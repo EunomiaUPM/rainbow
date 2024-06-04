@@ -1,0 +1,40 @@
+use axum::body::HttpBody;
+use axum::Router;
+use axum::routing::get;
+use anyhow::Result;
+use tracing::info;
+use axum::response::IntoResponse;
+use serde::{Deserialize, Serialize};
+
+
+pub fn router() -> Router
+{
+    Router::new().route("/version", get(get_version))
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct VersionResponse {
+    #[serde(rename = "@context")]
+    context: String,
+    protocol_versions: Vec<ProtocolVersionsResponse>
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct ProtocolVersionsResponse {
+    version: String,
+    path: String
+}
+
+async fn get_version() -> impl IntoResponse {
+    info!("GET /version");
+    let response = VersionResponse {
+        context: "https://w3id.org/dspace/2024/1/context.json".to_string(),
+        protocol_versions: vec![
+            ProtocolVersionsResponse {
+                version: "1.0".to_string(),
+                path: "/some/path/v1".to_string()
+            }
+        ]
+    };
+    serde_json::to_string(&response).unwrap()
+}
