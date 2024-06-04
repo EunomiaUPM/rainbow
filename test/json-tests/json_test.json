@@ -1,0 +1,29 @@
+{
+  "@context": "http://blabla.es/example",
+  "@type": "@bla",
+  "consumer_pid": "urn:consumer:123123",
+  "format": "push",
+  "callback_address": "",
+  "data_address": {
+    "@type": "",
+    "endpoint_type": "",
+    "endpoint": "",
+    "endpoint_properties": [
+      {
+        "@type": "",
+        "name": "",
+        "value": ""
+      },
+      {
+        "@type": "",
+        "name": "",
+        "value": ""
+      },
+      {
+        "@type": "",
+        "name": "",
+        "value": ""
+      }
+    ]
+  }
+}
