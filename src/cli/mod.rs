@@ -2,7 +2,7 @@ use anyhow::Result;
 use clap::{Args, Parser, Subcommand};
 use tracing::{debug, info};
 
-use crate::http::provider::start_provider_server;
+use crate::http::provider::{start_provider_server, start_provider_auth_server};
 
 
 #[derive(Parser, Debug)]
@@ -42,7 +42,8 @@ struct ProviderArgs {
 
 #[derive(Subcommand, Debug)]
 pub enum ProviderCommands {
-    Start {}
+    Start {},
+    Auth {}
 }
 
 pub async fn init_command_line() -> Result<()> {
@@ -59,6 +60,9 @@ pub async fn init_command_line() -> Result<()> {
             match &args.command {
                 ProviderCommands::Start { .. } => {
                     start_provider_server(&args.host_url, &args.host_port).await?;
+                }
+                ProviderCommands::Auth { .. } => {
+                    start_provider_auth_server(&args.host_url, &args.host_port).await?;
                 }
             }
         }
