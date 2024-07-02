@@ -1,6 +1,7 @@
 use anyhow::Result;
 use clap::{Args, Parser, Subcommand};
 use tracing::{debug, info};
+use crate::http::consumer::{start_test, start_transfer_request};
 
 use crate::http::provider::{start_provider_server, start_provider_auth_server};
 
@@ -28,6 +29,8 @@ struct ConsumerArgs {
     provider_url: Option<String>,
     #[arg(long)]
     provider_port: Option<String>,
+    #[command(subcommand)]
+    command: ConsumerCommands,
 }
 
 #[derive(Debug, Args)]
@@ -46,15 +49,31 @@ pub enum ProviderCommands {
     Auth {}
 }
 
+#[derive(Subcommand, Debug)]
+pub enum ConsumerCommands {
+    Test,
+    TransferRequest {},
+    TransferSuspension {}
+}
+
 pub async fn init_command_line() -> Result<()> {
     info!("Init the command line application");
     let cli = Cli::parse();
     debug!("{:?}", cli);
 
     match &cli.role {
-        DataSpaceTransferRoles::Consumer { .. } => {
-            info!("To still be implemented");
-            todo!("to be implemented...")
+        DataSpaceTransferRoles::Consumer(args) => {
+            match &args.command {
+                ConsumerCommands::Test {} => {
+                    start_test(&args.provider_url, &args.provider_port).await?;
+                }
+                ConsumerCommands::TransferRequest { .. } => {
+                    start_transfer_request(&args.provider_url, &args.provider_port).await?;
+                }
+                ConsumerCommands::TransferSuspension { .. } => {
+
+                }
+            }
         }
         DataSpaceTransferRoles::Provider(args) => {
             match &args.command {

@@ -1,0 +1,12 @@
+version: "3.5"
+services:
+  dev_db:
+    container_name: "dev_db"
+    image: "postgres"
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: ds-protocol
+      POSTGRES_USER: ds-protocol
+      POSTGRES_DB: ds-protocol
+    ports:
+      - "5454:5432"

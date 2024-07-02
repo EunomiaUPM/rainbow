@@ -4,6 +4,8 @@ use tracing_subscriber::FmtSubscriber;
 pub mod transfer;
 pub mod cli;
 pub mod http;
+pub mod config;
+pub mod catalog;
 
 const INFO: &str = "
 

@@ -9,11 +9,13 @@ use serde::{Deserialize, Serialize};
 
 pub fn router() -> Router
 {
-    Router::new().route("/version", get(get_version))
+    Router::new()
+        .route("/version", get(get_version))
+        .route("/.well-known/version", get(get_version))
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct VersionResponse {
+pub struct VersionResponse {
     #[serde(rename = "@context")]
     context: String,
     protocol_versions: Vec<ProtocolVersionsResponse>
