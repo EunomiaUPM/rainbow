@@ -1,18 +1,13 @@
-use std::convert::Infallible;
-use std::net::SocketAddr;
-
 use anyhow::Result;
 use axum::{
-    http::StatusCode,
-    Json,
     Router,
-    routing::{get, post}, serve,
+    serve
 };
 use tokio::net::TcpListener;
-use tower_http::trace::{self, TraceLayer};
-use tracing::{info, Level};
+use tower_http::trace::{TraceLayer};
+use tracing::{info};
 
-use crate::http::{auth, version};
+use crate::http::{auth, transfer_router, version_router};
 
 pub async fn start_provider_server(host: &Option<String>, url: &Option<String>) -> Result<()> {
     info!("Starting provider server...");
@@ -23,7 +18,8 @@ pub async fn start_provider_server(host: &Option<String>, url: &Option<String>) 
 
     // create routing system
     let server = Router::new()
-        .merge(version::router())
+        .merge(version_router::router())
+        .merge(transfer_router::router())
         .layer(TraceLayer::new_for_http());
 
     // start server

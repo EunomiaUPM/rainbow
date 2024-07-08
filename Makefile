@@ -2,7 +2,7 @@
 BINARY_NAME=ds-protocol
 RELEASE_DIR=target/release
 RELEASE_BIN_DIR=bin
-VERSION=0_1
+VERSION=0_2
 SCHEMA_NAME=b
 
 all:

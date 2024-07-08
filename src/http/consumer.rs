@@ -1,13 +1,13 @@
-use std::collections::HashMap;
 use std::fs;
 
-use reqwest::{Client, Response};
-use tracing::{info, Level};
+use reqwest::{Client};
+use tracing::{info};
 use tracing::log::debug;
 use once_cell::sync::Lazy;
+use reqwest::header::HeaderMap;
 
-use crate::http::version::VersionResponse;
-use crate::transfer::messages::TransferRequestMessage;
+use crate::http::version_router::VersionResponse;
+use crate::transfer::messages::*;
 
 static CLIENT: Lazy<Client> = Lazy::new(|| Client::new());
 
@@ -29,12 +29,12 @@ pub async fn start_test(host: &Option<String>, url: &Option<String>) -> anyhow::
     info!("Test transfer...");
 
     let path = get_provider_url("/version", host, url);
-    let req = reqwest::get(&path)
+    let res = reqwest::get(&path)
         .await?
         .json::<VersionResponse>()
         .await?;
 
-    println!("{req:#?}");
+    debug!("{:#?}", res);
     Ok(())
 }
 
@@ -42,19 +42,105 @@ pub async fn start_transfer_request(host: &Option<String>, url: &Option<String>)
     info!("Starting transfer from consumer...");
 
     // config stuff
-    let path = get_provider_url("/transfer/start", host, url);
+    let path = get_provider_url("/transfer/request", host, url);
     let file = get_json_file("transfer-request.json")?;
     let data = serde_json::from_str::<TransferRequestMessage>(&file)?;
 
-    debug!("{:?}", &data);
+    debug!("{:#?}", &data);
 
     // request
     let res = CLIENT.post(path)
-        .json(&serde_json::to_string(&data)?)
+        .header("Content-Type","application/json")
+        .json(&data)
         .send()
         .await?;
 
     // manage response...
-    println!("{:?}", res);
+    debug!("{:#?}", res.text().await?);
+    Ok(())
+}
+
+
+pub async fn start_transfer_start(host: &Option<String>, url: &Option<String>) -> anyhow::Result<()> {
+    info!("Starting transfer...");
+
+    // config stuff
+    let path = get_provider_url("/transfer/start", host, url);
+    let file = get_json_file("transfer-start.json")?;
+    let data = serde_json::from_str::<TransferStartMessage>(&file)?;
+
+    debug!("{:#?}", &data);
+
+    // request
+    let res = CLIENT.post(path)
+        .json(&data)
+        .send()
+        .await?;
+
+    // manage response...
+    debug!("{:#?}", &res);
+    Ok(())
+}
+
+pub async fn start_transfer_suspension(host: &Option<String>, url: &Option<String>) -> anyhow::Result<()> {
+    info!("Starting transfer suspension...");
+
+    // config stuff
+    let path = get_provider_url("/transfer/suspension", host, url);
+    let file = get_json_file("transfer-suspension.json")?;
+    let data = serde_json::from_str::<TransferSuspensionMessage>(&file)?;
+
+    debug!("{:#?}", &data);
+
+    // request
+    let res = CLIENT.post(path)
+        .json(&data)
+        .send()
+        .await?;
+
+    // manage response...
+    debug!("{:#?}", &data);
+    Ok(())
+}
+
+pub async fn start_transfer_completion(host: &Option<String>, url: &Option<String>) -> anyhow::Result<()> {
+    info!("Starting transfer completion...");
+
+    // config stuff
+    let path = get_provider_url("/transfer/completion", host, url);
+    let file = get_json_file("transfer-completion.json")?;
+    let data = serde_json::from_str::<TransferCompletionMessage>(&file)?;
+
+    debug!("{:#?}", &data);
+
+    // request
+    let res = CLIENT.post(path)
+        .json(&data)
+        .send()
+        .await?;
+
+    // manage response...
+    debug!("{:#?}", &data);
+    Ok(())
+}
+
+pub async fn start_transfer_termination(host: &Option<String>, url: &Option<String>) -> anyhow::Result<()> {
+    info!("Starting transfer termination...");
+
+    // config stuff
+    let path = get_provider_url("/transfer/termination", host, url);
+    let file = get_json_file("transfer-termination.json")?;
+    let data = serde_json::from_str::<TransferTerminationMessage>(&file)?;
+
+    debug!("{:#?}", &data);
+
+    // request
+    let res = CLIENT.post(path)
+        .json(&data)
+        .send()
+        .await?;
+
+    // manage response...
+    debug!("{:#?}", &data);
     Ok(())
 }

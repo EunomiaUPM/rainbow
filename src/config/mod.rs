@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 use std::sync::OnceLock;
-use crate::cli::DataSpaceTransferRoles;
+
 pub static CF: OnceLock<Config> = OnceLock::new();
 
 #[derive(Clone, Debug)]

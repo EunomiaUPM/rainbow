@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::{Args, Parser, Subcommand};
 use tracing::{debug, info};
-use crate::http::consumer::{start_test, start_transfer_request};
+use crate::http::consumer::*;
 
 use crate::http::provider::{start_provider_server, start_provider_auth_server};
 
@@ -24,7 +24,7 @@ pub enum DataSpaceTransferRoles {
 }
 
 #[derive(Debug, Args)]
-struct ConsumerArgs {
+pub struct ConsumerArgs {
     #[arg(long)]
     provider_url: Option<String>,
     #[arg(long)]
@@ -34,7 +34,7 @@ struct ConsumerArgs {
 }
 
 #[derive(Debug, Args)]
-struct ProviderArgs {
+pub struct ProviderArgs {
     #[arg(long)]
     host_url: Option<String>,
     #[arg(long)]
@@ -53,7 +53,10 @@ pub enum ProviderCommands {
 pub enum ConsumerCommands {
     Test,
     TransferRequest {},
-    TransferSuspension {}
+    TransferStart {},
+    TransferSuspension {},
+    TransferCompletion {},
+    TransferTermination {}
 }
 
 pub async fn init_command_line() -> Result<()> {
@@ -70,8 +73,17 @@ pub async fn init_command_line() -> Result<()> {
                 ConsumerCommands::TransferRequest { .. } => {
                     start_transfer_request(&args.provider_url, &args.provider_port).await?;
                 }
+                ConsumerCommands::TransferStart { .. } => {
+                    start_transfer_start(&args.provider_url, &args.provider_port).await?;
+                }
                 ConsumerCommands::TransferSuspension { .. } => {
-
+                    start_transfer_suspension(&args.provider_url, &args.provider_port).await?;
+                }
+                ConsumerCommands::TransferCompletion { .. } => {
+                    start_transfer_completion(&args.provider_url, &args.provider_port).await?;
+                }
+                ConsumerCommands::TransferTermination { .. } => {
+                    start_transfer_termination(&args.provider_url, &args.provider_port).await?;
                 }
             }
         }

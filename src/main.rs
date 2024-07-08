@@ -1,5 +1,4 @@
 use tracing::{info, Level};
-use tracing_subscriber::FmtSubscriber;
 
 pub mod transfer;
 pub mod cli;
