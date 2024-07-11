@@ -1,10 +1,9 @@
 use std::fs;
 
-use reqwest::{Client};
-use tracing::{info};
-use tracing::log::debug;
 use once_cell::sync::Lazy;
-use reqwest::header::HeaderMap;
+use reqwest::Client;
+use tracing::info;
+use tracing::log::debug;
 
 use crate::http::version_router::VersionResponse;
 use crate::transfer::messages::*;
@@ -50,7 +49,7 @@ pub async fn start_transfer_request(host: &Option<String>, url: &Option<String>)
 
     // request
     let res = CLIENT.post(path)
-        .header("Content-Type","application/json")
+        .header("Content-Type", "application/json")
         .json(&data)
         .send()
         .await?;
@@ -93,7 +92,7 @@ pub async fn start_transfer_suspension(host: &Option<String>, url: &Option<Strin
     debug!("{:#?}", &data);
 
     // request
-    let res = CLIENT.post(path)
+    let _ = CLIENT.post(path)
         .json(&data)
         .send()
         .await?;
@@ -114,7 +113,7 @@ pub async fn start_transfer_completion(host: &Option<String>, url: &Option<Strin
     debug!("{:#?}", &data);
 
     // request
-    let res = CLIENT.post(path)
+    let _ = CLIENT.post(path)
         .json(&data)
         .send()
         .await?;
@@ -135,7 +134,7 @@ pub async fn start_transfer_termination(host: &Option<String>, url: &Option<Stri
     debug!("{:#?}", &data);
 
     // request
-    let res = CLIENT.post(path)
+    let _ = CLIENT.post(path)
         .json(&data)
         .send()
         .await?;

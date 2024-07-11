@@ -7,7 +7,7 @@ use tokio::net::TcpListener;
 use tower_http::trace::TraceLayer;
 use tracing::info;
 
-use crate::http::{auth_service, transfer_router, version_router};
+use crate::http::{auth_router, transfer_router, version_router};
 
 pub async fn start_provider_server(host: &Option<String>, url: &Option<String>) -> Result<()> {
     info!("Starting provider server...");
@@ -38,7 +38,7 @@ pub async fn start_provider_auth_server(host: &Option<String>, url: &Option<Stri
 
     // create routing system
     let server = Router::new()
-        .merge(auth_service::router())
+        .merge(auth_router::router())
         .layer(TraceLayer::new_for_http());
 
     // start server

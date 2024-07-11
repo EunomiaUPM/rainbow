@@ -21,7 +21,7 @@ pub enum HttpError {
 impl IntoResponse for HttpError {
     fn into_response(self) -> Response {
         match &self {
-            err @ HttpError::ValidationError { errors, .. } => {
+            HttpError::ValidationError { errors, .. } => {
                 let mut errors_out: Vec<String> = vec![];
                 for error in errors {
                     errors_out.push(error.error_description().to_string())

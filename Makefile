@@ -1,8 +1,8 @@
 
-BINARY_NAME=ds-protocol
+BINARY_NAME=rainbow
 RELEASE_DIR=target/release
 RELEASE_BIN_DIR=bin
-VERSION=0_2
+VERSION=0_1
 SCHEMA_NAME=b
 
 all:

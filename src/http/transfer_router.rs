@@ -2,9 +2,9 @@ use axum::extract::Json;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::Router;
-use axum::routing::{get, post};
+use axum::routing::post;
 use jsonschema::output::BasicOutput;
-use tracing::{debug, info};
+use tracing::info;
 
 use crate::http::err::HttpError;
 use crate::transfer::compiled_schemas::*;

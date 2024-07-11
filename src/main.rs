@@ -7,9 +7,10 @@ pub mod config;
 pub mod catalog;
 
 const INFO: &str = "
-
-Starting UPM Dataspace protocol implementation
-Show some love on github.com
+----------
+Starting Rainbow 🌈🌈
+UPM Dataspace protocol implementation
+Show some love on https://github.com/ging/rainbow
 ----------
 
 ";
