@@ -1,10 +1,9 @@
 use anyhow::Result;
 use clap::{Args, Parser, Subcommand};
 use tracing::{debug, info};
-use crate::http::consumer::*;
 
-use crate::http::provider::{start_provider_server, start_provider_auth_server};
-
+use crate::http::consumer_service::*;
+use crate::http::provider_service::{start_provider_auth_server, start_provider_server};
 
 #[derive(Parser, Debug)]
 #[command(name = "Dataspace protocol")]
@@ -46,7 +45,7 @@ pub struct ProviderArgs {
 #[derive(Subcommand, Debug)]
 pub enum ProviderCommands {
     Start {},
-    Auth {}
+    Auth {},
 }
 
 #[derive(Subcommand, Debug)]
@@ -56,7 +55,7 @@ pub enum ConsumerCommands {
     TransferStart {},
     TransferSuspension {},
     TransferCompletion {},
-    TransferTermination {}
+    TransferTermination {},
 }
 
 pub async fn init_command_line() -> Result<()> {

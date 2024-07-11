@@ -1,11 +1,13 @@
-use axum::response::{IntoResponse, Response};
-use axum::{Router};
-use axum::body::{Body, Bytes};
-use axum::extract::{Json, Request};
-use axum::routing::{get, post};
-use garde::{Report, Validate};
+use axum::extract::Json;
 use axum::http::StatusCode;
+use axum::response::IntoResponse;
+use axum::Router;
+use axum::routing::{get, post};
+use jsonschema::output::BasicOutput;
 use tracing::{debug, info};
+
+use crate::http::err::HttpError;
+use crate::transfer::compiled_schemas::*;
 use crate::transfer::messages::*;
 
 pub fn router() -> Router
@@ -19,32 +21,103 @@ pub fn router() -> Router
 }
 
 
-
 async fn handle_transfer_request(Json(input): Json<TransferRequestMessage>) -> impl IntoResponse {
     info!("POST /transfer/request");
 
-    // validation
+    // schema validation
+    let input_as_value = serde_json::value::to_value(&input).unwrap();
+    let validation = TRANSFER_REQUEST_SCHEMA.apply(&input_as_value).basic();
+    if let BasicOutput::Invalid(errors) = validation {
+        return HttpError::ValidationError { errors }.into_response();
+    }
 
-    // send ACK o ERROR
-
-    // try to send errors with ERROR Response...
-    debug!("{:#?}", &input);
-    return "ok"
+    // response builder
+    (StatusCode::OK, Json(TransferProcess {
+        context: TRANSFER_CONTEXT.to_string(),
+        _type: TransferMessageTypes::TransferProcess.to_string(),
+        provider_pid: "123".to_string(),
+        consumer_pid: "123".to_string(),
+        state: TransferState::REQUESTED,
+    })).into_response()
 }
 
 async fn handle_transfer_start(Json(input): Json<TransferStartMessage>) -> impl IntoResponse {
-    info!("POST /transfer/start")
+    info!("POST /transfer/start");
+
+    // schema validation
+    let input_as_value = serde_json::value::to_value(&input).unwrap();
+    let validation = TRANSFER_START_SCHEMA.apply(&input_as_value).basic();
+    if let BasicOutput::Invalid(errors) = validation {
+        return HttpError::ValidationError { errors }.into_response();
+    }
+
+    // response builder
+    (StatusCode::OK, Json(TransferProcess {
+        context: TRANSFER_CONTEXT.to_string(),
+        _type: TransferMessageTypes::TransferProcess.to_string(),
+        provider_pid: "123".to_string(),
+        consumer_pid: "123".to_string(),
+        state: TransferState::STARTED,
+    })).into_response()
 }
 
 async fn handle_transfer_suspension(Json(input): Json<TransferSuspensionMessage>) -> impl IntoResponse {
-    info!("POST /transfer/suspension")
+    info!("POST /transfer/suspension");
+
+    // schema validation
+    let input_as_value = serde_json::value::to_value(&input).unwrap();
+    let validation = TRANSFER_SUSPENSION_SCHEMA.apply(&input_as_value).basic();
+    if let BasicOutput::Invalid(errors) = validation {
+        return HttpError::ValidationError { errors }.into_response();
+    }
+
+    // response builder
+    (StatusCode::OK, Json(TransferProcess {
+        context: TRANSFER_CONTEXT.to_string(),
+        _type: TransferMessageTypes::TransferProcess.to_string(),
+        provider_pid: "123".to_string(),
+        consumer_pid: "123".to_string(),
+        state: TransferState::SUSPENDED,
+    })).into_response()
 }
 
 async fn handle_transfer_completion(Json(input): Json<TransferCompletionMessage>) -> impl IntoResponse {
-    info!("POST /transfer/completion")
+    info!("POST /transfer/completion");
+
+    // schema validation
+    let input_as_value = serde_json::value::to_value(&input).unwrap();
+    let validation = TRANSFER_COMPLETION_SCHEMA.apply(&input_as_value).basic();
+    if let BasicOutput::Invalid(errors) = validation {
+        return HttpError::ValidationError { errors }.into_response();
+    }
+
+    // response builder
+    (StatusCode::OK, Json(TransferProcess {
+        context: TRANSFER_CONTEXT.to_string(),
+        _type: TransferMessageTypes::TransferProcess.to_string(),
+        provider_pid: "123".to_string(),
+        consumer_pid: "123".to_string(),
+        state: TransferState::COMPLETED,
+    })).into_response()
 }
 
 async fn handle_transfer_termination(Json(input): Json<TransferTerminationMessage>) -> impl IntoResponse {
-    info!("POST /transfer/termination")
+    info!("POST /transfer/termination");
+
+    // schema validation
+    let input_as_value = serde_json::value::to_value(&input).unwrap();
+    let validation = TRANSFER_TERMINATION_SCHEMA.apply(&input_as_value).basic();
+    if let BasicOutput::Invalid(errors) = validation {
+        return HttpError::ValidationError { errors }.into_response();
+    }
+
+    // response builder
+    (StatusCode::OK, Json(TransferProcess {
+        context: TRANSFER_CONTEXT.to_string(),
+        _type: TransferMessageTypes::TransferProcess.to_string(),
+        provider_pid: "123".to_string(),
+        consumer_pid: "123".to_string(),
+        state: TransferState::TERMINATED,
+    })).into_response()
 }
 

@@ -1,45 +1,27 @@
+use std::fmt;
+
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use garde::Validate;
 
+pub static TRANSFER_CONTEXT: &str = "https://w3id.org/dspace/2024/1/context.json";
 
-const CONTEXT: &str = "https://w3id.org/dspace/2024/1/context.json";
-
-
-#[derive(Debug, Serialize, Deserialize, Validate)]
-#[garde(context(()))]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct TransferRequestMessage {
-
     #[serde(rename = "@context")]
-    #[garde(contains(CONTEXT))]
     pub context: String,
-
     #[serde(rename = "@type")]
-    #[garde(skip)]
     pub _type: String,
-
     #[serde(rename = "dspace:consumerPid")]
-    #[garde(contains("dspace:TransferRequestMessage"))]
     pub consumer_pid: String,
-
     #[serde(rename = "dspace:agreementId")]
-    #[garde(skip)]
     pub agreement_id: String,
-
     #[serde(rename = "dct:format")]
-    #[garde(skip)]
     pub format: String,
-
     #[serde(rename = "dspace:callbackAddress")]
-    #[garde(skip)]
     pub callback_address: String,
-
     #[serde(rename = "dspace:dataAddress")]
-    #[garde(dive)]
     pub data_address: Option<DataAddress>,
 }
-
-
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TransferStartMessage {
@@ -99,45 +81,93 @@ pub struct TransferTerminationMessage {
     pub reason: Vec<Value>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Validate)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct DataAddress {
     #[serde(rename = "@type")]
-    #[garde(skip)]
     pub _type: String,
-
     #[serde(rename = "dspace:endpointType")]
-    #[garde(skip)]
     pub endpoint_type: String,
-
     #[serde(rename = "dspace:endpoint")]
-    #[garde(skip)]
     pub endpoint: String,
-
     #[serde(rename = "dspace:endpointProperties")]
-    #[garde(dive)]
     pub endpoint_properties: Vec<EndpointProperty>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Validate)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct EndpointProperty {
     #[serde(rename = "@type")]
-    #[garde(skip)]
     pub _type: String,
-
     #[serde(rename = "dspace:name")]
-    #[garde(skip)]
     pub name: String,
-
     #[serde(rename = "dspace:value")]
-    #[garde(skip)]
     pub value: String,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TransferProcess {
+    #[serde(rename = "@context")]
+    pub context: String,
+    #[serde(rename = "@type")]
+    pub _type: String,
+    #[serde(rename = "dspace:providerPid")]
+    pub provider_pid: String,
+    #[serde(rename = "dspace:consumerPid")]
+    pub consumer_pid: String,
+    #[serde(rename = "dspace:state")]
+    pub state: TransferState,
+}
 
+#[derive(Debug, Serialize, Deserialize)]
+pub enum TransferState {
+    #[serde(rename = "dspace:REQUESTED")]
+    REQUESTED,
+    #[serde(rename = "dspace:STARTED")]
+    STARTED,
+    #[serde(rename = "dspace:TERMINATED")]
+    TERMINATED,
+    #[serde(rename = "dspace:COMPLETED")]
+    COMPLETED,
+    #[serde(rename = "dspace:SUSPENDED")]
+    SUSPENDED,
+}
 
-fn validate_uuid(value: &str) -> garde::Result {
-    if value != "pass" {
-        return Err(garde::Error::new("password is not strong enough"));
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TransferError {
+    #[serde(rename = "@context")]
+    pub context: String,
+    #[serde(rename = "@type")]
+    pub _type: String,
+    #[serde(rename = "dspace:providerPid")]
+    pub provider_pid: String,
+    #[serde(rename = "dspace:consumerPid")]
+    pub consumer_pid: String,
+    #[serde(rename = "dspace:code")]
+    pub code: String,
+    #[serde(rename = "dspace:reason")]
+    pub reason: Vec<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub enum TransferMessageTypes {
+    TransferError,
+    TransferRequestMessage,
+    TransferStartMessage,
+    TransferSuspensionMessage,
+    TransferCompletionMessage,
+    TransferTerminationMessage,
+    TransferProcess,
+}
+
+impl fmt::Display for TransferMessageTypes {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            TransferMessageTypes::TransferError => f.write_str("dspace:TransferError"),
+            TransferMessageTypes::TransferRequestMessage => f.write_str("dspace:TransferRequestMessage"),
+            TransferMessageTypes::TransferStartMessage => f.write_str("dspace:TransferStartMessage"),
+            TransferMessageTypes::TransferSuspensionMessage => f.write_str("dspace:TransferSuspensionMessage"),
+            TransferMessageTypes::TransferCompletionMessage => f.write_str("dspace:TransferCompletionMessage"),
+            TransferMessageTypes::TransferTerminationMessage => f.write_str("dspace:TransferTerminationMessage"),
+            TransferMessageTypes::TransferProcess => f.write_str("dspace:TransferProcess"),
+        }
     }
-    Ok(())
 }
