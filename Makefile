@@ -34,6 +34,6 @@ run-migration:
 		--database-url $(DATABASE_URL)
 
 start-static-server:
+	cd ./test/data-servers/static-parquet-server; \
 	cargo run \
-		--manifest-path ./test/data-servers/static-parquet-server/Cargo.toml \
 		1236
