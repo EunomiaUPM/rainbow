@@ -24,10 +24,16 @@ build-container:
 	echo "container..."
 
 create-migration:
+	export $(cat $(PWD)/.env | xargs)
 	diesel migration generate \
 		--diff-schema $(SCHEMA_NAME) \
-		--database-url postgres://ds-protocol:ds-protocol@localhost:5454/ds-protocol
+		--database-url $(DATABASE_URL)
 
 run-migration:
 	diesel migration run \
-		--database-url postgres://ds-protocol:ds-protocol@localhost:5454/ds-protocol
+		--database-url $(DATABASE_URL)
+
+start-static-server:
+	cargo run \
+		--manifest-path ./test/data-servers/static-parquet-server/Cargo.toml \
+		1236
