@@ -2,8 +2,9 @@ use anyhow::Result;
 use clap::{Args, Parser, Subcommand};
 use tracing::{debug, info};
 
-use crate::http::consumer_service::*;
-use crate::http::provider_service::{start_provider_auth_server, start_provider_server};
+use crate::auth::start_provider_auth_server;
+use crate::transfer::consumer::*;
+use crate::transfer::provider::server::start_provider_server;
 
 #[derive(Parser, Debug)]
 #[command(name = "Dataspace protocol")]

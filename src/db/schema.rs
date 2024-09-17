@@ -1,23 +1,12 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
-    protocol_versions (id) {
+    transfer_sessions (id) {
         id -> Uuid,
-        path -> Varchar,
-        version -> Varchar,
+        provider_pid -> Uuid,
+        consumer_pid -> Uuid,
+        state -> Varchar,
+        created_at -> Timestamp,
+        updated_at -> Nullable<Timestamp>,
     }
 }
-
-diesel::table! {
-    users (id) {
-        id -> Int4,
-        name -> Varchar,
-        email -> Varchar,
-        lol -> Varchar,
-    }
-}
-
-diesel::allow_tables_to_appear_in_same_query!(
-    protocol_versions,
-    users,
-);

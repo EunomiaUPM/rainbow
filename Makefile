@@ -4,6 +4,7 @@ RELEASE_DIR=target/release
 RELEASE_BIN_DIR=bin
 VERSION=0_1
 SCHEMA_NAME=b
+DATABASE_URL=postgresql://ds-protocol:ds-protocol@localhost:5454/ds-protocol
 
 all:
 	build
