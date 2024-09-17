@@ -10,9 +10,8 @@ use uuid::{uuid, Uuid};
 
 pub struct MemoryPersistence;
 
-static MEMORY_TRANSFER_SESSIONS: Lazy<Mutex<HashMap<Uuid, TransferSession>>> = Lazy::new(|| {
-    Mutex::new(HashMap::new())
-});
+static MEMORY_TRANSFER_SESSIONS: Lazy<Mutex<HashMap<Uuid, TransferSession>>> =
+    Lazy::new(|| Mutex::new(HashMap::new()));
 
 impl Persistence for MemoryPersistence {
     fn persist_transfer_request(request: CreateTransferSession) -> anyhow::Result<TransferSession> {

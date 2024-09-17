@@ -14,7 +14,7 @@ use crate::transfer::protocol::messages::{TransferError, TransferMessageTypes, T
 pub enum TransferErrorType {
     #[error("The request body contains invalid data")]
     ValidationError {
-        errors: VecDeque<OutputUnit<ErrorDescription>>
+        errors: VecDeque<OutputUnit<ErrorDescription>>,
     },
     #[error("Consumer needs to have a valid uuid")]
     ConsumerIdUuidError,
@@ -45,43 +45,41 @@ impl IntoResponse for TransferErrorType {
 
                 (StatusCode::BAD_REQUEST, Json(error_message))
             }
-            e @ TransferErrorType::ConsumerIdUuidError => {
-                (StatusCode::BAD_REQUEST, Json(TransferError {
+            e @ TransferErrorType::ConsumerIdUuidError => (
+                StatusCode::BAD_REQUEST,
+                Json(TransferError {
                     context: TRANSFER_CONTEXT.to_string(),
                     _type: TransferMessageTypes::TransferError.to_string(),
                     provider_pid: "123".to_string(),
                     consumer_pid: "123".to_string(),
                     code: "400".to_string(),
-                    reason: vec![
-                        e.to_string()
-                    ],
-                }))
-            }
-            e @ TransferErrorType::ProviderIdUuidError => {
-                (StatusCode::BAD_REQUEST, Json(TransferError {
+                    reason: vec![e.to_string()],
+                }),
+            ),
+            e @ TransferErrorType::ProviderIdUuidError => (
+                StatusCode::BAD_REQUEST,
+                Json(TransferError {
                     context: TRANSFER_CONTEXT.to_string(),
                     _type: TransferMessageTypes::TransferError.to_string(),
                     provider_pid: "123".to_string(),
                     consumer_pid: "123".to_string(),
                     code: "400".to_string(),
-                    reason: vec![
-                        e.to_string()
-                    ],
-                }))
-            }
-            e @ TransferErrorType::AgreementError => {
-                (StatusCode::BAD_REQUEST, Json(TransferError {
+                    reason: vec![e.to_string()],
+                }),
+            ),
+            e @ TransferErrorType::AgreementError => (
+                StatusCode::BAD_REQUEST,
+                Json(TransferError {
                     context: TRANSFER_CONTEXT.to_string(),
                     _type: TransferMessageTypes::TransferError.to_string(),
                     provider_pid: "123".to_string(),
                     consumer_pid: "123".to_string(),
                     code: "400".to_string(),
-                    reason: vec![
-                        e.to_string()
-                    ],
-                }))
-            }
-        }.into_response()
+                    reason: vec![e.to_string()],
+                }),
+            ),
+        }
+        .into_response()
     }
 }
 

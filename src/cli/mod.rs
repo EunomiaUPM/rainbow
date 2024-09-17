@@ -65,41 +65,35 @@ pub async fn init_command_line() -> Result<()> {
     debug!("{:?}", cli);
 
     match &cli.role {
-        DataSpaceTransferRoles::Consumer(args) => {
-            match &args.command {
-                ConsumerCommands::Test {} => {
-                    start_test(&args.provider_url, &args.provider_port).await?;
-                }
-                ConsumerCommands::TransferRequest { .. } => {
-                    start_transfer_request(&args.provider_url, &args.provider_port).await?;
-                }
-                ConsumerCommands::TransferStart { .. } => {
-                    start_transfer_start(&args.provider_url, &args.provider_port).await?;
-                }
-                ConsumerCommands::TransferSuspension { .. } => {
-                    start_transfer_suspension(&args.provider_url, &args.provider_port).await?;
-                }
-                ConsumerCommands::TransferCompletion { .. } => {
-                    start_transfer_completion(&args.provider_url, &args.provider_port).await?;
-                }
-                ConsumerCommands::TransferTermination { .. } => {
-                    start_transfer_termination(&args.provider_url, &args.provider_port).await?;
-                }
+        DataSpaceTransferRoles::Consumer(args) => match &args.command {
+            ConsumerCommands::Test {} => {
+                start_test(&args.provider_url, &args.provider_port).await?;
             }
-        }
-        DataSpaceTransferRoles::Provider(args) => {
-            match &args.command {
-                ProviderCommands::Start { .. } => {
-                    start_provider_server(&args.host_url, &args.host_port).await?;
-                }
-                ProviderCommands::Auth { .. } => {
-                    start_provider_auth_server(&args.host_url, &args.host_port).await?;
-                }
+            ConsumerCommands::TransferRequest { .. } => {
+                start_transfer_request(&args.provider_url, &args.provider_port).await?;
             }
-        }
+            ConsumerCommands::TransferStart { .. } => {
+                start_transfer_start(&args.provider_url, &args.provider_port).await?;
+            }
+            ConsumerCommands::TransferSuspension { .. } => {
+                start_transfer_suspension(&args.provider_url, &args.provider_port).await?;
+            }
+            ConsumerCommands::TransferCompletion { .. } => {
+                start_transfer_completion(&args.provider_url, &args.provider_port).await?;
+            }
+            ConsumerCommands::TransferTermination { .. } => {
+                start_transfer_termination(&args.provider_url, &args.provider_port).await?;
+            }
+        },
+        DataSpaceTransferRoles::Provider(args) => match &args.command {
+            ProviderCommands::Start { .. } => {
+                start_provider_server(&args.host_url, &args.host_port).await?;
+            }
+            ProviderCommands::Auth { .. } => {
+                start_provider_auth_server(&args.host_url, &args.host_port).await?;
+            }
+        },
     }
-
 
     Ok(())
 }
-

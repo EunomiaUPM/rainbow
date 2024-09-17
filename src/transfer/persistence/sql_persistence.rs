@@ -26,7 +26,7 @@ impl Persistence for SQLPersistence {
         let uuid = uuid!("0f4bb619-0a1f-4187-b7f3-fd34c592fba1");
         let values = (
             state.eq(TransferState::STARTED.to_string()),
-            updated_at.eq(chrono::Utc::now().naive_utc())
+            updated_at.eq(chrono::Utc::now().naive_utc()),
         );
 
         let transaction = diesel::update(transfer_sessions.find(uuid))
@@ -44,7 +44,7 @@ impl Persistence for SQLPersistence {
         let uuid = uuid!("0f4bb619-0a1f-4187-b7f3-fd34c592fba1");
         let values = (
             state.eq(TransferState::SUSPENDED.to_string()),
-            updated_at.eq(chrono::Utc::now().naive_utc())
+            updated_at.eq(chrono::Utc::now().naive_utc()),
         );
 
         let transaction = diesel::update(transfer_sessions.find(uuid))
@@ -62,7 +62,7 @@ impl Persistence for SQLPersistence {
         let uuid = uuid!("0f4bb619-0a1f-4187-b7f3-fd34c592fba1");
         let values = (
             state.eq(TransferState::COMPLETED.to_string()),
-            updated_at.eq(chrono::Utc::now().naive_utc())
+            updated_at.eq(chrono::Utc::now().naive_utc()),
         );
 
         let transaction = diesel::update(transfer_sessions.find(uuid))
@@ -80,7 +80,7 @@ impl Persistence for SQLPersistence {
         let uuid = uuid!("0f4bb619-0a1f-4187-b7f3-fd34c592fba1");
         let values = (
             state.eq(TransferState::TERMINATED.to_string()),
-            updated_at.eq(chrono::Utc::now().naive_utc())
+            updated_at.eq(chrono::Utc::now().naive_utc()),
         );
 
         let transaction = diesel::update(transfer_sessions.find(uuid))

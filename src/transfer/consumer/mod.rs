@@ -29,16 +29,16 @@ pub async fn start_test(host: &Option<String>, url: &Option<String>) -> anyhow::
     info!("Test transfer...");
 
     let path = get_provider_url("/version", host, url);
-    let res = reqwest::get(&path)
-        .await?
-        .json::<VersionResponse>()
-        .await?;
+    let res = reqwest::get(&path).await?.json::<VersionResponse>().await?;
 
     debug!("{:#?}", res);
     Ok(())
 }
 
-pub async fn start_transfer_request(host: &Option<String>, url: &Option<String>) -> anyhow::Result<()> {
+pub async fn start_transfer_request(
+    host: &Option<String>,
+    url: &Option<String>,
+) -> anyhow::Result<()> {
     info!("Starting transfer from consumer...");
 
     // config stuff
@@ -51,19 +51,23 @@ pub async fn start_transfer_request(host: &Option<String>, url: &Option<String>)
     debug!("{}", serde_json::to_string_pretty(&data)?);
 
     // request
-    let res = CLIENT.post(path)
+    let res = CLIENT
+        .post(path)
         .header("Content-Type", "application/json")
         .json(&data)
         .send()
         .await?;
+    let tp = serde_json::from_str::<TransferProcess>(&res.text().await?)?;
 
     // manage response...
-    debug!("{}", serde_json::to_string_pretty(&res.text().await?)?);
+    debug!("{}", serde_json::to_string_pretty(&tp)?);
     Ok(())
 }
 
-
-pub async fn start_transfer_start(host: &Option<String>, url: &Option<String>) -> anyhow::Result<()> {
+pub async fn start_transfer_start(
+    host: &Option<String>,
+    url: &Option<String>,
+) -> anyhow::Result<()> {
     info!("Starting transfer...");
 
     // config stuff
@@ -74,17 +78,17 @@ pub async fn start_transfer_start(host: &Option<String>, url: &Option<String>) -
     debug!("{:#?}", &data);
 
     // request
-    let res = CLIENT.post(path)
-        .json(&data)
-        .send()
-        .await?;
+    let res = CLIENT.post(path).json(&data).send().await?;
 
     // manage response...
     debug!("{:#?}", &res);
     Ok(())
 }
 
-pub async fn start_transfer_suspension(host: &Option<String>, url: &Option<String>) -> anyhow::Result<()> {
+pub async fn start_transfer_suspension(
+    host: &Option<String>,
+    url: &Option<String>,
+) -> anyhow::Result<()> {
     info!("Starting transfer suspension...");
 
     // config stuff
@@ -95,17 +99,17 @@ pub async fn start_transfer_suspension(host: &Option<String>, url: &Option<Strin
     debug!("{:#?}", &data);
 
     // request
-    let _ = CLIENT.post(path)
-        .json(&data)
-        .send()
-        .await?;
+    let _ = CLIENT.post(path).json(&data).send().await?;
 
     // manage response...
     debug!("{:#?}", &data);
     Ok(())
 }
 
-pub async fn start_transfer_completion(host: &Option<String>, url: &Option<String>) -> anyhow::Result<()> {
+pub async fn start_transfer_completion(
+    host: &Option<String>,
+    url: &Option<String>,
+) -> anyhow::Result<()> {
     info!("Starting transfer completion...");
 
     // config stuff
@@ -116,17 +120,17 @@ pub async fn start_transfer_completion(host: &Option<String>, url: &Option<Strin
     debug!("{:#?}", &data);
 
     // request
-    let _ = CLIENT.post(path)
-        .json(&data)
-        .send()
-        .await?;
+    let _ = CLIENT.post(path).json(&data).send().await?;
 
     // manage response...
     debug!("{:#?}", &data);
     Ok(())
 }
 
-pub async fn start_transfer_termination(host: &Option<String>, url: &Option<String>) -> anyhow::Result<()> {
+pub async fn start_transfer_termination(
+    host: &Option<String>,
+    url: &Option<String>,
+) -> anyhow::Result<()> {
     info!("Starting transfer termination...");
 
     // config stuff
@@ -137,10 +141,7 @@ pub async fn start_transfer_termination(host: &Option<String>, url: &Option<Stri
     debug!("{:#?}", &data);
 
     // request
-    let _ = CLIENT.post(path)
-        .json(&data)
-        .send()
-        .await?;
+    let _ = CLIENT.post(path).json(&data).send().await?;
 
     // manage response...
     debug!("{:#?}", &data);

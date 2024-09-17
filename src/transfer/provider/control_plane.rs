@@ -20,8 +20,7 @@ use crate::transfer::protocol::messages::*;
 use crate::transfer::provider::err::TransferErrorType;
 use crate::transfer::schemas::*;
 
-pub fn router() -> Router
-{
+pub fn router() -> Router {
     Router::new()
         .route("/transfer/request", post(handle_transfer_request))
         .route("/transfer/start", post(handle_transfer_start))
@@ -29,7 +28,6 @@ pub fn router() -> Router
         .route("/transfer/completion", post(handle_transfer_completion))
         .route("/transfer/termination", post(handle_transfer_termination))
 }
-
 
 async fn handle_transfer_request(Json(input): Json<TransferRequestMessage>) -> impl IntoResponse {
     info!("POST /transfer/request");
@@ -51,15 +49,11 @@ async fn handle_transfer_request(Json(input): Json<TransferRequestMessage>) -> i
         return TransferErrorType::AgreementError.into_response();
     }
 
-
     // TODO refactor for proper forwarding...
     // forwarding data
     let endpoint = input.data_address.unwrap().endpoint;
     debug!(endpoint);
-    let res = Client::new()
-        .get(endpoint)
-        .send()
-        .await;
+    let res = Client::new().get(endpoint).send().await;
 
     if let Err(err) = res {
         debug!("{}", err.to_string());
@@ -71,7 +65,6 @@ async fn handle_transfer_request(Json(input): Json<TransferRequestMessage>) -> i
     let id_uuid = Uuid::new_v4();
     let provide_uuid = Uuid::new_v4();
     let provider_pid = format!("urn:uuid:{}", provide_uuid.to_string());
-
 
     // persist
     let new_transaction = CreateTransferSession {
@@ -85,13 +78,17 @@ async fn handle_transfer_request(Json(input): Json<TransferRequestMessage>) -> i
     debug!("{:?}", a);
 
     // response builder
-    (StatusCode::OK, Json(TransferProcess {
-        context: TRANSFER_CONTEXT.to_string(),
-        _type: TransferMessageTypes::TransferProcess.to_string(),
-        provider_pid,
-        consumer_pid: input.consumer_pid,
-        state: TransferState::REQUESTED,
-    })).into_response()
+    (
+        StatusCode::OK,
+        Json(TransferProcess {
+            context: TRANSFER_CONTEXT.to_string(),
+            _type: TransferMessageTypes::TransferProcess.to_string(),
+            provider_pid,
+            consumer_pid: input.consumer_pid,
+            state: TransferState::REQUESTED,
+        }),
+    )
+        .into_response()
 }
 
 async fn handle_transfer_start(Json(input): Json<TransferStartMessage>) -> impl IntoResponse {
@@ -120,16 +117,22 @@ async fn handle_transfer_start(Json(input): Json<TransferStartMessage>) -> impl 
     debug!("{:?}", a);
 
     // response builder
-    (StatusCode::OK, Json(TransferProcess {
-        context: TRANSFER_CONTEXT.to_string(),
-        _type: TransferMessageTypes::TransferProcess.to_string(),
-        provider_pid: "123".to_string(),
-        consumer_pid: "123".to_string(),
-        state: TransferState::STARTED,
-    })).into_response()
+    (
+        StatusCode::OK,
+        Json(TransferProcess {
+            context: TRANSFER_CONTEXT.to_string(),
+            _type: TransferMessageTypes::TransferProcess.to_string(),
+            provider_pid: "123".to_string(),
+            consumer_pid: "123".to_string(),
+            state: TransferState::STARTED,
+        }),
+    )
+        .into_response()
 }
 
-async fn handle_transfer_suspension(Json(input): Json<TransferSuspensionMessage>) -> impl IntoResponse {
+async fn handle_transfer_suspension(
+    Json(input): Json<TransferSuspensionMessage>,
+) -> impl IntoResponse {
     info!("POST /transfer/suspension");
 
     // schema validation
@@ -154,16 +157,22 @@ async fn handle_transfer_suspension(Json(input): Json<TransferSuspensionMessage>
     debug!("{:?}", a);
 
     // response builder
-    (StatusCode::OK, Json(TransferProcess {
-        context: TRANSFER_CONTEXT.to_string(),
-        _type: TransferMessageTypes::TransferProcess.to_string(),
-        provider_pid: "123".to_string(),
-        consumer_pid: "123".to_string(),
-        state: TransferState::SUSPENDED,
-    })).into_response()
+    (
+        StatusCode::OK,
+        Json(TransferProcess {
+            context: TRANSFER_CONTEXT.to_string(),
+            _type: TransferMessageTypes::TransferProcess.to_string(),
+            provider_pid: "123".to_string(),
+            consumer_pid: "123".to_string(),
+            state: TransferState::SUSPENDED,
+        }),
+    )
+        .into_response()
 }
 
-async fn handle_transfer_completion(Json(input): Json<TransferCompletionMessage>) -> impl IntoResponse {
+async fn handle_transfer_completion(
+    Json(input): Json<TransferCompletionMessage>,
+) -> impl IntoResponse {
     info!("POST /transfer/completion");
 
     // schema validation
@@ -188,16 +197,22 @@ async fn handle_transfer_completion(Json(input): Json<TransferCompletionMessage>
     debug!("{:?}", a);
 
     // response builder
-    (StatusCode::OK, Json(TransferProcess {
-        context: TRANSFER_CONTEXT.to_string(),
-        _type: TransferMessageTypes::TransferProcess.to_string(),
-        provider_pid: "123".to_string(),
-        consumer_pid: "123".to_string(),
-        state: TransferState::COMPLETED,
-    })).into_response()
+    (
+        StatusCode::OK,
+        Json(TransferProcess {
+            context: TRANSFER_CONTEXT.to_string(),
+            _type: TransferMessageTypes::TransferProcess.to_string(),
+            provider_pid: "123".to_string(),
+            consumer_pid: "123".to_string(),
+            state: TransferState::COMPLETED,
+        }),
+    )
+        .into_response()
 }
 
-async fn handle_transfer_termination(Json(input): Json<TransferTerminationMessage>) -> impl IntoResponse {
+async fn handle_transfer_termination(
+    Json(input): Json<TransferTerminationMessage>,
+) -> impl IntoResponse {
     info!("POST /transfer/termination");
 
     // schema validation
@@ -222,12 +237,15 @@ async fn handle_transfer_termination(Json(input): Json<TransferTerminationMessag
     debug!("{:?}", a);
 
     // response builder
-    (StatusCode::OK, Json(TransferProcess {
-        context: TRANSFER_CONTEXT.to_string(),
-        _type: TransferMessageTypes::TransferProcess.to_string(),
-        provider_pid: "123".to_string(),
-        consumer_pid: "123".to_string(),
-        state: TransferState::TERMINATED,
-    })).into_response()
+    (
+        StatusCode::OK,
+        Json(TransferProcess {
+            context: TRANSFER_CONTEXT.to_string(),
+            _type: TransferMessageTypes::TransferProcess.to_string(),
+            provider_pid: "123".to_string(),
+            consumer_pid: "123".to_string(),
+            state: TransferState::TERMINATED,
+        }),
+    )
+        .into_response()
 }
-

@@ -6,7 +6,10 @@ use tracing::info;
 
 pub mod router;
 
-pub async fn start_provider_auth_server(host: &Option<String>, url: &Option<String>) -> anyhow::Result<()> {
+pub async fn start_provider_auth_server(
+    host: &Option<String>,
+    url: &Option<String>,
+) -> anyhow::Result<()> {
     info!("Starting provider auth server...");
 
     // config stuff

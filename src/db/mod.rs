@@ -18,9 +18,8 @@ pub mod schema;
 /// https://stackoverflow.com/questions/70313347/ld-library-not-found-for-lpq-when-build-rust-in-macos
 ///
 pub fn get_db_connection() -> Pool<ConnectionManager<PgConnection>> {
-
     // TODO refactor this for working with different databases type or none...
-    
+
     dotenv().ok();
     let db_url = env::var("DATABASE_URL").unwrap();
     let manager = ConnectionManager::<PgConnection>::new(db_url);

@@ -163,11 +163,21 @@ impl fmt::Display for TransferMessageTypes {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             TransferMessageTypes::TransferError => f.write_str("dspace:TransferError"),
-            TransferMessageTypes::TransferRequestMessage => f.write_str("dspace:TransferRequestMessage"),
-            TransferMessageTypes::TransferStartMessage => f.write_str("dspace:TransferStartMessage"),
-            TransferMessageTypes::TransferSuspensionMessage => f.write_str("dspace:TransferSuspensionMessage"),
-            TransferMessageTypes::TransferCompletionMessage => f.write_str("dspace:TransferCompletionMessage"),
-            TransferMessageTypes::TransferTerminationMessage => f.write_str("dspace:TransferTerminationMessage"),
+            TransferMessageTypes::TransferRequestMessage => {
+                f.write_str("dspace:TransferRequestMessage")
+            }
+            TransferMessageTypes::TransferStartMessage => {
+                f.write_str("dspace:TransferStartMessage")
+            }
+            TransferMessageTypes::TransferSuspensionMessage => {
+                f.write_str("dspace:TransferSuspensionMessage")
+            }
+            TransferMessageTypes::TransferCompletionMessage => {
+                f.write_str("dspace:TransferCompletionMessage")
+            }
+            TransferMessageTypes::TransferTerminationMessage => {
+                f.write_str("dspace:TransferTerminationMessage")
+            }
             TransferMessageTypes::TransferProcess => f.write_str("dspace:TransferProcess"),
         }
     }
@@ -176,11 +186,11 @@ impl fmt::Display for TransferMessageTypes {
 impl fmt::Display for TransferState {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            TransferState::REQUESTED => { f.write_str("dspace:REQUESTED") }
-            TransferState::STARTED => { f.write_str("dspace:STARTED") }
-            TransferState::TERMINATED => { f.write_str("dspace:TERMINATED") }
-            TransferState::COMPLETED => { f.write_str("dspace:COMPLETED") }
-            TransferState::SUSPENDED => { f.write_str("dspace:SUSPENDED") }
+            TransferState::REQUESTED => f.write_str("dspace:REQUESTED"),
+            TransferState::STARTED => f.write_str("dspace:STARTED"),
+            TransferState::TERMINATED => f.write_str("dspace:TERMINATED"),
+            TransferState::COMPLETED => f.write_str("dspace:COMPLETED"),
+            TransferState::SUSPENDED => f.write_str("dspace:SUSPENDED"),
         }
     }
 }

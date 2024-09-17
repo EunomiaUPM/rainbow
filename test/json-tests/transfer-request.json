@@ -18,11 +18,6 @@
         "@type": "dspace:EndpointProperty",
         "dspace:name": "authType",
         "dspace:value": "bearer"
-      },
-      {
-        "@type": "dspace:EndpointProperty",
-        "dspace:name": "contentType",
-        "dspace:value": "application/vnd.apache.parquet"
       }
     ]
   },
