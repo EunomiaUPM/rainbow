@@ -1,3 +1,9 @@
+pub mod server;
+pub mod control_plane;
+pub mod middleware;
+pub mod data_plane;
+mod kickoff_router;
+
 use std::fs;
 
 use once_cell::sync::Lazy;
@@ -6,8 +12,8 @@ use tracing::info;
 use tracing::log::debug;
 use uuid::Uuid;
 
+use crate::transfer::common::misc_router::VersionResponse;
 use crate::transfer::protocol::messages::*;
-use crate::transfer::provider::misc_router::VersionResponse;
 
 static CLIENT: Lazy<Client> = Lazy::new(|| Client::new());
 
@@ -42,7 +48,7 @@ pub async fn start_transfer_request(
     info!("Starting transfer from consumer...");
 
     // config stuff
-    let path = get_provider_url("/transfer/request", host, url);
+    let path = get_provider_url("/transfers/request", host, url);
     let file = get_json_file("transfer-request.json")?;
     let mut data = serde_json::from_str::<TransferRequestMessage>(&file)?;
     let uuid = Uuid::new_v4();
@@ -57,10 +63,8 @@ pub async fn start_transfer_request(
         .json(&data)
         .send()
         .await?;
-    let tp = serde_json::from_str::<TransferProcess>(&res.text().await?)?;
+    debug!("{}", &res.text().await?);
 
-    // manage response...
-    debug!("{}", serde_json::to_string_pretty(&tp)?);
     Ok(())
 }
 
@@ -71,7 +75,7 @@ pub async fn start_transfer_start(
     info!("Starting transfer...");
 
     // config stuff
-    let path = get_provider_url("/transfer/start", host, url);
+    let path = get_provider_url("/transfers/start", host, url);
     let file = get_json_file("transfer-start.json")?;
     let data = serde_json::from_str::<TransferStartMessage>(&file)?;
 
@@ -92,7 +96,7 @@ pub async fn start_transfer_suspension(
     info!("Starting transfer suspension...");
 
     // config stuff
-    let path = get_provider_url("/transfer/suspension", host, url);
+    let path = get_provider_url("/transfers/suspension", host, url);
     let file = get_json_file("transfer-suspension.json")?;
     let data = serde_json::from_str::<TransferSuspensionMessage>(&file)?;
 
@@ -113,7 +117,7 @@ pub async fn start_transfer_completion(
     info!("Starting transfer completion...");
 
     // config stuff
-    let path = get_provider_url("/transfer/completion", host, url);
+    let path = get_provider_url("/transfers/completion", host, url);
     let file = get_json_file("transfer-completion.json")?;
     let data = serde_json::from_str::<TransferCompletionMessage>(&file)?;
 
@@ -134,7 +138,7 @@ pub async fn start_transfer_termination(
     info!("Starting transfer termination...");
 
     // config stuff
-    let path = get_provider_url("/transfer/termination", host, url);
+    let path = get_provider_url("/transfers/termination", host, url);
     let file = get_json_file("transfer-termination.json")?;
     let data = serde_json::from_str::<TransferTerminationMessage>(&file)?;
 

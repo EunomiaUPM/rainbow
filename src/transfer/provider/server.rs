@@ -4,10 +4,10 @@ use tokio::net::TcpListener;
 use tower_http::trace::TraceLayer;
 use tracing::info;
 
+use crate::transfer::common::misc_router;
 use crate::transfer::provider::control_plane;
 use crate::transfer::provider::data_plane;
 use crate::transfer::provider::middleware::{authentication_middleware, authorization_middleware};
-use crate::transfer::provider::misc_router;
 
 pub async fn start_provider_server(host: &Option<String>, url: &Option<String>) -> Result<()> {
     // config stuff

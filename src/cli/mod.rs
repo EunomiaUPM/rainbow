@@ -3,6 +3,8 @@ use clap::{Args, Parser, Subcommand};
 use tracing::{debug, info};
 
 use crate::auth::start_provider_auth_server;
+use crate::cli::DataSpaceTransferRoles::Consumer;
+use crate::transfer::consumer::server::start_consumer_server;
 use crate::transfer::consumer::*;
 use crate::transfer::provider::server::start_provider_server;
 
@@ -29,6 +31,10 @@ pub struct ConsumerArgs {
     provider_url: Option<String>,
     #[arg(long)]
     provider_port: Option<String>,
+    #[arg(long)]
+    host_url: Option<String>,
+    #[arg(long)]
+    host_port: Option<String>,
     #[command(subcommand)]
     command: ConsumerCommands,
 }
@@ -57,6 +63,7 @@ pub enum ConsumerCommands {
     TransferSuspension {},
     TransferCompletion {},
     TransferTermination {},
+    Start {},
 }
 
 pub async fn init_command_line() -> Result<()> {
@@ -83,6 +90,9 @@ pub async fn init_command_line() -> Result<()> {
             }
             ConsumerCommands::TransferTermination { .. } => {
                 start_transfer_termination(&args.provider_url, &args.provider_port).await?;
+            }
+            ConsumerCommands::Start { .. } => {
+                start_consumer_server(&args.host_url, &args.host_port).await?;
             }
         },
         DataSpaceTransferRoles::Provider(args) => match &args.command {

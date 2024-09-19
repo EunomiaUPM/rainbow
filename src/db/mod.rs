@@ -13,7 +13,8 @@ pub mod schema;
 /// It could happen in some systems that an error related with -ld,
 /// with a message such as:
 /// ld: library not found for -lpq when build rust in macOS
-/// It's a problem of linking homebrew and libpg with postgres in macOS
+/// It's a problem of linking homebrew and libpq with postgres in macOS
+/// Likewise could happen in ubuntu, so: sudo apt install libpq-dev
 /// Solution here:
 /// https://stackoverflow.com/questions/70313347/ld-library-not-found-for-lpq-when-build-rust-in-macos
 ///

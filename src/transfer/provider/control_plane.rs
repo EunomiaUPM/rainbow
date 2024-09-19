@@ -13,7 +13,7 @@ use uuid::{uuid, Uuid};
 
 use crate::db::get_db_connection;
 use crate::db::models::{CreateTransferSession, TransferSession};
-use crate::transfer::common::utils::{is_agreement_valid, is_consumer_pid_valid, is_provider_valid};
+use crate::transfer::common::utils::{has_data_address_in_push, is_agreement_valid, is_consumer_pid_valid, is_provider_valid};
 use crate::transfer::persistence::sql_persistence::SQLPersistence;
 use crate::transfer::persistence::Persistence;
 use crate::transfer::protocol::messages::*;
@@ -22,11 +22,12 @@ use crate::transfer::schemas::*;
 
 pub fn router() -> Router {
     Router::new()
-        .route("/transfer/request", post(handle_transfer_request))
-        .route("/transfer/start", post(handle_transfer_start))
-        .route("/transfer/suspension", post(handle_transfer_suspension))
-        .route("/transfer/completion", post(handle_transfer_completion))
-        .route("/transfer/termination", post(handle_transfer_termination))
+        .route("/transfers/request", post(handle_transfer_request))
+        // TODO implement "GET /transfers/:providerPid"
+        .route("/transfers/start", post(handle_transfer_start))
+        .route("/transfers/suspension", post(handle_transfer_suspension))
+        .route("/transfers/completion", post(handle_transfer_completion))
+        .route("/transfers/termination", post(handle_transfer_termination))
 }
 
 async fn handle_transfer_request(Json(input): Json<TransferRequestMessage>) -> impl IntoResponse {
@@ -49,22 +50,30 @@ async fn handle_transfer_request(Json(input): Json<TransferRequestMessage>) -> i
         return TransferErrorType::AgreementError.into_response();
     }
 
-    // TODO refactor for proper forwarding...
-    // forwarding data
-    let endpoint = input.data_address.unwrap().endpoint;
-    debug!(endpoint);
-    let res = Client::new().get(endpoint).send().await;
-
-    if let Err(err) = res {
-        debug!("{}", err.to_string());
-        return (StatusCode::INTERNAL_SERVER_ERROR).into_response();
+    // dct:format is push, dataAdress must be
+    if has_data_address_in_push(&input.data_address, &input.format).unwrap() == false {
+        return TransferErrorType::DataAddressCannotBeNullOnPushError.into_response();
     }
 
-    let data = res.unwrap().bytes().await.unwrap();
-    debug!("{:?}", data);
+    // TODO refactor for proper forwarding...
+    // forwarding data
+    if let Some(data_address) = input.data_address {
+        let endpoint = data_address.endpoint;
+        debug!(endpoint);
+        let res = Client::new().get(endpoint).send().await;
+
+        if let Err(err) = res {
+            debug!("{}", err.to_string());
+            return (StatusCode::INTERNAL_SERVER_ERROR).into_response();
+        }
+        let data = res.unwrap().bytes().await.unwrap();
+        debug!("{:?}", data);
+    }
+
+
     let id_uuid = Uuid::new_v4();
-    let provide_uuid = Uuid::new_v4();
-    let provider_pid = format!("urn:uuid:{}", provide_uuid.to_string());
+    let provider_uuid = Uuid::new_v4();
+    let provider_pid = format!("urn:uuid:{}", provider_uuid.to_string());
 
     // persist
     let new_transaction = CreateTransferSession {
@@ -74,8 +83,8 @@ async fn handle_transfer_request(Json(input): Json<TransferRequestMessage>) -> i
         state: TransferState::REQUESTED.to_string(),
         created_at: chrono::Utc::now().naive_utc(),
     };
-    let a = SQLPersistence::persist_transfer_request(new_transaction);
-    debug!("{:?}", a);
+    let db_transaction = SQLPersistence::persist_transfer_request(new_transaction);
+    debug!("{:?}", db_transaction);
 
     // response builder
     (
