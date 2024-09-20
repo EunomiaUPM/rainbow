@@ -1,6 +1,6 @@
 use crate::transfer::common::misc_router;
+use crate::transfer::consumer::control_plane;
 use crate::transfer::consumer::kickoff_router;
-use crate::transfer::provider::control_plane;
 use anyhow::Result;
 use axum::{middleware, serve, Router};
 use tokio::net::TcpListener;

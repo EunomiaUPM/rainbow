@@ -1,13 +1,11 @@
+use crate::transfer::common::misc_router;
+use crate::transfer::provider::http::middleware::{authentication_middleware, authorization_middleware};
+use crate::transfer::provider::http::router;
 use anyhow::Result;
 use axum::{middleware, serve, Router};
 use tokio::net::TcpListener;
 use tower_http::trace::TraceLayer;
 use tracing::info;
-
-use crate::transfer::common::misc_router;
-use crate::transfer::provider::control_plane;
-use crate::transfer::provider::data_plane;
-use crate::transfer::provider::middleware::{authentication_middleware, authorization_middleware};
 
 pub async fn start_provider_server(host: &Option<String>, url: &Option<String>) -> Result<()> {
     // config stuff
@@ -19,8 +17,7 @@ pub async fn start_provider_server(host: &Option<String>, url: &Option<String>) 
     // create routing system
     let server = Router::new()
         .merge(misc_router::router())
-        .merge(control_plane::router())
-        .merge(data_plane::router())
+        .merge(router::router())
         .layer(middleware::from_fn(authorization_middleware)) // TODO put middleware where needed
         .layer(middleware::from_fn(authentication_middleware))
         .layer(TraceLayer::new_for_http());

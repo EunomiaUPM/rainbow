@@ -1,12 +1,11 @@
 use tracing::{info, Level};
 
+pub mod auth;
 pub mod catalog;
 pub mod cli;
 pub mod config;
-pub mod transfer;
-
-mod auth;
 pub mod db;
+pub mod transfer;
 
 const INFO: &str = "
 ----------

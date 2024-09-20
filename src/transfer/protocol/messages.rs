@@ -1,9 +1,10 @@
-use std::fmt;
-use std::fmt::Write;
-
 use crate::transfer::protocol::formats::DctFormats;
+use crate::transfer::provider::err::TransferErrorType;
+use anyhow::Error;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::fmt;
+use std::fmt::Write;
 
 pub static TRANSFER_CONTEXT: &str = "https://w3id.org/dspace/2024/1/context.json";
 
@@ -155,9 +156,9 @@ pub struct TransferError {
     pub context: String,
     #[serde(rename = "@type")]
     pub _type: String,
-    #[serde(rename = "dspace:providerPid")]
+    #[serde(rename = "dspace:providerPid")] // IMPROVEMENT should be optional
     pub provider_pid: String,
-    #[serde(rename = "dspace:consumerPid")]
+    #[serde(rename = "dspace:consumerPid")] // IMPROVEMENT should be optional
     pub consumer_pid: String,
     #[serde(rename = "dspace:code")]
     pub code: String,
@@ -212,6 +213,21 @@ impl fmt::Display for TransferState {
             TransferState::TERMINATED => f.write_str("dspace:TERMINATED"),
             TransferState::COMPLETED => f.write_str("dspace:COMPLETED"),
             TransferState::SUSPENDED => f.write_str("dspace:SUSPENDED"),
+        }
+    }
+}
+
+impl TryFrom<String> for TransferState {
+    type Error = anyhow::Error;
+
+    fn try_from(value: String) -> anyhow::Result<Self, Self::Error> {
+        match value.as_str() {
+            "dspace:REQUESTED" => Ok(TransferState::REQUESTED),
+            "dspace:STARTED" => Ok(TransferState::STARTED),
+            "dspace:TERMINATED" => Ok(TransferState::TERMINATED),
+            "dspace:COMPLETED" => Ok(TransferState::COMPLETED),
+            "dspace:SUSPENDED" => Ok(TransferState::SUSPENDED),
+            _ => Err(Error::from(TransferErrorType::UnknownTransferState)),
         }
     }
 }

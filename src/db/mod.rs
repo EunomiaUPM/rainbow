@@ -4,9 +4,6 @@ use diesel::pg::PgConnection;
 use diesel::r2d2::{ConnectionManager, Pool};
 use dotenvy::dotenv;
 
-pub mod models;
-pub mod schema;
-
 ///
 /// ⚠️Warning!
 /// NOTE of building

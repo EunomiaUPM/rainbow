@@ -34,7 +34,7 @@ impl Serialize for DctFormats {
         };
         let action = match self.action {
             FormatAction::Push => "PUSH",
-            FormatAction::Pull => "PULL"
+            FormatAction::Pull => "PULL",
         };
         let combined = format!("{}_{}", protocol, action);
         serializer.serialize_str(&combined)
@@ -57,12 +57,12 @@ impl<'de> Deserialize<'de> for DctFormats {
             "GRPC" => FormatProtocol::Grpc,
             "KAFKA" => FormatProtocol::Kafka,
             "MQTT" => FormatProtocol::Mqtt,
-            _ => return Err(Error::custom("expected a correct protocol"))
+            _ => return Err(Error::custom("expected a correct protocol")),
         };
         let action = match parts[1] {
             "PUSH" => FormatAction::Push,
             "PULL" => FormatAction::Pull,
-            _ => return Err(Error::custom("expected a correct protocol"))
+            _ => return Err(Error::custom("expected a correct protocol")),
         };
         Ok(DctFormats { protocol, action })
     }

@@ -28,7 +28,8 @@ create-migration:
 	export $(cat $(PWD)/.env | xargs)
 	diesel migration generate \
 		--diff-schema $(SCHEMA_NAME) \
-		--database-url $(DATABASE_URL)
+		--database-url $(DATABASE_URL) \
+		--schema-key provider
 
 run-migration:
 	diesel migration run \

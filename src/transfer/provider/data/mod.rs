@@ -1,3 +1,3 @@
-mod schema;
-mod models;
-mod repo;
+pub mod models;
+pub mod repo;
+pub mod schema;

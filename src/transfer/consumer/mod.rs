@@ -1,8 +1,8 @@
-pub mod server;
 pub mod control_plane;
-pub mod middleware;
 pub mod data_plane;
 mod kickoff_router;
+pub mod middleware;
+pub mod server;
 
 use std::fs;
 
@@ -83,9 +83,8 @@ pub async fn start_transfer_start(
 
     // request
     let res = CLIENT.post(path).json(&data).send().await?;
-
     // manage response...
-    debug!("{:#?}", &res);
+    debug!("{}", &res.text().await?);
     Ok(())
 }
 
@@ -103,10 +102,9 @@ pub async fn start_transfer_suspension(
     debug!("{:#?}", &data);
 
     // request
-    let _ = CLIENT.post(path).json(&data).send().await?;
-
+    let res = CLIENT.post(path).json(&data).send().await?;
     // manage response...
-    debug!("{:#?}", &data);
+    debug!("{}", &res.text().await?);
     Ok(())
 }
 
@@ -124,10 +122,9 @@ pub async fn start_transfer_completion(
     debug!("{:#?}", &data);
 
     // request
-    let _ = CLIENT.post(path).json(&data).send().await?;
-
+    let res = CLIENT.post(path).json(&data).send().await?;
     // manage response...
-    debug!("{:#?}", &data);
+    debug!("{}", &res.text().await?);
     Ok(())
 }
 
@@ -145,9 +142,8 @@ pub async fn start_transfer_termination(
     debug!("{:#?}", &data);
 
     // request
-    let _ = CLIENT.post(path).json(&data).send().await?;
-
+    let res = CLIENT.post(path).json(&data).send().await?;
     // manage response...
-    debug!("{:#?}", &data);
+    debug!("{}", &res.text().await?);
     Ok(())
 }

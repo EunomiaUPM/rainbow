@@ -1,2 +1,2 @@
-mod control_plane;
-mod data_plane;
+pub mod control_plane;
+pub mod data_plane;

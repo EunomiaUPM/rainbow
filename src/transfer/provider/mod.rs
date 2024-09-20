@@ -1,10 +1,6 @@
-pub mod control_plane;
-pub mod data_plane;
+pub mod cli;
+pub mod data;
 pub mod err;
-pub mod middleware;
-pub mod server;
-mod lib;
-mod http;
-mod grpc;
-mod cli;
-mod data;
+pub mod grpc;
+pub mod http;
+pub mod lib;

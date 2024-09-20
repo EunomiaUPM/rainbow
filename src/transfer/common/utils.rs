@@ -20,11 +20,14 @@ pub fn is_provider_valid(provider_pid: &String) -> anyhow::Result<bool> {
     Ok(true)
 }
 
-pub fn has_data_address_in_push(data_address: &Option<DataAddress>, format: &DctFormats) -> anyhow::Result<bool> {
+pub fn has_data_address_in_push(
+    data_address: &Option<DataAddress>,
+    format: &DctFormats,
+) -> anyhow::Result<bool> {
     let format_action = &format.action;
     match format_action {
         FormatAction::Push => Ok(data_address.is_some()),
-        FormatAction::Pull => Ok(data_address.is_none())
+        FormatAction::Pull => Ok(data_address.is_none()),
     }
 }
 

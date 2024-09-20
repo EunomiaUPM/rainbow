@@ -1,6 +1,6 @@
 {
-  "@context":  "https://w3id.org/dspace/2024/1/context.json",
+  "@context": "https://w3id.org/dspace/2024/1/context.json",
   "@type": "dspace:TransferCompletionMessage",
-  "dspace:providerPid": "urn:uuid:a343fcbf-99fc-4ce8-8e9b-148c97605aab",
+  "dspace:providerPid": "urn:uuid:188e0d6f-aec9-467c-9d56-279205269093",
   "dspace:consumerPid": "urn:uuid:32541fe6-c580-409e-85a8-8a9a32fbe833"
 }

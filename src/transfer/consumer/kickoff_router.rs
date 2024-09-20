@@ -5,8 +5,7 @@ use axum::routing::post;
 use axum::{Json, Router};
 
 pub fn router() -> Router {
-    Router::new()
-        .route("/transfers", post(handle_kickoff_transfer))
+    Router::new().route("/transfers", post(handle_kickoff_transfer))
 }
 
 async fn handle_kickoff_transfer(Json(input): Json<TransferKickOff>) -> impl IntoResponse {
