@@ -1,11 +1,20 @@
 use crate::transfer::common::misc_router;
-use crate::transfer::consumer::control_plane;
-use crate::transfer::consumer::kickoff_router;
+use crate::transfer::consumer::http::router;
+use crate::transfer::provider::http::middleware::{authentication_middleware, authorization_middleware};
 use anyhow::Result;
 use axum::{middleware, serve, Router};
 use tokio::net::TcpListener;
 use tower_http::trace::TraceLayer;
 use tracing::info;
+
+pub async fn create_consumer_router() -> Router {
+    // create routing system
+    let server = Router::new()
+        .merge(misc_router::router())
+        .merge(router::router())
+        .layer(TraceLayer::new_for_http());
+    server
+}
 
 pub async fn start_consumer_server(host: &Option<String>, url: &Option<String>) -> Result<()> {
     // config stuff
@@ -14,16 +23,9 @@ pub async fn start_consumer_server(host: &Option<String>, url: &Option<String>) 
     let server_message = format!("Starting consumer server in http://{}:{}", host, url);
     info!("{}", server_message);
 
-    // create routing system
-    let server = Router::new()
-        .merge(misc_router::router())
-        .merge(kickoff_router::router())
-        .merge(control_plane::router())
-        .layer(TraceLayer::new_for_http());
-
     // start server
     let listener = TcpListener::bind(format!("{}:{}", host, url)).await?;
-    serve(listener, server).await?;
+    serve(listener, create_consumer_router().await).await?;
 
     Ok(())
 }

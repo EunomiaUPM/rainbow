@@ -17,6 +17,7 @@ use dotenvy::dotenv;
 ///
 pub fn get_db_connection() -> Pool<ConnectionManager<PgConnection>> {
     // TODO refactor this for working with different databases type or none...
+    // TODO change the way of doing migrations...
 
     dotenv().ok();
     let db_url = env::var("DATABASE_URL").unwrap();

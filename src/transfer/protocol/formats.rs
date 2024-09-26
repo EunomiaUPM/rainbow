@@ -48,7 +48,7 @@ impl<'de> Deserialize<'de> for DctFormats {
     {
         let v = String::deserialize(deserializer)?;
         let parts: Vec<&str> = v.split("_").collect();
-        if (parts.len() != 2) {
+        if parts.len() != 2 {
             return Err(Error::custom("Expected string in format PROTOCOL_ACTION"));
         }
         let protocol = match parts[0] {

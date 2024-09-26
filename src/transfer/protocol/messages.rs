@@ -4,7 +4,6 @@ use anyhow::Error;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::fmt;
-use std::fmt::Write;
 
 pub static TRANSFER_CONTEXT: &str = "https://w3id.org/dspace/2024/1/context.json";
 
@@ -108,7 +107,7 @@ pub struct EndpointProperty {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct TransferProcess {
+pub struct TransferProcessMessage {
     #[serde(rename = "@context")]
     pub context: String,
     #[serde(rename = "@type")]
@@ -174,7 +173,7 @@ pub enum TransferMessageTypes {
     TransferSuspensionMessage,
     TransferCompletionMessage,
     TransferTerminationMessage,
-    TransferProcess,
+    TransferProcessMessage,
     TransferKickOffMessage,
 }
 
@@ -197,7 +196,7 @@ impl fmt::Display for TransferMessageTypes {
             TransferMessageTypes::TransferTerminationMessage => {
                 f.write_str("dspace:TransferTerminationMessage")
             }
-            TransferMessageTypes::TransferProcess => f.write_str("dspace:TransferProcess"),
+            TransferMessageTypes::TransferProcessMessage => f.write_str("dspace:TransferProcess"),
             TransferMessageTypes::TransferKickOffMessage => {
                 f.write_str("dspace:TransferKickOffMessage")
             }

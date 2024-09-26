@@ -4,8 +4,8 @@ use uuid::Uuid;
 
 #[derive(Queryable, Identifiable, Selectable, Debug, PartialEq, Insertable)]
 #[diesel(table_name=transfer_processes)]
-#[primary_key(provider_pid)]
-pub struct TransferProcess {
+#[diesel(primary_key(provider_pid))]
+pub struct TransferProcessModel {
     pub provider_pid: Uuid,
     pub consumer_pid: Uuid,
     pub state: String,
@@ -15,7 +15,7 @@ pub struct TransferProcess {
 
 #[derive(Queryable, Identifiable, Selectable, Debug, PartialEq, Insertable)]
 #[diesel(table_name=transfer_messages)]
-pub struct TransferMessage {
+pub struct TransferMessageModel {
     pub id: Uuid,
     pub transfer_process_id: Uuid,
     pub created_at: chrono::NaiveDateTime,
@@ -24,7 +24,7 @@ pub struct TransferMessage {
 
 #[derive(Queryable, Identifiable, Selectable, Debug, PartialEq, Insertable)]
 #[diesel(table_name=transfer_message_fields)]
-pub struct TransferField {
+pub struct TransferFieldModel {
     pub id: Uuid,
     pub transfer_message_id: Uuid,
     pub key: String,

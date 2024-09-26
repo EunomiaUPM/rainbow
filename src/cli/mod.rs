@@ -4,7 +4,7 @@ use tracing::{debug, info};
 
 use crate::auth::start_provider_auth_server;
 use crate::cli::DataSpaceTransferRoles::Consumer;
-use crate::transfer::consumer::server::start_consumer_server;
+use crate::transfer::consumer::http::server::start_consumer_server;
 use crate::transfer::consumer::*;
 use crate::transfer::provider::http::server::start_provider_server;
 

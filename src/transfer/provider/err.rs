@@ -27,6 +27,8 @@ pub enum TransferErrorType {
     // errores de procolo de transporte
     #[error("Unknown TransferState")]
     UnknownTransferState,
+    #[error("Unknown Callback")]
+    CallbackClientError,
 }
 
 impl IntoResponse for TransferErrorType {
@@ -94,6 +96,17 @@ impl IntoResponse for TransferErrorType {
                 }),
             ),
             e @ TransferErrorType::UnknownTransferState => (
+                StatusCode::BAD_REQUEST,
+                Json(TransferError {
+                    context: TRANSFER_CONTEXT.to_string(),
+                    _type: TransferMessageTypes::TransferError.to_string(),
+                    provider_pid: "123".to_string(),
+                    consumer_pid: "123".to_string(),
+                    code: "400".to_string(),
+                    reason: vec![e.to_string()],
+                }),
+            ),
+            e @ TransferErrorType::CallbackClientError => (
                 StatusCode::BAD_REQUEST,
                 Json(TransferError {
                     context: TRANSFER_CONTEXT.to_string(),

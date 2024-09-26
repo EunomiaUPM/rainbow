@@ -1,7 +1,6 @@
 use crate::transfer::protocol::formats::{DctFormats, FormatAction};
 use crate::transfer::protocol::messages::DataAddress;
 use crate::transfer::provider::err::TransferErrorType;
-use std::cmp::PartialEq;
 use tracing::debug;
 use uuid::Uuid;
 
@@ -34,4 +33,14 @@ pub fn has_data_address_in_push(
 pub fn does_callback_exist(callback_id: Uuid) -> anyhow::Result<bool> {
     debug!("{}", callback_id.to_string());
     Ok(true)
+}
+
+pub fn convert_uuid_to_uri(uuid: &Uuid) -> anyhow::Result<String> {
+    Ok(format!("urn:uuid:{}", uuid.to_string()))
+}
+
+pub fn convert_uri_to_uuid(string: &String) -> anyhow::Result<Uuid> {
+    let string = string.replace("urn:uuid:", "");
+    let uuid = Uuid::parse_str(&string)?;
+    Ok(uuid)
 }

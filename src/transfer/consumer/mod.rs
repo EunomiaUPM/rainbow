@@ -1,8 +1,8 @@
-pub mod control_plane;
-pub mod data_plane;
-mod kickoff_router;
-pub mod middleware;
-pub mod server;
+pub mod cli;
+pub mod data;
+pub mod grpc;
+pub mod http;
+pub mod lib;
 
 use std::fs;
 
@@ -25,7 +25,7 @@ fn get_provider_url(path: &str, host: &Option<String>, url: &Option<String>) -> 
 }
 
 fn get_json_file(path: &str) -> anyhow::Result<String> {
-    let main_path = "./test/json-tests/";
+    let main_path = "./static/json-tests/";
     let file_url = format!("{}{}", main_path, path);
     let json_raw = fs::read_to_string(file_url)?;
     Ok(json_raw)

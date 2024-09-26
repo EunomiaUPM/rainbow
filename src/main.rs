@@ -1,3 +1,8 @@
+#![allow(unused_imports)]
+
+use crate::db::get_db_connection;
+use diesel::r2d2::{ConnectionManager, Pool};
+use diesel::{PgConnection, RunQueryDsl};
 use tracing::{info, Level};
 
 pub mod auth;
@@ -24,6 +29,9 @@ async fn main() -> anyhow::Result<()> {
         .init();
 
     info!("{}", INFO);
+
+    // Create databases
+    // TODO take it to cli start - start different databases...
 
     // Cli parser
     cli::init_command_line().await?;

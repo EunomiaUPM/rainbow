@@ -7,6 +7,6 @@ services:
     environment:
       POSTGRES_PASSWORD: ds-protocol
       POSTGRES_USER: ds-protocol
-      POSTGRES_DB: ds-protocol
+    #      POSTGRES_DB: ds-protocol
     ports:
       - "5454:5432"

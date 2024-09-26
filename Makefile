@@ -3,8 +3,8 @@ BINARY_NAME=rainbow
 RELEASE_DIR=target/release
 RELEASE_BIN_DIR=bin
 VERSION=0_1
-SCHEMA_NAME=b
-DATABASE_URL=postgresql://ds-protocol:ds-protocol@localhost:5454/ds-protocol
+PROVIDER_DATABASE_URL=postgresql://ds-protocol:ds-protocol@localhost:5454/ds-protocol
+CONSUMER_DATABASE_URL=postgresql://ds-protocol:ds-protocol@localhost:5454/ds-protocol
 
 all:
 	build
@@ -24,12 +24,29 @@ dev:
 build-container:
 	echo "container..."
 
-create-migration:
+create-provider-migration:
 	export $(cat $(PWD)/.env | xargs)
 	diesel migration generate \
-		--diff-schema $(SCHEMA_NAME) \
-		--database-url $(DATABASE_URL) \
+		--diff-schema provider \
+		--database-url $(PROVIDER_DATABASE_URL) \
 		--schema-key provider
+
+run-provider-migration:
+	diesel migration run \
+		--database-url $(PROVIDER_DATABASE_URL)
+		--schema-key provider
+
+create-consumer-migration:
+	export $(cat $(PWD)/.env | xargs)
+	diesel migration generate \
+		--diff-schema consumer \
+		--database-url $(CONSUMER_DATABASE_URL) \
+		--schema-key consumer
+
+run-consumer-migration:
+	diesel migration run \
+		--database-url $(CONSUMER_DATABASE_URL)
+		--schema-key consumer
 
 run-migration:
 	diesel migration run \

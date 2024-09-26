@@ -1,14 +1,17 @@
+use crate::transfer::common::utils::convert_uuid_to_uri;
 use crate::transfer::common::utils::{
     has_data_address_in_push, is_agreement_valid, is_consumer_pid_valid, is_provider_valid,
 };
+use crate::transfer::protocol::messages::TransferMessageTypes;
 use crate::transfer::protocol::messages::{
-    TransferCompletionMessage, TransferRequestMessage, TransferStartMessage, TransferState,
-    TransferSuspensionMessage, TransferTerminationMessage,
+    TransferCompletionMessage, TransferProcessMessage, TransferRequestMessage,
+    TransferStartMessage, TransferState, TransferSuspensionMessage, TransferTerminationMessage,
+    TRANSFER_CONTEXT,
 };
-use crate::transfer::provider::data::models::{TransferMessage, TransferProcess};
+use crate::transfer::provider::data::models::{TransferMessageModel, TransferProcessModel};
 use crate::transfer::provider::data::repo::{
-    create_transfer_message, create_transfer_process, get_transfer_process_by_provider_pid,
-    update_transfer_process_by_provider_pid,
+    create_transfer_fields, create_transfer_message, create_transfer_process,
+    get_transfer_process_by_provider_pid, update_transfer_process_by_provider_pid,
 };
 use crate::transfer::provider::err::TransferErrorType;
 use crate::transfer::schemas::{
@@ -19,12 +22,13 @@ use anyhow::Error;
 use axum::extract::Path;
 use axum::Json;
 use jsonschema::output::BasicOutput;
+use serde_json::Value;
 use tracing::{debug, error};
 use uuid::Uuid;
 
 pub fn get_transfer_requests_by_provider(
     Path(provider_pid): Path<Uuid>,
-) -> anyhow::Result<Option<TransferProcess>> {
+) -> anyhow::Result<Option<TransferProcessModel>> {
     // access info
     let transaction = get_transfer_process_by_provider_pid(provider_pid)?;
     Ok(transaction)
@@ -32,7 +36,7 @@ pub fn get_transfer_requests_by_provider(
 
 pub fn transfer_request(
     Json(input): Json<&TransferRequestMessage>,
-) -> anyhow::Result<&TransferRequestMessage> {
+) -> anyhow::Result<TransferProcessMessage> {
     // schema validation
     let input_as_value = serde_json::value::to_value(&input)?;
     let validation = TRANSFER_REQUEST_SCHEMA.apply(&input_as_value).basic();
@@ -62,7 +66,7 @@ pub fn transfer_request(
     let created_at = chrono::Utc::now().naive_utc();
     let message_type = input._type.clone();
 
-    create_transfer_process(TransferProcess {
+    create_transfer_process(TransferProcessModel {
         provider_pid,
         consumer_pid: input.consumer_pid.parse()?,
         state: TransferState::REQUESTED.to_string(),
@@ -70,17 +74,28 @@ pub fn transfer_request(
         updated_at: None,
     })?;
 
-    create_transfer_message(TransferMessage {
-        id: Uuid::new_v4(),
+    let message_id = Uuid::new_v4();
+    create_transfer_message(TransferMessageModel {
+        id: message_id,
         transfer_process_id: provider_pid,
         created_at,
         message_type,
     })?;
+    create_transfer_fields(&serde_json::to_value(&input)?, message_id)?;
 
     // provide data_plane
     // TODO manage data plane
 
-    Ok(input)
+    // send back TransferProcessMessage
+    let tp = TransferProcessMessage {
+        context: TRANSFER_CONTEXT.to_string(),
+        _type: TransferMessageTypes::TransferProcessMessage.to_string(),
+        provider_pid: convert_uuid_to_uri(&provider_pid)?,
+        consumer_pid: input.consumer_pid.clone(),
+        state: TransferState::REQUESTED,
+    };
+
+    Ok(tp)
 }
 
 pub fn transfer_start(Json(input): Json<&TransferStartMessage>) -> anyhow::Result<()> {
@@ -107,7 +122,7 @@ pub fn transfer_start(Json(input): Json<&TransferStartMessage>) -> anyhow::Resul
         TransferState::STARTED,
     )?;
     if let Some(_) = transaction {
-        create_transfer_message(TransferMessage {
+        create_transfer_message(TransferMessageModel {
             id: Uuid::new_v4(),
             transfer_process_id: input.provider_pid.parse()?,
             created_at: chrono::Utc::now().naive_utc(),
@@ -146,7 +161,7 @@ pub fn transfer_suspension(Json(input): Json<&TransferSuspensionMessage>) -> any
         TransferState::SUSPENDED,
     )?;
     if let Some(_) = transaction {
-        create_transfer_message(TransferMessage {
+        create_transfer_message(TransferMessageModel {
             id: Uuid::new_v4(),
             transfer_process_id: input.provider_pid.parse()?,
             created_at: chrono::Utc::now().naive_utc(),
@@ -184,7 +199,7 @@ pub fn transfer_completion(Json(input): Json<&TransferCompletionMessage>) -> any
         TransferState::COMPLETED,
     )?;
     if let Some(_) = transaction {
-        create_transfer_message(TransferMessage {
+        create_transfer_message(TransferMessageModel {
             id: Uuid::new_v4(),
             transfer_process_id: input.provider_pid.parse()?,
             created_at: chrono::Utc::now().naive_utc(),
@@ -222,7 +237,7 @@ pub fn transfer_termination(Json(input): Json<&TransferTerminationMessage>) -> a
         TransferState::TERMINATED,
     )?;
     if let Some(_) = transaction {
-        create_transfer_message(TransferMessage {
+        create_transfer_message(TransferMessageModel {
             id: Uuid::new_v4(),
             transfer_process_id: input.provider_pid.parse()?,
             created_at: chrono::Utc::now().naive_utc(),

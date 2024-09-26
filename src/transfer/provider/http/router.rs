@@ -1,7 +1,7 @@
 use crate::transfer::protocol::messages::{
-    TransferCompletionMessage, TransferMessageTypes, TransferProcess, TransferRequestMessage,
-    TransferStartMessage, TransferState, TransferSuspensionMessage, TransferTerminationMessage,
-    TRANSFER_CONTEXT,
+    TransferCompletionMessage, TransferMessageTypes, TransferProcessMessage,
+    TransferRequestMessage, TransferStartMessage, TransferState, TransferSuspensionMessage,
+    TransferTerminationMessage, TRANSFER_CONTEXT,
 };
 use crate::transfer::provider::data::repo::get_transfer_process_by_provider_pid;
 use crate::transfer::provider::err::TransferErrorType;
@@ -39,9 +39,9 @@ async fn handle_get_transfer_by_provider(Path(provider_pid): Path<Uuid>) -> impl
     match transfer {
         Some(transfer_process) => (
             StatusCode::OK,
-            Json(TransferProcess {
+            Json(TransferProcessMessage {
                 context: TRANSFER_CONTEXT.to_string(),
-                _type: TransferMessageTypes::TransferProcess.to_string(),
+                _type: TransferMessageTypes::TransferProcessMessage.to_string(),
                 provider_pid: transfer_process.provider_pid.to_string(),
                 consumer_pid: transfer_process.consumer_pid.to_string(),
                 state: TransferState::try_from(transfer_process.state).unwrap(),
@@ -56,7 +56,7 @@ async fn handle_transfer_request(Json(input): Json<TransferRequestMessage>) -> i
     info!("POST /transfers/request");
 
     match transfer_request(Json(&input)) {
-        Ok(_) => (StatusCode::OK, Json(input)).into_response(),
+        Ok(tp) => (StatusCode::CREATED, Json(tp)).into_response(),
         Err(e) => match e.downcast::<TransferErrorType>() {
             Ok(transfer_error) => transfer_error.into_response(),
             Err(e_) => {

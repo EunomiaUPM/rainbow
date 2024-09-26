@@ -7,13 +7,7 @@ use tokio::net::TcpListener;
 use tower_http::trace::TraceLayer;
 use tracing::info;
 
-pub async fn start_provider_server(host: &Option<String>, url: &Option<String>) -> Result<()> {
-    // config stuff
-    let host = host.clone().unwrap_or("localhost".to_owned());
-    let url = url.clone().unwrap_or("1234".to_owned());
-    let server_message = format!("Starting provider server in http://{}:{}", host, url);
-    info!("{}", server_message);
-
+pub async fn create_provider_router() -> Router {
     // create routing system
     let server = Router::new()
         .merge(misc_router::router())
@@ -21,10 +15,19 @@ pub async fn start_provider_server(host: &Option<String>, url: &Option<String>) 
         .layer(middleware::from_fn(authorization_middleware)) // TODO put middleware where needed
         .layer(middleware::from_fn(authentication_middleware))
         .layer(TraceLayer::new_for_http());
+    server
+}
+
+pub async fn start_provider_server(host: &Option<String>, url: &Option<String>) -> Result<()> {
+    // config stuff
+    let host = host.clone().unwrap_or("localhost".to_owned());
+    let url = url.clone().unwrap_or("1234".to_owned());
+    let server_message = format!("Starting provider server in http://{}:{}", host, url);
+    info!("{}", server_message);
 
     // start server
     let listener = TcpListener::bind(format!("{}:{}", host, url)).await?;
-    serve(listener, server).await?;
+    serve(listener, create_provider_router().await).await?;
 
     Ok(())
 }
