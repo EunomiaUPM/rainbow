@@ -3,6 +3,12 @@ use axum::body::Body;
 use axum::http;
 use axum::http::{Request, StatusCode};
 use http_body_util::BodyExt;
+use rainbow::fake_catalog::data::models::DatasetsCatalogModel;
+use rainbow::fake_catalog::data::repo::delete_dataset_repo;
+use rainbow::fake_catalog::lib::{create_dataset, delete_dataset};
+use rainbow::fake_contracts::data::models::ContractAgreementsModel;
+use rainbow::fake_contracts::data::repo::delete_agreement_repo;
+use rainbow::fake_contracts::lib::create_agreement;
 use rainbow::transfer::common::utils::convert_uri_to_uuid;
 use rainbow::transfer::consumer::http::server::create_consumer_router;
 use rainbow::transfer::consumer::lib::callbacks_controller::create_new_callback;
@@ -10,11 +16,13 @@ use rainbow::transfer::protocol::messages::{
     TransferMessageTypes, TransferProcessMessage, TransferRequestMessage, TransferStartMessage,
     TransferState,
 };
-use rainbow::transfer::provider::data::repo::update_transfer_process_by_provider_pid;
+use rainbow::transfer::provider::data::repo::{get_transfer_process_by_provider_pid, update_transfer_process_by_provider_pid};
 use rainbow::transfer::provider::http::server::create_provider_router;
+use rainbow::transfer::provider::lib::control_plane::get_transfer_requests_by_provider;
 use std::fs;
 use tower::ServiceExt;
 use tracing::{debug, error, info, trace};
+use tracing_subscriber::fmt::format;
 use tracing_test::traced_test;
 use uuid::Uuid;
 
@@ -34,11 +42,57 @@ where
     Ok(body)
 }
 
+async fn setup_env() -> anyhow::Result<(Vec<DatasetsCatalogModel>, Vec<ContractAgreementsModel>)> {
+    let fake_parquet_url = "http://localhost:1236/data-space";
+    let fake_parquet_files = vec![
+        "/sample1.parquet",
+        "/sample2.parquet",
+        "/sample3.parquet",
+    ];
+    let mut fake_datasets: Vec<DatasetsCatalogModel> = vec![];
+    let mut agreements: Vec<ContractAgreementsModel> = vec![];
+
+    let fake_parquet_file = fake_parquet_files
+        .iter()
+        .map(|f| format!("{}{}", fake_parquet_url, f)).collect::<Vec<_>>();
+
+    for endpoint in fake_parquet_file {
+        let ds = create_dataset(endpoint)?;
+        let agreement = create_agreement(ds.dataset_id.clone())?;
+        fake_datasets.push(ds);
+        agreements.push(agreement);
+    }
+
+    Ok((fake_datasets, agreements))
+}
+
+async fn cleanup_env(setup: (Vec<DatasetsCatalogModel>, Vec<ContractAgreementsModel>)) -> anyhow::Result<()> {
+    let (fake_datasets, agreements) = setup;
+    for ds in fake_datasets {
+        delete_dataset(ds.dataset_id)?;
+    }
+    for agg in agreements {
+        delete_agreement_repo(agg.agreement_id)?;
+    }
+    Ok(())
+}
+
 #[traced_test]
 #[tokio::test]
 pub async fn transfer_all_provider() -> anyhow::Result<()> {
+    //============================================//
+    // ON INIT (LOAD AGREEMENTS AND START SERVERS)
+    //============================================//
+
+    let setup = setup_env().await?;
+    let agreements = setup.1.clone();
+    let datasets = setup.0.clone();
     let request_to_provider = create_provider_router().await;
     let request_to_consumer = create_consumer_router().await;
+
+    //============================================//
+    // TRANSFER REQUEST STAGE
+    //============================================//
 
     // 1.
     // Hi, i'm a consumer and going to start the protocol
@@ -48,6 +102,7 @@ pub async fn transfer_all_provider() -> anyhow::Result<()> {
     let consumer_pid = Uuid::new_v4();
     let provider_pid: Uuid;
     data.consumer_pid = format!("urn:uuid:{}", consumer_pid.to_string());
+    data.agreement_id = agreements.get(0).unwrap().agreement_id.to_string();
 
     // Register callback in consumer
     let callback_id = create_new_callback()?;
@@ -95,6 +150,11 @@ pub async fn transfer_all_provider() -> anyhow::Result<()> {
         }
     }
 
+
+    //============================================//
+    // TRANSFER START STAGE
+    //============================================//
+
     // 3.
     // Hi, I'm the provider again.
     // I negotiated succesfully with the data-space the transfer
@@ -126,8 +186,19 @@ pub async fn transfer_all_provider() -> anyhow::Result<()> {
     // Consumer again, sending back OK
     assert_eq!(response.status().to_string(), StatusCode::OK.to_string());
 
-    // 5.
-    // Provider data plane sends data to dataAddress
+    //============================================//
+    // DATA PLANE TRANSFER
+    //============================================//
 
+    // 5.
+    // Provider resolves endpoint from Contract and Catalog (by now is all faked)
+    get_transfer_process_by_provider_pid(provider_pid)?;
+
+
+    //============================================//
+    // CLEANUP
+    //============================================//
+
+    cleanup_env(setup).await?;
     Ok(())
 }

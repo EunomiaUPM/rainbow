@@ -11,6 +11,9 @@ pub mod cli;
 pub mod config;
 pub mod db;
 pub mod transfer;
+pub mod contracts;
+pub mod fake_contracts;
+pub mod fake_catalog;
 
 const INFO: &str = "
 ----------

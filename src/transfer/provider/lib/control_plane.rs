@@ -26,6 +26,7 @@ use serde_json::Value;
 use tracing::{debug, error};
 use uuid::Uuid;
 
+// TODO lib shouldn't have extractors, it should be only in http presentation layer
 pub fn get_transfer_requests_by_provider(
     Path(provider_pid): Path<Uuid>,
 ) -> anyhow::Result<Option<TransferProcessModel>> {

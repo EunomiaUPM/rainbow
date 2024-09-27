@@ -12,6 +12,17 @@ file = "./src/transfer/consumer/data/schema.rs"
 custom_type_derives = ["diesel::query_builder::QueryId", "Clone"]
 filter = { only_tables = ["transfer_callbacks"] }
 
+[print_schema.contracts]
+file = "./src/fake_contracts/data/schema.rs"
+custom_type_derives = ["diesel::query_builder::QueryId", "Clone"]
+filter = { only_tables = ["contract_agreements"] }
+
+[print_schema.catalog]
+file = "./src/fake_catalog/data/schema.rs"
+custom_type_derives = ["diesel::query_builder::QueryId", "Clone"]
+filter = { only_tables = ["dataset_catalogs"] }
+
+
 
 [migrations_directory]
 dir = "./src/db/migrations"
