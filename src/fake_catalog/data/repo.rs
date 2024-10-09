@@ -30,7 +30,9 @@ pub fn get_dataset_by_id_repo(id: Uuid) -> anyhow::Result<Option<DatasetsCatalog
     Ok(transaction)
 }
 
-pub fn get_datasets_by_endpoint_repo(endpoint: String) -> anyhow::Result<Vec<DatasetsCatalogModel>> {
+pub fn get_datasets_by_endpoint_repo(
+    endpoint: String,
+) -> anyhow::Result<Vec<DatasetsCatalogModel>> {
     let connection = &mut get_db_connection().get()?;
     let transaction = dataset_catalogs
         .filter(dataset_endpoint.eq(endpoint))

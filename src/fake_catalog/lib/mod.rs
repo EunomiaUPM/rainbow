@@ -1,5 +1,7 @@
 use crate::fake_catalog::data::models::DatasetsCatalogModel;
-use crate::fake_catalog::data::repo::{create_dataset_repo, delete_dataset_repo, get_dataset_by_id_repo, get_datasets_by_endpoint_repo};
+use crate::fake_catalog::data::repo::{
+    create_dataset_repo, delete_dataset_repo, get_dataset_by_id_repo, get_datasets_by_endpoint_repo,
+};
 use uuid::Uuid;
 
 pub fn create_dataset(endpoint: String) -> anyhow::Result<DatasetsCatalogModel> {

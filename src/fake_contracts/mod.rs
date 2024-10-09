@@ -1,3 +1,3 @@
-pub mod lib;
-pub mod data;
 pub mod cli;
+pub mod data;
+pub mod lib;

@@ -1,12 +1,13 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
-    transfer_message_fields (id) {
-        id -> Uuid,
-        transfer_message_id -> Uuid,
-        key -> Varchar,
-        value -> Varchar,
-        parent -> Nullable<Uuid>,
+    data_plane_processes (data_plane_id) {
+        data_plane_id -> Uuid,
+        transfer_process_id -> Uuid,
+        agreement_id -> Uuid,
+        created_at -> Timestamp,
+        updated_at -> Nullable<Timestamp>,
+        state -> Bool,
     }
 }
 
@@ -16,6 +17,7 @@ diesel::table! {
         transfer_process_id -> Uuid,
         created_at -> Timestamp,
         message_type -> Varchar,
+        content -> Jsonb,
     }
 }
 
@@ -29,11 +31,11 @@ diesel::table! {
     }
 }
 
-diesel::joinable!(transfer_message_fields -> transfer_messages (transfer_message_id));
+diesel::joinable!(data_plane_processes -> transfer_processes (transfer_process_id));
 diesel::joinable!(transfer_messages -> transfer_processes (transfer_process_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
-    transfer_message_fields,
+    data_plane_processes,
     transfer_messages,
     transfer_processes,
 );

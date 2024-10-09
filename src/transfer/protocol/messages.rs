@@ -2,7 +2,6 @@ use crate::transfer::protocol::formats::DctFormats;
 use crate::transfer::provider::err::TransferErrorType;
 use anyhow::Error;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use std::fmt;
 
 pub static TRANSFER_CONTEXT: &str = "https://w3id.org/dspace/2024/1/context.json";
@@ -37,10 +36,11 @@ pub struct TransferStartMessage {
     #[serde(rename = "dspace:consumerPid")]
     pub consumer_pid: String,
     #[serde(rename = "dspace:dataAddress")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub data_address: Option<DataAddress>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct TransferSuspensionMessage {
     #[serde(rename = "@context")]
     pub context: String,
@@ -53,7 +53,7 @@ pub struct TransferSuspensionMessage {
     #[serde(rename = "dspace:code")]
     pub code: String,
     #[serde(rename = "dspace:reason")]
-    pub reason: Vec<Value>,
+    pub reason: Vec<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -81,14 +81,14 @@ pub struct TransferTerminationMessage {
     #[serde(rename = "dspace:code")]
     pub code: String,
     #[serde(rename = "dspace:reason")]
-    pub reason: Vec<Value>,
+    pub reason: Vec<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct DataAddress {
     #[serde(rename = "@type")]
     pub _type: String,
-    #[serde(rename = "dspace:endpointType")]
+    #[serde(rename = "dspace:endpointType")] // TODO define this
     pub endpoint_type: String,
     #[serde(rename = "dspace:endpoint")]
     pub endpoint: String,
@@ -96,7 +96,7 @@ pub struct DataAddress {
     pub endpoint_properties: Vec<EndpointProperty>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct EndpointProperty {
     #[serde(rename = "@type")]
     pub _type: String,

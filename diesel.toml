@@ -4,7 +4,7 @@
 [print_schema.provider]
 file = "./src/transfer/provider/data/schema.rs"
 custom_type_derives = ["diesel::query_builder::QueryId", "Clone"]
-filter = { only_tables = ["transfer_message_fields", "transfer_messages", "transfer_processes"] }
+filter = { only_tables = ["transfer_message_fields", "transfer_messages", "transfer_processes", "data_plane_processes"] }
 
 
 [print_schema.consumer]

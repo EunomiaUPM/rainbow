@@ -9,4 +9,14 @@ pub struct TransferCallbacksModel {
     pub id: Uuid,
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: Option<chrono::NaiveDateTime>,
+    pub provider_pid: Option<Uuid>,
+    pub consumer_pid: Option<Uuid>,
+    pub data_address: Option<serde_json::Value>,
+}
+
+#[derive(Debug)]
+pub struct TransferCallbacksModelNewState {
+    pub provider_pid: Option<Uuid>,
+    pub consumer_pid: Option<Uuid>,
+    pub data_address: Option<serde_json::Value>, // TODO see if it could be toSQL and fromSQL traits
 }

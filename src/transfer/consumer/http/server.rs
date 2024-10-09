@@ -29,3 +29,17 @@ pub async fn start_consumer_server(host: &Option<String>, url: &Option<String>) 
 
     Ok(())
 }
+
+pub async fn start_consumer_server_with_listener(
+    host: &Option<String>,
+    url: &Option<String>,
+) -> Result<TcpListener> {
+    // config stuff
+    let host = host.clone().unwrap_or("localhost".to_owned());
+    let url = url.clone().unwrap_or("1235".to_owned());
+    let server_message = format!("Starting consumer server in http://{}:{}", host, url);
+    info!("{}", server_message);
+
+    let listener = TcpListener::bind(format!("{}:{}", host, url)).await?;
+    Ok(listener)
+}

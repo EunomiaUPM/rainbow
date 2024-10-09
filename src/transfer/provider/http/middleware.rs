@@ -14,6 +14,9 @@ pub async fn authentication_middleware(
     next: Next,
 ) -> anyhow::Result<Response, StatusCode> {
     info!("Authentication middleware");
+    // redirijo al verifier -> Me devuelve un OK más la identidad (JWT)
+    // DNI
+    // CLIENT
 
     let response = next.run(request).await;
     Ok(response)
@@ -24,6 +27,13 @@ pub async fn authorization_middleware(
     next: Next,
 ) -> anyhow::Result<Response, StatusCode> {
     info!("Authorization middleware");
+
+    // Tiraríamos contra el motor de políticas
+    // KeyRock??? + OPENFGA
+    // CLIENT
+    // resuelvo el agreement - tu endpoint tiene asocidad una regla que vincula agreement, endpoint y DNI
+    // IF OK -> OK()
+    // IF NOK -> Error
 
     let response = next.run(request).await;
     Ok(response)

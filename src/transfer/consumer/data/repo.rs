@@ -1,7 +1,9 @@
 use crate::db::get_db_connection;
-use crate::transfer::consumer::data::models::TransferCallbacksModel;
+use crate::transfer::consumer::data::models::{TransferCallbacksModel, TransferCallbacksModelNewState};
 use crate::transfer::consumer::data::schema::transfer_callbacks::dsl::transfer_callbacks;
-use crate::transfer::consumer::data::schema::transfer_callbacks::{id, updated_at};
+use crate::transfer::consumer::data::schema::transfer_callbacks::{
+    consumer_pid, data_address, id, provider_pid, updated_at,
+};
 use diesel::prelude::*;
 use diesel::{QueryDsl, SelectableHelper};
 use uuid::Uuid;
@@ -25,6 +27,20 @@ pub fn get_callback_by_id(callback_id: Uuid) -> anyhow::Result<Option<TransferCa
 
     Ok(transaction)
 }
+
+pub fn get_callback_by_consumer_id(
+    consumer_pid_in: Uuid,
+) -> anyhow::Result<Option<TransferCallbacksModel>> {
+    let connection = &mut get_db_connection().get()?;
+    let transaction = transfer_callbacks
+        .filter(consumer_pid.eq(consumer_pid_in))
+        .select(TransferCallbacksModel::as_select())
+        .first(connection)
+        .optional()?;
+
+    Ok(transaction)
+}
+
 pub fn create_callback() -> anyhow::Result<TransferCallbacksModel> {
     let connection = &mut get_db_connection().get()?;
     let transaction = diesel::insert_into(transfer_callbacks)
@@ -32,23 +48,34 @@ pub fn create_callback() -> anyhow::Result<TransferCallbacksModel> {
             id: Uuid::new_v4(),
             created_at: chrono::Utc::now().naive_utc(),
             updated_at: None,
+            provider_pid: None,
+            consumer_pid: None,
+            data_address: None,
         })
         .returning(TransferCallbacksModel::as_select())
         .get_result(connection)?;
 
     Ok(transaction)
 }
-pub fn update_callback(callback_id: Uuid) -> anyhow::Result<()> {
+pub fn update_callback(
+    callback_id: Uuid,
+    new_state: TransferCallbacksModelNewState,
+) -> anyhow::Result<Option<TransferCallbacksModel>> {
+    // <-----
     let connection = &mut get_db_connection().get()?;
     let values = (
-        id.eq(callback_id),
+        consumer_pid.eq(new_state.consumer_pid),
+        provider_pid.eq(new_state.provider_pid),
+        data_address.eq(new_state.data_address),
         updated_at.eq(chrono::Utc::now().naive_utc()),
     );
-    let _ = diesel::update(transfer_callbacks.filter(id.eq(callback_id)))
+    let transaction = diesel::update(transfer_callbacks.filter(id.eq(callback_id)))
         .set(values)
-        .execute(connection)?;
+        .returning(TransferCallbacksModel::as_select())
+        .get_result(connection)
+        .optional()?;
 
-    Ok(())
+    Ok(transaction)
 }
 
 pub fn delete_callback(callback_id: Uuid) -> anyhow::Result<()> {

@@ -1,4 +1,6 @@
 #![allow(unused_imports)]
+#![allow(dead_code)]
+#![allow(unused_variables)]
 
 use crate::db::get_db_connection;
 use diesel::r2d2::{ConnectionManager, Pool};
@@ -9,11 +11,11 @@ pub mod auth;
 pub mod catalog;
 pub mod cli;
 pub mod config;
-pub mod db;
-pub mod transfer;
 pub mod contracts;
-pub mod fake_contracts;
+pub mod db;
 pub mod fake_catalog;
+pub mod fake_contracts;
+pub mod transfer;
 
 const INFO: &str = "
 ----------

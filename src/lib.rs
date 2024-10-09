@@ -1,8 +1,13 @@
+#![allow(unused_imports)]
+#![allow(dead_code)]
+#![allow(unused_variables)]
+#![allow(unused_mut)]
+
 pub mod auth;
 pub mod catalog;
 pub mod cli;
 pub mod config;
 pub mod db;
-pub mod transfer;
 pub mod fake_catalog;
 pub mod fake_contracts;
+pub mod transfer;
