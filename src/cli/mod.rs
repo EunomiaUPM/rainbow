@@ -1,12 +1,17 @@
 use anyhow::Result;
 use clap::{Args, Parser, Subcommand};
+use dotenvy::dotenv;
 use tracing::{debug, info};
 
 use crate::auth::start_provider_auth_server;
-use crate::cli::DataSpaceTransferRoles::Consumer;
+use crate::cli::setup::setup_database;
+use crate::config::{Config, ConfigRoles, GLOBAL_CONFIG};
+use crate::config_field;
 use crate::transfer::consumer::http::server::start_consumer_server;
 use crate::transfer::consumer::*;
 use crate::transfer::provider::http::server::start_provider_server;
+
+pub mod setup;
 
 #[derive(Parser, Debug)]
 #[command(name = "Dataspace protocol")]
@@ -35,6 +40,18 @@ pub struct ConsumerArgs {
     host_url: Option<String>,
     #[arg(long)]
     host_port: Option<String>,
+    #[arg(long)]
+    db_type: Option<String>,
+    #[arg(long)]
+    db_url: Option<String>,
+    #[arg(long)]
+    db_port: Option<String>,
+    #[arg(long)]
+    db_user: Option<String>,
+    #[arg(long)]
+    db_password: Option<String>,
+    #[arg(long)]
+    db_database: Option<String>,
     #[command(subcommand)]
     command: ConsumerCommands,
 }
@@ -45,6 +62,22 @@ pub struct ProviderArgs {
     host_url: Option<String>,
     #[arg(long)]
     host_port: Option<String>,
+    #[arg(long)]
+    db_type: Option<String>,
+    #[arg(long)]
+    db_url: Option<String>,
+    #[arg(long)]
+    db_port: Option<String>,
+    #[arg(long)]
+    db_user: Option<String>,
+    #[arg(long)]
+    db_password: Option<String>,
+    #[arg(long)]
+    db_database: Option<String>,
+    #[arg(long)]
+    auth_url: Option<String>,
+    #[arg(long)]
+    auth_port: Option<String>,
     #[command(subcommand)]
     command: ProviderCommands,
 }
@@ -53,56 +86,94 @@ pub struct ProviderArgs {
 pub enum ProviderCommands {
     Start {},
     Auth {},
+    Setup,
 }
 
 #[derive(Subcommand, Debug)]
 pub enum ConsumerCommands {
-    Test,
-    TransferRequest {},
-    TransferStart {},
-    TransferSuspension {},
-    TransferCompletion {},
-    TransferTermination {},
     Start {},
+    Setup,
 }
 
 pub async fn init_command_line() -> Result<()> {
     info!("Init the command line application");
     let cli = Cli::parse();
     debug!("{:?}", cli);
+    dotenv().ok();
+
+    let config = match &cli.role {
+        DataSpaceTransferRoles::Provider(args) => Config {
+            host_url: config_field!(args, host_url, "HOST_URL", "http://localhost"),
+            host_port: config_field!(args, host_port, "HOST_PORT", "1234"),
+            db_type: config_field!(args, db_type, "DB_TYPE", "postgres"),
+            db_url: config_field!(args, db_url, "DB_URL", "http://localhost"),
+            db_port: config_field!(args, db_port, "DB_PORT", "5433"),
+            db_user: config_field!(args, db_user, "DB_USER", "ds-protocol-provider"),
+            db_password: config_field!(args, db_password, "DB_PASSWORD", "ds-protocol-provider"),
+            db_database: config_field!(args, db_database, "DB_DATABASE", "ds-protocol-provider"),
+            provider_url: None,
+            provider_port: None,
+            auth_url: Some(config_field!(
+                args,
+                auth_url,
+                "AUTH_URL",
+                "http://localhost"
+            )),
+            auth_port: Some(config_field!(args, auth_port, "AUTH_PORT", "1232")),
+            role: ConfigRoles::Provider,
+        },
+        DataSpaceTransferRoles::Consumer(args) => Config {
+            host_url: config_field!(args, host_url, "HOST_URL", "http://localhost"),
+            host_port: config_field!(args, host_port, "HOST_PORT", "1235"),
+            db_type: config_field!(args, db_type, "DB_TYPE", "postgres"),
+            db_url: config_field!(args, db_url, "DB_URL", "http://localhost"),
+            db_port: config_field!(args, db_port, "DB_PORT", "5434"),
+            db_user: config_field!(args, db_user, "DB_USER", "ds-protocol-consumer"),
+            db_password: config_field!(args, db_password, "DB_PASSWORD", "ds-protocol-consumer"),
+            db_database: config_field!(args, db_database, "DB_DATABASE", "ds-protocol-consumer"),
+            provider_url: Some(config_field!(
+                args,
+                provider_url,
+                "PROVIDER_HOST",
+                "http://localhost"
+            )),
+            provider_port: Some(config_field!(args, provider_port, "PROVIDER_PORT", "1234")),
+            auth_url: None,
+            auth_port: None,
+            role: ConfigRoles::Consumer,
+        },
+    };
+
+    GLOBAL_CONFIG
+        .set(config)
+        .expect("Global Config not initialized");
 
     match &cli.role {
-        DataSpaceTransferRoles::Consumer(args) => match &args.command {
-            ConsumerCommands::Test {} => {
-                start_test(&args.provider_url, &args.provider_port).await?;
+        DataSpaceTransferRoles::Consumer(args) => {
+            // CONFIG FOR CONSUMER HERE
+            match &args.command {
+                ConsumerCommands::Start { .. } => {
+                    start_consumer_server().await?;
+                }
+                ConsumerCommands::Setup => {
+                    setup_database("consumer".to_string()).await?;
+                }
             }
-            ConsumerCommands::TransferRequest { .. } => {
-                start_transfer_request(&args.provider_url, &args.provider_port).await?;
+        }
+        DataSpaceTransferRoles::Provider(args) => {
+            // CONFIG FOR PROVIDER HERE
+            match &args.command {
+                ProviderCommands::Start { .. } => {
+                    start_provider_server().await?;
+                }
+                ProviderCommands::Auth { .. } => {
+                    start_provider_auth_server().await?;
+                }
+                ProviderCommands::Setup => {
+                    setup_database("provider".to_string()).await?;
+                }
             }
-            ConsumerCommands::TransferStart { .. } => {
-                start_transfer_start(&args.provider_url, &args.provider_port).await?;
-            }
-            ConsumerCommands::TransferSuspension { .. } => {
-                start_transfer_suspension(&args.provider_url, &args.provider_port).await?;
-            }
-            ConsumerCommands::TransferCompletion { .. } => {
-                start_transfer_completion(&args.provider_url, &args.provider_port).await?;
-            }
-            ConsumerCommands::TransferTermination { .. } => {
-                start_transfer_termination(&args.provider_url, &args.provider_port).await?;
-            }
-            ConsumerCommands::Start { .. } => {
-                start_consumer_server(&args.host_url, &args.host_port).await?;
-            }
-        },
-        DataSpaceTransferRoles::Provider(args) => match &args.command {
-            ProviderCommands::Start { .. } => {
-                start_provider_server(&args.host_url, &args.host_port).await?;
-            }
-            ProviderCommands::Auth { .. } => {
-                start_provider_auth_server(&args.host_url, &args.host_port).await?;
-            }
-        },
+        }
     }
 
     Ok(())

@@ -28,17 +28,10 @@ Show some love on https://github.com/ging/rainbow
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    // Logging setup
     tracing_subscriber::fmt()
         .with_max_level(Level::DEBUG)
         .init();
-
     info!("{}", INFO);
-
-    // Create databases
-    // TODO take it to cli start - start different databases...
-
-    // Cli parser
     cli::init_command_line().await?;
 
     Ok(())

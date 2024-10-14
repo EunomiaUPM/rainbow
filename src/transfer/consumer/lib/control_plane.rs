@@ -1,6 +1,6 @@
 use crate::transfer::common::utils::{does_callback_exist, is_consumer_pid_valid};
 use crate::transfer::consumer::data::models::TransferCallbacksModelNewState;
-use crate::transfer::consumer::data::repo::update_callback;
+use crate::transfer::consumer::data::repo::{TransferConsumerDataRepo, TRANSFER_CONSUMER_REPO};
 use crate::transfer::protocol::messages::{
     TransferCompletionMessage, TransferStartMessage, TransferSuspensionMessage,
     TransferTerminationMessage,
@@ -44,7 +44,7 @@ pub fn transfer_start(
 
     // Here i should persist something
     println!("persist something to recover");
-    let transaction = update_callback(
+    let transaction = TRANSFER_CONSUMER_REPO.update_callback(
         callback,
         TransferCallbacksModelNewState {
             provider_pid: Some(Uuid::parse_str(&input.provider_pid)?),

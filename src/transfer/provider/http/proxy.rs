@@ -1,7 +1,8 @@
 use crate::fake_catalog::lib::get_dataset_by_id;
 use crate::fake_catalog::lib::get_datasets_by_endpoint;
 use crate::fake_contracts::lib::get_agreement_by_id;
-use crate::transfer::provider::data::repo::get_data_plane_process_by_id;
+use crate::transfer::provider::data::repo::{TransferProviderDataRepo, TRANSFER_PROVIDER_REPO};
+use crate::transfer::provider::data::repo_postgres::TransferProviderDataRepoPostgres;
 use crate::transfer::provider::http::client::DATA_PLANE_HTTP_CLIENT;
 use crate::transfer::provider::lib::data_plane::resolve_endpoint_from_agreement;
 use axum::extract::Path;
@@ -21,7 +22,7 @@ async fn handle_data_proxy(Path(data_id): Path<Uuid>) -> impl IntoResponse {
 
     // Resolve consumer, provider, agreement, endpoint, status...
     // Resolve data plane process
-    let data_plane_process = get_data_plane_process_by_id(data_id).unwrap();
+    let data_plane_process = TRANSFER_PROVIDER_REPO.get_data_plane_process_by_id(data_id).unwrap();
     if data_plane_process.is_none() {
         return (StatusCode::NOT_FOUND, "Not found".to_string());
     }

@@ -4,10 +4,7 @@ use crate::transfer::protocol::messages::{
     DataAddress, TransferRequestMessage, TransferSuspensionMessage,
 };
 use crate::transfer::provider::data::models::DataPlaneProcessModel;
-use crate::transfer::provider::data::repo::{
-    create_data_plane_process, get_data_plane_process_by_transfer_process_id,
-    update_data_plane_process,
-};
+use crate::transfer::provider::data::repo::{TransferProviderDataRepo, TRANSFER_PROVIDER_REPO};
 use anyhow::Error;
 use std::future::Future;
 use uuid::Uuid;
@@ -37,7 +34,7 @@ pub async fn provision_data_plane<F, Fut, M>(
 ) -> anyhow::Result<()>
 where
     F: Fn(M, Uuid) -> Fut + Send + Sync + 'static,
-    Fut: Future<Output = Result<(), Error>> + Send,
+    Fut: Future<Output=Result<(), Error>> + Send,
     M: From<TransferRequestMessage> + Send + 'static,
 {
     let agreement = Uuid::parse_str(&input.agreement_id)?;
@@ -47,14 +44,15 @@ where
     //
 
     // persist
-    let data_plane_process = create_data_plane_process(DataPlaneProcessModel {
-        data_plane_id: Uuid::new_v4(),
-        transfer_process_id: provider_pid.to_owned(),
-        agreement_id: agreement,
-        created_at: chrono::Utc::now().naive_utc(),
-        updated_at: None,
-        state: true,
-    })?;
+    let data_plane_process =
+        TRANSFER_PROVIDER_REPO.create_data_plane_process(DataPlaneProcessModel {
+            data_plane_id: Uuid::new_v4(),
+            transfer_process_id: provider_pid.to_owned(),
+            agreement_id: agreement,
+            created_at: chrono::Utc::now().naive_utc(),
+            updated_at: None,
+            state: true,
+        })?;
 
     let endpoint = format!(
         "http://localhost:1234/data/{}",
@@ -79,18 +77,24 @@ pub async fn unprovision_data_plane<F, Fut, M>(
 ) -> anyhow::Result<()>
 where
     F: Fn(M, Uuid) -> Fut + Send + Sync + 'static,
-    Fut: Future<Output = Result<(), Error>> + Send,
+    Fut: Future<Output=Result<(), Error>> + Send,
     M: From<TransferSuspensionMessage> + Send + 'static,
 {
     // Stuff should happen here....
     // TODO define what... related with PXP
     //
 
-    let data_plane = get_data_plane_process_by_transfer_process_id(provider_pid)?;
+    let data_plane =
+        TRANSFER_PROVIDER_REPO.get_data_plane_process_by_transfer_process_id(
+            provider_pid,
+        )?;
     if let None = data_plane {
         return Err(anyhow::anyhow!("not found...")); // TODO error
     } else {
-        update_data_plane_process(data_plane.unwrap().data_plane_id, false)?;
+        TRANSFER_PROVIDER_REPO.update_data_plane_process(
+            data_plane.unwrap().data_plane_id,
+            false,
+        )?;
         cb(input.into(), provider_pid).await?;
         Ok(())
     }

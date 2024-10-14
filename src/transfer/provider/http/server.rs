@@ -3,6 +3,7 @@ use crate::transfer::provider::http::middleware::{authentication_middleware, aut
 use crate::transfer::provider::http::proxy;
 use crate::transfer::provider::http::router;
 
+use crate::config::GLOBAL_CONFIG;
 use anyhow::Result;
 use axum::{middleware, serve, Router};
 use tokio::net::TcpListener;
@@ -21,30 +22,34 @@ pub async fn create_provider_router() -> Router {
     server
 }
 
-pub async fn start_provider_server(host: &Option<String>, url: &Option<String>) -> Result<()> {
+pub async fn start_provider_server() -> Result<()> {
     // config stuff
-    let host = host.clone().unwrap_or("localhost".to_owned());
-    let url = url.clone().unwrap_or("1234".to_owned());
-    let server_message = format!("Starting provider server in http://{}:{}", host, url);
+    let config = GLOBAL_CONFIG.get().unwrap();
+    let server_message = format!(
+        "Starting provider server in {}:{}",
+        config.host_url, config.host_port
+    );
     info!("{}", server_message);
+    let url = config.host_url.clone().replace("http://", "");
 
     // start server
-    let listener = TcpListener::bind(format!("{}:{}", host, url)).await?;
+    let listener = TcpListener::bind(format!("{}:{}", url, config.host_port)).await?;
     serve(listener, create_provider_router().await).await?;
 
     Ok(())
 }
 
-pub async fn start_provider_server_with_listener(
-    host: &Option<String>,
-    url: &Option<String>,
-) -> Result<TcpListener> {
+pub async fn start_provider_server_with_listener() -> Result<TcpListener> {
     // config stuff
-    let host = host.clone().unwrap_or("localhost".to_owned());
-    let url = url.clone().unwrap_or("1234".to_owned());
-    let server_message = format!("Starting provider server in http://{}:{}", host, url);
+    let config = GLOBAL_CONFIG.get().unwrap();
+    let server_message = format!(
+        "Starting provider server in http://{}:{}",
+        config.host_url, config.host_port
+    );
     info!("{}", server_message);
+    let url = config.host_url.clone().replace("http://", "");
 
-    let listener = TcpListener::bind(format!("{}:{}", host, url)).await?;
+
+    let listener = TcpListener::bind(format!("{}:{}", config.host_url, config.host_port)).await?;
     Ok(listener)
 }

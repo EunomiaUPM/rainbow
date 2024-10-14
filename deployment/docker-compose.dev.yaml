@@ -1,12 +1,24 @@
 version: "3.5"
 services:
-  dev_db:
-    container_name: "dev_db"
+
+  ds_provider_db:
+    container_name: "ds_provider_db"
     image: "postgres"
     restart: always
     environment:
-      POSTGRES_PASSWORD: ds-protocol
-      POSTGRES_USER: ds-protocol
-    #      POSTGRES_DB: ds-protocol
+      POSTGRES_PASSWORD: ds-protocol-provider
+      POSTGRES_USER: ds-protocol-provider
+      POSTGRES_DB: ds-protocol-provider
     ports:
-      - "5454:5432"
+      - "5433:5432"
+
+  ds_consumer_db:
+    container_name: "ds_consumer_db"
+    image: "postgres"
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: ds-protocol-consumer
+      POSTGRES_USER: ds-protocol-consumer
+      POSTGRES_DB: ds-protocol-consumer
+    ports:
+      - "5434:5432"

@@ -9,10 +9,9 @@ use crate::transfer::protocol::messages::{
     TRANSFER_CONTEXT,
 };
 use crate::transfer::provider::data::models::{TransferMessageModel, TransferProcessModel};
-use crate::transfer::provider::data::repo::{
-    create_transfer_message, create_transfer_process, get_transfer_process_by_provider_pid,
-    update_transfer_process_by_provider_pid,
-};
+use crate::transfer::provider::data::repo::TransferProviderDataRepo;
+use crate::transfer::provider::data::repo::TRANSFER_PROVIDER_REPO;
+use crate::transfer::provider::data::repo_postgres::TransferProviderDataRepoPostgres;
 use crate::transfer::provider::err::TransferErrorType;
 use crate::transfer::provider::lib::data_plane::{provision_data_plane, unprovision_data_plane};
 use crate::transfer::provider::lib::get_current_data_plane_client;
@@ -35,7 +34,7 @@ pub fn get_transfer_requests_by_provider(
     Path(provider_pid): Path<Uuid>,
 ) -> anyhow::Result<Option<TransferProcessModel>> {
     // access info
-    let transaction = get_transfer_process_by_provider_pid(provider_pid)?;
+    let transaction = TRANSFER_PROVIDER_REPO.get_transfer_process_by_provider_pid(provider_pid)?;
     Ok(transaction)
 }
 
@@ -45,7 +44,7 @@ pub async fn transfer_request<F, Fut, M>(
 ) -> anyhow::Result<TransferProcessMessage>
 where
     F: Fn(M, Uuid) -> Fut + Send + Sync + 'static,
-    Fut: Future<Output = Result<(), Error>> + Send,
+    Fut: Future<Output=Result<(), Error>> + Send,
     M: From<TransferRequestMessage> + Send + 'static,
 {
     // schema validation
@@ -78,7 +77,7 @@ where
     let message_type = input._type.clone();
 
     // REQUEST PART
-    create_transfer_process(TransferProcessModel {
+    TRANSFER_PROVIDER_REPO.create_transfer_process(TransferProcessModel {
         provider_pid,
         consumer_pid: input.consumer_pid.parse()?,
         state: TransferState::REQUESTED.to_string(),
@@ -87,7 +86,7 @@ where
     })?;
 
     let message_id = Uuid::new_v4();
-    create_transfer_message(TransferMessageModel {
+    TRANSFER_PROVIDER_REPO.create_transfer_message(TransferMessageModel {
         id: message_id,
         transfer_process_id: provider_pid,
         created_at,
@@ -146,12 +145,12 @@ pub fn transfer_start(Json(input): Json<&TransferStartMessage>) -> anyhow::Resul
     }
 
     // persist information
-    let transaction = update_transfer_process_by_provider_pid(
+    let transaction = TRANSFER_PROVIDER_REPO.update_transfer_process_by_provider_pid(
         &input.provider_pid.parse()?,
         TransferState::STARTED,
     )?;
 
-    create_transfer_message(TransferMessageModel {
+    TRANSFER_PROVIDER_REPO.create_transfer_message(TransferMessageModel {
         id: Uuid::new_v4(),
         transfer_process_id: input.provider_pid.parse()?,
         created_at: chrono::Utc::now().naive_utc(),
@@ -168,7 +167,7 @@ pub fn transfer_suspension<F, Fut, M>(
 ) -> anyhow::Result<TransferProcessMessage>
 where
     F: Fn(M, Uuid) -> Fut + Send + Sync + 'static,
-    Fut: Future<Output = Result<(), Error>> + Send,
+    Fut: Future<Output=Result<(), Error>> + Send,
     M: From<TransferSuspensionMessage> + Send + 'static,
 {
     // schema validation
@@ -188,7 +187,7 @@ where
         return Err(Error::from(TransferErrorType::ProviderIdUuidError));
     }
 
-    let transaction = update_transfer_process_by_provider_pid(
+    let transaction = TRANSFER_PROVIDER_REPO.update_transfer_process_by_provider_pid(
         &input.provider_pid.parse()?,
         TransferState::SUSPENDED,
     )?;
@@ -205,7 +204,7 @@ where
     // For debugging, make provision_data_plan synchronous.
     // provision_data_plane(input, provider_clone, callback).await?;
 
-    create_transfer_message(TransferMessageModel {
+    TRANSFER_PROVIDER_REPO.create_transfer_message(TransferMessageModel {
         id: Uuid::new_v4(),
         transfer_process_id: input.provider_pid.parse()?,
         created_at: chrono::Utc::now().naive_utc(),
@@ -257,12 +256,12 @@ pub fn transfer_completion(Json(input): Json<&TransferCompletionMessage>) -> any
         return Err(Error::from(TransferErrorType::ProviderIdUuidError));
     }
 
-    let transaction = update_transfer_process_by_provider_pid(
+    let transaction = TRANSFER_PROVIDER_REPO.update_transfer_process_by_provider_pid(
         &input.provider_pid.parse()?,
         TransferState::COMPLETED,
     )?;
     if let Some(_) = transaction {
-        create_transfer_message(TransferMessageModel {
+        TRANSFER_PROVIDER_REPO.create_transfer_message(TransferMessageModel {
             id: Uuid::new_v4(),
             transfer_process_id: input.provider_pid.parse()?,
             created_at: chrono::Utc::now().naive_utc(),
@@ -296,12 +295,12 @@ pub fn transfer_termination(Json(input): Json<&TransferTerminationMessage>) -> a
         return Err(Error::from(TransferErrorType::ProviderIdUuidError));
     }
 
-    let transaction = update_transfer_process_by_provider_pid(
+    let transaction = TRANSFER_PROVIDER_REPO.update_transfer_process_by_provider_pid(
         &input.provider_pid.parse()?,
         TransferState::TERMINATED,
     )?;
     if let Some(_) = transaction {
-        create_transfer_message(TransferMessageModel {
+        TRANSFER_PROVIDER_REPO.create_transfer_message(TransferMessageModel {
             id: Uuid::new_v4(),
             transfer_process_id: input.provider_pid.parse()?,
             created_at: chrono::Utc::now().naive_utc(),

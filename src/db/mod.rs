@@ -1,8 +1,6 @@
-use std::env;
-
+use crate::config::GLOBAL_CONFIG;
 use diesel::pg::PgConnection;
 use diesel::r2d2::{ConnectionManager, Pool};
-use dotenvy::dotenv;
 
 ///
 /// ⚠️Warning!
@@ -17,14 +15,13 @@ use dotenvy::dotenv;
 ///
 pub fn get_db_connection() -> Pool<ConnectionManager<PgConnection>> {
     // TODO refactor this for working with different databases type or none...
-    // TODO change the way of doing migrations...
+    // TODO change the way of doing provider_migrations...
 
-    dotenv().ok();
-    let db_url = env::var("DATABASE_URL").unwrap();
+    let db_url = GLOBAL_CONFIG.get().unwrap().db_url.clone();
     let manager = ConnectionManager::<PgConnection>::new(db_url);
     Pool::builder()
         .max_size(10)
         .test_on_check_out(true)
         .build(manager)
-        .expect("aaa")
+        .expect("Database pool initialization failed")
 }

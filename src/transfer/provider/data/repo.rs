@@ -1,189 +1,77 @@
-use crate::db::get_db_connection;
 use crate::transfer::protocol::messages::{TransferMessageTypes, TransferState};
 use crate::transfer::provider::data::models::{
     DataPlaneProcessModel, TransferMessageModel, TransferProcessModel,
 };
-use crate::transfer::provider::data::schema::transfer_messages::dsl::{
-    id as message_id, message_type, transfer_messages,
-};
-use crate::transfer::provider::data::schema::transfer_processes::dsl::transfer_processes;
-use crate::transfer::provider::data::schema::transfer_processes::dsl::*;
+use once_cell::sync::Lazy;
 
-use crate::transfer::provider::data::schema::data_plane_processes;
-use diesel::prelude::*;
+use crate::config::GLOBAL_CONFIG;
+use crate::transfer::provider::data::repo_memory::TransferProviderDataRepoMemory;
+use crate::transfer::provider::data::repo_mongo::TransferProviderDataRepoMongo;
+use crate::transfer::provider::data::repo_postgres::TransferProviderDataRepoPostgres;
 use uuid::Uuid;
+// https://chatgpt.com/c/67069598-decc-800f-a673-3b6b84aeeca9
 
-pub fn get_all_transfer_processes(limit: Option<i64>) -> anyhow::Result<Vec<TransferProcessModel>> {
-    let connection = &mut get_db_connection().get()?;
-    let transaction = transfer_processes
-        .limit(limit.unwrap_or(20))
-        .select(TransferProcessModel::as_select())
-        .load(connection)?;
-
-    Ok(transaction)
+pub trait TransferProviderDataRepo {
+    fn get_all_transfer_processes(
+        &self,
+        limit: Option<i64>,
+    ) -> anyhow::Result<Vec<TransferProcessModel>>;
+    fn get_transfer_process_by_consumer_pid(
+        &self,
+        consumer_pid_in: Uuid,
+    ) -> anyhow::Result<Option<TransferProcessModel>>;
+    fn get_transfer_process_by_provider_pid(
+        &self,
+        provider_pid_in: Uuid,
+    ) -> anyhow::Result<Option<TransferProcessModel>>;
+    fn create_transfer_process(&self, transfer_process: TransferProcessModel)
+                               -> anyhow::Result<()>;
+    fn update_transfer_process_by_provider_pid(
+        &self,
+        provider_pid_in: &Uuid,
+        new_state: TransferState,
+    ) -> anyhow::Result<Option<TransferProcessModel>>;
+    fn get_all_transfer_messages(
+        &self,
+        limit: Option<i64>,
+    ) -> anyhow::Result<Vec<TransferMessageModel>>;
+    fn get_all_transfer_messages_by_type(
+        &self,
+        message_type_in: TransferMessageTypes,
+        limit: Option<i64>,
+    ) -> anyhow::Result<Vec<TransferMessageModel>>;
+    fn get_transfer_message_by_id(
+        &self,
+        message_id_in: Uuid,
+    ) -> anyhow::Result<Option<TransferMessageModel>>;
+    fn create_transfer_message(&self, message: TransferMessageModel) -> anyhow::Result<()>;
+    fn create_data_plane_process(
+        &self,
+        data_plane_process: DataPlaneProcessModel,
+    ) -> anyhow::Result<DataPlaneProcessModel>;
+    fn update_data_plane_process(
+        &self,
+        data_plane_process_id: Uuid,
+        new_state: bool,
+    ) -> anyhow::Result<Option<DataPlaneProcessModel>>;
+    fn get_data_plane_process_by_id(
+        &self,
+        data_plane_id: Uuid,
+    ) -> anyhow::Result<Option<DataPlaneProcessModel>>;
+    fn get_data_plane_process_by_transfer_process_id(
+        &self,
+        transfer_process_id: Uuid,
+    ) -> anyhow::Result<Option<DataPlaneProcessModel>>;
+    fn delete_data_plane_process_by_id(&self, data_plane_id: Uuid) -> anyhow::Result<()>;
 }
 
-pub fn get_transfer_process_by_consumer_pid(
-    consumer_pid_in: Uuid,
-) -> anyhow::Result<Option<TransferProcessModel>> {
-    let connection = &mut get_db_connection().get()?;
-    let transaction = transfer_processes
-        .filter(consumer_pid.eq(consumer_pid_in))
-        .select(TransferProcessModel::as_select())
-        .first(connection)
-        .optional()?;
+pub static TRANSFER_PROVIDER_REPO: Lazy<Box<dyn TransferProviderDataRepo + Send + Sync>> = Lazy::new(|| {
+    let repo_type = GLOBAL_CONFIG.get().unwrap().db_type.clone();
 
-    Ok(transaction)
-}
-
-pub fn get_transfer_process_by_provider_pid(
-    provider_pid_in: Uuid,
-) -> anyhow::Result<Option<TransferProcessModel>> {
-    let connection = &mut get_db_connection().get()?;
-    let transaction = transfer_processes
-        .filter(provider_pid.eq(provider_pid_in))
-        .select(TransferProcessModel::as_select())
-        .first(connection)
-        .optional()?;
-
-    Ok(transaction)
-}
-
-pub fn create_transfer_process(transfer_process: TransferProcessModel) -> anyhow::Result<()> {
-    let connection = &mut get_db_connection().get()?;
-    let _ = diesel::insert_into(transfer_processes)
-        .values(&transfer_process)
-        .execute(connection)?;
-
-    Ok(())
-}
-
-pub fn update_transfer_process_by_provider_pid(
-    provider_pid_in: &Uuid,
-    new_state: TransferState,
-) -> anyhow::Result<Option<TransferProcessModel>> {
-    let connection = &mut get_db_connection().get()?;
-    let find = transfer_processes.find(provider_pid_in);
-    let values = (
-        state.eq(new_state.to_string()),
-        updated_at.eq(chrono::Utc::now().naive_utc()),
-    );
-    let transaction = diesel::update(find)
-        .set(values)
-        .returning(TransferProcessModel::as_returning())
-        .get_result(connection)
-        .optional()?;
-
-    Ok(transaction)
-}
-
-pub fn get_all_transfer_messages(limit: Option<i64>) -> anyhow::Result<Vec<TransferMessageModel>> {
-    // TODO create joins and return format ok
-    let connection = &mut get_db_connection().get()?;
-    let transaction = transfer_messages
-        .limit(limit.unwrap_or(20))
-        .select(TransferMessageModel::as_select())
-        .load(connection)?;
-
-    Ok(transaction)
-}
-
-pub fn get_all_transfer_messages_by_type(
-    message_type_in: TransferMessageTypes,
-    limit: Option<i64>,
-) -> anyhow::Result<Vec<TransferMessageModel>> {
-    let connection = &mut get_db_connection().get()?;
-    let transaction = transfer_messages
-        .filter(message_type.eq(message_type_in.to_string()))
-        .limit(limit.unwrap_or(20))
-        .select(TransferMessageModel::as_select())
-        .load(connection)?;
-
-    Ok(transaction)
-}
-
-pub fn get_transfer_message_by_id(
-    message_id_in: Uuid,
-) -> anyhow::Result<Option<TransferMessageModel>> {
-    let connection = &mut get_db_connection().get()?;
-    let transaction = transfer_messages
-        .filter(message_id.eq(message_id_in))
-        .select(TransferMessageModel::as_select())
-        .first(connection)
-        .optional()?;
-
-    Ok(transaction)
-}
-
-pub fn create_transfer_message(message: TransferMessageModel) -> anyhow::Result<()> {
-    let connection = &mut get_db_connection().get()?;
-    let _ = diesel::insert_into(transfer_messages)
-        .values(&message)
-        .execute(connection)?;
-
-    Ok(())
-}
-
-pub fn create_data_plane_process(
-    data_plane_process: DataPlaneProcessModel,
-) -> anyhow::Result<DataPlaneProcessModel> {
-    let connection = &mut get_db_connection().get()?;
-    let transaction = diesel::insert_into(data_plane_processes::table)
-        .values(data_plane_process)
-        .get_result(connection)?;
-
-    Ok(transaction)
-}
-
-pub fn update_data_plane_process(
-    data_plane_process_id: Uuid,
-    new_state: bool,
-) -> anyhow::Result<Option<DataPlaneProcessModel>> {
-    let connection = &mut get_db_connection().get()?;
-    let find = data_plane_processes::table.find(data_plane_process_id);
-    let values = (
-        data_plane_processes::dsl::updated_at.eq(chrono::Utc::now().naive_utc()),
-        data_plane_processes::dsl::state.eq(new_state),
-    );
-    let transaction = diesel::update(find)
-        .set(values)
-        .returning(DataPlaneProcessModel::as_returning())
-        .get_result(connection)
-        .optional()?;
-
-    Ok(transaction)
-}
-
-pub fn get_data_plane_process_by_id(
-    data_plane_id: Uuid,
-) -> anyhow::Result<Option<DataPlaneProcessModel>> {
-    let connection = &mut get_db_connection().get()?;
-    let transaction = data_plane_processes::table
-        .find(data_plane_id)
-        .select(DataPlaneProcessModel::as_select())
-        .first(connection)
-        .optional()?;
-
-    Ok(transaction)
-}
-
-pub fn get_data_plane_process_by_transfer_process_id(
-    transfer_process_id: Uuid,
-) -> anyhow::Result<Option<DataPlaneProcessModel>> {
-    let connection = &mut get_db_connection().get()?;
-    let transaction = data_plane_processes::table
-        .filter(data_plane_processes::transfer_process_id.eq(transfer_process_id))
-        .select(DataPlaneProcessModel::as_select())
-        .first(connection)
-        .optional()?;
-
-    Ok(transaction)
-}
-
-pub fn delete_data_plane_process_by_id(data_plane_id: Uuid) -> anyhow::Result<()> {
-    let connection = &mut get_db_connection().get()?;
-    let find = data_plane_processes::table.find(data_plane_id);
-    let _ = diesel::delete(find).execute(connection)?;
-
-    Ok(())
-}
+    match repo_type.as_str() {
+        "postgres" => Box::new(TransferProviderDataRepoPostgres::new()),
+        "mongo" => Box::new(TransferProviderDataRepoMongo::new()),
+        "memory" => Box::new(TransferProviderDataRepoMemory::new()),
+        _ => panic!("Unknown REPO_TYPE: {}", repo_type),
+    }
+});

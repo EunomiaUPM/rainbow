@@ -5,10 +5,8 @@ use crate::transfer::protocol::messages::{
     TransferTerminationMessage, TRANSFER_CONTEXT,
 };
 use crate::transfer::provider::data::models::{TransferMessageModel, TransferProcessModel};
-use crate::transfer::provider::data::repo::{
-    create_transfer_message, create_transfer_process, get_transfer_process_by_provider_pid,
-    update_transfer_process_by_provider_pid,
-};
+use crate::transfer::provider::data::repo::{TransferProviderDataRepo, TRANSFER_PROVIDER_REPO};
+use crate::transfer::provider::data::repo_postgres::TransferProviderDataRepoPostgres;
 use crate::transfer::provider::err::TransferErrorType;
 use crate::transfer::provider::http::client::DATA_PLANE_HTTP_CLIENT;
 use crate::transfer::provider::lib::control_plane::{
@@ -41,7 +39,9 @@ async fn handle_get_transfer_by_provider(Path(provider_pid): Path<Uuid>) -> impl
     info!("GET /transfers/{}", provider_pid.to_string());
 
     // TODO REFACTOR IN CONTROL PLANE
-    let transfer = get_transfer_process_by_provider_pid(provider_pid).unwrap();
+    let transfer = TRANSFER_PROVIDER_REPO
+        .get_transfer_process_by_provider_pid(provider_pid)
+        .unwrap();
     match transfer {
         Some(transfer_process) => (
             StatusCode::OK,
@@ -104,12 +104,12 @@ async fn send_transfer_start(
         Ok(res) => {
             println!("{:?}", res.status());
             if res.status() == StatusCode::OK {
-                let transfer_process =
-                    update_transfer_process_by_provider_pid(&provider_pid, TransferState::STARTED)?
-                        .unwrap();
+                let transfer_process = TRANSFER_PROVIDER_REPO
+                    .update_transfer_process_by_provider_pid(&provider_pid, TransferState::STARTED)?
+                    .unwrap();
                 let created_at = chrono::Utc::now().naive_utc();
                 let message_id = Uuid::new_v4();
-                create_transfer_message(TransferMessageModel {
+                TRANSFER_PROVIDER_REPO.create_transfer_message(TransferMessageModel {
                     id: message_id,
                     transfer_process_id: transfer_process.provider_pid,
                     created_at,
