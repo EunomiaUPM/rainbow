@@ -1,4 +1,5 @@
 use crate::transfer::common::misc_router;
+use crate::transfer::provider::http::contracts_datasets_api;
 use crate::transfer::provider::http::middleware::{authentication_middleware, authorization_middleware};
 use crate::transfer::provider::http::proxy;
 use crate::transfer::provider::http::router;
@@ -16,6 +17,7 @@ pub async fn create_provider_router() -> Router {
         .merge(misc_router::router())
         .merge(router::router())
         .merge(proxy::router())
+        .merge(contracts_datasets_api::router())
         .layer(middleware::from_fn(authorization_middleware)) // TODO put middleware where needed
         .layer(middleware::from_fn(authentication_middleware))
         .layer(TraceLayer::new_for_http());
@@ -26,7 +28,7 @@ pub async fn start_provider_server() -> Result<()> {
     // config stuff
     let config = GLOBAL_CONFIG.get().unwrap();
     let server_message = format!(
-        "Starting provider server in {}:{}",
+        "Starting provider server in http://{}:{}",
         config.host_url, config.host_port
     );
     info!("{}", server_message);

@@ -19,7 +19,7 @@ pub fn router() -> Router {
 
 async fn handle_data_proxy(Path(data_id): Path<Uuid>) -> impl IntoResponse {
     info!("GET /data/{}", data_id.to_string());
-
+    
     // Resolve consumer, provider, agreement, endpoint, status...
     // Resolve data plane process
     let data_plane_process = TRANSFER_PROVIDER_REPO.get_data_plane_process_by_id(data_id).unwrap();

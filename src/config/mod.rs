@@ -7,13 +7,23 @@ pub mod provider;
 
 #[macro_export]
 macro_rules! config_field {
-    ($args:expr, $field:ident, $env_var:expr, $default:expr) => {
-        $args
-            .$field
-            .clone()
-            .or_else(|| std::env::var($env_var).ok())
-            .unwrap_or_else(|| $default.to_string())
-    };
+    ($args:expr, $field:ident, $env_var:expr, $default:expr) => {{
+        // Check if TEST=true in the environment variables
+        if std::env::var("TEST").as_deref() == Ok("true") {
+            // Do not read from environment variables
+            $args
+                .$field
+                .clone()
+                .unwrap_or_else(|| $default.to_string())
+        } else {
+            // Original behavior: attempt to read from environment variables
+            $args
+                .$field
+                .clone()
+                .or_else(|| std::env::var($env_var).ok())
+                .unwrap_or_else(|| $default.to_string())
+        }
+    }};
 }
 
 #[derive(Debug, Serialize, Deserialize)]

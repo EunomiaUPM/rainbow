@@ -67,7 +67,6 @@ pub trait TransferProviderDataRepo {
 
 pub static TRANSFER_PROVIDER_REPO: Lazy<Box<dyn TransferProviderDataRepo + Send + Sync>> = Lazy::new(|| {
     let repo_type = GLOBAL_CONFIG.get().unwrap().db_type.clone();
-
     match repo_type.as_str() {
         "postgres" => Box::new(TransferProviderDataRepoPostgres::new()),
         "mongo" => Box::new(TransferProviderDataRepoMongo::new()),

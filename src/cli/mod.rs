@@ -1,7 +1,8 @@
 use anyhow::Result;
 use clap::{Args, Parser, Subcommand};
 use dotenvy::dotenv;
-use tracing::{debug, info};
+use std::env;
+use tracing::{debug, error, info};
 
 use crate::auth::start_provider_auth_server;
 use crate::cli::setup::setup_database;
@@ -87,6 +88,7 @@ pub enum ProviderCommands {
     Start {},
     Auth {},
     Setup,
+    PopulateFakeContracts,
 }
 
 #[derive(Subcommand, Debug)]
@@ -98,15 +100,13 @@ pub enum ConsumerCommands {
 pub async fn init_command_line() -> Result<()> {
     info!("Init the command line application");
     let cli = Cli::parse();
-    debug!("{:?}", cli);
     dotenv().ok();
-
     let config = match &cli.role {
         DataSpaceTransferRoles::Provider(args) => Config {
-            host_url: config_field!(args, host_url, "HOST_URL", "http://localhost"),
+            host_url: config_field!(args, host_url, "HOST_URL", "localhost"),
             host_port: config_field!(args, host_port, "HOST_PORT", "1234"),
             db_type: config_field!(args, db_type, "DB_TYPE", "postgres"),
-            db_url: config_field!(args, db_url, "DB_URL", "http://localhost"),
+            db_url: config_field!(args, db_url, "DB_URL", "localhost"),
             db_port: config_field!(args, db_port, "DB_PORT", "5433"),
             db_user: config_field!(args, db_user, "DB_USER", "ds-protocol-provider"),
             db_password: config_field!(args, db_password, "DB_PASSWORD", "ds-protocol-provider"),
@@ -117,16 +117,16 @@ pub async fn init_command_line() -> Result<()> {
                 args,
                 auth_url,
                 "AUTH_URL",
-                "http://localhost"
+                "localhost"
             )),
             auth_port: Some(config_field!(args, auth_port, "AUTH_PORT", "1232")),
             role: ConfigRoles::Provider,
         },
         DataSpaceTransferRoles::Consumer(args) => Config {
-            host_url: config_field!(args, host_url, "HOST_URL", "http://localhost"),
+            host_url: config_field!(args, host_url, "HOST_URL", "localhost"),
             host_port: config_field!(args, host_port, "HOST_PORT", "1235"),
             db_type: config_field!(args, db_type, "DB_TYPE", "postgres"),
-            db_url: config_field!(args, db_url, "DB_URL", "http://localhost"),
+            db_url: config_field!(args, db_url, "DB_URL", "localhost"),
             db_port: config_field!(args, db_port, "DB_PORT", "5434"),
             db_user: config_field!(args, db_user, "DB_USER", "ds-protocol-consumer"),
             db_password: config_field!(args, db_password, "DB_PASSWORD", "ds-protocol-consumer"),
@@ -135,7 +135,7 @@ pub async fn init_command_line() -> Result<()> {
                 args,
                 provider_url,
                 "PROVIDER_HOST",
-                "http://localhost"
+                "localhost"
             )),
             provider_port: Some(config_field!(args, provider_port, "PROVIDER_PORT", "1234")),
             auth_url: None,
@@ -147,6 +147,8 @@ pub async fn init_command_line() -> Result<()> {
     GLOBAL_CONFIG
         .set(config)
         .expect("Global Config not initialized");
+
+    println!("{:?}", GLOBAL_CONFIG.get().unwrap());
 
     match &cli.role {
         DataSpaceTransferRoles::Consumer(args) => {
@@ -172,6 +174,7 @@ pub async fn init_command_line() -> Result<()> {
                 ProviderCommands::Setup => {
                     setup_database("provider".to_string()).await?;
                 }
+                ProviderCommands::PopulateFakeContracts => {}
             }
         }
     }

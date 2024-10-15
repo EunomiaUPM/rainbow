@@ -1,4 +1,6 @@
-use crate::config::GLOBAL_CONFIG;
+use crate::config::consumer::get_consumer_database_url;
+use crate::config::provider::get_provider_database_url;
+use crate::config::{ConfigRoles, GLOBAL_CONFIG};
 use diesel::pg::PgConnection;
 use diesel::r2d2::{ConnectionManager, Pool};
 
@@ -16,8 +18,11 @@ use diesel::r2d2::{ConnectionManager, Pool};
 pub fn get_db_connection() -> Pool<ConnectionManager<PgConnection>> {
     // TODO refactor this for working with different databases type or none...
     // TODO change the way of doing provider_migrations...
-
-    let db_url = GLOBAL_CONFIG.get().unwrap().db_url.clone();
+    let db_url = match GLOBAL_CONFIG.get().unwrap().role {
+        ConfigRoles::Provider => get_provider_database_url(),
+        ConfigRoles::Consumer => get_consumer_database_url(),
+        _ => panic!("Unsupported dataspace role"),
+    }.unwrap();
     let manager = ConnectionManager::<PgConnection>::new(db_url);
     Pool::builder()
         .max_size(10)
