@@ -20,6 +20,8 @@ pub fn transfer_start(
     callback: Uuid,
     consumer_pid: Uuid,
 ) -> anyhow::Result<()> {
+
+
     // schema validation
     let input_as_value = serde_json::value::to_value(&input)?;
     let validation = TRANSFER_START_SCHEMA.apply(&input_as_value).basic();

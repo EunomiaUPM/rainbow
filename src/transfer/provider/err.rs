@@ -118,7 +118,7 @@ impl IntoResponse for TransferErrorType {
                 }),
             ),
         }
-        .into_response()
+            .into_response()
     }
 }
 

@@ -13,7 +13,9 @@ use crate::transfer::provider::data::repo::TransferProviderDataRepo;
 use crate::transfer::provider::data::repo::TRANSFER_PROVIDER_REPO;
 use crate::transfer::provider::data::repo_postgres::TransferProviderDataRepoPostgres;
 use crate::transfer::provider::err::TransferErrorType;
-use crate::transfer::provider::lib::data_plane::{provision_data_plane, unprovision_data_plane};
+use crate::transfer::provider::lib::data_plane::{
+    complete_data_plane, provision_data_plane, reprovision_data_plane, unprovision_data_plane,
+};
 use crate::transfer::provider::lib::get_current_data_plane_client;
 use crate::transfer::schemas::{
     TRANSFER_COMPLETION_SCHEMA, TRANSFER_REQUEST_SCHEMA, TRANSFER_START_SCHEMA,
@@ -126,7 +128,7 @@ where
     Ok(tp)
 }
 
-pub fn transfer_start(Json(input): Json<&TransferStartMessage>) -> anyhow::Result<()> {
+pub async fn transfer_start(Json(input): Json<&TransferStartMessage>) -> anyhow::Result<()> {
     // schema validation
     let input_as_value = serde_json::value::to_value(&input)?;
     let validation = TRANSFER_START_SCHEMA.apply(&input_as_value).basic();
@@ -143,6 +145,9 @@ pub fn transfer_start(Json(input): Json<&TransferStartMessage>) -> anyhow::Resul
     if is_provider_valid(&input.provider_pid)? == false {
         return Err(Error::from(TransferErrorType::ProviderIdUuidError));
     }
+
+    // if possible PIP
+    reprovision_data_plane(input.provider_pid.clone().parse()?).await?;
 
     // persist information
     let transaction = TRANSFER_PROVIDER_REPO.update_transfer_process_by_provider_pid(
@@ -238,7 +243,9 @@ where
     Ok(tp)
 }
 
-pub fn transfer_completion(Json(input): Json<&TransferCompletionMessage>) -> anyhow::Result<()> {
+pub async fn transfer_completion(
+    Json(input): Json<&TransferCompletionMessage>,
+) -> anyhow::Result<()> {
     // schema validation
     let input_as_value = serde_json::value::to_value(&input)?;
     let validation = TRANSFER_COMPLETION_SCHEMA.apply(&input_as_value).basic();
@@ -250,29 +257,28 @@ pub fn transfer_completion(Json(input): Json<&TransferCompletionMessage>) -> any
     if is_consumer_pid_valid(&input.consumer_pid)? == false {
         return Err(Error::from(TransferErrorType::ConsumerIdUuidError));
     }
-
+    
     // has provider - validate - TODO check in database
     if is_provider_valid(&input.provider_pid)? == false {
         return Err(Error::from(TransferErrorType::ProviderIdUuidError));
     }
 
+    println!("aaaaaaa\n{}", serde_json::to_string_pretty(&input)?);
+
+    // if possible PIP
+    complete_data_plane(input.provider_pid.clone().parse()?).await?;
+
     let transaction = TRANSFER_PROVIDER_REPO.update_transfer_process_by_provider_pid(
         &input.provider_pid.parse()?,
         TransferState::COMPLETED,
     )?;
-    if let Some(_) = transaction {
-        TRANSFER_PROVIDER_REPO.create_transfer_message(TransferMessageModel {
-            id: Uuid::new_v4(),
-            transfer_process_id: input.provider_pid.parse()?,
-            created_at: chrono::Utc::now().naive_utc(),
-            message_type: input._type.clone(),
-            content: serde_json::to_value(input)?,
-        })?;
-    } else {
-        // TODO send back error
-        error!("Not provider");
-        return Err(Error::from(TransferErrorType::ProviderIdUuidError));
-    }
+    TRANSFER_PROVIDER_REPO.create_transfer_message(TransferMessageModel {
+        id: Uuid::new_v4(),
+        transfer_process_id: input.provider_pid.parse()?,
+        created_at: chrono::Utc::now().naive_utc(),
+        message_type: input._type.clone(),
+        content: serde_json::to_value(input)?,
+    })?;
 
     Ok(())
 }

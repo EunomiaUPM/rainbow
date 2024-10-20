@@ -48,6 +48,7 @@ async fn handle_transfer_start(
         consumer_pid.to_string()
     );
 
+
     match transfer_start(Json(&input), callback, consumer_pid) {
         Ok(_) => (StatusCode::OK).into_response(),
         Err(e) => match e.downcast::<TransferErrorType>() {

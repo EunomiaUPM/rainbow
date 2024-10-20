@@ -1,5 +1,5 @@
 use crate::auth::router as auth_router;
-use crate::config::GLOBAL_CONFIG;
+use crate::setup::config::GLOBAL_CONFIG;
 use anyhow::bail;
 use axum::{serve, Router};
 use tokio::net::TcpListener;

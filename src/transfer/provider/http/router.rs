@@ -1,4 +1,4 @@
-use crate::transfer::common::utils::convert_uuid_to_uri;
+use crate::transfer::common::utils::{convert_uri_to_uuid, convert_uuid_to_uri};
 use crate::transfer::protocol::messages::{
     TransferCompletionMessage, TransferMessageTypes, TransferProcessMessage,
     TransferRequestMessage, TransferStartMessage, TransferState, TransferSuspensionMessage,
@@ -93,7 +93,7 @@ async fn send_transfer_start(
         .post(format!(
             "{}/transfers/{}/start",
             input.callback_address,
-            input.consumer_pid.to_string()
+            convert_uri_to_uuid(&input.consumer_pid.to_string())?
         ))
         .header("content-type", "application/json")
         .json(&transfer_start_message)
@@ -130,7 +130,7 @@ async fn send_transfer_start(
 async fn handle_transfer_start(Json(input): Json<TransferStartMessage>) -> impl IntoResponse {
     info!("POST /transfers/start");
 
-    match transfer_start(Json(&input)) {
+    match transfer_start(Json(&input)).await {
         Ok(_) => (StatusCode::OK, Json(input)).into_response(),
         Err(e) => match e.downcast::<TransferErrorType>() {
             Ok(transfer_error) => transfer_error.into_response(),
@@ -172,7 +172,7 @@ async fn handle_transfer_completion(
 ) -> impl IntoResponse {
     info!("POST /transfers/completion");
 
-    match transfer_completion(Json(&input)) {
+    match transfer_completion(Json(&input)).await {
         Ok(_) => (StatusCode::OK, Json(input)).into_response(),
         Err(e) => match e.downcast::<TransferErrorType>() {
             Ok(transfer_error) => transfer_error.into_response(),

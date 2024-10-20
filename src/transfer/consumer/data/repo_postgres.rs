@@ -24,7 +24,7 @@ impl TransferConsumerDataRepo for TransferConsumerDataRepoPostgres {
     fn get_all_callbacks(&self, limit: Option<i64>) -> anyhow::Result<Vec<TransferCallbacksModel>> {
         let connection = &mut self.connection_pool.get()?;
         let transaction = transfer_callbacks
-            .limit(limit.unwrap_or(20))
+            .limit(limit.unwrap_or(50))
             .select(TransferCallbacksModel::as_select())
             .load(connection)?;
 

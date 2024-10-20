@@ -4,6 +4,7 @@ use std::ops::Deref;
 
 pub mod control_plane;
 pub mod data_plane;
+pub mod api;
 
 enum Clients {
     HttpClient,
@@ -14,5 +15,5 @@ pub fn get_current_data_plane_client() -> &'static Client {
     match true {
         _ => &DATA_PLANE_HTTP_CLIENT,
     }
-    .deref()
+        .deref()
 }

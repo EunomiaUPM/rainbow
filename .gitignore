@@ -17,3 +17,4 @@ crashlytics-build.properties
 fabric.properties
 .env
 **/pslm/
+gui/node_modules

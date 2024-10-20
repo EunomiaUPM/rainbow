@@ -2,23 +2,16 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-use crate::db::get_db_connection;
-use diesel::r2d2::{ConnectionManager, Pool};
-use diesel::{PgConnection, RunQueryDsl};
+use rainbow::setup;
 use tracing::{info, Level};
 
-pub mod auth;
-pub mod catalog;
-pub mod cli;
-pub mod config;
-pub mod contracts;
-pub mod db;
-pub mod fake_catalog;
-pub mod fake_contracts;
-pub mod transfer;
-
-const INFO: &str = "
+const INFO: &str = r"
 ----------
+ ____    __    ____  _  _  ____  _____  _    _
+(  _ \  /__\  (_  _)( \( )(  _ \(  _  )( \/\/ )
+ )   / /(__)\  _)(_  )  (  ) _ < )(_)(  )    (
+(_)\_)(__)(__)(____)(_)\_)(____/(_____)(__/\__)
+
 Starting Rainbow 🌈🌈
 UPM Dataspace protocol implementation
 Show some love on https://github.com/ging/rainbow
@@ -32,7 +25,7 @@ async fn main() -> anyhow::Result<()> {
         .with_max_level(Level::DEBUG)
         .init();
     info!("{}", INFO);
-    cli::init_command_line().await?;
+    setup::commands::init_command_line().await?;
 
     Ok(())
 }

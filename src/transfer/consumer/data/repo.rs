@@ -1,4 +1,4 @@
-use crate::config::GLOBAL_CONFIG;
+use crate::setup::config::GLOBAL_CONFIG;
 use crate::transfer::consumer::data::models::{TransferCallbacksModel, TransferCallbacksModelNewState};
 use crate::transfer::consumer::data::repo_memory::TransferConsumerDataRepoMemory;
 use crate::transfer::consumer::data::repo_mongo::TransferConsumerDataRepoMongo;

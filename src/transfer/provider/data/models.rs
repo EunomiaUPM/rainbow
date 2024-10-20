@@ -3,7 +3,16 @@ use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-#[derive(Queryable, Identifiable, Selectable, Debug, PartialEq, Insertable)]
+#[derive(
+    Queryable,
+    Identifiable,
+    Selectable,
+    Debug,
+    PartialEq,
+    Insertable,
+    Serialize,
+    Deserialize,
+)]
 #[diesel(table_name=transfer_processes)]
 #[diesel(primary_key(provider_pid))]
 pub struct TransferProcessModel {

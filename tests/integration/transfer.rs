@@ -15,19 +15,17 @@ use rainbow::fake_contracts::data::models::ContractAgreementsModel;
 use rainbow::fake_contracts::data::repo::delete_agreement_repo;
 use rainbow::fake_contracts::lib::create_agreement;
 use rainbow::transfer::common::utils::{convert_uri_to_uuid, convert_uuid_to_uri};
+use rainbow::transfer::consumer::data::models::TransferCallbacksModel;
 use rainbow::transfer::consumer::data::repo::TRANSFER_CONSUMER_REPO;
-use rainbow::transfer::consumer::http::server::{
-    create_consumer_router, start_consumer_server, start_consumer_server_with_listener,
-};
+use rainbow::transfer::consumer::http::server::create_consumer_router;
 use rainbow::transfer::consumer::lib::callbacks_controller::create_new_callback;
 use rainbow::transfer::protocol::formats::{DctFormats, FormatAction, FormatProtocol};
 use rainbow::transfer::protocol::messages::{
-    DataAddress, TransferMessageTypes, TransferProcessMessage, TransferRequestMessage,
-    TransferStartMessage, TransferState, TransferSuspensionMessage, TRANSFER_CONTEXT,
+    DataAddress, TransferCompletionMessage, TransferMessageTypes, TransferProcessMessage,
+    TransferRequestMessage, TransferStartMessage, TransferState, TransferSuspensionMessage,
+    TRANSFER_CONTEXT,
 };
-use rainbow::transfer::provider::http::server::{
-    create_provider_router, start_provider_server, start_provider_server_with_listener,
-};
+use rainbow::transfer::provider::http::server::create_provider_router;
 use rainbow::transfer::provider::lib::control_plane::get_transfer_requests_by_provider;
 use rainbow::transfer::provider::lib::data_plane::resolve_endpoint_from_agreement;
 use serde_json::{json, Value};
@@ -77,7 +75,8 @@ async fn setup_env() -> anyhow::Result<(Vec<DatasetsCatalogModel>, Vec<ContractA
             .json(&json!({
                 "endpoint": endpoint
             }))
-            .send().await?;
+            .send()
+            .await?;
         let ds: DatasetsCatalogModel = res.json().await?;
         fake_datasets.push(ds.clone());
         let res = client
@@ -85,7 +84,8 @@ async fn setup_env() -> anyhow::Result<(Vec<DatasetsCatalogModel>, Vec<ContractA
             .json(&json!({
                 "dataset": ds.dataset_id
             }))
-            .send().await?;
+            .send()
+            .await?;
         let agreement: ContractAgreementsModel = res.json().await?;
         agreements.push(agreement);
     }
@@ -139,8 +139,7 @@ pub async fn transfer_all_provider() -> anyhow::Result<()> {
         .spawn()
         .expect("Failed to start consumer server");
 
-    tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
-
+    tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
 
     // LOAD AGREEMENTS AND ENDPOINTS
     let client = reqwest::Client::new();
@@ -155,120 +154,185 @@ pub async fn transfer_all_provider() -> anyhow::Result<()> {
     // 1.
     // Hi, i'm a consumer and going to start the protocol
     // First i create a callback
+    let res = client
+        .post("http://localhost:1235/api/v1/callbacks")
+        .send()
+        .await?;
+    let callback_id = res.text().await?.parse::<Uuid>()?;
+    let callback_address = format!("http://localhost:1235/{}", callback_id.to_string());
+    println!("1.1 Creating Callback Address: \n{}", callback_address);
 
-    // HERE I AM!!!! <------ GO WITH HERE and refactor ========================================
-    // let callback_id = create_new_callback()?; // <---should be done via api or cli
+    // After Create TransferRequestMessage
+    let transfer_request_message = get_json_file("transfer-request.json")?;
+    let mut request_data =
+        serde_json::from_str::<TransferRequestMessage>(&transfer_request_message)?;
+    let consumer_pid = Uuid::new_v4();
+    request_data.format = DctFormats {
+        protocol: FormatProtocol::Http,
+        action: FormatAction::Pull,
+    };
+    request_data.consumer_pid = convert_uuid_to_uri(&consumer_pid)?;
+    request_data.agreement_id = convert_uuid_to_uri(&agreements.get(0).unwrap().agreement_id)?;
+    request_data.callback_address = callback_address;
+    request_data.data_address = None;
+    //
+    println!(
+        "1.2 Create TransferRequest \n{}",
+        serde_json::to_string_pretty(&request_data)?
+    );
 
-    // let callback_address = format!("http://localhost:1235/{}", callback_id.to_string());
-    // println!("1.1 Creating Callback Address: \n{}", callback_address);
-    //
-    // // After Create TransferRequestMessage
-    // let transfer_request_message = get_json_file("transfer-request.json")?;
-    // let mut request_data =
-    //     serde_json::from_str::<TransferRequestMessage>(&transfer_request_message)?;
-    // let consumer_pid = Uuid::new_v4();
-    // request_data.format = DctFormats {
-    //     protocol: FormatProtocol::Http,
-    //     action: FormatAction::Pull,
-    // };
-    // request_data.consumer_pid = convert_uuid_to_uri(&consumer_pid)?;
-    // request_data.agreement_id = convert_uuid_to_uri(&agreements.get(0).unwrap().agreement_id)?;
-    // request_data.callback_address = callback_address;
-    // request_data.data_address = None;
-    // //
-    // println!(
-    //     "1.2 Create TransferRequest \n{}",
-    //     serde_json::to_string_pretty(&request_data)?
-    // );
+    // And I send it to Provider
+    let res = client
+        .post("http://localhost:1234/transfers/request")
+        .header("content-type", "application/json")
+        .json(&request_data)
+        .send()
+        .await?;
+    let res_body = &res.json::<TransferProcessMessage>().await?;
+    let provider_pid_ = res_body.provider_pid.clone();
 
-    // // And I send it to Provider
-    // let res = client
-    //     .post("http://localhost:1234/transfers/request")
-    //     .header("content-type", "application/json")
-    //     .json(&request_data)
-    //     .send()
-    //     .await?;
-    // let res_body = &res.json::<TransferProcessMessage>().await?;
-    // let provider_pid = res_body.provider_pid.clone();
-    //
-    // println!(
-    //     "1.3 Send data to provider and status is: \n{}",
-    //     serde_json::to_string_pretty(&res_body)?
-    // );
-    //
-    // //============================================//
-    // // TRANSFER START STAGE IS HAPPENING UNDER THE HOOD (async) - Check the logs
-    // //============================================//
-    // // Assert transfer start
-    // // Assert endpoint
-    //
-    // //============================================//
-    // // BEGIN DATA TRANSFER!!!
-    // //============================================//
-    // // Give some time data plane to be provided
-    // tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-    //
-    // // Consumer queries wants to know where is the endpoint
-    // // This info is consumer callback database
-    // // let agreement = convert_uuid_to_uri(&agreements.get(0).unwrap().agreement_id)?;
-    // // let endpoint = resolve_endpoint_from_agreement(agreement.parse()?).await?;
-    // let callback = TRANSFER_CONSUMER_REPO.get_callback_by_consumer_id(consumer_pid)?.unwrap();
-    // let callback_data_address =
-    //     serde_json::from_value::<DataAddress>(Value::from(callback.data_address))?;
-    // let endpoint = callback_data_address.endpoint;
-    //
-    // let data_plane_res = client.get(&endpoint).send().await?;
-    //
-    // println!("{:?}", &data_plane_res.status());
-    // println!("{:?}", &data_plane_res.bytes().await?);
-    // // ASSERT TRANSFER!!
-    //
-    // //============================================//
-    // // END DATA TRANSFER!!!
-    // //============================================//
-    //
-    // //============================================//
-    // // TRANSFER SUSPENSION STAGE
-    // //============================================//
-    // // Consumer want's to suspend temporarily the transfer
-    // let suspension_data = TransferSuspensionMessage {
-    //     context: TRANSFER_CONTEXT.to_string(),
-    //     _type: TransferMessageTypes::TransferSuspensionMessage.to_string(),
-    //     provider_pid,
-    //     consumer_pid: convert_uuid_to_uri(&consumer_pid)?,
-    //     code: "A".to_string(),           // TODO DEFINE ALL THIS!!!
-    //     reason: vec!["bla".to_string()], // TODO DEFINE REASONS
-    // };
-    // let res = client
-    //     .post("http://localhost:1234/transfers/suspension")
-    //     .header("content-type", "application/json")
-    //     .json(&suspension_data)
-    //     .send()
-    //     .await?;
-    //
-    // println!("{:?}", &res.status());
-    // // ASSERT
-    //
-    // //============================================//
-    // // BEGIN DATA TRANSFER!!! should fail
-    // //============================================//
-    // // Give some time data plane to be unprovided
-    // tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-    //
-    // let data_plane_res = client.get(&endpoint).send().await?;
-    //
-    // println!("{:?}", &data_plane_res.status()); // <---- revisar esto bien, que no cuadra...
-    // // ASSERT TRANSFER!!
-    // // ASSERT SHOULD FAIL
-    //
-    // //============================================//
-    // // END DATA TRANSFER!!!
-    // //============================================//
-    //
-    // //============================================//
-    // // CLEANUP
-    // //============================================//
-    tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
+    println!(
+        "1.3 Send data to provider and status is: \n{}",
+        serde_json::to_string_pretty(&res_body)?
+    );
+
+    //============================================//
+    // TRANSFER START STAGE IS HAPPENING UNDER THE HOOD (async) - Check the logs
+    //============================================//
+    // Assert transfer start
+    // Assert endpoint
+
+    //============================================//
+    // BEGIN DATA TRANSFER!!!
+    //============================================//
+    // Give some time data plane to be provided
+    tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+
+    // Consumer queries wants to know where is the endpoint
+    // This info is in consumer callback database
+    let res = client
+        .get(format!(
+            "http://localhost:1235/api/v1/callbacks/{}",
+            callback_id
+        ))
+        .header("content-type", "application/json")
+        .send()
+        .await?;
+    let res_body = res.json::<TransferCallbacksModel>().await.unwrap();
+    let res_body_data_address =
+        serde_json::from_value::<DataAddress>(res_body.data_address.unwrap());
+    let endpoint = &res_body_data_address?.endpoint;
+
+    let data_plane_res = client.get(endpoint).send().await?;
+    println!("{:?}", &data_plane_res.status());
+    println!("{:?}", &data_plane_res.bytes().await?);
+    // ASSERT TRANSFER!!
+    //============================================//
+    // END DATA TRANSFER!!!
+    //============================================//
+
+    //============================================//
+    // TRANSFER SUSPENSION STAGE
+    //============================================//
+    // Consumer want's to suspend temporarily the transfer
+    let suspension_data = TransferSuspensionMessage {
+        context: TRANSFER_CONTEXT.to_string(),
+        _type: TransferMessageTypes::TransferSuspensionMessage.to_string(),
+        provider_pid: provider_pid_.clone(),
+        consumer_pid: convert_uuid_to_uri(&consumer_pid)?,
+        code: "A".to_string(),           // TODO DEFINE ALL THIS!!!
+        reason: vec!["bla".to_string()], // TODO DEFINE REASONS
+    };
+    let res = client
+        .post("http://localhost:1234/transfers/suspension")
+        .header("content-type", "application/json")
+        .json(&suspension_data)
+        .send()
+        .await?;
+
+    println!("{:?}", &res.status());
+    // ASSERT
+
+    //============================================//
+    // BEGIN DATA TRANSFER!!! should fail
+    //============================================//
+    // Give some time data plane to be unprovided
+    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+    let data_plane_res = client.get(endpoint).send().await?;
+    println!("{:?}", &data_plane_res.status());
+    // ASSERT SHOULD FAIL
+    //============================================//
+    // END DATA TRANSFER!!!
+    //============================================//
+
+    //============================================//
+    // TRANSFER RESTART STAGE
+    //============================================//
+    // Consumer wants to restart
+    // This info is in consumer callback database
+    // Recalls endpoint
+    let restart_data = TransferStartMessage {
+        context: TRANSFER_CONTEXT.to_string(),
+        _type: TransferMessageTypes::TransferStartMessage.to_string(),
+        provider_pid: provider_pid_.clone(),
+        consumer_pid: convert_uuid_to_uri(&consumer_pid)?,
+        data_address: None,
+    };
+    let res = client
+        .post("http://localhost:1234/transfers/start")
+        .header("content-type", "application/json")
+        .json(&restart_data)
+        .send()
+        .await?;
+
+    println!("{:?}", &res.status());
+
+    //============================================//
+    // BEGIN DATA TRANSFER!!! should work
+    //============================================//
+    // Give some time data plane to be provided
+    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+    let data_plane_res = client.get(endpoint).send().await?;
+    println!("{:?}", &data_plane_res.status());
+    println!("{:?}", &data_plane_res.bytes().await?);
+    //============================================//
+    // END DATA TRANSFER!!!
+    //============================================//
+
+    //============================================//
+    // TRANSFER COMPLETION STAGE
+    //============================================//
+    // Consumer wants to complete
+    let complete_data = TransferCompletionMessage {
+        context: TRANSFER_CONTEXT.to_string(),
+        _type: TransferMessageTypes::TransferCompletionMessage.to_string(),
+        provider_pid: provider_pid_.clone(),
+        consumer_pid: convert_uuid_to_uri(&consumer_pid)?,
+    };
+    let res = client
+        .post("http://localhost:1234/transfers/completion")
+        .header("content-type", "application/json")
+        .json(&complete_data)
+        .send()
+        .await?;
+
+    println!("{:?}", &res.status());
+
+    //============================================//
+    // BEGIN DATA TRANSFER!!! shouldn't work
+    //============================================//
+    // Give some time data plane to be provided
+    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+    let data_plane_res = client.get(endpoint).send().await?;
+    println!("{:?}", &data_plane_res.status());
+    //============================================//
+    // END DATA TRANSFER!!!
+    //============================================//
+
+    //============================================//
+    // CLEANUP
+    //============================================//
+    tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
     provider_server.kill().expect("Failed to kill server");
     consumer_server.kill().expect("Failed to kill server");
     // cleanup_env(setup).await?;

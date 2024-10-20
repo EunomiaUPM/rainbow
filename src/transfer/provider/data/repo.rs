@@ -4,7 +4,7 @@ use crate::transfer::provider::data::models::{
 };
 use once_cell::sync::Lazy;
 
-use crate::config::GLOBAL_CONFIG;
+use crate::setup::config::GLOBAL_CONFIG;
 use crate::transfer::provider::data::repo_memory::TransferProviderDataRepoMemory;
 use crate::transfer::provider::data::repo_mongo::TransferProviderDataRepoMongo;
 use crate::transfer::provider::data::repo_postgres::TransferProviderDataRepoPostgres;

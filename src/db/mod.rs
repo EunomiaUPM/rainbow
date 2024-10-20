@@ -1,8 +1,9 @@
-use crate::config::consumer::get_consumer_database_url;
-use crate::config::provider::get_provider_database_url;
-use crate::config::{ConfigRoles, GLOBAL_CONFIG};
+use crate::setup::config::get_consumer_database_url;
+use crate::setup::config::get_provider_database_url;
+use crate::setup::config::{ConfigRoles, GLOBAL_CONFIG};
 use diesel::pg::PgConnection;
 use diesel::r2d2::{ConnectionManager, Pool};
+use duckdb::DuckdbConnectionManager;
 
 ///
 /// ⚠️Warning!
@@ -28,5 +29,14 @@ pub fn get_db_connection() -> Pool<ConnectionManager<PgConnection>> {
         .max_size(10)
         .test_on_check_out(true)
         .build(manager)
+        .expect("Database pool initialization failed")
+}
+
+pub fn get_db_memory_connection_r2d2() -> Pool<DuckdbConnectionManager> {
+    let conn = DuckdbConnectionManager::file("db").unwrap();
+    Pool::builder()
+        .max_size(10)
+        .test_on_check_out(true)
+        .build(conn)
         .expect("Database pool initialization failed")
 }

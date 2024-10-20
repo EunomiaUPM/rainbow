@@ -5,14 +5,12 @@ use std::env;
 use tracing::{debug, error, info};
 
 use crate::auth::start_provider_auth_server;
-use crate::cli::setup::setup_database;
-use crate::config::{Config, ConfigRoles, GLOBAL_CONFIG};
 use crate::config_field;
-use crate::transfer::consumer::http::server::start_consumer_server;
+use crate::setup::config::{Config, ConfigRoles, GLOBAL_CONFIG};
+use crate::setup::databases::setup_database;
+use crate::setup::servers::{start_consumer_server, start_provider_server};
 use crate::transfer::consumer::*;
-use crate::transfer::provider::http::server::start_provider_server;
 
-pub mod setup;
 
 #[derive(Parser, Debug)]
 #[command(name = "Dataspace protocol")]
@@ -100,7 +98,10 @@ pub enum ConsumerCommands {
 pub async fn init_command_line() -> Result<()> {
     info!("Init the command line application");
     let cli = Cli::parse();
-    dotenv().ok();
+    if env::var_os("TEST").is_none() {
+        dotenv().ok();
+    }
+
     let config = match &cli.role {
         DataSpaceTransferRoles::Provider(args) => Config {
             host_url: config_field!(args, host_url, "HOST_URL", "localhost"),

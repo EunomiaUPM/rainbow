@@ -19,7 +19,7 @@ anyhow = "1.0.80"
 tracing = "0.1"
 tracing-subscriber = "0.3.0"
 axum = { version = "0.7.5" }
-tower-http = { version = "0.5.2", features = ["trace"] }
+tower-http = { version = "0.5.2", features = ["trace", "cors"] }
 diesel = { version = "2.0.3", features = ["postgres", "uuid", "chrono", "r2d2", "serde_json"] }
 diesel_migrations = { version = "2.2.0", features = ["default"] }
 dotenvy = "0.15"
@@ -34,3 +34,4 @@ log = "0.4.21"
 tower = "0.4.13"
 http-body-util = "0.1.2"
 tracing-test = "0.2.5"
+duckdb = { version = "1.1.1", features = ["bundled", "uuid", "r2d2", "serde_json"] }

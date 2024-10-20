@@ -1,8 +1,6 @@
 use crate::fake_catalog::lib::get_dataset_by_id;
 use crate::fake_contracts::lib::get_agreement_by_id;
-use crate::transfer::protocol::messages::{
-    DataAddress, TransferRequestMessage, TransferSuspensionMessage,
-};
+use crate::transfer::protocol::messages::{DataAddress, TransferRequestMessage, TransferSuspensionMessage};
 use crate::transfer::provider::data::models::DataPlaneProcessModel;
 use crate::transfer::provider::data::repo::{TransferProviderDataRepo, TRANSFER_PROVIDER_REPO};
 use anyhow::Error;
@@ -39,10 +37,6 @@ where
 {
     let agreement = Uuid::parse_str(&input.agreement_id)?;
 
-    // Stuff should happen here....
-    // TODO define what... related with PXP
-    //
-
     // persist
     let data_plane_process =
         TRANSFER_PROVIDER_REPO.create_data_plane_process(DataPlaneProcessModel {
@@ -68,6 +62,40 @@ where
 
     cb(input.into(), provider_pid).await?;
     Ok(())
+}
+
+pub async fn reprovision_data_plane(
+    provider_pid: Uuid,
+) -> anyhow::Result<()> {
+    let data_plane =
+        TRANSFER_PROVIDER_REPO.get_data_plane_process_by_transfer_process_id(
+            provider_pid,
+        )?;
+    if let None = data_plane {
+        return Err(anyhow::anyhow!("not found...")); // TODO error
+    } else {
+        TRANSFER_PROVIDER_REPO.update_data_plane_process(
+            data_plane.unwrap().data_plane_id,
+            true,
+        )?;
+        Ok(())
+    }
+}
+
+pub async fn complete_data_plane(provider_pid: Uuid) -> anyhow::Result<()> {
+    let data_plane =
+        TRANSFER_PROVIDER_REPO.get_data_plane_process_by_transfer_process_id(
+            provider_pid,
+        )?;
+    if let None = data_plane {
+        return Err(anyhow::anyhow!("not found...")); // TODO error
+    } else {
+        TRANSFER_PROVIDER_REPO.update_data_plane_process(
+            data_plane.unwrap().data_plane_id,
+            false,
+        )?;
+        Ok(())
+    }
 }
 
 pub async fn unprovision_data_plane<F, Fut, M>(
