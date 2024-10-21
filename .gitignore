@@ -18,3 +18,4 @@ fabric.properties
 .env
 **/pslm/
 gui/node_modules
+.DS_Store

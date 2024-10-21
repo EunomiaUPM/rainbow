@@ -3,13 +3,14 @@
 @tailwind utilities;
 
 * {
-  @apply border border-red-500;
+  /* @apply border border-red-500; */
 }
 
 html,
 body {
   --font-sans: "Arial";
-  @apply font-sans;
+  @apply font-sans leading-snug min-h-full text-base text-slate-800;
+
 }
 
 @layer base {

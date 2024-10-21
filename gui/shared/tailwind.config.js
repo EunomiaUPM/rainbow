@@ -1,11 +1,9 @@
 import { fontFamily } from "tailwindcss/defaultTheme"
 
 /** @type {import('tailwindcss').Config} */
-export const darkMode = ["class"]
 export const content = [
   "index.css",
-  "./../consumer/src/**/*.{ts,tsx}",
-  "./src/**/*.{ts,tsx}"
+  "./src/**/*.{ts,tsx,js,jsx,css,sass,scss}"
 ]
 export const theme = {
   container: {

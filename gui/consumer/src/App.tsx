@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import {
   Table,
@@ -9,26 +8,17 @@ import {
   TableHeader,
   TableRow,
 } from "shared/src/components/ui/table";
+import { useFetchConsumerCallbacks } from "./hooks/useFetchConsumerCallbacks";
 
 const App = () => {
-  const { data, isError, error } = useQuery({
-    queryKey: [],
-    queryFn: async () => {
-      const consumerCallbacks = await fetch(
-        "http://localhost:1235/api/v1/callbacks"
-      );
-      return await consumerCallbacks.json();
-    },
-    refetchInterval: 10000,
-    refetchIntervalInBackground: true,
-  });
+  const { data, isError, error } = useFetchConsumerCallbacks();
 
   if (isError) {
-    return <div>{error.message}</div>;
+    return <div>{error!.message}</div>;
   }
 
   return (
-    <div className="">
+    <div className="container">
       <h1>Dataspace consumer</h1>
       <Table>
         <TableCaption>Ongoing consumer callbacks</TableCaption>
@@ -37,14 +27,16 @@ const App = () => {
             <TableHead>Callback Id:</TableHead>
             <TableHead>Created at:</TableHead>
             <TableHead>Updated at:</TableHead>
+            <TableHead>Provider pid:</TableHead>
+            <TableHead>Consumer pid:</TableHead>
             <TableHead>Data Address:</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {data &&
-            data.map((d, i: number) => (
+            data.map((d: TransferCallbackModel, i: number) => (
               <TableRow key={i}>
-                <TableCell className="font-medium">{d.id}</TableCell>
+                <TableCell>{d.id}</TableCell>
                 <TableCell>
                   {dayjs(d.created_at).format("DD/MM/YYYY HH:mm:ss.SSS")}
                 </TableCell>
@@ -53,6 +45,8 @@ const App = () => {
                     ? dayjs(d.updated_at).format("DD/MM/YYYY HH:mm:ss.SSS")
                     : "-"}
                 </TableCell>
+                <TableCell>{d.provider_pid ? d.provider_pid : "-"}</TableCell>
+                <TableCell>{d.consumer_pid ? d.consumer_pid : "-"}</TableCell>
                 <TableCell>
                   {d.data_address ? d.data_address["dspace:endpoint"] : "-"}
                 </TableCell>
