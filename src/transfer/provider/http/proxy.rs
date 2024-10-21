@@ -19,20 +19,20 @@ pub fn router() -> Router {
 
 async fn handle_data_proxy(Path(data_id): Path<Uuid>) -> impl IntoResponse {
     info!("GET /data/{}", data_id.to_string());
-    
+
     // Resolve consumer, provider, agreement, endpoint, status...
     // Resolve data plane process
-    let data_plane_process = TRANSFER_PROVIDER_REPO.get_data_plane_process_by_id(data_id).unwrap();
-    if data_plane_process.is_none() {
+    let transfer_process = TRANSFER_PROVIDER_REPO.get_transfer_process_by_data_plane_process(data_id).unwrap();
+    if transfer_process.is_none() {
         return (StatusCode::NOT_FOUND, "Not found".to_string());
     }
+    let transfer_process = transfer_process.unwrap();
 
-    let data_plane_state = data_plane_process.as_ref().unwrap().state;
-    if data_plane_state == false {
+    if transfer_process.state != "dspace:STARTED" {
         return (StatusCode::UNAUTHORIZED, "Not found".to_string());
     }
 
-    let endpoint = resolve_endpoint_from_agreement(data_plane_process.unwrap().agreement_id).await;
+    let endpoint = resolve_endpoint_from_agreement(transfer_process.agreement_id).await;
     if endpoint.is_err() {
         return (
             StatusCode::UNAVAILABLE_FOR_LEGAL_REASONS,

@@ -1,6 +1,6 @@
 use crate::transfer::protocol::messages::{TransferMessageTypes, TransferState};
 use crate::transfer::provider::data::models::{
-    DataPlaneProcessModel, TransferMessageModel, TransferProcessModel,
+    TransferMessageModel, TransferProcessModel,
 };
 use once_cell::sync::Lazy;
 
@@ -24,12 +24,17 @@ pub trait TransferProviderDataRepo {
         &self,
         provider_pid_in: Uuid,
     ) -> anyhow::Result<Option<TransferProcessModel>>;
+    fn get_transfer_process_by_data_plane_process(
+        &self,
+        data_plane_process: Uuid,
+    ) -> anyhow::Result<Option<TransferProcessModel>>;
     fn create_transfer_process(&self, transfer_process: TransferProcessModel)
                                -> anyhow::Result<()>;
     fn update_transfer_process_by_provider_pid(
         &self,
         provider_pid_in: &Uuid,
         new_state: TransferState,
+        new_data_plane_id: Option<Uuid>,
     ) -> anyhow::Result<Option<TransferProcessModel>>;
     fn get_all_transfer_messages(
         &self,
@@ -45,24 +50,6 @@ pub trait TransferProviderDataRepo {
         message_id_in: Uuid,
     ) -> anyhow::Result<Option<TransferMessageModel>>;
     fn create_transfer_message(&self, message: TransferMessageModel) -> anyhow::Result<()>;
-    fn create_data_plane_process(
-        &self,
-        data_plane_process: DataPlaneProcessModel,
-    ) -> anyhow::Result<DataPlaneProcessModel>;
-    fn update_data_plane_process(
-        &self,
-        data_plane_process_id: Uuid,
-        new_state: bool,
-    ) -> anyhow::Result<Option<DataPlaneProcessModel>>;
-    fn get_data_plane_process_by_id(
-        &self,
-        data_plane_id: Uuid,
-    ) -> anyhow::Result<Option<DataPlaneProcessModel>>;
-    fn get_data_plane_process_by_transfer_process_id(
-        &self,
-        transfer_process_id: Uuid,
-    ) -> anyhow::Result<Option<DataPlaneProcessModel>>;
-    fn delete_data_plane_process_by_id(&self, data_plane_id: Uuid) -> anyhow::Result<()>;
 }
 
 pub static TRANSFER_PROVIDER_REPO: Lazy<Box<dyn TransferProviderDataRepo + Send + Sync>> = Lazy::new(|| {

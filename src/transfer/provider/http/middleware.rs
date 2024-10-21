@@ -38,3 +38,14 @@ pub async fn authorization_middleware(
     let response = next.run(request).await;
     Ok(response)
 }
+
+pub async fn protocol_rules_middleware(
+    request: Request,
+    next: Next,
+) -> anyhow::Result<Response, StatusCode> {
+    info!("Protocol rules middleware");
+    // request.
+
+    let response = next.run(request).await;
+    Ok(response)
+}

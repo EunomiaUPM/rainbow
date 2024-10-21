@@ -9,10 +9,7 @@ use crate::transfer::provider::data::repo::{TransferProviderDataRepo, TRANSFER_P
 use crate::transfer::provider::data::repo_postgres::TransferProviderDataRepoPostgres;
 use crate::transfer::provider::err::TransferErrorType;
 use crate::transfer::provider::http::client::DATA_PLANE_HTTP_CLIENT;
-use crate::transfer::provider::lib::control_plane::{
-    transfer_completion, transfer_request, transfer_start, transfer_suspension,
-    transfer_termination,
-};
+use crate::transfer::provider::lib::control_plane::{get_transfer_requests_by_provider, transfer_completion, transfer_request, transfer_start, transfer_suspension, transfer_termination};
 use axum::extract::Path;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
@@ -38,11 +35,7 @@ pub fn router() -> Router {
 async fn handle_get_transfer_by_provider(Path(provider_pid): Path<Uuid>) -> impl IntoResponse {
     info!("GET /transfers/{}", provider_pid.to_string());
 
-    // TODO REFACTOR IN CONTROL PLANE
-    let transfer = TRANSFER_PROVIDER_REPO
-        .get_transfer_process_by_provider_pid(provider_pid)
-        .unwrap();
-    match transfer {
+    match get_transfer_requests_by_provider(provider_pid).await.unwrap() {
         Some(transfer_process) => (
             StatusCode::OK,
             Json(TransferProcessMessage {
@@ -61,7 +54,7 @@ async fn handle_get_transfer_by_provider(Path(provider_pid): Path<Uuid>) -> impl
 async fn handle_transfer_request(Json(input): Json<TransferRequestMessage>) -> impl IntoResponse {
     info!("POST /transfers/request");
 
-    match transfer_request(Json(input), send_transfer_start).await {
+    match transfer_request(input, send_transfer_start).await {
         Ok(tp) => (StatusCode::CREATED, Json(tp)).into_response(),
         Err(e) => match e.downcast::<TransferErrorType>() {
             Ok(transfer_error) => transfer_error.into_response(),
@@ -86,8 +79,6 @@ async fn send_transfer_start(
         data_address: input.data_address,
     };
 
-    println!("{}", serde_json::to_string_pretty(&transfer_start_message)?);
-
     let response = DATA_PLANE_HTTP_CLIENT
         .clone()
         .post(format!(
@@ -102,10 +93,9 @@ async fn send_transfer_start(
 
     match response {
         Ok(res) => {
-            println!("{:?}", res.status());
             if res.status() == StatusCode::OK {
                 let transfer_process = TRANSFER_PROVIDER_REPO
-                    .update_transfer_process_by_provider_pid(&provider_pid, TransferState::STARTED)?
+                    .update_transfer_process_by_provider_pid(&provider_pid, TransferState::STARTED, None)?
                     .unwrap();
                 let created_at = chrono::Utc::now().naive_utc();
                 let message_id = Uuid::new_v4();
@@ -114,6 +104,8 @@ async fn send_transfer_start(
                     transfer_process_id: transfer_process.provider_pid,
                     created_at,
                     message_type: TransferMessageTypes::TransferStartMessage.to_string(),
+                    from: "provider".to_string(),
+                    to: "consumer".to_string(),
                     content: serde_json::to_value(&transfer_start_message)?,
                 })?;
             } else {
@@ -130,7 +122,7 @@ async fn send_transfer_start(
 async fn handle_transfer_start(Json(input): Json<TransferStartMessage>) -> impl IntoResponse {
     info!("POST /transfers/start");
 
-    match transfer_start(Json(&input)).await {
+    match transfer_start(&input).await {
         Ok(_) => (StatusCode::OK, Json(input)).into_response(),
         Err(e) => match e.downcast::<TransferErrorType>() {
             Ok(transfer_error) => transfer_error.into_response(),
@@ -147,7 +139,7 @@ async fn handle_transfer_suspension(
 ) -> impl IntoResponse {
     info!("POST /transfers/suspension");
 
-    match transfer_suspension(Json(input.clone()), send_transfer_suspension) {
+    match transfer_suspension(&input).await {
         Ok(tp) => (StatusCode::OK, Json(tp)).into_response(),
         Err(e) => match e.downcast::<TransferErrorType>() {
             Ok(transfer_error) => transfer_error.into_response(),
@@ -159,20 +151,12 @@ async fn handle_transfer_suspension(
     }
 }
 
-async fn send_transfer_suspension(
-    Json(input): Json<TransferSuspensionMessage>,
-    provider_pid: Uuid,
-) -> anyhow::Result<()> {
-    println!("Transfer {} suspended", input.provider_pid);
-    Ok(())
-}
-
 async fn handle_transfer_completion(
     Json(input): Json<TransferCompletionMessage>,
 ) -> impl IntoResponse {
     info!("POST /transfers/completion");
 
-    match transfer_completion(Json(&input)).await {
+    match transfer_completion(&input).await {
         Ok(_) => (StatusCode::OK, Json(input)).into_response(),
         Err(e) => match e.downcast::<TransferErrorType>() {
             Ok(transfer_error) => transfer_error.into_response(),
@@ -189,7 +173,7 @@ async fn handle_transfer_termination(
 ) -> impl IntoResponse {
     info!("POST /transfers/termination");
 
-    match transfer_termination(Json(&input)) {
+    match transfer_termination(&input) {
         Ok(_) => (StatusCode::OK, Json(input)).into_response(),
         Err(e) => match e.downcast::<TransferErrorType>() {
             Ok(transfer_error) => transfer_error.into_response(),

@@ -9,6 +9,5 @@ pub async fn get_all_callbacks() -> anyhow::Result<Vec<TransferCallbacksModel>> 
 
 pub async fn get_callback_by_id(callback_id: Uuid) -> anyhow::Result<Option<TransferCallbacksModel>> {
     let callbacks = TRANSFER_CONSUMER_REPO.get_callback_by_id(callback_id)?;
-    println!("holaaaaa:::: {:?}", callbacks);
     Ok(callbacks)
 }

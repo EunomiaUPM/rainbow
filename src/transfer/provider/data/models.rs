@@ -18,6 +18,8 @@ use uuid::Uuid;
 pub struct TransferProcessModel {
     pub provider_pid: Uuid,
     pub consumer_pid: Uuid,
+    pub agreement_id: Uuid,
+    pub data_plane_id: Option<Uuid>,
     pub state: String,
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: Option<chrono::NaiveDateTime>,
@@ -32,19 +34,7 @@ pub struct TransferMessageModel {
     pub transfer_process_id: Uuid,
     pub created_at: chrono::NaiveDateTime,
     pub message_type: String,
+    pub from: String,
+    pub to: String,
     pub content: serde_json::Value,
-}
-
-#[derive(
-    Queryable, Identifiable, Selectable, Debug, PartialEq, Insertable, Serialize, Deserialize,
-)]
-#[diesel(table_name=data_plane_processes)]
-#[diesel(primary_key(data_plane_id))]
-pub struct DataPlaneProcessModel {
-    pub data_plane_id: Uuid,
-    pub transfer_process_id: Uuid,
-    pub agreement_id: Uuid,
-    pub created_at: chrono::NaiveDateTime,
-    pub updated_at: Option<chrono::NaiveDateTime>,
-    pub state: bool,
 }

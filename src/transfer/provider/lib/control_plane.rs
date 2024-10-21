@@ -11,29 +11,22 @@ use crate::transfer::protocol::messages::{
 use crate::transfer::provider::data::models::{TransferMessageModel, TransferProcessModel};
 use crate::transfer::provider::data::repo::TransferProviderDataRepo;
 use crate::transfer::provider::data::repo::TRANSFER_PROVIDER_REPO;
-use crate::transfer::provider::data::repo_postgres::TransferProviderDataRepoPostgres;
 use crate::transfer::provider::err::TransferErrorType;
 use crate::transfer::provider::lib::data_plane::{
-    complete_data_plane, provision_data_plane, reprovision_data_plane, unprovision_data_plane,
+    data_plane_start, suspend_data_plane,
 };
-use crate::transfer::provider::lib::get_current_data_plane_client;
 use crate::transfer::schemas::{
     TRANSFER_COMPLETION_SCHEMA, TRANSFER_REQUEST_SCHEMA, TRANSFER_START_SCHEMA,
     TRANSFER_SUSPENSION_SCHEMA, TRANSFER_TERMINATION_SCHEMA,
 };
 use anyhow::Error;
-use axum::extract::Path;
-use axum::Json;
 use jsonschema::output::BasicOutput;
-use serde_json::Value;
 use std::future::{Future, IntoFuture};
-use std::sync::Arc;
-use tracing::{debug, error};
 use uuid::Uuid;
 
-// TODO lib shouldn't have extractors, it should be only in http presentation layer
-pub fn get_transfer_requests_by_provider(
-    Path(provider_pid): Path<Uuid>,
+
+pub async fn get_transfer_requests_by_provider(
+    provider_pid: Uuid,
 ) -> anyhow::Result<Option<TransferProcessModel>> {
     // access info
     let transaction = TRANSFER_PROVIDER_REPO.get_transfer_process_by_provider_pid(provider_pid)?;
@@ -41,7 +34,7 @@ pub fn get_transfer_requests_by_provider(
 }
 
 pub async fn transfer_request<F, Fut, M>(
-    Json(input): Json<TransferRequestMessage>,
+    input: TransferRequestMessage,
     callback: F,
 ) -> anyhow::Result<TransferProcessMessage>
 where
@@ -73,26 +66,29 @@ where
         ));
     }
 
+    // REQUEST PART
     // persist information
     let provider_pid = Uuid::new_v4();
     let created_at = chrono::Utc::now().naive_utc();
     let message_type = input._type.clone();
 
-    // REQUEST PART
     TRANSFER_PROVIDER_REPO.create_transfer_process(TransferProcessModel {
         provider_pid,
         consumer_pid: input.consumer_pid.parse()?,
+        agreement_id: input.agreement_id.parse()?,
+        data_plane_id: None,
         state: TransferState::REQUESTED.to_string(),
         created_at,
         updated_at: None,
     })?;
 
-    let message_id = Uuid::new_v4();
     TRANSFER_PROVIDER_REPO.create_transfer_message(TransferMessageModel {
-        id: message_id,
+        id: Uuid::new_v4(),
         transfer_process_id: provider_pid,
         created_at,
         message_type,
+        from: "consumer".to_string(),
+        to: "provider".to_string(),
         content: serde_json::to_value(&input)?,
     })?;
 
@@ -105,30 +101,12 @@ where
         state: TransferState::REQUESTED,
     };
 
-    //
-    // provide data_plane
-    // For debugging, make provision_data_plan synchronous.
-    let provider_clone = provider_pid.clone();
-    tokio::task::spawn(async move {
-        debug!("Provision data plane task started");
-        println!("Provision data plane task started");
-        let dp = provision_data_plane(input, provider_clone, callback).await;
-        match dp {
-            Ok(_) => {
-                println!("ok")
-            }
-            Err(_) => {
-                println!("nok")
-            }
-        }
-    });
-    // For debugging, make provision_data_plan synchronous.
-    // provision_data_plane(input, provider_clone, callback).await?;
+    data_plane_start(input, provider_pid.clone(), callback).await?;
 
     Ok(tp)
 }
 
-pub async fn transfer_start(Json(input): Json<&TransferStartMessage>) -> anyhow::Result<()> {
+pub async fn transfer_start(input: &TransferStartMessage) -> anyhow::Result<()> {
     // schema validation
     let input_as_value = serde_json::value::to_value(&input)?;
     let validation = TRANSFER_START_SCHEMA.apply(&input_as_value).basic();
@@ -146,13 +124,11 @@ pub async fn transfer_start(Json(input): Json<&TransferStartMessage>) -> anyhow:
         return Err(Error::from(TransferErrorType::ProviderIdUuidError));
     }
 
-    // if possible PIP
-    reprovision_data_plane(input.provider_pid.clone().parse()?).await?;
-
     // persist information
     let transaction = TRANSFER_PROVIDER_REPO.update_transfer_process_by_provider_pid(
         &input.provider_pid.parse()?,
         TransferState::STARTED,
+        None,
     )?;
 
     TRANSFER_PROVIDER_REPO.create_transfer_message(TransferMessageModel {
@@ -160,21 +136,17 @@ pub async fn transfer_start(Json(input): Json<&TransferStartMessage>) -> anyhow:
         transfer_process_id: input.provider_pid.parse()?,
         created_at: chrono::Utc::now().naive_utc(),
         message_type: input._type.clone(),
+        from: "consumer".to_string(),
+        to: "provider".to_string(),
         content: serde_json::to_value(input)?,
     })?;
 
     Ok(())
 }
 
-pub fn transfer_suspension<F, Fut, M>(
-    Json(input): Json<TransferSuspensionMessage>,
-    callback: F,
-) -> anyhow::Result<TransferProcessMessage>
-where
-    F: Fn(M, Uuid) -> Fut + Send + Sync + 'static,
-    Fut: Future<Output=Result<(), Error>> + Send,
-    M: From<TransferSuspensionMessage> + Send + 'static,
-{
+pub async fn transfer_suspension(
+    input: &TransferSuspensionMessage,
+) -> anyhow::Result<TransferProcessMessage> {
     // schema validation
     let input_as_value = serde_json::value::to_value(&input)?;
     let validation = TRANSFER_SUSPENSION_SCHEMA.apply(&input_as_value).basic();
@@ -195,25 +167,17 @@ where
     let transaction = TRANSFER_PROVIDER_REPO.update_transfer_process_by_provider_pid(
         &input.provider_pid.parse()?,
         TransferState::SUSPENDED,
+        None,
     )?;
 
-    //
-    // provide data_plane
-    // For debugging, make provision_data_plan synchronous.
-    let provider_clone = input.provider_pid.clone().parse()?;
-    if transaction.is_none() {
-        // TODO send back error or in guard up
-        return Err(Error::from(TransferErrorType::ProviderIdUuidError));
-    }
-
-    // For debugging, make provision_data_plan synchronous.
-    // provision_data_plane(input, provider_clone, callback).await?;
 
     TRANSFER_PROVIDER_REPO.create_transfer_message(TransferMessageModel {
         id: Uuid::new_v4(),
         transfer_process_id: input.provider_pid.parse()?,
         created_at: chrono::Utc::now().naive_utc(),
         message_type: input._type.clone(),
+        from: "consumer".to_string(),
+        to: "provider".to_string(),
         content: serde_json::to_value(input.clone())?,
     })?;
 
@@ -221,30 +185,18 @@ where
     let tp = TransferProcessMessage {
         context: TRANSFER_CONTEXT.to_string(),
         _type: TransferMessageTypes::TransferProcessMessage.to_string(),
-        provider_pid: convert_uuid_to_uri(&provider_clone)?,
+        provider_pid: convert_uuid_to_uri(&input.provider_pid.clone().parse()?)?,
         consumer_pid: (&input.consumer_pid).to_owned(),
         state: TransferState::SUSPENDED,
     };
 
-    tokio::task::spawn(async move {
-        debug!("Unprovision data plane task started");
-        println!("Unprovision data plane task started");
-        let dp = unprovision_data_plane(input, provider_clone, callback).await;
-        match dp {
-            Ok(_) => {
-                println!("ok")
-            }
-            Err(_) => {
-                println!("nok")
-            }
-        }
-    });
+    suspend_data_plane(input.clone(), input.provider_pid.clone().parse()?).await?;
 
     Ok(tp)
 }
 
 pub async fn transfer_completion(
-    Json(input): Json<&TransferCompletionMessage>,
+    input: &TransferCompletionMessage,
 ) -> anyhow::Result<()> {
     // schema validation
     let input_as_value = serde_json::value::to_value(&input)?;
@@ -257,33 +209,31 @@ pub async fn transfer_completion(
     if is_consumer_pid_valid(&input.consumer_pid)? == false {
         return Err(Error::from(TransferErrorType::ConsumerIdUuidError));
     }
-    
+
     // has provider - validate - TODO check in database
     if is_provider_valid(&input.provider_pid)? == false {
         return Err(Error::from(TransferErrorType::ProviderIdUuidError));
     }
 
-    println!("aaaaaaa\n{}", serde_json::to_string_pretty(&input)?);
-
-    // if possible PIP
-    complete_data_plane(input.provider_pid.clone().parse()?).await?;
-
     let transaction = TRANSFER_PROVIDER_REPO.update_transfer_process_by_provider_pid(
         &input.provider_pid.parse()?,
         TransferState::COMPLETED,
+        None,
     )?;
     TRANSFER_PROVIDER_REPO.create_transfer_message(TransferMessageModel {
         id: Uuid::new_v4(),
         transfer_process_id: input.provider_pid.parse()?,
         created_at: chrono::Utc::now().naive_utc(),
         message_type: input._type.clone(),
+        from: "consumer".to_string(),
+        to: "provider".to_string(),
         content: serde_json::to_value(input)?,
     })?;
 
     Ok(())
 }
 
-pub fn transfer_termination(Json(input): Json<&TransferTerminationMessage>) -> anyhow::Result<()> {
+pub fn transfer_termination(input: &TransferTerminationMessage) -> anyhow::Result<()> {
     // schema validation
     let input_as_value = serde_json::value::to_value(&input)?;
     let validation = TRANSFER_TERMINATION_SCHEMA.apply(&input_as_value).basic();
@@ -304,20 +254,18 @@ pub fn transfer_termination(Json(input): Json<&TransferTerminationMessage>) -> a
     let transaction = TRANSFER_PROVIDER_REPO.update_transfer_process_by_provider_pid(
         &input.provider_pid.parse()?,
         TransferState::TERMINATED,
+        None,
     )?;
-    if let Some(_) = transaction {
-        TRANSFER_PROVIDER_REPO.create_transfer_message(TransferMessageModel {
-            id: Uuid::new_v4(),
-            transfer_process_id: input.provider_pid.parse()?,
-            created_at: chrono::Utc::now().naive_utc(),
-            message_type: input._type.clone(),
-            content: serde_json::to_value(input)?,
-        })?;
-    } else {
-        // TODO send back error or in guard up
-        error!("Not provider");
-        return Err(Error::from(TransferErrorType::ProviderIdUuidError));
-    }
+
+    TRANSFER_PROVIDER_REPO.create_transfer_message(TransferMessageModel {
+        id: Uuid::new_v4(),
+        transfer_process_id: input.provider_pid.parse()?,
+        created_at: chrono::Utc::now().naive_utc(),
+        message_type: input._type.clone(),
+        from: "consumer".to_string(),
+        to: "provider".to_string(),
+        content: serde_json::to_value(input)?,
+    })?;
 
     Ok(())
 }

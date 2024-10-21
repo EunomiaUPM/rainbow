@@ -1,8 +1,6 @@
 use crate::db::get_db_connection;
 use crate::transfer::protocol::messages::{TransferMessageTypes, TransferState};
-use crate::transfer::provider::data::models::{
-    DataPlaneProcessModel, TransferMessageModel, TransferProcessModel,
-};
+use crate::transfer::provider::data::models::{TransferMessageModel, TransferProcessModel};
 use crate::transfer::provider::data::schema::transfer_messages::dsl::{
     id as message_id, message_type, transfer_messages,
 };
@@ -10,7 +8,6 @@ use crate::transfer::provider::data::schema::transfer_processes::dsl::transfer_p
 use crate::transfer::provider::data::schema::transfer_processes::dsl::*;
 
 use crate::transfer::provider::data::repo::TransferProviderDataRepo;
-use crate::transfer::provider::data::schema::data_plane_processes;
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
 use uuid::Uuid;
@@ -69,6 +66,20 @@ impl TransferProviderDataRepo for TransferProviderDataRepoPostgres {
         Ok(transaction)
     }
 
+    fn get_transfer_process_by_data_plane_process(
+        &self,
+        data_plane_process_in: Uuid,
+    ) -> anyhow::Result<Option<TransferProcessModel>> {
+        let connection = &mut self.connection_pool.get()?;
+        let transaction = transfer_processes
+            .filter(data_plane_id.eq(data_plane_process_in))
+            .select(TransferProcessModel::as_select())
+            .first(connection)
+            .optional()?;
+
+        Ok(transaction)
+    }
+
     fn create_transfer_process(
         &self,
         transfer_process: TransferProcessModel,
@@ -85,18 +96,31 @@ impl TransferProviderDataRepo for TransferProviderDataRepoPostgres {
         &self,
         provider_pid_in: &Uuid,
         new_state: TransferState,
+        new_data_plane_id: Option<Uuid>,
     ) -> anyhow::Result<Option<TransferProcessModel>> {
         let connection = &mut self.connection_pool.get()?;
         let find = transfer_processes.find(provider_pid_in);
-        let values = (
-            state.eq(new_state.to_string()),
-            updated_at.eq(chrono::Utc::now().naive_utc()),
-        );
-        let transaction = diesel::update(find)
-            .set(values)
-            .returning(TransferProcessModel::as_returning())
-            .get_result(connection)
-            .optional()?;
+        
+        let transaction = if let Some(data_plane_id_value) = new_data_plane_id {
+            diesel::update(find)
+                .set((
+                    state.eq(new_state.to_string()),
+                    updated_at.eq(chrono::Utc::now().naive_utc()),
+                    data_plane_id.eq(data_plane_id_value),
+                ))
+                .returning(TransferProcessModel::as_returning())
+                .get_result(connection)
+                .optional()?
+        } else {
+            diesel::update(find)
+                .set((
+                    state.eq(new_state.to_string()),
+                    updated_at.eq(chrono::Utc::now().naive_utc()),
+                ))
+                .returning(TransferProcessModel::as_returning())
+                .get_result(connection)
+                .optional()?
+        };
 
         Ok(transaction)
     }
@@ -149,74 +173,6 @@ impl TransferProviderDataRepo for TransferProviderDataRepoPostgres {
         let _ = diesel::insert_into(transfer_messages)
             .values(&message)
             .execute(connection)?;
-
-        Ok(())
-    }
-
-    fn create_data_plane_process(
-        &self,
-        data_plane_process: DataPlaneProcessModel,
-    ) -> anyhow::Result<DataPlaneProcessModel> {
-        let connection = &mut self.connection_pool.get()?;
-        let transaction = diesel::insert_into(data_plane_processes::table)
-            .values(data_plane_process)
-            .get_result(connection)?;
-
-        Ok(transaction)
-    }
-
-    fn update_data_plane_process(
-        &self,
-        data_plane_process_id: Uuid,
-        new_state: bool,
-    ) -> anyhow::Result<Option<DataPlaneProcessModel>> {
-        let connection = &mut self.connection_pool.get()?;
-        let find = data_plane_processes::table.find(data_plane_process_id);
-        let values = (
-            data_plane_processes::dsl::updated_at.eq(chrono::Utc::now().naive_utc()),
-            data_plane_processes::dsl::state.eq(new_state),
-        );
-        let transaction = diesel::update(find)
-            .set(values)
-            .returning(DataPlaneProcessModel::as_returning())
-            .get_result(connection)
-            .optional()?;
-
-        Ok(transaction)
-    }
-
-    fn get_data_plane_process_by_id(
-        &self,
-        data_plane_id: Uuid,
-    ) -> anyhow::Result<Option<DataPlaneProcessModel>> {
-        let connection = &mut self.connection_pool.get()?;
-        let transaction = data_plane_processes::table
-            .find(data_plane_id)
-            .select(DataPlaneProcessModel::as_select())
-            .first(connection)
-            .optional()?;
-
-        Ok(transaction)
-    }
-
-    fn get_data_plane_process_by_transfer_process_id(
-        &self,
-        transfer_process_id: Uuid,
-    ) -> anyhow::Result<Option<DataPlaneProcessModel>> {
-        let connection = &mut self.connection_pool.get()?;
-        let transaction = data_plane_processes::table
-            .filter(data_plane_processes::transfer_process_id.eq(transfer_process_id))
-            .select(DataPlaneProcessModel::as_select())
-            .first(connection)
-            .optional()?;
-
-        Ok(transaction)
-    }
-
-    fn delete_data_plane_process_by_id(&self, data_plane_id: Uuid) -> anyhow::Result<()> {
-        let connection = &mut self.connection_pool.get()?;
-        let find = data_plane_processes::table.find(data_plane_id);
-        let _ = diesel::delete(find).execute(connection)?;
 
         Ok(())
     }
