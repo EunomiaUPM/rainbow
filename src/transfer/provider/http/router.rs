@@ -1,3 +1,7 @@
+use crate::transfer::common::err::TransferErrorType;
+use crate::transfer::common::err::TransferErrorType::{
+    ConsumerNotReachableError, NotCheckedError, ProtocolBodyError, TransferProcessNotFound,
+};
 use crate::transfer::common::utils::{convert_uri_to_uuid, convert_uuid_to_uri};
 use crate::transfer::protocol::messages::{
     TransferCompletionMessage, TransferMessageTypes, TransferProcessMessage,
@@ -7,35 +11,55 @@ use crate::transfer::protocol::messages::{
 use crate::transfer::provider::data::models::{TransferMessageModel, TransferProcessModel};
 use crate::transfer::provider::data::repo::{TransferProviderDataRepo, TRANSFER_PROVIDER_REPO};
 use crate::transfer::provider::data::repo_postgres::TransferProviderDataRepoPostgres;
-use crate::transfer::provider::err::TransferErrorType;
 use crate::transfer::provider::http::client::DATA_PLANE_HTTP_CLIENT;
-use crate::transfer::provider::lib::control_plane::{get_transfer_requests_by_provider, transfer_completion, transfer_request, transfer_start, transfer_suspension, transfer_termination};
-use axum::extract::Path;
+use crate::transfer::provider::http::middleware::{
+    authorization_middleware, pids_as_urn_validation_middleware, protocol_rules_middleware,
+    schema_validation_middleware,
+};
+use crate::transfer::provider::lib::control_plane::{
+    get_transfer_requests_by_provider, transfer_completion, transfer_request, transfer_start,
+    transfer_suspension, transfer_termination,
+};
+use anyhow::bail;
+use axum::extract::rejection::JsonRejection;
+use axum::extract::{Path, Request};
 use axum::http::StatusCode;
-use axum::response::IntoResponse;
+use axum::middleware::Next;
+use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
-use axum::{Json, Router};
-use reqwest::{Error, Response};
+use axum::{middleware, Json, Router};
+use reqwest::Error;
 use tracing::{debug, error, info};
 use uuid::Uuid;
 
 pub fn router() -> Router {
-    Router::new()
-        .route(
-            "/transfers/:provider_pid",
-            get(handle_get_transfer_by_provider),
-        )
+    // Based on a group of middlewares
+    let router_group_a = Router::new().route(
+        "/transfers/:provider_pid",
+        get(handle_get_transfer_by_provider),
+    );
+
+    // Based on a group of middlewares
+    let router_group_b = Router::new()
         .route("/transfers/request", post(handle_transfer_request))
         .route("/transfers/start", post(handle_transfer_start))
         .route("/transfers/suspension", post(handle_transfer_suspension))
         .route("/transfers/completion", post(handle_transfer_completion))
         .route("/transfers/termination", post(handle_transfer_termination))
+        .route_layer(middleware::from_fn(pids_as_urn_validation_middleware))
+        .route_layer(middleware::from_fn(protocol_rules_middleware))
+        .route_layer(middleware::from_fn(schema_validation_middleware));
+
+    Router::new().merge(router_group_a).merge(router_group_b)
 }
 
 async fn handle_get_transfer_by_provider(Path(provider_pid): Path<Uuid>) -> impl IntoResponse {
     info!("GET /transfers/{}", provider_pid.to_string());
 
-    match get_transfer_requests_by_provider(provider_pid).await.unwrap() {
+    match get_transfer_requests_by_provider(provider_pid)
+        .await
+        .unwrap()
+    {
         Some(transfer_process) => (
             StatusCode::OK,
             Json(TransferProcessMessage {
@@ -47,21 +71,32 @@ async fn handle_get_transfer_by_provider(Path(provider_pid): Path<Uuid>) -> impl
             }),
         )
             .into_response(),
-        None => (StatusCode::NOT_FOUND).into_response(),
+        None => TransferProcessNotFound.into_response(),
     }
 }
 
-async fn handle_transfer_request(Json(input): Json<TransferRequestMessage>) -> impl IntoResponse {
+async fn handle_transfer_request(
+    result: Result<Json<TransferRequestMessage>, JsonRejection>,
+) -> impl IntoResponse {
     info!("POST /transfers/request");
 
-    match transfer_request(input, send_transfer_start).await {
-        Ok(tp) => (StatusCode::CREATED, Json(tp)).into_response(),
-        Err(e) => match e.downcast::<TransferErrorType>() {
-            Ok(transfer_error) => transfer_error.into_response(),
-            Err(e_) => {
-                error!("Unexpected error: {:?}", e_);
-                (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error").into_response()
+    match result {
+        Ok(Json(input)) => match transfer_request(input, send_transfer_start).await {
+            Ok(tp) => (StatusCode::CREATED, Json(tp)).into_response(),
+            Err(e) => match e.downcast::<TransferErrorType>() {
+                Ok(transfer_error) => transfer_error.into_response(),
+                Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
+            },
+        },
+        Err(e) => match e {
+            JsonRejection::JsonDataError(e_) => ProtocolBodyError {
+                message: e_.body_text(),
             }
+                .into_response(),
+            _ => NotCheckedError {
+                inner_error: e.into(),
+            }
+                .into_response(),
         },
     }
 }
@@ -69,6 +104,7 @@ async fn handle_transfer_request(Json(input): Json<TransferRequestMessage>) -> i
 async fn send_transfer_start(
     Json(input): Json<TransferRequestMessage>,
     provider_pid: Uuid,
+    data_plane_id: Uuid,
 ) -> anyhow::Result<()> {
     // TODO REFACTOR IN CONTROL PLANE
     let transfer_start_message = TransferStartMessage {
@@ -94,11 +130,18 @@ async fn send_transfer_start(
     match response {
         Ok(res) => {
             if res.status() == StatusCode::OK {
-                let transfer_process = TRANSFER_PROVIDER_REPO
-                    .update_transfer_process_by_provider_pid(&provider_pid, TransferState::STARTED, None)?
-                    .unwrap();
                 let created_at = chrono::Utc::now().naive_utc();
                 let message_id = Uuid::new_v4();
+
+                // persist
+                let transfer_process = TRANSFER_PROVIDER_REPO
+                    .update_transfer_process_by_provider_pid(
+                        &provider_pid,
+                        TransferState::STARTED,
+                        Some(data_plane_id),
+                    )?
+                    .unwrap();
+
                 TRANSFER_PROVIDER_REPO.create_transfer_message(TransferMessageModel {
                     id: message_id,
                     transfer_process_id: transfer_process.provider_pid,
@@ -108,79 +151,116 @@ async fn send_transfer_start(
                     to: "consumer".to_string(),
                     content: serde_json::to_value(&transfer_start_message)?,
                 })?;
+                Ok(())
             } else {
                 println!("not started...."); // TODO Error
+                Ok(())
             }
         }
-        Err(_) => {
-            println!("boom");
-        }
+        Err(_) => bail!(ConsumerNotReachableError),
     }
-    Ok(())
 }
 
-async fn handle_transfer_start(Json(input): Json<TransferStartMessage>) -> impl IntoResponse {
+async fn handle_transfer_start(
+    result: Result<Json<TransferStartMessage>, JsonRejection>,
+) -> impl IntoResponse {
     info!("POST /transfers/start");
 
-    match transfer_start(&input).await {
-        Ok(_) => (StatusCode::OK, Json(input)).into_response(),
-        Err(e) => match e.downcast::<TransferErrorType>() {
-            Ok(transfer_error) => transfer_error.into_response(),
-            Err(e_) => {
-                error!("Unexpected error: {:?}", e_);
-                (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error").into_response()
+    match result {
+        Ok(Json(input)) => match transfer_start(&input).await {
+            Ok(tp) => (StatusCode::OK, Json(tp)).into_response(),
+            Err(e) => match e.downcast::<TransferErrorType>() {
+                Ok(transfer_error) => transfer_error.into_response(),
+                Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
+            },
+        },
+        Err(e) => match e {
+            JsonRejection::JsonDataError(e_) => ProtocolBodyError {
+                message: e_.body_text(),
             }
+                .into_response(),
+            _ => NotCheckedError {
+                inner_error: e.into(),
+            }
+                .into_response(),
         },
     }
 }
 
 async fn handle_transfer_suspension(
-    Json(input): Json<TransferSuspensionMessage>,
+    result: Result<Json<TransferSuspensionMessage>, JsonRejection>,
 ) -> impl IntoResponse {
     info!("POST /transfers/suspension");
 
-    match transfer_suspension(&input).await {
-        Ok(tp) => (StatusCode::OK, Json(tp)).into_response(),
-        Err(e) => match e.downcast::<TransferErrorType>() {
-            Ok(transfer_error) => transfer_error.into_response(),
-            Err(e_) => {
-                error!("Unexpected error: {:?}", e_);
-                (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error").into_response()
+    match result {
+        Ok(Json(input)) => match transfer_suspension(&input).await {
+            Ok(tp) => (StatusCode::OK, Json(tp)).into_response(),
+            Err(e) => match e.downcast::<TransferErrorType>() {
+                Ok(transfer_error) => transfer_error.into_response(),
+                Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
+            },
+        },
+        Err(e) => match e {
+            JsonRejection::JsonDataError(e_) => ProtocolBodyError {
+                message: e_.body_text(),
             }
+                .into_response(),
+            _ => NotCheckedError {
+                inner_error: e.into(),
+            }
+                .into_response(),
         },
     }
 }
 
 async fn handle_transfer_completion(
-    Json(input): Json<TransferCompletionMessage>,
+    result: Result<Json<TransferCompletionMessage>, JsonRejection>,
 ) -> impl IntoResponse {
     info!("POST /transfers/completion");
 
-    match transfer_completion(&input).await {
-        Ok(_) => (StatusCode::OK, Json(input)).into_response(),
-        Err(e) => match e.downcast::<TransferErrorType>() {
-            Ok(transfer_error) => transfer_error.into_response(),
-            Err(e_) => {
-                error!("Unexpected error: {:?}", e_);
-                (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error").into_response()
+    match result {
+        Ok(Json(input)) => match transfer_completion(&input).await {
+            Ok(tp) => (StatusCode::OK, Json(tp)).into_response(),
+            Err(e) => match e.downcast::<TransferErrorType>() {
+                Ok(transfer_error) => transfer_error.into_response(),
+                Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
+            },
+        },
+        Err(e) => match e {
+            JsonRejection::JsonDataError(e_) => ProtocolBodyError {
+                message: e_.body_text(),
             }
+                .into_response(),
+            _ => NotCheckedError {
+                inner_error: e.into(),
+            }
+                .into_response(),
         },
     }
 }
 
 async fn handle_transfer_termination(
-    Json(input): Json<TransferTerminationMessage>,
+    result: Result<Json<TransferTerminationMessage>, JsonRejection>,
 ) -> impl IntoResponse {
     info!("POST /transfers/termination");
 
-    match transfer_termination(&input) {
-        Ok(_) => (StatusCode::OK, Json(input)).into_response(),
-        Err(e) => match e.downcast::<TransferErrorType>() {
-            Ok(transfer_error) => transfer_error.into_response(),
-            Err(e_) => {
-                error!("Unexpected error: {:?}", e_);
-                (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error").into_response()
+    match result {
+        Ok(Json(input)) => match transfer_termination(&input).await {
+            Ok(tp) => (StatusCode::OK, Json(tp)).into_response(),
+            Err(e) => match e.downcast::<TransferErrorType>() {
+                Ok(transfer_error) => transfer_error.into_response(),
+                Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
+            },
+        },
+        Err(e) => match e {
+            JsonRejection::JsonDataError(e_) => ProtocolBodyError {
+                message: e_.body_text(),
             }
+                .into_response(),
+            _ => NotCheckedError {
+                inner_error: e.into(),
+            }
+                .into_response(),
         },
     }
 }

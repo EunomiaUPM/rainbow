@@ -16,9 +16,8 @@ use duckdb::DuckdbConnectionManager;
 /// Solution here:
 /// https://stackoverflow.com/questions/70313347/ld-library-not-found-for-lpq-when-build-rust-in-macos
 ///
-pub fn get_db_connection() -> Pool<ConnectionManager<PgConnection>> {
+pub fn get_db_relational_connection_r2d2() -> Pool<ConnectionManager<PgConnection>> {
     // TODO refactor this for working with different databases type or none...
-    // TODO change the way of doing provider_migrations...
     let db_url = match GLOBAL_CONFIG.get().unwrap().role {
         ConfigRoles::Provider => get_provider_database_url(),
         ConfigRoles::Consumer => get_consumer_database_url(),
@@ -34,6 +33,7 @@ pub fn get_db_connection() -> Pool<ConnectionManager<PgConnection>> {
 
 pub fn get_db_memory_connection_r2d2() -> Pool<DuckdbConnectionManager> {
     let conn = DuckdbConnectionManager::file("db").unwrap();
+    // let conn = DuckdbConnectionManager::memory.unwrap();
     Pool::builder()
         .max_size(10)
         .test_on_check_out(true)

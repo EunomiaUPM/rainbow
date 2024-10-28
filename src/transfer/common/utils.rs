@@ -1,6 +1,6 @@
+use crate::transfer::common::err::TransferErrorType;
 use crate::transfer::protocol::formats::{DctFormats, FormatAction};
 use crate::transfer::protocol::messages::DataAddress;
-use crate::transfer::provider::err::TransferErrorType;
 use tracing::debug;
 use uuid::Uuid;
 

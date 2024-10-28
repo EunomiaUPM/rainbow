@@ -1,5 +1,5 @@
+use crate::transfer::common::err::TransferErrorType;
 use crate::transfer::protocol::formats::DctFormats;
-use crate::transfer::provider::err::TransferErrorType;
 use anyhow::Error;
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -121,21 +121,6 @@ pub struct TransferProcessMessage {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct TransferKickOff {
-    #[serde(rename = "@context")]
-    pub context: String,
-    #[serde(rename = "@type")]
-    pub _type: String,
-    #[serde(rename = "provider_url")]
-    pub provider_url: String,
-    #[serde(rename = "dct:format")]
-    pub format: DctFormats,
-    #[serde(rename = "dspace:dataAddress")]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub data_address: Option<DataAddress>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
 pub enum TransferState {
     #[serde(rename = "dspace:REQUESTED")]
     REQUESTED,
@@ -156,7 +141,7 @@ pub struct TransferError {
     #[serde(rename = "@type")]
     pub _type: String,
     #[serde(rename = "dspace:providerPid")] // IMPROVEMENT should be optional
-    pub provider_pid: String,
+    pub provider_pid: Option<String>,
     #[serde(rename = "dspace:consumerPid")] // IMPROVEMENT should be optional
     pub consumer_pid: String,
     #[serde(rename = "dspace:code")]
@@ -174,7 +159,6 @@ pub enum TransferMessageTypes {
     TransferCompletionMessage,
     TransferTerminationMessage,
     TransferProcessMessage,
-    TransferKickOffMessage,
 }
 
 impl fmt::Display for TransferMessageTypes {
@@ -197,9 +181,6 @@ impl fmt::Display for TransferMessageTypes {
                 f.write_str("dspace:TransferTerminationMessage")
             }
             TransferMessageTypes::TransferProcessMessage => f.write_str("dspace:TransferProcess"),
-            TransferMessageTypes::TransferKickOffMessage => {
-                f.write_str("dspace:TransferKickOffMessage")
-            }
         }
     }
 }

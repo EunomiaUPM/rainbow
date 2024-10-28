@@ -1,3 +1,4 @@
+use crate::transfer::common::err::TransferErrorType;
 use crate::transfer::common::utils::convert_uuid_to_uri;
 use crate::transfer::common::utils::{
     has_data_address_in_push, is_agreement_valid, is_consumer_pid_valid, is_provider_valid,
@@ -11,16 +12,8 @@ use crate::transfer::protocol::messages::{
 use crate::transfer::provider::data::models::{TransferMessageModel, TransferProcessModel};
 use crate::transfer::provider::data::repo::TransferProviderDataRepo;
 use crate::transfer::provider::data::repo::TRANSFER_PROVIDER_REPO;
-use crate::transfer::provider::err::TransferErrorType;
-use crate::transfer::provider::lib::data_plane::{
-    data_plane_start, suspend_data_plane,
-};
-use crate::transfer::schemas::{
-    TRANSFER_COMPLETION_SCHEMA, TRANSFER_REQUEST_SCHEMA, TRANSFER_START_SCHEMA,
-    TRANSFER_SUSPENSION_SCHEMA, TRANSFER_TERMINATION_SCHEMA,
-};
+use crate::transfer::provider::lib::data_plane::data_plane_start;
 use anyhow::Error;
-use jsonschema::output::BasicOutput;
 use std::future::{Future, IntoFuture};
 use uuid::Uuid;
 
@@ -38,20 +31,13 @@ pub async fn transfer_request<F, Fut, M>(
     callback: F,
 ) -> anyhow::Result<TransferProcessMessage>
 where
-    F: Fn(M, Uuid) -> Fut + Send + Sync + 'static,
+    F: Fn(M, Uuid, Uuid) -> Fut + Send + Sync + 'static,
     Fut: Future<Output=Result<(), Error>> + Send,
     M: From<TransferRequestMessage> + Send + 'static,
 {
-    // schema validation
-    let input_as_value = serde_json::value::to_value(&input)?;
-    let validation = TRANSFER_REQUEST_SCHEMA.apply(&input_as_value).basic();
-    if let BasicOutput::Invalid(errors) = validation {
-        return Err(Error::from(TransferErrorType::ValidationError { errors }));
-    }
-
     // has consumerId - validate
     if is_consumer_pid_valid(&input.consumer_pid)? == false {
-        return Err(Error::from(TransferErrorType::ConsumerIdUuidError));
+        return Err(Error::from(TransferErrorType::PidUuidError));
     }
 
     // agreement validation - validate
@@ -107,16 +93,9 @@ where
 }
 
 pub async fn transfer_start(input: &TransferStartMessage) -> anyhow::Result<()> {
-    // schema validation
-    let input_as_value = serde_json::value::to_value(&input)?;
-    let validation = TRANSFER_START_SCHEMA.apply(&input_as_value).basic();
-    if let BasicOutput::Invalid(errors) = validation {
-        return Err(Error::from(TransferErrorType::ValidationError { errors }));
-    }
-
     // has consumerId - validate
     if is_consumer_pid_valid(&input.consumer_pid)? == false {
-        return Err(Error::from(TransferErrorType::ConsumerIdUuidError));
+        return Err(Error::from(TransferErrorType::PidUuidError));
     }
 
     // has provider - validate - TODO check in database
@@ -147,16 +126,9 @@ pub async fn transfer_start(input: &TransferStartMessage) -> anyhow::Result<()> 
 pub async fn transfer_suspension(
     input: &TransferSuspensionMessage,
 ) -> anyhow::Result<TransferProcessMessage> {
-    // schema validation
-    let input_as_value = serde_json::value::to_value(&input)?;
-    let validation = TRANSFER_SUSPENSION_SCHEMA.apply(&input_as_value).basic();
-    if let BasicOutput::Invalid(errors) = validation {
-        return Err(Error::from(TransferErrorType::ValidationError { errors }));
-    }
-
     // has consumerId - validate
     if is_consumer_pid_valid(&input.consumer_pid)? == false {
-        return Err(Error::from(TransferErrorType::ConsumerIdUuidError));
+        return Err(Error::from(TransferErrorType::PidUuidError));
     }
 
     // has provider - validate - TODO check in database
@@ -170,7 +142,6 @@ pub async fn transfer_suspension(
         None,
     )?;
 
-
     TRANSFER_PROVIDER_REPO.create_transfer_message(TransferMessageModel {
         id: Uuid::new_v4(),
         transfer_process_id: input.provider_pid.parse()?,
@@ -181,7 +152,6 @@ pub async fn transfer_suspension(
         content: serde_json::to_value(input.clone())?,
     })?;
 
-    // send back TransferProcessMessage
     let tp = TransferProcessMessage {
         context: TRANSFER_CONTEXT.to_string(),
         _type: TransferMessageTypes::TransferProcessMessage.to_string(),
@@ -190,24 +160,15 @@ pub async fn transfer_suspension(
         state: TransferState::SUSPENDED,
     };
 
-    suspend_data_plane(input.clone(), input.provider_pid.clone().parse()?).await?;
-
     Ok(tp)
 }
 
 pub async fn transfer_completion(
     input: &TransferCompletionMessage,
-) -> anyhow::Result<()> {
-    // schema validation
-    let input_as_value = serde_json::value::to_value(&input)?;
-    let validation = TRANSFER_COMPLETION_SCHEMA.apply(&input_as_value).basic();
-    if let BasicOutput::Invalid(errors) = validation {
-        return Err(Error::from(TransferErrorType::ValidationError { errors }));
-    }
-
+) -> anyhow::Result<TransferProcessMessage> {
     // has consumerId - validate
     if is_consumer_pid_valid(&input.consumer_pid)? == false {
-        return Err(Error::from(TransferErrorType::ConsumerIdUuidError));
+        return Err(Error::from(TransferErrorType::PidUuidError));
     }
 
     // has provider - validate - TODO check in database
@@ -220,6 +181,7 @@ pub async fn transfer_completion(
         TransferState::COMPLETED,
         None,
     )?;
+
     TRANSFER_PROVIDER_REPO.create_transfer_message(TransferMessageModel {
         id: Uuid::new_v4(),
         transfer_process_id: input.provider_pid.parse()?,
@@ -230,20 +192,21 @@ pub async fn transfer_completion(
         content: serde_json::to_value(input)?,
     })?;
 
-    Ok(())
+    let tp = TransferProcessMessage {
+        context: TRANSFER_CONTEXT.to_string(),
+        _type: TransferMessageTypes::TransferProcessMessage.to_string(),
+        provider_pid: convert_uuid_to_uri(&input.provider_pid.clone().parse()?)?,
+        consumer_pid: (&input.consumer_pid).to_owned(),
+        state: TransferState::COMPLETED,
+    };
+
+    Ok(tp)
 }
 
-pub fn transfer_termination(input: &TransferTerminationMessage) -> anyhow::Result<()> {
-    // schema validation
-    let input_as_value = serde_json::value::to_value(&input)?;
-    let validation = TRANSFER_TERMINATION_SCHEMA.apply(&input_as_value).basic();
-    if let BasicOutput::Invalid(errors) = validation {
-        return Err(Error::from(TransferErrorType::ValidationError { errors }));
-    }
-
+pub async fn transfer_termination(input: &TransferTerminationMessage) -> anyhow::Result<TransferProcessMessage> {
     // has consumerId - validate
     if is_consumer_pid_valid(&input.consumer_pid)? == false {
-        return Err(Error::from(TransferErrorType::ConsumerIdUuidError));
+        return Err(Error::from(TransferErrorType::PidUuidError));
     }
 
     // has provider - validate - TODO check in database
@@ -267,5 +230,13 @@ pub fn transfer_termination(input: &TransferTerminationMessage) -> anyhow::Resul
         content: serde_json::to_value(input)?,
     })?;
 
-    Ok(())
+    let tp = TransferProcessMessage {
+        context: TRANSFER_CONTEXT.to_string(),
+        _type: TransferMessageTypes::TransferProcessMessage.to_string(),
+        provider_pid: convert_uuid_to_uri(&input.provider_pid.clone().parse()?)?,
+        consumer_pid: (&input.consumer_pid).to_owned(),
+        state: TransferState::TERMINATED,
+    };
+
+    Ok(tp)
 }

@@ -5,7 +5,7 @@ use std::ops::Deref;
 pub mod control_plane;
 pub mod data_plane;
 pub mod api;
-pub mod pdp;
+pub mod protocol_transition_rules;
 
 enum Clients {
     HttpClient,

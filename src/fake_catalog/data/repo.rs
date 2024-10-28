@@ -1,4 +1,4 @@
-use crate::db::get_db_connection;
+use crate::db::get_db_relational_connection_r2d2;
 use crate::fake_catalog::data::models::DatasetsCatalogModel;
 use crate::fake_catalog::data::schema::dataset_catalogs::dsl::dataset_catalogs;
 use crate::fake_catalog::data::schema::dataset_catalogs::{dataset_endpoint, dataset_id};
@@ -7,7 +7,7 @@ use diesel::{OptionalExtension, QueryDsl, RunQueryDsl, SelectableHelper};
 use uuid::Uuid;
 
 pub fn create_dataset_repo(endpoint: String) -> anyhow::Result<DatasetsCatalogModel> {
-    let connection = &mut get_db_connection().get()?;
+    let connection = &mut get_db_relational_connection_r2d2().get()?;
     let transaction = diesel::insert_into(dataset_catalogs)
         .values(DatasetsCatalogModel {
             dataset_id: Uuid::new_v4(),
@@ -20,7 +20,7 @@ pub fn create_dataset_repo(endpoint: String) -> anyhow::Result<DatasetsCatalogMo
 }
 
 pub fn get_dataset_by_id_repo(id: Uuid) -> anyhow::Result<Option<DatasetsCatalogModel>> {
-    let connection = &mut get_db_connection().get()?;
+    let connection = &mut get_db_relational_connection_r2d2().get()?;
     let transaction = dataset_catalogs
         .filter(dataset_id.eq(id))
         .select(DatasetsCatalogModel::as_returning())
@@ -33,7 +33,7 @@ pub fn get_dataset_by_id_repo(id: Uuid) -> anyhow::Result<Option<DatasetsCatalog
 pub fn get_datasets_by_endpoint_repo(
     endpoint: String,
 ) -> anyhow::Result<Vec<DatasetsCatalogModel>> {
-    let connection = &mut get_db_connection().get()?;
+    let connection = &mut get_db_relational_connection_r2d2().get()?;
     let transaction = dataset_catalogs
         .filter(dataset_endpoint.eq(endpoint))
         .select(DatasetsCatalogModel::as_returning())
@@ -43,7 +43,7 @@ pub fn get_datasets_by_endpoint_repo(
 }
 
 pub fn delete_dataset_repo(id: Uuid) -> anyhow::Result<()> {
-    let connection = &mut get_db_connection().get()?;
+    let connection = &mut get_db_relational_connection_r2d2().get()?;
     let _ = diesel::delete(dataset_catalogs.filter(dataset_id.eq(id))).execute(connection)?;
 
     Ok(())

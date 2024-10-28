@@ -1,3 +1,4 @@
+use crate::transfer::common::err::TransferErrorType;
 use crate::transfer::common::utils::{does_callback_exist, is_consumer_pid_valid};
 use crate::transfer::consumer::lib::control_plane::transfer_completion;
 use crate::transfer::consumer::lib::control_plane::{
@@ -7,7 +8,6 @@ use crate::transfer::protocol::messages::{
     TransferCompletionMessage, TransferStartMessage, TransferSuspensionMessage,
     TransferTerminationMessage,
 };
-use crate::transfer::provider::err::TransferErrorType;
 use anyhow::Error;
 use axum::extract::Path;
 use axum::http::StatusCode;

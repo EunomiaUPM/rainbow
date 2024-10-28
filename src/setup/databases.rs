@@ -1,4 +1,4 @@
-use crate::db::get_db_connection;
+use crate::db::get_db_relational_connection_r2d2;
 use crate::setup::config::get_provider_database_url;
 use crate::setup::config::GLOBAL_CONFIG;
 use diesel::dsl::{exists, select};

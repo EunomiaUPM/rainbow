@@ -1,3 +1,4 @@
+use crate::transfer::common::err::TransferErrorType;
 use crate::transfer::common::utils::{does_callback_exist, is_consumer_pid_valid};
 use crate::transfer::consumer::data::models::TransferCallbacksModelNewState;
 use crate::transfer::consumer::data::repo::{TransferConsumerDataRepo, TRANSFER_CONSUMER_REPO};
@@ -5,7 +6,6 @@ use crate::transfer::protocol::messages::{
     TransferCompletionMessage, TransferStartMessage, TransferSuspensionMessage,
     TransferTerminationMessage,
 };
-use crate::transfer::provider::err::TransferErrorType;
 use crate::transfer::schemas::{
     TRANSFER_COMPLETION_SCHEMA, TRANSFER_START_SCHEMA, TRANSFER_SUSPENSION_SCHEMA,
     TRANSFER_TERMINATION_SCHEMA,
@@ -41,11 +41,10 @@ pub fn transfer_start(
     if is_consumer_pid_valid(&input.consumer_pid)? == false {
         // TODO ConsumerBadError
         // TODO consumer pid both must be taken...
-        return Err(Error::from(TransferErrorType::ConsumerIdUuidError));
+        return Err(Error::from(TransferErrorType::PidUuidError));
     }
 
     // Here i should persist something
-    println!("persist something to recover");
     let transaction = TRANSFER_CONSUMER_REPO.update_callback(
         callback,
         TransferCallbacksModelNewState {
@@ -75,7 +74,7 @@ pub fn transfer_completion(
 
     // has consumerId - validate
     if is_consumer_pid_valid(&input.consumer_pid)? == false {
-        return Err(Error::from(TransferErrorType::ConsumerIdUuidError));
+        return Err(Error::from(TransferErrorType::PidUuidError));
     }
 
     Ok(())
@@ -95,7 +94,7 @@ pub fn transfer_termination(
 
     // has consumerId - validate
     if is_consumer_pid_valid(&input.consumer_pid)? == false {
-        return Err(Error::from(TransferErrorType::ConsumerIdUuidError));
+        return Err(Error::from(TransferErrorType::PidUuidError));
     }
 
     Ok(())
@@ -115,7 +114,7 @@ pub fn transfer_suspension(
 
     // has consumerId - validate
     if is_consumer_pid_valid(&input.consumer_pid)? == false {
-        return Err(Error::from(TransferErrorType::ConsumerIdUuidError));
+        return Err(Error::from(TransferErrorType::PidUuidError));
     }
 
     Ok(())

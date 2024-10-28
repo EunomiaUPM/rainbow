@@ -3,31 +3,15 @@
 #![allow(unused_variables)]
 #![allow(unused_mut)]
 
+use crate::integration::utils::{get_json_file, load_env_file, setup_agreements_and_datasets};
 use anyhow::anyhow;
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
 use axum::{http, serve};
-use http_body_util::BodyExt;
-use rainbow::fake_catalog::data::models::DatasetsCatalogModel;
-use rainbow::fake_catalog::data::repo::delete_dataset_repo;
-use rainbow::fake_catalog::lib::{create_dataset, delete_dataset};
-use rainbow::fake_contracts::data::models::ContractAgreementsModel;
-use rainbow::fake_contracts::data::repo::delete_agreement_repo;
-use rainbow::fake_contracts::lib::create_agreement;
-use rainbow::transfer::common::utils::{convert_uri_to_uuid, convert_uuid_to_uri};
+use rainbow::transfer::common::utils::convert_uuid_to_uri;
 use rainbow::transfer::consumer::data::models::TransferCallbacksModel;
-use rainbow::transfer::consumer::data::repo::TRANSFER_CONSUMER_REPO;
-use rainbow::transfer::consumer::http::server::create_consumer_router;
-use rainbow::transfer::consumer::lib::callbacks_controller::create_new_callback;
 use rainbow::transfer::protocol::formats::{DctFormats, FormatAction, FormatProtocol};
-use rainbow::transfer::protocol::messages::{
-    DataAddress, TransferCompletionMessage, TransferMessageTypes, TransferProcessMessage,
-    TransferRequestMessage, TransferStartMessage, TransferState, TransferSuspensionMessage,
-    TRANSFER_CONTEXT,
-};
-use rainbow::transfer::provider::http::server::create_provider_router;
-use rainbow::transfer::provider::lib::control_plane::get_transfer_requests_by_provider;
-use rainbow::transfer::provider::lib::data_plane::resolve_endpoint_from_agreement;
+use rainbow::transfer::protocol::messages::{DataAddress, TransferCompletionMessage, TransferMessageTypes, TransferProcessMessage, TransferRequestMessage, TransferStartMessage, TransferSuspensionMessage, TRANSFER_CONTEXT};
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::fs;
@@ -39,79 +23,6 @@ use tracing::{debug, error, info, trace};
 use tracing_subscriber::fmt::format;
 use tracing_test::traced_test;
 use uuid::Uuid;
-
-fn get_json_file(path: &str) -> anyhow::Result<String> {
-    let main_path = "./static/json-tests/";
-    let file_url = format!("{}{}", main_path, path);
-    let json_raw = fs::read_to_string(file_url)?;
-    Ok(json_raw)
-}
-
-async fn extract_body<T>(body: Body) -> anyhow::Result<T>
-where
-    T: serde::de::DeserializeOwned,
-{
-    let body = body.collect().await?.to_bytes();
-    let body = serde_json::from_slice::<T>(&body)?;
-    Ok(body)
-}
-
-async fn setup_env() -> anyhow::Result<(Vec<DatasetsCatalogModel>, Vec<ContractAgreementsModel>)> {
-    let client = reqwest::Client::new();
-    let fake_parquet_url = "http://localhost:1236/data-space";
-    let fake_parquet_files = vec!["/sample1.parquet", "/sample2.parquet", "/sample3.parquet"];
-    let mut fake_datasets: Vec<DatasetsCatalogModel> = vec![];
-    let mut agreements: Vec<ContractAgreementsModel> = vec![];
-
-    let fake_parquet_file = fake_parquet_files
-        .iter()
-        .map(|f| format!("{}{}", fake_parquet_url, f))
-        .collect::<Vec<_>>();
-
-    for endpoint in fake_parquet_file {
-        println!("{}", endpoint);
-        let res = client
-            .post("http://localhost:1234/catalogs/datasets")
-            .json(&json!({
-                "endpoint": endpoint
-            }))
-            .send()
-            .await?;
-        let ds: DatasetsCatalogModel = res.json().await?;
-        fake_datasets.push(ds.clone());
-        let res = client
-            .post("http://localhost:1234/agreements")
-            .json(&json!({
-                "dataset": ds.dataset_id
-            }))
-            .send()
-            .await?;
-        let agreement: ContractAgreementsModel = res.json().await?;
-        agreements.push(agreement);
-    }
-
-    Ok((fake_datasets, agreements))
-}
-
-async fn cleanup_env(
-    setup: (Vec<DatasetsCatalogModel>, Vec<ContractAgreementsModel>),
-) -> anyhow::Result<()> {
-    let (fake_datasets, agreements) = setup;
-    for ds in fake_datasets {
-        delete_dataset(ds.dataset_id)?;
-    }
-    for agg in agreements {
-        delete_agreement_repo(agg.agreement_id)?;
-    }
-    Ok(())
-}
-
-fn load_env_file(env_file: &str) -> HashMap<String, String> {
-    dotenvy::from_filename(env_file)
-        .ok()
-        .expect("Failed to read .env file");
-    std::env::vars().collect()
-}
 
 #[traced_test]
 #[tokio::test]
@@ -143,7 +54,7 @@ pub async fn transfer_all_provider() -> anyhow::Result<()> {
 
     // LOAD AGREEMENTS AND ENDPOINTS
     let client = reqwest::Client::new();
-    let setup = setup_env().await?;
+    let setup = setup_agreements_and_datasets().await?;
     let agreements = setup.1.clone();
     let datasets = setup.0.clone();
 

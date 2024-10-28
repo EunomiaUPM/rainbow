@@ -1,6 +1,7 @@
+use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::get;
-use axum::Router;
+use axum::{Json, Router};
 use serde::{Deserialize, Serialize};
 use tracing::info;
 
@@ -32,5 +33,5 @@ async fn get_version() -> impl IntoResponse {
             path: "/some/path/v1".to_string(),
         }],
     };
-    serde_json::to_string(&response).unwrap()
+    (StatusCode::OK, Json(response))
 }

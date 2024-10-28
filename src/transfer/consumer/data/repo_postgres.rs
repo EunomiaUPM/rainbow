@@ -1,4 +1,4 @@
-use crate::db::get_db_connection;
+use crate::db::get_db_relational_connection_r2d2;
 use crate::transfer::consumer::data::models::{TransferCallbacksModel, TransferCallbacksModelNewState};
 use crate::transfer::consumer::data::repo::TransferConsumerDataRepo;
 use crate::transfer::consumer::data::schema::transfer_callbacks::dsl::transfer_callbacks;
@@ -16,7 +16,7 @@ pub struct TransferConsumerDataRepoPostgres {
 
 impl TransferConsumerDataRepoPostgres {
     pub fn new() -> Self {
-        let connection_pool = get_db_connection();
+        let connection_pool = get_db_relational_connection_r2d2();
         Self { connection_pool }
     }
 }

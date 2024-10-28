@@ -1,4 +1,4 @@
-use crate::db::get_db_connection;
+use crate::db::get_db_relational_connection_r2d2;
 use crate::transfer::protocol::messages::{TransferMessageTypes, TransferState};
 use crate::transfer::provider::data::models::{TransferMessageModel, TransferProcessModel};
 use crate::transfer::provider::data::schema::transfer_messages::dsl::{
@@ -18,7 +18,7 @@ pub struct TransferProviderDataRepoPostgres {
 
 impl TransferProviderDataRepoPostgres {
     pub fn new() -> Self {
-        let connection_pool = get_db_connection();
+        let connection_pool = get_db_relational_connection_r2d2();
         Self { connection_pool }
     }
 }
@@ -100,7 +100,7 @@ impl TransferProviderDataRepo for TransferProviderDataRepoPostgres {
     ) -> anyhow::Result<Option<TransferProcessModel>> {
         let connection = &mut self.connection_pool.get()?;
         let find = transfer_processes.find(provider_pid_in);
-        
+
         let transaction = if let Some(data_plane_id_value) = new_data_plane_id {
             diesel::update(find)
                 .set((
