@@ -25,6 +25,7 @@ pub struct TransferRequestMessage {
     pub data_address: Option<DataAddress>,
 }
 
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TransferStartMessage {
     #[serde(rename = "@context")]

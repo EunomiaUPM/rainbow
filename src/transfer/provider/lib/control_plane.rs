@@ -1,8 +1,6 @@
 use crate::transfer::common::err::TransferErrorType;
 use crate::transfer::common::utils::convert_uuid_to_uri;
-use crate::transfer::common::utils::{
-    has_data_address_in_push, is_agreement_valid, is_consumer_pid_valid, is_provider_valid,
-};
+use crate::transfer::common::utils::{has_data_address_in_push, is_agreement_valid};
 use crate::transfer::protocol::messages::TransferMessageTypes;
 use crate::transfer::protocol::messages::{
     TransferCompletionMessage, TransferProcessMessage, TransferRequestMessage,
@@ -13,10 +11,9 @@ use crate::transfer::provider::data::models::{TransferMessageModel, TransferProc
 use crate::transfer::provider::data::repo::TransferProviderDataRepo;
 use crate::transfer::provider::data::repo::TRANSFER_PROVIDER_REPO;
 use crate::transfer::provider::lib::data_plane::data_plane_start;
-use anyhow::Error;
+use anyhow::{bail, Error};
 use std::future::{Future, IntoFuture};
 use uuid::Uuid;
-
 
 pub async fn get_transfer_requests_by_provider(
     provider_pid: Uuid,
@@ -35,21 +32,14 @@ where
     Fut: Future<Output=Result<(), Error>> + Send,
     M: From<TransferRequestMessage> + Send + 'static,
 {
-    // has consumerId - validate
-    if is_consumer_pid_valid(&input.consumer_pid)? == false {
-        return Err(Error::from(TransferErrorType::PidUuidError));
-    }
-
     // agreement validation - validate
     if is_agreement_valid(&input.agreement_id)? == false {
-        return Err(Error::from(TransferErrorType::AgreementError));
+        bail!(TransferErrorType::AgreementError);
     }
 
     // dct:format is push, dataAdress must be
     if has_data_address_in_push(&input.data_address, &input.format)? == false {
-        return Err(Error::from(
-            TransferErrorType::DataAddressCannotBeNullOnPushError,
-        ));
+        bail!(TransferErrorType::DataAddressCannotBeNullOnPushError);
     }
 
     // REQUEST PART
@@ -78,7 +68,6 @@ where
         content: serde_json::to_value(&input)?,
     })?;
 
-    // send back TransferProcessMessage
     let tp = TransferProcessMessage {
         context: TRANSFER_CONTEXT.to_string(),
         _type: TransferMessageTypes::TransferProcessMessage.to_string(),
@@ -93,16 +82,6 @@ where
 }
 
 pub async fn transfer_start(input: &TransferStartMessage) -> anyhow::Result<()> {
-    // has consumerId - validate
-    if is_consumer_pid_valid(&input.consumer_pid)? == false {
-        return Err(Error::from(TransferErrorType::PidUuidError));
-    }
-
-    // has provider - validate - TODO check in database
-    if is_provider_valid(&input.provider_pid)? == false {
-        return Err(Error::from(TransferErrorType::ProviderIdUuidError));
-    }
-
     // persist information
     let transaction = TRANSFER_PROVIDER_REPO.update_transfer_process_by_provider_pid(
         &input.provider_pid.parse()?,
@@ -126,16 +105,6 @@ pub async fn transfer_start(input: &TransferStartMessage) -> anyhow::Result<()> 
 pub async fn transfer_suspension(
     input: &TransferSuspensionMessage,
 ) -> anyhow::Result<TransferProcessMessage> {
-    // has consumerId - validate
-    if is_consumer_pid_valid(&input.consumer_pid)? == false {
-        return Err(Error::from(TransferErrorType::PidUuidError));
-    }
-
-    // has provider - validate - TODO check in database
-    if is_provider_valid(&input.provider_pid)? == false {
-        return Err(Error::from(TransferErrorType::ProviderIdUuidError));
-    }
-
     let transaction = TRANSFER_PROVIDER_REPO.update_transfer_process_by_provider_pid(
         &input.provider_pid.parse()?,
         TransferState::SUSPENDED,
@@ -166,16 +135,6 @@ pub async fn transfer_suspension(
 pub async fn transfer_completion(
     input: &TransferCompletionMessage,
 ) -> anyhow::Result<TransferProcessMessage> {
-    // has consumerId - validate
-    if is_consumer_pid_valid(&input.consumer_pid)? == false {
-        return Err(Error::from(TransferErrorType::PidUuidError));
-    }
-
-    // has provider - validate - TODO check in database
-    if is_provider_valid(&input.provider_pid)? == false {
-        return Err(Error::from(TransferErrorType::ProviderIdUuidError));
-    }
-
     let transaction = TRANSFER_PROVIDER_REPO.update_transfer_process_by_provider_pid(
         &input.provider_pid.parse()?,
         TransferState::COMPLETED,
@@ -203,17 +162,9 @@ pub async fn transfer_completion(
     Ok(tp)
 }
 
-pub async fn transfer_termination(input: &TransferTerminationMessage) -> anyhow::Result<TransferProcessMessage> {
-    // has consumerId - validate
-    if is_consumer_pid_valid(&input.consumer_pid)? == false {
-        return Err(Error::from(TransferErrorType::PidUuidError));
-    }
-
-    // has provider - validate - TODO check in database
-    if is_provider_valid(&input.provider_pid)? == false {
-        return Err(Error::from(TransferErrorType::ProviderIdUuidError));
-    }
-
+pub async fn transfer_termination(
+    input: &TransferTerminationMessage,
+) -> anyhow::Result<TransferProcessMessage> {
     let transaction = TRANSFER_PROVIDER_REPO.update_transfer_process_by_provider_pid(
         &input.provider_pid.parse()?,
         TransferState::TERMINATED,

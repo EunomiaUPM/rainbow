@@ -3,7 +3,7 @@
 #![allow(unused_variables)]
 #![allow(unused_mut)]
 
-use crate::integration::utils::{get_json_file, load_env_file, setup_agreements_and_datasets};
+use crate::integration::utils::{cleanup_test_env, get_json_file, load_env_file, setup_agreements_and_datasets, setup_test_env};
 use anyhow::anyhow;
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
@@ -26,37 +26,16 @@ use uuid::Uuid;
 
 #[traced_test]
 #[tokio::test]
-pub async fn transfer_all_provider() -> anyhow::Result<()> {
-    //============================================//
-    // ON INIT ( START SERVERS AND LOAD AGREEMENTS)
-    //============================================//
-
-    // CREATE SERVERS
-    let provider_envs = load_env_file(".env.provider.template");
-    let mut provider_server = Command::new("cargo")
-        .env_clear()
-        .envs(&provider_envs)
-        .env("TEST", "true")
-        .args(&["run", "--", "provider", "start"])
-        .spawn()
-        .expect("Failed to start provider server");
-
-    let consumer_envs = load_env_file(".env.consumer.template");
-    let mut consumer_server = Command::new("cargo")
-        .env_clear()
-        .envs(&consumer_envs)
-        .env("TEST", "true")
-        .args(&["run", "--", "consumer", "start"])
-        .spawn()
-        .expect("Failed to start consumer server");
-
-    tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
-
-    // LOAD AGREEMENTS AND ENDPOINTS
-    let client = reqwest::Client::new();
-    let setup = setup_agreements_and_datasets().await?;
-    let agreements = setup.1.clone();
-    let datasets = setup.0.clone();
+pub async fn transfer_pull_full_case() -> anyhow::Result<()> {
+    let (
+        mut provider_server,
+        mut consumer_server,
+        client,
+        agreements,
+        _datasets,
+        callback_address,
+        consumer_pid,
+    ) = setup_test_env().await?;
 
     //============================================//
     // TRANSFER REQUEST STAGE
@@ -240,12 +219,5 @@ pub async fn transfer_all_provider() -> anyhow::Result<()> {
     // END DATA TRANSFER!!!
     //============================================//
 
-    //============================================//
-    // CLEANUP
-    //============================================//
-    tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
-    provider_server.kill().expect("Failed to kill server");
-    consumer_server.kill().expect("Failed to kill server");
-    // cleanup_env(setup).await?;
-    Ok(())
+    cleanup_test_env(provider_server, consumer_server).await
 }

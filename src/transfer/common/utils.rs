@@ -14,11 +14,6 @@ pub fn is_agreement_valid(agreement_id: &String) -> anyhow::Result<bool> {
     Ok(true)
 }
 
-pub fn is_provider_valid(provider_pid: &String) -> anyhow::Result<bool> {
-    debug!("Validating provider_pid: {}", provider_pid);
-    Ok(true)
-}
-
 pub fn has_data_address_in_push(
     data_address: &Option<DataAddress>,
     format: &DctFormats,
