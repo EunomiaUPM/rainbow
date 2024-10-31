@@ -4,8 +4,12 @@
 #![allow(unused_mut)]
 
 use crate::integration::utils::{cleanup_test_env, get_json_file, load_env_file, setup_agreements_and_datasets, setup_test_env};
+use rainbow::transfer::common::utils::convert_uuid_to_uri;
+use rainbow::transfer::protocol::formats::{DctFormats, FormatAction, FormatProtocol};
+use rainbow::transfer::protocol::messages::TransferRequestMessage;
+use rainbow::transfer::protocol::messages::{DataAddress, TransferMessageTypes, TransferProcessMessage, TRANSFER_CONTEXT};
 use tracing_test::traced_test;
-
+use uuid::Uuid;
 
 #[traced_test]
 #[tokio::test]
@@ -18,9 +22,58 @@ pub async fn transfer_push_full_case() -> anyhow::Result<()> {
         _datasets,
         callback_address,
         consumer_pid,
+        callback_id
     ) = setup_test_env().await?;
 
-    // logic here
+    // 1. Kickoff from client with DataAddress
+    let data_address = DataAddress {
+        _type: "dspace:DataAddress".to_string(),
+        endpoint_type: "test".to_string(),
+        endpoint: "".to_string(),
+        endpoint_properties: vec![],
+    };
+    let res = client
+        .post("http://localhost:1235/api/v1/callbacks")
+        .json(&serde_json::to_string(&data_address)?) // <---
+        .send()
+        .await?;
+
+    let callback_id = res.text().await?.parse::<Uuid>()?;
+    let callback_address = format!("http://localhost:1235/{}", callback_id.to_string());
+    println!("1.\n Creating Callback Address: \n{}", callback_address);
+
+
+    // 2. I create a TransferRequest
+    let consumer_pid = Uuid::new_v4();
+    let request_data = TransferRequestMessage {
+        context: TRANSFER_CONTEXT.to_string(),
+        _type: TransferMessageTypes::TransferRequestMessage.to_string(),
+        consumer_pid: convert_uuid_to_uri(&consumer_pid)?,
+        agreement_id: convert_uuid_to_uri(&agreements.get(0).unwrap().agreement_id)?,
+        format: DctFormats { protocol: FormatProtocol::Http, action: FormatAction::Push },
+        callback_address,
+        data_address: Some(data_address), // <- this data address should be created
+    };
+    println!("2.\n Creating TransferRequest: \n{:?}", request_data);
+
+
+    // 3. Transfer request to provider
+    let res = client
+        .post("http://localhost:1234/transfers/request")
+        .json(&request_data)
+        .send()
+        .await?;
+
+    let res_body = &res.json::<TransferProcessMessage>().await?;
+    let provider_pid_ = res_body.provider_pid.clone();
+    println!("3.\n Provider says: \n{:?}", res_body);
+
+    // 4. Transfer start is happening under the hood. check logs
+
+    // 5. begin data transfer
+
+    // i have to create data layer in consumer first...
+
 
     cleanup_test_env(provider_server, consumer_server).await
 }

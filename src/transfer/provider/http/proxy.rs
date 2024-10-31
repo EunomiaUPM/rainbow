@@ -1,9 +1,9 @@
 use crate::fake_catalog::lib::get_dataset_by_id;
 use crate::fake_catalog::lib::get_datasets_by_endpoint;
 use crate::fake_contracts::lib::get_agreement_by_id;
+use crate::transfer::common::http::client::DATA_PLANE_HTTP_CLIENT;
 use crate::transfer::provider::data::repo::{TransferProviderDataRepo, TRANSFER_PROVIDER_REPO};
 use crate::transfer::provider::data::repo_postgres::TransferProviderDataRepoPostgres;
-use crate::transfer::provider::http::client::DATA_PLANE_HTTP_CLIENT;
 use crate::transfer::provider::lib::data_plane::resolve_endpoint_from_agreement;
 use axum::extract::Path;
 use axum::http::StatusCode;
@@ -18,6 +18,7 @@ pub fn router() -> Router {
 }
 
 async fn handle_data_proxy(Path(data_id): Path<Uuid>) -> impl IntoResponse {
+    info!("Forwarding data from provider data plane proxy");
     info!("GET /data/{}", data_id.to_string());
 
     // Resolve consumer, provider, agreement, endpoint, status...
@@ -48,5 +49,5 @@ async fn handle_data_proxy(Path(data_id): Path<Uuid>) -> impl IntoResponse {
         .unwrap();
 
     // Forward request
-    (StatusCode::OK, res.text().await.unwrap())
+    (res.status(), res.text().await.unwrap())
 }

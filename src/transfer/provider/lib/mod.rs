@@ -1,11 +1,10 @@
-use crate::transfer::provider::http::client::DATA_PLANE_HTTP_CLIENT;
+use crate::transfer::common::http::client::DATA_PLANE_HTTP_CLIENT;
 use reqwest::Client;
 use std::ops::Deref;
 
 pub mod control_plane;
 pub mod data_plane;
 pub mod api;
-pub mod protocol_transition_rules;
 
 enum Clients {
     HttpClient,

@@ -2,6 +2,11 @@ use crate::transfer::common::err::TransferErrorType;
 use crate::transfer::common::err::TransferErrorType::{
     ConsumerNotReachableError, NotCheckedError, ProtocolBodyError, TransferProcessNotFound,
 };
+use crate::transfer::common::http::client::DATA_PLANE_HTTP_CLIENT;
+use crate::transfer::common::http::middleware::{
+    authorization_middleware, pids_as_urn_validation_middleware, protocol_rules_middleware,
+    schema_validation_middleware,
+};
 use crate::transfer::common::utils::{convert_uri_to_uuid, convert_uuid_to_uri};
 use crate::transfer::protocol::messages::{
     TransferCompletionMessage, TransferMessageTypes, TransferProcessMessage,
@@ -11,11 +16,6 @@ use crate::transfer::protocol::messages::{
 use crate::transfer::provider::data::models::{TransferMessageModel, TransferProcessModel};
 use crate::transfer::provider::data::repo::{TransferProviderDataRepo, TRANSFER_PROVIDER_REPO};
 use crate::transfer::provider::data::repo_postgres::TransferProviderDataRepoPostgres;
-use crate::transfer::provider::http::client::DATA_PLANE_HTTP_CLIENT;
-use crate::transfer::provider::http::middleware::{
-    authorization_middleware, pids_as_urn_validation_middleware, protocol_rules_middleware,
-    schema_validation_middleware,
-};
 use crate::transfer::provider::lib::control_plane::{
     get_transfer_requests_by_provider, transfer_completion, transfer_request, transfer_start,
     transfer_suspension, transfer_termination,
@@ -115,13 +115,10 @@ async fn send_transfer_start(
         data_address: input.data_address,
     };
 
+
     let response = DATA_PLANE_HTTP_CLIENT
         .clone()
-        .post(format!(
-            "{}/transfers/{}/start",
-            input.callback_address,
-            convert_uri_to_uuid(&input.consumer_pid.to_string())?
-        ))
+        .post(format!("{}/start", input.callback_address))
         .header("content-type", "application/json")
         .json(&transfer_start_message)
         .send()

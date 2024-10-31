@@ -7,7 +7,8 @@ use rainbow::fake_catalog::data::models::DatasetsCatalogModel;
 use rainbow::fake_catalog::lib::delete_dataset;
 use rainbow::fake_contracts::data::models::ContractAgreementsModel;
 use rainbow::fake_contracts::data::repo::delete_agreement_repo;
-use serde_json::json;
+use rainbow::transfer::consumer::http::api::ApiResponseCallback;
+use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::fs;
 use std::process::{Child, Command};
@@ -33,7 +34,7 @@ pub async fn setup_agreements_and_datasets() -> anyhow::Result<(Vec<DatasetsCata
         .collect::<Vec<_>>();
 
     for endpoint in fake_parquet_file {
-        println!("{}", endpoint);
+        println!("Processing endpoint: {}", endpoint);
         let res = client
             .post("http://localhost:1234/catalogs/datasets")
             .json(&json!({
@@ -65,6 +66,7 @@ pub async fn setup_test_env() -> anyhow::Result<(
     Vec<DatasetsCatalogModel>,
     String,
     Uuid,
+    Uuid
 )> {
     let provider_envs = load_env_file(".env.provider.template");
     let mut provider_server = Command::new("cargo")
@@ -92,12 +94,13 @@ pub async fn setup_test_env() -> anyhow::Result<(
     let datasets = setup.0.clone();
 
     let res = client
-        .post("http://localhost:1235/api/v1/callbacks")
+        .post("http://localhost:1235/api/v1/setup-transfer")
         .send()
         .await?;
-    let callback_id = res.text().await?.parse::<Uuid>()?;
-    let callback_address = format!("http://localhost:1235/{}", callback_id.to_string());
-    let consumer_pid = Uuid::new_v4();
+    let res_json = res.json::<ApiResponseCallback>().await?;
+    let callback_id = res_json.callback_id.parse::<Uuid>()?;
+    let callback_address = res_json.callback_address;
+    let consumer_pid = res_json.consumer_pid.parse::<Uuid>()?;
 
     Ok((
         provider_server,
@@ -107,6 +110,7 @@ pub async fn setup_test_env() -> anyhow::Result<(
         datasets,
         callback_address,
         consumer_pid,
+        callback_id
     ))
 }
 

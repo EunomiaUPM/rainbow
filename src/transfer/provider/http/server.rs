@@ -1,7 +1,7 @@
 use crate::fake_catalog::http as fake_catalog;
 use crate::fake_contracts::http as fake_contracts;
+use crate::transfer::common::http::middleware::{authentication_middleware, authorization_middleware};
 use crate::transfer::common::misc_router;
-use crate::transfer::provider::http::middleware::{authentication_middleware, authorization_middleware};
 use crate::transfer::provider::http::router;
 use crate::transfer::provider::http::{api, proxy};
 use axum::http::Method;

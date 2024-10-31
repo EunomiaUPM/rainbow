@@ -30,6 +30,7 @@ pub async fn to_requested() -> anyhow::Result<()> {
         _datasets,
         callback_address,
         consumer_pid,
+        callback_id
     ) = setup_test_env().await?;
 
     // 1. NORMAL REQUEST
@@ -105,6 +106,7 @@ pub async fn to_started() -> anyhow::Result<()> {
         _datasets,
         callback_address,
         consumer_pid,
+        callback_id
     ) = setup_test_env().await?;
 
     // 1. NORMAL REQUEST
@@ -175,6 +177,7 @@ pub async fn to_suspended() -> anyhow::Result<()> {
         _datasets,
         callback_address,
         consumer_pid,
+        callback_id
     ) = setup_test_env().await?;
 
     // 1. NORMAL REQUEST
@@ -246,6 +249,7 @@ pub async fn to_completed() -> anyhow::Result<()> {
         _datasets,
         callback_address,
         consumer_pid,
+        callback_id
     ) = setup_test_env().await?;
 
     // 1. NORMAL REQUEST
@@ -315,6 +319,7 @@ pub async fn to_terminated() -> anyhow::Result<()> {
         _datasets,
         callback_address,
         consumer_pid,
+        callback_id
     ) = setup_test_env().await?;
 
     // 1. NORMAL REQUEST

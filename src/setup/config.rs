@@ -48,7 +48,15 @@ pub static GLOBAL_CONFIG: OnceCell<Config> = OnceCell::new();
 
 pub fn get_provider_url() -> anyhow::Result<String> {
     let config = GLOBAL_CONFIG.get().unwrap();
-    let url = format!("{}:{}", config.host_url, config.host_port);
+    let url = match config.role {
+        ConfigRoles::Consumer => format!(
+            "{}:{}",
+            config.provider_url.clone().unwrap(),
+            config.provider_port.clone().unwrap()
+        ),
+        ConfigRoles::Provider => format!("{}:{}", config.host_url, config.host_port),
+        ConfigRoles::Auth => format!("{}:{}", config.host_url, config.host_port),
+    };
     Ok(url)
 }
 

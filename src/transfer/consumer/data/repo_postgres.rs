@@ -66,7 +66,7 @@ impl TransferConsumerDataRepo for TransferConsumerDataRepoPostgres {
                 created_at: chrono::Utc::now().naive_utc(),
                 updated_at: None,
                 provider_pid: None,
-                consumer_pid: None,
+                consumer_pid: Option::from(Uuid::new_v4()),
                 data_address: None,
             })
             .returning(TransferCallbacksModel::as_select())

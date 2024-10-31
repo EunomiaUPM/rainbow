@@ -40,7 +40,7 @@ impl Serialize for DctFormats {
         serializer.serialize_str(&combined)
     }
 }
-// https://docs.rs/axum/0.6.2/axum/extract/index.html#accessing-inner-errors
+
 impl<'de> Deserialize<'de> for DctFormats {
     fn deserialize<D>(deserializer: D) -> Result<DctFormats, D::Error>
     where
@@ -54,9 +54,7 @@ impl<'de> Deserialize<'de> for DctFormats {
         let protocol = match parts[0] {
             "HTTP" => FormatProtocol::Http,
             "QUIC" => FormatProtocol::Quic,
-            "GRPC" => FormatProtocol::Grpc,
             "KAFKA" => FormatProtocol::Kafka,
-            "MQTT" => FormatProtocol::Mqtt,
             _ => return Err(Error::custom("expected a correct protocol")),
         };
         let action = match parts[1] {

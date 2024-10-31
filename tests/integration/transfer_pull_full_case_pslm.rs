@@ -112,15 +112,13 @@ pub async fn transfer_pull_full_case() -> anyhow::Result<()> {
     let res_body = res.json::<TransferCallbacksModel>().await.unwrap();
     println!("{:#?}", res_body);
 
-    let callback_id = res_body.id.to_string();
-    let consumer_id = res_body.consumer_pid.unwrap().to_string();
-    let endpoint = format!("http://localhost:1235/{}/data/{}", callback_id, consumer_id);
+    let res_body_data_address =
+        serde_json::from_value::<DataAddress>(res_body.data_address.unwrap());
+    let endpoint = &res_body_data_address?.endpoint;
 
-    let data_plane_res = client.get(endpoint.clone()).send().await?;
+    let data_plane_res = client.get(endpoint).send().await?;
     println!("{:?}", &data_plane_res.status());
     println!("{:?}", &data_plane_res.bytes().await?);
-
-
     // ASSERT TRANSFER!!
     //============================================//
     // END DATA TRANSFER!!!
@@ -153,7 +151,7 @@ pub async fn transfer_pull_full_case() -> anyhow::Result<()> {
     //============================================//
     // Give some time data plane to be unprovided
     tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-    let data_plane_res = client.get(endpoint.clone()).send().await?;
+    let data_plane_res = client.get(endpoint).send().await?;
     println!("{:?}", &data_plane_res.status());
     // ASSERT SHOULD FAIL
     //============================================//
@@ -187,7 +185,7 @@ pub async fn transfer_pull_full_case() -> anyhow::Result<()> {
     //============================================//
     // Give some time data plane to be provided
     tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-    let data_plane_res = client.get(endpoint.clone()).send().await?;
+    let data_plane_res = client.get(endpoint).send().await?;
     println!("{:?}", &data_plane_res.status());
     println!("{:?}", &data_plane_res.bytes().await?);
     //============================================//
@@ -218,7 +216,7 @@ pub async fn transfer_pull_full_case() -> anyhow::Result<()> {
     //============================================//
     // Give some time data plane to be provided
     tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-    let data_plane_res = client.get(endpoint.clone()).send().await?;
+    let data_plane_res = client.get(endpoint).send().await?;
     println!("{:?}", &data_plane_res.status());
     //============================================//
     // END DATA TRANSFER!!!

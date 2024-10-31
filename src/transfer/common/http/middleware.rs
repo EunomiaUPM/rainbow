@@ -1,10 +1,10 @@
 use crate::transfer::common::err::TransferErrorType;
 use crate::transfer::common::err::TransferErrorType::NotCheckedError;
 use crate::transfer::common::lib::common_validations::pids_as_urn_validation;
+use crate::transfer::common::lib::protocol_transition_rules::protocol_transition_rules;
 use crate::transfer::common::lib::schema_validation::schema_validation;
 use crate::transfer::protocol::messages::TransferMessageTypes;
 use crate::transfer::provider::lib::control_plane::transfer_request;
-use crate::transfer::provider::lib::protocol_transition_rules::protocol_transition_rules;
 use axum::body::{to_bytes, Body, Bytes};
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{FromRequest, Request};
