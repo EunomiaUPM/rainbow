@@ -7,7 +7,7 @@ use rainbow::fake_catalog::data::models::DatasetsCatalogModel;
 use rainbow::fake_catalog::lib::delete_dataset;
 use rainbow::fake_contracts::data::models::ContractAgreementsModel;
 use rainbow::fake_contracts::data::repo::delete_agreement_repo;
-use rainbow::transfer::consumer::http::api::ApiResponseCallback;
+use rainbow::transfer::consumer::http::api::CreateCallbackResponse;
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::fs;
@@ -97,7 +97,7 @@ pub async fn setup_test_env() -> anyhow::Result<(
         .post("http://localhost:1235/api/v1/setup-transfer")
         .send()
         .await?;
-    let res_json = res.json::<ApiResponseCallback>().await?;
+    let res_json = res.json::<CreateCallbackResponse>().await?;
     let callback_id = res_json.callback_id.parse::<Uuid>()?;
     let callback_address = res_json.callback_address;
     let consumer_pid = res_json.consumer_pid.parse::<Uuid>()?;

@@ -1,12 +1,12 @@
-use std::collections::VecDeque;
-use std::fmt;
-use std::fmt::{Debug, Display, Formatter};
-
+use axum::body::to_bytes;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
 use jsonschema::output::{ErrorDescription, OutputUnit};
 use serde::Serialize;
+use std::collections::VecDeque;
+use std::fmt;
+use std::fmt::{Debug, Display, Formatter};
 use thiserror::Error;
 
 use crate::transfer::protocol::messages::{
@@ -281,6 +281,15 @@ impl IntoResponse for TransferErrorType {
             .into_response()
     }
 }
+
+impl TransferError {
+    pub async fn from_async(value: TransferErrorType) -> Self {
+        let response = value.into_response();
+        let response_data = to_bytes(response.into_parts().1, 2048).await.unwrap();
+        serde_json::from_slice::<TransferError>(&response_data).unwrap()
+    }
+}
+
 
 impl Serialize for TransferErrorType {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>

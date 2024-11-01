@@ -81,7 +81,7 @@ where
     Ok(tp)
 }
 
-pub async fn transfer_start(input: &TransferStartMessage) -> anyhow::Result<()> {
+pub async fn transfer_start(input: &TransferStartMessage) -> anyhow::Result<TransferProcessMessage> {
     // persist information
     let transaction = TRANSFER_PROVIDER_REPO.update_transfer_process_by_provider_pid(
         &input.provider_pid.parse()?,
@@ -99,7 +99,15 @@ pub async fn transfer_start(input: &TransferStartMessage) -> anyhow::Result<()> 
         content: serde_json::to_value(input)?,
     })?;
 
-    Ok(())
+    let tp = TransferProcessMessage {
+        context: TRANSFER_CONTEXT.to_string(),
+        _type: TransferMessageTypes::TransferProcessMessage.to_string(),
+        provider_pid: convert_uuid_to_uri(&input.provider_pid.clone().parse()?)?,
+        consumer_pid: (&input.consumer_pid).to_owned(),
+        state: TransferState::STARTED,
+    };
+
+    Ok(tp)
 }
 
 pub async fn transfer_suspension(

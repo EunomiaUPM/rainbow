@@ -84,7 +84,10 @@ async fn handle_transfer_request(
         Ok(Json(input)) => match transfer_request(input, send_transfer_start).await {
             Ok(tp) => (StatusCode::CREATED, Json(tp)).into_response(),
             Err(e) => match e.downcast::<TransferErrorType>() {
-                Ok(transfer_error) => transfer_error.into_response(),
+                Ok(transfer_error) => {
+                    println!("{:#?}", transfer_error);
+                    transfer_error.into_response()
+                }
                 Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
             },
         },
