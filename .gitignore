@@ -19,3 +19,5 @@ fabric.properties
 **/pslm/
 gui/node_modules
 .DS_Store
+db
+.db
