@@ -1,7 +1,8 @@
 use serde::de::Error;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use utoipa::ToSchema;
 
-#[derive(Debug)]
+#[derive(Debug, ToSchema)]
 pub enum FormatProtocol {
     Http,
     Quic,
@@ -9,12 +10,12 @@ pub enum FormatProtocol {
     Kafka,
     Mqtt,
 }
-#[derive(Debug)]
+#[derive(Debug, ToSchema)]
 pub enum FormatAction {
     Push,
     Pull,
 }
-#[derive(Debug)]
+#[derive(Debug, ToSchema)]
 pub struct DctFormats {
     pub protocol: FormatProtocol,
     pub action: FormatAction,

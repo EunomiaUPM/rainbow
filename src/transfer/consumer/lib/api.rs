@@ -14,6 +14,7 @@ use crate::transfer::protocol::messages::{
 use axum::http::StatusCode;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
+use utoipa::ToSchema;
 use uuid::Uuid;
 
 pub async fn get_all_callbacks() -> anyhow::Result<Vec<TransferCallbacksModel>> {
@@ -28,7 +29,7 @@ pub async fn get_callback_by_id(
     Ok(callbacks)
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct CreateCallbackResponse {
     #[serde(rename = "callbackAddress")]
     pub callback_address: String,
@@ -60,7 +61,7 @@ pub async fn create_new_callback_with_address(
     todo!("not implemented")
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct RequestTransferRequest {
     #[serde(rename = "agreementId")]
     pub agreement_id: String,
@@ -73,7 +74,7 @@ pub struct RequestTransferRequest {
     #[serde(rename = "consumerPid")]
     pub consumer_pid: String,
 }
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct RequestTransferResponse {
     #[serde(rename = "consumerPid")]
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -150,7 +151,7 @@ pub async fn request_transfer(
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct DataPlaneAddressResponse {
     #[serde(rename = "dataPlaneAddress")]
     pub data_plane_address: String,
@@ -180,7 +181,7 @@ pub async fn get_data_address_by_consumer_pid(
     Ok(DataPlaneAddressResponse { data_plane_address })
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct SuspendTransferRequest {
     #[serde(rename = "consumerPid")]
     pub consumer_pid: String,
@@ -255,7 +256,7 @@ pub async fn suspend_transfer(
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct RestartTransferRequest {
     #[serde(rename = "consumerPid")]
     pub consumer_pid: String,
@@ -318,7 +319,7 @@ pub async fn restart_transfer(
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct CompleteTransferRequest {
     #[serde(rename = "consumerPid")]
     pub consumer_pid: String,

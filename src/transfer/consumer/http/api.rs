@@ -54,6 +54,7 @@ pub fn router() -> Router {
         .layer(middleware::from_fn(authorization_middleware))
 }
 
+
 async fn handle_get_all_callbacks() -> impl IntoResponse {
     info!("GET /api/v1/callbacks");
 
@@ -62,6 +63,7 @@ async fn handle_get_all_callbacks() -> impl IntoResponse {
         Err(e) => NotCheckedError { inner_error: e }.into_response(),
     }
 }
+
 
 async fn handle_get_callback_by_id(Path(callback_id): Path<Uuid>) -> impl IntoResponse {
     info!("GET /api/v1/callbacks/{}", callback_id.to_string());

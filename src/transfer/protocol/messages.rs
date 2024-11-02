@@ -3,10 +3,11 @@ use crate::transfer::protocol::formats::DctFormats;
 use anyhow::Error;
 use serde::{Deserialize, Serialize};
 use std::fmt;
+use utoipa::ToSchema;
 
 pub static TRANSFER_CONTEXT: &str = "https://w3id.org/dspace/2024/1/context.json";
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct TransferRequestMessage {
     #[serde(rename = "@context")]
     pub context: String,
@@ -26,7 +27,7 @@ pub struct TransferRequestMessage {
 }
 
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct TransferStartMessage {
     #[serde(rename = "@context")]
     pub context: String,
@@ -41,7 +42,7 @@ pub struct TransferStartMessage {
     pub data_address: Option<DataAddress>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, ToSchema)]
 pub struct TransferSuspensionMessage {
     #[serde(rename = "@context")]
     pub context: String,
@@ -57,7 +58,7 @@ pub struct TransferSuspensionMessage {
     pub reason: Vec<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct TransferCompletionMessage {
     #[serde(rename = "@context")]
     pub context: String,
@@ -69,7 +70,7 @@ pub struct TransferCompletionMessage {
     pub consumer_pid: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct TransferTerminationMessage {
     #[serde(rename = "@context")]
     pub context: String,
@@ -85,7 +86,7 @@ pub struct TransferTerminationMessage {
     pub reason: Vec<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, ToSchema)]
 pub struct DataAddress {
     #[serde(rename = "@type")]
     pub _type: String,
@@ -97,7 +98,7 @@ pub struct DataAddress {
     pub endpoint_properties: Vec<EndpointProperty>,
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, ToSchema)]
 pub struct EndpointProperty {
     #[serde(rename = "@type")]
     pub _type: String,
@@ -107,7 +108,7 @@ pub struct EndpointProperty {
     pub value: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct TransferProcessMessage {
     #[serde(rename = "@context")]
     pub context: String,
@@ -121,7 +122,7 @@ pub struct TransferProcessMessage {
     pub state: TransferState,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub enum TransferState {
     #[serde(rename = "dspace:REQUESTED")]
     REQUESTED,
@@ -135,7 +136,7 @@ pub enum TransferState {
     SUSPENDED,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct TransferError {
     #[serde(rename = "@context")]
     pub context: String,
@@ -151,7 +152,7 @@ pub struct TransferError {
     pub reason: Vec<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub enum TransferMessageTypes {
     TransferError,
     TransferRequestMessage,
