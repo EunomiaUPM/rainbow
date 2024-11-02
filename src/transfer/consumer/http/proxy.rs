@@ -17,6 +17,7 @@ pub fn router() -> Router {
 
 // https://hackernoon.com/effective-proxy-server-design-and-implementation
 async fn handle_data_proxy(
+    // TODO refactor this
     Path((callback_id, consumer_id)): Path<(Uuid, Uuid)>,
 ) -> impl IntoResponse {
     info!("Forwarding data from consumer data plane proxy");
