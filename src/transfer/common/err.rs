@@ -55,6 +55,8 @@ pub enum TransferErrorType {
     ConsumerNotReachableError,
     #[error("It seems the provider is not reachable")]
     ProviderNotReachableError,
+    #[error("It seems the provider or consumer peer is not recognized")]
+    ProviderAndConsumerNotMatchingError,
     #[error("There is a problem parsing the TransferMessage")]
     ProtocolBodyError {
         message: String
@@ -275,6 +277,17 @@ impl IntoResponse for TransferErrorType {
                     consumer_pid: "123".to_string(),
                     code: TransferErrorCodes::TransferErrorCode.to_string(),
                     reason: vec![e.to_string(), message.clone()],
+                }),
+            ),
+            e @ TransferErrorType::ProviderAndConsumerNotMatchingError => (
+                StatusCode::BAD_GATEWAY,
+                Json(TransferError {
+                    context: TRANSFER_CONTEXT.to_string(),
+                    _type: TransferMessageTypes::TransferError.to_string(),
+                    provider_pid: Some("123".to_string()),
+                    consumer_pid: "123".to_string(),
+                    code: TransferErrorCodes::TransferErrorCode.to_string(),
+                    reason: vec![e.to_string()],
                 }),
             ),
         }

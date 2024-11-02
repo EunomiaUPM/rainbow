@@ -1,4 +1,5 @@
 use crate::setup::config::{get_provider_url, GLOBAL_CONFIG};
+use crate::transfer::common::err::TransferErrorType::{CallbackClientError, ProviderAndConsumerNotMatchingError, ProviderNotReachableError};
 use crate::transfer::common::http::client::DATA_PLANE_HTTP_CLIENT;
 use crate::transfer::consumer::data::repo::TRANSFER_CONSUMER_REPO;
 use axum::extract::Path;
@@ -29,14 +30,11 @@ async fn handle_data_proxy(
 
     let callback = TRANSFER_CONSUMER_REPO.get_callback_by_consumer_id(consumer_id);
     if callback.is_err() {
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(json!({"hola": "mal"})),
-        );
+        return CallbackClientError.into_response();
     }
     let callback = callback.unwrap();
     if callback.is_none() {
-        (StatusCode::NOT_FOUND, Json(json!({"hola": "no encuentro"})));
+        return CallbackClientError.into_response();
     }
     let callback = callback.unwrap();
     let data_address = callback.data_address.unwrap();
@@ -47,10 +45,9 @@ async fn handle_data_proxy(
         .send()
         .await;
 
-
     if res.is_err() {
         println!("{:#?}", res.err().unwrap());
-        return (StatusCode::INTERNAL_SERVER_ERROR, "error".to_string());
+        return ProviderNotReachableError.into_response();
     }
     let res = res.unwrap();
 
@@ -60,14 +57,13 @@ async fn handle_data_proxy(
     let provider_host = provider_url.host_str().unwrap();
     let provider_port = provider_url.port().unwrap();
     let provider_path = provider_url.path();
-    let provider_format = format!("http://{}:{}/{}", provider_host, provider_port, provider_path);
+    let provider_format = format!("http://{}:{}{}", provider_host, provider_port, provider_path);
     let provider_check = format!("{}/data", get_provider_url().unwrap());
 
     if provider_format.contains(provider_check.as_str()) == false {
-        // TODO make error
-        (StatusCode::BAD_GATEWAY, "url doesn't correspond to peer".to_string());
+        return ProviderAndConsumerNotMatchingError.into_response();
     }
 
     // Forward request
-    (res.status(), res.text().await.unwrap())
+    (res.status(), res.text().await.unwrap()).into_response()
 }
