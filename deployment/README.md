@@ -27,13 +27,6 @@ Create the container for the consumer:
 docker compose -f docker-consumer/docker-compose.consumer.yaml up -d 
 ```
 
-## Build and use
-
-```shell
-$ make build
-$ ./bin/rainbow-0_1
-```
-
 And the program retrieves
 
 ```shell
@@ -49,25 +42,6 @@ Options:
   -V, --version  Print version
 ```
 
-For starting the provider
-
-````shell
-$ ./bin/rainbow-0_1 provider \
-  --host-url localhost \
-  --host-port 1234 \
-  start
-````
-
-And the provider server starts...
-
-Same thing for kicking off the auth server
-
-````shell
-$ ./bin/rainbow-0_1 provider \
-  --host-url localhost \
-  --host-port 1235 \
-  auth
-````
 
 ### Testing transfer messages
 
