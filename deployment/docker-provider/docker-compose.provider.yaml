@@ -33,3 +33,7 @@ services:
     env_file:
       - "./.env.provider.template"
     command: [ "provider", "setup" ]
+networks:
+  ds-rainbow:
+    external: true
+    name: ds-rainbow
