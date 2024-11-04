@@ -33,3 +33,7 @@ services:
     env_file:
       - "./.env.consumer.template"
     command: [ "consumer", "setup" ]
+networks:
+  ds-rainbow:
+    external: true
+    name: ds-rainbow
