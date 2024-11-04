@@ -10,6 +10,23 @@ Create  docker network:
 docker network create ds-rainbow
 ```
 
+cahnge to the deployment directory:
+
+```
+cd deployment
+```
+Create the cointainers for the provider:
+
+```
+docker compose -f docker-provider/docker-compose.provider.yaml up -d 
+```
+
+Create the container for the consumer:
+
+```
+docker compose -f docker-consumer/docker-compose.consumer.yaml up -d 
+```
+
 ## Build and use
 
 ```shell
