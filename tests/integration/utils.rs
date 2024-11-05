@@ -7,12 +7,12 @@ use rainbow::fake_catalog::data::models::DatasetsCatalogModel;
 use rainbow::fake_catalog::lib::delete_dataset;
 use rainbow::fake_contracts::data::models::ContractAgreementsModel;
 use rainbow::fake_contracts::data::repo::delete_agreement_repo;
-use rainbow::transfer::consumer::http::api::CreateCallbackResponse;
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::fs;
 use std::process::{Child, Command};
 use uuid::Uuid;
+use rainbow::transfer::consumer::lib::api::CreateCallbackResponse;
 
 pub fn get_json_file(path: &str) -> anyhow::Result<String> {
     let main_path = "./static/json-tests/";

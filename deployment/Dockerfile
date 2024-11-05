@@ -29,6 +29,7 @@ RUN apt-get update && \
 # Files
 WORKDIR /app
 COPY --from=builder /app/target/release/rainbow .
+COPY ./../../src/transfer/schemas ./src/transfer/schemas
 
 # Envs
 ENV LD_LIBRARY_PATH="/usr/lib"
