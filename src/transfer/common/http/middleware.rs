@@ -148,9 +148,9 @@ pub async fn authentication_middleware(
     next: Next,
 ) -> anyhow::Result<Response, StatusCode> {
     info!("Authentication middleware");
-    // redirijo al verifier -> Me devuelve un OK más la identidad (JWT)
-    // DNI
-    // CLIENT
+    // Extraemos el header Authorization: Bearer <JWT>
+    // Extraemos información del JWT
+    // 
 
     let response = next.run(request).await;
     Ok(response)
@@ -161,6 +161,8 @@ pub async fn authorization_middleware(
     next: Next,
 ) -> anyhow::Result<Response, StatusCode> {
     info!("Authorization middleware");
+
+    // IRENE - de momoneto pass through
 
     // Tiraríamos contra el motor de políticas
     // KeyRock??? + OPENFGA
