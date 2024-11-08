@@ -29,19 +29,14 @@ pub async fn transfer_push_full_case() -> anyhow::Result<()> {
     let data_address = DataAddress {
         _type: "dspace:DataAddress".to_string(),
         endpoint_type: "test".to_string(),
-        endpoint: "".to_string(),
+        endpoint: "test".to_string(),
         endpoint_properties: vec![],
     };
-    let res = client
-        .post("http://localhost:1235/api/v1/callbacks")
-        .json(&serde_json::to_string(&data_address)?) // <---
-        .send()
-        .await?;
+    println!("{}", callback_address);
+    println!("{}", consumer_pid);
+    println!("{}", callback_id);
 
-    let callback_id = res.text().await?.parse::<Uuid>()?;
-    let callback_address = format!("http://localhost:1235/{}", callback_id.to_string());
-    println!("1.\n Creating Callback Address: \n{}", callback_address);
-
+    // let consumer_pid = convert_uuid_to_uri(&consumer_pid)?;
 
     // 2. I create a TransferRequest
     let consumer_pid = Uuid::new_v4();
@@ -66,6 +61,7 @@ pub async fn transfer_push_full_case() -> anyhow::Result<()> {
 
     let res_body = &res.json::<TransferProcessMessage>().await?;
     let provider_pid_ = res_body.provider_pid.clone();
+
     println!("3.\n Provider says: \n{:?}", res_body);
 
     // 4. Transfer start is happening under the hood. check logs
@@ -74,6 +70,6 @@ pub async fn transfer_push_full_case() -> anyhow::Result<()> {
 
     // i have to create data layer in consumer first...
 
-
+    tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
     cleanup_test_env(provider_server, consumer_server).await
 }

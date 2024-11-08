@@ -1,9 +1,7 @@
 use crate::fake_catalog::lib::get_dataset_by_id;
 use crate::fake_contracts::lib::get_agreement_by_id;
 use crate::setup::config::get_provider_url;
-use crate::transfer::protocol::messages::{
-    DataAddress, TransferRequestMessage,
-};
+use crate::transfer::protocol::messages::{DataAddress, TransferRequestMessage, TransferSuspensionMessage};
 use anyhow::Error;
 use std::future::Future;
 use uuid::Uuid;
@@ -51,3 +49,17 @@ where
     cb(input.into(), provider_pid, data_plane_id).await?;
     Ok(())
 }
+
+pub async fn connect_to_streaming_service(
+    input: TransferRequestMessage,
+    provider_pid: Uuid,
+) -> anyhow::Result<()> {
+    Ok(())
+}
+
+pub async fn disconnect_from_streaming_service(
+    input: TransferSuspensionMessage,
+    provider_pid: Uuid,
+) -> anyhow::Result<()> {
+    Ok(())
+} 

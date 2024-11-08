@@ -15,11 +15,19 @@ pub enum FormatAction {
     Push,
     Pull,
 }
+
+impl PartialEq for FormatAction {
+    fn eq(&self, other: &Self) -> bool {
+        self == other
+    }
+}
+
 #[derive(Debug, ToSchema)]
 pub struct DctFormats {
     pub protocol: FormatProtocol,
     pub action: FormatAction,
 }
+
 
 impl Serialize for DctFormats {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>

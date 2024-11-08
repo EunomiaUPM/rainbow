@@ -53,6 +53,6 @@ run-migration:
 		--database-url $(DATABASE_URL)
 
 start-static-server:
-	cd ./test/data-servers/static-parquet-server; \
+	cd ./test/data-servers/static-parquet-server \
 	cargo run \
 		1236

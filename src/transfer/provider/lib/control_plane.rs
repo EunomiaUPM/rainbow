@@ -1,6 +1,7 @@
 use crate::transfer::common::err::TransferErrorType;
 use crate::transfer::common::utils::convert_uuid_to_uri;
 use crate::transfer::common::utils::{has_data_address_in_push, is_agreement_valid};
+use crate::transfer::protocol::formats::FormatAction;
 use crate::transfer::protocol::messages::TransferMessageTypes;
 use crate::transfer::protocol::messages::{
     TransferCompletionMessage, TransferProcessMessage, TransferRequestMessage,
@@ -23,6 +24,7 @@ pub async fn get_transfer_requests_by_provider(
     Ok(transaction)
 }
 
+
 pub async fn transfer_request<F, Fut, M>(
     input: TransferRequestMessage,
     callback: F,
@@ -32,6 +34,7 @@ where
     Fut: Future<Output=Result<(), Error>> + Send,
     M: From<TransferRequestMessage> + Send + 'static,
 {
+
     // agreement validation - validate
     if is_agreement_valid(&input.agreement_id)? == false {
         bail!(TransferErrorType::AgreementError);
@@ -75,6 +78,13 @@ where
         consumer_pid: (&input.consumer_pid).to_owned(),
         state: TransferState::REQUESTED,
     };
+
+
+    // Connect to data streaming in case push
+    if input.format.action == FormatAction::Push {
+        // TODO here streaming connection
+        // connect_to_streaming_service(input, provider_pid).await?;
+    }
 
     data_plane_start(input, provider_pid.clone(), callback).await?;
 

@@ -86,7 +86,7 @@ pub enum ProviderCommands {
     Start {},
     Auth {},
     Setup,
-    PopulateFakeContracts,
+    LoadContracts,
 }
 
 #[derive(Subcommand, Debug)]
@@ -149,7 +149,7 @@ pub async fn init_command_line() -> Result<()> {
         .set(config)
         .expect("Global Config not initialized");
 
-    println!("{:?}", GLOBAL_CONFIG.get().unwrap());
+    info!("Config status: \n{}", serde_json::to_string_pretty(GLOBAL_CONFIG.get().unwrap())?);
 
     match &cli.role {
         DataSpaceTransferRoles::Consumer(args) => {
@@ -175,7 +175,7 @@ pub async fn init_command_line() -> Result<()> {
                 ProviderCommands::Setup => {
                     setup_database("provider".to_string()).await?;
                 }
-                ProviderCommands::PopulateFakeContracts => {}
+                ProviderCommands::LoadContracts => {}
             }
         }
     }
