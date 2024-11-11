@@ -1,11 +1,19 @@
-[package]
-name = "rainbow"
-version = "0.1.0"
-edition = "2021"
-
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[workspace]
+members = [
+    "rainbow-catalog",
+    "rainbow-contracts",
+    "rainbow-core",
+]
+exclude = [
+    "static",
+    "gui",
+    "deployment"
+]
+resolver = "2"
 
-[dependencies]
+
+[workspace.dependencies]
 serde = { version = "1.0.203", features = ["default", "derive"] }
 serde_json = { version = "1.0.117", features = ["default"] }
 clap = { version = "4.4.9", features = [
