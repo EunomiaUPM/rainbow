@@ -1,14 +1,14 @@
 [package]
-name = "rainbow-contracts"
+name = "rainbow-dataplane"
 version = "0.1.0"
 edition = "2021"
 
-#[lib]
-#name = "rainbow_contracts"
-#path = "src/.rs"
+[lib]
+name = "rainbow_dataplane"
+path = "src/lib.rs"
 
 [[bin]]
-name = "rainbow_contracts"
+name = "rainbow_dataplane"
 path = "src/main.rs"
 
 [dependencies]
