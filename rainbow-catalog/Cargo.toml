@@ -1,11 +1,11 @@
 [package]
-name = "rainbow-catalog"
+name = "rainbow_catalog"
 version = "0.1.0"
 edition = "2021"
 
-#[lib]
-#name = "rainbow_contracts"
-#path = "src/.rs"
+[lib]
+name = "rainbow_catalog"
+path = "src/lib.rs"
 
 [[bin]]
 name = "rainbow_catalog"
@@ -15,7 +15,7 @@ path = "src/main.rs"
 serde = { workspace = true }
 serde_json = { workspace = true }
 clap = { workspace = true }
-tokio = { workspace = true }
+tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros"] }
 anyhow = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
@@ -39,4 +39,5 @@ duckdb = { workspace = true }
 utoipa = { workspace = true }
 utoipa-axum = { workspace = true }
 utoipa-redoc = { workspace = true }
-
+sea-orm = { version = "1.1.1", features = ["sqlx-postgres", "runtime-tokio", "macros", "debug-print"] }
+sea-orm-migration = { version = "1.1.1" }
