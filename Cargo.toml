@@ -4,6 +4,7 @@ members = [
     "rainbow-catalog",
     "rainbow-contracts",
     "rainbow-core",
+    "rainbow-dataplane",
 ]
 exclude = [
     "static",

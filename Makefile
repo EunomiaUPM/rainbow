@@ -3,8 +3,8 @@ BINARY_NAME=rainbow
 RELEASE_DIR=target/release
 RELEASE_BIN_DIR=bin
 VERSION=0_1
-PROVIDER_DATABASE_URL=postgresql://ds-protocol:ds-protocol@localhost:5454/ds-protocol
-CONSUMER_DATABASE_URL=postgresql://ds-protocol:ds-protocol@localhost:5454/ds-protocol
+PROVIDER_DATABASE_URL=postgresql://ds-protocol-provider:ds-protocol-provider@localhost:5433/ds-protocol-provider
+CONSUMER_DATABASE_URL=postgresql://ds-protocol:ds-protocol@localhost:5434/ds-protocol
 
 all:
 	build
@@ -33,8 +33,8 @@ create-provider-migration:
 
 run-provider-migration:
 	diesel migration run \
-		--database-url $(PROVIDER_DATABASE_URL)
-		--schema-key provider
+		--database-url $(PROVIDER_DATABASE_URL) \
+		--migration-dir ./rainbow-core/src/db/provider_migrations
 
 create-consumer-migration:
 	export $(cat $(PWD)/.env | xargs)

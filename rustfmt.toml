@@ -1,2 +1,44 @@
-indent_style = "Block"
-reorder_imports = false
+# rustfmt.toml
+
+# Indentation
+max_width = 100                 # Maximum line width; 100 is readable without overly long lines
+hard_tabs = false                # Use spaces instead of tabs
+tab_spaces = 4                   # Number of spaces per tab
+
+# Code Wrapping
+wrap_comments = true             # Wrap comments to fit within the max_width
+force_multiline_blocks = false   # Avoid forcing multiline for one-line blocks
+combine_control_expr = true      # Keep control expressions (like if/else) on one line if they fit
+
+# Formatting Style
+struct_lit_single_line = true    # Prefer single-line struct literals if they fit
+fn_call_width = 60               # Allow function call arguments on a single line if they fit
+fn_single_line = true            # Allow functions to be on one line if they fit
+
+# Import Formatting
+reorder_imports = true           # Reorder imports to alphabetize them
+group_imports = "StdExternalCrate" # Separate std, external, and crate imports with newlines
+
+# Comments
+normalize_comments = true        # Make comment style consistent
+format_code_in_doc_comments = true # Format code blocks in documentation comments
+
+# Trait and Function Formatting
+newline_style = "Unix"           # Consistent line endings
+where_style = "Rfc"              # Put `where` clauses on a new line if it doesn't fit inline
+where_pred_indent = "Block"      # Indent `where` predicates in a block style for readability
+
+# Closures
+closure_block_style = true       # Use block formatting for closures
+
+# Other Options
+blank_lines_upper_bound = 2      # Limit blank lines to a maximum of 2 for readability
+newline_before_return = true     # Insert a newline before return statements
+
+# Control Expressions
+control_brace_style = "AlwaysNextLine" # Place braces on the next line for control structures
+
+# Punctuation and Whitespace
+trailing_comma = "Always"        # Add trailing commas where possible for better diffs
+space_before_colon = false       # Remove space before colons in type declarations
+use_small_heuristics = "Max"     # Applies small formatting heuristics to as many cases as possible
