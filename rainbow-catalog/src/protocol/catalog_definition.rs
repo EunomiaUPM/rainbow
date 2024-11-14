@@ -1,5 +1,9 @@
 use crate::data::entities::catalog::Model as CatalogModel;
+use crate::protocol::dataservice_definition::DataService;
+use crate::protocol::dataset_definition::Dataset;
+use crate::protocol::distribution_definition::Distribution;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Catalog {
@@ -18,9 +22,13 @@ pub struct Catalog {
     #[serde(flatten)]
     pub dspace: CatalogDSpaceDeclaration,
     #[serde(rename = "odrl:hasPolicy")]
-    pub odrl_offer: Vec<serde_json::Value>,
+    pub odrl_offer: serde_json::Value,
     #[serde(rename = "dspace:extraFields")]
-    pub extra_fields: Vec<serde_json::Value>,
+    pub extra_fields: serde_json::Value,
+    #[serde(rename = "dcat:dataset")]
+    pub datasets: Vec<Dataset>,
+    #[serde(rename = "dcat:service")]
+    pub data_services: Vec<DataService>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -88,8 +96,10 @@ impl TryFrom<CatalogModel> for Catalog {
             dspace: CatalogDSpaceDeclaration {
                 participant_id: catalog_model.dspace_participant_id
             },
-            odrl_offer: vec![],
-            extra_fields: vec![],
+            odrl_offer: Value::default(),
+            extra_fields: Value::default(),
+            datasets: vec![],
+            data_services: vec![],
         };
 
         Ok(catalog_out)

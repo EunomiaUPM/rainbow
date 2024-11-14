@@ -1,6 +1,7 @@
 use sea_orm::{DeriveActiveEnum, EnumIter};
 use sea_orm_migration::prelude::*;
 use sea_orm_migration::sea_query::extension::postgres::Type;
+use serde::{Deserialize, Serialize};
 
 pub struct Migration;
 impl MigrationName for Migration {
@@ -15,12 +16,12 @@ impl MigrationTrait for Migration {
         manager
             .create_type(
                 Type::create()
-                    .as_enum(ODRLOffers::EntityType)
+                    .as_enum(Alias::new("tea"))
                     .values([
-                        EntityTypes::Catalog,
-                        EntityTypes::Dataset,
-                        EntityTypes::Distribution,
-                        EntityTypes::DataService,
+                        Alias::new("catalog"),
+                        Alias::new("dataset"),
+                        Alias::new("distribution"),
+                        Alias::new("service"),
                     ])
                     .to_owned(),
             )
@@ -58,19 +59,25 @@ pub enum ODRLOffers {
     EntityType,
 }
 
-#[derive(Iden, Clone, Debug, PartialEq, Eq, EnumIter, DeriveActiveEnum)]
-#[sea_orm(rs_type = "String", db_type = "String(StringLen::N(1))")]
+#[derive(
+    EnumIter,
+    DeriveActiveEnum,
+    Clone,
+    Debug,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize
+)]
+#[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "entity_types")]
 pub enum EntityTypes {
-    #[iden = "catalog"]
-    #[sea_orm(string_value = "catalog")]
+    #[sea_orm(string_value = "c")]
     Catalog,
-    #[iden = "dataset"]
-    #[sea_orm(string_value = "dataset")]
+    #[sea_orm(string_value = "d")]
     Dataset,
-    #[iden = "distribution"]
-    #[sea_orm(string_value = "distribution")]
+    #[sea_orm(string_value = "t")]
     Distribution,
-    #[iden = "dataService"]
-    #[sea_orm(string_value = "dataService")]
+    #[sea_orm(string_value = "s")]
     DataService,
 }
+

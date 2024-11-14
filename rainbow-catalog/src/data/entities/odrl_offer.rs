@@ -1,14 +1,16 @@
-use sea_orm::entity::prelude::*;
 use super::super::migrations::m20241111_000005_odrl_offers::EntityTypes;
+use sea_orm::entity::prelude::*;
+use sea_orm::TryGetable;
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
 #[sea_orm(table_name = "odrl_offers")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: Uuid,
     pub odrl_offers: Option<serde_json::Value>,
     pub entity: Uuid,
-    pub entity_type: EntityTypes
+    pub entity_type: EntityTypes,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
