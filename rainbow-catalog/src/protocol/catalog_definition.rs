@@ -1,7 +1,6 @@
 use crate::data::entities::catalog::Model as CatalogModel;
 use crate::protocol::dataservice_definition::DataService;
 use crate::protocol::dataset_definition::Dataset;
-use crate::protocol::distribution_definition::Distribution;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -60,7 +59,7 @@ pub struct CatalogDctDeclaration {
     #[serde(rename = "dct:title")]
     pub title: Option<String>,
     #[serde(rename = "dct:description")]
-    pub description: Vec<String>,
+    pub description: Vec<String>, // TODO set descriptions in all...
 }
 
 #[derive(Debug, Serialize, Deserialize)]

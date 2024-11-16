@@ -1,7 +1,10 @@
+use axum::async_trait;
+use diesel::serialize::IsNull::No;
 use crate::data::entities::distribution::Model as DistributionModel;
 use crate::protocol::dataservice_definition::DataService;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use crate::core::ll_api::dataservices_request_by_id;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Distribution {
@@ -19,12 +22,13 @@ pub struct Distribution {
     pub odrl_offer: serde_json::Value,
     #[serde(rename = "dspace:extraFields")]
     pub extra_fields: serde_json::Value,
-    #[serde(rename = "dcat:accessService")]
-    pub access_service: Vec<DataService>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct DistributionDcatDeclaration {}
+pub struct DistributionDcatDeclaration {
+    #[serde(rename = "dcat:accessService")]
+    pub access_service: Option<DataService>, // Todo should be many to many
+} // TODO dcat:format
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DistributionDctDeclaration {
@@ -40,6 +44,7 @@ pub struct DistributionDctDeclaration {
     pub description: Vec<String>,
 }
 
+
 impl TryFrom<DistributionModel> for Distribution {
     type Error = anyhow::Error;
 
@@ -48,7 +53,9 @@ impl TryFrom<DistributionModel> for Distribution {
             context: "https://w3id.org/dspace/2024/1/context.json".to_string(),
             _type: "dcat:Distribution".to_string(),
             id: distribution_model.id.to_string(),
-            dcat: DistributionDcatDeclaration {},
+            dcat: DistributionDcatDeclaration {
+                access_service: None
+            },
             dct: DistributionDctDeclaration {
                 identifier: distribution_model.id.to_string(),
                 issued: distribution_model.dct_issued,
@@ -58,7 +65,6 @@ impl TryFrom<DistributionModel> for Distribution {
             },
             odrl_offer: Value::default(),
             extra_fields: Value::default(),
-            access_service: vec![],
         })
     }
 }

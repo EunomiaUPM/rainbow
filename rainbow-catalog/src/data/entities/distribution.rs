@@ -10,6 +10,7 @@ pub struct Model {
     pub dct_modified: Option<chrono::NaiveDateTime>,
     pub dct_title: Option<String>,
     pub dct_description: Option<String>,
+    pub dcat_access_service: Uuid,
     pub dataset_id: Uuid,
 }
 
@@ -21,6 +22,12 @@ pub enum Relation {
         to = "super::dataset::Column::Id"
     )]
     Dataset,
+    #[sea_orm(
+        belongs_to = "super::dataservice::Entity",
+        from = "Column::DcatAccessService",
+        to = "super::dataservice::Column::Id"
+    )]
+    DataService,
     #[sea_orm(has_many = "super::odrl_offer::Entity")]
     OdrlOffer,
 }
@@ -28,6 +35,12 @@ pub enum Relation {
 impl Related<super::dataset::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Dataset.def()
+    }
+}
+
+impl Related<super::dataservice::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::DataService.def()
     }
 }
 

@@ -25,6 +25,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Distribution::DctModified).date_time())
                     .col(ColumnDef::new(Distribution::DctTitle).string())
                     .col(ColumnDef::new(Distribution::DctDescription).string())
+                    .col(ColumnDef::new(Distribution::DcatAccessService).uuid().not_null())
                     .col(ColumnDef::new(Distribution::DatasetId).uuid().not_null())
                     .foreign_key(
                         ForeignKey::create()
@@ -51,5 +52,6 @@ pub enum Distribution {
     DctModified,
     DctTitle,
     DctDescription,
+    DcatAccessService,
     DatasetId
 }

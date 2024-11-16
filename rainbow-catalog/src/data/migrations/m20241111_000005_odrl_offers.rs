@@ -16,7 +16,7 @@ impl MigrationTrait for Migration {
         manager
             .create_type(
                 Type::create()
-                    .as_enum(Alias::new("tea"))
+                    .as_enum(Alias::new("entity_type"))
                     .values([
                         Alias::new("catalog"),
                         Alias::new("dataset"),
@@ -69,15 +69,15 @@ pub enum ODRLOffers {
     Serialize,
     Deserialize
 )]
-#[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "entity_types")]
+#[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "entity_type")]
 pub enum EntityTypes {
-    #[sea_orm(string_value = "c")]
+    #[sea_orm(string_value = "catalog")]
     Catalog,
-    #[sea_orm(string_value = "d")]
+    #[sea_orm(string_value = "dataset")]
     Dataset,
-    #[sea_orm(string_value = "t")]
+    #[sea_orm(string_value = "distribution")]
     Distribution,
-    #[sea_orm(string_value = "s")]
+    #[sea_orm(string_value = "service")]
     DataService,
 }
 
