@@ -1,13 +1,10 @@
-use std::future::Future;
-use std::ops::Deref;
-use std::rc::Rc;
 use crate::core::ll_api::{catalog_request, dataset_request, CatalogRequestMessage};
 use axum::extract::rejection::{JsonRejection, PathRejection};
+use axum::extract::Path;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::{Json, Router};
-use axum::extract::Path;
 use tower_http::trace::TraceLayer;
 use tracing::info;
 use uuid::Uuid;
@@ -16,7 +13,7 @@ pub async fn catalog_router() -> anyhow::Result<Router> {
     let router = Router::new()
         .route("/catalog/request", post(handle_catalog_request))
         .route("/catalog/datasets/:id", get(handle_get_dataset))
-        .layer(TraceLayer::new_for_http());;
+        .layer(TraceLayer::new_for_http());
     Ok(router)
 }
 
@@ -44,7 +41,7 @@ async fn handle_get_dataset(
     result: Result<Path<Uuid>, PathRejection>,
 ) -> impl IntoResponse {
     info!("POST /catalog/datasets/:id");
-    
+
     match result {
         Ok(id) => match dataset_request(id.0).await {
             Ok(d) => (StatusCode::OK, Json(d)).into_response(),

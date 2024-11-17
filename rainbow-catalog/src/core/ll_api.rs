@@ -3,7 +3,7 @@ use crate::data::entities::dataservice;
 use crate::data::entities::dataset;
 use crate::data::entities::distribution;
 use crate::data::entities::odrl_offer;
-use crate::data::get_db_connection;
+use crate::setup::databases::get_db_connection;
 use anyhow::bail;
 
 use crate::protocol::catalog_definition::Catalog;
@@ -14,7 +14,6 @@ use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, QuerySelect};
 use serde::{Deserialize, Serialize};
 use serde_json::{to_value, Value};
 use uuid::Uuid;
-use crate::data::entities::dataservice::Model;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CatalogRequestMessage {
@@ -28,7 +27,7 @@ pub struct CatalogRequestMessage {
 
 pub async fn dataset_request(dataset_id: Uuid) -> anyhow::Result<Dataset> {
     let db_connection = get_db_connection().await;
-    let mut datasets_out: Vec<Dataset> = vec![];
+    let datasets_out: Vec<Dataset> = vec![];
     let datasets_from_db = dataset::Entity::find()
         .filter(dataset::Column::Id.eq(dataset_id))
         .one(db_connection)
@@ -105,7 +104,7 @@ pub async fn dataservices_request_by_id(
 ) -> anyhow::Result<Option<DataService>> {
     let db_connection = get_db_connection().await;
     let dataservice_from_db = dataservice::Entity::find_by_id(dataservice_id).one(db_connection).await?;
-    
+
     let dataservice = match dataservice_from_db {
         Some(d) => Some(DataService::try_from(d)?),
         None => None

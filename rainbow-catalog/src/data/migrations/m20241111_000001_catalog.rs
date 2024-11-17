@@ -45,5 +45,4 @@ pub enum Catalog {
     DctModified,
     DctTitle,
     DspaceParticipantId,
-    DctDescription,
 }

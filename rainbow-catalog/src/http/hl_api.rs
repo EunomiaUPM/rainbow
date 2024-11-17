@@ -1,5 +1,5 @@
-use crate::core::ll_api::catalog_request;
 use crate::core::hl_api::{catalog_request_by_id, delete_catalog, delete_dataservice, delete_dataset, delete_distribution, post_catalog, post_dataservice, post_dataset, post_distribution, put_catalog, put_dataservice, put_dataset, put_distribution, EditDataServiceRequest, EditDistributionRequest, NewCatalogRequest, NewDataServiceRequest, NewDatasetRequest, NewDistributionRequest};
+use crate::core::ll_api::catalog_request;
 use axum::extract::Path;
 use axum::response::IntoResponse;
 use axum::routing::{delete, get, post, put};
@@ -30,7 +30,7 @@ pub async fn catalog_api_router() -> anyhow::Result<Router> {
         .route("/api/v1/catalogs/:id/data-services/:did", delete(handle_delete_dataservice))
         //
 
-        .layer(TraceLayer::new_for_http());;
+        .layer(TraceLayer::new_for_http());
     Ok(router)
 }
 

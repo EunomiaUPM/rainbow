@@ -1,6 +1,5 @@
 use super::super::migrations::m20241111_000005_odrl_offers::EntityTypes;
 use sea_orm::entity::prelude::*;
-use sea_orm::TryGetable;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
@@ -60,6 +59,5 @@ impl Related<super::distribution::Entity> for Entity {
         Relation::Distribution.def()
     }
 }
-
 
 impl ActiveModelBehavior for ActiveModel {}

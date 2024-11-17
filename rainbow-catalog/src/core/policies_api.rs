@@ -1,6 +1,6 @@
 use crate::data::entities::odrl_offer;
-use crate::data::get_db_connection;
 use crate::data::migrations::m20241111_000005_odrl_offers::EntityTypes;
+use crate::setup::databases::get_db_connection;
 use sea_orm::QueryFilter;
 use sea_orm::{ActiveValue, ColumnTrait, EntityTrait};
 use serde_json::Value;

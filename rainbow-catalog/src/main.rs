@@ -1,5 +1,8 @@
-use tracing::info;
+#![allow(dead_code)]
+#![allow(unused_variables)]
+
 use rainbow_catalog::setup::init_command_line;
+use tracing::info;
 
 const INFO: &str = r"
 ----------
