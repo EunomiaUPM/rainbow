@@ -22,3 +22,4 @@ gui/node_modules
 db
 .db
 rainbow-pslm
+.run
