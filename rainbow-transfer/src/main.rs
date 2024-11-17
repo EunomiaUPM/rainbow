@@ -27,4 +27,5 @@ async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt().with_max_level(tracing::Level::DEBUG).with_test_writer().init();
     info!("{}", INFO);
     setup::commands::init_command_line().await?;
+    Ok(())
 }

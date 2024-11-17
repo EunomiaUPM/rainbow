@@ -1,29 +1,35 @@
-use crate::fake_catalog::lib::get_dataset_by_id;
-use crate::fake_contracts::lib::get_agreement_by_id;
 use crate::protocol::messages::{
     DataAddress, TransferCompletionMessage, TransferRequestMessage, TransferSuspensionMessage,
     TransferTerminationMessage,
 };
+use crate::provider::data::entities::agreements;
 use crate::setup::config::get_provider_url;
+use crate::setup::databases::get_db_connection;
 use anyhow::Error;
+use rainbow_common::transfer_comm::get_dataservice_url_by_id;
+use sea_orm::EntityTrait;
 use std::future::Future;
 use uuid::Uuid;
 
 pub async fn resolve_endpoint_from_agreement(agreement_id: Uuid) -> anyhow::Result<String> {
     // Resolve endpoint
-    let agreement = get_agreement_by_id(agreement_id).unwrap();
+    let db_connection = get_db_connection().await;
+    let agreement = agreements::Entity::find_by_id(agreement_id)
+        .one(db_connection)
+        .await?;
     if agreement.is_none() {
         // TODO create error
         return Err(anyhow::anyhow!("agreement not found"));
     }
+    let agreement = agreement.unwrap();
 
-    let dataset_id = agreement.unwrap().dataset_id;
-    let dataset = get_dataset_by_id(dataset_id)?;
-    if dataset.is_none() {
+    let data_service_id = agreement.data_service_id;
+    let data_service = get_dataservice_url_by_id(data_service_id).await;
+    if data_service.is_err() {
         // TODO create error
         return Err(anyhow::anyhow!("dataset not found"));
     }
-    let endpoint = dataset.unwrap().dataset_endpoint;
+    let endpoint = data_service?;
     Ok(endpoint)
 }
 

@@ -9,6 +9,8 @@ path = "src/lib.rs"
 
 
 [dependencies]
+rainbow_catalog = { version = "0.1.0", path = "../rainbow-catalog", default-features = false }
+
 serde = { workspace = true }
 serde_json = { workspace = true }
 clap = { workspace = true }

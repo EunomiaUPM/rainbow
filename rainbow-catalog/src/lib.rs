@@ -3,6 +3,6 @@
 
 mod protocol;
 mod http;
-mod core;
+pub mod core;
 mod data;
 pub mod setup;
