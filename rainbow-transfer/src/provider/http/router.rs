@@ -9,11 +9,11 @@ use crate::protocol::messages::{
     TRANSFER_CONTEXT,
 };
 use crate::provider::data::entities::{transfer_message, transfer_process};
-use crate::provider::data::get_db_connection;
 use crate::provider::lib::control_plane::{
     get_transfer_requests_by_provider, transfer_completion, transfer_request, transfer_start,
     transfer_suspension, transfer_termination,
 };
+use crate::setup::databases::get_db_connection;
 use anyhow::bail;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, Request};

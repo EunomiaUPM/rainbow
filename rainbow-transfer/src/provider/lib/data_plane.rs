@@ -4,6 +4,7 @@ use crate::protocol::messages::{
     DataAddress, TransferCompletionMessage, TransferRequestMessage, TransferSuspensionMessage,
     TransferTerminationMessage,
 };
+use crate::setup::config::get_provider_url;
 use anyhow::Error;
 use std::future::Future;
 use uuid::Uuid;
@@ -37,8 +38,7 @@ where
     M: From<TransferRequestMessage> + Send + 'static,
 {
     let data_plane_id = Uuid::new_v4();
-    // let endpoint = format!("http://{}/data/{}", get_provider_url()?, data_plane_id.to_string());
-    let endpoint = format!("http://localhost:1234/data/{}", data_plane_id.to_string());
+    let endpoint = format!("http://{}/data/{}", get_provider_url()?, data_plane_id.to_string());
 
     // return data address
     input.data_address = Some(DataAddress {

@@ -12,7 +12,7 @@ use crate::protocol::messages::{
 use crate::protocol::messages::{TransferMessageTypesForDb, TransferRoles, TransferStateForDb};
 use crate::provider::data::entities::transfer_message;
 use crate::provider::data::entities::transfer_process;
-use crate::provider::data::get_db_connection;
+use crate::setup::databases::get_db_connection;
 use anyhow::{bail, Error};
 use rainbow_common::formats::FormatAction;
 use sea_orm::{ActiveValue, EntityTrait};

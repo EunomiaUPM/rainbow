@@ -1,8 +1,8 @@
 use crate::common::http::client::DATA_PLANE_HTTP_CLIENT;
 use crate::protocol::messages::TransferStateForDb;
 use crate::provider::data::entities::transfer_process;
-use crate::provider::data::get_db_connection;
 use crate::provider::lib::data_plane::resolve_endpoint_from_agreement;
+use crate::setup::databases::get_db_connection;
 use axum::body::Body;
 use axum::extract::Path;
 use axum::http::{Response, StatusCode};

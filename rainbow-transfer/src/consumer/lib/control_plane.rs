@@ -1,10 +1,10 @@
 use crate::common::err::TransferErrorType::CallbackClientError;
 use crate::consumer::data::entities::transfer_callback;
-use crate::consumer::data::get_db_connection;
 use crate::protocol::messages::{
     TransferCompletionMessage, TransferStartMessage, TransferSuspensionMessage,
     TransferTerminationMessage,
 };
+use crate::setup::databases::get_db_connection;
 use anyhow::bail;
 use axum::Json;
 use sea_orm::{ActiveValue, EntityTrait};

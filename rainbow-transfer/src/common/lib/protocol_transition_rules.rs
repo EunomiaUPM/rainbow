@@ -4,7 +4,7 @@ use crate::common::err::TransferErrorType::{
 };
 use crate::protocol::messages::TransferState;
 use crate::provider::data::entities::transfer_process;
-use crate::provider::data::get_db_connection;
+use crate::setup::databases::get_db_connection;
 use anyhow::{anyhow, bail};
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use serde_json::Value;

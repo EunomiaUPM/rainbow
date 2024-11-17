@@ -1,8 +1,8 @@
 use crate::common::err::TransferErrorType::{CallbackClientError, ProviderAndConsumerNotMatchingError, ProviderNotReachableError};
 use crate::common::http::client::DATA_PLANE_HTTP_CLIENT;
 use crate::consumer::data::entities::transfer_callback;
-use crate::consumer::data::get_db_connection;
 use crate::setup::config::{get_provider_url, GLOBAL_CONFIG};
+use crate::setup::databases::get_db_connection;
 use anyhow::bail;
 use axum::body::Body;
 use axum::extract::Path;

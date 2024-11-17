@@ -1,6 +1,6 @@
 use crate::protocol::messages::TransferProcessMessage;
 use crate::provider::data::entities::transfer_process;
-use crate::provider::data::get_db_connection;
+use crate::setup::databases::get_db_connection;
 use sea_orm::EntityTrait;
 
 pub async fn get_all_transfers() -> anyhow::Result<Vec<TransferProcessMessage>> {

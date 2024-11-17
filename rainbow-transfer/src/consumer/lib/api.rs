@@ -3,12 +3,13 @@ use crate::common::err::TransferErrorType::{
     CallbackClientError, NotCheckedError, PidUuidError, TransferProcessNotFound,
 };
 use crate::consumer::data::entities::transfer_callback;
-use crate::consumer::data::get_db_connection;
 use crate::protocol::messages::{
     DataAddress, TransferCompletionMessage, TransferError, TransferMessageTypes,
     TransferProcessMessage, TransferRequestMessage, TransferStartMessage,
     TransferSuspensionMessage, TRANSFER_CONTEXT,
 };
+use crate::setup::config::{get_consumer_url, get_provider_url};
+use crate::setup::databases::get_db_connection;
 use axum::http::StatusCode;
 use rainbow_common::formats::DctFormats;
 use rainbow_common::utils::convert_uuid_to_uri;

@@ -4,8 +4,7 @@
 #![allow(unused_mut)]
 #![allow(unused_imports)]
 
-use rainbow_transfer::provider::data::get_db_connection;
-use rainbow_transfer::provider::data::migrations::Migrator;
+use rainbow_transfer::setup;
 use sea_orm_migration::MigratorTrait;
 use tracing::info;
 
@@ -24,11 +23,8 @@ Show some love on https://github.com/ging/rainbow
 ";
 
 #[tokio::main]
-async fn main() {
+async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt().with_max_level(tracing::Level::DEBUG).with_test_writer().init();
     info!("{}", INFO);
-
-    let db_connection = get_db_connection().await;
-    // Migrator::down(db_connection, None).await.unwrap();
-    Migrator::refresh(db_connection).await.unwrap();
+    setup::commands::init_command_line().await?;
 }
