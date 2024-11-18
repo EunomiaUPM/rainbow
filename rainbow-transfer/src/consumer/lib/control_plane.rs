@@ -4,7 +4,7 @@ use crate::protocol::messages::{
     TransferCompletionMessage, TransferStartMessage, TransferSuspensionMessage,
     TransferTerminationMessage,
 };
-use crate::setup::databases::get_db_connection;
+use rainbow_common::config::database::get_db_connection;
 use anyhow::bail;
 use axum::Json;
 use sea_orm::{ActiveValue, EntityTrait};

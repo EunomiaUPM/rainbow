@@ -1,18 +1,109 @@
+use crate::provider::lib::api::{delete_agreement, get_agreement_by_id, get_all_agreements, get_all_transfers, get_messages_by_id, get_messages_by_transfer, post_agreement, put_agreement, EditAgreement, NewAgreement};
+use axum::extract::Path;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use axum::routing::get;
+use axum::routing::{delete, get, post, put};
 use axum::{Json, Router};
-use crate::provider::lib::api::get_all_transfers;
+use log::info;
+use uuid::Uuid;
 
-// TODO CONTINUE HERE
 pub fn router() -> Router {
-    Router::new().route("/api/v1/transfers", get(handle_get_all_transfers))
+    Router::new()
+        .route("/api/v1/transfers", get(handle_get_all_transfers))
+        .route(
+            "/api/v1/transfers/:id/messages",
+            get(handle_get_messages_by_transfer),
+        )
+        .route(
+            "/api/v1/transfers/:id/messages/:mid",
+            get(handle_get_messages_by_id),
+        )
+        .route("/api/v1/agreements", get(handle_get_all_agreements))
+        .route("/api/v1/agreements/:id", get(handle_get_agreement_by_id))
+        .route("/api/v1/agreements", post(handle_post_agreement))
+        .route("/api/v1/agreements/:id", put(handle_put_agreement))
+        .route("/api/v1/agreements/:id", delete(handle_delete_agreement))
 }
 
 async fn handle_get_all_transfers() -> impl IntoResponse {
+    info!("GET /api/v1/transfers");
+
     let transfers = get_all_transfers().await;
     if transfers.is_err() {
         return StatusCode::INTERNAL_SERVER_ERROR.into_response();
     }
     (StatusCode::OK, Json(transfers.unwrap())).into_response()
 }
+
+async fn handle_get_messages_by_transfer(Path(id): Path<Uuid>) -> impl IntoResponse {
+    info!("GET /api/v1/transfers/{}/messages", id.to_string());
+    match get_messages_by_transfer(id).await {
+        Ok(messages) => (StatusCode::OK, Json(messages)).into_response(),
+        Err(e) => (StatusCode::OK, e.to_string()).into_response(),
+    }
+}
+
+async fn handle_get_messages_by_id(Path((id, mid)): Path<(Uuid, Uuid)>) -> impl IntoResponse {
+    info!(
+        "GET /api/v1/agreements/{}/messages/{}",
+        id.to_string(),
+        mid.to_string()
+    );
+    match get_messages_by_id(id, mid).await {
+        Ok(messages) => (StatusCode::OK, Json(messages)).into_response(),
+        Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
+    }
+}
+
+async fn handle_get_all_agreements() -> impl IntoResponse {
+    info!("GET /api/v1/agreements/");
+
+    match get_all_agreements().await {
+        Ok(agreements) => (StatusCode::OK, Json(agreements)).into_response(),
+        Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
+    }
+}
+
+async fn handle_get_agreement_by_id(
+    Path(id): Path<Uuid>
+) -> impl IntoResponse {
+    info!("GET /api/v1/agreements/{}", id.to_string());
+
+    match get_agreement_by_id(id).await {
+        Ok(agreement) => (StatusCode::OK, Json(agreement)).into_response(),
+        Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
+    }
+}
+
+async fn handle_post_agreement(
+    Json(input): Json<NewAgreement>
+) -> impl IntoResponse {
+    info!("POST /api/v1/agreements/");
+    match post_agreement(input).await {
+        Ok(agreement) => (StatusCode::CREATED, Json(agreement)).into_response(),
+        Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
+    }
+}
+
+async fn handle_put_agreement(
+    Path(id): Path<Uuid>,
+    Json(input): Json<EditAgreement>,
+) -> impl IntoResponse {
+    info!("PUT /api/v1/agreements/{}", id.to_string());
+    match put_agreement(id, input).await {
+        Ok(agreement) => (StatusCode::CREATED, Json(agreement)).into_response(),
+        Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
+    }
+}
+
+async fn handle_delete_agreement(
+    Path(id): Path<Uuid>
+) -> impl IntoResponse {
+    info!("DELETE /api/v1/agreements/{}", id.to_string());
+
+    match delete_agreement(id).await {
+        Ok(_) => (StatusCode::ACCEPTED).into_response(),
+        Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
+    }
+}
+

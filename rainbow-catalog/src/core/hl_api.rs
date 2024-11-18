@@ -5,13 +5,13 @@ use crate::protocol::catalog_definition::Catalog;
 use crate::protocol::dataservice_definition::DataService;
 use crate::protocol::dataset_definition::Dataset;
 use crate::protocol::distribution_definition::Distribution;
-use crate::setup::databases::get_db_connection;
 use anyhow::bail;
 use sea_orm::{ActiveValue, ColumnTrait};
 use sea_orm::{EntityTrait, QueryFilter};
 use serde::{Deserialize, Serialize};
 use serde_json::to_value;
 use uuid::Uuid;
+use rainbow_common::config::database::get_db_connection;
 
 pub async fn catalog_request_by_id(id: Uuid) -> anyhow::Result<Catalog> {
     let db_connection = get_db_connection().await;

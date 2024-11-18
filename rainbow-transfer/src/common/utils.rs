@@ -1,5 +1,5 @@
 use crate::protocol::messages::DataAddress;
-use rainbow_common::formats::{DctFormats, FormatAction};
+use rainbow_common::dcat_formats::{DctFormats, FormatAction};
 use tracing::debug;
 use uuid::Uuid;
 

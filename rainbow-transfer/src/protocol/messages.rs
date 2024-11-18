@@ -1,6 +1,6 @@
 use crate::provider::data::entities::transfer_process;
 use anyhow::bail;
-use rainbow_common::formats::DctFormats;
+use rainbow_common::dcat_formats::DctFormats;
 use rainbow_common::utils::convert_uuid_to_uri;
 use sea_orm::{DeriveActiveEnum, EnumIter};
 use serde::{Deserialize, Serialize};

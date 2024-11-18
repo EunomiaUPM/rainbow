@@ -2,15 +2,12 @@ use crate::data::migrations::Migrator;
 use crate::http::hl_api::catalog_api_router;
 use crate::http::ll_api::catalog_router;
 use crate::http::policies_api::catalog_policies_api_router;
-use crate::setup::databases::get_db_connection;
 use axum::{serve, Router};
 use clap::{Parser, Subcommand};
 use sea_orm_migration::MigratorTrait;
 use tokio::net::TcpListener;
 use tracing::info;
-
-pub mod databases;
-
+use rainbow_common::config::database::get_db_connection;
 // TODO export to lib to be interoperable with modules
 // TODO parse env
 

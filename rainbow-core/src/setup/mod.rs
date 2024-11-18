@@ -1,14 +1,13 @@
-pub mod databases;
-
 use crate::http::{get_consumer_routes, get_provider_routes};
 use crate::migrations::{migrate_consumer_db, migrate_provider_db};
-use crate::setup::databases::get_db_connection;
 use anyhow::Result;
 use axum::serve;
 use clap::{Args, Parser, Subcommand};
 use dotenvy::dotenv;
-use rainbow_transfer::config_field;
-use rainbow_transfer::setup::config::{Config, ConfigRoles, GLOBAL_CONFIG};
+use rainbow_common::config::config::{Config, ConfigRoles, GLOBAL_CONFIG};
+use rainbow_common::config_field;
+// use rainbow_transfer::config_field;
+// use rainbow_transfer::setup::config::{Config, ConfigRoles, GLOBAL_CONFIG};
 use sea_orm_migration::MigratorTrait;
 use std::env;
 use tokio::net::TcpListener;

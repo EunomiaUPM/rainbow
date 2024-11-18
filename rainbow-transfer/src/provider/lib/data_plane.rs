@@ -3,13 +3,15 @@ use crate::protocol::messages::{
     TransferTerminationMessage,
 };
 use crate::provider::data::entities::agreements;
-use crate::setup::config::get_provider_url;
-use crate::setup::databases::get_db_connection;
+// use crate::setup::config::get_provider_url;
+use rainbow_common::config::database::get_db_connection;
 use anyhow::Error;
-use rainbow_common::transfer_comm::get_dataservice_url_by_id;
+use rainbow_common::config::config::get_provider_url;
+// use rainbow_common::transfer_comm::get_dataservice_url_by_id;
 use sea_orm::EntityTrait;
 use std::future::Future;
 use uuid::Uuid;
+use rainbow_catalog::core::ll_api::dataservices_request_by_id;
 
 pub async fn resolve_endpoint_from_agreement(agreement_id: Uuid) -> anyhow::Result<String> {
     // Resolve endpoint
@@ -23,13 +25,14 @@ pub async fn resolve_endpoint_from_agreement(agreement_id: Uuid) -> anyhow::Resu
     }
     let agreement = agreement.unwrap();
 
+    // TODO if is all in modules, change function
     let data_service_id = agreement.data_service_id;
-    let data_service = get_dataservice_url_by_id(data_service_id).await;
-    if data_service.is_err() {
+    let data_service = dataservices_request_by_id(data_service_id).await?;
+    if data_service.is_none() {
         // TODO create error
         return Err(anyhow::anyhow!("dataset not found"));
     }
-    let endpoint = data_service?;
+    let endpoint = data_service.unwrap().dcat.endpoint_url;
     Ok(endpoint)
 }
 

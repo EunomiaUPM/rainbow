@@ -3,15 +3,12 @@
 #![allow(unused_variables)]
 #![allow(unused_mut)]
 
-mod utils;
-
-use rainbow_core::transfer::common::utils::convert_uuid_to_uri;
-use rainbow_core::transfer::protocol::formats::{DctFormats, FormatAction, FormatProtocol};
-use rainbow_core::transfer::protocol::messages::TransferRequestMessage;
-use rainbow_core::transfer::protocol::messages::{DataAddress, TransferMessageTypes, TransferProcessMessage, TRANSFER_CONTEXT};
 use tracing_test::traced_test;
-use utils::{cleanup_test_env, load_env_file, setup_agreements_and_datasets_pull, setup_test_env};
 use uuid::Uuid;
+use rainbow_common::dcat_formats::{DctFormats, FormatAction, FormatProtocol};
+use rainbow_common::utils::convert_uuid_to_uri;
+use rainbow_transfer::protocol::messages::{DataAddress, TransferMessageTypes, TransferProcessMessage, TransferRequestMessage, TRANSFER_CONTEXT};
+use crate::utils::{cleanup_test_env, setup_test_env};
 
 #[traced_test]
 #[tokio::test]

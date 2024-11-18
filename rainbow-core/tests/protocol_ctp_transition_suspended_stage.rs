@@ -3,21 +3,18 @@
 #![allow(unused_variables)]
 #![allow(unused_mut)]
 
-mod utils;
 
+use crate::utils::{cleanup_test_env, setup_test_env};
 use once_cell::sync::Lazy;
-use rainbow_core::fake_catalog::data::models::DatasetsCatalogModel;
-use rainbow_core::fake_contracts::data::models::ContractAgreementsModel;
-use rainbow_core::transfer::common::utils::convert_uuid_to_uri;
-use rainbow_core::transfer::protocol::formats::{DctFormats, FormatAction, FormatProtocol};
-use rainbow_core::transfer::protocol::messages::{
+use rainbow_common::dcat_formats::{DctFormats, FormatAction, FormatProtocol};
+use rainbow_common::utils::convert_uuid_to_uri;
+use rainbow_transfer::protocol::messages::{
     TransferCompletionMessage, TransferMessageTypes, TransferProcessMessage,
     TransferRequestMessage, TransferStartMessage, TransferSuspensionMessage,
     TransferTerminationMessage, TRANSFER_CONTEXT,
 };
 use std::process::{Child, Command};
 use tracing_test::traced_test;
-use utils::{cleanup_test_env, load_env_file, setup_agreements_and_datasets_pull, setup_test_env};
 use uuid::Uuid;
 
 

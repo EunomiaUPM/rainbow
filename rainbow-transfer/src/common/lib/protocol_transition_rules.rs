@@ -4,11 +4,11 @@ use crate::common::err::TransferErrorType::{
 };
 use crate::protocol::messages::TransferState;
 use crate::provider::data::entities::transfer_process;
-use crate::setup::databases::get_db_connection;
 use anyhow::{anyhow, bail};
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use serde_json::Value;
 use uuid::Uuid;
+use rainbow_common::config::database::get_db_connection;
 
 pub async fn protocol_transition_rules(json_value: Value) -> anyhow::Result<()> {
     let db_connection = get_db_connection().await;

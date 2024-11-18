@@ -3,7 +3,7 @@ use crate::data::entities::dataservice;
 use crate::data::entities::dataset;
 use crate::data::entities::distribution;
 use crate::data::entities::odrl_offer;
-use crate::setup::databases::get_db_connection;
+use rainbow_common::config::database::get_db_connection;
 use anyhow::bail;
 
 use crate::protocol::catalog_definition::Catalog;

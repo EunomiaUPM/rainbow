@@ -1,15 +1,11 @@
-pub mod databases;
 
 use crate::data::migrations::Migrator;
-use crate::setup::databases::get_db_connection;
 use axum::{serve, Router};
 use clap::{Parser, Subcommand};
 use sea_orm_migration::MigratorTrait;
 use tokio::net::TcpListener;
 use tracing::info;
-
-// TODO export to lib to be interoperable with modules
-// TODO parse env
+use rainbow_common::config::database::get_db_connection;
 
 #[derive(Parser, Debug)]
 #[command(name = "Dataspace protocol contracts")]

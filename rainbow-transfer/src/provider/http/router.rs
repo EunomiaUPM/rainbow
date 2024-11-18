@@ -13,7 +13,6 @@ use crate::provider::lib::control_plane::{
     get_transfer_requests_by_provider, transfer_completion, transfer_request, transfer_start,
     transfer_suspension, transfer_termination,
 };
-use crate::setup::databases::get_db_connection;
 use anyhow::bail;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, Request};
@@ -23,6 +22,7 @@ use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{middleware, Json, Router};
 use clap::builder::TypedValueParser;
+use rainbow_common::config::database::get_db_connection;
 use rainbow_common::utils::{convert_uri_to_uuid, convert_uuid_to_uri};
 use reqwest::Error;
 use sea_orm::{ActiveValue, EntityTrait};

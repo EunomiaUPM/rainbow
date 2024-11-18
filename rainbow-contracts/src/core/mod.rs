@@ -1,5 +1,5 @@
 use crate::data::entities::agreements;
-use crate::setup::databases::get_db_connection;
+use rainbow_common::config::database::get_db_connection;
 use anyhow::bail;
 use sea_orm::{ActiveValue, EntityTrait};
 use serde::{Deserialize, Serialize};

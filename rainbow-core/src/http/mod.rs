@@ -8,10 +8,12 @@ use rainbow_transfer::consumer::http::openapi as consumer_redoc_router;
 use rainbow_catalog::http::ll_api as catalog_ll_api_router;
 use rainbow_catalog::http::hl_api as catalog_hl_api_router;
 use rainbow_catalog::http::policies_api as catalog_policies_api_router;
+use rainbow_common::misc_router as misc_router;
 use rainbow_contracts::http as contract_router;
 
 pub async fn get_provider_routes() -> Router {
     Router::new()
+        .merge(misc_router::router())
         .merge(provider_ll_api_router::router())
         .merge(provider_hl_api_router::router())
         .merge(provider_http_dataplane_router::router())
@@ -23,6 +25,7 @@ pub async fn get_provider_routes() -> Router {
 
 pub async fn get_consumer_routes() -> Router {
     Router::new()
+        .merge(misc_router::router())
         .merge(consumer_ll_api_router::router())
         .merge(consumer_hl_api_router::router())
         .merge(consumer_redoc_router::open_api_setup().unwrap())

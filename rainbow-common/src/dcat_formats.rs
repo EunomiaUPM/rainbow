@@ -62,19 +62,21 @@ impl<'de> Deserialize<'de> for DctFormats {
         D: Deserializer<'de>,
     {
         let v = String::deserialize(deserializer)?;
-        let parts: Vec<&str> = v.split("_").collect();
+        println!("{}", v);
+        let parts: Vec<&str> = v.split("+").collect();
         if parts.len() != 2 {
+            println!("estas petando aquí...");
             return Err(Error::custom("Expected string in format PROTOCOL_ACTION"));
         }
-        let protocol = match parts[0] {
-            "HTTP" => FormatProtocol::Http,
-            "QUIC" => FormatProtocol::Quic,
-            "KAFKA" => FormatProtocol::Kafka,
+        let protocol = match parts[0].to_lowercase().as_str() {
+            "http" => FormatProtocol::Http,
+            "quic" => FormatProtocol::Quic,
+            "kafka" => FormatProtocol::Kafka,
             _ => return Err(Error::custom("expected a correct protocol")),
         };
-        let action = match parts[1] {
-            "PUSH" => FormatAction::Push,
-            "PULL" => FormatAction::Pull,
+        let action = match parts[1].to_lowercase().as_str() {
+            "push" => FormatAction::Push,
+            "pull" => FormatAction::Pull,
             _ => return Err(Error::custom("expected a correct protocol")),
         };
         Ok(DctFormats { protocol, action })

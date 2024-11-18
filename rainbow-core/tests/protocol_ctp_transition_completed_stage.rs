@@ -3,23 +3,18 @@
 #![allow(unused_variables)]
 #![allow(unused_mut)]
 
-mod utils;
-
+use crate::utils::{cleanup_test_env, setup_test_env};
 use once_cell::sync::Lazy;
-use rainbow_core::fake_catalog::data::models::DatasetsCatalogModel;
-use rainbow_core::fake_contracts::data::models::ContractAgreementsModel;
-use rainbow_core::transfer::common::utils::convert_uuid_to_uri;
-use rainbow_core::transfer::protocol::formats::{DctFormats, FormatAction, FormatProtocol};
-use rainbow_core::transfer::protocol::messages::{
+use rainbow_common::dcat_formats::{DctFormats, FormatAction, FormatProtocol};
+use rainbow_common::utils::convert_uuid_to_uri;
+use rainbow_transfer::protocol::messages::{
     TransferCompletionMessage, TransferMessageTypes, TransferProcessMessage,
     TransferRequestMessage, TransferStartMessage, TransferSuspensionMessage,
     TransferTerminationMessage, TRANSFER_CONTEXT,
 };
 use std::process::{Child, Command};
 use tracing_test::traced_test;
-use utils::{cleanup_test_env, load_env_file, setup_agreements_and_datasets_pull, setup_test_env};
 use uuid::Uuid;
-
 
 #[traced_test]
 #[tokio::test]
@@ -32,7 +27,7 @@ pub async fn to_requested() -> anyhow::Result<()> {
         _datasets,
         callback_address,
         consumer_pid,
-        callback_id
+        callback_id,
     ) = setup_test_env().await?;
 
     // 1. NORMAL REQUEST
@@ -44,10 +39,7 @@ pub async fn to_requested() -> anyhow::Result<()> {
             _type: TransferMessageTypes::TransferRequestMessage.to_string(),
             consumer_pid: convert_uuid_to_uri(&consumer_pid)?,
             agreement_id: convert_uuid_to_uri(&agreements.get(0).unwrap().agreement_id)?,
-            format: DctFormats {
-                protocol: FormatProtocol::Http,
-                action: FormatAction::Pull,
-            },
+            format: DctFormats { protocol: FormatProtocol::Http, action: FormatAction::Pull },
             callback_address: callback_address.clone(), // start will trigger
             data_address: None,
         })
@@ -82,10 +74,7 @@ pub async fn to_requested() -> anyhow::Result<()> {
             _type: TransferMessageTypes::TransferRequestMessage.to_string(),
             consumer_pid: convert_uuid_to_uri(&consumer_pid)?,
             agreement_id: convert_uuid_to_uri(&agreements.get(0).unwrap().agreement_id)?,
-            format: DctFormats {
-                protocol: FormatProtocol::Http,
-                action: FormatAction::Pull,
-            },
+            format: DctFormats { protocol: FormatProtocol::Http, action: FormatAction::Pull },
             callback_address: callback_address.clone(), // start will trigger
             data_address: None,
         })
@@ -108,7 +97,7 @@ pub async fn to_started() -> anyhow::Result<()> {
         _datasets,
         callback_address,
         consumer_pid,
-        callback_id
+        callback_id,
     ) = setup_test_env().await?;
 
     // 1. NORMAL REQUEST
@@ -120,10 +109,7 @@ pub async fn to_started() -> anyhow::Result<()> {
             _type: TransferMessageTypes::TransferRequestMessage.to_string(),
             consumer_pid: convert_uuid_to_uri(&consumer_pid)?,
             agreement_id: convert_uuid_to_uri(&agreements.get(0).unwrap().agreement_id)?,
-            format: DctFormats {
-                protocol: FormatProtocol::Http,
-                action: FormatAction::Pull,
-            },
+            format: DctFormats { protocol: FormatProtocol::Http, action: FormatAction::Pull },
             callback_address: callback_address.clone(), // start will trigger
             data_address: None,
         })
@@ -179,7 +165,7 @@ pub async fn to_suspended() -> anyhow::Result<()> {
         _datasets,
         callback_address,
         consumer_pid,
-        callback_id
+        callback_id,
     ) = setup_test_env().await?;
 
     // 1. NORMAL REQUEST
@@ -191,10 +177,7 @@ pub async fn to_suspended() -> anyhow::Result<()> {
             _type: TransferMessageTypes::TransferRequestMessage.to_string(),
             consumer_pid: convert_uuid_to_uri(&consumer_pid)?,
             agreement_id: convert_uuid_to_uri(&agreements.get(0).unwrap().agreement_id)?,
-            format: DctFormats {
-                protocol: FormatProtocol::Http,
-                action: FormatAction::Pull,
-            },
+            format: DctFormats { protocol: FormatProtocol::Http, action: FormatAction::Pull },
             callback_address: callback_address.clone(), // start will trigger
             data_address: None,
         })
@@ -251,7 +234,7 @@ pub async fn to_completed() -> anyhow::Result<()> {
         _datasets,
         callback_address,
         consumer_pid,
-        callback_id
+        callback_id,
     ) = setup_test_env().await?;
 
     // 1. NORMAL REQUEST
@@ -263,10 +246,7 @@ pub async fn to_completed() -> anyhow::Result<()> {
             _type: TransferMessageTypes::TransferRequestMessage.to_string(),
             consumer_pid: convert_uuid_to_uri(&consumer_pid)?,
             agreement_id: convert_uuid_to_uri(&agreements.get(0).unwrap().agreement_id)?,
-            format: DctFormats {
-                protocol: FormatProtocol::Http,
-                action: FormatAction::Pull,
-            },
+            format: DctFormats { protocol: FormatProtocol::Http, action: FormatAction::Pull },
             callback_address: callback_address.clone(), // start will trigger
             data_address: None,
         })
@@ -321,7 +301,7 @@ pub async fn to_terminated() -> anyhow::Result<()> {
         _datasets,
         callback_address,
         consumer_pid,
-        callback_id
+        callback_id,
     ) = setup_test_env().await?;
 
     // 1. NORMAL REQUEST
@@ -333,10 +313,7 @@ pub async fn to_terminated() -> anyhow::Result<()> {
             _type: TransferMessageTypes::TransferRequestMessage.to_string(),
             consumer_pid: convert_uuid_to_uri(&consumer_pid)?,
             agreement_id: convert_uuid_to_uri(&agreements.get(0).unwrap().agreement_id)?,
-            format: DctFormats {
-                protocol: FormatProtocol::Http,
-                action: FormatAction::Pull,
-            },
+            format: DctFormats { protocol: FormatProtocol::Http, action: FormatAction::Pull },
             callback_address: callback_address.clone(), // start will trigger
             data_address: None,
         })

@@ -8,10 +8,11 @@ use crate::protocol::messages::{
     TransferProcessMessage, TransferRequestMessage, TransferStartMessage,
     TransferSuspensionMessage, TRANSFER_CONTEXT,
 };
-use crate::setup::config::{get_consumer_url, get_provider_url};
-use crate::setup::databases::get_db_connection;
 use axum::http::StatusCode;
-use rainbow_common::formats::DctFormats;
+use rainbow_common::config::config::{get_consumer_url, get_provider_url};
+// use crate::setup::config::{get_consumer_url, get_provider_url};
+use rainbow_common::config::database::get_db_connection;
+use rainbow_common::dcat_formats::DctFormats;
 use rainbow_common::utils::convert_uuid_to_uri;
 use sea_orm::{ActiveValue, ColumnTrait, EntityTrait, QueryFilter};
 use serde::{Deserialize, Serialize};

@@ -56,19 +56,17 @@ pub fn get_provider_url() -> anyhow::Result<String> {
             config.provider_url.clone().unwrap(),
             config.provider_port.clone().unwrap()
         ),
-        ConfigRoles::Provider => format!("{}:{}", config.host_url, config.host_port),
         ConfigRoles::Auth => format!("{}:{}", config.host_url, config.host_port),
+        _ => format!("{}:{}", config.host_url, config.host_port),
     };
     Ok(url)
 }
 
-pub fn get_provider_database_url() -> anyhow::Result<String> {
+pub fn get_local_database_url() -> anyhow::Result<String> {
     let config = GLOBAL_CONFIG.get().unwrap();
     let protocol = match config.db_type.as_str() {
         "postgres" => "postgres",
-        "mongo" => "mongodb",
-        "memory" => ":memory:",
-        "mysql" => "mysql",
+        // "memory" => "memory",
         _ => bail!("Unsupported Persistence Provider Type"),
     };
 

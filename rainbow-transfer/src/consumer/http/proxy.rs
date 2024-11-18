@@ -1,8 +1,8 @@
 use crate::common::err::TransferErrorType::{CallbackClientError, ProviderAndConsumerNotMatchingError, ProviderNotReachableError};
 use crate::common::http::client::DATA_PLANE_HTTP_CLIENT;
 use crate::consumer::data::entities::transfer_callback;
-use crate::setup::config::{get_provider_url, GLOBAL_CONFIG};
-use crate::setup::databases::get_db_connection;
+// use crate::setup::config::{get_provider_url, GLOBAL_CONFIG};
+use rainbow_common::config::database::get_db_connection;
 use anyhow::bail;
 use axum::body::Body;
 use axum::extract::Path;
@@ -10,6 +10,7 @@ use axum::http::{Response, StatusCode};
 use axum::response::IntoResponse;
 use axum::routing::get;
 use axum::{Json, Router};
+use rainbow_common::config::config::get_provider_url;
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use serde_json::json;
 use tracing::{error, info};

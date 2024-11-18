@@ -3,23 +3,23 @@
 #![allow(unused_variables)]
 #![allow(unused_mut)]
 
-mod utils;
+// mod utils;
 
 use anyhow::anyhow;
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
 use axum::{http, serve};
-use rainbow_core::transfer::common::utils::convert_uuid_to_uri;
-use rainbow_core::transfer::consumer::data::models::TransferCallbacksModel;
-use rainbow_core::transfer::protocol::formats::{DctFormats, FormatAction, FormatProtocol};
-use rainbow_core::transfer::protocol::messages::{DataAddress, TransferCompletionMessage, TransferMessageTypes, TransferProcessMessage, TransferRequestMessage, TransferStartMessage, TransferSuspensionMessage, TRANSFER_CONTEXT};
+use rainbow_transfer::consumer::data::entities::transfer_callback;
+use rainbow_transfer::protocol::messages::{DataAddress, TransferCompletionMessage, TransferMessageTypes, TransferProcessMessage, TransferRequestMessage, TransferStartMessage, TransferSuspensionMessage, TRANSFER_CONTEXT};
 use serde_json::{json, Value};
 use std::io::BufRead;
 use tracing::{debug, error, info, trace};
 use tracing_subscriber::fmt::format;
 use tracing_test::traced_test;
-use utils::{cleanup_test_env, load_env_file, setup_agreements_and_datasets_pull, setup_test_env};
+use super::utils::{cleanup_test_env, load_env_file, setup_agreements_and_datasets_pull, setup_test_env};
 use uuid::Uuid;
+use rainbow_common::dcat_formats::{DctFormats, FormatAction, FormatProtocol};
+use rainbow_common::utils::convert_uuid_to_uri;
 
 #[traced_test]
 #[tokio::test]
@@ -96,11 +96,11 @@ pub async fn transfer_pull_full_case() -> anyhow::Result<()> {
         .header("content-type", "application/json")
         .send()
         .await?;
-    let res_body = res.json::<TransferCallbacksModel>().await.unwrap();
+    let res_body = res.json::<transfer_callback::Model>().await.unwrap();
     println!("{:#?}", res_body);
 
     let callback_id = res_body.id.to_string();
-    let consumer_id = res_body.consumer_pid.unwrap().to_string();
+    let consumer_id = res_body.consumer_pid.to_string();
     let endpoint = format!("http://localhost:1235/{}/data/{}", callback_id, consumer_id);
 
     let data_plane_res = client.get(endpoint.clone()).send().await?;

@@ -1,10 +1,9 @@
-use crate::setup::databases::get_db_connection;
 use rainbow_catalog::data::migrations::get_catalog_migrations;
 use rainbow_transfer::consumer::data::migrations::get_transfer_consumer_migrations;
 use rainbow_transfer::provider::data::migrations::get_transfer_provider_migrations;
 use sea_orm::prelude::async_trait;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
-
+use rainbow_common::config::database::get_db_connection;
 
 pub struct ProviderMigrator;
 #[async_trait::async_trait]
