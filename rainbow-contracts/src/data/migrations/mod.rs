@@ -1,8 +1,8 @@
 use sea_orm_migration::prelude::*;
-pub mod m20241116_000003_contract_agreements;
+pub mod m20241118_000001_contract_agreements;
 
 pub fn get_contracts_migrations() -> Vec<Box<dyn MigrationTrait>> {
-    vec![Box::new(m20241116_000003_contract_agreements::Migration)]
+    vec![Box::new(m20241118_000001_contract_agreements::Migration)]
 }
 
 pub struct Migrator;

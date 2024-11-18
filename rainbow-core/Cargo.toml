@@ -12,6 +12,11 @@ name = "rainbow"
 path = "src/main.rs"
 
 [dependencies]
+rainbow_transfer = { version = "0.1.0", path = "../rainbow-transfer", default-features = false }
+rainbow_common = { version = "0.1.0", path = "../rainbow-common", default-features = false }
+rainbow_catalog = { version = "0.1.0", path = "../rainbow-catalog", default-features = false }
+rainbow_contracts = { version = "0.1.0", path = "../rainbow-contracts", default-features = false }
+
 serde = { workspace = true }
 serde_json = { workspace = true }
 clap = { workspace = true }

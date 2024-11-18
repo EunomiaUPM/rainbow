@@ -2,7 +2,7 @@
 #![allow(unused_variables)]
 
 mod protocol;
-mod http;
+pub mod http;
 pub mod core;
-mod data;
+pub mod data;
 pub mod setup;

@@ -12,17 +12,6 @@ services:
     ports:
       - "5433:5432"
 
-  ds_provider_db_2:
-    container_name: "ds_provider_db_2"
-    image: "postgres"
-    restart: always
-    environment:
-      POSTGRES_PASSWORD: ds-protocol-provider
-      POSTGRES_USER: ds-protocol-provider
-      POSTGRES_DB: ds-protocol-provider
-    ports:
-      - "5435:5432"
-
   ds_consumer_db:
     container_name: "ds_consumer_db"
     image: "postgres"
