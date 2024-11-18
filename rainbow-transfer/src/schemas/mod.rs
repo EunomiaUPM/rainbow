@@ -4,7 +4,7 @@ use jsonschema::JSONSchema;
 use once_cell::sync::Lazy;
 use serde_json::Value;
 
-static SCHEMAS_ROUTE: &str = "./src/transfer/schemas";
+static SCHEMAS_ROUTE: &str = "./../rainbow-transfer/src/schemas";
 
 fn schema_compiler_util(path: &str) -> Value {
     let file_url = format!("{}{}", SCHEMAS_ROUTE, path);

@@ -13,9 +13,12 @@ use tracing::error;
 pub static DB_CONNECTION: OnceCell<DatabaseConnection> = OnceCell::const_new();
 pub async fn get_db_connection() -> &'static DatabaseConnection {
     DB_CONNECTION.get_or_init(|| async {
-        let db = Database::connect("postgres://ds-protocol-provider:ds-protocol-provider@localhost:5435/ds-protocol-provider").await;
+        let db = Database::connect("postgres://ds-protocol-provider:ds-protocol-provider@localhost:5433/ds-protocol-provider").await;
         match db {
-            Ok(db) => db,
+            Ok(db) => { 
+                println!("Database connection successfully established");
+                db
+            },
             Err(e) => panic!("Database connection error: {}", e.to_string()),
         }
     }).await

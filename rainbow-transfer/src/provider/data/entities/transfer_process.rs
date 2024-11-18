@@ -8,7 +8,7 @@ pub struct Model {
     pub provider_pid: Uuid,
     pub consumer_pid: Option<Uuid>,
     pub agreement_id: Uuid,
-    pub dataplane_id: Option<Uuid>,
+    pub data_plane_id: Option<Uuid>,
     pub state: TransferStateForDb,
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: Option<chrono::NaiveDateTime>,

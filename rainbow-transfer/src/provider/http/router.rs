@@ -135,7 +135,7 @@ async fn send_transfer_start(
                         provider_pid: ActiveValue::Set(old_process.provider_pid),
                         consumer_pid: ActiveValue::Set(old_process.consumer_pid),
                         agreement_id: ActiveValue::Set(old_process.agreement_id),
-                        dataplane_id: ActiveValue::Set(Some(data_plane_id)),
+                        data_plane_id: ActiveValue::Set(Some(data_plane_id)),
                         state: ActiveValue::Set(TransferStateForDb::STARTED),
                         created_at: ActiveValue::Set(old_process.created_at),
                         updated_at: ActiveValue::Set(Some(chrono::Utc::now().naive_utc())),

@@ -15,19 +15,22 @@ pub async fn protocol_transition_rules(json_value: Value) -> anyhow::Result<()> 
     let provider_pid = json_value
         .get("dspace:providerPid")
         .and_then(|v| v.as_str())
-        .and_then(|v| Uuid::parse_str(v).ok());
+        .and_then(|v| Uuid::parse_str(v).ok())
+        .unwrap_or_default();
+
 
     let consumer_pid = json_value
         .get("dspace:consumerPid")
         .and_then(|v| v.as_str())
-        .and_then(|v| Uuid::parse_str(v).ok());
+        .and_then(|v| Uuid::parse_str(v).ok())
+        .unwrap_or_default();
 
     let message_type = json_value.get("@type").and_then(|v| v.as_str()).unwrap();
 
-    let transfer_provider = transfer_process::Entity::find_by_id(provider_pid.unwrap())
+    let transfer_provider = transfer_process::Entity::find_by_id(provider_pid)
         .one(db_connection)
-        .await
-        .map_err(|e| anyhow!(e))?;
+        .await?;
+
 
     // let transfer_provider = TRANSFER_PROVIDER_REPO
     //     .get_transfer_process_by_provider_pid(provider_pid.unwrap_or(Uuid::default()))

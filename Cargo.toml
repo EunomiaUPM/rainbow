@@ -4,10 +4,9 @@ members = [
     "rainbow-core",
     "rainbow-catalog",
     "rainbow-contracts",
-    #    "rainbow-pslm",
     "rainbow-dataplane",
     "rainbow-transfer",
-    "rainbow-common"
+    "rainbow-common",
 ]
 exclude = [
     "static",
@@ -49,3 +48,4 @@ utoipa-axum = "0.1.2"
 utoipa-redoc = { version = "5.0.0", features = ["axum"] }
 sea-orm = { version = "1.1.1", features = ["sqlx-postgres", "runtime-tokio", "macros", "debug-print"] }
 sea-orm-migration = { version = "1.1.1" }
+

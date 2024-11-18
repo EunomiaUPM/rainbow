@@ -26,7 +26,7 @@ async fn handle_data_proxy(Path(data_id): Path<Uuid>) -> impl IntoResponse {
 
     // Resolve transfer process and endpoint...
     let transfer_process_from_db = transfer_process::Entity::find()
-        .filter(transfer_process::Column::DataplaneId.eq(data_id))
+        .filter(transfer_process::Column::DataPlaneId.eq(data_id))
         .one(db_connection)
         .await.unwrap();
 

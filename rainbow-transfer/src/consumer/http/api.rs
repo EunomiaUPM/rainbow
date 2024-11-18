@@ -73,6 +73,7 @@ async fn handle_get_callback_by_id(Path(callback_id): Path<Uuid>) -> impl IntoRe
 
 async fn handle_create_callback(data_address: Option<Json<DataAddress>>) -> impl IntoResponse {
     info!("POST /api/v1/setup-transfer");
+    println!("{:?}", data_address);
 
     match data_address {
         Some(address) => match create_new_callback_with_address(address.0).await {

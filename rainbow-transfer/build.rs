@@ -1,6 +1,6 @@
 fn main() {
-    println!("cargo:rustc-link-search=native=/opt/homebrew/lib");
-    println!("cargo:rustc-link-lib=dylib=duckdb");
+    // println!("cargo:rustc-link-search=native=/opt/homebrew/lib");
+    // println!("cargo:rustc-link-lib=dylib=duckdb");
 
     // // PostgreSQL
     // println!("cargo:rustc-link-search=native=/path/to/postgresql/lib"); // Adjust to actual path
