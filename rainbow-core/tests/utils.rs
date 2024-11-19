@@ -3,63 +3,26 @@
 #![allow(unused_variables)]
 #![allow(unused_mut)]
 
-use rainbow_core::fake_catalog::data::models::DatasetsCatalogModel;
-use rainbow_core::fake_catalog::lib::delete_dataset;
-use rainbow_core::fake_contracts::data::models::ContractAgreementsModel;
-use rainbow_core::fake_contracts::data::repo::delete_agreement_repo;
-use rainbow_core::transfer::consumer::lib::api::CreateCallbackResponse;
+use rainbow_catalog::protocol::catalog_definition::Catalog;
+use rainbow_catalog::protocol::dataservice_definition::DataService;
+use rainbow_transfer::consumer::lib::api::CreateCallbackResponse;
+use rainbow_transfer::provider::data::entities::agreements;
 use serde_json::json;
 use std::collections::HashMap;
-use std::fs;
 use std::process::{Child, Command};
 use uuid::Uuid;
 
-
-pub async fn setup_agreements_and_datasets_pull() -> anyhow::Result<(Vec<DatasetsCatalogModel>, Vec<ContractAgreementsModel>)> {
-    let client = reqwest::Client::new();
-    let fake_parquet_url = "http://localhost:1236/data-space";
-    let fake_parquet_files = vec!["/sample1.parquet"];
-    let mut fake_datasets: Vec<DatasetsCatalogModel> = vec![];
-    let mut agreements: Vec<ContractAgreementsModel> = vec![];
-
-    let fake_parquet_file = fake_parquet_files
-        .iter()
-        .map(|f| format!("{}{}", fake_parquet_url, f))
-        .collect::<Vec<_>>();
-
-    for endpoint in fake_parquet_file {
-        println!("Processing endpoint: {}", endpoint);
-        let res = client
-            .post("http://localhost:1234/catalogs/datasets")
-            .json(&json!({
-                "endpoint": endpoint
-            }))
-            .send()
-            .await?;
-        let ds: DatasetsCatalogModel = res.json().await?;
-        fake_datasets.push(ds.clone());
-        let res = client
-            .post("http://localhost:1234/agreements")
-            .json(&json!({
-                "dataset": ds.dataset_id
-            }))
-            .send()
-            .await?;
-        let agreement: ContractAgreementsModel = res.json().await?;
-        agreements.push(agreement);
-    }
-
-    Ok((fake_datasets, agreements))
-}
-
-pub async fn setup_test_env() -> anyhow::Result<(
+pub async fn setup_test_env(
+    url_to_load: &str,
+) -> anyhow::Result<(
     Child,
     Child,
     reqwest::Client,
-    Vec<ContractAgreementsModel>,
-    Vec<DatasetsCatalogModel>,
-    String,
     Uuid,
+    Uuid,
+    Uuid,
+    String,
+    String,
     Uuid
 )> {
     let provider_envs = load_env_file(".env.provider.template");
@@ -82,29 +45,72 @@ pub async fn setup_test_env() -> anyhow::Result<(
 
     tokio::time::sleep(tokio::time::Duration::from_secs(3)).await;
 
+    // ====================================
+    //  LOAD DATASERVICES AND AGREEEMENTS IN PROVIDER
+    // ====================================
     let client = reqwest::Client::new();
-    let setup = setup_agreements_and_datasets_pull().await?;
-    let agreements = setup.1.clone();
-    let datasets = setup.0.clone();
 
+    // catalog
     let res = client
-        .post("http://localhost:1235/api/v1/setup-transfer")
+        .post("http://localhost:1234/api/v1/catalogs")
+        .json(&json!({
+            "foaf:homepage": "homepage"
+        }))
         .send()
         .await?;
-    let res_json = res.json::<CreateCallbackResponse>().await?;
-    let callback_id = res_json.callback_id.parse::<Uuid>()?;
-    let callback_address = res_json.callback_address;
-    let consumer_pid = res_json.consumer_pid.parse::<Uuid>()?;
+    let res_body = res.json::<Catalog>().await?;
+    let catalog_id = res_body.id.parse::<Uuid>()?;
+    println!("\nCatalog Id: {:#?}\n\n", catalog_id);
+
+    // dataservice
+    let res = client
+        .post(format!(
+            "http://localhost:1234/api/v1/catalogs/{}/data-services",
+            catalog_id
+        ))
+        .json(&json!({
+            "dcat:endpointURL": url_to_load
+        }))
+        .send()
+        .await?;
+    let res_body = res.json::<DataService>().await?;
+    let dataservice_id = res_body.id.parse::<Uuid>()?;;
+    println!("\nDataservice Id: {:#?}\n\n", dataservice_id);
+
+    // agreement
+    let res = client
+        .post("http://localhost:1234/api/v1/agreements")
+        .json(&json!({
+            "dataServiceId": dataservice_id
+        }))
+        .send()
+        .await?;
+    let res_body = res.json::<agreements::Model>().await?;
+    let agreement_id = res_body.agreement_id;
+    println!("\nAgreement Id: {:#?}\n\n", agreement_id.to_string());
+
+    // ====================================
+    //  CREATE CALLBACK IN CONSUMER
+    // ====================================
+    let res = client.post("http://localhost:1235/api/v1/setup-transfer").send().await?;
+    let res_body = res.json::<CreateCallbackResponse>().await?;
+    let consumer_pid = res_body.consumer_pid.clone();
+    let consumer_callback_address = res_body.callback_address.clone();
+    let callback_id = res_body.callback_id.clone().parse::<Uuid>()?;;
+    println!("\nConsumer Pid: {:#?}", consumer_pid);
+    println!("\nConsumer Pid: {:#?}", consumer_callback_address);
+    println!("\nConsumer Pid: {:#?}\n\n", callback_id);
 
     Ok((
         provider_server,
         consumer_server,
         client,
-        agreements,
-        datasets,
-        callback_address,
+        catalog_id,
+        dataservice_id,
+        agreement_id,
         consumer_pid,
-        callback_id
+        consumer_callback_address,
+        callback_id,
     ))
 }
 
@@ -113,31 +119,12 @@ pub async fn cleanup_test_env(
     mut consumer_server: Child,
 ) -> anyhow::Result<()> {
     tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
-    provider_server
-        .kill()
-        .expect("Failed to kill provider server");
-    consumer_server
-        .kill()
-        .expect("Failed to kill consumer server");
-    Ok(())
-}
-
-pub async fn cleanup_env(
-    setup: (Vec<DatasetsCatalogModel>, Vec<ContractAgreementsModel>),
-) -> anyhow::Result<()> {
-    let (fake_datasets, agreements) = setup;
-    for ds in fake_datasets {
-        delete_dataset(ds.dataset_id)?;
-    }
-    for agg in agreements {
-        delete_agreement_repo(agg.agreement_id)?;
-    }
+    provider_server.kill().expect("Failed to kill provider server");
+    consumer_server.kill().expect("Failed to kill consumer server");
     Ok(())
 }
 
 pub fn load_env_file(env_file: &str) -> HashMap<String, String> {
-    dotenvy::from_filename(env_file)
-        .ok()
-        .expect("Failed to read .env file");
+    dotenvy::from_filename(env_file).ok().expect("Failed to read .env file");
     std::env::vars().collect()
 }

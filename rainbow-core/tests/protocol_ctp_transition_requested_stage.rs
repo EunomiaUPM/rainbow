@@ -3,7 +3,7 @@
 #![allow(unused_variables)]
 #![allow(unused_mut)]
 
-use crate::utils::{cleanup_test_env, setup_test_env};
+use super::utils::{cleanup_test_env, setup_test_env};
 use once_cell::sync::Lazy;
 use rainbow_common::dcat_formats::{DctFormats, FormatAction, FormatProtocol};
 use rainbow_common::utils::convert_uuid_to_uri;
@@ -45,7 +45,7 @@ pub async fn to_requested() -> anyhow::Result<()> {
         })
         .send()
         .await?;
-    let res_body = &res.json::<TransferProcessMessage>().await?;
+    let res_body = res.json::<TransferProcessMessage>().await?;
     let provider_pid_ = res_body.provider_pid.clone();
     println!("provider: {}", provider_pid_);
 
@@ -102,7 +102,7 @@ pub async fn to_started() -> anyhow::Result<()> {
         })
         .send()
         .await?;
-    let res_body = &res.json::<TransferProcessMessage>().await?;
+    let res_body = res.json::<TransferProcessMessage>().await?;
     let provider_pid_ = res_body.provider_pid.clone();
     println!("provider: {}", provider_pid_);
 
@@ -157,7 +157,7 @@ pub async fn to_suspended() -> anyhow::Result<()> {
         })
         .send()
         .await?;
-    let res_body = &res.json::<TransferProcessMessage>().await?;
+    let res_body = res.json::<TransferProcessMessage>().await?;
     let provider_pid_ = res_body.provider_pid.clone();
     println!("provider: {}", provider_pid_);
 
@@ -213,7 +213,7 @@ pub async fn to_completed() -> anyhow::Result<()> {
         })
         .send()
         .await?;
-    let res_body = &res.json::<TransferProcessMessage>().await?;
+    let res_body = res.json::<TransferProcessMessage>().await?;
     let provider_pid_ = res_body.provider_pid.clone();
     println!("provider: {}", provider_pid_);
 
@@ -267,7 +267,7 @@ pub async fn to_terminated() -> anyhow::Result<()> {
         })
         .send()
         .await?;
-    let res_body = &res.json::<TransferProcessMessage>().await?;
+    let res_body = res.json::<TransferProcessMessage>().await?;
     let provider_pid_ = res_body.provider_pid.clone();
     println!("provider: {}", provider_pid_);
 

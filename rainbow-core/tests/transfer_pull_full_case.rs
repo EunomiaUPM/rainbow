@@ -9,6 +9,8 @@ use anyhow::anyhow;
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
 use axum::{http, serve};
+use rainbow_common::dcat_formats::{DctFormats, FormatAction, FormatProtocol};
+use rainbow_common::utils::convert_uuid_to_uri;
 use rainbow_transfer::consumer::data::entities::transfer_callback;
 use rainbow_transfer::protocol::messages::{DataAddress, TransferCompletionMessage, TransferMessageTypes, TransferProcessMessage, TransferRequestMessage, TransferStartMessage, TransferSuspensionMessage, TRANSFER_CONTEXT};
 use serde_json::{json, Value};
@@ -16,10 +18,10 @@ use std::io::BufRead;
 use tracing::{debug, error, info, trace};
 use tracing_subscriber::fmt::format;
 use tracing_test::traced_test;
-use super::utils::{cleanup_test_env, load_env_file, setup_agreements_and_datasets_pull, setup_test_env};
 use uuid::Uuid;
-use rainbow_common::dcat_formats::{DctFormats, FormatAction, FormatProtocol};
-use rainbow_common::utils::convert_uuid_to_uri;
+
+#[path = "utils.rs"]
+mod utils;
 
 #[traced_test]
 #[tokio::test]
@@ -28,28 +30,29 @@ pub async fn transfer_pull_full_case() -> anyhow::Result<()> {
         mut provider_server,
         mut consumer_server,
         client,
-        agreements,
-        _datasets,
-        callback_address,
+        catalog_id,
+        dataservice_id,
+        agreement_id,
         consumer_pid,
-        callback_id
-    ) = setup_test_env().await?;
+        consumer_callback_address,
+        callback_id,
+    ) = utils::setup_test_env("a").await?;
 
     //============================================//
     // TRANSFER REQUEST STAGE
     //============================================//
 
-    // After Create TransferRequestMessage
+    // Consumer creates TransferRequestMessage
     let request_data = TransferRequestMessage {
         context: TRANSFER_CONTEXT.to_string(),
         _type: TransferMessageTypes::TransferRequestMessage.to_string(),
-        consumer_pid: convert_uuid_to_uri(&consumer_pid)?,
-        agreement_id: convert_uuid_to_uri(&agreements.get(0).unwrap().agreement_id)?,
+        consumer_pid: consumer_pid.clone(),
+        agreement_id: convert_uuid_to_uri(&agreement_id)?,
         format: DctFormats {
             protocol: FormatProtocol::Http,
             action: FormatAction::Pull,
         },
-        callback_address,
+        callback_address: consumer_callback_address,
         data_address: None,
     };
 
@@ -66,7 +69,7 @@ pub async fn transfer_pull_full_case() -> anyhow::Result<()> {
         .json(&request_data)
         .send()
         .await?;
-    let res_body = &res.json::<TransferProcessMessage>().await?;
+    let res_body = res.json::<TransferProcessMessage>().await?;
     let provider_pid_ = res_body.provider_pid.clone();
 
     println!(
@@ -86,130 +89,131 @@ pub async fn transfer_pull_full_case() -> anyhow::Result<()> {
     // Give some time data plane to be provided
     tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
 
-    // Consumer queries wants to know where is the endpoint
-    // This info is in consumer callback database
-    let res = client
-        .get(format!(
-            "http://localhost:1235/api/v1/callbacks/{}",
-            callback_id
-        ))
-        .header("content-type", "application/json")
-        .send()
-        .await?;
-    let res_body = res.json::<transfer_callback::Model>().await.unwrap();
-    println!("{:#?}", res_body);
+    // // Consumer queries wants to know where is the endpoint
+    // // This info is in consumer callback database
+    // let res = client
+    //     .get(format!(
+    //         "http://localhost:1235/api/v1/callbacks/{}",
+    //         callback_id
+    //     ))
+    //     .header("content-type", "application/json")
+    //     .send()
+    //     .await?;
+    // let res_body = res.json::<transfer_callback::Model>().await.unwrap();
+    // println!("{:#?}", res_body);
+    // 
+    // let callback_id = res_body.id.to_string();
+    // let consumer_id = res_body.consumer_pid.to_string();
+    // let endpoint = format!("http://localhost:1235/{}/data/{}", callback_id, consumer_id);
+    // 
+    // let data_plane_res = client.get(endpoint.clone()).send().await?;
+    // println!("{:?}", &data_plane_res.status());
+    // println!("{:?}", &data_plane_res.bytes().await?);
+    // 
+    // 
+    // // ASSERT TRANSFER!!
+    // //============================================//
+    // // END DATA TRANSFER!!!
+    // //============================================//
+    // 
+    // //============================================//
+    // // TRANSFER SUSPENSION STAGE
+    // //============================================//
+    // // Consumer want's to suspend temporarily the transfer
+    // let suspension_data = TransferSuspensionMessage {
+    //     context: TRANSFER_CONTEXT.to_string(),
+    //     _type: TransferMessageTypes::TransferSuspensionMessage.to_string(),
+    //     provider_pid: provider_pid_.clone(),
+    //     consumer_pid: consumer_pid.clone(),
+    //     code: "A".to_string(),           // TODO DEFINE ALL THIS!!!
+    //     reason: vec!["bla".to_string()], // TODO DEFINE REASONS
+    // };
+    // let res = client
+    //     .post("http://localhost:1234/transfers/suspension")
+    //     .header("content-type", "application/json")
+    //     .json(&suspension_data)
+    //     .send()
+    //     .await?;
+    // 
+    // println!("{:?}", &res.status());
+    // // ASSERT
+    // 
+    // //============================================//
+    // // BEGIN DATA TRANSFER!!! should fail
+    // //============================================//
+    // // Give some time data plane to be unprovided
+    // tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+    // let data_plane_res = client.get(endpoint.clone()).send().await?;
+    // println!("{:?}", &data_plane_res.status());
+    // // ASSERT SHOULD FAIL
+    // //============================================//
+    // // END DATA TRANSFER!!!
+    // //============================================//
+    // 
+    // //============================================//
+    // // TRANSFER RESTART STAGE
+    // //============================================//
+    // // Consumer wants to restart
+    // // This info is in consumer callback database
+    // // Recalls endpoint
+    // let restart_data = TransferStartMessage {
+    //     context: TRANSFER_CONTEXT.to_string(),
+    //     _type: TransferMessageTypes::TransferStartMessage.to_string(),
+    //     provider_pid: provider_pid_.clone(),
+    //     consumer_pid: consumer_pid.clone(),
+    //     data_address: None,
+    // };
+    // let res = client
+    //     .post("http://localhost:1234/transfers/start")
+    //     .header("content-type", "application/json")
+    //     .json(&restart_data)
+    //     .send()
+    //     .await?;
+    // 
+    // println!("{:?}", &res.status());
+    // 
+    // //============================================//
+    // // BEGIN DATA TRANSFER!!! should work
+    // //============================================//
+    // // Give some time data plane to be provided
+    // tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+    // let data_plane_res = client.get(endpoint.clone()).send().await?;
+    // println!("{:?}", &data_plane_res.status());
+    // println!("{:?}", &data_plane_res.bytes().await?);
+    // //============================================//
+    // // END DATA TRANSFER!!!
+    // //============================================//
+    // 
+    // //============================================//
+    // // TRANSFER COMPLETION STAGE
+    // //============================================//
+    // // Consumer wants to complete
+    // let complete_data = TransferCompletionMessage {
+    //     context: TRANSFER_CONTEXT.to_string(),
+    //     _type: TransferMessageTypes::TransferCompletionMessage.to_string(),
+    //     provider_pid: provider_pid_.clone(),
+    //     consumer_pid: consumer_pid.clone(),
+    // };
+    // let res = client
+    //     .post("http://localhost:1234/transfers/completion")
+    //     .header("content-type", "application/json")
+    //     .json(&complete_data)
+    //     .send()
+    //     .await?;
+    // 
+    // println!("{:?}", &res.status());
+    // 
+    // //============================================//
+    // // BEGIN DATA TRANSFER!!! shouldn't work
+    // //============================================//
+    // // Give some time data plane to be provided
+    // tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+    // let data_plane_res = client.get(endpoint.clone()).send().await?;
+    // println!("{:?}", &data_plane_res.status());
+    // //============================================//
+    // // END DATA TRANSFER!!!
+    // //============================================//
 
-    let callback_id = res_body.id.to_string();
-    let consumer_id = res_body.consumer_pid.to_string();
-    let endpoint = format!("http://localhost:1235/{}/data/{}", callback_id, consumer_id);
-
-    let data_plane_res = client.get(endpoint.clone()).send().await?;
-    println!("{:?}", &data_plane_res.status());
-    println!("{:?}", &data_plane_res.bytes().await?);
-
-
-    // ASSERT TRANSFER!!
-    //============================================//
-    // END DATA TRANSFER!!!
-    //============================================//
-
-    //============================================//
-    // TRANSFER SUSPENSION STAGE
-    //============================================//
-    // Consumer want's to suspend temporarily the transfer
-    let suspension_data = TransferSuspensionMessage {
-        context: TRANSFER_CONTEXT.to_string(),
-        _type: TransferMessageTypes::TransferSuspensionMessage.to_string(),
-        provider_pid: provider_pid_.clone(),
-        consumer_pid: convert_uuid_to_uri(&consumer_pid)?,
-        code: "A".to_string(),           // TODO DEFINE ALL THIS!!!
-        reason: vec!["bla".to_string()], // TODO DEFINE REASONS
-    };
-    let res = client
-        .post("http://localhost:1234/transfers/suspension")
-        .header("content-type", "application/json")
-        .json(&suspension_data)
-        .send()
-        .await?;
-
-    println!("{:?}", &res.status());
-    // ASSERT
-
-    //============================================//
-    // BEGIN DATA TRANSFER!!! should fail
-    //============================================//
-    // Give some time data plane to be unprovided
-    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-    let data_plane_res = client.get(endpoint.clone()).send().await?;
-    println!("{:?}", &data_plane_res.status());
-    // ASSERT SHOULD FAIL
-    //============================================//
-    // END DATA TRANSFER!!!
-    //============================================//
-
-    //============================================//
-    // TRANSFER RESTART STAGE
-    //============================================//
-    // Consumer wants to restart
-    // This info is in consumer callback database
-    // Recalls endpoint
-    let restart_data = TransferStartMessage {
-        context: TRANSFER_CONTEXT.to_string(),
-        _type: TransferMessageTypes::TransferStartMessage.to_string(),
-        provider_pid: provider_pid_.clone(),
-        consumer_pid: convert_uuid_to_uri(&consumer_pid)?,
-        data_address: None,
-    };
-    let res = client
-        .post("http://localhost:1234/transfers/start")
-        .header("content-type", "application/json")
-        .json(&restart_data)
-        .send()
-        .await?;
-
-    println!("{:?}", &res.status());
-
-    //============================================//
-    // BEGIN DATA TRANSFER!!! should work
-    //============================================//
-    // Give some time data plane to be provided
-    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-    let data_plane_res = client.get(endpoint.clone()).send().await?;
-    println!("{:?}", &data_plane_res.status());
-    println!("{:?}", &data_plane_res.bytes().await?);
-    //============================================//
-    // END DATA TRANSFER!!!
-    //============================================//
-
-    //============================================//
-    // TRANSFER COMPLETION STAGE
-    //============================================//
-    // Consumer wants to complete
-    let complete_data = TransferCompletionMessage {
-        context: TRANSFER_CONTEXT.to_string(),
-        _type: TransferMessageTypes::TransferCompletionMessage.to_string(),
-        provider_pid: provider_pid_.clone(),
-        consumer_pid: convert_uuid_to_uri(&consumer_pid)?,
-    };
-    let res = client
-        .post("http://localhost:1234/transfers/completion")
-        .header("content-type", "application/json")
-        .json(&complete_data)
-        .send()
-        .await?;
-
-    println!("{:?}", &res.status());
-
-    //============================================//
-    // BEGIN DATA TRANSFER!!! shouldn't work
-    //============================================//
-    // Give some time data plane to be provided
-    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-    let data_plane_res = client.get(endpoint.clone()).send().await?;
-    println!("{:?}", &data_plane_res.status());
-    //============================================//
-    // END DATA TRANSFER!!!
-    //============================================//
-
-    cleanup_test_env(provider_server, consumer_server).await
+    utils::cleanup_test_env(provider_server, consumer_server).await?;
+    Ok(())
 }

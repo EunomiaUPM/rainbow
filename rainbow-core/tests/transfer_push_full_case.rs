@@ -8,7 +8,7 @@ use uuid::Uuid;
 use rainbow_common::dcat_formats::{DctFormats, FormatAction, FormatProtocol};
 use rainbow_common::utils::convert_uuid_to_uri;
 use rainbow_transfer::protocol::messages::{DataAddress, TransferMessageTypes, TransferProcessMessage, TransferRequestMessage, TRANSFER_CONTEXT};
-use crate::utils::{cleanup_test_env, setup_test_env};
+use super::utils::{cleanup_test_env, setup_test_env};
 
 #[traced_test]
 #[tokio::test]
@@ -54,7 +54,7 @@ pub async fn transfer_push_full_case() -> anyhow::Result<()> {
         .send()
         .await?;
 
-    let res_body = &res.json::<TransferProcessMessage>().await?;
+    let res_body = res.json::<TransferProcessMessage>().await?;
     let provider_pid_ = res_body.provider_pid.clone();
 
     println!("3.\n Provider says: \n{:?}", res_body);
