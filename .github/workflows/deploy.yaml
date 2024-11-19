@@ -14,24 +14,22 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Verify yarn.lock
-        run: ls -la docs/
-
       - uses: actions/setup-node@v4
         with:
           node-version: 18
-          cache: yarn
-          cache-dependency-path: docs/yarn.lock
+          cache: 'npm'
+          cache-dependency-path: docs/package-lock.json
 
       - name: Install dependencies
-        run: cd docs && yarn install --frozen-lockfile
+        run: cd docs && npm ci
+
       - name: Build website
-        run: cd docs && yarn build
+        run: cd docs && npm run build
 
       - name: Upload Build Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/build  # Note: Adjusted path to include 'docs/'
+          path: docs/build
 
   deploy:
     name: Deploy to GitHub Pages
