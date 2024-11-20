@@ -53,8 +53,6 @@ async fn handle_data_proxy(Path(data_id): Path<Uuid>) -> impl IntoResponse {
             .into_response();
     }
     
-    println!("{:#?}", endpoint);
-
     // Send the request to the upstream server
     let res = match DATA_PLANE_HTTP_CLIENT.get(endpoint.unwrap()).send().await {
         Ok(res) => res,
