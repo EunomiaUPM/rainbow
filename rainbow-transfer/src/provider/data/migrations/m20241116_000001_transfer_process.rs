@@ -42,6 +42,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(TransferProcesses::ConsumerPid).uuid())
                     .col(ColumnDef::new(TransferProcesses::AgreementId).uuid())
                     .col(ColumnDef::new(TransferProcesses::DataPlaneId).uuid())
+                    .col(ColumnDef::new(TransferProcesses::SubscriptionId).string())
                     .col(
                         ColumnDef::new(TransferProcesses::State)
                             .custom(TransferStateForDb::name())
@@ -67,6 +68,7 @@ pub enum TransferProcesses {
     ConsumerPid,
     AgreementId,
     DataPlaneId,
+    SubscriptionId,
     State,
     CreatedAt,
     UpdatedAt,
