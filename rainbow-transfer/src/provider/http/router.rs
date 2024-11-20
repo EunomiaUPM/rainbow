@@ -158,7 +158,6 @@ async fn send_transfer_start(
                         id: ActiveValue::Set(Uuid::new_v4()),
                         transfer_process_id: ActiveValue::Set(provider_pid),
                         created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
-                        updated_at: ActiveValue::Set(None),
                         message_type: ActiveValue::Set(
                             TransferMessageTypesForDb::TransferStartMessage,
                         ),

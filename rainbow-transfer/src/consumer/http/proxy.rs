@@ -87,7 +87,7 @@ async fn handle_data_proxy(
     // Fetch the callback information
     let db_connection = get_db_connection().await;
     let callback = match transfer_callback::Entity::find()
-        .filter(transfer_callback::Column::ConsumerPid.eq(consumer_id))
+        .filter(transfer_callback::Column::Id.eq(callback_id))
         .one(db_connection)
         .await {
         Ok(Some(callback)) => callback,

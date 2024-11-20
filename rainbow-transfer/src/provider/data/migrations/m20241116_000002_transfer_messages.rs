@@ -43,7 +43,6 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(TransferMessages::Id).uuid().not_null().primary_key())
                     .col(ColumnDef::new(TransferMessages::TransferProcessId).uuid().not_null())
                     .col(ColumnDef::new(TransferMessages::CreatedAt).date_time().not_null())
-                    .col(ColumnDef::new(TransferMessages::UpdatedAt).date_time())
                     .col(
                         ColumnDef::new(TransferMessages::MessageType)
                             .custom(TransferMessageTypesForDb::name())
@@ -82,7 +81,6 @@ pub enum TransferMessages {
     Id,
     TransferProcessId,
     CreatedAt,
-    UpdatedAt,
     MessageType,
     From,
     To,

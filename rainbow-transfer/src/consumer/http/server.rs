@@ -20,7 +20,6 @@ pub async fn create_consumer_router() -> Router {
         .merge(proxy::router())
         .merge(api::router())
         .merge(open_api)
-        .layer(cors)
         .layer(TraceLayer::new_for_http());
     server
 }

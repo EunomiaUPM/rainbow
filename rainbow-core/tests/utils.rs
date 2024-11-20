@@ -74,7 +74,7 @@ pub async fn setup_test_env(
         .send()
         .await?;
     let res_body = res.json::<DataService>().await?;
-    let dataservice_id = res_body.id.parse::<Uuid>()?;;
+    let dataservice_id = res_body.id.parse::<Uuid>()?;
     println!("\nDataservice Id: {:#?}\n\n", dataservice_id);
 
     // agreement
@@ -96,10 +96,10 @@ pub async fn setup_test_env(
     let res_body = res.json::<CreateCallbackResponse>().await?;
     let consumer_pid = res_body.consumer_pid.clone();
     let consumer_callback_address = res_body.callback_address.clone();
-    let callback_id = res_body.callback_id.clone().parse::<Uuid>()?;;
+    let callback_id = res_body.callback_id.clone().parse::<Uuid>()?;
     println!("\nConsumer Pid: {:#?}", consumer_pid);
-    println!("\nConsumer Pid: {:#?}", consumer_callback_address);
-    println!("\nConsumer Pid: {:#?}\n\n", callback_id);
+    println!("Consumer Callback Address: {:#?}", consumer_callback_address);
+    println!("Callback Id: {:#?}\n", callback_id);
 
     Ok((
         provider_server,

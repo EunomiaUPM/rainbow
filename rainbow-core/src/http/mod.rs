@@ -8,6 +8,8 @@ use rainbow_contracts::http as contract_router;
 use rainbow_transfer::consumer::http::api as consumer_hl_api_router;
 use rainbow_transfer::consumer::http::openapi as consumer_redoc_router;
 use rainbow_transfer::consumer::http::router as consumer_ll_api_router;
+use rainbow_transfer::consumer::http::proxy as consumer_proxy_router;
+
 use rainbow_transfer::provider::http::api as provider_hl_api_router;
 use rainbow_transfer::provider::http::proxy as provider_http_dataplane_router;
 use rainbow_transfer::provider::http::router as provider_ll_api_router;
@@ -41,5 +43,6 @@ pub async fn get_consumer_routes() -> Router {
         .merge(consumer_ll_api_router::router())
         .merge(consumer_hl_api_router::router())
         .merge(consumer_redoc_router::open_api_setup().unwrap())
+        .merge(consumer_proxy_router::router())
         .layer(_create_cors_layer())
 }

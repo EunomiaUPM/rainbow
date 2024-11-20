@@ -3,8 +3,7 @@
 #![allow(unused_variables)]
 #![allow(unused_mut)]
 
-
-use super::utils::{cleanup_test_env, setup_test_env};
+use crate::utils::cleanup_test_env;
 use once_cell::sync::Lazy;
 use rainbow_common::dcat_formats::{DctFormats, FormatAction, FormatProtocol};
 use rainbow_common::utils::convert_uuid_to_uri;
@@ -17,6 +16,8 @@ use std::process::{Child, Command};
 use tracing_test::traced_test;
 use uuid::Uuid;
 
+#[path = "utils.rs"]
+mod utils;
 
 #[traced_test]
 #[tokio::test]
@@ -25,12 +26,13 @@ pub async fn to_requested() -> anyhow::Result<()> {
         mut provider_server,
         mut consumer_server,
         client,
-        agreements,
-        _datasets,
-        callback_address,
+        catalog_id,
+        dataservice_id,
+        agreement_id,
         consumer_pid,
-        callback_id
-    ) = setup_test_env().await?;
+        consumer_callback_address,
+        callback_id,
+    ) = utils::setup_test_env("a").await?;
 
     // 1. NORMAL REQUEST
     let res = client
@@ -39,13 +41,10 @@ pub async fn to_requested() -> anyhow::Result<()> {
         .json(&TransferRequestMessage {
             context: TRANSFER_CONTEXT.into(),
             _type: TransferMessageTypes::TransferRequestMessage.to_string(),
-            consumer_pid: convert_uuid_to_uri(&consumer_pid)?,
-            agreement_id: convert_uuid_to_uri(&agreements.get(0).unwrap().agreement_id)?,
-            format: DctFormats {
-                protocol: FormatProtocol::Http,
-                action: FormatAction::Pull,
-            },
-            callback_address: callback_address.clone(), // start will trigger
+            consumer_pid: consumer_pid.clone(),
+            agreement_id: convert_uuid_to_uri(&agreement_id).unwrap(),
+            format: DctFormats { protocol: FormatProtocol::Http, action: FormatAction::Pull },
+            callback_address: consumer_callback_address.clone(), // start will trigger
             data_address: None,
         })
         .send()
@@ -64,13 +63,10 @@ pub async fn to_requested() -> anyhow::Result<()> {
         .json(&TransferRequestMessage {
             context: TRANSFER_CONTEXT.into(),
             _type: TransferMessageTypes::TransferRequestMessage.to_string(),
-            consumer_pid: convert_uuid_to_uri(&consumer_pid)?,
-            agreement_id: convert_uuid_to_uri(&agreements.get(0).unwrap().agreement_id)?,
-            format: DctFormats {
-                protocol: FormatProtocol::Http,
-                action: FormatAction::Pull,
-            },
-            callback_address: callback_address.clone(), // start will trigger
+            consumer_pid: consumer_pid.clone(),
+            agreement_id: convert_uuid_to_uri(&agreement_id).unwrap(),
+            format: DctFormats { protocol: FormatProtocol::Http, action: FormatAction::Pull },
+            callback_address: consumer_callback_address.clone(), // start will trigger
             data_address: None,
         })
         .send()
@@ -78,7 +74,8 @@ pub async fn to_requested() -> anyhow::Result<()> {
     println!("Response status: {}", res.status());
     println!("Response body: {}", res.text().await?);
 
-    cleanup_test_env(provider_server, consumer_server).await
+    utils::cleanup_test_env(provider_server, consumer_server).await?;
+    Ok(())
 }
 
 #[traced_test]
@@ -88,12 +85,13 @@ pub async fn to_started() -> anyhow::Result<()> {
         mut provider_server,
         mut consumer_server,
         client,
-        agreements,
-        _datasets,
-        callback_address,
+        catalog_id,
+        dataservice_id,
+        agreement_id,
         consumer_pid,
-        callback_id
-    ) = setup_test_env().await?;
+        consumer_callback_address,
+        callback_id,
+    ) = utils::setup_test_env("a").await?;
 
     // 1. NORMAL REQUEST
     let res = client
@@ -102,13 +100,10 @@ pub async fn to_started() -> anyhow::Result<()> {
         .json(&TransferRequestMessage {
             context: TRANSFER_CONTEXT.into(),
             _type: TransferMessageTypes::TransferRequestMessage.to_string(),
-            consumer_pid: convert_uuid_to_uri(&consumer_pid)?,
-            agreement_id: convert_uuid_to_uri(&agreements.get(0).unwrap().agreement_id)?,
-            format: DctFormats {
-                protocol: FormatProtocol::Http,
-                action: FormatAction::Pull,
-            },
-            callback_address: callback_address.clone(), // start will trigger
+            consumer_pid: consumer_pid.clone(),
+            agreement_id: convert_uuid_to_uri(&agreement_id).unwrap(),
+            format: DctFormats { protocol: FormatProtocol::Http, action: FormatAction::Pull },
+            callback_address: consumer_callback_address.clone(), // start will trigger
             data_address: None,
         })
         .send()
@@ -128,7 +123,7 @@ pub async fn to_started() -> anyhow::Result<()> {
             context: TRANSFER_CONTEXT.into(),
             _type: TransferMessageTypes::TransferStartMessage.to_string(),
             provider_pid: provider_pid_.clone(),
-            consumer_pid: convert_uuid_to_uri(&consumer_pid)?,
+            consumer_pid: consumer_pid.clone(),
             data_address: None,
         })
         .send()
@@ -136,7 +131,8 @@ pub async fn to_started() -> anyhow::Result<()> {
     println!("Response status: {}", res.status());
     println!("Response body: {}", res.text().await?);
 
-    cleanup_test_env(provider_server, consumer_server).await
+    utils::cleanup_test_env(provider_server, consumer_server).await?;
+    Ok(())
 }
 
 #[traced_test]
@@ -146,12 +142,13 @@ pub async fn to_suspended() -> anyhow::Result<()> {
         mut provider_server,
         mut consumer_server,
         client,
-        agreements,
-        _datasets,
-        callback_address,
+        catalog_id,
+        dataservice_id,
+        agreement_id,
         consumer_pid,
-        callback_id
-    ) = setup_test_env().await?;
+        consumer_callback_address,
+        callback_id,
+    ) = utils::setup_test_env("a").await?;
 
     // 1. NORMAL REQUEST
     let res = client
@@ -160,13 +157,10 @@ pub async fn to_suspended() -> anyhow::Result<()> {
         .json(&TransferRequestMessage {
             context: TRANSFER_CONTEXT.into(),
             _type: TransferMessageTypes::TransferRequestMessage.to_string(),
-            consumer_pid: convert_uuid_to_uri(&consumer_pid)?,
-            agreement_id: convert_uuid_to_uri(&agreements.get(0).unwrap().agreement_id)?,
-            format: DctFormats {
-                protocol: FormatProtocol::Http,
-                action: FormatAction::Pull,
-            },
-            callback_address: callback_address.clone(), // start will trigger
+            consumer_pid: consumer_pid.clone(),
+            agreement_id: convert_uuid_to_uri(&agreement_id).unwrap(),
+            format: DctFormats { protocol: FormatProtocol::Http, action: FormatAction::Pull },
+            callback_address: consumer_callback_address.clone(), // start will trigger
             data_address: None,
         })
         .send()
@@ -186,7 +180,7 @@ pub async fn to_suspended() -> anyhow::Result<()> {
             context: TRANSFER_CONTEXT.into(),
             _type: TransferMessageTypes::TransferSuspensionMessage.to_string(),
             provider_pid: provider_pid_.clone(),
-            consumer_pid: convert_uuid_to_uri(&consumer_pid)?,
+            consumer_pid: consumer_pid.clone(),
             code: "".to_string(),
             reason: vec![],
         })
@@ -195,7 +189,8 @@ pub async fn to_suspended() -> anyhow::Result<()> {
     println!("Response status: {}", res.status());
     println!("Response body: {}", res.text().await?);
 
-    cleanup_test_env(provider_server, consumer_server).await
+    utils::cleanup_test_env(provider_server, consumer_server).await?;
+    Ok(())
 }
 
 #[traced_test]
@@ -205,12 +200,13 @@ pub async fn to_completed() -> anyhow::Result<()> {
         mut provider_server,
         mut consumer_server,
         client,
-        agreements,
-        _datasets,
-        callback_address,
+        catalog_id,
+        dataservice_id,
+        agreement_id,
         consumer_pid,
-        callback_id
-    ) = setup_test_env().await?;
+        consumer_callback_address,
+        callback_id,
+    ) = utils::setup_test_env("a").await?;
 
     // 1. NORMAL REQUEST
     let res = client
@@ -219,13 +215,10 @@ pub async fn to_completed() -> anyhow::Result<()> {
         .json(&TransferRequestMessage {
             context: TRANSFER_CONTEXT.into(),
             _type: TransferMessageTypes::TransferRequestMessage.to_string(),
-            consumer_pid: convert_uuid_to_uri(&consumer_pid)?,
-            agreement_id: convert_uuid_to_uri(&agreements.get(0).unwrap().agreement_id)?,
-            format: DctFormats {
-                protocol: FormatProtocol::Http,
-                action: FormatAction::Pull,
-            },
-            callback_address: callback_address.clone(), // start will trigger
+            consumer_pid: consumer_pid.clone(),
+            agreement_id: convert_uuid_to_uri(&agreement_id).unwrap(),
+            format: DctFormats { protocol: FormatProtocol::Http, action: FormatAction::Pull },
+            callback_address: consumer_callback_address.clone(), // start will trigger
             data_address: None,
         })
         .send()
@@ -245,14 +238,15 @@ pub async fn to_completed() -> anyhow::Result<()> {
             context: TRANSFER_CONTEXT.into(),
             _type: TransferMessageTypes::TransferCompletionMessage.to_string(),
             provider_pid: provider_pid_.clone(),
-            consumer_pid: convert_uuid_to_uri(&consumer_pid)?,
+            consumer_pid: consumer_pid.clone(),
         })
         .send()
         .await?;
     println!("Response status: {}", res.status());
     println!("Response body: {}", res.text().await?);
 
-    cleanup_test_env(provider_server, consumer_server).await
+    utils::cleanup_test_env(provider_server, consumer_server).await?;
+    Ok(())
 }
 
 #[traced_test]
@@ -262,12 +256,13 @@ pub async fn to_terminated() -> anyhow::Result<()> {
         mut provider_server,
         mut consumer_server,
         client,
-        agreements,
-        _datasets,
-        callback_address,
+        catalog_id,
+        dataservice_id,
+        agreement_id,
         consumer_pid,
-        callback_id
-    ) = setup_test_env().await?;
+        consumer_callback_address,
+        callback_id,
+    ) = utils::setup_test_env("a").await?;
 
     // 1. NORMAL REQUEST
     let res = client
@@ -276,13 +271,10 @@ pub async fn to_terminated() -> anyhow::Result<()> {
         .json(&TransferRequestMessage {
             context: TRANSFER_CONTEXT.into(),
             _type: TransferMessageTypes::TransferRequestMessage.to_string(),
-            consumer_pid: convert_uuid_to_uri(&consumer_pid)?,
-            agreement_id: convert_uuid_to_uri(&agreements.get(0).unwrap().agreement_id)?,
-            format: DctFormats {
-                protocol: FormatProtocol::Http,
-                action: FormatAction::Pull,
-            },
-            callback_address: callback_address.clone(), // start will trigger
+            consumer_pid: consumer_pid.clone(),
+            agreement_id: convert_uuid_to_uri(&agreement_id).unwrap(),
+            format: DctFormats { protocol: FormatProtocol::Http, action: FormatAction::Pull },
+            callback_address: consumer_callback_address.clone(), // start will trigger
             data_address: None,
         })
         .send()
@@ -294,7 +286,7 @@ pub async fn to_terminated() -> anyhow::Result<()> {
     //============================================//
     // FROM REQUEST TO WRONG STATES
     //============================================//
-    // should fail
+    // Should fail
     let res = client
         .post("http://localhost:1234/transfers/termination")
         .header("content-type", "application/json")
@@ -302,14 +294,15 @@ pub async fn to_terminated() -> anyhow::Result<()> {
             context: TRANSFER_CONTEXT.into(),
             _type: TransferMessageTypes::TransferTerminationMessage.to_string(),
             provider_pid: provider_pid_.clone(),
-            consumer_pid: convert_uuid_to_uri(&consumer_pid)?,
+            consumer_pid: consumer_pid.clone(),
             code: "".to_string(),
-            reason: vec!["a".to_string()],
+            reason: vec!["termination".to_string()],
         })
         .send()
         .await?;
     println!("Response status: {}", res.status());
     println!("Response body: {}", res.text().await?);
 
-    cleanup_test_env(provider_server, consumer_server).await
+    utils::cleanup_test_env(provider_server, consumer_server).await?;
+    Ok(())
 }

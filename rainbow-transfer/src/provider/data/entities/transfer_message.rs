@@ -9,7 +9,6 @@ pub struct Model {
     pub id: Uuid,
     pub transfer_process_id: Uuid,
     pub created_at: chrono::NaiveDateTime,
-    pub updated_at: Option<chrono::NaiveDateTime>,
     pub message_type: TransferMessageTypesForDb,
     pub from: TransferRoles,
     pub to: TransferRoles,
