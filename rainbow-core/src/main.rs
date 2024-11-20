@@ -4,8 +4,8 @@
 #![allow(unused_mut)]
 #![allow(unused_imports)]
 
-use tracing::info;
 use rainbow::setup;
+use tracing::info;
 
 const INFO: &str = r"
 ----------

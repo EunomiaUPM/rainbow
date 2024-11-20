@@ -1,6 +1,3 @@
-// use crate::transfer::provider::data::models::{TransferMessageModel, TransferProcessModel};
-// use crate::transfer::provider::data::repo::TransferProviderDataRepo;
-// use crate::transfer::provider::data::repo::TRANSFER_PROVIDER_REPO;
 use super::data_plane::{connect_to_streaming_service, data_plane_start};
 use crate::common::err::TransferErrorType;
 use crate::common::err::TransferErrorType::TransferProcessNotFound;
@@ -75,16 +72,6 @@ where
         .exec_with_returning(db_connection)
         .await?;
 
-    // TRANSFER_PROVIDER_REPO.create_transfer_process(TransferProcessModel {
-    //     provider_pid,
-    //     consumer_pid: input.consumer_pid.parse()?,
-    //     agreement_id: input.agreement_id.parse()?,
-    //     data_plane_id: None,
-    //     state: TransferState::REQUESTED.to_string(),
-    //     created_at,
-    //     updated_at: None,
-    // })?;
-
     let transfer_message_db = transfer_message::Entity::insert(transfer_message::ActiveModel {
         id: ActiveValue::Set(Uuid::new_v4()),
         transfer_process_id: ActiveValue::Set(provider_pid),
@@ -97,25 +84,7 @@ where
         .exec_with_returning(db_connection)
         .await?;
 
-    // TRANSFER_PROVIDER_REPO.create_transfer_message(TransferMessageModel {
-    //     id: Uuid::new_v4(),
-    //     transfer_process_id: provider_pid,
-    //     created_at,
-    //     message_type,
-    //     from: "consumer".to_string(),
-    //     to: "provider".to_string(),
-    //     content: serde_json::to_value(&input)?,
-    // })?;
-
     let tp = TransferProcessMessage::from(transfer_process_db);
-
-    // let tp = TransferProcessMessage {
-    //     context: TRANSFER_CONTEXT.to_string(),
-    //     _type: TransferMessageTypes::TransferProcessMessage.to_string(),
-    //     provider_pid: convert_uuid_to_uri(&provider_pid)?,
-    //     consumer_pid: (&input.consumer_pid).to_owned(),
-    //     state: TransferState::REQUESTED,
-    // };
 
     // Connect to data streaming in case push
     if input.format.action == FormatAction::Push {
@@ -153,12 +122,6 @@ pub async fn transfer_start(
         .exec(db_connection)
         .await?;
 
-    // let transaction = TRANSFER_PROVIDER_REPO.update_transfer_process_by_provider_pid(
-    //     &input.provider_pid.parse()?,
-    //     TransferState::STARTED,
-    //     None,
-    // )?;
-
     let transfer_message_db = transfer_message::Entity::insert(transfer_message::ActiveModel {
         id: ActiveValue::Set(Uuid::new_v4()),
         transfer_process_id: ActiveValue::Set(input.provider_pid.parse()?),
@@ -171,26 +134,8 @@ pub async fn transfer_start(
         .exec_with_returning(db_connection)
         .await?;
 
-    // TRANSFER_PROVIDER_REPO.create_transfer_message(TransferMessageModel {
-    //     id: Uuid::new_v4(),
-    //     transfer_process_id: input.provider_pid.parse()?,
-    //     created_at: chrono::Utc::now().naive_utc(),
-    //     message_type: input._type.clone(),
-    //     from: "consumer".to_string(),
-    //     to: "provider".to_string(),
-    //     content: serde_json::to_value(input)?,
-    // })?;
-
     let tp = TransferProcessMessage::from(transfer_process_db);
-
-    // let tp = TransferProcessMessage {
-    //     context: TRANSFER_CONTEXT.to_string(),
-    //     _type: TransferMessageTypes::TransferProcessMessage.to_string(),
-    //     provider_pid: convert_uuid_to_uri(&input.provider_pid.clone().parse()?)?,
-    //     consumer_pid: (&input.consumer_pid).to_owned(),
-    //     state: TransferState::STARTED,
-    // };
-
+    
     Ok(tp)
 }
 
@@ -220,12 +165,6 @@ pub async fn transfer_suspension(
         .exec(db_connection)
         .await?;
 
-    // let transaction = TRANSFER_PROVIDER_REPO.update_transfer_process_by_provider_pid(
-    //     &input.provider_pid.parse()?,
-    //     TransferState::SUSPENDED,
-    //     None,
-    // )?;
-
     let transfer_message_db = transfer_message::Entity::insert(transfer_message::ActiveModel {
         id: ActiveValue::Set(Uuid::new_v4()),
         transfer_process_id: ActiveValue::Set(input.provider_pid.parse()?),
@@ -238,26 +177,7 @@ pub async fn transfer_suspension(
         .exec_with_returning(db_connection)
         .await?;
 
-    // TRANSFER_PROVIDER_REPO.create_transfer_message(TransferMessageModel {
-    //     id: Uuid::new_v4(),
-    //     transfer_process_id: input.provider_pid.parse()?,
-    //     created_at: chrono::Utc::now().naive_utc(),
-    //     message_type: input._type.clone(),
-    //     from: "consumer".to_string(),
-    //     to: "provider".to_string(),
-    //     content: serde_json::to_value(input.clone())?,
-    // })?;
-
     let tp = TransferProcessMessage::from(transfer_process_db);
-
-    // let tp = TransferProcessMessage {
-    //     context: TRANSFER_CONTEXT.to_string(),
-    //     _type: TransferMessageTypes::TransferProcessMessage.to_string(),
-    //     provider_pid: convert_uuid_to_uri(&input.provider_pid.clone().parse()?)?,
-    //     consumer_pid: (&input.consumer_pid).to_owned(),
-    //     state: TransferState::SUSPENDED,
-    // };
-
     Ok(tp)
 }
 
@@ -286,13 +206,7 @@ pub async fn transfer_completion(
     })
         .exec(db_connection)
         .await?;
-
-    // let transaction = TRANSFER_PROVIDER_REPO.update_transfer_process_by_provider_pid(
-    //     &input.provider_pid.parse()?,
-    //     TransferState::COMPLETED,
-    //     None,
-    // )?;
-
+    
     let transfer_message_db = transfer_message::Entity::insert(transfer_message::ActiveModel {
         id: ActiveValue::Set(Uuid::new_v4()),
         transfer_process_id: ActiveValue::Set(input.provider_pid.parse()?),
@@ -304,27 +218,8 @@ pub async fn transfer_completion(
     })
         .exec_with_returning(db_connection)
         .await?;
-
-    // TRANSFER_PROVIDER_REPO.create_transfer_message(TransferMessageModel {
-    //     id: Uuid::new_v4(),
-    //     transfer_process_id: input.provider_pid.parse()?,
-    //     created_at: chrono::Utc::now().naive_utc(),
-    //     message_type: input._type.clone(),
-    //     from: "consumer".to_string(),
-    //     to: "provider".to_string(),
-    //     content: serde_json::to_value(input)?,
-    // })?;
-
+    
     let tp = TransferProcessMessage::from(transfer_process_db);
-
-    // let tp = TransferProcessMessage {
-    //     context: TRANSFER_CONTEXT.to_string(),
-    //     _type: TransferMessageTypes::TransferProcessMessage.to_string(),
-    //     provider_pid: convert_uuid_to_uri(&input.provider_pid.clone().parse()?)?,
-    //     consumer_pid: (&input.consumer_pid).to_owned(),
-    //     state: TransferState::COMPLETED,
-    // };
-
     Ok(tp)
 }
 
@@ -354,12 +249,6 @@ pub async fn transfer_termination(
         .exec(db_connection)
         .await?;
 
-    // let transaction = TRANSFER_PROVIDER_REPO.update_transfer_process_by_provider_pid(
-    //     &input.provider_pid.parse()?,
-    //     TransferState::TERMINATED,
-    //     None,
-    // )?;
-
     let transfer_message_db = transfer_message::Entity::insert(transfer_message::ActiveModel {
         id: ActiveValue::Set(Uuid::new_v4()),
         transfer_process_id: ActiveValue::Set(input.provider_pid.parse()?),
@@ -371,26 +260,7 @@ pub async fn transfer_termination(
     })
         .exec_with_returning(db_connection)
         .await?;
-
-    // TRANSFER_PROVIDER_REPO.create_transfer_message(TransferMessageModel {
-    //     id: Uuid::new_v4(),
-    //     transfer_process_id: input.provider_pid.parse()?,
-    //     created_at: chrono::Utc::now().naive_utc(),
-    //     message_type: input._type.clone(),
-    //     from: "consumer".to_string(),
-    //     to: "provider".to_string(),
-    //     content: serde_json::to_value(input)?,
-    // })?;
-
+    
     let tp = TransferProcessMessage::from(transfer_process_db);
-
-    // let tp = TransferProcessMessage {
-    //     context: TRANSFER_CONTEXT.to_string(),
-    //     _type: TransferMessageTypes::TransferProcessMessage.to_string(),
-    //     provider_pid: convert_uuid_to_uri(&input.provider_pid.clone().parse()?)?,
-    //     consumer_pid: (&input.consumer_pid).to_owned(),
-    //     state: TransferState::TERMINATED,
-    // };
-
     Ok(tp)
 }

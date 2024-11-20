@@ -16,22 +16,13 @@ pub async fn transfer_start(
     consumer_pid: Uuid,
 ) -> anyhow::Result<()> {
     let db_connection = get_db_connection().await;
-
-    // // Check if callback exists
-    // if let Ok(callback_exists) = does_callback_exist(callback) {
-    //     if callback_exists == false {
-    //         bail!(CallbackClientError)
-    //     }
-    // }
-
-    // Here i should persist something
+    
     let callback = transfer_callback::Entity::find_by_id(callback).one(db_connection).await?;
-
     if callback.is_none() {
         bail!(CallbackClientError)
     }
-
     let callback = callback.unwrap();
+    
     let transaction = transfer_callback::Entity::update(transfer_callback::ActiveModel {
         id: ActiveValue::Set(callback.id),
         consumer_pid: ActiveValue::Set(callback.consumer_pid),
@@ -43,21 +34,7 @@ pub async fn transfer_start(
         .exec(db_connection)
         .await?;
 
-    // let transaction = TRANSFER_CONSUMER_REPO.update_callback(
-    //     callback,
-    //     TransferCallbacksModelNewState {
-    //         provider_pid: Some(Uuid::parse_str(&input.provider_pid)?),
-    //         consumer_pid: Some(Uuid::parse_str(&input.consumer_pid)?),
-    //         data_address: Some(serde_json::to_value(&input.data_address)?),
-    //     },
-    // )?;
-    //
     Ok(())
-    // match transaction {
-    //     Some(_) => Ok(()),
-    //     // TODO IMPROVE THIS ERROR
-    //     None => Err(anyhow::Error::msg("no transaction returned")),
-    // }
 }
 
 pub fn transfer_completion(

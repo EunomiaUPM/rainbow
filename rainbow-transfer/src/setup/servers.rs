@@ -1,6 +1,5 @@
 use crate::consumer::http::server::create_consumer_router;
 use crate::provider::http::server::create_provider_router;
-// use crate::setup::config::GLOBAL_CONFIG;
 use axum::serve;
 use rainbow_common::config::config::GLOBAL_CONFIG;
 use tokio::net::TcpListener;

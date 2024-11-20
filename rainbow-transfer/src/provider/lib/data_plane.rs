@@ -3,15 +3,13 @@ use crate::protocol::messages::{
     TransferTerminationMessage,
 };
 use crate::provider::data::entities::agreements;
-// use crate::setup::config::get_provider_url;
-use rainbow_common::config::database::get_db_connection;
 use anyhow::Error;
+use rainbow_catalog::core::ll_api::dataservices_request_by_id;
 use rainbow_common::config::config::get_provider_url;
-// use rainbow_common::transfer_comm::get_dataservice_url_by_id;
+use rainbow_common::config::database::get_db_connection;
 use sea_orm::EntityTrait;
 use std::future::Future;
 use uuid::Uuid;
-use rainbow_catalog::core::ll_api::dataservices_request_by_id;
 
 pub async fn resolve_endpoint_from_agreement(agreement_id: Uuid) -> anyhow::Result<String> {
     // Resolve endpoint

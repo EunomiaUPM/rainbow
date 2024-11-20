@@ -10,7 +10,6 @@ use crate::protocol::messages::{
 };
 use axum::http::StatusCode;
 use rainbow_common::config::config::{get_consumer_url, get_provider_url};
-// use crate::setup::config::{get_consumer_url, get_provider_url};
 use rainbow_common::config::database::get_db_connection;
 use rainbow_common::dcat_formats::DctFormats;
 use rainbow_common::utils::convert_uuid_to_uri;
@@ -23,8 +22,6 @@ use uuid::Uuid;
 pub async fn get_all_callbacks() -> anyhow::Result<Vec<transfer_callback::Model>> {
     let db_connection = get_db_connection().await;
     let callbacks = transfer_callback::Entity::find().all(db_connection).await?;
-    // let callbacks = TRANSFER_CONSUMER_REPO.get_all_callbacks(None)?;
-
     Ok(callbacks)
 }
 
@@ -33,7 +30,6 @@ pub async fn get_callback_by_id(
 ) -> anyhow::Result<Option<transfer_callback::Model>> {
     let db_connection = get_db_connection().await;
     let callbacks = transfer_callback::Entity::find_by_id(callback_id).one(db_connection).await?;
-    // let callbacks = TRANSFER_CONSUMER_REPO.get_callback_by_id(callback_id)?;
     Ok(callbacks)
 }
 
@@ -61,7 +57,6 @@ pub async fn create_new_callback() -> anyhow::Result<CreateCallbackResponse> {
     })
         .exec_with_returning(db_connection)
         .await?;
-    // let callback = TRANSFER_CONSUMER_REPO.create_callback()?;
 
     let callback_url = format!(
         "http://{}/{}/transfers/{}",
@@ -93,7 +88,7 @@ pub async fn create_new_callback_with_address(
     })
         .exec_with_returning(db_connection)
         .await?;
-    // let callback = TRANSFER_CONSUMER_REPO.create_callback_with_data_address(data_address)?;
+
     let callback_url = format!(
         "http://{}/{}/transfers/{}",
         get_consumer_url()?,
@@ -206,7 +201,6 @@ pub async fn get_data_address_by_consumer_pid(
         .one(db_connection)
         .await.unwrap();
 
-    // let callback = TRANSFER_CONSUMER_REPO.get_callback_by_consumer_id(consumer_pid).unwrap();
     if callback.is_none() {
         return Err(RequestTransferResponse {
             consumer_pid: Some(convert_uuid_to_uri(&consumer_pid).unwrap()),
@@ -249,7 +243,7 @@ pub async fn suspend_transfer(
         .filter(transfer_callback::Column::ConsumerPid.eq(consumer_pid))
         .one(db_connection)
         .await.unwrap();
-    // let callback = TRANSFER_CONSUMER_REPO.get_callback_by_consumer_id(consumer_pid).unwrap();
+
     if callback.is_none() {
         return Err(RequestTransferResponse {
             consumer_pid: None,
@@ -312,8 +306,6 @@ pub async fn restart_transfer(
         .filter(transfer_callback::Column::ConsumerPid.eq(consumer_pid))
         .one(db_connection)
         .await.unwrap().unwrap();
-    // let callback =
-    //     TRANSFER_CONSUMER_REPO.get_callback_by_consumer_id(consumer_pid).unwrap().unwrap();
 
     let transfer_start = TransferStartMessage {
         context: TRANSFER_CONTEXT.to_string(),
@@ -369,8 +361,6 @@ pub async fn complete_transfer(
         .filter(transfer_callback::Column::ConsumerPid.eq(consumer_pid))
         .one(db_connection)
         .await.unwrap().unwrap();
-    // let callback =
-    //     TRANSFER_CONSUMER_REPO.get_callback_by_consumer_id(consumer_pid).unwrap().unwrap();
 
     let transfer_complete = TransferCompletionMessage {
         context: TRANSFER_CONTEXT.to_string(),

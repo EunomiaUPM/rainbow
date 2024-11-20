@@ -29,10 +29,7 @@ async fn handle_data_proxy(Path(data_id): Path<Uuid>) -> impl IntoResponse {
         .filter(transfer_process::Column::DataPlaneId.eq(data_id))
         .one(db_connection)
         .await.unwrap();
-
-    // let transfer_process_from_db =
-    //     TRANSFER_PROVIDER_REPO.get_transfer_process_by_data_plane_process(data_id).unwrap();
-
+    
     if transfer_process_from_db.is_none() {
         return (StatusCode::NOT_FOUND, "Not found".to_string()).into_response();
     }

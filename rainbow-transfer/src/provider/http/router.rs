@@ -167,17 +167,6 @@ async fn send_transfer_start(
                     })
                         .exec_with_returning(db_connection)
                         .await?;
-
-                // TRANSFER_PROVIDER_REPO.create_transfer_message(TransferMessageModel {
-                //     id: message_id,
-                //     transfer_process_id: transfer_process.provider_pid,
-                //     created_at,
-                //     message_type: TransferMessageTypes::TransferStartMessage.to_string(),
-                //     from: "provider".to_string(),
-                //     to: "consumer".to_string(),
-                //     content: serde_json::to_value(&transfer_start_message)?,
-                // })?;
-
                 Ok(())
             } else {
                 println!("not started...."); // TODO Error

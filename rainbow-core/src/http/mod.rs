@@ -3,12 +3,12 @@ use axum::Router;
 use rainbow_catalog::http::hl_api as catalog_hl_api_router;
 use rainbow_catalog::http::ll_api as catalog_ll_api_router;
 use rainbow_catalog::http::policies_api as catalog_policies_api_router;
-use rainbow_common::misc_router as misc_router;
+use rainbow_common::misc_router;
 use rainbow_contracts::http as contract_router;
 use rainbow_transfer::consumer::http::api as consumer_hl_api_router;
 use rainbow_transfer::consumer::http::openapi as consumer_redoc_router;
-use rainbow_transfer::consumer::http::router as consumer_ll_api_router;
 use rainbow_transfer::consumer::http::proxy as consumer_proxy_router;
+use rainbow_transfer::consumer::http::router as consumer_ll_api_router;
 
 use rainbow_transfer::provider::http::api as provider_hl_api_router;
 use rainbow_transfer::provider::http::proxy as provider_http_dataplane_router;
@@ -23,8 +23,6 @@ fn _create_cors_layer() -> CorsLayer {
 }
 
 pub async fn get_provider_routes() -> Router {
-
-
     Router::new()
         .merge(misc_router::router())
         .merge(provider_ll_api_router::router())

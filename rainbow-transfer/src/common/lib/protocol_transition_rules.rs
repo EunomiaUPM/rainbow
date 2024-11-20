@@ -31,21 +31,12 @@ pub async fn protocol_transition_rules(json_value: Value) -> anyhow::Result<()> 
         .one(db_connection)
         .await?;
 
-
-    // let transfer_provider = TRANSFER_PROVIDER_REPO
-    //     .get_transfer_process_by_provider_pid(provider_pid.unwrap_or(Uuid::default()))
-    //     .map_err(|e| anyhow!(e))?;
-
     let transfer_consumer = transfer_process::Entity::find()
         .filter(transfer_process::Column::ConsumerPid.eq(consumer_pid))
         .one(db_connection)
         .await
         .map_err(|e| anyhow!(e))?;
-
-    // let transfer_consumer = TRANSFER_PROVIDER_REPO
-    //     .get_transfer_process_by_consumer_pid(consumer_pid.unwrap_or(Uuid::default()))
-    //     .map_err(|e| anyhow!(e))?;
-
+    
     match message_type {
         "dspace:TransferRequestMessage" => {
             if transfer_consumer.is_some() {

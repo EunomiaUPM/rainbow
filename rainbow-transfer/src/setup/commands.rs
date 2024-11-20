@@ -1,14 +1,12 @@
+use crate::setup::databases::setup_database;
+use crate::setup::servers::{start_consumer_server, start_provider_server};
 use anyhow::Result;
 use clap::{Args, Parser, Subcommand};
 use dotenvy::dotenv;
-use std::env;
-use tracing::{debug, error, info};
 use rainbow_common::config::config::{Config, ConfigRoles, GLOBAL_CONFIG};
 use rainbow_common::config_field;
-// use crate::config_field;
-// use crate::setup::config::{Config, ConfigRoles, GLOBAL_CONFIG};
-use crate::setup::databases::setup_database;
-use crate::setup::servers::{start_consumer_server, start_provider_server};
+use std::env;
+use tracing::{debug, error, info};
 
 
 #[derive(Parser, Debug)]
