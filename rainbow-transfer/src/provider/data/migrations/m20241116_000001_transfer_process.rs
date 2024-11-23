@@ -50,6 +50,8 @@ impl MigrationTrait for Migration {
                     )
                     .col(ColumnDef::new(TransferProcesses::CreatedAt).date_time().not_null())
                     .col(ColumnDef::new(TransferProcesses::UpdatedAt).date_time())
+                    .col(ColumnDef::new(TransferProcesses::DataPlaneAddress).string())
+                    .col(ColumnDef::new(TransferProcesses::NextHopAddress).json())
                     .to_owned(),
             )
             .await
@@ -72,4 +74,6 @@ pub enum TransferProcesses {
     State,
     CreatedAt,
     UpdatedAt,
+    DataPlaneAddress,
+    NextHopAddress,
 }

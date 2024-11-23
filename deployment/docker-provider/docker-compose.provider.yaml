@@ -37,4 +37,3 @@ services:
 networks:
   ds-rainbow:
     external: true
-    name: ds-rainbow

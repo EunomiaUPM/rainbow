@@ -1,5 +1,8 @@
 use crate::protocol::messages::TransferStateForDb;
 use sea_orm::entity::prelude::*;
+use sea_orm::entity::prelude::*;
+use sea_orm::sea_query::ValueType;
+
 
 #[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel)]
 #[sea_orm(table_name = "transfer_processes")]
@@ -13,8 +16,9 @@ pub struct Model {
     pub state: TransferStateForDb,
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: Option<chrono::NaiveDateTime>,
+    pub data_plane_address: Option<String>,
+    pub next_hop_address: Option<serde_json::Value>
 }
-
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
     #[sea_orm(has_many = "super::transfer_message::Entity")]

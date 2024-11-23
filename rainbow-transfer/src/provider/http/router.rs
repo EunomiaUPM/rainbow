@@ -2,12 +2,7 @@ use crate::common::err::TransferErrorType;
 use crate::common::err::TransferErrorType::{ConsumerNotReachableError, NotCheckedError, ProtocolBodyError, TransferProcessNotFound};
 use crate::common::http::client::DATA_PLANE_HTTP_CLIENT;
 use crate::common::http::middleware::{pids_as_urn_validation_middleware, protocol_rules_middleware, schema_validation_middleware};
-use crate::protocol::messages::{
-    TransferCompletionMessage, TransferMessageTypes, TransferMessageTypesForDb,
-    TransferProcessMessage, TransferRequestMessage, TransferRoles, TransferStartMessage,
-    TransferState, TransferStateForDb, TransferSuspensionMessage, TransferTerminationMessage,
-    TRANSFER_CONTEXT,
-};
+use crate::protocol::messages::{DataAddress, TransferCompletionMessage, TransferMessageTypes, TransferMessageTypesForDb, TransferProcessMessage, TransferRequestMessage, TransferRoles, TransferStartMessage, TransferState, TransferStateForDb, TransferSuspensionMessage, TransferTerminationMessage, TRANSFER_CONTEXT};
 use crate::provider::data::entities::{transfer_message, transfer_process};
 use crate::provider::lib::control_plane::{
     get_transfer_requests_by_provider, transfer_completion, transfer_request, transfer_start,
@@ -23,9 +18,11 @@ use axum::routing::{get, post};
 use axum::{middleware, Json, Router};
 use clap::builder::TypedValueParser;
 use rainbow_common::config::database::get_db_connection;
+use rainbow_common::dcat_formats::FormatAction;
 use rainbow_common::utils::{convert_uri_to_uuid, convert_uuid_to_uri};
 use reqwest::Error;
 use sea_orm::{ActiveValue, EntityTrait};
+use serde_json::to_value;
 use tracing::{debug, error, info};
 use uuid::Uuid;
 
@@ -97,20 +94,30 @@ async fn handle_transfer_request(
 async fn send_transfer_start(
     Json(input): Json<TransferRequestMessage>,
     provider_pid: Uuid,
+    next_hop_address: DataAddress,
+    data_plane_address: DataAddress,
     data_plane_id: Uuid,
 ) -> anyhow::Result<()> {
-    // TODO REFACTOR IN CONTROL PLANE
+    let data_address_in_msg = match input.format.action {
+        FormatAction::Push => None,
+        FormatAction::Pull => Some(data_plane_address.clone())
+    };
     let transfer_start_message = TransferStartMessage {
         context: TRANSFER_CONTEXT.to_string(),
         _type: TransferMessageTypes::TransferStartMessage.to_string(),
         provider_pid: convert_uuid_to_uri(&provider_pid)?,
         consumer_pid: input.consumer_pid.to_string(),
-        data_address: input.data_address,
+        data_address: data_address_in_msg,
     };
 
+    let consumer_transfer_endpoint = format!(
+        "{}/transfers/{}/start",
+        input.callback_address,
+        convert_uri_to_uuid(&input.consumer_pid)?
+    );
     let response = DATA_PLANE_HTTP_CLIENT
         .clone()
-        .post(format!("{}/start", input.callback_address))
+        .post(consumer_transfer_endpoint)
         .header("content-type", "application/json")
         .json(&transfer_start_message)
         .send()
@@ -130,28 +137,23 @@ async fn send_transfer_start(
                     bail!(TransferProcessNotFound)
                 }
                 let old_process = old_process.unwrap();
+                println!("{:?}", old_process);
+                
                 let transfer_process_db =
                     transfer_process::Entity::update(transfer_process::ActiveModel {
                         provider_pid: ActiveValue::Set(old_process.provider_pid),
                         consumer_pid: ActiveValue::Set(old_process.consumer_pid),
                         agreement_id: ActiveValue::Set(old_process.agreement_id),
                         data_plane_id: ActiveValue::Set(Some(data_plane_id)),
-                        subscription_id: ActiveValue::Set(None),
+                        subscription_id: ActiveValue::Set(old_process.subscription_id),
                         state: ActiveValue::Set(TransferStateForDb::STARTED),
                         created_at: ActiveValue::Set(old_process.created_at),
                         updated_at: ActiveValue::Set(Some(chrono::Utc::now().naive_utc())),
+                        next_hop_address: ActiveValue::Set(Some(to_value(next_hop_address)?)),
+                        data_plane_address: ActiveValue::Set(Some(data_plane_address.endpoint)),
                     })
                         .exec(db_connection)
                         .await?;
-
-                // // persist
-                // let transfer_process = TRANSFER_PROVIDER_REPO
-                //     .update_transfer_process_by_provider_pid(
-                //         &provider_pid,
-                //         TransferState::STARTED,
-                //         Some(data_plane_id),
-                //     )?
-                //     .unwrap();
 
                 let transfer_message_db =
                     transfer_message::Entity::insert(transfer_message::ActiveModel {
@@ -183,7 +185,7 @@ async fn handle_transfer_start(
     info!("POST /transfers/start");
 
     match result {
-        Ok(Json(input)) => match transfer_start(&input).await {
+        Ok(Json(input)) => match transfer_start(input).await {
             Ok(tp) => (StatusCode::OK, Json(tp)).into_response(),
             Err(e) => match e.downcast::<TransferErrorType>() {
                 Ok(transfer_error) => transfer_error.into_response(),
@@ -205,7 +207,7 @@ async fn handle_transfer_suspension(
     info!("POST /transfers/suspension");
 
     match result {
-        Ok(Json(input)) => match transfer_suspension(&input).await {
+        Ok(Json(input)) => match transfer_suspension(input).await {
             Ok(tp) => (StatusCode::OK, Json(tp)).into_response(),
             Err(e) => match e.downcast::<TransferErrorType>() {
                 Ok(transfer_error) => transfer_error.into_response(),
@@ -227,7 +229,7 @@ async fn handle_transfer_completion(
     info!("POST /transfers/completion");
 
     match result {
-        Ok(Json(input)) => match transfer_completion(&input).await {
+        Ok(Json(input)) => match transfer_completion(input).await {
             Ok(tp) => (StatusCode::OK, Json(tp)).into_response(),
             Err(e) => match e.downcast::<TransferErrorType>() {
                 Ok(transfer_error) => transfer_error.into_response(),
@@ -249,7 +251,7 @@ async fn handle_transfer_termination(
     info!("POST /transfers/termination");
 
     match result {
-        Ok(Json(input)) => match transfer_termination(&input).await {
+        Ok(Json(input)) => match transfer_termination(input).await {
             Ok(tp) => (StatusCode::OK, Json(tp)).into_response(),
             Err(e) => match e.downcast::<TransferErrorType>() {
                 Ok(transfer_error) => transfer_error.into_response(),

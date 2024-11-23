@@ -14,6 +14,7 @@ use rainbow_transfer::provider::http::api as provider_hl_api_router;
 use rainbow_transfer::provider::http::proxy as provider_http_dataplane_router;
 use rainbow_transfer::provider::http::router as provider_ll_api_router;
 use tower_http::cors::{Any, CorsLayer};
+use tower_http::trace::TraceLayer;
 
 fn _create_cors_layer() -> CorsLayer {
     // TODO Cors in env
@@ -33,6 +34,7 @@ pub async fn get_provider_routes() -> Router {
         .merge(catalog_policies_api_router::catalog_policies_api_router().await.unwrap())
         .merge(contract_router::router())
         .layer(_create_cors_layer())
+        .layer(TraceLayer::new_for_http())
 }
 
 pub async fn get_consumer_routes() -> Router {
@@ -43,4 +45,5 @@ pub async fn get_consumer_routes() -> Router {
         .merge(consumer_redoc_router::open_api_setup().unwrap())
         .merge(consumer_proxy_router::router())
         .layer(_create_cors_layer())
+        .layer(TraceLayer::new_for_http())
 }

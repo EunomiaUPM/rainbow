@@ -12,6 +12,7 @@ use rainbow_common::config::database::get_db_connection;
 
 pub async fn protocol_transition_rules(json_value: Value) -> anyhow::Result<()> {
     let db_connection = get_db_connection().await;
+    
     let provider_pid = json_value
         .get("dspace:providerPid")
         .and_then(|v| v.as_str())
@@ -30,13 +31,16 @@ pub async fn protocol_transition_rules(json_value: Value) -> anyhow::Result<()> 
     let transfer_provider = transfer_process::Entity::find_by_id(provider_pid)
         .one(db_connection)
         .await?;
+    println!("jelow");
 
     let transfer_consumer = transfer_process::Entity::find()
         .filter(transfer_process::Column::ConsumerPid.eq(consumer_pid))
         .one(db_connection)
         .await
         .map_err(|e| anyhow!(e))?;
-    
+
+
+
     match message_type {
         "dspace:TransferRequestMessage" => {
             if transfer_consumer.is_some() {

@@ -1,17 +1,13 @@
-use super::data_plane::{connect_to_streaming_service, data_plane_start};
+use super::data_plane::{data_plane_start, disconnect_from_streaming_service_on_completion, disconnect_from_streaming_service_on_suspension, disconnect_from_streaming_service_on_termination, reconnect_to_streaming_service_on_start};
 use crate::common::err::TransferErrorType;
 use crate::common::err::TransferErrorType::TransferProcessNotFound;
 use crate::common::utils::{has_data_address_in_push, is_agreement_valid};
-use crate::protocol::messages::{
-    TransferCompletionMessage, TransferProcessMessage, TransferRequestMessage,
-    TransferStartMessage, TransferSuspensionMessage, TransferTerminationMessage,
-};
+use crate::protocol::messages::{DataAddress, TransferCompletionMessage, TransferProcessMessage, TransferRequestMessage, TransferStartMessage, TransferSuspensionMessage, TransferTerminationMessage};
 use crate::protocol::messages::{TransferMessageTypesForDb, TransferRoles, TransferStateForDb};
 use crate::provider::data::entities::transfer_message;
 use crate::provider::data::entities::transfer_process;
 use anyhow::{bail, Error};
 use rainbow_common::config::database::get_db_connection;
-use rainbow_common::dcat_formats::FormatAction;
 use sea_orm::{ActiveValue, EntityTrait};
 use std::future::{Future, IntoFuture};
 use std::str::FromStr;
@@ -37,7 +33,7 @@ pub async fn transfer_request<F, Fut, M>(
     callback: F,
 ) -> anyhow::Result<TransferProcessMessage>
 where
-    F: Fn(M, Uuid, Uuid) -> Fut + Send + Sync + 'static,
+    F: Fn(M, Uuid, DataAddress, DataAddress, Uuid) -> Fut + Send + Sync + 'static,
     Fut: Future<Output=Result<(), Error>> + Send,
     M: From<TransferRequestMessage> + Send + 'static,
 {
@@ -59,6 +55,7 @@ where
     let created_at = chrono::Utc::now().naive_utc();
     let message_type = input._type.clone();
 
+
     let transfer_process_db = transfer_process::Entity::insert(transfer_process::ActiveModel {
         provider_pid: ActiveValue::Set(provider_pid),
         consumer_pid: ActiveValue::Set(Some(input.consumer_pid.parse().unwrap())),
@@ -68,6 +65,8 @@ where
         state: ActiveValue::Set(TransferStateForDb::REQUESTED),
         created_at: ActiveValue::Set(created_at),
         updated_at: ActiveValue::Set(None),
+        next_hop_address: ActiveValue::Set(None),
+        data_plane_address: ActiveValue::Set(None),
     })
         .exec_with_returning(db_connection)
         .await?;
@@ -86,18 +85,12 @@ where
 
     let tp = TransferProcessMessage::from(transfer_process_db);
 
-    // Connect to data streaming in case push
-    if input.format.action == FormatAction::Push {
-        connect_to_streaming_service(&input, provider_pid).await?;
-    }
-
     data_plane_start(input, provider_pid.clone(), callback).await?;
-
     Ok(tp)
 }
 
 pub async fn transfer_start(
-    input: &TransferStartMessage,
+    input: TransferStartMessage,
 ) -> anyhow::Result<TransferProcessMessage> {
     let db_connection = get_db_connection().await;
     // persist information
@@ -109,15 +102,19 @@ pub async fn transfer_start(
         bail!(TransferProcessNotFound)
     }
     let old_process = old_process.unwrap();
+
+
     let transfer_process_db = transfer_process::Entity::update(transfer_process::ActiveModel {
         provider_pid: ActiveValue::Set(old_process.provider_pid),
         consumer_pid: ActiveValue::Set(old_process.consumer_pid),
         agreement_id: ActiveValue::Set(old_process.agreement_id),
         data_plane_id: ActiveValue::Set(old_process.data_plane_id),
-        subscription_id: ActiveValue::Set(None),
+        subscription_id: ActiveValue::Set(old_process.subscription_id),
         state: ActiveValue::Set(TransferStateForDb::STARTED),
         created_at: ActiveValue::Set(old_process.created_at),
         updated_at: ActiveValue::Set(Some(chrono::Utc::now().naive_utc())),
+        data_plane_address: ActiveValue::Set(old_process.data_plane_address),
+        next_hop_address: ActiveValue::Set(old_process.next_hop_address),
     })
         .exec(db_connection)
         .await?;
@@ -135,12 +132,14 @@ pub async fn transfer_start(
         .await?;
 
     let tp = TransferProcessMessage::from(transfer_process_db);
-    
+
+    reconnect_to_streaming_service_on_start(input).await?;
+
     Ok(tp)
 }
 
 pub async fn transfer_suspension(
-    input: &TransferSuspensionMessage,
+    input: TransferSuspensionMessage,
 ) -> anyhow::Result<TransferProcessMessage> {
     let db_connection = get_db_connection().await;
     // persist information
@@ -157,10 +156,12 @@ pub async fn transfer_suspension(
         consumer_pid: ActiveValue::Set(old_process.consumer_pid),
         agreement_id: ActiveValue::Set(old_process.agreement_id),
         data_plane_id: ActiveValue::Set(old_process.data_plane_id),
-        subscription_id: ActiveValue::Set(None),
+        subscription_id: ActiveValue::Set(old_process.subscription_id),
         state: ActiveValue::Set(TransferStateForDb::SUSPENDED),
         created_at: ActiveValue::Set(old_process.created_at),
         updated_at: ActiveValue::Set(Some(chrono::Utc::now().naive_utc())),
+        data_plane_address: ActiveValue::Set(old_process.data_plane_address),
+        next_hop_address: ActiveValue::Set(old_process.next_hop_address),
     })
         .exec(db_connection)
         .await?;
@@ -176,13 +177,18 @@ pub async fn transfer_suspension(
     })
         .exec_with_returning(db_connection)
         .await?;
+
+    // if suscription id cancel
+    if transfer_process_db.subscription_id.is_some() {
+        disconnect_from_streaming_service_on_suspension(input).await?;
+    }
 
     let tp = TransferProcessMessage::from(transfer_process_db);
     Ok(tp)
 }
 
 pub async fn transfer_completion(
-    input: &TransferCompletionMessage,
+    input: TransferCompletionMessage,
 ) -> anyhow::Result<TransferProcessMessage> {
     let db_connection = get_db_connection().await;
     // persist information
@@ -199,14 +205,16 @@ pub async fn transfer_completion(
         consumer_pid: ActiveValue::Set(old_process.consumer_pid),
         agreement_id: ActiveValue::Set(old_process.agreement_id),
         data_plane_id: ActiveValue::Set(old_process.data_plane_id),
-        subscription_id: ActiveValue::Set(None),
+        subscription_id: ActiveValue::Set(old_process.subscription_id),
         state: ActiveValue::Set(TransferStateForDb::COMPLETED),
         created_at: ActiveValue::Set(old_process.created_at),
         updated_at: ActiveValue::Set(Some(chrono::Utc::now().naive_utc())),
+        data_plane_address: ActiveValue::Set(old_process.data_plane_address),
+        next_hop_address: ActiveValue::Set(old_process.next_hop_address),
     })
         .exec(db_connection)
         .await?;
-    
+
     let transfer_message_db = transfer_message::Entity::insert(transfer_message::ActiveModel {
         id: ActiveValue::Set(Uuid::new_v4()),
         transfer_process_id: ActiveValue::Set(input.provider_pid.parse()?),
@@ -218,13 +226,18 @@ pub async fn transfer_completion(
     })
         .exec_with_returning(db_connection)
         .await?;
-    
+
+    // if suscription id cancel
+    if transfer_process_db.subscription_id.is_some() {
+        disconnect_from_streaming_service_on_completion(input).await?;
+    }
+
     let tp = TransferProcessMessage::from(transfer_process_db);
     Ok(tp)
 }
 
 pub async fn transfer_termination(
-    input: &TransferTerminationMessage,
+    input: TransferTerminationMessage,
 ) -> anyhow::Result<TransferProcessMessage> {
     let db_connection = get_db_connection().await;
     // persist information
@@ -241,10 +254,12 @@ pub async fn transfer_termination(
         consumer_pid: ActiveValue::Set(old_process.consumer_pid),
         agreement_id: ActiveValue::Set(old_process.agreement_id),
         data_plane_id: ActiveValue::Set(old_process.data_plane_id),
-        subscription_id: ActiveValue::Set(None),
+        subscription_id: ActiveValue::Set(old_process.subscription_id),
         state: ActiveValue::Set(TransferStateForDb::TERMINATED),
         created_at: ActiveValue::Set(old_process.created_at),
         updated_at: ActiveValue::Set(Some(chrono::Utc::now().naive_utc())),
+        data_plane_address: ActiveValue::Set(old_process.data_plane_address),
+        next_hop_address: ActiveValue::Set(old_process.next_hop_address),
     })
         .exec(db_connection)
         .await?;
@@ -260,7 +275,12 @@ pub async fn transfer_termination(
     })
         .exec_with_returning(db_connection)
         .await?;
-    
+
+    // if suscription id cancel
+    if transfer_process_db.subscription_id.is_some() {
+        disconnect_from_streaming_service_on_termination(input).await?;
+    }
+
     let tp = TransferProcessMessage::from(transfer_process_db);
     Ok(tp)
 }

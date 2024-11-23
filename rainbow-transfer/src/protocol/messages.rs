@@ -2,7 +2,7 @@ use crate::provider::data::entities::transfer_process;
 use anyhow::bail;
 use rainbow_common::dcat_formats::DctFormats;
 use rainbow_common::utils::convert_uuid_to_uri;
-use sea_orm::{DeriveActiveEnum, EnumIter};
+use sea_orm::{DeriveActiveEnum, DeriveValueType, EnumIter};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use utoipa::ToSchema;
@@ -87,7 +87,7 @@ pub struct TransferTerminationMessage {
     pub reason: Vec<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, ToSchema)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, ToSchema, Clone, Eq)]
 pub struct DataAddress {
     #[serde(rename = "@type")]
     pub _type: String,
@@ -99,7 +99,7 @@ pub struct DataAddress {
     pub endpoint_properties: Vec<EndpointProperty>,
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, ToSchema)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, ToSchema, Clone, Eq)]
 pub struct EndpointProperty {
     #[serde(rename = "@type")]
     pub _type: String,
@@ -211,11 +211,19 @@ impl TryFrom<String> for TransferMessageTypesForDb {
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
         match value.as_str() {
-            "dspace:TransferRequestMessage" => Ok(TransferMessageTypesForDb::TransferRequestMessage),
+            "dspace:TransferRequestMessage" => {
+                Ok(TransferMessageTypesForDb::TransferRequestMessage)
+            }
             "dspace:TransferStartMessage" => Ok(TransferMessageTypesForDb::TransferStartMessage),
-            "dspace:TransferSuspensionMessage" => Ok(TransferMessageTypesForDb::TransferSuspensionMessage),
-            "dspace:TransferCompletionMessage" => Ok(TransferMessageTypesForDb::TransferCompletionMessage),
-            "dspace:TransferTerminationMessage" => Ok(TransferMessageTypesForDb::TransferTerminationMessage),
+            "dspace:TransferSuspensionMessage" => {
+                Ok(TransferMessageTypesForDb::TransferSuspensionMessage)
+            }
+            "dspace:TransferCompletionMessage" => {
+                Ok(TransferMessageTypesForDb::TransferCompletionMessage)
+            }
+            "dspace:TransferTerminationMessage" => {
+                Ok(TransferMessageTypesForDb::TransferTerminationMessage)
+            }
             _ => bail!("Invalid transfer message type"),
         }
     }

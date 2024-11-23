@@ -53,17 +53,13 @@ pub async fn create_new_callback() -> anyhow::Result<CreateCallbackResponse> {
         provider_pid: ActiveValue::Set(None),
         created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
         updated_at: ActiveValue::Set(None),
-        data_address: ActiveValue::Set(None),
+        next_hop_address: ActiveValue::Set(None),
+        data_plane_address: ActiveValue::Set(None),
     })
         .exec_with_returning(db_connection)
         .await?;
 
-    let callback_url = format!(
-        "http://{}/{}/transfers/{}",
-        get_consumer_url()?,
-        callback.id,
-        callback.consumer_pid
-    );
+    let callback_url = format!("http://{}/{}/", get_consumer_url()?, callback.id, );
     let response = CreateCallbackResponse {
         callback_id: callback.id.to_string(),
         callback_address: callback_url,
@@ -78,29 +74,31 @@ pub async fn create_new_callback_with_address(
     data_address: DataAddress,
 ) -> anyhow::Result<CreateCallbackResponse> {
     let db_connection = get_db_connection().await;
+    let callback_id = Uuid::new_v4();
+    let consumer_pid = Uuid::new_v4();
+
+    let callback_url = format!("http://{}/{}", get_consumer_url()?, callback_id, );
+
+    let data_plane_address = format!("{}/data/push/{}", callback_url, consumer_pid);
+
     let callback = transfer_callback::Entity::insert(transfer_callback::ActiveModel {
-        id: ActiveValue::Set(Uuid::new_v4()),
-        consumer_pid: ActiveValue::Set(Uuid::new_v4()),
+        id: ActiveValue::Set(callback_id),
+        consumer_pid: ActiveValue::Set(consumer_pid),
         provider_pid: ActiveValue::Set(None),
         created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
         updated_at: ActiveValue::Set(None),
-        data_address: ActiveValue::Set(Some(serde_json::to_value(data_address)?)),
+        next_hop_address: ActiveValue::Set(Some(serde_json::to_value(data_address)?)),
+        data_plane_address: ActiveValue::Set(Some(data_plane_address)),
     })
         .exec_with_returning(db_connection)
         .await?;
 
-    let callback_url = format!(
-        "http://{}/{}/transfers/{}",
-        get_consumer_url()?,
-        callback.id,
-        callback.consumer_pid
-    );
     let response = CreateCallbackResponse {
         callback_id: callback.id.to_string(),
         callback_address: callback_url,
         consumer_pid: convert_uuid_to_uri(&callback.consumer_pid)?,
         data_address: Some(serde_json::from_value::<DataAddress>(
-            callback.data_address.unwrap(),
+            callback.next_hop_address.unwrap(),
         )?),
     };
     Ok(response)
@@ -133,7 +131,7 @@ pub struct RequestTransferResponse {
 pub async fn request_transfer(
     request: RequestTransferRequest,
 ) -> anyhow::Result<RequestTransferResponse, RequestTransferResponse> {
-    let consumer_pid = Uuid::from_str(&request.consumer_pid); // <-----
+    let consumer_pid = Uuid::from_str(&request.consumer_pid);
     if consumer_pid.is_err() {
         return Err(RequestTransferResponse {
             consumer_pid: None,
@@ -153,12 +151,14 @@ pub async fn request_transfer(
         data_address: request.data_address,
     };
 
+    println!("{:#?}", transfer_request);
     let url = format!(
         "http://{}/{}",
         get_provider_url().unwrap(),
         "transfers/request"
     );
 
+    // request to provider
     let req = reqwest::Client::new().post(url).json(&transfer_request).send().await;
 
     match req {
@@ -199,7 +199,8 @@ pub async fn get_data_address_by_consumer_pid(
     let callback = transfer_callback::Entity::find()
         .filter(transfer_callback::Column::ConsumerPid.eq(consumer_pid))
         .one(db_connection)
-        .await.unwrap();
+        .await
+        .unwrap();
 
     if callback.is_none() {
         return Err(RequestTransferResponse {
@@ -209,15 +210,8 @@ pub async fn get_data_address_by_consumer_pid(
         });
     }
     let callback = callback.unwrap();
-    let consumer_pid = callback.consumer_pid.to_string();
-    let callback_id = callback.id.to_string();
-    let data_plane_address = format!(
-        "http://{}/{}/data/{}",
-        get_consumer_url().unwrap(),
-        callback_id,
-        consumer_pid
-    );
-    Ok(DataPlaneAddressResponse { data_plane_address })
+    let data_plane_address = callback.data_plane_address;
+    Ok(DataPlaneAddressResponse { data_plane_address: data_plane_address.unwrap_or_default() })
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
@@ -242,7 +236,8 @@ pub async fn suspend_transfer(
     let callback = transfer_callback::Entity::find()
         .filter(transfer_callback::Column::ConsumerPid.eq(consumer_pid))
         .one(db_connection)
-        .await.unwrap();
+        .await
+        .unwrap();
 
     if callback.is_none() {
         return Err(RequestTransferResponse {
@@ -293,6 +288,7 @@ pub async fn suspend_transfer(
 pub struct RestartTransferRequest {
     #[serde(rename = "consumerPid")]
     pub consumer_pid: String,
+    // TODO create new data address
 }
 pub async fn restart_transfer(
     input: RestartTransferRequest,
@@ -305,14 +301,25 @@ pub async fn restart_transfer(
     let callback = transfer_callback::Entity::find()
         .filter(transfer_callback::Column::ConsumerPid.eq(consumer_pid))
         .one(db_connection)
-        .await.unwrap().unwrap();
+        .await
+        .unwrap()
+        .unwrap();
+
+    // is pull_or_push
+    let data_address = serde_json::from_value::<DataAddress>(callback.next_hop_address.unwrap()).unwrap();
+    let provider_url = get_provider_url().unwrap();
+    let is_pull = data_address.endpoint.contains(provider_url.as_str());
+    let data_address = match is_pull {
+        true => None,
+        false => Some(data_address)
+    };
 
     let transfer_start = TransferStartMessage {
         context: TRANSFER_CONTEXT.to_string(),
         _type: TransferMessageTypes::TransferStartMessage.to_string(),
         provider_pid: convert_uuid_to_uri(&callback.provider_pid.unwrap()).unwrap(),
         consumer_pid: convert_uuid_to_uri(&callback.consumer_pid).unwrap(),
-        data_address: None,
+        data_address: data_address,
     };
 
     let url = format!(
@@ -360,7 +367,9 @@ pub async fn complete_transfer(
     let callback = transfer_callback::Entity::find()
         .filter(transfer_callback::Column::ConsumerPid.eq(consumer_pid))
         .one(db_connection)
-        .await.unwrap().unwrap();
+        .await
+        .unwrap()
+        .unwrap();
 
     let transfer_complete = TransferCompletionMessage {
         context: TRANSFER_CONTEXT.to_string(),

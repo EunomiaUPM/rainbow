@@ -104,7 +104,7 @@ pub async fn init_command_line() -> Result<()> {
 
     let config = match &cli.role {
         DataSpaceTransferRoles::Provider(args) => Config {
-            host_url: config_field!(args, host_url, "HOST_URL", "localhost"),
+            host_url: config_field!(args, host_url, "HOST_URL", "127.0.0.1"),
             host_port: config_field!(args, host_port, "HOST_PORT", "1234"),
             db_type: config_field!(args, db_type, "DB_TYPE", "postgres"),
             db_url: config_field!(args, db_url, "DB_URL", "localhost"),
@@ -124,7 +124,7 @@ pub async fn init_command_line() -> Result<()> {
             role: ConfigRoles::Provider,
         },
         DataSpaceTransferRoles::Consumer(args) => Config {
-            host_url: config_field!(args, host_url, "HOST_URL", "localhost"),
+            host_url: config_field!(args, host_url, "HOST_URL", "127.0.0.1"),
             host_port: config_field!(args, host_port, "HOST_PORT", "1235"),
             db_type: config_field!(args, db_type, "DB_TYPE", "postgres"),
             db_url: config_field!(args, db_url, "DB_URL", "localhost"),
@@ -136,7 +136,7 @@ pub async fn init_command_line() -> Result<()> {
                 args,
                 provider_url,
                 "PROVIDER_HOST",
-                "localhost"
+                "127.0.0.1"
             )),
             provider_port: Some(config_field!(args, provider_port, "PROVIDER_PORT", "1234")),
             auth_url: None,
