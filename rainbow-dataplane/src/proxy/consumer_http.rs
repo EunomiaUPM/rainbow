@@ -57,7 +57,11 @@ async fn handle_dataplane_pull(Path((callback_id, data_id)): Path<(Uuid, Uuid)>,
 
 async fn handle_dataplane_push(Path((callback_id, data_id)): Path<(Uuid, Uuid)>, request: Request) -> impl IntoResponse {
     let db_connection = get_db_connection().await;
-    let data_plane_process = data_plane_process::Entity::find_by_id(data_id)
+    // TODO Refactor DB
+    let data_plane_process = data_plane_process::Entity::find()
+        .filter(data_plane_process::Column::Address.contains(callback_id).and(
+            data_plane_process::Column::Address.contains(data_id)
+        ))
         .one(db_connection)
         .await
         .unwrap();

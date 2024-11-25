@@ -72,12 +72,13 @@ pub async fn get_data_plane_peer(data_plane_id: Uuid) -> anyhow::Result<DataPlan
 pub async fn set_data_plane_next_hop(
     data_plane_peer: DataPlanePeer,
     provider_pid: Uuid,
+    consumer_pid: Uuid,
 ) -> anyhow::Result<DataPlanePeer> {
     info!("Setting next hop");
 
     match data_plane_peer.dct_formats.protocol {
         FormatProtocol::FiwareContextBroker => {
-            Ok(FiwareDataPlane::set_data_plane_next_hop(data_plane_peer, provider_pid).await?)
+            Ok(FiwareDataPlane::set_data_plane_next_hop(data_plane_peer, provider_pid, consumer_pid).await?)
         }
 
         _ => {

@@ -57,7 +57,9 @@ async fn handle_dataplane_pull(Path(data_id): Path<Uuid>, request: Request) -> i
 
 async fn handle_dataplane_push(Path(data_id): Path<Uuid>, request: Request) -> impl IntoResponse {
     let db_connection = get_db_connection().await;
-    let data_plane_process = data_plane_process::Entity::find_by_id(data_id)
+    let data_plane_process = data_plane_process::Entity::find()
+        .filter(data_plane_process::Column::Address.contains(data_id)
+        )
         .one(db_connection)
         .await
         .unwrap();

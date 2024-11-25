@@ -3,6 +3,7 @@ use crate::implementations::fiware_context_broker::FiwareDataPlane;
 use crate::DATA_PLANE_HTTP_CLIENT;
 use anyhow::bail;
 use axum::async_trait;
+use axum::body::to_bytes;
 use axum::extract::Request;
 use rainbow_common::config::config::{get_provider_url, ConfigRoles};
 use rainbow_common::config::database::get_db_connection;
@@ -68,7 +69,7 @@ impl DataPlanePeerDefaultBehavior for FiwareDataPlane {
         Ok(fw.inner)
     }
 
-    async fn set_data_plane_next_hop(data_plane_peer: DataPlanePeer, provider_pid: Uuid) -> anyhow::Result<DataPlanePeer> {
+    async fn set_data_plane_next_hop(data_plane_peer: DataPlanePeer, provider_pid: Uuid, consumer_pid: Uuid) -> anyhow::Result<DataPlanePeer> {
         let db_connection = get_db_connection().await;
         match data_plane_peer.role {
             ConfigRoles::Consumer => {
@@ -108,7 +109,7 @@ impl DataPlanePeerDefaultBehavior for FiwareDataPlane {
                         let endpoint_url = format!(
                             "{}/data/push/{}",
                             consumer_callback,
-                            provider_pid
+                            consumer_pid
                         );
                         let mut fw = fw.add_attribute("nextHop".to_string(), endpoint_url);
                         fw = *fw.persist(db_connection).await?;
@@ -221,11 +222,15 @@ impl DataPlanePeerDefaultBehavior for FiwareDataPlane {
         }
     }
 
-    async fn on_push_data(data_plane_peer: DataPlanePeer, request: Request) -> anyhow::Result<axum::response::Response> {
+    async fn on_push_data(data_plane_peer: DataPlanePeer, mut request: Request) -> anyhow::Result<axum::response::Response> {
         let next_hop = data_plane_peer.attributes.get("nextHop").unwrap();
         match request.method() {
             &Method::POST => {
-                let res = DATA_PLANE_HTTP_CLIENT.post(next_hop).send().await;
+                let body = std::mem::take(request.body_mut());
+                let body_bytes = to_bytes(body, 2024)
+                    .await
+                    .map_err(|_| StatusCode::BAD_REQUEST);
+                let res = DATA_PLANE_HTTP_CLIENT.post(next_hop).body(body_bytes.unwrap()).send().await;
                 match res {
                     Ok(r) => Ok(forward_response(r).await),
                     Err(_) => bail!("Not able to push data from service"),

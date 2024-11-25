@@ -54,6 +54,7 @@ where
     }
 
     let provider_pid = Uuid::new_v4();
+    let consumer_pid = convert_uri_to_uuid(&input.consumer_pid)?;
     let created_at = chrono::Utc::now().naive_utc();
     let message_type = input._type.clone();
 
@@ -64,7 +65,7 @@ where
     let data_plane_peer = bootstrap_data_plane_in_provider(input.clone(), provider_pid.clone()).await?
         .add_attribute("endpointUrl".to_string(), data_service.dcat.clone().endpoint_url)
         .add_attribute("endpointDescription".to_string(), data_service.dcat.clone().endpoint_description);
-    let data_plane_peer = set_data_plane_next_hop(data_plane_peer, provider_pid.clone()).await?;
+    let data_plane_peer = set_data_plane_next_hop(data_plane_peer, provider_pid.clone(), consumer_pid).await?;
     let data_plane_id = data_plane_peer.id.clone();
     connect_to_streaming_service(data_plane_id).await?;
 

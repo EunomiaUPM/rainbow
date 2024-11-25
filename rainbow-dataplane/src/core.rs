@@ -54,6 +54,7 @@ pub trait DataPlanePeerDefaultBehavior {
     async fn set_data_plane_next_hop(
         data_plane_peer: DataPlanePeer,
         provider_pid: Uuid,
+        consumer_pid: Uuid,
     ) -> anyhow::Result<DataPlanePeer>;
 
     async fn connect_to_streaming_service(data_plane_id: Uuid) -> anyhow::Result<()>;

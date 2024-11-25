@@ -1,8 +1,10 @@
+use axum::body::to_bytes;
+use axum::extract::Request;
+use axum::http::StatusCode;
 use axum::routing::{get, post};
 use axum::{serve, Json, Router};
 use std::env::args;
 use std::net::SocketAddr;
-use axum::http::StatusCode;
 use tokio::net::TcpListener;
 use tower_http::services::ServeDir;
 use tower_http::trace::TraceLayer;
@@ -23,9 +25,11 @@ async fn main() -> anyhow::Result<()> {
 
     // static router
     let static_router = Router::new()
-        .route("/data-client", post(|Json(input): Json<serde_json::Value>| async move {
+        .route("/data-client", post(|body: String| async move {
+            let data = serde_json::from_slice::<serde_json::Value>(body.as_bytes()).unwrap();
+            let data_text = serde_json::to_string_pretty(&data).unwrap();
             info!("POST /data-client");
-            info!("Receiving data from dataspace: \n{}\n", serde_json::to_string_pretty(&input).unwrap());
+            info!("Receiving data from dataspace: \n{}\n", data_text);
             StatusCode::OK
         }))
         .layer(TraceLayer::new_for_http());

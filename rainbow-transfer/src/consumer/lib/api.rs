@@ -176,24 +176,26 @@ pub async fn request_transfer(
                 // setup data plane
                 let transfer_process = res.json::<TransferProcessMessage>().await.unwrap();
                 let provider_pid = transfer_process.provider_pid.clone();
+                let consumer_pid = transfer_process.consumer_pid.clone();
                 let provider_uuid = convert_uri_to_uuid(&provider_pid).unwrap();
+                let consumer_uuid = convert_uri_to_uuid(&consumer_pid).unwrap();
                 let data_plane_peer = bootstrap_data_plane_in_consumer(transfer_request)
                     .await
                     .unwrap();
                 let data_plane_id = data_plane_peer.id;
-                set_data_plane_next_hop(data_plane_peer, provider_uuid)
+                set_data_plane_next_hop(data_plane_peer, provider_uuid, consumer_uuid)
                     .await
                     .unwrap();
 
                 // persist data plane in transfer
                 let tp = transfer_callback::Entity::find()
-                    .filter(transfer_callback::Column::ConsumerPid.eq(consumer_pid))
+                    .filter(transfer_callback::Column::ConsumerPid.eq(consumer_uuid))
                     .one(db_connection)
                     .await
                     .unwrap();
                 if tp.is_none() {
                     return Err(RequestTransferResponse {
-                        consumer_pid: Some(convert_uuid_to_uri(&consumer_pid).unwrap()),
+                        consumer_pid: Some(consumer_pid.clone()),
                         transfer_process: None,
                         error: Some(
                             TransferError::from_async(NotCheckedError {
@@ -218,7 +220,7 @@ pub async fn request_transfer(
 
                 // return to client
                 Ok(RequestTransferResponse {
-                    consumer_pid: Some(convert_uuid_to_uri(&consumer_pid).unwrap()),
+                    consumer_pid: Some(consumer_pid),
                     transfer_process: Some(transfer_process),
                     error: None,
                 })
