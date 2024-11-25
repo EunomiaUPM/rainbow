@@ -19,8 +19,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(TransferCallbacks::ProviderPid).uuid())
                     .col(ColumnDef::new(TransferCallbacks::CreatedAt).date_time().not_null())
                     .col(ColumnDef::new(TransferCallbacks::UpdatedAt).date_time())
-                    .col(ColumnDef::new(TransferCallbacks::DataPlaneAddress).string())
-                    .col(ColumnDef::new(TransferCallbacks::NextHopAddress).json())
+                    .col(ColumnDef::new(TransferCallbacks::DataPlaneId).uuid())
                     .to_owned(),
             )
             .await
@@ -40,6 +39,5 @@ pub enum TransferCallbacks {
     DataAddress,
     CreatedAt,
     UpdatedAt,
-    DataPlaneAddress,
-    NextHopAddress
+    DataPlaneId,
 }

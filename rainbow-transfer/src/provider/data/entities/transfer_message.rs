@@ -1,4 +1,4 @@
-use crate::protocol::messages::{TransferMessageTypesForDb, TransferRoles};
+use rainbow_common::protocol::transfer::{TransferMessageTypesForDb, TransferRoles};
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 

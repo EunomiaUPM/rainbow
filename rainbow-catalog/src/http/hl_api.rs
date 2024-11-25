@@ -27,10 +27,8 @@ pub async fn catalog_api_router() -> anyhow::Result<Router> {
         //
         .route("/api/v1/catalogs/:id/data-services", post(handle_post_dataservice))
         .route("/api/v1/catalogs/:id/data-services/:did", put(handle_put_dataservice))
-        .route("/api/v1/catalogs/:id/data-services/:did", delete(handle_delete_dataservice))
+        .route("/api/v1/catalogs/:id/data-services/:did", delete(handle_delete_dataservice));
         //
-
-        .layer(TraceLayer::new_for_http());
     Ok(router)
 }
 

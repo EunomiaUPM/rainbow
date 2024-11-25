@@ -1,18 +1,15 @@
-use crate::common::err::TransferErrorType::{
-    ConsumerAlreadyRegisteredError, MessageTypeNotAcceptedError, ProtocolError,
-    TransferProcessAlreadySuspendedError, TransferProcessNotFound,
-};
-use crate::protocol::messages::TransferState;
 use crate::provider::data::entities::transfer_process;
 use anyhow::{anyhow, bail};
+use rainbow_common::config::database::get_db_connection;
+use rainbow_common::err::transfer_err::TransferErrorType::{ConsumerAlreadyRegisteredError, MessageTypeNotAcceptedError, ProtocolError, TransferProcessAlreadySuspendedError, TransferProcessNotFound};
+use rainbow_common::protocol::transfer::TransferState;
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use serde_json::Value;
 use uuid::Uuid;
-use rainbow_common::config::database::get_db_connection;
 
 pub async fn protocol_transition_rules(json_value: Value) -> anyhow::Result<()> {
     let db_connection = get_db_connection().await;
-    
+
     let provider_pid = json_value
         .get("dspace:providerPid")
         .and_then(|v| v.as_str())
@@ -40,7 +37,6 @@ pub async fn protocol_transition_rules(json_value: Value) -> anyhow::Result<()> 
         .map_err(|e| anyhow!(e))?;
 
 
-
     match message_type {
         "dspace:TransferRequestMessage" => {
             if transfer_consumer.is_some() {
@@ -51,8 +47,7 @@ pub async fn protocol_transition_rules(json_value: Value) -> anyhow::Result<()> 
             if transfer_provider.is_none() {
                 bail!(TransferProcessNotFound);
             }
-            let transfer_state = TransferState::try_from(transfer_provider.unwrap().state)
-                .map_err(|e| anyhow!(e))?;
+            let transfer_state = TransferState::try_from(transfer_provider.unwrap().state)?;
             match transfer_state {
                 TransferState::REQUESTED => {}
                 TransferState::STARTED => {
@@ -83,9 +78,7 @@ pub async fn protocol_transition_rules(json_value: Value) -> anyhow::Result<()> 
             if transfer_provider.is_none() {
                 bail!(TransferProcessNotFound);
             }
-            let transfer_state = TransferState::try_from(transfer_provider.unwrap().state)
-                .map_err(|e| anyhow!(e))?;
-
+            let transfer_state = TransferState::try_from(transfer_provider.unwrap().state)?;
             match transfer_state {
                 TransferState::REQUESTED => {
                     bail!(ProtocolError {
@@ -117,8 +110,7 @@ pub async fn protocol_transition_rules(json_value: Value) -> anyhow::Result<()> 
             if transfer_provider.is_none() {
                 bail!(TransferProcessNotFound);
             }
-            let transfer_state = TransferState::try_from(transfer_provider.unwrap().state)
-                .map_err(|e| anyhow!(e))?;
+            let transfer_state = TransferState::try_from(transfer_provider.unwrap().state)?;
             match transfer_state {
                 TransferState::REQUESTED => {
                     bail!(ProtocolError {
@@ -144,8 +136,7 @@ pub async fn protocol_transition_rules(json_value: Value) -> anyhow::Result<()> 
             if transfer_provider.is_none() {
                 bail!(TransferProcessNotFound);
             }
-            let transfer_state = TransferState::try_from(transfer_provider.unwrap().state)
-                .map_err(|e| anyhow!(e))?;
+            let transfer_state = TransferState::try_from(transfer_provider.unwrap().state)?;
             match transfer_state {
                 TransferState::REQUESTED => {}
                 TransferState::STARTED => {}

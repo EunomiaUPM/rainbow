@@ -1,4 +1,4 @@
-use crate::protocol::messages::{TransferMessageTypesForDb, TransferRoles};
+use rainbow_common::protocol::transfer::{TransferMessageTypesForDb, TransferRoles};
 use sea_orm::sea_query::extension::postgres::Type;
 use sea_orm::ActiveEnum;
 use sea_orm_migration::prelude::*;

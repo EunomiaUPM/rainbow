@@ -3,7 +3,7 @@
 // use crate::transfer::common::http::middleware::{authentication_middleware, authorization_middleware};
 // use crate::transfer::common::misc_router;
 use crate::provider::http::router;
-use crate::provider::http::{api, proxy};
+use crate::provider::http::api;
 use axum::http::Method;
 use axum::Router;
 use rainbow_common::misc_router;
@@ -17,7 +17,6 @@ pub async fn create_provider_router() -> Router {
     let server = Router::new()
         .merge(misc_router::router())
         .merge(router::router())
-        .merge(proxy::router())
         .merge(api::router())
         // .layer(cors)
         // .layer(middleware::from_fn(authorization_middleware)) // TODO put middleware where needed

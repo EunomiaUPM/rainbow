@@ -1,5 +1,5 @@
-use crate::common::err::TransferErrorType::{PidSchemeError, PidUuidError};
 use anyhow::bail;
+use rainbow_common::err::transfer_err::TransferErrorType::{PidSchemeError, PidUuidError};
 use serde_json::Value;
 use uuid::Uuid;
 

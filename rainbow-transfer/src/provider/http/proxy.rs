@@ -1,5 +1,4 @@
 use crate::common::http::client::DATA_PLANE_HTTP_CLIENT;
-use crate::protocol::messages::TransferStateForDb;
 use crate::provider::data::entities::transfer_process;
 use crate::provider::lib::data_plane::resolve_endpoint_from_agreement;
 use axum::body::Body;
@@ -9,6 +8,7 @@ use axum::response::IntoResponse;
 use axum::routing::{get, post, put};
 use axum::{Json, Router};
 use rainbow_common::config::database::get_db_connection;
+use rainbow_common::protocol::transfer::TransferStateForDb;
 use sea_orm::ColumnTrait;
 use sea_orm::EntityTrait;
 use sea_orm::QueryFilter;
@@ -124,16 +124,13 @@ async fn handle_data_push_proxy(
         return (StatusCode::UNAUTHORIZED, "Not authorized".to_string()).into_response();
     }
 
-    let endpoint = transfer_process.next_hop_address;
-    if endpoint.is_none() {
-        return (StatusCode::NOT_FOUND, "Not found".to_string()).into_response();
-    }
-    let endpoint = endpoint.unwrap();
-    let endpoint_url = endpoint.get("dspace:endpoint").and_then(|v| v.as_str()).unwrap();
+
+    let endpoint = "asdas";
+    // let endpoint_url = endpoint.get("dspace:endpoint").and_then(|v| v.as_str()).unwrap();
 
 
     // Send the request to the downstream server
-    let res = match DATA_PLANE_HTTP_CLIENT.post(endpoint_url).json(&input).send().await {
+    let res = match DATA_PLANE_HTTP_CLIENT.post(endpoint).json(&input).send().await {
         Ok(res) => res,
         Err(err) => {
             error!("Error sending request: {:?}", err);

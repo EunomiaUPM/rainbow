@@ -1,5 +1,3 @@
-use crate::common::err::TransferErrorType;
-use crate::common::err::TransferErrorType::NotCheckedError;
 use crate::common::lib::common_validations::pids_as_urn_validation;
 use crate::common::lib::protocol_transition_rules::protocol_transition_rules;
 use crate::common::lib::schema_validation::schema_validation;
@@ -12,6 +10,8 @@ use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
 use axum::{Extension, Json};
 use log::error;
+use rainbow_common::err::transfer_err::TransferErrorType;
+use rainbow_common::err::transfer_err::TransferErrorType::NotCheckedError;
 use reqwest::StatusCode;
 use serde_json::{json, Error, Value};
 use tracing::info;

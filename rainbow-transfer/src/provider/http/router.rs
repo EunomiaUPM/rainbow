@@ -1,8 +1,7 @@
-use crate::common::err::TransferErrorType;
-use crate::common::err::TransferErrorType::{ConsumerNotReachableError, NotCheckedError, ProtocolBodyError, TransferProcessNotFound};
 use crate::common::http::client::DATA_PLANE_HTTP_CLIENT;
-use crate::common::http::middleware::{pids_as_urn_validation_middleware, protocol_rules_middleware, schema_validation_middleware};
-use crate::protocol::messages::{DataAddress, TransferCompletionMessage, TransferMessageTypes, TransferMessageTypesForDb, TransferProcessMessage, TransferRequestMessage, TransferRoles, TransferStartMessage, TransferState, TransferStateForDb, TransferSuspensionMessage, TransferTerminationMessage, TRANSFER_CONTEXT};
+use crate::common::http::middleware::{
+    pids_as_urn_validation_middleware, protocol_rules_middleware, schema_validation_middleware,
+};
 use crate::provider::data::entities::{transfer_message, transfer_process};
 use crate::provider::lib::control_plane::{
     get_transfer_requests_by_provider, transfer_completion, transfer_request, transfer_start,
@@ -19,6 +18,14 @@ use axum::{middleware, Json, Router};
 use clap::builder::TypedValueParser;
 use rainbow_common::config::database::get_db_connection;
 use rainbow_common::dcat_formats::FormatAction;
+use rainbow_common::err::transfer_err::TransferErrorType;
+use rainbow_common::err::transfer_err::TransferErrorType::{ConsumerNotReachableError, NotCheckedError, ProtocolBodyError, TransferProcessNotFound};
+use rainbow_common::protocol::transfer::{
+    DataAddress, TransferCompletionMessage, TransferMessageTypes, TransferMessageTypesForDb,
+    TransferProcessMessage, TransferRequestMessage, TransferRoles, TransferStartMessage,
+    TransferState, TransferStateForDb, TransferSuspensionMessage, TransferTerminationMessage,
+    TRANSFER_CONTEXT,
+};
 use rainbow_common::utils::{convert_uri_to_uuid, convert_uuid_to_uri};
 use reqwest::Error;
 use sea_orm::{ActiveValue, EntityTrait};
@@ -50,7 +57,10 @@ pub fn router() -> Router {
 async fn handle_get_transfer_by_provider(Path(provider_pid): Path<Uuid>) -> impl IntoResponse {
     info!("GET /transfers/{}", provider_pid.to_string());
 
-    match get_transfer_requests_by_provider(provider_pid).await.unwrap() {
+    match get_transfer_requests_by_provider(provider_pid)
+        .await
+        .unwrap()
+    {
         Some(transfer_process) => (
             StatusCode::OK,
             Json(TransferProcessMessage {
@@ -83,10 +93,14 @@ async fn handle_transfer_request(
             },
         },
         Err(e) => match e {
-            JsonRejection::JsonDataError(e_) => {
-                ProtocolBodyError { message: e_.body_text() }.into_response()
+            JsonRejection::JsonDataError(e_) => ProtocolBodyError {
+                message: e_.body_text(),
             }
-            _ => NotCheckedError { inner_error: e.into() }.into_response(),
+                .into_response(),
+            _ => NotCheckedError {
+                inner_error: e.into(),
+            }
+                .into_response(),
         },
     }
 }
@@ -94,21 +108,18 @@ async fn handle_transfer_request(
 async fn send_transfer_start(
     Json(input): Json<TransferRequestMessage>,
     provider_pid: Uuid,
-    next_hop_address: DataAddress,
-    data_plane_address: DataAddress,
-    data_plane_id: Uuid,
+    data_address: Option<DataAddress>,
 ) -> anyhow::Result<()> {
-    let data_address_in_msg = match input.format.action {
-        FormatAction::Push => None,
-        FormatAction::Pull => Some(data_plane_address.clone())
-    };
     let transfer_start_message = TransferStartMessage {
         context: TRANSFER_CONTEXT.to_string(),
         _type: TransferMessageTypes::TransferStartMessage.to_string(),
         provider_pid: convert_uuid_to_uri(&provider_pid)?,
         consumer_pid: input.consumer_pid.to_string(),
-        data_address: data_address_in_msg,
+        data_address: data_address,
     };
+
+    println!("\nholaaaaaaaaaaaaaaaaaaaaaaa=====\n\n");
+    println!("{:?}", transfer_start_message);
 
     let consumer_transfer_endpoint = format!(
         "{}/transfers/{}/start",
@@ -131,26 +142,24 @@ async fn send_transfer_start(
 
                 let db_connection = get_db_connection().await;
                 // persist information
-                let old_process =
-                    transfer_process::Entity::find_by_id(provider_pid).one(db_connection).await?;
+                let old_process = transfer_process::Entity::find_by_id(provider_pid)
+                    .one(db_connection)
+                    .await?;
                 if old_process.is_none() {
                     bail!(TransferProcessNotFound)
                 }
                 let old_process = old_process.unwrap();
                 println!("{:?}", old_process);
-                
+
                 let transfer_process_db =
                     transfer_process::Entity::update(transfer_process::ActiveModel {
                         provider_pid: ActiveValue::Set(old_process.provider_pid),
                         consumer_pid: ActiveValue::Set(old_process.consumer_pid),
                         agreement_id: ActiveValue::Set(old_process.agreement_id),
-                        data_plane_id: ActiveValue::Set(Some(data_plane_id)),
-                        subscription_id: ActiveValue::Set(old_process.subscription_id),
+                        data_plane_id: ActiveValue::Set(old_process.data_plane_id),
                         state: ActiveValue::Set(TransferStateForDb::STARTED),
                         created_at: ActiveValue::Set(old_process.created_at),
                         updated_at: ActiveValue::Set(Some(chrono::Utc::now().naive_utc())),
-                        next_hop_address: ActiveValue::Set(Some(to_value(next_hop_address)?)),
-                        data_plane_address: ActiveValue::Set(Some(data_plane_address.endpoint)),
                     })
                         .exec(db_connection)
                         .await?;
@@ -193,10 +202,14 @@ async fn handle_transfer_start(
             },
         },
         Err(e) => match e {
-            JsonRejection::JsonDataError(e_) => {
-                ProtocolBodyError { message: e_.body_text() }.into_response()
+            JsonRejection::JsonDataError(e_) => ProtocolBodyError {
+                message: e_.body_text(),
             }
-            _ => NotCheckedError { inner_error: e.into() }.into_response(),
+                .into_response(),
+            _ => NotCheckedError {
+                inner_error: e.into(),
+            }
+                .into_response(),
         },
     }
 }
@@ -215,10 +228,14 @@ async fn handle_transfer_suspension(
             },
         },
         Err(e) => match e {
-            JsonRejection::JsonDataError(e_) => {
-                ProtocolBodyError { message: e_.body_text() }.into_response()
+            JsonRejection::JsonDataError(e_) => ProtocolBodyError {
+                message: e_.body_text(),
             }
-            _ => NotCheckedError { inner_error: e.into() }.into_response(),
+                .into_response(),
+            _ => NotCheckedError {
+                inner_error: e.into(),
+            }
+                .into_response(),
         },
     }
 }
@@ -237,10 +254,14 @@ async fn handle_transfer_completion(
             },
         },
         Err(e) => match e {
-            JsonRejection::JsonDataError(e_) => {
-                ProtocolBodyError { message: e_.body_text() }.into_response()
+            JsonRejection::JsonDataError(e_) => ProtocolBodyError {
+                message: e_.body_text(),
             }
-            _ => NotCheckedError { inner_error: e.into() }.into_response(),
+                .into_response(),
+            _ => NotCheckedError {
+                inner_error: e.into(),
+            }
+                .into_response(),
         },
     }
 }
@@ -259,10 +280,14 @@ async fn handle_transfer_termination(
             },
         },
         Err(e) => match e {
-            JsonRejection::JsonDataError(e_) => {
-                ProtocolBodyError { message: e_.body_text() }.into_response()
+            JsonRejection::JsonDataError(e_) => ProtocolBodyError {
+                message: e_.body_text(),
             }
-            _ => NotCheckedError { inner_error: e.into() }.into_response(),
+                .into_response(),
+            _ => NotCheckedError {
+                inner_error: e.into(),
+            }
+                .into_response(),
         },
     }
 }

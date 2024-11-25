@@ -1,12 +1,7 @@
-use crate::common::err::TransferErrorType;
 use crate::common::utils::{does_callback_exist, is_consumer_pid_valid};
 use crate::consumer::lib::control_plane::transfer_completion;
 use crate::consumer::lib::control_plane::{
     transfer_start, transfer_suspension, transfer_termination,
-};
-use crate::protocol::messages::{
-    TransferCompletionMessage, TransferStartMessage, TransferSuspensionMessage,
-    TransferTerminationMessage,
 };
 use anyhow::Error;
 use axum::extract::Path;
@@ -15,6 +10,8 @@ use axum::response::IntoResponse;
 use axum::routing::post;
 use axum::{Json, Router};
 use log::info;
+use rainbow_common::err::transfer_err::TransferErrorType;
+use rainbow_common::protocol::transfer::{TransferCompletionMessage, TransferStartMessage, TransferSuspensionMessage, TransferTerminationMessage};
 use tracing::error;
 use uuid::Uuid;
 
@@ -47,7 +44,6 @@ async fn handle_transfer_start(
         callback.to_string(),
         consumer_pid.to_string()
     );
-
 
     match transfer_start(Json(&input), callback, consumer_pid).await {
         Ok(_) => (StatusCode::OK).into_response(),

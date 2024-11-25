@@ -1,18 +1,22 @@
-// use crate::setup::config::{get_consumer_url, get_provider_url};
-use crate::common::err::TransferErrorType::{
-    CallbackClientError, NotCheckedError, PidUuidError, TransferProcessNotFound,
-};
 use crate::consumer::data::entities::transfer_callback;
-use crate::protocol::messages::{
-    DataAddress, TransferCompletionMessage, TransferError, TransferMessageTypes,
-    TransferProcessMessage, TransferRequestMessage, TransferStartMessage,
-    TransferSuspensionMessage, TRANSFER_CONTEXT,
-};
+use anyhow::anyhow;
 use axum::http::StatusCode;
 use rainbow_common::config::config::{get_consumer_url, get_provider_url};
 use rainbow_common::config::database::get_db_connection;
 use rainbow_common::dcat_formats::DctFormats;
-use rainbow_common::utils::convert_uuid_to_uri;
+// use crate::setup::config::{get_consumer_url, get_provider_url};
+use rainbow_common::err::transfer_err::TransferErrorType::{
+    CallbackClientError, NotCheckedError, PidUuidError, TransferProcessNotFound,
+};
+use rainbow_common::protocol::transfer::{
+    DataAddress, TransferCompletionMessage, TransferError, TransferMessageTypes,
+    TransferProcessMessage, TransferRequestMessage, TransferStartMessage,
+    TransferSuspensionMessage, TRANSFER_CONTEXT,
+};
+use rainbow_common::utils::{convert_uri_to_uuid, convert_uuid_to_uri};
+use rainbow_dataplane::{
+    bootstrap_data_plane_in_consumer, get_data_plane_peer, set_data_plane_next_hop,
+};
 use sea_orm::{ActiveValue, ColumnTrait, EntityTrait, QueryFilter};
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
@@ -29,7 +33,9 @@ pub async fn get_callback_by_id(
     callback_id: Uuid,
 ) -> anyhow::Result<Option<transfer_callback::Model>> {
     let db_connection = get_db_connection().await;
-    let callbacks = transfer_callback::Entity::find_by_id(callback_id).one(db_connection).await?;
+    let callbacks = transfer_callback::Entity::find_by_id(callback_id)
+        .one(db_connection)
+        .await?;
     Ok(callbacks)
 }
 
@@ -53,13 +59,12 @@ pub async fn create_new_callback() -> anyhow::Result<CreateCallbackResponse> {
         provider_pid: ActiveValue::Set(None),
         created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
         updated_at: ActiveValue::Set(None),
-        next_hop_address: ActiveValue::Set(None),
-        data_plane_address: ActiveValue::Set(None),
+        data_plane_id: ActiveValue::Set(None),
     })
         .exec_with_returning(db_connection)
         .await?;
 
-    let callback_url = format!("http://{}/{}/", get_consumer_url()?, callback.id, );
+    let callback_url = format!("http://{}/{}", get_consumer_url()?, callback.id, );
     let response = CreateCallbackResponse {
         callback_id: callback.id.to_string(),
         callback_address: callback_url,
@@ -87,8 +92,7 @@ pub async fn create_new_callback_with_address(
         provider_pid: ActiveValue::Set(None),
         created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
         updated_at: ActiveValue::Set(None),
-        next_hop_address: ActiveValue::Set(Some(serde_json::to_value(data_address)?)),
-        data_plane_address: ActiveValue::Set(Some(data_plane_address)),
+        data_plane_id: ActiveValue::Set(None),
     })
         .exec_with_returning(db_connection)
         .await?;
@@ -97,9 +101,7 @@ pub async fn create_new_callback_with_address(
         callback_id: callback.id.to_string(),
         callback_address: callback_url,
         consumer_pid: convert_uuid_to_uri(&callback.consumer_pid)?,
-        data_address: Some(serde_json::from_value::<DataAddress>(
-            callback.next_hop_address.unwrap(),
-        )?),
+        data_address: None,
     };
     Ok(response)
 }
@@ -131,7 +133,10 @@ pub struct RequestTransferResponse {
 pub async fn request_transfer(
     request: RequestTransferRequest,
 ) -> anyhow::Result<RequestTransferResponse, RequestTransferResponse> {
+    let db_connection = get_db_connection().await;
     let consumer_pid = Uuid::from_str(&request.consumer_pid);
+    let request_format = request.format;
+    let request_callback_address = request.callback_address;
     if consumer_pid.is_err() {
         return Err(RequestTransferResponse {
             consumer_pid: None,
@@ -146,8 +151,8 @@ pub async fn request_transfer(
         _type: TransferMessageTypes::TransferRequestMessage.to_string(),
         consumer_pid: convert_uuid_to_uri(&consumer_pid).unwrap(),
         agreement_id: request.agreement_id,
-        format: request.format,
-        callback_address: request.callback_address,
+        format: request_format.clone(),
+        callback_address: request_callback_address.clone(),
         data_address: request.data_address,
     };
 
@@ -159,15 +164,65 @@ pub async fn request_transfer(
     );
 
     // request to provider
-    let req = reqwest::Client::new().post(url).json(&transfer_request).send().await;
+    let req = reqwest::Client::new()
+        .post(url)
+        .json(&transfer_request)
+        .send()
+        .await;
 
     match req {
         Ok(res) => match res.status() {
-            StatusCode::CREATED => Ok(RequestTransferResponse {
-                consumer_pid: Some(convert_uuid_to_uri(&consumer_pid).unwrap()),
-                transfer_process: res.json().await.unwrap(),
-                error: None,
-            }),
+            StatusCode::CREATED => {
+                // setup data plane
+                let transfer_process = res.json::<TransferProcessMessage>().await.unwrap();
+                let provider_pid = transfer_process.provider_pid.clone();
+                let provider_uuid = convert_uri_to_uuid(&provider_pid).unwrap();
+                let data_plane_peer = bootstrap_data_plane_in_consumer(transfer_request)
+                    .await
+                    .unwrap();
+                let data_plane_id = data_plane_peer.id;
+                set_data_plane_next_hop(data_plane_peer, provider_uuid)
+                    .await
+                    .unwrap();
+
+                // persist data plane in transfer
+                let tp = transfer_callback::Entity::find()
+                    .filter(transfer_callback::Column::ConsumerPid.eq(consumer_pid))
+                    .one(db_connection)
+                    .await
+                    .unwrap();
+                if tp.is_none() {
+                    return Err(RequestTransferResponse {
+                        consumer_pid: Some(convert_uuid_to_uri(&consumer_pid).unwrap()),
+                        transfer_process: None,
+                        error: Some(
+                            TransferError::from_async(NotCheckedError {
+                                inner_error: anyhow!("Db error"),
+                            })
+                                .await,
+                        ),
+                    });
+                }
+                let tp = tp.unwrap();
+                transfer_callback::Entity::update(transfer_callback::ActiveModel {
+                    id: ActiveValue::Set(tp.id),
+                    consumer_pid: ActiveValue::Set(tp.consumer_pid),
+                    provider_pid: ActiveValue::Set(tp.provider_pid),
+                    created_at: ActiveValue::Set(tp.created_at),
+                    updated_at: ActiveValue::Set(Some(chrono::Utc::now().naive_utc())),
+                    data_plane_id: ActiveValue::Set(Some(data_plane_id)),
+                })
+                    .exec(db_connection)
+                    .await
+                    .unwrap();
+
+                // return to client
+                Ok(RequestTransferResponse {
+                    consumer_pid: Some(convert_uuid_to_uri(&consumer_pid).unwrap()),
+                    transfer_process: Some(transfer_process),
+                    error: None,
+                })
+            }
             StatusCode::BAD_REQUEST => Err(RequestTransferResponse {
                 consumer_pid: Some(convert_uuid_to_uri(&consumer_pid).unwrap()),
                 transfer_process: None,
@@ -182,7 +237,12 @@ pub async fn request_transfer(
         Err(e) => Err(RequestTransferResponse {
             consumer_pid: Some(convert_uuid_to_uri(&consumer_pid).unwrap()),
             transfer_process: None,
-            error: Some(TransferError::from_async(NotCheckedError { inner_error: e.into() }).await),
+            error: Some(
+                TransferError::from_async(NotCheckedError {
+                    inner_error: e.into(),
+                })
+                    .await,
+            ),
         }),
     }
 }
@@ -209,9 +269,15 @@ pub async fn get_data_address_by_consumer_pid(
             error: Some(TransferError::from_async(CallbackClientError).await),
         });
     }
+
     let callback = callback.unwrap();
-    let data_plane_address = callback.data_plane_address;
-    Ok(DataPlaneAddressResponse { data_plane_address: data_plane_address.unwrap_or_default() })
+    let dataplane = get_data_plane_peer(callback.data_plane_id.unwrap())
+        .await
+        .unwrap();
+
+    Ok(DataPlaneAddressResponse {
+        data_plane_address: dataplane.local_address.unwrap(),
+    })
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
@@ -261,7 +327,11 @@ pub async fn suspend_transfer(
         "transfers/suspension"
     );
 
-    let req = reqwest::Client::new().post(url).json(&transfer_suspend).send().await;
+    let req = reqwest::Client::new()
+        .post(url)
+        .json(&transfer_suspend)
+        .send()
+        .await;
 
     match req {
         Ok(res) => match res.status() {
@@ -279,7 +349,12 @@ pub async fn suspend_transfer(
         Err(e) => Err(RequestTransferResponse {
             consumer_pid: Some(convert_uuid_to_uri(&consumer_pid).unwrap()),
             transfer_process: None,
-            error: Some(TransferError::from_async(NotCheckedError { inner_error: e.into() }).await),
+            error: Some(
+                TransferError::from_async(NotCheckedError {
+                    inner_error: e.into(),
+                })
+                    .await,
+            ),
         }),
     }
 }
@@ -305,21 +380,12 @@ pub async fn restart_transfer(
         .unwrap()
         .unwrap();
 
-    // is pull_or_push
-    let data_address = serde_json::from_value::<DataAddress>(callback.next_hop_address.unwrap()).unwrap();
-    let provider_url = get_provider_url().unwrap();
-    let is_pull = data_address.endpoint.contains(provider_url.as_str());
-    let data_address = match is_pull {
-        true => None,
-        false => Some(data_address)
-    };
-
     let transfer_start = TransferStartMessage {
         context: TRANSFER_CONTEXT.to_string(),
         _type: TransferMessageTypes::TransferStartMessage.to_string(),
         provider_pid: convert_uuid_to_uri(&callback.provider_pid.unwrap()).unwrap(),
         consumer_pid: convert_uuid_to_uri(&callback.consumer_pid).unwrap(),
-        data_address: data_address,
+        data_address: None,
     };
 
     let url = format!(
@@ -328,7 +394,11 @@ pub async fn restart_transfer(
         "transfers/start"
     );
 
-    let req = reqwest::Client::new().post(url).json(&transfer_start).send().await;
+    let req = reqwest::Client::new()
+        .post(url)
+        .json(&transfer_start)
+        .send()
+        .await;
 
     match req {
         Ok(res) => match res.status() {
@@ -346,7 +416,12 @@ pub async fn restart_transfer(
         Err(e) => Err(RequestTransferResponse {
             consumer_pid: Some(convert_uuid_to_uri(&consumer_pid).unwrap()),
             transfer_process: None,
-            error: Some(TransferError::from_async(NotCheckedError { inner_error: e.into() }).await),
+            error: Some(
+                TransferError::from_async(NotCheckedError {
+                    inner_error: e.into(),
+                })
+                    .await,
+            ),
         }),
     }
 }
@@ -384,7 +459,11 @@ pub async fn complete_transfer(
         "transfers/completion"
     );
 
-    let req = reqwest::Client::new().post(url).json(&transfer_complete).send().await;
+    let req = reqwest::Client::new()
+        .post(url)
+        .json(&transfer_complete)
+        .send()
+        .await;
 
     match req {
         Ok(res) => match res.status() {
@@ -402,7 +481,12 @@ pub async fn complete_transfer(
         Err(e) => Err(RequestTransferResponse {
             consumer_pid: Some(convert_uuid_to_uri(&consumer_pid).unwrap()),
             transfer_process: None,
-            error: Some(TransferError::from_async(NotCheckedError { inner_error: e.into() }).await),
+            error: Some(
+                TransferError::from_async(NotCheckedError {
+                    inner_error: e.into(),
+                })
+                    .await,
+            ),
         }),
     }
 }

@@ -25,9 +25,7 @@ pub async fn catalog_policies_api_router() -> anyhow::Result<Router> {
 
         .route("/api/v1/distributions/:id/policies", get(handle_get_distributions_policies))
         .route("/api/v1/distributions/:id/policies", post(handle_post_distributions_policies))
-        .route("/api/v1/distributions/:id/policies/:pid", delete(handle_delete_distributions_policies))
-
-        .layer(TraceLayer::new_for_http());
+        .route("/api/v1/distributions/:id/policies/:pid", delete(handle_delete_distributions_policies));
     Ok(router)
 }
 

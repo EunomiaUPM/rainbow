@@ -1,4 +1,4 @@
-use crate::protocol::messages::TransferStateForDb;
+use rainbow_common::protocol::transfer::TransferStateForDb;
 use sea_orm::sea_query::extension::postgres::Type;
 use sea_orm::ActiveEnum;
 use sea_orm_migration::prelude::*;
@@ -42,7 +42,6 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(TransferProcesses::ConsumerPid).uuid())
                     .col(ColumnDef::new(TransferProcesses::AgreementId).uuid())
                     .col(ColumnDef::new(TransferProcesses::DataPlaneId).uuid())
-                    .col(ColumnDef::new(TransferProcesses::SubscriptionId).string())
                     .col(
                         ColumnDef::new(TransferProcesses::State)
                             .custom(TransferStateForDb::name())
@@ -50,8 +49,6 @@ impl MigrationTrait for Migration {
                     )
                     .col(ColumnDef::new(TransferProcesses::CreatedAt).date_time().not_null())
                     .col(ColumnDef::new(TransferProcesses::UpdatedAt).date_time())
-                    .col(ColumnDef::new(TransferProcesses::DataPlaneAddress).string())
-                    .col(ColumnDef::new(TransferProcesses::NextHopAddress).json())
                     .to_owned(),
             )
             .await
@@ -70,10 +67,7 @@ pub enum TransferProcesses {
     ConsumerPid,
     AgreementId,
     DataPlaneId,
-    SubscriptionId,
     State,
     CreatedAt,
     UpdatedAt,
-    DataPlaneAddress,
-    NextHopAddress,
 }

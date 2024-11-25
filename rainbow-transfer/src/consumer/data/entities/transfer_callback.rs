@@ -10,8 +10,7 @@ pub struct Model {
     pub provider_pid: Option<Uuid>,
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: Option<chrono::NaiveDateTime>,
-    pub next_hop_address: Option<serde_json::Value>,
-    pub data_plane_address: Option<String>,
+    pub data_plane_id: Option<Uuid>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

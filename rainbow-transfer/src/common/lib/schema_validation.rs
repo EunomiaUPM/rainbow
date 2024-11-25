@@ -1,12 +1,10 @@
-use crate::common::err::TransferErrorType::{
-    MessageTypeNotAcceptedError, NoTypeFieldError, ValidationError,
-};
 use crate::schemas::{
     TRANSFER_COMPLETION_SCHEMA, TRANSFER_REQUEST_SCHEMA, TRANSFER_START_SCHEMA,
     TRANSFER_SUSPENSION_SCHEMA, TRANSFER_TERMINATION_SCHEMA,
 };
 use anyhow::bail;
 use jsonschema::output::BasicOutput;
+use rainbow_common::err::transfer_err::TransferErrorType::{MessageTypeNotAcceptedError, NoTypeFieldError, ValidationError};
 use serde_json::Value;
 
 pub async fn schema_validation(json_value: Value) -> anyhow::Result<()> {

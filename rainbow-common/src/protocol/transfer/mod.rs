@@ -1,15 +1,16 @@
-use crate::provider::data::entities::transfer_process;
+use crate::dcat_formats::DctFormats;
+use crate::err::transfer_err::TransferErrorType;
 use anyhow::bail;
-use rainbow_common::dcat_formats::DctFormats;
-use rainbow_common::utils::convert_uuid_to_uri;
-use sea_orm::{DeriveActiveEnum, DeriveValueType, EnumIter};
+use axum::body::to_bytes;
+use axum::response::IntoResponse;
+use sea_orm::{DeriveActiveEnum, EnumIter};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use utoipa::ToSchema;
 
 pub static TRANSFER_CONTEXT: &str = "https://w3id.org/dspace/2024/1/context.json";
 
-#[derive(Debug, Serialize, Deserialize, ToSchema)]
+#[derive(Debug, Serialize, Deserialize, ToSchema, Clone)]
 pub struct TransferRequestMessage {
     #[serde(rename = "@context")]
     pub context: String,
@@ -109,7 +110,7 @@ pub struct EndpointProperty {
     pub value: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, ToSchema)]
+#[derive(Debug, Serialize, Deserialize, ToSchema, Clone)]
 pub struct TransferProcessMessage {
     #[serde(rename = "@context")]
     pub context: String,
@@ -123,7 +124,7 @@ pub struct TransferProcessMessage {
     pub state: TransferState,
 }
 
-#[derive(Debug, Serialize, Deserialize, ToSchema)]
+#[derive(Debug, Serialize, Deserialize, ToSchema, Clone)]
 pub enum TransferState {
     #[serde(rename = "dspace:REQUESTED")]
     REQUESTED,
@@ -178,6 +179,14 @@ pub struct TransferError {
     pub code: String,
     #[serde(rename = "dspace:reason")]
     pub reason: Vec<String>,
+}
+
+impl TransferError {
+    pub async fn from_async(value: TransferErrorType) -> Self {
+        let response = value.into_response();
+        let response_data = to_bytes(response.into_parts().1, 2048).await.unwrap();
+        serde_json::from_slice::<TransferError>(&response_data).unwrap()
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
@@ -307,19 +316,9 @@ impl TryFrom<String> for TransferState {
             "dspace:COMPLETED" => Ok(TransferState::COMPLETED),
             "dspace:SUSPENDED" => Ok(TransferState::SUSPENDED),
             // _ => Err(Error::from(TransferErrorType::UnknownTransferState)),
-            _ => bail!("Invalid TransferState value: {}", value),
+            _ => bail!("Invalid TransferState value"),
         }
     }
 }
 
-impl From<transfer_process::Model> for TransferProcessMessage {
-    fn from(model: transfer_process::Model) -> Self {
-        TransferProcessMessage {
-            context: TRANSFER_CONTEXT.to_string(),
-            _type: TransferMessageTypes::TransferProcessMessage.to_string(),
-            provider_pid: convert_uuid_to_uri(&model.provider_pid).unwrap(),
-            consumer_pid: convert_uuid_to_uri(&model.consumer_pid.unwrap()).unwrap(),
-            state: TransferState::from(model.state),
-        }
-    }
-}
+

@@ -1,12 +1,12 @@
-use crate::common::err::TransferErrorType::CallbackClientError;
 use crate::consumer::data::entities::transfer_callback;
-use crate::protocol::messages::{
-    TransferCompletionMessage, TransferStartMessage, TransferSuspensionMessage,
-    TransferTerminationMessage,
-};
 use anyhow::bail;
 use axum::Json;
 use rainbow_common::config::database::get_db_connection;
+use rainbow_common::err::transfer_err::TransferErrorType::CallbackClientError;
+use rainbow_common::protocol::transfer::{
+    TransferCompletionMessage, TransferStartMessage, TransferSuspensionMessage,
+    TransferTerminationMessage,
+};
 use sea_orm::{ActiveValue, EntityTrait};
 use uuid::Uuid;
 
@@ -16,9 +16,6 @@ pub async fn transfer_start(
     consumer_pid: Uuid,
 ) -> anyhow::Result<()> {
     let db_connection = get_db_connection().await;
-
-    // hops and data address??
-
     let callback = transfer_callback::Entity::find_by_id(callback).one(db_connection).await?;
     if callback.is_none() {
         bail!(CallbackClientError)
@@ -31,8 +28,7 @@ pub async fn transfer_start(
         provider_pid: ActiveValue::Set(Some(Uuid::parse_str(input.provider_pid.as_str())?)),
         created_at: ActiveValue::Set(callback.created_at),
         updated_at: ActiveValue::Set(Some(chrono::Utc::now().naive_utc())),
-        next_hop_address: ActiveValue::Set(callback.next_hop_address),
-        data_plane_address: ActiveValue::Set(callback.data_plane_address),
+        data_plane_id: ActiveValue::Set(None),
     })
         .exec(db_connection)
         .await?;

@@ -1,6 +1,3 @@
-use crate::common::err::TransferErrorType::{
-    CallbackClientError, NotCheckedError, PidUuidError, TransferProcessNotFound,
-};
 use crate::common::http::middleware::{authentication_middleware, authorization_middleware};
 use crate::consumer::lib::api::{
     complete_transfer, create_new_callback, create_new_callback_with_address, get_all_callbacks,
@@ -8,16 +5,13 @@ use crate::consumer::lib::api::{
     suspend_transfer, CompleteTransferRequest, RequestTransferRequest, RequestTransferResponse,
     RestartTransferRequest, SuspendTransferRequest,
 };
-use crate::protocol::messages::{
-    DataAddress, TransferError, TransferMessageTypes, TransferProcessMessage, TRANSFER_CONTEXT,
-};
-use crate::protocol::messages::{TransferCompletionMessage, TransferSuspensionMessage};
-use crate::protocol::messages::{TransferRequestMessage, TransferStartMessage};
 use axum::extract::Path;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::{middleware, Json, Router};
+use rainbow_common::err::transfer_err::TransferErrorType::{CallbackClientError, NotCheckedError};
+use rainbow_common::protocol::transfer::DataAddress;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use tracing::info;
@@ -73,7 +67,7 @@ async fn handle_get_callback_by_id(Path(callback_id): Path<Uuid>) -> impl IntoRe
 
 async fn handle_create_callback(data_address: Option<Json<DataAddress>>) -> impl IntoResponse {
     info!("POST /api/v1/setup-transfer");
-    
+
     match data_address {
         Some(Json(address)) => match create_new_callback_with_address(address).await {
             Ok(res) => (StatusCode::OK, Json(res)).into_response(),

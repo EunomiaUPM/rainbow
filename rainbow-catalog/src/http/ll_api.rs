@@ -12,8 +12,7 @@ use uuid::Uuid;
 pub async fn catalog_router() -> anyhow::Result<Router> {
     let router = Router::new()
         .route("/catalog/request", post(handle_catalog_request))
-        .route("/catalog/datasets/:id", get(handle_get_dataset))
-        .layer(TraceLayer::new_for_http());
+        .route("/catalog/datasets/:id", get(handle_get_dataset));
     Ok(router)
 }
 

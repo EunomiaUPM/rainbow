@@ -841,6 +841,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9e5c1b78ca4aae1ac06c48a526a655760685149f0d465d21f37abfe57ce075c6"
 
 [[package]]
+name = "futures-macro"
+version = "0.3.31"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "162ee34ebcb7c64a8abebc059ce0fee27c2262618d7b60ed8faf72fef13c3650"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.87",
+]
+
+[[package]]
 name = "futures-sink"
 version = "0.3.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -861,6 +872,7 @@ dependencies = [
  "futures-channel",
  "futures-core",
  "futures-io",
+ "futures-macro",
  "futures-sink",
  "futures-task",
  "memchr",
@@ -2013,39 +2025,8 @@ dependencies = [
  "rainbow_catalog",
  "rainbow_common",
  "rainbow_contracts",
+ "rainbow_dataplane",
  "rainbow_transfer",
- "reqwest",
- "sea-orm",
- "sea-orm-migration",
- "serde",
- "serde_json",
- "thiserror",
- "tokio",
- "tower 0.4.13",
- "tower-http",
- "tracing",
- "tracing-subscriber",
- "tracing-test",
- "ulid",
- "utoipa",
- "utoipa-axum",
- "utoipa-redoc",
- "uuid",
-]
-
-[[package]]
-name = "rainbow-dataplane"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "axum",
- "chrono",
- "clap",
- "dotenvy",
- "http-body-util",
- "jsonschema",
- "log",
- "once_cell",
  "reqwest",
  "sea-orm",
  "sea-orm-migration",
@@ -2164,6 +2145,40 @@ dependencies = [
 ]
 
 [[package]]
+name = "rainbow_dataplane"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "chrono",
+ "clap",
+ "dotenvy",
+ "http-body-util",
+ "jsonschema",
+ "log",
+ "once_cell",
+ "rainbow_catalog",
+ "rainbow_common",
+ "reqwest",
+ "sea-orm",
+ "sea-orm-migration",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tokio",
+ "tower 0.4.13",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+ "tracing-test",
+ "ulid",
+ "utoipa",
+ "utoipa-axum",
+ "utoipa-redoc",
+ "uuid",
+]
+
+[[package]]
 name = "rainbow_transfer"
 version = "0.1.0"
 dependencies = [
@@ -2178,6 +2193,7 @@ dependencies = [
  "once_cell",
  "rainbow_catalog",
  "rainbow_common",
+ "rainbow_dataplane",
  "reqwest",
  "sea-orm",
  "sea-orm-migration",
@@ -2325,10 +2341,12 @@ dependencies = [
  "system-configuration",
  "tokio",
  "tokio-native-tls",
+ "tokio-util",
  "tower-service",
  "url",
  "wasm-bindgen",
  "wasm-bindgen-futures",
+ "wasm-streams",
  "web-sys",
  "windows-registry",
 ]
@@ -3805,6 +3823,19 @@ name = "wasm-bindgen-shared"
 version = "0.2.95"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "65fc09f10666a9f147042251e0dda9c18f166ff7de300607007e96bdebc1068d"
+
+[[package]]
+name = "wasm-streams"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4e072d4e72f700fb3443d8fe94a39315df013eef1104903cdb0a2abd322bbecd"
+dependencies = [
+ "futures-util",
+ "js-sys",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
 
 [[package]]
 name = "web-sys"

@@ -1,6 +1,7 @@
 use anyhow::bail;
 use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
 
 #[macro_export]
 macro_rules! config_field {
@@ -27,6 +28,33 @@ pub enum ConfigRoles {
     Consumer,
     Provider,
     Auth,
+}
+
+impl FromStr for ConfigRoles {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "Catalog" => Ok(ConfigRoles::Catalog),
+            "Contracts" => Ok(ConfigRoles::Contracts),
+            "Consumer" => Ok(ConfigRoles::Consumer),
+            "Provider" => Ok(ConfigRoles::Provider),
+            "Auth" => Ok(ConfigRoles::Auth),
+            _ => bail!("Invalid config role: {}", s),
+        }
+    }
+}
+
+impl ToString for ConfigRoles {
+    fn to_string(&self) -> String {
+        match self {
+            ConfigRoles::Catalog => "Catalog".to_string(),
+            ConfigRoles::Contracts => "Contracts".to_string(),
+            ConfigRoles::Consumer => "Consumer".to_string(),
+            ConfigRoles::Provider => "Provider".to_string(),
+            ConfigRoles::Auth => "Auth".to_string(),
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]

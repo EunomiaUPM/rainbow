@@ -1,5 +1,5 @@
 [package]
-name = "rainbow-dataplane"
+name = "rainbow_dataplane"
 version = "0.1.0"
 edition = "2021"
 
@@ -12,6 +12,9 @@ name = "rainbow_dataplane"
 path = "src/main.rs"
 
 [dependencies]
+rainbow_common = { version = "0.1.0", path = "../rainbow-common", default-features = true }
+rainbow_catalog = { version = "0.1.0", path = "../rainbow-catalog", default-features = true }
+
 serde = { workspace = true }
 serde_json = { workspace = true }
 clap = { workspace = true }
