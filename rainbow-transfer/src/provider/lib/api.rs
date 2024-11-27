@@ -1,6 +1,6 @@
-use crate::provider::data::entities::transfer_process;
-use crate::provider::data::entities::{agreements, transfer_message};
 use anyhow::bail;
+use rainbow_db::transfer_provider::entities::transfer_process;
+use rainbow_db::transfer_provider::entities::{agreements, transfer_message};
 
 use rainbow_common::config::database::get_db_connection;
 use rainbow_common::protocol::transfer::TransferProcessMessage;

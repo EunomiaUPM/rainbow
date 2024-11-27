@@ -1,14 +1,14 @@
-use crate::consumer::data::migrations::Migrator as ConsumerMigrator;
-use crate::provider::data::migrations::Migrator as ProviderMigrator;
 use log::info;
+use rainbow_common::config::config::GLOBAL_CONFIG;
+use rainbow_common::config::database::get_db_connection;
+use rainbow_db::transfer_consumer::migrations::Migrator as ConsumerMigrator;
+use rainbow_db::transfer_provider::migrations::Migrator as ProviderMigrator;
 use sea_orm::{Database, DatabaseConnection};
 use sea_orm_migration::MigratorTrait;
 use tokio::fs::File;
 use tokio::io::AsyncReadExt;
 use tokio::sync::OnceCell;
 use tracing::error;
-use rainbow_common::config::config::GLOBAL_CONFIG;
-use rainbow_common::config::database::get_db_connection;
 
 pub async fn setup_database(role: String) -> anyhow::Result<()> {
     match GLOBAL_CONFIG.get().unwrap().db_type.as_str() {

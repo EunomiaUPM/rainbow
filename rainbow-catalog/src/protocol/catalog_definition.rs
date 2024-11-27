@@ -1,6 +1,6 @@
-use crate::data::entities::catalog::Model as CatalogModel;
 use crate::protocol::dataservice_definition::DataService;
 use crate::protocol::dataset_definition::Dataset;
+use rainbow_db::catalog::entities::catalog;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -68,10 +68,10 @@ pub struct CatalogDSpaceDeclaration {
     pub participant_id: Option<String>,
 }
 
-impl TryFrom<CatalogModel> for Catalog {
+impl TryFrom<catalog::Model> for Catalog {
     type Error = ();
 
-    fn try_from(catalog_model: CatalogModel) -> anyhow::Result<Self, Self::Error> {
+    fn try_from(catalog_model: catalog::Model) -> anyhow::Result<Self, Self::Error> {
         let catalog_out = Catalog {
             context: "https://w3id.org/dspace/2024/1/context.json".to_string(),
             _type: "dcat:Catalog".to_string(),

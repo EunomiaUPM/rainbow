@@ -1,10 +1,7 @@
-use crate::data::entities::catalog;
-use crate::data::entities::dataservice;
-use crate::data::entities::dataset;
-use crate::data::entities::distribution;
-use crate::data::entities::odrl_offer;
-use rainbow_common::config::database::get_db_connection;
 use anyhow::bail;
+use rainbow_common::config::database::get_db_connection;
+use rainbow_db::catalog::entities::{catalog, dataset, distribution};
+use rainbow_db::catalog::entities::{dataservice, odrl_offer};
 
 use crate::protocol::catalog_definition::Catalog;
 use crate::protocol::dataservice_definition::DataService;

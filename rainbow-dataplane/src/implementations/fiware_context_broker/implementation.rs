@@ -227,7 +227,7 @@ impl DataPlanePeerDefaultBehavior for FiwareDataPlane {
         match request.method() {
             &Method::POST => {
                 let body = std::mem::take(request.body_mut());
-                let body_bytes = to_bytes(body, 2024)
+                let body_bytes = to_bytes(body, 2024) // MAX_BUFFER
                     .await
                     .map_err(|_| StatusCode::BAD_REQUEST);
                 let res = DATA_PLANE_HTTP_CLIENT.post(next_hop).body(body_bytes.unwrap()).send().await;

@@ -1,6 +1,6 @@
-use crate::data::entities::odrl_offer;
-use crate::data::migrations::m20241111_000005_odrl_offers::EntityTypes;
 use rainbow_common::config::database::get_db_connection;
+use rainbow_db::catalog::entities::odrl_offer;
+use rainbow_db::catalog::migrations::m20241111_000005_odrl_offers::EntityTypes;
 use sea_orm::QueryFilter;
 use sea_orm::{ActiveValue, ColumnTrait, EntityTrait};
 use serde_json::Value;

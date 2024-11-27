@@ -2,7 +2,6 @@ use crate::common::http::client::DATA_PLANE_HTTP_CLIENT;
 use crate::common::http::middleware::{
     pids_as_urn_validation_middleware, protocol_rules_middleware, schema_validation_middleware,
 };
-use crate::provider::data::entities::{transfer_message, transfer_process};
 use crate::provider::lib::control_plane::{
     get_transfer_requests_by_provider, transfer_completion, transfer_request, transfer_start,
     transfer_suspension, transfer_termination,
@@ -27,6 +26,7 @@ use rainbow_common::protocol::transfer::{
     TRANSFER_CONTEXT,
 };
 use rainbow_common::utils::{convert_uri_to_uuid, convert_uuid_to_uri};
+use rainbow_db::transfer_provider::entities::{transfer_message, transfer_process};
 use reqwest::Error;
 use sea_orm::{ActiveValue, EntityTrait};
 use serde_json::to_value;

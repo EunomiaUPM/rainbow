@@ -1,5 +1,5 @@
-use crate::data::entities::distribution::Model as DistributionModel;
 use crate::protocol::dataservice_definition::DataService;
+use rainbow_db::catalog::entities::distribution;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -41,11 +41,10 @@ pub struct DistributionDctDeclaration {
     pub description: Vec<String>,
 }
 
-
-impl TryFrom<DistributionModel> for Distribution {
+impl TryFrom<distribution::Model> for Distribution {
     type Error = anyhow::Error;
 
-    fn try_from(distribution_model: DistributionModel) -> Result<Self, Self::Error> {
+    fn try_from(distribution_model: distribution::Model) -> Result<Self, Self::Error> {
         Ok(Distribution {
             context: "https://w3id.org/dspace/2024/1/context.json".to_string(),
             _type: "dcat:Distribution".to_string(),

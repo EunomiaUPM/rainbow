@@ -13,6 +13,7 @@ path = "src/main.rs"
 
 [dependencies]
 rainbow_common = { version = "0.1.0", path = "../rainbow-common", default-features = false }
+rainbow_db = { version = "0.1.0", path = "../rainbow-db", default-features = false }
 
 serde = { workspace = true }
 serde_json = { workspace = true }

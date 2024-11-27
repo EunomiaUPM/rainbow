@@ -1,15 +1,13 @@
-use crate::data::migrations::Migrator;
 use crate::http::hl_api::catalog_api_router;
 use crate::http::ll_api::catalog_router;
 use crate::http::policies_api::catalog_policies_api_router;
 use axum::{serve, Router};
 use clap::{Parser, Subcommand};
+use rainbow_common::config::database::get_db_connection;
+use rainbow_db::catalog::migrations::Migrator;
 use sea_orm_migration::MigratorTrait;
 use tokio::net::TcpListener;
 use tracing::info;
-use rainbow_common::config::database::get_db_connection;
-// TODO export to lib to be interoperable with modules
-// TODO parse env
 
 #[derive(Parser, Debug)]
 #[command(name = "Dataspace protocol catalog")]

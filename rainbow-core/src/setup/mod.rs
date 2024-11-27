@@ -6,8 +6,6 @@ use clap::{Args, Parser, Subcommand};
 use dotenvy::dotenv;
 use rainbow_common::config::config::{Config, ConfigRoles, GLOBAL_CONFIG};
 use rainbow_common::config_field;
-// use rainbow_transfer::config_field;
-// use rainbow_transfer::setup::config::{Config, ConfigRoles, GLOBAL_CONFIG};
 use sea_orm_migration::MigratorTrait;
 use std::env;
 use tokio::net::TcpListener;
@@ -52,6 +50,12 @@ pub struct ConsumerArgs {
     db_password: Option<String>,
     #[arg(long)]
     db_database: Option<String>,
+    #[arg(long)]
+    ssi_auth_enabled: Option<String>, // TODO boolean
+    #[arg(long)]
+    ssi_holder_url: Option<String>,
+    #[arg(long)]
+    ssi_holder_port: Option<String>,
     #[command(subcommand)]
     command: ConsumerCommands,
 }
@@ -78,6 +82,12 @@ pub struct ProviderArgs {
     auth_url: Option<String>,
     #[arg(long)]
     auth_port: Option<String>,
+    #[arg(long)]
+    ssi_auth_enabled: Option<String>, // TODO boolean
+    #[arg(long)]
+    ssi_holder_url: Option<String>,
+    #[arg(long)]
+    ssi_holder_port: Option<String>,
     #[command(subcommand)]
     command: ProviderCommands,
 }
@@ -122,6 +132,9 @@ pub async fn init_command_line() -> Result<()> {
             )),
             auth_port: Some(config_field!(args, auth_port, "AUTH_PORT", "1232")),
             role: ConfigRoles::Provider,
+            ssi_auth_enabled: Some(config_field!(args, ssi_auth_enabled, "SSI_AUTH_ENABLED", "true")),
+            ssi_holder_url: Some(config_field!(args, ssi_holder_url, "SSI_HOLDER_URL", "127.0.0.1")),
+            ssi_holder_port: Some(config_field!(args, ssi_holder_port, "SSI_HOLDER_PORT", "4000")),
         },
         DataSpaceTransferRoles::Consumer(args) => Config {
             host_url: config_field!(args, host_url, "HOST_URL", "127.0.0.1"),
@@ -142,6 +155,9 @@ pub async fn init_command_line() -> Result<()> {
             auth_url: None,
             auth_port: None,
             role: ConfigRoles::Consumer,
+            ssi_auth_enabled: Some(config_field!(args, ssi_auth_enabled, "SSI_AUTH_ENABLED", "true")),
+            ssi_holder_url: Some(config_field!(args, ssi_holder_url, "SSI_HOLDER_URL", "127.0.0.1")),
+            ssi_holder_port: Some(config_field!(args, ssi_holder_port, "SSI_HOLDER_PORT", "4000")),
         },
     };
 

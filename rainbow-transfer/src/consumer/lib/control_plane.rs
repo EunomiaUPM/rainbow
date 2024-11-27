@@ -1,4 +1,3 @@
-use crate::consumer::data::entities::transfer_callback;
 use anyhow::bail;
 use axum::Json;
 use rainbow_common::config::database::get_db_connection;
@@ -7,6 +6,8 @@ use rainbow_common::protocol::transfer::{
     TransferCompletionMessage, TransferStartMessage, TransferSuspensionMessage,
     TransferTerminationMessage,
 };
+// use crate::consumer::data::entities::transfer_callback;
+use rainbow_db::transfer_consumer::entities::transfer_callback;
 use sea_orm::{ActiveValue, EntityTrait};
 use uuid::Uuid;
 

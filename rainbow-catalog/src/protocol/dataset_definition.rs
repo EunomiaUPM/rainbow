@@ -1,5 +1,5 @@
-use crate::data::entities::dataset::Model as DatasetModel;
 use crate::protocol::distribution_definition::Distribution;
+use rainbow_db::catalog::entities::dataset;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -49,10 +49,10 @@ pub struct DatasetDctDeclaration {
     pub description: Vec<String>,
 }
 
-impl TryFrom<DatasetModel> for Dataset {
+impl TryFrom<dataset::Model> for Dataset {
     type Error = anyhow::Error;
 
-    fn try_from(dataset_model: DatasetModel) -> Result<Self, Self::Error> {
+    fn try_from(dataset_model: dataset::Model) -> Result<Self, Self::Error> {
         Ok(Dataset {
             context: "https://w3id.org/dspace/2024/1/context.json".to_string(),
             _type: "dcat:Dataset".to_string(),

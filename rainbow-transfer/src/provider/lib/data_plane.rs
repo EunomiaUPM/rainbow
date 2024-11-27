@@ -1,7 +1,7 @@
-use crate::provider::data::entities::agreements;
 use rainbow_catalog::core::ll_api::dataservices_request_by_id;
 use rainbow_catalog::protocol::dataservice_definition::DataService;
 use rainbow_common::config::database::get_db_connection;
+use rainbow_db::transfer_provider::entities::agreements;
 use sea_orm::EntityTrait;
 use uuid::Uuid;
 

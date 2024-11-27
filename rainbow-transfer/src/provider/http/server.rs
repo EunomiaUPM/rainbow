@@ -1,9 +1,5 @@
-// use crate::fake_catalog::http as fake_catalog;
-// use crate::fake_contracts::http as fake_contracts;
-// use crate::transfer::common::http::middleware::{authentication_middleware, authorization_middleware};
-// use crate::transfer::common::misc_router;
-use crate::provider::http::router;
 use crate::provider::http::api;
+use crate::provider::http::router;
 use axum::http::Method;
 use axum::Router;
 use rainbow_common::misc_router;
@@ -18,9 +14,6 @@ pub async fn create_provider_router() -> Router {
         .merge(misc_router::router())
         .merge(router::router())
         .merge(api::router())
-        // .layer(cors)
-        // .layer(middleware::from_fn(authorization_middleware)) // TODO put middleware where needed
-        // .layer(middleware::from_fn(authentication_middleware))
         .layer(TraceLayer::new_for_http());
     server
 }

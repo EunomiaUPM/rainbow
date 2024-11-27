@@ -1,4 +1,3 @@
-use crate::consumer::data::entities::transfer_callback;
 use anyhow::anyhow;
 use axum::http::StatusCode;
 use rainbow_common::config::config::{get_consumer_url, get_provider_url};
@@ -17,6 +16,7 @@ use rainbow_common::utils::{convert_uri_to_uuid, convert_uuid_to_uri};
 use rainbow_dataplane::{
     bootstrap_data_plane_in_consumer, get_data_plane_peer, set_data_plane_next_hop,
 };
+use rainbow_db::transfer_consumer::entities::transfer_callback;
 use sea_orm::{ActiveValue, ColumnTrait, EntityTrait, QueryFilter};
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;

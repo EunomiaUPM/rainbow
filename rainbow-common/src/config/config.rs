@@ -72,6 +72,9 @@ pub struct Config {
     pub auth_url: Option<String>,
     pub auth_port: Option<String>,
     pub role: ConfigRoles,
+    pub ssi_auth_enabled: Option<String>,
+    pub ssi_holder_url: Option<String>,
+    pub ssi_holder_port: Option<String>,
 }
 
 pub static GLOBAL_CONFIG: OnceCell<Config> = OnceCell::new();
@@ -114,5 +117,14 @@ pub fn get_local_database_url() -> anyhow::Result<String> {
 pub fn get_consumer_url() -> anyhow::Result<String> {
     let config = GLOBAL_CONFIG.get().unwrap();
     let url = format!("{}:{}", config.host_url, config.host_port);
+    Ok(url)
+}
+
+pub fn get_consumer_ssi_holder() -> anyhow::Result<String> {
+    let config = GLOBAL_CONFIG.get().unwrap();
+    let ssi_holder_url = config.ssi_holder_url.clone().unwrap();
+    let ssi_holder_port = config.ssi_holder_port.clone().unwrap();
+
+    let url = format!("{}:{}", ssi_holder_url, ssi_holder_port);
     Ok(url)
 }

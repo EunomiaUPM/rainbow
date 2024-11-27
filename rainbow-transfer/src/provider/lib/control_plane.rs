@@ -1,7 +1,5 @@
 // use super::data_plane::{disconnect_from_streaming_service_on_completion, disconnect_from_streaming_service_on_suspension, disconnect_from_streaming_service_on_termination, reconnect_to_streaming_service_on_start, resolve_endpoint_from_agreement};
 use crate::common::utils::{has_data_address_in_push, is_agreement_valid};
-use crate::provider::data::entities::transfer_message;
-use crate::provider::data::entities::transfer_process;
 use crate::provider::lib::data_plane::resolve_endpoint_from_agreement;
 use anyhow::{bail, Error};
 use rainbow_common::config::database::get_db_connection;
@@ -12,6 +10,8 @@ use rainbow_common::protocol::transfer::{DataAddress, TransferCompletionMessage,
 use rainbow_common::utils::convert_uri_to_uuid;
 use rainbow_dataplane::core::DataPlanePeerCreationBehavior;
 use rainbow_dataplane::{bootstrap_data_plane_in_provider, connect_to_streaming_service, disconnect_from_streaming_service, set_data_plane_next_hop};
+use rainbow_db::transfer_provider::entities::transfer_message;
+use rainbow_db::transfer_provider::entities::transfer_process;
 use sea_orm::{ActiveValue, EntityTrait};
 use std::future::{Future, IntoFuture};
 use std::str::FromStr;

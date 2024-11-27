@@ -1,8 +1,8 @@
-use crate::provider::data::entities::transfer_process;
 use anyhow::{anyhow, bail};
 use rainbow_common::config::database::get_db_connection;
 use rainbow_common::err::transfer_err::TransferErrorType::{ConsumerAlreadyRegisteredError, MessageTypeNotAcceptedError, ProtocolError, TransferProcessAlreadySuspendedError, TransferProcessNotFound};
 use rainbow_common::protocol::transfer::TransferState;
+use rainbow_db::transfer_provider::entities::transfer_process;
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use serde_json::Value;
 use uuid::Uuid;

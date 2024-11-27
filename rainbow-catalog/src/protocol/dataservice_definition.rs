@@ -1,4 +1,4 @@
-use crate::data::entities::dataservice::Model as DataserviceModel;
+use rainbow_db::catalog::entities::dataservice;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -50,10 +50,10 @@ pub struct DataServiceDctDeclaration {
     pub description: Vec<String>,
 }
 
-impl TryFrom<DataserviceModel> for DataService {
+impl TryFrom<dataservice::Model> for DataService {
     type Error = anyhow::Error;
 
-    fn try_from(dataservice_model: DataserviceModel) -> Result<Self, Self::Error> {
+    fn try_from(dataservice_model: dataservice::Model) -> Result<Self, Self::Error> {
         Ok(DataService {
             context: "https://w3id.org/dspace/2024/1/context.json".to_string(),
             _type: "dcat:DataService".to_string(),

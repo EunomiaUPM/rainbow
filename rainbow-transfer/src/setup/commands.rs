@@ -118,6 +118,9 @@ pub async fn init_command_line() -> Result<()> {
             )),
             auth_port: Some(config_field!(args, auth_port, "AUTH_PORT", "1232")),
             role: ConfigRoles::Provider,
+            ssi_auth_enabled: Some(config_field!(args, db_database, "DB_DATABASE", "ds-protocol-provider")),
+            ssi_holder_url: Some(config_field!(args, db_database, "DB_DATABASE", "ds-protocol-provider")),
+            ssi_holder_port: Some(config_field!(args, db_database, "DB_DATABASE", "ds-protocol-provider")),
         },
         DataSpaceTransferRoles::Consumer(args) => Config {
             host_url: config_field!(args, host_url, "HOST_URL", "localhost"),
@@ -138,6 +141,9 @@ pub async fn init_command_line() -> Result<()> {
             auth_url: None,
             auth_port: None,
             role: ConfigRoles::Consumer,
+            ssi_auth_enabled: Some(config_field!(args, db_database, "DB_DATABASE", "ds-protocol-provider")),
+            ssi_holder_url: Some(config_field!(args, db_database, "DB_DATABASE", "ds-protocol-provider")),
+            ssi_holder_port: Some(config_field!(args, db_database, "DB_DATABASE", "ds-protocol-provider")),
         },
     };
 
