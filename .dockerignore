@@ -1,0 +1,7 @@
+./gui
+./static
+./deployment
+.idea
+./.github
+./docs
+./target

@@ -141,16 +141,16 @@ impl DataPlanePeerDefaultBehavior for FiwareDataPlane {
             .to_string();
         let url = fw.inner.attributes.get("endpointUrl").unwrap().to_string();
         let mut description_as_json = serde_json::from_str::<Value>(description.as_str())?;
-        let local_address = fw
-            .inner
-            .local_address
-            .clone()
-            .unwrap()
-            .replace(get_provider_url()?.as_str(), "host.docker.internal:1234");
         // let local_address = fw
         //     .inner
-        //     .local_address.clone()
-        //     .unwrap();
+        //     .local_address
+        //     .clone()
+        //     .unwrap()
+        //     .replace(get_provider_url()?.as_str(), "host.docker.internal:1234");
+        let local_address = fw
+            .inner
+            .local_address.clone()
+            .unwrap();
 
         if let Some(url) = description_as_json
             .get_mut("notification")

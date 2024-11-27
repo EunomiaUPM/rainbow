@@ -35,7 +35,7 @@ async fn main() -> anyhow::Result<()> {
         .layer(TraceLayer::new_for_http());
 
     // start server
-    let addr = SocketAddr::from(([127, 0, 0, 1], port_number));
+    let addr = SocketAddr::from(([0, 0, 0, 0], port_number));
     let listener = TcpListener::bind(addr).await?;
     debug!("listening on {}", listener.local_addr()?);
     serve(listener, static_router).await?;

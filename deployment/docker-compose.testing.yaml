@@ -20,7 +20,6 @@ services:
       - db-provider
     ports:
       - "1234:1234"
-      - "1236:1236"
     env_file:
       - "./docker-provider/.env.provider.template"
     command: [ "provider", "start" ]
@@ -67,3 +66,36 @@ services:
     env_file:
       - "./docker-consumer/.env.consumer.template"
     command: [ "consumer", "setup" ]
+
+  streaming-testing-service:
+    container_name: streaming-testing-service
+    image: caparicioesd/rainbow-test-srv:latest
+    restart: always
+    ports:
+      - "1237:1237"
+
+  fiware-orion:
+    image: fiware/orion
+    ports:
+      - "1026:1026"
+    command: -logLevel INFO -noCache -dbURI mongodb://mongo:27017
+    depends_on:
+      - mongo
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://0.0.0.0:1026/version" ]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
+
+  streaming-service:
+    image: caparicioesd/rainbow-testing-streaming
+    environment:
+      CONTEXT_BROKER_URL: fiware-orion
+      CONTEXT_BROKER_HOST: 1026

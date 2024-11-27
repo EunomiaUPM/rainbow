@@ -6,7 +6,7 @@ members = [
     "rainbow-contracts",
     "rainbow-dataplane",
     "rainbow-transfer",
-    "rainbow-common", "static/data-servers/push-receiving-server",
+    "rainbow-common",
 ]
 exclude = [
     "static",
