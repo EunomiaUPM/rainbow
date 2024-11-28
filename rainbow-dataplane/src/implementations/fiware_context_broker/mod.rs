@@ -16,7 +16,6 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 pub mod implementation;
 
 use crate::core::{DataPlanePeer, DataPlanePeerCreationBehavior, PersistModel};
@@ -52,8 +51,8 @@ impl PersistModel<data_plane_process::Model> for FiwareDataPlane {
                 created_at: ActiveValue::Set(dp.created_at),
                 updated_at: ActiveValue::Set(Option::from(chrono::Utc::now().naive_utc())),
             })
-            .exec(db_connection)
-            .await?;
+                .exec(db_connection)
+                .await?;
 
             for (key, value) in &self.inner.attributes {
                 let exists = attributes
@@ -66,8 +65,8 @@ impl PersistModel<data_plane_process::Model> for FiwareDataPlane {
                         value: ActiveValue::Set(value.to_owned()),
                         data_plane_process_id: ActiveValue::Set(self.inner.id),
                     })
-                    .exec(db_connection)
-                    .await?;
+                        .exec(db_connection)
+                        .await?;
                 }
             }
 
@@ -80,8 +79,8 @@ impl PersistModel<data_plane_process::Model> for FiwareDataPlane {
                         id: ActiveValue::Set(attribute.id),
                         ..Default::default()
                     })
-                    .exec(db_connection)
-                    .await?;
+                        .exec(db_connection)
+                        .await?;
                 }
             }
         } else {
@@ -94,8 +93,8 @@ impl PersistModel<data_plane_process::Model> for FiwareDataPlane {
                 created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
                 updated_at: ActiveValue::Set(None),
             })
-            .exec(db_connection)
-            .await?;
+                .exec(db_connection)
+                .await?;
 
             for (key, value) in &self.inner.attributes {
                 data_plane_field::Entity::insert(data_plane_field::ActiveModel {
@@ -104,8 +103,8 @@ impl PersistModel<data_plane_process::Model> for FiwareDataPlane {
                     value: ActiveValue::Set(value.to_string()),
                     data_plane_process_id: ActiveValue::Set(self.inner.id.clone()),
                 })
-                .exec(db_connection)
-                .await?;
+                    .exec(db_connection)
+                    .await?;
             }
         }
         Ok(Box::new(self))

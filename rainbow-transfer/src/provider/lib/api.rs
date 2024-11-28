@@ -1,3 +1,22 @@
+/*
+ *
+ *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 use anyhow::bail;
 use rainbow_db::transfer_provider::entities::transfer_process;
 use rainbow_db::transfer_provider::entities::{agreements, transfer_message};
@@ -84,8 +103,8 @@ pub async fn post_agreement(new_agreement: NewAgreement) -> anyhow::Result<agree
         identity: ActiveValue::Set(new_agreement.identity),
         identity_token: ActiveValue::Set(new_agreement.identity_token),
     })
-    .exec_with_returning(db_connection)
-    .await?;
+        .exec_with_returning(db_connection)
+        .await?;
     Ok(agreement_in_db)
 }
 

@@ -1,9 +1,27 @@
+/*
+ *
+ *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 use anyhow::anyhow;
 use axum::http::StatusCode;
 use rainbow_common::config::config::{get_consumer_url, get_provider_url};
 use rainbow_common::config::database::get_db_connection;
 use rainbow_common::dcat_formats::DctFormats;
-// use crate::setup::config::{get_consumer_url, get_provider_url};
 use rainbow_common::err::transfer_err::TransferErrorType::{
     CallbackClientError, NotCheckedError, PidUuidError, TransferProcessNotFound,
 };
@@ -59,10 +77,10 @@ pub async fn create_new_callback() -> anyhow::Result<CreateCallbackResponse> {
         updated_at: ActiveValue::Set(None),
         data_plane_id: ActiveValue::Set(None),
     })
-    .exec_with_returning(db_connection)
-    .await?;
+        .exec_with_returning(db_connection)
+        .await?;
 
-    let callback_url = format!("http://{}/{}", get_consumer_url()?, callback.id,);
+    let callback_url = format!("http://{}/{}", get_consumer_url()?, callback.id, );
     let response = CreateCallbackResponse {
         callback_id: callback.id.to_string(),
         callback_address: callback_url,
@@ -80,7 +98,7 @@ pub async fn create_new_callback_with_address(
     let callback_id = Uuid::new_v4();
     let consumer_pid = Uuid::new_v4();
 
-    let callback_url = format!("http://{}/{}", get_consumer_url()?, callback_id,);
+    let callback_url = format!("http://{}/{}", get_consumer_url()?, callback_id, );
 
     let data_plane_address = format!("{}/data/push/{}", callback_url, consumer_pid);
 
@@ -92,8 +110,8 @@ pub async fn create_new_callback_with_address(
         updated_at: ActiveValue::Set(None),
         data_plane_id: ActiveValue::Set(None),
     })
-    .exec_with_returning(db_connection)
-    .await?;
+        .exec_with_returning(db_connection)
+        .await?;
 
     let response = CreateCallbackResponse {
         callback_id: callback.id.to_string(),
@@ -194,7 +212,7 @@ pub async fn request_transfer(
                             TransferError::from_async(NotCheckedError {
                                 inner_error: anyhow!("Db error"),
                             })
-                            .await,
+                                .await,
                         ),
                     });
                 }
@@ -207,9 +225,9 @@ pub async fn request_transfer(
                     updated_at: ActiveValue::Set(Some(chrono::Utc::now().naive_utc())),
                     data_plane_id: ActiveValue::Set(Some(data_plane_id)),
                 })
-                .exec(db_connection)
-                .await
-                .unwrap();
+                    .exec(db_connection)
+                    .await
+                    .unwrap();
 
                 // return to client
                 Ok(RequestTransferResponse {

@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use sea_orm_migration::prelude::*;
 
 pub struct Migration;

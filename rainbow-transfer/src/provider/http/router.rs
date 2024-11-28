@@ -1,3 +1,22 @@
+/*
+ *
+ *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 use crate::common::http::client::DATA_PLANE_HTTP_CLIENT;
 use crate::common::http::middleware::{
     pids_as_urn_validation_middleware, protocol_rules_middleware, schema_validation_middleware,
@@ -155,8 +174,8 @@ async fn send_transfer_start(
                         created_at: ActiveValue::Set(old_process.created_at),
                         updated_at: ActiveValue::Set(Some(chrono::Utc::now().naive_utc())),
                     })
-                    .exec(db_connection)
-                    .await?;
+                        .exec(db_connection)
+                        .await?;
 
                 let transfer_message_db =
                     transfer_message::Entity::insert(transfer_message::ActiveModel {
@@ -170,8 +189,8 @@ async fn send_transfer_start(
                         to: ActiveValue::Set(TransferRoles::Consumer),
                         content: ActiveValue::Set(serde_json::to_value(&transfer_start_message)?),
                     })
-                    .exec_with_returning(db_connection)
-                    .await?;
+                        .exec_with_returning(db_connection)
+                        .await?;
                 Ok(())
             } else {
                 println!("not started...."); // TODO Error
