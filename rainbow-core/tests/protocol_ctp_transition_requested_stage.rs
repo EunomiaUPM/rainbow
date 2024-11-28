@@ -25,12 +25,12 @@
 use crate::utils::cleanup_test_env;
 use once_cell::sync::Lazy;
 use rainbow_common::dcat_formats::{DctFormats, FormatAction, FormatProtocol};
-use rainbow_common::utils::convert_uuid_to_uri;
-use rainbow_transfer::protocol::messages::{
+use rainbow_common::protocol::transfer::{
     TransferCompletionMessage, TransferMessageTypes, TransferProcessMessage,
     TransferRequestMessage, TransferStartMessage, TransferSuspensionMessage,
     TransferTerminationMessage, TRANSFER_CONTEXT,
 };
+use rainbow_common::utils::convert_uuid_to_uri;
 use std::process::{Child, Command};
 use tracing_test::traced_test;
 use uuid::Uuid;

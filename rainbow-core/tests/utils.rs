@@ -24,8 +24,8 @@
 
 use rainbow_catalog::protocol::catalog_definition::Catalog;
 use rainbow_catalog::protocol::dataservice_definition::DataService;
+use rainbow_db::transfer_provider::entities::agreements;
 use rainbow_transfer::consumer::lib::api::CreateCallbackResponse;
-use rainbow_transfer::provider::data::entities::agreements;
 use serde_json::json;
 use std::collections::HashMap;
 use std::process::{Child, Command};

@@ -27,12 +27,12 @@ use axum::body::Body;
 use axum::http::{Request, StatusCode};
 use axum::{http, serve};
 use rainbow_common::dcat_formats::{DctFormats, FormatAction, FormatProtocol};
-use rainbow_common::utils::convert_uuid_to_uri;
-use rainbow_transfer::consumer::data::entities::transfer_callback;
-use rainbow_transfer::protocol::messages::{
+use rainbow_common::protocol::transfer::{
     DataAddress, TransferCompletionMessage, TransferMessageTypes, TransferProcessMessage,
     TransferRequestMessage, TransferStartMessage, TransferSuspensionMessage, TRANSFER_CONTEXT,
 };
+use rainbow_common::utils::convert_uuid_to_uri;
+use rainbow_db::transfer_consumer::entities::transfer_callback;
 use serde_json::{json, Value};
 use std::io::BufRead;
 use tracing::{debug, error, info, trace};
