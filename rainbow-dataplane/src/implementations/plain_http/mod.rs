@@ -17,11 +17,8 @@
  *
  */
 
-pub mod implementation;
-
 use crate::core::{DataPlanePeer, DataPlanePeerCreationBehavior, PersistModel};
-use crate::data::entities::data_plane_field;
-use crate::data::entities::data_plane_process;
+use crate::data::entities::{data_plane_field, data_plane_process};
 use axum::async_trait;
 use rainbow_common::config::config::ConfigRoles;
 use rainbow_common::dcat_formats::{FormatAction, FormatProtocol};
@@ -29,12 +26,14 @@ use sea_orm::{ActiveValue, ColumnTrait, DbConn, EntityTrait, QueryFilter};
 use std::collections::HashMap;
 use uuid::Uuid;
 
-pub struct FiwareDataPlane {
+pub mod implementation;
+
+pub struct HttpDataPlane {
     pub inner: DataPlanePeer,
 }
 
 #[async_trait]
-impl PersistModel<data_plane_process::Model> for FiwareDataPlane {
+impl PersistModel<data_plane_process::Model> for HttpDataPlane {
     async fn persist(self, db_connection: &DbConn) -> anyhow::Result<Box<Self>> {
         let dp = data_plane_process::Entity::find_by_id(self.inner.id)
             .one(db_connection)
@@ -114,7 +113,7 @@ impl PersistModel<data_plane_process::Model> for FiwareDataPlane {
     }
 }
 
-impl DataPlanePeerCreationBehavior for FiwareDataPlane {
+impl DataPlanePeerCreationBehavior for HttpDataPlane {
     fn create_data_plane_peer() -> Self {
         Self {
             inner: DataPlanePeer::default(),

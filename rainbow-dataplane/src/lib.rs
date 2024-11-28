@@ -1,6 +1,7 @@
 use crate::core::{
     DataPlanePeer, DataPlanePeerCreationBehavior, DataPlanePeerDefaultBehavior, PersistModel,
 };
+use crate::implementations::plain_http::HttpDataPlane;
 use anyhow::bail;
 use implementations::fiware_context_broker::FiwareDataPlane;
 use once_cell::sync::Lazy;
@@ -37,6 +38,9 @@ pub async fn bootstrap_data_plane_in_consumer(
         FormatProtocol::FiwareContextBroker => {
             Ok(FiwareDataPlane::bootstrap_data_plane_in_consumer(transfer_request).await?)
         }
+        FormatProtocol::Http => {
+            Ok(HttpDataPlane::bootstrap_data_plane_in_consumer(transfer_request).await?)
+        }
         _ => {
             todo!("Not implemented yet...")
         }
@@ -54,6 +58,9 @@ pub async fn bootstrap_data_plane_in_provider(
             FiwareDataPlane::bootstrap_data_plane_in_provider(transfer_request, provider_pid)
                 .await?,
         ),
+        FormatProtocol::Http => {
+            Ok(HttpDataPlane::bootstrap_data_plane_in_provider(transfer_request, provider_pid).await?)
+        }
         _ => {
             todo!("Not implemented yet...")
         }
@@ -80,7 +87,9 @@ pub async fn set_data_plane_next_hop(
         FormatProtocol::FiwareContextBroker => {
             Ok(FiwareDataPlane::set_data_plane_next_hop(data_plane_peer, provider_pid, consumer_pid).await?)
         }
-
+        FormatProtocol::Http => {
+            Ok(HttpDataPlane::set_data_plane_next_hop(data_plane_peer, provider_pid, consumer_pid).await?)
+        }
         _ => {
             todo!("Not implemented yet...")
         }
@@ -108,6 +117,7 @@ pub async fn connect_to_streaming_service(data_plane_id: Uuid) -> anyhow::Result
 
     match data_plane_peer.dct_formats.protocol {
         FormatProtocol::FiwareContextBroker => Ok(FiwareDataPlane::connect_to_streaming_service(data_plane_id).await?),
+        FormatProtocol::Http => Ok(()),
         _ => {
             todo!("Not implemented yet...")
         }
@@ -134,6 +144,7 @@ pub async fn disconnect_from_streaming_service(data_plane_id: Uuid) -> anyhow::R
     }
     match peer.dct_formats.protocol {
         FormatProtocol::FiwareContextBroker => Ok(FiwareDataPlane::disconnect_from_streaming_service(data_plane_id).await?),
+        FormatProtocol::Http => Ok(()),
         _ => {
             todo!("Not implemented yet...")
         }

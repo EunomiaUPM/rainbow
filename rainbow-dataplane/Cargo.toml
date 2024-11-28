@@ -41,3 +41,4 @@ utoipa-axum = { workspace = true }
 utoipa-redoc = { workspace = true }
 sea-orm = { workspace = true }
 sea-orm-migration = { workspace = true }
+hyper = { version = "1.5.0", features = ["full"] }

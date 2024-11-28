@@ -2140,6 +2140,7 @@ dependencies = [
  "clap",
  "dotenvy",
  "http-body-util",
+ "hyper",
  "jsonschema",
  "log",
  "once_cell",

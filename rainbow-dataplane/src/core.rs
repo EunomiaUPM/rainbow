@@ -59,8 +59,16 @@ pub trait DataPlanePeerDefaultBehavior {
 
     async fn connect_to_streaming_service(data_plane_id: Uuid) -> anyhow::Result<()>;
     async fn disconnect_from_streaming_service(data_plane_id: Uuid) -> anyhow::Result<()>;
-    async fn on_pull_data(data_plane_peer: DataPlanePeer, request: Request) -> anyhow::Result<axum::response::Response>;
-    async fn on_push_data(data_plane_peer: DataPlanePeer, request: Request) -> anyhow::Result<axum::response::Response>;
+    async fn on_pull_data(
+        data_plane_peer: DataPlanePeer,
+        request: Request,
+        extras: Option<String>,
+    ) -> anyhow::Result<axum::response::Response>;
+    async fn on_push_data(
+        data_plane_peer: DataPlanePeer,
+        request: Request,
+        extras: Option<String>,
+    ) -> anyhow::Result<axum::response::Response>;
 }
 
 pub trait DataPlanePeerCreationBehavior {
@@ -166,8 +174,6 @@ impl DataPlanePeer {
         for attr in attributes {
             fw_peer = fw_peer.add_attribute(attr.key.to_string(), attr.value.to_string());
         }
-
-        println!("{:?}", fw_peer);
 
         Ok(Box::new(fw_peer))
     }
