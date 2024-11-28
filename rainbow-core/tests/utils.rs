@@ -23,7 +23,7 @@ pub async fn setup_test_env(
     Uuid,
     String,
     String,
-    Uuid
+    Uuid,
 )> {
     let provider_envs = load_env_file(".env.provider.template");
     let mut provider_server = Command::new("cargo")
@@ -98,7 +98,10 @@ pub async fn setup_test_env(
     let consumer_callback_address = res_body.callback_address.clone();
     let callback_id = res_body.callback_id.clone().parse::<Uuid>()?;
     println!("\nConsumer Pid: {:#?}", consumer_pid);
-    println!("Consumer Callback Address: {:#?}", consumer_callback_address);
+    println!(
+        "Consumer Callback Address: {:#?}",
+        consumer_callback_address
+    );
     println!("Callback Id: {:#?}\n", callback_id);
 
     Ok((
@@ -114,11 +117,10 @@ pub async fn setup_test_env(
     ))
 }
 
-
 // TODO refactor into same test function
 pub async fn setup_test_env_push(
     url_to_load: &str,
-    description_to_load: serde_json::Value
+    description_to_load: serde_json::Value,
 ) -> anyhow::Result<(
     Child,
     Child,
@@ -128,7 +130,7 @@ pub async fn setup_test_env_push(
     Uuid,
     String,
     String,
-    Uuid
+    Uuid,
 )> {
     let provider_envs = load_env_file(".env.provider.template");
     let mut provider_server = Command::new("cargo")
@@ -205,7 +207,10 @@ pub async fn setup_test_env_push(
     let consumer_callback_address = res_body.callback_address.clone();
     let callback_id = res_body.callback_id.clone().parse::<Uuid>()?;
     println!("\nConsumer Pid: {:#?}", consumer_pid);
-    println!("Consumer Callback Address: {:#?}", consumer_callback_address);
+    println!(
+        "Consumer Callback Address: {:#?}",
+        consumer_callback_address
+    );
     println!("Callback Id: {:#?}\n", callback_id);
 
     Ok((
@@ -220,8 +225,6 @@ pub async fn setup_test_env_push(
         callback_id,
     ))
 }
-
-
 
 pub async fn cleanup_test_env(
     mut provider_server: Child,

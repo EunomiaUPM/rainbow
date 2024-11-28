@@ -50,5 +50,4 @@ impl Related<super::odrl_offer::Entity> for Entity {
     }
 }
 
-
 impl ActiveModelBehavior for ActiveModel {}

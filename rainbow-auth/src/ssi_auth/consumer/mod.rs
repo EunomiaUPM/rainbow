@@ -2,9 +2,8 @@ use once_cell::sync::Lazy;
 use reqwest::Client;
 use std::time::Duration;
 
-mod http;
 mod core;
-
+mod http;
 
 pub static SSI_AUTH_HTTP_CLIENT: Lazy<Client> = Lazy::new(|| {
     Client::builder()

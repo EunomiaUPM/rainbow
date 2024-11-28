@@ -100,11 +100,12 @@ pub async fn dataservices_request_by_id(
     dataservice_id: Uuid,
 ) -> anyhow::Result<Option<DataService>> {
     let db_connection = get_db_connection().await;
-    let dataservice_from_db = dataservice::Entity::find_by_id(dataservice_id).one(db_connection).await?;
+    let dataservice_from_db =
+        dataservice::Entity::find_by_id(dataservice_id).one(db_connection).await?;
 
     let dataservice = match dataservice_from_db {
         Some(d) => Some(DataService::try_from(d)?),
-        None => None
+        None => None,
     };
     Ok(dataservice)
 }
@@ -130,7 +131,8 @@ pub async fn distributions_request_by_dataset(
             .await?;
         distribution.odrl_offer = to_value(distribution_odrl_from_db)?;
         // dataservice
-        distribution.dcat.access_service = dataservices_request_by_id(distribution_entity.dcat_access_service).await?;
+        distribution.dcat.access_service =
+            dataservices_request_by_id(distribution_entity.dcat_access_service).await?;
         distributions_out.push(distribution);
     }
 

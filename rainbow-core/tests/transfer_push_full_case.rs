@@ -60,7 +60,7 @@ pub async fn transfer_push_full_case() -> anyhow::Result<()> {
           },
         }),
     )
-        .await?;
+    .await?;
 
     // 1. Kickoff from client with DataAddress
     // 2. I create a TransferRequest
@@ -84,7 +84,6 @@ pub async fn transfer_push_full_case() -> anyhow::Result<()> {
     let res =
         client.post("http://localhost:1234/transfers/request").json(&request_data).send().await?;
 
-
     let res_body = res.json::<TransferProcessMessage>().await?;
     let provider_pid_ = res_body.provider_pid.clone();
     println!("3.\n Provider says: \n{:?}", res_body);
@@ -92,7 +91,6 @@ pub async fn transfer_push_full_case() -> anyhow::Result<()> {
     // 4. Transfer start is happening under the hood. check logs
 
     // 5. begin data transfer
-
 
     tokio::time::sleep(tokio::time::Duration::from_secs(4)).await;
     utils::cleanup_test_env(provider_server, consumer_server).await?;

@@ -49,9 +49,7 @@ impl TryFrom<distribution::Model> for Distribution {
             context: "https://w3id.org/dspace/2024/1/context.json".to_string(),
             _type: "dcat:Distribution".to_string(),
             id: distribution_model.id.to_string(),
-            dcat: DistributionDcatDeclaration {
-                access_service: None
-            },
+            dcat: DistributionDcatDeclaration { access_service: None },
             dct: DistributionDctDeclaration {
                 identifier: distribution_model.id.to_string(),
                 issued: distribution_model.dct_issued,

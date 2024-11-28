@@ -25,7 +25,6 @@ pub async fn consumer_vc_request(input: ConsumerSSIVCRequest) -> anyhow::Result<
     }
 }
 
-
 pub async fn consumer_wf_exchange_from_consumer() -> anyhow::Result<()> {
     Ok(())
 }

@@ -14,12 +14,7 @@ impl MigrationTrait for Migration {
             .create_table(
                 Table::create()
                     .table(KeyWords::Table)
-                    .col(
-                        ColumnDef::new(KeyWords::Id)
-                            .uuid()
-                            .not_null()
-                            .primary_key(),
-                    )
+                    .col(ColumnDef::new(KeyWords::Id).uuid().not_null().primary_key())
                     .col(ColumnDef::new(KeyWords::KeyWord).string().not_null())
                     .to_owned(),
             )
@@ -29,12 +24,7 @@ impl MigrationTrait for Migration {
             .create_table(
                 Table::create()
                     .table(KeyWords::Table)
-                    .col(
-                        ColumnDef::new(Themes::Id)
-                            .uuid()
-                            .not_null()
-                            .primary_key(),
-                    )
+                    .col(ColumnDef::new(Themes::Id).uuid().not_null().primary_key())
                     .col(ColumnDef::new(Themes::Theme).string().not_null())
                     .to_owned(),
             )

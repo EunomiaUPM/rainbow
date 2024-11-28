@@ -17,7 +17,9 @@
  *
  */
 
-use crate::core::{DataPlanePeer, DataPlanePeerCreationBehavior, DataPlanePeerDefaultBehavior, PersistModel};
+use crate::core::{
+    DataPlanePeer, DataPlanePeerCreationBehavior, DataPlanePeerDefaultBehavior, PersistModel,
+};
 use crate::implementations::fiware_context_broker::FiwareDataPlane;
 use crate::DATA_PLANE_HTTP_CLIENT;
 use anyhow::bail;
@@ -36,7 +38,9 @@ use uuid::Uuid;
 
 #[async_trait]
 impl DataPlanePeerDefaultBehavior for FiwareDataPlane {
-    async fn bootstrap_data_plane_in_consumer(transfer_request: TransferRequestMessage) -> anyhow::Result<DataPlanePeer> {
+    async fn bootstrap_data_plane_in_consumer(
+        transfer_request: TransferRequestMessage,
+    ) -> anyhow::Result<DataPlanePeer> {
         let db_connection = get_db_connection().await;
         let local_address_path = match transfer_request.format.action {
             FormatAction::Push => "/data/push",
@@ -62,7 +66,10 @@ impl DataPlanePeerDefaultBehavior for FiwareDataPlane {
         Ok(fw.inner)
     }
 
-    async fn bootstrap_data_plane_in_provider(transfer_request: TransferRequestMessage, provider_pid: Uuid) -> anyhow::Result<DataPlanePeer> {
+    async fn bootstrap_data_plane_in_provider(
+        transfer_request: TransferRequestMessage,
+        provider_pid: Uuid,
+    ) -> anyhow::Result<DataPlanePeer> {
         let db_connection = get_db_connection().await;
         let local_address_path = match transfer_request.format.action {
             FormatAction::Push => "/data/push",
@@ -88,7 +95,11 @@ impl DataPlanePeerDefaultBehavior for FiwareDataPlane {
         Ok(fw.inner)
     }
 
-    async fn set_data_plane_next_hop(data_plane_peer: DataPlanePeer, provider_pid: Uuid, consumer_pid: Uuid) -> anyhow::Result<DataPlanePeer> {
+    async fn set_data_plane_next_hop(
+        data_plane_peer: DataPlanePeer,
+        provider_pid: Uuid,
+        consumer_pid: Uuid,
+    ) -> anyhow::Result<DataPlanePeer> {
         let db_connection = get_db_connection().await;
         match data_plane_peer.role {
             ConfigRoles::Consumer => {
@@ -104,11 +115,8 @@ impl DataPlanePeerDefaultBehavior for FiwareDataPlane {
                     }
                     // Or action pull
                     FormatAction::Pull => {
-                        let endpoint_url = format!(
-                            "http://{}/data/pull/{}",
-                            get_provider_url()?,
-                            provider_pid
-                        );
+                        let endpoint_url =
+                            format!("http://{}/data/pull/{}", get_provider_url()?, provider_pid);
                         let mut fw = fw.add_attribute("nextHop".to_string(), endpoint_url);
                         fw = *fw.persist(db_connection).await?;
                         Ok(fw.inner)
@@ -119,17 +127,10 @@ impl DataPlanePeerDefaultBehavior for FiwareDataPlane {
                 let mut fw = FiwareDataPlane::create_data_plane_peer_from_inner(data_plane_peer);
                 match fw.inner.dct_formats.action {
                     FormatAction::Push => {
-                        let consumer_callback = fw
-                            .inner
-                            .attributes
-                            .get("consumerCallback")
-                            .unwrap()
-                            .to_string();
-                        let endpoint_url = format!(
-                            "{}/data/push/{}",
-                            consumer_callback,
-                            consumer_pid
-                        );
+                        let consumer_callback =
+                            fw.inner.attributes.get("consumerCallback").unwrap().to_string();
+                        let endpoint_url =
+                            format!("{}/data/push/{}", consumer_callback, consumer_pid);
                         let mut fw = fw.add_attribute("nextHop".to_string(), endpoint_url);
                         fw = *fw.persist(db_connection).await?;
                         Ok(fw.inner)
@@ -152,12 +153,7 @@ impl DataPlanePeerDefaultBehavior for FiwareDataPlane {
         let data_plane_peer = DataPlanePeer::load_model_by_id(data_plane_id, db_connection).await?;
 
         let mut fw = FiwareDataPlane::create_data_plane_peer_from_inner(*data_plane_peer);
-        let description = fw
-            .inner
-            .attributes
-            .get("endpointDescription")
-            .unwrap()
-            .to_string();
+        let description = fw.inner.attributes.get("endpointDescription").unwrap().to_string();
         let url = fw.inner.attributes.get("endpointUrl").unwrap().to_string();
         let mut description_as_json = serde_json::from_str::<Value>(description.as_str())?;
         // let local_address = fw
@@ -166,10 +162,7 @@ impl DataPlanePeerDefaultBehavior for FiwareDataPlane {
         //     .clone()
         //     .unwrap()
         //     .replace(get_provider_url()?.as_str(), "host.docker.internal:1234");
-        let local_address = fw
-            .inner
-            .local_address.clone()
-            .unwrap();
+        let local_address = fw.inner.local_address.clone().unwrap();
 
         if let Some(url) = description_as_json
             .get_mut("notification")
@@ -181,11 +174,7 @@ impl DataPlanePeerDefaultBehavior for FiwareDataPlane {
             bail!("Key path 'notification.http.url' not found");
         }
 
-        let res = DATA_PLANE_HTTP_CLIENT
-            .post(url)
-            .json(&description_as_json)
-            .send()
-            .await?;
+        let res = DATA_PLANE_HTTP_CLIENT.post(url).json(&description_as_json).send().await?;
         if res.status() != StatusCode::CREATED {
             bail!("not able to connect to streaming service")
         }
@@ -213,12 +202,7 @@ impl DataPlanePeerDefaultBehavior for FiwareDataPlane {
             .unwrap()
             .to_string()
             .replace("/v2/subscriptions", "");
-        let endpoint_path = fw
-            .inner
-            .attributes
-            .get("suscriptionId")
-            .unwrap()
-            .to_string();
+        let endpoint_path = fw.inner.attributes.get("suscriptionId").unwrap().to_string();
         let endpoint = format!("{}{}", endpoint_url, endpoint_path);
         let res = DATA_PLANE_HTTP_CLIENT.delete(endpoint).send().await?;
         let fw = fw.delete_attribute("suscriptionId".to_string());
@@ -227,7 +211,11 @@ impl DataPlanePeerDefaultBehavior for FiwareDataPlane {
         Ok(())
     }
 
-    async fn on_pull_data(data_plane_peer: DataPlanePeer, request: Request, extras: Option<String>) -> anyhow::Result<axum::response::Response> {
+    async fn on_pull_data(
+        data_plane_peer: DataPlanePeer,
+        request: Request,
+        extras: Option<String>,
+    ) -> anyhow::Result<axum::response::Response> {
         let next_hop = data_plane_peer.attributes.get("nextHop").unwrap();
         match request.method() {
             &Method::GET => {
@@ -241,7 +229,11 @@ impl DataPlanePeerDefaultBehavior for FiwareDataPlane {
         }
     }
 
-    async fn on_push_data(data_plane_peer: DataPlanePeer, mut request: Request, extras: Option<String>) -> anyhow::Result<axum::response::Response> {
+    async fn on_push_data(
+        data_plane_peer: DataPlanePeer,
+        mut request: Request,
+        extras: Option<String>,
+    ) -> anyhow::Result<axum::response::Response> {
         let next_hop = data_plane_peer.attributes.get("nextHop").unwrap();
         match request.method() {
             &Method::POST => {
@@ -249,7 +241,8 @@ impl DataPlanePeerDefaultBehavior for FiwareDataPlane {
                 let body_bytes = to_bytes(body, 2024) // MAX_BUFFER
                     .await
                     .map_err(|_| StatusCode::BAD_REQUEST);
-                let res = DATA_PLANE_HTTP_CLIENT.post(next_hop).body(body_bytes.unwrap()).send().await;
+                let res =
+                    DATA_PLANE_HTTP_CLIENT.post(next_hop).body(body_bytes.unwrap()).send().await;
                 match res {
                     Ok(r) => Ok(forward_response(r).await),
                     Err(_) => bail!("Not able to push data from service"),

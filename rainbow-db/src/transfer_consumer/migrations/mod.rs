@@ -3,9 +3,7 @@ use sea_orm_migration::prelude::*;
 pub mod m20241117_000001_transfer_callbacks;
 
 pub fn get_transfer_consumer_migrations() -> Vec<Box<dyn MigrationTrait>> {
-    vec![
-        Box::new(m20241117_000001_transfer_callbacks::Migration),
-    ]
+    vec![Box::new(m20241117_000001_transfer_callbacks::Migration)]
 }
 
 pub struct Migrator;

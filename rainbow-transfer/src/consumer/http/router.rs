@@ -11,7 +11,10 @@ use axum::routing::post;
 use axum::{Json, Router};
 use log::info;
 use rainbow_common::err::transfer_err::TransferErrorType;
-use rainbow_common::protocol::transfer::{TransferCompletionMessage, TransferStartMessage, TransferSuspensionMessage, TransferTerminationMessage};
+use rainbow_common::protocol::transfer::{
+    TransferCompletionMessage, TransferStartMessage, TransferSuspensionMessage,
+    TransferTerminationMessage,
+};
 use tracing::error;
 use uuid::Uuid;
 

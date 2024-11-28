@@ -18,9 +18,7 @@ use tracing::info;
 
 async fn _extract_json_body(request: &mut Request<Body>) -> anyhow::Result<(Value, Bytes)> {
     let body = std::mem::take(request.body_mut());
-    let body_bytes = to_bytes(body, 2024)
-        .await
-        .map_err(|_| StatusCode::BAD_REQUEST);
+    let body_bytes = to_bytes(body, 2024).await.map_err(|_| StatusCode::BAD_REQUEST);
     if body_bytes.is_err() {
         return Err(anyhow::anyhow!("Failed to decode body"));
     }
@@ -51,7 +49,7 @@ pub async fn schema_validation_middleware(
         Err(e) => match e.downcast::<TransferErrorType>() {
             Ok(transfer_error) => transfer_error.into_response(),
             Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
-        }
+        },
     }
 }
 
@@ -75,7 +73,7 @@ pub async fn pids_as_urn_validation_middleware(
         Err(e) => match e.downcast::<TransferErrorType>() {
             Ok(transfer_error) => transfer_error.into_response(),
             Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
-        }
+        },
     }
 }
 
@@ -96,7 +94,6 @@ pub async fn validate_incoming_pids_middleware(
     let response = next.run(request).await;
     Ok(response)
 }
-
 
 pub async fn validate_agreement_id_middleware(
     mut request: Request<Body>,
@@ -137,7 +134,7 @@ pub async fn protocol_rules_middleware(
         Err(e) => match e.downcast::<TransferErrorType>() {
             Ok(transfer_error) => transfer_error.into_response(),
             Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
-        }
+        },
     }
 }
 
@@ -148,7 +145,7 @@ pub async fn authentication_middleware(
     info!("Authentication middleware");
     // Extraemos el header Authorization: Bearer <JWT>
     // Extraemos información del JWT
-    // 
+    //
 
     let response = next.run(request).await;
     Ok(response)

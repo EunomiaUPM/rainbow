@@ -4,8 +4,8 @@
 #![allow(unused_mut)]
 #![allow(unused_imports)]
 
+pub mod common;
 pub mod consumer;
 pub mod provider;
-pub mod common;
 pub mod schemas;
 pub mod setup;

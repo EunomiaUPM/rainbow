@@ -15,12 +15,7 @@ impl MigrationTrait for Migration {
             .create_table(
                 Table::create()
                     .table(Distribution::Table)
-                    .col(
-                        ColumnDef::new(Distribution::Id)
-                            .uuid()
-                            .not_null()
-                            .primary_key(),
-                    )
+                    .col(ColumnDef::new(Distribution::Id).uuid().not_null().primary_key())
                     .col(ColumnDef::new(Distribution::DctIssued).date_time().not_null())
                     .col(ColumnDef::new(Distribution::DctModified).date_time())
                     .col(ColumnDef::new(Distribution::DctTitle).string())

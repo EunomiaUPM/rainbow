@@ -7,9 +7,7 @@ use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
 
 pub async fn create_consumer_router() -> Router {
-    let cors = CorsLayer::new()
-        .allow_methods([Method::GET, Method::POST])
-        .allow_origin(Any);
+    let cors = CorsLayer::new().allow_methods([Method::GET, Method::POST]).allow_origin(Any);
 
     let open_api = open_api_setup().unwrap();
 

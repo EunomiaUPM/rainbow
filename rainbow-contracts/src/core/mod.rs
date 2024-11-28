@@ -13,8 +13,8 @@ pub async fn create_agreement(data_service_id: Uuid) -> anyhow::Result<agreement
         identity: ActiveValue::Set(None),
         identity_token: ActiveValue::Set(None),
     })
-        .exec_with_returning(db_connection)
-        .await?;
+    .exec_with_returning(db_connection)
+    .await?;
     Ok(agreement)
 }
 
@@ -27,11 +27,12 @@ pub struct AgreementIdentity {
     #[serde(skip_serializing_if = "Option::is_none")]
     identity_token: Option<String>,
 }
-pub async fn edit_agreement(agreement_id: Uuid, agreement_data: AgreementIdentity) -> anyhow::Result<Option<agreements::Model>> {
+pub async fn edit_agreement(
+    agreement_id: Uuid,
+    agreement_data: AgreementIdentity,
+) -> anyhow::Result<Option<agreements::Model>> {
     let db_connection = get_db_connection().await;
-    let agreement = agreements::Entity::find_by_id(agreement_id)
-        .one(db_connection)
-        .await?;
+    let agreement = agreements::Entity::find_by_id(agreement_id).one(db_connection).await?;
     if agreement.is_none() {
         return Ok(None);
     }
@@ -42,17 +43,15 @@ pub async fn edit_agreement(agreement_id: Uuid, agreement_data: AgreementIdentit
         identity: ActiveValue::Set(agreement_data.identity),
         identity_token: ActiveValue::Set(agreement_data.identity_token),
     })
-        .exec(db_connection)
-        .await?;
+    .exec(db_connection)
+    .await?;
 
     Ok(Some(agreement))
 }
 
 pub async fn delete_agreement(agreement_id: Uuid) -> anyhow::Result<()> {
     let db_connection = get_db_connection().await;
-    let agreement = agreements::Entity::delete_by_id(agreement_id)
-        .exec(db_connection)
-        .await?;
+    let agreement = agreements::Entity::delete_by_id(agreement_id).exec(db_connection).await?;
     if agreement.rows_affected == 0 {
         bail!("Agreement does not exist");
     }
@@ -61,9 +60,7 @@ pub async fn delete_agreement(agreement_id: Uuid) -> anyhow::Result<()> {
 
 pub async fn get_agreement_by_id(agreement_id: Uuid) -> anyhow::Result<Option<agreements::Model>> {
     let db_connection = get_db_connection().await;
-    let agreement = agreements::Entity::find_by_id(agreement_id)
-        .one(db_connection)
-        .await?;
+    let agreement = agreements::Entity::find_by_id(agreement_id).one(db_connection).await?;
     // let agreement = get_agreement_by_id_repo(agreement_id)?;
     Ok(agreement)
 }

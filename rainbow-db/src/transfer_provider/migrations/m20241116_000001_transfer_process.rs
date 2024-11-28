@@ -28,7 +28,6 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
-
         manager
             .create_table(
                 Table::create()
@@ -56,7 +55,9 @@ impl MigrationTrait for Migration {
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager.drop_table(Table::drop().table(TransferProcesses::Table).to_owned()).await?;
-        manager.drop_type(Type::drop().name(TransferStateForDb::name()).if_exists().to_owned()).await
+        manager
+            .drop_type(Type::drop().name(TransferStateForDb::name()).if_exists().to_owned())
+            .await
     }
 }
 

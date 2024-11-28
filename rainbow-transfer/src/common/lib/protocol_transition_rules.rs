@@ -1,6 +1,9 @@
 use anyhow::{anyhow, bail};
 use rainbow_common::config::database::get_db_connection;
-use rainbow_common::err::transfer_err::TransferErrorType::{ConsumerAlreadyRegisteredError, MessageTypeNotAcceptedError, ProtocolError, TransferProcessAlreadySuspendedError, TransferProcessNotFound};
+use rainbow_common::err::transfer_err::TransferErrorType::{
+    ConsumerAlreadyRegisteredError, MessageTypeNotAcceptedError, ProtocolError,
+    TransferProcessAlreadySuspendedError, TransferProcessNotFound,
+};
 use rainbow_common::protocol::transfer::TransferState;
 use rainbow_db::transfer_provider::entities::transfer_process;
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
@@ -16,7 +19,6 @@ pub async fn protocol_transition_rules(json_value: Value) -> anyhow::Result<()> 
         .and_then(|v| Uuid::parse_str(v).ok())
         .unwrap_or_default();
 
-
     let consumer_pid = json_value
         .get("dspace:consumerPid")
         .and_then(|v| v.as_str())
@@ -25,9 +27,8 @@ pub async fn protocol_transition_rules(json_value: Value) -> anyhow::Result<()> 
 
     let message_type = json_value.get("@type").and_then(|v| v.as_str()).unwrap();
 
-    let transfer_provider = transfer_process::Entity::find_by_id(provider_pid)
-        .one(db_connection)
-        .await?;
+    let transfer_provider =
+        transfer_process::Entity::find_by_id(provider_pid).one(db_connection).await?;
     println!("jelow");
 
     let transfer_consumer = transfer_process::Entity::find()
@@ -35,7 +36,6 @@ pub async fn protocol_transition_rules(json_value: Value) -> anyhow::Result<()> 
         .one(db_connection)
         .await
         .map_err(|e| anyhow!(e))?;
-
 
     match message_type {
         "dspace:TransferRequestMessage" => {
@@ -88,7 +88,9 @@ pub async fn protocol_transition_rules(json_value: Value) -> anyhow::Result<()> 
                     })
                 }
                 TransferState::STARTED => {}
-                TransferState::SUSPENDED => bail!(TransferProcessAlreadySuspendedError),
+                TransferState::SUSPENDED => {
+                    bail!(TransferProcessAlreadySuspendedError)
+                }
                 TransferState::COMPLETED => {
                     bail!(ProtocolError {
                         state: TransferState::COMPLETED,

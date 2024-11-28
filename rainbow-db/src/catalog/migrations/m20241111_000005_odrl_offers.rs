@@ -59,16 +59,7 @@ pub enum ODRLOffers {
     EntityType,
 }
 
-#[derive(
-    EnumIter,
-    DeriveActiveEnum,
-    Clone,
-    Debug,
-    PartialEq,
-    Eq,
-    Serialize,
-    Deserialize
-)]
+#[derive(EnumIter, DeriveActiveEnum, Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "entity_type")]
 pub enum EntityTypes {
     #[sea_orm(string_value = "catalog")]
@@ -80,4 +71,3 @@ pub enum EntityTypes {
     #[sea_orm(string_value = "service")]
     DataService,
 }
-

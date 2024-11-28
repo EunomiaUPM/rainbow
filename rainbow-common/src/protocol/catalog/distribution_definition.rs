@@ -38,4 +38,3 @@ pub struct DistributionDctDeclaration {
     #[serde(rename = "dct:description")]
     pub description: Vec<String>,
 }
-

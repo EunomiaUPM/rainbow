@@ -61,13 +61,17 @@ impl TryFrom<dataservice::Model> for DataService {
             dcat: DataServiceDcatDeclaration {
                 theme: "".to_string(),
                 keyword: "".to_string(),
-                endpoint_description: dataservice_model.dcat_endpoint_description.unwrap_or("".to_string()),
+                endpoint_description: dataservice_model
+                    .dcat_endpoint_description
+                    .unwrap_or("".to_string()),
                 endpoint_url: dataservice_model.dcat_endpoint_url,
             },
             dct: DataServiceDctDeclaration {
                 conforms_to: dataservice_model.dct_conforms_to,
                 creator: dataservice_model.dct_creator,
-                identifier: dataservice_model.dct_identifier.unwrap_or_else(|| dataservice_model.id.to_string()),
+                identifier: dataservice_model
+                    .dct_identifier
+                    .unwrap_or_else(|| dataservice_model.id.to_string()),
                 issued: dataservice_model.dct_issued,
                 modified: dataservice_model.dct_modified,
                 title: dataservice_model.dct_title,

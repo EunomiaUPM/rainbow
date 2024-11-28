@@ -1,9 +1,11 @@
 use crate::transfer_provider::entities::transfer_process;
-use rainbow_common::protocol::transfer::{TransferMessageTypes, TransferProcessMessage, TransferState, TRANSFER_CONTEXT};
+use rainbow_common::protocol::transfer::{
+    TransferMessageTypes, TransferProcessMessage, TransferState, TRANSFER_CONTEXT,
+};
 use rainbow_common::utils::convert_uuid_to_uri;
 
-pub mod migrations;
 pub mod entities;
+pub mod migrations;
 pub mod repo;
 
 impl From<transfer_process::Model> for TransferProcessMessage {

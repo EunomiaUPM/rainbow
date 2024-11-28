@@ -87,7 +87,9 @@ pub fn get_provider_url() -> anyhow::Result<String> {
             config.provider_url.clone().unwrap(),
             config.provider_port.clone().unwrap()
         ),
-        ConfigRoles::Auth => format!("{}:{}", config.host_url, config.host_port),
+        ConfigRoles::Auth => {
+            format!("{}:{}", config.host_url, config.host_port)
+        }
         _ => format!("{}:{}", config.host_url, config.host_port),
     };
     Ok(url)

@@ -148,9 +148,7 @@ impl DataPlanePeer {
         id: Uuid,
         db_connection: &DbConn,
     ) -> anyhow::Result<Box<Self>> {
-        let peer = data_plane_process::Entity::find_by_id(id)
-            .one(db_connection)
-            .await?;
+        let peer = data_plane_process::Entity::find_by_id(id).one(db_connection).await?;
         if peer.is_none() {
             bail!("Could not find dataPlaneDataPlan with id {}", id)
         }

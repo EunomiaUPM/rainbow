@@ -320,5 +320,3 @@ impl TryFrom<String> for TransferState {
         }
     }
 }
-
-

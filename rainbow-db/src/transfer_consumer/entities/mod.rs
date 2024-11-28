@@ -12,7 +12,6 @@ pub struct Model {
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: Option<chrono::NaiveDateTime>,
     pub data_address: serde_json::Value,
-
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

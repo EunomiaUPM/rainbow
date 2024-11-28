@@ -8,7 +8,6 @@ use rainbow_common::config_field;
 use std::env;
 use tracing::{debug, error, info};
 
-
 #[derive(Parser, Debug)]
 #[command(name = "Dataspace protocol")]
 #[command(version = "0.1")]
@@ -110,17 +109,27 @@ pub async fn init_command_line() -> Result<()> {
             db_database: config_field!(args, db_database, "DB_DATABASE", "ds-protocol-provider"),
             provider_url: None,
             provider_port: None,
-            auth_url: Some(config_field!(
-                args,
-                auth_url,
-                "AUTH_URL",
-                "localhost"
-            )),
+            auth_url: Some(config_field!(args, auth_url, "AUTH_URL", "localhost")),
             auth_port: Some(config_field!(args, auth_port, "AUTH_PORT", "1232")),
             role: ConfigRoles::Provider,
-            ssi_auth_enabled: Some(config_field!(args, db_database, "DB_DATABASE", "ds-protocol-provider")),
-            ssi_holder_url: Some(config_field!(args, db_database, "DB_DATABASE", "ds-protocol-provider")),
-            ssi_holder_port: Some(config_field!(args, db_database, "DB_DATABASE", "ds-protocol-provider")),
+            ssi_auth_enabled: Some(config_field!(
+                args,
+                db_database,
+                "DB_DATABASE",
+                "ds-protocol-provider"
+            )),
+            ssi_holder_url: Some(config_field!(
+                args,
+                db_database,
+                "DB_DATABASE",
+                "ds-protocol-provider"
+            )),
+            ssi_holder_port: Some(config_field!(
+                args,
+                db_database,
+                "DB_DATABASE",
+                "ds-protocol-provider"
+            )),
         },
         DataSpaceTransferRoles::Consumer(args) => Config {
             host_url: config_field!(args, host_url, "HOST_URL", "localhost"),
@@ -141,17 +150,33 @@ pub async fn init_command_line() -> Result<()> {
             auth_url: None,
             auth_port: None,
             role: ConfigRoles::Consumer,
-            ssi_auth_enabled: Some(config_field!(args, db_database, "DB_DATABASE", "ds-protocol-provider")),
-            ssi_holder_url: Some(config_field!(args, db_database, "DB_DATABASE", "ds-protocol-provider")),
-            ssi_holder_port: Some(config_field!(args, db_database, "DB_DATABASE", "ds-protocol-provider")),
+            ssi_auth_enabled: Some(config_field!(
+                args,
+                db_database,
+                "DB_DATABASE",
+                "ds-protocol-provider"
+            )),
+            ssi_holder_url: Some(config_field!(
+                args,
+                db_database,
+                "DB_DATABASE",
+                "ds-protocol-provider"
+            )),
+            ssi_holder_port: Some(config_field!(
+                args,
+                db_database,
+                "DB_DATABASE",
+                "ds-protocol-provider"
+            )),
         },
     };
 
-    GLOBAL_CONFIG
-        .set(config)
-        .expect("Global Config not initialized");
+    GLOBAL_CONFIG.set(config).expect("Global Config not initialized");
 
-    info!("Config status: \n{}", serde_json::to_string_pretty(GLOBAL_CONFIG.get().unwrap())?);
+    info!(
+        "Config status: \n{}",
+        serde_json::to_string_pretty(GLOBAL_CONFIG.get().unwrap())?
+    );
 
     match &cli.role {
         DataSpaceTransferRoles::Consumer(args) => {

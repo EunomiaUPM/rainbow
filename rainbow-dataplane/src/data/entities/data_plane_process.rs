@@ -17,7 +17,6 @@
  *
  */
 
-
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
@@ -44,6 +43,5 @@ impl Related<super::data_plane_field::Entity> for Entity {
         Relation::DataPlaneFields.def()
     }
 }
-
 
 impl ActiveModelBehavior for ActiveModel {}

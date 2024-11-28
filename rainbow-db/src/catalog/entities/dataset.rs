@@ -12,7 +12,7 @@ pub struct Model {
     pub dct_modified: Option<chrono::NaiveDateTime>,
     pub dct_title: Option<String>,
     pub dct_description: Option<String>,
-    pub catalog_id: Uuid
+    pub catalog_id: Uuid,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
@@ -35,7 +35,6 @@ impl Related<super::catalog::Entity> for Entity {
     }
 }
 
-
 impl Related<super::distribution::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Distribution.def()
@@ -47,6 +46,5 @@ impl Related<super::odrl_offer::Entity> for Entity {
         Relation::OdrlOffer.def()
     }
 }
-
 
 impl ActiveModelBehavior for ActiveModel {}

@@ -15,12 +15,7 @@ impl MigrationTrait for Migration {
             .create_table(
                 Table::create()
                     .table(Dataset::Table)
-                    .col(
-                        ColumnDef::new(Dataset::Id)
-                            .uuid()
-                            .not_null()
-                            .primary_key(),
-                    )
+                    .col(ColumnDef::new(Dataset::Id).uuid().not_null().primary_key())
                     .col(ColumnDef::new(Dataset::DctConformsTo).string())
                     .col(ColumnDef::new(Dataset::DctCreator).string())
                     .col(ColumnDef::new(Dataset::DctIdentifier).string())

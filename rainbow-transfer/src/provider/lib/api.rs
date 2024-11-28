@@ -50,16 +50,13 @@ pub async fn get_messages_by_id(
     Ok(messages.unwrap())
 }
 
-
 pub async fn get_all_agreements() -> anyhow::Result<Vec<agreements::Model>> {
     let db_connection = get_db_connection().await;
     let agreement = agreements::Entity::find().all(db_connection).await?;
     Ok(agreement)
 }
 
-pub async fn get_agreement_by_id(
-    agreement_id: Uuid
-) -> anyhow::Result<agreements::Model> {
+pub async fn get_agreement_by_id(agreement_id: Uuid) -> anyhow::Result<agreements::Model> {
     let db_connection = get_db_connection().await;
     let agreement = agreements::Entity::find_by_id(agreement_id).one(db_connection).await?;
     if agreement.is_none() {
@@ -87,8 +84,8 @@ pub async fn post_agreement(new_agreement: NewAgreement) -> anyhow::Result<agree
         identity: ActiveValue::Set(new_agreement.identity),
         identity_token: ActiveValue::Set(new_agreement.identity_token),
     })
-        .exec_with_returning(db_connection)
-        .await?;
+    .exec_with_returning(db_connection)
+    .await?;
     Ok(agreement_in_db)
 }
 

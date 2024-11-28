@@ -124,17 +124,27 @@ pub async fn init_command_line() -> Result<()> {
             db_database: config_field!(args, db_database, "DB_DATABASE", "ds-protocol-provider"),
             provider_url: None,
             provider_port: None,
-            auth_url: Some(config_field!(
-                args,
-                auth_url,
-                "AUTH_URL",
-                "localhost"
-            )),
+            auth_url: Some(config_field!(args, auth_url, "AUTH_URL", "localhost")),
             auth_port: Some(config_field!(args, auth_port, "AUTH_PORT", "1232")),
             role: ConfigRoles::Provider,
-            ssi_auth_enabled: Some(config_field!(args, ssi_auth_enabled, "SSI_AUTH_ENABLED", "true")),
-            ssi_holder_url: Some(config_field!(args, ssi_holder_url, "SSI_HOLDER_URL", "127.0.0.1")),
-            ssi_holder_port: Some(config_field!(args, ssi_holder_port, "SSI_HOLDER_PORT", "4000")),
+            ssi_auth_enabled: Some(config_field!(
+                args,
+                ssi_auth_enabled,
+                "SSI_AUTH_ENABLED",
+                "true"
+            )),
+            ssi_holder_url: Some(config_field!(
+                args,
+                ssi_holder_url,
+                "SSI_HOLDER_URL",
+                "127.0.0.1"
+            )),
+            ssi_holder_port: Some(config_field!(
+                args,
+                ssi_holder_port,
+                "SSI_HOLDER_PORT",
+                "4000"
+            )),
         },
         DataSpaceTransferRoles::Consumer(args) => Config {
             host_url: config_field!(args, host_url, "HOST_URL", "127.0.0.1"),
@@ -155,17 +165,33 @@ pub async fn init_command_line() -> Result<()> {
             auth_url: None,
             auth_port: None,
             role: ConfigRoles::Consumer,
-            ssi_auth_enabled: Some(config_field!(args, ssi_auth_enabled, "SSI_AUTH_ENABLED", "true")),
-            ssi_holder_url: Some(config_field!(args, ssi_holder_url, "SSI_HOLDER_URL", "127.0.0.1")),
-            ssi_holder_port: Some(config_field!(args, ssi_holder_port, "SSI_HOLDER_PORT", "4000")),
+            ssi_auth_enabled: Some(config_field!(
+                args,
+                ssi_auth_enabled,
+                "SSI_AUTH_ENABLED",
+                "true"
+            )),
+            ssi_holder_url: Some(config_field!(
+                args,
+                ssi_holder_url,
+                "SSI_HOLDER_URL",
+                "127.0.0.1"
+            )),
+            ssi_holder_port: Some(config_field!(
+                args,
+                ssi_holder_port,
+                "SSI_HOLDER_PORT",
+                "4000"
+            )),
         },
     };
 
-    GLOBAL_CONFIG
-        .set(config)
-        .expect("Global Config not initialized");
+    GLOBAL_CONFIG.set(config).expect("Global Config not initialized");
 
-    info!("Config status: \n{}", serde_json::to_string_pretty(GLOBAL_CONFIG.get().unwrap())?);
+    info!(
+        "Config status: \n{}",
+        serde_json::to_string_pretty(GLOBAL_CONFIG.get().unwrap())?
+    );
 
     match &cli.role {
         DataSpaceTransferRoles::Consumer(args) => {
@@ -178,7 +204,9 @@ pub async fn init_command_line() -> Result<()> {
                         config.host_url, config.host_port
                     );
                     info!("{}", server_message);
-                    let listener = TcpListener::bind(format!("{}:{}", config.host_url, config.host_port)).await?;
+                    let listener =
+                        TcpListener::bind(format!("{}:{}", config.host_url, config.host_port))
+                            .await?;
                     serve(listener, get_consumer_routes().await).await?;
                 }
                 ConsumerCommands::Setup => {
@@ -196,7 +224,9 @@ pub async fn init_command_line() -> Result<()> {
                         config.host_url, config.host_port
                     );
                     info!("{}", server_message);
-                    let listener = TcpListener::bind(format!("{}:{}", config.host_url, config.host_port)).await?;
+                    let listener =
+                        TcpListener::bind(format!("{}:{}", config.host_url, config.host_port))
+                            .await?;
                     serve(listener, get_provider_routes().await).await?;
                 }
                 ProviderCommands::Setup => {

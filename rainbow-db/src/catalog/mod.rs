@@ -6,11 +6,15 @@ use rainbow_common::protocol::catalog::catalog_definition::{
     Catalog, CatalogDSpaceDeclaration, CatalogDcatDeclaration, CatalogDctDeclaration,
     CatalogFoafDeclaration,
 };
-use rainbow_common::protocol::catalog::dataservice_definition::{DataService, DataServiceDcatDeclaration, DataServiceDctDeclaration};
+use rainbow_common::protocol::catalog::dataservice_definition::{
+    DataService, DataServiceDcatDeclaration, DataServiceDctDeclaration,
+};
 use rainbow_common::protocol::catalog::dataset_definition::{
     Dataset, DatasetDcatDeclaration, DatasetDctDeclaration,
 };
-use rainbow_common::protocol::catalog::distribution_definition::{Distribution, DistributionDcatDeclaration, DistributionDctDeclaration};
+use rainbow_common::protocol::catalog::distribution_definition::{
+    Distribution, DistributionDcatDeclaration, DistributionDctDeclaration,
+};
 use serde_json::Value;
 
 pub mod entities;
@@ -25,10 +29,7 @@ impl TryFrom<dataset::Model> for Dataset {
             context: "https://w3id.org/dspace/2024/1/context.json".to_string(),
             _type: "dcat:Dataset".to_string(),
             id: dataset_model.id.to_string(),
-            dcat: DatasetDcatDeclaration {
-                theme: "".to_string(),
-                keyword: "".to_string(),
-            },
+            dcat: DatasetDcatDeclaration { theme: "".to_string(), keyword: "".to_string() },
             dct: DatasetDctDeclaration {
                 conforms_to: dataset_model.dct_conforms_to,
                 creator: dataset_model.dct_creator,
@@ -55,9 +56,7 @@ impl TryFrom<catalog::Model> for Catalog {
             context: "https://w3id.org/dspace/2024/1/context.json".to_string(),
             _type: "dcat:Catalog".to_string(),
             id: catalog_model.id.to_string(),
-            foaf: CatalogFoafDeclaration {
-                homepage: catalog_model.foaf_home_page,
-            },
+            foaf: CatalogFoafDeclaration { homepage: catalog_model.foaf_home_page },
             dcat: CatalogDcatDeclaration {
                 // Array of strings...
                 theme: "".to_string(),
@@ -85,7 +84,6 @@ impl TryFrom<catalog::Model> for Catalog {
     }
 }
 
-
 impl TryFrom<distribution::Model> for Distribution {
     type Error = anyhow::Error;
 
@@ -94,9 +92,7 @@ impl TryFrom<distribution::Model> for Distribution {
             context: "https://w3id.org/dspace/2024/1/context.json".to_string(),
             _type: "dcat:Distribution".to_string(),
             id: distribution_model.id.to_string(),
-            dcat: DistributionDcatDeclaration {
-                access_service: None
-            },
+            dcat: DistributionDcatDeclaration { access_service: None },
             dct: DistributionDctDeclaration {
                 identifier: distribution_model.id.to_string(),
                 issued: distribution_model.dct_issued,
@@ -121,13 +117,17 @@ impl TryFrom<dataservice::Model> for DataService {
             dcat: DataServiceDcatDeclaration {
                 theme: "".to_string(),
                 keyword: "".to_string(),
-                endpoint_description: dataservice_model.dcat_endpoint_description.unwrap_or("".to_string()),
+                endpoint_description: dataservice_model
+                    .dcat_endpoint_description
+                    .unwrap_or("".to_string()),
                 endpoint_url: dataservice_model.dcat_endpoint_url,
             },
             dct: DataServiceDctDeclaration {
                 conforms_to: dataservice_model.dct_conforms_to,
                 creator: dataservice_model.dct_creator,
-                identifier: dataservice_model.dct_identifier.unwrap_or_else(|| dataservice_model.id.to_string()),
+                identifier: dataservice_model
+                    .dct_identifier
+                    .unwrap_or_else(|| dataservice_model.id.to_string()),
                 issued: dataservice_model.dct_issued,
                 modified: dataservice_model.dct_modified,
                 title: dataservice_model.dct_title,

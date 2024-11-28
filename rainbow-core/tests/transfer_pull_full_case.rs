@@ -12,7 +12,10 @@ use axum::{http, serve};
 use rainbow_common::dcat_formats::{DctFormats, FormatAction, FormatProtocol};
 use rainbow_common::utils::convert_uuid_to_uri;
 use rainbow_transfer::consumer::data::entities::transfer_callback;
-use rainbow_transfer::protocol::messages::{DataAddress, TransferCompletionMessage, TransferMessageTypes, TransferProcessMessage, TransferRequestMessage, TransferStartMessage, TransferSuspensionMessage, TRANSFER_CONTEXT};
+use rainbow_transfer::protocol::messages::{
+    DataAddress, TransferCompletionMessage, TransferMessageTypes, TransferProcessMessage,
+    TransferRequestMessage, TransferStartMessage, TransferSuspensionMessage, TRANSFER_CONTEXT,
+};
 use serde_json::{json, Value};
 use std::io::BufRead;
 use tracing::{debug, error, info, trace};
@@ -49,10 +52,7 @@ pub async fn transfer_pull_full_case() -> anyhow::Result<()> {
         _type: TransferMessageTypes::TransferRequestMessage.to_string(),
         consumer_pid: consumer_pid.clone(),
         agreement_id: convert_uuid_to_uri(&agreement_id)?,
-        format: DctFormats {
-            protocol: FormatProtocol::Http,
-            action: FormatAction::Pull,
-        },
+        format: DctFormats { protocol: FormatProtocol::Http, action: FormatAction::Pull },
         callback_address: consumer_callback_address,
         data_address: None,
     };
@@ -102,21 +102,20 @@ pub async fn transfer_pull_full_case() -> anyhow::Result<()> {
         .await?;
     let res_body = res.json::<transfer_callback::Model>().await.unwrap();
     println!("{:#?}", res_body);
-    
+
     let callback_id = res_body.id.to_string();
     let consumer_id = res_body.consumer_pid.to_string();
     let endpoint = format!("http://localhost:1235/{}/data/{}", callback_id, consumer_id);
-    
+
     let data_plane_res = client.get(endpoint.clone()).send().await?;
     println!("{:?}", &data_plane_res.status());
     println!("{:?}", &data_plane_res.bytes().await?);
-    
-    
+
     // ASSERT TRANSFER!!
     //============================================//
     // END DATA TRANSFER!!!
     //============================================//
-    
+
     //============================================//
     // TRANSFER SUSPENSION STAGE
     //============================================//
@@ -135,10 +134,10 @@ pub async fn transfer_pull_full_case() -> anyhow::Result<()> {
         .json(&suspension_data)
         .send()
         .await?;
-    
+
     println!("{:?}", &res.status());
     // ASSERT
-    
+
     //============================================//
     // BEGIN DATA TRANSFER!!! should fail
     //============================================//
@@ -150,7 +149,7 @@ pub async fn transfer_pull_full_case() -> anyhow::Result<()> {
     //============================================//
     // END DATA TRANSFER!!!
     //============================================//
-    
+
     //============================================//
     // TRANSFER RESTART STAGE
     //============================================//
@@ -170,9 +169,9 @@ pub async fn transfer_pull_full_case() -> anyhow::Result<()> {
         .json(&restart_data)
         .send()
         .await?;
-    
+
     println!("{:?}", &res.status());
-    
+
     //============================================//
     // BEGIN DATA TRANSFER!!! should work
     //============================================//
@@ -184,7 +183,7 @@ pub async fn transfer_pull_full_case() -> anyhow::Result<()> {
     //============================================//
     // END DATA TRANSFER!!!
     //============================================//
-    
+
     //============================================//
     // TRANSFER COMPLETION STAGE
     //============================================//
@@ -201,9 +200,9 @@ pub async fn transfer_pull_full_case() -> anyhow::Result<()> {
         .json(&complete_data)
         .send()
         .await?;
-    
+
     println!("{:?}", &res.status());
-    
+
     //============================================//
     // BEGIN DATA TRANSFER!!! shouldn't work
     //============================================//

@@ -36,9 +36,7 @@ pub struct FiwareDataPlane {
 #[async_trait]
 impl PersistModel<data_plane_process::Model> for FiwareDataPlane {
     async fn persist(self, db_connection: &DbConn) -> anyhow::Result<Box<Self>> {
-        let dp = data_plane_process::Entity::find_by_id(self.inner.id)
-            .one(db_connection)
-            .await?;
+        let dp = data_plane_process::Entity::find_by_id(self.inner.id).one(db_connection).await?;
         let attributes = data_plane_field::Entity::find()
             .filter(data_plane_field::Column::DataPlaneProcessId.eq(self.inner.id))
             .all(db_connection)
@@ -54,8 +52,8 @@ impl PersistModel<data_plane_process::Model> for FiwareDataPlane {
                 created_at: ActiveValue::Set(dp.created_at),
                 updated_at: ActiveValue::Set(Option::from(chrono::Utc::now().naive_utc())),
             })
-                .exec(db_connection)
-                .await?;
+            .exec(db_connection)
+            .await?;
 
             for (key, value) in &self.inner.attributes {
                 let exists = attributes
@@ -68,8 +66,8 @@ impl PersistModel<data_plane_process::Model> for FiwareDataPlane {
                         value: ActiveValue::Set(value.to_owned()),
                         data_plane_process_id: ActiveValue::Set(self.inner.id),
                     })
-                        .exec(db_connection)
-                        .await?;
+                    .exec(db_connection)
+                    .await?;
                 }
             }
 
@@ -82,8 +80,8 @@ impl PersistModel<data_plane_process::Model> for FiwareDataPlane {
                         id: ActiveValue::Set(attribute.id),
                         ..Default::default()
                     })
-                        .exec(db_connection)
-                        .await?;
+                    .exec(db_connection)
+                    .await?;
                 }
             }
         } else {
@@ -96,8 +94,8 @@ impl PersistModel<data_plane_process::Model> for FiwareDataPlane {
                 created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
                 updated_at: ActiveValue::Set(None),
             })
-                .exec(db_connection)
-                .await?;
+            .exec(db_connection)
+            .await?;
 
             for (key, value) in &self.inner.attributes {
                 data_plane_field::Entity::insert(data_plane_field::ActiveModel {
@@ -106,8 +104,8 @@ impl PersistModel<data_plane_process::Model> for FiwareDataPlane {
                     value: ActiveValue::Set(value.to_string()),
                     data_plane_process_id: ActiveValue::Set(self.inner.id.clone()),
                 })
-                    .exec(db_connection)
-                    .await?;
+                .exec(db_connection)
+                .await?;
             }
         }
         Ok(Box::new(self))
@@ -116,9 +114,7 @@ impl PersistModel<data_plane_process::Model> for FiwareDataPlane {
 
 impl DataPlanePeerCreationBehavior for FiwareDataPlane {
     fn create_data_plane_peer() -> Self {
-        Self {
-            inner: DataPlanePeer::default(),
-        }
+        Self { inner: DataPlanePeer::default() }
     }
 
     fn create_data_plane_peer_from_inner(inner: DataPlanePeer) -> Self {

@@ -76,10 +76,9 @@ impl TryFrom<catalog::Model> for Catalog {
             context: "https://w3id.org/dspace/2024/1/context.json".to_string(),
             _type: "dcat:Catalog".to_string(),
             id: catalog_model.id.to_string(),
-            foaf: CatalogFoafDeclaration {
-                homepage: catalog_model.foaf_home_page
-            },
-            dcat: CatalogDcatDeclaration { // Array of strings...
+            foaf: CatalogFoafDeclaration { homepage: catalog_model.foaf_home_page },
+            dcat: CatalogDcatDeclaration {
+                // Array of strings...
                 theme: "".to_string(),
                 keyword: "".to_string(),
             },
@@ -93,7 +92,7 @@ impl TryFrom<catalog::Model> for Catalog {
                 description: vec![],
             },
             dspace: CatalogDSpaceDeclaration {
-                participant_id: catalog_model.dspace_participant_id
+                participant_id: catalog_model.dspace_participant_id,
             },
             odrl_offer: Value::default(),
             extra_fields: Value::default(),

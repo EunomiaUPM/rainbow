@@ -138,21 +138,13 @@ impl DataPlanePeerDefaultBehavior for HttpDataPlane {
         mut request: Request,
         extras: Option<String>,
     ) -> anyhow::Result<Response> {
-        let next_hop = data_plane_peer
-            .attributes
-            .get("nextHop")
-            .unwrap()
-            .to_string();
+        let next_hop = data_plane_peer.attributes.get("nextHop").unwrap().to_string();
         let query = request.uri().query();
         let next_hop = format!(
             "{}{}{}",
             next_hop,
-            extras
-                .map(|ex| format!("/{}", ex))
-                .unwrap_or_default(),
-            query
-                .map(|q| format!("?{}", q.to_string()))
-                .unwrap_or_default()
+            extras.map(|ex| format!("/{}", ex)).unwrap_or_default(),
+            query.map(|q| format!("?{}", q.to_string())).unwrap_or_default()
         );
 
         let body = std::mem::take(request.body_mut());

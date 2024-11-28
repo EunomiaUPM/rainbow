@@ -14,7 +14,12 @@ impl MigrationTrait for Migration {
             .create_table(
                 Table::create()
                     .table(ContractAgreements::Table)
-                    .col(ColumnDef::new(ContractAgreements::AgreementId).uuid().not_null().primary_key())
+                    .col(
+                        ColumnDef::new(ContractAgreements::AgreementId)
+                            .uuid()
+                            .not_null()
+                            .primary_key(),
+                    )
                     .col(ColumnDef::new(ContractAgreements::DataServiceId).uuid().not_null())
                     .col(ColumnDef::new(ContractAgreements::Identity).string())
                     .col(ColumnDef::new(ContractAgreements::IdentityToken).string())

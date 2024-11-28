@@ -33,7 +33,7 @@ pub async fn to_requested() -> anyhow::Result<()> {
         consumer_callback_address,
         callback_id,
     ) = utils::setup_test_env("a").await?;
-    
+
     // 1. NORMAL REQUEST
     let res = client
         .post("http://localhost:1234/transfers/request")

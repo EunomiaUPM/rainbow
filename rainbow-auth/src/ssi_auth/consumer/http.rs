@@ -12,7 +12,6 @@ pub fn create_ssi_auth_router() -> Router {
         .route("/ssi-auth/wf-exchange", post(handle_consumer_wf_exchange))
 }
 
-
 async fn handle_consumer_vc_request(Json(input): Json<ConsumerSSIVCRequest>) -> impl IntoResponse {
     info!("POST /ssi-auth/vc-request");
 
@@ -29,4 +28,4 @@ async fn handle_consumer_wf_exchange() -> impl IntoResponse {
         Ok(_) => (StatusCode::CREATED, "OK").into_response(),
         Err(e) => TransferErrorType::NotCheckedError { inner_error: e }.into_response(),
     }
-} 
+}

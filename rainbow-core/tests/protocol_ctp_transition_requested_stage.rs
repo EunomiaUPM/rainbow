@@ -3,7 +3,6 @@
 #![allow(unused_variables)]
 #![allow(unused_mut)]
 
-
 use crate::utils::cleanup_test_env;
 use once_cell::sync::Lazy;
 use rainbow_common::dcat_formats::{DctFormats, FormatAction, FormatProtocol};

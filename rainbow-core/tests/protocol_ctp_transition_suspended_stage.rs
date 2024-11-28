@@ -19,7 +19,6 @@ use uuid::Uuid;
 #[path = "utils.rs"]
 mod utils;
 
-
 #[traced_test]
 #[tokio::test]
 pub async fn to_requested() -> anyhow::Result<()> {

@@ -28,5 +28,3 @@ pub fn does_callback_exist(callback_id: Uuid) -> anyhow::Result<bool> {
     debug!("{}", callback_id.to_string());
     Ok(true)
 }
-
-

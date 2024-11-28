@@ -61,7 +61,9 @@ impl TryFrom<dataset::Model> for Dataset {
             dct: DatasetDctDeclaration {
                 conforms_to: dataset_model.dct_conforms_to,
                 creator: dataset_model.dct_creator,
-                identifier: dataset_model.dct_identifier.unwrap_or_else(|| dataset_model.id.to_string()),
+                identifier: dataset_model
+                    .dct_identifier
+                    .unwrap_or_else(|| dataset_model.id.to_string()),
                 issued: dataset_model.dct_issued,
                 modified: dataset_model.dct_modified,
                 title: dataset_model.dct_title,

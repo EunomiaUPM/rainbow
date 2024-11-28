@@ -36,9 +36,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(DataPlaneFields::Id).uuid().not_null().primary_key())
                     .col(ColumnDef::new(DataPlaneFields::Key).string().not_null())
                     .col(ColumnDef::new(DataPlaneFields::Value).string())
-                    .col(
-                        ColumnDef::new(DataPlaneFields::DataPlaneProcessId).uuid().not_null(),
-                    )
+                    .col(ColumnDef::new(DataPlaneFields::DataPlaneProcessId).uuid().not_null())
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk_dataplane_fields_dataplane_process")

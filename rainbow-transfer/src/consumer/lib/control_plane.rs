@@ -31,8 +31,8 @@ pub async fn transfer_start(
         updated_at: ActiveValue::Set(Some(chrono::Utc::now().naive_utc())),
         data_plane_id: ActiveValue::Set(None),
     })
-        .exec(db_connection)
-        .await?;
+    .exec(db_connection)
+    .await?;
 
     Ok(())
 }

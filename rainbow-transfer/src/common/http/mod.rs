@@ -1,2 +1,2 @@
-pub mod middleware;
 pub mod client;
+pub mod middleware;

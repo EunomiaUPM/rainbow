@@ -13,14 +13,14 @@ pub fn router() -> Router {
         .route("/agreements", post(handle_create_agreement))
 }
 
-
 async fn handle_create_agreement(Json(input): Json<Value>) -> impl IntoResponse {
     let dataset = input.get("dataset");
     if dataset.is_none() {
         return (
             StatusCode::BAD_REQUEST,
             "Must provide a {\"dataset\": <dataset>}".to_string(),
-        ).into_response();
+        )
+            .into_response();
     }
 
     // TODO maybe create a DTO
@@ -29,7 +29,8 @@ async fn handle_create_agreement(Json(input): Json<Value>) -> impl IntoResponse 
         return (
             StatusCode::BAD_REQUEST,
             "Dataset must be a valid UUIDv4".to_string(),
-        ).into_response();
+        )
+            .into_response();
     }
 
     match create_agreement(dataset_as_uuid.unwrap()).await {
@@ -37,7 +38,8 @@ async fn handle_create_agreement(Json(input): Json<Value>) -> impl IntoResponse 
         Err(_) => (
             StatusCode::INTERNAL_SERVER_ERROR,
             "Internal server error".to_string(),
-        ).into_response(),
+        )
+            .into_response(),
     }
 }
 async fn handle_get_agreement_by_id(Path(agreement_id): Path<Uuid>) -> impl IntoResponse {
@@ -50,6 +52,7 @@ async fn handle_get_agreement_by_id(Path(agreement_id): Path<Uuid>) -> impl Into
         Err(_) => (
             StatusCode::INTERNAL_SERVER_ERROR,
             "Internal server error".to_string(),
-        ).into_response(),
+        )
+            .into_response(),
     }
 }

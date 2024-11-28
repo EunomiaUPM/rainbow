@@ -1,4 +1,8 @@
-use crate::provider::lib::api::{delete_agreement, get_agreement_by_id, get_all_agreements, get_all_transfers, get_messages_by_id, get_messages_by_transfer, post_agreement, put_agreement, EditAgreement, NewAgreement};
+use crate::provider::lib::api::{
+    delete_agreement, get_agreement_by_id, get_all_agreements, get_all_transfers,
+    get_messages_by_id, get_messages_by_transfer, post_agreement, put_agreement, EditAgreement,
+    NewAgreement,
+};
 use axum::extract::Path;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
@@ -64,9 +68,7 @@ async fn handle_get_all_agreements() -> impl IntoResponse {
     }
 }
 
-async fn handle_get_agreement_by_id(
-    Path(id): Path<Uuid>
-) -> impl IntoResponse {
+async fn handle_get_agreement_by_id(Path(id): Path<Uuid>) -> impl IntoResponse {
     info!("GET /api/v1/agreements/{}", id.to_string());
 
     match get_agreement_by_id(id).await {
@@ -75,9 +77,7 @@ async fn handle_get_agreement_by_id(
     }
 }
 
-async fn handle_post_agreement(
-    Json(input): Json<NewAgreement>
-) -> impl IntoResponse {
+async fn handle_post_agreement(Json(input): Json<NewAgreement>) -> impl IntoResponse {
     info!("POST /api/v1/agreements/");
     match post_agreement(input).await {
         Ok(agreement) => (StatusCode::CREATED, Json(agreement)).into_response(),
@@ -96,9 +96,7 @@ async fn handle_put_agreement(
     }
 }
 
-async fn handle_delete_agreement(
-    Path(id): Path<Uuid>
-) -> impl IntoResponse {
+async fn handle_delete_agreement(Path(id): Path<Uuid>) -> impl IntoResponse {
     info!("DELETE /api/v1/agreements/{}", id.to_string());
 
     match delete_agreement(id).await {
@@ -106,4 +104,3 @@ async fn handle_delete_agreement(
         Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
     }
 }
-

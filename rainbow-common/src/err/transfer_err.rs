@@ -1,4 +1,6 @@
-use crate::protocol::transfer::{TransferError, TransferMessageTypes, TransferState, TRANSFER_CONTEXT};
+use crate::protocol::transfer::{
+    TransferError, TransferMessageTypes, TransferState, TRANSFER_CONTEXT,
+};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
@@ -12,9 +14,7 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum TransferErrorType {
     #[error("The transfer message is not compatible with the transfer protocol")]
-    ValidationError {
-        errors: VecDeque<OutputUnit<ErrorDescription>>,
-    },
+    ValidationError { errors: VecDeque<OutputUnit<ErrorDescription>> },
     #[error("ConsumerPid, ProviderPid, AgreementId must have a valid Uuid v4")]
     PidUuidError,
     #[error("ConsumerPid or ProviderPid must have urn:uuid:<uuid> schema")]
@@ -37,10 +37,7 @@ pub enum TransferErrorType {
     TransferProcessNotFound,
     #[error("Protocol Error. dspace:TransferRequestMessage is not allowed here. Current state is {state}"
     )]
-    ProtocolError {
-        state: TransferState,
-        message_type: String,
-    },
+    ProtocolError { state: TransferState, message_type: String },
     #[error("Protocol Error. This message type is not allowed")]
     MessageTypeNotAcceptedError,
     #[error("Protocol Error. @type field is required. Check the documentation")]
@@ -54,9 +51,7 @@ pub enum TransferErrorType {
     #[error("It seems the provider or consumer peer is not recognized")]
     ProviderAndConsumerNotMatchingError,
     #[error("There is a problem parsing the TransferMessage")]
-    ProtocolBodyError {
-        message: String
-    },
+    ProtocolBodyError { message: String },
 }
 
 pub enum TransferErrorCodes {
@@ -287,7 +282,7 @@ impl IntoResponse for TransferErrorType {
                 }),
             ),
         }
-            .into_response()
+        .into_response()
     }
 }
 

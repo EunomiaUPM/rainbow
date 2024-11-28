@@ -27,25 +27,25 @@ async fn handle_catalog_request(
                 println!("{:#?}", Json(&res));
                 (StatusCode::OK, Json(res)).into_response()
             }
-            Err(err) => (StatusCode::BAD_REQUEST, err.to_string()).into_response()
+            Err(err) => (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
         },
         Err(err) => match err {
-            JsonRejection::JsonDataError(_) => (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+            JsonRejection::JsonDataError(_) => {
+                (StatusCode::BAD_REQUEST, err.to_string()).into_response()
+            }
             _ => (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
-        }
+        },
     }
 }
 
-async fn handle_get_dataset(
-    result: Result<Path<Uuid>, PathRejection>,
-) -> impl IntoResponse {
+async fn handle_get_dataset(result: Result<Path<Uuid>, PathRejection>) -> impl IntoResponse {
     info!("POST /catalog/datasets/:id");
 
     match result {
         Ok(id) => match dataset_request(id.0).await {
             Ok(d) => (StatusCode::OK, Json(d)).into_response(),
-            Err(err) => (StatusCode::NOT_FOUND, err.to_string()).into_response()
+            Err(err) => (StatusCode::NOT_FOUND, err.to_string()).into_response(),
         },
-        Err(err) => (StatusCode::BAD_REQUEST, err.to_string()).into_response()
+        Err(err) => (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
     }
 }

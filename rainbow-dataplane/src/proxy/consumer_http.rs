@@ -81,9 +81,8 @@ async fn dataplane_pull(
 
     match data_plane_process {
         Some(dp) => {
-            let data_plane_peer = DataPlanePeer::load_model_by_id(dp.id, db_connection)
-                .await
-                .unwrap();
+            let data_plane_peer =
+                DataPlanePeer::load_model_by_id(dp.id, db_connection).await.unwrap();
 
             match data_plane_peer.role {
                 ConfigRoles::Consumer => match data_plane_peer.dct_formats.action {
@@ -133,9 +132,8 @@ async fn dataplane_push(
 
     match data_plane_process {
         Some(dp) => {
-            let data_plane_peer = DataPlanePeer::load_model_by_id(dp.id, db_connection)
-                .await
-                .unwrap();
+            let data_plane_peer =
+                DataPlanePeer::load_model_by_id(dp.id, db_connection).await.unwrap();
             match data_plane_peer.role {
                 ConfigRoles::Consumer => match data_plane_peer.dct_formats.action {
                     FormatAction::Push => match data_plane_peer.dct_formats.protocol {
