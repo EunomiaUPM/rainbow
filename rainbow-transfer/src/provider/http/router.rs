@@ -132,9 +132,6 @@ async fn send_transfer_start(
         data_address,
     };
 
-    println!("\nholaaaaaaaaaaaaaaaaaaaaaaa=====\n\n");
-    println!("{:?}", transfer_start_message);
-
     let consumer_transfer_endpoint = format!(
         "{}/transfers/{}/start",
         input.callback_address,

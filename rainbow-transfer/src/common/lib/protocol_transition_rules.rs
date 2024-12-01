@@ -17,15 +17,15 @@
  *
  */
 
-use anyhow::{anyhow, bail};
+use anyhow::bail;
 use rainbow_common::config::database::get_db_connection;
 use rainbow_common::err::transfer_err::TransferErrorType::{
     ConsumerAlreadyRegisteredError, MessageTypeNotAcceptedError, ProtocolError,
     TransferProcessAlreadySuspendedError, TransferProcessNotFound,
 };
 use rainbow_common::protocol::transfer::TransferState;
-use rainbow_db::transfer_provider::entities::transfer_process;
-use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
+use rainbow_db::transfer_consumer::repo::TRANSFER_CONSUMER_REPO;
+use rainbow_db::transfer_provider::repo::TRANSFER_PROVIDER_REPO;
 use serde_json::Value;
 use uuid::Uuid;
 
@@ -46,15 +46,14 @@ pub async fn protocol_transition_rules(json_value: Value) -> anyhow::Result<()> 
 
     let message_type = json_value.get("@type").and_then(|v| v.as_str()).unwrap();
 
-    let transfer_provider =
-        transfer_process::Entity::find_by_id(provider_pid).one(db_connection).await?;
-    println!("jelow");
+    println!("\n\nAqui\n\n");
 
-    let transfer_consumer = transfer_process::Entity::find()
-        .filter(transfer_process::Column::ConsumerPid.eq(consumer_pid))
-        .one(db_connection)
-        .await
-        .map_err(|e| anyhow!(e))?;
+
+    let transfer_provider =
+        TRANSFER_PROVIDER_REPO.get_transfer_process_by_provider(provider_pid).await?;
+    let transfer_consumer =
+        TRANSFER_CONSUMER_REPO.get_transfer_callbacks_by_consumer_id(consumer_pid).await
+            .unwrap_or_default();
 
     match message_type {
         "dspace:TransferRequestMessage" => {

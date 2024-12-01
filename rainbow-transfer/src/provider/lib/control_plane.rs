@@ -23,11 +23,10 @@ use anyhow::{bail, Error};
 use rainbow_common::config::database::get_db_connection;
 use rainbow_common::dcat_formats::FormatAction;
 use rainbow_common::err::transfer_err::TransferErrorType;
-use rainbow_common::err::transfer_err::TransferErrorType::TransferProcessNotFound;
 use rainbow_common::protocol::transfer::{
-    DataAddress, TransferCompletionMessage, TransferMessageTypesForDb, TransferProcessMessage,
-    TransferRequestMessage, TransferRoles, TransferStartMessage, TransferStateForDb,
-    TransferSuspensionMessage, TransferTerminationMessage,
+    DataAddress, TransferCompletionMessage, TransferProcessMessage, TransferRequestMessage,
+    TransferRoles, TransferStartMessage, TransferStateForDb, TransferSuspensionMessage,
+    TransferTerminationMessage,
 };
 use rainbow_common::utils::convert_uri_to_uuid;
 use rainbow_dataplane::core::DataPlanePeerCreationBehavior;
@@ -35,9 +34,10 @@ use rainbow_dataplane::{
     bootstrap_data_plane_in_provider, connect_to_streaming_service,
     disconnect_from_streaming_service, set_data_plane_next_hop,
 };
-use rainbow_db::transfer_provider::entities::transfer_message;
-use rainbow_db::transfer_provider::entities::transfer_process;
-use sea_orm::{ActiveValue, EntityTrait};
+use rainbow_db::transfer_provider::repo::{
+    EditTransferProcessModel, NewTransferMessageModel, NewTransferProcessModel,
+    TRANSFER_PROVIDER_REPO,
+};
 use std::future::{Future, IntoFuture};
 use std::str::FromStr;
 use uuid::Uuid;
@@ -45,16 +45,9 @@ use uuid::Uuid;
 pub async fn get_transfer_requests_by_provider(
     provider_pid: Uuid,
 ) -> anyhow::Result<Option<TransferProcessMessage>> {
-    let db_connection = get_db_connection().await;
-    let transaction_from_db =
-        transfer_process::Entity::find_by_id(provider_pid).one(db_connection).await?;
-    match transaction_from_db {
-        Some(t) => {
-            let transaction = TransferProcessMessage::from(t);
-            Ok(Some(transaction))
-        }
-        None => Ok(None),
-    }
+    let transfers = TRANSFER_PROVIDER_REPO.get_transfer_process_by_provider(provider_pid).await?;
+    let transfers = transfers.map(|t| TransferProcessMessage::from(t));
+    Ok(transfers)
 }
 
 pub async fn transfer_request<F, Fut, M>(
@@ -102,29 +95,27 @@ where
     let data_plane_id = data_plane_peer.id.clone();
     connect_to_streaming_service(data_plane_id).await?;
 
+
     // db persist
-    let transfer_process_db = transfer_process::Entity::insert(transfer_process::ActiveModel {
-        provider_pid: ActiveValue::Set(provider_pid),
-        consumer_pid: ActiveValue::Set(Some(input.consumer_pid.parse().unwrap())),
-        agreement_id: ActiveValue::Set(input.agreement_id.parse()?),
-        data_plane_id: ActiveValue::Set(Some(data_plane_id)),
-        state: ActiveValue::Set(TransferStateForDb::REQUESTED),
-        created_at: ActiveValue::Set(created_at),
-        updated_at: ActiveValue::Set(None),
-    })
-        .exec_with_returning(db_connection)
+    let transfer_process_db = TRANSFER_PROVIDER_REPO
+        .create_transfer_process(NewTransferProcessModel {
+            provider_pid,
+            consumer_pid,
+            agreement_id: input.agreement_id.parse()?,
+            data_plane_id,
+        })
         .await?;
 
-    let transfer_message_db = transfer_message::Entity::insert(transfer_message::ActiveModel {
-        id: ActiveValue::Set(Uuid::new_v4()),
-        transfer_process_id: ActiveValue::Set(provider_pid),
-        created_at: ActiveValue::Set(created_at),
-        message_type: ActiveValue::Set(TransferMessageTypesForDb::try_from(message_type)?),
-        from: ActiveValue::Set(TransferRoles::Consumer),
-        to: ActiveValue::Set(TransferRoles::Provider),
-        content: ActiveValue::Set(serde_json::to_value(&input)?),
-    })
-        .exec_with_returning(db_connection)
+    let _ = TRANSFER_PROVIDER_REPO
+        .create_transfer_message(
+            provider_pid,
+            NewTransferMessageModel {
+                message_type,
+                from: TransferRoles::Consumer,
+                to: TransferRoles::Provider,
+                content: serde_json::to_value(&input)?,
+            },
+        )
         .await?;
 
     // prepare data address for transfer start message
@@ -147,43 +138,33 @@ where
 }
 
 pub async fn transfer_start(input: TransferStartMessage) -> anyhow::Result<TransferProcessMessage> {
-    let db_connection = get_db_connection().await;
-    // persist information
-    let old_process =
-        transfer_process::Entity::find_by_id(Uuid::from_str(input.provider_pid.as_str())?)
-            .one(db_connection)
-            .await?;
-    if old_process.is_none() {
-        bail!(TransferProcessNotFound)
-    }
-    let old_process = old_process.unwrap();
-
-    let transfer_process_db = transfer_process::Entity::update(transfer_process::ActiveModel {
-        provider_pid: ActiveValue::Set(old_process.provider_pid),
-        consumer_pid: ActiveValue::Set(old_process.consumer_pid),
-        agreement_id: ActiveValue::Set(old_process.agreement_id),
-        data_plane_id: ActiveValue::Set(old_process.data_plane_id),
-        state: ActiveValue::Set(TransferStateForDb::STARTED),
-        created_at: ActiveValue::Set(old_process.created_at),
-        updated_at: ActiveValue::Set(Some(chrono::Utc::now().naive_utc())),
-    })
-        .exec(db_connection)
+    // persist process
+    let provider_pid = convert_uri_to_uuid(&input.provider_pid)?;
+    let transfer_process_db = TRANSFER_PROVIDER_REPO
+        .put_transfer_process(
+            provider_pid,
+            EditTransferProcessModel {
+                state: Option::from(TransferStateForDb::STARTED),
+                ..Default::default()
+            },
+        )
         .await?;
 
-    let transfer_message_db = transfer_message::Entity::insert(transfer_message::ActiveModel {
-        id: ActiveValue::Set(Uuid::new_v4()),
-        transfer_process_id: ActiveValue::Set(input.provider_pid.parse()?),
-        created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
-        message_type: ActiveValue::Set(TransferMessageTypesForDb::try_from(input._type.clone())?),
-        from: ActiveValue::Set(TransferRoles::Consumer),
-        to: ActiveValue::Set(TransferRoles::Provider),
-        content: ActiveValue::Set(serde_json::to_value(&input)?),
-    })
-        .exec_with_returning(db_connection)
+    // create message
+    let _ = TRANSFER_PROVIDER_REPO
+        .create_transfer_message(
+            provider_pid,
+            NewTransferMessageModel {
+                message_type: input._type.clone(),
+                from: TransferRoles::Consumer,
+                to: TransferRoles::Provider,
+                content: serde_json::to_value(&input)?,
+            },
+        )
         .await?;
 
     let tp = TransferProcessMessage::from(transfer_process_db.clone());
-
+    // data plane
     connect_to_streaming_service(transfer_process_db.data_plane_id.unwrap()).await?;
 
     Ok(tp)
@@ -192,136 +173,102 @@ pub async fn transfer_start(input: TransferStartMessage) -> anyhow::Result<Trans
 pub async fn transfer_suspension(
     input: TransferSuspensionMessage,
 ) -> anyhow::Result<TransferProcessMessage> {
-    let db_connection = get_db_connection().await;
-    // persist information
-    let old_process =
-        transfer_process::Entity::find_by_id(Uuid::from_str(input.provider_pid.as_str())?)
-            .one(db_connection)
-            .await?;
-    if old_process.is_none() {
-        bail!(TransferProcessNotFound)
-    }
-    let old_process = old_process.unwrap();
-    let transfer_process_db = transfer_process::Entity::update(transfer_process::ActiveModel {
-        provider_pid: ActiveValue::Set(old_process.provider_pid),
-        consumer_pid: ActiveValue::Set(old_process.consumer_pid),
-        agreement_id: ActiveValue::Set(old_process.agreement_id),
-        data_plane_id: ActiveValue::Set(old_process.data_plane_id),
-        state: ActiveValue::Set(TransferStateForDb::SUSPENDED),
-        created_at: ActiveValue::Set(old_process.created_at),
-        updated_at: ActiveValue::Set(Some(chrono::Utc::now().naive_utc())),
-    })
-        .exec(db_connection)
+    // persist process
+    let provider_pid = convert_uri_to_uuid(&input.provider_pid)?;
+    let transfer_process_db = TRANSFER_PROVIDER_REPO
+        .put_transfer_process(
+            provider_pid,
+            EditTransferProcessModel {
+                state: Option::from(TransferStateForDb::SUSPENDED),
+                ..Default::default()
+            },
+        )
         .await?;
-
-    let transfer_message_db = transfer_message::Entity::insert(transfer_message::ActiveModel {
-        id: ActiveValue::Set(Uuid::new_v4()),
-        transfer_process_id: ActiveValue::Set(input.provider_pid.parse()?),
-        created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
-        message_type: ActiveValue::Set(TransferMessageTypesForDb::try_from(input._type.clone())?),
-        from: ActiveValue::Set(TransferRoles::Consumer),
-        to: ActiveValue::Set(TransferRoles::Provider),
-        content: ActiveValue::Set(serde_json::to_value(&input)?),
-    })
-        .exec_with_returning(db_connection)
+    // create message
+    let _ = TRANSFER_PROVIDER_REPO
+        .create_transfer_message(
+            provider_pid,
+            NewTransferMessageModel {
+                message_type: input._type.clone(),
+                from: TransferRoles::Consumer,
+                to: TransferRoles::Provider,
+                content: serde_json::to_value(&input)?,
+            },
+        )
         .await?;
 
     let tp = TransferProcessMessage::from(transfer_process_db.clone());
-
+    // data plane
     disconnect_from_streaming_service(transfer_process_db.data_plane_id.unwrap()).await?;
-
     Ok(tp)
 }
 
 pub async fn transfer_completion(
     input: TransferCompletionMessage,
 ) -> anyhow::Result<TransferProcessMessage> {
-    let db_connection = get_db_connection().await;
-    // persist information
-    let old_process =
-        transfer_process::Entity::find_by_id(Uuid::from_str(input.provider_pid.as_str())?)
-            .one(db_connection)
-            .await?;
-    if old_process.is_none() {
-        bail!(TransferProcessNotFound)
-    }
-    let old_process = old_process.unwrap();
-    let transfer_process_db = transfer_process::Entity::update(transfer_process::ActiveModel {
-        provider_pid: ActiveValue::Set(old_process.provider_pid),
-        consumer_pid: ActiveValue::Set(old_process.consumer_pid),
-        agreement_id: ActiveValue::Set(old_process.agreement_id),
-        data_plane_id: ActiveValue::Set(old_process.data_plane_id),
-        state: ActiveValue::Set(TransferStateForDb::COMPLETED),
-        created_at: ActiveValue::Set(old_process.created_at),
-        updated_at: ActiveValue::Set(Some(chrono::Utc::now().naive_utc())),
-    })
-        .exec(db_connection)
+    // persist process
+    let provider_pid = convert_uri_to_uuid(&input.provider_pid)?;
+    let transfer_process_db = TRANSFER_PROVIDER_REPO
+        .put_transfer_process(
+            provider_pid,
+            EditTransferProcessModel {
+                state: Option::from(TransferStateForDb::COMPLETED),
+                ..Default::default()
+            },
+        )
         .await?;
 
-    let transfer_message_db = transfer_message::Entity::insert(transfer_message::ActiveModel {
-        id: ActiveValue::Set(Uuid::new_v4()),
-        transfer_process_id: ActiveValue::Set(input.provider_pid.parse()?),
-        created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
-        message_type: ActiveValue::Set(TransferMessageTypesForDb::try_from(input._type.clone())?),
-        from: ActiveValue::Set(TransferRoles::Consumer),
-        to: ActiveValue::Set(TransferRoles::Provider),
-        content: ActiveValue::Set(serde_json::to_value(&input)?),
-    })
-        .exec_with_returning(db_connection)
+    // create message
+    let _ = TRANSFER_PROVIDER_REPO
+        .create_transfer_message(
+            provider_pid,
+            NewTransferMessageModel {
+                message_type: input._type.clone(),
+                from: TransferRoles::Consumer,
+                to: TransferRoles::Provider,
+                content: serde_json::to_value(&input)?,
+            },
+        )
         .await?;
 
     let tp = TransferProcessMessage::from(transfer_process_db.clone());
 
+    // data plane
     disconnect_from_streaming_service(transfer_process_db.data_plane_id.unwrap()).await?;
-
     Ok(tp)
 }
 
 pub async fn transfer_termination(
     input: TransferTerminationMessage,
 ) -> anyhow::Result<TransferProcessMessage> {
-    let db_connection = get_db_connection().await;
-    // persist information
-    let old_process =
-        transfer_process::Entity::find_by_id(Uuid::from_str(input.provider_pid.as_str())?)
-            .one(db_connection)
-            .await?;
-    if old_process.is_none() {
-        bail!(TransferProcessNotFound)
-    }
-    let old_process = old_process.unwrap();
-    let transfer_process_db = transfer_process::Entity::update(transfer_process::ActiveModel {
-        provider_pid: ActiveValue::Set(old_process.provider_pid),
-        consumer_pid: ActiveValue::Set(old_process.consumer_pid),
-        agreement_id: ActiveValue::Set(old_process.agreement_id),
-        data_plane_id: ActiveValue::Set(old_process.data_plane_id),
-        state: ActiveValue::Set(TransferStateForDb::TERMINATED),
-        created_at: ActiveValue::Set(old_process.created_at),
-        updated_at: ActiveValue::Set(Some(chrono::Utc::now().naive_utc())),
-    })
-        .exec(db_connection)
+    // persist process
+    let provider_pid = convert_uri_to_uuid(&input.provider_pid)?;
+    let transfer_process_db = TRANSFER_PROVIDER_REPO
+        .put_transfer_process(
+            provider_pid,
+            EditTransferProcessModel {
+                state: Option::from(TransferStateForDb::TERMINATED),
+                ..Default::default()
+            },
+        )
         .await?;
 
-    let transfer_message_db = transfer_message::Entity::insert(transfer_message::ActiveModel {
-        id: ActiveValue::Set(Uuid::new_v4()),
-        transfer_process_id: ActiveValue::Set(input.provider_pid.parse()?),
-        created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
-        message_type: ActiveValue::Set(TransferMessageTypesForDb::try_from(input._type.clone())?),
-        from: ActiveValue::Set(TransferRoles::Consumer),
-        to: ActiveValue::Set(TransferRoles::Provider),
-        content: ActiveValue::Set(serde_json::to_value(&input)?),
-    })
-        .exec_with_returning(db_connection)
+    // create message
+    let _ = TRANSFER_PROVIDER_REPO
+        .create_transfer_message(
+            provider_pid,
+            NewTransferMessageModel {
+                message_type: input._type.clone(),
+                from: TransferRoles::Consumer,
+                to: TransferRoles::Provider,
+                content: serde_json::to_value(&input)?,
+            },
+        )
         .await?;
-
-    // // if suscription id cancel
-    // if transfer_process_db.subscription_id.is_some() {
-    //     disconnect_from_streaming_service_on_termination(input).await?;
-    // }
 
     let tp = TransferProcessMessage::from(transfer_process_db.clone());
 
+    // data plane
     disconnect_from_streaming_service(transfer_process_db.data_plane_id.unwrap()).await?;
-
     Ok(tp)
 }

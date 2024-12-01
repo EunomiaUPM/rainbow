@@ -37,7 +37,7 @@ pub enum FormatProtocol {
 impl ToString for FormatProtocol {
     fn to_string(&self) -> String {
         match self {
-            FormatProtocol::FiwareContextBroker => "FiwareContextBroker".to_string(),
+            FormatProtocol::FiwareContextBroker => "Ngsi-LD".to_string(),
             FormatProtocol::Http => "Http".to_string(),
             FormatProtocol::Quic => "Quic".to_string(),
             FormatProtocol::Grpc => "Grpc".to_string(),
@@ -53,7 +53,7 @@ impl FromStr for FormatProtocol {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "FiwareContextBroker" => Ok(FormatProtocol::FiwareContextBroker),
+            "Ngsi-LD" => Ok(FormatProtocol::FiwareContextBroker),
             "Http" => Ok(FormatProtocol::Http),
             "Quic" => Ok(FormatProtocol::Quic),
             "Grpc" => Ok(FormatProtocol::Grpc),
@@ -114,7 +114,7 @@ impl Serialize for DctFormats {
         S: Serializer,
     {
         let protocol = match self.protocol {
-            FormatProtocol::FiwareContextBroker => "fiware_context_broker",
+            FormatProtocol::FiwareContextBroker => "ngsi-ld",
             FormatProtocol::Http => "http",
             FormatProtocol::Quic => "quic",
             FormatProtocol::Grpc => "grpc",
@@ -140,13 +140,11 @@ impl<'de> Deserialize<'de> for DctFormats {
         println!("{}", v);
         let parts: Vec<&str> = v.split("+").collect();
         if parts.len() != 2 {
-            println!("estas petando aquí...");
             return Err(Error::custom("Expected string in format PROTOCOL_ACTION"));
         }
         let protocol = match parts[0].to_lowercase().as_str() {
-            "fiware_context_broker" => FormatProtocol::FiwareContextBroker,
+            "ngsi-ld" => FormatProtocol::FiwareContextBroker,
             "fiware" => FormatProtocol::FiwareContextBroker,
-            "cb" => FormatProtocol::FiwareContextBroker,
             "http" => FormatProtocol::Http,
             "quic" => FormatProtocol::Quic,
             "kafka" => FormatProtocol::Kafka,

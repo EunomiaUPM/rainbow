@@ -31,28 +31,24 @@ use rainbow_common::protocol::transfer::{
     TransferSuspensionMessage, TRANSFER_CONTEXT,
 };
 use rainbow_common::utils::{convert_uri_to_uuid, convert_uuid_to_uri};
-use rainbow_dataplane::{
-    bootstrap_data_plane_in_consumer, get_data_plane_peer, set_data_plane_next_hop,
-};
+use rainbow_dataplane::{bootstrap_data_plane_in_consumer, get_data_plane_peer, set_data_plane_next_hop};
 use rainbow_db::transfer_consumer::entities::transfer_callback;
-use sea_orm::{ActiveValue, ColumnTrait, EntityTrait, QueryFilter};
+use rainbow_db::transfer_consumer::repo::{EditTransferCallback, NewTransferCallback, TRANSFER_CONSUMER_REPO};
+use sea_orm::EntityTrait;
 use serde::{Deserialize, Serialize};
+use serde_json::to_value;
 use std::str::FromStr;
 use utoipa::ToSchema;
 use uuid::Uuid;
 
 pub async fn get_all_callbacks() -> anyhow::Result<Vec<transfer_callback::Model>> {
-    let db_connection = get_db_connection().await;
-    let callbacks = transfer_callback::Entity::find().all(db_connection).await?;
-    Ok(callbacks)
+    TRANSFER_CONSUMER_REPO.get_all_transfer_callbacks(None, None).await
 }
 
 pub async fn get_callback_by_id(
     callback_id: Uuid,
 ) -> anyhow::Result<Option<transfer_callback::Model>> {
-    let db_connection = get_db_connection().await;
-    let callbacks = transfer_callback::Entity::find_by_id(callback_id).one(db_connection).await?;
-    Ok(callbacks)
+    TRANSFER_CONSUMER_REPO.get_transfer_callbacks_by_id(callback_id).await
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
@@ -68,16 +64,8 @@ pub struct CreateCallbackResponse {
     pub data_address: Option<DataAddress>,
 }
 pub async fn create_new_callback() -> anyhow::Result<CreateCallbackResponse> {
-    let db_connection = get_db_connection().await;
-    let callback = transfer_callback::Entity::insert(transfer_callback::ActiveModel {
-        id: ActiveValue::Set(Uuid::new_v4()),
-        consumer_pid: ActiveValue::Set(Uuid::new_v4()),
-        provider_pid: ActiveValue::Set(None),
-        created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
-        updated_at: ActiveValue::Set(None),
-        data_plane_id: ActiveValue::Set(None),
-    })
-        .exec_with_returning(db_connection)
+    let callback = TRANSFER_CONSUMER_REPO
+        .create_transfer_callback(NewTransferCallback { data_address: None })
         .await?;
 
     let callback_url = format!("http://{}/{}", get_consumer_url()?, callback.id, );
@@ -94,30 +82,22 @@ pub async fn create_new_callback() -> anyhow::Result<CreateCallbackResponse> {
 pub async fn create_new_callback_with_address(
     data_address: DataAddress,
 ) -> anyhow::Result<CreateCallbackResponse> {
-    let db_connection = get_db_connection().await;
-    let callback_id = Uuid::new_v4();
-    let consumer_pid = Uuid::new_v4();
-
-    let callback_url = format!("http://{}/{}", get_consumer_url()?, callback_id, );
-
-    let data_plane_address = format!("{}/data/push/{}", callback_url, consumer_pid);
-
-    let callback = transfer_callback::Entity::insert(transfer_callback::ActiveModel {
-        id: ActiveValue::Set(callback_id),
-        consumer_pid: ActiveValue::Set(consumer_pid),
-        provider_pid: ActiveValue::Set(None),
-        created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
-        updated_at: ActiveValue::Set(None),
-        data_plane_id: ActiveValue::Set(None),
-    })
-        .exec_with_returning(db_connection)
+    let callback = TRANSFER_CONSUMER_REPO
+        .create_transfer_callback(NewTransferCallback {
+            data_address: Option::from(to_value(data_address).unwrap()),
+        })
         .await?;
+
+    let callback_url = format!("http://{}/{}", get_consumer_url()?, callback.id, );
+    let data_plane_address = format!("{}/data/push/{}", callback_url, callback.consumer_pid);
 
     let response = CreateCallbackResponse {
         callback_id: callback.id.to_string(),
         callback_address: callback_url,
         consumer_pid: convert_uuid_to_uri(&callback.consumer_pid)?,
-        data_address: None,
+        data_address: Option::from(serde_json::from_value::<DataAddress>(
+            callback.data_address.unwrap(),
+        )?),
     };
     Ok(response)
 }
@@ -172,7 +152,6 @@ pub async fn request_transfer(
         data_address: request.data_address,
     };
 
-    println!("{:#?}", transfer_request);
     let url = format!(
         "http://{}/{}",
         get_provider_url().unwrap(),
@@ -199,13 +178,22 @@ pub async fn request_transfer(
                     .unwrap();
 
                 // persist data plane in transfer
-                let tp = transfer_callback::Entity::find()
-                    .filter(transfer_callback::Column::ConsumerPid.eq(consumer_uuid))
-                    .one(db_connection)
+                match TRANSFER_CONSUMER_REPO
+                    .put_transfer_callback_by_consumer(
+                        consumer_uuid,
+                        EditTransferCallback {
+                            data_plane_id: Some(data_plane_id),
+                            ..Default::default()
+                        },
+                    )
                     .await
-                    .unwrap();
-                if tp.is_none() {
-                    return Err(RequestTransferResponse {
+                {
+                    Ok(res) => Ok(RequestTransferResponse {
+                        consumer_pid: Some(convert_uuid_to_uri(&res.consumer_pid).unwrap()),
+                        transfer_process: Some(transfer_process),
+                        error: None,
+                    }),
+                    Err(_) => Err(RequestTransferResponse {
                         consumer_pid: Some(consumer_pid.clone()),
                         transfer_process: None,
                         error: Some(
@@ -214,27 +202,8 @@ pub async fn request_transfer(
                             })
                                 .await,
                         ),
-                    });
+                    }),
                 }
-                let tp = tp.unwrap();
-                transfer_callback::Entity::update(transfer_callback::ActiveModel {
-                    id: ActiveValue::Set(tp.id),
-                    consumer_pid: ActiveValue::Set(tp.consumer_pid),
-                    provider_pid: ActiveValue::Set(tp.provider_pid),
-                    created_at: ActiveValue::Set(tp.created_at),
-                    updated_at: ActiveValue::Set(Some(chrono::Utc::now().naive_utc())),
-                    data_plane_id: ActiveValue::Set(Some(data_plane_id)),
-                })
-                    .exec(db_connection)
-                    .await
-                    .unwrap();
-
-                // return to client
-                Ok(RequestTransferResponse {
-                    consumer_pid: Some(consumer_pid),
-                    transfer_process: Some(transfer_process),
-                    error: None,
-                })
             }
             StatusCode::BAD_REQUEST => Err(RequestTransferResponse {
                 consumer_pid: Some(convert_uuid_to_uri(&consumer_pid).unwrap()),
@@ -263,25 +232,18 @@ pub struct DataPlaneAddressResponse {
 pub async fn get_data_address_by_consumer_pid(
     consumer_pid: Uuid,
 ) -> anyhow::Result<DataPlaneAddressResponse, RequestTransferResponse> {
-    let db_connection = get_db_connection().await;
-    let callback = transfer_callback::Entity::find()
-        .filter(transfer_callback::Column::ConsumerPid.eq(consumer_pid))
-        .one(db_connection)
-        .await
-        .unwrap();
-
-    if callback.is_none() {
-        return Err(RequestTransferResponse {
+    let callback = TRANSFER_CONSUMER_REPO.get_transfer_callbacks_by_consumer_id(consumer_pid).await;
+    match callback.unwrap() {
+        Some(callback) => {
+            let dataplane = get_data_plane_peer(callback.data_plane_id.unwrap()).await.unwrap();
+            Ok(DataPlaneAddressResponse { data_plane_address: dataplane.local_address.unwrap() })
+        }
+        None => Err(RequestTransferResponse {
             consumer_pid: Some(convert_uuid_to_uri(&consumer_pid).unwrap()),
             transfer_process: None,
             error: Some(TransferError::from_async(CallbackClientError).await),
-        });
+        }),
     }
-
-    let callback = callback.unwrap();
-    let dataplane = get_data_plane_peer(callback.data_plane_id.unwrap()).await.unwrap();
-
-    Ok(DataPlaneAddressResponse { data_plane_address: dataplane.local_address.unwrap() })
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
@@ -292,31 +254,39 @@ pub struct SuspendTransferRequest {
 pub async fn suspend_transfer(
     input: SuspendTransferRequest,
 ) -> anyhow::Result<RequestTransferResponse, RequestTransferResponse> {
-    let consumer_pid = Uuid::from_str(&input.consumer_pid);
-    if let Err(e) = Uuid::from_str(&input.consumer_pid) {
-        return Err(RequestTransferResponse {
-            consumer_pid: None,
-            transfer_process: None,
-            error: Some(TransferError::from_async(PidUuidError).await),
-        });
-    }
-    let consumer_pid = consumer_pid.unwrap();
-
-    let db_connection = get_db_connection().await;
-    let callback = transfer_callback::Entity::find()
-        .filter(transfer_callback::Column::ConsumerPid.eq(consumer_pid))
-        .one(db_connection)
+    let consumer_pid = match Uuid::from_str(&input.consumer_pid) {
+        Ok(p) => p,
+        Err(e) => {
+            return Err(RequestTransferResponse {
+                consumer_pid: None,
+                transfer_process: None,
+                error: Some(TransferError::from_async(PidUuidError).await),
+            })
+        }
+    };
+    let callback = match TRANSFER_CONSUMER_REPO
+        .get_transfer_callbacks_by_consumer_id(consumer_pid)
         .await
-        .unwrap();
+    {
+        Ok(callback) => match callback {
+            Some(callback) => callback,
+            None => {
+                return Err(RequestTransferResponse {
+                    consumer_pid: None,
+                    transfer_process: None,
+                    error: Some(TransferError::from_async(TransferProcessNotFound).await),
+                })
+            }
+        },
+        Err(e) => {
+            return Err(RequestTransferResponse {
+                consumer_pid: None,
+                transfer_process: None,
+                error: Some(TransferError::from_async(NotCheckedError { inner_error: e }).await),
+            })
+        }
+    };
 
-    if callback.is_none() {
-        return Err(RequestTransferResponse {
-            consumer_pid: None,
-            transfer_process: None,
-            error: Some(TransferError::from_async(TransferProcessNotFound).await),
-        });
-    }
-    let callback = callback.unwrap();
     let transfer_suspend = TransferSuspensionMessage {
         context: TRANSFER_CONTEXT.to_string(),
         _type: TransferMessageTypes::TransferSuspensionMessage.to_string(),
@@ -325,6 +295,7 @@ pub async fn suspend_transfer(
         code: "TRANSFER_SUSPENSION_FROM_CONSUMER_CLIENT".to_string(),
         reason: vec![],
     };
+
     let url = format!(
         "http://{}/{}",
         get_provider_url().unwrap(),
@@ -363,17 +334,38 @@ pub struct RestartTransferRequest {
 pub async fn restart_transfer(
     input: RestartTransferRequest,
 ) -> anyhow::Result<RequestTransferResponse, RequestTransferResponse> {
-    let consumer_pid = Uuid::from_str(&input.consumer_pid)
-        .map_err(|_| return (StatusCode::BAD_REQUEST, "invalid consumer_pid"))
-        .unwrap();
-
-    let db_connection = get_db_connection().await;
-    let callback = transfer_callback::Entity::find()
-        .filter(transfer_callback::Column::ConsumerPid.eq(consumer_pid))
-        .one(db_connection)
+    let consumer_pid = match Uuid::from_str(&input.consumer_pid) {
+        Ok(p) => p,
+        Err(e) => {
+            return Err(RequestTransferResponse {
+                consumer_pid: None,
+                transfer_process: None,
+                error: Some(TransferError::from_async(PidUuidError).await),
+            })
+        }
+    };
+    let callback = match TRANSFER_CONSUMER_REPO
+        .get_transfer_callbacks_by_consumer_id(consumer_pid)
         .await
-        .unwrap()
-        .unwrap();
+    {
+        Ok(callback) => match callback {
+            Some(callback) => callback,
+            None => {
+                return Err(RequestTransferResponse {
+                    consumer_pid: None,
+                    transfer_process: None,
+                    error: Some(TransferError::from_async(TransferProcessNotFound).await),
+                })
+            }
+        },
+        Err(e) => {
+            return Err(RequestTransferResponse {
+                consumer_pid: None,
+                transfer_process: None,
+                error: Some(TransferError::from_async(NotCheckedError { inner_error: e }).await),
+            })
+        }
+    };
 
     let transfer_start = TransferStartMessage {
         context: TRANSFER_CONTEXT.to_string(),
@@ -420,17 +412,38 @@ pub struct CompleteTransferRequest {
 pub async fn complete_transfer(
     input: CompleteTransferRequest,
 ) -> anyhow::Result<RequestTransferResponse, RequestTransferResponse> {
-    let consumer_pid = Uuid::from_str(&input.consumer_pid)
-        .map_err(|_| return (StatusCode::BAD_REQUEST, "invalid consumer_pid"))
-        .unwrap();
-
-    let db_connection = get_db_connection().await;
-    let callback = transfer_callback::Entity::find()
-        .filter(transfer_callback::Column::ConsumerPid.eq(consumer_pid))
-        .one(db_connection)
+    let consumer_pid = match Uuid::from_str(&input.consumer_pid) {
+        Ok(p) => p,
+        Err(e) => {
+            return Err(RequestTransferResponse {
+                consumer_pid: None,
+                transfer_process: None,
+                error: Some(TransferError::from_async(PidUuidError).await),
+            })
+        }
+    };
+    let callback = match TRANSFER_CONSUMER_REPO
+        .get_transfer_callbacks_by_consumer_id(consumer_pid)
         .await
-        .unwrap()
-        .unwrap();
+    {
+        Ok(callback) => match callback {
+            Some(callback) => callback,
+            None => {
+                return Err(RequestTransferResponse {
+                    consumer_pid: None,
+                    transfer_process: None,
+                    error: Some(TransferError::from_async(TransferProcessNotFound).await),
+                })
+            }
+        },
+        Err(e) => {
+            return Err(RequestTransferResponse {
+                consumer_pid: None,
+                transfer_process: None,
+                error: Some(TransferError::from_async(NotCheckedError { inner_error: e }).await),
+            })
+        }
+    };
 
     let transfer_complete = TransferCompletionMessage {
         context: TRANSFER_CONTEXT.to_string(),

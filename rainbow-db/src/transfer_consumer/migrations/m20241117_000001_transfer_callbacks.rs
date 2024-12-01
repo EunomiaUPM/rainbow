@@ -39,6 +39,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(TransferCallbacks::CreatedAt).date_time().not_null())
                     .col(ColumnDef::new(TransferCallbacks::UpdatedAt).date_time())
                     .col(ColumnDef::new(TransferCallbacks::DataPlaneId).uuid())
+                    .col(ColumnDef::new(TransferCallbacks::DataAddress).json())
                     .to_owned(),
             )
             .await
