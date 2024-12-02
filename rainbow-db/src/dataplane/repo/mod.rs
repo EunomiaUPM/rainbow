@@ -17,4 +17,101 @@
  *
  */
 
+use crate::dataplane::entities::data_plane_field;
+use crate::dataplane::entities::data_plane_process;
+use crate::dataplane::repo::sql::DataPlaneRepoForSql;
+use axum::async_trait;
+use once_cell::sync::Lazy;
+use rainbow_common::config::config::GLOBAL_CONFIG;
+use uuid::Uuid;
 
+pub mod sql;
+
+pub trait CombinedRepo: DataPlaneProcessRepo + DataPlaneFieldRepo {}
+impl<T> CombinedRepo for T where T: DataPlaneProcessRepo + DataPlaneFieldRepo {}
+pub static DATA_PLANE_REPO: Lazy<Box<dyn CombinedRepo + Send + Sync>> = Lazy::new(|| {
+    let repo_type = GLOBAL_CONFIG.get().unwrap().db_type.clone();
+    match repo_type.as_str() {
+        "postgres" => Box::new(DataPlaneRepoForSql {}),
+        "memory" => Box::new(DataPlaneRepoForSql {}),
+        "mysql" => Box::new(DataPlaneRepoForSql {}),
+        _ => panic!("Unknown REPO_TYPE: {}", repo_type),
+    }
+});
+
+pub struct NewDataPlaneProcess {
+    pub id: Uuid,
+    pub role: String,
+    pub address: String,
+    pub dct_action_format: String,
+    pub dct_action_protocol: String,
+}
+
+pub struct EditDataPlaneProcess {
+    pub address: Option<String>,
+}
+
+#[async_trait]
+pub trait DataPlaneProcessRepo {
+    async fn get_all_data_plane_processes(
+        &self,
+        limit: Option<u64>,
+        offset: Option<u64>,
+    ) -> anyhow::Result<Vec<data_plane_process::Model>>;
+    async fn get_data_plane_process_by_id(
+        &self,
+        data_plane_process_id: Uuid,
+    ) -> anyhow::Result<Option<data_plane_process::Model>>;
+    async fn put_data_plane_process(
+        &self,
+        data_plane_process_id: Uuid,
+        new_data_plane_process: EditDataPlaneProcess,
+    ) -> anyhow::Result<data_plane_process::Model>;
+    async fn create_data_plane_process(
+        &self,
+        new_data_plane_process: NewDataPlaneProcess,
+    ) -> anyhow::Result<data_plane_process::Model>;
+    async fn delete_data_plane_process(&self, data_plane_process_id: Uuid) -> anyhow::Result<()>;
+}
+
+pub struct NewDataPlaneField {
+    pub key: String,
+    pub value: String,
+    pub data_plane_process_id: Uuid,
+}
+
+pub struct EditDataPlaneField {
+    pub value: Option<String>,
+}
+
+#[async_trait]
+pub trait DataPlaneFieldRepo {
+    async fn get_all_data_plane_fields(
+        &self,
+        limit: Option<u64>,
+        offset: Option<u64>,
+    ) -> anyhow::Result<Vec<data_plane_field::Model>>;
+
+    async fn get_all_data_plane_fields_by_process(
+        &self,
+        data_plane_process_id: Uuid,
+    ) -> anyhow::Result<Vec<data_plane_field::Model>>;
+
+    async fn get_data_plane_field_by_id(
+        &self,
+        data_plane_field_id: Uuid,
+    ) -> anyhow::Result<Option<data_plane_field::Model>>;
+
+    async fn put_data_plane_field_by_id(
+        &self,
+        data_plane_field_id: Uuid,
+        new_data_plane_field: EditDataPlaneField,
+    ) -> anyhow::Result<data_plane_field::Model>;
+
+    async fn create_data_plane_field(
+        &self,
+        new_data_plane_field: NewDataPlaneField,
+    ) -> anyhow::Result<data_plane_field::Model>;
+
+    async fn delete_data_plane_field(&self, data_plane_field_id: Uuid) -> anyhow::Result<()>;
+}
