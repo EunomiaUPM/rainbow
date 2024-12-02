@@ -71,6 +71,10 @@ pub trait TransferProcessRepo {
         &self,
         pid: Uuid,
     ) -> anyhow::Result<Option<transfer_process::Model>>;
+    async fn get_transfer_process_by_data_plane(
+        &self,
+        pid: Uuid,
+    ) -> anyhow::Result<Option<transfer_process::Model>>;
     async fn put_transfer_process(
         &self,
         pid: Uuid,

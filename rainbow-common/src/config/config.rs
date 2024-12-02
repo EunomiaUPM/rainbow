@@ -40,7 +40,7 @@ macro_rules! config_field {
     }};
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum ConfigRoles {
     Catalog,
     Contracts,

@@ -31,8 +31,9 @@ use rainbow_common::config::config::{get_provider_url, ConfigRoles};
 use rainbow_common::config::database::get_db_connection;
 use rainbow_common::dcat_formats::FormatAction;
 use rainbow_common::forwarding::forward_response;
-use rainbow_common::protocol::transfer::TransferRequestMessage;
+use rainbow_common::protocol::transfer::{TransferRequestMessage, TransferStateForDb};
 use rainbow_common::utils::convert_uri_to_uuid;
+use rainbow_db::transfer_provider::repo::TRANSFER_PROVIDER_REPO;
 use reqwest::{Method, StatusCode};
 use uuid::Uuid;
 
@@ -139,6 +140,20 @@ impl DataPlanePeerDefaultBehavior for HttpDataPlane {
         mut request: Request,
         extras: Option<String>,
     ) -> anyhow::Result<Response> {
+        // Check PIP status
+        if data_plane_peer.role == ConfigRoles::Provider {
+            let data_process = match TRANSFER_PROVIDER_REPO.get_transfer_process_by_data_plane(data_plane_peer.id).await {
+                Ok(dp) => match dp {
+                    Some(dp) => dp,
+                    None => bail!("Transfer not found")
+                }
+                Err(_) => bail!("Not able to pull data from service")
+            };
+            let state = data_process.state;
+            if state != TransferStateForDb::STARTED {
+                bail!("Unauthorized")
+            }
+        }
         let next_hop = data_plane_peer.attributes.get("nextHop").unwrap().to_string();
         let query = request.uri().query();
         let next_hop = format!(

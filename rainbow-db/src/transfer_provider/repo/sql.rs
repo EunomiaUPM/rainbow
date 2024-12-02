@@ -81,6 +81,18 @@ impl TransferProcessRepo for TransferProviderRepoForSql {
         }
     }
 
+    async fn get_transfer_process_by_data_plane(&self, pid: Uuid) -> anyhow::Result<Option<transfer_process::Model>> {
+        let db_connection = get_db_connection().await;
+        let transfer_process = transfer_process::Entity::find()
+            .filter(transfer_process::Column::DataPlaneId.eq(pid))
+            .one(db_connection)
+            .await;
+        match transfer_process {
+            Ok(transfer_process) => Ok(transfer_process),
+            Err(_) => bail!("Failed to fetch transfer process"),
+        }
+    }
+
     async fn put_transfer_process(
         &self,
         pid: Uuid,
