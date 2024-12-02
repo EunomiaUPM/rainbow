@@ -45,8 +45,9 @@ as big data or machine learning.
 - Rainbow-catalog: Catalog system compatible with DCAT3, and based on the Catalog Protocol of the Dataspace Protocol.
 - Rainbow-transfer: Complete implementation of the transfer system and control plane of the Transfer Process Protocol of
   the Dataspace Protocol. Specification and implementation of the data plane.
-- Rainbow-data-plane: (Work in progress). Own implementation for big-data and multi-implementation environments based on
-  massive transfer tools. Future integration with Databricks' Deltasharing protocol, and with Apache Arrow's Flight.
+- Rainbow-data-plane: Own implementation for big-data and multi-implementation environments based on
+  massive transfer tools. Currently supported is Fiware's NGSI-LD and plain HTTP. Future integration with Databricks'
+  Deltasharing protocol, and with Apache Arrow's Flight.
 - Rainbow-contracts: (Work in progress). Implementation of the Contract Protocol of the Dataspace Protocol.
 - Rainbow-common: lib crate for common functionality in the project.
 - Rainbow-core: Binary to run the whole project.
@@ -54,4 +55,65 @@ as big data or machine learning.
 
 ## Getting started
 
-Coming soon…
+### Plain old docker
+
+To get started simply, we recommend that you work with the docker container.
+
+```bash
+docker pull caparicioesd/rainbow
+```
+
+And then you can initialize it with:
+
+```bash
+docker run caparicioesd/rainbow:latest provider start
+```
+
+If you want to see the different rainbow options:
+
+```bash
+docker run caparicioesd/rainbow:latest provider -h  
+
+# Options:
+  # --host-url <HOST_URL>                  
+  # --host-port <HOST_PORT>                
+  # --db-type <DB_TYPE>                    
+  # --db-url <DB_URL>                      
+  # --db-port <DB_PORT>                    
+  # --db-user <DB_USER>                    
+  # --db-password <DB_PASSWORD>  
+```
+
+The database that Rainbow works with is Postgres. To initialize the database migrations:
+
+```bash
+docker run caparicioesd/rainbow:latest provider \
+  --db-port <DB_PORT> \
+  --db-user <DB_USER> \                    
+  --db-password <DB_PASSWORD> \           
+  --db-database <DB_DATABASE> \
+  setup
+```
+
+### Docker compose
+
+In case you want to integrate Rainbow in a more automated way, with docker-compose, you can start server instances,
+databases, migrations. In `/deployments/docker-compose.testing.yaml` you have a good example of this.
+
+### Architecture
+
+![arquitectura.png](./docs/static/img/arquitectura.png)
+
+- Client: It is any client, machine or human that wants to connect to a consumer, in order to access the data space. The
+  client connects to the consumer to initiate transactions, suspend them, complete them, by means of a high level API of
+  the Consumer. We call this API the HL Consumer API.
+- The communication between the Consumer Provider is done with the LL API (Low level API), which is an improved
+  implementation of the Transfer Process of the Dataspace Protocol.
+- Final System is the environment where the data behind the provider is exposed.
+
+### Tutorial
+
+To become familiar with the whole system, we recommend to deploy the following repository, and follow the tutorials in
+jupyter notebook.
+
+https://github.com/ging/ds-deployment
