@@ -46,9 +46,6 @@ pub async fn protocol_transition_rules(json_value: Value) -> anyhow::Result<()> 
 
     let message_type = json_value.get("@type").and_then(|v| v.as_str()).unwrap();
 
-    println!("\n\nAqui\n\n");
-
-
     let transfer_provider =
         TRANSFER_PROVIDER_REPO.get_transfer_process_by_provider(provider_pid).await?;
     let transfer_consumer =

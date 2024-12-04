@@ -20,7 +20,7 @@
 use crate::core::{
     DataPlanePeer, DataPlanePeerCreationBehavior, DataPlanePeerDefaultBehavior, PersistModel,
 };
-use crate::implementations::fiware_context_broker::FiwareDataPlane;
+use crate::implementations::ngsi_ld::NgsiLdDataPlane;
 use crate::DATA_PLANE_HTTP_CLIENT;
 use anyhow::bail;
 use axum::async_trait;
@@ -38,7 +38,7 @@ use serde_json::Value;
 use uuid::Uuid;
 
 #[async_trait]
-impl DataPlanePeerDefaultBehavior for FiwareDataPlane {
+impl DataPlanePeerDefaultBehavior for NgsiLdDataPlane {
     async fn bootstrap_data_plane_in_consumer(
         transfer_request: TransferRequestMessage,
     ) -> anyhow::Result<DataPlanePeer> {
@@ -53,7 +53,7 @@ impl DataPlanePeerDefaultBehavior for FiwareDataPlane {
             local_address_path,
             convert_uri_to_uuid(&transfer_request.consumer_pid)?
         );
-        let mut fw = FiwareDataPlane::create_data_plane_peer()
+        let mut fw = NgsiLdDataPlane::create_data_plane_peer()
             .with_role(ConfigRoles::Consumer)
             .with_protocol(transfer_request.format.protocol)
             .with_action(transfer_request.format.action)
@@ -82,7 +82,7 @@ impl DataPlanePeerDefaultBehavior for FiwareDataPlane {
             local_address_path,
             provider_pid
         );
-        let mut fw = FiwareDataPlane::create_data_plane_peer()
+        let mut fw = NgsiLdDataPlane::create_data_plane_peer()
             .with_role(ConfigRoles::Provider)
             .with_protocol(transfer_request.format.protocol)
             .with_action(transfer_request.format.action)
@@ -104,7 +104,7 @@ impl DataPlanePeerDefaultBehavior for FiwareDataPlane {
         let db_connection = get_db_connection().await;
         match data_plane_peer.role {
             ConfigRoles::Consumer => {
-                let mut fw = FiwareDataPlane::create_data_plane_peer_from_inner(data_plane_peer);
+                let mut fw = NgsiLdDataPlane::create_data_plane_peer_from_inner(data_plane_peer);
                 match fw.inner.dct_formats.action {
                     // And action push
                     FormatAction::Push => {
@@ -125,7 +125,7 @@ impl DataPlanePeerDefaultBehavior for FiwareDataPlane {
                 }
             }
             ConfigRoles::Provider => {
-                let mut fw = FiwareDataPlane::create_data_plane_peer_from_inner(data_plane_peer);
+                let mut fw = NgsiLdDataPlane::create_data_plane_peer_from_inner(data_plane_peer);
                 match fw.inner.dct_formats.action {
                     FormatAction::Push => {
                         let consumer_callback =
@@ -153,7 +153,7 @@ impl DataPlanePeerDefaultBehavior for FiwareDataPlane {
         let db_connection = get_db_connection().await;
         let data_plane_peer = DataPlanePeer::load_model_by_id(data_plane_id, db_connection).await?;
 
-        let mut fw = FiwareDataPlane::create_data_plane_peer_from_inner(*data_plane_peer);
+        let mut fw = NgsiLdDataPlane::create_data_plane_peer_from_inner(*data_plane_peer);
         let description = fw.inner.attributes.get("endpointDescription").unwrap().to_string();
         let url = fw.inner.attributes.get("endpointUrl").unwrap().to_string();
         let mut description_as_json = serde_json::from_str::<Value>(description.as_str())?;
@@ -195,7 +195,7 @@ impl DataPlanePeerDefaultBehavior for FiwareDataPlane {
     async fn disconnect_from_streaming_service(data_plane_id: Uuid) -> anyhow::Result<()> {
         let db_connection = get_db_connection().await;
         let data_plane_peer = DataPlanePeer::load_model_by_id(data_plane_id, db_connection).await?;
-        let fw = FiwareDataPlane::create_data_plane_peer_from_inner(*data_plane_peer);
+        let fw = NgsiLdDataPlane::create_data_plane_peer_from_inner(*data_plane_peer);
         let endpoint_url = fw
             .inner
             .attributes

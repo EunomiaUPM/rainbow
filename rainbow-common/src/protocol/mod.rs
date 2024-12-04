@@ -19,3 +19,4 @@
 
 pub mod catalog;
 pub mod transfer;
+pub mod contract;

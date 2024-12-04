@@ -17,5 +17,7 @@
  *
  */
 
-pub mod fiware_context_broker;
+pub mod ngsi_ld;
 pub mod plain_http;
+pub mod kafka;
+

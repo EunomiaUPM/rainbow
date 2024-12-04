@@ -34,7 +34,6 @@ pub async fn create_consumer_router() -> Router {
     let server = Router::new()
         .merge(misc_router::router())
         .merge(router::router())
-        // .merge(proxy::router())
         .merge(api::router())
         .merge(open_api)
         .layer(TraceLayer::new_for_http());

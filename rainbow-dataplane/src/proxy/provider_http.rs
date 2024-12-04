@@ -19,7 +19,7 @@
 
 use crate::core::{DataPlanePeer, DataPlanePeerDefaultBehavior};
 use crate::data::entities::data_plane_process;
-use crate::implementations::fiware_context_broker::FiwareDataPlane;
+use crate::implementations::ngsi_ld::NgsiLdDataPlane;
 use crate::implementations::plain_http::HttpDataPlane;
 use axum::extract::{Path, Request};
 use axum::response::IntoResponse;
@@ -92,7 +92,7 @@ async fn dataplane_pull(
                     FormatAction::Pull => match data_plane_peer.dct_formats.protocol {
                         FormatProtocol::FiwareContextBroker => {
                             let res =
-                                FiwareDataPlane::on_pull_data(*data_plane_peer, request, extras)
+                                NgsiLdDataPlane::on_pull_data(*data_plane_peer, request, extras)
                                     .await;
                             res.unwrap_or_else(|_| (StatusCode::BAD_REQUEST).into_response())
                         }
@@ -136,7 +136,7 @@ async fn dataplane_push(
                     FormatAction::Push => match data_plane_peer.dct_formats.protocol {
                         FormatProtocol::FiwareContextBroker => {
                             let res =
-                                FiwareDataPlane::on_push_data(*data_plane_peer, request, extras)
+                                NgsiLdDataPlane::on_push_data(*data_plane_peer, request, extras)
                                     .await;
                             res.unwrap_or_else(|_| (StatusCode::BAD_REQUEST).into_response())
                         }

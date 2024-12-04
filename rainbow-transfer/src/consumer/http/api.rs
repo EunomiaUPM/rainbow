@@ -63,7 +63,18 @@ pub fn router() -> Router {
         .layer(middleware::from_fn(authorization_middleware))
 }
 
-async fn handle_get_all_callbacks() -> impl IntoResponse {
+#[utoipa::path(
+    get,
+    path = "/api/v1/callbacks",
+    operation_id = "getExample",
+    tag = "Example",
+    description = "This endpoint retrieves an example response for demonstration purposes.",
+    params(),
+    responses(
+        (status = 200, description = "Get todo success", body = String)
+    ),
+)]
+pub async fn handle_get_all_callbacks() -> impl IntoResponse {
     info!("GET /api/v1/callbacks");
 
     match get_all_callbacks().await {
@@ -72,7 +83,7 @@ async fn handle_get_all_callbacks() -> impl IntoResponse {
     }
 }
 
-async fn handle_get_callback_by_id(Path(callback_id): Path<Uuid>) -> impl IntoResponse {
+pub async fn handle_get_callback_by_id(Path(callback_id): Path<Uuid>) -> impl IntoResponse {
     info!("GET /api/v1/callbacks/{}", callback_id.to_string());
 
     match get_callback_by_id(callback_id).await {
@@ -84,7 +95,7 @@ async fn handle_get_callback_by_id(Path(callback_id): Path<Uuid>) -> impl IntoRe
     }
 }
 
-async fn handle_create_callback(data_address: Option<Json<DataAddress>>) -> impl IntoResponse {
+pub async fn handle_create_callback(data_address: Option<Json<DataAddress>>) -> impl IntoResponse {
     info!("POST /api/v1/setup-transfer");
 
     match data_address {
@@ -99,7 +110,7 @@ async fn handle_create_callback(data_address: Option<Json<DataAddress>>) -> impl
     }
 }
 
-async fn handle_request_transfer(Json(input): Json<RequestTransferRequest>) -> impl IntoResponse {
+pub async fn handle_request_transfer(Json(input): Json<RequestTransferRequest>) -> impl IntoResponse {
     info!("POST /api/v1/request-transfer");
 
     match request_transfer(input).await {
@@ -108,7 +119,7 @@ async fn handle_request_transfer(Json(input): Json<RequestTransferRequest>) -> i
     }
 }
 
-async fn handle_get_data_address_by_consumer_pid(
+pub async fn handle_get_data_address_by_consumer_pid(
     Path(consumer_pid): Path<Uuid>,
 ) -> impl IntoResponse {
     info!("GET /api/v1/data-address/{}", consumer_pid.to_string());
@@ -119,7 +130,7 @@ async fn handle_get_data_address_by_consumer_pid(
     }
 }
 
-async fn handle_suspend_transfer(Json(input): Json<SuspendTransferRequest>) -> impl IntoResponse {
+pub async fn handle_suspend_transfer(Json(input): Json<SuspendTransferRequest>) -> impl IntoResponse {
     info!("POST /api/v1/suspend-transfer");
 
     match suspend_transfer(input).await {
@@ -128,7 +139,7 @@ async fn handle_suspend_transfer(Json(input): Json<SuspendTransferRequest>) -> i
     }
 }
 
-async fn handle_restart_transfer(Json(input): Json<RestartTransferRequest>) -> impl IntoResponse {
+pub async fn handle_restart_transfer(Json(input): Json<RestartTransferRequest>) -> impl IntoResponse {
     info!("POST /api/v1/restart-transfer");
 
     match restart_transfer(input).await {
@@ -137,7 +148,7 @@ async fn handle_restart_transfer(Json(input): Json<RestartTransferRequest>) -> i
     }
 }
 
-async fn handle_complete_transfer(Json(input): Json<CompleteTransferRequest>) -> impl IntoResponse {
+pub async fn handle_complete_transfer(Json(input): Json<CompleteTransferRequest>) -> impl IntoResponse {
     info!("POST /api/v1/complete-transfer");
 
     match complete_transfer(input).await {

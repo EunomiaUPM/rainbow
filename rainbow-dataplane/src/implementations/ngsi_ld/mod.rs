@@ -28,12 +28,12 @@ use sea_orm::{ActiveValue, ColumnTrait, DbConn, EntityTrait, QueryFilter};
 use std::collections::HashMap;
 use uuid::Uuid;
 
-pub struct FiwareDataPlane {
+pub struct NgsiLdDataPlane {
     pub inner: DataPlanePeer,
 }
 
 #[async_trait]
-impl PersistModel<data_plane_process::Model> for FiwareDataPlane {
+impl PersistModel<data_plane_process::Model> for NgsiLdDataPlane {
     async fn persist(self, db_connection: &DbConn) -> anyhow::Result<Box<Self>> {
         let dp = data_plane_process::Entity::find_by_id(self.inner.id).one(db_connection).await?;
         let attributes = data_plane_field::Entity::find()
@@ -111,7 +111,7 @@ impl PersistModel<data_plane_process::Model> for FiwareDataPlane {
     }
 }
 
-impl DataPlanePeerCreationBehavior for FiwareDataPlane {
+impl DataPlanePeerCreationBehavior for NgsiLdDataPlane {
     fn create_data_plane_peer() -> Self {
         Self { inner: DataPlanePeer::default() }
     }

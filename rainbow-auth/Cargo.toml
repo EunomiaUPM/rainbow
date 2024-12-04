@@ -39,6 +39,6 @@ http-body-util = { workspace = true }
 tracing-test = { workspace = true }
 utoipa = { workspace = true }
 utoipa-axum = { workspace = true }
-utoipa-redoc = { workspace = true }
+utoipa-swagger-ui = { workspace = true }
 sea-orm = { workspace = true }
 sea-orm-migration = { workspace = true }

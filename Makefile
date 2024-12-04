@@ -21,38 +21,17 @@ clean:
 dev:
 	docker compose -f ./deployment/docker-compose.dev.yaml up -d
 
-build-container:
-	echo "container..."
-
-create-provider-migration:
-	export $(cat $(PWD)/.env | xargs)
-	diesel migration generate \
-		--diff-schema provider \
-		--database-url $(PROVIDER_DATABASE_URL) \
-		--schema-key provider
-
-run-provider-migration:
-	diesel migration run \
-		--database-url $(PROVIDER_DATABASE_URL) \
-		--migration-dir ./rainbow-core/src/db/provider_migrations
-
-create-consumer-migration:
-	export $(cat $(PWD)/.env | xargs)
-	diesel migration generate \
-		--diff-schema consumer \
-		--database-url $(CONSUMER_DATABASE_URL) \
-		--schema-key consumer
-
-run-consumer-migration:
-	diesel migration run \
-		--database-url $(CONSUMER_DATABASE_URL)
-		--schema-key consumer
-
-run-migration:
-	diesel migration run \
-		--database-url $(DATABASE_URL)
-
 start-static-server:
 	cd ./test/data-servers/static-parquet-server \
 	cargo run \
 		1236
+
+build-container:
+	docker build \
+		--progress plain \
+		-t caparicioesd/rainbow:latest \
+		-f deployment/Dockerfile \
+		.
+
+push-container:
+	docker push caparicioesd/rainbow:latest

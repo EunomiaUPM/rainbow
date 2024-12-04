@@ -16,17 +16,31 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
-use utoipa::openapi::OpenApi as OpenApiModel;
+use crate::consumer::http::api::__path_handle_get_all_callbacks;
+use crate::consumer::http::api::handle_get_all_callbacks;
+use axum::Router;
 use utoipa::{OpenApi, PartialSchema};
-use utoipa_redoc::{Redoc, Servable};
+use utoipa_axum::router::OpenApiRouter;
+use utoipa_axum::routes;
+use utoipa_scalar::{Scalar, Servable};
+use utoipa_swagger_ui::SwaggerUi;
 
 // https://github.com/juhaku/utoipa/blob/master/examples/axum-utoipa-bindings/src/main.rs
 #[derive(OpenApi)]
 struct HighLevelConsumerApiDoc;
 
-pub fn open_api_setup() -> anyhow::Result<Redoc<OpenApiModel>> {
-    let api_docs = HighLevelConsumerApiDoc::openapi();
-    let router = Redoc::with_url("/api/v1", api_docs);
+pub fn create_openapi_router() -> OpenApiRouter {
+    OpenApiRouter::new()
+        .routes(routes!(handle_get_all_callbacks))
+}
+
+pub fn open_api_setup() -> anyhow::Result<Router> {
+    let (router, api) = OpenApiRouter::with_openapi(HighLevelConsumerApiDoc::openapi())
+        .nest("", create_openapi_router())
+        .split_for_parts();
+
+    let router = router
+        .merge(SwaggerUi::new("/swagger-ui").url("/api/v1/openapi.json", api.clone()))
+        .merge(Scalar::with_url("/api/v1", api));
     Ok(router)
 }
