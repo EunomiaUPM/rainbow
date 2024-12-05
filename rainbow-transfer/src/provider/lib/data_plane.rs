@@ -19,13 +19,10 @@
 use anyhow::bail;
 use rainbow_catalog::core::ll_api::dataservices_request_by_id;
 use rainbow_catalog::protocol::dataservice_definition::DataService;
-use rainbow_common::config::database::get_db_connection;
 use rainbow_db::transfer_provider::repo::TRANSFER_PROVIDER_REPO;
 use uuid::Uuid;
 
 pub async fn resolve_endpoint_from_agreement(agreement_id: Uuid) -> anyhow::Result<DataService> {
-    let db_connection = get_db_connection().await;
-
     let agreement = match TRANSFER_PROVIDER_REPO.get_agreement_by_id(agreement_id).await? {
         None => bail!("agreement not found"),
         Some(agreement) => agreement,

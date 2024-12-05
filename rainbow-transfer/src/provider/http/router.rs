@@ -48,10 +48,12 @@ use rainbow_common::protocol::transfer::{
 };
 use rainbow_common::utils::{convert_uri_to_uuid, convert_uuid_to_uri};
 use rainbow_db::transfer_provider::entities::{transfer_message, transfer_process};
+use rainbow_db::transfer_provider::repo::{EditTransferProcessModel, NewTransferMessageModel, TRANSFER_PROVIDER_REPO};
 use reqwest::Error;
 use sea_orm::{ActiveValue, EntityTrait};
 use serde_json::to_value;
 use tracing::{debug, error, info};
+use utoipa::openapi::RefOr::T;
 use uuid::Uuid;
 
 pub fn router() -> Router {
@@ -137,6 +139,7 @@ async fn send_transfer_start(
         input.callback_address,
         convert_uri_to_uuid(&input.consumer_pid)?
     );
+
     let response = DATA_PLANE_HTTP_CLIENT
         .clone()
         .post(consumer_transfer_endpoint)
@@ -148,46 +151,18 @@ async fn send_transfer_start(
     match response {
         Ok(res) => {
             if res.status() == StatusCode::OK {
-                let created_at = chrono::Utc::now().naive_utc();
-                let message_id = Uuid::new_v4();
+                let _ = TRANSFER_PROVIDER_REPO.put_transfer_process(provider_pid, EditTransferProcessModel {
+                    state: Some(TransferStateForDb::STARTED),
+                    ..Default::default()
+                }).await?;
 
-                let db_connection = get_db_connection().await;
-                // persist information
-                let old_process =
-                    transfer_process::Entity::find_by_id(provider_pid).one(db_connection).await?;
-                if old_process.is_none() {
-                    bail!(TransferProcessNotFound)
-                }
-                let old_process = old_process.unwrap();
-                println!("{:?}", old_process);
+                let _ = TRANSFER_PROVIDER_REPO.create_transfer_message(provider_pid, NewTransferMessageModel {
+                    message_type: TransferMessageTypes::TransferStartMessage.to_string(),
+                    from: TransferRoles::Provider,
+                    to: TransferRoles::Consumer,
+                    content: to_value(&transfer_start_message)?,
+                }).await?;
 
-                let transfer_process_db =
-                    transfer_process::Entity::update(transfer_process::ActiveModel {
-                        provider_pid: ActiveValue::Set(old_process.provider_pid),
-                        consumer_pid: ActiveValue::Set(old_process.consumer_pid),
-                        agreement_id: ActiveValue::Set(old_process.agreement_id),
-                        data_plane_id: ActiveValue::Set(old_process.data_plane_id),
-                        state: ActiveValue::Set(TransferStateForDb::STARTED),
-                        created_at: ActiveValue::Set(old_process.created_at),
-                        updated_at: ActiveValue::Set(Some(chrono::Utc::now().naive_utc())),
-                    })
-                        .exec(db_connection)
-                        .await?;
-
-                let transfer_message_db =
-                    transfer_message::Entity::insert(transfer_message::ActiveModel {
-                        id: ActiveValue::Set(Uuid::new_v4()),
-                        transfer_process_id: ActiveValue::Set(provider_pid),
-                        created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
-                        message_type: ActiveValue::Set(
-                            TransferMessageTypesForDb::TransferStartMessage,
-                        ),
-                        from: ActiveValue::Set(TransferRoles::Provider),
-                        to: ActiveValue::Set(TransferRoles::Consumer),
-                        content: ActiveValue::Set(serde_json::to_value(&transfer_start_message)?),
-                    })
-                        .exec_with_returning(db_connection)
-                        .await?;
                 Ok(())
             } else {
                 println!("not started...."); // TODO Error
