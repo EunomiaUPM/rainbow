@@ -27,7 +27,6 @@ use axum::async_trait;
 use axum::body::to_bytes;
 use axum::extract::Request;
 use rainbow_common::config::config::{get_provider_url, ConfigRoles};
-use rainbow_common::config::database::get_db_connection;
 use rainbow_common::dcat_formats::FormatAction;
 use rainbow_common::forwarding::forward_response;
 use rainbow_common::protocol::transfer::{TransferRequestMessage, TransferStateForDb};
@@ -42,7 +41,6 @@ impl DataPlanePeerDefaultBehavior for NgsiLdDataPlane {
     async fn bootstrap_data_plane_in_consumer(
         transfer_request: TransferRequestMessage,
     ) -> anyhow::Result<DataPlanePeer> {
-        let db_connection = get_db_connection().await;
         let local_address_path = match transfer_request.format.action {
             FormatAction::Push => "/data/push",
             FormatAction::Pull => "/data/pull",
@@ -63,7 +61,7 @@ impl DataPlanePeerDefaultBehavior for NgsiLdDataPlane {
             fw = fw.add_attribute("endpointUrl".to_string(), data_address.endpoint);
         }
 
-        fw = *fw.persist(db_connection).await?;
+        fw = *fw.persist().await?;
         Ok(fw.inner)
     }
 
@@ -71,7 +69,6 @@ impl DataPlanePeerDefaultBehavior for NgsiLdDataPlane {
         transfer_request: TransferRequestMessage,
         provider_pid: Uuid,
     ) -> anyhow::Result<DataPlanePeer> {
-        let db_connection = get_db_connection().await;
         let local_address_path = match transfer_request.format.action {
             FormatAction::Push => "/data/push",
             FormatAction::Pull => "/data/pull",
@@ -92,7 +89,7 @@ impl DataPlanePeerDefaultBehavior for NgsiLdDataPlane {
                 transfer_request.callback_address,
             );
 
-        fw = *fw.persist(db_connection).await?;
+        fw = *fw.persist().await?;
         Ok(fw.inner)
     }
 
@@ -101,7 +98,6 @@ impl DataPlanePeerDefaultBehavior for NgsiLdDataPlane {
         provider_pid: Uuid,
         consumer_pid: Uuid,
     ) -> anyhow::Result<DataPlanePeer> {
-        let db_connection = get_db_connection().await;
         match data_plane_peer.role {
             ConfigRoles::Consumer => {
                 let mut fw = NgsiLdDataPlane::create_data_plane_peer_from_inner(data_plane_peer);
@@ -111,7 +107,7 @@ impl DataPlanePeerDefaultBehavior for NgsiLdDataPlane {
                         let endpoint_url =
                             fw.inner.attributes.get("endpointUrl").unwrap().to_string();
                         let mut fw = fw.add_attribute("nextHop".to_string(), endpoint_url);
-                        fw = *fw.persist(db_connection).await?;
+                        fw = *fw.persist().await?;
                         Ok(fw.inner)
                     }
                     // Or action pull
@@ -119,7 +115,7 @@ impl DataPlanePeerDefaultBehavior for NgsiLdDataPlane {
                         let endpoint_url =
                             format!("http://{}/data/pull/{}", get_provider_url()?, provider_pid);
                         let mut fw = fw.add_attribute("nextHop".to_string(), endpoint_url);
-                        fw = *fw.persist(db_connection).await?;
+                        fw = *fw.persist().await?;
                         Ok(fw.inner)
                     }
                 }
@@ -133,14 +129,14 @@ impl DataPlanePeerDefaultBehavior for NgsiLdDataPlane {
                         let endpoint_url =
                             format!("{}/data/push/{}", consumer_callback, consumer_pid);
                         let mut fw = fw.add_attribute("nextHop".to_string(), endpoint_url);
-                        fw = *fw.persist(db_connection).await?;
+                        fw = *fw.persist().await?;
                         Ok(fw.inner)
                     }
                     FormatAction::Pull => {
                         let endpoint_url =
                             fw.inner.attributes.get("endpointUrl").unwrap().to_string();
                         let mut fw = fw.add_attribute("nextHop".to_string(), endpoint_url);
-                        fw = *fw.persist(db_connection).await?;
+                        fw = *fw.persist().await?;
                         Ok(fw.inner)
                     }
                 }
@@ -150,8 +146,7 @@ impl DataPlanePeerDefaultBehavior for NgsiLdDataPlane {
     }
 
     async fn connect_to_streaming_service(data_plane_id: Uuid) -> anyhow::Result<()> {
-        let db_connection = get_db_connection().await;
-        let data_plane_peer = DataPlanePeer::load_model_by_id(data_plane_id, db_connection).await?;
+        let data_plane_peer = DataPlanePeer::load_model_by_id(data_plane_id).await?;
 
         let mut fw = NgsiLdDataPlane::create_data_plane_peer_from_inner(*data_plane_peer);
         let description = fw.inner.attributes.get("endpointDescription").unwrap().to_string();
@@ -188,13 +183,12 @@ impl DataPlanePeerDefaultBehavior for NgsiLdDataPlane {
         let suscription_id = suscription_id.unwrap().to_str()?;
         let mut fw = fw.add_attribute("suscriptionId".to_string(), suscription_id.to_string());
 
-        *fw.persist(db_connection).await?;
+        let _ = *fw.persist().await?;
         Ok(())
     }
 
     async fn disconnect_from_streaming_service(data_plane_id: Uuid) -> anyhow::Result<()> {
-        let db_connection = get_db_connection().await;
-        let data_plane_peer = DataPlanePeer::load_model_by_id(data_plane_id, db_connection).await?;
+        let data_plane_peer = DataPlanePeer::load_model_by_id(data_plane_id).await?;
         let fw = NgsiLdDataPlane::create_data_plane_peer_from_inner(*data_plane_peer);
         let endpoint_url = fw
             .inner
@@ -208,14 +202,14 @@ impl DataPlanePeerDefaultBehavior for NgsiLdDataPlane {
         let res = DATA_PLANE_HTTP_CLIENT.delete(endpoint).send().await?;
         let fw = fw.delete_attribute("suscriptionId".to_string());
 
-        fw.persist(db_connection).await?;
+        fw.persist().await?;
         Ok(())
     }
 
     async fn on_pull_data(
         data_plane_peer: DataPlanePeer,
         request: Request,
-        extras: Option<String>,
+        _: Option<String>,
     ) -> anyhow::Result<axum::response::Response> {
         let next_hop = data_plane_peer.attributes.get("nextHop").unwrap();
         match request.method() {

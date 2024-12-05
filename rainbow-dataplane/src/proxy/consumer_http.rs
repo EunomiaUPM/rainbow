@@ -18,7 +18,6 @@
  */
 
 use crate::core::{DataPlanePeer, DataPlanePeerDefaultBehavior};
-use crate::data::entities::data_plane_process;
 use crate::implementations::ngsi_ld::NgsiLdDataPlane;
 use crate::implementations::plain_http::HttpDataPlane;
 use axum::extract::{Path, Request};
@@ -26,10 +25,9 @@ use axum::response::IntoResponse;
 use axum::routing::any;
 use axum::Router;
 use rainbow_common::config::config::ConfigRoles;
-use rainbow_common::config::database::get_db_connection;
 use rainbow_common::dcat_formats::{FormatAction, FormatProtocol};
+use rainbow_db::dataplane::repo::DATA_PLANE_REPO;
 use reqwest::StatusCode;
-use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use uuid::Uuid;
 
 pub fn consumer_dataplane_router() -> Router {
@@ -86,22 +84,16 @@ async fn dataplane_pull(
     extras: Option<String>,
     request: Request,
 ) -> impl IntoResponse {
-    let db_connection = get_db_connection().await;
-    // TODO Refactor DB
-    let data_plane_process = data_plane_process::Entity::find()
-        .filter(
-            data_plane_process::Column::Address
-                .contains(callback_id)
-                .and(data_plane_process::Column::Address.contains(data_id)),
-        )
-        .one(db_connection)
-        .await
-        .unwrap();
+    let data_plane_process =
+        match DATA_PLANE_REPO.get_data_plane_process_by_id_in_url(data_id).await {
+            Ok(data_plane_process) => data_plane_process,
+            Err(e) => return (StatusCode::BAD_REQUEST).into_response(),
+        };
 
     match data_plane_process {
         Some(dp) => {
             let data_plane_peer =
-                DataPlanePeer::load_model_by_id(dp.id, db_connection).await.unwrap();
+                DataPlanePeer::load_model_by_id(dp.id).await.unwrap();
 
             match data_plane_peer.role {
                 ConfigRoles::Consumer => match data_plane_peer.dct_formats.action {
@@ -137,22 +129,16 @@ async fn dataplane_push(
     extras: Option<String>,
     request: Request,
 ) -> impl IntoResponse {
-    let db_connection = get_db_connection().await;
-    // TODO Refactor DB
-    let data_plane_process = data_plane_process::Entity::find()
-        .filter(
-            data_plane_process::Column::Address
-                .contains(callback_id)
-                .and(data_plane_process::Column::Address.contains(data_id)),
-        )
-        .one(db_connection)
-        .await
-        .unwrap();
+    let data_plane_process =
+        match DATA_PLANE_REPO.get_data_plane_process_by_id_in_url(data_id).await {
+            Ok(data_plane_process) => data_plane_process,
+            Err(e) => return (StatusCode::BAD_REQUEST).into_response(),
+        };
 
     match data_plane_process {
         Some(dp) => {
             let data_plane_peer =
-                DataPlanePeer::load_model_by_id(dp.id, db_connection).await.unwrap();
+                DataPlanePeer::load_model_by_id(dp.id).await.unwrap();
             match data_plane_peer.role {
                 ConfigRoles::Consumer => match data_plane_peer.dct_formats.action {
                     FormatAction::Push => match data_plane_peer.dct_formats.protocol {

@@ -17,8 +17,13 @@
  *
  */
 
+
+#![allow(unused_imports)]
 #![allow(dead_code)]
 #![allow(unused_variables)]
+#![allow(unused_mut)]
+#![allow(unused_imports)]
+#![allow(unused_must_use)]
 
 pub mod core;
 pub mod http;

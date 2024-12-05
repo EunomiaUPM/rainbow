@@ -16,14 +16,14 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::data::entities::{data_plane_field, data_plane_process};
 use anyhow::bail;
 use axum::async_trait;
 use axum::extract::Request;
 use rainbow_common::config::config::ConfigRoles;
 use rainbow_common::dcat_formats::{DctFormats, FormatAction, FormatProtocol};
 use rainbow_common::protocol::transfer::TransferRequestMessage;
-use sea_orm::{ColumnTrait, DbConn, EntityTrait, QueryFilter};
+use rainbow_db::dataplane::repo::DATA_PLANE_REPO;
+use sea_orm::EntityTrait;
 use std::collections::HashMap;
 use uuid::Uuid;
 
@@ -38,7 +38,7 @@ pub struct DataPlanePeer {
 
 #[async_trait]
 pub trait PersistModel<T> {
-    async fn persist(self, db_connection: &DbConn) -> anyhow::Result<Box<Self>>;
+    async fn persist(self) -> anyhow::Result<Box<Self>>;
 }
 
 #[async_trait]
@@ -146,13 +146,12 @@ impl Default for DataPlanePeer {
 impl DataPlanePeer {
     pub(crate) async fn load_model_by_id(
         id: Uuid,
-        db_connection: &DbConn,
     ) -> anyhow::Result<Box<Self>> {
-        let peer = data_plane_process::Entity::find_by_id(id).one(db_connection).await?;
-        if peer.is_none() {
-            bail!("Could not find dataPlaneDataPlan with id {}", id)
-        }
-        let peer = peer.unwrap();
+        let peer = match DATA_PLANE_REPO.get_data_plane_process_by_id(id).await? {
+            Some(peer) => peer,
+            None => bail!("Could not find dataPlaneDataPlan with id {}", id),
+        };
+
         let mut fw_peer = Self {
             id: peer.id,
             role: peer.role.parse()?,
@@ -164,11 +163,7 @@ impl DataPlanePeer {
             attributes: Default::default(),
         };
 
-        let attributes = data_plane_field::Entity::find()
-            .filter(data_plane_field::Column::DataPlaneProcessId.eq(id))
-            .all(db_connection)
-            .await?;
-
+        let attributes = DATA_PLANE_REPO.get_all_data_plane_fields_by_process(id).await?;
         for attr in attributes {
             fw_peer = fw_peer.add_attribute(attr.key.to_string(), attr.value.to_string());
         }

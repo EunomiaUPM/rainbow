@@ -18,8 +18,8 @@
  */
 
 use rainbow_common::config::database::get_db_connection;
-use rainbow_dataplane::data::migrations::get_dataplane_migrations;
 use rainbow_db::catalog::migrations::get_catalog_migrations;
+use rainbow_db::dataplane::migrations::get_dataplane_migrations;
 use rainbow_db::transfer_consumer::migrations::get_transfer_consumer_migrations;
 use rainbow_db::transfer_provider::migrations::get_transfer_provider_migrations;
 use sea_orm::prelude::async_trait;

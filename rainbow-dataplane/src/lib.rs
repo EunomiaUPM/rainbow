@@ -17,6 +17,13 @@
  *
  */
 
+#![allow(unused_imports)]
+#![allow(dead_code)]
+#![allow(unused_variables)]
+#![allow(unused_mut)]
+#![allow(unused_imports)]
+#![allow(unused_must_use)]
+
 use crate::core::{
     DataPlanePeer, DataPlanePeerCreationBehavior, DataPlanePeerDefaultBehavior, PersistModel,
 };
@@ -37,7 +44,6 @@ use tracing::info;
 use uuid::Uuid;
 
 pub mod core;
-pub mod data;
 pub mod implementations;
 pub mod proxy;
 
@@ -89,8 +95,7 @@ pub async fn bootstrap_data_plane_in_provider(
 }
 
 pub async fn get_data_plane_peer(data_plane_id: Uuid) -> anyhow::Result<DataPlanePeer> {
-    let db_connection = get_db_connection().await;
-    let data_plane_peer = DataPlanePeer::load_model_by_id(data_plane_id, db_connection).await;
+    let data_plane_peer = DataPlanePeer::load_model_by_id(data_plane_id).await;
     match data_plane_peer {
         Ok(dp) => Ok(*dp),
         Err(_) => bail!("Failed to load data plane. Data plane not found."),
@@ -126,7 +131,7 @@ pub async fn set_data_plane_next_hop(
 pub async fn connect_to_streaming_service(data_plane_id: Uuid) -> anyhow::Result<()> {
     info!("Setup Connection to streaming service");
     let db_connection = get_db_connection().await;
-    let data_plane_peer = DataPlanePeer::load_model_by_id(data_plane_id, db_connection).await?;
+    let data_plane_peer = DataPlanePeer::load_model_by_id(data_plane_id).await?;
 
     // Prevent connections on Consumer or Pull cases
     match data_plane_peer.role {
@@ -156,7 +161,7 @@ pub async fn connect_to_streaming_service(data_plane_id: Uuid) -> anyhow::Result
 pub async fn disconnect_from_streaming_service(data_plane_id: Uuid) -> anyhow::Result<()> {
     info!("Disconnecting from streaming service");
     let db_connection = get_db_connection().await;
-    let peer = DataPlanePeer::load_model_by_id(data_plane_id, db_connection).await?;
+    let peer = DataPlanePeer::load_model_by_id(data_plane_id).await?;
 
     // Prevent disconnection on Consumer or Pull cases
     match peer.role {
@@ -181,6 +186,3 @@ pub async fn disconnect_from_streaming_service(data_plane_id: Uuid) -> anyhow::R
         }
     }
 }
-
-// ROUTES IN AXUM
-// TESTS AND CLEANUP

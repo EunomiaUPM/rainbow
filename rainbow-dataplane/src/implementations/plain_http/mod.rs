@@ -18,11 +18,12 @@
  */
 
 use crate::core::{DataPlanePeer, DataPlanePeerCreationBehavior, PersistModel};
-use crate::data::entities::{data_plane_field, data_plane_process};
 use axum::async_trait;
 use rainbow_common::config::config::ConfigRoles;
+use rainbow_common::config::database::get_db_connection;
 use rainbow_common::dcat_formats::{FormatAction, FormatProtocol};
-use sea_orm::{ActiveValue, ColumnTrait, DbConn, EntityTrait, QueryFilter};
+use rainbow_db::dataplane::entities::{data_plane_field, data_plane_process};
+use sea_orm::{ActiveValue, ColumnTrait, EntityTrait, QueryFilter};
 use std::collections::HashMap;
 use uuid::Uuid;
 
@@ -34,7 +35,8 @@ pub struct HttpDataPlane {
 
 #[async_trait]
 impl PersistModel<data_plane_process::Model> for HttpDataPlane {
-    async fn persist(self, db_connection: &DbConn) -> anyhow::Result<Box<Self>> {
+    async fn persist(self) -> anyhow::Result<Box<Self>> {
+        let db_connection = get_db_connection().await;
         let dp = data_plane_process::Entity::find_by_id(self.inner.id).one(db_connection).await?;
         let attributes = data_plane_field::Entity::find()
             .filter(data_plane_field::Column::DataPlaneProcessId.eq(self.inner.id))
@@ -51,8 +53,8 @@ impl PersistModel<data_plane_process::Model> for HttpDataPlane {
                 created_at: ActiveValue::Set(dp.created_at),
                 updated_at: ActiveValue::Set(Option::from(chrono::Utc::now().naive_utc())),
             })
-            .exec(db_connection)
-            .await?;
+                .exec(db_connection)
+                .await?;
 
             for (key, value) in &self.inner.attributes {
                 let exists = attributes
@@ -65,8 +67,8 @@ impl PersistModel<data_plane_process::Model> for HttpDataPlane {
                         value: ActiveValue::Set(value.to_owned()),
                         data_plane_process_id: ActiveValue::Set(self.inner.id),
                     })
-                    .exec(db_connection)
-                    .await?;
+                        .exec(db_connection)
+                        .await?;
                 }
             }
 
@@ -79,8 +81,8 @@ impl PersistModel<data_plane_process::Model> for HttpDataPlane {
                         id: ActiveValue::Set(attribute.id),
                         ..Default::default()
                     })
-                    .exec(db_connection)
-                    .await?;
+                        .exec(db_connection)
+                        .await?;
                 }
             }
         } else {
@@ -93,8 +95,8 @@ impl PersistModel<data_plane_process::Model> for HttpDataPlane {
                 created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
                 updated_at: ActiveValue::Set(None),
             })
-            .exec(db_connection)
-            .await?;
+                .exec(db_connection)
+                .await?;
 
             for (key, value) in &self.inner.attributes {
                 data_plane_field::Entity::insert(data_plane_field::ActiveModel {
@@ -103,8 +105,8 @@ impl PersistModel<data_plane_process::Model> for HttpDataPlane {
                     value: ActiveValue::Set(value.to_string()),
                     data_plane_process_id: ActiveValue::Set(self.inner.id.clone()),
                 })
-                .exec(db_connection)
-                .await?;
+                    .exec(db_connection)
+                    .await?;
             }
         }
         Ok(Box::new(self))

@@ -17,6 +17,14 @@
  *
  */
 
+
+#![allow(unused_imports)]
+#![allow(dead_code)]
+#![allow(unused_variables)]
+#![allow(unused_mut)]
+#![allow(unused_imports)]
+#![allow(unused_must_use)]
+
 /// This package is used to provide testing contracts or catalogs
 /// In future, the data structures and functions to achieve this will be available
 /// in the rainbow-catalog or rainbow-contracts feature

@@ -28,7 +28,6 @@ use axum::body::{to_bytes, Bytes};
 use axum::extract::Request;
 use axum::response::Response;
 use rainbow_common::config::config::{get_provider_url, ConfigRoles};
-use rainbow_common::config::database::get_db_connection;
 use rainbow_common::dcat_formats::FormatAction;
 use rainbow_common::forwarding::forward_response;
 use rainbow_common::protocol::transfer::{TransferRequestMessage, TransferStateForDb};
@@ -42,7 +41,6 @@ impl DataPlanePeerDefaultBehavior for HttpDataPlane {
     async fn bootstrap_data_plane_in_consumer(
         transfer_request: TransferRequestMessage,
     ) -> anyhow::Result<DataPlanePeer> {
-        let db_connection = get_db_connection().await;
         let local_address_path = match transfer_request.format.action {
             FormatAction::Push => "/data/push",
             FormatAction::Pull => "/data/pull",
@@ -63,7 +61,7 @@ impl DataPlanePeerDefaultBehavior for HttpDataPlane {
             fw = fw.add_attribute("endpointUrl".to_string(), data_address.endpoint);
         }
 
-        fw = *fw.persist(db_connection).await?;
+        fw = *fw.persist().await?;
         Ok(fw.inner)
     }
 
@@ -71,7 +69,6 @@ impl DataPlanePeerDefaultBehavior for HttpDataPlane {
         transfer_request: TransferRequestMessage,
         provider_pid: Uuid,
     ) -> anyhow::Result<DataPlanePeer> {
-        let db_connection = get_db_connection().await;
         let local_address_path = match transfer_request.format.action {
             FormatAction::Push => "/data/push",
             FormatAction::Pull => "/data/pull",
@@ -92,7 +89,7 @@ impl DataPlanePeerDefaultBehavior for HttpDataPlane {
                 transfer_request.callback_address,
             );
 
-        fw = *fw.persist(db_connection).await?;
+        fw = *fw.persist().await?;
         Ok(fw.inner)
     }
 
@@ -101,7 +98,6 @@ impl DataPlanePeerDefaultBehavior for HttpDataPlane {
         provider_pid: Uuid,
         consumer_pid: Uuid,
     ) -> anyhow::Result<DataPlanePeer> {
-        let db_connection = get_db_connection().await;
         if data_plane_peer.dct_formats.action == FormatAction::Push {
             bail!("Not allowed PUSH for plain HTTP implementation")
         }
@@ -111,14 +107,14 @@ impl DataPlanePeerDefaultBehavior for HttpDataPlane {
                 let endpoint_url =
                     format!("http://{}/data/pull/{}", get_provider_url()?, provider_pid);
                 let mut fw = fw.add_attribute("nextHop".to_string(), endpoint_url);
-                fw = *fw.persist(db_connection).await?;
+                fw = *fw.persist().await?;
                 Ok(fw.inner)
             }
             ConfigRoles::Provider => {
                 let mut fw = HttpDataPlane::create_data_plane_peer_from_inner(data_plane_peer);
                 let endpoint_url = fw.inner.attributes.get("endpointUrl").unwrap().to_string();
                 let mut fw = fw.add_attribute("nextHop".to_string(), endpoint_url);
-                fw = *fw.persist(db_connection).await?;
+                fw = *fw.persist().await?;
                 Ok(fw.inner)
             }
             _ => bail!("Not supported data plane peer type..."),

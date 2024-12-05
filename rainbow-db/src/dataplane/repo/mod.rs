@@ -62,6 +62,12 @@ pub trait DataPlaneProcessRepo {
         &self,
         data_plane_process_id: Uuid,
     ) -> anyhow::Result<Option<data_plane_process::Model>>;
+
+    async fn get_data_plane_process_by_id_in_url(
+        &self,
+        id: Uuid,
+    ) -> anyhow::Result<Option<data_plane_process::Model>>;
+
     async fn put_data_plane_process(
         &self,
         data_plane_process_id: Uuid,

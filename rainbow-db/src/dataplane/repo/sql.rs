@@ -19,6 +19,7 @@
 
 use crate::dataplane::entities::data_plane_field;
 use crate::dataplane::entities::data_plane_process;
+use crate::dataplane::entities::data_plane_process::Model;
 use crate::dataplane::repo::{
     DataPlaneFieldRepo, DataPlaneProcessRepo, EditDataPlaneField, EditDataPlaneProcess,
     NewDataPlaneField, NewDataPlaneProcess,
@@ -57,6 +58,19 @@ impl DataPlaneProcessRepo for DataPlaneRepoForSql {
         let db_connection = get_db_connection().await;
         let data_plane_process =
             data_plane_process::Entity::find_by_id(data_plane_process_id).one(db_connection).await;
+        match data_plane_process {
+            Ok(data_plane_process) => Ok(data_plane_process),
+            Err(_) => bail!("Failed to fetch data plane process"),
+        }
+    }
+
+    async fn get_data_plane_process_by_id_in_url(&self, id: Uuid) -> anyhow::Result<Option<Model>> {
+        let db_connection = get_db_connection().await;
+        let data_plane_process = data_plane_process::Entity::find()
+            .filter(data_plane_process::Column::Address.contains(id))
+            .one(db_connection)
+            .await;
+
         match data_plane_process {
             Ok(data_plane_process) => Ok(data_plane_process),
             Err(_) => bail!("Failed to fetch data plane process"),

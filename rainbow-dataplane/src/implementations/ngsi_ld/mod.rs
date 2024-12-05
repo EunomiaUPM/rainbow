@@ -19,12 +19,12 @@
 pub mod implementation;
 
 use crate::core::{DataPlanePeer, DataPlanePeerCreationBehavior, PersistModel};
-use crate::data::entities::data_plane_field;
-use crate::data::entities::data_plane_process;
 use axum::async_trait;
 use rainbow_common::config::config::ConfigRoles;
+use rainbow_common::config::database::get_db_connection;
 use rainbow_common::dcat_formats::{FormatAction, FormatProtocol};
-use sea_orm::{ActiveValue, ColumnTrait, DbConn, EntityTrait, QueryFilter};
+use rainbow_db::dataplane::entities::{data_plane_field, data_plane_process};
+use sea_orm::{ActiveValue, ColumnTrait, EntityTrait, QueryFilter};
 use std::collections::HashMap;
 use uuid::Uuid;
 
@@ -34,7 +34,8 @@ pub struct NgsiLdDataPlane {
 
 #[async_trait]
 impl PersistModel<data_plane_process::Model> for NgsiLdDataPlane {
-    async fn persist(self, db_connection: &DbConn) -> anyhow::Result<Box<Self>> {
+    async fn persist(self) -> anyhow::Result<Box<Self>> {
+        let db_connection = get_db_connection().await;
         let dp = data_plane_process::Entity::find_by_id(self.inner.id).one(db_connection).await?;
         let attributes = data_plane_field::Entity::find()
             .filter(data_plane_field::Column::DataPlaneProcessId.eq(self.inner.id))

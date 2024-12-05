@@ -1,9 +1,8 @@
 use crate::core::{DataPlanePeer, DataPlanePeerCreationBehavior, PersistModel};
-use crate::data::entities::data_plane_process;
 use axum::async_trait;
 use rainbow_common::config::config::ConfigRoles;
 use rainbow_common::dcat_formats::{FormatAction, FormatProtocol};
-use sea_orm::DbConn;
+use rainbow_db::dataplane::entities::data_plane_process;
 use std::collections::HashMap;
 
 pub mod implementation;
@@ -14,7 +13,7 @@ pub struct KafkaDataPlane {
 
 #[async_trait]
 impl PersistModel<data_plane_process::Model> for KafkaDataPlane {
-    async fn persist(self, db_connection: &DbConn) -> anyhow::Result<Box<Self>> {
+    async fn persist(self) -> anyhow::Result<Box<Self>> {
         todo!()
     }
 }
