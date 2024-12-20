@@ -2233,6 +2233,7 @@ dependencies = [
  "sea-orm-migration",
  "serde",
  "serde_json",
+ "urn",
  "uuid",
 ]
 
