@@ -33,7 +33,7 @@ use rainbow_common::protocol::transfer::{
     DataAddress, TransferCompletionMessage, TransferMessageTypes, TransferProcessMessage,
     TransferRequestMessage, TransferStartMessage, TransferSuspensionMessage, TRANSFER_CONTEXT,
 };
-use rainbow_common::utils::convert_uuid_to_uri;
+use rainbow_common::utils::get_urn;
 use rainbow_db::transfer_consumer::entities::transfer_callback;
 use serde_json::{json, Value};
 use std::io::BufRead;
@@ -41,6 +41,7 @@ use tracing::{debug, error, info, trace};
 use tracing_subscriber::fmt::format;
 use tracing_test::traced_test;
 use uuid::Uuid;
+use urn::Urn;
 
 #[path = "utils.rs"]
 mod utils;
@@ -70,7 +71,7 @@ pub async fn transfer_pull_full_case() -> anyhow::Result<()> {
         context: TRANSFER_CONTEXT.to_string(),
         _type: TransferMessageTypes::TransferRequestMessage.to_string(),
         consumer_pid: consumer_pid.clone(),
-        agreement_id: convert_uuid_to_uri(&agreement_id)?,
+        agreement_id: get_urn(Some(agreement_id.parse::<Urn>()?)).to_string(),
         format: DctFormats { protocol: FormatProtocol::Http, action: FormatAction::Pull },
         callback_address: consumer_callback_address,
         data_address: None,

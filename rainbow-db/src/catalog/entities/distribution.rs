@@ -24,13 +24,13 @@ use serde::{Deserialize, Serialize};
 #[sea_orm(table_name = "distribution")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: Uuid,
+    pub id: String,
     pub dct_issued: chrono::NaiveDateTime,
     pub dct_modified: Option<chrono::NaiveDateTime>,
     pub dct_title: Option<String>,
     pub dct_description: Option<String>,
-    pub dcat_access_service: Uuid,
-    pub dataset_id: Uuid,
+    pub dcat_access_service: String,
+    pub dataset_id: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

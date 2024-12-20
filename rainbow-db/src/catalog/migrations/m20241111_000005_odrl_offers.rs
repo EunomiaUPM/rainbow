@@ -50,9 +50,9 @@ impl MigrationTrait for Migration {
             .create_table(
                 Table::create()
                     .table(ODRLOffers::Table)
-                    .col(ColumnDef::new(ODRLOffers::Id).uuid().not_null().primary_key())
+                    .col(ColumnDef::new(ODRLOffers::Id).string().not_null().primary_key())
                     .col(ColumnDef::new(ODRLOffers::ODRLOffers).json())
-                    .col(ColumnDef::new(ODRLOffers::Entity).uuid().not_null())
+                    .col(ColumnDef::new(ODRLOffers::Entity).string().not_null())
                     .col(
                         ColumnDef::new(ODRLOffers::EntityType)
                             .custom(ODRLOffers::EntityType)

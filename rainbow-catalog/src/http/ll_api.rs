@@ -26,7 +26,7 @@ use axum::routing::{get, post};
 use axum::{Json, Router};
 use tower_http::trace::TraceLayer;
 use tracing::info;
-use uuid::Uuid;
+use axum::http::Uri;
 
 pub async fn catalog_router() -> anyhow::Result<Router> {
     let router = Router::new()
@@ -57,7 +57,7 @@ async fn handle_catalog_request(
     }
 }
 
-async fn handle_get_dataset(result: Result<Path<Uuid>, PathRejection>) -> impl IntoResponse {
+async fn handle_get_dataset(result: Result<Path<String>, PathRejection>) -> impl IntoResponse {
     info!("POST /catalog/datasets/:id");
 
     match result {

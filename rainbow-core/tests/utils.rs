@@ -30,6 +30,7 @@ use serde_json::json;
 use std::collections::HashMap;
 use std::process::{Child, Command};
 use uuid::Uuid;
+use urn::Urn;
 
 pub async fn setup_test_env(
     url_to_load: &str,
@@ -38,8 +39,8 @@ pub async fn setup_test_env(
     Child,
     reqwest::Client,
     Uuid,
-    Uuid,
-    Uuid,
+    String,
+    String,
     String,
     String,
     Uuid,
@@ -93,7 +94,7 @@ pub async fn setup_test_env(
         .send()
         .await?;
     let res_body = res.json::<DataService>().await?;
-    let dataservice_id = res_body.id.parse::<Uuid>()?;
+    let dataservice_id = res_body.id;
     println!("\nDataservice Id: {:#?}\n\n", dataservice_id);
 
     // agreement
@@ -146,7 +147,7 @@ pub async fn setup_test_env_push(
     reqwest::Client,
     Uuid,
     Uuid,
-    Uuid,
+    String,
     String,
     String,
     Uuid,

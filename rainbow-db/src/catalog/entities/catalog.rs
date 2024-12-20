@@ -23,7 +23,7 @@ use sea_orm::entity::prelude::*;
 #[sea_orm(table_name = "catalog")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: Uuid,
+    pub id: String,
     pub foaf_home_page: Option<String>,
     pub dct_conforms_to: Option<String>,
     pub dct_creator: Option<String>,

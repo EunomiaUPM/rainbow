@@ -28,7 +28,7 @@ pub struct Model {
     #[sea_orm(primary_key)]
     pub provider_pid: Uuid,
     pub consumer_pid: Option<Uuid>,
-    pub agreement_id: Uuid,
+    pub agreement_id: String,
     pub data_plane_id: Option<Uuid>,
     pub state: TransferStateForDb,
     pub created_at: chrono::NaiveDateTime,

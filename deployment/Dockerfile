@@ -1,5 +1,5 @@
 # BUILD STAGE
-FROM rust:bullseye AS builder
+FROM rust:1.83-bullseye AS builder
 
 # Install build dependencies
 RUN apt-get update && \

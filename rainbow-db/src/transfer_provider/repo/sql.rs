@@ -28,6 +28,7 @@ use crate::transfer_provider::repo::{
 };
 use anyhow::bail;
 use axum::async_trait;
+use rainbow_common::utils::get_urn;
 use rainbow_common::config::database::get_db_connection;
 use rainbow_common::protocol::transfer::{TransferMessageTypesForDb, TransferStateForDb};
 use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, EntityTrait, QueryFilter, QuerySelect};
@@ -337,7 +338,7 @@ impl AgreementsRepo for TransferProviderRepoForSql {
         let db_connection = get_db_connection().await;
 
         let model = agreements::ActiveModel {
-            agreement_id: ActiveValue::Set(Uuid::new_v4()),
+            agreement_id: ActiveValue::Set(get_urn(None).to_string()),
             data_service_id: ActiveValue::Set(new_agreement.data_service_id),
             identity: ActiveValue::Set(new_agreement.identity),
             identity_token: ActiveValue::Set(new_agreement.identity_token),

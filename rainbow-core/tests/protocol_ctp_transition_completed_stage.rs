@@ -30,10 +30,11 @@ use rainbow_common::protocol::transfer::{
     TransferRequestMessage, TransferStartMessage, TransferSuspensionMessage,
     TransferTerminationMessage, TRANSFER_CONTEXT,
 };
-use rainbow_common::utils::convert_uuid_to_uri;
+use rainbow_common::utils::get_urn;
 use std::process::{Child, Command};
 use tracing_test::traced_test;
 use uuid::Uuid;
+use urn::Urn;
 
 #[path = "utils.rs"]
 mod utils;
@@ -61,7 +62,7 @@ pub async fn to_requested() -> anyhow::Result<()> {
             context: TRANSFER_CONTEXT.into(),
             _type: TransferMessageTypes::TransferRequestMessage.to_string(),
             consumer_pid: consumer_pid.clone(),
-            agreement_id: convert_uuid_to_uri(&agreement_id).unwrap(),
+            agreement_id: get_urn(Some(agreement_id.parse::<Urn>()?)).to_string(),
             format: DctFormats { protocol: FormatProtocol::Http, action: FormatAction::Pull },
             callback_address: consumer_callback_address.clone(), // start will trigger
             data_address: None,
@@ -96,7 +97,7 @@ pub async fn to_requested() -> anyhow::Result<()> {
             context: TRANSFER_CONTEXT.into(),
             _type: TransferMessageTypes::TransferRequestMessage.to_string(),
             consumer_pid: consumer_pid.clone(),
-            agreement_id: convert_uuid_to_uri(&agreement_id).unwrap(),
+            agreement_id: get_urn(Some(agreement_id.parse::<Urn>()?)).to_string(),
             format: DctFormats { protocol: FormatProtocol::Http, action: FormatAction::Pull },
             callback_address: consumer_callback_address.clone(), // start will trigger
             data_address: None,
@@ -133,7 +134,7 @@ pub async fn to_started() -> anyhow::Result<()> {
             context: TRANSFER_CONTEXT.into(),
             _type: TransferMessageTypes::TransferRequestMessage.to_string(),
             consumer_pid: consumer_pid.clone(),
-            agreement_id: convert_uuid_to_uri(&agreement_id).unwrap(),
+            agreement_id: get_urn(Some(agreement_id.parse::<Urn>()?)).to_string(),
             format: DctFormats { protocol: FormatProtocol::Http, action: FormatAction::Pull },
             callback_address: consumer_callback_address.clone(), // start will trigger
             data_address: None,
@@ -203,7 +204,7 @@ pub async fn to_suspended() -> anyhow::Result<()> {
             context: TRANSFER_CONTEXT.into(),
             _type: TransferMessageTypes::TransferRequestMessage.to_string(),
             consumer_pid: consumer_pid.clone(),
-            agreement_id: convert_uuid_to_uri(&agreement_id).unwrap(),
+            agreement_id: get_urn(Some(agreement_id.parse::<Urn>()?)).to_string(),
             format: DctFormats { protocol: FormatProtocol::Http, action: FormatAction::Pull },
             callback_address: consumer_callback_address.clone(), // start will trigger
             data_address: None,
@@ -274,7 +275,7 @@ pub async fn to_completed() -> anyhow::Result<()> {
             context: TRANSFER_CONTEXT.into(),
             _type: TransferMessageTypes::TransferRequestMessage.to_string(),
             consumer_pid: consumer_pid.clone(),
-            agreement_id: convert_uuid_to_uri(&agreement_id).unwrap(),
+            agreement_id: get_urn(Some(agreement_id.parse::<Urn>()?)).to_string(),
             format: DctFormats { protocol: FormatProtocol::Http, action: FormatAction::Pull },
             callback_address: consumer_callback_address.clone(), // start will trigger
             data_address: None,
@@ -343,7 +344,7 @@ pub async fn to_terminated() -> anyhow::Result<()> {
             context: TRANSFER_CONTEXT.into(),
             _type: TransferMessageTypes::TransferRequestMessage.to_string(),
             consumer_pid: consumer_pid.clone(),
-            agreement_id: convert_uuid_to_uri(&agreement_id).unwrap(),
+            agreement_id: get_urn(Some(agreement_id.parse::<Urn>()?)).to_string(),
             format: DctFormats { protocol: FormatProtocol::Http, action: FormatAction::Pull },
             callback_address: consumer_callback_address.clone(), // start will trigger
             data_address: None,

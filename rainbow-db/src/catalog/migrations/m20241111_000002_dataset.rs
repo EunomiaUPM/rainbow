@@ -34,7 +34,7 @@ impl MigrationTrait for Migration {
             .create_table(
                 Table::create()
                     .table(Dataset::Table)
-                    .col(ColumnDef::new(Dataset::Id).uuid().not_null().primary_key())
+                    .col(ColumnDef::new(Dataset::Id).string().not_null().primary_key())
                     .col(ColumnDef::new(Dataset::DctConformsTo).string())
                     .col(ColumnDef::new(Dataset::DctCreator).string())
                     .col(ColumnDef::new(Dataset::DctIdentifier).string())
@@ -42,7 +42,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Dataset::DctModified).date_time())
                     .col(ColumnDef::new(Dataset::DctTitle).string())
                     .col(ColumnDef::new(Dataset::DctDescription).string())
-                    .col(ColumnDef::new(Dataset::CatalogId).uuid().not_null())
+                    .col(ColumnDef::new(Dataset::CatalogId).string().not_null())
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk_dataset_catalog")

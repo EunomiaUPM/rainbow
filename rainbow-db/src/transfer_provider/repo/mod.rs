@@ -44,14 +44,14 @@ pub static TRANSFER_PROVIDER_REPO: Lazy<Box<dyn CombinedRepo + Send + Sync>> = L
 pub struct NewTransferProcessModel {
     pub provider_pid: Uuid,
     pub consumer_pid: Uuid,
-    pub agreement_id: Uuid,
+    pub agreement_id: String,
     pub data_plane_id: Uuid,
 }
 
 pub struct EditTransferProcessModel {
     pub provider_pid: Option<Uuid>,
     pub consumer_pid: Option<Uuid>,
-    pub agreement_id: Option<Uuid>,
+    pub agreement_id: Option<String>,
     pub data_plane_id: Option<Uuid>,
     pub state: Option<TransferStateForDb>,
 }
@@ -125,13 +125,13 @@ pub trait TransferMessagesRepo {
 }
 
 pub struct NewAgreementModel {
-    pub data_service_id: Uuid,
+    pub data_service_id: String,
     pub identity: Option<String>,
     pub identity_token: Option<String>,
 }
 
 pub struct EditAgreementModel {
-    pub data_service_id: Option<Uuid>,
+    pub data_service_id: Option<String>,
     pub identity: Option<String>,
     pub identity_token: Option<String>,
 }

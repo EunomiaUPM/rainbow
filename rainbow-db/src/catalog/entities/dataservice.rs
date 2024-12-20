@@ -23,7 +23,7 @@ use sea_orm::entity::prelude::*;
 #[sea_orm(table_name = "data_services")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: Uuid,
+    pub id: String,
     pub dcat_endpoint_description: Option<String>,
     pub dcat_endpoint_url: String,
     pub dct_conforms_to: Option<String>,
@@ -33,7 +33,7 @@ pub struct Model {
     pub dct_modified: Option<chrono::NaiveDateTime>,
     pub dct_title: Option<String>,
     pub dct_description: Option<String>,
-    pub catalog_id: Uuid,
+    pub catalog_id: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

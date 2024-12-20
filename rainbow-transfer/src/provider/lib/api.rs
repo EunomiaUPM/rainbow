@@ -18,6 +18,7 @@
  */
 
 use anyhow::bail;
+use axum::http::Uri;
 use rainbow_db::transfer_provider::entities::{agreements, transfer_message};
 
 use rainbow_common::config::database::get_db_connection;
@@ -76,7 +77,7 @@ pub async fn get_agreement_by_id(agreement_id: Uuid) -> anyhow::Result<agreement
 #[derive(Debug, Deserialize, Serialize)]
 pub struct NewAgreement {
     #[serde(rename = "dataServiceId")]
-    data_service_id: Uuid,
+    data_service_id: String,
     #[serde(rename = "identity")]
     #[serde(skip_serializing_if = "Option::is_none")]
     identity: Option<String>,
@@ -88,7 +89,7 @@ pub struct NewAgreement {
 pub async fn post_agreement(new_agreement: NewAgreement) -> anyhow::Result<agreements::Model> {
     let agreement = TRANSFER_PROVIDER_REPO
         .create_agreement(NewAgreementModel {
-            data_service_id: new_agreement.data_service_id,
+            data_service_id: new_agreement.data_service_id.to_string(),
             identity: new_agreement.identity,
             identity_token: new_agreement.identity_token,
         })
@@ -99,7 +100,7 @@ pub async fn post_agreement(new_agreement: NewAgreement) -> anyhow::Result<agree
 #[derive(Debug, Deserialize, Serialize)]
 pub struct EditAgreement {
     #[serde(rename = "dataServiceId")]
-    data_service_id: Option<Uuid>,
+    data_service_id: Option<String>,
     #[serde(rename = "identity")]
     #[serde(skip_serializing_if = "Option::is_none")]
     identity: Option<String>,
@@ -116,7 +117,7 @@ pub async fn put_agreement(
         .put_agreement(
             agreement_id,
             EditAgreementModel {
-                data_service_id: new_agreement.data_service_id,
+                data_service_id: new_agreement.data_service_id.map(|uri|uri.to_string()),
                 identity: new_agreement.identity,
                 identity_token: new_agreement.identity_token,
             },
