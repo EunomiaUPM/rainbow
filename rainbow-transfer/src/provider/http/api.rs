@@ -46,6 +46,7 @@ pub fn router() -> Router {
         .route("/api/v1/agreements", post(handle_post_agreement))
         .route("/api/v1/agreements/:id", put(handle_put_agreement))
         .route("/api/v1/agreements/:id", delete(handle_delete_agreement))
+    // TODO HL api to handle messages to modify state
 }
 
 async fn handle_get_all_transfers() -> impl IntoResponse {

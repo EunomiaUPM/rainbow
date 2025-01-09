@@ -149,6 +149,24 @@ pub async fn init_command_line() -> Result<()> {
                 "DB_DATABASE",
                 "ds-protocol-provider"
             )),
+            ssi_verifier_url: Some(config_field!(
+                args,
+                db_database,
+                "SSI_VERIFIER_URL",
+                "ds-protocol-provider"
+            )),
+            ssi_verifier_port: Some(config_field!(
+                args,
+                db_database,
+                "SSI_VERIFIER_PORT",
+                "ds-protocol-provider"
+            )),
+            catalog_as_service: None,
+            catalog_service_url: None,
+            catalog_service_port: None,
+            contracts_as_service: None,
+            contracts_service_url: None,
+            contracts_service_port: None,
         },
         DataSpaceTransferRoles::Consumer(args) => Config {
             host_url: config_field!(args, host_url, "HOST_URL", "localhost"),
@@ -187,6 +205,24 @@ pub async fn init_command_line() -> Result<()> {
                 "DB_DATABASE",
                 "ds-protocol-provider"
             )),
+            ssi_verifier_url: Some(config_field!(
+                args,
+                db_database,
+                "SSI_VERIFIER_URL",
+                "ds-protocol-provider"
+            )),
+            ssi_verifier_port: Some(config_field!(
+                args,
+                db_database,
+                "SSI_VERIFIER_PORT",
+                "ds-protocol-provider"
+            )),
+            catalog_as_service: None,
+            catalog_service_url: None,
+            catalog_service_port: None,
+            contracts_as_service: None,
+            contracts_service_url: None,
+            contracts_service_port: None,
         },
     };
 

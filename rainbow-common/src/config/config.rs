@@ -88,12 +88,28 @@ pub struct Config {
     pub db_database: String,
     pub provider_url: Option<String>,
     pub provider_port: Option<String>,
+    pub role: ConfigRoles,
+
+    // Auth
     pub auth_url: Option<String>,
     pub auth_port: Option<String>,
-    pub role: ConfigRoles,
+
+    // SSI Auth
     pub ssi_auth_enabled: Option<String>,
     pub ssi_holder_url: Option<String>,
     pub ssi_holder_port: Option<String>,
+    pub ssi_verifier_url: Option<String>,
+    pub ssi_verifier_port: Option<String>,
+
+    // Catalog
+    pub catalog_as_service: Option<String>,
+    pub catalog_service_url: Option<String>,
+    pub catalog_service_port: Option<String>,
+
+    // Contracts
+    pub contracts_as_service: Option<String>,
+    pub contracts_service_url: Option<String>,
+    pub contracts_service_port: Option<String>,
 }
 
 pub static GLOBAL_CONFIG: OnceCell<Config> = OnceCell::new();

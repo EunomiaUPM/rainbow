@@ -4,12 +4,14 @@ use crate::catalog::repo::{
     CatalogRepo, DatasetRepo, EditCatalogModel, EditDatasetModel, NewCatalogModel, NewDatasetModel,
 };
 use anyhow::bail;
+use axum::async_trait;
 use rainbow_common::config::database::get_db_connection;
 use sea_orm::{ActiveModelTrait, ActiveValue, EntityTrait, QuerySelect};
 use uuid::Uuid;
 
 pub struct CatalogRepoForSql {}
 
+#[async_trait]
 impl CatalogRepo for CatalogRepoForSql {
     async fn get_all_catalogs(
         &self,
@@ -113,6 +115,7 @@ impl CatalogRepo for CatalogRepoForSql {
     }
 }
 
+#[async_trait]
 impl DatasetRepo for CatalogRepoForSql {
     async fn get_all_datasets(
         &self,

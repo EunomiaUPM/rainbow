@@ -70,7 +70,7 @@ pub struct ConsumerArgs {
     #[arg(long)]
     db_database: Option<String>,
     #[arg(long)]
-    ssi_auth_enabled: Option<String>, // TODO boolean
+    ssi_auth_enabled: Option<String>,
     #[arg(long)]
     ssi_holder_url: Option<String>,
     #[arg(long)]
@@ -102,11 +102,27 @@ pub struct ProviderArgs {
     #[arg(long)]
     auth_port: Option<String>,
     #[arg(long)]
-    ssi_auth_enabled: Option<String>, // TODO boolean
+    ssi_auth_enabled: Option<String>,
     #[arg(long)]
     ssi_holder_url: Option<String>,
     #[arg(long)]
     ssi_holder_port: Option<String>,
+    #[arg(long)]
+    ssi_verifier_url: Option<String>,
+    #[arg(long)]
+    ssi_verifier_port: Option<String>,
+    #[arg(long)]
+    catalog_as_service: Option<String>,
+    #[arg(long)]
+    catalog_service_url: Option<String>,
+    #[arg(long)]
+    catalog_service_port: Option<String>,
+    #[arg(long)]
+    contracts_as_service: Option<String>,
+    #[arg(long)]
+    contracts_service_url: Option<String>,
+    #[arg(long)]
+    contracts_service_port: Option<String>,
     #[command(subcommand)]
     command: ProviderCommands,
 }
@@ -115,7 +131,6 @@ pub struct ProviderArgs {
 pub enum ProviderCommands {
     Start {},
     Setup,
-    LoadContracts,
 }
 
 #[derive(Subcommand, Debug)]
@@ -150,19 +165,57 @@ pub async fn init_command_line() -> Result<()> {
                 args,
                 ssi_auth_enabled,
                 "SSI_AUTH_ENABLED",
-                "true"
+                "false"
             )),
-            ssi_holder_url: Some(config_field!(
+            ssi_holder_url: None,
+            ssi_holder_port: None,
+            ssi_verifier_url: Some(config_field!(
                 args,
-                ssi_holder_url,
-                "SSI_HOLDER_URL",
+                ssi_verifier_url,
+                "SSI_VERIFIER_URL",
                 "127.0.0.1"
             )),
-            ssi_holder_port: Some(config_field!(
+            ssi_verifier_port: Some(config_field!(
                 args,
                 ssi_holder_port,
-                "SSI_HOLDER_PORT",
-                "4000"
+                "SSI_VERIFIER_PORT",
+                "4001"
+            )),
+            catalog_as_service: Some(config_field!(
+                args,
+                catalog_as_service,
+                "CATALOG_AS_SERVICE",
+                "false"
+            )),
+            catalog_service_url: Some(config_field!(
+                args,
+                catalog_service_url,
+                "CATALOG_SERVICE_URL",
+                "127.0.0.1"
+            )),
+            catalog_service_port: Some(config_field!(
+                args,
+                catalog_service_port,
+                "CATALOG_SERVICE_PORT",
+                "1232"
+            )),
+            contracts_as_service: Some(config_field!(
+                args,
+                catalog_as_service,
+                "CONTRACTS_AS_SERVICE",
+                "false"
+            )),
+            contracts_service_url: Some(config_field!(
+                args,
+                contracts_service_url,
+                "CONTRACTS_SERVICE_URL",
+                "127.0.0.1"
+            )),
+            contracts_service_port: Some(config_field!(
+                args,
+                contracts_service_port,
+                "CONTRACTS_SERVICE_PORT",
+                "1232"
             )),
         },
         DataSpaceTransferRoles::Consumer(args) => Config {
@@ -188,7 +241,7 @@ pub async fn init_command_line() -> Result<()> {
                 args,
                 ssi_auth_enabled,
                 "SSI_AUTH_ENABLED",
-                "true"
+                "false"
             )),
             ssi_holder_url: Some(config_field!(
                 args,
@@ -202,6 +255,14 @@ pub async fn init_command_line() -> Result<()> {
                 "SSI_HOLDER_PORT",
                 "4000"
             )),
+            ssi_verifier_url: None,
+            ssi_verifier_port: None,
+            catalog_as_service: None,
+            catalog_service_url: None,
+            catalog_service_port: None,
+            contracts_as_service: None,
+            contracts_service_url: None,
+            contracts_service_port: None,
         },
     };
 
@@ -251,7 +312,6 @@ pub async fn init_command_line() -> Result<()> {
                 ProviderCommands::Setup => {
                     migrate_provider_db().await?;
                 }
-                ProviderCommands::LoadContracts => {}
             }
         }
     }
