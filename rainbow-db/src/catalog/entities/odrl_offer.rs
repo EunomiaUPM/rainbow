@@ -25,9 +25,9 @@ use serde::{Deserialize, Serialize};
 #[sea_orm(table_name = "odrl_offers")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: Uuid,
+    pub id: String,
     pub odrl_offers: Option<serde_json::Value>,
-    pub entity: Uuid,
+    pub entity: String,
     pub entity_type: EntityTypes,
 }
 

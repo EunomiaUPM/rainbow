@@ -18,6 +18,10 @@
  */
 
 use uuid::Uuid;
+use urn::Urn;
+
+
+static UUID_PREFIX: &str ="urn:uuid:";
 
 pub fn convert_uuid_to_uri(uuid: &Uuid) -> anyhow::Result<String> {
     Ok(format!("urn:uuid:{}", uuid.to_string()))
@@ -27,4 +31,14 @@ pub fn convert_uri_to_uuid(string: &String) -> anyhow::Result<Uuid> {
     let string = string.replace("urn:uuid:", "");
     let uuid = Uuid::parse_str(&string)?;
     Ok(uuid)
+}
+
+pub fn get_urn(optional_urn: Option<Urn>) -> Urn {
+    let uuid = Uuid::new_v4();
+    let id_string =  UUID_PREFIX.to_string() + &uuid.to_string();
+    let mut urn_res = id_string.parse::<Urn>().unwrap();
+    if !optional_urn.is_none() {
+        urn_res = optional_urn.unwrap();
+    }
+    return  urn_res;
 }

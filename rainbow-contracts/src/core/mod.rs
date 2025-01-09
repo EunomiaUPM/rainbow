@@ -20,15 +20,16 @@
 use anyhow::bail;
 use rainbow_common::config::database::get_db_connection;
 use rainbow_db::contracts::entities::agreements;
+use rainbow_common::utils::get_urn;
 use sea_orm::{ActiveValue, EntityTrait};
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
+use urn::Urn;
 
-pub async fn create_agreement(data_service_id: Uuid) -> anyhow::Result<agreements::Model> {
+pub async fn create_agreement(data_service_id: Urn) -> anyhow::Result<agreements::Model> {
     let db_connection = get_db_connection().await;
     let agreement = agreements::Entity::insert(agreements::ActiveModel {
-        agreement_id: ActiveValue::Set(Uuid::new_v4()),
-        data_service_id: ActiveValue::Set(data_service_id),
+        agreement_id: ActiveValue::Set(get_urn(None).to_string()),
+        data_service_id: ActiveValue::Set(data_service_id.to_string()),
         identity: ActiveValue::Set(None),
         identity_token: ActiveValue::Set(None),
     })
@@ -47,7 +48,7 @@ pub struct AgreementIdentity {
     identity_token: Option<String>,
 }
 pub async fn edit_agreement(
-    agreement_id: Uuid,
+    agreement_id: String,
     agreement_data: AgreementIdentity,
 ) -> anyhow::Result<Option<agreements::Model>> {
     let db_connection = get_db_connection().await;
@@ -68,7 +69,7 @@ pub async fn edit_agreement(
     Ok(Some(agreement))
 }
 
-pub async fn delete_agreement(agreement_id: Uuid) -> anyhow::Result<()> {
+pub async fn delete_agreement(agreement_id: String) -> anyhow::Result<()> {
     let db_connection = get_db_connection().await;
     let agreement = agreements::Entity::delete_by_id(agreement_id).exec(db_connection).await?;
     if agreement.rows_affected == 0 {
@@ -77,9 +78,16 @@ pub async fn delete_agreement(agreement_id: Uuid) -> anyhow::Result<()> {
     Ok(())
 }
 
-pub async fn get_agreement_by_id(agreement_id: Uuid) -> anyhow::Result<Option<agreements::Model>> {
+pub async fn get_agreement_by_id(agreement_id: String) -> anyhow::Result<Option<agreements::Model>> {
     let db_connection = get_db_connection().await;
     let agreement = agreements::Entity::find_by_id(agreement_id).one(db_connection).await?;
     // let agreement = get_agreement_by_id_repo(agreement_id)?;
     Ok(agreement)
+}
+
+pub async fn get_agreements() -> anyhow::Result<Vec<agreements::Model>> {
+    let db_connection = get_db_connection().await;
+    let agreements = agreements::Entity::find().all(db_connection).await?;
+    // let agreement = get_agreement_by_id_repo(agreement_id)?;
+    Ok(agreements)
 }

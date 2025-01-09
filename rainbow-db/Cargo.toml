@@ -22,5 +22,6 @@ dotenvy = { workspace = true }
 once_cell = { workspace = true }
 chrono = { workspace = true }
 uuid = { workspace = true }
+urn = { workspace = true }
 sea-orm = { workspace = true }
 sea-orm-migration = { workspace = true }

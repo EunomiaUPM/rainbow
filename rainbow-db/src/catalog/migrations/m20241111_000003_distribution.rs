@@ -34,13 +34,13 @@ impl MigrationTrait for Migration {
             .create_table(
                 Table::create()
                     .table(Distribution::Table)
-                    .col(ColumnDef::new(Distribution::Id).uuid().not_null().primary_key())
+                    .col(ColumnDef::new(Distribution::Id).string().not_null().primary_key())
                     .col(ColumnDef::new(Distribution::DctIssued).date_time().not_null())
                     .col(ColumnDef::new(Distribution::DctModified).date_time())
                     .col(ColumnDef::new(Distribution::DctTitle).string())
                     .col(ColumnDef::new(Distribution::DctDescription).string())
-                    .col(ColumnDef::new(Distribution::DcatAccessService).uuid().not_null())
-                    .col(ColumnDef::new(Distribution::DatasetId).uuid().not_null())
+                    .col(ColumnDef::new(Distribution::DcatAccessService).string().not_null())
+                    .col(ColumnDef::new(Distribution::DatasetId).string().not_null())
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk_distribution_dataset")

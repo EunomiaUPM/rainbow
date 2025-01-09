@@ -33,10 +33,10 @@ impl MigrationTrait for Migration {
             .create_table(
                 Table::create()
                     .table(DcatDescriptions::Table)
-                    .col(ColumnDef::new(DcatDescriptions::Id).uuid().not_null().primary_key())
+                    .col(ColumnDef::new(DcatDescriptions::Id).string().not_null().primary_key())
                     .col(ColumnDef::new(DcatDescriptions::Description).string().not_null())
                     .col(ColumnDef::new(DcatDescriptions::DescriptionLanguage).string().not_null())
-                    .col(ColumnDef::new(DcatDescriptions::Entity).uuid().not_null())
+                    .col(ColumnDef::new(DcatDescriptions::Entity).string().not_null())
                     .col(
                         ColumnDef::new(DcatDescriptions::EntityType)
                             .enumeration(

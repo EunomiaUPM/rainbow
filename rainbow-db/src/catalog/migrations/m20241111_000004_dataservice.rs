@@ -34,7 +34,7 @@ impl MigrationTrait for Migration {
             .create_table(
                 Table::create()
                     .table(DataServices::Table)
-                    .col(ColumnDef::new(DataServices::Id).uuid().not_null().primary_key())
+                    .col(ColumnDef::new(DataServices::Id).string().not_null().primary_key())
                     .col(ColumnDef::new(DataServices::DcatEndpointDescription).string())
                     .col(ColumnDef::new(DataServices::DcatEndpointURL).string().not_null())
                     .col(ColumnDef::new(DataServices::DctConformsTo).string())
@@ -44,7 +44,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(DataServices::DctModified).date_time())
                     .col(ColumnDef::new(DataServices::DctTitle).string())
                     .col(ColumnDef::new(DataServices::DctDescription).string())
-                    .col(ColumnDef::new(DataServices::CatalogId).uuid().not_null())
+                    .col(ColumnDef::new(DataServices::CatalogId).string().not_null())
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk_dataservice_catalog")

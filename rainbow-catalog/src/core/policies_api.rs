@@ -17,6 +17,7 @@
  *
  */
 
+use axum::http::Uri;
 use rainbow_common::config::database::get_db_connection;
 use rainbow_db::catalog::entities::odrl_offer;
 use rainbow_db::catalog::migrations::m20241111_000005_odrl_offers::EntityTypes;
@@ -25,7 +26,7 @@ use sea_orm::{ActiveValue, ColumnTrait, EntityTrait};
 use serde_json::Value;
 use uuid::Uuid;
 
-pub async fn get_catalog_policies(catalog_id: Uuid) -> anyhow::Result<Value> {
+pub async fn get_catalog_policies(catalog_id: String) -> anyhow::Result<Value> {
     let db_connection = get_db_connection().await;
 
     let policies = odrl_offer::Entity::find()
@@ -39,12 +40,12 @@ pub async fn get_catalog_policies(catalog_id: Uuid) -> anyhow::Result<Value> {
     let policies_value = serde_json::to_value(policies)?;
     Ok(policies_value)
 }
-pub async fn post_catalog_policies(catalog_id: Uuid, policy: Value) -> anyhow::Result<Value> {
+pub async fn post_catalog_policies(catalog_id: String, policy: Value) -> anyhow::Result<Value> {
     let db_connection = get_db_connection().await;
     let new_policy = odrl_offer::ActiveModel {
-        id: ActiveValue::Set(uuid::Uuid::new_v4()),
+        id: ActiveValue::Set(uuid::Uuid::new_v4().to_string()),
         odrl_offers: ActiveValue::Set(Some(policy)),
-        entity: ActiveValue::Set(catalog_id),
+        entity: ActiveValue::Set(catalog_id.to_string()),
         entity_type: ActiveValue::Set(EntityTypes::Catalog),
     };
     let policy_entity =
@@ -53,12 +54,12 @@ pub async fn post_catalog_policies(catalog_id: Uuid, policy: Value) -> anyhow::R
     let policies_value = serde_json::to_value(policy_entity)?;
     Ok(policies_value)
 }
-pub async fn delete_catalog_policies(catalog_id: Uuid, policy_id: Uuid) -> anyhow::Result<()> {
+pub async fn delete_catalog_policies(catalog_id: String, policy_id: String) -> anyhow::Result<()> {
     let db_connection = get_db_connection().await;
     odrl_offer::Entity::delete_by_id(policy_id).exec(db_connection).await?;
     Ok(())
 }
-pub async fn get_dataset_policies(dataset_id: Uuid) -> anyhow::Result<Value> {
+pub async fn get_dataset_policies(dataset_id: String) -> anyhow::Result<Value> {
     let db_connection = get_db_connection().await;
 
     let policies = odrl_offer::Entity::find()
@@ -72,12 +73,12 @@ pub async fn get_dataset_policies(dataset_id: Uuid) -> anyhow::Result<Value> {
     let policies_value = serde_json::to_value(policies)?;
     Ok(policies_value)
 }
-pub async fn post_dataset_policies(dataset_id: Uuid, policy: Value) -> anyhow::Result<Value> {
+pub async fn post_dataset_policies(dataset_id: String, policy: Value) -> anyhow::Result<Value> {
     let db_connection = get_db_connection().await;
     let new_policy = odrl_offer::ActiveModel {
-        id: ActiveValue::Set(uuid::Uuid::new_v4()),
+        id: ActiveValue::Set(uuid::Uuid::new_v4().to_string()),
         odrl_offers: ActiveValue::Set(Some(policy)),
-        entity: ActiveValue::Set(dataset_id),
+        entity: ActiveValue::Set(dataset_id.to_string()),
         entity_type: ActiveValue::Set(EntityTypes::Dataset),
     };
     let policy_entity =
@@ -86,12 +87,12 @@ pub async fn post_dataset_policies(dataset_id: Uuid, policy: Value) -> anyhow::R
     let policies_value = serde_json::to_value(policy_entity)?;
     Ok(policies_value)
 }
-pub async fn delete_dataset_policies(dataset_id: Uuid, policy_id: Uuid) -> anyhow::Result<()> {
+pub async fn delete_dataset_policies(dataset_id: String, policy_id: String) -> anyhow::Result<()> {
     let db_connection = get_db_connection().await;
     odrl_offer::Entity::delete_by_id(policy_id).exec(db_connection).await?;
     Ok(())
 }
-pub async fn get_dataservices_policies(dataservice_id: Uuid) -> anyhow::Result<Value> {
+pub async fn get_dataservices_policies(dataservice_id: String) -> anyhow::Result<Value> {
     let db_connection = get_db_connection().await;
 
     let policies = odrl_offer::Entity::find()
@@ -106,12 +107,12 @@ pub async fn get_dataservices_policies(dataservice_id: Uuid) -> anyhow::Result<V
     Ok(policies_value)
 }
 pub async fn post_dataservices_policies(
-    dataservice_id: Uuid,
+    dataservice_id: String,
     policy: Value,
 ) -> anyhow::Result<Value> {
     let db_connection = get_db_connection().await;
     let new_policy = odrl_offer::ActiveModel {
-        id: ActiveValue::Set(uuid::Uuid::new_v4()),
+        id: ActiveValue::Set(uuid::Uuid::new_v4().to_string()),
         odrl_offers: ActiveValue::Set(Some(policy)),
         entity: ActiveValue::Set(dataservice_id),
         entity_type: ActiveValue::Set(EntityTypes::DataService),
@@ -123,14 +124,14 @@ pub async fn post_dataservices_policies(
     Ok(policies_value)
 }
 pub async fn delete_dataservices_policies(
-    dataservice_id: Uuid,
-    policy_id: Uuid,
+    dataservice_id: String,
+    policy_id: String,
 ) -> anyhow::Result<()> {
     let db_connection = get_db_connection().await;
     odrl_offer::Entity::delete_by_id(policy_id).exec(db_connection).await?;
     Ok(())
 }
-pub async fn get_distributions_policies(distribution_id: Uuid) -> anyhow::Result<Value> {
+pub async fn get_distributions_policies(distribution_id: String) -> anyhow::Result<Value> {
     let db_connection = get_db_connection().await;
 
     let policies = odrl_offer::Entity::find()
@@ -145,12 +146,12 @@ pub async fn get_distributions_policies(distribution_id: Uuid) -> anyhow::Result
     Ok(policies_value)
 }
 pub async fn post_distributions_policies(
-    distribution_id: Uuid,
+    distribution_id: String,
     policy: Value,
 ) -> anyhow::Result<Value> {
     let db_connection = get_db_connection().await;
     let new_policy = odrl_offer::ActiveModel {
-        id: ActiveValue::Set(uuid::Uuid::new_v4()),
+        id: ActiveValue::Set(uuid::Uuid::new_v4().to_string()),
         odrl_offers: ActiveValue::Set(Some(policy)),
         entity: ActiveValue::Set(distribution_id),
         entity_type: ActiveValue::Set(EntityTypes::DataService),
@@ -162,8 +163,8 @@ pub async fn post_distributions_policies(
     Ok(policies_value)
 }
 pub async fn delete_distributions_policies(
-    distribution_id: Uuid,
-    policy_id: Uuid,
+    distribution_id: String,
+    policy_id: String,
 ) -> anyhow::Result<()> {
     let db_connection = get_db_connection().await;
     odrl_offer::Entity::delete_by_id(policy_id).exec(db_connection).await?;

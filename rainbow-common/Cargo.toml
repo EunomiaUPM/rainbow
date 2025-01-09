@@ -28,6 +28,7 @@ jsonschema = { workspace = true }
 chrono = { workspace = true }
 ulid = { workspace = true }
 uuid = { workspace = true }
+urn = { workspace = true }
 log = { workspace = true }
 tower = { workspace = true }
 http-body-util = { workspace = true }

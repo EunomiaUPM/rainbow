@@ -22,11 +22,11 @@
 use super::entities::catalog;
 use super::entities::dataset;
 use axum::async_trait;
-use uuid::Uuid;
 
 pub mod sql;
 
 pub struct NewCatalogModel {
+    pub id: Option<String>,
     pub foaf_home_page: Option<String>,
     pub dct_conforms_to: Option<String>,
     pub dct_creator: Option<String>,
@@ -47,14 +47,15 @@ pub trait CatalogRepo {
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<catalog::Model>>;
-    async fn get_catalog_by_id(&self, catalog_id: Uuid) -> anyhow::Result<Option<catalog::Model>>;
-    async fn put_catalog_by_id(&self, catalog_id: Uuid, edit_catalog_model: EditCatalogModel) -> anyhow::Result<catalog::Model>;
-    async fn create_catalog(&self, catalog_id: Uuid, new_catalog_model: NewCatalogModel) -> anyhow::Result<catalog::Model>;
-    async fn delete_catalog_by_id(&self, catalog_id: Uuid) -> anyhow::Result<()>;
+    async fn get_catalog_by_id(&self, catalog_id: String) -> anyhow::Result<Option<catalog::Model>>;
+    async fn put_catalog_by_id(&self, catalog_id: String, edit_catalog_model: EditCatalogModel) -> anyhow::Result<catalog::Model>;
+    async fn create_catalog(&self, catalog_id: String, new_catalog_model: NewCatalogModel) -> anyhow::Result<catalog::Model>;
+    async fn delete_catalog_by_id(&self, catalog_id: String) -> anyhow::Result<()>;
 }
 
 
 pub struct NewDatasetModel {
+    pub id: Option<String>,
     pub dct_conforms_to: Option<String>,
     pub dct_creator: Option<String>,
     pub dct_title: Option<String>,
@@ -75,8 +76,8 @@ pub trait DatasetRepo {
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<dataset::Model>>;
-    async fn get_datasets_by_id(&self, dataset_id: Uuid) -> anyhow::Result<Option<dataset::Model>>;
-    async fn put_datasets_by_id(&self, dataset_id: Uuid, edit_dataset_model: EditDatasetModel) -> anyhow::Result<dataset::Model>;
-    async fn create_dataset(&self, catalog_id: Uuid, new_dataset_model: NewDatasetModel) -> anyhow::Result<dataset::Model>;
-    async fn delete_dataset_by_id(&self, dataset_id: Uuid) -> anyhow::Result<()>;
+    async fn get_datasets_by_id(&self, dataset_id: String) -> anyhow::Result<Option<dataset::Model>>;
+    async fn put_datasets_by_id(&self, dataset_id: String, edit_dataset_model: EditDatasetModel) -> anyhow::Result<dataset::Model>;
+    async fn create_dataset(&self, catalog_id: String, new_dataset_model: NewDatasetModel) -> anyhow::Result<dataset::Model>;
+    async fn delete_dataset_by_id(&self, dataset_id: String) -> anyhow::Result<()>;
 }

@@ -33,7 +33,7 @@ impl MigrationTrait for Migration {
             .create_table(
                 Table::create()
                     .table(Catalog::Table)
-                    .col(ColumnDef::new(Catalog::Id).uuid().not_null().primary_key())
+                    .col(ColumnDef::new(Catalog::Id).string().not_null().primary_key())
                     .col(ColumnDef::new(Catalog::FoafHomePage).string())
                     .col(ColumnDef::new(Catalog::DctConformsTo).string())
                     .col(ColumnDef::new(Catalog::DctCreator).string())

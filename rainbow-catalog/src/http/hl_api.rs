@@ -31,7 +31,7 @@ use axum::{Json, Router};
 use reqwest::StatusCode;
 use tower_http::trace::TraceLayer;
 use tracing::info;
-use uuid::Uuid;
+use axum::http::Uri;
 
 pub async fn catalog_api_router() -> anyhow::Result<Router> {
     let router = Router::new()
@@ -89,8 +89,8 @@ async fn handle_get_catalogs() -> impl IntoResponse {
     }
 }
 
-async fn handle_get_catalogs_by_id(Path(id): Path<Uuid>) -> impl IntoResponse {
-    info!("GET /api/v1/catalogs/{}", id.to_string());
+async fn handle_get_catalogs_by_id(Path(id): Path<String>) -> impl IntoResponse {
+    info!("GET /api/v1/catalogs/{}", id);
     match catalog_request_by_id(id).await {
         Ok(c) => (StatusCode::OK, Json(c)).into_response(),
         Err(err) => (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
@@ -106,18 +106,18 @@ async fn handle_post_catalog(Json(input): Json<NewCatalogRequest>) -> impl IntoR
 }
 
 async fn handle_put_catalog(
-    Path(id): Path<Uuid>,
+    Path(id): Path<String>,
     Json(input): Json<NewCatalogRequest>,
 ) -> impl IntoResponse {
-    info!("PUT /api/v1/catalogs/{}", id.to_string());
+    info!("PUT /api/v1/catalogs/{}", id);
     match put_catalog(id, input).await {
         Ok(c) => (StatusCode::ACCEPTED, Json(c)).into_response(),
         Err(err) => (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
     }
 }
 
-async fn handle_delete_catalog(Path(id): Path<Uuid>) -> impl IntoResponse {
-    info!("DELETE /api/v1/catalogs/{}", id.to_string());
+async fn handle_delete_catalog(Path(id): Path<String>) -> impl IntoResponse {
+    info!("DELETE /api/v1/catalogs/{}", id);
     match delete_catalog(id).await {
         Ok(_) => (StatusCode::ACCEPTED).into_response(),
         Err(err) => (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
@@ -125,10 +125,10 @@ async fn handle_delete_catalog(Path(id): Path<Uuid>) -> impl IntoResponse {
 }
 
 async fn handle_post_dataset(
-    Path(id): Path<Uuid>,
+    Path(id): Path<String>,
     Json(input): Json<NewDatasetRequest>,
 ) -> impl IntoResponse {
-    info!("POST /api/v1/catalogs/{}/datasets", id.to_string());
+    info!("POST /api/v1/catalogs/{}/datasets", id);
     match post_dataset(id, input).await {
         Ok(d) => (StatusCode::CREATED, Json(d)).into_response(),
         Err(err) => (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
@@ -136,13 +136,13 @@ async fn handle_post_dataset(
 }
 
 async fn handle_put_dataset(
-    Path(id): Path<(Uuid, Uuid)>,
+    Path(id): Path<(String, String)>,
     Json(input): Json<NewDatasetRequest>,
 ) -> impl IntoResponse {
     info!(
         "PUT /api/v1/catalogs/{}/datasets/{}",
-        id.0.to_string(),
-        id.1.to_string()
+        id.0,
+        id.1
     );
     match put_dataset(id.0, id.1, input).await {
         Ok(d) => (StatusCode::ACCEPTED, Json(d)).into_response(),
@@ -150,11 +150,11 @@ async fn handle_put_dataset(
     }
 }
 
-async fn handle_delete_dataset(Path(id): Path<(Uuid, Uuid)>) -> impl IntoResponse {
+async fn handle_delete_dataset(Path(id): Path<(String, String)>) -> impl IntoResponse {
     info!(
         "DELETE /api/v1/catalogs/{}/datasets/{}",
-        id.0.to_string(),
-        id.1.to_string()
+        id.0,
+        id.1
     );
     match delete_dataset(id.0, id.1).await {
         Ok(d) => (StatusCode::ACCEPTED).into_response(),
@@ -163,10 +163,10 @@ async fn handle_delete_dataset(Path(id): Path<(Uuid, Uuid)>) -> impl IntoRespons
 }
 
 async fn handle_post_distribution(
-    Path((id, did)): Path<(Uuid, Uuid)>,
+    Path((id, did)): Path<(String, String)>,
     Json(input): Json<NewDistributionRequest>,
 ) -> impl IntoResponse {
-    info!("POST /api/v1/catalogs/{}/datasets", id.to_string());
+    info!("POST /api/v1/catalogs/{}/datasets", id);
     match post_distribution(id, did, input).await {
         Ok(d) => (StatusCode::CREATED, Json(d)).into_response(),
         Err(err) => (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
@@ -174,13 +174,13 @@ async fn handle_post_distribution(
 }
 
 async fn handle_put_distribution(
-    Path(id): Path<(Uuid, Uuid, Uuid)>,
+    Path(id): Path<(String, String, String)>,
     Json(input): Json<EditDistributionRequest>,
 ) -> impl IntoResponse {
     info!(
         "PUT /api/v1/catalogs/{}/datasets/{}",
-        id.0.to_string(),
-        id.1.to_string()
+        id.0,
+        id.1
     );
     match put_distribution(id.0, id.1, id.2, input).await {
         Ok(d) => (StatusCode::ACCEPTED, Json(d)).into_response(),
@@ -188,11 +188,11 @@ async fn handle_put_distribution(
     }
 }
 
-async fn handle_delete_distribution(Path(id): Path<(Uuid, Uuid, Uuid)>) -> impl IntoResponse {
+async fn handle_delete_distribution(Path(id): Path<(String, String, String)>) -> impl IntoResponse {
     info!(
         "DELETE /api/v1/catalogs/{}/datasets/{}",
-        id.0.to_string(),
-        id.1.to_string()
+        id.0,
+        id.1
     );
     match delete_distribution(id.0, id.1, id.2).await {
         Ok(d) => (StatusCode::ACCEPTED).into_response(),
@@ -201,10 +201,10 @@ async fn handle_delete_distribution(Path(id): Path<(Uuid, Uuid, Uuid)>) -> impl 
 }
 
 async fn handle_post_dataservice(
-    Path(id): Path<Uuid>,
+    Path(id): Path<String>,
     Json(input): Json<NewDataServiceRequest>,
 ) -> impl IntoResponse {
-    info!("POST /api/v1/catalogs/{}/data-services", id.to_string());
+    info!("POST /api/v1/catalogs/{}/data-services", id);
     match post_dataservice(id, input).await {
         Ok(d) => (StatusCode::CREATED, Json(d)).into_response(),
         Err(err) => (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
@@ -212,13 +212,13 @@ async fn handle_post_dataservice(
 }
 
 async fn handle_put_dataservice(
-    Path(id): Path<(Uuid, Uuid)>,
+    Path(id): Path<(String, String)>,
     Json(input): Json<EditDataServiceRequest>,
 ) -> impl IntoResponse {
     info!(
         "PUT /api/v1/catalogs/{}/data-services/{}",
-        id.0.to_string(),
-        id.1.to_string()
+        id.0,
+        id.1
     );
     match put_dataservice(id.0, id.1, input).await {
         Ok(d) => (StatusCode::ACCEPTED, Json(d)).into_response(),
@@ -226,11 +226,11 @@ async fn handle_put_dataservice(
     }
 }
 
-async fn handle_delete_dataservice(Path(id): Path<(Uuid, Uuid)>) -> impl IntoResponse {
+async fn handle_delete_dataservice(Path(id): Path<(String, String)>) -> impl IntoResponse {
     info!(
         "DELETE /api/v1/catalogs/{}/data-services/{}",
-        id.0.to_string(),
-        id.1.to_string()
+        id.0,
+        id.1
     );
     match delete_dataservice(id.0, id.1).await {
         Ok(d) => (StatusCode::ACCEPTED).into_response(),

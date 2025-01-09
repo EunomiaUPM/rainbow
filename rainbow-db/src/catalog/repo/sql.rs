@@ -6,13 +6,17 @@ use crate::catalog::repo::{
 use anyhow::bail;
 use axum::async_trait;
 use rainbow_common::config::database::get_db_connection;
+use rainbow_common::utils::get_urn;
 use sea_orm::{ActiveModelTrait, ActiveValue, EntityTrait, QuerySelect};
 use uuid::Uuid;
+use urn::Urn;
+use axum::async_trait;
 
 pub struct CatalogRepoForSql {}
 
 #[async_trait]
 impl CatalogRepo for CatalogRepoForSql {
+       
     async fn get_all_catalogs(
         &self,
         limit: Option<u64>,
@@ -30,7 +34,7 @@ impl CatalogRepo for CatalogRepoForSql {
         }
     }
 
-    async fn get_catalog_by_id(&self, catalog_id: Uuid) -> anyhow::Result<Option<catalog::Model>> {
+    async fn get_catalog_by_id(&self, catalog_id: String) -> anyhow::Result<Option<catalog::Model>> {
         let db_connection = get_db_connection().await;
         let catalog = catalog::Entity::find_by_id(catalog_id).one(db_connection).await;
         match catalog {
@@ -41,7 +45,7 @@ impl CatalogRepo for CatalogRepoForSql {
 
     async fn put_catalog_by_id(
         &self,
-        catalog_id: Uuid,
+        catalog_id: String,
         edit_catalog_model: EditCatalogModel,
     ) -> anyhow::Result<catalog::Model> {
         let db_connection = get_db_connection().await;
@@ -79,17 +83,17 @@ impl CatalogRepo for CatalogRepoForSql {
 
     async fn create_catalog(
         &self,
-        catalog_id: Uuid,
+        catalog_id: String,
         new_catalog_model: NewCatalogModel,
     ) -> anyhow::Result<catalog::Model> {
         let db_connection = get_db_connection().await;
-        let uuid = Uuid::new_v4();
+        let urn = get_urn(new_catalog_model.id.map(|urn_id|urn_id.parse::<Urn>().unwrap()));
         let model = catalog::ActiveModel {
-            id: ActiveValue::Set(uuid),
+            id: ActiveValue::Set(urn.to_string()),
             foaf_home_page: ActiveValue::Set(new_catalog_model.foaf_home_page),
             dct_conforms_to: ActiveValue::Set(new_catalog_model.dct_conforms_to),
             dct_creator: ActiveValue::Set(new_catalog_model.dct_creator),
-            dct_identifier: ActiveValue::Set(Option::from(uuid.to_string())),
+            dct_identifier: ActiveValue::Set(Some(urn.to_string())),
             dct_issued: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             dct_modified: ActiveValue::Set(None),
             dct_title: ActiveValue::Set(new_catalog_model.dct_title),
@@ -102,7 +106,7 @@ impl CatalogRepo for CatalogRepoForSql {
         }
     }
 
-    async fn delete_catalog_by_id(&self, catalog_id: Uuid) -> anyhow::Result<()> {
+    async fn delete_catalog_by_id(&self, catalog_id: String) -> anyhow::Result<()> {
         let db_connection = get_db_connection().await;
         let catalog = catalog::Entity::delete_by_id(catalog_id).exec(db_connection).await;
         match catalog {
@@ -134,7 +138,7 @@ impl DatasetRepo for CatalogRepoForSql {
         }
     }
 
-    async fn get_datasets_by_id(&self, dataset_id: Uuid) -> anyhow::Result<Option<dataset::Model>> {
+    async fn get_datasets_by_id(&self, dataset_id: String) -> anyhow::Result<Option<dataset::Model>> {
         let db_connection = get_db_connection().await;
         let dataset = dataset::Entity::find_by_id(dataset_id).one(db_connection).await;
         match dataset {
@@ -145,7 +149,7 @@ impl DatasetRepo for CatalogRepoForSql {
 
     async fn put_datasets_by_id(
         &self,
-        dataset_id: Uuid,
+        dataset_id: String,
         edit_dataset_model: EditDatasetModel,
     ) -> anyhow::Result<dataset::Model> {
         let db_connection = get_db_connection().await;
@@ -183,16 +187,16 @@ impl DatasetRepo for CatalogRepoForSql {
 
     async fn create_dataset(
         &self,
-        catalog_id: Uuid,
+        catalog_id: String,
         new_dataset_model: NewDatasetModel,
     ) -> anyhow::Result<dataset::Model> {
         let db_connection = get_db_connection().await;
-        let uuid = Uuid::new_v4();
+        let urn = get_urn(new_dataset_model.id.map(|urn_id|urn_id.parse::<Urn>().unwrap()));
         let model = dataset::ActiveModel {
-            id: ActiveValue::Set(uuid),
+            id: ActiveValue::Set(urn.to_string()),
             dct_conforms_to: ActiveValue::Set(new_dataset_model.dct_conforms_to),
             dct_creator: ActiveValue::Set(new_dataset_model.dct_creator),
-            dct_identifier: ActiveValue::Set(Option::from(uuid.to_string())),
+            dct_identifier: ActiveValue::Set(Option::from(urn.to_string())),
             dct_issued: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             dct_modified: ActiveValue::Set(None),
             dct_title: ActiveValue::Set(new_dataset_model.dct_title),
@@ -207,7 +211,7 @@ impl DatasetRepo for CatalogRepoForSql {
     }
 
 
-    async fn delete_dataset_by_id(&self, dataset_id: Uuid) -> anyhow::Result<()> {
+    async fn delete_dataset_by_id(&self, dataset_id: String) -> anyhow::Result<()> {
         let db_connection = get_db_connection().await;
         let dataset = dataset::Entity::delete_by_id(dataset_id).exec(db_connection).await;
         match dataset {

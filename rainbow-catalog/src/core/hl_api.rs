@@ -25,6 +25,12 @@ use crate::protocol::dataservice_definition::DataService;
 use crate::protocol::dataset_definition::Dataset;
 use crate::protocol::distribution_definition::Distribution;
 use anyhow::bail;
+use axum::routing::get;
+use clap::builder::Str;
+use rainbow_common::opt_urn_serde;
+use rainbow_common::urn_serde;
+use rainbow_common::utils;
+use rainbow_common::utils::get_urn;
 use rainbow_common::config::database::get_db_connection;
 use rainbow_db::catalog::entities::{catalog, dataset, distribution};
 use rainbow_db::catalog::entities::{dataservice, odrl_offer};
@@ -32,12 +38,14 @@ use sea_orm::{ActiveValue, ColumnTrait};
 use sea_orm::{EntityTrait, QueryFilter};
 use serde::{Deserialize, Serialize};
 use serde_json::to_value;
-use uuid::Uuid;
+use axum::http::Uri;
+use tracing::info;
+use urn::Urn;
 
-pub async fn catalog_request_by_id(id: Uuid) -> anyhow::Result<Catalog> {
+pub async fn catalog_request_by_id(id: String) -> anyhow::Result<Catalog> {
     let db_connection = get_db_connection().await;
     let catalog =
-        catalog::Entity::find().filter(catalog::Column::Id.eq(id)).one(db_connection).await?;
+        catalog::Entity::find().filter(catalog::Column::Id.eq(id.to_string())).one(db_connection).await?;
 
     match catalog {
         Some(catalog_entity) => {
@@ -57,6 +65,10 @@ pub async fn catalog_request_by_id(id: Uuid) -> anyhow::Result<Catalog> {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NewCatalogRequest {
+    #[serde(rename = "@id")]
+    #[serde(with="opt_urn_serde")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    id: Option<Urn>,
     #[serde(rename = "foaf:homepage")]
     #[serde(skip_serializing_if = "Option::is_none")]
     foaf_home_page: Option<String>,
@@ -70,15 +82,21 @@ pub struct NewCatalogRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     dct_title: Option<String>,
 }
+
+
+
 pub async fn post_catalog(input: NewCatalogRequest) -> anyhow::Result<Catalog> {
     let db_connection = get_db_connection().await;
-    let uuid = Uuid::new_v4();
+    let input_string = input.id.clone().unwrap();
+    
+    let urn = get_urn(input.id);
+
     let new_catalog = catalog::ActiveModel {
-        id: ActiveValue::Set(uuid),
+        id: ActiveValue::Set(urn.to_string()),
         foaf_home_page: ActiveValue::Set(input.foaf_home_page),
         dct_conforms_to: ActiveValue::Set(input.dct_conforms_to),
         dct_creator: ActiveValue::Set(input.dct_creator),
-        dct_identifier: ActiveValue::Set(Some(uuid.to_string())),
+        dct_identifier: ActiveValue::Set(Some(urn.to_string())),
         dct_issued: ActiveValue::Set(chrono::Utc::now().naive_utc()),
         dct_modified: Default::default(),
         dct_title: ActiveValue::Set(input.dct_title),
@@ -92,10 +110,10 @@ pub async fn post_catalog(input: NewCatalogRequest) -> anyhow::Result<Catalog> {
     Ok(catalog)
 }
 
-pub async fn put_catalog(id: Uuid, input: NewCatalogRequest) -> anyhow::Result<Catalog> {
+pub async fn put_catalog(id: String, input: NewCatalogRequest) -> anyhow::Result<Catalog> {
     let db_connection = get_db_connection().await;
     let catalog: Option<catalog::Model> =
-        catalog::Entity::find_by_id(id).one(db_connection).await?;
+        catalog::Entity::find_by_id(id.to_string()).one(db_connection).await?;
 
     if catalog.is_none() {
         bail!("Catalog does not exist"); // TODO 404
@@ -123,9 +141,9 @@ pub async fn put_catalog(id: Uuid, input: NewCatalogRequest) -> anyhow::Result<C
     Ok(catalog)
 }
 
-pub async fn delete_catalog(id: Uuid) -> anyhow::Result<()> {
+pub async fn delete_catalog(id: String) -> anyhow::Result<()> {
     let db_connection = get_db_connection().await;
-    let catalog = catalog::Entity::delete_by_id(id).exec(db_connection).await?;
+    let catalog = catalog::Entity::delete_by_id(id.to_string()).exec(db_connection).await?;
     if catalog.rows_affected == 0 {
         bail!("Catalog does not exist");
     }
@@ -134,6 +152,10 @@ pub async fn delete_catalog(id: Uuid) -> anyhow::Result<()> {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NewDatasetRequest {
+    #[serde(rename = "@id")]
+    #[serde(with="opt_urn_serde")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    id: Option<Urn>,
     #[serde(rename = "dct:conformsTo")]
     #[serde(skip_serializing_if = "Option::is_none")]
     dct_conforms_to: Option<String>,
@@ -144,14 +166,14 @@ pub struct NewDatasetRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     dct_title: Option<String>,
 }
-pub async fn post_dataset(catalog_id: Uuid, input: NewDatasetRequest) -> anyhow::Result<Dataset> {
+pub async fn post_dataset(catalog_id: String, input: NewDatasetRequest) -> anyhow::Result<Dataset> {
     let db_connection = get_db_connection().await;
-    let uuid = Uuid::new_v4();
+    let urn = get_urn(input.id);
     let new_dataset = dataset::ActiveModel {
-        id: ActiveValue::Set(uuid),
+        id: ActiveValue::Set(urn.to_string()),
         dct_conforms_to: ActiveValue::Set(input.dct_conforms_to),
         dct_creator: ActiveValue::Set(input.dct_creator),
-        dct_identifier: ActiveValue::Set(Some(uuid.to_string())),
+        dct_identifier: ActiveValue::Set(Some(urn.to_string())),
         dct_issued: ActiveValue::Set(chrono::Utc::now().naive_utc()),
         dct_modified: Default::default(),
         dct_title: ActiveValue::Set(input.dct_title),
@@ -167,8 +189,8 @@ pub async fn post_dataset(catalog_id: Uuid, input: NewDatasetRequest) -> anyhow:
 }
 
 pub async fn put_dataset(
-    catalog_id: Uuid,
-    dataset_id: Uuid,
+    catalog_id: String,
+    dataset_id: String,
     input: NewDatasetRequest,
 ) -> anyhow::Result<Dataset> {
     let db_connection = get_db_connection().await;
@@ -198,9 +220,9 @@ pub async fn put_dataset(
     Ok(dataset)
 }
 
-pub async fn delete_dataset(catalog_id: Uuid, dataset_id: Uuid) -> anyhow::Result<()> {
+pub async fn delete_dataset(catalog_id: String, dataset_id: String) -> anyhow::Result<()> {
     let db_connection = get_db_connection().await;
-    let dataset = dataset::Entity::delete_by_id(dataset_id).exec(db_connection).await?;
+    let dataset = dataset::Entity::delete_by_id(dataset_id.to_string()).exec(db_connection).await?;
     if dataset.rows_affected == 0 {
         bail!("Dataset does not exist");
     }
@@ -209,6 +231,10 @@ pub async fn delete_dataset(catalog_id: Uuid, dataset_id: Uuid) -> anyhow::Resul
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NewDataServiceRequest {
+    #[serde(rename = "@id")]
+    #[serde(with="opt_urn_serde")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    id: Option<Urn>,
     #[serde(rename = "dct:conformsTo")]
     #[serde(skip_serializing_if = "Option::is_none")]
     dct_conforms_to: Option<String>,
@@ -226,18 +252,18 @@ pub struct NewDataServiceRequest {
 }
 
 pub async fn post_dataservice(
-    catalog_id: Uuid,
+    catalog_id: String,
     input: NewDataServiceRequest,
 ) -> anyhow::Result<DataService> {
     let db_connection = get_db_connection().await;
-    let uuid = Uuid::new_v4();
+    let urn = get_urn(input.id);
     let new_dataservice = dataservice::ActiveModel {
-        id: ActiveValue::Set(uuid),
+        id: ActiveValue::Set(urn.to_string()),
         dcat_endpoint_description: ActiveValue::Set(input.dcat_endpoint_description),
         dcat_endpoint_url: ActiveValue::Set(input.dcat_endpoint_url),
         dct_conforms_to: ActiveValue::Set(input.dct_conforms_to),
         dct_creator: ActiveValue::Set(input.dct_creator),
-        dct_identifier: ActiveValue::Set(Some(uuid.to_string())),
+        dct_identifier: ActiveValue::Set(Some(urn.to_string())),
         dct_issued: ActiveValue::Set(chrono::Utc::now().naive_utc()),
         dct_modified: Default::default(),
         dct_title: ActiveValue::Set(input.dct_title),
@@ -272,8 +298,8 @@ pub struct EditDataServiceRequest {
 }
 
 pub async fn put_dataservice(
-    catalog_id: Uuid,
-    dataservice_id: Uuid,
+    catalog_id: String,
+    dataservice_id: String,
     input: EditDataServiceRequest,
 ) -> anyhow::Result<DataService> {
     let db_connection = get_db_connection().await;
@@ -311,7 +337,7 @@ pub async fn put_dataservice(
     Ok(dataservice)
 }
 
-pub async fn delete_dataservice(catalog_id: Uuid, dataset_id: Uuid) -> anyhow::Result<()> {
+pub async fn delete_dataservice(catalog_id: String, dataset_id: String) -> anyhow::Result<()> {
     let db_connection = get_db_connection().await;
     let dataservice = dataservice::Entity::delete_by_id(dataset_id).exec(db_connection).await?;
     if dataservice.rows_affected == 0 {
@@ -322,27 +348,32 @@ pub async fn delete_dataservice(catalog_id: Uuid, dataset_id: Uuid) -> anyhow::R
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NewDistributionRequest {
+    #[serde(rename = "@id")]
+    #[serde(with="opt_urn_serde")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    id: Option<Urn>,
     #[serde(rename = "dct:title")]
     #[serde(skip_serializing_if = "Option::is_none")]
     dct_title: Option<String>,
+    #[serde(with="urn_serde")]
     #[serde(rename = "dcat:accessService")]
-    dcat_access_service: Uuid,
+    dcat_access_service: Urn,
 }
 
 pub async fn post_distribution(
-    catalog_id: Uuid,
-    dataset_id: Uuid,
+    catalog_id: String,
+    dataset_id: String,
     input: NewDistributionRequest,
 ) -> anyhow::Result<Distribution> {
     let db_connection = get_db_connection().await;
-    let uuid = Uuid::new_v4();
+    let urn = get_urn(input.id);
     let new_distribution = distribution::ActiveModel {
-        id: ActiveValue::Set(uuid),
+        id: ActiveValue::Set(urn.to_string()),
         dct_issued: ActiveValue::Set(chrono::Utc::now().naive_utc()),
         dct_modified: Default::default(),
         dct_title: ActiveValue::Set(input.dct_title),
         dct_description: Default::default(),
-        dcat_access_service: ActiveValue::Set(input.dcat_access_service),
+        dcat_access_service: ActiveValue::Set(input.dcat_access_service.to_string()),
         dataset_id: ActiveValue::Set(dataset_id),
     };
 
@@ -351,7 +382,7 @@ pub async fn post_distribution(
 
     let mut distribution = Distribution::try_from(distribution_entity).unwrap();
     distribution.dcat.access_service =
-        dataservices_request_by_id(input.dcat_access_service).await?;
+        dataservices_request_by_id(input.dcat_access_service.to_string()).await?;
     Ok(distribution)
 }
 
@@ -362,13 +393,13 @@ pub struct EditDistributionRequest {
     dct_title: Option<String>,
     #[serde(rename = "dcat:accessService")]
     #[serde(skip_serializing_if = "Option::is_none")]
-    dcat_access_service: Option<Uuid>,
+    dcat_access_service: Option<String>,
 }
 
 pub async fn put_distribution(
-    catalog_id: Uuid,
-    dataservice_id: Uuid,
-    distribution_id: Uuid,
+    catalog_id: String,
+    dataservice_id: String,
+    distribution_id: String,
     input: EditDistributionRequest,
 ) -> anyhow::Result<Distribution> {
     let db_connection = get_db_connection().await;
@@ -402,13 +433,13 @@ pub async fn put_distribution(
 }
 
 pub async fn delete_distribution(
-    catalog_id: Uuid,
-    dataservice_id: Uuid,
-    distribution_id: Uuid,
+    catalog_id: String,
+    dataservice_id: String,
+    distribution_id: String,
 ) -> anyhow::Result<()> {
     let db_connection = get_db_connection().await;
     let distribution =
-        distribution::Entity::delete_by_id(distribution_id).exec(db_connection).await?;
+        distribution::Entity::delete_by_id(distribution_id.to_string()).exec(db_connection).await?;
     if distribution.rows_affected == 0 {
         bail!("Distribution does not exist");
     }

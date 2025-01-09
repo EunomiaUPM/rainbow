@@ -16,9 +16,26 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use urn::Urn;
+use serde::{self, Deserialize, Deserializer, Serializer};
+use urn::{Urn, UrnBuilder};
 
-pub mod catalog_definition;
-pub mod dataservice_definition;
-pub mod dataset_definition;
-pub mod distribution_definition;
+pub fn serialize<S>(value: &Option<Urn>, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    match value {
+        Some(urn) => serializer.serialize_some(&urn.to_string()),
+        None => serializer.serialize_none(),
+    }
+}
+
+pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<Urn>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let opt: Option<String> = Option::deserialize(deserializer)?;
+    match opt {
+        Some(s) => s.parse::<Urn>().map(Some).map_err(serde::de::Error::custom),
+        None => Ok(None),
+    }
+}
