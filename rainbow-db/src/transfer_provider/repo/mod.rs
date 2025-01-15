@@ -27,7 +27,7 @@ use once_cell::sync::Lazy;
 use rainbow_common::config::config::GLOBAL_CONFIG;
 use rainbow_common::protocol::transfer::{TransferRoles, TransferStateForDb};
 use sea_orm_migration::async_trait::async_trait;
-use uuid::Uuid;
+use urn::Urn;
 
 pub trait CombinedRepo: TransferProcessRepo + TransferMessagesRepo + AgreementsRepo {}
 impl<T> CombinedRepo for T where T: TransferProcessRepo + TransferMessagesRepo + AgreementsRepo {}
@@ -42,17 +42,17 @@ pub static TRANSFER_PROVIDER_REPO: Lazy<Box<dyn CombinedRepo + Send + Sync>> = L
 });
 
 pub struct NewTransferProcessModel {
-    pub provider_pid: Uuid,
-    pub consumer_pid: Uuid,
-    pub agreement_id: String,
-    pub data_plane_id: Uuid,
+    pub provider_pid: Urn,
+    pub consumer_pid: Urn,
+    pub agreement_id: Urn,
+    pub data_plane_id: Urn,
 }
 
 pub struct EditTransferProcessModel {
-    pub provider_pid: Option<Uuid>,
-    pub consumer_pid: Option<Uuid>,
-    pub agreement_id: Option<String>,
-    pub data_plane_id: Option<Uuid>,
+    pub provider_pid: Option<Urn>,
+    pub consumer_pid: Option<Urn>,
+    pub agreement_id: Option<Urn>,
+    pub data_plane_id: Option<Urn>,
     pub state: Option<TransferStateForDb>,
 }
 
@@ -65,26 +65,26 @@ pub trait TransferProcessRepo {
     ) -> anyhow::Result<Vec<transfer_process::Model>>;
     async fn get_transfer_process_by_provider(
         &self,
-        pid: Uuid,
+        pid: Urn,
     ) -> anyhow::Result<Option<transfer_process::Model>>;
     async fn get_transfer_process_by_consumer(
         &self,
-        pid: Uuid,
+        pid: Urn,
     ) -> anyhow::Result<Option<transfer_process::Model>>;
     async fn get_transfer_process_by_data_plane(
         &self,
-        pid: Uuid,
+        pid: Urn,
     ) -> anyhow::Result<Option<transfer_process::Model>>;
     async fn put_transfer_process(
         &self,
-        pid: Uuid,
+        pid: Urn,
         new_transfer_process: EditTransferProcessModel,
     ) -> anyhow::Result<transfer_process::Model>;
     async fn create_transfer_process(
         &self,
         new_transfer_process: NewTransferProcessModel,
     ) -> anyhow::Result<transfer_process::Model>;
-    async fn delete_transfer_process(&self, pid: Uuid) -> anyhow::Result<()>;
+    async fn delete_transfer_process(&self, pid: Urn) -> anyhow::Result<()>;
 }
 
 pub struct NewTransferMessageModel {
@@ -104,34 +104,34 @@ pub trait TransferMessagesRepo {
 
     async fn get_all_transfer_messages_by_provider(
         &self,
-        pid: Uuid,
+        pid: Urn,
     ) -> anyhow::Result<Vec<transfer_message::Model>>;
 
     async fn get_transfer_message_by_id(
         &self,
-        pid: Uuid,
+        pid: Urn,
     ) -> anyhow::Result<Option<transfer_message::Model>>;
     async fn put_transfer_message(
         &self,
-        pid: Uuid,
+        pid: Urn,
         new_transfer_message: transfer_message::ActiveModel,
     ) -> anyhow::Result<Option<transfer_message::Model>>;
     async fn create_transfer_message(
         &self,
-        pid: Uuid,
+        pid: Urn,
         new_transfer_message: NewTransferMessageModel,
     ) -> anyhow::Result<transfer_message::Model>;
-    async fn delete_transfer_message(&self, pid: Uuid) -> anyhow::Result<()>;
+    async fn delete_transfer_message(&self, pid: Urn) -> anyhow::Result<()>;
 }
 
 pub struct NewAgreementModel {
-    pub data_service_id: String,
+    pub data_service_id: Urn,
     pub identity: Option<String>,
     pub identity_token: Option<String>,
 }
 
 pub struct EditAgreementModel {
-    pub data_service_id: Option<String>,
+    pub data_service_id: Option<Urn>,
     pub identity: Option<String>,
     pub identity_token: Option<String>,
 }
@@ -143,17 +143,17 @@ pub trait AgreementsRepo {
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<agreements::Model>>;
-    async fn get_agreement_by_id(&self, id: Uuid) -> anyhow::Result<Option<agreements::Model>>;
+    async fn get_agreement_by_id(&self, id: Urn) -> anyhow::Result<Option<agreements::Model>>;
     async fn put_agreement(
         &self,
-        id: Uuid,
+        id: Urn,
         new_agreement: EditAgreementModel,
     ) -> anyhow::Result<agreements::Model>;
     async fn create_agreement(
         &self,
         new_agreement: NewAgreementModel,
     ) -> anyhow::Result<agreements::Model>;
-    async fn delete_agreement(&self, id: Uuid) -> anyhow::Result<()>;
+    async fn delete_agreement(&self, id: Urn) -> anyhow::Result<()>;
 }
 
 impl Default for EditTransferProcessModel {

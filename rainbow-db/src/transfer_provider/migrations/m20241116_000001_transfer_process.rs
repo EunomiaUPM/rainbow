@@ -53,13 +53,13 @@ impl MigrationTrait for Migration {
                     .table(TransferProcesses::Table)
                     .col(
                         ColumnDef::new(TransferProcesses::ProviderPid)
-                            .uuid()
+                            .string()
                             .not_null()
                             .primary_key(),
                     )
-                    .col(ColumnDef::new(TransferProcesses::ConsumerPid).uuid())
-                    .col(ColumnDef::new(TransferProcesses::AgreementId).uuid())
-                    .col(ColumnDef::new(TransferProcesses::DataPlaneId).uuid())
+                    .col(ColumnDef::new(TransferProcesses::ConsumerPid).string())
+                    .col(ColumnDef::new(TransferProcesses::AgreementId).string())
+                    .col(ColumnDef::new(TransferProcesses::DataPlaneId).string())
                     .col(
                         ColumnDef::new(TransferProcesses::State)
                             .custom(TransferStateForDb::name())

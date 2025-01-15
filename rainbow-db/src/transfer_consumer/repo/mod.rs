@@ -24,7 +24,7 @@ use crate::transfer_provider::repo::{AgreementsRepo, TransferMessagesRepo, Trans
 use axum::async_trait;
 use once_cell::sync::Lazy;
 use rainbow_common::config::config::GLOBAL_CONFIG;
-use uuid::Uuid;
+use urn::Urn;
 
 pub trait CombinedRepo: TransferCallbackRepo {}
 impl<T> CombinedRepo for T where T: TransferCallbackRepo {}
@@ -42,9 +42,9 @@ pub struct NewTransferCallback {
     pub data_address: Option<serde_json::Value>,
 }
 pub struct EditTransferCallback {
-    pub consumer_pid: Option<Uuid>,
-    pub provider_pid: Option<Uuid>,
-    pub data_plane_id: Option<Uuid>,
+    pub consumer_pid: Option<Urn>,
+    pub provider_pid: Option<Urn>,
+    pub data_plane_id: Option<Urn>,
     pub data_address: Option<serde_json::Value>,
 }
 
@@ -57,23 +57,23 @@ pub trait TransferCallbackRepo {
     ) -> anyhow::Result<Vec<transfer_callback::Model>>;
     async fn get_transfer_callbacks_by_id(
         &self,
-        callback_id: Uuid,
+        callback_id: Urn,
     ) -> anyhow::Result<Option<transfer_callback::Model>>;
 
     async fn get_transfer_callbacks_by_consumer_id(
         &self,
-        consumer_pid: Uuid,
+        consumer_pid: Urn,
     ) -> anyhow::Result<Option<transfer_callback::Model>>;
 
     async fn put_transfer_callback(
         &self,
-        callback_id: Uuid,
+        callback_id: Urn,
         new_transfer_callback: EditTransferCallback,
     ) -> anyhow::Result<transfer_callback::Model>;
 
     async fn put_transfer_callback_by_consumer(
         &self,
-        callback_id: Uuid,
+        callback_id: Urn,
         new_transfer_callback: EditTransferCallback,
     ) -> anyhow::Result<transfer_callback::Model>;
 
@@ -82,7 +82,7 @@ pub trait TransferCallbackRepo {
         new_transfer_callback: NewTransferCallback,
     ) -> anyhow::Result<transfer_callback::Model>;
 
-    async fn delete_transfer_callback(&self, callback_id: Uuid) -> anyhow::Result<()>;
+    async fn delete_transfer_callback(&self, callback_id: Urn) -> anyhow::Result<()>;
 }
 
 impl Default for EditTransferCallback {

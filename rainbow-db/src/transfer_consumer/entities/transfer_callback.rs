@@ -24,12 +24,12 @@ use serde::{Deserialize, Serialize};
 #[sea_orm(table_name = "transfer_callbacks")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: Uuid,
-    pub consumer_pid: Uuid,
-    pub provider_pid: Option<Uuid>,
+    pub id: String,
+    pub consumer_pid: String,
+    pub provider_pid: Option<String>,
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: Option<chrono::NaiveDateTime>,
-    pub data_plane_id: Option<Uuid>,
+    pub data_plane_id: Option<String>,
     pub data_address: Option<serde_json::Value>,
 }
 

@@ -36,12 +36,11 @@ use rainbow_common::config::config::{get_provider_url, ConfigRoles};
 use rainbow_common::config::database::get_db_connection;
 use rainbow_common::dcat_formats::{DctFormats, FormatAction, FormatProtocol};
 use rainbow_common::protocol::transfer::{TransferProcessMessage, TransferRequestMessage};
-use rainbow_common::utils::convert_uri_to_uuid;
 use reqwest::{Client, StatusCode};
 use serde_json::Value;
 use std::time::Duration;
 use tracing::info;
-use uuid::Uuid;
+use urn::Urn;
 
 pub mod core;
 pub mod implementations;
@@ -74,7 +73,7 @@ pub async fn bootstrap_data_plane_in_consumer(
 
 pub async fn bootstrap_data_plane_in_provider(
     transfer_request: TransferRequestMessage,
-    provider_pid: Uuid,
+    provider_pid: Urn,
 ) -> anyhow::Result<DataPlanePeer> {
     info!("Bootstraping provider data plane");
 
@@ -94,7 +93,7 @@ pub async fn bootstrap_data_plane_in_provider(
     }
 }
 
-pub async fn get_data_plane_peer(data_plane_id: Uuid) -> anyhow::Result<DataPlanePeer> {
+pub async fn get_data_plane_peer(data_plane_id: Urn) -> anyhow::Result<DataPlanePeer> {
     let data_plane_peer = DataPlanePeer::load_model_by_id(data_plane_id).await;
     match data_plane_peer {
         Ok(dp) => Ok(*dp),
@@ -104,8 +103,8 @@ pub async fn get_data_plane_peer(data_plane_id: Uuid) -> anyhow::Result<DataPlan
 
 pub async fn set_data_plane_next_hop(
     data_plane_peer: DataPlanePeer,
-    provider_pid: Uuid,
-    consumer_pid: Uuid,
+    provider_pid: Urn,
+    consumer_pid: Urn,
 ) -> anyhow::Result<DataPlanePeer> {
     info!("Setting next hop");
 
@@ -128,10 +127,10 @@ pub async fn set_data_plane_next_hop(
     }
 }
 
-pub async fn connect_to_streaming_service(data_plane_id: Uuid) -> anyhow::Result<()> {
+pub async fn connect_to_streaming_service(data_plane_id: Urn) -> anyhow::Result<()> {
     info!("Setup Connection to streaming service");
     let db_connection = get_db_connection().await;
-    let data_plane_peer = DataPlanePeer::load_model_by_id(data_plane_id).await?;
+    let data_plane_peer = DataPlanePeer::load_model_by_id(data_plane_id.clone()).await?;
 
     // Prevent connections on Consumer or Pull cases
     match data_plane_peer.role {
@@ -158,10 +157,10 @@ pub async fn connect_to_streaming_service(data_plane_id: Uuid) -> anyhow::Result
     }
 }
 
-pub async fn disconnect_from_streaming_service(data_plane_id: Uuid) -> anyhow::Result<()> {
+pub async fn disconnect_from_streaming_service(data_plane_id: Urn) -> anyhow::Result<()> {
     info!("Disconnecting from streaming service");
     let db_connection = get_db_connection().await;
-    let peer = DataPlanePeer::load_model_by_id(data_plane_id).await?;
+    let peer = DataPlanePeer::load_model_by_id(data_plane_id.clone()).await?;
 
     // Prevent disconnection on Consumer or Pull cases
     match peer.role {

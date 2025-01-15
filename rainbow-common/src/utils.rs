@@ -16,29 +16,26 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
-use uuid::Uuid;
+use crate::err::transfer_err::TransferErrorType;
+use anyhow::bail;
 use urn::Urn;
+use uuid::Uuid;
 
-
-static UUID_PREFIX: &str ="urn:uuid:";
-
-pub fn convert_uuid_to_uri(uuid: &Uuid) -> anyhow::Result<String> {
-    Ok(format!("urn:uuid:{}", uuid.to_string()))
-}
-
-pub fn convert_uri_to_uuid(string: &String) -> anyhow::Result<Uuid> {
-    let string = string.replace("urn:uuid:", "");
-    let uuid = Uuid::parse_str(&string)?;
-    Ok(uuid)
-}
+static UUID_PREFIX: &str = "urn:uuid:";
 
 pub fn get_urn(optional_urn: Option<Urn>) -> Urn {
-    let uuid = Uuid::new_v4();
-    let id_string =  UUID_PREFIX.to_string() + &uuid.to_string();
-    let mut urn_res = id_string.parse::<Urn>().unwrap();
-    if !optional_urn.is_none() {
-        urn_res = optional_urn.unwrap();
+    optional_urn.unwrap_or_else(|| {
+        let uuid = Uuid::new_v4();
+        let id_string = format!("{}{}", UUID_PREFIX, uuid);
+        let urn = id_string.parse::<Urn>().unwrap();
+        urn
+    })
+}
+
+pub fn get_urn_from_string(string_in: &String) -> anyhow::Result<Urn> {
+    let urn_res = string_in.parse::<Urn>();
+    match urn_res {
+        Ok(urn_res) => Ok(urn_res),
+        Err(e) => bail!(TransferErrorType::PidSchemeError),
     }
-    return  urn_res;
 }

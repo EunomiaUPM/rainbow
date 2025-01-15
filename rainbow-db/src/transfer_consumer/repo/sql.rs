@@ -19,18 +19,25 @@
 
 use crate::transfer_consumer::entities::transfer_callback;
 use crate::transfer_consumer::entities::transfer_callback::Model;
-use crate::transfer_consumer::repo::{EditTransferCallback, NewTransferCallback, TransferCallbackRepo};
+use crate::transfer_consumer::repo::{
+    EditTransferCallback, NewTransferCallback, TransferCallbackRepo,
+};
 use anyhow::bail;
 use axum::async_trait;
 use rainbow_common::config::database::get_db_connection;
+use rainbow_common::utils::get_urn;
 use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, EntityTrait, QueryFilter, QuerySelect};
-use uuid::Uuid;
+use urn::Urn;
 
 pub struct TransferCallbackRepoForSql {}
 
 #[async_trait]
 impl TransferCallbackRepo for TransferCallbackRepoForSql {
-    async fn get_all_transfer_callbacks(&self, limit: Option<u64>, page: Option<u64>) -> anyhow::Result<Vec<Model>> {
+    async fn get_all_transfer_callbacks(
+        &self,
+        limit: Option<u64>,
+        page: Option<u64>,
+    ) -> anyhow::Result<Vec<Model>> {
         let db_connection = get_db_connection().await;
         let transfer_callbacks = transfer_callback::Entity::find()
             .limit(limit.unwrap_or(100000))
@@ -43,17 +50,26 @@ impl TransferCallbackRepo for TransferCallbackRepoForSql {
         }
     }
 
-    async fn get_transfer_callbacks_by_id(&self, callback_id: Uuid) -> anyhow::Result<Option<Model>> {
+    async fn get_transfer_callbacks_by_id(
+        &self,
+        callback_id: Urn,
+    ) -> anyhow::Result<Option<Model>> {
         let db_connection = get_db_connection().await;
-        let transfer_callback = transfer_callback::Entity::find_by_id(callback_id).one(db_connection).await;
+        let callback_id = callback_id.to_string();
+        let transfer_callback =
+            transfer_callback::Entity::find_by_id(callback_id).one(db_connection).await;
         match transfer_callback {
             Ok(transfer_callback) => Ok(transfer_callback),
             Err(_) => bail!("Failed to fetch transfer callback"),
         }
     }
 
-    async fn get_transfer_callbacks_by_consumer_id(&self, consumer_pid: Uuid) -> anyhow::Result<Option<Model>> {
+    async fn get_transfer_callbacks_by_consumer_id(
+        &self,
+        consumer_pid: Urn,
+    ) -> anyhow::Result<Option<Model>> {
         let db_connection = get_db_connection().await;
+        let consumer_pid = consumer_pid.to_string();
         let transfer_callback = transfer_callback::Entity::find()
             .filter(transfer_callback::Column::ConsumerPid.eq(consumer_pid))
             .one(db_connection)
@@ -64,9 +80,13 @@ impl TransferCallbackRepo for TransferCallbackRepoForSql {
         }
     }
 
-    async fn put_transfer_callback(&self, callback_id: Uuid, new_transfer_callback: EditTransferCallback) -> anyhow::Result<Model> {
+    async fn put_transfer_callback(
+        &self,
+        callback_id: Urn,
+        new_transfer_callback: EditTransferCallback,
+    ) -> anyhow::Result<Model> {
         let db_connection = get_db_connection().await;
-
+        let callback_id = callback_id.to_string();
         let old_model = transfer_callback::Entity::find_by_id(callback_id).one(db_connection).await;
         let old_model = match old_model {
             Ok(old_model) => match old_model {
@@ -78,13 +98,15 @@ impl TransferCallbackRepo for TransferCallbackRepoForSql {
 
         let mut old_active_model: transfer_callback::ActiveModel = old_model.into();
         if let Some(provider_pid) = new_transfer_callback.provider_pid {
-            old_active_model.provider_pid = ActiveValue::Set(Option::from(provider_pid));
+            old_active_model.provider_pid =
+                ActiveValue::Set(Option::from(provider_pid.to_string()));
         }
         if let Some(consumer_pid) = new_transfer_callback.consumer_pid {
-            old_active_model.consumer_pid = ActiveValue::Set(consumer_pid);
+            old_active_model.consumer_pid = ActiveValue::Set(consumer_pid.to_string());
         }
         if let Some(data_plane_id) = new_transfer_callback.data_plane_id {
-            old_active_model.data_plane_id = ActiveValue::Set(Option::from(data_plane_id));
+            old_active_model.data_plane_id =
+                ActiveValue::Set(Option::from(data_plane_id.to_string()));
         }
         if let Some(data_address) = new_transfer_callback.data_address {
             old_active_model.data_address = ActiveValue::Set(Option::from(data_address));
@@ -98,12 +120,17 @@ impl TransferCallbackRepo for TransferCallbackRepoForSql {
         }
     }
 
-    async fn put_transfer_callback_by_consumer(&self, consumer_pid: Uuid, new_transfer_callback: EditTransferCallback) -> anyhow::Result<Model> {
+    async fn put_transfer_callback_by_consumer(
+        &self,
+        consumer_pid: Urn,
+        new_transfer_callback: EditTransferCallback,
+    ) -> anyhow::Result<Model> {
         let db_connection = get_db_connection().await;
-
+        let consumer_pid = consumer_pid.to_string();
         let old_model = transfer_callback::Entity::find()
             .filter(transfer_callback::Column::ConsumerPid.eq(consumer_pid))
-            .one(db_connection).await;
+            .one(db_connection)
+            .await;
         let old_model = match old_model {
             Ok(old_model) => match old_model {
                 Some(old_model) => old_model,
@@ -114,13 +141,15 @@ impl TransferCallbackRepo for TransferCallbackRepoForSql {
 
         let mut old_active_model: transfer_callback::ActiveModel = old_model.into();
         if let Some(provider_pid) = new_transfer_callback.provider_pid {
-            old_active_model.provider_pid = ActiveValue::Set(Option::from(provider_pid));
+            old_active_model.provider_pid =
+                ActiveValue::Set(Option::from(provider_pid.to_string()));
         }
         if let Some(consumer_pid) = new_transfer_callback.consumer_pid {
-            old_active_model.consumer_pid = ActiveValue::Set(consumer_pid);
+            old_active_model.consumer_pid = ActiveValue::Set(consumer_pid.to_string());
         }
         if let Some(data_plane_id) = new_transfer_callback.data_plane_id {
-            old_active_model.data_plane_id = ActiveValue::Set(Option::from(data_plane_id));
+            old_active_model.data_plane_id =
+                ActiveValue::Set(Option::from(data_plane_id.to_string()));
         }
         if let Some(data_address) = new_transfer_callback.data_address {
             old_active_model.data_address = ActiveValue::Set(Option::from(data_address));
@@ -134,11 +163,14 @@ impl TransferCallbackRepo for TransferCallbackRepoForSql {
         }
     }
 
-    async fn create_transfer_callback(&self, new_transfer_callback: NewTransferCallback) -> anyhow::Result<Model> {
+    async fn create_transfer_callback(
+        &self,
+        new_transfer_callback: NewTransferCallback,
+    ) -> anyhow::Result<Model> {
         let db_connection = get_db_connection().await;
         let model = transfer_callback::ActiveModel {
-            id: ActiveValue::Set(Uuid::new_v4()),
-            consumer_pid: ActiveValue::Set(Uuid::new_v4()),
+            id: ActiveValue::Set(get_urn(None).to_string()),
+            consumer_pid: ActiveValue::Set(get_urn(None).to_string()),
             provider_pid: ActiveValue::Set(None),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             updated_at: ActiveValue::Set(None),
@@ -154,8 +186,9 @@ impl TransferCallbackRepo for TransferCallbackRepoForSql {
         }
     }
 
-    async fn delete_transfer_callback(&self, callback_id: Uuid) -> anyhow::Result<()> {
+    async fn delete_transfer_callback(&self, callback_id: Urn) -> anyhow::Result<()> {
         let db_connection = get_db_connection().await;
+        let callback_id = callback_id.to_string();
         let transfer_callback =
             transfer_callback::Entity::delete_by_id(callback_id).exec(db_connection).await;
         match transfer_callback {

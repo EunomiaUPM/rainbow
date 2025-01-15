@@ -21,7 +21,6 @@ use crate::transfer_provider::entities::transfer_process;
 use rainbow_common::protocol::transfer::{
     TransferMessageTypes, TransferProcessMessage, TransferState, TRANSFER_CONTEXT,
 };
-use rainbow_common::utils::convert_uuid_to_uri;
 
 pub mod entities;
 pub mod migrations;
@@ -32,8 +31,8 @@ impl From<transfer_process::Model> for TransferProcessMessage {
         TransferProcessMessage {
             context: TRANSFER_CONTEXT.to_string(),
             _type: TransferMessageTypes::TransferProcessMessage.to_string(),
-            provider_pid: convert_uuid_to_uri(&model.provider_pid).unwrap(),
-            consumer_pid: convert_uuid_to_uri(&model.consumer_pid.unwrap()).unwrap(),
+            provider_pid: model.provider_pid,
+            consumer_pid: model.consumer_pid.unwrap_or_default(),
             state: TransferState::from(model.state),
         }
     }

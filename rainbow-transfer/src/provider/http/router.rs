@@ -46,13 +46,14 @@ use rainbow_common::protocol::transfer::{
     TransferState, TransferStateForDb, TransferSuspensionMessage, TransferTerminationMessage,
     TRANSFER_CONTEXT,
 };
-use rainbow_common::utils::{convert_uri_to_uuid, convert_uuid_to_uri};
+use rainbow_common::utils::get_urn_from_string;
 use rainbow_db::transfer_provider::entities::{transfer_message, transfer_process};
 use rainbow_db::transfer_provider::repo::{EditTransferProcessModel, NewTransferMessageModel, TRANSFER_PROVIDER_REPO};
 use reqwest::Error;
 use sea_orm::{ActiveValue, EntityTrait};
 use serde_json::to_value;
 use tracing::{debug, error, info};
+use urn::Urn;
 use utoipa::openapi::RefOr::T;
 use uuid::Uuid;
 
@@ -77,10 +78,11 @@ pub fn router() -> Router {
     Router::new().merge(router_group_a).merge(router_group_b)
 }
 
-async fn handle_get_transfer_by_provider(Path(provider_pid): Path<Uuid>) -> impl IntoResponse {
-    info!("GET /transfers/{}", provider_pid.to_string());
+async fn handle_get_transfer_by_provider(Path(provider_pid): Path<String>) -> impl IntoResponse {
+    info!("GET /transfers/{}", provider_pid);
+    let id = get_urn_from_string(&provider_pid).unwrap();
 
-    match get_transfer_requests_by_provider(provider_pid).await.unwrap() {
+    match get_transfer_requests_by_provider(id).await.unwrap() {
         Some(transfer_process) => (
             StatusCode::OK,
             Json(TransferProcessMessage {
@@ -123,13 +125,13 @@ async fn handle_transfer_request(
 
 async fn send_transfer_start(
     Json(input): Json<TransferRequestMessage>,
-    provider_pid: Uuid,
+    provider_pid: Urn,
     data_address: Option<DataAddress>,
 ) -> anyhow::Result<()> {
     let transfer_start_message = TransferStartMessage {
         context: TRANSFER_CONTEXT.to_string(),
         _type: TransferMessageTypes::TransferStartMessage.to_string(),
-        provider_pid: convert_uuid_to_uri(&provider_pid)?,
+        provider_pid: provider_pid.to_string(),
         consumer_pid: input.consumer_pid.to_string(),
         data_address,
     };
@@ -137,7 +139,7 @@ async fn send_transfer_start(
     let consumer_transfer_endpoint = format!(
         "{}/transfers/{}/start",
         input.callback_address,
-        convert_uri_to_uuid(&input.consumer_pid)?
+        input.consumer_pid
     );
 
     let response = DATA_PLANE_HTTP_CLIENT
@@ -151,7 +153,7 @@ async fn send_transfer_start(
     match response {
         Ok(res) => {
             if res.status() == StatusCode::OK {
-                let _ = TRANSFER_PROVIDER_REPO.put_transfer_process(provider_pid, EditTransferProcessModel {
+                let _ = TRANSFER_PROVIDER_REPO.put_transfer_process(provider_pid.clone(), EditTransferProcessModel {
                     state: Some(TransferStateForDb::STARTED),
                     ..Default::default()
                 }).await?;

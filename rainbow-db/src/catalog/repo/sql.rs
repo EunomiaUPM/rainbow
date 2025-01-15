@@ -8,15 +8,12 @@ use axum::async_trait;
 use rainbow_common::config::database::get_db_connection;
 use rainbow_common::utils::get_urn;
 use sea_orm::{ActiveModelTrait, ActiveValue, EntityTrait, QuerySelect};
-use uuid::Uuid;
 use urn::Urn;
-use axum::async_trait;
 
 pub struct CatalogRepoForSql {}
 
 #[async_trait]
 impl CatalogRepo for CatalogRepoForSql {
-       
     async fn get_all_catalogs(
         &self,
         limit: Option<u64>,
@@ -34,8 +31,9 @@ impl CatalogRepo for CatalogRepoForSql {
         }
     }
 
-    async fn get_catalog_by_id(&self, catalog_id: String) -> anyhow::Result<Option<catalog::Model>> {
+    async fn get_catalog_by_id(&self, catalog_id: Urn) -> anyhow::Result<Option<catalog::Model>> {
         let db_connection = get_db_connection().await;
+        let catalog_id = catalog_id.to_string();
         let catalog = catalog::Entity::find_by_id(catalog_id).one(db_connection).await;
         match catalog {
             Ok(catalog) => Ok(catalog),
@@ -45,11 +43,11 @@ impl CatalogRepo for CatalogRepoForSql {
 
     async fn put_catalog_by_id(
         &self,
-        catalog_id: String,
+        catalog_id: Urn,
         edit_catalog_model: EditCatalogModel,
     ) -> anyhow::Result<catalog::Model> {
         let db_connection = get_db_connection().await;
-
+        let catalog_id = catalog_id.to_string();
         let old_model = catalog::Entity::find_by_id(catalog_id).one(db_connection).await;
         let old_model = match old_model {
             Ok(old_model) => match old_model {
@@ -83,11 +81,13 @@ impl CatalogRepo for CatalogRepoForSql {
 
     async fn create_catalog(
         &self,
-        catalog_id: String,
+        catalog_id: Urn,
         new_catalog_model: NewCatalogModel,
     ) -> anyhow::Result<catalog::Model> {
         let db_connection = get_db_connection().await;
-        let urn = get_urn(new_catalog_model.id.map(|urn_id|urn_id.parse::<Urn>().unwrap()));
+        let catalog_id = catalog_id.to_string();
+        let urn = new_catalog_model.id.unwrap_or_else(|| get_urn(None));
+        let participant_id = get_urn(None);  // TODO create participant global id (create global setup)
         let model = catalog::ActiveModel {
             id: ActiveValue::Set(urn.to_string()),
             foaf_home_page: ActiveValue::Set(new_catalog_model.foaf_home_page),
@@ -97,7 +97,7 @@ impl CatalogRepo for CatalogRepoForSql {
             dct_issued: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             dct_modified: ActiveValue::Set(None),
             dct_title: ActiveValue::Set(new_catalog_model.dct_title),
-            dspace_participant_id: ActiveValue::Set(Some(Uuid::new_v4().to_string())), // TODO create participant global id (create global setup)
+            dspace_participant_id: ActiveValue::Set(Some(participant_id.to_string())),
         };
         let catalog = catalog::Entity::insert(model).exec_with_returning(db_connection).await;
         match catalog {
@@ -106,8 +106,9 @@ impl CatalogRepo for CatalogRepoForSql {
         }
     }
 
-    async fn delete_catalog_by_id(&self, catalog_id: String) -> anyhow::Result<()> {
+    async fn delete_catalog_by_id(&self, catalog_id: Urn) -> anyhow::Result<()> {
         let db_connection = get_db_connection().await;
+        let catalog_id = catalog_id.to_string();
         let catalog = catalog::Entity::delete_by_id(catalog_id).exec(db_connection).await;
         match catalog {
             Ok(delete_result) => match delete_result.rows_affected {
@@ -138,8 +139,9 @@ impl DatasetRepo for CatalogRepoForSql {
         }
     }
 
-    async fn get_datasets_by_id(&self, dataset_id: String) -> anyhow::Result<Option<dataset::Model>> {
+    async fn get_datasets_by_id(&self, dataset_id: Urn) -> anyhow::Result<Option<dataset::Model>> {
         let db_connection = get_db_connection().await;
+        let dataset_id = dataset_id.to_string();
         let dataset = dataset::Entity::find_by_id(dataset_id).one(db_connection).await;
         match dataset {
             Ok(dataset) => Ok(dataset),
@@ -149,11 +151,11 @@ impl DatasetRepo for CatalogRepoForSql {
 
     async fn put_datasets_by_id(
         &self,
-        dataset_id: String,
+        dataset_id: Urn,
         edit_dataset_model: EditDatasetModel,
     ) -> anyhow::Result<dataset::Model> {
         let db_connection = get_db_connection().await;
-
+        let dataset_id = dataset_id.to_string();
         let old_model = dataset::Entity::find_by_id(dataset_id).one(db_connection).await;
         let old_model = match old_model {
             Ok(old_model) => match old_model {
@@ -187,11 +189,12 @@ impl DatasetRepo for CatalogRepoForSql {
 
     async fn create_dataset(
         &self,
-        catalog_id: String,
+        catalog_id: Urn,
         new_dataset_model: NewDatasetModel,
     ) -> anyhow::Result<dataset::Model> {
         let db_connection = get_db_connection().await;
-        let urn = get_urn(new_dataset_model.id.map(|urn_id|urn_id.parse::<Urn>().unwrap()));
+        let catalog_id = catalog_id.to_string();
+        let urn = new_dataset_model.id.unwrap_or_else(|| get_urn(None));
         let model = dataset::ActiveModel {
             id: ActiveValue::Set(urn.to_string()),
             dct_conforms_to: ActiveValue::Set(new_dataset_model.dct_conforms_to),
@@ -210,9 +213,9 @@ impl DatasetRepo for CatalogRepoForSql {
         }
     }
 
-
-    async fn delete_dataset_by_id(&self, dataset_id: String) -> anyhow::Result<()> {
+    async fn delete_dataset_by_id(&self, dataset_id: Urn) -> anyhow::Result<()> {
         let db_connection = get_db_connection().await;
+        let dataset_id = dataset_id.to_string();
         let dataset = dataset::Entity::delete_by_id(dataset_id).exec(db_connection).await;
         match dataset {
             Ok(delete_result) => match delete_result.rows_affected {

@@ -22,14 +22,15 @@ use axum::extract::Request;
 use rainbow_common::config::config::ConfigRoles;
 use rainbow_common::dcat_formats::{DctFormats, FormatAction, FormatProtocol};
 use rainbow_common::protocol::transfer::TransferRequestMessage;
+use rainbow_common::utils::{get_urn, get_urn_from_string};
 use rainbow_db::dataplane::repo::DATA_PLANE_REPO;
 use sea_orm::EntityTrait;
 use std::collections::HashMap;
-use uuid::Uuid;
+use urn::Urn;
 
 #[derive(Debug)]
 pub struct DataPlanePeer {
-    pub id: Uuid,
+    pub id: Urn,
     pub role: ConfigRoles,
     pub local_address: Option<String>,
     pub dct_formats: DctFormats,
@@ -48,17 +49,17 @@ pub trait DataPlanePeerDefaultBehavior {
     ) -> anyhow::Result<DataPlanePeer>;
     async fn bootstrap_data_plane_in_provider(
         transfer_request: TransferRequestMessage,
-        provider_pid: Uuid,
+        provider_pid: Urn,
     ) -> anyhow::Result<DataPlanePeer>;
 
     async fn set_data_plane_next_hop(
         data_plane_peer: DataPlanePeer,
-        provider_pid: Uuid,
-        consumer_pid: Uuid,
+        provider_pid: Urn,
+        consumer_pid: Urn,
     ) -> anyhow::Result<DataPlanePeer>;
 
-    async fn connect_to_streaming_service(data_plane_id: Uuid) -> anyhow::Result<()>;
-    async fn disconnect_from_streaming_service(data_plane_id: Uuid) -> anyhow::Result<()>;
+    async fn connect_to_streaming_service(data_plane_id: Urn) -> anyhow::Result<()>;
+    async fn disconnect_from_streaming_service(data_plane_id: Urn) -> anyhow::Result<()>;
     async fn on_pull_data(
         data_plane_peer: DataPlanePeer,
         request: Request,
@@ -131,7 +132,7 @@ impl DataPlanePeerCreationBehavior for DataPlanePeer {
 impl Default for DataPlanePeer {
     fn default() -> DataPlanePeer {
         Self {
-            id: Uuid::new_v4(),
+            id: get_urn(None),
             role: ConfigRoles::Consumer,
             local_address: None,
             dct_formats: DctFormats {
@@ -145,15 +146,15 @@ impl Default for DataPlanePeer {
 
 impl DataPlanePeer {
     pub(crate) async fn load_model_by_id(
-        id: Uuid,
+        id: Urn,
     ) -> anyhow::Result<Box<Self>> {
-        let peer = match DATA_PLANE_REPO.get_data_plane_process_by_id(id).await? {
+        let peer = match DATA_PLANE_REPO.get_data_plane_process_by_id(id.clone()).await? {
             Some(peer) => peer,
             None => bail!("Could not find dataPlaneDataPlan with id {}", id),
         };
 
         let mut fw_peer = Self {
-            id: peer.id,
+            id: get_urn_from_string(&peer.id)?,
             role: peer.role.parse()?,
             local_address: Option::from(peer.address),
             dct_formats: DctFormats {

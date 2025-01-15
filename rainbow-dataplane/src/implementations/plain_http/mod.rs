@@ -22,10 +22,10 @@ use axum::async_trait;
 use rainbow_common::config::config::ConfigRoles;
 use rainbow_common::config::database::get_db_connection;
 use rainbow_common::dcat_formats::{FormatAction, FormatProtocol};
+use rainbow_common::utils::get_urn;
 use rainbow_db::dataplane::entities::{data_plane_field, data_plane_process};
 use sea_orm::{ActiveValue, ColumnTrait, EntityTrait, QueryFilter};
 use std::collections::HashMap;
-use uuid::Uuid;
 
 pub mod implementation;
 
@@ -37,9 +37,9 @@ pub struct HttpDataPlane {
 impl PersistModel<data_plane_process::Model> for HttpDataPlane {
     async fn persist(self) -> anyhow::Result<Box<Self>> {
         let db_connection = get_db_connection().await;
-        let dp = data_plane_process::Entity::find_by_id(self.inner.id).one(db_connection).await?;
+        let dp = data_plane_process::Entity::find_by_id(self.inner.id.to_string()).one(db_connection).await?;
         let attributes = data_plane_field::Entity::find()
-            .filter(data_plane_field::Column::DataPlaneProcessId.eq(self.inner.id))
+            .filter(data_plane_field::Column::DataPlaneProcessId.eq(self.inner.id.to_string()))
             .all(db_connection)
             .await?;
 
@@ -62,10 +62,10 @@ impl PersistModel<data_plane_process::Model> for HttpDataPlane {
                     .any(|attr| attr.key == key.to_string() && attr.value == value.to_string());
                 if !exists {
                     data_plane_field::Entity::insert(data_plane_field::ActiveModel {
-                        id: ActiveValue::Set(Uuid::new_v4()),
+                        id: ActiveValue::Set(get_urn(None).to_string()),
                         key: ActiveValue::Set(key.to_owned()),
                         value: ActiveValue::Set(value.to_owned()),
-                        data_plane_process_id: ActiveValue::Set(self.inner.id),
+                        data_plane_process_id: ActiveValue::Set(self.inner.id.to_string()),
                     })
                         .exec(db_connection)
                         .await?;
@@ -87,7 +87,7 @@ impl PersistModel<data_plane_process::Model> for HttpDataPlane {
             }
         } else {
             data_plane_process::Entity::insert(data_plane_process::ActiveModel {
-                id: ActiveValue::Set(self.inner.id),
+                id: ActiveValue::Set(self.inner.id.to_string()),
                 role: ActiveValue::Set(self.inner.role.to_string()),
                 address: ActiveValue::Set(self.inner.local_address.clone().unwrap()),
                 dct_action_format: ActiveValue::Set(self.inner.dct_formats.action.to_string()),
@@ -100,10 +100,10 @@ impl PersistModel<data_plane_process::Model> for HttpDataPlane {
 
             for (key, value) in &self.inner.attributes {
                 data_plane_field::Entity::insert(data_plane_field::ActiveModel {
-                    id: ActiveValue::Set(Uuid::new_v4()),
+                    id: ActiveValue::Set(get_urn(None).to_string()),
                     key: ActiveValue::Set(key.to_string()),
                     value: ActiveValue::Set(value.to_string()),
-                    data_plane_process_id: ActiveValue::Set(self.inner.id.clone()),
+                    data_plane_process_id: ActiveValue::Set(self.inner.id.to_string()),
                 })
                     .exec(db_connection)
                     .await?;

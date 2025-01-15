@@ -23,10 +23,10 @@ use sea_orm::entity::prelude::*;
 #[sea_orm(table_name = "data_plane_fields")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: Uuid,
+    pub id: String,
     pub key: String,
     pub value: String,
-    pub data_plane_process_id: Uuid,
+    pub data_plane_process_id: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

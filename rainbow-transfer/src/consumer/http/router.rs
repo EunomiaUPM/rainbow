@@ -34,6 +34,7 @@ use rainbow_common::protocol::transfer::{
     TransferCompletionMessage, TransferStartMessage, TransferSuspensionMessage,
     TransferTerminationMessage,
 };
+use rainbow_common::utils::get_urn_from_string;
 use tracing::error;
 use uuid::Uuid;
 
@@ -58,14 +59,12 @@ pub fn router() -> Router {
 }
 
 async fn handle_transfer_start(
-    Path((callback, consumer_pid)): Path<(Uuid, Uuid)>,
+    Path((callback, consumer_pid)): Path<(String, String)>,
     Json(input): Json<TransferStartMessage>,
 ) -> impl IntoResponse {
-    info!(
-        "/{}/transfers/{}/start",
-        callback.to_string(),
-        consumer_pid.to_string()
-    );
+    info!("/{}/transfers/{}/start", callback, consumer_pid);
+    let callback = get_urn_from_string(&callback).unwrap();
+    let consumer_pid = get_urn_from_string(&consumer_pid).unwrap();
 
     match transfer_start(Json(&input), callback, consumer_pid).await {
         Ok(_) => (StatusCode::OK).into_response(),
@@ -80,14 +79,12 @@ async fn handle_transfer_start(
 }
 
 async fn handle_transfer_completion(
-    Path((callback, consumer_pid)): Path<(Uuid, Uuid)>,
+    Path((callback, consumer_pid)): Path<(String, String)>,
     Json(input): Json<TransferCompletionMessage>,
 ) -> impl IntoResponse {
-    info!(
-        "/{}/transfers/{}/start",
-        callback.to_string(),
-        consumer_pid.to_string()
-    );
+    info!("/{}/transfers/{}/start", callback, consumer_pid);
+    let callback = get_urn_from_string(&callback).unwrap();
+    let consumer_pid = get_urn_from_string(&consumer_pid).unwrap();
 
     match transfer_completion(Json(&input), callback, consumer_pid) {
         Ok(_) => (StatusCode::OK).into_response(),
@@ -102,14 +99,12 @@ async fn handle_transfer_completion(
 }
 
 async fn handle_transfer_termination(
-    Path((callback, consumer_pid)): Path<(Uuid, Uuid)>,
+    Path((callback, consumer_pid)): Path<(String, String)>,
     Json(input): Json<TransferTerminationMessage>,
 ) -> impl IntoResponse {
-    info!(
-        "/{}/transfers/{}/start",
-        callback.to_string(),
-        consumer_pid.to_string()
-    );
+    info!("/{}/transfers/{}/start", callback, consumer_pid);
+    let callback = get_urn_from_string(&callback).unwrap();
+    let consumer_pid = get_urn_from_string(&consumer_pid).unwrap();
 
     match transfer_termination(Json(&input), callback, consumer_pid) {
         Ok(_) => (StatusCode::OK).into_response(),
@@ -124,14 +119,12 @@ async fn handle_transfer_termination(
 }
 
 async fn handle_transfer_suspension(
-    Path((callback, consumer_pid)): Path<(Uuid, Uuid)>,
+    Path((callback, consumer_pid)): Path<(String, String)>,
     Json(input): Json<TransferSuspensionMessage>,
 ) -> impl IntoResponse {
-    info!(
-        "/{}/transfers/{}/start",
-        callback.to_string(),
-        consumer_pid.to_string()
-    );
+    info!("/{}/transfers/{}/start", callback, consumer_pid);
+    let callback = get_urn_from_string(&callback).unwrap();
+    let consumer_pid = get_urn_from_string(&consumer_pid).unwrap();
 
     match transfer_suspension(Json(&input), callback, consumer_pid) {
         Ok(_) => (StatusCode::OK).into_response(),

@@ -18,17 +18,17 @@
  */
 
 use anyhow::bail;
-use axum::http::Uri;
 use rainbow_db::transfer_provider::entities::{agreements, transfer_message};
 
 use rainbow_common::config::database::get_db_connection;
 use rainbow_common::protocol::transfer::TransferProcessMessage;
+use rainbow_common::utils::get_urn_from_string;
 use rainbow_db::transfer_provider::repo::{
     EditAgreementModel, NewAgreementModel, TRANSFER_PROVIDER_REPO,
 };
 use sea_orm::EntityTrait;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
+use urn::Urn;
 
 pub async fn get_all_transfers() -> anyhow::Result<Vec<TransferProcessMessage>> {
     let transfer_processes_from_db =
@@ -41,7 +41,7 @@ pub async fn get_all_transfers() -> anyhow::Result<Vec<TransferProcessMessage>> 
 }
 
 pub async fn get_messages_by_transfer(
-    transfer_id: Uuid,
+    transfer_id: Urn,
 ) -> anyhow::Result<Vec<transfer_message::Model>> {
     let messages =
         TRANSFER_PROVIDER_REPO.get_all_transfer_messages_by_provider(transfer_id).await?;
@@ -49,10 +49,10 @@ pub async fn get_messages_by_transfer(
 }
 
 pub async fn get_messages_by_id(
-    transfer_id: Uuid,
-    message_id: Uuid,
+    transfer_id: Urn,
+    message_id: Urn,
 ) -> anyhow::Result<transfer_message::Model> {
-    let message = TRANSFER_PROVIDER_REPO.get_transfer_message_by_id(message_id).await?;
+    let message = TRANSFER_PROVIDER_REPO.get_transfer_message_by_id(message_id.clone()).await?;
     let message = match message {
         Some(message) => message,
         None => bail!("Message {} not found", message_id),
@@ -65,8 +65,9 @@ pub async fn get_all_agreements() -> anyhow::Result<Vec<agreements::Model>> {
     Ok(agreements)
 }
 
-pub async fn get_agreement_by_id(agreement_id: Uuid) -> anyhow::Result<agreements::Model> {
+pub async fn get_agreement_by_id(agreement_id: Urn) -> anyhow::Result<agreements::Model> {
     let db_connection = get_db_connection().await;
+    let agreement_id = agreement_id.to_string();
     let agreement = agreements::Entity::find_by_id(agreement_id).one(db_connection).await?;
     if agreement.is_none() {
         bail!("Agreement not found");
@@ -89,7 +90,7 @@ pub struct NewAgreement {
 pub async fn post_agreement(new_agreement: NewAgreement) -> anyhow::Result<agreements::Model> {
     let agreement = TRANSFER_PROVIDER_REPO
         .create_agreement(NewAgreementModel {
-            data_service_id: new_agreement.data_service_id.to_string(),
+            data_service_id: get_urn_from_string(&new_agreement.data_service_id)?,
             identity: new_agreement.identity,
             identity_token: new_agreement.identity_token,
         })
@@ -110,14 +111,16 @@ pub struct EditAgreement {
 }
 
 pub async fn put_agreement(
-    agreement_id: Uuid,
+    agreement_id: Urn,
     new_agreement: EditAgreement,
 ) -> anyhow::Result<agreements::Model> {
     let agreement = TRANSFER_PROVIDER_REPO
         .put_agreement(
             agreement_id,
             EditAgreementModel {
-                data_service_id: new_agreement.data_service_id.map(|uri|uri.to_string()),
+                data_service_id: new_agreement
+                    .data_service_id
+                    .map(|id| get_urn_from_string(&id).unwrap()),
                 identity: new_agreement.identity,
                 identity_token: new_agreement.identity_token,
             },
@@ -126,7 +129,7 @@ pub async fn put_agreement(
     Ok(agreement)
 }
 
-pub async fn delete_agreement(agreement_id: Uuid) -> anyhow::Result<()> {
+pub async fn delete_agreement(agreement_id: Urn) -> anyhow::Result<()> {
     TRANSFER_PROVIDER_REPO.delete_agreement(agreement_id).await?;
     Ok(())
 }

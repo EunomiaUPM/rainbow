@@ -25,3 +25,4 @@ uuid = { workspace = true }
 urn = { workspace = true }
 sea-orm = { workspace = true }
 sea-orm-migration = { workspace = true }
+url = "2.5.4"

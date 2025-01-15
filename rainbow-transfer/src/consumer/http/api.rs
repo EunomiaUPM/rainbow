@@ -31,6 +31,7 @@ use axum::routing::{get, post};
 use axum::{middleware, Json, Router};
 use rainbow_common::err::transfer_err::TransferErrorType::{CallbackClientError, NotCheckedError};
 use rainbow_common::protocol::transfer::DataAddress;
+use rainbow_common::utils::get_urn_from_string;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use tracing::info;
@@ -83,8 +84,9 @@ pub async fn handle_get_all_callbacks() -> impl IntoResponse {
     }
 }
 
-pub async fn handle_get_callback_by_id(Path(callback_id): Path<Uuid>) -> impl IntoResponse {
-    info!("GET /api/v1/callbacks/{}", callback_id.to_string());
+pub async fn handle_get_callback_by_id(Path(callback_id): Path<String>) -> impl IntoResponse {
+    info!("GET /api/v1/callbacks/{}", callback_id);
+    let callback_id = get_urn_from_string(&callback_id).unwrap();
 
     match get_callback_by_id(callback_id).await {
         Ok(callback) => match callback {
@@ -120,9 +122,10 @@ pub async fn handle_request_transfer(Json(input): Json<RequestTransferRequest>) 
 }
 
 pub async fn handle_get_data_address_by_consumer_pid(
-    Path(consumer_pid): Path<Uuid>,
+    Path(consumer_pid): Path<String>,
 ) -> impl IntoResponse {
-    info!("GET /api/v1/data-address/{}", consumer_pid.to_string());
+    info!("GET /api/v1/data-address/{}", consumer_pid);
+    let consumer_pid = get_urn_from_string(&consumer_pid).unwrap();
 
     match get_data_address_by_consumer_pid(consumer_pid).await {
         Ok(res) => (StatusCode::OK, Json(res)).into_response(),

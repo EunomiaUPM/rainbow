@@ -31,10 +31,9 @@ use rainbow_common::config::config::{get_provider_url, ConfigRoles};
 use rainbow_common::dcat_formats::FormatAction;
 use rainbow_common::forwarding::forward_response;
 use rainbow_common::protocol::transfer::{TransferRequestMessage, TransferStateForDb};
-use rainbow_common::utils::convert_uri_to_uuid;
 use rainbow_db::transfer_provider::repo::TRANSFER_PROVIDER_REPO;
 use reqwest::{Method, StatusCode};
-use uuid::Uuid;
+use urn::Urn;
 
 #[async_trait]
 impl DataPlanePeerDefaultBehavior for HttpDataPlane {
@@ -49,7 +48,7 @@ impl DataPlanePeerDefaultBehavior for HttpDataPlane {
             "{}{}/{}",
             transfer_request.callback_address,
             local_address_path,
-            convert_uri_to_uuid(&transfer_request.consumer_pid)?
+            transfer_request.consumer_pid
         );
         let mut fw = HttpDataPlane::create_data_plane_peer()
             .with_role(ConfigRoles::Consumer)
@@ -67,7 +66,7 @@ impl DataPlanePeerDefaultBehavior for HttpDataPlane {
 
     async fn bootstrap_data_plane_in_provider(
         transfer_request: TransferRequestMessage,
-        provider_pid: Uuid,
+        provider_pid: Urn,
     ) -> anyhow::Result<DataPlanePeer> {
         let local_address_path = match transfer_request.format.action {
             FormatAction::Push => "/data/push",
@@ -95,8 +94,8 @@ impl DataPlanePeerDefaultBehavior for HttpDataPlane {
 
     async fn set_data_plane_next_hop(
         data_plane_peer: DataPlanePeer,
-        provider_pid: Uuid,
-        consumer_pid: Uuid,
+        provider_pid: Urn,
+        consumer_pid: Urn,
     ) -> anyhow::Result<DataPlanePeer> {
         if data_plane_peer.dct_formats.action == FormatAction::Push {
             bail!("Not allowed PUSH for plain HTTP implementation")
@@ -121,12 +120,12 @@ impl DataPlanePeerDefaultBehavior for HttpDataPlane {
         }
     }
 
-    async fn connect_to_streaming_service(data_plane_id: Uuid) -> anyhow::Result<()> {
+    async fn connect_to_streaming_service(data_plane_id: Urn) -> anyhow::Result<()> {
         // No need for implementation
         Ok(())
     }
 
-    async fn disconnect_from_streaming_service(data_plane_id: Uuid) -> anyhow::Result<()> {
+    async fn disconnect_from_streaming_service(data_plane_id: Urn) -> anyhow::Result<()> {
         // No need for implementation
         Ok(())
     }

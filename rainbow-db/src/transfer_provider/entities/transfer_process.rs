@@ -26,10 +26,10 @@ use sea_orm::sea_query::ValueType;
 #[sea_orm(table_name = "transfer_processes")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub provider_pid: Uuid,
-    pub consumer_pid: Option<Uuid>,
+    pub provider_pid: String,
+    pub consumer_pid: Option<String>,
     pub agreement_id: String,
-    pub data_plane_id: Option<Uuid>,
+    pub data_plane_id: Option<String>,
     pub state: TransferStateForDb,
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: Option<chrono::NaiveDateTime>,

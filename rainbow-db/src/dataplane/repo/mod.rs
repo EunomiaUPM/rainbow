@@ -23,7 +23,7 @@ use crate::dataplane::repo::sql::DataPlaneRepoForSql;
 use axum::async_trait;
 use once_cell::sync::Lazy;
 use rainbow_common::config::config::GLOBAL_CONFIG;
-use uuid::Uuid;
+use urn::Urn;
 
 pub mod sql;
 
@@ -40,7 +40,7 @@ pub static DATA_PLANE_REPO: Lazy<Box<dyn CombinedRepo + Send + Sync>> = Lazy::ne
 });
 
 pub struct NewDataPlaneProcess {
-    pub id: Uuid,
+    pub id: Urn,
     pub role: String,
     pub address: String,
     pub dct_action_format: String,
@@ -60,30 +60,30 @@ pub trait DataPlaneProcessRepo {
     ) -> anyhow::Result<Vec<data_plane_process::Model>>;
     async fn get_data_plane_process_by_id(
         &self,
-        data_plane_process_id: Uuid,
+        data_plane_process_id: Urn,
     ) -> anyhow::Result<Option<data_plane_process::Model>>;
 
     async fn get_data_plane_process_by_id_in_url(
         &self,
-        id: Uuid,
+        id: Urn,
     ) -> anyhow::Result<Option<data_plane_process::Model>>;
 
     async fn put_data_plane_process(
         &self,
-        data_plane_process_id: Uuid,
+        data_plane_process_id: Urn,
         new_data_plane_process: EditDataPlaneProcess,
     ) -> anyhow::Result<data_plane_process::Model>;
     async fn create_data_plane_process(
         &self,
         new_data_plane_process: NewDataPlaneProcess,
     ) -> anyhow::Result<data_plane_process::Model>;
-    async fn delete_data_plane_process(&self, data_plane_process_id: Uuid) -> anyhow::Result<()>;
+    async fn delete_data_plane_process(&self, data_plane_process_id: Urn) -> anyhow::Result<()>;
 }
 
 pub struct NewDataPlaneField {
     pub key: String,
     pub value: String,
-    pub data_plane_process_id: Uuid,
+    pub data_plane_process_id: Urn,
 }
 
 pub struct EditDataPlaneField {
@@ -100,17 +100,17 @@ pub trait DataPlaneFieldRepo {
 
     async fn get_all_data_plane_fields_by_process(
         &self,
-        data_plane_process_id: Uuid,
+        data_plane_process_id: Urn,
     ) -> anyhow::Result<Vec<data_plane_field::Model>>;
 
     async fn get_data_plane_field_by_id(
         &self,
-        data_plane_field_id: Uuid,
+        data_plane_field_id: Urn,
     ) -> anyhow::Result<Option<data_plane_field::Model>>;
 
     async fn put_data_plane_field_by_id(
         &self,
-        data_plane_field_id: Uuid,
+        data_plane_field_id: Urn,
         new_data_plane_field: EditDataPlaneField,
     ) -> anyhow::Result<data_plane_field::Model>;
 
@@ -119,5 +119,5 @@ pub trait DataPlaneFieldRepo {
         new_data_plane_field: NewDataPlaneField,
     ) -> anyhow::Result<data_plane_field::Model>;
 
-    async fn delete_data_plane_field(&self, data_plane_field_id: Uuid) -> anyhow::Result<()>;
+    async fn delete_data_plane_field(&self, data_plane_field_id: Urn) -> anyhow::Result<()>;
 }

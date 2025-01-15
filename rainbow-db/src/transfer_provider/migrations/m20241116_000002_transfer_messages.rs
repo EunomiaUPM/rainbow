@@ -59,8 +59,8 @@ impl MigrationTrait for Migration {
             .create_table(
                 Table::create()
                     .table(TransferMessages::Table)
-                    .col(ColumnDef::new(TransferMessages::Id).uuid().not_null().primary_key())
-                    .col(ColumnDef::new(TransferMessages::TransferProcessId).uuid().not_null())
+                    .col(ColumnDef::new(TransferMessages::Id).string().not_null().primary_key())
+                    .col(ColumnDef::new(TransferMessages::TransferProcessId).string().not_null())
                     .col(ColumnDef::new(TransferMessages::CreatedAt).date_time().not_null())
                     .col(
                         ColumnDef::new(TransferMessages::MessageType)

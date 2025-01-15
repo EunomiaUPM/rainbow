@@ -25,21 +25,14 @@ use crate::protocol::dataservice_definition::DataService;
 use crate::protocol::dataset_definition::Dataset;
 use crate::protocol::distribution_definition::Distribution;
 use anyhow::bail;
-use axum::routing::get;
-use clap::builder::Str;
-use rainbow_common::opt_urn_serde;
-use rainbow_common::urn_serde;
-use rainbow_common::utils;
-use rainbow_common::utils::get_urn;
 use rainbow_common::config::database::get_db_connection;
+use rainbow_common::utils::get_urn;
 use rainbow_db::catalog::entities::{catalog, dataset, distribution};
 use rainbow_db::catalog::entities::{dataservice, odrl_offer};
 use sea_orm::{ActiveValue, ColumnTrait};
 use sea_orm::{EntityTrait, QueryFilter};
 use serde::{Deserialize, Serialize};
 use serde_json::to_value;
-use axum::http::Uri;
-use tracing::info;
 use urn::Urn;
 
 pub async fn catalog_request_by_id(id: String) -> anyhow::Result<Catalog> {
@@ -66,7 +59,6 @@ pub async fn catalog_request_by_id(id: String) -> anyhow::Result<Catalog> {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NewCatalogRequest {
     #[serde(rename = "@id")]
-    #[serde(with="opt_urn_serde")]
     #[serde(skip_serializing_if = "Option::is_none")]
     id: Option<Urn>,
     #[serde(rename = "foaf:homepage")]
@@ -84,11 +76,8 @@ pub struct NewCatalogRequest {
 }
 
 
-
 pub async fn post_catalog(input: NewCatalogRequest) -> anyhow::Result<Catalog> {
     let db_connection = get_db_connection().await;
-    let input_string = input.id.clone().unwrap();
-    
     let urn = get_urn(input.id);
 
     let new_catalog = catalog::ActiveModel {
@@ -153,7 +142,6 @@ pub async fn delete_catalog(id: String) -> anyhow::Result<()> {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NewDatasetRequest {
     #[serde(rename = "@id")]
-    #[serde(with="opt_urn_serde")]
     #[serde(skip_serializing_if = "Option::is_none")]
     id: Option<Urn>,
     #[serde(rename = "dct:conformsTo")]
@@ -232,7 +220,6 @@ pub async fn delete_dataset(catalog_id: String, dataset_id: String) -> anyhow::R
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NewDataServiceRequest {
     #[serde(rename = "@id")]
-    #[serde(with="opt_urn_serde")]
     #[serde(skip_serializing_if = "Option::is_none")]
     id: Option<Urn>,
     #[serde(rename = "dct:conformsTo")]
@@ -349,13 +336,11 @@ pub async fn delete_dataservice(catalog_id: String, dataset_id: String) -> anyho
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NewDistributionRequest {
     #[serde(rename = "@id")]
-    #[serde(with="opt_urn_serde")]
     #[serde(skip_serializing_if = "Option::is_none")]
     id: Option<Urn>,
     #[serde(rename = "dct:title")]
     #[serde(skip_serializing_if = "Option::is_none")]
     dct_title: Option<String>,
-    #[serde(with="urn_serde")]
     #[serde(rename = "dcat:accessService")]
     dcat_access_service: Urn,
 }

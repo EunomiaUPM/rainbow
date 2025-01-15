@@ -23,7 +23,7 @@ use sea_orm::entity::prelude::*;
 #[sea_orm(table_name = "data_plane_process")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: Uuid,
+    pub id: String,
     pub role: String,
     pub address: String,
     pub dct_action_format: String,

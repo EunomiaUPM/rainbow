@@ -35,10 +35,11 @@ impl MigrationTrait for Migration {
                     .table(ContractAgreements::Table)
                     .col(
                         ColumnDef::new(ContractAgreements::AgreementId)
+                            .string()
                             .not_null()
                             .primary_key(),
                     )
-                    .col(ColumnDef::new(ContractAgreements::DataServiceId).not_null())
+                    .col(ColumnDef::new(ContractAgreements::DataServiceId).string().not_null())
                     .col(ColumnDef::new(ContractAgreements::Identity).string())
                     .col(ColumnDef::new(ContractAgreements::IdentityToken).string())
                     .to_owned(),

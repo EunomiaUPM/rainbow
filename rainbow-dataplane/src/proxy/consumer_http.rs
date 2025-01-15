@@ -26,9 +26,10 @@ use axum::routing::any;
 use axum::Router;
 use rainbow_common::config::config::ConfigRoles;
 use rainbow_common::dcat_formats::{FormatAction, FormatProtocol};
+use rainbow_common::utils::get_urn_from_string;
 use rainbow_db::dataplane::repo::DATA_PLANE_REPO;
 use reqwest::StatusCode;
-use uuid::Uuid;
+use urn::Urn;
 
 pub fn consumer_dataplane_router() -> Router {
     Router::new()
@@ -51,36 +52,36 @@ pub fn consumer_dataplane_router() -> Router {
 }
 
 async fn handle_dataplane_pull(
-    Path((callback_id, data_id)): Path<(Uuid, Uuid)>,
+    Path((callback_id, data_id)): Path<(Urn, Urn)>,
     request: Request,
 ) -> impl IntoResponse {
     dataplane_pull(callback_id, data_id, None, request).await
 }
 
 async fn handle_dataplane_pull_extras(
-    Path((callback_id, data_id, extras)): Path<(Uuid, Uuid, String)>,
+    Path((callback_id, data_id, extras)): Path<(Urn, Urn, String)>,
     request: Request,
 ) -> impl IntoResponse {
     dataplane_pull(callback_id, data_id, Some(extras), request).await
 }
 
 async fn handle_dataplane_push(
-    Path((callback_id, data_id)): Path<(Uuid, Uuid)>,
+    Path((callback_id, data_id)): Path<(Urn, Urn)>,
     request: Request,
 ) -> impl IntoResponse {
     dataplane_push(callback_id, data_id, None, request).await
 }
 
 async fn handle_dataplane_push_extras(
-    Path((callback_id, data_id, extras)): Path<(Uuid, Uuid, String)>,
+    Path((callback_id, data_id, extras)): Path<(Urn, Urn, String)>,
     request: Request,
 ) -> impl IntoResponse {
     dataplane_push(callback_id, data_id, Some(extras), request).await
 }
 
 async fn dataplane_pull(
-    callback_id: Uuid,
-    data_id: Uuid,
+    callback_id: Urn,
+    data_id: Urn,
     extras: Option<String>,
     request: Request,
 ) -> impl IntoResponse {
@@ -92,8 +93,9 @@ async fn dataplane_pull(
 
     match data_plane_process {
         Some(dp) => {
+            let id = get_urn_from_string(&dp.id).unwrap();
             let data_plane_peer =
-                DataPlanePeer::load_model_by_id(dp.id).await.unwrap();
+                DataPlanePeer::load_model_by_id(id).await.unwrap();
 
             match data_plane_peer.role {
                 ConfigRoles::Consumer => match data_plane_peer.dct_formats.action {
@@ -124,8 +126,8 @@ async fn dataplane_pull(
 }
 
 async fn dataplane_push(
-    callback_id: Uuid,
-    data_id: Uuid,
+    callback_id: Urn,
+    data_id: Urn,
     extras: Option<String>,
     request: Request,
 ) -> impl IntoResponse {
@@ -137,8 +139,9 @@ async fn dataplane_push(
 
     match data_plane_process {
         Some(dp) => {
+            let id = get_urn_from_string(&dp.id).unwrap();
             let data_plane_peer =
-                DataPlanePeer::load_model_by_id(dp.id).await.unwrap();
+                DataPlanePeer::load_model_by_id(id).await.unwrap();
             match data_plane_peer.role {
                 ConfigRoles::Consumer => match data_plane_peer.dct_formats.action {
                     FormatAction::Push => match data_plane_peer.dct_formats.protocol {

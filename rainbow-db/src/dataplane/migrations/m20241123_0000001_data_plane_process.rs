@@ -33,7 +33,7 @@ impl MigrationTrait for Migration {
             .create_table(
                 Table::create()
                     .table(DataPlaneProcess::Table)
-                    .col(ColumnDef::new(DataPlaneProcess::Id).uuid().not_null().primary_key())
+                    .col(ColumnDef::new(DataPlaneProcess::Id).string().not_null().primary_key())
                     .col(ColumnDef::new(DataPlaneProcess::Role).string().not_null())
                     .col(ColumnDef::new(DataPlaneProcess::Address).string().not_null())
                     .col(ColumnDef::new(DataPlaneProcess::DctActionFormat).string().not_null())

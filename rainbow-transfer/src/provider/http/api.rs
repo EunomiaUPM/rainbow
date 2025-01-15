@@ -28,6 +28,7 @@ use axum::response::IntoResponse;
 use axum::routing::{delete, get, post, put};
 use axum::{Json, Router};
 use log::info;
+use rainbow_common::utils::get_urn_from_string;
 use uuid::Uuid;
 
 pub fn router() -> Router {
@@ -59,20 +60,20 @@ async fn handle_get_all_transfers() -> impl IntoResponse {
     (StatusCode::OK, Json(transfers.unwrap())).into_response()
 }
 
-async fn handle_get_messages_by_transfer(Path(id): Path<Uuid>) -> impl IntoResponse {
+async fn handle_get_messages_by_transfer(Path(id): Path<String>) -> impl IntoResponse {
     info!("GET /api/v1/transfers/{}/messages", id.to_string());
+    let id = get_urn_from_string(&id).unwrap();
     match get_messages_by_transfer(id).await {
         Ok(messages) => (StatusCode::OK, Json(messages)).into_response(),
         Err(e) => (StatusCode::OK, e.to_string()).into_response(),
     }
 }
 
-async fn handle_get_messages_by_id(Path((id, mid)): Path<(Uuid, Uuid)>) -> impl IntoResponse {
-    info!(
-        "GET /api/v1/agreements/{}/messages/{}",
-        id.to_string(),
-        mid.to_string()
-    );
+async fn handle_get_messages_by_id(Path((id, mid)): Path<(String, String)>) -> impl IntoResponse {
+    info!("GET /api/v1/agreements/{}/messages/{}", id, mid);
+    let id = get_urn_from_string(&id).unwrap();
+    let mid = get_urn_from_string(&mid).unwrap();
+
     match get_messages_by_id(id, mid).await {
         Ok(messages) => (StatusCode::OK, Json(messages)).into_response(),
         Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
@@ -88,8 +89,9 @@ async fn handle_get_all_agreements() -> impl IntoResponse {
     }
 }
 
-async fn handle_get_agreement_by_id(Path(id): Path<Uuid>) -> impl IntoResponse {
-    info!("GET /api/v1/agreements/{}", id.to_string());
+async fn handle_get_agreement_by_id(Path(id): Path<String>) -> impl IntoResponse {
+    info!("GET /api/v1/agreements/{}", id);
+    let id = get_urn_from_string(&id).unwrap();
 
     match get_agreement_by_id(id).await {
         Ok(agreement) => (StatusCode::OK, Json(agreement)).into_response(),
@@ -106,18 +108,21 @@ async fn handle_post_agreement(Json(input): Json<NewAgreement>) -> impl IntoResp
 }
 
 async fn handle_put_agreement(
-    Path(id): Path<Uuid>,
+    Path(id): Path<String>,
     Json(input): Json<EditAgreement>,
 ) -> impl IntoResponse {
-    info!("PUT /api/v1/agreements/{}", id.to_string());
+    info!("PUT /api/v1/agreements/{}", id);
+    let id = get_urn_from_string(&id).unwrap();
+
     match put_agreement(id, input).await {
         Ok(agreement) => (StatusCode::CREATED, Json(agreement)).into_response(),
         Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
     }
 }
 
-async fn handle_delete_agreement(Path(id): Path<Uuid>) -> impl IntoResponse {
-    info!("DELETE /api/v1/agreements/{}", id.to_string());
+async fn handle_delete_agreement(Path(id): Path<String>) -> impl IntoResponse {
+    info!("DELETE /api/v1/agreements/{}", id);
+    let id = get_urn_from_string(&id).unwrap();
 
     match delete_agreement(id).await {
         Ok(_) => (StatusCode::ACCEPTED).into_response(),

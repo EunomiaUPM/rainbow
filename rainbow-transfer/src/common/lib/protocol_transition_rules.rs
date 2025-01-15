@@ -24,10 +24,10 @@ use rainbow_common::err::transfer_err::TransferErrorType::{
     TransferProcessAlreadySuspendedError, TransferProcessNotFound,
 };
 use rainbow_common::protocol::transfer::TransferState;
+use rainbow_common::utils::{get_urn, get_urn_from_string};
 use rainbow_db::transfer_consumer::repo::TRANSFER_CONSUMER_REPO;
 use rainbow_db::transfer_provider::repo::TRANSFER_PROVIDER_REPO;
 use serde_json::Value;
-use uuid::Uuid;
 
 pub async fn protocol_transition_rules(json_value: Value) -> anyhow::Result<()> {
     let db_connection = get_db_connection().await;
@@ -35,14 +35,14 @@ pub async fn protocol_transition_rules(json_value: Value) -> anyhow::Result<()> 
     let provider_pid = json_value
         .get("dspace:providerPid")
         .and_then(|v| v.as_str())
-        .and_then(|v| Uuid::parse_str(v).ok())
-        .unwrap_or_default();
+        .and_then(|v| get_urn_from_string(&v.to_string()).ok())
+        .unwrap_or_else(|| get_urn(None));
 
     let consumer_pid = json_value
         .get("dspace:consumerPid")
         .and_then(|v| v.as_str())
-        .and_then(|v| Uuid::parse_str(v).ok())
-        .unwrap_or_default();
+        .and_then(|v| get_urn_from_string(&v.to_string()).ok())
+        .unwrap_or_else(|| get_urn(None));
 
     let message_type = json_value.get("@type").and_then(|v| v.as_str()).unwrap();
 

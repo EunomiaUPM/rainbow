@@ -28,11 +28,11 @@ use crate::transfer_provider::repo::{
 };
 use anyhow::bail;
 use axum::async_trait;
-use rainbow_common::utils::get_urn;
 use rainbow_common::config::database::get_db_connection;
 use rainbow_common::protocol::transfer::{TransferMessageTypesForDb, TransferStateForDb};
+use rainbow_common::utils::get_urn;
 use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, EntityTrait, QueryFilter, QuerySelect};
-use uuid::Uuid;
+use urn::Urn;
 
 pub struct TransferProviderRepoForSql {}
 
@@ -59,9 +59,10 @@ impl TransferProcessRepo for TransferProviderRepoForSql {
 
     async fn get_transfer_process_by_provider(
         &self,
-        pid: Uuid,
+        pid: Urn,
     ) -> anyhow::Result<Option<transfer_process::Model>> {
         let db_connection = get_db_connection().await;
+        let pid = pid.to_string();
         let transfer_process = transfer_process::Entity::find_by_id(pid).one(db_connection).await;
         match transfer_process {
             Ok(transfer_process) => Ok(transfer_process),
@@ -71,9 +72,10 @@ impl TransferProcessRepo for TransferProviderRepoForSql {
 
     async fn get_transfer_process_by_consumer(
         &self,
-        pid: Uuid,
+        pid: Urn,
     ) -> anyhow::Result<Option<transfer_process::Model>> {
         let db_connection = get_db_connection().await;
+        let pid = pid.to_string();
         let transfer_process = transfer_process::Entity::find()
             .filter(transfer_process::Column::ConsumerPid.eq(pid))
             .one(db_connection)
@@ -84,8 +86,9 @@ impl TransferProcessRepo for TransferProviderRepoForSql {
         }
     }
 
-    async fn get_transfer_process_by_data_plane(&self, pid: Uuid) -> anyhow::Result<Option<transfer_process::Model>> {
+    async fn get_transfer_process_by_data_plane(&self, pid: Urn) -> anyhow::Result<Option<transfer_process::Model>> {
         let db_connection = get_db_connection().await;
+        let pid = pid.to_string();
         let transfer_process = transfer_process::Entity::find()
             .filter(transfer_process::Column::DataPlaneId.eq(pid))
             .one(db_connection)
@@ -98,10 +101,11 @@ impl TransferProcessRepo for TransferProviderRepoForSql {
 
     async fn put_transfer_process(
         &self,
-        pid: Uuid,
+        pid: Urn,
         new_transfer_process: EditTransferProcessModel,
     ) -> anyhow::Result<transfer_process::Model> {
         let db_connection = get_db_connection().await;
+        let pid = pid.to_string();
 
         let old_model = transfer_process::Entity::find_by_id(pid).one(db_connection).await;
         let old_model = match old_model {
@@ -114,16 +118,16 @@ impl TransferProcessRepo for TransferProviderRepoForSql {
 
         let mut old_active_model: transfer_process::ActiveModel = old_model.into();
         if let Some(provider_pid) = new_transfer_process.provider_pid {
-            old_active_model.provider_pid = ActiveValue::Set(provider_pid);
+            old_active_model.provider_pid = ActiveValue::Set(provider_pid.to_string());
         }
         if let Some(consumer_pid) = new_transfer_process.consumer_pid {
-            old_active_model.consumer_pid = ActiveValue::Set(Some(consumer_pid));
+            old_active_model.consumer_pid = ActiveValue::Set(Some(consumer_pid.to_string()));
         }
         if let Some(agreement_id) = new_transfer_process.agreement_id {
-            old_active_model.agreement_id = ActiveValue::Set(agreement_id);
+            old_active_model.agreement_id = ActiveValue::Set(agreement_id.to_string());
         }
         if let Some(data_plane_id) = new_transfer_process.data_plane_id {
-            old_active_model.data_plane_id = ActiveValue::Set(Some(data_plane_id));
+            old_active_model.data_plane_id = ActiveValue::Set(Some(data_plane_id.to_string()));
         }
         if let Some(state) = new_transfer_process.state {
             old_active_model.state = ActiveValue::Set(state);
@@ -142,10 +146,10 @@ impl TransferProcessRepo for TransferProviderRepoForSql {
     ) -> anyhow::Result<transfer_process::Model> {
         let db_connection = get_db_connection().await;
         let model = transfer_process::ActiveModel {
-            provider_pid: ActiveValue::Set(new_transfer_process.provider_pid),
-            consumer_pid: ActiveValue::Set(Some(new_transfer_process.consumer_pid)),
-            agreement_id: ActiveValue::Set(new_transfer_process.agreement_id),
-            data_plane_id: ActiveValue::Set(Some(new_transfer_process.data_plane_id)),
+            provider_pid: ActiveValue::Set(new_transfer_process.provider_pid.to_string()),
+            consumer_pid: ActiveValue::Set(Some(new_transfer_process.consumer_pid.to_string())),
+            agreement_id: ActiveValue::Set(new_transfer_process.agreement_id.to_string()),
+            data_plane_id: ActiveValue::Set(Some(new_transfer_process.data_plane_id.to_string())),
             state: ActiveValue::Set(TransferStateForDb::REQUESTED),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             updated_at: ActiveValue::Set(None),
@@ -159,8 +163,10 @@ impl TransferProcessRepo for TransferProviderRepoForSql {
         }
     }
 
-    async fn delete_transfer_process(&self, pid: Uuid) -> anyhow::Result<()> {
+    async fn delete_transfer_process(&self, pid: Urn) -> anyhow::Result<()> {
         let db_connection = get_db_connection().await;
+        let pid = pid.to_string();
+
         let transfer_process =
             transfer_process::Entity::delete_by_id(pid).exec(db_connection).await;
         match transfer_process {
@@ -192,8 +198,10 @@ impl TransferMessagesRepo for TransferProviderRepoForSql {
         }
     }
 
-    async fn get_all_transfer_messages_by_provider(&self, pid: Uuid) -> anyhow::Result<Vec<Model>> {
+    async fn get_all_transfer_messages_by_provider(&self, pid: Urn) -> anyhow::Result<Vec<Model>> {
         let db_connection = get_db_connection().await;
+        let pid = pid.to_string();
+
         let transfer_message = transfer_message::Entity::find()
             .filter(transfer_message::Column::TransferProcessId.eq(pid))
             .all(db_connection)
@@ -206,9 +214,11 @@ impl TransferMessagesRepo for TransferProviderRepoForSql {
 
     async fn get_transfer_message_by_id(
         &self,
-        pid: Uuid,
+        pid: Urn,
     ) -> anyhow::Result<Option<transfer_message::Model>> {
         let db_connection = get_db_connection().await;
+        let pid = pid.to_string();
+
         let transfer_message = transfer_message::Entity::find_by_id(pid).one(db_connection).await;
         match transfer_message {
             Ok(transfer_message) => Ok(transfer_message),
@@ -218,7 +228,7 @@ impl TransferMessagesRepo for TransferProviderRepoForSql {
 
     async fn put_transfer_message(
         &self,
-        pid: Uuid,
+        pid: Urn,
         new_transfer_process: transfer_message::ActiveModel,
     ) -> anyhow::Result<Option<transfer_message::Model>> {
         Ok(None)
@@ -226,10 +236,11 @@ impl TransferMessagesRepo for TransferProviderRepoForSql {
 
     async fn create_transfer_message(
         &self,
-        pid: Uuid,
+        pid: Urn,
         new_transfer_message: NewTransferMessageModel,
     ) -> anyhow::Result<transfer_message::Model> {
         let db_connection = get_db_connection().await;
+        let pid = pid.to_string();
 
         let message_type = TransferMessageTypesForDb::try_from(new_transfer_message.message_type);
         let message_type = match message_type {
@@ -238,7 +249,7 @@ impl TransferMessagesRepo for TransferProviderRepoForSql {
         };
 
         let model = transfer_message::ActiveModel {
-            id: ActiveValue::Set(Uuid::new_v4()),
+            id: ActiveValue::Set(get_urn(None).to_string()),
             transfer_process_id: ActiveValue::Set(pid),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             message_type: ActiveValue::Set(message_type),
@@ -255,8 +266,10 @@ impl TransferMessagesRepo for TransferProviderRepoForSql {
         }
     }
 
-    async fn delete_transfer_message(&self, pid: Uuid) -> anyhow::Result<()> {
+    async fn delete_transfer_message(&self, pid: Urn) -> anyhow::Result<()> {
         let db_connection = get_db_connection().await;
+        let pid = pid.to_string();
+
         let transfer_message =
             transfer_message::Entity::delete_by_id(pid).exec(db_connection).await;
         match transfer_message {
@@ -288,8 +301,10 @@ impl AgreementsRepo for TransferProviderRepoForSql {
         }
     }
 
-    async fn get_agreement_by_id(&self, id: Uuid) -> anyhow::Result<Option<agreements::Model>> {
+    async fn get_agreement_by_id(&self, id: Urn) -> anyhow::Result<Option<agreements::Model>> {
         let db_connection = get_db_connection().await;
+        let id = id.to_string();
+
         let agreement = agreements::Entity::find_by_id(id).one(db_connection).await;
         match agreement {
             Ok(agreement) => Ok(agreement),
@@ -299,10 +314,11 @@ impl AgreementsRepo for TransferProviderRepoForSql {
 
     async fn put_agreement(
         &self,
-        id: Uuid,
+        id: Urn,
         new_agreement: EditAgreementModel,
     ) -> anyhow::Result<agreements::Model> {
         let db_connection = get_db_connection().await;
+        let id = id.to_string();
 
         let old_model = agreements::Entity::find_by_id(id).one(db_connection).await;
         let old_model = match old_model {
@@ -315,7 +331,7 @@ impl AgreementsRepo for TransferProviderRepoForSql {
 
         let mut old_active_model: agreements::ActiveModel = old_model.into();
         if let Some(data_service_id) = new_agreement.data_service_id {
-            old_active_model.data_service_id = ActiveValue::Set(data_service_id);
+            old_active_model.data_service_id = ActiveValue::Set(data_service_id.to_string());
         }
         if let Some(identity) = new_agreement.identity {
             old_active_model.identity = ActiveValue::Set(Some(identity));
@@ -339,7 +355,7 @@ impl AgreementsRepo for TransferProviderRepoForSql {
 
         let model = agreements::ActiveModel {
             agreement_id: ActiveValue::Set(get_urn(None).to_string()),
-            data_service_id: ActiveValue::Set(new_agreement.data_service_id),
+            data_service_id: ActiveValue::Set(new_agreement.data_service_id.to_string()),
             identity: ActiveValue::Set(new_agreement.identity),
             identity_token: ActiveValue::Set(new_agreement.identity_token),
         };
@@ -351,8 +367,9 @@ impl AgreementsRepo for TransferProviderRepoForSql {
         }
     }
 
-    async fn delete_agreement(&self, id: Uuid) -> anyhow::Result<()> {
+    async fn delete_agreement(&self, id: Urn) -> anyhow::Result<()> {
         let db_connection = get_db_connection().await;
+        let id = id.to_string();
         let agreement = agreements::Entity::delete_by_id(id).exec(db_connection).await;
         match agreement {
             Ok(delete_result) => match delete_result.rows_affected {

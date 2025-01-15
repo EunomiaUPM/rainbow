@@ -36,7 +36,7 @@ pub enum TransferErrorType {
     ValidationError { errors: VecDeque<OutputUnit<ErrorDescription>> },
     #[error("ConsumerPid, ProviderPid, AgreementId must have a valid Uuid v4")]
     PidUuidError,
-    #[error("ConsumerPid or ProviderPid must have urn:uuid:<uuid> schema")]
+    #[error("Identifiers must have urn:uuid:<uuid> schema")]
     PidSchemeError,
     #[error("Agreement doesn't seem to be valid")]
     AgreementError,

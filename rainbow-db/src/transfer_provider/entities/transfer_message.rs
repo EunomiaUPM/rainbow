@@ -25,8 +25,8 @@ use serde::{Deserialize, Serialize};
 #[sea_orm(table_name = "transfer_messages")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: Uuid,
-    pub transfer_process_id: Uuid,
+    pub id: String,
+    pub transfer_process_id: String,
     pub created_at: chrono::NaiveDateTime,
     pub message_type: TransferMessageTypesForDb,
     pub from: TransferRoles,

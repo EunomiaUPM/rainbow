@@ -33,12 +33,12 @@ impl MigrationTrait for Migration {
             .create_table(
                 Table::create()
                     .table(TransferCallbacks::Table)
-                    .col(ColumnDef::new(TransferCallbacks::Id).uuid().not_null().primary_key())
-                    .col(ColumnDef::new(TransferCallbacks::ConsumerPid).uuid().not_null())
-                    .col(ColumnDef::new(TransferCallbacks::ProviderPid).uuid())
+                    .col(ColumnDef::new(TransferCallbacks::Id).string().not_null().primary_key())
+                    .col(ColumnDef::new(TransferCallbacks::ConsumerPid).string().not_null())
+                    .col(ColumnDef::new(TransferCallbacks::ProviderPid).string())
                     .col(ColumnDef::new(TransferCallbacks::CreatedAt).date_time().not_null())
                     .col(ColumnDef::new(TransferCallbacks::UpdatedAt).date_time())
-                    .col(ColumnDef::new(TransferCallbacks::DataPlaneId).uuid())
+                    .col(ColumnDef::new(TransferCallbacks::DataPlaneId).string())
                     .col(ColumnDef::new(TransferCallbacks::DataAddress).json())
                     .to_owned(),
             )

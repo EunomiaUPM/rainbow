@@ -27,8 +27,9 @@ use crate::dataplane::repo::{
 use anyhow::bail;
 use axum::async_trait;
 use rainbow_common::config::database::get_db_connection;
+use rainbow_common::utils::get_urn;
 use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, EntityTrait, QueryFilter, QuerySelect};
-use uuid::Uuid;
+use urn::Urn;
 
 pub struct DataPlaneRepoForSql {}
 
@@ -53,9 +54,10 @@ impl DataPlaneProcessRepo for DataPlaneRepoForSql {
 
     async fn get_data_plane_process_by_id(
         &self,
-        data_plane_process_id: Uuid,
+        data_plane_process_id: Urn,
     ) -> anyhow::Result<Option<data_plane_process::Model>> {
         let db_connection = get_db_connection().await;
+        let data_plane_process_id = data_plane_process_id.to_string();
         let data_plane_process =
             data_plane_process::Entity::find_by_id(data_plane_process_id).one(db_connection).await;
         match data_plane_process {
@@ -64,8 +66,9 @@ impl DataPlaneProcessRepo for DataPlaneRepoForSql {
         }
     }
 
-    async fn get_data_plane_process_by_id_in_url(&self, id: Uuid) -> anyhow::Result<Option<Model>> {
+    async fn get_data_plane_process_by_id_in_url(&self, id: Urn) -> anyhow::Result<Option<Model>> {
         let db_connection = get_db_connection().await;
+        let id = id.to_string();
         let data_plane_process = data_plane_process::Entity::find()
             .filter(data_plane_process::Column::Address.contains(id))
             .one(db_connection)
@@ -79,10 +82,11 @@ impl DataPlaneProcessRepo for DataPlaneRepoForSql {
 
     async fn put_data_plane_process(
         &self,
-        data_plane_process_id: Uuid,
+        data_plane_process_id: Urn,
         new_data_plane_process: EditDataPlaneProcess,
     ) -> anyhow::Result<data_plane_process::Model> {
         let db_connection = get_db_connection().await;
+        let data_plane_process_id = data_plane_process_id.to_string();
 
         let old_model =
             data_plane_process::Entity::find_by_id(data_plane_process_id).one(db_connection).await;
@@ -113,7 +117,7 @@ impl DataPlaneProcessRepo for DataPlaneRepoForSql {
     ) -> anyhow::Result<data_plane_process::Model> {
         let db_connection = get_db_connection().await;
         let model = data_plane_process::ActiveModel {
-            id: ActiveValue::Set(new_data_plane_process.id),
+            id: ActiveValue::Set(new_data_plane_process.id.to_string()),
             role: ActiveValue::Set(new_data_plane_process.role),
             address: ActiveValue::Set(new_data_plane_process.address),
             dct_action_format: ActiveValue::Set(new_data_plane_process.dct_action_format),
@@ -130,8 +134,9 @@ impl DataPlaneProcessRepo for DataPlaneRepoForSql {
         }
     }
 
-    async fn delete_data_plane_process(&self, data_plane_process_id: Uuid) -> anyhow::Result<()> {
+    async fn delete_data_plane_process(&self, data_plane_process_id: Urn) -> anyhow::Result<()> {
         let db_connection = get_db_connection().await;
+        let data_plane_process_id = data_plane_process_id.to_string();
         let data_plane_p = data_plane_process::Entity::delete_by_id(data_plane_process_id)
             .exec(db_connection)
             .await;
@@ -166,9 +171,10 @@ impl DataPlaneFieldRepo for DataPlaneRepoForSql {
 
     async fn get_all_data_plane_fields_by_process(
         &self,
-        data_plane_process_id: Uuid,
+        data_plane_process_id: Urn,
     ) -> anyhow::Result<Vec<data_plane_field::Model>> {
         let db_connection = get_db_connection().await;
+        let data_plane_process_id = data_plane_process_id.to_string();
         let data_plane_process = match data_plane_process::Entity::find_by_id(data_plane_process_id)
             .one(db_connection)
             .await
@@ -192,9 +198,10 @@ impl DataPlaneFieldRepo for DataPlaneRepoForSql {
 
     async fn get_data_plane_field_by_id(
         &self,
-        data_plane_field_id: Uuid,
+        data_plane_field_id: Urn,
     ) -> anyhow::Result<Option<data_plane_field::Model>> {
         let db_connection = get_db_connection().await;
+        let data_plane_field_id = data_plane_field_id.to_string();
         let data_plane_f =
             data_plane_field::Entity::find_by_id(data_plane_field_id).one(db_connection).await;
         match data_plane_f {
@@ -205,10 +212,11 @@ impl DataPlaneFieldRepo for DataPlaneRepoForSql {
 
     async fn put_data_plane_field_by_id(
         &self,
-        data_plane_field_id: Uuid,
+        data_plane_field_id: Urn,
         new_data_plane_field: EditDataPlaneField,
     ) -> anyhow::Result<data_plane_field::Model> {
         let db_connection = get_db_connection().await;
+        let data_plane_field_id = data_plane_field_id.to_string();
 
         let old_model =
             data_plane_field::Entity::find_by_id(data_plane_field_id).one(db_connection).await;
@@ -238,10 +246,12 @@ impl DataPlaneFieldRepo for DataPlaneRepoForSql {
     ) -> anyhow::Result<data_plane_field::Model> {
         let db_connection = get_db_connection().await;
         let model = data_plane_field::ActiveModel {
-            id: ActiveValue::Set(Uuid::new_v4()),
+            id: ActiveValue::Set(get_urn(None).to_string()),
             key: ActiveValue::Set(new_data_plane_field.key),
             value: ActiveValue::Set(new_data_plane_field.value),
-            data_plane_process_id: ActiveValue::Set(new_data_plane_field.data_plane_process_id),
+            data_plane_process_id: ActiveValue::Set(
+                new_data_plane_field.data_plane_process_id.to_string(),
+            ),
         };
         let transfer_callback =
             data_plane_field::Entity::insert(model).exec_with_returning(db_connection).await;
@@ -252,8 +262,9 @@ impl DataPlaneFieldRepo for DataPlaneRepoForSql {
         }
     }
 
-    async fn delete_data_plane_field(&self, data_plane_field_id: Uuid) -> anyhow::Result<()> {
+    async fn delete_data_plane_field(&self, data_plane_field_id: Urn) -> anyhow::Result<()> {
         let db_connection = get_db_connection().await;
+        let data_plane_field_id = data_plane_field_id.to_string();
         let transfer_callback =
             data_plane_field::Entity::delete_by_id(data_plane_field_id).exec(db_connection).await;
         match transfer_callback {
