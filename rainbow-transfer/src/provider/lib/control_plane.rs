@@ -137,9 +137,8 @@ where
     Ok(tp)
 }
 
-pub async fn transfer_start(input: TransferStartMessage) -> anyhow::Result<TransferProcessMessage> {
+pub async fn transfer_start(provider_pid: Urn, input: TransferStartMessage) -> anyhow::Result<TransferProcessMessage> {
     // persist process
-    let provider_pid = get_urn_from_string(&input.provider_pid)?;
     let transfer_process_db = TRANSFER_PROVIDER_REPO
         .put_transfer_process(
             provider_pid.clone(),
@@ -172,10 +171,10 @@ pub async fn transfer_start(input: TransferStartMessage) -> anyhow::Result<Trans
 }
 
 pub async fn transfer_suspension(
+    provider_pid: Urn,
     input: TransferSuspensionMessage,
 ) -> anyhow::Result<TransferProcessMessage> {
     // persist process
-    let provider_pid = get_urn_from_string(&input.provider_pid)?;
 
     let transfer_process_db = TRANSFER_PROVIDER_REPO
         .put_transfer_process(
@@ -207,10 +206,10 @@ pub async fn transfer_suspension(
 }
 
 pub async fn transfer_completion(
+    provider_pid: Urn,
     input: TransferCompletionMessage,
 ) -> anyhow::Result<TransferProcessMessage> {
     // persist process
-    let provider_pid = get_urn_from_string(&input.provider_pid)?;
 
     let transfer_process_db = TRANSFER_PROVIDER_REPO
         .put_transfer_process(
@@ -244,10 +243,10 @@ pub async fn transfer_completion(
 }
 
 pub async fn transfer_termination(
+    provider_pid: Urn,
     input: TransferTerminationMessage,
 ) -> anyhow::Result<TransferProcessMessage> {
     // persist process
-    let provider_pid = get_urn_from_string(&input.provider_pid)?;
 
     let transfer_process_db = TRANSFER_PROVIDER_REPO
         .put_transfer_process(

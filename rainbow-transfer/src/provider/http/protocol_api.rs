@@ -66,10 +66,10 @@ pub fn router() -> Router {
     // Based on a group of middlewares
     let router_group_b = Router::new()
         .route("/transfers/request", post(handle_transfer_request))
-        .route("/transfers/start", post(handle_transfer_start))
-        .route("/transfers/suspension", post(handle_transfer_suspension))
-        .route("/transfers/completion", post(handle_transfer_completion))
-        .route("/transfers/termination", post(handle_transfer_termination))
+        .route("/transfers/:provider_pid/start", post(handle_transfer_start))
+        .route("/transfers/:provider_pid/suspension", post(handle_transfer_suspension))
+        .route("/transfers/:provider_pid/completion", post(handle_transfer_completion))
+        .route("/transfers/:provider_pid/termination", post(handle_transfer_termination))
         .route_layer(middleware::from_fn(pids_as_urn_validation_middleware))
         .route_layer(middleware::from_fn(protocol_rules_middleware))
         .route_layer(middleware::from_fn(schema_validation_middleware));
@@ -78,7 +78,7 @@ pub fn router() -> Router {
 }
 
 async fn handle_get_transfer_by_provider(Path(provider_pid): Path<String>) -> impl IntoResponse {
-    info!("GET /transfers/{}", provider_pid);
+    info!("GET /transfers/{}", provider_pid.to_string());
     let id = get_urn_from_string(&provider_pid).unwrap();
 
     match get_transfer_requests_by_provider(id).await.unwrap() {
@@ -175,12 +175,20 @@ async fn send_transfer_start(
 }
 
 async fn handle_transfer_start(
+    provider_pid: Path<String>,
     result: Result<Json<TransferStartMessage>, JsonRejection>,
 ) -> impl IntoResponse {
-    info!("POST /transfers/start");
+    info!("POST /transfers/{}/start", provider_pid.to_string());
+
+    let provider_pid = match get_urn_from_string(&provider_pid) {
+        Ok(provider_pid) => provider_pid,
+        Err(_) => {
+            return TransferErrorType::PidSchemeError.into_response();
+        }
+    };
 
     match result {
-        Ok(Json(input)) => match transfer_start(input).await {
+        Ok(Json(input)) => match transfer_start(provider_pid, input).await {
             Ok(tp) => (StatusCode::OK, Json(tp)).into_response(),
             Err(e) => match e.downcast::<TransferErrorType>() {
                 Ok(transfer_error) => transfer_error.into_response(),
@@ -197,12 +205,20 @@ async fn handle_transfer_start(
 }
 
 async fn handle_transfer_suspension(
+    provider_pid: Path<String>,
     result: Result<Json<TransferSuspensionMessage>, JsonRejection>,
 ) -> impl IntoResponse {
-    info!("POST /transfers/suspension");
+    info!("POST /transfers/{}/suspension", provider_pid.to_string());
+
+    let provider_pid = match get_urn_from_string(&provider_pid) {
+        Ok(provider_pid) => provider_pid,
+        Err(_) => {
+            return TransferErrorType::PidSchemeError.into_response();
+        }
+    };
 
     match result {
-        Ok(Json(input)) => match transfer_suspension(input).await {
+        Ok(Json(input)) => match transfer_suspension(provider_pid, input).await {
             Ok(tp) => (StatusCode::OK, Json(tp)).into_response(),
             Err(e) => match e.downcast::<TransferErrorType>() {
                 Ok(transfer_error) => transfer_error.into_response(),
@@ -219,12 +235,20 @@ async fn handle_transfer_suspension(
 }
 
 async fn handle_transfer_completion(
+    provider_pid: Path<String>,
     result: Result<Json<TransferCompletionMessage>, JsonRejection>,
 ) -> impl IntoResponse {
-    info!("POST /transfers/completion");
+    info!("POST /transfers/{}/completion", provider_pid.to_string());
+
+    let provider_pid = match get_urn_from_string(&provider_pid) {
+        Ok(provider_pid) => provider_pid,
+        Err(_) => {
+            return TransferErrorType::PidSchemeError.into_response();
+        }
+    };
 
     match result {
-        Ok(Json(input)) => match transfer_completion(input).await {
+        Ok(Json(input)) => match transfer_completion(provider_pid, input).await {
             Ok(tp) => (StatusCode::OK, Json(tp)).into_response(),
             Err(e) => match e.downcast::<TransferErrorType>() {
                 Ok(transfer_error) => transfer_error.into_response(),
@@ -241,12 +265,20 @@ async fn handle_transfer_completion(
 }
 
 async fn handle_transfer_termination(
+    provider_pid: Path<String>,
     result: Result<Json<TransferTerminationMessage>, JsonRejection>,
 ) -> impl IntoResponse {
-    info!("POST /transfers/termination");
+    info!("POST /transfers/{}/termination", provider_pid.to_string());
+
+    let provider_pid = match get_urn_from_string(&provider_pid) {
+        Ok(provider_pid) => provider_pid,
+        Err(_) => {
+            return TransferErrorType::PidSchemeError.into_response();
+        }
+    };
 
     match result {
-        Ok(Json(input)) => match transfer_termination(input).await {
+        Ok(Json(input)) => match transfer_termination(provider_pid, input).await {
             Ok(tp) => (StatusCode::OK, Json(tp)).into_response(),
             Err(e) => match e.downcast::<TransferErrorType>() {
                 Ok(transfer_error) => transfer_error.into_response(),
