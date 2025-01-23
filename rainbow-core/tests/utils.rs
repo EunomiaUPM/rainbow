@@ -22,6 +22,7 @@
 #![allow(unused_variables)]
 #![allow(unused_mut)]
 
+use clap::builder::TypedValueParser;
 use rainbow_catalog::protocol::catalog_definition::Catalog;
 use rainbow_catalog::protocol::dataservice_definition::DataService;
 use rainbow_db::transfer_provider::entities::agreements;
@@ -30,7 +31,6 @@ use serde_json::json;
 use std::collections::HashMap;
 use std::process::{Child, Command};
 use uuid::Uuid;
-use urn::Urn;
 
 pub async fn setup_test_env(
     url_to_load: &str,

@@ -17,7 +17,7 @@
  *
  */
 
-pub mod api;
+pub mod hl_api;
 pub mod openapi;
-pub mod router;
+pub mod protocol_api;
 pub mod server;

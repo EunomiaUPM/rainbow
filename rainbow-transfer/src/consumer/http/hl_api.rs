@@ -64,17 +64,6 @@ pub fn router() -> Router {
         .layer(middleware::from_fn(authorization_middleware))
 }
 
-#[utoipa::path(
-    get,
-    path = "/api/v1/callbacks",
-    operation_id = "getExample",
-    tag = "Example",
-    description = "This endpoint retrieves an example response for demonstration purposes.",
-    params(),
-    responses(
-        (status = 200, description = "Get todo success", body = String)
-    ),
-)]
 pub async fn handle_get_all_callbacks() -> impl IntoResponse {
     info!("GET /api/v1/callbacks");
 

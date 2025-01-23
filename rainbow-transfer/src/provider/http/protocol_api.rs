@@ -54,7 +54,6 @@ use sea_orm::{ActiveValue, EntityTrait};
 use serde_json::to_value;
 use tracing::{debug, error, info};
 use urn::Urn;
-use utoipa::openapi::RefOr::T;
 use uuid::Uuid;
 
 pub fn router() -> Router {

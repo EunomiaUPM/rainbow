@@ -21,9 +21,8 @@ use anyhow::bail;
 use serde::de::Error;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::str::FromStr;
-use utoipa::ToSchema;
 
-#[derive(Debug, ToSchema, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum FormatProtocol {
     FiwareContextBroker,
     Http,
@@ -65,7 +64,7 @@ impl FromStr for FormatProtocol {
     }
 }
 
-#[derive(Debug, ToSchema, Clone)]
+#[derive(Debug, Clone)]
 pub enum FormatAction {
     Push,
     Pull,
@@ -102,7 +101,7 @@ impl PartialEq for FormatAction {
     }
 }
 
-#[derive(Debug, Clone, ToSchema)]
+#[derive(Debug, Clone)]
 pub struct DctFormats {
     pub protocol: FormatProtocol,
     pub action: FormatAction,

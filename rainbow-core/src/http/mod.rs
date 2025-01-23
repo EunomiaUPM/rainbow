@@ -25,12 +25,12 @@ use rainbow_catalog::http::policies_api as catalog_policies_api_router;
 use rainbow_common::misc_router;
 use rainbow_contracts::http as contract_router;
 use rainbow_dataplane::proxy::provider_http;
-use rainbow_transfer::consumer::http::api as consumer_hl_api_router;
-use rainbow_transfer::consumer::http::router as consumer_ll_api_router;
+use rainbow_transfer::consumer::http::hl_api as consumer_hl_api_router;
+use rainbow_transfer::consumer::http::protocol_api as consumer_ll_api_router;
 
 use rainbow_dataplane::proxy::consumer_http;
-use rainbow_transfer::provider::http::api as provider_hl_api_router;
-use rainbow_transfer::provider::http::router as provider_ll_api_router;
+use rainbow_transfer::provider::http::hl_api as provider_hl_api_router;
+use rainbow_transfer::provider::http::protocol_api as provider_ll_api_router;
 
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;

@@ -17,8 +17,8 @@
  *
  */
 
-use crate::provider::http::api;
-use crate::provider::http::router;
+use crate::provider::http::hl_api;
+use crate::provider::http::protocol_api;
 use axum::http::Method;
 use axum::Router;
 use rainbow_common::misc_router;
@@ -31,8 +31,8 @@ pub async fn create_provider_router() -> Router {
     // create routing system
     let server = Router::new()
         .merge(misc_router::router())
-        .merge(router::router())
-        .merge(api::router())
+        .merge(protocol_api::router())
+        .merge(hl_api::router())
         .layer(TraceLayer::new_for_http());
     server
 }

@@ -19,7 +19,7 @@
 
 use crate::common::misc_router;
 use crate::consumer::http::openapi::open_api_setup;
-use crate::consumer::http::{api, router};
+use crate::consumer::http::{hl_api, protocol_api};
 use axum::http::Method;
 use axum::Router;
 use tower_http::cors::{Any, CorsLayer};
@@ -33,8 +33,8 @@ pub async fn create_consumer_router() -> Router {
     // create routing system
     let server = Router::new()
         .merge(misc_router::router())
-        .merge(router::router())
-        .merge(api::router())
+        .merge(protocol_api::router())
+        .merge(hl_api::router())
         .merge(open_api)
         .layer(TraceLayer::new_for_http());
     server

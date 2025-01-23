@@ -43,7 +43,6 @@ use serde::{Deserialize, Serialize};
 use serde_json::to_value;
 use std::str::FromStr;
 use urn::Urn;
-use utoipa::ToSchema;
 
 pub async fn get_all_callbacks() -> anyhow::Result<Vec<transfer_callback::Model>> {
     TRANSFER_CONSUMER_REPO.get_all_transfer_callbacks(None, None).await
@@ -422,7 +421,7 @@ pub async fn restart_transfer(
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, ToSchema)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct CompleteTransferRequest {
     #[serde(rename = "consumerPid")]
     pub consumer_pid: String,
