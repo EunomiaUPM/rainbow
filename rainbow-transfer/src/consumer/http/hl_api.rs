@@ -35,7 +35,6 @@ use rainbow_common::utils::get_urn_from_string;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use tracing::info;
-use uuid::Uuid;
 
 pub fn router() -> Router {
     let group_1 = Router::new()
@@ -101,7 +100,9 @@ pub async fn handle_create_callback(data_address: Option<Json<DataAddress>>) -> 
     }
 }
 
-pub async fn handle_request_transfer(Json(input): Json<RequestTransferRequest>) -> impl IntoResponse {
+pub async fn handle_request_transfer(
+    Json(input): Json<RequestTransferRequest>,
+) -> impl IntoResponse {
     info!("POST /api/v1/request-transfer");
 
     match request_transfer(input).await {
@@ -122,7 +123,9 @@ pub async fn handle_get_data_address_by_consumer_pid(
     }
 }
 
-pub async fn handle_suspend_transfer(Json(input): Json<SuspendTransferRequest>) -> impl IntoResponse {
+pub async fn handle_suspend_transfer(
+    Json(input): Json<SuspendTransferRequest>,
+) -> impl IntoResponse {
     info!("POST /api/v1/suspend-transfer");
 
     match suspend_transfer(input).await {
@@ -131,7 +134,9 @@ pub async fn handle_suspend_transfer(Json(input): Json<SuspendTransferRequest>) 
     }
 }
 
-pub async fn handle_restart_transfer(Json(input): Json<RestartTransferRequest>) -> impl IntoResponse {
+pub async fn handle_restart_transfer(
+    Json(input): Json<RestartTransferRequest>,
+) -> impl IntoResponse {
     info!("POST /api/v1/restart-transfer");
 
     match restart_transfer(input).await {
@@ -140,7 +145,9 @@ pub async fn handle_restart_transfer(Json(input): Json<RestartTransferRequest>) 
     }
 }
 
-pub async fn handle_complete_transfer(Json(input): Json<CompleteTransferRequest>) -> impl IntoResponse {
+pub async fn handle_complete_transfer(
+    Json(input): Json<CompleteTransferRequest>,
+) -> impl IntoResponse {
     info!("POST /api/v1/complete-transfer");
 
     match complete_transfer(input).await {

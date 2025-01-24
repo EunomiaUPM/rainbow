@@ -36,7 +36,6 @@ use rainbow_common::protocol::transfer::{
 };
 use rainbow_common::utils::get_urn_from_string;
 use tracing::error;
-use uuid::Uuid;
 
 pub fn router() -> Router {
     Router::new()

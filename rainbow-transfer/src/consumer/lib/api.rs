@@ -306,16 +306,16 @@ pub async fn suspend_transfer(
     let transfer_suspend = TransferSuspensionMessage {
         context: TRANSFER_CONTEXT.to_string(),
         _type: TransferMessageTypes::TransferSuspensionMessage.to_string(),
-        provider_pid: callback.provider_pid.unwrap(),
+        provider_pid: callback.provider_pid.clone().unwrap(),
         consumer_pid: callback.consumer_pid,
         code: "TRANSFER_SUSPENSION_FROM_CONSUMER_CLIENT".to_string(),
         reason: vec![],
     };
 
     let url = format!(
-        "http://{}/{}",
+        "http://{}/transfers/{}/suspension",
         get_provider_url().unwrap(),
-        "transfers/suspension"
+        callback.provider_pid.unwrap()
     );
 
     let req = reqwest::Client::new().post(url).json(&transfer_suspend).send().await;
@@ -387,15 +387,15 @@ pub async fn restart_transfer(
         context: TRANSFER_CONTEXT.to_string(),
         _type: TransferMessageTypes::TransferStartMessage.to_string(),
         // provider_pid: convert_uuid_to_uri(&callback.provider_pid.unwrap()).unwrap(),
-        provider_pid: callback.provider_pid.unwrap(),
+        provider_pid: callback.provider_pid.clone().unwrap(),
         consumer_pid: callback.consumer_pid,
         data_address: None,
     };
 
     let url = format!(
-        "http://{}/{}",
+        "http://{}/transfers/{}/start",
         get_provider_url().unwrap(),
-        "transfers/start"
+        callback.provider_pid.unwrap()
     );
 
     let req = reqwest::Client::new().post(url).json(&transfer_start).send().await;
@@ -465,14 +465,14 @@ pub async fn complete_transfer(
     let transfer_complete = TransferCompletionMessage {
         context: TRANSFER_CONTEXT.to_string(),
         _type: TransferMessageTypes::TransferCompletionMessage.to_string(),
-        provider_pid: callback.provider_pid.unwrap(),
+        provider_pid: callback.provider_pid.clone().unwrap(),
         consumer_pid: callback.consumer_pid,
     };
 
     let url = format!(
-        "http://{}/{}",
+        "http://{}/transfers/{}/completion",
         get_provider_url().unwrap(),
-        "transfers/completion"
+        callback.provider_pid.unwrap()
     );
 
     let req = reqwest::Client::new().post(url).json(&transfer_complete).send().await;
