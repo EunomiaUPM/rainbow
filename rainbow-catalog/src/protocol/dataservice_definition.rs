@@ -101,3 +101,30 @@ impl TryFrom<dataservice::Model> for DataService {
         })
     }
 }
+
+impl Default for DataService {
+    fn default() -> Self {
+        DataService {
+            context: "https://w3id.org/dspace/2024/1/context.json".to_string(),
+            _type: "dcat:DataService".to_string(),
+            id: "".to_string(),
+            dcat: DataServiceDcatDeclaration {
+                theme: "".to_string(),
+                keyword: "".to_string(),
+                endpoint_description: "".to_string(),
+                endpoint_url: "".to_string(),
+            },
+            dct: DataServiceDctDeclaration {
+                conforms_to: None,
+                creator: None,
+                identifier: "".to_string(),
+                issued: chrono::Utc::now().naive_utc(),
+                modified: None,
+                title: None,
+                description: vec![],
+            },
+            odrl_offer: Value::default(),
+            extra_fields: Value::default(),
+        }
+    }
+}

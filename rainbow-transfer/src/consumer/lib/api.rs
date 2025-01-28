@@ -71,6 +71,10 @@ pub async fn create_new_callback() -> anyhow::Result<CreateCallbackResponse> {
         .create_transfer_callback(NewTransferCallback { data_address: None })
         .await?;
 
+
+    println!("\n\n\n\nTransfer Start: {:#?}\n\n\n", callback);
+
+
     let callback_url = format!("http://{}/{}", get_consumer_url()?, callback.id, );
     let response = CreateCallbackResponse {
         callback_id: get_urn_from_string(&callback.id)?,

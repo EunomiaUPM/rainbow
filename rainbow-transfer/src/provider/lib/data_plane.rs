@@ -28,7 +28,6 @@ pub async fn resolve_endpoint_from_agreement(agreement_id: Urn) -> anyhow::Resul
         Some(agreement) => agreement,
     };
 
-    // TODO if is all in modules, change function
     let data_service_id = agreement.data_service_id;
     let data_service = match dataservices_request_by_id(data_service_id).await? {
         None => bail!("data service not found"),
@@ -36,4 +35,12 @@ pub async fn resolve_endpoint_from_agreement(agreement_id: Urn) -> anyhow::Resul
     };
 
     Ok(data_service)
+}
+
+pub async fn resolve_endpoint_from_agreement_decoupled(
+    agreement_id: Urn,
+) -> anyhow::Result<DataService> {
+    // TODO if is all in modules, change function
+    todo!("resolve_endpoint_from_agreement_decoupled");
+    Ok(DataService::default())
 }

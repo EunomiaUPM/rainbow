@@ -33,15 +33,20 @@ use rainbow_common::protocol::transfer::{
     DataAddress, TransferCompletionMessage, TransferMessageTypes, TransferProcessMessage,
     TransferRequestMessage, TransferStartMessage, TransferSuspensionMessage, TRANSFER_CONTEXT,
 };
-use rainbow_common::utils::get_urn;
+use rainbow_common::utils::{get_urn, get_urn_from_string};
 use rainbow_db::transfer_consumer::entities::transfer_callback;
+use rainbow_db::transfer_provider::entities::transfer_process;
+use rainbow_transfer::consumer::lib::api::{
+    CompleteTransferRequest, RequestTransferRequest, RequestTransferResponse,
+    RestartTransferRequest, SuspendTransferRequest,
+};
 use serde_json::{json, Value};
 use std::io::BufRead;
 use tracing::{debug, error, info, trace};
 use tracing_subscriber::fmt::format;
 use tracing_test::traced_test;
-use uuid::Uuid;
 use urn::Urn;
+use uuid::Uuid;
 
 #[path = "utils.rs"]
 mod utils;
@@ -62,6 +67,7 @@ pub async fn transfer_pull_full_case() -> anyhow::Result<()> {
         callback_id,
     ) = utils::setup_test_env(pull_url).await?;
 
+
     //============================================//
     // TRANSFER REQUEST STAGE
     //============================================//
@@ -70,8 +76,8 @@ pub async fn transfer_pull_full_case() -> anyhow::Result<()> {
     let request_data = TransferRequestMessage {
         context: TRANSFER_CONTEXT.to_string(),
         _type: TransferMessageTypes::TransferRequestMessage.to_string(),
-        consumer_pid: consumer_pid.clone(),
-        agreement_id: get_urn(Some(agreement_id.parse::<Urn>()?)).to_string(),
+        consumer_pid: consumer_pid.to_string(),
+        agreement_id: agreement_id.to_string(),
         format: DctFormats { protocol: FormatProtocol::Http, action: FormatAction::Pull },
         callback_address: consumer_callback_address,
         data_address: None,
@@ -110,22 +116,25 @@ pub async fn transfer_pull_full_case() -> anyhow::Result<()> {
     // Give some time data plane to be provided
     tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
 
-    // Consumer queries wants to know where is the endpoint
-    // This info is in consumer callback database
+    // Client queries wants to know where is the endpoint
+    // This info is in transfers
     let res = client
         .get(format!(
-            "http://localhost:1235/api/v1/callbacks/{}",
-            callback_id
+            "http://localhost:1234/api/v1/transfers/{}",
+            provider_pid_
         ))
         .header("content-type", "application/json")
         .send()
         .await?;
-    let res_body = res.json::<transfer_callback::Model>().await.unwrap();
-    println!("{:#?}", res_body);
+    let res_body = res.json::<transfer_process::Model>().await?;
 
-    let callback_id = res_body.id.to_string();
-    let consumer_id = res_body.consumer_pid.to_string();
-    let endpoint = format!("http://localhost:1235/{}/data/{}", callback_id, consumer_id);
+    println!("{}", serde_json::to_string_pretty(&res_body)?);
+
+    // TODO address should go with data_plane_id and not with provider in address
+    // or totally different endpoint...
+    let data_plane_id = res_body.data_plane_id.clone().unwrap();
+    let endpoint = format!("http://localhost:1234/data/pull/{}", provider_pid_);
+    println!("1.4 Endpoint: \n{:?}", endpoint);
 
     let data_plane_res = client.get(endpoint.clone()).send().await?;
     println!("{:?}", &data_plane_res.status());
@@ -135,7 +144,7 @@ pub async fn transfer_pull_full_case() -> anyhow::Result<()> {
     //============================================//
     // END DATA TRANSFER!!!
     //============================================//
-
+    //
     //============================================//
     // TRANSFER SUSPENSION STAGE
     //============================================//
@@ -144,12 +153,12 @@ pub async fn transfer_pull_full_case() -> anyhow::Result<()> {
         context: TRANSFER_CONTEXT.to_string(),
         _type: TransferMessageTypes::TransferSuspensionMessage.to_string(),
         provider_pid: provider_pid_.clone(),
-        consumer_pid: consumer_pid.clone(),
+        consumer_pid: consumer_pid.to_string(),
         code: "A".to_string(),           // TODO DEFINE ALL THIS!!!
         reason: vec!["bla".to_string()], // TODO DEFINE REASONS
     };
     let res = client
-        .post("http://localhost:1234/transfers/suspension")
+        .post(format!("http://localhost:1234/transfers/{}/suspension", provider_pid_.clone()))
         .header("content-type", "application/json")
         .json(&suspension_data)
         .send()
@@ -157,6 +166,7 @@ pub async fn transfer_pull_full_case() -> anyhow::Result<()> {
 
     println!("{:?}", &res.status());
     // ASSERT
+
 
     //============================================//
     // BEGIN DATA TRANSFER!!! should fail
@@ -170,6 +180,7 @@ pub async fn transfer_pull_full_case() -> anyhow::Result<()> {
     // END DATA TRANSFER!!!
     //============================================//
 
+
     //============================================//
     // TRANSFER RESTART STAGE
     //============================================//
@@ -180,11 +191,11 @@ pub async fn transfer_pull_full_case() -> anyhow::Result<()> {
         context: TRANSFER_CONTEXT.to_string(),
         _type: TransferMessageTypes::TransferStartMessage.to_string(),
         provider_pid: provider_pid_.clone(),
-        consumer_pid: consumer_pid.clone(),
+        consumer_pid: consumer_pid.to_string(),
         data_address: None,
     };
     let res = client
-        .post("http://localhost:1234/transfers/start")
+        .post(format!("http://localhost:1234/transfers/{}/start", provider_pid_.clone()))
         .header("content-type", "application/json")
         .json(&restart_data)
         .send()
@@ -204,6 +215,7 @@ pub async fn transfer_pull_full_case() -> anyhow::Result<()> {
     // END DATA TRANSFER!!!
     //============================================//
 
+
     //============================================//
     // TRANSFER COMPLETION STAGE
     //============================================//
@@ -212,10 +224,10 @@ pub async fn transfer_pull_full_case() -> anyhow::Result<()> {
         context: TRANSFER_CONTEXT.to_string(),
         _type: TransferMessageTypes::TransferCompletionMessage.to_string(),
         provider_pid: provider_pid_.clone(),
-        consumer_pid: consumer_pid.clone(),
+        consumer_pid: consumer_pid.to_string(),
     };
     let res = client
-        .post("http://localhost:1234/transfers/completion")
+        .post(format!("http://localhost:1234/transfers/{}/completion", provider_pid_.clone()))
         .header("content-type", "application/json")
         .json(&complete_data)
         .send()

@@ -9,7 +9,7 @@ path = "src/lib.rs"
 
 #[[bin]]
 #name = "rainbow_db"
-#path = "src/main.rs"
+#path = "src/lib"
 
 [dependencies]
 rainbow_common = { version = "0.1.0", path = "../rainbow-common", default-features = false }

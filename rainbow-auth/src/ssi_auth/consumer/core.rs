@@ -21,6 +21,7 @@ use crate::ssi_auth::consumer::SSI_AUTH_HTTP_CLIENT;
 use anyhow::bail;
 use axum::http::StatusCode;
 use rainbow_common::config::config::{get_consumer_ssi_holder, GLOBAL_CONFIG};
+use reqwest::{Error, Response};
 use tracing::debug;
 
 pub type ConsumerSSIVCRequest = serde_json::Value;
@@ -31,8 +32,12 @@ pub async fn consumer_vc_request(input: ConsumerSSIVCRequest) -> anyhow::Result<
         .post(ssi_consumer_url)
         .json(&input)
         .send()
-        .await
-        .map_err(|_| bail!("SSI holder not available"))?;
+        .await;
+
+    let res = match res {
+        Ok(res) => res,
+        Err(e) => bail!("Error sending request: {}", e),
+    };
 
     match res.status() {
         StatusCode::CREATED => {

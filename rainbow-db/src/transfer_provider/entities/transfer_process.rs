@@ -21,8 +21,9 @@ use rainbow_common::protocol::transfer::TransferStateForDb;
 use sea_orm::entity::prelude::*;
 use sea_orm::entity::prelude::*;
 use sea_orm::sea_query::ValueType;
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel)]
+#[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Deserialize, Serialize)]
 #[sea_orm(table_name = "transfer_processes")]
 pub struct Model {
     #[sea_orm(primary_key)]

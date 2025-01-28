@@ -19,8 +19,8 @@
 
 use crate::provider::lib::api::{
     delete_agreement, get_agreement_by_id, get_all_agreements, get_all_transfers,
-    get_messages_by_id, get_messages_by_transfer, post_agreement, put_agreement, EditAgreement,
-    NewAgreement,
+    get_messages_by_id, get_messages_by_transfer, get_transfer_by_id, post_agreement,
+    put_agreement, EditAgreement, NewAgreement,
 };
 use axum::extract::Path;
 use axum::http::StatusCode;
@@ -29,11 +29,12 @@ use axum::routing::{delete, get, post, put};
 use axum::{Json, Router};
 use log::info;
 use rainbow_common::utils::get_urn_from_string;
-use uuid::Uuid;
+use serde_json::json;
 
 pub fn router() -> Router {
     Router::new()
         .route("/api/v1/transfers", get(handle_get_all_transfers))
+        .route("/api/v1/transfers/:id", get(handle_get_transfer_by_id))
         .route(
             "/api/v1/transfers/:id/messages",
             get(handle_get_messages_by_transfer),
@@ -58,6 +59,18 @@ async fn handle_get_all_transfers() -> impl IntoResponse {
         return StatusCode::INTERNAL_SERVER_ERROR.into_response();
     }
     (StatusCode::OK, Json(transfers.unwrap())).into_response()
+}
+
+async fn handle_get_transfer_by_id(Path(id): Path<String>) -> impl IntoResponse {
+    info!("GET /api/v1/transfers/{}", id.to_string());
+    let id = get_urn_from_string(&id).unwrap();
+    match get_transfer_by_id(id).await {
+        Ok(transfer) => match transfer {
+            Some(transfer) => (StatusCode::OK, Json(transfer)).into_response(),
+            None => (StatusCode::NOT_FOUND).into_response(),
+        },
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    }
 }
 
 async fn handle_get_messages_by_transfer(Path(id): Path<String>) -> impl IntoResponse {

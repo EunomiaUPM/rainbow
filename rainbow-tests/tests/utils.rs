@@ -25,12 +25,13 @@
 use clap::builder::TypedValueParser;
 use rainbow_catalog::protocol::catalog_definition::Catalog;
 use rainbow_catalog::protocol::dataservice_definition::DataService;
+use rainbow_common::utils::get_urn_from_string;
 use rainbow_db::transfer_provider::entities::agreements;
 use rainbow_transfer::consumer::lib::api::CreateCallbackResponse;
 use serde_json::json;
 use std::collections::HashMap;
 use std::process::{Child, Command};
-use uuid::Uuid;
+use urn::Urn;
 
 pub async fn setup_test_env(
     url_to_load: &str,
@@ -38,15 +39,17 @@ pub async fn setup_test_env(
     Child,
     Child,
     reqwest::Client,
-    Uuid,
+    Urn,
+    Urn,
+    Urn,
+    Urn,
     String,
-    String,
-    String,
-    String,
-    Uuid,
+    Urn,
 )> {
+    let cwd = "./../rainbow-core";
     let provider_envs = load_env_file(".env.provider.template");
     let mut provider_server = Command::new("cargo")
+        .current_dir(cwd)
         .env_clear()
         .envs(&provider_envs)
         .env("TEST", "true")
@@ -56,6 +59,7 @@ pub async fn setup_test_env(
 
     let consumer_envs = load_env_file(".env.consumer.template");
     let mut consumer_server = Command::new("cargo")
+        .current_dir(cwd)
         .env_clear()
         .envs(&consumer_envs)
         .env("TEST", "true")
@@ -79,14 +83,14 @@ pub async fn setup_test_env(
         .send()
         .await?;
     let res_body = res.json::<Catalog>().await?;
-    let catalog_id = res_body.id.parse::<Uuid>()?;
-    println!("\nCatalog Id: {:#?}\n\n", catalog_id);
+    let catalog_id = get_urn_from_string(&res_body.id)?;
+    println!("\nCatalog Id: {:#?}\n\n", catalog_id.to_string());
 
     // dataservice
     let res = client
         .post(format!(
             "http://localhost:1234/api/v1/catalogs/{}/data-services",
-            catalog_id
+            catalog_id.to_string()
         ))
         .json(&json!({
             "dcat:endpointURL": url_to_load
@@ -94,8 +98,8 @@ pub async fn setup_test_env(
         .send()
         .await?;
     let res_body = res.json::<DataService>().await?;
-    let dataservice_id = res_body.id;
-    println!("\nDataservice Id: {:#?}\n\n", dataservice_id);
+    let dataservice_id = get_urn_from_string(&res_body.id)?;
+    println!("\nDataservice Id: {:#?}\n\n", dataservice_id.to_string());
 
     // agreement
     let res = client
@@ -106,8 +110,9 @@ pub async fn setup_test_env(
         .send()
         .await?;
     let res_body = res.json::<agreements::Model>().await?;
-    let agreement_id = res_body.agreement_id;
+    let agreement_id = get_urn_from_string(&res_body.agreement_id)?;
     println!("\nAgreement Id: {:#?}\n\n", agreement_id.to_string());
+
 
     // ====================================
     //  CREATE CALLBACK IN CONSUMER
@@ -116,8 +121,8 @@ pub async fn setup_test_env(
     let res_body = res.json::<CreateCallbackResponse>().await?;
     let consumer_pid = res_body.consumer_pid.clone();
     let consumer_callback_address = res_body.callback_address.clone();
-    let callback_id = res_body.callback_id.clone().parse::<Uuid>()?;
-    println!("\nConsumer Pid: {:#?}", consumer_pid);
+    let callback_id = res_body.callback_id.clone();
+    println!("\nConsumer Pid: {:#?}", consumer_pid.to_string());
     println!(
         "Consumer Callback Address: {:#?}",
         consumer_callback_address
@@ -145,15 +150,17 @@ pub async fn setup_test_env_push(
     Child,
     Child,
     reqwest::Client,
-    Uuid,
-    Uuid,
+    Urn,
+    Urn,
+    Urn,
+    Urn,
     String,
-    String,
-    String,
-    Uuid,
+    Urn,
 )> {
+    let cwd = "./../rainbow-core";
     let provider_envs = load_env_file(".env.provider.template");
     let mut provider_server = Command::new("cargo")
+        .current_dir(cwd)
         .env_clear()
         .envs(&provider_envs)
         .env("TEST", "true")
@@ -163,6 +170,7 @@ pub async fn setup_test_env_push(
 
     let consumer_envs = load_env_file(".env.consumer.template");
     let mut consumer_server = Command::new("cargo")
+        .current_dir(cwd)
         .env_clear()
         .envs(&consumer_envs)
         .env("TEST", "true")
@@ -186,8 +194,8 @@ pub async fn setup_test_env_push(
         .send()
         .await?;
     let res_body = res.json::<Catalog>().await?;
-    let catalog_id = res_body.id.parse::<Uuid>()?;
-    println!("\nCatalog Id: {:#?}\n\n", catalog_id);
+    let catalog_id = get_urn_from_string(&res_body.id)?;
+    println!("\nCatalog Id: {:#?}\n\n", catalog_id.to_string());
 
     // dataservice
     let json_description = serde_json::to_string_pretty(&description_to_load)?;
@@ -203,8 +211,8 @@ pub async fn setup_test_env_push(
         .send()
         .await?;
     let res_body = res.json::<DataService>().await?;
-    let dataservice_id = res_body.id.parse::<Uuid>()?;
-    println!("\nDataservice Id: {:#?}\n\n", dataservice_id);
+    let dataservice_id = get_urn_from_string(&res_body.id)?;
+    println!("\nDataservice Id: {:#?}\n\n", dataservice_id.to_string());
 
     // agreement
     let res = client
@@ -215,8 +223,9 @@ pub async fn setup_test_env_push(
         .send()
         .await?;
     let res_body = res.json::<agreements::Model>().await?;
-    let agreement_id = res_body.agreement_id;
+    let agreement_id = get_urn_from_string(&res_body.agreement_id)?;
     println!("\nAgreement Id: {:#?}\n\n", agreement_id.to_string());
+
 
     // ====================================
     //  CREATE CALLBACK IN CONSUMER
@@ -225,8 +234,8 @@ pub async fn setup_test_env_push(
     let res_body = res.json::<CreateCallbackResponse>().await?;
     let consumer_pid = res_body.consumer_pid.clone();
     let consumer_callback_address = res_body.callback_address.clone();
-    let callback_id = res_body.callback_id.clone().parse::<Uuid>()?;
-    println!("\nConsumer Pid: {:#?}", consumer_pid);
+    let callback_id = res_body.callback_id;
+    println!("\nConsumer Pid: {:#?}", consumer_pid.to_string());
     println!(
         "Consumer Callback Address: {:#?}",
         consumer_callback_address

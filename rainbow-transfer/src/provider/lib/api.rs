@@ -18,10 +18,9 @@
  */
 
 use anyhow::bail;
-use rainbow_db::transfer_provider::entities::{agreements, transfer_message};
+use rainbow_db::transfer_provider::entities::{agreements, transfer_message, transfer_process};
 
 use rainbow_common::config::database::get_db_connection;
-use rainbow_common::protocol::transfer::TransferProcessMessage;
 use rainbow_common::utils::get_urn_from_string;
 use rainbow_db::transfer_provider::repo::{
     EditAgreementModel, NewAgreementModel, TRANSFER_PROVIDER_REPO,
@@ -30,13 +29,15 @@ use sea_orm::EntityTrait;
 use serde::{Deserialize, Serialize};
 use urn::Urn;
 
-pub async fn get_all_transfers() -> anyhow::Result<Vec<TransferProcessMessage>> {
-    let transfer_processes_from_db =
+pub async fn get_all_transfers() -> anyhow::Result<Vec<transfer_process::Model>> {
+    let transfer_processes =
         TRANSFER_PROVIDER_REPO.get_all_transfer_processes(None, None).await?;
-    let transfer_processes = transfer_processes_from_db
-        .iter()
-        .map(|t| TransferProcessMessage::from(t.clone()))
-        .collect();
+    Ok(transfer_processes)
+}
+
+pub async fn get_transfer_by_id(provider_pid: Urn) -> anyhow::Result<Option<transfer_process::Model>> {
+    let transfer_processes =
+        TRANSFER_PROVIDER_REPO.get_transfer_process_by_provider(provider_pid).await?;
     Ok(transfer_processes)
 }
 

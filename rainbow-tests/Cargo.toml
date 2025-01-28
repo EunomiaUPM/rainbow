@@ -1,15 +1,8 @@
 [package]
-name = "rainbow_core"
+name = "rainbow-tests"
 version = "0.1.0"
 edition = "2021"
 
-[lib]
-name = "rainbow"
-path = "src/lib.rs"
-
-[[bin]]
-name = "rainbow"
-path = "src/main.rs"
 
 [dependencies]
 rainbow_transfer = { version = "0.1.0", path = "../rainbow-transfer", default-features = false }
@@ -18,6 +11,7 @@ rainbow_catalog = { version = "0.1.0", path = "../rainbow-catalog", default-feat
 rainbow_contracts = { version = "0.1.0", path = "../rainbow-contracts", default-features = false }
 rainbow_dataplane = { version = "0.1.0", path = "../rainbow-dataplane", default-features = false }
 rainbow_db = { version = "0.1.0", path = "../rainbow-db", default-features = false }
+rainbow_core = { version = "0.1.0", path = "../rainbow-core", default-features = false }
 
 serde = { workspace = true }
 serde_json = { workspace = true }

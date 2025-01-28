@@ -1953,7 +1953,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dc33ff2d4973d518d823d61aa239014831e521c75da58e3df4840d3f47749d09"
 
 [[package]]
-name = "rainbow-core"
+name = "rainbow-tests"
 version = "0.1.0"
 dependencies = [
  "anyhow",
@@ -1968,6 +1968,7 @@ dependencies = [
  "rainbow_catalog",
  "rainbow_common",
  "rainbow_contracts",
+ "rainbow_core",
  "rainbow_dataplane",
  "rainbow_db",
  "rainbow_transfer",
@@ -2095,6 +2096,42 @@ dependencies = [
  "once_cell",
  "rainbow_common",
  "rainbow_db",
+ "reqwest",
+ "sea-orm",
+ "sea-orm-migration",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tokio",
+ "tower 0.4.13",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+ "tracing-test",
+ "ulid",
+ "urn",
+ "uuid",
+]
+
+[[package]]
+name = "rainbow_core"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "chrono",
+ "clap",
+ "dotenvy",
+ "http-body-util",
+ "jsonschema",
+ "log",
+ "once_cell",
+ "rainbow_catalog",
+ "rainbow_common",
+ "rainbow_contracts",
+ "rainbow_dataplane",
+ "rainbow_db",
+ "rainbow_transfer",
  "reqwest",
  "sea-orm",
  "sea-orm-migration",
