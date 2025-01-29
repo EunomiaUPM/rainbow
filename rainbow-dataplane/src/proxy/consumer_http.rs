@@ -100,7 +100,7 @@ async fn dataplane_pull(
             match data_plane_peer.role {
                 ConfigRoles::Consumer => match data_plane_peer.dct_formats.action {
                     FormatAction::Pull => match data_plane_peer.dct_formats.protocol {
-                        FormatProtocol::FiwareContextBroker => {
+                        FormatProtocol::NgsiLd => {
                             let res =
                                 NgsiLdDataPlane::on_pull_data(*data_plane_peer, request, extras)
                                     .await;
@@ -145,7 +145,7 @@ async fn dataplane_push(
             match data_plane_peer.role {
                 ConfigRoles::Consumer => match data_plane_peer.dct_formats.action {
                     FormatAction::Push => match data_plane_peer.dct_formats.protocol {
-                        FormatProtocol::FiwareContextBroker => {
+                        FormatProtocol::NgsiLd => {
                             let res =
                                 NgsiLdDataPlane::on_push_data(*data_plane_peer, request, extras)
                                     .await;

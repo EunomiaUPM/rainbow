@@ -24,7 +24,7 @@ use std::str::FromStr;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum FormatProtocol {
-    FiwareContextBroker,
+    NgsiLd,
     Http,
     Quic,
     Grpc,
@@ -36,7 +36,7 @@ pub enum FormatProtocol {
 impl ToString for FormatProtocol {
     fn to_string(&self) -> String {
         match self {
-            FormatProtocol::FiwareContextBroker => "Ngsi-LD".to_string(),
+            FormatProtocol::NgsiLd => "Ngsi-LD".to_string(),
             FormatProtocol::Http => "Http".to_string(),
             FormatProtocol::Quic => "Quic".to_string(),
             FormatProtocol::Grpc => "Grpc".to_string(),
@@ -52,7 +52,7 @@ impl FromStr for FormatProtocol {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "Ngsi-LD" => Ok(FormatProtocol::FiwareContextBroker),
+            "Ngsi-LD" => Ok(FormatProtocol::NgsiLd),
             "Http" => Ok(FormatProtocol::Http),
             "Quic" => Ok(FormatProtocol::Quic),
             "Grpc" => Ok(FormatProtocol::Grpc),
@@ -113,7 +113,7 @@ impl Serialize for DctFormats {
         S: Serializer,
     {
         let protocol = match self.protocol {
-            FormatProtocol::FiwareContextBroker => "ngsi-ld",
+            FormatProtocol::NgsiLd => "ngsi-ld",
             FormatProtocol::Http => "http",
             FormatProtocol::Quic => "quic",
             FormatProtocol::Grpc => "grpc",
@@ -142,8 +142,8 @@ impl<'de> Deserialize<'de> for DctFormats {
             return Err(Error::custom("Expected string in format PROTOCOL_ACTION"));
         }
         let protocol = match parts[0].to_lowercase().as_str() {
-            "ngsi-ld" => FormatProtocol::FiwareContextBroker,
-            "fiware" => FormatProtocol::FiwareContextBroker,
+            "ngsi-ld" => FormatProtocol::NgsiLd,
+            "fiware" => FormatProtocol::NgsiLd,
             "http" => FormatProtocol::Http,
             "quic" => FormatProtocol::Quic,
             "kafka" => FormatProtocol::Kafka,

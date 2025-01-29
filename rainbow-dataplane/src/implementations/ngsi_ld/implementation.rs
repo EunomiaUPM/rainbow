@@ -46,9 +46,7 @@ impl DataPlanePeerDefaultBehavior for NgsiLdDataPlane {
         };
         let local_address = format!(
             "{}{}/{}",
-            transfer_request.callback_address,
-            local_address_path,
-            transfer_request.consumer_pid
+            transfer_request.callback_address, local_address_path, transfer_request.consumer_pid
         );
         let mut fw = NgsiLdDataPlane::create_data_plane_peer()
             .with_role(ConfigRoles::Consumer)
@@ -151,13 +149,20 @@ impl DataPlanePeerDefaultBehavior for NgsiLdDataPlane {
         let description = fw.inner.attributes.get("endpointDescription").unwrap().to_string();
         let url = fw.inner.attributes.get("endpointUrl").unwrap().to_string();
         let mut description_as_json = serde_json::from_str::<Value>(description.as_str())?;
-        // let local_address = fw
-        //     .inner
-        //     .local_address
-        //     .clone()
-        //     .unwrap()
-        //     .replace(get_provider_url()?.as_str(), "host.docker.internal:1234");
-        let local_address = fw.inner.local_address.clone().unwrap();
+
+        let mut local_address = String::new();
+
+        if std::env::var("TEST").unwrap_or_else(|_| "false".to_string()) == "true" {
+            local_address = fw
+                .inner
+                .local_address
+                .clone()
+                .unwrap()
+                .replace(get_provider_url()?.as_str(), "host.docker.internal:1234");
+        } else {
+            local_address = fw.inner.local_address.clone().unwrap();
+        }
+
 
         if let Some(url) = description_as_json
             .get_mut("notification")
@@ -215,12 +220,15 @@ impl DataPlanePeerDefaultBehavior for NgsiLdDataPlane {
             &Method::GET => {
                 // Check PIP status
                 if data_plane_peer.role == ConfigRoles::Provider {
-                    let data_process = match TRANSFER_PROVIDER_REPO.get_transfer_process_by_data_plane(data_plane_peer.id).await {
+                    let data_process = match TRANSFER_PROVIDER_REPO
+                        .get_transfer_process_by_data_plane(data_plane_peer.id)
+                        .await
+                    {
                         Ok(dp) => match dp {
                             Some(dp) => dp,
-                            None => bail!("Transfer not found")
-                        }
-                        Err(_) => bail!("Not able to pull data from service")
+                            None => bail!("Transfer not found"),
+                        },
+                        Err(_) => bail!("Not able to pull data from service"),
                     };
                     let state = data_process.state;
                     if state != TransferStateForDb::STARTED {
@@ -247,12 +255,15 @@ impl DataPlanePeerDefaultBehavior for NgsiLdDataPlane {
             &Method::POST => {
                 // Check PIP status
                 if data_plane_peer.role == ConfigRoles::Provider {
-                    let data_process = match TRANSFER_PROVIDER_REPO.get_transfer_process_by_data_plane(data_plane_peer.id).await {
+                    let data_process = match TRANSFER_PROVIDER_REPO
+                        .get_transfer_process_by_data_plane(data_plane_peer.id)
+                        .await
+                    {
                         Ok(dp) => match dp {
                             Some(dp) => dp,
-                            None => bail!("Transfer not found")
-                        }
-                        Err(_) => bail!("Not able to pull data from service")
+                            None => bail!("Transfer not found"),
+                        },
+                        Err(_) => bail!("Not able to pull data from service"),
                     };
                     let state = data_process.state;
                     if state != TransferStateForDb::STARTED {

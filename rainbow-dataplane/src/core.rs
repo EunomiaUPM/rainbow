@@ -136,7 +136,7 @@ impl Default for DataPlanePeer {
             role: ConfigRoles::Consumer,
             local_address: None,
             dct_formats: DctFormats {
-                protocol: FormatProtocol::FiwareContextBroker,
+                protocol: FormatProtocol::NgsiLd,
                 action: FormatAction::Pull,
             },
             attributes: HashMap::new(),

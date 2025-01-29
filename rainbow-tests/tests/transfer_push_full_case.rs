@@ -31,15 +31,16 @@ use rainbow_common::protocol::transfer::{
     DataAddress, TransferCompletionMessage, TransferMessageTypes, TransferProcessMessage,
     TransferRequestMessage, TransferStartMessage, TransferSuspensionMessage, TRANSFER_CONTEXT,
 };
-use rainbow_common::utils::get_urn;
+use rainbow_common::utils::{get_urn, get_urn_from_string};
 use rainbow_db::transfer_consumer::entities::transfer_callback;
+use rainbow_transfer::consumer::lib::api::{RequestTransferRequest, RequestTransferResponse};
 use serde_json::{json, Value};
 use std::io::BufRead;
 use tracing::{debug, error, info, trace};
 use tracing_subscriber::fmt::format;
 use tracing_test::traced_test;
-use uuid::Uuid;
 use urn::Urn;
+use uuid::Uuid;
 
 #[path = "utils.rs"]
 mod utils;
@@ -84,12 +85,9 @@ pub async fn transfer_push_full_case() -> anyhow::Result<()> {
 
     // 1. Kickoff from client with DataAddress
     // 2. I create a TransferRequest
-    let request_data = TransferRequestMessage {
-        context: TRANSFER_CONTEXT.to_string(),
-        _type: TransferMessageTypes::TransferRequestMessage.to_string(),
-        consumer_pid: consumer_pid.clone(),
-        agreement_id: get_urn(Some(agreement_id.parse::<Urn>()?)).to_string(),
-        format: DctFormats { protocol: FormatProtocol::Http, action: FormatAction::Push },
+    let request_payload = RequestTransferRequest {
+        agreement_id: agreement_id.to_string(),
+        format: DctFormats { protocol: FormatProtocol::NgsiLd, action: FormatAction::Push },
         callback_address: consumer_callback_address,
         data_address: Some(DataAddress {
             _type: "dspace:DataAddress".to_string(),
@@ -97,22 +95,30 @@ pub async fn transfer_push_full_case() -> anyhow::Result<()> {
             endpoint: "http://localhost:1237/data-client".to_string(),
             endpoint_properties: vec![],
         }), // <- this data address should be created
+        consumer_pid: consumer_pid.to_string(),
     };
-    println!("2.\n Creating TransferRequest: \n{:?}", request_data);
 
-    // 3. Transfer request to provider
-    let res =
-        client.post("http://localhost:1234/transfers/request").json(&request_data).send().await?;
+    // 3. Transfer request to consumer
+    let res = client
+        .post("http://localhost:1235/api/v1/request-transfer")
+        .header("content-type", "application/json")
+        .json(&request_payload)
+        .send()
+        .await?;
 
-    let res_body = res.json::<TransferProcessMessage>().await?;
-    let provider_pid_ = res_body.provider_pid.clone();
-    println!("3.\n Provider says: \n{:?}", res_body);
+    let res_body = res.json::<RequestTransferResponse>().await?;
+    println!(
+        "RequestTransferResponse \n{}",
+        serde_json::to_string_pretty(&res_body)?
+    );
+    let provider_pid = get_urn_from_string(&res_body.transfer_process.unwrap().provider_pid)?;
+
 
     // 4. Transfer start is happening under the hood. check logs
 
     // 5. begin data transfer
 
-    tokio::time::sleep(tokio::time::Duration::from_secs(4)).await;
+    tokio::time::sleep(tokio::time::Duration::from_secs(14)).await;
     utils::cleanup_test_env(provider_server, consumer_server).await?;
     Ok(())
 }

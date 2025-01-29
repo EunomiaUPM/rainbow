@@ -59,7 +59,7 @@ pub async fn bootstrap_data_plane_in_consumer(
     info!("Bootstraping consumer data plane");
 
     match transfer_request.format.protocol {
-        FormatProtocol::FiwareContextBroker => {
+        FormatProtocol::NgsiLd => {
             Ok(NgsiLdDataPlane::bootstrap_data_plane_in_consumer(transfer_request).await?)
         }
         FormatProtocol::Http => {
@@ -78,7 +78,7 @@ pub async fn bootstrap_data_plane_in_provider(
     info!("Bootstraping provider data plane");
 
     match transfer_request.format.protocol {
-        FormatProtocol::FiwareContextBroker => Ok(
+        FormatProtocol::NgsiLd => Ok(
             NgsiLdDataPlane::bootstrap_data_plane_in_provider(transfer_request, provider_pid)
                 .await?,
         ),
@@ -109,7 +109,7 @@ pub async fn set_data_plane_next_hop(
     info!("Setting next hop");
 
     match data_plane_peer.dct_formats.protocol {
-        FormatProtocol::FiwareContextBroker => Ok(NgsiLdDataPlane::set_data_plane_next_hop(
+        FormatProtocol::NgsiLd => Ok(NgsiLdDataPlane::set_data_plane_next_hop(
             data_plane_peer,
             provider_pid,
             consumer_pid,
@@ -147,7 +147,7 @@ pub async fn connect_to_streaming_service(data_plane_id: Urn) -> anyhow::Result<
     }
 
     match data_plane_peer.dct_formats.protocol {
-        FormatProtocol::FiwareContextBroker => {
+        FormatProtocol::NgsiLd => {
             Ok(NgsiLdDataPlane::connect_to_streaming_service(data_plane_id).await?)
         }
         FormatProtocol::Http => Ok(()),
@@ -176,7 +176,7 @@ pub async fn disconnect_from_streaming_service(data_plane_id: Urn) -> anyhow::Re
         }
     }
     match peer.dct_formats.protocol {
-        FormatProtocol::FiwareContextBroker => {
+        FormatProtocol::NgsiLd => {
             Ok(NgsiLdDataPlane::disconnect_from_streaming_service(data_plane_id).await?)
         }
         FormatProtocol::Http => Ok(()),

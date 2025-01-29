@@ -1,7 +1,7 @@
  #!/usr/bin/bash
 
 ENTITIES_URL="http://$CONTEXT_BROKER_URL:$CONTEXT_BROKER_PORT/v2/entities"
-
+sleep 10
 curl -X POST \
   -H "Content-Type: application/json" \
   -d '{

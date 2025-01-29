@@ -85,7 +85,7 @@ async fn dataplane_pull(
             match data_plane_peer.role {
                 ConfigRoles::Provider => match data_plane_peer.dct_formats.action {
                     FormatAction::Pull => match data_plane_peer.dct_formats.protocol {
-                        FormatProtocol::FiwareContextBroker => {
+                        FormatProtocol::NgsiLd => {
                             let res =
                                 NgsiLdDataPlane::on_pull_data(*data_plane_peer, request, extras)
                                     .await;
@@ -116,7 +116,7 @@ async fn dataplane_push(
     request: Request,
 ) -> impl IntoResponse {
     let data_plane_process =
-        match DATA_PLANE_REPO.get_data_plane_process_by_id_in_url(data_id).await {
+        match DATA_PLANE_REPO.get_data_plane_process_by_id_in_url(data_id.clone()).await {
             Ok(data_plane_process) => data_plane_process,
             Err(e) => return (StatusCode::BAD_REQUEST).into_response(),
         };
@@ -128,7 +128,7 @@ async fn dataplane_push(
             match data_plane_peer.role {
                 ConfigRoles::Provider => match data_plane_peer.dct_formats.action {
                     FormatAction::Push => match data_plane_peer.dct_formats.protocol {
-                        FormatProtocol::FiwareContextBroker => {
+                        FormatProtocol::NgsiLd => {
                             let res =
                                 NgsiLdDataPlane::on_push_data(*data_plane_peer, request, extras)
                                     .await;
