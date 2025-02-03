@@ -17,7 +17,6 @@
  *
  */
 
-use axum::Json;
 use rainbow_db::catalog::repo::CatalogRepoErrors;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -25,12 +24,14 @@ use urn::Urn;
 
 #[derive(Error, Debug)]
 pub enum CatalogError {
-    #[error("{entity} with id {id:?} not found")]
+    #[error("{entity} with id {} not found", id.as_str())]
     NotFound { id: Urn, entity: String },
     #[error("Error from database: {0}")]
     DbErr(CatalogRepoErrors),
     #[error("Conversion Error: {0}")]
     ConversionError(anyhow::Error),
+    #[error("DataService {} not found for Distribution", id.as_str())]
+    DataServiceNotFoundForDistribution { id: Urn },
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -47,27 +48,5 @@ pub struct CatalogErrorOutDetail {
 impl CatalogErrorOut {
     pub fn new(code: String, title: String, message: String) -> Self {
         CatalogErrorOut { error: CatalogErrorOutDetail { code, title, message } }
-    }
-}
-
-impl Into<Json<CatalogErrorOut>> for CatalogError {
-    fn into(self) -> Json<CatalogErrorOut> {
-        match self {
-            CatalogError::NotFound { id, entity } => Json(CatalogErrorOut::new(
-                "404".to_string(),
-                "NOT_FOUND".to_string(),
-                "Not Found".to_string(),
-            )),
-            CatalogError::DbErr(e) => Json(CatalogErrorOut::new(
-                "500".to_string(),
-                "INTERNAL_SERVER_ERROR".to_string(),
-                e.to_string(),
-            )),
-            CatalogError::ConversionError(e) => Json(CatalogErrorOut::new(
-                "500".to_string(),
-                "INTERNAL_SERVER_ERROR".to_string(),
-                e.to_string(),
-            )),
-        }
     }
 }

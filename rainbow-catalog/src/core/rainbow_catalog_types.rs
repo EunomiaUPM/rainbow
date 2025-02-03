@@ -18,7 +18,10 @@
  */
 
 use rainbow_common::utils::get_urn_from_string;
-use rainbow_db::catalog::repo::{EditCatalogModel, EditDataServiceModel, EditDatasetModel, EditDistributionModel, NewCatalogModel, NewDataServiceModel, NewDatasetModel, NewDistributionModel};
+use rainbow_db::catalog::repo::{
+    EditCatalogModel, EditDataServiceModel, EditDatasetModel, EditDistributionModel,
+    NewCatalogModel, NewDataServiceModel, NewDatasetModel, NewDistributionModel,
+};
 use serde::{Deserialize, Serialize};
 use urn::Urn;
 
@@ -170,7 +173,6 @@ impl Into<EditDataServiceModel> for EditDataServiceRequest {
     }
 }
 
-
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct NewDistributionRequest {
     #[serde(rename = "@id")]
@@ -185,9 +187,19 @@ pub struct NewDistributionRequest {
 
 impl Into<NewDistributionModel> for NewDistributionRequest {
     fn into(self) -> NewDistributionModel {
-        let id = get_urn_from_string(&self.id.unwrap());
+        let id = self.id.as_ref().map(|x| get_urn_from_string(&x).unwrap());
         NewDistributionModel {
-            id: Option::from(id.unwrap()),
+            id,
+            dct_title: self.dct_title,
+            dct_description: None,
+            dcat_access_service: self.dcat_access_service.to_string(),
+        }
+    }
+}
+
+impl Into<EditDistributionModel> for NewDistributionRequest {
+    fn into(self) -> EditDistributionModel {
+        EditDistributionModel {
             dct_title: self.dct_title,
             dct_description: None,
             dcat_access_service: Option::from(self.dcat_access_service.to_string()),
@@ -195,7 +207,7 @@ impl Into<NewDistributionModel> for NewDistributionRequest {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct EditDistributionRequest {
     #[serde(rename = "dct:title")]
     #[serde(skip_serializing_if = "Option::is_none")]

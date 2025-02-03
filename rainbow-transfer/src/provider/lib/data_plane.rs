@@ -19,6 +19,7 @@
 use anyhow::bail;
 use rainbow_catalog::core::idsa_api::dataservices_request_by_id;
 use rainbow_catalog::protocol::dataservice_definition::DataService;
+use rainbow_common::utils::get_urn_from_string;
 use rainbow_db::transfer_provider::repo::TRANSFER_PROVIDER_REPO;
 use urn::Urn;
 
@@ -29,6 +30,7 @@ pub async fn resolve_endpoint_from_agreement(agreement_id: Urn) -> anyhow::Resul
     };
 
     let data_service_id = agreement.data_service_id;
+    let data_service_id = get_urn_from_string(&data_service_id)?;
     let data_service = match dataservices_request_by_id(data_service_id).await? {
         None => bail!("data service not found"),
         Some(data_service) => data_service,

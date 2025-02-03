@@ -22,7 +22,9 @@ use crate::core::rainbow_catalog_api::{
     catalog_request_by_id, delete_catalog, delete_dataservice, delete_dataset, delete_distribution,
     get_dataservice_by_id, get_dataset_by_id, get_distribution_by_id,
     get_distributions_by_dataset_id, post_catalog, post_dataservice, post_dataset,
-    post_distribution, put_catalog, put_dataservice, put_dataset, put_distribution};
+    post_distribution, put_catalog, put_dataservice, put_dataset, put_distribution,
+};
+use crate::core::rainbow_catalog_err::CatalogError;
 use crate::core::rainbow_catalog_types::{
     EditDataServiceRequest, EditDistributionRequest, NewCatalogRequest, NewDataServiceRequest,
     NewDatasetRequest, NewDistributionRequest,
@@ -102,7 +104,10 @@ async fn handle_get_catalogs() -> impl IntoResponse {
 
     match catalog_request().await {
         Ok(c) => (StatusCode::OK, Json(c)).into_response(),
-        Err(err) => (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+        Err(err) => match err.downcast::<CatalogError>() {
+            Ok(e) => e.into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        },
     }
 }
 
@@ -114,7 +119,10 @@ async fn handle_get_catalogs_by_id(Path(id): Path<String>) -> impl IntoResponse 
     };
     match catalog_request_by_id(catalog_id).await {
         Ok(c) => (StatusCode::OK, Json(c)).into_response(),
-        Err(err) => (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+        Err(err) => match err.downcast::<CatalogError>() {
+            Ok(e) => e.into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        },
     }
 }
 
@@ -122,10 +130,12 @@ async fn handle_post_catalog(Json(input): Json<NewCatalogRequest>) -> impl IntoR
     info!("POST /api/v1/catalogs");
     match post_catalog(input).await {
         Ok(c) => (StatusCode::CREATED, Json(c)).into_response(),
-        Err(err) => (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+        Err(err) => match err.downcast::<CatalogError>() {
+            Ok(e) => e.into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        },
     }
 }
-
 
 async fn handle_put_catalog(
     Path(id): Path<String>,
@@ -138,7 +148,10 @@ async fn handle_put_catalog(
     };
     match put_catalog(catalog_id, input).await {
         Ok(c) => (StatusCode::ACCEPTED, Json(c)).into_response(),
-        Err(err) => (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+        Err(err) => match err.downcast::<CatalogError>() {
+            Ok(e) => e.into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        },
     }
 }
 
@@ -150,7 +163,10 @@ async fn handle_delete_catalog(Path(id): Path<String>) -> impl IntoResponse {
     };
     match delete_catalog(catalog_id).await {
         Ok(_) => (StatusCode::ACCEPTED).into_response(),
-        Err(err) => (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+        Err(err) => match err.downcast::<CatalogError>() {
+            Ok(e) => e.into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        },
     }
 }
 
@@ -162,7 +178,10 @@ async fn handle_get_dataset_by_id(Path(id): Path<String>) -> impl IntoResponse {
     };
     match get_dataset_by_id(dataset_id).await {
         Ok(d) => (StatusCode::OK, Json(d)).into_response(),
-        Err(err) => (StatusCode::NOT_FOUND, err.to_string()).into_response(),
+        Err(err) => match err.downcast::<CatalogError>() {
+            Ok(e) => e.into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        },
     }
 }
 
@@ -177,7 +196,10 @@ async fn handle_post_dataset(
     };
     match post_dataset(dataset_id, input).await {
         Ok(d) => (StatusCode::CREATED, Json(d)).into_response(),
-        Err(err) => (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+        Err(err) => match err.downcast::<CatalogError>() {
+            Ok(e) => e.into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        },
     }
 }
 
@@ -196,7 +218,10 @@ async fn handle_put_dataset(
     };
     match put_dataset(catalog_id, dataset_id, input).await {
         Ok(d) => (StatusCode::ACCEPTED, Json(d)).into_response(),
-        Err(err) => (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+        Err(err) => match err.downcast::<CatalogError>() {
+            Ok(e) => e.into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        },
     }
 }
 
@@ -212,7 +237,10 @@ async fn handle_delete_dataset(Path((c_id, d_id)): Path<(String, String)>) -> im
     };
     match delete_dataset(catalog_id, dataset_id).await {
         Ok(d) => (StatusCode::ACCEPTED).into_response(),
-        Err(err) => (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+        Err(err) => match err.downcast::<CatalogError>() {
+            Ok(e) => e.into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        },
     }
 }
 
@@ -224,7 +252,10 @@ async fn handle_get_distributions_by_id(Path(id): Path<String>) -> impl IntoResp
     };
     match get_distribution_by_id(distribution_id).await {
         Ok(d) => (StatusCode::OK, Json(d)).into_response(),
-        Err(err) => (StatusCode::NOT_FOUND, err.to_string()).into_response(),
+        Err(err) => match err.downcast::<CatalogError>() {
+            Ok(e) => e.into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        },
     }
 }
 
@@ -236,7 +267,10 @@ async fn handle_get_distributions_by_dataset_id(Path(id): Path<String>) -> impl 
     };
     match get_distributions_by_dataset_id(dataset_id).await {
         Ok(d) => (StatusCode::OK, Json(d)).into_response(),
-        Err(err) => (StatusCode::NOT_FOUND, err.to_string()).into_response(),
+        Err(err) => match err.downcast::<CatalogError>() {
+            Ok(e) => e.into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        },
     }
 }
 
@@ -255,7 +289,10 @@ async fn handle_post_distribution(
     };
     match post_distribution(catalog_id, distribution_id, input).await {
         Ok(d) => (StatusCode::CREATED, Json(d)).into_response(),
-        Err(err) => (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+        Err(err) => match err.downcast::<CatalogError>() {
+            Ok(e) => e.into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        },
     }
 }
 
@@ -281,7 +318,10 @@ async fn handle_put_distribution(
     };
     match put_distribution(catalog_id, dataset_id, distribution_id, input).await {
         Ok(d) => (StatusCode::ACCEPTED, Json(d)).into_response(),
-        Err(err) => (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+        Err(err) => match err.downcast::<CatalogError>() {
+            Ok(e) => e.into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        },
     }
 }
 
@@ -306,7 +346,10 @@ async fn handle_delete_distribution(
     };
     match delete_distribution(catalog_id, dataset_id, distribution_id).await {
         Ok(d) => (StatusCode::ACCEPTED).into_response(),
-        Err(err) => (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+        Err(err) => match err.downcast::<CatalogError>() {
+            Ok(e) => e.into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        },
     }
 }
 
@@ -318,7 +361,10 @@ async fn handle_get_dataservice_by_id(Path(id): Path<String>) -> impl IntoRespon
     };
     match get_dataservice_by_id(dataservice_id).await {
         Ok(d) => (StatusCode::OK, Json(d)).into_response(),
-        Err(err) => (StatusCode::NOT_FOUND, err.to_string()).into_response(),
+        Err(err) => match err.downcast::<CatalogError>() {
+            Ok(e) => e.into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        },
     }
 }
 
@@ -333,7 +379,10 @@ async fn handle_post_dataservice(
     };
     match post_dataservice(dataservice_id, input).await {
         Ok(d) => (StatusCode::CREATED, Json(d)).into_response(),
-        Err(err) => (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+        Err(err) => match err.downcast::<CatalogError>() {
+            Ok(e) => e.into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        },
     }
 }
 
@@ -352,7 +401,10 @@ async fn handle_put_dataservice(
     };
     match put_dataservice(catalog_id, dataservice_id, input).await {
         Ok(d) => (StatusCode::ACCEPTED, Json(d)).into_response(),
-        Err(err) => (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+        Err(err) => match err.downcast::<CatalogError>() {
+            Ok(e) => e.into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        },
     }
 }
 
@@ -370,6 +422,9 @@ async fn handle_delete_dataservice(
     };
     match delete_dataservice(catalog_id, dataservice_id).await {
         Ok(d) => (StatusCode::ACCEPTED).into_response(),
-        Err(err) => (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+        Err(err) => match err.downcast::<CatalogError>() {
+            Ok(e) => e.into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        },
     }
 }

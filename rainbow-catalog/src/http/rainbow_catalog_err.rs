@@ -17,7 +17,7 @@
  *
  */
 
-use crate::core::rainbow_catalog_err::{CatalogError, CatalogErrorOut, CatalogErrorOutDetail};
+use crate::core::rainbow_catalog_err::{CatalogError, CatalogErrorOut};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
@@ -25,33 +25,37 @@ use axum::Json;
 impl IntoResponse for CatalogError {
     fn into_response(self) -> Response {
         match self {
-            CatalogError::NotFound { id, entity } => (
+            e @ CatalogError::NotFound { .. } => (
                 StatusCode::NOT_FOUND,
                 Json(CatalogErrorOut::new(
                     "404".to_string(),
                     "NOT_FOUND".to_string(),
-                    "Not Found".to_string(),
+                    e.to_string(),
                 )),
             ),
-            CatalogError::DbErr(e) => (
+            e @ CatalogError::DbErr(..) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(CatalogErrorOut {
-                    error: CatalogErrorOutDetail {
-                        code: "500".to_string(),
-                        title: "INTERNAL_SERVER_ERROR".to_string(),
-                        message: e.to_string(),
-                    },
-                }),
+                Json(CatalogErrorOut::new(
+                    "500".to_string(),
+                    "INTERNAL_SERVER_ERROR".to_string(),
+                    e.to_string(),
+                )),
             ),
-            CatalogError::ConversionError(e) => (
+            e @ CatalogError::ConversionError(..) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(CatalogErrorOut {
-                    error: CatalogErrorOutDetail {
-                        code: "500".to_string(),
-                        title: "INTERNAL_SERVER_ERROR".to_string(),
-                        message: e.to_string(),
-                    },
-                }),
+                Json(CatalogErrorOut::new(
+                    "500".to_string(),
+                    "INTERNAL_SERVER_ERROR".to_string(),
+                    e.to_string(),
+                )),
+            ),
+            e @ CatalogError::DataServiceNotFoundForDistribution { .. } => (
+                StatusCode::BAD_REQUEST,
+                Json(CatalogErrorOut::new(
+                    "400".to_string(),
+                    "BAD_REQUEST".to_string(),
+                    e.to_string(),
+                )),
             ),
         }
             .into_response()

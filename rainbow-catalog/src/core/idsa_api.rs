@@ -22,13 +22,16 @@ use rainbow_common::config::database::get_db_connection;
 use rainbow_db::catalog::entities::{catalog, dataset, distribution};
 use rainbow_db::catalog::entities::{dataservice, odrl_offer};
 
+use crate::core::rainbow_catalog_err::CatalogError;
 use crate::protocol::catalog_definition::Catalog;
 use crate::protocol::dataservice_definition::DataService;
 use crate::protocol::dataset_definition::Dataset;
 use crate::protocol::distribution_definition::Distribution;
+use rainbow_common::utils::get_urn_from_string;
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, QuerySelect};
 use serde::{Deserialize, Serialize};
 use serde_json::{to_value, Value};
+use urn::Urn;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CatalogRequestMessage {
@@ -40,7 +43,7 @@ pub struct CatalogRequestMessage {
     pub filter: Option<Value>, // TODO Define further
 }
 
-pub async fn dataset_request(dataset_id: String) -> anyhow::Result<Dataset> {
+pub async fn dataset_request(dataset_id: Urn) -> anyhow::Result<Dataset> {
     let db_connection = get_db_connection().await;
     let datasets_out: Vec<Dataset> = vec![];
     let datasets_from_db = dataset::Entity::find()
@@ -57,20 +60,22 @@ pub async fn dataset_request(dataset_id: String) -> anyhow::Result<Dataset> {
                 .all(db_connection)
                 .await?;
             dataset.odrl_offer = to_value(dataset_odrl_from_db)?;
-            dataset.distribution =
-                distributions_request_by_dataset(dataset.id.parse()?, dataset_from_db.catalog_id)
-                    .await?;
+            dataset.distribution = distributions_request_by_dataset(
+                dataset.id.parse()?,
+                dataset_from_db.catalog_id.parse()?,
+            )
+                .await?;
             Ok(dataset)
         }
         None => bail!("dataset not found"),
     }
 }
 
-pub async fn dataset_request_by_catalog(catalog_id: String) -> anyhow::Result<Vec<Dataset>> {
+pub async fn dataset_request_by_catalog(catalog_id: Urn) -> anyhow::Result<Vec<Dataset>> {
     let db_connection = get_db_connection().await;
     let mut datasets_out: Vec<Dataset> = vec![];
     let datasets_from_db = dataset::Entity::find()
-        .filter(dataset::Column::CatalogId.eq(catalog_id.clone()))
+        .filter(dataset::Column::CatalogId.eq(catalog_id.clone().to_string()))
         .all(db_connection)
         .await?;
 
@@ -91,11 +96,11 @@ pub async fn dataset_request_by_catalog(catalog_id: String) -> anyhow::Result<Ve
     Ok(datasets_out)
 }
 
-pub async fn dataservices_request_by_catalog(catalog_id: String) -> anyhow::Result<Vec<DataService>> {
+pub async fn dataservices_request_by_catalog(catalog_id: Urn) -> anyhow::Result<Vec<DataService>> {
     let db_connection = get_db_connection().await;
     let mut dataservices_out: Vec<DataService> = vec![];
     let dataservices_from_db = dataservice::Entity::find()
-        .filter(dataservice::Column::CatalogId.eq(catalog_id))
+        .filter(dataservice::Column::CatalogId.eq(catalog_id.to_string()))
         .all(db_connection)
         .await?;
 
@@ -115,27 +120,28 @@ pub async fn dataservices_request_by_catalog(catalog_id: String) -> anyhow::Resu
 }
 
 pub async fn dataservices_request_by_id(
-    dataservice_id: String,
+    dataservice_id: Urn,
 ) -> anyhow::Result<Option<DataService>> {
     let db_connection = get_db_connection().await;
-    let dataservice_from_db =
-        dataservice::Entity::find_by_id(dataservice_id).one(db_connection).await?;
+    let dataservice_from_db = dataservice::Entity::find_by_id(dataservice_id.clone().to_string())
+        .one(db_connection)
+        .await?;
 
     let dataservice = match dataservice_from_db {
         Some(d) => Some(DataService::try_from(d)?),
-        None => None,
+        None => bail!(CatalogError::DataServiceNotFoundForDistribution { id: dataservice_id }),
     };
     Ok(dataservice)
 }
 
 pub async fn distributions_request_by_dataset(
-    dataset_id: String,
-    catalog_id: String,
+    dataset_id: Urn,
+    catalog_id: Urn,
 ) -> anyhow::Result<Vec<Distribution>> {
     let db_connection = get_db_connection().await;
     let mut distributions_out: Vec<Distribution> = vec![];
     let distributions_from_db = distribution::Entity::find()
-        .filter(distribution::Column::DatasetId.eq(dataset_id))
+        .filter(distribution::Column::DatasetId.eq(dataset_id.to_string()))
         .all(db_connection)
         .await?;
 
@@ -149,8 +155,8 @@ pub async fn distributions_request_by_dataset(
             .await?;
         distribution.odrl_offer = to_value(distribution_odrl_from_db)?;
         // dataservice
-        distribution.dcat.access_service =
-            dataservices_request_by_id(distribution_entity.dcat_access_service.unwrap()).await?;
+        let dcat_access_service = get_urn_from_string(&distribution_entity.dcat_access_service)?;
+        distribution.dcat.access_service = dataservices_request_by_id(dcat_access_service).await?;
         distributions_out.push(distribution);
     }
 

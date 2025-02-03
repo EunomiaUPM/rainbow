@@ -110,8 +110,15 @@ pub async fn get_dataset_by_id(dataset_id: Urn) -> anyhow::Result<Dataset> {
 }
 
 pub async fn post_dataset(catalog_id: Urn, input: NewDatasetRequest) -> anyhow::Result<Dataset> {
-    let dataset_entity =
-        CATALOG_REPO.create_dataset(catalog_id, input.into()).await.map_err(CatalogError::DbErr)?;
+    let dataset_entity = CATALOG_REPO
+        .create_dataset(catalog_id.clone(), input.into())
+        .await
+        .map_err(|err| match err {
+            rainbow_db::catalog::repo::CatalogRepoErrors::CatalogNotFound => {
+                CatalogError::NotFound { id: catalog_id, entity: EntityTypes::Catalog.to_string() }
+            }
+            _ => CatalogError::DbErr(err),
+        })?;
     let dataset = Dataset::try_from(dataset_entity).map_err(CatalogError::ConversionError)?;
     Ok(dataset)
 }
@@ -122,15 +129,34 @@ pub async fn put_dataset(
     input: NewDatasetRequest,
 ) -> anyhow::Result<Dataset> {
     let dataset_entity = CATALOG_REPO
-        .put_datasets_by_id(dataset_id, input.into())
+        .put_datasets_by_id(catalog_id.clone(), dataset_id.clone(), input.into())
         .await
-        .map_err(CatalogError::DbErr)?;
+        .map_err(|err| match err {
+            rainbow_db::catalog::repo::CatalogRepoErrors::CatalogNotFound => {
+                CatalogError::NotFound { id: catalog_id, entity: EntityTypes::Catalog.to_string() }
+            }
+            rainbow_db::catalog::repo::CatalogRepoErrors::DatasetNotFound => {
+                CatalogError::NotFound { id: dataset_id, entity: EntityTypes::Dataset.to_string() }
+            }
+            _ => CatalogError::DbErr(err),
+        })?;
     let dataset = Dataset::try_from(dataset_entity).map_err(CatalogError::ConversionError)?;
     Ok(dataset)
 }
 
 pub async fn delete_dataset(catalog_id: Urn, dataset_id: Urn) -> anyhow::Result<()> {
-    let _ = CATALOG_REPO.delete_dataset_by_id(dataset_id).await.map_err(CatalogError::DbErr)?;
+    let _ = CATALOG_REPO
+        .delete_dataset_by_id(catalog_id.clone(), dataset_id.clone())
+        .await
+        .map_err(|err| match err {
+            rainbow_db::catalog::repo::CatalogRepoErrors::CatalogNotFound => {
+                CatalogError::NotFound { id: catalog_id, entity: EntityTypes::Catalog.to_string() }
+            }
+            rainbow_db::catalog::repo::CatalogRepoErrors::DatasetNotFound => {
+                CatalogError::NotFound { id: dataset_id, entity: EntityTypes::Dataset.to_string() }
+            }
+            _ => CatalogError::DbErr(err),
+        })?;
     Ok(())
 }
 
@@ -160,9 +186,14 @@ pub async fn post_dataservice(
     input: NewDataServiceRequest,
 ) -> anyhow::Result<DataService> {
     let dataservice_entity = CATALOG_REPO
-        .create_data_service(catalog_id, input.into())
+        .create_data_service(catalog_id.clone(), input.into())
         .await
-        .map_err(CatalogError::DbErr)?;
+        .map_err(|err| match err {
+            rainbow_db::catalog::repo::CatalogRepoErrors::CatalogNotFound => {
+                CatalogError::NotFound { id: catalog_id, entity: EntityTypes::Catalog.to_string() }
+            }
+            _ => CatalogError::DbErr(err),
+        })?;
     let dataservice =
         DataService::try_from(dataservice_entity).map_err(CatalogError::ConversionError)?;
     Ok(dataservice)
@@ -174,9 +205,14 @@ pub async fn put_dataservice(
     input: EditDataServiceRequest,
 ) -> anyhow::Result<DataService> {
     let dataservice_entity = CATALOG_REPO
-        .put_data_service_by_id(dataservice_id, input.into())
+        .put_data_service_by_id(catalog_id.clone(), dataservice_id, input.into())
         .await
-        .map_err(CatalogError::DbErr)?;
+        .map_err(|err| match err {
+            rainbow_db::catalog::repo::CatalogRepoErrors::DataServiceNotFound => {
+                CatalogError::NotFound { id: catalog_id, entity: EntityTypes::DataService.to_string() }
+            }
+            _ => CatalogError::DbErr(err),
+        })?;
     let dataservice =
         DataService::try_from(dataservice_entity).map_err(CatalogError::ConversionError)?;
     Ok(dataservice)
@@ -184,7 +220,17 @@ pub async fn put_dataservice(
 
 pub async fn delete_dataservice(catalog_id: Urn, dataset_id: Urn) -> anyhow::Result<()> {
     let _ =
-        CATALOG_REPO.delete_data_service_by_id(dataset_id).await.map_err(CatalogError::DbErr)?;
+        CATALOG_REPO.delete_data_service_by_id(catalog_id.clone(), dataset_id).await.map_err(|err| {
+            match err {
+                rainbow_db::catalog::repo::CatalogRepoErrors::DataServiceNotFound => {
+                    CatalogError::NotFound {
+                        id: catalog_id,
+                        entity: EntityTypes::DataService.to_string(),
+                    }
+                }
+                _ => CatalogError::DbErr(err),
+            }
+        })?;
     Ok(())
 }
 
@@ -231,13 +277,21 @@ pub async fn post_distribution(
     input: NewDistributionRequest,
 ) -> anyhow::Result<Distribution> {
     let distribution_entity = CATALOG_REPO
-        .create_distribution(dataset_id, input.clone().into())
+        .create_distribution(catalog_id.clone(), dataset_id.clone(), input.clone().into())
         .await
-        .map_err(CatalogError::DbErr)?;
+        .map_err(|err| match err {
+            rainbow_db::catalog::repo::CatalogRepoErrors::CatalogNotFound => {
+                CatalogError::NotFound { id: catalog_id, entity: EntityTypes::Catalog.to_string() }
+            }
+            rainbow_db::catalog::repo::CatalogRepoErrors::DatasetNotFound => {
+                CatalogError::NotFound { id: dataset_id, entity: EntityTypes::Dataset.to_string() }
+            }
+            _ => CatalogError::DbErr(err),
+        })?;
     let mut distribution =
         Distribution::try_from(distribution_entity).map_err(CatalogError::ConversionError)?;
     distribution.dcat.access_service =
-        dataservices_request_by_id(input.dcat_access_service.to_string()).await?;
+        dataservices_request_by_id(input.dcat_access_service).await?;
     Ok(distribution)
 }
 
@@ -248,13 +302,40 @@ pub async fn put_distribution(
     input: EditDistributionRequest,
 ) -> anyhow::Result<Distribution> {
     let distribution_entity = CATALOG_REPO
-        .put_distribution_by_id(distribution_id, input.into())
+        .put_distribution_by_id(
+            catalog_id.clone(),
+            dataservice_id.clone(),
+            distribution_id.clone(),
+            input.clone().into(),
+        )
         .await
-        .map_err(CatalogError::DbErr)?;
+        .map_err(|err| match err {
+            rainbow_db::catalog::repo::CatalogRepoErrors::CatalogNotFound => {
+                CatalogError::NotFound { id: catalog_id, entity: EntityTypes::Catalog.to_string() }
+            }
+            rainbow_db::catalog::repo::CatalogRepoErrors::DatasetNotFound => {
+                CatalogError::NotFound {
+                    id: dataservice_id,
+                    entity: EntityTypes::Dataset.to_string(),
+                }
+            }
+            rainbow_db::catalog::repo::CatalogRepoErrors::DistributionNotFound => {
+                CatalogError::NotFound {
+                    id: distribution_id,
+                    entity: EntityTypes::Distribution.to_string(),
+                }
+            }
+            _ => CatalogError::DbErr(err),
+        })?;
     let mut distribution = Distribution::try_from(distribution_entity.clone())
         .map_err(CatalogError::ConversionError)?;
-    distribution.dcat.access_service =
-        dataservices_request_by_id(distribution_entity.dcat_access_service.unwrap()).await?;
+
+    if let Some(dcat_access_service) = input.dcat_access_service {
+        let dcat_access_service = get_urn_from_string(&dcat_access_service)?;
+        distribution.dcat.access_service =
+            dataservices_request_by_id(dcat_access_service).await?;
+    }
+
     Ok(distribution)
 }
 
@@ -264,8 +345,29 @@ pub async fn delete_distribution(
     distribution_id: Urn,
 ) -> anyhow::Result<()> {
     let _ = CATALOG_REPO
-        .delete_distribution_by_id(distribution_id)
+        .delete_distribution_by_id(
+            catalog_id.clone(),
+            dataservice_id.clone(),
+            distribution_id.clone(),
+        )
         .await
-        .map_err(CatalogError::DbErr)?;
+        .map_err(|err| match err {
+            rainbow_db::catalog::repo::CatalogRepoErrors::CatalogNotFound => {
+                CatalogError::NotFound { id: catalog_id, entity: EntityTypes::Catalog.to_string() }
+            }
+            rainbow_db::catalog::repo::CatalogRepoErrors::DatasetNotFound => {
+                CatalogError::NotFound {
+                    id: dataservice_id,
+                    entity: EntityTypes::Dataset.to_string(),
+                }
+            }
+            rainbow_db::catalog::repo::CatalogRepoErrors::DistributionNotFound => {
+                CatalogError::NotFound {
+                    id: distribution_id,
+                    entity: EntityTypes::Distribution.to_string(),
+                }
+            }
+            _ => CatalogError::DbErr(err),
+        })?;
     Ok(())
 }

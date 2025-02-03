@@ -37,7 +37,10 @@ impl CatalogRepo for CatalogRepoForSql {
         }
     }
 
-    async fn get_catalog_by_id(&self, catalog_id: Urn) -> anyhow::Result<Option<catalog::Model>, CatalogRepoErrors> {
+    async fn get_catalog_by_id(
+        &self,
+        catalog_id: Urn,
+    ) -> anyhow::Result<Option<catalog::Model>, CatalogRepoErrors> {
         let db_connection = get_db_connection().await;
         let catalog_id = catalog_id.to_string();
         let catalog = catalog::Entity::find_by_id(catalog_id).one(db_connection).await;
@@ -58,9 +61,9 @@ impl CatalogRepo for CatalogRepoForSql {
         let old_model = match old_model {
             Ok(old_model) => match old_model {
                 Some(old_model) => old_model,
-                None => { return Err(CatalogRepoErrors::CatalogNotFound) }
+                None => return Err(CatalogRepoErrors::CatalogNotFound),
             },
-            Err(err) => { return Err(CatalogRepoErrors::ErrorFetchingCatalog(err.into())) }
+            Err(err) => return Err(CatalogRepoErrors::ErrorFetchingCatalog(err.into())),
         };
 
         let mut old_active_model: catalog::ActiveModel = old_model.into();
@@ -143,7 +146,10 @@ impl DatasetRepo for CatalogRepoForSql {
         }
     }
 
-    async fn get_datasets_by_id(&self, dataset_id: Urn) -> anyhow::Result<Option<dataset::Model>, CatalogRepoErrors> {
+    async fn get_datasets_by_id(
+        &self,
+        dataset_id: Urn,
+    ) -> anyhow::Result<Option<dataset::Model>, CatalogRepoErrors> {
         let db_connection = get_db_connection().await;
         let dataset_id = dataset_id.to_string();
         let dataset = dataset::Entity::find_by_id(dataset_id).one(db_connection).await;
@@ -155,18 +161,29 @@ impl DatasetRepo for CatalogRepoForSql {
 
     async fn put_datasets_by_id(
         &self,
+        catalog_id: Urn,
         dataset_id: Urn,
         edit_dataset_model: EditDatasetModel,
     ) -> anyhow::Result<dataset::Model, CatalogRepoErrors> {
         let db_connection = get_db_connection().await;
         let dataset_id = dataset_id.to_string();
+        let catalog_id = catalog_id.to_string();
+
+        let catalog = catalog::Entity::find_by_id(catalog_id.clone())
+            .one(db_connection)
+            .await
+            .map_err(|e| CatalogRepoErrors::ErrorFetchingCatalog(e.into()))?;
+        if catalog.is_none() {
+            return Err(CatalogRepoErrors::CatalogNotFound);
+        }
+
         let old_model = dataset::Entity::find_by_id(dataset_id).one(db_connection).await;
         let old_model = match old_model {
             Ok(old_model) => match old_model {
                 Some(old_model) => old_model,
-                None => { return Err(CatalogRepoErrors::DatasetNotFound) }
+                None => return Err(CatalogRepoErrors::DatasetNotFound),
             },
-            Err(err) => { return Err(CatalogRepoErrors::ErrorFetchingDataset(err.into())) }
+            Err(err) => return Err(CatalogRepoErrors::ErrorFetchingDataset(err.into())),
         };
 
         let mut old_active_model: dataset::ActiveModel = old_model.into();
@@ -198,6 +215,15 @@ impl DatasetRepo for CatalogRepoForSql {
     ) -> anyhow::Result<dataset::Model, CatalogRepoErrors> {
         let db_connection = get_db_connection().await;
         let catalog_id = catalog_id.to_string();
+
+        let catalog = catalog::Entity::find_by_id(catalog_id.clone())
+            .one(db_connection)
+            .await
+            .map_err(|e| CatalogRepoErrors::ErrorFetchingCatalog(e.into()))?;
+        if catalog.is_none() {
+            return Err(CatalogRepoErrors::CatalogNotFound);
+        }
+
         let urn = new_dataset_model.id.unwrap_or_else(|| get_urn(None));
         let model = dataset::ActiveModel {
             id: ActiveValue::Set(urn.to_string()),
@@ -217,9 +243,23 @@ impl DatasetRepo for CatalogRepoForSql {
         }
     }
 
-    async fn delete_dataset_by_id(&self, dataset_id: Urn) -> anyhow::Result<(), CatalogRepoErrors> {
+    async fn delete_dataset_by_id(
+        &self,
+        catalog_id: Urn,
+        dataset_id: Urn,
+    ) -> anyhow::Result<(), CatalogRepoErrors> {
         let db_connection = get_db_connection().await;
         let dataset_id = dataset_id.to_string();
+        let catalog_id = catalog_id.to_string();
+
+        let catalog = catalog::Entity::find_by_id(catalog_id.clone())
+            .one(db_connection)
+            .await
+            .map_err(|e| CatalogRepoErrors::ErrorFetchingCatalog(e.into()))?;
+        if catalog.is_none() {
+            return Err(CatalogRepoErrors::CatalogNotFound);
+        }
+
         let dataset = dataset::Entity::delete_by_id(dataset_id).exec(db_connection).await;
         match dataset {
             Ok(delete_result) => match delete_result.rows_affected {
@@ -256,8 +296,7 @@ impl DistributionRepo for CatalogRepoForSql {
     ) -> anyhow::Result<Vec<distribution::Model>, CatalogRepoErrors> {
         let db_connection = get_db_connection().await;
         let dataset_id = dataset_id.to_string();
-        let dataset =
-            dataset::Entity::find_by_id(dataset_id).one(db_connection).await;
+        let dataset = dataset::Entity::find_by_id(dataset_id).one(db_connection).await;
         match dataset {
             Ok(dataset) => match dataset {
                 Some(dataset) => {
@@ -292,18 +331,39 @@ impl DistributionRepo for CatalogRepoForSql {
 
     async fn put_distribution_by_id(
         &self,
+        catalog_id: Urn,
+        dataset_id: Urn,
         distribution_id: Urn,
         edit_distribution_model: EditDistributionModel,
     ) -> anyhow::Result<distribution::Model, CatalogRepoErrors> {
         let db_connection = get_db_connection().await;
         let distribution_id = distribution_id.to_string();
+        let catalog_id = catalog_id.to_string();
+        let dataset_id = dataset_id.to_string();
+
+        let catalog = catalog::Entity::find_by_id(catalog_id.clone())
+            .one(db_connection)
+            .await
+            .map_err(|e| CatalogRepoErrors::ErrorFetchingCatalog(e.into()))?;
+        if catalog.is_none() {
+            return Err(CatalogRepoErrors::CatalogNotFound);
+        }
+
+        let dataset = dataset::Entity::find_by_id(dataset_id.clone())
+            .one(db_connection)
+            .await
+            .map_err(|e| CatalogRepoErrors::ErrorFetchingDataset(e.into()))?;
+        if dataset.is_none() {
+            return Err(CatalogRepoErrors::DatasetNotFound);
+        }
+
         let old_model = distribution::Entity::find_by_id(distribution_id).one(db_connection).await;
         let old_model = match old_model {
             Ok(old_model) => match old_model {
                 Some(old_model) => old_model,
-                None => { return Err(CatalogRepoErrors::DistributionNotFound) }
+                None => return Err(CatalogRepoErrors::DistributionNotFound),
             },
-            Err(err) => { return Err(CatalogRepoErrors::ErrorFetchingDistribution(err.into())) }
+            Err(err) => return Err(CatalogRepoErrors::ErrorFetchingDistribution(err.into())),
         };
         let mut old_active_model: distribution::ActiveModel = old_model.into();
         if let Some(dct_title) = edit_distribution_model.dct_title {
@@ -313,7 +373,7 @@ impl DistributionRepo for CatalogRepoForSql {
             old_active_model.dct_description = ActiveValue::Set(Some(dct_description));
         }
         if let Some(dcat_access_service) = edit_distribution_model.dcat_access_service {
-            old_active_model.dcat_access_service = ActiveValue::Set(Some(dcat_access_service));
+            old_active_model.dcat_access_service = ActiveValue::Set(dcat_access_service);
         }
         old_active_model.dct_modified = ActiveValue::Set(Some(chrono::Utc::now().naive_utc()));
         let model = old_active_model.update(db_connection).await;
@@ -325,11 +385,30 @@ impl DistributionRepo for CatalogRepoForSql {
 
     async fn create_distribution(
         &self,
+        catalog_id: Urn,
         dataset_id: Urn,
         new_distribution_model: NewDistributionModel,
     ) -> anyhow::Result<distribution::Model, CatalogRepoErrors> {
         let db_connection = get_db_connection().await;
+        let catalog_id = catalog_id.to_string();
         let dataset_id = dataset_id.to_string();
+
+        let catalog = catalog::Entity::find_by_id(catalog_id.clone())
+            .one(db_connection)
+            .await
+            .map_err(|e| CatalogRepoErrors::ErrorFetchingCatalog(e.into()))?;
+        if catalog.is_none() {
+            return Err(CatalogRepoErrors::CatalogNotFound);
+        }
+
+        let dataset = dataset::Entity::find_by_id(dataset_id.clone())
+            .one(db_connection)
+            .await
+            .map_err(|e| CatalogRepoErrors::ErrorFetchingDataset(e.into()))?;
+        if dataset.is_none() {
+            return Err(CatalogRepoErrors::DatasetNotFound);
+        }
+
         let urn = new_distribution_model.id.unwrap_or_else(|| get_urn(None));
         let model = distribution::ActiveModel {
             id: ActiveValue::Set(urn.to_string()),
@@ -348,9 +427,33 @@ impl DistributionRepo for CatalogRepoForSql {
         }
     }
 
-    async fn delete_distribution_by_id(&self, distribution_id: Urn) -> anyhow::Result<(), CatalogRepoErrors> {
+    async fn delete_distribution_by_id(
+        &self,
+        catalog_id: Urn,
+        dataset_id: Urn,
+        distribution_id: Urn,
+    ) -> anyhow::Result<(), CatalogRepoErrors> {
         let db_connection = get_db_connection().await;
+        let catalog_id = catalog_id.to_string();
+        let dataset_id = dataset_id.to_string();
         let distribution_id = distribution_id.to_string();
+
+        let catalog = catalog::Entity::find_by_id(catalog_id.clone())
+            .one(db_connection)
+            .await
+            .map_err(|e| CatalogRepoErrors::ErrorFetchingCatalog(e.into()))?;
+        if catalog.is_none() {
+            return Err(CatalogRepoErrors::CatalogNotFound);
+        }
+
+        let dataset = dataset::Entity::find_by_id(dataset_id.clone())
+            .one(db_connection)
+            .await
+            .map_err(|e| CatalogRepoErrors::ErrorFetchingDataset(e.into()))?;
+        if dataset.is_none() {
+            return Err(CatalogRepoErrors::DatasetNotFound);
+        }
+
         let distribution =
             distribution::Entity::delete_by_id(distribution_id).exec(db_connection).await;
         match distribution {
@@ -398,18 +501,29 @@ impl DataServiceRepo for CatalogRepoForSql {
 
     async fn put_data_service_by_id(
         &self,
+        catalog_id: Urn,
         data_service_id: Urn,
         edit_data_service_model: EditDataServiceModel,
     ) -> anyhow::Result<dataservice::Model, CatalogRepoErrors> {
         let db_connection = get_db_connection().await;
         let data_service_id = data_service_id.to_string();
+        let catalog_id = catalog_id.to_string();
+
+        let catalog = catalog::Entity::find_by_id(catalog_id.clone())
+            .one(db_connection)
+            .await
+            .map_err(|e| CatalogRepoErrors::ErrorFetchingCatalog(e.into()))?;
+        if catalog.is_none() {
+            return Err(CatalogRepoErrors::CatalogNotFound);
+        }
+
         let old_model = dataservice::Entity::find_by_id(data_service_id).one(db_connection).await;
         let old_model = match old_model {
             Ok(old_model) => match old_model {
                 Some(old_model) => old_model,
-                None => { return Err(CatalogRepoErrors::DataServiceNotFound) }
+                None => return Err(CatalogRepoErrors::DataServiceNotFound),
             },
-            Err(err) => { return Err(CatalogRepoErrors::ErrorFetchingDataService(err.into())) }
+            Err(err) => return Err(CatalogRepoErrors::ErrorFetchingDataService(err.into())),
         };
         let mut old_active_model: dataservice::ActiveModel = old_model.into();
         if let Some(dcat_endpoint_description) = edit_data_service_model.dcat_endpoint_description {
@@ -471,9 +585,23 @@ impl DataServiceRepo for CatalogRepoForSql {
         }
     }
 
-    async fn delete_data_service_by_id(&self, data_service_id: Urn) -> anyhow::Result<(), CatalogRepoErrors> {
+    async fn delete_data_service_by_id(
+        &self,
+        catalog_id: Urn,
+        data_service_id: Urn,
+    ) -> anyhow::Result<(), CatalogRepoErrors> {
         let db_connection = get_db_connection().await;
         let data_service_id = data_service_id.to_string();
+        let catalog_id = catalog_id.to_string();
+
+        let catalog = catalog::Entity::find_by_id(catalog_id.clone())
+            .one(db_connection)
+            .await
+            .map_err(|e| CatalogRepoErrors::ErrorFetchingCatalog(e.into()))?;
+        if catalog.is_none() {
+            return Err(CatalogRepoErrors::CatalogNotFound);
+        }
+
         let data_service =
             dataservice::Entity::delete_by_id(data_service_id).exec(db_connection).await;
         match data_service {
@@ -556,7 +684,10 @@ impl OdrlOfferRepo for CatalogRepoForSql {
         }
     }
 
-    async fn delete_odrl_offer_by_id(&self, odrl_offer_id: Urn) -> anyhow::Result<(), CatalogRepoErrors> {
+    async fn delete_odrl_offer_by_id(
+        &self,
+        odrl_offer_id: Urn,
+    ) -> anyhow::Result<(), CatalogRepoErrors> {
         let db_connection = get_db_connection().await;
         let odrl_offer_id = odrl_offer_id.to_string();
         let odrl_offer = odrl_offer::Entity::delete_by_id(odrl_offer_id).exec(db_connection).await;
@@ -569,7 +700,10 @@ impl OdrlOfferRepo for CatalogRepoForSql {
         }
     }
 
-    async fn delete_odrl_offers_by_entity(&self, entity_id: Urn) -> anyhow::Result<(), CatalogRepoErrors> {
+    async fn delete_odrl_offers_by_entity(
+        &self,
+        entity_id: Urn,
+    ) -> anyhow::Result<(), CatalogRepoErrors> {
         let db_connection = get_db_connection().await;
         let entity_id = entity_id.to_string();
         let odrl_offer = odrl_offer::Entity::delete_many()
@@ -585,7 +719,10 @@ impl OdrlOfferRepo for CatalogRepoForSql {
         }
     }
 
-    async fn get_upstream_offers(&self, entity_id: Urn) -> anyhow::Result<Vec<odrl_offer::Model>, CatalogRepoErrors> {
+    async fn get_upstream_offers(
+        &self,
+        entity_id: Urn,
+    ) -> anyhow::Result<Vec<odrl_offer::Model>, CatalogRepoErrors> {
         todo!("get_upstream_offers")
     }
 }

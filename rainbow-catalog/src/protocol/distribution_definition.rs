@@ -43,8 +43,8 @@ pub struct Distribution {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DistributionDcatDeclaration {
     #[serde(rename = "dcat:accessService")]
-    pub access_service: Option<DataService>, // Todo should be many to many
-} // TODO dcat:format
+    pub access_service: Option<DataService>,
+}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DistributionDctDeclaration {

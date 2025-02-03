@@ -115,6 +115,7 @@ pub trait DatasetRepo {
     ) -> anyhow::Result<Option<dataset::Model>, CatalogRepoErrors>;
     async fn put_datasets_by_id(
         &self,
+        catalog_id: Urn,
         dataset_id: Urn,
         edit_dataset_model: EditDatasetModel,
     ) -> anyhow::Result<dataset::Model, CatalogRepoErrors>;
@@ -123,14 +124,18 @@ pub trait DatasetRepo {
         catalog_id: Urn,
         new_dataset_model: NewDatasetModel,
     ) -> anyhow::Result<dataset::Model, CatalogRepoErrors>;
-    async fn delete_dataset_by_id(&self, dataset_id: Urn) -> anyhow::Result<(), CatalogRepoErrors>;
+    async fn delete_dataset_by_id(
+        &self,
+        catalog_id: Urn,
+        dataset_id: Urn,
+    ) -> anyhow::Result<(), CatalogRepoErrors>;
 }
 
 pub struct NewDistributionModel {
     pub id: Option<Urn>,
     pub dct_title: Option<String>,
     pub dct_description: Option<String>,
-    pub dcat_access_service: Option<String>,
+    pub dcat_access_service: String,
 }
 pub struct EditDistributionModel {
     pub dct_title: Option<String>,
@@ -155,16 +160,21 @@ pub trait DistributionRepo {
     ) -> anyhow::Result<Option<distribution::Model>, CatalogRepoErrors>;
     async fn put_distribution_by_id(
         &self,
+        catalog_id: Urn,
+        dataset_id: Urn,
         distribution_id: Urn,
         edit_distribution_model: EditDistributionModel,
     ) -> anyhow::Result<distribution::Model, CatalogRepoErrors>;
     async fn create_distribution(
         &self,
+        catalog_id: Urn,
         dataset_id: Urn,
         new_distribution_model: NewDistributionModel,
     ) -> anyhow::Result<distribution::Model, CatalogRepoErrors>;
     async fn delete_distribution_by_id(
         &self,
+        catalog_id: Urn,
+        dataset_id: Urn,
         distribution_id: Urn,
     ) -> anyhow::Result<(), CatalogRepoErrors>;
 }
@@ -200,6 +210,7 @@ pub trait DataServiceRepo {
     ) -> anyhow::Result<Option<dataservice::Model>, CatalogRepoErrors>;
     async fn put_data_service_by_id(
         &self,
+        catalog_id: Urn,
         data_service_id: Urn,
         edit_data_service_model: EditDataServiceModel,
     ) -> anyhow::Result<dataservice::Model, CatalogRepoErrors>;
@@ -210,6 +221,7 @@ pub trait DataServiceRepo {
     ) -> anyhow::Result<dataservice::Model, CatalogRepoErrors>;
     async fn delete_data_service_by_id(
         &self,
+        catalog_id: Urn,
         data_service_id: Urn,
     ) -> anyhow::Result<(), CatalogRepoErrors>;
 }

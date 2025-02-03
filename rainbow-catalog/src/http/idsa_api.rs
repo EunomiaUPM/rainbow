@@ -25,6 +25,7 @@ use axum::http::Uri;
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::{Json, Router};
+use rainbow_common::utils::get_urn_from_string;
 use tower_http::trace::TraceLayer;
 use tracing::info;
 
@@ -46,7 +47,9 @@ async fn handle_catalog_request(
             Err(err) => (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
         },
         Err(err) => match err {
-            JsonRejection::JsonDataError(_) => (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+            JsonRejection::JsonDataError(_) => {
+                (StatusCode::BAD_REQUEST, err.to_string()).into_response()
+            }
             _ => (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
         },
     }
@@ -55,11 +58,18 @@ async fn handle_catalog_request(
 async fn handle_get_dataset(result: Result<Path<String>, PathRejection>) -> impl IntoResponse {
     info!("GET /catalog/datasets/:id");
 
-    match result {
-        Ok(id) => match dataset_request(id.0).await {
-            Ok(d) => (StatusCode::OK, Json(d)).into_response(),
-            Err(err) => (StatusCode::NOT_FOUND, err.to_string()).into_response(),
-        },
-        Err(err) => (StatusCode::BAD_REQUEST, err.to_string()).into_response()
+    let dataset_id = match result {
+        Ok(dataset_id) => dataset_id,
+        Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+    };
+
+    let dataset = match get_urn_from_string(&dataset_id) {
+        Ok(id) => id,
+        Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+    };
+
+    match dataset_request(dataset).await {
+        Ok(d) => (StatusCode::OK, Json(d)).into_response(),
+        Err(err) => (StatusCode::NOT_FOUND, err.to_string()).into_response(),
     }
 }
