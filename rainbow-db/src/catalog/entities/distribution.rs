@@ -29,7 +29,7 @@ pub struct Model {
     pub dct_modified: Option<chrono::NaiveDateTime>,
     pub dct_title: Option<String>,
     pub dct_description: Option<String>,
-    pub dcat_access_service: String,
+    pub dcat_access_service: Option<String>,
     pub dataset_id: String,
 }
 

@@ -17,7 +17,7 @@
  *
  */
 use anyhow::bail;
-use rainbow_catalog::core::ll_api::dataservices_request_by_id;
+use rainbow_catalog::core::idsa_api::dataservices_request_by_id;
 use rainbow_catalog::protocol::dataservice_definition::DataService;
 use rainbow_db::transfer_provider::repo::TRANSFER_PROVIDER_REPO;
 use urn::Urn;
@@ -42,5 +42,4 @@ pub async fn resolve_endpoint_from_agreement_decoupled(
 ) -> anyhow::Result<DataService> {
     // TODO if is all in modules, change function
     todo!("resolve_endpoint_from_agreement_decoupled");
-    Ok(DataService::default())
 }

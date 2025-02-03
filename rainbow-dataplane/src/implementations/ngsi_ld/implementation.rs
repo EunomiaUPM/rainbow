@@ -150,7 +150,7 @@ impl DataPlanePeerDefaultBehavior for NgsiLdDataPlane {
         let url = fw.inner.attributes.get("endpointUrl").unwrap().to_string();
         let mut description_as_json = serde_json::from_str::<Value>(description.as_str())?;
 
-        let mut local_address = String::new();
+        let mut local_address: String;
 
         if std::env::var("TEST").unwrap_or_else(|_| "false".to_string()) == "true" {
             local_address = fw

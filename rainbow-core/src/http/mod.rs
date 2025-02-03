@@ -19,9 +19,9 @@
 
 use axum::http::Method;
 use axum::Router;
-use rainbow_catalog::http::hl_api as catalog_hl_api_router;
-use rainbow_catalog::http::ll_api as catalog_ll_api_router;
-use rainbow_catalog::http::policies_api as catalog_policies_api_router;
+use rainbow_catalog::http::idsa_api as catalog_ll_api_router;
+use rainbow_catalog::http::rainbow_catalog_api as catalog_hl_api_router;
+use rainbow_catalog::http::rainbow_policies_api as catalog_policies_api_router;
 use rainbow_common::misc_router;
 use rainbow_contracts::http as contract_router;
 use rainbow_dataplane::proxy::provider_http;

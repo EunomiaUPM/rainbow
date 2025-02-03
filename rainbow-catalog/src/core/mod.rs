@@ -17,7 +17,9 @@
  *
  */
 
-pub mod err;
-pub mod hl_api;
-pub mod ll_api;
-pub mod policies_api;
+pub mod idsa_api;
+pub mod rainbow_catalog_api;
+pub mod rainbow_catalog_err;
+pub mod rainbow_catalog_types;
+pub mod rainbow_policies_api;
+pub mod rainbow_policies_types;

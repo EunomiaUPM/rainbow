@@ -17,7 +17,6 @@
  *
  */
 
-use super::super::migrations::m20241111_000005_odrl_offers::EntityTypes;
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -28,7 +27,7 @@ pub struct Model {
     pub id: String,
     pub odrl_offers: Option<serde_json::Value>,
     pub entity: String,
-    pub entity_type: EntityTypes,
+    pub entity_type: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

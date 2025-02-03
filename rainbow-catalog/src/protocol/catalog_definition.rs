@@ -88,7 +88,7 @@ pub struct CatalogDSpaceDeclaration {
 }
 
 impl TryFrom<catalog::Model> for Catalog {
-    type Error = ();
+    type Error = anyhow::Error;
 
     fn try_from(catalog_model: catalog::Model) -> anyhow::Result<Self, Self::Error> {
         let catalog_out = Catalog {
@@ -97,7 +97,6 @@ impl TryFrom<catalog::Model> for Catalog {
             id: catalog_model.id.to_string(),
             foaf: CatalogFoafDeclaration { homepage: catalog_model.foaf_home_page },
             dcat: CatalogDcatDeclaration {
-                // Array of strings...
                 theme: "".to_string(),
                 keyword: "".to_string(),
             },

@@ -1,0 +1,604 @@
+openapi: 3.0.3
+info:
+  title: Rainbow Catalog API
+  description: Catalog API of Rainbow
+  version: 0.0.1
+tags:
+  - name: catalog
+  - name: idsa
+paths:
+  /api/v1/catalogs:
+    get:
+      tags:
+        - catalog
+      operationId: getCatalogs
+      summary: Get all catalogs
+      description: Get all catalogs
+      responses:
+        '200':
+          description: Successfully retrieved the list of catalogs.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogList'
+    post:
+      tags:
+        - catalog
+      operationId: createCatalog
+      summary: Create the catalog
+      description: Create the catalog
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewCatalog'
+      responses:
+        '201':
+          description: Successfully created the catalog.
+        '400':
+          description: Invalid catalog provided
+
+  /api/v1/catalogs/{catalogId}:
+    get:
+      tags:
+        - catalog
+      parameters:
+        - $ref: '#/components/parameters/CatalogId'
+      operationId: getCatalogById
+      summary: Get catalog by  id
+      description: Get the catalog with the given id
+      responses:
+        '200':
+          description: Successfully retrieved the catalog.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Catalog'
+        '400':
+          description: Bad Request
+        '404':
+          description: Not found
+    put:
+      tags:
+        - catalog
+      parameters:
+        - $ref: '#/components/parameters/CatalogId'
+      operationId: updateCatalogById
+      summary: Update catalog by  id
+      description: Update the catalog with the given id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewCatalog'
+      responses:
+        '201':
+          description: Successfully created the catalog.
+        '400':
+          description: Invalid catalog provided
+    delete:
+      tags:
+        - catalog
+      parameters:
+        - $ref: '#/components/parameters/CatalogId'
+      operationId: deleteCatalogById
+      summary: Delete catalog by  id
+      description: Delete the catalog with the given id
+      responses:
+        '204':
+          description: Successfully deleted
+        '404':
+          description: No such catalog exists.
+  /api/v1/catalogs/{catalogId}/datasets:
+    post:
+      tags:
+        - catalog
+      parameters:
+        - $ref: '#/components/parameters/CatalogId'
+      operationId: createDatasetInCatalog
+      summary: Create dataset
+      description: Create a dataset in the given catalog
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewDataset'
+      responses:
+        '201':
+          description: Successfully created the dataset.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataSet'
+        '400':
+          description: Bad Request
+        '404':
+          description: Catalog not found
+  /api/v1/catalogs/{catalogId}/datasets/{datasetId}:
+    put:
+      tags:
+        - catalog
+      parameters:
+        - $ref: '#/components/parameters/CatalogId'
+        - $ref: '#/components/parameters/DatasetId'
+      operationId: updateDatasetInCatalog
+      summary: Update dataset
+      description: Update the dataset in the given catalog
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewDataset'
+      responses:
+        '200':
+          description: Successfully updated the dataset
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataSet'
+        '400':
+          description: Bad Request
+        '404':
+          description: Catalog not found
+    delete:
+      tags:
+        - catalog
+      parameters:
+        - $ref: '#/components/parameters/CatalogId'
+        - $ref: '#/components/parameters/DatasetId'
+      operationId: deleteDatasetInCatalog
+      summary: Delete dataset
+      description: Delete the dataset in the given catalog
+      responses:
+        '204':
+          description: Successfully deleted
+        '404':
+          description: No such dataset exists.
+  /api/v1/catalogs/{catalogId}/data-services:
+    post:
+      tags:
+        - catalog
+      parameters:
+        - $ref: '#/components/parameters/CatalogId'
+      operationId: createDataserviceInCatalog
+      summary: Create dataservice
+      description: Create a dataservice in the given catalog
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewDataservice'
+      responses:
+        '201':
+          description: Successfully created the dataservice.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataService'
+        '400':
+          description: Bad Request
+        '404':
+          description: Catalog not found
+  /api/v1/catalogs/{catalogId}/data-services/{dataserviceId}:
+    put:
+      tags:
+        - catalog
+      parameters:
+        - $ref: '#/components/parameters/CatalogId'
+        - $ref: '#/components/parameters/DataserviceId'
+      operationId: updateDataserviceInCatalog
+      summary: Update dataservice
+      description: Update the dataservice in the given catalog
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewDataservice'
+      responses:
+        '200':
+          description: Successfully updated the dataservice
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataService'
+        '400':
+          description: Bad Request
+        '404':
+          description: Catalog or Dataservice not found
+    delete:
+      tags:
+        - catalog
+      parameters:
+        - $ref: '#/components/parameters/CatalogId'
+        - $ref: '#/components/parameters/DataserviceId'
+      operationId: deleteDataserviceInCatalog
+      summary: Delete dataservice
+      description: Delete the dataservice in the given catalog
+      responses:
+        '204':
+          description: Successfully deleted
+        '404':
+          description: No such dataservice exists.
+  /api/v1/catalogs/{catalogId}/datasets/{datasetId}/distributions:
+    post:
+      tags:
+        - catalog
+      parameters:
+        - $ref: '#/components/parameters/CatalogId'
+        - $ref: '#/components/parameters/DatasetId'
+      operationId: createDistributionInDataset
+      summary: Create distribution
+      description: Create a distribution for the given dataset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewDistribution'
+      responses:
+        '201':
+          description: Successfully created the distribution.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Distribution'
+        '400':
+          description: Bad Request
+        '404':
+          description: Dataset or catalog not found
+  /api/v1/catalogs/{catalogId}/datasets/{datasetId}/distributions/{distributionId}:
+    put:
+      tags:
+        - catalog
+      parameters:
+        - $ref: '#/components/parameters/CatalogId'
+        - $ref: '#/components/parameters/DatasetId'
+        - $ref: '#/components/parameters/DistributionId'
+      operationId: updateDistribution
+      summary: Update distribution
+      description: Update the distribution in the given dataset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewDistribution'
+      responses:
+        '200':
+          description: Successfully updated the distribution
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Distribution'
+        '400':
+          description: Bad Request
+        '404':
+          description: Dataset, Distribution or Catalog not found
+    delete:
+      tags:
+        - catalog
+      parameters:
+        - $ref: '#/components/parameters/CatalogId'
+        - $ref: '#/components/parameters/DatasetId'
+        - $ref: '#/components/parameters/DistributionId'
+      operationId: deleteDistribution
+      summary: Delete distribution
+      description: Delete the distribution in the given dataset
+      responses:
+        '204':
+          description: Successfully deleted
+        '404':
+          description: Dataset, Distribution or Catalog not found
+  /catalog/request:
+    post:
+      tags:
+        - idsa
+      operationId: requestCatalog
+      summary: Handle catalog request
+      description: Handles the catalog request message according to the IDSA protocol
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatalogRequest'
+      responses:
+        '200':
+          description: Successfully retrieved the list of catalogs.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogList'
+        '400':
+          description: Invalid catalog request
+  /catalog/dataset/{datasetId}:
+    get:
+      tags:
+        - idsa
+      parameters:
+        - $ref: '#/components/parameters/DatasetId'
+      operationId: getDatasetById
+      summary: Get dataset
+      description: Get a dataset from the catalogs by id, according to the IDSA protocol
+      responses:
+        '200':
+          description: Successfully retrieved the list of catalogs.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataSet'
+        '404':
+          description: No such dataset exists
+
+components:
+  parameters:
+    CatalogId:
+      name: catalogId
+      in: path
+      required: true
+      schema:
+        type: string
+        example: urn:uuid:some-uuid
+    DatasetId:
+      name: datasetId
+      in: path
+      required: true
+      schema:
+        type: string
+        example: urn:uuid:some-uuid
+    DistributionId:
+      name: distributionId
+      in: path
+      required: true
+      schema:
+        type: string
+        example: urn:uuid:some-uuid
+    DataserviceId:
+      name: dataserviceId
+      in: path
+      required: true
+      schema:
+        type: string
+        example: urn:uuid:some-uuid
+  schemas:
+    CatalogRequest:
+      type: object
+      properties:
+        '@context':
+          type: string
+        '@type':
+          type: string
+        'dspace:filter':
+          type: string
+    NewCatalog:
+      type: object
+      properties:
+        'foaf:homepage':
+          type: string
+        'dct:conformsTo':
+          type: string
+        'dct:creator':
+          type: string
+        'dct:title':
+          type: string
+    NewDataset:
+      type: object
+      properties:
+        'dct:conformsTo':
+          type: string
+        'dct:creator':
+          type: string
+        'dct:title':
+          type: string
+    NewDistribution:
+      type: object
+      properties:
+        'dct:title':
+          type: string
+        'dcat:accessService':
+          type: string
+    NewDataservice:
+      type: object
+      properties:
+        'dct:conformsTo':
+          type: string
+        'dct:creator':
+          type: string
+        'dct:title':
+          type: string
+        'dcat:endpointDescription':
+          type: string
+        'dcat:endpointURL':
+          type: string
+    CatalogList:
+      type: array
+      items:
+        $ref: '#/components/schemas/Catalog'
+    Catalog:
+      type: object
+      properties:
+        'odrl:hasPolicy':
+          type: object
+        'dspace:extraFields':
+          type: object
+        'dcat:dataset':
+          $ref: '#/components/schemas/DataSet'
+        'dcat:service':
+          $ref: '#/components/schemas/DataService'
+      allOf:
+        - $ref: '#/components/schemas/ObjectHeaders'
+        - $ref: '#/components/schemas/CatalogFoaf'
+        - $ref: '#/components/schemas/CatalogDcat'
+        - $ref: '#/components/schemas/CatalogDct'
+        - $ref: '#/components/schemas/CatalogDspace'
+    ObjectHeaders:
+      type: object
+      properties:
+        '@context':
+          type: string
+        '@type':
+          type: string
+        '@id':
+          type: string
+
+    DataSet:
+      type: object
+      properties:
+        'odrl:hasPolicy':
+          type: object
+        'dspace:extraFields':
+          type: object
+        'dcat:distribution':
+          $ref: '#/components/schemas/Distribution'
+      allOf:
+        - $ref: '#/components/schemas/ObjectHeaders'
+        - $ref: '#/components/schemas/DataSetDcat'
+        - $ref: '#/components/schemas/DataSetDct'
+
+    Distribution:
+      type: object
+      properties:
+        'odrl:hasPolicy':
+          type: object
+        'dspace:extraFields':
+          type: object
+      allOf:
+        - $ref: '#/components/schemas/ObjectHeaders'
+        - $ref: '#/components/schemas/DistributionDcat'
+        - $ref: '#/components/schemas/DistributionDct'
+
+    DistributionDcat:
+      type: object
+      properties:
+        'dcat:accessService':
+          $ref: '#/components/schemas/DataService'
+
+    DistributionDct:
+      type: object
+      properties:
+        'dct:identifier':
+          type: string
+        'dct:issued':
+          type: string
+          format: date-time
+        'dct:modified':
+          type: string
+          format: date-time
+        'dct:title':
+          type: string
+        'dct:description':
+          type: string
+
+    DataSetDcat:
+      type: object
+      properties:
+        'dcat:theme':
+          type: string
+        'dcat:keyword':
+          type: string
+
+    DataSetDct:
+      type: object
+      properties:
+        'dct:conformsTo':
+          type: string
+        'dct:creator':
+          type: string
+        'dct:identifier':
+          type: string
+        'dct:issued':
+          type: string
+          format: date-time
+        'dct:modified':
+          type: string
+          format: date-time
+        'dct:title':
+          type: string
+        'dct:description':
+          type: string
+
+    DataService:
+      type: object
+      properties:
+        'odrl:hasPolicy':
+          type: object
+        'dspace:extraFields':
+          type: object
+      allOf:
+        - $ref: '#/components/schemas/ObjectHeaders'
+        - $ref: '#/components/schemas/DataServiceDcat'
+        - $ref: '#/components/schemas/DataServiceDct'
+
+    DataServiceDcat:
+      type: object
+      properties:
+        'dcat:theme':
+          type: string
+        'dcat:keyword':
+          type: string
+        'dcat:endpointDescription':
+          type: string
+        'dcat:endpointURL':
+          type: string
+
+    DataServiceDct:
+      type: object
+      properties:
+        'dct:conformsTo':
+          type: string
+        'dct:creator':
+          type: string
+        'dct:identifier':
+          type: string
+        'dct:issued':
+          type: string
+          format: date-time
+        'dct:modified':
+          type: string
+          format: date-time
+        'dct:title':
+          type: string
+        'dct:description':
+          type: string
+    CatalogFoaf:
+      type: object
+      properties:
+        'foaf:homepage':
+          type: string
+    CatalogDcat:
+      type: object
+      properties:
+        'dcat:theme':
+          type: string
+        'dcat:keyword':
+          type: string
+    CatalogDct:
+      type: object
+      properties:
+        'dct:conformsTo':
+          type: string
+        'dct:creator':
+          type: string
+        'dct:identifier':
+          type: string
+        'dct:issued':
+          type: string
+          format: date-time
+        'dct:modified':
+          type: string
+          format: date-time
+        'dct:title':
+          type: string
+        'dct:description':
+          type: string
+    CatalogDspace:
+      type: object
+      properties:
+        'dspace:participantId':
+          type: string

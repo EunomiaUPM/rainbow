@@ -17,9 +17,9 @@
  *
  */
 
-use crate::http::hl_api::catalog_api_router;
-use crate::http::ll_api::catalog_router;
-use crate::http::policies_api::catalog_policies_api_router;
+use crate::http::idsa_api::catalog_router;
+use crate::http::rainbow_catalog_api::catalog_api_router;
+use crate::http::rainbow_policies_api::catalog_policies_api_router;
 use axum::{serve, Router};
 use clap::{Parser, Subcommand};
 use rainbow_common::config::database::get_db_connection;
@@ -53,9 +53,9 @@ pub async fn init_command_line() -> anyhow::Result<()> {
             Ok(())
         }
         DataSpaceCatalogCommands::Start => {
-            let server_message = "Starting provider server in 0.0.0.0:8000".to_string();
+            let server_message = "Starting provider server in 0.0.0.0:1234".to_string();
             info!("{}", server_message);
-            let listener = TcpListener::bind("0.0.0.0:8000").await?;
+            let listener = TcpListener::bind("0.0.0.0:1234").await?;
             let router = Router::new()
                 .merge(catalog_router().await?)
                 .merge(catalog_api_router().await?)

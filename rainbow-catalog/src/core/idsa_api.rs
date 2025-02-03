@@ -29,7 +29,6 @@ use crate::protocol::distribution_definition::Distribution;
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, QuerySelect};
 use serde::{Deserialize, Serialize};
 use serde_json::{to_value, Value};
-use axum::http::Uri;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CatalogRequestMessage {
@@ -151,7 +150,7 @@ pub async fn distributions_request_by_dataset(
         distribution.odrl_offer = to_value(distribution_odrl_from_db)?;
         // dataservice
         distribution.dcat.access_service =
-            dataservices_request_by_id(distribution_entity.dcat_access_service).await?;
+            dataservices_request_by_id(distribution_entity.dcat_access_service.unwrap()).await?;
         distributions_out.push(distribution);
     }
 

@@ -1,0 +1,264 @@
+openapi: 3.0.3
+info:
+  title: Rainbow DCAT3 Catalog API
+  description: Rainbow DCAT3 Catalog API
+  version: 0.1.0
+servers:
+  - url: https://catalog/api/v1
+    description: Servidor de producción
+paths:
+  /catalogs:
+    get:
+      summary: Retrieves DCAT3 Catalogs
+      operationId: handle_get_catalogs
+      tags:
+        - Catalog
+      security:
+        - BearerAuth: [ ]  # Autenticación JWT
+      responses:
+        "200":
+          description: DCAT3 Catalogs Array
+          headers:
+            X-Total-Count:
+              description: Total count of catalogs
+              schema:
+                type: integer
+            X-Current-Count:
+              description: Total count of catalogs
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Catalog"
+        "401":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      summary: Creates a new DCAT3 Catalog
+      operationId: handle_post_catalog
+      tags:
+        - Catalog
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Catalog"
+      responses:
+        "201":
+          description: Catalog created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Catalog"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /catalogs/{id}:
+    get:
+      summary: Retrieves a DCAT3 Catalog by ID
+      operationId: handle_get_catalog_by_id
+      tags:
+        - Catalog
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Urn of the catalog to retrieve as urn::uuid::<id>
+          schema:
+            type: string
+      responses:
+        "200":
+          description: DCAT3 Catalog
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Catalog"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Catalog not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    put:
+      summary: Updates a DCAT3 Catalog by ID
+      operationId: handle_put_catalog
+      tags:
+        - Catalog
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Urn of the catalog to retrieve as urn::uuid::<id>
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Catalog"
+      responses:
+        "200":
+          description: Catalog updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Catalog"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Catalog not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      summary: Deletes a DCAT3 Catalog by ID
+      operationId: handle_delete_catalog
+      tags:
+        - Catalog
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Urn of the catalog to retrieve as urn::uuid::<id>
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Catalog deleted
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Catalog not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  schemas:
+    Catalog:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "123456"
+        nombre:
+          type: string
+          example: "Juan Pérez"
+        correo:
+          type: string
+          format: email
+          example: "juan.perez@example.com"
+
+    Error:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "123456"
+        nombre:
+          type: string
+          example: "Juan Pérez"
+        correo:
+          type: string
+          format: email
+          example: "juan.perez@example.com"
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
