@@ -4,7 +4,7 @@ info:
   description: Rainbow DCAT3 Catalog API
   version: 0.1.0
 servers:
-  - url: https://catalog/api/v1
+  - url: http://localhost:1234/api/v1
     description: Servidor de producción
 paths:
   /catalogs:
@@ -228,30 +228,116 @@ components:
     Catalog:
       type: object
       properties:
-        id:
+        "@context":
           type: string
-          example: "123456"
-        nombre:
+          description: JSON-LD context.
+          example: "https://w3id.org/dspace/2024/1/context.json"
+        "@type":
           type: string
-          example: "Juan Pérez"
-        correo:
+          description: The DCAT object type.
+          example: "dcat:Catalog"
+        "@id":
           type: string
-          format: email
-          example: "juan.perez@example.com"
+          description: The unique identifier for the catalog as urn:uuid::<uuid>.
+          example: "urn:uuid:a3f3d488-5bf4-4871-81a4-a32c170dcbc7"
+        "foaf:homepage":
+          type: string
+          description: The homepage URL.
+          example: "https://www.example.com/catalog"
+        "dcat:theme":
+          type: array
+          description: The catalog theme.
+          items:
+            type: string
+        "dcat:keyword":
+          type: array
+          description: A keyword for the catalog.
+          items:
+            type: string
+        "dct:conformsTo":
+          type: string
+          description: Information about the standards the catalog conforms to.
+        "dct:creator":
+          type: string
+          description: The creator of the catalog.
+        "dct:identifier":
+          type: string
+          description: The catalog identifier.
+          example: "urn:uuid:a3f3d488-5bf4-4871-81a4-a32c170dcbc7"
+        "dct:issued":
+          type: string
+          format: date-time
+          description: The issuance date.
+          example: "2025-01-27T09:28:50.507815"
+        "dct:modified":
+          type: string
+          description: The last modification date.
+        "dct:title":
+          type: string
+          description: The title of the catalog.
+        "dct:description":
+          type: array
+          description: A list of descriptions.
+          items:
+            type: string
+        "dspace:participantId":
+          type: string
+          description: The participant identifier.
+        "odrl:hasPolicy":
+          type: array
+          description: A list of policies.
+          items:
+            type: string
+        "dspace:extraFields":
+          type: object
+          description: Additional fields for the catalog.
+        "dcat:dataset":
+          type: array
+          description: An array of dataset objects.
+          items:
+            type: string
+        "dcat:service":
+          type: array
+          description: An array of data service objects.
+          items:
+            type: string
+
+    NewCatalog:
+      type: object
+      description: New schema
+      properties:
+        "@id":
+          type: string
+          nullable: true
+          description: The unique identifier for the catalog as urn:uuid::<uuid>.
+          example: "urn:uuid:a3f3d488-5bf4-4871-81a4-a32c170dcbc7"
+        "foaf:homepage":
+          type: string
+          nullable: true
+          description: The homepage URL.
+          example: "https://www.example.com/catalog"
+        "dct:conformsTo":
+          type: string
+          nullable: true
+          description: Information about the standards the catalog conforms to.
+        "dct:creator":
+          type: string
+          nullable: true
+          description: The creator of the catalog.
+        "dct:title":
+          type: string
+          nullable: true
+          description: The title of the catalog.c
 
     Error:
       type: object
       properties:
-        id:
+        code:
           type: string
-          example: "123456"
-        nombre:
+        title:
           type: string
-          example: "Juan Pérez"
-        correo:
+        message:
           type: string
-          format: email
-          example: "juan.perez@example.com"
 
   securitySchemes:
     BearerAuth:

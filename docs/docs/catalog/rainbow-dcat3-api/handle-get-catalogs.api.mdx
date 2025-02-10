@@ -1,0 +1,63 @@
+---
+id: handle-get-catalogs
+title: "Retrieves DCAT3 Catalogs"
+description: "Retrieves DCAT3 Catalogs"
+sidebar_label: "Retrieves DCAT3 Catalogs"
+hide_title: true
+hide_table_of_contents: true
+api: eJzVV+uO2kYUfpWRf6+xzUVQq6pCN0m1aZRGu0SNFEXRYWaASYzHnRlDKOKp+gh9sZ4ztlkMbCBq//SX7Zlz/c7V20AX0oBTOr8TQRosIBeZ/DSX7hMHB5me2+AmcICP9ENwWx0FH28CK3lplNvg8Tb4WYKRZly6BX5+3OG1kbbQuZXItg26cUwPIS03qiBdqOn57XjSY7VEy8bGwAZVLSQIaTzb+3Ci8Ta81WXuTgX4S8bpkukZOzDX8oVcAnG4TSGRVOVOzqUJdrsblHpbGiNz95/KRcFc41clEIoiU9yjGn22JHV7ygy1x8rJpT0419PPkju8KAzFxqkKxGde/ld3QGmdUfkcKdsOvHr47U34+jmrGTpIIL/CssiIZ+FcYdMoWveU6Ggzj4QtgMuoG3f7URI1PN5qdOpZpeqSyslCMgooq4xnRN3WKxCOtMkfEqzEdWLLXP1RSqYEYqtmSho204Y5vKkjw8Cy0uRpWSqRpj/S46e27v0t9GY90R+NwsF01g/7o2ESjhLoh9Dr8mQYCz7lQzJupmGWLvRSFjC/0vuGmr27f/0E4ut1pz7tcL2M+CMYHhx0aSnP5MeprsZxz9E5k0K1nbtG9Be5WWsjLgofs5ryGOOLSlyKmYNMSzvRlwG786S+PhhMdem8Luuw+YARthXdRi5zuhM0uowEp811kamJqZZbHtWyHhPrSnG1XY98/zLZvBHWlvJsQVRAUQGBk6FTmCLnrCIBkHPJiKxtEFb2IIyTsDucxD+k3VE6iDuDeDhKBo32pRbkyJUFmYF1rGKpWlytsxbmlMuurBlP+lRcWuQX8zZT1nfrg3N7KWl940sLwBbLVQG5u7sSgQOWVhqgUC1Mli7AvtU4ADbfYXhBDNjqrzMaW7SBl0pm4uzkOFIihKJXnGozz3Ja3U2jwEiCle6y3Vi3dOEhr3jq1n/RAVJjpVkpfrnZHathNeNVulBZnYv7vWW388f9ODkd+2+0Y7TBaKP+xFL4/nn+xNzmWpwph0fjztwspbVnB8+hTy+M0X7zwLPBuQXrDs03FPQHBA3HZsXwP/Jrd5wO9xLJ5Upa1l4eAxKNkaMFFjdXMhVoFQ2iw+XNo2D9vlqarB7MOJczzSFbaOvSpNvrR1CoaJWcpCKBqATWjcD6N1qUnKu//8Id6WAXfiDoKnQON+K9t6SwWSPpe+qJ8KR6edm0+le/TwiucaF+lZsjGeAPKe/Jqmpbxq8cvMT34fjtXUgEhJ7CyelZa2jvQeVTvW6jx5DjxNtvURKKFVXcSToxWVogekvw6VMb8o1QnW/stHVGRYZ6SaAP0LYO44dgH0YEmyJFZ9vtFNvOO5PtdnSMO6KhnxF8XYFRMCWP8V+k+aPwccfthroK57KgLFlBVlaYHpUBBXWfUb+8mCAttMNwFDovvYlQvjmQjWZ6ion+InM09aY2wtE3KsI0/wf6IJvu
+sidebar_class_name: "get api-method"
+info_path: docs/catalog/rainbow-dcat3-api/rainbow-dcat-3-catalog-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Retrieves DCAT3 Catalogs"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/catalogs"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Retrieves DCAT3 Catalogs
+
+<ParamsDetails
+  parameters={undefined}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={undefined}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"200":{"description":"DCAT3 Catalogs Array","headers":{"X-Total-Count":{"description":"Total count of catalogs","schema":{"type":"integer"}},"X-Current-Count":{"description":"Total count of catalogs","schema":{"type":"integer"}}},"content":{"application/json":{"schema":{"type":"array","items":{"type":"object","properties":{"@context":{"type":"string","description":"JSON-LD context.","example":"https://w3id.org/dspace/2024/1/context.json"},"@type":{"type":"string","description":"The DCAT object type.","example":"dcat:Catalog"},"@id":{"type":"string","description":"The unique identifier for the catalog as urn:uuid::<uuid>.","example":"urn:uuid:a3f3d488-5bf4-4871-81a4-a32c170dcbc7"},"foaf:homepage":{"type":"string","description":"The homepage URL.","example":"https://www.example.com/catalog"},"dcat:theme":{"type":"array","description":"The catalog theme.","items":{"type":"string"}},"dcat:keyword":{"type":"array","description":"A keyword for the catalog.","items":{"type":"string"}},"dct:conformsTo":{"type":"string","description":"Information about the standards the catalog conforms to."},"dct:creator":{"type":"string","description":"The creator of the catalog."},"dct:identifier":{"type":"string","description":"The catalog identifier.","example":"urn:uuid:a3f3d488-5bf4-4871-81a4-a32c170dcbc7"},"dct:issued":{"type":"string","format":"date-time","description":"The issuance date.","example":"2025-01-27T09:28:50.507815"},"dct:modified":{"type":"string","description":"The last modification date."},"dct:title":{"type":"string","description":"The title of the catalog."},"dct:description":{"type":"array","description":"A list of descriptions.","items":{"type":"string"}},"dspace:participantId":{"type":"string","description":"The participant identifier."},"odrl:hasPolicy":{"type":"array","description":"A list of policies.","items":{"type":"string"}},"dspace:extraFields":{"type":"object","description":"Additional fields for the catalog."},"dcat:dataset":{"type":"array","description":"An array of dataset objects.","items":{"type":"string"}},"dcat:service":{"type":"array","description":"An array of data service objects.","items":{"type":"string"}}},"title":"Catalog"}}}}},"401":{"description":"Not Authorized","content":{"application/json":{"schema":{"type":"object","properties":{"code":{"type":"string"},"title":{"type":"string"},"message":{"type":"string"}},"title":"Error"}}}},"500":{"description":"Internal Server Error","content":{"application/json":{"schema":{"type":"object","properties":{"code":{"type":"string"},"title":{"type":"string"},"message":{"type":"string"}},"title":"Error"}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

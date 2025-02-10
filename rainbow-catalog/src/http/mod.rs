@@ -21,3 +21,4 @@ pub mod rainbow_catalog_api;
 pub mod idsa_api;
 pub mod rainbow_policies_api;
 pub mod rainbow_catalog_err;
+pub mod openapi;

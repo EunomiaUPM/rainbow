@@ -29,6 +29,7 @@ use crate::core::rainbow_catalog_types::{
     EditDataServiceRequest, EditDistributionRequest, NewCatalogRequest, NewDataServiceRequest,
     NewDatasetRequest, NewDistributionRequest,
 };
+use crate::http::openapi::route_openapi;
 use axum::extract::Path;
 use axum::http::Uri;
 use axum::response::IntoResponse;
@@ -41,6 +42,8 @@ use tracing::info;
 
 pub async fn catalog_api_router() -> anyhow::Result<Router> {
     let router = Router::new()
+        .merge(route_openapi())
+
         // CATALOGS
         .route("/api/v1/catalogs", get(handle_get_catalogs))
         .route("/api/v1/catalogs/:id", get(handle_get_catalogs_by_id))
@@ -96,6 +99,7 @@ pub async fn catalog_api_router() -> anyhow::Result<Router> {
             "/api/v1/catalogs/:id/data-services/:did",
             delete(handle_delete_dataservice),
         );
+    
     Ok(router)
 }
 

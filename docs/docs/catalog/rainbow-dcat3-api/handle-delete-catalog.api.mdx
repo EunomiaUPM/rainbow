@@ -1,0 +1,71 @@
+---
+id: handle-delete-catalog
+title: "Deletes a DCAT3 Catalog by ID"
+description: "Deletes a DCAT3 Catalog by ID"
+sidebar_label: "Deletes a DCAT3 Catalog by ID"
+hide_title: true
+hide_table_of_contents: true
+api: eJzVVcFu2zAM/RVBpw1I66TtLsYwIG0yINswDG2KDSiKgrGYRK0jaZKcLTP8VfuE/dhI20nTJOiA3XqyLFHk43skVUrr0EPU1oyUTOUcjMrxTmGOEe8yiJDbmezICLMg0xt50e7cdmTArPA6rmi7lOcIHn2/iHP6va3o2IGHBTnxoTYw9EP+tSJn2tDKAdl2pMfvhfZIsaMvsCMVhsxrx4DI6NobYacizlG0WES0wmP0GpcoIIjCmzQtCq3S9K1W78hjyOa4AJmWMq4cxwxkbWayYlQeg7MmYODzk+4Zf56GbDMUDQVKVh151u3u252DEpcEHkOkoJk1EU1kM3Au11lNaXIf2Lbcx2Qn95jxRedZgKgbRJlVeAA58a9jfvhkgSHA7NDZ4zU59N562qnqbHr72Xy2UbB61utfqF5aQs/IaCixqS3MC8vpzaGSGxF8byAXV+iX6EVz4QXlVe3296BusiBADC7641OxVm2yEqOBZP9UkjyXmm5kyDw2Upm04yAkpVYVd31NSTNrCp/zKIvRpUmS2wzyuQ0x7Z2cniXgdLLsyV0gzKhW1lPbC2JFFVmm//w2stoadFfMY0PV9rjbpM4B1/OH/ye1Ee00i/fWL4BEkh++jpm7vtMfcbXjA+rN9YycI6jaQzs9vx31v4yO2ICp1GZq66stz5egzcT+2KGSbuxl+5wls9hYdY97x11G6oi9BdS11AL5l25Pwm2Si/gzJi6n4Oy1VqlsBb2Ra0HpdkqvBPHOovFJWU4g4LXPq4q3aeR6fnRouQSvYcLJk+pKB15TtUwhD7tPSfnYJfLVZfvovBb/88AczGatn2HxlpAX/EfLBxKrfvaqW7JqBWW4zUE/y9DFrSt7DcwVuGmDwfDTcDwkc3haNjulVgc4iIi4rC3G9gFNVW0ARv5njFX1FxR+vUE=
+sidebar_class_name: "delete api-method"
+info_path: docs/catalog/rainbow-dcat3-api/rainbow-dcat-3-catalog-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Deletes a DCAT3 Catalog by ID"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"delete"}
+  path={"/catalogs/{id}"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Deletes a DCAT3 Catalog by ID
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={[{"name":"id","in":"path","required":true,"description":"Urn of the catalog to retrieve as urn::uuid::<id>","schema":{"type":"string"}}]}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={undefined}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"204":{"description":"Catalog deleted"},"400":{"description":"Bad Request","content":{"application/json":{"schema":{"type":"object","properties":{"code":{"type":"string"},"title":{"type":"string"},"message":{"type":"string"}},"title":"Error"}}}},"401":{"description":"Not Authorized","content":{"application/json":{"schema":{"type":"object","properties":{"code":{"type":"string"},"title":{"type":"string"},"message":{"type":"string"}},"title":"Error"}}}},"404":{"description":"Catalog not found","content":{"application/json":{"schema":{"type":"object","properties":{"code":{"type":"string"},"title":{"type":"string"},"message":{"type":"string"}},"title":"Error"}}}},"500":{"description":"Internal Server Error","content":{"application/json":{"schema":{"type":"object","properties":{"code":{"type":"string"},"title":{"type":"string"},"message":{"type":"string"}},"title":"Error"}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

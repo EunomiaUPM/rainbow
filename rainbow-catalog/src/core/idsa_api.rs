@@ -22,7 +22,6 @@ use rainbow_common::config::database::get_db_connection;
 use rainbow_db::catalog::entities::{catalog, dataset, distribution};
 use rainbow_db::catalog::entities::{dataservice, odrl_offer};
 
-use crate::core::rainbow_catalog_err::CatalogError;
 use crate::protocol::catalog_definition::Catalog;
 use crate::protocol::dataservice_definition::DataService;
 use crate::protocol::dataset_definition::Dataset;
@@ -129,7 +128,7 @@ pub async fn dataservices_request_by_id(
 
     let dataservice = match dataservice_from_db {
         Some(d) => Some(DataService::try_from(d)?),
-        None => bail!(CatalogError::DataServiceNotFoundForDistribution { id: dataservice_id }),
+        None => None,
     };
     Ok(dataservice)
 }
