@@ -42,10 +42,7 @@ pub async fn transfer_start(
             },
         )
         .await?;
-
-    println!("\n\n\n\nTransfer Start: {:#?}\n\n\n", callback);
-
-
+    
     Ok(())
 }
 
