@@ -22,7 +22,7 @@ use sea_orm_migration::prelude::*;
 pub struct Migration;
 impl MigrationName for Migration {
     fn name(&self) -> &str {
-        "m20241116_000003_contract_agreements"
+        "m20250211_000001_cn_processes"
     }
 }
 
@@ -32,31 +32,28 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(ContractAgreements::Table)
-                    .col(
-                        ColumnDef::new(ContractAgreements::AgreementId)
-                            .string()
-                            .not_null()
-                            .primary_key(),
-                    )
-                    .col(ColumnDef::new(ContractAgreements::DataServiceId).string().not_null())
-                    .col(ColumnDef::new(ContractAgreements::Identity).string())
-                    .col(ColumnDef::new(ContractAgreements::IdentityToken).string())
+                    .table(CnProcesses::Table)
+                    .col(ColumnDef::new(CnProcesses::CnProcessId).string().not_null().primary_key())
+                    .col(ColumnDef::new(CnProcesses::ProviderId).string())
+                    .col(ColumnDef::new(CnProcesses::ConsumerId).string())
+                    .col(ColumnDef::new(CnProcesses::CreatedAt).date_time().not_null())
+                    .col(ColumnDef::new(CnProcesses::UpdatedAt).date_time())
                     .to_owned(),
             )
             .await
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(ContractAgreements::Table).to_owned()).await
+        manager.drop_table(Table::drop().table(CnProcesses::Table).to_owned()).await
     }
 }
 
 #[derive(Iden)]
-pub enum ContractAgreements {
+pub enum CnProcesses {
     Table,
-    AgreementId,
-    DataServiceId,
-    Identity,
-    IdentityToken,
+    CnProcessId,
+    ProviderId,
+    ConsumerId,
+    CreatedAt,
+    UpdatedAt,
 }

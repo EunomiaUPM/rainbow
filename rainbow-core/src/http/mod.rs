@@ -22,8 +22,10 @@ use axum::Router;
 use rainbow_catalog::http::idsa_api as catalog_ll_api_router;
 use rainbow_catalog::http::rainbow_catalog_api as catalog_hl_api_router;
 use rainbow_catalog::http::rainbow_policies_api as catalog_policies_api_router;
+use rainbow_contracts::consumer::http::idsa_api as contracts_consumer__ll_api_router;
+use rainbow_contracts::provider::http::idsa_api as contracts_provider_ll_api_router;
+
 use rainbow_common::misc_router;
-use rainbow_contracts::http as contract_router;
 use rainbow_dataplane::proxy::provider_http;
 use rainbow_transfer::consumer::http::hl_api as consumer_hl_api_router;
 use rainbow_transfer::consumer::http::protocol_api as consumer_ll_api_router;
@@ -33,7 +35,6 @@ use rainbow_transfer::provider::http::hl_api as provider_hl_api_router;
 use rainbow_transfer::provider::http::protocol_api as provider_ll_api_router;
 
 use tower_http::cors::{Any, CorsLayer};
-use tower_http::trace::TraceLayer;
 
 fn _create_cors_layer() -> CorsLayer {
     // TODO Cors in env
@@ -51,9 +52,9 @@ pub async fn get_provider_routes() -> Router {
         .merge(catalog_ll_api_router::catalog_router().await.unwrap())
         .merge(catalog_hl_api_router::catalog_api_router().await.unwrap())
         .merge(catalog_policies_api_router::catalog_policies_api_router().await.unwrap())
-        .merge(contract_router::router())
+        .merge(contracts_provider_ll_api_router::router())
         .layer(_create_cors_layer())
-        .layer(TraceLayer::new_for_http())
+    // .layer(TraceLayer::new_for_http())
 }
 
 pub async fn get_consumer_routes() -> Router {
@@ -62,7 +63,7 @@ pub async fn get_consumer_routes() -> Router {
         .merge(consumer_ll_api_router::router())
         .merge(consumer_hl_api_router::router())
         .merge(consumer_http::consumer_dataplane_router())
-        // .merge(consumer_redoc_router::open_api_setup().unwrap())
+        .merge(contracts_consumer__ll_api_router::router())
         .layer(_create_cors_layer())
-        .layer(TraceLayer::new_for_http())
+    // .layer(TraceLayer::new_for_http())
 }

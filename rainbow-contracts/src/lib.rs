@@ -17,7 +17,6 @@
  *
  */
 
-
 #![allow(unused_imports)]
 #![allow(dead_code)]
 #![allow(unused_variables)]
@@ -25,9 +24,8 @@
 #![allow(unused_imports)]
 #![allow(unused_must_use)]
 
-/// This package is used to provide testing contracts or catalogs
-/// In future, the data structures and functions to achieve this will be available
-/// in the rainbow-catalog or rainbow-contracts feature
-pub mod http;
+pub mod common;
+pub mod consumer;
+pub mod provider;
+pub mod schemas;
 pub mod setup;
-pub mod core;

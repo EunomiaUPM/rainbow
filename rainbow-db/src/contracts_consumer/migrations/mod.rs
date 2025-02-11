@@ -17,16 +17,19 @@
  *
  */
 
-#![allow(unused_imports)]
-#![allow(dead_code)]
-#![allow(unused_variables)]
-#![allow(unused_mut)]
-#![allow(unused_imports)]
-#![allow(unused_must_use)]
+use sea_orm_migration::prelude::*;
+pub mod m20250211_000001_cn_processes;
 
-pub mod catalog;
-pub mod contracts_provider;
-pub mod contracts_consumer;
-pub mod dataplane;
-pub mod transfer_consumer;
-pub mod transfer_provider;
+pub fn get_contracts_migrations() -> Vec<Box<dyn MigrationTrait>> {
+    vec![
+        Box::new(m20250211_000001_cn_processes::Migration),
+    ]
+}
+
+pub struct Migrator;
+#[async_trait::async_trait]
+impl MigratorTrait for Migrator {
+    fn migrations() -> Vec<Box<dyn MigrationTrait>> {
+        get_contracts_migrations()
+    }
+}

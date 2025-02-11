@@ -22,7 +22,7 @@ use sea_orm_migration::prelude::*;
 pub struct Migration;
 impl MigrationName for Migration {
     fn name(&self) -> &str {
-        "m20241111_000006_keywords_themes"
+        "m20250211_000001_cn_processes"
     }
 }
 
@@ -32,40 +32,30 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(KeyWords::Table)
-                    .col(ColumnDef::new(KeyWords::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(KeyWords::KeyWord).string().not_null())
-                    .to_owned(),
-            )
-            .await?;
-
-        manager
-            .create_table(
-                Table::create()
-                    .table(KeyWords::Table)
-                    .col(ColumnDef::new(Themes::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(Themes::Theme).string().not_null())
+                    .table(CNProcesses::Table)
+                    .col(ColumnDef::new(CNProcesses::CnProcessId).string().not_null().primary_key())
+                    .col(ColumnDef::new(CNProcesses::ProviderId).string())
+                    .col(ColumnDef::new(CNProcesses::ConsumerId).string())
+                    .col(ColumnDef::new(CNProcesses::State).string())
+                    .col(ColumnDef::new(CNProcesses::CreatedAt).date_time().not_null())
+                    .col(ColumnDef::new(CNProcesses::UpdatedAt).date_time())
                     .to_owned(),
             )
             .await
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(KeyWords::Table).to_owned()).await?;
-        manager.drop_table(Table::drop().table(Themes::Table).to_owned()).await
+        manager.drop_table(Table::drop().table(CNProcesses::Table).to_owned()).await
     }
 }
 
 #[derive(Iden)]
-pub enum KeyWords {
+pub enum CNProcesses {
     Table,
-    Id,
-    KeyWord,
-}
-
-#[derive(Iden)]
-pub enum Themes {
-    Table,
-    Id,
-    Theme,
+    CnProcessId,
+    ProviderId,
+    ConsumerId,
+    State,
+    CreatedAt,
+    UpdatedAt,
 }

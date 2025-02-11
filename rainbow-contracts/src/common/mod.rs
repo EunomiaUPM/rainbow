@@ -16,17 +16,3 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
-#![allow(unused_imports)]
-#![allow(dead_code)]
-#![allow(unused_variables)]
-#![allow(unused_mut)]
-#![allow(unused_imports)]
-#![allow(unused_must_use)]
-
-pub mod catalog;
-pub mod contracts_provider;
-pub mod contracts_consumer;
-pub mod dataplane;
-pub mod transfer_consumer;
-pub mod transfer_provider;

@@ -18,51 +18,50 @@
  */
 
 use sea_orm::entity::prelude::*;
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
-#[sea_orm(table_name = "catalog_datasets")]
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
+#[sea_orm(table_name = "cn_messages")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: String,
-    pub dct_conforms_to: Option<String>,
-    pub dct_creator: Option<String>,
-    pub dct_identifier: Option<String>,
-    pub dct_issued: chrono::NaiveDateTime,
-    pub dct_modified: Option<chrono::NaiveDateTime>,
-    pub dct_title: Option<String>,
-    pub dct_description: Option<String>,
-    pub catalog_id: String,
+    pub cn_message_id: String,
+    pub cn_process_id: String,
+    pub _type: String,
+    pub from: String,
+    pub to: String,
+    pub created_at: chrono::NaiveDateTime,
+    pub content: serde_json::Value,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
     #[sea_orm(
-        belongs_to = "super::catalog::Entity",
-        from = "Column::CatalogId",
-        to = "super::catalog::Column::Id"
+        belongs_to = "super::cn_process::Entity",
+        from = "Column::CnProcessId",
+        to = "super::cn_process::Column::CnProcessId"
     )]
-    Catalog,
-    #[sea_orm(has_many = "super::distribution::Entity")]
-    Distribution,
-    #[sea_orm(has_many = "super::odrl_offer::Entity")]
-    OdrlOffer,
+    CnProcess,
+    #[sea_orm(has_many = "super::cn_offer::Entity")]
+    CnOffers,
+    #[sea_orm(has_many = "super::agreement::Entity")]
+    Agreements,
 }
 
-impl Related<super::catalog::Entity> for Entity {
+impl Related<super::cn_process::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Catalog.def()
+        Relation::CnProcess.def()
     }
 }
 
-impl Related<super::distribution::Entity> for Entity {
+impl Related<super::cn_offer::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Distribution.def()
+        Relation::CnOffers.def()
     }
 }
 
-impl Related<super::odrl_offer::Entity> for Entity {
+impl Related<super::agreement::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::OdrlOffer.def()
+        Relation::Agreements.def()
     }
 }
 

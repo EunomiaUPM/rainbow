@@ -17,13 +17,13 @@
  *
  */
 
-use super::m20241111_000001_catalog::CatalogCatalogs;
+use crate::contracts_provider::migrations::m20250211_000001_cn_processes::CNProcesses;
 use sea_orm_migration::prelude::*;
 
 pub struct Migration;
 impl MigrationName for Migration {
     fn name(&self) -> &str {
-        "m20241111_000002_dataset"
+        "m20250211_000002_cn_messages"
     }
 }
 
@@ -33,21 +33,19 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(CatalogDatasets::Table)
-                    .col(ColumnDef::new(CatalogDatasets::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(CatalogDatasets::DctConformsTo).string())
-                    .col(ColumnDef::new(CatalogDatasets::DctCreator).string())
-                    .col(ColumnDef::new(CatalogDatasets::DctIdentifier).string())
-                    .col(ColumnDef::new(CatalogDatasets::DctIssued).date_time().not_null())
-                    .col(ColumnDef::new(CatalogDatasets::DctModified).date_time())
-                    .col(ColumnDef::new(CatalogDatasets::DctTitle).string())
-                    .col(ColumnDef::new(CatalogDatasets::DctDescription).string())
-                    .col(ColumnDef::new(CatalogDatasets::CatalogId).string().not_null())
+                    .table(CNMessages::Table)
+                    .col(ColumnDef::new(CNMessages::CnMessageId).string().not_null().primary_key())
+                    .col(ColumnDef::new(CNMessages::CnProcessId).string().not_null())
+                    .col(ColumnDef::new(CNMessages::Type).string().not_null())
+                    .col(ColumnDef::new(CNMessages::From).string().not_null())
+                    .col(ColumnDef::new(CNMessages::To).string().not_null())
+                    .col(ColumnDef::new(CNMessages::CreatedAt).date_time().not_null())
+                    .col(ColumnDef::new(CNMessages::Content).json().not_null())
                     .foreign_key(
                         ForeignKey::create()
-                            .name("fk_dataset_catalog")
-                            .from(CatalogDatasets::Table, CatalogDatasets::CatalogId)
-                            .to(CatalogCatalogs::Table, CatalogCatalogs::Id)
+                            .name("fk_cn_messages_cn_process")
+                            .from(CNMessages::Table, CNMessages::CnProcessId)
+                            .to(CNProcesses::Table, CNProcesses::CnProcessId)
                             .on_delete(ForeignKeyAction::Cascade),
                     )
                     .to_owned(),
@@ -56,20 +54,18 @@ impl MigrationTrait for Migration {
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(CatalogDatasets::Table).to_owned()).await
+        manager.drop_table(Table::drop().table(CNMessages::Table).to_owned()).await
     }
 }
 
 #[derive(Iden)]
-pub enum CatalogDatasets {
+pub enum CNMessages {
     Table,
-    Id,
-    DctConformsTo,
-    DctCreator,
-    DctIdentifier,
-    DctIssued,
-    DctModified,
-    DctTitle,
-    DctDescription,
-    CatalogId,
+    CnMessageId,
+    CnProcessId,
+    Type,
+    From,
+    To,
+    CreatedAt,
+    Content,
 }

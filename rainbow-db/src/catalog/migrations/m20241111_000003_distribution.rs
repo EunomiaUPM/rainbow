@@ -17,7 +17,7 @@
  *
  */
 
-use super::m20241111_000002_dataset::Dataset;
+use super::m20241111_000002_dataset::CatalogDatasets;
 use sea_orm_migration::prelude::*;
 
 pub struct Migration;
@@ -33,19 +33,19 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(Distribution::Table)
-                    .col(ColumnDef::new(Distribution::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(Distribution::DctIssued).date_time().not_null())
-                    .col(ColumnDef::new(Distribution::DctModified).date_time())
-                    .col(ColumnDef::new(Distribution::DctTitle).string())
-                    .col(ColumnDef::new(Distribution::DctDescription).string())
-                    .col(ColumnDef::new(Distribution::DcatAccessService).string().not_null())
-                    .col(ColumnDef::new(Distribution::DatasetId).string().not_null())
+                    .table(CatalogDistributions::Table)
+                    .col(ColumnDef::new(CatalogDistributions::Id).string().not_null().primary_key())
+                    .col(ColumnDef::new(CatalogDistributions::DctIssued).date_time().not_null())
+                    .col(ColumnDef::new(CatalogDistributions::DctModified).date_time())
+                    .col(ColumnDef::new(CatalogDistributions::DctTitle).string())
+                    .col(ColumnDef::new(CatalogDistributions::DctDescription).string())
+                    .col(ColumnDef::new(CatalogDistributions::DcatAccessService).string().not_null())
+                    .col(ColumnDef::new(CatalogDistributions::DatasetId).string().not_null())
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk_distribution_dataset")
-                            .from(Distribution::Table, Distribution::DatasetId)
-                            .to(Dataset::Table, Dataset::Id)
+                            .from(CatalogDistributions::Table, CatalogDistributions::DatasetId)
+                            .to(CatalogDatasets::Table, CatalogDatasets::Id)
                             .on_delete(ForeignKeyAction::Cascade),
                     )
                     .to_owned(),
@@ -54,12 +54,12 @@ impl MigrationTrait for Migration {
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(Distribution::Table).to_owned()).await
+        manager.drop_table(Table::drop().table(CatalogDistributions::Table).to_owned()).await
     }
 }
 
 #[derive(Iden)]
-pub enum Distribution {
+pub enum CatalogDistributions {
     Table,
     Id,
     DctIssued,

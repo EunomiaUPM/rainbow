@@ -17,16 +17,19 @@
  *
  */
 
-#![allow(unused_imports)]
-#![allow(dead_code)]
-#![allow(unused_variables)]
-#![allow(unused_mut)]
-#![allow(unused_imports)]
-#![allow(unused_must_use)]
+use crate::protocol::contract::contract_odrl::OdrlOffer;
+use serde::{Deserialize, Serialize};
 
-pub mod catalog;
-pub mod contracts_provider;
-pub mod contracts_consumer;
-pub mod dataplane;
-pub mod transfer_consumer;
-pub mod transfer_provider;
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ContractOfferMessage {
+    #[serde(rename = "@context")]
+    pub context: String,
+    #[serde(rename = "@type")]
+    pub _type: String,
+    #[serde(rename = "dspace:providerPid")]
+    pub provider_pid: String,
+    #[serde(rename = "dspace:callbackAddress")]
+    pub callback_address: String,
+    #[serde(rename = "dspace:offer")]
+    pub odrl_offer: OdrlOffer,
+}

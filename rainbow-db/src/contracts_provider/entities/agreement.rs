@@ -18,51 +18,41 @@
  */
 
 use sea_orm::entity::prelude::*;
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
-#[sea_orm(table_name = "catalog_datasets")]
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
+#[sea_orm(table_name = "agreements")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: String,
-    pub dct_conforms_to: Option<String>,
-    pub dct_creator: Option<String>,
-    pub dct_identifier: Option<String>,
-    pub dct_issued: chrono::NaiveDateTime,
-    pub dct_modified: Option<chrono::NaiveDateTime>,
-    pub dct_title: Option<String>,
-    pub dct_description: Option<String>,
-    pub catalog_id: String,
+    pub agreement_id: String,
+    pub consumer_participant_id: String,
+    pub provider_participant_id: String,
+    pub cn_message_id: String,
+    pub agreement_content: serde_json::Value,
 }
+
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
     #[sea_orm(
-        belongs_to = "super::catalog::Entity",
-        from = "Column::CatalogId",
-        to = "super::catalog::Column::Id"
+        belongs_to = "super::cn_message::Entity",
+        from = "Column::CnMessageId",
+        to = "super::cn_message::Column::CnMessageId"
     )]
-    Catalog,
-    #[sea_orm(has_many = "super::distribution::Entity")]
-    Distribution,
-    #[sea_orm(has_many = "super::odrl_offer::Entity")]
-    OdrlOffer,
+    CnMessage,
+    #[sea_orm(has_many = "super::participant::Entity")]
+    Participant,
 }
 
-impl Related<super::catalog::Entity> for Entity {
+impl Related<super::cn_message::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Catalog.def()
+        Relation::CnMessage.def()
     }
 }
 
-impl Related<super::distribution::Entity> for Entity {
+impl Related<super::participant::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Distribution.def()
-    }
-}
-
-impl Related<super::odrl_offer::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::OdrlOffer.def()
+        Relation::Participant.def()
     }
 }
 

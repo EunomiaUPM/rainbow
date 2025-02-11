@@ -21,7 +21,7 @@ use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
-#[sea_orm(table_name = "odrl_offers")]
+#[sea_orm(table_name = "catalog_odrl_offers")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: String,

@@ -21,13 +21,14 @@ use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
-#[sea_orm(table_name = "contract_agreements")]
+#[sea_orm(table_name = "cn_processes")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub agreement_id: String,
-    pub data_service_id: String,
-    pub identity: Option<String>,
-    pub identity_token: Option<String>,
+    pub cn_process_id: String,
+    pub provider_pid: Option<String>,
+    pub consumer_pid: Option<String>,
+    pub created_at: chrono::NaiveDateTime,
+    pub updated_at: Option<chrono::NaiveDateTime>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

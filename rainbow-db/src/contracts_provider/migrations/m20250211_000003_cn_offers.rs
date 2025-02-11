@@ -17,12 +17,13 @@
  *
  */
 
+use crate::contracts_provider::migrations::m20250211_000002_cn_messages::CNMessages;
 use sea_orm_migration::prelude::*;
 
 pub struct Migration;
 impl MigrationName for Migration {
     fn name(&self) -> &str {
-        "m20241111_000001_catalog"
+        "m20250211_000003_cn_offers"
     }
 }
 
@@ -32,36 +33,31 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(CatalogCatalogs::Table)
-                    .col(ColumnDef::new(CatalogCatalogs::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(CatalogCatalogs::FoafHomePage).string())
-                    .col(ColumnDef::new(CatalogCatalogs::DctConformsTo).string())
-                    .col(ColumnDef::new(CatalogCatalogs::DctCreator).string())
-                    .col(ColumnDef::new(CatalogCatalogs::DctIdentifier).string())
-                    .col(ColumnDef::new(CatalogCatalogs::DctIssued).date_time().not_null())
-                    .col(ColumnDef::new(CatalogCatalogs::DctModified).date_time())
-                    .col(ColumnDef::new(CatalogCatalogs::DctTitle).string())
-                    .col(ColumnDef::new(CatalogCatalogs::DspaceParticipantId).string())
+                    .table(CNOffers::Table)
+                    .col(ColumnDef::new(CNOffers::OfferId).string().not_null().primary_key())
+                    .col(ColumnDef::new(CNOffers::CnMessageId).string().not_null())
+                    .col(ColumnDef::new(CNOffers::OfferContent).json().not_null())
+                    .foreign_key(
+                        ForeignKey::create()
+                            .name("fk_cn_offers_cn_messages")
+                            .from(CNOffers::Table, CNOffers::CnMessageId)
+                            .to(CNMessages::Table, CNMessages::CnMessageId)
+                            .on_delete(ForeignKeyAction::Cascade),
+                    )
                     .to_owned(),
             )
             .await
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(CatalogCatalogs::Table).to_owned()).await
+        manager.drop_table(Table::drop().table(CNOffers::Table).to_owned()).await
     }
 }
 
 #[derive(Iden)]
-pub enum CatalogCatalogs {
+pub enum CNOffers {
     Table,
-    Id,
-    FoafHomePage,
-    DctConformsTo,
-    DctCreator,
-    DctIdentifier,
-    DctIssued,
-    DctModified,
-    DctTitle,
-    DspaceParticipantId,
+    OfferId,
+    CnMessageId,
+    OfferContent,
 }

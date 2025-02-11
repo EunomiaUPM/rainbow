@@ -17,7 +17,7 @@
  *
  */
 
-use crate::catalog::migrations::m20241111_000001_catalog::Catalog;
+use crate::catalog::migrations::m20241111_000001_catalog::CatalogCatalogs;
 use sea_orm_migration::prelude::*;
 
 pub struct Migration;
@@ -33,23 +33,23 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(DataServices::Table)
-                    .col(ColumnDef::new(DataServices::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(DataServices::DcatEndpointDescription).string())
-                    .col(ColumnDef::new(DataServices::DcatEndpointURL).string().not_null())
-                    .col(ColumnDef::new(DataServices::DctConformsTo).string())
-                    .col(ColumnDef::new(DataServices::DctCreator).string())
-                    .col(ColumnDef::new(DataServices::DctIdentifier).string())
-                    .col(ColumnDef::new(DataServices::DctIssued).date_time().not_null())
-                    .col(ColumnDef::new(DataServices::DctModified).date_time())
-                    .col(ColumnDef::new(DataServices::DctTitle).string())
-                    .col(ColumnDef::new(DataServices::DctDescription).string())
-                    .col(ColumnDef::new(DataServices::CatalogId).string().not_null())
+                    .table(CatalogDataServices::Table)
+                    .col(ColumnDef::new(CatalogDataServices::Id).string().not_null().primary_key())
+                    .col(ColumnDef::new(CatalogDataServices::DcatEndpointDescription).string())
+                    .col(ColumnDef::new(CatalogDataServices::DcatEndpointURL).string().not_null())
+                    .col(ColumnDef::new(CatalogDataServices::DctConformsTo).string())
+                    .col(ColumnDef::new(CatalogDataServices::DctCreator).string())
+                    .col(ColumnDef::new(CatalogDataServices::DctIdentifier).string())
+                    .col(ColumnDef::new(CatalogDataServices::DctIssued).date_time().not_null())
+                    .col(ColumnDef::new(CatalogDataServices::DctModified).date_time())
+                    .col(ColumnDef::new(CatalogDataServices::DctTitle).string())
+                    .col(ColumnDef::new(CatalogDataServices::DctDescription).string())
+                    .col(ColumnDef::new(CatalogDataServices::CatalogId).string().not_null())
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk_dataservice_catalog")
-                            .from(DataServices::Table, DataServices::CatalogId)
-                            .to(Catalog::Table, Catalog::Id)
+                            .from(CatalogDataServices::Table, CatalogDataServices::CatalogId)
+                            .to(CatalogCatalogs::Table, CatalogCatalogs::Id)
                             .on_delete(ForeignKeyAction::Cascade),
                     )
                     .to_owned(),
@@ -58,12 +58,12 @@ impl MigrationTrait for Migration {
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(DataServices::Table).to_owned()).await
+        manager.drop_table(Table::drop().table(CatalogDataServices::Table).to_owned()).await
     }
 }
 
 #[derive(Iden)]
-pub enum DataServices {
+pub enum CatalogDataServices {
     Table,
     Id,
     DcatEndpointDescription,
@@ -77,3 +77,4 @@ pub enum DataServices {
     DctDescription,
     CatalogId,
 }
+

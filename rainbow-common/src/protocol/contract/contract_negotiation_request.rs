@@ -17,4 +17,22 @@
  *
  */
 
+use crate::protocol::contract::contract_odrl::OdrlOffer;
+use serde::{Deserialize, Serialize};
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ContractRequestMessage {
+    #[serde(rename = "@context")]
+    pub context: String,
+    #[serde(rename = "@type")]
+    pub _type: String,
+    #[serde(rename = "dspace:providerPid")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub provider_pid: Option<String>,
+    #[serde(rename = "dspace:consumerPid")]
+    pub consumer_pid: String,
+    #[serde(rename = "dspace:callbackAddress")]
+    pub callback_address: String,
+    #[serde(rename = "dspace:offer")]
+    pub odrl_offer: OdrlOffer,
+}

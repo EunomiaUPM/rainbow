@@ -19,9 +19,12 @@
 
 use rainbow_common::config::database::get_db_connection;
 use rainbow_db::catalog::migrations::get_catalog_migrations;
+use rainbow_db::contracts_consumer::migrations::get_contracts_migrations as get_consumer_migrations;
+use rainbow_db::contracts_provider::migrations::get_contracts_migrations as get_provider_migrations;
 use rainbow_db::dataplane::migrations::get_dataplane_migrations;
 use rainbow_db::transfer_consumer::migrations::get_transfer_consumer_migrations;
 use rainbow_db::transfer_provider::migrations::get_transfer_provider_migrations;
+
 use sea_orm::prelude::async_trait;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
 
@@ -33,11 +36,12 @@ impl MigratorTrait for ProviderMigrator {
         let mut provider_migrations = get_transfer_provider_migrations();
         let mut catalog_migrations = get_catalog_migrations();
         let mut dataplane_migrations = get_dataplane_migrations();
-        // let mut contract_migrations = get_contracts_migrations();
+        let mut contract_migrations = get_provider_migrations();
+
         migrations.append(&mut provider_migrations);
         migrations.append(&mut catalog_migrations);
         migrations.append(&mut dataplane_migrations);
-        // migrations.append(&mut contract_migrations);
+        migrations.append(&mut contract_migrations);
         migrations
     }
 }
@@ -46,12 +50,14 @@ pub struct ConsumerMigrator;
 #[async_trait::async_trait]
 impl MigratorTrait for ConsumerMigrator {
     fn migrations() -> Vec<Box<dyn MigrationTrait>> {
-        // TODO migrations all in a same workspace for dealing with cross compiling fks
         let mut migrations = vec![];
         let mut consumer_migrations = get_transfer_consumer_migrations();
         let mut dataplane_migrations = get_dataplane_migrations();
+        let mut contract_migrations = get_consumer_migrations();
+
         migrations.append(&mut consumer_migrations);
         migrations.append(&mut dataplane_migrations);
+        migrations.append(&mut contract_migrations);
         migrations
     }
 }

@@ -20,7 +20,7 @@
 use axum::{serve, Router};
 use clap::{Parser, Subcommand};
 use rainbow_common::config::database::get_db_connection;
-use rainbow_db::contracts::migrations::Migrator;
+use rainbow_db::contracts_provider::migrations::Migrator;
 use sea_orm_migration::MigratorTrait;
 use tokio::net::TcpListener;
 use tracing::info;

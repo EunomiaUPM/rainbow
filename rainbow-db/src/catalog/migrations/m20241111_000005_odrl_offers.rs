@@ -32,23 +32,23 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(ODRLOffers::Table)
-                    .col(ColumnDef::new(ODRLOffers::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(ODRLOffers::ODRLOffer).json())
-                    .col(ColumnDef::new(ODRLOffers::Entity).string().not_null())
-                    .col(ColumnDef::new(ODRLOffers::EntityType).string().not_null())
+                    .table(CatalogODRLOffers::Table)
+                    .col(ColumnDef::new(CatalogODRLOffers::Id).string().not_null().primary_key())
+                    .col(ColumnDef::new(CatalogODRLOffers::ODRLOffer).json())
+                    .col(ColumnDef::new(CatalogODRLOffers::Entity).string().not_null())
+                    .col(ColumnDef::new(CatalogODRLOffers::EntityType).string().not_null())
                     .to_owned(),
             )
             .await
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(ODRLOffers::Table).to_owned()).await
+        manager.drop_table(Table::drop().table(CatalogODRLOffers::Table).to_owned()).await
     }
 }
 
 #[derive(Iden)]
-pub enum ODRLOffers {
+pub enum CatalogODRLOffers {
     Table,
     Id,
     ODRLOffer,
