@@ -36,7 +36,8 @@
  *
  */
 
-use jsonschema::JSONSchema;
+use jsonschema;
+use jsonschema::Validator;
 use once_cell::sync::Lazy;
 use serde_json::Value;
 
@@ -44,65 +45,79 @@ fn schema_compiler_util(schema_content: &str) -> Value {
     serde_json::from_str::<Value>(schema_content).unwrap()
 }
 
-pub static CONTRACT_SCHEMA_SCHEMA: Lazy<JSONSchema> = Lazy::new(|| -> JSONSchema {
+pub static CONTRACT_SCHEMA_SCHEMA: Lazy<Validator> = Lazy::new(|| -> Validator {
     let compiler = schema_compiler_util(include_str!(
         "../.././../rainbow-contracts/src/schemas/contract-schema.schema.json"
     ));
-    JSONSchema::options().compile(&compiler).unwrap()
+    let validator = jsonschema::validator_for(&compiler).unwrap();
+    validator
 });
 
-pub static CONTRACT_REQUEST_MESSAGE_SCHEMA: Lazy<JSONSchema> = Lazy::new(|| -> JSONSchema {
+pub static CONTRACT_REQUEST_MESSAGE_SCHEMA: Lazy<Validator> = Lazy::new(|| -> Validator {
     let compiler = schema_compiler_util(include_str!(
         "../.././../rainbow-contracts/src/schemas/contract-request-message.schema.json"
     ));
-    JSONSchema::options().compile(&compiler).unwrap()
+    let validator = jsonschema::validator_for(&compiler).unwrap();
+    validator
 });
 
-pub static CONTRACT_OFFER_MESSAGE_SCHEMA: Lazy<JSONSchema> = Lazy::new(|| -> JSONSchema {
+pub static CONTRACT_OFFER_MESSAGE_SCHEMA: Lazy<Validator> = Lazy::new(|| -> Validator {
     let compiler = schema_compiler_util(include_str!(
         "../.././../rainbow-contracts/src/schemas/contract-offer-message.schema.json"
     ));
-    JSONSchema::options().compile(&compiler).unwrap()
+    let validator = jsonschema::validator_for(&compiler).unwrap();
+    validator
 });
 
-pub static CONTRACT_NEGOTIATION_TERMINATION_MESSAGE_SCHEMA: Lazy<JSONSchema> = Lazy::new(|| -> JSONSchema {
-    let compiler = schema_compiler_util(include_str!(
-        "../.././../rainbow-contracts/src/schemas/contract-negotiation-termination-message.schema.json"
-    ));
-    JSONSchema::options().compile(&compiler).unwrap()
-});
+pub static CONTRACT_NEGOTIATION_TERMINATION_MESSAGE_SCHEMA: Lazy<Validator> = Lazy::new(
+    || -> Validator {
+        let compiler = schema_compiler_util(include_str!(
+            "../.././../rainbow-contracts/src/schemas/contract-negotiation-termination-message.schema.json"
+        ));
+        let validator = jsonschema::validator_for(&compiler).unwrap();
+        validator
+    },
+);
 
-pub static CONTRACT_NEGOTIATION_EVENT_MESSAGE_SCHEMA: Lazy<JSONSchema> = Lazy::new(|| -> JSONSchema {
-    let compiler = schema_compiler_util(include_str!(
-        "../.././../rainbow-contracts/src/schemas/contract-negotiation-event-message.schema.json"
-    ));
-    JSONSchema::options().compile(&compiler).unwrap()
-});
+pub static CONTRACT_NEGOTIATION_EVENT_MESSAGE_SCHEMA: Lazy<Validator> =
+    Lazy::new(|| -> Validator {
+        let compiler = schema_compiler_util(include_str!(
+            "../.././../rainbow-contracts/src/schemas/contract-negotiation-event-message.schema.json"
+        ));
+        let validator = jsonschema::validator_for(&compiler).unwrap();
+        validator
+    });
 
-pub static CONTRACT_NEGOTIATION_ERROR_SCHEMA: Lazy<JSONSchema> = Lazy::new(|| -> JSONSchema {
+pub static CONTRACT_NEGOTIATION_ERROR_SCHEMA: Lazy<Validator> = Lazy::new(|| -> Validator {
     let compiler = schema_compiler_util(include_str!(
         "../.././../rainbow-contracts/src/schemas/contract-negotiation-error.schema.json"
     ));
-    JSONSchema::options().compile(&compiler).unwrap()
+    let validator = jsonschema::validator_for(&compiler).unwrap();
+    validator
 });
 
-pub static CONTRACT_NEGOTIATION_SCHEMA: Lazy<JSONSchema> = Lazy::new(|| -> JSONSchema {
+pub static CONTRACT_NEGOTIATION_SCHEMA: Lazy<Validator> = Lazy::new(|| -> Validator {
     let compiler = schema_compiler_util(include_str!(
         "../.././../rainbow-contracts/src/schemas/contract-negotiation.schema.json"
     ));
-    JSONSchema::options().compile(&compiler).unwrap()
+    let validator = jsonschema::validator_for(&compiler).unwrap();
+    validator
 });
 
-pub static CONTRACT_AGREEMENT_VERIFICATION_MESSAGE_SCHEMA: Lazy<JSONSchema> = Lazy::new(|| -> JSONSchema {
-    let compiler = schema_compiler_util(include_str!(
-        "../.././../rainbow-contracts/src/schemas/contract-agreement-verification-message.schema.json"
-    ));
-    JSONSchema::options().compile(&compiler).unwrap()
-});
+pub static CONTRACT_AGREEMENT_VERIFICATION_MESSAGE_SCHEMA: Lazy<Validator> = Lazy::new(
+    || -> Validator {
+        let compiler = schema_compiler_util(include_str!(
+            "../.././../rainbow-contracts/src/schemas/contract-agreement-verification-message.schema.json"
+        ));
+        let validator = jsonschema::validator_for(&compiler).unwrap();
+        validator
+    },
+);
 
-pub static CONTRACT_AGREEMENT_MESSAGE_SCHEMA: Lazy<JSONSchema> = Lazy::new(|| -> JSONSchema {
+pub static CONTRACT_AGREEMENT_MESSAGE_SCHEMA: Lazy<Validator> = Lazy::new(|| -> Validator {
     let compiler = schema_compiler_util(include_str!(
         "../.././../rainbow-contracts/src/schemas/contract-agreement-message.schema.json"
     ));
-    JSONSchema::options().compile(&compiler).unwrap()
+    let validator = jsonschema::validator_for(&compiler).unwrap();
+    validator
 });

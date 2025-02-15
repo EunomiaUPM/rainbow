@@ -38,13 +38,13 @@ dotenvy = "0.15"
 reqwest = { version = "0.12", features = ["json"] }
 once_cell = "1.19.0"
 thiserror = "1.0.61"
-jsonschema = "0.18.0"
+jsonschema = "0.29.0"
 chrono = { version = "0.4.38", features = ["serde"] }
 ulid = "1.1.3"
 uuid = { version = "1.8.0", features = ["serde", "default", "v4"] }
 urn = { version = "0.7.0", features = ["serde"] }
 log = "0.4.21"
-tower = "0.4.13"
+tower = "0.5.2"
 http-body-util = "0.1.2"
 tracing-test = "0.2.5"
 sea-orm = { version = "1.1.1", features = ["sqlx-postgres", "runtime-tokio", "macros", "with-json"] }
