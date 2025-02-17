@@ -7,7 +7,6 @@ const NotFound = () => {
 const RouteComponent = () => {
   return (
     <div>
-      <header>hola</header>
       <Outlet />
     </div>
   );
