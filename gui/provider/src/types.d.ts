@@ -19,6 +19,14 @@ declare global {
   }
 
   export interface Content {}
+
+  export interface CNError {
+    error: {
+      code: string;
+      message: string;
+      title: string;
+    };
+  }
 }
 
 export {};

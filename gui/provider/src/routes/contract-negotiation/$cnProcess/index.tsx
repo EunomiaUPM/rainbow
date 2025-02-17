@@ -3,7 +3,7 @@ import {
   getMessagesByCatalogId,
 } from "@/data/catalog-queries";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 
 const RouteComponent = () => {
   const { cnProcess } = Route.useParams();
@@ -36,6 +36,7 @@ export const Route = createFileRoute("/contract-negotiation/$cnProcess/")({
     const messages = await queryClient.ensureQueryData(
       getMessagesByCatalogId(params.cnProcess)
     );
+    if ("error" in process) throw notFound();
     return { process, messages };
   },
 });

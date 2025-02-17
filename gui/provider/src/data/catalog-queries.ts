@@ -14,7 +14,7 @@ export const getCatalogsById = (id: UUID) =>
   queryOptions({
     queryKey: ["GET_CONTRACT_NEGOTIATION_PROCESSES", id],
     queryFn: async () => {
-      const cnProcesses: CNProcess = await (
+      const cnProcesses: CNProcess | CNError = await (
         await fetch(
           "http://localhost:1234/api/v1/contract-negotiation/processes/" + id
         )
