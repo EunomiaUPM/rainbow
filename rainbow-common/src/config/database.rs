@@ -20,6 +20,7 @@
 use crate::config::config::get_local_database_url;
 use sea_orm::{Database, DatabaseConnection};
 use tokio::sync::OnceCell;
+use tracing::info;
 
 pub static DB_CONNECTION: OnceCell<DatabaseConnection> = OnceCell::const_new();
 pub async fn get_db_connection() -> &'static DatabaseConnection {
@@ -29,7 +30,7 @@ pub async fn get_db_connection() -> &'static DatabaseConnection {
             let db = Database::connect(db_url).await;
             match db {
                 Ok(db) => {
-                    println!("Database connection successfully established");
+                    info!("Database connection successfully established");
                     db
                 }
                 Err(e) => {

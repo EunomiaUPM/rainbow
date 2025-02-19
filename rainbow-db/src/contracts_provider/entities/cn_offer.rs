@@ -27,6 +27,7 @@ pub struct Model {
     pub offer_id: String,
     pub cn_message_id: String,
     pub offer_content: serde_json::Value,
+    pub created_at: chrono::NaiveDateTime,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

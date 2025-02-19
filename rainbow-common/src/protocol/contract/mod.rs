@@ -34,7 +34,7 @@ pub mod contract_negotiation_termination;
 static CONTEXT: &str = "https://w3id.org/dspace/2024/1/context.json";
 
 #[derive(Debug, Serialize, Deserialize)]
-enum ContractNegotiationState {
+pub enum ContractNegotiationState {
     #[serde(rename = "dspace:REQUESTED")]
     Requested,
     #[serde(rename = "dspace:OFFERED")]

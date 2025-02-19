@@ -17,6 +17,7 @@
  *
  */
 
+use axum::extract::rejection::JsonRejection;
 use axum::extract::Path;
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
@@ -60,7 +61,8 @@ async fn handle_get_negotiations(Path(provider_pid): Path<String>) -> impl IntoR
     };
     (StatusCode::OK, "Ok").into_response()
 }
-async fn handle_post_request(Json(input): Json<ContractRequestMessage>) -> impl IntoResponse {
+
+async fn handle_post_request(input: Result<Json<ContractRequestMessage>, JsonRejection>) -> impl IntoResponse {
     info!("POST /negotiations/request");
     (StatusCode::OK, "Ok").into_response()
 }

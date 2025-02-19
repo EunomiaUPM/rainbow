@@ -16,3 +16,22 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Debug, Deserialize)]
+pub struct ContractErrorMessage {
+    #[serde(rename = "@context")]
+    pub context: String,
+    #[serde(rename = "@type")]
+    pub _type: String,
+    #[serde(rename = "dspace:providerPid")]
+    pub provider_pid: String,
+    #[serde(rename = "dspace:consumerPid")]
+    pub consumer_pid: String,
+    #[serde(rename = "dspace:code")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub code: Option<Vec<String>>,
+    #[serde(rename = "dspace:reason")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reason: Option<Vec<String>>,
+}

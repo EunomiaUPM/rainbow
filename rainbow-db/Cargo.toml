@@ -24,3 +24,4 @@ chrono = { workspace = true }
 urn = { workspace = true }
 sea-orm = { workspace = true }
 sea-orm-migration = { workspace = true }
+uuid = { version = "1.11.0", features = ["v4"] }

@@ -16,7 +16,6 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 use super::entities::agreement;
 use super::entities::cn_message;
 use super::entities::cn_offer;
@@ -26,16 +25,27 @@ use crate::contracts_provider::repo::sql::ContractNegotiationRepoForSql;
 use anyhow::Error;
 use once_cell::sync::Lazy;
 use rainbow_common::config::config::GLOBAL_CONFIG;
+use rainbow_common::protocol::contract::ContractNegotiationState;
 use sea_orm_migration::async_trait::async_trait;
 use thiserror::Error;
 use urn::Urn;
 
 pub mod sql;
 
-pub trait CombinedRepo: ContractNegotiationProcessRepo + ContractNegotiationMessageRepo + ContractNegotiationOfferRepo + AgreementRepo + Participant {}
+pub trait CombinedRepo:
+ContractNegotiationProcessRepo
++ ContractNegotiationMessageRepo
++ ContractNegotiationOfferRepo
++ AgreementRepo
++ Participant
+{}
 impl<T> CombinedRepo for T
 where
-    T: ContractNegotiationProcessRepo + ContractNegotiationMessageRepo + ContractNegotiationOfferRepo + AgreementRepo + Participant,
+    T: ContractNegotiationProcessRepo
+    + ContractNegotiationMessageRepo
+    + ContractNegotiationOfferRepo
+    + AgreementRepo
+    + Participant,
 {}
 
 pub static CONTRACT_PROVIDER_REPO: Lazy<Box<dyn CombinedRepo + Send + Sync>> = Lazy::new(|| {
@@ -48,9 +58,16 @@ pub static CONTRACT_PROVIDER_REPO: Lazy<Box<dyn CombinedRepo + Send + Sync>> = L
     }
 });
 
-
-pub struct NewContractNegotiationProcess {}
-pub struct EditContractNegotiationProcess {}
+pub struct NewContractNegotiationProcess {
+    pub provider_id: Option<Urn>,
+    pub consumer_id: Option<Urn>,
+    pub state: ContractNegotiationState,
+}
+pub struct EditContractNegotiationProcess {
+    pub provider_id: Option<Urn>,
+    pub consumer_id: Option<Urn>,
+    pub state: Option<ContractNegotiationState>,
+}
 
 #[async_trait]
 pub trait ContractNegotiationProcessRepo {
@@ -62,11 +79,11 @@ pub trait ContractNegotiationProcessRepo {
     async fn get_cn_processes_by_provider_id(
         &self,
         provider_id: Urn,
-    ) -> anyhow::Result<Vec<cn_process::Model>, CnErrors>;
+    ) -> anyhow::Result<Option<cn_process::Model>, CnErrors>;
     async fn get_cn_processes_by_consumer_id(
         &self,
         consumer_id: Urn,
-    ) -> anyhow::Result<Vec<cn_process::Model>, CnErrors>;
+    ) -> anyhow::Result<Option<cn_process::Model>, CnErrors>;
     async fn get_cn_process_by_cn_id(
         &self,
         cn_process_id: Urn,
@@ -83,8 +100,18 @@ pub trait ContractNegotiationProcessRepo {
     async fn delete_cn_process(&self, cn_process_id: Urn) -> anyhow::Result<(), CnErrors>;
 }
 
-pub struct NewContractNegotiationMessage {}
-pub struct EditContractNegotiationMessage {}
+pub struct NewContractNegotiationMessage {
+    pub _type: String,
+    pub from: String,
+    pub to: String,
+    pub content: serde_json::Value,
+}
+pub struct EditContractNegotiationMessage {
+    pub _type: String,
+    pub from: String,
+    pub to: String,
+    pub content: serde_json::Value,
+}
 
 #[async_trait]
 pub trait ContractNegotiationMessageRepo {
@@ -93,10 +120,14 @@ pub trait ContractNegotiationMessageRepo {
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<cn_message::Model>, CnErrors>;
-    async fn get_cn_messages_by_cn_id(
+    async fn get_cn_messages_by_cn_process_id(
+        &self,
+        cn_process_id: Urn,
+    ) -> anyhow::Result<Vec<cn_message::Model>, CnErrors>;
+    async fn get_cn_messages_by_cn_message_id(
         &self,
         cn_message_id: Urn,
-    ) -> anyhow::Result<Vec<cn_message::Model>, CnErrors>;
+    ) -> anyhow::Result<Option<cn_message::Model>, CnErrors>;
     async fn get_cn_messages_by_provider_id(
         &self,
         provider_id: Urn,
@@ -107,17 +138,25 @@ pub trait ContractNegotiationMessageRepo {
     ) -> anyhow::Result<Vec<cn_message::Model>, CnErrors>;
     async fn put_cn_message(
         &self,
+        cn_process_id: Urn,
         cn_message_id: Urn,
         edit_cn_message: EditContractNegotiationMessage,
     ) -> anyhow::Result<cn_message::Model, CnErrors>;
     async fn create_cn_message(
         &self,
+        cn_process_id: Urn,
         new_cn_message: NewContractNegotiationMessage,
     ) -> anyhow::Result<cn_message::Model, CnErrors>;
-    async fn delete_cn_message(&self, cn_message_id: Urn) -> anyhow::Result<(), CnErrors>;
+    async fn delete_cn_message(
+        &self,
+        cn_process_id: Urn,
+        cn_message_id: Urn,
+    ) -> anyhow::Result<(), CnErrors>;
 }
 
-pub struct NewContractNegotiationOffer {}
+pub struct NewContractNegotiationOffer {
+    pub offer_content: serde_json::Value,
+}
 pub struct EditContractNegotiationOffer {}
 
 #[async_trait]
@@ -127,36 +166,60 @@ pub trait ContractNegotiationOfferRepo {
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<cn_offer::Model>, CnErrors>;
-    async fn get_all_cn_offers_by_id(
+    async fn get_all_cn_offers_by_message_id(
         &self,
         offer_id: Urn,
-    ) -> anyhow::Result<Vec<cn_offer::Model>, CnErrors>;
+    ) -> anyhow::Result<Option<cn_offer::Model>, CnErrors>;
     async fn get_all_cn_offers_by_provider(
         &self,
         provider_id: Urn,
     ) -> anyhow::Result<Vec<cn_offer::Model>, CnErrors>;
+    async fn get_all_cn_offers_by_cn_process(
+        &self,
+        process_id: Urn,
+    ) -> anyhow::Result<Vec<cn_offer::Model>, CnErrors>;
     async fn get_all_cn_offers_by_consumer(
         &self,
-        provider_id: Urn,
+        consumer_id: Urn,
     ) -> anyhow::Result<Vec<cn_offer::Model>, CnErrors>;
-    async fn get_cn_offers_by_id(
+    async fn get_last_cn_offers_by_cn_process(
+        &self,
+        process_id: Urn,
+    ) -> anyhow::Result<Option<cn_offer::Model>, CnErrors>;
+    async fn get_cn_offer_by_id(
         &self,
         offer_id: Urn,
     ) -> anyhow::Result<Option<cn_offer::Model>, CnErrors>;
     async fn put_cn_offer(
         &self,
+        process_id: Urn,
+        message_id: Urn,
         offer_id: Urn,
         edit_cn_offer: EditContractNegotiationOffer,
     ) -> anyhow::Result<cn_offer::Model, CnErrors>;
     async fn create_cn_offer(
         &self,
+        process_id: Urn,
+        message_id: Urn,
         new_cn_offer: NewContractNegotiationOffer,
     ) -> anyhow::Result<cn_offer::Model, CnErrors>;
-    async fn delete_cn_offer(&self, offer_id: Urn) -> anyhow::Result<(), CnErrors>;
+    async fn delete_cn_offer(
+        &self,
+        process_id: Urn,
+        message_id: Urn,
+        offer_id: Urn,
+    ) -> anyhow::Result<(), CnErrors>;
 }
 
-pub struct NewAgreement {}
-pub struct EditAgreement {}
+pub struct NewAgreement {
+    pub consumer_participant_id: Urn,
+    pub provider_participant_id: Urn,
+    pub agreement_content: serde_json::Value,
+    pub active: bool,
+}
+pub struct EditAgreement {
+    pub active: Option<bool>,
+}
 #[async_trait]
 pub trait AgreementRepo {
     async fn get_all_agreements(
@@ -168,20 +231,50 @@ pub trait AgreementRepo {
         &self,
         agreement_id: Urn,
     ) -> anyhow::Result<Option<agreement::Model>, CnErrors>;
+    async fn get_agreement_by_process_id(
+        &self,
+        process_id: Urn,
+    ) -> anyhow::Result<Option<agreement::Model>, CnErrors>;
+    async fn get_agreement_by_message_id(
+        &self,
+        message_id: Urn,
+    ) -> anyhow::Result<Option<agreement::Model>, CnErrors>;
+
+    async fn get_agreements_by_participant_id(
+        &self,
+        participant_id: Urn,
+    ) -> anyhow::Result<Vec<agreement::Model>, CnErrors>;
+
     async fn put_agreement(
         &self,
+        process_id: Urn,
+        message_id: Urn,
         agreement_id: Urn,
         edit_agreement: EditAgreement,
     ) -> anyhow::Result<agreement::Model, CnErrors>;
     async fn create_agreement(
         &self,
+        process_id: Urn,
+        message_id: Urn,
         new_agreement: NewAgreement,
     ) -> anyhow::Result<agreement::Model, CnErrors>;
-    async fn delete_agreement(&self, agreement_id: Urn) -> anyhow::Result<(), CnErrors>;
+    async fn delete_agreement(
+        &self,
+        process_id: Urn,
+        message_id: Urn,
+        agreement_id: Urn,
+    ) -> anyhow::Result<(), CnErrors>;
 }
 
-pub struct NewParticipant {}
-pub struct EditParticipant {}
+pub struct NewParticipant {
+    pub identity_token: Option<String>,
+    pub _type: String,
+    pub extra_fields: serde_json::Value,
+}
+pub struct EditParticipant {
+    pub identity_token: Option<String>,
+    pub extra_fields: Option<serde_json::Value>,
+}
 
 #[async_trait]
 pub trait Participant {
@@ -217,7 +310,7 @@ pub enum CnErrors {
     #[error("Agreement not found")]
     AgreementNotFound,
     #[error("Participant not found")]
-    ParticipantNotFound,
+    ParticipantNotFound(String, Urn),
 
     #[error("Error fetching Contract Negotiation Process. {0}")]
     ErrorFetchingCNProcess(Error),

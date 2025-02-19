@@ -16,3 +16,19 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use crate::protocol::contract::ContractNegotiationState;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ContractAckMessage {
+    #[serde(rename = "@context")]
+    pub context: String,
+    #[serde(rename = "@type")]
+    pub _type: String,
+    #[serde(rename = "dspace:providerPid")]
+    pub provider_pid: String,
+    #[serde(rename = "dspace:consumerPid")]
+    pub consumer_pid: String,
+    #[serde(rename = "dspace:state")]
+    pub state: ContractNegotiationState,
+}

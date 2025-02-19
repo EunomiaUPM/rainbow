@@ -99,7 +99,7 @@ pub async fn catalog_api_router() -> anyhow::Result<Router> {
             "/api/v1/catalogs/:id/data-services/:did",
             delete(handle_delete_dataservice),
         );
-    
+
     Ok(router)
 }
 

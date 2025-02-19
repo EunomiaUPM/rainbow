@@ -18,3 +18,5 @@
  */
 
 pub mod idsa_api;
+pub mod rainbow_cn_api;
+pub mod rainbow_cn_errors;

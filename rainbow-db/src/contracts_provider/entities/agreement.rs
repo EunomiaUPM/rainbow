@@ -29,6 +29,7 @@ pub struct Model {
     pub provider_participant_id: String,
     pub cn_message_id: String,
     pub agreement_content: serde_json::Value,
+    pub created_at: chrono::NaiveDateTime,
 }
 
 

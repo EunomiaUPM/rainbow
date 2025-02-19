@@ -2190,6 +2190,7 @@ dependencies = [
  "serde_json",
  "thiserror",
  "urn",
+ "uuid",
 ]
 
 [[package]]

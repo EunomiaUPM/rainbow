@@ -37,6 +37,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(CNOffers::OfferId).string().not_null().primary_key())
                     .col(ColumnDef::new(CNOffers::CnMessageId).string().not_null())
                     .col(ColumnDef::new(CNOffers::OfferContent).json().not_null())
+                    .col(ColumnDef::new(CNOffers::CreatedAt).date_time().not_null())
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk_cn_offers_cn_messages")
@@ -60,4 +61,5 @@ pub enum CNOffers {
     OfferId,
     CnMessageId,
     OfferContent,
+    CreatedAt,
 }
