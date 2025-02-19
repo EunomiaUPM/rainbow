@@ -107,10 +107,10 @@ pub struct NewContractNegotiationMessage {
     pub content: serde_json::Value,
 }
 pub struct EditContractNegotiationMessage {
-    pub _type: String,
-    pub from: String,
-    pub to: String,
-    pub content: serde_json::Value,
+    pub _type: Option<String>,
+    pub from: Option<String>,
+    pub to: Option<String>,
+    pub content: Option<serde_json::Value>,
 }
 
 #[async_trait]

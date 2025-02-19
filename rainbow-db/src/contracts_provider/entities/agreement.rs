@@ -30,6 +30,7 @@ pub struct Model {
     pub cn_message_id: String,
     pub agreement_content: serde_json::Value,
     pub created_at: chrono::NaiveDateTime,
+    pub active: bool,
 }
 
 

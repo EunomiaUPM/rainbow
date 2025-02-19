@@ -110,10 +110,10 @@ pub struct EditContractNegotiationMessageRequest {
 impl Into<EditContractNegotiationMessage> for EditContractNegotiationMessageRequest {
     fn into(self) -> EditContractNegotiationMessage {
         EditContractNegotiationMessage {
-            _type: self._type,
-            from: self.from,
-            to: self.to,
-            content: self.content,
+            _type: Option::from(self._type),
+            from: Option::from(self.from),
+            to: Option::from(self.to),
+            content: Option::from(self.content),
         }
     }
 }

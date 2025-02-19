@@ -10,6 +10,7 @@ use crate::contracts_provider::repo::{
     NewContractNegotiationMessage, NewContractNegotiationOffer, NewContractNegotiationProcess,
     NewParticipant, Participant,
 };
+use json_value_merge::Merge;
 use rainbow_common::config::database::get_db_connection;
 use rainbow_common::protocol::contract::ContractNegotiationState;
 use rainbow_common::utils::get_urn;
@@ -20,6 +21,7 @@ use sea_orm::{
 use sea_orm_migration::async_trait::async_trait;
 use sea_orm_migration::prelude::Condition;
 use urn::Urn;
+
 
 pub struct ContractNegotiationRepoForSql {}
 
@@ -91,6 +93,16 @@ impl ContractNegotiationProcessRepo for ContractNegotiationRepoForSql {
             .ok_or(CnErrors::CNProcessNotFound)?;
 
         let mut old_active_model: cn_process::ActiveModel = old_model.into();
+
+        if let Some(provider_id) = edit_cn_process.provider_id {
+            old_active_model.provider_id = ActiveValue::Set(Some(provider_id.to_string()));
+        }
+        if let Some(consumer_id) = edit_cn_process.consumer_id {
+            old_active_model.consumer_id = ActiveValue::Set(Some(consumer_id.to_string()));
+        }
+        if let Some(state) = edit_cn_process.state {
+            old_active_model.state = ActiveValue::Set(state.to_string());
+        }
         old_active_model.updated_at = ActiveValue::Set(Some(chrono::Utc::now().naive_utc()));
 
         let model = old_active_model
@@ -247,6 +259,19 @@ impl ContractNegotiationMessageRepo for ContractNegotiationRepoForSql {
             .ok_or(CnErrors::CNMessageNotFound)?;
 
         let mut old_active_model: cn_message::ActiveModel = old_model.into();
+        if let Some(_type) = edit_cn_message._type {
+            old_active_model._type = ActiveValue::Set(_type);
+        }
+        if let Some(from) = edit_cn_message.from {
+            old_active_model.from = ActiveValue::Set(from);
+        }
+        if let Some(to) = edit_cn_message.to {
+            old_active_model.to = ActiveValue::Set(to);
+        }
+        let mut old_json_content = old_active_model.content.unwrap();
+        let new_json_content = edit_cn_message.content.unwrap();
+        old_json_content.merge(&new_json_content);
+        old_active_model.content = ActiveValue::Set(old_json_content);
 
         let model = old_active_model
             .update(db_connection)
@@ -664,6 +689,9 @@ impl AgreementRepo for ContractNegotiationRepoForSql {
             .ok_or(CnErrors::AgreementNotFound)?;
 
         let mut old_active_model: agreement::ActiveModel = old_model.into();
+        if let Some(active) = edit_agreement.active {
+            old_active_model.active = ActiveValue::Set(active);
+        }
 
         let model = old_active_model
             .update(db_connection)
@@ -720,6 +748,7 @@ impl AgreementRepo for ContractNegotiationRepoForSql {
             cn_message_id: ActiveValue::Set(message_id.to_string()),
             agreement_content: ActiveValue::Set(new_agreement.agreement_content),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
+            active: ActiveValue::Set(true),
         };
 
         let agreement = agreement::Entity::insert(model)
@@ -811,6 +840,12 @@ impl Participant for ContractNegotiationRepoForSql {
             ))?;
 
         let mut old_active_model: participant::ActiveModel = old_model.into();
+
+        if let Some(extra_fields) = edit_participant.extra_fields {
+            let mut old_json_content = old_active_model.extra_fields.unwrap();
+            old_json_content.merge(&extra_fields);
+            old_active_model.extra_fields = ActiveValue::Set(old_json_content);
+        }
 
         let model = old_active_model
             .update(db_connection)

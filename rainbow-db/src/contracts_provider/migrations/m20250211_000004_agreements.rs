@@ -41,6 +41,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Agreements::CnMessageId).string().not_null())
                     .col(ColumnDef::new(Agreements::AgreementContent).json().not_null())
                     .col(ColumnDef::new(Agreements::CreatedAt).date_time().not_null())
+                    .col(ColumnDef::new(Agreements::Active).boolean().not_null().default(true))
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk_agreements_cn_messages")
@@ -81,4 +82,5 @@ pub enum Agreements {
     CnMessageId,
     AgreementContent,
     CreatedAt,
+    Active,
 }
