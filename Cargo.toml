@@ -50,5 +50,3 @@ tracing-test = "0.2.5"
 sea-orm = { version = "1.1.1", features = ["sqlx-postgres", "runtime-tokio", "macros", "with-json"] }
 sea-orm-migration = { version = "1.1.1" }
 
-[build]
-rustflags = ["-Z", "threads=8"]

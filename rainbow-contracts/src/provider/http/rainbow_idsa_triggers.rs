@@ -42,6 +42,7 @@ use rainbow_db::contracts_provider::repo::{
 };
 use reqwest::{Client, StatusCode};
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
 use std::time::Duration;
 use urn::Urn;
 
@@ -194,7 +195,7 @@ async fn setup_offer(input: Result<Json<SetupOfferRequest>, JsonRejection>) -> i
     println!("{:?}", response);
 
     // persist cn_process
-    let cn_process: cn_process::Model;
+    let mut cn_process: cn_process::Model;
     if is_reoffer == false {
         cn_process = CONTRACT_PROVIDER_REPO
             .create_cn_process(NewContractNegotiationProcess {
@@ -211,7 +212,18 @@ async fn setup_offer(input: Result<Json<SetupOfferRequest>, JsonRejection>) -> i
             .await
             .unwrap()
             .unwrap(); // errors
+        cn_process = CONTRACT_PROVIDER_REPO
+            .put_cn_process(cn_process.cn_process_id.parse().unwrap(), EditContractNegotiationProcess {
+                provider_id: None,
+                consumer_id: None,
+                state: Some(response.state),
+            })
+            .await
+            .unwrap();
     }
+
+    println!("\n\n\n\n\n\n\n\n\n{:?}", is_reoffer);
+    println!("{:#?}\n\n\n\n\n\n\n", cn_process);
 
     // persist cn_message
     let cn_message = CONTRACT_PROVIDER_REPO

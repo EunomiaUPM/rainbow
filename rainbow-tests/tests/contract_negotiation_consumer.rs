@@ -23,18 +23,15 @@ use rainbow_contracts::provider::http::rainbow_idsa_triggers::{
     SetupFinalizationResponse, SetupOfferRequest, SetupOfferResponse,
 };
 
-use rainbow_common::protocol::contract::contract_ack::ContractAckMessage;
 use rainbow_common::protocol::contract::contract_odrl::{
-    OdrlAgreement, OdrlMessageOffer, OdrlOffer, OdrlPermission, OdrlTypes, OfferTypes,
+    OdrlAgreement, OdrlOffer, OdrlPermission, OdrlTypes, OfferTypes,
 };
 use rainbow_common::utils::{get_urn, get_urn_from_string};
 use rainbow_contracts::consumer::http::rainbow_idsa_triggers::{
-    SetupAcceptanceRequest, SetupAcceptanceResponse, SetupRequestRequest, SetupRequestResponse,
+    SetupRequestRequest, SetupRequestResponse,
     SetupVerificationRequest, SetupVerificationResponse,
 };
-use rainbow_dataplane::proxy::consumer_http::consumer_dataplane_router;
 use rainbow_db::contracts_provider::entities::participant;
-use serde_json::json;
 use std::process::Command;
 use tracing_test::traced_test;
 
@@ -44,9 +41,9 @@ mod utils;
 #[traced_test]
 #[tokio::test]
 pub async fn contract_negotiation_consumer() -> anyhow::Result<()> {
-    ///
-    /// Setup servers
-    ///
+    //
+    // Setup servers
+    //
     let cwd = "./../rainbow-core";
     let provider_envs = load_env_file(".env.provider.template");
     let mut provider_server = Command::new("cargo")
@@ -147,7 +144,6 @@ pub async fn contract_negotiation_consumer() -> anyhow::Result<()> {
         .await?;
     let res = req.json::<SetupOfferResponse>().await?;
     println!("SetupOfferResponse: {:#?}", res);
-    // TODO fix here, should go to OFFERED
 
     // -------------------------------
     // Consumer redoes offer with REQUEST
@@ -240,10 +236,12 @@ pub async fn contract_negotiation_consumer() -> anyhow::Result<()> {
     // TODO improve strings and urns
     // TODO validation on ODRL
     // TODO persist agreement
+    // TODO Middlewares for verifying everything (jsonschema, auth, protocol transition validation)
+    // TODO refactor files
 
-    ///
-    /// Tear down servers
-    ///
+    //
+    // Tear down servers
+    //
     tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
     provider_server.kill().expect("Failed to kill provider server");
     consumer_server.kill().expect("Failed to kill consumer server");
