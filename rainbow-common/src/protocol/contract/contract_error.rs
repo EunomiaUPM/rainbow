@@ -16,6 +16,10 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use crate::protocol::contract::ContractNegotiationMessages;
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Response};
+use axum::Json;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Debug, Deserialize)]
@@ -23,15 +27,34 @@ pub struct ContractErrorMessage {
     #[serde(rename = "@context")]
     pub context: String,
     #[serde(rename = "@type")]
-    pub _type: String,
+    pub _type: ContractNegotiationMessages,
     #[serde(rename = "dspace:providerPid")]
-    pub provider_pid: String,
+    pub provider_pid: Option<String>,
     #[serde(rename = "dspace:consumerPid")]
-    pub consumer_pid: String,
+    pub consumer_pid: Option<String>,
     #[serde(rename = "dspace:code")]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub code: Option<Vec<String>>,
+    pub code: Option<String>,
     #[serde(rename = "dspace:reason")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reason: Option<Vec<String>>,
+}
+
+impl Default for ContractErrorMessage {
+    fn default() -> Self {
+        ContractErrorMessage {
+            context: "https://w3id.org/dspace/2025/1/context.jsonld".to_string(),
+            _type: ContractNegotiationMessages::ContractNegotiationError,
+            provider_pid: None,
+            consumer_pid: None,
+            code: None,
+            reason: None,
+        }
+    }
+}
+
+impl IntoResponse for ContractErrorMessage {
+    fn into_response(self) -> Response {
+        (StatusCode::BAD_REQUEST, Json(self)).into_response()
+    }
 }

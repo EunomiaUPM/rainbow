@@ -18,6 +18,7 @@
  */
 
 use crate::protocol::contract::contract_odrl::OdrlOffer;
+use crate::protocol::contract::{ContractNegotiationMessages, CONTEXT};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -29,7 +30,20 @@ pub struct ContractOfferMessage {
     #[serde(rename = "dspace:providerPid")]
     pub provider_pid: String,
     #[serde(rename = "dspace:callbackAddress")]
-    pub callback_address: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub callback_address: Option<String>,
     #[serde(rename = "dspace:offer")]
     pub odrl_offer: OdrlOffer,
+}
+
+impl Default for ContractOfferMessage {
+    fn default() -> Self {
+        ContractOfferMessage {
+            context: CONTEXT.to_string(),
+            _type: ContractNegotiationMessages::ContractOfferMessage.to_string(),
+            provider_pid: "".to_string(),
+            callback_address: None,
+            odrl_offer: OdrlOffer::default(),
+        }
+    }
 }

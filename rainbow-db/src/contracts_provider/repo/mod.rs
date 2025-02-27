@@ -24,7 +24,7 @@ use super::entities::participant;
 use crate::contracts_provider::repo::sql::ContractNegotiationRepoForSql;
 use anyhow::Error;
 use once_cell::sync::Lazy;
-use rainbow_common::config::config::GLOBAL_CONFIG;
+use rainbow_common::config::config::{ConfigRoles, GLOBAL_CONFIG};
 use rainbow_common::protocol::contract::ContractNegotiationState;
 use sea_orm_migration::async_trait::async_trait;
 use thiserror::Error;
@@ -62,6 +62,7 @@ pub struct NewContractNegotiationProcess {
     pub provider_id: Option<Urn>,
     pub consumer_id: Option<Urn>,
     pub state: ContractNegotiationState,
+    pub initiated_by: ConfigRoles,
 }
 pub struct EditContractNegotiationProcess {
     pub provider_id: Option<Urn>,
@@ -78,7 +79,7 @@ pub trait ContractNegotiationProcessRepo {
     ) -> anyhow::Result<Vec<cn_process::Model>, CnErrors>;
     async fn get_cn_processes_by_provider_id(
         &self,
-        provider_id: Urn,
+        provider_id: &Urn,
     ) -> anyhow::Result<Option<cn_process::Model>, CnErrors>;
     async fn get_cn_processes_by_consumer_id(
         &self,
@@ -155,6 +156,7 @@ pub trait ContractNegotiationMessageRepo {
 }
 
 pub struct NewContractNegotiationOffer {
+    pub offer_id: Urn,
     pub offer_content: serde_json::Value,
 }
 pub struct EditContractNegotiationOffer {}
@@ -269,10 +271,12 @@ pub trait AgreementRepo {
 pub struct NewParticipant {
     pub identity_token: Option<String>,
     pub _type: String,
+    pub base_url: String,
     pub extra_fields: serde_json::Value,
 }
 pub struct EditParticipant {
     pub identity_token: Option<String>,
+    pub base_url: Option<String>,
     pub extra_fields: Option<serde_json::Value>,
 }
 

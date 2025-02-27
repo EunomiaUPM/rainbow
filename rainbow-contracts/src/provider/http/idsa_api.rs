@@ -17,12 +17,17 @@
  *
  */
 
+use crate::provider::core::idsa_api::*;
+use crate::provider::core::idsa_api_errors::IdsaCNError;
+use crate::provider::core::rainbow_cn_errors::CnErrorProvider;
+use anyhow::Error;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::Path;
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use rainbow_common::protocol::contract::contract_agreement_verification::ContractAgreementVerificationMessage;
+use rainbow_common::protocol::contract::contract_error::ContractErrorMessage;
 use rainbow_common::protocol::contract::contract_negotiation_event::ContractNegotiationEventMessage;
 use rainbow_common::protocol::contract::contract_negotiation_request::ContractRequestMessage;
 use rainbow_common::protocol::contract::contract_negotiation_termination::ContractTerminationMessage;
@@ -57,43 +62,124 @@ async fn handle_get_negotiations(Path(provider_pid): Path<String>) -> impl IntoR
     info!("GET /negotiations/{}", provider_pid.to_string());
     let provider_pid = match get_urn_from_string(&provider_pid) {
         Ok(provider_pid) => provider_pid,
-        Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+        Err(err) => {
+            return IdsaCNError::UUIDParseError {
+                provider_pid: Option::from(provider_pid.clone()),
+                consumer_pid: None,
+                error: err.to_string(),
+            }
+                .into_response()
+        }
     };
-    (StatusCode::OK, "Ok").into_response()
+    match get_negotiation(provider_pid.clone()).await {
+        Ok(negotiation) => negotiation.into_response(),
+        Err(err) => match err.downcast::<IdsaCNError>() {
+            Ok(err_) => err_.into_response(),
+            Err(err_) => IdsaCNError::NotCheckedError {
+                provider_pid: Option::from(provider_pid.clone().to_string()),
+                consumer_pid: None,
+                error: err_.to_string(),
+            }
+                .into_response(),
+        },
+    }
 }
 
-async fn handle_post_request(input: Result<Json<ContractRequestMessage>, JsonRejection>) -> impl IntoResponse {
+async fn handle_post_request(
+    input: Result<Json<ContractRequestMessage>, JsonRejection>,
+) -> impl IntoResponse {
     info!("POST /negotiations/request");
-    (StatusCode::OK, "Ok").into_response()
+    let input = match input {
+        Ok(input) => input.0,
+        Err(e) => return IdsaCNError::JsonRejection(e).into_response(),
+    };
+    match post_request(input).await {
+        Ok(negotiation) => negotiation.into_response(),
+        Err(err) => match err.downcast::<IdsaCNError>() {
+            Ok(err_) => err_.into_response(),
+            Err(err_) => IdsaCNError::NotCheckedError {
+                provider_pid: None,
+                consumer_pid: None,
+                error: err_.to_string(),
+            }
+                .into_response(),
+        },
+    }
 }
 
 async fn handle_post_provider_request(
     Path(provider_pid): Path<String>,
-    Json(input): Json<ContractRequestMessage>,
+    input: Result<Json<ContractRequestMessage>, JsonRejection>,
 ) -> impl IntoResponse {
     info!("POST /negotiations/{}/request", provider_pid.to_string());
     let provider_pid = match get_urn_from_string(&provider_pid) {
         Ok(provider_pid) => provider_pid,
-        Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+        Err(err) => {
+            return IdsaCNError::UUIDParseError {
+                provider_pid: Option::from(provider_pid.clone()),
+                consumer_pid: None,
+                error: err.to_string(),
+            }
+                .into_response()
+        }
     };
-    (StatusCode::OK, "Ok").into_response()
+    let input = match input {
+        Ok(input) => input.0,
+        Err(e) => return IdsaCNError::JsonRejection(e).into_response(),
+    };
+
+    match post_provider_request(provider_pid, input).await {
+        Ok(negotiation) => negotiation.into_response(),
+        Err(err) => match err.downcast::<IdsaCNError>() {
+            Ok(err_) => err_.into_response(),
+            Err(err_) => IdsaCNError::NotCheckedError {
+                provider_pid: None,
+                consumer_pid: None,
+                error: err_.to_string(),
+            }
+                .into_response(),
+        },
+    }
 }
 
 async fn handle_post_provider_events(
     Path(provider_pid): Path<String>,
-    Json(input): Json<ContractNegotiationEventMessage>,
+    input: Result<Json<ContractNegotiationEventMessage>, JsonRejection>,
 ) -> impl IntoResponse {
     info!("POST /negotiations/{}/events", provider_pid.to_string());
     let provider_pid = match get_urn_from_string(&provider_pid) {
         Ok(provider_pid) => provider_pid,
-        Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+        Err(err) => {
+            return IdsaCNError::UUIDParseError {
+                provider_pid: Option::from(provider_pid.clone()),
+                consumer_pid: None,
+                error: err.to_string(),
+            }
+                .into_response()
+        }
     };
-    (StatusCode::OK, "Ok").into_response()
+    let input = match input {
+        Ok(input) => input.0,
+        Err(e) => return IdsaCNError::JsonRejection(e).into_response(),
+    };
+
+    match post_provider_events(&provider_pid, &input).await {
+        Ok(negotiation) => negotiation.into_response(),
+        Err(err) => match err.downcast::<IdsaCNError>() {
+            Ok(err_) => err_.into_response(),
+            Err(err_) => IdsaCNError::NotCheckedError {
+                provider_pid: None,
+                consumer_pid: None,
+                error: err_.to_string(),
+            }
+                .into_response(),
+        },
+    }
 }
 
 async fn handle_post_provider_agreement_verification(
     Path(provider_pid): Path<String>,
-    Json(input): Json<ContractAgreementVerificationMessage>,
+    input: Result<Json<ContractAgreementVerificationMessage>, JsonRejection>,
 ) -> impl IntoResponse {
     info!(
         "POST /negotiations/{}/agreement/verification",
@@ -103,20 +189,50 @@ async fn handle_post_provider_agreement_verification(
         Ok(provider_pid) => provider_pid,
         Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
     };
-    (StatusCode::OK, "Ok").into_response()
+    let input = match input {
+        Ok(input) => input.0,
+        Err(e) => return IdsaCNError::JsonRejection(e).into_response(),
+    };
+    match post_provider_agreement_verification(provider_pid, input).await {
+        Ok(negotiation) => negotiation.into_response(),
+        Err(err) => match err.downcast::<IdsaCNError>() {
+            Ok(err_) => err_.into_response(),
+            Err(err_) => IdsaCNError::NotCheckedError {
+                provider_pid: None,
+                consumer_pid: None,
+                error: err_.to_string(),
+            }
+                .into_response(),
+        },
+    }
 }
 
 async fn handle_post_provider_termination(
     Path(provider_pid): Path<String>,
-    Json(input): Json<ContractTerminationMessage>,
+    input: Result<Json<ContractTerminationMessage>, JsonRejection>,
 ) -> impl IntoResponse {
     info!(
         "POST /negotiations/{}/termination",
         provider_pid.to_string()
     );
+    let input = match input {
+        Ok(input) => input.0,
+        Err(e) => return IdsaCNError::JsonRejection(e).into_response(),
+    };
     let provider_pid = match get_urn_from_string(&provider_pid) {
         Ok(provider_pid) => provider_pid,
         Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
     };
-    (StatusCode::OK, "Ok").into_response()
+    match post_provider_termination(provider_pid, input).await {
+        Ok(negotiation) => negotiation.into_response(),
+        Err(err) => match err.downcast::<IdsaCNError>() {
+            Ok(err_) => err_.into_response(),
+            Err(err_) => IdsaCNError::NotCheckedError {
+                provider_pid: None,
+                consumer_pid: None,
+                error: err_.to_string(),
+            }
+                .into_response(),
+        },
+    }
 }

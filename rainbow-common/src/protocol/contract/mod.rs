@@ -17,21 +17,22 @@
  *
  */
 
-
+use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
+use std::str::FromStr;
 
-pub mod contract_negotiation_request;
-pub mod contract_offer;
-pub mod contract_agreement;
-pub mod contract_negotiation_event;
-pub mod contract_agreement_verification;
 pub mod contract_ack;
+pub mod contract_agreement;
+pub mod contract_agreement_verification;
 pub mod contract_error;
-pub mod contract_odrl;
+pub mod contract_negotiation_event;
+pub mod contract_negotiation_request;
 pub mod contract_negotiation_termination;
+pub mod contract_odrl;
+pub mod contract_offer;
 
-static CONTEXT: &str = "https://w3id.org/dspace/2024/1/context.json";
+static CONTEXT: &str = "https://w3id.org/dspace/2025/1/context.jsonld";
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum ContractNegotiationState {
@@ -79,8 +80,31 @@ impl Display for ContractNegotiationState {
     }
 }
 
+impl FromStr for ContractNegotiationState {
+    type Err = anyhow::Error;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "dspace:REQUESTED" => Ok(Self::Requested),
+            "REQUESTED" => Ok(Self::Requested),
+            "dspace:OFFERED" => Ok(Self::Offered),
+            "OFFERED" => Ok(Self::Offered),
+            "dspace:ACCEPTED" => Ok(Self::Accepted),
+            "ACCEPTED" => Ok(Self::Accepted),
+            "dspace:AGREED" => Ok(Self::Agreed),
+            "AGREED" => Ok(Self::Agreed),
+            "dspace:VERIFIED" => Ok(Self::Verified),
+            "VERIFIED" => Ok(Self::Verified),
+            "dspace:FINALIZED" => Ok(Self::Finalized),
+            "FINALIZED" => Ok(Self::Finalized),
+            "dspace:TERMINATED" => Ok(Self::Terminated),
+            "TERMINATED" => Ok(Self::Terminated),
+            &_ => Err(anyhow!("Invalid ContractNegotiationState".to_string())),
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
-enum ContractNegotiationMessages {
+pub enum ContractNegotiationMessages {
     #[serde(rename = "dspace:ContractRequestMessage")]
     ContractRequestMessage,
     #[serde(rename = "dspace:ContractOfferMessage")]
@@ -130,3 +154,48 @@ impl Display for ContractNegotiationMessages {
     }
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(untagged)]
+pub enum ContextField {
+    Single(String),
+    Multiple(Vec<String>),
+}
+
+impl Display for ContextField {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str(CONTEXT)
+    }
+}
+
+impl Default for ContextField {
+    fn default() -> Self {
+        ContextField::Single(
+            CONTEXT.to_string()
+        )
+    }
+}
+
+impl CNValidate for ContextField {
+    fn validate(&self) -> anyhow::Result<()> {
+        match self {
+            ContextField::Single(s) => {
+                if s == CONTEXT {
+                    Ok(())
+                } else {
+                    Err(anyhow!("Invalid @context value"))
+                }
+            }
+            ContextField::Multiple(v) => {
+                if v.iter().any(|s| s == CONTEXT) {
+                    Ok(())
+                } else {
+                    Err(anyhow!("Invalid @context value"))
+                }
+            }
+        }
+    }
+}
+
+pub trait CNValidate {
+    fn validate(&self) -> anyhow::Result<()>;
+}

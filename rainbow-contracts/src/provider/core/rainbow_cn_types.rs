@@ -17,6 +17,7 @@
  *
  */
 
+use rainbow_common::config::config::ConfigRoles;
 use rainbow_common::protocol::contract::ContractNegotiationState;
 use rainbow_common::utils::get_urn_from_string;
 use rainbow_db::contracts_provider::repo::{EditAgreement, EditContractNegotiationMessage, EditContractNegotiationOffer, EditContractNegotiationProcess, EditParticipant, NewAgreement, NewContractNegotiationMessage, NewContractNegotiationOffer, NewContractNegotiationProcess, NewParticipant};
@@ -42,6 +43,7 @@ impl Into<NewContractNegotiationProcess> for NewContractNegotiationRequest {
             provider_id: self.provider_id.map(|id| get_urn_from_string(&id).unwrap()),
             consumer_id: self.consumer_id.map(|id| get_urn_from_string(&id).unwrap()),
             state: self.state,
+            initiated_by: ConfigRoles::Provider,
         }
     }
 }
@@ -122,12 +124,14 @@ impl Into<EditContractNegotiationMessage> for EditContractNegotiationMessageRequ
 #[serde(deny_unknown_fields)]
 pub struct NewContractNegotiationOfferRequest {
     #[serde(rename = "odrl:offer")] // TODO
+    pub offer_id: Urn,
     pub offer_content: serde_json::Value,
 }
 
 impl Into<NewContractNegotiationOffer> for NewContractNegotiationOfferRequest {
     fn into(self) -> NewContractNegotiationOffer {
         NewContractNegotiationOffer {
+            offer_id: self.offer_id,
             offer_content: self.offer_content,
         }
     }
@@ -186,6 +190,9 @@ impl Into<EditAgreement> for EditAgreementRequest {
 pub struct NewParticipantRequest {
     #[serde(rename = "dspace:participantType")]
     pub _type: String,
+    #[serde(rename = "dspace:participantBaseUrl")]
+    pub base_url: String,
+    #[serde(rename = "dspace:extraFields")]
     pub extra_fields: serde_json::Value,
 }
 
@@ -194,6 +201,7 @@ impl Into<NewParticipant> for NewParticipantRequest {
         NewParticipant {
             identity_token: None,
             _type: self._type,
+            base_url: self.base_url,
             extra_fields: self.extra_fields,
         }
     }
@@ -202,6 +210,10 @@ impl Into<NewParticipant> for NewParticipantRequest {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct EditParticipantRequest {
+    #[serde(rename = "dspace:participantBaseUrl")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub base_url: Option<String>,
+    #[serde(rename = "dspace:extraFields")]
     pub extra_fields: Option<serde_json::Value>,
 }
 
@@ -209,6 +221,7 @@ impl Into<EditParticipant> for EditParticipantRequest {
     fn into(self) -> EditParticipant {
         EditParticipant {
             identity_token: None,
+            base_url: self.base_url,
             extra_fields: self.extra_fields,
         }
     }

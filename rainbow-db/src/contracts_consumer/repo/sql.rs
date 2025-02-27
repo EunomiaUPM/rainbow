@@ -20,6 +20,9 @@
 use super::super::entities::cn_process;
 use crate::contracts_consumer::repo::{CnErrors, ContractNegotiationConsumerProcessRepo, EditContractNegotiationProcess, NewContractNegotiationProcess};
 use axum::async_trait;
+use rainbow_common::config::database::get_db_connection;
+use rainbow_common::utils::get_urn;
+use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, EntityTrait, QueryFilter, QuerySelect};
 use urn::Urn;
 
 pub struct ContractNegotiationRepoForSql {}
@@ -31,28 +34,53 @@ impl ContractNegotiationConsumerProcessRepo for ContractNegotiationRepoForSql {
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<cn_process::Model>, CnErrors> {
-        todo!()
+        let db_connection = get_db_connection().await;
+        let cn_processes = cn_process::Entity::find()
+            .limit(limit.unwrap_or(10000))
+            .offset(page.unwrap_or(0))
+            .all(db_connection)
+            .await
+            .map_err(|err| CnErrors::ErrorFetchingCNProcess(err.into()))?;
+        Ok(cn_processes)
     }
 
-    async fn get_cn_processes_by_provider_id(
+    async fn get_cn_process_by_provider_id(
         &self,
         provider_id: Urn,
-    ) -> anyhow::Result<Vec<cn_process::Model>, CnErrors> {
-        todo!()
+    ) -> anyhow::Result<Option<cn_process::Model>, CnErrors> {
+        let db_connection = get_db_connection().await;
+        let cn_processes = cn_process::Entity::find()
+            .filter(cn_process::Column::ProviderId.eq(provider_id.as_str()))
+            .one(db_connection)
+            .await
+            .map_err(|err| CnErrors::ErrorFetchingCNProcess(err.into()))?;
+        Ok(cn_processes)
     }
 
-    async fn get_cn_processes_by_consumer_id(
+    async fn get_cn_process_by_consumer_id(
         &self,
         consumer_id: Urn,
-    ) -> anyhow::Result<Vec<cn_process::Model>, CnErrors> {
-        todo!()
+    ) -> anyhow::Result<Option<cn_process::Model>, CnErrors> {
+        let db_connection = get_db_connection().await;
+        let cn_processes = cn_process::Entity::find()
+            .filter(cn_process::Column::ConsumerId.eq(consumer_id.as_str()))
+            .one(db_connection)
+            .await
+            .map_err(|err| CnErrors::ErrorFetchingCNProcess(err.into()))?;
+        Ok(cn_processes)
     }
+
 
     async fn get_cn_process_by_cn_id(
         &self,
         cn_process_id: Urn,
     ) -> anyhow::Result<Option<cn_process::Model>, CnErrors> {
-        todo!()
+        let db_connection = get_db_connection().await;
+        let cn_process = cn_process::Entity::find_by_id(cn_process_id.as_str())
+            .one(db_connection)
+            .await
+            .map_err(|err| CnErrors::ErrorFetchingCNProcess(err.into()))?;
+        Ok(cn_process)
     }
 
     async fn put_cn_process(
@@ -60,17 +88,57 @@ impl ContractNegotiationConsumerProcessRepo for ContractNegotiationRepoForSql {
         cn_process_id: Urn,
         edit_cn_process: EditContractNegotiationProcess,
     ) -> anyhow::Result<cn_process::Model, CnErrors> {
-        todo!()
+        let db_connection = get_db_connection().await;
+        let old_model = cn_process::Entity::find_by_id(cn_process_id.as_str())
+            .one(db_connection)
+            .await
+            .map_err(|err| CnErrors::ErrorFetchingCNProcess(err.into()))?
+            .ok_or(CnErrors::CNProcessNotFound)?;
+
+        let mut old_active_model: cn_process::ActiveModel = old_model.into();
+        old_active_model.updated_at = ActiveValue::Set(Some(chrono::Utc::now().naive_utc()));
+
+        let model = old_active_model
+            .update(db_connection)
+            .await
+            .map_err(|err| CnErrors::ErrorUpdatingCNProcess(err.into()))?;
+        Ok(model)
     }
 
     async fn create_cn_process(
         &self,
         new_cn_process: NewContractNegotiationProcess,
     ) -> anyhow::Result<cn_process::Model, CnErrors> {
-        todo!()
+        let db_connection = get_db_connection().await;
+        let model = cn_process::ActiveModel {
+            cn_process_id: ActiveValue::Set(get_urn(None).to_string()),
+            provider_id: ActiveValue::Set(Option::from(
+                get_urn(new_cn_process.provider_id).to_string(),
+            )),
+            consumer_id: ActiveValue::Set(Option::from(
+                get_urn(new_cn_process.consumer_id).to_string(),
+            )),
+            created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
+            updated_at: ActiveValue::Set(None),
+        };
+
+        let cn_process = cn_process::Entity::insert(model)
+            .exec_with_returning(db_connection)
+            .await
+            .map_err(|err| CnErrors::ErrorCreatingCNProcess(err.into()))?;
+        Ok(cn_process)
     }
 
     async fn delete_cn_process(&self, cn_process_id: Urn) -> anyhow::Result<(), CnErrors> {
-        todo!()
+        let db_connection = get_db_connection().await;
+        match cn_process::Entity::delete_by_id(cn_process_id.as_str())
+            .exec(db_connection)
+            .await
+            .map_err(|err| CnErrors::ErrorDeletingCNProcess(err.into()))?
+            .rows_affected
+        {
+            0 => Err(CnErrors::CNProcessNotFound),
+            _ => Ok(()),
+        }
     }
 }

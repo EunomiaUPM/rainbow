@@ -16,25 +16,37 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
+use crate::protocol::contract::CNValidate;
+use crate::utils::get_urn;
+use anyhow::bail;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use urn::Urn;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum OdrlTypes {
-    #[serde(rename = "dspace:offer")]
+    #[serde(rename = "dspace:Offer")]
     Offer,
-    #[serde(rename = "dspace:agreement")]
+    #[serde(rename = "dspace:Agreement")]
     Agreement,
 }
 
-/// Offer is PolicyClass + MessageOffer
-#[derive(Serialize, Deserialize, Debug)]
-pub struct OdrlOffer {
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(untagged)]
+pub enum OfferTypes {
+    MessageOffer(OdrlMessageOffer),
+    Offer(OdrlOffer),
+    Other(Value),
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(deny_unknown_fields)]
+pub struct OdrlMessageOffer {
     // PolicyClass
     #[serde(rename = "@id")]
-    pub id: String,
+    pub id: Urn,
     #[serde(rename = "odrl:profile")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub profile: Option<OdrlProfile>,
     #[serde(rename = "odrl:permission")]
     pub permission: Option<Vec<OdrlPermission>>, // anyof
@@ -42,13 +54,86 @@ pub struct OdrlOffer {
     pub obligation: Option<Vec<OdrlObligation>>,
     // MessageOffer
     #[serde(rename = "@type")]
-    pub _type: String,
+    pub _type: OdrlTypes,
     #[serde(rename = "odrl:prohibition")]
     pub prohibition: Option<Vec<OdrlObligation>>, // anyof
 }
 
+impl CNValidate for OdrlMessageOffer {
+    fn validate(&self) -> anyhow::Result<()> {
+        //
+
+        // Validate any of permission or prohibition
+        match (&self.permission, &self.prohibition) {
+            (Some(pr), Some(ph)) => {
+                bail!("Either one of dspace:offer.permission or dspace:offer.prohibition must be present".to_string(),)
+            }
+            (None, None) => {
+                bail!("At least one of dspace:offer.permission or dspace:offer.prohibition must be present".to_string(),)
+            }
+            _ => {}
+        };
+        Ok(())
+    }
+}
+
+/// Offer is PolicyClass + MessageOffer - Offer
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(deny_unknown_fields)]
+pub struct OdrlOffer {
+    // PolicyClass
+    #[serde(rename = "@id")]
+    pub id: Urn,
+    #[serde(rename = "odrl:profile")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub profile: Option<OdrlProfile>,
+    #[serde(rename = "odrl:permission")]
+    pub permission: Option<Vec<OdrlPermission>>, // anyof
+    #[serde(rename = "odrl:obligation")]
+    pub obligation: Option<Vec<OdrlObligation>>,
+    // MessageOffer
+    #[serde(rename = "@type")]
+    pub _type: OdrlTypes,
+    #[serde(rename = "odrl:prohibition")]
+    pub prohibition: Option<Vec<OdrlObligation>>, // anyof
+    // Offer
+    #[serde(rename = "odrl:target")]
+    pub target: Option<Urn>,
+}
+
+impl Default for OdrlOffer {
+    fn default() -> Self {
+        OdrlOffer {
+            id: get_urn(None),
+            profile: None,
+            permission: None,
+            obligation: None,
+            _type: OdrlTypes::Offer,
+            prohibition: None,
+            target: None,
+        }
+    }
+}
+
+impl CNValidate for OdrlOffer {
+    fn validate(&self) -> anyhow::Result<()> {
+        // Validate any of permission or prohibition
+        match (&self.permission, &self.prohibition) {
+            (Some(pr), Some(ph)) => {
+                bail!("Either one of dspace:offer.permission or dspace:offer.prohibition must be present".to_string(),)
+            }
+            (None, None) => {
+                bail!("At least one of dspace:offer.permission or dspace:offer.prohibition must be present".to_string(),)
+            }
+            _ => {}
+        };
+        Ok(())
+    }
+}
+
 /// Offer is PolicyClass + Agreement
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct OdrlAgreement {
     // PolicyClass
     #[serde(rename = "@id")]
@@ -61,21 +146,44 @@ pub struct OdrlAgreement {
     pub obligation: Option<Vec<OdrlObligation>>,
     // Agreement
     #[serde(rename = "@type")]
-    pub _type: String,
+    pub _type: OdrlTypes,
     #[serde(rename = "odrl:target")]
-    pub target: Option<String>,
+    pub target: Urn,
     #[serde(rename = "odrl:assigner")]
-    pub assigner: String,
+    pub assigner: Urn,
     #[serde(rename = "odrl:assignee")]
-    pub assignee: String,
+    pub assignee: Urn,
     #[serde(rename = "odrl:timestamp")]
     pub timestamp: Option<String>,
     #[serde(rename = "odrl:prohibition")]
     pub prohibition: Option<Vec<OdrlObligation>>, // anyof
 }
 
+impl Default for OdrlAgreement {
+    fn default() -> OdrlAgreement {
+        Self {
+            id: get_urn(None).to_string(),
+            profile: None,
+            permission: None,
+            obligation: None,
+            _type: OdrlTypes::Agreement,
+            target: get_urn(None),
+            assigner: get_urn(None),
+            assignee: get_urn(None),
+            timestamp: None,
+            prohibition: None,
+        }
+    }
+}
+
+impl CNValidate for OdrlAgreement {
+    fn validate(&self) -> anyhow::Result<()> {
+        Ok(())
+    }
+}
+
 // ODRL Profile type
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(untagged)]
 pub enum OdrlProfile {
     Single(String),
@@ -83,17 +191,24 @@ pub enum OdrlProfile {
 }
 
 /// OdrlPermission
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct OdrlPermission {
+    #[serde(rename = "odrl:action")]
     pub action: OdrlAction,
+    #[serde(rename = "odrl:constraint")]
     pub constraint: Option<Vec<OdrlConstraint>>,
+    #[serde(rename = "odrl:duty")]
     pub duty: Option<OdrlDuty>,
 }
 
 /// OdrlDuty
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct OdrlDuty {
+    #[serde(rename = "odrl:action")]
     pub action: OdrlAction,
+    #[serde(rename = "odrl:constraint")]
     pub constraint: Option<Vec<OdrlConstraint>>,
 }
 
@@ -103,48 +218,52 @@ pub type OdrlObligation = OdrlDuty;
 /// OdrlAction
 pub type OdrlAction = String;
 
-
 /// OdrlConstraint
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(untagged)]
 pub enum OdrlConstraint {
-    Logical(OdrlLogicalConstraint),
     Atomic(OdrlAtomicConstraint),
+    Logical(OdrlLogicalConstraint),
 }
 
 /// LogicalConstraint permite una de las siguientes propiedades: "and", "andSequence", "or" o "xone".
 /// Se usan Option para cada una;
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct OdrlLogicalConstraint {
+    #[serde(rename = "odrl:and")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub and: Option<Vec<OdrlConstraint>>,
     #[serde(rename = "andSequence", skip_serializing_if = "Option::is_none")]
     pub and_sequence: Option<Vec<OdrlConstraint>>,
+    #[serde(rename = "odrl:or")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub or: Option<Vec<OdrlConstraint>>,
+    #[serde(rename = "odrl:xone")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub xone: Option<Vec<OdrlConstraint>>,
 }
 
-/// la regla de que exactamente una debe estar presente se valida externamente.
+/// the rule that exactly one must be present is validated externally.
 /// let constraint: LogicalConstraint = serde_json::from_str(json_data)?;
-/// constraint.validate()?; // si falla, se retorna un error
+/// constraint.validate()?; // if it fails, an error is returned.
 impl OdrlLogicalConstraint {
-    pub fn validate(&self) -> Result<(), String> {
-        let count = self.and.is_some() as usize +
-            self.and_sequence.is_some() as usize +
-            self.or.is_some() as usize +
-            self.xone.is_some() as usize;
+    pub fn validate(&self) -> anyhow::Result<()> {
+        let count = self.and.is_some() as usize
+            + self.and_sequence.is_some() as usize
+            + self.or.is_some() as usize
+            + self.xone.is_some() as usize;
         if count != 1 {
-            Err(format!("Exactamente uno de 'and', 'andSequence', 'or' o 'xone' debe estar presente, encontrado {}", count))
+            bail!("Exactly one of 'and', 'andSequence', 'or' or 'xone' must be present, found {}", count)
         } else {
             Ok(())
         }
     }
 }
 
-// AtomicConstraint define los tres campos requeridos: rightOperand, leftOperand y operator.
-#[derive(Serialize, Deserialize, Debug)]
+// AtomicConstraint defines the three required fields: rightOperand, leftOperand and operator.
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct OdrlAtomicConstraint {
     #[serde(rename = "odrl:rightOperand")]
     pub right_operand: OdrlRightOperand,
@@ -154,8 +273,9 @@ pub struct OdrlAtomicConstraint {
     pub operator: Operator,
 }
 
-// Operator se define como un enum con los valores permitidos.
-#[derive(Serialize, Deserialize, Debug)]
+// Operator is defined as an enum with allowed values.
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(deny_unknown_fields)]
 pub enum Operator {
     #[serde(rename = "odrl:eq")]
     Eq,
@@ -185,9 +305,9 @@ pub enum Operator {
     Neq,
 }
 
-// RightOperand se define para aceptar string, objeto o arreglo.
-// Se utiliza serde_json::Value para permitir esta variabilidad.
-#[derive(Serialize, Deserialize, Debug)]
+// RightOperand is defined to accept string, object or array.
+// serde_json::Value is used to allow this variability.
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(untagged)]
 pub enum OdrlRightOperand {
     Str(String),

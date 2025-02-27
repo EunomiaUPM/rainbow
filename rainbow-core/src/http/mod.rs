@@ -23,8 +23,11 @@ use rainbow_catalog::http::idsa_api as catalog_ll_api_router;
 use rainbow_catalog::http::rainbow_catalog_api as catalog_hl_api_router;
 use rainbow_catalog::http::rainbow_policies_api as catalog_policies_api_router;
 use rainbow_contracts::consumer::http::idsa_api as contracts_consumer_ll_api_router;
+use rainbow_contracts::consumer::http::rainbow_cn_api as contracts_consumer_hl_api_router;
+use rainbow_contracts::consumer::http::rainbow_idsa_triggers as contracts_consumer_triggers_api_router;
 use rainbow_contracts::provider::http::idsa_api as contracts_provider_ll_api_router;
 use rainbow_contracts::provider::http::rainbow_cn_api as contracts_provider_hl_api_router;
+use rainbow_contracts::provider::http::rainbow_idsa_triggers as contracts_provider_triggers_api_router;
 
 use rainbow_common::misc_router;
 use rainbow_dataplane::proxy::provider_http;
@@ -55,6 +58,7 @@ pub async fn get_provider_routes() -> Router {
         .merge(catalog_policies_api_router::catalog_policies_api_router().await.unwrap())
         .merge(contracts_provider_ll_api_router::router())
         .merge(contracts_provider_hl_api_router::router())
+        .merge(contracts_provider_triggers_api_router::router())
         .layer(_create_cors_layer())
     // .layer(TraceLayer::new_for_http())
 }
@@ -66,6 +70,8 @@ pub async fn get_consumer_routes() -> Router {
         .merge(consumer_hl_api_router::router())
         .merge(consumer_http::consumer_dataplane_router())
         .merge(contracts_consumer_ll_api_router::router())
+        .merge(contracts_consumer_hl_api_router::router())
+        .merge(contracts_consumer_triggers_api_router::router())
         .layer(_create_cors_layer())
     // .layer(TraceLayer::new_for_http())
 }

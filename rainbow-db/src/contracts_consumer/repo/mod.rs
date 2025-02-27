@@ -45,7 +45,11 @@ pub static CONTRACT_CONSUMER_REPO: Lazy<Box<dyn CombinedRepo + Send + Sync>> = L
 });
 
 
-pub struct NewContractNegotiationProcess {}
+pub struct NewContractNegotiationProcess {
+    pub provider_id: Option<Urn>,
+    pub consumer_id: Option<Urn>,
+}
+
 pub struct EditContractNegotiationProcess {}
 
 #[async_trait]
@@ -55,14 +59,14 @@ pub trait ContractNegotiationConsumerProcessRepo {
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<cn_process::Model>, CnErrors>;
-    async fn get_cn_processes_by_provider_id(
+    async fn get_cn_process_by_provider_id(
         &self,
         provider_id: Urn,
-    ) -> anyhow::Result<Vec<cn_process::Model>, CnErrors>;
-    async fn get_cn_processes_by_consumer_id(
+    ) -> anyhow::Result<Option<cn_process::Model>, CnErrors>;
+    async fn get_cn_process_by_consumer_id(
         &self,
         consumer_id: Urn,
-    ) -> anyhow::Result<Vec<cn_process::Model>, CnErrors>;
+    ) -> anyhow::Result<Option<cn_process::Model>, CnErrors>;
     async fn get_cn_process_by_cn_id(
         &self,
         cn_process_id: Urn,

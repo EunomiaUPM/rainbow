@@ -16,60 +16,59 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
-use crate::provider::core::rainbow_cn_errors::{CnErrorProvider, CnErrorProviderErrorOut};
+use crate::consumer::core::rainbow_cn_errors::{CnErrorConsumer, CnErrorConsumerErrorOut};
 use axum::extract::rejection::JsonRejection;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
 
-impl IntoResponse for CnErrorProvider {
+impl IntoResponse for CnErrorConsumer {
     fn into_response(self) -> Response {
         match self {
-            e @ CnErrorProvider::NotFound { .. } => (
+            e @ CnErrorConsumer::NotFound { .. } => (
                 StatusCode::NOT_FOUND,
-                Json(CnErrorProviderErrorOut::new(
+                Json(CnErrorConsumerErrorOut::new(
                     "404".to_string(),
                     "NOT_FOUND".to_string(),
                     e.to_string(),
                 )),
             ),
-            e @ CnErrorProvider::ProviderNotFound { .. } => (
+            e @ CnErrorConsumer::ProviderNotFound { .. } => (
                 StatusCode::NOT_FOUND,
-                Json(CnErrorProviderErrorOut::new(
+                Json(CnErrorConsumerErrorOut::new(
                     "404".to_string(),
                     "NOT_FOUND".to_string(),
                     e.to_string(),
                 )),
             ),
-            e @ CnErrorProvider::ConsumerNotFound { .. } => (
+            e @ CnErrorConsumer::ConsumerNotFound { .. } => (
                 StatusCode::NOT_FOUND,
-                Json(CnErrorProviderErrorOut::new(
+                Json(CnErrorConsumerErrorOut::new(
                     "404".to_string(),
                     "NOT_FOUND".to_string(),
                     e.to_string(),
                 )),
             ),
-            e @ CnErrorProvider::ProcessNotFound { .. } => (
+            e @ CnErrorConsumer::ProcessNotFound { .. } => (
                 StatusCode::NOT_FOUND,
-                Json(CnErrorProviderErrorOut::new(
+                Json(CnErrorConsumerErrorOut::new(
                     "404".to_string(),
                     "NOT_FOUND".to_string(),
                     e.to_string(),
                 )),
             ),
-            e @ CnErrorProvider::DbErr(_) => (
+            e @ CnErrorConsumer::DbErr(_) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(CnErrorProviderErrorOut::new(
+                Json(CnErrorConsumerErrorOut::new(
                     "500".to_string(),
                     "INTERNAL_SERVER_ERROR".to_string(),
                     e.to_string(),
                 )),
             ),
-            CnErrorProvider::JsonRejection(e) => match e {
+            CnErrorConsumer::JsonRejection(e) => match e {
                 JsonRejection::JsonDataError(e_) => (
                     StatusCode::BAD_REQUEST,
-                    Json(CnErrorProviderErrorOut::new(
+                    Json(CnErrorConsumerErrorOut::new(
                         "400".to_string(),
                         "BAD_REQUEST".to_string(),
                         format!("JsonDataError: {}", e_.body_text()),
@@ -77,7 +76,7 @@ impl IntoResponse for CnErrorProvider {
                 ),
                 JsonRejection::JsonSyntaxError(e_) => (
                     StatusCode::BAD_REQUEST,
-                    Json(CnErrorProviderErrorOut::new(
+                    Json(CnErrorConsumerErrorOut::new(
                         "400".to_string(),
                         "BAD_REQUEST".to_string(),
                         format!("JsonSyntaxError: {}", e_.body_text()),
@@ -85,7 +84,7 @@ impl IntoResponse for CnErrorProvider {
                 ),
                 JsonRejection::MissingJsonContentType(e_) => (
                     StatusCode::BAD_REQUEST,
-                    Json(CnErrorProviderErrorOut::new(
+                    Json(CnErrorConsumerErrorOut::new(
                         "400".to_string(),
                         "BAD_REQUEST".to_string(),
                         format!("MissingJsonContentType: {}", e_.body_text()),
@@ -93,7 +92,7 @@ impl IntoResponse for CnErrorProvider {
                 ),
                 JsonRejection::BytesRejection(e_) => (
                     StatusCode::BAD_REQUEST,
-                    Json(CnErrorProviderErrorOut::new(
+                    Json(CnErrorConsumerErrorOut::new(
                         "400".to_string(),
                         "BAD_REQUEST".to_string(),
                         format!("BytesRejection: {}", e_.body_text()),
@@ -101,40 +100,40 @@ impl IntoResponse for CnErrorProvider {
                 ),
                 e_ => (
                     StatusCode::BAD_REQUEST,
-                    Json(CnErrorProviderErrorOut::new(
+                    Json(CnErrorConsumerErrorOut::new(
                         "400".to_string(),
                         "BAD_REQUEST".to_string(),
                         e_.to_string(),
                     )),
                 ),
             },
-            e @ CnErrorProvider::UrnUuidSchema(_) => (
+            e @ CnErrorConsumer::UrnUuidSchema(_) => (
                 StatusCode::BAD_REQUEST,
-                Json(CnErrorProviderErrorOut::new(
+                Json(CnErrorConsumerErrorOut::new(
                     "400".to_string(),
                     "BAD_REQUEST".to_string(),
                     e.to_string(),
                 )),
             ),
-            e @ CnErrorProvider::LastNotFound { .. } => (
+            e @ CnErrorConsumer::LastNotFound { .. } => (
                 StatusCode::NOT_FOUND,
-                Json(CnErrorProviderErrorOut::new(
+                Json(CnErrorConsumerErrorOut::new(
                     "404".to_string(),
                     "NOT_FOUND".to_string(),
                     e.to_string(),
                 )),
             ),
-            e @ CnErrorProvider::MessageNotFound { .. } => (
+            e @ CnErrorConsumer::MessageNotFound { .. } => (
                 StatusCode::NOT_FOUND,
-                Json(CnErrorProviderErrorOut::new(
+                Json(CnErrorConsumerErrorOut::new(
                     "404".to_string(),
                     "NOT_FOUND".to_string(),
                     e.to_string(),
                 )),
             ),
-            e @ CnErrorProvider::ParticipantNotFound { .. } => (
+            e @ CnErrorConsumer::ParticipantNotFound { .. } => (
                 StatusCode::NOT_FOUND,
-                Json(CnErrorProviderErrorOut::new(
+                Json(CnErrorConsumerErrorOut::new(
                     "404".to_string(),
                     "NOT_FOUND".to_string(),
                     e.to_string(),

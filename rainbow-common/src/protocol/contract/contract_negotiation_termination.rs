@@ -16,22 +16,38 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use super::{ContextField, ContractNegotiationMessages, CONTEXT};
+use crate::utils::get_urn;
 use serde::{Deserialize, Serialize};
+use urn::Urn;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ContractTerminationMessage {
     #[serde(rename = "@context")]
-    pub context: String,
+    pub context: ContextField,
     #[serde(rename = "@type")]
     pub _type: String,
     #[serde(rename = "dspace:providerPid")]
-    pub provider_pid: String,
+    pub provider_pid: Urn,
     #[serde(rename = "dspace:consumerPid")]
-    pub consumer_pid: String,
+    pub consumer_pid: Urn,
     #[serde(rename = "dspace:code")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub code: Option<String>,
     #[serde(rename = "dspace:reason")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reason: Option<Vec<String>>,
+}
+
+impl Default for ContractTerminationMessage {
+    fn default() -> Self {
+        Self {
+            context: ContextField::Single(CONTEXT.to_string()),
+            _type: ContractNegotiationMessages::ContractNegotiationTerminationMessage.to_string(),
+            provider_pid: get_urn(None),
+            consumer_pid: get_urn(None),
+            code: None,
+            reason: None,
+        }
+    }
 }

@@ -31,7 +31,7 @@ use rainbow_db::contracts_provider::repo::{CnErrors, CONTRACT_PROVIDER_REPO};
 use std::fmt::{Display, Formatter};
 use urn::Urn;
 
-enum CNControllerTypes {
+pub enum CNControllerTypes {
     Process,
     Message,
     Offer,
@@ -75,7 +75,7 @@ pub async fn get_cn_process_by_id(process_id: Urn) -> anyhow::Result<cn_process:
 
 pub async fn get_cn_process_by_provider(provider_id: Urn) -> anyhow::Result<cn_process::Model> {
     let process = CONTRACT_PROVIDER_REPO
-        .get_cn_processes_by_provider_id(provider_id.clone())
+        .get_cn_processes_by_provider_id(&provider_id)
         .await
         .map_err(CnErrorProvider::DbErr)?
         .ok_or(CnErrorProvider::ProviderNotFound {

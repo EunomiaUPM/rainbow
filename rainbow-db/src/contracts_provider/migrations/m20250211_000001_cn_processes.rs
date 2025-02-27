@@ -37,6 +37,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(CNProcesses::ProviderId).string())
                     .col(ColumnDef::new(CNProcesses::ConsumerId).string())
                     .col(ColumnDef::new(CNProcesses::State).string())
+                    .col(ColumnDef::new(CNProcesses::InitiatedBy).string())
                     .col(ColumnDef::new(CNProcesses::CreatedAt).date_time().not_null())
                     .col(ColumnDef::new(CNProcesses::UpdatedAt).date_time())
                     .to_owned(),
@@ -56,6 +57,7 @@ pub enum CNProcesses {
     ProviderId,
     ConsumerId,
     State,
+    InitiatedBy,
     CreatedAt,
     UpdatedAt,
 }

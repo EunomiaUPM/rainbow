@@ -42,6 +42,7 @@ impl MigrationTrait for Migration {
                     )
                     .col(ColumnDef::new(Participants::IdentityToken).string().not_null())
                     .col(ColumnDef::new(Participants::Type).string().not_null())
+                    .col(ColumnDef::new(Participants::BaseUrl).string().not_null())
                     .col(ColumnDef::new(Participants::ExtraFields).json().default(json!({})))
                     .to_owned(),
             )
@@ -59,5 +60,6 @@ pub enum Participants {
     ParticipantId,
     IdentityToken,
     Type,
+    BaseUrl,
     ExtraFields,
 }

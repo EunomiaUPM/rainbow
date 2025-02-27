@@ -16,23 +16,65 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
-use crate::protocol::contract::contract_odrl::OdrlOffer;
+use crate::protocol::contract::contract_odrl::OfferTypes;
+use crate::protocol::contract::{CNValidate, ContextField, ContractNegotiationMessages};
+use crate::utils::get_urn;
+use anyhow::bail;
 use serde::{Deserialize, Serialize};
+use urn::Urn;
+
+use super::contract_odrl::{OdrlMessageOffer, OdrlTypes};
+use super::CONTEXT;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ContractRequestMessage {
     #[serde(rename = "@context")]
-    pub context: String,
+    pub context: ContextField,
     #[serde(rename = "@type")]
-    pub _type: String,
+    pub _type: ContractNegotiationMessages,
     #[serde(rename = "dspace:providerPid")]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub provider_pid: Option<String>,
+    pub provider_pid: Option<Urn>,
     #[serde(rename = "dspace:consumerPid")]
-    pub consumer_pid: String,
+    pub consumer_pid: Urn,
     #[serde(rename = "dspace:callbackAddress")]
     pub callback_address: String,
     #[serde(rename = "dspace:offer")]
-    pub odrl_offer: OdrlOffer,
+    pub odrl_offer: OfferTypes,
+}
+
+impl Default for ContractRequestMessage {
+    fn default() -> Self {
+        Self {
+            context: ContextField::default(),
+            _type: ContractNegotiationMessages::ContractRequestMessage,
+            provider_pid: Default::default(),
+            consumer_pid: get_urn(None),
+            callback_address: Default::default(),
+            odrl_offer: OfferTypes::MessageOffer(OdrlMessageOffer {
+                id: get_urn(None),
+                profile: None,
+                permission: None,
+                obligation: None,
+                _type: OdrlTypes::Offer,
+                prohibition: None,
+            }),
+        }
+    }
+}
+
+impl ContractRequestMessage {
+    pub fn validate(&self) -> anyhow::Result<&Self> {
+        // Syntactic JSON validation through serde_json
+        // Lacks of semantic validation
+        // Correct @context
+        self.context.validate()?;
+        // Offer is validated in Offer struct implementation
+        match &self.odrl_offer {
+            OfferTypes::Offer(o) => o.validate(),
+            OfferTypes::MessageOffer(o) => o.validate(),
+            _ => bail!("Invalid offer type. Only Offer and MessageOffer are allowed"),
+        }?;
+        Ok(&self)
+    }
 }

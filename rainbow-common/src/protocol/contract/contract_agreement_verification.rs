@@ -17,17 +17,29 @@
  *
  */
 
-
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+use super::{ContextField, ContractNegotiationMessages};
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ContractAgreementVerificationMessage {
     #[serde(rename = "@context")]
-    pub context: String,
+    pub context: ContextField,
     #[serde(rename = "@type")]
     pub _type: String,
     #[serde(rename = "dspace:providerPid")]
     pub provider_pid: String,
     #[serde(rename = "dspace:consumerPid")]
     pub consumer_pid: String,
+}
+
+impl Default for ContractAgreementVerificationMessage {
+    fn default() -> Self {
+        ContractAgreementVerificationMessage {
+            context: ContextField::default(),
+            _type: ContractNegotiationMessages::ContractAgreementVerificationMessage.to_string(),
+            provider_pid: "".to_string(),
+            consumer_pid: "".to_string(),
+        }
+    }
 }

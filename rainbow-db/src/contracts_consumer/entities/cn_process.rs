@@ -25,8 +25,8 @@ use serde::{Deserialize, Serialize};
 pub struct Model {
     #[sea_orm(primary_key)]
     pub cn_process_id: String,
-    pub provider_pid: Option<String>,
-    pub consumer_pid: Option<String>,
+    pub provider_id: Option<String>,
+    pub consumer_id: Option<String>,
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: Option<chrono::NaiveDateTime>,
 }

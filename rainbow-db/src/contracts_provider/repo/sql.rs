@@ -12,7 +12,6 @@ use crate::contracts_provider::repo::{
 };
 use json_value_merge::Merge;
 use rainbow_common::config::database::get_db_connection;
-use rainbow_common::protocol::contract::ContractNegotiationState;
 use rainbow_common::utils::get_urn;
 use sea_orm::{
     ActiveModelTrait, ActiveValue, ColumnTrait, EntityTrait, JoinType, QueryFilter, QueryOrder,
@@ -35,7 +34,7 @@ impl ContractNegotiationProcessRepo for ContractNegotiationRepoForSql {
         let db_connection = get_db_connection().await;
         let cn_processes = cn_process::Entity::find()
             .limit(limit.unwrap_or(10000))
-            .offset(page.unwrap_or(1))
+            .offset(page.unwrap_or(0))
             .all(db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNProcess(err.into()))?;
@@ -44,7 +43,7 @@ impl ContractNegotiationProcessRepo for ContractNegotiationRepoForSql {
 
     async fn get_cn_processes_by_provider_id(
         &self,
-        provider_id: Urn,
+        provider_id: &Urn,
     ) -> anyhow::Result<Option<cn_process::Model>, CnErrors> {
         let db_connection = get_db_connection().await;
         let cn_processes = cn_process::Entity::find()
@@ -108,7 +107,7 @@ impl ContractNegotiationProcessRepo for ContractNegotiationRepoForSql {
         let model = old_active_model
             .update(db_connection)
             .await
-            .map_err(|err| CnErrors::ErrorUpdatingParticipant(err.into()))?;
+            .map_err(|err| CnErrors::ErrorUpdatingCNProcess(err.into()))?;
         Ok(model)
     }
 
@@ -125,7 +124,8 @@ impl ContractNegotiationProcessRepo for ContractNegotiationRepoForSql {
             consumer_id: ActiveValue::Set(Option::from(
                 get_urn(new_cn_process.consumer_id).to_string(),
             )),
-            state: ActiveValue::Set(ContractNegotiationState::Offered.to_string()),
+            state: ActiveValue::Set(new_cn_process.state.to_string()),
+            initiated_by: ActiveValue::Set(new_cn_process.initiated_by.to_string()),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             updated_at: ActiveValue::Set(None),
         };
@@ -161,7 +161,7 @@ impl ContractNegotiationMessageRepo for ContractNegotiationRepoForSql {
         let db_connection = get_db_connection().await;
         let cn_processes = cn_message::Entity::find()
             .limit(limit.unwrap_or(10000))
-            .offset(page.unwrap_or(1))
+            .offset(page.unwrap_or(0))
             .all(db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNMessage(err.into()))?;
@@ -205,7 +205,7 @@ impl ContractNegotiationMessageRepo for ContractNegotiationRepoForSql {
     ) -> anyhow::Result<Vec<cn_message::Model>, CnErrors> {
         let db_connection = get_db_connection().await;
         let cn_process = self
-            .get_cn_processes_by_provider_id(provider_id)
+            .get_cn_processes_by_provider_id(&provider_id)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNProcess(err.into()))?
             .ok_or(CnErrors::CNProcessNotFound)?;
@@ -343,7 +343,7 @@ impl ContractNegotiationOfferRepo for ContractNegotiationRepoForSql {
         let db_connection = get_db_connection().await;
         let cn_offers = cn_offer::Entity::find()
             .limit(limit.unwrap_or(10000))
-            .offset(page.unwrap_or(1))
+            .offset(page.unwrap_or(0))
             .all(db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNOffer(err.into()))?;
@@ -515,6 +515,8 @@ impl ContractNegotiationOfferRepo for ContractNegotiationRepoForSql {
             .ok_or(CnErrors::CNMessageNotFound)?;
 
         let model = cn_offer::ActiveModel {
+            // TODO review this...
+            // offer_id: ActiveValue::Set(new_cn_offer.offer_id.to_string()),
             offer_id: ActiveValue::Set(get_urn(None).to_string()),
             cn_message_id: ActiveValue::Set(message_id.to_string()),
             offer_content: ActiveValue::Set(new_cn_offer.offer_content),
@@ -569,7 +571,7 @@ impl AgreementRepo for ContractNegotiationRepoForSql {
         let db_connection = get_db_connection().await;
         let agreements = agreement::Entity::find()
             .limit(limit.unwrap_or(10000))
-            .offset(page.unwrap_or(1))
+            .offset(page.unwrap_or(0))
             .all(db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingAgreement(err.into()))?;
@@ -805,7 +807,7 @@ impl Participant for ContractNegotiationRepoForSql {
         let db_connection = get_db_connection().await;
         let participants = participant::Entity::find()
             .limit(limit.unwrap_or(10000))
-            .offset(page.unwrap_or(1))
+            .offset(page.unwrap_or(0))
             .all(db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingParticipant(err.into()))?;
@@ -841,6 +843,9 @@ impl Participant for ContractNegotiationRepoForSql {
 
         let mut old_active_model: participant::ActiveModel = old_model.into();
 
+        if let Some(base_url) = edit_participant.base_url {
+            old_active_model.base_url = ActiveValue::Set(base_url);
+        }
         if let Some(extra_fields) = edit_participant.extra_fields {
             let mut old_json_content = old_active_model.extra_fields.unwrap();
             old_json_content.merge(&extra_fields);
@@ -863,6 +868,7 @@ impl Participant for ContractNegotiationRepoForSql {
             participant_id: ActiveValue::Set(get_urn(None).to_string()),
             identity_token: ActiveValue::Set(Option::from("TODO TOKENS".to_string())),
             _type: ActiveValue::Set(new_participant._type),
+            base_url: ActiveValue::Set(new_participant.base_url),
             extra_fields: ActiveValue::Set(new_participant.extra_fields),
         };
 

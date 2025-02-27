@@ -27,6 +27,7 @@ pub struct Model {
     pub participant_id: String,
     pub identity_token: Option<String>,
     pub _type: String,
+    pub base_url: String,
     pub extra_fields: serde_json::Value,
 }
 

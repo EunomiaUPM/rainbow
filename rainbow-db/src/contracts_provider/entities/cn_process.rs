@@ -28,6 +28,7 @@ pub struct Model {
     pub provider_id: Option<String>,
     pub consumer_id: Option<String>,
     pub state: String,
+    pub initiated_by: String,
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: Option<chrono::NaiveDateTime>,
 }
