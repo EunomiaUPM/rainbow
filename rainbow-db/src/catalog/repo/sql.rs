@@ -13,7 +13,9 @@ use crate::catalog::repo::{
 use axum::async_trait;
 use rainbow_common::config::database::get_db_connection;
 use rainbow_common::utils::get_urn;
-use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, EntityTrait, QueryFilter, QuerySelect};
+use sea_orm::{
+    ActiveModelTrait, ActiveValue, ColumnTrait, EntityTrait, ModelTrait, QueryFilter, QuerySelect,
+};
 use urn::Urn;
 
 pub struct CatalogRepoForSql {}
@@ -669,12 +671,12 @@ impl OdrlOfferRepo for CatalogRepoForSql {
         new_odrl_offer_model: NewOdrlOfferModel,
     ) -> anyhow::Result<odrl_offer::Model, CatalogRepoErrors> {
         let db_connection = get_db_connection().await;
-        let entity_id = entity_id.to_string();
+        // TODO dynamic typing
         let urn = new_odrl_offer_model.id.unwrap_or_else(|| get_urn(None));
         let model = odrl_offer::ActiveModel {
             id: ActiveValue::Set(urn.to_string()),
-            odrl_offers: ActiveValue::Set(new_odrl_offer_model.odrl_offers),
-            entity: ActiveValue::Set(entity_id),
+            odrl_offer: ActiveValue::Set(new_odrl_offer_model.odrl_offers),
+            entity: ActiveValue::Set(entity_id.to_string()),
             entity_type: ActiveValue::Set(entity_type),
         };
         let odrl_offer = odrl_offer::Entity::insert(model).exec_with_returning(db_connection).await;
