@@ -26,7 +26,9 @@ use once_cell::sync::Lazy;
 use rainbow_common::config::config::ConfigRoles;
 use rainbow_common::protocol::contract::contract_ack::ContractAckMessage;
 use rainbow_common::protocol::contract::contract_agreement::ContractAgreementMessage;
-use rainbow_common::protocol::contract::contract_negotiation_event::{ContractNegotiationEventMessage, NegotiationEventType};
+use rainbow_common::protocol::contract::contract_negotiation_event::{
+    ContractNegotiationEventMessage, NegotiationEventType,
+};
 use rainbow_common::protocol::contract::contract_negotiation_termination::ContractTerminationMessage;
 use rainbow_common::protocol::contract::contract_odrl::{OdrlAgreement, OdrlOffer};
 use rainbow_common::protocol::contract::contract_offer::ContractOfferMessage;
@@ -34,7 +36,10 @@ use rainbow_common::protocol::contract::{CNValidate, ContractNegotiationMessages
 use rainbow_common::utils::{get_urn, get_urn_from_string};
 use rainbow_db::contracts_provider::entities::cn_process;
 use rainbow_db::contracts_provider::repo::EditContractNegotiationProcess;
-use rainbow_db::contracts_provider::repo::{NewContractNegotiationMessage, NewContractNegotiationOffer, NewContractNegotiationProcess, CONTRACT_PROVIDER_REPO};
+use rainbow_db::contracts_provider::repo::{
+    NewContractNegotiationMessage, NewContractNegotiationOffer, NewContractNegotiationProcess,
+    CONTRACT_PROVIDER_REPO,
+};
 use reqwest::{Client, StatusCode};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
@@ -43,11 +48,19 @@ use urn::Urn;
 pub fn router() -> Router {
     Router::new()
         .route("/api/v1/negotiations/rpc/setup-offer", post(setup_offer))
-        .route("/api/v1/negotiations/rpc/setup-agreement", post(setup_agreement))
-        .route("/api/v1/negotiations/rpc/setup-finalization", post(setup_finalization))
-        .route("/api/v1/negotiations/rpc/setup-termination", post(setup_termination))
+        .route(
+            "/api/v1/negotiations/rpc/setup-agreement",
+            post(setup_agreement),
+        )
+        .route(
+            "/api/v1/negotiations/rpc/setup-finalization",
+            post(setup_finalization),
+        )
+        .route(
+            "/api/v1/negotiations/rpc/setup-termination",
+            post(setup_termination),
+        )
 }
-
 
 pub static HTTP_CLIENT: Lazy<Client> = Lazy::new(|| {
     Client::builder()
@@ -58,7 +71,7 @@ pub static HTTP_CLIENT: Lazy<Client> = Lazy::new(|| {
 
 #[derive(Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-struct SetupOfferRequest {
+pub struct SetupOfferRequest {
     #[serde(rename = "dspace:consumerParticipantId")]
     pub consumer_participant_id: Urn,
     #[serde(rename = "dspace:consumerPid")]
@@ -70,8 +83,8 @@ struct SetupOfferRequest {
     #[serde(rename = "dspace:offer")]
     pub odrl_offer: OdrlOffer,
 }
-#[derive(Deserialize, Serialize)]
-struct SetupOfferResponse {
+#[derive(Deserialize, Serialize, Debug)]
+pub struct SetupOfferResponse {
     #[serde(rename = "dspace:consumerParticipantId")]
     pub consumer_participant_id: Urn,
     #[serde(rename = "dspace:consumerPid")]
@@ -85,9 +98,7 @@ struct SetupOfferResponse {
     pub message: ContractAckMessage,
 }
 
-async fn setup_offer(
-    input: Result<Json<SetupOfferRequest>, JsonRejection>,
-) -> impl IntoResponse {
+async fn setup_offer(input: Result<Json<SetupOfferRequest>, JsonRejection>) -> impl IntoResponse {
     let input = match input {
         Ok(input) => input.0,
         Err(e) => return IdsaCNError::JsonRejection(e).into_response(),
@@ -96,10 +107,7 @@ async fn setup_offer(
 
     // validate consumer_participant_id
     let participant_id = input.consumer_participant_id.clone();
-    let consumer = CONTRACT_PROVIDER_REPO
-        .get_participant_by_p_id(participant_id)
-        .await
-        .unwrap(); // errors;
+    let consumer = CONTRACT_PROVIDER_REPO.get_participant_by_p_id(participant_id).await.unwrap(); // errors;
     if consumer.is_none() {
         return (StatusCode::NOT_FOUND, "consumer not found").into_response();
     }
@@ -127,7 +135,11 @@ async fn setup_offer(
 
         // validate correlation
         if consumer.unwrap().cn_process_id != provider.clone().unwrap().cn_process_id {
-            return (StatusCode::BAD_REQUEST, "no correlation between consumer and provider").into_response();
+            return (
+                StatusCode::BAD_REQUEST,
+                "no correlation between consumer and provider",
+            )
+                .into_response();
         }
     }
 
@@ -151,20 +163,30 @@ async fn setup_offer(
             .post(&format!("{}/negotiations/offers", consumer_base_url))
             .json(&contract_offer_message)
             .send()
-            .await.unwrap();
+            .await
+            .unwrap();
     } else {
         // send message to consumer
         req = HTTP_CLIENT
-            .post(&format!("{}/negotiations/{}/offers", consumer_base_url, input.consumer_pid.clone().unwrap()))
+            .post(&format!(
+                "{}/negotiations/{}/offers",
+                consumer_base_url,
+                input.consumer_pid.clone().unwrap()
+            ))
             .json(&contract_offer_message)
             .send()
-            .await.unwrap();
+            .await
+            .unwrap();
     }
 
     // if status is not CREATED, return error
     let status = req.status();
     if status.clone() != StatusCode::CREATED {
-        return (StatusCode::INTERNAL_SERVER_ERROR, "internal error in consumer").into_response();
+        return (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "internal error in consumer",
+        )
+            .into_response();
     }
 
     // response as json
@@ -193,12 +215,15 @@ async fn setup_offer(
 
     // persist cn_message
     let cn_message = CONTRACT_PROVIDER_REPO
-        .create_cn_message(cn_process.cn_process_id.parse().unwrap(), NewContractNegotiationMessage {
-            _type: ContractNegotiationMessages::ContractOfferMessage.to_string(),
-            from: ConfigRoles::Provider.to_string(),
-            to: ConfigRoles::Consumer.to_string(),
-            content: serde_json::to_value(contract_offer_message).unwrap(),
-        })
+        .create_cn_message(
+            cn_process.cn_process_id.parse().unwrap(),
+            NewContractNegotiationMessage {
+                _type: ContractNegotiationMessages::ContractOfferMessage.to_string(),
+                from: ConfigRoles::Provider.to_string(),
+                to: ConfigRoles::Consumer.to_string(),
+                content: serde_json::to_value(contract_offer_message).unwrap(),
+            },
+        )
         .await
         .unwrap(); // errors
 
@@ -210,7 +235,8 @@ async fn setup_offer(
             NewContractNegotiationOffer {
                 offer_id: get_urn(None),
                 offer_content: serde_json::to_value(input.odrl_offer.clone()).unwrap(),
-            })
+            },
+        )
         .await
         .unwrap(); // errors
 
@@ -220,8 +246,8 @@ async fn setup_offer(
     if is_reoffer == false {
         response = SetupOfferResponse {
             consumer_participant_id: input.consumer_participant_id.clone(),
-            consumer_pid: None,
-            provider_pid: None,
+            consumer_pid: Some(cn_ack.consumer_pid.clone().parse().unwrap()),
+            provider_pid: Some(cn_ack.provider_pid.clone().parse().unwrap()),
             odrl_offer: input.odrl_offer.clone(),
             message: cn_ack,
         };
@@ -238,10 +264,9 @@ async fn setup_offer(
     (status, Json(response)).into_response()
 }
 
-
 #[derive(Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-struct SetupAgreementRequest {
+pub struct SetupAgreementRequest {
     #[serde(rename = "dspace:consumerParticipantId")]
     pub consumer_participant_id: Urn,
     #[serde(rename = "dspace:consumerPid")]
@@ -251,8 +276,8 @@ struct SetupAgreementRequest {
     #[serde(rename = "dspace:agreement")]
     pub odrl_agreement: OdrlAgreement,
 }
-#[derive(Deserialize, Serialize)]
-struct SetupAgreementResponse {
+#[derive(Deserialize, Serialize, Debug)]
+pub struct SetupAgreementResponse {
     #[serde(rename = "dspace:consumerPid")]
     pub consumer_pid: Urn,
     #[serde(rename = "dspace:providerPid")]
@@ -272,15 +297,11 @@ async fn setup_agreement(
 
     // validate consumerParticipant
     let participant_id = input.consumer_participant_id.clone();
-    let participant = CONTRACT_PROVIDER_REPO
-        .get_participant_by_p_id(participant_id)
-        .await
-        .unwrap(); // errors;
+    let participant = CONTRACT_PROVIDER_REPO.get_participant_by_p_id(participant_id).await.unwrap(); // errors;
     if participant.is_none() {
         return (StatusCode::NOT_FOUND, "consumer not found").into_response();
     }
     let participant_base_url = participant.unwrap().base_url;
-
 
     // validate consumer
     let consumer = CONTRACT_PROVIDER_REPO
@@ -292,17 +313,19 @@ async fn setup_agreement(
     }
 
     // validate provider
-    let provider = CONTRACT_PROVIDER_REPO
-        .get_cn_processes_by_provider_id(&input.provider_pid)
-        .await
-        .unwrap(); // errors;
+    let provider =
+        CONTRACT_PROVIDER_REPO.get_cn_processes_by_provider_id(&input.provider_pid).await.unwrap(); // errors;
     if provider.is_none() {
         return (StatusCode::NOT_FOUND, "provider not found").into_response();
     }
 
     // validate correlation
     if consumer.unwrap().cn_process_id != provider.clone().unwrap().cn_process_id {
-        return (StatusCode::BAD_REQUEST, "no correlation between consumer and provider").into_response();
+        return (
+            StatusCode::BAD_REQUEST,
+            "no correlation between consumer and provider",
+        )
+            .into_response();
     }
 
     // validate agreement
@@ -320,15 +343,23 @@ async fn setup_agreement(
 
     // send message to consumer
     let req = HTTP_CLIENT
-        .post(&format!("{}/negotiations/{}/agreement", participant_base_url, input.consumer_pid))
+        .post(&format!(
+            "{}/negotiations/{}/agreement",
+            participant_base_url, input.consumer_pid
+        ))
         .json(&contract_agreement_message)
         .send()
-        .await.unwrap();
+        .await
+        .unwrap();
 
     // if status is not CREATED, return error
     let status = req.status();
     if status.clone() != StatusCode::CREATED {
-        return (StatusCode::INTERNAL_SERVER_ERROR, "internal error in consumer").into_response();
+        return (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "internal error in consumer",
+        )
+            .into_response();
     }
 
     // response as json
@@ -338,22 +369,28 @@ async fn setup_agreement(
     // persist cn_process
     let process_id = get_urn_from_string(&provider.unwrap().cn_process_id.clone()).unwrap();
     let cn_process = CONTRACT_PROVIDER_REPO
-        .put_cn_process(process_id, EditContractNegotiationProcess {
-            provider_id: None,
-            consumer_id: None,
-            state: Option::from(response.state),
-        })
+        .put_cn_process(
+            process_id,
+            EditContractNegotiationProcess {
+                provider_id: None,
+                consumer_id: None,
+                state: Option::from(response.state),
+            },
+        )
         .await
         .unwrap(); // errors
 
     // persist cn_message
     let cn_message = CONTRACT_PROVIDER_REPO
-        .create_cn_message(cn_process.cn_process_id.parse().unwrap(), NewContractNegotiationMessage {
-            _type: ContractNegotiationMessages::ContractAgreementMessage.to_string(),
-            from: ConfigRoles::Provider.to_string(),
-            to: ConfigRoles::Consumer.to_string(),
-            content: serde_json::to_value(contract_agreement_message).unwrap(),
-        })
+        .create_cn_message(
+            cn_process.cn_process_id.parse().unwrap(),
+            NewContractNegotiationMessage {
+                _type: ContractNegotiationMessages::ContractAgreementMessage.to_string(),
+                from: ConfigRoles::Provider.to_string(),
+                to: ConfigRoles::Consumer.to_string(),
+                content: serde_json::to_value(contract_agreement_message).unwrap(),
+            },
+        )
         .await
         .unwrap(); // errors
 
@@ -365,7 +402,8 @@ async fn setup_agreement(
             NewContractNegotiationOffer {
                 offer_id: get_urn(None),
                 offer_content: serde_json::to_value(input.odrl_agreement.clone()).unwrap(),
-            })
+            },
+        )
         .await
         .unwrap(); // errors
 
@@ -382,7 +420,7 @@ async fn setup_agreement(
 
 #[derive(Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-struct SetupFinalizationRequest {
+pub struct SetupFinalizationRequest {
     #[serde(rename = "dspace:consumerParticipantId")]
     pub consumer_participant_id: Urn,
     #[serde(rename = "dspace:consumerPid")]
@@ -391,9 +429,9 @@ struct SetupFinalizationRequest {
     pub provider_pid: Urn,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 #[serde(deny_unknown_fields)]
-struct SetupFinalizationResponse {
+pub struct SetupFinalizationResponse {
     #[serde(rename = "dspace:consumerPid")]
     pub consumer_pid: Urn,
     #[serde(rename = "dspace:providerPid")]
@@ -411,15 +449,11 @@ async fn setup_finalization(
 
     // validate consumerParticipant
     let participant_id = input.consumer_participant_id.clone();
-    let participant = CONTRACT_PROVIDER_REPO
-        .get_participant_by_p_id(participant_id)
-        .await
-        .unwrap(); // errors;
+    let participant = CONTRACT_PROVIDER_REPO.get_participant_by_p_id(participant_id).await.unwrap(); // errors;
     if participant.is_none() {
         return (StatusCode::NOT_FOUND, "consumer not found").into_response();
     }
     let participant_base_url = participant.unwrap().base_url;
-
 
     // validate consumer
     let consumer = CONTRACT_PROVIDER_REPO
@@ -431,17 +465,19 @@ async fn setup_finalization(
     }
 
     // validate provider
-    let provider = CONTRACT_PROVIDER_REPO
-        .get_cn_processes_by_provider_id(&input.provider_pid)
-        .await
-        .unwrap(); // errors;
+    let provider =
+        CONTRACT_PROVIDER_REPO.get_cn_processes_by_provider_id(&input.provider_pid).await.unwrap(); // errors;
     if provider.is_none() {
         return (StatusCode::NOT_FOUND, "provider not found").into_response();
     }
 
     // validate correlation
     if consumer.unwrap().cn_process_id != provider.clone().unwrap().cn_process_id {
-        return (StatusCode::BAD_REQUEST, "no correlation between consumer and provider").into_response();
+        return (
+            StatusCode::BAD_REQUEST,
+            "no correlation between consumer and provider",
+        )
+            .into_response();
     }
 
     // create message
@@ -454,15 +490,23 @@ async fn setup_finalization(
 
     // send message to consumer
     let req = HTTP_CLIENT
-        .post(&format!("{}/negotiations/{}/events", participant_base_url, input.consumer_pid))
+        .post(&format!(
+            "{}/negotiations/{}/events",
+            participant_base_url, input.consumer_pid
+        ))
         .json(&contract_verification_message)
         .send()
-        .await.unwrap();
+        .await
+        .unwrap();
 
     // if status is not CREATED, return error
     let status = req.status();
     if status.clone() != StatusCode::CREATED {
-        return (StatusCode::INTERNAL_SERVER_ERROR, "internal error in consumer").into_response();
+        return (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "internal error in consumer",
+        )
+            .into_response();
     }
 
     // response as json
@@ -472,23 +516,28 @@ async fn setup_finalization(
     // persist cn_process
     let process_id = get_urn_from_string(&provider.unwrap().cn_process_id.clone()).unwrap();
     let cn_process = CONTRACT_PROVIDER_REPO
-        .put_cn_process(process_id, EditContractNegotiationProcess {
-            provider_id: None,
-            consumer_id: None,
-            state: Option::from(response.state),
-
-        })
+        .put_cn_process(
+            process_id,
+            EditContractNegotiationProcess {
+                provider_id: None,
+                consumer_id: None,
+                state: Option::from(response.state),
+            },
+        )
         .await
         .unwrap(); // errors
 
     // persist cn_message
     let cn_message = CONTRACT_PROVIDER_REPO
-        .create_cn_message(cn_process.cn_process_id.parse().unwrap(), NewContractNegotiationMessage {
-            _type: ContractNegotiationMessages::ContractNegotiationEventMessage.to_string(),
-            from: ConfigRoles::Provider.to_string(),
-            to: ConfigRoles::Consumer.to_string(),
-            content: serde_json::to_value(contract_verification_message).unwrap(),
-        })
+        .create_cn_message(
+            cn_process.cn_process_id.parse().unwrap(),
+            NewContractNegotiationMessage {
+                _type: ContractNegotiationMessages::ContractNegotiationEventMessage.to_string(),
+                from: ConfigRoles::Provider.to_string(),
+                to: ConfigRoles::Consumer.to_string(),
+                content: serde_json::to_value(contract_verification_message).unwrap(),
+            },
+        )
         .await
         .unwrap(); // errors
 
@@ -502,10 +551,9 @@ async fn setup_finalization(
     (status, Json(response)).into_response()
 }
 
-
 #[derive(Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-struct SetupTerminationRequest {
+pub struct SetupTerminationRequest {
     #[serde(rename = "dspace:consumerParticipantId")]
     pub consumer_participant_id: Urn,
     #[serde(rename = "dspace:consumerPid")]
@@ -514,9 +562,9 @@ struct SetupTerminationRequest {
     pub provider_pid: Urn,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 #[serde(deny_unknown_fields)]
-struct SetupTerminationResponse {
+pub struct SetupTerminationResponse {
     #[serde(rename = "dspace:consumerPid")]
     pub consumer_pid: Urn,
     #[serde(rename = "dspace:providerPid")]
@@ -534,15 +582,11 @@ async fn setup_termination(
 
     // validate consumerParticipant
     let participant_id = input.consumer_participant_id.clone();
-    let participant = CONTRACT_PROVIDER_REPO
-        .get_participant_by_p_id(participant_id)
-        .await
-        .unwrap(); // errors;
+    let participant = CONTRACT_PROVIDER_REPO.get_participant_by_p_id(participant_id).await.unwrap(); // errors;
     if participant.is_none() {
         return (StatusCode::NOT_FOUND, "consumer not found").into_response();
     }
     let participant_base_url = participant.unwrap().base_url;
-
 
     // validate consumer
     let consumer = CONTRACT_PROVIDER_REPO
@@ -554,17 +598,19 @@ async fn setup_termination(
     }
 
     // validate provider
-    let provider = CONTRACT_PROVIDER_REPO
-        .get_cn_processes_by_provider_id(&input.provider_pid)
-        .await
-        .unwrap(); // errors;
+    let provider =
+        CONTRACT_PROVIDER_REPO.get_cn_processes_by_provider_id(&input.provider_pid).await.unwrap(); // errors;
     if provider.is_none() {
         return (StatusCode::NOT_FOUND, "provider not found").into_response();
     }
 
     // validate correlation
     if consumer.unwrap().cn_process_id != provider.clone().unwrap().cn_process_id {
-        return (StatusCode::BAD_REQUEST, "no correlation between consumer and provider").into_response();
+        return (
+            StatusCode::BAD_REQUEST,
+            "no correlation between consumer and provider",
+        )
+            .into_response();
     }
 
     // create message
@@ -576,15 +622,23 @@ async fn setup_termination(
 
     // send message to consumer
     let req = HTTP_CLIENT
-        .post(&format!("{}/negotiations/{}/termination", participant_base_url, input.consumer_pid))
+        .post(&format!(
+            "{}/negotiations/{}/termination",
+            participant_base_url, input.consumer_pid
+        ))
         .json(&contract_termination_message)
         .send()
-        .await.unwrap();
+        .await
+        .unwrap();
 
     // if status is not CREATED, return error
     let status = req.status();
     if status.clone() != StatusCode::CREATED {
-        return (StatusCode::INTERNAL_SERVER_ERROR, "internal error in consumer").into_response();
+        return (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "internal error in consumer",
+        )
+            .into_response();
     }
 
     // response as json
@@ -594,23 +648,29 @@ async fn setup_termination(
     // persist cn_process
     let process_id = get_urn_from_string(&provider.unwrap().cn_process_id.clone()).unwrap();
     let cn_process = CONTRACT_PROVIDER_REPO
-        .put_cn_process(process_id, EditContractNegotiationProcess {
-            provider_id: None,
-            consumer_id: None,
-            state: Option::from(response.state),
-
-        })
+        .put_cn_process(
+            process_id,
+            EditContractNegotiationProcess {
+                provider_id: None,
+                consumer_id: None,
+                state: Option::from(response.state),
+            },
+        )
         .await
         .unwrap(); // errors
 
     // persist cn_message
     let cn_message = CONTRACT_PROVIDER_REPO
-        .create_cn_message(cn_process.cn_process_id.parse().unwrap(), NewContractNegotiationMessage {
-            _type: ContractNegotiationMessages::ContractNegotiationTerminationMessage.to_string(),
-            from: ConfigRoles::Provider.to_string(),
-            to: ConfigRoles::Consumer.to_string(),
-            content: serde_json::to_value(contract_termination_message).unwrap(),
-        })
+        .create_cn_message(
+            cn_process.cn_process_id.parse().unwrap(),
+            NewContractNegotiationMessage {
+                _type: ContractNegotiationMessages::ContractNegotiationTerminationMessage
+                    .to_string(),
+                from: ConfigRoles::Provider.to_string(),
+                to: ConfigRoles::Consumer.to_string(),
+                content: serde_json::to_value(contract_termination_message).unwrap(),
+            },
+        )
         .await
         .unwrap(); // errors
 

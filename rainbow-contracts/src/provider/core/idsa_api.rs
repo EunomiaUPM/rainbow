@@ -167,7 +167,7 @@ pub async fn post_provider_request(
             EditContractNegotiationProcess {
                 provider_id: None, // no need to change
                 consumer_id: None,
-                state: Option::from(ContractNegotiationState::Requested),
+                state: Option::from(ContractNegotiationState::Offered),
             },
         )
         .await
@@ -224,16 +224,10 @@ pub async fn post_provider_events(
             provider_pid: Some(provider_pid.clone()),
             consumer_pid: Some(input.consumer_pid.clone()),
         })?;
-    let initiated_by = cn_process.initiated_by.parse::<ConfigRoles>().map_err(|e| {
-        IdsaCNError::NotCheckedError {
-            provider_pid: Option::from(provider_pid.clone().to_string()),
-            consumer_pid: Some(input.consumer_pid.clone().to_string()),
-            error: e.to_string(),
-        }
-    })?;
-    match (initiated_by, event_type) {
-        (ConfigRoles::Consumer, NegotiationEventType::Accepted) => {}
-        _ => {
+
+    match event_type {
+        NegotiationEventType::Accepted => {}
+        NegotiationEventType::Finalized => {
             return Err(IdsaCNError::NotAllowed {
                 provider_pid: Option::from(provider_pid.clone()),
                 consumer_pid: Some(input.consumer_pid.clone()),
@@ -242,6 +236,25 @@ pub async fn post_provider_events(
                 .into())
         }
     };
+
+    // let initiated_by = cn_process.initiated_by.parse::<ConfigRoles>().map_err(|e| {
+    //     IdsaCNError::NotCheckedError {
+    //         provider_pid: Option::from(provider_pid.clone().to_string()),
+    //         consumer_pid: Some(input.consumer_pid.clone().to_string()),
+    //         error: e.to_string(),
+    //     }
+    // })?;
+    // match (initiated_by, event_type) {
+    //     (ConfigRoles::Consumer, NegotiationEventType::Accepted) => {}
+    //     _ => {
+    //         return Err(IdsaCNError::NotAllowed {
+    //             provider_pid: Option::from(provider_pid.clone()),
+    //             consumer_pid: Some(input.consumer_pid.clone()),
+    //             error: "This message is not allowed".to_string(),
+    //         }
+    //             .into())
+    //     }
+    // };
 
     // Update CN process state
     let cn_process = CONTRACT_PROVIDER_REPO
@@ -268,7 +281,7 @@ pub async fn post_provider_events(
         )
         .await
         .map_err(IdsaCNError::DbErr)?;
-    
+
     Ok(cn_process.into())
 }
 

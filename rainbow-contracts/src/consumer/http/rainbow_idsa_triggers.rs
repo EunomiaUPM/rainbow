@@ -54,7 +54,7 @@ pub static HTTP_CLIENT: Lazy<Client> = Lazy::new(|| {
 
 #[derive(Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-struct SetupRequestRequest {
+pub struct SetupRequestRequest {
     #[serde(rename = "dspace:consumerPid")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub consumer_pid: Option<Urn>,
@@ -64,8 +64,8 @@ struct SetupRequestRequest {
     #[serde(rename = "dspace:offer")]
     pub odrl_offer: OfferTypes,
 }
-#[derive(Deserialize, Serialize)]
-struct SetupRequestResponse {
+#[derive(Deserialize, Serialize, Debug)]
+pub struct SetupRequestResponse {
     #[serde(rename = "dspace:consumerPid")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub consumer_pid: Option<Urn>,
@@ -195,14 +195,14 @@ async fn setup_request(
 
 #[derive(Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-struct SetupAcceptanceRequest {
+pub struct SetupAcceptanceRequest {
     #[serde(rename = "dspace:consumerPid")]
     pub consumer_pid: Urn,
     #[serde(rename = "dspace:providerPid")]
     pub provider_pid: Urn,
 }
-#[derive(Deserialize, Serialize)]
-struct SetupAcceptanceResponse {
+#[derive(Deserialize, Serialize, Debug)]
+pub struct SetupAcceptanceResponse {
     #[serde(rename = "dspace:consumerPid")]
     pub consumer_pid: Urn,
     #[serde(rename = "dspace:providerPid")]
@@ -277,14 +277,14 @@ async fn setup_acceptance(
 
 #[derive(Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-struct SetupVerificationRequest {
+pub struct SetupVerificationRequest {
     #[serde(rename = "dspace:consumerPid")]
     pub consumer_pid: Urn,
     #[serde(rename = "dspace:providerPid")]
     pub provider_pid: Urn,
 }
-#[derive(Deserialize, Serialize)]
-struct SetupVerificationResponse {
+#[derive(Deserialize, Serialize, Debug)]
+pub struct SetupVerificationResponse {
     #[serde(rename = "dspace:consumerPid")]
     pub consumer_pid: Urn,
     #[serde(rename = "dspace:providerPid")]
@@ -359,16 +359,16 @@ async fn setup_verification(
 
 #[derive(Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-struct SetupTerminationRequest {
+pub struct SetupTerminationRequest {
     #[serde(rename = "dspace:consumerPid")]
     pub consumer_pid: Urn,
     #[serde(rename = "dspace:providerPid")]
     pub provider_pid: Urn,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 #[serde(deny_unknown_fields)]
-struct SetupTerminationResponse {
+pub struct SetupTerminationResponse {
     #[serde(rename = "dspace:consumerPid")]
     pub consumer_pid: Urn,
     #[serde(rename = "dspace:providerPid")]
