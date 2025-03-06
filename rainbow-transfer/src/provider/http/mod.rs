@@ -17,6 +17,6 @@
  *
  */
 
-pub mod hl_api;
-pub mod protocol_api;
-pub mod server;
+pub mod ds_protocol;
+pub mod rainbow_entities;
+pub mod rainbow_entities_errors;

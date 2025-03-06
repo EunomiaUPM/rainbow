@@ -1,4 +1,5 @@
-use crate::core::{DataPlanePeer, DataPlanePeerCreationBehavior, PersistModel};
+use crate::core::{DataPlanePeerCreationBehavior, DataPlanePersistenceBehavior};
+use crate::data_plane_peer::DataPlanePeer;
 use axum::async_trait;
 use rainbow_common::config::config::ConfigRoles;
 use rainbow_common::dcat_formats::{FormatAction, FormatProtocol};
@@ -12,7 +13,7 @@ pub struct KafkaDataPlane {
 }
 
 #[async_trait]
-impl PersistModel<data_plane_process::Model> for KafkaDataPlane {
+impl DataPlanePersistenceBehavior<data_plane_process::Model> for KafkaDataPlane {
     async fn persist(self) -> anyhow::Result<Box<Self>> {
         todo!()
     }

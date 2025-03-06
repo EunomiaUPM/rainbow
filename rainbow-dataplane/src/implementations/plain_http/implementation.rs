@@ -17,9 +17,9 @@
  *
  */
 
-use crate::core::{
-    DataPlanePeer, DataPlanePeerCreationBehavior, DataPlanePeerDefaultBehavior, PersistModel,
-};
+
+use crate::core::{DataPlanePeerCreationBehavior, DataPlanePeerDefaultBehavior, DataPlanePeerTransferBehavior, DataPlanePersistenceBehavior};
+use crate::data_plane_peer::DataPlanePeer;
 use crate::implementations::plain_http::HttpDataPlane;
 use crate::DATA_PLANE_HTTP_CLIENT;
 use anyhow::bail;
@@ -30,8 +30,8 @@ use axum::response::Response;
 use rainbow_common::config::config::{get_provider_url, ConfigRoles};
 use rainbow_common::dcat_formats::FormatAction;
 use rainbow_common::forwarding::forward_response;
-use rainbow_common::protocol::transfer::{TransferRequestMessage, TransferStateForDb};
-use rainbow_db::transfer_provider::repo::TRANSFER_PROVIDER_REPO;
+use rainbow_common::protocol::transfer::TransferRequestMessage;
+// use rainbow_db::transfer_provider::repo::TRANSFER_PROVIDER_REPO;
 use reqwest::{Method, StatusCode};
 use urn::Urn;
 
@@ -46,9 +46,7 @@ impl DataPlanePeerDefaultBehavior for HttpDataPlane {
         };
         let local_address = format!(
             "{}{}/{}",
-            transfer_request.callback_address,
-            local_address_path,
-            transfer_request.consumer_pid
+            transfer_request.callback_address, local_address_path, transfer_request.consumer_pid
         );
         let mut fw = HttpDataPlane::create_data_plane_peer()
             .with_role(ConfigRoles::Consumer)
@@ -129,26 +127,29 @@ impl DataPlanePeerDefaultBehavior for HttpDataPlane {
         // No need for implementation
         Ok(())
     }
+}
 
+#[async_trait]
+impl DataPlanePeerTransferBehavior for HttpDataPlane {
     async fn on_pull_data(
         data_plane_peer: DataPlanePeer,
         mut request: Request,
         extras: Option<String>,
     ) -> anyhow::Result<Response> {
         // Check PIP status
-        if data_plane_peer.role == ConfigRoles::Provider {
-            let data_process = match TRANSFER_PROVIDER_REPO.get_transfer_process_by_data_plane(data_plane_peer.id).await {
-                Ok(dp) => match dp {
-                    Some(dp) => dp,
-                    None => bail!("Transfer not found")
-                }
-                Err(_) => bail!("Not able to pull data from service")
-            };
-            let state = data_process.state;
-            if state != TransferStateForDb::STARTED {
-                bail!("Unauthorized")
-            }
-        }
+        // if data_plane_peer.role == ConfigRoles::Provider {
+        //     let data_process = match TRANSFER_PROVIDER_REPO.get_transfer_process_by_data_plane(data_plane_peer.id).await {
+        //         Ok(dp) => match dp {
+        //             Some(dp) => dp,
+        //             None => bail!("Transfer not found")
+        //         }
+        //         Err(_) => bail!("Not able to pull data from service")
+        //     };
+        //     let state = data_process.state;
+        //     if state != TransferStateForDb::STARTED {
+        //         bail!("Unauthorized")
+        //     }
+        // }
         let next_hop = data_plane_peer.attributes.get("nextHop").unwrap().to_string();
         let query = request.uri().query();
         let next_hop = format!(

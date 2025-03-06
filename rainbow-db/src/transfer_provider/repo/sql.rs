@@ -17,26 +17,30 @@
  *
  */
 
-
-use crate::transfer_provider::entities::agreements;
 use crate::transfer_provider::entities::transfer_message;
-use crate::transfer_provider::entities::transfer_message::Model;
 use crate::transfer_provider::entities::transfer_process;
-use crate::transfer_provider::repo::{
-    AgreementsRepo, EditAgreementModel, EditTransferProcessModel, NewAgreementModel,
-    NewTransferMessageModel, NewTransferProcessModel, TransferMessagesRepo, TransferProcessRepo,
-};
-use anyhow::bail;
+use crate::transfer_provider::repo::{EditTransferMessageModel, EditTransferProcessModel, NewTransferMessageModel, NewTransferProcessModel, TransferMessagesRepo, TransferProcessRepo, TransferProviderRepoErrors, TransferProviderRepoFactory};
 use axum::async_trait;
-use rainbow_common::config::database::get_db_connection;
 use rainbow_common::protocol::transfer::{TransferMessageTypesForDb, TransferStateForDb};
 use rainbow_common::utils::get_urn;
-use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, EntityTrait, QueryFilter, QuerySelect};
+use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect};
 use urn::Urn;
 
-pub struct TransferProviderRepoForSql {}
+pub struct TransferProviderRepoForSql {
+    db_connection: DatabaseConnection,
+}
 
-// TODO create impl From everywhere!!
+impl TransferProviderRepoForSql {
+    fn new(db_connection: DatabaseConnection) -> Self {
+        Self { db_connection }
+    }
+}
+
+impl TransferProviderRepoFactory for TransferProviderRepoForSql {
+    fn create_repo(database_connection: DatabaseConnection) -> Self {
+        Self::new(database_connection)
+    }
+}
 
 #[async_trait]
 impl TransferProcessRepo for TransferProviderRepoForSql {
@@ -44,58 +48,57 @@ impl TransferProcessRepo for TransferProviderRepoForSql {
         &self,
         limit: Option<u64>,
         page: Option<u64>,
-    ) -> anyhow::Result<Vec<transfer_process::Model>> {
-        let db_connection = get_db_connection().await;
+    ) -> anyhow::Result<Vec<transfer_process::Model>, TransferProviderRepoErrors> {
         let transfer_process = transfer_process::Entity::find()
             .limit(limit.unwrap_or(100000))
             .offset(page.unwrap_or(0))
-            .all(db_connection)
+            .all(&self.db_connection)
             .await;
         match transfer_process {
             Ok(transfer_process) => Ok(transfer_process),
-            Err(_) => bail!("Failed to fetch transfer process"),
+            Err(e) => Err(TransferProviderRepoErrors::ErrorFetchingProviderTransferProcess(e.into())),
         }
     }
 
     async fn get_transfer_process_by_provider(
         &self,
         pid: Urn,
-    ) -> anyhow::Result<Option<transfer_process::Model>> {
-        let db_connection = get_db_connection().await;
+    ) -> anyhow::Result<Option<transfer_process::Model>, TransferProviderRepoErrors> {
         let pid = pid.to_string();
-        let transfer_process = transfer_process::Entity::find_by_id(pid).one(db_connection).await;
+        let transfer_process = transfer_process::Entity::find_by_id(pid).one(&self.db_connection).await;
         match transfer_process {
             Ok(transfer_process) => Ok(transfer_process),
-            Err(_) => bail!("Failed to fetch transfer process"),
+            Err(e) => Err(TransferProviderRepoErrors::ErrorFetchingProviderTransferProcess(e.into())),
         }
     }
 
     async fn get_transfer_process_by_consumer(
         &self,
         pid: Urn,
-    ) -> anyhow::Result<Option<transfer_process::Model>> {
-        let db_connection = get_db_connection().await;
+    ) -> anyhow::Result<Option<transfer_process::Model>, TransferProviderRepoErrors> {
         let pid = pid.to_string();
         let transfer_process = transfer_process::Entity::find()
             .filter(transfer_process::Column::ConsumerPid.eq(pid))
-            .one(db_connection)
+            .one(&self.db_connection)
             .await;
         match transfer_process {
             Ok(transfer_process) => Ok(transfer_process),
-            Err(_) => bail!("Failed to fetch transfer process"),
+            Err(e) => Err(TransferProviderRepoErrors::ErrorFetchingProviderTransferProcess(e.into())),
         }
     }
 
-    async fn get_transfer_process_by_data_plane(&self, pid: Urn) -> anyhow::Result<Option<transfer_process::Model>> {
-        let db_connection = get_db_connection().await;
+    async fn get_transfer_process_by_data_plane(
+        &self,
+        pid: Urn,
+    ) -> anyhow::Result<Option<transfer_process::Model>, TransferProviderRepoErrors> {
         let pid = pid.to_string();
         let transfer_process = transfer_process::Entity::find()
             .filter(transfer_process::Column::DataPlaneId.eq(pid))
-            .one(db_connection)
+            .one(&self.db_connection)
             .await;
         match transfer_process {
             Ok(transfer_process) => Ok(transfer_process),
-            Err(_) => bail!("Failed to fetch transfer process"),
+            Err(e) => Err(TransferProviderRepoErrors::ErrorFetchingProviderTransferProcess(e.into())),
         }
     }
 
@@ -103,17 +106,16 @@ impl TransferProcessRepo for TransferProviderRepoForSql {
         &self,
         pid: Urn,
         new_transfer_process: EditTransferProcessModel,
-    ) -> anyhow::Result<transfer_process::Model> {
-        let db_connection = get_db_connection().await;
+    ) -> anyhow::Result<transfer_process::Model, TransferProviderRepoErrors> {
         let pid = pid.to_string();
 
-        let old_model = transfer_process::Entity::find_by_id(pid).one(db_connection).await;
+        let old_model = transfer_process::Entity::find_by_id(pid).one(&self.db_connection).await;
         let old_model = match old_model {
             Ok(old_model) => match old_model {
                 Some(old_model) => old_model,
-                None => bail!("Failed to fetch old model"),
+                None => return Err(TransferProviderRepoErrors::ProviderTransferProcessNotFound),
             },
-            Err(_) => bail!("Failed to fetch old model"),
+            Err(e) => return Err(TransferProviderRepoErrors::ErrorFetchingProviderTransferProcess(e.into())),
         };
 
         let mut old_active_model: transfer_process::ActiveModel = old_model.into();
@@ -133,18 +135,17 @@ impl TransferProcessRepo for TransferProviderRepoForSql {
             old_active_model.state = ActiveValue::Set(state);
         }
         old_active_model.updated_at = ActiveValue::Set(Some(chrono::Utc::now().naive_utc()));
-        let model = old_active_model.update(db_connection).await;
+        let model = old_active_model.update(&self.db_connection).await;
         match model {
             Ok(model) => Ok(model),
-            Err(_) => bail!("Failed to update model"),
+            Err(e) => return Err(TransferProviderRepoErrors::ErrorUpdatingProviderTransferProcess(e.into())),
         }
     }
 
     async fn create_transfer_process(
         &self,
         new_transfer_process: NewTransferProcessModel,
-    ) -> anyhow::Result<transfer_process::Model> {
-        let db_connection = get_db_connection().await;
+    ) -> anyhow::Result<transfer_process::Model, TransferProviderRepoErrors> {
         let model = transfer_process::ActiveModel {
             provider_pid: ActiveValue::Set(new_transfer_process.provider_pid.to_string()),
             consumer_pid: ActiveValue::Set(Some(new_transfer_process.consumer_pid.to_string())),
@@ -154,27 +155,24 @@ impl TransferProcessRepo for TransferProviderRepoForSql {
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             updated_at: ActiveValue::Set(None),
         };
-        let transfer_process =
-            transfer_process::Entity::insert(model).exec_with_returning(db_connection).await;
+        let transfer_process = transfer_process::Entity::insert(model).exec_with_returning(&self.db_connection).await;
 
         match transfer_process {
             Ok(transfer_process) => Ok(transfer_process),
-            Err(_) => bail!("Failed to create model"),
+            Err(e) => return Err(TransferProviderRepoErrors::ErrorCreatingProviderTransferProcess(e.into())),
         }
     }
 
-    async fn delete_transfer_process(&self, pid: Urn) -> anyhow::Result<()> {
-        let db_connection = get_db_connection().await;
+    async fn delete_transfer_process(&self, pid: Urn) -> anyhow::Result<(), TransferProviderRepoErrors> {
         let pid = pid.to_string();
 
-        let transfer_process =
-            transfer_process::Entity::delete_by_id(pid).exec(db_connection).await;
+        let transfer_process = transfer_process::Entity::delete_by_id(pid).exec(&self.db_connection).await;
         match transfer_process {
             Ok(delete_result) => match delete_result.rows_affected {
-                0 => bail!("Not found"),
+                0 => Err(TransferProviderRepoErrors::ProviderTransferProcessNotFound),
                 _ => Ok(()),
             },
-            Err(_) => bail!("Failed to fetch transfer process"),
+            Err(e) => Err(TransferProviderRepoErrors::ErrorDeletingProviderTransferProcess(e.into())),
         }
     }
 }
@@ -185,52 +183,52 @@ impl TransferMessagesRepo for TransferProviderRepoForSql {
         &self,
         limit: Option<u64>,
         page: Option<u64>,
-    ) -> anyhow::Result<Vec<transfer_message::Model>> {
-        let db_connection = get_db_connection().await;
+    ) -> anyhow::Result<Vec<transfer_message::Model>, TransferProviderRepoErrors> {
         let transfer_message = transfer_message::Entity::find()
             .limit(limit.unwrap_or(100000))
             .offset(page.unwrap_or(0))
-            .all(db_connection)
+            .all(&self.db_connection)
             .await;
         match transfer_message {
             Ok(transfer_message) => Ok(transfer_message),
-            Err(_) => bail!("Failed to fetch transfer messages"),
+            Err(e) => Err(TransferProviderRepoErrors::ErrorFetchingProviderTransferMessage(e.into())),
         }
     }
 
-    async fn get_all_transfer_messages_by_provider(&self, pid: Urn) -> anyhow::Result<Vec<Model>> {
-        let db_connection = get_db_connection().await;
+    async fn get_all_transfer_messages_by_provider(
+        &self,
+        pid: Urn,
+    ) -> anyhow::Result<Vec<transfer_message::Model>, TransferProviderRepoErrors> {
         let pid = pid.to_string();
 
         let transfer_message = transfer_message::Entity::find()
             .filter(transfer_message::Column::TransferProcessId.eq(pid))
-            .all(db_connection)
+            .all(&self.db_connection)
             .await;
         match transfer_message {
             Ok(transfer_message) => Ok(transfer_message),
-            Err(_) => bail!("Failed to fetch transfer messages"),
+            Err(e) => Err(TransferProviderRepoErrors::ErrorFetchingProviderTransferMessage(e.into())),
         }
     }
 
     async fn get_transfer_message_by_id(
         &self,
         pid: Urn,
-    ) -> anyhow::Result<Option<transfer_message::Model>> {
-        let db_connection = get_db_connection().await;
+    ) -> anyhow::Result<Option<transfer_message::Model>, TransferProviderRepoErrors> {
         let pid = pid.to_string();
 
-        let transfer_message = transfer_message::Entity::find_by_id(pid).one(db_connection).await;
+        let transfer_message = transfer_message::Entity::find_by_id(pid).one(&self.db_connection).await;
         match transfer_message {
             Ok(transfer_message) => Ok(transfer_message),
-            Err(_) => bail!("Failed to fetch transfer message"),
+            Err(e) => Err(TransferProviderRepoErrors::ErrorFetchingProviderTransferMessage(e.into())),
         }
     }
 
     async fn put_transfer_message(
         &self,
         pid: Urn,
-        new_transfer_process: transfer_message::ActiveModel,
-    ) -> anyhow::Result<Option<transfer_message::Model>> {
+        edit_transfer_process: EditTransferMessageModel,
+    ) -> anyhow::Result<Option<transfer_message::Model>, TransferProviderRepoErrors> {
         Ok(None)
     }
 
@@ -238,14 +236,13 @@ impl TransferMessagesRepo for TransferProviderRepoForSql {
         &self,
         pid: Urn,
         new_transfer_message: NewTransferMessageModel,
-    ) -> anyhow::Result<transfer_message::Model> {
-        let db_connection = get_db_connection().await;
+    ) -> anyhow::Result<transfer_message::Model, TransferProviderRepoErrors> {
         let pid = pid.to_string();
 
         let message_type = TransferMessageTypesForDb::try_from(new_transfer_message.message_type);
         let message_type = match message_type {
             Ok(message_type) => message_type,
-            Err(_) => bail!("Failed to parse message type"),
+            Err(e) => return Err(TransferProviderRepoErrors::ErrorFetchingProviderTransferMessage(e.into())),
         };
 
         let model = transfer_message::ActiveModel {
@@ -258,125 +255,23 @@ impl TransferMessagesRepo for TransferProviderRepoForSql {
             content: ActiveValue::Set(new_transfer_message.content),
         };
 
-        let model =
-            transfer_message::Entity::insert(model).exec_with_returning(db_connection).await;
+        let model = transfer_message::Entity::insert(model).exec_with_returning(&self.db_connection).await;
         match model {
             Ok(model) => Ok(model),
-            Err(_) => bail!("Failed to create message"),
+            Err(e) => Err(TransferProviderRepoErrors::ErrorCreatingProviderTransferMessage(e.into())),
         }
     }
 
-    async fn delete_transfer_message(&self, pid: Urn) -> anyhow::Result<()> {
-        let db_connection = get_db_connection().await;
+    async fn delete_transfer_message(&self, pid: Urn) -> anyhow::Result<(), TransferProviderRepoErrors> {
         let pid = pid.to_string();
 
-        let transfer_message =
-            transfer_message::Entity::delete_by_id(pid).exec(db_connection).await;
+        let transfer_message = transfer_message::Entity::delete_by_id(pid).exec(&self.db_connection).await;
         match transfer_message {
             Ok(delete_result) => match delete_result.rows_affected {
-                0 => bail!("Not found"),
+                0 => Err(TransferProviderRepoErrors::ProviderTransferMessageNotFound),
                 _ => Ok(()),
             },
-            Err(_) => bail!("Failed to fetch transfer message"),
-        }
-    }
-}
-
-#[async_trait]
-impl AgreementsRepo for TransferProviderRepoForSql {
-    async fn get_all_agreements(
-        &self,
-        limit: Option<u64>,
-        page: Option<u64>,
-    ) -> anyhow::Result<Vec<agreements::Model>> {
-        let db_connection = get_db_connection().await;
-        let agreements = agreements::Entity::find()
-            .limit(limit.unwrap_or(100000))
-            .offset(page.unwrap_or(0))
-            .all(db_connection)
-            .await;
-        match agreements {
-            Ok(agreements) => Ok(agreements),
-            Err(_) => bail!("Failed to fetch agreements"),
-        }
-    }
-
-    async fn get_agreement_by_id(&self, id: Urn) -> anyhow::Result<Option<agreements::Model>> {
-        let db_connection = get_db_connection().await;
-        let id = id.to_string();
-
-        let agreement = agreements::Entity::find_by_id(id).one(db_connection).await;
-        match agreement {
-            Ok(agreement) => Ok(agreement),
-            Err(_) => bail!("Failed to fetch agreement"),
-        }
-    }
-
-    async fn put_agreement(
-        &self,
-        id: Urn,
-        new_agreement: EditAgreementModel,
-    ) -> anyhow::Result<agreements::Model> {
-        let db_connection = get_db_connection().await;
-        let id = id.to_string();
-
-        let old_model = agreements::Entity::find_by_id(id).one(db_connection).await;
-        let old_model = match old_model {
-            Ok(old_model) => match old_model {
-                Some(old_model) => old_model,
-                None => bail!("Not found"),
-            },
-            Err(_) => bail!("Failed to fetch old model"),
-        };
-
-        let mut old_active_model: agreements::ActiveModel = old_model.into();
-        if let Some(data_service_id) = new_agreement.data_service_id {
-            old_active_model.data_service_id = ActiveValue::Set(data_service_id.to_string());
-        }
-        if let Some(identity) = new_agreement.identity {
-            old_active_model.identity = ActiveValue::Set(Some(identity));
-        }
-        if let Some(identity_token) = new_agreement.identity_token {
-            old_active_model.identity_token = ActiveValue::Set(Some(identity_token));
-        }
-
-        let model = old_active_model.update(db_connection).await;
-        match model {
-            Ok(model) => Ok(model),
-            Err(_) => bail!("Failed to update model"),
-        }
-    }
-
-    async fn create_agreement(
-        &self,
-        new_agreement: NewAgreementModel,
-    ) -> anyhow::Result<agreements::Model> {
-        let db_connection = get_db_connection().await;
-
-        let model = agreements::ActiveModel {
-            agreement_id: ActiveValue::Set(get_urn(None).to_string()),
-            data_service_id: ActiveValue::Set(new_agreement.data_service_id.to_string()),
-            identity: ActiveValue::Set(new_agreement.identity),
-            identity_token: ActiveValue::Set(new_agreement.identity_token),
-        };
-
-        let agreement = agreements::Entity::insert(model).exec_with_returning(db_connection).await;
-        match agreement {
-            Ok(agreement) => Ok(agreement),
-            Err(_) => bail!("Failed to create agreement"),
-        }
-    }
-
-    async fn delete_agreement(&self, id: Urn) -> anyhow::Result<()> {
-        let db_connection = get_db_connection().await;
-        let id = id.to_string();
-        let agreement = agreements::Entity::delete_by_id(id).exec(db_connection).await;
-        match agreement {
-            Ok(delete_result) => match delete_result.rows_affected {
-                0 => bail!("Not found"),
-                _ => Ok(()),
-            },
-            Err(_) => bail!("Failed to fetch agreement"),
+            Err(e) => Err(TransferProviderRepoErrors::ErrorDeletingProviderTransferMessage(e.into())),
         }
     }
 }

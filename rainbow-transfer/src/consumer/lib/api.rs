@@ -31,9 +31,9 @@ use rainbow_common::protocol::transfer::{
     TransferSuspensionMessage, TRANSFER_CONTEXT,
 };
 use rainbow_common::utils::get_urn_from_string;
-use rainbow_dataplane::{
-    bootstrap_data_plane_in_consumer, get_data_plane_peer, set_data_plane_next_hop,
-};
+// use rainbow_dataplane::{
+//     bootstrap_data_plane_in_consumer, get_data_plane_peer, set_data_plane_next_hop,
+// };
 use rainbow_db::transfer_consumer::entities::transfer_callback;
 use rainbow_db::transfer_consumer::repo::{
     EditTransferCallback, NewTransferCallback, TRANSFER_CONSUMER_REPO,

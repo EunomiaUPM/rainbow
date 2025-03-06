@@ -20,7 +20,7 @@ pub mod sql;
 
 use crate::transfer_consumer::entities::transfer_callback;
 use crate::transfer_consumer::repo::sql::TransferCallbackRepoForSql;
-use crate::transfer_provider::repo::{AgreementsRepo, TransferMessagesRepo, TransferProcessRepo};
+use crate::transfer_provider::repo::{TransferMessagesRepo, TransferProcessRepo};
 use axum::async_trait;
 use once_cell::sync::Lazy;
 use rainbow_common::config::config::GLOBAL_CONFIG;

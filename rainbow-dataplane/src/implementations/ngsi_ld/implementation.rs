@@ -17,9 +17,9 @@
  *
  */
 
-use crate::core::{
-    DataPlanePeer, DataPlanePeerCreationBehavior, DataPlanePeerDefaultBehavior, PersistModel,
-};
+
+use crate::core::{DataPlanePeerCreationBehavior, DataPlanePeerDefaultBehavior, DataPlanePeerTransferBehavior, DataPlanePersistenceBehavior};
+use crate::data_plane_peer::DataPlanePeer;
 use crate::implementations::ngsi_ld::NgsiLdDataPlane;
 use crate::DATA_PLANE_HTTP_CLIENT;
 use anyhow::bail;
@@ -29,8 +29,8 @@ use axum::extract::Request;
 use rainbow_common::config::config::{get_provider_url, ConfigRoles};
 use rainbow_common::dcat_formats::FormatAction;
 use rainbow_common::forwarding::forward_response;
-use rainbow_common::protocol::transfer::{TransferRequestMessage, TransferStateForDb};
-use rainbow_db::transfer_provider::repo::TRANSFER_PROVIDER_REPO;
+use rainbow_common::protocol::transfer::TransferRequestMessage;
+// use rainbow_db::transfer_provider::repo::TRANSFER_PROVIDER_REPO;
 use reqwest::{Method, StatusCode};
 use serde_json::Value;
 use urn::Urn;
@@ -163,7 +163,6 @@ impl DataPlanePeerDefaultBehavior for NgsiLdDataPlane {
             local_address = fw.inner.local_address.clone().unwrap();
         }
 
-
         if let Some(url) = description_as_json
             .get_mut("notification")
             .and_then(|notification| notification.get_mut("http"))
@@ -209,7 +208,10 @@ impl DataPlanePeerDefaultBehavior for NgsiLdDataPlane {
         fw.persist().await?;
         Ok(())
     }
+}
 
+#[async_trait]
+impl DataPlanePeerTransferBehavior for NgsiLdDataPlane {
     async fn on_pull_data(
         data_plane_peer: DataPlanePeer,
         request: Request,
@@ -219,22 +221,22 @@ impl DataPlanePeerDefaultBehavior for NgsiLdDataPlane {
         match request.method() {
             &Method::GET => {
                 // Check PIP status
-                if data_plane_peer.role == ConfigRoles::Provider {
-                    let data_process = match TRANSFER_PROVIDER_REPO
-                        .get_transfer_process_by_data_plane(data_plane_peer.id)
-                        .await
-                    {
-                        Ok(dp) => match dp {
-                            Some(dp) => dp,
-                            None => bail!("Transfer not found"),
-                        },
-                        Err(_) => bail!("Not able to pull data from service"),
-                    };
-                    let state = data_process.state;
-                    if state != TransferStateForDb::STARTED {
-                        bail!("Unauthorized")
-                    }
-                }
+                // if data_plane_peer.role == ConfigRoles::Provider {
+                //     let data_process = match TRANSFER_PROVIDER_REPO
+                //         .get_transfer_process_by_data_plane(data_plane_peer.id)
+                //         .await
+                //     {
+                //         Ok(dp) => match dp {
+                //             Some(dp) => dp,
+                //             None => bail!("Transfer not found"),
+                //         },
+                //         Err(_) => bail!("Not able to pull data from service"),
+                //     };
+                //     let state = data_process.state;
+                //     if state != TransferStateForDb::STARTED {
+                //         bail!("Unauthorized")
+                //     }
+                // }
                 let res = DATA_PLANE_HTTP_CLIENT.get(next_hop).send().await;
                 match res {
                     Ok(r) => Ok(forward_response(r).await),
@@ -254,22 +256,22 @@ impl DataPlanePeerDefaultBehavior for NgsiLdDataPlane {
         match request.method() {
             &Method::POST => {
                 // Check PIP status
-                if data_plane_peer.role == ConfigRoles::Provider {
-                    let data_process = match TRANSFER_PROVIDER_REPO
-                        .get_transfer_process_by_data_plane(data_plane_peer.id)
-                        .await
-                    {
-                        Ok(dp) => match dp {
-                            Some(dp) => dp,
-                            None => bail!("Transfer not found"),
-                        },
-                        Err(_) => bail!("Not able to pull data from service"),
-                    };
-                    let state = data_process.state;
-                    if state != TransferStateForDb::STARTED {
-                        bail!("Unauthorized")
-                    }
-                }
+                // if data_plane_peer.role == ConfigRoles::Provider {
+                //     let data_process = match TRANSFER_PROVIDER_REPO
+                //         .get_transfer_process_by_data_plane(data_plane_peer.id)
+                //         .await
+                //     {
+                //         Ok(dp) => match dp {
+                //             Some(dp) => dp,
+                //             None => bail!("Transfer not found"),
+                //         },
+                //         Err(_) => bail!("Not able to pull data from service"),
+                //     };
+                //     let state = data_process.state;
+                //     if state != TransferStateForDb::STARTED {
+                //         bail!("Unauthorized")
+                //     }
+                // }
                 let body = std::mem::take(request.body_mut());
                 let body_bytes = to_bytes(body, 2024) // MAX_BUFFER
                     .await

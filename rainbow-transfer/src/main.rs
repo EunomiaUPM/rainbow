@@ -23,8 +23,9 @@
 #![allow(unused_mut)]
 #![allow(unused_imports)]
 
-use rainbow_transfer::setup;
-use sea_orm_migration::MigratorTrait;
+use rainbow_transfer::provider::setup::application::TransferProviderApplication;
+use rainbow_transfer::provider::setup::config::TransferProviderApplicationConfig;
+use rainbow_transfer::setup::commands::TransferProviderCommands;
 use tracing::info;
 
 const INFO: &str = r"
@@ -34,7 +35,7 @@ const INFO: &str = r"
  )   / /(__)\  _)(_  )  (  ) _ < )(_)(  )    (
 (_)\_)(__)(__)(____)(_)\_)(____/(_____)(__/\__)
 
-Starting Rainbow Transfer Server 🌈🌈
+Starting Rainbow Transfer Provider Server 🌈🌈
 UPM Dataspace protocol implementation
 Show some love on https://github.com/ging/rainbow
 ----------
@@ -45,6 +46,6 @@ Show some love on https://github.com/ging/rainbow
 async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt().with_max_level(tracing::Level::DEBUG).with_test_writer().init();
     info!("{}", INFO);
-    setup::commands::init_command_line().await?;
+    TransferProviderCommands::init_command_line().await?;
     Ok(())
 }

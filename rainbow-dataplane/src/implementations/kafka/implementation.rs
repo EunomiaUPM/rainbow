@@ -1,4 +1,5 @@
-use crate::core::{DataPlanePeer, DataPlanePeerDefaultBehavior};
+use crate::core::{DataPlanePeerDefaultBehavior, DataPlanePeerTransferBehavior};
+use crate::data_plane_peer::DataPlanePeer;
 use crate::implementations::kafka::KafkaDataPlane;
 use axum::async_trait;
 use axum::extract::Request;
@@ -36,7 +37,10 @@ impl DataPlanePeerDefaultBehavior for KafkaDataPlane {
     async fn disconnect_from_streaming_service(data_plane_id: Urn) -> anyhow::Result<()> {
         todo!()
     }
+}
 
+#[async_trait]
+impl DataPlanePeerTransferBehavior for KafkaDataPlane {
     async fn on_pull_data(
         data_plane_peer: DataPlanePeer,
         request: Request,

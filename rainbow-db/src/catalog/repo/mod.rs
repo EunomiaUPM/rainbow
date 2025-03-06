@@ -22,7 +22,7 @@ use super::entities::dataset;
 use super::entities::distribution;
 use super::entities::odrl_offer;
 use crate::catalog::repo::sql::CatalogRepoForSql;
-use crate::transfer_provider::repo::{AgreementsRepo, TransferMessagesRepo, TransferProcessRepo};
+use crate::transfer_provider::repo::{TransferMessagesRepo, TransferProcessRepo};
 use anyhow::Error;
 use axum::async_trait;
 use once_cell::sync::Lazy;

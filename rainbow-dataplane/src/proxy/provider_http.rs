@@ -16,7 +16,8 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::core::{DataPlanePeer, DataPlanePeerDefaultBehavior};
+use crate::core::DataPlanePeerTransferBehavior;
+use crate::data_plane_peer::DataPlanePeer;
 use crate::implementations::ngsi_ld::NgsiLdDataPlane;
 use crate::implementations::plain_http::HttpDataPlane;
 use axum::extract::{Path, Request};

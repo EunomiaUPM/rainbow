@@ -17,29 +17,22 @@
  *
  */
 
-pub mod sql;
-
-use crate::transfer_provider::entities::agreements;
 use crate::transfer_provider::entities::transfer_message;
 use crate::transfer_provider::entities::transfer_process;
-use crate::transfer_provider::repo::sql::TransferProviderRepoForSql;
-use once_cell::sync::Lazy;
-use rainbow_common::config::config::GLOBAL_CONFIG;
+use anyhow::Error;
 use rainbow_common::protocol::transfer::{TransferRoles, TransferStateForDb};
+use sea_orm::DatabaseConnection;
 use sea_orm_migration::async_trait::async_trait;
+use thiserror::Error;
 use urn::Urn;
 
-pub trait CombinedRepo: TransferProcessRepo + TransferMessagesRepo + AgreementsRepo {}
-impl<T> CombinedRepo for T where T: TransferProcessRepo + TransferMessagesRepo + AgreementsRepo {}
-pub static TRANSFER_PROVIDER_REPO: Lazy<Box<dyn CombinedRepo + Send + Sync>> = Lazy::new(|| {
-    let repo_type = GLOBAL_CONFIG.get().unwrap().db_type.clone();
-    match repo_type.as_str() {
-        "postgres" => Box::new(TransferProviderRepoForSql {}),
-        "memory" => Box::new(TransferProviderRepoForSql {}),
-        "mysql" => Box::new(TransferProviderRepoForSql {}),
-        _ => panic!("Unknown REPO_TYPE: {}", repo_type),
-    }
-});
+pub mod sql;
+
+pub trait TransferProviderRepoFactory: TransferProcessRepo + TransferMessagesRepo + Send + Sync + 'static {
+    fn create_repo(db_connection: DatabaseConnection) -> Self
+    where
+        Self: Sized;
+}
 
 pub struct NewTransferProcessModel {
     pub provider_pid: Urn,
@@ -62,29 +55,29 @@ pub trait TransferProcessRepo {
         &self,
         limit: Option<u64>,
         page: Option<u64>,
-    ) -> anyhow::Result<Vec<transfer_process::Model>>;
+    ) -> anyhow::Result<Vec<transfer_process::Model>, TransferProviderRepoErrors>;
     async fn get_transfer_process_by_provider(
         &self,
         pid: Urn,
-    ) -> anyhow::Result<Option<transfer_process::Model>>;
+    ) -> anyhow::Result<Option<transfer_process::Model>, TransferProviderRepoErrors>;
     async fn get_transfer_process_by_consumer(
         &self,
         pid: Urn,
-    ) -> anyhow::Result<Option<transfer_process::Model>>;
+    ) -> anyhow::Result<Option<transfer_process::Model>, TransferProviderRepoErrors>;
     async fn get_transfer_process_by_data_plane(
         &self,
         pid: Urn,
-    ) -> anyhow::Result<Option<transfer_process::Model>>;
+    ) -> anyhow::Result<Option<transfer_process::Model>, TransferProviderRepoErrors>;
     async fn put_transfer_process(
         &self,
         pid: Urn,
         new_transfer_process: EditTransferProcessModel,
-    ) -> anyhow::Result<transfer_process::Model>;
+    ) -> anyhow::Result<transfer_process::Model, TransferProviderRepoErrors>;
     async fn create_transfer_process(
         &self,
         new_transfer_process: NewTransferProcessModel,
-    ) -> anyhow::Result<transfer_process::Model>;
-    async fn delete_transfer_process(&self, pid: Urn) -> anyhow::Result<()>;
+    ) -> anyhow::Result<transfer_process::Model, TransferProviderRepoErrors>;
+    async fn delete_transfer_process(&self, pid: Urn) -> anyhow::Result<(), TransferProviderRepoErrors>;
 }
 
 pub struct NewTransferMessageModel {
@@ -94,66 +87,64 @@ pub struct NewTransferMessageModel {
     pub content: serde_json::Value,
 }
 
+pub struct EditTransferMessageModel {}
+
 #[async_trait]
 pub trait TransferMessagesRepo {
     async fn get_all_transfer_messages(
         &self,
         limit: Option<u64>,
         page: Option<u64>,
-    ) -> anyhow::Result<Vec<transfer_message::Model>>;
+    ) -> anyhow::Result<Vec<transfer_message::Model>, TransferProviderRepoErrors>;
 
     async fn get_all_transfer_messages_by_provider(
         &self,
         pid: Urn,
-    ) -> anyhow::Result<Vec<transfer_message::Model>>;
+    ) -> anyhow::Result<Vec<transfer_message::Model>, TransferProviderRepoErrors>;
 
     async fn get_transfer_message_by_id(
         &self,
         pid: Urn,
-    ) -> anyhow::Result<Option<transfer_message::Model>>;
+    ) -> anyhow::Result<Option<transfer_message::Model>, TransferProviderRepoErrors>;
     async fn put_transfer_message(
         &self,
         pid: Urn,
-        new_transfer_message: transfer_message::ActiveModel,
-    ) -> anyhow::Result<Option<transfer_message::Model>>;
+        edit_transfer_message: EditTransferMessageModel,
+    ) -> anyhow::Result<Option<transfer_message::Model>, TransferProviderRepoErrors>;
     async fn create_transfer_message(
         &self,
         pid: Urn,
         new_transfer_message: NewTransferMessageModel,
-    ) -> anyhow::Result<transfer_message::Model>;
-    async fn delete_transfer_message(&self, pid: Urn) -> anyhow::Result<()>;
+    ) -> anyhow::Result<transfer_message::Model, TransferProviderRepoErrors>;
+    async fn delete_transfer_message(&self, pid: Urn) -> anyhow::Result<(), TransferProviderRepoErrors>;
 }
 
-pub struct NewAgreementModel {
-    pub data_service_id: Urn,
-    pub identity: Option<String>,
-    pub identity_token: Option<String>,
-}
+#[derive(Debug, Error)]
+pub enum TransferProviderRepoErrors {
+    #[error("Provider Transfer Process not found")]
+    ProviderTransferProcessNotFound,
+    #[error("Provider Transfer Message not found")]
+    ProviderTransferMessageNotFound,
 
-pub struct EditAgreementModel {
-    pub data_service_id: Option<Urn>,
-    pub identity: Option<String>,
-    pub identity_token: Option<String>,
-}
+    #[error("Error fetching provider transfer process. {0}")]
+    ErrorFetchingProviderTransferProcess(Error),
+    #[error("Error fetching provider transfer message. {0}")]
+    ErrorFetchingProviderTransferMessage(Error),
 
-#[async_trait]
-pub trait AgreementsRepo {
-    async fn get_all_agreements(
-        &self,
-        limit: Option<u64>,
-        page: Option<u64>,
-    ) -> anyhow::Result<Vec<agreements::Model>>;
-    async fn get_agreement_by_id(&self, id: Urn) -> anyhow::Result<Option<agreements::Model>>;
-    async fn put_agreement(
-        &self,
-        id: Urn,
-        new_agreement: EditAgreementModel,
-    ) -> anyhow::Result<agreements::Model>;
-    async fn create_agreement(
-        &self,
-        new_agreement: NewAgreementModel,
-    ) -> anyhow::Result<agreements::Model>;
-    async fn delete_agreement(&self, id: Urn) -> anyhow::Result<()>;
+    #[error("Error creating provider transfer process. {0}")]
+    ErrorCreatingProviderTransferProcess(Error),
+    #[error("Error creating provider transfer message. {0}")]
+    ErrorCreatingProviderTransferMessage(Error),
+
+    #[error("Error deleting provider transfer process. {0}")]
+    ErrorDeletingProviderTransferProcess(Error),
+    #[error("Error deleting provider transfer message. {0}")]
+    ErrorDeletingProviderTransferMessage(Error),
+
+    #[error("Error updating provider transfer process. {0}")]
+    ErrorUpdatingProviderTransferProcess(Error),
+    #[error("Error updating provider transfer message. {0}")]
+    ErrorUpdatingProviderTransferMessage(Error),
 }
 
 impl Default for EditTransferProcessModel {

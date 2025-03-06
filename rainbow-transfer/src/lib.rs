@@ -23,8 +23,8 @@
 #![allow(unused_mut)]
 #![allow(unused_imports)]
 
-pub mod common;
-pub mod consumer;
+// pub mod common;
+// pub mod consumer;
 pub mod provider;
 pub mod schemas;
 pub mod setup;

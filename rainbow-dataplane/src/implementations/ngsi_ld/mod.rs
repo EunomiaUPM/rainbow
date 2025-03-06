@@ -18,7 +18,8 @@
  */
 pub mod implementation;
 
-use crate::core::{DataPlanePeer, DataPlanePeerCreationBehavior, PersistModel};
+use crate::core::{DataPlanePeerCreationBehavior, DataPlanePersistenceBehavior};
+use crate::data_plane_peer::DataPlanePeer;
 use axum::async_trait;
 use rainbow_common::config::config::ConfigRoles;
 use rainbow_common::config::database::get_db_connection;
@@ -33,7 +34,7 @@ pub struct NgsiLdDataPlane {
 }
 
 #[async_trait]
-impl PersistModel<data_plane_process::Model> for NgsiLdDataPlane {
+impl DataPlanePersistenceBehavior<data_plane_process::Model> for NgsiLdDataPlane {
     async fn persist(self) -> anyhow::Result<Box<Self>> {
         let db_connection = get_db_connection().await;
         let dp = data_plane_process::Entity::find_by_id(self.inner.id.to_string())

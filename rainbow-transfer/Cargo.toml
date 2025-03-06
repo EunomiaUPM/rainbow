@@ -40,4 +40,6 @@ http-body-util = { workspace = true }
 tracing-test = { workspace = true }
 sea-orm = { workspace = true }
 sea-orm-migration = { workspace = true }
+json_to_table = { workspace = true }
+mockall = { workspace = true }
 
