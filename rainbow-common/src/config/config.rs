@@ -20,6 +20,7 @@
 use anyhow::bail;
 use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
 use std::str::FromStr;
 
 #[macro_export]
@@ -94,6 +95,19 @@ pub struct Config {
     pub auth_url: Option<String>,
     pub auth_port: Option<String>,
 
+    // Holder Wallet Portal
+    pub ssi_holder_wallet_portal_url: Option<String>,
+    pub ssi_holder_wallet_portal_port: Option<String>,
+    pub ssi_holder_wallet_type: Option<String>,
+    pub ssi_holder_wallet_name: Option<String>,
+    pub ssi_holder_wallet_email: Option<String>,
+    pub ssi_holder_wallet_password: Option<String>,
+    pub ssi_holder_wallet_id: Option<String>,
+
+    // Local Holder Wallet
+    // If deployed locally
+    // ...
+
     // SSI Auth
     pub ssi_auth_enabled: Option<String>,
     pub ssi_holder_url: Option<String>,
@@ -164,4 +178,27 @@ pub fn get_consumer_ssi_holder() -> anyhow::Result<String> {
 
     let url = format!("{}:{}", ssi_holder_url, ssi_holder_port);
     Ok(url)
+}
+
+pub fn get_consumer_wallet_portal_url() -> anyhow::Result<String> {
+    let config = GLOBAL_CONFIG.get().unwrap();
+    let ssi_holder_wallet_portal_url = config.ssi_holder_wallet_portal_url.clone().unwrap();
+    match config.ssi_holder_wallet_portal_port.clone() {
+        Some(port) => Ok(format!("{}:{}", ssi_holder_wallet_portal_url, port)),
+        None => Ok(ssi_holder_wallet_portal_url),
+    }
+}
+
+pub fn get_consumer_wallet_data() -> anyhow::Result<Value> {
+    let config = GLOBAL_CONFIG.get().unwrap();
+
+    let wallet = json!({
+        "type": config.ssi_holder_wallet_type.clone().unwrap(),
+        "name": config.ssi_holder_wallet_name.clone().unwrap(),
+        "email": config.ssi_holder_wallet_email.clone().unwrap(),
+        "password": config.ssi_holder_wallet_password.clone().unwrap(),
+    });
+
+    Ok(wallet)
+
 }
