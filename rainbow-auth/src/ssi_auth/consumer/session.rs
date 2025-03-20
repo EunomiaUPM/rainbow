@@ -21,7 +21,6 @@ use crate::ssi_auth::consumer::SSI_AUTH_HTTP_CLIENT;
 use anyhow::bail;
 use log::error;
 use rainbow_common::config::config::{get_consumer_wallet_data, get_consumer_wallet_portal_url};
-use serde_json::Value;
 use tracing::info;
 
 pub struct SessionManager {
@@ -96,10 +95,21 @@ impl SessionManager {
         let wallet_portal_url = get_consumer_wallet_portal_url()? + "/wallet-api/auth/logout";
 
         let res = SSI_AUTH_HTTP_CLIENT.post(wallet_portal_url).send().await;
-        match res {
-            Ok(()) => self.token = None,
+        let res = match res {
+            Ok(res) => res,
             Err(e) => bail!("Error sending request: {}", e),
         };
+
+        match res.status().as_u16() {
+            200 => {
+                info!("Wallet login successful");
+                self.token = None; //TEST
+            }
+            _ => {
+                error!("Wallet login failed: {}", res.status());
+                bail!("Wallet login failed: {}", res.status())
+            }
+        }
 
         Ok(())
     }
