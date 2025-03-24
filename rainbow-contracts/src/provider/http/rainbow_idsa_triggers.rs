@@ -32,7 +32,8 @@ use rainbow_common::protocol::contract::contract_negotiation_event::{
 use rainbow_common::protocol::contract::contract_negotiation_termination::ContractTerminationMessage;
 use rainbow_common::protocol::contract::contract_odrl::{OdrlAgreement, OdrlOffer};
 use rainbow_common::protocol::contract::contract_offer::ContractOfferMessage;
-use rainbow_common::protocol::contract::{CNValidate, ContractNegotiationMessages};
+use rainbow_common::protocol::contract::ContractNegotiationMessages;
+use rainbow_common::protocol::ProtocolValidate;
 use rainbow_common::utils::{get_urn, get_urn_from_string};
 use rainbow_db::contracts_provider::entities::cn_process;
 use rainbow_db::contracts_provider::repo::EditContractNegotiationProcess;

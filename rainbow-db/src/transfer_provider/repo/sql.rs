@@ -21,7 +21,7 @@ use crate::transfer_provider::entities::transfer_message;
 use crate::transfer_provider::entities::transfer_process;
 use crate::transfer_provider::repo::{EditTransferMessageModel, EditTransferProcessModel, NewTransferMessageModel, NewTransferProcessModel, TransferMessagesRepo, TransferProcessRepo, TransferProviderRepoErrors, TransferProviderRepoFactory};
 use axum::async_trait;
-use rainbow_common::protocol::transfer::{TransferMessageTypesForDb, TransferStateForDb};
+use rainbow_common::protocol::transfer::TransferState;
 use rainbow_common::utils::get_urn;
 use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect};
 use urn::Urn;
@@ -132,7 +132,7 @@ impl TransferProcessRepo for TransferProviderRepoForSql {
             old_active_model.data_plane_id = ActiveValue::Set(Some(data_plane_id.to_string()));
         }
         if let Some(state) = new_transfer_process.state {
-            old_active_model.state = ActiveValue::Set(state);
+            old_active_model.state = ActiveValue::Set(state.to_string());
         }
         old_active_model.updated_at = ActiveValue::Set(Some(chrono::Utc::now().naive_utc()));
         let model = old_active_model.update(&self.db_connection).await;
@@ -151,7 +151,7 @@ impl TransferProcessRepo for TransferProviderRepoForSql {
             consumer_pid: ActiveValue::Set(Some(new_transfer_process.consumer_pid.to_string())),
             agreement_id: ActiveValue::Set(new_transfer_process.agreement_id.to_string()),
             data_plane_id: ActiveValue::Set(Some(new_transfer_process.data_plane_id.to_string())),
-            state: ActiveValue::Set(TransferStateForDb::REQUESTED),
+            state: ActiveValue::Set(TransferState::REQUESTED.to_string()),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             updated_at: ActiveValue::Set(None),
         };
@@ -199,10 +199,12 @@ impl TransferMessagesRepo for TransferProviderRepoForSql {
         &self,
         pid: Urn,
     ) -> anyhow::Result<Vec<transfer_message::Model>, TransferProviderRepoErrors> {
-        let pid = pid.to_string();
+        let transfer_process = self.get_transfer_process_by_provider(pid.clone()).await
+            .map_err(|e| TransferProviderRepoErrors::ErrorFetchingProviderTransferProcess(e.into()))?
+            .ok_or(TransferProviderRepoErrors::ProviderTransferProcessNotFound)?;
 
         let transfer_message = transfer_message::Entity::find()
-            .filter(transfer_message::Column::TransferProcessId.eq(pid))
+            .filter(transfer_message::Column::TransferProcessId.eq(pid.to_string()))
             .all(&self.db_connection)
             .await;
         match transfer_message {
@@ -214,10 +216,13 @@ impl TransferMessagesRepo for TransferProviderRepoForSql {
     async fn get_transfer_message_by_id(
         &self,
         pid: Urn,
+        mid: Urn,
     ) -> anyhow::Result<Option<transfer_message::Model>, TransferProviderRepoErrors> {
-        let pid = pid.to_string();
+        let transfer_process = self.get_transfer_process_by_provider(pid.clone()).await
+            .map_err(|e| TransferProviderRepoErrors::ErrorFetchingProviderTransferProcess(e.into()))?
+            .ok_or(TransferProviderRepoErrors::ProviderTransferProcessNotFound)?;
 
-        let transfer_message = transfer_message::Entity::find_by_id(pid).one(&self.db_connection).await;
+        let transfer_message = transfer_message::Entity::find_by_id(mid.to_string()).one(&self.db_connection).await;
         match transfer_message {
             Ok(transfer_message) => Ok(transfer_message),
             Err(e) => Err(TransferProviderRepoErrors::ErrorFetchingProviderTransferMessage(e.into())),
@@ -239,19 +244,13 @@ impl TransferMessagesRepo for TransferProviderRepoForSql {
     ) -> anyhow::Result<transfer_message::Model, TransferProviderRepoErrors> {
         let pid = pid.to_string();
 
-        let message_type = TransferMessageTypesForDb::try_from(new_transfer_message.message_type);
-        let message_type = match message_type {
-            Ok(message_type) => message_type,
-            Err(e) => return Err(TransferProviderRepoErrors::ErrorFetchingProviderTransferMessage(e.into())),
-        };
-
         let model = transfer_message::ActiveModel {
             id: ActiveValue::Set(get_urn(None).to_string()),
             transfer_process_id: ActiveValue::Set(pid),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
-            message_type: ActiveValue::Set(message_type),
-            from: ActiveValue::Set(new_transfer_message.from),
-            to: ActiveValue::Set(new_transfer_message.to),
+            message_type: ActiveValue::Set(new_transfer_message.message_type),
+            from: ActiveValue::Set(new_transfer_message.from.to_string()),
+            to: ActiveValue::Set(new_transfer_message.to.to_string()),
             content: ActiveValue::Set(new_transfer_message.content),
         };
 

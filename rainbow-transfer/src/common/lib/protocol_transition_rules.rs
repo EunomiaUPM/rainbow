@@ -16,162 +16,135 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
+use crate::provider::core::ds_protocol::DSProtocolTransferProviderTrait;
 use anyhow::bail;
-use rainbow_common::config::database::get_db_connection;
 use rainbow_common::err::transfer_err::TransferErrorType::{
-    ConsumerAlreadyRegisteredError, MessageTypeNotAcceptedError, ProtocolError,
-    TransferProcessAlreadySuspendedError, TransferProcessNotFound,
+    ConsumerAlreadyRegisteredError, MessageTypeNotAcceptedError, ProtocolError, TransferProcessAlreadySuspendedError,
 };
-use rainbow_common::protocol::transfer::TransferState;
+use rainbow_common::protocol::transfer::{TransferMessageTypes, TransferState};
 use rainbow_common::utils::{get_urn, get_urn_from_string};
-use rainbow_db::transfer_consumer::repo::TRANSFER_CONSUMER_REPO;
-use rainbow_db::transfer_provider::repo::TRANSFER_PROVIDER_REPO;
 use serde_json::Value;
+use std::sync::Arc;
 
-pub async fn protocol_transition_rules(json_value: Value) -> anyhow::Result<()> {
-    let db_connection = get_db_connection().await;
-
+pub async fn protocol_transition_rules<T>(transfer_service: Arc<T>, json_value: Value) -> anyhow::Result<()>
+where
+    T: DSProtocolTransferProviderTrait + Send + Sync + 'static,
+{
     let provider_pid = json_value
-        .get("dspace:providerPid")
+        .get("providerPid")
         .and_then(|v| v.as_str())
         .and_then(|v| get_urn_from_string(&v.to_string()).ok())
         .unwrap_or_else(|| get_urn(None));
 
     let consumer_pid = json_value
-        .get("dspace:consumerPid")
+        .get("consumerPid")
         .and_then(|v| v.as_str())
         .and_then(|v| get_urn_from_string(&v.to_string()).ok())
         .unwrap_or_else(|| get_urn(None));
 
     let message_type = json_value.get("@type").and_then(|v| v.as_str()).unwrap();
+    let transfer_provider = transfer_service.get_transfer_requests_by_provider(provider_pid).await;
+    let transfer_consumer = transfer_service.get_transfer_requests_by_consumer(consumer_pid).await?;
 
-    let transfer_provider =
-        TRANSFER_PROVIDER_REPO.get_transfer_process_by_provider(provider_pid).await?;
-    let transfer_consumer =
-        TRANSFER_CONSUMER_REPO.get_transfer_callbacks_by_consumer_id(consumer_pid).await
-            .unwrap_or_default();
-
-    match message_type {
-        "dspace:TransferRequestMessage" => {
-            if transfer_consumer.is_some() {
-                bail!(ConsumerAlreadyRegisteredError);
-            }
-        }
-        "dspace:TransferStartMessage" => {
-            if transfer_provider.is_none() {
-                bail!(TransferProcessNotFound);
-            }
-            let transfer_state = TransferState::try_from(transfer_provider.unwrap().state)?;
-            match transfer_state {
-                TransferState::REQUESTED => {}
-                TransferState::STARTED => {
-                    bail!(ProtocolError {
-                        state: TransferState::STARTED,
-                        message_type: "Start message is not allowed in dspace:STARTED state"
-                            .to_string(),
-                    })
-                }
-                TransferState::SUSPENDED => {}
-                TransferState::COMPLETED => {
-                    bail!(ProtocolError {
-                        state: TransferState::COMPLETED,
-                        message_type: "Start message is not allowed in dspace:COMPLETED state"
-                            .to_string(),
-                    })
-                }
-                TransferState::TERMINATED => {
-                    bail!(ProtocolError {
-                        state: TransferState::TERMINATED,
-                        message_type: "Start message is not allowed in dspace:TERMINATED state"
-                            .to_string(),
-                    })
+    match message_type.parse::<TransferMessageTypes>() {
+        Ok(message) => match message {
+            TransferMessageTypes::TransferRequestMessage => {
+                if transfer_consumer.is_some() {
+                    bail!(ConsumerAlreadyRegisteredError)
                 }
             }
-        }
-        "dspace:TransferSuspensionMessage" => {
-            if transfer_provider.is_none() {
-                bail!(TransferProcessNotFound);
-            }
-            let transfer_state = TransferState::try_from(transfer_provider.unwrap().state)?;
-            match transfer_state {
-                TransferState::REQUESTED => {
-                    bail!(ProtocolError {
-                        state: TransferState::REQUESTED,
-                        message_type: "Suspension message is not allowed in dspace:REQUESTED state"
-                            .to_string(),
-                    })
-                }
-                TransferState::STARTED => {}
-                TransferState::SUSPENDED => {
-                    bail!(TransferProcessAlreadySuspendedError)
-                }
-                TransferState::COMPLETED => {
-                    bail!(ProtocolError {
-                        state: TransferState::COMPLETED,
-                        message_type: "Suspension message is not allowed in dspace:COMPLETED state"
-                            .to_string(),
-                    })
-                }
-                TransferState::TERMINATED => {
-                    bail!(ProtocolError {
-                        state: TransferState::TERMINATED,
-                        message_type:
-                            "Suspension message is not allowed in dspace:TERMINATED state"
-                                .to_string(),
-                    })
+            TransferMessageTypes::TransferStartMessage => {
+                let transfer_state = TransferState::try_from(transfer_provider.unwrap().state)?;
+                match transfer_state {
+                    TransferState::REQUESTED => {}
+                    TransferState::STARTED => {
+                        bail!(ProtocolError {
+                            state: TransferState::STARTED,
+                            message_type: "Start message is not allowed in STARTED state".to_string(),
+                        })
+                    }
+                    TransferState::SUSPENDED => {}
+                    TransferState::COMPLETED => {
+                        bail!(ProtocolError {
+                            state: TransferState::COMPLETED,
+                            message_type: "Start message is not allowed in COMPLETED state".to_string(),
+                        })
+                    }
+                    TransferState::TERMINATED => {
+                        bail!(ProtocolError {
+                            state: TransferState::TERMINATED,
+                            message_type: "Start message is not allowed in TERMINATED state".to_string(),
+                        })
+                    }
                 }
             }
-        }
-        "dspace:TransferCompletionMessage" => {
-            if transfer_provider.is_none() {
-                bail!(TransferProcessNotFound);
-            }
-            let transfer_state = TransferState::try_from(transfer_provider.unwrap().state)?;
-            match transfer_state {
-                TransferState::REQUESTED => {
-                    bail!(ProtocolError {
-                        state: TransferState::REQUESTED,
-                        message_type: "Completion message is not allowed in dspace:REQUESTED state"
-                            .to_string(),
-                    })
+            TransferMessageTypes::TransferSuspensionMessage => {
+                let transfer_state = TransferState::try_from(transfer_provider.unwrap().state)?;
+                match transfer_state {
+                    TransferState::REQUESTED => {
+                        bail!(ProtocolError {
+                            state: TransferState::REQUESTED,
+                            message_type: "Suspension message is not allowed in REQUESTED state".to_string(),
+                        })
+                    }
+                    TransferState::STARTED => {}
+                    TransferState::SUSPENDED => {
+                        bail!(TransferProcessAlreadySuspendedError)
+                    }
+                    TransferState::COMPLETED => {
+                        bail!(ProtocolError {
+                            state: TransferState::COMPLETED,
+                            message_type: "Suspension message is not allowed in COMPLETED state".to_string(),
+                        })
+                    }
+                    TransferState::TERMINATED => {
+                        bail!(ProtocolError {
+                            state: TransferState::TERMINATED,
+                            message_type: "Suspension message is not allowed in TERMINATED state".to_string(),
+                        })
+                    }
                 }
-                TransferState::STARTED => {}
-                TransferState::SUSPENDED => {}
-                TransferState::COMPLETED => {}
-                TransferState::TERMINATED => {
-                    bail!(ProtocolError {
-                        state: TransferState::TERMINATED,
-                        message_type:
-                            "Completion message is not allowed in dspace:TERMINATED state"
-                                .to_string(),
-                    })
+            }
+            TransferMessageTypes::TransferCompletionMessage => {
+                let transfer_state = TransferState::try_from(transfer_provider.unwrap().state)?;
+                match transfer_state {
+                    TransferState::REQUESTED => {
+                        bail!(ProtocolError {
+                            state: TransferState::REQUESTED,
+                            message_type: "Completion message is not allowed in REQUESTED state".to_string(),
+                        })
+                    }
+                    TransferState::STARTED => {}
+                    TransferState::SUSPENDED => {}
+                    TransferState::COMPLETED => {}
+                    TransferState::TERMINATED => {
+                        bail!(ProtocolError {
+                            state: TransferState::TERMINATED,
+                            message_type: "Completion message is not allowed in TERMINATED state".to_string(),
+                        })
+                    }
                 }
             }
-        }
-        "dspace:TransferTerminationMessage" => {
-            if transfer_provider.is_none() {
-                bail!(TransferProcessNotFound);
-            }
-            let transfer_state = TransferState::try_from(transfer_provider.unwrap().state)?;
-            match transfer_state {
-                TransferState::REQUESTED => {}
-                TransferState::STARTED => {}
-                TransferState::SUSPENDED => {}
-                TransferState::COMPLETED => {
-                    bail!(ProtocolError {
-                        state: TransferState::COMPLETED,
-                        message_type:
-                            "Termination message is not allowed in dspace:COMPLETED state"
-                                .to_string(),
-                    })
+            TransferMessageTypes::TransferTerminationMessage => {
+                let transfer_state = TransferState::try_from(transfer_provider.unwrap().state)?;
+                match transfer_state {
+                    TransferState::REQUESTED => {}
+                    TransferState::STARTED => {}
+                    TransferState::SUSPENDED => {}
+                    TransferState::COMPLETED => {
+                        bail!(ProtocolError {
+                            state: TransferState::COMPLETED,
+                            message_type: "Termination message is not allowed in COMPLETED state".to_string(),
+                        })
+                    }
+                    TransferState::TERMINATED => {}
                 }
-                TransferState::TERMINATED => {}
             }
-        }
-        _ => {
-            bail!(MessageTypeNotAcceptedError);
-        }
+            _ => {
+                bail!(MessageTypeNotAcceptedError);
+            }
+        },
+        Err(_) => bail!(MessageTypeNotAcceptedError),
     }
 
     Ok(())

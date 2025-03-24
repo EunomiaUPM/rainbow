@@ -20,7 +20,7 @@
 use crate::transfer_provider::entities::transfer_message;
 use crate::transfer_provider::entities::transfer_process;
 use anyhow::Error;
-use rainbow_common::protocol::transfer::{TransferRoles, TransferStateForDb};
+use rainbow_common::protocol::transfer::{TransferRoles, TransferState};
 use sea_orm::DatabaseConnection;
 use sea_orm_migration::async_trait::async_trait;
 use thiserror::Error;
@@ -46,7 +46,7 @@ pub struct EditTransferProcessModel {
     pub consumer_pid: Option<Urn>,
     pub agreement_id: Option<Urn>,
     pub data_plane_id: Option<Urn>,
-    pub state: Option<TransferStateForDb>,
+    pub state: Option<TransferState>,
 }
 
 #[async_trait]
@@ -105,6 +105,7 @@ pub trait TransferMessagesRepo {
     async fn get_transfer_message_by_id(
         &self,
         pid: Urn,
+        mid: Urn,
     ) -> anyhow::Result<Option<transfer_message::Model>, TransferProviderRepoErrors>;
     async fn put_transfer_message(
         &self,

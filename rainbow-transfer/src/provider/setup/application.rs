@@ -1,11 +1,32 @@
-use crate::provider::core::data_service_resolver::data_service::DataServiceFacadeImpl;
+/*
+ *
+ *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
+use crate::provider::core::data_plane_facade::data_plane_facade::DataPlaneProviderFacadeImpl;
+use crate::provider::core::data_service_resolver_facade::data_service_resolver_facade::DataServiceFacadeImpl;
 use crate::provider::core::ds_protocol::ds_protocol::DSProtocolTransferProviderImpl;
+use crate::provider::core::ds_protocol_rpc::ds_protocol_rpc::DSRPCTransferProviderService;
 use crate::provider::core::rainbow_entities::rainbow_entities::RainbowTransferProviderServiceImpl;
-use crate::provider::http::ds_protocol::DSProtocolTransferProviderRouter;
-use crate::provider::http::rainbow_entities::RainbowTransferProviderEntitiesRouter;
+use crate::provider::http::ds_protocol::ds_protocol::DSProtocolTransferProviderRouter;
+use crate::provider::http::ds_protocol_rpc::ds_protocol_rpc::DSRPCTransferProviderProviderRouter;
+use crate::provider::http::rainbow_entities::rainbow_entities::RainbowTransferProviderEntitiesRouter;
 use crate::provider::setup::config::TransferProviderApplicationConfig;
 use axum::{serve, Router};
-use rainbow_dataplane::facade::facade::DataPlaneFacadeImpl;
 use rainbow_db::transfer_provider::repo::sql::TransferProviderRepoForSql;
 use rainbow_db::transfer_provider::repo::TransferProviderRepoFactory;
 use sea_orm::Database;
@@ -15,26 +36,45 @@ use tracing::info;
 
 pub struct TransferProviderApplication;
 
+pub async fn create_transfer_provider_router(db_url: String) -> Router {
+    let db_connection = Database::connect(db_url).await.expect("Database can't connect");
+
+    // Rainbow Entities Dependency injection
+    let provider_repo = Arc::new(TransferProviderRepoForSql::create_repo(db_connection));
+    let rainbow_entities_service = RainbowTransferProviderServiceImpl::new(provider_repo.clone());
+    let rainbow_entities_router =
+        RainbowTransferProviderEntitiesRouter::new(Arc::new(rainbow_entities_service)).router();
+
+    // DSProtocol Dependency injection
+    let data_plane_facade = Arc::new(DataPlaneProviderFacadeImpl::new());
+    let data_service_facade = Arc::new(DataServiceFacadeImpl::new());
+    let ds_protocol_service = Arc::new(DSProtocolTransferProviderImpl::new(
+        provider_repo.clone(),
+        data_service_facade.clone(),
+        data_plane_facade.clone(),
+    ));
+    let ds_protocol_router = DSProtocolTransferProviderRouter::new(ds_protocol_service.clone()).router();
+
+    // DSRPCProtocol Dependency injection
+    let ds_protocol_rpc_service = Arc::new(DSRPCTransferProviderService::new(
+        provider_repo.clone(),
+        data_service_facade,
+        data_plane_facade,
+    ));
+    let ds_protocol_rpc = DSRPCTransferProviderProviderRouter::new(ds_protocol_rpc_service.clone()).router();
+
+    // Router
+    let transfer_provider_application_router =
+        Router::new().merge(rainbow_entities_router).merge(ds_protocol_router).merge(ds_protocol_rpc);
+
+    transfer_provider_application_router
+}
+
 impl TransferProviderApplication {
     pub async fn run(config: &TransferProviderApplicationConfig<'static>) -> anyhow::Result<()> {
         // db_connection
         let db_url = config.get_full_db_url();
-        let db_connection = Database::connect(db_url).await.expect("Database can't connect");
-
-        // Rainbow Entities Dependency injection
-        let provider_repo = Arc::new(TransferProviderRepoForSql::create_repo(db_connection));
-        let rainbow_entities_service = RainbowTransferProviderServiceImpl::new(provider_repo.clone());
-        let rainbow_entities_router =
-            RainbowTransferProviderEntitiesRouter::new(Arc::new(rainbow_entities_service)).router();
-        // DSProtocol Dependency injection
-        let data_plane_service = Arc::new(DataPlaneFacadeImpl::new());
-        let data_service_facade = Arc::new(DataServiceFacadeImpl::new());
-        let ds_protocol_service = DSProtocolTransferProviderImpl::new(provider_repo.clone(), data_service_facade, data_plane_service);
-        let ds_protocol_router = DSProtocolTransferProviderRouter::new(Arc::new(ds_protocol_service)).router();
-        // Router
-        let transfer_provider_application_router =
-            Router::new().merge(rainbow_entities_router).merge(ds_protocol_router);
-
+        let router = create_transfer_provider_router(db_url).await;
         // Init server
         let server_message = format!("Starting provider server in {}", config.get_full_host_url(), );
         info!("{}", server_message);
@@ -44,7 +84,7 @@ impl TransferProviderApplication {
             config.get_host_port()
         ))
             .await?;
-        serve(listener, transfer_provider_application_router).await?;
+        serve(listener, router).await?;
         Ok(())
     }
 }

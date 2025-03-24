@@ -16,7 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::protocol::contract::CNValidate;
+use crate::protocol::ProtocolValidate;
 use crate::utils::get_urn;
 use anyhow::bail;
 use serde::{Deserialize, Serialize};
@@ -59,7 +59,7 @@ pub struct OdrlMessageOffer {
     pub prohibition: Option<Vec<OdrlObligation>>, // anyof
 }
 
-impl CNValidate for OdrlMessageOffer {
+impl ProtocolValidate for OdrlMessageOffer {
     fn validate(&self) -> anyhow::Result<()> {
         //
 
@@ -115,7 +115,7 @@ impl Default for OdrlOffer {
     }
 }
 
-impl CNValidate for OdrlOffer {
+impl ProtocolValidate for OdrlOffer {
     fn validate(&self) -> anyhow::Result<()> {
         // Validate any of permission or prohibition
         match (&self.permission, &self.prohibition) {
@@ -176,7 +176,7 @@ impl Default for OdrlAgreement {
     }
 }
 
-impl CNValidate for OdrlAgreement {
+impl ProtocolValidate for OdrlAgreement {
     fn validate(&self) -> anyhow::Result<()> {
         Ok(())
     }

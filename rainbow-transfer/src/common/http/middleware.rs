@@ -16,24 +16,20 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 use crate::common::lib::common_validations::pids_as_urn_validation;
 use crate::common::lib::protocol_transition_rules::protocol_transition_rules;
 use crate::common::lib::schema_validation::schema_validation;
+use crate::provider::core::ds_protocol::DSProtocolTransferProviderTrait;
 use axum::body::{to_bytes, Body, Bytes};
-use axum::extract::rejection::JsonRejection;
-use axum::extract::{FromRequest, Request};
-use axum::http::request::Parts;
-use axum::http::HeaderMap;
+use axum::extract::{Request, State};
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
-use axum::{Extension, Json};
-use log::error;
 use rainbow_common::err::transfer_err::TransferErrorType;
 use rainbow_common::err::transfer_err::TransferErrorType::NotCheckedError;
 use reqwest::StatusCode;
-use serde_json::{json, Error, Value};
-use tracing::info;
+use serde_json::Value;
+use std::sync::Arc;
+use tracing::{debug, info};
 
 async fn _extract_json_body(request: &mut Request<Body>) -> anyhow::Result<(Value, Bytes)> {
     let body = std::mem::take(request.body_mut());
@@ -51,7 +47,7 @@ pub async fn schema_validation_middleware(
     mut request: Request<Body>,
     next: Next,
 ) -> impl IntoResponse {
-    info!("Shape validation middleware");
+    debug!("Shape validation middleware");
 
     let (json_value, body_bytes) = match _extract_json_body(&mut request).await {
         Ok(result) => result,
@@ -76,7 +72,7 @@ pub async fn pids_as_urn_validation_middleware(
     mut request: Request<Body>,
     next: Next,
 ) -> impl IntoResponse {
-    info!("Pids validation middleware");
+    debug!("Pids validation middleware");
 
     let (json_value, body_bytes) = match _extract_json_body(&mut request).await {
         Ok(result) => result,
@@ -96,47 +92,15 @@ pub async fn pids_as_urn_validation_middleware(
     }
 }
 
-pub async fn validate_incoming_pids_middleware(
-    mut request: Request,
-    next: Next,
-) -> anyhow::Result<Response, StatusCode> {
-    info!("Validate incoming pids middleware");
-
-    let (json_value, body_bytes) = _extract_json_body(&mut request).await.map_err(|_| {
-        println!("Invalid JSON format");
-        StatusCode::UNPROCESSABLE_ENTITY
-    })?;
-
-    // logic
-
-    *request.body_mut() = Body::from(body_bytes);
-    let response = next.run(request).await;
-    Ok(response)
-}
-
-pub async fn validate_agreement_id_middleware(
+pub async fn protocol_rules_middleware<T>(
+    transfer_service: State<Arc<T>>,
     mut request: Request<Body>,
     next: Next,
-) -> anyhow::Result<Response, StatusCode> {
-    info!("Agreement validation middleware");
-
-    let (json_value, body_bytes) = _extract_json_body(&mut request).await.map_err(|_| {
-        println!("Invalid JSON format");
-        StatusCode::UNPROCESSABLE_ENTITY
-    })?;
-
-    // logic
-
-    *request.body_mut() = Body::from(body_bytes);
-    let response = next.run(request).await;
-    Ok(response)
-}
-
-pub async fn protocol_rules_middleware(
-    mut request: Request<Body>,
-    next: Next,
-) -> impl IntoResponse {
-    info!("Protocol rules middleware");
+) -> impl IntoResponse
+where
+    T: DSProtocolTransferProviderTrait + Send + Sync + 'static,
+{
+    debug!("Protocol rules middleware");
 
     let (json_value, body_bytes) = match _extract_json_body(&mut request).await {
         Ok(result) => result,
@@ -145,7 +109,7 @@ pub async fn protocol_rules_middleware(
         }
     };
 
-    match protocol_transition_rules(json_value).await {
+    match protocol_transition_rules(transfer_service.0, json_value).await {
         Ok(_) => {
             *request.body_mut() = Body::from(body_bytes);
             next.run(request).await

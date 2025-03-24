@@ -4,7 +4,7 @@ use crate::implementations::kafka::KafkaDataPlane;
 use axum::async_trait;
 use axum::extract::Request;
 use axum::response::Response;
-use rainbow_common::protocol::transfer::TransferRequestMessage;
+use rainbow_common::protocol::transfer::transfer_request::TransferRequestMessage;
 use urn::Urn;
 
 #[async_trait]

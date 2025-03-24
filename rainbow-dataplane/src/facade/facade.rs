@@ -6,7 +6,7 @@ use crate::implementations::plain_http::HttpDataPlane;
 use rainbow_common::config::config::ConfigRoles;
 use rainbow_common::config::database::get_db_connection;
 use rainbow_common::dcat_formats::{FormatAction, FormatProtocol};
-use rainbow_common::protocol::transfer::TransferRequestMessage;
+use rainbow_common::protocol::transfer::transfer_request::TransferRequestMessage;
 use tracing::info;
 use urn::Urn;
 

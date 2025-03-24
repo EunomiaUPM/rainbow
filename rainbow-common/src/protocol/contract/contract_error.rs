@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use crate::protocol::context_field::ContextField;
 use crate::protocol::contract::ContractNegotiationMessages;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
@@ -25,7 +26,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Debug, Deserialize)]
 pub struct ContractErrorMessage {
     #[serde(rename = "@context")]
-    pub context: String,
+    pub context: ContextField,
     #[serde(rename = "@type")]
     pub _type: ContractNegotiationMessages,
     #[serde(rename = "dspace:providerPid")]
@@ -43,7 +44,7 @@ pub struct ContractErrorMessage {
 impl Default for ContractErrorMessage {
     fn default() -> Self {
         ContractErrorMessage {
-            context: "https://w3id.org/dspace/2025/1/context.jsonld".to_string(),
+            context: ContextField::default(),
             _type: ContractNegotiationMessages::ContractNegotiationError,
             provider_pid: None,
             consumer_pid: None,

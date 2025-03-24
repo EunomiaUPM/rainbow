@@ -17,8 +17,8 @@
  *
  */
 
-// pub mod xxdata_plane;
 pub mod rainbow_entities;
 pub mod ds_protocol;
-pub mod data_service_resolver;
-// pub mod data_plane;
+pub mod data_service_resolver_facade;
+pub mod data_plane_facade;
+pub mod ds_protocol_rpc;

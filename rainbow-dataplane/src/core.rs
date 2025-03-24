@@ -21,7 +21,7 @@ use axum::async_trait;
 use axum::extract::Request;
 use rainbow_common::config::config::ConfigRoles;
 use rainbow_common::dcat_formats::{FormatAction, FormatProtocol};
-use rainbow_common::protocol::transfer::TransferRequestMessage;
+use rainbow_common::protocol::transfer::transfer_request::TransferRequestMessage;
 use std::collections::HashMap;
 use urn::Urn;
 

@@ -1,7 +1,25 @@
+/*
+ *
+ *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 use rainbow_common::config::config::ConfigRoles;
 use rainbow_common::config::database::DbType;
 use serde::Serialize;
-use std::env;
 
 #[derive(Serialize, Copy, Clone)]
 struct HostConfig<'a> {
@@ -30,6 +48,7 @@ pub struct TransferProviderApplicationConfig<'a> {
     database_config: DatabaseConfig<'a>,
     role: ConfigRoles,
 }
+
 
 impl<'a> Default for TransferProviderApplicationConfig<'a> {
     fn default() -> Self {
@@ -109,7 +128,6 @@ impl<'a> TransferProviderApplicationConfig<'a> {
     }
     pub fn merge_dotenv_configuration(&self) -> anyhow::Result<Self> {
         dotenvy::dotenv()?;
-        let vars = option_env!("HOST_PROTOCOL");
         let compound_config = Self {
             transfer_process_host: HostConfig {
                 protocol: option_env!("HOST_PROTOCOL")

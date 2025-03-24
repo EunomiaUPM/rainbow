@@ -1,7 +1,8 @@
 use crate::data_plane_peer::DataPlanePeer;
 use axum::async_trait;
-use rainbow_common::protocol::transfer::TransferRequestMessage;
+use rainbow_common::protocol::transfer::transfer_request::TransferRequestMessage;
 use urn::Urn;
+
 pub mod facade;
 
 #[async_trait]

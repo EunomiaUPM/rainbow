@@ -17,7 +17,8 @@
  *
  */
 
-use crate::protocol::contract::{ContractNegotiationMessages, ContractNegotiationState, CONTEXT};
+use crate::protocol::context_field::ContextField;
+use crate::protocol::contract::{ContractNegotiationMessages, ContractNegotiationState};
 use crate::utils::get_urn;
 use serde::{Deserialize, Serialize};
 use urn::Urn;
@@ -25,7 +26,7 @@ use urn::Urn;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ContractNegotiationEventMessage {
     #[serde(rename = "@context")]
-    pub context: String,
+    pub context: ContextField,
     #[serde(rename = "@type")]
     pub _type: String,
     #[serde(rename = "dspace:providerPid")]
@@ -47,7 +48,7 @@ pub enum NegotiationEventType {
 impl Default for ContractNegotiationEventMessage {
     fn default() -> Self {
         Self {
-            context: CONTEXT.to_string(),
+            context: ContextField::default(),
             _type: ContractNegotiationMessages::ContractNegotiationEventMessage.to_string(),
             provider_pid: get_urn(None),
             consumer_pid: get_urn(None),

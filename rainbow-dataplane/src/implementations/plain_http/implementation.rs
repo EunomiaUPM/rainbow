@@ -30,8 +30,7 @@ use axum::response::Response;
 use rainbow_common::config::config::{get_provider_url, ConfigRoles};
 use rainbow_common::dcat_formats::FormatAction;
 use rainbow_common::forwarding::forward_response;
-use rainbow_common::protocol::transfer::TransferRequestMessage;
-// use rainbow_db::transfer_provider::repo::TRANSFER_PROVIDER_REPO;
+use rainbow_common::protocol::transfer::transfer_request::TransferRequestMessage;
 use reqwest::{Method, StatusCode};
 use urn::Urn;
 
@@ -46,7 +45,7 @@ impl DataPlanePeerDefaultBehavior for HttpDataPlane {
         };
         let local_address = format!(
             "{}{}/{}",
-            transfer_request.callback_address, local_address_path, transfer_request.consumer_pid
+            transfer_request.callback_address.unwrap(), local_address_path, transfer_request.consumer_pid
         );
         let mut fw = HttpDataPlane::create_data_plane_peer()
             .with_role(ConfigRoles::Consumer)
@@ -83,7 +82,7 @@ impl DataPlanePeerDefaultBehavior for HttpDataPlane {
             .with_local_address(local_address)
             .add_attribute(
                 "consumerCallback".to_string(),
-                transfer_request.callback_address,
+                transfer_request.callback_address.unwrap(),
             );
 
         fw = *fw.persist().await?;

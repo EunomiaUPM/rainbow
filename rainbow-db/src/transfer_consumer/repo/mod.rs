@@ -19,26 +19,24 @@
 pub mod sql;
 
 use crate::transfer_consumer::entities::transfer_callback;
-use crate::transfer_consumer::repo::sql::TransferCallbackRepoForSql;
 use crate::transfer_provider::repo::{TransferMessagesRepo, TransferProcessRepo};
+use anyhow::Error;
 use axum::async_trait;
-use once_cell::sync::Lazy;
-use rainbow_common::config::config::GLOBAL_CONFIG;
+use sea_orm::DatabaseConnection;
+use thiserror::Error;
 use urn::Urn;
 
-pub trait CombinedRepo: TransferCallbackRepo {}
-impl<T> CombinedRepo for T where T: TransferCallbackRepo {}
-pub static TRANSFER_CONSUMER_REPO: Lazy<Box<dyn CombinedRepo + Send + Sync>> = Lazy::new(|| {
-    let repo_type = GLOBAL_CONFIG.get().unwrap().db_type.clone();
-    match repo_type.as_str() {
-        "postgres" => Box::new(TransferCallbackRepoForSql {}),
-        "memory" => Box::new(TransferCallbackRepoForSql {}),
-        "mysql" => Box::new(TransferCallbackRepoForSql {}),
-        _ => panic!("Unknown REPO_TYPE: {}", repo_type),
-    }
-});
+
+pub trait TransferConsumerRepoFactory: TransferCallbackRepo + Send + Sync + 'static {
+    fn create_repo(db_connection: DatabaseConnection) -> Self
+    where
+        Self: Sized;
+}
+
 
 pub struct NewTransferCallback {
+    pub consumer_pid: Option<Urn>,
+    pub provider_pid: Option<Urn>,
     pub data_address: Option<serde_json::Value>,
 }
 pub struct EditTransferCallback {
@@ -54,35 +52,50 @@ pub trait TransferCallbackRepo {
         &self,
         limit: Option<u64>,
         page: Option<u64>,
-    ) -> anyhow::Result<Vec<transfer_callback::Model>>;
+    ) -> anyhow::Result<Vec<transfer_callback::Model>, TransferConsumerRepoErrors>;
     async fn get_transfer_callbacks_by_id(
         &self,
         callback_id: Urn,
-    ) -> anyhow::Result<Option<transfer_callback::Model>>;
+    ) -> anyhow::Result<Option<transfer_callback::Model>, TransferConsumerRepoErrors>;
 
     async fn get_transfer_callbacks_by_consumer_id(
         &self,
         consumer_pid: Urn,
-    ) -> anyhow::Result<Option<transfer_callback::Model>>;
+    ) -> anyhow::Result<Option<transfer_callback::Model>, TransferConsumerRepoErrors>;
 
     async fn put_transfer_callback(
         &self,
         callback_id: Urn,
         new_transfer_callback: EditTransferCallback,
-    ) -> anyhow::Result<transfer_callback::Model>;
+    ) -> anyhow::Result<transfer_callback::Model, TransferConsumerRepoErrors>;
 
     async fn put_transfer_callback_by_consumer(
         &self,
         callback_id: Urn,
         new_transfer_callback: EditTransferCallback,
-    ) -> anyhow::Result<transfer_callback::Model>;
+    ) -> anyhow::Result<transfer_callback::Model, TransferConsumerRepoErrors>;
 
     async fn create_transfer_callback(
         &self,
         new_transfer_callback: NewTransferCallback,
-    ) -> anyhow::Result<transfer_callback::Model>;
+    ) -> anyhow::Result<transfer_callback::Model, TransferConsumerRepoErrors>;
 
-    async fn delete_transfer_callback(&self, callback_id: Urn) -> anyhow::Result<()>;
+    async fn delete_transfer_callback(&self, callback_id: Urn) -> anyhow::Result<(), TransferConsumerRepoErrors>;
+}
+
+#[derive(Debug, Error)]
+pub enum TransferConsumerRepoErrors {
+    #[error("Consumer Transfer Process not found")]
+    ConsumerTransferProcessNotFound,
+
+    #[error("Error fetching consumer transfer process. {0}")]
+    ErrorFetchingConsumerTransferProcess(Error),
+    #[error("Error creating consumer transfer process. {0}")]
+    ErrorCreatingConsumerTransferProcess(Error),
+    #[error("Error deleting consumer transfer process. {0}")]
+    ErrorDeletingConsumerTransferProcess(Error),
+    #[error("Error updating consumer transfer process. {0}")]
+    ErrorUpdatingConsumerTransferProcess(Error),
 }
 
 impl Default for EditTransferCallback {

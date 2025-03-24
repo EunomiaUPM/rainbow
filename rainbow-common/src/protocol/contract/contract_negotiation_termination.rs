@@ -16,7 +16,8 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use super::{ContextField, ContractNegotiationMessages, CONTEXT};
+use super::ContractNegotiationMessages;
+use crate::protocol::context_field::ContextField;
 use crate::utils::get_urn;
 use serde::{Deserialize, Serialize};
 use urn::Urn;
@@ -42,7 +43,7 @@ pub struct ContractTerminationMessage {
 impl Default for ContractTerminationMessage {
     fn default() -> Self {
         Self {
-            context: ContextField::Single(CONTEXT.to_string()),
+            context: ContextField::default(),
             _type: ContractNegotiationMessages::ContractNegotiationTerminationMessage.to_string(),
             provider_pid: get_urn(None),
             consumer_pid: get_urn(None),

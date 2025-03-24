@@ -1,24 +1,47 @@
-use crate::provider::core::data_service_resolver::DataServiceFacadeTrait;
-// use crate::common::utils::{has_data_address_in_push, is_agreement_valid};
+/*
+ *
+ *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
+use crate::common::utils::has_data_address_in_push;
+use crate::provider::core::data_plane_facade::DataPlaneProviderFacadeTrait;
+use crate::provider::core::data_service_resolver_facade::DataServiceFacadeTrait;
+use crate::provider::core::ds_protocol::ds_protocol_err::DSProtocolTransferProviderErrors;
 use crate::provider::core::ds_protocol::DSProtocolTransferProviderTrait;
-use anyhow::anyhow;
+use anyhow::bail;
 use axum::async_trait;
-use rainbow_common::dcat_formats::FormatAction;
-use rainbow_common::protocol::transfer::{
-    DataAddress, TransferCompletionMessage, TransferProcessMessage, TransferRequestMessage, TransferRoles,
-    TransferStartMessage, TransferStateForDb, TransferSuspensionMessage, TransferTerminationMessage,
-};
+use rainbow_common::protocol::transfer::transfer_completion::TransferCompletionMessage;
+use rainbow_common::protocol::transfer::transfer_process::TransferProcessMessage;
+use rainbow_common::protocol::transfer::transfer_request::TransferRequestMessage;
+use rainbow_common::protocol::transfer::transfer_start::TransferStartMessage;
+use rainbow_common::protocol::transfer::transfer_suspension::TransferSuspensionMessage;
+use rainbow_common::protocol::transfer::transfer_termination::TransferTerminationMessage;
+use rainbow_common::protocol::transfer::{TransferRoles, TransferState};
 use rainbow_common::utils::{get_urn, get_urn_from_string};
-use rainbow_dataplane::facade::DataPlaneFacade;
-use rainbow_db::transfer_provider::repo::{EditTransferProcessModel, NewTransferMessageModel, NewTransferProcessModel, TransferProviderRepoFactory};
+use rainbow_db::transfer_provider::repo::{EditTransferProcessModel, NewTransferMessageModel, NewTransferProcessModel, TransferProviderRepoErrors, TransferProviderRepoFactory};
 use std::sync::Arc;
+use tracing::debug;
 use urn::Urn;
 
 pub struct DSProtocolTransferProviderImpl<T, U, V>
 where
     T: TransferProviderRepoFactory + Send + Sync,
     U: DataServiceFacadeTrait + Send + Sync,
-    V: DataPlaneFacade + Send + Sync,
+    V: DataPlaneProviderFacadeTrait + Send + Sync,
 {
     transfer_repo: Arc<T>,
     data_service_facade: Arc<U>,
@@ -29,7 +52,7 @@ impl<T, U, V> DSProtocolTransferProviderImpl<T, U, V>
 where
     T: TransferProviderRepoFactory + Send + Sync,
     U: DataServiceFacadeTrait + Send + Sync,
-    V: DataPlaneFacade + Send + Sync,
+    V: DataPlaneProviderFacadeTrait + Send + Sync,
 {
     pub fn new(
         transfer_repo: Arc<T>,
@@ -45,71 +68,69 @@ impl<T, U, V> DSProtocolTransferProviderTrait for DSProtocolTransferProviderImpl
 where
     T: TransferProviderRepoFactory + Send + Sync,
     U: DataServiceFacadeTrait + Send + Sync,
-    V: DataPlaneFacade + Send + Sync,
+    V: DataPlaneProviderFacadeTrait + Send + Sync,
 {
     async fn get_transfer_requests_by_provider(
         &self,
         provider_pid: Urn,
     ) -> anyhow::Result<TransferProcessMessage> {
-        // TODO THIS
-        let transfers = self.transfer_repo.get_transfer_process_by_provider(provider_pid).await?.ok_or(anyhow!("nope"))?;
-        let transfers = TransferProcessMessage::from(transfers);
-        Ok(transfers)
+        debug!("DSProtocol Service: get_transfer_requests_by_provider");
+        let transfers =
+            self.transfer_repo.get_transfer_process_by_provider(provider_pid.clone()).await
+                .map_err(DSProtocolTransferProviderErrors::DbErr)?
+                .ok_or(DSProtocolTransferProviderErrors::TransferProcessNotFound {
+                    provider_pid: Option::from(provider_pid),
+                    consumer_pid: None,
+                })?;
+        Ok(transfers.into())
+    }
+
+    async fn get_transfer_requests_by_consumer(
+        &self,
+        consumer_pid: Urn,
+    ) -> anyhow::Result<Option<TransferProcessMessage>> {
+        debug!("DSProtocol Service: get_transfer_requests_by_consumer");
+        let transfers =
+            self.transfer_repo.get_transfer_process_by_consumer(consumer_pid.clone()).await
+                .map_err(DSProtocolTransferProviderErrors::DbErr)?;
+        Ok(transfers.map(|e| e.into()))
     }
 
     async fn transfer_request(&self, input: TransferRequestMessage) -> anyhow::Result<TransferProcessMessage> {
-        // // agreement validation - validate
-        // if is_agreement_valid(&input.agreement_id)? == false {
-        //     bail!(TransferErrorType::AgreementError);
-        // }
-        //
-        // // dct:format is push, dataAdress must be
-        // if has_data_address_in_push(&input.data_address, &input.format)? == false {
-        //     bail!(TransferErrorType::DataAddressCannotBeNullOnPushError);
-        // }
-
+        debug!("DSProtocol Service: transfer_request");
+        // extract data
         let provider_pid = get_urn(None);
         let consumer_pid = get_urn_from_string(&input.consumer_pid)?;
-        let created_at = chrono::Utc::now().naive_utc();
+        let agreement_id = get_urn_from_string(&input.agreement_id)?;
+        let _created_at = chrono::Utc::now().naive_utc();
         let message_type = input._type.clone();
 
-        // data plane provision
-        let agreement_id = get_urn_from_string(&input.agreement_id)?;
-        let data_service = self.data_service_facade.resolve_data_service_by_agreement_id(agreement_id.clone()).await?;
-        // let data_plane_peer = self
-        //     .data_plane
-        //     .bootstrap_data_plane_in_provider(input.clone(), provider_pid.clone())
-        //     .await?
-        //     .add_attribute(
-        //         "endpointUrl".to_string(),
-        //         data_service.clone().dcat.clone().endpoint_url,
-        //     )
-        //     .add_attribute(
-        //         "endpointDescription".to_string(),
-        //         data_service.clone().dcat.clone().endpoint_description,
-        //     );
-        // println!("{:?}", data_plane_peer);
-        //
-        // let data_plane_peer = self
-        //     .data_plane
-        //     .set_data_plane_next_hop(data_plane_peer, provider_pid.clone(), consumer_pid.clone())
-        //     .await?;
-        // let data_plane_id = data_plane_peer.id.clone();
-        // self.data_plane.connect_to_streaming_service(data_plane_id.clone()).await?;
+        // validate
+        if has_data_address_in_push(&input.data_address, &input.format)? == false {
+            bail!(DSProtocolTransferProviderErrors::DataAddressCannotBeNullOnPushError {
+                consumer_pid: Option::from(consumer_pid),
+                provider_pid: None
+            });
+        }
 
+        // resolve data service
+        let _data_service = self.data_service_facade
+            .resolve_data_service_by_agreement_id(agreement_id.clone()).await?;
+        // connect to data plane
+        self.data_plane.on_transfer_request().await?;
 
         // db persist
-        let transfer_process_db = self
+        let transfer_process = self
             .transfer_repo
             .create_transfer_process(NewTransferProcessModel {
                 provider_pid: provider_pid.clone(),
                 consumer_pid,
                 agreement_id,
                 // data_plane_id,
-                data_plane_id: get_urn(None),
+                data_plane_id: get_urn(None), // TODO
             })
-            .await?;
-
+            .await
+            .map_err(DSProtocolTransferProviderErrors::DbErr)?;
         let _ = self
             .transfer_repo
             .create_transfer_message(
@@ -121,25 +142,10 @@ where
                     content: serde_json::to_value(&input)?,
                 },
             )
-            .await?;
+            .await
+            .map_err(DSProtocolTransferProviderErrors::DbErr)?;
 
-        // prepare data address for transfer start message
-        let data_address = match input.clone().format.action {
-            FormatAction::Push => None,
-            FormatAction::Pull => Some(DataAddress {
-                _type: "dspace:DataAddress".to_string(),
-                endpoint_type: "HTTP".to_string(),
-                endpoint: data_service.clone().dcat.endpoint_description.to_string(),
-                endpoint_properties: vec![],
-            }),
-        };
-
-        // // callback for sending after a transfer start
-        // callback(input.into(), provider_pid, data_address).await?;
-
-        // return
-        let tp = TransferProcessMessage::from(transfer_process_db);
-        Ok(tp)
+        Ok(transfer_process.into())
     }
 
     async fn transfer_start(
@@ -147,14 +153,34 @@ where
         provider_pid: Urn,
         input: TransferStartMessage,
     ) -> anyhow::Result<TransferProcessMessage> {
-        // persist process
-        let transfer_process_db = self
+        let TransferStartMessage {
+            provider_pid: provider_pid_,
+            consumer_pid,
+            ..
+        } = input.clone();
+
+        // validate
+        if provider_pid.to_string() != provider_pid_ {
+            bail!(DSProtocolTransferProviderErrors::UriAndBodyIdentifiersDoNotCoincide);
+        }
+
+        let transfer_process = self
             .transfer_repo
             .put_transfer_process(
                 provider_pid.clone(),
-                EditTransferProcessModel { state: Option::from(TransferStateForDb::STARTED), ..Default::default() },
+                EditTransferProcessModel {
+                    state: Option::from(TransferState::STARTED),
+                    ..Default::default()
+                },
             )
-            .await?;
+            .await
+            .map_err(|e| match e {
+                TransferProviderRepoErrors::ProviderTransferProcessNotFound => DSProtocolTransferProviderErrors::TransferProcessNotFound {
+                    provider_pid: Some(provider_pid_.clone().parse().unwrap()),
+                    consumer_pid: Some(consumer_pid.clone().parse().unwrap()),
+                },
+                e_ => DSProtocolTransferProviderErrors::DbErr(e_)
+            })?;
 
         // create message
         let _ = self
@@ -168,14 +194,15 @@ where
                     content: serde_json::to_value(&input)?,
                 },
             )
-            .await?;
+            .await
+            .map_err(DSProtocolTransferProviderErrors::DbErr)?;
 
-        let tp = TransferProcessMessage::from(transfer_process_db.clone());
         // data plane
-        let data_plane_id = get_urn_from_string(&transfer_process_db.data_plane_id.unwrap())?;
-        self.data_plane.connect_to_streaming_service(data_plane_id).await?;
+        let _data_plane_id = get_urn_from_string(&transfer_process.data_plane_id.clone().unwrap())?;
+        // self.data_plane.connect_to_streaming_service(data_plane_id).await?;
+        self.data_plane.on_transfer_start().await?;
 
-        Ok(tp)
+        Ok(transfer_process.into())
     }
 
     async fn transfer_suspension(
@@ -183,15 +210,35 @@ where
         provider_pid: Urn,
         input: TransferSuspensionMessage,
     ) -> anyhow::Result<TransferProcessMessage> {
-        // persist process
+        let TransferSuspensionMessage {
+            provider_pid: provider_pid_,
+            consumer_pid,
+            ..
+        } = input.clone();
 
+        // validate
+        if provider_pid.to_string() != provider_pid_ {
+            bail!(DSProtocolTransferProviderErrors::UriAndBodyIdentifiersDoNotCoincide);
+        }
+
+        // persist process
         let transfer_process_db = self
             .transfer_repo
             .put_transfer_process(
                 provider_pid.clone(),
-                EditTransferProcessModel { state: Option::from(TransferStateForDb::COMPLETED), ..Default::default() },
+                EditTransferProcessModel {
+                    state: Option::from(TransferState::SUSPENDED),
+                    ..Default::default()
+                },
             )
-            .await?;
+            .await
+            .map_err(|e| match e {
+                TransferProviderRepoErrors::ProviderTransferProcessNotFound => DSProtocolTransferProviderErrors::TransferProcessNotFound {
+                    provider_pid: Some(provider_pid_.clone().parse().unwrap()),
+                    consumer_pid: Some(consumer_pid.clone().parse().unwrap()),
+                },
+                e_ => DSProtocolTransferProviderErrors::DbErr(e_)
+            })?;
 
         // create message
         let _ = self
@@ -205,14 +252,16 @@ where
                     content: serde_json::to_value(&input)?,
                 },
             )
-            .await?;
+            .await
+            .map_err(DSProtocolTransferProviderErrors::DbErr)?;
 
-        let tp = TransferProcessMessage::from(transfer_process_db.clone());
 
         // data plane
-        let data_plane_id = get_urn_from_string(&transfer_process_db.data_plane_id.unwrap())?;
-        self.data_plane.disconnect_from_streaming_service(data_plane_id).await?;
-        Ok(tp)
+        let _data_plane_id = get_urn_from_string(&transfer_process_db.data_plane_id.clone().unwrap())?;
+        // self.data_plane.disconnect_from_streaming_service(data_plane_id).await?;
+        self.data_plane.on_transfer_suspension().await?;
+
+        Ok(transfer_process_db.into())
     }
 
     async fn transfer_completion(
@@ -220,15 +269,35 @@ where
         provider_pid: Urn,
         input: TransferCompletionMessage,
     ) -> anyhow::Result<TransferProcessMessage> {
-        // persist process
+        let TransferCompletionMessage {
+            provider_pid: provider_pid_,
+            consumer_pid,
+            ..
+        } = input.clone();
 
+        // validate
+        if provider_pid.to_string() != provider_pid_ {
+            bail!(DSProtocolTransferProviderErrors::UriAndBodyIdentifiersDoNotCoincide);
+        }
+
+        // persist process
         let transfer_process_db = self
             .transfer_repo
             .put_transfer_process(
                 provider_pid.clone(),
-                EditTransferProcessModel { state: Option::from(TransferStateForDb::COMPLETED), ..Default::default() },
+                EditTransferProcessModel {
+                    state: Option::from(TransferState::COMPLETED),
+                    ..Default::default()
+                },
             )
-            .await?;
+            .await
+            .map_err(|e| match e {
+                TransferProviderRepoErrors::ProviderTransferProcessNotFound => DSProtocolTransferProviderErrors::TransferProcessNotFound {
+                    provider_pid: Some(provider_pid_.clone().parse().unwrap()),
+                    consumer_pid: Some(consumer_pid.clone().parse().unwrap()),
+                },
+                e_ => DSProtocolTransferProviderErrors::DbErr(e_)
+            })?;
 
         // create message
         let _ = self
@@ -242,14 +311,15 @@ where
                     content: serde_json::to_value(&input)?,
                 },
             )
-            .await?;
-
-        let tp = TransferProcessMessage::from(transfer_process_db.clone());
+            .await
+            .map_err(DSProtocolTransferProviderErrors::DbErr)?;
 
         // data plane
-        let data_plane_id = get_urn_from_string(&transfer_process_db.data_plane_id.unwrap())?;
-        self.data_plane.disconnect_from_streaming_service(data_plane_id).await?;
-        Ok(tp)
+        let _data_plane_id = get_urn_from_string(&transfer_process_db.data_plane_id.clone().unwrap())?;
+        // self.data_plane.disconnect_from_streaming_service(data_plane_id).await?;
+        self.data_plane.on_transfer_completion().await?;
+
+        Ok(transfer_process_db.into())
     }
 
     async fn transfer_termination(
@@ -257,15 +327,35 @@ where
         provider_pid: Urn,
         input: TransferTerminationMessage,
     ) -> anyhow::Result<TransferProcessMessage> {
-        // persist process
+        let TransferTerminationMessage {
+            provider_pid: provider_pid_,
+            consumer_pid,
+            ..
+        } = input.clone();
 
+        // validate
+        if provider_pid.to_string() != provider_pid_ {
+            bail!(DSProtocolTransferProviderErrors::UriAndBodyIdentifiersDoNotCoincide);
+        }
+
+        // persist process
         let transfer_process_db = self
             .transfer_repo
             .put_transfer_process(
                 provider_pid.clone(),
-                EditTransferProcessModel { state: Option::from(TransferStateForDb::TERMINATED), ..Default::default() },
+                EditTransferProcessModel {
+                    state: Option::from(TransferState::TERMINATED),
+                    ..Default::default()
+                },
             )
-            .await?;
+            .await
+            .map_err(|e| match e {
+                TransferProviderRepoErrors::ProviderTransferProcessNotFound => DSProtocolTransferProviderErrors::TransferProcessNotFound {
+                    provider_pid: Some(provider_pid_.clone().parse().unwrap()),
+                    consumer_pid: Some(consumer_pid.clone().parse().unwrap()),
+                },
+                e_ => DSProtocolTransferProviderErrors::DbErr(e_)
+            })?;
 
         // create message
         let _ = self
@@ -279,13 +369,14 @@ where
                     content: serde_json::to_value(&input)?,
                 },
             )
-            .await?;
-
-        let tp = TransferProcessMessage::from(transfer_process_db.clone());
+            .await
+            .map_err(DSProtocolTransferProviderErrors::DbErr)?;
 
         // data plane
-        let data_plane_id = get_urn_from_string(&transfer_process_db.data_plane_id.unwrap())?;
-        self.data_plane.disconnect_from_streaming_service(data_plane_id).await?;
-        Ok(tp)
+        let _data_plane_id = get_urn_from_string(&transfer_process_db.data_plane_id.clone().unwrap())?;
+        // self.data_plane.disconnect_from_streaming_service(data_plane_id).await?;
+        self.data_plane.on_transfer_termination().await?;
+
+        Ok(transfer_process_db.into())
     }
 }

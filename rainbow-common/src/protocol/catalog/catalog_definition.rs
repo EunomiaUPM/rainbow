@@ -19,12 +19,13 @@
 
 use crate::protocol::catalog::dataservice_definition::DataService;
 use crate::protocol::catalog::dataset_definition::Dataset;
+use crate::protocol::context_field::ContextField;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Catalog {
     #[serde(rename = "@context")]
-    pub context: String,
+    pub context: ContextField,
     #[serde(rename = "@type")]
     pub _type: String,
     #[serde(rename = "@id")]

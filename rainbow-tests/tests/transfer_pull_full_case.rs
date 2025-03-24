@@ -31,7 +31,7 @@ use axum::{http, serve};
 use rainbow_common::dcat_formats::{DctFormats, FormatAction, FormatProtocol};
 use rainbow_common::protocol::transfer::{
     DataAddress, TransferCompletionMessage, TransferMessageTypes, TransferProcessMessage,
-    TransferRequestMessage, TransferStartMessage, TransferSuspensionMessage, TRANSFER_CONTEXT,
+    TransferRequestMessage, TransferStartMessage, TransferSuspensionMessage,
 };
 use rainbow_common::utils::{get_urn, get_urn_from_string};
 use rainbow_db::transfer_consumer::entities::transfer_callback;

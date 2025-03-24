@@ -17,8 +17,10 @@
  *
  */
 
+use crate::protocol::context_field::ContextField;
+use crate::protocol::transfer::transfer_error::TransferError;
 use crate::protocol::transfer::{
-    TransferError, TransferMessageTypes, TransferState, TRANSFER_CONTEXT,
+    TransferMessageTypes, TransferState,
 };
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
@@ -88,10 +90,10 @@ impl IntoResponse for TransferErrorType {
                 errors_out.push(e.to_string());
 
                 let error_message = TransferError {
-                    context: TRANSFER_CONTEXT.to_string(),
+                    context: ContextField::default(),
                     _type: TransferMessageTypes::TransferError.to_string(),
-                    provider_pid: Some("123".to_string()),
-                    consumer_pid: "123".to_string(),
+                    provider_pid: None,
+                    consumer_pid: None,
                     code: TransferErrorCodes::TransferErrorCode.to_string(),
                     reason: errors_out,
                 };
@@ -101,10 +103,10 @@ impl IntoResponse for TransferErrorType {
             e @ TransferErrorType::PidSchemeError => (
                 StatusCode::BAD_REQUEST,
                 Json(TransferError {
-                    context: TRANSFER_CONTEXT.to_string(),
+                    context: ContextField::default(),
                     _type: TransferMessageTypes::TransferError.to_string(),
-                    provider_pid: Some("123".to_string()),
-                    consumer_pid: "123".to_string(),
+                    provider_pid: None,
+                    consumer_pid: None,
                     code: TransferErrorCodes::TransferErrorCode.to_string(),
                     reason: vec![e.to_string()],
                 }),
@@ -112,10 +114,10 @@ impl IntoResponse for TransferErrorType {
             e @ TransferErrorType::PidUuidError => (
                 StatusCode::BAD_REQUEST,
                 Json(TransferError {
-                    context: TRANSFER_CONTEXT.to_string(),
+                    context: ContextField::default(),
                     _type: TransferMessageTypes::TransferError.to_string(),
-                    provider_pid: Some("123".to_string()),
-                    consumer_pid: "123".to_string(),
+                    provider_pid: None,
+                    consumer_pid: None,
                     code: TransferErrorCodes::TransferErrorCode.to_string(),
                     reason: vec![e.to_string()],
                 }),
@@ -123,10 +125,10 @@ impl IntoResponse for TransferErrorType {
             e @ TransferErrorType::ProviderIdUuidError => (
                 StatusCode::BAD_REQUEST,
                 Json(TransferError {
-                    context: TRANSFER_CONTEXT.to_string(),
+                    context: ContextField::default(),
                     _type: TransferMessageTypes::TransferError.to_string(),
-                    provider_pid: Some("123".to_string()),
-                    consumer_pid: "123".to_string(),
+                    provider_pid: None,
+                    consumer_pid: None,
                     code: TransferErrorCodes::TransferErrorCode.to_string(),
                     reason: vec![e.to_string()],
                 }),
@@ -134,10 +136,10 @@ impl IntoResponse for TransferErrorType {
             e @ TransferErrorType::AgreementError => (
                 StatusCode::BAD_REQUEST,
                 Json(TransferError {
-                    context: TRANSFER_CONTEXT.to_string(),
+                    context: ContextField::default(),
                     _type: TransferMessageTypes::TransferError.to_string(),
-                    provider_pid: Some("123".to_string()),
-                    consumer_pid: "123".to_string(),
+                    provider_pid: None,
+                    consumer_pid: None,
                     code: TransferErrorCodes::TransferErrorCode.to_string(),
                     reason: vec![e.to_string()],
                 }),
@@ -145,10 +147,10 @@ impl IntoResponse for TransferErrorType {
             e @ TransferErrorType::DataAddressCannotBeNullOnPushError => (
                 StatusCode::BAD_REQUEST,
                 Json(TransferError {
-                    context: TRANSFER_CONTEXT.to_string(),
+                    context: ContextField::default(),
                     _type: TransferMessageTypes::TransferError.to_string(),
-                    provider_pid: Some("123".to_string()),
-                    consumer_pid: "123".to_string(),
+                    provider_pid: None,
+                    consumer_pid: None,
                     code: TransferErrorCodes::TransferErrorCode.to_string(),
                     reason: vec![e.to_string()],
                 }),
@@ -156,10 +158,10 @@ impl IntoResponse for TransferErrorType {
             e @ TransferErrorType::UnknownTransferState => (
                 StatusCode::BAD_REQUEST,
                 Json(TransferError {
-                    context: TRANSFER_CONTEXT.to_string(),
+                    context: ContextField::default(),
                     _type: TransferMessageTypes::TransferError.to_string(),
-                    provider_pid: Some("123".to_string()),
-                    consumer_pid: "123".to_string(),
+                    provider_pid: None,
+                    consumer_pid: None,
                     code: TransferErrorCodes::TransferErrorCode.to_string(),
                     reason: vec![e.to_string()],
                 }),
@@ -167,10 +169,10 @@ impl IntoResponse for TransferErrorType {
             e @ TransferErrorType::CallbackClientError => (
                 StatusCode::BAD_REQUEST,
                 Json(TransferError {
-                    context: TRANSFER_CONTEXT.to_string(),
+                    context: ContextField::default(),
                     _type: TransferMessageTypes::TransferError.to_string(),
-                    provider_pid: Some("123".to_string()),
-                    consumer_pid: "123".to_string(),
+                    provider_pid: None,
+                    consumer_pid: None,
                     code: TransferErrorCodes::TransferErrorCode.to_string(),
                     reason: vec![e.to_string()],
                 }),
@@ -178,10 +180,10 @@ impl IntoResponse for TransferErrorType {
             e @ TransferErrorType::ConsumerAlreadyRegisteredError => (
                 StatusCode::BAD_REQUEST,
                 Json(TransferError {
-                    context: TRANSFER_CONTEXT.to_string(),
+                    context: ContextField::default(),
                     _type: TransferMessageTypes::TransferError.to_string(),
-                    provider_pid: Some("123".to_string()),
-                    consumer_pid: "123".to_string(),
+                    provider_pid: None,
+                    consumer_pid: None,
                     code: TransferErrorCodes::TransferErrorCode.to_string(),
                     reason: vec![e.to_string()],
                 }),
@@ -189,10 +191,10 @@ impl IntoResponse for TransferErrorType {
             e @ TransferErrorType::TransferProcessNotFound => (
                 StatusCode::NOT_FOUND,
                 Json(TransferError {
-                    context: TRANSFER_CONTEXT.to_string(),
+                    context: ContextField::default(),
                     _type: TransferMessageTypes::TransferError.to_string(),
-                    provider_pid: Some("123".to_string()),
-                    consumer_pid: "123".to_string(),
+                    provider_pid: None,
+                    consumer_pid: None,
                     code: TransferErrorCodes::TransferErrorCode.to_string(),
                     reason: vec![e.to_string()],
                 }),
@@ -200,10 +202,10 @@ impl IntoResponse for TransferErrorType {
             e @ TransferErrorType::ProtocolError { .. } => (
                 StatusCode::BAD_REQUEST,
                 Json(TransferError {
-                    context: TRANSFER_CONTEXT.to_string(),
+                    context: ContextField::default(),
                     _type: TransferMessageTypes::TransferError.to_string(),
-                    provider_pid: Some("123".to_string()),
-                    consumer_pid: "123".to_string(),
+                    provider_pid: None,
+                    consumer_pid: None,
                     code: TransferErrorCodes::TransferErrorCode.to_string(),
                     reason: vec![e.to_string()],
                 }),
@@ -211,10 +213,10 @@ impl IntoResponse for TransferErrorType {
             e @ TransferErrorType::MessageTypeNotAcceptedError { .. } => (
                 StatusCode::BAD_REQUEST,
                 Json(TransferError {
-                    context: TRANSFER_CONTEXT.to_string(),
+                    context: ContextField::default(),
                     _type: TransferMessageTypes::TransferError.to_string(),
-                    provider_pid: Some("123".to_string()),
-                    consumer_pid: "123".to_string(),
+                    provider_pid: None,
+                    consumer_pid: None,
                     code: TransferErrorCodes::TransferErrorCode.to_string(),
                     reason: vec![e.to_string()],
                 }),
@@ -222,10 +224,10 @@ impl IntoResponse for TransferErrorType {
             e @ TransferErrorType::TransferProcessAlreadySuspendedError { .. } => (
                 StatusCode::BAD_REQUEST,
                 Json(TransferError {
-                    context: TRANSFER_CONTEXT.to_string(),
+                    context: ContextField::default(),
                     _type: TransferMessageTypes::TransferError.to_string(),
-                    provider_pid: Some("123".to_string()),
-                    consumer_pid: "123".to_string(),
+                    provider_pid: None,
+                    consumer_pid: None,
                     code: TransferErrorCodes::TransferErrorCode.to_string(),
                     reason: vec![e.to_string()],
                 }),
@@ -233,10 +235,10 @@ impl IntoResponse for TransferErrorType {
             e @ TransferErrorType::NoTypeFieldError { .. } => (
                 StatusCode::BAD_REQUEST,
                 Json(TransferError {
-                    context: TRANSFER_CONTEXT.to_string(),
+                    context: ContextField::default(),
                     _type: TransferMessageTypes::TransferError.to_string(),
-                    provider_pid: Some("123".to_string()),
-                    consumer_pid: "123".to_string(),
+                    provider_pid: None,
+                    consumer_pid: None,
                     code: TransferErrorCodes::TransferErrorCode.to_string(),
                     reason: vec![e.to_string()],
                 }),
@@ -244,10 +246,10 @@ impl IntoResponse for TransferErrorType {
             e @ TransferErrorType::NotCheckedError { inner_error } => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(TransferError {
-                    context: TRANSFER_CONTEXT.to_string(),
+                    context: ContextField::default(),
                     _type: TransferMessageTypes::TransferError.to_string(),
-                    provider_pid: Some("123".to_string()),
-                    consumer_pid: "123".to_string(),
+                    provider_pid: None,
+                    consumer_pid: None,
                     code: TransferErrorCodes::TransferErrorCode.to_string(),
                     reason: vec![
                         "Internal server error".to_string(),
@@ -259,10 +261,10 @@ impl IntoResponse for TransferErrorType {
             e @ TransferErrorType::ConsumerNotReachableError => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(TransferError {
-                    context: TRANSFER_CONTEXT.to_string(),
+                    context: ContextField::default(),
                     _type: TransferMessageTypes::TransferError.to_string(),
-                    provider_pid: Some("123".to_string()),
-                    consumer_pid: "123".to_string(),
+                    provider_pid: None,
+                    consumer_pid: None,
                     code: TransferErrorCodes::TransferErrorCode.to_string(),
                     reason: vec![e.to_string()],
                 }),
@@ -270,10 +272,10 @@ impl IntoResponse for TransferErrorType {
             e @ TransferErrorType::ProviderNotReachableError => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(TransferError {
-                    context: TRANSFER_CONTEXT.to_string(),
+                    context: ContextField::default(),
                     _type: TransferMessageTypes::TransferError.to_string(),
-                    provider_pid: Some("123".to_string()),
-                    consumer_pid: "123".to_string(),
+                    provider_pid: None,
+                    consumer_pid: None,
                     code: TransferErrorCodes::TransferErrorCode.to_string(),
                     reason: vec![e.to_string()],
                 }),
@@ -281,10 +283,10 @@ impl IntoResponse for TransferErrorType {
             e @ TransferErrorType::ProtocolBodyError { message } => (
                 StatusCode::BAD_REQUEST,
                 Json(TransferError {
-                    context: TRANSFER_CONTEXT.to_string(),
+                    context: ContextField::default(),
                     _type: TransferMessageTypes::TransferError.to_string(),
-                    provider_pid: Some("123".to_string()),
-                    consumer_pid: "123".to_string(),
+                    provider_pid: None,
+                    consumer_pid: None,
                     code: TransferErrorCodes::TransferErrorCode.to_string(),
                     reason: vec![e.to_string(), message.clone()],
                 }),
@@ -292,10 +294,10 @@ impl IntoResponse for TransferErrorType {
             e @ TransferErrorType::ProviderAndConsumerNotMatchingError => (
                 StatusCode::BAD_GATEWAY,
                 Json(TransferError {
-                    context: TRANSFER_CONTEXT.to_string(),
+                    context: ContextField::default(),
                     _type: TransferMessageTypes::TransferError.to_string(),
-                    provider_pid: Some("123".to_string()),
-                    consumer_pid: "123".to_string(),
+                    provider_pid: None,
+                    consumer_pid: None,
                     code: TransferErrorCodes::TransferErrorCode.to_string(),
                     reason: vec![e.to_string()],
                 }),

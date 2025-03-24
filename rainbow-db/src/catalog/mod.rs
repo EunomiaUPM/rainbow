@@ -34,6 +34,7 @@ use rainbow_common::protocol::catalog::dataset_definition::{
 use rainbow_common::protocol::catalog::distribution_definition::{
     Distribution, DistributionDcatDeclaration, DistributionDctDeclaration,
 };
+use rainbow_common::protocol::context_field::ContextField;
 use serde_json::Value;
 
 pub mod entities;
@@ -45,7 +46,7 @@ impl TryFrom<dataset::Model> for Dataset {
 
     fn try_from(dataset_model: dataset::Model) -> Result<Self, Self::Error> {
         Ok(Dataset {
-            context: "https://w3id.org/dspace/2024/1/context.json".to_string(),
+            context: ContextField::default(),
             _type: "dcat:Dataset".to_string(),
             id: dataset_model.id.to_string(),
             dcat: DatasetDcatDeclaration { theme: "".to_string(), keyword: "".to_string() },
@@ -72,7 +73,7 @@ impl TryFrom<catalog::Model> for Catalog {
 
     fn try_from(catalog_model: catalog::Model) -> anyhow::Result<Self, Self::Error> {
         let catalog_out = Catalog {
-            context: "https://w3id.org/dspace/2024/1/context.json".to_string(),
+            context: ContextField::default(),
             _type: "dcat:Catalog".to_string(),
             id: catalog_model.id.to_string(),
             foaf: CatalogFoafDeclaration { homepage: catalog_model.foaf_home_page },
@@ -108,7 +109,7 @@ impl TryFrom<distribution::Model> for Distribution {
 
     fn try_from(distribution_model: distribution::Model) -> Result<Self, Self::Error> {
         Ok(Distribution {
-            context: "https://w3id.org/dspace/2024/1/context.json".to_string(),
+            context: ContextField::default(),
             _type: "dcat:Distribution".to_string(),
             id: distribution_model.id.to_string(),
             dcat: DistributionDcatDeclaration { access_service: None },
@@ -130,7 +131,7 @@ impl TryFrom<dataservice::Model> for DataService {
 
     fn try_from(dataservice_model: dataservice::Model) -> Result<Self, Self::Error> {
         Ok(DataService {
-            context: "https://w3id.org/dspace/2024/1/context.json".to_string(),
+            context: ContextField::default(),
             _type: "dcat:DataService".to_string(),
             id: dataservice_model.id.to_string(),
             dcat: DataServiceDcatDeclaration {
