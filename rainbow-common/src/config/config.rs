@@ -108,6 +108,9 @@ pub struct Config {
     // If deployed locally
     // ...
 
+    // Provider Verification Portal
+    pub provider_verification_portal_url: Option<String>,
+
     // SSI Auth
     pub ssi_auth_enabled: Option<String>,
     pub ssi_holder_url: Option<String>,
@@ -200,5 +203,10 @@ pub fn get_consumer_wallet_data() -> anyhow::Result<Value> {
     });
 
     Ok(wallet)
+}
 
+pub fn get_provider_portal_url() -> anyhow::Result<String> {
+    let config = GLOBAL_CONFIG.get().unwrap();
+    let uri = config.provider_verification_portal_url.clone().unwrap();
+    Ok(uri)
 }

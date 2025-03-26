@@ -19,3 +19,4 @@
 
 mod core;
 mod http;
+mod manager;

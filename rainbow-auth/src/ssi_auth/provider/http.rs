@@ -18,3 +18,41 @@
  */
 
 
+use axum::response::IntoResponse;
+use axum::routing::post;
+use axum::{Json, Router};
+use rainbow_common::err::transfer_err::TransferErrorType;
+use reqwest::StatusCode;
+use tracing::info;
+use crate::ssi_auth::provider::manager::Manager;
+
+pub fn create_ssi_auth_router() -> Router {
+    Router::new()
+        .route("/petition", post(handle_petition()))
+        .route("/vpexchange", post(vpexchange()))
+        .route("/vpdefinition", post(vpdefinition()))
+        .route("/presentation", post(presentation()))
+
+}
+
+fn handle_petition() -> impl IntoResponse {
+    info!("POST /petition");
+
+    let uri = Manager::generate_exchange_uri();
+    Json(uri)
+}
+
+fn vpexchange() -> impl IntoResponse {
+    info!("POST /vpexchange");
+
+}
+
+fn vpdefinition() -> impl IntoResponse {
+    info!("POST /vpdefinition");
+
+}
+
+fn presentation() -> impl IntoResponse {
+    info!("POST /presentation");
+
+}
