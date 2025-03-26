@@ -2139,6 +2139,7 @@ dependencies = [
  "log",
  "once_cell",
  "rainbow_common",
+ "rand",
  "reqwest",
  "sea-orm",
  "sea-orm-migration",
@@ -2152,6 +2153,7 @@ dependencies = [
  "tracing-subscriber",
  "tracing-test",
  "ulid",
+ "urlencoding",
  "uuid",
 ]
 

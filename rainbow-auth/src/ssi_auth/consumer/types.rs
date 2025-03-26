@@ -1,4 +1,5 @@
 use serde::Deserialize;
+use serde_json::Value;
 
 #[derive(Deserialize)]
 pub struct WalletLoginResponse {
@@ -30,4 +31,11 @@ pub struct Jwtclaims {
     pub jti: String,
     pub iss: String,
     pub aud: String,
+}
+
+#[derive(Deserialize)]
+pub struct Petition {
+    pub access_token: Vec<Value>, // Required if requesting access token
+    pub subject: Value, // Required if requesting subject information
+
 }

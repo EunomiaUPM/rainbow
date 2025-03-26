@@ -42,7 +42,6 @@ async fn handle_consumer_vc_request(Json(input): Json<ConsumerSSIVCRequest>) -> 
 
 async fn handle_consumer_wf_exchange() -> impl IntoResponse {
     info!("POST /ssi-auth/wf-exchange");
-
     // match consumer_vc_request().await {
     //     Ok(_) => (StatusCode::CREATED, "OK").into_response(),
     //     Err(e) => TransferErrorType::NotCheckedError { inner_error: e }.into_response(),

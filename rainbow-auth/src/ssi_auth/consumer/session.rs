@@ -28,18 +28,19 @@ use rainbow_common::config::config::{get_consumer_wallet_data, get_consumer_wall
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue, ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
+use serde_json::Value;
 use tracing::info;
 
-pub struct SessionManager {
+pub struct WalletSessionManager {
     pub token: Option<String>,
     pub token_exp: Option<u64>,
     pub account_id: Option<String>,
     pub wallets: Vec<WalletInfo>,
 }
 
-impl SessionManager {
+impl WalletSessionManager {
     pub fn new() -> Self {
-        SessionManager { token: None, account_id: None, wallets: Vec::new(), token_exp: None }
+        WalletSessionManager { token: None, account_id: None, wallets: Vec::new(), token_exp: None }
     }
 
     async fn register(&self) -> anyhow::Result<()> {
@@ -202,14 +203,97 @@ impl SessionManager {
     }
 
     pub async fn access(&mut self) -> () {
-        self.register().await.unwrap();
+        if self.account_id.is_none() {
+            self.register().await.unwrap();
+        }
         self.login().await.unwrap();
         self.get_wallet_info().await.unwrap();
     }
+
+    pub async fn joinexchange(&self, exchange_url: &str) -> anyhow::Result<()> {
+        if !self.wallets.first() {
+            bail!("There is not a wallet registered")
+        };
+        let url = format!(
+            "{}/wallet-api/wallet/{}/exchange/resolvePresentationRequest",
+            get_consumer_wallet_portal_url()?,
+            self.wallets.first().unwrap().id
+        );
+
+        let mut headers = Headers4WalletPetitions::build();
+        if let Some(token) = &self.token {
+            headers.addheader(AUTHORIZATION, &format!("Bearer {}", token));
+        } else {
+            bail!("No token available for authentication");
+        }
+
+        let res =
+            SSI_AUTH_HTTP_CLIENT.post(url).headers(headers.headers).json(exchange_url).send().await;
+
+        let res = match res {
+            Ok(res) => res,
+            Err(e) => bail!("Error sending request: {}", e),
+        };
+
+        match res.status().as_u16() {
+            200 => {
+                info!("Joined the exchange successful");
+            }
+            _ => {
+                error!("Error joining the exchange: {}", res.status());
+                bail!("Error joining the exchange: {}", res.status())
+            }
+        }
+
+        Ok(())
+    }
+
+    pub async fn match_vc4vp(&self, vpdef: Value) -> anyhow::Result<()> {
+        if !self.wallets.first() {
+            bail!("There is not a wallet registered")
+        };
+        let url = format!(
+            "{}/wallet-api/wallet/{}/exchange/matchCredentialsForPresentationDefinition",
+            get_consumer_wallet_portal_url()?,
+            self.wallets.first().unwrap().id
+        );
+
+        let mut headers = Headers4WalletPetitions::build();
+        if let Some(token) = &self.token {
+            headers.addheader(AUTHORIZATION, &format!("Bearer {}", token));
+        } else {
+            bail!("No token available for authentication");
+        }
+
+        let res =
+            SSI_AUTH_HTTP_CLIENT.post(url).headers(headers.headers).json(&vpdef).send().await;
+
+        let res = match res {
+            Ok(res) => res,
+            Err(e) => bail!("Error sending request: {}", e),
+        };
+
+        match res.status().as_u16() {
+            200 => {
+                info!("Credentials matched successfully");
+            }
+            _ => {
+                error!("Error matching credentials: {}", res.status());
+                bail!("Error matching credentials: {}", res.status())
+            }
+        }
+
+        Ok(())
+    }
+
+    pub async fn present_vp(&self, vpdef: Value) -> anyhow::Result<()> {
+        
+        Ok(())
+    }
 }
 
-pub static SESSION_MANAGER: Lazy<Arc<Mutex<SessionManager>>> =
-    Lazy::new(|| Arc::new(Mutex::new(SessionManager::new())));
+pub static SESSION_MANAGER: Lazy<Arc<Mutex<WalletSessionManager>>> =
+    Lazy::new(|| Arc::new(Mutex::new(WalletSessionManager::new())));
 
 struct Headers4WalletPetitions {
     headers: HeaderMap,
