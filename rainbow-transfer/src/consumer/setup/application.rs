@@ -34,8 +34,8 @@ use tracing::info;
 
 pub struct TransferConsumerApplication;
 
-pub async fn create_transfer_consumer_router(db_url: String) -> Router {
-    let db_connection = Database::connect(db_url).await.expect("Database can't connect");
+pub async fn create_transfer_consumer_router(config: TransferConsumerApplicationConfig) -> Router {
+    let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
 
     // Rainbow Entities Dependency injection
     let consumer_repo = Arc::new(TransferConsumerRepoForSql::create_repo(db_connection));
@@ -55,6 +55,7 @@ pub async fn create_transfer_consumer_router(db_url: String) -> Router {
     let ds_protocol_rpc_service = Arc::new(DSRPCTransferConsumerService::new(
         consumer_repo.clone(),
         data_plane_facade.clone(),
+        config.clone(),
     ));
     let ds_protocol_rpc_router = DSRPCTransferConsumerRouter::new(ds_protocol_rpc_service.clone()).router();
 
@@ -66,10 +67,9 @@ pub async fn create_transfer_consumer_router(db_url: String) -> Router {
 }
 
 impl TransferConsumerApplication {
-    pub async fn run(config: &TransferConsumerApplicationConfig<'_>) -> anyhow::Result<()> {
+    pub async fn run(config: TransferConsumerApplicationConfig) -> anyhow::Result<()> {
         // db_connection
-        let db_url = config.get_full_db_url();
-        let router = create_transfer_consumer_router(db_url).await;
+        let router = create_transfer_consumer_router(config.clone()).await;
         // Init server
         let server_message = format!("Starting consumer server in {}", config.get_full_host_url(), );
         info!("{}", server_message);

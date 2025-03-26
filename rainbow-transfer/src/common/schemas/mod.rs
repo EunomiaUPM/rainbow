@@ -111,9 +111,7 @@ pub static TRANSFER_SUSPENSION_SCHEMA: Lazy<Validator> = Lazy::new(|| -> Validat
         "#/definitions/ContextSchema",
     );
     let updated_schema: Value = serde_json::from_str(&definitions).expect("Invalid updated JSON");
-    println!("{}", serde_json::to_string_pretty(&updated_schema).unwrap());
     let validator = jsonschema::validator_for(&updated_schema);
-    println!("{:#?}", validator);
     validator.unwrap()
 });
 

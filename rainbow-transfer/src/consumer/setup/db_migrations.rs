@@ -35,7 +35,7 @@ impl MigratorTrait for TransferConsumerMigration {
 }
 
 impl TransferConsumerMigration {
-    pub async fn run(config: &TransferConsumerApplicationConfig<'_>) -> anyhow::Result<()> {
+    pub async fn run(config: TransferConsumerApplicationConfig) -> anyhow::Result<()> {
         // db_connection
         let db_url = config.get_full_db_url();
         let db_connection = Database::connect(db_url).await.expect("Database can't connect");

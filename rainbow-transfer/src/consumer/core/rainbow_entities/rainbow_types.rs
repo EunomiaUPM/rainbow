@@ -38,6 +38,7 @@ impl Default for NewTransferConsumerRequest {
 impl Into<NewTransferCallback> for NewTransferConsumerRequest {
     fn into(self) -> NewTransferCallback {
         NewTransferCallback {
+            callback_id: None,
             consumer_pid: None,
             provider_pid: None,
             data_address: self.data_address.map(|data_address| serde_json::to_value(data_address).unwrap()),

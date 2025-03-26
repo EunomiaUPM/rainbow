@@ -144,6 +144,7 @@ where
                 consumer_pid: Option::from(consumer_pid.clone()),
             }
         })?;
+
         // process response
         let status = req.status();
         if status.clone() != StatusCode::OK {
@@ -375,7 +376,7 @@ where
         // TODO participants...
         let consumer_callback = consumer_callback.strip_suffix('/').unwrap_or(consumer_callback.as_str());
         let consumer_url = format!(
-            "{}/transfers/{}/suspension",
+            "{}/transfers/{}/completion",
             consumer_callback,
             consumer_pid.clone()
         );

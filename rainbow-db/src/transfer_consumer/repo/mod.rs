@@ -35,6 +35,7 @@ pub trait TransferConsumerRepoFactory: TransferCallbackRepo + Send + Sync + 'sta
 
 
 pub struct NewTransferCallback {
+    pub callback_id: Option<Urn>,
     pub consumer_pid: Option<Urn>,
     pub provider_pid: Option<Urn>,
     pub data_address: Option<serde_json::Value>,

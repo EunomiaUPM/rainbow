@@ -28,6 +28,8 @@ pub struct DSRPCTransferConsumerRequestResponse {
     pub consumer_pid: Urn,
     #[serde(rename = "agreementId")]
     pub agreement_id: String,
+    #[serde(rename = "callbackAddress")]
+    pub callback_address: String,
     #[serde(rename = "format")]
     pub format: DctFormats,
     #[serde(rename = "dataAddress")]

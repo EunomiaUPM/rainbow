@@ -11,7 +11,7 @@ use tracing::{debug, info};
 #[derive(Parser, Debug)]
 #[command(name = "Rainbow Dataspace Connector Transfer Provider Server")]
 #[command(version = "0.2")]
-struct TransferProviderCli {
+struct TransferCli {
     #[command(subcommand)]
     role: TransferCliRoles,
 }
@@ -30,13 +30,13 @@ pub enum TransferCliCommands {
     Setup,
 }
 
-pub struct TransferProviderCommands;
+pub struct TransferCommands;
 
-impl TransferProviderCommands {
+impl TransferCommands {
     pub async fn init_command_line() -> anyhow::Result<()> {
         // parse command line
         debug!("Init the command line application");
-        let cli = TransferProviderCli::parse();
+        let cli = TransferCli::parse();
 
         // run scripts
         match cli.role {
@@ -64,8 +64,8 @@ impl TransferProviderCommands {
                     json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
                 info!("Current config:\n{}", table);
                 match cmd {
-                    TransferCliCommands::Start => TransferConsumerApplication::run(&config).await?,
-                    TransferCliCommands::Setup => TransferConsumerMigration::run(&config).await?
+                    TransferCliCommands::Start => TransferConsumerApplication::run(config.clone()).await?,
+                    TransferCliCommands::Setup => TransferConsumerMigration::run(config.clone()).await?
                 }
             }
         };

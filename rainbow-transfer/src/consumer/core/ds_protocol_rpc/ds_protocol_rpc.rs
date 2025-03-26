@@ -9,12 +9,15 @@ use crate::consumer::core::ds_protocol_rpc::ds_protocol_rpc_types::{
     DSRPCTransferConsumerTerminationResponse,
 };
 use crate::consumer::core::ds_protocol_rpc::DSRPCTransferConsumerTrait;
+use crate::consumer::setup::config::TransferConsumerApplicationConfig;
 use anyhow::bail;
 use axum::async_trait;
+use rainbow_common::protocol::transfer::transfer_completion::TransferCompletionMessage;
 use rainbow_common::protocol::transfer::transfer_process::TransferProcessMessage;
 use rainbow_common::protocol::transfer::transfer_request::TransferRequestMessage;
 use rainbow_common::protocol::transfer::transfer_start::TransferStartMessage;
 use rainbow_common::protocol::transfer::transfer_suspension::TransferSuspensionMessage;
+use rainbow_common::protocol::transfer::transfer_termination::TransferTerminationMessage;
 use rainbow_common::utils::{get_urn, get_urn_from_string};
 use rainbow_db::transfer_consumer::repo::{EditTransferCallback, NewTransferCallback, TransferConsumerRepoFactory};
 use reqwest::Client;
@@ -28,6 +31,7 @@ where
 {
     transfer_repo: Arc<T>,
     data_plane_facade: Arc<U>,
+    config: TransferConsumerApplicationConfig,
     client: Client,
 }
 
@@ -36,10 +40,10 @@ where
     T: TransferConsumerRepoFactory + Send + Sync,
     U: DataPlaneConsumerFacadeTrait + Send + Sync,
 {
-    pub fn new(transfer_repo: Arc<T>, data_plane_facade: Arc<U>) -> Self {
+    pub fn new(transfer_repo: Arc<T>, data_plane_facade: Arc<U>, config: TransferConsumerApplicationConfig) -> Self {
         let client =
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
-        Self { transfer_repo, data_plane_facade, client }
+        Self { transfer_repo, data_plane_facade, config, client }
     }
 }
 
@@ -55,12 +59,15 @@ where
     ) -> anyhow::Result<DSRPCTransferConsumerRequestResponse> {
         let DSRPCTransferConsumerRequestRequest { agreement_id, format, data_address, provider_address, .. } = input;
         let consumer_pid = get_urn(None);
+        let callback_urn = get_urn(None);
+        let callback_address = format!("{}/{}", self.config.get_full_host_url(), callback_urn);
         // create message
         let transfer_request = TransferRequestMessage {
             consumer_pid: consumer_pid.to_string(),
             agreement_id: agreement_id.clone(),
             format: format.clone(),
             data_address: data_address.clone(),
+            callback_address: Some(callback_address.to_string()),
             ..Default::default()
         };
 
@@ -94,6 +101,7 @@ where
         // persist in db
         let transfer_process = self.transfer_repo
             .create_transfer_callback(NewTransferCallback {
+                callback_id: Some(callback_urn),
                 consumer_pid: Some(get_urn_from_string(&response.consumer_pid)?),
                 provider_pid: Some(get_urn_from_string(&response.provider_pid)?),
                 data_address: None,
@@ -110,6 +118,7 @@ where
             agreement_id,
             format,
             data_address,
+            callback_address: callback_address.to_string(),
             message: response,
         };
         Ok(response)
@@ -245,7 +254,7 @@ where
     ) -> anyhow::Result<DSRPCTransferConsumerCompletionResponse> {
         let DSRPCTransferConsumerCompletionRequest { provider_address, provider_pid, consumer_pid, .. } = input;
         // create message
-        let transfer_request = TransferStartMessage {
+        let transfer_request = TransferCompletionMessage {
             consumer_pid: consumer_pid.to_string(),
             provider_pid: provider_pid.to_string(),
             ..Default::default()
@@ -305,7 +314,7 @@ where
     ) -> anyhow::Result<DSRPCTransferConsumerTerminationResponse> {
         let DSRPCTransferConsumerTerminationRequest { provider_address, provider_pid, consumer_pid, code, reason } = input;
         // create message
-        let transfer_request = TransferSuspensionMessage {
+        let transfer_request = TransferTerminationMessage {
             consumer_pid: consumer_pid.to_string(),
             provider_pid: provider_pid.to_string(),
             code,

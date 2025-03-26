@@ -28,7 +28,7 @@ use rainbow_common::protocol::contract::contract_negotiation_event::{ContractNeg
 use rainbow_common::protocol::contract::contract_negotiation_request::ContractRequestMessage;
 use rainbow_common::protocol::contract::contract_negotiation_termination::ContractTerminationMessage;
 use rainbow_common::protocol::contract::contract_odrl::OfferTypes;
-use rainbow_common::protocol::contract::CNValidate;
+use rainbow_common::protocol::ProtocolValidate;
 use rainbow_common::utils::{get_urn, get_urn_from_string};
 use rainbow_db::contracts_consumer::entities::cn_process;
 use rainbow_db::contracts_consumer::repo::{NewContractNegotiationProcess, CONTRACT_CONSUMER_REPO};

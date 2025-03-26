@@ -44,7 +44,7 @@ pub async fn get_db_connection() -> &'static DatabaseConnection {
         .await
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub enum DbType {
     Postgres,
     Mysql,

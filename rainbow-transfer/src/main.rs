@@ -17,7 +17,7 @@
  *
  */
 
-use rainbow_transfer::cmd::cmd::TransferProviderCommands;
+use rainbow_transfer::cmd::cmd::TransferCommands;
 use tracing::info;
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::EnvFilter;
@@ -42,6 +42,6 @@ async fn main() -> anyhow::Result<()> {
         EnvFilter::builder().with_default_directive(LevelFilter::INFO.into()).parse("debug,sqlx::query=off")?;
     tracing_subscriber::fmt().with_env_filter(filter).init();
     info!("{}", INFO);
-    TransferProviderCommands::init_command_line().await?;
+    TransferCommands::init_command_line().await?;
     Ok(())
 }

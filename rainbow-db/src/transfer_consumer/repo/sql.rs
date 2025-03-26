@@ -174,8 +174,9 @@ impl TransferCallbackRepo for TransferConsumerRepoForSql {
     ) -> anyhow::Result<Model, TransferConsumerRepoErrors> {
         let consumer_pid = new_transfer_callback.consumer_pid.map(|p| p);
         let provider_pid = new_transfer_callback.provider_pid.map(|p| p.to_string());
+        let callback_id = new_transfer_callback.callback_id.map(|p| p);
         let model = transfer_callback::ActiveModel {
-            id: ActiveValue::Set(get_urn(None).to_string()),
+            id: ActiveValue::Set(get_urn(callback_id).to_string()),
             consumer_pid: ActiveValue::Set(get_urn(consumer_pid).to_string()),
             provider_pid: ActiveValue::Set(provider_pid),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
