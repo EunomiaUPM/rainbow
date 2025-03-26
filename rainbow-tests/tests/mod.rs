@@ -25,5 +25,7 @@
 // pub mod protocol_ctp_transition_terminated_stage;
 // pub mod transfer_pull_full_case;
 // pub mod transfer_push_full_case;
+mod transfer_rpc_pull;
+
 pub mod generic_testing_case;
 pub mod utils;
