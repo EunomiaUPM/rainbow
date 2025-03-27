@@ -23,12 +23,16 @@ use crate::core::rainbow_entities::data_service::RainbowCatalogDataServiceServic
 use crate::core::rainbow_entities::dataset::RainbowCatalogDatasetService;
 use crate::core::rainbow_entities::distribution::RainbowCatalogDistributionService;
 use crate::core::rainbow_entities::policies::RainbowCatalogPoliciesService;
+use crate::core::rainbow_rpc::rainbow_rpc::RainbowRPCCatalogService;
+use crate::http::openapi::route_openapi;
 use crate::http::rainbow_entities::catalog::RainbowCatalogCatalogRouter;
 use crate::http::rainbow_entities::data_service::RainbowCatalogDataServiceRouter;
 use crate::http::rainbow_entities::dataset::RainbowCatalogDatasetRouter;
 use crate::http::rainbow_entities::distribution::RainbowCatalogDistributionRouter;
 use crate::http::rainbow_entities::policies::RainbowCatalogPoliciesRouter;
+use crate::http::rainbow_rpc::rainbow_rpc::RainbowRPCCatalogRouter;
 use crate::setup::config::CatalogApplicationConfig;
+use axum::routing::get;
 use axum::{serve, Router};
 use rainbow_db::catalog::repo::sql::CatalogRepoForSql;
 use rainbow_db::catalog::repo::CatalogRepoFactory;
@@ -60,6 +64,11 @@ pub async fn create_catalog_router(config: CatalogApplicationConfig) -> Router {
     let rainbow_distributions_router = RainbowCatalogDistributionRouter::new(rainbow_distribution_service.clone());
     let rainbow_policies_router = RainbowCatalogPoliciesRouter::new(rainbow_policies_service.clone());
 
+    // RPC Dependency injection
+    let rainbow_rpc_service = Arc::new(RainbowRPCCatalogService::new(catalog_repo.clone()));
+    let rainbow_rpc_router = RainbowRPCCatalogRouter::new(rainbow_rpc_service.clone());
+
+
     // Router
     let catalog_application_router =
         Router::new()
@@ -67,7 +76,9 @@ pub async fn create_catalog_router(config: CatalogApplicationConfig) -> Router {
             .merge(rainbow_data_service_router.router())
             .merge(rainbow_dataset_router.router())
             .merge(rainbow_distributions_router.router())
-            .merge(rainbow_policies_router.router());
+            .merge(rainbow_policies_router.router())
+            .merge(rainbow_rpc_router.router())
+            .merge(route_openapi());
 
     catalog_application_router
 }

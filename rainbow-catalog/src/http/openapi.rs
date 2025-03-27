@@ -7,7 +7,7 @@ use serde_json::Value;
 
 pub fn route_openapi() -> Router {
     Router::new()
-        .route("/openapi.json", get(get_open_api))
+        .route("/api/v1/catalog/openapi.json", get(get_open_api))
 }
 
 static OPENAPI_JSON: Lazy<Value> = Lazy::new(|| {
