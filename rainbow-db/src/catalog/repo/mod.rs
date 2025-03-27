@@ -21,33 +21,22 @@ use super::entities::dataservice;
 use super::entities::dataset;
 use super::entities::distribution;
 use super::entities::odrl_offer;
-use crate::catalog::repo::sql::CatalogRepoForSql;
 use crate::transfer_provider::repo::{TransferMessagesRepo, TransferProcessRepo};
 use anyhow::Error;
 use axum::async_trait;
-use once_cell::sync::Lazy;
-use rainbow_common::config::config::GLOBAL_CONFIG;
+use sea_orm::DatabaseConnection;
 use thiserror::Error;
 use urn::Urn;
 
 pub mod sql;
 
-pub trait CombinedRepo:
-CatalogRepo + DatasetRepo + DistributionRepo + DataServiceRepo + OdrlOfferRepo
-{}
-impl<T> CombinedRepo for T
-where
-    T: CatalogRepo + DatasetRepo + DistributionRepo + DataServiceRepo + OdrlOfferRepo,
-{}
-pub static CATALOG_REPO: Lazy<Box<dyn CombinedRepo + Send + Sync>> = Lazy::new(|| {
-    let repo_type = GLOBAL_CONFIG.get().unwrap().db_type.clone();
-    match repo_type.as_str() {
-        "postgres" => Box::new(CatalogRepoForSql {}),
-        "memory" => Box::new(CatalogRepoForSql {}),
-        "mysql" => Box::new(CatalogRepoForSql {}),
-        _ => panic!("Unknown REPO_TYPE: {}", repo_type),
-    }
-});
+pub trait CatalogRepoFactory:
+CatalogRepo + DatasetRepo + DistributionRepo + DataServiceRepo + OdrlOfferRepo + Send + Sync + 'static
+{
+    fn create_repo(db_connection: DatabaseConnection) -> Self
+    where
+        Self: Sized;
+}
 
 pub struct NewCatalogModel {
     pub id: Option<Urn>,
@@ -71,10 +60,7 @@ pub trait CatalogRepo {
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<catalog::Model>, CatalogRepoErrors>;
-    async fn get_catalog_by_id(
-        &self,
-        catalog_id: Urn,
-    ) -> anyhow::Result<Option<catalog::Model>, CatalogRepoErrors>;
+    async fn get_catalog_by_id(&self, catalog_id: Urn) -> anyhow::Result<Option<catalog::Model>, CatalogRepoErrors>;
     async fn put_catalog_by_id(
         &self,
         catalog_id: Urn,
@@ -109,10 +95,7 @@ pub trait DatasetRepo {
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<dataset::Model>, CatalogRepoErrors>;
-    async fn get_datasets_by_id(
-        &self,
-        dataset_id: Urn,
-    ) -> anyhow::Result<Option<dataset::Model>, CatalogRepoErrors>;
+    async fn get_datasets_by_id(&self, dataset_id: Urn) -> anyhow::Result<Option<dataset::Model>, CatalogRepoErrors>;
     async fn put_datasets_by_id(
         &self,
         catalog_id: Urn,
@@ -124,11 +107,7 @@ pub trait DatasetRepo {
         catalog_id: Urn,
         new_dataset_model: NewDatasetModel,
     ) -> anyhow::Result<dataset::Model, CatalogRepoErrors>;
-    async fn delete_dataset_by_id(
-        &self,
-        catalog_id: Urn,
-        dataset_id: Urn,
-    ) -> anyhow::Result<(), CatalogRepoErrors>;
+    async fn delete_dataset_by_id(&self, catalog_id: Urn, dataset_id: Urn) -> anyhow::Result<(), CatalogRepoErrors>;
 }
 
 pub struct NewDistributionModel {
@@ -254,18 +233,9 @@ pub trait OdrlOfferRepo {
         entity_type: String, // TODO EntityTypes
         new_odrl_offer_model: NewOdrlOfferModel,
     ) -> anyhow::Result<odrl_offer::Model, CatalogRepoErrors>;
-    async fn delete_odrl_offer_by_id(
-        &self,
-        odrl_offer_id: Urn,
-    ) -> anyhow::Result<(), CatalogRepoErrors>;
-    async fn delete_odrl_offers_by_entity(
-        &self,
-        entity_id: Urn,
-    ) -> anyhow::Result<(), CatalogRepoErrors>;
-    async fn get_upstream_offers(
-        &self,
-        entity_id: Urn,
-    ) -> anyhow::Result<Vec<odrl_offer::Model>, CatalogRepoErrors>;
+    async fn delete_odrl_offer_by_id(&self, odrl_offer_id: Urn) -> anyhow::Result<(), CatalogRepoErrors>;
+    async fn delete_odrl_offers_by_entity(&self, entity_id: Urn) -> anyhow::Result<(), CatalogRepoErrors>;
+    async fn get_upstream_offers(&self, entity_id: Urn) -> anyhow::Result<Vec<odrl_offer::Model>, CatalogRepoErrors>;
 }
 
 #[derive(Error, Debug)]

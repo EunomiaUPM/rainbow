@@ -31,12 +31,11 @@ use rainbow_contracts::provider::http::rainbow_idsa_triggers as contracts_provid
 
 use rainbow_common::misc_router;
 use rainbow_dataplane::proxy::provider_http;
-use rainbow_transfer::consumer::http::hl_api as consumer_hl_api_router;
-use rainbow_transfer::consumer::http::protocol_api as consumer_ll_api_router;
+// use rainbow_transfer::consumer::http::hl_api as consumer_hl_api_router;
+// use rainbow_transfer::consumer::http::protocol_api as consumer_ll_api_router;
 
 use rainbow_dataplane::proxy::consumer_http;
 
-use rainbow_transfer::provider::setup::application::create_transfer_provider_router;
 use tower_http::cors::{Any, CorsLayer};
 
 fn _create_cors_layer() -> CorsLayer {
@@ -50,7 +49,7 @@ pub async fn get_provider_routes() -> Router {
     Router::new()
         .merge(misc_router::router())
         // TODO CONFIG
-        .merge(create_transfer_provider_router("".to_string()))
+        // .merge(create_transfer_provider_router("".to_string()))
         .merge(provider_http::provider_dataplane_router())
         .merge(catalog_ll_api_router::catalog_router().await.unwrap())
         .merge(catalog_hl_api_router::catalog_api_router().await.unwrap())
@@ -65,8 +64,8 @@ pub async fn get_provider_routes() -> Router {
 pub async fn get_consumer_routes() -> Router {
     Router::new()
         .merge(misc_router::router())
-        .merge(consumer_ll_api_router::router())
-        .merge(consumer_hl_api_router::router())
+        // .merge(consumer_ll_api_router::router())
+        // .merge(consumer_hl_api_router::router())
         .merge(consumer_http::consumer_dataplane_router())
         .merge(contracts_consumer_ll_api_router::router())
         .merge(contracts_consumer_hl_api_router::router())

@@ -17,7 +17,7 @@
  *
  */
 
-use crate::core::rainbow_catalog_err::{CatalogError, CatalogErrorOut};
+use crate::core::rainbow_entities::rainbow_catalog_err::{CatalogError, CatalogErrorOut};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
