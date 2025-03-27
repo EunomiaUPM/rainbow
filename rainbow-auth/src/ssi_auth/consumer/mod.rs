@@ -22,7 +22,7 @@ use reqwest::Client;
 use std::time::Duration;
 
 mod core;
-mod http;
+pub mod http;
 mod session;
 mod types;
 

@@ -211,7 +211,7 @@ impl WalletSessionManager {
     }
 
     pub async fn joinexchange(&self, exchange_url: &str) -> anyhow::Result<()> {
-        if !self.wallets.first() {
+        if self.wallets.first().is_none() {
             bail!("There is not a wallet registered")
         };
         let url = format!(
@@ -249,7 +249,7 @@ impl WalletSessionManager {
     }
 
     pub async fn match_vc4vp(&self, vpdef: Value) -> anyhow::Result<()> {
-        if !self.wallets.first() {
+        if self.wallets.first().is_none() {
             bail!("There is not a wallet registered")
         };
         let url = format!(

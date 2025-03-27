@@ -29,6 +29,10 @@ use rainbow_contracts::provider::http::idsa_api as contracts_provider_ll_api_rou
 use rainbow_contracts::provider::http::rainbow_cn_api as contracts_provider_hl_api_router;
 use rainbow_contracts::provider::http::rainbow_idsa_triggers as contracts_provider_triggers_api_router;
 
+use rainbow_auth::ssi_auth::consumer::http::router as consumer_ssi_auth_router;
+use rainbow_auth::ssi_auth::provider::http::router as provider_ssi_auth_router;
+
+
 use rainbow_common::misc_router;
 use rainbow_dataplane::proxy::provider_http;
 use rainbow_transfer::consumer::http::hl_api as consumer_hl_api_router;
@@ -59,6 +63,7 @@ pub async fn get_provider_routes() -> Router {
         .merge(contracts_provider_ll_api_router::router())
         .merge(contracts_provider_hl_api_router::router())
         .merge(contracts_provider_triggers_api_router::router())
+        .merge(provider_ssi_auth_router())
         .layer(_create_cors_layer())
     // .layer(TraceLayer::new_for_http())
 }
@@ -72,6 +77,7 @@ pub async fn get_consumer_routes() -> Router {
         .merge(contracts_consumer_ll_api_router::router())
         .merge(contracts_consumer_hl_api_router::router())
         .merge(contracts_consumer_triggers_api_router::router())
+        .merge(consumer_ssi_auth_router())
         .layer(_create_cors_layer())
     // .layer(TraceLayer::new_for_http())
 }

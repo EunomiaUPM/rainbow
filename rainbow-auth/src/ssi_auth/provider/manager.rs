@@ -29,6 +29,7 @@ use urlencoding::{decode, encode};
 pub struct Manager {}
 impl Manager {
     pub fn generate_exchange_uri() -> String {
+        info!("Generating exchange URI");
         generate_openid4vp_uri()
     }
 }
@@ -59,13 +60,13 @@ fn generate_openid4vp_uri() -> String {
     let response_uri = format!("{}/verify/{}", &provider_url, state);
     let encoded_response_uri = encode(&response_uri);
 
-    let response_type = "vptoken";
+    let response_type = "vp_token";
     let response_mode = "direct_post";
     let clientid_scheme = "redirect_uri";
 
-    let client_metadata = r#"{"authorization_encrypted_response_alg":"ECDH-ES","authorization_encrypted_response_enc":"A256GCM"}"#;
+    // let client_metadata = r#"{"authorization_encrypted_response_alg":"ECDH-ES","authorization_encrypted_response_enc":"A256GCM"}"#;
 
-    let uri = format!("{}?response_type={}&client_id={}&response_mode={}&presentation_definition_uri={}&client_id_scheme={}&client_metadata={}&nonce={}&response_uri={}", base_url, response_type, encoded_client_id, response_mode, encoded_presentation_definition_uri, clientid_scheme, client_metadata, nonce, encoded_response_uri);
+    let uri = format!("{}?response_type={}&client_id={}&response_mode={}&presentation_definition_uri={}&client_id_scheme={}&nonce={}&response_uri={}", base_url, response_type, encoded_client_id, response_mode, encoded_presentation_definition_uri, clientid_scheme, nonce, encoded_response_uri);
 
     uri
 }

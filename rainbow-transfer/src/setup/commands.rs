@@ -130,6 +130,13 @@ pub async fn init_command_line() -> Result<()> {
             provider_port: None,
             auth_url: Some(config_field!(args, auth_url, "AUTH_URL", "localhost")),
             auth_port: Some(config_field!(args, auth_port, "AUTH_PORT", "1232")),
+            ssi_holder_wallet_portal_url: Some(String::from("http://localhost")), // COMPLETAR
+            ssi_holder_wallet_portal_port: Some(String::from("5000")),
+            ssi_holder_wallet_type: Some(String::from("email")),
+            ssi_holder_wallet_name: Some(String::from("pepe")),
+            ssi_holder_wallet_email: Some(String::from("kk@kk.com")),
+            ssi_holder_wallet_password: Some(String::from("kk")),
+            ssi_holder_wallet_id: None,
             role: ConfigRoles::Provider,
             ssi_auth_enabled: Some(config_field!(
                 args,
@@ -167,6 +174,7 @@ pub async fn init_command_line() -> Result<()> {
             contracts_as_service: None,
             contracts_service_url: None,
             contracts_service_port: None,
+            provider_verification_portal_url: None,
         },
         DataSpaceTransferRoles::Consumer(args) => Config {
             host_url: config_field!(args, host_url, "HOST_URL", "localhost"),
@@ -186,6 +194,13 @@ pub async fn init_command_line() -> Result<()> {
             provider_port: Some(config_field!(args, provider_port, "PROVIDER_PORT", "1234")),
             auth_url: None,
             auth_port: None,
+            ssi_holder_wallet_portal_url: Some(String::from("http://localhost")), // COMPLETAR
+            ssi_holder_wallet_portal_port: Some(String::from("5000")),
+            ssi_holder_wallet_type: Some(String::from("email")),
+            ssi_holder_wallet_name: Some(String::from("pepe")),
+            ssi_holder_wallet_email: Some(String::from("kk@kk.com")),
+            ssi_holder_wallet_password: Some(String::from("kk")),
+            ssi_holder_wallet_id: None,
             role: ConfigRoles::Consumer,
             ssi_auth_enabled: Some(config_field!(
                 args,
@@ -223,6 +238,7 @@ pub async fn init_command_line() -> Result<()> {
             contracts_as_service: None,
             contracts_service_url: None,
             contracts_service_port: None,
+            provider_verification_portal_url: None,
         },
     };
 

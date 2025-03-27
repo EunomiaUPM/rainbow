@@ -2137,6 +2137,7 @@ dependencies = [
  "axum",
  "clap",
  "dotenvy",
+ "rainbow_auth",
  "rainbow_catalog",
  "rainbow_common",
  "rainbow_contracts",
