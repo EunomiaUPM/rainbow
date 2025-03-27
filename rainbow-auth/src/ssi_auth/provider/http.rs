@@ -17,7 +17,7 @@
  *
  */
 
-
+use axum::http::{Request, Uri};
 use axum::response::IntoResponse;
 use axum::routing::post;
 use axum::{Json, Router};
@@ -26,33 +26,43 @@ use reqwest::StatusCode;
 use tracing::info;
 use crate::ssi_auth::provider::manager::Manager;
 
-pub fn create_ssi_auth_router() -> Router {
+pub fn router() -> Router {
     Router::new()
-        .route("/petition", post(handle_petition()))
-        .route("/vpexchange", post(vpexchange()))
-        .route("/vpdefinition", post(vpdefinition()))
-        .route("/presentation", post(presentation()))
+        .route("/petition", post(handle_petition))
+        .route("/vpexchange", post(vpexchange))
+        .route("/vpdefinition", post(vpdefinition))
+        .route("/presentation", post(presentation))
+        .fallback(fallback)
 
 }
 
-fn handle_petition() -> impl IntoResponse {
+async fn handle_petition() -> impl IntoResponse {
     info!("POST /petition");
 
     let uri = Manager::generate_exchange_uri();
     Json(uri)
 }
 
-fn vpexchange() -> impl IntoResponse {
+async fn vpexchange() -> impl IntoResponse {
     info!("POST /vpexchange");
 
+    StatusCode::OK
 }
 
-fn vpdefinition() -> impl IntoResponse {
+async fn vpdefinition() -> impl IntoResponse {
     info!("POST /vpdefinition");
 
+    StatusCode::OK
 }
 
-fn presentation() -> impl IntoResponse {
+async fn presentation() -> impl IntoResponse {
     info!("POST /presentation");
 
+    StatusCode::OK
+}
+
+async fn fallback(uri: Uri) -> (StatusCode, String) {
+    let kk = format!("{}", uri);
+    info!("{}", kk);
+    (StatusCode::NOT_FOUND, format!("No route for {uri}"))
 }

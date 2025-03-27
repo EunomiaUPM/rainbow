@@ -25,7 +25,7 @@ use rainbow_common::err::transfer_err::TransferErrorType;
 use reqwest::StatusCode;
 use tracing::info;
 
-pub fn create_ssi_auth_router() -> Router {
+pub fn router() -> Router {
     Router::new()
         .route("/ssi-auth/vc-request", post(handle_consumer_vc_request))
         .route("/ssi-auth/wf-exchange", post(handle_consumer_wf_exchange))
