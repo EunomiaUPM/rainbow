@@ -19,6 +19,7 @@
 
 use crate::setup::config::CatalogApplicationConfig;
 use rainbow_db::catalog::migrations::get_catalog_migrations;
+use rainbow_db::events::migrations::get_events_migrations;
 use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
 
@@ -28,8 +29,10 @@ impl MigratorTrait for CatalogMigration {
     fn migrations() -> Vec<Box<dyn MigrationTrait>> {
         let mut migrations: Vec<Box<dyn MigrationTrait>> = vec![];
         let mut catalog_migrations = get_catalog_migrations();
+        let mut pub_sub_migrations = get_events_migrations();
 
         migrations.append(&mut catalog_migrations);
+        migrations.append(&mut pub_sub_migrations);
         migrations
     }
 }

@@ -33,42 +33,49 @@ use rainbow_common::protocol::transfer::transfer_termination::TransferTerminatio
 use rainbow_common::protocol::transfer::{TransferRoles, TransferState};
 use rainbow_common::utils::{get_urn, get_urn_from_string};
 use rainbow_db::transfer_provider::repo::{EditTransferProcessModel, NewTransferMessageModel, NewTransferProcessModel, TransferProviderRepoErrors, TransferProviderRepoFactory};
+use rainbow_events::core::notification::notification_types::{RainbowEventsNotificationCreationRequest, RainbowEventsNotificationMessageCategory, RainbowEventsNotificationMessageTypes, RainbowEventsNotificationStatus};
+use rainbow_events::core::notification::RainbowEventsNotificationTrait;
 use std::sync::Arc;
 use tracing::debug;
 use urn::Urn;
 
-pub struct DSProtocolTransferProviderImpl<T, U, V>
+pub struct DSProtocolTransferProviderImpl<T, U, V, W>
 where
     T: TransferProviderRepoFactory + Send + Sync,
     U: DataServiceFacadeTrait + Send + Sync,
     V: DataPlaneProviderFacadeTrait + Send + Sync,
+    W: RainbowEventsNotificationTrait + Sync + Send,
 {
     transfer_repo: Arc<T>,
     data_service_facade: Arc<U>,
     data_plane: Arc<V>,
+    notification_service: Arc<W>,
 }
 
-impl<T, U, V> DSProtocolTransferProviderImpl<T, U, V>
+impl<T, U, V, W> DSProtocolTransferProviderImpl<T, U, V, W>
 where
     T: TransferProviderRepoFactory + Send + Sync,
     U: DataServiceFacadeTrait + Send + Sync,
     V: DataPlaneProviderFacadeTrait + Send + Sync,
+    W: RainbowEventsNotificationTrait + Sync + Send,
 {
     pub fn new(
         transfer_repo: Arc<T>,
         data_service_facade: Arc<U>,
         data_plane: Arc<V>,
+        notification_service: Arc<W>,
     ) -> Self {
-        Self { transfer_repo, data_service_facade, data_plane }
+        Self { transfer_repo, data_service_facade, data_plane, notification_service }
     }
 }
 
 #[async_trait]
-impl<T, U, V> DSProtocolTransferProviderTrait for DSProtocolTransferProviderImpl<T, U, V>
+impl<T, U, V, W> DSProtocolTransferProviderTrait for DSProtocolTransferProviderImpl<T, U, V, W>
 where
     T: TransferProviderRepoFactory + Send + Sync,
     U: DataServiceFacadeTrait + Send + Sync,
     V: DataPlaneProviderFacadeTrait + Send + Sync,
+    W: RainbowEventsNotificationTrait + Sync + Send,
 {
     async fn get_transfer_requests_by_provider(
         &self,
@@ -145,6 +152,14 @@ where
             .await
             .map_err(DSProtocolTransferProviderErrors::DbErr)?;
 
+        self.notification_service.broadcast_notification(
+            RainbowEventsNotificationCreationRequest {
+                category: RainbowEventsNotificationMessageCategory::TransferProcess,
+                message_type: RainbowEventsNotificationMessageTypes::DSProtocolMessage,
+                message_content: serde_json::to_value(transfer_process.clone())?,
+                status: RainbowEventsNotificationStatus::Pending,
+            }
+        ).await?;
         Ok(transfer_process.into())
     }
 

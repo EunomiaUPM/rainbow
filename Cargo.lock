@@ -2292,6 +2292,36 @@ dependencies = [
 ]
 
 [[package]]
+name = "rainbow_events"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "chrono",
+ "clap",
+ "dotenvy",
+ "json_to_table",
+ "jsonschema",
+ "log",
+ "mockall",
+ "once_cell",
+ "rainbow_common",
+ "rainbow_db",
+ "reqwest",
+ "sea-orm",
+ "sea-orm-migration",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "tracing-test",
+ "urn",
+ "uuid",
+]
+
+[[package]]
 name = "rainbow_transfer"
 version = "0.1.0"
 dependencies = [
@@ -2307,6 +2337,7 @@ dependencies = [
  "once_cell",
  "rainbow_common",
  "rainbow_db",
+ "rainbow_events",
  "reqwest",
  "sea-orm",
  "sea-orm-migration",

@@ -39,41 +39,47 @@ use rainbow_common::protocol::transfer::{TransferMessageTypes, TransferRoles, Tr
 use rainbow_db::transfer_provider::repo::{
     EditTransferProcessModel, NewTransferMessageModel, TransferProviderRepoFactory,
 };
+use rainbow_events::core::notification::notification_types::{RainbowEventsNotificationCreationRequest, RainbowEventsNotificationMessageCategory, RainbowEventsNotificationMessageTypes, RainbowEventsNotificationStatus};
+use rainbow_events::core::notification::RainbowEventsNotificationTrait;
 use reqwest::Client;
 use std::sync::Arc;
 use std::time::Duration;
 
-pub struct DSRPCTransferProviderService<T, U, V>
+pub struct DSRPCTransferProviderService<T, U, V, W>
 where
     T: TransferProviderRepoFactory + Send + Sync,
     U: DataServiceFacadeTrait + Send + Sync,
     V: DataPlaneProviderFacadeTrait + Send + Sync,
+    W: RainbowEventsNotificationTrait + Sync + Send,
 {
     transfer_repo: Arc<T>,
     _data_service_facade: Arc<U>,
     data_plane_facade: Arc<V>,
+    notification_service: Arc<W>,
     client: Client,
 }
 
-impl<T, U, V> DSRPCTransferProviderService<T, U, V>
+impl<T, U, V, W> DSRPCTransferProviderService<T, U, V, W>
 where
     T: TransferProviderRepoFactory + Send + Sync,
     U: DataServiceFacadeTrait + Send + Sync,
     V: DataPlaneProviderFacadeTrait + Send + Sync,
+    W: RainbowEventsNotificationTrait + Sync + Send,
 {
-    pub fn new(transfer_repo: Arc<T>, _data_service_facade: Arc<U>, data_plane_facade: Arc<V>) -> Self {
+    pub fn new(transfer_repo: Arc<T>, _data_service_facade: Arc<U>, data_plane_facade: Arc<V>, notification_service: Arc<W>) -> Self {
         let client =
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
-        Self { transfer_repo, _data_service_facade, data_plane_facade, client }
+        Self { transfer_repo, _data_service_facade, data_plane_facade, notification_service, client }
     }
 }
 
 #[async_trait]
-impl<T, U, V> DSRPCTransferProviderTrait for DSRPCTransferProviderService<T, U, V>
+impl<T, U, V, W> DSRPCTransferProviderTrait for DSRPCTransferProviderService<T, U, V, W>
 where
     T: TransferProviderRepoFactory + Send + Sync,
     U: DataServiceFacadeTrait + Send + Sync,
     V: DataPlaneProviderFacadeTrait + Send + Sync,
+    W: RainbowEventsNotificationTrait + Sync + Send,
 {
     async fn setup_start(
         &self,
@@ -194,6 +200,14 @@ where
             data_address: data_address,
             message: response,
         };
+        self.notification_service.broadcast_notification(
+            RainbowEventsNotificationCreationRequest {
+                category: RainbowEventsNotificationMessageCategory::TransferProcess,
+                message_type: RainbowEventsNotificationMessageTypes::RPCMessage,
+                message_content: serde_json::to_value(response.clone())?,
+                status: RainbowEventsNotificationStatus::Pending,
+            }
+        ).await?;
         Ok(response)
     }
 
@@ -315,6 +329,14 @@ where
             consumer_pid,
             message: response,
         };
+        self.notification_service.broadcast_notification(
+            RainbowEventsNotificationCreationRequest {
+                category: RainbowEventsNotificationMessageCategory::TransferProcess,
+                message_type: RainbowEventsNotificationMessageTypes::RPCMessage,
+                message_content: serde_json::to_value(response.clone())?,
+                status: RainbowEventsNotificationStatus::Pending,
+            }
+        ).await?;
         Ok(response)
     }
 
@@ -434,6 +456,14 @@ where
             consumer_pid,
             message: response,
         };
+        self.notification_service.broadcast_notification(
+            RainbowEventsNotificationCreationRequest {
+                category: RainbowEventsNotificationMessageCategory::TransferProcess,
+                message_type: RainbowEventsNotificationMessageTypes::RPCMessage,
+                message_content: serde_json::to_value(response.clone())?,
+                status: RainbowEventsNotificationStatus::Pending,
+            }
+        ).await?;
         Ok(response)
     }
 
@@ -555,6 +585,14 @@ where
             consumer_pid,
             message: response,
         };
+        self.notification_service.broadcast_notification(
+            RainbowEventsNotificationCreationRequest {
+                category: RainbowEventsNotificationMessageCategory::TransferProcess,
+                message_type: RainbowEventsNotificationMessageTypes::RPCMessage,
+                message_content: serde_json::to_value(response.clone())?,
+                status: RainbowEventsNotificationStatus::Pending,
+            }
+        ).await?;
         Ok(response)
     }
 }

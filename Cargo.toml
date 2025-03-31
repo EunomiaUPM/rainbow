@@ -9,7 +9,7 @@ members = [
     "rainbow-common",
     "rainbow-auth",
     "rainbow-db",
-    "rainbow-tests",
+    "rainbow-tests", "rainbow-events",
 ]
 exclude = [
     "static",

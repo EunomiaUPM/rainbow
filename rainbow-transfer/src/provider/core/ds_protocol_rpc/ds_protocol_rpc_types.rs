@@ -38,7 +38,7 @@ pub struct DSRPCTransferProviderStartRequest {
     pub data_address: Option<DataAddress>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferProviderStartResponse {
     #[serde(rename = "providerPid")]
@@ -68,7 +68,7 @@ pub struct DSRPCTransferProviderSuspensionRequest {
     pub reason: Option<Vec<String>>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferProviderSuspensionResponse {
     #[serde(rename = "providerPid")]
@@ -89,7 +89,7 @@ pub struct DSRPCTransferProviderCompletionRequest {
     pub consumer_pid: Urn,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferProviderCompletionResponse {
     #[serde(rename = "providerPid")]
@@ -116,7 +116,7 @@ pub struct DSRPCTransferProviderTerminationRequest {
     pub reason: Option<Vec<String>>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferProviderTerminationResponse {
     #[serde(rename = "providerPid")]

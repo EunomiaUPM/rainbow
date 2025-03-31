@@ -17,17 +17,22 @@
  *
  */
 
-#![allow(unused_imports)]
-#![allow(dead_code)]
-#![allow(unused_variables)]
-#![allow(unused_mut)]
-#![allow(unused_imports)]
-#![allow(unused_must_use)]
+use sea_orm_migration::prelude::*;
 
-pub mod catalog;
-pub mod contracts_provider;
-pub mod contracts_consumer;
-pub mod dataplane;
-pub mod transfer_consumer;
-pub mod transfer_provider;
-pub mod events;
+pub mod m20241123_0000001_subscriptions;
+pub mod m20241123_0000002_notifications;
+
+pub fn get_events_migrations() -> Vec<Box<dyn MigrationTrait>> {
+    vec![
+        Box::new(m20241123_0000001_subscriptions::Migration),
+        Box::new(m20241123_0000002_notifications::Migration),
+    ]
+}
+
+pub struct Migrator;
+#[async_trait::async_trait]
+impl MigratorTrait for Migrator {
+    fn migrations() -> Vec<Box<dyn MigrationTrait>> {
+        get_events_migrations()
+    }
+}

@@ -1,20 +1,17 @@
 [package]
-name = "rainbow_transfer"
+name = "rainbow_events"
 version = "0.1.0"
 edition = "2021"
 
+
 [lib]
-name = "rainbow_transfer"
+name = "rainbow_events"
 path = "src/lib.rs"
 
-[[bin]]
-name = "rainbow_transfer"
-path = "src/main.rs"
 
 [dependencies]
 rainbow_common = { version = "0.1.0", path = "../rainbow-common", default-features = false }
 rainbow_db = { version = "0.1.0", path = "../rainbow-db", default-features = false }
-rainbow_events = { version = "0.1.0", path = "../rainbow-events", default-features = false }
 
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -38,4 +35,3 @@ sea-orm = { workspace = true }
 sea-orm-migration = { workspace = true }
 json_to_table = { workspace = true }
 mockall = { workspace = true }
-

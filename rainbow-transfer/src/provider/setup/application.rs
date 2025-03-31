@@ -27,8 +27,15 @@ use crate::provider::http::ds_protocol_rpc::ds_protocol_rpc::DSRPCTransferProvid
 use crate::provider::http::rainbow_entities::rainbow_entities::RainbowTransferProviderEntitiesRouter;
 use crate::provider::setup::config::TransferProviderApplicationConfig;
 use axum::{serve, Router};
+use rainbow_db::events::repo::sql::EventsRepoForSql;
+use rainbow_db::events::repo::EventsRepoFactory;
 use rainbow_db::transfer_provider::repo::sql::TransferProviderRepoForSql;
 use rainbow_db::transfer_provider::repo::TransferProviderRepoFactory;
+use rainbow_events::core::notification::notification::RainbowEventsNotificationsService;
+use rainbow_events::core::subscription::subscription::RainbowEventsSubscriptionService;
+use rainbow_events::core::subscription::subscription_types::SubscriptionEntities;
+use rainbow_events::http::notification::notification::RainbowEventsNotificationRouter;
+use rainbow_events::http::subscription::subscription::RainbowEventsSubscriptionRouter;
 use sea_orm::Database;
 use std::sync::Arc;
 use tokio::net::TcpListener;
@@ -39,9 +46,29 @@ pub struct TransferProviderApplication;
 pub async fn create_transfer_provider_router(db_url: String) -> Router {
     let db_connection = Database::connect(db_url).await.expect("Database can't connect");
 
+    // Events router
+    let subscription_repo = Arc::new(EventsRepoForSql::create_repo(db_connection.clone()));
+    let subscription_service = Arc::new(RainbowEventsSubscriptionService::new(
+        subscription_repo.clone(),
+    ));
+    let subscription_router = RainbowEventsSubscriptionRouter::new(
+        subscription_service,
+        Some(SubscriptionEntities::TransferProcess),
+    )
+        .router();
+    let notification_service = Arc::new(RainbowEventsNotificationsService::new(subscription_repo));
+    let notification_router = RainbowEventsNotificationRouter::new(
+        notification_service.clone(),
+        Some(SubscriptionEntities::TransferProcess),
+    )
+        .router();
+
     // Rainbow Entities Dependency injection
-    let provider_repo = Arc::new(TransferProviderRepoForSql::create_repo(db_connection));
-    let rainbow_entities_service = RainbowTransferProviderServiceImpl::new(provider_repo.clone());
+    let provider_repo = Arc::new(TransferProviderRepoForSql::create_repo(
+        db_connection.clone(),
+    ));
+    let rainbow_entities_service =
+        RainbowTransferProviderServiceImpl::new(provider_repo.clone(), notification_service.clone());
     let rainbow_entities_router =
         RainbowTransferProviderEntitiesRouter::new(Arc::new(rainbow_entities_service)).router();
 
@@ -52,6 +79,7 @@ pub async fn create_transfer_provider_router(db_url: String) -> Router {
         provider_repo.clone(),
         data_service_facade.clone(),
         data_plane_facade.clone(),
+        notification_service.clone(),
     ));
     let ds_protocol_router = DSProtocolTransferProviderRouter::new(ds_protocol_service.clone()).router();
 
@@ -60,12 +88,17 @@ pub async fn create_transfer_provider_router(db_url: String) -> Router {
         provider_repo.clone(),
         data_service_facade,
         data_plane_facade,
+        notification_service.clone(),
     ));
     let ds_protocol_rpc = DSRPCTransferProviderProviderRouter::new(ds_protocol_rpc_service.clone()).router();
 
     // Router
-    let transfer_provider_application_router =
-        Router::new().merge(rainbow_entities_router).merge(ds_protocol_router).merge(ds_protocol_rpc);
+    let transfer_provider_application_router = Router::new()
+        .merge(rainbow_entities_router)
+        .merge(ds_protocol_router)
+        .merge(ds_protocol_rpc)
+        .nest("/api/v1/transfers", subscription_router)
+        .nest("/api/v1/transfers", notification_router);
 
     transfer_provider_application_router
 }

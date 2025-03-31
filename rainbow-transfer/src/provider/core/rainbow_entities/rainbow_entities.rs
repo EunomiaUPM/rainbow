@@ -22,29 +22,34 @@ use crate::provider::core::rainbow_entities::RainbowTransferProviderServiceTrait
 use axum::async_trait;
 use rainbow_db::transfer_provider::entities::{transfer_message, transfer_process};
 use rainbow_db::transfer_provider::repo::TransferProviderRepoFactory;
+use rainbow_events::core::notification::RainbowEventsNotificationTrait;
 use std::sync::Arc;
 use urn::Urn;
 
-pub struct RainbowTransferProviderServiceImpl<T>
+pub struct RainbowTransferProviderServiceImpl<T, U>
 where
     T: TransferProviderRepoFactory + Send + Sync,
+    U: RainbowEventsNotificationTrait + Sync + Send,
 {
     repo: Arc<T>,
+    notification_service: Arc<U>,
 }
 
-impl<T> RainbowTransferProviderServiceImpl<T>
+impl<T, U> RainbowTransferProviderServiceImpl<T, U>
 where
     T: TransferProviderRepoFactory + Send + Sync,
+    U: RainbowEventsNotificationTrait + Sync + Send,
 {
-    pub fn new(repo: Arc<T>) -> Self {
-        Self { repo }
+    pub fn new(repo: Arc<T>, notification_service: Arc<U>) -> Self {
+        Self { repo, notification_service }
     }
 }
 
 #[async_trait]
-impl<T> RainbowTransferProviderServiceTrait for RainbowTransferProviderServiceImpl<T>
+impl<T, U> RainbowTransferProviderServiceTrait for RainbowTransferProviderServiceImpl<T, U>
 where
     T: TransferProviderRepoFactory + Send + Sync,
+    U: RainbowEventsNotificationTrait + Sync + Send,
 {
     async fn get_all_transfers(&self) -> anyhow::Result<Vec<transfer_process::Model>> {
         let transfer_processes = self.repo
