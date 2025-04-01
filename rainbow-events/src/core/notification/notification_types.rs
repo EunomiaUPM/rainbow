@@ -6,11 +6,15 @@ use urn::Urn;
 
 #[derive(Serialize, Deserialize)]
 pub struct RainbowEventsNotificationResponse {
+    #[serde(rename = "notificationId")]
     pub id: Urn,
     pub timestamp: chrono::NaiveDateTime,
     pub category: String,
+    #[serde(rename = "messageType")]
     pub message_type: String,
+    #[serde(rename = "messageContent")]
     pub message_content: serde_json::Value,
+    #[serde(rename = "subscriptionId")]
     pub subscription_id: Urn,
 }
 

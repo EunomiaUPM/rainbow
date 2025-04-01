@@ -1,0 +1,17 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Transfer Process Protocol - Rainbow Consumer API",
+    "description": "Transfer Process Protocol - Rainbow Consumer API",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:1234",
+      "description": "Testing server"
+    }
+  ],
+  "paths": {},
+  "components": {
+  }
+}

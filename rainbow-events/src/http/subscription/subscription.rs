@@ -108,7 +108,7 @@ where
             Err(err) => return SubscriptionErrors::JsonRejection(err).into_response(),
         };
         match service.put_subscription_by_id(id, input).await {
-            Ok(subscriptions) => (StatusCode::OK, Json(subscriptions)).into_response(),
+            Ok(subscriptions) => (StatusCode::ACCEPTED, Json(subscriptions)).into_response(),
             Err(e) => match e.downcast::<SubscriptionErrors>() {
                 Ok(e_) => e_.into_response(),
                 Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
@@ -128,7 +128,7 @@ where
             Err(err) => return SubscriptionErrors::JsonRejection(err).into_response(),
         };
         match service.create_subscription(input, entity.unwrap()).await {
-            Ok(subscriptions) => (StatusCode::OK, Json(subscriptions)).into_response(),
+            Ok(subscriptions) => (StatusCode::CREATED, Json(subscriptions)).into_response(),
             Err(e) => match e.downcast::<SubscriptionErrors>() {
                 Ok(e_) => e_.into_response(),
                 Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
@@ -149,7 +149,7 @@ where
             Err(err) => return SubscriptionErrors::UrnUuidSchema(id.to_string()).into_response(),
         };
         match service.delete_subscription_by_id(id).await {
-            Ok(subscriptions) => (StatusCode::OK, Json(subscriptions)).into_response(),
+            Ok(subscriptions) => (StatusCode::NO_CONTENT, Json(subscriptions)).into_response(),
             Err(e) => match e.downcast::<SubscriptionErrors>() {
                 Ok(e_) => e_.into_response(),
                 Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),

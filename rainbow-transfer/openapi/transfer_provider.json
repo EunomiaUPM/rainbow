@@ -11,34 +11,11 @@
       "description": "Testing server"
     }
   ],
-  "tags": [
-    {
-      "name": "Transfer Process",
-      "description": "Transfer Process Protocol related routes"
-    },
-    {
-      "name": "Rainbow",
-      "description": "Entities API in system"
-    },
-    {
-      "name": "Provider",
-      "description": "Routes from Provider"
-    },
-    {
-      "name": "RPC",
-      "description": "Routes for sending and processing Ds protocol message"
-    }
-  ],
   "paths": {
     "/api/v1/transfers": {
       "get": {
         "summary": "Retrieves all transfer processes in provider",
         "operationId": "rainbow_entities/get_all_transfers",
-        "tags": [
-          "Transfer Process",
-          "Provider",
-          "Rainbow"
-        ],
         "security": [],
         "description": "",
         "responses": {
@@ -56,8 +33,25 @@
               }
             }
           },
+          "4XX": {
+            "description": "Error by retrieving all transfer processes in provider",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RainbowTransferError"
+                }
+              }
+            }
+          },
           "5XX": {
-            "description": "Error by retrieving all transfer processes in provider"
+            "description": "Error by retrieving all transfer processes in provider",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RainbowTransferError"
+                }
+              }
+            }
           }
         }
       }
@@ -78,11 +72,6 @@
       "get": {
         "summary": "Retrieves transfer processes in provider by id",
         "operationId": "rainbow_entities/get_transfer_by_id",
-        "tags": [
-          "Transfer Process",
-          "Rainbow",
-          "Provider"
-        ],
         "security": [],
         "description": "Retrieves transfer processes in provider by id",
         "responses": {
@@ -93,6 +82,17 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RainbowTransferProcess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error in urn:uuid:<uuid> schema",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RainbowTransferError"
                 }
               }
             }
@@ -131,11 +131,6 @@
       "get": {
         "summary": "Retrieves transfer messages in provider by id",
         "operationId": "rainbow_entities/handle_get_messages_by_transfer",
-        "tags": [
-          "Transfer Process",
-          "Provider",
-          "Rainbow"
-        ],
         "security": [],
         "description": "Retrieves transfer messages in provider by id",
         "responses": {
@@ -153,7 +148,18 @@
               }
             }
           },
-          "4XX": {
+          "400": {
+            "description": "Error in urn:uuid:<uuid> schema",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RainbowTransferError"
+                }
+              }
+            }
+          },
+          "404": {
             "description": "Error not transfer process to be found",
             "headers": {},
             "content": {
@@ -190,11 +196,6 @@
       "get": {
         "summary": "Retrieves transfer message by provider and message id",
         "operationId": "rainbow_entities/get_messages_by_id",
-        "tags": [
-          "Transfer Process",
-          "Provider",
-          "Rainbow"
-        ],
         "security": [],
         "description": "Retrieves transfer message by provider and message id",
         "responses": {
@@ -209,7 +210,18 @@
               }
             }
           },
-          "4XX": {
+          "400": {
+            "description": "Error in urn:uuid:<uuid> schema",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RainbowTransferError"
+                }
+              }
+            }
+          },
+          "404": {
             "description": "Error not transfer process to be found or message",
             "headers": {},
             "content": {
@@ -238,11 +250,6 @@
       "post": {
         "summary": "Creates a transfer start message and sends it to consumer, if works, establishes data plane and persist process and messages",
         "operationId": "ds_rcp_transfer_provider/setup_start",
-        "tags": [
-          "Transfer Process",
-          "Provider",
-          "RPC"
-        ],
         "security": [],
         "description": "Creates a transfer start message and sends it to consumer, if works, establishes data plane and persist process and messages",
         "requestBody": {
@@ -259,6 +266,39 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Json malformed",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DSRPCTransferProviderErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "General Error",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DSRPCTransferProviderErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Peer service is not available or throws error",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DSRPCTransferProviderErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -267,11 +307,6 @@
       "post": {
         "summary": "Creates a transfer suspension message and sends it to consumer, if works, establishes data plane and persist process and messages",
         "operationId": "ds_rcp_transfer_provider/setup_suspension",
-        "tags": [
-          "Transfer Process",
-          "Provider",
-          "RPC"
-        ],
         "security": [],
         "description": "Creates a transfer suspension message and sends it to consumer, if works, establishes data plane and persist process and messages",
         "requestBody": {
@@ -288,6 +323,39 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Json malformed",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DSRPCTransferProviderErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "General Error",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DSRPCTransferProviderErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Peer service is not available or throws error",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DSRPCTransferProviderErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -296,11 +364,6 @@
       "post": {
         "summary": "Creates a transfer completion message and sends it to consumer, if works, establishes data plane and persist process and messages",
         "operationId": "ds_rcp_transfer_provider/setup_completion",
-        "tags": [
-          "Transfer Process",
-          "Provider",
-          "RPC"
-        ],
         "security": [],
         "description": "Creates a transfer completion message and sends it to consumer, if works, establishes data plane and persist process and messages",
         "requestBody": {
@@ -317,6 +380,39 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Json malformed",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DSRPCTransferProviderErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "General Error",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DSRPCTransferProviderErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Peer service is not available or throws error",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DSRPCTransferProviderErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -325,11 +421,6 @@
       "post": {
         "summary": "Creates a transfer termination message and sends it to consumer, if works, establishes data plane and persist process and messages",
         "operationId": "ds_rcp_transfer_provider/setup_termination",
-        "tags": [
-          "Transfer Process",
-          "Provider",
-          "RPC"
-        ],
         "security": [],
         "description": "Creates a transfer termination message and sends it to consumer, if works, establishes data plane and persist process and messages",
         "requestBody": {
@@ -343,6 +434,465 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DSRPCTransferProviderTerminationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Json malformed",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DSRPCTransferProviderErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "General Error",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DSRPCTransferProviderErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Peer service is not available or throws error",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DSRPCTransferProviderErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/transfers/subscriptions": {
+      "get": {
+        "summary": "Retrieves all subscriptions",
+        "operationId": "rainbow_events/subscription/get_all_subscriptions",
+        "security": [],
+        "description": "Retrieves all subscriptions",
+        "responses": {
+          "200": {
+            "description": "Retrieves all subscriptions",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RainbowEventsSubscriptionCreationResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new subscription to receive notifications",
+        "operationId": "rainbow_events/subscription/create_subscription",
+        "security": [],
+        "description": "Create a new subscription to receive notifications",
+        "requestBody": {
+          "$ref": "#/components/schemas/RainbowEventsSubscriptionCreationRequest"
+        },
+        "responses": {
+          "201": {
+            "description": "Provider returns information about subscription",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RainbowEventsSubscriptionCreationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Json malformed",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionErrorMessage"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Subscription not found",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionErrorMessage"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "General error",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionErrorMessage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/transfers/subscriptions/{subscription_id}": {
+      "parameters": [
+        {
+          "name": "subscription_id",
+          "in": "path",
+          "required": true,
+          "description": "The ID of the subscription to retrieve",
+          "schema": {
+            "type": "string",
+            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Retrieves subscription by id",
+        "operationId": "rainbow_events/subscription/get_subscription_by_id",
+        "security": [],
+        "description": "Retrieves subscription by id",
+        "responses": {
+          "200": {
+            "description": "Retrieves subscription by id",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RainbowEventsSubscriptionCreationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Json malformed",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionErrorMessage"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Subscription not found",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionErrorMessage"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "General error",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionErrorMessage"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Edits subscription by id",
+        "operationId": "rainbow_events/subscription/put_subscription_by_id",
+        "security": [],
+        "description": "Edits subscription by id",
+        "requestBody": {
+          "$ref": "#/components/schemas/RainbowEventsSubscriptionEditionRequest"
+        },
+        "responses": {
+          "202": {
+            "description": "Edits subscription by id",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RainbowEventsSubscriptionCreationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Json malformed",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionErrorMessage"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Subscription not found",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionErrorMessage"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "General error",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionErrorMessage"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Deletes subscription by id",
+        "operationId": "rainbow_events/subscription/delete_subscription_by_id",
+        "security": [],
+        "description": "Deletes subscription by id",
+        "responses": {
+          "204": {
+            "description": "Deletes subscription by id",
+            "headers": {}
+          },
+          "404": {
+            "description": "Subscription not found",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionErrorMessage"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "General error",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionErrorMessage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/transfers/notifications": {
+      "get": {
+        "summary": "Retrieves all notifications",
+        "operationId": "rainbow_events/notification/get_all_notifications",
+        "security": [],
+        "description": "Retrieves all notifications",
+        "responses": {
+          "200": {
+            "description": "Retrieves all notifications",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RainbowEventsNotificationResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/transfers/subscriptions/{subscription_id}/notifications": {
+      "get": {
+        "summary": "Retrieves all notifications belonging to a subscription",
+        "operationId": "rainbow_events/notification/get_notifications_by_subscription_id",
+        "security": [],
+        "description": "Retrieves all notifications belonging to a subscription",
+        "responses": {
+          "200": {
+            "description": "Retrieves all notifications belonging to a subscription",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RainbowEventsNotificationResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Json malformed",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationErrorMessage"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Subscription or notification not found",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationErrorMessage"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "General error",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationErrorMessage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/transfers/subscriptions/{subscription_id}/notifications-pending": {
+      "get": {
+        "summary": "Retrieves all pending notifications belonging to a subscription",
+        "operationId": "rainbow_events/notification/get_pending_notifications_by_subscription_id",
+        "security": [],
+        "description": "Retrieves all pending notifications belonging to a subscription",
+        "responses": {
+          "200": {
+            "description": "Retrieves all pending notifications belonging to a subscription",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RainbowEventsNotificationResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Json malformed",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationErrorMessage"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Subscription or notification not found",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationErrorMessage"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "General error",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationErrorMessage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/transfers/subscriptions/{subscription_id}/notifications/{notification_id}": {
+      "get": {
+        "summary": "Retrieves a notification by id and subscription",
+        "operationId": "rainbow_events/notification/get_notification_by_id",
+        "security": [],
+        "description": "Retrieves a notification by id and subscription",
+        "responses": {
+          "200": {
+            "description": "Retrieves a notification by id and subscription",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RainbowEventsNotificationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Json malformed",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationErrorMessage"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Subscription or notification not found",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationErrorMessage"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "General error",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationErrorMessage"
                 }
               }
             }
@@ -739,7 +1289,7 @@
             "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
           },
           "error": {
-            "$ref": "#/components/schemas/TransferProcessMessage"
+            "$ref": "#/components/schemas/TransferError"
           }
         },
         "required": [
@@ -890,6 +1440,232 @@
               "TERMINATED"
             ],
             "example": "REQUESTED"
+          }
+        }
+      },
+      "TransferError": {
+        "type": "object",
+        "description": "DSProtocol error message",
+        "additionalProperties": false,
+        "properties": {
+          "context": {
+            "type": "string",
+            "description": "context field"
+          },
+          "type": {
+            "type": "string",
+            "nullable": false,
+            "description": "Transfer message type",
+            "example": "TransferError"
+          },
+          "providerPid": {
+            "type": "string",
+            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
+            "nullable": true
+          },
+          "consumerPid": {
+            "type": "string",
+            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
+            "nullable": true
+          },
+          "code": {
+            "type": "string",
+            "nullable": true,
+            "example": "CONSUMER_INTERNAL_ERROR"
+          },
+          "reason": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "RainbowEventsSubscriptionCreationRequest": {
+        "type": "object",
+        "description": "Request to create a subscription",
+        "additionalProperties": false,
+        "properties": {
+          "callbackAddress": {
+            "type": "string",
+            "nullable": false,
+            "example": "https://callback.example.com"
+          },
+          "expirationTime": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time",
+            "example": "2025-03-07T09:56:28.105105"
+          }
+        },
+        "required": [
+          "callbackAddress"
+        ]
+      },
+      "RainbowEventsSubscriptionEditionRequest": {
+        "type": "object",
+        "description": "Request to create a subscription",
+        "additionalProperties": false,
+        "properties": {
+          "callbackAddress": {
+            "type": "string",
+            "nullable": true,
+            "example": "https://callback.example.com"
+          },
+          "expirationTime": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time",
+            "example": "2025-03-07T09:56:28.105105"
+          }
+        },
+        "required": []
+      },
+      "RainbowEventsSubscriptionCreationResponse": {
+        "type": "object",
+        "description": "Response to create a subscription",
+        "additionalProperties": false,
+        "properties": {
+          "subscriptionId": {
+            "type": "string",
+            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
+          },
+          "callbackAddress": {
+            "type": "string",
+            "example": "https://callback.example.com"
+          },
+          "timestamp": {
+            "type": "string",
+            "nullable": false,
+            "format": "date-time",
+            "example": "2025-03-07T09:56:28.105105"
+          },
+          "expirationTime": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time",
+            "example": "2025-03-07T09:56:28.105105"
+          },
+          "subscriptionEntity": {
+            "type": "string",
+            "nullable": false,
+            "description": "Transfer process current state",
+            "enum": [
+              "TransferProcess",
+              "Catalog",
+              "ContractNegotiationProcess",
+              "DataPlaneProcess"
+            ],
+            "example": "TransferProcess"
+          },
+          "active": {
+            "type": "boolean",
+            "nullable": false
+          }
+        },
+        "required": [
+          "subscriptionId",
+          "callbackAddress",
+          "timestamp",
+          "expirationTime",
+          "subscriptionEntity",
+          "active"
+        ]
+      },
+      "RainbowEventsNotificationResponse": {
+        "type": "object",
+        "description": "Response to create a notification and notifications to further systems",
+        "additionalProperties": false,
+        "properties": {
+          "notificationId": {
+            "type": "string",
+            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
+          },
+          "timestamp": {
+            "type": "string",
+            "nullable": false,
+            "format": "date-time",
+            "example": "2025-03-07T09:56:28.105105"
+          },
+          "category": {
+            "type": "string",
+            "nullable": false,
+            "description": "Notification category",
+            "enum": [
+              "TransferProcess",
+              "Catalog",
+              "ContractNegotiationProcess",
+              "DataPlaneProcess"
+            ],
+            "example": "TransferProcess"
+          },
+          "messageType": {
+            "type": "string",
+            "nullable": false,
+            "description": "Notification message type",
+            "enum": [
+              "RPCMessage",
+              "DSProtocolMessage",
+              "RainbowEntitiesMessage"
+            ],
+            "example": "RainbowEntitiesMessage"
+          },
+          "messageContent": {
+            "type": "object",
+            "nullable": false
+          },
+          "subscriptionId": {
+            "type": "string",
+            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
+          }
+        }
+      },
+      "SubscriptionErrorMessage": {
+        "type": "object",
+        "description": "Rainbow entity transfer process error",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Numeric code for error",
+            "nullable": false,
+            "example": "400"
+          },
+          "title": {
+            "type": "string",
+            "description": "Textual code for error",
+            "nullable": false,
+            "example": "BAD_REQUEST"
+          },
+          "message": {
+            "type": "string",
+            "description": "Textual description for error",
+            "nullable": false,
+            "example": "Error from deserializing path. Identifiers must have urn:uuid:<uuid> schema"
+          }
+        }
+      },
+      "NotificationErrorMessage": {
+        "type": "object",
+        "description": "Rainbow entity transfer process error",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Numeric code for error",
+            "nullable": false,
+            "example": "400"
+          },
+          "title": {
+            "type": "string",
+            "description": "Textual code for error",
+            "nullable": false,
+            "example": "BAD_REQUEST"
+          },
+          "message": {
+            "type": "string",
+            "description": "Textual description for error",
+            "nullable": false,
+            "example": "Error from deserializing path. Identifiers must have urn:uuid:<uuid> schema"
           }
         }
       }
