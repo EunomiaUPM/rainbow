@@ -864,8 +864,9 @@ impl Participant for ContractNegotiationRepoForSql {
         new_participant: NewParticipant,
     ) -> anyhow::Result<participant::Model, CnErrors> {
         let db_connection = get_db_connection().await;
+        let participant_id = new_participant.participant_id.unwrap_or(get_urn(None)).to_string();
         let model = participant::ActiveModel {
-            participant_id: ActiveValue::Set(get_urn(None).to_string()),
+            participant_id: ActiveValue::Set(participant_id),
             identity_token: ActiveValue::Set(Option::from("TODO TOKENS".to_string())),
             _type: ActiveValue::Set(new_participant._type),
             base_url: ActiveValue::Set(new_participant.base_url),

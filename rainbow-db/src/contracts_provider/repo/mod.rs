@@ -269,6 +269,7 @@ pub trait AgreementRepo {
 }
 
 pub struct NewParticipant {
+    pub participant_id: Option<Urn>,
     pub identity_token: Option<String>,
     pub _type: String,
     pub base_url: String,

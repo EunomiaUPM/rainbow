@@ -188,6 +188,9 @@ impl Into<EditAgreement> for EditAgreementRequest {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct NewParticipantRequest {
+    #[serde(rename = "dspace:participantId")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub participant_id: Option<Urn>,
     #[serde(rename = "dspace:participantType")]
     pub _type: String,
     #[serde(rename = "dspace:participantBaseUrl")]
@@ -199,6 +202,7 @@ pub struct NewParticipantRequest {
 impl Into<NewParticipant> for NewParticipantRequest {
     fn into(self) -> NewParticipant {
         NewParticipant {
+            participant_id: self.participant_id,
             identity_token: None,
             _type: self._type,
             base_url: self.base_url,

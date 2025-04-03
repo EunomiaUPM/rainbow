@@ -3432,6 +3432,11 @@
         "type": "object",
         "description": "Request to register a new participant in data space provider",
         "properties": {
+          "participantId": {
+            "type": "string",
+            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
+            "nullable": true
+          },
           "participantType": {
             "type": "string",
             "enum": [
