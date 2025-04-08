@@ -1,7 +1,6 @@
 use crate::core::subscription::subscription_err::SubscriptionErrors;
 use crate::core::subscription::subscription_types::{RainbowEventsSubscriptionCreationRequest, SubscriptionEntities};
 use crate::core::subscription::RainbowEventsSubscriptionTrait;
-use anyhow::Error;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, State};
 use axum::response::IntoResponse;
@@ -79,7 +78,7 @@ where
         );
         let id = match get_urn_from_string(&id) {
             Ok(id) => id,
-            Err(err) => return SubscriptionErrors::UrnUuidSchema(id.to_string()).into_response(),
+            Err(_) => return SubscriptionErrors::UrnUuidSchema(id.to_string()).into_response(),
         };
         match service.get_subscription_by_id(id).await {
             Ok(subscriptions) => (StatusCode::OK, Json(subscriptions)).into_response(),
@@ -101,7 +100,7 @@ where
         );
         let id = match get_urn_from_string(&id) {
             Ok(id) => id,
-            Err(err) => return SubscriptionErrors::UrnUuidSchema(id.to_string()).into_response(),
+            Err(_) => return SubscriptionErrors::UrnUuidSchema(id.to_string()).into_response(),
         };
         let input = match input {
             Ok(input) => input.0,
@@ -146,7 +145,7 @@ where
         );
         let id = match get_urn_from_string(&id) {
             Ok(id) => id,
-            Err(err) => return SubscriptionErrors::UrnUuidSchema(id.to_string()).into_response(),
+            Err(_) => return SubscriptionErrors::UrnUuidSchema(id.to_string()).into_response(),
         };
         match service.delete_subscription_by_id(id).await {
             Ok(subscriptions) => (StatusCode::NO_CONTENT, Json(subscriptions)).into_response(),

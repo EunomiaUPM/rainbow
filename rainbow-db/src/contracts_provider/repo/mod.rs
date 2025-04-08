@@ -21,42 +21,30 @@ use super::entities::cn_message;
 use super::entities::cn_offer;
 use super::entities::cn_process;
 use super::entities::participant;
-use crate::contracts_provider::repo::sql::ContractNegotiationRepoForSql;
 use anyhow::Error;
-use once_cell::sync::Lazy;
-use rainbow_common::config::config::{ConfigRoles, GLOBAL_CONFIG};
+use rainbow_common::config::config::ConfigRoles;
 use rainbow_common::protocol::contract::ContractNegotiationState;
+use sea_orm::DatabaseConnection;
 use sea_orm_migration::async_trait::async_trait;
 use thiserror::Error;
 use urn::Urn;
 
 pub mod sql;
 
-pub trait CombinedRepo:
+pub trait ContractNegotiationProviderRepoFactory:
 ContractNegotiationProcessRepo
 + ContractNegotiationMessageRepo
 + ContractNegotiationOfferRepo
 + AgreementRepo
 + Participant
-{}
-impl<T> CombinedRepo for T
-where
-    T: ContractNegotiationProcessRepo
-    + ContractNegotiationMessageRepo
-    + ContractNegotiationOfferRepo
-    + AgreementRepo
-    + Participant,
-{}
-
-pub static CONTRACT_PROVIDER_REPO: Lazy<Box<dyn CombinedRepo + Send + Sync>> = Lazy::new(|| {
-    let repo_type = GLOBAL_CONFIG.get().unwrap().db_type.clone();
-    match repo_type.as_str() {
-        "postgres" => Box::new(ContractNegotiationRepoForSql {}),
-        "memory" => Box::new(ContractNegotiationRepoForSql {}),
-        "mysql" => Box::new(ContractNegotiationRepoForSql {}),
-        _ => panic!("Unknown REPO_TYPE: {}", repo_type),
-    }
-});
++ Send
++ Sync
++ 'static
+{
+    fn create_repo(db_connection: DatabaseConnection) -> Self
+    where
+        Self: Sized;
+}
 
 pub struct NewContractNegotiationProcess {
     pub provider_id: Option<Urn>,
@@ -85,10 +73,7 @@ pub trait ContractNegotiationProcessRepo {
         &self,
         consumer_id: Urn,
     ) -> anyhow::Result<Option<cn_process::Model>, CnErrors>;
-    async fn get_cn_process_by_cn_id(
-        &self,
-        cn_process_id: Urn,
-    ) -> anyhow::Result<Option<cn_process::Model>, CnErrors>;
+    async fn get_cn_process_by_cn_id(&self, cn_process_id: Urn) -> anyhow::Result<Option<cn_process::Model>, CnErrors>;
     async fn put_cn_process(
         &self,
         cn_process_id: Urn,
@@ -148,11 +133,7 @@ pub trait ContractNegotiationMessageRepo {
         cn_process_id: Urn,
         new_cn_message: NewContractNegotiationMessage,
     ) -> anyhow::Result<cn_message::Model, CnErrors>;
-    async fn delete_cn_message(
-        &self,
-        cn_process_id: Urn,
-        cn_message_id: Urn,
-    ) -> anyhow::Result<(), CnErrors>;
+    async fn delete_cn_message(&self, cn_process_id: Urn, cn_message_id: Urn) -> anyhow::Result<(), CnErrors>;
 }
 
 pub struct NewContractNegotiationOffer {
@@ -168,30 +149,16 @@ pub trait ContractNegotiationOfferRepo {
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<cn_offer::Model>, CnErrors>;
-    async fn get_all_cn_offers_by_message_id(
-        &self,
-        offer_id: Urn,
-    ) -> anyhow::Result<Option<cn_offer::Model>, CnErrors>;
-    async fn get_all_cn_offers_by_provider(
-        &self,
-        provider_id: Urn,
-    ) -> anyhow::Result<Vec<cn_offer::Model>, CnErrors>;
-    async fn get_all_cn_offers_by_cn_process(
-        &self,
-        process_id: Urn,
-    ) -> anyhow::Result<Vec<cn_offer::Model>, CnErrors>;
-    async fn get_all_cn_offers_by_consumer(
-        &self,
-        consumer_id: Urn,
-    ) -> anyhow::Result<Vec<cn_offer::Model>, CnErrors>;
+    async fn get_all_cn_offers_by_message_id(&self, offer_id: Urn)
+                                             -> anyhow::Result<Option<cn_offer::Model>, CnErrors>;
+    async fn get_all_cn_offers_by_provider(&self, provider_id: Urn) -> anyhow::Result<Vec<cn_offer::Model>, CnErrors>;
+    async fn get_all_cn_offers_by_cn_process(&self, process_id: Urn) -> anyhow::Result<Vec<cn_offer::Model>, CnErrors>;
+    async fn get_all_cn_offers_by_consumer(&self, consumer_id: Urn) -> anyhow::Result<Vec<cn_offer::Model>, CnErrors>;
     async fn get_last_cn_offers_by_cn_process(
         &self,
         process_id: Urn,
     ) -> anyhow::Result<Option<cn_offer::Model>, CnErrors>;
-    async fn get_cn_offer_by_id(
-        &self,
-        offer_id: Urn,
-    ) -> anyhow::Result<Option<cn_offer::Model>, CnErrors>;
+    async fn get_cn_offer_by_id(&self, offer_id: Urn) -> anyhow::Result<Option<cn_offer::Model>, CnErrors>;
     async fn put_cn_offer(
         &self,
         process_id: Urn,
@@ -205,12 +172,7 @@ pub trait ContractNegotiationOfferRepo {
         message_id: Urn,
         new_cn_offer: NewContractNegotiationOffer,
     ) -> anyhow::Result<cn_offer::Model, CnErrors>;
-    async fn delete_cn_offer(
-        &self,
-        process_id: Urn,
-        message_id: Urn,
-        offer_id: Urn,
-    ) -> anyhow::Result<(), CnErrors>;
+    async fn delete_cn_offer(&self, process_id: Urn, message_id: Urn, offer_id: Urn) -> anyhow::Result<(), CnErrors>;
 }
 
 pub struct NewAgreement {
@@ -229,18 +191,9 @@ pub trait AgreementRepo {
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<agreement::Model>, CnErrors>;
-    async fn get_agreement_by_ag_id(
-        &self,
-        agreement_id: Urn,
-    ) -> anyhow::Result<Option<agreement::Model>, CnErrors>;
-    async fn get_agreement_by_process_id(
-        &self,
-        process_id: Urn,
-    ) -> anyhow::Result<Option<agreement::Model>, CnErrors>;
-    async fn get_agreement_by_message_id(
-        &self,
-        message_id: Urn,
-    ) -> anyhow::Result<Option<agreement::Model>, CnErrors>;
+    async fn get_agreement_by_ag_id(&self, agreement_id: Urn) -> anyhow::Result<Option<agreement::Model>, CnErrors>;
+    async fn get_agreement_by_process_id(&self, process_id: Urn) -> anyhow::Result<Option<agreement::Model>, CnErrors>;
+    async fn get_agreement_by_message_id(&self, message_id: Urn) -> anyhow::Result<Option<agreement::Model>, CnErrors>;
 
     async fn get_agreements_by_participant_id(
         &self,
@@ -297,10 +250,8 @@ pub trait Participant {
         participant_id: Urn,
         edit_participant: EditParticipant,
     ) -> anyhow::Result<participant::Model, CnErrors>;
-    async fn create_participant(
-        &self,
-        new_participant: NewParticipant,
-    ) -> anyhow::Result<participant::Model, CnErrors>;
+    async fn create_participant(&self, new_participant: NewParticipant)
+                                -> anyhow::Result<participant::Model, CnErrors>;
     async fn delete_participant(&self, participant_id: Urn) -> anyhow::Result<(), CnErrors>;
 }
 

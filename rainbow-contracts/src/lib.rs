@@ -17,15 +17,8 @@
  *
  */
 
-#![allow(unused_imports)]
-#![allow(dead_code)]
-#![allow(unused_variables)]
-#![allow(unused_mut)]
-#![allow(unused_imports)]
-#![allow(unused_must_use)]
-
+pub mod cmd;
+// pub mod common;
+// pub mod consumer;
 pub mod common;
-pub mod consumer;
 pub mod provider;
-pub mod schemas;
-pub mod setup;

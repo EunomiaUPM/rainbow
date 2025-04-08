@@ -1,12 +1,9 @@
 use crate::core::notification::notification_err::NotificationErrors;
-use crate::core::notification::notification_types::RainbowEventsNotificationCreationRequest;
 use crate::core::notification::RainbowEventsNotificationTrait;
-use crate::core::subscription::subscription_err::SubscriptionErrors;
 use crate::core::subscription::subscription_types::SubscriptionEntities;
-use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, State};
 use axum::response::IntoResponse;
-use axum::routing::{get, post};
+use axum::routing::get;
 use axum::{Json, Router};
 use log::info;
 use rainbow_common::err::transfer_err::TransferErrorType::NotCheckedError;
@@ -76,7 +73,7 @@ where
         );
         let sid = match get_urn_from_string(&sid) {
             Ok(sid) => sid,
-            Err(err) => return NotificationErrors::UrnUuidSchema(sid.to_string()).into_response(),
+            Err(_) => return NotificationErrors::UrnUuidSchema(sid.to_string()).into_response(),
         };
         match service.get_notifications_by_subscription_id(sid).await {
             Ok(notifications) => (StatusCode::OK, Json(notifications)).into_response(),
@@ -97,7 +94,7 @@ where
         );
         let sid = match get_urn_from_string(&sid) {
             Ok(sid) => sid,
-            Err(err) => return NotificationErrors::UrnUuidSchema(sid.to_string()).into_response(),
+            Err(_) => return NotificationErrors::UrnUuidSchema(sid.to_string()).into_response(),
         };
         match service.get_pending_notifications_by_subscription_id(sid).await {
             Ok(notifications) => (StatusCode::OK, Json(notifications)).into_response(),
@@ -119,11 +116,11 @@ where
         );
         let sid = match get_urn_from_string(&sid) {
             Ok(sid) => sid,
-            Err(err) => return NotificationErrors::UrnUuidSchema(sid.to_string()).into_response(),
+            Err(_) => return NotificationErrors::UrnUuidSchema(sid.to_string()).into_response(),
         };
         let nid = match get_urn_from_string(&nid) {
             Ok(nid) => nid,
-            Err(err) => return NotificationErrors::UrnUuidSchema(nid.to_string()).into_response(),
+            Err(_) => return NotificationErrors::UrnUuidSchema(nid.to_string()).into_response(),
         };
         match service.get_notification_by_id(sid, nid).await {
             Ok(notifications) => (StatusCode::OK, Json(notifications)).into_response(),

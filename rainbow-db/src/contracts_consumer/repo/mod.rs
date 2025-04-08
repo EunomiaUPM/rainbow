@@ -17,32 +17,29 @@
  *
  */
 
-use self::sql::ContractNegotiationRepoForSql;
 use super::entities::cn_process;
 use anyhow::Error;
 use axum::async_trait;
-use once_cell::sync::Lazy;
-use rainbow_common::config::config::GLOBAL_CONFIG;
 use thiserror::Error;
 use urn::Urn;
 
 mod sql;
 
-pub trait CombinedRepo: ContractNegotiationConsumerProcessRepo {}
-impl<T> CombinedRepo for T
-where
-    T: ContractNegotiationConsumerProcessRepo,
-{}
-
-pub static CONTRACT_CONSUMER_REPO: Lazy<Box<dyn CombinedRepo + Send + Sync>> = Lazy::new(|| {
-    let repo_type = GLOBAL_CONFIG.get().unwrap().db_type.clone();
-    match repo_type.as_str() {
-        "postgres" => Box::new(ContractNegotiationRepoForSql {}),
-        "memory" => Box::new(ContractNegotiationRepoForSql {}),
-        "mysql" => Box::new(ContractNegotiationRepoForSql {}),
-        _ => panic!("Unknown REPO_TYPE: {}", repo_type),
-    }
-});
+// pub trait CombinedRepo: ContractNegotiationConsumerProcessRepo {}
+// impl<T> CombinedRepo for T
+// where
+//     T: ContractNegotiationConsumerProcessRepo,
+// {}
+//
+// pub static CONTRACT_CONSUMER_REPO: Lazy<Box<dyn CombinedRepo + Send + Sync>> = Lazy::new(|| {
+//     let repo_type = GLOBAL_CONFIG.get().unwrap().db_type.clone();
+//     match repo_type.as_str() {
+//         "postgres" => Box::new(ContractNegotiationRepoForSql {}),
+//         "memory" => Box::new(ContractNegotiationRepoForSql {}),
+//         "mysql" => Box::new(ContractNegotiationRepoForSql {}),
+//         _ => panic!("Unknown REPO_TYPE: {}", repo_type),
+//     }
+// });
 
 
 pub struct NewContractNegotiationProcess {

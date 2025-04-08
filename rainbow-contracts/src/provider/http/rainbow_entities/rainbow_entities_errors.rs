@@ -17,7 +17,7 @@
  *
  */
 
-use crate::provider::core::rainbow_cn_errors::{CnErrorProvider, CnErrorProviderErrorOut};
+use crate::provider::core::rainbow_entities::rainbow_entities_errors::{CnErrorProvider, CnErrorProviderErrorOut};
 use axum::extract::rejection::JsonRejection;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};

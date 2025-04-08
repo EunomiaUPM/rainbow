@@ -16,7 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::provider::core::idsa_api_errors::IdsaCNError;
+use crate::provider::core::ds_protocol::ds_protocol_errors::IdsaCNError;
 use axum::extract::rejection::JsonRejection;
 use axum::response::{IntoResponse, Response};
 use rainbow_common::protocol::contract::contract_error::ContractErrorMessage;
@@ -29,7 +29,7 @@ impl IntoResponse for IdsaCNError {
                 reason: Option::from(vec![e.to_string()]),
                 ..Default::default()
             },
-            ref e @ IdsaCNError::ProcessNotFound { ref provider_pid, ref consumer_pid } => {
+            ref e @ IdsaCNError::ProcessNotFound { ref provider_pid, .. } => {
                 ContractErrorMessage {
                     provider_pid: provider_pid.as_ref().map(|pid| pid.to_string()),
                     code: Option::from("PROCESS_NOT_FOUND_BY_PROVIDER_OR_CONSUMER".to_string()),
@@ -38,7 +38,7 @@ impl IntoResponse for IdsaCNError {
                 }
             }
             ref
-            e @ IdsaCNError::UUIDParseError { ref provider_pid, ref consumer_pid, ref error } => {
+            e @ IdsaCNError::UUIDParseError { ref provider_pid, ref error, .. } => {
                 ContractErrorMessage {
                     provider_pid: provider_pid.as_ref().map(|pid| pid.to_string()),
                     code: Option::from("URN_PARSE_ERROR".to_string()),
@@ -48,8 +48,8 @@ impl IntoResponse for IdsaCNError {
             }
             ref e @ IdsaCNError::NotCheckedError {
                 ref provider_pid,
-                ref consumer_pid,
                 ref error,
+                ..
             } => ContractErrorMessage {
                 provider_pid: provider_pid.as_ref().map(|pid| pid.to_string()),
                 code: Option::from("NOT_CHECKED_ERROR".to_string()),
@@ -95,7 +95,7 @@ impl IntoResponse for IdsaCNError {
             ref e @ IdsaCNError::NotAllowed {
                 ref provider_pid,
                 ref consumer_pid,
-                ref error
+                ..
             } => ContractErrorMessage {
                 provider_pid: provider_pid.as_ref().map(|pid| pid.to_string()),
                 consumer_pid: consumer_pid.as_ref().map(|pid| pid.to_string()),
