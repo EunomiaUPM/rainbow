@@ -17,14 +17,9 @@
  *
  */
 
-#![allow(unused_imports)]
-#![allow(dead_code)]
-#![allow(unused_variables)]
-#![allow(unused_mut)]
-#![allow(unused_imports)]
-
-use rainbow::setup;
+use rainbow::cmd::CoreCommands;
 use tracing::info;
+use tracing::level_filters::LevelFilter;
 use tracing_subscriber::EnvFilter;
 
 const INFO: &str = r"
@@ -34,7 +29,7 @@ const INFO: &str = r"
  )   / /(__)\  _)(_  )  (  ) _ < )(_)(  )    (
 (_)\_)(__)(__)(____)(_)\_)(____/(_____)(__/\__)
 
-Starting Rainbow Server 🌈🌈
+Starting Rainbow Core Server 🌈🌈
 UPM Dataspace protocol implementation
 Show some love on https://github.com/ging/rainbow
 ----------
@@ -43,11 +38,10 @@ Show some love on https://github.com/ging/rainbow
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::DEBUG)
-        .with_test_writer()
-        .init();
+    let filter =
+        EnvFilter::builder().with_default_directive(LevelFilter::INFO.into()).parse("debug,sqlx::query=off")?;
+    tracing_subscriber::fmt().with_env_filter(filter).init();
     info!("{}", INFO);
-    setup::init_command_line().await?;
+    CoreCommands::init_command_line().await?;
     Ok(())
 }

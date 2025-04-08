@@ -23,7 +23,7 @@ use crate::utils::get_urn;
 use serde::{Deserialize, Serialize};
 use urn::Urn;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ContractNegotiationEventMessage {
     #[serde(rename = "@context")]
     pub context: ContextField,

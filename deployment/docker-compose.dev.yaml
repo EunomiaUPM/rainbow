@@ -33,3 +33,25 @@ services:
       POSTGRES_DB: ds-protocol-catalog
     ports:
       - "5435:5432"
+
+  ds_cn_provider_db:
+    container_name: "ds_cn_provider_db"
+    image: "postgres"
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: ds_cn_provider_db
+      POSTGRES_USER: ds_cn_provider_db
+      POSTGRES_DB: ds_cn_provider_db
+    ports:
+      - "5436:5432"
+
+  ds_core_provider_db:
+    container_name: "ds_core_provider_db"
+    image: "postgres"
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: ds_core_provider_db
+      POSTGRES_USER: ds_core_provider_db
+      POSTGRES_DB: ds_core_provider_db
+    ports:
+      - "5437:5432"

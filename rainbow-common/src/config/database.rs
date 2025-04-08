@@ -16,33 +16,11 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::config::config::get_local_database_url;
 use anyhow::anyhow;
-use sea_orm::{Database, DatabaseConnection};
 use serde::Serialize;
 use std::fmt::Display;
 use std::str::FromStr;
-use tokio::sync::OnceCell;
-use tracing::info;
 
-pub static DB_CONNECTION: OnceCell<DatabaseConnection> = OnceCell::const_new();
-pub async fn get_db_connection() -> &'static DatabaseConnection {
-    DB_CONNECTION
-        .get_or_init(|| async {
-            let db_url = get_local_database_url().unwrap();
-            let db = Database::connect(db_url).await;
-            match db {
-                Ok(db) => {
-                    info!("Database connection successfully established");
-                    db
-                }
-                Err(e) => {
-                    panic!("Database connection error: {}", e.to_string())
-                }
-            }
-        })
-        .await
-}
 
 #[derive(Serialize, Clone)]
 pub enum DbType {

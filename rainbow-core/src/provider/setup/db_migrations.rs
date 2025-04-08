@@ -17,31 +17,34 @@
  *
  */
 
-use crate::provider::setup::config::TransferProviderApplicationConfig;
-// use rainbow_db::dataplane::migrations::get_dataplane_migrations;
+use crate::provider::setup::config::CoreProviderApplicationConfig;
+use rainbow_db::catalog::migrations::get_catalog_migrations;
+use rainbow_db::contracts_provider::migrations::get_contracts_migrations;
 use rainbow_db::events::migrations::get_events_migrations;
 use rainbow_db::transfer_provider::migrations::get_transfer_provider_migrations;
 use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
 
-pub struct TransferProviderMigration;
+pub struct CoreProviderMigration;
 
-impl MigratorTrait for TransferProviderMigration {
+impl MigratorTrait for CoreProviderMigration {
     fn migrations() -> Vec<Box<dyn MigrationTrait>> {
         let mut migrations: Vec<Box<dyn MigrationTrait>> = vec![];
-        let mut provider_migrations = get_transfer_provider_migrations();
-        // let mut data_plane_migrations = get_dataplane_migrations();
+        let mut transfer_provider_migrations = get_transfer_provider_migrations();
+        let mut catalog_migrations = get_catalog_migrations();
+        let mut contract_negotiation_provider_migrations = get_contracts_migrations();
         let mut pub_sub_migrations = get_events_migrations();
 
-        migrations.append(&mut provider_migrations);
-        // migrations.append(&mut data_plane_migrations);
+        migrations.append(&mut transfer_provider_migrations);
+        migrations.append(&mut catalog_migrations);
+        migrations.append(&mut contract_negotiation_provider_migrations);
         migrations.append(&mut pub_sub_migrations);
         migrations
     }
 }
 
-impl TransferProviderMigration {
-    pub async fn run(config: &TransferProviderApplicationConfig<'static>) -> anyhow::Result<()> {
+impl CoreProviderMigration {
+    pub async fn run(config: &CoreProviderApplicationConfig<'static>) -> anyhow::Result<()> {
         // db_connection
         let db_url = config.get_full_db_url();
         let db_connection = Database::connect(db_url).await.expect("Database can't connect");
