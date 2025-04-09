@@ -25,3 +25,4 @@ urn = { workspace = true }
 sea-orm = { workspace = true }
 sea-orm-migration = { workspace = true }
 json_value_merge = "2.0.1"
+rand = "0.8.5"

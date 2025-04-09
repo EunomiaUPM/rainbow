@@ -17,18 +17,23 @@
  *
  */
 
-use crate::ssi_auth::consumer::types::{Jwtclaims, WalletInfo, WalletLoginResponse};
+use crate::ssi_auth::consumer::types::{
+    Didsinfo, Jwtclaims, MatchingVCs, VPexchange, WalletInfo, WalletInfoResponse,
+    WalletLoginResponse,
+};
 use crate::ssi_auth::consumer::SSI_AUTH_HTTP_CLIENT;
 use anyhow::bail;
-use base64::engine::general_purpose::STANDARD;
+use base64::engine::general_purpose::{STANDARD, URL_SAFE_NO_PAD};
 use base64::Engine;
 use log::error;
 use once_cell::sync::Lazy;
 use rainbow_common::config::config::{get_consumer_wallet_data, get_consumer_wallet_portal_url};
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue, ACCEPT, AUTHORIZATION, CONTENT_TYPE};
-use std::sync::{Arc, Mutex};
+use serde::Serialize;
+use serde_json::{json, Value};
+use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
-use serde_json::Value;
+use tokio::sync::Mutex;
 use tracing::info;
 
 pub struct WalletSessionManager {
@@ -46,11 +51,13 @@ impl WalletSessionManager {
     async fn register(&self) -> anyhow::Result<()> {
         let wallet_portal_url = get_consumer_wallet_portal_url()? + "/wallet-api/auth/register";
         let wallet_data = get_consumer_wallet_data()?;
-        let headers = Headers4WalletPetitions::build();
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "application/json".parse()?);
+        headers.insert(ACCEPT, "application/json".parse()?);
 
         let res = SSI_AUTH_HTTP_CLIENT
             .post(wallet_portal_url)
-            .headers(headers.headers)
+            .headers(headers)
             .json(&wallet_data)
             .send()
             .await;
@@ -80,11 +87,14 @@ impl WalletSessionManager {
         let wallet_portal_url = get_consumer_wallet_portal_url()? + "/wallet-api/auth/login";
         let mut wallet_data = get_consumer_wallet_data()?;
         wallet_data.as_object_mut().map(|obj| obj.remove("name"));
-        let headers = Headers4WalletPetitions::build();
+
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "application/json".parse()?);
+        headers.insert(ACCEPT, "application/json".parse()?);
 
         let res = SSI_AUTH_HTTP_CLIENT
             .post(wallet_portal_url)
-            .headers(headers.headers)
+            .headers(headers)
             .json(&wallet_data)
             .send()
             .await;
@@ -96,33 +106,40 @@ impl WalletSessionManager {
         match res.status().as_u16() {
             200 => {
                 info!("WaltId account login successful");
+
                 let json_res: WalletLoginResponse = res.json().await?;
+
                 self.account_id = Some(json_res.id);
                 self.token = Some(json_res.token.clone());
 
-                let jwtparts: Vec<&str> = json_res.token.as_str().split('.').collect();
+                let jwtparts: Vec<&str> = json_res.token.split('.').collect();
+
                 if jwtparts.len() != 3 {
                     bail!("JWT token does not have the correct format");
                 }
 
-                let claims = serde_json::from_slice::<Jwtclaims>(&STANDARD.decode(jwtparts[1])?)?;
+                let decoded = URL_SAFE_NO_PAD.decode(jwtparts[1]).unwrap();
+
+                let claims: Jwtclaims = serde_json::from_slice(&decoded).unwrap();
+
                 self.token_exp = Some(claims.exp);
+
+                Ok(())
             }
             _ => {
                 error!("WaltId account login failed: {}", res.status());
                 bail!("WaltId account login failed: {}", res.status())
             }
         }
-
-        Ok(())
     }
 
     pub async fn logout(&mut self) -> anyhow::Result<()> {
         let wallet_portal_url = get_consumer_wallet_portal_url()? + "/wallet-api/auth/logout";
-        let headers = Headers4WalletPetitions::build();
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "application/json".parse()?);
+        headers.insert(ACCEPT, "application/json".parse()?);
 
-        let res =
-            SSI_AUTH_HTTP_CLIENT.post(wallet_portal_url).headers(headers.headers).send().await;
+        let res = SSI_AUTH_HTTP_CLIENT.post(wallet_portal_url).headers(headers).send().await;
         let res = match res {
             Ok(res) => res,
             Err(e) => bail!("Error sending request: {}", e),
@@ -143,16 +160,19 @@ impl WalletSessionManager {
     }
 
     async fn get_wallet_info(&mut self) -> anyhow::Result<()> {
-        let wallet_portal_url = get_consumer_wallet_portal_url()? + "/wallet-api/accounts/wallets";
-        let mut headers = Headers4WalletPetitions::build();
+        let wallet_portal_url =
+            get_consumer_wallet_portal_url()? + "/wallet-api/wallet/accounts/wallets";
 
-        if let Some(token) = &self.token {
-            headers.addheader(AUTHORIZATION, &format!("Bearer {}", token));
-        } else {
-            bail!("No token available for authentication");
-        }
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "application/json".parse()?);
+        headers.insert(ACCEPT, "application/json".parse()?);
 
-        let res = SSI_AUTH_HTTP_CLIENT.get(wallet_portal_url).headers(headers.headers).send().await;
+        match &self.token {
+            Some(token) => headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?),
+            None => bail!("No token available for authentication"),
+        };
+
+        let res = SSI_AUTH_HTTP_CLIENT.get(wallet_portal_url).headers(headers).send().await;
         let res = match res {
             Ok(res) => res,
             Err(e) => bail!("Error sending request: {}", e),
@@ -160,11 +180,74 @@ impl WalletSessionManager {
 
         match res.status().as_u16() {
             200 => {
+                let wallets = res.json::<WalletInfoResponse>().await.unwrap().wallets;
+                for wallet in wallets {
+                    if self.wallets.contains(&wallet) {
+                        info!("Wallet {} already exists", wallet.id);
+                    } else {
+                        self.wallets.push(wallet);
+                    }
+                }
+
                 info!("Wallet data loaded successfully");
             }
             _ => {
                 error!("Wallet data loading failed: {}", res.status());
-                bail!("Wallet data loading failed: {}", res.status())
+                bail!("Wallet data loaading failed: {}", res.status())
+            }
+        }
+
+        Ok(())
+    }
+
+    async fn get_wallet_dids(&mut self) -> anyhow::Result<()> {
+        if self.wallets.first().is_none() {
+            bail!("There is not a wallet registered")
+        };
+
+        let wallet_portal_url = get_consumer_wallet_portal_url()?
+            + "/wallet-api/wallet/"
+            + &self.wallets.first().unwrap().id
+            + "/dids";
+
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "application/json".parse()?);
+        headers.insert(ACCEPT, "application/json".parse()?);
+
+        match &self.token {
+            Some(token) => headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?),
+            None => bail!("No token available for authentication"),
+        };
+
+        let res = SSI_AUTH_HTTP_CLIENT.get(wallet_portal_url).headers(headers).send().await;
+        let res = match res {
+            Ok(res) => res,
+            Err(e) => bail!("Error sending request: {}", e),
+        };
+
+        match res.status().as_u16() {
+            200 => {
+                let dids: Vec<Didsinfo> = res.json().await?;
+
+                for did in dids {
+                    if let Some(wallet) = self.wallets.first_mut() {
+                        if let Some(dids) = &mut wallet.dids {
+                            if dids.contains(&did) {
+                                info!("Did {} already exists", did.did);
+                            } else {
+                                dids.push(did);
+                            }
+                        } else {
+                            wallet.dids = Some(vec![did]);
+                        }
+                    }
+                }
+
+                info!("Dids data loaded successfully");
+            }
+            _ => {
+                error!("Dids data loading failed: {}", res.status());
+                bail!("Dids data loaading failed: {}", res.status())
             }
         }
 
@@ -202,33 +285,41 @@ impl WalletSessionManager {
         }
     }
 
-    pub async fn access(&mut self) -> () {
+    pub async fn access(&mut self) -> anyhow::Result<()> {
         if self.account_id.is_none() {
             self.register().await.unwrap();
         }
+
         self.login().await.unwrap();
         self.get_wallet_info().await.unwrap();
+        self.get_wallet_dids().await.unwrap();
+
+        Ok(())
     }
 
-    pub async fn joinexchange(&self, exchange_url: &str) -> anyhow::Result<()> {
+    pub async fn joinexchange(&self, exchange_url: String) -> anyhow::Result<String> {
+        let kk = self.wallets.first();
+
         if self.wallets.first().is_none() {
             bail!("There is not a wallet registered")
         };
+
         let url = format!(
             "{}/wallet-api/wallet/{}/exchange/resolvePresentationRequest",
             get_consumer_wallet_portal_url()?,
             self.wallets.first().unwrap().id
         );
 
-        let mut headers = Headers4WalletPetitions::build();
-        if let Some(token) = &self.token {
-            headers.addheader(AUTHORIZATION, &format!("Bearer {}", token));
-        } else {
-            bail!("No token available for authentication");
-        }
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "text/plain".parse()?);
+        headers.insert(ACCEPT, "text/plain".parse()?);
 
-        let res =
-            SSI_AUTH_HTTP_CLIENT.post(url).headers(headers.headers).json(exchange_url).send().await;
+        match &self.token {
+            Some(token) => headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?),
+            None => bail!("No token available for authentication"),
+        };
+
+        let res = SSI_AUTH_HTTP_CLIENT.post(url).headers(headers).body(exchange_url).send().await;
 
         let res = match res {
             Ok(res) => res,
@@ -238,17 +329,16 @@ impl WalletSessionManager {
         match res.status().as_u16() {
             200 => {
                 info!("Joined the exchange successful");
+                Ok(res.text().await?)
             }
             _ => {
                 error!("Error joining the exchange: {}", res.status());
                 bail!("Error joining the exchange: {}", res.status())
             }
         }
-
-        Ok(())
     }
 
-    pub async fn match_vc4vp(&self, vpdef: Value) -> anyhow::Result<()> {
+    pub async fn match_vc4vp(&self, vpdef: Value) -> anyhow::Result<Vec<MatchingVCs>> {
         if self.wallets.first().is_none() {
             bail!("There is not a wallet registered")
         };
@@ -258,15 +348,16 @@ impl WalletSessionManager {
             self.wallets.first().unwrap().id
         );
 
-        let mut headers = Headers4WalletPetitions::build();
-        if let Some(token) = &self.token {
-            headers.addheader(AUTHORIZATION, &format!("Bearer {}", token));
-        } else {
-            bail!("No token available for authentication");
-        }
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "application/json".parse()?);
+        headers.insert(ACCEPT, "application/json".parse()?);
 
-        let res =
-            SSI_AUTH_HTTP_CLIENT.post(url).headers(headers.headers).json(&vpdef).send().await;
+        match &self.token {
+            Some(token) => headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?),
+            None => bail!("No token available for authentication"),
+        };
+
+        let res = SSI_AUTH_HTTP_CLIENT.post(url).headers(headers).json(&vpdef).send().await;
 
         let res = match res {
             Ok(res) => res,
@@ -276,39 +367,64 @@ impl WalletSessionManager {
         match res.status().as_u16() {
             200 => {
                 info!("Credentials matched successfully");
+                println!("{:?}", res);
+                let vc_json: Vec<MatchingVCs> = res.json().await?;
+
+                Ok(vc_json)
             }
             _ => {
                 error!("Error matching credentials: {}", res.status());
                 bail!("Error matching credentials: {}", res.status())
             }
         }
-
-        Ok(())
     }
 
-    pub async fn present_vp(&self, vpdef: Value) -> anyhow::Result<()> {
-        
+    pub async fn present_vp(&self, preq: String, creds: Vec<String>) -> anyhow::Result<()> {
+        if self.wallets.first().is_none() {
+            bail!("There is not a wallet registered")
+        };
+        let url = format!(
+            "{}/wallet-api/wallet/{}/exchange/usePresentationRequest",
+            get_consumer_wallet_portal_url()?,
+            self.wallets.first().unwrap().id
+        );
+
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "application/json".parse()?);
+        headers.insert(ACCEPT, "application/json".parse()?);
+
+        match &self.token {
+            Some(token) => headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?),
+            None => bail!("No token available for authentication"),
+        };
+
+        let did = &self.wallets.first().unwrap().dids.as_ref().unwrap().first().unwrap().did;
+        let did = self.wallets.first().unwrap().dids.as_ref().unwrap().first().unwrap().did.clone();
+
+        let body =
+            json!({ "did": null, "presentationRequest": preq, "selectedCredentials": creds });
+
+
+        println!();
+        println!("{}", serde_json::to_string_pretty(&body)?);
+        println!();
+
+        let res = SSI_AUTH_HTTP_CLIENT.post(url).headers(headers).json(&body).send().await;
+
+        let res = match res {
+            Ok(res) => res,
+            Err(e) => bail!("Error sending request: {}", e),
+        };
+
+        println!("{:?}", res);
+        let status = res.status();
+        let body_text = res.text().await?;
+
+        println!("Status: {}", status);
+        println!("Body: {}", body_text);
         Ok(())
     }
 }
 
 pub static SESSION_MANAGER: Lazy<Arc<Mutex<WalletSessionManager>>> =
     Lazy::new(|| Arc::new(Mutex::new(WalletSessionManager::new())));
-
-struct Headers4WalletPetitions {
-    headers: HeaderMap,
-}
-
-impl Headers4WalletPetitions {
-    pub fn build() -> Self {
-        let mut builder = Headers4WalletPetitions { headers: HeaderMap::new() };
-
-        builder.addheader(CONTENT_TYPE, "application/json");
-        builder.addheader(ACCEPT, "application/json");
-        builder
-    }
-
-    pub fn addheader(&mut self, key: HeaderName, value: &str) -> () {
-        self.headers.insert(key, HeaderValue::from_str(value).unwrap());
-    }
-}

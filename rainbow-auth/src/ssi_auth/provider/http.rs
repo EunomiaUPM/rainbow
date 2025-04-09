@@ -17,52 +17,67 @@
  *
  */
 
-use axum::http::{Request, Uri};
+use crate::ssi_auth::provider::manager::Manager;
+use axum::extract::{Form, Path};
+use axum::http::{Method, Request, Uri};
 use axum::response::IntoResponse;
-use axum::routing::post;
+use axum::routing::{get, post};
 use axum::{Json, Router};
 use rainbow_common::err::transfer_err::TransferErrorType;
 use reqwest::StatusCode;
+use serde::Deserialize;
 use tracing::info;
-use crate::ssi_auth::provider::manager::Manager;
+use tracing_subscriber::fmt::format;
 
 pub fn router() -> Router {
     Router::new()
         .route("/petition", post(handle_petition))
-        .route("/vpexchange", post(vpexchange))
-        .route("/vpdefinition", post(vpdefinition))
-        .route("/presentation", post(presentation))
+        .route("/pd/:state", get(pd))
+        .route("/verify/:state", post(verify))
         .fallback(fallback)
-
 }
 
 async fn handle_petition() -> impl IntoResponse {
     info!("POST /petition");
 
-    let uri = Manager::generate_exchange_uri();
+    let uri = Manager::generate_exchange_uri().await.unwrap();
     Json(uri)
 }
 
-async fn vpexchange() -> impl IntoResponse {
-    info!("POST /vpexchange");
+async fn pd(Path(state): Path<String>) -> impl IntoResponse {
+    let log = format!("GET /pd/{}", state);
+    info!("{}", log);
+
+    let vpd = Manager::gererate_vp_def();
+    Json(vpd)
+}
+
+#[derive(Deserialize)]
+struct VerifyPayload {
+    vp_token: String,
+    presentation_submission: String,
+}
+
+async fn verify(
+    Path(state): Path<String>,
+    Form(payload): Form<VerifyPayload>,
+) -> impl IntoResponse {
+    let log = format!("GET /verify/{}", state);
+    info!("{}", log);
+
+    // {payload.vp_token,payload.presentation_submission}
+
+    let manager = Manager::new();
+    manager.verify(payload.vp_token).await.unwrap();
+
+
+
 
     StatusCode::OK
 }
 
-async fn vpdefinition() -> impl IntoResponse {
-    info!("POST /vpdefinition");
-
-    StatusCode::OK
-}
-
-async fn presentation() -> impl IntoResponse {
-    info!("POST /presentation");
-
-    StatusCode::OK
-}
-
-async fn fallback(uri: Uri) -> (StatusCode, String) {
-    let kk = format!("{}", uri);
+async fn fallback(method: Method, uri: Uri) -> (StatusCode, String) {
+    let kk = format!("{} {}", method, uri);
     info!("{}", kk);
     (StatusCode::NOT_FOUND, format!("No route for {uri}"))
 }
