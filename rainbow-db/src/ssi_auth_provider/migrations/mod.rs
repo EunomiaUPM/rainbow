@@ -17,17 +17,20 @@
  *
  */
 
-#![allow(unused_imports)]
-#![allow(dead_code)]
-#![allow(unused_variables)]
-#![allow(unused_mut)]
-#![allow(unused_imports)]
-#![allow(unused_must_use)]
+use sea_orm_migration::prelude::*;
 
-pub mod catalog;
-pub mod contracts_provider;
-pub mod contracts_consumer;
-pub mod dataplane;
-pub mod transfer_consumer;
-pub mod transfer_provider;
-pub mod ssi_auth_provider;
+pub mod m20250403_094651_ssi_auth_provider;
+
+pub fn get_ssi_auth_provider_migrations() -> Vec<Box<dyn MigrationTrait>> {
+    vec![
+        Box::new(m20250403_094651_ssi_auth_provider::Migration)
+        ]
+}
+
+pub struct Migrator;
+#[async_trait::async_trait]
+impl MigratorTrait for Migrator {
+        fn migrations() -> Vec<Box<dyn MigrationTrait>> {
+                get_ssi_auth_provider_migrations()
+        }
+}

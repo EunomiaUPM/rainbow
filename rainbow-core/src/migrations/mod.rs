@@ -24,6 +24,7 @@ use rainbow_db::contracts_provider::migrations::get_contracts_migrations as get_
 use rainbow_db::dataplane::migrations::get_dataplane_migrations;
 use rainbow_db::transfer_consumer::migrations::get_transfer_consumer_migrations;
 use rainbow_db::transfer_provider::migrations::get_transfer_provider_migrations;
+use rainbow_db::ssi_auth_provider::migrations::get_ssi_auth_provider_migrations;
 
 use sea_orm::prelude::async_trait;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
@@ -37,11 +38,13 @@ impl MigratorTrait for ProviderMigrator {
         let mut catalog_migrations = get_catalog_migrations();
         let mut dataplane_migrations = get_dataplane_migrations();
         let mut contract_migrations = get_provider_migrations();
+        let mut ssi_auth_migrations = get_ssi_auth_provider_migrations();
 
         migrations.append(&mut provider_migrations);
         migrations.append(&mut catalog_migrations);
         migrations.append(&mut dataplane_migrations);
         migrations.append(&mut contract_migrations);
+        migrations.append(&mut ssi_auth_migrations);
         migrations
     }
 }

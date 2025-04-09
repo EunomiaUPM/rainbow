@@ -161,7 +161,7 @@ pub async fn init_command_line() -> Result<()> {
             auth_url: Some(config_field!(args, auth_url, "AUTH_URL", "localhost")),
             auth_port: Some(config_field!(args, auth_port, "AUTH_PORT", "1232")),
             ssi_holder_wallet_portal_url: Some(String::from("http://localhost")), // COMPLETAR
-            ssi_holder_wallet_portal_port: Some(String::from("5000")),
+            ssi_holder_wallet_portal_port: Some(String::from("7001")),
             ssi_holder_wallet_type: Some(String::from("email")),
             ssi_holder_wallet_name: Some(String::from("pepe")),
             ssi_holder_wallet_email: Some(String::from("kk@kk.com")),
@@ -246,7 +246,7 @@ pub async fn init_command_line() -> Result<()> {
             auth_url: None,
             auth_port: None,
             ssi_holder_wallet_portal_url: Some(String::from("http://localhost")), // COMPLETAR
-            ssi_holder_wallet_portal_port: Some(String::from("5000")),
+            ssi_holder_wallet_portal_port: Some(String::from("7001")),
             ssi_holder_wallet_type: Some(String::from("email")),
             ssi_holder_wallet_name: Some(String::from("pepe")),
             ssi_holder_wallet_email: Some(String::from("kk@kk.com")),
