@@ -17,7 +17,4 @@
  *
  */
 
-pub mod cmd;
-pub mod common;
-pub mod consumer;
-pub mod provider;
+pub mod router;

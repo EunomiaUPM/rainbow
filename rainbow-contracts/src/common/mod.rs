@@ -16,3 +16,23 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use std::fmt::{Display, Formatter};
+
+pub enum CNControllerTypes {
+    Process,
+    Message,
+    Offer,
+    Agreement,
+    Participant,
+}
+impl Display for CNControllerTypes {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            CNControllerTypes::Process => write!(f, "Contract Negotiation Process"),
+            CNControllerTypes::Message => write!(f, "Contract Negotiation Message"),
+            CNControllerTypes::Offer => write!(f, "Contract Negotiation Offer"),
+            CNControllerTypes::Agreement => write!(f, "Contract Negotiation Agreement"),
+            CNControllerTypes::Participant => write!(f, "Contract Negotiation Participant"),
+        }
+    }
+}

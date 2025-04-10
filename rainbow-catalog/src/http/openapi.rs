@@ -11,8 +11,8 @@ pub fn route_openapi() -> Router {
 }
 
 static OPENAPI_JSON: Lazy<Value> = Lazy::new(|| {
-    let openapi_yaml = include_str!("./../api/rainbow_catalog_api.yaml");
-    let openapi = serde_yaml::from_str::<serde_json::Value>(&openapi_yaml).unwrap();
+    let openapi_yaml = include_str!("./../../openapi/catalog.json");
+    let openapi = serde_json::from_str::<Value>(&openapi_yaml).unwrap();
     openapi
 });
 

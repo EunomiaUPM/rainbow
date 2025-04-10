@@ -17,13 +17,14 @@
  *
  */
 
+use crate::common::CNControllerTypes;
 use crate::provider::core::rainbow_entities::rainbow_entities_errors::CnErrorProvider;
 use crate::provider::core::rainbow_entities::rainbow_entities_types::{
     EditAgreementRequest, EditContractNegotiationMessageRequest, EditContractNegotiationOfferRequest,
     EditContractNegotiationRequest, EditParticipantRequest, NewAgreementRequest, NewContractNegotiationMessageRequest,
     NewContractNegotiationOfferRequest, NewContractNegotiationRequest, NewParticipantRequest,
 };
-use crate::provider::core::rainbow_entities::{CNControllerTypes, RainbowEntitiesContractNegotiationProviderTrait};
+use crate::provider::core::rainbow_entities::RainbowEntitiesContractNegotiationProviderTrait;
 use axum::async_trait;
 use rainbow_db::contracts_provider::entities::cn_process::Model;
 use rainbow_db::contracts_provider::repo::{

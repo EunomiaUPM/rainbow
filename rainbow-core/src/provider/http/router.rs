@@ -20,7 +20,7 @@ use rainbow_contracts::provider::http::ds_protocol_rpc::ds_protocol_rpc::DSRPCCo
 use rainbow_contracts::provider::http::rainbow_entities::rainbow_entities::RainbowEntitesContractNegotiationProviderRouter;
 use rainbow_db::catalog::repo::sql::CatalogRepoForSql;
 use rainbow_db::catalog::repo::CatalogRepoFactory;
-use rainbow_db::contracts_provider::repo::sql::ContractNegotiationRepoForSql;
+use rainbow_db::contracts_provider::repo::sql::ContractNegotiationProviderRepoForSql;
 use rainbow_db::contracts_provider::repo::ContractNegotiationProviderRepoFactory;
 use rainbow_db::events::repo::sql::EventsRepoForSql;
 use rainbow_db::events::repo::EventsRepoFactory;
@@ -49,7 +49,7 @@ pub async fn create_core_provider_router(db_url: String) -> Router {
     let transfer_provider_repo = Arc::new(TransferProviderRepoForSql::create_repo(
         db_connection.clone(),
     ));
-    let cn_provider_repo = Arc::new(ContractNegotiationRepoForSql::create_repo(
+    let cn_provider_repo = Arc::new(ContractNegotiationProviderRepoForSql::create_repo(
         db_connection.clone(),
     ));
     let catalog_repo = Arc::new(CatalogRepoForSql::create_repo(db_connection));
@@ -81,18 +81,20 @@ pub async fn create_core_provider_router(db_url: String) -> Router {
     let catalog_rainbow_catalog_router = RainbowCatalogCatalogRouter::new(
         catalog_rainbow_catalog_service,
         catalog_ds_protocol_service.clone(),
-    ).router();
+    )
+        .router();
     let catalog_rainbow_data_service_router =
-        RainbowCatalogDataServiceRouter::new(catalog_rainbow_data_service_service.clone());
-    let catalog_rainbow_dataset_router = RainbowCatalogDatasetRouter::new(catalog_rainbow_dataset_service.clone());
+        RainbowCatalogDataServiceRouter::new(catalog_rainbow_data_service_service.clone()).router();
+    let catalog_rainbow_dataset_router =
+        RainbowCatalogDatasetRouter::new(catalog_rainbow_dataset_service.clone()).router();
     let catalog_rainbow_distributions_router =
-        RainbowCatalogDistributionRouter::new(catalog_rainbow_distribution_service.clone());
-    let catalog_rainbow_policies_router = RainbowCatalogPoliciesRouter::new(catalog_rainbow_policies_service.clone()).router();
+        RainbowCatalogDistributionRouter::new(catalog_rainbow_distribution_service.clone()).router();
+    let catalog_rainbow_policies_router =
+        RainbowCatalogPoliciesRouter::new(catalog_rainbow_policies_service.clone()).router();
 
     // RPC Dependency injection
     let catalog_rainbow_rpc_service = Arc::new(RainbowRPCCatalogService::new(catalog_repo.clone()));
     let catalog_rainbow_rpc_router = RainbowRPCCatalogRouter::new(catalog_rainbow_rpc_service.clone()).router();
-
 
     // =====================
     // CONTRACT NEGOTIATION
@@ -106,17 +108,18 @@ pub async fn create_core_provider_router(db_url: String) -> Router {
         RainbowEntitesContractNegotiationProviderRouter::new(cn_rainbow_entities_service.clone()).router();
 
     // DSProtocol Dependency injection
-    let cn_ds_protocol_service = Arc::new(DSProtocolContractNegotiationProviderService::new(cn_provider_repo.clone()));
-    let cn_ds_protocol_router = DSProtocolContractNegotiationProviderRouter::new(cn_ds_protocol_service.clone()).router();
+    let cn_ds_protocol_service = Arc::new(DSProtocolContractNegotiationProviderService::new(
+        cn_provider_repo.clone(),
+    ));
+    let cn_ds_protocol_router =
+        DSProtocolContractNegotiationProviderRouter::new(cn_ds_protocol_service.clone()).router();
 
     // DSRPCProtocol Dependency injection
     let cn_ds_protocol_rpc_service = Arc::new(DSRPCContractNegotiationProviderService::new(
-        cn_provider_repo.clone()
+        cn_provider_repo.clone(),
     ));
-    let cn_ds_protocol_rpc_router = DSRPCContractNegotiationProviderRouter::new(
-        cn_ds_protocol_rpc_service.clone()
-    ).router();
-
+    let cn_ds_protocol_rpc_router =
+        DSRPCContractNegotiationProviderRouter::new(cn_ds_protocol_rpc_service.clone()).router();
 
     // =====================
     // TRANSFER
@@ -150,13 +153,15 @@ pub async fn create_core_provider_router(db_url: String) -> Router {
     let transfer_ds_protocol_rpc_router =
         DSRPCTransferProviderProviderRouter::new(transfer_ds_protocol_rpc_service.clone()).router();
 
-
     // =====================
     // ROUTER
     // =====================
 
     let the_router = Router::new()
         .merge(catalog_rainbow_catalog_router)
+        .merge(catalog_rainbow_data_service_router)
+        .merge(catalog_rainbow_dataset_router)
+        .merge(catalog_rainbow_distributions_router)
         .merge(catalog_rainbow_policies_router)
         .merge(catalog_rainbow_rpc_router)
         .merge(cn_rainbow_entities_router)

@@ -17,21 +17,24 @@
  *
  */
 
-use crate::provider::http::router::create_core_provider_router;
-use crate::provider::setup::config::CoreProviderApplicationConfig;
+use crate::consumer::http::router::create_core_consumer_router;
+use crate::consumer::setup::config::CoreConsumerApplicationConfig;
 use axum::serve;
 use tokio::net::TcpListener;
 use tracing::info;
 
-pub struct CoreProviderApplication;
+pub struct CoreConsumerApplication;
 
-impl CoreProviderApplication {
-    pub async fn run(config: &CoreProviderApplicationConfig<'static>) -> anyhow::Result<()> {
+impl CoreConsumerApplication {
+    pub async fn run(config: &CoreConsumerApplicationConfig<'static>) -> anyhow::Result<()> {
         // db_connection
         let db_url = config.get_full_db_url();
-        let router = create_core_provider_router(db_url).await;
+        let router = create_core_consumer_router(db_url).await;
         // Init server
-        let server_message = format!("Starting core provider server in {}", config.get_full_host_url(), );
+        let server_message = format!(
+            "Starting core consumer server in {}",
+            config.get_full_host_url(),
+        );
         info!("{}", server_message);
         let listener = TcpListener::bind(format!(
             "{}:{}",

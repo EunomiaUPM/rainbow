@@ -17,16 +17,16 @@
  *
  */
 
-use crate::provider::core::ds_protocol::ds_protocol::DSProtocolContractNegotiationProviderService;
-use crate::provider::core::ds_protocol_rpc::ds_protocol_rpc::DSRPCContractNegotiationProviderService;
-use crate::provider::core::rainbow_entities::rainbow_entities::RainbowEntitiesContractNegotiationProviderService;
-use crate::provider::http::ds_protocol::ds_protocol::DSProtocolContractNegotiationProviderRouter;
-use crate::provider::http::ds_protocol_rpc::ds_protocol_rpc::DSRPCContractNegotiationProviderRouter;
-use crate::provider::http::rainbow_entities::rainbow_entities::RainbowEntitesContractNegotiationProviderRouter;
-use crate::provider::setup::config::ContractNegotiationProviderApplicationConfig;
+use crate::consumer::core::ds_protocol::ds_protocol::DSProtocolContractNegotiationConsumerService;
+use crate::consumer::core::ds_protocol_rpc::ds_protocol_rpc::DSRPCContractNegotiationConsumerService;
+use crate::consumer::core::rainbow_entities::rainbow_entities::RainbowEntitiesContractNegotiationConsumerService;
+use crate::consumer::http::ds_protocol::ds_protocol::DSProtocolContractNegotiationConsumerRouter;
+use crate::consumer::http::ds_protocol_rpc::ds_protocol_rpc::DSRPCContractNegotiationConsumerRouter;
+use crate::consumer::http::rainbow_entities::rainbow_entities::RainbowEntitiesContractNegotiationConsumerRouter;
+use crate::consumer::setup::config::ContractNegotiationConsumerApplicationConfig;
 use axum::{serve, Router};
-use rainbow_db::contracts_provider::repo::sql::ContractNegotiationProviderRepoForSql;
-use rainbow_db::contracts_provider::repo::ContractNegotiationProviderRepoFactory;
+use rainbow_db::contracts_consumer::repo::sql::ContractNegotiationConsumerRepoForSql;
+use rainbow_db::contracts_consumer::repo::ContractNegotiationConsumerRepoFactory;
 use rainbow_db::events::repo::sql::EventsRepoForSql;
 use rainbow_db::events::repo::EventsRepoFactory;
 use rainbow_events::core::notification::notification::RainbowEventsNotificationsService;
@@ -39,11 +39,11 @@ use std::sync::Arc;
 use tokio::net::TcpListener;
 use tracing::info;
 
-pub struct ContractNegotiationProviderApplication;
+pub struct ContractNegotiationConsumerApplication;
 
-pub async fn create_contract_negotiation_provider_router(db_url: String) -> Router {
+pub async fn create_contract_negotiation_consumer_router(db_url: String) -> Router {
     let db_connection = Database::connect(db_url).await.expect("Database can't connect");
-    let provider_repo = Arc::new(ContractNegotiationProviderRepoForSql::create_repo(
+    let consumer_repo = Arc::new(ContractNegotiationConsumerRepoForSql::create_repo(
         db_connection.clone(),
     ));
 
@@ -54,51 +54,49 @@ pub async fn create_contract_negotiation_provider_router(db_url: String) -> Rout
     ));
     let subscription_router = RainbowEventsSubscriptionRouter::new(
         subscription_service,
-        Some(SubscriptionEntities::TransferProcess),
+        Some(SubscriptionEntities::ContractNegotiationProcess),
     )
         .router();
     let notification_service = Arc::new(RainbowEventsNotificationsService::new(subscription_repo));
     let notification_router = RainbowEventsNotificationRouter::new(
         notification_service.clone(),
-        Some(SubscriptionEntities::TransferProcess),
+        Some(SubscriptionEntities::ContractNegotiationProcess),
     )
         .router();
 
-
     // Rainbow Entities Dependency injection
-    let rainbow_entities_service = Arc::new(RainbowEntitiesContractNegotiationProviderService::new(
-        provider_repo.clone(),
+    let rainbow_entities_service = Arc::new(RainbowEntitiesContractNegotiationConsumerService::new(
+        consumer_repo.clone(),
     ));
     let rainbow_entities_router =
-        RainbowEntitesContractNegotiationProviderRouter::new(rainbow_entities_service.clone()).router();
-
-    // DSProtocol Dependency injection
-    let ds_protocol_service = Arc::new(DSProtocolContractNegotiationProviderService::new(provider_repo.clone()));
-    let ds_protocol_router = DSProtocolContractNegotiationProviderRouter::new(ds_protocol_service.clone()).router();
+        RainbowEntitiesContractNegotiationConsumerRouter::new(rainbow_entities_service.clone()).router();
 
     // DSRPCProtocol Dependency injection
-    let ds_protocol_rpc_service = Arc::new(DSRPCContractNegotiationProviderService::new(
-        provider_repo.clone()
+    let ds_rpc_protocol_service = Arc::new(DSRPCContractNegotiationConsumerService::new(
+        consumer_repo.clone(),
     ));
-    let ds_protocol_rpc = DSRPCContractNegotiationProviderRouter::new(
-        ds_protocol_rpc_service.clone()
-    ).router();
+    let ds_rpc_protocol_router = DSRPCContractNegotiationConsumerRouter::new(ds_rpc_protocol_service.clone()).router();
 
+    // DSProtocol Dependency injection
+    let ds_protocol_service = Arc::new(DSProtocolContractNegotiationConsumerService::new(
+        consumer_repo.clone(),
+    ));
+    let ds_protocol_router = DSProtocolContractNegotiationConsumerRouter::new(ds_protocol_service.clone()).router();
 
     // Router
     Router::new()
-        .merge(rainbow_entities_router)
         .merge(ds_protocol_router)
-        .merge(ds_protocol_rpc)
+        .merge(ds_rpc_protocol_router)
+        .merge(rainbow_entities_router)
         .nest("/api/v1/contract-negotiation", subscription_router)
         .nest("/api/v1/contract-negotiation", notification_router)
 }
 
-impl ContractNegotiationProviderApplication {
-    pub async fn run(config: &ContractNegotiationProviderApplicationConfig<'static>) -> anyhow::Result<()> {
+impl ContractNegotiationConsumerApplication {
+    pub async fn run(config: &ContractNegotiationConsumerApplicationConfig<'static>) -> anyhow::Result<()> {
         // db_connection
         let db_url = config.get_full_db_url();
-        let router = create_contract_negotiation_provider_router(db_url).await;
+        let router = create_contract_negotiation_consumer_router(db_url).await;
         // Init server
         let server_message = format!("Starting provider server in {}", config.get_full_host_url(), );
         info!("{}", server_message);

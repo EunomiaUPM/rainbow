@@ -5,31 +5,12 @@ use crate::provider::core::rainbow_entities::rainbow_entities_types::{
 };
 use axum::async_trait;
 use rainbow_db::contracts_provider::entities::{agreement, cn_message, cn_offer, cn_process, participant};
-use std::fmt::{Display, Formatter};
 use urn::Urn;
 
 pub mod rainbow_entities;
 pub mod rainbow_entities_errors;
 pub mod rainbow_entities_types;
 
-pub enum CNControllerTypes {
-    Process,
-    Message,
-    Offer,
-    Agreement,
-    Participant,
-}
-impl Display for CNControllerTypes {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            CNControllerTypes::Process => write!(f, "Contract Negotiation Process"),
-            CNControllerTypes::Message => write!(f, "Contract Negotiation Message"),
-            CNControllerTypes::Offer => write!(f, "Contract Negotiation Offer"),
-            CNControllerTypes::Agreement => write!(f, "Contract Negotiation Agreement"),
-            CNControllerTypes::Participant => write!(f, "Contract Negotiation Participant"),
-        }
-    }
-}
 
 #[mockall::automock]
 #[async_trait]

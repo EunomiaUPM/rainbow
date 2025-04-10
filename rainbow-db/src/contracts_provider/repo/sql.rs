@@ -11,24 +11,24 @@ use sea_orm_migration::async_trait::async_trait;
 use sea_orm_migration::prelude::Condition;
 use urn::Urn;
 
-pub struct ContractNegotiationRepoForSql {
+pub struct ContractNegotiationProviderRepoForSql {
     db_connection: DatabaseConnection,
 }
 
-impl ContractNegotiationRepoForSql {
+impl ContractNegotiationProviderRepoForSql {
     fn new(db_connection: DatabaseConnection) -> Self {
         Self { db_connection }
     }
 }
 
-impl ContractNegotiationProviderRepoFactory for ContractNegotiationRepoForSql {
+impl ContractNegotiationProviderRepoFactory for ContractNegotiationProviderRepoForSql {
     fn create_repo(database_connection: DatabaseConnection) -> Self {
         Self::new(database_connection)
     }
 }
 
 #[async_trait]
-impl ContractNegotiationProcessRepo for ContractNegotiationRepoForSql {
+impl ContractNegotiationProcessRepo for ContractNegotiationProviderRepoForSql {
     async fn get_all_cn_processes(
         &self,
         limit: Option<u64>,
@@ -148,7 +148,7 @@ impl ContractNegotiationProcessRepo for ContractNegotiationRepoForSql {
 }
 
 #[async_trait]
-impl ContractNegotiationMessageRepo for ContractNegotiationRepoForSql {
+impl ContractNegotiationMessageRepo for ContractNegotiationProviderRepoForSql {
     async fn get_all_cn_messages(
         &self,
         limit: Option<u64>,
@@ -322,7 +322,7 @@ impl ContractNegotiationMessageRepo for ContractNegotiationRepoForSql {
 }
 
 #[async_trait]
-impl ContractNegotiationOfferRepo for ContractNegotiationRepoForSql {
+impl ContractNegotiationOfferRepo for ContractNegotiationProviderRepoForSql {
     async fn get_all_cn_offers(
         &self,
         limit: Option<u64>,
@@ -539,7 +539,7 @@ impl ContractNegotiationOfferRepo for ContractNegotiationRepoForSql {
 }
 
 #[async_trait]
-impl AgreementRepo for ContractNegotiationRepoForSql {
+impl AgreementRepo for ContractNegotiationProviderRepoForSql {
     async fn get_all_agreements(
         &self,
         limit: Option<u64>,
@@ -767,7 +767,7 @@ impl AgreementRepo for ContractNegotiationRepoForSql {
 }
 
 #[async_trait]
-impl Participant for ContractNegotiationRepoForSql {
+impl Participant for ContractNegotiationProviderRepoForSql {
     async fn get_all_participants(
         &self,
         limit: Option<u64>,

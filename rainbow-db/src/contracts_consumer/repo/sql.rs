@@ -18,18 +18,30 @@
  */
 
 use super::super::entities::cn_process;
-use crate::contracts_consumer::repo::{CnErrors, ContractNegotiationConsumerProcessRepo, EditContractNegotiationProcess, NewContractNegotiationProcess};
+use crate::contracts_consumer::repo::{CnErrors, ContractNegotiationConsumerProcessRepo, ContractNegotiationConsumerRepoFactory, EditContractNegotiationProcess, NewContractNegotiationProcess};
 use axum::async_trait;
 use rainbow_common::utils::get_urn;
 use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect};
 use urn::Urn;
 
-pub struct ContractNegotiationRepoForSql {
+pub struct ContractNegotiationConsumerRepoForSql {
     db_connection: DatabaseConnection,
 }
 
+impl ContractNegotiationConsumerRepoForSql {
+    fn new(db_connection: DatabaseConnection) -> Self {
+        Self { db_connection }
+    }
+}
+
+impl ContractNegotiationConsumerRepoFactory for ContractNegotiationConsumerRepoForSql {
+    fn create_repo(database_connection: DatabaseConnection) -> Self {
+        Self::new(database_connection)
+    }
+}
+
 #[async_trait]
-impl ContractNegotiationConsumerProcessRepo for ContractNegotiationRepoForSql {
+impl ContractNegotiationConsumerProcessRepo for ContractNegotiationConsumerRepoForSql {
     async fn get_all_cn_processes(
         &self,
         limit: Option<u64>,

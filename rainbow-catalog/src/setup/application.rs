@@ -68,17 +68,16 @@ pub async fn create_catalog_router(config: CatalogApplicationConfig) -> Router {
     let rainbow_rpc_service = Arc::new(RainbowRPCCatalogService::new(catalog_repo.clone()));
     let rainbow_rpc_router = RainbowRPCCatalogRouter::new(rainbow_rpc_service.clone());
 
-
     // Router
     let catalog_application_router =
         Router::new()
+            .merge(route_openapi())
             .merge(rainbow_catalog_router.router())
             .merge(rainbow_data_service_router.router())
             .merge(rainbow_dataset_router.router())
             .merge(rainbow_distributions_router.router())
             .merge(rainbow_policies_router.router())
-            .merge(rainbow_rpc_router.router())
-            .merge(route_openapi());
+            .merge(rainbow_rpc_router.router());
 
     catalog_application_router
 }
