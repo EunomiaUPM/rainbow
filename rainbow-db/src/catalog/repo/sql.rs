@@ -151,6 +151,28 @@ impl DatasetRepo for CatalogRepoForSql {
         }
     }
 
+    async fn get_datasets_by_catalog_id(&self, catalog_id: Urn) -> anyhow::Result<Vec<dataset::Model>, CatalogRepoErrors> {
+        let catalog_id = catalog_id.to_string();
+
+        let catalog = catalog::Entity::find_by_id(catalog_id.clone())
+            .one(&self.db_connection)
+            .await
+            .map_err(|e| CatalogRepoErrors::ErrorFetchingCatalog(e.into()))?;
+        if catalog.is_none() {
+            return Err(CatalogRepoErrors::CatalogNotFound);
+        }
+
+        let datasets = dataset::Entity::find()
+            .filter(dataset::Column::CatalogId.eq(catalog_id))
+            .all(&self.db_connection)
+            .await;
+        match datasets {
+            Ok(datasets) => Ok(datasets),
+            Err(err) => Err(CatalogRepoErrors::ErrorFetchingDataset(err.into())),
+        }
+    }
+
+
     async fn get_datasets_by_id(
         &self,
         dataset_id: Urn,
@@ -354,6 +376,16 @@ impl DistributionRepo for CatalogRepoForSql {
             return Err(CatalogRepoErrors::DatasetNotFound);
         }
 
+        if let Some(ds) = edit_distribution_model.dcat_access_service.clone() {
+            let data_service = dataservice::Entity::find_by_id(ds)
+                .one(&self.db_connection)
+                .await
+                .map_err(|e| CatalogRepoErrors::ErrorFetchingDataService(e.into()))?;
+            if data_service.is_none() {
+                return Err(CatalogRepoErrors::DataServiceNotFound);
+            }
+        }
+        
         let old_model = distribution::Entity::find_by_id(distribution_id).one(&self.db_connection).await;
         let old_model = match old_model {
             Ok(old_model) => match old_model {
@@ -403,6 +435,14 @@ impl DistributionRepo for CatalogRepoForSql {
             .map_err(|e| CatalogRepoErrors::ErrorFetchingDataset(e.into()))?;
         if dataset.is_none() {
             return Err(CatalogRepoErrors::DatasetNotFound);
+        }
+
+        let data_service = dataservice::Entity::find_by_id(new_distribution_model.dcat_access_service.clone())
+            .one(&self.db_connection)
+            .await
+            .map_err(|e| CatalogRepoErrors::ErrorFetchingDataService(e.into()))?;
+        if data_service.is_none() {
+            return Err(CatalogRepoErrors::DataServiceNotFound);
         }
 
         let urn = new_distribution_model.id.unwrap_or_else(|| get_urn(None));
@@ -471,6 +511,28 @@ impl DataServiceRepo for CatalogRepoForSql {
         let data_services = dataservice::Entity::find()
             .limit(limit.unwrap_or(100000))
             .offset(page.unwrap_or(0))
+            .all(&self.db_connection)
+            .await;
+        match data_services {
+            Ok(data_services) => Ok(data_services),
+            Err(err) => Err(CatalogRepoErrors::ErrorFetchingDataService(err.into())),
+        }
+    }
+
+    async fn get_data_services_by_catalog_id(
+        &self,
+        catalog_id: Urn,
+    ) -> anyhow::Result<Vec<dataservice::Model>, CatalogRepoErrors> {
+        let catalog_id = catalog_id.to_string();
+        let catalog = catalog::Entity::find_by_id(catalog_id.clone())
+            .one(&self.db_connection)
+            .await
+            .map_err(|e| CatalogRepoErrors::ErrorFetchingCatalog(e.into()))?;
+        if catalog.is_none() {
+            return Err(CatalogRepoErrors::CatalogNotFound);
+        }
+        let data_services = dataservice::Entity::find()
+            .filter(dataservice::Column::CatalogId.eq(catalog_id))
             .all(&self.db_connection)
             .await;
         match data_services {
@@ -552,6 +614,14 @@ impl DataServiceRepo for CatalogRepoForSql {
         new_data_service_model: NewDataServiceModel,
     ) -> anyhow::Result<dataservice::Model, CatalogRepoErrors> {
         let catalog_id = catalog_id.to_string();
+
+        let catalog = catalog::Entity::find_by_id(catalog_id.clone())
+            .one(&self.db_connection)
+            .await
+            .map_err(|e| CatalogRepoErrors::ErrorFetchingCatalog(e.into()))?;
+        if catalog.is_none() {
+            return Err(CatalogRepoErrors::CatalogNotFound);
+        }
         let urn = new_data_service_model.id.unwrap_or_else(|| get_urn(None));
         let model = dataservice::ActiveModel {
             id: ActiveValue::Set(urn.to_string()),

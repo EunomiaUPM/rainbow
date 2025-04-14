@@ -16,8 +16,11 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use crate::core::rainbow_entities::rainbow_catalog_err::CatalogError;
+use crate::core::rainbow_entities::rainbow_catalog_types::EditDistributionRequest;
 use crate::core::rainbow_entities::{RainbowDistributionTrait, RainbowPoliciesTrait};
 use anyhow::bail;
+use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, State};
 use axum::response::IntoResponse;
 use axum::routing::{delete, get, post};
@@ -103,7 +106,7 @@ where
         info!("GET /api/v1/catalogs/{}/policies", catalog_id);
         let catalog_id = match get_urn_from_string(&catalog_id) {
             Ok(catalog_id) => catalog_id,
-            Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+            Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
         };
 
         match policies_service.get_catalog_policies(catalog_id).await {
@@ -115,14 +118,17 @@ where
     async fn handle_post_catalog_policies(
         State(policies_service): State<Arc<T>>,
         Path(catalog_id): Path<String>,
-        Json(input): Json<Value>,
+        input: Result<Json<Value>, JsonRejection>,
     ) -> impl IntoResponse {
         info!("POST /api/v1/catalogs/{}/policies", catalog_id);
         let catalog_id = match get_urn_from_string(&catalog_id) {
             Ok(catalog_id) => catalog_id,
-            Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+            Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
         };
-
+        let input = match input {
+            Ok(input) => input.0,
+            Err(e) => return CatalogError::JsonRejection(e).into_response(),
+        };
         match policies_service.post_catalog_policies(catalog_id, input).await {
             Ok(d) => (StatusCode::CREATED, Json(d)).into_response(),
             Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
@@ -139,11 +145,11 @@ where
         );
         let catalog_id = match get_urn_from_string(&catalog_id) {
             Ok(catalog_id) => catalog_id,
-            Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+            Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
         };
         let policy_id = match get_urn_from_string(&policy_id) {
             Ok(policy_id) => policy_id,
-            Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+            Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
         };
 
         match policies_service.delete_catalog_policies(catalog_id, policy_id).await {
@@ -159,7 +165,7 @@ where
         info!("GET /api/v1/datasets/{}/policies", dataset_id);
         let dataset_id = match get_urn_from_string(&dataset_id) {
             Ok(dataset_id) => dataset_id,
-            Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+            Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
         };
         match policies_service.get_dataset_policies(dataset_id).await {
             Ok(d) => (StatusCode::OK, Json(d)).into_response(),
@@ -170,12 +176,16 @@ where
     async fn handle_post_dataset_policies(
         State(policies_service): State<Arc<T>>,
         Path(dataset_id): Path<String>,
-        Json(input): Json<Value>,
+        input: Result<Json<Value>, JsonRejection>,
     ) -> impl IntoResponse {
         info!("POST /api/v1/datasets/{}/policies", dataset_id);
         let dataset_id = match get_urn_from_string(&dataset_id) {
             Ok(dataset_id) => dataset_id,
-            Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+            Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
+        };
+        let input = match input {
+            Ok(input) => input.0,
+            Err(e) => return CatalogError::JsonRejection(e).into_response(),
         };
         match policies_service.post_dataset_policies(dataset_id, input).await {
             Ok(d) => (StatusCode::CREATED, Json(d)).into_response(),
@@ -193,11 +203,11 @@ where
         );
         let dataset_id = match get_urn_from_string(&dataset_id) {
             Ok(dataset_id) => dataset_id,
-            Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+            Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
         };
         let policy_id = match get_urn_from_string(&policy_id) {
             Ok(policy_id) => policy_id,
-            Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+            Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
         };
         match policies_service.delete_dataset_policies(dataset_id, policy_id).await {
             Ok(d) => (StatusCode::ACCEPTED).into_response(),
@@ -212,7 +222,7 @@ where
         info!("GET /api/v1/data-services/{}/policies", data_service_id);
         let dataservice_id = match get_urn_from_string(&data_service_id) {
             Ok(dataservice_id) => dataservice_id,
-            Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+            Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
         };
         match policies_service.get_data_service_policies(dataservice_id).await {
             Ok(d) => (StatusCode::OK, Json(d)).into_response(),
@@ -223,12 +233,16 @@ where
     async fn handle_post_dataservices_policies(
         State(policies_service): State<Arc<T>>,
         Path(data_service_id): Path<String>,
-        Json(input): Json<Value>,
+        input: Result<Json<Value>, JsonRejection>,
     ) -> impl IntoResponse {
         info!("POST /api/v1/data-services/{}/policies", data_service_id);
         let dataservice_id = match get_urn_from_string(&data_service_id) {
             Ok(dataservice_id) => dataservice_id,
-            Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+            Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
+        };
+        let input = match input {
+            Ok(input) => input.0,
+            Err(e) => return CatalogError::JsonRejection(e).into_response(),
         };
         match policies_service.post_data_service_policies(dataservice_id, input).await {
             Ok(d) => (StatusCode::CREATED, Json(d)).into_response(),
@@ -246,11 +260,11 @@ where
         );
         let dataservice_id = match get_urn_from_string(&dataservice_id) {
             Ok(dataservice_id) => dataservice_id,
-            Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+            Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
         };
         let policy_id = match get_urn_from_string(&policy_id) {
             Ok(policy_id) => policy_id,
-            Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+            Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
         };
         match policies_service.delete_data_service_policies(dataservice_id, policy_id).await {
             Ok(d) => (StatusCode::ACCEPTED).into_response(),
@@ -265,7 +279,7 @@ where
         info!("GET /api/v1/distributions/{}/policies", distribution_id);
         let distribution_id = match get_urn_from_string(&distribution_id) {
             Ok(distribution_id) => distribution_id,
-            Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+            Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
         };
         match policies_service.get_distribution_policies(distribution_id).await {
             Ok(d) => (StatusCode::OK, Json(d)).into_response(),
@@ -276,7 +290,7 @@ where
     async fn handle_post_distributions_policies(
         State(policies_service): State<Arc<T>>,
         Path(distribution_id): Path<String>,
-        Json(input): Json<Value>,
+        input: Result<Json<Value>, JsonRejection>,
     ) -> impl IntoResponse {
         info!(
             "POST /api/v1/distributions/{}/policies",
@@ -284,7 +298,11 @@ where
         );
         let distribution_id = match get_urn_from_string(&distribution_id) {
             Ok(distribution_id) => distribution_id,
-            Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+            Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
+        };
+        let input = match input {
+            Ok(input) => input.0,
+            Err(e) => return CatalogError::JsonRejection(e).into_response(),
         };
         match policies_service.post_distribution_policies(distribution_id, input).await {
             Ok(d) => (StatusCode::CREATED, Json(d)).into_response(),
@@ -302,11 +320,11 @@ where
         );
         let distribution_id = match get_urn_from_string(&distribution_id) {
             Ok(distribution_id) => distribution_id,
-            Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+            Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
         };
         let policy_id = match get_urn_from_string(&policy_id) {
             Ok(policy_id) => policy_id,
-            Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+            Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
         };
         match policies_service.delete_distribution_policies(distribution_id, policy_id).await {
             Ok(d) => (StatusCode::ACCEPTED).into_response(),

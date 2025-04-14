@@ -57,6 +57,22 @@ impl IntoResponse for CatalogError {
                     e.to_string(),
                 )),
             ),
+            e @ CatalogError::UrnUuidSchema(..) => (
+                StatusCode::BAD_REQUEST,
+                Json(CatalogErrorOut::new(
+                    "400".to_string(),
+                    "BAD_REQUEST".to_string(),
+                    e.to_string(),
+                )),
+            ),
+            e @ CatalogError::JsonRejection(..) => (
+                StatusCode::BAD_REQUEST,
+                Json(CatalogErrorOut::new(
+                    "400".to_string(),
+                    "BAD_REQUEST".to_string(),
+                    e.to_string(),
+                )),
+            ),
         }
             .into_response()
     }

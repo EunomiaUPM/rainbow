@@ -1,6 +1,7 @@
 use crate::core::rainbow_entities::rainbow_catalog_err::CatalogError;
-use crate::core::rainbow_entities::rainbow_catalog_types::{EditDistributionRequest, NewDistributionRequest};
+use crate::core::rainbow_entities::rainbow_catalog_types::{EditDistributionRequest, NewDatasetRequest, NewDistributionRequest};
 use crate::core::rainbow_entities::RainbowDistributionTrait;
+use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, State};
 use axum::http::Uri;
 use axum::response::IntoResponse;
@@ -55,7 +56,7 @@ where
         info!("GET /api/v1/distributions/:id");
         let distribution_id = match get_urn_from_string(&id) {
             Ok(id) => id,
-            Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+            Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
         };
         match distribution_service.get_distribution_by_id(distribution_id).await {
             Ok(d) => (StatusCode::OK, Json(d)).into_response(),
@@ -73,7 +74,7 @@ where
         info!("GET /api/v1/datasets/{}/distributions", id);
         let dataset_id = match get_urn_from_string(&id) {
             Ok(id) => id,
-            Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+            Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
         };
         match distribution_service.get_distributions_by_dataset_id(dataset_id).await {
             Ok(d) => (StatusCode::OK, Json(d)).into_response(),
@@ -87,16 +88,20 @@ where
     async fn handle_post_distribution(
         State(distribution_service): State<Arc<T>>,
         Path((id, did)): Path<(String, String)>,
-        Json(input): Json<NewDistributionRequest>,
+        input: Result<Json<NewDistributionRequest>, JsonRejection>,
     ) -> impl IntoResponse {
         info!("POST /api/v1/catalogs/{}/distributions", id);
         let catalog_id = match get_urn_from_string(&id) {
             Ok(id) => id,
-            Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+            Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
         };
         let distribution_id = match get_urn_from_string(&did) {
             Ok(id) => id,
-            Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+            Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
+        };
+        let input = match input {
+            Ok(input) => input.0,
+            Err(e) => return CatalogError::JsonRejection(e).into_response(),
         };
         match distribution_service.post_distribution(catalog_id, distribution_id, input).await {
             Ok(d) => (StatusCode::CREATED, Json(d)).into_response(),
@@ -110,7 +115,7 @@ where
     async fn handle_put_distribution(
         State(distribution_service): State<Arc<T>>,
         Path((c_id, d_id, ds_id)): Path<(String, String, String)>,
-        Json(input): Json<EditDistributionRequest>,
+        input: Result<Json<EditDistributionRequest>, JsonRejection>,
     ) -> impl IntoResponse {
         info!(
             "PUT /api/v1/catalogs/{}/datasets/{}/distributions/{}",
@@ -118,15 +123,19 @@ where
         );
         let catalog_id = match get_urn_from_string(&c_id) {
             Ok(id) => id,
-            Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+            Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
         };
         let dataset_id = match get_urn_from_string(&d_id) {
             Ok(id) => id,
-            Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+            Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
         };
         let distribution_id = match get_urn_from_string(&ds_id) {
             Ok(id) => id,
-            Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+            Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
+        };
+        let input = match input {
+            Ok(input) => input.0,
+            Err(e) => return CatalogError::JsonRejection(e).into_response(),
         };
         match distribution_service.put_distribution(catalog_id, dataset_id, distribution_id, input).await {
             Ok(d) => (StatusCode::ACCEPTED, Json(d)).into_response(),
@@ -147,15 +156,15 @@ where
         );
         let catalog_id = match get_urn_from_string(&c_id) {
             Ok(id) => id,
-            Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+            Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
         };
         let dataset_id = match get_urn_from_string(&d_id) {
             Ok(id) => id,
-            Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+            Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
         };
         let distribution_id = match get_urn_from_string(&ds_id) {
             Ok(id) => id,
-            Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+            Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
         };
         match distribution_service.delete_distribution(catalog_id, dataset_id, distribution_id).await {
             Ok(d) => (StatusCode::ACCEPTED).into_response(),

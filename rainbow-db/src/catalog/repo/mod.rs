@@ -95,6 +95,7 @@ pub trait DatasetRepo {
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<dataset::Model>, CatalogRepoErrors>;
+    async fn get_datasets_by_catalog_id(&self, catalog_id: Urn) -> anyhow::Result<Vec<dataset::Model>, CatalogRepoErrors>;
     async fn get_datasets_by_id(&self, dataset_id: Urn) -> anyhow::Result<Option<dataset::Model>, CatalogRepoErrors>;
     async fn put_datasets_by_id(
         &self,
@@ -110,6 +111,7 @@ pub trait DatasetRepo {
     async fn delete_dataset_by_id(&self, catalog_id: Urn, dataset_id: Urn) -> anyhow::Result<(), CatalogRepoErrors>;
 }
 
+#[derive(Debug)]
 pub struct NewDistributionModel {
     pub id: Option<Urn>,
     pub dct_title: Option<String>,
@@ -183,6 +185,12 @@ pub trait DataServiceRepo {
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<dataservice::Model>, CatalogRepoErrors>;
+
+    async fn get_data_services_by_catalog_id(
+        &self,
+        catalog_id: Urn,
+    ) -> anyhow::Result<Vec<dataservice::Model>, CatalogRepoErrors>;
+
     async fn get_data_service_by_id(
         &self,
         data_service_id: Urn,

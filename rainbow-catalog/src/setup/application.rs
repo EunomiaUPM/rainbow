@@ -24,6 +24,7 @@ use crate::core::rainbow_entities::dataset::RainbowCatalogDatasetService;
 use crate::core::rainbow_entities::distribution::RainbowCatalogDistributionService;
 use crate::core::rainbow_entities::policies::RainbowCatalogPoliciesService;
 use crate::core::rainbow_rpc::rainbow_rpc::RainbowRPCCatalogService;
+use crate::http::ds_protocol::ds_protocol::DSProcotolCatalogRouter;
 use crate::http::openapi::route_openapi;
 use crate::http::rainbow_entities::catalog::RainbowCatalogCatalogRouter;
 use crate::http::rainbow_entities::data_service::RainbowCatalogDataServiceRouter;
@@ -48,10 +49,13 @@ pub struct CatalogApplication;
 pub async fn create_catalog_router(config: CatalogApplicationConfig) -> Router {
     let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
 
-    // Rainbow Entities Dependency injection
     let catalog_repo = Arc::new(CatalogRepoForSql::create_repo(db_connection));
 
+    // DSProtocol Dependency Injection
     let ds_protocol_service = Arc::new(DSProtocolCatalogService::new(catalog_repo.clone()));
+    let ds_protocol_router = DSProcotolCatalogRouter::new(ds_protocol_service.clone());
+
+    // Rainbow Entities Dependency injection
     let rainbow_catalog_service = Arc::new(RainbowCatalogCatalogService::new(catalog_repo.clone()));
     let rainbow_data_service_service = Arc::new(RainbowCatalogDataServiceService::new(catalog_repo.clone()));
     let rainbow_dataset_service = Arc::new(RainbowCatalogDatasetService::new(catalog_repo.clone()));
@@ -77,7 +81,8 @@ pub async fn create_catalog_router(config: CatalogApplicationConfig) -> Router {
             .merge(rainbow_dataset_router.router())
             .merge(rainbow_distributions_router.router())
             .merge(rainbow_policies_router.router())
-            .merge(rainbow_rpc_router.router());
+            .merge(rainbow_rpc_router.router())
+            .merge(ds_protocol_router.router());
 
     catalog_application_router
 }

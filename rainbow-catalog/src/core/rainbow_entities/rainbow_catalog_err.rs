@@ -16,7 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
+use axum::extract::rejection::JsonRejection;
 use rainbow_db::catalog::repo::CatalogRepoErrors;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -32,6 +32,10 @@ pub enum CatalogError {
     ConversionError(anyhow::Error),
     #[error("DataService {} not found for Distribution", id.as_str())]
     DataServiceNotFoundForDistribution { id: Urn },
+    #[error("Error from deserializing path. {0}")]
+    UrnUuidSchema(String),
+    #[error("Error from deserializing JSON: {0}")]
+    JsonRejection(JsonRejection),
 }
 
 #[derive(Serialize, Deserialize, Debug)]

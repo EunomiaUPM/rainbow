@@ -1,6 +1,7 @@
 use crate::core::rainbow_entities::rainbow_catalog_err::CatalogError;
-use crate::core::rainbow_entities::rainbow_catalog_types::{EditDataServiceRequest, NewDataServiceRequest};
+use crate::core::rainbow_entities::rainbow_catalog_types::{EditDataServiceRequest, NewCatalogRequest, NewDataServiceRequest};
 use crate::core::rainbow_entities::RainbowDataServiceTrait;
+use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
@@ -48,7 +49,7 @@ where
         info!("GET /api/v1/data-services/:id");
         let dataservice_id = match get_urn_from_string(&id) {
             Ok(id) => id,
-            Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+            Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
         };
         match data_service_service.get_data_service_by_id(dataservice_id).await {
             Ok(d) => (StatusCode::OK, Json(d)).into_response(),
@@ -62,12 +63,16 @@ where
     async fn handle_post_data_service(
         State(data_service_service): State<Arc<T>>,
         Path(id): Path<String>,
-        Json(input): Json<NewDataServiceRequest>,
+        input: Result<Json<NewDataServiceRequest>, JsonRejection>,
     ) -> impl IntoResponse {
         info!("POST /api/v1/catalogs/{}/data-services", id);
         let dataservice_id = match get_urn_from_string(&id) {
             Ok(id) => id,
-            Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+            Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
+        };
+        let input = match input {
+            Ok(input) => input.0,
+            Err(e) => return CatalogError::JsonRejection(e).into_response(),
         };
         match data_service_service.post_data_service(dataservice_id, input).await {
             Ok(d) => (StatusCode::CREATED, Json(d)).into_response(),
@@ -81,16 +86,20 @@ where
     async fn handle_put_data_service(
         State(data_service_service): State<Arc<T>>,
         Path((c_id, ds_id)): Path<(String, String)>,
-        Json(input): Json<EditDataServiceRequest>,
+        input: Result<Json<EditDataServiceRequest>, JsonRejection>,
     ) -> impl IntoResponse {
         info!("PUT /api/v1/catalogs/{}/data-services/{}", c_id, ds_id);
         let catalog_id = match get_urn_from_string(&c_id) {
             Ok(id) => id,
-            Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+            Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
         };
         let dataservice_id = match get_urn_from_string(&ds_id) {
             Ok(id) => id,
-            Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+            Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
+        };
+        let input = match input {
+            Ok(input) => input.0,
+            Err(e) => return CatalogError::JsonRejection(e).into_response(),
         };
         match data_service_service.put_data_service(catalog_id, dataservice_id, input).await {
             Ok(d) => (StatusCode::ACCEPTED, Json(d)).into_response(),
@@ -108,11 +117,11 @@ where
         info!("DELETE /api/v1/catalogs/{}/data-services/{}", c_id, ds_id);
         let catalog_id = match get_urn_from_string(&c_id) {
             Ok(id) => id,
-            Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+            Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
         };
         let dataservice_id = match get_urn_from_string(&ds_id) {
             Ok(id) => id,
-            Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+            Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
         };
         match data_service_service.delete_data_service(catalog_id, dataservice_id).await {
             Ok(d) => (StatusCode::ACCEPTED).into_response(),

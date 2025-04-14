@@ -214,7 +214,7 @@ pub struct EditDistributionRequest {
     pub dct_title: Option<String>,
     #[serde(rename = "dcat:accessService")]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub dcat_access_service: Option<String>,
+    pub dcat_access_service: Option<Urn>,
 }
 
 impl Into<EditDistributionModel> for EditDistributionRequest {
@@ -222,7 +222,7 @@ impl Into<EditDistributionModel> for EditDistributionRequest {
         EditDistributionModel {
             dct_title: self.dct_title,
             dct_description: None,
-            dcat_access_service: self.dcat_access_service,
+            dcat_access_service: self.dcat_access_service.map(|a| a.to_string()),
         }
     }
 }

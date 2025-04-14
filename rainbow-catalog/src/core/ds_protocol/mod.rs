@@ -6,6 +6,7 @@ use axum::async_trait;
 use urn::Urn;
 
 pub mod ds_protocol;
+pub mod ds_protocol_errors;
 
 #[mockall::automock]
 #[async_trait]
@@ -20,5 +21,5 @@ pub trait DSProtocolCatalogTrait: Sync + Send {
         catalog_id: Urn,
     ) -> anyhow::Result<Vec<Distribution>>;
     async fn catalog_request(&self) -> anyhow::Result<Vec<Catalog>>;
-    async fn catalog_request_by_id(&self) -> anyhow::Result<Vec<Catalog>>;
+    async fn catalog_request_by_id(&self, catalog_id: Urn) -> anyhow::Result<Catalog>;
 }

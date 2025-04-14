@@ -1,0 +1,107 @@
+use crate::dcat_formats::DctFormats;
+use crate::protocol::catalog::CatalogProtocolEntities;
+use crate::protocol::context_field::ContextField;
+use crate::protocol::contract::contract_odrl::OdrlOffer;
+use crate::protocol::ProtocolValidate;
+use crate::utils::get_urn;
+use serde::{Deserialize, Serialize};
+use urn::Urn;
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CatalogRequest {
+    #[serde(rename = "@context")]
+    pub context: ContextField,
+    #[serde(rename = "@type")]
+    pub _type: String,
+    pub filter: Vec<String>,
+}
+
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CatalogResponse {
+    #[serde(rename = "@context")]
+    pub context: ContextField,
+    #[serde(rename = "@id")]
+    pub id: Urn,
+    #[serde(rename = "@type")]
+    pub _type: String,
+    #[serde(rename = "participantId")]
+    pub participant_id: String,
+    pub dataset: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub catalog: Option<Vec<DatasetResponse>>,
+    pub service: Vec<ServiceResponse>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DatasetResponse {
+    #[serde(rename = "@id")]
+    pub id: Urn,
+    #[serde(rename = "@type")]
+    pub _type: String,
+    #[serde(rename = "hasPolicy")]
+    pub has_policy: Vec<OdrlOffer>,
+    #[serde(rename = "distribution")]
+    pub distribution: Vec<DistributionResponse>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DistributionResponse {
+    #[serde(rename = "@type")]
+    pub _type: String,
+    #[serde(rename = "format")]
+    pub format: DctFormats,
+    #[serde(rename = "accessService")]
+    pub access_service: Urn,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ServiceResponse {
+    #[serde(rename = "@id")]
+    pub id: Urn,
+    #[serde(rename = "@type")]
+    pub _type: String,
+    #[serde(rename = "endpointURL")]
+    pub endpoint_url: String,
+}
+
+impl Default for CatalogResponse {
+    fn default() -> Self {
+        Self {
+            context: ContextField::default(),
+            participant_id: "".to_string(),
+            _type: CatalogProtocolEntities::Catalog.to_string(),
+            id: get_urn(None),
+            dataset: vec![],
+            catalog: None,
+            service: vec![],
+        }
+    }
+}
+
+impl ProtocolValidate for CatalogResponse {
+    fn validate(&self) -> anyhow::Result<()> {
+        Ok(())
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CatalogError {
+    #[serde(rename = "@context")]
+    pub context: ContextField,
+    #[serde(rename = "@type")]
+    pub _type: String,
+    pub code: Option<String>,
+    pub reason: Option<Vec<String>>,
+}
+
+impl Default for CatalogError {
+    fn default() -> Self {
+        Self {
+            context: ContextField::default(),
+            _type: "CatalogError".to_string(),
+            code: None,
+            reason: None,
+        }
+    }
+}
