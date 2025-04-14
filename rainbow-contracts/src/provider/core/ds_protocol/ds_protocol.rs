@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::provider::core::ds_protocol::ds_protocol_errors::IdsaCNError;
 use crate::provider::core::ds_protocol::DSProtocolContractNegotiationProviderTrait;
 use anyhow::bail;

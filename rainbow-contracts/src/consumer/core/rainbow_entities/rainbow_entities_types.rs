@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use rainbow_common::utils::get_urn_from_string;
 use rainbow_db::contracts_consumer::repo::EditContractNegotiationProcess;
 use rainbow_db::contracts_consumer::repo::NewContractNegotiationProcess;

@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use axum::extract::rejection::JsonRejection;
 use rainbow_db::catalog::repo::CatalogRepoErrors;
 use serde::{Deserialize, Serialize};

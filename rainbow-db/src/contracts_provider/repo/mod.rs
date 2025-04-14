@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use super::entities::agreement;
 use super::entities::cn_message;
 use super::entities::cn_offer;

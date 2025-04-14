@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use super::ContractNegotiationMessages;
 use crate::protocol::context_field::ContextField;
 use crate::utils::get_urn;

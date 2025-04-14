@@ -1,3 +1,22 @@
+/*
+ *
+ *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 use crate::catalog::entities::catalog;
 use crate::catalog::entities::dataservice;
 use crate::catalog::entities::dataset;
@@ -385,7 +404,7 @@ impl DistributionRepo for CatalogRepoForSql {
                 return Err(CatalogRepoErrors::DataServiceNotFound);
             }
         }
-        
+
         let old_model = distribution::Entity::find_by_id(distribution_id).one(&self.db_connection).await;
         let old_model = match old_model {
             Ok(old_model) => match old_model {

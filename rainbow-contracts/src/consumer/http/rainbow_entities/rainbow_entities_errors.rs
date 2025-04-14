@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::consumer::core::rainbow_entities::rainbow_entities_errors::{CnErrorConsumer, CnErrorConsumerErrorOut};
 use axum::extract::rejection::JsonRejection;
 use axum::http::StatusCode;

@@ -1,3 +1,22 @@
+/*
+ *
+ *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 use axum::async_trait;
 use rainbow_common::protocol::contract::contract_ack::ContractAckMessage;
 use rainbow_common::protocol::contract::contract_agreement_verification::ContractAgreementVerificationMessage;
@@ -6,7 +25,6 @@ use rainbow_common::protocol::contract::contract_negotiation_request::ContractRe
 use rainbow_common::protocol::contract::contract_negotiation_termination::ContractTerminationMessage;
 use urn::Urn;
 
-// pub mod ds_protocol_xxx;
 pub mod ds_protocol_errors;
 pub mod ds_protocol_types;
 pub mod ds_protocol;

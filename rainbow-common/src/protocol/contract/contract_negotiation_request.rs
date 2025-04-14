@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use super::contract_odrl::{OdrlMessageOffer, OdrlTypes};
 use crate::protocol::context_field::ContextField;
 use crate::protocol::contract::contract_odrl::OfferTypes;
