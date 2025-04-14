@@ -36,9 +36,12 @@ use rainbow_events::http::notification::notification::RainbowEventsNotificationR
 use rainbow_events::http::subscription::subscription::RainbowEventsSubscriptionRouter;
 use rainbow_transfer::consumer::core::data_plane_facade::data_plane_facade::DataPlaneConsumerFacadeImpl;
 use rainbow_transfer::consumer::core::ds_protocol::ds_procotol::DSProtocolTransferConsumerService;
+use rainbow_transfer::consumer::core::ds_protocol_rpc::ds_protocol_rpc::DSRPCTransferConsumerService;
 use rainbow_transfer::consumer::core::rainbow_entities::rainbow_entities::RainbowTransferConsumerServiceImpl;
 use rainbow_transfer::consumer::http::ds_protocol::ds_protocol::DSProtocolTransferConsumerRouter;
+use rainbow_transfer::consumer::http::ds_protocol_rpc::ds_protocol_rpc::DSRPCTransferConsumerRouter;
 use rainbow_transfer::consumer::http::rainbow_entities::rainbow_entities::RainbowTransferConsumerEntitiesRouter;
+use rainbow_transfer::consumer::setup::config::TransferConsumerApplicationConfig;
 use sea_orm::Database;
 use std::sync::Arc;
 
@@ -108,13 +111,15 @@ pub async fn create_core_consumer_router(db_url: String) -> Router {
     ));
     let transfer_ds_protocol_router = DSProtocolTransferConsumerRouter::new(ds_protocol_service.clone()).router();
 
-    // // DSRPCProtocol Dependency injection
-    // let ds_protocol_rpc_service = Arc::new(DSRPCTransferConsumerService::new(
-    //     transfer_provider_repo.clone(),
-    //     data_plane_facade.clone(),
-    //     config.clone(),
-    // ));
-    // let transfer_ds_protocol_rpc_router = DSRPCTransferConsumerRouter::new(ds_protocol_rpc_service.clone()).router();
+    // DSRPCProtocol Dependency injection
+    let config = TransferConsumerApplicationConfig::default();
+    config.merge_dotenv_configuration().expect("No possible to merge configuration");
+    let ds_protocol_rpc_service = Arc::new(DSRPCTransferConsumerService::new(
+        transfer_provider_repo.clone(),
+        data_plane_facade.clone(),
+        config.clone().into(),
+    ));
+    let transfer_ds_protocol_rpc_router = DSRPCTransferConsumerRouter::new(ds_protocol_rpc_service.clone()).router();
 
     // =====================
     // ROUTER
@@ -126,7 +131,7 @@ pub async fn create_core_consumer_router(db_url: String) -> Router {
         .merge(cn_ds_protocol_rpc_router)
         .merge(transfer_rainbow_entities_router)
         .merge(transfer_ds_protocol_router)
-        // .merge(transfer_ds_protocol_rpc_router)
+        .merge(transfer_ds_protocol_rpc_router)
         .nest("/api/v1/transfers", subscription_router.clone())
         .nest("/api/v1/transfers", notification_router.clone())
         .nest("/api/v1/contract-negotiation", subscription_router)

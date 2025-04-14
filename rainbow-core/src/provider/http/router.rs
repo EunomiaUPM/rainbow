@@ -25,6 +25,7 @@ use rainbow_catalog::core::rainbow_entities::dataset::RainbowCatalogDatasetServi
 use rainbow_catalog::core::rainbow_entities::distribution::RainbowCatalogDistributionService;
 use rainbow_catalog::core::rainbow_entities::policies::RainbowCatalogPoliciesService;
 use rainbow_catalog::core::rainbow_rpc::rainbow_rpc::RainbowRPCCatalogService;
+use rainbow_catalog::http::ds_protocol::ds_protocol::DSProcotolCatalogRouter;
 use rainbow_catalog::http::rainbow_entities::catalog::RainbowCatalogCatalogRouter;
 use rainbow_catalog::http::rainbow_entities::data_service::RainbowCatalogDataServiceRouter;
 use rainbow_catalog::http::rainbow_entities::dataset::RainbowCatalogDatasetRouter;
@@ -88,6 +89,11 @@ pub async fn create_core_provider_router(db_url: String) -> Router {
     // =====================
     // CATALOG
     // =====================
+
+    // DSProtocol Dependency Injection
+    let catalog_ds_protocol_service = Arc::new(DSProtocolCatalogService::new(catalog_repo.clone()));
+    let catalog_ds_protocol_router = DSProcotolCatalogRouter::new(catalog_ds_protocol_service.clone()).router();
+
 
     // Rainbow Entities Dependency injection
     let catalog_ds_protocol_service = Arc::new(DSProtocolCatalogService::new(catalog_repo.clone()));
@@ -183,6 +189,7 @@ pub async fn create_core_provider_router(db_url: String) -> Router {
         .merge(catalog_rainbow_distributions_router)
         .merge(catalog_rainbow_policies_router)
         .merge(catalog_rainbow_rpc_router)
+        .merge(catalog_ds_protocol_router)
         .merge(cn_rainbow_entities_router)
         .merge(cn_ds_protocol_router)
         .merge(cn_ds_protocol_rpc_router)
