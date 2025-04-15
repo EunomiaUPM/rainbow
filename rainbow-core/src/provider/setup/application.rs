@@ -26,7 +26,7 @@ use tracing::info;
 pub struct CoreProviderApplication;
 
 impl CoreProviderApplication {
-    pub async fn run(config: &CoreProviderApplicationConfig<'static>) -> anyhow::Result<()> {
+    pub async fn run(config: &CoreProviderApplicationConfig) -> anyhow::Result<()> {
         // db_connection
         let db_url = config.get_full_db_url();
         let router = create_core_provider_router(db_url).await;

@@ -22,7 +22,7 @@ use crate::core::notification::RainbowEventsNotificationTrait;
 use crate::core::subscription::subscription_types::SubscriptionEntities;
 use axum::extract::{Path, State};
 use axum::response::IntoResponse;
-use axum::routing::get;
+use axum::routing::{get, post};
 use axum::{Json, Router};
 use log::info;
 use rainbow_common::err::transfer_err::TransferErrorType::NotCheckedError;
@@ -51,6 +51,10 @@ where
             .route(
                 "/subscriptions/:sid/notifications-pending",
                 get(Self::handle_get_pending),
+            )
+            .route(
+                "/subscriptions/:sid/ack-notifications-pending",
+                post(Self::handle_ack_pending),
             )
             .route(
                 "/subscriptions/:sid/notifications/:nid",
@@ -117,6 +121,27 @@ where
         };
         match service.get_pending_notifications_by_subscription_id(sid).await {
             Ok(notifications) => (StatusCode::OK, Json(notifications)).into_response(),
+            Err(e) => match e.downcast::<NotificationErrors>() {
+                Ok(e_) => e_.into_response(),
+                Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
+            },
+        }
+    }
+    async fn handle_ack_pending(
+        State((service, entity)): State<(Arc<T>, Option<SubscriptionEntities>)>,
+        Path(sid): Path<String>,
+    ) -> impl IntoResponse {
+        info!(
+            "GET {}/subscriptions/{}/ack-notifications-pending",
+            Self::serialize_entity_type(&entity),
+            sid
+        );
+        let sid = match get_urn_from_string(&sid) {
+            Ok(sid) => sid,
+            Err(_) => return NotificationErrors::UrnUuidSchema(sid.to_string()).into_response(),
+        };
+        match service.ack_pending_notifications_by_subscription_id(sid).await {
+            Ok(notifications) => (StatusCode::ACCEPTED, Json(notifications)).into_response(),
             Err(e) => match e.downcast::<NotificationErrors>() {
                 Ok(e_) => e_.into_response(),
                 Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),

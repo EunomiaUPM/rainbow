@@ -64,26 +64,27 @@ pub async fn create_contract_negotiation_provider_router(db_url: String) -> Rout
     )
         .router();
 
-
     // Rainbow Entities Dependency injection
     let rainbow_entities_service = Arc::new(RainbowEntitiesContractNegotiationProviderService::new(
         provider_repo.clone(),
+        notification_service.clone(),
     ));
     let rainbow_entities_router =
         RainbowEntitesContractNegotiationProviderRouter::new(rainbow_entities_service.clone()).router();
 
     // DSProtocol Dependency injection
-    let ds_protocol_service = Arc::new(DSProtocolContractNegotiationProviderService::new(provider_repo.clone()));
+    let ds_protocol_service = Arc::new(DSProtocolContractNegotiationProviderService::new(
+        provider_repo.clone(),
+        notification_service.clone(),
+    ));
     let ds_protocol_router = DSProtocolContractNegotiationProviderRouter::new(ds_protocol_service.clone()).router();
 
     // DSRPCProtocol Dependency injection
     let ds_protocol_rpc_service = Arc::new(DSRPCContractNegotiationProviderService::new(
-        provider_repo.clone()
+        provider_repo.clone(),
+        notification_service.clone(),
     ));
-    let ds_protocol_rpc = DSRPCContractNegotiationProviderRouter::new(
-        ds_protocol_rpc_service.clone()
-    ).router();
-
+    let ds_protocol_rpc = DSRPCContractNegotiationProviderRouter::new(ds_protocol_rpc_service.clone()).router();
 
     // Router
     Router::new()

@@ -29,8 +29,11 @@ pub struct RainbowEventsNotificationResponse {
     pub id: Urn,
     pub timestamp: chrono::NaiveDateTime,
     pub category: String,
+    pub subcategory: String,
     #[serde(rename = "messageType")]
     pub message_type: String,
+    #[serde(rename = "messageOperation")]
+    pub message_operation: String,
     #[serde(rename = "messageContent")]
     pub message_content: serde_json::Value,
     #[serde(rename = "subscriptionId")]
@@ -45,8 +48,10 @@ impl TryFrom<notification::Model> for RainbowEventsNotificationResponse {
             id: get_urn_from_string(&value.id)?,
             timestamp: value.timestamp,
             category: value.category,
+            subcategory: value.subcategory,
             message_type: value.message_type,
             message_content: value.message_content,
+            message_operation: value.message_operation,
             subscription_id: get_urn_from_string(&value.subscription_id)?,
         })
     }
@@ -89,6 +94,27 @@ impl Display for RainbowEventsNotificationMessageCategory {
 }
 
 #[derive(Serialize, Deserialize)]
+pub enum RainbowEventsNotificationMessageOperation {
+    Creation,
+    Update,
+    Deletion,
+    IncomingMessage,
+    OutgoingMessage,
+}
+
+impl Display for RainbowEventsNotificationMessageOperation {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            RainbowEventsNotificationMessageOperation::Creation => Ok(f.write_str("Creation")?),
+            RainbowEventsNotificationMessageOperation::Update => Ok(f.write_str("Update")?),
+            RainbowEventsNotificationMessageOperation::Deletion => Ok(f.write_str("Deletion")?),
+            RainbowEventsNotificationMessageOperation::IncomingMessage => Ok(f.write_str("IncomingMessage")?),
+            RainbowEventsNotificationMessageOperation::OutgoingMessage => Ok(f.write_str("OutgoingMessage")?),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize)]
 pub enum RainbowEventsNotificationStatus {
     Pending,
     Ok,
@@ -106,7 +132,18 @@ impl Display for RainbowEventsNotificationStatus {
 #[derive(Serialize, Deserialize)]
 pub struct RainbowEventsNotificationCreationRequest {
     pub category: RainbowEventsNotificationMessageCategory,
+    pub subcategory: String,
     pub message_type: RainbowEventsNotificationMessageTypes,
+    pub message_operation: RainbowEventsNotificationMessageOperation,
     pub message_content: serde_json::Value,
     pub status: RainbowEventsNotificationStatus,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct RainbowEventsNotificationBroadcastRequest {
+    pub category: RainbowEventsNotificationMessageCategory,
+    pub subcategory: String,
+    pub message_type: RainbowEventsNotificationMessageTypes,
+    pub message_content: serde_json::Value,
+    pub message_operation: RainbowEventsNotificationMessageOperation,
 }

@@ -91,7 +91,9 @@ pub trait SubscriptionRepo {
 
 pub struct NewNotification {
     pub category: String,
+    pub subcategory: String,
     pub message_type: String,
+    pub message_operation: String,
     pub message_content: serde_json::Value,
     pub status: String,
 }
@@ -109,6 +111,11 @@ pub trait NotificationRepo {
         &self,
         subscription_id: Urn,
     ) -> anyhow::Result<Vec<notification::Model>, EventRepoErrors>;
+    async fn ack_pending_notifications_by_subscription_id(
+        &self,
+        subscription_id: Urn,
+    ) -> anyhow::Result<Vec<notification::Model>, EventRepoErrors>;
+
     async fn get_notification_by_id(
         &self,
         subscription_id: Urn,

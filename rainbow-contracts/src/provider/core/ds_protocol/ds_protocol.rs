@@ -31,10 +31,13 @@ use rainbow_common::protocol::contract::contract_odrl::OfferTypes;
 use rainbow_common::protocol::contract::ContractNegotiationState;
 use rainbow_common::utils::get_urn_from_string;
 use rainbow_db::contracts_provider::repo::{AgreementRepo, ContractNegotiationMessageRepo, ContractNegotiationOfferRepo, ContractNegotiationProcessRepo, EditContractNegotiationProcess, NewContractNegotiationMessage, NewContractNegotiationOffer, NewContractNegotiationProcess, Participant};
+use rainbow_events::core::notification::notification_types::{RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory, RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes};
+use rainbow_events::core::notification::RainbowEventsNotificationTrait;
+use serde_json::json;
 use std::sync::Arc;
 use urn::Urn;
 
-pub struct DSProtocolContractNegotiationProviderService<T>
+pub struct DSProtocolContractNegotiationProviderService<T, U>
 where
     T: ContractNegotiationProcessRepo
     + ContractNegotiationMessageRepo
@@ -44,11 +47,13 @@ where
     + Send
     + Sync
     + 'static,
+    U: RainbowEventsNotificationTrait + Send + Sync,
 {
     repo: Arc<T>,
+    notification_service: Arc<U>,
 }
 
-impl<T> DSProtocolContractNegotiationProviderService<T>
+impl<T, U> DSProtocolContractNegotiationProviderService<T, U>
 where
     T: ContractNegotiationProcessRepo
     + ContractNegotiationMessageRepo
@@ -58,14 +63,15 @@ where
     + Send
     + Sync
     + 'static,
+    U: RainbowEventsNotificationTrait + Send + Sync,
 {
-    pub fn new(repo: Arc<T>) -> Self {
-        Self { repo }
+    pub fn new(repo: Arc<T>, notification_service: Arc<U>) -> Self {
+        Self { repo, notification_service }
     }
 }
 
 #[async_trait]
-impl<T> DSProtocolContractNegotiationProviderTrait for DSProtocolContractNegotiationProviderService<T>
+impl<T, U> DSProtocolContractNegotiationProviderTrait for DSProtocolContractNegotiationProviderService<T, U>
 where
     T: ContractNegotiationProcessRepo
     + ContractNegotiationMessageRepo
@@ -75,6 +81,7 @@ where
     + Send
     + Sync
     + 'static,
+    U: RainbowEventsNotificationTrait + Send + Sync,
 {
     async fn get_negotiation(&self, provider_pid: Urn) -> anyhow::Result<ContractAckMessage> {
         let cn_process = self.repo
@@ -129,7 +136,7 @@ where
             .await
             .map_err(IdsaCNError::DbErr)?;
 
-        let _ = self.repo
+        let offer = self.repo
             .create_cn_offer(
                 get_urn_from_string(&cn_process.cn_process_id)?,
                 get_urn_from_string(&cn_message.cn_message_id)?,
@@ -145,6 +152,17 @@ where
             .await
             .map_err(IdsaCNError::DbErr)?;
 
+        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+            category: RainbowEventsNotificationMessageCategory::ContractNegotiation,
+            subcategory: "ContractOfferMessage".to_string(),
+            message_type: RainbowEventsNotificationMessageTypes::DSProtocolMessage,
+            message_content: json!({
+                "process": cn_process,
+                "message": cn_message,
+                "offer": offer
+            }),
+            message_operation: RainbowEventsNotificationMessageOperation::IncomingMessage,
+        }).await?;
         Ok(cn_process.into())
     }
 
@@ -212,7 +230,7 @@ where
             .await
             .map_err(IdsaCNError::DbErr)?;
 
-        let _ = self.repo
+        let offer = self.repo
             .create_cn_offer(
                 get_urn_from_string(&cn_process.cn_process_id)?,
                 get_urn_from_string(&cn_message.cn_message_id)?,
@@ -229,6 +247,17 @@ where
             .await
             .map_err(IdsaCNError::DbErr)?;
 
+        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+            category: RainbowEventsNotificationMessageCategory::ContractNegotiation,
+            subcategory: "ContractRequestMessage".to_string(),
+            message_type: RainbowEventsNotificationMessageTypes::DSProtocolMessage,
+            message_content: json!({
+                "process": cn_process,
+                "message": cn_message,
+                "offer": offer
+            }),
+            message_operation: RainbowEventsNotificationMessageOperation::IncomingMessage,
+        }).await?;
         Ok(cn_process.into())
     }
 
@@ -292,7 +321,7 @@ where
             .await
             .map_err(IdsaCNError::DbErr)?;
         // Create message
-        let _ = self.repo
+        let message = self.repo
             .create_cn_message(
                 get_urn_from_string(&cn_process.cn_process_id)?,
                 NewContractNegotiationMessage {
@@ -305,6 +334,16 @@ where
             .await
             .map_err(IdsaCNError::DbErr)?;
 
+        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+            category: RainbowEventsNotificationMessageCategory::ContractNegotiation,
+            subcategory: "ContractNegotiationEventMessage:accepted".to_string(),
+            message_type: RainbowEventsNotificationMessageTypes::DSProtocolMessage,
+            message_content: json!({
+                "process": cn_process,
+                "message": message
+            }),
+            message_operation: RainbowEventsNotificationMessageOperation::IncomingMessage,
+        }).await?;
         Ok(cn_process.into())
     }
 
@@ -336,7 +375,7 @@ where
             .await
             .map_err(IdsaCNError::DbErr)?;
         // Create message
-        let _ = self.repo
+        let message = self.repo
             .create_cn_message(
                 get_urn_from_string(&cn_process.cn_process_id)?,
                 NewContractNegotiationMessage {
@@ -349,6 +388,16 @@ where
             .await
             .map_err(IdsaCNError::DbErr)?;
 
+        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+            category: RainbowEventsNotificationMessageCategory::ContractNegotiation,
+            subcategory: "ContractAgreementVerificationMessage".to_string(),
+            message_type: RainbowEventsNotificationMessageTypes::DSProtocolMessage,
+            message_content: json!({
+                "process": cn_process,
+                "message": message
+            }),
+            message_operation: RainbowEventsNotificationMessageOperation::IncomingMessage,
+        }).await?;
         Ok(cn_process.into())
     }
 
@@ -379,7 +428,7 @@ where
             .await
             .map_err(IdsaCNError::DbErr)?;
         // Create message
-        let _ = self.repo
+        let message = self.repo
             .create_cn_message(
                 get_urn_from_string(&cn_process.cn_process_id)?,
                 NewContractNegotiationMessage {
@@ -392,6 +441,16 @@ where
             .await
             .map_err(IdsaCNError::DbErr)?;
 
+        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+            category: RainbowEventsNotificationMessageCategory::ContractNegotiation,
+            subcategory: "ContractNegotiationTerminationMessage".to_string(),
+            message_type: RainbowEventsNotificationMessageTypes::DSProtocolMessage,
+            message_content: json!({
+                "process": cn_process,
+                "message": message
+            }),
+            message_operation: RainbowEventsNotificationMessageOperation::IncomingMessage,
+        }).await?;
         Ok(cn_process.into())
     }
 }

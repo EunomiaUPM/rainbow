@@ -44,7 +44,7 @@ impl MigratorTrait for CoreConsumerMigration {
 }
 
 impl CoreConsumerMigration {
-    pub async fn run(config: &CoreConsumerApplicationConfig<'static>) -> anyhow::Result<()> {
+    pub async fn run(config: &CoreConsumerApplicationConfig) -> anyhow::Result<()> {
         // db_connection
         let db_url = config.get_full_db_url();
         let db_connection = Database::connect(db_url).await.expect("Database can't connect");

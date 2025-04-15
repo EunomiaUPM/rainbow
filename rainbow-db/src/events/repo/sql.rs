@@ -20,12 +20,14 @@
 use crate::events::entities::notification;
 use crate::events::entities::subscription;
 
+use crate::events::entities::notification::Model;
 use crate::events::repo::{
     EditSubscription, EventRepoErrors, EventsRepoFactory, NewNotification, NewSubscription, NotificationRepo,
     SubscriptionRepo,
 };
 use axum::async_trait;
 use rainbow_common::utils::get_urn;
+use sea_orm::prelude::Expr;
 use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 use urn::Urn;
 
@@ -216,6 +218,31 @@ impl NotificationRepo for EventsRepoForSql {
         }
     }
 
+    async fn ack_pending_notifications_by_subscription_id(&self, subscription_id: Urn) -> anyhow::Result<Vec<Model>, EventRepoErrors> {
+        let subscription = self
+            .get_subscription_by_id(subscription_id.clone())
+            .await;
+        let subscription = match subscription {
+            Ok(subscription) => match subscription {
+                Some(subscription) => subscription,
+                None => return Err(EventRepoErrors::SubscriptionNotFound),
+            }
+            Err(e) => return Err(EventRepoErrors::ErrorFetchingSubscription(e.into()))
+        };
+        let subscription_id = subscription_id.to_string();
+        let subscription_id = subscription_id.to_string();
+        let notifications = notification::Entity::update_many()
+            .col_expr(notification::Column::Status, Expr::value("Ok"))
+            .filter(notification::Column::SubscriptionId.eq(subscription_id))
+            .filter(notification::Column::Status.eq("Pending"))
+            .exec_with_returning(&self.db_connection)
+            .await;
+        match notifications {
+            Ok(notifications) => Ok(notifications),
+            Err(e) => Err(EventRepoErrors::ErrorFetchingNotification(e.into())),
+        }
+    }
+
     async fn get_notification_by_id(
         &self,
         subscription_id: Urn,
@@ -259,7 +286,9 @@ impl NotificationRepo for EventsRepoForSql {
             id: ActiveValue::Set(get_urn(None).to_string()),
             timestamp: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             category: ActiveValue::Set(new_notification.category),
+            subcategory: ActiveValue::Set(new_notification.subcategory),
             message_type: ActiveValue::Set(new_notification.message_type),
+            message_operation: ActiveValue::Set(new_notification.message_operation),
             message_content: ActiveValue::Set(new_notification.message_content),
             status: ActiveValue::Set(new_notification.status),
             subscription_id: ActiveValue::Set(subscription_id),
@@ -271,3 +300,4 @@ impl NotificationRepo for EventsRepoForSql {
         }
     }
 }
+

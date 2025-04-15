@@ -31,10 +31,13 @@ use rainbow_db::contracts_provider::repo::{
     AgreementRepo, CnErrors, ContractNegotiationMessageRepo, ContractNegotiationOfferRepo,
     ContractNegotiationProcessRepo, Participant,
 };
+use rainbow_events::core::notification::notification_types::{RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory, RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes};
+use rainbow_events::core::notification::RainbowEventsNotificationTrait;
+use serde_json::{json, to_value};
 use std::sync::Arc;
 use urn::Urn;
 
-pub struct RainbowEntitiesContractNegotiationProviderService<T>
+pub struct RainbowEntitiesContractNegotiationProviderService<T, U>
 where
     T: ContractNegotiationProcessRepo
     + ContractNegotiationMessageRepo
@@ -44,11 +47,14 @@ where
     + Send
     + Sync
     + 'static,
+    U: RainbowEventsNotificationTrait + Send + Sync,
 {
     repo: Arc<T>,
+    notification_service: Arc<U>,
+
 }
 
-impl<T> RainbowEntitiesContractNegotiationProviderService<T>
+impl<T, U> RainbowEntitiesContractNegotiationProviderService<T, U>
 where
     T: ContractNegotiationProcessRepo
     + ContractNegotiationMessageRepo
@@ -58,14 +64,15 @@ where
     + Send
     + Sync
     + 'static,
+    U: RainbowEventsNotificationTrait + Send + Sync,
 {
-    pub fn new(repo: Arc<T>) -> Self {
-        Self { repo }
+    pub fn new(repo: Arc<T>, notification_service: Arc<U>) -> Self {
+        Self { repo, notification_service }
     }
 }
 
 #[async_trait]
-impl<T> RainbowEntitiesContractNegotiationProviderTrait for RainbowEntitiesContractNegotiationProviderService<T>
+impl<T, U> RainbowEntitiesContractNegotiationProviderTrait for RainbowEntitiesContractNegotiationProviderService<T, U>
 where
     T: ContractNegotiationProcessRepo
     + ContractNegotiationMessageRepo
@@ -75,6 +82,7 @@ where
     + Send
     + Sync
     + 'static,
+    U: RainbowEventsNotificationTrait + Send + Sync,
 {
     async fn get_cn_processes(&self) -> anyhow::Result<Vec<Model>> {
         let processes = self.repo.get_all_cn_processes(None, None).await.map_err(CnErrorProvider::DbErr)?;
@@ -111,6 +119,13 @@ where
 
     async fn post_cn_process(&self, input: NewContractNegotiationRequest) -> anyhow::Result<Model> {
         let process = self.repo.create_cn_process(input.into()).await.map_err(CnErrorProvider::DbErr)?;
+        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+            category: RainbowEventsNotificationMessageCategory::ContractNegotiation,
+            subcategory: "ContractNegotiationProcess".to_string(),
+            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+            message_content: to_value(&process)?,
+            message_operation: RainbowEventsNotificationMessageOperation::Creation,
+        }).await?;
         Ok(process)
     }
 
@@ -121,16 +136,33 @@ where
             }
             _ => CnErrorProvider::DbErr(err),
         })?;
+        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+            category: RainbowEventsNotificationMessageCategory::ContractNegotiation,
+            subcategory: "ContractNegotiationProcess".to_string(),
+            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+            message_content: to_value(&process)?,
+            message_operation: RainbowEventsNotificationMessageOperation::Update,
+        }).await?;
         Ok(process)
     }
 
     async fn delete_cn_process_by_id(&self, process_id: Urn) -> anyhow::Result<()> {
         let _ = self.repo.delete_cn_process(process_id.clone()).await.map_err(|err| match err {
             CnErrors::CNProcessNotFound => {
-                CnErrorProvider::NotFound { id: process_id, entity: CNControllerTypes::Process.to_string() }
+                CnErrorProvider::NotFound { id: process_id.clone(), entity: CNControllerTypes::Process.to_string() }
             }
             _ => CnErrorProvider::DbErr(err),
         })?;
+        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+            category: RainbowEventsNotificationMessageCategory::ContractNegotiation,
+            subcategory: "ContractNegotiationProcess".to_string(),
+            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+            message_content: json!({
+                "@type": "ContractNegotiationProcess",
+                "@id": process_id.to_string()
+            }),
+            message_operation: RainbowEventsNotificationMessageOperation::Deletion,
+        }).await?;
         Ok(())
     }
 
@@ -208,6 +240,13 @@ where
                 }
                 _ => CnErrorProvider::DbErr(err),
             })?;
+        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+            category: RainbowEventsNotificationMessageCategory::ContractNegotiation,
+            subcategory: "ContractNegotiationMessage".to_string(),
+            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+            message_content: to_value(&cn_message)?,
+            message_operation: RainbowEventsNotificationMessageOperation::Creation,
+        }).await?;
         Ok(cn_message)
     }
 
@@ -229,6 +268,13 @@ where
                     _ => CnErrorProvider::DbErr(err),
                 }
             })?;
+        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+            category: RainbowEventsNotificationMessageCategory::ContractNegotiation,
+            subcategory: "ContractNegotiationMessage".to_string(),
+            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+            message_content: to_value(&cn_message)?,
+            message_operation: RainbowEventsNotificationMessageOperation::Update,
+        }).await?;
         Ok(cn_message)
     }
 
@@ -238,10 +284,20 @@ where
                 CnErrorProvider::NotFound { id: process_id, entity: CNControllerTypes::Process.to_string() }
             }
             CnErrors::CNMessageNotFound => {
-                CnErrorProvider::NotFound { id: message_id, entity: CNControllerTypes::Message.to_string() }
+                CnErrorProvider::NotFound { id: message_id.clone(), entity: CNControllerTypes::Message.to_string() }
             }
             _ => CnErrorProvider::DbErr(err),
         })?;
+        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+            category: RainbowEventsNotificationMessageCategory::ContractNegotiation,
+            subcategory: "ContractNegotiationMessage".to_string(),
+            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+            message_content: json!({
+                "@type": "ContractNegotiationMessage",
+                "@id": message_id.to_string()
+            }),
+            message_operation: RainbowEventsNotificationMessageOperation::Deletion,
+        }).await?;
         Ok(())
     }
 
@@ -329,6 +385,13 @@ where
                     _ => CnErrorProvider::DbErr(err),
                 }
             })?;
+        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+            category: RainbowEventsNotificationMessageCategory::ContractNegotiation,
+            subcategory: "ContractNegotiationOffer".to_string(),
+            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+            message_content: to_value(&offer)?,
+            message_operation: RainbowEventsNotificationMessageOperation::Creation,
+        }).await?;
         Ok(offer)
     }
 
@@ -360,6 +423,13 @@ where
                 }
                 _ => CnErrorProvider::DbErr(err),
             })?;
+        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+            category: RainbowEventsNotificationMessageCategory::ContractNegotiation,
+            subcategory: "ContractNegotiationOffer".to_string(),
+            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+            message_content: to_value(&offer)?,
+            message_operation: RainbowEventsNotificationMessageOperation::Update,
+        }).await?;
         Ok(offer)
     }
 
@@ -370,7 +440,7 @@ where
         offer_id: Urn,
     ) -> anyhow::Result<()> {
         let _ =
-            self.repo.delete_cn_offer(process_id.clone(), message_id.clone(), offer_id).await.map_err(
+            self.repo.delete_cn_offer(process_id.clone(), message_id.clone(), offer_id.clone()).await.map_err(
                 |err| match err {
                     CnErrors::CNProcessNotFound => {
                         CnErrorProvider::NotFound { id: process_id, entity: CNControllerTypes::Process.to_string() }
@@ -379,11 +449,21 @@ where
                         CnErrorProvider::NotFound { id: message_id, entity: CNControllerTypes::Message.to_string() }
                     }
                     CnErrors::CNOfferNotFound => {
-                        CnErrorProvider::NotFound { id: message_id, entity: CNControllerTypes::Offer.to_string() }
+                        CnErrorProvider::NotFound { id: offer_id.clone(), entity: CNControllerTypes::Offer.to_string() }
                     }
                     _ => CnErrorProvider::DbErr(err),
                 },
             )?;
+        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+            category: RainbowEventsNotificationMessageCategory::ContractNegotiation,
+            subcategory: "ContractNegotiationOffer".to_string(),
+            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+            message_content: json!({
+                "@type": "ContractNegotiationOffer",
+                "@id": offer_id.to_string()
+            }),
+            message_operation: RainbowEventsNotificationMessageOperation::Deletion,
+        }).await?;
         Ok(())
     }
 
@@ -462,6 +542,13 @@ where
                     _ => CnErrorProvider::DbErr(err),
                 }
             })?;
+        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+            category: RainbowEventsNotificationMessageCategory::ContractNegotiation,
+            subcategory: "Agreement".to_string(),
+            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+            message_content: to_value(&agreement)?,
+            message_operation: RainbowEventsNotificationMessageOperation::Creation,
+        }).await?;
         Ok(agreement)
     }
 
@@ -493,6 +580,13 @@ where
                 }
                 _ => CnErrorProvider::DbErr(err),
             })?;
+        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+            category: RainbowEventsNotificationMessageCategory::ContractNegotiation,
+            subcategory: "Agreement".to_string(),
+            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+            message_content: to_value(&agreement)?,
+            message_operation: RainbowEventsNotificationMessageOperation::Update,
+        }).await?;
         Ok(agreement)
     }
 
@@ -509,10 +603,20 @@ where
                     CnErrorProvider::MessageNotFound { message_id, entity: CNControllerTypes::Agreement.to_string() }
                 }
                 CnErrors::AgreementNotFound => {
-                    CnErrorProvider::NotFound { id: agreement_id, entity: CNControllerTypes::Agreement.to_string() }
+                    CnErrorProvider::NotFound { id: agreement_id.clone(), entity: CNControllerTypes::Agreement.to_string() }
                 }
                 _ => CnErrorProvider::DbErr(err),
             })?;
+        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+            category: RainbowEventsNotificationMessageCategory::ContractNegotiation,
+            subcategory: "Agreement".to_string(),
+            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+            message_content: json!({
+                "@type": "Agreement",
+                "@id": agreement_id.to_string()
+            }),
+            message_operation: RainbowEventsNotificationMessageOperation::Deletion,
+        }).await?;
         Ok(())
     }
 
@@ -553,6 +657,13 @@ where
         input: NewParticipantRequest,
     ) -> anyhow::Result<rainbow_db::contracts_provider::entities::participant::Model> {
         let participant = self.repo.create_participant(input.into()).await.map_err(CnErrorProvider::DbErr)?;
+        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+            category: RainbowEventsNotificationMessageCategory::ContractNegotiation,
+            subcategory: "Participant".to_string(),
+            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+            message_content: to_value(&participant)?,
+            message_operation: RainbowEventsNotificationMessageOperation::Creation,
+        }).await?;
         Ok(participant)
     }
 
@@ -568,16 +679,33 @@ where
                 }
                 _ => CnErrorProvider::DbErr(err),
             })?;
+        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+            category: RainbowEventsNotificationMessageCategory::ContractNegotiation,
+            subcategory: "Participant".to_string(),
+            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+            message_content: to_value(&participant)?,
+            message_operation: RainbowEventsNotificationMessageOperation::Update,
+        }).await?;
         Ok(participant)
     }
 
     async fn delete_participant(&self, participant_id: Urn) -> anyhow::Result<()> {
         let _ = self.repo.delete_participant(participant_id.clone()).await.map_err(|err| match err {
             CnErrors::ParticipantNotFound(_, _) => {
-                CnErrorProvider::NotFound { id: participant_id, entity: CNControllerTypes::Participant.to_string() }
+                CnErrorProvider::NotFound { id: participant_id.clone(), entity: CNControllerTypes::Participant.to_string() }
             }
             _ => CnErrorProvider::DbErr(err),
         })?;
+        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+            category: RainbowEventsNotificationMessageCategory::ContractNegotiation,
+            subcategory: "Participant".to_string(),
+            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+            message_content: json!({
+                "@type": "Participant",
+                "@id": participant_id.to_string()
+            }),
+            message_operation: RainbowEventsNotificationMessageOperation::Deletion,
+        }).await?;
         Ok(())
     }
 }

@@ -37,8 +37,10 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Notifications::Id).string().not_null().primary_key())
                     .col(ColumnDef::new(Notifications::Timestamp).date_time().not_null())
                     .col(ColumnDef::new(Notifications::Category).string().not_null())
+                    .col(ColumnDef::new(Notifications::Subcategory).string().not_null())
                     .col(ColumnDef::new(Notifications::MessageType).string().not_null())
                     .col(ColumnDef::new(Notifications::MessageContent).json().not_null())
+                    .col(ColumnDef::new(Notifications::MessageOperation).string().not_null())
                     .col(ColumnDef::new(Notifications::Status).string().not_null())
                     .col(ColumnDef::new(Notifications::SubscriptionId).string().not_null())
                     .foreign_key(
@@ -63,8 +65,10 @@ pub enum Notifications {
     Id,
     Timestamp,
     Category,
+    Subcategory,
     MessageType,
     MessageContent,
+    MessageOperation,
     Status,
     SubscriptionId,
 }

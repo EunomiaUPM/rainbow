@@ -33,11 +33,14 @@ use rainbow_common::protocol::ProtocolValidate;
 use rainbow_common::utils::{get_urn, get_urn_from_string};
 use rainbow_db::contracts_provider::entities::cn_process;
 use rainbow_db::contracts_provider::repo::{AgreementRepo, ContractNegotiationMessageRepo, ContractNegotiationOfferRepo, ContractNegotiationProcessRepo, EditContractNegotiationProcess, NewContractNegotiationMessage, NewContractNegotiationOffer, NewContractNegotiationProcess, Participant};
+use rainbow_events::core::notification::notification_types::{RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory, RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes};
+use rainbow_events::core::notification::RainbowEventsNotificationTrait;
 use reqwest::Client;
+use serde_json::json;
 use std::sync::Arc;
 use std::time::Duration;
 
-pub struct DSRPCContractNegotiationProviderService<T>
+pub struct DSRPCContractNegotiationProviderService<T, U>
 where
     T: ContractNegotiationProcessRepo
     + ContractNegotiationMessageRepo
@@ -47,12 +50,14 @@ where
     + Send
     + Sync
     + 'static,
+    U: RainbowEventsNotificationTrait + Send + Sync,
 {
     repo: Arc<T>,
+    notification_service: Arc<U>,
     client: Client,
 }
 
-impl<T> DSRPCContractNegotiationProviderService<T>
+impl<T, U> DSRPCContractNegotiationProviderService<T, U>
 where
     T: ContractNegotiationProcessRepo
     + ContractNegotiationMessageRepo
@@ -62,16 +67,17 @@ where
     + Send
     + Sync
     + 'static,
+    U: RainbowEventsNotificationTrait + Send + Sync,
 {
-    pub fn new(repo: Arc<T>) -> Self {
+    pub fn new(repo: Arc<T>, notification_service: Arc<U>) -> Self {
         let client =
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
-        Self { repo, client }
+        Self { repo, notification_service, client }
     }
 }
 
 #[async_trait]
-impl<T> DSRPCContractNegotiationProviderTrait for DSRPCContractNegotiationProviderService<T>
+impl<T, U> DSRPCContractNegotiationProviderTrait for DSRPCContractNegotiationProviderService<T, U>
 where
     T: ContractNegotiationProcessRepo
     + ContractNegotiationMessageRepo
@@ -81,6 +87,7 @@ where
     + Send
     + Sync
     + 'static,
+    U: RainbowEventsNotificationTrait + Send + Sync,
 {
     async fn setup_offer(&self, input: SetupOfferRequest) -> anyhow::Result<SetupOfferResponse> {
         let SetupOfferRequest {
@@ -224,7 +231,7 @@ where
             .map_err(CnErrorProvider::DbErr)?;
 
         // persist cn_offer
-        let _ = self.repo
+        let offer = self.repo
             .create_cn_offer(
                 cn_process.cn_process_id.parse().unwrap(),
                 cn_message.cn_message_id.parse().unwrap(),
@@ -237,7 +244,7 @@ where
             .map_err(CnErrorProvider::DbErr)?;
 
         // Create response
-        let cn_ack: ContractAckMessage = cn_process.into();
+        let cn_ack: ContractAckMessage = cn_process.clone().into();
         let response: SetupOfferResponse;
         if is_reoffer == false {
             response = SetupOfferResponse {
@@ -257,6 +264,17 @@ where
             };
         }
 
+        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+            category: RainbowEventsNotificationMessageCategory::Catalog,
+            subcategory: "ContractOfferMessage".to_string(),
+            message_type: RainbowEventsNotificationMessageTypes::RPCMessage,
+            message_content: json!({
+                "process": cn_process,
+                "message": cn_message,
+                "offer": offer
+            }),
+            message_operation: RainbowEventsNotificationMessageOperation::Creation,
+        }).await?;
         Ok(response)
     }
 
@@ -372,7 +390,7 @@ where
             .map_err(CnErrorProvider::DbErr)?;
 
         // persist cn_offer
-        let _ = self.repo
+        let agreement = self.repo
             .create_cn_offer(
                 cn_process.cn_process_id.parse().unwrap(),
                 cn_message.cn_message_id.parse().unwrap(),
@@ -384,7 +402,7 @@ where
             .await
             .map_err(CnErrorProvider::DbErr)?;
 
-        let cn_ack: ContractAckMessage = cn_process.into();
+        let cn_ack: ContractAckMessage = cn_process.clone().into();
         let response = SetupAgreementResponse {
             consumer_pid: consumer_pid.clone(),
             provider_pid: provider_pid.clone(),
@@ -392,6 +410,17 @@ where
             message: cn_ack,
         };
 
+        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+            category: RainbowEventsNotificationMessageCategory::ContractNegotiation,
+            subcategory: "ContractAgreementMessage".to_string(),
+            message_type: RainbowEventsNotificationMessageTypes::RPCMessage,
+            message_content: json!({
+                "process": cn_process,
+                "message": cn_message,
+                "agreement": agreement
+            }),
+            message_operation: RainbowEventsNotificationMessageOperation::OutgoingMessage,
+        }).await?;
         Ok(response)
     }
 
@@ -490,7 +519,7 @@ where
             .map_err(CnErrorProvider::DbErr)?;
 
         // persist cn_message
-        let _ = self.repo
+        let message = self.repo
             .create_cn_message(
                 cn_process.cn_process_id.parse().unwrap(),
                 NewContractNegotiationMessage {
@@ -504,13 +533,23 @@ where
             .map_err(CnErrorProvider::DbErr)?;
 
 
-        let cn_ack: ContractAckMessage = cn_process.into();
+        let cn_ack: ContractAckMessage = cn_process.clone().into();
         let response = SetupFinalizationResponse {
             consumer_pid: consumer_pid.clone(),
             provider_pid: provider_pid.clone(),
             message: cn_ack,
         };
 
+        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+            category: RainbowEventsNotificationMessageCategory::ContractNegotiation,
+            subcategory: "ContractNegotiationEventMessage:finalized".to_string(),
+            message_type: RainbowEventsNotificationMessageTypes::RPCMessage,
+            message_content: json!({
+                "process": cn_process,
+                "message": message
+            }),
+            message_operation: RainbowEventsNotificationMessageOperation::OutgoingMessage,
+        }).await?;
         Ok(response)
     }
 
@@ -608,7 +647,7 @@ where
             .map_err(CnErrorProvider::DbErr)?;
 
         // persist cn_message
-        let _ = self.repo
+        let message = self.repo
             .create_cn_message(
                 cn_process.cn_process_id.parse().unwrap(),
                 NewContractNegotiationMessage {
@@ -622,13 +661,23 @@ where
             .map_err(CnErrorProvider::DbErr)?;
 
 
-        let cn_ack: ContractAckMessage = cn_process.into();
+        let cn_ack: ContractAckMessage = cn_process.clone().into();
         let response = SetupTerminationResponse {
             consumer_pid: consumer_pid.clone(),
             provider_pid: provider_pid.clone(),
             message: cn_ack,
         };
 
+        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+            category: RainbowEventsNotificationMessageCategory::ContractNegotiation,
+            subcategory: "ContractNegotiationTerminationMessage".to_string(),
+            message_type: RainbowEventsNotificationMessageTypes::RPCMessage,
+            message_content: json!({
+                "process": cn_process,
+                "message": message
+            }),
+            message_operation: RainbowEventsNotificationMessageOperation::OutgoingMessage,
+        }).await?;
         Ok(response)
     }
 }

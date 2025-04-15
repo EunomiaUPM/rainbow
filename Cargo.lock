@@ -2138,6 +2138,7 @@ dependencies = [
  "once_cell",
  "rainbow_common",
  "rainbow_db",
+ "rainbow_events",
  "reqwest",
  "sea-orm",
  "sea-orm-migration",

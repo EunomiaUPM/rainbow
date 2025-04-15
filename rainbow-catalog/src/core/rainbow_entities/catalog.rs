@@ -26,30 +26,37 @@ use anyhow::bail;
 use axum::async_trait;
 use rainbow_common::utils::get_urn_from_string;
 use rainbow_db::catalog::repo::{CatalogRepo, DataServiceRepo, DatasetRepo, DistributionRepo, OdrlOfferRepo};
-use serde_json::to_value;
+use rainbow_events::core::notification::notification_types::{RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory, RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes};
+use rainbow_events::core::notification::RainbowEventsNotificationTrait;
+use serde_json::{json, to_value};
 use std::sync::Arc;
 use urn::Urn;
 
-pub struct RainbowCatalogCatalogService<T>
+pub struct RainbowCatalogCatalogService<T, U>
 where
     T: CatalogRepo + DatasetRepo + DistributionRepo + DataServiceRepo + OdrlOfferRepo + Send + Sync + 'static,
+    U: RainbowEventsNotificationTrait + Send + Sync,
 {
     repo: Arc<T>,
+    notification_service: Arc<U>,
 }
 
-impl<T> RainbowCatalogCatalogService<T>
+impl<T, U> RainbowCatalogCatalogService<T, U>
 where
     T: CatalogRepo + DatasetRepo + DistributionRepo + DataServiceRepo + OdrlOfferRepo + Send + Sync + 'static,
+    U: RainbowEventsNotificationTrait + Send + Sync,
 {
-    pub fn new(repo: Arc<T>) -> Self {
-        Self { repo }
+    pub fn new(repo: Arc<T>, notification_service: Arc<U>) -> Self {
+        Self { repo, notification_service }
     }
 }
 
 #[async_trait]
-impl<T> RainbowCatalogTrait for RainbowCatalogCatalogService<T>
+impl<T, U> RainbowCatalogTrait for RainbowCatalogCatalogService<T, U>
 where
     T: CatalogRepo + DatasetRepo + DistributionRepo + DataServiceRepo + OdrlOfferRepo + Send + Sync + 'static,
+    U: RainbowEventsNotificationTrait + Send + Sync,
+
 {
     async fn get_catalog_by_id(&self, id: Urn) -> anyhow::Result<Catalog> {
         let catalog = self.repo.get_catalog_by_id(id.clone()).await.map_err(CatalogError::DbErr)?;
@@ -72,6 +79,13 @@ where
     async fn post_catalog(&self, input: NewCatalogRequest) -> anyhow::Result<Catalog> {
         let catalog_entity = self.repo.create_catalog(input.into()).await.map_err(CatalogError::DbErr)?;
         let catalog = Catalog::try_from(catalog_entity).map_err(CatalogError::ConversionError)?;
+        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+            category: RainbowEventsNotificationMessageCategory::Catalog,
+            subcategory: "Catalog".to_string(),
+            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+            message_content: to_value(&catalog)?,
+            message_operation: RainbowEventsNotificationMessageOperation::Creation,
+        }).await?;
         Ok(catalog)
     }
 
@@ -83,16 +97,33 @@ where
             _ => CatalogError::DbErr(err),
         })?;
         let catalog = Catalog::try_from(catalog_entity).map_err(CatalogError::ConversionError)?;
+        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+            category: RainbowEventsNotificationMessageCategory::Catalog,
+            subcategory: "Catalog".to_string(),
+            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+            message_content: to_value(&catalog)?,
+            message_operation: RainbowEventsNotificationMessageOperation::Update,
+        }).await?;
         Ok(catalog)
     }
 
     async fn delete_catalog(&self, id: Urn) -> anyhow::Result<()> {
         let _ = self.repo.delete_catalog_by_id(id.clone()).await.map_err(|err| match err {
             rainbow_db::catalog::repo::CatalogRepoErrors::CatalogNotFound => {
-                CatalogError::NotFound { id, entity: EntityTypes::Catalog.to_string() }
+                CatalogError::NotFound { id: id.clone(), entity: EntityTypes::Catalog.to_string() }
             }
             _ => CatalogError::DbErr(err),
         })?;
+        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+            category: RainbowEventsNotificationMessageCategory::Catalog,
+            subcategory: "Catalog".to_string(),
+            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+            message_content: json!({
+                "@type": "dcat:Catalog",
+                "@id": id.to_string()
+            }),
+            message_operation: RainbowEventsNotificationMessageOperation::Deletion,
+        }).await?;
         Ok(())
     }
 }

@@ -37,8 +37,15 @@ use axum::routing::get;
 use axum::{serve, Router};
 use rainbow_db::catalog::repo::sql::CatalogRepoForSql;
 use rainbow_db::catalog::repo::CatalogRepoFactory;
+use rainbow_db::events::repo::sql::EventsRepoForSql;
+use rainbow_db::events::repo::EventsRepoFactory;
 use rainbow_db::transfer_consumer::repo::sql::TransferConsumerRepoForSql;
 use rainbow_db::transfer_consumer::repo::TransferConsumerRepoFactory;
+use rainbow_events::core::notification::notification::RainbowEventsNotificationsService;
+use rainbow_events::core::subscription::subscription::RainbowEventsSubscriptionService;
+use rainbow_events::core::subscription::subscription_types::SubscriptionEntities;
+use rainbow_events::http::notification::notification::RainbowEventsNotificationRouter;
+use rainbow_events::http::subscription::subscription::RainbowEventsSubscriptionRouter;
 use sea_orm::Database;
 use std::sync::Arc;
 use tokio::net::TcpListener;
@@ -49,18 +56,39 @@ pub struct CatalogApplication;
 pub async fn create_catalog_router(config: CatalogApplicationConfig) -> Router {
     let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
 
-    let catalog_repo = Arc::new(CatalogRepoForSql::create_repo(db_connection));
+    // Repos
+    let catalog_repo = Arc::new(CatalogRepoForSql::create_repo(db_connection.clone()));
+    let subscription_repo = Arc::new(EventsRepoForSql::create_repo(db_connection.clone()));
+
+    // Events
+    let subscription_service = Arc::new(RainbowEventsSubscriptionService::new(
+        subscription_repo.clone(),
+    ));
+    let subscription_router = RainbowEventsSubscriptionRouter::new(
+        subscription_service,
+        Option::from(SubscriptionEntities::Catalog),
+    )
+        .router();
+    let notification_service = Arc::new(RainbowEventsNotificationsService::new(subscription_repo));
+    let notification_router = RainbowEventsNotificationRouter::new(
+        notification_service.clone(),
+        Option::from(SubscriptionEntities::Catalog),
+    )
+        .router();
 
     // DSProtocol Dependency Injection
     let ds_protocol_service = Arc::new(DSProtocolCatalogService::new(catalog_repo.clone()));
     let ds_protocol_router = DSProcotolCatalogRouter::new(ds_protocol_service.clone());
 
     // Rainbow Entities Dependency injection
-    let rainbow_catalog_service = Arc::new(RainbowCatalogCatalogService::new(catalog_repo.clone()));
-    let rainbow_data_service_service = Arc::new(RainbowCatalogDataServiceService::new(catalog_repo.clone()));
-    let rainbow_dataset_service = Arc::new(RainbowCatalogDatasetService::new(catalog_repo.clone()));
-    let rainbow_distribution_service = Arc::new(RainbowCatalogDistributionService::new(catalog_repo.clone()));
-    let rainbow_policies_service = Arc::new(RainbowCatalogPoliciesService::new(catalog_repo.clone()));
+    let rainbow_catalog_service = Arc::new(RainbowCatalogCatalogService::new(
+        catalog_repo.clone(),
+        notification_service.clone(),
+    ));
+    let rainbow_data_service_service = Arc::new(RainbowCatalogDataServiceService::new(catalog_repo.clone(), notification_service.clone()));
+    let rainbow_dataset_service = Arc::new(RainbowCatalogDatasetService::new(catalog_repo.clone(), notification_service.clone()));
+    let rainbow_distribution_service = Arc::new(RainbowCatalogDistributionService::new(catalog_repo.clone(), notification_service.clone()));
+    let rainbow_policies_service = Arc::new(RainbowCatalogPoliciesService::new(catalog_repo.clone(), notification_service.clone()));
 
     let rainbow_catalog_router = RainbowCatalogCatalogRouter::new(rainbow_catalog_service, ds_protocol_service.clone());
     let rainbow_data_service_router = RainbowCatalogDataServiceRouter::new(rainbow_data_service_service.clone());
@@ -73,17 +101,17 @@ pub async fn create_catalog_router(config: CatalogApplicationConfig) -> Router {
     let rainbow_rpc_router = RainbowRPCCatalogRouter::new(rainbow_rpc_service.clone());
 
     // Router
-    let catalog_application_router =
-        Router::new()
-            .merge(route_openapi())
-            .merge(rainbow_catalog_router.router())
-            .merge(rainbow_data_service_router.router())
-            .merge(rainbow_dataset_router.router())
-            .merge(rainbow_distributions_router.router())
-            .merge(rainbow_policies_router.router())
-            .merge(rainbow_rpc_router.router())
-            .merge(ds_protocol_router.router());
-
+    let catalog_application_router = Router::new()
+        .merge(route_openapi())
+        .merge(rainbow_catalog_router.router())
+        .merge(rainbow_data_service_router.router())
+        .merge(rainbow_dataset_router.router())
+        .merge(rainbow_distributions_router.router())
+        .merge(rainbow_policies_router.router())
+        .merge(rainbow_rpc_router.router())
+        .merge(ds_protocol_router.router())
+        .nest("/api/v1/catalog", subscription_router.clone())
+        .nest("/api/v1/catalog", notification_router.clone());
     catalog_application_router
 }
 

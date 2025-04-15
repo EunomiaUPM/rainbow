@@ -48,6 +48,7 @@ use rainbow_db::transfer_provider::repo::sql::TransferProviderRepoForSql;
 use rainbow_db::transfer_provider::repo::TransferProviderRepoFactory;
 use rainbow_events::core::notification::notification::RainbowEventsNotificationsService;
 use rainbow_events::core::subscription::subscription::RainbowEventsSubscriptionService;
+use rainbow_events::core::subscription::subscription_types::SubscriptionEntities;
 use rainbow_events::http::notification::notification::RainbowEventsNotificationRouter;
 use rainbow_events::http::subscription::subscription::RainbowEventsSubscriptionRouter;
 use rainbow_transfer::provider::core::data_plane_facade::data_plane_facade::DataPlaneProviderFacadeImpl;
@@ -82,7 +83,22 @@ pub async fn create_core_provider_router(db_url: String) -> Router {
     let subscription_service = Arc::new(RainbowEventsSubscriptionService::new(
         subscription_repo.clone(),
     ));
-    let subscription_router = RainbowEventsSubscriptionRouter::new(subscription_service, None).router();
+    let catalog_subscription_router = RainbowEventsSubscriptionRouter::new(
+        subscription_service.clone(),
+        Some(SubscriptionEntities::Catalog),
+    )
+        .router();
+    let cn_subscription_router = RainbowEventsSubscriptionRouter::new(
+        subscription_service.clone(),
+        Some(SubscriptionEntities::ContractNegotiationProcess),
+    )
+        .router();
+    let transfer_subscription_router = RainbowEventsSubscriptionRouter::new(
+        subscription_service.clone(),
+        Some(SubscriptionEntities::TransferProcess),
+    )
+        .router();
+
     let notification_service = Arc::new(RainbowEventsNotificationsService::new(subscription_repo));
     let notification_router = RainbowEventsNotificationRouter::new(notification_service.clone(), None).router();
 
@@ -94,14 +110,28 @@ pub async fn create_core_provider_router(db_url: String) -> Router {
     let catalog_ds_protocol_service = Arc::new(DSProtocolCatalogService::new(catalog_repo.clone()));
     let catalog_ds_protocol_router = DSProcotolCatalogRouter::new(catalog_ds_protocol_service.clone()).router();
 
-
     // Rainbow Entities Dependency injection
     let catalog_ds_protocol_service = Arc::new(DSProtocolCatalogService::new(catalog_repo.clone()));
-    let catalog_rainbow_catalog_service = Arc::new(RainbowCatalogCatalogService::new(catalog_repo.clone()));
-    let catalog_rainbow_data_service_service = Arc::new(RainbowCatalogDataServiceService::new(catalog_repo.clone()));
-    let catalog_rainbow_dataset_service = Arc::new(RainbowCatalogDatasetService::new(catalog_repo.clone()));
-    let catalog_rainbow_distribution_service = Arc::new(RainbowCatalogDistributionService::new(catalog_repo.clone()));
-    let catalog_rainbow_policies_service = Arc::new(RainbowCatalogPoliciesService::new(catalog_repo.clone()));
+    let catalog_rainbow_catalog_service = Arc::new(RainbowCatalogCatalogService::new(
+        catalog_repo.clone(),
+        notification_service.clone(),
+    ));
+    let catalog_rainbow_data_service_service = Arc::new(RainbowCatalogDataServiceService::new(
+        catalog_repo.clone(),
+        notification_service.clone(),
+    ));
+    let catalog_rainbow_dataset_service = Arc::new(RainbowCatalogDatasetService::new(
+        catalog_repo.clone(),
+        notification_service.clone(),
+    ));
+    let catalog_rainbow_distribution_service = Arc::new(RainbowCatalogDistributionService::new(
+        catalog_repo.clone(),
+        notification_service.clone(),
+    ));
+    let catalog_rainbow_policies_service = Arc::new(RainbowCatalogPoliciesService::new(
+        catalog_repo.clone(),
+        notification_service.clone(),
+    ));
 
     let catalog_rainbow_catalog_router = RainbowCatalogCatalogRouter::new(
         catalog_rainbow_catalog_service,
@@ -128,6 +158,7 @@ pub async fn create_core_provider_router(db_url: String) -> Router {
     // Rainbow Entities Dependency injection
     let cn_rainbow_entities_service = Arc::new(RainbowEntitiesContractNegotiationProviderService::new(
         cn_provider_repo.clone(),
+        notification_service.clone(),
     ));
     let cn_rainbow_entities_router =
         RainbowEntitesContractNegotiationProviderRouter::new(cn_rainbow_entities_service.clone()).router();
@@ -135,6 +166,7 @@ pub async fn create_core_provider_router(db_url: String) -> Router {
     // DSProtocol Dependency injection
     let cn_ds_protocol_service = Arc::new(DSProtocolContractNegotiationProviderService::new(
         cn_provider_repo.clone(),
+        notification_service.clone(),
     ));
     let cn_ds_protocol_router =
         DSProtocolContractNegotiationProviderRouter::new(cn_ds_protocol_service.clone()).router();
@@ -142,6 +174,7 @@ pub async fn create_core_provider_router(db_url: String) -> Router {
     // DSRPCProtocol Dependency injection
     let cn_ds_protocol_rpc_service = Arc::new(DSRPCContractNegotiationProviderService::new(
         cn_provider_repo.clone(),
+        notification_service.clone(),
     ));
     let cn_ds_protocol_rpc_router =
         DSRPCContractNegotiationProviderRouter::new(cn_ds_protocol_rpc_service.clone()).router();
@@ -196,12 +229,12 @@ pub async fn create_core_provider_router(db_url: String) -> Router {
         .merge(transfer_rainbow_entities_router)
         .merge(transfer_ds_protocol_router)
         .merge(transfer_ds_protocol_rpc_router)
-        .nest("/api/v1/transfers", subscription_router.clone())
-        .nest("/api/v1/transfers", notification_router.clone())
-        .nest("/api/v1/catalog", subscription_router.clone())
+        .nest("/api/v1/catalog", catalog_subscription_router.clone())
         .nest("/api/v1/catalog", notification_router.clone())
-        .nest("/api/v1/contract-negotiation", subscription_router)
-        .nest("/api/v1/contract-negotiation", notification_router);
+        .nest("/api/v1/contract-negotiation", cn_subscription_router.clone())
+        .nest("/api/v1/contract-negotiation", notification_router.clone())
+        .nest("/api/v1/transfers", transfer_subscription_router)
+        .nest("/api/v1/transfers", notification_router);
 
     the_router
 }

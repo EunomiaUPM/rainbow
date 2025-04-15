@@ -29,7 +29,6 @@ use crate::provider::core::ds_protocol_rpc::ds_protocol_rpc_types::{
 use crate::provider::core::ds_protocol_rpc::DSRPCTransferProviderTrait;
 use anyhow::bail;
 use axum::async_trait;
-use axum::http::StatusCode;
 use rainbow_common::protocol::transfer::transfer_completion::TransferCompletionMessage;
 use rainbow_common::protocol::transfer::transfer_process::TransferProcessMessage;
 use rainbow_common::protocol::transfer::transfer_start::TransferStartMessage;
@@ -39,9 +38,10 @@ use rainbow_common::protocol::transfer::{TransferMessageTypes, TransferRoles, Tr
 use rainbow_db::transfer_provider::repo::{
     EditTransferProcessModel, NewTransferMessageModel, TransferProviderRepoFactory,
 };
-use rainbow_events::core::notification::notification_types::{RainbowEventsNotificationCreationRequest, RainbowEventsNotificationMessageCategory, RainbowEventsNotificationMessageTypes, RainbowEventsNotificationStatus};
+use rainbow_events::core::notification::notification_types::{RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory, RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes};
 use rainbow_events::core::notification::RainbowEventsNotificationTrait;
 use reqwest::Client;
+use serde_json::json;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -153,7 +153,7 @@ where
 
         // process response
         let status = req.status();
-        if status.clone() != StatusCode::OK {
+        if status.clone().is_success() == false {
             bail!(DSRPCTransferProviderErrors::ConsumerInternalError {
                 provider_pid: Option::from(provider_pid.clone()),
                 consumer_pid: Option::from(consumer_pid.clone())
@@ -167,7 +167,7 @@ where
             }
         })?;
         // persist transfer process
-        let _process = self
+        let process = self
             .transfer_repo
             .put_transfer_process(
                 provider_pid.clone(),
@@ -178,7 +178,7 @@ where
                 DSRPCTransferProviderErrors::DSProtocolTransferProviderError(DSProtocolTransferProviderErrors::DbErr(e))
             })?;
         // persist message
-        let _message = self
+        let message = self
             .transfer_repo
             .create_transfer_message(
                 provider_pid.clone(),
@@ -201,11 +201,15 @@ where
             message: response,
         };
         self.notification_service.broadcast_notification(
-            RainbowEventsNotificationCreationRequest {
+            RainbowEventsNotificationBroadcastRequest {
                 category: RainbowEventsNotificationMessageCategory::TransferProcess,
+                subcategory: "TransferStartMessage".to_string(),
                 message_type: RainbowEventsNotificationMessageTypes::RPCMessage,
-                message_content: serde_json::to_value(response.clone())?,
-                status: RainbowEventsNotificationStatus::Pending,
+                message_operation: RainbowEventsNotificationMessageOperation::OutgoingMessage,
+                message_content: json!({
+                    "process": &process,
+                    "message": &message
+                }),
             }
         ).await?;
         Ok(response)
@@ -283,7 +287,7 @@ where
         })?;
         // process response
         let status = req.status();
-        if status.clone() != StatusCode::OK {
+        if status.clone().is_success() == false {
             bail!(DSRPCTransferProviderErrors::ConsumerInternalError {
                 provider_pid: Option::from(provider_pid.clone()),
                 consumer_pid: Option::from(consumer_pid.clone())
@@ -297,7 +301,7 @@ where
             }
         })?;
         // persist transfer process
-        let _process = self
+        let process = self
             .transfer_repo
             .put_transfer_process(
                 provider_pid.clone(),
@@ -308,7 +312,7 @@ where
                 DSRPCTransferProviderErrors::DSProtocolTransferProviderError(DSProtocolTransferProviderErrors::DbErr(e))
             })?;
         // persist message
-        let _message = self
+        let message = self
             .transfer_repo
             .create_transfer_message(
                 provider_pid.clone(),
@@ -330,11 +334,15 @@ where
             message: response,
         };
         self.notification_service.broadcast_notification(
-            RainbowEventsNotificationCreationRequest {
+            RainbowEventsNotificationBroadcastRequest {
                 category: RainbowEventsNotificationMessageCategory::TransferProcess,
+                subcategory: "TransferSuspensionMessage".to_string(),
                 message_type: RainbowEventsNotificationMessageTypes::RPCMessage,
-                message_content: serde_json::to_value(response.clone())?,
-                status: RainbowEventsNotificationStatus::Pending,
+                message_operation: RainbowEventsNotificationMessageOperation::OutgoingMessage,
+                message_content: json!({
+                    "process": &process,
+                    "message": &message
+                }),
             }
         ).await?;
         Ok(response)
@@ -410,7 +418,7 @@ where
         })?;
         // process response
         let status = req.status();
-        if status.clone() != StatusCode::OK {
+        if status.clone().is_success() == false {
             bail!(DSRPCTransferProviderErrors::ConsumerInternalError {
                 provider_pid: Option::from(provider_pid.clone()),
                 consumer_pid: Option::from(consumer_pid.clone())
@@ -424,7 +432,7 @@ where
             }
         })?;
         // persist transfer process
-        let _process = self
+        let process = self
             .transfer_repo
             .put_transfer_process(
                 provider_pid.clone(),
@@ -435,7 +443,7 @@ where
                 DSRPCTransferProviderErrors::DSProtocolTransferProviderError(DSProtocolTransferProviderErrors::DbErr(e))
             })?;
         // persist message
-        let _message = self
+        let message = self
             .transfer_repo
             .create_transfer_message(
                 provider_pid.clone(),
@@ -457,11 +465,15 @@ where
             message: response,
         };
         self.notification_service.broadcast_notification(
-            RainbowEventsNotificationCreationRequest {
+            RainbowEventsNotificationBroadcastRequest {
                 category: RainbowEventsNotificationMessageCategory::TransferProcess,
+                subcategory: "TransferCompletionMessage".to_string(),
                 message_type: RainbowEventsNotificationMessageTypes::RPCMessage,
-                message_content: serde_json::to_value(response.clone())?,
-                status: RainbowEventsNotificationStatus::Pending,
+                message_operation: RainbowEventsNotificationMessageOperation::OutgoingMessage,
+                message_content: json!({
+                    "process": &process,
+                    "message": &message
+                }),
             }
         ).await?;
         Ok(response)
@@ -539,7 +551,7 @@ where
         })?;
         // process response
         let status = req.status();
-        if status.clone() != StatusCode::OK {
+        if status.clone().is_success() == false {
             bail!(DSRPCTransferProviderErrors::ConsumerInternalError {
                 provider_pid: Option::from(provider_pid.clone()),
                 consumer_pid: Option::from(consumer_pid.clone())
@@ -553,7 +565,7 @@ where
             }
         })?;
         // persist transfer process
-        let _process = self
+        let process = self
             .transfer_repo
             .put_transfer_process(
                 provider_pid.clone(),
@@ -564,7 +576,7 @@ where
                 DSRPCTransferProviderErrors::DSProtocolTransferProviderError(DSProtocolTransferProviderErrors::DbErr(e))
             })?;
         // persist message
-        let _message = self
+        let message = self
             .transfer_repo
             .create_transfer_message(
                 provider_pid.clone(),
@@ -586,11 +598,15 @@ where
             message: response,
         };
         self.notification_service.broadcast_notification(
-            RainbowEventsNotificationCreationRequest {
+            RainbowEventsNotificationBroadcastRequest {
                 category: RainbowEventsNotificationMessageCategory::TransferProcess,
+                subcategory: "TransferTerminationMessage".to_string(),
                 message_type: RainbowEventsNotificationMessageTypes::RPCMessage,
-                message_content: serde_json::to_value(response.clone())?,
-                status: RainbowEventsNotificationStatus::Pending,
+                message_operation: RainbowEventsNotificationMessageOperation::OutgoingMessage,
+                message_content: json!({
+                    "process": &process,
+                    "message": &message
+                }),
             }
         ).await?;
         Ok(response)

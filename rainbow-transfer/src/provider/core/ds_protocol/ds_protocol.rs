@@ -33,8 +33,9 @@ use rainbow_common::protocol::transfer::transfer_termination::TransferTerminatio
 use rainbow_common::protocol::transfer::{TransferRoles, TransferState};
 use rainbow_common::utils::{get_urn, get_urn_from_string};
 use rainbow_db::transfer_provider::repo::{EditTransferProcessModel, NewTransferMessageModel, NewTransferProcessModel, TransferProviderRepoErrors, TransferProviderRepoFactory};
-use rainbow_events::core::notification::notification_types::{RainbowEventsNotificationCreationRequest, RainbowEventsNotificationMessageCategory, RainbowEventsNotificationMessageTypes, RainbowEventsNotificationStatus};
+use rainbow_events::core::notification::notification_types::{RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationCreationRequest, RainbowEventsNotificationMessageCategory, RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes, RainbowEventsNotificationStatus};
 use rainbow_events::core::notification::RainbowEventsNotificationTrait;
+use serde_json::json;
 use std::sync::Arc;
 use tracing::debug;
 use urn::Urn;
@@ -138,7 +139,7 @@ where
             })
             .await
             .map_err(DSProtocolTransferProviderErrors::DbErr)?;
-        let _ = self
+        let transfer_message = self
             .transfer_repo
             .create_transfer_message(
                 provider_pid.clone(),
@@ -153,11 +154,15 @@ where
             .map_err(DSProtocolTransferProviderErrors::DbErr)?;
 
         self.notification_service.broadcast_notification(
-            RainbowEventsNotificationCreationRequest {
+            RainbowEventsNotificationBroadcastRequest {
                 category: RainbowEventsNotificationMessageCategory::TransferProcess,
+                subcategory: "TransferRequestMessage".to_string(),
                 message_type: RainbowEventsNotificationMessageTypes::DSProtocolMessage,
-                message_content: serde_json::to_value(transfer_process.clone())?,
-                status: RainbowEventsNotificationStatus::Pending,
+                message_operation: RainbowEventsNotificationMessageOperation::IncomingMessage,
+                message_content: json!({
+                    "process": transfer_process.clone(),
+                    "message": transfer_message
+                }),
             }
         ).await?;
         Ok(transfer_process.into())
@@ -198,7 +203,7 @@ where
             })?;
 
         // create message
-        let _ = self
+        let transfer_message = self
             .transfer_repo
             .create_transfer_message(
                 provider_pid,
@@ -217,6 +222,18 @@ where
         // self.data_plane.connect_to_streaming_service(data_plane_id).await?;
         self.data_plane.on_transfer_start().await?;
 
+        self.notification_service.broadcast_notification(
+            RainbowEventsNotificationBroadcastRequest {
+                category: RainbowEventsNotificationMessageCategory::TransferProcess,
+                subcategory: "TransferStartMessage".to_string(),
+                message_type: RainbowEventsNotificationMessageTypes::DSProtocolMessage,
+                message_operation: RainbowEventsNotificationMessageOperation::IncomingMessage,
+                message_content: json!({
+                    "process": transfer_process.clone(),
+                    "message": transfer_message
+                }),
+            }
+        ).await?;
         Ok(transfer_process.into())
     }
 
@@ -256,7 +273,7 @@ where
             })?;
 
         // create message
-        let _ = self
+        let transfer_message = self
             .transfer_repo
             .create_transfer_message(
                 provider_pid,
@@ -276,6 +293,18 @@ where
         // self.data_plane.disconnect_from_streaming_service(data_plane_id).await?;
         self.data_plane.on_transfer_suspension().await?;
 
+        self.notification_service.broadcast_notification(
+            RainbowEventsNotificationBroadcastRequest {
+                category: RainbowEventsNotificationMessageCategory::TransferProcess,
+                subcategory: "TransferSuspensionMessage".to_string(),
+                message_type: RainbowEventsNotificationMessageTypes::DSProtocolMessage,
+                message_operation: RainbowEventsNotificationMessageOperation::IncomingMessage,
+                message_content: json!({
+                    "process": transfer_process_db.clone(),
+                    "message": transfer_message
+                }),
+            }
+        ).await?;
         Ok(transfer_process_db.into())
     }
 
@@ -315,7 +344,7 @@ where
             })?;
 
         // create message
-        let _ = self
+        let transfer_message = self
             .transfer_repo
             .create_transfer_message(
                 provider_pid,
@@ -334,6 +363,18 @@ where
         // self.data_plane.disconnect_from_streaming_service(data_plane_id).await?;
         self.data_plane.on_transfer_completion().await?;
 
+        self.notification_service.broadcast_notification(
+            RainbowEventsNotificationBroadcastRequest {
+                category: RainbowEventsNotificationMessageCategory::TransferProcess,
+                subcategory: "TransferCompletionMessage".to_string(),
+                message_type: RainbowEventsNotificationMessageTypes::DSProtocolMessage,
+                message_operation: RainbowEventsNotificationMessageOperation::IncomingMessage,
+                message_content: json!({
+                    "process": transfer_process_db.clone(),
+                    "message": transfer_message
+                }),
+            }
+        ).await?;
         Ok(transfer_process_db.into())
     }
 
@@ -373,7 +414,7 @@ where
             })?;
 
         // create message
-        let _ = self
+        let transfer_message = self
             .transfer_repo
             .create_transfer_message(
                 provider_pid,
@@ -392,6 +433,18 @@ where
         // self.data_plane.disconnect_from_streaming_service(data_plane_id).await?;
         self.data_plane.on_transfer_termination().await?;
 
+        self.notification_service.broadcast_notification(
+            RainbowEventsNotificationBroadcastRequest {
+                category: RainbowEventsNotificationMessageCategory::TransferProcess,
+                subcategory: "TransferTerminationMessage".to_string(),
+                message_type: RainbowEventsNotificationMessageTypes::DSProtocolMessage,
+                message_operation: RainbowEventsNotificationMessageOperation::IncomingMessage,
+                message_content: json!({
+                    "process": transfer_process_db.clone(),
+                    "message": transfer_message
+                }),
+            }
+        ).await?;
         Ok(transfer_process_db.into())
     }
 }

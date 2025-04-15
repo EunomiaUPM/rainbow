@@ -21,55 +21,56 @@ use rainbow_common::config::config::ConfigRoles;
 use rainbow_common::config::database::DbType;
 use serde::Serialize;
 
-#[derive(Serialize, Copy, Clone)]
-struct HostConfig<'a> {
-    protocol: &'a str,
-    url: &'a str,
-    port: &'a str,
+#[derive(Serialize, Clone)]
+struct HostConfig {
+    protocol: String,
+    url: String,
+    port: String,
 }
 
-#[derive(Serialize, Copy, Clone)]
-struct DatabaseConfig<'a> {
-    db_type: &'a DbType,
-    url: &'a str,
-    port: &'a str,
-    user: &'a str,
-    password: &'a str,
-    name: &'a str,
+#[derive(Serialize, Clone)]
+struct DatabaseConfig {
+    db_type: DbType,
+    url: String,
+    port: String,
+    user: String,
+    password: String,
+    name: String,
 }
 
-#[derive(Serialize, Copy, Clone)]
-pub struct CoreConsumerApplicationConfig<'a> {
-    core_host: HostConfig<'a>,
-    database_config: DatabaseConfig<'a>,
+#[derive(Serialize, Clone)]
+pub struct CoreConsumerApplicationConfig {
+    core_host: HostConfig,
+    database_config: DatabaseConfig,
     role: ConfigRoles,
 }
 
-
-impl<'a> Default for CoreConsumerApplicationConfig<'a> {
+impl Default for CoreConsumerApplicationConfig {
     fn default() -> Self {
         CoreConsumerApplicationConfig {
-            core_host: HostConfig { protocol: "http", url: "127.0.0.1", port: "1235" },
+            core_host: HostConfig {
+                protocol: "http".to_string(),
+                url: "127.0.0.1".to_string(),
+                port: "1235".to_string(),
+            },
             database_config: DatabaseConfig {
-                db_type: &DbType::Postgres,
-                url: "127.0.0.1",
-                port: "5439",
-                user: "ds_core_consumer_db",
-                password: "ds_core_consumer_db",
-                name: "ds_core_consumer_db",
+                db_type: DbType::Postgres,
+                url: "127.0.0.1".to_string(),
+                port: "5439".to_string(),
+                user: "ds_core_consumer_db".to_string(),
+                password: "ds_core_consumer_db".to_string(),
+                name: "ds_core_consumer_db".to_string(),
             },
             role: ConfigRoles::Consumer,
         }
     }
 }
 
-impl<'a> CoreConsumerApplicationConfig<'a> {
+impl CoreConsumerApplicationConfig {
     pub fn get_full_host_url(&self) -> String {
         format!(
             "{}://{}:{}",
-            self.core_host.protocol,
-            self.core_host.url,
-            self.core_host.port
+            self.core_host.protocol, self.core_host.url, self.core_host.port
         )
     }
     pub fn get_full_db_url(&self) -> String {
@@ -92,33 +93,32 @@ impl<'a> CoreConsumerApplicationConfig<'a> {
     }
 
     pub fn merge_dotenv_configuration(&self) -> anyhow::Result<Self> {
-        dotenvy::dotenv()?;
+        dotenvy::dotenv().ok();
         let compound_config = Self {
             core_host: HostConfig {
-                protocol: option_env!("HOST_PROTOCOL")
-                    .unwrap_or(self.core_host.protocol),
-                url: option_env!("HOST_URL").unwrap_or(self.core_host.url),
-                port: option_env!("HOST_PORT").unwrap_or(self.core_host.port),
+                protocol: std::env::var("HOST_PROTOCOL").unwrap_or(self.core_host.protocol.clone()),
+                url: std::env::var("HOST_URL").unwrap_or(self.core_host.url.clone()),
+                port: std::env::var("HOST_PORT").unwrap_or(self.core_host.port.clone()),
             },
             database_config: DatabaseConfig {
-                db_type: option_env!("DB_TYPE")
-                    .unwrap_or(self.database_config.db_type.to_string().as_str())
+                db_type: std::env::var("DB_TYPE")
+                    .unwrap_or(self.database_config.db_type.to_string())
                     .parse()
                     .expect("Db type error"),
-                url: option_env!("DB_URL").unwrap_or(self.database_config.url),
-                port: option_env!("DB_PORT").unwrap_or(self.database_config.port),
-                user: option_env!("DB_USER").unwrap_or(self.database_config.user),
-                password: option_env!("DB_PASSWORD").unwrap_or(self.database_config.password),
-                name: option_env!("DB_DATABASE").unwrap_or(self.database_config.name),
+                url: std::env::var("DB_URL").unwrap_or(self.database_config.url.clone()),
+                port: std::env::var("DB_PORT").unwrap_or(self.database_config.port.clone()),
+                user: std::env::var("DB_USER").unwrap_or(self.database_config.user.clone()),
+                password: std::env::var("DB_PASSWORD").unwrap_or(self.database_config.password.clone()),
+                name: std::env::var("DB_DATABASE").unwrap_or(self.database_config.name.clone()),
             },
             role: ConfigRoles::Provider,
         };
         Ok(compound_config)
     }
-    pub fn get_host_url(&self) -> &'a str {
-        self.core_host.url
+    pub fn get_host_url(&self) -> String {
+        self.core_host.url.clone()
     }
-    pub fn get_host_port(&self) -> &'a str {
-        self.core_host.port
+    pub fn get_host_port(&self) -> String {
+        self.core_host.port.clone()
     }
 }
