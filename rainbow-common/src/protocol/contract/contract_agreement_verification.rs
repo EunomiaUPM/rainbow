@@ -17,9 +17,9 @@
  *
  */
 
+use super::ContractNegotiationMessages;
+use crate::protocol::context_field::ContextField;
 use serde::{Deserialize, Serialize};
-
-use super::{ContextField, ContractNegotiationMessages};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ContractAgreementVerificationMessage {

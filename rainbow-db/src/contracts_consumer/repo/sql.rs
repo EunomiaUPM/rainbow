@@ -18,27 +18,39 @@
  */
 
 use super::super::entities::cn_process;
-use crate::contracts_consumer::repo::{CnErrors, ContractNegotiationConsumerProcessRepo, EditContractNegotiationProcess, NewContractNegotiationProcess};
+use crate::contracts_consumer::repo::{CnErrors, ContractNegotiationConsumerProcessRepo, ContractNegotiationConsumerRepoFactory, EditContractNegotiationProcess, NewContractNegotiationProcess};
 use axum::async_trait;
-use rainbow_common::config::database::get_db_connection;
 use rainbow_common::utils::get_urn;
-use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, EntityTrait, QueryFilter, QuerySelect};
+use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect};
 use urn::Urn;
 
-pub struct ContractNegotiationRepoForSql {}
+pub struct ContractNegotiationConsumerRepoForSql {
+    db_connection: DatabaseConnection,
+}
+
+impl ContractNegotiationConsumerRepoForSql {
+    fn new(db_connection: DatabaseConnection) -> Self {
+        Self { db_connection }
+    }
+}
+
+impl ContractNegotiationConsumerRepoFactory for ContractNegotiationConsumerRepoForSql {
+    fn create_repo(database_connection: DatabaseConnection) -> Self {
+        Self::new(database_connection)
+    }
+}
 
 #[async_trait]
-impl ContractNegotiationConsumerProcessRepo for ContractNegotiationRepoForSql {
+impl ContractNegotiationConsumerProcessRepo for ContractNegotiationConsumerRepoForSql {
     async fn get_all_cn_processes(
         &self,
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<cn_process::Model>, CnErrors> {
-        let db_connection = get_db_connection().await;
         let cn_processes = cn_process::Entity::find()
             .limit(limit.unwrap_or(10000))
             .offset(page.unwrap_or(0))
-            .all(db_connection)
+            .all(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNProcess(err.into()))?;
         Ok(cn_processes)
@@ -48,10 +60,9 @@ impl ContractNegotiationConsumerProcessRepo for ContractNegotiationRepoForSql {
         &self,
         provider_id: Urn,
     ) -> anyhow::Result<Option<cn_process::Model>, CnErrors> {
-        let db_connection = get_db_connection().await;
         let cn_processes = cn_process::Entity::find()
             .filter(cn_process::Column::ProviderId.eq(provider_id.as_str()))
-            .one(db_connection)
+            .one(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNProcess(err.into()))?;
         Ok(cn_processes)
@@ -61,10 +72,9 @@ impl ContractNegotiationConsumerProcessRepo for ContractNegotiationRepoForSql {
         &self,
         consumer_id: Urn,
     ) -> anyhow::Result<Option<cn_process::Model>, CnErrors> {
-        let db_connection = get_db_connection().await;
         let cn_processes = cn_process::Entity::find()
             .filter(cn_process::Column::ConsumerId.eq(consumer_id.as_str()))
-            .one(db_connection)
+            .one(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNProcess(err.into()))?;
         Ok(cn_processes)
@@ -75,9 +85,8 @@ impl ContractNegotiationConsumerProcessRepo for ContractNegotiationRepoForSql {
         &self,
         cn_process_id: Urn,
     ) -> anyhow::Result<Option<cn_process::Model>, CnErrors> {
-        let db_connection = get_db_connection().await;
         let cn_process = cn_process::Entity::find_by_id(cn_process_id.as_str())
-            .one(db_connection)
+            .one(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNProcess(err.into()))?;
         Ok(cn_process)
@@ -88,9 +97,8 @@ impl ContractNegotiationConsumerProcessRepo for ContractNegotiationRepoForSql {
         cn_process_id: Urn,
         edit_cn_process: EditContractNegotiationProcess,
     ) -> anyhow::Result<cn_process::Model, CnErrors> {
-        let db_connection = get_db_connection().await;
         let old_model = cn_process::Entity::find_by_id(cn_process_id.as_str())
-            .one(db_connection)
+            .one(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNProcess(err.into()))?
             .ok_or(CnErrors::CNProcessNotFound)?;
@@ -99,7 +107,7 @@ impl ContractNegotiationConsumerProcessRepo for ContractNegotiationRepoForSql {
         old_active_model.updated_at = ActiveValue::Set(Some(chrono::Utc::now().naive_utc()));
 
         let model = old_active_model
-            .update(db_connection)
+            .update(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorUpdatingCNProcess(err.into()))?;
         Ok(model)
@@ -109,7 +117,6 @@ impl ContractNegotiationConsumerProcessRepo for ContractNegotiationRepoForSql {
         &self,
         new_cn_process: NewContractNegotiationProcess,
     ) -> anyhow::Result<cn_process::Model, CnErrors> {
-        let db_connection = get_db_connection().await;
         let model = cn_process::ActiveModel {
             cn_process_id: ActiveValue::Set(get_urn(None).to_string()),
             provider_id: ActiveValue::Set(Option::from(
@@ -123,16 +130,15 @@ impl ContractNegotiationConsumerProcessRepo for ContractNegotiationRepoForSql {
         };
 
         let cn_process = cn_process::Entity::insert(model)
-            .exec_with_returning(db_connection)
+            .exec_with_returning(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorCreatingCNProcess(err.into()))?;
         Ok(cn_process)
     }
 
     async fn delete_cn_process(&self, cn_process_id: Urn) -> anyhow::Result<(), CnErrors> {
-        let db_connection = get_db_connection().await;
         match cn_process::Entity::delete_by_id(cn_process_id.as_str())
-            .exec(db_connection)
+            .exec(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorDeletingCNProcess(err.into()))?
             .rows_affected

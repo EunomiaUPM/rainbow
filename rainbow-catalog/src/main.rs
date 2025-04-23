@@ -20,8 +20,10 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-use rainbow_catalog::setup::init_command_line;
+use rainbow_catalog::setup::cmd::CatalogCommands;
 use tracing::info;
+use tracing::level_filters::LevelFilter;
+use tracing_subscriber::EnvFilter;
 
 const INFO: &str = r"
 ----------
@@ -38,8 +40,11 @@ Show some love on https://github.com/ging/rainbow
 ";
 
 #[tokio::main]
-async fn main() {
-    tracing_subscriber::fmt().with_max_level(tracing::Level::DEBUG).with_test_writer().init();
+async fn main() -> anyhow::Result<()> {
+    let filter =
+        EnvFilter::builder().with_default_directive(LevelFilter::INFO.into()).parse("debug,sqlx::query=off")?;
+    tracing_subscriber::fmt().with_env_filter(filter).init();
     info!("{}", INFO);
-    init_command_line().await.expect("TODO: panic message");
+    CatalogCommands::init_command_line().await?;
+    Ok(())
 }

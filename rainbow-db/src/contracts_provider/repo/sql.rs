@@ -1,41 +1,62 @@
+/*
+ *
+ *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 use super::super::entities::agreement;
 use super::super::entities::cn_message;
 use super::super::entities::cn_offer;
 use super::super::entities::cn_process;
 use super::super::entities::participant;
-use crate::contracts_provider::repo::{
-    AgreementRepo, CnErrors, ContractNegotiationMessageRepo, ContractNegotiationOfferRepo,
-    ContractNegotiationProcessRepo, EditAgreement, EditContractNegotiationMessage,
-    EditContractNegotiationOffer, EditContractNegotiationProcess, EditParticipant, NewAgreement,
-    NewContractNegotiationMessage, NewContractNegotiationOffer, NewContractNegotiationProcess,
-    NewParticipant, Participant,
-};
+use crate::contracts_provider::repo::{AgreementRepo, CnErrors, ContractNegotiationMessageRepo, ContractNegotiationOfferRepo, ContractNegotiationProcessRepo, ContractNegotiationProviderRepoFactory, EditAgreement, EditContractNegotiationMessage, EditContractNegotiationOffer, EditContractNegotiationProcess, EditParticipant, NewAgreement, NewContractNegotiationMessage, NewContractNegotiationOffer, NewContractNegotiationProcess, NewParticipant, Participant};
 use json_value_merge::Merge;
-use rainbow_common::config::database::get_db_connection;
 use rainbow_common::utils::get_urn;
-use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, EntityTrait, JoinType, QueryFilter, QueryOrder,
-    QuerySelect, RelationTrait,
-};
+use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, JoinType, QueryFilter, QueryOrder, QuerySelect, RelationTrait};
 use sea_orm_migration::async_trait::async_trait;
 use sea_orm_migration::prelude::Condition;
 use urn::Urn;
 
+pub struct ContractNegotiationProviderRepoForSql {
+    db_connection: DatabaseConnection,
+}
 
-pub struct ContractNegotiationRepoForSql {}
+impl ContractNegotiationProviderRepoForSql {
+    fn new(db_connection: DatabaseConnection) -> Self {
+        Self { db_connection }
+    }
+}
+
+impl ContractNegotiationProviderRepoFactory for ContractNegotiationProviderRepoForSql {
+    fn create_repo(database_connection: DatabaseConnection) -> Self {
+        Self::new(database_connection)
+    }
+}
 
 #[async_trait]
-impl ContractNegotiationProcessRepo for ContractNegotiationRepoForSql {
+impl ContractNegotiationProcessRepo for ContractNegotiationProviderRepoForSql {
     async fn get_all_cn_processes(
         &self,
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<cn_process::Model>, CnErrors> {
-        let db_connection = get_db_connection().await;
         let cn_processes = cn_process::Entity::find()
             .limit(limit.unwrap_or(10000))
             .offset(page.unwrap_or(0))
-            .all(db_connection)
+            .all(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNProcess(err.into()))?;
         Ok(cn_processes)
@@ -45,10 +66,9 @@ impl ContractNegotiationProcessRepo for ContractNegotiationRepoForSql {
         &self,
         provider_id: &Urn,
     ) -> anyhow::Result<Option<cn_process::Model>, CnErrors> {
-        let db_connection = get_db_connection().await;
         let cn_processes = cn_process::Entity::find()
             .filter(cn_process::Column::ProviderId.eq(provider_id.as_str()))
-            .one(db_connection)
+            .one(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNProcess(err.into()))?;
         Ok(cn_processes)
@@ -58,10 +78,9 @@ impl ContractNegotiationProcessRepo for ContractNegotiationRepoForSql {
         &self,
         consumer_id: Urn,
     ) -> anyhow::Result<Option<cn_process::Model>, CnErrors> {
-        let db_connection = get_db_connection().await;
         let cn_processes = cn_process::Entity::find()
             .filter(cn_process::Column::ConsumerId.eq(consumer_id.as_str()))
-            .one(db_connection)
+            .one(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNProcess(err.into()))?;
         Ok(cn_processes)
@@ -71,9 +90,8 @@ impl ContractNegotiationProcessRepo for ContractNegotiationRepoForSql {
         &self,
         cn_process_id: Urn,
     ) -> anyhow::Result<Option<cn_process::Model>, CnErrors> {
-        let db_connection = get_db_connection().await;
         let cn_process = cn_process::Entity::find_by_id(cn_process_id.as_str())
-            .one(db_connection)
+            .one(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNProcess(err.into()))?;
         Ok(cn_process)
@@ -84,9 +102,8 @@ impl ContractNegotiationProcessRepo for ContractNegotiationRepoForSql {
         cn_process_id: Urn,
         edit_cn_process: EditContractNegotiationProcess,
     ) -> anyhow::Result<cn_process::Model, CnErrors> {
-        let db_connection = get_db_connection().await;
         let old_model = cn_process::Entity::find_by_id(cn_process_id.as_str())
-            .one(db_connection)
+            .one(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNProcess(err.into()))?
             .ok_or(CnErrors::CNProcessNotFound)?;
@@ -105,7 +122,7 @@ impl ContractNegotiationProcessRepo for ContractNegotiationRepoForSql {
         old_active_model.updated_at = ActiveValue::Set(Some(chrono::Utc::now().naive_utc()));
 
         let model = old_active_model
-            .update(db_connection)
+            .update(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorUpdatingCNProcess(err.into()))?;
         Ok(model)
@@ -115,7 +132,6 @@ impl ContractNegotiationProcessRepo for ContractNegotiationRepoForSql {
         &self,
         new_cn_process: NewContractNegotiationProcess,
     ) -> anyhow::Result<cn_process::Model, CnErrors> {
-        let db_connection = get_db_connection().await;
         let model = cn_process::ActiveModel {
             cn_process_id: ActiveValue::Set(get_urn(None).to_string()),
             provider_id: ActiveValue::Set(Option::from(
@@ -131,16 +147,15 @@ impl ContractNegotiationProcessRepo for ContractNegotiationRepoForSql {
         };
 
         let cn_process = cn_process::Entity::insert(model)
-            .exec_with_returning(db_connection)
+            .exec_with_returning(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorCreatingCNProcess(err.into()))?;
         Ok(cn_process)
     }
 
     async fn delete_cn_process(&self, cn_process_id: Urn) -> anyhow::Result<(), CnErrors> {
-        let db_connection = get_db_connection().await;
         match cn_process::Entity::delete_by_id(cn_process_id.as_str())
-            .exec(db_connection)
+            .exec(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorDeletingCNProcess(err.into()))?
             .rows_affected
@@ -152,17 +167,16 @@ impl ContractNegotiationProcessRepo for ContractNegotiationRepoForSql {
 }
 
 #[async_trait]
-impl ContractNegotiationMessageRepo for ContractNegotiationRepoForSql {
+impl ContractNegotiationMessageRepo for ContractNegotiationProviderRepoForSql {
     async fn get_all_cn_messages(
         &self,
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<cn_message::Model>, CnErrors> {
-        let db_connection = get_db_connection().await;
         let cn_processes = cn_message::Entity::find()
             .limit(limit.unwrap_or(10000))
             .offset(page.unwrap_or(0))
-            .all(db_connection)
+            .all(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNMessage(err.into()))?;
         Ok(cn_processes)
@@ -172,7 +186,6 @@ impl ContractNegotiationMessageRepo for ContractNegotiationRepoForSql {
         &self,
         cn_process_id: Urn,
     ) -> anyhow::Result<Vec<cn_message::Model>, CnErrors> {
-        let db_connection = get_db_connection().await;
         let cn_process = self
             .get_cn_process_by_cn_id(cn_process_id)
             .await
@@ -181,7 +194,7 @@ impl ContractNegotiationMessageRepo for ContractNegotiationRepoForSql {
 
         let cn_message = cn_message::Entity::find()
             .filter(cn_message::Column::CnProcessId.eq(cn_process.cn_process_id.as_str()))
-            .all(db_connection)
+            .all(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNMessage(err.into()))?;
         Ok(cn_message)
@@ -191,9 +204,8 @@ impl ContractNegotiationMessageRepo for ContractNegotiationRepoForSql {
         &self,
         cn_message_id: Urn,
     ) -> anyhow::Result<Option<cn_message::Model>, CnErrors> {
-        let db_connection = get_db_connection().await;
         let cn_message = cn_message::Entity::find_by_id(cn_message_id.as_str())
-            .one(db_connection)
+            .one(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNMessage(err.into()))?;
         Ok(cn_message)
@@ -203,7 +215,6 @@ impl ContractNegotiationMessageRepo for ContractNegotiationRepoForSql {
         &self,
         provider_id: Urn,
     ) -> anyhow::Result<Vec<cn_message::Model>, CnErrors> {
-        let db_connection = get_db_connection().await;
         let cn_process = self
             .get_cn_processes_by_provider_id(&provider_id)
             .await
@@ -213,7 +224,7 @@ impl ContractNegotiationMessageRepo for ContractNegotiationRepoForSql {
         let cn_messages = cn_message::Entity::find()
             .join(JoinType::InnerJoin, cn_message::Relation::CnProcess.def())
             .filter(cn_process::Column::ProviderId.eq(cn_process.provider_id.unwrap().as_str()))
-            .all(db_connection)
+            .all(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNMessage(err.into()))?;
         Ok(cn_messages)
@@ -223,7 +234,6 @@ impl ContractNegotiationMessageRepo for ContractNegotiationRepoForSql {
         &self,
         consumer_id: Urn,
     ) -> anyhow::Result<Vec<cn_message::Model>, CnErrors> {
-        let db_connection = get_db_connection().await;
         let cn_process = self
             .get_cn_processes_by_consumer_id(consumer_id)
             .await
@@ -233,7 +243,7 @@ impl ContractNegotiationMessageRepo for ContractNegotiationRepoForSql {
         let cn_messages = cn_message::Entity::find()
             .join(JoinType::InnerJoin, cn_message::Relation::CnProcess.def())
             .filter(cn_process::Column::ConsumerId.eq(cn_process.consumer_id.unwrap().as_str()))
-            .all(db_connection)
+            .all(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNMessage(err.into()))?;
         Ok(cn_messages)
@@ -245,7 +255,6 @@ impl ContractNegotiationMessageRepo for ContractNegotiationRepoForSql {
         cn_message_id: Urn,
         edit_cn_message: EditContractNegotiationMessage,
     ) -> anyhow::Result<cn_message::Model, CnErrors> {
-        let db_connection = get_db_connection().await;
         let cn_process = self
             .get_cn_process_by_cn_id(cn_process_id)
             .await
@@ -253,7 +262,7 @@ impl ContractNegotiationMessageRepo for ContractNegotiationRepoForSql {
             .ok_or(CnErrors::CNProcessNotFound)?;
 
         let old_model = cn_message::Entity::find_by_id(cn_message_id.as_str())
-            .one(db_connection)
+            .one(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNMessage(err.into()))?
             .ok_or(CnErrors::CNMessageNotFound)?;
@@ -274,7 +283,7 @@ impl ContractNegotiationMessageRepo for ContractNegotiationRepoForSql {
         old_active_model.content = ActiveValue::Set(old_json_content);
 
         let model = old_active_model
-            .update(db_connection)
+            .update(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorUpdatingCNMessage(err.into()))?;
         Ok(model)
@@ -285,7 +294,6 @@ impl ContractNegotiationMessageRepo for ContractNegotiationRepoForSql {
         cn_process_id: Urn,
         new_cn_message: NewContractNegotiationMessage,
     ) -> anyhow::Result<cn_message::Model, CnErrors> {
-        let db_connection = get_db_connection().await;
         let cn_process = self
             .get_cn_process_by_cn_id(cn_process_id.clone())
             .await
@@ -303,7 +311,7 @@ impl ContractNegotiationMessageRepo for ContractNegotiationRepoForSql {
         };
 
         let cn_process = cn_message::Entity::insert(model)
-            .exec_with_returning(db_connection)
+            .exec_with_returning(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorCreatingCNMessage(err.into()))?;
         Ok(cn_process)
@@ -314,7 +322,6 @@ impl ContractNegotiationMessageRepo for ContractNegotiationRepoForSql {
         cn_process_id: Urn,
         cn_message_id: Urn,
     ) -> anyhow::Result<(), CnErrors> {
-        let db_connection = get_db_connection().await;
         let cn_process = self
             .get_cn_process_by_cn_id(cn_process_id)
             .await
@@ -322,7 +329,7 @@ impl ContractNegotiationMessageRepo for ContractNegotiationRepoForSql {
             .ok_or(CnErrors::CNProcessNotFound)?;
 
         match cn_message::Entity::delete_by_id(cn_message_id.as_str())
-            .exec(db_connection)
+            .exec(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorDeletingCNMessage(err.into()))?
             .rows_affected
@@ -334,17 +341,16 @@ impl ContractNegotiationMessageRepo for ContractNegotiationRepoForSql {
 }
 
 #[async_trait]
-impl ContractNegotiationOfferRepo for ContractNegotiationRepoForSql {
+impl ContractNegotiationOfferRepo for ContractNegotiationProviderRepoForSql {
     async fn get_all_cn_offers(
         &self,
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<cn_offer::Model>, CnErrors> {
-        let db_connection = get_db_connection().await;
         let cn_offers = cn_offer::Entity::find()
             .limit(limit.unwrap_or(10000))
             .offset(page.unwrap_or(0))
-            .all(db_connection)
+            .all(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNOffer(err.into()))?;
         Ok(cn_offers)
@@ -354,7 +360,6 @@ impl ContractNegotiationOfferRepo for ContractNegotiationRepoForSql {
         &self,
         message_id: Urn,
     ) -> anyhow::Result<Option<cn_offer::Model>, CnErrors> {
-        let db_connection = get_db_connection().await;
         let cn_message = self
             .get_cn_messages_by_cn_message_id(message_id.clone())
             .await
@@ -363,7 +368,7 @@ impl ContractNegotiationOfferRepo for ContractNegotiationRepoForSql {
 
         let cn_offer = cn_offer::Entity::find()
             .filter(cn_offer::Column::CnMessageId.eq(cn_message.cn_message_id))
-            .one(db_connection)
+            .one(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNOffer(err.into()))?;
         Ok(cn_offer)
@@ -373,12 +378,11 @@ impl ContractNegotiationOfferRepo for ContractNegotiationRepoForSql {
         &self,
         provider_id: Urn,
     ) -> anyhow::Result<Vec<cn_offer::Model>, CnErrors> {
-        let db_connection = get_db_connection().await;
         let cn_offers = cn_offer::Entity::find()
             .join(JoinType::InnerJoin, cn_message::Relation::CnProcess.def())
             .join(JoinType::InnerJoin, cn_offer::Relation::CnMessage.def())
             .filter(cn_process::Column::ProviderId.eq(provider_id.as_str()))
-            .all(db_connection)
+            .all(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNOffer(err.into()))?;
         Ok(cn_offers)
@@ -388,12 +392,11 @@ impl ContractNegotiationOfferRepo for ContractNegotiationRepoForSql {
         &self,
         consumer_id: Urn,
     ) -> anyhow::Result<Vec<cn_offer::Model>, CnErrors> {
-        let db_connection = get_db_connection().await;
         let cn_offers = cn_offer::Entity::find()
             .join(JoinType::InnerJoin, cn_message::Relation::CnProcess.def())
             .join(JoinType::InnerJoin, cn_offer::Relation::CnMessage.def())
             .filter(cn_process::Column::ConsumerId.eq(consumer_id.as_str()))
-            .all(db_connection)
+            .all(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNOffer(err.into()))?;
         Ok(cn_offers)
@@ -403,7 +406,6 @@ impl ContractNegotiationOfferRepo for ContractNegotiationRepoForSql {
         &self,
         process_id: Urn,
     ) -> anyhow::Result<Vec<cn_offer::Model>, CnErrors> {
-        let db_connection = get_db_connection().await;
         let cn_process = self
             .get_cn_process_by_cn_id(process_id.clone())
             .await
@@ -413,7 +415,7 @@ impl ContractNegotiationOfferRepo for ContractNegotiationRepoForSql {
         let cn_offers = cn_offer::Entity::find()
             .join(JoinType::InnerJoin, cn_offer::Relation::CnMessage.def())
             .filter(cn_message::Column::CnProcessId.eq(cn_process.cn_process_id.as_str()))
-            .all(db_connection)
+            .all(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNOffer(err.into()))?;
         Ok(cn_offers)
@@ -423,7 +425,6 @@ impl ContractNegotiationOfferRepo for ContractNegotiationRepoForSql {
         &self,
         process_id: Urn,
     ) -> anyhow::Result<Option<cn_offer::Model>, CnErrors> {
-        let db_connection = get_db_connection().await;
         let cn_process = self
             .get_cn_process_by_cn_id(process_id.clone())
             .await
@@ -435,7 +436,7 @@ impl ContractNegotiationOfferRepo for ContractNegotiationRepoForSql {
             .filter(cn_message::Column::CnProcessId.eq(cn_process.cn_process_id.as_str()))
             .order_by_desc(cn_offer::Column::CreatedAt)
             .limit(1)
-            .one(db_connection)
+            .one(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNOffer(err.into()))?;
         Ok(cn_offers)
@@ -445,9 +446,8 @@ impl ContractNegotiationOfferRepo for ContractNegotiationRepoForSql {
         &self,
         offer_id: Urn,
     ) -> anyhow::Result<Option<cn_offer::Model>, CnErrors> {
-        let db_connection = get_db_connection().await;
         let cn_offers = cn_offer::Entity::find_by_id(offer_id.as_str())
-            .one(db_connection)
+            .one(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNOffer(err.into()))?;
         Ok(cn_offers)
@@ -460,8 +460,6 @@ impl ContractNegotiationOfferRepo for ContractNegotiationRepoForSql {
         offer_id: Urn,
         edit_cn_offer: EditContractNegotiationOffer,
     ) -> anyhow::Result<cn_offer::Model, CnErrors> {
-        let db_connection = get_db_connection().await;
-
         let cn_process = self
             .get_cn_process_by_cn_id(process_id)
             .await
@@ -481,7 +479,7 @@ impl ContractNegotiationOfferRepo for ContractNegotiationRepoForSql {
             .ok_or(CnErrors::CNOfferNotFound)?;
 
         let old_model = cn_offer::Entity::find_by_id(offer_id.as_str())
-            .one(db_connection)
+            .one(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNOffer(err.into()))?
             .ok_or(CnErrors::CNOfferNotFound)?;
@@ -489,7 +487,7 @@ impl ContractNegotiationOfferRepo for ContractNegotiationRepoForSql {
         let mut old_active_model: cn_offer::ActiveModel = old_model.into();
 
         let model = old_active_model
-            .update(db_connection)
+            .update(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorUpdatingCNOffer(err.into()))?;
         Ok(model)
@@ -501,7 +499,6 @@ impl ContractNegotiationOfferRepo for ContractNegotiationRepoForSql {
         message_id: Urn,
         new_cn_offer: NewContractNegotiationOffer,
     ) -> anyhow::Result<cn_offer::Model, CnErrors> {
-        let db_connection = get_db_connection().await;
         let cn_process = self
             .get_cn_process_by_cn_id(process_id.clone())
             .await
@@ -524,7 +521,7 @@ impl ContractNegotiationOfferRepo for ContractNegotiationRepoForSql {
         };
 
         let cn_offer = cn_offer::Entity::insert(model)
-            .exec_with_returning(db_connection)
+            .exec_with_returning(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorCreatingCNOffer(err.into()))?;
         Ok(cn_offer)
@@ -536,7 +533,6 @@ impl ContractNegotiationOfferRepo for ContractNegotiationRepoForSql {
         message_id: Urn,
         offer_id: Urn,
     ) -> anyhow::Result<(), CnErrors> {
-        let db_connection = get_db_connection().await;
         let cn_process = self
             .get_cn_process_by_cn_id(process_id)
             .await
@@ -550,7 +546,7 @@ impl ContractNegotiationOfferRepo for ContractNegotiationRepoForSql {
             .ok_or(CnErrors::CNMessageNotFound)?;
 
         match cn_offer::Entity::delete_by_id(offer_id.as_str())
-            .exec(db_connection)
+            .exec(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorDeletingCNOffer(err.into()))?
             .rows_affected
@@ -562,17 +558,16 @@ impl ContractNegotiationOfferRepo for ContractNegotiationRepoForSql {
 }
 
 #[async_trait]
-impl AgreementRepo for ContractNegotiationRepoForSql {
+impl AgreementRepo for ContractNegotiationProviderRepoForSql {
     async fn get_all_agreements(
         &self,
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<agreement::Model>, CnErrors> {
-        let db_connection = get_db_connection().await;
         let agreements = agreement::Entity::find()
             .limit(limit.unwrap_or(10000))
             .offset(page.unwrap_or(0))
-            .all(db_connection)
+            .all(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingAgreement(err.into()))?;
         Ok(agreements)
@@ -582,9 +577,8 @@ impl AgreementRepo for ContractNegotiationRepoForSql {
         &self,
         agreement_id: Urn,
     ) -> anyhow::Result<Option<agreement::Model>, CnErrors> {
-        let db_connection = get_db_connection().await;
         let agreement = agreement::Entity::find_by_id(agreement_id.as_str())
-            .one(db_connection)
+            .one(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingAgreement(err.into()))?;
         Ok(agreement)
@@ -594,7 +588,6 @@ impl AgreementRepo for ContractNegotiationRepoForSql {
         &self,
         process_id: Urn,
     ) -> anyhow::Result<Option<agreement::Model>, CnErrors> {
-        let db_connection = get_db_connection().await;
         let cn_process = self
             .get_cn_process_by_cn_id(process_id.clone())
             .await
@@ -604,7 +597,7 @@ impl AgreementRepo for ContractNegotiationRepoForSql {
         let agreement = agreement::Entity::find()
             .join(JoinType::InnerJoin, agreement::Relation::CnMessage.def())
             .filter(cn_message::Column::CnProcessId.eq(process_id.as_str()))
-            .one(db_connection)
+            .one(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingAgreement(err.into()))?;
         Ok(agreement)
@@ -614,7 +607,6 @@ impl AgreementRepo for ContractNegotiationRepoForSql {
         &self,
         message_id: Urn,
     ) -> anyhow::Result<Option<agreement::Model>, CnErrors> {
-        let db_connection = get_db_connection().await;
         let cn_message = self
             .get_cn_messages_by_cn_message_id(message_id.clone())
             .await
@@ -623,7 +615,7 @@ impl AgreementRepo for ContractNegotiationRepoForSql {
 
         let agreement = agreement::Entity::find()
             .filter(agreement::Column::CnMessageId.eq(message_id.as_str()))
-            .one(db_connection)
+            .one(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingAgreement(err.into()))?;
         Ok(agreement)
@@ -633,7 +625,6 @@ impl AgreementRepo for ContractNegotiationRepoForSql {
         &self,
         participant_id: Urn,
     ) -> anyhow::Result<Vec<agreement::Model>, CnErrors> {
-        let db_connection = get_db_connection().await;
         let participant = self
             .get_participant_by_p_id(participant_id.clone())
             .await
@@ -652,7 +643,7 @@ impl AgreementRepo for ContractNegotiationRepoForSql {
                     )
                     .add(agreement::Column::ConsumerParticipantId.eq(participant.participant_id)),
             )
-            .all(db_connection)
+            .all(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingAgreement(err.into()))?;
         Ok(agreement)
@@ -665,7 +656,6 @@ impl AgreementRepo for ContractNegotiationRepoForSql {
         agreement_id: Urn,
         edit_agreement: EditAgreement,
     ) -> anyhow::Result<agreement::Model, CnErrors> {
-        let db_connection = get_db_connection().await;
         let cn_process = self
             .get_cn_process_by_cn_id(process_id)
             .await
@@ -685,7 +675,7 @@ impl AgreementRepo for ContractNegotiationRepoForSql {
             .ok_or(CnErrors::AgreementNotFound)?;
 
         let old_model = agreement::Entity::find_by_id(agreement_id.as_str())
-            .one(db_connection)
+            .one(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingAgreement(err.into()))?
             .ok_or(CnErrors::AgreementNotFound)?;
@@ -696,7 +686,7 @@ impl AgreementRepo for ContractNegotiationRepoForSql {
         }
 
         let model = old_active_model
-            .update(db_connection)
+            .update(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorUpdatingAgreement(err.into()))?;
         Ok(model)
@@ -708,7 +698,6 @@ impl AgreementRepo for ContractNegotiationRepoForSql {
         message_id: Urn,
         new_agreement: NewAgreement,
     ) -> anyhow::Result<agreement::Model, CnErrors> {
-        let db_connection = get_db_connection().await;
         let cn_process = self
             .get_cn_process_by_cn_id(process_id)
             .await
@@ -754,7 +743,7 @@ impl AgreementRepo for ContractNegotiationRepoForSql {
         };
 
         let agreement = agreement::Entity::insert(model)
-            .exec_with_returning(db_connection)
+            .exec_with_returning(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorCreatingAgreement(err.into()))?;
         Ok(agreement)
@@ -766,7 +755,6 @@ impl AgreementRepo for ContractNegotiationRepoForSql {
         message_id: Urn,
         agreement_id: Urn,
     ) -> anyhow::Result<(), CnErrors> {
-        let db_connection = get_db_connection().await;
         let cn_process = self
             .get_cn_process_by_cn_id(process_id)
             .await
@@ -786,7 +774,7 @@ impl AgreementRepo for ContractNegotiationRepoForSql {
             .ok_or(CnErrors::AgreementNotFound)?;
 
         match agreement::Entity::delete_by_id(agreement_id.as_str())
-            .exec(db_connection)
+            .exec(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorDeletingAgreement(err.into()))?
             .rows_affected
@@ -798,17 +786,16 @@ impl AgreementRepo for ContractNegotiationRepoForSql {
 }
 
 #[async_trait]
-impl Participant for ContractNegotiationRepoForSql {
+impl Participant for ContractNegotiationProviderRepoForSql {
     async fn get_all_participants(
         &self,
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<participant::Model>, CnErrors> {
-        let db_connection = get_db_connection().await;
         let participants = participant::Entity::find()
             .limit(limit.unwrap_or(10000))
             .offset(page.unwrap_or(0))
-            .all(db_connection)
+            .all(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingParticipant(err.into()))?;
         Ok(participants)
@@ -818,9 +805,8 @@ impl Participant for ContractNegotiationRepoForSql {
         &self,
         participant_id: Urn,
     ) -> anyhow::Result<Option<participant::Model>, CnErrors> {
-        let db_connection = get_db_connection().await;
         let participant = participant::Entity::find_by_id(participant_id.as_str())
-            .one(db_connection)
+            .one(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingParticipant(err.into()))?;
         Ok(participant)
@@ -831,9 +817,8 @@ impl Participant for ContractNegotiationRepoForSql {
         participant_id: Urn,
         edit_participant: EditParticipant,
     ) -> anyhow::Result<participant::Model, CnErrors> {
-        let db_connection = get_db_connection().await;
         let old_model = participant::Entity::find_by_id(participant_id.as_str())
-            .one(db_connection)
+            .one(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingParticipant(err.into()))?
             .ok_or(CnErrors::ParticipantNotFound(
@@ -853,7 +838,7 @@ impl Participant for ContractNegotiationRepoForSql {
         }
 
         let model = old_active_model
-            .update(db_connection)
+            .update(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorUpdatingParticipant(err.into()))?;
         Ok(model)
@@ -863,9 +848,9 @@ impl Participant for ContractNegotiationRepoForSql {
         &self,
         new_participant: NewParticipant,
     ) -> anyhow::Result<participant::Model, CnErrors> {
-        let db_connection = get_db_connection().await;
+        let participant_id = new_participant.participant_id.unwrap_or(get_urn(None)).to_string();
         let model = participant::ActiveModel {
-            participant_id: ActiveValue::Set(get_urn(None).to_string()),
+            participant_id: ActiveValue::Set(participant_id),
             identity_token: ActiveValue::Set(Option::from("TODO TOKENS".to_string())),
             _type: ActiveValue::Set(new_participant._type),
             base_url: ActiveValue::Set(new_participant.base_url),
@@ -873,16 +858,15 @@ impl Participant for ContractNegotiationRepoForSql {
         };
 
         let participant = participant::Entity::insert(model)
-            .exec_with_returning(db_connection)
+            .exec_with_returning(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorCreatingParticipant(err.into()))?;
         Ok(participant)
     }
 
     async fn delete_participant(&self, participant_id: Urn) -> anyhow::Result<(), CnErrors> {
-        let db_connection = get_db_connection().await;
         match participant::Entity::delete_by_id(participant_id.as_str())
-            .exec(db_connection)
+            .exec(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorDeletingParticipant(err.into()))?
             .rows_affected

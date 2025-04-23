@@ -1,5 +1,26 @@
+/*
+ *
+ *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 use anyhow::anyhow;
+use rainbow_common::protocol::contract::contract_odrl::{OdrlObligation, OdrlPermission, OdrlProfile};
 use sea_orm::Value;
+use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
 pub enum EntityTypes {
@@ -39,4 +60,19 @@ impl From<EntityTypes> for Value {
     fn from(value: EntityTypes) -> Self {
         Self::String(Some(Box::new(value.to_string())))
     }
+}
+
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(deny_unknown_fields)]
+pub struct OdrlPolicy {
+    #[serde(rename = "odrl:profile")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub profile: Option<OdrlProfile>,
+    #[serde(rename = "odrl:permission")]
+    pub permission: Option<Vec<OdrlPermission>>, // anyof
+    #[serde(rename = "odrl:obligation")]
+    pub obligation: Option<Vec<OdrlObligation>>,
+    #[serde(rename = "odrl:prohibition")]
+    pub prohibition: Option<Vec<OdrlObligation>>, // anyof
 }

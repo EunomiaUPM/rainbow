@@ -16,7 +16,8 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::protocol::contract::CNValidate;
+
+use crate::protocol::ProtocolValidate;
 use crate::utils::get_urn;
 use anyhow::bail;
 use serde::{Deserialize, Serialize};
@@ -49,17 +50,20 @@ pub struct OdrlMessageOffer {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub profile: Option<OdrlProfile>,
     #[serde(rename = "odrl:permission")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub permission: Option<Vec<OdrlPermission>>, // anyof
     #[serde(rename = "odrl:obligation")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub obligation: Option<Vec<OdrlObligation>>,
     // MessageOffer
     #[serde(rename = "@type")]
     pub _type: OdrlTypes,
     #[serde(rename = "odrl:prohibition")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub prohibition: Option<Vec<OdrlObligation>>, // anyof
 }
 
-impl CNValidate for OdrlMessageOffer {
+impl ProtocolValidate for OdrlMessageOffer {
     fn validate(&self) -> anyhow::Result<()> {
         //
 
@@ -115,7 +119,7 @@ impl Default for OdrlOffer {
     }
 }
 
-impl CNValidate for OdrlOffer {
+impl ProtocolValidate for OdrlOffer {
     fn validate(&self) -> anyhow::Result<()> {
         // Validate any of permission or prohibition
         match (&self.permission, &self.prohibition) {
@@ -176,7 +180,7 @@ impl Default for OdrlAgreement {
     }
 }
 
-impl CNValidate for OdrlAgreement {
+impl ProtocolValidate for OdrlAgreement {
     fn validate(&self) -> anyhow::Result<()> {
         Ok(())
     }

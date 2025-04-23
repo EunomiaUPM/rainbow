@@ -17,23 +17,8 @@
  *
  */
 
-use crate::transfer_provider::entities::transfer_process;
-use rainbow_common::protocol::transfer::{
-    TransferMessageTypes, TransferProcessMessage, TransferState, TRANSFER_CONTEXT,
-};
-
 pub mod entities;
 pub mod migrations;
 pub mod repo;
+pub mod entity_mappers;
 
-impl From<transfer_process::Model> for TransferProcessMessage {
-    fn from(model: transfer_process::Model) -> Self {
-        TransferProcessMessage {
-            context: TRANSFER_CONTEXT.to_string(),
-            _type: TransferMessageTypes::TransferProcessMessage.to_string(),
-            provider_pid: model.provider_pid,
-            consumer_pid: model.consumer_pid.unwrap_or_default(),
-            state: TransferState::from(model.state),
-        }
-    }
-}

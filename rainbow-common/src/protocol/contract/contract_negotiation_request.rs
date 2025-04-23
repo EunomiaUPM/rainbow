@@ -16,15 +16,16 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
+use super::contract_odrl::{OdrlMessageOffer, OdrlTypes};
+use crate::protocol::context_field::ContextField;
 use crate::protocol::contract::contract_odrl::OfferTypes;
-use crate::protocol::contract::{CNValidate, ContextField, ContractNegotiationMessages};
+use crate::protocol::contract::ContractNegotiationMessages;
+use crate::protocol::ProtocolValidate;
 use crate::utils::get_urn;
 use anyhow::bail;
 use serde::{Deserialize, Serialize};
 use urn::Urn;
-
-use super::contract_odrl::{OdrlMessageOffer, OdrlTypes};
-use super::CONTEXT;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ContractRequestMessage {

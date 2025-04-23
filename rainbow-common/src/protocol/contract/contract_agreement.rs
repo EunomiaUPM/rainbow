@@ -17,14 +17,15 @@
  *
  */
 
+use crate::protocol::context_field::ContextField;
 use crate::protocol::contract::contract_odrl::OdrlAgreement;
-use crate::protocol::contract::{ContractNegotiationMessages, CONTEXT};
+use crate::protocol::contract::ContractNegotiationMessages;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ContractAgreementMessage {
     #[serde(rename = "@context")]
-    pub context: String,
+    pub context: ContextField,
     #[serde(rename = "@type")]
     pub _type: String,
     #[serde(rename = "dspace:providerPid")]
@@ -40,7 +41,7 @@ pub struct ContractAgreementMessage {
 impl Default for ContractAgreementMessage {
     fn default() -> Self {
         Self {
-            context: CONTEXT.to_string(),
+            context: ContextField::default(),
             _type: ContractNegotiationMessages::ContractAgreementMessage.to_string(),
             provider_pid: "".to_string(),
             consumer_pid: "".to_string(),

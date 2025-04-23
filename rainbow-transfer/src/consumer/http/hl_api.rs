@@ -21,7 +21,7 @@ use crate::common::http::middleware::{authentication_middleware, authorization_m
 use crate::consumer::lib::api::{
     complete_transfer, create_new_callback, create_new_callback_with_address, get_all_callbacks,
     get_callback_by_id, get_data_address_by_consumer_pid, request_transfer, restart_transfer,
-    suspend_transfer, CompleteTransferRequest, RequestTransferRequest, RequestTransferResponse,
+    suspend_transfer, CompleteTransferRequest, RequestTransferRequest,
     RestartTransferRequest, SuspendTransferRequest,
 };
 use axum::extract::Path;
@@ -32,8 +32,6 @@ use axum::{middleware, Json, Router};
 use rainbow_common::err::transfer_err::TransferErrorType::{CallbackClientError, NotCheckedError};
 use rainbow_common::protocol::transfer::DataAddress;
 use rainbow_common::utils::get_urn_from_string;
-use serde::{Deserialize, Serialize};
-use std::str::FromStr;
 use tracing::info;
 
 pub fn router() -> Router {

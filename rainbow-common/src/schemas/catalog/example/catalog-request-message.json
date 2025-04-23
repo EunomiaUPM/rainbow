@@ -1,0 +1,7 @@
+{
+  "@context": [
+    "https://w3id.org/dspace/2025/1/context.jsonld"
+  ],
+  "@type": "CatalogRequestMessage",
+  "filter": []
+}

@@ -17,8 +17,6 @@
  *
  */
 
-pub mod idsa_api;
-pub mod rainbow_cn_api;
-pub mod rainbow_cn_errors;
-pub mod idsa_api_errors;
-pub mod rainbow_idsa_triggers;
+pub mod ds_protocol;
+pub mod rainbow_entities;
+pub mod ds_protocol_rpc;

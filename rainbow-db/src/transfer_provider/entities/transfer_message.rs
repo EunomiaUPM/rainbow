@@ -17,7 +17,6 @@
  *
  */
 
-use rainbow_common::protocol::transfer::{TransferMessageTypesForDb, TransferRoles};
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -28,9 +27,9 @@ pub struct Model {
     pub id: String,
     pub transfer_process_id: String,
     pub created_at: chrono::NaiveDateTime,
-    pub message_type: TransferMessageTypesForDb,
-    pub from: TransferRoles,
-    pub to: TransferRoles,
+    pub message_type: String,
+    pub from: String,
+    pub to: String,
     pub content: serde_json::Value,
 }
 

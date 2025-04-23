@@ -18,12 +18,13 @@
  */
 
 use super::distribution_definition::Distribution;
+use crate::protocol::context_field::ContextField;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Dataset {
     #[serde(rename = "@context")]
-    pub context: String,
+    pub context: ContextField,
     #[serde(rename = "@type")]
     pub _type: String,
     #[serde(rename = "@id")]

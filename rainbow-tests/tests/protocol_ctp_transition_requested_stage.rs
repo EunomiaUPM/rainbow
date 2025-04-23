@@ -28,7 +28,7 @@ use rainbow_common::dcat_formats::{DctFormats, FormatAction, FormatProtocol};
 use rainbow_common::protocol::transfer::{
     TransferCompletionMessage, TransferMessageTypes, TransferProcessMessage,
     TransferRequestMessage, TransferStartMessage, TransferSuspensionMessage,
-    TransferTerminationMessage, TRANSFER_CONTEXT,
+    TransferTerminationMessage,
 };
 use rainbow_common::utils::get_urn;
 use std::process::{Child, Command};
