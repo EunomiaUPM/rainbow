@@ -17,19 +17,32 @@
  *
  */
 
-#![allow(unused_imports)]
-#![allow(dead_code)]
-#![allow(unused_variables)]
-#![allow(unused_mut)]
-#![allow(unused_imports)]
-#![allow(unused_must_use)]
+use sea_orm::entity::prelude::*;
 
-pub mod catalog;
-pub mod contracts_provider;
-pub mod contracts_consumer;
-pub mod dataplane;
-pub mod transfer_consumer;
-pub mod transfer_provider;
-pub mod auth_provider;
-pub mod auth_consumer;
-pub mod events;
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
+#[sea_orm(table_name = "auth_verification")]
+pub struct Model {
+    #[sea_orm(primary_key)]
+    pub id: String,
+    pub state: String,
+    pub nonce: String,
+    pub audience: String,
+    // pub requirements: Value,
+    pub holder: Option<String>,
+    pub vpt: Option<String>,
+    pub success: Option<bool>,
+}
+
+#[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
+pub enum Relation {
+    #[sea_orm(has_one = "super::auth::Entity")]
+    Auth,
+}
+
+impl Related<super::auth::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Auth.def()
+    }
+}
+
+impl ActiveModelBehavior for ActiveModel {}

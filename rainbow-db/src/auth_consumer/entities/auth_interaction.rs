@@ -17,19 +17,32 @@
  *
  */
 
-#![allow(unused_imports)]
-#![allow(dead_code)]
-#![allow(unused_variables)]
-#![allow(unused_mut)]
-#![allow(unused_imports)]
-#![allow(unused_must_use)]
+use sea_orm::entity::prelude::*;
+use serde_json::Value as JsonValue;
 
-pub mod catalog;
-pub mod contracts_provider;
-pub mod contracts_consumer;
-pub mod dataplane;
-pub mod transfer_consumer;
-pub mod transfer_provider;
-pub mod auth_provider;
-pub mod auth_consumer;
-pub mod events;
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
+#[sea_orm(table_name = "auth_interaction")]
+pub struct Model {
+    #[sea_orm(primary_key)]
+    pub id: i64,
+    pub start: JsonValue, // IT IS A VEC!!
+    pub method: String,
+    pub uri: Option<String>,
+    pub nonce: String,
+    pub hash_method: Option<String>,
+    pub hints: Option<String>, // VALUE
+}
+
+#[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
+pub enum Relation {
+    #[sea_orm(has_one = "super::auth::Entity")]
+    Auth,
+}
+
+impl Related<super::auth::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Auth.def()
+    }
+}
+
+impl ActiveModelBehavior for ActiveModel {}

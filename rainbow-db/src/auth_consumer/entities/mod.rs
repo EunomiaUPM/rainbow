@@ -17,20 +17,6 @@
  *
  */
 
-use sea_orm_migration::prelude::*;
-
-pub mod m20250403_094651_ssi_auth_provider;
-
-pub fn get_ssi_auth_provider_migrations() -> Vec<Box<dyn MigrationTrait>> {
-    vec![
-        Box::new(m20250403_094651_ssi_auth_provider::Migration)
-        ]
-}
-
-pub struct Migrator;
-#[async_trait::async_trait]
-impl MigratorTrait for Migrator {
-        fn migrations() -> Vec<Box<dyn MigrationTrait>> {
-                get_ssi_auth_provider_migrations()
-        }
-}
+pub mod auth;
+pub mod auth_interaction;
+pub mod auth_verification;

@@ -17,4 +17,6 @@
  *
  */
 
-pub mod ssi_auth_data;
+pub mod auth;
+pub mod auth_interaction;
+pub mod auth_verification;

@@ -23,7 +23,7 @@ use std::time::Duration;
 
 mod core;
 pub mod http;
-mod session;
+mod manager;
 mod types;
 
 pub static SSI_AUTH_HTTP_CLIENT: Lazy<Client> = Lazy::new(|| {

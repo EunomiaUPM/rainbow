@@ -31,6 +31,8 @@ pub mod forwarding;
 pub mod misc_router;
 pub mod protocol;
 pub mod utils;
+pub mod auth;
+
 pub mod schemas;
 pub mod facades;
 pub mod adv_protocol;
