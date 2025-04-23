@@ -17,45 +17,57 @@
  *
  */
 
+// use crate::ssi_auth::provider::manager::Manager;
+// use tracing_subscriber::fmt::format;
+
 use crate::ssi_auth::provider::manager::Manager;
 use axum::extract::{Form, Path};
-use axum::http::{Method, Request, Uri};
+use axum::http::{Method, Uri};
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::{Json, Router};
-use rainbow_common::err::transfer_err::TransferErrorType;
+use rainbow_common::auth::{GrantRequest, GrantRequestResponse};
 use reqwest::StatusCode;
 use serde::Deserialize;
+use serde_json::json;
 use tracing::info;
-use tracing_subscriber::fmt::format;
 
 pub fn router() -> Router {
     Router::new()
-        .route("/petition", post(handle_petition))
+        .route("/access", post(access_request))
         .route("/pd/:state", get(pd))
         .route("/verify/:state", post(verify))
         .fallback(fallback)
 }
 
-async fn handle_petition() -> impl IntoResponse {
-    info!("POST /petition");
+async fn access_request(Json(payload): Json<GrantRequest>) -> impl IntoResponse {
+    info!("POST /access");
 
-    let uri = Manager::generate_exchange_uri().await.unwrap();
-    Json(uri)
+    let manager = Manager::new();
+    let exchange = manager.generate_exchange_uri(payload).await;
+
+    let res = match exchange {
+        Ok((client_id, oidc4vp_uri, consumer_nonce)) => {
+            GrantRequestResponse::default4oidc4vp(client_id, oidc4vp_uri, consumer_nonce)
+        }
+        Err(e) => GrantRequestResponse::error(e.to_string()),
+    };
+
+    Json(res)
 }
 
 async fn pd(Path(state): Path<String>) -> impl IntoResponse {
     let log = format!("GET /pd/{}", state);
     info!("{}", log);
 
-    let vpd = Manager::gererate_vp_def();
-    Json(vpd)
-}
-
-#[derive(Deserialize)]
-struct VerifyPayload {
-    vp_token: String,
-    presentation_submission: String,
+    // COMPLETAR CON REQUIREMENTS
+    match Manager::generate_vp_def(state).await {
+        Ok(vpd) => Json(vpd).into_response(),
+        Err(e) => {
+            let body = Json(json!({"error": e.to_string()}));
+            (StatusCode::BAD_REQUEST, body).into_response()
+        }
+    }
 }
 
 async fn verify(
@@ -68,16 +80,32 @@ async fn verify(
     // {payload.vp_token,payload.presentation_submission}
 
     let manager = Manager::new();
-    manager.verify(payload.vp_token).await.unwrap();
-
-
-
+    match manager.verifyAll(state, payload.vp_token).await {
+        Ok(vpd) => {}
+        Err(e) => {}
+    }
 
     StatusCode::OK
 }
 
 async fn fallback(method: Method, uri: Uri) -> (StatusCode, String) {
-    let kk = format!("{} {}", method, uri);
-    info!("{}", kk);
+    let log = format!("{} {}", method, uri);
+    info!("{}", log);
     (StatusCode::NOT_FOUND, format!("No route for {uri}"))
+}
+
+// ----------------------------------------------------------------->
+//
+// async fn handle_petition() -> impl IntoResponse {
+//     info!("POST /petition");
+//
+//     let uri = Manager::generate_exchange_uri().await.unwrap();
+//     Json(uri)
+// }
+//
+
+#[derive(Deserialize)]
+struct VerifyPayload {
+    vp_token: String,
+    presentation_submission: String,
 }

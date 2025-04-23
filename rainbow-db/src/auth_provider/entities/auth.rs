@@ -17,21 +17,40 @@
  *
  */
 
-use sea_orm::entity::prelude::*;
-use crate::dataplane::entities::data_plane_process::Relation;
 use chrono;
-
+use sea_orm::entity::prelude::*;
+use serde_json::Value as JsonValue;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
-#[sea_orm(table_name = "ssi_auth_provider_data")]
+#[sea_orm(table_name = "auth")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: i64,
-    pub nonce: String,
+    pub id: String,
+    pub consumer: String,
+    pub actions: JsonValue, // IT IS A VEC!!
     pub status: Status,
-    pub state: String,
     pub created_at: chrono::NaiveDateTime,
     pub ended_at: Option<chrono::NaiveDateTime>,
+}
+
+#[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
+pub enum Relation {
+    #[sea_orm(has_one = "super::auth_interaction::Entity")]
+    AuthInteraction,
+    #[sea_orm(has_one = "super::auth_verification::Entity")]
+    AuthVerification,
+}
+
+impl Related<super::auth_interaction::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::AuthInteraction.def()
+    }
+}
+
+impl Related<super::auth_verification::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::AuthVerification.def()
+    }
 }
 
 impl ActiveModelBehavior for ActiveModel {}

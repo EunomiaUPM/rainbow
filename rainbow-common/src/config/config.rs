@@ -104,12 +104,17 @@ pub struct Config {
     pub ssi_holder_wallet_password: Option<String>,
     pub ssi_holder_wallet_id: Option<String>,
 
+    // Consumer Auth
+    pub consumer_client: Option<String>,
+    pub consumer_auth_callback: Option<String>,
+
     // Local Holder Wallet
     // If deployed locally
     // ...
 
     // Provider Verification Portal
     pub provider_verification_portal_url: Option<String>,
+    pub provider_audience: Option<String>,
 
     // SSI Auth
     pub ssi_auth_enabled: Option<String>,
@@ -209,4 +214,22 @@ pub fn get_provider_portal_url() -> anyhow::Result<String> {
     let config = GLOBAL_CONFIG.get().unwrap();
     let uri = config.provider_verification_portal_url.clone().unwrap();
     Ok(uri)
+}
+
+pub fn get_consumer_client() -> anyhow::Result<String> {
+    let config = GLOBAL_CONFIG.get().unwrap();
+    let uri = config.consumer_client.clone().unwrap();
+    Ok(uri)
+}
+
+pub fn get_consumer_auth_callback() -> anyhow::Result<String> {
+    let config = GLOBAL_CONFIG.get().unwrap();
+    let uri = config.consumer_auth_callback.clone().unwrap();
+    Ok(uri)
+}
+
+pub fn get_provider_audience() -> anyhow::Result<String> {
+    let config = GLOBAL_CONFIG.get().unwrap();
+    let aud = config.provider_audience.clone().unwrap();
+    Ok(aud)
 }

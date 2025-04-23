@@ -17,19 +17,24 @@
  *
  */
 
+use sea_orm_migration::prelude::*;
 
-#![allow(unused_imports)]
-#![allow(dead_code)]
-#![allow(unused_variables)]
-#![allow(unused_mut)]
-#![allow(unused_imports)]
-#![allow(unused_must_use)]
-pub mod config;
-pub mod dcat_formats;
-pub mod err;
-pub mod forwarding;
-pub mod misc_router;
-pub mod protocol;
-pub mod utils;
-pub mod auth;
+pub mod m20250403_094651_auth;
+pub mod m20250403_094651_auth_interaction;
+pub mod m20250403_094651_auth_verification;
 
+pub fn get_auth_consumer_migrations() -> Vec<Box<dyn MigrationTrait>> {
+    vec![
+        Box::new(m20250403_094651_auth::Migration),
+        Box::new(m20250403_094651_auth_interaction::Migration),
+        Box::new(m20250403_094651_auth_verification::Migration),
+    ]
+}
+
+pub struct Migrator;
+#[async_trait::async_trait]
+impl MigratorTrait for Migrator {
+    fn migrations() -> Vec<Box<dyn MigrationTrait>> {
+        get_auth_consumer_migrations()
+    }
+}

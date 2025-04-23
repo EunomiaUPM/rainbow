@@ -30,4 +30,5 @@ pub mod contracts_consumer;
 pub mod dataplane;
 pub mod transfer_consumer;
 pub mod transfer_provider;
-pub mod ssi_auth_provider;
+pub mod auth_provider;
+pub mod auth_consumer;

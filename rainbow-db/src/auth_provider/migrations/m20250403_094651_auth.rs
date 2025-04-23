@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use sea_orm::sea_query::extension::postgres::Type;
 use sea_orm::Iterable;
 use sea_orm_migration::prelude::*;
@@ -23,7 +24,7 @@ use sea_orm_migration::prelude::*;
 pub struct Migration;
 impl MigrationName for Migration {
     fn name(&self) -> &str {
-        "m20250403_094651_ssi_auth_provider"
+        "m20250403_094651_auth"
     }
 }
 
@@ -47,36 +48,30 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(SsiAuthProviderData::Table)
-                    .col(
-                        ColumnDef::new(SsiAuthProviderData::Id)
-                            .big_integer()
-                            .not_null()
-                            .primary_key()
-                            .auto_increment(),
-                    )
-                    .col(ColumnDef::new(SsiAuthProviderData::State).string().not_null())
-                    .col(ColumnDef::new(SsiAuthProviderData::Nonce).string().not_null())
-                    .col(ColumnDef::new(SsiAuthProviderData::Status).string().not_null())
-                    .col(ColumnDef::new(SsiAuthProviderData::CreatedAt).date_time().not_null())
-                    .col(ColumnDef::new(SsiAuthProviderData::EndedAt).date_time())
+                    .table(Auth::Table)
+                    .col(ColumnDef::new(Auth::Id).string().not_null().primary_key())
+                    .col(ColumnDef::new(Auth::Consumer).string().not_null())
+                    .col(ColumnDef::new(Auth::Actions).json().not_null())
+                    .col(ColumnDef::new(Auth::Status).string().not_null())
+                    .col(ColumnDef::new(Auth::CreatedAt).date_time().not_null())
+                    .col(ColumnDef::new(Auth::EndedAt).date_time())
                     .to_owned(),
             )
             .await
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(SsiAuthProviderData::Table).to_owned()).await
+        manager.drop_table(Table::drop().table(Auth::Table).to_owned()).await
     }
 }
 
 #[derive(Iden)]
-pub enum SsiAuthProviderData {
+pub enum Auth {
     Table,
     Id,
-    Nonce,
+    Consumer,
+    Actions,
     Status,
-    State,
     CreatedAt,
     EndedAt,
 }

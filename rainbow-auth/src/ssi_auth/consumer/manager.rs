@@ -18,39 +18,62 @@
  */
 
 use crate::ssi_auth::consumer::types::{
-    Didsinfo, Jwtclaims, MatchingVCs, VPexchange, WalletInfo, WalletInfoResponse,
-    WalletLoginResponse,
+    AuthJwtclaims, Didsinfo, MatchingVCs, WalletInfo, WalletInfoResponse, WalletLoginResponse,
 };
 use crate::ssi_auth::consumer::SSI_AUTH_HTTP_CLIENT;
 use anyhow::bail;
-use base64::engine::general_purpose::{STANDARD, URL_SAFE_NO_PAD};
+use axum::http::StatusCode;
+use axum::response::IntoResponse;
+use axum::Json;
+use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
-use log::error;
 use once_cell::sync::Lazy;
+use rainbow_common::auth::{GrantRequest, GrantRequestResponse};
 use rainbow_common::config::config::{get_consumer_wallet_data, get_consumer_wallet_portal_url};
-use reqwest::header::{HeaderMap, HeaderName, HeaderValue, ACCEPT, AUTHORIZATION, CONTENT_TYPE};
-use serde::Serialize;
+use rainbow_db::auth_consumer::entities::auth_verification::Model;
+use rainbow_db::auth_consumer::repo::AUTH_CONSUMER_REPO;
+use reqwest::header::{HeaderMap, ACCEPT, AUTHORIZATION, CONTENT_TYPE};
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::sync::Mutex;
-use tracing::info;
+use tracing::{error, info};
+use url::Url;
+use urlencoding::decode;
 
-pub struct WalletSessionManager {
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Manager {
+    pub wallet_session: WalletSession,
+    pub wallet_onboard: bool,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct WalletSession {
+    pub account_id: Option<String>,
     pub token: Option<String>,
     pub token_exp: Option<u64>,
-    pub account_id: Option<String>,
     pub wallets: Vec<WalletInfo>,
 }
 
-impl WalletSessionManager {
+impl Manager {
     pub fn new() -> Self {
-        WalletSessionManager { token: None, account_id: None, wallets: Vec::new(), token_exp: None }
+        info!("Manager created");
+        Manager {
+            wallet_session: WalletSession {
+                account_id: None,
+                token: None,
+                token_exp: None,
+                wallets: Vec::new(),
+            },
+            wallet_onboard: false,
+        }
     }
 
-    async fn register(&self) -> anyhow::Result<()> {
+    pub async fn register_wallet(&self) -> anyhow::Result<()> {
         let wallet_portal_url = get_consumer_wallet_portal_url()? + "/wallet-api/auth/register";
         let wallet_data = get_consumer_wallet_data()?;
+
         let mut headers = HeaderMap::new();
         headers.insert(CONTENT_TYPE, "application/json".parse()?);
         headers.insert(ACCEPT, "application/json".parse()?);
@@ -61,8 +84,8 @@ impl WalletSessionManager {
             .json(&wallet_data)
             .send()
             .await;
+
         let res = match res {
-            // Este match es necesario si esta el de despues??
             Ok(res) => res,
             Err(e) => bail!("Error sending request: {}", e),
         };
@@ -79,11 +102,10 @@ impl WalletSessionManager {
                 bail!("WaltId account registration failed: {}", res.status());
             }
         }
-
         Ok(())
     }
 
-    async fn login(&mut self) -> anyhow::Result<()> {
+    pub async fn login_wallet(&mut self) -> anyhow::Result<()> {
         let wallet_portal_url = get_consumer_wallet_portal_url()? + "/wallet-api/auth/login";
         let mut wallet_data = get_consumer_wallet_data()?;
         wallet_data.as_object_mut().map(|obj| obj.remove("name"));
@@ -98,6 +120,7 @@ impl WalletSessionManager {
             .json(&wallet_data)
             .send()
             .await;
+
         let res = match res {
             Ok(res) => res,
             Err(e) => bail!("Error sending request: {}", e),
@@ -109,8 +132,8 @@ impl WalletSessionManager {
 
                 let json_res: WalletLoginResponse = res.json().await?;
 
-                self.account_id = Some(json_res.id);
-                self.token = Some(json_res.token.clone());
+                self.wallet_session.account_id = Some(json_res.id);
+                self.wallet_session.token = Some(json_res.token.clone());
 
                 let jwtparts: Vec<&str> = json_res.token.split('.').collect();
 
@@ -118,11 +141,11 @@ impl WalletSessionManager {
                     bail!("JWT token does not have the correct format");
                 }
 
-                let decoded = URL_SAFE_NO_PAD.decode(jwtparts[1]).unwrap();
+                let decoded = URL_SAFE_NO_PAD.decode(jwtparts[1])?;
 
-                let claims: Jwtclaims = serde_json::from_slice(&decoded).unwrap();
+                let claims: AuthJwtclaims = serde_json::from_slice(&decoded)?;
 
-                self.token_exp = Some(claims.exp);
+                self.wallet_session.token_exp = Some(claims.exp);
 
                 Ok(())
             }
@@ -133,13 +156,15 @@ impl WalletSessionManager {
         }
     }
 
-    pub async fn logout(&mut self) -> anyhow::Result<()> {
+    pub async fn logout_wallet(&mut self) -> anyhow::Result<()> {
         let wallet_portal_url = get_consumer_wallet_portal_url()? + "/wallet-api/auth/logout";
+
         let mut headers = HeaderMap::new();
         headers.insert(CONTENT_TYPE, "application/json".parse()?);
         headers.insert(ACCEPT, "application/json".parse()?);
 
         let res = SSI_AUTH_HTTP_CLIENT.post(wallet_portal_url).headers(headers).send().await;
+
         let res = match res {
             Ok(res) => res,
             Err(e) => bail!("Error sending request: {}", e),
@@ -148,7 +173,7 @@ impl WalletSessionManager {
         match res.status().as_u16() {
             200 => {
                 info!("WaltId account logout successful");
-                self.token = None;
+                self.wallet_session.token = None;
             }
             _ => {
                 error!("WaltId account logout failed: {}", res.status());
@@ -167,12 +192,13 @@ impl WalletSessionManager {
         headers.insert(CONTENT_TYPE, "application/json".parse()?);
         headers.insert(ACCEPT, "application/json".parse()?);
 
-        match &self.token {
+        match &self.wallet_session.token {
             Some(token) => headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?),
-            None => bail!("No token available for authentication"),
+            None => bail!("No token available for wallet authentication"),
         };
 
         let res = SSI_AUTH_HTTP_CLIENT.get(wallet_portal_url).headers(headers).send().await;
+
         let res = match res {
             Ok(res) => res,
             Err(e) => bail!("Error sending request: {}", e),
@@ -180,12 +206,12 @@ impl WalletSessionManager {
 
         match res.status().as_u16() {
             200 => {
-                let wallets = res.json::<WalletInfoResponse>().await.unwrap().wallets;
+                let wallets = res.json::<WalletInfoResponse>().await?.wallets;
                 for wallet in wallets {
-                    if self.wallets.contains(&wallet) {
+                    if self.wallet_session.wallets.contains(&wallet) {
                         info!("Wallet {} already exists", wallet.id);
                     } else {
-                        self.wallets.push(wallet);
+                        self.wallet_session.wallets.push(wallet);
                     }
                 }
 
@@ -193,7 +219,7 @@ impl WalletSessionManager {
             }
             _ => {
                 error!("Wallet data loading failed: {}", res.status());
-                bail!("Wallet data loaading failed: {}", res.status())
+                bail!("Wallet data loading failed: {}", res.status())
             }
         }
 
@@ -201,25 +227,26 @@ impl WalletSessionManager {
     }
 
     async fn get_wallet_dids(&mut self) -> anyhow::Result<()> {
-        if self.wallets.first().is_none() {
+        if self.wallet_session.wallets.first().is_none() {
             bail!("There is not a wallet registered")
         };
 
         let wallet_portal_url = get_consumer_wallet_portal_url()?
             + "/wallet-api/wallet/"
-            + &self.wallets.first().unwrap().id
+            + &self.wallet_session.wallets.first().unwrap().id
             + "/dids";
 
         let mut headers = HeaderMap::new();
         headers.insert(CONTENT_TYPE, "application/json".parse()?);
         headers.insert(ACCEPT, "application/json".parse()?);
 
-        match &self.token {
+        match &self.wallet_session.token {
             Some(token) => headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?),
             None => bail!("No token available for authentication"),
         };
 
         let res = SSI_AUTH_HTTP_CLIENT.get(wallet_portal_url).headers(headers).send().await;
+
         let res = match res {
             Ok(res) => res,
             Err(e) => bail!("Error sending request: {}", e),
@@ -230,7 +257,7 @@ impl WalletSessionManager {
                 let dids: Vec<Didsinfo> = res.json().await?;
 
                 for did in dids {
-                    if let Some(wallet) = self.wallets.first_mut() {
+                    if let Some(wallet) = self.wallet_session.wallets.first_mut() {
                         if let Some(dids) = &mut wallet.dids {
                             if dids.contains(&did) {
                                 info!("Did {} already exists", did.did);
@@ -243,19 +270,31 @@ impl WalletSessionManager {
                     }
                 }
 
-                info!("Dids data loaded successfully");
+                info!("Wallet Dids data loaded successfully");
             }
             _ => {
-                error!("Dids data loading failed: {}", res.status());
-                bail!("Dids data loaading failed: {}", res.status())
+                error!("Wallet Dids data loading failed: {}", res.status());
+                bail!("Wallet Dids data loading failed: {}", res.status())
             }
         }
 
         Ok(())
     }
 
-    pub async fn token_expired(&mut self) -> anyhow::Result<()> {
-        match self.token_exp {
+    pub async fn onboard(&mut self) -> anyhow::Result<()> {
+        if !self.wallet_onboard {
+            self.register_wallet().await?;
+        }
+
+        self.login_wallet().await?;
+        self.get_wallet_info().await?;
+        self.get_wallet_dids().await?;
+
+        Ok(())
+    }
+
+    pub fn token_expired(&self) -> anyhow::Result<bool> {
+        match self.wallet_session.token_exp {
             Some(expiration_time) => {
                 let now = SystemTime::now()
                     .duration_since(UNIX_EPOCH)
@@ -264,9 +303,9 @@ impl WalletSessionManager {
 
                 if now >= expiration_time {
                     info!("Token expired");
-                    self.update_token().await
-                }
-                Ok(())
+                    return Ok(true);
+                };
+                Ok(false)
             }
             None => {
                 bail!("No token available for authentication")
@@ -274,47 +313,104 @@ impl WalletSessionManager {
         }
     }
 
-    async fn update_token(&mut self) {
-        match self.login().await {
-            Ok(_) => {
+    async fn update_token(&mut self) -> anyhow::Result<()> {
+        match self.login_wallet().await {
+            Ok(()) => {
                 info!("Token updated successfully");
+                Ok(())
             }
             Err(e) => {
                 error!("Token update failed: {}", e);
+                bail!("Error updating token: {}", e);
             }
         }
     }
 
-    pub async fn access(&mut self) -> anyhow::Result<()> {
-        if self.account_id.is_none() {
-            self.register().await.unwrap();
+    pub async fn ok(&mut self) -> anyhow::Result<()> {
+        if self.token_expired()? {
+            self.update_token().await?;
         }
-
-        self.login().await.unwrap();
-        self.get_wallet_info().await.unwrap();
-        self.get_wallet_dids().await.unwrap();
-
         Ok(())
     }
 
-    pub async fn joinexchange(&self, exchange_url: String) -> anyhow::Result<String> {
-        let kk = self.wallets.first();
+    pub async fn request_access(
+        &self,
+        url: String,
+        provider: String,
+        actions: Vec<String>,
+    ) -> anyhow::Result<Model> {
+        let body = GrantRequest::default4oidc();
 
-        if self.wallets.first().is_none() {
+        let model =
+            match AUTH_CONSUMER_REPO.create_auth(provider, actions, body.interact.clone()).await {
+                Ok(model) => {
+                    info!("exchange saved successfully");
+                    model
+                }
+                Err(e) => bail!("Unable to save exchange in db: {}", e),
+            };
+
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "application/json".parse()?);
+        headers.insert(ACCEPT, "application/json".parse()?);
+
+        info!("Sending Grant Petition to Provider");
+
+        let res = SSI_AUTH_HTTP_CLIENT.post(url).headers(headers).json(&body).send().await;
+
+        let res = match res {
+            Ok(res) => res,
+            Err(e) => bail!("Error sending request: {}", e),
+        };
+
+        let mut res: GrantRequestResponse = match res.status().as_u16() {
+            200 => {
+                info!("Grant Response received successfully");
+                res.json().await?
+            }
+            _ => {
+                error!("Grant Response failed: {}", res.status());
+                bail!("Grant Response failed: {}", res.status())
+            }
+        };
+
+        match AUTH_CONSUMER_REPO.auth_accepted(model.id, res.instance_id.unwrap()).await {
+            Ok(model) => {
+                info!("Assigned id updated successfully");
+            }
+            Err(e) => bail!("Unable to update assigned id in db: {}", e),
+        };
+
+        let model = match AUTH_CONSUMER_REPO
+            .create_auth_verification(model.id, res.interact.unwrap().oidc4vp.unwrap())
+            .await
+        {
+            Ok(model) => {
+                info!("Verification data stored successfully");
+                model
+            }
+            Err(e) => bail!("Unable to save verification in db: {}", e),
+        };
+
+        Ok(model)
+    }
+
+    pub async fn join_exchange(&self, exchange_url: String) -> anyhow::Result<String> {
+        if self.wallet_session.wallets.first().is_none() {
             bail!("There is not a wallet registered")
         };
 
         let url = format!(
             "{}/wallet-api/wallet/{}/exchange/resolvePresentationRequest",
             get_consumer_wallet_portal_url()?,
-            self.wallets.first().unwrap().id
+            self.wallet_session.wallets.first().unwrap().id
         );
 
         let mut headers = HeaderMap::new();
         headers.insert(CONTENT_TYPE, "text/plain".parse()?);
         headers.insert(ACCEPT, "text/plain".parse()?);
 
-        match &self.token {
+        match &self.wallet_session.token {
             Some(token) => headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?),
             None => bail!("No token available for authentication"),
         };
@@ -338,21 +434,40 @@ impl WalletSessionManager {
         }
     }
 
+    pub async fn parse_vpd(&self, vpd_as_string: String) -> anyhow::Result<Value> {
+        let url = Url::parse(decode(&vpd_as_string).unwrap().as_ref())?;
+
+        if let Some((_, vpd_json)) =
+            url.query_pairs().find(|(key, _)| key == "presentation_definition")
+        {
+            match serde_json::from_str::<Value>(&vpd_json) {
+                Ok(json) => Ok(json),
+                Err(err) => {
+                    error!("Error parsing the credential");
+                    bail!("Error parsing the credential")
+                }
+            }
+        } else {
+            error!("Invalid Presentation Definition");
+            bail!("Invalid Presentation Definition")
+        }
+    }
+
     pub async fn match_vc4vp(&self, vpdef: Value) -> anyhow::Result<Vec<MatchingVCs>> {
-        if self.wallets.first().is_none() {
+        if self.wallet_session.wallets.first().is_none() {
             bail!("There is not a wallet registered")
         };
         let url = format!(
             "{}/wallet-api/wallet/{}/exchange/matchCredentialsForPresentationDefinition",
             get_consumer_wallet_portal_url()?,
-            self.wallets.first().unwrap().id
+            self.wallet_session.wallets.first().unwrap().id
         );
 
         let mut headers = HeaderMap::new();
         headers.insert(CONTENT_TYPE, "application/json".parse()?);
         headers.insert(ACCEPT, "application/json".parse()?);
 
-        match &self.token {
+        match &self.wallet_session.token {
             Some(token) => headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?),
             None => bail!("No token available for authentication"),
         };
@@ -367,7 +482,6 @@ impl WalletSessionManager {
         match res.status().as_u16() {
             200 => {
                 info!("Credentials matched successfully");
-                println!("{:?}", res);
                 let vc_json: Vec<MatchingVCs> = res.json().await?;
 
                 Ok(vc_json)
@@ -380,34 +494,50 @@ impl WalletSessionManager {
     }
 
     pub async fn present_vp(&self, preq: String, creds: Vec<String>) -> anyhow::Result<()> {
-        if self.wallets.first().is_none() {
+        if self.wallet_session.wallets.first().is_none() {
             bail!("There is not a wallet registered")
         };
         let url = format!(
             "{}/wallet-api/wallet/{}/exchange/usePresentationRequest",
             get_consumer_wallet_portal_url()?,
-            self.wallets.first().unwrap().id
+            self.wallet_session.wallets.first().unwrap().id
         );
 
         let mut headers = HeaderMap::new();
         headers.insert(CONTENT_TYPE, "application/json".parse()?);
         headers.insert(ACCEPT, "application/json".parse()?);
 
-        match &self.token {
+        match &self.wallet_session.token {
             Some(token) => headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?),
             None => bail!("No token available for authentication"),
         };
 
-        let did = &self.wallets.first().unwrap().dids.as_ref().unwrap().first().unwrap().did;
-        let did = self.wallets.first().unwrap().dids.as_ref().unwrap().first().unwrap().did.clone();
+        let did = &self
+            .wallet_session
+            .wallets
+            .first()
+            .unwrap()
+            .dids
+            .as_ref()
+            .unwrap()
+            .first()
+            .unwrap()
+            .did;
+        let did = self
+            .wallet_session
+            .wallets
+            .first()
+            .unwrap()
+            .dids
+            .as_ref()
+            .unwrap()
+            .first()
+            .unwrap()
+            .did
+            .clone();
 
         let body =
             json!({ "did": null, "presentationRequest": preq, "selectedCredentials": creds });
-
-
-        println!();
-        println!("{}", serde_json::to_string_pretty(&body)?);
-        println!();
 
         let res = SSI_AUTH_HTTP_CLIENT.post(url).headers(headers).json(&body).send().await;
 
@@ -416,7 +546,6 @@ impl WalletSessionManager {
             Err(e) => bail!("Error sending request: {}", e),
         };
 
-        println!("{:?}", res);
         let status = res.status();
         let body_text = res.text().await?;
 
@@ -426,5 +555,29 @@ impl WalletSessionManager {
     }
 }
 
-pub static SESSION_MANAGER: Lazy<Arc<Mutex<WalletSessionManager>>> =
-    Lazy::new(|| Arc::new(Mutex::new(WalletSessionManager::new())));
+pub static MANAGER: Lazy<Arc<Mutex<Manager>>> = Lazy::new(|| Arc::new(Mutex::new(Manager::new())));
+
+//
+// use crate::ssi_auth::consumer::types::{
+//     Didsinfo, Jwtclaims, MatchingVCs, VPexchange, WalletInfo, WalletInfoResponse,
+//     WalletLoginResponse,
+// };
+// use crate::ssi_auth::consumer::SSI_AUTH_HTTP_CLIENT;
+// use anyhow::bail;
+// use base64::engine::general_purpose::{STANDARD, URL_SAFE_NO_PAD};
+// use base64::Engine;
+// use log::error;
+
+// use rainbow_common::config::config::{get_consumer_wallet_data, get_consumer_wallet_portal_url};
+// use reqwest::header::{HeaderMap, HeaderName, HeaderValue, ACCEPT, AUTHORIZATION, CONTENT_TYPE};
+// use serde::Serialize;
+// use serde_json::{json, Value};
+
+//
+
+//
+//
+// }
+//
+// pub static SESSION_MANAGER: Lazy<Arc<Mutex<WalletSessionManager>>> =
+//     Lazy::new(|| Arc::new(Mutex::new(WalletSessionManager::new())));

@@ -175,6 +175,9 @@ pub async fn init_command_line() -> Result<()> {
             contracts_service_url: None,
             contracts_service_port: None,
             provider_verification_portal_url: None,
+            consumer_client: Some(String::from("ConsumerService")),
+            consumer_auth_callback: Some(String::from("http://localhost:1235/auth/callback")),
+            provider_audience: Some(String::from("http://host.docker.internal:1234/verify")),
         },
         DataSpaceTransferRoles::Consumer(args) => Config {
             host_url: config_field!(args, host_url, "HOST_URL", "localhost"),
@@ -239,6 +242,9 @@ pub async fn init_command_line() -> Result<()> {
             contracts_service_url: None,
             contracts_service_port: None,
             provider_verification_portal_url: None,
+            consumer_client: Some(String::from("ConsumerService")),
+            consumer_auth_callback: Some(String::from("http://localhost:1235/auth/callback")),
+            provider_audience: Some(String::from("http://host.docker.internal:1234/verify")),
         },
     };
 

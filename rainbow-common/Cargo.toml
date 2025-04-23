@@ -35,4 +35,5 @@ http-body-util = { workspace = true }
 tracing-test = { workspace = true }
 sea-orm = { workspace = true }
 sea-orm-migration = { workspace = true }
-
+rand = "0.8.5"
+jsonwebtoken = "9.3.1"

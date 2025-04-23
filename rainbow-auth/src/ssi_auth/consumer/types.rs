@@ -16,138 +16,30 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
-use serde::{Serialize, Deserialize};
+use rainbow_common::config::config::get_consumer_client;
+use rand::distributions::Alphanumeric;
+use rand::Rng;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct GrantPetition {
-    pub access_token: AccessTokenRequirements4GP,
-    pub subject: Option<Subject4GP>, // REQUIRED if requesting subject information
-    pub client: String,
-    pub user: Option<String>,
-    pub interact: Interact4GP,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct AccessTokenRequirements4GP {
-    pub access: Access4AT,
-    pub label: Option<String>, // REQUIRED if used as part of a request for multiple access tokens
-    pub flags: Option<String>, // A set of flags that indicate desired attributes or behavior to be attached to the access token by the AS
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Access4AT {
-    _type: String,
-    actions: Option<Vec<Actions4Access4AT>>,
-    locations: Option<Vec<String>>,
-    datatypes: Option<Vec<String>>,
-    identifier: Option<String>,
-    privileges: Option<Vec<String>>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub enum Actions4Access4AT {
-    TALK,
-    NEGOTIATE,
-    EXCHANGE,
-    READ,
-    WRITE,
-    DELETE,
-}
-
-impl Actions4Access4AT {
-    pub fn as_str(&self) -> &str {
-        match *self {
-            Actions4Access4AT::TALK => "talk",
-            Actions4Access4AT::NEGOTIATE => "negotiate",
-            Actions4Access4AT::EXCHANGE => "exchange",
-            Actions4Access4AT::READ => "read",
-            Actions4Access4AT::WRITE => "write",
-            Actions4Access4AT::DELETE => "delete",
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Subject4GP {
-    sub_id_formats: Option<Vec<String>>, // REQUIRED if Subject Identifiers are requested
-    assertion_formats: Option<Vec<String>>, // REQUIRED if assertions are requested
-    sub_ids: Option<Value>, // If omited assume that subject information requests are about the current user
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Interact4GP {
-    start: Vec<String>,
-    finish: Finish4Interact, // REQUIRED because DataSpace Protocl is based on requirements
-    hints: Option<Value>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Finish4Interact {
-    method: String,
-    uri: Option<String>, // REQUIRED for redirect and push methods
-    nonce: String,
-    hash_method: Option<String>,
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-pub struct COMPLETAR {}
-
-
-// ------------------------------------------------------------------------------------
-
-
-
-#[derive(Deserialize)]
 pub struct WalletLoginResponse {
     pub id: String,
     pub username: String,
     pub token: String,
 }
 
-#[derive(Deserialize)]
-pub struct WalletInfoResponse {
-    pub account: String,
-    pub wallets: Vec<WalletInfo>,
+#[derive(Serialize, Deserialize, Debug)]
+pub struct AuthJwtclaims {
+    pub sub: String,
+    pub exp: u64,
+    pub iat: u64,
+    pub jti: String,
+    pub iss: String,
+    pub aud: String,
 }
 
-#[derive(Deserialize, PartialEq, Eq, Clone, Debug)]
+#[derive(Deserialize, Serialize, PartialEq, Eq, Clone, Debug)]
 pub struct WalletInfo {
     pub id: String,
     pub name: String,
@@ -157,7 +49,7 @@ pub struct WalletInfo {
     pub dids: Option<Vec<Didsinfo>>,
 }
 
-#[derive(Deserialize, PartialEq, Eq, Clone, Debug)]
+#[derive(Deserialize, Serialize, PartialEq, Eq, Clone, Debug)]
 pub struct Didsinfo {
     pub did: String,
     pub alias: String,
@@ -166,6 +58,21 @@ pub struct Didsinfo {
     pub default: bool,
     pub createdOn: String,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct WalletInfoResponse {
+    pub account: String,
+    pub wallets: Vec<WalletInfo>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ReachProvider {
+    pub id: String,
+    pub url: String,
+    pub actions: Vec<String>,
+}
+
+// ------------------------------------------------------------------------------------
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct VPexchange {
@@ -190,16 +97,6 @@ pub struct MatchingVCs {
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 enum Permission {
     ADMINISTRATE, // ADD MORE
-}
-
-#[derive(Deserialize)]
-pub struct Jwtclaims {
-    pub sub: String,
-    pub exp: u64,
-    pub iat: u64,
-    pub jti: String,
-    pub iss: String,
-    pub aud: String,
 }
 
 #[derive(Deserialize)]
