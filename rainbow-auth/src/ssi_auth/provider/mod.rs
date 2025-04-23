@@ -17,6 +17,6 @@
  *
  */
 
-mod core;
 pub mod http;
-mod manager;
+pub mod manager;
+mod utils;

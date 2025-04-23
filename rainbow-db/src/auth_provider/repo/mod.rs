@@ -18,24 +18,29 @@
  */
 
 use crate::auth_provider::entities::{auth, auth_interaction, auth_verification};
-use crate::auth_provider::repo::sql::AuthProviderRepo;
 use axum::async_trait;
-use once_cell::sync::Lazy;
 use rainbow_common::auth::Interact4GR;
-use rainbow_common::config::config::GLOBAL_CONFIG;
+use sea_orm::DatabaseConnection;
 
 pub mod sql;
 
-pub static AUTH_PROVIDER_REPO: Lazy<Box<dyn AuthProviderRepoTrait + Send + Sync>> =
-    Lazy::new(|| {
-        let repo_type = GLOBAL_CONFIG.get().unwrap().db_type.clone();
-        match repo_type.as_str() {
-            "postgres" => Box::new(AuthProviderRepo {}),
-            "memory" => Box::new(AuthProviderRepo {}),
-            "mysql" => Box::new(AuthProviderRepo {}),
-            _ => panic!("Unknown REPO_TYPE: {}", repo_type),
-        }
-    });
+// pub static AUTH_PROVIDER_REPO: Lazy<Box<dyn AuthProviderRepoTrait + Send + Sync>> =
+//     Lazy::new(|| {
+//         let repo_type = GLOBAL_CONFIG.get().unwrap().db_type.clone();
+//         match repo_type.as_str() {
+//             "postgres" => Box::new(AuthProviderRepo {}),
+//             "memory" => Box::new(AuthProviderRepo {}),
+//             "mysql" => Box::new(AuthProviderRepo {}),
+//             _ => panic!("Unknown REPO_TYPE: {}", repo_type),
+//         }
+//     });
+
+
+pub trait AuthProviderRepoFactory: AuthProviderRepoTrait + Send + Sync + Clone + 'static {
+    fn create_repo(db_connection: DatabaseConnection) -> Self
+    where
+        Self: Sized;
+}
 
 #[async_trait]
 pub trait AuthProviderRepoTrait {

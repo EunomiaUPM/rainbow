@@ -21,77 +21,97 @@
 // use tracing_subscriber::fmt::format;
 
 use crate::ssi_auth::provider::manager::Manager;
-use axum::extract::{Form, Path};
+use axum::extract::{Form, Path, State};
 use axum::http::{Method, Uri};
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use rainbow_common::auth::{GrantRequest, GrantRequestResponse};
+use rainbow_db::auth_provider::repo::AuthProviderRepoTrait;
 use reqwest::StatusCode;
 use serde::Deserialize;
 use serde_json::json;
+use std::sync::Arc;
 use tracing::info;
 
-pub fn router() -> Router {
-    Router::new()
-        .route("/access", post(access_request))
-        .route("/pd/:state", get(pd))
-        .route("/verify/:state", post(verify))
-        .fallback(fallback)
+pub struct RainbowAuthProviderRouter<T>
+where
+    T: AuthProviderRepoTrait + Send + Sync + Clone + 'static,
+{
+    pub manager: Manager<T>,
 }
 
-async fn access_request(Json(payload): Json<GrantRequest>) -> impl IntoResponse {
-    info!("POST /access");
 
-    let manager = Manager::new();
-    let exchange = manager.generate_exchange_uri(payload).await;
-
-    let res = match exchange {
-        Ok((client_id, oidc4vp_uri, consumer_nonce)) => {
-            GrantRequestResponse::default4oidc4vp(client_id, oidc4vp_uri, consumer_nonce)
-        }
-        Err(e) => GrantRequestResponse::error(e.to_string()),
-    };
-
-    Json(res)
-}
-
-async fn pd(Path(state): Path<String>) -> impl IntoResponse {
-    let log = format!("GET /pd/{}", state);
-    info!("{}", log);
-
-    // COMPLETAR CON REQUIREMENTS
-    match Manager::generate_vp_def(state).await {
-        Ok(vpd) => Json(vpd).into_response(),
-        Err(e) => {
-            let body = Json(json!({"error": e.to_string()}));
-            (StatusCode::BAD_REQUEST, body).into_response()
-        }
+impl<T> RainbowAuthProviderRouter<T>
+where
+    T: AuthProviderRepoTrait + Send + Sync + Clone + 'static,
+{
+    pub fn new(auth_repo: Arc<T>) -> Self {
+        let manager = Manager::new(auth_repo);
+        Self { manager }
     }
-}
-
-async fn verify(
-    Path(state): Path<String>,
-    Form(payload): Form<VerifyPayload>,
-) -> impl IntoResponse {
-    let log = format!("GET /verify/{}", state);
-    info!("{}", log);
-
-    // {payload.vp_token,payload.presentation_submission}
-
-    let manager = Manager::new();
-    match manager.verifyAll(state, payload.vp_token).await {
-        Ok(vpd) => {}
-        Err(e) => {}
+    pub fn router(self) -> Router {
+        Router::new()
+            .route("/access", post(Self::access_request))
+            .route("/pd/:state", get(Self::pd))
+            .route("/verify/:state", post(Self::verify))
+            .with_state(self.manager)
+            .fallback(Self::fallback)
     }
 
-    StatusCode::OK
-}
+    async fn access_request(State(manager): State<Manager<T>>, Json(payload): Json<GrantRequest>) -> impl IntoResponse {
+        info!("POST /access");
 
-async fn fallback(method: Method, uri: Uri) -> (StatusCode, String) {
-    let log = format!("{} {}", method, uri);
-    info!("{}", log);
-    (StatusCode::NOT_FOUND, format!("No route for {uri}"))
+        // let manager = Manager::new();
+        let exchange = manager.generate_exchange_uri(payload).await;
+
+        let res = match exchange {
+            Ok((client_id, oidc4vp_uri, consumer_nonce)) => {
+                GrantRequestResponse::default4oidc4vp(client_id, oidc4vp_uri, consumer_nonce)
+            }
+            Err(e) => GrantRequestResponse::error(e.to_string()),
+        };
+
+        Json(res)
+    }
+
+    async fn pd(State(manager): State<Manager<T>>, Path(state): Path<String>) -> impl IntoResponse {
+        let log = format!("GET /pd/{}", state);
+        info!("{}", log);
+
+        // COMPLETAR CON REQUIREMENTS
+        match manager.generate_vp_def(state).await {
+            Ok(vpd) => Json(vpd).into_response(),
+            Err(e) => {
+                let body = Json(json!({"error": e.to_string()}));
+                (StatusCode::BAD_REQUEST, body).into_response()
+            }
+        }
+    }
+
+    async fn verify(
+        State(manager): State<Manager<T>>,
+        Path(state): Path<String>,
+        Form(payload): Form<VerifyPayload>,
+    ) -> impl IntoResponse {
+        let log = format!("GET /verify/{}", state);
+        info!("{}", log);
+
+        // {payload.vp_token,payload.presentation_submission}
+
+        match manager.verify_all(state, payload.vp_token).await {
+            Ok(vpd) => {}
+            Err(e) => {}
+        }
+
+        StatusCode::OK
+    }
+
+    async fn fallback(method: Method, uri: Uri) -> (StatusCode, String) {
+        let log = format!("{} {}", method, uri);
+        info!("{}", log);
+        (StatusCode::NOT_FOUND, format!("No route for {uri}"))
+    }
 }
 
 // ----------------------------------------------------------------->

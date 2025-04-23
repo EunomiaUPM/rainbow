@@ -22,35 +22,47 @@ use crate::auth_provider::entities::auth::Status;
 use crate::auth_provider::entities::auth_interaction;
 use crate::auth_provider::entities::auth_verification;
 use crate::auth_provider::entities::auth_verification::Model;
-use crate::auth_provider::repo::AuthProviderRepoTrait;
+use crate::auth_provider::repo::{AuthProviderRepoFactory, AuthProviderRepoTrait};
 use anyhow::bail;
 use axum::async_trait;
 use chrono;
 use rainbow_common::auth::Interact4GR;
 use rainbow_common::config::config::get_provider_audience;
-use rainbow_common::config::database::get_db_connection;
 use rand::{distributions::Alphanumeric, Rng};
 use sea_orm::sqlx::types::uuid;
 use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter,
+    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter,
     QuerySelect,
 };
 use serde_json::Value;
 
-pub struct AuthProviderRepo {}
+#[derive(Clone)]
+pub struct AuthProviderRepoForSql {
+    db_connection: DatabaseConnection,
+}
+
+impl AuthProviderRepoForSql {
+    fn new(db_connection: DatabaseConnection) -> Self {
+        Self { db_connection }
+    }
+}
+
+impl AuthProviderRepoFactory for AuthProviderRepoForSql {
+    fn create_repo(db_connection: DatabaseConnection) -> Self
+    where
+        Self: Sized,
+    {
+        Self::new(db_connection)
+    }
+}
 
 #[async_trait]
-impl AuthProviderRepoTrait for AuthProviderRepo {
-    async fn get_all_auths(
-        &self,
-        limit: Option<u64>,
-        offset: Option<u64>,
-    ) -> anyhow::Result<Vec<auth::Model>> {
-        let db_connection = get_db_connection().await;
+impl AuthProviderRepoTrait for AuthProviderRepoForSql {
+    async fn get_all_auths(&self, limit: Option<u64>, offset: Option<u64>) -> anyhow::Result<Vec<auth::Model>> {
         let auths = auth::Entity::find()
             .limit(limit.unwrap_or(100000))
             .offset(offset.unwrap_or(0))
-            .all(db_connection)
+            .all(&self.db_connection)
             .await;
         match auths {
             Ok(auths) => Ok(auths),
@@ -59,8 +71,7 @@ impl AuthProviderRepoTrait for AuthProviderRepo {
     }
 
     async fn get_auth_by_id(&self, auth_id: String) -> anyhow::Result<auth::Model> {
-        let db_connection = get_db_connection().await;
-        let auth = auth::Entity::find_by_id(auth_id.clone()).one(db_connection).await;
+        let auth = auth::Entity::find_by_id(auth_id.clone()).one(&self.db_connection).await;
 
         match auth {
             Ok(Some(auth)) => Ok(auth),
@@ -79,12 +90,9 @@ impl AuthProviderRepoTrait for AuthProviderRepo {
         auth_interaction::Model,
         auth_verification::Model,
     )> {
-        let db_connection = get_db_connection().await;
         let id = uuid::Uuid::new_v4().to_string();
-        let state: String =
-            rand::thread_rng().sample_iter(&Alphanumeric).take(12).map(char::from).collect();
-        let nonce: String =
-            rand::thread_rng().sample_iter(&Alphanumeric).take(12).map(char::from).collect();
+        let state: String = rand::thread_rng().sample_iter(&Alphanumeric).take(12).map(char::from).collect();
+        let nonce: String = rand::thread_rng().sample_iter(&Alphanumeric).take(12).map(char::from).collect();
         let audience = get_provider_audience().unwrap();
         let actions: Value = Value::String(serde_json::to_string(&actions).unwrap());
         let start: Value = Value::String(serde_json::to_string(&interact.start).unwrap());
@@ -120,21 +128,17 @@ impl AuthProviderRepoTrait for AuthProviderRepo {
             success: ActiveValue::Set(None),
         };
 
-        let auth = auth::Entity::insert(auth_model).exec_with_returning(db_connection).await?;
-        let auth_interaction = auth_interaction::Entity::insert(auth_interaction_model)
-            .exec_with_returning(db_connection)
-            .await?;
-        let auth_verification = auth_verification::Entity::insert(auth_verification_model)
-            .exec_with_returning(db_connection)
-            .await?;
+        let auth = auth::Entity::insert(auth_model).exec_with_returning(&self.db_connection).await?;
+        let auth_interaction =
+            auth_interaction::Entity::insert(auth_interaction_model).exec_with_returning(&self.db_connection).await?;
+        let auth_verification =
+            auth_verification::Entity::insert(auth_verification_model).exec_with_returning(&self.db_connection).await?;
 
         Ok((auth, auth_interaction, auth_verification))
     }
 
     async fn update_auth_status(&self, id: String, status: Status) -> anyhow::Result<auth::Model> {
-        let db_connection = get_db_connection().await;
-
-        let mut entry = match auth::Entity::find_by_id(id.clone()).one(db_connection).await {
+        let mut entry = match auth::Entity::find_by_id(id.clone()).one(&self.db_connection).await {
             Ok(Some(entry)) => entry.into_active_model(),
             Ok(None) => bail!("No entry auth with ID: {}", id),
             Err(e) => bail!("Failed to fetch data: {}", e),
@@ -143,7 +147,7 @@ impl AuthProviderRepoTrait for AuthProviderRepo {
         entry.status = ActiveValue::Set(status);
         entry.ended_at = ActiveValue::Set(Some(chrono::Utc::now().naive_utc()));
 
-        let upd_entry = entry.update(db_connection).await;
+        let upd_entry = entry.update(&self.db_connection).await;
 
         match upd_entry {
             Ok(upd_entry) => Ok(upd_entry),
@@ -152,25 +156,20 @@ impl AuthProviderRepoTrait for AuthProviderRepo {
     }
 
     async fn delete_auth(&self, id: String) -> anyhow::Result<auth::Model> {
-        let db_connection = get_db_connection().await;
-
-        let mut entry = match auth::Entity::find_by_id(id.clone()).one(db_connection).await {
+        let mut entry = match auth::Entity::find_by_id(id.clone()).one(&self.db_connection).await {
             Ok(Some(entry)) => entry,
             Ok(None) => bail!("No entry found with ID: {}", id),
             Err(e) => bail!("Failed to fetch data: {}", e),
         };
         let ret = entry.clone();
         let active_model = entry.into_active_model();
-        active_model.delete(db_connection).await?;
+        active_model.delete(&self.db_connection).await?;
 
         Ok(ret)
     }
 
     async fn get_interaction_by_id(&self, id: String) -> anyhow::Result<auth_interaction::Model> {
-        let db_connection = get_db_connection().await;
-
-        let auth_interaction =
-            auth_interaction::Entity::find_by_id(id.clone()).one(db_connection).await;
+        let auth_interaction = auth_interaction::Entity::find_by_id(id.clone()).one(&self.db_connection).await;
 
         match auth_interaction {
             Ok(Some(auth_interaction)) => Ok(auth_interaction),
@@ -180,11 +179,9 @@ impl AuthProviderRepoTrait for AuthProviderRepo {
     }
 
     async fn get_auth_by_state(&self, state: String) -> anyhow::Result<String> {
-        let db_connection = get_db_connection().await;
-
         let auth = auth_verification::Entity::find()
             .filter(auth_verification::Column::State.eq(state.clone()))
-            .one(db_connection)
+            .one(&self.db_connection)
             .await;
 
         match auth {
@@ -194,15 +191,8 @@ impl AuthProviderRepoTrait for AuthProviderRepo {
         }
     }
 
-    async fn get_av_by_id_update_holder(
-        &self,
-        id: String,
-        vpt: String,
-        holder: String,
-    ) -> anyhow::Result<Model> {
-        let db_connection = get_db_connection().await;
-
-        let auth_ver = auth_verification::Entity::find_by_id(&id).one(db_connection).await;
+    async fn get_av_by_id_update_holder(&self, id: String, vpt: String, holder: String) -> anyhow::Result<Model> {
+        let auth_ver = auth_verification::Entity::find_by_id(&id).one(&self.db_connection).await;
 
         let mut entry = match auth_ver {
             Ok(Some(auth_ver)) => auth_ver.into_active_model(),
@@ -213,7 +203,7 @@ impl AuthProviderRepoTrait for AuthProviderRepo {
         entry.holder = ActiveValue::Set(Some(holder));
         entry.vpt = ActiveValue::Set(Some(vpt));
 
-        let upd_entry = entry.update(db_connection).await;
+        let upd_entry = entry.update(&self.db_connection).await;
 
         match upd_entry {
             Ok(upd_entry) => Ok(upd_entry),
@@ -222,10 +212,8 @@ impl AuthProviderRepoTrait for AuthProviderRepo {
     }
 
     async fn update_verification_result(&self, id: String, result: bool) -> anyhow::Result<()> {
-        let db_connection = get_db_connection().await;
-
-        let auth_ver = auth_verification::Entity::find_by_id(&id).one(db_connection).await;
-        let auth = auth::Entity::find_by_id(&id).one(db_connection).await;
+        let auth_ver = auth_verification::Entity::find_by_id(&id).one(&self.db_connection).await;
+        let auth = auth::Entity::find_by_id(&id).one(&self.db_connection).await;
 
         let mut ver_entry = match auth_ver {
             Ok(Some(auth_ver)) => auth_ver.into_active_model(),
@@ -241,11 +229,11 @@ impl AuthProviderRepoTrait for AuthProviderRepo {
         ver_entry.success = ActiveValue::Set(Some(result));
         auth_entry.ended_at = ActiveValue::Set(Some(chrono::Utc::now().naive_utc()));
 
-        let upd_entry = ver_entry.update(db_connection).await;
-        let upd_entry2 = auth_entry.update(db_connection).await;
+        let upd_entry = ver_entry.update(&self.db_connection).await;
+        let upd_entry2 = auth_entry.update(&self.db_connection).await;
 
         match upd_entry {
-            Ok(upd_entry) => {},
+            Ok(upd_entry) => {}
             Err(e) => bail!("Failed to update status: {}", e),
         }
         match upd_entry2 {

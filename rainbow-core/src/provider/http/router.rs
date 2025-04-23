@@ -18,6 +18,7 @@
  */
 
 use axum::Router;
+use rainbow_auth::ssi_auth::provider::http::RainbowAuthProviderRouter;
 use rainbow_catalog::core::ds_protocol::ds_protocol::DSProtocolCatalogService;
 use rainbow_catalog::core::rainbow_entities::catalog::RainbowCatalogCatalogService;
 use rainbow_catalog::core::rainbow_entities::data_service::RainbowCatalogDataServiceService;
@@ -38,6 +39,8 @@ use rainbow_contracts::provider::core::rainbow_entities::rainbow_entities::Rainb
 use rainbow_contracts::provider::http::ds_protocol::ds_protocol::DSProtocolContractNegotiationProviderRouter;
 use rainbow_contracts::provider::http::ds_protocol_rpc::ds_protocol_rpc::DSRPCContractNegotiationProviderRouter;
 use rainbow_contracts::provider::http::rainbow_entities::rainbow_entities::RainbowEntitesContractNegotiationProviderRouter;
+use rainbow_db::auth_provider::repo::sql::AuthProviderRepoForSql;
+use rainbow_db::auth_provider::repo::AuthProviderRepoFactory;
 use rainbow_db::catalog::repo::sql::CatalogRepoForSql;
 use rainbow_db::catalog::repo::CatalogRepoFactory;
 use rainbow_db::contracts_provider::repo::sql::ContractNegotiationProviderRepoForSql;
@@ -73,7 +76,15 @@ pub async fn create_core_provider_router(db_url: String) -> Router {
     let cn_provider_repo = Arc::new(ContractNegotiationProviderRepoForSql::create_repo(
         db_connection.clone(),
     ));
-    let catalog_repo = Arc::new(CatalogRepoForSql::create_repo(db_connection));
+    let catalog_repo = Arc::new(CatalogRepoForSql::create_repo(db_connection.clone()));
+    let auth_repo = Arc::new(AuthProviderRepoForSql::create_repo(db_connection.clone()));
+
+
+    // =====================
+    // AUTH
+    // =====================
+    let auth_router = RainbowAuthProviderRouter::new(auth_repo.clone()).router();
+
 
     // =====================
     // EVENTS
@@ -216,6 +227,7 @@ pub async fn create_core_provider_router(db_url: String) -> Router {
     // =====================
 
     let the_router = Router::new()
+        .merge(auth_router)
         .merge(catalog_rainbow_catalog_router)
         .merge(catalog_rainbow_data_service_router)
         .merge(catalog_rainbow_dataset_router)
