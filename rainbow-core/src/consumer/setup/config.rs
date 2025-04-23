@@ -111,7 +111,7 @@ impl CoreConsumerApplicationConfig {
                 password: std::env::var("DB_PASSWORD").unwrap_or(self.database_config.password.clone()),
                 name: std::env::var("DB_DATABASE").unwrap_or(self.database_config.name.clone()),
             },
-            role: ConfigRoles::Provider,
+            role: ConfigRoles::Consumer,
         };
         Ok(compound_config)
     }

@@ -113,7 +113,7 @@ pub async fn create_core_consumer_router(db_url: String) -> Router {
 
     // DSRPCProtocol Dependency injection
     let config = TransferConsumerApplicationConfig::default();
-    config.merge_dotenv_configuration().expect("No possible to merge configuration");
+    config.merge_dotenv_configuration().unwrap_or(config.clone());
     let ds_protocol_rpc_service = Arc::new(DSRPCTransferConsumerService::new(
         transfer_provider_repo.clone(),
         data_plane_facade.clone(),

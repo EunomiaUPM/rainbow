@@ -6,11 +6,11 @@ services:
     image: "postgres"
     restart: always
     ports:
-      - "5434:5432"
+      - "5439:5432"
     environment:
-      POSTGRES_PASSWORD: ds-protocol-consumer
-      POSTGRES_USER: ds-protocol-consumer
-      POSTGRES_DB: ds-protocol-consumer
+      POSTGRES_PASSWORD: ds_core_consumer_db
+      POSTGRES_USER: ds_core_consumer_db
+      POSTGRES_DB: ds_core_consumer_db
 
   ds-consumer:
     container_name: ds-consumer

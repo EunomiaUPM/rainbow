@@ -50,13 +50,16 @@ pub struct OdrlMessageOffer {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub profile: Option<OdrlProfile>,
     #[serde(rename = "odrl:permission")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub permission: Option<Vec<OdrlPermission>>, // anyof
     #[serde(rename = "odrl:obligation")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub obligation: Option<Vec<OdrlObligation>>,
     // MessageOffer
     #[serde(rename = "@type")]
     pub _type: OdrlTypes,
     #[serde(rename = "odrl:prohibition")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub prohibition: Option<Vec<OdrlObligation>>, // anyof
 }
 

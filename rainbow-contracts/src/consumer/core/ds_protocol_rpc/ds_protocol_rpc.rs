@@ -99,7 +99,7 @@ where
         let is_offer_err = match odrl_offer.clone() {
             OfferTypes::MessageOffer(message_offer) => message_offer.validate().is_err(),
             OfferTypes::Offer(offer) => offer.validate().is_err(),
-            OfferTypes::Other(_) => false
+            OfferTypes::Other(_) => true
         };
         if is_offer_err {
             bail!(IdsaCNError::ValidationError("Offer not valid".to_string()));
