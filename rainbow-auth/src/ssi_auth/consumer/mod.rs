@@ -21,7 +21,6 @@ use once_cell::sync::Lazy;
 use reqwest::Client;
 use std::time::Duration;
 
-mod core;
 pub mod http;
 mod manager;
 mod types;

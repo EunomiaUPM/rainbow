@@ -17,7 +17,6 @@
  *
  */
 
-use crate::ssi_auth::provider::utils::{compare_with_margin, split_did};
 use anyhow::bail;
 use base64::engine::general_purpose::{STANDARD, URL_SAFE_NO_PAD};
 use base64::Engine;
@@ -29,32 +28,25 @@ use jsonwebtoken::{Algorithm, Validation};
 use log::error;
 use rainbow_common::auth::GrantRequest;
 use rainbow_common::config::config::{get_provider_audience, get_provider_portal_url};
-use rainbow_db::auth_provider::repo::AuthProviderRepoTrait;
+use rainbow_db::auth_provider::repo::AUTH_PROVIDER_REPO;
 use rand::{distributions::Alphanumeric, Rng};
 use serde_json::{json, Value};
 use std::collections::HashSet;
-use std::sync::Arc;
 use tracing::field::debug;
 use tracing::{debug, info};
 use urlencoding::{decode, encode};
 
-#[derive(Clone)]
-pub struct Manager<T>
-where
-    T: AuthProviderRepoTrait + Send + Sync + Clone + 'static,
-{
-    auth_repo: Arc<T>,
-}
+#[derive(Clone, Copy)]
+pub struct Manager {}
 
-impl<T> Manager<T>
-where
-    T: AuthProviderRepoTrait + Send + Sync + Clone + 'static,
-{
-    pub fn new(auth_repo: Arc<T>) -> Manager<T> {
-        Manager { auth_repo }
+impl Manager {
+    pub fn new() -> Manager {
+        Manager {}
     }
-
-    pub async fn generate_exchange_uri(&self, payload: GrantRequest) -> anyhow::Result<(String, String, String)> {
+    pub async fn generate_exchange_uri(
+        &self,
+        payload: GrantRequest,
+    ) -> anyhow::Result<(String, String, String)> {
         info!("Generating exchange URI");
 
         if !payload.interact.start.contains(&"oidc4vp".to_string()) {
@@ -63,9 +55,10 @@ where
                 payload.interact.start.first().unwrap()
             );
         }
-        let actions = payload.access_token.access.actions.unwrap_or_else(|| vec![String::from("talk")]);
+        let actions =
+            payload.access_token.access.actions.unwrap_or_else(|| vec![String::from("talk")]);
         let (auth_model, interaction_model, verification_model) =
-            match self.auth_repo.create_auth(payload.client, actions, payload.interact).await {
+            match AUTH_PROVIDER_REPO.create_auth(payload.client, actions, payload.interact).await {
                 Ok(model) => {
                     info!("exchange saved successfully");
                     model
@@ -127,7 +120,7 @@ where
         //     ]
         // })
 
-        let id = match self.auth_repo.get_auth_by_state(state.clone()).await {
+        let id = match AUTH_PROVIDER_REPO.get_auth_by_state(state.clone()).await {
             Ok(id) => id,
             Err(e) => bail!("No exchange for state {}", state),
         };
@@ -162,16 +155,16 @@ where
         }))
     }
 
-    pub async fn verify_all(&self, state: String, vptoken: String) -> anyhow::Result<()> {
-        let exchange = match self.auth_repo.get_auth_by_state(state.clone()).await {
+    pub async fn verifyAll(&self, state: String, vptoken: String) -> anyhow::Result<()> {
+        let exchange = match AUTH_PROVIDER_REPO.get_auth_by_state(state.clone()).await {
             Ok(auth) => auth,
             Err(e) => bail!("No exchange for state {}", state),
         };
 
-        let (vcts, holder) = match self.verify_vp(exchange.clone(), vptoken).await {
+        let (vcts, holder) = match self.verifyVP(exchange.clone(), vptoken).await {
             Ok(v) => v,
             Err(e) => {
-                match self.auth_repo.update_verification_result(exchange, false).await {
+                match AUTH_PROVIDER_REPO.update_verification_result(exchange, false).await {
                     Ok(_) => {}
                     Err(e) => {
                         bail!("{}", e)
@@ -181,10 +174,10 @@ where
             }
         };
         for cred in vcts {
-            match self.verify_vc(cred, holder.clone()).await {
+            match self.verifyVC(cred, holder.clone()).await {
                 Ok(()) => {}
                 Err(e) => {
-                    match self.auth_repo.update_verification_result(exchange, false).await {
+                    match AUTH_PROVIDER_REPO.update_verification_result(exchange, false).await {
                         Ok(_) => {}
                         Err(e) => {
                             bail!("{}", e)
@@ -196,7 +189,7 @@ where
         }
         info!("VP & VP Validated successfully");
 
-        match self.auth_repo.update_verification_result(exchange, true).await {
+        match AUTH_PROVIDER_REPO.update_verification_result(exchange, true).await {
             Ok(_) => {}
             Err(e) => {
                 bail!("{}", e)
@@ -205,7 +198,11 @@ where
         Ok(())
     }
 
-    pub async fn verify_vp(&self, exchange: String, vptoken: String) -> anyhow::Result<(Vec<String>, String)> {
+    pub async fn verifyVP(
+        &self,
+        exchange: String,
+        vptoken: String,
+    ) -> anyhow::Result<(Vec<String>, String)> {
         info!("Verifying VP");
         let header = jsonwebtoken::decode_header(&vptoken)?;
         let kid_str = header.kid.as_ref().unwrap();
@@ -246,7 +243,7 @@ where
         }
         info!("VPT issuer, subject & kid matches");
 
-        let auth_ver = match self.auth_repo
+        let auth_ver = match AUTH_PROVIDER_REPO
             .get_av_by_id_update_holder(
                 id.to_string(),
                 vptoken,
@@ -270,8 +267,8 @@ where
 
         if auth_ver.id != exchange || exchange != token.claims["vp"]["id"].as_str().unwrap() {
             // VALIDATE ID MATCHES JTI
-            error!("Invalid exchange");
             bail!("Invalid exchange");
+            error!("Invalid exchange");
         }
         info!("Exchange is valid");
 
@@ -282,17 +279,18 @@ where
         info!("vp holder matches vpt subject & issuer");
         info!("VP Verification successful");
 
-        let vct: Vec<String> = match serde_json::from_value(token.claims["vp"]["verifiableCredential"].clone()) {
-            Ok(vc) => vc,
-            Err(_) => {
-                error!("VPresentation is based on a nonexistent credential");
-                bail!("VPresentation is based on a nonexistent credential")
-            }
-        };
+        let vct: Vec<String> =
+            match serde_json::from_value(token.claims["vp"]["verifiableCredential"].clone()) {
+                Ok(vc) => vc,
+                Err(_) => {
+                    error!("VPresentation is based on a nonexistent credential");
+                    bail!("VPresentation is based on a nonexistent credential")
+                }
+            };
         Ok((vct, kid.to_string()))
     }
 
-    pub async fn verify_vc(&self, vctoken: String, vp_holder: String) -> anyhow::Result<()> {
+    pub async fn verifyVC(&self, vctoken: String, VP_holder: String) -> anyhow::Result<()> {
         info!("Verifying VC");
         let header = jsonwebtoken::decode_header(&vctoken)?;
         let kid_str = header.kid.as_ref().unwrap();
@@ -321,7 +319,9 @@ where
         info!("VCT token signature is correct");
         debug!("{:#?}", token);
 
-        if token.claims["iss"].as_str().unwrap() != kid || kid != token.claims["vc"]["issuer"].as_str().unwrap() {
+        if token.claims["iss"].as_str().unwrap() != kid
+            || kid != token.claims["vc"]["issuer"].as_str().unwrap()
+        {
             // VALIDATE IF ISSUER IS THE SAME AS KID
             error!("VCT token issuer & kid does not match");
             bail!("VCT token issuer & kid does not match");
@@ -335,8 +335,8 @@ where
         // }
         // info!("VCT issuer is on the trusted issuers list");
 
-        if token.claims["sub"].as_str().unwrap() != &vp_holder
-            || &vp_holder != token.claims["vc"]["credentialSubject"]["id"].as_str().unwrap()
+        if token.claims["sub"].as_str().unwrap() != &VP_holder
+            || &VP_holder != token.claims["vc"]["credentialSubject"]["id"].as_str().unwrap()
         {
             error!("VCT token sub, credential subject & VP Holder do not match");
             bail!("VCT token sub, credential subject & VP Holder do not match");
@@ -373,4 +373,37 @@ where
     }
 }
 
+fn split_did(did: &str) -> (&str, Option<&str>) {
+    match did.split_once('#') {
+        Some((didkid, id)) => (didkid, Some(id)),
+        None => (did, None),
+    }
+}
 
+fn compare_with_margin(iat: i64, issuance_date: &str, margin_seconds: i64) -> (bool, String) {
+    let datetime = match DateTime::from_timestamp(iat, 0) {
+        Some(dt) => dt,
+        None => return (true, "Invalid iat field".to_string()),
+    };
+
+    let parsed_date = match DateTime::parse_from_rfc3339(issuance_date) {
+        Ok(dt) => dt,
+        Err(_) => {
+            return (
+                true,
+                "IssuanceDate is not with the correct format".to_string(),
+            )
+        }
+    };
+    let parsed_date_utc = parsed_date.with_timezone(&Utc);
+
+    if parsed_date_utc > Utc::now() {
+        return (true, "Issuance date has not reached yet".to_string());
+    }
+
+    if (datetime - parsed_date_utc).num_seconds().abs() > margin_seconds {
+        return (true, "IssuanceDate & iat field do not match".to_string());
+    }
+
+    (false, "Ignore this".to_string())
+}
