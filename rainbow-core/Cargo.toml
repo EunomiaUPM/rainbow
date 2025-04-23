@@ -19,6 +19,7 @@ rainbow_contracts = { version = "0.1.0", path = "../rainbow-contracts", default-
 rainbow_dataplane = { version = "0.1.0", path = "../rainbow-dataplane", default-features = false }
 rainbow_db = { version = "0.1.0", path = "../rainbow-db", default-features = false }
 rainbow_auth = { version = "0.1.0", path = "../rainbow-auth", default-features = false }
+rainbow_events = { version = "0.1.0", path = "../rainbow-events", default-features = false }
 
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -33,3 +34,4 @@ dotenvy = { workspace = true }
 tower = { workspace = true }
 sea-orm = { workspace = true }
 sea-orm-migration = { workspace = true }
+json_to_table = { workspace = true }

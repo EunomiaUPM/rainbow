@@ -136,7 +136,6 @@ impl<'de> Deserialize<'de> for DctFormats {
         D: Deserializer<'de>,
     {
         let v = String::deserialize(deserializer)?;
-        println!("{}", v);
         let parts: Vec<&str> = v.split("+").collect();
         if parts.len() != 2 {
             return Err(Error::custom("Expected string in format PROTOCOL_ACTION"));

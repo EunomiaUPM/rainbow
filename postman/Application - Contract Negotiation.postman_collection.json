@@ -1,0 +1,1980 @@
+{
+	"info": {
+		"_postman_id": "2638f7e7-2e7c-4681-b3bd-6b046cc84e53",
+		"name": "Application - Contract Negotiation",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "13165791"
+	},
+	"item": [
+		{
+			"name": "Provider",
+			"item": [
+				{
+					"name": "CN Processes",
+					"item": [
+						{
+							"name": "Get CN Processes",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/contract-negotiation/processes",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"contract-negotiation",
+										"processes"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get CN Process by CN_id",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/contract-negotiation/processes/urn:uuid:42d6cc1c-a18f-475f-a482-567e6bafebdb",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"contract-negotiation",
+										"processes",
+										"urn:uuid:42d6cc1c-a18f-475f-a482-567e6bafebdb"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get CN Process by Consumer Id",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/contract-negotiation/processes/consumer/urn:uuid:9ae90a5d-462d-4a4e-a533-6cf9afbf7775",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"contract-negotiation",
+										"processes",
+										"consumer",
+										"urn:uuid:9ae90a5d-462d-4a4e-a533-6cf9afbf7775"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get CN Process by Provider Id",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/contract-negotiation/processes/provider/urn:uuid:6e9ab59b-6cdf-411d-a54e-e754e084e84f",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"contract-negotiation",
+										"processes",
+										"provider",
+										"urn:uuid:6e9ab59b-6cdf-411d-a54e-e754e084e84f"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create CNProcess",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"dspace:state\": \"dspace:REQUESTED\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/contract-negotiation/processes",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"contract-negotiation",
+										"processes"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Edit CNProcess",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"dspace:state\": \"dspace:REQUESTED\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/contract-negotiation/processes/urn:uuid:b8c99a1e-9c1c-4560-9bea-a6c615ff4180",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"contract-negotiation",
+										"processes",
+										"urn:uuid:b8c99a1e-9c1c-4560-9bea-a6c615ff4180"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete CNProcess",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/contract-negotiation/processes/urn:uuid:76ac84eb-5054-4bfa-ae13-581983f7744f",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"contract-negotiation",
+										"processes",
+										"urn:uuid:76ac84eb-5054-4bfa-ae13-581983f7744f"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "CN Messages",
+					"item": [
+						{
+							"name": "Get CN Messages",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/contract-negotiation/messages",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"contract-negotiation",
+										"messages"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get CN Messages By Id",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/contract-negotiation/messages/urn:uuid:68ad284d-330f-47b5-afcf-53dca3ec10d0",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"contract-negotiation",
+										"messages",
+										"urn:uuid:68ad284d-330f-47b5-afcf-53dca3ec10d0"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get CN Messages by CNProcess Id",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/contract-negotiation/processes/urn:uuid:131b3bbc-9e15-4ea0-a601-32a8bc7c35c8/messages",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"contract-negotiation",
+										"processes",
+										"urn:uuid:131b3bbc-9e15-4ea0-a601-32a8bc7c35c8",
+										"messages"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get CN Messages by Provider Id",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/contract-negotiation/processes/provider/urn:uuid:42d6cc1c-a18f-475f-a482-567e6bafebdb/messages",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"contract-negotiation",
+										"processes",
+										"provider",
+										"urn:uuid:42d6cc1c-a18f-475f-a482-567e6bafebdb",
+										"messages"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get CN Messages by Consumer Id",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/contract-negotiation/processes/consumer/urn:uuid:9ae90a5d-462d-4a4e-a533-6cf9afbf7775/messages",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"contract-negotiation",
+										"processes",
+										"consumer",
+										"urn:uuid:9ae90a5d-462d-4a4e-a533-6cf9afbf7775",
+										"messages"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create CNMessage",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"@type\": \"Blabl\",\n    \"dspace:from\": \"Provider\",\n    \"dspace:to\": \"Consumer\",\n    \"dspace:content\": {\"asdsa\": \"asd\"}\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/contract-negotiation/processes/urn:uuid:bb711e4f-55fc-4d12-8629-158530e791a6/messages",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"contract-negotiation",
+										"processes",
+										"urn:uuid:bb711e4f-55fc-4d12-8629-158530e791a6",
+										"messages"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Edit CNMessage",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"@type\": \"a\",\n    \"dspace:from\": \"Provider\",\n    \"dspace:to\": \"iñaki\",\n    \"dspace:content\": {\n        \"eta\": \"holaasdasd\"\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/contract-negotiation/processes/urn:uuid:131b3bbc-9e15-4ea0-a601-32a8bc7c35c8/messages/urn:uuid:40a559a4-37b3-41b4-ad85-182bd17b3e2e",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"contract-negotiation",
+										"processes",
+										"urn:uuid:131b3bbc-9e15-4ea0-a601-32a8bc7c35c8",
+										"messages",
+										"urn:uuid:40a559a4-37b3-41b4-ad85-182bd17b3e2e"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete CNMessage",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/contract-negotiation/processes/urn:uuid:131b3bbc-9e15-4ea0-a601-32a8bc7c35c8/messages/urn:uuid:40a559a4-37b3-41b4-ad85-182bd17b3e2e",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"contract-negotiation",
+										"processes",
+										"urn:uuid:131b3bbc-9e15-4ea0-a601-32a8bc7c35c8",
+										"messages",
+										"urn:uuid:40a559a4-37b3-41b4-ad85-182bd17b3e2e"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "CN Offers",
+					"item": [
+						{
+							"name": "Get CN Offers By Process Id",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/contract-negotiation/processes/urn:uuid:7a7304e3-1aec-4dc6-8863-b04ce478d423/offers",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"contract-negotiation",
+										"processes",
+										"urn:uuid:7a7304e3-1aec-4dc6-8863-b04ce478d423",
+										"offers"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Last CN Offers By Process Id",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/contract-negotiation/processes/urn:uuid:7a7304e3-1aec-4dc6-8863-b04ce478d423/offers/last",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"contract-negotiation",
+										"processes",
+										"urn:uuid:7a7304e3-1aec-4dc6-8863-b04ce478d423",
+										"offers",
+										"last"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get CN Offer by CNMessage",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/contract-negotiation/messages/urn:uuid:c08848c3-1469-4487-ba94-f7e99dcae798/offer",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"contract-negotiation",
+										"messages",
+										"urn:uuid:c08848c3-1469-4487-ba94-f7e99dcae798",
+										"offer"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get CN Offer by Id",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/contract-negotiation/offers/urn:uuid:asdas",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"contract-negotiation",
+										"offers",
+										"urn:uuid:asdas"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create CNOffer",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"odrl:offer\": {\n        \"hola\": 1\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/contract-negotiation/processes/urn:uuid:7a7304e3-1aec-4dc6-8863-b04ce478d423/messages/urn:uuid:c08848c3-1469-4487-ba94-f7e99dcae798/offers",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"contract-negotiation",
+										"processes",
+										"urn:uuid:7a7304e3-1aec-4dc6-8863-b04ce478d423",
+										"messages",
+										"urn:uuid:c08848c3-1469-4487-ba94-f7e99dcae798",
+										"offers"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Edit CNMessage",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/contract-negotiation/processes/urn:uuid:7a7304e3-1aec-4dc6-8863-b04ce478d423/messages/urn:uuid:c08848c3-1469-4487-ba94-f7e99dcae798/offers/urn:uuid:af86cb0b-7375-4630-baf1-67e0d212b265",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"contract-negotiation",
+										"processes",
+										"urn:uuid:7a7304e3-1aec-4dc6-8863-b04ce478d423",
+										"messages",
+										"urn:uuid:c08848c3-1469-4487-ba94-f7e99dcae798",
+										"offers",
+										"urn:uuid:af86cb0b-7375-4630-baf1-67e0d212b265"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete CNMessage",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/contract-negotiation/processes/urn:uuid:7a7304e3-1aec-4dc6-8863-b04ce478d423/messages/urn:uuid:c08848c3-1469-4487-ba94-f7e99dcae798/offers/urn:uuid:af86cb0b-7375-4630-baf1-67e0d212b265",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"contract-negotiation",
+										"processes",
+										"urn:uuid:7a7304e3-1aec-4dc6-8863-b04ce478d423",
+										"messages",
+										"urn:uuid:c08848c3-1469-4487-ba94-f7e99dcae798",
+										"offers",
+										"urn:uuid:af86cb0b-7375-4630-baf1-67e0d212b265"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "CN Agreements",
+					"item": [
+						{
+							"name": "Get Agreement By CN Process Id",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/contract-negotiation/processes/urn:uuid:7a7304e3-1aec-4dc6-8863-b04ce478d423/agreement",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"contract-negotiation",
+										"processes",
+										"urn:uuid:7a7304e3-1aec-4dc6-8863-b04ce478d423",
+										"agreement"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Agreement By CN Message Id",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/contract-negotiation/messages/urn:uuid:c08848c3-1469-4487-ba94-f7e99dcae798/agreement",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"contract-negotiation",
+										"messages",
+										"urn:uuid:c08848c3-1469-4487-ba94-f7e99dcae798",
+										"agreement"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get All Agreements",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/contract-negotiation/agreements",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"contract-negotiation",
+										"agreements"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Agreement By Id",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/contract-negotiation/agreements/urn:uuid:asd",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"contract-negotiation",
+										"agreements",
+										"urn:uuid:asd"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Agreement",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"dspace:consumerParticipantId\": \"urn:uuid:asds\",\n    \"dspace:providerParticipantId\": \"urn:uuid:asds\",\n    \"odrl:agreement\": {}\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/contract-negotiation/processes/urn:uuid:7a7304e3-1aec-4dc6-8863-b04ce478d423/messages/urn:uuid:c08848c3-1469-4487-ba94-f7e99dcae798/agreements",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"contract-negotiation",
+										"processes",
+										"urn:uuid:7a7304e3-1aec-4dc6-8863-b04ce478d423",
+										"messages",
+										"urn:uuid:c08848c3-1469-4487-ba94-f7e99dcae798",
+										"agreements"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Edit CNMessage",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/contract-negotiation/processes/urn:uuid:7a7304e3-1aec-4dc6-8863-b04ce478d423/messages/urn:uuid:c08848c3-1469-4487-ba94-f7e99dcae798/agreements/urn:uuid:c08848c3-1469-4487-ba94-f7e99dcae798",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"contract-negotiation",
+										"processes",
+										"urn:uuid:7a7304e3-1aec-4dc6-8863-b04ce478d423",
+										"messages",
+										"urn:uuid:c08848c3-1469-4487-ba94-f7e99dcae798",
+										"agreements",
+										"urn:uuid:c08848c3-1469-4487-ba94-f7e99dcae798"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete CNMessage",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/contract-negotiation/processes/urn:uuid:7a7304e3-1aec-4dc6-8863-b04ce478d423/messages/urn:uuid:c08848c3-1469-4487-ba94-f7e99dcae798/agreements/urn:uuid:c08848c3-1469-4487-ba94-f7e99dcae798",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"contract-negotiation",
+										"processes",
+										"urn:uuid:7a7304e3-1aec-4dc6-8863-b04ce478d423",
+										"messages",
+										"urn:uuid:c08848c3-1469-4487-ba94-f7e99dcae798",
+										"agreements",
+										"urn:uuid:c08848c3-1469-4487-ba94-f7e99dcae798"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "CN Participants",
+					"item": [
+						{
+							"name": "Get Participants",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/participants",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"participants"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Participant By Id",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/participants/urn:uuid:777d98c4-7930-47bc-bbdc-726dbb6f540e",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"participants",
+										"urn:uuid:777d98c4-7930-47bc-bbdc-726dbb6f540e"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Agreements By Participant Id",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/participants/urn:uuid:777d98c4-7930-47bc-bbdc-726dbb6f540e/agreements",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"participants",
+										"urn:uuid:777d98c4-7930-47bc-bbdc-726dbb6f540e",
+										"agreements"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Participant",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"dspace:participantType\": \"Consumer\",\n    \"dspace:participantBaseUrl\": \"http://127.0.0.1:1235\",\n    \"dspace:extraFields\": {}\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/participants",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"participants"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Edit CNMessage",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"extra_fields\": {\n        \"adios\": null, \n        \"hola\": 21\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/participants/urn:uuid:5efa541a-16dc-48d3-b9b5-b5bbb08b3916",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"participants",
+										"urn:uuid:5efa541a-16dc-48d3-b9b5-b5bbb08b3916"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete CNMessage",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/participants/urn:uuid:28250665-3de9-46c1-94e8-209600916033",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"participants",
+										"urn:uuid:28250665-3de9-46c1-94e8-209600916033"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "RPC",
+					"item": [
+						{
+							"name": "Setup Offer from provider",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"dspace:consumerParticipantId\": \"urn:uuid:d5201dc3-9ffc-469c-a231-a311a3106490\",\n    \"dspace:offer\": {\n        \"@id\": \"urn:uuid:123\",\n        \"@type\": \"dspace:Offer\",\n        \"odrl:target\": \"urn:uuid:asdasd\",\n        \"odrl:permission\": [\n            {\n                \"odrl:action\": \"use\"\n            }\n        ]\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/negotiations/rpc/setup-offer",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"negotiations",
+										"rpc",
+										"setup-offer"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Setup Re-Offer from provider",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"dspace:consumerParticipantId\": \"urn:uuid:cb50c6e2-c6be-4fea-a7bd-de342bf63fc7\",\n    \"dspace:providerPid\": \"urn:uuid:401f1696-cf95-45f0-a317-d218ceb5633e\",\n    \"dspace:consumerPid\": \"urn:uuid:403e433f-952f-485d-8b3f-31baa70c66ed\",\n    \"dspace:offer\": {\n        \"@id\": \"urn:uuid:123\",\n        \"@type\": \"dspace:Offer\",\n        \"odrl:target\": \"urn:uuid:asdasd\",\n        \"odrl:permission\": [\n            {\n                \"odrl:action\": \"use\"\n            }\n        ]\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/negotiations/rpc/setup-offer",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"negotiations",
+										"rpc",
+										"setup-offer"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Setup Agreement from provider",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"dspace:consumerParticipantId\": \"urn:uuid:cb50c6e2-c6be-4fea-a7bd-de342bf63fc7\",\n    \"dspace:providerPid\": \"urn:uuid:401f1696-cf95-45f0-a317-d218ceb5633e\",\n    \"dspace:consumerPid\": \"urn:uuid:403e433f-952f-485d-8b3f-31baa70c66ed\",\n    \"dspace:agreement\": {\n        \"@id\": \"urn:uuid:asdasd\",\n        \"@type\": \"dspace:Agreement\",\n        \"odrl:target\": \"urn:uuid:123\",\n        \"odrl:assigner\": \"urn:uuid:123\",\n        \"odrl:assignee\": \"urn:uuid:123\"\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/negotiations/rpc/setup-agreement",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"negotiations",
+										"rpc",
+										"setup-agreement"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Setup finalization from provider",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"dspace:consumerParticipantId\": \"urn:uuid:cb50c6e2-c6be-4fea-a7bd-de342bf63fc7\",\n    \"dspace:providerPid\": \"urn:uuid:401f1696-cf95-45f0-a317-d218ceb5633e\",\n    \"dspace:consumerPid\": \"urn:uuid:403e433f-952f-485d-8b3f-31baa70c66ed\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/negotiations/rpc/setup-finalization",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"negotiations",
+										"rpc",
+										"setup-finalization"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Setup termination from provider",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"dspace:consumerParticipantId\": \"urn:uuid:cb50c6e2-c6be-4fea-a7bd-de342bf63fc7\",\n    \"dspace:providerPid\": \"urn:uuid:401f1696-cf95-45f0-a317-d218ceb5633e\",\n    \"dspace:consumerPid\": \"urn:uuid:403e433f-952f-485d-8b3f-31baa70c66ed\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/api/v1/negotiations/rpc/setup-termination",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"negotiations",
+										"rpc",
+										"setup-termination"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "DSProtocol",
+					"item": [
+						{
+							"name": "Get Negotiation By Provider Pid",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/negotiations/urn:uuid:453079fb-87d4-4c46-b6de-cceb93079308",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"negotiations",
+										"urn:uuid:453079fb-87d4-4c46-b6de-cceb93079308"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Contract Initial Request Message",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"@context\": [\n    \"https://w3id.org/dspace/2025/1/context.jsonld\"\n  ],\n  \"@type\": \"dspace:ContractRequestMessage\",\n  \"dspace:consumerPid\": \"urn:uuid:32541fe6-c580-409e-85a8-8a9a32fbe833\",\n  \"dspace:offer\": {\n    \"@type\": \"dspace:Offer\",\n    \"@id\": \"urn:uuid:{{$guid}}\",\n    \"odrl:target\": \"urn:uuid:{{$guid}}\",\n    \"odrl:permission\": [\n      {\n        \"odrl:action\": \"use\"\n      }\n    ]\n  },\n  \"dspace:callbackAddress\": \"https://example.com/callback\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/negotiations/request",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"negotiations",
+										"request"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Contract Request Message",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"@context\": [\n        \"https://w3id.org/dspace/2025/1/context.jsonld\"\n    ],\n    \"@type\": \"dspace:ContractRequestMessage\",\n    \"dspace:consumerPid\": \"urn:uuid:32541fe6-c580-409e-85a8-8a9a32fbe833\",\n    \"dspace:providerPid\": \"urn:uuid:453079fb-87d4-4c46-b6de-cceb93079308\",\n    \"dspace:offer\": {\n        \"@type\": \"dspace:Offer\",\n        \"@id\": \"urn:uuid:{{$guid}}\",\n        \"odrl:target\": \"urn:uuid:3dd1add8-4d2d-569e-d634-8394a8836a88\",\n        \"odrl:permission\": [\n            {\n                \"odrl:action\": \"use\"\n            }\n        ]\n    },\n    \"dspace:callbackAddress\": \"https://example.com/callback\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/negotiations/urn:uuid:453079fb-87d4-4c46-b6de-cceb93079308/request",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"negotiations",
+										"urn:uuid:453079fb-87d4-4c46-b6de-cceb93079308",
+										"request"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Contract Events",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"@context\":  \"https://w3id.org/dspace/2024/1/context.json\",\n  \"@type\": \"dspace:ContractNegotiationEventMessage\",\n  \"dspace:providerPid\": \"urn:uuid:a343fcbf-99fc-4ce8-8e9b-148c97605aab\",\n  \"dspace:consumerPid\": \"urn:uuid:32541fe6-c580-409e-85a8-8a9a32fbe833\",\n  \"dspace:eventType\": \"dspace:FINALIZED\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/negotiations/urn:uuid:453079fb-87d4-4c46-b6de-cceb93079308/events",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"negotiations",
+										"urn:uuid:453079fb-87d4-4c46-b6de-cceb93079308",
+										"events"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Agreement Verification",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"@context\": [\n    \"https://w3id.org/dspace/2025/1/context.jsonld\"\n  ],\n  \"@type\": \"dspace:ContractVerificationMessage\",\n  \"dspace:providerPid\": \"urn:uuid:a343fcbf-99fc-4ce8-8e9b-148c97605aab\",\n  \"dspace:consumerPid\": \"urn:uuid:32541fe6-c580-409e-85a8-8a9a32fbe833\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/negotiations/urn:uuid:453079fb-87d4-4c46-b6de-cceb93079308/agreement/verification",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"negotiations",
+										"urn:uuid:453079fb-87d4-4c46-b6de-cceb93079308",
+										"agreement",
+										"verification"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Process Termination",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"@context\": [\n    \"https://w3id.org/dspace/2025/1/context.jsonld\"\n  ],\n  \"@type\": \"dspace:ContractTerminationMessage\",\n  \"dspace:providerPid\": \"urn:uuid:a343fcbf-99fc-4ce8-8e9b-148c97605aab\",\n  \"dspace:consumerPid\": \"urn:uuid:32541fe6-c580-409e-85a8-8a9a32fbe833\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ContractNegotiationProvider}}/negotiations/urn:uuid:453079fb-87d4-4c46-b6de-cceb93079308/termination",
+									"host": [
+										"{{ContractNegotiationProvider}}"
+									],
+									"path": [
+										"negotiations",
+										"urn:uuid:453079fb-87d4-4c46-b6de-cceb93079308",
+										"termination"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Consumer",
+			"item": [
+				{
+					"name": "CN Processes",
+					"item": [
+						{
+							"name": "Get CN Processes",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{ContractNegotiationConsumer}}/api/v1/contract-negotiation/processes",
+									"host": [
+										"{{ContractNegotiationConsumer}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"contract-negotiation",
+										"processes"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get CN Process by CN_id",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{ContractNegotiationConsumer}}/api/v1/contract-negotiation/processes/urn:uuid:e716fa8a-fb93-4c1a-9856-16756477f6a9",
+									"host": [
+										"{{ContractNegotiationConsumer}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"contract-negotiation",
+										"processes",
+										"urn:uuid:e716fa8a-fb93-4c1a-9856-16756477f6a9"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get CN Process by Consumer Id",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{ContractNegotiationConsumer}}/api/v1/contract-negotiation/processes/consumer/urn:uuid:64e49ab2-e597-4bc9-859d-f1bcc5ff0929",
+									"host": [
+										"{{ContractNegotiationConsumer}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"contract-negotiation",
+										"processes",
+										"consumer",
+										"urn:uuid:64e49ab2-e597-4bc9-859d-f1bcc5ff0929"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get CN Process by Provider Id",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{ContractNegotiationConsumer}}/api/v1/contract-negotiation/processes/provider/urn:uuid:fe97841f-e515-49f6-af53-db7e187c331d",
+									"host": [
+										"{{ContractNegotiationConsumer}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"contract-negotiation",
+										"processes",
+										"provider",
+										"urn:uuid:fe97841f-e515-49f6-af53-db7e187c331d"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create CNProcess",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ContractNegotiationConsumer}}/api/v1/contract-negotiation/processes",
+									"host": [
+										"{{ContractNegotiationConsumer}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"contract-negotiation",
+										"processes"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Edit CNProcess",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n   \n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ContractNegotiationConsumer}}/api/v1/contract-negotiation/processes/urn:uuid:003d4f2a-3928-4e7b-b729-f0afed69783b",
+									"host": [
+										"{{ContractNegotiationConsumer}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"contract-negotiation",
+										"processes",
+										"urn:uuid:003d4f2a-3928-4e7b-b729-f0afed69783b"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete CNProcess",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ContractNegotiationConsumer}}/api/v1/contract-negotiation/processes/urn:uuid:e1861ecd-5623-4273-b38c-4e24cd7ede0a",
+									"host": [
+										"{{ContractNegotiationConsumer}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"contract-negotiation",
+										"processes",
+										"urn:uuid:e1861ecd-5623-4273-b38c-4e24cd7ede0a"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "RPC",
+					"item": [
+						{
+							"name": "Setup Request from consumer",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"dspace:offer\": {\n        \"@id\": \"urn:uuid:123\",\n        \"@type\": \"dspace:Offer\",\n        \"odrl:permission\": [\n            {\n                \"odrl:action\": \"use\"\n            }\n        ]\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ContractNegotiationConsumer}}/api/v1/negotiations/rpc/setup-request",
+									"host": [
+										"{{ContractNegotiationConsumer}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"negotiations",
+										"rpc",
+										"setup-request"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Setup Re-Request from consumer",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"dspace:providerPid\": \"urn:uuid:247fe64d-d9bf-47ce-b224-00e6c8db1e0b\",\n    \"dspace:consumerPid\": \"urn:uuid:ae3ed0dd-0d36-40da-b403-242f41280685\",\n    \"dspace:offer\": {\n        \"@id\": \"urn:uuid:123\",\n        \"@type\": \"dspace:Offer\",\n        \"odrl:target\": \"urn:uuid:123\",\n        \"odrl:permission\": [\n            {\n                \"odrl:action\": \"use\"\n            }\n        ]\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ContractNegotiationConsumer}}/api/v1/negotiations/rpc/setup-request",
+									"host": [
+										"{{ContractNegotiationConsumer}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"negotiations",
+										"rpc",
+										"setup-request"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Setup Acceptance from consumer",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"dspace:consumerPid\": \"urn:uuid:ae3ed0dd-0d36-40da-b403-242f41280685\",\n    \"dspace:providerPid\": \"urn:uuid:247fe64d-d9bf-47ce-b224-00e6c8db1e0b\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ContractNegotiationConsumer}}/api/v1/negotiations/rpc/setup-acceptance",
+									"host": [
+										"{{ContractNegotiationConsumer}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"negotiations",
+										"rpc",
+										"setup-acceptance"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Setup verification from consumer",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"dspace:consumerPid\": \"urn:uuid:ae3ed0dd-0d36-40da-b403-242f41280685\",\n    \"dspace:providerPid\": \"urn:uuid:247fe64d-d9bf-47ce-b224-00e6c8db1e0b\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ContractNegotiationConsumer}}/api/v1/negotiations/rpc/setup-verification",
+									"host": [
+										"{{ContractNegotiationConsumer}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"negotiations",
+										"rpc",
+										"setup-verification"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Setup termination from consumer",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"dspace:consumerParticipantId\": \"urn:uuid:cb50c6e2-c6be-4fea-a7bd-de342bf63fc7\",\n    \"dspace:providerPid\": \"urn:uuid:401f1696-cf95-45f0-a317-d218ceb5633e\",\n    \"dspace:consumerPid\": \"urn:uuid:403e433f-952f-485d-8b3f-31baa70c66ed\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ContractNegotiationConsumer}}/api/v1/negotiations/rpc/setup-termination",
+									"host": [
+										"{{ContractNegotiationConsumer}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"negotiations",
+										"rpc",
+										"setup-termination"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "DSProtocol",
+					"item": [
+						{
+							"name": "Contract Offer Message from Provider",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"@context\": \"asd\",\n    \"@type\": \"dspace:ContractNegotiationOffer\",\n    \"dspace:providerPid\": \"asd\",\n    \"dspace:callbackAddress\": \"asd\",\n    \"dspace:offer\": {\n        \"@id\": \"urn:uuid:{{$guid}}\",\n        \"@type\": \"dspace:Offer\",\n        \"odrl:target\": \"urn:uuid:3dd1add8-4d2d-569e-d634-8394a8836a88\"\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{ContractNegotiationConsumer}}/negotiations/offers",
+									"host": [
+										"{{ContractNegotiationConsumer}}"
+									],
+									"path": [
+										"negotiations",
+										"offers"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}

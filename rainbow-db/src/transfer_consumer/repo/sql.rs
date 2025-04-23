@@ -19,64 +19,71 @@
 
 use crate::transfer_consumer::entities::transfer_callback;
 use crate::transfer_consumer::entities::transfer_callback::Model;
-use crate::transfer_consumer::repo::{
-    EditTransferCallback, NewTransferCallback, TransferCallbackRepo,
-};
-use anyhow::bail;
+use crate::transfer_consumer::repo::{EditTransferCallback, NewTransferCallback, TransferCallbackRepo, TransferConsumerRepoErrors, TransferConsumerRepoFactory};
 use axum::async_trait;
-use rainbow_common::config::database::get_db_connection;
 use rainbow_common::utils::get_urn;
-use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, EntityTrait, QueryFilter, QuerySelect};
+use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect};
 use urn::Urn;
 
-pub struct TransferCallbackRepoForSql {}
+pub struct TransferConsumerRepoForSql {
+    db_connection: DatabaseConnection,
+}
+
+impl TransferConsumerRepoForSql {
+    pub fn new(db_connection: DatabaseConnection) -> Self {
+        Self { db_connection }
+    }
+}
+
+impl TransferConsumerRepoFactory for TransferConsumerRepoForSql {
+    fn create_repo(db_connection: DatabaseConnection) -> Self {
+        Self::new(db_connection)
+    }
+}
 
 #[async_trait]
-impl TransferCallbackRepo for TransferCallbackRepoForSql {
+impl TransferCallbackRepo for TransferConsumerRepoForSql {
     async fn get_all_transfer_callbacks(
         &self,
         limit: Option<u64>,
         page: Option<u64>,
-    ) -> anyhow::Result<Vec<Model>> {
-        let db_connection = get_db_connection().await;
+    ) -> anyhow::Result<Vec<Model>, TransferConsumerRepoErrors> {
         let transfer_callbacks = transfer_callback::Entity::find()
             .limit(limit.unwrap_or(100000))
             .offset(page.unwrap_or(0))
-            .all(db_connection)
+            .all(&self.db_connection)
             .await;
         match transfer_callbacks {
             Ok(transfer_callbacks) => Ok(transfer_callbacks),
-            Err(_) => bail!("Failed to fetch transfer callbacks"),
+            Err(e) => Err(TransferConsumerRepoErrors::ErrorFetchingConsumerTransferProcess(e.into())),
         }
     }
 
     async fn get_transfer_callbacks_by_id(
         &self,
         callback_id: Urn,
-    ) -> anyhow::Result<Option<Model>> {
-        let db_connection = get_db_connection().await;
+    ) -> anyhow::Result<Option<Model>, TransferConsumerRepoErrors> {
         let callback_id = callback_id.to_string();
         let transfer_callback =
-            transfer_callback::Entity::find_by_id(callback_id).one(db_connection).await;
+            transfer_callback::Entity::find_by_id(callback_id).one(&self.db_connection).await;
         match transfer_callback {
             Ok(transfer_callback) => Ok(transfer_callback),
-            Err(_) => bail!("Failed to fetch transfer callback"),
+            Err(e) => Err(TransferConsumerRepoErrors::ErrorFetchingConsumerTransferProcess(e.into())),
         }
     }
 
     async fn get_transfer_callbacks_by_consumer_id(
         &self,
         consumer_pid: Urn,
-    ) -> anyhow::Result<Option<Model>> {
-        let db_connection = get_db_connection().await;
+    ) -> anyhow::Result<Option<Model>, TransferConsumerRepoErrors> {
         let consumer_pid = consumer_pid.to_string();
         let transfer_callback = transfer_callback::Entity::find()
             .filter(transfer_callback::Column::ConsumerPid.eq(consumer_pid))
-            .one(db_connection)
+            .one(&self.db_connection)
             .await;
         match transfer_callback {
             Ok(transfer_callback) => Ok(transfer_callback),
-            Err(_) => bail!("Failed to fetch transfer callback"),
+            Err(e) => Err(TransferConsumerRepoErrors::ErrorFetchingConsumerTransferProcess(e.into())),
         }
     }
 
@@ -84,16 +91,15 @@ impl TransferCallbackRepo for TransferCallbackRepoForSql {
         &self,
         callback_id: Urn,
         new_transfer_callback: EditTransferCallback,
-    ) -> anyhow::Result<Model> {
-        let db_connection = get_db_connection().await;
+    ) -> anyhow::Result<Model, TransferConsumerRepoErrors> {
         let callback_id = callback_id.to_string();
-        let old_model = transfer_callback::Entity::find_by_id(callback_id).one(db_connection).await;
+        let old_model = transfer_callback::Entity::find_by_id(callback_id).one(&self.db_connection).await;
         let old_model = match old_model {
             Ok(old_model) => match old_model {
                 Some(old_model) => old_model,
-                None => bail!("Failed to fetch old model"),
+                None => return Err(TransferConsumerRepoErrors::ConsumerTransferProcessNotFound),
             },
-            Err(_) => bail!("Failed to fetch old model"),
+            Err(e) => return Err(TransferConsumerRepoErrors::ErrorFetchingConsumerTransferProcess(e.into())),
         };
 
         let mut old_active_model: transfer_callback::ActiveModel = old_model.into();
@@ -113,10 +119,10 @@ impl TransferCallbackRepo for TransferCallbackRepoForSql {
         }
         old_active_model.updated_at = ActiveValue::Set(Some(chrono::Utc::now().naive_utc()));
 
-        let model = old_active_model.update(db_connection).await;
+        let model = old_active_model.update(&self.db_connection).await;
         match model {
             Ok(model) => Ok(model),
-            Err(_) => bail!("Failed to update model"),
+            Err(e) => Err(TransferConsumerRepoErrors::ErrorUpdatingConsumerTransferProcess(e.into())),
         }
     }
 
@@ -124,19 +130,18 @@ impl TransferCallbackRepo for TransferCallbackRepoForSql {
         &self,
         consumer_pid: Urn,
         new_transfer_callback: EditTransferCallback,
-    ) -> anyhow::Result<Model> {
-        let db_connection = get_db_connection().await;
+    ) -> anyhow::Result<Model, TransferConsumerRepoErrors> {
         let consumer_pid = consumer_pid.to_string();
         let old_model = transfer_callback::Entity::find()
             .filter(transfer_callback::Column::ConsumerPid.eq(consumer_pid))
-            .one(db_connection)
+            .one(&self.db_connection)
             .await;
         let old_model = match old_model {
             Ok(old_model) => match old_model {
                 Some(old_model) => old_model,
-                None => bail!("Failed to fetch old model"),
+                None => return Err(TransferConsumerRepoErrors::ConsumerTransferProcessNotFound),
             },
-            Err(_) => bail!("Failed to fetch old model"),
+            Err(e) => return Err(TransferConsumerRepoErrors::ErrorFetchingConsumerTransferProcess(e.into())),
         };
 
         let mut old_active_model: transfer_callback::ActiveModel = old_model.into();
@@ -156,47 +161,48 @@ impl TransferCallbackRepo for TransferCallbackRepoForSql {
         }
         old_active_model.updated_at = ActiveValue::Set(Some(chrono::Utc::now().naive_utc()));
 
-        let model = old_active_model.update(db_connection).await;
+        let model = old_active_model.update(&self.db_connection).await;
         match model {
             Ok(model) => Ok(model),
-            Err(_) => bail!("Failed to update model"),
+            Err(e) => Err(TransferConsumerRepoErrors::ErrorUpdatingConsumerTransferProcess(e.into())),
         }
     }
 
     async fn create_transfer_callback(
         &self,
         new_transfer_callback: NewTransferCallback,
-    ) -> anyhow::Result<Model> {
-        let db_connection = get_db_connection().await;
+    ) -> anyhow::Result<Model, TransferConsumerRepoErrors> {
+        let consumer_pid = new_transfer_callback.consumer_pid.map(|p| p);
+        let provider_pid = new_transfer_callback.provider_pid.map(|p| p.to_string());
+        let callback_id = new_transfer_callback.callback_id.map(|p| p);
         let model = transfer_callback::ActiveModel {
-            id: ActiveValue::Set(get_urn(None).to_string()),
-            consumer_pid: ActiveValue::Set(get_urn(None).to_string()),
-            provider_pid: ActiveValue::Set(None),
+            id: ActiveValue::Set(get_urn(callback_id).to_string()),
+            consumer_pid: ActiveValue::Set(get_urn(consumer_pid).to_string()),
+            provider_pid: ActiveValue::Set(provider_pid),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             updated_at: ActiveValue::Set(None),
             data_plane_id: ActiveValue::Set(None),
             data_address: ActiveValue::Set(new_transfer_callback.data_address),
         };
         let transfer_callback =
-            transfer_callback::Entity::insert(model).exec_with_returning(db_connection).await;
+            transfer_callback::Entity::insert(model).exec_with_returning(&self.db_connection).await;
 
         match transfer_callback {
             Ok(transfer_callback) => Ok(transfer_callback),
-            Err(_) => bail!("Failed to create model"),
+            Err(e) => Err(TransferConsumerRepoErrors::ErrorCreatingConsumerTransferProcess(e.into())),
         }
     }
 
-    async fn delete_transfer_callback(&self, callback_id: Urn) -> anyhow::Result<()> {
-        let db_connection = get_db_connection().await;
+    async fn delete_transfer_callback(&self, callback_id: Urn) -> anyhow::Result<(), TransferConsumerRepoErrors> {
         let callback_id = callback_id.to_string();
         let transfer_callback =
-            transfer_callback::Entity::delete_by_id(callback_id).exec(db_connection).await;
+            transfer_callback::Entity::delete_by_id(callback_id).exec(&self.db_connection).await;
         match transfer_callback {
             Ok(delete_result) => match delete_result.rows_affected {
-                0 => bail!("Not found"),
+                0 => Err(TransferConsumerRepoErrors::ConsumerTransferProcessNotFound),
                 _ => Ok(()),
             },
-            Err(_) => bail!("Failed to fetch transfer callback"),
+            Err(e) => Err(TransferConsumerRepoErrors::ErrorDeletingConsumerTransferProcess(e.into())),
         }
     }
 }

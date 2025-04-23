@@ -17,8 +17,8 @@
  *
  */
 
-pub mod rainbow_catalog_api;
-pub mod idsa_api;
-pub mod rainbow_policies_api;
-pub mod rainbow_catalog_err;
 pub mod openapi;
+pub mod rainbow_entities;
+pub mod ds_protocol;
+pub mod rainbow_rpc;
+pub mod middleware;

@@ -20,5 +20,4 @@
 pub mod entities;
 pub mod migrations;
 pub mod repo;
-pub mod provider_entity_mappers;
-pub mod consumer_entity_mappers;
+pub mod entity_mappers;

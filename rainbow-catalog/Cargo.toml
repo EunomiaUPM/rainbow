@@ -14,6 +14,7 @@ path = "src/main.rs"
 [dependencies]
 rainbow_common = { version = "0.1.0", path = "../rainbow-common", default-features = true }
 rainbow_db = { version = "0.1.0", path = "../rainbow-db", default-features = true }
+rainbow_events = { version = "0.1.0", path = "../rainbow-events", default-features = true }
 
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -35,3 +36,5 @@ sea-orm = { workspace = true }
 sea-orm-migration = { workspace = true }
 once_cell = "1.20.2"
 serde_yaml = "0.9.33"
+json_to_table = { workspace = true }
+mockall = { workspace = true }

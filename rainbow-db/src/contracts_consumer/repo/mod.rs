@@ -17,33 +17,26 @@
  *
  */
 
-use self::sql::ContractNegotiationRepoForSql;
 use super::entities::cn_process;
+use crate::contracts_provider::repo::{
+    AgreementRepo, ContractNegotiationMessageRepo, ContractNegotiationOfferRepo, ContractNegotiationProcessRepo,
+    Participant,
+};
 use anyhow::Error;
 use axum::async_trait;
-use once_cell::sync::Lazy;
-use rainbow_common::config::config::GLOBAL_CONFIG;
+use sea_orm::DatabaseConnection;
 use thiserror::Error;
 use urn::Urn;
 
-mod sql;
+pub mod sql;
 
-pub trait CombinedRepo: ContractNegotiationConsumerProcessRepo {}
-impl<T> CombinedRepo for T
-where
-    T: ContractNegotiationConsumerProcessRepo,
-{}
-
-pub static CONTRACT_CONSUMER_REPO: Lazy<Box<dyn CombinedRepo + Send + Sync>> = Lazy::new(|| {
-    let repo_type = GLOBAL_CONFIG.get().unwrap().db_type.clone();
-    match repo_type.as_str() {
-        "postgres" => Box::new(ContractNegotiationRepoForSql {}),
-        "memory" => Box::new(ContractNegotiationRepoForSql {}),
-        "mysql" => Box::new(ContractNegotiationRepoForSql {}),
-        _ => panic!("Unknown REPO_TYPE: {}", repo_type),
-    }
-});
-
+pub trait ContractNegotiationConsumerRepoFactory:
+ContractNegotiationConsumerProcessRepo + Send + Sync + 'static
+{
+    fn create_repo(db_connection: DatabaseConnection) -> Self
+    where
+        Self: Sized;
+}
 
 pub struct NewContractNegotiationProcess {
     pub provider_id: Option<Urn>,
@@ -67,10 +60,7 @@ pub trait ContractNegotiationConsumerProcessRepo {
         &self,
         consumer_id: Urn,
     ) -> anyhow::Result<Option<cn_process::Model>, CnErrors>;
-    async fn get_cn_process_by_cn_id(
-        &self,
-        cn_process_id: Urn,
-    ) -> anyhow::Result<Option<cn_process::Model>, CnErrors>;
+    async fn get_cn_process_by_cn_id(&self, cn_process_id: Urn) -> anyhow::Result<Option<cn_process::Model>, CnErrors>;
     async fn put_cn_process(
         &self,
         cn_process_id: Urn,

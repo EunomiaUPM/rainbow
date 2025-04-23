@@ -6,11 +6,11 @@ services:
     image: "postgres"
     restart: always
     ports:
-      - "5433:5432"
+      - "5437:5432"
     environment:
-      POSTGRES_PASSWORD: ds-protocol-provider
-      POSTGRES_USER: ds-protocol-provider
-      POSTGRES_DB: ds-protocol-provider
+      POSTGRES_PASSWORD: ds_core_provider_db
+      POSTGRES_USER: ds_core_provider_db
+      POSTGRES_DB: ds_core_provider_db
 
   ds-provider:
     container_name: ds-provider
@@ -20,7 +20,6 @@ services:
       - db-provider
     ports:
       - "1234:1234"
-      - "1236:1236"
     env_file:
       - "./.env.provider.template"
     command: [ "provider", "start" ]
@@ -34,6 +33,7 @@ services:
     env_file:
       - "./.env.provider.template"
     command: [ "provider", "setup" ]
+
 networks:
   ds-rainbow:
     external: true

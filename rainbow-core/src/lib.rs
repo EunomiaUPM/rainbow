@@ -17,12 +17,6 @@
  *
  */
 
-#![allow(unused_imports)]
-#![allow(dead_code)]
-#![allow(unused_variables)]
-#![allow(unused_mut)]
-#![allow(unused_imports)]
-
-pub mod http;
-pub mod migrations;
-pub mod setup;
+pub mod cmd;
+pub mod provider;
+pub mod consumer;

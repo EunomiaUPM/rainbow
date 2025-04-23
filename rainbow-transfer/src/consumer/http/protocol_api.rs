@@ -17,12 +17,10 @@
  *
  */
 
-use crate::common::utils::{does_callback_exist, is_consumer_pid_valid};
 use crate::consumer::lib::control_plane::transfer_completion;
 use crate::consumer::lib::control_plane::{
     transfer_start, transfer_suspension, transfer_termination,
 };
-use anyhow::Error;
 use axum::extract::Path;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;

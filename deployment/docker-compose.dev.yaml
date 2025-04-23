@@ -22,3 +22,58 @@ services:
       POSTGRES_DB: ds-protocol-consumer
     ports:
       - "5434:5432"
+
+  ds_catalog_db:
+    container_name: "ds_catalog_db"
+    image: "postgres"
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: ds-protocol-catalog
+      POSTGRES_USER: ds-protocol-catalog
+      POSTGRES_DB: ds-protocol-catalog
+    ports:
+      - "5435:5432"
+
+  ds_cn_provider_db:
+    container_name: "ds_cn_provider_db"
+    image: "postgres"
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: ds_cn_provider_db
+      POSTGRES_USER: ds_cn_provider_db
+      POSTGRES_DB: ds_cn_provider_db
+    ports:
+      - "5436:5432"
+
+  ds_cn_consumer_db:
+    container_name: "ds_cn_consumer_db"
+    image: "postgres"
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: ds_cn_consumer_db
+      POSTGRES_USER: ds_cn_consumer_db
+      POSTGRES_DB: ds_cn_consumer_db
+    ports:
+      - "5438:5432"
+
+  ds_core_provider_db:
+    container_name: "ds_core_provider_db"
+    image: "postgres"
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: ds_core_provider_db
+      POSTGRES_USER: ds_core_provider_db
+      POSTGRES_DB: ds_core_provider_db
+    ports:
+      - "5437:5432"
+
+  ds_core_consumer_db:
+    container_name: "ds_core_consumer_db"
+    image: "postgres"
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: ds_core_consumer_db
+      POSTGRES_USER: ds_core_consumer_db
+      POSTGRES_DB: ds_core_consumer_db
+    ports:
+      - "5439:5432"

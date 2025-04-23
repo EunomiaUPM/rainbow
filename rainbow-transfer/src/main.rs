@@ -17,15 +17,10 @@
  *
  */
 
-#![allow(unused_imports)]
-#![allow(dead_code)]
-#![allow(unused_variables)]
-#![allow(unused_mut)]
-#![allow(unused_imports)]
-
-use rainbow_transfer::setup;
-use sea_orm_migration::MigratorTrait;
+use rainbow_transfer::cmd::cmd::TransferCommands;
 use tracing::info;
+use tracing_subscriber::filter::LevelFilter;
+use tracing_subscriber::EnvFilter;
 
 const INFO: &str = r"
 ----------
@@ -43,8 +38,10 @@ Show some love on https://github.com/ging/rainbow
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    tracing_subscriber::fmt().with_max_level(tracing::Level::DEBUG).with_test_writer().init();
+    let filter =
+        EnvFilter::builder().with_default_directive(LevelFilter::INFO.into()).parse("debug,sqlx::query=off")?;
+    tracing_subscriber::fmt().with_env_filter(filter).init();
     info!("{}", INFO);
-    setup::commands::init_command_line().await?;
+    TransferCommands::init_command_line().await?;
     Ok(())
 }

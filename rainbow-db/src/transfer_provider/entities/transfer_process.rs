@@ -17,7 +17,6 @@
  *
  */
 
-use rainbow_common::protocol::transfer::TransferStateForDb;
 use sea_orm::entity::prelude::*;
 use sea_orm::entity::prelude::*;
 use sea_orm::sea_query::ValueType;
@@ -31,7 +30,7 @@ pub struct Model {
     pub consumer_pid: Option<String>,
     pub agreement_id: String,
     pub data_plane_id: Option<String>,
-    pub state: TransferStateForDb,
+    pub state: String,
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: Option<chrono::NaiveDateTime>,
 }

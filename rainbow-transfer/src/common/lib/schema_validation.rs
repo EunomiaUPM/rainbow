@@ -17,7 +17,7 @@
  *
  */
 
-use crate::schemas::{
+use crate::common::schemas::{
     TRANSFER_COMPLETION_SCHEMA, TRANSFER_REQUEST_SCHEMA, TRANSFER_START_SCHEMA,
     TRANSFER_SUSPENSION_SCHEMA, TRANSFER_TERMINATION_SCHEMA,
 };
@@ -35,11 +35,11 @@ pub async fn schema_validation(json_value: Value) -> anyhow::Result<()> {
     }
 
     let validation = match message_type.unwrap() {
-        "dspace:TransferRequestMessage" => TRANSFER_REQUEST_SCHEMA.apply(&json_value).basic(),
-        "dspace:TransferStartMessage" => TRANSFER_START_SCHEMA.apply(&json_value).basic(),
-        "dspace:TransferSuspensionMessage" => TRANSFER_SUSPENSION_SCHEMA.apply(&json_value).basic(),
-        "dspace:TransferCompletionMessage" => TRANSFER_COMPLETION_SCHEMA.apply(&json_value).basic(),
-        "dspace:TransferTerminationMessage" => {
+        "TransferRequestMessage" => TRANSFER_REQUEST_SCHEMA.apply(&json_value).basic(),
+        "TransferStartMessage" => TRANSFER_START_SCHEMA.apply(&json_value).basic(),
+        "TransferSuspensionMessage" => TRANSFER_SUSPENSION_SCHEMA.apply(&json_value).basic(),
+        "TransferCompletionMessage" => TRANSFER_COMPLETION_SCHEMA.apply(&json_value).basic(),
+        "TransferTerminationMessage" => {
             TRANSFER_TERMINATION_SCHEMA.apply(&json_value).basic()
         }
         _ => {

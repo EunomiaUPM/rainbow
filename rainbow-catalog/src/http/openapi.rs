@@ -1,3 +1,22 @@
+/*
+ *
+ *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::get;
@@ -7,12 +26,12 @@ use serde_json::Value;
 
 pub fn route_openapi() -> Router {
     Router::new()
-        .route("/openapi.json", get(get_open_api))
+        .route("/api/v1/catalog/openapi.json", get(get_open_api))
 }
 
 static OPENAPI_JSON: Lazy<Value> = Lazy::new(|| {
-    let openapi_yaml = include_str!("./../api/rainbow_catalog_api.yaml");
-    let openapi = serde_yaml::from_str::<serde_json::Value>(&openapi_yaml).unwrap();
+    let openapi_yaml = include_str!("./../../openapi/catalog.json");
+    let openapi = serde_json::from_str::<Value>(&openapi_yaml).unwrap();
     openapi
 });
 

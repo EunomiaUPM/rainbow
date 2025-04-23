@@ -17,7 +17,36 @@
  *
  */
 
+use serde::{Deserialize, Serialize};
+use std::fmt::Display;
+
 pub mod catalog_definition;
 pub mod dataservice_definition;
 pub mod dataset_definition;
 pub mod distribution_definition;
+pub mod catalog_protocol_types;
+
+#[derive(Debug, Serialize, Deserialize)]
+pub enum CatalogProtocolEntities {
+    #[serde(rename = "Catalog")]
+    Catalog,
+    #[serde(rename = "DataService")]
+    DataService,
+    #[serde(rename = "Dataset")]
+    Dataset,
+    #[serde(rename = "Distribution")]
+    Distribution,
+}
+
+impl Display for CatalogProtocolEntities {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let str = match self {
+            CatalogProtocolEntities::Catalog => "Catalog".to_string(),
+            CatalogProtocolEntities::Dataset => "Dataset".to_string(),
+            CatalogProtocolEntities::DataService => "DataService".to_string(),
+            CatalogProtocolEntities::Distribution => "Distribution".to_string(),
+        };
+        write!(f, "{}", str)
+    }
+}
+

@@ -28,13 +28,14 @@ use rainbow_common::dcat_formats::{DctFormats, FormatAction, FormatProtocol};
 use rainbow_common::protocol::transfer::{
     TransferCompletionMessage, TransferMessageTypes, TransferProcessMessage,
     TransferRequestMessage, TransferStartMessage, TransferSuspensionMessage,
-    TransferTerminationMessage, TRANSFER_CONTEXT,
+    TransferTerminationMessage,
 };
 use rainbow_common::utils::get_urn;
 use std::process::{Child, Command};
 use tracing_test::traced_test;
 use uuid::Uuid;
 use urn::Urn;
+use rainbow_common::protocol::ContextField;
 
 #[path = "utils.rs"]
 mod utils;
@@ -78,7 +79,7 @@ pub async fn to_requested() -> anyhow::Result<()> {
         .post("http://localhost:1234/transfers/suspension")
         .header("content-type", "application/json")
         .json(&TransferSuspensionMessage {
-            context: TRANSFER_CONTEXT.into(),
+            context: ContextField::default(),
             _type: TransferMessageTypes::TransferSuspensionMessage.to_string(),
             provider_pid: provider_pid_.clone(),
             consumer_pid: consumer_pid.clone(),
@@ -155,7 +156,7 @@ pub async fn to_started() -> anyhow::Result<()> {
         .post("http://localhost:1234/transfers/suspension")
         .header("content-type", "application/json")
         .json(&TransferSuspensionMessage {
-            context: TRANSFER_CONTEXT.into(),
+            context: ContextField::default(),
             _type: TransferMessageTypes::TransferSuspensionMessage.to_string(),
             provider_pid: provider_pid_.clone(),
             consumer_pid: consumer_pid.clone(),
@@ -230,7 +231,7 @@ pub async fn to_suspended() -> anyhow::Result<()> {
         .post("http://localhost:1234/transfers/suspension")
         .header("content-type", "application/json")
         .json(&TransferSuspensionMessage {
-            context: TRANSFER_CONTEXT.into(),
+            context: ContextField::default(),
             _type: TransferMessageTypes::TransferSuspensionMessage.to_string(),
             provider_pid: provider_pid_.clone(),
             consumer_pid: consumer_pid.clone(),
@@ -306,7 +307,7 @@ pub async fn to_completed() -> anyhow::Result<()> {
         .post("http://localhost:1234/transfers/suspension")
         .header("content-type", "application/json")
         .json(&TransferSuspensionMessage {
-            context: TRANSFER_CONTEXT.into(),
+            context: ContextField::default(),
             _type: TransferMessageTypes::TransferSuspensionMessage.to_string(),
             provider_pid: provider_pid_.clone(),
             consumer_pid: consumer_pid.clone(),
@@ -380,7 +381,7 @@ pub async fn to_terminated() -> anyhow::Result<()> {
         .post("http://localhost:1234/transfers/suspension")
         .header("content-type", "application/json")
         .json(&TransferSuspensionMessage {
-            context: TRANSFER_CONTEXT.into(),
+            context: ContextField::default(),
             _type: TransferMessageTypes::TransferSuspensionMessage.to_string(),
             provider_pid: provider_pid_.clone(),
             consumer_pid: consumer_pid.clone(),

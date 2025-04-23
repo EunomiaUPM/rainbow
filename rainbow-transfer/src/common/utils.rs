@@ -18,19 +18,7 @@
  */
 
 use rainbow_common::dcat_formats::{DctFormats, FormatAction};
-use rainbow_common::protocol::transfer::DataAddress;
-use tracing::debug;
-use uuid::Uuid;
-
-pub fn is_consumer_pid_valid(consumer_pid: &String) -> anyhow::Result<bool> {
-    debug!("Validating consumer_pid: {}", consumer_pid);
-    Ok(true)
-}
-
-pub fn is_agreement_valid(agreement_id: &String) -> anyhow::Result<bool> {
-    debug!("Validating agreement_id: {}", agreement_id);
-    Ok(true)
-}
+use rainbow_common::protocol::transfer::transfer_data_address::DataAddress;
 
 pub fn has_data_address_in_push(
     data_address: &Option<DataAddress>,
@@ -43,7 +31,3 @@ pub fn has_data_address_in_push(
     }
 }
 
-pub fn does_callback_exist(callback_id: Uuid) -> anyhow::Result<bool> {
-    debug!("{}", callback_id.to_string());
-    Ok(true)
-}

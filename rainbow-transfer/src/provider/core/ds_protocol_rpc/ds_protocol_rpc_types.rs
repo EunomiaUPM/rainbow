@@ -1,0 +1,137 @@
+/*
+ *
+ *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
+
+use rainbow_common::protocol::transfer::transfer_data_address::DataAddress;
+use rainbow_common::protocol::transfer::transfer_error::TransferError;
+use rainbow_common::protocol::transfer::transfer_process::TransferProcessMessage;
+use serde::{Deserialize, Serialize};
+use urn::Urn;
+
+#[derive(Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct DSRPCTransferProviderStartRequest {
+    #[serde(rename = "consumerCallbackAddress")]
+    pub consumer_callback: String,
+    #[serde(rename = "providerPid")]
+    pub provider_pid: Urn,
+    #[serde(rename = "consumerPid")]
+    pub consumer_pid: Urn,
+    #[serde(rename = "dataAddress")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub data_address: Option<DataAddress>,
+}
+
+#[derive(Deserialize, Serialize, Clone)]
+#[serde(deny_unknown_fields)]
+pub struct DSRPCTransferProviderStartResponse {
+    #[serde(rename = "providerPid")]
+    pub provider_pid: Urn,
+    #[serde(rename = "consumerPid")]
+    pub consumer_pid: Urn,
+    #[serde(rename = "dataAddress")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub data_address: Option<DataAddress>,
+    pub message: TransferProcessMessage,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct DSRPCTransferProviderSuspensionRequest {
+    #[serde(rename = "consumerCallbackAddress")]
+    pub consumer_callback: String,
+    #[serde(rename = "providerPid")]
+    pub provider_pid: Urn,
+    #[serde(rename = "consumerPid")]
+    pub consumer_pid: Urn,
+    #[serde(rename = "code")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub code: Option<String>,
+    #[serde(rename = "reason")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reason: Option<Vec<String>>,
+}
+
+#[derive(Deserialize, Serialize, Clone)]
+#[serde(deny_unknown_fields)]
+pub struct DSRPCTransferProviderSuspensionResponse {
+    #[serde(rename = "providerPid")]
+    pub provider_pid: Urn,
+    #[serde(rename = "consumerPid")]
+    pub consumer_pid: Urn,
+    pub message: TransferProcessMessage,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct DSRPCTransferProviderCompletionRequest {
+    #[serde(rename = "consumerCallbackAddress")]
+    pub consumer_callback: String,
+    #[serde(rename = "providerPid")]
+    pub provider_pid: Urn,
+    #[serde(rename = "consumerPid")]
+    pub consumer_pid: Urn,
+}
+
+#[derive(Deserialize, Serialize, Clone)]
+#[serde(deny_unknown_fields)]
+pub struct DSRPCTransferProviderCompletionResponse {
+    #[serde(rename = "providerPid")]
+    pub provider_pid: Urn,
+    #[serde(rename = "consumerPid")]
+    pub consumer_pid: Urn,
+    pub message: TransferProcessMessage,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct DSRPCTransferProviderTerminationRequest {
+    #[serde(rename = "consumerCallbackAddress")]
+    pub consumer_callback: String,
+    #[serde(rename = "providerPid")]
+    pub provider_pid: Urn,
+    #[serde(rename = "consumerPid")]
+    pub consumer_pid: Urn,
+    #[serde(rename = "code")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub code: Option<String>,
+    #[serde(rename = "reason")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reason: Option<Vec<String>>,
+}
+
+#[derive(Deserialize, Serialize, Clone)]
+#[serde(deny_unknown_fields)]
+pub struct DSRPCTransferProviderTerminationResponse {
+    #[serde(rename = "providerPid")]
+    pub provider_pid: Urn,
+    #[serde(rename = "consumerPid")]
+    pub consumer_pid: Urn,
+    pub message: TransferProcessMessage,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct DSRPCTransferProviderErrorResponse {
+    #[serde(rename = "providerPid")]
+    pub provider_pid: Option<Urn>,
+    #[serde(rename = "consumerPid")]
+    pub consumer_pid: Option<Urn>,
+    pub error: TransferError,
+}
