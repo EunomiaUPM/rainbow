@@ -22,48 +22,47 @@ use rainbow_common::config::database::DbType;
 use serde::Serialize;
 
 #[derive(Serialize, Clone)]
-struct HostConfig {
-    protocol: String,
-    url: String,
-    port: String,
+pub struct HostConfig {
+    pub protocol: String,
+    pub url: String,
+    pub port: String,
 }
 
 #[derive(Serialize, Clone)]
-struct DatabaseConfig {
-    db_type: DbType,
-    url: String,
-    port: String,
-    user: String,
-    password: String,
-    name: String,
+pub struct DatabaseConfig {
+    pub db_type: DbType,
+    pub url: String,
+    pub port: String,
+    pub user: String,
+    pub password: String,
+    pub name: String,
 }
 
 #[derive(Serialize, Clone)]
-struct SSIConsumerWalletConfig {
-    ssi_holder_wallet_portal_url: String,
-    ssi_holder_wallet_portal_port: String,
-    ssi_holder_wallet_type: String,
-    ssi_holder_wallet_name: String,
-    ssi_holder_wallet_email: String,
-    ssi_holder_wallet_password: String,
-    ssi_holder_wallet_id: String,
-    consumer_auth_callback: String,
+pub struct SSIConsumerWalletConfig {
+    pub ssi_holder_wallet_portal_url: String,
+    pub ssi_holder_wallet_portal_port: String,
+    pub ssi_holder_wallet_type: String,
+    pub ssi_holder_wallet_name: String,
+    pub ssi_holder_wallet_email: String,
+    pub ssi_holder_wallet_password: String,
+    pub ssi_holder_wallet_id: String,
+    pub consumer_auth_callback: String,
 }
 
 #[derive(Serialize, Clone)]
-struct SSIConsumerConfig {
-    consumer_client: String,
+pub struct SSIConsumerConfig {
+    pub consumer_client: String,
 }
 
 #[derive(Serialize, Clone)]
 pub struct CoreConsumerApplicationConfig {
-    core_host: HostConfig,
-    database_config: DatabaseConfig,
-    ssi_wallet_config: SSIConsumerWalletConfig,
-    ssi_consumer_client: SSIConsumerConfig,
-    role: ConfigRoles,
+    pub core_host: HostConfig,
+    pub database_config: DatabaseConfig,
+    pub ssi_wallet_config: SSIConsumerWalletConfig,
+    pub ssi_consumer_client: SSIConsumerConfig,
+    pub role: ConfigRoles,
 }
-
 
 impl Default for CoreConsumerApplicationConfig {
     fn default() -> Self {
@@ -80,6 +79,21 @@ impl Default for CoreConsumerApplicationConfig {
                 user: "ds_core_consumer_db".to_string(),
                 password: "ds_core_consumer_db".to_string(),
                 name: "ds_core_consumer_db".to_string(),
+            },
+            ssi_wallet_config: SSIConsumerWalletConfig {
+                // TODO meter esta info
+                ssi_holder_wallet_portal_url: "".to_string(),
+                ssi_holder_wallet_portal_port: "".to_string(),
+                ssi_holder_wallet_type: "".to_string(),
+                ssi_holder_wallet_name: "".to_string(),
+                ssi_holder_wallet_email: "".to_string(),
+                ssi_holder_wallet_password: "".to_string(),
+                ssi_holder_wallet_id: "".to_string(),
+                consumer_auth_callback: "".to_string(),
+            },
+            ssi_consumer_client: SSIConsumerConfig {
+                // TODO meter esta info
+                consumer_client: "".to_string(),
             },
             role: ConfigRoles::Consumer,
         }
@@ -130,6 +144,28 @@ impl CoreConsumerApplicationConfig {
                 user: std::env::var("DB_USER").unwrap_or(self.database_config.user.clone()),
                 password: std::env::var("DB_PASSWORD").unwrap_or(self.database_config.password.clone()),
                 name: std::env::var("DB_DATABASE").unwrap_or(self.database_config.name.clone()),
+            },
+            ssi_wallet_config: SSIConsumerWalletConfig {
+                ssi_holder_wallet_portal_url: std::env::var("SSI_HOLDER_WALLET_DB_URL")
+                    .unwrap_or(self.ssi_wallet_config.ssi_holder_wallet_portal_url.clone()),
+                ssi_holder_wallet_portal_port: std::env::var("SSI_HOLDER_WALLET_DB_PORT")
+                    .unwrap_or(self.ssi_wallet_config.ssi_holder_wallet_portal_port.clone()),
+                ssi_holder_wallet_type: std::env::var("SSI_HOLDER_WALLET_DB_TYPE")
+                    .unwrap_or(self.ssi_wallet_config.ssi_holder_wallet_type.clone()),
+                ssi_holder_wallet_name: std::env::var("SSI_HOLDER_WALLET_DB_NAME")
+                    .unwrap_or(self.ssi_wallet_config.ssi_holder_wallet_name.clone()),
+                ssi_holder_wallet_email: std::env::var("SSI_HOLDER_WALLET_DB_EMAIL")
+                    .unwrap_or(self.ssi_wallet_config.ssi_holder_wallet_email.clone()),
+                ssi_holder_wallet_password: std::env::var("SSI_HOLDER_WALLET_DB_PASSWORD")
+                    .unwrap_or(self.ssi_wallet_config.ssi_holder_wallet_password.clone()),
+                ssi_holder_wallet_id: std::env::var("SSI_HOLDER_WALLET_DB_ID")
+                    .unwrap_or(self.ssi_wallet_config.ssi_holder_wallet_id.clone()),
+                consumer_auth_callback: std::env::var("CONSUMER_AUTH_CALLBACK")
+                    .unwrap_or(self.ssi_wallet_config.consumer_auth_callback.clone()),
+            },
+            ssi_consumer_client: SSIConsumerConfig {
+                consumer_client: std::env::var("SSI_CONSUMER_CLIENT")
+                    .unwrap_or(self.ssi_consumer_client.consumer_client.clone()),
             },
             role: ConfigRoles::Consumer,
         };

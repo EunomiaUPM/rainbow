@@ -16,9 +16,6 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use rainbow_common::config::config::get_consumer_client;
-use rand::distributions::Alphanumeric;
-use rand::Rng;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 

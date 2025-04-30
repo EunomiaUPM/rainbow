@@ -31,5 +31,5 @@ pub mod contracts_consumer;
 pub mod transfer_consumer;
 pub mod transfer_provider;
 pub mod auth_provider;
-// pub mod auth_consumer;
+pub mod auth_consumer;
 pub mod events;

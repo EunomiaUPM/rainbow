@@ -28,8 +28,7 @@ pub struct CoreConsumerApplication;
 impl CoreConsumerApplication {
     pub async fn run(config: &CoreConsumerApplicationConfig) -> anyhow::Result<()> {
         // db_connection
-        let db_url = config.get_full_db_url();
-        let router = create_core_consumer_router(db_url).await;
+        let router = create_core_consumer_router(&config).await;
         // Init server
         let server_message = format!(
             "Starting core consumer server in {}",

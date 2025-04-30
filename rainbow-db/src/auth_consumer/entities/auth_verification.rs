@@ -18,7 +18,6 @@
  */
 
 use sea_orm::entity::prelude::*;
-// use crate::auth_consumer::status::Status;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
 #[sea_orm(table_name = "auth_verification")]

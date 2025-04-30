@@ -17,8 +17,10 @@
  *
  */
 
+use crate::consumer::setup::config::CoreConsumerApplicationConfig;
 use axum::Router;
-use rainbow_auth::ssi_auth::consumer::http::RainbowAuthConsumerRouter;
+use rainbow_auth::ssi_auth::consumer::core::manager::Manager;
+use rainbow_auth::ssi_auth::consumer::http::http::RainbowAuthConsumerRouter;
 use rainbow_contracts::consumer::core::ds_protocol::ds_protocol::DSProtocolContractNegotiationConsumerService;
 use rainbow_contracts::consumer::core::ds_protocol_rpc::ds_protocol_rpc::DSRPCContractNegotiationConsumerService;
 use rainbow_contracts::consumer::core::rainbow_entities::rainbow_entities::RainbowEntitiesContractNegotiationConsumerService;
@@ -47,9 +49,10 @@ use rainbow_transfer::consumer::http::rainbow_entities::rainbow_entities::Rainbo
 use rainbow_transfer::consumer::setup::config::TransferConsumerApplicationConfig;
 use sea_orm::Database;
 use std::sync::Arc;
+use tokio::sync::Mutex;
 
-pub async fn create_core_consumer_router(db_url: String) -> Router {
-    let db_connection = Database::connect(db_url).await.expect("Database can't connect");
+pub async fn create_core_consumer_router(config: &CoreConsumerApplicationConfig) -> Router {
+    let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
 
     // DB repos
     let subscription_repo = Arc::new(EventsRepoForSql::create_repo(db_connection.clone()));
@@ -64,8 +67,8 @@ pub async fn create_core_consumer_router(db_url: String) -> Router {
     // =====================
     // AUTH
     // =====================
-
-    let auth_router = RainbowAuthConsumerRouter::new(auth_repo.clone()).router();
+    let auth_manager = Arc::new(Mutex::new(Manager::new(auth_repo.clone(), config.clone().into())));
+    let auth_router = RainbowAuthConsumerRouter::new(auth_manager).router();
 
     // =====================
     // EVENTS
