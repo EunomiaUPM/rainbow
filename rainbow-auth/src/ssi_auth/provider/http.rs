@@ -41,7 +41,6 @@ where
     pub manager: Manager<T>,
 }
 
-
 impl<T> RainbowAuthProviderRouter<T>
 where
     T: AuthProviderRepoTrait + Send + Sync + Clone + 'static,
@@ -100,11 +99,10 @@ where
         // {payload.vp_token,payload.presentation_submission}
 
         match manager.verify_all(state, payload.vp_token).await {
-            Ok(vpd) => {}
-            Err(e) => {}
+            Ok(Some(uri)) => (StatusCode::OK, uri).into_response(),
+            Ok(None) => StatusCode::OK.into_response(),
+            Err(e) => StatusCode::BAD_REQUEST.into_response(),
         }
-
-        StatusCode::OK
     }
 
     async fn fallback(method: Method, uri: Uri) -> (StatusCode, String) {

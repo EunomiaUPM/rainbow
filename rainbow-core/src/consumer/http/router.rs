@@ -22,8 +22,16 @@ use axum::Router;
 use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
 use rainbow_contracts::consumer::setup::application::create_contract_negotiation_consumer_router;
 use rainbow_transfer::consumer::setup::application::create_transfer_consumer_router;
+use rainbow_auth::ssi_auth::consumer::http::RainbowAuthConsumerRouter;
+use rainbow_db::auth_consumer::repo::sql::AuthConsumerRepoForSql;
+use rainbow_db::auth_consumer::repo::AuthConsumerRepoFactory;
 
 pub async fn create_core_consumer_router(config: &CoreApplicationConsumerConfig) -> Router {
+    // TODO fix this
+    let auth_router = RainbowAuthConsumerRouter::new(auth_repo.clone()).router();
+    let auth_repo = Arc::new(AuthConsumerRepoForSql::create_repo(db_connection.clone()));
+
+
     let app_config: ApplicationConsumerConfig = config.clone().into();
     let transfer_router = create_transfer_consumer_router(&app_config.clone().into()).await;
     let cn_router = create_contract_negotiation_consumer_router(&app_config.clone().into()).await;

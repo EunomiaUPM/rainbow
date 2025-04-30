@@ -37,7 +37,7 @@ impl MigrationTrait for Migration {
                     .as_enum(Alias::new("status"))
                     .values([
                         Alias::new("Completed"),
-                        Alias::new("Ongoing"),
+                        Alias::new("Pending"),
                         Alias::new("Failed"),
                         Alias::new("Expired"),
                         Alias::new("Requested"),
@@ -52,10 +52,9 @@ impl MigrationTrait for Migration {
                     .table(Auth::Table)
                     .col(
                         ColumnDef::new(Auth::Id)
-                            .big_integer()
+                            .string()
                             .not_null()
                             .primary_key()
-                            .auto_increment(),
                     )
                     .col(ColumnDef::new(Auth::AssignedId).string())
                     .col(ColumnDef::new(Auth::Provider).string().not_null())

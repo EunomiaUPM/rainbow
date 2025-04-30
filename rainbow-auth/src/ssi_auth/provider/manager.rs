@@ -162,7 +162,7 @@ where
         }))
     }
 
-    pub async fn verify_all(&self, state: String, vptoken: String) -> anyhow::Result<()> {
+    pub async fn verify_all(&self, state: String, vptoken: String) -> anyhow::Result<Option<String>> {
         let exchange = match self.auth_repo.get_auth_by_state(state.clone()).await {
             Ok(auth) => auth,
             Err(e) => bail!("No exchange for state {}", state),
@@ -196,13 +196,28 @@ where
         }
         info!("VP & VP Validated successfully");
 
-        match self.auth_repo.update_verification_result(exchange, true).await {
+        match self.auth_repo.update_verification_result(exchange.clone(), true).await {
             Ok(_) => {}
             Err(e) => {
                 bail!("{}", e)
             }
         }
-        Ok(())
+
+        let interact = match self.auth_repo.get_interaction_by_id(exchange).await {
+            Ok(interact) => interact,
+            Err(e) => {
+                bail!("{}", e)
+            }
+        };
+
+        match interact.uri {
+            // COMPLETAR OJALA LA WALLET TUVIESE UN CALLBACK DENTRO DE SI MISMA
+            Some(uri) => {
+                let redirect_uri = uri + "?nonce=" + &interact.nonce;
+                Ok(Some(redirect_uri))
+            }
+            None => Ok(None),
+        }
     }
 
     pub async fn verify_vp(&self, exchange: String, vptoken: String) -> anyhow::Result<(Vec<String>, String)> {
@@ -210,13 +225,14 @@ where
         let header = jsonwebtoken::decode_header(&vptoken)?;
         let kid_str = header.kid.as_ref().unwrap();
         let (kid, kid_id) = split_did(kid_str.as_str()); // COMPLETAR KIDID
+        let alg = header.alg;
 
         let vec = URL_SAFE_NO_PAD.decode(&(kid.replace("did:jwk:", "")))?;
         let mut jwk: Jwk = serde_json::from_slice(&vec)?;
 
         let key = jsonwebtoken::DecodingKey::from_jwk(&jwk)?;
 
-        let mut val = Validation::new(Algorithm::EdDSA); // AJUSTAR
+        let mut val = Validation::new(alg); // AJUSTAR
         val.required_spec_claims = HashSet::new();
         val.validate_aud = true; // VALIDATE AUDIENCE
         val.set_audience(&[&(get_provider_audience()?)]);
@@ -246,7 +262,8 @@ where
         }
         info!("VPT issuer, subject & kid matches");
 
-        let auth_ver = match self.auth_repo
+        let auth_ver = match self
+            .auth_repo
             .get_av_by_id_update_holder(
                 id.to_string(),
                 vptoken,
@@ -297,13 +314,14 @@ where
         let header = jsonwebtoken::decode_header(&vctoken)?;
         let kid_str = header.kid.as_ref().unwrap();
         let (kid, kid_id) = split_did(kid_str.as_str()); // COMPLETAR KIDID
+        let alg = header.alg;
 
         let vec = URL_SAFE_NO_PAD.decode(&(kid.replace("did:jwk:", "")))?;
         let mut jwk: Jwk = serde_json::from_slice(&vec)?;
 
         let key = jsonwebtoken::DecodingKey::from_jwk(&jwk)?;
 
-        let mut val = Validation::new(Algorithm::ES256); // AJUSTAR
+        let mut val = Validation::new(alg); // AJUSTAR
         val.required_spec_claims = HashSet::new();
         val.validate_aud = false;
         val.set_audience(&[&(get_provider_audience()?)]);
@@ -372,5 +390,3 @@ where
         Ok(())
     }
 }
-
-

@@ -19,34 +19,36 @@
 
 use crate::auth_consumer::entities::auth_interaction;
 use crate::auth_consumer::entities::{auth, auth_verification};
-use crate::auth_consumer::repo::sql::AuthConsumerRepo;
 use axum::async_trait;
 use once_cell::sync::Lazy;
 use rainbow_common::auth::Interact4GR;
 use rainbow_common::config::config::GLOBAL_CONFIG;
+use sea_orm::DatabaseConnection;
 
 pub mod sql;
 
-pub static AUTH_CONSUMER_REPO: Lazy<Box<dyn AuthConsumerRepoTrait + Send + Sync>> =
-    Lazy::new(|| {
-        let repo_type = GLOBAL_CONFIG.get().unwrap().db_type.clone();
-        match repo_type.as_str() {
-            "postgres" => Box::new(AuthConsumerRepo {}),
-            "memory" => Box::new(AuthConsumerRepo {}),
-            "mysql" => Box::new(AuthConsumerRepo {}),
-            _ => panic!("Unknown REPO_TYPE: {}", repo_type),
-        }
-    });
+// pub static AUTH_CONSUMER_REPO: Lazy<Box<dyn AuthConsumerRepoTrait + Send + Sync>> =
+//     Lazy::new(|| {
+//         let repo_type = GLOBAL_CONFIG.get().unwrap().db_type.clone();
+//         match repo_type.as_str() {
+//             "postgres" => Box::new(AuthConsumerRepo {}),
+//             "memory" => Box::new(AuthConsumerRepo {}),
+//             "mysql" => Box::new(AuthConsumerRepo {}),
+//             _ => panic!("Unknown REPO_TYPE: {}", repo_type),
+//         }
+//     });
+
+pub trait AuthConsumerRepoFactory: AuthConsumerRepoTrait + Send + Sync + Clone + 'static {
+    fn create_repo(db_connection: DatabaseConnection) -> Self
+    where
+        Self: Sized;
+}
 
 #[async_trait]
 pub trait AuthConsumerRepoTrait {
-    async fn get_all_auths(
-        &self,
-        limit: Option<u64>,
-        offset: Option<u64>,
-    ) -> anyhow::Result<Vec<auth::Model>>;
+    async fn get_all_auths(&self, limit: Option<u64>, offset: Option<u64>) -> anyhow::Result<Vec<auth::Model>>;
 
-    async fn get_auth_by_id(&self, id: i64) -> anyhow::Result<auth::Model>;
+    async fn get_auth_by_id(&self, id: String) -> anyhow::Result<auth::Model>;
 
     async fn create_auth(
         &self,
@@ -55,15 +57,11 @@ pub trait AuthConsumerRepoTrait {
         interact: Interact4GR,
     ) -> anyhow::Result<auth::Model>;
 
-    async fn auth_accepted(&self, id: i64, assigned_id: String) -> anyhow::Result<auth::Model>;
+    async fn auth_accepted(&self, id: String, assigned_id: String) -> anyhow::Result<auth::Model>;
 
-    async fn delete_auth(&self, id: i64) -> anyhow::Result<auth::Model>;
+    async fn delete_auth(&self, id: String) -> anyhow::Result<auth::Model>;
 
-    async fn get_interaction_by_id(&self, id: i64) -> anyhow::Result<auth_interaction::Model>;
+    async fn get_interaction_by_id(&self, id: String) -> anyhow::Result<auth_interaction::Model>;
 
-    async fn create_auth_verification(
-        &self,
-        id: i64,
-        uri: String,
-    ) -> anyhow::Result<auth_verification::Model>;
+    async fn create_auth_verification(&self, id: String, uri: String) -> anyhow::Result<auth_verification::Model>;
 }
