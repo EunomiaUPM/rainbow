@@ -32,7 +32,7 @@ where
     U: RainbowEventsNotificationTrait + Sync + Send,
 {
     repo: Arc<T>,
-    notification_service: Arc<U>,
+    _notification_service: Arc<U>,
 }
 
 impl<T, U> RainbowTransferProviderServiceImpl<T, U>
@@ -41,7 +41,7 @@ where
     U: RainbowEventsNotificationTrait + Sync + Send,
 {
     pub fn new(repo: Arc<T>, notification_service: Arc<U>) -> Self {
-        Self { repo, notification_service }
+        Self { repo, _notification_service: notification_service }
     }
 }
 

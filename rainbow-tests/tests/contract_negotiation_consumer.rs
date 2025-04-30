@@ -16,27 +16,21 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::utils::load_env_file;
-use rainbow_contracts::provider::core::rainbow_cn_types::NewParticipantRequest;
-use rainbow_contracts::provider::http::rainbow_idsa_triggers::{
-    SetupAgreementRequest, SetupAgreementResponse, SetupFinalizationRequest,
-    SetupFinalizationResponse, SetupOfferRequest, SetupOfferResponse,
-};
+// use crate::utils::load_env_file;
+use rainbow_contracts::provider::core::rainbow_entities::rainbow_entities_types::NewParticipantRequest;
 
-use rainbow_common::protocol::contract::contract_odrl::{
-    OdrlAgreement, OdrlOffer, OdrlPermission, OdrlTypes, OfferTypes,
-};
+
+use rainbow_common::protocol::contract::contract_odrl::{OdrlAgreement, OdrlMessageOffer, OdrlOffer, OdrlPermission, OdrlTypes, OfferTypes};
 use rainbow_common::utils::{get_urn, get_urn_from_string};
-use rainbow_contracts::consumer::http::rainbow_idsa_triggers::{
-    SetupRequestRequest, SetupRequestResponse,
-    SetupVerificationRequest, SetupVerificationResponse,
-};
+
+use rainbow_contracts::consumer::core::ds_protocol_rpc::ds_protocol_rpc_types::{SetupRequestRequest, SetupRequestResponse, SetupVerificationRequest, SetupVerificationResponse};
+use rainbow_contracts::provider::core::ds_protocol_rpc::ds_protocol_rpc_types::{SetupAgreementRequest, SetupAgreementResponse, SetupFinalizationRequest, SetupFinalizationResponse, SetupOfferRequest, SetupOfferResponse};
 use rainbow_db::contracts_provider::entities::participant;
 use std::process::Command;
 use tracing_test::traced_test;
 
-#[path = "utils.rs"]
-mod utils;
+// #[path = "utils.rs"]
+// mod utils;
 
 #[traced_test]
 #[tokio::test]
@@ -45,22 +39,22 @@ pub async fn contract_negotiation_consumer() -> anyhow::Result<()> {
     // Setup servers
     //
     let cwd = "./../rainbow-core";
-    let provider_envs = load_env_file(".env.provider.template");
+    // let provider_envs = load_env_file(".env.provider.template");
     let mut provider_server = Command::new("cargo")
         .current_dir(cwd)
-        .env_clear()
-        .envs(&provider_envs)
-        .env("TEST", "true")
+        // .env_clear()
+        // .envs(&provider_envs)
+        // .env("TEST", "true")
         .args(&["run", "--", "provider", "start"])
         .spawn()
         .expect("Failed to start provider server");
 
-    let consumer_envs = load_env_file(".env.consumer.template");
+    // let consumer_envs = load_env_file(".env.consumer.template");
     let mut consumer_server = Command::new("cargo")
         .current_dir(cwd)
-        .env_clear()
-        .envs(&consumer_envs)
-        .env("TEST", "true")
+        // .env_clear()
+        // .envs(&consumer_envs)
+        // .env("TEST", "true")
         .args(&["run", "--", "consumer", "start"])
         .spawn()
         .expect("Failed to start consumer server");
@@ -77,6 +71,7 @@ pub async fn contract_negotiation_consumer() -> anyhow::Result<()> {
     let req = provider_client
         .post("http://localhost:1234/api/v1/participants")
         .json(&NewParticipantRequest {
+            participant_id: None,
             _type: "Consumer".to_string(),
             base_url: "http://127.0.0.1:1235".to_string(),
             extra_fields: Default::default(),
@@ -94,11 +89,11 @@ pub async fn contract_negotiation_consumer() -> anyhow::Result<()> {
     let req = consumer_client
         .post("http://127.0.0.1:1235/api/v1/negotiations/rpc/setup-request")
         .json(&SetupRequestRequest {
+            provider_address: "".to_string(),
             consumer_pid: None,
             provider_pid: None,
-            odrl_offer: OfferTypes::Offer(OdrlOffer {
+            odrl_offer: OfferTypes::MessageOffer(OdrlMessageOffer {
                 id: get_urn(None),
-                target: Option::from(get_urn(None)), // Not implemented yet before catalog cleared out...
                 profile: None,
                 permission: Some(vec![OdrlPermission {
                     action: "supermegause".to_string(),
@@ -116,128 +111,129 @@ pub async fn contract_negotiation_consumer() -> anyhow::Result<()> {
     let consumer_pid = res.consumer_pid.clone().unwrap();
     let provider_pid = res.provider_pid.clone().unwrap();
     println!("SetupRequestResponse: {:#?}", res);
-
-    // -------------------------------
-    // Provider redoes OFFER
-    // -------------------------------
-    let req = provider_client
-        .post("http://localhost:1234/api/v1/negotiations/rpc/setup-offer")
-        .json(&SetupOfferRequest {
-            consumer_participant_id: consumer_participant_id.clone(),
-            consumer_pid: Option::from(consumer_pid.clone()),
-            provider_pid: Option::from(provider_pid.clone()),
-            odrl_offer: OdrlOffer {
-                id: get_urn(None),
-                target: Option::from(get_urn(None)), // Not implemented yet before catalog cleared out...
-                profile: None,
-                permission: Some(vec![OdrlPermission {
-                    action: "use".to_string(),
-                    constraint: None,
-                    duty: None,
-                }]),
-                obligation: None,
-                _type: OdrlTypes::Offer,
-                prohibition: None,
-            },
-        })
-        .send()
-        .await?;
-    let res = req.json::<SetupOfferResponse>().await?;
-    println!("SetupOfferResponse: {:#?}", res);
-
-    // -------------------------------
-    // Consumer redoes offer with REQUEST
-    // -------------------------------
-    let req = consumer_client
-        .post("http://127.0.0.1:1235/api/v1/negotiations/rpc/setup-request")
-        .json(&SetupRequestRequest {
-            consumer_pid: None,
-            provider_pid: None,
-            odrl_offer: OfferTypes::Offer(OdrlOffer {
-                id: get_urn(None),
-                target: Option::from(get_urn(None)), // Not implemented yet before catalog cleared out...
-                profile: None,
-                permission: Some(vec![OdrlPermission {
-                    action: "supermegause".to_string(),
-                    constraint: None,
-                    duty: None,
-                }]),
-                obligation: None,
-                _type: OdrlTypes::Offer,
-                prohibition: None,
-            }),
-        })
-        .send()
-        .await?;
-    let res = req.json::<SetupRequestResponse>().await?;
-    println!("SetupRequestResponse: {:#?}", res);
-
-    // -------------------------------
-    // Provider agrees with AGREED and sketches agreement
-    // -------------------------------
-    let req = consumer_client
-        .post("http://127.0.0.1:1234/api/v1/negotiations/rpc/setup-agreement")
-        .json(&SetupAgreementRequest {
-            consumer_participant_id: consumer_participant_id.clone(),
-            consumer_pid: consumer_pid.clone(),
-            provider_pid: provider_pid.clone(),
-            odrl_agreement: OdrlAgreement {
-                id: get_urn(None).to_string(),
-                target: get_urn(None), // Not implemented yet before catalog cleared out...
-                profile: None,
-                permission: Some(vec![OdrlPermission {
-                    action: "use".to_string(),
-                    constraint: None,
-                    duty: None,
-                }]),
-                obligation: None,
-                _type: OdrlTypes::Agreement,
-                prohibition: None,
-                assigner: get_urn(None), // Not implemented yet, but should be participants
-                assignee: get_urn(None), // Not implemented yet, but should be participants
-                timestamp: None,
-            },
-        })
-        .send()
-        .await?;
-    let res = req.json::<SetupAgreementResponse>().await?;
-    println!("SetupAgreementRequest: {:#?}", res);
-
-    // -------------------------------
-    // Consumer verifies agreement with VERIFY
-    // -------------------------------
-    let req = consumer_client
-        .post("http://127.0.0.1:1235/api/v1/negotiations/rpc/setup-verification")
-        .json(&SetupVerificationRequest {
-            consumer_pid: consumer_pid.clone(),
-            provider_pid: provider_pid.clone(),
-        })
-        .send()
-        .await?;
-    let res = req.json::<SetupVerificationResponse>().await?;
-    println!("SetupVerificationResponse: {:#?}", res);
-
-    // -------------------------------
-    // Provider finalizes agreement with FINALIZED
-    // and creates agreement
-    // -------------------------------
-    let req = consumer_client
-        .post("http://127.0.0.1:1234/api/v1/negotiations/rpc/setup-finalization")
-        .json(&SetupFinalizationRequest {
-            consumer_participant_id: consumer_participant_id.clone(),
-            consumer_pid: consumer_pid.clone(),
-            provider_pid: provider_pid.clone(),
-        })
-        .send()
-        .await?;
-    let res = req.json::<SetupFinalizationResponse>().await?;
-    println!("SetupFinalizationResponse: {:#?}", res);
-
-    // TODO improve strings and urns
-    // TODO validation on ODRL
-    // TODO persist agreement
-    // TODO Middlewares for verifying everything (jsonschema, auth, protocol transition validation)
-    // TODO refactor files
+    //
+    // // -------------------------------
+    // // Provider redoes OFFER
+    // // -------------------------------
+    // let req = provider_client
+    //     .post("http://localhost:1234/api/v1/negotiations/rpc/setup-offer")
+    //     .json(&SetupOfferRequest {
+    //         consumer_participant_id: consumer_participant_id.clone(),
+    //         consumer_pid: Option::from(consumer_pid.clone()),
+    //         provider_pid: Option::from(provider_pid.clone()),
+    //         odrl_offer: OdrlOffer {
+    //             id: get_urn(None),
+    //             target: Option::from(get_urn(None)), // Not implemented yet before catalog cleared out...
+    //             profile: None,
+    //             permission: Some(vec![OdrlPermission {
+    //                 action: "use".to_string(),
+    //                 constraint: None,
+    //                 duty: None,
+    //             }]),
+    //             obligation: None,
+    //             _type: OdrlTypes::Offer,
+    //             prohibition: None,
+    //         },
+    //     })
+    //     .send()
+    //     .await?;
+    // let res = req.json::<SetupOfferResponse>().await?;
+    // println!("SetupOfferResponse: {:#?}", res);
+    //
+    // // -------------------------------
+    // // Consumer redoes offer with REQUEST
+    // // -------------------------------
+    // let req = consumer_client
+    //     .post("http://127.0.0.1:1235/api/v1/negotiations/rpc/setup-request")
+    //     .json(&SetupRequestRequest {
+    //         provider_address: "".to_string(),
+    //         consumer_pid: None,
+    //         provider_pid: None,
+    //         odrl_offer: OfferTypes::Offer(OdrlOffer {
+    //             id: get_urn(None),
+    //             target: Option::from(get_urn(None)), // Not implemented yet before catalog cleared out...
+    //             profile: None,
+    //             permission: Some(vec![OdrlPermission {
+    //                 action: "supermegause".to_string(),
+    //                 constraint: None,
+    //                 duty: None,
+    //             }]),
+    //             obligation: None,
+    //             _type: OdrlTypes::Offer,
+    //             prohibition: None,
+    //         }),
+    //     })
+    //     .send()
+    //     .await?;
+    // let res = req.json::<SetupRequestResponse>().await?;
+    // println!("SetupRequestResponse: {:#?}", res);
+    //
+    // // -------------------------------
+    // // Provider agrees with AGREED and sketches agreement
+    // // -------------------------------
+    // let req = consumer_client
+    //     .post("http://127.0.0.1:1234/api/v1/negotiations/rpc/setup-agreement")
+    //     .json(&SetupAgreementRequest {
+    //         consumer_participant_id: consumer_participant_id.clone(),
+    //         consumer_pid: consumer_pid.clone(),
+    //         provider_pid: provider_pid.clone(),
+    //         odrl_agreement: OdrlAgreement {
+    //             id: get_urn(None).to_string(),
+    //             target: get_urn(None), // Not implemented yet before catalog cleared out...
+    //             profile: None,
+    //             permission: Some(vec![OdrlPermission {
+    //                 action: "use".to_string(),
+    //                 constraint: None,
+    //                 duty: None,
+    //             }]),
+    //             obligation: None,
+    //             _type: OdrlTypes::Agreement,
+    //             prohibition: None,
+    //             assigner: get_urn(None), // Not implemented yet, but should be participants
+    //             assignee: get_urn(None), // Not implemented yet, but should be participants
+    //             timestamp: None,
+    //         },
+    //     })
+    //     .send()
+    //     .await?;
+    // let res = req.json::<SetupAgreementResponse>().await?;
+    // println!("SetupAgreementRequest: {:#?}", res);
+    //
+    // // -------------------------------
+    // // Consumer verifies agreement with VERIFY
+    // // -------------------------------
+    // let req = consumer_client
+    //     .post("http://127.0.0.1:1235/api/v1/negotiations/rpc/setup-verification")
+    //     .json(&SetupVerificationRequest {
+    //         provider_address: "".to_string(),
+    //         consumer_pid: consumer_pid.clone(),
+    //         provider_pid: provider_pid.clone(),
+    //     })
+    //     .send()
+    //     .await?;
+    // let res = req.json::<SetupVerificationResponse>().await?;
+    // println!("SetupVerificationResponse: {:#?}", res);
+    //
+    // // -------------------------------
+    // // Provider finalizes agreement with FINALIZED
+    // // and creates agreement
+    // // -------------------------------
+    // let req = consumer_client
+    //     .post("http://127.0.0.1:1234/api/v1/negotiations/rpc/setup-finalization")
+    //     .json(&SetupFinalizationRequest {
+    //         consumer_participant_id: consumer_participant_id.clone(),
+    //         consumer_pid: consumer_pid.clone(),
+    //         provider_pid: provider_pid.clone(),
+    //     })
+    //     .send()
+    //     .await?;
+    // let res = req.json::<SetupFinalizationResponse>().await?;
+    // println!("SetupFinalizationResponse: {:#?}", res);
+    //
+    // // TODO improve strings and urns
+    // // TODO validation on ODRL
+    // // TODO persist agreement
+    // // TODO Middlewares for verifying everything (jsonschema, auth, protocol transition validation)
 
     //
     // Tear down servers

@@ -26,8 +26,8 @@ use clap::builder::TypedValueParser;
 use rainbow_catalog::protocol::catalog_definition::Catalog;
 use rainbow_catalog::protocol::dataservice_definition::DataService;
 use rainbow_common::utils::get_urn_from_string;
-use rainbow_db::transfer_provider::entities::agreements;
-use rainbow_transfer::consumer::lib::api::CreateCallbackResponse;
+use rainbow_db::contracts_provider::entities::agreement;
+use rainbow_transfer::consumer::core::ds_protocol_rpc::ds_protocol_rpc_types::DSRPCTransferConsumerRequestResponse;
 use serde_json::json;
 use std::collections::HashMap;
 use std::process::{Child, Command};
@@ -109,7 +109,7 @@ pub async fn setup_test_env(
         }))
         .send()
         .await?;
-    let res_body = res.json::<agreements::Model>().await?;
+    let res_body = res.json::<agreement::Model>().await?;
     let agreement_id = get_urn_from_string(&res_body.agreement_id)?;
     println!("\nAgreement Id: {:#?}\n\n", agreement_id.to_string());
 
@@ -117,11 +117,11 @@ pub async fn setup_test_env(
     // ====================================
     //  CREATE CALLBACK IN CONSUMER
     // ====================================
-    let res = client.post("http://localhost:1235/api/v1/setup-transfer").send().await?;
-    let res_body = res.json::<CreateCallbackResponse>().await?;
+    let res = client.post("http://localhost:1235/api/v1/transfers/rpc/setup-request").send().await?;
+    let res_body = res.json::<DSRPCTransferConsumerRequestResponse>().await?;
     let consumer_pid = res_body.consumer_pid.clone();
     let consumer_callback_address = res_body.callback_address.clone();
-    let callback_id = res_body.callback_id.clone();
+    let callback_id = res_body.consumer_pid.clone();
     println!("\nConsumer Pid: {:#?}", consumer_pid.to_string());
     println!(
         "Consumer Callback Address: {:#?}",
@@ -222,7 +222,7 @@ pub async fn setup_test_env_push(
         }))
         .send()
         .await?;
-    let res_body = res.json::<agreements::Model>().await?;
+    let res_body = res.json::<agreement::Model>().await?;
     let agreement_id = get_urn_from_string(&res_body.agreement_id)?;
     println!("\nAgreement Id: {:#?}\n\n", agreement_id.to_string());
 
@@ -230,11 +230,11 @@ pub async fn setup_test_env_push(
     // ====================================
     //  CREATE CALLBACK IN CONSUMER
     // ====================================
-    let res = client.post("http://localhost:1235/api/v1/setup-transfer").send().await?;
-    let res_body = res.json::<CreateCallbackResponse>().await?;
+    let res = client.post("http://localhost:1235/api/v1/transfers/rpc/setup-request").send().await?;
+    let res_body = res.json::<DSRPCTransferConsumerRequestResponse>().await?;
     let consumer_pid = res_body.consumer_pid.clone();
     let consumer_callback_address = res_body.callback_address.clone();
-    let callback_id = res_body.callback_id;
+    let callback_id = res_body.consumer_pid;
     println!("\nConsumer Pid: {:#?}", consumer_pid.to_string());
     println!(
         "Consumer Callback Address: {:#?}",
