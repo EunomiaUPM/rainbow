@@ -20,23 +20,10 @@
 use crate::auth_consumer::entities::auth_interaction;
 use crate::auth_consumer::entities::{auth, auth_verification};
 use axum::async_trait;
-use once_cell::sync::Lazy;
 use rainbow_common::auth::Interact4GR;
-use rainbow_common::config::config::GLOBAL_CONFIG;
 use sea_orm::DatabaseConnection;
 
 pub mod sql;
-
-// pub static AUTH_CONSUMER_REPO: Lazy<Box<dyn AuthConsumerRepoTrait + Send + Sync>> =
-//     Lazy::new(|| {
-//         let repo_type = GLOBAL_CONFIG.get().unwrap().db_type.clone();
-//         match repo_type.as_str() {
-//             "postgres" => Box::new(AuthConsumerRepo {}),
-//             "memory" => Box::new(AuthConsumerRepo {}),
-//             "mysql" => Box::new(AuthConsumerRepo {}),
-//             _ => panic!("Unknown REPO_TYPE: {}", repo_type),
-//         }
-//     });
 
 pub trait AuthConsumerRepoFactory: AuthConsumerRepoTrait + Send + Sync + Clone + 'static {
     fn create_repo(db_connection: DatabaseConnection) -> Self

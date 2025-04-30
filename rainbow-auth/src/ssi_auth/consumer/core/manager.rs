@@ -17,7 +17,8 @@
  *
  */
 
-use crate::ssi_auth::consumer::types::{
+use crate::setup::consumer::AuthConsumerApplicationConfig;
+use crate::ssi_auth::consumer::core::types::{
     AuthJwtclaims, Didsinfo, MatchingVCs, WalletInfo, WalletInfoResponse, WalletLoginResponse,
 };
 use anyhow::bail;
@@ -28,7 +29,6 @@ use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
 use once_cell::sync::Lazy;
 use rainbow_common::auth::{GrantRequest, GrantRequestResponse};
-use rainbow_common::config::config::{get_consumer_wallet_data, get_consumer_wallet_portal_url};
 use rainbow_db::auth_consumer::entities::auth_verification::Model;
 use rainbow_db::auth_consumer::repo::AuthConsumerRepoTrait;
 use reqwest::header::{HeaderMap, ACCEPT, AUTHORIZATION, CONTENT_TYPE};
@@ -52,6 +52,7 @@ where
     pub wallet_onboard: bool,
     pub auth_repo: Arc<T>,
     client: Client,
+    config: AuthConsumerApplicationConfig,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -66,7 +67,7 @@ impl<T> Manager<T>
 where
     T: AuthConsumerRepoTrait + Send + Sync + Clone + 'static,
 {
-    pub fn new(auth_repo: Arc<T>) -> Self {
+    pub fn new(auth_repo: Arc<T>, config: AuthConsumerApplicationConfig) -> Self {
         info!("Manager created");
         let client = reqwest::Client::builder()
             .timeout(Duration::from_secs(10))
@@ -77,12 +78,13 @@ where
             wallet_onboard: false,
             auth_repo,
             client,
+            config,
         }
     }
 
     pub async fn register_wallet(&self) -> anyhow::Result<()> {
-        let wallet_portal_url = get_consumer_wallet_portal_url()? + "/wallet-api/auth/register";
-        let wallet_data = get_consumer_wallet_data()?;
+        let wallet_portal_url = self.config.get_consumer_wallet_portal_url() + "/wallet-api/auth/register";
+        let wallet_data = self.config.get_consumer_wallet_data();
 
         let mut headers = HeaderMap::new();
         headers.insert(CONTENT_TYPE, "application/json".parse()?);
@@ -111,8 +113,8 @@ where
     }
 
     pub async fn login_wallet(&mut self) -> anyhow::Result<()> {
-        let wallet_portal_url = get_consumer_wallet_portal_url()? + "/wallet-api/auth/login";
-        let mut wallet_data = get_consumer_wallet_data()?;
+        let wallet_portal_url = self.config.get_consumer_wallet_portal_url() + "/wallet-api/auth/login";
+        let mut wallet_data = self.config.get_consumer_wallet_data();
         wallet_data.as_object_mut().map(|obj| obj.remove("name"));
 
         let mut headers = HeaderMap::new();
@@ -157,7 +159,7 @@ where
     }
 
     pub async fn logout_wallet(&mut self) -> anyhow::Result<()> {
-        let wallet_portal_url = get_consumer_wallet_portal_url()? + "/wallet-api/auth/logout";
+        let wallet_portal_url = self.config.get_consumer_wallet_portal_url() + "/wallet-api/auth/logout";
 
         let mut headers = HeaderMap::new();
         headers.insert(CONTENT_TYPE, "application/json".parse()?);
@@ -185,7 +187,7 @@ where
     }
 
     async fn get_wallet_info(&mut self) -> anyhow::Result<()> {
-        let wallet_portal_url = get_consumer_wallet_portal_url()? + "/wallet-api/wallet/accounts/wallets";
+        let wallet_portal_url = self.config.get_consumer_wallet_portal_url() + "/wallet-api/wallet/accounts/wallets";
 
         let mut headers = HeaderMap::new();
         headers.insert(CONTENT_TYPE, "application/json".parse()?);
@@ -230,7 +232,7 @@ where
             bail!("There is not a wallet registered")
         };
 
-        let wallet_portal_url = get_consumer_wallet_portal_url()?
+        let wallet_portal_url = self.config.get_consumer_wallet_portal_url()
             + "/wallet-api/wallet/"
             + &self.wallet_session.wallets.first().unwrap().id
             + "/dids";
@@ -393,7 +395,7 @@ where
 
         let url = format!(
             "{}/wallet-api/wallet/{}/exchange/resolvePresentationRequest",
-            get_consumer_wallet_portal_url()?,
+            self.config.get_consumer_wallet_portal_url(),
             self.wallet_session.wallets.first().unwrap().id
         );
 
@@ -448,7 +450,7 @@ where
         };
         let url = format!(
             "{}/wallet-api/wallet/{}/exchange/matchCredentialsForPresentationDefinition",
-            get_consumer_wallet_portal_url()?,
+            self.config.get_consumer_wallet_portal_url(),
             self.wallet_session.wallets.first().unwrap().id
         );
 
@@ -488,7 +490,7 @@ where
         };
         let url = format!(
             "{}/wallet-api/wallet/{}/exchange/usePresentationRequest",
-            get_consumer_wallet_portal_url()?,
+            self.config.get_consumer_wallet_portal_url(),
             self.wallet_session.wallets.first().unwrap().id
         );
 
@@ -523,7 +525,7 @@ where
 
     pub async fn continue_request(&self, id: String, nonce: String) -> anyhow::Result<()> {
         let model = match self.auth_repo.get_interaction_by_id(id).await {
-            Ok(interaction) => {interaction}
+            Ok(interaction) => { interaction }
             Err(e) => bail!("Error retrieving interaction: {}", e),
         };
 

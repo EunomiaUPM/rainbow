@@ -21,8 +21,8 @@
 // use anyhow::bail;
 // use rainbow_common::err::transfer_err::TransferErrorType;
 
-use crate::ssi_auth::consumer::manager::Manager;
-use crate::ssi_auth::consumer::types::ReachProvider;
+use crate::ssi_auth::consumer::core::manager::Manager;
+use crate::ssi_auth::consumer::core::types::ReachProvider;
 use axum::extract::{Path, Query, State};
 use axum::http::{Method, Uri};
 use axum::response::IntoResponse;
@@ -51,8 +51,7 @@ impl<T> RainbowAuthConsumerRouter<T>
 where
     T: AuthConsumerRepoTrait + Send + Sync + Clone + 'static,
 {
-    pub fn new(auth_repo: Arc<T>) -> Self {
-        let manager = Arc::new(Mutex::new(Manager::new(auth_repo)));
+    pub fn new(manager: Arc<Mutex<Manager<T>>>) -> Self {
         Self { manager }
     }
 
@@ -219,7 +218,6 @@ where
             Some(nonce) => nonce,
             None => return StatusCode::BAD_REQUEST.into_response(),
         };
-
 
 
         StatusCode::OK.into_response()

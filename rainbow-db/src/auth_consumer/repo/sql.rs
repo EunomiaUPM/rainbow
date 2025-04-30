@@ -18,7 +18,7 @@
  */
 
 use crate::auth_consumer::entities::auth;
-use crate::auth_consumer::status::Status;
+// use crate::auth_consumer::status::Status;
 use crate::auth_consumer::entities::auth_interaction;
 use crate::auth_consumer::entities::auth_verification;
 use crate::auth_consumer::repo::{AuthConsumerRepoFactory, AuthConsumerRepoTrait};
@@ -26,7 +26,6 @@ use anyhow::{anyhow, bail};
 use axum::async_trait;
 use chrono;
 use rainbow_common::auth::Interact4GR;
-use rand::{distributions::Alphanumeric, Rng};
 use sea_orm::sqlx::types::uuid;
 use sea_orm::{ActiveModelTrait, ActiveValue, DatabaseConnection, EntityTrait, IntoActiveModel, QuerySelect};
 use serde_json::Value;
@@ -91,7 +90,7 @@ impl AuthConsumerRepoTrait for AuthConsumerRepoForSql {
             assigned_id: ActiveValue::Set(None),
             provider: ActiveValue::Set(provider),
             actions: ActiveValue::Set(actions),
-            status: ActiveValue::Set(Status::Requested),
+            status: ActiveValue::Set("Requested".to_string()), // TODO Revisar esto Rodrigo
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             ended_at: ActiveValue::Set(None),
             ..Default::default()
@@ -122,7 +121,7 @@ impl AuthConsumerRepoTrait for AuthConsumerRepoForSql {
             Err(e) => bail!("Failed to fetch data: {}", e),
         };
 
-        entry.status = ActiveValue::Set(Status::Pending);
+        entry.status = ActiveValue::Set("Pending".to_string());
         entry.assigned_id = ActiveValue::Set(Some(assigned_id));
 
         let upd_entry = entry.update(&self.db_connection).await?;
@@ -179,7 +178,7 @@ impl AuthConsumerRepoTrait for AuthConsumerRepoForSql {
             nonce: ActiveValue::Set(nonce.unwrap()),
             response_uri: ActiveValue::Set(response_uri.unwrap()),
             uri: ActiveValue::Set(uri),
-            status: ActiveValue::Set(Status::Pending),
+            status: ActiveValue::Set("Pending".to_string()),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             ended_at: ActiveValue::Set(None),
         };

@@ -30,20 +30,20 @@ impl MigrationName for Migration {
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager
-            .create_type(
-                Type::create()
-                    .as_enum(Alias::new("status"))
-                    .values([
-                        Alias::new("Completed"),
-                        Alias::new("Pending"),
-                        Alias::new("Failed"),
-                        Alias::new("Expired"),
-                        Alias::new("Requested"),
-                    ])
-                    .to_owned(),
-            )
-            .await?;
+        // manager
+        //     .create_type(
+        //         Type::create()
+        //             .as_enum(Alias::new("status"))
+        //             .values([
+        //                 Alias::new("Completed"),
+        //                 Alias::new("Pending"),
+        //                 Alias::new("Failed"),
+        //                 Alias::new("Expired"),
+        //                 Alias::new("Requested"),
+        //             ])
+        //             .to_owned(),
+        //     )
+        //     .await?;
         manager
             .create_table(
                 Table::create()
@@ -88,5 +88,5 @@ pub enum AuthVerification {
     Uri,
     Status,
     CreatedAt,
-    EndedAt
+    EndedAt,
 }
