@@ -1,5 +1,3 @@
-use crate::config::config::get_consumer_client;
-use jsonwebtoken::DecodingKey;
 use rand::distributions::Alphanumeric;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
@@ -21,7 +19,7 @@ impl GrantRequest {
         Self {
             access_token: AccessTokenRequirements4GR::default(),
             subject: None,
-            client: get_consumer_client().unwrap(),
+            client: "".to_string(),
             user: None,
             interact: Interact4GR::default4oidc(),
         }
@@ -31,7 +29,7 @@ impl GrantRequest {
         let mut ret = Self {
             access_token: AccessTokenRequirements4GR::default(),
             subject: None,
-            client: get_consumer_client().unwrap(),
+            client: "".to_string(),
             user: None,
             interact: Interact4GR::default4oidc(),
         };
@@ -66,6 +64,7 @@ impl AccessTokenRequirements4GR {
         }
     }
 }
+
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Access4AT {
@@ -143,7 +142,7 @@ impl Interact4GR {
             start: vec![String::from("oidc4vp")],
             finish: Finish4Interact {
                 method: String::from("redirect"),
-                uri: Some(get_consumer_client().unwrap()), // COMPLETAR
+                uri: Some("".to_string()), // COMPLETAR
                 nonce,
                 hash_method: None,
             },

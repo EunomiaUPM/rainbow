@@ -25,3 +25,4 @@
 #![allow(unused_imports)]
 #![allow(unused_must_use)]
 pub mod ssi_auth;
+pub mod setup;

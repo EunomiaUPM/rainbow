@@ -1,0 +1,123 @@
+use rainbow_common::config::config::ConfigRoles;
+use rainbow_common::config::database::DbType;
+use serde::Serialize;
+
+#[derive(Serialize, Clone)]
+pub struct HostConfig {
+    pub protocol: String,
+    pub url: String,
+    pub port: String,
+}
+
+#[derive(Serialize, Clone)]
+pub struct DatabaseConfig {
+    pub db_type: DbType,
+    pub url: String,
+    pub port: String,
+    pub user: String,
+    pub password: String,
+    pub name: String,
+}
+
+#[derive(Serialize, Clone)]
+pub struct SSIProviderConfig {
+    pub provider_verification_portal_url: String,
+}
+
+#[derive(Serialize, Clone)]
+pub struct AuthProviderApplicationConfig {
+    pub core_host: HostConfig,
+    pub database_config: DatabaseConfig,
+    pub ssi_provider_config: SSIProviderConfig,
+    pub role: ConfigRoles,
+}
+
+impl Default for AuthProviderApplicationConfig {
+    fn default() -> Self {
+        AuthProviderApplicationConfig {
+            core_host: HostConfig {
+                protocol: "http".to_string(),
+                url: "127.0.0.1".to_string(),
+                port: "1234".to_string(),
+            },
+            database_config: DatabaseConfig {
+                db_type: DbType::Postgres,
+                url: "127.0.0.1".to_string(),
+                port: "5440".to_string(),
+                user: "ds_auth_provider_db".to_string(),
+                password: "ds_auth_provider_db".to_string(),
+                name: "ds_auth_provider_db".to_string(),
+            },
+            ssi_provider_config: SSIProviderConfig {
+                provider_verification_portal_url: "/provider_portal_url".to_string(),
+            },
+            role: ConfigRoles::Provider,
+        }
+    }
+}
+
+impl AuthProviderApplicationConfig {
+    pub fn get_full_host_url(&self) -> String {
+        format!(
+            "{}://{}:{}",
+            self.core_host.protocol, self.core_host.url, self.core_host.port
+        )
+    }
+    pub fn get_full_db_url(&self) -> String {
+        match self.database_config.db_type {
+            DbType::Memory => ":memory:".to_string(),
+            _ => format!(
+                "{}://{}:{}@{}:{}/{}",
+                self.database_config.db_type,
+                self.database_config.user,
+                self.database_config.password,
+                self.database_config.url,
+                self.database_config.port,
+                self.database_config.name
+            ),
+        }
+    }
+
+    pub fn get_role(&self) -> ConfigRoles {
+        self.role.clone()
+    }
+
+    pub fn merge_dotenv_configuration(&self) -> anyhow::Result<Self> {
+        dotenvy::dotenv().ok();
+
+        let compound_config = Self {
+            core_host: HostConfig {
+                protocol: std::env::var("HOST_PROTOCOL").unwrap_or(self.core_host.protocol.to_string()),
+                url: std::env::var("HOST_URL").unwrap_or(self.core_host.url.to_string()),
+                port: std::env::var("HOST_PORT").unwrap_or(self.core_host.port.to_string()),
+            },
+            database_config: DatabaseConfig {
+                db_type: std::env::var("DB_TYPE")
+                    .unwrap_or(self.database_config.db_type.to_string())
+                    .parse()
+                    .expect("Db type error"),
+                url: std::env::var("DB_URL").unwrap_or(self.database_config.url.to_string()),
+                port: std::env::var("DB_PORT").unwrap_or(self.database_config.port.to_string()),
+                user: std::env::var("DB_USER").unwrap_or(self.database_config.user.to_string()),
+                password: std::env::var("DB_PASSWORD").unwrap_or(self.database_config.password.to_string()),
+                name: std::env::var("DB_DATABASE").unwrap_or(self.database_config.name.to_string()),
+            },
+            ssi_provider_config: SSIProviderConfig {
+                provider_verification_portal_url: std::env::var("SSI_PROVIDER_PORTAL_URL")
+                    .unwrap_or(self.ssi_provider_config.provider_verification_portal_url.to_string()),
+            },
+            role: ConfigRoles::Provider,
+        };
+        Ok(compound_config)
+    }
+    pub fn get_host_url(&self) -> String {
+        self.core_host.url.clone()
+    }
+    pub fn get_host_port(&self) -> String {
+        self.core_host.port.clone()
+    }
+
+    pub fn get_provider_portal_url(&self) -> String {
+        format!("{}{}", self.get_full_host_url(), self.ssi_provider_config.provider_verification_portal_url)
+    }
+}
