@@ -18,7 +18,7 @@
  */
 
 use sea_orm::entity::prelude::*;
-use crate::auth_consumer::status::Status;
+// use crate::auth_consumer::status::Status;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
 #[sea_orm(table_name = "auth_verification")]
@@ -34,7 +34,7 @@ pub struct Model {
     pub nonce: String,
     pub response_uri: String,
     pub uri: String,
-    pub status: Status,
+    pub status: String,
     pub created_at: chrono::NaiveDateTime,
     pub ended_at: Option<chrono::NaiveDateTime>,
 }

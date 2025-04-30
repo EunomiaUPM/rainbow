@@ -17,8 +17,12 @@
  *
  */
 
+use crate::setup::provider::AuthProviderApplicationConfig;
+// use rainbow_common::config::config::{get_provider_audience, get_provider_portal_url};
+use crate::ssi_auth::provider::core::manager::RainbowSSIAuthProviderManagerTrait;
 use crate::ssi_auth::provider::utils::{compare_with_margin, split_did};
 use anyhow::bail;
+use axum::async_trait;
 use base64::engine::general_purpose::{STANDARD, URL_SAFE_NO_PAD};
 use base64::Engine;
 use chrono::format::Fixed::TimezoneName;
@@ -28,7 +32,6 @@ use jsonwebtoken::jwk::{Jwk, KeyAlgorithm};
 use jsonwebtoken::{Algorithm, Validation};
 use log::error;
 use rainbow_common::auth::GrantRequest;
-use rainbow_common::config::config::{get_provider_audience, get_provider_portal_url};
 use rainbow_db::auth_provider::repo::AuthProviderRepoTrait;
 use rand::{distributions::Alphanumeric, Rng};
 use serde_json::{json, Value};
@@ -44,17 +47,24 @@ where
     T: AuthProviderRepoTrait + Send + Sync + Clone + 'static,
 {
     auth_repo: Arc<T>,
+    config: AuthProviderApplicationConfig,
 }
 
 impl<T> Manager<T>
 where
     T: AuthProviderRepoTrait + Send + Sync + Clone + 'static,
 {
-    pub fn new(auth_repo: Arc<T>) -> Manager<T> {
-        Manager { auth_repo }
+    pub fn new(auth_repo: Arc<T>, config: AuthProviderApplicationConfig) -> Self {
+        Self { auth_repo, config }
     }
+}
 
-    pub async fn generate_exchange_uri(&self, payload: GrantRequest) -> anyhow::Result<(String, String, String)> {
+#[async_trait]
+impl<T> RainbowSSIAuthProviderManagerTrait for Manager<T>
+where
+    T: AuthProviderRepoTrait + Send + Sync + Clone + 'static,
+{
+    async fn generate_exchange_uri(&self, payload: GrantRequest) -> anyhow::Result<(String, String, String)> {
         info!("Generating exchange URI");
 
         if !payload.interact.start.contains(&"oidc4vp".to_string()) {
@@ -74,7 +84,7 @@ where
             };
 
         let base_url = "openid4vp://authorize";
-        let provider_url = get_provider_portal_url().unwrap();
+        let provider_url = self.config.get_provider_portal_url(); // TODO provider portal
 
         let client_id = format!("{}/verify", &provider_url);
         let encoded_client_id = encode(&client_id);
@@ -101,7 +111,7 @@ where
         Ok((auth_model.id, uri, interaction_model.nonce))
     }
 
-    pub async fn generate_vp_def(&self, state: String) -> anyhow::Result<Value> {
+    async fn generate_vp_def(&self, state: String) -> anyhow::Result<Value> {
         // json!({
         //     "vp_policies": [
         //         {
@@ -162,7 +172,7 @@ where
         }))
     }
 
-    pub async fn verify_all(&self, state: String, vptoken: String) -> anyhow::Result<Option<String>> {
+    async fn verify_all(&self, state: String, vptoken: String) -> anyhow::Result<Option<String>> {
         let exchange = match self.auth_repo.get_auth_by_state(state.clone()).await {
             Ok(auth) => auth,
             Err(e) => bail!("No exchange for state {}", state),
@@ -220,7 +230,7 @@ where
         }
     }
 
-    pub async fn verify_vp(&self, exchange: String, vptoken: String) -> anyhow::Result<(Vec<String>, String)> {
+    async fn verify_vp(&self, exchange: String, vptoken: String) -> anyhow::Result<(Vec<String>, String)> {
         info!("Verifying VP");
         let header = jsonwebtoken::decode_header(&vptoken)?;
         let kid_str = header.kid.as_ref().unwrap();
@@ -235,7 +245,7 @@ where
         let mut val = Validation::new(alg); // AJUSTAR
         val.required_spec_claims = HashSet::new();
         val.validate_aud = true; // VALIDATE AUDIENCE
-        val.set_audience(&[&(get_provider_audience()?)]);
+        // val.set_audience(&[&(get_provider_audience()?)]); // TODO audience
         val.validate_exp = false;
         val.validate_nbf = true; // VALIDATE NBF
 
@@ -309,7 +319,7 @@ where
         Ok((vct, kid.to_string()))
     }
 
-    pub async fn verify_vc(&self, vctoken: String, vp_holder: String) -> anyhow::Result<()> {
+    async fn verify_vc(&self, vctoken: String, vp_holder: String) -> anyhow::Result<()> {
         info!("Verifying VC");
         let header = jsonwebtoken::decode_header(&vctoken)?;
         let kid_str = header.kid.as_ref().unwrap();
@@ -324,7 +334,7 @@ where
         let mut val = Validation::new(alg); // AJUSTAR
         val.required_spec_claims = HashSet::new();
         val.validate_aud = false;
-        val.set_audience(&[&(get_provider_audience()?)]);
+        // val.set_audience(&[&(get_provider_audience()?)]); // TODO audience
         val.validate_exp = false; // SI CREDS EXPIRAN COMPLETAR
         val.validate_nbf = true; // VALIDATE NBF
 

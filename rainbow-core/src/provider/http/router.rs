@@ -17,8 +17,10 @@
  *
  */
 
+use crate::provider::setup::config::CoreProviderApplicationConfig;
 use axum::Router;
-use rainbow_auth::ssi_auth::provider::http::RainbowAuthProviderRouter;
+use rainbow_auth::ssi_auth::provider::core::manager::manager::Manager;
+use rainbow_auth::ssi_auth::provider::http::http::RainbowAuthProviderRouter;
 use rainbow_catalog::core::ds_protocol::ds_protocol::DSProtocolCatalogService;
 use rainbow_catalog::core::rainbow_entities::catalog::RainbowCatalogCatalogService;
 use rainbow_catalog::core::rainbow_entities::data_service::RainbowCatalogDataServiceService;
@@ -65,8 +67,8 @@ use rainbow_transfer::provider::http::rainbow_entities::rainbow_entities::Rainbo
 use sea_orm::Database;
 use std::sync::Arc;
 
-pub async fn create_core_provider_router(db_url: String) -> Router {
-    let db_connection = Database::connect(db_url).await.expect("Database can't connect");
+pub async fn create_core_provider_router(config: &CoreProviderApplicationConfig) -> Router {
+    let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
 
     // DB repos
     let subscription_repo = Arc::new(EventsRepoForSql::create_repo(db_connection.clone()));
@@ -79,12 +81,11 @@ pub async fn create_core_provider_router(db_url: String) -> Router {
     let catalog_repo = Arc::new(CatalogRepoForSql::create_repo(db_connection.clone()));
     let auth_repo = Arc::new(AuthProviderRepoForSql::create_repo(db_connection.clone()));
 
-
     // =====================
     // AUTH
     // =====================
-    let auth_router = RainbowAuthProviderRouter::new(auth_repo.clone()).router();
-
+    let auth_manager_service = Arc::new(Manager::new(auth_repo.clone(), config.clone().into()));
+    let auth_router = RainbowAuthProviderRouter::new(auth_manager_service.clone()).router();
 
     // =====================
     // EVENTS
@@ -243,7 +244,10 @@ pub async fn create_core_provider_router(db_url: String) -> Router {
         .merge(transfer_ds_protocol_rpc_router)
         .nest("/api/v1/catalog", catalog_subscription_router.clone())
         .nest("/api/v1/catalog", notification_router.clone())
-        .nest("/api/v1/contract-negotiation", cn_subscription_router.clone())
+        .nest(
+            "/api/v1/contract-negotiation",
+            cn_subscription_router.clone(),
+        )
         .nest("/api/v1/contract-negotiation", notification_router.clone())
         .nest("/api/v1/transfers", transfer_subscription_router)
         .nest("/api/v1/transfers", notification_router);

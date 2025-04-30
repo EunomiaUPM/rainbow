@@ -20,7 +20,7 @@
 // use crate::ssi_auth::provider::manager::Manager;
 // use tracing_subscriber::fmt::format;
 
-use crate::ssi_auth::provider::manager::Manager;
+use crate::ssi_auth::provider::core::manager::RainbowSSIAuthProviderManagerTrait;
 use axum::extract::{Form, Path, State};
 use axum::http::{Method, Uri};
 use axum::response::IntoResponse;
@@ -36,17 +36,16 @@ use tracing::info;
 
 pub struct RainbowAuthProviderRouter<T>
 where
-    T: AuthProviderRepoTrait + Send + Sync + Clone + 'static,
+    T: RainbowSSIAuthProviderManagerTrait + Send + Sync + 'static,
 {
-    pub manager: Manager<T>,
+    pub manager: Arc<T>,
 }
 
 impl<T> RainbowAuthProviderRouter<T>
 where
-    T: AuthProviderRepoTrait + Send + Sync + Clone + 'static,
+    T: RainbowSSIAuthProviderManagerTrait + Send + Sync + 'static,
 {
-    pub fn new(auth_repo: Arc<T>) -> Self {
-        let manager = Manager::new(auth_repo);
+    pub fn new(manager: Arc<T>) -> Self {
         Self { manager }
     }
     pub fn router(self) -> Router {
@@ -58,7 +57,7 @@ where
             .fallback(Self::fallback)
     }
 
-    async fn access_request(State(manager): State<Manager<T>>, Json(payload): Json<GrantRequest>) -> impl IntoResponse {
+    async fn access_request(State(manager): State<Arc<T>>, Json(payload): Json<GrantRequest>) -> impl IntoResponse {
         info!("POST /access");
 
         // let manager = Manager::new();
@@ -74,7 +73,7 @@ where
         Json(res)
     }
 
-    async fn pd(State(manager): State<Manager<T>>, Path(state): Path<String>) -> impl IntoResponse {
+    async fn pd(State(manager): State<Arc<T>>, Path(state): Path<String>) -> impl IntoResponse {
         let log = format!("GET /pd/{}", state);
         info!("{}", log);
 
@@ -89,7 +88,7 @@ where
     }
 
     async fn verify(
-        State(manager): State<Manager<T>>,
+        State(manager): State<Arc<T>>,
         Path(state): Path<String>,
         Form(payload): Form<VerifyPayload>,
     ) -> impl IntoResponse {

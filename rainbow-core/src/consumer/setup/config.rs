@@ -39,11 +39,31 @@ struct DatabaseConfig {
 }
 
 #[derive(Serialize, Clone)]
+struct SSIConsumerWalletConfig {
+    ssi_holder_wallet_portal_url: String,
+    ssi_holder_wallet_portal_port: String,
+    ssi_holder_wallet_type: String,
+    ssi_holder_wallet_name: String,
+    ssi_holder_wallet_email: String,
+    ssi_holder_wallet_password: String,
+    ssi_holder_wallet_id: String,
+    consumer_auth_callback: String,
+}
+
+#[derive(Serialize, Clone)]
+struct SSIConsumerConfig {
+    consumer_client: String,
+}
+
+#[derive(Serialize, Clone)]
 pub struct CoreConsumerApplicationConfig {
     core_host: HostConfig,
     database_config: DatabaseConfig,
+    ssi_wallet_config: SSIConsumerWalletConfig,
+    ssi_consumer_client: SSIConsumerConfig,
     role: ConfigRoles,
 }
+
 
 impl Default for CoreConsumerApplicationConfig {
     fn default() -> Self {

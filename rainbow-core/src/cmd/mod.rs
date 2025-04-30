@@ -17,9 +17,9 @@
  *
  */
 
-use crate::consumer::setup::application::CoreConsumerApplication;
-use crate::consumer::setup::config::CoreConsumerApplicationConfig;
-use crate::consumer::setup::db_migrations::CoreConsumerMigration;
+// use crate::consumer::setup::application::CoreConsumerApplication;
+// use crate::consumer::setup::config::CoreConsumerApplicationConfig;
+// use crate::consumer::setup::db_migrations::CoreConsumerMigration;
 use crate::provider::setup::application::CoreProviderApplication;
 use crate::provider::setup::config::CoreProviderApplicationConfig;
 use crate::provider::setup::db_migrations::CoreProviderMigration;
@@ -61,10 +61,7 @@ impl CoreCommands {
         match cli.role {
             CoreCliRoles::Provider(cmd) => {
                 let config = CoreProviderApplicationConfig::default();
-                let config = match config.merge_dotenv_configuration() {
-                    Ok(config) => config,
-                    Err(_) => config
-                };
+                let config = config.merge_dotenv_configuration().unwrap_or_else(|_| config);
                 let table =
                     json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
                 info!("Current config:\n{}", table);
@@ -74,18 +71,18 @@ impl CoreCommands {
                 }
             }
             CoreCliRoles::Consumer(cmd) => {
-                let config = CoreConsumerApplicationConfig::default();
-                let config = match config.merge_dotenv_configuration() {
-                    Ok(config) => config,
-                    Err(_) => config
-                };
-                let table =
-                    json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
-                info!("Current config:\n{}", table);
-                match cmd {
-                    CoreCliCommands::Start => CoreConsumerApplication::run(&config).await?,
-                    CoreCliCommands::Setup => CoreConsumerMigration::run(&config).await?,
-                }
+                // let config = CoreConsumerApplicationConfig::default();
+                // let config = match config.merge_dotenv_configuration() {
+                //     Ok(config) => config,
+                //     Err(_) => config
+                // };
+                // let table =
+                //     json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
+                // info!("Current config:\n{}", table);
+                // match cmd {
+                //     CoreCliCommands::Start => CoreConsumerApplication::run(&config).await?,
+                //     CoreCliCommands::Setup => CoreConsumerMigration::run(&config).await?,
+                // }
             }
         };
 

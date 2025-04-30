@@ -27,7 +27,6 @@ use anyhow::bail;
 use axum::async_trait;
 use chrono;
 use rainbow_common::auth::Interact4GR;
-use rainbow_common::config::config::get_provider_audience;
 use rand::{distributions::Alphanumeric, Rng};
 use sea_orm::sqlx::types::uuid;
 use sea_orm::{
@@ -93,7 +92,7 @@ impl AuthProviderRepoTrait for AuthProviderRepoForSql {
         let id = uuid::Uuid::new_v4().to_string();
         let state: String = rand::thread_rng().sample_iter(&Alphanumeric).take(12).map(char::from).collect();
         let nonce: String = rand::thread_rng().sample_iter(&Alphanumeric).take(12).map(char::from).collect();
-        let audience = get_provider_audience().unwrap();
+        // let audience = get_provider_audience().unwrap(); TODO audience
         let actions: Value = Value::String(serde_json::to_string(&actions).unwrap());
         let start: Value = Value::String(serde_json::to_string(&interact.start).unwrap());
 
@@ -126,7 +125,7 @@ impl AuthProviderRepoTrait for AuthProviderRepoForSql {
             id: ActiveValue::Set(id),
             state: ActiveValue::Set(state),
             nonce: ActiveValue::Set(nonce),
-            audience: ActiveValue::Set(audience),
+            audience: ActiveValue::Set("audience".to_string()),
             holder: ActiveValue::Set(None),
             vpt: ActiveValue::Set(None),
             success: ActiveValue::Set(None),

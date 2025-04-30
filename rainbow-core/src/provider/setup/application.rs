@@ -28,8 +28,7 @@ pub struct CoreProviderApplication;
 impl CoreProviderApplication {
     pub async fn run(config: &CoreProviderApplicationConfig) -> anyhow::Result<()> {
         // db_connection
-        let db_url = config.get_full_db_url();
-        let router = create_core_provider_router(db_url).await;
+        let router = create_core_provider_router(&config).await;
         // Init server
         let server_message = format!("Starting core provider server in {}", config.get_full_host_url(), );
         info!("{}", server_message);

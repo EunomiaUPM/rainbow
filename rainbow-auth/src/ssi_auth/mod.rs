@@ -17,5 +17,5 @@
  *
  */
 
-pub mod consumer;
+// pub mod consumer;
 pub mod provider;

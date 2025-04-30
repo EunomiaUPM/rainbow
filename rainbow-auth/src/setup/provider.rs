@@ -1,22 +1,3 @@
-/*
- *
- *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
- *  *
- *  * This program is free software: you can redistribute it and/or modify
- *  * it under the terms of the GNU General Public License as published by
- *  * the Free Software Foundation, either version 3 of the License, or
- *  * (at your option) any later version.
- *  *
- *  * This program is distributed in the hope that it will be useful,
- *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  * GNU General Public License for more details.
- *  *
- *  * You should have received a copy of the GNU General Public License
- *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- *
- */
-
 use rainbow_common::config::config::ConfigRoles;
 use rainbow_common::config::database::DbType;
 use serde::Serialize;
@@ -44,16 +25,16 @@ pub struct SSIProviderConfig {
 }
 
 #[derive(Serialize, Clone)]
-pub struct CoreProviderApplicationConfig {
+pub struct AuthProviderApplicationConfig {
     pub core_host: HostConfig,
     pub database_config: DatabaseConfig,
     pub ssi_provider_config: SSIProviderConfig,
     pub role: ConfigRoles,
 }
 
-impl Default for CoreProviderApplicationConfig {
+impl Default for AuthProviderApplicationConfig {
     fn default() -> Self {
-        CoreProviderApplicationConfig {
+        AuthProviderApplicationConfig {
             core_host: HostConfig {
                 protocol: "http".to_string(),
                 url: "127.0.0.1".to_string(),
@@ -62,10 +43,10 @@ impl Default for CoreProviderApplicationConfig {
             database_config: DatabaseConfig {
                 db_type: DbType::Postgres,
                 url: "127.0.0.1".to_string(),
-                port: "5437".to_string(),
-                user: "ds_core_provider_db".to_string(),
-                password: "ds_core_provider_db".to_string(),
-                name: "ds_core_provider_db".to_string(),
+                port: "5440".to_string(),
+                user: "ds_auth_provider_db".to_string(),
+                password: "ds_auth_provider_db".to_string(),
+                name: "ds_auth_provider_db".to_string(),
             },
             ssi_provider_config: SSIProviderConfig {
                 provider_verification_portal_url: "/provider_portal_url".to_string(),
@@ -75,7 +56,7 @@ impl Default for CoreProviderApplicationConfig {
     }
 }
 
-impl CoreProviderApplicationConfig {
+impl AuthProviderApplicationConfig {
     pub fn get_full_host_url(&self) -> String {
         format!(
             "{}://{}:{}",
