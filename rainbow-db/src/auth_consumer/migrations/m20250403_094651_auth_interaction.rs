@@ -37,10 +37,9 @@ impl MigrationTrait for Migration {
                     .table(AuthInteraction::Table)
                     .col(
                         ColumnDef::new(AuthInteraction::Id)
-                            .big_integer()
+                            .string()
                             .not_null()
                             .primary_key()
-                            .auto_increment(),
                     )
                     .col(ColumnDef::new(AuthInteraction::Start).json().not_null())
                     .col(ColumnDef::new(AuthInteraction::Method).string())

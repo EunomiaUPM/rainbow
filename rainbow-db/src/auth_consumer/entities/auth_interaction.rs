@@ -24,7 +24,7 @@ use serde_json::Value as JsonValue;
 #[sea_orm(table_name = "auth_interaction")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: i64,
+    pub id: String,
     pub start: JsonValue, // IT IS A VEC!!
     pub method: String,
     pub uri: Option<String>,

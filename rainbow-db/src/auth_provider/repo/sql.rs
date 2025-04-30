@@ -107,11 +107,15 @@ impl AuthProviderRepoTrait for AuthProviderRepoForSql {
             ..Default::default()
         };
 
+        let uri = match interact.finish.uri {
+            Some(uri) => Some(uri + "/" + id.as_str()),
+            None => None,
+        };
         let auth_interaction_model = auth_interaction::ActiveModel {
             id: ActiveValue::Set(id.clone()),
             start: ActiveValue::Set(start),
             method: ActiveValue::Set(interact.finish.method),
-            uri: ActiveValue::Set(interact.finish.uri),
+            uri: ActiveValue::Set(uri),
             nonce: ActiveValue::Set(interact.finish.nonce),
             hash_method: ActiveValue::Set(interact.finish.hash_method),
             hints: ActiveValue::Set(None), // FUERA PROBLEMAS
@@ -228,6 +232,11 @@ impl AuthProviderRepoTrait for AuthProviderRepoForSql {
 
         ver_entry.success = ActiveValue::Set(Some(result));
         auth_entry.ended_at = ActiveValue::Set(Some(chrono::Utc::now().naive_utc()));
+        if result {
+            auth_entry.status = ActiveValue::Set(Status::Completed);
+        } else {
+            auth_entry.status = ActiveValue::Set(Status::Failed);
+        }
 
         let upd_entry = ver_entry.update(&self.db_connection).await;
         let upd_entry2 = auth_entry.update(&self.db_connection).await;

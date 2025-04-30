@@ -18,12 +18,13 @@
  */
 
 use sea_orm::entity::prelude::*;
+use crate::auth_consumer::status::Status;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
 #[sea_orm(table_name = "auth_verification")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: i64,
+    pub id: String,
     pub scheme: String,
     pub response_type: String,
     pub client_id: String,
@@ -32,7 +33,10 @@ pub struct Model {
     pub client_id_scheme: String,
     pub nonce: String,
     pub response_uri: String,
-    pub uri: String
+    pub uri: String,
+    pub status: Status,
+    pub created_at: chrono::NaiveDateTime,
+    pub ended_at: Option<chrono::NaiveDateTime>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

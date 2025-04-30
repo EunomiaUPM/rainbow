@@ -20,12 +20,13 @@
 use chrono;
 use sea_orm::entity::prelude::*;
 use serde_json::Value as JsonValue;
+use crate::auth_consumer::status::Status;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
 #[sea_orm(table_name = "auth")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: i64,
+    pub id: String,
     pub assigned_id: Option<String>,
     pub provider: String,
     pub actions: JsonValue, // IT IS A VEC!!
@@ -56,21 +57,4 @@ impl Related<super::auth_verification::Entity> for Entity {
 
 impl ActiveModelBehavior for ActiveModel {}
 
-#[derive(Debug, Clone, Copy, PartialEq, EnumIter, DeriveActiveEnum)]
-#[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "status")]
-pub enum Status {
-    #[sea_orm(string_value = "Requested")]
-    Requested,
 
-    #[sea_orm(string_value = "Ongoing")]
-    Ongoing,
-
-    #[sea_orm(string_value = "Completed")]
-    Completed,
-
-    #[sea_orm(string_value = "Failed")]
-    Failed,
-
-    #[sea_orm(string_value = "Expired")]
-    Expired,
-}
