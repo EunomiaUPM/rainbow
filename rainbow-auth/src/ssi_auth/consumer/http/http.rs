@@ -21,7 +21,8 @@
 // use anyhow::bail;
 // use rainbow_common::err::transfer_err::TransferErrorType;
 
-use crate::ssi_auth::consumer::core::manager::Manager;
+use crate::ssi_auth::consumer::core::manager::{RainbowSSIAuthConsumerWalletTrait, RainbowSSIAuthConsumerManagerTrait};
+use crate::ssi_auth::consumer::core::Manager;
 use crate::ssi_auth::consumer::core::types::ReachProvider;
 use axum::extract::{Path, Query, State};
 use axum::http::{Method, Uri};
@@ -128,7 +129,7 @@ where
         }
 
         let mut auth_ver;
-        match manager.request_access(payload.url, payload.id, payload.actions).await {
+        match manager.request_access(payload.url, payload.id, payload.actions).await { // TODO Carlos pasame did:web
             Ok(auth_ver_model) => auth_ver = auth_ver_model,
             Err(e) => {
                 return {
@@ -141,9 +142,8 @@ where
             }
         }
 
-        let mut vpd_as_string;
-        match manager.join_exchange(auth_ver.uri).await {
-            Ok(texto) => vpd_as_string = texto,
+        let vpd_as_string = match manager.join_exchange(auth_ver.uri).await {
+            Ok(texto) => texto,
             Err(e) => {
                 return {
                     (
@@ -153,7 +153,7 @@ where
                         .into_response()
                 }
             }
-        }
+        };
 
         let vpd = match manager.parse_vpd(vpd_as_string.clone()).await {
             Ok(json) => json,

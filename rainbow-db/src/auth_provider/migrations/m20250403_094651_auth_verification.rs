@@ -20,6 +20,7 @@
 use sea_orm::sea_query::extension::postgres::Type;
 use sea_orm::Iterable;
 use sea_orm_migration::prelude::*;
+use crate::auth_provider::migrations::m20250403_094651_auth::Auth;
 
 pub struct Migration;
 impl MigrationName for Migration {
@@ -42,6 +43,9 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(AuthVerification::Holder).string())
                     .col(ColumnDef::new(AuthVerification::VPT).string())
                     .col(ColumnDef::new(AuthVerification::Success).boolean())
+                    .col(ColumnDef::new(AuthVerification::Status).string())
+                    .col(ColumnDef::new(Auth::CreatedAt).date_time().not_null())
+                    .col(ColumnDef::new(Auth::EndedAt).date_time())
                     .to_owned(),
             )
             .await
@@ -62,4 +66,7 @@ pub enum AuthVerification {
     Holder,
     VPT,
     Success,
+    Status,
+    CreatedAt,
+    EndedAt,
 }

@@ -17,18 +17,19 @@
  *
  */
 
+use super::{RainbowSSIAuthConsumerManagerTrait, RainbowSSIAuthConsumerWalletTrait};
 use crate::setup::consumer::AuthConsumerApplicationConfig;
 use crate::ssi_auth::consumer::core::types::{
-    AuthJwtclaims, Didsinfo, MatchingVCs, WalletInfo, WalletInfoResponse, WalletLoginResponse,
+    AuthJwtClaims, DidsInfo, MatchingVCs, WalletInfo, WalletInfoResponse, WalletLoginResponse,
 };
 use anyhow::bail;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use axum::Json;
+use axum::{async_trait, Json};
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
 use once_cell::sync::Lazy;
-use rainbow_common::auth::{GrantRequest, GrantRequestResponse};
+use rainbow_common::auth::gnap::{GrantRequest, GrantResponse};
 use rainbow_db::auth_consumer::entities::auth_verification::Model;
 use rainbow_db::auth_consumer::repo::AuthConsumerRepoTrait;
 use reqwest::header::{HeaderMap, ACCEPT, AUTHORIZATION, CONTENT_TYPE};
@@ -69,10 +70,8 @@ where
 {
     pub fn new(auth_repo: Arc<T>, config: AuthConsumerApplicationConfig) -> Self {
         info!("Manager created");
-        let client = reqwest::Client::builder()
-            .timeout(Duration::from_secs(10))
-            .build()
-            .expect("Failed to build reqwest client");
+        let client =
+            Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
         Manager {
             wallet_session: WalletSession { account_id: None, token: None, token_exp: None, wallets: Vec::new() },
             wallet_onboard: false,
@@ -81,8 +80,14 @@ where
             config,
         }
     }
+}
 
-    pub async fn register_wallet(&self) -> anyhow::Result<()> {
+#[async_trait]
+impl<T> RainbowSSIAuthConsumerWalletTrait for Manager<T>
+where
+    T: AuthConsumerRepoTrait + Send + Sync + Clone + 'static,
+{
+    async fn register_wallet(&self) -> anyhow::Result<()> {
         let wallet_portal_url = self.config.get_consumer_wallet_portal_url() + "/wallet-api/auth/register";
         let wallet_data = self.config.get_consumer_wallet_data();
 
@@ -112,7 +117,7 @@ where
         Ok(())
     }
 
-    pub async fn login_wallet(&mut self) -> anyhow::Result<()> {
+    async fn login_wallet(&mut self) -> anyhow::Result<()> {
         let wallet_portal_url = self.config.get_consumer_wallet_portal_url() + "/wallet-api/auth/login";
         let mut wallet_data = self.config.get_consumer_wallet_data();
         wallet_data.as_object_mut().map(|obj| obj.remove("name"));
@@ -137,15 +142,15 @@ where
                 self.wallet_session.account_id = Some(json_res.id);
                 self.wallet_session.token = Some(json_res.token.clone());
 
-                let jwtparts: Vec<&str> = json_res.token.split('.').collect();
+                let jwt_parts: Vec<&str> = json_res.token.split('.').collect();
 
-                if jwtparts.len() != 3 {
+                if jwt_parts.len() != 3 {
                     bail!("JWT token does not have the correct format");
                 }
 
-                let decoded = URL_SAFE_NO_PAD.decode(jwtparts[1])?;
+                let decoded = URL_SAFE_NO_PAD.decode(jwt_parts[1])?;
 
-                let claims: AuthJwtclaims = serde_json::from_slice(&decoded)?;
+                let claims: AuthJwtClaims = serde_json::from_slice(&decoded)?;
 
                 self.wallet_session.token_exp = Some(claims.exp);
 
@@ -158,7 +163,7 @@ where
         }
     }
 
-    pub async fn logout_wallet(&mut self) -> anyhow::Result<()> {
+    async fn logout_wallet(&mut self) -> anyhow::Result<()> {
         let wallet_portal_url = self.config.get_consumer_wallet_portal_url() + "/wallet-api/auth/logout";
 
         let mut headers = HeaderMap::new();
@@ -255,7 +260,7 @@ where
 
         match res.status().as_u16() {
             200 => {
-                let dids: Vec<Didsinfo> = res.json().await?;
+                let dids: Vec<DidsInfo> = res.json().await?;
 
                 for did in dids {
                     if let Some(wallet) = self.wallet_session.wallets.first_mut() {
@@ -282,11 +287,10 @@ where
         Ok(())
     }
 
-    pub async fn onboard(&mut self) -> anyhow::Result<()> {
+    async fn onboard(&mut self) -> anyhow::Result<()> {
         if !self.wallet_onboard {
             self.register_wallet().await?;
         }
-
         self.login_wallet().await?;
         self.get_wallet_info().await?;
         self.get_wallet_dids().await?;
@@ -294,7 +298,7 @@ where
         Ok(())
     }
 
-    pub fn token_expired(&self) -> anyhow::Result<bool> {
+    async fn token_expired(&self) -> anyhow::Result<bool> {
         match self.wallet_session.token_exp {
             Some(expiration_time) => {
                 let now = SystemTime::now().duration_since(UNIX_EPOCH).expect("Time went backwards").as_secs();
@@ -324,17 +328,35 @@ where
         }
     }
 
-    pub async fn ok(&mut self) -> anyhow::Result<()> {
-        if self.token_expired()? {
+    async fn ok(&mut self) -> anyhow::Result<()> {
+        if self.token_expired().await? {
             self.update_token().await?;
         }
         Ok(())
     }
+}
 
-    pub async fn request_access(&self, url: String, provider: String, actions: Vec<String>) -> anyhow::Result<Model> {
-        let body = GrantRequest::default4oidc();
+#[async_trait]
+impl<T> RainbowSSIAuthConsumerManagerTrait for Manager<T>
+where
+    T: AuthConsumerRepoTrait + Send + Sync + Clone + 'static,
+{
+    async fn request_access(&self, url: String, provider: String, actions: Vec<String>) -> anyhow::Result<Model> {
+        let mut body = GrantRequest::default4oidc(
+            self.config.ssi_consumer_client.consumer_client.clone(), // TODO change with did:web
+        );
 
-        let model = match self.auth_repo.create_auth(provider, actions, body.interact.clone()).await {
+        let id = uuid::Uuid::new_v4().to_string();
+        body.update_actions(actions.clone());
+        let callback = format!(
+            "http://{}:{}/callback/{}",
+            self.config.core_host.url,
+            self.config.core_host.port,
+            id.clone()
+        );
+        body.update_callback(callback);
+
+        let model = match self.auth_repo.create_auth(id, provider, actions, body.interact.clone()).await {
             Ok(model) => {
                 info!("exchange saved successfully");
                 model
@@ -355,7 +377,7 @@ where
             Err(e) => bail!("Error sending request: {}", e),
         };
 
-        let mut res: GrantRequestResponse = match res.status().as_u16() {
+        let mut res: GrantResponse = match res.status().as_u16() {
             200 => {
                 info!("Grant Response received successfully");
                 res.json().await?
@@ -388,7 +410,7 @@ where
         Ok(model)
     }
 
-    pub async fn join_exchange(&self, exchange_url: String) -> anyhow::Result<String> {
+    async fn join_exchange(&self, exchange_url: String) -> anyhow::Result<String> {
         if self.wallet_session.wallets.first().is_none() {
             bail!("There is not a wallet registered")
         };
@@ -427,7 +449,7 @@ where
         }
     }
 
-    pub async fn parse_vpd(&self, vpd_as_string: String) -> anyhow::Result<Value> {
+    async fn parse_vpd(&self, vpd_as_string: String) -> anyhow::Result<Value> {
         let url = Url::parse(decode(&vpd_as_string).unwrap().as_ref())?;
 
         if let Some((_, vpd_json)) = url.query_pairs().find(|(key, _)| key == "presentation_definition") {
@@ -444,7 +466,7 @@ where
         }
     }
 
-    pub async fn match_vc4vp(&self, vpdef: Value) -> anyhow::Result<Vec<MatchingVCs>> {
+    async fn match_vc4vp(&self, vp_def: Value) -> anyhow::Result<Vec<MatchingVCs>> {
         if self.wallet_session.wallets.first().is_none() {
             bail!("There is not a wallet registered")
         };
@@ -463,7 +485,7 @@ where
             None => bail!("No token available for authentication"),
         };
 
-        let res = self.client.post(url).headers(headers).json(&vpdef).send().await;
+        let res = self.client.post(url).headers(headers).json(&vp_def).send().await;
 
         let res = match res {
             Ok(res) => res,
@@ -484,7 +506,7 @@ where
         }
     }
 
-    pub async fn present_vp(&self, preq: String, creds: Vec<String>) -> anyhow::Result<()> {
+    async fn present_vp(&self, preq: String, creds: Vec<String>) -> anyhow::Result<()> {
         if self.wallet_session.wallets.first().is_none() {
             bail!("There is not a wallet registered")
         };
@@ -523,9 +545,9 @@ where
         Ok(())
     }
 
-    pub async fn continue_request(&self, id: String, nonce: String) -> anyhow::Result<()> {
+    async fn continue_request(&self, id: String, nonce: String) -> anyhow::Result<()> {
         let model = match self.auth_repo.get_interaction_by_id(id).await {
-            Ok(interaction) => { interaction }
+            Ok(interaction) => interaction,
             Err(e) => bail!("Error retrieving interaction: {}", e),
         };
 

@@ -18,7 +18,6 @@
  */
 
 use crate::setup::provider::AuthProviderApplicationConfig;
-// use rainbow_common::config::config::{get_provider_audience, get_provider_portal_url};
 use crate::ssi_auth::provider::core::manager::RainbowSSIAuthProviderManagerTrait;
 use crate::ssi_auth::provider::utils::{compare_with_margin, split_did};
 use anyhow::bail;
@@ -31,7 +30,7 @@ use jsonwebtoken;
 use jsonwebtoken::jwk::{Jwk, KeyAlgorithm};
 use jsonwebtoken::{Algorithm, Validation};
 use log::error;
-use rainbow_common::auth::GrantRequest;
+use rainbow_common::auth::gnap::{GrantRequest, GrantResponse};
 use rainbow_db::auth_provider::repo::AuthProviderRepoTrait;
 use rand::{distributions::Alphanumeric, Rng};
 use serde_json::{json, Value};
@@ -73,9 +72,13 @@ where
                 payload.interact.start.first().unwrap()
             );
         }
+        let provider_url = self.config.get_provider_portal_url();
+        let client_id = format!("{}/verify", &provider_url); // TODO TEST
+
         let actions = payload.access_token.access.actions.unwrap_or_else(|| vec![String::from("talk")]);
+
         let (auth_model, interaction_model, verification_model) =
-            match self.auth_repo.create_auth(payload.client, actions, payload.interact).await {
+            match self.auth_repo.create_auth(payload.client, client_id.clone(), actions, payload.interact).await {
                 Ok(model) => {
                     info!("exchange saved successfully");
                     model
@@ -84,29 +87,26 @@ where
             };
 
         let base_url = "openid4vp://authorize";
-        let provider_url = self.config.get_provider_portal_url(); // TODO provider portal
+        // TODO provider portal
 
-        let client_id = format!("{}/verify", &provider_url);
-        let encoded_client_id = encode(&client_id);
+        let encoded_client_id = encode(&verification_model.audience);
 
         let state = verification_model.state;
         let nonce = verification_model.nonce;
 
-        // COMPLETAR
         let presentation_definition_uri = format!("{}/pd/{}", &provider_url, state);
         let encoded_presentation_definition_uri = encode(&presentation_definition_uri);
 
-        // COMPLETAR
         let response_uri = format!("{}/verify/{}", &provider_url, state);
         let encoded_response_uri = encode(&response_uri);
 
         let response_type = "vp_token";
         let response_mode = "direct_post";
-        let clientid_scheme = "redirect_uri";
+        let client_id_scheme = "redirect_uri";
 
-        // let client_metadata = r#"{"authorization_encrypted_response_alg":"ECDH-ES","authorization_encrypted_response_enc":"A256GCM"}"#;
+        // TODO let client_metadata = r#"{"authorization_encrypted_response_alg":"ECDH-ES","authorization_encrypted_response_enc":"A256GCM"}"#;
 
-        let uri = format!("{}?response_type={}&client_id={}&response_mode={}&presentation_definition_uri={}&client_id_scheme={}&nonce={}&response_uri={}", base_url, response_type, encoded_client_id, response_mode, encoded_presentation_definition_uri, clientid_scheme, nonce, encoded_response_uri);
+        let uri = format!("{}?response_type={}&client_id={}&response_mode={}&presentation_definition_uri={}&client_id_scheme={}&nonce={}&response_uri={}", base_url, response_type, encoded_client_id, response_mode, encoded_presentation_definition_uri, client_id_scheme, nonce, encoded_response_uri);
         info!("uri generated successfully: {}", uri);
         Ok((auth_model.id, uri, interaction_model.nonce))
     }
@@ -172,13 +172,13 @@ where
         }))
     }
 
-    async fn verify_all(&self, state: String, vptoken: String) -> anyhow::Result<Option<String>> {
+    async fn verify_all(&self, state: String, vp_token: String) -> anyhow::Result<Option<String>> {
         let exchange = match self.auth_repo.get_auth_by_state(state.clone()).await {
             Ok(auth) => auth,
             Err(e) => bail!("No exchange for state {}", state),
         };
 
-        let (vcts, holder) = match self.verify_vp(exchange.clone(), vptoken).await {
+        let (vcts, holder) = match self.verify_vp(exchange.clone(), state, vp_token).await {
             Ok(v) => v,
             Err(e) => {
                 match self.auth_repo.update_verification_result(exchange, false).await {
@@ -221,7 +221,7 @@ where
         };
 
         match interact.uri {
-            // COMPLETAR OJALA LA WALLET TUVIESE UN CALLBACK DENTRO DE SI MISMA
+            // TODO OJALA LA WALLET TUVIESE UN CALLBACK DENTRO DE SI MISMA
             Some(uri) => {
                 let redirect_uri = uri + "?nonce=" + &interact.nonce;
                 Ok(Some(redirect_uri))
@@ -230,26 +230,32 @@ where
         }
     }
 
-    async fn verify_vp(&self, exchange: String, vptoken: String) -> anyhow::Result<(Vec<String>, String)> {
+    async fn verify_vp(
+        &self,
+        exchange: String,
+        state: String,
+        vp_token: String,
+    ) -> anyhow::Result<(Vec<String>, String)> {
         info!("Verifying VP");
-        let header = jsonwebtoken::decode_header(&vptoken)?;
+        let header = jsonwebtoken::decode_header(&vp_token)?;
         let kid_str = header.kid.as_ref().unwrap();
-        let (kid, kid_id) = split_did(kid_str.as_str()); // COMPLETAR KIDID
+        let (kid, kid_id) = split_did(kid_str.as_str()); // TODO KID_ID
         let alg = header.alg;
 
         let vec = URL_SAFE_NO_PAD.decode(&(kid.replace("did:jwk:", "")))?;
         let mut jwk: Jwk = serde_json::from_slice(&vec)?;
 
         let key = jsonwebtoken::DecodingKey::from_jwk(&jwk)?;
+        let audience = format!("{}/verify/{}", self.config.get_provider_portal_url(), state);
 
-        let mut val = Validation::new(alg); // AJUSTAR
+        let mut val = Validation::new(alg);
         val.required_spec_claims = HashSet::new();
         val.validate_aud = true; // VALIDATE AUDIENCE
-        // val.set_audience(&[&(get_provider_audience()?)]); // TODO audience
+        val.set_audience(&[&(audience)]); // TODO audience
         val.validate_exp = false;
         val.validate_nbf = true; // VALIDATE NBF
 
-        let token = match jsonwebtoken::decode::<Value>(&vptoken, &key, &val) {
+        let token = match jsonwebtoken::decode::<Value>(&vp_token, &key, &val) {
             Ok(token) => token,
             Err(e) => {
                 error!("VPT token signature is incorrect");
@@ -276,7 +282,7 @@ where
             .auth_repo
             .get_av_by_id_update_holder(
                 id.to_string(),
-                vptoken,
+                vp_token,
                 token.claims["sub"].as_str().unwrap().to_string(),
             )
             .await
@@ -319,11 +325,11 @@ where
         Ok((vct, kid.to_string()))
     }
 
-    async fn verify_vc(&self, vctoken: String, vp_holder: String) -> anyhow::Result<()> {
+    async fn verify_vc(&self, vc_token: String, vp_holder: String) -> anyhow::Result<()> {
         info!("Verifying VC");
-        let header = jsonwebtoken::decode_header(&vctoken)?;
+        let header = jsonwebtoken::decode_header(&vc_token)?;
         let kid_str = header.kid.as_ref().unwrap();
-        let (kid, kid_id) = split_did(kid_str.as_str()); // COMPLETAR KIDID
+        let (kid, kid_id) = split_did(kid_str.as_str()); // TODO KID_ID
         let alg = header.alg;
 
         let vec = URL_SAFE_NO_PAD.decode(&(kid.replace("did:jwk:", "")))?;
@@ -331,14 +337,13 @@ where
 
         let key = jsonwebtoken::DecodingKey::from_jwk(&jwk)?;
 
-        let mut val = Validation::new(alg); // AJUSTAR
+        let mut val = Validation::new(alg);
         val.required_spec_claims = HashSet::new();
         val.validate_aud = false;
-        // val.set_audience(&[&(get_provider_audience()?)]); // TODO audience
-        val.validate_exp = false; // SI CREDS EXPIRAN COMPLETAR
+        val.validate_exp = false; // TODO
         val.validate_nbf = true; // VALIDATE NBF
 
-        let token = match jsonwebtoken::decode::<Value>(&vctoken, &key, &val) {
+        let token = match jsonwebtoken::decode::<Value>(&vc_token, &key, &val) {
             Ok(token) => token,
             Err(e) => {
                 error!("VCT token signature is incorrect");
@@ -357,7 +362,7 @@ where
         info!("VCT issuer & kid matches");
 
         // if issuers_list.contains(kid) {
-        //     // COMPLETAR
+        //     // TODO
         //     error!("VCT issuer is not on the trusted issuers list");
         //     bail!("VCT issuer is not on the trusted issuers list");
         // }

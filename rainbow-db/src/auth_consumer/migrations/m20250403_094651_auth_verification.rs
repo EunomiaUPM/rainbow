@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use sea_orm::sea_query::extension::postgres::Type;
 use sea_orm_migration::prelude::*;
 
@@ -30,27 +31,12 @@ impl MigrationName for Migration {
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        // manager
-        //     .create_type(
-        //         Type::create()
-        //             .as_enum(Alias::new("status"))
-        //             .values([
-        //                 Alias::new("Completed"),
-        //                 Alias::new("Pending"),
-        //                 Alias::new("Failed"),
-        //                 Alias::new("Expired"),
-        //                 Alias::new("Requested"),
-        //             ])
-        //             .to_owned(),
-        //     )
-        //     .await?;
         manager
             .create_table(
                 Table::create()
                     .table(AuthVerification::Table)
-                    .col(
-                        ColumnDef::new(AuthVerification::Id).string().not_null().primary_key(),
-                    )
+                    .col(ColumnDef::new(AuthVerification::Id).string().not_null().primary_key())
+                    .col(ColumnDef::new(AuthVerification::Status).string().not_null())
                     .col(ColumnDef::new(AuthVerification::Scheme).string().not_null())
                     .col(ColumnDef::new(AuthVerification::ResponseType).string().not_null())
                     .col(ColumnDef::new(AuthVerification::ClientId).string().not_null())
@@ -60,7 +46,6 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(AuthVerification::Nonce).string().not_null())
                     .col(ColumnDef::new(AuthVerification::ResponseUri).string().not_null())
                     .col(ColumnDef::new(AuthVerification::Uri).string().not_null())
-                    .col(ColumnDef::new(AuthVerification::Status).string().not_null())
                     .col(ColumnDef::new(AuthVerification::CreatedAt).date_time().not_null())
                     .col(ColumnDef::new(AuthVerification::EndedAt).date_time())
                     .to_owned(),

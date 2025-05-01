@@ -30,7 +30,7 @@ pub struct Model {
     pub uri: Option<String>,
     pub nonce: String,
     pub hash_method: Option<String>,
-    pub hints: Option<String>, // VALUE
+    pub hints: Option<String>, // In reality, it is a value
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

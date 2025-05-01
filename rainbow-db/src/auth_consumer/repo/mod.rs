@@ -20,8 +20,9 @@
 use crate::auth_consumer::entities::auth_interaction;
 use crate::auth_consumer::entities::{auth, auth_verification};
 use axum::async_trait;
-use rainbow_common::auth::Interact4GR;
 use sea_orm::DatabaseConnection;
+use serde_json::Value;
+use rainbow_common::auth::gnap::grant_request::Interact4GR;
 
 pub mod sql;
 
@@ -39,6 +40,7 @@ pub trait AuthConsumerRepoTrait {
 
     async fn create_auth(
         &self,
+        id: String,
         provider: String,
         actions: Vec<String>,
         interact: Interact4GR,

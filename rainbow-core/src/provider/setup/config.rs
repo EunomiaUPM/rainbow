@@ -68,7 +68,7 @@ impl Default for CoreProviderApplicationConfig {
                 name: "ds_core_provider_db".to_string(),
             },
             ssi_provider_config: SSIProviderConfig {
-                provider_verification_portal_url: "/provider_portal_url".to_string(),
+                provider_verification_portal_url: "http://host.docker.internal:1234".to_string(),
             },
             role: ConfigRoles::Provider,
         }

@@ -24,6 +24,7 @@ use sea_orm::entity::prelude::*;
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: String,
+    pub status: String,
     pub scheme: String,
     pub response_type: String,
     pub client_id: String,
@@ -33,7 +34,6 @@ pub struct Model {
     pub nonce: String,
     pub response_uri: String,
     pub uri: String,
-    pub status: String,
     pub created_at: chrono::NaiveDateTime,
     pub ended_at: Option<chrono::NaiveDateTime>,
 }

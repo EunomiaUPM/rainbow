@@ -40,14 +40,13 @@ pub struct DatabaseConfig {
 
 #[derive(Serialize, Clone)]
 pub struct SSIConsumerWalletConfig {
-    pub ssi_holder_wallet_portal_url: String,
-    pub ssi_holder_wallet_portal_port: String,
-    pub ssi_holder_wallet_type: String,
-    pub ssi_holder_wallet_name: String,
-    pub ssi_holder_wallet_email: String,
-    pub ssi_holder_wallet_password: String,
-    pub ssi_holder_wallet_id: String,
-    pub consumer_auth_callback: String,
+    pub consumer_wallet_portal_url: String,
+    pub consumer_wallet_portal_port: String,
+    pub consumer_wallet_type: String,
+    pub consumer_wallet_name: String,
+    pub consumer_wallet_email: String,
+    pub consumer_wallet_password: String,
+    pub consumer_wallet_id: Option<String>,
 }
 
 #[derive(Serialize, Clone)]
@@ -82,18 +81,17 @@ impl Default for CoreConsumerApplicationConfig {
             },
             ssi_wallet_config: SSIConsumerWalletConfig {
                 // TODO meter esta info
-                ssi_holder_wallet_portal_url: "".to_string(),
-                ssi_holder_wallet_portal_port: "".to_string(),
-                ssi_holder_wallet_type: "".to_string(),
-                ssi_holder_wallet_name: "".to_string(),
-                ssi_holder_wallet_email: "".to_string(),
-                ssi_holder_wallet_password: "".to_string(),
-                ssi_holder_wallet_id: "".to_string(),
-                consumer_auth_callback: "".to_string(),
+                consumer_wallet_portal_url: "127.0.0.1".to_string(),
+                consumer_wallet_portal_port: "7001".to_string(),
+                consumer_wallet_type: "email".to_string(),
+                consumer_wallet_name: "kk".to_string(),
+                consumer_wallet_email: "kk@kk.com".to_string(),
+                consumer_wallet_password: "kk".to_string(),
+                consumer_wallet_id: None,
             },
             ssi_consumer_client: SSIConsumerConfig {
                 // TODO meter esta info
-                consumer_client: "".to_string(),
+                consumer_client: "ConsConsumer".to_string(),
             },
             role: ConfigRoles::Consumer,
         }
@@ -146,22 +144,19 @@ impl CoreConsumerApplicationConfig {
                 name: std::env::var("DB_DATABASE").unwrap_or(self.database_config.name.clone()),
             },
             ssi_wallet_config: SSIConsumerWalletConfig {
-                ssi_holder_wallet_portal_url: std::env::var("SSI_HOLDER_WALLET_DB_URL")
-                    .unwrap_or(self.ssi_wallet_config.ssi_holder_wallet_portal_url.clone()),
-                ssi_holder_wallet_portal_port: std::env::var("SSI_HOLDER_WALLET_DB_PORT")
-                    .unwrap_or(self.ssi_wallet_config.ssi_holder_wallet_portal_port.clone()),
-                ssi_holder_wallet_type: std::env::var("SSI_HOLDER_WALLET_DB_TYPE")
-                    .unwrap_or(self.ssi_wallet_config.ssi_holder_wallet_type.clone()),
-                ssi_holder_wallet_name: std::env::var("SSI_HOLDER_WALLET_DB_NAME")
-                    .unwrap_or(self.ssi_wallet_config.ssi_holder_wallet_name.clone()),
-                ssi_holder_wallet_email: std::env::var("SSI_HOLDER_WALLET_DB_EMAIL")
-                    .unwrap_or(self.ssi_wallet_config.ssi_holder_wallet_email.clone()),
-                ssi_holder_wallet_password: std::env::var("SSI_HOLDER_WALLET_DB_PASSWORD")
-                    .unwrap_or(self.ssi_wallet_config.ssi_holder_wallet_password.clone()),
-                ssi_holder_wallet_id: std::env::var("SSI_HOLDER_WALLET_DB_ID")
-                    .unwrap_or(self.ssi_wallet_config.ssi_holder_wallet_id.clone()),
-                consumer_auth_callback: std::env::var("CONSUMER_AUTH_CALLBACK")
-                    .unwrap_or(self.ssi_wallet_config.consumer_auth_callback.clone()),
+                consumer_wallet_portal_url: std::env::var("CONSUMER_WALLET_DB_URL")
+                    .unwrap_or(self.ssi_wallet_config.consumer_wallet_portal_url.clone()),
+                consumer_wallet_portal_port: std::env::var("CONSUMER_WALLET_DB_PORT")
+                    .unwrap_or(self.ssi_wallet_config.consumer_wallet_portal_port.clone()),
+                consumer_wallet_type: std::env::var("CONSUMER_WALLET_DB_TYPE")
+                    .unwrap_or(self.ssi_wallet_config.consumer_wallet_type.clone()),
+                consumer_wallet_name: std::env::var("CONSUMER_WALLET_DB_NAME")
+                    .unwrap_or(self.ssi_wallet_config.consumer_wallet_name.clone()),
+                consumer_wallet_email: std::env::var("CONSUMER_WALLET_DB_EMAIL")
+                    .unwrap_or(self.ssi_wallet_config.consumer_wallet_email.clone()),
+                consumer_wallet_password: std::env::var("CONSUMER_WALLET_DB_PASSWORD")
+                    .unwrap_or(self.ssi_wallet_config.consumer_wallet_password.clone()),
+                consumer_wallet_id: None,
             },
             ssi_consumer_client: SSIConsumerConfig {
                 consumer_client: std::env::var("SSI_CONSUMER_CLIENT")

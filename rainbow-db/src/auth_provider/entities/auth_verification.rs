@@ -27,10 +27,13 @@ pub struct Model {
     pub state: String,
     pub nonce: String,
     pub audience: String,
-    // pub requirements: Value,
+    // pub requirements: Value, TODO Hablar con Carlos
     pub holder: Option<String>,
     pub vpt: Option<String>,
     pub success: Option<bool>,
+    pub status: String,
+    pub created_at: chrono::NaiveDateTime,
+    pub ended_at: Option<chrono::NaiveDateTime>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
