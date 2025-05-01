@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -27,7 +28,7 @@ pub struct WalletLoginResponse {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct AuthJwtclaims {
+pub struct AuthJwtClaims {
     pub sub: String,
     pub exp: u64,
     pub iat: u64,
@@ -40,20 +41,24 @@ pub struct AuthJwtclaims {
 pub struct WalletInfo {
     pub id: String,
     pub name: String,
-    pub createdOn: String,
-    pub addedOn: String,
-    pub permission: String, // COMPLETAR
-    pub dids: Option<Vec<Didsinfo>>,
+    #[serde(rename = "createdOn")]
+    pub created_on: String,
+    #[serde(rename = "addedOn")]
+    pub added_on: String,
+    pub permission: String, // TODO
+    pub dids: Option<Vec<DidsInfo>>,
 }
 
 #[derive(Deserialize, Serialize, PartialEq, Eq, Clone, Debug)]
-pub struct Didsinfo {
+pub struct DidsInfo {
     pub did: String,
     pub alias: String,
     pub document: String,
-    pub keyId: String,
+    #[serde(rename = "keyId")]
+    pub key_id: String,
     pub default: bool,
-    pub createdOn: String,
+    #[serde(rename = "createdOn")]
+    pub created_on: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -69,35 +74,16 @@ pub struct ReachProvider {
     pub actions: Vec<String>,
 }
 
-// ------------------------------------------------------------------------------------
-
-#[derive(Deserialize, Serialize, Debug)]
-pub struct VPexchange {
-    pub did: String,
-    pub presentationRequest: String,
-    pub selectedCredentials: Vec<String>,
-}
-
 #[derive(Deserialize, Serialize, Debug)]
 pub struct MatchingVCs {
-    pub addedOn: String,
+    #[serde(rename = "addedOn")]
+    pub added_on: String,
     pub disclosures: String,
     pub document: String,
     pub format: String,
     pub id: String,
-    pub parsedDocument: Value,
+    #[serde(rename = "parsedDocument")]
+    pub parsed_document: Value,
     pub pending: bool,
     pub wallet: String,
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-enum Permission {
-    ADMINISTRATE, // ADD MORE
-}
-
-#[derive(Deserialize)]
-pub struct Petition {
-    pub access_token: Vec<Value>, // Required if requesting access token
-    pub subject: Value,           // Required if requesting subject information
 }

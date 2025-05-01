@@ -1,3 +1,22 @@
+/*
+ *
+ *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 use rainbow_common::config::config::ConfigRoles;
 use rainbow_common::config::database::DbType;
 use serde::Serialize;
@@ -49,7 +68,7 @@ impl Default for AuthProviderApplicationConfig {
                 name: "ds_auth_provider_db".to_string(),
             },
             ssi_provider_config: SSIProviderConfig {
-                provider_verification_portal_url: "/provider_portal_url".to_string(),
+                provider_verification_portal_url: "http://host.docker.internal:1234".to_string(),
             },
             role: ConfigRoles::Provider,
         }
@@ -118,6 +137,6 @@ impl AuthProviderApplicationConfig {
     }
 
     pub fn get_provider_portal_url(&self) -> String {
-        format!("{}{}", self.get_full_host_url(), self.ssi_provider_config.provider_verification_portal_url)
+        self.ssi_provider_config.provider_verification_portal_url.clone()
     }
 }

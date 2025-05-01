@@ -26,7 +26,7 @@ use axum::http::{Method, Uri};
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::{Json, Router};
-use rainbow_common::auth::{GrantRequest, GrantRequestResponse};
+use rainbow_common::auth::gnap::{GrantRequest, GrantResponse};
 use rainbow_db::auth_provider::repo::AuthProviderRepoTrait;
 use reqwest::StatusCode;
 use serde::Deserialize;
@@ -60,14 +60,13 @@ where
     async fn access_request(State(manager): State<Arc<T>>, Json(payload): Json<GrantRequest>) -> impl IntoResponse {
         info!("POST /access");
 
-        // let manager = Manager::new();
         let exchange = manager.generate_exchange_uri(payload).await;
 
         let res = match exchange {
             Ok((client_id, oidc4vp_uri, consumer_nonce)) => {
-                GrantRequestResponse::default4oidc4vp(client_id, oidc4vp_uri, consumer_nonce)
+                GrantResponse::default4oidc4vp(client_id, oidc4vp_uri, consumer_nonce)
             }
-            Err(e) => GrantRequestResponse::error(e.to_string()),
+            Err(e) => GrantResponse::error(e.to_string()),
         };
 
         Json(res)

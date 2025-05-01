@@ -19,14 +19,13 @@ impl Into<AuthConsumerApplicationConfig> for CoreConsumerApplicationConfig {
                 name: self.database_config.name,
             },
             ssi_wallet_config: SSIConsumerWalletConfig {
-                ssi_holder_wallet_portal_url: self.ssi_wallet_config.ssi_holder_wallet_portal_url,
-                ssi_holder_wallet_portal_port: self.ssi_wallet_config.ssi_holder_wallet_portal_port,
-                ssi_holder_wallet_type: self.ssi_wallet_config.ssi_holder_wallet_type,
-                ssi_holder_wallet_name: self.ssi_wallet_config.ssi_holder_wallet_name,
-                ssi_holder_wallet_email: self.ssi_wallet_config.ssi_holder_wallet_email,
-                ssi_holder_wallet_password: self.ssi_wallet_config.ssi_holder_wallet_password,
-                ssi_holder_wallet_id: self.ssi_wallet_config.ssi_holder_wallet_id,
-                consumer_auth_callback: self.ssi_wallet_config.consumer_auth_callback,
+                consumer_wallet_portal_url: self.ssi_wallet_config.consumer_wallet_portal_url,
+                consumer_wallet_portal_port: self.ssi_wallet_config.consumer_wallet_portal_port,
+                consumer_wallet_type: self.ssi_wallet_config.consumer_wallet_type,
+                consumer_wallet_name: self.ssi_wallet_config.consumer_wallet_name,
+                consumer_wallet_email: self.ssi_wallet_config.consumer_wallet_email,
+                consumer_wallet_password: self.ssi_wallet_config.consumer_wallet_password,
+                consumer_wallet_id: self.ssi_wallet_config.consumer_wallet_id,
             },
             ssi_consumer_client: SSIConsumerConfig {
                 consumer_client: self.ssi_consumer_client.consumer_client

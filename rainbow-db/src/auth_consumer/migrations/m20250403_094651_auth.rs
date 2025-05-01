@@ -32,34 +32,14 @@ impl MigrationName for Migration {
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
-            .create_type(
-                Type::create()
-                    .as_enum(Alias::new("status"))
-                    .values([
-                        Alias::new("Completed"),
-                        Alias::new("Pending"),
-                        Alias::new("Failed"),
-                        Alias::new("Expired"),
-                        Alias::new("Requested"),
-                    ])
-                    .to_owned(),
-            )
-            .await?;
-
-        manager
             .create_table(
                 Table::create()
                     .table(Auth::Table)
-                    .col(
-                        ColumnDef::new(Auth::Id)
-                            .string()
-                            .not_null()
-                            .primary_key()
-                    )
-                    .col(ColumnDef::new(Auth::AssignedId).string())
+                    .col(ColumnDef::new(Auth::Id).string().not_null().primary_key())
                     .col(ColumnDef::new(Auth::Provider).string().not_null())
-                    .col(ColumnDef::new(Auth::Actions).json().not_null())
                     .col(ColumnDef::new(Auth::Status).string().not_null())
+                    .col(ColumnDef::new(Auth::AssignedId).string())
+                    .col(ColumnDef::new(Auth::Actions).json().not_null())
                     .col(ColumnDef::new(Auth::CreatedAt).date_time().not_null())
                     .col(ColumnDef::new(Auth::EndedAt).date_time())
                     .to_owned(),

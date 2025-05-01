@@ -27,10 +27,10 @@ use serde_json::Value as JsonValue;
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: String,
-    pub assigned_id: Option<String>,
     pub provider: String,
-    pub actions: JsonValue, // IT IS A VEC!!
     pub status: String,
+    pub assigned_id: Option<String>,
+    pub actions: JsonValue, // IT IS A VEC!!
     pub created_at: chrono::NaiveDateTime,
     pub ended_at: Option<chrono::NaiveDateTime>,
 }

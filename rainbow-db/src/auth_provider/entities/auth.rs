@@ -28,7 +28,7 @@ pub struct Model {
     pub id: String,
     pub consumer: String,
     pub actions: JsonValue, // IT IS A VEC!!
-    pub status: Status,
+    pub status: String,
     pub created_at: chrono::NaiveDateTime,
     pub ended_at: Option<chrono::NaiveDateTime>,
 }
@@ -54,19 +54,3 @@ impl Related<super::auth_verification::Entity> for Entity {
 }
 
 impl ActiveModelBehavior for ActiveModel {}
-
-#[derive(Debug, Clone, Copy, PartialEq, EnumIter, DeriveActiveEnum)]
-#[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "status")]
-pub enum Status {
-    #[sea_orm(string_value = "Ongoing")]
-    Ongoing,
-
-    #[sea_orm(string_value = "Completed")]
-    Completed,
-
-    #[sea_orm(string_value = "Failed")]
-    Failed,
-
-    #[sea_orm(string_value = "Expired")]
-    Expired,
-}

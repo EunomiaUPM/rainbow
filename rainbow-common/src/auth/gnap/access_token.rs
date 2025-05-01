@@ -17,4 +17,17 @@
  *
  */
 
-pub mod manager;
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct AccessToken {
+    pub value: String,
+    pub label: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub manage: Option<Value>,
+    pub access: Vec<String>,
+    pub expires_in: Option<u64>,
+    pub key: Value, // TODO DecodingKey
+    pub flags: Vec<String>,
+}

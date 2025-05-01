@@ -32,20 +32,6 @@ impl MigrationName for Migration {
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
-            .create_type(
-                Type::create()
-                    .as_enum(Alias::new("status"))
-                    .values([
-                        Alias::new("Completed"),
-                        Alias::new("Ongoing"),
-                        Alias::new("Failed"),
-                        Alias::new("Expired"),
-                    ])
-                    .to_owned(),
-            )
-            .await?;
-
-        manager
             .create_table(
                 Table::create()
                     .table(Auth::Table)

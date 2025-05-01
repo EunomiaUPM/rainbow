@@ -18,14 +18,13 @@
  */
 
 use crate::auth_consumer::entities::auth;
-// use crate::auth_consumer::status::Status;
 use crate::auth_consumer::entities::auth_interaction;
 use crate::auth_consumer::entities::auth_verification;
 use crate::auth_consumer::repo::{AuthConsumerRepoFactory, AuthConsumerRepoTrait};
 use anyhow::{anyhow, bail};
 use axum::async_trait;
 use chrono;
-use rainbow_common::auth::Interact4GR;
+use rainbow_common::auth::gnap::grant_request::Interact4GR;
 use sea_orm::sqlx::types::uuid;
 use sea_orm::{ActiveModelTrait, ActiveValue, DatabaseConnection, EntityTrait, IntoActiveModel, QuerySelect};
 use serde_json::Value;
@@ -77,13 +76,13 @@ impl AuthConsumerRepoTrait for AuthConsumerRepoForSql {
 
     async fn create_auth(
         &self,
+        id: String,
         provider: String,
         actions: Vec<String>,
         interact: Interact4GR,
     ) -> anyhow::Result<auth::Model> {
-        let id = uuid::Uuid::new_v4().to_string();
-        let actions: Value = Value::String(serde_json::to_string(&actions).unwrap());
-        let start: Value = Value::String(serde_json::to_string(&interact.start).unwrap());
+        let actions: Value = Value::String(serde_json::to_string(&actions)?);
+        let start: Value = Value::String(serde_json::to_string(&interact.start)?);
 
         let auth_model = auth::ActiveModel {
             id: ActiveValue::Set(id.clone()),
@@ -93,7 +92,6 @@ impl AuthConsumerRepoTrait for AuthConsumerRepoForSql {
             status: ActiveValue::Set("Requested".to_string()), // TODO Revisar esto Rodrigo
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             ended_at: ActiveValue::Set(None),
-            ..Default::default()
         };
 
         let auth_interaction_model = auth_interaction::ActiveModel {
@@ -103,8 +101,7 @@ impl AuthConsumerRepoTrait for AuthConsumerRepoForSql {
             uri: ActiveValue::Set(interact.finish.uri),
             nonce: ActiveValue::Set(interact.finish.nonce),
             hash_method: ActiveValue::Set(interact.finish.hash_method),
-            hints: ActiveValue::Set(None), // FUERA PROBLEMAS
-            ..Default::default()
+            hints: ActiveValue::Set(None), // TODO ??
         };
 
         let auth = auth::Entity::insert(auth_model).exec_with_returning(&self.db_connection).await?;
