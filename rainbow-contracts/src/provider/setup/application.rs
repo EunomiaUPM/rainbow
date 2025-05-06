@@ -17,6 +17,7 @@
  *
  */
 
+use crate::provider::core::catalog_odrl_facade::catalog_odrl_facade::CatalogOdrlFacadeService;
 use crate::provider::core::ds_protocol::ds_protocol::DSProtocolContractNegotiationProviderService;
 use crate::provider::core::ds_protocol_rpc::ds_protocol_rpc::DSRPCContractNegotiationProviderService;
 use crate::provider::core::rainbow_entities::rainbow_entities::RainbowEntitiesContractNegotiationProviderService;
@@ -73,9 +74,11 @@ pub async fn create_contract_negotiation_provider_router(db_url: String) -> Rout
         RainbowEntitesContractNegotiationProviderRouter::new(rainbow_entities_service.clone()).router();
 
     // DSProtocol Dependency injection
+    let catalog_odrl_facade = Arc::new(CatalogOdrlFacadeService::new());
     let ds_protocol_service = Arc::new(DSProtocolContractNegotiationProviderService::new(
         provider_repo.clone(),
         notification_service.clone(),
+        catalog_odrl_facade,
     ));
     let ds_protocol_router = DSProtocolContractNegotiationProviderRouter::new(ds_protocol_service.clone()).router();
 

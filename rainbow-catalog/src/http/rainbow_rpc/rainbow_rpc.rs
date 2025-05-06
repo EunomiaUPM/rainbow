@@ -18,7 +18,7 @@
  */
 
 use crate::core::rainbow_entities::rainbow_catalog_err::CatalogError;
-use crate::core::rainbow_rpc::rainbow_rpc_types::RainbowRPCCatalogResolveDataServiceRequest;
+use crate::core::rainbow_rpc::rainbow_rpc_types::{RainbowRPCCatalogResolveDataServiceRequest, RainbowRPCCatalogResolveOfferByIdRequest};
 use crate::core::rainbow_rpc::RainbowRPCCatalogTrait;
 use anyhow::Error;
 use axum::extract::rejection::JsonRejection;
@@ -51,6 +51,10 @@ where
                 "/api/v1/catalog/rpc/resolve-data-service",
                 post(Self::handle_resolve_data_service),
             )
+            .route(
+                "/api/v1/catalog/rpc/resolve-offer",
+                post(Self::handle_resolve_offer),
+            )
             .with_state(self.service)
     }
     pub async fn handle_resolve_data_service(
@@ -59,6 +63,19 @@ where
     ) -> impl IntoResponse {
         info!("POST /api/v1/catalog/rpc/resolve-data-service");
         match service.resolve_data_service(input.unwrap().0).await {
+            Ok(d) => (StatusCode::OK, Json(d)).into_response(),
+            Err(e) => match e.downcast::<CatalogError>() {
+                Ok(e_) => e_.into_response(),
+                Err(e_) => (StatusCode::INTERNAL_SERVER_ERROR, NotCheckedError { inner_error: e_ }).into_response()
+            }
+        }
+    }
+    pub async fn handle_resolve_offer(
+        State(service): State<Arc<T>>,
+        input: Result<Json<RainbowRPCCatalogResolveOfferByIdRequest>, JsonRejection>, // Todo define object
+    ) -> impl IntoResponse {
+        info!("POST /api/v1/catalog/rpc/resolve-offer");
+        match service.resolve_offer(input.unwrap().0).await {
             Ok(d) => (StatusCode::OK, Json(d)).into_response(),
             Err(e) => match e.downcast::<CatalogError>() {
                 Ok(e_) => e_.into_response(),

@@ -21,6 +21,7 @@ use crate::catalog::entities::catalog;
 use crate::catalog::entities::dataservice;
 use crate::catalog::entities::dataset;
 use crate::catalog::entities::distribution;
+use crate::catalog::entities::odrl_offer;
 use rainbow_common::protocol::catalog::catalog_definition::{
     Catalog, CatalogDSpaceDeclaration, CatalogDcatDeclaration, CatalogDctDeclaration,
     CatalogFoafDeclaration,
@@ -34,7 +35,10 @@ use rainbow_common::protocol::catalog::dataset_definition::{
 use rainbow_common::protocol::catalog::distribution_definition::{
     Distribution, DistributionDcatDeclaration, DistributionDctDeclaration,
 };
+use rainbow_common::protocol::catalog::OdrlPolicyInfo;
 use rainbow_common::protocol::context_field::ContextField;
+use rainbow_common::protocol::contract::contract_odrl::{OdrlOffer, OdrlTypes};
+use rainbow_common::utils::get_urn_from_string;
 use serde_json::Value;
 
 pub mod entities;
@@ -155,6 +159,24 @@ impl TryFrom<dataservice::Model> for DataService {
             },
             odrl_offer: Value::default(),
             extra_fields: Value::default(),
+        })
+    }
+}
+
+impl TryFrom<odrl_offer::Model> for OdrlOffer {
+    type Error = anyhow::Error;
+
+    fn try_from(value: odrl_offer::Model) -> Result<Self, Self::Error> {
+        let message_value = value.odrl_offer.unwrap_or_default();
+        let message = serde_json::from_value::<OdrlPolicyInfo>(message_value)?;
+        Ok(OdrlOffer {
+            id: get_urn_from_string(&value.id)?,
+            profile: message.profile,
+            permission: message.permission,
+            obligation: message.obligation,
+            _type: OdrlTypes::Offer,
+            prohibition: message.prohibition,
+            target: Option::from(get_urn_from_string(&value.entity)?),
         })
     }
 }

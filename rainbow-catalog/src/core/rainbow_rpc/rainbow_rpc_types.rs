@@ -26,3 +26,10 @@ pub struct RainbowRPCCatalogResolveDataServiceRequest {
     #[serde(rename = "dataServiceId")]
     pub data_service_id: Urn,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RainbowRPCCatalogResolveOfferByIdRequest {
+    #[serde(rename = "offerId")]
+    pub offer_id: Urn,
+}

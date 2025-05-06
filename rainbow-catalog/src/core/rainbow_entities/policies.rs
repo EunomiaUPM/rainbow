@@ -19,8 +19,10 @@
 
 use crate::core::rainbow_entities::rainbow_catalog_err::CatalogError;
 use crate::core::rainbow_entities::RainbowPoliciesTrait;
-use crate::protocol::policies::{EntityTypes, OdrlPolicy};
+use crate::protocol::policies::EntityTypes;
 use axum::async_trait;
+use rainbow_common::protocol::catalog::OdrlPolicyInfo;
+use rainbow_common::protocol::contract::contract_odrl::OdrlOffer;
 use rainbow_common::utils::get_urn;
 use rainbow_db::catalog::entities::odrl_offer::Model;
 use rainbow_db::catalog::repo::{NewOdrlOfferModel, OdrlOfferRepo};
@@ -55,12 +57,13 @@ where
     T: OdrlOfferRepo + Send + Sync,
     U: RainbowEventsNotificationTrait + Send + Sync,
 {
-    async fn get_catalog_policies(&self, catalog_id: Urn) -> anyhow::Result<Vec<Model>> {
+    async fn get_catalog_policies(&self, catalog_id: Urn) -> anyhow::Result<Vec<OdrlOffer>> {
         let policies = self.repo.get_all_odrl_offers_by_entity(catalog_id).await.map_err(CatalogError::DbErr)?;
+        let policies: Vec<OdrlOffer> = policies.iter().map(|p| OdrlOffer::try_from(p.to_owned()).unwrap()).collect();
         Ok(policies)
     }
 
-    async fn post_catalog_policies(&self, catalog_id: Urn, policy: OdrlPolicy) -> anyhow::Result<Model> {
+    async fn post_catalog_policies(&self, catalog_id: Urn, policy: OdrlPolicyInfo) -> anyhow::Result<Model> {
         let new_policy = self
             .repo
             .create_odrl_offer(
@@ -100,12 +103,13 @@ where
         Ok(())
     }
 
-    async fn get_dataset_policies(&self, dataset_id: Urn) -> anyhow::Result<Vec<Model>> {
+    async fn get_dataset_policies(&self, dataset_id: Urn) -> anyhow::Result<Vec<OdrlOffer>> {
         let policies = self.repo.get_all_odrl_offers_by_entity(dataset_id).await.map_err(CatalogError::DbErr)?;
+        let policies: Vec<OdrlOffer> = policies.iter().map(|p| OdrlOffer::try_from(p.to_owned()).unwrap()).collect();
         Ok(policies)
     }
 
-    async fn post_dataset_policies(&self, dataset_id: Urn, policy: OdrlPolicy) -> anyhow::Result<Model> {
+    async fn post_dataset_policies(&self, dataset_id: Urn, policy: OdrlPolicyInfo) -> anyhow::Result<Model> {
         let new_policy = self
             .repo
             .create_odrl_offer(
@@ -145,12 +149,13 @@ where
         Ok(())
     }
 
-    async fn get_data_service_policies(&self, data_service_id: Urn) -> anyhow::Result<Vec<Model>> {
+    async fn get_data_service_policies(&self, data_service_id: Urn) -> anyhow::Result<Vec<OdrlOffer>> {
         let policies = self.repo.get_all_odrl_offers_by_entity(data_service_id).await.map_err(CatalogError::DbErr)?;
+        let policies: Vec<OdrlOffer> = policies.iter().map(|p| OdrlOffer::try_from(p.to_owned()).unwrap()).collect();
         Ok(policies)
     }
 
-    async fn post_data_service_policies(&self, data_service_id: Urn, policy: OdrlPolicy) -> anyhow::Result<Model> {
+    async fn post_data_service_policies(&self, data_service_id: Urn, policy: OdrlPolicyInfo) -> anyhow::Result<Model> {
         let new_policy = self
             .repo
             .create_odrl_offer(
@@ -190,12 +195,13 @@ where
         Ok(())
     }
 
-    async fn get_distribution_policies(&self, distribution_id: Urn) -> anyhow::Result<Vec<Model>> {
+    async fn get_distribution_policies(&self, distribution_id: Urn) -> anyhow::Result<Vec<OdrlOffer>> {
         let policies = self.repo.get_all_odrl_offers_by_entity(distribution_id).await.map_err(CatalogError::DbErr)?;
+        let policies: Vec<OdrlOffer> = policies.iter().map(|p| OdrlOffer::try_from(p.to_owned()).unwrap()).collect();
         Ok(policies)
     }
 
-    async fn post_distribution_policies(&self, distribution_id: Urn, policy: OdrlPolicy) -> anyhow::Result<Model> {
+    async fn post_distribution_policies(&self, distribution_id: Urn, policy: OdrlPolicyInfo) -> anyhow::Result<Model> {
         let new_policy = self
             .repo
             .create_odrl_offer(

@@ -32,6 +32,7 @@ use rainbow_catalog::http::rainbow_entities::dataset::RainbowCatalogDatasetRoute
 use rainbow_catalog::http::rainbow_entities::distribution::RainbowCatalogDistributionRouter;
 use rainbow_catalog::http::rainbow_entities::policies::RainbowCatalogPoliciesRouter;
 use rainbow_catalog::http::rainbow_rpc::rainbow_rpc::RainbowRPCCatalogRouter;
+use rainbow_contracts::provider::core::catalog_odrl_facade::catalog_odrl_facade::CatalogOdrlFacadeService;
 use rainbow_contracts::provider::core::ds_protocol::ds_protocol::DSProtocolContractNegotiationProviderService;
 use rainbow_contracts::provider::core::ds_protocol_rpc::ds_protocol_rpc::DSRPCContractNegotiationProviderService;
 use rainbow_contracts::provider::core::rainbow_entities::rainbow_entities::RainbowEntitiesContractNegotiationProviderService;
@@ -164,9 +165,11 @@ pub async fn create_core_provider_router(db_url: String) -> Router {
         RainbowEntitesContractNegotiationProviderRouter::new(cn_rainbow_entities_service.clone()).router();
 
     // DSProtocol Dependency injection
+    let catalog_odrl_facade = Arc::new(CatalogOdrlFacadeService::new());
     let cn_ds_protocol_service = Arc::new(DSProtocolContractNegotiationProviderService::new(
         cn_provider_repo.clone(),
         notification_service.clone(),
+        catalog_odrl_facade,
     ));
     let cn_ds_protocol_router =
         DSProtocolContractNegotiationProviderRouter::new(cn_ds_protocol_service.clone()).router();
