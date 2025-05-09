@@ -32,7 +32,9 @@
           "oneOf": [
             {
               "type": "array",
-              "items": "string"
+              "items": {
+                "type": "object"
+              }
             },
             {
               "type": "string"
@@ -97,12 +99,7 @@
         {
           "$ref": "#/definitions/MessageOffer"
         }
-      ],
-      "not": {
-        "required": [
-          "target"
-        ]
-      }
+      ]
     },
     "Agreement": {
       "type": "object",
@@ -213,11 +210,15 @@
       "properties": {
         "and": {
           "type": "array",
-          "items": "object"
+          "items": {
+            "type": "object"
+          }
         },
         "andSequence": {
           "type": "array",
-          "items": "object"
+          "items": {
+            "type": "object"
+          }
         },
         "or": {
           "type": "array",
@@ -234,7 +235,9 @@
         },
         "xone": {
           "type": "array",
-          "items": "object"
+          "items": {
+            "type": "object"
+          }
         }
       },
       "oneOf": [

@@ -78,7 +78,7 @@ pub async fn create_contract_negotiation_provider_router(db_url: String) -> Rout
     let ds_protocol_service = Arc::new(DSProtocolContractNegotiationProviderService::new(
         provider_repo.clone(),
         notification_service.clone(),
-        catalog_odrl_facade,
+        catalog_odrl_facade.clone(),
     ));
     let ds_protocol_router = DSProtocolContractNegotiationProviderRouter::new(ds_protocol_service.clone()).router();
 
@@ -86,6 +86,7 @@ pub async fn create_contract_negotiation_provider_router(db_url: String) -> Rout
     let ds_protocol_rpc_service = Arc::new(DSRPCContractNegotiationProviderService::new(
         provider_repo.clone(),
         notification_service.clone(),
+        catalog_odrl_facade.clone(),
     ));
     let ds_protocol_rpc = DSRPCContractNegotiationProviderRouter::new(ds_protocol_rpc_service.clone()).router();
 

@@ -24,6 +24,14 @@ pub struct RainbowRPCCatalogResolveOfferByIdRequest {
     #[serde(rename = "offerId")]
     pub offer_id: Urn,
 }
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RainbowRPCCatalogResolveEntityTargetRequest {
+    #[serde(rename = "target")]
+    pub target: Urn,
+    #[serde(rename = "entityType")]
+    pub entity_type: String,
+}
 
 #[async_trait]
 impl CatalogOdrlFacadeTrait for CatalogOdrlFacadeService {
@@ -36,6 +44,19 @@ impl CatalogOdrlFacadeTrait for CatalogOdrlFacadeService {
         if res.status().is_success() {
             let res_json = res.json::<OdrlOffer>().await?;
             Ok(res_json)
+        } else {
+            bail!("id not found")
+        }
+    }
+
+    async fn resolve_catalog_target(&self, target: Urn, entity_type: String) -> anyhow::Result<()> {
+        let res = self.client
+            .post("http://127.0.0.1:1234/api/v1/catalog/rpc/resolve-entity-target")
+            .json(&RainbowRPCCatalogResolveEntityTargetRequest { target, entity_type })
+            .send()
+            .await?;
+        if res.status().is_success() {
+            Ok(())
         } else {
             bail!("id not found")
         }

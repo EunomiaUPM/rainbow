@@ -183,22 +183,6 @@ pub async fn contract_negotiation_consumer() -> anyhow::Result<()> {
             consumer_participant_id: consumer_participant_id.clone(),
             consumer_pid: consumer_pid.clone(),
             provider_pid: provider_pid.clone(),
-            odrl_agreement: OdrlAgreement {
-                id: get_urn(None),
-                target: policy_target.clone(), // Not implemented yet before catalog cleared out...
-                profile: None,
-                permission: Some(vec![OdrlPermission {
-                    action: "use".to_string(),
-                    constraint: None,
-                    duty: None,
-                }]),
-                obligation: None,
-                _type: OdrlTypes::Agreement,
-                prohibition: None,
-                assigner: provider_participant_id.clone(),
-                assignee: consumer_participant_id.clone(),
-                timestamp: None,
-            },
         })
         .send()
         .await?;

@@ -21,4 +21,3 @@ pub mod ds_protocol;
 pub mod ds_protocol_rpc;
 pub mod rainbow_entities;
 pub mod catalog_odrl_facade;
-

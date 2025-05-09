@@ -20,11 +20,8 @@
 use jsonschema;
 use jsonschema::Validator;
 use once_cell::sync::Lazy;
+use rainbow_common::schemas::schema_compiler_util;
 use serde_json::Value;
-
-fn schema_compiler_util(schema_content: &str) -> Value {
-    serde_json::from_str::<Value>(schema_content).unwrap()
-}
 
 // TODO make all of this in compile time...
 pub static TRANSFER_REQUEST_SCHEMA: Lazy<Validator> = Lazy::new(|| -> Validator {

@@ -6,8 +6,8 @@
   "consumerPid": "urn:uuid:32541fe6-c580-409e-85a8-8a9a32fbe833",
   "offer": {
     "@type": "Offer",
-    "@id": "urn:uuid:2828282:3dd1add8-4d2d-569e-d634-8394a8836a89",
-    "target": "urn:uuid:3dd1add8-4d2d-569e-d634-8394a8836a88",
+    "@id": "urn:uuid:852e7476-beb7-4699-b6e3-10973a1db285",
+    "target": "urn:uuid:92024671-2f37-4ea6-a927-db937de6fdea",
     "permission": [
       {
         "action": "use"

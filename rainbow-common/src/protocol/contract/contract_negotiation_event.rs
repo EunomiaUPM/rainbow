@@ -18,6 +18,7 @@
  */
 
 use crate::protocol::context_field::ContextField;
+use crate::protocol::contract::contract_protocol_trait::DSProtocolContractNegotiationMessageTrait;
 use crate::protocol::contract::{ContractNegotiationMessages, ContractNegotiationState};
 use crate::utils::get_urn;
 use serde::{Deserialize, Serialize};
@@ -28,20 +29,20 @@ pub struct ContractNegotiationEventMessage {
     #[serde(rename = "@context")]
     pub context: ContextField,
     #[serde(rename = "@type")]
-    pub _type: String,
-    #[serde(rename = "dspace:providerPid")]
+    pub _type: ContractNegotiationMessages,
+    #[serde(rename = "providerPid")]
     pub provider_pid: Urn,
-    #[serde(rename = "dspace:consumerPid")]
+    #[serde(rename = "consumerPid")]
     pub consumer_pid: Urn,
-    #[serde(rename = "dspace:eventType")]
+    #[serde(rename = "eventType")]
     pub event_type: NegotiationEventType,
 }
 
 #[derive(Debug, Serialize, Deserialize, Copy, Clone, PartialEq)]
 pub enum NegotiationEventType {
-    #[serde(rename = "dspace:ACCEPTED")]
+    #[serde(rename = "ACCEPTED")]
     Accepted,
-    #[serde(rename = "dspace:FINALIZED")]
+    #[serde(rename = "FINALIZED")]
     Finalized,
 }
 
@@ -49,7 +50,7 @@ impl Default for ContractNegotiationEventMessage {
     fn default() -> Self {
         Self {
             context: ContextField::default(),
-            _type: ContractNegotiationMessages::ContractNegotiationEventMessage.to_string(),
+            _type: ContractNegotiationMessages::ContractNegotiationEventMessage,
             provider_pid: get_urn(None),
             consumer_pid: get_urn(None),
             event_type: NegotiationEventType::Accepted,
@@ -61,7 +62,25 @@ impl Into<ContractNegotiationState> for NegotiationEventType {
     fn into(self) -> ContractNegotiationState {
         match self {
             NegotiationEventType::Accepted => ContractNegotiationState::Accepted,
-            NegotiationEventType::Finalized => ContractNegotiationState::Finalized
+            NegotiationEventType::Finalized => ContractNegotiationState::Finalized,
         }
+    }
+}
+
+impl DSProtocolContractNegotiationMessageTrait<'_> for ContractNegotiationEventMessage {
+    fn get_message_type(&self) -> anyhow::Result<ContractNegotiationMessages> {
+        Ok(self._type)
+    }
+
+    fn get_consumer_pid(&self) -> anyhow::Result<&Urn> {
+        Ok(&self.consumer_pid)
+    }
+
+    fn get_provider_pid(&self) -> anyhow::Result<Option<&Urn>> {
+        Ok(Some(&self.provider_pid))
+    }
+
+    fn get_negotiation_event_type(&self) -> anyhow::Result<Option<NegotiationEventType>> {
+        Ok(Some(self.event_type))
     }
 }

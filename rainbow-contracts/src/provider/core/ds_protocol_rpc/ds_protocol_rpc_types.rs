@@ -60,8 +60,8 @@ pub struct SetupAgreementRequest {
     pub consumer_pid: Urn,
     #[serde(rename = "providerPid")]
     pub provider_pid: Urn,
-    #[serde(rename = "agreement")]
-    pub odrl_agreement: OdrlAgreement,
+    // #[serde(rename = "agreement")]
+    // pub odrl_agreement: OdrlMessageAgreement,
 }
 #[derive(Deserialize, Serialize, Debug)]
 pub struct SetupAgreementResponse {

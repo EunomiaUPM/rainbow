@@ -24,6 +24,7 @@ use super::entities::cn_process;
 use super::entities::participant;
 use anyhow::Error;
 use rainbow_common::config::config::ConfigRoles;
+use rainbow_common::protocol::contract::contract_odrl::OdrlAgreement;
 use rainbow_common::protocol::contract::ContractNegotiationState;
 use sea_orm::DatabaseConnection;
 use sea_orm_migration::async_trait::async_trait;
@@ -138,7 +139,7 @@ pub trait ContractNegotiationMessageRepo {
 }
 
 pub struct NewContractNegotiationOffer {
-    pub offer_id: Urn,
+    pub offer_id: Option<Urn>,
     pub offer_content: serde_json::Value,
 }
 pub struct EditContractNegotiationOffer {}
@@ -179,7 +180,7 @@ pub trait ContractNegotiationOfferRepo {
 pub struct NewAgreement {
     pub consumer_participant_id: Urn,
     pub provider_participant_id: Urn,
-    pub agreement_content: serde_json::Value,
+    pub agreement_content: OdrlAgreement,
     pub active: bool,
 }
 pub struct EditAgreement {
@@ -245,6 +246,9 @@ pub trait Participant {
     async fn get_participant_by_p_id(
         &self,
         participant_id: Urn,
+    ) -> anyhow::Result<Option<participant::Model>, CnErrors>;
+    async fn get_provider_participant(
+        &self,
     ) -> anyhow::Result<Option<participant::Model>, CnErrors>;
     async fn put_participant(
         &self,

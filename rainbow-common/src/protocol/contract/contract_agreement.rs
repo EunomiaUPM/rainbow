@@ -28,13 +28,13 @@ pub struct ContractAgreementMessage {
     pub context: ContextField,
     #[serde(rename = "@type")]
     pub _type: String,
-    #[serde(rename = "dspace:providerPid")]
+    #[serde(rename = "providerPid")]
     pub provider_pid: String,
-    #[serde(rename = "dspace:consumerPid")]
+    #[serde(rename = "consumerPid")]
     pub consumer_pid: String,
-    #[serde(rename = "dspace:callbackAddress")]
+    #[serde(rename = "callbackAddress")]
     pub callback_address: String,
-    #[serde(rename = "dspace:agreement")]
+    #[serde(rename = "agreement")]
     pub odrl_agreement: OdrlAgreement,
 }
 

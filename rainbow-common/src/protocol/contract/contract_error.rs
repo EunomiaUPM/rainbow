@@ -30,14 +30,14 @@ pub struct ContractErrorMessage {
     pub context: ContextField,
     #[serde(rename = "@type")]
     pub _type: ContractNegotiationMessages,
-    #[serde(rename = "dspace:providerPid")]
+    #[serde(rename = "providerPid")]
     pub provider_pid: Option<String>,
-    #[serde(rename = "dspace:consumerPid")]
+    #[serde(rename = "consumerPid")]
     pub consumer_pid: Option<String>,
-    #[serde(rename = "dspace:code")]
+    #[serde(rename = "code")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub code: Option<String>,
-    #[serde(rename = "dspace:reason")]
+    #[serde(rename = "reason")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reason: Option<Vec<String>>,
 }

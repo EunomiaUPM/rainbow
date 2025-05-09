@@ -30,11 +30,11 @@ pub struct ContractAckMessage {
     pub context: ContextField,
     #[serde(rename = "@type")]
     pub _type: String,
-    #[serde(rename = "dspace:providerPid")]
+    #[serde(rename = "providerPid")]
     pub provider_pid: String,
-    #[serde(rename = "dspace:consumerPid")]
+    #[serde(rename = "consumerPid")]
     pub consumer_pid: String,
-    #[serde(rename = "dspace:state")]
+    #[serde(rename = "state")]
     pub state: ContractNegotiationState,
 }
 

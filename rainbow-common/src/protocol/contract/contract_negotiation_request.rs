@@ -19,13 +19,14 @@
 
 use super::contract_odrl::{ContractRequestMessageOfferTypes, OdrlMessageOffer, OdrlTypes};
 use crate::protocol::context_field::ContextField;
+use crate::protocol::contract::contract_protocol_trait::DSProtocolContractNegotiationMessageTrait;
 use crate::protocol::contract::ContractNegotiationMessages;
 use crate::protocol::ProtocolValidate;
 use crate::utils::get_urn;
 use serde::{Deserialize, Serialize};
 use urn::Urn;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct ContractRequestMessage {
     #[serde(rename = "@context")]
@@ -61,6 +62,24 @@ impl Default for ContractRequestMessage {
                 target: get_urn(None),
             }),
         }
+    }
+}
+
+impl DSProtocolContractNegotiationMessageTrait<'_> for ContractRequestMessage {
+    fn get_message_type(&self) -> anyhow::Result<ContractNegotiationMessages> {
+        Ok(self._type.clone())
+    }
+
+    fn get_consumer_pid(&self) -> anyhow::Result<&Urn> {
+        Ok(&self.consumer_pid)
+    }
+
+    fn get_provider_pid(&self) -> anyhow::Result<Option<&Urn>> {
+        Ok(self.provider_pid.as_ref())
+    }
+
+    fn get_odrl_offer(&self) -> anyhow::Result<Option<&ContractRequestMessageOfferTypes>> {
+        Ok(Some(&self.odrl_offer))
     }
 }
 

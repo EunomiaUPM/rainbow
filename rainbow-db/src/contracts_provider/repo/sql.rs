@@ -22,12 +22,14 @@ use super::super::entities::cn_message;
 use super::super::entities::cn_offer;
 use super::super::entities::cn_process;
 use super::super::entities::participant;
+use crate::contracts_provider::entities::participant::Model;
 use crate::contracts_provider::repo::{AgreementRepo, CnErrors, ContractNegotiationMessageRepo, ContractNegotiationOfferRepo, ContractNegotiationProcessRepo, ContractNegotiationProviderRepoFactory, EditAgreement, EditContractNegotiationMessage, EditContractNegotiationOffer, EditContractNegotiationProcess, EditParticipant, NewAgreement, NewContractNegotiationMessage, NewContractNegotiationOffer, NewContractNegotiationProcess, NewParticipant, Participant};
 use json_value_merge::Merge;
 use rainbow_common::utils::get_urn;
 use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, JoinType, QueryFilter, QueryOrder, QuerySelect, RelationTrait};
 use sea_orm_migration::async_trait::async_trait;
 use sea_orm_migration::prelude::Condition;
+use serde_json::to_value;
 use urn::Urn;
 
 pub struct ContractNegotiationProviderRepoForSql {
@@ -728,6 +730,9 @@ impl AgreementRepo for ContractNegotiationProviderRepoForSql {
                 new_agreement.provider_participant_id.clone(),
             ))?;
 
+        let agreement_as_json = to_value(new_agreement.agreement_content)
+            .map_err(|err| CnErrors::ErrorCreatingAgreement(err.into()))?;
+
         let model = agreement::ActiveModel {
             agreement_id: ActiveValue::Set(get_urn(None).to_string()),
             consumer_participant_id: ActiveValue::Set(
@@ -737,7 +742,7 @@ impl AgreementRepo for ContractNegotiationProviderRepoForSql {
                 new_agreement.provider_participant_id.to_string(),
             ),
             cn_message_id: ActiveValue::Set(message_id.to_string()),
-            agreement_content: ActiveValue::Set(new_agreement.agreement_content),
+            agreement_content: ActiveValue::Set(agreement_as_json),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             active: ActiveValue::Set(true),
         };
@@ -810,6 +815,15 @@ impl Participant for ContractNegotiationProviderRepoForSql {
             .await
             .map_err(|err| CnErrors::ErrorFetchingParticipant(err.into()))?;
         Ok(participant)
+    }
+
+    async fn get_provider_participant(&self) -> anyhow::Result<Option<Model>, CnErrors> {
+        let provider_participant = participant::Entity::find()
+            .filter(participant::Column::Type.eq("Provider"))
+            .one(&self.db_connection)
+            .await
+            .map_err(|err| CnErrors::ErrorFetchingParticipant(err.into()))?;
+        Ok(provider_participant)
     }
 
     async fn put_participant(

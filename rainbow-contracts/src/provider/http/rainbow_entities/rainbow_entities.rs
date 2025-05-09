@@ -924,13 +924,22 @@ where
             Ok(input) => input.0,
             Err(e) => return CnErrorProvider::JsonRejection(e).into_response(),
         };
-
-        match service.post_participant(input).await {
-            Ok(participant) => (StatusCode::CREATED, Json(participant)).into_response(),
-            Err(err) => match err.downcast::<CnErrorProvider>() {
-                Ok(e) => e.into_response(),
-                Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        match input._type.as_str() {
+            "Provider" => match service.post_provider_participant(input).await {
+                Ok(participant) => (StatusCode::CREATED, Json(participant)).into_response(),
+                Err(err) => match err.downcast::<CnErrorProvider>() {
+                    Ok(e) => e.into_response(),
+                    Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+                },
             },
+            "Consumer" => match service.post_participant(input).await {
+                Ok(participant) => (StatusCode::CREATED, Json(participant)).into_response(),
+                Err(err) => match err.downcast::<CnErrorProvider>() {
+                    Ok(e) => e.into_response(),
+                    Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+                },
+            },
+            _ => (StatusCode::INTERNAL_SERVER_ERROR).into_response()
         }
     }
 

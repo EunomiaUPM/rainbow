@@ -28,12 +28,12 @@ pub struct ContractOfferMessage {
     pub context: ContextField,
     #[serde(rename = "@type")]
     pub _type: String,
-    #[serde(rename = "dspace:providerPid")]
+    #[serde(rename = "providerPid")]
     pub provider_pid: String,
-    #[serde(rename = "dspace:callbackAddress")]
+    #[serde(rename = "callbackAddress")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub callback_address: Option<String>,
-    #[serde(rename = "dspace:offer")]
+    #[serde(rename = "offer")]
     pub odrl_offer: OdrlMessageOffer,
 }
 

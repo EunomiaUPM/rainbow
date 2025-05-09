@@ -105,8 +105,11 @@ pub trait RainbowEntitiesContractNegotiationProviderTrait: Send + Sync {
     async fn delete_agreement(&self, process_id: Urn, message_id: Urn, agreement_id: Urn) -> anyhow::Result<()>;
     async fn get_participants(&self) -> anyhow::Result<Vec<participant::Model>>;
     async fn get_participant_by_id(&self, participant_id: Urn) -> anyhow::Result<participant::Model>;
+    async fn get_provider_participant(&self) -> anyhow::Result<participant::Model>;
+
     async fn get_participant_agreements(&self, participant_id: Urn) -> anyhow::Result<Vec<agreement::Model>>;
     async fn post_participant(&self, input: NewParticipantRequest) -> anyhow::Result<participant::Model>;
+    async fn post_provider_participant(&self, input: NewParticipantRequest) -> anyhow::Result<participant::Model>;
     async fn put_participant(
         &self,
         participant_id: Urn,

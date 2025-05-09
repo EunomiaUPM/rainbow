@@ -17,7 +17,9 @@
  *
  */
 
-use crate::provider::core::ds_protocol_rpc::ds_protocol_rpc_types::{SetupAgreementRequest, SetupFinalizationRequest, SetupOfferRequest, SetupTerminationRequest};
+use crate::provider::core::ds_protocol_rpc::ds_protocol_rpc_types::{
+    SetupAgreementRequest, SetupFinalizationRequest, SetupOfferRequest, SetupTerminationRequest,
+};
 use crate::provider::core::ds_protocol_rpc::DSRPCContractNegotiationProviderTrait;
 use crate::provider::core::rainbow_entities::rainbow_entities_errors::CnErrorProvider;
 use axum::extract::rejection::JsonRejection;
@@ -46,7 +48,10 @@ where
     }
     pub fn router(self) -> Router {
         Router::new()
-            .route("/api/v1/negotiations/rpc/setup-offer", post(Self::handle_setup_offer))
+            .route(
+                "/api/v1/negotiations/rpc/setup-offer",
+                post(Self::handle_setup_offer),
+            )
             .route(
                 "/api/v1/negotiations/rpc/setup-agreement",
                 post(Self::handle_setup_agreement),
@@ -71,12 +76,22 @@ where
             Ok(input) => input.0,
             Err(e) => return CnErrorProvider::JsonRejection(e).into_response(),
         };
-        match service.setup_offer(input).await {
-            Ok(res) => (StatusCode::CREATED, Json(res)).into_response(),
-            Err(err) => match err.downcast::<CnErrorProvider>() {
-                Ok(e_) => e_.into_response(),
-                Err(e_) => NotCheckedError { inner_error: e_ }.into_response()
-            }
+        let is_reoffer = input.provider_pid.clone().is_some() && input.consumer_pid.clone().is_some();
+        match is_reoffer {
+            false => match service.setup_offer(input).await {
+                Ok(res) => (StatusCode::CREATED, Json(res)).into_response(),
+                Err(err) => match err.downcast::<CnErrorProvider>() {
+                    Ok(e_) => e_.into_response(),
+                    Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
+                },
+            },
+            true => match service.setup_reoffer(input).await {
+                Ok(res) => (StatusCode::CREATED, Json(res)).into_response(),
+                Err(err) => match err.downcast::<CnErrorProvider>() {
+                    Ok(e_) => e_.into_response(),
+                    Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
+                },
+            },
         }
     }
 
@@ -93,8 +108,8 @@ where
             Ok(res) => (StatusCode::CREATED, Json(res)).into_response(),
             Err(err) => match err.downcast::<CnErrorProvider>() {
                 Ok(e_) => e_.into_response(),
-                Err(e_) => NotCheckedError { inner_error: e_ }.into_response()
-            }
+                Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
+            },
         }
     }
 
@@ -111,8 +126,8 @@ where
             Ok(res) => (StatusCode::CREATED, Json(res)).into_response(),
             Err(err) => match err.downcast::<CnErrorProvider>() {
                 Ok(e_) => e_.into_response(),
-                Err(e_) => NotCheckedError { inner_error: e_ }.into_response()
-            }
+                Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
+            },
         }
     }
 
@@ -129,8 +144,8 @@ where
             Ok(res) => (StatusCode::CREATED, Json(res)).into_response(),
             Err(err) => match err.downcast::<CnErrorProvider>() {
                 Ok(e_) => e_.into_response(),
-                Err(e_) => NotCheckedError { inner_error: e_ }.into_response()
-            }
+                Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
+            },
         }
     }
 }

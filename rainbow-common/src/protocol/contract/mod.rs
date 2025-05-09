@@ -31,23 +31,23 @@ pub mod contract_negotiation_request;
 pub mod contract_negotiation_termination;
 pub mod contract_odrl;
 pub mod contract_offer;
-
+pub mod contract_protocol_trait;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum ContractNegotiationState {
-    #[serde(rename = "dspace:REQUESTED")]
+    #[serde(rename = "REQUESTED")]
     Requested,
-    #[serde(rename = "dspace:OFFERED")]
+    #[serde(rename = "OFFERED")]
     Offered,
-    #[serde(rename = "dspace:ACCEPTED")]
+    #[serde(rename = "ACCEPTED")]
     Accepted,
-    #[serde(rename = "dspace:AGREED")]
+    #[serde(rename = "AGREED")]
     Agreed,
-    #[serde(rename = "dspace:VERIFIED")]
+    #[serde(rename = "VERIFIED")]
     Verified,
-    #[serde(rename = "dspace:FINALIZED")]
+    #[serde(rename = "FINALIZED")]
     Finalized,
-    #[serde(rename = "dspace:TERMINATED")]
+    #[serde(rename = "TERMINATED")]
     Terminated,
 }
 
@@ -55,25 +55,25 @@ impl Display for ContractNegotiationState {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             ContractNegotiationState::Requested => {
-                write!(f, "dspace:REQUESTED")
+                write!(f, "REQUESTED")
             }
             ContractNegotiationState::Offered => {
-                write!(f, "dspace:OFFERED")
+                write!(f, "OFFERED")
             }
             ContractNegotiationState::Accepted => {
-                write!(f, "dspace:ACCEPTED")
+                write!(f, "ACCEPTED")
             }
             ContractNegotiationState::Agreed => {
-                write!(f, "dspace:AGREED")
+                write!(f, "AGREED")
             }
             ContractNegotiationState::Verified => {
-                write!(f, "dspace:VERIFIED")
+                write!(f, "VERIFIED")
             }
             ContractNegotiationState::Finalized => {
-                write!(f, "dspace:FINALIZED")
+                write!(f, "FINALIZED")
             }
             ContractNegotiationState::Terminated => {
-                write!(f, "dspace:TERMINATED")
+                write!(f, "TERMINATED")
             }
         }
     }
@@ -102,23 +102,23 @@ impl FromStr for ContractNegotiationState {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
 pub enum ContractNegotiationMessages {
-    #[serde(rename = "dspace:ContractRequestMessage")]
+    #[serde(rename = "ContractRequestMessage")]
     ContractRequestMessage,
-    #[serde(rename = "dspace:ContractOfferMessage")]
+    #[serde(rename = "ContractOfferMessage")]
     ContractOfferMessage,
-    #[serde(rename = "dspace:ContractAgreementMessage")]
+    #[serde(rename = "ContractAgreementMessage")]
     ContractAgreementMessage,
-    #[serde(rename = "dspace:ContractAgreementVerificationMessage")]
+    #[serde(rename = "ContractAgreementVerificationMessage")]
     ContractAgreementVerificationMessage,
-    #[serde(rename = "dspace:ContractNegotiationEventMessage")]
+    #[serde(rename = "ContractNegotiationEventMessage")]
     ContractNegotiationEventMessage,
-    #[serde(rename = "dspace:ContractNegotiationTerminationMessage")]
+    #[serde(rename = "ContractNegotiationTerminationMessage")]
     ContractNegotiationTerminationMessage,
-    #[serde(rename = "dspace:ContractNegotiation")]
+    #[serde(rename = "ContractNegotiation")]
     ContractNegotiationAck,
-    #[serde(rename = "dspace:ContractNegotiationError")]
+    #[serde(rename = "ContractNegotiationError")]
     ContractNegotiationError,
 }
 
@@ -126,28 +126,28 @@ impl Display for ContractNegotiationMessages {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             ContractNegotiationMessages::ContractRequestMessage => {
-                write!(f, "dspace:ContractRequestMessage")
+                write!(f, "ContractRequestMessage")
             }
             ContractNegotiationMessages::ContractOfferMessage => {
-                write!(f, "dspace:ContractOfferMessage")
+                write!(f, "ContractOfferMessage")
             }
             ContractNegotiationMessages::ContractAgreementMessage => {
-                write!(f, "dspace:ContractAgreementMessage")
+                write!(f, "ContractAgreementMessage")
             }
             ContractNegotiationMessages::ContractAgreementVerificationMessage => {
-                write!(f, "dspace:ContractAgreementVerificationMessage")
+                write!(f, "ContractAgreementVerificationMessage")
             }
             ContractNegotiationMessages::ContractNegotiationEventMessage => {
-                write!(f, "dspace:ContractNegotiationEventMessage")
+                write!(f, "ContractNegotiationEventMessage")
             }
             ContractNegotiationMessages::ContractNegotiationTerminationMessage => {
-                write!(f, "dspace:ContractNegotiationTerminationMessage")
+                write!(f, "ContractNegotiationTerminationMessage")
             }
             ContractNegotiationMessages::ContractNegotiationAck => {
-                write!(f, "dspace:ContractNegotiation")
+                write!(f, "ContractNegotiation")
             }
             ContractNegotiationMessages::ContractNegotiationError => {
-                write!(f, "dspace:ContractNegotiationError")
+                write!(f, "ContractNegotiationError")
             }
         }
     }

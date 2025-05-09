@@ -159,7 +159,6 @@ impl ProtocolValidate for OdrlOffer {
     }
 }
 
-/// Offer is PolicyClass + Agreement
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct OdrlAgreement {
@@ -225,8 +224,10 @@ pub struct OdrlPermission {
     #[serde(rename = "action")]
     pub action: OdrlAction,
     #[serde(rename = "constraint")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub constraint: Option<Vec<OdrlConstraint>>,
     #[serde(rename = "duty")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub duty: Option<OdrlDuty>,
 }
 

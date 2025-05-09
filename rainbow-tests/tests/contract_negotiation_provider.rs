@@ -220,7 +220,7 @@ pub async fn contract_negotiation_provider() -> anyhow::Result<()> {
                 target: policy_target.clone(),
                 profile: None,
                 permission: Some(vec![OdrlPermission {
-                    action: "use".to_string(),
+                    action: "superultrause".to_string(),
                     constraint: None,
                     duty: None,
                 }]),
@@ -260,22 +260,6 @@ pub async fn contract_negotiation_provider() -> anyhow::Result<()> {
             consumer_participant_id: consumer_participant_id.clone(),
             consumer_pid: consumer_pid.clone(),
             provider_pid: provider_pid.clone(),
-            odrl_agreement: OdrlAgreement {
-                id: policy_id.clone(),
-                target: policy_target.clone(),
-                profile: None,
-                permission: Some(vec![OdrlPermission {
-                    action: "use".to_string(),
-                    constraint: None,
-                    duty: None,
-                }]),
-                obligation: None,
-                _type: OdrlTypes::Agreement,
-                prohibition: None,
-                assigner: get_urn(None), // Not implemented yet, but should be participants
-                assignee: get_urn(None), // Not implemented yet, but should be participants
-                timestamp: None,
-            },
         })
         .send()
         .await?;
@@ -314,10 +298,6 @@ pub async fn contract_negotiation_provider() -> anyhow::Result<()> {
         .await?;
     let res = req.json::<SetupFinalizationResponse>().await?;
     println!("SetupFinalizationResponse: {:#?}", res);
-
-    // TODO improve strings and urns
-    // TODO validation on ODRL
-    // TODO persist agreement
 
     ///
     /// Tear down servers
