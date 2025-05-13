@@ -23,18 +23,18 @@ use urn::Urn;
 
 #[derive(Debug, Error)]
 pub enum DSRPCContractNegotiationConsumerErrors {
-    #[error("Consumer not reachable")]
-    ConsumerNotReachable {
+    #[error("Provider not reachable")]
+    ProviderNotReachable {
         provider_pid: Option<Urn>,
         consumer_pid: Option<Urn>,
     },
-    #[error("Consumer internal error")]
-    ConsumerInternalError {
+    #[error("Provider internal error")]
+    ProviderInternalError {
         provider_pid: Option<Urn>,
         consumer_pid: Option<Urn>,
     },
-    #[error("Consumer response is not protocol compliant")]
-    ConsumerResponseNotSerializable {
+    #[error("Provider response is not protocol compliant")]
+    ProviderResponseNotSerializable {
         provider_pid: Option<Urn>,
         consumer_pid: Option<Urn>,
     },
@@ -45,6 +45,6 @@ pub enum DSRPCContractNegotiationConsumerErrors {
         provider_pid: Urn,
         consumer_pid: Urn,
     },
-    #[error("Consumer and Provider not coincide")]
+    #[error("Odrl validation error")]
     OdrlValidationError,
 }

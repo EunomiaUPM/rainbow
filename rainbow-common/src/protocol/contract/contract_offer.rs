@@ -18,7 +18,7 @@
  */
 
 use crate::protocol::context_field::ContextField;
-use crate::protocol::contract::contract_odrl::OdrlOffer;
+use crate::protocol::contract::contract_odrl::OdrlMessageOffer;
 use crate::protocol::contract::ContractNegotiationMessages;
 use serde::{Deserialize, Serialize};
 
@@ -28,13 +28,13 @@ pub struct ContractOfferMessage {
     pub context: ContextField,
     #[serde(rename = "@type")]
     pub _type: String,
-    #[serde(rename = "dspace:providerPid")]
+    #[serde(rename = "providerPid")]
     pub provider_pid: String,
-    #[serde(rename = "dspace:callbackAddress")]
+    #[serde(rename = "callbackAddress")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub callback_address: Option<String>,
-    #[serde(rename = "dspace:offer")]
-    pub odrl_offer: OdrlOffer,
+    #[serde(rename = "offer")]
+    pub odrl_offer: OdrlMessageOffer,
 }
 
 impl Default for ContractOfferMessage {
@@ -44,7 +44,7 @@ impl Default for ContractOfferMessage {
             _type: ContractNegotiationMessages::ContractOfferMessage.to_string(),
             provider_pid: "".to_string(),
             callback_address: None,
-            odrl_offer: OdrlOffer::default(),
+            odrl_offer: OdrlMessageOffer::default(),
         }
     }
 }

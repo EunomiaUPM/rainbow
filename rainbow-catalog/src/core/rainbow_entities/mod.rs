@@ -22,8 +22,9 @@ use crate::protocol::catalog_definition::Catalog;
 use crate::protocol::dataservice_definition::DataService;
 use crate::protocol::dataset_definition::Dataset;
 use crate::protocol::distribution_definition::Distribution;
-use crate::protocol::policies::OdrlPolicy;
 use axum::async_trait;
+use rainbow_common::protocol::catalog::OdrlPolicyInfo;
+use rainbow_common::protocol::contract::contract_odrl::OdrlOffer;
 use rainbow_db::catalog::entities::odrl_offer;
 use urn::Urn;
 
@@ -98,24 +99,24 @@ pub trait RainbowDistributionTrait: Send + Sync {
 #[mockall::automock]
 #[async_trait]
 pub trait RainbowPoliciesTrait: Send + Sync {
-    async fn get_catalog_policies(&self, catalog_id: Urn) -> anyhow::Result<Vec<odrl_offer::Model>>;
-    async fn post_catalog_policies(&self, catalog_id: Urn, policy: OdrlPolicy) -> anyhow::Result<odrl_offer::Model>;
+    async fn get_catalog_policies(&self, catalog_id: Urn) -> anyhow::Result<Vec<OdrlOffer>>;
+    async fn post_catalog_policies(&self, catalog_id: Urn, policy: OdrlPolicyInfo) -> anyhow::Result<odrl_offer::Model>;
     async fn delete_catalog_policies(&self, catalog_id: Urn, policy_id: Urn) -> anyhow::Result<()>;
-    async fn get_dataset_policies(&self, dataset_id: Urn) -> anyhow::Result<Vec<odrl_offer::Model>>;
-    async fn post_dataset_policies(&self, dataset_id: Urn, policy: OdrlPolicy) -> anyhow::Result<odrl_offer::Model>;
+    async fn get_dataset_policies(&self, dataset_id: Urn) -> anyhow::Result<Vec<OdrlOffer>>;
+    async fn post_dataset_policies(&self, dataset_id: Urn, policy: OdrlPolicyInfo) -> anyhow::Result<odrl_offer::Model>;
     async fn delete_dataset_policies(&self, dataset_id: Urn, policy_id: Urn) -> anyhow::Result<()>;
-    async fn get_data_service_policies(&self, data_service_id: Urn) -> anyhow::Result<Vec<odrl_offer::Model>>;
+    async fn get_data_service_policies(&self, data_service_id: Urn) -> anyhow::Result<Vec<OdrlOffer>>;
     async fn post_data_service_policies(
         &self,
         data_service_id: Urn,
-        policy: OdrlPolicy,
+        policy: OdrlPolicyInfo,
     ) -> anyhow::Result<odrl_offer::Model>;
     async fn delete_data_service_policies(&self, data_service_id: Urn, policy_id: Urn) -> anyhow::Result<()>;
-    async fn get_distribution_policies(&self, distribution_id: Urn) -> anyhow::Result<Vec<odrl_offer::Model>>;
+    async fn get_distribution_policies(&self, distribution_id: Urn) -> anyhow::Result<Vec<OdrlOffer>>;
     async fn post_distribution_policies(
         &self,
         distribution_id: Urn,
-        policy: OdrlPolicy,
+        policy: OdrlPolicyInfo,
     ) -> anyhow::Result<odrl_offer::Model>;
     async fn delete_distribution_policies(&self, distribution_id: Urn, policy_id: Urn) -> anyhow::Result<()>;
 }

@@ -41,6 +41,7 @@ struct DatabaseConfig<'a> {
 #[derive(Serialize, Copy, Clone)]
 pub struct ContractNegotiationProviderApplicationConfig<'a> {
     contract_negotiation_host: HostConfig<'a>,
+    catalog_host: HostConfig<'a>,
     auth_host: HostConfig<'a>,
     database_config: DatabaseConfig<'a>,
     role: ConfigRoles,
@@ -54,6 +55,11 @@ impl<'a> Default for ContractNegotiationProviderApplicationConfig<'a> {
                 protocol: "http",
                 url: "127.0.0.1",
                 port: "1232",
+            },
+            catalog_host: HostConfig {
+                protocol: "http",
+                url: "127.0.0.1",
+                port: "1233",
             },
             auth_host: HostConfig { protocol: "http", url: "127.0.0.1", port: "1231" },
             database_config: DatabaseConfig {
@@ -114,6 +120,11 @@ impl<'a> ContractNegotiationProviderApplicationConfig<'a> {
                     .unwrap_or(self.contract_negotiation_host.url),
                 port: option_env!("CONTRACT_NEGOTIATION_PORT")
                     .unwrap_or(self.contract_negotiation_host.port),
+            },
+            catalog_host: HostConfig {
+                protocol: option_env!("CATALOG_PROTOCOL").unwrap_or(self.catalog_host.protocol),
+                url: option_env!("CATALOG_URL").unwrap_or(self.catalog_host.url),
+                port: option_env!("CATALOG_PORT").unwrap_or(self.catalog_host.port),
             },
             auth_host: HostConfig {
                 protocol: option_env!("AUTH_PROTOCOL").unwrap_or(self.auth_host.protocol),

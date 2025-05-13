@@ -17,6 +17,7 @@
  *
  */
 
+use crate::protocol::contract::contract_odrl::{OdrlObligation, OdrlPermission, OdrlProfile};
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
@@ -50,3 +51,16 @@ impl Display for CatalogProtocolEntities {
     }
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(deny_unknown_fields)]
+pub struct OdrlPolicyInfo {
+    #[serde(rename = "profile")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub profile: Option<OdrlProfile>,
+    #[serde(rename = "permission")]
+    pub permission: Option<Vec<OdrlPermission>>, // anyof
+    #[serde(rename = "obligation")]
+    pub obligation: Option<Vec<OdrlObligation>>,
+    #[serde(rename = "prohibition")]
+    pub prohibition: Option<Vec<OdrlObligation>>, // anyof
+}

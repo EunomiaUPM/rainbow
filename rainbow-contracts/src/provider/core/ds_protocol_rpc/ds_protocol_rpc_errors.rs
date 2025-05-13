@@ -16,8 +16,8 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 use crate::provider::core::ds_protocol::ds_protocol_errors::IdsaCNError;
+use serde_json::Value;
 use thiserror::Error;
 use urn::Urn;
 
@@ -32,6 +32,7 @@ pub enum DSRPCContractNegotiationProviderErrors {
     ConsumerInternalError {
         provider_pid: Option<Urn>,
         consumer_pid: Option<Urn>,
+        consumer_error: Value,
     },
     #[error("Consumer response is not protocol compliant")]
     ConsumerResponseNotSerializable {

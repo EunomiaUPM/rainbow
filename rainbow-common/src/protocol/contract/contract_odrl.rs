@@ -26,19 +26,26 @@ use urn::Urn;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum OdrlTypes {
-    #[serde(rename = "dspace:Offer")]
+    #[serde(rename = "Offer")]
     Offer,
-    #[serde(rename = "dspace:Agreement")]
+    #[serde(rename = "Agreement")]
     Agreement,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(untagged)]
-pub enum OfferTypes {
-    MessageOffer(OdrlMessageOffer),
-    Offer(OdrlOffer),
-    Other(Value),
+pub enum ContractRequestMessageOfferTypes {
+    OfferMessage(OdrlMessageOffer),
+    OfferId(ContractRequestMessageOfferOfferId),
 }
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
+pub struct ContractRequestMessageOfferOfferId {
+    #[serde(rename = "@id")]
+    pub id: Urn,
+}
+
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(deny_unknown_fields)]
@@ -46,21 +53,38 @@ pub struct OdrlMessageOffer {
     // PolicyClass
     #[serde(rename = "@id")]
     pub id: Urn,
-    #[serde(rename = "odrl:profile")]
+    #[serde(rename = "profile")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub profile: Option<OdrlProfile>,
-    #[serde(rename = "odrl:permission")]
+    #[serde(rename = "permission")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub permission: Option<Vec<OdrlPermission>>, // anyof
-    #[serde(rename = "odrl:obligation")]
+    #[serde(rename = "obligation")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub obligation: Option<Vec<OdrlObligation>>,
     // MessageOffer
     #[serde(rename = "@type")]
     pub _type: OdrlTypes,
-    #[serde(rename = "odrl:prohibition")]
+    #[serde(rename = "prohibition")]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub prohibition: Option<Vec<OdrlObligation>>, // anyof
+    pub prohibition: Option<Vec<OdrlObligation>>,
+    // Offer
+    #[serde(rename = "target")]
+    pub target: Urn, // anyof
+}
+
+impl Default for OdrlMessageOffer {
+    fn default() -> Self {
+        Self {
+            id: get_urn(None),
+            profile: None,
+            permission: None,
+            obligation: None,
+            _type: OdrlTypes::Offer,
+            prohibition: None,
+            target: get_urn(None),
+        }
+    }
 }
 
 impl ProtocolValidate for OdrlMessageOffer {
@@ -88,21 +112,21 @@ pub struct OdrlOffer {
     // PolicyClass
     #[serde(rename = "@id")]
     pub id: Urn,
-    #[serde(rename = "odrl:profile")]
+    #[serde(rename = "profile")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub profile: Option<OdrlProfile>,
-    #[serde(rename = "odrl:permission")]
+    #[serde(rename = "permission")]
     pub permission: Option<Vec<OdrlPermission>>, // anyof
-    #[serde(rename = "odrl:obligation")]
+    #[serde(rename = "obligation")]
     pub obligation: Option<Vec<OdrlObligation>>,
     // MessageOffer
     #[serde(rename = "@type")]
     pub _type: OdrlTypes,
-    #[serde(rename = "odrl:prohibition")]
-    pub prohibition: Option<Vec<OdrlObligation>>, // anyof
+    #[serde(rename = "prohibition")]
+    pub prohibition: Option<Vec<OdrlObligation>>,
     // Offer
-    #[serde(rename = "odrl:target")]
-    pub target: Option<Urn>,
+    #[serde(rename = "target")]
+    pub target: Option<Urn>, // anyof// anyof
 }
 
 impl Default for OdrlOffer {
@@ -135,38 +159,37 @@ impl ProtocolValidate for OdrlOffer {
     }
 }
 
-/// Offer is PolicyClass + Agreement
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct OdrlAgreement {
     // PolicyClass
     #[serde(rename = "@id")]
-    pub id: String,
-    #[serde(rename = "odrl:profile")]
+    pub id: Urn,
+    #[serde(rename = "profile")]
     pub profile: Option<OdrlProfile>,
-    #[serde(rename = "odrl:permission")]
+    #[serde(rename = "permission")]
     pub permission: Option<Vec<OdrlPermission>>, // anyof
-    #[serde(rename = "odrl:obligation")]
+    #[serde(rename = "obligation")]
     pub obligation: Option<Vec<OdrlObligation>>,
     // Agreement
     #[serde(rename = "@type")]
     pub _type: OdrlTypes,
-    #[serde(rename = "odrl:target")]
+    #[serde(rename = "target")]
     pub target: Urn,
-    #[serde(rename = "odrl:assigner")]
+    #[serde(rename = "assigner")]
     pub assigner: Urn,
-    #[serde(rename = "odrl:assignee")]
+    #[serde(rename = "assignee")]
     pub assignee: Urn,
-    #[serde(rename = "odrl:timestamp")]
+    #[serde(rename = "timestamp")]
     pub timestamp: Option<String>,
-    #[serde(rename = "odrl:prohibition")]
+    #[serde(rename = "prohibition")]
     pub prohibition: Option<Vec<OdrlObligation>>, // anyof
 }
 
 impl Default for OdrlAgreement {
     fn default() -> OdrlAgreement {
         Self {
-            id: get_urn(None).to_string(),
+            id: get_urn(None),
             profile: None,
             permission: None,
             obligation: None,
@@ -198,11 +221,13 @@ pub enum OdrlProfile {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct OdrlPermission {
-    #[serde(rename = "odrl:action")]
+    #[serde(rename = "action")]
     pub action: OdrlAction,
-    #[serde(rename = "odrl:constraint")]
+    #[serde(rename = "constraint")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub constraint: Option<Vec<OdrlConstraint>>,
-    #[serde(rename = "odrl:duty")]
+    #[serde(rename = "duty")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub duty: Option<OdrlDuty>,
 }
 
@@ -210,9 +235,9 @@ pub struct OdrlPermission {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct OdrlDuty {
-    #[serde(rename = "odrl:action")]
+    #[serde(rename = "action")]
     pub action: OdrlAction,
-    #[serde(rename = "odrl:constraint")]
+    #[serde(rename = "constraint")]
     pub constraint: Option<Vec<OdrlConstraint>>,
 }
 
@@ -235,15 +260,15 @@ pub enum OdrlConstraint {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct OdrlLogicalConstraint {
-    #[serde(rename = "odrl:and")]
+    #[serde(rename = "and")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub and: Option<Vec<OdrlConstraint>>,
     #[serde(rename = "andSequence", skip_serializing_if = "Option::is_none")]
     pub and_sequence: Option<Vec<OdrlConstraint>>,
-    #[serde(rename = "odrl:or")]
+    #[serde(rename = "or")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub or: Option<Vec<OdrlConstraint>>,
-    #[serde(rename = "odrl:xone")]
+    #[serde(rename = "xone")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub xone: Option<Vec<OdrlConstraint>>,
 }
@@ -269,11 +294,11 @@ impl OdrlLogicalConstraint {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct OdrlAtomicConstraint {
-    #[serde(rename = "odrl:rightOperand")]
+    #[serde(rename = "rightOperand")]
     pub right_operand: OdrlRightOperand,
-    #[serde(rename = "odrl:leftOperand")]
+    #[serde(rename = "leftOperand")]
     pub left_operand: OdrlLeftOperand,
-    #[serde(rename = "odrl:operator")]
+    #[serde(rename = "operator")]
     pub operator: Operator,
 }
 
@@ -281,31 +306,31 @@ pub struct OdrlAtomicConstraint {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(deny_unknown_fields)]
 pub enum Operator {
-    #[serde(rename = "odrl:eq")]
+    #[serde(rename = "eq")]
     Eq,
-    #[serde(rename = "odrl:gt")]
+    #[serde(rename = "gt")]
     Gt,
-    #[serde(rename = "odrl:gteq")]
+    #[serde(rename = "gteq")]
     Gteq,
-    #[serde(rename = "odrl:lteq")]
+    #[serde(rename = "lteq")]
     Lteq,
-    #[serde(rename = "odrl:hasPart")]
+    #[serde(rename = "hasPart")]
     HasPart,
-    #[serde(rename = "odrl:isA")]
+    #[serde(rename = "isA")]
     IsA,
-    #[serde(rename = "odrl:isAllOf")]
+    #[serde(rename = "isAllOf")]
     IsAllOf,
-    #[serde(rename = "odrl:isAnyOf")]
+    #[serde(rename = "isAnyOf")]
     IsAnyOf,
-    #[serde(rename = "odrl:isNoneOf")]
+    #[serde(rename = "isNoneOf")]
     IsNoneOf,
-    #[serde(rename = "odrl:isPartOf")]
+    #[serde(rename = "isPartOf")]
     IsPartOf,
-    #[serde(rename = "odrl:lt")]
+    #[serde(rename = "lt")]
     Lt,
-    #[serde(rename = "odrl:termLteq")]
+    #[serde(rename = "termLteq")]
     TermLteq,
-    #[serde(rename = "odrl:neq")]
+    #[serde(rename = "neq")]
     Neq,
 }
 

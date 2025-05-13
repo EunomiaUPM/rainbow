@@ -16,7 +16,6 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 use crate::catalog::entities::catalog;
 use crate::catalog::entities::dataservice;
 use crate::catalog::entities::dataset;

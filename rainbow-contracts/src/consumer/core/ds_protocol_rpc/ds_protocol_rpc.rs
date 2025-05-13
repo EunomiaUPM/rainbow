@@ -29,7 +29,7 @@ use rainbow_common::protocol::contract::contract_agreement_verification::Contrac
 use rainbow_common::protocol::contract::contract_negotiation_event::{ContractNegotiationEventMessage, NegotiationEventType};
 use rainbow_common::protocol::contract::contract_negotiation_request::ContractRequestMessage;
 use rainbow_common::protocol::contract::contract_negotiation_termination::ContractTerminationMessage;
-use rainbow_common::protocol::contract::contract_odrl::OfferTypes;
+use rainbow_common::protocol::contract::contract_odrl::ContractRequestMessageOfferTypes;
 use rainbow_common::protocol::ProtocolValidate;
 use rainbow_common::utils::{get_urn, get_urn_from_string};
 use rainbow_db::contracts_consumer::entities::cn_process;
@@ -63,6 +63,9 @@ where
     T: ContractNegotiationConsumerProcessRepo + Send + Sync + 'static,
 {
     async fn setup_request(&self, input: SetupRequestRequest) -> anyhow::Result<SetupRequestResponse> {
+        // Auth                 <----- create facade for inner users
+        // Validate correlation <----- refactor in impl
+
         let SetupRequestRequest {
             provider_pid,
             consumer_pid,
@@ -97,9 +100,10 @@ where
 
         // validate offer types
         let is_offer_err = match odrl_offer.clone() {
-            OfferTypes::MessageOffer(message_offer) => message_offer.validate().is_err(),
-            OfferTypes::Offer(offer) => offer.validate().is_err(),
-            OfferTypes::Other(_) => true
+            ContractRequestMessageOfferTypes::OfferMessage(offer) => {
+                offer.validate().is_err()
+            }
+            ContractRequestMessageOfferTypes::OfferId(_) => false
         };
         if is_offer_err {
             bail!(IdsaCNError::ValidationError("Offer not valid".to_string()));
@@ -109,15 +113,10 @@ where
         let contract_offer_message = ContractRequestMessage {
             provider_pid: provider_pid.clone(),
             consumer_pid: consumer_pid.clone().unwrap_or(get_urn(None)),
-            odrl_offer: match odrl_offer.clone() {
-                OfferTypes::MessageOffer(message_offer) => OfferTypes::MessageOffer(message_offer),
-                OfferTypes::Offer(offer) => OfferTypes::Offer(offer),
-                _ => {
-                    bail!(IdsaCNError::ValidationError("Offer not valid".to_string()));
-                }
-            },
+            odrl_offer: odrl_offer.clone(),
             ..Default::default()
         };
+        println!("{:?}", contract_offer_message);
 
         // send message to provider
         let provider_base_url = provider_address.strip_suffix('/').unwrap_or(provider_address.as_str());
@@ -130,13 +129,13 @@ where
             .json(&contract_offer_message)
             .send()
             .await
-            .map_err(|_| DSRPCContractNegotiationConsumerErrors::ConsumerNotReachable {
+            .map_err(|_| DSRPCContractNegotiationConsumerErrors::ProviderNotReachable {
                 provider_pid: Option::from(provider_pid.clone()),
                 consumer_pid: Option::from(consumer_pid.clone()),
             })?;
         let status = req.status();
         if status.is_success() == false {
-            bail!(DSRPCContractNegotiationConsumerErrors::ConsumerInternalError {
+            bail!(DSRPCContractNegotiationConsumerErrors::ProviderInternalError {
                 provider_pid: Option::from(provider_pid.clone()),
                 consumer_pid: Option::from(consumer_pid.clone())
             });
@@ -145,7 +144,7 @@ where
         // response
         let response = req.json::<ContractAckMessage>()
             .await
-            .map_err(|_| DSRPCContractNegotiationConsumerErrors::ConsumerResponseNotSerializable {
+            .map_err(|_| DSRPCContractNegotiationConsumerErrors::ProviderResponseNotSerializable {
                 provider_pid: Option::from(provider_pid.clone()),
                 consumer_pid: Option::from(consumer_pid.clone()),
             })?;
@@ -226,13 +225,13 @@ where
             .json(&contract_acceptance_message)
             .send()
             .await
-            .map_err(|_| DSRPCContractNegotiationConsumerErrors::ConsumerNotReachable {
+            .map_err(|_| DSRPCContractNegotiationConsumerErrors::ProviderNotReachable {
                 provider_pid: Option::from(provider_pid.clone()),
                 consumer_pid: Option::from(consumer_pid.clone()),
             })?;
         let status = req.status();
         if status.is_success() == false {
-            bail!(DSRPCContractNegotiationConsumerErrors::ConsumerInternalError {
+            bail!(DSRPCContractNegotiationConsumerErrors::ProviderInternalError {
                 provider_pid: Option::from(provider_pid.clone()),
                 consumer_pid: Option::from(consumer_pid.clone())
             });
@@ -240,7 +239,7 @@ where
         // response
         let response = req.json::<ContractAckMessage>()
             .await
-            .map_err(|_| DSRPCContractNegotiationConsumerErrors::ConsumerResponseNotSerializable {
+            .map_err(|_| DSRPCContractNegotiationConsumerErrors::ProviderResponseNotSerializable {
                 provider_pid: Option::from(provider_pid.clone()),
                 consumer_pid: Option::from(consumer_pid.clone()),
             })?;
@@ -282,8 +281,8 @@ where
 
         // create message
         let contract_verification_message = ContractAgreementVerificationMessage {
-            provider_pid: provider_pid.clone().to_string(),
-            consumer_pid: consumer_pid.clone().to_string(),
+            provider_pid: provider_pid.clone(),
+            consumer_pid: consumer_pid.clone(),
             ..Default::default()
         };
 
@@ -295,13 +294,13 @@ where
             .json(&contract_verification_message)
             .send()
             .await
-            .map_err(|_| DSRPCContractNegotiationConsumerErrors::ConsumerNotReachable {
+            .map_err(|_| DSRPCContractNegotiationConsumerErrors::ProviderNotReachable {
                 provider_pid: Option::from(provider_pid.clone()),
                 consumer_pid: Option::from(consumer_pid.clone()),
             })?;
         let status = req.status();
         if status.is_success() == false {
-            bail!(DSRPCContractNegotiationConsumerErrors::ConsumerInternalError {
+            bail!(DSRPCContractNegotiationConsumerErrors::ProviderInternalError {
                 provider_pid: Option::from(provider_pid.clone()),
                 consumer_pid: Option::from(consumer_pid.clone())
             });
@@ -309,7 +308,7 @@ where
         // response
         let response = req.json::<ContractAckMessage>()
             .await
-            .map_err(|_| DSRPCContractNegotiationConsumerErrors::ConsumerResponseNotSerializable {
+            .map_err(|_| DSRPCContractNegotiationConsumerErrors::ProviderResponseNotSerializable {
                 provider_pid: Option::from(provider_pid.clone()),
                 consumer_pid: Option::from(consumer_pid.clone()),
             })?;
@@ -364,13 +363,13 @@ where
             .json(&contract_termination_message)
             .send()
             .await
-            .map_err(|_| DSRPCContractNegotiationConsumerErrors::ConsumerNotReachable {
+            .map_err(|_| DSRPCContractNegotiationConsumerErrors::ProviderNotReachable {
                 provider_pid: Option::from(provider_pid.clone()),
                 consumer_pid: Option::from(consumer_pid.clone()),
             })?;
         let status = req.status();
         if status.is_success() == false {
-            bail!(DSRPCContractNegotiationConsumerErrors::ConsumerInternalError {
+            bail!(DSRPCContractNegotiationConsumerErrors::ProviderInternalError {
                 provider_pid: Option::from(provider_pid.clone()),
                 consumer_pid: Option::from(consumer_pid.clone())
             });
@@ -378,7 +377,7 @@ where
         // response
         let response = req.json::<ContractAckMessage>()
             .await
-            .map_err(|_| DSRPCContractNegotiationConsumerErrors::ConsumerResponseNotSerializable {
+            .map_err(|_| DSRPCContractNegotiationConsumerErrors::ProviderResponseNotSerializable {
                 provider_pid: Option::from(provider_pid.clone()),
                 consumer_pid: Option::from(consumer_pid.clone()),
             })?;

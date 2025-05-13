@@ -19,6 +19,7 @@
 
 use super::ContractNegotiationMessages;
 use crate::protocol::context_field::ContextField;
+use crate::protocol::contract::contract_protocol_trait::DSProtocolContractNegotiationMessageTrait;
 use crate::utils::get_urn;
 use serde::{Deserialize, Serialize};
 use urn::Urn;
@@ -28,15 +29,15 @@ pub struct ContractTerminationMessage {
     #[serde(rename = "@context")]
     pub context: ContextField,
     #[serde(rename = "@type")]
-    pub _type: String,
-    #[serde(rename = "dspace:providerPid")]
+    pub _type: ContractNegotiationMessages,
+    #[serde(rename = "providerPid")]
     pub provider_pid: Urn,
-    #[serde(rename = "dspace:consumerPid")]
+    #[serde(rename = "consumerPid")]
     pub consumer_pid: Urn,
-    #[serde(rename = "dspace:code")]
+    #[serde(rename = "code")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub code: Option<String>,
-    #[serde(rename = "dspace:reason")]
+    #[serde(rename = "reason")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reason: Option<Vec<String>>,
 }
@@ -45,11 +46,25 @@ impl Default for ContractTerminationMessage {
     fn default() -> Self {
         Self {
             context: ContextField::default(),
-            _type: ContractNegotiationMessages::ContractNegotiationTerminationMessage.to_string(),
+            _type: ContractNegotiationMessages::ContractNegotiationTerminationMessage,
             provider_pid: get_urn(None),
             consumer_pid: get_urn(None),
             code: None,
             reason: None,
         }
+    }
+}
+
+impl DSProtocolContractNegotiationMessageTrait<'_> for ContractTerminationMessage {
+    fn get_message_type(&self) -> anyhow::Result<ContractNegotiationMessages> {
+        Ok(self._type)
+    }
+
+    fn get_consumer_pid(&self) -> anyhow::Result<&Urn> {
+        Ok(&self.consumer_pid)
+    }
+
+    fn get_provider_pid(&self) -> anyhow::Result<Option<&Urn>> {
+        Ok(Some(&self.provider_pid))
     }
 }

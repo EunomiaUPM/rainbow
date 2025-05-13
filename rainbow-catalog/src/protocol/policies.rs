@@ -18,9 +18,7 @@
  */
 
 use anyhow::anyhow;
-use rainbow_common::protocol::contract::contract_odrl::{OdrlObligation, OdrlPermission, OdrlProfile};
 use sea_orm::Value;
-use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
 pub enum EntityTypes {
@@ -63,16 +61,5 @@ impl From<EntityTypes> for Value {
 }
 
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(deny_unknown_fields)]
-pub struct OdrlPolicy {
-    #[serde(rename = "odrl:profile")]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub profile: Option<OdrlProfile>,
-    #[serde(rename = "odrl:permission")]
-    pub permission: Option<Vec<OdrlPermission>>, // anyof
-    #[serde(rename = "odrl:obligation")]
-    pub obligation: Option<Vec<OdrlObligation>>,
-    #[serde(rename = "odrl:prohibition")]
-    pub prohibition: Option<Vec<OdrlObligation>>, // anyof
-}
+
+

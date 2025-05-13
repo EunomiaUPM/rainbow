@@ -33,7 +33,7 @@ use rainbow_common::protocol::transfer::transfer_termination::TransferTerminatio
 use rainbow_common::protocol::transfer::{TransferRoles, TransferState};
 use rainbow_common::utils::{get_urn, get_urn_from_string};
 use rainbow_db::transfer_provider::repo::{EditTransferProcessModel, NewTransferMessageModel, NewTransferProcessModel, TransferProviderRepoErrors, TransferProviderRepoFactory};
-use rainbow_events::core::notification::notification_types::{RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationCreationRequest, RainbowEventsNotificationMessageCategory, RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes, RainbowEventsNotificationStatus};
+use rainbow_events::core::notification::notification_types::{RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory, RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes};
 use rainbow_events::core::notification::RainbowEventsNotificationTrait;
 use serde_json::json;
 use std::sync::Arc;

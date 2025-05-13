@@ -17,31 +17,31 @@
  *
  */
 
-use super::contract_odrl::{OdrlMessageOffer, OdrlTypes};
+use super::contract_odrl::{ContractRequestMessageOfferTypes, OdrlMessageOffer, OdrlTypes};
 use crate::protocol::context_field::ContextField;
-use crate::protocol::contract::contract_odrl::OfferTypes;
+use crate::protocol::contract::contract_protocol_trait::DSProtocolContractNegotiationMessageTrait;
 use crate::protocol::contract::ContractNegotiationMessages;
 use crate::protocol::ProtocolValidate;
 use crate::utils::get_urn;
-use anyhow::bail;
 use serde::{Deserialize, Serialize};
 use urn::Urn;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct ContractRequestMessage {
     #[serde(rename = "@context")]
     pub context: ContextField,
     #[serde(rename = "@type")]
     pub _type: ContractNegotiationMessages,
-    #[serde(rename = "dspace:providerPid")]
+    #[serde(rename = "providerPid")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub provider_pid: Option<Urn>,
-    #[serde(rename = "dspace:consumerPid")]
+    #[serde(rename = "consumerPid")]
     pub consumer_pid: Urn,
-    #[serde(rename = "dspace:callbackAddress")]
+    #[serde(rename = "callbackAddress")]
     pub callback_address: String,
-    #[serde(rename = "dspace:offer")]
-    pub odrl_offer: OfferTypes,
+    #[serde(rename = "offer")]
+    pub odrl_offer: ContractRequestMessageOfferTypes,
 }
 
 impl Default for ContractRequestMessage {
@@ -52,15 +52,34 @@ impl Default for ContractRequestMessage {
             provider_pid: Default::default(),
             consumer_pid: get_urn(None),
             callback_address: Default::default(),
-            odrl_offer: OfferTypes::MessageOffer(OdrlMessageOffer {
+            odrl_offer: ContractRequestMessageOfferTypes::OfferMessage(OdrlMessageOffer {
                 id: get_urn(None),
                 profile: None,
                 permission: None,
                 obligation: None,
                 _type: OdrlTypes::Offer,
                 prohibition: None,
+                target: get_urn(None),
             }),
         }
+    }
+}
+
+impl DSProtocolContractNegotiationMessageTrait<'_> for ContractRequestMessage {
+    fn get_message_type(&self) -> anyhow::Result<ContractNegotiationMessages> {
+        Ok(self._type.clone())
+    }
+
+    fn get_consumer_pid(&self) -> anyhow::Result<&Urn> {
+        Ok(&self.consumer_pid)
+    }
+
+    fn get_provider_pid(&self) -> anyhow::Result<Option<&Urn>> {
+        Ok(self.provider_pid.as_ref())
+    }
+
+    fn get_odrl_offer(&self) -> anyhow::Result<Option<&ContractRequestMessageOfferTypes>> {
+        Ok(Some(&self.odrl_offer))
     }
 }
 
@@ -71,11 +90,11 @@ impl ContractRequestMessage {
         // Correct @context
         self.context.validate()?;
         // Offer is validated in Offer struct implementation
-        match &self.odrl_offer {
-            OfferTypes::Offer(o) => o.validate(),
-            OfferTypes::MessageOffer(o) => o.validate(),
-            _ => bail!("Invalid offer type. Only Offer and MessageOffer are allowed"),
-        }?;
+        // match &self.odrl_offer {
+        //     OfferTypes::Offer(o) => o.validate(),
+        //     OfferTypes::MessageOffer(o) => o.validate(),
+        //     _ => bail!("Invalid offer type. Only Offer and MessageOffer are allowed"),
+        // }?;
         Ok(&self)
     }
 }

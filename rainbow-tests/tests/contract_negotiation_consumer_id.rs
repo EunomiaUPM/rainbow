@@ -19,10 +19,7 @@
 // use crate::utils::load_env_file;
 use rainbow_contracts::provider::core::rainbow_entities::rainbow_entities_types::NewParticipantRequest;
 
-use rainbow_common::protocol::contract::contract_odrl::{
-    ContractRequestMessageOfferTypes, OdrlAgreement, OdrlAtomicConstraint, OdrlConstraint, OdrlMessageOffer, OdrlOffer,
-    OdrlPermission, OdrlRightOperand, OdrlTypes, Operator,
-};
+use rainbow_common::protocol::contract::contract_odrl::{ContractRequestMessageOfferOfferId, ContractRequestMessageOfferTypes, OdrlAgreement, OdrlAtomicConstraint, OdrlConstraint, OdrlMessageOffer, OdrlOffer, OdrlPermission, OdrlRightOperand, OdrlTypes, Operator};
 use rainbow_common::utils::{get_urn, get_urn_from_string};
 
 use rainbow_catalog::core::rainbow_entities::rainbow_catalog_types::{NewCatalogRequest, NewDatasetRequest};
@@ -40,7 +37,6 @@ use rainbow_contracts::provider::core::ds_protocol_rpc::ds_protocol_rpc_types::{
 use rainbow_db::catalog;
 use rainbow_db::catalog::entities::odrl_offer;
 use rainbow_db::contracts_provider::entities::participant;
-use serde_json::json;
 use std::process::Command;
 use tracing_test::traced_test;
 // #[path = "utils.rs"]
@@ -126,10 +122,7 @@ pub async fn contract_negotiation_consumer() -> anyhow::Result<()> {
     let catalog_id = get_urn_from_string(&res.id)?;
 
     let req = provider_client
-        .post(format!(
-            "http://localhost:1234/api/v1/catalogs/{}/datasets",
-            catalog_id
-        ))
+        .post(format!("http://localhost:1234/api/v1/catalogs/{}/datasets", catalog_id))
         .json(&NewDatasetRequest { id: None, dct_conforms_to: None, dct_creator: None, dct_title: None })
         .send()
         .await?;
@@ -138,10 +131,7 @@ pub async fn contract_negotiation_consumer() -> anyhow::Result<()> {
     let dataset_id = get_urn_from_string(&res.id)?;
 
     let req = provider_client
-        .post(format!(
-            "http://localhost:1234/api/v1/datasets/{}/policies",
-            dataset_id
-        ))
+        .post(format!("http://localhost:1234/api/v1/datasets/{}/policies", dataset_id))
         .json(&OdrlPolicyInfo {
             profile: None,
             permission: Some(vec![OdrlPermission {
@@ -172,18 +162,8 @@ pub async fn contract_negotiation_consumer() -> anyhow::Result<()> {
             provider_address: "http://127.0.0.1:1234".to_string(),
             consumer_pid: None,
             provider_pid: None,
-            odrl_offer: ContractRequestMessageOfferTypes::OfferMessage(OdrlMessageOffer {
-                id: policy_id.clone(),
-                profile: None,
-                permission: Some(vec![OdrlPermission {
-                    action: "use".to_string(),
-                    constraint: None,
-                    duty: None,
-                }]),
-                obligation: None,
-                _type: OdrlTypes::Offer,
-                prohibition: None,
-                target: policy_target.clone(),
+            odrl_offer: ContractRequestMessageOfferTypes::OfferId(ContractRequestMessageOfferOfferId {
+                id: policy_id.clone()
             }),
         })
         .send()
@@ -193,62 +173,6 @@ pub async fn contract_negotiation_consumer() -> anyhow::Result<()> {
     let provider_pid = res.provider_pid.clone().unwrap();
     println!("SetupRequestResponse: {:#?}", res);
 
-    // -------------------------------
-    // Provider redoes OFFER
-    // -------------------------------
-    let req = provider_client
-        .post("http://localhost:1234/api/v1/negotiations/rpc/setup-offer")
-        .json(&SetupOfferRequest {
-            consumer_participant_id: consumer_participant_id.clone(),
-            consumer_pid: Option::from(consumer_pid.clone()),
-            provider_pid: Option::from(provider_pid.clone()),
-            odrl_offer: OdrlMessageOffer {
-                id: policy_id.clone(),
-                target: policy_target.clone(),
-                profile: None,
-                permission: Some(vec![OdrlPermission {
-                    action: "superuse".to_string(),
-                    constraint: None,
-                    duty: None,
-                }]),
-                obligation: None,
-                _type: OdrlTypes::Offer,
-                prohibition: None,
-            },
-        })
-        .send()
-        .await?;
-    let res = req.json::<SetupOfferResponse>().await?;
-    println!("SetupOfferResponse: {:#?}", res);
-
-    // -------------------------------
-    // Consumer redoes offer with REQUEST
-    // -------------------------------
-    let req = consumer_client
-        .post("http://127.0.0.1:1235/api/v1/negotiations/rpc/setup-request")
-        .json(&SetupRequestRequest {
-            provider_address: "http://127.0.0.1:1234".to_string(),
-            consumer_pid: Option::from(consumer_pid.clone()),
-            provider_pid: Option::from(provider_pid.clone()),
-            odrl_offer: ContractRequestMessageOfferTypes::OfferMessage(OdrlMessageOffer {
-                id: policy_id.clone(),
-                profile: None,
-                permission: Some(vec![OdrlPermission {
-                    action: "superultrause".to_string(),
-                    constraint: None,
-                    duty: None,
-                }]),
-                obligation: None,
-                _type: OdrlTypes::Offer,
-                prohibition: None,
-                target: policy_target.clone(),
-            }),
-        })
-        .send()
-        .await?;
-
-    let res = req.json::<SetupRequestResponse>().await?;
-    println!("SetupRequestResponse: {:#?}", res);
 
     // -------------------------------
     // Provider agrees with AGREED and sketches agreement
@@ -295,6 +219,11 @@ pub async fn contract_negotiation_consumer() -> anyhow::Result<()> {
         .await?;
     let res = req.json::<SetupFinalizationResponse>().await?;
     println!("SetupFinalizationResponse: {:#?}", res);
+
+    // TODO improve strings and urns
+    // TODO validation on ODRL
+    // TODO persist agreement
+    // TODO Middlewares for verifying everything (jsonschema, auth, protocol transition validation)
 
     //
     // Tear down servers

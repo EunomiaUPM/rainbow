@@ -19,7 +19,6 @@
 use crate::core::rainbow_entities::rainbow_catalog_err::CatalogError;
 use crate::core::rainbow_entities::rainbow_catalog_types::EditDistributionRequest;
 use crate::core::rainbow_entities::{RainbowDistributionTrait, RainbowPoliciesTrait};
-use crate::protocol::policies::OdrlPolicy;
 use anyhow::bail;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, State};
@@ -27,6 +26,7 @@ use axum::response::IntoResponse;
 use axum::routing::{delete, get, post};
 use axum::{Json, Router};
 use log::info;
+use rainbow_common::protocol::catalog::OdrlPolicyInfo;
 use rainbow_common::utils::get_urn_from_string;
 use reqwest::StatusCode;
 use serde_json::Value;
@@ -119,7 +119,7 @@ where
     async fn handle_post_catalog_policies(
         State(policies_service): State<Arc<T>>,
         Path(catalog_id): Path<String>,
-        input: Result<Json<OdrlPolicy>, JsonRejection>,
+        input: Result<Json<OdrlPolicyInfo>, JsonRejection>,
     ) -> impl IntoResponse {
         info!("POST /api/v1/catalogs/{}/policies", catalog_id);
         let catalog_id = match get_urn_from_string(&catalog_id) {
@@ -177,7 +177,7 @@ where
     async fn handle_post_dataset_policies(
         State(policies_service): State<Arc<T>>,
         Path(dataset_id): Path<String>,
-        input: Result<Json<OdrlPolicy>, JsonRejection>,
+        input: Result<Json<OdrlPolicyInfo>, JsonRejection>,
     ) -> impl IntoResponse {
         info!("POST /api/v1/datasets/{}/policies", dataset_id);
         let dataset_id = match get_urn_from_string(&dataset_id) {
@@ -234,7 +234,7 @@ where
     async fn handle_post_dataservices_policies(
         State(policies_service): State<Arc<T>>,
         Path(data_service_id): Path<String>,
-        input: Result<Json<OdrlPolicy>, JsonRejection>,
+        input: Result<Json<OdrlPolicyInfo>, JsonRejection>,
     ) -> impl IntoResponse {
         info!("POST /api/v1/data-services/{}/policies", data_service_id);
         let dataservice_id = match get_urn_from_string(&data_service_id) {
@@ -291,7 +291,7 @@ where
     async fn handle_post_distributions_policies(
         State(policies_service): State<Arc<T>>,
         Path(distribution_id): Path<String>,
-        input: Result<Json<OdrlPolicy>, JsonRejection>,
+        input: Result<Json<OdrlPolicyInfo>, JsonRejection>,
     ) -> impl IntoResponse {
         info!(
             "POST /api/v1/distributions/{}/policies",

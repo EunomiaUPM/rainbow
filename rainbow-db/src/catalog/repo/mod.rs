@@ -303,4 +303,7 @@ pub enum CatalogRepoErrors {
     ErrorUpdatingDataService(Error),
     #[error("Error updating odrl offer. {0}")]
     ErrorUpdatingOdrlOffer(Error),
+
+    #[error("Error fetching offer ids. {missing_ids:?}")]
+    SomeOdrlOffersNotFound { missing_ids: String },
 }
