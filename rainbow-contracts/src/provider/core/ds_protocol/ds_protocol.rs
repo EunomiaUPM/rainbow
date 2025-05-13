@@ -311,12 +311,12 @@ where
     }
 
     async fn post_request(&self, input: ContractRequestMessage) -> anyhow::Result<ContractAckMessage> {
-        // validate request
+        // 1. validate request
         self.transition_validation(&input).await.map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
         self.json_schema_validation(&input).map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
         let _ = self.payload_validation(None, &input).await.map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
 
-        // resolve odrl policy
+        // 2. resolve odrl policy
         let odrl_ids = match &input.odrl_offer {
             ContractRequestMessageOfferTypes::OfferId(offer) => Ok::<_, anyhow::Error>(offer.id.clone()),
             ContractRequestMessageOfferTypes::OfferMessage(offer) => Ok::<_, anyhow::Error>(offer.id.clone()),
@@ -342,7 +342,7 @@ where
             ContractRequestMessageOfferTypes::OfferId(_) => {}
         }
 
-        // persist process, message and offer
+        // 3. persist process, message and offer
         let cn_process = self
             .repo
             .create_cn_process(NewContractNegotiationProcess {
@@ -378,13 +378,15 @@ where
             .await
             .map_err(IdsaCNError::DbErr)?;
 
-        // notify subscriptions
+        // 4. notify subscriptions
         self.notify_subscribers(json!({
             "process": cn_process,
             "message": cn_message,
             "offer": cn_offer
         }))
             .await?;
+
+
         Ok(cn_process.into())
     }
 
@@ -393,6 +395,7 @@ where
         provider_pid: Urn,
         input: ContractRequestMessage,
     ) -> anyhow::Result<ContractAckMessage> {
+        // 1. validate request
         self.transition_validation(&input).await.map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
         self.json_schema_validation(&input).map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
         let cn_process = self
@@ -401,6 +404,33 @@ where
             .map_err(|e| IdsaCNError::ValidationError(e.to_string()))?
             .unwrap();
 
+        // 2. resolve odrl policy
+        let odrl_ids = match &input.odrl_offer {
+            ContractRequestMessageOfferTypes::OfferId(offer) => Ok::<_, anyhow::Error>(offer.id.clone()),
+            ContractRequestMessageOfferTypes::OfferMessage(offer) => Ok::<_, anyhow::Error>(offer.id.clone()),
+        }?;
+        let offer = match self.catalog_facade.resolve_odrl_offers(odrl_ids).await {
+            Ok(resolver) => resolver,
+            Err(_) => bail!(IdsaCNError::NotCheckedError {
+                provider_pid: None,
+                consumer_pid: None,
+                error: "Id not found".to_string()
+            }),
+        };
+        match &input.odrl_offer {
+            ContractRequestMessageOfferTypes::OfferMessage(input_offer) => {
+                if input_offer.target.clone() != offer.target.clone().unwrap() {
+                    bail!(IdsaCNError::NotCheckedError {
+                        provider_pid: None,
+                        consumer_pid: None,
+                        error: "target not coincide".to_string()
+                    })
+                }
+            }
+            ContractRequestMessageOfferTypes::OfferId(_) => {}
+        }
+
+        // 3. persist process, message and offer
         let _ = self
             .repo
             .put_cn_process(
@@ -438,13 +468,14 @@ where
             .await
             .map_err(IdsaCNError::DbErr)?;
 
-        // notify subscriptions
+        // 4. notify subscriptions
         self.notify_subscribers(json!({
             "process": cn_process,
             "message": cn_message,
             "offer": offer
         }))
             .await?;
+
         Ok(cn_process.into())
     }
 
@@ -453,6 +484,7 @@ where
         provider_pid: Urn,
         input: ContractNegotiationEventMessage,
     ) -> anyhow::Result<ContractAckMessage> {
+        // 1. validate request
         self.transition_validation(&input).await.map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
         self.json_schema_validation(&input).map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
         let cn_process = self
@@ -461,7 +493,7 @@ where
             .map_err(|e| IdsaCNError::ValidationError(e.to_string()))?
             .unwrap();
 
-        // Update CN process state
+        // 2. persist process, message and offer
         let cn_process = self
             .repo
             .put_cn_process(
@@ -475,7 +507,6 @@ where
             .await
             .map_err(IdsaCNError::DbErr)?;
 
-        // Create message
         let message = self
             .repo
             .create_cn_message(
@@ -490,7 +521,7 @@ where
             .await
             .map_err(IdsaCNError::DbErr)?;
 
-        // notify subscriptions
+        // 3. notify subscriptions
         self.notify_subscribers(json!({
             "process": cn_process,
             "message": message
@@ -555,7 +586,7 @@ where
         provider_id: Urn,
         input: ContractTerminationMessage,
     ) -> anyhow::Result<ContractAckMessage> {
-        // validate request
+        // 1. validate request
         self.transition_validation(&input).await.map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
         self.json_schema_validation(&input).map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
         let cn_process = self
@@ -564,8 +595,8 @@ where
             .map_err(|e| IdsaCNError::ValidationError(e.to_string()))?
             .unwrap();
 
+        // 2. persist process, message and offer
         let ContractTerminationMessage { _type, .. } = input.clone();
-
         let cn_process = self
             .repo
             .put_cn_process(
@@ -593,7 +624,7 @@ where
             .await
             .map_err(IdsaCNError::DbErr)?;
 
-        // notify subscriptions
+        // 3. notify subscriptions
         self.notify_subscribers(json!({
             "process": cn_process,
             "message": message
