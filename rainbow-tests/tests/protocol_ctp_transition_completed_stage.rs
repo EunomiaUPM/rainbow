@@ -23,19 +23,22 @@
 #![allow(unused_mut)]
 
 use crate::utils::cleanup_test_env;
+use clap::builder::TypedValueParser;
 use once_cell::sync::Lazy;
 use rainbow_common::dcat_formats::{DctFormats, FormatAction, FormatProtocol};
-use rainbow_common::protocol::transfer::{
-    TransferCompletionMessage, TransferMessageTypes, TransferProcessMessage,
-    TransferRequestMessage, TransferStartMessage, TransferSuspensionMessage,
-    TransferTerminationMessage,
-};
+use rainbow_common::protocol::context_field::ContextField;
+use rainbow_common::protocol::transfer::transfer_completion::TransferCompletionMessage;
+use rainbow_common::protocol::transfer::transfer_process::TransferProcessMessage;
+use rainbow_common::protocol::transfer::transfer_request::TransferRequestMessage;
+use rainbow_common::protocol::transfer::transfer_start::TransferStartMessage;
+use rainbow_common::protocol::transfer::transfer_suspension::TransferSuspensionMessage;
+use rainbow_common::protocol::transfer::transfer_termination::TransferTerminationMessage;
+use rainbow_common::protocol::transfer::TransferMessageTypes;
 use rainbow_common::utils::get_urn;
 use std::process::{Child, Command};
 use tracing_test::traced_test;
-use uuid::Uuid;
 use urn::Urn;
-use rainbow_common::protocol::ContextField;
+use uuid::Uuid;
 
 #[path = "utils.rs"]
 mod utils;
@@ -60,9 +63,9 @@ pub async fn to_requested() -> anyhow::Result<()> {
         .post("http://localhost:1234/transfers/request")
         .header("content-type", "application/json")
         .json(&TransferRequestMessage {
-            context: TRANSFER_CONTEXT.into(),
+            context: ContextField::default(),
             _type: TransferMessageTypes::TransferRequestMessage.to_string(),
-            consumer_pid: consumer_pid.clone(),
+            consumer_pid: consumer_pid.clone().to_string(),
             agreement_id: get_urn(Some(agreement_id.parse::<Urn>()?)).to_string(),
             format: DctFormats { protocol: FormatProtocol::Http, action: FormatAction::Pull },
             callback_address: consumer_callback_address.clone(), // start will trigger
@@ -95,7 +98,7 @@ pub async fn to_requested() -> anyhow::Result<()> {
         .post("http://localhost:1234/transfers/request")
         .header("content-type", "application/json")
         .json(&TransferRequestMessage {
-            context: TRANSFER_CONTEXT.into(),
+            context: ContextField::default(),
             _type: TransferMessageTypes::TransferRequestMessage.to_string(),
             consumer_pid: consumer_pid.clone(),
             agreement_id: get_urn(Some(agreement_id.parse::<Urn>()?)).to_string(),
@@ -132,9 +135,9 @@ pub async fn to_started() -> anyhow::Result<()> {
         .post("http://localhost:1234/transfers/request")
         .header("content-type", "application/json")
         .json(&TransferRequestMessage {
-            context: TRANSFER_CONTEXT.into(),
+            context: ContextField::default(),
             _type: TransferMessageTypes::TransferRequestMessage.to_string(),
-            consumer_pid: consumer_pid.clone(),
+            consumer_pid: consumer_pid.clone().to_string(),
             agreement_id: get_urn(Some(agreement_id.parse::<Urn>()?)).to_string(),
             format: DctFormats { protocol: FormatProtocol::Http, action: FormatAction::Pull },
             callback_address: consumer_callback_address.clone(), // start will trigger
@@ -167,7 +170,7 @@ pub async fn to_started() -> anyhow::Result<()> {
         .post("http://localhost:1234/transfers/start")
         .header("content-type", "application/json")
         .json(&TransferStartMessage {
-            context: TRANSFER_CONTEXT.into(),
+            context: ContextField::default(),
             _type: TransferMessageTypes::TransferStartMessage.to_string(),
             provider_pid: provider_pid_.clone(),
             consumer_pid: consumer_pid.clone(),
@@ -202,9 +205,9 @@ pub async fn to_suspended() -> anyhow::Result<()> {
         .post("http://localhost:1234/transfers/request")
         .header("content-type", "application/json")
         .json(&TransferRequestMessage {
-            context: TRANSFER_CONTEXT.into(),
+            context: ContextField::default(),
             _type: TransferMessageTypes::TransferRequestMessage.to_string(),
-            consumer_pid: consumer_pid.clone(),
+            consumer_pid: consumer_pid.clone().to_string(),
             agreement_id: get_urn(Some(agreement_id.parse::<Urn>()?)).to_string(),
             format: DctFormats { protocol: FormatProtocol::Http, action: FormatAction::Pull },
             callback_address: consumer_callback_address.clone(), // start will trigger
@@ -237,7 +240,7 @@ pub async fn to_suspended() -> anyhow::Result<()> {
         .post("http://localhost:1234/transfers/suspension")
         .header("content-type", "application/json")
         .json(&TransferSuspensionMessage {
-            context: TRANSFER_CONTEXT.into(),
+            context: ContextField::default(),
             _type: TransferMessageTypes::TransferSuspensionMessage.to_string(),
             provider_pid: provider_pid_.clone(),
             consumer_pid: consumer_pid.clone(),
@@ -273,9 +276,9 @@ pub async fn to_completed() -> anyhow::Result<()> {
         .post("http://localhost:1234/transfers/request")
         .header("content-type", "application/json")
         .json(&TransferRequestMessage {
-            context: TRANSFER_CONTEXT.into(),
+            context: ContextField::default(),
             _type: TransferMessageTypes::TransferRequestMessage.to_string(),
-            consumer_pid: consumer_pid.clone(),
+            consumer_pid: consumer_pid.clone().to_string(),
             agreement_id: get_urn(Some(agreement_id.parse::<Urn>()?)).to_string(),
             format: DctFormats { protocol: FormatProtocol::Http, action: FormatAction::Pull },
             callback_address: consumer_callback_address.clone(), // start will trigger
@@ -344,7 +347,7 @@ pub async fn to_terminated() -> anyhow::Result<()> {
         .json(&TransferRequestMessage {
             context: ContextField::default(),
             _type: TransferMessageTypes::TransferRequestMessage.to_string(),
-            consumer_pid: consumer_pid.clone(),
+            consumer_pid: consumer_pid.clone().to_string(),
             agreement_id: get_urn(Some(agreement_id.parse::<Urn>()?)).to_string(),
             format: DctFormats { protocol: FormatProtocol::Http, action: FormatAction::Pull },
             callback_address: consumer_callback_address.clone(), // start will trigger

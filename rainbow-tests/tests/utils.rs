@@ -23,8 +23,8 @@
 #![allow(unused_mut)]
 
 use clap::builder::TypedValueParser;
-use rainbow_catalog::protocol::catalog_definition::Catalog;
-use rainbow_catalog::protocol::dataservice_definition::DataService;
+use rainbow_common::protocol::catalog::catalog_definition::Catalog;
+use rainbow_common::protocol::catalog::dataservice_definition::DataService;
 use rainbow_common::utils::get_urn_from_string;
 use rainbow_db::contracts_provider::entities::agreement;
 use rainbow_transfer::consumer::core::ds_protocol_rpc::ds_protocol_rpc_types::DSRPCTransferConsumerRequestResponse;

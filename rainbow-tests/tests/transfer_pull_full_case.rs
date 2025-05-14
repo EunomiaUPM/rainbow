@@ -29,16 +29,8 @@ use axum::body::Body;
 use axum::http::{Request, StatusCode};
 use axum::{http, serve};
 use rainbow_common::dcat_formats::{DctFormats, FormatAction, FormatProtocol};
-use rainbow_common::protocol::transfer::{
-    DataAddress, TransferCompletionMessage, TransferMessageTypes, TransferProcessMessage,
-    TransferRequestMessage, TransferStartMessage, TransferSuspensionMessage,
-};
 use rainbow_common::utils::{get_urn, get_urn_from_string};
 use rainbow_db::transfer_consumer::entities::transfer_callback;
-use rainbow_transfer::consumer::lib::api::{
-    CompleteTransferRequest, RequestTransferRequest, RequestTransferResponse,
-    RestartTransferRequest, SuspendTransferRequest,
-};
 use serde_json::{json, Value};
 use std::io::BufRead;
 use tracing::{debug, error, info, trace};
