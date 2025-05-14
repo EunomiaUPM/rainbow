@@ -19,6 +19,7 @@
 
 use crate::protocol::catalog::dataservice_definition::DataService;
 use crate::protocol::context_field::ContextField;
+use crate::protocol::contract::contract_odrl::OdrlOffer;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -33,28 +34,30 @@ pub struct Distribution {
     pub dcat: DistributionDcatDeclaration,
     #[serde(flatten)]
     pub dct: DistributionDctDeclaration,
-    #[serde(rename = "odrl:hasPolicy")]
-    pub odrl_offer: serde_json::Value,
-    #[serde(rename = "dspace:extraFields")]
+    #[serde(rename = "hasPolicy")]
+    pub odrl_offer: Vec<OdrlOffer>,
+    #[serde(rename = "extraFields")]
     pub extra_fields: serde_json::Value,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DistributionDcatDeclaration {
-    #[serde(rename = "dcat:accessService")]
-    pub access_service: Option<DataService>, // Todo should be many to many
-} // TODO dcat:format
+    #[serde(rename = "accessService")]
+    pub access_service: Option<DataService>,
+}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DistributionDctDeclaration {
-    #[serde(rename = "dct:identifier")]
+    #[serde(rename = "identifier")]
     pub identifier: String,
-    #[serde(rename = "dct:issued")]
+    #[serde(rename = "issued")]
     pub issued: chrono::NaiveDateTime,
-    #[serde(rename = "dct:modified")]
+    #[serde(rename = "modified")]
     pub modified: Option<chrono::NaiveDateTime>,
-    #[serde(rename = "dct:title")]
+    #[serde(rename = "title")]
     pub title: Option<String>,
-    #[serde(rename = "dct:description")]
+    #[serde(rename = "description")]
     pub description: Vec<String>,
 }
+
+

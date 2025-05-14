@@ -20,10 +20,10 @@
 use crate::core::rainbow_entities::rainbow_catalog_err::CatalogError;
 use crate::core::rainbow_entities::rainbow_catalog_types::{EditDistributionRequest, NewDistributionRequest};
 use crate::core::rainbow_entities::RainbowDistributionTrait;
-use crate::protocol::dataservice_definition::DataService;
-use crate::protocol::distribution_definition::Distribution;
-use crate::protocol::policies::EntityTypes;
 use axum::async_trait;
+use rainbow_common::protocol::catalog::dataservice_definition::DataService;
+use rainbow_common::protocol::catalog::distribution_definition::Distribution;
+use rainbow_common::protocol::catalog::EntityTypes;
 use rainbow_common::utils::get_urn_from_string;
 use rainbow_db::catalog::repo::{CatalogRepo, DataServiceRepo, DatasetRepo, DistributionRepo, OdrlOfferRepo};
 use rainbow_events::core::notification::notification_types::{RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory, RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes};

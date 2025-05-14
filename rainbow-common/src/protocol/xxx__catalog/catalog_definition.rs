@@ -17,37 +17,57 @@
  *
  */
 
-use crate::protocol::dataservice_definition::DataService;
-use rainbow_db::catalog::entities::distribution;
+use crate::protocol::catalog::dataservice_definition::DataService;
+use crate::protocol::catalog::dataset_definition::Dataset;
+use crate::protocol::context_field::ContextField;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Distribution {
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Catalog {
     #[serde(rename = "@context")]
-    pub context: String,
+    pub context: ContextField,
     #[serde(rename = "@type")]
     pub _type: String,
     #[serde(rename = "@id")]
     pub id: String,
     #[serde(flatten)]
-    pub dcat: DistributionDcatDeclaration,
+    pub foaf: CatalogFoafDeclaration,
     #[serde(flatten)]
-    pub dct: DistributionDctDeclaration,
+    pub dcat: CatalogDcatDeclaration,
+    #[serde(flatten)]
+    pub dct: CatalogDctDeclaration,
+    #[serde(flatten)]
+    pub dspace: CatalogDSpaceDeclaration,
     #[serde(rename = "odrl:hasPolicy")]
     pub odrl_offer: serde_json::Value,
     #[serde(rename = "dspace:extraFields")]
     pub extra_fields: serde_json::Value,
+    #[serde(rename = "dcat:dataset")]
+    pub datasets: Vec<Dataset>,
+    #[serde(rename = "dcat:service")]
+    pub data_services: Vec<DataService>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct DistributionDcatDeclaration {
-    #[serde(rename = "dcat:accessService")]
-    pub access_service: Option<DataService>,
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CatalogFoafDeclaration {
+    #[serde(rename = "foaf:homepage")]
+    pub homepage: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct DistributionDctDeclaration {
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CatalogDcatDeclaration {
+    #[serde(rename = "dcat:theme")]
+    pub theme: String,
+    #[serde(rename = "dcat:keyword")]
+    pub keyword: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CatalogDctDeclaration {
+    #[serde(rename = "dct:conformsTo")]
+    pub conforms_to: Option<String>,
+    #[serde(rename = "dct:creator")]
+    pub creator: Option<String>,
     #[serde(rename = "dct:identifier")]
     pub identifier: String,
     #[serde(rename = "dct:issued")]
@@ -57,27 +77,11 @@ pub struct DistributionDctDeclaration {
     #[serde(rename = "dct:title")]
     pub title: Option<String>,
     #[serde(rename = "dct:description")]
-    pub description: Vec<String>,
+    pub description: Vec<String>, // TODO set descriptions in all...
 }
 
-impl TryFrom<distribution::Model> for Distribution {
-    type Error = anyhow::Error;
-
-    fn try_from(distribution_model: distribution::Model) -> Result<Self, Self::Error> {
-        Ok(Distribution {
-            context: "https://w3id.org/dspace/2024/1/context.json".to_string(),
-            _type: "dcat:Distribution".to_string(),
-            id: distribution_model.id.to_string(),
-            dcat: DistributionDcatDeclaration { access_service: None },
-            dct: DistributionDctDeclaration {
-                identifier: distribution_model.id.to_string(),
-                issued: distribution_model.dct_issued,
-                modified: distribution_model.dct_modified,
-                title: distribution_model.dct_title,
-                description: vec![],
-            },
-            odrl_offer: Value::default(),
-            extra_fields: Value::default(),
-        })
-    }
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CatalogDSpaceDeclaration {
+    #[serde(rename = "dspace:participantId")]
+    pub participant_id: Option<String>,
 }

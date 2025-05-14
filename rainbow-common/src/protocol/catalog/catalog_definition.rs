@@ -20,7 +20,10 @@
 use crate::protocol::catalog::dataservice_definition::DataService;
 use crate::protocol::catalog::dataset_definition::Dataset;
 use crate::protocol::context_field::ContextField;
+use crate::protocol::contract::contract_odrl::OdrlOffer;
+// use rainbow_db::catalog::entities::catalog;
 use serde::{Deserialize, Serialize};
+use urn::Urn;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Catalog {
@@ -29,7 +32,7 @@ pub struct Catalog {
     #[serde(rename = "@type")]
     pub _type: String,
     #[serde(rename = "@id")]
-    pub id: String,
+    pub id: Urn,
     #[serde(flatten)]
     pub foaf: CatalogFoafDeclaration,
     #[serde(flatten)]
@@ -38,50 +41,50 @@ pub struct Catalog {
     pub dct: CatalogDctDeclaration,
     #[serde(flatten)]
     pub dspace: CatalogDSpaceDeclaration,
-    #[serde(rename = "odrl:hasPolicy")]
-    pub odrl_offer: serde_json::Value,
-    #[serde(rename = "dspace:extraFields")]
+    #[serde(rename = "hasPolicy")]
+    pub odrl_offer: Vec<OdrlOffer>,
+    #[serde(rename = "extraFields")]
     pub extra_fields: serde_json::Value,
-    #[serde(rename = "dcat:dataset")]
+    #[serde(rename = "dataset")]
     pub datasets: Vec<Dataset>,
-    #[serde(rename = "dcat:service")]
+    #[serde(rename = "service")]
     pub data_services: Vec<DataService>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CatalogFoafDeclaration {
-    #[serde(rename = "foaf:homepage")]
+    #[serde(rename = "homepage")]
     pub homepage: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CatalogDcatDeclaration {
-    #[serde(rename = "dcat:theme")]
+    #[serde(rename = "theme")]
     pub theme: String,
-    #[serde(rename = "dcat:keyword")]
+    #[serde(rename = "keyword")]
     pub keyword: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CatalogDctDeclaration {
-    #[serde(rename = "dct:conformsTo")]
+    #[serde(rename = "conformsTo")]
     pub conforms_to: Option<String>,
-    #[serde(rename = "dct:creator")]
+    #[serde(rename = "creator")]
     pub creator: Option<String>,
-    #[serde(rename = "dct:identifier")]
+    #[serde(rename = "identifier")]
     pub identifier: String,
-    #[serde(rename = "dct:issued")]
+    #[serde(rename = "issued")]
     pub issued: chrono::NaiveDateTime,
-    #[serde(rename = "dct:modified")]
+    #[serde(rename = "modified")]
     pub modified: Option<chrono::NaiveDateTime>,
-    #[serde(rename = "dct:title")]
+    #[serde(rename = "title")]
     pub title: Option<String>,
-    #[serde(rename = "dct:description")]
+    #[serde(rename = "description")]
     pub description: Vec<String>, // TODO set descriptions in all...
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CatalogDSpaceDeclaration {
-    #[serde(rename = "dspace:participantId")]
+    #[serde(rename = "participantId")]
     pub participant_id: Option<String>,
 }

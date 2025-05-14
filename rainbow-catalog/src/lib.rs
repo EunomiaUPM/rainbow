@@ -27,5 +27,4 @@
 
 pub mod core;
 pub mod http;
-pub mod protocol;
 pub mod setup;

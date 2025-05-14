@@ -19,9 +19,9 @@
 use crate::core::rainbow_entities::rainbow_catalog_err::CatalogError;
 use crate::core::rainbow_rpc::rainbow_rpc_types::{RainbowRPCCatalogResolveDataServiceRequest, RainbowRPCCatalogResolveOfferByIdRequest};
 use crate::core::rainbow_rpc::RainbowRPCCatalogTrait;
-use crate::protocol::dataservice_definition::DataService;
-use crate::protocol::policies::EntityTypes;
 use axum::async_trait;
+use rainbow_common::protocol::catalog::dataservice_definition::DataService;
+use rainbow_common::protocol::catalog::EntityTypes;
 use rainbow_common::protocol::contract::contract_odrl::OdrlOffer;
 use rainbow_db::catalog::repo::{CatalogRepo, DataServiceRepo, DatasetRepo, DistributionRepo, OdrlOfferRepo};
 use std::sync::Arc;

@@ -17,13 +17,12 @@
  *
  */
 
-use crate::protocol::catalog::distribution_definition::Distribution;
+use crate::protocol::catalog::dataservice_definition::DataService;
 use crate::protocol::context_field::ContextField;
-use crate::protocol::contract::contract_odrl::OdrlOffer;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Dataset {
+pub struct Distribution {
     #[serde(rename = "@context")]
     pub context: ContextField,
     #[serde(rename = "@type")]
@@ -31,41 +30,31 @@ pub struct Dataset {
     #[serde(rename = "@id")]
     pub id: String,
     #[serde(flatten)]
-    pub dcat: DatasetDcatDeclaration,
+    pub dcat: DistributionDcatDeclaration,
     #[serde(flatten)]
-    pub dct: DatasetDctDeclaration,
-    #[serde(rename = "hasPolicy")]
-    pub odrl_offer: Vec<OdrlOffer>,
-    #[serde(rename = "extraFields")]
+    pub dct: DistributionDctDeclaration,
+    #[serde(rename = "odrl:hasPolicy")]
+    pub odrl_offer: serde_json::Value,
+    #[serde(rename = "dspace:extraFields")]
     pub extra_fields: serde_json::Value,
-    #[serde(rename = "distribution")]
-    pub distribution: Vec<Distribution>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct DatasetDcatDeclaration {
-    #[serde(rename = "theme")]
-    pub theme: String,
-    #[serde(rename = "keyword")]
-    pub keyword: String,
-}
+pub struct DistributionDcatDeclaration {
+    #[serde(rename = "dcat:accessService")]
+    pub access_service: Option<DataService>, // Todo should be many to many
+} // TODO dcat:format
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct DatasetDctDeclaration {
-    #[serde(rename = "conformsTo")]
-    pub conforms_to: Option<String>,
-    #[serde(rename = "creator")]
-    pub creator: Option<String>,
-    #[serde(rename = "identifier")]
+pub struct DistributionDctDeclaration {
+    #[serde(rename = "dct:identifier")]
     pub identifier: String,
-    #[serde(rename = "issued")]
+    #[serde(rename = "dct:issued")]
     pub issued: chrono::NaiveDateTime,
-    #[serde(rename = "modified")]
+    #[serde(rename = "dct:modified")]
     pub modified: Option<chrono::NaiveDateTime>,
-    #[serde(rename = "title")]
+    #[serde(rename = "dct:title")]
     pub title: Option<String>,
-    #[serde(rename = "description")]
+    #[serde(rename = "dct:description")]
     pub description: Vec<String>,
 }
-
-

@@ -17,41 +17,41 @@
  *
  */
 
-use crate::protocol::distribution_definition::Distribution;
-use rainbow_db::catalog::entities::dataset;
+use crate::protocol::context_field::ContextField;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Dataset {
+pub struct DataService {
     #[serde(rename = "@context")]
-    pub context: String,
+    pub context: ContextField,
     #[serde(rename = "@type")]
     pub _type: String,
     #[serde(rename = "@id")]
     pub id: String,
     #[serde(flatten)]
-    pub dcat: DatasetDcatDeclaration,
+    pub dcat: DataServiceDcatDeclaration,
     #[serde(flatten)]
-    pub dct: DatasetDctDeclaration,
+    pub dct: DataServiceDctDeclaration,
     #[serde(rename = "odrl:hasPolicy")]
     pub odrl_offer: serde_json::Value,
-    #[serde(rename = "odrl:extraFields")]
+    #[serde(rename = "dspace:extraFields")]
     pub extra_fields: serde_json::Value,
-    #[serde(rename = "dcat:distribution")]
-    pub distribution: Vec<Distribution>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct DatasetDcatDeclaration {
+pub struct DataServiceDcatDeclaration {
     #[serde(rename = "dcat:theme")]
     pub theme: String,
     #[serde(rename = "dcat:keyword")]
     pub keyword: String,
+    #[serde(rename = "dcat:endpointDescription")]
+    pub endpoint_description: String,
+    #[serde(rename = "dcat:endpointURL")]
+    pub endpoint_url: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct DatasetDctDeclaration {
+pub struct DataServiceDctDeclaration {
     #[serde(rename = "dct:conformsTo")]
     pub conforms_to: Option<String>,
     #[serde(rename = "dct:creator")]
@@ -66,31 +66,4 @@ pub struct DatasetDctDeclaration {
     pub title: Option<String>,
     #[serde(rename = "dct:description")]
     pub description: Vec<String>,
-}
-
-impl TryFrom<dataset::Model> for Dataset {
-    type Error = anyhow::Error;
-
-    fn try_from(dataset_model: dataset::Model) -> Result<Self, Self::Error> {
-        Ok(Dataset {
-            context: "https://w3id.org/dspace/2024/1/context.json".to_string(),
-            _type: "dcat:Dataset".to_string(),
-            id: dataset_model.id.to_string(),
-            dcat: DatasetDcatDeclaration { theme: "".to_string(), keyword: "".to_string() },
-            dct: DatasetDctDeclaration {
-                conforms_to: dataset_model.dct_conforms_to,
-                creator: dataset_model.dct_creator,
-                identifier: dataset_model
-                    .dct_identifier
-                    .unwrap_or_else(|| dataset_model.id.to_string()),
-                issued: dataset_model.dct_issued,
-                modified: dataset_model.dct_modified,
-                title: dataset_model.dct_title,
-                description: vec![],
-            },
-            odrl_offer: Value::default(),
-            extra_fields: Value::default(),
-            distribution: vec![],
-        })
-    }
 }

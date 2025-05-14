@@ -18,6 +18,7 @@
  */
 
 use crate::core::ds_protocol::ds_protocol_errors::DSProtocolCatalogErrors;
+use crate::core::ds_protocol::ds_protocol_types::CatalogRequest;
 use crate::core::ds_protocol::DSProtocolCatalogTrait;
 use anyhow::Error;
 use axum::extract::rejection::JsonRejection;
@@ -27,7 +28,6 @@ use axum::routing::{get, post};
 use axum::{Json, Router};
 use clap::builder::Str;
 use rainbow_common::err::transfer_err::TransferErrorType::NotCheckedError;
-use rainbow_common::protocol::catalog::catalog_protocol_types::CatalogRequest;
 use rainbow_common::utils::get_urn_from_string;
 use reqwest::StatusCode;
 use serde_json::Value;

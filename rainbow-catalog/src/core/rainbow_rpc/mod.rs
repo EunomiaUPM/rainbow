@@ -18,8 +18,8 @@
  */
 
 use crate::core::rainbow_rpc::rainbow_rpc_types::{RainbowRPCCatalogResolveDataServiceRequest, RainbowRPCCatalogResolveOfferByIdRequest};
-use crate::protocol::dataservice_definition::DataService;
 use axum::async_trait;
+use rainbow_common::protocol::catalog::dataservice_definition::DataService;
 use rainbow_common::protocol::contract::contract_odrl::OdrlOffer;
 
 pub mod rainbow_rpc;

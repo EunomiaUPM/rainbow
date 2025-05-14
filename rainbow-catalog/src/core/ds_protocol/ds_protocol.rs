@@ -19,14 +19,14 @@
 
 use crate::core::ds_protocol::ds_protocol_errors::DSProtocolCatalogErrors;
 use crate::core::ds_protocol::DSProtocolCatalogTrait;
-use crate::protocol::catalog_definition::Catalog;
-use crate::protocol::dataservice_definition::DataService;
-use crate::protocol::dataset_definition::Dataset;
-use crate::protocol::distribution_definition::Distribution;
 use axum::async_trait;
+use rainbow_common::protocol::catalog::catalog_definition::Catalog;
+use rainbow_common::protocol::catalog::dataservice_definition::DataService;
+use rainbow_common::protocol::catalog::dataset_definition::Dataset;
+use rainbow_common::protocol::catalog::distribution_definition::Distribution;
+use rainbow_common::protocol::contract::contract_odrl::OdrlOffer;
 use rainbow_common::utils::get_urn_from_string;
 use rainbow_db::catalog::repo::{CatalogRepo, CatalogRepoErrors, DataServiceRepo, DatasetRepo, DistributionRepo, OdrlOfferRepo};
-use serde_json::to_value;
 use std::sync::Arc;
 use urn::Urn;
 
@@ -68,7 +68,8 @@ where
             .get_all_odrl_offers_by_entity(dataset_id.clone())
             .await
             .map_err(DSProtocolCatalogErrors::DbErr)?;
-        dataset.odrl_offer = to_value(odrl_offer)?;
+        let odrl_offer = odrl_offer.iter().map(|o| OdrlOffer::try_from(o.to_owned()).unwrap()).collect();
+        dataset.odrl_offer = odrl_offer;
 
         // distributions
         let distributions = self.repo
@@ -104,7 +105,8 @@ where
                 .get_all_odrl_offers_by_entity(get_urn_from_string(&dataset.id)?)
                 .await
                 .map_err(DSProtocolCatalogErrors::DbErr)?;
-            dataset.odrl_offer = to_value(odrl_offer)?;
+            let odrl_offer = odrl_offer.iter().map(|o| OdrlOffer::try_from(o.to_owned()).unwrap()).collect();
+            dataset.odrl_offer = odrl_offer;
             let distributions = self.distributions_request_by_dataset(dataset_id, catalog_id.clone()).await?;
             dataset.distribution = distributions;
             datasets_out.push(dataset);
@@ -134,7 +136,8 @@ where
                 .get_all_odrl_offers_by_entity(get_urn_from_string(&data_service.id)?)
                 .await
                 .map_err(DSProtocolCatalogErrors::DbErr)?;
-            data_service.odrl_offer = to_value(odrl_offer)?;
+            let odrl_offer = odrl_offer.iter().map(|o| OdrlOffer::try_from(o.to_owned()).unwrap()).collect();
+            data_service.odrl_offer = odrl_offer;
             data_services_out.push(data_service);
         }
 
@@ -169,7 +172,8 @@ where
                 .get_all_odrl_offers_by_entity(get_urn_from_string(&distribution.id)?)
                 .await
                 .map_err(DSProtocolCatalogErrors::DbErr)?;
-            distribution.odrl_offer = to_value(odrl_offer)?;
+            let odrl_offer = odrl_offer.iter().map(|o| OdrlOffer::try_from(o.to_owned()).unwrap()).collect();
+            distribution.odrl_offer = odrl_offer;
             distribution.dcat.access_service = self.data_services_request_by_id(data_service_id).await?;
             distributions_out.push(distribution);
         }
@@ -186,16 +190,17 @@ where
 
         for catalog in catalogs {
             let mut catalog = Catalog::try_from(catalog)?;
-            let id = get_urn_from_string(&catalog.id)?;
+            let id = &catalog.id;
 
             // odrl
             let odrl_offer = self.repo
                 .get_all_odrl_offers_by_entity(id.clone())
                 .await
                 .map_err(DSProtocolCatalogErrors::DbErr)?;
-            catalog.odrl_offer = to_value(odrl_offer)?;
+            let odrl_offer = odrl_offer.iter().map(|o| OdrlOffer::try_from(o.to_owned()).unwrap()).collect();
+            catalog.odrl_offer = odrl_offer;
             catalog.datasets = self.dataset_request_by_catalog(id.clone()).await?;
-            catalog.data_services = self.data_services_request_by_catalog(id).await?;
+            catalog.data_services = self.data_services_request_by_catalog(id.clone()).await?;
             catalogs_out.push(catalog);
         }
 
@@ -220,7 +225,8 @@ where
             .get_all_odrl_offers_by_entity(id.clone())
             .await
             .map_err(DSProtocolCatalogErrors::DbErr)?;
-        catalogs_out.odrl_offer = to_value(odrl_offer)?;
+        let odrl_offer = odrl_offer.iter().map(|o| OdrlOffer::try_from(o.to_owned()).unwrap()).collect();
+        catalogs_out.odrl_offer = odrl_offer;
         catalogs_out.datasets = self.dataset_request_by_catalog(id.clone()).await?;
         catalogs_out.data_services = self.data_services_request_by_catalog(id).await?;
 
