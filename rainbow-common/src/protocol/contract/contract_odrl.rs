@@ -126,6 +126,7 @@ pub struct OdrlOffer {
     pub prohibition: Option<Vec<OdrlObligation>>,
     // Offer
     #[serde(rename = "target")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub target: Option<Urn>, // anyof// anyof
 }
 
@@ -346,3 +347,17 @@ pub enum OdrlRightOperand {
 
 // LeftOperand es un string.
 pub type OdrlLeftOperand = String;
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(deny_unknown_fields)]
+pub struct OdrlPolicyInfo {
+    #[serde(rename = "profile")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub profile: Option<OdrlProfile>,
+    #[serde(rename = "permission")]
+    pub permission: Option<Vec<OdrlPermission>>, // anyof
+    #[serde(rename = "obligation")]
+    pub obligation: Option<Vec<OdrlObligation>>,
+    #[serde(rename = "prohibition")]
+    pub prohibition: Option<Vec<OdrlObligation>>, // anyof
+}

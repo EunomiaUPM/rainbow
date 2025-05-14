@@ -17,50 +17,52 @@
  *
  */
 
-use crate::protocol::contract::contract_odrl::{OdrlObligation, OdrlPermission, OdrlProfile};
-use serde::{Deserialize, Serialize};
+use anyhow::anyhow;
+use sea_orm::Value;
 use std::fmt::Display;
 
 pub mod catalog_definition;
 pub mod dataservice_definition;
 pub mod dataset_definition;
 pub mod distribution_definition;
-pub mod catalog_protocol_types;
 
-#[derive(Debug, Serialize, Deserialize)]
-pub enum CatalogProtocolEntities {
-    #[serde(rename = "Catalog")]
+
+pub enum EntityTypes {
     Catalog,
-    #[serde(rename = "DataService")]
-    DataService,
-    #[serde(rename = "Dataset")]
     Dataset,
-    #[serde(rename = "Distribution")]
+    DataService,
     Distribution,
 }
 
-impl Display for CatalogProtocolEntities {
+impl TryFrom<&str> for EntityTypes {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value {
+            "Catalog" => Ok(EntityTypes::Catalog),
+            "Dataset" => Ok(EntityTypes::Dataset),
+            "DataService" => Ok(EntityTypes::DataService),
+            "Distribution" => Ok(EntityTypes::Distribution),
+            _ => Err(anyhow!("Invalid Entity Type")),
+        }
+    }
+}
+
+impl Display for EntityTypes {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let str = match self {
-            CatalogProtocolEntities::Catalog => "Catalog".to_string(),
-            CatalogProtocolEntities::Dataset => "Dataset".to_string(),
-            CatalogProtocolEntities::DataService => "DataService".to_string(),
-            CatalogProtocolEntities::Distribution => "Distribution".to_string(),
+            EntityTypes::Catalog => "Catalog".to_string(),
+            EntityTypes::Dataset => "Dataset".to_string(),
+            EntityTypes::DataService => "DataService".to_string(),
+            EntityTypes::Distribution => "Distribution".to_string(),
         };
         write!(f, "{}", str)
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(deny_unknown_fields)]
-pub struct OdrlPolicyInfo {
-    #[serde(rename = "profile")]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub profile: Option<OdrlProfile>,
-    #[serde(rename = "permission")]
-    pub permission: Option<Vec<OdrlPermission>>, // anyof
-    #[serde(rename = "obligation")]
-    pub obligation: Option<Vec<OdrlObligation>>,
-    #[serde(rename = "prohibition")]
-    pub prohibition: Option<Vec<OdrlObligation>>, // anyof
+impl From<EntityTypes> for Value {
+    fn from(value: EntityTypes) -> Self {
+        Self::String(Some(Box::new(value.to_string())))
+    }
 }
+

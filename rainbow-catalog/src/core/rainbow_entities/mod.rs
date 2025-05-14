@@ -18,13 +18,12 @@
  */
 
 use crate::core::rainbow_entities::rainbow_catalog_types::{EditDataServiceRequest, EditDistributionRequest, NewCatalogRequest, NewDataServiceRequest, NewDatasetRequest, NewDistributionRequest};
-use crate::protocol::catalog_definition::Catalog;
-use crate::protocol::dataservice_definition::DataService;
-use crate::protocol::dataset_definition::Dataset;
-use crate::protocol::distribution_definition::Distribution;
 use axum::async_trait;
-use rainbow_common::protocol::catalog::OdrlPolicyInfo;
-use rainbow_common::protocol::contract::contract_odrl::OdrlOffer;
+use rainbow_common::protocol::catalog::catalog_definition::Catalog;
+use rainbow_common::protocol::catalog::dataservice_definition::DataService;
+use rainbow_common::protocol::catalog::dataset_definition::Dataset;
+use rainbow_common::protocol::catalog::distribution_definition::Distribution;
+use rainbow_common::protocol::contract::contract_odrl::{OdrlOffer, OdrlPolicyInfo};
 use rainbow_db::catalog::entities::odrl_offer;
 use urn::Urn;
 
@@ -41,7 +40,7 @@ pub mod rainbow_policies_types;
 #[async_trait]
 pub trait RainbowCatalogTrait: Send + Sync {
     async fn get_catalog_by_id(&self, id: Urn) -> anyhow::Result<Catalog>;
-    async fn post_catalog(&self, input: NewCatalogRequest) -> anyhow::Result<Catalog>;
+    async fn post_catalog(&self, input: NewCatalogRequest, is_main: bool) -> anyhow::Result<Catalog>;
     async fn put_catalog(&self, id: Urn, input: NewCatalogRequest) -> anyhow::Result<Catalog>;
     async fn delete_catalog(&self, id: Urn) -> anyhow::Result<()>;
 }

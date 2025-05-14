@@ -30,12 +30,12 @@ use rainbow_common::protocol::transfer::{
     TransferRequestMessage, TransferStartMessage, TransferSuspensionMessage,
     TransferTerminationMessage,
 };
+use rainbow_common::protocol::ContextField;
 use rainbow_common::utils::get_urn;
 use std::process::{Child, Command};
 use tracing_test::traced_test;
-use uuid::Uuid;
 use urn::Urn;
-use rainbow_common::protocol::ContextField;
+use uuid::Uuid;
 
 #[path = "utils.rs"]
 mod utils;

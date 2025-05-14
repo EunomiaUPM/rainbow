@@ -26,7 +26,7 @@ use axum::response::IntoResponse;
 use axum::routing::{delete, get, post};
 use axum::{Json, Router};
 use log::info;
-use rainbow_common::protocol::catalog::OdrlPolicyInfo;
+use rainbow_common::protocol::contract::contract_odrl::OdrlPolicyInfo;
 use rainbow_common::utils::get_urn_from_string;
 use reqwest::StatusCode;
 use serde_json::Value;

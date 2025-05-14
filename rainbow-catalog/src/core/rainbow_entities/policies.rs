@@ -19,10 +19,9 @@
 
 use crate::core::rainbow_entities::rainbow_catalog_err::CatalogError;
 use crate::core::rainbow_entities::RainbowPoliciesTrait;
-use crate::protocol::policies::EntityTypes;
 use axum::async_trait;
-use rainbow_common::protocol::catalog::OdrlPolicyInfo;
-use rainbow_common::protocol::contract::contract_odrl::OdrlOffer;
+use rainbow_common::protocol::catalog::EntityTypes;
+use rainbow_common::protocol::contract::contract_odrl::{OdrlOffer, OdrlPolicyInfo};
 use rainbow_common::utils::get_urn;
 use rainbow_db::catalog::entities::odrl_offer::Model;
 use rainbow_db::catalog::repo::{NewOdrlOfferModel, OdrlOfferRepo};

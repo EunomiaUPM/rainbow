@@ -17,12 +17,13 @@
  *
  */
 
-use crate::dcat_formats::DctFormats;
-use crate::protocol::catalog::CatalogProtocolEntities;
-use crate::protocol::context_field::ContextField;
-use crate::protocol::contract::contract_odrl::OdrlOffer;
-use crate::protocol::ProtocolValidate;
-use crate::utils::get_urn;
+
+use rainbow_common::dcat_formats::DctFormats;
+use rainbow_common::protocol::catalog::EntityTypes;
+use rainbow_common::protocol::context_field::ContextField;
+use rainbow_common::protocol::contract::contract_odrl::OdrlOffer;
+use rainbow_common::protocol::ProtocolValidate;
+use rainbow_common::utils::get_urn;
 use serde::{Deserialize, Serialize};
 use urn::Urn;
 
@@ -89,7 +90,7 @@ impl Default for CatalogResponse {
         Self {
             context: ContextField::default(),
             participant_id: "".to_string(),
-            _type: CatalogProtocolEntities::Catalog.to_string(),
+            _type: EntityTypes::Catalog.to_string(),
             id: get_urn(None),
             dataset: vec![],
             catalog: None,

@@ -17,8 +17,11 @@
  *
  */
 
+use crate::protocol::catalog::EntityTypes;
 use crate::protocol::context_field::ContextField;
+use crate::protocol::contract::contract_odrl::OdrlOffer;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DataService {
@@ -32,38 +35,65 @@ pub struct DataService {
     pub dcat: DataServiceDcatDeclaration,
     #[serde(flatten)]
     pub dct: DataServiceDctDeclaration,
-    #[serde(rename = "odrl:hasPolicy")]
-    pub odrl_offer: serde_json::Value,
-    #[serde(rename = "dspace:extraFields")]
+    #[serde(rename = "hasPolicy")]
+    pub odrl_offer: Vec<OdrlOffer>,
+    #[serde(rename = "extraFields")]
     pub extra_fields: serde_json::Value,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DataServiceDcatDeclaration {
-    #[serde(rename = "dcat:theme")]
+    #[serde(rename = "theme")]
     pub theme: String,
-    #[serde(rename = "dcat:keyword")]
+    #[serde(rename = "keyword")]
     pub keyword: String,
-    #[serde(rename = "dcat:endpointDescription")]
+    #[serde(rename = "endpointDescription")]
     pub endpoint_description: String,
-    #[serde(rename = "dcat:endpointURL")]
+    #[serde(rename = "endpointURL")]
     pub endpoint_url: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DataServiceDctDeclaration {
-    #[serde(rename = "dct:conformsTo")]
+    #[serde(rename = "conformsTo")]
     pub conforms_to: Option<String>,
-    #[serde(rename = "dct:creator")]
+    #[serde(rename = "creator")]
     pub creator: Option<String>,
-    #[serde(rename = "dct:identifier")]
+    #[serde(rename = "identifier")]
     pub identifier: String,
-    #[serde(rename = "dct:issued")]
+    #[serde(rename = "issued")]
     pub issued: chrono::NaiveDateTime,
-    #[serde(rename = "dct:modified")]
+    #[serde(rename = "modified")]
     pub modified: Option<chrono::NaiveDateTime>,
-    #[serde(rename = "dct:title")]
+    #[serde(rename = "title")]
     pub title: Option<String>,
-    #[serde(rename = "dct:description")]
+    #[serde(rename = "description")]
     pub description: Vec<String>,
+}
+
+impl Default for DataService {
+    fn default() -> Self {
+        DataService {
+            context: ContextField::default(),
+            _type: EntityTypes::DataService.to_string(),
+            id: "".to_string(),
+            dcat: DataServiceDcatDeclaration {
+                theme: "".to_string(),
+                keyword: "".to_string(),
+                endpoint_description: "".to_string(),
+                endpoint_url: "".to_string(),
+            },
+            dct: DataServiceDctDeclaration {
+                conforms_to: None,
+                creator: None,
+                identifier: "".to_string(),
+                issued: chrono::Utc::now().naive_utc(),
+                modified: None,
+                title: None,
+                description: vec![],
+            },
+            odrl_offer: vec![],
+            extra_fields: Value::default(),
+        }
+    }
 }

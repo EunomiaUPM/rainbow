@@ -16,10 +16,10 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 use anyhow::bail;
 use serde::de::Error;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -105,6 +105,15 @@ impl PartialEq for FormatAction {
 pub struct DctFormats {
     pub protocol: FormatProtocol,
     pub action: FormatAction,
+}
+
+impl Display for DctFormats {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let protocol = self.protocol.to_string();
+        let action = self.action.to_string();
+        let combined = format!("{}+{}", protocol, action);
+        f.write_str(combined.as_str())
+    }
 }
 
 impl Serialize for DctFormats {

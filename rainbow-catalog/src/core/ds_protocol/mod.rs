@@ -17,15 +17,16 @@
  *
  */
 
-use crate::protocol::catalog_definition::Catalog;
-use crate::protocol::dataservice_definition::DataService;
-use crate::protocol::dataset_definition::Dataset;
-use crate::protocol::distribution_definition::Distribution;
 use axum::async_trait;
+use rainbow_common::protocol::catalog::catalog_definition::Catalog;
+use rainbow_common::protocol::catalog::dataservice_definition::DataService;
+use rainbow_common::protocol::catalog::dataset_definition::Dataset;
+use rainbow_common::protocol::catalog::distribution_definition::Distribution;
 use urn::Urn;
 
 pub mod ds_protocol;
 pub mod ds_protocol_errors;
+pub mod ds_protocol_types;
 
 #[mockall::automock]
 #[async_trait]
@@ -39,6 +40,6 @@ pub trait DSProtocolCatalogTrait: Sync + Send {
         dataset_id: Urn,
         catalog_id: Urn,
     ) -> anyhow::Result<Vec<Distribution>>;
-    async fn catalog_request(&self) -> anyhow::Result<Vec<Catalog>>;
+    async fn catalog_request(&self) -> anyhow::Result<Catalog>;
     async fn catalog_request_by_id(&self, catalog_id: Urn) -> anyhow::Result<Catalog>;
 }

@@ -19,16 +19,12 @@
 // use crate::utils::load_env_file;
 use rainbow_contracts::provider::core::rainbow_entities::rainbow_entities_types::NewParticipantRequest;
 
-use rainbow_common::protocol::contract::contract_odrl::{
-    ContractRequestMessageOfferTypes, OdrlAgreement, OdrlAtomicConstraint, OdrlConstraint, OdrlMessageOffer, OdrlOffer,
-    OdrlPermission, OdrlRightOperand, OdrlTypes, Operator,
-};
+use rainbow_common::protocol::contract::contract_odrl::{ContractRequestMessageOfferTypes, OdrlAgreement, OdrlAtomicConstraint, OdrlConstraint, OdrlMessageOffer, OdrlOffer, OdrlPermission, OdrlPolicyInfo, OdrlRightOperand, OdrlTypes, Operator};
 use rainbow_common::utils::{get_urn, get_urn_from_string};
 
 use rainbow_catalog::core::rainbow_entities::rainbow_catalog_types::{NewCatalogRequest, NewDatasetRequest};
-use rainbow_catalog::protocol::catalog_definition::Catalog;
-use rainbow_catalog::protocol::dataset_definition::Dataset;
-use rainbow_common::protocol::catalog::OdrlPolicyInfo;
+use rainbow_common::protocol::catalog::catalog_definition::Catalog;
+use rainbow_common::protocol::catalog::dataset_definition::Dataset;
 use rainbow_common::protocol::contract::contract_odrl::ContractRequestMessageOfferTypes::OfferMessage;
 use rainbow_contracts::consumer::core::ds_protocol_rpc::ds_protocol_rpc_types::{
     SetupRequestRequest, SetupRequestResponse, SetupVerificationRequest, SetupVerificationResponse,
@@ -123,7 +119,7 @@ pub async fn contract_negotiation_consumer() -> anyhow::Result<()> {
 
     let res = req.json::<Catalog>().await?;
     println!("Catalog: {:#?}", res);
-    let catalog_id = get_urn_from_string(&res.id)?;
+    let catalog_id = res.id;
 
     let req = provider_client
         .post(format!(

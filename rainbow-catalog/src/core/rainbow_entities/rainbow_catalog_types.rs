@@ -17,6 +17,7 @@
  *
  */
 
+use rainbow_common::dcat_formats::DctFormats;
 use rainbow_common::utils::get_urn_from_string;
 use rainbow_db::catalog::repo::{
     EditCatalogModel, EditDataServiceModel, EditDatasetModel, EditDistributionModel,
@@ -178,6 +179,9 @@ pub struct NewDistributionRequest {
     #[serde(rename = "@id")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
+    #[serde(rename = "dct:formats")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_formats: Option<DctFormats>,
     #[serde(rename = "dct:title")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dct_title: Option<String>,
@@ -192,6 +196,7 @@ impl Into<NewDistributionModel> for NewDistributionRequest {
             id,
             dct_title: self.dct_title,
             dct_description: None,
+            dct_formats: self.dct_formats,
             dcat_access_service: self.dcat_access_service.to_string(),
         }
     }

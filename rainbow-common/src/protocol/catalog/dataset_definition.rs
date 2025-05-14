@@ -17,8 +17,9 @@
  *
  */
 
-use super::distribution_definition::Distribution;
+use crate::protocol::catalog::distribution_definition::Distribution;
 use crate::protocol::context_field::ContextField;
+use crate::protocol::contract::contract_odrl::OdrlOffer;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -33,36 +34,38 @@ pub struct Dataset {
     pub dcat: DatasetDcatDeclaration,
     #[serde(flatten)]
     pub dct: DatasetDctDeclaration,
-    #[serde(rename = "odrl:hasPolicy")]
-    pub odrl_offer: serde_json::Value,
-    #[serde(rename = "odrl:extraFields")]
+    #[serde(rename = "hasPolicy")]
+    pub odrl_offer: Vec<OdrlOffer>,
+    #[serde(rename = "extraFields")]
     pub extra_fields: serde_json::Value,
-    #[serde(rename = "dcat:distribution")]
+    #[serde(rename = "distribution")]
     pub distribution: Vec<Distribution>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DatasetDcatDeclaration {
-    #[serde(rename = "dcat:theme")]
+    #[serde(rename = "theme")]
     pub theme: String,
-    #[serde(rename = "dcat:keyword")]
+    #[serde(rename = "keyword")]
     pub keyword: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DatasetDctDeclaration {
-    #[serde(rename = "dct:conformsTo")]
+    #[serde(rename = "conformsTo")]
     pub conforms_to: Option<String>,
-    #[serde(rename = "dct:creator")]
+    #[serde(rename = "creator")]
     pub creator: Option<String>,
-    #[serde(rename = "dct:identifier")]
+    #[serde(rename = "identifier")]
     pub identifier: String,
-    #[serde(rename = "dct:issued")]
+    #[serde(rename = "issued")]
     pub issued: chrono::NaiveDateTime,
-    #[serde(rename = "dct:modified")]
+    #[serde(rename = "modified")]
     pub modified: Option<chrono::NaiveDateTime>,
-    #[serde(rename = "dct:title")]
+    #[serde(rename = "title")]
     pub title: Option<String>,
-    #[serde(rename = "dct:description")]
+    #[serde(rename = "description")]
     pub description: Vec<String>,
 }
+
+
