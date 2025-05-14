@@ -52,8 +52,9 @@ impl TryFrom<catalog::Model> for Catalog {
             dspace: CatalogDSpaceDeclaration {
                 participant_id: catalog_model.dspace_participant_id,
             },
-            odrl_offer: vec![],
+            odrl_offer: Some(vec![]),
             extra_fields: Value::default(),
+            catalogs: vec![],
             datasets: vec![],
             data_services: vec![],
         };

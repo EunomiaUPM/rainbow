@@ -32,4 +32,6 @@ pub enum DSProtocolCatalogErrors {
     JsonRejection(JsonRejection),
     #[error("Error from deserializing path. {0}")]
     UrnUuidSchema(String),
+    #[error("There is no a main catalog for DSProtocol")]
+    NoMainCatalog,
 }

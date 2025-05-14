@@ -40,7 +40,7 @@ pub mod rainbow_policies_types;
 #[async_trait]
 pub trait RainbowCatalogTrait: Send + Sync {
     async fn get_catalog_by_id(&self, id: Urn) -> anyhow::Result<Catalog>;
-    async fn post_catalog(&self, input: NewCatalogRequest) -> anyhow::Result<Catalog>;
+    async fn post_catalog(&self, input: NewCatalogRequest, is_main: bool) -> anyhow::Result<Catalog>;
     async fn put_catalog(&self, id: Urn, input: NewCatalogRequest) -> anyhow::Result<Catalog>;
     async fn delete_catalog(&self, id: Urn) -> anyhow::Result<()>;
 }

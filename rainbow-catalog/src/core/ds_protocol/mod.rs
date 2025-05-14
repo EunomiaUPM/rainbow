@@ -40,6 +40,6 @@ pub trait DSProtocolCatalogTrait: Sync + Send {
         dataset_id: Urn,
         catalog_id: Urn,
     ) -> anyhow::Result<Vec<Distribution>>;
-    async fn catalog_request(&self) -> anyhow::Result<Vec<Catalog>>;
+    async fn catalog_request(&self) -> anyhow::Result<Catalog>;
     async fn catalog_request_by_id(&self, catalog_id: Urn) -> anyhow::Result<Catalog>;
 }

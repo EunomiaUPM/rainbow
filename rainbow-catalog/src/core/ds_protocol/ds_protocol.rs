@@ -19,6 +19,7 @@
 
 use crate::core::ds_protocol::ds_protocol_errors::DSProtocolCatalogErrors;
 use crate::core::ds_protocol::DSProtocolCatalogTrait;
+use crate::core::rainbow_entities::rainbow_catalog_err::CatalogError::ConversionError;
 use axum::async_trait;
 use rainbow_common::protocol::catalog::catalog_definition::Catalog;
 use rainbow_common::protocol::catalog::dataservice_definition::DataService;
@@ -181,30 +182,32 @@ where
         Ok(distributions_out)
     }
 
-    async fn catalog_request(&self) -> anyhow::Result<Vec<Catalog>> {
+    async fn catalog_request(&self) -> anyhow::Result<Catalog> {
+        let main_catalog = self.repo
+            .get_main_catalog().await.map_err(DSProtocolCatalogErrors::DbErr)?
+            .ok_or(DSProtocolCatalogErrors::NoMainCatalog)?;
+        let mut main_catalog = Catalog::try_from(main_catalog).map_err(|e| ConversionError(e))?;
+
         let mut catalogs_out: Vec<Catalog> = vec![];
         let catalogs = self.repo
-            .get_all_catalogs(None, None)
+            .get_all_catalogs(None, None, true)
             .await
             .map_err(DSProtocolCatalogErrors::DbErr)?;
 
         for catalog in catalogs {
             let mut catalog = Catalog::try_from(catalog)?;
             let id = &catalog.id;
-
-            // odrl
-            let odrl_offer = self.repo
-                .get_all_odrl_offers_by_entity(id.clone())
-                .await
-                .map_err(DSProtocolCatalogErrors::DbErr)?;
-            let odrl_offer = odrl_offer.iter().map(|o| OdrlOffer::try_from(o.to_owned()).unwrap()).collect();
-            catalog.odrl_offer = odrl_offer;
+            catalog.odrl_offer = None;
             catalog.datasets = self.dataset_request_by_catalog(id.clone()).await?;
             catalog.data_services = self.data_services_request_by_catalog(id.clone()).await?;
             catalogs_out.push(catalog);
         }
 
-        Ok(catalogs_out)
+        main_catalog.catalogs = catalogs_out;
+        main_catalog.odrl_offer = None;
+        main_catalog.datasets = self.dataset_request_by_catalog(main_catalog.id.clone()).await?;
+        main_catalog.data_services = self.data_services_request_by_catalog(main_catalog.id.clone()).await?;
+        Ok(main_catalog)
     }
 
     async fn catalog_request_by_id(&self, catalog_id: Urn) -> anyhow::Result<Catalog> {
@@ -225,7 +228,7 @@ where
             .get_all_odrl_offers_by_entity(id.clone())
             .await
             .map_err(DSProtocolCatalogErrors::DbErr)?;
-        let odrl_offer = odrl_offer.iter().map(|o| OdrlOffer::try_from(o.to_owned()).unwrap()).collect();
+        let odrl_offer = Some(odrl_offer.iter().map(|o| OdrlOffer::try_from(o.to_owned()).unwrap()).collect());
         catalogs_out.odrl_offer = odrl_offer;
         catalogs_out.datasets = self.dataset_request_by_catalog(id.clone()).await?;
         catalogs_out.data_services = self.data_services_request_by_catalog(id).await?;

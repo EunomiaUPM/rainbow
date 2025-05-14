@@ -58,6 +58,14 @@ impl IntoResponse for DSProtocolCatalogErrors {
                     e.to_string(),
                 )),
             ),
+            e @ DSProtocolCatalogErrors::NoMainCatalog => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(CatalogErrorOut::new(
+                    "500".to_string(),
+                    "NO_MAIN_CATALOG".to_string(),
+                    e.to_string(),
+                )),
+            ),
         }
             .into_response()
     }

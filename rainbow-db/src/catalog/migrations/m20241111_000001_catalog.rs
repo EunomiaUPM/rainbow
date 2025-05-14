@@ -42,6 +42,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(CatalogCatalogs::DctModified).date_time())
                     .col(ColumnDef::new(CatalogCatalogs::DctTitle).string())
                     .col(ColumnDef::new(CatalogCatalogs::DspaceParticipantId).string())
+                    .col(ColumnDef::new(CatalogCatalogs::DspaceMainCatalog).boolean().not_null().default(false))
                     .to_owned(),
             )
             .await
@@ -64,4 +65,5 @@ pub enum CatalogCatalogs {
     DctModified,
     DctTitle,
     DspaceParticipantId,
+    DspaceMainCatalog,
 }

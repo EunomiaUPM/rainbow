@@ -42,9 +42,12 @@ pub struct Catalog {
     #[serde(flatten)]
     pub dspace: CatalogDSpaceDeclaration,
     #[serde(rename = "hasPolicy")]
-    pub odrl_offer: Vec<OdrlOffer>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub odrl_offer: Option<Vec<OdrlOffer>>,
     #[serde(rename = "extraFields")]
     pub extra_fields: serde_json::Value,
+    #[serde(rename = "catalog")]
+    pub catalogs: Vec<Catalog>,
     #[serde(rename = "dataset")]
     pub datasets: Vec<Dataset>,
     #[serde(rename = "service")]

@@ -126,6 +126,7 @@ pub struct OdrlOffer {
     pub prohibition: Option<Vec<OdrlObligation>>,
     // Offer
     #[serde(rename = "target")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub target: Option<Urn>, // anyof// anyof
 }
 

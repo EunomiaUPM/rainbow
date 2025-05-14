@@ -22,10 +22,17 @@ use crate::catalog::entities::dataset;
 use crate::catalog::entities::distribution;
 use crate::catalog::entities::odrl_offer;
 
-use crate::catalog::repo::{CatalogRepo, CatalogRepoErrors, CatalogRepoFactory, DataServiceRepo, DatasetRepo, DistributionRepo, EditCatalogModel, EditDataServiceModel, EditDatasetModel, EditDistributionModel, NewCatalogModel, NewDataServiceModel, NewDatasetModel, NewDistributionModel, NewOdrlOfferModel, OdrlOfferRepo};
+use crate::catalog::entities::catalog::Model;
+use crate::catalog::repo::{
+    CatalogRepo, CatalogRepoErrors, CatalogRepoFactory, DataServiceRepo, DatasetRepo, DistributionRepo,
+    EditCatalogModel, EditDataServiceModel, EditDatasetModel, EditDistributionModel, NewCatalogModel,
+    NewDataServiceModel, NewDatasetModel, NewDistributionModel, NewOdrlOfferModel, OdrlOfferRepo,
+};
 use axum::async_trait;
 use rainbow_common::utils::get_urn;
-use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, ModelTrait, QueryFilter, QuerySelect};
+use sea_orm::{
+    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, ModelTrait, QueryFilter, QuerySelect,
+};
 use urn::Urn;
 
 pub struct CatalogRepoForSql {
@@ -53,28 +60,48 @@ impl CatalogRepo for CatalogRepoForSql {
         &self,
         limit: Option<u64>,
         page: Option<u64>,
+        no_main_catalog: bool,
     ) -> anyhow::Result<Vec<catalog::Model>, CatalogRepoErrors> {
-        let catalogs = catalog::Entity::find()
-            .limit(limit.unwrap_or(100000))
-            .offset(page.unwrap_or(0))
-            .all(&self.db_connection)
-            .await;
+        let catalogs = match no_main_catalog {
+            true => {
+                catalog::Entity::find()
+                    .filter(catalog::Column::DspaceMainCatalog.eq(false))
+                    .limit(limit.unwrap_or(100000))
+                    .offset(page.unwrap_or(0))
+                    .all(&self.db_connection)
+                    .await
+            }
+            false => {
+                catalog::Entity::find()
+                    .limit(limit.unwrap_or(100000))
+                    .offset(page.unwrap_or(0))
+                    .all(&self.db_connection)
+                    .await
+            }
+        };
+
         match catalogs {
             Ok(catalogs) => Ok(catalogs),
             Err(err) => Err(CatalogRepoErrors::ErrorFetchingCatalog(err.into())),
         }
     }
 
-    async fn get_catalog_by_id(
-        &self,
-        catalog_id: Urn,
-    ) -> anyhow::Result<Option<catalog::Model>, CatalogRepoErrors> {
+    async fn get_catalog_by_id(&self, catalog_id: Urn) -> anyhow::Result<Option<catalog::Model>, CatalogRepoErrors> {
         let catalog_id = catalog_id.to_string();
         let catalog = catalog::Entity::find_by_id(catalog_id).one(&self.db_connection).await;
         match catalog {
             Ok(catalog) => Ok(catalog),
             Err(err) => Err(CatalogRepoErrors::ErrorFetchingCatalog(err.into())),
         }
+    }
+
+    async fn get_main_catalog(&self) -> anyhow::Result<Option<Model>, CatalogRepoErrors> {
+        let catalog = catalog::Entity::find()
+            .filter(catalog::Column::DspaceMainCatalog.eq(true))
+            .one(&self.db_connection)
+            .await
+            .map_err(|err| CatalogRepoErrors::ErrorCreatingCatalog(err.into()))?;
+        Ok(catalog)
     }
 
     async fn put_catalog_by_id(
@@ -130,6 +157,38 @@ impl CatalogRepo for CatalogRepoForSql {
             dct_modified: ActiveValue::Set(None),
             dct_title: ActiveValue::Set(new_catalog_model.dct_title),
             dspace_participant_id: ActiveValue::Set(Some(participant_id.to_string())),
+            dspace_main_catalog: ActiveValue::Set(false),
+        };
+        let catalog = catalog::Entity::insert(model).exec_with_returning(&self.db_connection).await;
+        match catalog {
+            Ok(catalog) => Ok(catalog),
+            Err(err) => Err(CatalogRepoErrors::ErrorCreatingCatalog(err.into())),
+        }
+    }
+
+    async fn create_main_catalog(
+        &self,
+        new_catalog_model: NewCatalogModel,
+    ) -> anyhow::Result<Model, CatalogRepoErrors> {
+        let main_catalog =
+            self.get_main_catalog().await.map_err(|err| CatalogRepoErrors::ErrorCreatingCatalog(err.into()))?;
+        if main_catalog.is_some() {
+            return Ok(main_catalog.unwrap());
+        }
+
+        let urn = new_catalog_model.id.unwrap_or_else(|| get_urn(None));
+        let participant_id = get_urn(None); // TODO create participant global id (create global setup)
+        let model = catalog::ActiveModel {
+            id: ActiveValue::Set(urn.to_string()),
+            foaf_home_page: ActiveValue::Set(new_catalog_model.foaf_home_page),
+            dct_conforms_to: ActiveValue::Set(new_catalog_model.dct_conforms_to),
+            dct_creator: ActiveValue::Set(new_catalog_model.dct_creator),
+            dct_identifier: ActiveValue::Set(Some(urn.to_string())),
+            dct_issued: ActiveValue::Set(chrono::Utc::now().naive_utc()),
+            dct_modified: ActiveValue::Set(None),
+            dct_title: ActiveValue::Set(new_catalog_model.dct_title),
+            dspace_participant_id: ActiveValue::Set(Some(participant_id.to_string())),
+            dspace_main_catalog: ActiveValue::Set(true),
         };
         let catalog = catalog::Entity::insert(model).exec_with_returning(&self.db_connection).await;
         match catalog {
@@ -169,7 +228,10 @@ impl DatasetRepo for CatalogRepoForSql {
         }
     }
 
-    async fn get_datasets_by_catalog_id(&self, catalog_id: Urn) -> anyhow::Result<Vec<dataset::Model>, CatalogRepoErrors> {
+    async fn get_datasets_by_catalog_id(
+        &self,
+        catalog_id: Urn,
+    ) -> anyhow::Result<Vec<dataset::Model>, CatalogRepoErrors> {
         let catalog_id = catalog_id.to_string();
 
         let catalog = catalog::Entity::find_by_id(catalog_id.clone())
@@ -180,21 +242,15 @@ impl DatasetRepo for CatalogRepoForSql {
             return Err(CatalogRepoErrors::CatalogNotFound);
         }
 
-        let datasets = dataset::Entity::find()
-            .filter(dataset::Column::CatalogId.eq(catalog_id))
-            .all(&self.db_connection)
-            .await;
+        let datasets =
+            dataset::Entity::find().filter(dataset::Column::CatalogId.eq(catalog_id)).all(&self.db_connection).await;
         match datasets {
             Ok(datasets) => Ok(datasets),
             Err(err) => Err(CatalogRepoErrors::ErrorFetchingDataset(err.into())),
         }
     }
 
-
-    async fn get_datasets_by_id(
-        &self,
-        dataset_id: Urn,
-    ) -> anyhow::Result<Option<dataset::Model>, CatalogRepoErrors> {
+    async fn get_datasets_by_id(&self, dataset_id: Urn) -> anyhow::Result<Option<dataset::Model>, CatalogRepoErrors> {
         let dataset_id = dataset_id.to_string();
         let dataset = dataset::Entity::find_by_id(dataset_id).one(&self.db_connection).await;
         match dataset {
@@ -285,11 +341,7 @@ impl DatasetRepo for CatalogRepoForSql {
         }
     }
 
-    async fn delete_dataset_by_id(
-        &self,
-        catalog_id: Urn,
-        dataset_id: Urn,
-    ) -> anyhow::Result<(), CatalogRepoErrors> {
+    async fn delete_dataset_by_id(&self, catalog_id: Urn, dataset_id: Urn) -> anyhow::Result<(), CatalogRepoErrors> {
         let dataset_id = dataset_id.to_string();
         let catalog_id = catalog_id.to_string();
 
@@ -359,8 +411,7 @@ impl DistributionRepo for CatalogRepoForSql {
         distribution_id: Urn,
     ) -> anyhow::Result<Option<distribution::Model>, CatalogRepoErrors> {
         let distribution_id = distribution_id.to_string();
-        let distribution =
-            distribution::Entity::find_by_id(distribution_id).one(&self.db_connection).await;
+        let distribution = distribution::Entity::find_by_id(distribution_id).one(&self.db_connection).await;
         match distribution {
             Ok(distribution) => Ok(distribution),
             Err(err) => Err(CatalogRepoErrors::ErrorFetchingDistribution(err.into())),
@@ -472,9 +523,9 @@ impl DistributionRepo for CatalogRepoForSql {
             dct_description: ActiveValue::Set(new_distribution_model.dct_description),
             dcat_access_service: ActiveValue::Set(new_distribution_model.dcat_access_service),
             dataset_id: ActiveValue::Set(dataset_id),
+            dct_format: ActiveValue::Set(new_distribution_model.dct_formats.map(|f| f.to_string())),
         };
-        let distribution =
-            distribution::Entity::insert(model).exec_with_returning(&self.db_connection).await;
+        let distribution = distribution::Entity::insert(model).exec_with_returning(&self.db_connection).await;
         match distribution {
             Ok(distribution) => Ok(distribution),
             Err(err) => Err(CatalogRepoErrors::ErrorCreatingDistribution(err.into())),
@@ -507,8 +558,7 @@ impl DistributionRepo for CatalogRepoForSql {
             return Err(CatalogRepoErrors::DatasetNotFound);
         }
 
-        let distribution =
-            distribution::Entity::delete_by_id(distribution_id).exec(&self.db_connection).await;
+        let distribution = distribution::Entity::delete_by_id(distribution_id).exec(&self.db_connection).await;
         match distribution {
             Ok(delete_result) => match delete_result.rows_affected {
                 0 => Err(CatalogRepoErrors::DistributionNotFound),
@@ -564,8 +614,7 @@ impl DataServiceRepo for CatalogRepoForSql {
         data_service_id: Urn,
     ) -> anyhow::Result<Option<dataservice::Model>, CatalogRepoErrors> {
         let data_service_id = data_service_id.to_string();
-        let data_service =
-            dataservice::Entity::find_by_id(data_service_id).one(&self.db_connection).await;
+        let data_service = dataservice::Entity::find_by_id(data_service_id).one(&self.db_connection).await;
         match data_service {
             Ok(data_service) => Ok(data_service),
             Err(err) => Err(CatalogRepoErrors::ErrorFetchingDataService(err.into())),
@@ -599,8 +648,7 @@ impl DataServiceRepo for CatalogRepoForSql {
         };
         let mut old_active_model: dataservice::ActiveModel = old_model.into();
         if let Some(dcat_endpoint_description) = edit_data_service_model.dcat_endpoint_description {
-            old_active_model.dcat_endpoint_description =
-                ActiveValue::Set(Some(dcat_endpoint_description));
+            old_active_model.dcat_endpoint_description = ActiveValue::Set(Some(dcat_endpoint_description));
         }
         if let Some(dcat_endpoint_url) = edit_data_service_model.dcat_endpoint_url {
             old_active_model.dcat_endpoint_url = ActiveValue::Set(dcat_endpoint_url);
@@ -643,9 +691,7 @@ impl DataServiceRepo for CatalogRepoForSql {
         let urn = new_data_service_model.id.unwrap_or_else(|| get_urn(None));
         let model = dataservice::ActiveModel {
             id: ActiveValue::Set(urn.to_string()),
-            dcat_endpoint_description: ActiveValue::Set(
-                new_data_service_model.dcat_endpoint_description,
-            ),
+            dcat_endpoint_description: ActiveValue::Set(new_data_service_model.dcat_endpoint_description),
             dcat_endpoint_url: ActiveValue::Set(new_data_service_model.dcat_endpoint_url),
             dct_conforms_to: ActiveValue::Set(new_data_service_model.dct_conforms_to),
             dct_creator: ActiveValue::Set(new_data_service_model.dct_creator),
@@ -656,8 +702,7 @@ impl DataServiceRepo for CatalogRepoForSql {
             dct_description: ActiveValue::Set(new_data_service_model.dct_description),
             catalog_id: ActiveValue::Set(catalog_id),
         };
-        let data_service =
-            dataservice::Entity::insert(model).exec_with_returning(&self.db_connection).await;
+        let data_service = dataservice::Entity::insert(model).exec_with_returning(&self.db_connection).await;
         match data_service {
             Ok(data_service) => Ok(data_service),
             Err(err) => Err(CatalogRepoErrors::ErrorCreatingDataService(err.into())),
@@ -680,8 +725,7 @@ impl DataServiceRepo for CatalogRepoForSql {
             return Err(CatalogRepoErrors::CatalogNotFound);
         }
 
-        let data_service =
-            dataservice::Entity::delete_by_id(data_service_id).exec(&self.db_connection).await;
+        let data_service = dataservice::Entity::delete_by_id(data_service_id).exec(&self.db_connection).await;
         match data_service {
             Ok(delete_result) => match delete_result.rows_affected {
                 0 => Err(CatalogRepoErrors::DataServiceNotFound),
@@ -715,10 +759,8 @@ impl OdrlOfferRepo for CatalogRepoForSql {
         entity: Urn,
     ) -> anyhow::Result<Vec<odrl_offer::Model>, CatalogRepoErrors> {
         let entity = entity.to_string();
-        let odrl_offers = odrl_offer::Entity::find()
-            .filter(odrl_offer::Column::Entity.eq(entity))
-            .all(&self.db_connection)
-            .await;
+        let odrl_offers =
+            odrl_offer::Entity::find().filter(odrl_offer::Column::Entity.eq(entity)).all(&self.db_connection).await;
         match odrl_offers {
             Ok(odrl_offers) => Ok(odrl_offers),
             Err(err) => Err(CatalogRepoErrors::ErrorFetchingOdrlOffer(err.into())),
@@ -758,10 +800,7 @@ impl OdrlOfferRepo for CatalogRepoForSql {
         }
     }
 
-    async fn delete_odrl_offer_by_id(
-        &self,
-        odrl_offer_id: Urn,
-    ) -> anyhow::Result<(), CatalogRepoErrors> {
+    async fn delete_odrl_offer_by_id(&self, odrl_offer_id: Urn) -> anyhow::Result<(), CatalogRepoErrors> {
         let odrl_offer_id = odrl_offer_id.to_string();
         let odrl_offer = odrl_offer::Entity::delete_by_id(odrl_offer_id).exec(&self.db_connection).await;
         match odrl_offer {
@@ -773,10 +812,7 @@ impl OdrlOfferRepo for CatalogRepoForSql {
         }
     }
 
-    async fn delete_odrl_offers_by_entity(
-        &self,
-        entity_id: Urn,
-    ) -> anyhow::Result<(), CatalogRepoErrors> {
+    async fn delete_odrl_offers_by_entity(&self, entity_id: Urn) -> anyhow::Result<(), CatalogRepoErrors> {
         let entity_id = entity_id.to_string();
         let odrl_offer = odrl_offer::Entity::delete_many()
             .filter(odrl_offer::Column::Entity.eq(entity_id))
@@ -791,10 +827,7 @@ impl OdrlOfferRepo for CatalogRepoForSql {
         }
     }
 
-    async fn get_upstream_offers(
-        &self,
-        entity_id: Urn,
-    ) -> anyhow::Result<Vec<odrl_offer::Model>, CatalogRepoErrors> {
+    async fn get_upstream_offers(&self, entity_id: Urn) -> anyhow::Result<Vec<odrl_offer::Model>, CatalogRepoErrors> {
         todo!("get_upstream_offers")
     }
 }

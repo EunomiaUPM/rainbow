@@ -25,6 +25,7 @@ use super::entities::odrl_offer;
 use crate::transfer_provider::repo::{TransferMessagesRepo, TransferProcessRepo};
 use anyhow::Error;
 use axum::async_trait;
+use rainbow_common::dcat_formats::DctFormats;
 use sea_orm::DatabaseConnection;
 use thiserror::Error;
 use urn::Urn;
@@ -60,8 +61,11 @@ pub trait CatalogRepo {
         &self,
         limit: Option<u64>,
         page: Option<u64>,
+        no_main_catalog: bool,
     ) -> anyhow::Result<Vec<catalog::Model>, CatalogRepoErrors>;
     async fn get_catalog_by_id(&self, catalog_id: Urn) -> anyhow::Result<Option<catalog::Model>, CatalogRepoErrors>;
+    async fn get_main_catalog(&self) -> anyhow::Result<Option<catalog::Model>, CatalogRepoErrors>;
+
     async fn put_catalog_by_id(
         &self,
         catalog_id: Urn,
@@ -71,6 +75,12 @@ pub trait CatalogRepo {
         &self,
         new_catalog_model: NewCatalogModel,
     ) -> anyhow::Result<catalog::Model, CatalogRepoErrors>;
+
+    async fn create_main_catalog(
+        &self,
+        new_catalog_model: NewCatalogModel,
+    ) -> anyhow::Result<catalog::Model, CatalogRepoErrors>;
+
     async fn delete_catalog_by_id(&self, catalog_id: Urn) -> anyhow::Result<(), CatalogRepoErrors>;
 }
 
@@ -117,6 +127,7 @@ pub struct NewDistributionModel {
     pub id: Option<Urn>,
     pub dct_title: Option<String>,
     pub dct_description: Option<String>,
+    pub dct_formats: Option<DctFormats>,
     pub dcat_access_service: String,
 }
 pub struct EditDistributionModel {

@@ -31,6 +31,7 @@ pub struct Model {
     pub dct_description: Option<String>,
     pub dcat_access_service: String,
     pub dataset_id: String,
+    pub dct_format: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

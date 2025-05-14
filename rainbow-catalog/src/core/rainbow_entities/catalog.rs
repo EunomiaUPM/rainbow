@@ -68,7 +68,7 @@ where
                     Catalog::try_from(catalog_entity.clone()).map_err(CatalogError::ConversionError)?;
                 let catalog_id = get_urn_from_string(&catalog_entity.id.clone())?;
                 let odrl = self.repo.get_all_odrl_offers_by_entity(catalog_id).await.map_err(CatalogError::DbErr)?;
-                let odrl = odrl.iter().map(|o| OdrlOffer::try_from(o.to_owned()).unwrap()).collect();
+                let odrl = Some(odrl.iter().map(|o| OdrlOffer::try_from(o.to_owned()).unwrap()).collect());
                 catalog_out.odrl_offer = odrl;
                 // catalog_out.datasets = dataset_request_by_catalog(catalog_out.id.parse()?).await?;
                 // catalog_out.data_services = dataservices_request_by_catalog(catalog_out.id.parse()?).await?;
@@ -78,8 +78,11 @@ where
         }
     }
 
-    async fn post_catalog(&self, input: NewCatalogRequest) -> anyhow::Result<Catalog> {
-        let catalog_entity = self.repo.create_catalog(input.into()).await.map_err(CatalogError::DbErr)?;
+    async fn post_catalog(&self, input: NewCatalogRequest, is_main: bool) -> anyhow::Result<Catalog> {
+        let catalog_entity = match is_main {
+            true => self.repo.create_main_catalog(input.into()).await.map_err(CatalogError::DbErr)?,
+            false => self.repo.create_catalog(input.into()).await.map_err(CatalogError::DbErr)?,
+        };
         let catalog = Catalog::try_from(catalog_entity).map_err(CatalogError::ConversionError)?;
         self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
             category: RainbowEventsNotificationMessageCategory::Catalog,

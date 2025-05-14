@@ -32,6 +32,7 @@ pub struct Model {
     pub dct_modified: Option<chrono::NaiveDateTime>,
     pub dct_title: Option<String>,
     pub dspace_participant_id: Option<String>,
+    pub dspace_main_catalog: bool,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
