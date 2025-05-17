@@ -18,6 +18,7 @@
  */
 
 use crate::consumer::setup::config::ContractNegotiationConsumerApplicationConfig;
+use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
 use rainbow_db::contracts_consumer::migrations::get_contracts_migrations;
 use rainbow_db::events::migrations::get_events_migrations;
 use sea_orm::Database;
@@ -37,7 +38,7 @@ impl MigratorTrait for ContractNegotiationConsumerMigration {
 }
 
 impl ContractNegotiationConsumerMigration {
-    pub async fn run(config: &ContractNegotiationConsumerApplicationConfig<'static>) -> anyhow::Result<()> {
+    pub async fn run(config: &ContractNegotiationConsumerApplicationConfig) -> anyhow::Result<()> {
         // db_connection
         let db_url = config.get_full_db_url();
         let db_connection = Database::connect(db_url).await.expect("Database can't connect");

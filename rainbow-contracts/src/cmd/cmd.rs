@@ -24,6 +24,7 @@ use crate::provider::setup::application::ContractNegotiationProviderApplication;
 use crate::provider::setup::config::ContractNegotiationApplicationProviderConfig;
 use crate::provider::setup::db_migrations::ContractNegotiationProviderMigration;
 use clap::{Parser, Subcommand};
+use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
 use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
 use tracing::{debug, info};
 
@@ -72,10 +73,7 @@ impl ContractNegotiationCommands {
             }
             ContractNegotiationCliRoles::Consumer(cmd) => {
                 let config = ContractNegotiationConsumerApplicationConfig::default();
-                let config = match config.merge_dotenv_configuration() {
-                    Ok(config) => config,
-                    Err(_) => config
-                };
+                let config = config.merge_dotenv_configuration();
                 let table =
                     json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
                 info!("Current config:\n{}", table);

@@ -17,144 +17,78 @@
  *
  */
 
-use rainbow_common::config::database::DbType;
+
+use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
+use rainbow_common::config::global_config::{DatabaseConfig, HostConfig};
 use rainbow_common::config::ConfigRoles;
 use serde::Serialize;
 
 #[derive(Serialize, Clone)]
-struct HostConfig {
-    protocol: String,
-    url: String,
-    port: String,
-}
-
-#[derive(Serialize, Clone)]
-struct DatabaseConfig {
-    db_type: DbType,
-    url: String,
-    port: String,
-    user: String,
-    password: String,
-    name: String,
-}
-
-#[derive(Serialize, Clone)]
 pub struct TransferConsumerApplicationConfig {
-    transfer_process_host: HostConfig,
-    data_plane_host: Option<HostConfig>,
-    auth_host: HostConfig,
-    database_config: DatabaseConfig,
-    role: ConfigRoles,
+    pub transfer_process_host: Option<HostConfig>,
+    pub business_system_host: Option<HostConfig>,
+    pub contract_negotiation_host: Option<HostConfig>,
+    pub auth_host: Option<HostConfig>,
+    pub ssi_auth_host: Option<HostConfig>,
+    pub database_config: DatabaseConfig,
+    pub ssh_user: Option<String>,
+    pub ssh_private_key_path: Option<String>,
+    pub role: ConfigRoles,
 }
 
 impl Default for TransferConsumerApplicationConfig {
     fn default() -> Self {
-        TransferConsumerApplicationConfig {
-            transfer_process_host: HostConfig {
-                protocol: "http".to_string(),
-                url: "127.0.0.1".to_string(),
-                port: "1235".to_string(),
-            },
-            data_plane_host: None,
-            auth_host: HostConfig {
-                protocol: "http".to_string(),
-                url: "127.0.0.1".to_string(),
-                port: "1231".to_string(),
-            },
-            database_config: DatabaseConfig {
-                db_type: DbType::Postgres,
-                url: "127.0.0.1".to_string(),
-                port: "5434".to_string(),
-                user: "ds-protocol-consumer".to_string(),
-                password: "ds-protocol-consumer".to_string(),
-                name: "ds-protocol-consumer".to_string(),
-            },
-            role: ConfigRoles::Consumer,
+        TransferConsumerApplicationConfig::from(ApplicationConsumerConfig::default())
+    }
+}
+
+impl ApplicationConsumerConfigTrait for TransferConsumerApplicationConfig {
+    fn ssh_user(&self) -> Option<String> { self.ssh_user.clone() }
+    fn ssh_private_key_path(&self) -> Option<String> { self.ssh_private_key_path.clone() }
+    fn get_role(&self) -> ConfigRoles { self.role }
+    fn get_raw_transfer_process_host(&self) -> &Option<HostConfig> { &self.transfer_process_host }
+    fn get_raw_business_system_host(&self) -> &Option<HostConfig> { &self.business_system_host }
+    fn get_raw_contract_negotiation_host(&self) -> &Option<HostConfig> { &self.contract_negotiation_host }
+    fn get_raw_auth_host(&self) -> &Option<HostConfig> { &self.auth_host }
+    fn get_raw_ssi_auth_host(&self) -> &Option<HostConfig> { &self.ssi_auth_host }
+    fn get_raw_database_config(&self) -> &DatabaseConfig { &self.database_config }
+    fn merge_dotenv_configuration(&self) -> Self
+    where
+        Self: Sized,
+    {
+        let app_config = ApplicationConsumerConfig::default().merge_dotenv_configuration();
+        TransferConsumerApplicationConfig::from(app_config)
+    }
+}
+
+impl From<ApplicationConsumerConfig> for TransferConsumerApplicationConfig {
+    fn from(value: ApplicationConsumerConfig) -> Self {
+        Self {
+            transfer_process_host: value.transfer_process_host,
+            business_system_host: value.business_system_host,
+            contract_negotiation_host: value.contract_negotiation_host,
+            auth_host: value.auth_host,
+            ssi_auth_host: value.ssi_auth_host,
+            database_config: value.database_config,
+            ssh_user: value.ssh_user,
+            ssh_private_key_path: value.ssh_private_key_path,
+            role: value.role,
         }
     }
 }
 
-impl TransferConsumerApplicationConfig {
-    pub fn get_full_host_url(&self) -> String {
-        format!(
-            "{}://{}:{}",
-            self.transfer_process_host.protocol, self.transfer_process_host.url, self.transfer_process_host.port
-        )
-    }
-    pub fn get_full_db_url(&self) -> String {
-        match self.database_config.db_type {
-            DbType::Memory => ":memory:".to_string(),
-            _ => format!(
-                "{}://{}:{}@{}:{}/{}",
-                self.database_config.db_type,
-                self.database_config.user,
-                self.database_config.password,
-                self.database_config.url,
-                self.database_config.port,
-                self.database_config.name
-            ),
+impl Into<ApplicationConsumerConfig> for TransferConsumerApplicationConfig {
+    fn into(self) -> ApplicationConsumerConfig {
+        ApplicationConsumerConfig {
+            transfer_process_host: self.transfer_process_host,
+            business_system_host: self.business_system_host,
+            contract_negotiation_host: self.contract_negotiation_host,
+            auth_host: self.auth_host,
+            ssi_auth_host: self.ssi_auth_host,
+            database_config: self.database_config,
+            ssh_user: self.ssh_user,
+            ssh_private_key_path: self.ssh_private_key_path,
+            role: self.role,
         }
-    }
-    pub fn get_data_plane_url(&self) -> Option<String> {
-        self.data_plane_host.as_ref().map(|d| format!("{}://{}:{}", d.protocol, d.url, d.port))
-    }
-    pub fn get_auth_url(&self) -> String {
-        format!(
-            "{}://{}:{}",
-            self.transfer_process_host.protocol, self.transfer_process_host.url, self.transfer_process_host.port
-        )
-    }
-    pub fn get_role(&self) -> ConfigRoles {
-        self.role.clone()
-    }
-    pub fn merge_dotenv_configuration(&self) -> anyhow::Result<Self> {
-        dotenvy::dotenv()?;
-        let compound_config = Self {
-            transfer_process_host: HostConfig {
-                protocol: option_env!("HOST_PROTOCOL")
-                    .unwrap_or(self.transfer_process_host.protocol.as_str())
-                    .to_string(),
-                url: option_env!("HOST_URL").unwrap_or(self.transfer_process_host.url.as_str()).to_string(),
-                port: option_env!("HOST_PORT").unwrap_or(self.transfer_process_host.port.as_str()).to_string(),
-            },
-            data_plane_host: match option_env!("DATA_PLANE_PROTOCOL") {
-                Some(_) => Some(HostConfig {
-                    protocol: option_env!("DATA_PLANE_PROTOCOL")
-                        .unwrap_or(self.data_plane_host.clone().unwrap().protocol.as_str())
-                        .to_string(),
-                    url: option_env!("DATA_PLANE_URL")
-                        .unwrap_or(self.data_plane_host.clone().unwrap().url.as_str())
-                        .to_string(),
-                    port: option_env!("DATA_PLANE_PORT")
-                        .unwrap_or(self.data_plane_host.clone().unwrap().port.as_str())
-                        .to_string(),
-                }),
-                None => None,
-            },
-            auth_host: HostConfig {
-                protocol: option_env!("AUTH_PROTOCOL").unwrap_or(self.auth_host.protocol.as_str()).to_string(),
-                url: option_env!("AUTH_URL").unwrap_or(self.auth_host.url.as_str()).to_string(),
-                port: option_env!("AUTH_PORT").unwrap_or(self.auth_host.port.as_str()).to_string(),
-            },
-            database_config: DatabaseConfig {
-                db_type: option_env!("DB_TYPE")
-                    .unwrap_or(self.database_config.db_type.to_string().as_str())
-                    .parse()
-                    .expect("Db type error"),
-                url: option_env!("DB_URL").unwrap_or(self.database_config.url.as_str()).to_string(),
-                port: option_env!("DB_PORT").unwrap_or(self.database_config.port.as_str()).to_string(),
-                user: option_env!("DB_USER").unwrap_or(self.database_config.user.as_str()).to_string(),
-                password: option_env!("DB_PASSWORD").unwrap_or(self.database_config.password.as_str()).to_string(),
-                name: option_env!("DB_DATABASE").unwrap_or(self.database_config.name.as_str()).to_string(),
-            },
-            role: ConfigRoles::Consumer,
-        };
-        Ok(compound_config)
-    }
-    pub fn get_host_url(&self) -> String {
-        self.transfer_process_host.url.clone()
-    }
-    pub fn get_host_port(&self) -> String {
-        self.transfer_process_host.port.clone()
     }
 }

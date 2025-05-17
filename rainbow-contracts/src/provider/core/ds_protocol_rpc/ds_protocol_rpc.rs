@@ -520,7 +520,7 @@ where
             .await
             .map_err(CnErrorProvider::DbErr)?;
         // persist agreement
-        let agreement = self
+        let _ = self
             .repo
             .create_agreement(
                 cn_process.cn_process_id.parse().unwrap(),

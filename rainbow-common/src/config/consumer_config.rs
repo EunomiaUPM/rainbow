@@ -17,19 +17,16 @@
  *
  */
 use crate::config::database::DbType;
-use crate::config::global_config::{extract_env, DatabaseConfig, HostConfig};
+use crate::config::global_config::{extract_env, format_host_config_to_url_string, DatabaseConfig, HostConfig};
 use crate::config::ConfigRoles;
 use serde::Serialize;
 use std::env;
 use std::fmt::Display;
 
-#[derive(Serialize, Clone)]
-pub struct ApplicationConfig {
+#[derive(Serialize, Clone, Debug)]
+pub struct ApplicationConsumerConfig {
     pub transfer_process_host: Option<HostConfig>,
     pub business_system_host: Option<HostConfig>,
-    pub catalog_host: Option<HostConfig>,
-    pub catalog_as_datahub: bool,
-    pub datahub_host: Option<HostConfig>,
     pub contract_negotiation_host: Option<HostConfig>,
     pub auth_host: Option<HostConfig>,
     pub ssi_auth_host: Option<HostConfig>,
@@ -39,171 +36,197 @@ pub struct ApplicationConfig {
     pub role: ConfigRoles,
 }
 
-impl Default for ApplicationConfig {
+impl Default for ApplicationConsumerConfig {
     fn default() -> Self {
         Self {
             transfer_process_host: Some(HostConfig {
                 protocol: "http".to_string(),
                 url: "127.0.0.1".to_string(),
-                port: "1200".to_string(),
+                port: "1100".to_string(),
             }),
             business_system_host: Some(HostConfig {
                 protocol: "http".to_string(),
                 url: "127.0.0.1".to_string(),
-                port: "".to_string(),
+                port: "1101".to_string(),
             }),
-            catalog_host: Some(HostConfig {
-                protocol: "http".to_string(),
-                url: "127.0.0.1".to_string(),
-                port: "1201".to_string(),
-            }),
-            catalog_as_datahub: false,
-            datahub_host: None,
             contract_negotiation_host: Some(HostConfig {
                 protocol: "http".to_string(),
                 url: "127.0.0.1".to_string(),
-                port: "1202".to_string(),
+                port: "1102".to_string(),
             }),
             auth_host: Some(HostConfig {
                 protocol: "http".to_string(),
                 url: "127.0.0.1".to_string(),
-                port: "1203".to_string(),
+                port: "1103".to_string(),
             }),
             ssi_auth_host: Some(HostConfig {
                 protocol: "http".to_string(),
                 url: "127.0.0.1".to_string(),
-                port: "1204".to_string(),
+                port: "1104".to_string(),
             }),
             database_config: DatabaseConfig {
                 db_type: DbType::Postgres,
                 url: "127.0.0.1".to_string(),
-                port: "1300".to_string(),
-                user: "ds_transfer_provider".to_string(),
-                password: "ds_transfer_provider".to_string(),
-                name: "ds_transfer_provider".to_string(),
+                port: "1301".to_string(),
+                user: "ds_consumer".to_string(),
+                password: "ds_consumer".to_string(),
+                name: "ds_consumer".to_string(),
             },
             ssh_user: None,
             ssh_private_key_path: None,
-            role: ConfigRoles::Provider,
+            role: ConfigRoles::Consumer,
         }
     }
 }
 
-impl ApplicationConfig {
-    pub fn merge_dotenv_configuration(&self) -> Self {
-        dotenvy::dotenv().ok();
-        let default_config = ApplicationConfig::default();
-
-        let catalog_as_datahub: bool = extract_env(
-            "CATALOG_AS_DATAHUB",
-            default_config.catalog_as_datahub.to_string(),
-        )
-            .parse()
-            .unwrap_or(default_config.catalog_as_datahub);
-
-        let datahub_host_config = if catalog_as_datahub {
-            Some(HostConfig {
-                protocol: extract_env("DATAHUB_PROTOCOL", "http".to_string()), // Default explícito
-                url: extract_env("DATAHUB_URL", "127.0.0.1".to_string()), // Default explícito
-                port: extract_env("DATAHUB_PORT", "1205".to_string()), // Default explícito para puerto datahub
-            })
-        } else {
-            None
-        };
-
-        let default_transfer_host = default_config.transfer_process_host.unwrap();
-        let default_business_host = default_config.business_system_host.unwrap();
-        let default_catalog_host = default_config.catalog_host.unwrap();
-        let default_contract_host = default_config.contract_negotiation_host.unwrap();
-        let default_auth_host = default_config.auth_host.unwrap();
-        let default_ssi_auth_host = default_config.ssi_auth_host.unwrap();
-
-        Self {
-            transfer_process_host: Some(HostConfig {
-                protocol: extract_env("TRANSFER_PROTOCOL", default_transfer_host.protocol),
-                url: extract_env("TRANSFER_URL", default_transfer_host.url),
-                port: extract_env("TRANSFER_PORT", default_transfer_host.port),
-            }),
-            business_system_host: Some(HostConfig {
-                protocol: extract_env("BUSINESS_SYSTEM_PROTOCOL", default_business_host.protocol),
-                url: extract_env("BUSINESS_SYSTEM_URL", default_business_host.url),
-                port: extract_env("BUSINESS_SYSTEM_PORT", default_business_host.port), // Corregido: _PORT
-            }),
-            catalog_host: Some(HostConfig {
-                protocol: extract_env("CATALOG_PROTOCOL", default_catalog_host.protocol),
-                url: extract_env("CATALOG_URL", default_catalog_host.url),
-                port: extract_env("CATALOG_PORT", default_catalog_host.port),
-            }),
-            catalog_as_datahub,
-            datahub_host: datahub_host_config,
-            contract_negotiation_host: Some(HostConfig {
-                protocol: extract_env("CONTRACT_NEGOTIATION_PROTOCOL", default_contract_host.protocol),
-                url: extract_env("CONTRACT_NEGOTIATION_URL", default_contract_host.url),
-                port: extract_env("CONTRACT_NEGOTIATION_PORT", default_contract_host.port),
-            }),
-            auth_host: Some(HostConfig {
-                protocol: extract_env("AUTH_PROTOCOL", default_auth_host.protocol),
-                url: extract_env("AUTH_URL", default_auth_host.url),
-                port: extract_env("AUTH_PORT", default_auth_host.port),
-            }),
-            ssi_auth_host: Some(HostConfig {
-                protocol: extract_env("SSI_AUTH_PROTOCOL", default_ssi_auth_host.protocol),
-                url: extract_env("SSI_AUTH_URL", default_ssi_auth_host.url),
-                port: extract_env("SSI_AUTH_PORT", default_ssi_auth_host.port),
-            }),
-            database_config: DatabaseConfig {
-                db_type: extract_env("DB_TYPE", default_config.database_config.db_type.to_string())
-                    .parse()
-                    .unwrap_or(default_config.database_config.db_type), // Asume que DbType implementa FromStr
-                url: extract_env("DB_URL", default_config.database_config.url),
-                port: extract_env("DB_PORT", default_config.database_config.port),
-                user: extract_env("DB_USER", default_config.database_config.user),
-                password: extract_env("DB_PASSWORD", default_config.database_config.password),
-                name: extract_env("DB_DATABASE", default_config.database_config.name),
-            },
-            ssh_user: env::var("SSH_USER").ok(), // Usar env::var para variables de entorno en tiempo de ejecución
-            ssh_private_key_path: env::var("SSH_PKEY_PATH").ok(),
-            role: extract_env("CONFIG_ROLE", default_config.role.to_string())
-                .parse()
-                .unwrap_or(default_config.role), // Asume que ConfigRoles implementa FromStr
-        }
-    }
-}
-
-pub trait ApplicationConfigTrait {
-    fn ssh_user(&self) -> Option<String> {
-        None
-    }
-    fn ssh_private_key_path(&self) -> Option<String> {
-        None
-    }
+pub trait ApplicationConsumerConfigTrait {
+    fn ssh_user(&self) -> Option<String>;
+    fn ssh_private_key_path(&self) -> Option<String>;
+    fn get_role(&self) -> ConfigRoles;
+    // raw stuff
+    fn get_raw_transfer_process_host(&self) -> &Option<HostConfig>;
+    fn get_raw_business_system_host(&self) -> &Option<HostConfig>;
+    fn get_raw_contract_negotiation_host(&self) -> &Option<HostConfig>;
+    fn get_raw_auth_host(&self) -> &Option<HostConfig>;
+    fn get_raw_ssi_auth_host(&self) -> &Option<HostConfig>;
+    fn get_raw_database_config(&self) -> &DatabaseConfig;
+    // implemented stuff
     fn get_transfer_host_url(&self) -> Option<String> {
-        None
-    }
-    fn get_contract_negotiation_host_url(&self) -> Option<String> {
-        None
-    }
-    fn is_datahub_as_catalog(&self) -> bool {
-        false
-    }
-    fn get_catalog_host_url(&self) -> Option<String> {
-        None
-    }
-    fn get_datahub_host_url(&self) -> Option<String> {
-        None
+        self.get_raw_transfer_process_host().as_ref().map(format_host_config_to_url_string)
     }
     fn get_business_system_host_url(&self) -> Option<String> {
-        None
+        self.get_raw_business_system_host().as_ref().map(format_host_config_to_url_string)
+    }
+    fn get_contract_negotiation_host_url(&self) -> Option<String> {
+        self.get_raw_contract_negotiation_host().as_ref().map(format_host_config_to_url_string)
     }
     fn get_auth_host_url(&self) -> Option<String> {
-        None
+        self.get_raw_auth_host().as_ref().map(format_host_config_to_url_string)
     }
     fn get_ssi_auth_host_url(&self) -> Option<String> {
-        None
+        self.get_raw_ssi_auth_host().as_ref().map(format_host_config_to_url_string)
     }
-    fn get_role(&self) -> ConfigRoles;
+    fn get_full_db_url(&self) -> String {
+        let db_config = self.get_raw_database_config();
+        match db_config.db_type {
+            DbType::Memory => ":memory:".to_string(),
+            _ => format!(
+                "{}://{}:{}@{}:{}/{}",
+                db_config.db_type, // Asumiendo que DbType implementa Display
+                db_config.user,
+                db_config.password,
+                db_config.url,
+                db_config.port,
+                db_config.name
+            ),
+        }
+    }
+    // merge dotenv
     fn merge_dotenv_configuration(&self) -> Self
     where
         Self: Sized;
-    fn get_full_db_url(&self) -> String;
+}
+
+impl ApplicationConsumerConfigTrait for ApplicationConsumerConfig {
+    fn ssh_user(&self) -> Option<String> {
+        self.ssh_user.clone()
+    }
+    fn ssh_private_key_path(&self) -> Option<String> {
+        self.ssh_private_key_path.clone()
+    }
+    fn get_role(&self) -> ConfigRoles {
+        self.role
+    }
+    fn get_raw_transfer_process_host(&self) -> &Option<HostConfig> {
+        &self.transfer_process_host
+    }
+    fn get_raw_business_system_host(&self) -> &Option<HostConfig> {
+        &self.business_system_host
+    }
+    fn get_raw_contract_negotiation_host(&self) -> &Option<HostConfig> {
+        &self.contract_negotiation_host
+    }
+    fn get_raw_auth_host(&self) -> &Option<HostConfig> {
+        &self.auth_host
+    }
+    fn get_raw_ssi_auth_host(&self) -> &Option<HostConfig> {
+        &self.ssi_auth_host
+    }
+    fn get_raw_database_config(&self) -> &DatabaseConfig {
+        &self.database_config
+    }
+
+    fn merge_dotenv_configuration(&self) -> Self {
+        dotenvy::dotenv().ok();
+        let default = ApplicationConsumerConfig::default();
+        let compound_config = Self {
+            transfer_process_host: Some(HostConfig {
+                protocol: extract_env(
+                    "TRANSFER_PROTOCOL",
+                    default.transfer_process_host.clone().unwrap().protocol,
+                ),
+                url: extract_env(
+                    "TRANSFER_URL",
+                    default.transfer_process_host.clone().unwrap().url,
+                ),
+                port: extract_env(
+                    "TRANSFER_PORT",
+                    default.transfer_process_host.clone().unwrap().port,
+                ),
+            }),
+            business_system_host: Some(HostConfig {
+                protocol: extract_env(
+                    "BUSINESS_SYSTEM_HOST",
+                    default.business_system_host.clone().unwrap().protocol,
+                ),
+                url: extract_env(
+                    "BUSINESS_SYSTEM_URL",
+                    default.business_system_host.clone().unwrap().url,
+                ),
+                port: extract_env(
+                    "BUSINESS_SYSTEM_PORT",
+                    default.business_system_host.clone().unwrap().port,
+                ),
+            }),
+            contract_negotiation_host: Some(HostConfig {
+                protocol: extract_env(
+                    "CONTRACT_NEGOTIATION_PROTOCOL",
+                    default.contract_negotiation_host.clone().unwrap().protocol,
+                ),
+                url: extract_env(
+                    "CONTRACT_NEGOTIATION_URL",
+                    default.contract_negotiation_host.clone().unwrap().url,
+                ),
+                port: extract_env(
+                    "CONTRACT_NEGOTIATION_PORT",
+                    default.contract_negotiation_host.clone().unwrap().port,
+                ),
+            }),
+            auth_host: Some(HostConfig {
+                protocol: extract_env("AUTH_PROTOCOL", default.auth_host.clone().unwrap().protocol),
+                url: extract_env("AUTH_URL", default.auth_host.clone().unwrap().url),
+                port: extract_env("AUTH_PORT", default.auth_host.clone().unwrap().port),
+            }),
+            ssi_auth_host: Some(HostConfig {
+                protocol: extract_env(
+                    "SSI_AUTH_PROTOCOL",
+                    default.ssi_auth_host.clone().unwrap().protocol,
+                ),
+                url: extract_env("SSI_AUTH_URL", default.ssi_auth_host.clone().unwrap().url),
+                port: extract_env("SSI_AUTH_PORT", default.ssi_auth_host.clone().unwrap().port),
+            }),
+            database_config: DatabaseConfig {
+                db_type: extract_env("DB_TYPE", default.database_config.db_type.to_string()).parse().unwrap(),
+                url: extract_env("DB_URL", default.database_config.url),
+                port: extract_env("DB_PORT", default.database_config.port),
+                user: extract_env("DB_USER", default.database_config.user),
+                password: extract_env("DB_PASSWORD", default.database_config.password),
+                name: extract_env("DB_DATABASE", default.database_config.name),
+            },
+            ssh_user: env::var("SSH_USER").ok(),
+            ssh_private_key_path: env::var("SSH_PKEY_PATH").ok(),
+            role: ConfigRoles::Consumer,
+        };
+        compound_config
+    }
 }

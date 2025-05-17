@@ -18,6 +18,7 @@
  */
 
 use crate::consumer::setup::config::TransferConsumerApplicationConfig;
+use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
 use rainbow_db::transfer_consumer::migrations::get_transfer_consumer_migrations;
 use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};

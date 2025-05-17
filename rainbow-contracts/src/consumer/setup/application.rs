@@ -25,6 +25,7 @@ use crate::consumer::http::ds_protocol::ds_protocol::DSProtocolContractNegotiati
 use crate::consumer::http::rainbow_entities::rainbow_entities::RainbowEntitiesContractNegotiationConsumerRouter;
 use crate::consumer::setup::config::ContractNegotiationConsumerApplicationConfig;
 use axum::{serve, Router};
+use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
 use rainbow_db::contracts_consumer::repo::sql::ContractNegotiationConsumerRepoForSql;
 use rainbow_db::contracts_consumer::repo::ContractNegotiationConsumerRepoFactory;
 use rainbow_db::events::repo::sql::EventsRepoForSql;
@@ -41,8 +42,8 @@ use tracing::info;
 
 pub struct ContractNegotiationConsumerApplication;
 
-pub async fn create_contract_negotiation_consumer_router(db_url: String) -> Router {
-    let db_connection = Database::connect(db_url).await.expect("Database can't connect");
+pub async fn create_contract_negotiation_consumer_router(config: &ContractNegotiationConsumerApplicationConfig) -> Router {
+    let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
     let consumer_repo = Arc::new(ContractNegotiationConsumerRepoForSql::create_repo(
         db_connection.clone(),
     ));
@@ -93,19 +94,16 @@ pub async fn create_contract_negotiation_consumer_router(db_url: String) -> Rout
 }
 
 impl ContractNegotiationConsumerApplication {
-    pub async fn run(config: &ContractNegotiationConsumerApplicationConfig<'static>) -> anyhow::Result<()> {
+    pub async fn run(config: &ContractNegotiationConsumerApplicationConfig) -> anyhow::Result<()> {
         // db_connection
-        let db_url = config.get_full_db_url();
-        let router = create_contract_negotiation_consumer_router(db_url).await;
+        let router = create_contract_negotiation_consumer_router(config).await;
         // Init server
-        let server_message = format!("Starting provider server in {}", config.get_full_host_url(), );
+        let server_message = format!(
+            "Starting provider server in {}",
+            config.get_contract_negotiation_host_url().unwrap()
+        );
         info!("{}", server_message);
-        let listener = TcpListener::bind(format!(
-            "{}:{}",
-            config.get_host_url(),
-            config.get_host_port()
-        ))
-            .await?;
+        let listener = TcpListener::bind(config.get_contract_negotiation_host_url().unwrap()).await?;
         serve(listener, router).await?;
         Ok(())
     }

@@ -18,12 +18,13 @@
  */
 
 use crate::consumer::setup::application::CoreConsumerApplication;
-use crate::consumer::setup::config::CoreConsumerApplicationConfig;
+use crate::consumer::setup::config::CoreApplicationConsumerConfig;
 use crate::consumer::setup::db_migrations::CoreConsumerMigration;
 use crate::provider::setup::application::CoreProviderApplication;
 use crate::provider::setup::config::CoreApplicationProviderConfig;
 use crate::provider::setup::db_migrations::CoreProviderMigration;
 use clap::{Parser, Subcommand};
+use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
 use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
 use std::cmp::PartialEq;
 use tracing::{debug, info};
@@ -72,8 +73,8 @@ impl CoreCommands {
                 }
             }
             CoreCliRoles::Consumer(cmd) => {
-                let config = CoreConsumerApplicationConfig::default();
-                let config = config.merge_dotenv_configuration().unwrap_or_else(|_| config);
+                let config = CoreApplicationConsumerConfig::default();
+                let config = config.merge_dotenv_configuration();
                 let table =
                     json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
                 info!("Current config:\n{}", table);

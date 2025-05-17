@@ -17,7 +17,7 @@
  *
  */
 
-use crate::provider::setup::config::TransferApplicationConfig;
+use crate::provider::setup::config::TransferProviderApplicationConfig;
 use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
 use rainbow_db::events::migrations::get_events_migrations;
 use rainbow_db::transfer_provider::migrations::get_transfer_provider_migrations;
@@ -41,7 +41,7 @@ impl MigratorTrait for TransferProviderMigration {
 }
 
 impl TransferProviderMigration {
-    pub async fn run(config: &TransferApplicationConfig) -> anyhow::Result<()> {
+    pub async fn run(config: &TransferProviderApplicationConfig) -> anyhow::Result<()> {
         // db_connection
         let db_url = config.get_full_db_url();
         let db_connection = Database::connect(db_url).await.expect("Database can't connect");

@@ -31,6 +31,7 @@ use crate::consumer::core::ds_protocol_rpc::DSRPCTransferConsumerTrait;
 use crate::consumer::setup::config::TransferConsumerApplicationConfig;
 use anyhow::bail;
 use axum::async_trait;
+use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
 use rainbow_common::protocol::transfer::transfer_completion::TransferCompletionMessage;
 use rainbow_common::protocol::transfer::transfer_process::TransferProcessMessage;
 use rainbow_common::protocol::transfer::transfer_request::TransferRequestMessage;
@@ -79,7 +80,7 @@ where
         let DSRPCTransferConsumerRequestRequest { agreement_id, format, data_address, provider_address, .. } = input;
         let consumer_pid = get_urn(None);
         let callback_urn = get_urn(None);
-        let callback_address = format!("{}/{}", self.config.get_full_host_url(), callback_urn);
+        let callback_address = format!("{}/{}", self.config.get_transfer_host_url().unwrap(), callback_urn);
         // create message
         let transfer_request = TransferRequestMessage {
             consumer_pid: consumer_pid.to_string(),

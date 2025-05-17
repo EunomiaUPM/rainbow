@@ -17,128 +17,78 @@
  *
  */
 
-use rainbow_common::config::database::DbType;
+
+use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
+use rainbow_common::config::global_config::{DatabaseConfig, HostConfig};
 use rainbow_common::config::ConfigRoles;
 use serde::Serialize;
 
-#[derive(Serialize, Copy, Clone)]
-struct HostConfig<'a> {
-    protocol: &'a str,
-    url: &'a str,
-    port: &'a str,
+#[derive(Serialize, Clone)]
+pub struct ContractNegotiationConsumerApplicationConfig {
+    pub transfer_process_host: Option<HostConfig>,
+    pub business_system_host: Option<HostConfig>,
+    pub contract_negotiation_host: Option<HostConfig>,
+    pub auth_host: Option<HostConfig>,
+    pub ssi_auth_host: Option<HostConfig>,
+    pub database_config: DatabaseConfig,
+    pub ssh_user: Option<String>,
+    pub ssh_private_key_path: Option<String>,
+    pub role: ConfigRoles,
 }
 
-#[derive(Serialize, Copy, Clone)]
-struct DatabaseConfig<'a> {
-    db_type: &'a DbType,
-    url: &'a str,
-    port: &'a str,
-    user: &'a str,
-    password: &'a str,
-    name: &'a str,
-}
-
-#[derive(Serialize, Copy, Clone)]
-pub struct ContractNegotiationConsumerApplicationConfig<'a> {
-    contract_negotiation_host: HostConfig<'a>,
-    auth_host: HostConfig<'a>,
-    database_config: DatabaseConfig<'a>,
-    role: ConfigRoles,
-}
-
-
-impl<'a> Default for ContractNegotiationConsumerApplicationConfig<'a> {
+impl Default for ContractNegotiationConsumerApplicationConfig {
     fn default() -> Self {
-        ContractNegotiationConsumerApplicationConfig {
-            contract_negotiation_host: HostConfig {
-                protocol: "http",
-                url: "127.0.0.1",
-                port: "1230",
-            },
-            auth_host: HostConfig { protocol: "http", url: "127.0.0.1", port: "1231" },
-            database_config: DatabaseConfig {
-                db_type: &DbType::Postgres,
-                url: "127.0.0.1",
-                port: "5438",
-                user: "ds_cn_consumer_db",
-                password: "ds_cn_consumer_db",
-                name: "ds_cn_consumer_db",
-            },
-            role: ConfigRoles::Consumer,
+        ContractNegotiationConsumerApplicationConfig::from(ApplicationConsumerConfig::default())
+    }
+}
+
+impl ApplicationConsumerConfigTrait for ContractNegotiationConsumerApplicationConfig {
+    fn ssh_user(&self) -> Option<String> { self.ssh_user.clone() }
+    fn ssh_private_key_path(&self) -> Option<String> { self.ssh_private_key_path.clone() }
+    fn get_role(&self) -> ConfigRoles { self.role }
+    fn get_raw_transfer_process_host(&self) -> &Option<HostConfig> { &self.transfer_process_host }
+    fn get_raw_business_system_host(&self) -> &Option<HostConfig> { &self.business_system_host }
+    fn get_raw_contract_negotiation_host(&self) -> &Option<HostConfig> { &self.contract_negotiation_host }
+    fn get_raw_auth_host(&self) -> &Option<HostConfig> { &self.auth_host }
+    fn get_raw_ssi_auth_host(&self) -> &Option<HostConfig> { &self.ssi_auth_host }
+    fn get_raw_database_config(&self) -> &DatabaseConfig { &self.database_config }
+    fn merge_dotenv_configuration(&self) -> Self
+    where
+        Self: Sized,
+    {
+        let app_config = ApplicationConsumerConfig::default().merge_dotenv_configuration();
+        ContractNegotiationConsumerApplicationConfig::from(app_config)
+    }
+}
+
+impl From<ApplicationConsumerConfig> for ContractNegotiationConsumerApplicationConfig {
+    fn from(value: ApplicationConsumerConfig) -> Self {
+        Self {
+            transfer_process_host: value.transfer_process_host,
+            business_system_host: value.business_system_host,
+            contract_negotiation_host: value.contract_negotiation_host,
+            auth_host: value.auth_host,
+            ssi_auth_host: value.ssi_auth_host,
+            database_config: value.database_config,
+            ssh_user: value.ssh_user,
+            ssh_private_key_path: value.ssh_private_key_path,
+            role: value.role,
         }
     }
 }
 
-impl<'a> ContractNegotiationConsumerApplicationConfig<'a> {
-    pub fn get_full_host_url(&self) -> String {
-        format!(
-            "{}://{}:{}",
-            self.contract_negotiation_host.protocol,
-            self.contract_negotiation_host.url,
-            self.contract_negotiation_host.port
-        )
-    }
-    pub fn get_full_db_url(&self) -> String {
-        match self.database_config.db_type {
-            DbType::Memory => ":memory:".to_string(),
-            _ => format!(
-                "{}://{}:{}@{}:{}/{}",
-                self.database_config.db_type,
-                self.database_config.user,
-                self.database_config.password,
-                self.database_config.url,
-                self.database_config.port,
-                self.database_config.name
-            ),
+impl Into<ApplicationConsumerConfig> for ContractNegotiationConsumerApplicationConfig {
+    fn into(self) -> ApplicationConsumerConfig {
+        ApplicationConsumerConfig {
+            transfer_process_host: self.transfer_process_host,
+            business_system_host: self.business_system_host,
+            contract_negotiation_host: self.contract_negotiation_host,
+            auth_host: self.auth_host,
+            ssi_auth_host: self.ssi_auth_host,
+            database_config: self.database_config,
+            ssh_user: self.ssh_user,
+            ssh_private_key_path: self.ssh_private_key_path,
+            role: self.role,
         }
-    }
-
-    pub fn get_auth_url(&self) -> String {
-        format!(
-            "{}://{}:{}",
-            self.auth_host.protocol,
-            self.auth_host.url,
-            self.auth_host.port
-        )
-    }
-    pub fn get_role(&self) -> ConfigRoles {
-        self.role.clone()
-    }
-    pub fn merge_dotenv_configuration(&self) -> anyhow::Result<Self> {
-        dotenvy::dotenv()?;
-        let compound_config = Self {
-            contract_negotiation_host: HostConfig {
-                protocol: option_env!("CONTRACT_NEGOTIATION_PROTOCOL")
-                    .unwrap_or(self.contract_negotiation_host.protocol),
-                url: option_env!("CONTRACT_NEGOTIATION_URL")
-                    .unwrap_or(self.contract_negotiation_host.url),
-                port: option_env!("CONTRACT_NEGOTIATION_PORT")
-                    .unwrap_or(self.contract_negotiation_host.port),
-            },
-            auth_host: HostConfig {
-                protocol: option_env!("AUTH_PROTOCOL").unwrap_or(self.auth_host.protocol),
-                url: option_env!("AUTH_URL").unwrap_or(self.auth_host.url),
-                port: option_env!("AUTH_PORT").unwrap_or(self.auth_host.port),
-            },
-            database_config: DatabaseConfig {
-                db_type: option_env!("DB_TYPE")
-                    .unwrap_or(self.database_config.db_type.to_string().as_str())
-                    .parse()
-                    .expect("Db type error"),
-                url: option_env!("DB_URL").unwrap_or(self.database_config.url),
-                port: option_env!("DB_PORT").unwrap_or(self.database_config.port),
-                user: option_env!("DB_USER").unwrap_or(self.database_config.user),
-                password: option_env!("DB_PASSWORD").unwrap_or(self.database_config.password),
-                name: option_env!("DB_DATABASE").unwrap_or(self.database_config.name),
-            },
-            role: ConfigRoles::Provider,
-        };
-        Ok(compound_config)
-    }
-    pub fn get_host_url(&self) -> &'a str {
-        self.contract_negotiation_host.url
-    }
-    pub fn get_host_port(&self) -> &'a str {
-        self.contract_negotiation_host.port
     }
 }

@@ -23,7 +23,7 @@ use rainbow_common::config::ConfigRoles;
 use serde::Serialize;
 
 #[derive(Serialize, Clone, Debug)]
-pub struct TransferApplicationConfig {
+pub struct TransferProviderApplicationConfig {
     transfer_process_host: Option<HostConfig>,
     business_system_host: Option<HostConfig>,
     catalog_host: Option<HostConfig>,
@@ -38,14 +38,14 @@ pub struct TransferApplicationConfig {
     role: ConfigRoles,
 }
 
-impl Default for TransferApplicationConfig {
+impl Default for TransferProviderApplicationConfig {
     fn default() -> Self {
-        TransferApplicationConfig::from(ApplicationProviderConfig::default())
+        TransferProviderApplicationConfig::from(ApplicationProviderConfig::default())
     }
 }
 
 
-impl ApplicationProviderConfigTrait for TransferApplicationConfig {
+impl ApplicationProviderConfigTrait for TransferProviderApplicationConfig {
     fn ssh_user(&self) -> Option<String> { self.ssh_user.clone() }
     fn ssh_private_key_path(&self) -> Option<String> { self.ssh_private_key_path.clone() }
     fn is_datahub_as_catalog(&self) -> bool { self.catalog_as_datahub }
@@ -60,11 +60,11 @@ impl ApplicationProviderConfigTrait for TransferApplicationConfig {
     fn get_raw_database_config(&self) -> &DatabaseConfig { &self.database_config }
     fn merge_dotenv_configuration(&self) -> Self {
         let app_config = ApplicationProviderConfig::default().merge_dotenv_configuration();
-        TransferApplicationConfig::from(app_config)
+        TransferProviderApplicationConfig::from(app_config)
     }
 }
 
-impl From<ApplicationProviderConfig> for TransferApplicationConfig {
+impl From<ApplicationProviderConfig> for TransferProviderApplicationConfig {
     fn from(value: ApplicationProviderConfig) -> Self {
         Self {
             transfer_process_host: value.transfer_process_host,
@@ -83,7 +83,7 @@ impl From<ApplicationProviderConfig> for TransferApplicationConfig {
     }
 }
 
-impl Into<ApplicationProviderConfig> for TransferApplicationConfig {
+impl Into<ApplicationProviderConfig> for TransferProviderApplicationConfig {
     fn into(self) -> ApplicationProviderConfig {
         ApplicationProviderConfig {
             transfer_process_host: self.transfer_process_host,
