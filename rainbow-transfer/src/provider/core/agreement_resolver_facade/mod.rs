@@ -17,9 +17,14 @@
  *
  */
 
-pub mod rainbow_entities;
-pub mod ds_protocol;
-pub mod data_service_resolver_facade;
-pub mod data_plane_facade;
-pub mod ds_protocol_rpc;
+use axum::async_trait;
+use rainbow_common::protocol::contract::contract_odrl::OdrlAgreement;
+use urn::Urn;
+
 pub mod agreement_resolver_facade;
+
+#[mockall::automock]
+#[async_trait]
+pub trait AgreementResolverFacadeTrait: Send + Sync {
+    async fn resolve_agreement(&self, agreement_id: Urn) -> anyhow::Result<OdrlAgreement>;
+}

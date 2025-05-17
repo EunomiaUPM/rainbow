@@ -17,8 +17,8 @@
  *
  */
 
+use rainbow_common::config::provider_config::ConfigRoles;
 use rainbow_common::config::database::DbType;
-use rainbow_common::config::ConfigRoles;
 use serde::Serialize;
 
 #[derive(Serialize, Clone)]
@@ -39,23 +39,21 @@ struct DatabaseConfig {
 }
 
 #[derive(Serialize, Clone)]
-pub struct TransferConsumerApplicationConfig {
-    transfer_process_host: HostConfig,
-    data_plane_host: Option<HostConfig>,
+pub struct CatalogApplicationConfig {
+    catalog_host: HostConfig,
     auth_host: HostConfig,
     database_config: DatabaseConfig,
     role: ConfigRoles,
 }
 
-impl Default for TransferConsumerApplicationConfig {
+impl Default for CatalogApplicationConfig {
     fn default() -> Self {
-        TransferConsumerApplicationConfig {
-            transfer_process_host: HostConfig {
+        CatalogApplicationConfig {
+            catalog_host: HostConfig {
                 protocol: "http".to_string(),
                 url: "127.0.0.1".to_string(),
-                port: "1235".to_string(),
+                port: "1236".to_string(),
             },
-            data_plane_host: None,
             auth_host: HostConfig {
                 protocol: "http".to_string(),
                 url: "127.0.0.1".to_string(),
@@ -64,21 +62,21 @@ impl Default for TransferConsumerApplicationConfig {
             database_config: DatabaseConfig {
                 db_type: DbType::Postgres,
                 url: "127.0.0.1".to_string(),
-                port: "5434".to_string(),
-                user: "ds-protocol-consumer".to_string(),
-                password: "ds-protocol-consumer".to_string(),
-                name: "ds-protocol-consumer".to_string(),
+                port: "5435".to_string(),
+                user: "ds-protocol-catalog".to_string(),
+                password: "ds-protocol-catalog".to_string(),
+                name: "ds-protocol-catalog".to_string(),
             },
-            role: ConfigRoles::Consumer,
+            role: ConfigRoles::Catalog,
         }
     }
 }
 
-impl TransferConsumerApplicationConfig {
+impl CatalogApplicationConfig {
     pub fn get_full_host_url(&self) -> String {
         format!(
             "{}://{}:{}",
-            self.transfer_process_host.protocol, self.transfer_process_host.url, self.transfer_process_host.port
+            self.catalog_host.protocol, self.catalog_host.url, self.catalog_host.port
         )
     }
     pub fn get_full_db_url(&self) -> String {
@@ -95,13 +93,10 @@ impl TransferConsumerApplicationConfig {
             ),
         }
     }
-    pub fn get_data_plane_url(&self) -> Option<String> {
-        self.data_plane_host.as_ref().map(|d| format!("{}://{}:{}", d.protocol, d.url, d.port))
-    }
     pub fn get_auth_url(&self) -> String {
         format!(
             "{}://{}:{}",
-            self.transfer_process_host.protocol, self.transfer_process_host.url, self.transfer_process_host.port
+            self.catalog_host.protocol, self.catalog_host.url, self.catalog_host.port
         )
     }
     pub fn get_role(&self) -> ConfigRoles {
@@ -110,26 +105,12 @@ impl TransferConsumerApplicationConfig {
     pub fn merge_dotenv_configuration(&self) -> anyhow::Result<Self> {
         dotenvy::dotenv()?;
         let compound_config = Self {
-            transfer_process_host: HostConfig {
+            catalog_host: HostConfig {
                 protocol: option_env!("HOST_PROTOCOL")
-                    .unwrap_or(self.transfer_process_host.protocol.as_str())
+                    .unwrap_or(self.catalog_host.protocol.as_str())
                     .to_string(),
-                url: option_env!("HOST_URL").unwrap_or(self.transfer_process_host.url.as_str()).to_string(),
-                port: option_env!("HOST_PORT").unwrap_or(self.transfer_process_host.port.as_str()).to_string(),
-            },
-            data_plane_host: match option_env!("DATA_PLANE_PROTOCOL") {
-                Some(_) => Some(HostConfig {
-                    protocol: option_env!("DATA_PLANE_PROTOCOL")
-                        .unwrap_or(self.data_plane_host.clone().unwrap().protocol.as_str())
-                        .to_string(),
-                    url: option_env!("DATA_PLANE_URL")
-                        .unwrap_or(self.data_plane_host.clone().unwrap().url.as_str())
-                        .to_string(),
-                    port: option_env!("DATA_PLANE_PORT")
-                        .unwrap_or(self.data_plane_host.clone().unwrap().port.as_str())
-                        .to_string(),
-                }),
-                None => None,
+                url: option_env!("HOST_URL").unwrap_or(self.catalog_host.url.as_str()).to_string(),
+                port: option_env!("HOST_PORT").unwrap_or(self.catalog_host.port.as_str()).to_string(),
             },
             auth_host: HostConfig {
                 protocol: option_env!("AUTH_PROTOCOL").unwrap_or(self.auth_host.protocol.as_str()).to_string(),
@@ -152,9 +133,9 @@ impl TransferConsumerApplicationConfig {
         Ok(compound_config)
     }
     pub fn get_host_url(&self) -> String {
-        self.transfer_process_host.url.clone()
+        self.catalog_host.url.clone()
     }
     pub fn get_host_port(&self) -> String {
-        self.transfer_process_host.port.clone()
+        self.catalog_host.port.clone()
     }
 }

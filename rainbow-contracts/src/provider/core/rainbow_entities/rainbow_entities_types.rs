@@ -17,8 +17,7 @@
  *
  */
 
-use rainbow_common::config::config::ConfigRoles;
-// use rainbow_common::protocol::contract::contract_agreement::OdrlAgreement;
+use rainbow_common::config::ConfigRoles;
 use rainbow_common::protocol::contract::contract_odrl::OdrlAgreement;
 use rainbow_common::protocol::contract::ContractNegotiationState;
 use rainbow_common::utils::get_urn_from_string;

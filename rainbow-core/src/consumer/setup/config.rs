@@ -17,8 +17,8 @@
  *
  */
 
-use rainbow_common::config::config::ConfigRoles;
 use rainbow_common::config::database::DbType;
+use rainbow_common::config::ConfigRoles;
 use serde::Serialize;
 
 #[derive(Serialize, Clone)]

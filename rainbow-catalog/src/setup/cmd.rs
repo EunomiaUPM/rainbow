@@ -18,9 +18,10 @@
  */
 
 use crate::setup::application::CatalogApplication;
-use crate::setup::config::CatalogApplicationConfig;
+use crate::setup::config::CatalogApplicationProviderConfig;
 use crate::setup::db_migrations::CatalogMigration;
 use clap::{Parser, Subcommand};
+use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
 use std::cmp::PartialEq;
 use tracing::{debug, info};
 
@@ -47,8 +48,8 @@ impl CatalogCommands {
         let cli = CatalogCli::parse();
 
         // config
-        let config = CatalogApplicationConfig::default();
-        let config = config.merge_dotenv_configuration().unwrap_or_else(|_| config);
+        let config = CatalogApplicationProviderConfig::default();
+        let config = config.merge_dotenv_configuration();
 
         let table =
             json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
@@ -56,8 +57,8 @@ impl CatalogCommands {
 
         // run scripts
         match cli.command {
-            CatalogCliCommands::Start => CatalogApplication::run(config.clone()).await?,
-            CatalogCliCommands::Setup => CatalogMigration::run(config.clone()).await?,
+            CatalogCliCommands::Start => CatalogApplication::run(&config).await?,
+            CatalogCliCommands::Setup => CatalogMigration::run(&config).await?,
         }
 
         Ok(())

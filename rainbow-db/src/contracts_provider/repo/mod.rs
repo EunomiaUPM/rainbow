@@ -23,7 +23,7 @@ use super::entities::cn_offer;
 use super::entities::cn_process;
 use super::entities::participant;
 use anyhow::Error;
-use rainbow_common::config::config::ConfigRoles;
+use rainbow_common::config::ConfigRoles;
 use rainbow_common::protocol::contract::contract_odrl::OdrlAgreement;
 use rainbow_common::protocol::contract::ContractNegotiationState;
 use sea_orm::DatabaseConnection;

@@ -20,7 +20,7 @@
 use crate::ssi_auth::consumer::SSI_AUTH_HTTP_CLIENT;
 use anyhow::bail;
 use axum::http::StatusCode;
-use rainbow_common::config::config::{get_consumer_ssi_holder, GLOBAL_CONFIG};
+use rainbow_common::config::provider_config::{get_consumer_ssi_holder, GLOBAL_CONFIG};
 use reqwest::{Error, Response};
 use tracing::debug;
 

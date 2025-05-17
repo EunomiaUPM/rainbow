@@ -28,7 +28,7 @@ use crate::provider::core::ds_protocol_rpc::DSRPCContractNegotiationProviderTrai
 use crate::provider::core::rainbow_entities::rainbow_entities_errors::CnErrorProvider;
 use anyhow::bail;
 use axum::async_trait;
-use rainbow_common::config::config::ConfigRoles;
+use rainbow_common::config::ConfigRoles;
 use rainbow_common::protocol::contract::contract_ack::ContractAckMessage;
 use rainbow_common::protocol::contract::contract_agreement::ContractAgreementMessage;
 use rainbow_common::protocol::contract::contract_negotiation_event::{
@@ -147,7 +147,7 @@ where
         error_context_provider_pid: Option<Urn>,
         error_context_consumer_pid: Option<Urn>,
     ) -> anyhow::Result<ContractAckMessage> {
-        let response = self.client.post(&target_url).json(message_payload).send().await.map_err(|e| {
+        let response = self.client.post(&target_url).json(message_payload).send().await.map_err(|_| {
             DSRPCContractNegotiationProviderErrors::ConsumerNotReachable {
                 provider_pid: error_context_provider_pid.clone(),
                 consumer_pid: error_context_consumer_pid.clone(),
@@ -165,7 +165,7 @@ where
             );
         }
 
-        let ack_message = response.json::<ContractAckMessage>().await.map_err(|e| {
+        let ack_message = response.json::<ContractAckMessage>().await.map_err(|_| {
             DSRPCContractNegotiationProviderErrors::ConsumerResponseNotSerializable {
                 provider_pid: error_context_provider_pid,
                 consumer_pid: error_context_consumer_pid,

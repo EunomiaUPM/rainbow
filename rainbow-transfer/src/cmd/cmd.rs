@@ -21,9 +21,10 @@ use crate::consumer::setup::application::TransferConsumerApplication;
 use crate::consumer::setup::config::TransferConsumerApplicationConfig;
 use crate::consumer::setup::db_migrations::TransferConsumerMigration;
 use crate::provider::setup::application::TransferProviderApplication;
-use crate::provider::setup::config::TransferProviderApplicationConfig;
+use crate::provider::setup::config::TransferApplicationConfig;
 use crate::provider::setup::db_migrations::TransferProviderMigration;
 use clap::{Parser, Subcommand};
+use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
 use std::cmp::PartialEq;
 use tracing::{debug, info};
 
@@ -60,11 +61,8 @@ impl TransferCommands {
         // run scripts
         match cli.role {
             TransferCliRoles::Provider(cmd) => {
-                let config = TransferProviderApplicationConfig::default();
-                let config = match config.merge_dotenv_configuration() {
-                    Ok(config) => config,
-                    Err(_) => config
-                };
+                let config = TransferApplicationConfig::default();
+                let config = config.merge_dotenv_configuration();
                 let table =
                     json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
                 info!("Current config:\n{}", table);

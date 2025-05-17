@@ -24,8 +24,9 @@ use crate::provider::core::rainbow_entities::rainbow_entities::RainbowEntitiesCo
 use crate::provider::http::ds_protocol::ds_protocol::DSProtocolContractNegotiationProviderRouter;
 use crate::provider::http::ds_protocol_rpc::ds_protocol_rpc::DSRPCContractNegotiationProviderRouter;
 use crate::provider::http::rainbow_entities::rainbow_entities::RainbowEntitesContractNegotiationProviderRouter;
-use crate::provider::setup::config::ContractNegotiationProviderApplicationConfig;
+use crate::provider::setup::config::ContractNegotiationApplicationProviderConfig;
 use axum::{serve, Router};
+use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
 use rainbow_db::contracts_provider::repo::sql::ContractNegotiationProviderRepoForSql;
 use rainbow_db::contracts_provider::repo::ContractNegotiationProviderRepoFactory;
 use rainbow_db::events::repo::sql::EventsRepoForSql;
@@ -42,8 +43,8 @@ use tracing::info;
 
 pub struct ContractNegotiationProviderApplication;
 
-pub async fn create_contract_negotiation_provider_router(db_url: String) -> Router {
-    let db_connection = Database::connect(db_url).await.expect("Database can't connect");
+pub async fn create_contract_negotiation_provider_router(config: &ContractNegotiationApplicationProviderConfig) -> Router {
+    let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
     let provider_repo = Arc::new(ContractNegotiationProviderRepoForSql::create_repo(
         db_connection.clone(),
     ));
@@ -100,18 +101,13 @@ pub async fn create_contract_negotiation_provider_router(db_url: String) -> Rout
 }
 
 impl ContractNegotiationProviderApplication {
-    pub async fn run(config: &ContractNegotiationProviderApplicationConfig<'static>) -> anyhow::Result<()> {
+    pub async fn run(config: &ContractNegotiationApplicationProviderConfig) -> anyhow::Result<()> {
         // db_connection
-        let db_url = config.get_full_db_url();
-        let router = create_contract_negotiation_provider_router(db_url).await;
+        let router = create_contract_negotiation_provider_router(config).await;
         // Init server
-        let server_message = format!("Starting provider server in {}", config.get_full_host_url(), );
+        let server_message = format!("Starting provider server in {}", config.get_contract_negotiation_host_url().unwrap());
         info!("{}", server_message);
-        let listener = TcpListener::bind(format!(
-            "{}:{}",
-            config.get_host_url(),
-            config.get_host_port()
-        ))
+        let listener = TcpListener::bind(config.get_contract_negotiation_host_url().unwrap())
             .await?;
         serve(listener, router).await?;
         Ok(())

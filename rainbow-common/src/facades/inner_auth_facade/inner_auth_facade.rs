@@ -17,9 +17,23 @@
  *
  */
 
-pub mod rainbow_entities;
-pub mod ds_protocol;
-pub mod data_service_resolver_facade;
-pub mod data_plane_facade;
-pub mod ds_protocol_rpc;
-pub mod agreement_resolver_facade;
+use axum::async_trait;
+use crate::facades::inner_auth_facade::InnerAuthFacadeTrait;
+
+pub struct InnerAuthFacadeService {}
+impl InnerAuthFacadeService {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
+#[async_trait]
+impl InnerAuthFacadeTrait for InnerAuthFacadeService {
+    async fn authenticate(&self) -> anyhow::Result<()> {
+        Ok(())
+    }
+
+    async fn authorize(&self) -> anyhow::Result<()> {
+        Ok(())
+    }
+}

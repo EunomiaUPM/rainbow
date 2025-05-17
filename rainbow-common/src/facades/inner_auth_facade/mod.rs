@@ -17,9 +17,13 @@
  *
  */
 
-pub mod rainbow_entities;
-pub mod ds_protocol;
-pub mod data_service_resolver_facade;
-pub mod data_plane_facade;
-pub mod ds_protocol_rpc;
-pub mod agreement_resolver_facade;
+use axum::async_trait;
+
+pub mod inner_auth_facade;
+
+#[mockall::automock]
+#[async_trait]
+pub trait InnerAuthFacadeTrait: Send + Sync {
+    async fn authenticate(&self) -> anyhow::Result<()>;
+    async fn authorize(&self) -> anyhow::Result<()>;
+}

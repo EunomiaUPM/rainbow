@@ -25,8 +25,9 @@ use crate::provider::core::rainbow_entities::rainbow_entities::RainbowTransferPr
 use crate::provider::http::ds_protocol::ds_protocol::DSProtocolTransferProviderRouter;
 use crate::provider::http::ds_protocol_rpc::ds_protocol_rpc::DSRPCTransferProviderProviderRouter;
 use crate::provider::http::rainbow_entities::rainbow_entities::RainbowTransferProviderEntitiesRouter;
-use crate::provider::setup::config::TransferProviderApplicationConfig;
+use crate::provider::setup::config::TransferApplicationConfig;
 use axum::{serve, Router};
+use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
 use rainbow_db::events::repo::sql::EventsRepoForSql;
 use rainbow_db::events::repo::EventsRepoFactory;
 use rainbow_db::transfer_provider::repo::sql::TransferProviderRepoForSql;
@@ -43,8 +44,8 @@ use tracing::info;
 
 pub struct TransferProviderApplication;
 
-pub async fn create_transfer_provider_router(db_url: String) -> Router {
-    let db_connection = Database::connect(db_url).await.expect("Database can't connect");
+pub async fn create_transfer_provider_router(config: &TransferApplicationConfig) -> Router {
+    let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
 
     // Events router
     let subscription_repo = Arc::new(EventsRepoForSql::create_repo(db_connection.clone()));
@@ -104,18 +105,13 @@ pub async fn create_transfer_provider_router(db_url: String) -> Router {
 }
 
 impl TransferProviderApplication {
-    pub async fn run(config: &TransferProviderApplicationConfig<'static>) -> anyhow::Result<()> {
+    pub async fn run(config: &TransferApplicationConfig) -> anyhow::Result<()> {
         // db_connection
-        let db_url = config.get_full_db_url();
-        let router = create_transfer_provider_router(db_url).await;
+        let router = create_transfer_provider_router(config).await;
         // Init server
-        let server_message = format!("Starting provider server in {}", config.get_full_host_url(), );
+        let server_message = format!("Starting provider server in {}", config.get_transfer_host_url().unwrap());
         info!("{}", server_message);
-        let listener = TcpListener::bind(format!(
-            "{}:{}",
-            config.get_host_url(),
-            config.get_host_port()
-        ))
+        let listener = TcpListener::bind(config.get_transfer_host_url().unwrap())
             .await?;
         serve(listener, router).await?;
         Ok(())

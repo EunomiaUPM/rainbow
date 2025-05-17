@@ -29,7 +29,7 @@ use anyhow::bail;
 use axum::async_trait;
 use jsonschema::BasicOutput;
 use log::error;
-use rainbow_common::config::config::ConfigRoles;
+use rainbow_common::config::ConfigRoles;
 use rainbow_common::protocol::contract::contract_ack::ContractAckMessage;
 use rainbow_common::protocol::contract::contract_agreement_verification::ContractAgreementVerificationMessage;
 use rainbow_common::protocol::contract::contract_negotiation_event::{

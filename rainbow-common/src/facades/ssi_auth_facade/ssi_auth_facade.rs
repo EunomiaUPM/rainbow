@@ -17,9 +17,19 @@
  *
  */
 
-pub mod rainbow_entities;
-pub mod ds_protocol;
-pub mod data_service_resolver_facade;
-pub mod data_plane_facade;
-pub mod ds_protocol_rpc;
-pub mod agreement_resolver_facade;
+use crate::facades::ssi_auth_facade::SSIAuthFacadeTrait;
+use axum::async_trait;
+
+pub struct SSIAuthFacadeService {}
+impl SSIAuthFacadeService {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
+#[async_trait]
+impl SSIAuthFacadeTrait for SSIAuthFacadeService {
+    async fn authorize(&self, token: String) -> anyhow::Result<()> {
+        Ok(())
+    }
+}

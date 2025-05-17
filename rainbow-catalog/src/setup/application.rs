@@ -32,9 +32,10 @@ use crate::http::rainbow_entities::dataset::RainbowCatalogDatasetRouter;
 use crate::http::rainbow_entities::distribution::RainbowCatalogDistributionRouter;
 use crate::http::rainbow_entities::policies::RainbowCatalogPoliciesRouter;
 use crate::http::rainbow_rpc::rainbow_rpc::RainbowRPCCatalogRouter;
-use crate::setup::config::CatalogApplicationConfig;
+use crate::setup::config::CatalogApplicationProviderConfig;
 use axum::routing::get;
 use axum::{serve, Router};
+use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
 use rainbow_db::catalog::repo::sql::CatalogRepoForSql;
 use rainbow_db::catalog::repo::CatalogRepoFactory;
 use rainbow_db::events::repo::sql::EventsRepoForSql;
@@ -53,7 +54,7 @@ use tracing::info;
 
 pub struct CatalogApplication;
 
-pub async fn create_catalog_router(config: CatalogApplicationConfig) -> Router {
+pub async fn create_catalog_router(config: &CatalogApplicationProviderConfig) -> Router {
     let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
 
     // Repos
@@ -116,17 +117,13 @@ pub async fn create_catalog_router(config: CatalogApplicationConfig) -> Router {
 }
 
 impl CatalogApplication {
-    pub async fn run(config: CatalogApplicationConfig) -> anyhow::Result<()> {
+    pub async fn run(config: &CatalogApplicationProviderConfig) -> anyhow::Result<()> {
         // db_connection
-        let router = create_catalog_router(config.clone()).await;
+        let router = create_catalog_router(config).await;
         // Init server
-        let server_message = format!("Starting consumer server in {}", config.get_full_host_url(), );
+        let server_message = format!("Starting catalog server in {}", config.get_catalog_host_url().unwrap());
         info!("{}", server_message);
-        let listener = TcpListener::bind(format!(
-            "{}:{}",
-            config.get_host_url(),
-            config.get_host_port()
-        ))
+        let listener = TcpListener::bind(config.get_catalog_host_url().unwrap())
             .await?;
         serve(listener, router).await?;
         Ok(())

@@ -23,7 +23,7 @@ use std::fmt::Display;
 use std::str::FromStr;
 
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug)]
 pub enum DbType {
     Postgres,
     Mysql,

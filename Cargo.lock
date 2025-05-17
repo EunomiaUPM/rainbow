@@ -2166,6 +2166,7 @@ dependencies = [
  "http-body-util",
  "jsonschema",
  "log",
+ "mockall",
  "once_cell",
  "reqwest",
  "sea-orm",

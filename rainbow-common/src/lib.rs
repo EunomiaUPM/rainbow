@@ -32,3 +32,4 @@ pub mod misc_router;
 pub mod protocol;
 pub mod utils;
 pub mod schemas;
+pub mod facades;
