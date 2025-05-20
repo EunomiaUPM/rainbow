@@ -24,7 +24,6 @@ use rainbow_common::protocol::catalog::dataservice_definition::DataService;
 use rainbow_common::protocol::catalog::dataset_definition::Dataset;
 use rainbow_common::protocol::catalog::distribution_definition::Distribution;
 use rainbow_common::protocol::contract::contract_odrl::{OdrlOffer, OdrlPolicyInfo};
-use rainbow_db::catalog::entities::odrl_offer;
 use urn::Urn;
 
 pub mod catalog;
@@ -99,23 +98,23 @@ pub trait RainbowDistributionTrait: Send + Sync {
 #[async_trait]
 pub trait RainbowPoliciesTrait: Send + Sync {
     async fn get_catalog_policies(&self, catalog_id: Urn) -> anyhow::Result<Vec<OdrlOffer>>;
-    async fn post_catalog_policies(&self, catalog_id: Urn, policy: OdrlPolicyInfo) -> anyhow::Result<odrl_offer::Model>;
+    async fn post_catalog_policies(&self, catalog_id: Urn, policy: OdrlPolicyInfo) -> anyhow::Result<OdrlOffer>;
     async fn delete_catalog_policies(&self, catalog_id: Urn, policy_id: Urn) -> anyhow::Result<()>;
     async fn get_dataset_policies(&self, dataset_id: Urn) -> anyhow::Result<Vec<OdrlOffer>>;
-    async fn post_dataset_policies(&self, dataset_id: Urn, policy: OdrlPolicyInfo) -> anyhow::Result<odrl_offer::Model>;
+    async fn post_dataset_policies(&self, dataset_id: Urn, policy: OdrlPolicyInfo) -> anyhow::Result<OdrlOffer>;
     async fn delete_dataset_policies(&self, dataset_id: Urn, policy_id: Urn) -> anyhow::Result<()>;
     async fn get_data_service_policies(&self, data_service_id: Urn) -> anyhow::Result<Vec<OdrlOffer>>;
     async fn post_data_service_policies(
         &self,
         data_service_id: Urn,
         policy: OdrlPolicyInfo,
-    ) -> anyhow::Result<odrl_offer::Model>;
+    ) -> anyhow::Result<OdrlOffer>;
     async fn delete_data_service_policies(&self, data_service_id: Urn, policy_id: Urn) -> anyhow::Result<()>;
     async fn get_distribution_policies(&self, distribution_id: Urn) -> anyhow::Result<Vec<OdrlOffer>>;
     async fn post_distribution_policies(
         &self,
         distribution_id: Urn,
         policy: OdrlPolicyInfo,
-    ) -> anyhow::Result<odrl_offer::Model>;
+    ) -> anyhow::Result<OdrlOffer>;
     async fn delete_distribution_policies(&self, distribution_id: Urn, policy_id: Urn) -> anyhow::Result<()>;
 }

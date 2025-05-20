@@ -23,7 +23,6 @@ use axum::async_trait;
 use rainbow_common::protocol::catalog::EntityTypes;
 use rainbow_common::protocol::contract::contract_odrl::{OdrlOffer, OdrlPolicyInfo};
 use rainbow_common::utils::get_urn;
-use rainbow_db::catalog::entities::odrl_offer::Model;
 use rainbow_db::catalog::repo::{NewOdrlOfferModel, OdrlOfferRepo};
 use rainbow_events::core::notification::notification_types::{RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory, RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes};
 use rainbow_events::core::notification::RainbowEventsNotificationTrait;
@@ -62,7 +61,7 @@ where
         Ok(policies)
     }
 
-    async fn post_catalog_policies(&self, catalog_id: Urn, policy: OdrlPolicyInfo) -> anyhow::Result<Model> {
+    async fn post_catalog_policies(&self, catalog_id: Urn, policy: OdrlPolicyInfo) -> anyhow::Result<OdrlOffer> {
         let new_policy = self
             .repo
             .create_odrl_offer(
@@ -84,6 +83,7 @@ where
             message_content: to_value(&new_policy)?,
             message_operation: RainbowEventsNotificationMessageOperation::Creation,
         }).await?;
+        let new_policy = OdrlOffer::try_from(new_policy)?;
         Ok(new_policy)
     }
 
@@ -108,7 +108,7 @@ where
         Ok(policies)
     }
 
-    async fn post_dataset_policies(&self, dataset_id: Urn, policy: OdrlPolicyInfo) -> anyhow::Result<Model> {
+    async fn post_dataset_policies(&self, dataset_id: Urn, policy: OdrlPolicyInfo) -> anyhow::Result<OdrlOffer> {
         let new_policy = self
             .repo
             .create_odrl_offer(
@@ -130,6 +130,7 @@ where
             message_content: to_value(&new_policy)?,
             message_operation: RainbowEventsNotificationMessageOperation::Creation,
         }).await?;
+        let new_policy = OdrlOffer::try_from(new_policy)?;
         Ok(new_policy)
     }
 
@@ -154,7 +155,7 @@ where
         Ok(policies)
     }
 
-    async fn post_data_service_policies(&self, data_service_id: Urn, policy: OdrlPolicyInfo) -> anyhow::Result<Model> {
+    async fn post_data_service_policies(&self, data_service_id: Urn, policy: OdrlPolicyInfo) -> anyhow::Result<OdrlOffer> {
         let new_policy = self
             .repo
             .create_odrl_offer(
@@ -176,6 +177,7 @@ where
             message_content: to_value(&new_policy)?,
             message_operation: RainbowEventsNotificationMessageOperation::Creation,
         }).await?;
+        let new_policy = OdrlOffer::try_from(new_policy)?;
         Ok(new_policy)
     }
 
@@ -200,7 +202,7 @@ where
         Ok(policies)
     }
 
-    async fn post_distribution_policies(&self, distribution_id: Urn, policy: OdrlPolicyInfo) -> anyhow::Result<Model> {
+    async fn post_distribution_policies(&self, distribution_id: Urn, policy: OdrlPolicyInfo) -> anyhow::Result<OdrlOffer> {
         let new_policy = self
             .repo
             .create_odrl_offer(
@@ -222,6 +224,7 @@ where
             message_content: to_value(&new_policy)?,
             message_operation: RainbowEventsNotificationMessageOperation::Creation,
         }).await?;
+        let new_policy = OdrlOffer::try_from(new_policy)?;
         Ok(new_policy)
     }
 

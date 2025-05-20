@@ -47,7 +47,19 @@ pub struct TransferProviderApplication;
 pub async fn create_transfer_provider_router(config: &TransferProviderApplicationConfig) -> Router {
     let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
 
+    // Dataplane services
     let application_global_config: ApplicationProviderConfig = config.clone().into();
+    let dataplane_repo = Arc::new(DataPlaneRepoForSql::create_repo(db_connection.clone()));
+    let dataplane_process_service = Arc::new(DataPlaneProcessService::new(dataplane_repo));
+    let dataplane_controller = Arc::new(DataPlaneControllerService::new(
+        Arc::new(application_global_config.clone().into()),
+        dataplane_process_service.clone(),
+    ));
+    let dataplane_testing_router = TestingHTTPProxy::new(
+        application_global_config.clone().into(),
+        dataplane_process_service.clone(),
+    ).router();
+
     // Events router
     let subscription_repo = Arc::new(EventsRepoForSql::create_repo(db_connection.clone()));
     let subscription_service = Arc::new(RainbowEventsSubscriptionService::new(
