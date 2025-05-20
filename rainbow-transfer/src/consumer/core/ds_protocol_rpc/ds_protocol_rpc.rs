@@ -129,7 +129,7 @@ where
             .await
             .map_err(|e| DSRPCTransferConsumerErrors::DSProtocolTransferConsumerError(DSProtocolTransferConsumerErrors::DbErr(e)))?;
         // data plane
-        self.data_plane_facade.on_transfer_request().await?;
+        self.data_plane_facade.on_transfer_request(consumer_pid.clone(), format.clone()).await?;
         // create response
         let provider_pid = Some(get_urn_from_string(&transfer_process.provider_pid.unwrap())?);
         let response = DSRPCTransferConsumerRequestResponse {
@@ -195,7 +195,7 @@ where
             .await
             .map_err(|e| DSRPCTransferConsumerErrors::DSProtocolTransferConsumerError(DSProtocolTransferConsumerErrors::DbErr(e)))?;
         // data plane
-        self.data_plane_facade.on_transfer_start().await?;
+        self.data_plane_facade.on_transfer_start(consumer_pid.clone(), data_address.clone()).await?;
         // create response
         let response = DSRPCTransferConsumerStartResponse {
             provider_pid,
@@ -258,7 +258,7 @@ where
             .await
             .map_err(|e| DSRPCTransferConsumerErrors::DSProtocolTransferConsumerError(DSProtocolTransferConsumerErrors::DbErr(e)))?;
         // data plane
-        self.data_plane_facade.on_transfer_start().await?;
+        self.data_plane_facade.on_transfer_suspension(consumer_pid.clone()).await?;
         // create response
         let response = DSRPCTransferConsumerSuspensionResponse {
             provider_pid,
@@ -318,7 +318,7 @@ where
             .await
             .map_err(|e| DSRPCTransferConsumerErrors::DSProtocolTransferConsumerError(DSProtocolTransferConsumerErrors::DbErr(e)))?;
         // data plane
-        self.data_plane_facade.on_transfer_start().await?;
+        self.data_plane_facade.on_transfer_completion(consumer_pid.clone()).await?;
         // create response
         let response = DSRPCTransferConsumerCompletionResponse {
             provider_pid,
@@ -380,7 +380,7 @@ where
             .await
             .map_err(|e| DSRPCTransferConsumerErrors::DSProtocolTransferConsumerError(DSProtocolTransferConsumerErrors::DbErr(e)))?;
         // data plane
-        self.data_plane_facade.on_transfer_start().await?;
+        self.data_plane_facade.on_transfer_termination(consumer_pid.clone()).await?;
         // create response
         let response = DSRPCTransferConsumerTerminationResponse {
             provider_pid,

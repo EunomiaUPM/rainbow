@@ -24,10 +24,8 @@ use sea_orm::entity::prelude::*;
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: String,
-    pub role: String,
-    pub address: String,
-    pub dct_action_format: String,
-    pub dct_action_protocol: String,
+    pub state: String,
+    pub direction: String,
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: Option<chrono::NaiveDateTime>,
 }

@@ -1,3 +1,2 @@
-// pub mod proxy;
-// pub mod coordinator;
-// pub mod pdp;
+pub mod testing_proxy;
+pub mod coordinator;

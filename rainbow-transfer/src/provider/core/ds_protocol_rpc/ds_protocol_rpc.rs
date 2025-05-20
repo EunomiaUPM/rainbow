@@ -38,7 +38,10 @@ use rainbow_common::protocol::transfer::{TransferMessageTypes, TransferRoles, Tr
 use rainbow_db::transfer_provider::repo::{
     EditTransferProcessModel, NewTransferMessageModel, TransferProviderRepoFactory,
 };
-use rainbow_events::core::notification::notification_types::{RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory, RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes};
+use rainbow_events::core::notification::notification_types::{
+    RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory,
+    RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes,
+};
 use rainbow_events::core::notification::RainbowEventsNotificationTrait;
 use reqwest::Client;
 use serde_json::json;
@@ -66,7 +69,12 @@ where
     V: DataPlaneProviderFacadeTrait + Send + Sync,
     W: RainbowEventsNotificationTrait + Sync + Send,
 {
-    pub fn new(transfer_repo: Arc<T>, _data_service_facade: Arc<U>, data_plane_facade: Arc<V>, notification_service: Arc<W>) -> Self {
+    pub fn new(
+        transfer_repo: Arc<T>,
+        _data_service_facade: Arc<U>,
+        data_plane_facade: Arc<V>,
+        notification_service: Arc<W>,
+    ) -> Self {
         let client =
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
         Self { transfer_repo, _data_service_facade, data_plane_facade, notification_service, client }
@@ -85,7 +93,7 @@ where
         &self,
         input: DSRPCTransferProviderStartRequest,
     ) -> anyhow::Result<DSRPCTransferProviderStartResponse> {
-        let DSRPCTransferProviderStartRequest { consumer_callback, provider_pid, consumer_pid, data_address, .. } =
+        let DSRPCTransferProviderStartRequest { consumer_callback, provider_pid, consumer_pid, .. } =
             input;
         // validate fields
         let provider = self
@@ -129,11 +137,14 @@ where
                 )
             );
         };
+
+
         // create message
+        let data_address = self.data_plane_facade.get_dataplane_address(provider_pid.clone()).await?;
         let start_message = TransferStartMessage {
             provider_pid: provider_pid.clone().to_string(),
             consumer_pid: consumer_pid.clone().to_string(),
-            data_address: data_address.clone(),
+            data_address: Some(data_address.clone()),
             ..Default::default()
         };
         // http to consumer
@@ -193,15 +204,15 @@ where
             .map_err(|e| {
                 DSRPCTransferProviderErrors::DSProtocolTransferProviderError(DSProtocolTransferProviderErrors::DbErr(e))
             })?;
-        self.data_plane_facade.on_transfer_start().await?;
+        self.data_plane_facade.on_transfer_start(provider_pid.clone()).await?;
         let response = DSRPCTransferProviderStartResponse {
             provider_pid,
             consumer_pid,
-            data_address: data_address,
+            data_address: Some(data_address),
             message: response,
         };
-        self.notification_service.broadcast_notification(
-            RainbowEventsNotificationBroadcastRequest {
+        self.notification_service
+            .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
                 category: RainbowEventsNotificationMessageCategory::TransferProcess,
                 subcategory: "TransferStartMessage".to_string(),
                 message_type: RainbowEventsNotificationMessageTypes::RPCMessage,
@@ -210,8 +221,8 @@ where
                     "process": &process,
                     "message": &message
                 }),
-            }
-        ).await?;
+            })
+            .await?;
         Ok(response)
     }
 
@@ -219,8 +230,9 @@ where
         &self,
         input: DSRPCTransferProviderSuspensionRequest,
     ) -> anyhow::Result<DSRPCTransferProviderSuspensionResponse> {
-        let DSRPCTransferProviderSuspensionRequest { consumer_callback, provider_pid, consumer_pid, code, reason, .. } =
-            input;
+        let DSRPCTransferProviderSuspensionRequest {
+            consumer_callback, provider_pid, consumer_pid, code, reason, ..
+        } = input;
         // validate fields
         let provider = self
             .transfer_repo
@@ -327,14 +339,10 @@ where
             .map_err(|e| {
                 DSRPCTransferProviderErrors::DSProtocolTransferProviderError(DSProtocolTransferProviderErrors::DbErr(e))
             })?;
-        self.data_plane_facade.on_transfer_suspension().await?;
-        let response = DSRPCTransferProviderSuspensionResponse {
-            provider_pid,
-            consumer_pid,
-            message: response,
-        };
-        self.notification_service.broadcast_notification(
-            RainbowEventsNotificationBroadcastRequest {
+        self.data_plane_facade.on_transfer_suspension(provider_pid.clone()).await?;
+        let response = DSRPCTransferProviderSuspensionResponse { provider_pid, consumer_pid, message: response };
+        self.notification_service
+            .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
                 category: RainbowEventsNotificationMessageCategory::TransferProcess,
                 subcategory: "TransferSuspensionMessage".to_string(),
                 message_type: RainbowEventsNotificationMessageTypes::RPCMessage,
@@ -343,8 +351,8 @@ where
                     "process": &process,
                     "message": &message
                 }),
-            }
-        ).await?;
+            })
+            .await?;
         Ok(response)
     }
 
@@ -352,8 +360,7 @@ where
         &self,
         input: DSRPCTransferProviderCompletionRequest,
     ) -> anyhow::Result<DSRPCTransferProviderCompletionResponse> {
-        let DSRPCTransferProviderCompletionRequest { consumer_callback, provider_pid, consumer_pid, .. } =
-            input;
+        let DSRPCTransferProviderCompletionRequest { consumer_callback, provider_pid, consumer_pid, .. } = input;
         // validate fields
         let provider = self
             .transfer_repo
@@ -458,14 +465,10 @@ where
             .map_err(|e| {
                 DSRPCTransferProviderErrors::DSProtocolTransferProviderError(DSProtocolTransferProviderErrors::DbErr(e))
             })?;
-        self.data_plane_facade.on_transfer_completion().await?;
-        let response = DSRPCTransferProviderCompletionResponse {
-            provider_pid,
-            consumer_pid,
-            message: response,
-        };
-        self.notification_service.broadcast_notification(
-            RainbowEventsNotificationBroadcastRequest {
+        self.data_plane_facade.on_transfer_completion(provider_pid.clone()).await?;
+        let response = DSRPCTransferProviderCompletionResponse { provider_pid, consumer_pid, message: response };
+        self.notification_service
+            .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
                 category: RainbowEventsNotificationMessageCategory::TransferProcess,
                 subcategory: "TransferCompletionMessage".to_string(),
                 message_type: RainbowEventsNotificationMessageTypes::RPCMessage,
@@ -474,8 +477,8 @@ where
                     "process": &process,
                     "message": &message
                 }),
-            }
-        ).await?;
+            })
+            .await?;
         Ok(response)
     }
 
@@ -483,8 +486,9 @@ where
         &self,
         input: DSRPCTransferProviderTerminationRequest,
     ) -> anyhow::Result<DSRPCTransferProviderTerminationResponse> {
-        let DSRPCTransferProviderTerminationRequest { consumer_callback, provider_pid, consumer_pid, code, reason, .. } =
-            input;
+        let DSRPCTransferProviderTerminationRequest {
+            consumer_callback, provider_pid, consumer_pid, code, reason, ..
+        } = input;
         // validate fields
         let provider = self
             .transfer_repo
@@ -591,14 +595,10 @@ where
             .map_err(|e| {
                 DSRPCTransferProviderErrors::DSProtocolTransferProviderError(DSProtocolTransferProviderErrors::DbErr(e))
             })?;
-        self.data_plane_facade.on_transfer_termination().await?;
-        let response = DSRPCTransferProviderTerminationResponse {
-            provider_pid,
-            consumer_pid,
-            message: response,
-        };
-        self.notification_service.broadcast_notification(
-            RainbowEventsNotificationBroadcastRequest {
+        self.data_plane_facade.on_transfer_termination(provider_pid.clone()).await?;
+        let response = DSRPCTransferProviderTerminationResponse { provider_pid, consumer_pid, message: response };
+        self.notification_service
+            .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
                 category: RainbowEventsNotificationMessageCategory::TransferProcess,
                 subcategory: "TransferTerminationMessage".to_string(),
                 message_type: RainbowEventsNotificationMessageTypes::RPCMessage,
@@ -607,8 +607,8 @@ where
                     "process": &process,
                     "message": &message
                 }),
-            }
-        ).await?;
+            })
+            .await?;
         Ok(response)
     }
 }

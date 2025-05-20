@@ -32,8 +32,15 @@ use rainbow_common::protocol::transfer::transfer_suspension::TransferSuspensionM
 use rainbow_common::protocol::transfer::transfer_termination::TransferTerminationMessage;
 use rainbow_common::protocol::transfer::{TransferRoles, TransferState};
 use rainbow_common::utils::{get_urn, get_urn_from_string};
-use rainbow_db::transfer_provider::repo::{EditTransferProcessModel, NewTransferMessageModel, NewTransferProcessModel, TransferProviderRepoErrors, TransferProviderRepoFactory};
-use rainbow_events::core::notification::notification_types::{RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory, RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes};
+use rainbow_dataplane::coordinator::controller::DataPlaneControllerTrait;
+use rainbow_db::transfer_provider::repo::{
+    EditTransferProcessModel, NewTransferMessageModel, NewTransferProcessModel, TransferProviderRepoErrors,
+    TransferProviderRepoFactory,
+};
+use rainbow_events::core::notification::notification_types::{
+    RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory,
+    RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes,
+};
 use rainbow_events::core::notification::RainbowEventsNotificationTrait;
 use serde_json::json;
 use std::sync::Arc;
@@ -78,18 +85,17 @@ where
     V: DataPlaneProviderFacadeTrait + Send + Sync,
     W: RainbowEventsNotificationTrait + Sync + Send,
 {
-    async fn get_transfer_requests_by_provider(
-        &self,
-        provider_pid: Urn,
-    ) -> anyhow::Result<TransferProcessMessage> {
+    async fn get_transfer_requests_by_provider(&self, provider_pid: Urn) -> anyhow::Result<TransferProcessMessage> {
         debug!("DSProtocol Service: get_transfer_requests_by_provider");
-        let transfers =
-            self.transfer_repo.get_transfer_process_by_provider(provider_pid.clone()).await
-                .map_err(DSProtocolTransferProviderErrors::DbErr)?
-                .ok_or(DSProtocolTransferProviderErrors::TransferProcessNotFound {
-                    provider_pid: Option::from(provider_pid),
-                    consumer_pid: None,
-                })?;
+        let transfers = self
+            .transfer_repo
+            .get_transfer_process_by_provider(provider_pid.clone())
+            .await
+            .map_err(DSProtocolTransferProviderErrors::DbErr)?
+            .ok_or(DSProtocolTransferProviderErrors::TransferProcessNotFound {
+                provider_pid: Option::from(provider_pid),
+                consumer_pid: None,
+            })?;
         Ok(transfers.into())
     }
 
@@ -98,9 +104,11 @@ where
         consumer_pid: Urn,
     ) -> anyhow::Result<Option<TransferProcessMessage>> {
         debug!("DSProtocol Service: get_transfer_requests_by_consumer");
-        let transfers =
-            self.transfer_repo.get_transfer_process_by_consumer(consumer_pid.clone()).await
-                .map_err(DSProtocolTransferProviderErrors::DbErr)?;
+        let transfers = self
+            .transfer_repo
+            .get_transfer_process_by_consumer(consumer_pid.clone())
+            .await
+            .map_err(DSProtocolTransferProviderErrors::DbErr)?;
         Ok(transfers.map(|e| e.into()))
     }
 
@@ -115,17 +123,18 @@ where
 
         // validate
         if has_data_address_in_push(&input.data_address, &input.format)? == false {
-            bail!(DSProtocolTransferProviderErrors::DataAddressCannotBeNullOnPushError {
-                consumer_pid: Option::from(consumer_pid),
-                provider_pid: None
-            });
+            bail!(
+                DSProtocolTransferProviderErrors::DataAddressCannotBeNullOnPushError {
+                    consumer_pid: Option::from(consumer_pid),
+                    provider_pid: None
+                }
+            );
         }
 
         // resolve data service
-        let _data_service = self.data_service_facade
-            .resolve_data_service_by_agreement_id(agreement_id.clone()).await?;
+        let data_service = self.data_service_facade.resolve_data_service_by_agreement_id(agreement_id.clone()).await?;
         // connect to data plane
-        self.data_plane.on_transfer_request().await?;
+        self.data_plane.on_transfer_request(provider_pid.clone(), data_service, input.format.clone()).await?;
 
         // db persist
         let transfer_process = self
@@ -153,8 +162,8 @@ where
             .await
             .map_err(DSProtocolTransferProviderErrors::DbErr)?;
 
-        self.notification_service.broadcast_notification(
-            RainbowEventsNotificationBroadcastRequest {
+        self.notification_service
+            .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
                 category: RainbowEventsNotificationMessageCategory::TransferProcess,
                 subcategory: "TransferRequestMessage".to_string(),
                 message_type: RainbowEventsNotificationMessageTypes::DSProtocolMessage,
@@ -163,8 +172,8 @@ where
                     "process": transfer_process.clone(),
                     "message": transfer_message
                 }),
-            }
-        ).await?;
+            })
+            .await?;
         Ok(transfer_process.into())
     }
 
@@ -173,11 +182,7 @@ where
         provider_pid: Urn,
         input: TransferStartMessage,
     ) -> anyhow::Result<TransferProcessMessage> {
-        let TransferStartMessage {
-            provider_pid: provider_pid_,
-            consumer_pid,
-            ..
-        } = input.clone();
+        let TransferStartMessage { provider_pid: provider_pid_, consumer_pid, .. } = input.clone();
 
         // validate
         if provider_pid.to_string() != provider_pid_ {
@@ -188,25 +193,24 @@ where
             .transfer_repo
             .put_transfer_process(
                 provider_pid.clone(),
-                EditTransferProcessModel {
-                    state: Option::from(TransferState::STARTED),
-                    ..Default::default()
-                },
+                EditTransferProcessModel { state: Option::from(TransferState::STARTED), ..Default::default() },
             )
             .await
             .map_err(|e| match e {
-                TransferProviderRepoErrors::ProviderTransferProcessNotFound => DSProtocolTransferProviderErrors::TransferProcessNotFound {
-                    provider_pid: Some(provider_pid_.clone().parse().unwrap()),
-                    consumer_pid: Some(consumer_pid.clone().parse().unwrap()),
-                },
-                e_ => DSProtocolTransferProviderErrors::DbErr(e_)
+                TransferProviderRepoErrors::ProviderTransferProcessNotFound => {
+                    DSProtocolTransferProviderErrors::TransferProcessNotFound {
+                        provider_pid: Some(provider_pid_.clone().parse().unwrap()),
+                        consumer_pid: Some(consumer_pid.clone().parse().unwrap()),
+                    }
+                }
+                e_ => DSProtocolTransferProviderErrors::DbErr(e_),
             })?;
 
         // create message
         let transfer_message = self
             .transfer_repo
             .create_transfer_message(
-                provider_pid,
+                provider_pid.clone(),
                 NewTransferMessageModel {
                     message_type: input._type.clone(),
                     from: TransferRoles::Consumer,
@@ -220,10 +224,10 @@ where
         // data plane
         let _data_plane_id = get_urn_from_string(&transfer_process.data_plane_id.clone().unwrap())?;
         // self.data_plane.connect_to_streaming_service(data_plane_id).await?;
-        self.data_plane.on_transfer_start().await?;
+        self.data_plane.on_transfer_start(provider_pid.clone()).await?;
 
-        self.notification_service.broadcast_notification(
-            RainbowEventsNotificationBroadcastRequest {
+        self.notification_service
+            .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
                 category: RainbowEventsNotificationMessageCategory::TransferProcess,
                 subcategory: "TransferStartMessage".to_string(),
                 message_type: RainbowEventsNotificationMessageTypes::DSProtocolMessage,
@@ -232,8 +236,8 @@ where
                     "process": transfer_process.clone(),
                     "message": transfer_message
                 }),
-            }
-        ).await?;
+            })
+            .await?;
         Ok(transfer_process.into())
     }
 
@@ -242,11 +246,7 @@ where
         provider_pid: Urn,
         input: TransferSuspensionMessage,
     ) -> anyhow::Result<TransferProcessMessage> {
-        let TransferSuspensionMessage {
-            provider_pid: provider_pid_,
-            consumer_pid,
-            ..
-        } = input.clone();
+        let TransferSuspensionMessage { provider_pid: provider_pid_, consumer_pid, .. } = input.clone();
 
         // validate
         if provider_pid.to_string() != provider_pid_ {
@@ -258,25 +258,24 @@ where
             .transfer_repo
             .put_transfer_process(
                 provider_pid.clone(),
-                EditTransferProcessModel {
-                    state: Option::from(TransferState::SUSPENDED),
-                    ..Default::default()
-                },
+                EditTransferProcessModel { state: Option::from(TransferState::SUSPENDED), ..Default::default() },
             )
             .await
             .map_err(|e| match e {
-                TransferProviderRepoErrors::ProviderTransferProcessNotFound => DSProtocolTransferProviderErrors::TransferProcessNotFound {
-                    provider_pid: Some(provider_pid_.clone().parse().unwrap()),
-                    consumer_pid: Some(consumer_pid.clone().parse().unwrap()),
-                },
-                e_ => DSProtocolTransferProviderErrors::DbErr(e_)
+                TransferProviderRepoErrors::ProviderTransferProcessNotFound => {
+                    DSProtocolTransferProviderErrors::TransferProcessNotFound {
+                        provider_pid: Some(provider_pid_.clone().parse().unwrap()),
+                        consumer_pid: Some(consumer_pid.clone().parse().unwrap()),
+                    }
+                }
+                e_ => DSProtocolTransferProviderErrors::DbErr(e_),
             })?;
 
         // create message
         let transfer_message = self
             .transfer_repo
             .create_transfer_message(
-                provider_pid,
+                provider_pid.clone(),
                 NewTransferMessageModel {
                     message_type: input._type.clone(),
                     from: TransferRoles::Consumer,
@@ -287,14 +286,13 @@ where
             .await
             .map_err(DSProtocolTransferProviderErrors::DbErr)?;
 
-
         // data plane
         let _data_plane_id = get_urn_from_string(&transfer_process_db.data_plane_id.clone().unwrap())?;
         // self.data_plane.disconnect_from_streaming_service(data_plane_id).await?;
-        self.data_plane.on_transfer_suspension().await?;
+        self.data_plane.on_transfer_suspension(provider_pid.clone()).await?;
 
-        self.notification_service.broadcast_notification(
-            RainbowEventsNotificationBroadcastRequest {
+        self.notification_service
+            .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
                 category: RainbowEventsNotificationMessageCategory::TransferProcess,
                 subcategory: "TransferSuspensionMessage".to_string(),
                 message_type: RainbowEventsNotificationMessageTypes::DSProtocolMessage,
@@ -303,8 +301,8 @@ where
                     "process": transfer_process_db.clone(),
                     "message": transfer_message
                 }),
-            }
-        ).await?;
+            })
+            .await?;
         Ok(transfer_process_db.into())
     }
 
@@ -313,11 +311,7 @@ where
         provider_pid: Urn,
         input: TransferCompletionMessage,
     ) -> anyhow::Result<TransferProcessMessage> {
-        let TransferCompletionMessage {
-            provider_pid: provider_pid_,
-            consumer_pid,
-            ..
-        } = input.clone();
+        let TransferCompletionMessage { provider_pid: provider_pid_, consumer_pid, .. } = input.clone();
 
         // validate
         if provider_pid.to_string() != provider_pid_ {
@@ -329,25 +323,24 @@ where
             .transfer_repo
             .put_transfer_process(
                 provider_pid.clone(),
-                EditTransferProcessModel {
-                    state: Option::from(TransferState::COMPLETED),
-                    ..Default::default()
-                },
+                EditTransferProcessModel { state: Option::from(TransferState::COMPLETED), ..Default::default() },
             )
             .await
             .map_err(|e| match e {
-                TransferProviderRepoErrors::ProviderTransferProcessNotFound => DSProtocolTransferProviderErrors::TransferProcessNotFound {
-                    provider_pid: Some(provider_pid_.clone().parse().unwrap()),
-                    consumer_pid: Some(consumer_pid.clone().parse().unwrap()),
-                },
-                e_ => DSProtocolTransferProviderErrors::DbErr(e_)
+                TransferProviderRepoErrors::ProviderTransferProcessNotFound => {
+                    DSProtocolTransferProviderErrors::TransferProcessNotFound {
+                        provider_pid: Some(provider_pid_.clone().parse().unwrap()),
+                        consumer_pid: Some(consumer_pid.clone().parse().unwrap()),
+                    }
+                }
+                e_ => DSProtocolTransferProviderErrors::DbErr(e_),
             })?;
 
         // create message
         let transfer_message = self
             .transfer_repo
             .create_transfer_message(
-                provider_pid,
+                provider_pid.clone(),
                 NewTransferMessageModel {
                     message_type: input._type.clone(),
                     from: TransferRoles::Consumer,
@@ -361,10 +354,10 @@ where
         // data plane
         let _data_plane_id = get_urn_from_string(&transfer_process_db.data_plane_id.clone().unwrap())?;
         // self.data_plane.disconnect_from_streaming_service(data_plane_id).await?;
-        self.data_plane.on_transfer_completion().await?;
+        self.data_plane.on_transfer_completion(provider_pid.clone()).await?;
 
-        self.notification_service.broadcast_notification(
-            RainbowEventsNotificationBroadcastRequest {
+        self.notification_service
+            .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
                 category: RainbowEventsNotificationMessageCategory::TransferProcess,
                 subcategory: "TransferCompletionMessage".to_string(),
                 message_type: RainbowEventsNotificationMessageTypes::DSProtocolMessage,
@@ -373,8 +366,8 @@ where
                     "process": transfer_process_db.clone(),
                     "message": transfer_message
                 }),
-            }
-        ).await?;
+            })
+            .await?;
         Ok(transfer_process_db.into())
     }
 
@@ -383,11 +376,7 @@ where
         provider_pid: Urn,
         input: TransferTerminationMessage,
     ) -> anyhow::Result<TransferProcessMessage> {
-        let TransferTerminationMessage {
-            provider_pid: provider_pid_,
-            consumer_pid,
-            ..
-        } = input.clone();
+        let TransferTerminationMessage { provider_pid: provider_pid_, consumer_pid, .. } = input.clone();
 
         // validate
         if provider_pid.to_string() != provider_pid_ {
@@ -399,25 +388,24 @@ where
             .transfer_repo
             .put_transfer_process(
                 provider_pid.clone(),
-                EditTransferProcessModel {
-                    state: Option::from(TransferState::TERMINATED),
-                    ..Default::default()
-                },
+                EditTransferProcessModel { state: Option::from(TransferState::TERMINATED), ..Default::default() },
             )
             .await
             .map_err(|e| match e {
-                TransferProviderRepoErrors::ProviderTransferProcessNotFound => DSProtocolTransferProviderErrors::TransferProcessNotFound {
-                    provider_pid: Some(provider_pid_.clone().parse().unwrap()),
-                    consumer_pid: Some(consumer_pid.clone().parse().unwrap()),
-                },
-                e_ => DSProtocolTransferProviderErrors::DbErr(e_)
+                TransferProviderRepoErrors::ProviderTransferProcessNotFound => {
+                    DSProtocolTransferProviderErrors::TransferProcessNotFound {
+                        provider_pid: Some(provider_pid_.clone().parse().unwrap()),
+                        consumer_pid: Some(consumer_pid.clone().parse().unwrap()),
+                    }
+                }
+                e_ => DSProtocolTransferProviderErrors::DbErr(e_),
             })?;
 
         // create message
         let transfer_message = self
             .transfer_repo
             .create_transfer_message(
-                provider_pid,
+                provider_pid.clone(),
                 NewTransferMessageModel {
                     message_type: input._type.clone(),
                     from: TransferRoles::Consumer,
@@ -431,10 +419,10 @@ where
         // data plane
         let _data_plane_id = get_urn_from_string(&transfer_process_db.data_plane_id.clone().unwrap())?;
         // self.data_plane.disconnect_from_streaming_service(data_plane_id).await?;
-        self.data_plane.on_transfer_termination().await?;
+        self.data_plane.on_transfer_termination(provider_pid.clone()).await?;
 
-        self.notification_service.broadcast_notification(
-            RainbowEventsNotificationBroadcastRequest {
+        self.notification_service
+            .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
                 category: RainbowEventsNotificationMessageCategory::TransferProcess,
                 subcategory: "TransferTerminationMessage".to_string(),
                 message_type: RainbowEventsNotificationMessageTypes::DSProtocolMessage,
@@ -443,8 +431,8 @@ where
                     "process": transfer_process_db.clone(),
                     "message": transfer_message
                 }),
-            }
-        ).await?;
+            })
+            .await?;
         Ok(transfer_process_db.into())
     }
 }

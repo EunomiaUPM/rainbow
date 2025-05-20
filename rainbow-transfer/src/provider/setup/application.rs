@@ -17,7 +17,7 @@
  *
  */
 
-use crate::provider::core::data_plane_facade::data_plane_facade::DataPlaneProviderFacadeImpl;
+use crate::provider::core::data_plane_facade::data_plane_facade::DataPlaneProviderFacadeForDSProtocol;
 use crate::provider::core::data_service_resolver_facade::data_service_resolver_facade::DataServiceFacadeImpl;
 use crate::provider::core::ds_protocol::ds_protocol::DSProtocolTransferProviderImpl;
 use crate::provider::core::ds_protocol_rpc::ds_protocol_rpc::DSRPCTransferProviderService;
@@ -27,7 +27,13 @@ use crate::provider::http::ds_protocol_rpc::ds_protocol_rpc::DSRPCTransferProvid
 use crate::provider::http::rainbow_entities::rainbow_entities::RainbowTransferProviderEntitiesRouter;
 use crate::provider::setup::config::TransferProviderApplicationConfig;
 use axum::{serve, Router};
-use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
+use rainbow_common::config::global_config::ApplicationGlobalConfig;
+use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_dataplane::coordinator::controller::controller_service::DataPlaneControllerService;
+use rainbow_dataplane::coordinator::dataplane_process::dataplane_process_service::DataPlaneProcessService;
+use rainbow_dataplane::testing_proxy::http::http::TestingHTTPProxy;
+use rainbow_db::dataplane::repo::sql::DataPlaneRepoForSql;
+use rainbow_db::dataplane::repo::DataPlaneRepoFactory;
 use rainbow_db::events::repo::sql::EventsRepoForSql;
 use rainbow_db::events::repo::EventsRepoFactory;
 use rainbow_db::transfer_provider::repo::sql::TransferProviderRepoForSql;
@@ -87,7 +93,10 @@ pub async fn create_transfer_provider_router(config: &TransferProviderApplicatio
         RainbowTransferProviderEntitiesRouter::new(Arc::new(rainbow_entities_service)).router();
 
     // DSProtocol Dependency injection
-    let data_plane_facade = Arc::new(DataPlaneProviderFacadeImpl::new());
+    let data_plane_facade = Arc::new(DataPlaneProviderFacadeForDSProtocol::new(
+        dataplane_controller.clone(),
+        config.clone(),
+    ));
     let data_service_facade = Arc::new(DataServiceFacadeImpl::new());
     let ds_protocol_service = Arc::new(DSProtocolTransferProviderImpl::new(
         provider_repo.clone(),
@@ -111,6 +120,7 @@ pub async fn create_transfer_provider_router(config: &TransferProviderApplicatio
         .merge(rainbow_entities_router)
         .merge(ds_protocol_router)
         .merge(ds_protocol_rpc)
+        .merge(dataplane_testing_router)
         .nest("/api/v1/transfers", subscription_router)
         .nest("/api/v1/transfers", notification_router);
 

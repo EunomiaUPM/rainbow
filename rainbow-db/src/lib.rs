@@ -27,7 +27,7 @@
 pub mod catalog;
 pub mod contracts_provider;
 pub mod contracts_consumer;
-// pub mod dataplane;
+pub mod dataplane;
 pub mod transfer_consumer;
 pub mod transfer_provider;
 pub mod events;

@@ -18,15 +18,20 @@
  */
 
 use axum::async_trait;
+use rainbow_common::dcat_formats::DctFormats;
+use rainbow_common::protocol::catalog::dataservice_definition::DataService;
+use rainbow_common::protocol::transfer::transfer_data_address::DataAddress;
+use urn::Urn;
 
 pub mod data_plane_facade;
 
 #[mockall::automock]
 #[async_trait]
 pub trait DataPlaneProviderFacadeTrait: Send + Sync {
-    async fn on_transfer_request(&self) -> anyhow::Result<()>;
-    async fn on_transfer_start(&self) -> anyhow::Result<()>;
-    async fn on_transfer_suspension(&self) -> anyhow::Result<()>;
-    async fn on_transfer_completion(&self) -> anyhow::Result<()>;
-    async fn on_transfer_termination(&self) -> anyhow::Result<()>;
+    async fn get_dataplane_address(&self, session_id: Urn) -> anyhow::Result<DataAddress>;
+    async fn on_transfer_request(&self, session_id: Urn, data_service: DataService, format: DctFormats) -> anyhow::Result<()>;
+    async fn on_transfer_start(&self, session_id: Urn) -> anyhow::Result<()>;
+    async fn on_transfer_suspension(&self, session_id: Urn) -> anyhow::Result<()>;
+    async fn on_transfer_completion(&self, session_id: Urn) -> anyhow::Result<()>;
+    async fn on_transfer_termination(&self, session_id: Urn) -> anyhow::Result<()>;
 }

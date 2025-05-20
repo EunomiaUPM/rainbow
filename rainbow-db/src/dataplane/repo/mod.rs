@@ -19,36 +19,27 @@
 
 use crate::dataplane::entities::data_plane_field;
 use crate::dataplane::entities::data_plane_process;
-use crate::dataplane::repo::sql::DataPlaneRepoForSql;
 use axum::async_trait;
-use once_cell::sync::Lazy;
-use rainbow_common::config::config::GLOBAL_CONFIG;
+use rainbow_common::adv_protocol::interplane::{DataPlaneProcessDirection, DataPlaneProcessState};
+use sea_orm::DatabaseConnection;
 use urn::Urn;
 
 pub mod sql;
 
-pub trait CombinedRepo: DataPlaneProcessRepo + DataPlaneFieldRepo {}
-impl<T> CombinedRepo for T where T: DataPlaneProcessRepo + DataPlaneFieldRepo {}
-pub static DATA_PLANE_REPO: Lazy<Box<dyn CombinedRepo + Send + Sync>> = Lazy::new(|| {
-    let repo_type = GLOBAL_CONFIG.get().unwrap().db_type.clone();
-    match repo_type.as_str() {
-        "postgres" => Box::new(DataPlaneRepoForSql {}),
-        "memory" => Box::new(DataPlaneRepoForSql {}),
-        "mysql" => Box::new(DataPlaneRepoForSql {}),
-        _ => panic!("Unknown REPO_TYPE: {}", repo_type),
-    }
-});
+pub trait DataPlaneRepoFactory: DataPlaneProcessRepo + DataPlaneFieldRepo + Send + Sync + 'static {
+    fn create_repo(db_connection: DatabaseConnection) -> Self
+    where
+        Self: Sized;
+}
 
 pub struct NewDataPlaneProcess {
     pub id: Urn,
-    pub role: String,
-    pub address: String,
-    pub dct_action_format: String,
-    pub dct_action_protocol: String,
+    pub state: DataPlaneProcessState,
+    pub direction: DataPlaneProcessDirection,
 }
 
 pub struct EditDataPlaneProcess {
-    pub address: Option<String>,
+    pub state: Option<DataPlaneProcessState>,
 }
 
 #[async_trait]

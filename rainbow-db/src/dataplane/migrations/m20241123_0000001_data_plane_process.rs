@@ -34,10 +34,8 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(DataPlaneProcess::Table)
                     .col(ColumnDef::new(DataPlaneProcess::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(DataPlaneProcess::Role).string().not_null())
-                    .col(ColumnDef::new(DataPlaneProcess::Address).string().not_null())
-                    .col(ColumnDef::new(DataPlaneProcess::DctActionFormat).string().not_null())
-                    .col(ColumnDef::new(DataPlaneProcess::DctActionProtocol).string().not_null())
+                    .col(ColumnDef::new(DataPlaneProcess::State).string().not_null())
+                    .col(ColumnDef::new(DataPlaneProcess::Direction).string().not_null())
                     .col(ColumnDef::new(DataPlaneProcess::CreatedAt).date_time().not_null())
                     .col(ColumnDef::new(DataPlaneProcess::UpdatedAt).date_time())
                     .to_owned(),
@@ -53,10 +51,8 @@ impl MigrationTrait for Migration {
 pub enum DataPlaneProcess {
     Table,
     Id,
-    Role,
-    Address,
-    DctActionFormat,
-    DctActionProtocol,
+    State,
+    Direction,
     CreatedAt,
     UpdatedAt,
 }

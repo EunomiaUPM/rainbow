@@ -16,36 +16,215 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 use crate::consumer::core::data_plane_facade::DataPlaneConsumerFacadeTrait;
+use crate::consumer::setup::config::TransferConsumerApplicationConfig;
 use axum::async_trait;
+use rainbow_common::adv_protocol::interplane::data_plane_provision::DataPlaneProvisionRequest;
+use rainbow_common::adv_protocol::interplane::data_plane_start::DataPlaneStart;
+use rainbow_common::adv_protocol::interplane::data_plane_status::DataPlaneStatusRequest;
+use rainbow_common::adv_protocol::interplane::data_plane_stop::DataPlaneStop;
+use rainbow_common::adv_protocol::interplane::{
+    DataPlaneControllerMessages, DataPlaneControllerVersion, DataPlaneSDPConfigField, DataPlaneSDPConfigTypes,
+    DataPlaneSDPFieldTypes, DataPlaneSDPRequestField,
+};
+use rainbow_common::dcat_formats::{DctFormats, FormatAction};
+use rainbow_common::protocol::transfer::transfer_data_address::{DataAddress, EndpointProperty};
+use rainbow_dataplane::coordinator::controller::DataPlaneControllerTrait;
+use std::sync::Arc;
+use urn::Urn;
 
-pub struct DataPlaneConsumerFacadeImpl {}
-impl DataPlaneConsumerFacadeImpl {
-    pub fn new() -> Self {
-        Self {}
+pub struct DataPlaneConsumerFacadeForDSProtocol<T>
+where
+    T: DataPlaneControllerTrait + Sync + Send,
+{
+    dataplane_controller: Arc<T>,
+    config: TransferConsumerApplicationConfig,
+}
+
+impl<'a, T> DataPlaneConsumerFacadeForDSProtocol<T>
+where
+    T: DataPlaneControllerTrait + Sync + Send,
+    'a: 'static,
+{
+    pub fn new(dataplane_controller: Arc<T>, config: TransferConsumerApplicationConfig) -> Self {
+        Self { dataplane_controller, config }
     }
 }
 
 #[async_trait]
-impl DataPlaneConsumerFacadeTrait for DataPlaneConsumerFacadeImpl {
-    async fn on_transfer_request(&self) -> anyhow::Result<()> {
+impl<T> DataPlaneConsumerFacadeTrait for DataPlaneConsumerFacadeForDSProtocol<T>
+where
+    T: DataPlaneControllerTrait + Sync + Send,
+{
+    async fn get_dataplane_address(&self, session_id: Urn) -> anyhow::Result<DataAddress> {
+        let status = self
+            .dataplane_controller
+            .data_plane_get_status(DataPlaneStatusRequest {
+                _type: DataPlaneControllerMessages::DataPlaneStatusRequest,
+                version: DataPlaneControllerVersion::Version10,
+                session_id,
+            })
+            .await?;
+        let scheme = status
+            .sdp_response
+            .iter()
+            .find(|f| f._type == DataPlaneSDPFieldTypes::DataPlaneAddressScheme)
+            .unwrap()
+            .content
+            .clone();
+        let address = status
+            .sdp_response
+            .iter()
+            .find(|f| f._type == DataPlaneSDPFieldTypes::DataPlaneAddress)
+            .unwrap()
+            .content
+            .clone();
+        let auth_type = status
+            .sdp_response
+            .iter()
+            .find(|f| f._type == DataPlaneSDPFieldTypes::DataPlaneAddressAuthType)
+            .unwrap()
+            .content
+            .clone();
+        let auth_content = status
+            .sdp_response
+            .iter()
+            .find(|f| f._type == DataPlaneSDPFieldTypes::DataPlaneAddressAuthToken)
+            .unwrap()
+            .content
+            .clone();
+
+        let data_address = DataAddress {
+            _type: "DataAddress".to_string(),
+            endpoint_type: scheme,
+            endpoint: address,
+            endpoint_properties: vec![
+                EndpointProperty {
+                    _type: "EndpointProperty".to_string(),
+                    name: "authType".to_string(),
+                    value: auth_type,
+                },
+                EndpointProperty {
+                    _type: "EndpointProperty".to_string(),
+                    name: "authorization".to_string(),
+                    value: auth_content,
+                },
+            ],
+        };
+        Ok(data_address)
+    }
+
+    async fn on_transfer_request(
+        &self,
+        session_id: Urn,
+        format: DctFormats,
+    ) -> anyhow::Result<()> {
+        let _dataplane_response = match format.action {
+            FormatAction::Push => {
+                // TODO push case next_hop should point to consumer dataplane
+                todo!()
+            }
+            FormatAction::Pull => {}
+        };
+
         Ok(())
     }
 
-    async fn on_transfer_start(&self) -> anyhow::Result<()> {
+    async fn on_transfer_start(&self, session_id: Urn, data_address: Option<DataAddress>) -> anyhow::Result<()> {
+        self.dataplane_controller
+            .data_plane_provision_request(DataPlaneProvisionRequest {
+                _type: DataPlaneControllerMessages::DataPlaneProvisionRequest,
+                version: DataPlaneControllerVersion::Version10,
+                session_id: session_id.clone(),
+                sdp_request: vec![
+                    DataPlaneSDPRequestField {
+                        _type: DataPlaneSDPFieldTypes::DataPlaneAddressScheme,
+                        format: "https://www.iana.org/assignments/uri-schemes/uri-schemes.xhtml".to_string(),
+                    },
+                    DataPlaneSDPRequestField {
+                        _type: DataPlaneSDPFieldTypes::DataPlaneAddress,
+                        format: "uri".to_string(),
+                    },
+                    DataPlaneSDPRequestField {
+                        _type: DataPlaneSDPFieldTypes::DataPlaneAddressAuthType,
+                        format: "https://www.iana.org/assignments/http-authschemes/http-authschemes.xhtml"
+                            .to_string(),
+                    },
+                    DataPlaneSDPRequestField {
+                        _type: DataPlaneSDPFieldTypes::DataPlaneAddressAuthToken,
+                        format: "jwt".to_string(),
+                    },
+                ],
+                sdp_config: match data_address {
+                    None => None,
+                    Some(data_address) => Some(vec![
+                        DataPlaneSDPConfigField {
+                            _type: DataPlaneSDPConfigTypes::NextHopAddressScheme,
+                            format: Some(
+                                "https://www.iana.org/assignments/uri-schemes/uri-schemes.xhtml".to_string(),
+                            ),
+                            content: data_address.endpoint_type,
+                        },
+                        DataPlaneSDPConfigField {
+                            _type: DataPlaneSDPConfigTypes::NextHopAddress,
+                            format: Some("uri".to_string()),
+                            content: data_address.endpoint,
+                        },
+                        DataPlaneSDPConfigField {
+                            _type: DataPlaneSDPConfigTypes::Direction,
+                            format: Some("dcterms:transferDirection".to_string()),
+                            content: FormatAction::Pull.to_string(),
+                        },
+                    ])
+                },
+            })
+            .await?;
+
+
+        let ack = self
+            .dataplane_controller
+            .data_plane_start(DataPlaneStart {
+                _type: DataPlaneControllerMessages::DataPlaneStart,
+                version: DataPlaneControllerVersion::Version10,
+                session_id: session_id.clone(),
+            })
+            .await?;
         Ok(())
     }
 
-    async fn on_transfer_suspension(&self) -> anyhow::Result<()> {
+    async fn on_transfer_suspension(&self, session_id: Urn) -> anyhow::Result<()> {
+        let ack = self
+            .dataplane_controller
+            .data_plane_stop(DataPlaneStop {
+                _type: DataPlaneControllerMessages::DataPlaneStop,
+                version: DataPlaneControllerVersion::Version10,
+                session_id: session_id.clone(),
+            })
+            .await?;
         Ok(())
     }
 
-    async fn on_transfer_completion(&self) -> anyhow::Result<()> {
+    async fn on_transfer_completion(&self, session_id: Urn) -> anyhow::Result<()> {
+        let ack = self
+            .dataplane_controller
+            .data_plane_stop(DataPlaneStop {
+                _type: DataPlaneControllerMessages::DataPlaneStop,
+                version: DataPlaneControllerVersion::Version10,
+                session_id: session_id.clone(),
+            })
+            .await?;
         Ok(())
     }
 
-    async fn on_transfer_termination(&self) -> anyhow::Result<()> {
+    async fn on_transfer_termination(&self, session_id: Urn) -> anyhow::Result<()> {
+        let ack = self
+            .dataplane_controller
+            .data_plane_stop(DataPlaneStop {
+                _type: DataPlaneControllerMessages::DataPlaneStop,
+                version: DataPlaneControllerVersion::Version10,
+                session_id: session_id.clone(),
+            })
+            .await?;
         Ok(())
     }
 }

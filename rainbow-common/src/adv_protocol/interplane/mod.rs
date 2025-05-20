@@ -1,0 +1,154 @@
+use crate::dcat_formats::FormatAction;
+use anyhow::bail;
+use serde::{Deserialize, Serialize};
+use std::fmt::{Display, Formatter};
+use std::str::FromStr;
+
+pub mod data_plane_provision;
+pub mod data_plane_start;
+pub mod data_plane_stop;
+pub mod data_plane_status;
+
+#[derive(Serialize, Deserialize, Debug)]
+pub enum DataPlaneControllerVersion {
+    #[serde(rename = "1.0")]
+    Version10
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub enum DataPlaneControllerMessages {
+    #[serde(rename = "DataPlaneProvisionRequest")]
+    DataPlaneProvisionRequest,
+    #[serde(rename = "DataPlaneProvisionResponse")]
+    DataPlaneProvisionResponse,
+    #[serde(rename = "DataPlaneStatusRequest")]
+    DataPlaneStatusRequest,
+    #[serde(rename = "DataPlaneStatusResponse")]
+    DataPlaneStatusResponse,
+    #[serde(rename = "DataPlaneStart")]
+    DataPlaneStart,
+    #[serde(rename = "DataPlaneStartAck")]
+    DataPlaneStartAck,
+    #[serde(rename = "DataPlaneStop")]
+    DataPlaneStop,
+    #[serde(rename = "DataPlaneStopAck")]
+    DataPlaneStopAck,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub enum DataPlaneSDPFieldTypes {
+    #[serde(rename = "DataPlaneAddressScheme")]
+    DataPlaneAddressScheme,
+    #[serde(rename = "DataPlaneAddress")]
+    DataPlaneAddress,
+    #[serde(rename = "DataPlaneAddressAuthType")]
+    DataPlaneAddressAuthType,
+    #[serde(rename = "DataPlaneAddressAuthToke")]
+    DataPlaneAddressAuthToken,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub enum DataPlaneSDPConfigTypes {
+    #[serde(rename = "NextHopAddressScheme")]
+    NextHopAddressScheme,
+    #[serde(rename = "NextHopAddress")]
+    NextHopAddress,
+    #[serde(rename = "Direction")]
+    Direction,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct DataPlaneSDPRequestField {
+    #[serde(rename = "@type")]
+    pub _type: DataPlaneSDPFieldTypes,
+    pub format: String,
+}
+#[derive(Serialize, Deserialize, Debug)]
+pub struct DataPlaneSDPResponseField {
+    #[serde(rename = "@type")]
+    pub _type: DataPlaneSDPFieldTypes,
+    pub format: String,
+    pub content: String,
+}
+#[derive(Serialize, Deserialize, Debug)]
+pub struct DataPlaneSDPConfigField {
+    #[serde(rename = "@type")]
+    pub _type: DataPlaneSDPConfigTypes,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub format: Option<String>,
+    pub content: String,
+}
+
+#[derive(Debug)]
+pub enum DataPlaneProcessDirection {
+    PUSH,
+    PULL,
+    BIDI,
+}
+
+impl FromStr for DataPlaneProcessDirection {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "PUSH" => Ok(DataPlaneProcessDirection::PUSH),
+            "PULL" => Ok(DataPlaneProcessDirection::PULL),
+            "BIDI" => Ok(DataPlaneProcessDirection::BIDI),
+            _ => bail!("no direction allowed")
+        }
+    }
+}
+
+impl Display for DataPlaneProcessDirection {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DataPlaneProcessDirection::PUSH => f.write_str("PUSH"),
+            DataPlaneProcessDirection::PULL => f.write_str("PULL"),
+            DataPlaneProcessDirection::BIDI => f.write_str("BIDI"),
+        }
+    }
+}
+
+impl From<FormatAction> for DataPlaneProcessDirection {
+    fn from(value: FormatAction) -> Self {
+        match value {
+            FormatAction::Push => DataPlaneProcessDirection::PUSH,
+            FormatAction::Pull => DataPlaneProcessDirection::PULL,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum DataPlaneProcessState {
+    REQUESTED,
+    STARTED,
+    STOPPED,
+    TERMINATED,
+}
+
+impl FromStr for DataPlaneProcessState {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "REQUESTED" => Ok(DataPlaneProcessState::REQUESTED),
+            "STARTED" => Ok(DataPlaneProcessState::STARTED),
+            "STOPPED" => Ok(DataPlaneProcessState::STOPPED),
+            "TERMINATED" => Ok(DataPlaneProcessState::TERMINATED),
+            _ => bail!("no state allowed")
+        }
+    }
+}
+
+impl Display for DataPlaneProcessState {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DataPlaneProcessState::REQUESTED => f.write_str("REQUESTED"),
+            DataPlaneProcessState::STARTED => f.write_str("STARTED"),
+            DataPlaneProcessState::STOPPED => f.write_str("STOPPED"),
+            DataPlaneProcessState::TERMINATED => f.write_str("TERMINATED"),
+        }
+    }
+}
+
+

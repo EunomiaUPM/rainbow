@@ -148,7 +148,7 @@ where
                 callback_id.unwrap(),
                 EditTransferCallback {
                     provider_pid: Option::from(get_urn_from_string(&provider_pid)?),
-                    data_address: Option::from(to_value(data_address)?),
+                    data_address: Option::from(to_value(data_address.clone())?),
                     ..Default::default()
                 },
             )
@@ -156,7 +156,7 @@ where
             .map_err(DSProtocolTransferConsumerErrors::DbErr)?;
 
         // data plane
-        self.data_plane.on_transfer_start().await?;
+        self.data_plane.on_transfer_start(consumer_pid.clone(), data_address.clone()).await?;
 
         // return
         let mut transfer_process: TransferProcessMessage = callback.into();
@@ -192,7 +192,7 @@ where
             .map_err(DSProtocolTransferConsumerErrors::DbErr)?;
 
         // data plane
-        self.data_plane.on_transfer_suspension().await?;
+        self.data_plane.on_transfer_suspension(consumer_pid.clone()).await?;
 
         // return
         let mut transfer_process: TransferProcessMessage = callback.into();
@@ -228,7 +228,7 @@ where
             .map_err(DSProtocolTransferConsumerErrors::DbErr)?;
 
         // data plane
-        self.data_plane.on_transfer_completion().await?;
+        self.data_plane.on_transfer_completion(consumer_pid.clone()).await?;
 
         // return
         let mut transfer_process: TransferProcessMessage = callback.into();
@@ -263,7 +263,7 @@ where
             .map_err(DSProtocolTransferConsumerErrors::DbErr)?;
 
         // data plane
-        self.data_plane.on_transfer_termination().await?;
+        self.data_plane.on_transfer_termination(consumer_pid.clone()).await?;
 
         // return
         let mut transfer_process: TransferProcessMessage = callback.into();
