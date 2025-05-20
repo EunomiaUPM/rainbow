@@ -18,9 +18,11 @@
  */
 
 use crate::consumer::core::ds_protocol::ds_protocol::DSProtocolContractNegotiationConsumerService;
+use crate::consumer::core::ds_protocol_rpc::ds_protocol_rpc::DSRPCContractNegotiationConsumerService;
 // use crate::consumer::core::ds_protocol_rpc::ds_protocol_rpc::DSRPCContractNegotiationConsumerService;
 use crate::consumer::core::rainbow_entities::rainbow_entities::RainbowEntitiesContractNegotiationConsumerService;
 use crate::consumer::http::ds_protocol::ds_protocol::DSProtocolContractNegotiationConsumerRouter;
+use crate::consumer::http::ds_protocol_rpc::ds_protocol_rpc::DSRPCContractNegotiationConsumerRouter;
 // use crate::consumer::http::ds_protocol_rpc::ds_protocol_rpc::DSRPCContractNegotiationConsumerRouter;
 use crate::consumer::http::rainbow_entities::rainbow_entities::RainbowEntitiesContractNegotiationConsumerRouter;
 use crate::consumer::setup::config::ContractNegotiationConsumerApplicationConfig;
@@ -73,10 +75,10 @@ pub async fn create_contract_negotiation_consumer_router(config: &ContractNegoti
         RainbowEntitiesContractNegotiationConsumerRouter::new(rainbow_entities_service.clone()).router();
 
     // DSRPCProtocol Dependency injection
-    // let ds_rpc_protocol_service = Arc::new(DSRPCContractNegotiationConsumerService::new(
-    //     consumer_repo.clone(),
-    // ));
-    // let ds_rpc_protocol_router = DSRPCContractNegotiationConsumerRouter::new(ds_rpc_protocol_service.clone()).router();
+    let ds_rpc_protocol_service = Arc::new(DSRPCContractNegotiationConsumerService::new(
+        consumer_repo.clone(),
+    ));
+    let ds_rpc_protocol_router = DSRPCContractNegotiationConsumerRouter::new(ds_rpc_protocol_service.clone()).router();
 
     // DSProtocol Dependency injection
     let ds_protocol_service = Arc::new(DSProtocolContractNegotiationConsumerService::new(
@@ -87,7 +89,7 @@ pub async fn create_contract_negotiation_consumer_router(config: &ContractNegoti
     // Router
     Router::new()
         .merge(ds_protocol_router)
-        // .merge(ds_rpc_protocol_router)
+        .merge(ds_rpc_protocol_router)
         .merge(rainbow_entities_router)
         .nest("/api/v1/contract-negotiation", subscription_router)
         .nest("/api/v1/contract-negotiation", notification_router)
@@ -103,7 +105,11 @@ impl ContractNegotiationConsumerApplication {
             config.get_contract_negotiation_host_url().unwrap()
         );
         info!("{}", server_message);
-        let listener = TcpListener::bind(config.get_contract_negotiation_host_url().unwrap()).await?;
+        let listener = TcpListener::bind(format!(
+            "{}:{}",
+            config.get_raw_contract_negotiation_host().clone().unwrap().url,
+            config.get_raw_contract_negotiation_host().clone().unwrap().port
+        )).await?;
         serve(listener, router).await?;
         Ok(())
     }

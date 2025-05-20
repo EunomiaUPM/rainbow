@@ -116,7 +116,6 @@ where
             odrl_offer: odrl_offer.clone(),
             ..Default::default()
         };
-        println!("{:?}", contract_offer_message);
 
         // send message to provider
         let provider_base_url = provider_address.strip_suffix('/').unwrap_or(provider_address.as_str());

@@ -73,11 +73,11 @@ pub async fn contract_negotiation_consumer() -> anyhow::Result<()> {
     // -------------------------------
     // We create participants from scratch, there's no identity flow implemented yet
     let req = provider_client
-        .post("http://localhost:1234/api/v1/participants")
+        .post("http://localhost:1200/api/v1/participants")
         .json(&NewParticipantRequest {
             participant_id: None,
             _type: "Provider".to_string(),
-            base_url: "http://127.0.0.1:1234".to_string(),
+            base_url: "http://127.0.0.1:1200".to_string(),
             extra_fields: Default::default(),
         })
         .send()
@@ -88,11 +88,11 @@ pub async fn contract_negotiation_consumer() -> anyhow::Result<()> {
     println!("Provider participant: {:#?}", provider_participant_id);
 
     let req = provider_client
-        .post("http://localhost:1234/api/v1/participants")
+        .post("http://localhost:1200/api/v1/participants")
         .json(&NewParticipantRequest {
             participant_id: None,
             _type: "Consumer".to_string(),
-            base_url: "http://127.0.0.1:1235".to_string(),
+            base_url: "http://127.0.0.1:1100".to_string(),
             extra_fields: Default::default(),
         })
         .send()
@@ -106,7 +106,7 @@ pub async fn contract_negotiation_consumer() -> anyhow::Result<()> {
     // Create Dataset and policy
     // -------------------------------
     let req = provider_client
-        .post("http://localhost:1234/api/v1/catalogs")
+        .post("http://localhost:1200/api/v1/catalogs")
         .json(&NewCatalogRequest {
             id: None,
             foaf_home_page: None,
@@ -123,7 +123,7 @@ pub async fn contract_negotiation_consumer() -> anyhow::Result<()> {
 
     let req = provider_client
         .post(format!(
-            "http://localhost:1234/api/v1/catalogs/{}/datasets",
+            "http://localhost:1200/api/v1/catalogs/{}/datasets",
             catalog_id
         ))
         .json(&NewDatasetRequest { id: None, dct_conforms_to: None, dct_creator: None, dct_title: None })
@@ -135,7 +135,7 @@ pub async fn contract_negotiation_consumer() -> anyhow::Result<()> {
 
     let req = provider_client
         .post(format!(
-            "http://localhost:1234/api/v1/datasets/{}/policies",
+            "http://localhost:1200/api/v1/datasets/{}/policies",
             dataset_id
         ))
         .json(&OdrlPolicyInfo {
@@ -154,18 +154,18 @@ pub async fn contract_negotiation_consumer() -> anyhow::Result<()> {
         })
         .send()
         .await?;
-    let res = req.json::<odrl_offer::Model>().await?;
+    let res = req.json::<OdrlOffer>().await?;
     println!("Dataset policy: {:#?}", res);
-    let policy_id = get_urn_from_string(&res.id)?;
-    let policy_target = get_urn_from_string(&res.entity)?;
+    let policy_id = res.id;
+    let policy_target = res.target.unwrap();
 
     // -------------------------------
     // Consumer inits offer with REQUESTED
     // -------------------------------
     let req = consumer_client
-        .post("http://127.0.0.1:1235/api/v1/negotiations/rpc/setup-request")
+        .post("http://127.0.0.1:1100/api/v1/negotiations/rpc/setup-request")
         .json(&SetupRequestRequest {
-            provider_address: "http://127.0.0.1:1234".to_string(),
+            provider_address: "http://127.0.0.1:1200".to_string(),
             consumer_pid: None,
             provider_pid: None,
             odrl_offer: ContractRequestMessageOfferTypes::OfferMessage(OdrlMessageOffer {
@@ -193,7 +193,7 @@ pub async fn contract_negotiation_consumer() -> anyhow::Result<()> {
     // Provider redoes OFFER
     // -------------------------------
     let req = provider_client
-        .post("http://localhost:1234/api/v1/negotiations/rpc/setup-offer")
+        .post("http://localhost:1200/api/v1/negotiations/rpc/setup-offer")
         .json(&SetupOfferRequest {
             consumer_participant_id: consumer_participant_id.clone(),
             consumer_pid: Option::from(consumer_pid.clone()),
@@ -221,9 +221,9 @@ pub async fn contract_negotiation_consumer() -> anyhow::Result<()> {
     // Consumer redoes offer with REQUEST
     // -------------------------------
     let req = consumer_client
-        .post("http://127.0.0.1:1235/api/v1/negotiations/rpc/setup-request")
+        .post("http://127.0.0.1:1100/api/v1/negotiations/rpc/setup-request")
         .json(&SetupRequestRequest {
-            provider_address: "http://127.0.0.1:1234".to_string(),
+            provider_address: "http://127.0.0.1:1200".to_string(),
             consumer_pid: Option::from(consumer_pid.clone()),
             provider_pid: Option::from(provider_pid.clone()),
             odrl_offer: ContractRequestMessageOfferTypes::OfferMessage(OdrlMessageOffer {
@@ -250,7 +250,7 @@ pub async fn contract_negotiation_consumer() -> anyhow::Result<()> {
     // Provider agrees with AGREED and sketches agreement
     // -------------------------------
     let req = consumer_client
-        .post("http://127.0.0.1:1234/api/v1/negotiations/rpc/setup-agreement")
+        .post("http://127.0.0.1:1200/api/v1/negotiations/rpc/setup-agreement")
         .json(&SetupAgreementRequest {
             consumer_participant_id: consumer_participant_id.clone(),
             consumer_pid: consumer_pid.clone(),
@@ -265,9 +265,9 @@ pub async fn contract_negotiation_consumer() -> anyhow::Result<()> {
     // Consumer verifies agreement with VERIFY
     // -------------------------------
     let req = consumer_client
-        .post("http://127.0.0.1:1235/api/v1/negotiations/rpc/setup-verification")
+        .post("http://127.0.0.1:1100/api/v1/negotiations/rpc/setup-verification")
         .json(&SetupVerificationRequest {
-            provider_address: "http://127.0.0.1:1234".to_string(),
+            provider_address: "http://127.0.0.1:1200".to_string(),
             consumer_pid: consumer_pid.clone(),
             provider_pid: provider_pid.clone(),
         })
@@ -281,7 +281,7 @@ pub async fn contract_negotiation_consumer() -> anyhow::Result<()> {
     // and creates agreement
     // -------------------------------
     let req = consumer_client
-        .post("http://127.0.0.1:1234/api/v1/negotiations/rpc/setup-finalization")
+        .post("http://127.0.0.1:1200/api/v1/negotiations/rpc/setup-finalization")
         .json(&SetupFinalizationRequest {
             consumer_participant_id: consumer_participant_id.clone(),
             consumer_pid: consumer_pid.clone(),
@@ -295,7 +295,6 @@ pub async fn contract_negotiation_consumer() -> anyhow::Result<()> {
     //
     // Tear down servers
     //
-    tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
     provider_server.kill().expect("Failed to kill provider server");
     consumer_server.kill().expect("Failed to kill consumer server");
     Ok(())

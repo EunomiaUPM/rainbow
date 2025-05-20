@@ -36,3 +36,4 @@ tracing-test = { workspace = true }
 sea-orm = { workspace = true }
 sea-orm-migration = { workspace = true }
 mockall = { workspace = true }
+serde_valid = { workspace = true }

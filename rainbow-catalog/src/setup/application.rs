@@ -123,8 +123,11 @@ impl CatalogApplication {
         // Init server
         let server_message = format!("Starting catalog server in {}", config.get_catalog_host_url().unwrap());
         info!("{}", server_message);
-        let listener = TcpListener::bind(config.get_catalog_host_url().unwrap())
-            .await?;
+        let listener = TcpListener::bind(format!(
+            "{}:{}",
+            config.get_raw_catalog_host().clone().unwrap().url,
+            config.get_raw_catalog_host().clone().unwrap().port
+        )).await?;
         serve(listener, router).await?;
         Ok(())
     }

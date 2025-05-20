@@ -21,6 +21,7 @@ use crate::provider::setup::config::CoreApplicationProviderConfig;
 use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
 use rainbow_db::catalog::migrations::get_catalog_migrations;
 use rainbow_db::contracts_provider::migrations::get_contracts_migrations;
+use rainbow_db::dataplane::migrations::get_dataplane_migrations;
 use rainbow_db::events::migrations::get_events_migrations;
 use rainbow_db::transfer_provider::migrations::get_transfer_provider_migrations;
 use sea_orm::Database;
@@ -35,11 +36,13 @@ impl MigratorTrait for CoreProviderMigration {
         let mut catalog_migrations = get_catalog_migrations();
         let mut contract_negotiation_provider_migrations = get_contracts_migrations();
         let mut pub_sub_migrations = get_events_migrations();
+        let mut dataplane_migrations = get_dataplane_migrations();
 
         migrations.append(&mut transfer_provider_migrations);
         migrations.append(&mut catalog_migrations);
         migrations.append(&mut contract_negotiation_provider_migrations);
         migrations.append(&mut pub_sub_migrations);
+        migrations.append(&mut dataplane_migrations);
         migrations
     }
 }

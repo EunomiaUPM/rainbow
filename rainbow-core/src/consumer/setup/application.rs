@@ -36,8 +36,11 @@ impl CoreConsumerApplication {
             config.get_transfer_host_url().unwrap(),
         );
         info!("{}", server_message);
-        let listener = TcpListener::bind(config.get_transfer_host_url().unwrap())
-            .await?;
+        let listener = TcpListener::bind(format!(
+            "{}:{}",
+            config.get_raw_transfer_process_host().clone().unwrap().url,
+            config.get_raw_transfer_process_host().clone().unwrap().port
+        )).await?;
         serve(listener, router).await?;
         Ok(())
     }

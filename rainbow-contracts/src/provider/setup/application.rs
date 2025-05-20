@@ -107,8 +107,11 @@ impl ContractNegotiationProviderApplication {
         // Init server
         let server_message = format!("Starting provider server in {}", config.get_contract_negotiation_host_url().unwrap());
         info!("{}", server_message);
-        let listener = TcpListener::bind(config.get_contract_negotiation_host_url().unwrap())
-            .await?;
+        let listener = TcpListener::bind(format!(
+            "{}:{}",
+            config.get_raw_contract_negotiation_host().clone().unwrap().url,
+            config.get_raw_contract_negotiation_host().clone().unwrap().port
+        )).await?;
         serve(listener, router).await?;
         Ok(())
     }
