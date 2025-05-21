@@ -147,6 +147,11 @@ pub trait DistributionRepo {
         &self,
         dataset_id: Urn,
     ) -> anyhow::Result<Vec<distribution::Model>, CatalogRepoErrors>;
+    async fn get_distribution_by_dataset_id_and_dct_format(
+        &self,
+        dataset_id: Urn,
+        dct_formats: DctFormats,
+    ) -> anyhow::Result<distribution::Model, CatalogRepoErrors>;
     async fn get_distribution_by_id(
         &self,
         distribution_id: Urn,

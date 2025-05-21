@@ -21,6 +21,7 @@ use crate::core::rainbow_entities::rainbow_catalog_err::CatalogError;
 use crate::core::rainbow_entities::rainbow_catalog_types::{EditDistributionRequest, NewDistributionRequest};
 use crate::core::rainbow_entities::RainbowDistributionTrait;
 use axum::async_trait;
+use rainbow_common::dcat_formats::DctFormats;
 use rainbow_common::protocol::catalog::dataservice_definition::DataService;
 use rainbow_common::protocol::catalog::distribution_definition::Distribution;
 use rainbow_common::protocol::catalog::EntityTypes;
@@ -90,6 +91,17 @@ where
             distributions_out.push(distribution);
         }
         Ok(distributions_out)
+    }
+
+    async fn get_distributions_by_dataset_id_and_dct_formats(&self, dataset_id: Urn, dct_formats: DctFormats) -> anyhow::Result<Distribution> {
+        let distribution_db = self.repo
+            .get_distribution_by_dataset_id_and_dct_format(dataset_id.clone(), dct_formats)
+            .await
+            .map_err(CatalogError::DbErr)?;
+        let data_service_id = get_urn_from_string(&distribution_db.dcat_access_service)?;
+        let mut distribution = Distribution::try_from(distribution_db).map_err(CatalogError::ConversionError)?;
+        distribution.dcat.access_service = self.data_services_request_by_id(data_service_id).await?;
+        Ok(distribution)
     }
 
     async fn post_distribution(

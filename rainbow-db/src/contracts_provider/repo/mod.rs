@@ -178,6 +178,7 @@ pub trait ContractNegotiationOfferRepo {
 }
 
 pub struct NewAgreement {
+    pub agreement_id: Option<Urn>,
     pub consumer_participant_id: Urn,
     pub provider_participant_id: Urn,
     pub agreement_content: OdrlAgreement,

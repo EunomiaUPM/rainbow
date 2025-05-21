@@ -29,6 +29,7 @@ use crate::catalog::repo::{
     NewDataServiceModel, NewDatasetModel, NewDistributionModel, NewOdrlOfferModel, OdrlOfferRepo,
 };
 use axum::async_trait;
+use rainbow_common::dcat_formats::DctFormats;
 use rainbow_common::utils::get_urn;
 use sea_orm::{
     ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, ModelTrait, QueryFilter, QuerySelect,
@@ -404,6 +405,25 @@ impl DistributionRepo for CatalogRepoForSql {
             },
             Err(err) => Err(CatalogRepoErrors::ErrorFetchingDataset(err.into())),
         }
+    }
+
+    async fn get_distribution_by_dataset_id_and_dct_format(&self, dataset_id: Urn, dct_formats: DctFormats) -> anyhow::Result<distribution::Model, CatalogRepoErrors> {
+        let dataset_id = dataset_id.to_string();
+        let dataset = dataset::Entity::find_by_id(dataset_id.clone())
+            .one(&self.db_connection).await
+            .map_err(|err| CatalogRepoErrors::ErrorFetchingDataset(err.into()))?
+            .ok_or(CatalogRepoErrors::DatasetNotFound)?;
+        let distribution = distribution::Entity::find()
+            .filter(
+                distribution::Column::DatasetId.eq(dataset_id.clone())
+            )
+            .filter(
+                distribution::Column::DctFormat.eq(dct_formats.to_string())
+            )
+            .one(&self.db_connection).await
+            .map_err(|err| CatalogRepoErrors::ErrorFetchingDistribution(err.into()))?
+            .ok_or(CatalogRepoErrors::DistributionNotFound)?;
+        Ok(distribution)
     }
 
     async fn get_distribution_by_id(

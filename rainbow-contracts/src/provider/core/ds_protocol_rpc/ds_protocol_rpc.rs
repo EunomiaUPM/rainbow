@@ -456,8 +456,9 @@ where
         let provider_participant_id = get_urn_from_string(&provider_participant.participant_id)?;
 
         // 3.3 arrange agreement
+        let agreement_id = get_urn(None);
         let final_agreement = OdrlAgreement {
-            id: get_urn(None),
+            id: agreement_id.clone(),
             profile: last_offer.profile,
             permission: last_offer.permission,
             obligation: last_offer.obligation,
@@ -526,6 +527,7 @@ where
                 cn_process.cn_process_id.parse().unwrap(),
                 cn_message.cn_message_id.parse().unwrap(),
                 NewAgreement {
+                    agreement_id: Some(agreement_id.clone()),
                     consumer_participant_id,
                     provider_participant_id,
                     agreement_content: final_agreement.clone(),

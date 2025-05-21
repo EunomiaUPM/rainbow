@@ -16,11 +16,13 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
-use crate::contracts_provider::entities::cn_process;
+use crate::contracts_provider::entities::agreement::Model;
+use crate::contracts_provider::entities::{agreement, cn_process};
 use crate::contracts_provider::repo::CnErrors;
+use anyhow::anyhow;
 use rainbow_common::protocol::contract::contract_ack::ContractAckMessage;
 use rainbow_common::protocol::contract::contract_error::ContractErrorMessage;
+use rainbow_common::protocol::contract::contract_odrl::OdrlAgreement;
 
 impl From<cn_process::Model> for ContractAckMessage {
     fn from(model: cn_process::Model) -> Self {
@@ -47,5 +49,15 @@ impl From<CnErrors> for ContractErrorMessage {
                 ..Default::default()
             }
         }
+    }
+}
+
+impl TryFrom<agreement::Model> for OdrlAgreement {
+    type Error = anyhow::Error;
+
+    fn try_from(value: Model) -> Result<Self, Self::Error> {
+        let agreement_content = serde_json::from_value::<OdrlAgreement>(value.agreement_content)
+            .map_err(|_e| anyhow!("Agreement not serializable from DB".to_string()))?;
+        Ok(agreement_content)
     }
 }

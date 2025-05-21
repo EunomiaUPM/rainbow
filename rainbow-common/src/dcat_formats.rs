@@ -116,6 +116,31 @@ impl Display for DctFormats {
     }
 }
 
+impl FromStr for DctFormats {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let parts: Vec<&str> = s.split("+").collect();
+        if parts.len() != 2 {
+            return bail!("Expected string in format PROTOCOL_ACTION");
+        }
+        let protocol = match parts[0].to_lowercase().as_str() {
+            "ngsi-ld" => FormatProtocol::NgsiLd,
+            "fiware" => FormatProtocol::NgsiLd,
+            "http" => FormatProtocol::Http,
+            "quic" => FormatProtocol::Quic,
+            "kafka" => FormatProtocol::Kafka,
+            _ => bail!("expected a correct protocol"),
+        };
+        let action = match parts[1].to_lowercase().as_str() {
+            "push" => FormatAction::Push,
+            "pull" => FormatAction::Pull,
+            _ => bail!("expected a correct protocol"),
+        };
+        Ok(DctFormats { protocol, action })
+    }
+}
+
 impl Serialize for DctFormats {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
