@@ -35,6 +35,8 @@ pub enum CatalogError {
     DataServiceNotFoundForDistribution { id: Urn },
     #[error("Error from deserializing path. {0}")]
     UrnUuidSchema(String),
+    #[error("Error from deserializing dct:formats. {0}")]
+    DctFormatSchema(String),
     #[error("Error from deserializing JSON: {0}")]
     JsonRejection(JsonRejection),
 }

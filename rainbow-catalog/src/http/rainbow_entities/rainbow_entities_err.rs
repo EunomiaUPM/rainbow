@@ -65,6 +65,14 @@ impl IntoResponse for CatalogError {
                     e.to_string(),
                 )),
             ),
+            e @ CatalogError::DctFormatSchema(..) => (
+                StatusCode::BAD_REQUEST,
+                Json(CatalogErrorOut::new(
+                    "400".to_string(),
+                    "BAD_REQUEST".to_string(),
+                    e.to_string(),
+                )),
+            ),
             e @ CatalogError::JsonRejection(..) => (
                 StatusCode::BAD_REQUEST,
                 Json(CatalogErrorOut::new(

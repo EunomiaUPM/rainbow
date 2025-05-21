@@ -162,6 +162,7 @@ pub struct NewAgreementRequest {
 impl Into<NewAgreement> for NewAgreementRequest {
     fn into(self) -> NewAgreement {
         NewAgreement {
+            agreement_id: None,
             consumer_participant_id: self.consumer_participant_id,
             provider_participant_id: self.provider_participant_id,
             agreement_content: self.agreement_content,

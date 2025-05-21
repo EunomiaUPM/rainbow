@@ -733,8 +733,11 @@ impl AgreementRepo for ContractNegotiationProviderRepoForSql {
         let agreement_as_json = to_value(new_agreement.agreement_content)
             .map_err(|err| CnErrors::ErrorCreatingAgreement(err.into()))?;
 
+        let agreement_id = new_agreement.agreement_id
+            .map(|a| a.to_string())
+            .unwrap_or(get_urn(None).to_string());
         let model = agreement::ActiveModel {
-            agreement_id: ActiveValue::Set(get_urn(None).to_string()),
+            agreement_id: ActiveValue::Set(agreement_id),
             consumer_participant_id: ActiveValue::Set(
                 new_agreement.consumer_participant_id.to_string(),
             ),

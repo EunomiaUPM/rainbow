@@ -118,6 +118,7 @@ where
         let provider_pid = get_urn(None);
         let consumer_pid = get_urn_from_string(&input.consumer_pid)?;
         let agreement_id = get_urn_from_string(&input.agreement_id)?;
+        let formats = input.format.clone();
         let _created_at = chrono::Utc::now().naive_utc();
         let message_type = input._type.clone();
 
@@ -132,7 +133,8 @@ where
         }
 
         // resolve data service
-        let data_service = self.data_service_facade.resolve_data_service_by_agreement_id(agreement_id.clone()).await?;
+        let data_service = self.data_service_facade
+            .resolve_data_service_by_agreement_id(agreement_id.clone(), Some(formats)).await?;
         // connect to data plane
         self.data_plane.on_transfer_request(provider_pid.clone(), data_service, input.format.clone()).await?;
 

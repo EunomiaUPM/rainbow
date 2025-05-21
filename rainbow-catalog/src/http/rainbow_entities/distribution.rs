@@ -21,11 +21,12 @@ use crate::core::rainbow_entities::rainbow_catalog_err::CatalogError;
 use crate::core::rainbow_entities::rainbow_catalog_types::{EditDistributionRequest, NewDatasetRequest, NewDistributionRequest};
 use crate::core::rainbow_entities::RainbowDistributionTrait;
 use axum::extract::rejection::JsonRejection;
-use axum::extract::{Path, State};
+use axum::extract::{Path, Query, State};
 use axum::http::Uri;
 use axum::response::IntoResponse;
 use axum::routing::{delete, get, post, put};
 use axum::{Json, Router};
+use rainbow_common::dcat_formats::DctFormats;
 use rainbow_common::utils::get_urn_from_string;
 use reqwest::StatusCode;
 use std::sync::Arc;
@@ -52,6 +53,10 @@ where
             .route(
                 "/api/v1/datasets/:id/distributions",
                 get(Self::handle_get_distributions_by_dataset_id),
+            )
+            .route(
+                "/api/v1/datasets/:id/distributions/dct-formats/:dct_format",
+                get(Self::handle_get_distributions_by_dataset_id_and_dct_format),
             )
             .route(
                 "/api/v1/catalogs/:id/datasets/:did/distributions",
@@ -96,6 +101,28 @@ where
             Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
         };
         match distribution_service.get_distributions_by_dataset_id(dataset_id).await {
+            Ok(d) => (StatusCode::OK, Json(d)).into_response(),
+            Err(err) => match err.downcast::<CatalogError>() {
+                Ok(e) => e.into_response(),
+                Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+            },
+        }
+    }
+
+    async fn handle_get_distributions_by_dataset_id_and_dct_format(
+        State(distribution_service): State<Arc<T>>,
+        Path((id, dct_format)): Path<(String, String)>,
+    ) -> impl IntoResponse {
+        info!("GET /api/v1/datasets/{}/distributions", id);
+        let dataset_id = match get_urn_from_string(&id) {
+            Ok(id) => id,
+            Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
+        };
+        let dct_format = match dct_format.parse::<DctFormats>() {
+            Ok(dct_format) => dct_format,
+            Err(err) => return CatalogError::DctFormatSchema(err.to_string()).into_response(),
+        };
+        match distribution_service.get_distributions_by_dataset_id_and_dct_formats(dataset_id, dct_format).await {
             Ok(d) => (StatusCode::OK, Json(d)).into_response(),
             Err(err) => match err.downcast::<CatalogError>() {
                 Ok(e) => e.into_response(),
