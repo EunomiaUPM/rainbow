@@ -1,34 +1,44 @@
 [package]
-name = "rainbow_core"
+name = "rainbow_fe_gateway"
 version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "rainbow"
+name = "rainbow_fe_gateway"
 path = "src/lib.rs"
 
 [[bin]]
-name = "rainbow"
+name = "rainbow_fe_gateway"
 path = "src/main.rs"
 
 [dependencies]
-rainbow_transfer = { version = "0.1.0", path = "../rainbow-transfer", default-features = false }
 rainbow_common = { version = "0.1.0", path = "../rainbow-common", default-features = false }
-rainbow_catalog = { version = "0.1.0", path = "../rainbow-catalog", default-features = false }
-rainbow_contracts = { version = "0.1.0", path = "../rainbow-contracts", default-features = false }
-rainbow_db = { version = "0.1.0", path = "../rainbow-db", default-features = false }
 
 serde = { workspace = true }
 serde_json = { workspace = true }
 clap = { workspace = true }
-tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros"] }
+tokio = { workspace = true }
 anyhow = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 axum = { workspace = true }
-tower-http = { workspace = true }
 dotenvy = { workspace = true }
-tower = { workspace = true }
+reqwest = { workspace = true }
+once_cell = { workspace = true }
+thiserror = { workspace = true }
+jsonschema = { workspace = true }
+chrono = { workspace = true }
+urn = { workspace = true }
+uuid = { workspace = true }
+log = { workspace = true }
+tracing-test = { workspace = true }
 sea-orm = { workspace = true }
 sea-orm-migration = { workspace = true }
 json_to_table = { workspace = true }
+mockall = { workspace = true }
+url = { workspace = true }
+futures-util = "0.3.31"
+http-body-util = "0.1.2"
+bytes = "1.9.0"
+http-body = "1.0.1"
+tower-http = "0.6.2"

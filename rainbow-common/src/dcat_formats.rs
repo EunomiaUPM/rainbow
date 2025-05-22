@@ -122,7 +122,7 @@ impl FromStr for DctFormats {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let parts: Vec<&str> = s.split("+").collect();
         if parts.len() != 2 {
-            return bail!("Expected string in format PROTOCOL_ACTION");
+            bail!("Expected string in format PROTOCOL_ACTION");
         }
         let protocol = match parts[0].to_lowercase().as_str() {
             "ngsi-ld" => FormatProtocol::NgsiLd,
