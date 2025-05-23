@@ -21,19 +21,19 @@ declare global {
     }
 
     export interface CNOffer {
-        offer_id: string;
-        cn_message_id: string;
+        offer_id: UUID;
+        cn_message_id: UUID;
         offer_content: OdrlOffer;
         created_at: Date;
     }
 
     export interface OdrlOffer {
-        "@id": string;
+        "@id": UUID;
         "@type": string;
         obligation: any[];
         permission: OdrlPermission[];
         prohibition: any[];
-        target: string;
+        target: UUID;
     }
 
     export interface OdrlPermission {
@@ -62,7 +62,7 @@ declare global {
     export interface Catalog {
         "@context": string[];
         "@type": string;
-        "@id": string;
+        "@id": UUID;
         homepage: string;
         theme: string;
         keyword: string;
@@ -83,12 +83,12 @@ declare global {
     export interface Dataset {
         "@context": string[];
         "@type": Type;
-        "@id": string;
+        "@id": UUID;
         theme: string;
         keyword: string;
         conformsTo: null;
         creator: null;
-        identifier: string;
+        identifier: UUID;
         issued: Date;
         modified: null;
         title: null | string;
@@ -103,14 +103,14 @@ declare global {
     export interface DataService {
         "@context": string[];
         "@type": string;
-        "@id": string;
+        "@id": UUID;
         theme: string;
         keyword: string;
         endpointDescription: string;
         endpointURL: string;
         conformsTo: null;
         creator: null;
-        identifier: string;
+        identifier: UUID;
         issued: Date;
         modified: null;
         title: null;
@@ -122,9 +122,9 @@ declare global {
     export interface Distribution {
         "@context": string[];
         "@type": string;
-        "@id": string;
+        "@id": UUID;
         accessService: DataService;
-        identifier: string;
+        identifier: UUID;
         issued: Date;
         modified?: Date;
         title: string;
@@ -133,11 +133,61 @@ declare global {
         extraFields: null;
     }
 
+    export interface Agreement {
+        agreement_id: UUID
+        consumer_participant_id: UUID
+        provider_participant_id: UUID
+        cn_message_id: UUID
+        agreement_content: OdrlAgreement
+        created_at: Date
+        active: boolean
+    }
+
+    export interface OdrlAgreement {
+        "@id": UUID;
+        "@type": string;
+        obligation: any[];
+        permission: OdrlPermission[];
+        prohibition: any[];
+        target: UUID;
+        assignee: UUID;
+        assigner: UUID;
+        timestamp: Date
+    }
+
     export enum Type {
         Catalog = "Catalog",
         DataService = "DataService",
         Dataset = "Dataset",
         Distribution = "Distribution",
+    }
+
+    export interface TransferProcess {
+        provider_pid: UUID
+        consumer_pid: UUID
+        agreement_id: UUID
+        data_plane_id: UUID
+        state: TransferProcessState
+        created_at: Date
+        updated_at: Date
+    }
+
+    export enum TransferProcessState {
+        Requested = "Requested",
+        Started = "Started",
+        Suspended = "Suspended",
+        Completed = "Completed",
+        Terminated = "Terminated",
+    }
+
+    export interface TransferMessage {
+        id: UUID
+        transfer_process_id: UUID
+        created_at: Date
+        message_type: string
+        from: string
+        to: string
+        content: any
     }
 
 }

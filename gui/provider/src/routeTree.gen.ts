@@ -11,20 +11,48 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as TransferProcessRouteImport } from './routes/transfer-process/route'
+import { Route as SubscriptionsRouteImport } from './routes/subscriptions/route'
+import { Route as ParticipantsRouteImport } from './routes/participants/route'
 import { Route as ContractNegotiationRouteImport } from './routes/contract-negotiation/route'
 import { Route as CatalogRouteImport } from './routes/catalog/route'
+import { Route as AgreementsRouteImport } from './routes/agreements/route'
 import { Route as IndexImport } from './routes/index'
+import { Route as TransferProcessIndexImport } from './routes/transfer-process/index'
 import { Route as ContractNegotiationIndexImport } from './routes/contract-negotiation/index'
 import { Route as CatalogIndexImport } from './routes/catalog/index'
+import { Route as AgreementsIndexImport } from './routes/agreements/index'
+import { Route as AgreementsAgreementIdImport } from './routes/agreements/$agreementId'
+import { Route as TransferProcessTransferProcessIdRouteImport } from './routes/transfer-process/$transferProcessId/route'
 import { Route as ContractNegotiationCnProcessRouteImport } from './routes/contract-negotiation/$cnProcess/route'
 import { Route as CatalogCatalogIdRouteImport } from './routes/catalog/$catalogId/route'
+import { Route as TransferProcessTransferProcessIdIndexImport } from './routes/transfer-process/$transferProcessId/index'
 import { Route as ContractNegotiationCnProcessIndexImport } from './routes/contract-negotiation/$cnProcess/index'
 import { Route as CatalogCatalogIdIndexImport } from './routes/catalog/$catalogId/index'
+import { Route as TransferProcessTransferProcessIdTransferMessageTransferMessageIdImport } from './routes/transfer-process/$transferProcessId/transfer-message.$transferMessageId'
 import { Route as ContractNegotiationCnProcessMessageMessageIdImport } from './routes/contract-negotiation/$cnProcess/message.$messageId'
 import { Route as CatalogCatalogIdDatasetDatasetIdImport } from './routes/catalog/$catalogId/dataset.$datasetId'
 import { Route as CatalogCatalogIdDataServiceDataServiceIdImport } from './routes/catalog/$catalogId/data-service.$dataServiceId'
 
 // Create/Update Routes
+
+const TransferProcessRouteRoute = TransferProcessRouteImport.update({
+  id: '/transfer-process',
+  path: '/transfer-process',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const SubscriptionsRouteRoute = SubscriptionsRouteImport.update({
+  id: '/subscriptions',
+  path: '/subscriptions',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const ParticipantsRouteRoute = ParticipantsRouteImport.update({
+  id: '/participants',
+  path: '/participants',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const ContractNegotiationRouteRoute = ContractNegotiationRouteImport.update({
   id: '/contract-negotiation',
@@ -38,10 +66,22 @@ const CatalogRouteRoute = CatalogRouteImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const AgreementsRouteRoute = AgreementsRouteImport.update({
+  id: '/agreements',
+  path: '/agreements',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRoute,
+} as any)
+
+const TransferProcessIndexRoute = TransferProcessIndexImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => TransferProcessRouteRoute,
 } as any)
 
 const ContractNegotiationIndexRoute = ContractNegotiationIndexImport.update({
@@ -56,6 +96,25 @@ const CatalogIndexRoute = CatalogIndexImport.update({
   getParentRoute: () => CatalogRouteRoute,
 } as any)
 
+const AgreementsIndexRoute = AgreementsIndexImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AgreementsRouteRoute,
+} as any)
+
+const AgreementsAgreementIdRoute = AgreementsAgreementIdImport.update({
+  id: '/$agreementId',
+  path: '/$agreementId',
+  getParentRoute: () => AgreementsRouteRoute,
+} as any)
+
+const TransferProcessTransferProcessIdRouteRoute =
+  TransferProcessTransferProcessIdRouteImport.update({
+    id: '/$transferProcessId',
+    path: '/$transferProcessId',
+    getParentRoute: () => TransferProcessRouteRoute,
+  } as any)
+
 const ContractNegotiationCnProcessRouteRoute =
   ContractNegotiationCnProcessRouteImport.update({
     id: '/$cnProcess',
@@ -69,6 +128,13 @@ const CatalogCatalogIdRouteRoute = CatalogCatalogIdRouteImport.update({
   getParentRoute: () => CatalogRouteRoute,
 } as any)
 
+const TransferProcessTransferProcessIdIndexRoute =
+  TransferProcessTransferProcessIdIndexImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => TransferProcessTransferProcessIdRouteRoute,
+  } as any)
+
 const ContractNegotiationCnProcessIndexRoute =
   ContractNegotiationCnProcessIndexImport.update({
     id: '/',
@@ -81,6 +147,15 @@ const CatalogCatalogIdIndexRoute = CatalogCatalogIdIndexImport.update({
   path: '/',
   getParentRoute: () => CatalogCatalogIdRouteRoute,
 } as any)
+
+const TransferProcessTransferProcessIdTransferMessageTransferMessageIdRoute =
+  TransferProcessTransferProcessIdTransferMessageTransferMessageIdImport.update(
+    {
+      id: '/transfer-message/$transferMessageId',
+      path: '/transfer-message/$transferMessageId',
+      getParentRoute: () => TransferProcessTransferProcessIdRouteRoute,
+    } as any,
+  )
 
 const ContractNegotiationCnProcessMessageMessageIdRoute =
   ContractNegotiationCnProcessMessageMessageIdImport.update({
@@ -114,6 +189,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
+    '/agreements': {
+      id: '/agreements'
+      path: '/agreements'
+      fullPath: '/agreements'
+      preLoaderRoute: typeof AgreementsRouteImport
+      parentRoute: typeof rootRoute
+    }
     '/catalog': {
       id: '/catalog'
       path: '/catalog'
@@ -126,6 +208,27 @@ declare module '@tanstack/react-router' {
       path: '/contract-negotiation'
       fullPath: '/contract-negotiation'
       preLoaderRoute: typeof ContractNegotiationRouteImport
+      parentRoute: typeof rootRoute
+    }
+    '/participants': {
+      id: '/participants'
+      path: '/participants'
+      fullPath: '/participants'
+      preLoaderRoute: typeof ParticipantsRouteImport
+      parentRoute: typeof rootRoute
+    }
+    '/subscriptions': {
+      id: '/subscriptions'
+      path: '/subscriptions'
+      fullPath: '/subscriptions'
+      preLoaderRoute: typeof SubscriptionsRouteImport
+      parentRoute: typeof rootRoute
+    }
+    '/transfer-process': {
+      id: '/transfer-process'
+      path: '/transfer-process'
+      fullPath: '/transfer-process'
+      preLoaderRoute: typeof TransferProcessRouteImport
       parentRoute: typeof rootRoute
     }
     '/catalog/$catalogId': {
@@ -142,6 +245,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContractNegotiationCnProcessRouteImport
       parentRoute: typeof ContractNegotiationRouteImport
     }
+    '/transfer-process/$transferProcessId': {
+      id: '/transfer-process/$transferProcessId'
+      path: '/$transferProcessId'
+      fullPath: '/transfer-process/$transferProcessId'
+      preLoaderRoute: typeof TransferProcessTransferProcessIdRouteImport
+      parentRoute: typeof TransferProcessRouteImport
+    }
+    '/agreements/$agreementId': {
+      id: '/agreements/$agreementId'
+      path: '/$agreementId'
+      fullPath: '/agreements/$agreementId'
+      preLoaderRoute: typeof AgreementsAgreementIdImport
+      parentRoute: typeof AgreementsRouteImport
+    }
+    '/agreements/': {
+      id: '/agreements/'
+      path: '/'
+      fullPath: '/agreements/'
+      preLoaderRoute: typeof AgreementsIndexImport
+      parentRoute: typeof AgreementsRouteImport
+    }
     '/catalog/': {
       id: '/catalog/'
       path: '/'
@@ -156,6 +280,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContractNegotiationIndexImport
       parentRoute: typeof ContractNegotiationRouteImport
     }
+    '/transfer-process/': {
+      id: '/transfer-process/'
+      path: '/'
+      fullPath: '/transfer-process/'
+      preLoaderRoute: typeof TransferProcessIndexImport
+      parentRoute: typeof TransferProcessRouteImport
+    }
     '/catalog/$catalogId/': {
       id: '/catalog/$catalogId/'
       path: '/'
@@ -169,6 +300,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/contract-negotiation/$cnProcess/'
       preLoaderRoute: typeof ContractNegotiationCnProcessIndexImport
       parentRoute: typeof ContractNegotiationCnProcessRouteImport
+    }
+    '/transfer-process/$transferProcessId/': {
+      id: '/transfer-process/$transferProcessId/'
+      path: '/'
+      fullPath: '/transfer-process/$transferProcessId/'
+      preLoaderRoute: typeof TransferProcessTransferProcessIdIndexImport
+      parentRoute: typeof TransferProcessTransferProcessIdRouteImport
     }
     '/catalog/$catalogId/data-service/$dataServiceId': {
       id: '/catalog/$catalogId/data-service/$dataServiceId'
@@ -191,10 +329,31 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContractNegotiationCnProcessMessageMessageIdImport
       parentRoute: typeof ContractNegotiationCnProcessRouteImport
     }
+    '/transfer-process/$transferProcessId/transfer-message/$transferMessageId': {
+      id: '/transfer-process/$transferProcessId/transfer-message/$transferMessageId'
+      path: '/transfer-message/$transferMessageId'
+      fullPath: '/transfer-process/$transferProcessId/transfer-message/$transferMessageId'
+      preLoaderRoute: typeof TransferProcessTransferProcessIdTransferMessageTransferMessageIdImport
+      parentRoute: typeof TransferProcessTransferProcessIdRouteImport
+    }
   }
 }
 
 // Create and export the route tree
+
+interface AgreementsRouteRouteChildren {
+  AgreementsAgreementIdRoute: typeof AgreementsAgreementIdRoute
+  AgreementsIndexRoute: typeof AgreementsIndexRoute
+}
+
+const AgreementsRouteRouteChildren: AgreementsRouteRouteChildren = {
+  AgreementsAgreementIdRoute: AgreementsAgreementIdRoute,
+  AgreementsIndexRoute: AgreementsIndexRoute,
+}
+
+const AgreementsRouteRouteWithChildren = AgreementsRouteRoute._addFileChildren(
+  AgreementsRouteRouteChildren,
+)
 
 interface CatalogCatalogIdRouteRouteChildren {
   CatalogCatalogIdIndexRoute: typeof CatalogCatalogIdIndexRoute
@@ -263,100 +422,194 @@ const ContractNegotiationRouteRouteWithChildren =
     ContractNegotiationRouteRouteChildren,
   )
 
+interface TransferProcessTransferProcessIdRouteRouteChildren {
+  TransferProcessTransferProcessIdIndexRoute: typeof TransferProcessTransferProcessIdIndexRoute
+  TransferProcessTransferProcessIdTransferMessageTransferMessageIdRoute: typeof TransferProcessTransferProcessIdTransferMessageTransferMessageIdRoute
+}
+
+const TransferProcessTransferProcessIdRouteRouteChildren: TransferProcessTransferProcessIdRouteRouteChildren =
+  {
+    TransferProcessTransferProcessIdIndexRoute:
+      TransferProcessTransferProcessIdIndexRoute,
+    TransferProcessTransferProcessIdTransferMessageTransferMessageIdRoute:
+      TransferProcessTransferProcessIdTransferMessageTransferMessageIdRoute,
+  }
+
+const TransferProcessTransferProcessIdRouteRouteWithChildren =
+  TransferProcessTransferProcessIdRouteRoute._addFileChildren(
+    TransferProcessTransferProcessIdRouteRouteChildren,
+  )
+
+interface TransferProcessRouteRouteChildren {
+  TransferProcessTransferProcessIdRouteRoute: typeof TransferProcessTransferProcessIdRouteRouteWithChildren
+  TransferProcessIndexRoute: typeof TransferProcessIndexRoute
+}
+
+const TransferProcessRouteRouteChildren: TransferProcessRouteRouteChildren = {
+  TransferProcessTransferProcessIdRouteRoute:
+    TransferProcessTransferProcessIdRouteRouteWithChildren,
+  TransferProcessIndexRoute: TransferProcessIndexRoute,
+}
+
+const TransferProcessRouteRouteWithChildren =
+  TransferProcessRouteRoute._addFileChildren(TransferProcessRouteRouteChildren)
+
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/agreements': typeof AgreementsRouteRouteWithChildren
   '/catalog': typeof CatalogRouteRouteWithChildren
   '/contract-negotiation': typeof ContractNegotiationRouteRouteWithChildren
+  '/participants': typeof ParticipantsRouteRoute
+  '/subscriptions': typeof SubscriptionsRouteRoute
+  '/transfer-process': typeof TransferProcessRouteRouteWithChildren
   '/catalog/$catalogId': typeof CatalogCatalogIdRouteRouteWithChildren
   '/contract-negotiation/$cnProcess': typeof ContractNegotiationCnProcessRouteRouteWithChildren
+  '/transfer-process/$transferProcessId': typeof TransferProcessTransferProcessIdRouteRouteWithChildren
+  '/agreements/$agreementId': typeof AgreementsAgreementIdRoute
+  '/agreements/': typeof AgreementsIndexRoute
   '/catalog/': typeof CatalogIndexRoute
   '/contract-negotiation/': typeof ContractNegotiationIndexRoute
+  '/transfer-process/': typeof TransferProcessIndexRoute
   '/catalog/$catalogId/': typeof CatalogCatalogIdIndexRoute
   '/contract-negotiation/$cnProcess/': typeof ContractNegotiationCnProcessIndexRoute
+  '/transfer-process/$transferProcessId/': typeof TransferProcessTransferProcessIdIndexRoute
   '/catalog/$catalogId/data-service/$dataServiceId': typeof CatalogCatalogIdDataServiceDataServiceIdRoute
   '/catalog/$catalogId/dataset/$datasetId': typeof CatalogCatalogIdDatasetDatasetIdRoute
   '/contract-negotiation/$cnProcess/message/$messageId': typeof ContractNegotiationCnProcessMessageMessageIdRoute
+  '/transfer-process/$transferProcessId/transfer-message/$transferMessageId': typeof TransferProcessTransferProcessIdTransferMessageTransferMessageIdRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/participants': typeof ParticipantsRouteRoute
+  '/subscriptions': typeof SubscriptionsRouteRoute
+  '/agreements/$agreementId': typeof AgreementsAgreementIdRoute
+  '/agreements': typeof AgreementsIndexRoute
   '/catalog': typeof CatalogIndexRoute
   '/contract-negotiation': typeof ContractNegotiationIndexRoute
+  '/transfer-process': typeof TransferProcessIndexRoute
   '/catalog/$catalogId': typeof CatalogCatalogIdIndexRoute
   '/contract-negotiation/$cnProcess': typeof ContractNegotiationCnProcessIndexRoute
+  '/transfer-process/$transferProcessId': typeof TransferProcessTransferProcessIdIndexRoute
   '/catalog/$catalogId/data-service/$dataServiceId': typeof CatalogCatalogIdDataServiceDataServiceIdRoute
   '/catalog/$catalogId/dataset/$datasetId': typeof CatalogCatalogIdDatasetDatasetIdRoute
   '/contract-negotiation/$cnProcess/message/$messageId': typeof ContractNegotiationCnProcessMessageMessageIdRoute
+  '/transfer-process/$transferProcessId/transfer-message/$transferMessageId': typeof TransferProcessTransferProcessIdTransferMessageTransferMessageIdRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
+  '/agreements': typeof AgreementsRouteRouteWithChildren
   '/catalog': typeof CatalogRouteRouteWithChildren
   '/contract-negotiation': typeof ContractNegotiationRouteRouteWithChildren
+  '/participants': typeof ParticipantsRouteRoute
+  '/subscriptions': typeof SubscriptionsRouteRoute
+  '/transfer-process': typeof TransferProcessRouteRouteWithChildren
   '/catalog/$catalogId': typeof CatalogCatalogIdRouteRouteWithChildren
   '/contract-negotiation/$cnProcess': typeof ContractNegotiationCnProcessRouteRouteWithChildren
+  '/transfer-process/$transferProcessId': typeof TransferProcessTransferProcessIdRouteRouteWithChildren
+  '/agreements/$agreementId': typeof AgreementsAgreementIdRoute
+  '/agreements/': typeof AgreementsIndexRoute
   '/catalog/': typeof CatalogIndexRoute
   '/contract-negotiation/': typeof ContractNegotiationIndexRoute
+  '/transfer-process/': typeof TransferProcessIndexRoute
   '/catalog/$catalogId/': typeof CatalogCatalogIdIndexRoute
   '/contract-negotiation/$cnProcess/': typeof ContractNegotiationCnProcessIndexRoute
+  '/transfer-process/$transferProcessId/': typeof TransferProcessTransferProcessIdIndexRoute
   '/catalog/$catalogId/data-service/$dataServiceId': typeof CatalogCatalogIdDataServiceDataServiceIdRoute
   '/catalog/$catalogId/dataset/$datasetId': typeof CatalogCatalogIdDatasetDatasetIdRoute
   '/contract-negotiation/$cnProcess/message/$messageId': typeof ContractNegotiationCnProcessMessageMessageIdRoute
+  '/transfer-process/$transferProcessId/transfer-message/$transferMessageId': typeof TransferProcessTransferProcessIdTransferMessageTransferMessageIdRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/agreements'
     | '/catalog'
     | '/contract-negotiation'
+    | '/participants'
+    | '/subscriptions'
+    | '/transfer-process'
     | '/catalog/$catalogId'
     | '/contract-negotiation/$cnProcess'
+    | '/transfer-process/$transferProcessId'
+    | '/agreements/$agreementId'
+    | '/agreements/'
     | '/catalog/'
     | '/contract-negotiation/'
+    | '/transfer-process/'
     | '/catalog/$catalogId/'
     | '/contract-negotiation/$cnProcess/'
+    | '/transfer-process/$transferProcessId/'
     | '/catalog/$catalogId/data-service/$dataServiceId'
     | '/catalog/$catalogId/dataset/$datasetId'
     | '/contract-negotiation/$cnProcess/message/$messageId'
+    | '/transfer-process/$transferProcessId/transfer-message/$transferMessageId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/participants'
+    | '/subscriptions'
+    | '/agreements/$agreementId'
+    | '/agreements'
     | '/catalog'
     | '/contract-negotiation'
+    | '/transfer-process'
     | '/catalog/$catalogId'
     | '/contract-negotiation/$cnProcess'
+    | '/transfer-process/$transferProcessId'
     | '/catalog/$catalogId/data-service/$dataServiceId'
     | '/catalog/$catalogId/dataset/$datasetId'
     | '/contract-negotiation/$cnProcess/message/$messageId'
+    | '/transfer-process/$transferProcessId/transfer-message/$transferMessageId'
   id:
     | '__root__'
     | '/'
+    | '/agreements'
     | '/catalog'
     | '/contract-negotiation'
+    | '/participants'
+    | '/subscriptions'
+    | '/transfer-process'
     | '/catalog/$catalogId'
     | '/contract-negotiation/$cnProcess'
+    | '/transfer-process/$transferProcessId'
+    | '/agreements/$agreementId'
+    | '/agreements/'
     | '/catalog/'
     | '/contract-negotiation/'
+    | '/transfer-process/'
     | '/catalog/$catalogId/'
     | '/contract-negotiation/$cnProcess/'
+    | '/transfer-process/$transferProcessId/'
     | '/catalog/$catalogId/data-service/$dataServiceId'
     | '/catalog/$catalogId/dataset/$datasetId'
     | '/contract-negotiation/$cnProcess/message/$messageId'
+    | '/transfer-process/$transferProcessId/transfer-message/$transferMessageId'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AgreementsRouteRoute: typeof AgreementsRouteRouteWithChildren
   CatalogRouteRoute: typeof CatalogRouteRouteWithChildren
   ContractNegotiationRouteRoute: typeof ContractNegotiationRouteRouteWithChildren
+  ParticipantsRouteRoute: typeof ParticipantsRouteRoute
+  SubscriptionsRouteRoute: typeof SubscriptionsRouteRoute
+  TransferProcessRouteRoute: typeof TransferProcessRouteRouteWithChildren
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AgreementsRouteRoute: AgreementsRouteRouteWithChildren,
   CatalogRouteRoute: CatalogRouteRouteWithChildren,
   ContractNegotiationRouteRoute: ContractNegotiationRouteRouteWithChildren,
+  ParticipantsRouteRoute: ParticipantsRouteRoute,
+  SubscriptionsRouteRoute: SubscriptionsRouteRoute,
+  TransferProcessRouteRoute: TransferProcessRouteRouteWithChildren,
 }
 
 export const routeTree = rootRoute
@@ -370,12 +623,23 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
+        "/agreements",
         "/catalog",
-        "/contract-negotiation"
+        "/contract-negotiation",
+        "/participants",
+        "/subscriptions",
+        "/transfer-process"
       ]
     },
     "/": {
       "filePath": "index.tsx"
+    },
+    "/agreements": {
+      "filePath": "agreements/route.tsx",
+      "children": [
+        "/agreements/$agreementId",
+        "/agreements/"
+      ]
     },
     "/catalog": {
       "filePath": "catalog/route.tsx",
@@ -389,6 +653,19 @@ export const routeTree = rootRoute
       "children": [
         "/contract-negotiation/$cnProcess",
         "/contract-negotiation/"
+      ]
+    },
+    "/participants": {
+      "filePath": "participants/route.tsx"
+    },
+    "/subscriptions": {
+      "filePath": "subscriptions/route.tsx"
+    },
+    "/transfer-process": {
+      "filePath": "transfer-process/route.tsx",
+      "children": [
+        "/transfer-process/$transferProcessId",
+        "/transfer-process/"
       ]
     },
     "/catalog/$catalogId": {
@@ -408,6 +685,22 @@ export const routeTree = rootRoute
         "/contract-negotiation/$cnProcess/message/$messageId"
       ]
     },
+    "/transfer-process/$transferProcessId": {
+      "filePath": "transfer-process/$transferProcessId/route.tsx",
+      "parent": "/transfer-process",
+      "children": [
+        "/transfer-process/$transferProcessId/",
+        "/transfer-process/$transferProcessId/transfer-message/$transferMessageId"
+      ]
+    },
+    "/agreements/$agreementId": {
+      "filePath": "agreements/$agreementId.tsx",
+      "parent": "/agreements"
+    },
+    "/agreements/": {
+      "filePath": "agreements/index.tsx",
+      "parent": "/agreements"
+    },
     "/catalog/": {
       "filePath": "catalog/index.tsx",
       "parent": "/catalog"
@@ -416,6 +709,10 @@ export const routeTree = rootRoute
       "filePath": "contract-negotiation/index.tsx",
       "parent": "/contract-negotiation"
     },
+    "/transfer-process/": {
+      "filePath": "transfer-process/index.tsx",
+      "parent": "/transfer-process"
+    },
     "/catalog/$catalogId/": {
       "filePath": "catalog/$catalogId/index.tsx",
       "parent": "/catalog/$catalogId"
@@ -423,6 +720,10 @@ export const routeTree = rootRoute
     "/contract-negotiation/$cnProcess/": {
       "filePath": "contract-negotiation/$cnProcess/index.tsx",
       "parent": "/contract-negotiation/$cnProcess"
+    },
+    "/transfer-process/$transferProcessId/": {
+      "filePath": "transfer-process/$transferProcessId/index.tsx",
+      "parent": "/transfer-process/$transferProcessId"
     },
     "/catalog/$catalogId/data-service/$dataServiceId": {
       "filePath": "catalog/$catalogId/data-service.$dataServiceId.tsx",
@@ -435,6 +736,10 @@ export const routeTree = rootRoute
     "/contract-negotiation/$cnProcess/message/$messageId": {
       "filePath": "contract-negotiation/$cnProcess/message.$messageId.tsx",
       "parent": "/contract-negotiation/$cnProcess"
+    },
+    "/transfer-process/$transferProcessId/transfer-message/$transferMessageId": {
+      "filePath": "transfer-process/$transferProcessId/transfer-message.$transferMessageId.tsx",
+      "parent": "/transfer-process/$transferProcessId"
     }
   }
 }
