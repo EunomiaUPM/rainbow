@@ -49,6 +49,10 @@ where
             )
             .route(
                 "/api/v1/catalogs/:id/data-services",
+                get(Self::handle_get_data_services_by_catalog_id),
+            )
+            .route(
+                "/api/v1/catalogs/:id/data-services",
                 post(Self::handle_post_data_service),
             )
             .route(
@@ -71,6 +75,24 @@ where
             Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
         };
         match data_service_service.get_data_service_by_id(dataservice_id).await {
+            Ok(d) => (StatusCode::OK, Json(d)).into_response(),
+            Err(err) => match err.downcast::<CatalogError>() {
+                Ok(e) => e.into_response(),
+                Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+            },
+        }
+    }
+
+    async fn handle_get_data_services_by_catalog_id(
+        State(data_service_service): State<Arc<T>>,
+        Path(id): Path<String>,
+    ) -> impl IntoResponse {
+        info!("GET /api/v1/catalogs/{}/data-services", id);
+        let catalog_id = match get_urn_from_string(&id) {
+            Ok(id) => id,
+            Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
+        };
+        match data_service_service.get_data_services_by_catalog_id(catalog_id).await {
             Ok(d) => (StatusCode::OK, Json(d)).into_response(),
             Err(err) => match err.downcast::<CatalogError>() {
                 Ok(e) => e.into_response(),

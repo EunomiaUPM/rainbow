@@ -12,17 +12,29 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as ContractNegotiationRouteImport } from './routes/contract-negotiation/route'
+import { Route as CatalogRouteImport } from './routes/catalog/route'
 import { Route as IndexImport } from './routes/index'
 import { Route as ContractNegotiationIndexImport } from './routes/contract-negotiation/index'
+import { Route as CatalogIndexImport } from './routes/catalog/index'
 import { Route as ContractNegotiationCnProcessRouteImport } from './routes/contract-negotiation/$cnProcess/route'
+import { Route as CatalogCatalogIdRouteImport } from './routes/catalog/$catalogId/route'
 import { Route as ContractNegotiationCnProcessIndexImport } from './routes/contract-negotiation/$cnProcess/index'
+import { Route as CatalogCatalogIdIndexImport } from './routes/catalog/$catalogId/index'
 import { Route as ContractNegotiationCnProcessMessageMessageIdImport } from './routes/contract-negotiation/$cnProcess/message.$messageId'
+import { Route as CatalogCatalogIdDatasetDatasetIdImport } from './routes/catalog/$catalogId/dataset.$datasetId'
+import { Route as CatalogCatalogIdDataServiceDataServiceIdImport } from './routes/catalog/$catalogId/data-service.$dataServiceId'
 
 // Create/Update Routes
 
 const ContractNegotiationRouteRoute = ContractNegotiationRouteImport.update({
   id: '/contract-negotiation',
   path: '/contract-negotiation',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const CatalogRouteRoute = CatalogRouteImport.update({
+  id: '/catalog',
+  path: '/catalog',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -38,12 +50,24 @@ const ContractNegotiationIndexRoute = ContractNegotiationIndexImport.update({
   getParentRoute: () => ContractNegotiationRouteRoute,
 } as any)
 
+const CatalogIndexRoute = CatalogIndexImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CatalogRouteRoute,
+} as any)
+
 const ContractNegotiationCnProcessRouteRoute =
   ContractNegotiationCnProcessRouteImport.update({
     id: '/$cnProcess',
     path: '/$cnProcess',
     getParentRoute: () => ContractNegotiationRouteRoute,
   } as any)
+
+const CatalogCatalogIdRouteRoute = CatalogCatalogIdRouteImport.update({
+  id: '/$catalogId',
+  path: '/$catalogId',
+  getParentRoute: () => CatalogRouteRoute,
+} as any)
 
 const ContractNegotiationCnProcessIndexRoute =
   ContractNegotiationCnProcessIndexImport.update({
@@ -52,11 +76,31 @@ const ContractNegotiationCnProcessIndexRoute =
     getParentRoute: () => ContractNegotiationCnProcessRouteRoute,
   } as any)
 
+const CatalogCatalogIdIndexRoute = CatalogCatalogIdIndexImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CatalogCatalogIdRouteRoute,
+} as any)
+
 const ContractNegotiationCnProcessMessageMessageIdRoute =
   ContractNegotiationCnProcessMessageMessageIdImport.update({
     id: '/message/$messageId',
     path: '/message/$messageId',
     getParentRoute: () => ContractNegotiationCnProcessRouteRoute,
+  } as any)
+
+const CatalogCatalogIdDatasetDatasetIdRoute =
+  CatalogCatalogIdDatasetDatasetIdImport.update({
+    id: '/dataset/$datasetId',
+    path: '/dataset/$datasetId',
+    getParentRoute: () => CatalogCatalogIdRouteRoute,
+  } as any)
+
+const CatalogCatalogIdDataServiceDataServiceIdRoute =
+  CatalogCatalogIdDataServiceDataServiceIdImport.update({
+    id: '/data-service/$dataServiceId',
+    path: '/data-service/$dataServiceId',
+    getParentRoute: () => CatalogCatalogIdRouteRoute,
   } as any)
 
 // Populate the FileRoutesByPath interface
@@ -70,12 +114,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
+    '/catalog': {
+      id: '/catalog'
+      path: '/catalog'
+      fullPath: '/catalog'
+      preLoaderRoute: typeof CatalogRouteImport
+      parentRoute: typeof rootRoute
+    }
     '/contract-negotiation': {
       id: '/contract-negotiation'
       path: '/contract-negotiation'
       fullPath: '/contract-negotiation'
       preLoaderRoute: typeof ContractNegotiationRouteImport
       parentRoute: typeof rootRoute
+    }
+    '/catalog/$catalogId': {
+      id: '/catalog/$catalogId'
+      path: '/$catalogId'
+      fullPath: '/catalog/$catalogId'
+      preLoaderRoute: typeof CatalogCatalogIdRouteImport
+      parentRoute: typeof CatalogRouteImport
     }
     '/contract-negotiation/$cnProcess': {
       id: '/contract-negotiation/$cnProcess'
@@ -84,6 +142,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContractNegotiationCnProcessRouteImport
       parentRoute: typeof ContractNegotiationRouteImport
     }
+    '/catalog/': {
+      id: '/catalog/'
+      path: '/'
+      fullPath: '/catalog/'
+      preLoaderRoute: typeof CatalogIndexImport
+      parentRoute: typeof CatalogRouteImport
+    }
     '/contract-negotiation/': {
       id: '/contract-negotiation/'
       path: '/'
@@ -91,12 +156,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContractNegotiationIndexImport
       parentRoute: typeof ContractNegotiationRouteImport
     }
+    '/catalog/$catalogId/': {
+      id: '/catalog/$catalogId/'
+      path: '/'
+      fullPath: '/catalog/$catalogId/'
+      preLoaderRoute: typeof CatalogCatalogIdIndexImport
+      parentRoute: typeof CatalogCatalogIdRouteImport
+    }
     '/contract-negotiation/$cnProcess/': {
       id: '/contract-negotiation/$cnProcess/'
       path: '/'
       fullPath: '/contract-negotiation/$cnProcess/'
       preLoaderRoute: typeof ContractNegotiationCnProcessIndexImport
       parentRoute: typeof ContractNegotiationCnProcessRouteImport
+    }
+    '/catalog/$catalogId/data-service/$dataServiceId': {
+      id: '/catalog/$catalogId/data-service/$dataServiceId'
+      path: '/data-service/$dataServiceId'
+      fullPath: '/catalog/$catalogId/data-service/$dataServiceId'
+      preLoaderRoute: typeof CatalogCatalogIdDataServiceDataServiceIdImport
+      parentRoute: typeof CatalogCatalogIdRouteImport
+    }
+    '/catalog/$catalogId/dataset/$datasetId': {
+      id: '/catalog/$catalogId/dataset/$datasetId'
+      path: '/dataset/$datasetId'
+      fullPath: '/catalog/$catalogId/dataset/$datasetId'
+      preLoaderRoute: typeof CatalogCatalogIdDatasetDatasetIdImport
+      parentRoute: typeof CatalogCatalogIdRouteImport
     }
     '/contract-negotiation/$cnProcess/message/$messageId': {
       id: '/contract-negotiation/$cnProcess/message/$messageId'
@@ -109,6 +195,38 @@ declare module '@tanstack/react-router' {
 }
 
 // Create and export the route tree
+
+interface CatalogCatalogIdRouteRouteChildren {
+  CatalogCatalogIdIndexRoute: typeof CatalogCatalogIdIndexRoute
+  CatalogCatalogIdDataServiceDataServiceIdRoute: typeof CatalogCatalogIdDataServiceDataServiceIdRoute
+  CatalogCatalogIdDatasetDatasetIdRoute: typeof CatalogCatalogIdDatasetDatasetIdRoute
+}
+
+const CatalogCatalogIdRouteRouteChildren: CatalogCatalogIdRouteRouteChildren = {
+  CatalogCatalogIdIndexRoute: CatalogCatalogIdIndexRoute,
+  CatalogCatalogIdDataServiceDataServiceIdRoute:
+    CatalogCatalogIdDataServiceDataServiceIdRoute,
+  CatalogCatalogIdDatasetDatasetIdRoute: CatalogCatalogIdDatasetDatasetIdRoute,
+}
+
+const CatalogCatalogIdRouteRouteWithChildren =
+  CatalogCatalogIdRouteRoute._addFileChildren(
+    CatalogCatalogIdRouteRouteChildren,
+  )
+
+interface CatalogRouteRouteChildren {
+  CatalogCatalogIdRouteRoute: typeof CatalogCatalogIdRouteRouteWithChildren
+  CatalogIndexRoute: typeof CatalogIndexRoute
+}
+
+const CatalogRouteRouteChildren: CatalogRouteRouteChildren = {
+  CatalogCatalogIdRouteRoute: CatalogCatalogIdRouteRouteWithChildren,
+  CatalogIndexRoute: CatalogIndexRoute,
+}
+
+const CatalogRouteRouteWithChildren = CatalogRouteRoute._addFileChildren(
+  CatalogRouteRouteChildren,
+)
 
 interface ContractNegotiationCnProcessRouteRouteChildren {
   ContractNegotiationCnProcessIndexRoute: typeof ContractNegotiationCnProcessIndexRoute
@@ -147,27 +265,43 @@ const ContractNegotiationRouteRouteWithChildren =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/catalog': typeof CatalogRouteRouteWithChildren
   '/contract-negotiation': typeof ContractNegotiationRouteRouteWithChildren
+  '/catalog/$catalogId': typeof CatalogCatalogIdRouteRouteWithChildren
   '/contract-negotiation/$cnProcess': typeof ContractNegotiationCnProcessRouteRouteWithChildren
+  '/catalog/': typeof CatalogIndexRoute
   '/contract-negotiation/': typeof ContractNegotiationIndexRoute
+  '/catalog/$catalogId/': typeof CatalogCatalogIdIndexRoute
   '/contract-negotiation/$cnProcess/': typeof ContractNegotiationCnProcessIndexRoute
+  '/catalog/$catalogId/data-service/$dataServiceId': typeof CatalogCatalogIdDataServiceDataServiceIdRoute
+  '/catalog/$catalogId/dataset/$datasetId': typeof CatalogCatalogIdDatasetDatasetIdRoute
   '/contract-negotiation/$cnProcess/message/$messageId': typeof ContractNegotiationCnProcessMessageMessageIdRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/catalog': typeof CatalogIndexRoute
   '/contract-negotiation': typeof ContractNegotiationIndexRoute
+  '/catalog/$catalogId': typeof CatalogCatalogIdIndexRoute
   '/contract-negotiation/$cnProcess': typeof ContractNegotiationCnProcessIndexRoute
+  '/catalog/$catalogId/data-service/$dataServiceId': typeof CatalogCatalogIdDataServiceDataServiceIdRoute
+  '/catalog/$catalogId/dataset/$datasetId': typeof CatalogCatalogIdDatasetDatasetIdRoute
   '/contract-negotiation/$cnProcess/message/$messageId': typeof ContractNegotiationCnProcessMessageMessageIdRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
+  '/catalog': typeof CatalogRouteRouteWithChildren
   '/contract-negotiation': typeof ContractNegotiationRouteRouteWithChildren
+  '/catalog/$catalogId': typeof CatalogCatalogIdRouteRouteWithChildren
   '/contract-negotiation/$cnProcess': typeof ContractNegotiationCnProcessRouteRouteWithChildren
+  '/catalog/': typeof CatalogIndexRoute
   '/contract-negotiation/': typeof ContractNegotiationIndexRoute
+  '/catalog/$catalogId/': typeof CatalogCatalogIdIndexRoute
   '/contract-negotiation/$cnProcess/': typeof ContractNegotiationCnProcessIndexRoute
+  '/catalog/$catalogId/data-service/$dataServiceId': typeof CatalogCatalogIdDataServiceDataServiceIdRoute
+  '/catalog/$catalogId/dataset/$datasetId': typeof CatalogCatalogIdDatasetDatasetIdRoute
   '/contract-negotiation/$cnProcess/message/$messageId': typeof ContractNegotiationCnProcessMessageMessageIdRoute
 }
 
@@ -175,35 +309,53 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/catalog'
     | '/contract-negotiation'
+    | '/catalog/$catalogId'
     | '/contract-negotiation/$cnProcess'
+    | '/catalog/'
     | '/contract-negotiation/'
+    | '/catalog/$catalogId/'
     | '/contract-negotiation/$cnProcess/'
+    | '/catalog/$catalogId/data-service/$dataServiceId'
+    | '/catalog/$catalogId/dataset/$datasetId'
     | '/contract-negotiation/$cnProcess/message/$messageId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/catalog'
     | '/contract-negotiation'
+    | '/catalog/$catalogId'
     | '/contract-negotiation/$cnProcess'
+    | '/catalog/$catalogId/data-service/$dataServiceId'
+    | '/catalog/$catalogId/dataset/$datasetId'
     | '/contract-negotiation/$cnProcess/message/$messageId'
   id:
     | '__root__'
     | '/'
+    | '/catalog'
     | '/contract-negotiation'
+    | '/catalog/$catalogId'
     | '/contract-negotiation/$cnProcess'
+    | '/catalog/'
     | '/contract-negotiation/'
+    | '/catalog/$catalogId/'
     | '/contract-negotiation/$cnProcess/'
+    | '/catalog/$catalogId/data-service/$dataServiceId'
+    | '/catalog/$catalogId/dataset/$datasetId'
     | '/contract-negotiation/$cnProcess/message/$messageId'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CatalogRouteRoute: typeof CatalogRouteRouteWithChildren
   ContractNegotiationRouteRoute: typeof ContractNegotiationRouteRouteWithChildren
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CatalogRouteRoute: CatalogRouteRouteWithChildren,
   ContractNegotiationRouteRoute: ContractNegotiationRouteRouteWithChildren,
 }
 
@@ -218,17 +370,34 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
+        "/catalog",
         "/contract-negotiation"
       ]
     },
     "/": {
       "filePath": "index.tsx"
     },
+    "/catalog": {
+      "filePath": "catalog/route.tsx",
+      "children": [
+        "/catalog/$catalogId",
+        "/catalog/"
+      ]
+    },
     "/contract-negotiation": {
       "filePath": "contract-negotiation/route.tsx",
       "children": [
         "/contract-negotiation/$cnProcess",
         "/contract-negotiation/"
+      ]
+    },
+    "/catalog/$catalogId": {
+      "filePath": "catalog/$catalogId/route.tsx",
+      "parent": "/catalog",
+      "children": [
+        "/catalog/$catalogId/",
+        "/catalog/$catalogId/data-service/$dataServiceId",
+        "/catalog/$catalogId/dataset/$datasetId"
       ]
     },
     "/contract-negotiation/$cnProcess": {
@@ -239,13 +408,29 @@ export const routeTree = rootRoute
         "/contract-negotiation/$cnProcess/message/$messageId"
       ]
     },
+    "/catalog/": {
+      "filePath": "catalog/index.tsx",
+      "parent": "/catalog"
+    },
     "/contract-negotiation/": {
       "filePath": "contract-negotiation/index.tsx",
       "parent": "/contract-negotiation"
     },
+    "/catalog/$catalogId/": {
+      "filePath": "catalog/$catalogId/index.tsx",
+      "parent": "/catalog/$catalogId"
+    },
     "/contract-negotiation/$cnProcess/": {
       "filePath": "contract-negotiation/$cnProcess/index.tsx",
       "parent": "/contract-negotiation/$cnProcess"
+    },
+    "/catalog/$catalogId/data-service/$dataServiceId": {
+      "filePath": "catalog/$catalogId/data-service.$dataServiceId.tsx",
+      "parent": "/catalog/$catalogId"
+    },
+    "/catalog/$catalogId/dataset/$datasetId": {
+      "filePath": "catalog/$catalogId/dataset.$datasetId.tsx",
+      "parent": "/catalog/$catalogId"
     },
     "/contract-negotiation/$cnProcess/message/$messageId": {
       "filePath": "contract-negotiation/$cnProcess/message.$messageId.tsx",

@@ -11,7 +11,7 @@ const RouteComponent = () => {
             <header className="mb-2">
                 <h2 className="flex gap-2 items-center">
                     <ArrowLeft className="w-4"/>
-                    <Link to="/contract-negotiation">Contract negotiation</Link>
+                    <Link to="/catalog">Catalog</Link>
                 </h2>
             </header>
             <Outlet/>
@@ -19,7 +19,7 @@ const RouteComponent = () => {
     );
 };
 
-export const Route = createFileRoute("/contract-negotiation")({
+export const Route = createFileRoute("/catalog")({
     component: RouteComponent,
     notFoundComponent: NotFound,
 });
