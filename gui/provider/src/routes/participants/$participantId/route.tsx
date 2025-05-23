@@ -8,11 +8,14 @@ const NotFound = () => {
 
 const RouteComponent = () => {
     return (
-        <div className="container mx-auto my-5">
+        <div className="mb-2">
             <header className="mb-2">
                 <h2 className="flex gap-2 items-center">
                     <ArrowLeft className="w-4"/>
-                    <Link to="/participants">Participants</Link>
+                    <Link
+                        to="/participants"
+
+                    >Participants</Link>
                 </h2>
             </header>
             <Outlet/>
@@ -20,7 +23,7 @@ const RouteComponent = () => {
     );
 };
 
-export const Route = createFileRoute('/participants')({
+export const Route = createFileRoute('/participants/$participantId')({
     component: RouteComponent,
     notFoundComponent: NotFound,
 })

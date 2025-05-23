@@ -190,6 +190,14 @@ declare global {
         content: any
     }
 
+    export interface Participant {
+        participant_id: UUID
+        identity_token: string
+        _type: string
+        base_url: string
+        extra_fields: any
+    }
+
 }
 
 declare module "@tanstack/react-router" {
