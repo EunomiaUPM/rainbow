@@ -272,11 +272,11 @@ where
 
     ///
     ///
-    async fn notify_subscribers(&self, message: Value) -> anyhow::Result<()> {
+    async fn notify_subscribers(&self, subcategory: String, message: Value) -> anyhow::Result<()> {
         self.notification_service
             .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
                 category: RainbowEventsNotificationMessageCategory::ContractNegotiation,
-                subcategory: "ContractRequestMessage".to_string(),
+                subcategory,
                 message_type: RainbowEventsNotificationMessageTypes::DSProtocolMessage,
                 message_content: message,
                 message_operation: RainbowEventsNotificationMessageOperation::IncomingMessage,
@@ -379,13 +379,15 @@ where
             .map_err(IdsaCNError::DbErr)?;
 
         // 4. notify subscriptions
-        self.notify_subscribers(json!({
-            "process": cn_process,
-            "message": cn_message,
-            "offer": cn_offer
-        }))
+        self.notify_subscribers(
+            "ContractRequestMessage".to_string(),
+            json!({
+                "process": cn_process,
+                "message": cn_message,
+                "offer": cn_offer
+            }),
+        )
             .await?;
-
 
         Ok(cn_process.into())
     }
@@ -469,11 +471,14 @@ where
             .map_err(IdsaCNError::DbErr)?;
 
         // 4. notify subscriptions
-        self.notify_subscribers(json!({
-            "process": cn_process,
-            "message": cn_message,
-            "offer": offer
-        }))
+        self.notify_subscribers(
+            "ContractRequestMessage".to_string(),
+            json!({
+                "process": cn_process,
+                "message": cn_message,
+                "offer": offer
+            }),
+        )
             .await?;
 
         Ok(cn_process.into())
@@ -522,10 +527,13 @@ where
             .map_err(IdsaCNError::DbErr)?;
 
         // 3. notify subscriptions
-        self.notify_subscribers(json!({
-            "process": cn_process,
-            "message": message
-        }))
+        self.notify_subscribers(
+            "ContractNegotiationEventMessage:accepted".to_string(),
+            json!({
+                "process": cn_process,
+                "message": message
+            }),
+        )
             .await?;
         Ok(cn_process.into())
     }
@@ -573,10 +581,13 @@ where
             .map_err(IdsaCNError::DbErr)?;
 
         // notify subscriptions
-        self.notify_subscribers(json!({
-            "process": cn_process,
-            "message": message
-        }))
+        self.notify_subscribers(
+            "ContractAgreementVerificationMessage".to_string(),
+            json!({
+                "process": cn_process,
+                "message": message
+            }),
+        )
             .await?;
         Ok(cn_process.into())
     }
@@ -625,10 +636,13 @@ where
             .map_err(IdsaCNError::DbErr)?;
 
         // 3. notify subscriptions
-        self.notify_subscribers(json!({
-            "process": cn_process,
-            "message": message
-        }))
+        self.notify_subscribers(
+            "ContractTerminationMessage".to_string(),
+            json!({
+                "process": cn_process,
+                "message": message
+            }),
+        )
             .await?;
         Ok(cn_process.into())
     }
