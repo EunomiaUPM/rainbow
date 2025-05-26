@@ -9,13 +9,41 @@ import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "sha
 import dayjs from "dayjs";
 import {ExternalLink} from "lucide-react";
 import {getPoliciesByDatasetIdOptions, useGetPoliciesByDatasetId} from "@/data/policy-queries.ts";
+import {
+    Form,
+    FormControl,
+    FormDescription,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "shared/src/components/ui/form"
+import {SubmitHandler, useForm} from "react-hook-form";
+import {Button} from "shared/src/components/ui/button.tsx";
+import {Textarea} from "shared/src/components/ui/textarea.tsx";
+import {usePostNewPolicyInDataset} from "@/data/catalog-mutations.ts";
 
+
+type Inputs = {
+    odrl: string
+}
 
 function RouteComponent() {
     const {catalogId, datasetId} = Route.useParams()
     const {data: dataset} = useGetDatasetById(datasetId)
     const {data: distributions} = useGetDistributionsByDatasetId(datasetId)
     const {data: policies} = useGetPoliciesByDatasetId(datasetId)
+    const {mutate: postNewPolicy, isPending} = usePostNewPolicyInDataset()
+    const form = useForm<Inputs>({
+        defaultValues: {
+            odrl: "{\"permission\":[{\"action\":\"use\",\"constraint\":[{\"rightOperand\":\"user\",\"leftOperand\":\"did:web:hola.es\",\"operator\":\"eq\"}]}],\"obligation\":[],\"prohibition\":[]}",
+        },
+    })
+    const onSubmit: SubmitHandler<Inputs> = data => {
+        // @ts-ignore
+        postNewPolicy({datasetId, body: data.odrl})
+        form.reset()
+    }
 
     return <div className="space-y-4">
         <h2>Dataset info with id: {dataset["@id"]} </h2>
@@ -105,6 +133,29 @@ function RouteComponent() {
                     ))}
                 </TableBody>
             </Table>
+        </div>
+        <div>
+            <h2>Create new odrl policy</h2>
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)}>
+                    <FormField
+                        disabled={isPending}
+                        control={form.control}
+                        name="odrl"
+                        render={({field}) => (
+                            <FormItem>
+                                <FormLabel>Odrl</FormLabel>
+                                <FormControl>
+                                    <Textarea {...field} />
+                                </FormControl>
+                                <FormDescription>Provide the ODRL policy content</FormDescription>
+                                <FormMessage/>
+                            </FormItem>
+                        )}
+                    />
+                    <Button type="submit">Enviar {isPending && <span>- loading...</span>}</Button>
+                </form>
+            </Form>
         </div>
     </div>
 

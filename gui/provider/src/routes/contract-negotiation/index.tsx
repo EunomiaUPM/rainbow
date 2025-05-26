@@ -3,11 +3,17 @@ import dayjs from "dayjs";
 import {ExternalLink} from "lucide-react";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "shared/src/components/ui/table";
 import {getContractNegotiationProcessesOptions, useGetContractNegotiationProcesses} from "@/data/contract-queries.ts";
+import {Button} from "shared/src/components/ui/button.tsx";
 
 const RouteComponent = () => {
     const {data: cnProcesses} = useGetContractNegotiationProcesses();
     return (
         <div>
+            <div className="flex justify-end">
+                <Link to="/contract-negotiation/offer">
+                    <Button>Create new offer</Button>
+                </Link>
+            </div>
             <Table className="text-sm">
                 <TableHeader>
                     <TableRow>

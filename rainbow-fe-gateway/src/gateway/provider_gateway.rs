@@ -21,6 +21,7 @@ use crate::gateway::execute_proxy;
 use axum::body::Body;
 use axum::extract::ws::{Message, WebSocketUpgrade};
 use axum::extract::{Path, Request, State};
+use axum::http::header::{AUTHORIZATION, CONTENT_TYPE};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::{any, get, post};
@@ -30,7 +31,7 @@ use reqwest::Client;
 use serde_json::Value;
 use std::time::Duration;
 use tokio::sync::broadcast;
-use tower_http::cors::{Any, CorsLayer};
+use tower_http::cors::{AllowHeaders, Any, CorsLayer};
 
 pub struct RainbowProviderGateway {
     config: ApplicationProviderConfig,
@@ -46,7 +47,10 @@ impl RainbowProviderGateway {
         Self { config, client, notification_tx }
     }
     pub fn router(self) -> Router {
-        let cors = CorsLayer::new().allow_methods(Any).allow_origin(Any);
+        let cors = CorsLayer::new()
+            .allow_methods(Any)
+            .allow_origin(Any)
+            .allow_headers(AllowHeaders::list([CONTENT_TYPE, AUTHORIZATION]));
 
         Router::new()
             .route(
@@ -118,80 +122,72 @@ impl RainbowProviderGateway {
             .await
     }
     async fn websocket_handler(
-        State((config, client, notification_tx)): State<(
-            ApplicationProviderConfig,
-            Client,
-            broadcast::Sender<String>,
-        )>,
+        State((config, client, notification_tx)): State<(ApplicationProviderConfig, Client, broadcast::Sender<String>)>,
         ws: WebSocketUpgrade,
     ) -> impl IntoResponse {
         ws.on_upgrade(move |mut socket| async move {
             let mut notification_rx = notification_tx.subscribe();
             loop {
                 tokio::select! {
-            // Forward messages from the broadcast channel to the WebSocket client
-            Ok(msg_to_send) = notification_rx.recv() => {
-                if socket.send(Message::Text(msg_to_send)).await.is_err() {
-                    // Client disconnected or error sending
-                    eprintln!("WS client disconnected or send error.");
-                    break;
-                }
-            }
-            // Handle messages from the WebSocket client (optional)
-            Some(Ok(ws_msg)) = socket.recv() => {
-                match ws_msg {
-                    Message::Text(text) => {
-                        println!("Received WS message from client: {}", text);
-                        // Process message from client, e.g., echo or handle command
-                        // if socket.send(Message::Text(format!("Echo: {}", text))).await.is_err() {
-                        //     break;
-                        // }
-                    }
-                    Message::Binary(_) => {
-                        println!("Received binary message from client.");
-                    }
-                    Message::Ping(ping) => {
-                        if socket.send(Message::Pong(ping)).await.is_err() {
-                           break;
+                    // Forward messages from the broadcast channel to the WebSocket client
+                    Ok(msg_to_send) = notification_rx.recv() => {
+                        if socket.send(Message::Text(msg_to_send)).await.is_err() {
+                            // Client disconnected or error sending
+                            eprintln!("WS client disconnected or send error.");
+                            break;
                         }
                     }
-                    Message::Pong(_) => {
-                         // Pong received
+                    // Handle messages from the WebSocket client (optional)
+                    Some(Ok(ws_msg)) = socket.recv() => {
+                        match ws_msg {
+                            Message::Text(text) => {
+                                println!("Received WS message from client: {}", text);
+                                // Process message from client, e.g., echo or handle command
+                                // if socket.send(Message::Text(format!("Echo: {}", text))).await.is_err() {
+                                //     break;
+                                // }
+                            }
+                            Message::Binary(_) => {
+                                println!("Received binary message from client.");
+                            }
+                            Message::Ping(ping) => {
+                                if socket.send(Message::Pong(ping)).await.is_err() {
+                                   break;
+                                }
+                            }
+                            Message::Pong(_) => {
+                                 // Pong received
+                            }
+                            Message::Close(_) => {
+                                eprintln!("WS client initiated close.");
+                                break;
+                            }
+                        }
                     }
-                    Message::Close(_) => {
-                        eprintln!("WS client initiated close.");
+                    // If either the broadcast channel closes or the socket.recv() returns None/Err
+                    else => {
+                        // This branch can be reached if notification_rx.recv() fails (e.g. channel closed)
+                        // or if socket.recv() indicates the connection is closed or errored out.
+                        eprintln!("WS connection or broadcast channel error/closed.");
                         break;
                     }
                 }
-            }
-            // If either the broadcast channel closes or the socket.recv() returns None/Err
-            else => {
-                // This branch can be reached if notification_rx.recv() fails (e.g. channel closed)
-                // or if socket.recv() indicates the connection is closed or errored out.
-                eprintln!("WS connection or broadcast channel error/closed.");
-                break;
-            }
-        }
             }
             println!("WebSocket connection handler finished.");
         })
     }
     async fn incoming_notification(
-        State((config, client, notification_tx)): State<(
-            ApplicationProviderConfig,
-            Client,
-            broadcast::Sender<String>
-        )>,
+        State((config, client, notification_tx)): State<(ApplicationProviderConfig, Client, broadcast::Sender<String>)>,
         Json(input): Json<Value>,
     ) -> impl IntoResponse {
         let value_str = match serde_json::to_string(&input) {
             Ok(value_str) => value_str,
-            Err(e) => return (StatusCode::BAD_REQUEST, "Not able to deserialize").into_response()
+            Err(e) => return (StatusCode::BAD_REQUEST, "Not able to deserialize").into_response(),
         };
         let req = match notification_tx.send(value_str) {
             Ok(num_receivers) => num_receivers,
             // Send Pending
-            Err(e) => return (StatusCode::BAD_REQUEST, "Not able to deserialize").into_response()
+            Err(e) => return (StatusCode::BAD_REQUEST, "Not able to deserialize").into_response(),
         };
         StatusCode::ACCEPTED.into_response()
     }
