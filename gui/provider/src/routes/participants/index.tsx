@@ -2,6 +2,8 @@ import {createFileRoute, Link} from '@tanstack/react-router'
 import {useGetParticipants} from "@/data/participant-queries.ts";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "shared/src/components/ui/table.tsx";
 import {ExternalLink} from "lucide-react";
+import {useContext} from "react";
+import {PubSubContext} from "@/context/PubSubContext.tsx";
 
 export const Route = createFileRoute('/participants/')({
     component: RouteComponent,
@@ -9,6 +11,7 @@ export const Route = createFileRoute('/participants/')({
 
 function RouteComponent() {
     const {data: participants} = useGetParticipants()
+    const {lastHighLightedNotification} = useContext(PubSubContext)!;
     return <div>
         <Table className="text-sm">
             <TableHeader>
@@ -23,7 +26,11 @@ function RouteComponent() {
             </TableHeader>
             <TableBody>
                 {participants.map((participant) => (
-                    <TableRow key={participant.participant_id.slice(0, 20)}>
+                    <TableRow key={participant.participant_id.slice(0, 20)} className={
+                        participant.participant_id === lastHighLightedNotification
+                            ? "bg-blue-200"
+                            : ""
+                    }>
                         <TableCell>
                             {participant.participant_id.slice(0, 20) + "..."}
                         </TableCell>

@@ -19,6 +19,8 @@
 
 use crate::gateway::consumer_gateway::RainbowConsumerGateway;
 use crate::gateway::provider_gateway::RainbowProviderGateway;
+use crate::subscriptions::provider_subscriptions::RainbowProviderGatewaySubscriptions;
+use crate::subscriptions::MicroserviceSubscriptionKey;
 use axum::serve;
 use clap::{Parser, Subcommand};
 use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
@@ -46,6 +48,7 @@ pub enum GatewayCliRoles {
 #[derive(Subcommand, Debug, PartialEq)]
 pub enum GatewayCliCommands {
     Start,
+    Subscribe,
 }
 
 pub struct GatewayCommands;
@@ -79,6 +82,13 @@ impl GatewayCommands {
                             .await?;
                         serve(listener, gateway_router).await?;
                     }
+                    GatewayCliCommands::Subscribe => {
+                        let microservices_subs = RainbowProviderGatewaySubscriptions::new(config.clone());
+                        microservices_subs.subscribe_to_microservice(MicroserviceSubscriptionKey::Catalog).await?;
+                        // TODO when pubsub refactor
+                        // microservices_subs.subscribe_to_microservice(MicroserviceSubscriptionKey::ContractNegotiation).await?;
+                        // microservices_subs.subscribe_to_microservice(MicroserviceSubscriptionKey::TransferControlPlane).await?;
+                    }
                 }
             }
             GatewayCliRoles::Consumer(cmd) => {
@@ -101,6 +111,9 @@ impl GatewayCommands {
                         ))
                             .await?;
                         serve(listener, gateway_router).await?;
+                    }
+                    GatewayCliCommands::Subscribe => {
+                        todo!()
                     }
                 }
             }

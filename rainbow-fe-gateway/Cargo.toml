@@ -42,3 +42,4 @@ http-body-util = "0.1.2"
 bytes = "1.9.0"
 http-body = "1.0.1"
 tower-http = "0.6.2"
+urlencoding = { workspace = true }

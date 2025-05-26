@@ -1,9 +1,9 @@
-import React from "react";
 import ReactDOM from "react-dom/client";
 import "shared/index.css";
 import {createRouter, RouterProvider} from "@tanstack/react-router";
 import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
 import {routeTree} from "./routeTree.gen";
+import {PubSubContextProvider} from "@/context/PubSubContext.tsx";
 
 export const queryClient = new QueryClient();
 
@@ -11,9 +11,9 @@ export const queryClient = new QueryClient();
 const router = createRouter({routeTree, context: {queryClient}});
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
-    <React.StrictMode>
-        <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+        <PubSubContextProvider>
             <RouterProvider router={router}/>
-        </QueryClientProvider>
-    </React.StrictMode>
+        </PubSubContextProvider>
+    </QueryClientProvider>
 );

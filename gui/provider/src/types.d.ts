@@ -198,6 +198,25 @@ declare global {
         extra_fields: any
     }
 
+    export interface Subscription {
+        subscriptionId: UUID
+        callbackAddress: string
+        timestamp: Date
+        expirationTime: Date
+        subscriptionEntity: string
+        active: boolean
+    }
+
+    export interface NotificationSub {
+        notificationId: string
+        timestamp: string
+        category: string
+        subcategory: string
+        messageType: string
+        messageOperation: string
+        messageContent: any
+        subscriptionId: string
+    }
 }
 
 declare module "@tanstack/react-router" {

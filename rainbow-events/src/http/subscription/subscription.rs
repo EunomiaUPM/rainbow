@@ -16,20 +16,20 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 use crate::core::subscription::subscription_err::SubscriptionErrors;
 use crate::core::subscription::subscription_types::{RainbowEventsSubscriptionCreationRequest, SubscriptionEntities};
 use crate::core::subscription::RainbowEventsSubscriptionTrait;
 use axum::extract::rejection::JsonRejection;
-use axum::extract::{Path, State};
+use axum::extract::{Path, Query, State};
 use axum::response::IntoResponse;
 use axum::routing::{delete, get, post, put};
 use axum::{Json, Router};
-use log::info;
 use rainbow_common::err::transfer_err::TransferErrorType::NotCheckedError;
 use rainbow_common::utils::get_urn_from_string;
 use reqwest::StatusCode;
+use serde::Deserialize;
 use std::sync::Arc;
+use tracing::{debug, info};
 
 pub struct RainbowEventsSubscriptionRouter<T>
 where
@@ -38,6 +38,13 @@ where
     service: Arc<T>,
     entity_type: Option<SubscriptionEntities>,
 }
+
+
+#[derive(Debug, Deserialize)]
+struct SubscriptionQueryParams {
+    callback_address: Option<String>,
+}
+
 impl<T> RainbowEventsSubscriptionRouter<T>
 where
     T: RainbowEventsSubscriptionTrait + Send + Sync + 'static,
@@ -76,20 +83,35 @@ where
     }
     async fn handle_get_all_subscriptions(
         State((service, entity)): State<(Arc<T>, Option<SubscriptionEntities>)>,
+        query: Query<SubscriptionQueryParams>,
     ) -> impl IntoResponse {
-        info!("GET {}/subscriptions", Self::serialize_entity_type(&entity));
-        match service.get_all_subscriptions().await {
-            Ok(subscriptions) => (StatusCode::OK, Json(subscriptions)).into_response(),
-            Err(e) => match e.downcast::<SubscriptionErrors>() {
-                Ok(e_) => e_.into_response(),
-                Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
-            },
+        info!("bien");
+        let cb = query.callback_address.clone();
+        if cb.is_some() {
+            info!("GET {}/subscriptions?callback_address={}", Self::serialize_entity_type(&entity), cb.clone().unwrap());
+            match service.get_subscription_by_callback_url(cb.unwrap()).await {
+                Ok(subscriptions) => (StatusCode::OK, Json(subscriptions)).into_response(),
+                Err(e) => match e.downcast::<SubscriptionErrors>() {
+                    Ok(e_) => e_.into_response(),
+                    Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
+                },
+            }
+        } else {
+            info!("GET {}/subscriptions", Self::serialize_entity_type(&entity));
+            match service.get_all_subscriptions().await {
+                Ok(subscriptions) => (StatusCode::OK, Json(subscriptions)).into_response(),
+                Err(e) => match e.downcast::<SubscriptionErrors>() {
+                    Ok(e_) => e_.into_response(),
+                    Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
+                },
+            }
         }
     }
     async fn handle_get_subscription_by_id(
         State((service, entity)): State<(Arc<T>, Option<SubscriptionEntities>)>,
         Path(id): Path<String>,
     ) -> impl IntoResponse {
+        info!("mal");
         info!(
             "GET {}/subscriptions/{}",
             Self::serialize_entity_type(&entity),

@@ -19,6 +19,7 @@ import { Route as CatalogRouteImport } from './routes/catalog/route'
 import { Route as AgreementsRouteImport } from './routes/agreements/route'
 import { Route as IndexImport } from './routes/index'
 import { Route as TransferProcessIndexImport } from './routes/transfer-process/index'
+import { Route as SubscriptionsIndexImport } from './routes/subscriptions/index'
 import { Route as ParticipantsIndexImport } from './routes/participants/index'
 import { Route as ContractNegotiationIndexImport } from './routes/contract-negotiation/index'
 import { Route as CatalogIndexImport } from './routes/catalog/index'
@@ -85,6 +86,12 @@ const TransferProcessIndexRoute = TransferProcessIndexImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => TransferProcessRouteRoute,
+} as any)
+
+const SubscriptionsIndexRoute = SubscriptionsIndexImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SubscriptionsRouteRoute,
 } as any)
 
 const ParticipantsIndexRoute = ParticipantsIndexImport.update({
@@ -317,6 +324,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ParticipantsIndexImport
       parentRoute: typeof ParticipantsRouteImport
     }
+    '/subscriptions/': {
+      id: '/subscriptions/'
+      path: '/'
+      fullPath: '/subscriptions/'
+      preLoaderRoute: typeof SubscriptionsIndexImport
+      parentRoute: typeof SubscriptionsRouteImport
+    }
     '/transfer-process/': {
       id: '/transfer-process/'
       path: '/'
@@ -494,6 +508,17 @@ const ParticipantsRouteRouteChildren: ParticipantsRouteRouteChildren = {
 const ParticipantsRouteRouteWithChildren =
   ParticipantsRouteRoute._addFileChildren(ParticipantsRouteRouteChildren)
 
+interface SubscriptionsRouteRouteChildren {
+  SubscriptionsIndexRoute: typeof SubscriptionsIndexRoute
+}
+
+const SubscriptionsRouteRouteChildren: SubscriptionsRouteRouteChildren = {
+  SubscriptionsIndexRoute: SubscriptionsIndexRoute,
+}
+
+const SubscriptionsRouteRouteWithChildren =
+  SubscriptionsRouteRoute._addFileChildren(SubscriptionsRouteRouteChildren)
+
 interface TransferProcessTransferProcessIdRouteRouteChildren {
   TransferProcessTransferProcessIdIndexRoute: typeof TransferProcessTransferProcessIdIndexRoute
   TransferProcessTransferProcessIdTransferMessageTransferMessageIdRoute: typeof TransferProcessTransferProcessIdTransferMessageTransferMessageIdRoute
@@ -532,7 +557,7 @@ export interface FileRoutesByFullPath {
   '/catalog': typeof CatalogRouteRouteWithChildren
   '/contract-negotiation': typeof ContractNegotiationRouteRouteWithChildren
   '/participants': typeof ParticipantsRouteRouteWithChildren
-  '/subscriptions': typeof SubscriptionsRouteRoute
+  '/subscriptions': typeof SubscriptionsRouteRouteWithChildren
   '/transfer-process': typeof TransferProcessRouteRouteWithChildren
   '/catalog/$catalogId': typeof CatalogCatalogIdRouteRouteWithChildren
   '/contract-negotiation/$cnProcess': typeof ContractNegotiationCnProcessRouteRouteWithChildren
@@ -543,6 +568,7 @@ export interface FileRoutesByFullPath {
   '/catalog/': typeof CatalogIndexRoute
   '/contract-negotiation/': typeof ContractNegotiationIndexRoute
   '/participants/': typeof ParticipantsIndexRoute
+  '/subscriptions/': typeof SubscriptionsIndexRoute
   '/transfer-process/': typeof TransferProcessIndexRoute
   '/catalog/$catalogId/': typeof CatalogCatalogIdIndexRoute
   '/contract-negotiation/$cnProcess/': typeof ContractNegotiationCnProcessIndexRoute
@@ -556,12 +582,12 @@ export interface FileRoutesByFullPath {
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/subscriptions': typeof SubscriptionsRouteRoute
   '/agreements/$agreementId': typeof AgreementsAgreementIdRoute
   '/agreements': typeof AgreementsIndexRoute
   '/catalog': typeof CatalogIndexRoute
   '/contract-negotiation': typeof ContractNegotiationIndexRoute
   '/participants': typeof ParticipantsIndexRoute
+  '/subscriptions': typeof SubscriptionsIndexRoute
   '/transfer-process': typeof TransferProcessIndexRoute
   '/catalog/$catalogId': typeof CatalogCatalogIdIndexRoute
   '/contract-negotiation/$cnProcess': typeof ContractNegotiationCnProcessIndexRoute
@@ -580,7 +606,7 @@ export interface FileRoutesById {
   '/catalog': typeof CatalogRouteRouteWithChildren
   '/contract-negotiation': typeof ContractNegotiationRouteRouteWithChildren
   '/participants': typeof ParticipantsRouteRouteWithChildren
-  '/subscriptions': typeof SubscriptionsRouteRoute
+  '/subscriptions': typeof SubscriptionsRouteRouteWithChildren
   '/transfer-process': typeof TransferProcessRouteRouteWithChildren
   '/catalog/$catalogId': typeof CatalogCatalogIdRouteRouteWithChildren
   '/contract-negotiation/$cnProcess': typeof ContractNegotiationCnProcessRouteRouteWithChildren
@@ -591,6 +617,7 @@ export interface FileRoutesById {
   '/catalog/': typeof CatalogIndexRoute
   '/contract-negotiation/': typeof ContractNegotiationIndexRoute
   '/participants/': typeof ParticipantsIndexRoute
+  '/subscriptions/': typeof SubscriptionsIndexRoute
   '/transfer-process/': typeof TransferProcessIndexRoute
   '/catalog/$catalogId/': typeof CatalogCatalogIdIndexRoute
   '/contract-negotiation/$cnProcess/': typeof ContractNegotiationCnProcessIndexRoute
@@ -621,6 +648,7 @@ export interface FileRouteTypes {
     | '/catalog/'
     | '/contract-negotiation/'
     | '/participants/'
+    | '/subscriptions/'
     | '/transfer-process/'
     | '/catalog/$catalogId/'
     | '/contract-negotiation/$cnProcess/'
@@ -633,12 +661,12 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/subscriptions'
     | '/agreements/$agreementId'
     | '/agreements'
     | '/catalog'
     | '/contract-negotiation'
     | '/participants'
+    | '/subscriptions'
     | '/transfer-process'
     | '/catalog/$catalogId'
     | '/contract-negotiation/$cnProcess'
@@ -666,6 +694,7 @@ export interface FileRouteTypes {
     | '/catalog/'
     | '/contract-negotiation/'
     | '/participants/'
+    | '/subscriptions/'
     | '/transfer-process/'
     | '/catalog/$catalogId/'
     | '/contract-negotiation/$cnProcess/'
@@ -684,7 +713,7 @@ export interface RootRouteChildren {
   CatalogRouteRoute: typeof CatalogRouteRouteWithChildren
   ContractNegotiationRouteRoute: typeof ContractNegotiationRouteRouteWithChildren
   ParticipantsRouteRoute: typeof ParticipantsRouteRouteWithChildren
-  SubscriptionsRouteRoute: typeof SubscriptionsRouteRoute
+  SubscriptionsRouteRoute: typeof SubscriptionsRouteRouteWithChildren
   TransferProcessRouteRoute: typeof TransferProcessRouteRouteWithChildren
 }
 
@@ -694,7 +723,7 @@ const rootRouteChildren: RootRouteChildren = {
   CatalogRouteRoute: CatalogRouteRouteWithChildren,
   ContractNegotiationRouteRoute: ContractNegotiationRouteRouteWithChildren,
   ParticipantsRouteRoute: ParticipantsRouteRouteWithChildren,
-  SubscriptionsRouteRoute: SubscriptionsRouteRoute,
+  SubscriptionsRouteRoute: SubscriptionsRouteRouteWithChildren,
   TransferProcessRouteRoute: TransferProcessRouteRouteWithChildren,
 }
 
@@ -749,7 +778,10 @@ export const routeTree = rootRoute
       ]
     },
     "/subscriptions": {
-      "filePath": "subscriptions/route.tsx"
+      "filePath": "subscriptions/route.tsx",
+      "children": [
+        "/subscriptions/"
+      ]
     },
     "/transfer-process": {
       "filePath": "transfer-process/route.tsx",
@@ -809,6 +841,10 @@ export const routeTree = rootRoute
     "/participants/": {
       "filePath": "participants/index.tsx",
       "parent": "/participants"
+    },
+    "/subscriptions/": {
+      "filePath": "subscriptions/index.tsx",
+      "parent": "/subscriptions"
     },
     "/transfer-process/": {
       "filePath": "transfer-process/index.tsx",

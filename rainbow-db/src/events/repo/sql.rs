@@ -72,6 +72,19 @@ impl SubscriptionRepo for EventsRepoForSql {
         }
     }
 
+    async fn get_subscription_by_callback_string(
+        &self,
+        callback_string: String,
+    ) -> anyhow::Result<Option<subscription::Model>, EventRepoErrors> {
+        let subscriptions = subscription::Entity::find()
+            .filter(subscription::Column::CallbackAddress.eq(callback_string))
+            .one(&self.db_connection).await;
+        match subscriptions {
+            Ok(subscriptions) => Ok(subscriptions),
+            Err(e) => Err(EventRepoErrors::ErrorFetchingSubscription(e.into())),
+        }
+    }
+
     async fn put_subscription_by_id(
         &self,
         subscription_id: Urn,

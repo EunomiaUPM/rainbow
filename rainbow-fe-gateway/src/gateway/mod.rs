@@ -37,9 +37,12 @@ pub async fn execute_proxy(
 ) -> Response {
     let method = req.method();
     let path = req.uri().path();
+    let query = req.uri().query(); // Get the raw query string
     info!("{} {}", method, path);
 
     let microservice_api_path = match service_prefix.as_str() {
+        "notifications" => "api/v1/catalog/notifications",
+        "subscriptions" => "api/v1/catalog/subscriptions",
         "catalogs" => "api/v1/catalogs",
         "datasets" => "api/v1/datasets",
         "data-services" => "api/v1/data-services",
@@ -66,6 +69,15 @@ pub async fn execute_proxy(
             target_url_str.push('/');
             target_url_str.push_str(trimmed_extra);
         }
+    }
+
+    // Prepare query
+    if let Some(q) = query {
+        target_url_str.push('?');
+        target_url_str.push_str(q);
+        debug!("Target URL with original query: {}", target_url_str);
+    } else {
+        debug!("No query parameters in original request.");
     }
 
     debug!("Redirecting to {}", target_url_str);

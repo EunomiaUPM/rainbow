@@ -33,6 +33,8 @@ pub enum SubscriptionErrors {
     JsonRejection(JsonRejection),
     #[error("Error from deserializing path. {0}")]
     UrnUuidSchema(String),
+    #[error("There is a subscription for this callback address. {0}")]
+    SubscriptionCallbackAddressExists(String),
 }
 
 #[derive(Serialize, Deserialize)]

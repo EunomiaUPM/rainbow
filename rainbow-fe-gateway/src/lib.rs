@@ -19,3 +19,4 @@
 
 pub mod cmd;
 pub mod gateway;
+pub mod subscriptions;
