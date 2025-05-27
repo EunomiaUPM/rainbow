@@ -17,7 +17,7 @@
  *
  */
 
-use crate::auth_consumer::entities::auth_interaction;
+use crate::auth_consumer::entities::{auth_interaction, prov};
 use crate::auth_consumer::entities::{auth, auth_verification};
 use axum::async_trait;
 use rainbow_common::auth::gnap::grant_request::Interact4GR;
@@ -61,4 +61,8 @@ pub trait AuthConsumerRepoTrait {
 
     async fn create_auth_verification(&self, id: String, uri: String) -> anyhow::Result<auth_verification::Model>;
     async fn grant_req_approved(&self, id: String, jwt: String) -> anyhow::Result<auth::Model>;
+    async fn create_prov(&self, provider: String, provider_route: String) -> anyhow::Result<()>;
+    async fn prov_onboard(&self, provider: String) -> anyhow::Result<()>;
+    async fn get_all_provs(&self) -> anyhow::Result<Vec<prov::Model>>;
+    async fn get_prov(&self, provider: String) -> anyhow::Result<prov::Model>;
 }

@@ -313,4 +313,14 @@ impl AuthProviderRepoTrait for AuthProviderRepoForSql {
             Err(e) => bail!("Failed to fetch data: {}", e),
         }
     }
+
+    async fn is_token_in_db(&self, token: String) -> anyhow::Result<bool> {
+        let auth = auth::Entity::find().filter(auth::Column::Token.eq(token)).one(&self.db_connection).await;
+
+        match auth {
+            Ok(Some(auth)) => Ok(true),
+            Ok(None) => Ok(false),
+            Err(e) => bail!("Failed to fetch data: {}", e),
+        }
+    }
 }

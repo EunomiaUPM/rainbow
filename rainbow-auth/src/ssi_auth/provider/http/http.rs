@@ -55,6 +55,7 @@ where
             .route("/pd/:state", get(Self::pd))
             .route("/verify/:state", post(Self::verify))
             .route("/continue", post(Self::continue_request))
+            .route("/verify/token", post(Self::verify_token))
             .with_state(self.manager)
             .fallback(Self::fallback)
     }
@@ -120,6 +121,14 @@ where
         let json = AccessToken::default(token);
 
         (StatusCode::OK, Json(json)).into_response()
+    }
+
+    async fn verify_token(State(manager): State<Arc<T>>) -> impl IntoResponse {
+        info!("POST /verify/token");
+
+        let token: String;
+
+
     }
 
     async fn fallback(method: Method, uri: Uri) -> (StatusCode, String) {
