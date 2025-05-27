@@ -34,6 +34,7 @@ declare global {
         permission: OdrlPermission[];
         prohibition: any[];
         target: UUID;
+        profile: string
     }
 
     export interface OdrlPermission {
