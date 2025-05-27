@@ -40,7 +40,7 @@ const RouteComponent = () => {
     // --- State Management ---
     // Consumer Participant
     const [consumerParticipantOpen, setConsumerParticipantOpen] = useState(false);
-    const [consumerSelectedParticipant, setConsumerSelectedParticipant] = useState<Participant | null>(null);
+    const [_consumerSelectedParticipant, setConsumerSelectedParticipant] = useState<Participant | null>(null);
     const [consumerParticipants, setConsumerParticipants] = useState<Participant[]>([]);
 
     // Catalog
