@@ -28,7 +28,11 @@ pub struct Model {
     pub start: JsonValue, // IT IS A VEC!!
     pub method: String,
     pub uri: Option<String>,
-    pub nonce: String,
+    pub client_nonce: String,
+    pub as_nonce: String,
+    pub interact_ref: String,
+    pub grant_endpoint: String,
+    pub hash: String,
     pub hash_method: Option<String>,
     pub hints: Option<String>, // In reality, it is a value
 }

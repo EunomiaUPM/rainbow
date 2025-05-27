@@ -71,7 +71,7 @@ pub struct WalletInfoResponse {
 pub struct ReachProvider {
     pub id: String,
     pub url: String,
-    pub actions: Vec<String>,
+    pub actions: String,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -86,4 +86,11 @@ pub struct MatchingVCs {
     pub parsed_document: Value,
     pub pending: bool,
     pub wallet: String,
+}
+
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct RedirectResponse {
+    #[serde(rename = "redirectUri")]
+    pub redirect_uri: String,
 }

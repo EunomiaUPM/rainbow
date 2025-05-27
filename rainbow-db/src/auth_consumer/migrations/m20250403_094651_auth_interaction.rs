@@ -35,16 +35,15 @@ impl MigrationTrait for Migration {
             .create_table(
                 Table::create()
                     .table(AuthInteraction::Table)
-                    .col(
-                        ColumnDef::new(AuthInteraction::Id)
-                            .string()
-                            .not_null()
-                            .primary_key()
-                    )
+                    .col(ColumnDef::new(AuthInteraction::Id).string().not_null().primary_key())
                     .col(ColumnDef::new(AuthInteraction::Start).json().not_null())
                     .col(ColumnDef::new(AuthInteraction::Method).string())
                     .col(ColumnDef::new(AuthInteraction::Uri).string())
-                    .col(ColumnDef::new(AuthInteraction::Nonce).string())
+                    .col(ColumnDef::new(AuthInteraction::ClientNonce).string().not_null())
+                    .col(ColumnDef::new(AuthInteraction::ASNonce).string())
+                    .col(ColumnDef::new(AuthInteraction::InteractRef).string())
+                    .col(ColumnDef::new(AuthInteraction::GrantEndpoint).string().not_null())
+                    .col(ColumnDef::new(AuthInteraction::Hash).string())
                     .col(ColumnDef::new(AuthInteraction::HashMethod).string())
                     .col(ColumnDef::new(AuthInteraction::Hints).string())
                     .to_owned(),
@@ -64,7 +63,11 @@ pub enum AuthInteraction {
     Start,
     Method,
     Uri,
-    Nonce,
+    ClientNonce,
+    ASNonce,
+    InteractRef,
+    GrantEndpoint,
+    Hash,
     HashMethod,
     Hints,
 }

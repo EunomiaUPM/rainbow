@@ -35,4 +35,6 @@ pub trait RainbowSSIAuthProviderManagerTrait: Send + Sync {
         vp_token: String,
     ) -> anyhow::Result<(Vec<String>, String)>;
     async fn verify_vc(&self, vc_token: String, vp_holder: String) -> anyhow::Result<()>;
+
+    async fn continue_req(&self, interact_ref: String) -> anyhow::Result<String>;
 }

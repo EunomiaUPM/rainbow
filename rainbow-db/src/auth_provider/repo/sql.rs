@@ -19,10 +19,13 @@
 
 use crate::auth_provider::entities::auth;
 use crate::auth_provider::entities::auth_interaction;
+use crate::auth_provider::entities::auth_interaction::Model;
 use crate::auth_provider::entities::auth_verification;
 use crate::auth_provider::repo::{AuthProviderRepoFactory, AuthProviderRepoTrait};
 use anyhow::bail;
 use axum::async_trait;
+use base64::engine::general_purpose::{STANDARD, URL_SAFE_NO_PAD};
+use base64::Engine;
 use chrono;
 use rainbow_common::auth::gnap::grant_request::Interact4GR;
 use rand::{distributions::Alphanumeric, Rng};
@@ -32,6 +35,7 @@ use sea_orm::{
     QuerySelect,
 };
 use serde_json::Value;
+use sha2::{Digest, Sha256};
 
 #[derive(Clone)]
 pub struct AuthProviderRepoForSql {
@@ -81,7 +85,7 @@ impl AuthProviderRepoTrait for AuthProviderRepoForSql {
         &self,
         consumer: String,
         audience: String,
-        actions: Vec<String>,
+        actions: String,
         interact: Interact4GR,
     ) -> anyhow::Result<(
         auth::Model,
@@ -89,16 +93,33 @@ impl AuthProviderRepoTrait for AuthProviderRepoForSql {
         auth_verification::Model,
     )> {
         let id = uuid::Uuid::new_v4().to_string();
+
         let state: String = rand::thread_rng().sample_iter(&Alphanumeric).take(12).map(char::from).collect();
+        let as_nonce: String = rand::thread_rng().sample_iter(&Alphanumeric).take(36).map(char::from).collect();
         let nonce: String = rand::thread_rng().sample_iter(&Alphanumeric).take(12).map(char::from).collect();
-        let actions: Value = Value::String(serde_json::to_string(&actions).unwrap());
+        let interact_ref: String = rand::thread_rng().sample_iter(&Alphanumeric).take(16).map(char::from).collect();
+
         let start: Value = Value::String(serde_json::to_string(&interact.start).unwrap());
+        let grant_uri = "http://127.0.0.1/access".to_string(); // TODO
+
+        let hash_method = interact.finish.hash_method.unwrap_or_else(|| "sha-256".to_string());
+        let hash_input = format!(
+            "{}\n{}\n{}\n{}",
+            interact.finish.nonce, as_nonce, interact_ref, grant_uri
+        );
+
+        let mut hasher = Sha256::new();
+        hasher.update(hash_input.as_bytes());
+        let result = hasher.finalize();
+
+        let hash = URL_SAFE_NO_PAD.encode(result);
 
         let auth_model = auth::ActiveModel {
             id: ActiveValue::Set(id.clone()),
             consumer: ActiveValue::Set(consumer),
             actions: ActiveValue::Set(actions),
-            status: ActiveValue::Set("Ongoing".to_string()),
+            status: ActiveValue::Set("Pending".to_string()),
+            token: ActiveValue::Set(None),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             ended_at: ActiveValue::Set(None),
             ..Default::default()
@@ -109,8 +130,12 @@ impl AuthProviderRepoTrait for AuthProviderRepoForSql {
             start: ActiveValue::Set(start),
             method: ActiveValue::Set(interact.finish.method),
             uri: ActiveValue::Set(interact.finish.uri),
-            nonce: ActiveValue::Set(interact.finish.nonce),
-            hash_method: ActiveValue::Set(interact.finish.hash_method),
+            client_nonce: ActiveValue::Set(interact.finish.nonce),
+            as_nonce: ActiveValue::Set(as_nonce),
+            interact_ref: ActiveValue::Set(interact_ref),
+            grant_endpoint: ActiveValue::Set(grant_uri),
+            hash: ActiveValue::Set(hash),
+            hash_method: ActiveValue::Set(Some(hash_method)),
             hints: ActiveValue::Set(None), // TODO
             ..Default::default()
         };
@@ -137,7 +162,7 @@ impl AuthProviderRepoTrait for AuthProviderRepoForSql {
         Ok((auth, auth_interaction, auth_verification))
     }
 
-    async fn update_auth_status(&self, id: String, status: String) -> anyhow::Result<auth::Model> {
+    async fn update_auth_status(&self, id: String, status: String, end: bool) -> anyhow::Result<auth::Model> {
         let mut entry = match auth::Entity::find_by_id(id.clone()).one(&self.db_connection).await {
             Ok(Some(entry)) => entry.into_active_model(),
             Ok(None) => bail!("No entry auth with ID: {}", id),
@@ -145,7 +170,9 @@ impl AuthProviderRepoTrait for AuthProviderRepoForSql {
         };
 
         entry.status = ActiveValue::Set(status);
-        entry.ended_at = ActiveValue::Set(Some(chrono::Utc::now().naive_utc()));
+        if end {
+            entry.ended_at = ActiveValue::Set(Some(chrono::Utc::now().naive_utc()));
+        }
 
         let upd_entry = entry.update(&self.db_connection).await;
 
@@ -191,7 +218,12 @@ impl AuthProviderRepoTrait for AuthProviderRepoForSql {
         }
     }
 
-    async fn get_av_by_id_update_holder(&self, id: String, vpt: String, holder: String) -> anyhow::Result<auth_verification::Model> {
+    async fn get_av_by_id_update_holder(
+        &self,
+        id: String,
+        vpt: String,
+        holder: String,
+    ) -> anyhow::Result<auth_verification::Model> {
         let auth_ver = auth_verification::Entity::find_by_id(&id).one(&self.db_connection).await;
 
         let mut entry = match auth_ver {
@@ -227,11 +259,10 @@ impl AuthProviderRepoTrait for AuthProviderRepoForSql {
         };
 
         ver_entry.success = ActiveValue::Set(Some(result));
-        auth_entry.ended_at = ActiveValue::Set(Some(chrono::Utc::now().naive_utc()));
         if result {
-            auth_entry.status = ActiveValue::Set("Completed".to_string());
+            auth_entry.status = ActiveValue::Set("Processing".to_string());
         } else {
-            auth_entry.status = ActiveValue::Set("Failed".to_string());
+            auth_entry.status = ActiveValue::Set("Finalized".to_string());
         }
 
         let upd_entry = ver_entry.update(&self.db_connection).await;
@@ -244,6 +275,42 @@ impl AuthProviderRepoTrait for AuthProviderRepoForSql {
         match upd_entry2 {
             Ok(auth_entry) => Ok(()),
             Err(e) => bail!("Failed to update status: {}", e),
+        }
+    }
+
+    async fn save_token(&self, id: String, token: String) -> anyhow::Result<auth::Model> {
+        let auth = auth::Entity::find_by_id(&id).one(&self.db_connection).await;
+
+        let mut auth_entry = match auth {
+            Ok(Some(auth)) => auth.into_active_model(),
+            Ok(None) => bail!("No authentication with id {}", id),
+            Err(e) => bail!("Failed to fetch data: {}", e),
+        };
+
+        auth_entry.token = ActiveValue::Set(Some(token));
+        auth_entry.status = ActiveValue::Set("Approved".to_string());
+
+        let upd_model = auth_entry.update(&self.db_connection).await;
+
+        match upd_model {
+            Ok(upd_entry) => Ok(upd_entry),
+            Err(e) => bail!("Failed to save in db: {}", e),
+        }
+    }
+
+    async fn get_auth_by_interact_ref(&self, interact_ref: String) -> anyhow::Result<String> {
+        let auth = auth_interaction::Entity::find()
+            .filter(auth_interaction::Column::InteractRef.eq(interact_ref.clone()))
+            .one(&self.db_connection)
+            .await;
+
+        match auth {
+            Ok(Some(auth)) => Ok(auth.id),
+            Ok(None) => bail!(
+                "No verification from authentication with interact_ref {}",
+                interact_ref
+            ),
+            Err(e) => bail!("Failed to fetch data: {}", e),
         }
     }
 }

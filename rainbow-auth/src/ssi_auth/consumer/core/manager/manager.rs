@@ -20,7 +20,7 @@
 use super::{RainbowSSIAuthConsumerManagerTrait, RainbowSSIAuthConsumerWalletTrait};
 use crate::setup::consumer::AuthConsumerApplicationConfig;
 use crate::ssi_auth::consumer::core::types::{
-    AuthJwtClaims, DidsInfo, MatchingVCs, WalletInfo, WalletInfoResponse, WalletLoginResponse,
+    AuthJwtClaims, DidsInfo, MatchingVCs, RedirectResponse, WalletInfo, WalletInfoResponse, WalletLoginResponse,
 };
 use anyhow::bail;
 use axum::http::StatusCode;
@@ -29,7 +29,8 @@ use axum::{async_trait, Json};
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
 use once_cell::sync::Lazy;
-use rainbow_common::auth::gnap::{GrantRequest, GrantResponse};
+use rainbow_common::auth::gnap::{AccessToken, GrantRequest, GrantResponse};
+use rainbow_db::auth_consumer::entities::auth;
 use rainbow_db::auth_consumer::entities::auth_verification::Model;
 use rainbow_db::auth_consumer::repo::AuthConsumerRepoTrait;
 use reqwest::header::{HeaderMap, ACCEPT, AUTHORIZATION, CONTENT_TYPE};
@@ -37,6 +38,7 @@ use reqwest::Client;
 use sea_orm_migration::cli::Cli;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::{json, Serializer, Value};
+use sha2::{Digest, Sha256};
 use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tokio::sync::Mutex;
@@ -54,6 +56,7 @@ where
     pub auth_repo: Arc<T>,
     client: Client,
     config: AuthConsumerApplicationConfig,
+    didweb: Value,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -78,6 +81,7 @@ where
             auth_repo,
             client,
             config,
+            didweb: Value::Null,
         }
     }
 }
@@ -334,6 +338,46 @@ where
         }
         Ok(())
     }
+
+    async fn didweb(&mut self) -> anyhow::Result<Value> {
+        Ok(json!({
+          "@context": [
+            "https://www.w3.org/ns/did/v1",
+            "https://w3id.org/security/suites/jws-2020/v1"
+          ],
+          "id": "did:web:host.docker.internal%3A1235",
+          "verificationMethod": [
+            {
+              "id": "did:web:host.docker.internal%3A1235#vfn_5i43O2Rs7vFjrpIBUln9LwG2-ALMyfQ-G4_F_8U",
+              "type": "JsonWebKey2020",
+              "controller": "did:web:host.docker.internal%3A1235",
+              "publicKeyJwk": {
+                "kty": "OKP",
+                "crv": "Ed25519",
+                "kid": "vfn_5i43O2Rs7vFjrpIBUln9LwG2-ALMyfQ-G4_F_8U",
+                "x": "6OmRPulFw3MX44mbZ0bedcULKSrPdZlqqsIrwgBhyLs"
+              }
+            }
+          ],
+          "assertionMethod": [
+            "did:web:host.docker.internal%3A1235#vfn_5i43O2Rs7vFjrpIBUln9LwG2-ALMyfQ-G4_F_8U"
+          ],
+          "authentication": [
+            "did:web:host.docker.internal%3A1235#vfn_5i43O2Rs7vFjrpIBUln9LwG2-ALMyfQ-G4_F_8U"
+          ],
+          "capabilityInvocation": [
+            "did:web:host.docker.internal%3A1235#vfn_5i43O2Rs7vFjrpIBUln9LwG2-ALMyfQ-G4_F_8U"
+          ],
+          "capabilityDelegation": [
+            "did:web:host.docker.internal%3A1235#vfn_5i43O2Rs7vFjrpIBUln9LwG2-ALMyfQ-G4_F_8U"
+          ],
+          "keyAgreement": [
+            "did:web:host.docker.internal%3A1235#vfn_5i43O2Rs7vFjrpIBUln9LwG2-ALMyfQ-G4_F_8U"
+          ]
+        }))
+
+        // Ok(self.didweb.clone())
+    }
 }
 
 #[async_trait]
@@ -341,9 +385,10 @@ impl<T> RainbowSSIAuthConsumerManagerTrait for Manager<T>
 where
     T: AuthConsumerRepoTrait + Send + Sync + Clone + 'static,
 {
-    async fn request_access(&self, url: String, provider: String, actions: Vec<String>) -> anyhow::Result<Model> {
+    async fn request_access(&self, url: String, provider: String, actions: String) -> anyhow::Result<Model> {
         let mut body = GrantRequest::default4oidc(
             self.config.ssi_consumer_client.consumer_client.clone(), // TODO change with did:web
+            "push".to_string(),
         );
 
         let id = uuid::Uuid::new_v4().to_string();
@@ -388,18 +433,100 @@ where
             }
         };
 
-        match self.auth_repo.auth_accepted(model.id.clone(), res.instance_id.unwrap()).await {
+        let interact = res.interact.unwrap();
+
+        match self
+            .auth_repo
+            .auth_pending(
+                model.id.clone(),
+                res.instance_id.unwrap(),
+                interact.finish.unwrap(),
+            )
+            .await
+        {
             Ok(model) => {
                 info!("Assigned id updated successfully");
             }
             Err(e) => bail!("Unable to update assigned id in db: {}", e),
         };
 
-        let model = match self
+        let model = match self.auth_repo.create_auth_verification(model.id.clone(), interact.oidc4vp.unwrap()).await {
+            Ok(model) => {
+                info!("Verification data stored successfully");
+                model
+            }
+            Err(e) => bail!("Unable to save verification in db: {}", e),
+        };
+
+        Ok(model)
+    }
+
+    async fn manual_request_access(&self, url: String, provider: String, actions: String) -> anyhow::Result<Model> {
+        let mut body = GrantRequest::default4oidc(
+            self.config.ssi_consumer_client.consumer_client.clone(), // TODO change with did:web
+            "redirect".to_string(),
+        );
+
+        let id = uuid::Uuid::new_v4().to_string();
+        body.update_actions(actions.clone());
+        let callback = format!(
+            "http://{}:{}/callback/manual/{}",
+            self.config.core_host.url,
+            self.config.core_host.port,
+            id.clone()
+        );
+        body.update_callback(callback);
+
+        let model = match self.auth_repo.create_auth(id, provider, actions, body.interact.clone()).await {
+            Ok(model) => {
+                info!("exchange saved successfully");
+                model
+            }
+            Err(e) => bail!("Unable to save exchange in db: {}", e),
+        };
+
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "application/json".parse()?);
+        headers.insert(ACCEPT, "application/json".parse()?);
+
+        info!("Sending Grant Petition to Provider");
+
+        let res = self.client.post(url).headers(headers).json(&body).send().await;
+
+        let res = match res {
+            Ok(res) => res,
+            Err(e) => bail!("Error sending request: {}", e),
+        };
+
+        let mut res: GrantResponse = match res.status().as_u16() {
+            200 => {
+                info!("Grant Response received successfully");
+                res.json().await?
+            }
+            _ => {
+                error!("Grant Response failed: {}", res.status());
+                bail!("Grant Response failed: {}", res.status())
+            }
+        };
+
+        let interact = res.interact.unwrap();
+
+        match self
             .auth_repo
-            .create_auth_verification(model.id.clone(), res.interact.unwrap().oidc4vp.unwrap())
+            .auth_pending(
+                model.id.clone(),
+                res.instance_id.unwrap(),
+                interact.finish.unwrap(),
+            )
             .await
         {
+            Ok(model) => {
+                info!("Assigned id updated successfully");
+            }
+            Err(e) => bail!("Unable to update assigned id in db: {}", e),
+        };
+
+        let model = match self.auth_repo.create_auth_verification(model.id.clone(), interact.oidc4vp.unwrap()).await {
             Ok(model) => {
                 info!("Verification data stored successfully");
                 model
@@ -506,7 +633,7 @@ where
         }
     }
 
-    async fn present_vp(&self, preq: String, creds: Vec<String>) -> anyhow::Result<()> {
+    async fn present_vp(&self, preq: String, creds: Vec<String>) -> anyhow::Result<RedirectResponse> {
         if self.wallet_session.wallets.first().is_none() {
             bail!("There is not a wallet registered")
         };
@@ -538,24 +665,88 @@ where
         };
 
         let status = res.status();
-        let body_text = res.text().await?;
-
-        println!("Status: {}", status);
-        println!("Body: {}", body_text);
-        Ok(())
+        let body: RedirectResponse = res.json().await?;
+        // TODO
+        Ok(body)
     }
 
-    async fn continue_request(&self, id: String, nonce: String) -> anyhow::Result<()> {
-        let model = match self.auth_repo.get_interaction_by_id(id).await {
-            Ok(interaction) => interaction,
-            Err(e) => bail!("Error retrieving interaction: {}", e),
+    async fn do_callback(&self, uri: String) -> anyhow::Result<()> {
+        // TODO
+        Ok(())
+    }
+    async fn check_callback(&self, id: String, interact_ref: String, hash: String) -> anyhow::Result<String> {
+        let model = match self.auth_repo.update_interaction_by_id(id, interact_ref, hash.clone()).await {
+            Ok(model) => model,
+            Err(e) => bail!("Error getting interaction by id: {}", e),
         };
 
-        if model.nonce != nonce {
-            bail!("Invalid nonce");
+        let hash_method = model.hash_method.unwrap_or_else(|| "sha-256".to_string());
+        let hash_input = format!(
+            "{}\n{}\n{}\n{}",
+            model.client_nonce,
+            model.as_nonce.unwrap(),
+            model.interact_ref.unwrap(),
+            model.grant_endpoint
+        );
+
+        let mut hasher = Sha256::new();
+        hasher.update(hash_input.as_bytes());
+        let result = hasher.finalize();
+
+        let calculated_hash = URL_SAFE_NO_PAD.encode(result);
+
+        if calculated_hash != hash {
+            bail!("Incorrect hash")
         }
 
-        Ok(())
+        info!("Hash matches the calculated one");
+        Ok(model.grant_endpoint)
+    }
+
+    async fn continue_request(&self, id: String, interact_ref: String, uri: String) -> anyhow::Result<auth::Model> {
+        // TODO WAIT 5 SECONDS
+        info!("Continuing request");
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "application/json".parse()?);
+        headers.insert(ACCEPT, "application/json".parse()?);
+
+        let body = json!({
+            "interact_ref": interact_ref
+        });
+
+        let mut url = Url::parse(&uri)?;
+        let path = url.path();
+        let new_path = path.rsplit('/').skip(1).collect::<Vec<&str>>().join("/");
+        let new_url = url.join(&format!("/{}", new_path))?;
+        let final_url = new_url.join("continue")?;
+        // TODO
+        let final_url = "http://127.0.0.1:1234/continue".to_string();
+        let res = self.client.post(final_url.to_string()).headers(headers).json(&body).send().await;
+
+        let res = match res {
+            Ok(res) => res,
+            Err(e) => bail!("Error sending request: {}", e),
+        };
+
+        // TODO MERECE LA PENA PONER ESTADO PROCCESING??
+        // TODO
+        let res: AccessToken = match res.status().as_u16() {
+            200 => {
+                info!("Success retrieving the token");
+                res.json().await?
+            }
+            _ => {
+                error!("Error retrieving the token: {}", res.status());
+                bail!("Error retrieving the token: {}", res.status());
+            }
+        };
+
+        let model = match self.auth_repo.grant_req_approved(id, res.value).await {
+            Ok(model) => model,
+            Err(e) => bail!("Error saving data: {}", e),
+        };
+
+        Ok(model)
     }
 }
 

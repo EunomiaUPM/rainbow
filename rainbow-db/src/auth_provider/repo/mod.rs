@@ -49,14 +49,14 @@ pub trait AuthProviderRepoTrait {
         &self,
         consumer: String,
         audience: String,
-        actions: Vec<String>,
+        actions: String,
         interact: Interact4GR,
     ) -> anyhow::Result<(
         auth::Model,
         auth_interaction::Model,
         auth_verification::Model,
     )>;
-    async fn update_auth_status(&self, id: String, status: String) -> anyhow::Result<auth::Model>;
+    async fn update_auth_status(&self, id: String, status: String, end: bool) -> anyhow::Result<auth::Model>;
     async fn delete_auth(&self, id: String) -> anyhow::Result<auth::Model>;
 
     async fn get_interaction_by_id(&self, id: String) -> anyhow::Result<auth_interaction::Model>;
@@ -71,4 +71,8 @@ pub trait AuthProviderRepoTrait {
     ) -> anyhow::Result<auth_verification::Model>;
 
     async fn update_verification_result(&self, id: String, result: bool) -> anyhow::Result<()>;
+
+    async fn save_token(&self, id: String, token: String) -> anyhow::Result<auth::Model>;
+
+    async fn get_auth_by_interact_ref(&self, interact_ref: String) -> anyhow::Result<String>;
 }
