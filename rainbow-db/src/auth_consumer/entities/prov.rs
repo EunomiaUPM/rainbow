@@ -23,7 +23,12 @@ use sea_orm::entity::prelude::*;
 #[sea_orm(table_name = "prov")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: String,
     pub provider: String,
     pub provider_route: String,
+    pub onboard: bool,
 }
+
+#[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
+pub enum Relation {}
+
+impl ActiveModelBehavior for ActiveModel {}

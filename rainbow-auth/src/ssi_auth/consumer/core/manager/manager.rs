@@ -462,6 +462,14 @@ where
     }
 
     async fn manual_request_access(&self, url: String, provider: String, actions: String) -> anyhow::Result<Model> {
+        let _ = match self.auth_repo.create_prov(provider.clone(), url.clone()).await {
+            Ok(model) => {
+                info!("Provider saved successfully");
+                model
+            }
+            Err(e) => bail!("Unable to save provider in db: {}", e),
+        };
+
         let mut body = GrantRequest::default4oidc(
             self.config.ssi_consumer_client.consumer_client.clone(), // TODO change with did:web
             "redirect".to_string(),
@@ -742,6 +750,11 @@ where
         };
 
         let model = match self.auth_repo.grant_req_approved(id, res.value).await {
+            Ok(model) => model,
+            Err(e) => bail!("Error saving data: {}", e),
+        };
+
+        let _ = match self.auth_repo.prov_onboard(model.provider.clone()).await {
             Ok(model) => model,
             Err(e) => bail!("Error saving data: {}", e),
         };

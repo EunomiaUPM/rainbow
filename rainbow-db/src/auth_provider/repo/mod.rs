@@ -75,4 +75,5 @@ pub trait AuthProviderRepoTrait {
     async fn save_token(&self, id: String, token: String) -> anyhow::Result<auth::Model>;
 
     async fn get_auth_by_interact_ref(&self, interact_ref: String) -> anyhow::Result<String>;
+    async fn is_token_in_db(&self, token: String) -> anyhow::Result<bool>;
 }

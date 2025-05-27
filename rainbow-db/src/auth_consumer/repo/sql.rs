@@ -20,6 +20,7 @@
 use crate::auth_consumer::entities::auth;
 use crate::auth_consumer::entities::auth_interaction;
 use crate::auth_consumer::entities::auth_verification;
+use crate::auth_consumer::entities::prov;
 use crate::auth_consumer::repo::{AuthConsumerRepoFactory, AuthConsumerRepoTrait};
 use anyhow::{anyhow, bail};
 use axum::async_trait;
@@ -29,6 +30,7 @@ use sea_orm::sqlx::types::uuid;
 use sea_orm::{ActiveModelTrait, ActiveValue, DatabaseConnection, EntityTrait, IntoActiveModel, QuerySelect};
 use serde_json::Value;
 use url::Url;
+use crate::auth_consumer::entities::prov::Model;
 
 #[derive(Clone)]
 pub struct AuthConsumerRepoForSql {
@@ -217,7 +219,7 @@ impl AuthConsumerRepoTrait for AuthConsumerRepoForSql {
         Ok(auth_verification_model)
     }
 
-    async fn grant_req_approved(&self, id: String, jwt: String) -> anyhow::Result<auth::Model> {
+    async fn grant_req_approved(&self, id: String, jwt: String) -> anyhow::Result<(auth::Model)> {
         let mut entry = match auth::Entity::find_by_id(&id).one(&self.db_connection).await {
             Ok(Some(entry)) => entry.into_active_model(),
             Ok(None) => bail!("No entry auth with ID: {}", id),
@@ -230,5 +232,62 @@ impl AuthConsumerRepoTrait for AuthConsumerRepoForSql {
         let upd_entry = entry.update(&self.db_connection).await?;
 
         Ok(upd_entry)
+    }
+
+    async fn create_prov(&self, provider: String, provider_route: String) -> anyhow::Result<()> {
+
+        let prov_model = prov::ActiveModel {
+            provider: ActiveValue::Set(provider.clone()),
+            provider_route: ActiveValue::Set(provider_route),
+            onboard: ActiveValue::Set(false),
+        };
+
+        let prov = prov::Entity::insert(prov_model).exec_with_returning(&self.db_connection).await;
+
+        match prov {
+            Ok(prov) => Ok(()),
+            Err(e) if e.to_string().contains("duplicate key") => {
+                // Trying to save a provider that already exists
+                Ok(())
+            }
+            Err(e) => Err(e.into()),
+        }
+
+    }
+
+    async fn prov_onboard(&self, provider: String) -> anyhow::Result<()> {
+        let mut entry = match prov::Entity::find_by_id(&provider).one(&self.db_connection).await {
+            Ok(Some(entry)) => entry.into_active_model(),
+            Ok(None) => bail!("No provider auth with ID: {}", provider),
+            Err(e) => bail!("Failed to fetch data: {}", e),
+        };
+
+        entry.onboard = ActiveValue::Set(true);
+
+        let upd_entry = entry.update(&self.db_connection).await?;
+
+        Ok(())
+    }
+
+    async fn get_all_provs(&self) -> anyhow::Result<Vec<Model>> {
+        let provs = prov::Entity::find()
+            .limit(100000)
+            .offset(0)
+            .all(&self.db_connection)
+            .await;
+        match provs {
+            Ok(provs) => Ok(provs),
+            Err(e) => bail!("Failed to fetch data: {}", e),
+        }
+    }
+
+    async fn get_prov(&self, provider: String) -> anyhow::Result<Model> {
+        let prov = prov::Entity::find_by_id(&provider).one(&self.db_connection).await;
+
+        match prov {
+            Ok(Some(prov)) => Ok(prov),
+            Ok(None) => bail!("NO authentication with id {}", provider),
+            Err(e) => bail!("Failed to fetch data: {}", e),
+        }
     }
 }
