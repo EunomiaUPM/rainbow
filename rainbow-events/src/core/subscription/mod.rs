@@ -33,6 +33,10 @@ pub trait RainbowEventsSubscriptionTrait: Send + Sync {
         &self,
         subscription_id: Urn,
     ) -> anyhow::Result<RainbowEventsSubscriptionCreationResponse>;
+    async fn get_subscription_by_callback_url(
+        &self,
+        callback_url: String,
+    ) -> anyhow::Result<RainbowEventsSubscriptionCreationResponse>;
     async fn put_subscription_by_id(
         &self,
         subscription_id: Urn,

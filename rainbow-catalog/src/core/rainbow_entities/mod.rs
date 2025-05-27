@@ -49,6 +49,7 @@ pub trait RainbowCatalogTrait: Send + Sync {
 #[async_trait]
 pub trait RainbowDatasetTrait: Send + Sync {
     async fn get_dataset_by_id(&self, dataset_id: Urn) -> anyhow::Result<Dataset>;
+    async fn get_datasets_by_catalog_id(&self, catalog_id: Urn) -> anyhow::Result<Vec<Dataset>>;
     async fn post_dataset(&self, catalog_id: Urn, input: NewDatasetRequest) -> anyhow::Result<Dataset>;
     async fn put_dataset(&self, catalog_id: Urn, dataset_id: Urn, input: NewDatasetRequest) -> anyhow::Result<Dataset>;
     async fn delete_dataset(&self, catalog_id: Urn, dataset_id: Urn) -> anyhow::Result<()>;
@@ -58,6 +59,7 @@ pub trait RainbowDatasetTrait: Send + Sync {
 #[async_trait]
 pub trait RainbowDataServiceTrait: Send + Sync {
     async fn get_data_service_by_id(&self, data_service_id: Urn) -> anyhow::Result<DataService>;
+    async fn get_data_services_by_catalog_id(&self, catalog_id: Urn) -> anyhow::Result<Vec<DataService>>;
     async fn post_data_service(&self, catalog_id: Urn, input: NewDataServiceRequest) -> anyhow::Result<DataService>;
     async fn put_data_service(
         &self,

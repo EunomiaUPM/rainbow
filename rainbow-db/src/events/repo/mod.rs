@@ -76,6 +76,10 @@ pub trait SubscriptionRepo {
         &self,
         subscription_id: Urn,
     ) -> anyhow::Result<Option<subscription::Model>, EventRepoErrors>;
+    async fn get_subscription_by_callback_string(
+        &self,
+        callback_string: String,
+    ) -> anyhow::Result<Option<subscription::Model>, EventRepoErrors>;
     async fn put_subscription_by_id(
         &self,
         subscription_id: Urn,

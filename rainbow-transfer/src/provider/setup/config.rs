@@ -44,20 +44,46 @@ impl Default for TransferProviderApplicationConfig {
     }
 }
 
-
 impl ApplicationProviderConfigTrait for TransferProviderApplicationConfig {
-    fn ssh_user(&self) -> Option<String> { self.ssh_user.clone() }
-    fn ssh_private_key_path(&self) -> Option<String> { self.ssh_private_key_path.clone() }
-    fn is_datahub_as_catalog(&self) -> bool { self.catalog_as_datahub }
-    fn get_role(&self) -> ConfigRoles { self.role }
-    fn get_raw_transfer_process_host(&self) -> &Option<HostConfig> { &self.transfer_process_host }
-    fn get_raw_business_system_host(&self) -> &Option<HostConfig> { &self.business_system_host }
-    fn get_raw_catalog_host(&self) -> &Option<HostConfig> { &self.catalog_host }
-    fn get_raw_datahub_host(&self) -> &Option<HostConfig> { &self.datahub_host }
-    fn get_raw_contract_negotiation_host(&self) -> &Option<HostConfig> { &self.contract_negotiation_host }
-    fn get_raw_auth_host(&self) -> &Option<HostConfig> { &self.auth_host }
-    fn get_raw_ssi_auth_host(&self) -> &Option<HostConfig> { &self.ssi_auth_host }
-    fn get_raw_database_config(&self) -> &DatabaseConfig { &self.database_config }
+    fn ssh_user(&self) -> Option<String> {
+        self.ssh_user.clone()
+    }
+    fn ssh_private_key_path(&self) -> Option<String> {
+        self.ssh_private_key_path.clone()
+    }
+    fn is_datahub_as_catalog(&self) -> bool {
+        self.catalog_as_datahub
+    }
+    fn get_role(&self) -> ConfigRoles {
+        self.role
+    }
+    fn get_raw_transfer_process_host(&self) -> &Option<HostConfig> {
+        &self.transfer_process_host
+    }
+    fn get_raw_business_system_host(&self) -> &Option<HostConfig> {
+        &self.business_system_host
+    }
+    fn get_raw_catalog_host(&self) -> &Option<HostConfig> {
+        &self.catalog_host
+    }
+    fn get_raw_datahub_host(&self) -> &Option<HostConfig> {
+        &self.datahub_host
+    }
+    fn get_raw_contract_negotiation_host(&self) -> &Option<HostConfig> {
+        &self.contract_negotiation_host
+    }
+    fn get_raw_auth_host(&self) -> &Option<HostConfig> {
+        &self.auth_host
+    }
+    fn get_raw_gateway_host(&self) -> &Option<HostConfig> {
+        &None
+    }
+    fn get_raw_ssi_auth_host(&self) -> &Option<HostConfig> {
+        &self.ssi_auth_host
+    }
+    fn get_raw_database_config(&self) -> &DatabaseConfig {
+        &self.database_config
+    }
     fn merge_dotenv_configuration(&self) -> Self {
         let app_config = ApplicationProviderConfig::default().merge_dotenv_configuration();
         TransferProviderApplicationConfig::from(app_config)
@@ -94,6 +120,7 @@ impl Into<ApplicationProviderConfig> for TransferProviderApplicationConfig {
             contract_negotiation_host: self.contract_negotiation_host,
             auth_host: self.auth_host,
             ssi_auth_host: self.ssi_auth_host,
+            gateway_host: None,
             database_config: self.database_config,
             ssh_user: self.ssh_user,
             ssh_private_key_path: self.ssh_private_key_path,

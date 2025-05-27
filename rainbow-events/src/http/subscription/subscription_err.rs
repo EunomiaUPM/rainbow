@@ -56,7 +56,15 @@ impl IntoResponse for SubscriptionErrors {
                     title: "UUID_SCHEMA".to_string(),
                     message: e.to_string(),
                 }),
-            ).into_response()
+            ).into_response(),
+            e @ SubscriptionErrors::SubscriptionCallbackAddressExists { .. } => (
+                StatusCode::BAD_REQUEST,
+                Json(SubscriptionErrorMessage {
+                    code: "400".to_string(),
+                    title: "SUBSCRIPTION_CALLBACK_EXISTS".to_string(),
+                    message: e.to_string(),
+                }),
+            ).into_response(),
         }
     }
 }

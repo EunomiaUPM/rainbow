@@ -22,7 +22,9 @@ use crate::core::subscription::subscription_types::{
     RainbowEventsSubscriptionCreationRequest, RainbowEventsSubscriptionCreationResponse, SubscriptionEntities,
 };
 use crate::core::subscription::RainbowEventsSubscriptionTrait;
+use anyhow::bail;
 use axum::async_trait;
+use rainbow_common::utils::get_urn;
 use rainbow_db::events::repo::{EditSubscription, EventsRepoFactory, NewSubscription};
 use std::sync::Arc;
 use urn::Urn;
@@ -65,6 +67,16 @@ where
         Ok(subscription)
     }
 
+    async fn get_subscription_by_callback_url(&self, callback_url: String) -> anyhow::Result<RainbowEventsSubscriptionCreationResponse> {
+        let subscription = self.repo
+            .get_subscription_by_callback_string(callback_url)
+            .await
+            .map_err(|e| SubscriptionErrors::DbErr(e.into()))?
+            .ok_or(SubscriptionErrors::NotFound { id: get_urn(None), entity: "Subscription".to_string() })?;
+        let subscription = RainbowEventsSubscriptionCreationResponse::try_from(subscription)?;
+        Ok(subscription)
+    }
+
     async fn put_subscription_by_id(
         &self,
         subscription_id: Urn,
@@ -91,6 +103,14 @@ where
         input: RainbowEventsSubscriptionCreationRequest,
         subscription_type: SubscriptionEntities,
     ) -> anyhow::Result<RainbowEventsSubscriptionCreationResponse> {
+        let subscription = self
+            .repo
+            .get_subscription_by_callback_string(input.callback_address.clone()).await
+            .map_err(|e| SubscriptionErrors::DbErr(e.into()))?;
+        if subscription.is_some() {
+            bail!(SubscriptionErrors::SubscriptionCallbackAddressExists(subscription.unwrap().callback_address))
+        }
+
         let subscription = self
             .repo
             .create_subscription(NewSubscription {

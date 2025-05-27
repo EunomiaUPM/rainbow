@@ -48,6 +48,10 @@ where
             .route("/api/v1/datasets/:id", get(Self::handle_get_dataset_by_id))
             .route(
                 "/api/v1/catalogs/:id/datasets",
+                get(Self::handle_get_datasets_by_catalog_id),
+            )
+            .route(
+                "/api/v1/catalogs/:id/datasets",
                 post(Self::handle_post_dataset),
             )
             .route(
@@ -71,6 +75,24 @@ where
             Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
         };
         match dataset_service.get_dataset_by_id(dataset_id).await {
+            Ok(d) => (StatusCode::OK, Json(d)).into_response(),
+            Err(err) => match err.downcast::<CatalogError>() {
+                Ok(e) => e.into_response(),
+                Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+            },
+        }
+    }
+
+    async fn handle_get_datasets_by_catalog_id(
+        State(dataset_service): State<Arc<T>>,
+        Path(id): Path<String>,
+    ) -> impl IntoResponse {
+        info!("GET /api/v1/catalogs/{}/datasets", id);
+        let catalog_id = match get_urn_from_string(&id) {
+            Ok(id) => id,
+            Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
+        };
+        match dataset_service.get_datasets_by_catalog_id(catalog_id).await {
             Ok(d) => (StatusCode::OK, Json(d)).into_response(),
             Err(err) => match err.downcast::<CatalogError>() {
                 Ok(e) => e.into_response(),

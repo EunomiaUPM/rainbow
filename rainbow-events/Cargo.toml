@@ -30,8 +30,5 @@ chrono = { workspace = true }
 urn = { workspace = true }
 uuid = { workspace = true }
 log = { workspace = true }
-tracing-test = { workspace = true }
-sea-orm = { workspace = true }
-sea-orm-migration = { workspace = true }
-json_to_table = { workspace = true }
 mockall = { workspace = true }
+urlencoding = { workspace = true }

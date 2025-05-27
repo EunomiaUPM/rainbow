@@ -24,7 +24,7 @@ use anyhow::bail;
 use axum::async_trait;
 use rainbow_common::protocol::catalog::dataset_definition::Dataset;
 use rainbow_common::protocol::catalog::EntityTypes;
-use rainbow_db::catalog::repo::{CatalogRepo, DataServiceRepo, DatasetRepo, DistributionRepo, OdrlOfferRepo};
+use rainbow_db::catalog::repo::{CatalogRepo, CatalogRepoErrors, DataServiceRepo, DatasetRepo, DistributionRepo, OdrlOfferRepo};
 use rainbow_events::core::notification::notification_types::{RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory, RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes};
 use rainbow_events::core::notification::RainbowEventsNotificationTrait;
 use serde_json::{json, to_value};
@@ -66,6 +66,22 @@ where
             }
             None => bail!(CatalogError::NotFound { id: dataset_id, entity: EntityTypes::Dataset.to_string() }),
         }
+    }
+
+    async fn get_datasets_by_catalog_id(&self, catalog_id: Urn) -> anyhow::Result<Vec<Dataset>> {
+        let datasets = self.repo.get_datasets_by_catalog_id(catalog_id.clone())
+            .await
+            .map_err(|e| match e {
+                CatalogRepoErrors::CatalogNotFound => CatalogError::NotFound {
+                    id: catalog_id,
+                    entity: EntityTypes::Catalog.to_string(),
+                },
+                err => CatalogError::DbErr(err),
+            })?;
+        let datasets = datasets.iter()
+            .map(|d| Dataset::try_from(d.to_owned()).unwrap())
+            .collect();
+        Ok(datasets)
     }
 
     async fn post_dataset(&self, catalog_id: Urn, input: NewDatasetRequest) -> anyhow::Result<Dataset> {

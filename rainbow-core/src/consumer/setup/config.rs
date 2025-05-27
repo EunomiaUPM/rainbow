@@ -17,7 +17,6 @@
  *
  */
 
-
 use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
 use rainbow_common::config::global_config::{DatabaseConfig, HostConfig};
 use rainbow_common::config::ConfigRoles;
@@ -40,15 +39,36 @@ impl Default for CoreApplicationConsumerConfig {
 }
 
 impl ApplicationConsumerConfigTrait for CoreApplicationConsumerConfig {
-    fn ssh_user(&self) -> Option<String> { self.ssh_user.clone() }
-    fn ssh_private_key_path(&self) -> Option<String> { self.ssh_private_key_path.clone() }
-    fn get_role(&self) -> ConfigRoles { self.role }
-    fn get_raw_transfer_process_host(&self) -> &Option<HostConfig> { &self.core_host }
-    fn get_raw_business_system_host(&self) -> &Option<HostConfig> { &self.business_system_host }
-    fn get_raw_contract_negotiation_host(&self) -> &Option<HostConfig> { &self.core_host }
-    fn get_raw_auth_host(&self) -> &Option<HostConfig> { &self.core_host }
-    fn get_raw_ssi_auth_host(&self) -> &Option<HostConfig> { &self.core_host }
-    fn get_raw_database_config(&self) -> &DatabaseConfig { &self.database_config }
+    fn ssh_user(&self) -> Option<String> {
+        self.ssh_user.clone()
+    }
+    fn ssh_private_key_path(&self) -> Option<String> {
+        self.ssh_private_key_path.clone()
+    }
+    fn get_role(&self) -> ConfigRoles {
+        self.role
+    }
+    fn get_raw_transfer_process_host(&self) -> &Option<HostConfig> {
+        &self.core_host
+    }
+    fn get_raw_business_system_host(&self) -> &Option<HostConfig> {
+        &self.business_system_host
+    }
+    fn get_raw_contract_negotiation_host(&self) -> &Option<HostConfig> {
+        &self.core_host
+    }
+    fn get_raw_auth_host(&self) -> &Option<HostConfig> {
+        &self.core_host
+    }
+    fn get_raw_gateway_host(&self) -> &Option<HostConfig> {
+        &None
+    }
+    fn get_raw_ssi_auth_host(&self) -> &Option<HostConfig> {
+        &self.core_host
+    }
+    fn get_raw_database_config(&self) -> &DatabaseConfig {
+        &self.database_config
+    }
     fn merge_dotenv_configuration(&self) -> Self
     where
         Self: Sized,
@@ -79,6 +99,7 @@ impl Into<ApplicationConsumerConfig> for CoreApplicationConsumerConfig {
             contract_negotiation_host: self.core_host.clone(),
             auth_host: self.core_host.clone(),
             ssi_auth_host: self.core_host.clone(),
+            gateway_host: None,
             database_config: self.database_config,
             ssh_user: self.ssh_user,
             ssh_private_key_path: self.ssh_private_key_path,

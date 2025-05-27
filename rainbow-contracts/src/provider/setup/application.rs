@@ -56,13 +56,13 @@ pub async fn create_contract_negotiation_provider_router(config: &ContractNegoti
     ));
     let subscription_router = RainbowEventsSubscriptionRouter::new(
         subscription_service,
-        Some(SubscriptionEntities::TransferProcess),
+        Some(SubscriptionEntities::ContractNegotiationProcess),
     )
         .router();
     let notification_service = Arc::new(RainbowEventsNotificationsService::new(subscription_repo));
     let notification_router = RainbowEventsNotificationRouter::new(
         notification_service.clone(),
-        Some(SubscriptionEntities::TransferProcess),
+        Some(SubscriptionEntities::ContractNegotiationProcess),
     )
         .router();
 

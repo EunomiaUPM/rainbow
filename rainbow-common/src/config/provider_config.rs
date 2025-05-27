@@ -33,6 +33,7 @@ pub struct ApplicationProviderConfig {
     pub contract_negotiation_host: Option<HostConfig>,
     pub auth_host: Option<HostConfig>,
     pub ssi_auth_host: Option<HostConfig>,
+    pub gateway_host: Option<HostConfig>,
     pub database_config: DatabaseConfig,
     pub ssh_user: Option<String>,
     pub ssh_private_key_path: Option<String>,
@@ -74,6 +75,11 @@ impl Default for ApplicationProviderConfig {
                 url: "127.0.0.1".to_string(),
                 port: "1204".to_string(),
             }),
+            gateway_host: Some(HostConfig {
+                protocol: "http".to_string(),
+                url: "127.0.0.1".to_string(),
+                port: "1205".to_string(),
+            }),
             database_config: DatabaseConfig {
                 db_type: DbType::Postgres,
                 url: "127.0.0.1".to_string(),
@@ -101,6 +107,7 @@ pub trait ApplicationProviderConfigTrait {
     fn get_raw_datahub_host(&self) -> &Option<HostConfig>;
     fn get_raw_contract_negotiation_host(&self) -> &Option<HostConfig>;
     fn get_raw_auth_host(&self) -> &Option<HostConfig>;
+    fn get_raw_gateway_host(&self) -> &Option<HostConfig>;
     fn get_raw_ssi_auth_host(&self) -> &Option<HostConfig>;
     fn get_raw_database_config(&self) -> &DatabaseConfig;
     // implemented stuff
@@ -125,6 +132,9 @@ pub trait ApplicationProviderConfigTrait {
     }
     fn get_auth_host_url(&self) -> Option<String> {
         self.get_raw_auth_host().as_ref().map(format_host_config_to_url_string)
+    }
+    fn get_gateway_host_url(&self) -> Option<String> {
+        self.get_raw_gateway_host().as_ref().map(format_host_config_to_url_string)
     }
     fn get_ssi_auth_host_url(&self) -> Option<String> {
         self.get_raw_ssi_auth_host().as_ref().map(format_host_config_to_url_string)
@@ -181,6 +191,8 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
     fn get_raw_auth_host(&self) -> &Option<HostConfig> {
         &self.auth_host
     }
+    fn get_raw_gateway_host(&self) -> &Option<HostConfig> { &self.gateway_host }
+
     fn get_raw_ssi_auth_host(&self) -> &Option<HostConfig> {
         &self.ssi_auth_host
     }
@@ -268,6 +280,14 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
                 ),
                 url: extract_env("SSI_AUTH_URL", default.ssi_auth_host.clone().unwrap().url),
                 port: extract_env("SSI_AUTH_PORT", default.ssi_auth_host.clone().unwrap().port),
+            }),
+            gateway_host: Some(HostConfig {
+                protocol: extract_env(
+                    "GATEWAY_PROTOCOL",
+                    default.gateway_host.clone().unwrap().protocol,
+                ),
+                url: extract_env("GATEWAY_HOST", default.gateway_host.clone().unwrap().url),
+                port: extract_env("GATEWAY_PORT", default.gateway_host.clone().unwrap().port),
             }),
             database_config: DatabaseConfig {
                 db_type: extract_env("DB_TYPE", default.database_config.db_type.to_string()).parse().unwrap(),
