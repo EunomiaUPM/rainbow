@@ -21,12 +21,13 @@
 // use tracing_subscriber::fmt::format;
 
 use crate::ssi_auth::provider::core::manager::RainbowSSIAuthProviderManagerTrait;
+use crate::ssi_auth::provider::core::types::RefBody;
 use axum::extract::{Form, Path, State};
 use axum::http::{Method, Uri};
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::{Json, Router};
-use rainbow_common::auth::gnap::{GrantRequest, GrantResponse};
+use rainbow_common::auth::gnap::{AccessToken, GrantRequest, GrantResponse};
 use rainbow_db::auth_provider::repo::AuthProviderRepoTrait;
 use reqwest::StatusCode;
 use serde::Deserialize;
@@ -53,6 +54,7 @@ where
             .route("/access", post(Self::access_request))
             .route("/pd/:state", get(Self::pd))
             .route("/verify/:state", post(Self::verify))
+            .route("/continue", post(Self::continue_request))
             .with_state(self.manager)
             .fallback(Self::fallback)
     }
@@ -103,6 +105,23 @@ where
         }
     }
 
+    async fn continue_request(State(manager): State<Arc<T>>, Json(payload): Json<RefBody>) -> impl IntoResponse {
+        info!("POST /continue");
+
+        let token = match manager.continue_req(payload.interact_ref).await {
+            Ok(token) => token,
+            Err(e) => {
+                let error = json!({"error": "error"});
+
+                return (StatusCode::BAD_GATEWAY, Json(error)).into_response();
+            }
+        };
+
+        let json = AccessToken::default(token);
+
+        (StatusCode::OK, Json(json)).into_response()
+    }
+
     async fn fallback(method: Method, uri: Uri) -> (StatusCode, String) {
         let log = format!("{} {}", method, uri);
         info!("{}", log);
@@ -110,18 +129,9 @@ where
     }
 }
 
-// ----------------------------------------------------------------->
-//
-// async fn handle_petition() -> impl IntoResponse {
-//     info!("POST /petition");
-//
-//     let uri = Manager::generate_exchange_uri().await.unwrap();
-//     Json(uri)
-// }
-//
-
 #[derive(Deserialize)]
 struct VerifyPayload {
     vp_token: String,
     presentation_submission: String,
 }
+

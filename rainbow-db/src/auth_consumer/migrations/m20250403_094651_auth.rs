@@ -39,7 +39,8 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Auth::Provider).string().not_null())
                     .col(ColumnDef::new(Auth::Status).string().not_null())
                     .col(ColumnDef::new(Auth::AssignedId).string())
-                    .col(ColumnDef::new(Auth::Actions).json().not_null())
+                    .col(ColumnDef::new(Auth::Actions).string().not_null())
+                    .col(ColumnDef::new(Auth::Token).string())
                     .col(ColumnDef::new(Auth::CreatedAt).date_time().not_null())
                     .col(ColumnDef::new(Auth::EndedAt).date_time())
                     .to_owned(),
@@ -60,6 +61,7 @@ pub enum Auth {
     Provider,
     Actions,
     Status,
+    Token,
     CreatedAt,
     EndedAt,
 }

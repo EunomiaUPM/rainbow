@@ -21,9 +21,9 @@
 // use anyhow::bail;
 // use rainbow_common::err::transfer_err::TransferErrorType;
 
-use crate::ssi_auth::consumer::core::manager::{RainbowSSIAuthConsumerWalletTrait, RainbowSSIAuthConsumerManagerTrait};
-use crate::ssi_auth::consumer::core::Manager;
+use crate::ssi_auth::consumer::core::manager::{RainbowSSIAuthConsumerManagerTrait, RainbowSSIAuthConsumerWalletTrait};
 use crate::ssi_auth::consumer::core::types::ReachProvider;
+use crate::ssi_auth::consumer::core::Manager;
 use axum::extract::{Path, Query, State};
 use axum::http::{Method, Uri};
 use axum::response::IntoResponse;
@@ -32,6 +32,7 @@ use axum::{Json, Router};
 use once_cell::sync::Lazy;
 use rainbow_db::auth_consumer::repo::AuthConsumerRepoTrait;
 use reqwest::StatusCode;
+use serde::Deserialize;
 use serde_json::json;
 use serde_json::Value;
 use std::collections::HashMap;
@@ -63,7 +64,12 @@ where
             .route("/wallet/logout", post(Self::wallet_logout))
             .route("/wallet/onboard", post(Self::wallet_oboard))
             .route("/auth/ssi", post(Self::auth_ssi))
-            .route("/callback/:id", get(Self::callback))
+            .route("/callback/:id", post(Self::callback))
+            .route("/auth/manual/ssi", post(Self::manual_auth_ssi))
+            .route("/callback/manual/:id", get(Self::manual_callback))
+            .route("/.well-known/did.json", get(Self::didweb))
+            // .route("/provider/:id/renew", post(todo!()))
+            // .route("/provider/:id/finalize", post(todo!()))
             .with_state(self.manager)
             .fallback(Self::fallback)
     }
@@ -129,7 +135,8 @@ where
         }
 
         let mut auth_ver;
-        match manager.request_access(payload.url, payload.id, payload.actions).await { // TODO Carlos pasame did:web
+        match manager.request_access(payload.url, payload.id, payload.actions).await {
+            // TODO Carlos pasame did:web
             Ok(auth_ver_model) => auth_ver = auth_ver_model,
             Err(e) => {
                 return {
@@ -204,23 +211,92 @@ where
                 }
             }
         };
-        res
+        res // TODO HABLAR CON CARLOS
     }
+
 
     async fn callback(
         State(manager): State<Arc<Mutex<Manager<T>>>>,
-        Path(state): Path<String>,
+        Path(id): Path<String>,
+        Json(payload): Json<CallbackResponse>,
+    ) -> impl IntoResponse {
+        let log = format!("GET /callback/{}", id);
+        info!(log);
+
+        let hash = payload.hash;
+        let interact_ref = payload.interact_ref;
+
+        let mut manager = manager.lock().await;
+
+        let uri = match manager.check_callback(id.clone(), interact_ref.to_string(), hash.to_string()).await {
+            Ok(uri) => uri,
+            Err(e) => return StatusCode::BAD_REQUEST.into_response(),
+        };
+
+        let res = match manager.continue_request(id, interact_ref.to_string(), uri).await {
+            Ok(res) => res,
+            Err(e) => return StatusCode::BAD_REQUEST.into_response(),
+        };
+
+        res.token.unwrap().into_response() // TODO hablar a carlos
+    }
+
+    async fn manual_auth_ssi(
+        State(manager): State<Arc<Mutex<Manager<T>>>>,
+        Json(payload): Json<ReachProvider>,
+    ) -> impl IntoResponse {
+        info!("POST /auth/manual/ssi");
+
+        let mut manager = manager.lock().await;
+
+        let mut auth_ver;
+        match manager.manual_request_access(payload.url, payload.id, payload.actions).await {
+            // TODO Carlos pasame did:web
+            Ok(auth_ver_model) => auth_ver = auth_ver_model,
+            Err(e) => {
+                return {
+                    (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        Json(json!({"error":"Error contacting the provider"})),
+                    )
+                        .into_response()
+                }
+            }
+        }
+        auth_ver.uri.into_response()
+    }
+
+    async fn manual_callback(
+        State(manager): State<Arc<Mutex<Manager<T>>>>,
+        Path(id): Path<String>,
         Query(params): Query<HashMap<String, String>>,
     ) -> impl IntoResponse {
-        info!("GET /callback");
+        let log = format!("GET /callback/manual/{}", id);
+        info!(log);
 
-        let nonce = match params.get("nonce") {
-            Some(nonce) => nonce,
+        let hash = match params.get("hash") {
+            Some(hash) => hash,
             None => return StatusCode::BAD_REQUEST.into_response(),
         };
 
+        let interact_ref = match params.get("interact_ref") {
+            Some(interact_ref) => interact_ref,
+            None => return StatusCode::BAD_REQUEST.into_response(),
+        };
 
-        StatusCode::OK.into_response()
+        let mut manager = manager.lock().await;
+
+        let uri = match manager.check_callback(id.clone(), interact_ref.to_string(), hash.to_string()).await {
+            Ok(uri) => uri,
+            Err(e) => return StatusCode::BAD_REQUEST.into_response(),
+        };
+
+        let res = match manager.continue_request(id, interact_ref.to_string(), uri).await {
+            Ok(res) => res,
+            Err(e) => return StatusCode::BAD_REQUEST.into_response(),
+        };
+
+        res.token.unwrap().into_response() // TODO hablar a carlos
     }
 
     async fn fallback(method: Method, uri: Uri) -> (StatusCode, String) {
@@ -228,129 +304,15 @@ where
         info!("{}", log);
         (StatusCode::NOT_FOUND, format!("No route for {uri}"))
     }
+
+    async fn didweb(State(manager): State<Arc<Mutex<Manager<T>>>>,) -> impl IntoResponse {
+        let mut manager = manager.lock().await;
+        Json(manager.didweb().await.unwrap())
+    }
 }
 
-// ---------------------------------------------------------------------
-
-// async fn login() -> impl IntoResponse {
-//     let mut session = SESSION_MANAGER.lock().await;
-//
-//     match session.access().await {
-//         Ok(()) => {
-//             info!("Sesion creada con éxito");
-//             Json("Login successful")
-//         }
-//         Err(err) => {
-//             info!("FRACASO");
-//             Json("FRACASO")
-//         }
-//     }
-// }
-//
-// async fn url(Json(payload): Json<MessageRequest>) -> impl IntoResponse {
-//     let mut session = SESSION_MANAGER.lock().await;
-//
-//     match session.access().await {
-//         Ok(()) => {
-//             info!("Sesion creada con éxito");
-//         }
-//         Err(err) => {
-//             info!("FRACASO");
-//         }
-//     }
-//
-//     match session.joinexchange(payload.message).await {
-//         Ok(string) => {
-//             println!();
-//             println!("UURRLL: {}", string);
-//             println!()
-//         }
-//         Err(err) => println!("errror: {}", err),
-//     }
-//
-//     StatusCode::OK
-// }
-//
-// async fn matcheo(Json(payload): Json<MessageRequest>) -> impl IntoResponse {
-//     let mut session = SESSION_MANAGER.lock().await;
-//
-//     match session.access().await {
-//         Ok(()) => {
-//             info!("Sesion creada con éxito");
-//         }
-//         Err(err) => {
-//             info!("FRACASO");
-//         }
-//     }
-//
-//     let res =
-//         session.joinexchange(payload.message).await.unwrap_or_else(|err| String::from("ERROR"));
-//     let url = Url::parse(decode(&res).unwrap().as_ref()).unwrap();
-//
-//     if let Some((_, vpd)) = url.query_pairs().find(|(key, _)| key == "presentation_definition") {
-//         println!("vp: {}", vpd);
-//
-//         match serde_json::from_str::<Value>(&vpd) {
-//             Ok(json) => {
-//                 println!("json: {:?}", json);
-//             }
-//             Err(err) => {
-//                 println!("ERROR")
-//             }
-//         }
-//     } else {
-//         println!("ERROR");
-//     }
-//
-//     StatusCode::OK
-// }
-//
-// async fn exchange(Json(payload): Json<MessageRequest>) -> impl IntoResponse {
-//     let mut session = SESSION_MANAGER.lock().await;
-//
-//     match session.access().await {
-//         Ok(()) => {
-//             info!("Sesion creada con éxito");
-//         }
-//         Err(err) => {
-//             info!("FRACASO");
-//         }
-//     }
-//
-//     let res =
-//         session.joinexchange(payload.message).await.unwrap_or_else(|err| String::from("ERROR"));
-//     println!();
-//     println!("UURRLL1: {}", res);
-//     println!();
-//
-//     let url = Url::parse(decode(&res).unwrap().as_ref()).unwrap();
-//
-//     println!();
-//     println!("UURRLL2: {}", url);
-//     println!();
-//
-//     if let Some((_, vpd)) = url.query_pairs().find(|(key, _)| key == "presentation_definition") {
-//         let vpd = serde_json::from_str::<Value>(&vpd).unwrap();
-//
-//         let vcs = session.match_vc4vp(vpd).await.unwrap();
-//
-//         let mut creds = Vec::new();
-//         for vc in vcs {
-//             creds.push(vc.id);
-//         }
-//
-//         let kk = session.present_vp(res, creds).await.unwrap();
-//     } else {
-//         println!("ERROR");
-//     }
-//
-//     StatusCode::OK
-// }
-//
-//
-// use serde::{Deserialize, Serialize};
-//
-// #[derive(Deserialize, Serialize)]
-// struct MessageRequest {
-//     message: String,
-// }
+#[derive(Deserialize)]
+pub struct CallbackResponse {
+    pub hash: String,
+    pub interact_ref: String,
+}

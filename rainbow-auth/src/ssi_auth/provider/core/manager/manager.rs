@@ -19,7 +19,7 @@
 
 use crate::setup::provider::AuthProviderApplicationConfig;
 use crate::ssi_auth::provider::core::manager::RainbowSSIAuthProviderManagerTrait;
-use crate::ssi_auth::provider::utils::{compare_with_margin, split_did};
+use crate::ssi_auth::provider::utils::{compare_with_margin, create_opaque_token, create_token, split_did};
 use anyhow::bail;
 use axum::async_trait;
 use base64::engine::general_purpose::{STANDARD, URL_SAFE_NO_PAD};
@@ -75,7 +75,7 @@ where
         let provider_url = self.config.get_provider_portal_url();
         let client_id = format!("{}/verify", &provider_url); // TODO TEST
 
-        let actions = payload.access_token.access.actions.unwrap_or_else(|| vec![String::from("talk")]);
+        let actions = payload.access_token.access.actions.unwrap_or_else(|| String::from("talk"));
 
         let (auth_model, interaction_model, verification_model) =
             match self.auth_repo.create_auth(payload.client, client_id.clone(), actions, payload.interact).await {
@@ -108,7 +108,7 @@ where
 
         let uri = format!("{}?response_type={}&client_id={}&response_mode={}&presentation_definition_uri={}&client_id_scheme={}&nonce={}&response_uri={}", base_url, response_type, encoded_client_id, response_mode, encoded_presentation_definition_uri, client_id_scheme, nonce, encoded_response_uri);
         info!("uri generated successfully: {}", uri);
-        Ok((auth_model.id, uri, interaction_model.nonce))
+        Ok((auth_model.id, uri, interaction_model.as_nonce))
     }
 
     async fn generate_vp_def(&self, state: String) -> anyhow::Result<Value> {
@@ -220,13 +220,31 @@ where
             }
         };
 
-        match interact.uri {
-            // TODO OJALA LA WALLET TUVIESE UN CALLBACK DENTRO DE SI MISMA
-            Some(uri) => {
-                let redirect_uri = uri + "?nonce=" + &interact.nonce;
-                Ok(Some(redirect_uri))
+        match interact.method.as_str() {
+            "redirect" => match interact.uri {
+                Some(uri) => {
+                    let redirect_uri = format!(
+                        "{}?hash={}&interact_ref={}",
+                        uri, interact.hash, interact.interact_ref
+                    );
+                    Ok(Some(redirect_uri))
+                }
+                None => Ok(None),
+            },
+            "push" => {
+                match interact.uri {
+                    // TODO ESTO DE MOMENTO NO ESTA SOPORTADO PRO LA WALLET
+                    Some(uri) => {
+                        // let redirect_uri = uri + "?nonce=" + &interact.nonce;
+                        let redirect_uri = uri;
+                        Ok(Some(redirect_uri))
+                    }
+                    None => Ok(None),
+                }
             }
-            None => Ok(None),
+            _ => {
+                bail!("Interact method not supported")
+            }
         }
     }
 
@@ -403,5 +421,34 @@ where
         info!("VC validFrom is correct");
         info!("VC Verification successful");
         Ok(())
+    }
+
+    async fn continue_req(&self, interact_ref: String) -> anyhow::Result<String> {
+        let id = match self.auth_repo.get_auth_by_interact_ref(interact_ref).await {
+            Ok(string) => string,
+            Err(e) => bail!("No interact reference expected"),
+        };
+
+        let model = match self.auth_repo.get_auth_by_id(id.clone()).await {
+            Ok(model) => model,
+            Err(e) => {
+                bail!("Not expected")
+            }
+        };
+
+        // if model.status != "pending" {
+        //     bail!("Too many attempts"); // TODO
+        // }
+
+        // let token = create_token(model.consumer, model.actions)?; TODO NO ES JWT ES VALOR OPACO
+
+        let token: String = create_opaque_token();
+
+        match self.auth_repo.save_token(id, token.clone()).await {
+            Ok(_) => Ok(token),
+            Err(e) => {
+                bail!("Unable to create token")
+            }
+        }
     }
 }

@@ -17,7 +17,17 @@
  *
  */
 
+use crate::ssi_auth::provider::core::types::Claims;
+use anyhow::bail;
+use base64::{engine::general_purpose, Engine as _};
 use chrono::{DateTime, Utc};
+use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
+use log::error;
+use rand::Rng;
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+use std::collections::HashSet;
+use std::time::{Duration, SystemTime};
 
 pub fn split_did(did: &str) -> (&str, Option<&str>) {
     match did.split_once('#') {
@@ -52,4 +62,75 @@ pub fn compare_with_margin(iat: i64, issuance_date: &str, margin_seconds: i64) -
     }
 
     (false, "Ignore this".to_string())
+}
+
+pub fn create_opaque_token() -> String {
+    let mut bytes = [0u8; 32]; // 256 bits
+    rand::thread_rng().fill(&mut bytes);
+    general_purpose::URL_SAFE_NO_PAD.encode(&bytes)
+}
+
+pub fn create_token(sub: String, scopes: String) -> anyhow::Result<String> {
+    // TODO
+    let exp = generate_exp() as usize;
+    let claims = Claims::new(
+        sub.clone(),
+        "ProvProvider".to_string(),
+        format!("ProvProvider-{}", sub),
+        scopes,
+        exp,
+    );
+
+    let token = encode(
+        &Header::new(Algorithm::HS512),
+        &claims,
+        &EncodingKey::from_secret("supersecreto".as_ref()),
+    )?;
+
+    Ok(token)
+}
+
+pub fn verify_token(token: String) -> (bool, String) {
+    // TODO
+
+    let mut val = Validation::new(Algorithm::HS512);
+
+    val.required_spec_claims = HashSet::new();
+    val.required_spec_claims.insert("jti".to_string());
+    val.required_spec_claims.insert("sub".to_string());
+    val.required_spec_claims.insert("iss".to_string());
+    val.required_spec_claims.insert("aud".to_string());
+    val.required_spec_claims.insert("scopes".to_string());
+    val.required_spec_claims.insert("nbf".to_string());
+    val.required_spec_claims.insert("exp".to_string());
+
+    val.validate_aud = true; // VALIDATE AUDIENCE
+    val.validate_exp = true;
+    val.validate_nbf = true; // VALIDATE NBF
+
+    let token = match jsonwebtoken::decode::<Claims>(
+        &token,
+        &DecodingKey::from_secret("supersecreto".as_ref()),
+        &val,
+    ) {
+        Ok(token) => token,
+        Err(e) => return (false, "INVALID TOKEN".to_string()),
+    };
+
+    if token.claims.iss != "ProvProvider" {
+        return (false, "INVALID TOKEN".to_string());
+    }
+
+    if token.claims.aud != format!("ProvProvider-{}", token.claims.sub) {
+        return (false, "INVALID TOKEN".to_string());
+    }
+
+    (true, token.claims.scopes)
+}
+
+fn generate_exp() -> u64 {
+    let now = SystemTime::now();
+    let ten_minutes_from_now = now + Duration::new(600, 0); // 600 segundos = 10 minutos
+    let exp = ten_minutes_from_now.duration_since(SystemTime::UNIX_EPOCH).expect("Time went backwards").as_secs();
+    exp
 }

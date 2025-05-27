@@ -30,9 +30,11 @@ pub struct Model {
     pub provider: String,
     pub status: String,
     pub assigned_id: Option<String>,
-    pub actions: JsonValue, // IT IS A VEC!!
+    pub actions: String,
+    pub token: Option<String>,
     pub created_at: chrono::NaiveDateTime,
     pub ended_at: Option<chrono::NaiveDateTime>,
+
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

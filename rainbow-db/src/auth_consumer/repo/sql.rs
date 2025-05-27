@@ -78,10 +78,9 @@ impl AuthConsumerRepoTrait for AuthConsumerRepoForSql {
         &self,
         id: String,
         provider: String,
-        actions: Vec<String>,
+        actions: String,
         interact: Interact4GR,
     ) -> anyhow::Result<auth::Model> {
-        let actions: Value = Value::String(serde_json::to_string(&actions)?);
         let start: Value = Value::String(serde_json::to_string(&interact.start)?);
 
         let auth_model = auth::ActiveModel {
@@ -89,7 +88,8 @@ impl AuthConsumerRepoTrait for AuthConsumerRepoForSql {
             assigned_id: ActiveValue::Set(None),
             provider: ActiveValue::Set(provider),
             actions: ActiveValue::Set(actions),
-            status: ActiveValue::Set("Requested".to_string()), // TODO Revisar esto Rodrigo
+            status: ActiveValue::Set("Processing".to_string()), // TODO Revisar esto Rodrigo
+            token: ActiveValue::Set(None),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             ended_at: ActiveValue::Set(None),
         };
@@ -99,7 +99,11 @@ impl AuthConsumerRepoTrait for AuthConsumerRepoForSql {
             start: ActiveValue::Set(start),
             method: ActiveValue::Set(interact.finish.method),
             uri: ActiveValue::Set(interact.finish.uri),
-            nonce: ActiveValue::Set(interact.finish.nonce),
+            client_nonce: ActiveValue::Set(interact.finish.nonce),
+            as_nonce: ActiveValue::Set(None),
+            interact_ref: ActiveValue::Set(None),
+            grant_endpoint: ActiveValue::Set("http://127.0.0.1/access".to_string()), // TODO
+            hash: ActiveValue::Set(None),
             hash_method: ActiveValue::Set(interact.finish.hash_method),
             hints: ActiveValue::Set(None), // TODO ??
         };
@@ -111,17 +115,25 @@ impl AuthConsumerRepoTrait for AuthConsumerRepoForSql {
         Ok(auth)
     }
 
-    async fn auth_accepted(&self, id: String, assigned_id: String) -> anyhow::Result<auth::Model> {
+    async fn auth_pending(&self, id: String, assigned_id: String, as_nonce: String) -> anyhow::Result<auth::Model> {
         let mut entry = match auth::Entity::find_by_id(&id).one(&self.db_connection).await {
             Ok(Some(entry)) => entry.into_active_model(),
             Ok(None) => bail!("No entry auth with ID: {}", id),
             Err(e) => bail!("Failed to fetch data: {}", e),
         };
 
+        let mut entry_int = match auth_interaction::Entity::find_by_id(&id).one(&self.db_connection).await {
+            Ok(Some(entry)) => entry.into_active_model(),
+            Ok(None) => bail!("No entry auth with ID: {}", id),
+            Err(e) => bail!("Failed to fetch data: {}", e),
+        };
+
+        entry_int.as_nonce = ActiveValue::Set(Some(as_nonce));
         entry.status = ActiveValue::Set("Pending".to_string());
         entry.assigned_id = ActiveValue::Set(Some(assigned_id));
 
         let upd_entry = entry.update(&self.db_connection).await?;
+        entry_int.update(&self.db_connection).await?;
 
         Ok(upd_entry)
     }
@@ -147,6 +159,26 @@ impl AuthConsumerRepoTrait for AuthConsumerRepoForSql {
             Ok(None) => bail!("No Interaction from authentication with id {}", id),
             Err(e) => bail!("Failed to fetch data: {}", e),
         }
+    }
+
+    async fn update_interaction_by_id(
+        &self,
+        id: String,
+        interact_ref: String,
+        hash: String,
+    ) -> anyhow::Result<auth_interaction::Model> {
+        let mut entry = match auth_interaction::Entity::find_by_id(&id).one(&self.db_connection).await {
+            Ok(Some(entry)) => entry.into_active_model(),
+            Ok(None) => bail!("No entry auth with ID: {}", id),
+            Err(e) => bail!("Failed to fetch data: {}", e),
+        };
+
+        entry.interact_ref = ActiveValue::Set(Some(interact_ref));
+        entry.hash = ActiveValue::Set(Some(hash));
+
+        let upd_entry = entry.update(&self.db_connection).await?;
+
+        Ok(upd_entry)
     }
 
     async fn create_auth_verification(&self, id: String, uri: String) -> anyhow::Result<auth_verification::Model> {
@@ -183,5 +215,20 @@ impl AuthConsumerRepoTrait for AuthConsumerRepoForSql {
         let auth_verification_model =
             auth_verification::Entity::insert(auth_verification_model).exec_with_returning(&self.db_connection).await?;
         Ok(auth_verification_model)
+    }
+
+    async fn grant_req_approved(&self, id: String, jwt: String) -> anyhow::Result<auth::Model> {
+        let mut entry = match auth::Entity::find_by_id(&id).one(&self.db_connection).await {
+            Ok(Some(entry)) => entry.into_active_model(),
+            Ok(None) => bail!("No entry auth with ID: {}", id),
+            Err(e) => bail!("Failed to fetch data: {}", e),
+        };
+
+        entry.status = ActiveValue::Set("Approved".to_string());
+        entry.token = ActiveValue::Set(Some(jwt));
+
+        let upd_entry = entry.update(&self.db_connection).await?;
+
+        Ok(upd_entry)
     }
 }

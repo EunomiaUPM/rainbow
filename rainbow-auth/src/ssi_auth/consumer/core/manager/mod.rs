@@ -18,11 +18,19 @@
  */
 
 pub mod manager;
-use crate::ssi_auth::consumer::core::types::MatchingVCs;
+
+use crate::ssi_auth::consumer::core::types::{MatchingVCs, RedirectResponse};
+use anyhow::bail;
 use axum::async_trait;
+use axum::http::header::{ACCEPT, CONTENT_TYPE};
+use axum::http::HeaderMap;
 pub use manager::Manager;
-use rainbow_db::auth_consumer::entities::auth_verification::Model;
+use rainbow_common::auth::gnap::{GrantRequest, GrantResponse};
+use rainbow_db::auth_consumer::entities::{auth, auth_verification};
+
 use serde_json::Value;
+use std::format;
+use tracing::{error, info};
 
 #[async_trait]
 pub trait RainbowSSIAuthConsumerWalletTrait: Send + Sync {
@@ -35,14 +43,18 @@ pub trait RainbowSSIAuthConsumerWalletTrait: Send + Sync {
     async fn token_expired(&self) -> anyhow::Result<bool>;
     async fn update_token(&mut self) -> anyhow::Result<()>;
     async fn ok(&mut self) -> anyhow::Result<()>;
+    async fn didweb(&mut self) -> anyhow::Result<Value>;
 }
 
 #[async_trait]
 pub trait RainbowSSIAuthConsumerManagerTrait: Send + Sync {
-    async fn request_access(&self, url: String, provider: String, actions: Vec<String>) -> anyhow::Result<Model>;
+    async fn request_access(&self, url: String, provider: String, actions: String) -> anyhow::Result<auth_verification::Model>;
+    async fn manual_request_access(&self, url: String, provider: String, actions: String) -> anyhow::Result<auth_verification::Model>;
     async fn join_exchange(&self, exchange_url: String) -> anyhow::Result<String>;
     async fn parse_vpd(&self, vpd_as_string: String) -> anyhow::Result<Value>;
     async fn match_vc4vp(&self, vp_def: Value) -> anyhow::Result<Vec<MatchingVCs>>;
-    async fn present_vp(&self, preq: String, creds: Vec<String>) -> anyhow::Result<()>;
-    async fn continue_request(&self, id: String, nonce: String) -> anyhow::Result<()>;
+    async fn present_vp(&self, preq: String, creds: Vec<String>) -> anyhow::Result<RedirectResponse>;
+    async fn do_callback(&self, uri: String) -> anyhow::Result<()>;
+    async fn check_callback(&self, id: String, interact_ref: String, hash: String) -> anyhow::Result<String>;
+    async fn continue_request(&self, id: String, interact_ref: String, uri: String) -> anyhow::Result<auth::Model>;
 }

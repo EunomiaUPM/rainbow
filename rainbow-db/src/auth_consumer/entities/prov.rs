@@ -18,35 +18,12 @@
  */
 
 use sea_orm::entity::prelude::*;
-use serde_json::Value as JsonValue;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
-#[sea_orm(table_name = "auth_interaction")]
+#[sea_orm(table_name = "prov")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: String,
-    pub start: JsonValue, // IT IS A VEC!!
-    pub method: String,
-    pub uri: Option<String>,
-    pub client_nonce: String,
-    pub as_nonce: Option<String>,
-    pub interact_ref: Option<String>,
-    pub grant_endpoint: String,
-    pub hash: Option<String>,
-    pub hash_method: Option<String>,
-    pub hints: Option<String>, // In reality, it is a value
+    pub provider: String,
+    pub provider_route: String,
 }
-
-#[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {
-    #[sea_orm(has_one = "super::auth::Entity")]
-    Auth,
-}
-
-impl Related<super::auth::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::Auth.def()
-    }
-}
-
-impl ActiveModelBehavior for ActiveModel {}

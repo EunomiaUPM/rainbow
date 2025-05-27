@@ -20,9 +20,9 @@
 use crate::auth_consumer::entities::auth_interaction;
 use crate::auth_consumer::entities::{auth, auth_verification};
 use axum::async_trait;
+use rainbow_common::auth::gnap::grant_request::Interact4GR;
 use sea_orm::DatabaseConnection;
 use serde_json::Value;
-use rainbow_common::auth::gnap::grant_request::Interact4GR;
 
 pub mod sql;
 
@@ -42,15 +42,23 @@ pub trait AuthConsumerRepoTrait {
         &self,
         id: String,
         provider: String,
-        actions: Vec<String>,
+        actions: String,
         interact: Interact4GR,
     ) -> anyhow::Result<auth::Model>;
 
-    async fn auth_accepted(&self, id: String, assigned_id: String) -> anyhow::Result<auth::Model>;
+    async fn auth_pending(&self, id: String, assigned_id: String, as_nonce: String) -> anyhow::Result<auth::Model>;
 
     async fn delete_auth(&self, id: String) -> anyhow::Result<auth::Model>;
 
     async fn get_interaction_by_id(&self, id: String) -> anyhow::Result<auth_interaction::Model>;
 
+    async fn update_interaction_by_id(
+        &self,
+        id: String,
+        interact_ref: String,
+        hash: String,
+    ) -> anyhow::Result<auth_interaction::Model>;
+
     async fn create_auth_verification(&self, id: String, uri: String) -> anyhow::Result<auth_verification::Model>;
+    async fn grant_req_approved(&self, id: String, jwt: String) -> anyhow::Result<auth::Model>;
 }

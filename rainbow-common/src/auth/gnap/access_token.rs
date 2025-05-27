@@ -23,11 +23,27 @@ use serde_json::Value;
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AccessToken {
     pub value: String,
-    pub label: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub manage: Option<Value>,
     pub access: Vec<String>,
     pub expires_in: Option<u64>,
-    pub key: Value, // TODO DecodingKey
-    pub flags: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub key: Option<Value>, // TODO DecodingKey
+    pub flags: Option<Vec<String>>,
+}
+
+impl AccessToken {
+    pub fn default(value: String) -> Self {
+        Self {
+            value,
+            label: None,
+            manage: None,
+            access: vec!["talk".to_string()],
+            expires_in: None,
+            key: None,
+            flags: None,
+        }
+    }
 }

@@ -27,8 +27,9 @@ pub struct Model {
     #[sea_orm(primary_key)]
     pub id: String,
     pub consumer: String,
-    pub actions: JsonValue, // IT IS A VEC!!
+    pub actions: String, // IT IS A VEC!!
     pub status: String,
+    pub token: Option<String>,
     pub created_at: chrono::NaiveDateTime,
     pub ended_at: Option<chrono::NaiveDateTime>,
 }
