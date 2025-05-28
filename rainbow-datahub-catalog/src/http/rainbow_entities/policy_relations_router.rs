@@ -4,15 +4,15 @@ use crate::core::rainbow_entities::PolicyTemplatesToDatahubDatasetRelationTrait;
 use axum::extract::{Path, Query, State};
 use axum::response::IntoResponse;
 use axum::routing::get;
-use axum::Router;
+use axum::{Json, Router};
 use reqwest::StatusCode;
 use std::sync::Arc;
 use tracing::info;
 
 pub struct RainbowDatahubPolicyRelationsRouter<T, U>
 where
-    T: DatahubProxyTrait + Send + Sync,
-    U: PolicyTemplatesToDatahubDatasetRelationTrait + Send + Sync,
+    T: DatahubProxyTrait + Send + Sync + 'static,
+    U: PolicyTemplatesToDatahubDatasetRelationTrait + Send + Sync + 'static,
 {
     datahub_service: Arc<T>,
     policy_relations_service: Arc<U>,
@@ -37,12 +37,11 @@ where
     }
     async fn handle_your_routes_here(
         State((datahub_service, policy_relations_service)): State<(Arc<T>, Arc<U>)>,
-        query: Query<DomainsQueryOptions>,
     ) -> impl IntoResponse {
         info!("GET /api/v1/datahub/hola-pablo");
         match datahub_service.get_datahub_domains().await {
-            Ok(domains) => (StatusCode::OK, domains).into(),
-            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into(),
+            Ok(domains) => (StatusCode::OK, Json(domains)).into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
         }
     }
 }
