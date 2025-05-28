@@ -17,175 +17,134 @@
  *
  */
 
-use rainbow_common::config::config::ConfigRoles;
-use rainbow_common::config::database::DbType;
+use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait, SSIConsumerConfig, SSIConsumerWalletConfig};
+use rainbow_common::config::global_config::{DatabaseConfig, HostConfig};
+use rainbow_common::config::ConfigRoles;
 use serde::Serialize;
-use serde_json::{json, Value};
 
 #[derive(Serialize, Clone, Debug)]
-pub struct HostConfig {
-    pub protocol: String,
-    pub url: String,
-    pub port: String,
-}
-
-#[derive(Serialize, Clone, Debug)]
-pub struct DatabaseConfig {
-    pub db_type: DbType,
-    pub url: String,
-    pub port: String,
-    pub user: String,
-    pub password: String,
-    pub name: String,
-}
-
-#[derive(Serialize, Clone, Debug)]
-pub struct SSIConsumerWalletConfig {
-    pub consumer_wallet_portal_url: String,
-    pub consumer_wallet_portal_port: String,
-    pub consumer_wallet_type: String,
-    pub consumer_wallet_name: String,
-    pub consumer_wallet_email: String,
-    pub consumer_wallet_password: String,
-    pub consumer_wallet_id: Option<String>,
-    // pub consumer_auth_callback: String, TODO Merece la pena inclusion?
-}
-
-#[derive(Serialize, Clone, Debug)]
-pub struct SSIConsumerConfig {
-    pub consumer_client: String,
-}
-
-#[derive(Serialize, Clone, Debug)]
-pub struct AuthConsumerApplicationConfig {
-    pub core_host: HostConfig,
+pub struct SSIAuthConsumerApplicationConfig {
+    pub transfer_process_host: Option<HostConfig>,
+    pub business_system_host: Option<HostConfig>,
+    pub contract_negotiation_host: Option<HostConfig>,
+    pub auth_host: Option<HostConfig>,
+    pub ssi_auth_host: Option<HostConfig>,
     pub database_config: DatabaseConfig,
+    pub ssh_user: Option<String>,
+    pub ssh_private_key_path: Option<String>,
     pub ssi_wallet_config: SSIConsumerWalletConfig,
     pub ssi_consumer_client: SSIConsumerConfig,
     pub role: ConfigRoles,
 }
 
-impl Default for AuthConsumerApplicationConfig {
+impl Default for SSIAuthConsumerApplicationConfig {
     fn default() -> Self {
-        AuthConsumerApplicationConfig {
-            core_host: HostConfig {
-                protocol: "http".to_string(),
-                url: "127.0.0.1".to_string(),
-                port: "1235".to_string(),
-            },
-            database_config: DatabaseConfig {
-                db_type: DbType::Postgres,
-                url: "127.0.0.1".to_string(),
-                port: "5439".to_string(),
-                user: "ds_core_consumer_db".to_string(),
-                password: "ds_core_consumer_db".to_string(),
-                name: "ds_core_consumer_db".to_string(),
-            },
+        SSIAuthConsumerApplicationConfig::from(ApplicationConsumerConfig::default())
+    }
+}
+
+impl ApplicationConsumerConfigTrait for SSIAuthConsumerApplicationConfig {
+    fn ssh_user(&self) -> Option<String> {
+        self.ssh_user.clone()
+    }
+    fn ssh_private_key_path(&self) -> Option<String> {
+        self.ssh_private_key_path.clone()
+    }
+    fn get_role(&self) -> ConfigRoles {
+        self.role
+    }
+    fn get_raw_transfer_process_host(&self) -> &Option<HostConfig> {
+        &self.transfer_process_host
+    }
+    fn get_raw_business_system_host(&self) -> &Option<HostConfig> {
+        &self.business_system_host
+    }
+    fn get_raw_contract_negotiation_host(&self) -> &Option<HostConfig> {
+        &self.contract_negotiation_host
+    }
+    fn get_raw_auth_host(&self) -> &Option<HostConfig> {
+        &self.auth_host
+    }
+    fn get_raw_gateway_host(&self) -> &Option<HostConfig> {
+        &None
+    }
+    fn get_raw_ssi_auth_host(&self) -> &Option<HostConfig> {
+        &self.ssi_auth_host
+    }
+    fn get_raw_database_config(&self) -> &DatabaseConfig {
+        &self.database_config
+    }
+
+    fn get_raw_ssi_wallet_config(&self) -> &SSIConsumerWalletConfig {
+        &self.ssi_wallet_config
+    }
+
+    fn get_raw_ssi_consumer_client(&self) -> &SSIConsumerConfig {
+        &self.ssi_consumer_client
+    }
+
+    fn merge_dotenv_configuration(&self) -> Self
+    where
+        Self: Sized,
+    {
+        let app_config = ApplicationConsumerConfig::default().merge_dotenv_configuration();
+        SSIAuthConsumerApplicationConfig::from(app_config)
+    }
+}
+
+impl From<ApplicationConsumerConfig> for SSIAuthConsumerApplicationConfig {
+    fn from(value: ApplicationConsumerConfig) -> Self {
+        Self {
+            transfer_process_host: value.transfer_process_host,
+            business_system_host: value.business_system_host,
+            contract_negotiation_host: value.contract_negotiation_host,
+            auth_host: value.auth_host,
+            ssi_auth_host: value.ssi_auth_host,
+            database_config: value.database_config,
+            ssh_user: value.ssh_user,
+            ssh_private_key_path: value.ssh_private_key_path,
             ssi_wallet_config: SSIConsumerWalletConfig {
-                consumer_wallet_portal_url: "127.0.0.1".to_string(),
-                consumer_wallet_portal_port: "7001".to_string(),
-                consumer_wallet_type: "email".to_string(),
-                consumer_wallet_name: "kk".to_string(),
-                consumer_wallet_email: "kk@kk.com".to_string(),
-                consumer_wallet_password: "kk".to_string(),
+                consumer_wallet_portal_url: value.ssi_wallet_config.consumer_wallet_portal_url,
+                consumer_wallet_portal_port: value.ssi_wallet_config.consumer_wallet_portal_port,
+                consumer_wallet_type: value.ssi_wallet_config.consumer_wallet_type,
+                consumer_wallet_name: value.ssi_wallet_config.consumer_wallet_name,
+                consumer_wallet_email: value.ssi_wallet_config.consumer_wallet_email,
+                consumer_wallet_password: value.ssi_wallet_config.consumer_wallet_password,
                 consumer_wallet_id: None,
             },
             ssi_consumer_client: SSIConsumerConfig {
-                // TODO meter esta info
-                consumer_client: "ConsConsumer".to_string(),
+                consumer_client: value.ssi_consumer_client.consumer_client,
             },
-            role: ConfigRoles::Consumer,
+            role: value.role,
         }
     }
 }
 
-impl AuthConsumerApplicationConfig {
-    pub fn get_full_host_url(&self) -> String {
-        format!(
-            "{}://{}:{}",
-            self.core_host.protocol, self.core_host.url, self.core_host.port
-        )
-    }
-    pub fn get_full_db_url(&self) -> String {
-        match self.database_config.db_type {
-            DbType::Memory => ":memory:".to_string(),
-            _ => format!(
-                "{}://{}:{}@{}:{}/{}",
-                self.database_config.db_type,
-                self.database_config.user,
-                self.database_config.password,
-                self.database_config.url,
-                self.database_config.port,
-                self.database_config.name
-            ),
-        }
-    }
-
-    pub fn get_role(&self) -> ConfigRoles {
-        self.role.clone()
-    }
-
-    pub fn merge_dotenv_configuration(&self) -> anyhow::Result<Self> {
-        dotenvy::dotenv().ok();
-        let compound_config = Self {
-            core_host: HostConfig {
-                protocol: std::env::var("HOST_PROTOCOL").unwrap_or(self.core_host.protocol.clone()),
-                url: std::env::var("HOST_URL").unwrap_or(self.core_host.url.clone()),
-                port: std::env::var("HOST_PORT").unwrap_or(self.core_host.port.clone()),
-            },
-            database_config: DatabaseConfig {
-                db_type: std::env::var("DB_TYPE")
-                    .unwrap_or(self.database_config.db_type.to_string())
-                    .parse()
-                    .expect("Db type error"),
-                url: std::env::var("DB_URL").unwrap_or(self.database_config.url.clone()),
-                port: std::env::var("DB_PORT").unwrap_or(self.database_config.port.clone()),
-                user: std::env::var("DB_USER").unwrap_or(self.database_config.user.clone()),
-                password: std::env::var("DB_PASSWORD").unwrap_or(self.database_config.password.clone()),
-                name: std::env::var("DB_DATABASE").unwrap_or(self.database_config.name.clone()),
-            },
+impl Into<ApplicationConsumerConfig> for SSIAuthConsumerApplicationConfig {
+    fn into(self) -> ApplicationConsumerConfig {
+        ApplicationConsumerConfig {
+            transfer_process_host: self.transfer_process_host,
+            business_system_host: self.business_system_host,
+            contract_negotiation_host: self.contract_negotiation_host,
+            auth_host: self.auth_host,
+            ssi_auth_host: self.ssi_auth_host,
+            gateway_host: None,
+            database_config: self.database_config,
+            ssh_user: self.ssh_user,
+            ssh_private_key_path: self.ssh_private_key_path,
             ssi_wallet_config: SSIConsumerWalletConfig {
-                consumer_wallet_portal_url: std::env::var("CONSUMER_WALLET_URL")
-                    .unwrap_or(self.ssi_wallet_config.consumer_wallet_portal_url.clone()),
-                consumer_wallet_portal_port: std::env::var("CONSUMER_WALLET_PORT")
-                    .unwrap_or(self.ssi_wallet_config.consumer_wallet_password.clone()),
-                consumer_wallet_type: std::env::var("CONSUMER_WALLET_TYPE")
-                    .unwrap_or(self.ssi_wallet_config.consumer_wallet_type.clone()),
-                consumer_wallet_name: std::env::var("CONSUMER_WALLET_NAME")
-                    .unwrap_or(self.ssi_wallet_config.consumer_wallet_name.clone()),
-                consumer_wallet_email: std::env::var("CONSUMER_WALLET_EMAIL")
-                    .unwrap_or(self.ssi_wallet_config.consumer_wallet_email.clone()),
-                consumer_wallet_password: std::env::var("CONSUMER_WALLET_PASSWORD")
-                    .unwrap_or(self.ssi_wallet_config.consumer_wallet_password.clone()),
+                consumer_wallet_portal_url: self.ssi_wallet_config.consumer_wallet_portal_url,
+                consumer_wallet_portal_port: self.ssi_wallet_config.consumer_wallet_portal_port,
+                consumer_wallet_type: self.ssi_wallet_config.consumer_wallet_type,
+                consumer_wallet_name: self.ssi_wallet_config.consumer_wallet_name,
+                consumer_wallet_email: self.ssi_wallet_config.consumer_wallet_email,
+                consumer_wallet_password: self.ssi_wallet_config.consumer_wallet_password,
                 consumer_wallet_id: None,
             },
             ssi_consumer_client: SSIConsumerConfig {
-                consumer_client: std::env::var("SSI_CONSUMER_CLIENT")
-                    .unwrap_or(self.ssi_consumer_client.consumer_client.clone()),
+                consumer_client: self.ssi_consumer_client.consumer_client
             },
-            role: ConfigRoles::Consumer,
-        };
-        Ok(compound_config)
+            role: self.role,
+        }
     }
-    pub fn get_host_url(&self) -> String {
-        self.core_host.url.clone()
-    }
-    pub fn get_host_port(&self) -> String {
-        self.core_host.port.clone()
-    }
-    pub fn get_consumer_wallet_portal_url(&self) -> String {
-        format!(
-            "{}://{}:{}",
-            self.core_host.protocol,self.ssi_wallet_config.consumer_wallet_portal_url, self.ssi_wallet_config.consumer_wallet_portal_port
-        )
-    }
-    pub fn get_consumer_wallet_data(&self) -> Value {
-        json!({
-            "type": self.ssi_wallet_config.consumer_wallet_type,
-            "name": self.ssi_wallet_config.consumer_wallet_name,
-            "email": self.ssi_wallet_config.consumer_wallet_email,
-            "password": self.ssi_wallet_config.consumer_wallet_password,
-        })
-    }
-
 }

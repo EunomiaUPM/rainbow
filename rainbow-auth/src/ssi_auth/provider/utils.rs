@@ -18,14 +18,10 @@
  */
 
 use crate::ssi_auth::provider::core::types::Claims;
-use anyhow::bail;
 use base64::{engine::general_purpose, Engine as _};
 use chrono::{DateTime, Utc};
-use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
-use log::error;
+use jsonwebtoken::{encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use rand::Rng;
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use std::collections::HashSet;
 use std::time::{Duration, SystemTime};
 

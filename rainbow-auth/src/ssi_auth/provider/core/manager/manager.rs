@@ -17,7 +17,7 @@
  *
  */
 
-use crate::setup::provider::AuthProviderApplicationConfig;
+use crate::setup::provider::SSIAuthProviderApplicationConfig;
 use crate::ssi_auth::provider::core::manager::RainbowSSIAuthProviderManagerTrait;
 use crate::ssi_auth::provider::utils::{compare_with_margin, create_opaque_token, create_token, split_did};
 use anyhow::bail;
@@ -31,6 +31,7 @@ use jsonwebtoken::jwk::{Jwk, KeyAlgorithm};
 use jsonwebtoken::{Algorithm, Validation};
 use log::error;
 use rainbow_common::auth::gnap::{GrantRequest, GrantResponse};
+use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
 use rainbow_db::auth_provider::repo::AuthProviderRepoTrait;
 use rand::{distributions::Alphanumeric, Rng};
 use serde_json::{json, Value};
@@ -46,14 +47,14 @@ where
     T: AuthProviderRepoTrait + Send + Sync + Clone + 'static,
 {
     auth_repo: Arc<T>,
-    config: AuthProviderApplicationConfig,
+    config: SSIAuthProviderApplicationConfig,
 }
 
 impl<T> Manager<T>
 where
     T: AuthProviderRepoTrait + Send + Sync + Clone + 'static,
 {
-    pub fn new(auth_repo: Arc<T>, config: AuthProviderApplicationConfig) -> Self {
+    pub fn new(auth_repo: Arc<T>, config: SSIAuthProviderApplicationConfig) -> Self {
         Self { auth_repo, config }
     }
 }
@@ -72,7 +73,7 @@ where
                 payload.interact.start.first().unwrap()
             );
         }
-        let provider_url = self.config.get_provider_portal_url();
+        let provider_url = self.config.get_ssi_auth_host_url().unwrap(); // TODO fix docker internal
         let client_id = format!("{}/verify", &provider_url); // TODO TEST
 
         let actions = payload.access_token.access.actions.unwrap_or_else(|| String::from("talk"));
@@ -264,7 +265,11 @@ where
         let mut jwk: Jwk = serde_json::from_slice(&vec)?;
 
         let key = jsonwebtoken::DecodingKey::from_jwk(&jwk)?;
-        let audience = format!("{}/verify/{}", self.config.get_provider_portal_url(), state);
+        let audience = format!(
+            "{}/verify/{}",
+            self.config.get_ssi_auth_host_url().unwrap(),
+            state
+        );
 
         let mut val = Validation::new(alg);
         val.required_spec_claims = HashSet::new();

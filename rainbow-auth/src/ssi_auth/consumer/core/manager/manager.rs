@@ -18,7 +18,7 @@
  */
 
 use super::{RainbowSSIAuthConsumerManagerTrait, RainbowSSIAuthConsumerWalletTrait};
-use crate::setup::consumer::AuthConsumerApplicationConfig;
+use crate::setup::consumer::SSIAuthConsumerApplicationConfig;
 use crate::ssi_auth::consumer::core::types::{
     AuthJwtClaims, DidsInfo, MatchingVCs, RedirectResponse, WalletInfo, WalletInfoResponse, WalletLoginResponse,
 };
@@ -30,6 +30,7 @@ use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
 use once_cell::sync::Lazy;
 use rainbow_common::auth::gnap::{AccessToken, GrantRequest, GrantResponse};
+use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
 use rainbow_db::auth_consumer::entities::auth;
 use rainbow_db::auth_consumer::entities::auth_verification::Model;
 use rainbow_db::auth_consumer::repo::AuthConsumerRepoTrait;
@@ -55,7 +56,7 @@ where
     pub wallet_onboard: bool,
     pub auth_repo: Arc<T>,
     client: Client,
-    config: AuthConsumerApplicationConfig,
+    config: SSIAuthConsumerApplicationConfig,
     didweb: Value,
 }
 
@@ -71,7 +72,7 @@ impl<T> Manager<T>
 where
     T: AuthConsumerRepoTrait + Send + Sync + Clone + 'static,
 {
-    pub fn new(auth_repo: Arc<T>, config: AuthConsumerApplicationConfig) -> Self {
+    pub fn new(auth_repo: Arc<T>, config: SSIAuthConsumerApplicationConfig) -> Self {
         info!("Manager created");
         let client =
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
@@ -393,10 +394,10 @@ where
 
         let id = uuid::Uuid::new_v4().to_string();
         body.update_actions(actions.clone());
+        let auth_url = self.config.get_auth_host_url().unwrap();
         let callback = format!(
-            "http://{}:{}/callback/{}",
-            self.config.core_host.url,
-            self.config.core_host.port,
+            "{}/callback/{}",
+            auth_url,
             id.clone()
         );
         body.update_callback(callback);
@@ -477,10 +478,10 @@ where
 
         let id = uuid::Uuid::new_v4().to_string();
         body.update_actions(actions.clone());
+        let auth_url = self.config.get_auth_host_url().unwrap();
         let callback = format!(
-            "http://{}:{}/callback/manual/{}",
-            self.config.core_host.url,
-            self.config.core_host.port,
+            "{}/callback/manual/{}",
+            auth_url,
             id.clone()
         );
         body.update_callback(callback);

@@ -17,10 +17,9 @@
  *
  */
 
-use crate::provider::setup::config::CoreProviderApplicationConfig;
-use rainbow_db::auth_provider::migrations::get_auth_provider_migrations;
 use crate::provider::setup::config::CoreApplicationProviderConfig;
 use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
+use rainbow_db::auth_provider::migrations::get_auth_provider_migrations;
 use rainbow_db::catalog::migrations::get_catalog_migrations;
 use rainbow_db::contracts_provider::migrations::get_contracts_migrations;
 use rainbow_db::dataplane::migrations::get_dataplane_migrations;

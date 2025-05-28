@@ -17,126 +17,114 @@
  *
  */
 
-use rainbow_common::config::config::ConfigRoles;
-use rainbow_common::config::database::DbType;
+use rainbow_common::config::global_config::{DatabaseConfig, HostConfig};
+use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_common::config::ConfigRoles;
 use serde::Serialize;
 
-#[derive(Serialize, Clone)]
-pub struct HostConfig {
-    pub protocol: String,
-    pub url: String,
-    pub port: String,
+#[derive(Serialize, Clone, Debug)]
+pub struct SSIAuthProviderApplicationConfig {
+    transfer_process_host: Option<HostConfig>,
+    business_system_host: Option<HostConfig>,
+    catalog_host: Option<HostConfig>,
+    catalog_as_datahub: bool,
+    datahub_host: Option<HostConfig>,
+    contract_negotiation_host: Option<HostConfig>,
+    auth_host: Option<HostConfig>,
+    ssi_auth_host: Option<HostConfig>,
+    database_config: DatabaseConfig,
+    ssh_user: Option<String>,
+    ssh_private_key_path: Option<String>,
+    role: ConfigRoles,
 }
 
-#[derive(Serialize, Clone)]
-pub struct DatabaseConfig {
-    pub db_type: DbType,
-    pub url: String,
-    pub port: String,
-    pub user: String,
-    pub password: String,
-    pub name: String,
-}
-
-#[derive(Serialize, Clone)]
-pub struct SSIProviderConfig {
-    pub provider_verification_portal_url: String,
-}
-
-#[derive(Serialize, Clone)]
-pub struct AuthProviderApplicationConfig {
-    pub core_host: HostConfig,
-    pub database_config: DatabaseConfig,
-    pub ssi_provider_config: SSIProviderConfig,
-    pub role: ConfigRoles,
-}
-
-impl Default for AuthProviderApplicationConfig {
+impl Default for SSIAuthProviderApplicationConfig {
     fn default() -> Self {
-        AuthProviderApplicationConfig {
-            core_host: HostConfig {
-                protocol: "http".to_string(),
-                url: "127.0.0.1".to_string(),
-                port: "1234".to_string(),
-            },
-            database_config: DatabaseConfig {
-                db_type: DbType::Postgres,
-                url: "127.0.0.1".to_string(),
-                port: "5440".to_string(),
-                user: "ds_auth_provider_db".to_string(),
-                password: "ds_auth_provider_db".to_string(),
-                name: "ds_auth_provider_db".to_string(),
-            },
-            ssi_provider_config: SSIProviderConfig {
-                provider_verification_portal_url: "http://host.docker.internal:1234".to_string(),
-            },
-            role: ConfigRoles::Provider,
+        SSIAuthProviderApplicationConfig::from(ApplicationProviderConfig::default())
+    }
+}
+
+impl ApplicationProviderConfigTrait for SSIAuthProviderApplicationConfig {
+    fn ssh_user(&self) -> Option<String> {
+        self.ssh_user.clone()
+    }
+    fn ssh_private_key_path(&self) -> Option<String> {
+        self.ssh_private_key_path.clone()
+    }
+    fn is_datahub_as_catalog(&self) -> bool {
+        self.catalog_as_datahub
+    }
+    fn get_role(&self) -> ConfigRoles {
+        self.role
+    }
+    fn get_raw_transfer_process_host(&self) -> &Option<HostConfig> {
+        &self.transfer_process_host
+    }
+    fn get_raw_business_system_host(&self) -> &Option<HostConfig> {
+        &self.business_system_host
+    }
+    fn get_raw_catalog_host(&self) -> &Option<HostConfig> {
+        &self.catalog_host
+    }
+    fn get_raw_datahub_host(&self) -> &Option<HostConfig> {
+        &self.datahub_host
+    }
+    fn get_raw_contract_negotiation_host(&self) -> &Option<HostConfig> {
+        &self.contract_negotiation_host
+    }
+    fn get_raw_auth_host(&self) -> &Option<HostConfig> {
+        &self.auth_host
+    }
+    fn get_raw_gateway_host(&self) -> &Option<HostConfig> {
+        &None
+    }
+    fn get_raw_ssi_auth_host(&self) -> &Option<HostConfig> {
+        &self.ssi_auth_host
+    }
+    fn get_raw_database_config(&self) -> &DatabaseConfig {
+        &self.database_config
+    }
+    fn merge_dotenv_configuration(&self) -> Self {
+        let app_config = ApplicationProviderConfig::default().merge_dotenv_configuration();
+        SSIAuthProviderApplicationConfig::from(app_config)
+    }
+}
+
+impl From<ApplicationProviderConfig> for SSIAuthProviderApplicationConfig {
+    fn from(value: ApplicationProviderConfig) -> Self {
+        Self {
+            transfer_process_host: value.transfer_process_host,
+            business_system_host: value.business_system_host,
+            catalog_host: value.catalog_host,
+            catalog_as_datahub: value.catalog_as_datahub,
+            datahub_host: value.datahub_host,
+            contract_negotiation_host: value.contract_negotiation_host,
+            auth_host: value.auth_host,
+            ssi_auth_host: value.ssi_auth_host,
+            database_config: value.database_config,
+            ssh_user: value.ssh_user,
+            ssh_private_key_path: value.ssh_private_key_path,
+            role: value.role,
         }
     }
 }
 
-impl AuthProviderApplicationConfig {
-    pub fn get_full_host_url(&self) -> String {
-        format!(
-            "{}://{}:{}",
-            self.core_host.protocol, self.core_host.url, self.core_host.port
-        )
-    }
-    pub fn get_full_db_url(&self) -> String {
-        match self.database_config.db_type {
-            DbType::Memory => ":memory:".to_string(),
-            _ => format!(
-                "{}://{}:{}@{}:{}/{}",
-                self.database_config.db_type,
-                self.database_config.user,
-                self.database_config.password,
-                self.database_config.url,
-                self.database_config.port,
-                self.database_config.name
-            ),
+impl Into<ApplicationProviderConfig> for SSIAuthProviderApplicationConfig {
+    fn into(self) -> ApplicationProviderConfig {
+        ApplicationProviderConfig {
+            transfer_process_host: self.transfer_process_host,
+            business_system_host: self.business_system_host,
+            catalog_host: self.catalog_host,
+            catalog_as_datahub: self.catalog_as_datahub,
+            datahub_host: self.datahub_host,
+            contract_negotiation_host: self.contract_negotiation_host,
+            auth_host: self.auth_host,
+            ssi_auth_host: self.ssi_auth_host,
+            gateway_host: None,
+            database_config: self.database_config,
+            ssh_user: self.ssh_user,
+            ssh_private_key_path: self.ssh_private_key_path,
+            role: self.role,
         }
-    }
-
-    pub fn get_role(&self) -> ConfigRoles {
-        self.role.clone()
-    }
-
-    pub fn merge_dotenv_configuration(&self) -> anyhow::Result<Self> {
-        dotenvy::dotenv().ok();
-
-        let compound_config = Self {
-            core_host: HostConfig {
-                protocol: std::env::var("HOST_PROTOCOL").unwrap_or(self.core_host.protocol.to_string()),
-                url: std::env::var("HOST_URL").unwrap_or(self.core_host.url.to_string()),
-                port: std::env::var("HOST_PORT").unwrap_or(self.core_host.port.to_string()),
-            },
-            database_config: DatabaseConfig {
-                db_type: std::env::var("DB_TYPE")
-                    .unwrap_or(self.database_config.db_type.to_string())
-                    .parse()
-                    .expect("Db type error"),
-                url: std::env::var("DB_URL").unwrap_or(self.database_config.url.to_string()),
-                port: std::env::var("DB_PORT").unwrap_or(self.database_config.port.to_string()),
-                user: std::env::var("DB_USER").unwrap_or(self.database_config.user.to_string()),
-                password: std::env::var("DB_PASSWORD").unwrap_or(self.database_config.password.to_string()),
-                name: std::env::var("DB_DATABASE").unwrap_or(self.database_config.name.to_string()),
-            },
-            ssi_provider_config: SSIProviderConfig {
-                provider_verification_portal_url: std::env::var("SSI_PROVIDER_PORTAL_URL")
-                    .unwrap_or(self.ssi_provider_config.provider_verification_portal_url.to_string()),
-            },
-            role: ConfigRoles::Provider,
-        };
-        Ok(compound_config)
-    }
-    pub fn get_host_url(&self) -> String {
-        self.core_host.url.clone()
-    }
-    pub fn get_host_port(&self) -> String {
-        self.core_host.port.clone()
-    }
-
-    pub fn get_provider_portal_url(&self) -> String {
-        self.ssi_provider_config.provider_verification_portal_url.clone()
     }
 }
