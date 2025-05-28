@@ -24,7 +24,7 @@ pub struct DatahubDomain {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DomainProperties {
     pub name: String,
-    pub description: String,
+    pub description: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

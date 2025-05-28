@@ -25,7 +25,7 @@ async fn main() -> anyhow::Result<()> {
             for domain in domains {
                 println!("URN: {}", domain.urn);
                 println!("Nombre: {}", domain.properties.name);
-                println!("Descripción: {}", domain.properties.description);
+                println!("Descripción: {}", domain.properties.description.unwrap_or_default());
                 println!("--------------------");
             }
         },
