@@ -305,7 +305,7 @@ where
         (StatusCode::NOT_FOUND, format!("No route for {uri}"))
     }
 
-    async fn didweb(State(manager): State<Arc<Mutex<Manager<T>>>>,) -> impl IntoResponse {
+    async fn didweb(State(manager): State<Arc<Mutex<Manager<T>>>>) -> impl IntoResponse {
         let mut manager = manager.lock().await;
         Json(manager.didweb().await.unwrap())
     }
