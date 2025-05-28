@@ -17,16 +17,23 @@
  *
  */
 
-use serde::{Deserialize, Serialize};
-use std::fmt::Display;
+use sea_orm_migration::prelude::*;
 
-// pub mod xxx__catalog;
-pub mod contract;
-pub mod transfer;
-pub mod context_field;
-pub mod catalog;
-pub mod policy_templates;
+mod m20250528_000001_policy_relations;
+mod m20250528_000002_policy_templates;
+mod m20250528_000003_add_policy_relations_fks;
 
-pub trait ProtocolValidate {
-    fn validate(&self) -> anyhow::Result<()>;
+pub fn get_datahub_migrations() -> Vec<Box<dyn MigrationTrait>> {
+    vec![
+        Box::new(m20250528_000001_policy_relations::Migration),
+        Box::new(m20250528_000002_policy_templates::Migration),
+        Box::new(m20250528_000003_add_policy_relations_fks::Migration),
+    ]
+}
+pub struct Migrator;
+#[async_trait::async_trait]
+impl MigratorTrait for Migrator {
+    fn migrations() -> Vec<Box<dyn MigrationTrait>> {
+        get_datahub_migrations()
+    }
 }

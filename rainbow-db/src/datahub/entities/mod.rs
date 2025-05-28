@@ -17,16 +17,5 @@
  *
  */
 
-use serde::{Deserialize, Serialize};
-use std::fmt::Display;
-
-// pub mod xxx__catalog;
-pub mod contract;
-pub mod transfer;
-pub mod context_field;
-pub mod catalog;
+pub mod policy_relations;
 pub mod policy_templates;
-
-pub trait ProtocolValidate {
-    fn validate(&self) -> anyhow::Result<()>;
-}

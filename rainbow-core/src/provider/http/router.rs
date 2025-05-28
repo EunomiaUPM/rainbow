@@ -19,8 +19,9 @@
 
 use crate::provider::setup::config::CoreApplicationProviderConfig;
 use axum::Router;
+use rainborainbow_datahub_catalogw_catalog::setup::application::create_datahub_catalog_router;
 use rainbow_catalog::setup::application::create_catalog_router;
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
+use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_contracts::provider::setup::application::create_contract_negotiation_provider_router;
 use rainbow_transfer::provider::setup::application::create_transfer_provider_router;
 
@@ -28,7 +29,13 @@ pub async fn create_core_provider_router(config: &CoreApplicationProviderConfig)
     let app_config: ApplicationProviderConfig = config.clone().into();
     let transfer_router = create_transfer_provider_router(&app_config.clone().into()).await;
     let cn_router = create_contract_negotiation_provider_router(&app_config.clone().into()).await;
-    let catalog_router = create_catalog_router(&app_config.clone().into()).await;
+
+    let mut catalog_router: Router;
+    if config.is_datahub_as_catalog() {
+        catalog_router = create_datahub_catalog_router(&app_config.clone().into()).await
+    } else {
+        catalog_router = create_catalog_router(&app_config.clone().into()).await;
+    }
     Router::new()
         .merge(transfer_router)
         .merge(cn_router)

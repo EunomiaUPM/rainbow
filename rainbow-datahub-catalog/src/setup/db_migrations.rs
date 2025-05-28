@@ -17,41 +17,25 @@
  *
  */
 
-use crate::provider::setup::config::CoreApplicationProviderConfig;
+use crate::setup::config::DatahubCatalogApplicationProviderConfig;
 use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
-use rainbow_db::catalog::migrations::get_catalog_migrations;
-use rainbow_db::contracts_provider::migrations::get_contracts_migrations;
 use rainbow_db::datahub::migrations::get_datahub_migrations;
-use rainbow_db::dataplane::migrations::get_dataplane_migrations;
-use rainbow_db::events::migrations::get_events_migrations;
-use rainbow_db::transfer_provider::migrations::get_transfer_provider_migrations;
 use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
 
-pub struct CoreProviderMigration;
+pub struct DatahubCatalogRelationsMigration;
 
-impl MigratorTrait for CoreProviderMigration {
+impl MigratorTrait for DatahubCatalogRelationsMigration {
     fn migrations() -> Vec<Box<dyn MigrationTrait>> {
         let mut migrations: Vec<Box<dyn MigrationTrait>> = vec![];
-        let mut transfer_provider_migrations = get_transfer_provider_migrations();
-        let mut catalog_migrations = get_catalog_migrations();
-        let mut contract_negotiation_provider_migrations = get_contracts_migrations();
-        let mut pub_sub_migrations = get_events_migrations();
-        let mut dataplane_migrations = get_dataplane_migrations();
         let mut datahub_migrations = get_datahub_migrations();
-
-        migrations.append(&mut transfer_provider_migrations);
-        migrations.append(&mut catalog_migrations);
-        migrations.append(&mut contract_negotiation_provider_migrations);
-        migrations.append(&mut pub_sub_migrations);
-        migrations.append(&mut dataplane_migrations);
         migrations.append(&mut datahub_migrations);
         migrations
     }
 }
 
-impl CoreProviderMigration {
-    pub async fn run(config: &CoreApplicationProviderConfig) -> anyhow::Result<()> {
+impl DatahubCatalogRelationsMigration {
+    pub async fn run(config: &DatahubCatalogApplicationProviderConfig) -> anyhow::Result<()> {
         // db_connection
         let db_url = config.get_full_db_url();
         let db_connection = Database::connect(db_url).await.expect("Database can't connect");

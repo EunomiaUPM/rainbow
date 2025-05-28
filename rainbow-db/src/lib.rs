@@ -31,3 +31,4 @@ pub mod dataplane;
 pub mod transfer_consumer;
 pub mod transfer_provider;
 pub mod events;
+pub mod datahub;

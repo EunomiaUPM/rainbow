@@ -1,0 +1,93 @@
+/*
+ *
+ *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
+use crate::datahub::repo::{DatahubConnectorRepoFactory, NewPolicyRelationModel, NewPolicyTemplateModel, PolicyRelationsRepo, PolicyTemplatesRepo, PolicyTemplatesRepoErrors};
+use axum::async_trait;
+use sea_orm::{
+    DatabaseConnection, EntityTrait,
+};
+use urn::Urn;
+
+pub struct DatahubConnectorRepoForSql {
+    db_connection: DatabaseConnection,
+}
+
+impl DatahubConnectorRepoForSql {
+    pub fn new(db_connection: DatabaseConnection) -> Self {
+        Self { db_connection }
+    }
+}
+
+impl DatahubConnectorRepoFactory for DatahubConnectorRepoForSql {
+    fn create_repo(db_connection: DatabaseConnection) -> Self
+    where
+        Self: Sized,
+    {
+        Self::new(db_connection)
+    }
+}
+
+#[async_trait]
+impl PolicyTemplatesRepo for DatahubConnectorRepoForSql {
+    async fn get_all_policy_templates(&self, limit: Option<u64>, page: Option<u64>) -> anyhow::Result<Vec<crate::datahub::entities::policy_templates::Model>, PolicyTemplatesRepoErrors> {
+        todo!()
+    }
+
+    async fn get_policy_template_by_id(&self, template_id: Urn) -> anyhow::Result<Option<crate::datahub::entities::policy_templates::Model>, PolicyTemplatesRepoErrors> {
+        todo!()
+    }
+
+    async fn create_policy_template(&self, new_policy_template: NewPolicyTemplateModel) -> anyhow::Result<crate::datahub::entities::policy_templates::Model, PolicyTemplatesRepoErrors> {
+        todo!()
+    }
+
+    async fn delete_policy_template_by_id(&self, template_id: Urn) -> anyhow::Result<(), PolicyTemplatesRepoErrors> {
+        todo!()
+    }
+}
+
+#[async_trait]
+impl PolicyRelationsRepo for DatahubConnectorRepoForSql {
+    async fn get_all_policy_relations(&self, limit: Option<u64>, page: Option<u64>) -> anyhow::Result<Vec<crate::datahub::entities::policy_relations::Model>, PolicyTemplatesRepoErrors> {
+        todo!()
+    }
+
+    async fn get_all_policy_relations_by_template_id(&self, template_id: Urn) -> anyhow::Result<Vec<crate::datahub::entities::policy_relations::Model>, PolicyTemplatesRepoErrors> {
+        todo!()
+    }
+
+    async fn get_all_templates_by_dataset_id(&self, dataset_id: String) -> anyhow::Result<Vec<crate::datahub::entities::policy_templates::Model>, PolicyTemplatesRepoErrors> {
+        todo!()
+    }
+
+    async fn get_relation_by_id(&self, policy_relation_id: Urn) -> anyhow::Result<crate::datahub::entities::policy_relations::Model, PolicyTemplatesRepoErrors> {
+        todo!()
+    }
+
+    async fn create_policy_relation(&self, new_policy_relation: NewPolicyRelationModel) -> anyhow::Result<crate::datahub::entities::policy_relations::Model, PolicyTemplatesRepoErrors> {
+        todo!()
+    }
+
+    async fn delete_policy_relation(&self, template_id: Urn) -> anyhow::Result<(), PolicyTemplatesRepoErrors> {
+        todo!()
+    }
+}
+
+
+
