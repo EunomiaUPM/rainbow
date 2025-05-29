@@ -140,6 +140,7 @@ where
         debug!("Contract negotiation payload_validation");
 
         // 1. provider in url and provider in body must coincide
+        // In many bindings provider_pid is in body and url, these must coincide
         let provider_pid = message.get_provider_pid()?;
         match (incoming_provider_pid, provider_pid) {
             (None, _) => {}
@@ -151,6 +152,9 @@ where
             ))),
         };
 
+        // 2. there must be process correlation between provider pid and consumer pid
+        // Ack and Error don't need this validation
+        // Request only need this validation in case provider is some (re-request from consumer)
         match message.get_message_type()? {
             ContractNegotiationMessages::ContractNegotiationAck => Ok(None),
             ContractNegotiationMessages::ContractNegotiationError => Ok(None),
@@ -196,6 +200,7 @@ where
         let consumer_pid = message.get_consumer_pid()?.to_owned();
         let provider_pid = message.get_provider_pid()?;
         let message_type = message.get_message_type()?;
+
         // 1. Only provider is optional in ContractRequestMessage
         match (provider_pid, message_type) {
             (None, m) => match m {
@@ -204,6 +209,7 @@ where
             },
             _ => {}
         }
+
         // extract process
         let cn_process = self
             .repo
@@ -222,6 +228,7 @@ where
             ),
             _ => {}
         }
+
         // 3. transition matrix
         match message.get_message_type()? {
             ContractNegotiationMessages::ContractRequestMessage => match (&provider_pid, &cn_process) {
@@ -543,6 +550,7 @@ where
         provider_pid: Urn,
         input: ContractAgreementVerificationMessage,
     ) -> anyhow::Result<ContractAckMessage> {
+        // 1. validate request
         self.transition_validation(&input).await.map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
         self.json_schema_validation(&input).map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
         let cn_process = self
@@ -550,9 +558,9 @@ where
             .await
             .map_err(|e| IdsaCNError::ValidationError(e.to_string()))?
             .unwrap();
-
         let ContractAgreementVerificationMessage { _type, .. } = input.clone();
 
+        // 2. persist process, message
         let cn_process = self
             .repo
             .put_cn_process(
@@ -580,7 +588,7 @@ where
             .await
             .map_err(IdsaCNError::DbErr)?;
 
-        // notify subscriptions
+        // 3. notify subscriptions
         self.notify_subscribers(
             "ContractAgreementVerificationMessage".to_string(),
             json!({

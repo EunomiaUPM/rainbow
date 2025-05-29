@@ -208,9 +208,11 @@ where
         let SetupOfferRequest { odrl_offer, consumer_participant_id, .. } = input;
         // 1. fetch participant id
         let consumer_base_url = self.get_consumer_base_url(&consumer_participant_id).await?;
+
         // 2. validate correlation
         // protocol validation??
         // No need of validation since there is no provider or consumer pid at this point
+
         // 2. Validate ODRL policy...
         let resolved_offer = match self.catalog_facade.resolve_odrl_offers(odrl_offer.id.clone()).await {
             Ok(resolver) => resolver,
