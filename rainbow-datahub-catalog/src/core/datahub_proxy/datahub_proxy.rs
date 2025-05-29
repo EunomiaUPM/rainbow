@@ -1,5 +1,6 @@
 // use crate::core::datahub_proxy::datahub_proxy_types::{DatahubDataset, DatahubDomain};
 use crate::core::datahub_proxy::datahub_proxy_types::{DatahubDomain, DomainProperties, GraphQLResponse, SearchResponse, SearchResults, SearchResult, Entity};
+use crate::core::datahub_proxy::datahub_proxy_types::{DatahubDataset, Platform, DatasetGraphQLResponse, DatasetSearchResponse, DatasetSearchResults, DatasetSearchResult, DatasetEntity};
 use crate::core::datahub_proxy::DatahubProxyTrait;
 use axum::async_trait;
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
@@ -81,9 +82,63 @@ impl DatahubProxyTrait for DatahubProxyService {
     //     todo!()
     // }
 
-    // async fn get_datahub_datasets_by_domain_id(&self, id: String) -> anyhow::Result<Vec<DatahubDataset>> {
-    //     todo!()
-    // }
+    async fn get_datahub_datasets_by_domain_id(&self, id: String) -> anyhow::Result<Vec<DatahubDataset>> {
+       let graphql_url = "http://localhost:8084/api/graphql";
+        let query = format!(r#"{{
+            searchAcrossEntities(input: {{ 
+                query: "*", 
+                filters: [
+                    {{field: "domains", values: ["{}"]}}
+                ], 
+                types: [DATASET], 
+                start: 0, 
+                count: 50 
+            }}) {{
+                searchResults {{
+                    entity {{
+                        urn
+                        ... on Dataset {{
+                            name
+                            platform {{
+                                name
+                            }}
+                        }}
+                    }}
+                }}
+            }}
+        }}"#, id);
+
+        let request_body = serde_json::json!({
+            "query": query
+        });
+
+        let token = "eyJhbGciOiJIUzI1NiJ9.eyJhY3RvclR5cGUiOiJVU0VSIiwiYWN0b3JJZCI6ImRydWdzQGRydWdzLmNvbSIsInR5cGUiOiJQRVJTT05BTCIsInZlcnNpb24iOiIyIiwianRpIjoiNGEzOTExYTgtNWYxYS00OWE4LWI4MTEtMDU4ZDMyOTgwYjZiIiwic3ViIjoiZHJ1Z3NAZHJ1Z3MuY29tIiwiZXhwIjoxNzUxMDE0NDI1LCJpc3MiOiJkYXRhaHViLW1ldGFkYXRhLXNlcnZpY2UifQ.-S7uV_rCesUQ92bse8TzaaeZX_WFsAKc3kh3YsWcvxo";
+
+        let response = self.client
+            .post(graphql_url)
+            .header("Content-Type", "application/json")
+            .header("Authorization", format!("Bearer {}", token))
+            .json(&request_body)
+            .send()
+            .await?;
+
+        let graphql_response: DatasetGraphQLResponse = response.json().await?;
+
+        let datasets = graphql_response
+            .data
+            .searchAcrossEntities
+            .searchResults
+            .into_iter()
+            .map(|result| DatahubDataset {
+                urn: result.entity.urn,
+                name: result.entity.name,
+                platform: result.entity.platform,
+            })
+            .collect();
+
+        Ok(datasets)
+    }
+
 
     // async fn get_datahub_dataset_by_id(&self, id: String) -> anyhow::Result<DatahubDataset> {
     //     todo!()

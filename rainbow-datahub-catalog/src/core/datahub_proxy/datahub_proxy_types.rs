@@ -61,3 +61,51 @@ pub struct Entity {
     pub urn: String,
     pub properties: DomainProperties,
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DatahubDataset {
+    pub urn: String,
+    pub name: String,
+    pub platform: Platform,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Platform {
+    pub name: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DatasetGraphQLResponse {
+    pub data: DatasetSearchResponse,
+    pub extensions: serde_json::Value,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DatasetSearchResponse {
+    pub searchAcrossEntities: DatasetSearchResults,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DatasetSearchResults {
+    pub searchResults: Vec<DatasetSearchResult>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DatasetSearchResult {
+    pub entity: DatasetEntity,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DatasetEntity {
+    pub urn: String,
+    pub name: String,
+    pub platform: Platform,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DatasetsQueryOptions {
+    pub start: Option<i32>,
+    pub count: Option<i32>,
+    pub query: Option<String>,
+    pub domain_id: Option<String>,
+}
