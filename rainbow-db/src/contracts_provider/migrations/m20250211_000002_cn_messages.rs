@@ -45,7 +45,7 @@ impl MigrationTrait for Migration {
                         ForeignKey::create()
                             .name("fk_cn_messages_cn_process")
                             .from(CNMessages::Table, CNMessages::CnProcessId)
-                            .to(CNProcesses::Table, CNProcesses::CnProcessId)
+                            .to(CNProcesses::Table, CNProcesses::ProviderId)
                             .on_delete(ForeignKeyAction::Cascade),
                     )
                     .to_owned(),

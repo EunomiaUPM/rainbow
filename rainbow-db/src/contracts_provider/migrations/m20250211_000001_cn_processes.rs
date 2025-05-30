@@ -33,8 +33,7 @@ impl MigrationTrait for Migration {
             .create_table(
                 Table::create()
                     .table(CNProcesses::Table)
-                    .col(ColumnDef::new(CNProcesses::CnProcessId).string().not_null().primary_key())
-                    .col(ColumnDef::new(CNProcesses::ProviderId).string())
+                    .col(ColumnDef::new(CNProcesses::ProviderId).string().not_null().primary_key())
                     .col(ColumnDef::new(CNProcesses::ConsumerId).string())
                     .col(ColumnDef::new(CNProcesses::State).string())
                     .col(ColumnDef::new(CNProcesses::InitiatedBy).string())
@@ -53,7 +52,6 @@ impl MigrationTrait for Migration {
 #[derive(Iden)]
 pub enum CNProcesses {
     Table,
-    CnProcessId,
     ProviderId,
     ConsumerId,
     State,

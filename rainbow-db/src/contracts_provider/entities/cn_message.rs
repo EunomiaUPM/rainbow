@@ -38,7 +38,7 @@ pub enum Relation {
     #[sea_orm(
         belongs_to = "super::cn_process::Entity",
         from = "Column::CnProcessId",
-        to = "super::cn_process::Column::CnProcessId"
+        to = "super::cn_process::Column::ProviderId"
     )]
     CnProcess,
     #[sea_orm(has_many = "super::cn_offer::Entity")]

@@ -41,7 +41,6 @@ pub struct NewContractNegotiationRequest {
 impl Into<NewContractNegotiationProcess> for NewContractNegotiationRequest {
     fn into(self) -> NewContractNegotiationProcess {
         NewContractNegotiationProcess {
-            provider_id: self.provider_id.map(|id| get_urn_from_string(&id).unwrap()),
             consumer_id: self.consumer_id.map(|id| get_urn_from_string(&id).unwrap()),
             state: self.state,
             initiated_by: ConfigRoles::Provider,
@@ -66,7 +65,6 @@ pub struct EditContractNegotiationRequest {
 impl Into<EditContractNegotiationProcess> for EditContractNegotiationRequest {
     fn into(self) -> EditContractNegotiationProcess {
         EditContractNegotiationProcess {
-            provider_id: self.provider_id.map(|id| get_urn_from_string(&id).unwrap()),
             consumer_id: self.consumer_id.map(|id| get_urn_from_string(&id).unwrap()),
             state: self.state,
         }

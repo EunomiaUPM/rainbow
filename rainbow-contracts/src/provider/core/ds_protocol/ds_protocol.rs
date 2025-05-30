@@ -175,7 +175,7 @@ where
                         provider_pid: provider_pid.map(|p| p.to_owned()),
                         consumer_pid: Option::from(message.get_consumer_pid()?.to_owned()),
                     })?;
-                if cn_process_consumer.cn_process_id != cn_process_provider.cn_process_id {
+                if cn_process_consumer.provider_id != cn_process_provider.provider_id {
                     bail!(IdsaCNError::ValidationError(
                         "ConsumerPid and ProviderPid don't coincide".to_string()
                     ))
@@ -346,7 +346,6 @@ where
         let cn_process = self
             .repo
             .create_cn_process(NewContractNegotiationProcess {
-                provider_id: None,
                 consumer_id: Option::from(input.consumer_pid.clone()),
                 state: ContractNegotiationState::Requested,
                 initiated_by: ConfigRoles::Consumer,
@@ -357,7 +356,7 @@ where
         let cn_message = self
             .repo
             .create_cn_message(
-                get_urn_from_string(&cn_process.cn_process_id)?,
+                get_urn_from_string(&cn_process.provider_id)?,
                 NewContractNegotiationMessage {
                     _type: input._type.to_string(),
                     from: "Consumer".to_string(),
@@ -371,7 +370,7 @@ where
         let cn_offer = self
             .repo
             .create_cn_offer(
-                get_urn_from_string(&cn_process.cn_process_id)?,
+                get_urn_from_string(&cn_process.provider_id)?,
                 get_urn_from_string(&cn_message.cn_message_id)?,
                 NewContractNegotiationOffer { offer_id: None, offer_content: serde_json::to_value(&offer)? },
             )
@@ -436,9 +435,8 @@ where
         let _ = self
             .repo
             .put_cn_process(
-                get_urn_from_string(&cn_process.cn_process_id)?,
+                get_urn_from_string(&cn_process.provider_id)?,
                 EditContractNegotiationProcess {
-                    provider_id: None, // no need to change
                     consumer_id: None,
                     state: Option::from(ContractNegotiationState::Offered),
                 },
@@ -449,7 +447,7 @@ where
         let cn_message = self
             .repo
             .create_cn_message(
-                get_urn_from_string(&cn_process.cn_process_id)?,
+                get_urn_from_string(&cn_process.provider_id)?,
                 NewContractNegotiationMessage {
                     _type: input._type.to_string(),
                     from: "Consumer".to_string(),
@@ -463,7 +461,7 @@ where
         let offer = self
             .repo
             .create_cn_offer(
-                get_urn_from_string(&cn_process.cn_process_id)?,
+                get_urn_from_string(&cn_process.provider_id)?,
                 get_urn_from_string(&cn_message.cn_message_id)?,
                 NewContractNegotiationOffer { offer_id: None, offer_content: serde_json::to_value(&input.odrl_offer)? },
             )
@@ -502,9 +500,8 @@ where
         let cn_process = self
             .repo
             .put_cn_process(
-                get_urn_from_string(&cn_process.cn_process_id)?,
+                get_urn_from_string(&cn_process.provider_id)?,
                 EditContractNegotiationProcess {
-                    provider_id: None, // no need to change
                     consumer_id: None,
                     state: Some(input.event_type.clone().into()),
                 },
@@ -515,7 +512,7 @@ where
         let message = self
             .repo
             .create_cn_message(
-                get_urn_from_string(&cn_process.cn_process_id)?,
+                get_urn_from_string(&cn_process.provider_id)?,
                 NewContractNegotiationMessage {
                     _type: input._type.to_string(),
                     from: "Consumer".to_string(),
@@ -556,9 +553,8 @@ where
         let cn_process = self
             .repo
             .put_cn_process(
-                get_urn_from_string(&cn_process.cn_process_id)?,
+                get_urn_from_string(&cn_process.provider_id)?,
                 EditContractNegotiationProcess {
-                    provider_id: None, // no need to change
                     consumer_id: None,
                     state: Some(ContractNegotiationState::Verified),
                 },
@@ -569,7 +565,7 @@ where
         let message = self
             .repo
             .create_cn_message(
-                get_urn_from_string(&cn_process.cn_process_id)?,
+                get_urn_from_string(&cn_process.provider_id)?,
                 NewContractNegotiationMessage {
                     _type: _type.to_string(),
                     from: "Consumer".to_string(),
@@ -611,9 +607,8 @@ where
         let cn_process = self
             .repo
             .put_cn_process(
-                get_urn_from_string(&cn_process.cn_process_id)?,
+                get_urn_from_string(&cn_process.provider_id)?,
                 EditContractNegotiationProcess {
-                    provider_id: None, // no need to change
                     consumer_id: None,
                     state: Some(ContractNegotiationState::Terminated),
                 },
@@ -624,7 +619,7 @@ where
         let message = self
             .repo
             .create_cn_message(
-                get_urn_from_string(&cn_process.cn_process_id)?,
+                get_urn_from_string(&cn_process.provider_id)?,
                 NewContractNegotiationMessage {
                     _type: _type.to_string(),
                     from: "Consumer".to_string(),
