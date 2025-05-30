@@ -114,10 +114,7 @@ impl ContractNegotiationProcessRepo for ContractNegotiationProviderRepoForSql {
             .ok_or(CnErrors::CNProcessNotFound)?;
 
         let mut old_active_model: cn_process::ActiveModel = old_model.into();
-
-        if let Some(provider_id) = edit_cn_process.provider_id {
-            old_active_model.provider_id = ActiveValue::Set(Some(provider_id.to_string()));
-        }
+        
         if let Some(consumer_id) = edit_cn_process.consumer_id {
             old_active_model.consumer_id = ActiveValue::Set(Some(consumer_id.to_string()));
         }
@@ -138,10 +135,7 @@ impl ContractNegotiationProcessRepo for ContractNegotiationProviderRepoForSql {
         new_cn_process: NewContractNegotiationProcess,
     ) -> anyhow::Result<cn_process::Model, CnErrors> {
         let model = cn_process::ActiveModel {
-            cn_process_id: ActiveValue::Set(get_urn(None).to_string()),
-            provider_id: ActiveValue::Set(Option::from(
-                get_urn(new_cn_process.provider_id).to_string(),
-            )),
+            provider_id: ActiveValue::Set(get_urn(None).to_string()),
             consumer_id: ActiveValue::Set(Option::from(
                 get_urn(new_cn_process.consumer_id).to_string(),
             )),
@@ -198,7 +192,7 @@ impl ContractNegotiationMessageRepo for ContractNegotiationProviderRepoForSql {
             .ok_or(CnErrors::CNProcessNotFound)?;
 
         let cn_message = cn_message::Entity::find()
-            .filter(cn_message::Column::CnProcessId.eq(cn_process.cn_process_id.as_str()))
+            .filter(cn_message::Column::CnProcessId.eq(cn_process.provider_id.as_str()))
             .all(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNMessage(err.into()))?;
@@ -228,7 +222,7 @@ impl ContractNegotiationMessageRepo for ContractNegotiationProviderRepoForSql {
 
         let cn_messages = cn_message::Entity::find()
             .join(JoinType::InnerJoin, cn_message::Relation::CnProcess.def())
-            .filter(cn_process::Column::ProviderId.eq(cn_process.provider_id.unwrap().as_str()))
+            .filter(cn_process::Column::ProviderId.eq(cn_process.provider_id.as_str()))
             .all(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNMessage(err.into()))?;
@@ -406,7 +400,7 @@ impl ContractNegotiationOfferRepo for ContractNegotiationProviderRepoForSql {
 
         let cn_offers = cn_offer::Entity::find()
             .join(JoinType::InnerJoin, cn_offer::Relation::CnMessage.def())
-            .filter(cn_message::Column::CnProcessId.eq(cn_process.cn_process_id.as_str()))
+            .filter(cn_message::Column::CnProcessId.eq(cn_process.provider_id.as_str()))
             .all(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNOffer(err.into()))?;
@@ -425,7 +419,7 @@ impl ContractNegotiationOfferRepo for ContractNegotiationProviderRepoForSql {
 
         let cn_offers = cn_offer::Entity::find()
             .join(JoinType::InnerJoin, cn_offer::Relation::CnMessage.def())
-            .filter(cn_message::Column::CnProcessId.eq(cn_process.cn_process_id.as_str()))
+            .filter(cn_message::Column::CnProcessId.eq(cn_process.provider_id.as_str()))
             .order_by_desc(cn_offer::Column::CreatedAt)
             .limit(1)
             .one(&self.db_connection)

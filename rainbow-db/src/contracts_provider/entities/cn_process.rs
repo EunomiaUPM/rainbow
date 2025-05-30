@@ -24,8 +24,7 @@ use serde::{Deserialize, Serialize};
 #[sea_orm(table_name = "cn_processes")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub cn_process_id: String,
-    pub provider_id: Option<String>,
+    pub provider_id: String,
     pub consumer_id: Option<String>,
     pub state: String,
     pub initiated_by: String,

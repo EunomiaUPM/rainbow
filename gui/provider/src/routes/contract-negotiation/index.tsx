@@ -26,10 +26,7 @@ const RouteComponent = () => {
                 </TableHeader>
                 <TableBody>
                     {cnProcesses.map((cnProcess) => (
-                        <TableRow key={cnProcess.cn_process_id.slice(0, 20)}>
-                            <TableCell>
-                                {cnProcess.cn_process_id.slice(0, 20) + "..."}
-                            </TableCell>
+                        <TableRow key={cnProcess.provider_id.slice(0, 20)}>
                             <TableCell>
                                 {cnProcess.provider_id?.slice(0, 20) + "..."}
                             </TableCell>
@@ -43,7 +40,7 @@ const RouteComponent = () => {
                             <TableCell>
                                 <Link
                                     to="/contract-negotiation/$cnProcess"
-                                    params={{cnProcess: cnProcess.cn_process_id}}
+                                    params={{cnProcess: cnProcess.provider_id}}
                                 >
                                     <ExternalLink size={12} className="text-pink-600"/>
                                 </Link>
