@@ -4,6 +4,7 @@ import {ExternalLink} from "lucide-react";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "shared/src/components/ui/table";
 import {getContractNegotiationProcessesOptions, useGetContractNegotiationProcesses} from "@/data/contract-queries.ts";
 import {Button} from "shared/src/components/ui/button.tsx";
+import {ContractNegotiationActions} from "shared/src/components/ContractNegotiationActions.tsx";
 
 const RouteComponent = () => {
     const {data: cnProcesses} = useGetContractNegotiationProcesses();
@@ -17,11 +18,12 @@ const RouteComponent = () => {
             <Table className="text-sm">
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Contract Negotiation Process</TableHead>
                         <TableHead>ProviderPid</TableHead>
                         <TableHead>ConsumerPid</TableHead>
                         <TableHead>State</TableHead>
                         <TableHead>CreatedAt</TableHead>
+                        <TableHead>Actions</TableHead>
+                        <TableHead>Link</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -36,6 +38,9 @@ const RouteComponent = () => {
                             <TableCell>{cnProcess.state.replace("dspace:", "")}</TableCell>
                             <TableCell>
                                 {dayjs(cnProcess.created_at).format("DD/MM/YYYY - HH:mm")}
+                            </TableCell>
+                            <TableCell>
+                                <ContractNegotiationActions state={cnProcess.state} tiny={true}/>
                             </TableCell>
                             <TableCell>
                                 <Link
