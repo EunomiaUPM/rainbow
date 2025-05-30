@@ -44,12 +44,21 @@ async fn print_dataset_metadata(datahub_service: &DatahubProxyService, dataset_u
         Ok(dataset) => {
             println!("URN: {}", dataset.urn);
             println!("Nombre: {}", dataset.name);
-            println!("Plataforma: {}", dataset.platform.name);
+            /*println!("Plataforma: {}", dataset.platform.name);
             println!("Descripción: {}", dataset.description.unwrap_or_default());
             println!("Tags: {}", dataset.tag_names.join(", "));
             println!("Propiedades personalizadas:");
             for (key, value) in &dataset.custom_properties {
                 println!("  {}: {}", key, value);
+            }
+            println!("--------------------");*/
+            println!("Política (campo 'policy'):");
+            // Buscar el campo 'policy' en custom_properties
+            if let Some(policy_value) = dataset.custom_properties.iter()
+                .find_map(|(key, value)| if key == "policy" { Some(value) } else { None }) {
+                println!("{}", policy_value);
+            } else {
+                println!("No se encontró el campo 'policy'.");
             }
             println!("--------------------");
         },

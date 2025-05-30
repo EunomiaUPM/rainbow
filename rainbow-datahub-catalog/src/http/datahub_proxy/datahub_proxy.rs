@@ -76,4 +76,15 @@ where
             Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
         }
     }
+
+    /*async fn handle_get_dataset_policies(
+        State(datahub_service): State<Arc<T>>,
+        Path((domain_id, dataset_id)): Path<(String, String)>,
+    ) -> impl IntoResponse {
+        info!("GET /api/v1/datahub/domains/{}/datasets/{}/policies", domain_id, dataset_id);
+        match datahub_service.get_dataset_policies(dataset_id).await {
+            Ok(dataset) => (StatusCode::OK, Json(dataset)).into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        }
+    }*/
 }

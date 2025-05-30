@@ -210,4 +210,43 @@ impl DatahubProxyTrait for DatahubProxyService {
 
         Ok(dataset)
     }
+
+    /*async fn get_dataset_policies(&self, dataset_urn: &str) -> anyhow::Result<Option<String>> {
+        let graphql_url = "http://localhost:8086/api/graphql";
+        let token = "eyJhbGciOiJIUzI1NiJ9.eyJhY3RvclR5cGUiOiJVU0VSIiwiYWN0b3JJZCI6ImRhdGFodWIiLCJ0eXBlIjoiUEVSU09OQUwiLCJ2ZXJzaW9uIjoiMiIsImp0aSI6IjFlMzljZjM4LWJmN2QtNGUzNi05OWFjLWI3ZGU4MjYwMDRiNiIsInN1YiI6ImRhdGFodWIiLCJleHAiOjE3NTExODY0MzIsImlzcyI6ImRhdGFodWItbWV0YWRhdGEtc2VydmljZSJ9.4agJYK2SWEfc0tCVsq7HRG_4CI5HG2sStJ2_gReglDI";
+
+        let query = format!(r#"{{
+        dataset(urn: "{}") {{
+            properties {{
+                customProperties {{
+                    key
+                    value
+                }}
+            }}
+        }}
+    }}"#, dataset_urn);
+
+        let request_body = serde_json::json!({ "query": query });
+
+        let response = self.client
+            .post(graphql_url)
+            .header("Content-Type", "application/json")
+            .header("Authorization", format!("Bearer {}", token))
+            .json(&request_body)
+            .send()
+            .await?;
+
+        let graphql_response: DatasetGraphQLResponseDetailed = response.json().await?;
+
+        // Buscar la propiedad "policy" dentro de customProperties
+        if let Some(custom_props) = graphql_response.data.dataset.properties.custom_properties {
+            for cp in custom_props {
+                if cp.key == "policy" {
+                    return Ok(Some(cp.value));
+                }
+            }
+        }
+
+        Ok(None)
+    }*/
 }
