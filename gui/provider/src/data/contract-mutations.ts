@@ -1,6 +1,5 @@
 import {GATEWAY_API} from "@/data/index.ts";
 import {useMutation} from "@tanstack/react-query";
-import {queryClient} from "@/main.tsx";
 
 /**
  *  POST /datasets/{datasetId}/policies
@@ -35,8 +34,6 @@ export const usePostContractNegotiationRPCOffer = () => {
         onSuccess: async ({providerPid}, _variables) => {
             console.log("onSuccess")
             window.location.href = `/contract-negotiation/${providerPid}`; // Redirect to the contract negotiation processes page
-            // @ts-ignore
-            await queryClient.refetchQueries(["CONTRACT_NEGOTIATION_PROCESSES"]);
         },
         onSettled: () => {
         },

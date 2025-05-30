@@ -7,6 +7,7 @@ import {
     useGetContractNegotiationMessagesByCNID,
     useGetContractNegotiationProcessesByCNID
 } from "@/data/contract-queries.ts";
+import {ContractNegotiationActions} from "shared/src/components/ContractNegotiationActions.tsx";
 
 const RouteComponent = () => {
     const {cnProcess} = Route.useParams();
@@ -15,7 +16,7 @@ const RouteComponent = () => {
     const {data: cnMessages} = useGetContractNegotiationMessagesByCNID(cnProcess);
 
     return (
-        <div>
+        <div className="space-y-4">
             <Table className="text-sm">
                 <TableHeader>
                     <TableRow>
@@ -44,6 +45,7 @@ const RouteComponent = () => {
                     </TableRow>
                 </TableBody>
             </Table>
+            <ContractNegotiationActions state={process.state} tiny={false}/>
             <div>
                 <h1>Messages</h1>
                 <Table className="text-sm">
