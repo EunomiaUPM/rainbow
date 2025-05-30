@@ -130,11 +130,11 @@ where
                 entity: "ProviderProcess".to_string(),
             })?;
 
-        if consumer_process.cn_process_id != provider_process.cn_process_id {
+        if consumer_process.provider_id != provider_process.provider_id {
             bail!(
                 DSRPCContractNegotiationProviderErrors::ConsumerAndProviderCorrelationError {
-                    provider_pid: get_urn_from_string(&provider_process.cn_process_id)?,
-                    consumer_pid: get_urn_from_string(&consumer_process.cn_process_id)?,
+                    provider_pid: get_urn_from_string(&provider_process.provider_id)?,
+                    consumer_pid: get_urn_from_string(&consumer_process.provider_id)?,
                 }
             );
         }
@@ -209,11 +209,9 @@ where
         let SetupOfferRequest { odrl_offer, consumer_participant_id, .. } = input;
         // 1. fetch participant id
         let consumer_base_url = self.get_consumer_base_url(&consumer_participant_id).await?;
-
         // 2. validate correlation
         // protocol validation??
         // No need of validation since there is no provider or consumer pid at this point
-
         // 2. Validate ODRL policy...
         let resolved_offer = match self.catalog_facade.resolve_odrl_offers(odrl_offer.id.clone()).await {
             Ok(resolver) => resolver,
@@ -242,7 +240,6 @@ where
         let provider_pid = get_urn(None);
         let contract_offer_message = ContractOfferMessage {
             provider_pid: provider_pid.to_string().parse()?,
-            consumer_pid: None,
             odrl_offer: ContractRequestMessageOfferTypes::OfferMessage(odrl_offer.clone()),
             ..Default::default()
         };
@@ -260,7 +257,6 @@ where
         let cn_process = self
             .repo
             .create_cn_process(NewContractNegotiationProcess {
-                provider_id: Some(get_urn_from_string(&response.provider_pid)?),
                 consumer_id: Some(get_urn_from_string(&response.consumer_pid)?),
                 state: response.state,
                 initiated_by: ConfigRoles::Provider,
@@ -270,7 +266,7 @@ where
         let cn_message = self
             .repo
             .create_cn_message(
-                cn_process.cn_process_id.parse().unwrap(),
+                cn_process.provider_id.parse().unwrap(),
                 NewContractNegotiationMessage {
                     _type: ContractNegotiationMessages::ContractOfferMessage.to_string(),
                     from: ConfigRoles::Provider.to_string(),
@@ -283,7 +279,7 @@ where
         let offer = self
             .repo
             .create_cn_offer(
-                cn_process.cn_process_id.parse().unwrap(),
+                cn_process.provider_id.parse().unwrap(),
                 cn_message.cn_message_id.parse().unwrap(),
                 NewContractNegotiationOffer {
                     offer_id: None,
@@ -356,7 +352,6 @@ where
         // 3. create message
         let contract_offer_message = ContractOfferMessage {
             provider_pid: cn_process.provider_id.unwrap().parse()?,
-            consumer_pid: cn_process.consumer_id.map(|c| get_urn_from_string(&c).unwrap()),
             odrl_offer: ContractRequestMessageOfferTypes::OfferMessage(odrl_offer.clone()),
             ..Default::default()
         };
@@ -378,15 +373,15 @@ where
         let cn_process = self
             .repo
             .put_cn_process(
-                cn_process.cn_process_id.parse()?,
-                EditContractNegotiationProcess { provider_id: None, consumer_id: None, state: Some(response.state) },
+                cn_process.provider_id.parse()?,
+                EditContractNegotiationProcess { consumer_id: None, state: Some(response.state) },
             )
             .await
             .map_err(CnErrorProvider::DbErr)?;
         let cn_message = self
             .repo
             .create_cn_message(
-                cn_process.cn_process_id.parse().unwrap(),
+                cn_process.provider_id.parse().unwrap(),
                 NewContractNegotiationMessage {
                     _type: ContractNegotiationMessages::ContractOfferMessage.to_string(),
                     from: ConfigRoles::Provider.to_string(),
@@ -399,7 +394,7 @@ where
         let offer = self
             .repo
             .create_cn_offer(
-                cn_process.cn_process_id.parse().unwrap(),
+                cn_process.provider_id.parse().unwrap(),
                 cn_message.cn_message_id.parse().unwrap(),
                 NewContractNegotiationOffer {
                     offer_id: None,
@@ -445,7 +440,7 @@ where
 
         // 3. Create and validate agreement
         // 3.1. fetch last valid offer in process
-        let cn_process_id = get_urn_from_string(&cn_process.cn_process_id)?;
+        let cn_process_id = get_urn_from_string(&cn_process.provider_id)?;
         let last_offer_model = self.repo
             .get_last_cn_offers_by_cn_process(cn_process_id.clone())
             .await
@@ -500,13 +495,12 @@ where
             .await?;
 
         // 6. persist process, message and agreement
-        let process_id = get_urn_from_string(&cn_process.cn_process_id)?;
+        let process_id = get_urn_from_string(&cn_process.provider_id)?;
         let cn_process = self
             .repo
             .put_cn_process(
                 process_id,
                 EditContractNegotiationProcess {
-                    provider_id: None,
                     consumer_id: None,
                     state: Option::from(response.state),
                 },
@@ -517,7 +511,7 @@ where
         let cn_message = self
             .repo
             .create_cn_message(
-                cn_process.cn_process_id.parse().unwrap(),
+                cn_process.provider_id.parse().unwrap(),
                 NewContractNegotiationMessage {
                     _type: ContractNegotiationMessages::ContractAgreementMessage.to_string(),
                     from: ConfigRoles::Provider.to_string(),
@@ -531,7 +525,7 @@ where
         let _ = self
             .repo
             .create_agreement(
-                cn_process.cn_process_id.parse().unwrap(),
+                cn_process.provider_id.parse().unwrap(),
                 cn_message.cn_message_id.parse().unwrap(),
                 NewAgreement {
                     agreement_id: Some(agreement_id.clone()),
@@ -596,13 +590,12 @@ where
             )
             .await?;
         // 6. persist process, message
-        let process_id = get_urn_from_string(&cn_process.cn_process_id.clone())?;
+        let process_id = get_urn_from_string(&cn_process.provider_id.clone())?;
         let cn_process = self
             .repo
             .put_cn_process(
                 process_id,
                 EditContractNegotiationProcess {
-                    provider_id: None,
                     consumer_id: None,
                     state: Option::from(response.state),
                 },
@@ -613,7 +606,7 @@ where
         let message = self
             .repo
             .create_cn_message(
-                cn_process.cn_process_id.parse().unwrap(),
+                cn_process.provider_id.parse().unwrap(),
                 NewContractNegotiationMessage {
                     _type: ContractNegotiationMessages::ContractNegotiationEventMessage.to_string(),
                     from: ConfigRoles::Provider.to_string(),
@@ -678,13 +671,12 @@ where
             .await?;
 
         // 5. persist cn_process
-        let process_id = get_urn_from_string(&cn_process.cn_process_id.clone())?;
+        let process_id = get_urn_from_string(&cn_process.provider_id.clone())?;
         let cn_process = self
             .repo
             .put_cn_process(
                 process_id,
                 EditContractNegotiationProcess {
-                    provider_id: None,
                     consumer_id: None,
                     state: Option::from(response.state),
                 },
@@ -695,7 +687,7 @@ where
         let message = self
             .repo
             .create_cn_message(
-                cn_process.cn_process_id.parse().unwrap(),
+                cn_process.provider_id.parse().unwrap(),
                 NewContractNegotiationMessage {
                     _type: ContractNegotiationMessages::ContractNegotiationTerminationMessage.to_string(),
                     from: ConfigRoles::Provider.to_string(),

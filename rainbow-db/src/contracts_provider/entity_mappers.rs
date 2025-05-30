@@ -27,7 +27,7 @@ use rainbow_common::protocol::contract::contract_odrl::OdrlAgreement;
 impl From<cn_process::Model> for ContractAckMessage {
     fn from(model: cn_process::Model) -> Self {
         ContractAckMessage {
-            provider_pid: model.provider_id.unwrap(),
+            provider_pid: model.provider_id,
             consumer_pid: model.consumer_id.unwrap(),
             state: model.state.parse().unwrap(),
             ..Default::default()

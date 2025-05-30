@@ -49,13 +49,11 @@ ContractNegotiationProcessRepo
 }
 
 pub struct NewContractNegotiationProcess {
-    pub provider_id: Option<Urn>,
     pub consumer_id: Option<Urn>,
     pub state: ContractNegotiationState,
     pub initiated_by: ConfigRoles,
 }
 pub struct EditContractNegotiationProcess {
-    pub provider_id: Option<Urn>,
     pub consumer_id: Option<Urn>,
     pub state: Option<ContractNegotiationState>,
 }

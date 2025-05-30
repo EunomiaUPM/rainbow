@@ -25,10 +25,6 @@ const RouteComponent = () => {
                 </TableHeader>
                 <TableBody>
                     <TableRow>
-                        <TableCell>Contract negotiation process UUID</TableCell>
-                        <TableCell>{process.cn_process_id}</TableCell>
-                    </TableRow>
-                    <TableRow>
                         <TableCell>ProviderPid</TableCell>
                         <TableCell>{process.provider_id}</TableCell>
                     </TableRow>

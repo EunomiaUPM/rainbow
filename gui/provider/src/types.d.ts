@@ -2,7 +2,6 @@ declare global {
     export type UUID = string;
 
     export interface CNProcess {
-        cn_process_id: UUID;
         provider_id: UUID;
         consumer_id: UUID;
         state: string;
