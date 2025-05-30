@@ -10,6 +10,7 @@ export const Route = createFileRoute('/agreements/')({
 
 function RouteComponent() {
     const {data: agreements} = useGetAgreements();
+
     return <div>
         <div>
             <Table className="text-sm">

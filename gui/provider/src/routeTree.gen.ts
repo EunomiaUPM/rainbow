@@ -21,6 +21,7 @@ import { Route as IndexImport } from './routes/index'
 import { Route as TransferProcessIndexImport } from './routes/transfer-process/index'
 import { Route as SubscriptionsIndexImport } from './routes/subscriptions/index'
 import { Route as ParticipantsIndexImport } from './routes/participants/index'
+import { Route as LoginIndexImport } from './routes/login/index'
 import { Route as ContractNegotiationIndexImport } from './routes/contract-negotiation/index'
 import { Route as CatalogIndexImport } from './routes/catalog/index'
 import { Route as AgreementsIndexImport } from './routes/agreements/index'
@@ -99,6 +100,12 @@ const ParticipantsIndexRoute = ParticipantsIndexImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => ParticipantsRouteRoute,
+} as any)
+
+const LoginIndexRoute = LoginIndexImport.update({
+  id: '/login/',
+  path: '/login/',
+  getParentRoute: () => rootRoute,
 } as any)
 
 const ContractNegotiationIndexRoute = ContractNegotiationIndexImport.update({
@@ -330,6 +337,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/contract-negotiation/'
       preLoaderRoute: typeof ContractNegotiationIndexImport
       parentRoute: typeof ContractNegotiationRouteImport
+    }
+    '/login/': {
+      id: '/login/'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginIndexImport
+      parentRoute: typeof rootRoute
     }
     '/participants/': {
       id: '/participants/'
@@ -584,6 +598,7 @@ export interface FileRoutesByFullPath {
   '/agreements/': typeof AgreementsIndexRoute
   '/catalog/': typeof CatalogIndexRoute
   '/contract-negotiation/': typeof ContractNegotiationIndexRoute
+  '/login': typeof LoginIndexRoute
   '/participants/': typeof ParticipantsIndexRoute
   '/subscriptions/': typeof SubscriptionsIndexRoute
   '/transfer-process/': typeof TransferProcessIndexRoute
@@ -604,6 +619,7 @@ export interface FileRoutesByTo {
   '/agreements': typeof AgreementsIndexRoute
   '/catalog': typeof CatalogIndexRoute
   '/contract-negotiation': typeof ContractNegotiationIndexRoute
+  '/login': typeof LoginIndexRoute
   '/participants': typeof ParticipantsIndexRoute
   '/subscriptions': typeof SubscriptionsIndexRoute
   '/transfer-process': typeof TransferProcessIndexRoute
@@ -635,6 +651,7 @@ export interface FileRoutesById {
   '/agreements/': typeof AgreementsIndexRoute
   '/catalog/': typeof CatalogIndexRoute
   '/contract-negotiation/': typeof ContractNegotiationIndexRoute
+  '/login/': typeof LoginIndexRoute
   '/participants/': typeof ParticipantsIndexRoute
   '/subscriptions/': typeof SubscriptionsIndexRoute
   '/transfer-process/': typeof TransferProcessIndexRoute
@@ -667,6 +684,7 @@ export interface FileRouteTypes {
     | '/agreements/'
     | '/catalog/'
     | '/contract-negotiation/'
+    | '/login'
     | '/participants/'
     | '/subscriptions/'
     | '/transfer-process/'
@@ -686,6 +704,7 @@ export interface FileRouteTypes {
     | '/agreements'
     | '/catalog'
     | '/contract-negotiation'
+    | '/login'
     | '/participants'
     | '/subscriptions'
     | '/transfer-process'
@@ -715,6 +734,7 @@ export interface FileRouteTypes {
     | '/agreements/'
     | '/catalog/'
     | '/contract-negotiation/'
+    | '/login/'
     | '/participants/'
     | '/subscriptions/'
     | '/transfer-process/'
@@ -737,6 +757,7 @@ export interface RootRouteChildren {
   ParticipantsRouteRoute: typeof ParticipantsRouteRouteWithChildren
   SubscriptionsRouteRoute: typeof SubscriptionsRouteRouteWithChildren
   TransferProcessRouteRoute: typeof TransferProcessRouteRouteWithChildren
+  LoginIndexRoute: typeof LoginIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -747,6 +768,7 @@ const rootRouteChildren: RootRouteChildren = {
   ParticipantsRouteRoute: ParticipantsRouteRouteWithChildren,
   SubscriptionsRouteRoute: SubscriptionsRouteRouteWithChildren,
   TransferProcessRouteRoute: TransferProcessRouteRouteWithChildren,
+  LoginIndexRoute: LoginIndexRoute,
 }
 
 export const routeTree = rootRoute
@@ -765,7 +787,8 @@ export const routeTree = rootRoute
         "/contract-negotiation",
         "/participants",
         "/subscriptions",
-        "/transfer-process"
+        "/transfer-process",
+        "/login/"
       ]
     },
     "/": {
@@ -864,6 +887,9 @@ export const routeTree = rootRoute
     "/contract-negotiation/": {
       "filePath": "contract-negotiation/index.tsx",
       "parent": "/contract-negotiation"
+    },
+    "/login/": {
+      "filePath": "login/index.tsx"
     },
     "/participants/": {
       "filePath": "participants/index.tsx",
