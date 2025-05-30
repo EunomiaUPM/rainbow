@@ -26,6 +26,7 @@ import {getParticipants} from "@/data/participant-queries.ts";
 import {getCatalogs, getDatasetsByCatalogId} from "@/data/catalog-queries.ts";
 import {getPoliciesByDatasetId} from "@/data/policy-queries.ts";
 import {Textarea} from "shared/src/components/ui/textarea.tsx";
+import {usePostContractNegotiationRPCOffer} from "@/data/contract-mutations.ts";
 
 
 type Inputs = {
@@ -37,6 +38,8 @@ type Inputs = {
 }
 
 const RouteComponent = () => {
+    const {mutate: sendOffer, isPending} = usePostContractNegotiationRPCOffer()
+
     // --- State Management ---
     // Consumer Participant
     const [consumerParticipantOpen, setConsumerParticipantOpen] = useState(false);
@@ -125,10 +128,10 @@ const RouteComponent = () => {
             if (fieldName === "catalog") {
                 setSelectedCatalog(null);
                 setCatalogs([]); // Clear catalog options if needed
-            } else if (fieldName === "id") { // Dataset field
+            } else if (fieldName === "target") { // Dataset field
                 setSelectedDataset(null);
                 setDatasets([]); // Clear dataset options
-            } else if (fieldName === "target") { // Policy field
+            } else if (fieldName === "id") { // Policy field
                 setSelectedPolicy(null);
                 setPolicies([]); // Clear policy options
             }
@@ -139,6 +142,25 @@ const RouteComponent = () => {
     // --- Form Submission Handler ---
     const onSubmit: SubmitHandler<Inputs> = data => {
         console.log("Form data submitted:", data);
+        sendOffer({
+            consumerParticipantId: data.consumerParticipantId,
+            offer: {
+                "@id": data.id,
+                "@type": "Offer",
+                target: data.target,
+                permission: [
+                    {
+                        action: "use",
+                        constraint: []
+                    }
+                ],
+                obligation: [],
+                prohibition: [],
+                profile: ""
+            }
+        })
+
+
         form.reset();
         // Reset all local states when the form is fully reset
         setConsumerSelectedParticipant(null);
@@ -341,7 +363,7 @@ const RouteComponent = () => {
                     {/* Dataset Field (mapped to 'id' in Inputs) */}
                     <FormField
                         control={control}
-                        name="id" // This is the dataset ID field
+                        name="target" // This is the dataset ID field
                         render={({field}) => (
                             <FormItem>
                                 <FormLabel className="text-gray-700">Dataset</FormLabel>
@@ -379,7 +401,7 @@ const RouteComponent = () => {
                                                                             setSelectedDataset(dataset);
                                                                             setDatasetOpen(false);
                                                                             // Clear Policy field
-                                                                            clearFields(["target"]);
+                                                                            clearFields(["id"]);
                                                                         } else {
                                                                             setDatasetOpen(false); // Just close if same value
                                                                         }
@@ -406,10 +428,10 @@ const RouteComponent = () => {
                     {/* Policy Target Field (mapped to 'target' in Inputs) */}
                     <FormField
                         control={control}
-                        name="target" // This is the policy ID field
+                        name="id" // This is the policy ID field
                         render={({field}) => (
                             <FormItem>
-                                <FormLabel className="text-gray-700">Policy Target</FormLabel>
+                                <FormLabel className="text-gray-700">Policy Id</FormLabel>
                                 <div>
                                     <FormControl>
                                         <Popover open={policiesOpen} onOpenChange={handlePoliciesOpenChange}>
@@ -479,9 +501,9 @@ const RouteComponent = () => {
                         )}
                     />
 
-                    <Button type="submit"
+                    <Button type="submit" disabled={isPending}
                             className="w-full">
-                        Submit Offer
+                        Submit Offer {isPending && <span className="ml-2">...</span>}
                     </Button>
                 </form>
             </Form>
