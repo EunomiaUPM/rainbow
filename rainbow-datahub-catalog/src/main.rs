@@ -38,6 +38,27 @@ async fn print_datasets(datahub_service: &DatahubProxyService, domain_urn: &str,
     Ok(())
 }
 
+async fn print_dataset_metadata(datahub_service: &DatahubProxyService, dataset_urn: &str) -> anyhow::Result<()> {
+    println!("\nObteniendo metadatos para el dataset {}...", dataset_urn);
+    match datahub_service.get_datahub_dataset_by_id(dataset_urn.to_string()).await {
+        Ok(dataset) => {
+            println!("URN: {}", dataset.urn);
+            println!("Nombre: {}", dataset.name);
+            println!("Plataforma: {}", dataset.platform.name);
+            println!("Descripción: {}", dataset.description.unwrap_or_default());
+            println!("Tags: {}", dataset.tag_names.join(", "));
+            println!("Propiedades personalizadas:");
+            for (key, value) in &dataset.custom_properties {
+                println!("  {}: {}", key, value);
+            }
+            println!("--------------------");
+        },
+        Err(e) => println!("Error al obtener metadatos del dataset: {}", e),
+    }
+    Ok(())
+}
+
+
 fn main() {
     let config = ApplicationProviderConfig::default();
     let datahub_service = DatahubProxyService::new(config);
@@ -56,6 +77,11 @@ fn main() {
                     println!("Error printing datasets for domain {}: {}", domain.properties.name, e);
                 }
             }
+        }
+
+        // Llamar a la función para imprimir metadatos del dataset específico
+        if let Err(e) = print_dataset_metadata(&datahub_service, "urn:li:dataset:(urn:li:dataPlatform:airflow,ASPIRIN_events,PROD)").await {
+            println!("Error al imprimir metadatos del dataset ASPIRIN_events: {}", e);
         }
     });
 }

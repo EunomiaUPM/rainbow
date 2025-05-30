@@ -1,6 +1,7 @@
 // use crate::core::datahub_proxy::datahub_proxy_types::{DatahubDataset, DatahubDomain};
 use crate::core::datahub_proxy::datahub_proxy_types::{DatahubDomain, DomainProperties, GraphQLResponse, SearchResponse, SearchResults, SearchResult, Entity};
 use crate::core::datahub_proxy::datahub_proxy_types::{DatahubDataset, Platform, DatasetGraphQLResponse, DatasetSearchResponse, DatasetSearchResults, DatasetSearchResult, DatasetEntity};
+use crate::core::datahub_proxy::datahub_proxy_types::{DatasetGraphQLResponseDetailed};
 use crate::core::datahub_proxy::DatahubProxyTrait;
 use axum::async_trait;
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
@@ -30,7 +31,7 @@ impl DatahubProxyTrait for DatahubProxyService {
         // let graphql_url = "http://datahub-gms-federado:8080/api/graphql";
         // let dh_host = self.config.get_datahub_host_url();
         // let graphql_url = "http://192.168.64.29:8080/api/graphql";
-        let graphql_url = "http://localhost:8084/api/graphql";
+        let graphql_url = "http://localhost:8086/api/graphql";
         let query = r#"{
             search(input: { type: DOMAIN, query: "*", start: 0, count: 50 }) {
                 searchResults {
@@ -50,9 +51,8 @@ impl DatahubProxyTrait for DatahubProxyService {
         let request_body = serde_json::json!({
             "query": query
         });
-
-        // Aquí debes poner tu token de autorización
-        let token = "eyJhbGciOiJIUzI1NiJ9.eyJhY3RvclR5cGUiOiJVU0VSIiwiYWN0b3JJZCI6ImRydWdzQGRydWdzLmNvbSIsInR5cGUiOiJQRVJTT05BTCIsInZlcnNpb24iOiIyIiwianRpIjoiNGEzOTExYTgtNWYxYS00OWE4LWI4MTEtMDU4ZDMyOTgwYjZiIiwic3ViIjoiZHJ1Z3NAZHJ1Z3MuY29tIiwiZXhwIjoxNzUxMDE0NDI1LCJpc3MiOiJkYXRhaHViLW1ldGFkYXRhLXNlcnZpY2UifQ.-S7uV_rCesUQ92bse8TzaaeZX_WFsAKc3kh3YsWcvxo";
+         
+        let token = "eyJhbGciOiJIUzI1NiJ9.eyJhY3RvclR5cGUiOiJVU0VSIiwiYWN0b3JJZCI6ImRhdGFodWIiLCJ0eXBlIjoiUEVSU09OQUwiLCJ2ZXJzaW9uIjoiMiIsImp0aSI6IjFlMzljZjM4LWJmN2QtNGUzNi05OWFjLWI3ZGU4MjYwMDRiNiIsInN1YiI6ImRhdGFodWIiLCJleHAiOjE3NTExODY0MzIsImlzcyI6ImRhdGFodWItbWV0YWRhdGEtc2VydmljZSJ9.4agJYK2SWEfc0tCVsq7HRG_4CI5HG2sStJ2_gReglDI";
 
         let response = self.client
             .post(graphql_url)
@@ -83,7 +83,7 @@ impl DatahubProxyTrait for DatahubProxyService {
     // }
 
     async fn get_datahub_datasets_by_domain_id(&self, id: String) -> anyhow::Result<Vec<DatahubDataset>> {
-       let graphql_url = "http://localhost:8084/api/graphql";
+       let graphql_url = "http://localhost:8086/api/graphql";
         let query = format!(r#"{{
             searchAcrossEntities(input: {{ 
                 query: "*", 
@@ -112,7 +112,7 @@ impl DatahubProxyTrait for DatahubProxyService {
             "query": query
         });
 
-        let token = "eyJhbGciOiJIUzI1NiJ9.eyJhY3RvclR5cGUiOiJVU0VSIiwiYWN0b3JJZCI6ImRydWdzQGRydWdzLmNvbSIsInR5cGUiOiJQRVJTT05BTCIsInZlcnNpb24iOiIyIiwianRpIjoiNGEzOTExYTgtNWYxYS00OWE4LWI4MTEtMDU4ZDMyOTgwYjZiIiwic3ViIjoiZHJ1Z3NAZHJ1Z3MuY29tIiwiZXhwIjoxNzUxMDE0NDI1LCJpc3MiOiJkYXRhaHViLW1ldGFkYXRhLXNlcnZpY2UifQ.-S7uV_rCesUQ92bse8TzaaeZX_WFsAKc3kh3YsWcvxo";
+        let token = "eyJhbGciOiJIUzI1NiJ9.eyJhY3RvclR5cGUiOiJVU0VSIiwiYWN0b3JJZCI6ImRhdGFodWIiLCJ0eXBlIjoiUEVSU09OQUwiLCJ2ZXJzaW9uIjoiMiIsImp0aSI6IjFlMzljZjM4LWJmN2QtNGUzNi05OWFjLWI3ZGU4MjYwMDRiNiIsInN1YiI6ImRhdGFodWIiLCJleHAiOjE3NTExODY0MzIsImlzcyI6ImRhdGFodWItbWV0YWRhdGEtc2VydmljZSJ9.4agJYK2SWEfc0tCVsq7HRG_4CI5HG2sStJ2_gReglDI";
 
         let response = self.client
             .post(graphql_url)
@@ -133,14 +133,81 @@ impl DatahubProxyTrait for DatahubProxyService {
                 urn: result.entity.urn,
                 name: result.entity.name,
                 platform: result.entity.platform,
+                description: None,
+                tag_names: vec![],
+                custom_properties: vec![],
             })
             .collect();
 
         Ok(datasets)
     }
+    async fn get_datahub_dataset_by_id(&self, id: String) -> anyhow::Result<DatahubDataset> {
+        let graphql_url = "http://localhost:8086/api/graphql";
+        let query = format!(r#"{{
+        dataset(urn: "{}") {{
+            urn
+            name
+            platform {{ name }}
+            description
+            properties {{
+                name
+                description
+                customProperties {{
+                    key
+                    value
+                }}
+            }}
+            ownership {{
+                owners {{
+                    owner {{
+                        ... on CorpUser {{
+                            username
+                        }}
+                    }}
+                }}
+            }}
+            tags {{
+                tags {{
+                    tag {{
+                        name
+                    }}
+                }}
+            }}
+        }}
+    }}"#, id);
 
+        let request_body = serde_json::json!({
+        "query": query
+    });
 
-    // async fn get_datahub_dataset_by_id(&self, id: String) -> anyhow::Result<DatahubDataset> {
-    //     todo!()
-    // }
+        let token = "eyJhbGciOiJIUzI1NiJ9.eyJhY3RvclR5cGUiOiJVU0VSIiwiYWN0b3JJZCI6ImRhdGFodWIiLCJ0eXBlIjoiUEVSU09OQUwiLCJ2ZXJzaW9uIjoiMiIsImp0aSI6IjFlMzljZjM4LWJmN2QtNGUzNi05OWFjLWI3ZGU4MjYwMDRiNiIsInN1YiI6ImRhdGFodWIiLCJleHAiOjE3NTExODY0MzIsImlzcyI6ImRhdGFodWItbWV0YWRhdGEtc2VydmljZSJ9.4agJYK2SWEfc0tCVsq7HRG_4CI5HG2sStJ2_gReglDI";
+
+        let response = self.client
+            .post(graphql_url)
+            .header("Content-Type", "application/json")
+            .header("Authorization", format!("Bearer {}", token))
+            .json(&request_body)
+            .send()
+            .await?;
+
+        let graphql_response: DatasetGraphQLResponseDetailed = response.json().await?;
+        
+        let detailed = graphql_response.data.dataset;
+
+        let custom_props = detailed.properties.custom_properties.unwrap_or_default()
+            .into_iter()
+            .map(|cp| (cp.key, cp.value))
+            .collect();
+
+        let dataset = DatahubDataset {
+            urn: detailed.urn,
+            name: detailed.name,
+            platform: detailed.platform,
+            description: detailed.description,
+            tag_names: detailed.tags.tags.into_iter().map(|tw| tw.tag.name).collect(),
+            custom_properties: custom_props,
+        };
+
+        Ok(dataset)
+    }
 }
