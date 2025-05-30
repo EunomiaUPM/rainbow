@@ -218,6 +218,11 @@ declare global {
         messageContent: any
         subscriptionId: string
     }
+
+    export interface ContractNegotiationRPCProviderOfferBody {
+        consumerParticipantId: UUID;
+        offer: OdrlOffer;
+    }
 }
 
 declare module "@tanstack/react-router" {
