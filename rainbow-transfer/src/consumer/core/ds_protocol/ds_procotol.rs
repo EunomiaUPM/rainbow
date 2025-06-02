@@ -62,7 +62,7 @@ where
         }
         let consumer = self
             .transfer_repo
-            .get_transfer_callbacks_by_consumer_id(consumer_pid.clone())
+            .get_transfer_callback_by_consumer_id(consumer_pid.clone())
             .await
             .map_err(DSProtocolTransferConsumerErrors::DbErr)?
             .ok_or(DSProtocolTransferConsumerErrors::TransferProcessNotFound {
@@ -116,7 +116,7 @@ where
     async fn get_transfer_requests_by_consumer(&self, consumer_pid: Urn) -> anyhow::Result<TransferProcessMessage> {
         let transfer_process = self
             .transfer_repo
-            .get_transfer_callbacks_by_consumer_id(consumer_pid.clone())
+            .get_transfer_callback_by_consumer_id(consumer_pid.clone())
             .await
             .map_err(DSProtocolTransferConsumerErrors::DbErr)?
             .ok_or(DSProtocolTransferConsumerErrors::TransferProcessNotFound {

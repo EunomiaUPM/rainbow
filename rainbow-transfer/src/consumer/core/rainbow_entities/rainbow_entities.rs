@@ -68,7 +68,7 @@ where
 
     async fn get_transfer_by_consumer_id(&self, consumer_pid: Urn) -> anyhow::Result<transfer_callback::Model> {
         let transfer_process = self.repo
-            .get_transfer_callbacks_by_consumer_id(consumer_pid.clone())
+            .get_transfer_callback_by_consumer_id(consumer_pid.clone())
             .await
             .map_err(RainbowTransferConsumerErrors::DbErr)?
             .ok_or(RainbowTransferConsumerErrors::ProcessNotFound {

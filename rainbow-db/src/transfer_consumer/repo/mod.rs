@@ -60,9 +60,14 @@ pub trait TransferCallbackRepo {
         callback_id: Urn,
     ) -> anyhow::Result<Option<transfer_callback::Model>, TransferConsumerRepoErrors>;
 
-    async fn get_transfer_callbacks_by_consumer_id(
+    async fn get_transfer_callback_by_consumer_id(
         &self,
         consumer_pid: Urn,
+    ) -> anyhow::Result<Option<transfer_callback::Model>, TransferConsumerRepoErrors>;
+
+    async fn get_transfer_callback_by_provider_id(
+        &self,
+        provider_id: Urn,
     ) -> anyhow::Result<Option<transfer_callback::Model>, TransferConsumerRepoErrors>;
 
     async fn put_transfer_callback(

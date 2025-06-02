@@ -32,8 +32,15 @@ use rainbow_dataplane::coordinator::dataplane_process::dataplane_process_service
 use rainbow_dataplane::testing_proxy::http::http::TestingHTTPProxy;
 use rainbow_db::dataplane::repo::sql::DataPlaneRepoForSql;
 use rainbow_db::dataplane::repo::DataPlaneRepoFactory;
+use rainbow_db::events::repo::sql::EventsRepoForSql;
+use rainbow_db::events::repo::EventsRepoFactory;
 use rainbow_db::transfer_consumer::repo::sql::TransferConsumerRepoForSql;
 use rainbow_db::transfer_consumer::repo::TransferConsumerRepoFactory;
+use rainbow_events::core::notification::notification::RainbowEventsNotificationsService;
+use rainbow_events::core::subscription::subscription::RainbowEventsSubscriptionService;
+use rainbow_events::core::subscription::subscription_types::SubscriptionEntities;
+use rainbow_events::http::notification::notification::RainbowEventsNotificationRouter;
+use rainbow_events::http::subscription::subscription::RainbowEventsSubscriptionRouter;
 use sea_orm::Database;
 use std::sync::Arc;
 use tokio::net::TcpListener;
@@ -43,6 +50,23 @@ pub struct TransferConsumerApplication;
 
 pub async fn create_transfer_consumer_router(config: &TransferConsumerApplicationConfig) -> Router {
     let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
+
+    // Events router
+    let subscription_repo = Arc::new(EventsRepoForSql::create_repo(db_connection.clone()));
+    let subscription_service = Arc::new(RainbowEventsSubscriptionService::new(
+        subscription_repo.clone(),
+    ));
+    let subscription_router = RainbowEventsSubscriptionRouter::new(
+        subscription_service,
+        Some(SubscriptionEntities::TransferProcess),
+    )
+        .router();
+    let notification_service = Arc::new(RainbowEventsNotificationsService::new(subscription_repo));
+    let notification_router = RainbowEventsNotificationRouter::new(
+        notification_service.clone(),
+        Some(SubscriptionEntities::TransferProcess),
+    )
+        .router();
 
     // Dataplane services
     let application_global_config: ApplicationConsumerConfig = config.clone().into();
@@ -81,6 +105,7 @@ pub async fn create_transfer_consumer_router(config: &TransferConsumerApplicatio
         consumer_repo.clone(),
         data_plane_facade.clone(),
         config.clone(),
+        notification_service.clone(),
     ));
     let ds_protocol_rpc_router = DSRPCTransferConsumerRouter::new(ds_protocol_rpc_service.clone()).router();
 
@@ -89,7 +114,9 @@ pub async fn create_transfer_consumer_router(config: &TransferConsumerApplicatio
         .merge(rainbow_entities_router)
         .merge(ds_protocol_router)
         .merge(ds_protocol_rpc_router)
-        .merge(dataplane_testing_router);
+        .merge(dataplane_testing_router)
+        .nest("/api/v1/transfers", subscription_router)
+        .nest("/api/v1/transfers", notification_router);
 
     transfer_provider_application_router
 }

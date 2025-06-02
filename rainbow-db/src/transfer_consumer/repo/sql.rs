@@ -72,13 +72,25 @@ impl TransferCallbackRepo for TransferConsumerRepoForSql {
         }
     }
 
-    async fn get_transfer_callbacks_by_consumer_id(
+    async fn get_transfer_callback_by_consumer_id(
         &self,
         consumer_pid: Urn,
     ) -> anyhow::Result<Option<Model>, TransferConsumerRepoErrors> {
         let consumer_pid = consumer_pid.to_string();
         let transfer_callback = transfer_callback::Entity::find()
             .filter(transfer_callback::Column::ConsumerPid.eq(consumer_pid))
+            .one(&self.db_connection)
+            .await;
+        match transfer_callback {
+            Ok(transfer_callback) => Ok(transfer_callback),
+            Err(e) => Err(TransferConsumerRepoErrors::ErrorFetchingConsumerTransferProcess(e.into())),
+        }
+    }
+
+    async fn get_transfer_callback_by_provider_id(&self, provider_id: Urn) -> anyhow::Result<Option<Model>, TransferConsumerRepoErrors> {
+        let consumer_pid = provider_id.to_string();
+        let transfer_callback = transfer_callback::Entity::find()
+            .filter(transfer_callback::Column::ProviderPid.eq(consumer_pid))
             .one(&self.db_connection)
             .await;
         match transfer_callback {
