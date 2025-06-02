@@ -38,7 +38,7 @@ type Inputs = {
 }
 
 const RouteComponent = () => {
-    const {mutate: sendOffer, isPending} = usePostContractNegotiationRPCOffer()
+    const {mutateAsync: sendOfferAsync, isPending} = usePostContractNegotiationRPCOffer()
 
     // --- State Management ---
     // Consumer Participant
@@ -140,9 +140,9 @@ const RouteComponent = () => {
     };
 
     // --- Form Submission Handler ---
-    const onSubmit: SubmitHandler<Inputs> = data => {
+    const onSubmit: SubmitHandler<Inputs> = async data => {
         console.log("Form data submitted:", data);
-        sendOffer({
+        await sendOfferAsync({
             consumerParticipantId: data.consumerParticipantId,
             offer: {
                 "@id": data.id,
@@ -158,8 +158,7 @@ const RouteComponent = () => {
                 prohibition: [],
                 profile: ""
             }
-        })
-
+        }, {})
 
         form.reset();
         // Reset all local states when the form is fully reset
