@@ -18,7 +18,10 @@
  */
 
 use super::super::entities::cn_process;
-use crate::contracts_consumer::repo::{CnErrors, ContractNegotiationConsumerProcessRepo, ContractNegotiationConsumerRepoFactory, EditContractNegotiationProcess, NewContractNegotiationProcess};
+use crate::contracts_consumer::repo::{
+    CnErrors, ContractNegotiationConsumerProcessRepo, ContractNegotiationConsumerRepoFactory,
+    EditContractNegotiationProcess, NewContractNegotiationProcess,
+};
 use axum::async_trait;
 use rainbow_common::utils::get_urn;
 use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect};
@@ -80,11 +83,7 @@ impl ContractNegotiationConsumerProcessRepo for ContractNegotiationConsumerRepoF
         Ok(cn_processes)
     }
 
-
-    async fn get_cn_process_by_cn_id(
-        &self,
-        cn_process_id: Urn,
-    ) -> anyhow::Result<Option<cn_process::Model>, CnErrors> {
+    async fn get_cn_process_by_cn_id(&self, cn_process_id: Urn) -> anyhow::Result<Option<cn_process::Model>, CnErrors> {
         let cn_process = cn_process::Entity::find_by_id(cn_process_id.as_str())
             .one(&self.db_connection)
             .await
@@ -118,12 +117,9 @@ impl ContractNegotiationConsumerProcessRepo for ContractNegotiationConsumerRepoF
         new_cn_process: NewContractNegotiationProcess,
     ) -> anyhow::Result<cn_process::Model, CnErrors> {
         let model = cn_process::ActiveModel {
-            cn_process_id: ActiveValue::Set(get_urn(None).to_string()),
+            consumer_id: ActiveValue::Set(new_cn_process.consumer_id.unwrap_or(get_urn(None)).to_string()),
             provider_id: ActiveValue::Set(Option::from(
                 get_urn(new_cn_process.provider_id).to_string(),
-            )),
-            consumer_id: ActiveValue::Set(Option::from(
-                get_urn(new_cn_process.consumer_id).to_string(),
             )),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             updated_at: ActiveValue::Set(None),

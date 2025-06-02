@@ -32,6 +32,7 @@ pub enum DSRPCContractNegotiationConsumerErrors {
     ProviderInternalError {
         provider_pid: Option<Urn>,
         consumer_pid: Option<Urn>,
+        error: Option<serde_json::Value>,
     },
     #[error("Provider response is not protocol compliant")]
     ProviderResponseNotSerializable {

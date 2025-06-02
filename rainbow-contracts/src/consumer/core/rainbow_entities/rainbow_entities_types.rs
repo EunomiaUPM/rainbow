@@ -28,16 +28,13 @@ pub struct NewContractNegotiationRequest {
     #[serde(rename = "dspace:providerPid")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub provider_id: Option<String>,
-    #[serde(rename = "dspace:consumerPid")]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub consumer_id: Option<String>,
 }
 
 impl Into<NewContractNegotiationProcess> for NewContractNegotiationRequest {
     fn into(self) -> NewContractNegotiationProcess {
         NewContractNegotiationProcess {
             provider_id: self.provider_id.map(|id| get_urn_from_string(&id).unwrap()),
-            consumer_id: self.consumer_id.map(|id| get_urn_from_string(&id).unwrap()),
+            consumer_id: None,
         }
     }
 }

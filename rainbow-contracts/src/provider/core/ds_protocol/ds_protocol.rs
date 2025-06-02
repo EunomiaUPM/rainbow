@@ -17,6 +17,7 @@
  *
  */
 
+use crate::common::schemas::validation::validate_payload_schema;
 use crate::common::schemas::{
     CONTRACT_AGREEMENT_MESSAGE_SCHEMA, CONTRACT_AGREEMENT_VERIFICATION_MESSAGE_SCHEMA,
     CONTRACT_NEGOTIATION_EVENT_MESSAGE_SCHEMA, CONTRACT_OFFER_MESSAGE_SCHEMA, CONTRACT_REQUEST_MESSAGE_SCHEMA,
@@ -99,34 +100,7 @@ where
         message: &M,
     ) -> anyhow::Result<()> {
         debug!("Contract negotiation json_schema_validation");
-        let validation = match message.get_message_type()? {
-            ContractNegotiationMessages::ContractRequestMessage => {
-                CONTRACT_REQUEST_MESSAGE_SCHEMA.apply(&to_value(message)?).basic()
-            }
-            ContractNegotiationMessages::ContractOfferMessage => {
-                CONTRACT_OFFER_MESSAGE_SCHEMA.apply(&to_value(message)?).basic()
-            }
-            ContractNegotiationMessages::ContractAgreementMessage => {
-                CONTRACT_AGREEMENT_MESSAGE_SCHEMA.apply(&to_value(message)?).basic()
-            }
-            ContractNegotiationMessages::ContractAgreementVerificationMessage => {
-                CONTRACT_AGREEMENT_VERIFICATION_MESSAGE_SCHEMA.apply(&to_value(message)?).basic()
-            }
-            ContractNegotiationMessages::ContractNegotiationEventMessage => {
-                CONTRACT_NEGOTIATION_EVENT_MESSAGE_SCHEMA.apply(&to_value(message)?).basic()
-            }
-            ContractNegotiationMessages::ContractNegotiationTerminationMessage => {
-                CONTRACT_TERMINATION_MESSAGE_SCHEMA.apply(&to_value(message)?).basic()
-            }
-            _ => bail!("Message malformed"),
-        };
-        if let BasicOutput::Invalid(errors) = validation {
-            for error in errors {
-                error!("{}", error.instance_location());
-                error!("{}", error.error_description());
-            }
-            bail!("Message malformed in JSON Data Validation");
-        }
+        validate_payload_schema(message)?;
         Ok(())
     }
 
@@ -162,12 +136,12 @@ where
             _ => {
                 let cn_process_consumer = self
                     .repo
-                    .get_cn_processes_by_consumer_id(message.get_consumer_pid()?.to_owned())
+                    .get_cn_processes_by_consumer_id(message.get_consumer_pid()?.unwrap().to_owned())
                     .await
                     .map_err(IdsaCNError::DbErr)?
                     .ok_or(IdsaCNError::ProcessNotFound {
                         provider_pid: provider_pid.map(|p| p.to_owned()),
-                        consumer_pid: Option::from(message.get_consumer_pid()?.to_owned()),
+                        consumer_pid: Option::from(message.get_consumer_pid()?.map(|m| m.to_owned())),
                     })?;
 
                 let cn_process_provider = self
@@ -177,7 +151,7 @@ where
                     .map_err(IdsaCNError::DbErr)?
                     .ok_or(IdsaCNError::ProcessNotFound {
                         provider_pid: provider_pid.map(|p| p.to_owned()),
-                        consumer_pid: Option::from(message.get_consumer_pid()?.to_owned()),
+                        consumer_pid: Option::from(message.get_consumer_pid()?.map(|m| m.to_owned())),
                     })?;
                 if cn_process_consumer.cn_process_id != cn_process_provider.cn_process_id {
                     bail!(IdsaCNError::ValidationError(
@@ -213,7 +187,7 @@ where
         // extract process
         let cn_process = self
             .repo
-            .get_cn_processes_by_consumer_id(consumer_pid.clone())
+            .get_cn_processes_by_consumer_id(consumer_pid.clone().unwrap().to_owned())
             .await
             .map_err(|e| IdsaCNError::DbErr(e.into()))?;
 
@@ -224,7 +198,7 @@ where
             // (None, None) => {}
             (None, Some(_)) => bail!(
                 "Contract with consumerPid {} already requested",
-                &consumer_pid
+                &consumer_pid.unwrap()
             ),
             _ => {}
         }

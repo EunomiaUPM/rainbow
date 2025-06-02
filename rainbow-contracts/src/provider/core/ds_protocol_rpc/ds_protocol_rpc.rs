@@ -34,7 +34,7 @@ use rainbow_common::protocol::contract::contract_agreement::ContractAgreementMes
 use rainbow_common::protocol::contract::contract_negotiation_event::{
     ContractNegotiationEventMessage, NegotiationEventType,
 };
-use rainbow_common::protocol::contract::contract_odrl::{OdrlAgreement, OdrlOffer, OdrlTypes};
+use rainbow_common::protocol::contract::contract_odrl::{ContractRequestMessageOfferTypes, OdrlAgreement, OdrlOffer, OdrlTypes};
 use rainbow_common::protocol::contract::contract_offer::ContractOfferMessage;
 use rainbow_common::protocol::contract::ContractNegotiationMessages;
 use rainbow_common::utils::{get_urn, get_urn_from_string};
@@ -53,6 +53,7 @@ use reqwest::Client;
 use serde_json::{json, Value};
 use std::sync::Arc;
 use std::time::Duration;
+use tracing::debug;
 use urn::Urn;
 
 pub struct DSRPCContractNegotiationProviderService<T, U, V>
@@ -240,8 +241,9 @@ where
         // 3. create message
         let provider_pid = get_urn(None);
         let contract_offer_message = ContractOfferMessage {
-            provider_pid: provider_pid.to_string(),
-            odrl_offer: odrl_offer.clone(),
+            provider_pid: provider_pid.to_string().parse()?,
+            consumer_pid: None,
+            odrl_offer: ContractRequestMessageOfferTypes::OfferMessage(odrl_offer.clone()),
             ..Default::default()
         };
         // 4. send message
@@ -353,8 +355,9 @@ where
         }
         // 3. create message
         let contract_offer_message = ContractOfferMessage {
-            provider_pid: cn_process.provider_id.unwrap(), // consumer??
-            odrl_offer: odrl_offer.clone(),
+            provider_pid: cn_process.provider_id.unwrap().parse()?,
+            consumer_pid: cn_process.consumer_id.map(|c| get_urn_from_string(&c).unwrap()),
+            odrl_offer: ContractRequestMessageOfferTypes::OfferMessage(odrl_offer.clone()),
             ..Default::default()
         };
         // 4. send message
@@ -468,14 +471,16 @@ where
             target: last_offer.target.unwrap(),
             assigner: provider_participant_id.clone(),
             assignee: consumer_participant_id.clone(),
-            timestamp: Option::from(chrono::Utc::now().naive_utc().to_string()),
+            timestamp: Option::from(chrono::Utc::now().to_rfc3339().to_string()),
             prohibition: last_offer.prohibition,
         };
 
+        debug!("{:?}", final_agreement);
+
         // 4. create message
         let contract_agreement_message = ContractAgreementMessage {
-            provider_pid: provider_pid.to_string(),
-            consumer_pid: consumer_pid.to_string(),
+            provider_pid: provider_pid.clone(),
+            consumer_pid: consumer_pid.clone(),
             odrl_agreement: final_agreement.clone(),
             ..Default::default()
         };

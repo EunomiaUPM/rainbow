@@ -17,6 +17,9 @@
  *
  */
 
+use crate::consumer::core::ds_protocol_rpc::ds_protocol_rpc_errors::DSRPCContractNegotiationConsumerErrors;
+use crate::consumer::core::rainbow_entities::rainbow_entities_errors::CnErrorConsumer;
+use crate::provider::core::ds_protocol_rpc::ds_protocol_rpc_errors::DSRPCContractNegotiationProviderErrors;
 use crate::provider::core::ds_protocol_rpc::ds_protocol_rpc_types::{
     SetupAgreementRequest, SetupFinalizationRequest, SetupOfferRequest, SetupTerminationRequest,
 };
@@ -28,6 +31,7 @@ use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::post;
 use axum::{Json, Router};
+use log::debug;
 use rainbow_common::err::transfer_err::TransferErrorType::NotCheckedError;
 use std::sync::Arc;
 use tracing::info;
@@ -82,14 +86,20 @@ where
                 Ok(res) => (StatusCode::CREATED, Json(res)).into_response(),
                 Err(err) => match err.downcast::<CnErrorProvider>() {
                     Ok(e_) => e_.into_response(),
-                    Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
+                    Err(e_) => match e_.downcast::<DSRPCContractNegotiationProviderErrors>() {
+                        Ok(e__) => e__.into_response(),
+                        Err(e__) => NotCheckedError { inner_error: e__ }.into_response(),
+                    },
                 },
             },
             true => match service.setup_reoffer(input).await {
                 Ok(res) => (StatusCode::CREATED, Json(res)).into_response(),
                 Err(err) => match err.downcast::<CnErrorProvider>() {
                     Ok(e_) => e_.into_response(),
-                    Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
+                    Err(e_) => match e_.downcast::<DSRPCContractNegotiationProviderErrors>() {
+                        Ok(e__) => e__.into_response(),
+                        Err(e__) => NotCheckedError { inner_error: e__ }.into_response(),
+                    },
                 },
             },
         }
@@ -108,7 +118,10 @@ where
             Ok(res) => (StatusCode::CREATED, Json(res)).into_response(),
             Err(err) => match err.downcast::<CnErrorProvider>() {
                 Ok(e_) => e_.into_response(),
-                Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
+                Err(e_) => match e_.downcast::<DSRPCContractNegotiationProviderErrors>() {
+                    Ok(e__) => e__.into_response(),
+                    Err(e__) => NotCheckedError { inner_error: e__ }.into_response(),
+                },
             },
         }
     }
@@ -126,7 +139,10 @@ where
             Ok(res) => (StatusCode::CREATED, Json(res)).into_response(),
             Err(err) => match err.downcast::<CnErrorProvider>() {
                 Ok(e_) => e_.into_response(),
-                Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
+                Err(e_) => match e_.downcast::<DSRPCContractNegotiationProviderErrors>() {
+                    Ok(e__) => e__.into_response(),
+                    Err(e__) => NotCheckedError { inner_error: e__ }.into_response(),
+                },
             },
         }
     }
@@ -144,7 +160,10 @@ where
             Ok(res) => (StatusCode::CREATED, Json(res)).into_response(),
             Err(err) => match err.downcast::<CnErrorProvider>() {
                 Ok(e_) => e_.into_response(),
-                Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
+                Err(e_) => match e_.downcast::<DSRPCContractNegotiationProviderErrors>() {
+                    Ok(e__) => e__.into_response(),
+                    Err(e__) => NotCheckedError { inner_error: e__ }.into_response(),
+                },
             },
         }
     }

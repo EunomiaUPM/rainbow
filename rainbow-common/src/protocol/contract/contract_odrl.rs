@@ -167,10 +167,13 @@ pub struct OdrlAgreement {
     #[serde(rename = "@id")]
     pub id: Urn,
     #[serde(rename = "profile")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub profile: Option<OdrlProfile>,
     #[serde(rename = "permission")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub permission: Option<Vec<OdrlPermission>>, // anyof
     #[serde(rename = "obligation")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub obligation: Option<Vec<OdrlObligation>>,
     // Agreement
     #[serde(rename = "@type")]
@@ -184,6 +187,7 @@ pub struct OdrlAgreement {
     #[serde(rename = "timestamp")]
     pub timestamp: Option<String>,
     #[serde(rename = "prohibition")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub prohibition: Option<Vec<OdrlObligation>>, // anyof
 }
 
