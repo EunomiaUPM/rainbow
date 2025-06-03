@@ -34,7 +34,7 @@ use rainbow_common::protocol::transfer::transfer_process::TransferProcessMessage
 use rainbow_common::protocol::transfer::transfer_start::TransferStartMessage;
 use rainbow_common::protocol::transfer::transfer_suspension::TransferSuspensionMessage;
 use rainbow_common::protocol::transfer::transfer_termination::TransferTerminationMessage;
-use rainbow_common::protocol::transfer::{TransferMessageTypes, TransferRoles, TransferState};
+use rainbow_common::protocol::transfer::{TransferMessageTypes, TransferRoles, TransferState, TransferStateAttribute};
 use rainbow_db::transfer_provider::entities::transfer_process;
 use rainbow_db::transfer_provider::repo::{
     EditTransferProcessModel, NewTransferMessageModel, TransferProviderRepoFactory,
@@ -206,7 +206,7 @@ where
     ) -> anyhow::Result<DSRPCTransferProviderStartResponse> {
         let DSRPCTransferProviderStartRequest { consumer_callback, provider_pid, consumer_pid, .. } = input;
         // 1. Validate fields and correlation
-        let _ = self.validate_and_get_correlated_transfer_process(&consumer_pid, &provider_pid).await?;
+        let tp = self.validate_and_get_correlated_transfer_process(&consumer_pid, &provider_pid).await?;
         // 2. Create message
         let data_address = self.data_plane_facade.get_dataplane_address(provider_pid.clone()).await?;
         let start_message = TransferStartMessage {
@@ -231,11 +231,20 @@ where
             )
             .await?;
         // 4. Persist transfer process state
+        // 4.1 is start ON_REQUEST OR BY_PROVIDER
+        let attribute = match tp.state_attribute {
+            None => TransferStateAttribute::OnRequest,
+            Some(_) => TransferStateAttribute::ByProvider,
+        };
         let process = self
             .transfer_repo
             .put_transfer_process(
                 provider_pid.clone(),
-                EditTransferProcessModel { state: Option::from(TransferState::STARTED), ..Default::default() },
+                EditTransferProcessModel {
+                    state: Option::from(TransferState::STARTED),
+                    state_attribute: Option::from(attribute),
+                    ..Default::default()
+                },
             )
             .await
             .map_err(|e| {
@@ -317,7 +326,11 @@ where
             .transfer_repo
             .put_transfer_process(
                 provider_pid.clone(),
-                EditTransferProcessModel { state: Option::from(TransferState::SUSPENDED), ..Default::default() },
+                EditTransferProcessModel {
+                    state: Option::from(TransferState::SUSPENDED),
+                    state_attribute: Option::from(TransferStateAttribute::ByProvider),
+                    ..Default::default()
+                },
             )
             .await
             .map_err(|e| {
@@ -390,7 +403,11 @@ where
             .transfer_repo
             .put_transfer_process(
                 provider_pid.clone(),
-                EditTransferProcessModel { state: Option::from(TransferState::COMPLETED), ..Default::default() },
+                EditTransferProcessModel {
+                    state: Option::from(TransferState::COMPLETED),
+                    state_attribute: Option::from(TransferStateAttribute::ByConsumer),
+                    ..Default::default()
+                },
             )
             .await
             .map_err(|e| {
@@ -467,7 +484,11 @@ where
             .transfer_repo
             .put_transfer_process(
                 provider_pid.clone(),
-                EditTransferProcessModel { state: Option::from(TransferState::TERMINATED), ..Default::default() },
+                EditTransferProcessModel {
+                    state: Option::from(TransferState::TERMINATED),
+                    state_attribute: Option::from(TransferStateAttribute::ByConsumer),
+                    ..Default::default()
+                },
             )
             .await
             .map_err(|e| {
