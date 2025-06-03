@@ -31,12 +31,16 @@ import { Route as ContractNegotiationOfferImport } from './routes/contract-negot
 import { Route as AgreementsAgreementIdImport } from './routes/agreements/$agreementId'
 import { Route as TransferProcessTransferProcessIdRouteImport } from './routes/transfer-process/$transferProcessId/route'
 import { Route as ParticipantsParticipantIdRouteImport } from './routes/participants/$participantId/route'
+import { Route as GuiAgreementsRouteImport } from './routes/gui/agreements/route'
 import { Route as ContractNegotiationCnProcessRouteImport } from './routes/contract-negotiation/$cnProcess/route'
 import { Route as CatalogCatalogIdRouteImport } from './routes/catalog/$catalogId/route'
 import { Route as TransferProcessTransferProcessIdIndexImport } from './routes/transfer-process/$transferProcessId/index'
 import { Route as ParticipantsParticipantIdIndexImport } from './routes/participants/$participantId/index'
+import { Route as GuiAgreementsIndexImport } from './routes/gui/agreements/index'
 import { Route as ContractNegotiationCnProcessIndexImport } from './routes/contract-negotiation/$cnProcess/index'
 import { Route as CatalogCatalogIdIndexImport } from './routes/catalog/$catalogId/index'
+import { Route as GuiAgreementsHolaImport } from './routes/gui/agreements/hola'
+import { Route as GuiAgreementsAgreementidImport } from './routes/gui/agreements/$agreement_id'
 import { Route as TransferProcessTransferProcessIdTransferMessageTransferMessageIdImport } from './routes/transfer-process/$transferProcessId/transfer-message.$transferMessageId'
 import { Route as ContractNegotiationCnProcessMessageMessageIdImport } from './routes/contract-negotiation/$cnProcess/message.$messageId'
 import { Route as CatalogCatalogIdDatasetDatasetIdImport } from './routes/catalog/$catalogId/dataset.$datasetId'
@@ -166,6 +170,12 @@ const ParticipantsParticipantIdRouteRoute =
     getParentRoute: () => ParticipantsRouteRoute,
   } as any)
 
+const GuiAgreementsRouteRoute = GuiAgreementsRouteImport.update({
+  id: '/agreements',
+  path: '/agreements',
+  getParentRoute: () => GuiRouteRoute,
+} as any)
+
 const ContractNegotiationCnProcessRouteRoute =
   ContractNegotiationCnProcessRouteImport.update({
     id: '/$cnProcess',
@@ -193,6 +203,12 @@ const ParticipantsParticipantIdIndexRoute =
     getParentRoute: () => ParticipantsParticipantIdRouteRoute,
   } as any)
 
+const GuiAgreementsIndexRoute = GuiAgreementsIndexImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => GuiAgreementsRouteRoute,
+} as any)
+
 const ContractNegotiationCnProcessIndexRoute =
   ContractNegotiationCnProcessIndexImport.update({
     id: '/',
@@ -204,6 +220,18 @@ const CatalogCatalogIdIndexRoute = CatalogCatalogIdIndexImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => CatalogCatalogIdRouteRoute,
+} as any)
+
+const GuiAgreementsHolaRoute = GuiAgreementsHolaImport.update({
+  id: '/hola',
+  path: '/hola',
+  getParentRoute: () => GuiAgreementsRouteRoute,
+} as any)
+
+const GuiAgreementsAgreementidRoute = GuiAgreementsAgreementidImport.update({
+  id: '/$agreement_id',
+  path: '/$agreement_id',
+  getParentRoute: () => GuiAgreementsRouteRoute,
 } as any)
 
 const TransferProcessTransferProcessIdTransferMessageTransferMessageIdRoute =
@@ -310,6 +338,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContractNegotiationCnProcessRouteImport
       parentRoute: typeof ContractNegotiationRouteImport
     }
+    '/gui/agreements': {
+      id: '/gui/agreements'
+      path: '/agreements'
+      fullPath: '/gui/agreements'
+      preLoaderRoute: typeof GuiAgreementsRouteImport
+      parentRoute: typeof GuiRouteImport
+    }
     '/participants/$participantId': {
       id: '/participants/$participantId'
       path: '/$participantId'
@@ -394,6 +429,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TransferProcessIndexImport
       parentRoute: typeof TransferProcessRouteImport
     }
+    '/gui/agreements/$agreement_id': {
+      id: '/gui/agreements/$agreement_id'
+      path: '/$agreement_id'
+      fullPath: '/gui/agreements/$agreement_id'
+      preLoaderRoute: typeof GuiAgreementsAgreementidImport
+      parentRoute: typeof GuiAgreementsRouteImport
+    }
+    '/gui/agreements/hola': {
+      id: '/gui/agreements/hola'
+      path: '/hola'
+      fullPath: '/gui/agreements/hola'
+      preLoaderRoute: typeof GuiAgreementsHolaImport
+      parentRoute: typeof GuiAgreementsRouteImport
+    }
     '/catalog/$catalogId/': {
       id: '/catalog/$catalogId/'
       path: '/'
@@ -407,6 +456,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/contract-negotiation/$cnProcess/'
       preLoaderRoute: typeof ContractNegotiationCnProcessIndexImport
       parentRoute: typeof ContractNegotiationCnProcessRouteImport
+    }
+    '/gui/agreements/': {
+      id: '/gui/agreements/'
+      path: '/'
+      fullPath: '/gui/agreements/'
+      preLoaderRoute: typeof GuiAgreementsIndexImport
+      parentRoute: typeof GuiAgreementsRouteImport
     }
     '/participants/$participantId/': {
       id: '/participants/$participantId/'
@@ -538,11 +594,28 @@ const ContractNegotiationRouteRouteWithChildren =
     ContractNegotiationRouteRouteChildren,
   )
 
+interface GuiAgreementsRouteRouteChildren {
+  GuiAgreementsAgreementidRoute: typeof GuiAgreementsAgreementidRoute
+  GuiAgreementsHolaRoute: typeof GuiAgreementsHolaRoute
+  GuiAgreementsIndexRoute: typeof GuiAgreementsIndexRoute
+}
+
+const GuiAgreementsRouteRouteChildren: GuiAgreementsRouteRouteChildren = {
+  GuiAgreementsAgreementidRoute: GuiAgreementsAgreementidRoute,
+  GuiAgreementsHolaRoute: GuiAgreementsHolaRoute,
+  GuiAgreementsIndexRoute: GuiAgreementsIndexRoute,
+}
+
+const GuiAgreementsRouteRouteWithChildren =
+  GuiAgreementsRouteRoute._addFileChildren(GuiAgreementsRouteRouteChildren)
+
 interface GuiRouteRouteChildren {
+  GuiAgreementsRouteRoute: typeof GuiAgreementsRouteRouteWithChildren
   GuiIndexRoute: typeof GuiIndexRoute
 }
 
 const GuiRouteRouteChildren: GuiRouteRouteChildren = {
+  GuiAgreementsRouteRoute: GuiAgreementsRouteRouteWithChildren,
   GuiIndexRoute: GuiIndexRoute,
 }
 
@@ -632,6 +705,7 @@ export interface FileRoutesByFullPath {
   '/transfer-process': typeof TransferProcessRouteRouteWithChildren
   '/catalog/$catalogId': typeof CatalogCatalogIdRouteRouteWithChildren
   '/contract-negotiation/$cnProcess': typeof ContractNegotiationCnProcessRouteRouteWithChildren
+  '/gui/agreements': typeof GuiAgreementsRouteRouteWithChildren
   '/participants/$participantId': typeof ParticipantsParticipantIdRouteRouteWithChildren
   '/transfer-process/$transferProcessId': typeof TransferProcessTransferProcessIdRouteRouteWithChildren
   '/agreements/$agreementId': typeof AgreementsAgreementIdRoute
@@ -644,8 +718,11 @@ export interface FileRoutesByFullPath {
   '/participants/': typeof ParticipantsIndexRoute
   '/subscriptions/': typeof SubscriptionsIndexRoute
   '/transfer-process/': typeof TransferProcessIndexRoute
+  '/gui/agreements/$agreement_id': typeof GuiAgreementsAgreementidRoute
+  '/gui/agreements/hola': typeof GuiAgreementsHolaRoute
   '/catalog/$catalogId/': typeof CatalogCatalogIdIndexRoute
   '/contract-negotiation/$cnProcess/': typeof ContractNegotiationCnProcessIndexRoute
+  '/gui/agreements/': typeof GuiAgreementsIndexRoute
   '/participants/$participantId/': typeof ParticipantsParticipantIdIndexRoute
   '/transfer-process/$transferProcessId/': typeof TransferProcessTransferProcessIdIndexRoute
   '/catalog/$catalogId/data-service/$dataServiceId': typeof CatalogCatalogIdDataServiceDataServiceIdRoute
@@ -666,8 +743,11 @@ export interface FileRoutesByTo {
   '/participants': typeof ParticipantsIndexRoute
   '/subscriptions': typeof SubscriptionsIndexRoute
   '/transfer-process': typeof TransferProcessIndexRoute
+  '/gui/agreements/$agreement_id': typeof GuiAgreementsAgreementidRoute
+  '/gui/agreements/hola': typeof GuiAgreementsHolaRoute
   '/catalog/$catalogId': typeof CatalogCatalogIdIndexRoute
   '/contract-negotiation/$cnProcess': typeof ContractNegotiationCnProcessIndexRoute
+  '/gui/agreements': typeof GuiAgreementsIndexRoute
   '/participants/$participantId': typeof ParticipantsParticipantIdIndexRoute
   '/transfer-process/$transferProcessId': typeof TransferProcessTransferProcessIdIndexRoute
   '/catalog/$catalogId/data-service/$dataServiceId': typeof CatalogCatalogIdDataServiceDataServiceIdRoute
@@ -688,6 +768,7 @@ export interface FileRoutesById {
   '/transfer-process': typeof TransferProcessRouteRouteWithChildren
   '/catalog/$catalogId': typeof CatalogCatalogIdRouteRouteWithChildren
   '/contract-negotiation/$cnProcess': typeof ContractNegotiationCnProcessRouteRouteWithChildren
+  '/gui/agreements': typeof GuiAgreementsRouteRouteWithChildren
   '/participants/$participantId': typeof ParticipantsParticipantIdRouteRouteWithChildren
   '/transfer-process/$transferProcessId': typeof TransferProcessTransferProcessIdRouteRouteWithChildren
   '/agreements/$agreementId': typeof AgreementsAgreementIdRoute
@@ -700,8 +781,11 @@ export interface FileRoutesById {
   '/participants/': typeof ParticipantsIndexRoute
   '/subscriptions/': typeof SubscriptionsIndexRoute
   '/transfer-process/': typeof TransferProcessIndexRoute
+  '/gui/agreements/$agreement_id': typeof GuiAgreementsAgreementidRoute
+  '/gui/agreements/hola': typeof GuiAgreementsHolaRoute
   '/catalog/$catalogId/': typeof CatalogCatalogIdIndexRoute
   '/contract-negotiation/$cnProcess/': typeof ContractNegotiationCnProcessIndexRoute
+  '/gui/agreements/': typeof GuiAgreementsIndexRoute
   '/participants/$participantId/': typeof ParticipantsParticipantIdIndexRoute
   '/transfer-process/$transferProcessId/': typeof TransferProcessTransferProcessIdIndexRoute
   '/catalog/$catalogId/data-service/$dataServiceId': typeof CatalogCatalogIdDataServiceDataServiceIdRoute
@@ -723,6 +807,7 @@ export interface FileRouteTypes {
     | '/transfer-process'
     | '/catalog/$catalogId'
     | '/contract-negotiation/$cnProcess'
+    | '/gui/agreements'
     | '/participants/$participantId'
     | '/transfer-process/$transferProcessId'
     | '/agreements/$agreementId'
@@ -735,8 +820,11 @@ export interface FileRouteTypes {
     | '/participants/'
     | '/subscriptions/'
     | '/transfer-process/'
+    | '/gui/agreements/$agreement_id'
+    | '/gui/agreements/hola'
     | '/catalog/$catalogId/'
     | '/contract-negotiation/$cnProcess/'
+    | '/gui/agreements/'
     | '/participants/$participantId/'
     | '/transfer-process/$transferProcessId/'
     | '/catalog/$catalogId/data-service/$dataServiceId'
@@ -756,8 +844,11 @@ export interface FileRouteTypes {
     | '/participants'
     | '/subscriptions'
     | '/transfer-process'
+    | '/gui/agreements/$agreement_id'
+    | '/gui/agreements/hola'
     | '/catalog/$catalogId'
     | '/contract-negotiation/$cnProcess'
+    | '/gui/agreements'
     | '/participants/$participantId'
     | '/transfer-process/$transferProcessId'
     | '/catalog/$catalogId/data-service/$dataServiceId'
@@ -776,6 +867,7 @@ export interface FileRouteTypes {
     | '/transfer-process'
     | '/catalog/$catalogId'
     | '/contract-negotiation/$cnProcess'
+    | '/gui/agreements'
     | '/participants/$participantId'
     | '/transfer-process/$transferProcessId'
     | '/agreements/$agreementId'
@@ -788,8 +880,11 @@ export interface FileRouteTypes {
     | '/participants/'
     | '/subscriptions/'
     | '/transfer-process/'
+    | '/gui/agreements/$agreement_id'
+    | '/gui/agreements/hola'
     | '/catalog/$catalogId/'
     | '/contract-negotiation/$cnProcess/'
+    | '/gui/agreements/'
     | '/participants/$participantId/'
     | '/transfer-process/$transferProcessId/'
     | '/catalog/$catalogId/data-service/$dataServiceId'
@@ -872,6 +967,7 @@ export const routeTree = rootRoute
     "/gui": {
       "filePath": "gui/route.tsx",
       "children": [
+        "/gui/agreements",
         "/gui/"
       ]
     },
@@ -910,6 +1006,15 @@ export const routeTree = rootRoute
       "children": [
         "/contract-negotiation/$cnProcess/",
         "/contract-negotiation/$cnProcess/message/$messageId"
+      ]
+    },
+    "/gui/agreements": {
+      "filePath": "gui/agreements/route.tsx",
+      "parent": "/gui",
+      "children": [
+        "/gui/agreements/$agreement_id",
+        "/gui/agreements/hola",
+        "/gui/agreements/"
       ]
     },
     "/participants/$participantId": {
@@ -966,6 +1071,14 @@ export const routeTree = rootRoute
       "filePath": "transfer-process/index.tsx",
       "parent": "/transfer-process"
     },
+    "/gui/agreements/$agreement_id": {
+      "filePath": "gui/agreements/$agreement_id.tsx",
+      "parent": "/gui/agreements"
+    },
+    "/gui/agreements/hola": {
+      "filePath": "gui/agreements/hola.tsx",
+      "parent": "/gui/agreements"
+    },
     "/catalog/$catalogId/": {
       "filePath": "catalog/$catalogId/index.tsx",
       "parent": "/catalog/$catalogId"
@@ -973,6 +1086,10 @@ export const routeTree = rootRoute
     "/contract-negotiation/$cnProcess/": {
       "filePath": "contract-negotiation/$cnProcess/index.tsx",
       "parent": "/contract-negotiation/$cnProcess"
+    },
+    "/gui/agreements/": {
+      "filePath": "gui/agreements/index.tsx",
+      "parent": "/gui/agreements"
     },
     "/participants/$participantId/": {
       "filePath": "participants/$participantId/index.tsx",
