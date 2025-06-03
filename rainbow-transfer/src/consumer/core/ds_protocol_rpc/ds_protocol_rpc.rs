@@ -207,7 +207,7 @@ where
         );
         // 2. Create message
         let transfer_request = TransferRequestMessage {
-            consumer_pid: consumer_pid.to_string(),
+            consumer_pid: consumer_pid.clone(),
             agreement_id: agreement_id.clone(),
             format: format.clone(),
             data_address: data_address.clone(),
@@ -278,8 +278,8 @@ where
             self.validate_and_get_transfer_callback_by_consumer_id(&provider_pid, &consumer_pid).await?;
         // 2. Create message
         let transfer_start_message = TransferStartMessage {
-            consumer_pid: consumer_pid.to_string(),
-            provider_pid: provider_pid.to_string(),
+            consumer_pid: consumer_pid.clone(),
+            provider_pid: provider_pid.clone(),
             data_address: data_address.clone(),
             ..Default::default()
         };
@@ -349,8 +349,8 @@ where
             self.validate_and_get_transfer_callback_by_consumer_id(&provider_pid, &consumer_pid).await?;
         // 2. Create message
         let transfer_suspension_message = TransferSuspensionMessage {
-            consumer_pid: consumer_pid.to_string(),
-            provider_pid: provider_pid.to_string(),
+            consumer_pid: consumer_pid.clone(),
+            provider_pid: provider_pid.clone(),
             code,
             reason,
             ..Default::default()
@@ -419,8 +419,8 @@ where
             self.validate_and_get_transfer_callback_by_consumer_id(&provider_pid, &consumer_pid).await?;
         // 2. Create message
         let transfer_completion_message = TransferCompletionMessage {
-            consumer_pid: consumer_pid.to_string(),
-            provider_pid: provider_pid.to_string(),
+            consumer_pid: consumer_pid.clone(),
+            provider_pid: provider_pid.clone(),
             ..Default::default()
         };
         // 3. Send message to provider
@@ -488,8 +488,8 @@ where
             self.validate_and_get_transfer_callback_by_consumer_id(&provider_pid, &consumer_pid).await?;
         // 2. Create message
         let transfer_termination_message = TransferTerminationMessage {
-            consumer_pid: consumer_pid.to_string(),
-            provider_pid: provider_pid.to_string(),
+            consumer_pid: consumer_pid.clone(),
+            provider_pid: provider_pid.clone(),
             code,
             reason,
             ..Default::default()

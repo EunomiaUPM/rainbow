@@ -31,7 +31,7 @@ pub mod transfer_termination;
 pub mod transfer_process;
 pub mod transfer_error;
 pub mod transfer_data_address;
-
+pub mod transfer_protocol_trait;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum TransferState {
@@ -100,7 +100,7 @@ impl ToString for TransferRoles {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum TransferMessageTypes {
     TransferError,
     TransferRequestMessage,

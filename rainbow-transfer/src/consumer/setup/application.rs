@@ -97,6 +97,7 @@ pub async fn create_transfer_consumer_router(config: &TransferConsumerApplicatio
     let ds_protocol_service = Arc::new(DSProtocolTransferConsumerService::new(
         consumer_repo.clone(),
         data_plane_facade.clone(),
+        notification_service.clone(),
     ));
     let ds_protocol_router = DSProtocolTransferConsumerRouter::new(ds_protocol_service.clone()).router();
 

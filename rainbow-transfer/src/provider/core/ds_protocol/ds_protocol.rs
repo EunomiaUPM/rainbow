@@ -116,7 +116,7 @@ where
         debug!("DSProtocol Service: transfer_request");
         // extract data
         let provider_pid = get_urn(None);
-        let consumer_pid = get_urn_from_string(&input.consumer_pid)?;
+        let consumer_pid = input.consumer_pid.to_owned();
         let agreement_id = get_urn_from_string(&input.agreement_id)?;
         let formats = input.format.clone();
         let _created_at = chrono::Utc::now().naive_utc();
@@ -155,7 +155,7 @@ where
             .create_transfer_message(
                 provider_pid.clone(),
                 NewTransferMessageModel {
-                    message_type,
+                    message_type: message_type.to_string(),
                     from: TransferRoles::Consumer,
                     to: TransferRoles::Provider,
                     content: serde_json::to_value(&input)?,
@@ -187,7 +187,7 @@ where
         let TransferStartMessage { provider_pid: provider_pid_, consumer_pid, .. } = input.clone();
 
         // validate
-        if provider_pid.to_string() != provider_pid_ {
+        if provider_pid != provider_pid_ {
             bail!(DSProtocolTransferProviderErrors::UriAndBodyIdentifiersDoNotCoincide);
         }
 
@@ -201,8 +201,8 @@ where
             .map_err(|e| match e {
                 TransferProviderRepoErrors::ProviderTransferProcessNotFound => {
                     DSProtocolTransferProviderErrors::TransferProcessNotFound {
-                        provider_pid: Some(provider_pid_.clone().parse().unwrap()),
-                        consumer_pid: Some(consumer_pid.clone().parse().unwrap()),
+                        provider_pid: Some(provider_pid_.clone()),
+                        consumer_pid: Some(consumer_pid.clone()),
                     }
                 }
                 e_ => DSProtocolTransferProviderErrors::DbErr(e_),
@@ -214,7 +214,7 @@ where
             .create_transfer_message(
                 provider_pid.clone(),
                 NewTransferMessageModel {
-                    message_type: input._type.clone(),
+                    message_type: input._type.clone().to_string(),
                     from: TransferRoles::Consumer,
                     to: TransferRoles::Provider,
                     content: serde_json::to_value(&input)?,
@@ -251,7 +251,7 @@ where
         let TransferSuspensionMessage { provider_pid: provider_pid_, consumer_pid, .. } = input.clone();
 
         // validate
-        if provider_pid.to_string() != provider_pid_ {
+        if provider_pid != provider_pid_ {
             bail!(DSProtocolTransferProviderErrors::UriAndBodyIdentifiersDoNotCoincide);
         }
 
@@ -266,8 +266,8 @@ where
             .map_err(|e| match e {
                 TransferProviderRepoErrors::ProviderTransferProcessNotFound => {
                     DSProtocolTransferProviderErrors::TransferProcessNotFound {
-                        provider_pid: Some(provider_pid_.clone().parse().unwrap()),
-                        consumer_pid: Some(consumer_pid.clone().parse().unwrap()),
+                        provider_pid: Some(provider_pid_.clone()),
+                        consumer_pid: Some(consumer_pid.clone()),
                     }
                 }
                 e_ => DSProtocolTransferProviderErrors::DbErr(e_),
@@ -279,7 +279,7 @@ where
             .create_transfer_message(
                 provider_pid.clone(),
                 NewTransferMessageModel {
-                    message_type: input._type.clone(),
+                    message_type: input._type.clone().to_string(),
                     from: TransferRoles::Consumer,
                     to: TransferRoles::Provider,
                     content: serde_json::to_value(&input)?,
@@ -316,7 +316,7 @@ where
         let TransferCompletionMessage { provider_pid: provider_pid_, consumer_pid, .. } = input.clone();
 
         // validate
-        if provider_pid.to_string() != provider_pid_ {
+        if provider_pid != provider_pid_ {
             bail!(DSProtocolTransferProviderErrors::UriAndBodyIdentifiersDoNotCoincide);
         }
 
@@ -331,8 +331,8 @@ where
             .map_err(|e| match e {
                 TransferProviderRepoErrors::ProviderTransferProcessNotFound => {
                     DSProtocolTransferProviderErrors::TransferProcessNotFound {
-                        provider_pid: Some(provider_pid_.clone().parse().unwrap()),
-                        consumer_pid: Some(consumer_pid.clone().parse().unwrap()),
+                        provider_pid: Some(provider_pid_.clone()),
+                        consumer_pid: Some(consumer_pid.clone()),
                     }
                 }
                 e_ => DSProtocolTransferProviderErrors::DbErr(e_),
@@ -344,7 +344,7 @@ where
             .create_transfer_message(
                 provider_pid.clone(),
                 NewTransferMessageModel {
-                    message_type: input._type.clone(),
+                    message_type: input._type.clone().to_string(),
                     from: TransferRoles::Consumer,
                     to: TransferRoles::Provider,
                     content: serde_json::to_value(&input)?,
@@ -381,7 +381,7 @@ where
         let TransferTerminationMessage { provider_pid: provider_pid_, consumer_pid, .. } = input.clone();
 
         // validate
-        if provider_pid.to_string() != provider_pid_ {
+        if provider_pid != provider_pid_ {
             bail!(DSProtocolTransferProviderErrors::UriAndBodyIdentifiersDoNotCoincide);
         }
 
@@ -396,8 +396,8 @@ where
             .map_err(|e| match e {
                 TransferProviderRepoErrors::ProviderTransferProcessNotFound => {
                     DSProtocolTransferProviderErrors::TransferProcessNotFound {
-                        provider_pid: Some(provider_pid_.clone().parse().unwrap()),
-                        consumer_pid: Some(consumer_pid.clone().parse().unwrap()),
+                        provider_pid: Some(provider_pid_.clone()),
+                        consumer_pid: Some(consumer_pid.clone()),
                     }
                 }
                 e_ => DSProtocolTransferProviderErrors::DbErr(e_),
@@ -409,7 +409,7 @@ where
             .create_transfer_message(
                 provider_pid.clone(),
                 NewTransferMessageModel {
-                    message_type: input._type.clone(),
+                    message_type: input._type.clone().to_string(),
                     from: TransferRoles::Consumer,
                     to: TransferRoles::Provider,
                     content: serde_json::to_value(&input)?,

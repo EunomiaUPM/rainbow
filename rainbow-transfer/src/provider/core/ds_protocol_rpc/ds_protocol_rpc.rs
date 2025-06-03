@@ -210,8 +210,8 @@ where
         // 2. Create message
         let data_address = self.data_plane_facade.get_dataplane_address(provider_pid.clone()).await?;
         let start_message = TransferStartMessage {
-            provider_pid: provider_pid.clone().to_string(),
-            consumer_pid: consumer_pid.clone().to_string(),
+            provider_pid: provider_pid.clone(),
+            consumer_pid: consumer_pid.clone(),
             data_address: Some(data_address.clone()),
             ..Default::default()
         };
@@ -291,8 +291,8 @@ where
             self.validate_and_get_correlated_transfer_process(&consumer_pid, &provider_pid).await?;
         // 2. Create message
         let suspension_message = TransferSuspensionMessage {
-            provider_pid: provider_pid.clone().to_string(),
-            consumer_pid: consumer_pid.clone().to_string(),
+            provider_pid: provider_pid.clone(),
+            consumer_pid: consumer_pid.clone(),
             code: code.clone(),
             reason: reason.clone(),
             ..Default::default()
@@ -366,8 +366,8 @@ where
             self.validate_and_get_correlated_transfer_process(&consumer_pid, &provider_pid).await?;
         // 2. Create message
         let completion_message = TransferCompletionMessage {
-            provider_pid: provider_pid.clone().to_string(),
-            consumer_pid: consumer_pid.clone().to_string(),
+            provider_pid: provider_pid.clone(),
+            consumer_pid: consumer_pid.clone(),
             ..Default::default()
         };
         // 3. Send message to consumer
@@ -441,8 +441,8 @@ where
             self.validate_and_get_correlated_transfer_process(&consumer_pid, &provider_pid).await?;
         // 2. Create message
         let termination_message = TransferTerminationMessage {
-            provider_pid: provider_pid.clone().to_string(),
-            consumer_pid: consumer_pid.clone().to_string(),
+            provider_pid: provider_pid.clone(),
+            consumer_pid: consumer_pid.clone(),
             code: code.clone(),
             reason: reason.clone(),
             ..Default::default()

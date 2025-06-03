@@ -17,44 +17,56 @@
  *
  */
 
+use crate::common::schemas::validation::validate_payload_schema;
 use crate::consumer::core::data_plane_facade::DataPlaneConsumerFacadeTrait;
 use crate::consumer::core::ds_protocol::ds_protocol_err::DSProtocolTransferConsumerErrors;
 use crate::consumer::core::ds_protocol::DSProtocolTransferConsumerTrait;
+use crate::consumer::core::rainbow_entities::rainbow_err::RainbowTransferConsumerErrors;
+use anyhow::bail;
 use axum::async_trait;
 use rainbow_common::protocol::transfer::transfer_completion::TransferCompletionMessage;
 use rainbow_common::protocol::transfer::transfer_process::TransferProcessMessage;
+use rainbow_common::protocol::transfer::transfer_protocol_trait::DSProtocolTransferMessageTrait;
 use rainbow_common::protocol::transfer::transfer_start::TransferStartMessage;
 use rainbow_common::protocol::transfer::transfer_suspension::TransferSuspensionMessage;
 use rainbow_common::protocol::transfer::transfer_termination::TransferTerminationMessage;
 use rainbow_common::protocol::transfer::TransferState;
 use rainbow_common::utils::get_urn_from_string;
+use rainbow_db::transfer_consumer::entities::transfer_callback;
 use rainbow_db::transfer_consumer::repo::{EditTransferCallback, TransferConsumerRepoFactory};
-use serde_json::to_value;
+use rainbow_events::core::notification::notification_types::{RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory, RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes};
+use rainbow_events::core::notification::RainbowEventsNotificationTrait;
+use serde_json::{json, to_value};
 use std::sync::Arc;
+use tracing::debug;
 use urn::Urn;
 
-pub struct DSProtocolTransferConsumerService<T, U>
+pub struct DSProtocolTransferConsumerService<T, U, V>
 where
-    T: TransferConsumerRepoFactory + Send + Sync,
-    U: DataPlaneConsumerFacadeTrait + Send + Sync,
+    T: TransferConsumerRepoFactory + Send + Sync + 'static,
+    U: DataPlaneConsumerFacadeTrait + Send + Sync + 'static,
+    V: RainbowEventsNotificationTrait + Send + Sync + 'static, // Added notification service
 {
     transfer_repo: Arc<T>,
     data_plane: Arc<U>,
+    notification_service: Arc<V>, // Added notification service
 }
 
-impl<T, U> DSProtocolTransferConsumerService<T, U>
+impl<T, U, V> DSProtocolTransferConsumerService<T, U, V>
 where
-    T: TransferConsumerRepoFactory + Send + Sync,
-    U: DataPlaneConsumerFacadeTrait + Send + Sync,
+    T: TransferConsumerRepoFactory + Send + Sync + 'static,
+    U: DataPlaneConsumerFacadeTrait + Send + Sync + 'static,
+    V: RainbowEventsNotificationTrait + Send + Sync + 'static,
 {
-    pub fn new(transfer_repo: Arc<T>, data_plane: Arc<U>) -> Self {
-        Self { transfer_repo, data_plane }
+    pub fn new(transfer_repo: Arc<T>, data_plane: Arc<U>, notification_service: Arc<V>) -> Self {
+        Self { transfer_repo, data_plane, notification_service }
     }
-    async fn do_validations(&self,
-                            callback_id: &Option<Urn>,
-                            consumer_pid: &Urn,
-                            input_consumer_pid: &String,
-                            input_provider_pid: &String,
+    async fn do_validations(
+        &self,
+        callback_id: &Option<Urn>,
+        consumer_pid: &Urn,
+        input_consumer_pid: &String,
+        input_provider_pid: &String,
     ) -> anyhow::Result<()> {
         // validate consumer
         if &consumer_pid.to_string() != input_consumer_pid {
@@ -89,13 +101,89 @@ where
         }
         Ok(())
     }
+
+    /// Performs JSON schema validation for incoming messages.
+    fn json_schema_validation<'a, M: DSProtocolTransferMessageTrait<'a>>(&self, message: &M) -> anyhow::Result<()> {
+        debug!("Transfer consumer JSON schema validation");
+        validate_payload_schema(message)?;
+        Ok(())
+    }
+
+    /// Validates the payload of an incoming transfer message against existing transfer processes.
+    /// Ensures correlation between URIs and message body PIDs.
+    async fn payload_validation<'a, M: DSProtocolTransferMessageTrait<'a>>(
+        &self,
+        callback_id: &Option<Urn>,   // Optional callback_id from URL
+        consumer_pid_from_uri: &Urn, // Consumer PID from URL path
+        message: &M,                 // The incoming message
+    ) -> anyhow::Result<transfer_callback::Model> {
+        debug!("Transfer consumer payload validation");
+        let message_consumer_pid = message.get_consumer_pid()?;
+        let message_provider_pid = message.get_provider_pid()?;
+
+        // 1. Validate consumer_pid in message body matches consumer_pid from URI
+        match message_consumer_pid {
+            Some(msg_c_pid) if msg_c_pid == consumer_pid_from_uri => {}
+            _ => bail!(DSProtocolTransferConsumerErrors::UriAndBodyIdentifiersDoNotCoincide),
+        }
+        // 2. Validate correlation in processes
+        let consumer_transfer_process = self
+            .transfer_repo
+            .get_transfer_callback_by_consumer_id(consumer_pid_from_uri.clone())
+            .await
+            .map_err(DSProtocolTransferConsumerErrors::DbErr)?
+            .ok_or(DSProtocolTransferConsumerErrors::TransferProcessNotFound {
+                provider_pid: message_provider_pid.map(|m| m.to_owned()),
+                consumer_pid: Some(consumer_pid_from_uri.to_owned()),
+            })?;
+        if let Some(provider_pid) = message_provider_pid.clone() {
+            let provider_transfer_process = self
+                .transfer_repo
+                .get_transfer_callback_by_provider_id(provider_pid.to_owned())
+                .await
+                .map_err(DSProtocolTransferConsumerErrors::DbErr)?
+                .ok_or(DSProtocolTransferConsumerErrors::TransferProcessNotFound {
+                    provider_pid: message_provider_pid.map(|m| m.to_owned()),
+                    consumer_pid: Some(consumer_pid_from_uri.to_owned()),
+                })?;
+            if consumer_transfer_process.consumer_pid != provider_transfer_process.consumer_pid {
+                bail!(RainbowTransferConsumerErrors::ValidationError(
+                    "ConsumerPid and ProviderPid don't coincide".to_string()
+                ))
+            }
+        }
+        // 3. Validate provider_pid in message body matches provider_pid in DB
+        match (
+            message_provider_pid,
+            consumer_transfer_process.provider_pid.as_ref(),
+        ) {
+            (Some(msg_p_pid), Some(db_p_pid)) if msg_p_pid.to_string() == db_p_pid.to_owned() => {}
+            _ => bail!(DSProtocolTransferConsumerErrors::UriAndBodyIdentifiersDoNotCoincide),
+        }
+        Ok(consumer_transfer_process)
+    }
+
+    /// Broadcasts a notification about a transfer process event.
+    async fn notify_subscribers(&self, subcategory: String, message: serde_json::Value) -> anyhow::Result<()> {
+        self.notification_service
+            .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+                category: RainbowEventsNotificationMessageCategory::TransferProcess,
+                subcategory,
+                message_type: RainbowEventsNotificationMessageTypes::DSProtocolMessage,
+                message_content: message,
+                message_operation: RainbowEventsNotificationMessageOperation::IncomingMessage,
+            })
+            .await?;
+        Ok(())
+    }
 }
 
 #[async_trait]
-impl<T, U> DSProtocolTransferConsumerTrait for DSProtocolTransferConsumerService<T, U>
+impl<T, U, V> DSProtocolTransferConsumerTrait for DSProtocolTransferConsumerService<T, U, V>
 where
-    T: TransferConsumerRepoFactory + Send + Sync,
-    U: DataPlaneConsumerFacadeTrait + Send + Sync,
+    T: TransferConsumerRepoFactory + Send + Sync + 'static,
+    U: DataPlaneConsumerFacadeTrait + Send + Sync + 'static,
+    V: RainbowEventsNotificationTrait + Send + Sync + 'static,
 {
     async fn get_transfer_requests_by_callback(&self, callback_id: Urn) -> anyhow::Result<TransferProcessMessage> {
         let transfer_process = self
@@ -132,35 +220,41 @@ where
         consumer_pid: Urn,
         input: TransferStartMessage,
     ) -> anyhow::Result<TransferProcessMessage> {
-        let TransferStartMessage { provider_pid, consumer_pid: consumer_pid_, data_address, .. } = input;
-
-        self.do_validations(
+        let TransferStartMessage { provider_pid, consumer_pid: consumer_pid_, data_address, .. } = input.clone();
+        // 1. Validate request
+        self.json_schema_validation(&input).map_err(|e| RainbowTransferConsumerErrors::ValidationError(e.to_string()))?;
+        let _existing_process = self.payload_validation(
             &callback_id,
             &consumer_pid,
-            &consumer_pid_,
-            &provider_pid,
+            &input,
         ).await?;
-
-        // persist model
+        // 2. Persist model
         let callback = self
             .transfer_repo
             .put_transfer_callback(
                 callback_id.unwrap(),
                 EditTransferCallback {
-                    provider_pid: Option::from(get_urn_from_string(&provider_pid)?),
+                    provider_pid: Option::from(provider_pid),
                     data_address: Option::from(to_value(data_address.clone())?),
                     ..Default::default()
                 },
             )
             .await
             .map_err(DSProtocolTransferConsumerErrors::DbErr)?;
-
-        // data plane
+        // 3. Data plane hook
         self.data_plane.on_transfer_start(consumer_pid.clone(), data_address.clone()).await?;
-
-        // return
+        // 4. Prepare response
         let mut transfer_process: TransferProcessMessage = callback.into();
         transfer_process.state = TransferState::STARTED;
+        // 5. Notify subscribers
+        self.notify_subscribers(
+            "TransferStartMessage".to_string(),
+            json!({
+                "transfer_process": transfer_process,
+            }),
+        )
+            .await?;
+        // 6. Bye
         Ok(transfer_process)
     }
 
@@ -170,33 +264,37 @@ where
         consumer_pid: Urn,
         input: TransferSuspensionMessage,
     ) -> anyhow::Result<TransferProcessMessage> {
-        let TransferSuspensionMessage { provider_pid, consumer_pid: consumer_pid_, .. } = input;
-
-        self.do_validations(
+        let TransferSuspensionMessage { provider_pid, consumer_pid: consumer_pid_, .. } = input.clone();
+        // 1. Validate request
+        self.json_schema_validation(&input).map_err(|e| RainbowTransferConsumerErrors::ValidationError(e.to_string()))?;
+        let _existing_process = self.payload_validation(
             &callback_id,
             &consumer_pid,
-            &consumer_pid_,
-            &provider_pid,
+            &input,
         ).await?;
-
-        // persist model
+        // 2. Persist state
         let callback = self
             .transfer_repo
             .put_transfer_callback(
                 callback_id.unwrap(),
-                EditTransferCallback {
-                    ..Default::default()
-                },
+                EditTransferCallback { ..Default::default() },
             )
             .await
             .map_err(DSProtocolTransferConsumerErrors::DbErr)?;
-
-        // data plane
+        // 3. Data plane hook
         self.data_plane.on_transfer_suspension(consumer_pid.clone()).await?;
-
-        // return
+        // 4. Prepare response
         let mut transfer_process: TransferProcessMessage = callback.into();
         transfer_process.state = TransferState::SUSPENDED;
+        // 5. Notify subscribers
+        self.notify_subscribers(
+            "TransferSuspensionMessage".to_string(),
+            json!({
+                "transfer_process": transfer_process,
+            }),
+        )
+            .await?;
+        // 6. Bye
         Ok(transfer_process)
     }
 
@@ -206,33 +304,37 @@ where
         consumer_pid: Urn,
         input: TransferCompletionMessage,
     ) -> anyhow::Result<TransferProcessMessage> {
-        let TransferCompletionMessage { provider_pid, consumer_pid: consumer_pid_, .. } = input;
-
-        self.do_validations(
+        let TransferCompletionMessage { provider_pid, consumer_pid: consumer_pid_, .. } = input.clone();
+        // 1. Validate request
+        self.json_schema_validation(&input).map_err(|e| RainbowTransferConsumerErrors::ValidationError(e.to_string()))?;
+        let _existing_process = self.payload_validation(
             &callback_id,
             &consumer_pid,
-            &consumer_pid_,
-            &provider_pid,
+            &input,
         ).await?;
-
-        // persist model
+        // 2. Persist state
         let callback = self
             .transfer_repo
             .put_transfer_callback(
                 callback_id.unwrap(),
-                EditTransferCallback {
-                    ..Default::default()
-                },
+                EditTransferCallback { ..Default::default() },
             )
             .await
             .map_err(DSProtocolTransferConsumerErrors::DbErr)?;
-
-        // data plane
+        // 3. Data plane hook
         self.data_plane.on_transfer_completion(consumer_pid.clone()).await?;
-
-        // return
+        // 4. Prepare response
         let mut transfer_process: TransferProcessMessage = callback.into();
         transfer_process.state = TransferState::COMPLETED;
+        // 5. Notify subscribers
+        self.notify_subscribers(
+            "TransferCompletionMessage".to_string(),
+            json!({
+                  "transfer_process": transfer_process,
+            }),
+        )
+            .await?;
+        // 6. Bye
         Ok(transfer_process)
     }
 
@@ -242,32 +344,36 @@ where
         consumer_pid: Urn,
         input: TransferTerminationMessage,
     ) -> anyhow::Result<TransferProcessMessage> {
-        let TransferTerminationMessage { provider_pid, consumer_pid: consumer_pid_, .. } = input;
-        self.do_validations(
+        let TransferTerminationMessage { provider_pid, consumer_pid: consumer_pid_, .. } = input.clone();
+        self.json_schema_validation(&input).map_err(|e| RainbowTransferConsumerErrors::ValidationError(e.to_string()))?;
+        let _existing_process = self.payload_validation(
             &callback_id,
             &consumer_pid,
-            &consumer_pid_,
-            &provider_pid,
+            &input,
         ).await?;
-
-        // persist model
+        // 2. Persist state
         let callback = self
             .transfer_repo
             .put_transfer_callback(
                 callback_id.unwrap(),
-                EditTransferCallback {
-                    ..Default::default()
-                },
+                EditTransferCallback { ..Default::default() },
             )
             .await
             .map_err(DSProtocolTransferConsumerErrors::DbErr)?;
-
-        // data plane
+        // 3. Data plane hook
         self.data_plane.on_transfer_termination(consumer_pid.clone()).await?;
-
-        // return
+        // 4. Prepare response
         let mut transfer_process: TransferProcessMessage = callback.into();
         transfer_process.state = TransferState::TERMINATED;
+        // 5. Notify subscribers
+        self.notify_subscribers(
+            "TransferTerminationMessage".to_string(),
+            json!({
+                  "transfer_process": transfer_process,
+            }),
+        )
+            .await?;
+        // 6. Bye
         Ok(transfer_process)
     }
 }

@@ -16,10 +16,12 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 use crate::protocol::context_field::ContextField;
+use crate::protocol::transfer::transfer_protocol_trait::DSProtocolTransferMessageTrait;
 use crate::protocol::transfer::TransferMessageTypes;
+use crate::utils::get_urn;
 use serde::{Deserialize, Serialize};
+use urn::Urn;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
@@ -27,20 +29,34 @@ pub struct TransferCompletionMessage {
     #[serde(rename = "@context")]
     pub context: ContextField,
     #[serde(rename = "@type")]
-    pub _type: String,
+    pub _type: TransferMessageTypes,
     #[serde(rename = "providerPid")]
-    pub provider_pid: String,
+    pub provider_pid: Urn,
     #[serde(rename = "consumerPid")]
-    pub consumer_pid: String,
+    pub consumer_pid: Urn,
 }
 
 impl Default for TransferCompletionMessage {
     fn default() -> Self {
         Self {
             context: ContextField::default(),
-            _type: TransferMessageTypes::TransferCompletionMessage.to_string(),
-            provider_pid: "".to_string(),
-            consumer_pid: "".to_string(),
+            _type: TransferMessageTypes::TransferCompletionMessage,
+            provider_pid: get_urn(None),
+            consumer_pid: get_urn(None),
         }
+    }
+}
+
+impl DSProtocolTransferMessageTrait<'_> for TransferCompletionMessage {
+    fn get_message_type(&self) -> anyhow::Result<TransferMessageTypes> {
+        Ok(self._type.clone())
+    }
+
+    fn get_consumer_pid(&self) -> anyhow::Result<Option<&Urn>> {
+        Ok(Some(&self.consumer_pid))
+    }
+
+    fn get_provider_pid(&self) -> anyhow::Result<Option<&Urn>> {
+        Ok(Some(&self.provider_pid))
     }
 }
