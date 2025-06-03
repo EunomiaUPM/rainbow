@@ -12,6 +12,7 @@
   "workspaces": [
     "consumer",
     "provider",
+    "business",
     "shared"
   ],
   "dependencies": {
