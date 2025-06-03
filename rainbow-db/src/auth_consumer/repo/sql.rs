@@ -79,6 +79,7 @@ impl AuthConsumerRepoTrait for AuthConsumerRepoForSql {
     async fn create_auth(
         &self,
         id: String,
+        uri: String,
         provider: String,
         actions: String,
         interact: Interact4GR,
@@ -104,7 +105,7 @@ impl AuthConsumerRepoTrait for AuthConsumerRepoForSql {
             client_nonce: ActiveValue::Set(interact.finish.nonce),
             as_nonce: ActiveValue::Set(None),
             interact_ref: ActiveValue::Set(None),
-            grant_endpoint: ActiveValue::Set("http://127.0.0.1/access".to_string()), // TODO
+            grant_endpoint: ActiveValue::Set(uri),
             hash: ActiveValue::Set(None),
             hash_method: ActiveValue::Set(interact.finish.hash_method),
             hints: ActiveValue::Set(None), // TODO ??

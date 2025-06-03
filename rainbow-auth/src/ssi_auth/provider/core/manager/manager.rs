@@ -73,13 +73,16 @@ where
                 payload.interact.start.first().unwrap()
             );
         }
-        let provider_url = self.config.get_ssi_auth_host_url().unwrap(); // TODO fix docker internal
-        let client_id = format!("{}/verify", &provider_url); // TODO TEST
+        let mut provider_url = self.config.get_ssi_auth_host_url().unwrap(); // TODO fix docker internal
+        provider_url = provider_url.replace("127.0.0.1", "host.docker.internal");
+
+        let client_id = format!("{}/verify", &provider_url);
 
         let actions = payload.access_token.access.actions.unwrap_or_else(|| String::from("talk"));
+        let grant_endpoint = format!("{}/access", self.config.get_ssi_auth_host_url().unwrap()) ;
 
         let (auth_model, interaction_model, verification_model) =
-            match self.auth_repo.create_auth(payload.client, client_id.clone(), actions, payload.interact).await {
+            match self.auth_repo.create_auth(payload.client, client_id.clone(), grant_endpoint,actions, payload.interact).await {
                 Ok(model) => {
                     info!("exchange saved successfully");
                     model
@@ -88,7 +91,6 @@ where
             };
 
         let base_url = "openid4vp://authorize";
-        // TODO provider portal
 
         let encoded_client_id = encode(&verification_model.audience);
 
@@ -265,18 +267,20 @@ where
         let mut jwk: Jwk = serde_json::from_slice(&vec)?;
 
         let key = jsonwebtoken::DecodingKey::from_jwk(&jwk)?;
-        let audience = format!(
+        let mut audience = format!(
             "{}/verify/{}",
             self.config.get_ssi_auth_host_url().unwrap(),
             state
         );
+        audience = audience.replace("127.0.0.1", "host.docker.internal"); // TODO fix docker
 
         let mut val = Validation::new(alg);
+
         val.required_spec_claims = HashSet::new();
-        val.validate_aud = true; // VALIDATE AUDIENCE
-        val.set_audience(&[&(audience)]); // TODO audience
+        val.validate_aud = true;
+        val.set_audience(&[&(audience)]);
         val.validate_exp = false;
-        val.validate_nbf = true; // VALIDATE NBF
+        val.validate_nbf = true;
 
         let token = match jsonwebtoken::decode::<Value>(&vp_token, &key, &val) {
             Ok(token) => token,
@@ -363,8 +367,8 @@ where
         let mut val = Validation::new(alg);
         val.required_spec_claims = HashSet::new();
         val.validate_aud = false;
-        val.validate_exp = false; // TODO
-        val.validate_nbf = true; // VALIDATE NBF
+        val.validate_exp = false; // TODO de momemnto las VCs no caducan
+        val.validate_nbf = true;
 
         let token = match jsonwebtoken::decode::<Value>(&vc_token, &key, &val) {
             Ok(token) => token,
@@ -444,8 +448,6 @@ where
         // if model.status != "pending" {
         //     bail!("Too many attempts"); // TODO
         // }
-
-        // let token = create_token(model.consumer, model.actions)?; TODO NO ES JWT ES VALOR OPACO
 
         let token: String = create_opaque_token();
 
