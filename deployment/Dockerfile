@@ -37,3 +37,4 @@ EXPOSE 1234
 
 # Entrypoint
 ENTRYPOINT ["./rainbow"]
+
