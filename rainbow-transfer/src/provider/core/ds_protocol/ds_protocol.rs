@@ -214,18 +214,7 @@ where
                                     message_type: "Suspension message is not allowed in REQUESTED state".to_string(),
                                 })
                             }
-                            TransferState::STARTED => {
-                                // 5. Transfer state attribute check.
-                                // Start from state suspended is only allowed if
-                                match transfer_state_attribute {
-                                    TransferStateAttribute::ByProvider => bail!(TransferErrorType::ProtocolError {
-                                        state: TransferState::STARTED,
-                                        message_type: "State STARTED was established by Provider, Consumer is not allowed to change it".to_string(),
-                                    }),
-                                    TransferStateAttribute::ByConsumer => {}
-                                    TransferStateAttribute::OnRequest => {}
-                                }
-                            }
+                            TransferState::STARTED => {}
                             TransferState::SUSPENDED => {
                                 bail!(TransferErrorType::TransferProcessAlreadySuspendedError)
                             }

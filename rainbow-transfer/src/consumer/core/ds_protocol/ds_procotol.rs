@@ -242,7 +242,11 @@ where
             .await
             .map_err(DSProtocolTransferConsumerErrors::DbErr)?;
         // 3. Data plane hook
-        self.data_plane.on_transfer_start(consumer_pid.clone(), data_address.clone()).await?;
+        if callback.restart_flag {
+            self.data_plane.on_transfer_restart(consumer_pid.clone()).await?;
+        } else {
+            self.data_plane.on_transfer_start(consumer_pid.clone(), data_address.clone()).await?;
+        }
         // 4. Prepare response
         let mut transfer_process: TransferProcessMessage = callback.into();
         transfer_process.state = TransferState::STARTED;

@@ -149,7 +149,8 @@ where
         let tp = self.transfer_repo.get_transfer_process_by_provider(provider_pid).await?.unwrap();
         debug!("{:?}", tp);
         let transfer_state = tp.state.parse()?;
-        let transfer_state_attribute = tp.state_attribute.unwrap_or(TransferStateAttribute::OnRequest.to_string()).parse()?;
+        let transfer_state_attribute =
+            tp.state_attribute.unwrap_or(TransferStateAttribute::OnRequest.to_string()).parse()?;
 
         debug!("{:?}", transfer_state);
         debug!("{:?}", transfer_state_attribute);
@@ -191,45 +192,30 @@ where
                 }
             },
             // 4. Transfer suspension transition check
-            TransferMessageTypes::TransferSuspensionMessage => {
-                match transfer_state {
-                    TransferState::REQUESTED => {
-                        bail!(TransferErrorType::ProtocolError {
-                            state: TransferState::REQUESTED,
-                            message_type: "Suspension message is not allowed in REQUESTED state".to_string(),
-                        })
-                    }
-                    TransferState::STARTED => {
-                        // Transfer state attribute check.
-                        // Start from state suspended is only allowed if
-                        match transfer_state_attribute {
-                            TransferStateAttribute::ByProvider => {}
-                            TransferStateAttribute::ByConsumer => bail!(TransferErrorType::ProtocolError {
-                                state: TransferState::STARTED,
-                                message_type:
-                                    "State STARTED was established by Consumer, Provider is not allowed to change it"
-                                        .to_string(),
-                            }),
-                            TransferStateAttribute::OnRequest => {}
-                        }
-                    }
-                    TransferState::SUSPENDED => {
-                        bail!(TransferErrorType::TransferProcessAlreadySuspendedError)
-                    }
-                    TransferState::COMPLETED => {
-                        bail!(TransferErrorType::ProtocolError {
-                            state: TransferState::COMPLETED,
-                            message_type: "Suspension message is not allowed in COMPLETED state".to_string(),
-                        })
-                    }
-                    TransferState::TERMINATED => {
-                        bail!(TransferErrorType::ProtocolError {
-                            state: TransferState::TERMINATED,
-                            message_type: "Suspension message is not allowed in TERMINATED state".to_string(),
-                        })
-                    }
+            TransferMessageTypes::TransferSuspensionMessage => match transfer_state {
+                TransferState::REQUESTED => {
+                    bail!(TransferErrorType::ProtocolError {
+                        state: TransferState::REQUESTED,
+                        message_type: "Suspension message is not allowed in REQUESTED state".to_string(),
+                    })
                 }
-            }
+                TransferState::STARTED => {}
+                TransferState::SUSPENDED => {
+                    bail!(TransferErrorType::TransferProcessAlreadySuspendedError)
+                }
+                TransferState::COMPLETED => {
+                    bail!(TransferErrorType::ProtocolError {
+                        state: TransferState::COMPLETED,
+                        message_type: "Suspension message is not allowed in COMPLETED state".to_string(),
+                    })
+                }
+                TransferState::TERMINATED => {
+                    bail!(TransferErrorType::ProtocolError {
+                        state: TransferState::TERMINATED,
+                        message_type: "Suspension message is not allowed in TERMINATED state".to_string(),
+                    })
+                }
+            },
             // 4. Transfer completion transition check
             TransferMessageTypes::TransferCompletionMessage => match transfer_state {
                 TransferState::REQUESTED => {
