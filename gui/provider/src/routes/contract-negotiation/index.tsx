@@ -11,7 +11,7 @@ const RouteComponent = () => {
     return (
         <div>
             <div className="flex justify-end">
-                <Link to="/contract-negotiation/offer">
+                <Link to="/contract-negotiation/offer" className="text-decoration-none text-foreground">
                     <Button>Create new offer</Button>
                 </Link>
             </div>
