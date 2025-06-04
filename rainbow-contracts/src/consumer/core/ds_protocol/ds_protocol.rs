@@ -34,8 +34,15 @@ use rainbow_common::protocol::contract::{ContractNegotiationMessages, ContractNe
 use rainbow_common::utils::{get_urn, get_urn_from_string};
 use rainbow_db::contracts_consumer::entities::cn_process;
 use rainbow_db::contracts_consumer::entities::cn_process::Model;
-use rainbow_db::contracts_consumer::repo::{CnErrors, ContractNegotiationConsumerProcessRepo, NewContractNegotiationProcess};
-use rainbow_events::core::notification::notification_types::{RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory, RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes};
+use rainbow_db::contracts_consumer::repo::{
+    AgreementConsumerRepo, CnErrors, ContractNegotiationConsumerMessageRepo, ContractNegotiationConsumerOfferRepo,
+    ContractNegotiationConsumerProcessRepo, NewAgreement, NewContractNegotiationProcess,
+};
+use rainbow_db::contracts_consumer::repo::{NewContractNegotiationMessage, NewContractNegotiationOffer};
+use rainbow_events::core::notification::notification_types::{
+    RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory,
+    RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes,
+};
 use rainbow_events::core::notification::RainbowEventsNotificationTrait;
 use serde_json::{json, to_value, Value};
 use std::sync::Arc;
@@ -44,20 +51,29 @@ use urn::Urn;
 
 pub struct DSProtocolContractNegotiationConsumerService<T, U>
 where
-    T: ContractNegotiationConsumerProcessRepo + Send + Sync + 'static,
+    T: ContractNegotiationConsumerProcessRepo
+    + ContractNegotiationConsumerMessageRepo
+    + ContractNegotiationConsumerOfferRepo
+    + AgreementConsumerRepo
+    + Send
+    + Sync
+    + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
-
 {
     repo: Arc<T>,
     notification_service: Arc<U>,
-
 }
 
 impl<T, U> DSProtocolContractNegotiationConsumerService<T, U>
 where
-    T: ContractNegotiationConsumerProcessRepo + Send + Sync + 'static,
+    T: ContractNegotiationConsumerProcessRepo
+    + ContractNegotiationConsumerMessageRepo
+    + ContractNegotiationConsumerOfferRepo
+    + AgreementConsumerRepo
+    + Send
+    + Sync
+    + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
-
 {
     pub fn new(repo: Arc<T>, notification_service: Arc<U>) -> Self {
         Self { repo, notification_service }
@@ -88,12 +104,15 @@ where
             match self.repo.get_cn_process_by_provider_id(provider_pid.to_owned()).await {
                 Ok(cn) => match cn {
                     None => {} // // if process not found ok
-                    Some(_) => bail!(IdsaCNError::ValidationError(format!("Provider {} pid already exists", provider_pid)))
+                    Some(_) => bail!(IdsaCNError::ValidationError(format!(
+                        "Provider {} pid already exists",
+                        provider_pid
+                    ))),
                 },
                 Err(e) => match e {
                     CnErrors::CNProcessNotFound => {} // if process not found ok
-                    e_ => bail!(IdsaCNError::DbErr(e_))
-                }
+                    e_ => bail!(IdsaCNError::DbErr(e_)),
+                },
             }
         }
 
@@ -101,7 +120,9 @@ where
         match (incoming_consumer_pid, message.get_consumer_pid()?) {
             (None, _) => {}
             (Some(i), Some(p)) if i == p => {}
-            out => bail!(IdsaCNError::ValidationError("Consumer pid in body should coincide with URL path".to_string()))
+            out => bail!(IdsaCNError::ValidationError(
+                "Consumer pid in body should coincide with URL path".to_string()
+            )),
         }
 
         // 3. there must be process correlation between provider pid and consumer pid
@@ -140,7 +161,6 @@ where
         }
     }
 
-
     ///
     ///
     async fn notify_subscribers(&self, subcategory: String, message: Value) -> anyhow::Result<()> {
@@ -160,13 +180,16 @@ where
 #[async_trait]
 impl<T, U> DSProtocolContractNegotiationConsumerTrait for DSProtocolContractNegotiationConsumerService<T, U>
 where
-    T: ContractNegotiationConsumerProcessRepo + Send + Sync + 'static,
+    T: ContractNegotiationConsumerProcessRepo
+    + ContractNegotiationConsumerMessageRepo
+    + ContractNegotiationConsumerOfferRepo
+    + AgreementConsumerRepo
+    + Send
+    + Sync
+    + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
-
 {
     async fn post_offers(&self, input: ContractOfferMessage) -> anyhow::Result<ContractAckMessage> {
-        debug!("holi");
-
         // 1. validate request
         self.json_schema_validation(&input).map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
         let _ = self.payload_validation(None, &input).await.map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
@@ -180,7 +203,28 @@ where
             })
             .await
             .map_err(IdsaCNError::DbErr)?;
-
+        let cn_message = self
+            .repo
+            .create_cn_message(
+                get_urn_from_string(&cn_process.consumer_id)?,
+                NewContractNegotiationMessage {
+                    _type: input._type.to_string(),
+                    from: "Consumer".to_string(),
+                    to: "Provider".to_string(),
+                    content: serde_json::to_value(&input).unwrap(),
+                },
+            )
+            .await
+            .map_err(IdsaCNError::DbErr)?;
+        let cn_offer = self
+            .repo
+            .create_cn_offer(
+                get_urn_from_string(&cn_process.consumer_id)?,
+                get_urn_from_string(&cn_message.cn_message_id)?,
+                NewContractNegotiationOffer { offer_id: None, offer_content: serde_json::to_value(&input.odrl_offer)? },
+            )
+            .await
+            .map_err(IdsaCNError::DbErr)?;
         // 3. prepare message
         let mut cn_ack: ContractAckMessage = cn_process.clone().into();
         cn_ack.state = ContractNegotiationState::Offered;
@@ -190,7 +234,8 @@ where
             "ContractOfferMessage".to_string(),
             json!({
                 "process": cn_process,
-                "message": to_value(input)?
+                "message": cn_message,
+                "offer": cn_offer
             }),
         )
             .await?;
@@ -205,7 +250,35 @@ where
     ) -> anyhow::Result<ContractAckMessage> {
         // 1. validate request
         self.json_schema_validation(&input).map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
-        let cn_process = self.payload_validation(Some(&consumer_pid), &input).await.map_err(|e| IdsaCNError::ValidationError(e.to_string()))?.unwrap();
+        let cn_process = self
+            .payload_validation(Some(&consumer_pid), &input)
+            .await
+            .map_err(|e| IdsaCNError::ValidationError(e.to_string()))?
+            .unwrap();
+
+        // 2. Persist info
+        let cn_message = self
+            .repo
+            .create_cn_message(
+                consumer_pid.clone(),
+                NewContractNegotiationMessage {
+                    _type: input._type.to_string(),
+                    from: "Consumer".to_string(),
+                    to: "Provider".to_string(),
+                    content: serde_json::to_value(&input).unwrap(),
+                },
+            )
+            .await
+            .map_err(IdsaCNError::DbErr)?;
+        let cn_offer = self
+            .repo
+            .create_cn_offer(
+                consumer_pid,
+                get_urn_from_string(&cn_message.cn_message_id)?,
+                NewContractNegotiationOffer { offer_id: None, offer_content: serde_json::to_value(&input.odrl_offer)? },
+            )
+            .await
+            .map_err(IdsaCNError::DbErr)?;
 
         // 3. prepare message
         let mut cn_ack: ContractAckMessage = cn_process.clone().into();
@@ -216,7 +289,8 @@ where
             "ContractOfferMessage".to_string(),
             json!({
                 "process": cn_process,
-                "message": to_value(input)?
+                "message": cn_message,
+                "offer": cn_offer
             }),
         )
             .await?;
@@ -231,7 +305,41 @@ where
     ) -> anyhow::Result<ContractAckMessage> {
         // 1. validate request
         self.json_schema_validation(&input).map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
-        let cn_process = self.payload_validation(Some(&consumer_pid), &input).await.map_err(|e| IdsaCNError::ValidationError(e.to_string()))?.unwrap();
+        let cn_process = self
+            .payload_validation(Some(&consumer_pid), &input)
+            .await
+            .map_err(|e| IdsaCNError::ValidationError(e.to_string()))?
+            .unwrap();
+
+        // 2. Persist info
+        let cn_message = self
+            .repo
+            .create_cn_message(
+                consumer_pid.clone(),
+                NewContractNegotiationMessage {
+                    _type: input._type.to_string(),
+                    from: "Consumer".to_string(),
+                    to: "Provider".to_string(),
+                    content: serde_json::to_value(&input).unwrap(),
+                },
+            )
+            .await
+            .map_err(IdsaCNError::DbErr)?;
+        let agreement = self
+            .repo
+            .create_agreement(
+                get_urn_from_string(&cn_process.consumer_id.clone())?,
+                get_urn_from_string(&cn_message.cn_message_id.clone())?,
+                NewAgreement {
+                    agreement_id: Some(input.odrl_agreement.clone().id),
+                    consumer_participant_id: input.odrl_agreement.clone().assignee,
+                    provider_participant_id: input.odrl_agreement.clone().assigner,
+                    agreement_content: input.odrl_agreement,
+                    active: true,
+                },
+            )
+            .await
+            .map_err(IdsaCNError::DbErr)?;
 
         // 3. prepare message
         let mut cn_ack: ContractAckMessage = cn_process.clone().into();
@@ -242,7 +350,8 @@ where
             "ContractAgreementMessage".to_string(),
             json!({
                 "process": cn_process,
-                "message": to_value(input)?
+                "message": cn_message,
+                "agreement": agreement
             }),
         )
             .await?;
@@ -265,7 +374,26 @@ where
         }
         // 1. validate request
         self.json_schema_validation(&input).map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
-        let cn_process = self.payload_validation(Some(&consumer_pid), &input).await.map_err(|e| IdsaCNError::ValidationError(e.to_string()))?.unwrap();
+        let cn_process = self
+            .payload_validation(Some(&consumer_pid), &input)
+            .await
+            .map_err(|e| IdsaCNError::ValidationError(e.to_string()))?
+            .unwrap();
+
+        // 2. Persist info
+        let cn_message = self
+            .repo
+            .create_cn_message(
+                consumer_pid.clone(),
+                NewContractNegotiationMessage {
+                    _type: input._type.to_string(),
+                    from: "Consumer".to_string(),
+                    to: "Provider".to_string(),
+                    content: serde_json::to_value(&input).unwrap(),
+                },
+            )
+            .await
+            .map_err(IdsaCNError::DbErr)?;
 
         // 3. prepare message
         let mut cn_ack: ContractAckMessage = cn_process.clone().into();
@@ -276,7 +404,7 @@ where
             "ContractEventMessage:finalized".to_string(),
             json!({
                 "process": cn_process,
-                "message": to_value(input)?
+                "message": cn_message,
             }),
         )
             .await?;
@@ -291,7 +419,26 @@ where
     ) -> anyhow::Result<ContractAckMessage> {
         // 1. validate request
         self.json_schema_validation(&input).map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
-        let cn_process = self.payload_validation(Some(&consumer_pid), &input).await.map_err(|e| IdsaCNError::ValidationError(e.to_string()))?.unwrap();
+        let cn_process = self
+            .payload_validation(Some(&consumer_pid), &input)
+            .await
+            .map_err(|e| IdsaCNError::ValidationError(e.to_string()))?
+            .unwrap();
+
+        // 2. Persist info
+        let cn_message = self
+            .repo
+            .create_cn_message(
+                consumer_pid.clone(),
+                NewContractNegotiationMessage {
+                    _type: input._type.to_string(),
+                    from: "Consumer".to_string(),
+                    to: "Provider".to_string(),
+                    content: serde_json::to_value(&input).unwrap(),
+                },
+            )
+            .await
+            .map_err(IdsaCNError::DbErr)?;
 
         // 3. prepare message
         let mut cn_ack: ContractAckMessage = cn_process.clone().into();
@@ -302,7 +449,7 @@ where
             "ContractTerminationMessage".to_string(),
             json!({
                 "process": cn_process,
-                "message": to_value(input)?
+                "message": cn_message,
             }),
         )
             .await?;

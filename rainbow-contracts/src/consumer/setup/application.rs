@@ -70,6 +70,7 @@ pub async fn create_contract_negotiation_consumer_router(config: &ContractNegoti
     // Rainbow Entities Dependency injection
     let rainbow_entities_service = Arc::new(RainbowEntitiesContractNegotiationConsumerService::new(
         consumer_repo.clone(),
+        notification_service.clone(),
     ));
     let rainbow_entities_router =
         RainbowEntitiesContractNegotiationConsumerRouter::new(rainbow_entities_service.clone()).router();

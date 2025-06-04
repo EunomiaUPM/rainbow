@@ -27,6 +27,7 @@ use crate::consumer::core::ds_protocol_rpc::DSRPCContractNegotiationConsumerTrai
 use crate::consumer::core::rainbow_entities::rainbow_entities_errors::CnErrorConsumer;
 use anyhow::bail;
 use axum::async_trait;
+use rainbow_common::config::ConfigRoles;
 use rainbow_common::protocol::contract::contract_ack::ContractAckMessage;
 use rainbow_common::protocol::contract::contract_agreement_verification::ContractAgreementVerificationMessage;
 use rainbow_common::protocol::contract::contract_negotiation_event::{
@@ -34,10 +35,18 @@ use rainbow_common::protocol::contract::contract_negotiation_event::{
 };
 use rainbow_common::protocol::contract::contract_negotiation_request::ContractRequestMessage;
 use rainbow_common::protocol::contract::contract_negotiation_termination::ContractTerminationMessage;
+use rainbow_common::protocol::contract::ContractNegotiationMessages;
 use rainbow_common::utils::{get_urn, get_urn_from_string};
 use rainbow_db::contracts_consumer::entities::cn_process;
-use rainbow_db::contracts_consumer::repo::{ContractNegotiationConsumerProcessRepo, NewContractNegotiationProcess};
-use rainbow_events::core::notification::notification_types::{RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory, RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes};
+use rainbow_db::contracts_consumer::repo::{
+    AgreementConsumerRepo, ContractNegotiationConsumerMessageRepo, ContractNegotiationConsumerOfferRepo,
+    ContractNegotiationConsumerProcessRepo, NewContractNegotiationMessage, NewContractNegotiationOffer,
+    NewContractNegotiationProcess,
+};
+use rainbow_events::core::notification::notification_types::{
+    RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory,
+    RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes,
+};
 use rainbow_events::core::notification::RainbowEventsNotificationTrait;
 use reqwest::Client;
 use serde_json::{json, Value};
@@ -47,7 +56,13 @@ use urn::Urn;
 
 pub struct DSRPCContractNegotiationConsumerService<T, U>
 where
-    T: ContractNegotiationConsumerProcessRepo + Send + Sync + 'static,
+    T: ContractNegotiationConsumerProcessRepo
+    + ContractNegotiationConsumerMessageRepo
+    + ContractNegotiationConsumerOfferRepo
+    + AgreementConsumerRepo
+    + Send
+    + Sync
+    + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
 {
     repo: Arc<T>,
@@ -57,7 +72,13 @@ where
 
 impl<T, U> DSRPCContractNegotiationConsumerService<T, U>
 where
-    T: ContractNegotiationConsumerProcessRepo + Send + Sync + 'static,
+    T: ContractNegotiationConsumerProcessRepo
+    + ContractNegotiationConsumerMessageRepo
+    + ContractNegotiationConsumerOfferRepo
+    + AgreementConsumerRepo
+    + Send
+    + Sync
+    + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
 {
     pub fn new(repo: Arc<T>, notification_service: Arc<U>) -> Self {
@@ -150,7 +171,13 @@ where
 #[async_trait]
 impl<T, U> DSRPCContractNegotiationConsumerTrait for DSRPCContractNegotiationConsumerService<T, U>
 where
-    T: ContractNegotiationConsumerProcessRepo + Send + Sync + 'static,
+    T: ContractNegotiationConsumerProcessRepo
+    + ContractNegotiationConsumerMessageRepo
+    + ContractNegotiationConsumerOfferRepo
+    + AgreementConsumerRepo
+    + Send
+    + Sync
+    + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
 {
     async fn setup_request(&self, input: SetupRequestRequest) -> anyhow::Result<SetupRequestResponse> {
@@ -170,12 +197,14 @@ where
         // 4. send message
         let provider_base_url = provider_address.strip_suffix('/').unwrap_or(provider_address.as_str());
         let provider_url = format!("{}/negotiations/request", provider_base_url);
-        let response = self.send_protocol_message_to_provider(
-            provider_url,
-            &contract_request_message,
-            None,
-            Some(consumer_pid.clone()),
-        ).await?;
+        let response = self
+            .send_protocol_message_to_provider(
+                provider_url,
+                &contract_request_message,
+                None,
+                Some(consumer_pid.clone()),
+            )
+            .await?;
         // 5. persist process, message and offer
         let cn_process = self
             .repo
@@ -183,6 +212,31 @@ where
                 provider_id: Option::from(get_urn_from_string(&response.provider_pid)?),
                 consumer_id: Option::from(get_urn_from_string(&response.consumer_pid)?),
             })
+            .await
+            .map_err(CnErrorConsumer::DbErr)?;
+        let cn_message = self
+            .repo
+            .create_cn_message(
+                cn_process.consumer_id.parse().unwrap(),
+                NewContractNegotiationMessage {
+                    _type: ContractNegotiationMessages::ContractRequestMessage.to_string(),
+                    from: ConfigRoles::Provider.to_string(),
+                    to: ConfigRoles::Consumer.to_string(),
+                    content: serde_json::to_value(contract_request_message).unwrap(),
+                },
+            )
+            .await
+            .map_err(CnErrorConsumer::DbErr)?;
+        let offer = self
+            .repo
+            .create_cn_offer(
+                cn_process.consumer_id.parse().unwrap(),
+                cn_message.cn_message_id.parse().unwrap(),
+                NewContractNegotiationOffer {
+                    offer_id: None,
+                    offer_content: serde_json::to_value(odrl_offer.clone()).unwrap(),
+                },
+            )
             .await
             .map_err(CnErrorConsumer::DbErr)?;
         // 6. create response
@@ -209,7 +263,12 @@ where
         // 1. fetch participant id TODO
         let SetupRequestRequest { provider_pid, consumer_pid, odrl_offer, provider_address, .. } = input;
         // 2. validate correlation
-        let consumer = self.validate_and_get_correlated_provider_process(&consumer_pid.clone().unwrap(), &provider_pid.clone().unwrap()).await?;
+        let consumer = self
+            .validate_and_get_correlated_provider_process(
+                &consumer_pid.clone().unwrap(),
+                &provider_pid.clone().unwrap(),
+            )
+            .await?;
         // 3. create message
         let contract_offer_message = ContractRequestMessage {
             provider_pid: provider_pid.clone(),
@@ -219,13 +278,19 @@ where
         };
         // 4. send message
         let provider_base_url = provider_address.strip_suffix('/').unwrap_or(provider_address.as_str());
-        let provider_url = format!("{}/negotiations/{}/request", provider_base_url, provider_pid.clone().unwrap());
-        let response = self.send_protocol_message_to_provider(
-            provider_url,
-            &contract_offer_message,
-            provider_pid.clone(),
-            consumer_pid.clone(),
-        ).await?;
+        let provider_url = format!(
+            "{}/negotiations/{}/request",
+            provider_base_url,
+            provider_pid.clone().unwrap()
+        );
+        let response = self
+            .send_protocol_message_to_provider(
+                provider_url,
+                &contract_offer_message,
+                provider_pid.clone(),
+                consumer_pid.clone(),
+            )
+            .await?;
         // 5. persist process, message and offer
         let cn_process = self
             .repo
@@ -233,6 +298,31 @@ where
             .await
             .map_err(CnErrorConsumer::DbErr)?
             .ok_or(CnErrorConsumer::NotFound { id: consumer_pid.clone().unwrap(), entity: "Consumer".to_string() })?; // errors
+        let cn_message = self
+            .repo
+            .create_cn_message(
+                cn_process.consumer_id.parse().unwrap(),
+                NewContractNegotiationMessage {
+                    _type: ContractNegotiationMessages::ContractRequestMessage.to_string(),
+                    from: ConfigRoles::Provider.to_string(),
+                    to: ConfigRoles::Consumer.to_string(),
+                    content: serde_json::to_value(contract_offer_message).unwrap(),
+                },
+            )
+            .await
+            .map_err(CnErrorConsumer::DbErr)?;
+        let offer = self
+            .repo
+            .create_cn_offer(
+                cn_process.consumer_id.parse().unwrap(),
+                cn_message.cn_message_id.parse().unwrap(),
+                NewContractNegotiationOffer {
+                    offer_id: None,
+                    offer_content: serde_json::to_value(odrl_offer.clone()).unwrap(),
+                },
+            )
+            .await
+            .map_err(CnErrorConsumer::DbErr)?;
         // 6. create response
         let cn_ack: ContractAckMessage = cn_process.clone().into();
         let response = SetupRequestResponse {
@@ -246,6 +336,8 @@ where
             "ContractRequestMessage".to_string(),
             json!({
                 "process": cn_process,
+                "message": cn_message,
+                "offer": offer
             }),
         )
             .await?;
@@ -257,7 +349,8 @@ where
         // 1. fetch participant id TODO
         let SetupAcceptanceRequest { provider_pid, consumer_pid, provider_address, .. } = input;
         // 2. validate correlation
-        let consumer = self.validate_and_get_correlated_provider_process(&consumer_pid.clone(), &provider_pid.clone()).await?;
+        let consumer =
+            self.validate_and_get_correlated_provider_process(&consumer_pid.clone(), &provider_pid.clone()).await?;
         // 3. create message
         let contract_acceptance_message = ContractNegotiationEventMessage {
             provider_pid: provider_pid.clone(),
@@ -267,14 +360,39 @@ where
         };
         // 4. send message to provider
         let provider_base_url = provider_address.strip_suffix('/').unwrap_or(provider_address.as_str());
-        let provider_url = format!("{}/negotiations/{}/events", provider_base_url, provider_pid.clone());
-        let response = self.send_protocol_message_to_provider(
-            provider_url,
-            &contract_acceptance_message,
-            Option::from(provider_pid.clone()),
-            Option::from(consumer_pid.clone()),
-        ).await?;
+        let provider_url = format!(
+            "{}/negotiations/{}/events",
+            provider_base_url,
+            provider_pid.clone()
+        );
+        let response = self
+            .send_protocol_message_to_provider(
+                provider_url,
+                &contract_acceptance_message,
+                Option::from(provider_pid.clone()),
+                Option::from(consumer_pid.clone()),
+            )
+            .await?;
         // 5. persist process, message and offer
+        let cn_process = self
+            .repo
+            .get_cn_process_by_consumer_id(consumer_pid.clone())
+            .await
+            .map_err(CnErrorConsumer::DbErr)?
+            .ok_or(CnErrorConsumer::NotFound { id: consumer_pid.clone(), entity: "Consumer".to_string() })?; // errors
+        let cn_message = self
+            .repo
+            .create_cn_message(
+                cn_process.consumer_id.parse().unwrap(),
+                NewContractNegotiationMessage {
+                    _type: ContractNegotiationMessages::ContractNegotiationEventMessage.to_string(),
+                    from: ConfigRoles::Provider.to_string(),
+                    to: ConfigRoles::Consumer.to_string(),
+                    content: serde_json::to_value(contract_acceptance_message).unwrap(),
+                },
+            )
+            .await
+            .map_err(CnErrorConsumer::DbErr)?;
         // 6. create response
         let response = SetupAcceptanceResponse {
             consumer_pid: get_urn_from_string(&response.consumer_pid)?,
@@ -285,7 +403,8 @@ where
         self.notify_subscribers(
             "ContractAcceptanceMessage".to_string(),
             json!({
-
+                "process": cn_process,
+                "message": cn_message,
             }),
         )
             .await?;
@@ -297,7 +416,8 @@ where
         // 1. fetch participant id TODO
         let SetupVerificationRequest { provider_pid, consumer_pid, provider_address, .. } = input;
         // 2. validate correlation
-        let consumer = self.validate_and_get_correlated_provider_process(&consumer_pid.clone(), &provider_pid.clone()).await?;
+        let consumer =
+            self.validate_and_get_correlated_provider_process(&consumer_pid.clone(), &provider_pid.clone()).await?;
         // 3. create message
         let contract_verification_message = ContractAgreementVerificationMessage {
             provider_pid: provider_pid.clone(),
@@ -311,13 +431,34 @@ where
             provider_base_url,
             provider_pid.clone()
         );
-        let response = self.send_protocol_message_to_provider(
-            provider_url,
-            &contract_verification_message,
-            Option::from(provider_pid.clone()),
-            Option::from(consumer_pid.clone()),
-        ).await?;
+        let response = self
+            .send_protocol_message_to_provider(
+                provider_url,
+                &contract_verification_message,
+                Option::from(provider_pid.clone()),
+                Option::from(consumer_pid.clone()),
+            )
+            .await?;
         // 5. persist process, message and offer
+        let cn_process = self
+            .repo
+            .get_cn_process_by_consumer_id(consumer_pid.clone())
+            .await
+            .map_err(CnErrorConsumer::DbErr)?
+            .ok_or(CnErrorConsumer::NotFound { id: consumer_pid.clone(), entity: "Consumer".to_string() })?; // errors
+        let cn_message = self
+            .repo
+            .create_cn_message(
+                cn_process.consumer_id.parse().unwrap(),
+                NewContractNegotiationMessage {
+                    _type: ContractNegotiationMessages::ContractAgreementVerificationMessage.to_string(),
+                    from: ConfigRoles::Provider.to_string(),
+                    to: ConfigRoles::Consumer.to_string(),
+                    content: serde_json::to_value(contract_verification_message).unwrap(),
+                },
+            )
+            .await
+            .map_err(CnErrorConsumer::DbErr)?;
         // 6. create response
         let response = SetupVerificationResponse {
             consumer_pid: get_urn_from_string(&response.consumer_pid)?,
@@ -328,7 +469,8 @@ where
         self.notify_subscribers(
             "ContractVerificationMessage".to_string(),
             json!({
-
+                "process": cn_process,
+                "message": cn_message,
             }),
         )
             .await?;
@@ -340,7 +482,8 @@ where
         // 1. fetch participant id TODO
         let SetupTerminationRequest { provider_pid, consumer_pid, provider_address, .. } = input;
         // 2. validate correlation
-        let consumer = self.validate_and_get_correlated_provider_process(&consumer_pid.clone(), &provider_pid.clone()).await?;
+        let consumer =
+            self.validate_and_get_correlated_provider_process(&consumer_pid.clone(), &provider_pid.clone()).await?;
         // 3. create message
         let contract_termination_message = ContractTerminationMessage {
             provider_pid: provider_pid.clone(),
@@ -354,13 +497,35 @@ where
             provider_base_url,
             provider_pid.clone()
         );
-        let response = self.send_protocol_message_to_provider(
-            provider_url,
-            &contract_termination_message,
-            Option::from(provider_pid.clone()),
-            Option::from(consumer_pid.clone()),
-        ).await?;
+        let response = self
+            .send_protocol_message_to_provider(
+                provider_url,
+                &contract_termination_message,
+                Option::from(provider_pid.clone()),
+                Option::from(consumer_pid.clone()),
+            )
+            .await?;
         // 5. persist process, message and offer
+        // 5. persist process, message and offer
+        let cn_process = self
+            .repo
+            .get_cn_process_by_consumer_id(consumer_pid.clone())
+            .await
+            .map_err(CnErrorConsumer::DbErr)?
+            .ok_or(CnErrorConsumer::NotFound { id: consumer_pid.clone(), entity: "Consumer".to_string() })?; // errors
+        let cn_message = self
+            .repo
+            .create_cn_message(
+                cn_process.consumer_id.parse().unwrap(),
+                NewContractNegotiationMessage {
+                    _type: ContractNegotiationMessages::ContractNegotiationTerminationMessage.to_string(),
+                    from: ConfigRoles::Provider.to_string(),
+                    to: ConfigRoles::Consumer.to_string(),
+                    content: serde_json::to_value(contract_termination_message).unwrap(),
+                },
+            )
+            .await
+            .map_err(CnErrorConsumer::DbErr)?;
         // 6. create response
         let response = SetupTerminationResponse {
             consumer_pid: get_urn_from_string(&response.consumer_pid)?,
@@ -370,7 +535,8 @@ where
         self.notify_subscribers(
             "ContractTerminationMessage".to_string(),
             json!({
-
+                "process": cn_process,
+                "message": cn_message,
             }),
         )
             .await?;

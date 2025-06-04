@@ -17,10 +17,12 @@
  *
  */
 
+use rainbow_common::protocol::contract::contract_odrl::OdrlAgreement;
 use rainbow_common::utils::get_urn_from_string;
-use rainbow_db::contracts_consumer::repo::EditContractNegotiationProcess;
 use rainbow_db::contracts_consumer::repo::NewContractNegotiationProcess;
+use rainbow_db::contracts_consumer::repo::{EditAgreement, EditContractNegotiationMessage, EditContractNegotiationOffer, EditContractNegotiationProcess, NewAgreement, NewContractNegotiationMessage, NewContractNegotiationOffer};
 use serde::{Deserialize, Serialize};
+use urn::Urn;
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -46,5 +48,119 @@ pub struct EditContractNegotiationRequest {}
 impl Into<EditContractNegotiationProcess> for EditContractNegotiationRequest {
     fn into(self) -> EditContractNegotiationProcess {
         EditContractNegotiationProcess {}
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct NewContractNegotiationMessageRequest {
+    #[serde(rename = "@type")]
+    pub _type: String,
+    #[serde(rename = "from")]
+    pub from: String,
+    #[serde(rename = "to")]
+    pub to: String,
+    #[serde(rename = "content")] // TODO
+    pub content: serde_json::Value,
+}
+
+impl Into<NewContractNegotiationMessage> for NewContractNegotiationMessageRequest {
+    fn into(self) -> NewContractNegotiationMessage {
+        NewContractNegotiationMessage {
+            _type: self._type,
+            from: self.from,
+            to: self.to,
+            content: self.content,
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct EditContractNegotiationMessageRequest {
+    #[serde(rename = "@type")]
+    pub _type: String,
+    #[serde(rename = "from")]
+    pub from: String,
+    #[serde(rename = "to")]
+    pub to: String,
+    #[serde(rename = "content")] // TODO
+    pub content: serde_json::Value,
+}
+
+impl Into<EditContractNegotiationMessage> for EditContractNegotiationMessageRequest {
+    fn into(self) -> EditContractNegotiationMessage {
+        EditContractNegotiationMessage {
+            _type: Option::from(self._type),
+            from: Option::from(self.from),
+            to: Option::from(self.to),
+            content: Option::from(self.content),
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct NewContractNegotiationOfferRequest {
+    #[serde(rename = "offer")] // TODO
+    pub offer_id: Urn,
+    pub offer_content: serde_json::Value,
+}
+
+impl Into<NewContractNegotiationOffer> for NewContractNegotiationOfferRequest {
+    fn into(self) -> NewContractNegotiationOffer {
+        NewContractNegotiationOffer {
+            offer_id: Option::from(self.offer_id),
+            offer_content: self.offer_content,
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct EditContractNegotiationOfferRequest {}
+
+impl Into<EditContractNegotiationOffer> for EditContractNegotiationOfferRequest {
+    fn into(self) -> EditContractNegotiationOffer {
+        EditContractNegotiationOffer {}
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct NewAgreementRequest {
+    #[serde(rename = "consumerParticipantId")]
+    pub consumer_participant_id: Urn,
+    #[serde(rename = "providerParticipantId")]
+    pub provider_participant_id: Urn,
+    #[serde(rename = "agreement")]
+    pub agreement_content: OdrlAgreement,
+}
+
+impl Into<NewAgreement> for NewAgreementRequest {
+    fn into(self) -> NewAgreement {
+        NewAgreement {
+            agreement_id: None,
+            consumer_participant_id: self.consumer_participant_id,
+            provider_participant_id: self.provider_participant_id,
+            agreement_content: self.agreement_content,
+            active: true,
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct EditAgreementRequest {
+    #[serde(rename = "agreementStatusActive")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub active: Option<bool>,
+}
+
+impl Into<EditAgreement> for EditAgreementRequest {
+    fn into(self) -> EditAgreement {
+        EditAgreement {
+            active: self.active
+        }
     }
 }
