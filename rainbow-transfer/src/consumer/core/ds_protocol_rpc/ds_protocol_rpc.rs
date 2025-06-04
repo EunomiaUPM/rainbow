@@ -38,16 +38,19 @@ use rainbow_common::protocol::transfer::transfer_request::TransferRequestMessage
 use rainbow_common::protocol::transfer::transfer_start::TransferStartMessage;
 use rainbow_common::protocol::transfer::transfer_suspension::TransferSuspensionMessage;
 use rainbow_common::protocol::transfer::transfer_termination::TransferTerminationMessage;
+use rainbow_common::protocol::transfer::{TransferMessageTypes, TransferRoles};
 use rainbow_common::utils::{get_urn, get_urn_from_string};
 use rainbow_db::transfer_consumer::entities::transfer_callback;
-use rainbow_db::transfer_consumer::repo::{EditTransferCallback, NewTransferCallback, TransferConsumerRepoFactory};
+use rainbow_db::transfer_consumer::repo::{
+    EditTransferCallback, NewTransferCallback, NewTransferMessageModel, TransferConsumerRepoFactory,
+};
 use rainbow_events::core::notification::notification_types::{
     RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory,
     RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes,
 };
 use rainbow_events::core::notification::RainbowEventsNotificationTrait;
 use reqwest::Client;
-use serde_json::json;
+use serde_json::{json, to_value};
 use std::sync::Arc;
 use std::time::Duration;
 use tracing::debug;
@@ -196,7 +199,7 @@ where
         &self,
         input: DSRPCTransferConsumerRequestRequest,
     ) -> anyhow::Result<DSRPCTransferConsumerRequestResponse> {
-        let DSRPCTransferConsumerRequestRequest { agreement_id, format, data_address, provider_address, .. } = input;
+        let DSRPCTransferConsumerRequestRequest { agreement_id, format, data_address, provider_address, .. } = input.clone();
         // 1. Generate PIDs and callback address
         let consumer_pid = get_urn(None);
         let callback_urn = get_urn(None);
@@ -238,6 +241,18 @@ where
             .map_err(|e| {
                 DSRPCTransferConsumerErrors::DSProtocolTransferConsumerError(DSProtocolTransferConsumerErrors::DbErr(e))
             })?;
+        let message = self
+            .transfer_repo
+            .create_transfer_message(
+                get_urn_from_string(&transfer_process.id)?,
+                NewTransferMessageModel {
+                    message_type: TransferMessageTypes::TransferRequestMessage.to_string(),
+                    from: TransferRoles::Consumer,
+                    to: TransferRoles::Provider,
+                    content: to_value(&input)?,
+                },
+            )
+            .await?;
         // 5. Data plane facade hook
         self.data_plane_facade.on_transfer_request(consumer_pid.clone(), format.clone()).await?;
         // 6. Create response
@@ -258,8 +273,7 @@ where
             "TransferRequestMessage".to_string(),
             json!({
                 "transfer_process": transfer_process,
-                "message": transfer_request,
-                "response_message": response,
+                "transfer_message": message,
             }),
         )
             .await?;
@@ -272,7 +286,7 @@ where
         input: DSRPCTransferConsumerStartRequest,
     ) -> anyhow::Result<DSRPCTransferConsumerStartResponse> {
         let DSRPCTransferConsumerStartRequest { data_address, provider_address, provider_pid, consumer_pid, .. } =
-            input;
+            input.clone();
         // 1. Validate correlation
         let _current_process_record =
             self.validate_and_get_transfer_callback_by_consumer_id(&provider_pid, &consumer_pid).await?;
@@ -314,6 +328,18 @@ where
             .map_err(|e| {
                 DSRPCTransferConsumerErrors::DSProtocolTransferConsumerError(DSProtocolTransferConsumerErrors::DbErr(e))
             })?;
+        let message = self
+            .transfer_repo
+            .create_transfer_message(
+                get_urn_from_string(&transfer_process.id)?,
+                NewTransferMessageModel {
+                    message_type: TransferMessageTypes::TransferStartMessage.to_string(),
+                    from: TransferRoles::Consumer,
+                    to: TransferRoles::Provider,
+                    content: to_value(&input)?,
+                },
+            )
+            .await?;
         // 5. Data plane facade hook
         if transfer_process.restart_flag {
             self.data_plane_facade.on_transfer_restart(consumer_pid.clone()).await?;
@@ -331,10 +357,8 @@ where
         self.notify_subscribers(
             "TransferStartMessage".to_string(),
             json!({
-                "consumer_pid": consumer_pid,
-                "provider_pid": provider_pid,
-                "message": transfer_start_message,
-                "response": response,
+                "transfer_process": transfer_process,
+                "transfer_message": message,
             }),
         )
             .await?;
@@ -347,7 +371,7 @@ where
         input: DSRPCTransferConsumerSuspensionRequest,
     ) -> anyhow::Result<DSRPCTransferConsumerSuspensionResponse> {
         let DSRPCTransferConsumerSuspensionRequest { provider_address, provider_pid, consumer_pid, code, reason } =
-            input;
+            input.clone();
         // 1. Validate correlation
         let _current_process_record =
             self.validate_and_get_transfer_callback_by_consumer_id(&provider_pid, &consumer_pid).await?;
@@ -375,7 +399,7 @@ where
             )
             .await?;
         // 4. Persist in DB (update transfer callback)
-        let _transfer_process = self
+        let transfer_process = self
             .transfer_repo
             .put_transfer_callback_by_consumer(
                 consumer_pid.clone(),
@@ -390,6 +414,18 @@ where
             .map_err(|e| {
                 DSRPCTransferConsumerErrors::DSProtocolTransferConsumerError(DSProtocolTransferConsumerErrors::DbErr(e))
             })?;
+        let message = self
+            .transfer_repo
+            .create_transfer_message(
+                get_urn_from_string(&transfer_process.id)?,
+                NewTransferMessageModel {
+                    message_type: TransferMessageTypes::TransferSuspensionMessage.to_string(),
+                    from: TransferRoles::Consumer,
+                    to: TransferRoles::Provider,
+                    content: to_value(&input)?,
+                },
+            )
+            .await?;
         // 5. Data plane facade hook
         self.data_plane_facade.on_transfer_suspension(consumer_pid.clone()).await?;
         // 6. Create response
@@ -402,10 +438,8 @@ where
         self.notify_subscribers(
             "TransferSuspensionMessage".to_string(),
             json!({
-                "consumer_pid": consumer_pid,
-                "provider_pid": provider_pid,
-                "message": transfer_suspension_message,
-                "response": response,
+                "transfer_process": transfer_process,
+                "transfer_message": message,
             }),
         )
             .await?;
@@ -417,7 +451,7 @@ where
         &self,
         input: DSRPCTransferConsumerCompletionRequest,
     ) -> anyhow::Result<DSRPCTransferConsumerCompletionResponse> {
-        let DSRPCTransferConsumerCompletionRequest { provider_address, provider_pid, consumer_pid, .. } = input;
+        let DSRPCTransferConsumerCompletionRequest { provider_address, provider_pid, consumer_pid, .. } = input.clone();
         // 1. Validate correlation
         let _current_process_record =
             self.validate_and_get_transfer_callback_by_consumer_id(&provider_pid, &consumer_pid).await?;
@@ -443,7 +477,7 @@ where
             )
             .await?;
         // 4. Persist in DB (update transfer callback)
-        let _transfer_process = self
+        let transfer_process = self
             .transfer_repo
             .put_transfer_callback_by_consumer(
                 consumer_pid.clone(),
@@ -458,6 +492,18 @@ where
             .map_err(|e| {
                 DSRPCTransferConsumerErrors::DSProtocolTransferConsumerError(DSProtocolTransferConsumerErrors::DbErr(e))
             })?;
+        let message = self
+            .transfer_repo
+            .create_transfer_message(
+                get_urn_from_string(&transfer_process.id)?,
+                NewTransferMessageModel {
+                    message_type: TransferMessageTypes::TransferCompletionMessage.to_string(),
+                    from: TransferRoles::Consumer,
+                    to: TransferRoles::Provider,
+                    content: to_value(&input)?,
+                },
+            )
+            .await?;
         // 5. Data plane facade hook
         self.data_plane_facade.on_transfer_completion(consumer_pid.clone()).await?;
         // 6. Create response
@@ -470,10 +516,8 @@ where
         self.notify_subscribers(
             "TransferCompletionMessage".to_string(),
             json!({
-                "consumer_pid": consumer_pid,
-                "provider_pid": provider_pid,
-                "message": transfer_completion_message,
-                "response": response,
+                "transfer_process": transfer_process,
+                "transfer_message": message,
             }),
         )
             .await?;
@@ -486,7 +530,7 @@ where
         input: DSRPCTransferConsumerTerminationRequest,
     ) -> anyhow::Result<DSRPCTransferConsumerTerminationResponse> {
         let DSRPCTransferConsumerTerminationRequest { provider_address, provider_pid, consumer_pid, code, reason } =
-            input;
+            input.clone();
         // 1. Validate correlation
         let _current_process_record =
             self.validate_and_get_transfer_callback_by_consumer_id(&provider_pid, &consumer_pid).await?;
@@ -514,7 +558,7 @@ where
             )
             .await?;
         // 4. Persist in DB (update transfer callback)
-        let _transfer_process = self
+        let transfer_process = self
             .transfer_repo
             .put_transfer_callback_by_consumer(
                 consumer_pid.clone(),
@@ -529,6 +573,18 @@ where
             .map_err(|e| {
                 DSRPCTransferConsumerErrors::DSProtocolTransferConsumerError(DSProtocolTransferConsumerErrors::DbErr(e))
             })?;
+        let message = self
+            .transfer_repo
+            .create_transfer_message(
+                get_urn_from_string(&transfer_process.id)?,
+                NewTransferMessageModel {
+                    message_type: TransferMessageTypes::TransferTerminationMessage.to_string(),
+                    from: TransferRoles::Consumer,
+                    to: TransferRoles::Provider,
+                    content: to_value(&input)?,
+                },
+            )
+            .await?;
         // 5. Data plane facade hook
         self.data_plane_facade.on_transfer_termination(consumer_pid.clone()).await?;
         // 6. Create response
@@ -541,10 +597,8 @@ where
         self.notify_subscribers(
             "TransferTerminationMessage".to_string(),
             json!({
-                "consumer_pid": consumer_pid,
-                "provider_pid": provider_pid,
-                "message": transfer_termination_message,
-                "response": response,
+                "transfer_process": transfer_process,
+                "transfer_message": message,
             }),
         )
             .await?;

@@ -18,8 +18,9 @@
  */
 
 use crate::transfer_consumer::entities::transfer_callback;
-use crate::transfer_consumer::entities::transfer_callback::Model;
-use crate::transfer_consumer::repo::{EditTransferCallback, NewTransferCallback, TransferCallbackRepo, TransferConsumerRepoErrors, TransferConsumerRepoFactory};
+use crate::transfer_consumer::entities::transfer_message;
+use crate::transfer_consumer::repo::{EditTransferCallback, NewTransferCallback, TransferCallbackRepo, TransferConsumerRepoErrors, TransferConsumerRepoFactory, TransferMessagesConsumerRepo};
+use crate::transfer_consumer::repo::{EditTransferMessageModel, NewTransferMessageModel};
 use axum::async_trait;
 use rainbow_common::utils::get_urn;
 use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect};
@@ -47,7 +48,7 @@ impl TransferCallbackRepo for TransferConsumerRepoForSql {
         &self,
         limit: Option<u64>,
         page: Option<u64>,
-    ) -> anyhow::Result<Vec<Model>, TransferConsumerRepoErrors> {
+    ) -> anyhow::Result<Vec<transfer_callback::Model>, TransferConsumerRepoErrors> {
         let transfer_callbacks = transfer_callback::Entity::find()
             .limit(limit.unwrap_or(100000))
             .offset(page.unwrap_or(0))
@@ -62,7 +63,7 @@ impl TransferCallbackRepo for TransferConsumerRepoForSql {
     async fn get_transfer_callbacks_by_id(
         &self,
         callback_id: Urn,
-    ) -> anyhow::Result<Option<Model>, TransferConsumerRepoErrors> {
+    ) -> anyhow::Result<Option<transfer_callback::Model>, TransferConsumerRepoErrors> {
         let callback_id = callback_id.to_string();
         let transfer_callback =
             transfer_callback::Entity::find_by_id(callback_id).one(&self.db_connection).await;
@@ -75,7 +76,7 @@ impl TransferCallbackRepo for TransferConsumerRepoForSql {
     async fn get_transfer_callback_by_consumer_id(
         &self,
         consumer_pid: Urn,
-    ) -> anyhow::Result<Option<Model>, TransferConsumerRepoErrors> {
+    ) -> anyhow::Result<Option<transfer_callback::Model>, TransferConsumerRepoErrors> {
         let consumer_pid = consumer_pid.to_string();
         let transfer_callback = transfer_callback::Entity::find()
             .filter(transfer_callback::Column::ConsumerPid.eq(consumer_pid))
@@ -87,7 +88,7 @@ impl TransferCallbackRepo for TransferConsumerRepoForSql {
         }
     }
 
-    async fn get_transfer_callback_by_provider_id(&self, provider_id: Urn) -> anyhow::Result<Option<Model>, TransferConsumerRepoErrors> {
+    async fn get_transfer_callback_by_provider_id(&self, provider_id: Urn) -> anyhow::Result<Option<transfer_callback::Model>, TransferConsumerRepoErrors> {
         let consumer_pid = provider_id.to_string();
         let transfer_callback = transfer_callback::Entity::find()
             .filter(transfer_callback::Column::ProviderPid.eq(consumer_pid))
@@ -103,7 +104,7 @@ impl TransferCallbackRepo for TransferConsumerRepoForSql {
         &self,
         callback_id: Urn,
         new_transfer_callback: EditTransferCallback,
-    ) -> anyhow::Result<Model, TransferConsumerRepoErrors> {
+    ) -> anyhow::Result<transfer_callback::Model, TransferConsumerRepoErrors> {
         let callback_id = callback_id.to_string();
         let old_model = transfer_callback::Entity::find_by_id(callback_id).one(&self.db_connection).await;
         let old_model = match old_model {
@@ -142,7 +143,7 @@ impl TransferCallbackRepo for TransferConsumerRepoForSql {
         &self,
         consumer_pid: Urn,
         new_transfer_callback: EditTransferCallback,
-    ) -> anyhow::Result<Model, TransferConsumerRepoErrors> {
+    ) -> anyhow::Result<transfer_callback::Model, TransferConsumerRepoErrors> {
         let consumer_pid = consumer_pid.to_string();
         let old_model = transfer_callback::Entity::find()
             .filter(transfer_callback::Column::ConsumerPid.eq(consumer_pid))
@@ -184,7 +185,7 @@ impl TransferCallbackRepo for TransferConsumerRepoForSql {
     async fn create_transfer_callback(
         &self,
         new_transfer_callback: NewTransferCallback,
-    ) -> anyhow::Result<Model, TransferConsumerRepoErrors> {
+    ) -> anyhow::Result<transfer_callback::Model, TransferConsumerRepoErrors> {
         let consumer_pid = new_transfer_callback.consumer_pid.map(|p| p);
         let provider_pid = new_transfer_callback.provider_pid.map(|p| p.to_string());
         let callback_id = new_transfer_callback.callback_id.map(|p| p);
@@ -217,6 +218,84 @@ impl TransferCallbackRepo for TransferConsumerRepoForSql {
                 _ => Ok(()),
             },
             Err(e) => Err(TransferConsumerRepoErrors::ErrorDeletingConsumerTransferProcess(e.into())),
+        }
+    }
+}
+
+#[async_trait]
+impl TransferMessagesConsumerRepo for TransferConsumerRepoForSql {
+    async fn get_all_transfer_messages(&self, limit: Option<u64>, page: Option<u64>) -> anyhow::Result<Vec<transfer_message::Model>, TransferConsumerRepoErrors> {
+        let transfer_message = transfer_message::Entity::find()
+            .limit(limit.unwrap_or(100000))
+            .offset(page.unwrap_or(0))
+            .all(&self.db_connection)
+            .await;
+        match transfer_message {
+            Ok(transfer_message) => Ok(transfer_message),
+            Err(e) => Err(TransferConsumerRepoErrors::ErrorFetchingConsumerTransferMessage(e.into())),
+        }
+    }
+
+    async fn get_all_transfer_messages_by_consumer(&self, pid: Urn) -> anyhow::Result<Vec<transfer_message::Model>, TransferConsumerRepoErrors> {
+        let transfer_process = self.get_transfer_callbacks_by_id(pid.clone()).await
+            .map_err(|e| TransferConsumerRepoErrors::ErrorFetchingConsumerTransferProcess(e.into()))?
+            .ok_or(TransferConsumerRepoErrors::ConsumerTransferProcessNotFound)?;
+        let transfer_message = transfer_message::Entity::find()
+            .filter(transfer_message::Column::TransferProcessId.eq(pid.to_string()))
+            .all(&self.db_connection)
+            .await;
+        match transfer_message {
+            Ok(transfer_message) => Ok(transfer_message),
+            Err(e) => Err(TransferConsumerRepoErrors::ErrorFetchingConsumerTransferMessage(e.into())),
+        }
+    }
+
+    async fn get_transfer_message_by_id(&self, pid: Urn, mid: Urn) -> anyhow::Result<Option<transfer_message::Model>, TransferConsumerRepoErrors> {
+        let transfer_process = self.get_transfer_callbacks_by_id(pid.clone()).await
+            .map_err(|e| TransferConsumerRepoErrors::ErrorFetchingConsumerTransferProcess(e.into()))?
+            .ok_or(TransferConsumerRepoErrors::ConsumerTransferProcessNotFound)?;
+
+        let transfer_message = transfer_message::Entity::find_by_id(mid.to_string()).one(&self.db_connection).await;
+        match transfer_message {
+            Ok(transfer_message) => Ok(transfer_message),
+            Err(e) => Err(TransferConsumerRepoErrors::ErrorFetchingConsumerTransferMessage(e.into())),
+        }
+    }
+
+    async fn put_transfer_message(&self, pid: Urn, edit_transfer_message: EditTransferMessageModel) -> anyhow::Result<Option<transfer_message::Model>, TransferConsumerRepoErrors> {
+        Ok(None)
+    }
+
+    async fn create_transfer_message(&self, pid: Urn, new_transfer_message: NewTransferMessageModel) -> anyhow::Result<transfer_message::Model, TransferConsumerRepoErrors> {
+        let pid = pid.to_string();
+
+        let model = transfer_message::ActiveModel {
+            id: ActiveValue::Set(get_urn(None).to_string()),
+            transfer_process_id: ActiveValue::Set(pid),
+            created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
+            message_type: ActiveValue::Set(new_transfer_message.message_type),
+            from: ActiveValue::Set(new_transfer_message.from.to_string()),
+            to: ActiveValue::Set(new_transfer_message.to.to_string()),
+            content: ActiveValue::Set(new_transfer_message.content),
+        };
+
+        let model = transfer_message::Entity::insert(model).exec_with_returning(&self.db_connection).await;
+        match model {
+            Ok(model) => Ok(model),
+            Err(e) => Err(TransferConsumerRepoErrors::ErrorCreatingConsumerTransferMessage(e.into())),
+        }
+    }
+
+    async fn delete_transfer_message(&self, pid: Urn) -> anyhow::Result<(), TransferConsumerRepoErrors> {
+        let pid = pid.to_string();
+
+        let transfer_message = transfer_message::Entity::delete_by_id(pid).exec(&self.db_connection).await;
+        match transfer_message {
+            Ok(delete_result) => match delete_result.rows_affected {
+                0 => Err(TransferConsumerRepoErrors::ConsumerTransferMessageNotFound),
+                _ => Ok(()),
+            },
+            Err(e) => Err(TransferConsumerRepoErrors::ErrorDeletingConsumerTransferMessage(e.into())),
         }
     }
 }

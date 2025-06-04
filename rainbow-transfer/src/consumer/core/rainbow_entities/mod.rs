@@ -23,7 +23,7 @@ pub mod rainbow_types;
 
 use crate::consumer::core::rainbow_entities::rainbow_types::{EditTransferConsumerRequest, NewTransferConsumerRequest};
 use axum::async_trait;
-use rainbow_db::transfer_consumer::entities::transfer_callback;
+use rainbow_db::transfer_consumer::entities::{transfer_callback, transfer_message};
 use urn::Urn;
 
 #[mockall::automock]
@@ -43,4 +43,6 @@ pub trait RainbowTransferConsumerServiceTrait: Send + Sync {
         new_transfer: NewTransferConsumerRequest,
     ) -> anyhow::Result<transfer_callback::Model>;
     async fn delete_transfer(&self, process_id: Urn) -> anyhow::Result<()>;
+    async fn get_messages_by_transfer(&self, transfer_id: Urn) -> anyhow::Result<Vec<transfer_message::Model>>;
+    async fn get_messages_by_id(&self, transfer_id: Urn, message_id: Urn) -> anyhow::Result<transfer_message::Model>;
 }

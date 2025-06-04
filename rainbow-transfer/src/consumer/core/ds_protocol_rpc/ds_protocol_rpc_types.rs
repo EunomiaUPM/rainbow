@@ -24,7 +24,7 @@ use rainbow_common::protocol::transfer::transfer_process::TransferProcessMessage
 use serde::{Deserialize, Serialize};
 use urn::Urn;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferConsumerRequestRequest {
     #[serde(rename = "providerAddress")]
@@ -38,7 +38,7 @@ pub struct DSRPCTransferConsumerRequestRequest {
     pub data_address: Option<DataAddress>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferConsumerRequestResponse {
     #[serde(rename = "providerPid")]
@@ -57,7 +57,7 @@ pub struct DSRPCTransferConsumerRequestResponse {
     pub message: TransferProcessMessage,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferConsumerStartRequest {
     #[serde(rename = "providerAddress")]
@@ -84,7 +84,7 @@ pub struct DSRPCTransferConsumerStartResponse {
     pub message: TransferProcessMessage,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferConsumerSuspensionRequest {
     #[serde(rename = "providerAddress")]
@@ -111,7 +111,7 @@ pub struct DSRPCTransferConsumerSuspensionResponse {
     pub message: TransferProcessMessage,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferConsumerCompletionRequest {
     #[serde(rename = "providerAddress")]
@@ -132,7 +132,7 @@ pub struct DSRPCTransferConsumerCompletionResponse {
     pub message: TransferProcessMessage,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferConsumerTerminationRequest {
     #[serde(rename = "providerAddress")]
