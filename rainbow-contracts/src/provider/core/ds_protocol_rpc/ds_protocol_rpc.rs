@@ -363,6 +363,7 @@ where
         }
         // 3. create message
         let contract_offer_message = ContractOfferMessage {
+            consumer_pid: cn_process.consumer_id.map(|a| a.parse().unwrap()),
             provider_pid: cn_process.provider_id.parse()?,
             odrl_offer: ContractRequestMessageOfferTypes::OfferMessage(odrl_offer.clone()),
             ..Default::default()
