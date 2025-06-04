@@ -18,7 +18,7 @@
  */
 
 use super::{RainbowSSIAuthConsumerManagerTrait, RainbowSSIAuthConsumerWalletTrait};
-use crate::setup::consumer::SSIAuthConsumerApplicationConfig;
+use crate::ssi_auth::consumer::setup::config::SSIAuthConsumerApplicationConfig;
 use crate::ssi_auth::consumer::core::types::{
     AuthJwtClaims, DidsInfo, MatchingVCs, RedirectResponse, WalletInfo, WalletInfoResponse, WalletLoginResponse,
 };
@@ -46,6 +46,7 @@ use tokio::sync::Mutex;
 use tracing::{error, info};
 use url::Url;
 use urlencoding::decode;
+use rainbow_common::mates::Mates;
 
 #[derive(Debug)]
 pub struct Manager<T>
@@ -752,6 +753,35 @@ where
         };
 
         Ok(model)
+    }
+
+    async fn save_mate(&self, id: String, base_url: String, token: String, token_actions: String) -> anyhow::Result<()> {
+        let url = format!("{}/mates" , self.config.get_ssi_auth_host_url().unwrap()); // TODO fix 4 microservices
+
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "application/json".parse()?);
+        headers.insert(ACCEPT, "application/json".parse()?);
+
+        let body = Mates::default4consumer(id, base_url, token, token_actions);
+
+        let res = self.client.post(url).headers(headers).json(&body).send().await;
+
+        let res = match res {
+            Ok(res) => res,
+            Err(e) => bail!("Error sending request: {}", e),
+        };
+
+        match res.status().as_u16() {
+            200 => {
+                info!("Mate saved successfully");
+            }
+            _ => {
+                error!("Mate saving failed: {}", res.status());
+                bail!("Mate saving failed: {}", res.status());
+            }
+        }
+
+        Ok(())
     }
 }
 

@@ -17,11 +17,13 @@
  *
  */
 
-use crate::setup::provider::SSIAuthProviderApplicationConfig;
 use crate::ssi_auth::provider::core::manager::RainbowSSIAuthProviderManagerTrait;
+use crate::ssi_auth::provider::setup::config::SSIAuthProviderApplicationConfig;
 use crate::ssi_auth::provider::utils::{compare_with_margin, create_opaque_token, create_token, split_did};
 use anyhow::bail;
 use axum::async_trait;
+use axum::http::header::{ACCEPT, CONTENT_TYPE};
+use axum::http::HeaderMap;
 use base64::engine::general_purpose::{STANDARD, URL_SAFE_NO_PAD};
 use base64::Engine;
 use chrono::format::Fixed::TimezoneName;
@@ -32,11 +34,14 @@ use jsonwebtoken::{Algorithm, Validation};
 use log::error;
 use rainbow_common::auth::gnap::{GrantRequest, GrantResponse};
 use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
+use rainbow_common::mates::Mates;
 use rainbow_db::auth_provider::repo::AuthProviderRepoTrait;
 use rand::{distributions::Alphanumeric, Rng};
+use reqwest::Client;
 use serde_json::{json, Value};
 use std::collections::HashSet;
 use std::sync::Arc;
+use std::time::Duration;
 use tracing::field::debug;
 use tracing::{debug, info};
 use urlencoding::{decode, encode};
@@ -46,6 +51,7 @@ pub struct Manager<T>
 where
     T: AuthProviderRepoTrait + Send + Sync + Clone + 'static,
 {
+    client: Client,
     auth_repo: Arc<T>,
     config: SSIAuthProviderApplicationConfig,
 }
@@ -55,7 +61,9 @@ where
     T: AuthProviderRepoTrait + Send + Sync + Clone + 'static,
 {
     pub fn new(auth_repo: Arc<T>, config: SSIAuthProviderApplicationConfig) -> Self {
-        Self { auth_repo, config }
+        let client =
+            Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
+        Self { client, auth_repo, config }
     }
 }
 
@@ -79,16 +87,25 @@ where
         let client_id = format!("{}/verify", &provider_url);
 
         let actions = payload.access_token.access.actions.unwrap_or_else(|| String::from("talk"));
-        let grant_endpoint = format!("{}/access", self.config.get_ssi_auth_host_url().unwrap()) ;
+        let grant_endpoint = format!("{}/access", self.config.get_ssi_auth_host_url().unwrap());
 
-        let (auth_model, interaction_model, verification_model) =
-            match self.auth_repo.create_auth(payload.client, client_id.clone(), grant_endpoint,actions, payload.interact).await {
-                Ok(model) => {
-                    info!("exchange saved successfully");
-                    model
-                }
-                Err(e) => bail!("Unable to save exchange in db: {}", e),
-            };
+        let (auth_model, interaction_model, verification_model) = match self
+            .auth_repo
+            .create_auth(
+                payload.client,
+                client_id.clone(),
+                grant_endpoint,
+                actions,
+                payload.interact,
+            )
+            .await
+        {
+            Ok(model) => {
+                info!("exchange saved successfully");
+                model
+            }
+            Err(e) => bail!("Unable to save exchange in db: {}", e),
+        };
 
         let base_url = "openid4vp://authorize";
 
@@ -432,7 +449,7 @@ where
         Ok(())
     }
 
-    async fn continue_req(&self, interact_ref: String) -> anyhow::Result<String> {
+    async fn continue_req(&self, interact_ref: String) -> anyhow::Result<Value> {
         let id = match self.auth_repo.get_auth_by_interact_ref(interact_ref).await {
             Ok(string) => string,
             Err(e) => bail!("No interact reference expected"),
@@ -451,11 +468,47 @@ where
 
         let token: String = create_opaque_token();
 
-        match self.auth_repo.save_token(id, token.clone()).await {
-            Ok(_) => Ok(token),
+        let model = match self.auth_repo.save_token(id, token.clone()).await {
+            Ok(model) => model,
             Err(e) => {
                 bail!("Unable to create token")
             }
+        };
+
+        Ok(serde_json::to_value(&model)?)
+    }
+
+    async fn save_mate(
+        &self,
+        id: String,
+        token: String,
+        token_actions: String,
+    ) -> anyhow::Result<()> {
+        let url = format!("{}/mates", self.config.get_ssi_auth_host_url().unwrap()); // TODO fix 4 microservices
+
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "application/json".parse()?);
+        headers.insert(ACCEPT, "application/json".parse()?);
+
+        let body = Mates::default4provider(id, token, token_actions);
+
+        let res = self.client.post(url).headers(headers).json(&body).send().await;
+
+        let res = match res {
+            Ok(res) => res,
+            Err(e) => bail!("Error sending request: {}", e),
+        };
+
+        match res.status().as_u16() {
+            200 => {
+                info!("Mate saved successfully");
+            }
+            _ => {
+                error!("Mate saving failed: {}", res.status());
+                bail!("Mate saving failed: {}", res.status());
+            }
         }
+
+        Ok(())
     }
 }

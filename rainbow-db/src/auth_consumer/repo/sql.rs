@@ -95,6 +95,7 @@ impl AuthConsumerRepoTrait for AuthConsumerRepoForSql {
             token: ActiveValue::Set(None),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             ended_at: ActiveValue::Set(None),
+            grant_endpoint: ActiveValue::Set(uri.clone()),
         };
 
         let auth_interaction_model = auth_interaction::ActiveModel {

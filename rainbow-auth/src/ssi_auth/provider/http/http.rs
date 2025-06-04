@@ -33,6 +33,7 @@ use reqwest::StatusCode;
 use serde::Deserialize;
 use serde_json::json;
 use std::sync::Arc;
+use anyhow::bail;
 use tracing::info;
 
 pub struct RainbowAuthProviderRouter<T>
@@ -57,7 +58,7 @@ where
             .route("/continue", post(Self::continue_request))
             .route("/verify/token", post(Self::verify_token))
             .with_state(self.manager)
-            .fallback(Self::fallback)
+            // .fallback(Self::fallback) 2 routers cannot have 1 fallback each
     }
 
     async fn access_request(State(manager): State<Arc<T>>, Json(payload): Json<GrantRequest>) -> impl IntoResponse {
@@ -109,8 +110,8 @@ where
     async fn continue_request(State(manager): State<Arc<T>>, Json(payload): Json<RefBody>) -> impl IntoResponse {
         info!("POST /continue");
 
-        let token = match manager.continue_req(payload.interact_ref).await {
-            Ok(token) => token,
+        let model = match manager.continue_req(payload.interact_ref).await {
+            Ok(model) => model,
             Err(e) => {
                 let error = json!({"error": "error"});
 
@@ -118,7 +119,16 @@ where
             }
         };
 
+        let id = model["consumer"].as_str().unwrap().to_string();
+        let token = model["token"].as_str().unwrap().to_string();
+        let actions = model["actions"].as_str().unwrap().to_string();
+        match manager.save_mate(id, token.clone(), actions).await {
+            Ok(_) => (),
+            Err(e) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+        }
+
         let json = AccessToken::default(token);
+
 
         (StatusCode::OK, Json(json)).into_response()
     }

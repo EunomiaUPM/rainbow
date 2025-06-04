@@ -19,9 +19,10 @@
 
 use chrono;
 use sea_orm::entity::prelude::*;
+use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, DeriveEntityModel)]
 #[sea_orm(table_name = "auth")]
 pub struct Model {
     #[sea_orm(primary_key)]

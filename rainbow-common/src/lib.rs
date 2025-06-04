@@ -36,3 +36,4 @@ pub mod auth;
 pub mod schemas;
 pub mod facades;
 pub mod adv_protocol;
+pub mod mates;

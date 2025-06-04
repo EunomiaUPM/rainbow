@@ -48,8 +48,18 @@ pub trait RainbowSSIAuthConsumerWalletTrait: Send + Sync {
 
 #[async_trait]
 pub trait RainbowSSIAuthConsumerManagerTrait: Send + Sync {
-    async fn request_access(&self, url: String, provider: String, actions: String) -> anyhow::Result<auth_verification::Model>;
-    async fn manual_request_access(&self, url: String, provider: String, actions: String) -> anyhow::Result<auth_verification::Model>;
+    async fn request_access(
+        &self,
+        url: String,
+        provider: String,
+        actions: String,
+    ) -> anyhow::Result<auth_verification::Model>;
+    async fn manual_request_access(
+        &self,
+        url: String,
+        provider: String,
+        actions: String,
+    ) -> anyhow::Result<auth_verification::Model>;
     async fn join_exchange(&self, exchange_url: String) -> anyhow::Result<String>;
     async fn parse_vpd(&self, vpd_as_string: String) -> anyhow::Result<Value>;
     async fn match_vc4vp(&self, vp_def: Value) -> anyhow::Result<Vec<MatchingVCs>>;
@@ -57,4 +67,5 @@ pub trait RainbowSSIAuthConsumerManagerTrait: Send + Sync {
     async fn do_callback(&self, uri: String) -> anyhow::Result<()>;
     async fn check_callback(&self, id: String, interact_ref: String, hash: String) -> anyhow::Result<String>;
     async fn continue_request(&self, id: String, interact_ref: String, uri: String) -> anyhow::Result<auth::Model>;
+    async fn save_mate(&self, id: String, url: String, token: String, token_actions: String) -> anyhow::Result<()>;
 }

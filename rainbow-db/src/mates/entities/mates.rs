@@ -17,6 +17,24 @@
  *
  */
 
-pub mod http;
-pub mod core;
-pub mod setup;
+use chrono;
+use sea_orm::entity::prelude::*;
+use sea_orm::DeriveEntityModel;
+
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
+#[sea_orm(table_name = "mates")]
+pub struct Model {
+    #[sea_orm(primary_key)]
+    pub participant_id: String,
+    pub participant_type: String,
+    pub base_url: Option<String>,
+    pub token: Option<String>,
+    pub token_actions: Option<String>,
+    pub saved_at: chrono::NaiveDateTime,
+    pub last_interaction: chrono::NaiveDateTime,
+}
+
+#[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
+pub enum Relation {}
+
+impl ActiveModelBehavior for ActiveModel {}

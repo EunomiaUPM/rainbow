@@ -37,6 +37,7 @@ use serde_json::json;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
+use anyhow::bail;
 use tokio::sync::Mutex;
 use tracing::info;
 use url::Url;
@@ -67,11 +68,12 @@ where
             .route("/callback/:id", post(Self::callback))
             .route("/auth/manual/ssi", post(Self::manual_auth_ssi))
             .route("/callback/manual/:id", get(Self::manual_callback))
-            .route("/.well-known/did.json", get(Self::didweb))
+            .route("/retrieve/token/:id", get(Self::manual_callback))
+            .route("/.well-known/did.json", get(Self::didweb))// TODO
             // .route("/provider/:id/renew", post(todo!()))
             // .route("/provider/:id/finalize", post(todo!()))
             .with_state(self.manager)
-            .fallback(Self::fallback)
+            // .fallback(Self::fallback) 2 routers cannot have 1 fallback each
     }
 
     async fn wallet_register(State(manager): State<Arc<Mutex<Manager<T>>>>) -> impl IntoResponse {
@@ -296,7 +298,29 @@ where
             Err(e) => return StatusCode::BAD_REQUEST.into_response(),
         };
 
-        res.token.unwrap().into_response() // TODO hablar a carlos
+        match manager.save_mate(res.provider, res.grant_endpoint, res.token.unwrap(), res.actions).await {
+            Ok(_) => (),
+            Err(e) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+        }
+
+        StatusCode::OK.into_response()
+        // TODO VISTA CARLOS
+    }
+
+    async fn get_token(State(manager): State<Arc<Mutex<Manager<T>>>>, Path(id): Path<String>,) -> impl IntoResponse {
+        let log = format!("GET /callback/manual/{}", id);
+        info!(log);
+
+        let mut manager = manager.lock().await;
+        let token = match manager.auth_repo.get_auth_by_id(id).await {
+            Ok(model) => model.token,
+            Err(e) => return StatusCode::BAD_REQUEST.into_response(),
+        };
+
+         match token {
+            Some(token) => token.into_response(),
+            None => StatusCode::BAD_REQUEST.into_response(),
+        }
     }
 
     async fn fallback(method: Method, uri: Uri) -> (StatusCode, String) {

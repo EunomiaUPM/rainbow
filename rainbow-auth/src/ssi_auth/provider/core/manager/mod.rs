@@ -16,10 +16,15 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
+use std::format;
+use anyhow::bail;
 use axum::async_trait;
+use axum::http::header::{ACCEPT, CONTENT_TYPE};
+use axum::http::HeaderMap;
 use rainbow_common::auth::gnap::GrantRequest;
 use serde_json::Value;
+use tracing::info;
+use rainbow_common::mates::Mates;
 
 pub mod manager;
 
@@ -36,5 +41,6 @@ pub trait RainbowSSIAuthProviderManagerTrait: Send + Sync {
     ) -> anyhow::Result<(Vec<String>, String)>;
     async fn verify_vc(&self, vc_token: String, vp_holder: String) -> anyhow::Result<()>;
 
-    async fn continue_req(&self, interact_ref: String) -> anyhow::Result<String>;
+    async fn continue_req(&self, interact_ref: String) -> anyhow::Result<Value>;
+    async fn save_mate(&self, id: String, token: String, token_actions: String) -> anyhow::Result<()>;
 }
