@@ -171,6 +171,7 @@ impl TransferCallbackRepo for TransferConsumerRepoForSql {
         if let Some(data_address) = new_transfer_callback.data_address {
             old_active_model.data_address = ActiveValue::Set(Option::from(data_address));
         }
+        old_active_model.restart_flag = ActiveValue::Set(true);
         old_active_model.updated_at = ActiveValue::Set(Some(chrono::Utc::now().naive_utc()));
 
         let model = old_active_model.update(&self.db_connection).await;
@@ -195,6 +196,7 @@ impl TransferCallbackRepo for TransferConsumerRepoForSql {
             updated_at: ActiveValue::Set(None),
             data_plane_id: ActiveValue::Set(None),
             data_address: ActiveValue::Set(new_transfer_callback.data_address),
+            restart_flag: ActiveValue::Set(false),
         };
         let transfer_callback =
             transfer_callback::Entity::insert(model).exec_with_returning(&self.db_connection).await;

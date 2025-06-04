@@ -299,7 +299,7 @@ where
             )
             .await?;
         // 4. Persist in DB (update transfer callback)
-        let _transfer_process = self
+        let transfer_process = self
             .transfer_repo
             .put_transfer_callback_by_consumer(
                 consumer_pid.clone(),
@@ -315,7 +315,11 @@ where
                 DSRPCTransferConsumerErrors::DSProtocolTransferConsumerError(DSProtocolTransferConsumerErrors::DbErr(e))
             })?;
         // 5. Data plane facade hook
-        self.data_plane_facade.on_transfer_start(consumer_pid.clone(), data_address.clone()).await?;
+        if transfer_process.restart_flag {
+            self.data_plane_facade.on_transfer_restart(consumer_pid.clone()).await?;
+        } else {
+            self.data_plane_facade.on_transfer_start(consumer_pid.clone(), data_address.clone()).await?;
+        }
         // 6. Create response
         let response = DSRPCTransferConsumerStartResponse {
             provider_pid: provider_pid.clone(),

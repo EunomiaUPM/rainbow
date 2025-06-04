@@ -31,6 +31,7 @@ pub struct Model {
     pub updated_at: Option<chrono::NaiveDateTime>,
     pub data_plane_id: Option<String>,
     pub data_address: Option<serde_json::Value>,
+    pub restart_flag: bool,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

@@ -29,8 +29,10 @@ use crate::provider::core::ds_protocol_rpc::ds_protocol_rpc_types::{
 use crate::provider::core::ds_protocol_rpc::DSRPCTransferProviderTrait;
 use anyhow::bail;
 use axum::async_trait;
+use rainbow_common::err::transfer_err::TransferErrorType;
 use rainbow_common::protocol::transfer::transfer_completion::TransferCompletionMessage;
 use rainbow_common::protocol::transfer::transfer_process::TransferProcessMessage;
+use rainbow_common::protocol::transfer::transfer_protocol_trait::DSProtocolTransferMessageTrait;
 use rainbow_common::protocol::transfer::transfer_start::TransferStartMessage;
 use rainbow_common::protocol::transfer::transfer_suspension::TransferSuspensionMessage;
 use rainbow_common::protocol::transfer::transfer_termination::TransferTerminationMessage;
@@ -89,8 +91,6 @@ where
         consumer_pid: &Urn,
         provider_pid: &Urn,
     ) -> anyhow::Result<transfer_process::Model> {
-        debug!("{:?}", consumer_pid);
-        debug!("{:?}", provider_pid);
         let provider_process = self
             .transfer_repo
             .get_transfer_process_by_provider(provider_pid.clone())
@@ -106,8 +106,6 @@ where
                     },
                 ),
             )?;
-        // debug!("{:?}", provider_process);
-        // debug!("{:?}", consumer_process);
 
         let consumer_process = self
             .transfer_repo
@@ -136,6 +134,137 @@ where
             );
         }
         Ok(provider_process)
+    }
+
+    async fn transition_validation<'a, M: DSProtocolTransferMessageTrait<'a>>(
+        &self,
+        message: &M,
+    ) -> anyhow::Result<()> {
+        // Negotiation state
+        // For RPC consumer_pid and provider_pid are always some
+        let consumer_pid = message.get_consumer_pid()?.unwrap().to_owned();
+        let provider_pid = message.get_provider_pid()?.unwrap().to_owned();
+        let message_type = message.get_message_type()?;
+        // For RPC transfer process is always there
+        let tp = self.transfer_repo.get_transfer_process_by_provider(provider_pid).await?.unwrap();
+        debug!("{:?}", tp);
+        let transfer_state = tp.state.parse()?;
+        let transfer_state_attribute = tp.state_attribute.unwrap_or(TransferStateAttribute::OnRequest.to_string()).parse()?;
+
+        debug!("{:?}", transfer_state);
+        debug!("{:?}", transfer_state_attribute);
+
+        match message_type {
+            TransferMessageTypes::TransferStartMessage => match transfer_state {
+                TransferState::REQUESTED => {}
+                TransferState::STARTED => {
+                    bail!(TransferErrorType::ProtocolError {
+                        state: TransferState::STARTED,
+                        message_type: "Start message is not allowed in STARTED state".to_string(),
+                    })
+                }
+                TransferState::SUSPENDED => {
+                    // Transfer state attribute check.
+                    match transfer_state_attribute {
+                        // If suspended by consumer, not able to start from provider
+                        TransferStateAttribute::ByConsumer => bail!(TransferErrorType::ProtocolError {
+                            state: TransferState::SUSPENDED,
+                            message_type:
+                                "State SUSPENDED was established by Consumer, Provider is not allowed to change it"
+                                    .to_string(),
+                        }),
+                        TransferStateAttribute::OnRequest => {}
+                        TransferStateAttribute::ByProvider => {}
+                    }
+                }
+                TransferState::COMPLETED => {
+                    bail!(TransferErrorType::ProtocolError {
+                        state: TransferState::COMPLETED,
+                        message_type: "Start message is not allowed in COMPLETED state".to_string(),
+                    })
+                }
+                TransferState::TERMINATED => {
+                    bail!(TransferErrorType::ProtocolError {
+                        state: TransferState::TERMINATED,
+                        message_type: "Start message is not allowed in TERMINATED state".to_string(),
+                    })
+                }
+            },
+            // 4. Transfer suspension transition check
+            TransferMessageTypes::TransferSuspensionMessage => {
+                match transfer_state {
+                    TransferState::REQUESTED => {
+                        bail!(TransferErrorType::ProtocolError {
+                            state: TransferState::REQUESTED,
+                            message_type: "Suspension message is not allowed in REQUESTED state".to_string(),
+                        })
+                    }
+                    TransferState::STARTED => {
+                        // Transfer state attribute check.
+                        // Start from state suspended is only allowed if
+                        match transfer_state_attribute {
+                            TransferStateAttribute::ByProvider => {}
+                            TransferStateAttribute::ByConsumer => bail!(TransferErrorType::ProtocolError {
+                                state: TransferState::STARTED,
+                                message_type:
+                                    "State STARTED was established by Consumer, Provider is not allowed to change it"
+                                        .to_string(),
+                            }),
+                            TransferStateAttribute::OnRequest => {}
+                        }
+                    }
+                    TransferState::SUSPENDED => {
+                        bail!(TransferErrorType::TransferProcessAlreadySuspendedError)
+                    }
+                    TransferState::COMPLETED => {
+                        bail!(TransferErrorType::ProtocolError {
+                            state: TransferState::COMPLETED,
+                            message_type: "Suspension message is not allowed in COMPLETED state".to_string(),
+                        })
+                    }
+                    TransferState::TERMINATED => {
+                        bail!(TransferErrorType::ProtocolError {
+                            state: TransferState::TERMINATED,
+                            message_type: "Suspension message is not allowed in TERMINATED state".to_string(),
+                        })
+                    }
+                }
+            }
+            // 4. Transfer completion transition check
+            TransferMessageTypes::TransferCompletionMessage => match transfer_state {
+                TransferState::REQUESTED => {
+                    bail!(TransferErrorType::ProtocolError {
+                        state: TransferState::REQUESTED,
+                        message_type: "Completion message is not allowed in REQUESTED state".to_string(),
+                    })
+                }
+                TransferState::STARTED => {}
+                TransferState::SUSPENDED => {}
+                TransferState::COMPLETED => {}
+                TransferState::TERMINATED => {
+                    bail!(TransferErrorType::ProtocolError {
+                        state: TransferState::TERMINATED,
+                        message_type: "Completion message is not allowed in TERMINATED state".to_string(),
+                    })
+                }
+            },
+            // 4. Transfer termination transition check
+            TransferMessageTypes::TransferTerminationMessage => match transfer_state {
+                TransferState::REQUESTED => {}
+                TransferState::STARTED => {}
+                TransferState::SUSPENDED => {}
+                TransferState::COMPLETED => {
+                    bail!(TransferErrorType::ProtocolError {
+                        state: TransferState::COMPLETED,
+                        message_type: "Termination message is not allowed in COMPLETED state".to_string(),
+                    })
+                }
+                TransferState::TERMINATED => {}
+            },
+            // 4. Rest of messages not allowed
+            _ => bail!(TransferErrorType::MessageTypeNotAcceptedError),
+        }
+        Ok(())
     }
 
     /// Sends a protocol message to the consumer and handles the response.
@@ -204,9 +333,10 @@ where
         &self,
         input: DSRPCTransferProviderStartRequest,
     ) -> anyhow::Result<DSRPCTransferProviderStartResponse> {
-        let DSRPCTransferProviderStartRequest { consumer_callback, provider_pid, consumer_pid, .. } = input;
+        let DSRPCTransferProviderStartRequest { consumer_callback, provider_pid, consumer_pid, .. } = input.clone();
         // 1. Validate fields and correlation
         let tp = self.validate_and_get_correlated_transfer_process(&consumer_pid, &provider_pid).await?;
+        self.transition_validation(&input).await?;
         // 2. Create message
         let data_address = self.data_plane_facade.get_dataplane_address(provider_pid.clone()).await?;
         let start_message = TransferStartMessage {
@@ -294,10 +424,11 @@ where
     ) -> anyhow::Result<DSRPCTransferProviderSuspensionResponse> {
         let DSRPCTransferProviderSuspensionRequest {
             consumer_callback, provider_pid, consumer_pid, code, reason, ..
-        } = input;
+        } = input.clone();
         // 1. Validate fields and correlation
         let _current_process_model =
             self.validate_and_get_correlated_transfer_process(&consumer_pid, &provider_pid).await?;
+        self.transition_validation(&input).await?;
         // 2. Create message
         let suspension_message = TransferSuspensionMessage {
             provider_pid: provider_pid.clone(),
@@ -373,10 +504,12 @@ where
         &self,
         input: DSRPCTransferProviderCompletionRequest,
     ) -> anyhow::Result<DSRPCTransferProviderCompletionResponse> {
-        let DSRPCTransferProviderCompletionRequest { consumer_callback, provider_pid, consumer_pid, .. } = input;
+        let DSRPCTransferProviderCompletionRequest { consumer_callback, provider_pid, consumer_pid, .. } =
+            input.clone();
         // 1. Validate fields and correlation
         let _current_process_model =
             self.validate_and_get_correlated_transfer_process(&consumer_pid, &provider_pid).await?;
+        self.transition_validation(&input).await?;
         // 2. Create message
         let completion_message = TransferCompletionMessage {
             provider_pid: provider_pid.clone(),
@@ -452,10 +585,11 @@ where
     ) -> anyhow::Result<DSRPCTransferProviderTerminationResponse> {
         let DSRPCTransferProviderTerminationRequest {
             consumer_callback, provider_pid, consumer_pid, code, reason, ..
-        } = input;
+        } = input.clone();
         // 1. Validate fields and correlation
         let _current_process_model =
             self.validate_and_get_correlated_transfer_process(&consumer_pid, &provider_pid).await?;
+        self.transition_validation(&input).await?;
         // 2. Create message
         let termination_message = TransferTerminationMessage {
             provider_pid: provider_pid.clone(),
