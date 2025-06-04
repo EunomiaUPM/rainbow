@@ -29,6 +29,8 @@ use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, Applica
 use rainbow_common::config::provider_config::ApplicationProviderConfig;
 use rainbow_dataplane::coordinator::controller::controller_service::DataPlaneControllerService;
 use rainbow_dataplane::coordinator::dataplane_process::dataplane_process_service::DataPlaneProcessService;
+use rainbow_dataplane::data_plane_info::data_plane_info::DataPlaneInfoService;
+use rainbow_dataplane::http::DataPlaneRouter;
 use rainbow_dataplane::testing_proxy::http::http::TestingHTTPProxy;
 use rainbow_db::dataplane::repo::sql::DataPlaneRepoForSql;
 use rainbow_db::dataplane::repo::DataPlaneRepoFactory;
@@ -82,6 +84,13 @@ pub async fn create_transfer_consumer_router(config: &TransferConsumerApplicatio
     )
         .router();
 
+    // Dataplane Router
+    let dataplane_info_service = Arc::new(DataPlaneInfoService::new(
+        dataplane_process_service.clone(),
+        application_global_config.into(),
+    ));
+    let dataplane_info_router = DataPlaneRouter::new(dataplane_info_service.clone()).router();
+
     // Rainbow Entities Dependency injection
     let consumer_repo = Arc::new(TransferConsumerRepoForSql::create_repo(db_connection));
     let rainbow_entities_service = RainbowTransferConsumerServiceImpl::new(consumer_repo.clone());
@@ -116,6 +125,7 @@ pub async fn create_transfer_consumer_router(config: &TransferConsumerApplicatio
         .merge(ds_protocol_router)
         .merge(ds_protocol_rpc_router)
         .merge(dataplane_testing_router)
+        .merge(dataplane_info_router)
         .nest("/api/v1/transfers", subscription_router)
         .nest("/api/v1/transfers", notification_router);
 

@@ -31,6 +31,8 @@ use rainbow_common::config::global_config::ApplicationGlobalConfig;
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_dataplane::coordinator::controller::controller_service::DataPlaneControllerService;
 use rainbow_dataplane::coordinator::dataplane_process::dataplane_process_service::DataPlaneProcessService;
+use rainbow_dataplane::data_plane_info::data_plane_info::DataPlaneInfoService;
+use rainbow_dataplane::http::DataPlaneRouter;
 use rainbow_dataplane::testing_proxy::http::http::TestingHTTPProxy;
 use rainbow_db::dataplane::repo::sql::DataPlaneRepoForSql;
 use rainbow_db::dataplane::repo::DataPlaneRepoFactory;
@@ -56,7 +58,7 @@ pub async fn create_transfer_provider_router(config: &TransferProviderApplicatio
     // Dataplane services
     let application_global_config: ApplicationProviderConfig = config.clone().into();
     let dataplane_repo = Arc::new(DataPlaneRepoForSql::create_repo(db_connection.clone()));
-    let dataplane_process_service = Arc::new(DataPlaneProcessService::new(dataplane_repo));
+    let dataplane_process_service = Arc::new(DataPlaneProcessService::new(dataplane_repo.clone()));
     let dataplane_controller = Arc::new(DataPlaneControllerService::new(
         Arc::new(application_global_config.clone().into()),
         dataplane_process_service.clone(),
@@ -65,6 +67,10 @@ pub async fn create_transfer_provider_router(config: &TransferProviderApplicatio
         application_global_config.clone().into(),
         dataplane_process_service.clone(),
     ).router();
+
+    // Dataplane Router
+    let dataplane_info_service = Arc::new(DataPlaneInfoService::new(dataplane_process_service.clone(), application_global_config.into()));
+    let dataplane_info_router = DataPlaneRouter::new(dataplane_info_service.clone()).router();
 
     // Events router
     let subscription_repo = Arc::new(EventsRepoForSql::create_repo(db_connection.clone()));
@@ -123,6 +129,7 @@ pub async fn create_transfer_provider_router(config: &TransferProviderApplicatio
         .merge(ds_protocol_router)
         .merge(ds_protocol_rpc)
         .merge(dataplane_testing_router)
+        .merge(dataplane_info_router)
         .nest("/api/v1/transfers", subscription_router)
         .nest("/api/v1/transfers", notification_router);
 

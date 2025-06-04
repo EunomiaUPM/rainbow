@@ -2,6 +2,7 @@ use crate::coordinator::dataplane_process::dataplane_process::DataPlaneProcess;
 use crate::coordinator::transfer_event::TransferEvent;
 use axum::async_trait;
 use rainbow_common::adv_protocol::interplane::{DataPlaneProcessDirection, DataPlaneProcessState};
+use serde::Serialize;
 use urn::Urn;
 
 pub mod dataplane_process;
@@ -14,7 +15,7 @@ pub struct DataPlaneProcessRequest {
     pub process_direction: DataPlaneProcessDirection,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct DataPlaneProcessAddress {
     pub protocol: String,
     pub url: String,
