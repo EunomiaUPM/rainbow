@@ -70,8 +70,8 @@ impl DSProtocolContractNegotiationMessageTrait<'_> for ContractRequestMessage {
         Ok(self._type.clone())
     }
 
-    fn get_consumer_pid(&self) -> anyhow::Result<&Urn> {
-        Ok(&self.consumer_pid)
+    fn get_consumer_pid(&self) -> anyhow::Result<Option<&Urn>> {
+        Ok(Option::from(&self.consumer_pid))
     }
 
     fn get_provider_pid(&self) -> anyhow::Result<Option<&Urn>> {

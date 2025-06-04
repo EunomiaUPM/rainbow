@@ -56,7 +56,7 @@ pub enum TransferErrorType {
     TransferProcessAlreadySuspendedError,
     #[error("Protocol Error. Transfer process not found")]
     TransferProcessNotFound,
-    #[error("Protocol Error. dspace:TransferRequestMessage is not allowed here. Current state is {state}"
+    #[error("Protocol Error. {message_type} is not allowed here. Current state is {state}"
     )]
     ProtocolError { state: TransferState, message_type: String },
     #[error("Protocol Error. This message type is not allowed")]

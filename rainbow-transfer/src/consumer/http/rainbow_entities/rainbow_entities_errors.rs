@@ -58,6 +58,14 @@ impl IntoResponse for RainbowTransferConsumerErrors {
                     e.to_string(),
                 )),
             ),
+            e @ RainbowTransferConsumerErrors::MessageNotFound { .. } => (
+                StatusCode::NOT_FOUND,
+                Json(RainbowTransferConsumerOut::new(
+                    "404".to_string(),
+                    "NOT_FOUND".to_string(),
+                    e.to_string(),
+                )),
+            ),
             e @ RainbowTransferConsumerErrors::ValidationError { .. } => (
                 StatusCode::BAD_REQUEST,
                 Json(RainbowTransferConsumerOut::new(

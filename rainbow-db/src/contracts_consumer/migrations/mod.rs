@@ -19,10 +19,16 @@
 
 use sea_orm_migration::prelude::*;
 pub mod m20250211_000001_cn_processes;
+pub mod m20250211_000002_cn_messages;
+pub mod m20250211_000003_cn_offers;
+pub mod m20250211_000004_agreements;
 
 pub fn get_contracts_migrations() -> Vec<Box<dyn MigrationTrait>> {
     vec![
         Box::new(m20250211_000001_cn_processes::Migration),
+        Box::new(m20250211_000002_cn_messages::Migration),
+        Box::new(m20250211_000003_cn_offers::Migration),
+        Box::new(m20250211_000004_agreements::Migration),
     ]
 }
 

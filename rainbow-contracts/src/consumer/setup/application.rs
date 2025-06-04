@@ -70,6 +70,7 @@ pub async fn create_contract_negotiation_consumer_router(config: &ContractNegoti
     // Rainbow Entities Dependency injection
     let rainbow_entities_service = Arc::new(RainbowEntitiesContractNegotiationConsumerService::new(
         consumer_repo.clone(),
+        notification_service.clone(),
     ));
     let rainbow_entities_router =
         RainbowEntitiesContractNegotiationConsumerRouter::new(rainbow_entities_service.clone()).router();
@@ -77,12 +78,14 @@ pub async fn create_contract_negotiation_consumer_router(config: &ContractNegoti
     // DSRPCProtocol Dependency injection
     let ds_rpc_protocol_service = Arc::new(DSRPCContractNegotiationConsumerService::new(
         consumer_repo.clone(),
+        notification_service.clone(),
     ));
     let ds_rpc_protocol_router = DSRPCContractNegotiationConsumerRouter::new(ds_rpc_protocol_service.clone()).router();
 
     // DSProtocol Dependency injection
     let ds_protocol_service = Arc::new(DSProtocolContractNegotiationConsumerService::new(
         consumer_repo.clone(),
+        notification_service.clone(),
     ));
     let ds_protocol_router = DSProtocolContractNegotiationConsumerRouter::new(ds_protocol_service.clone()).router();
 

@@ -79,7 +79,7 @@ pub struct DataPlaneSDPConfigField {
     pub content: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub enum DataPlaneProcessDirection {
     PUSH,
     PULL,
@@ -118,7 +118,7 @@ impl From<FormatAction> for DataPlaneProcessDirection {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub enum DataPlaneProcessState {
     REQUESTED,
     STARTED,

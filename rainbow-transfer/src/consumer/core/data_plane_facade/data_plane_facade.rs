@@ -181,7 +181,19 @@ where
             .await?;
 
 
-        let ack = self
+        let _ack = self
+            .dataplane_controller
+            .data_plane_start(DataPlaneStart {
+                _type: DataPlaneControllerMessages::DataPlaneStart,
+                version: DataPlaneControllerVersion::Version10,
+                session_id: session_id.clone(),
+            })
+            .await?;
+        Ok(())
+    }
+
+    async fn on_transfer_restart(&self, session_id: Urn) -> anyhow::Result<()> {
+        let _ack = self
             .dataplane_controller
             .data_plane_start(DataPlaneStart {
                 _type: DataPlaneControllerMessages::DataPlaneStart,
@@ -193,7 +205,7 @@ where
     }
 
     async fn on_transfer_suspension(&self, session_id: Urn) -> anyhow::Result<()> {
-        let ack = self
+        let _ack = self
             .dataplane_controller
             .data_plane_stop(DataPlaneStop {
                 _type: DataPlaneControllerMessages::DataPlaneStop,
@@ -205,7 +217,7 @@ where
     }
 
     async fn on_transfer_completion(&self, session_id: Urn) -> anyhow::Result<()> {
-        let ack = self
+        let _ack = self
             .dataplane_controller
             .data_plane_stop(DataPlaneStop {
                 _type: DataPlaneControllerMessages::DataPlaneStop,
@@ -217,7 +229,7 @@ where
     }
 
     async fn on_transfer_termination(&self, session_id: Urn) -> anyhow::Result<()> {
-        let ack = self
+        let _ack = self
             .dataplane_controller
             .data_plane_stop(DataPlaneStop {
                 _type: DataPlaneControllerMessages::DataPlaneStop,

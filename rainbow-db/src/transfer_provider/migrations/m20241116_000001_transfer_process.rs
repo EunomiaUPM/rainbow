@@ -38,6 +38,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(TransferProcesses::AgreementId).string())
                     .col(ColumnDef::new(TransferProcesses::DataPlaneId).string())
                     .col(ColumnDef::new(TransferProcesses::State).string().not_null())
+                    .col(ColumnDef::new(TransferProcesses::StateAttribute).string())
                     .col(ColumnDef::new(TransferProcesses::CreatedAt).date_time().not_null())
                     .col(ColumnDef::new(TransferProcesses::UpdatedAt).date_time())
                     .to_owned(),
@@ -58,6 +59,7 @@ pub enum TransferProcesses {
     AgreementId,
     DataPlaneId,
     State,
+    StateAttribute,
     CreatedAt,
     UpdatedAt,
 }

@@ -18,7 +18,6 @@
  */
 
 
-use crate::common::http::middleware::{pids_as_urn_validation_middleware, protocol_rules_middleware, schema_validation_middleware};
 use crate::provider::core::ds_protocol::ds_protocol_err::DSProtocolTransferProviderErrors;
 use crate::provider::core::ds_protocol::DSProtocolTransferProviderTrait;
 use axum::extract::rejection::JsonRejection;
@@ -70,9 +69,6 @@ where
                 "/transfers/:provider_pid/termination",
                 post(Self::handle_transfer_termination),
             )
-            .route_layer(middleware::from_fn(pids_as_urn_validation_middleware))
-            .route_layer(middleware::from_fn_with_state(self.transfer_service.clone(), protocol_rules_middleware::<T>))
-            .route_layer(middleware::from_fn(schema_validation_middleware))
             .route(
                 "/transfers/:provider_pid",
                 get(Self::handle_get_transfer_by_provider),

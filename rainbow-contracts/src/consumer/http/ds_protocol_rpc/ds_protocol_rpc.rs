@@ -17,11 +17,13 @@
  *
  */
 
+use crate::consumer::core::ds_protocol_rpc::ds_protocol_rpc_errors::DSRPCContractNegotiationConsumerErrors;
 use crate::consumer::core::ds_protocol_rpc::ds_protocol_rpc_types::{
     SetupAcceptanceRequest, SetupRequestRequest, SetupTerminationRequest, SetupVerificationRequest,
 };
 use crate::consumer::core::ds_protocol_rpc::DSRPCContractNegotiationConsumerTrait;
 use crate::consumer::core::rainbow_entities::rainbow_entities_errors::CnErrorConsumer;
+use anyhow::Error;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::State;
 use axum::http::StatusCode;
@@ -75,12 +77,28 @@ where
             Ok(input) => input.0,
             Err(e) => return CnErrorConsumer::JsonRejection(e).into_response(),
         };
-        match service.setup_request(input).await {
-            Ok(res) => (StatusCode::CREATED, Json(res)).into_response(),
-            Err(err) => match err.downcast::<CnErrorConsumer>() {
-                Ok(e_) => e_.into_response(),
-                Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
-            },
+        let is_rerequest = input.provider_pid.clone().is_some() && input.consumer_pid.clone().is_some();
+        match is_rerequest {
+            false => match service.setup_request(input).await {
+                Ok(res) => (StatusCode::CREATED, Json(res)).into_response(),
+                Err(err) => match err.downcast::<CnErrorConsumer>() {
+                    Ok(e_) => e_.into_response(),
+                    Err(e_) => match e_.downcast::<DSRPCContractNegotiationConsumerErrors>() {
+                        Ok(e__) => e__.into_response(),
+                        Err(e__) => NotCheckedError { inner_error: e__ }.into_response(),
+                    },
+                },
+            }
+            true => match service.setup_rerequest(input).await {
+                Ok(res) => (StatusCode::CREATED, Json(res)).into_response(),
+                Err(err) => match err.downcast::<CnErrorConsumer>() {
+                    Ok(e_) => e_.into_response(),
+                    Err(e_) => match e_.downcast::<DSRPCContractNegotiationConsumerErrors>() {
+                        Ok(e__) => e__.into_response(),
+                        Err(e__) => NotCheckedError { inner_error: e__ }.into_response(),
+                    },
+                },
+            }
         }
     }
     async fn handle_setup_acceptance(
@@ -96,7 +114,10 @@ where
             Ok(res) => (StatusCode::CREATED, Json(res)).into_response(),
             Err(err) => match err.downcast::<CnErrorConsumer>() {
                 Ok(e_) => e_.into_response(),
-                Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
+                Err(e_) => match e_.downcast::<DSRPCContractNegotiationConsumerErrors>() {
+                    Ok(e__) => e__.into_response(),
+                    Err(e__) => NotCheckedError { inner_error: e__ }.into_response(),
+                },
             },
         }
     }
@@ -113,7 +134,10 @@ where
             Ok(res) => (StatusCode::CREATED, Json(res)).into_response(),
             Err(err) => match err.downcast::<CnErrorConsumer>() {
                 Ok(e_) => e_.into_response(),
-                Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
+                Err(e_) => match e_.downcast::<DSRPCContractNegotiationConsumerErrors>() {
+                    Ok(e__) => e__.into_response(),
+                    Err(e__) => NotCheckedError { inner_error: e__ }.into_response(),
+                },
             },
         }
     }
@@ -130,7 +154,10 @@ where
             Ok(res) => (StatusCode::CREATED, Json(res)).into_response(),
             Err(err) => match err.downcast::<CnErrorConsumer>() {
                 Ok(e_) => e_.into_response(),
-                Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
+                Err(e_) => match e_.downcast::<DSRPCContractNegotiationConsumerErrors>() {
+                    Ok(e__) => e__.into_response(),
+                    Err(e__) => NotCheckedError { inner_error: e__ }.into_response(),
+                },
             },
         }
     }
