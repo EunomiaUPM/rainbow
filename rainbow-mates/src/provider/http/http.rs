@@ -101,7 +101,7 @@ where
         Path(id): Path<String>,
         Json(payload): Json<Mates>,
     ) -> impl IntoResponse {
-        let log = format!("POST /mates/{}", id);
+        let log = format!("PUT /mates/{}", id);
         info!(log);
         // TODO COMPLETAR PA EDITAR, COMO ME LLEGAN LOS DATOS A MI??
 
