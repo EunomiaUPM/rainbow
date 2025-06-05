@@ -20,7 +20,7 @@
 use axum::extract::{Path, Query, State};
 use axum::http::{Method, Uri};
 use axum::response::IntoResponse;
-use axum::routing::{delete, get, post};
+use axum::routing::{delete, get, post, put};
 use axum::{Json, Router};
 use rainbow_common::mates::Mates;
 use rainbow_db::mates::repo::{MateRepoFactory, MateRepoTrait};
@@ -53,7 +53,7 @@ where
             .route("/mates", get(Self::get_mates))
             .route("/mates", post(Self::new_mate))
             .route("/mates/:id", get(Self::get_singular_mate))
-            .route("/mates/:id", post(Self::edit_mate))
+            .route("/mates/:id", put(Self::edit_mate))
             .route("/mates/:id", delete(Self::delete_mate))
             .with_state(self.mate_repo)
             .fallback(Self::fallback)
