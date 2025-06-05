@@ -17,6 +17,5 @@
  *
  */
 
-pub mod http;
-pub mod core;
-pub mod setup;
+pub use self::mates::Mates;
+pub mod mates;

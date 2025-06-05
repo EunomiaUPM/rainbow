@@ -30,6 +30,7 @@ pub struct Model {
     pub provider: String,
     pub status: String,
     pub assigned_id: Option<String>,
+    pub grant_endpoint: String,
     pub actions: String,
     pub token: Option<String>,
     pub created_at: chrono::NaiveDateTime,

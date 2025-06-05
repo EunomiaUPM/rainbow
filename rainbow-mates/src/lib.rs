@@ -17,6 +17,13 @@
  *
  */
 
-pub mod http;
-pub mod core;
-pub mod setup;
+
+#![allow(unused_imports)]
+#![allow(dead_code)]
+#![allow(unused_variables)]
+#![allow(unused_mut)]
+#![allow(unused_imports)]
+#![allow(unused_must_use)]
+
+pub mod consumer;
+pub mod provider;

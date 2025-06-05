@@ -17,6 +17,6 @@
  *
  */
 
-pub mod http;
-pub mod core;
-pub mod setup;
+pub mod config;
+pub mod router;
+

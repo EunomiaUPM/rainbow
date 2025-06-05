@@ -33,3 +33,4 @@ pub mod transfer_provider;
 pub mod auth_provider;
 pub mod auth_consumer;
 pub mod events;
+pub mod mates;

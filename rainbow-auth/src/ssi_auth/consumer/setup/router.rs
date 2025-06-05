@@ -1,4 +1,5 @@
-use crate::setup::consumer::SSIAuthConsumerApplicationConfig;
+
+use crate::ssi_auth::consumer::setup::config::SSIAuthConsumerApplicationConfig;
 use crate::ssi_auth::consumer::core::Manager;
 use crate::ssi_auth::consumer::http::http::RainbowAuthConsumerRouter;
 use axum::Router;

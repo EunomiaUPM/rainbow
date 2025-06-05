@@ -17,6 +17,6 @@
  *
  */
 
-pub mod http;
-pub mod core;
-pub mod setup;
+pub mod entities;
+pub mod repo;
+pub mod migrations;

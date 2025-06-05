@@ -18,7 +18,7 @@
  */
 
 use super::{RainbowSSIAuthConsumerManagerTrait, RainbowSSIAuthConsumerWalletTrait};
-use crate::setup::consumer::SSIAuthConsumerApplicationConfig;
+use crate::ssi_auth::consumer::setup::config::SSIAuthConsumerApplicationConfig;
 use crate::ssi_auth::consumer::core::types::{
     AuthJwtClaims, DidsInfo, MatchingVCs, RedirectResponse, WalletInfo, WalletInfoResponse, WalletLoginResponse,
 };
@@ -46,6 +46,7 @@ use tokio::sync::Mutex;
 use tracing::{error, info};
 use url::Url;
 use urlencoding::decode;
+use rainbow_common::mates::Mates;
 
 #[derive(Debug)]
 pub struct Manager<T>
@@ -395,14 +396,10 @@ where
         let id = uuid::Uuid::new_v4().to_string();
         body.update_actions(actions.clone());
         let auth_url = self.config.get_auth_host_url().unwrap();
-        let callback = format!(
-            "{}/callback/{}",
-            auth_url,
-            id.clone()
-        );
+            let callback = format!("{}/callback/{}", auth_url, id.clone());
         body.update_callback(callback);
 
-        let model = match self.auth_repo.create_auth(id, provider, actions, body.interact.clone()).await {
+        let model = match self.auth_repo.create_auth(id, url.clone(), provider, actions, body.interact.clone()).await {
             Ok(model) => {
                 info!("exchange saved successfully");
                 model
@@ -479,14 +476,10 @@ where
         let id = uuid::Uuid::new_v4().to_string();
         body.update_actions(actions.clone());
         let auth_url = self.config.get_auth_host_url().unwrap();
-        let callback = format!(
-            "{}/callback/manual/{}",
-            auth_url,
-            id.clone()
-        );
+        let callback = format!("{}/callback/manual/{}", auth_url, id.clone());
         body.update_callback(callback);
 
-        let model = match self.auth_repo.create_auth(id, provider, actions, body.interact.clone()).await {
+        let model = match self.auth_repo.create_auth(id, url.clone(), provider, actions, body.interact.clone()).await {
             Ok(model) => {
                 info!("exchange saved successfully");
                 model
@@ -675,7 +668,7 @@ where
 
         let status = res.status();
         let body: RedirectResponse = res.json().await?;
-        // TODO
+
         Ok(body)
     }
 
@@ -728,9 +721,8 @@ where
         let new_path = path.rsplit('/').skip(1).collect::<Vec<&str>>().join("/");
         let new_url = url.join(&format!("/{}", new_path))?;
         let final_url = new_url.join("continue")?;
-        // TODO
-        let final_url = "http://127.0.0.1:1234/continue".to_string();
-        let res = self.client.post(final_url.to_string()).headers(headers).json(&body).send().await;
+
+        let res = self.client.post(final_url).headers(headers).json(&body).send().await;
 
         let res = match res {
             Ok(res) => res,
@@ -738,7 +730,7 @@ where
         };
 
         // TODO MERECE LA PENA PONER ESTADO PROCCESING??
-        // TODO
+
         let res: AccessToken = match res.status().as_u16() {
             200 => {
                 info!("Success retrieving the token");
@@ -755,12 +747,36 @@ where
             Err(e) => bail!("Error saving data: {}", e),
         };
 
-        let _ = match self.auth_repo.prov_onboard(model.provider.clone()).await {
-            Ok(model) => model,
-            Err(e) => bail!("Error saving data: {}", e),
+        Ok(model)
+    }
+
+    async fn save_mate(&self, id: String, base_url: String, token: String, token_actions: String) -> anyhow::Result<()> {
+        let url = format!("{}/mates" , self.config.get_ssi_auth_host_url().unwrap()); // TODO fix 4 microservices
+
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "application/json".parse()?);
+        headers.insert(ACCEPT, "application/json".parse()?);
+
+        let body = Mates::default4consumer(id, base_url, token, token_actions);
+
+        let res = self.client.post(url).headers(headers).json(&body).send().await;
+
+        let res = match res {
+            Ok(res) => res,
+            Err(e) => bail!("Error sending request: {}", e),
         };
 
-        Ok(model)
+        match res.status().as_u16() {
+            200 => {
+                info!("Mate saved successfully");
+            }
+            _ => {
+                error!("Mate saving failed: {}", res.status());
+                bail!("Mate saving failed: {}", res.status());
+            }
+        }
+
+        Ok(())
     }
 }
 

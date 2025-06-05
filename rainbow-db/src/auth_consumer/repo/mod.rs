@@ -41,6 +41,7 @@ pub trait AuthConsumerRepoTrait {
     async fn create_auth(
         &self,
         id: String,
+        uri: String,
         provider: String,
         actions: String,
         interact: Interact4GR,

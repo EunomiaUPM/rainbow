@@ -49,6 +49,7 @@ pub trait AuthProviderRepoTrait {
         &self,
         consumer: String,
         audience: String,
+        grant_uri: String,
         actions: String,
         interact: Interact4GR,
     ) -> anyhow::Result<(

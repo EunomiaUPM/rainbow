@@ -17,6 +17,19 @@
  *
  */
 
-pub mod http;
-pub mod core;
-pub mod setup;
+use crate::consumer::http::http::RainbowMateConsumerRouter;
+use crate::consumer::setup::config::MateConsumerApplicationConfig;
+use axum::Router;
+use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
+use rainbow_db::mates::repo::sql::MateRepoForSql;
+use rainbow_db::mates::repo::MateRepoFactory;
+use sea_orm::Database;
+use std::sync::Arc;
+use tokio::sync::Mutex;
+
+pub async fn create_mate_consumer_router(config: MateConsumerApplicationConfig) -> Router {
+    let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
+    let mate_repo = Arc::new(MateRepoForSql::create_repo(db_connection));
+    let mate_router = RainbowMateConsumerRouter::new(mate_repo).router();
+    mate_router
+}

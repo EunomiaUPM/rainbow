@@ -17,6 +17,6 @@
  *
  */
 
-pub mod http;
-pub mod core;
-pub mod setup;
+fn main() {
+    println!("Hello, world!");
+}

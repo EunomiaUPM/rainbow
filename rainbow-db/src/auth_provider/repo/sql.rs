@@ -85,6 +85,7 @@ impl AuthProviderRepoTrait for AuthProviderRepoForSql {
         &self,
         consumer: String,
         audience: String,
+        grant_uri: String,
         actions: String,
         interact: Interact4GR,
     ) -> anyhow::Result<(
@@ -99,8 +100,7 @@ impl AuthProviderRepoTrait for AuthProviderRepoForSql {
         let nonce: String = rand::thread_rng().sample_iter(&Alphanumeric).take(12).map(char::from).collect();
         let interact_ref: String = rand::thread_rng().sample_iter(&Alphanumeric).take(16).map(char::from).collect();
 
-        let start: Value = Value::String(serde_json::to_string(&interact.start).unwrap());
-        let grant_uri = "http://127.0.0.1/access".to_string(); // TODO
+        let start: Value = Value::String(serde_json::to_string(&interact.start)?);
 
         let hash_method = interact.finish.hash_method.unwrap_or_else(|| "sha-256".to_string());
         let hash_input = format!(

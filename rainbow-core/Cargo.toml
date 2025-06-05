@@ -20,6 +20,7 @@ rainbow_dataplane = { version = "0.1.0", path = "../rainbow-dataplane", default-
 rainbow_db = { version = "0.1.0", path = "../rainbow-db", default-features = false }
 rainbow_auth = { version = "0.1.0", path = "../rainbow-auth", default-features = false }
 rainbow_events = { version = "0.1.0", path = "../rainbow-events", default-features = false }
+rainbow_mates = { version = "0.1.0", path = "../rainbow-mates", default-features = false }
 
 serde = { workspace = true }
 serde_json = { workspace = true }

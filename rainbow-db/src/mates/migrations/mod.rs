@@ -17,6 +17,18 @@
  *
  */
 
-pub mod http;
-pub mod core;
-pub mod setup;
+use sea_orm_migration::prelude::*;
+
+pub mod m20250403_094651_mates;
+
+pub fn get_mates_migrations() -> Vec<Box<dyn MigrationTrait>> {
+    vec![Box::new(m20250403_094651_mates::Migration)]
+}
+
+pub struct Migrator;
+#[async_trait::async_trait]
+impl MigratorTrait for Migrator {
+    fn migrations() -> Vec<Box<dyn MigrationTrait>> {
+        get_mates_migrations()
+    }
+}
