@@ -21,6 +21,7 @@ use crate::datahub::repo::{DatahubConnectorRepoFactory, NewPolicyRelationModel, 
 use axum::async_trait;
 use sea_orm::{DatabaseConnection, EntityTrait};
 use urn::Urn;
+use sea_orm::ActiveValue;
 
 pub struct DatahubConnectorRepoForSql {
     db_connection: DatabaseConnection,
@@ -52,7 +53,25 @@ impl PolicyTemplatesRepo for DatahubConnectorRepoForSql {
     }
 
     async fn create_policy_template(&self, new_policy_template: NewPolicyTemplateModel) -> anyhow::Result<policy_templates::Model, PolicyTemplatesRepoErrors> {
-        todo!()
+    let id = format!("template_{}", chrono::Utc::now().timestamp());
+
+    // Crear el ActiveModel
+    let model = policy_templates::ActiveModel {
+        id: ActiveValue::Set(id),
+        title: ActiveValue::Set(new_policy_template.title),
+        description: ActiveValue::Set(new_policy_template.description),
+        content: ActiveValue::Set(new_policy_template.content),
+        created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
+    };
+
+    // Insertar en la base de datos y devolver el resultado
+    match policy_templates::Entity::insert(model)
+        .exec_with_returning(&self.db_connection)
+        .await
+    {
+        Ok(template) => Ok(template),
+        Err(err) => Err(PolicyTemplatesRepoErrors::ErrorCreatingPolicyTemplate(err.into())),
+    }
     }
 
     async fn delete_policy_template_by_id(&self, template_id: Urn) -> anyhow::Result<(), PolicyTemplatesRepoErrors> {

@@ -103,7 +103,10 @@ use std::sync::Arc;
 use tokio;
 use crate::core::datahub_proxy::datahub_proxy::DatahubProxyService;
 use crate::http::datahub_proxy::datahub_proxy::DataHubProxyRouter;  // Importamos el router
-
+use crate::http::rainbow_entities::policy_relations_router::PolicyTemplatesRouter; 
+use rainbow_db::datahub::repo::sql::DatahubConnectorRepoForSql;  // Y esta
+use sea_orm::DatabaseConnection;
+use sea_orm::Database;
 mod core;
 mod http;
 
@@ -111,13 +114,20 @@ mod http;
 async fn main() {
     let config = ApplicationProviderConfig::default();
     let datahub_service = Arc::new(DatahubProxyService::new(config));
+    let db_connection = Database::connect("postgres://ds_transfer_provider:ds_transfer_provider@127.0.0.1:1300/ds_transfer_provider").await.unwrap();
+    
+    let policy_templates_service = Arc::new(DatahubConnectorRepoForSql::new(db_connection));
+
+
 
     // Creamos el router de datahub_proxy
     let datahub_router = DataHubProxyRouter::new(datahub_service.clone());
+    let policy_templates_router = PolicyTemplatesRouter::new(policy_templates_service);  // Creamos el router
 
     // Montamos el router en la aplicación principal
     let app = Router::new()
-        .merge(datahub_router.router());
+        .merge(datahub_router.router())
+        .merge(policy_templates_router.router());  // Añadimos el nuevo router
 
     println!("🚀 Servidor corriendo en http://localhost:3000");
     
