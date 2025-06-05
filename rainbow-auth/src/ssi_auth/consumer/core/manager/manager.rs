@@ -747,11 +747,6 @@ where
             Err(e) => bail!("Error saving data: {}", e),
         };
 
-        let _ = match self.auth_repo.prov_onboard(model.provider.clone()).await {
-            Ok(model) => model,
-            Err(e) => bail!("Error saving data: {}", e),
-        };
-
         Ok(model)
     }
 
