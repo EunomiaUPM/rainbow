@@ -52,7 +52,7 @@ impl DatahubProxyTrait for DatahubProxyService {
             "query": query
         });
          
-        let token = "eyJhbGciOiJIUzI1NiJ9.eyJhY3RvclR5cGUiOiJVU0VSIiwiYWN0b3JJZCI6ImRhdGFodWIiLCJ0eXBlIjoiUEVSU09OQUwiLCJ2ZXJzaW9uIjoiMiIsImp0aSI6IjFlMzljZjM4LWJmN2QtNGUzNi05OWFjLWI3ZGU4MjYwMDRiNiIsInN1YiI6ImRhdGFodWIiLCJleHAiOjE3NTExODY0MzIsImlzcyI6ImRhdGFodWItbWV0YWRhdGEtc2VydmljZSJ9.4agJYK2SWEfc0tCVsq7HRG_4CI5HG2sStJ2_gReglDI";
+        let token = "eyJhbGciOiJIUzI1NiJ9.eyJhY3RvclR5cGUiOiJVU0VSIiwiYWN0b3JJZCI6ImRydWdzQGRydWdzLmNvbSIsInR5cGUiOiJQRVJTT05BTCIsInZlcnNpb24iOiIyIiwianRpIjoiYmZkMTA5MjYtODE0MC00ODk1LTliNTgtNTMzMWMxMjY2MWMwIiwic3ViIjoiZHJ1Z3NAZHJ1Z3MuY29tIiwiZXhwIjoxNzUxNTM3NzQxLCJpc3MiOiJkYXRhaHViLW1ldGFkYXRhLXNlcnZpY2UifQ.VvTiXmU98Hnurdg9g_xINtz3zyvtM2SpF6Ad23h7kJM";
 
         let response = self.client
             .post(graphql_url)
@@ -112,7 +112,7 @@ impl DatahubProxyTrait for DatahubProxyService {
             "query": query
         });
 
-        let token = "eyJhbGciOiJIUzI1NiJ9.eyJhY3RvclR5cGUiOiJVU0VSIiwiYWN0b3JJZCI6ImRhdGFodWIiLCJ0eXBlIjoiUEVSU09OQUwiLCJ2ZXJzaW9uIjoiMiIsImp0aSI6IjFlMzljZjM4LWJmN2QtNGUzNi05OWFjLWI3ZGU4MjYwMDRiNiIsInN1YiI6ImRhdGFodWIiLCJleHAiOjE3NTExODY0MzIsImlzcyI6ImRhdGFodWItbWV0YWRhdGEtc2VydmljZSJ9.4agJYK2SWEfc0tCVsq7HRG_4CI5HG2sStJ2_gReglDI";
+        let token = "eyJhbGciOiJIUzI1NiJ9.eyJhY3RvclR5cGUiOiJVU0VSIiwiYWN0b3JJZCI6ImRydWdzQGRydWdzLmNvbSIsInR5cGUiOiJQRVJTT05BTCIsInZlcnNpb24iOiIyIiwianRpIjoiYmZkMTA5MjYtODE0MC00ODk1LTliNTgtNTMzMWMxMjY2MWMwIiwic3ViIjoiZHJ1Z3NAZHJ1Z3MuY29tIiwiZXhwIjoxNzUxNTM3NzQxLCJpc3MiOiJkYXRhaHViLW1ldGFkYXRhLXNlcnZpY2UifQ.VvTiXmU98Hnurdg9g_xINtz3zyvtM2SpF6Ad23h7kJM";
 
         let response = self.client
             .post(graphql_url)
@@ -180,7 +180,7 @@ impl DatahubProxyTrait for DatahubProxyService {
         "query": query
     });
 
-        let token = "eyJhbGciOiJIUzI1NiJ9.eyJhY3RvclR5cGUiOiJVU0VSIiwiYWN0b3JJZCI6ImRhdGFodWIiLCJ0eXBlIjoiUEVSU09OQUwiLCJ2ZXJzaW9uIjoiMiIsImp0aSI6IjFlMzljZjM4LWJmN2QtNGUzNi05OWFjLWI3ZGU4MjYwMDRiNiIsInN1YiI6ImRhdGFodWIiLCJleHAiOjE3NTExODY0MzIsImlzcyI6ImRhdGFodWItbWV0YWRhdGEtc2VydmljZSJ9.4agJYK2SWEfc0tCVsq7HRG_4CI5HG2sStJ2_gReglDI";
+        let token = "eyJhbGciOiJIUzI1NiJ9.eyJhY3RvclR5cGUiOiJVU0VSIiwiYWN0b3JJZCI6ImRydWdzQGRydWdzLmNvbSIsInR5cGUiOiJQRVJTT05BTCIsInZlcnNpb24iOiIyIiwianRpIjoiYmZkMTA5MjYtODE0MC00ODk1LTliNTgtNTMzMWMxMjY2MWMwIiwic3ViIjoiZHJ1Z3NAZHJ1Z3MuY29tIiwiZXhwIjoxNzUxNTM3NzQxLCJpc3MiOiJkYXRhaHViLW1ldGFkYXRhLXNlcnZpY2UifQ.VvTiXmU98Hnurdg9g_xINtz3zyvtM2SpF6Ad23h7kJM";
 
         let response = self.client
             .post(graphql_url)
@@ -211,42 +211,55 @@ impl DatahubProxyTrait for DatahubProxyService {
         Ok(dataset)
     }
 
-    /*async fn get_dataset_policies(&self, dataset_urn: &str) -> anyhow::Result<Option<String>> {
-        let graphql_url = "http://localhost:8086/api/graphql";
-        let token = "eyJhbGciOiJIUzI1NiJ9.eyJhY3RvclR5cGUiOiJVU0VSIiwiYWN0b3JJZCI6ImRhdGFodWIiLCJ0eXBlIjoiUEVSU09OQUwiLCJ2ZXJzaW9uIjoiMiIsImp0aSI6IjFlMzljZjM4LWJmN2QtNGUzNi05OWFjLWI3ZGU4MjYwMDRiNiIsInN1YiI6ImRhdGFodWIiLCJleHAiOjE3NTExODY0MzIsImlzcyI6ImRhdGFodWItbWV0YWRhdGEtc2VydmljZSJ9.4agJYK2SWEfc0tCVsq7HRG_4CI5HG2sStJ2_gReglDI";
+    // async fn get_dataset_policies(&self, dataset_urn: &str) -> anyhow::Result<Option<String>> {
+    //     let graphql_url = "http://localhost:8086/api/graphql";
+    //     let token = "eyJhbGciOiJIUzI1NiJ9.eyJhY3RvclR5cGUiOiJVU0VSIiwiYWN0b3JJZCI6ImRydWdzQGRydWdzLmNvbSIsInR5cGUiOiJQRVJTT05BTCIsInZlcnNpb24iOiIyIiwianRpIjoiNGEzOTExYTgtNWYxYS00OWE4LWI4MTEtMDU4ZDMyOTgwYjZiIiwic3ViIjoiZHJ1Z3NAZHJ1Z3MuY29tIiwiZXhwIjoxNzUxMDE0NDI1LCJpc3MiOiJkYXRhaHViLW1ldGFkYXRhLXNlcnZpY2UifQ.-S7uV_rCesUQ92bse8TzaaeZX_WFsAKc3kh3YsWcvxo";
 
-        let query = format!(r#"{{
-        dataset(urn: "{}") {{
-            properties {{
-                customProperties {{
-                    key
-                    value
-                }}
-            }}
-        }}
-    }}"#, dataset_urn);
+    //     let query = format!(r#"{{
+    //     dataset(urn: "{}") {{
+    //         properties {{
+    //             customProperties {{
+    //                 key
+    //                 value
+    //             }}
+    //         }}
+    //     }}
+    // }}"#, dataset_urn);
 
-        let request_body = serde_json::json!({ "query": query });
+    //     let request_body = serde_json::json!({ "query": query });
 
-        let response = self.client
-            .post(graphql_url)
-            .header("Content-Type", "application/json")
-            .header("Authorization", format!("Bearer {}", token))
-            .json(&request_body)
-            .send()
-            .await?;
+    //     let response = self.client
+    //         .post(graphql_url)
+    //         .header("Content-Type", "application/json")
+    //         .header("Authorization", format!("Bearer {}", token))
+    //         .json(&request_body)
+    //         .send()
+    //         .await?;
 
-        let graphql_response: DatasetGraphQLResponseDetailed = response.json().await?;
+    //     let graphql_response: DatasetGraphQLResponseDetailed = response.json().await?;
 
-        // Buscar la propiedad "policy" dentro de customProperties
-        if let Some(custom_props) = graphql_response.data.dataset.properties.custom_properties {
-            for cp in custom_props {
-                if cp.key == "policy" {
-                    return Ok(Some(cp.value));
-                }
-            }
-        }
+    //     // Buscar la propiedad "policy" dentro de customProperties
+    //     if let Some(custom_props) = graphql_response.data.dataset.properties.custom_properties {
+    //         for cp in custom_props {
+    //             if cp.key == "policy" {
+    //                 return Ok(Some(cp.value));
+    //             }
+    //         }
+    //     }
 
-        Ok(None)
-    }*/
+    //     Ok(None)
+    // }
+
+
+    // async fn add_policy_to_dataset(&self, dataset_urn: String, property_name: String, property_value: String) -> anyhow::Result<bool> {
+    //     let output = tokio::process::Command::new("python3")
+    //         .arg("../scripts/add_policy_to_dataset.py")
+    //         .arg(dataset_urn)
+    //         .arg(property_name)
+    //         .arg(property_value)
+    //         .output()
+    //         .await?;
+
+    //     Ok(output.status.success())
+    // }
 }

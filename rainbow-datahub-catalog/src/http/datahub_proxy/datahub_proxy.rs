@@ -1,6 +1,7 @@
 // use crate::core::datahub_proxy::datahub_proxy_types::{DatasetsQueryOptions, DomainsQueryOptions};
 use crate::core::datahub_proxy::datahub_proxy_types::{DomainsQueryOptions};
 use crate::core::datahub_proxy::datahub_proxy_types::{DatasetsQueryOptions};
+// use crate::core::datahub_proxy::datahub_proxy_types::{AddPolicyRequest};
 use crate::core::datahub_proxy::DatahubProxyTrait;
 use axum::extract::{Path, Query, State};
 use axum::response::IntoResponse;
@@ -87,4 +88,28 @@ where
             Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
         }
     }*/
+
+    // async fn add_policy_to_dataset(
+    //     State(datahub_service): State<Arc<T>>,
+    //     Path((domain_id, dataset_id)): Path<(String, String)>,
+    //     Json(payload): Json<AddPolicyRequest>,
+    // ) -> impl IntoResponse {
+    //     info!(
+    //         "POST /api/v1/datahub/domains/{}/datasets/{}/addpolicy",
+    //         domain_id, dataset_id
+    //     );
+        
+    //     match datahub_service
+    //         .add_policy_to_dataset(
+    //             dataset_id,
+    //             payload.property_name,
+    //             payload.property_value,
+    //         )
+    //         .await
+    //     {
+    //         Ok(success) => (StatusCode::OK, Json(success)).into_response(),
+    //         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    //     }
+    // }
+
 }

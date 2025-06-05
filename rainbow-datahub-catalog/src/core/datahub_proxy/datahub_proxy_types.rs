@@ -1,20 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-// #[derive(Debug, Serialize, Deserialize)]
-// pub struct DatahubDomain;
-// #[derive(Debug, Serialize, Deserialize)]
-// pub struct DatahubDataset;
-
-// #[derive(Debug, Deserialize)]
-// pub struct DomainsQueryOptions {
-//     pub a: Option<String>,
-// }
-
-// #[derive(Debug, Deserialize)]
-// pub struct DatasetsQueryOptions {
-//     pub a: Option<String>,
-// }
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DatahubDomain {
     pub urn: String,
@@ -182,3 +167,9 @@ pub struct DatasetGraphQLResponseDetailed {
     pub data: DatasetResponse,
     pub extensions: serde_json::Value,
 }
+
+// #[derive(Debug, Deserialize)]
+// pub struct AddPolicyRequest {
+//     pub property_name: String,
+//     pub property_value: String,
+// }

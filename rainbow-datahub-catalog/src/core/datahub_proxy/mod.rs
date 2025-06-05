@@ -13,5 +13,6 @@ pub trait DatahubProxyTrait: Send + Sync + 'static {
     // async fn get_datahub_domain_by_id(&self, id: String) -> anyhow::Result<DatahubDomain>;
     async fn get_datahub_datasets_by_domain_id(&self, id: String) -> anyhow::Result<Vec<DatahubDataset>>;
     async fn get_datahub_dataset_by_id(&self, id: String) -> anyhow::Result<DatahubDataset>;
-/*    async fn get_dataset_policies(&self, id: String) -> anyhow::Result<DatahubDataset>;*/
+    // async fn get_dataset_policies(&self, id: String) -> anyhow::Result<DatahubDataset>;
+    // async fn add_policy_to_dataset(&self, dataset_urn: String, property_name: String, property_value: String) -> anyhow::Result<bool> ;
 }
