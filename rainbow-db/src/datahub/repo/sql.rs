@@ -63,25 +63,27 @@ impl PolicyTemplatesRepo for DatahubConnectorRepoForSql {
 #[async_trait]
 impl PolicyRelationsRepo for DatahubConnectorRepoForSql {
     async fn get_all_policy_relations(&self, limit: Option<u64>, page: Option<u64>) -> anyhow::Result<Vec<policy_relations::Model>, PolicyTemplatesRepoErrors> {
-        let policy_relations = policy_relations::Entity::find()
-            .all(&self.db_connection)
-            .await;
-        match policy_relations {
-            Ok(policy_relations) => Ok(policy_relations),
-            Err(e) => Err(PolicyTemplatesRepoErrors::ErrorFetchingPolicyTemplate(e.into()))
-        }
+        todo!()
+        // let policy_relations = policy_relations::Entity::find()
+        //     .all(&self.db_connection)
+        //     .await;
+        // match policy_relations {
+        //     Ok(policy_relations) => Ok(policy_relations),
+        //     Err(e) => Err(PolicyTemplatesRepoErrors::ErrorFetchingPolicyTemplate(e.into()))
+        // }
     }
 
     async fn get_all_policy_relations_by_template_id(&self, template_id: Urn) -> anyhow::Result<policy_relations::Model, PolicyTemplatesRepoErrors> {
-        let template_id = template_id.to_string();
-        let policy_relation = policy_relations::Entity::find_by_id(template_id)
-            .one(&self.db_connection)
-            .await
-            .map_err(|e| Err(PolicyTemplatesRepoErrors::ErrorFetchingPolicyTemplate(e.into())))?;
-        match policy_relation {
-            Some(policy_relation) => Ok(policy_relation),
-            None => Err(PolicyTemplatesRepoErrors::PolicyTemplateNotFound)
-        }
+        todo!()
+        // let template_id = template_id.to_string();
+        // let policy_relation = policy_relations::Entity::find_by_id(template_id)
+        //     .one(&self.db_connection)
+        //     .await
+        //     .map_err(|e| Err(PolicyTemplatesRepoErrors::ErrorFetchingPolicyTemplate(e.into())))?;
+        // match policy_relation {
+        //     Some(policy_relation) => Ok(policy_relation),
+        //     None => Err(PolicyTemplatesRepoErrors::PolicyTemplateNotFound)
+        // }
     }
 
     async fn get_all_templates_by_dataset_id(&self, dataset_id: String) -> anyhow::Result<Vec<policy_templates::Model>, PolicyTemplatesRepoErrors> {

@@ -33,8 +33,9 @@ impl DatahubProxyTrait for DatahubProxyService {
         // let graphql_url = "http://datahub-gms-federado:8080/api/graphql";
         // let dh_host = self.config.get_datahub_host_url();
         // let graphql_url = "http://192.168.64.29:8080/api/graphql";
-        let base_url = self.config.get_datahub_host_url().unwrap();
-        let graphql_url = format!("{}//api/graphql", base_url);
+        // let base_url = self.config.get_datahub_host_url().unwrap();
+        // let graphql_url = format!("{}//api/graphql", base_url);
+        let graphql_url = "http://localhost:8086/api/graphql";
         let query = r#"{
             search(input: { type: DOMAIN, query: "*", start: 0, count: 50 }) {
                 searchResults {

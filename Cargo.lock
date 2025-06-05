@@ -2287,6 +2287,7 @@ dependencies = [
  "chrono",
  "clap",
  "dotenvy",
+ "hyper",
  "json_to_table",
  "log",
  "mockall",
