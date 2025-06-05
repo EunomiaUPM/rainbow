@@ -98,3 +98,29 @@ export const useGetTransferMessageById = (transferProcessId: UUID, messageId: UU
     } = useSuspenseQuery(getTransferMessageByIdOptions(transferProcessId, messageId))
     return {data, isLoading, isError, error}
 }
+
+/**
+ *  GET /dataplane/{sessionId}
+ * */
+export const getDataplaneProcessById = async (sessionId: UUID) => {
+    const dataplane: DataplaneSession = await (
+        await fetch(GATEWAY_API + `/dataplane/${sessionId}`)
+    ).json();
+    return dataplane;
+}
+
+export const getDataplaneProcessByIdOptions = (sessionId: UUID) => queryOptions({
+    queryKey: ["DATAPLANE_PROCESS", sessionId],
+    queryFn: () => getDataplaneProcessById(sessionId),
+    enabled: !!sessionId
+})
+
+export const useGetDataplaneProcessById = (transferProcessId: UUID) => {
+    const {
+        data,
+        isLoading,
+        isError,
+        error
+    } = useSuspenseQuery(getDataplaneProcessByIdOptions(transferProcessId))
+    return {data, isLoading, isError, error}
+}
