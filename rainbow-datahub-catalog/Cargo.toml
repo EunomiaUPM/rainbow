@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "rainborainbow_datahub_catalogw_catalog"
+name = "rainbow_datahub_catalog"
 path = "src/lib.rs"
 
 [[bin]]

@@ -75,7 +75,7 @@ pub trait PolicyRelationsRepo {
     async fn get_all_policy_relations_by_template_id(
         &self,
         template_id: Urn,
-    ) -> anyhow::Result<Vec<policy_relations::Model>, PolicyTemplatesRepoErrors>;
+    ) -> anyhow::Result<policy_relations::Model, PolicyTemplatesRepoErrors>;
     async fn get_all_templates_by_dataset_id(
         &self,
         dataset_id: String,

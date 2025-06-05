@@ -59,7 +59,11 @@ impl Default for ApplicationProviderConfig {
                 port: "1201".to_string(),
             }),
             catalog_as_datahub: false,
-            datahub_host: None,
+            datahub_host: Some(HostConfig {
+                protocol: "http".to_string(),
+                url: "127.0.0.1".to_string(),
+                port: "8086".to_string(),
+            }),
             contract_negotiation_host: Some(HostConfig {
                 protocol: "http".to_string(),
                 url: "127.0.0.1".to_string(),

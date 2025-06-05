@@ -16,12 +16,10 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
+use crate::datahub::entities::{policy_relations, policy_templates};
 use crate::datahub::repo::{DatahubConnectorRepoFactory, NewPolicyRelationModel, NewPolicyTemplateModel, PolicyRelationsRepo, PolicyTemplatesRepo, PolicyTemplatesRepoErrors};
 use axum::async_trait;
-use sea_orm::{
-    DatabaseConnection, EntityTrait,
-};
+use sea_orm::{DatabaseConnection, EntityTrait};
 use urn::Urn;
 
 pub struct DatahubConnectorRepoForSql {
@@ -45,15 +43,15 @@ impl DatahubConnectorRepoFactory for DatahubConnectorRepoForSql {
 
 #[async_trait]
 impl PolicyTemplatesRepo for DatahubConnectorRepoForSql {
-    async fn get_all_policy_templates(&self, limit: Option<u64>, page: Option<u64>) -> anyhow::Result<Vec<crate::datahub::entities::policy_templates::Model>, PolicyTemplatesRepoErrors> {
+    async fn get_all_policy_templates(&self, limit: Option<u64>, page: Option<u64>) -> anyhow::Result<Vec<policy_templates::Model>, PolicyTemplatesRepoErrors> {
         todo!()
     }
 
-    async fn get_policy_template_by_id(&self, template_id: Urn) -> anyhow::Result<Option<crate::datahub::entities::policy_templates::Model>, PolicyTemplatesRepoErrors> {
+    async fn get_policy_template_by_id(&self, template_id: Urn) -> anyhow::Result<Option<policy_templates::Model>, PolicyTemplatesRepoErrors> {
         todo!()
     }
 
-    async fn create_policy_template(&self, new_policy_template: NewPolicyTemplateModel) -> anyhow::Result<crate::datahub::entities::policy_templates::Model, PolicyTemplatesRepoErrors> {
+    async fn create_policy_template(&self, new_policy_template: NewPolicyTemplateModel) -> anyhow::Result<policy_templates::Model, PolicyTemplatesRepoErrors> {
         todo!()
     }
 
@@ -64,23 +62,37 @@ impl PolicyTemplatesRepo for DatahubConnectorRepoForSql {
 
 #[async_trait]
 impl PolicyRelationsRepo for DatahubConnectorRepoForSql {
-    async fn get_all_policy_relations(&self, limit: Option<u64>, page: Option<u64>) -> anyhow::Result<Vec<crate::datahub::entities::policy_relations::Model>, PolicyTemplatesRepoErrors> {
+    async fn get_all_policy_relations(&self, limit: Option<u64>, page: Option<u64>) -> anyhow::Result<Vec<policy_relations::Model>, PolicyTemplatesRepoErrors> {
+        let policy_relations = policy_relations::Entity::find()
+            .all(&self.db_connection)
+            .await;
+        match policy_relations {
+            Ok(policy_relations) => Ok(policy_relations),
+            Err(e) => Err(PolicyTemplatesRepoErrors::ErrorFetchingPolicyTemplate(e.into()))
+        }
+    }
+
+    async fn get_all_policy_relations_by_template_id(&self, template_id: Urn) -> anyhow::Result<policy_relations::Model, PolicyTemplatesRepoErrors> {
+        let template_id = template_id.to_string();
+        let policy_relation = policy_relations::Entity::find_by_id(template_id)
+            .one(&self.db_connection)
+            .await
+            .map_err(|e| Err(PolicyTemplatesRepoErrors::ErrorFetchingPolicyTemplate(e.into())))?;
+        match policy_relation {
+            Some(policy_relation) => Ok(policy_relation),
+            None => Err(PolicyTemplatesRepoErrors::PolicyTemplateNotFound)
+        }
+    }
+
+    async fn get_all_templates_by_dataset_id(&self, dataset_id: String) -> anyhow::Result<Vec<policy_templates::Model>, PolicyTemplatesRepoErrors> {
         todo!()
     }
 
-    async fn get_all_policy_relations_by_template_id(&self, template_id: Urn) -> anyhow::Result<Vec<crate::datahub::entities::policy_relations::Model>, PolicyTemplatesRepoErrors> {
+    async fn get_relation_by_id(&self, policy_relation_id: Urn) -> anyhow::Result<policy_relations::Model, PolicyTemplatesRepoErrors> {
         todo!()
     }
 
-    async fn get_all_templates_by_dataset_id(&self, dataset_id: String) -> anyhow::Result<Vec<crate::datahub::entities::policy_templates::Model>, PolicyTemplatesRepoErrors> {
-        todo!()
-    }
-
-    async fn get_relation_by_id(&self, policy_relation_id: Urn) -> anyhow::Result<crate::datahub::entities::policy_relations::Model, PolicyTemplatesRepoErrors> {
-        todo!()
-    }
-
-    async fn create_policy_relation(&self, new_policy_relation: NewPolicyRelationModel) -> anyhow::Result<crate::datahub::entities::policy_relations::Model, PolicyTemplatesRepoErrors> {
+    async fn create_policy_relation(&self, new_policy_relation: NewPolicyRelationModel) -> anyhow::Result<policy_relations::Model, PolicyTemplatesRepoErrors> {
         todo!()
     }
 
