@@ -9,7 +9,7 @@
 html,
 body {
     --font-sans: "Arial";
-    @apply font-sans leading-snug min-h-full text-base text-slate-800;
+    @apply font-sans leading-tight min-h-full text-base text-white;
 
 }
 
@@ -80,7 +80,7 @@ body {
     }
 
     a {
-        @apply text-blue-700 underline;
+        @apply text-inherit underline;
     }
 }
 

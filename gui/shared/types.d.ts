@@ -168,6 +168,7 @@ declare global {
         agreement_id: UUID
         data_plane_id: UUID
         state: TransferProcessState
+        state_attribute: string
         created_at: Date
         updated_at: Date
     }
@@ -216,6 +217,24 @@ declare global {
         messageOperation: string
         messageContent: any
         subscriptionId: string
+    }
+
+    export interface DataplaneSession {
+        id: string
+        process_direction: string
+        upstream_hop: DataplaneSessionAddress
+        downstream_hop: DataplaneSessionAddress
+        process_address: DataplaneSessionAddress
+        created_at: Date
+        updated_at: Date
+        state: string
+    }
+
+    export interface DataplaneSessionAddress {
+        protocol: string
+        url: string
+        auth_type: string
+        auth_content: string
     }
 }
 

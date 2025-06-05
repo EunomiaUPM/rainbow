@@ -1,7 +1,11 @@
 import {createFileRoute, Link} from '@tanstack/react-router'
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "shared/src/components/ui/table.tsx";
 import dayjs from "dayjs";
-import {useGetTransferMessagesByProviderPid, useGetTransferProcessByProviderPid} from "@/data/transfer-queries.ts";
+import {
+    useGetDataplaneProcessById,
+    useGetTransferMessagesByProviderPid,
+    useGetTransferProcessByProviderPid
+} from "@/data/transfer-queries.ts";
 
 export const Route = createFileRoute('/transfer-process/$transferProcessId/')({
     component: RouteComponent,
@@ -11,6 +15,10 @@ function RouteComponent() {
     const {transferProcessId} = Route.useParams();
     const {data: transferProcess} = useGetTransferProcessByProviderPid(transferProcessId)
     const {data: transferMessages} = useGetTransferMessagesByProviderPid(transferProcessId)
+    const {data: dataplaneProcess} = useGetDataplaneProcessById(transferProcessId)
+
+    // @ts-ignore
+    // @ts-ignore
     return <div className="space-y-4">
         <div>
             Transfer process with id : {transferProcess.provider_pid}
@@ -39,7 +47,13 @@ function RouteComponent() {
                     </TableRow>
                     <TableRow>
                         <TableCell>State</TableCell>
-                        <TableCell>{transferProcess.state}</TableCell>
+                        <TableCell>
+                            {transferProcess.state}
+                            {/*@ts-ignore*/}
+                            {transferProcess.state == "SUSPENDED" && " - "}
+                            {/*@ts-ignore*/}
+                            {transferProcess.state == "SUSPENDED" && transferProcess.state_attribute}
+                        </TableCell>
                     </TableRow>
                     <TableRow>
                         <TableCell>Created At</TableCell>
@@ -51,6 +65,52 @@ function RouteComponent() {
                         <TableCell>Updated At</TableCell>
                         <TableCell>
                             {dayjs(transferProcess.updated_at).format("DD/MM/YYYY - HH:mm")}
+                        </TableCell>
+                    </TableRow>
+                </TableBody>
+            </Table>
+        </div>
+
+        <div>
+            <h2>Dataplane info: </h2>
+            <Table className="text-sm">
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Key</TableHead>
+                        <TableHead>Value</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    <TableRow>
+                        <TableCell>Process direction</TableCell>
+                        <TableCell>{dataplaneProcess.process_direction}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell>Upstream hop</TableCell>
+                        <TableCell>{dataplaneProcess.upstream_hop.url}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell>Downstream hop</TableCell>
+                        <TableCell>{dataplaneProcess.downstream_hop.url}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell>Process address</TableCell>
+                        <TableCell>{dataplaneProcess.process_address.url}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell>State</TableCell>
+                        <TableCell>{dataplaneProcess.state}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell>Created At</TableCell>
+                        <TableCell>
+                            {dayjs(dataplaneProcess.created_at).format("DD/MM/YYYY - HH:mm")}
+                        </TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell>Updated At</TableCell>
+                        <TableCell>
+                            {dayjs(dataplaneProcess.updated_at).format("DD/MM/YYYY - HH:mm")}
                         </TableCell>
                     </TableRow>
                 </TableBody>

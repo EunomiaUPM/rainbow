@@ -154,8 +154,8 @@ const RouteComponent = () => {
                         constraint: []
                     }
                 ],
-                obligation: [],
-                prohibition: [],
+                obligation: null,
+                prohibition: null,
                 profile: ""
             }
         }, {})

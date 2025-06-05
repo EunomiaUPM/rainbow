@@ -37,6 +37,10 @@ function RouteComponent() {
                         </TableCell>
                         <TableCell>
                             {transferProcess.state}
+                            {/*@ts-ignore*/}
+                            {transferProcess.state == "SUSPENDED" && " - "}
+                            {/*@ts-ignore*/}
+                            {transferProcess.state == "SUSPENDED" && transferProcess.state_attribute}
                         </TableCell>
                         <TableCell>
                             {dayjs(transferProcess.created_at).format("DD/MM/YYYY - HH:mm")}
