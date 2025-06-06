@@ -75,6 +75,22 @@ pub struct CreatePolicyTemplateRequest {
     pub content: serde_json::Value,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct GetPolicyTemplatesParams {
+    #[serde(default = "default_limit")]
+    pub limit: Option<u64>,
+    #[serde(default = "default_page")]
+    pub page: Option<u64>,
+}
+
+fn default_limit() -> Option<u64> {
+    Some(10)
+}
+
+fn default_page() -> Option<u64> {
+    Some(1)
+}
+
 impl<T> PolicyTemplatesRouter<T>
 where
     T: PolicyTemplatesRepo + Send + Sync,
@@ -89,6 +105,7 @@ where
         Router::new()
             .route("/api/v1/datahub/policy-templates", post(Self::create_policy_template))
             .route("/api/v1/datahub/policy-templates/:id", delete(Self::delete_policy_template_by_id))
+            .route("/api/v1/datahub/policy-templates", get(Self::get_all_policy_templates))
             .with_state(self.policy_templates_service)
     }
 
@@ -129,6 +146,30 @@ where
             },
             Err(e) => {
                 error!("Error al eliminar policy template: {}", e);
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(json!({ "error": e.to_string() }))
+                )
+            },
+        }
+    }
+
+    async fn get_all_policy_templates(
+        State(policy_templates_service): State<Arc<T>>,
+        Query(params): Query<GetPolicyTemplatesParams>,  // Añadimos los parámetros de query
+    ) -> impl IntoResponse {
+        info!("GET /api/v1/datahub/policy-templates");
+        
+        match policy_templates_service.get_all_policy_templates(params.limit, params.page).await {
+            Ok(templates) => {
+                info!("Policy templates obtenidas exitosamente");
+                (
+                    StatusCode::OK,
+                    Json(json!({ "templates": templates }))
+                )
+            },
+            Err(e) => {
+                error!("Error al obtener policy templates: {}", e);
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
                     Json(json!({ "error": e.to_string() }))

@@ -21,7 +21,9 @@ use crate::datahub::repo::{DatahubConnectorRepoFactory, NewPolicyRelationModel, 
 use axum::async_trait;
 use sea_orm::{DatabaseConnection, EntityTrait};
 use sea_orm::QueryFilter;
+use sea_orm::QueryOrder;
 use urn::Urn;
+use sea_orm::QuerySelect;
 use sea_orm::{ActiveValue, Condition};
 
 pub struct DatahubConnectorRepoForSql {
@@ -46,12 +48,27 @@ impl DatahubConnectorRepoFactory for DatahubConnectorRepoForSql {
 #[async_trait]
 impl PolicyTemplatesRepo for DatahubConnectorRepoForSql {
     async fn get_all_policy_templates(&self, limit: Option<u64>, page: Option<u64>) -> anyhow::Result<Vec<policy_templates::Model>, PolicyTemplatesRepoErrors> {
-        todo!()
+    // Configurar la paginación
+    let page = page.unwrap_or(1);
+    let limit = limit.unwrap_or(10);
+    let offset = (page - 1) * limit;
+
+    // Construir la consulta
+    match policy_templates::Entity::find()
+        .order_by_desc(policy_templates::Column::CreatedAt)
+        .limit(limit)
+        .offset(offset)
+        .all(&self.db_connection)
+        .await
+    {
+        Ok(templates) => Ok(templates),
+        Err(err) => Err(PolicyTemplatesRepoErrors::ErrorFetchingPolicyTemplate(err.into())),
+    }
     }
 
-    async fn get_policy_template_by_id(&self, template_id: Urn) -> anyhow::Result<Option<policy_templates::Model>, PolicyTemplatesRepoErrors> {
-        todo!()
-    }
+    // async fn get_policy_template_by_id(&self, template_id: Urn) -> anyhow::Result<Option<policy_templates::Model>, PolicyTemplatesRepoErrors> {
+    //     todo!()
+    // }
 
     async fn create_policy_template(&self, new_policy_template: NewPolicyTemplateModel) -> anyhow::Result<policy_templates::Model, PolicyTemplatesRepoErrors> {
         let id = format!("template_{}", chrono::Utc::now().timestamp());
