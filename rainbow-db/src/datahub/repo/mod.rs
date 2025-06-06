@@ -46,7 +46,7 @@ pub trait PolicyTemplatesRepo {
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<policy_templates::Model>, PolicyTemplatesRepoErrors>;
-    // async fn get_policy_template_by_id(&self, template_id: String) -> anyhow::Result<Option<policy_templates::Model>, PolicyTemplatesRepoErrors>;
+    async fn get_policy_template_by_id(&self, template_id: String) -> anyhow::Result<Option<policy_templates::Model>, PolicyTemplatesRepoErrors>;
 
     async fn create_policy_template(
         &self,

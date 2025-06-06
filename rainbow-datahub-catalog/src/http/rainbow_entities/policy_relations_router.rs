@@ -106,6 +106,7 @@ where
             .route("/api/v1/datahub/policy-templates", post(Self::create_policy_template))
             .route("/api/v1/datahub/policy-templates/:id", delete(Self::delete_policy_template_by_id))
             .route("/api/v1/datahub/policy-templates", get(Self::get_all_policy_templates))
+            .route("/api/v1/datahub/policy-templates/:id", get(Self::get_policy_template_by_id))
             .with_state(self.policy_templates_service)
     }
 
@@ -170,6 +171,37 @@ where
             },
             Err(e) => {
                 error!("Error al obtener policy templates: {}", e);
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(json!({ "error": e.to_string() }))
+                )
+            },
+        }
+    }
+
+    async fn get_policy_template_by_id(
+        State(policy_templates_service): State<Arc<T>>,
+        Path(id): Path<String>,
+    ) -> impl IntoResponse {
+        info!("GET /api/v1/datahub/policy-templates/{}", id);
+        
+        match policy_templates_service.get_policy_template_by_id(id).await {
+            Ok(Some(template)) => {
+                info!("Policy template encontrada exitosamente");
+                (
+                    StatusCode::OK,
+                    Json(json!({ "template": template }))
+                )
+            },
+            Ok(None) => {
+                info!("Policy template no encontrada");
+                (
+                    StatusCode::NOT_FOUND,
+                    Json(json!({ "error": "Policy template not found" }))
+                )
+            },
+            Err(e) => {
+                error!("Error al obtener policy template: {}", e);
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
                     Json(json!({ "error": e.to_string() }))

@@ -66,9 +66,16 @@ impl PolicyTemplatesRepo for DatahubConnectorRepoForSql {
     }
     }
 
-    // async fn get_policy_template_by_id(&self, template_id: Urn) -> anyhow::Result<Option<policy_templates::Model>, PolicyTemplatesRepoErrors> {
-    //     todo!()
-    // }
+    async fn get_policy_template_by_id(&self, template_id: String) -> anyhow::Result<Option<policy_templates::Model>, PolicyTemplatesRepoErrors> {
+        // Buscar la plantilla por ID
+        match policy_templates::Entity::find_by_id(template_id)
+            .one(&self.db_connection)
+            .await
+        {
+            Ok(template) => Ok(template),
+            Err(err) => Err(PolicyTemplatesRepoErrors::ErrorFetchingPolicyTemplate(err.into())),
+        }
+    }
 
     async fn create_policy_template(&self, new_policy_template: NewPolicyTemplateModel) -> anyhow::Result<policy_templates::Model, PolicyTemplatesRepoErrors> {
         let id = format!("template_{}", chrono::Utc::now().timestamp());
