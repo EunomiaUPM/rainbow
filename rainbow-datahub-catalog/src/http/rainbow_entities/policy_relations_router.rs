@@ -6,8 +6,9 @@ use axum::response::IntoResponse;
 use axum::routing::get;
 use axum::{Json, Router};
 use reqwest::StatusCode;
-use std::sync::Arc;
+use std::{sync::Arc, str::FromStr}; 
 use tracing::info;
+use tracing::error;
 
 pub struct RainbowDatahubPolicyRelationsRouter<T, U>
 where
@@ -50,11 +51,12 @@ where
 use rainbow_db::datahub::repo::{NewPolicyTemplateModel, PolicyTemplatesRepo, PolicyTemplatesRepoErrors};
 // use axum::extract::State;
 // use axum::response::IntoResponse;
-use axum::routing::post;
+use axum::routing::{post, delete};
 // use axum::{Json, Router};
 // use reqwest::StatusCode;
 use serde::Deserialize;
 use serde_json::json;
+use urn::Urn;
 // use std::sync::Arc;
 // use tracing::info;
 
@@ -86,6 +88,7 @@ where
     pub fn router(self) -> Router {
         Router::new()
             .route("/api/v1/datahub/policy-templates", post(Self::create_policy_template))
+            .route("/api/v1/datahub/policy-templates/:id", delete(Self::delete_policy_template_by_id))
             .with_state(self.policy_templates_service)
     }
 
@@ -107,6 +110,30 @@ where
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(json!({ "error": e.to_string() })),
         ),
+        }
+    }
+
+    async fn delete_policy_template_by_id(
+        State(policy_templates_service): State<Arc<T>>,
+        Path(id): Path<String>,
+    ) -> impl IntoResponse {
+        info!("DELETE /api/v1/datahub/policy-templates/{}", id);
+        
+        match policy_templates_service.delete_policy_template_by_id(id).await {
+            Ok(_) => {
+                info!("Policy template eliminada exitosamente");
+                (
+                    StatusCode::NO_CONTENT,
+                    Json(json!({ "message": "Policy template deleted successfully" }))
+                )
+            },
+            Err(e) => {
+                error!("Error al eliminar policy template: {}", e);
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(json!({ "error": e.to_string() }))
+                )
+            },
         }
     }
 }

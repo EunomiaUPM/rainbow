@@ -55,7 +55,7 @@ pub trait PolicyTemplatesRepo {
         new_policy_template: NewPolicyTemplateModel,
     ) -> anyhow::Result<policy_templates::Model, PolicyTemplatesRepoErrors>;
 
-    async fn delete_policy_template_by_id(&self, template_id: Urn) -> anyhow::Result<(), PolicyTemplatesRepoErrors>;
+    async fn delete_policy_template_by_id(&self, template_id: String) -> anyhow::Result<(), PolicyTemplatesRepoErrors>;
 }
 
 pub struct NewPolicyRelationModel {

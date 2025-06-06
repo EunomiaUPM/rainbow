@@ -20,8 +20,9 @@ use crate::datahub::entities::{policy_relations, policy_templates};
 use crate::datahub::repo::{DatahubConnectorRepoFactory, NewPolicyRelationModel, NewPolicyTemplateModel, PolicyRelationsRepo, PolicyTemplatesRepo, PolicyTemplatesRepoErrors};
 use axum::async_trait;
 use sea_orm::{DatabaseConnection, EntityTrait};
+use sea_orm::QueryFilter;
 use urn::Urn;
-use sea_orm::ActiveValue;
+use sea_orm::{ActiveValue, Condition};
 
 pub struct DatahubConnectorRepoForSql {
     db_connection: DatabaseConnection,
@@ -53,29 +54,36 @@ impl PolicyTemplatesRepo for DatahubConnectorRepoForSql {
     }
 
     async fn create_policy_template(&self, new_policy_template: NewPolicyTemplateModel) -> anyhow::Result<policy_templates::Model, PolicyTemplatesRepoErrors> {
-    let id = format!("template_{}", chrono::Utc::now().timestamp());
+        let id = format!("template_{}", chrono::Utc::now().timestamp());
 
-    // Crear el ActiveModel
-    let model = policy_templates::ActiveModel {
-        id: ActiveValue::Set(id),
-        title: ActiveValue::Set(new_policy_template.title),
-        description: ActiveValue::Set(new_policy_template.description),
-        content: ActiveValue::Set(new_policy_template.content),
-        created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
-    };
+        // Crear el ActiveModel
+        let model = policy_templates::ActiveModel {
+            id: ActiveValue::Set(id),
+            title: ActiveValue::Set(new_policy_template.title),
+            description: ActiveValue::Set(new_policy_template.description),
+            content: ActiveValue::Set(new_policy_template.content),
+            created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
+        };
 
-    // Insertar en la base de datos y devolver el resultado
-    match policy_templates::Entity::insert(model)
-        .exec_with_returning(&self.db_connection)
-        .await
-    {
-        Ok(template) => Ok(template),
-        Err(err) => Err(PolicyTemplatesRepoErrors::ErrorCreatingPolicyTemplate(err.into())),
+        // Insertar en la base de datos y devolver el resultado
+        match policy_templates::Entity::insert(model)
+            .exec_with_returning(&self.db_connection)
+            .await
+        {
+            Ok(template) => Ok(template),
+            Err(err) => Err(PolicyTemplatesRepoErrors::ErrorCreatingPolicyTemplate(err.into())),
+        }
     }
-    }
 
-    async fn delete_policy_template_by_id(&self, template_id: Urn) -> anyhow::Result<(), PolicyTemplatesRepoErrors> {
-        todo!()
+    async fn delete_policy_template_by_id(&self, template_id: String) -> anyhow::Result<(), PolicyTemplatesRepoErrors> {
+    // Intentar eliminar la plantilla
+        match policy_templates::Entity::delete_by_id(template_id)
+            .exec(&self.db_connection)
+            .await
+        {
+            Ok(_) => Ok(()),
+            Err(err) => Err(PolicyTemplatesRepoErrors::ErrorDeletingPolicyTemplate(err.into())),
+        }
     }
 }
 
