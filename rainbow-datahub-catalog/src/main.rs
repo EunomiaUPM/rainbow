@@ -1,4 +1,3 @@
-
 use axum::{
     Router,
 };
@@ -6,9 +5,10 @@ use rainbow_common::config::provider_config::ApplicationProviderConfig;
 use std::sync::Arc;
 use tokio;
 use crate::core::datahub_proxy::datahub_proxy::DatahubProxyService;
+use crate::core::datahub_proxy::DatahubProxyTrait;
 use crate::http::datahub_proxy::datahub_proxy::DataHubProxyRouter;
 use crate::http::rainbow_entities::policy_relations_router::PolicyTemplatesRouter; 
-use rainbow_db::datahub::repo::sql::DatahubConnectorRepoForSql;  // Y esta
+use rainbow_db::datahub::repo::sql::DatahubConnectorRepoForSql;
 use rainbow_db::datahub::repo::{NewDataHubDatasetModel, DatahubDatasetsRepo};
 use sea_orm::{DatabaseConnection, Database, EntityTrait};
 
@@ -23,29 +23,38 @@ async fn main() {
     
     let policy_templates_service = Arc::new(DatahubConnectorRepoForSql::new(db_connection.clone()));
 
-    // Crear un nuevo dataset
-    let new_dataset = NewDataHubDatasetModel {
-        urn: "urn:li:dataset:(urn:li:dataPlatform:airflow,ACETAMINOPHEN_events,PROD)".to_string(),
-        name: "ACETAMINOPHEN_events".to_string(),
-    };
+    // Obtener datasets del dominio medicamentos
+    let domain_id = "urn:li:domain:medicamentos";
+    match DatahubProxyTrait::get_datahub_datasets_by_domain_id(&*datahub_service, domain_id.to_string()).await {
+        Ok(datasets) => {
+            println!("Datasets encontrados: {}", datasets.len());
+            
+            // Guardar cada dataset en la base de datos
+            let repo = DatahubConnectorRepoForSql::new(db_connection.clone());
+            for dataset in datasets {
+                let new_dataset = NewDataHubDatasetModel {
+                    urn: dataset.urn,
+                    name: dataset.name,
+                };
 
-    // Insertar en la base de datos
-    let repo = DatahubConnectorRepoForSql::new(db_connection.clone());
-    
-    // Primero verificamos si el dataset ya existe
-    let existing_dataset = rainbow_db::datahub::entities::datahub_datasets::Entity::find_by_id(&new_dataset.urn)
-        .one(&db_connection)
-        .await
-        .unwrap();
+                // Verificar si el dataset ya existe
+                let existing_dataset = rainbow_db::datahub::entities::datahub_datasets::Entity::find_by_id(&new_dataset.urn)
+                    .one(&db_connection)
+                    .await
+                    .unwrap();
 
-    match existing_dataset {
-        Some(_) => println!("El dataset ya existe en la base de datos"),
-        None => {
-            match repo.create_datahub_dataset(new_dataset).await {
-                Ok(dataset) => println!("Dataset creado: {:?}", dataset),
-                Err(e) => println!("Error al crear el dataset: {:?}", e),
+                match existing_dataset {
+                    Some(_) => println!("El dataset {} ya existe en la base de datos", new_dataset.urn),
+                    None => {
+                        match repo.create_datahub_dataset(new_dataset).await {
+                            Ok(dataset) => println!("Dataset creado: {:?}", dataset),
+                            Err(e) => println!("Error al crear el dataset: {:?}", e),
+                        }
+                    }
+                }
             }
-        }
+        },
+        Err(e) => println!("Error al obtener los datasets: {:?}", e),
     }
 
     // Creamos el router de datahub_proxy
