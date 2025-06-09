@@ -22,6 +22,7 @@
 
 use crate::ssi_auth::provider::core::manager::RainbowSSIAuthProviderManagerTrait;
 use crate::ssi_auth::provider::core::types::RefBody;
+use anyhow::bail;
 use axum::extract::{Form, Path, State};
 use axum::http::{Method, Uri};
 use axum::response::IntoResponse;
@@ -33,7 +34,6 @@ use reqwest::StatusCode;
 use serde::Deserialize;
 use serde_json::json;
 use std::sync::Arc;
-use anyhow::bail;
 use tracing::info;
 
 pub struct RainbowAuthProviderRouter<T>
@@ -58,7 +58,7 @@ where
             .route("/continue", post(Self::continue_request))
             .route("/verify/token", post(Self::verify_token))
             .with_state(self.manager)
-            // .fallback(Self::fallback) 2 routers cannot have 1 fallback each
+        // .fallback(Self::fallback) 2 routers cannot have 1 fallback each
     }
 
     async fn access_request(State(manager): State<Arc<T>>, Json(payload): Json<GrantRequest>) -> impl IntoResponse {
@@ -110,7 +110,7 @@ where
     async fn continue_request(State(manager): State<Arc<T>>, Json(payload): Json<RefBody>) -> impl IntoResponse {
         info!("POST /continue");
 
-        let model = match manager.continue_req(payload.interact_ref).await {
+        let (model, base_url) = match manager.continue_req(payload.interact_ref).await {
             Ok(model) => model,
             Err(e) => {
                 let error = json!({"error": "error"});
@@ -119,10 +119,11 @@ where
             }
         };
 
+
         let id = model["consumer"].as_str().unwrap().to_string();
         let token = model["token"].as_str().unwrap().to_string();
         let actions = model["actions"].as_str().unwrap().to_string();
-        match manager.save_mate(id, token.clone(), actions).await {
+        match manager.save_mate(id, token.clone(), base_url, actions).await {
             Ok(_) => (),
             Err(e) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
         }
@@ -137,8 +138,6 @@ where
         info!("POST /verify/token");
 
         let token: String;
-
-
     }
 
     async fn fallback(method: Method, uri: Uri) -> (StatusCode, String) {

@@ -17,6 +17,7 @@
  *
  */
 
+use crate::common::core::mates_facade::MatesFacadeTrait;
 use crate::consumer::core::data_plane_facade::DataPlaneConsumerFacadeTrait;
 use crate::consumer::core::ds_protocol::ds_protocol_err::DSProtocolTransferConsumerErrors;
 use crate::consumer::core::ds_protocol_rpc::ds_protocol_rpc_err::DSRPCTransferConsumerErrors;
@@ -29,7 +30,7 @@ use crate::consumer::core::ds_protocol_rpc::ds_protocol_rpc_types::{
 };
 use crate::consumer::core::ds_protocol_rpc::DSRPCTransferConsumerTrait;
 use crate::consumer::setup::config::TransferConsumerApplicationConfig;
-use anyhow::bail;
+use anyhow::{anyhow, bail};
 use axum::async_trait;
 use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
 use rainbow_common::protocol::transfer::transfer_completion::TransferCompletionMessage;
@@ -56,34 +57,50 @@ use std::time::Duration;
 use tracing::debug;
 use urn::Urn;
 
-pub struct DSRPCTransferConsumerService<T, U, V>
+pub struct DSRPCTransferConsumerService<T, U, V, W>
 where
     T: TransferConsumerRepoFactory + Send + Sync,
     U: DataPlaneConsumerFacadeTrait + Send + Sync,
     V: RainbowEventsNotificationTrait + Send + Sync + 'static,
+    W: MatesFacadeTrait + Send + Sync,
 {
     transfer_repo: Arc<T>,
     data_plane_facade: Arc<U>,
     config: TransferConsumerApplicationConfig,
     notification_service: Arc<V>,
     client: Client,
+    mates_facade: Arc<W>,
 }
 
-impl<T, U, V> DSRPCTransferConsumerService<T, U, V>
+impl<T, U, V, W> DSRPCTransferConsumerService<T, U, V, W>
 where
     T: TransferConsumerRepoFactory + Send + Sync,
     U: DataPlaneConsumerFacadeTrait + Send + Sync,
     V: RainbowEventsNotificationTrait + Send + Sync + 'static,
+    W: MatesFacadeTrait + Send + Sync,
 {
     pub fn new(
         transfer_repo: Arc<T>,
         data_plane_facade: Arc<U>,
         config: TransferConsumerApplicationConfig,
         notification_service: Arc<V>,
+        mates_facade: Arc<W>,
     ) -> Self {
         let client =
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
-        Self { transfer_repo, data_plane_facade, config, notification_service, client }
+        Self { transfer_repo, data_plane_facade, config, notification_service, client, mates_facade }
+    }
+
+    async fn get_provider_base_url(&self, provider_participant_id: &Urn) -> anyhow::Result<String> {
+        let mate = self
+            .mates_facade
+            .get_mate_by_id(provider_participant_id.clone())
+            .await
+            .map_err(|e| anyhow!("Error parsing mate: {}", e.to_string()))?;
+        match mate.base_url {
+            Some(base_url) => Ok(base_url),
+            None => bail!("Mate with no base_url".to_string())
+        }
     }
 
     /// Fetches and validates the existence of a transfer callback record by consumer_pid.
@@ -189,17 +206,21 @@ where
 }
 
 #[async_trait]
-impl<T, U, V> DSRPCTransferConsumerTrait for DSRPCTransferConsumerService<T, U, V>
+impl<T, U, V, W> DSRPCTransferConsumerTrait for DSRPCTransferConsumerService<T, U, V, W>
 where
     T: TransferConsumerRepoFactory + Send + Sync,
     U: DataPlaneConsumerFacadeTrait + Send + Sync,
     V: RainbowEventsNotificationTrait + Send + Sync + 'static,
+    W: MatesFacadeTrait + Send + Sync,
 {
     async fn setup_request(
         &self,
         input: DSRPCTransferConsumerRequestRequest,
     ) -> anyhow::Result<DSRPCTransferConsumerRequestResponse> {
-        let DSRPCTransferConsumerRequestRequest { agreement_id, format, data_address, provider_address, .. } = input.clone();
+        let DSRPCTransferConsumerRequestRequest { agreement_id, format, data_address, provider_participant_id, .. } = input.clone();
+        // 0. fetch participant
+        let provider_base_url = self.get_provider_base_url(&provider_participant_id).await?;
+        let provider_base_url = provider_base_url.strip_suffix('/').unwrap_or(provider_base_url.as_str());
         // 1. Generate PIDs and callback address
         let consumer_pid = get_urn(None);
         let callback_urn = get_urn(None);
@@ -218,7 +239,6 @@ where
             ..Default::default()
         };
         // 3. Send message to provider
-        let provider_base_url = provider_address.strip_suffix('/').unwrap_or(provider_address.as_str());
         let provider_url = format!("{}/transfers/request", provider_base_url);
         let response = self
             .send_protocol_message_to_provider(
@@ -285,8 +305,11 @@ where
         &self,
         input: DSRPCTransferConsumerStartRequest,
     ) -> anyhow::Result<DSRPCTransferConsumerStartResponse> {
-        let DSRPCTransferConsumerStartRequest { data_address, provider_address, provider_pid, consumer_pid, .. } =
+        let DSRPCTransferConsumerStartRequest { data_address, provider_participant_id, provider_pid, consumer_pid, .. } =
             input.clone();
+        // 0. fetch participant
+        let provider_base_url = self.get_provider_base_url(&provider_participant_id).await?;
+        let provider_base_url = provider_base_url.strip_suffix('/').unwrap_or(provider_base_url.as_str());
         // 1. Validate correlation
         let _current_process_record =
             self.validate_and_get_transfer_callback_by_consumer_id(&provider_pid, &consumer_pid).await?;
@@ -298,7 +321,6 @@ where
             ..Default::default()
         };
         // 3. Send message to provider
-        let provider_base_url = provider_address.strip_suffix('/').unwrap_or(provider_address.as_str());
         let provider_url = format!(
             "{}/transfers/{}/start",
             provider_base_url,
@@ -370,8 +392,11 @@ where
         &self,
         input: DSRPCTransferConsumerSuspensionRequest,
     ) -> anyhow::Result<DSRPCTransferConsumerSuspensionResponse> {
-        let DSRPCTransferConsumerSuspensionRequest { provider_address, provider_pid, consumer_pid, code, reason } =
+        let DSRPCTransferConsumerSuspensionRequest { provider_participant_id, provider_pid, consumer_pid, code, reason } =
             input.clone();
+        // 0. fetch participant
+        let provider_base_url = self.get_provider_base_url(&provider_participant_id).await?;
+        let provider_base_url = provider_base_url.strip_suffix('/').unwrap_or(provider_base_url.as_str());
         // 1. Validate correlation
         let _current_process_record =
             self.validate_and_get_transfer_callback_by_consumer_id(&provider_pid, &consumer_pid).await?;
@@ -384,7 +409,6 @@ where
             ..Default::default()
         };
         // 3. Send message to provider
-        let provider_base_url = provider_address.strip_suffix('/').unwrap_or(provider_address.as_str());
         let provider_url = format!(
             "{}/transfers/{}/suspension",
             provider_base_url,
@@ -451,7 +475,10 @@ where
         &self,
         input: DSRPCTransferConsumerCompletionRequest,
     ) -> anyhow::Result<DSRPCTransferConsumerCompletionResponse> {
-        let DSRPCTransferConsumerCompletionRequest { provider_address, provider_pid, consumer_pid, .. } = input.clone();
+        let DSRPCTransferConsumerCompletionRequest { provider_participant_id, provider_pid, consumer_pid, .. } = input.clone();
+        // 0. fetch participant
+        let provider_base_url = self.get_provider_base_url(&provider_participant_id).await?;
+        let provider_base_url = provider_base_url.strip_suffix('/').unwrap_or(provider_base_url.as_str());
         // 1. Validate correlation
         let _current_process_record =
             self.validate_and_get_transfer_callback_by_consumer_id(&provider_pid, &consumer_pid).await?;
@@ -462,7 +489,6 @@ where
             ..Default::default()
         };
         // 3. Send message to provider
-        let provider_base_url = provider_address.strip_suffix('/').unwrap_or(provider_address.as_str());
         let provider_address = format!(
             "{}/transfers/{}/completion",
             provider_base_url,
@@ -529,8 +555,11 @@ where
         &self,
         input: DSRPCTransferConsumerTerminationRequest,
     ) -> anyhow::Result<DSRPCTransferConsumerTerminationResponse> {
-        let DSRPCTransferConsumerTerminationRequest { provider_address, provider_pid, consumer_pid, code, reason } =
+        let DSRPCTransferConsumerTerminationRequest { provider_participant_id, provider_pid, consumer_pid, code, reason } =
             input.clone();
+        // 0. fetch participant
+        let provider_base_url = self.get_provider_base_url(&provider_participant_id).await?;
+        let provider_base_url = provider_base_url.strip_suffix('/').unwrap_or(provider_base_url.as_str());
         // 1. Validate correlation
         let _current_process_record =
             self.validate_and_get_transfer_callback_by_consumer_id(&provider_pid, &consumer_pid).await?;
@@ -543,7 +572,6 @@ where
             ..Default::default()
         };
         // 3. Send message to provider
-        let provider_base_url = provider_address.strip_suffix('/').unwrap_or(provider_address.as_str());
         let provider_url = format!(
             "{}/transfers/{}/termination",
             provider_base_url,

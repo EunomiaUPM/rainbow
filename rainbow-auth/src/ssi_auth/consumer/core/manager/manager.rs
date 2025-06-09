@@ -18,10 +18,10 @@
  */
 
 use super::{RainbowSSIAuthConsumerManagerTrait, RainbowSSIAuthConsumerWalletTrait};
-use crate::ssi_auth::consumer::setup::config::SSIAuthConsumerApplicationConfig;
 use crate::ssi_auth::consumer::core::types::{
     AuthJwtClaims, DidsInfo, MatchingVCs, RedirectResponse, WalletInfo, WalletInfoResponse, WalletLoginResponse,
 };
+use crate::ssi_auth::consumer::setup::config::SSIAuthConsumerApplicationConfig;
 use anyhow::bail;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
@@ -31,11 +31,12 @@ use base64::Engine;
 use once_cell::sync::Lazy;
 use rainbow_common::auth::gnap::{AccessToken, GrantRequest, GrantResponse};
 use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
+use rainbow_common::mates::Mates;
 use rainbow_db::auth_consumer::entities::auth;
 use rainbow_db::auth_consumer::entities::auth_verification::Model;
 use rainbow_db::auth_consumer::repo::AuthConsumerRepoTrait;
 use reqwest::header::{HeaderMap, ACCEPT, AUTHORIZATION, CONTENT_TYPE};
-use reqwest::Client;
+use reqwest::{Client, Response};
 use sea_orm_migration::cli::Cli;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::{json, Serializer, Value};
@@ -46,7 +47,6 @@ use tokio::sync::Mutex;
 use tracing::{error, info};
 use url::Url;
 use urlencoding::decode;
-use rainbow_common::mates::Mates;
 
 #[derive(Debug)]
 pub struct Manager<T>
@@ -396,7 +396,7 @@ where
         let id = uuid::Uuid::new_v4().to_string();
         body.update_actions(actions.clone());
         let auth_url = self.config.get_auth_host_url().unwrap();
-            let callback = format!("{}/callback/{}", auth_url, id.clone());
+        let callback = format!("{}/callback/{}", auth_url, id.clone());
         body.update_callback(callback);
 
         let model = match self.auth_repo.create_auth(id, url.clone(), provider, actions, body.interact.clone()).await {
@@ -750,8 +750,8 @@ where
         Ok(model)
     }
 
-    async fn save_mate(&self, id: String, base_url: String, token: String, token_actions: String) -> anyhow::Result<()> {
-        let url = format!("{}/mates" , self.config.get_ssi_auth_host_url().unwrap()); // TODO fix 4 microservices
+    async fn save_mate(&self, id: String, base_url: String, token: String, token_actions: String) -> anyhow::Result<Response> {
+        let url = format!("{}/api/v1/mates", self.config.get_ssi_auth_host_url().unwrap()); // TODO fix 4 microservices
 
         let mut headers = HeaderMap::new();
         headers.insert(CONTENT_TYPE, "application/json".parse()?);
@@ -776,7 +776,7 @@ where
             }
         }
 
-        Ok(())
+        Ok(res)
     }
 }
 

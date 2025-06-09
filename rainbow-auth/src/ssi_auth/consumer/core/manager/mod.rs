@@ -20,17 +20,12 @@
 pub mod manager;
 
 use crate::ssi_auth::consumer::core::types::{MatchingVCs, RedirectResponse};
-use anyhow::bail;
 use axum::async_trait;
-use axum::http::header::{ACCEPT, CONTENT_TYPE};
-use axum::http::HeaderMap;
 pub use manager::Manager;
-use rainbow_common::auth::gnap::{GrantRequest, GrantResponse};
 use rainbow_db::auth_consumer::entities::{auth, auth_verification};
 
+use reqwest::Response;
 use serde_json::Value;
-use std::format;
-use tracing::{error, info};
 
 #[async_trait]
 pub trait RainbowSSIAuthConsumerWalletTrait: Send + Sync {
@@ -67,5 +62,5 @@ pub trait RainbowSSIAuthConsumerManagerTrait: Send + Sync {
     async fn do_callback(&self, uri: String) -> anyhow::Result<()>;
     async fn check_callback(&self, id: String, interact_ref: String, hash: String) -> anyhow::Result<String>;
     async fn continue_request(&self, id: String, interact_ref: String, uri: String) -> anyhow::Result<auth::Model>;
-    async fn save_mate(&self, id: String, url: String, token: String, token_actions: String) -> anyhow::Result<()>;
+    async fn save_mate(&self, id: String, url: String, token: String, token_actions: String) -> anyhow::Result<Response>;
 }

@@ -16,41 +16,48 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use crate::utils::get_urn;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Mates {
     pub participant_id: String,
+    pub participant_slug: String,
     pub participant_type: String,
     pub base_url: Option<String>,
     pub token: Option<String>,
     pub token_actions: Option<String>,
     pub saved_at: chrono::NaiveDateTime,
     pub last_interaction: chrono::NaiveDateTime,
+    pub is_me: bool,
 }
 
 impl Mates {
     pub fn default4consumer(id: String, url: String, token: String, token_actions: String) -> Self {
         Self {
-            participant_id: id,
+            participant_id: get_urn(None).to_string(),
+            participant_slug: id,
             participant_type: "Provider".to_string(),
             base_url: Some(url),
             token: Some(token),
             token_actions: Some(token_actions),
             saved_at: chrono::Utc::now().naive_utc(),
             last_interaction: chrono::Utc::now().naive_utc(),
+            is_me: false,
         }
     }
 
-    pub fn default4provider(id: String, token: String, token_actions: String) -> Self {
+    pub fn default4provider(id: String, url: String, token: String, token_actions: String) -> Self {
         Self {
-            participant_id: id,
+            participant_id: get_urn(None).to_string(),
+            participant_slug: id,
             participant_type: "Consumer".to_string(),
-            base_url: None,
+            base_url: Some(url),
             token: Some(token),
             token_actions: Some(token_actions),
             saved_at: chrono::Utc::now().naive_utc(),
             last_interaction: chrono::Utc::now().naive_utc(),
+            is_me: false,
         }
     }
 }

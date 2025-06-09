@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use crate::common::core::mates_facade::mates_facade::MatesFacadeService;
 use crate::consumer::core::data_plane_facade::data_plane_facade::DataPlaneConsumerFacadeForDSProtocol;
 use crate::consumer::core::ds_protocol::ds_procotol::DSProtocolTransferConsumerService;
 use crate::consumer::core::ds_protocol_rpc::ds_protocol_rpc::DSRPCTransferConsumerService;
@@ -111,11 +112,16 @@ pub async fn create_transfer_consumer_router(config: &TransferConsumerApplicatio
     let ds_protocol_router = DSProtocolTransferConsumerRouter::new(ds_protocol_service.clone()).router();
 
     // DSRPCProtocol Dependency injection
+    let app_config: ApplicationConsumerConfig = config.clone().into();
+    let mates_facade = Arc::new(MatesFacadeService::new(
+        app_config.into()
+    ));
     let ds_protocol_rpc_service = Arc::new(DSRPCTransferConsumerService::new(
         consumer_repo.clone(),
         data_plane_facade.clone(),
         config.clone(),
         notification_service.clone(),
+        mates_facade.clone(),
     ));
     let ds_protocol_rpc_router = DSRPCTransferConsumerRouter::new(ds_protocol_rpc_service.clone()).router();
 

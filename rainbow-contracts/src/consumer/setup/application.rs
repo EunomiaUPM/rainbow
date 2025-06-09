@@ -17,6 +17,7 @@
  *
  */
 
+use crate::common::core::mates_facade::mates_facade::MatesFacadeService;
 use crate::consumer::core::ds_protocol::ds_protocol::DSProtocolContractNegotiationConsumerService;
 use crate::consumer::core::ds_protocol_rpc::ds_protocol_rpc::DSRPCContractNegotiationConsumerService;
 // use crate::consumer::core::ds_protocol_rpc::ds_protocol_rpc::DSRPCContractNegotiationConsumerService;
@@ -27,7 +28,8 @@ use crate::consumer::http::ds_protocol_rpc::ds_protocol_rpc::DSRPCContractNegoti
 use crate::consumer::http::rainbow_entities::rainbow_entities::RainbowEntitiesContractNegotiationConsumerRouter;
 use crate::consumer::setup::config::ContractNegotiationConsumerApplicationConfig;
 use axum::{serve, Router};
-use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
+use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
+use rainbow_common::config::provider_config::ApplicationProviderConfig;
 use rainbow_db::contracts_consumer::repo::sql::ContractNegotiationConsumerRepoForSql;
 use rainbow_db::contracts_consumer::repo::ContractNegotiationConsumerRepoFactory;
 use rainbow_db::events::repo::sql::EventsRepoForSql;
@@ -76,9 +78,14 @@ pub async fn create_contract_negotiation_consumer_router(config: &ContractNegoti
         RainbowEntitiesContractNegotiationConsumerRouter::new(rainbow_entities_service.clone()).router();
 
     // DSRPCProtocol Dependency injection
+    let app_config: ApplicationConsumerConfig = config.clone().into();
+    let mates_facade = Arc::new(MatesFacadeService::new(
+        app_config.into()
+    ));
     let ds_rpc_protocol_service = Arc::new(DSRPCContractNegotiationConsumerService::new(
         consumer_repo.clone(),
         notification_service.clone(),
+        mates_facade.clone(),
     ));
     let ds_rpc_protocol_router = DSRPCContractNegotiationConsumerRouter::new(ds_rpc_protocol_service.clone()).router();
 

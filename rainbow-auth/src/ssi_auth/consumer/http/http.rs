@@ -24,6 +24,7 @@
 use crate::ssi_auth::consumer::core::manager::{RainbowSSIAuthConsumerManagerTrait, RainbowSSIAuthConsumerWalletTrait};
 use crate::ssi_auth::consumer::core::types::ReachProvider;
 use crate::ssi_auth::consumer::core::Manager;
+use anyhow::bail;
 use axum::extract::{Path, Query, State};
 use axum::http::{Method, Uri};
 use axum::response::IntoResponse;
@@ -37,9 +38,8 @@ use serde_json::json;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
-use anyhow::bail;
 use tokio::sync::Mutex;
-use tracing::info;
+use tracing::{debug, info};
 use url::Url;
 use urlencoding::decode;
 
@@ -69,11 +69,11 @@ where
             .route("/auth/manual/ssi", post(Self::manual_auth_ssi))
             .route("/callback/manual/:id", get(Self::manual_callback))
             .route("/retrieve/token/:id", get(Self::manual_callback))
-            .route("/.well-known/did.json", get(Self::didweb))// TODO
+            .route("/.well-known/did.json", get(Self::didweb)) // TODO
             // .route("/provider/:id/renew", post(todo!()))
             // .route("/provider/:id/finalize", post(todo!()))
             .with_state(self.manager)
-            // .fallback(Self::fallback) 2 routers cannot have 1 fallback each
+        // .fallback(Self::fallback) 2 routers cannot have 1 fallback each
     }
 
     async fn wallet_register(State(manager): State<Arc<Mutex<Manager<T>>>>) -> impl IntoResponse {
@@ -278,36 +278,34 @@ where
 
         let hash = match params.get("hash") {
             Some(hash) => hash,
-            None => return StatusCode::BAD_REQUEST.into_response(),
+            None => return (StatusCode::BAD_REQUEST, "hash not available").into_response(),
         };
 
         let interact_ref = match params.get("interact_ref") {
             Some(interact_ref) => interact_ref,
-            None => return StatusCode::BAD_REQUEST.into_response(),
+            None => return (StatusCode::BAD_REQUEST, "interact ref not available").into_response(),
         };
 
         let mut manager = manager.lock().await;
 
         let uri = match manager.check_callback(id.clone(), interact_ref.to_string(), hash.to_string()).await {
             Ok(uri) => uri,
-            Err(e) => return StatusCode::BAD_REQUEST.into_response(),
+            Err(e) => return (StatusCode::BAD_REQUEST, format!("check callback failed: {}", e.to_string())).into_response(),
         };
 
         let res = match manager.continue_request(id, interact_ref.to_string(), uri).await {
             Ok(res) => res,
-            Err(e) => return StatusCode::BAD_REQUEST.into_response(),
+            Err(e) => return (StatusCode::BAD_REQUEST, format!("continue request failed: {}", e.to_string())).into_response(),
         };
 
-        match manager.save_mate(res.provider, res.grant_endpoint, res.token.unwrap(), res.actions).await {
-            Ok(_) => (),
-            Err(e) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+        let grant_endpoint = res.grant_endpoint.replace("/access", "");
+        match manager.save_mate(res.provider, grant_endpoint, res.token.unwrap(), res.actions).await {
+            Ok(a) => (StatusCode::CREATED, Json(a.json::<Value>().await.unwrap())).into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, format!("mate not saved: {}", e.to_string())).into_response(),
         }
-
-        StatusCode::OK.into_response()
-        // TODO VISTA CARLOS
     }
 
-    async fn get_token(State(manager): State<Arc<Mutex<Manager<T>>>>, Path(id): Path<String>,) -> impl IntoResponse {
+    async fn get_token(State(manager): State<Arc<Mutex<Manager<T>>>>, Path(id): Path<String>) -> impl IntoResponse {
         let log = format!("GET /callback/manual/{}", id);
         info!(log);
 
@@ -317,7 +315,7 @@ where
             Err(e) => return StatusCode::BAD_REQUEST.into_response(),
         };
 
-         match token {
+        match token {
             Some(token) => token.into_response(),
             None => StatusCode::BAD_REQUEST.into_response(),
         }

@@ -19,11 +19,11 @@
 
 use crate::provider::core::rainbow_entities::rainbow_entities_types::{
     EditAgreementRequest, EditContractNegotiationMessageRequest, EditContractNegotiationOfferRequest,
-    EditContractNegotiationRequest, EditParticipantRequest, NewAgreementRequest, NewContractNegotiationMessageRequest,
-    NewContractNegotiationOfferRequest, NewContractNegotiationRequest, NewParticipantRequest,
+    EditContractNegotiationRequest, NewAgreementRequest, NewContractNegotiationMessageRequest,
+    NewContractNegotiationOfferRequest, NewContractNegotiationRequest,
 };
 use axum::async_trait;
-use rainbow_db::contracts_provider::entities::{agreement, cn_message, cn_offer, cn_process, participant};
+use rainbow_db::contracts_provider::entities::{agreement, cn_message, cn_offer, cn_process};
 use urn::Urn;
 
 pub mod rainbow_entities;
@@ -103,17 +103,4 @@ pub trait RainbowEntitiesContractNegotiationProviderTrait: Send + Sync {
         input: EditAgreementRequest,
     ) -> anyhow::Result<agreement::Model>;
     async fn delete_agreement(&self, process_id: Urn, message_id: Urn, agreement_id: Urn) -> anyhow::Result<()>;
-    async fn get_participants(&self) -> anyhow::Result<Vec<participant::Model>>;
-    async fn get_participant_by_id(&self, participant_id: Urn) -> anyhow::Result<participant::Model>;
-    async fn get_provider_participant(&self) -> anyhow::Result<participant::Model>;
-
-    async fn get_participant_agreements(&self, participant_id: Urn) -> anyhow::Result<Vec<agreement::Model>>;
-    async fn post_participant(&self, input: NewParticipantRequest) -> anyhow::Result<participant::Model>;
-    async fn post_provider_participant(&self, input: NewParticipantRequest) -> anyhow::Result<participant::Model>;
-    async fn put_participant(
-        &self,
-        participant_id: Urn,
-        input: EditParticipantRequest,
-    ) -> anyhow::Result<participant::Model>;
-    async fn delete_participant(&self, participant_id: Urn) -> anyhow::Result<()>;
 }

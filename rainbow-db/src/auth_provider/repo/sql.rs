@@ -19,12 +19,11 @@
 
 use crate::auth_provider::entities::auth;
 use crate::auth_provider::entities::auth_interaction;
-use crate::auth_provider::entities::auth_interaction::Model;
 use crate::auth_provider::entities::auth_verification;
 use crate::auth_provider::repo::{AuthProviderRepoFactory, AuthProviderRepoTrait};
 use anyhow::bail;
 use axum::async_trait;
-use base64::engine::general_purpose::{STANDARD, URL_SAFE_NO_PAD};
+use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
 use chrono;
 use rainbow_common::auth::gnap::grant_request::Interact4GR;
@@ -278,7 +277,7 @@ impl AuthProviderRepoTrait for AuthProviderRepoForSql {
         }
     }
 
-    async fn save_token(&self, id: String, token: String) -> anyhow::Result<auth::Model> {
+    async fn save_token(&self, id: String, base_url: String, token: String) -> anyhow::Result<auth::Model> {
         let auth = auth::Entity::find_by_id(&id).one(&self.db_connection).await;
 
         let mut auth_entry = match auth {
@@ -298,14 +297,14 @@ impl AuthProviderRepoTrait for AuthProviderRepoForSql {
         }
     }
 
-    async fn get_auth_by_interact_ref(&self, interact_ref: String) -> anyhow::Result<String> {
+    async fn get_auth_by_interact_ref(&self, interact_ref: String) -> anyhow::Result<auth_interaction::Model> {
         let auth = auth_interaction::Entity::find()
             .filter(auth_interaction::Column::InteractRef.eq(interact_ref.clone()))
             .one(&self.db_connection)
             .await;
 
         match auth {
-            Ok(Some(auth)) => Ok(auth.id),
+            Ok(Some(auth)) => Ok(auth),
             Ok(None) => bail!(
                 "No verification from authentication with interact_ref {}",
                 interact_ref

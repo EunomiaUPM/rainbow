@@ -44,6 +44,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use tracing::field::debug;
 use tracing::{debug, info};
+use url::Url;
 use urlencoding::{decode, encode};
 
 #[derive(Clone)]
@@ -449,13 +450,14 @@ where
         Ok(())
     }
 
-    async fn continue_req(&self, interact_ref: String) -> anyhow::Result<Value> {
-        let id = match self.auth_repo.get_auth_by_interact_ref(interact_ref).await {
-            Ok(string) => string,
+    async fn continue_req(&self, interact_ref: String) -> anyhow::Result<(Value, String)> {
+        let auth_interact = match self.auth_repo.get_auth_by_interact_ref(interact_ref).await {
+            Ok(auth_interact) => auth_interact,
             Err(e) => bail!("No interact reference expected"),
         };
 
-        let model = match self.auth_repo.get_auth_by_id(id.clone()).await {
+        let auth_interact_id = auth_interact.id;
+        let model = match self.auth_repo.get_auth_by_id(auth_interact_id.clone()).await {
             Ok(model) => model,
             Err(e) => {
                 bail!("Not expected")
@@ -467,30 +469,46 @@ where
         // }
 
         let token: String = create_opaque_token();
+        let base_url = auth_interact.uri.unwrap_or("".to_string());
+        let base_url = match Url::parse(base_url.as_str()) {
+            Ok(parsed_url) => {
+                format!(
+                    "{}://{}:{}",
+                    parsed_url.scheme(),
+                    parsed_url.host_str().unwrap_or_default(),
+                    parsed_url.port().unwrap_or_default()
+                )
+            }
+            Err(e) => bail!("not able to parse url: {}", e.to_string()),
+        };
 
-        let model = match self.auth_repo.save_token(id, token.clone()).await {
+        let model = match self.auth_repo.save_token(auth_interact_id, base_url.clone(), token.clone()).await {
             Ok(model) => model,
             Err(e) => {
                 bail!("Unable to create token")
             }
         };
 
-        Ok(serde_json::to_value(&model)?)
+        Ok((serde_json::to_value(&model)?, base_url))
     }
 
     async fn save_mate(
         &self,
         id: String,
         token: String,
+        base_url: String,
         token_actions: String,
     ) -> anyhow::Result<()> {
-        let url = format!("{}/mates", self.config.get_ssi_auth_host_url().unwrap()); // TODO fix 4 microservices
+        let url = format!(
+            "{}/api/v1/mates",
+            self.config.get_ssi_auth_host_url().unwrap()
+        ); // TODO fix 4 microservices
 
         let mut headers = HeaderMap::new();
         headers.insert(CONTENT_TYPE, "application/json".parse()?);
         headers.insert(ACCEPT, "application/json".parse()?);
 
-        let body = Mates::default4provider(id, token, token_actions);
+        let body = Mates::default4provider(id, base_url, token, token_actions);
 
         let res = self.client.post(url).headers(headers).json(&body).send().await;
 
