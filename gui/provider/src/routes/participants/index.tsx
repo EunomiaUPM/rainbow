@@ -17,10 +17,10 @@ function RouteComponent() {
             <TableHeader>
                 <TableRow>
                     <TableHead>Participant ID</TableHead>
-                    <TableHead>Identity Token</TableHead>
+                    <TableHead>Participant Name</TableHead>
                     <TableHead>Participant Type</TableHead>
                     <TableHead>Base URL</TableHead>
-                    <TableHead>Extra Info</TableHead>
+                    <TableHead>Identity Token</TableHead>
                     <TableHead>Link</TableHead>
                 </TableRow>
             </TableHeader>
@@ -35,16 +35,16 @@ function RouteComponent() {
                             {participant.participant_id.slice(0, 20) + "..."}
                         </TableCell>
                         <TableCell>
-                            {participant.identity_token?.slice(0, 20) + "..."}
+                            {participant.participant_slug}
                         </TableCell>
                         <TableCell>
-                            {participant._type}
+                            {participant.participant_type}
                         </TableCell>
                         <TableCell>
                             {participant.base_url}
                         </TableCell>
                         <TableCell>
-                            {JSON.stringify(participant.extra_fields)}
+                            {participant.token}
                         </TableCell>
                         <TableCell>
                             <Link

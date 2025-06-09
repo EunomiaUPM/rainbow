@@ -93,7 +93,6 @@ impl RainbowProviderGateway {
         req: Request<Body>,
     ) -> impl IntoResponse {
         let microservice_base_url = match service_prefix.as_str() {
-            "dataplane" => config.get_transfer_host_url(),
             "subscriptions" => config.get_catalog_host_url(),
             "notifications" => config.get_catalog_host_url(),
             "catalogs" => config.get_catalog_host_url(),
@@ -101,14 +100,13 @@ impl RainbowProviderGateway {
             "data-services" => config.get_catalog_host_url(),
             "distributions" => config.get_catalog_host_url(),
             "contract-negotiation" => config.get_contract_negotiation_host_url(),
-            "participants" => config.get_contract_negotiation_host_url(),
+            "mates" => config.get_contract_negotiation_host_url(),
             "negotiations" => config.get_contract_negotiation_host_url(),
             "transfers" => config.get_transfer_host_url(),
             "auth" => config.get_auth_host_url(),
             "ssi-auth" => config.get_ssi_auth_host_url(),
             _ => return (StatusCode::NOT_FOUND, "prefix not found").into_response(),
         };
-
         let microservice_base_url = match microservice_base_url {
             Some(microservice_url) => microservice_url,
             None => return (StatusCode::INTERNAL_SERVER_ERROR, "prefix not configured").into_response(),

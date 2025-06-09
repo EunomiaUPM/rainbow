@@ -31,21 +31,24 @@ function RouteComponent() {
                         <TableCell>{participant.participant_id}</TableCell>
                     </TableRow>
                     <TableRow>
-                        <TableCell>Identity Token</TableCell>
-                        <TableCell>{participant.identity_token}</TableCell>
-                    </TableRow>
+                        <TableCell>Participant Name</TableCell>
+                        <TableCell>
+                            {participant.participant_slug}
+                        </TableCell> </TableRow>
                     <TableRow>
                         <TableCell>Participant Type</TableCell>
-                        <TableCell>{participant._type}</TableCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableCell>Base UR</TableCell>
-                        <TableCell>{participant.base_url}</TableCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableCell>Extra Info</TableCell>
                         <TableCell>
-                            {JSON.stringify(participant.extra_fields)}
+                            {participant.participant_type}
+                        </TableCell> </TableRow>
+                    <TableRow>
+                        <TableCell>Base URL</TableCell>
+                        <TableCell>
+                            {participant.base_url}
+                        </TableCell> </TableRow>
+                    <TableRow>
+                        <TableCell>Identity Token</TableCell>
+                        <TableCell>
+                            {participant.token}
                         </TableCell>
                     </TableRow>
                 </TableBody>

@@ -160,6 +160,10 @@ where
                 get(Self::handle_get_agreement_by_agreement_id),
             )
             .route(
+                "/api/v1/contract-negotiation/agreements/participant/:participant_id",
+                get(Self::handle_get_agreements_by_participant_id),
+            )
+            .route(
                 "/api/v1/contract-negotiation/processes/:process_id/messages/:message_id/agreements",
                 post(Self::handle_post_agreement),
             )
@@ -741,6 +745,27 @@ where
         };
         match service.get_agreement_by_agreement_id(agreement_id).await {
             Ok(agreement) => (StatusCode::OK, Json(agreement)).into_response(),
+            Err(err) => match err.downcast::<CnErrorProvider>() {
+                Ok(e) => e.into_response(),
+                Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+            },
+        }
+    }
+
+    async fn handle_get_agreements_by_participant_id(
+        State(service): State<Arc<T>>,
+        Path(participant_id): Path<String>,
+    ) -> impl IntoResponse {
+        info!(
+            "GET /api/v1/contract-negotiation/agreements/participant/{}",
+            participant_id
+        );
+        let participant_id = match get_urn_from_string(&participant_id) {
+            Ok(participant_id) => participant_id,
+            Err(err) => return CnErrorProvider::UrnUuidSchema(err.to_string()).into_response(),
+        };
+        match service.get_agreements_by_participant_id(participant_id).await {
+            Ok(agreements) => (StatusCode::OK, Json(agreements)).into_response(),
             Err(err) => match err.downcast::<CnErrorProvider>() {
                 Ok(e) => e.into_response(),
                 Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),

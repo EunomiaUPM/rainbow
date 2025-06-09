@@ -192,11 +192,15 @@ declare global {
     }
 
     export interface Participant {
-        participant_id: UUID
-        identity_token: string
-        _type: string
+        participant_id: string
+        participant_slug: string
+        participant_type: string
         base_url: string
-        extra_fields: any
+        token: any
+        token_actions: any
+        saved_at: string
+        last_interaction: string
+        is_me: boolean
     }
 
     export interface Subscription {

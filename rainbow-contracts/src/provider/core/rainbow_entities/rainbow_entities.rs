@@ -535,6 +535,15 @@ where
         Ok(agreement)
     }
 
+    async fn get_agreements_by_participant_id(&self, participant_id: Urn) -> anyhow::Result<Vec<rainbow_db::contracts_provider::entities::agreement::Model>> {
+        let agreements = self
+            .repo
+            .get_agreements_by_participant_id(participant_id.clone())
+            .await
+            .map_err(CnErrorProvider::DbErr)?;
+        Ok(agreements)
+    }
+
     async fn post_agreement(
         &self,
         process_id: Urn,

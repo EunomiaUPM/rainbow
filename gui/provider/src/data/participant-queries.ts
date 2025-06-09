@@ -6,7 +6,7 @@ import {queryOptions, useSuspenseQuery} from "@tanstack/react-query";
  * */
 export const getParticipants = async () => {
     const catalogs: Participant[] = await (
-        await fetch(GATEWAY_API + "/participants")
+        await fetch(GATEWAY_API + "/mates")
     ).json();
     return catalogs;
 }
@@ -27,7 +27,7 @@ export const useGetParticipants = () => {
  * */
 export const getParticipantById = async (participantId: UUID) => {
     const catalogs: Participant = await (
-        await fetch(GATEWAY_API + `/participants/${participantId}`)
+        await fetch(GATEWAY_API + `/mates/${participantId}`)
     ).json();
     return catalogs;
 }
@@ -45,11 +45,11 @@ export const useGetParticipantById = (participantId: UUID) => {
 
 
 /**
- *  GET /participants/{participantId}/agreements
+ *  GET /contract-negotiation/agreements/participant/{participantId}
  * */
 export const getAgreementsByParticipantId = async (participantId: UUID) => {
     const catalogs: Agreement[] = await (
-        await fetch(GATEWAY_API + `/participants/${participantId}/agreements`)
+        await fetch(GATEWAY_API + `/contract-negotiation/agreements/participant/${participantId}`)
     ).json();
     return catalogs;
 }
