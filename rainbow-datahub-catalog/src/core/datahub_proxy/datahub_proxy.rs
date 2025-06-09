@@ -40,7 +40,7 @@ impl DatahubProxyTrait for DatahubProxyService {
         // let graphql_url = format!("{}//api/graphql", base_url);
         let graphql_url = "http://localhost:8086/api/graphql";
         let query = r#"{
-            search(input: { type: DOMAIN, query: "*", start: 0, count: 50 }) {
+            search(input: { type: DOMAIN, query: "*", start: 0, count: 1000 }) {
                 searchResults {
                     entity {
                         urn
@@ -94,7 +94,7 @@ impl DatahubProxyTrait for DatahubProxyService {
                 ], 
                 types: [DATASET], 
                 start: 0, 
-                count: 50 
+                count: 1000 
             }}) {{
                 searchResults {{
                     entity {{
