@@ -23,7 +23,7 @@ use sea_orm_migration::prelude::*;
 pub struct Migration;
 impl MigrationName for Migration {
     fn name(&self) -> &str {
-        "m20241111_000002_datahub_dataset"
+        "m20250606_000001_datahub_datasets"
     }
 }
 

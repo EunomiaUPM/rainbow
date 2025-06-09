@@ -17,7 +17,7 @@
  *
  */
 
-use super::entities::{policy_relations, policy_templates};
+use super::entities::{policy_relations, policy_templates, datahub_datasets};
 use crate::transfer_provider::repo::{TransferMessagesRepo, TransferProcessRepo};
 use anyhow::Error;
 use axum::async_trait;
@@ -65,6 +65,16 @@ pub trait PolicyRelationsRepo {
 
 }
 
+pub struct NewDataHubDatasetModel {
+    pub urn: String,
+    pub name: String,
+}
+
+#[async_trait]
+pub trait DatahubDatasetsRepo {
+    async fn create_datahub_dataset(&self, new_dataset: NewDataHubDatasetModel) -> anyhow::Result<datahub_datasets::Model, DatahubDatasetsRepoErrors>;
+}
+
 #[derive(Error, Debug)]
 pub enum PolicyTemplatesRepoErrors {
     #[error("PolicyTemplate not found")]
@@ -84,4 +94,10 @@ pub enum PolicyTemplatesRepoErrors {
     ErrorCreatingPolicyRelation(Error),
     #[error("Error deleting policy relation. {0}")]
     ErrorDeletingPolicyRelation(Error),
+}
+
+#[derive(Error, Debug)]
+pub enum DatahubDatasetsRepoErrors {
+    #[error("Error creating dataset. {0}")]
+    ErrorCreatingDataset(Error),
 }

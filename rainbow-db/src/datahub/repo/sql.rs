@@ -16,8 +16,8 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::datahub::entities::{policy_relations, policy_templates};
-use crate::datahub::repo::{DatahubConnectorRepoFactory, NewPolicyRelationModel, NewPolicyTemplateModel, PolicyRelationsRepo, PolicyTemplatesRepo, PolicyTemplatesRepoErrors};
+use crate::datahub::entities::{policy_relations, policy_templates, datahub_datasets};
+use crate::datahub::repo::{DatahubConnectorRepoFactory, NewPolicyRelationModel, NewPolicyTemplateModel, PolicyRelationsRepo, PolicyTemplatesRepo, PolicyTemplatesRepoErrors, NewDataHubDatasetModel, DatahubDatasetsRepo, DatahubDatasetsRepoErrors};
 use axum::async_trait;
 use sea_orm::{DatabaseConnection, EntityTrait};
 use sea_orm::QueryFilter;
@@ -146,28 +146,47 @@ impl PolicyRelationsRepo for DatahubConnectorRepoForSql {
     }
 
     async fn create_policy_relation(&self, new_policy_relation: NewPolicyRelationModel) -> anyhow::Result<policy_relations::Model, PolicyTemplatesRepoErrors> {
-        let id = format!("relation_{}", chrono::Utc::now().timestamp());
+        todo!()
+        // let id = format!("relation_{}", chrono::Utc::now().timestamp());
 
-        let model = policy_relations::ActiveModel {
-        id: ActiveValue::Set(id),
-        dataset_id: ActiveValue::Set(new_policy_relation.dataset_id),
-        domain_id: ActiveValue::Set(new_policy_relation.domain_id),
-        policy_template_id: ActiveValue::Set(new_policy_relation.policy_template_id),
-        extra_content: ActiveValue::Set(new_policy_relation.extra_content),
-        created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
-        };
+        // let model = policy_relations::ActiveModel {
+        // id: ActiveValue::Set(id),
+        // dataset_id: ActiveValue::Set(new_policy_relation.dataset_id),
+        // domain_id: ActiveValue::Set(new_policy_relation.domain_id),
+        // policy_template_id: ActiveValue::Set(new_policy_relation.policy_template_id),
+        // extra_content: ActiveValue::Set(new_policy_relation.extra_content),
+        // created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
+        // };
 
-        match policy_relations::Entity::insert(model)
-            .exec_with_returning(&self.db_connection)
-            .await
-        {
-            Ok(relation) => Ok(relation),
-            Err(err) => Err(PolicyTemplatesRepoErrors::ErrorCreatingPolicyRelation(err.into())),
-        }
+        // match policy_relations::Entity::insert(model)
+        //     .exec_with_returning(&self.db_connection)
+        //     .await
+        // {
+        //     Ok(relation) => Ok(relation),
+        //     Err(err) => Err(PolicyTemplatesRepoErrors::ErrorCreatingPolicyRelation(err.into())),
+        // }
     }
 
     async fn delete_policy_relation(&self, template_id: Urn) -> anyhow::Result<(), PolicyTemplatesRepoErrors> {
         todo!()
+    }
+}
+
+#[async_trait]
+impl DatahubDatasetsRepo for DatahubConnectorRepoForSql {
+    async fn create_datahub_dataset(&self, new_dataset: NewDataHubDatasetModel) -> anyhow::Result<datahub_datasets::Model, DatahubDatasetsRepoErrors> {
+        let model = datahub_datasets::ActiveModel {
+            urn: ActiveValue::Set(new_dataset.urn),
+            name: ActiveValue::Set(new_dataset.name),
+        };
+
+        match datahub_datasets::Entity::insert(model)
+            .exec_with_returning(&self.db_connection)
+            .await
+        {
+            Ok(dataset) => Ok(dataset),
+            Err(err) => Err(DatahubDatasetsRepoErrors::ErrorCreatingDataset(err.into())),
+        }
     }
 }
 

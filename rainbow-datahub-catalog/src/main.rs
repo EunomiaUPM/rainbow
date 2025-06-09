@@ -1,99 +1,3 @@
-// use rainbow_common::config::provider_config::ApplicationProviderConfig;
-// use crate::core::datahub_proxy::datahub_proxy::DatahubProxyService;
-// use crate::core::datahub_proxy::DatahubProxyTrait;
-// use tokio;
-
-// mod core;
-
-// async fn print_domains(datahub_service: &DatahubProxyService) -> anyhow::Result<()> {
-//     println!("Obteniendo dominios de DataHub...");
-//     let domains = datahub_service.get_datahub_domains().await?;
-    
-//     println!("\nDominios encontrados:");
-//     println!("====================");
-//     for domain in domains {
-//         println!("URN: {}", domain.urn);
-//         println!("Nombre: {}", domain.properties.name);
-//         println!("Descripción: {}", domain.properties.description.unwrap_or_default());
-//         println!("--------------------");
-//     }
-//     Ok(())
-// }
-
-// async fn print_datasets(datahub_service: &DatahubProxyService, domain_urn: &str, domain_name: &str) -> anyhow::Result<()> {
-//     println!("\nObteniendo datasets para el dominio {}...", domain_name);
-//     match datahub_service.get_datahub_datasets_by_domain_id(domain_urn.to_string()).await {
-//         Ok(datasets) => {
-//             println!("\nDatasets encontrados:");
-//             println!("====================");
-//             for dataset in datasets {
-//                 println!("URN: {}", dataset.urn);
-//                 println!("Nombre: {}", dataset.name);
-//                 // println!("Plataforma: {}", dataset.platform.name);
-//                 println!("--------------------");
-//             }
-//         },
-//         Err(e) => println!("Error al obtener los datasets: {}", e),
-//     }
-//     Ok(())
-// }
-
-// async fn print_dataset_metadata(datahub_service: &DatahubProxyService, dataset_urn: &str) -> anyhow::Result<()> {
-//     println!("\nObteniendo metadatos para el dataset {}...", dataset_urn);
-//     match datahub_service.get_datahub_dataset_by_id(dataset_urn.to_string()).await {
-//         Ok(dataset) => {
-//             println!("URN: {}", dataset.urn);
-//             println!("Nombre: {}", dataset.name);
-//             // println!("Plataforma: {}", dataset.platform.name);
-//             println!("Descripción: {}", dataset.description.unwrap_or_default());
-//             println!("Tags: {}", dataset.tag_names.join(", "));
-//             println!("Metadatos:");
-//             for (key, value) in &dataset.custom_properties {
-//                 println!("  {}: {}", key, value);
-//             }
-//             println!("--------------------");
-//             // println!("Política (campo 'policy'):");
-//             // // Buscar el campo 'policy' en custom_properties
-//             // if let Some(policy_value) = dataset.custom_properties.iter()
-//             //     .find_map(|(key, value)| if key == "policy" { Some(value) } else { None }) {
-//             //     println!("{}", policy_value);
-//             // } else {
-//             //     println!("No se encontró el campo 'policy'.");
-//             // }
-//             // println!("--------------------");
-//         },
-//         Err(e) => println!("Error al obtener metadatos del dataset: {}", e),
-//     }
-//     Ok(())
-// }
-
-
-// fn main() {
-//     let config = ApplicationProviderConfig::default();
-//     let datahub_service = DatahubProxyService::new(config);
-    
-//     let runtime = tokio::runtime::Runtime::new().unwrap();
-//     runtime.block_on(async {
-//         // Print domains
-//         if let Err(e) = print_domains(&datahub_service).await {
-//             println!("Error printing domains: {}", e);
-//         }
-        
-//         // Print datasets for each domain
-//         if let Ok(domains) = datahub_service.get_datahub_domains().await {
-//             for domain in domains {
-//                 if let Err(e) = print_datasets(&datahub_service, &domain.urn, &domain.properties.name).await {
-//                     println!("Error printing datasets for domain {}: {}", domain.properties.name, e);
-//                 }
-//             }
-//         }
-
-//         // Llamar a la función para imprimir metadatos del dataset específico
-//         if let Err(e) = print_dataset_metadata(&datahub_service, "urn:li:dataset:(urn:li:dataPlatform:airflow,ASPIRIN_events,PROD)").await {
-//             println!("Error al imprimir metadatos del dataset ASPIRIN_events: {}", e);
-//         }
-//     });
-// }
 
 use axum::{
     Router,
@@ -102,11 +6,12 @@ use rainbow_common::config::provider_config::ApplicationProviderConfig;
 use std::sync::Arc;
 use tokio;
 use crate::core::datahub_proxy::datahub_proxy::DatahubProxyService;
-use crate::http::datahub_proxy::datahub_proxy::DataHubProxyRouter;  // Importamos el router
+use crate::http::datahub_proxy::datahub_proxy::DataHubProxyRouter;
 use crate::http::rainbow_entities::policy_relations_router::PolicyTemplatesRouter; 
 use rainbow_db::datahub::repo::sql::DatahubConnectorRepoForSql;  // Y esta
-use sea_orm::DatabaseConnection;
-use sea_orm::Database;
+use rainbow_db::datahub::repo::{NewDataHubDatasetModel, DatahubDatasetsRepo};
+use sea_orm::{DatabaseConnection, Database, EntityTrait};
+
 mod core;
 mod http;
 
@@ -116,18 +21,41 @@ async fn main() {
     let datahub_service = Arc::new(DatahubProxyService::new(config));
     let db_connection = Database::connect("postgres://ds_transfer_provider:ds_transfer_provider@127.0.0.1:1300/ds_transfer_provider").await.unwrap();
     
-    let policy_templates_service = Arc::new(DatahubConnectorRepoForSql::new(db_connection));
+    let policy_templates_service = Arc::new(DatahubConnectorRepoForSql::new(db_connection.clone()));
 
+    // Crear un nuevo dataset
+    let new_dataset = NewDataHubDatasetModel {
+        urn: "urn:li:dataset:(urn:li:dataPlatform:airflow,ACETAMINOPHEN_events,PROD)".to_string(),
+        name: "ACETAMINOPHEN_events".to_string(),
+    };
 
+    // Insertar en la base de datos
+    let repo = DatahubConnectorRepoForSql::new(db_connection.clone());
+    
+    // Primero verificamos si el dataset ya existe
+    let existing_dataset = rainbow_db::datahub::entities::datahub_datasets::Entity::find_by_id(&new_dataset.urn)
+        .one(&db_connection)
+        .await
+        .unwrap();
+
+    match existing_dataset {
+        Some(_) => println!("El dataset ya existe en la base de datos"),
+        None => {
+            match repo.create_datahub_dataset(new_dataset).await {
+                Ok(dataset) => println!("Dataset creado: {:?}", dataset),
+                Err(e) => println!("Error al crear el dataset: {:?}", e),
+            }
+        }
+    }
 
     // Creamos el router de datahub_proxy
     let datahub_router = DataHubProxyRouter::new(datahub_service.clone());
-    let policy_templates_router = PolicyTemplatesRouter::new(policy_templates_service);  // Creamos el router
+    let policy_templates_router = PolicyTemplatesRouter::new(policy_templates_service);
 
     // Montamos el router en la aplicación principal
     let app = Router::new()
         .merge(datahub_router.router())
-        .merge(policy_templates_router.router());  // Añadimos el nuevo router
+        .merge(policy_templates_router.router());
 
     println!("🚀 Servidor corriendo en http://localhost:3000");
     

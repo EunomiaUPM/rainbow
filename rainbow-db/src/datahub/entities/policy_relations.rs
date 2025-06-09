@@ -18,14 +18,14 @@
  */
 
 use sea_orm::entity::prelude::*;
+use urn::Urn;
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, serde::Serialize)]
 #[sea_orm(table_name = "policy_relations")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: String,
     pub dataset_id: String,
-    pub domain_id: Option<String>,
     pub policy_template_id: String,
     pub extra_content: Option<serde_json::Value>,
     pub created_at: chrono::NaiveDateTime,
@@ -33,6 +33,15 @@ pub struct Model {
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
+    // Relación con el dataset
+    #[sea_orm(
+        belongs_to = "super::datahub_datasets::Entity",
+        from = "Column::DatasetId",
+        to = "super::datahub_datasets::Column::Urn"
+    )]
+    Dataset,
+
+    // Relación con el template
     #[sea_orm(
         belongs_to = "super::policy_templates::Entity",
         from = "Column::PolicyTemplateId",
@@ -41,8 +50,12 @@ pub enum Relation {
     PolicyTemplate,
 }
 
+impl Related<super::datahub_datasets::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Dataset.def()
+    }
+}
 
-// Corrected Related implementation for PolicyTemplates
 impl Related<super::policy_templates::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::PolicyTemplate.def()
