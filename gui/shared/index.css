@@ -96,7 +96,10 @@ body {
     }
 
     a {
-        @apply text-foreground underline;
+        @apply text-blue-200 underline;
     }
 }
 
+#root {
+    @apply text-slate-300;
+}
