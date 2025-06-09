@@ -18,7 +18,6 @@
  */
 
 use crate::contracts_provider::migrations::m20250211_000002_cn_messages::CNMessages;
-use crate::contracts_provider::migrations::m20250211_000005_participants::Participants;
 use sea_orm_migration::prelude::*;
 
 pub struct Migration;
@@ -48,20 +47,6 @@ impl MigrationTrait for Migration {
                             .from(Agreements::Table, Agreements::CnMessageId)
                             .to(CNMessages::Table, CNMessages::CnMessageId)
                             .on_delete(ForeignKeyAction::Cascade),
-                    )
-                    .foreign_key(
-                        ForeignKey::create()
-                            .name("fk_agreements_participants_c")
-                            .from(Agreements::Table, Agreements::ConsumerParticipantId)
-                            .to(Participants::Table, Participants::ParticipantId)
-                            .on_delete(ForeignKeyAction::NoAction),
-                    )
-                    .foreign_key(
-                        ForeignKey::create()
-                            .name("fk_agreements_participants_p")
-                            .from(Agreements::Table, Agreements::ProviderParticipantId)
-                            .to(Participants::Table, Participants::ParticipantId)
-                            .on_delete(ForeignKeyAction::NoAction),
                     )
                     .to_owned(),
             )

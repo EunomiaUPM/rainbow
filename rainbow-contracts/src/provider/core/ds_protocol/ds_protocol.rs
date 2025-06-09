@@ -17,6 +17,7 @@
  *
  */
 
+use crate::common::core::mates_facade::MatesFacadeTrait;
 use crate::common::schemas::validation::validate_payload_schema;
 use crate::common::schemas::{
     CONTRACT_AGREEMENT_MESSAGE_SCHEMA, CONTRACT_AGREEMENT_VERIFICATION_MESSAGE_SCHEMA,
@@ -46,7 +47,7 @@ use rainbow_db::contracts_provider::entities::cn_process;
 use rainbow_db::contracts_provider::repo::{
     AgreementRepo, ContractNegotiationMessageRepo, ContractNegotiationOfferRepo, ContractNegotiationProcessRepo,
     EditContractNegotiationProcess, NewContractNegotiationMessage, NewContractNegotiationOffer,
-    NewContractNegotiationProcess, Participant,
+    NewContractNegotiationProcess,
 };
 use rainbow_events::core::notification::notification_types::{
     RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory,
@@ -58,39 +59,40 @@ use std::sync::Arc;
 use tracing::debug;
 use urn::Urn;
 
-pub struct DSProtocolContractNegotiationProviderService<T, U, V>
+pub struct DSProtocolContractNegotiationProviderService<T, U, V, W>
 where
     T: ContractNegotiationProcessRepo
     + ContractNegotiationMessageRepo
     + ContractNegotiationOfferRepo
     + AgreementRepo
-    + Participant
     + Send
     + Sync
     + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
     V: CatalogOdrlFacadeTrait + Send + Sync,
+    W: MatesFacadeTrait + Send + Sync,
 {
     repo: Arc<T>,
     notification_service: Arc<U>,
     catalog_facade: Arc<V>,
+    mates_facade: Arc<W>,
 }
 
-impl<T, U, V> DSProtocolContractNegotiationProviderService<T, U, V>
+impl<T, U, V, W> DSProtocolContractNegotiationProviderService<T, U, V, W>
 where
     T: ContractNegotiationProcessRepo
     + ContractNegotiationMessageRepo
     + ContractNegotiationOfferRepo
     + AgreementRepo
-    + Participant
     + Send
     + Sync
     + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
     V: CatalogOdrlFacadeTrait + Send + Sync,
+    W: MatesFacadeTrait + Send + Sync,
 {
-    pub fn new(repo: Arc<T>, notification_service: Arc<U>, catalog_facade: Arc<V>) -> Self {
-        Self { repo, notification_service, catalog_facade }
+    pub fn new(repo: Arc<T>, notification_service: Arc<U>, catalog_facade: Arc<V>, mates_facade: Arc<W>) -> Self {
+        Self { repo, notification_service, catalog_facade, mates_facade }
     }
 
     ///
@@ -268,18 +270,18 @@ where
 }
 
 #[async_trait]
-impl<T, U, V> DSProtocolContractNegotiationProviderTrait for DSProtocolContractNegotiationProviderService<T, U, V>
+impl<T, U, V, W> DSProtocolContractNegotiationProviderTrait for DSProtocolContractNegotiationProviderService<T, U, V, W>
 where
     T: ContractNegotiationProcessRepo
     + ContractNegotiationMessageRepo
     + ContractNegotiationOfferRepo
     + AgreementRepo
-    + Participant
     + Send
     + Sync
     + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
     V: CatalogOdrlFacadeTrait + Send + Sync,
+    W: MatesFacadeTrait + Send + Sync,
 {
     async fn get_negotiation(&self, provider_pid: Urn) -> anyhow::Result<ContractAckMessage> {
         let cn_process = self

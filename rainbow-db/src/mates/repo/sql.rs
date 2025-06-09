@@ -17,20 +17,15 @@
  *
  */
 
-use crate::auth_consumer::entities::auth;
 use crate::mates::entities::mates;
 use crate::mates::entities::mates::Model;
 use crate::mates::repo::{MateRepoFactory, MateRepoTrait};
 use anyhow::{anyhow, bail};
 use axum::async_trait;
 use chrono;
-use rainbow_common::auth::gnap::grant_request::Interact4GR;
 use rainbow_common::mates::Mates;
 use sea_orm::sea_query::OnConflict;
-use sea_orm::sqlx::types::uuid;
-use sea_orm::{ActiveModelTrait, ActiveValue, DatabaseConnection, EntityTrait, IntoActiveModel, QuerySelect};
-use serde_json::Value;
-use url::Url;
+use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter, QuerySelect};
 
 #[derive(Clone)]
 pub struct MateRepoForSql {
@@ -80,15 +75,32 @@ impl MateRepoTrait for MateRepoForSql {
         }
     }
 
-    async fn create_mate(&self, mate: Mates) -> anyhow::Result<mates::Model> {
+    async fn get_mate_me(&self) -> anyhow::Result<Option<Model>> {
+        let mate = mates::Entity::find()
+            .filter(mates::Column::IsMe.eq(true))
+            .one(&self.db_connection)
+            .await
+            .map_err(|e| anyhow!("No able to save {}", e.to_string()))?;
+        Ok(mate)
+    }
+
+    async fn create_mate(&self, mate: Mates, is_me: bool) -> anyhow::Result<mates::Model> {
+        if is_me {
+            if let Some(mate_me) = self.get_mate_me().await? {
+                bail!("mate owner already exists: {:?}", mate_me)
+            }
+        }
+        
         let mate = mates::ActiveModel {
             participant_id: ActiveValue::Set(mate.participant_id),
+            participant_slug: ActiveValue::Set(mate.participant_slug),
             participant_type: ActiveValue::Set(mate.participant_type),
             base_url: ActiveValue::Set(mate.base_url),
             token: ActiveValue::Set(mate.token),
             token_actions: ActiveValue::Set(mate.token_actions),
             saved_at: ActiveValue::Set(mate.saved_at),
             last_interaction: ActiveValue::Set(mate.last_interaction),
+            is_me: ActiveValue::Set(is_me),
         };
 
         let mate = match mates::Entity::insert(mate)

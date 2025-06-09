@@ -1,0 +1,149 @@
+/*
+ *
+ *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
+use crate::common::core::mates_types::BootstrapMateRequest;
+use axum::extract::rejection::JsonRejection;
+use axum::extract::{Path, Query, State};
+use axum::http::{Method, Uri};
+use axum::response::IntoResponse;
+use axum::routing::{delete, get, post, put};
+use axum::{Json, Router};
+use rainbow_common::mates::Mates;
+use rainbow_db::mates::repo::{MateRepoFactory, MateRepoTrait};
+use reqwest::StatusCode;
+use serde::Deserialize;
+use serde_json::json;
+use serde_json::Value;
+use std::collections::HashMap;
+use std::sync::Arc;
+use tracing::info;
+
+pub struct RainbowMatesRouter<T>
+where
+    T: MateRepoTrait + Send + Sync + Clone + 'static,
+{
+    pub mate_repo: Arc<T>,
+}
+
+impl<T> RainbowMatesRouter<T>
+where
+    T: MateRepoTrait + Send + Sync + Clone + 'static,
+{
+    pub fn new(mate_repo: Arc<T>) -> Self {
+        Self { mate_repo }
+    }
+
+    pub fn router(self) -> Router {
+        Router::new()
+            .route("/api/v1/mates", get(Self::get_mates))
+            .route("/api/v1/mates", post(Self::new_mate))
+            .route("/api/v1/mates/me", get(Self::get_me_mate))
+            .route("/api/v1/mates/me", post(Self::bootstrap_mate))
+            .route("/api/v1/mates/:id", get(Self::get_singular_mate))
+            .route("/api/v1/mates/:id", put(Self::edit_mate))
+            .route("/api/v1/mates/:id", delete(Self::delete_mate))
+            .with_state(self.mate_repo)
+            .fallback(Self::fallback)
+    }
+
+    async fn get_mates(State(mate_repo): State<Arc<T>>) -> impl IntoResponse {
+        info!("GET /api/v1/mates");
+
+        match mate_repo.get_all_mates(None, None).await {
+            Ok(mates) => (StatusCode::OK, Json(mates)).into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        }
+    }
+
+    async fn new_mate(State(mate_repo): State<Arc<T>>, input: Result<Json<Mates>, JsonRejection>) -> impl IntoResponse {
+        info!("POST /api/v1/mates");
+
+        let input = match input {
+            Ok(input) => input.0,
+            Err(e) => return (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
+        };
+        match mate_repo.create_mate(input, false).await {
+            Ok(mates) => (StatusCode::OK, Json(mates)).into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        }
+    }
+
+    async fn bootstrap_mate(State(mate_repo): State<Arc<T>>, input: Result<Json<BootstrapMateRequest>, JsonRejection>) -> impl IntoResponse {
+        info!("POST /api/v1/mates/me");
+
+        let input = match input {
+            Ok(input) => input.0,
+            Err(e) => return (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
+        };
+        match mate_repo.create_mate(input.into(), true).await {
+            Ok(mates) => (StatusCode::OK, Json(mates)).into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        }
+    }
+
+    async fn get_singular_mate(State(mate_repo): State<Arc<T>>, Path(id): Path<String>) -> impl IntoResponse {
+        info!("GET /mates/{}", id);
+
+        match mate_repo.get_mate_by_id(id).await {
+            Ok(mates) => (StatusCode::OK, Json(mates)).into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        }
+    }
+
+    async fn get_me_mate(State(mate_repo): State<Arc<T>>) -> impl IntoResponse {
+        info!("GET /mates/me");
+
+        match mate_repo.get_mate_me().await {
+            Ok(mates) => (StatusCode::OK, Json(mates)).into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        }
+    }
+
+    async fn edit_mate(
+        State(mate_repo): State<Arc<T>>,
+        Path(id): Path<String>,
+        input: Result<Json<Mates>, JsonRejection>,
+    ) -> impl IntoResponse {
+        info!("PUT /mates/{}", id);
+
+        let input = match input {
+            Ok(input) => input.0,
+            Err(e) => return (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
+        };
+        match mate_repo.update_mate(input).await {
+            Ok(mates) => (StatusCode::OK, Json(mates)).into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        }
+    }
+
+    async fn delete_mate(State(mate_repo): State<Arc<T>>, Path(id): Path<String>) -> impl IntoResponse {
+        info!("DELETE /mates/{}", id);
+
+        match mate_repo.delete_mate(id).await {
+            Ok(_) => StatusCode::OK.into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        }
+    }
+
+    async fn fallback(method: Method, uri: Uri) -> (StatusCode, String) {
+        let log = format!("{} {}", method, uri);
+        info!("{}", log);
+        (StatusCode::NOT_FOUND, format!("No route for {uri}"))
+    }
+}

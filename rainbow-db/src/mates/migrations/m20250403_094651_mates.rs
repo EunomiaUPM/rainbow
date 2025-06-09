@@ -17,8 +17,6 @@
  *
  */
 
-use sea_orm::sea_query::extension::postgres::Type;
-use sea_orm::Iterable;
 use sea_orm_migration::prelude::*;
 
 pub struct Migration;
@@ -36,12 +34,14 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(Mates::Table)
                     .col(ColumnDef::new(Mates::ParticipantId).string().not_null().primary_key())
+                    .col(ColumnDef::new(Mates::ParticipantSlug).string().not_null())
                     .col(ColumnDef::new(Mates::ParticipantType).string().not_null())
                     .col(ColumnDef::new(Mates::BaseUrl).string())
                     .col(ColumnDef::new(Mates::Token).string())
                     .col(ColumnDef::new(Mates::TokenActions).string())
                     .col(ColumnDef::new(Mates::SavedAt).date_time().not_null())
                     .col(ColumnDef::new(Mates::LastInteraction).date_time().not_null())
+                    .col(ColumnDef::new(Mates::IsMe).boolean().not_null())
                     .to_owned(),
             )
             .await
@@ -56,10 +56,12 @@ impl MigrationTrait for Migration {
 pub enum Mates {
     Table,
     ParticipantId,
+    ParticipantSlug,
     ParticipantType,
     BaseUrl,
     Token,
     TokenActions,
     SavedAt,
     LastInteraction,
+    IsMe,
 }

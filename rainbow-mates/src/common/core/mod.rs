@@ -17,6 +17,6 @@
  *
  */
 
-fn main() {
-    println!("Hello, world!");
-}
+// TODO http and service decoupling
+
+pub mod mates_types;

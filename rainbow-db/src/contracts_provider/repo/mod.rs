@@ -21,7 +21,6 @@ use super::entities::agreement;
 use super::entities::cn_message;
 use super::entities::cn_offer;
 use super::entities::cn_process;
-use super::entities::participant;
 use anyhow::Error;
 use rainbow_common::config::ConfigRoles;
 use rainbow_common::protocol::contract::contract_odrl::OdrlAgreement;
@@ -38,7 +37,6 @@ ContractNegotiationProcessRepo
 + ContractNegotiationMessageRepo
 + ContractNegotiationOfferRepo
 + AgreementRepo
-+ Participant
 + Send
 + Sync
 + 'static
@@ -237,30 +235,6 @@ pub struct EditParticipant {
     pub extra_fields: Option<serde_json::Value>,
 }
 
-#[async_trait]
-pub trait Participant {
-    async fn get_all_participants(
-        &self,
-        limit: Option<u64>,
-        page: Option<u64>,
-    ) -> anyhow::Result<Vec<participant::Model>, CnErrors>;
-    async fn get_participant_by_p_id(
-        &self,
-        participant_id: Urn,
-    ) -> anyhow::Result<Option<participant::Model>, CnErrors>;
-    async fn get_provider_participant(
-        &self,
-    ) -> anyhow::Result<Option<participant::Model>, CnErrors>;
-    async fn put_participant(
-        &self,
-        participant_id: Urn,
-        edit_participant: EditParticipant,
-    ) -> anyhow::Result<participant::Model, CnErrors>;
-    async fn create_participant(&self, new_participant: NewParticipant)
-                                -> anyhow::Result<participant::Model, CnErrors>;
-    async fn delete_participant(&self, participant_id: Urn) -> anyhow::Result<(), CnErrors>;
-}
-
 #[derive(Error, Debug)]
 pub enum CnErrors {
     #[error("Contract Negotiation Process not found")]
@@ -271,8 +245,6 @@ pub enum CnErrors {
     CNOfferNotFound,
     #[error("Agreement not found")]
     AgreementNotFound,
-    #[error("Participant not found")]
-    ParticipantNotFound(String, Urn),
 
     #[error("Error fetching Contract Negotiation Process. {0}")]
     ErrorFetchingCNProcess(Error),
@@ -282,8 +254,6 @@ pub enum CnErrors {
     ErrorFetchingCNOffer(Error),
     #[error("Error fetching Agreement. {0}")]
     ErrorFetchingAgreement(Error),
-    #[error("Error fetching Participant. {0}")]
-    ErrorFetchingParticipant(Error),
 
     #[error("Error creating Contract Negotiation Process. {0}")]
     ErrorCreatingCNProcess(Error),
@@ -293,8 +263,6 @@ pub enum CnErrors {
     ErrorCreatingCNOffer(Error),
     #[error("Error creating Agreement. {0}")]
     ErrorCreatingAgreement(Error),
-    #[error("Error creating Participant. {0}")]
-    ErrorCreatingParticipant(Error),
 
     #[error("Error deleting Contract Negotiation Process. {0}")]
     ErrorDeletingCNProcess(Error),
@@ -304,8 +272,6 @@ pub enum CnErrors {
     ErrorDeletingCNOffer(Error),
     #[error("Error deleting Agreement. {0}")]
     ErrorDeletingAgreement(Error),
-    #[error("Error deleting Participant. {0}")]
-    ErrorDeletingParticipant(Error),
 
     #[error("Error updating Contract Negotiation Process. {0}")]
     ErrorUpdatingCNProcess(Error),
@@ -315,6 +281,4 @@ pub enum CnErrors {
     ErrorUpdatingCNOffer(Error),
     #[error("Error updating Agreement. {0}")]
     ErrorUpdatingAgreement(Error),
-    #[error("Error updating Participant. {0}")]
-    ErrorUpdatingParticipant(Error),
 }

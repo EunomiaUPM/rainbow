@@ -22,8 +22,8 @@ use axum::Router;
 use rainbow_auth::ssi_auth::consumer::setup::router::create_ssi_consumer_router;
 use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
 use rainbow_contracts::consumer::setup::application::create_contract_negotiation_consumer_router;
+use rainbow_mates::consumer::setup::application::create_mate_consumer_router;
 use rainbow_transfer::consumer::setup::application::create_transfer_consumer_router;
-use rainbow_mates::consumer::setup::router::create_mate_consumer_router;
 
 pub async fn create_core_consumer_router(config: &CoreApplicationConsumerConfig) -> Router {
     let app_config: ApplicationConsumerConfig = config.clone().into();

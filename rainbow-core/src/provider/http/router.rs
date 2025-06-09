@@ -22,8 +22,8 @@ use rainbow_auth::ssi_auth::provider::setup::router::create_ssi_provider_router;
 use rainbow_catalog::setup::application::create_catalog_router;
 use rainbow_common::config::provider_config::ApplicationProviderConfig;
 use rainbow_contracts::provider::setup::application::create_contract_negotiation_provider_router;
+use rainbow_mates::provider::setup::application::create_mate_consumer_router;
 use rainbow_transfer::provider::setup::application::create_transfer_provider_router;
-use rainbow_mates::provider::setup::router::create_mate_consumer_router;
 
 
 pub async fn create_core_provider_router(config: &CoreApplicationProviderConfig) -> Router {

@@ -73,8 +73,8 @@ pub trait AuthProviderRepoTrait {
 
     async fn update_verification_result(&self, id: String, result: bool) -> anyhow::Result<()>;
 
-    async fn save_token(&self, id: String, token: String) -> anyhow::Result<auth::Model>;
+    async fn save_token(&self, id: String, base_url: String, token: String) -> anyhow::Result<auth::Model>;
 
-    async fn get_auth_by_interact_ref(&self, interact_ref: String) -> anyhow::Result<String>;
+    async fn get_auth_by_interact_ref(&self, interact_ref: String) -> anyhow::Result<auth_interaction::Model>;
     async fn is_token_in_db(&self, token: String) -> anyhow::Result<bool>;
 }

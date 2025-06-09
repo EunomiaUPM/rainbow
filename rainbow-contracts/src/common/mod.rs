@@ -20,6 +20,7 @@
 use std::fmt::{Display, Formatter};
 
 pub mod schemas;
+pub mod core;
 
 pub enum CNControllerTypes {
     Process,

@@ -17,6 +17,7 @@
  *
  */
 
+use crate::common::core::mates_facade::MatesFacadeTrait;
 use crate::provider::core::catalog_odrl_facade::CatalogOdrlFacadeTrait;
 use crate::provider::core::ds_protocol::ds_protocol_errors::IdsaCNError;
 use crate::provider::core::ds_protocol_rpc::ds_protocol_rpc_errors::DSRPCContractNegotiationProviderErrors;
@@ -26,9 +27,10 @@ use crate::provider::core::ds_protocol_rpc::ds_protocol_rpc_types::{
 };
 use crate::provider::core::ds_protocol_rpc::DSRPCContractNegotiationProviderTrait;
 use crate::provider::core::rainbow_entities::rainbow_entities_errors::CnErrorProvider;
-use anyhow::bail;
+use anyhow::{anyhow, bail};
 use axum::async_trait;
 use rainbow_common::config::ConfigRoles;
+use rainbow_common::mates::Mates;
 use rainbow_common::protocol::contract::contract_ack::ContractAckMessage;
 use rainbow_common::protocol::contract::contract_agreement::ContractAgreementMessage;
 use rainbow_common::protocol::contract::contract_negotiation_event::{
@@ -42,7 +44,7 @@ use rainbow_db::contracts_provider::entities::cn_process;
 use rainbow_db::contracts_provider::repo::{
     AgreementRepo, ContractNegotiationMessageRepo, ContractNegotiationOfferRepo, ContractNegotiationProcessRepo,
     EditContractNegotiationProcess, NewAgreement, NewContractNegotiationMessage, NewContractNegotiationOffer,
-    NewContractNegotiationProcess, Participant,
+    NewContractNegotiationProcess,
 };
 use rainbow_events::core::notification::notification_types::{
     RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory,
@@ -56,55 +58,65 @@ use std::time::Duration;
 use tracing::debug;
 use urn::Urn;
 
-pub struct DSRPCContractNegotiationProviderService<T, U, V>
+pub struct DSRPCContractNegotiationProviderService<T, U, V, W>
 where
     T: ContractNegotiationProcessRepo
     + ContractNegotiationMessageRepo
     + ContractNegotiationOfferRepo
     + AgreementRepo
-    + Participant
     + Send
     + Sync
     + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
     V: CatalogOdrlFacadeTrait + Send + Sync,
+    W: MatesFacadeTrait + Send + Sync,
 {
     repo: Arc<T>,
     notification_service: Arc<U>,
     client: Client,
     catalog_facade: Arc<V>,
+    mates_facade: Arc<W>,
 }
 
-impl<T, U, V> DSRPCContractNegotiationProviderService<T, U, V>
+impl<T, U, V, W> DSRPCContractNegotiationProviderService<T, U, V, W>
 where
     T: ContractNegotiationProcessRepo
     + ContractNegotiationMessageRepo
     + ContractNegotiationOfferRepo
     + AgreementRepo
-    + Participant
     + Send
     + Sync
     + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
     V: CatalogOdrlFacadeTrait + Send + Sync,
+    W: MatesFacadeTrait + Send + Sync,
 {
-    pub fn new(repo: Arc<T>, notification_service: Arc<U>, catalog_facade: Arc<V>) -> Self {
+    pub fn new(repo: Arc<T>, notification_service: Arc<U>, catalog_facade: Arc<V>, mates_facade: Arc<W>) -> Self {
         let client =
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
-        Self { repo, notification_service, client, catalog_facade }
+        Self { repo, notification_service, client, catalog_facade, mates_facade }
     }
     async fn get_consumer_base_url(&self, consumer_participant_id: &Urn) -> anyhow::Result<String> {
-        let participant = self
-            .repo
-            .get_participant_by_p_id(consumer_participant_id.clone())
+        let mate = self
+            .mates_facade
+            .get_mate_by_id(consumer_participant_id.clone())
             .await
-            .map_err(CnErrorProvider::DbErr)?
-            .ok_or_else(|| CnErrorProvider::NotFound {
-                id: consumer_participant_id.clone(),
-                entity: "Participant".to_string(),
-            })?;
-        Ok(participant.base_url)
+            .map_err(|e| anyhow!("Error parsing mate: {}", e.to_string()))?;
+        match mate.base_url {
+            Some(base_url) => Ok(base_url),
+            None => bail!("Mate with no base_url".to_string())
+        }
     }
+
+    async fn get_provider(&self) -> anyhow::Result<Mates> {
+        let mate = self
+            .mates_facade
+            .get_me_mate()
+            .await
+            .map_err(|e| anyhow!("Error parsing mate: {}", e.to_string()))?;
+        Ok(mate)
+    }
+
     async fn validate_and_get_correlated_provider_process(
         &self,
         consumer_pid_urn: &Urn,
@@ -192,18 +204,18 @@ where
 }
 
 #[async_trait]
-impl<T, U, V> DSRPCContractNegotiationProviderTrait for DSRPCContractNegotiationProviderService<T, U, V>
+impl<T, U, V, W> DSRPCContractNegotiationProviderTrait for DSRPCContractNegotiationProviderService<T, U, V, W>
 where
     T: ContractNegotiationProcessRepo
     + ContractNegotiationMessageRepo
     + ContractNegotiationOfferRepo
     + AgreementRepo
-    + Participant
     + Send
     + Sync
     + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
     V: CatalogOdrlFacadeTrait + Send + Sync,
+    W: MatesFacadeTrait + Send + Sync,
 {
     async fn setup_offer(&self, input: SetupOfferRequest) -> anyhow::Result<SetupOfferResponse> {
         let SetupOfferRequest { odrl_offer, consumer_participant_id, .. } = input;
@@ -457,7 +469,7 @@ where
         let last_offer = serde_json::from_value::<OdrlOffer>(last_offer_model.offer_content)?;
 
         // 3.2 fetch participants
-        let provider_participant = self.repo.get_provider_participant().await?.unwrap();
+        let provider_participant = self.get_provider().await?;
         let provider_participant_id = get_urn_from_string(&provider_participant.participant_id)?;
 
         // 3.3 arrange agreement
