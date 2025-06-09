@@ -120,7 +120,7 @@ impl PolicyRelationsRepo for DatahubConnectorRepoForSql {
         //     .await;
         // match policy_relations {
         //     Ok(policy_relations) => Ok(policy_relations),
-        //     Err(e) => Err(PolicyTemplatesRepoErrors::ErrorFetchingPolicyTemplate(e.into()))
+        //     Err(e) => Err(PolicyTemplatesRepoErrors::ErrorFetchingPolicyRelation(e.into()))
         // }
     }
 
@@ -130,7 +130,7 @@ impl PolicyRelationsRepo for DatahubConnectorRepoForSql {
         // let policy_relation = policy_relations::Entity::find_by_id(template_id)
         //     .one(&self.db_connection)
         //     .await
-        //     .map_err(|e| Err(PolicyTemplatesRepoErrors::ErrorFetchingPolicyTemplate(e.into())))?;
+        //     .map_err(|e| Err(PolicyTemplatesRepoErrors::ErrorFetchingPolicyRelation(e.into())))?;
         // match policy_relation {
         //     Some(policy_relation) => Ok(policy_relation),
         //     None => Err(PolicyTemplatesRepoErrors::PolicyTemplateNotFound)
@@ -146,7 +146,24 @@ impl PolicyRelationsRepo for DatahubConnectorRepoForSql {
     }
 
     async fn create_policy_relation(&self, new_policy_relation: NewPolicyRelationModel) -> anyhow::Result<policy_relations::Model, PolicyTemplatesRepoErrors> {
-        todo!()
+        let id = format!("relation_{}", chrono::Utc::now().timestamp());
+
+        let model = policy_relations::ActiveModel {
+        id: ActiveValue::Set(id),
+        dataset_id: ActiveValue::Set(new_policy_relation.dataset_id),
+        domain_id: ActiveValue::Set(new_policy_relation.domain_id),
+        policy_template_id: ActiveValue::Set(new_policy_relation.policy_template_id),
+        extra_content: ActiveValue::Set(new_policy_relation.extra_content),
+        created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
+        };
+
+        match policy_relations::Entity::insert(model)
+            .exec_with_returning(&self.db_connection)
+            .await
+        {
+            Ok(relation) => Ok(relation),
+            Err(err) => Err(PolicyTemplatesRepoErrors::ErrorCreatingPolicyRelation(err.into())),
+        }
     }
 
     async fn delete_policy_relation(&self, template_id: Urn) -> anyhow::Result<(), PolicyTemplatesRepoErrors> {

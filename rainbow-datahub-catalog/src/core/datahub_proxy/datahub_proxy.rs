@@ -1,17 +1,18 @@
 // use crate::core::datahub_proxy::datahub_proxy_types::{DatahubDataset, DatahubDomain};
 use crate::core::datahub_proxy::datahub_proxy_types::DatasetGraphQLResponseDetailed;
 use crate::core::datahub_proxy::datahub_proxy_types::{
-    DatahubDataset, DatasetGraphQLResponse
+    DatahubDataset, DatasetGraphQLResponse, GlossaryTerm, DomainProperties, Platform, DatasetBasicInfo
     ,
 };
 use crate::core::datahub_proxy::datahub_proxy_types::{
-    DatahubDomain, GraphQLResponse,
+    DatahubDomain, GraphQLResponse, 
 };
 use crate::core::datahub_proxy::DatahubProxyTrait;
 use axum::async_trait;
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use reqwest::Client;
 use std::time::Duration;
+use serde::Deserialize;
 
 pub struct DatahubProxyService {
     config: ApplicationProviderConfig,
@@ -25,6 +26,8 @@ impl DatahubProxyService {
         Self { config, client }
     }
 }
+
+
 
 #[async_trait]
 impl DatahubProxyTrait for DatahubProxyService {
@@ -80,11 +83,7 @@ impl DatahubProxyTrait for DatahubProxyService {
         Ok(domains)
     }
 
-    // async fn get_datahub_domain_by_id(&self, id: String) -> anyhow::Result<DatahubDomain> {
-    //     todo!()
-    // }
-
-    async fn get_datahub_datasets_by_domain_id(&self, id: String) -> anyhow::Result<Vec<DatahubDataset>> {
+    async fn get_datahub_datasets_by_domain_id(&self, id: String) -> anyhow::Result<Vec<DatasetBasicInfo>> {
         let graphql_url = "http://localhost:8086/api/graphql";
         let query = format!(
             r#"{{
@@ -102,9 +101,6 @@ impl DatahubProxyTrait for DatahubProxyService {
                         urn
                         ... on Dataset {{
                             name
-                            platform {{
-                                name
-                            }}
                         }}
                     }}
                 }}
@@ -135,53 +131,77 @@ impl DatahubProxyTrait for DatahubProxyService {
             .searchAcrossEntities
             .searchResults
             .into_iter()
-            .map(|result| DatahubDataset {
+            .map(|result| DatasetBasicInfo {
                 urn: result.entity.urn,
                 name: result.entity.name,
-                platform: result.entity.platform,
-                description: None,
-                tag_names: vec![],
-                custom_properties: vec![],
             })
             .collect();
 
+
         Ok(datasets)
     }
+
     async fn get_datahub_dataset_by_id(&self, id: String) -> anyhow::Result<DatahubDataset> {
         let graphql_url = "http://localhost:8086/api/graphql";
         let query = format!(
             r#"{{
-        dataset(urn: "{}") {{
-            urn
-            name
-            platform {{ name }}
-            description
-            properties {{
+            dataset(urn: "{}") {{
+                urn
                 name
+                platform {{ name }}
                 description
-                customProperties {{
-                    key
-                    value
+                properties {{
+                    name
+                    description
+                    customProperties {{
+                        key
+                        value
+                    }}
                 }}
-            }}
-            ownership {{
-                owners {{
-                    owner {{
-                        ... on CorpUser {{
-                            username
+                ownership {{
+                    owners {{
+                        owner {{
+                            ... on CorpUser {{
+                                username
+                            }}
+                        }}
+                    }}
+                }}
+                tags {{
+                    tags {{
+                        tag {{
+                            name
+                        }}
+                    }}
+                }}
+                schemaMetadata {{
+                    fields {{
+                        fieldPath
+                        type
+                    }}
+                }}
+                domain {{
+                    associatedUrn
+                    domain {{
+                        urn
+                        properties {{
+                            name
+                        }}
+                    }}
+                }}
+                glossaryTerms {{
+                    terms {{
+                        term {{
+                            urn
+                            glossaryTermInfo {{
+                                name
+                                description
+                            }}
                         }}
                     }}
                 }}
             }}
-            tags {{
-                tags {{
-                    tag {{
-                        name
-                    }}
-                }}
-            }}
-        }}
-    }}"#,
+        }}"#,
             id
         );
 
@@ -202,23 +222,38 @@ impl DatahubProxyTrait for DatahubProxyService {
 
         let graphql_response: DatasetGraphQLResponseDetailed = response.json().await?;
 
-        let detailed = graphql_response.data.dataset;
+        let dataset = graphql_response.data.dataset;
 
-        let custom_props = detailed
-            .properties
-            .custom_properties
+        let custom_props = dataset.properties.customProperties
             .unwrap_or_default()
             .into_iter()
             .map(|cp| (cp.key, cp.value))
             .collect();
 
+        let domain = DatahubDomain {
+            urn: dataset.domain.domain.urn,
+            properties: DomainProperties {
+                name: dataset.domain.domain.properties.name,
+                description: None,
+            },
+        };
+
+        let glossary_terms = dataset.glossaryTerms.map(|gt| {
+            gt.terms
+                .into_iter()
+                .map(|t| t.term)
+                .collect::<Vec<GlossaryTerm>>()
+        });
+
         let dataset = DatahubDataset {
-            urn: detailed.urn,
-            name: detailed.name,
-            platform: detailed.platform,
-            description: detailed.description,
-            tag_names: detailed.tags.tags.into_iter().map(|tw| tw.tag.name).collect(),
+            urn: dataset.urn,
+            name: dataset.name,
+            platform: dataset.platform,
+            description: dataset.description,
+            tag_names: dataset.tags.tags.into_iter().map(|tw| tw.tag.name).collect(),
             custom_properties: custom_props,
+            domain,
+            glossary_terms,
         };
 
         Ok(dataset)
@@ -274,4 +309,5 @@ impl DatahubProxyTrait for DatahubProxyService {
 
     //     Ok(output.status.success())
     // }
+    
 }

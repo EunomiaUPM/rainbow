@@ -1,6 +1,6 @@
 // use crate::core::datahub_proxy::datahub_proxy_types::{DatasetsQueryOptions, DomainsQueryOptions};
 use crate::core::datahub_proxy::datahub_proxy_types::{DomainsQueryOptions};
-use crate::core::datahub_proxy::datahub_proxy_types::{DatasetsQueryOptions};
+use crate::core::datahub_proxy::datahub_proxy_types::{DatasetsQueryOptions, DatasetBasicInfo};
 // use crate::core::datahub_proxy::datahub_proxy_types::{AddPolicyRequest};
 use crate::core::datahub_proxy::DatahubProxyTrait;
 use axum::extract::{Path, Query, State};
@@ -46,16 +46,7 @@ where
             Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
         }
     }
-    // async fn handle_get_datahub_domain_by_id(
-    //     State(datahub_service): State<Arc<T>>,
-    //     Path(domain_id): Path<String>,
-    // ) -> impl IntoResponse {
-    //     info!("GET /api/v1/datahub/domains/{}", domain_id);
-    //     match datahub_service.get_datahub_domain_by_id(domain_id).await {
-    //         Ok(domain) => (StatusCode::OK, Json(domain)).into_response(),
-    //         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
-    //     }
-    // }
+    
     async fn handle_get_datasets_by_domain_id(
         State(datahub_service): State<Arc<T>>,
         Path(domain_id): Path<String>,
@@ -78,38 +69,5 @@ where
         }
     }
 
-    /*async fn handle_get_dataset_policies(
-        State(datahub_service): State<Arc<T>>,
-        Path((domain_id, dataset_id)): Path<(String, String)>,
-    ) -> impl IntoResponse {
-        info!("GET /api/v1/datahub/domains/{}/datasets/{}/policies", domain_id, dataset_id);
-        match datahub_service.get_dataset_policies(dataset_id).await {
-            Ok(dataset) => (StatusCode::OK, Json(dataset)).into_response(),
-            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
-        }
-    }*/
-
-    // async fn add_policy_to_dataset(
-    //     State(datahub_service): State<Arc<T>>,
-    //     Path((domain_id, dataset_id)): Path<(String, String)>,
-    //     Json(payload): Json<AddPolicyRequest>,
-    // ) -> impl IntoResponse {
-    //     info!(
-    //         "POST /api/v1/datahub/domains/{}/datasets/{}/addpolicy",
-    //         domain_id, dataset_id
-    //     );
-        
-    //     match datahub_service
-    //         .add_policy_to_dataset(
-    //             dataset_id,
-    //             payload.property_name,
-    //             payload.property_value,
-    //         )
-    //         .await
-    //     {
-    //         Ok(success) => (StatusCode::OK, Json(success)).into_response(),
-    //         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
-    //     }
-    // }
 
 }

@@ -55,17 +55,14 @@ pub struct DatahubDataset {
     pub description: Option<String>,
     pub tag_names: Vec<String>,
     pub custom_properties: Vec<(String, String)>,
+    pub domain: DatahubDomain,
+    pub glossary_terms: Option<Vec<GlossaryTerm>>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Platform {
-    pub name: String,
-}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DatasetGraphQLResponse {
     pub data: DatasetSearchResponse,
-    pub extensions: serde_json::Value,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -80,15 +77,10 @@ pub struct DatasetSearchResults {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DatasetSearchResult {
-    pub entity: DatasetEntity,
+    pub entity: DatasetBasicInfo,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct DatasetEntity {
-    pub urn: String,
-    pub name: String,
-    pub platform: Platform,
-}
+
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DatasetsQueryOptions {
@@ -102,12 +94,6 @@ pub struct DatasetsQueryOptions {
 
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct CustomProperty {
-    pub key: String,
-    pub value: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
 pub struct Properties {
     pub name: String,
     pub description: Option<String>,
@@ -115,25 +101,100 @@ pub struct Properties {
     pub custom_properties: Option<Vec<CustomProperty>>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Owner {
-    #[serde(rename = "username")]
-    pub username: Option<String>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Ownership {
-    pub owners: Vec<OwnerWrapper>,
-}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct OwnerWrapper {
     pub owner: Owner,
 }
 
+
+
+
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Tag {
+pub struct DatasetEntityDetailed {
+    pub urn: String,
     pub name: String,
+    pub platform: Platform,
+    pub description: Option<String>,
+    pub properties: Properties,
+    pub ownership: Ownership,
+    pub tags: Tags,
+    pub domain: Option<DatahubDomain>,
+    pub glossaryTerms: Option<GlossaryTerms>,
+}
+
+
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GlossaryTermWrapper {
+    pub term: GlossaryTerm,
+}
+
+
+
+
+// #[derive(Debug, Deserialize)]
+// pub struct AddPolicyRequest {
+//     pub property_name: String,
+//     pub property_value: String,
+// }
+
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DatasetGraphQLResponseDetailed {
+    pub data: DatasetResponse,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DatasetResponse {
+    pub dataset: DatasetEntity,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DatasetEntity {
+    pub urn: String,
+    pub name: String,
+    pub platform: Platform,
+    pub description: Option<String>,
+    pub properties: DatasetProperties,
+    pub ownership: Ownership,
+    pub tags: Tags,
+    pub schemaMetadata: Option<SchemaMetadata>,
+    pub domain: Domain,
+    pub glossaryTerms: Option<GlossaryTerms>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Platform {
+    pub name: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DatasetProperties {
+    pub name: String,
+    pub description: Option<String>,
+    pub customProperties: Option<Vec<CustomProperty>>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CustomProperty {
+    pub key: String,
+    pub value: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Ownership {
+    pub owners: Vec<Owner>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Owner {
+    pub owner: CorpUser,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CorpUser {
+    pub username: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -147,29 +208,58 @@ pub struct TagWrapper {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct DatasetEntityDetailed {
+pub struct Tag {
+    pub name: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SchemaMetadata {
+    pub fields: Vec<Field>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Field {
+    pub fieldPath: String,
+    pub r#type: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Domain {
+    pub associatedUrn: String,
+    pub domain: DomainEntity,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DomainEntity {
+    pub urn: String,
+    pub properties: DomainProperties,
+}
+
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GlossaryTerms {
+    pub terms: Vec<TermWrapper>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TermWrapper {
+    pub term: GlossaryTerm,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GlossaryTerm {
+    pub urn: String,
+    pub glossaryTermInfo: GlossaryTermInfo,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GlossaryTermInfo {
+    pub name: String,
+    pub description: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DatasetBasicInfo {
     pub urn: String,
     pub name: String,
-    pub platform: Platform,
-    pub description: Option<String>,
-    pub properties: Properties,
-    pub ownership: Ownership,
-    pub tags: Tags,
 }
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct DatasetResponse {
-    pub dataset: DatasetEntityDetailed,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct DatasetGraphQLResponseDetailed {
-    pub data: DatasetResponse,
-    pub extensions: serde_json::Value,
-}
-
-// #[derive(Debug, Deserialize)]
-// pub struct AddPolicyRequest {
-//     pub property_name: String,
-//     pub property_value: String,
-// }
