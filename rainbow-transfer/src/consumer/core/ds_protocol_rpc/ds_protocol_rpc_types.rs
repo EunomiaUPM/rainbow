@@ -27,8 +27,8 @@ use urn::Urn;
 #[derive(Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferConsumerRequestRequest {
-    #[serde(rename = "providerAddress")]
-    pub provider_address: String,
+    #[serde(rename = "providerParticipantId")]
+    pub provider_participant_id: Urn,
     #[serde(rename = "agreementId")]
     pub agreement_id: String,
     #[serde(rename = "format")]
@@ -60,8 +60,8 @@ pub struct DSRPCTransferConsumerRequestResponse {
 #[derive(Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferConsumerStartRequest {
-    #[serde(rename = "providerAddress")]
-    pub provider_address: String,
+    #[serde(rename = "providerParticipantId")]
+    pub provider_participant_id: Urn,
     #[serde(rename = "providerPid")]
     pub provider_pid: Urn,
     #[serde(rename = "consumerPid")]
@@ -87,8 +87,8 @@ pub struct DSRPCTransferConsumerStartResponse {
 #[derive(Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferConsumerSuspensionRequest {
-    #[serde(rename = "providerAddress")]
-    pub provider_address: String,
+    #[serde(rename = "providerParticipantId")]
+    pub provider_participant_id: Urn,
     #[serde(rename = "providerPid")]
     pub provider_pid: Urn,
     #[serde(rename = "consumerPid")]
@@ -114,8 +114,8 @@ pub struct DSRPCTransferConsumerSuspensionResponse {
 #[derive(Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferConsumerCompletionRequest {
-    #[serde(rename = "providerAddress")]
-    pub provider_address: String,
+    #[serde(rename = "providerParticipantId")]
+    pub provider_participant_id: Urn,
     #[serde(rename = "providerPid")]
     pub provider_pid: Urn,
     #[serde(rename = "consumerPid")]
@@ -135,8 +135,8 @@ pub struct DSRPCTransferConsumerCompletionResponse {
 #[derive(Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferConsumerTerminationRequest {
-    #[serde(rename = "providerAddress")]
-    pub provider_address: String,
+    #[serde(rename = "providerParticipantId")]
+    pub provider_participant_id: Urn,
     #[serde(rename = "providerPid")]
     pub provider_pid: Urn,
     #[serde(rename = "consumerPid")]

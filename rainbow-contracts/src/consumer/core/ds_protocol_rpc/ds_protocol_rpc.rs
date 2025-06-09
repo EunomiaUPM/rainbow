@@ -17,6 +17,7 @@
  *
  */
 
+use crate::common::core::mates_facade::MatesFacadeTrait;
 use crate::consumer::core::ds_protocol::ds_protocol_errors::IdsaCNError;
 use crate::consumer::core::ds_protocol_rpc::ds_protocol_rpc_errors::DSRPCContractNegotiationConsumerErrors;
 use crate::consumer::core::ds_protocol_rpc::ds_protocol_rpc_types::{
@@ -25,7 +26,7 @@ use crate::consumer::core::ds_protocol_rpc::ds_protocol_rpc_types::{
 };
 use crate::consumer::core::ds_protocol_rpc::DSRPCContractNegotiationConsumerTrait;
 use crate::consumer::core::rainbow_entities::rainbow_entities_errors::CnErrorConsumer;
-use anyhow::bail;
+use anyhow::{anyhow, bail};
 use axum::async_trait;
 use rainbow_common::config::ConfigRoles;
 use rainbow_common::protocol::contract::contract_ack::ContractAckMessage;
@@ -54,7 +55,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use urn::Urn;
 
-pub struct DSRPCContractNegotiationConsumerService<T, U>
+pub struct DSRPCContractNegotiationConsumerService<T, U, V>
 where
     T: ContractNegotiationConsumerProcessRepo
     + ContractNegotiationConsumerMessageRepo
@@ -64,13 +65,15 @@ where
     + Sync
     + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
+    V: MatesFacadeTrait + Send + Sync,
 {
     repo: Arc<T>,
     client: Client,
     notification_service: Arc<U>,
+    mates_facade: Arc<V>,
 }
 
-impl<T, U> DSRPCContractNegotiationConsumerService<T, U>
+impl<T, U, V> DSRPCContractNegotiationConsumerService<T, U, V>
 where
     T: ContractNegotiationConsumerProcessRepo
     + ContractNegotiationConsumerMessageRepo
@@ -80,11 +83,24 @@ where
     + Sync
     + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
+    V: MatesFacadeTrait + Send + Sync,
 {
-    pub fn new(repo: Arc<T>, notification_service: Arc<U>) -> Self {
+    pub fn new(repo: Arc<T>, notification_service: Arc<U>, mates_facade: Arc<V>) -> Self {
         let client =
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
-        Self { repo, client, notification_service }
+        Self { repo, client, notification_service, mates_facade }
+    }
+
+    async fn get_provider_base_url(&self, provider_participant_id: &Urn) -> anyhow::Result<String> {
+        let mate = self
+            .mates_facade
+            .get_mate_by_id(provider_participant_id.clone())
+            .await
+            .map_err(|e| anyhow!("Error parsing mate: {}", e.to_string()))?;
+        match mate.base_url {
+            Some(base_url) => Ok(base_url),
+            None => bail!("Mate with no base_url".to_string())
+        }
     }
 
     async fn validate_and_get_correlated_provider_process(
@@ -169,7 +185,7 @@ where
 }
 
 #[async_trait]
-impl<T, U> DSRPCContractNegotiationConsumerTrait for DSRPCContractNegotiationConsumerService<T, U>
+impl<T, U, V> DSRPCContractNegotiationConsumerTrait for DSRPCContractNegotiationConsumerService<T, U, V>
 where
     T: ContractNegotiationConsumerProcessRepo
     + ContractNegotiationConsumerMessageRepo
@@ -179,10 +195,13 @@ where
     + Sync
     + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
+    V: MatesFacadeTrait + Send + Sync,
 {
     async fn setup_request(&self, input: SetupRequestRequest) -> anyhow::Result<SetupRequestResponse> {
-        // 1. fetch participant id TODO
-        let SetupRequestRequest { provider_pid, consumer_pid, odrl_offer, provider_address, .. } = input;
+        let SetupRequestRequest { provider_pid, consumer_pid, odrl_offer, provider_participant_id, .. } = input;
+        // 1. fetch participant
+        let provider_base_url = self.get_provider_base_url(&provider_participant_id).await?;
+        let provider_base_url = provider_base_url.strip_suffix('/').unwrap_or(provider_base_url.as_str());
         // 2. validate correlation
         // protocol validation??
         // No need of validation since there is no provider or consumer pid at this point
@@ -195,7 +214,6 @@ where
             ..Default::default()
         };
         // 4. send message
-        let provider_base_url = provider_address.strip_suffix('/').unwrap_or(provider_address.as_str());
         let provider_url = format!("{}/negotiations/request", provider_base_url);
         let response = self
             .send_protocol_message_to_provider(
@@ -260,8 +278,10 @@ where
     }
 
     async fn setup_rerequest(&self, input: SetupRequestRequest) -> anyhow::Result<SetupRequestResponse> {
-        // 1. fetch participant id TODO
-        let SetupRequestRequest { provider_pid, consumer_pid, odrl_offer, provider_address, .. } = input;
+        let SetupRequestRequest { provider_pid, consumer_pid, odrl_offer, provider_participant_id, .. } = input;
+        // 1. fetch participant
+        let provider_base_url = self.get_provider_base_url(&provider_participant_id).await?;
+        let provider_base_url = provider_base_url.strip_suffix('/').unwrap_or(provider_base_url.as_str());
         // 2. validate correlation
         let consumer = self
             .validate_and_get_correlated_provider_process(
@@ -277,7 +297,6 @@ where
             ..Default::default()
         };
         // 4. send message
-        let provider_base_url = provider_address.strip_suffix('/').unwrap_or(provider_address.as_str());
         let provider_url = format!(
             "{}/negotiations/{}/request",
             provider_base_url,
@@ -346,8 +365,10 @@ where
     }
 
     async fn setup_acceptance(&self, input: SetupAcceptanceRequest) -> anyhow::Result<SetupAcceptanceResponse> {
-        // 1. fetch participant id TODO
-        let SetupAcceptanceRequest { provider_pid, consumer_pid, provider_address, .. } = input;
+        let SetupAcceptanceRequest { provider_pid, consumer_pid, provider_participant_id, .. } = input;
+        // 1. fetch participant
+        let provider_base_url = self.get_provider_base_url(&provider_participant_id).await?;
+        let provider_base_url = provider_base_url.strip_suffix('/').unwrap_or(provider_base_url.as_str());
         // 2. validate correlation
         let consumer =
             self.validate_and_get_correlated_provider_process(&consumer_pid.clone(), &provider_pid.clone()).await?;
@@ -359,7 +380,6 @@ where
             ..Default::default()
         };
         // 4. send message to provider
-        let provider_base_url = provider_address.strip_suffix('/').unwrap_or(provider_address.as_str());
         let provider_url = format!(
             "{}/negotiations/{}/events",
             provider_base_url,
@@ -413,9 +433,10 @@ where
     }
 
     async fn setup_verification(&self, input: SetupVerificationRequest) -> anyhow::Result<SetupVerificationResponse> {
-        // 1. fetch participant id TODO
-        let SetupVerificationRequest { provider_pid, consumer_pid, provider_address, .. } = input;
-        // 2. validate correlation
+        let SetupVerificationRequest { provider_pid, consumer_pid, provider_participant_id, .. } = input;
+        // 1. fetch participant
+        let provider_base_url = self.get_provider_base_url(&provider_participant_id).await?;
+        let provider_base_url = provider_base_url.strip_suffix('/').unwrap_or(provider_base_url.as_str());        // 2. validate correlation
         let consumer =
             self.validate_and_get_correlated_provider_process(&consumer_pid.clone(), &provider_pid.clone()).await?;
         // 3. create message
@@ -425,7 +446,6 @@ where
             ..Default::default()
         };
         // 4. send message to provider
-        let provider_base_url = provider_address.strip_suffix('/').unwrap_or(provider_address.as_str());
         let provider_url = format!(
             "{}/negotiations/{}/agreement/verification",
             provider_base_url,
@@ -479,8 +499,10 @@ where
     }
 
     async fn setup_termination(&self, input: SetupTerminationRequest) -> anyhow::Result<SetupTerminationResponse> {
-        // 1. fetch participant id TODO
-        let SetupTerminationRequest { provider_pid, consumer_pid, provider_address, .. } = input;
+        let SetupTerminationRequest { provider_pid, consumer_pid, provider_participant_id, .. } = input;
+        // 1. fetch participant
+        let provider_base_url = self.get_provider_base_url(&provider_participant_id).await?;
+        let provider_base_url = provider_base_url.strip_suffix('/').unwrap_or(provider_base_url.as_str());
         // 2. validate correlation
         let consumer =
             self.validate_and_get_correlated_provider_process(&consumer_pid.clone(), &provider_pid.clone()).await?;
@@ -491,7 +513,6 @@ where
             ..Default::default()
         };
         // 4. send message to provider
-        let provider_base_url = provider_address.strip_suffix('/').unwrap_or(provider_address.as_str());
         let provider_url = format!(
             "{}/negotiations/{}/termination",
             provider_base_url,
