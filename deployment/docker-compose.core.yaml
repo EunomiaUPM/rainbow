@@ -2,6 +2,7 @@ version: "3.5"
 services:
 
   ds_core_provider:
+    # platform: linux/amd64
     container_name: "ds_core_provider"
     image: "postgres"
     restart: always
@@ -13,6 +14,7 @@ services:
       - "1300:5432"
 
   ds_core_consumer:
+    # platform: linux/amd64
     container_name: "ds_core_consumer"
     image: "postgres"
     restart: always
