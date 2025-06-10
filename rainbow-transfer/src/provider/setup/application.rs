@@ -17,6 +17,7 @@
  *
  */
 
+use crate::common::core::mates_facade::mates_facade::MatesFacadeService;
 use crate::provider::core::data_plane_facade::data_plane_facade::DataPlaneProviderFacadeForDSProtocol;
 use crate::provider::core::data_service_resolver_facade::data_service_resolver_facade::DataServiceFacadeServiceForDSProtocol;
 use crate::provider::core::ds_protocol::ds_protocol::DSProtocolTransferProviderImpl;
@@ -27,6 +28,7 @@ use crate::provider::http::ds_protocol_rpc::ds_protocol_rpc::DSRPCTransferProvid
 use crate::provider::http::rainbow_entities::rainbow_entities::RainbowTransferProviderEntitiesRouter;
 use crate::provider::setup::config::TransferProviderApplicationConfig;
 use axum::{serve, Router};
+use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
 use rainbow_common::config::global_config::ApplicationGlobalConfig;
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_common::facades::ssi_auth_facade::ssi_auth_facade::SSIAuthFacadeService;
@@ -123,11 +125,16 @@ pub async fn create_transfer_provider_router(config: &TransferProviderApplicatio
     let ds_protocol_router = DSProtocolTransferProviderRouter::new(ds_protocol_service.clone()).router();
 
     // DSRPCProtocol Dependency injection
+    let app_config: ApplicationProviderConfig = config.clone().into();
+    let mates_facade = Arc::new(MatesFacadeService::new(
+        app_config.into()
+    ));
     let ds_protocol_rpc_service = Arc::new(DSRPCTransferProviderService::new(
         provider_repo.clone(),
         data_service_facade,
         data_plane_facade,
         notification_service.clone(),
+        mates_facade.clone(),
     ));
     let ds_protocol_rpc = DSRPCTransferProviderProviderRouter::new(ds_protocol_rpc_service.clone()).router();
 

@@ -24,6 +24,8 @@ use crate::consumer::core::ds_protocol::DSProtocolTransferConsumerTrait;
 use crate::consumer::core::rainbow_entities::rainbow_err::RainbowTransferConsumerErrors;
 use anyhow::bail;
 use axum::async_trait;
+use rainbow_common::facades::ssi_auth_facade::SSIAuthFacadeTrait;
+use rainbow_common::mates::Mates;
 use rainbow_common::protocol::transfer::transfer_completion::TransferCompletionMessage;
 use rainbow_common::protocol::transfer::transfer_process::TransferProcessMessage;
 use rainbow_common::protocol::transfer::transfer_protocol_trait::DSProtocolTransferMessageTrait;
@@ -44,25 +46,39 @@ use std::sync::Arc;
 use tracing::debug;
 use urn::Urn;
 
-pub struct DSProtocolTransferConsumerService<T, U, V>
+pub struct DSProtocolTransferConsumerService<T, U, V, W>
 where
     T: TransferConsumerRepoFactory + Send + Sync + 'static,
     U: DataPlaneConsumerFacadeTrait + Send + Sync + 'static,
     V: RainbowEventsNotificationTrait + Send + Sync + 'static, // Added notification service
+    W: SSIAuthFacadeTrait + Sync + Send,
 {
     transfer_repo: Arc<T>,
     data_plane: Arc<U>,
     notification_service: Arc<V>, // Added notification service
+    ssi_auth_facade: Arc<W>,
 }
 
-impl<T, U, V> DSProtocolTransferConsumerService<T, U, V>
+impl<T, U, V, W> DSProtocolTransferConsumerService<T, U, V, W>
 where
     T: TransferConsumerRepoFactory + Send + Sync + 'static,
     U: DataPlaneConsumerFacadeTrait + Send + Sync + 'static,
     V: RainbowEventsNotificationTrait + Send + Sync + 'static,
+    W: SSIAuthFacadeTrait + Sync + Send,
 {
-    pub fn new(transfer_repo: Arc<T>, data_plane: Arc<U>, notification_service: Arc<V>) -> Self {
-        Self { transfer_repo, data_plane, notification_service }
+    pub fn new(
+        transfer_repo: Arc<T>,
+        data_plane: Arc<U>,
+        notification_service: Arc<V>,
+        ssi_auth_facade: Arc<W>,
+    ) -> Self {
+        Self { transfer_repo, data_plane, notification_service, ssi_auth_facade }
+    }
+
+    /// Validate auth token
+    async fn validate_auth_token(&self, token: String) -> anyhow::Result<Mates> {
+        let mate = self.ssi_auth_facade.verify_token(token).await?;
+        Ok(mate)
     }
 
     /// Performs JSON schema validation for incoming messages.
@@ -79,6 +95,7 @@ where
         callback_id: &Option<Urn>,   // Optional callback_id from URL
         consumer_pid_from_uri: &Urn, // Consumer PID from URL path
         message: &M,                 // The incoming message
+        provider_participant_mate: &Mates,
     ) -> anyhow::Result<transfer_callback::Model> {
         debug!("Transfer consumer payload validation");
         let message_consumer_pid = message.get_consumer_pid()?;
@@ -123,6 +140,13 @@ where
             (Some(msg_p_pid), Some(db_p_pid)) if msg_p_pid.to_string() == db_p_pid.to_owned() => {}
             _ => bail!(DSProtocolTransferConsumerErrors::UriAndBodyIdentifiersDoNotCoincide),
         }
+        // 4. Consumer transfer process and provider participant mate
+        if consumer_transfer_process.associated_provider.clone().unwrap() != provider_participant_mate.participant_id {
+            bail!(RainbowTransferConsumerErrors::ValidationError(
+                "This user is not related with this process".to_string()
+            ))
+        }
+
         Ok(consumer_transfer_process)
     }
 
@@ -142,11 +166,12 @@ where
 }
 
 #[async_trait]
-impl<T, U, V> DSProtocolTransferConsumerTrait for DSProtocolTransferConsumerService<T, U, V>
+impl<T, U, V, W> DSProtocolTransferConsumerTrait for DSProtocolTransferConsumerService<T, U, V, W>
 where
     T: TransferConsumerRepoFactory + Send + Sync + 'static,
     U: DataPlaneConsumerFacadeTrait + Send + Sync + 'static,
     V: RainbowEventsNotificationTrait + Send + Sync + 'static,
+    W: SSIAuthFacadeTrait + Sync + Send,
 {
     async fn get_transfer_requests_by_callback(&self, callback_id: Urn) -> anyhow::Result<TransferProcessMessage> {
         let transfer_process = self
@@ -182,12 +207,14 @@ where
         callback_id: Option<Urn>,
         consumer_pid: Urn,
         input: TransferStartMessage,
+        token: String,
     ) -> anyhow::Result<TransferProcessMessage> {
         let TransferStartMessage { provider_pid, consumer_pid: consumer_pid_, data_address, .. } = input.clone();
         // 1. Validate request
+        let provider_participant_mate = self.validate_auth_token(token).await?;
         self.json_schema_validation(&input)
             .map_err(|e| RainbowTransferConsumerErrors::ValidationError(e.to_string()))?;
-        let _existing_process = self.payload_validation(&callback_id, &consumer_pid, &input).await?;
+        let _existing_process = self.payload_validation(&callback_id, &consumer_pid, &input, &provider_participant_mate).await?;
         // 2. Persist model
         let callback = self
             .transfer_repo
@@ -240,12 +267,14 @@ where
         callback_id: Option<Urn>,
         consumer_pid: Urn,
         input: TransferSuspensionMessage,
+        token: String,
     ) -> anyhow::Result<TransferProcessMessage> {
         let TransferSuspensionMessage { provider_pid, consumer_pid: consumer_pid_, .. } = input.clone();
         // 1. Validate request
+        let provider_participant_mate = self.validate_auth_token(token).await?;
         self.json_schema_validation(&input)
             .map_err(|e| RainbowTransferConsumerErrors::ValidationError(e.to_string()))?;
-        let _existing_process = self.payload_validation(&callback_id, &consumer_pid, &input).await?;
+        let _existing_process = self.payload_validation(&callback_id, &consumer_pid, &input, &provider_participant_mate).await?;
         // 2. Persist state
         let callback = self
             .transfer_repo
@@ -290,12 +319,14 @@ where
         callback_id: Option<Urn>,
         consumer_pid: Urn,
         input: TransferCompletionMessage,
+        token: String,
     ) -> anyhow::Result<TransferProcessMessage> {
         let TransferCompletionMessage { provider_pid, consumer_pid: consumer_pid_, .. } = input.clone();
         // 1. Validate request
+        let provider_participant_mate = self.validate_auth_token(token).await?;
         self.json_schema_validation(&input)
             .map_err(|e| RainbowTransferConsumerErrors::ValidationError(e.to_string()))?;
-        let _existing_process = self.payload_validation(&callback_id, &consumer_pid, &input).await?;
+        let _existing_process = self.payload_validation(&callback_id, &consumer_pid, &input, &provider_participant_mate).await?;
         // 2. Persist state
         let callback = self
             .transfer_repo
@@ -341,11 +372,14 @@ where
         callback_id: Option<Urn>,
         consumer_pid: Urn,
         input: TransferTerminationMessage,
+        token: String,
     ) -> anyhow::Result<TransferProcessMessage> {
         let TransferTerminationMessage { provider_pid, consumer_pid: consumer_pid_, .. } = input.clone();
+        // 1. Validate request
+        let provider_participant_mate = self.validate_auth_token(token).await?;
         self.json_schema_validation(&input)
             .map_err(|e| RainbowTransferConsumerErrors::ValidationError(e.to_string()))?;
-        let _existing_process = self.payload_validation(&callback_id, &consumer_pid, &input).await?;
+        let _existing_process = self.payload_validation(&callback_id, &consumer_pid, &input, &provider_participant_mate).await?;
         // 2. Persist state
         let callback = self
             .transfer_repo

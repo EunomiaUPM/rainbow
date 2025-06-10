@@ -28,6 +28,7 @@ use crate::consumer::setup::config::TransferConsumerApplicationConfig;
 use axum::{serve, Router};
 use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
 use rainbow_common::config::provider_config::ApplicationProviderConfig;
+use rainbow_common::facades::ssi_auth_facade::ssi_auth_facade::SSIAuthFacadeService;
 use rainbow_dataplane::coordinator::controller::controller_service::DataPlaneControllerService;
 use rainbow_dataplane::coordinator::dataplane_process::dataplane_process_service::DataPlaneProcessService;
 use rainbow_dataplane::data_plane_info::data_plane_info::DataPlaneInfoService;
@@ -88,7 +89,7 @@ pub async fn create_transfer_consumer_router(config: &TransferConsumerApplicatio
     // Dataplane Router
     let dataplane_info_service = Arc::new(DataPlaneInfoService::new(
         dataplane_process_service.clone(),
-        application_global_config.into(),
+        application_global_config.clone().into(),
     ));
     let dataplane_info_router = DataPlaneRouter::new(dataplane_info_service.clone()).router();
 
@@ -99,7 +100,9 @@ pub async fn create_transfer_consumer_router(config: &TransferConsumerApplicatio
         RainbowTransferConsumerEntitiesRouter::new(Arc::new(rainbow_entities_service)).router();
 
     // DSProtocol Dependency injection
-
+    let ssi_auth_facade = Arc::new(SSIAuthFacadeService::new(
+        application_global_config.clone().into(),
+    ));
     let data_plane_facade = Arc::new(DataPlaneConsumerFacadeForDSProtocol::new(
         dataplane_controller.clone(),
         config.clone(),
@@ -108,6 +111,7 @@ pub async fn create_transfer_consumer_router(config: &TransferConsumerApplicatio
         consumer_repo.clone(),
         data_plane_facade.clone(),
         notification_service.clone(),
+        ssi_auth_facade.clone(),
     ));
     let ds_protocol_router = DSProtocolTransferConsumerRouter::new(ds_protocol_service.clone()).router();
 

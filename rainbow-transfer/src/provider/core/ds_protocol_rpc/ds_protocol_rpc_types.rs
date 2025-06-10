@@ -29,8 +29,10 @@ use urn::Urn;
 #[derive(Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferProviderStartRequest {
+    #[serde(rename = "consumerParticipantId")]
+    pub consumer_participant_id: Urn,
     #[serde(rename = "consumerCallbackAddress")]
-    pub consumer_callback: String,
+    pub consumer_callback: Option<String>,
     #[serde(rename = "providerPid")]
     pub provider_pid: Urn,
     #[serde(rename = "consumerPid")]
@@ -71,8 +73,10 @@ pub struct DSRPCTransferProviderStartResponse {
 #[derive(Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferProviderSuspensionRequest {
+    #[serde(rename = "consumerParticipantId")]
+    pub consumer_participant_id: Urn,
     #[serde(rename = "consumerCallbackAddress")]
-    pub consumer_callback: String,
+    pub consumer_callback: Option<String>,
     #[serde(rename = "providerPid")]
     pub provider_pid: Urn,
     #[serde(rename = "consumerPid")]
@@ -112,8 +116,10 @@ pub struct DSRPCTransferProviderSuspensionResponse {
 #[derive(Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferProviderCompletionRequest {
+    #[serde(rename = "consumerParticipantId")]
+    pub consumer_participant_id: Urn,
     #[serde(rename = "consumerCallbackAddress")]
-    pub consumer_callback: String,
+    pub consumer_callback: Option<String>,
     #[serde(rename = "providerPid")]
     pub provider_pid: Urn,
     #[serde(rename = "consumerPid")]
@@ -147,8 +153,10 @@ pub struct DSRPCTransferProviderCompletionResponse {
 #[derive(Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferProviderTerminationRequest {
+    #[serde(rename = "consumerParticipantId")]
+    pub consumer_participant_id: Urn,
     #[serde(rename = "consumerCallbackAddress")]
-    pub consumer_callback: String,
+    pub consumer_callback: Option<String>,
     #[serde(rename = "providerPid")]
     pub provider_pid: Urn,
     #[serde(rename = "consumerPid")]

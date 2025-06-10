@@ -269,6 +269,7 @@ where
                 consumer_pid: Some(consumer_pid.clone()),
                 provider_pid: Some(get_urn_from_string(&response.provider_pid)?),
                 data_address: None,
+                associated_provider: Some(get_urn_from_string(&provider_mate.participant_id)?),
             })
             .await
             .map_err(|e| {

@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use crate::common::core::mates_facade::MatesFacadeTrait;
 use crate::provider::core::data_plane_facade::DataPlaneProviderFacadeTrait;
 use crate::provider::core::data_service_resolver_facade::DataServiceFacadeTrait;
 use crate::provider::core::ds_protocol::ds_protocol_err::DSProtocolTransferProviderErrors;
@@ -27,9 +28,10 @@ use crate::provider::core::ds_protocol_rpc::ds_protocol_rpc_types::{
     DSRPCTransferProviderTerminationResponse,
 };
 use crate::provider::core::ds_protocol_rpc::DSRPCTransferProviderTrait;
-use anyhow::bail;
+use anyhow::{anyhow, bail};
 use axum::async_trait;
 use rainbow_common::err::transfer_err::TransferErrorType;
+use rainbow_common::mates::Mates;
 use rainbow_common::protocol::transfer::transfer_completion::TransferCompletionMessage;
 use rainbow_common::protocol::transfer::transfer_process::TransferProcessMessage;
 use rainbow_common::protocol::transfer::transfer_protocol_trait::DSProtocolTransferMessageTrait;
@@ -53,36 +55,50 @@ use std::time::Duration;
 use tracing::debug;
 use urn::Urn;
 
-pub struct DSRPCTransferProviderService<T, U, V, W>
+pub struct DSRPCTransferProviderService<T, U, V, W, X>
 where
     T: TransferProviderRepoFactory + Send + Sync,
     U: DataServiceFacadeTrait + Send + Sync,
     V: DataPlaneProviderFacadeTrait + Send + Sync,
     W: RainbowEventsNotificationTrait + Sync + Send,
+    X: MatesFacadeTrait + Send + Sync,
 {
     transfer_repo: Arc<T>,
     _data_service_facade: Arc<U>,
     data_plane_facade: Arc<V>,
     notification_service: Arc<W>,
     client: Client,
+    mates_facade: Arc<X>,
 }
 
-impl<T, U, V, W> DSRPCTransferProviderService<T, U, V, W>
+impl<T, U, V, W, X> DSRPCTransferProviderService<T, U, V, W, X>
 where
     T: TransferProviderRepoFactory + Send + Sync,
     U: DataServiceFacadeTrait + Send + Sync,
     V: DataPlaneProviderFacadeTrait + Send + Sync,
     W: RainbowEventsNotificationTrait + Sync + Send,
+    X: MatesFacadeTrait + Send + Sync,
 {
     pub fn new(
         transfer_repo: Arc<T>,
         _data_service_facade: Arc<U>,
         data_plane_facade: Arc<V>,
         notification_service: Arc<W>,
+        mates_facade: Arc<X>,
     ) -> Self {
         let client =
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
-        Self { transfer_repo, _data_service_facade, data_plane_facade, notification_service, client }
+        Self { transfer_repo, _data_service_facade, data_plane_facade, notification_service, client, mates_facade }
+    }
+
+    /// Get consumer mate based in id
+    async fn get_consumer_mate(&self, consumer_participant_id: &Urn) -> anyhow::Result<Mates> {
+        let mate = self
+            .mates_facade
+            .get_mate_by_id(consumer_participant_id.clone())
+            .await
+            .map_err(|e| anyhow!("Error parsing mate: {}", e.to_string()))?;
+        Ok(mate)
     }
 
     /// Validates the existence and correlation of provider and consumer transfer processes.
@@ -258,6 +274,7 @@ where
         &self,
         target_url: String,
         message_payload: &M,
+        token: String,
         error_context_provider_pid: Option<Urn>,
         error_context_consumer_pid: Option<Urn>,
     ) -> anyhow::Result<TransferProcessMessage> {
@@ -265,12 +282,17 @@ where
             "Sending message to consumer at URL: {}, Payload: {:?}",
             target_url, message_payload
         );
-        let response = self.client.post(&target_url).json(message_payload).send().await.map_err(|_e| {
-            DSRPCTransferProviderErrors::ConsumerNotReachable {
+        let response = self
+            .client
+            .post(&target_url)
+            .header("Authorization", format!("Bearer {}", token))
+            .json(message_payload)
+            .send()
+            .await
+            .map_err(|_e| DSRPCTransferProviderErrors::ConsumerNotReachable {
                 provider_pid: error_context_provider_pid.clone(),
                 consumer_pid: error_context_consumer_pid.clone(),
-            }
-        })?;
+            })?;
 
         let status = response.status();
         if !status.is_success() {
@@ -308,18 +330,29 @@ where
 }
 
 #[async_trait]
-impl<T, U, V, W> DSRPCTransferProviderTrait for DSRPCTransferProviderService<T, U, V, W>
+impl<T, U, V, W, X> DSRPCTransferProviderTrait for DSRPCTransferProviderService<T, U, V, W, X>
 where
     T: TransferProviderRepoFactory + Send + Sync,
     U: DataServiceFacadeTrait + Send + Sync,
     V: DataPlaneProviderFacadeTrait + Send + Sync,
     W: RainbowEventsNotificationTrait + Sync + Send,
+    X: MatesFacadeTrait + Send + Sync,
 {
     async fn setup_start(
         &self,
         input: DSRPCTransferProviderStartRequest,
     ) -> anyhow::Result<DSRPCTransferProviderStartResponse> {
-        let DSRPCTransferProviderStartRequest { consumer_callback, provider_pid, consumer_pid, .. } = input.clone();
+        let DSRPCTransferProviderStartRequest {
+            consumer_participant_id,
+            consumer_callback,
+            provider_pid,
+            consumer_pid,
+            ..
+        } = input.clone();
+        // 0. fetch participant
+        let consumer_mate = self.get_consumer_mate(&consumer_participant_id).await?;
+        let consumer_callback = consumer_callback.unwrap_or(consumer_mate.base_url.unwrap());
+        let consumer_token = consumer_mate.token.ok_or(anyhow!("No token"))?;
         // 1. Validate fields and correlation
         let tp = self.validate_and_get_correlated_transfer_process(&consumer_pid, &provider_pid).await?;
         self.transition_validation(&input).await?;
@@ -342,6 +375,7 @@ where
             .send_protocol_message_to_consumer(
                 consumer_url,
                 &start_message,
+                consumer_token,
                 Some(provider_pid.clone()),
                 Some(consumer_pid.clone()),
             )
@@ -409,8 +443,18 @@ where
         input: DSRPCTransferProviderSuspensionRequest,
     ) -> anyhow::Result<DSRPCTransferProviderSuspensionResponse> {
         let DSRPCTransferProviderSuspensionRequest {
-            consumer_callback, provider_pid, consumer_pid, code, reason, ..
+            consumer_participant_id,
+            consumer_callback,
+            provider_pid,
+            consumer_pid,
+            code,
+            reason,
+            ..
         } = input.clone();
+        // 0. fetch participant
+        let consumer_mate = self.get_consumer_mate(&consumer_participant_id).await?;
+        let consumer_callback = consumer_callback.unwrap_or(consumer_mate.base_url.unwrap());
+        let consumer_token = consumer_mate.token.ok_or(anyhow!("No token"))?;
         // 1. Validate fields and correlation
         let _current_process_model =
             self.validate_and_get_correlated_transfer_process(&consumer_pid, &provider_pid).await?;
@@ -434,6 +478,7 @@ where
             .send_protocol_message_to_consumer(
                 consumer_url,
                 &suspension_message,
+                consumer_token,
                 Some(provider_pid.clone()),
                 Some(consumer_pid.clone()),
             )
@@ -490,8 +535,17 @@ where
         &self,
         input: DSRPCTransferProviderCompletionRequest,
     ) -> anyhow::Result<DSRPCTransferProviderCompletionResponse> {
-        let DSRPCTransferProviderCompletionRequest { consumer_callback, provider_pid, consumer_pid, .. } =
-            input.clone();
+        let DSRPCTransferProviderCompletionRequest {
+            consumer_participant_id,
+            consumer_callback,
+            provider_pid,
+            consumer_pid,
+            ..
+        } = input.clone();
+        // 0. fetch participant
+        let consumer_mate = self.get_consumer_mate(&consumer_participant_id).await?;
+        let consumer_callback = consumer_callback.unwrap_or(consumer_mate.base_url.unwrap());
+        let consumer_token = consumer_mate.token.ok_or(anyhow!("No token"))?;
         // 1. Validate fields and correlation
         let _current_process_model =
             self.validate_and_get_correlated_transfer_process(&consumer_pid, &provider_pid).await?;
@@ -513,6 +567,7 @@ where
             .send_protocol_message_to_consumer(
                 consumer_url,
                 &completion_message,
+                consumer_token,
                 Some(provider_pid.clone()),
                 Some(consumer_pid.clone()),
             )
@@ -570,8 +625,18 @@ where
         input: DSRPCTransferProviderTerminationRequest,
     ) -> anyhow::Result<DSRPCTransferProviderTerminationResponse> {
         let DSRPCTransferProviderTerminationRequest {
-            consumer_callback, provider_pid, consumer_pid, code, reason, ..
+            consumer_participant_id,
+            consumer_callback,
+            provider_pid,
+            consumer_pid,
+            code,
+            reason,
+            ..
         } = input.clone();
+        // 0. fetch participant
+        let consumer_mate = self.get_consumer_mate(&consumer_participant_id).await?;
+        let consumer_callback = consumer_callback.unwrap_or(consumer_mate.base_url.unwrap());
+        let consumer_token = consumer_mate.token.ok_or(anyhow!("No token"))?;
         // 1. Validate fields and correlation
         let _current_process_model =
             self.validate_and_get_correlated_transfer_process(&consumer_pid, &provider_pid).await?;
@@ -595,6 +660,7 @@ where
             .send_protocol_message_to_consumer(
                 consumer_url,
                 &termination_message,
+                consumer_token,
                 Some(provider_pid.clone()),
                 Some(consumer_pid.clone()),
             )

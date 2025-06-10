@@ -42,23 +42,27 @@ pub trait DSProtocolTransferConsumerTrait: Send + Sync {
         callback_id: Option<Urn>,
         consumer_pid: Urn,
         input: TransferStartMessage,
+        token: String,
     ) -> anyhow::Result<TransferProcessMessage>;
     async fn transfer_suspension(
         &self,
         callback_id: Option<Urn>,
         consumer_pid: Urn,
         input: TransferSuspensionMessage,
+        token: String,
     ) -> anyhow::Result<TransferProcessMessage>;
     async fn transfer_completion(
         &self,
         callback_id: Option<Urn>,
         consumer_pid: Urn,
         input: TransferCompletionMessage,
+        token: String,
     ) -> anyhow::Result<TransferProcessMessage>;
     async fn transfer_termination(
         &self,
         callback_id: Option<Urn>,
         consumer_pid: Urn,
         input: TransferTerminationMessage,
+        token: String,
     ) -> anyhow::Result<TransferProcessMessage>;
 }
