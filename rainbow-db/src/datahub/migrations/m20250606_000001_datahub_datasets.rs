@@ -33,22 +33,23 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(DataHubDatasets::Table)
-                    .col(ColumnDef::new(DataHubDatasets::Urn).string().not_null().primary_key())
-                    .col(ColumnDef::new(DataHubDatasets::Name).string())
+                    .table(DatahubDatasets::Table)
+                    .if_not_exists()
+                    .col(ColumnDef::new(DatahubDatasets::Urn).string().not_null().primary_key())
+                    .col(ColumnDef::new(DatahubDatasets::Name).string().not_null())
                     .to_owned(),
             )
             .await
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(DataHubDatasets::Table).to_owned()).await
+        manager.drop_table(Table::drop().table(DatahubDatasets::Table).to_owned()).await
     }
 }
 
 
 #[derive(Iden)]
-pub enum DataHubDatasets {
+pub enum DatahubDatasets {
     Table,
     Urn,
     Name,

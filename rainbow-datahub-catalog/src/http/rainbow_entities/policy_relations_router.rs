@@ -3,12 +3,23 @@ use crate::core::datahub_proxy::DatahubProxyTrait;
 use crate::core::rainbow_entities::PolicyTemplatesToDatahubDatasetRelationTrait;
 use axum::extract::{Path, Query, State};
 use axum::response::IntoResponse;
-use axum::routing::get;
+use axum::routing::{get, post};
 use axum::{Json, Router};
 use reqwest::StatusCode;
 use std::{sync::Arc, str::FromStr}; 
 use tracing::info;
 use tracing::error;
+use serde::Deserialize;
+use serde_json::json;
+use urn::Urn;
+use rainbow_db::datahub::repo::NewPolicyRelationModel;
+
+#[derive(Debug, Deserialize)]
+pub struct CreatePolicyRelationRequest {
+    pub dataset_id: String,
+    pub policy_template_id: String,
+    pub extra_content: Option<serde_json::Value>,
+}
 
 pub struct RainbowDatahubPolicyRelationsRouter<T, U>
 where
@@ -18,7 +29,6 @@ where
     datahub_service: Arc<T>,
     policy_relations_service: Arc<U>,
 }
-
 
 impl<T, U> RainbowDatahubPolicyRelationsRouter<T, U>
 where
@@ -33,30 +43,42 @@ where
     }
     pub fn router(self) -> Router {
         Router::new()
-            .route("/api/v1/datahub/hola-pablo", get(Self::handle_your_routes_here))
+            .route("/api/v1/datahub/policy-relations", post(Self::create_policy_relation))
             .with_state((self.datahub_service, self.policy_relations_service))
     }
-    async fn handle_your_routes_here(
+
+    async fn create_policy_relation(
         State((datahub_service, policy_relations_service)): State<(Arc<T>, Arc<U>)>,
+        Json(payload): Json<CreatePolicyRelationRequest>,
     ) -> impl IntoResponse {
-        info!("GET /api/v1/datahub/hola-pablo");
-        match datahub_service.get_datahub_domains().await {
-            Ok(domains) => (StatusCode::OK, Json(domains)).into_response(),
-            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        info!("POST /api/v1/datahub/policy-relations");
+        
+        let new_relation = NewPolicyRelationModel {
+            dataset_id: payload.dataset_id,
+            policy_template_id: payload.policy_template_id,
+            extra_content: payload.extra_content,
+        };
+        
+        match policy_relations_service.create_policy_relation(new_relation).await {
+            Ok(relation) => (StatusCode::CREATED, Json(serde_json::to_value(relation).unwrap())),
+            Err(e) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({ "error": e.to_string() })),
+            ),
         }
     }
+
 }
+
 
 // use crate::core::datahub_proxy::DatahubProxyTrait;
 use rainbow_db::datahub::repo::{NewPolicyTemplateModel, PolicyTemplatesRepo, PolicyTemplatesRepoErrors};
 // use axum::extract::State;
 // use axum::response::IntoResponse;
-use axum::routing::{post, delete};
+use axum::routing::{delete};
 // use axum::{Json, Router};
 // use reqwest::StatusCode;
-use serde::Deserialize;
-use serde_json::json;
-use urn::Urn;
+
 // use std::sync::Arc;
 // use tracing::info;
 

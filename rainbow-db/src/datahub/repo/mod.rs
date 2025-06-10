@@ -25,6 +25,7 @@ use sea_orm::DatabaseConnection;
 use thiserror::Error;
 use urn::Urn;
 
+
 pub mod sql;
 
 pub trait DatahubConnectorRepoFactory: PolicyTemplatesRepo + PolicyRelationsRepo + Send + Sync + 'static {
@@ -49,7 +50,6 @@ pub trait PolicyTemplatesRepo {
 
 pub struct NewPolicyRelationModel {
     pub dataset_id: String,
-    pub domain_id: Option<String>,
     pub policy_template_id: String,
     pub extra_content: Option<serde_json::Value>,
 }

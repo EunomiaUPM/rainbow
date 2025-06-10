@@ -32,29 +32,27 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(DatahubPolicyRelations::Table)
-                    .col(ColumnDef::new(DatahubPolicyRelations::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(DatahubPolicyRelations::DatasetId).string().not_null())
-                    .col(ColumnDef::new(DatahubPolicyRelations::DomainId).string())
-                    .col(ColumnDef::new(DatahubPolicyRelations::PolicyTemplateId).string().not_null())
-                    .col(ColumnDef::new(DatahubPolicyRelations::ExtraContent).json())
-                    .col(ColumnDef::new(DatahubPolicyRelations::CreatedAt).date_time().not_null())
+                    .table(DataHubPolicyRelations::Table)
+                    .col(ColumnDef::new(DataHubPolicyRelations::Id).string().not_null().primary_key())
+                    .col(ColumnDef::new(DataHubPolicyRelations::DatasetId).string().not_null())
+                    .col(ColumnDef::new(DataHubPolicyRelations::PolicyTemplateId).string().not_null())
+                    .col(ColumnDef::new(DataHubPolicyRelations::ExtraContent).json())
+                    .col(ColumnDef::new(DataHubPolicyRelations::CreatedAt).date_time().not_null())
                     .to_owned(),
             )
             .await
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(DatahubPolicyRelations::Table).to_owned()).await
+        manager.drop_table(Table::drop().table(DataHubPolicyRelations::Table).to_owned()).await
     }
 }
 
 #[derive(Iden)]
-pub enum DatahubPolicyRelations {
+pub enum DataHubPolicyRelations {
     Table,
     Id,
     DatasetId,
-    DomainId,
     PolicyTemplateId,
     ExtraContent,
     CreatedAt,

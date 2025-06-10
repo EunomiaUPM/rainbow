@@ -21,7 +21,7 @@ use sea_orm::entity::prelude::*;
 use urn::Urn;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, serde::Serialize)]
-#[sea_orm(table_name = "policy_relations")]
+#[sea_orm(table_name = "datahub_policy_relations")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: String,

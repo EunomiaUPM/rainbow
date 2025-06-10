@@ -17,7 +17,7 @@
  *
  */
 
-use crate::datahub::migrations::m20250528_000001_policy_relations::DatahubPolicyRelations;
+use crate::datahub::migrations::m20250528_000001_policy_relations::DataHubPolicyRelations;
 use sea_orm_migration::prelude::*;
 
 pub struct Migration;
@@ -34,7 +34,7 @@ impl MigrationTrait for Migration {
             .create_foreign_key(
                 ForeignKey::create()
                     .name("fk-datahub_policy_relations-policy_template_id")
-                    .from(DatahubPolicyRelations::Table, DatahubPolicyRelations::PolicyTemplateId)
+                    .from(DataHubPolicyRelations::Table, DataHubPolicyRelations::PolicyTemplateId)
                     .to(PolicyTemplates::Table, PolicyTemplates::Id)
                     .on_delete(ForeignKeyAction::Cascade) // Cascade deletion if a policy template is removed
                     .on_update(ForeignKeyAction::Cascade) // Cascade updates if a policy template ID changes
@@ -49,7 +49,7 @@ impl MigrationTrait for Migration {
             .drop_foreign_key(
                 ForeignKey::drop()
                     .name("fk-datahub_policy_relations-policy_template_id")
-                    .table(DatahubPolicyRelations::Table) // Specify the table from which the FK is dropped
+                    .table(DataHubPolicyRelations::Table) // Specify the table from which the FK is dropped
                     .to_owned(),
             )
             .await?;
