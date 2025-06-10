@@ -127,6 +127,7 @@ impl PolicyTemplatesRepo for DatahubConnectorRepoForSql {
     }
 }
 
+
 #[async_trait]
 impl PolicyRelationsRepo for DatahubConnectorRepoForSql {
     async fn create_policy_relation(&self, new_relation: NewPolicyRelationModel) -> anyhow::Result<policy_relations::Model, PolicyTemplatesRepoErrors> {
@@ -158,6 +159,36 @@ impl PolicyRelationsRepo for DatahubConnectorRepoForSql {
         {
             Ok(_) => Ok(()),
             Err(err) => Err(PolicyTemplatesRepoErrors::ErrorDeletingPolicyRelation(err.into())),
+        }
+    }
+
+    async fn get_all_policy_relations(&self, limit: Option<u64>, page: Option<u64>) -> anyhow::Result<Vec<policy_relations::Model>, PolicyTemplatesRepoErrors> {
+        // Configurar la paginación
+        let page = page.unwrap_or(1);
+        let limit = limit.unwrap_or(10);
+        let offset = (page - 1) * limit;
+
+        // Construir la consulta
+        match policy_relations::Entity::find()
+            .order_by_desc(policy_relations::Column::CreatedAt)
+            .limit(limit)
+            .offset(offset)
+            .all(&self.db_connection)
+            .await
+        {
+            Ok(relations) => Ok(relations),
+            Err(err) => Err(PolicyTemplatesRepoErrors::ErrorFetchingPolicyRelation(err.into())),
+        }
+    }
+
+    async fn get_relation_by_id(&self, relation_id: String) -> anyhow::Result<Option<policy_relations::Model>, PolicyTemplatesRepoErrors> {
+        // Buscar la plantilla por ID
+        match policy_relations::Entity::find_by_id(relation_id)
+            .one(&self.db_connection)
+            .await
+        {
+            Ok(relation) => Ok(relation),
+            Err(err) => Err(PolicyTemplatesRepoErrors::ErrorFetchingPolicyRelation(err.into())),
         }
     }
 }

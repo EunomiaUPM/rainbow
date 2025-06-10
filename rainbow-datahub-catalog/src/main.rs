@@ -9,7 +9,7 @@ use crate::core::datahub_proxy::DatahubProxyTrait;
 use crate::http::datahub_proxy::datahub_proxy::DataHubProxyRouter;
 use crate::http::rainbow_entities::policy_relations_router::{PolicyTemplatesRouter, PolicyRelationsRouter}; 
 use rainbow_db::datahub::repo::sql::DatahubConnectorRepoForSql;
-use rainbow_db::datahub::repo::{NewDataHubDatasetModel, DatahubDatasetsRepo};
+use rainbow_db::datahub::repo::{NewDataHubDatasetModel, DatahubDatasetsRepo, PolicyRelationsRepo};
 use sea_orm::{DatabaseConnection, Database, EntityTrait};
 use crate::core::rainbow_entities::rainbow_entites::PolicyTemplatesToDatahubDatasetRelationService;
 
@@ -35,6 +35,8 @@ async fn main() {
     let datahub_router = DataHubProxyRouter::new(datahub_service.clone());
     let policy_templates_router = PolicyTemplatesRouter::new(policy_templates_service.clone());
     let policy_relations_router = PolicyRelationsRouter::new(repo.clone());
+
+
 
     let app = Router::new()
         .merge(datahub_router.router())
