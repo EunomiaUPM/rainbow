@@ -167,7 +167,7 @@ where
           "id": id,
           "input_descriptors": [
             {
-              "id": "VerifiableId",
+              "id": "DataspaceParticipantCredential",
               "format": {
                 "jwt_vc_json": {
                   "alg": [
@@ -183,7 +183,7 @@ where
                     ],
                     "filter": {
                       "type": "string",
-                      "pattern": "VerifiableId"
+                      "pattern": "DataspaceParticipantCredential"
                     }
                   }
                 ]
@@ -399,7 +399,7 @@ where
         info!("VCT token signature is correct");
         debug!("{:#?}", token);
 
-        if token.claims["iss"].as_str().unwrap() != kid || kid != token.claims["vc"]["issuer"].as_str().unwrap() {
+        if token.claims["iss"].as_str().unwrap() != kid || kid != token.claims["vc"]["issuer"]["id"].as_str().unwrap() {
             // VALIDATE IF ISSUER IS THE SAME AS KID
             error!("VCT token issuer & kid does not match");
             bail!("VCT token issuer & kid does not match");
