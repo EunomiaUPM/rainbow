@@ -24,6 +24,7 @@ use axum::http::{Method, Uri};
 use axum::response::IntoResponse;
 use axum::routing::{delete, get, post, put};
 use axum::{Json, Router};
+use rainbow_common::mates::mates::VerifyTokenRequest;
 use rainbow_common::mates::Mates;
 use rainbow_db::mates::repo::{MateRepoFactory, MateRepoTrait};
 use reqwest::StatusCode;
@@ -53,6 +54,10 @@ where
         Router::new()
             .route("/api/v1/mates", get(Self::get_mates))
             .route("/api/v1/mates", post(Self::new_mate))
+            .route(
+                "/api/v1/mates/verify",
+                post(Self::verify_singular_mate_by_token),
+            )
             .route("/api/v1/mates/me", get(Self::get_me_mate))
             .route("/api/v1/mates/me", post(Self::bootstrap_mate))
             .route("/api/v1/mates/:id", get(Self::get_singular_mate))
@@ -84,7 +89,10 @@ where
         }
     }
 
-    async fn bootstrap_mate(State(mate_repo): State<Arc<T>>, input: Result<Json<BootstrapMateRequest>, JsonRejection>) -> impl IntoResponse {
+    async fn bootstrap_mate(
+        State(mate_repo): State<Arc<T>>,
+        input: Result<Json<BootstrapMateRequest>, JsonRejection>,
+    ) -> impl IntoResponse {
         info!("POST /api/v1/mates/me");
 
         let input = match input {
@@ -101,6 +109,20 @@ where
         info!("GET /mates/{}", id);
 
         match mate_repo.get_mate_by_id(id).await {
+            Ok(mates) => (StatusCode::OK, Json(mates)).into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        }
+    }
+    async fn verify_singular_mate_by_token(
+        State(mate_repo): State<Arc<T>>,
+        input: Result<Json<VerifyTokenRequest>, JsonRejection>,
+    ) -> impl IntoResponse {
+        info!("POST /mates/verify");
+        let input = match input {
+            Ok(input) => input.0,
+            Err(e) => return (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
+        };
+        match mate_repo.get_mate_by_token(input).await {
             Ok(mates) => (StatusCode::OK, Json(mates)).into_response(),
             Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
         }

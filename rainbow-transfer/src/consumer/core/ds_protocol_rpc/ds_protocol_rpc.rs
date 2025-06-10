@@ -33,6 +33,7 @@ use crate::consumer::setup::config::TransferConsumerApplicationConfig;
 use anyhow::{anyhow, bail};
 use axum::async_trait;
 use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
+use rainbow_common::mates::Mates;
 use rainbow_common::protocol::transfer::transfer_completion::TransferCompletionMessage;
 use rainbow_common::protocol::transfer::transfer_process::TransferProcessMessage;
 use rainbow_common::protocol::transfer::transfer_request::TransferRequestMessage;
@@ -91,16 +92,14 @@ where
         Self { transfer_repo, data_plane_facade, config, notification_service, client, mates_facade }
     }
 
-    async fn get_provider_base_url(&self, provider_participant_id: &Urn) -> anyhow::Result<String> {
+    /// Get provider mate based in id
+    async fn get_provider_mate(&self, provider_participant_id: &Urn) -> anyhow::Result<Mates> {
         let mate = self
             .mates_facade
             .get_mate_by_id(provider_participant_id.clone())
             .await
             .map_err(|e| anyhow!("Error parsing mate: {}", e.to_string()))?;
-        match mate.base_url {
-            Some(base_url) => Ok(base_url),
-            None => bail!("Mate with no base_url".to_string())
-        }
+        Ok(mate)
     }
 
     /// Fetches and validates the existence of a transfer callback record by consumer_pid.
@@ -154,6 +153,7 @@ where
         &self,
         target_url: String,
         message_payload: &M,
+        token: String,
         error_context_provider_pid: Option<Urn>,
         error_context_consumer_pid: Option<Urn>,
     ) -> anyhow::Result<TransferProcessMessage> {
@@ -161,7 +161,11 @@ where
             "Sending message to provider at URL: {}, Payload: {:?}",
             target_url, message_payload
         );
-        let response = self.client.post(&target_url).json(message_payload).send().await.map_err(|_e| {
+        let response = self.client
+            .post(&target_url)
+            .header("Authorization", format!("Bearer {}", token))
+            .json(message_payload)
+            .send().await.map_err(|_e| {
             DSRPCTransferConsumerErrors::ProviderNotReachable {
                 provider_pid: error_context_provider_pid.clone(),
                 consumer_pid: error_context_consumer_pid.clone(),
@@ -219,8 +223,16 @@ where
     ) -> anyhow::Result<DSRPCTransferConsumerRequestResponse> {
         let DSRPCTransferConsumerRequestRequest { agreement_id, format, data_address, provider_participant_id, .. } = input.clone();
         // 0. fetch participant
-        let provider_base_url = self.get_provider_base_url(&provider_participant_id).await?;
+        let provider_mate = self
+            .get_provider_mate(&provider_participant_id)
+            .await?;
+        let provider_base_url = provider_mate
+            .base_url
+            .ok_or(anyhow!("No base url"))?;
         let provider_base_url = provider_base_url.strip_suffix('/').unwrap_or(provider_base_url.as_str());
+        let provider_token = provider_mate
+            .token
+            .ok_or(anyhow!("No token"))?;
         // 1. Generate PIDs and callback address
         let consumer_pid = get_urn(None);
         let callback_urn = get_urn(None);
@@ -244,6 +256,7 @@ where
             .send_protocol_message_to_provider(
                 provider_url,
                 &transfer_request,
+                provider_token,
                 None, // Provider PID is not known yet for error tracking at this initial stage
                 Some(consumer_pid.clone()),
             )
@@ -308,8 +321,16 @@ where
         let DSRPCTransferConsumerStartRequest { data_address, provider_participant_id, provider_pid, consumer_pid, .. } =
             input.clone();
         // 0. fetch participant
-        let provider_base_url = self.get_provider_base_url(&provider_participant_id).await?;
+        let provider_mate = self
+            .get_provider_mate(&provider_participant_id)
+            .await?;
+        let provider_base_url = provider_mate
+            .base_url
+            .ok_or(anyhow!("No base url"))?;
         let provider_base_url = provider_base_url.strip_suffix('/').unwrap_or(provider_base_url.as_str());
+        let provider_token = provider_mate
+            .token
+            .ok_or(anyhow!("No token"))?;
         // 1. Validate correlation
         let _current_process_record =
             self.validate_and_get_transfer_callback_by_consumer_id(&provider_pid, &consumer_pid).await?;
@@ -330,6 +351,7 @@ where
             .send_protocol_message_to_provider(
                 provider_url,
                 &transfer_start_message,
+                provider_token,
                 Some(provider_pid.clone()),
                 Some(consumer_pid.clone()),
             )
@@ -395,8 +417,16 @@ where
         let DSRPCTransferConsumerSuspensionRequest { provider_participant_id, provider_pid, consumer_pid, code, reason } =
             input.clone();
         // 0. fetch participant
-        let provider_base_url = self.get_provider_base_url(&provider_participant_id).await?;
+        let provider_mate = self
+            .get_provider_mate(&provider_participant_id)
+            .await?;
+        let provider_base_url = provider_mate
+            .base_url
+            .ok_or(anyhow!("No base url"))?;
         let provider_base_url = provider_base_url.strip_suffix('/').unwrap_or(provider_base_url.as_str());
+        let provider_token = provider_mate
+            .token
+            .ok_or(anyhow!("No token"))?;
         // 1. Validate correlation
         let _current_process_record =
             self.validate_and_get_transfer_callback_by_consumer_id(&provider_pid, &consumer_pid).await?;
@@ -418,6 +448,7 @@ where
             .send_protocol_message_to_provider(
                 provider_url,
                 &transfer_suspension_message,
+                provider_token,
                 Some(provider_pid.clone()),
                 Some(consumer_pid.clone()),
             )
@@ -477,8 +508,16 @@ where
     ) -> anyhow::Result<DSRPCTransferConsumerCompletionResponse> {
         let DSRPCTransferConsumerCompletionRequest { provider_participant_id, provider_pid, consumer_pid, .. } = input.clone();
         // 0. fetch participant
-        let provider_base_url = self.get_provider_base_url(&provider_participant_id).await?;
+        let provider_mate = self
+            .get_provider_mate(&provider_participant_id)
+            .await?;
+        let provider_base_url = provider_mate
+            .base_url
+            .ok_or(anyhow!("No base url"))?;
         let provider_base_url = provider_base_url.strip_suffix('/').unwrap_or(provider_base_url.as_str());
+        let provider_token = provider_mate
+            .token
+            .ok_or(anyhow!("No token"))?;
         // 1. Validate correlation
         let _current_process_record =
             self.validate_and_get_transfer_callback_by_consumer_id(&provider_pid, &consumer_pid).await?;
@@ -498,6 +537,7 @@ where
             .send_protocol_message_to_provider(
                 provider_address,
                 &transfer_completion_message,
+                provider_token,
                 Some(provider_pid.clone()),
                 Some(consumer_pid.clone()),
             )
@@ -558,8 +598,16 @@ where
         let DSRPCTransferConsumerTerminationRequest { provider_participant_id, provider_pid, consumer_pid, code, reason } =
             input.clone();
         // 0. fetch participant
-        let provider_base_url = self.get_provider_base_url(&provider_participant_id).await?;
+        let provider_mate = self
+            .get_provider_mate(&provider_participant_id)
+            .await?;
+        let provider_base_url = provider_mate
+            .base_url
+            .ok_or(anyhow!("No base url"))?;
         let provider_base_url = provider_base_url.strip_suffix('/').unwrap_or(provider_base_url.as_str());
+        let provider_token = provider_mate
+            .token
+            .ok_or(anyhow!("No token"))?;
         // 1. Validate correlation
         let _current_process_record =
             self.validate_and_get_transfer_callback_by_consumer_id(&provider_pid, &consumer_pid).await?;
@@ -581,6 +629,7 @@ where
             .send_protocol_message_to_provider(
                 provider_url,
                 &transfer_termination_message,
+                provider_token,
                 Some(provider_pid.clone()),
                 Some(consumer_pid.clone()),
             )

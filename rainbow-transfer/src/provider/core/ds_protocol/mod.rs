@@ -34,25 +34,29 @@ pub mod ds_protocol_err;
 pub trait DSProtocolTransferProviderTrait: Send + Sync {
     async fn get_transfer_requests_by_provider(&self, provider_pid: Urn) -> anyhow::Result<TransferProcessMessage>;
     async fn get_transfer_requests_by_consumer(&self, consumer_pid: Urn) -> anyhow::Result<Option<TransferProcessMessage>>;
-    async fn transfer_request(&self, input: TransferRequestMessage) -> anyhow::Result<TransferProcessMessage>;
+    async fn transfer_request(&self, input: TransferRequestMessage, token: String) -> anyhow::Result<TransferProcessMessage>;
     async fn transfer_start(
         &self,
         provider_pid: Urn,
         input: TransferStartMessage,
+        token: String,
     ) -> anyhow::Result<TransferProcessMessage>;
     async fn transfer_suspension(
         &self,
         provider_pid: Urn,
         input: TransferSuspensionMessage,
+        token: String,
     ) -> anyhow::Result<TransferProcessMessage>;
     async fn transfer_completion(
         &self,
         provider_pid: Urn,
         input: TransferCompletionMessage,
+        token: String,
     ) -> anyhow::Result<TransferProcessMessage>;
     async fn transfer_termination(
         &self,
         provider_pid: Urn,
         input: TransferTerminationMessage,
+        token: String,
     ) -> anyhow::Result<TransferProcessMessage>;
 }

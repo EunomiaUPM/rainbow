@@ -19,6 +19,7 @@
 
 use crate::mates::entities::mates;
 use axum::async_trait;
+use rainbow_common::mates::mates::VerifyTokenRequest;
 use rainbow_common::mates::Mates;
 use sea_orm::DatabaseConnection;
 
@@ -35,6 +36,7 @@ pub trait MateRepoTrait {
     async fn get_all_mates(&self, limit: Option<u64>, offset: Option<u64>) -> anyhow::Result<Vec<mates::Model>>;
     async fn get_mate_by_id(&self, id: String) -> anyhow::Result<mates::Model>;
     async fn get_mate_me(&self) -> anyhow::Result<Option<mates::Model>>;
+    async fn get_mate_by_token(&self, verify_token_request: VerifyTokenRequest) -> anyhow::Result<mates::Model>;
     async fn create_mate(&self, mate: Mates, is_me: bool) -> anyhow::Result<mates::Model>;
     async fn update_mate(&self, mate: Mates) -> anyhow::Result<mates::Model>;
     async fn delete_mate(&self, id: String) -> anyhow::Result<()>;

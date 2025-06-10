@@ -28,6 +28,8 @@ use crate::provider::core::rainbow_entities::rainbow_err::RainbowTransferProvide
 use anyhow::bail;
 use axum::async_trait;
 use rainbow_common::err::transfer_err::TransferErrorType;
+use rainbow_common::facades::ssi_auth_facade::SSIAuthFacadeTrait;
+use rainbow_common::mates::Mates;
 use rainbow_common::protocol::contract::contract_protocol_trait::DSProtocolContractNegotiationMessageTrait;
 use rainbow_common::protocol::contract::ContractNegotiationMessages;
 use rainbow_common::protocol::transfer::transfer_completion::TransferCompletionMessage;
@@ -56,34 +58,48 @@ use std::sync::Arc;
 use tracing::debug;
 use urn::Urn;
 
-pub struct DSProtocolTransferProviderImpl<T, U, V, W>
+pub struct DSProtocolTransferProviderImpl<T, U, V, W, X>
 where
     T: TransferProviderRepoFactory + Send + Sync,
     U: DataServiceFacadeTrait + Send + Sync,
     V: DataPlaneProviderFacadeTrait + Send + Sync,
     W: RainbowEventsNotificationTrait + Sync + Send,
+    X: SSIAuthFacadeTrait + Sync + Send,
 {
     transfer_repo: Arc<T>,
     data_service_facade: Arc<U>,
     data_plane: Arc<V>,
     notification_service: Arc<W>,
+    ssi_auth_facade: Arc<X>,
 }
 
-impl<T, U, V, W> DSProtocolTransferProviderImpl<T, U, V, W>
+impl<T, U, V, W, X> DSProtocolTransferProviderImpl<T, U, V, W, X>
 where
     T: TransferProviderRepoFactory + Send + Sync,
     U: DataServiceFacadeTrait + Send + Sync,
     V: DataPlaneProviderFacadeTrait + Send + Sync,
     W: RainbowEventsNotificationTrait + Sync + Send,
+    X: SSIAuthFacadeTrait + Sync + Send,
 {
     pub fn new(
         transfer_repo: Arc<T>,
         data_service_facade: Arc<U>,
         data_plane: Arc<V>,
         notification_service: Arc<W>,
+        ssi_auth_facade: Arc<X>,
     ) -> Self {
-        Self { transfer_repo, data_service_facade, data_plane, notification_service }
+        Self { transfer_repo, data_service_facade, data_plane, notification_service, ssi_auth_facade }
     }
+
+
+    /// Validate auth token
+    async fn validate_auth_token(&self, token: String) -> anyhow::Result<Mates> {
+        let mate = self.ssi_auth_facade
+            .verify_token(token)
+            .await?;
+        Ok(mate)
+    }
+
 
     ///
     ///
@@ -99,6 +115,7 @@ where
         &self,
         provider_pid_from_uri: &Urn, // Provider PID from URL path
         message: &M,                 // The incoming message
+        consumer_participant_mate: &Mates,
     ) -> anyhow::Result<transfer_process::Model> {
         debug!("Transfer provider payload validation");
         let message_provider_pid = message.get_provider_pid()?;
@@ -132,6 +149,12 @@ where
             if consumer_transfer_process.provider_pid != provider_transfer_process.provider_pid {
                 bail!(RainbowTransferProviderErrors::ValidationError(
                     "ConsumerPid and ProviderPid don't coincide".to_string()
+                ))
+            }
+            // 4. Validate process is correlated with mate
+            if provider_transfer_process.associated_consumer.clone().unwrap() != consumer_participant_mate.participant_id {
+                bail!(RainbowTransferProviderErrors::ValidationError(
+                    "This user is not related with this process".to_string()
                 ))
             }
         }
@@ -289,12 +312,13 @@ where
 }
 
 #[async_trait]
-impl<T, U, V, W> DSProtocolTransferProviderTrait for DSProtocolTransferProviderImpl<T, U, V, W>
+impl<T, U, V, W, X> DSProtocolTransferProviderTrait for DSProtocolTransferProviderImpl<T, U, V, W, X>
 where
     T: TransferProviderRepoFactory + Send + Sync,
     U: DataServiceFacadeTrait + Send + Sync,
     V: DataPlaneProviderFacadeTrait + Send + Sync,
     W: RainbowEventsNotificationTrait + Sync + Send,
+    X: SSIAuthFacadeTrait + Sync + Send,
 {
     async fn get_transfer_requests_by_provider(&self, provider_pid: Urn) -> anyhow::Result<TransferProcessMessage> {
         debug!("DSProtocol Service: get_transfer_requests_by_provider");
@@ -323,7 +347,7 @@ where
         Ok(transfers.map(|e| e.into()))
     }
 
-    async fn transfer_request(&self, input: TransferRequestMessage) -> anyhow::Result<TransferProcessMessage> {
+    async fn transfer_request(&self, input: TransferRequestMessage, token: String) -> anyhow::Result<TransferProcessMessage> {
         debug!("DSProtocol Service: transfer_request");
         // 0. Extract data
         let provider_pid = get_urn(None);
@@ -334,6 +358,7 @@ where
         let message_type = input._type.clone();
 
         // 1. Validate request
+        let consumer_participant_mate = self.validate_auth_token(token).await?;
         self.json_schema_validation(&input)
             .map_err(|e| RainbowTransferProviderErrors::ValidationError(e.to_string()))?;
         self.transition_validation(&input).await?;
@@ -359,6 +384,7 @@ where
                 consumer_pid,
                 agreement_id,
                 data_plane_id: get_urn(None), // TODO
+                associated_consumer: Some(get_urn_from_string(&consumer_participant_mate.participant_id)?),
             })
             .await
             .map_err(DSProtocolTransferProviderErrors::DbErr)?;
@@ -392,13 +418,15 @@ where
         &self,
         provider_pid: Urn,
         input: TransferStartMessage,
+        token: String,
     ) -> anyhow::Result<TransferProcessMessage> {
         let TransferStartMessage { provider_pid: provider_pid_, consumer_pid, .. } = input.clone();
         // 1. Validate request
+        let consumer_participant_mate = self.validate_auth_token(token).await?;
         self.json_schema_validation(&input)
             .map_err(|e| RainbowTransferProviderErrors::ValidationError(e.to_string()))?;
         self.transition_validation(&input).await?;
-        let _ = self.payload_validation(&provider_pid, &input).await?;
+        let _ = self.payload_validation(&provider_pid, &input, &consumer_participant_mate).await?;
         // 2. Persist model/state
         let transfer_process = self
             .transfer_repo
@@ -454,12 +482,14 @@ where
         &self,
         provider_pid: Urn,
         input: TransferSuspensionMessage,
+        token: String,
     ) -> anyhow::Result<TransferProcessMessage> {
         let TransferSuspensionMessage { provider_pid: provider_pid_, consumer_pid, .. } = input.clone();
         // 1. Validate request
+        let consumer_participant_mate = self.validate_auth_token(token).await?;
         self.json_schema_validation(&input)
             .map_err(|e| RainbowTransferProviderErrors::ValidationError(e.to_string()))?;
-        let _ = self.payload_validation(&provider_pid, &input).await?;
+        let _ = self.payload_validation(&provider_pid, &input, &consumer_participant_mate).await?;
         self.transition_validation(&input).await?;
         // 2. Persist model/state
         let transfer_process = self
@@ -515,12 +545,14 @@ where
         &self,
         provider_pid: Urn,
         input: TransferCompletionMessage,
+        token: String,
     ) -> anyhow::Result<TransferProcessMessage> {
         let TransferCompletionMessage { provider_pid: provider_pid_, consumer_pid, .. } = input.clone();
         // 1. Validate request
+        let consumer_participant_mate = self.validate_auth_token(token).await?;
         self.json_schema_validation(&input)
             .map_err(|e| RainbowTransferProviderErrors::ValidationError(e.to_string()))?;
-        let _ = self.payload_validation(&provider_pid, &input).await?;
+        let _ = self.payload_validation(&provider_pid, &input, &consumer_participant_mate).await?;
         self.transition_validation(&input).await?;
         // 2. Persist model/state
         let transfer_process = self
@@ -576,12 +608,14 @@ where
         &self,
         provider_pid: Urn,
         input: TransferTerminationMessage,
+        token: String,
     ) -> anyhow::Result<TransferProcessMessage> {
         let TransferTerminationMessage { provider_pid: provider_pid_, consumer_pid, .. } = input.clone();
         // 1. Validate request
+        let consumer_participant_mate = self.validate_auth_token(token).await?;
         self.json_schema_validation(&input)
             .map_err(|e| RainbowTransferProviderErrors::ValidationError(e.to_string()))?;
-        let _ = self.payload_validation(&provider_pid, &input).await?;
+        let _ = self.payload_validation(&provider_pid, &input, &consumer_participant_mate).await?;
         self.transition_validation(&input).await?;
         // 2. Persist model/state
         let transfer_process = self

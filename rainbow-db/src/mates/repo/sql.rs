@@ -23,6 +23,7 @@ use crate::mates::repo::{MateRepoFactory, MateRepoTrait};
 use anyhow::{anyhow, bail};
 use axum::async_trait;
 use chrono;
+use rainbow_common::mates::mates::VerifyTokenRequest;
 use rainbow_common::mates::Mates;
 use sea_orm::sea_query::OnConflict;
 use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter, QuerySelect};
@@ -84,13 +85,23 @@ impl MateRepoTrait for MateRepoForSql {
         Ok(mate)
     }
 
+    async fn get_mate_by_token(&self, verify_token_request: VerifyTokenRequest) -> anyhow::Result<Model> {
+        let mate = mates::Entity::find()
+            .filter(mates::Column::Token.eq(verify_token_request.token))
+            .one(&self.db_connection)
+            .await
+            .map_err(|e| anyhow!("No able to fetch {}", e.to_string()))?
+            .ok_or(anyhow!("No mate associated with token"))?;
+        Ok(mate)
+    }
+
     async fn create_mate(&self, mate: Mates, is_me: bool) -> anyhow::Result<mates::Model> {
         if is_me {
             if let Some(mate_me) = self.get_mate_me().await? {
                 bail!("mate owner already exists: {:?}", mate_me)
             }
         }
-        
+
         let mate = mates::ActiveModel {
             participant_id: ActiveValue::Set(mate.participant_id),
             participant_slug: ActiveValue::Set(mate.participant_slug),

@@ -39,6 +39,7 @@ pub struct NewTransferProcessModel {
     pub consumer_pid: Urn,
     pub agreement_id: Urn,
     pub data_plane_id: Urn,
+    pub associated_consumer: Option<Urn>,
 }
 
 pub struct EditTransferProcessModel {

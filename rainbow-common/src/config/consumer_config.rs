@@ -226,7 +226,7 @@ impl ApplicationConsumerConfigTrait for ApplicationConsumerConfig {
         &self.ssi_consumer_client
     }
     fn merge_dotenv_configuration(&self) -> Self {
-        dotenvy::dotenv().ok();
+        dotenvy::from_filename(".env.gateway.consumer");
         let default = ApplicationConsumerConfig::default();
         let compound_config = Self {
             transfer_process_host: Some(HostConfig {

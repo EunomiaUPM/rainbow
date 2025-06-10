@@ -61,3 +61,8 @@ impl Mates {
         }
     }
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct VerifyTokenRequest {
+    pub token: String,
+}

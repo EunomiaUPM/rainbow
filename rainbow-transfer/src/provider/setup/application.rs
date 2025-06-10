@@ -29,6 +29,7 @@ use crate::provider::setup::config::TransferProviderApplicationConfig;
 use axum::{serve, Router};
 use rainbow_common::config::global_config::ApplicationGlobalConfig;
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_common::facades::ssi_auth_facade::ssi_auth_facade::SSIAuthFacadeService;
 use rainbow_dataplane::coordinator::controller::controller_service::DataPlaneControllerService;
 use rainbow_dataplane::coordinator::dataplane_process::dataplane_process_service::DataPlaneProcessService;
 use rainbow_dataplane::data_plane_info::data_plane_info::DataPlaneInfoService;
@@ -66,10 +67,14 @@ pub async fn create_transfer_provider_router(config: &TransferProviderApplicatio
     let dataplane_testing_router = TestingHTTPProxy::new(
         application_global_config.clone().into(),
         dataplane_process_service.clone(),
-    ).router();
+    )
+        .router();
 
     // Dataplane Router
-    let dataplane_info_service = Arc::new(DataPlaneInfoService::new(dataplane_process_service.clone(), application_global_config.into()));
+    let dataplane_info_service = Arc::new(DataPlaneInfoService::new(
+        dataplane_process_service.clone(),
+        application_global_config.clone().into(),
+    ));
     let dataplane_info_router = DataPlaneRouter::new(dataplane_info_service.clone()).router();
 
     // Events router
@@ -99,18 +104,21 @@ pub async fn create_transfer_provider_router(config: &TransferProviderApplicatio
         RainbowTransferProviderEntitiesRouter::new(Arc::new(rainbow_entities_service)).router();
 
     // DSProtocol Dependency injection
+
+    let ssi_auth_facade = Arc::new(SSIAuthFacadeService::new(
+        application_global_config.clone().into(),
+    ));
     let data_plane_facade = Arc::new(DataPlaneProviderFacadeForDSProtocol::new(
         dataplane_controller.clone(),
         config.clone(),
     ));
-    let data_service_facade = Arc::new(DataServiceFacadeServiceForDSProtocol::new(
-        config.clone(),
-    ));
+    let data_service_facade = Arc::new(DataServiceFacadeServiceForDSProtocol::new(config.clone()));
     let ds_protocol_service = Arc::new(DSProtocolTransferProviderImpl::new(
         provider_repo.clone(),
         data_service_facade.clone(),
         data_plane_facade.clone(),
         notification_service.clone(),
+        ssi_auth_facade.clone(),
     ));
     let ds_protocol_router = DSProtocolTransferProviderRouter::new(ds_protocol_service.clone()).router();
 
