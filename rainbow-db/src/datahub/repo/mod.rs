@@ -61,7 +61,7 @@ pub trait PolicyRelationsRepo {
     // async fn get_all_templates_by_dataset_id(&self, dataset_id: String) -> anyhow::Result<Vec<policy_templates::Model>, PolicyTemplatesRepoErrors>;
     // async fn get_relation_by_id(&self, policy_relation_id: Urn) -> anyhow::Result<policy_relations::Model, PolicyTemplatesRepoErrors>;
     async fn create_policy_relation(&self, new_policy_relation: NewPolicyRelationModel) -> anyhow::Result<policy_relations::Model, PolicyTemplatesRepoErrors>;
-    async fn delete_policy_relation(&self, template_id: Urn) -> anyhow::Result<(), PolicyTemplatesRepoErrors>;
+    async fn delete_policy_relation_by_id(&self, template_id: String) -> anyhow::Result<(), PolicyTemplatesRepoErrors>;
 
 }
 

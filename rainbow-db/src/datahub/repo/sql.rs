@@ -151,10 +151,17 @@ impl PolicyRelationsRepo for DatahubConnectorRepoForSql {
     }
     
 
-    async fn delete_policy_relation(&self, relation_id: Urn) -> anyhow::Result<(), PolicyTemplatesRepoErrors> {
-        todo!()
+    async fn delete_policy_relation_by_id(&self, relation_id: String) -> anyhow::Result<(), PolicyTemplatesRepoErrors> {
+        match policy_relations::Entity::delete_by_id(relation_id)
+            .exec(&self.db_connection)
+            .await
+        {
+            Ok(_) => Ok(()),
+            Err(err) => Err(PolicyTemplatesRepoErrors::ErrorDeletingPolicyRelation(err.into())),
+        }
     }
 }
+
 
 #[async_trait]
 impl DatahubDatasetsRepo for DatahubConnectorRepoForSql {

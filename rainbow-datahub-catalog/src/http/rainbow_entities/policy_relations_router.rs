@@ -56,11 +56,12 @@ where
     pub fn router(self) -> Router {
         Router::new()
             .route("/api/v1/datahub/policy-relations", post(Self::create_policy_relation))
-            .with_state((self.policy_relations_service))
+            .route("/api/v1/datahub/policy-relations/:id", delete(Self::delete_policy_relation_by_id))
+            .with_state(self.policy_relations_service)
     }
 
     async fn create_policy_relation(
-        State((policy_relations_service)): State<(Arc<T>)>,
+        State(policy_relations_service): State<Arc<T>>,
         Json(payload): Json<CreatePolicyRelationRequest>,
     ) -> impl IntoResponse {
         info!("POST /api/v1/datahub/policy-relations");
@@ -79,6 +80,31 @@ where
             ),
         }
     }
+
+    async fn delete_policy_relation_by_id(
+        State(policy_relations_service): State<Arc<T>>,
+        Path(id): Path<String>,
+    ) -> impl IntoResponse {
+        info!("DELETE /api/v1/datahub/policy-relations/{}", id);
+        
+        match policy_relations_service.delete_policy_relation_by_id(id).await {
+            Ok(_) => {
+                info!("Policy relation eliminada exitosamente");
+                (
+                    StatusCode::NO_CONTENT,
+                    Json(json!({ "message": "Policy relation deleted successfully" }))
+                )
+            },
+            Err(e) => {
+                error!("Error al eliminar policy relation: {}", e);
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(json!({ "error": e.to_string() }))
+                )
+            },
+        }
+    }
+
 
 }
 
