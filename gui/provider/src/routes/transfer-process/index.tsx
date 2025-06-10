@@ -4,6 +4,7 @@ import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "sha
 import dayjs from "dayjs";
 import {ExternalLink} from "lucide-react";
 
+
 export const Route = createFileRoute('/transfer-process/')({
     component: RouteComponent,
 })

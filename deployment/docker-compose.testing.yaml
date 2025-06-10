@@ -2,6 +2,7 @@ version: "3"
 services:
 
   db-provider:
+    platform: linux/amd64
     container_name: db-provider
     image: "postgres"
     restart: always
@@ -13,6 +14,7 @@ services:
       POSTGRES_DB: ds-protocol-provider
 
   ds-provider:
+    platform: linux/amd64
     container_name: ds-provider
     image: caparicioesd/rainbow
     restart: on-failure
@@ -25,6 +27,7 @@ services:
     command: [ "provider", "start" ]
 
   ds-provider-setup:
+    platform: linux/amd64
     container_name: ds-provider-setup
     image: caparicioesd/rainbow
     restart: on-failure
@@ -35,6 +38,8 @@ services:
     command: [ "provider", "setup" ]
 
   db-consumer:
+    
+    platform: linux/amd64
     container_name: db-consumer
     image: "postgres"
     restart: always
@@ -46,6 +51,7 @@ services:
       POSTGRES_DB: ds-protocol-consumer
 
   ds-consumer:
+    platform: linux/amd64
     container_name: ds-consumer
     image: caparicioesd/rainbow
     restart: on-failure
@@ -58,6 +64,7 @@ services:
     command: [ "consumer", "start" ]
 
   ds-consumer-setup:
+    platform: linux/amd64
     container_name: ds-consumer-setup
     image: caparicioesd/rainbow
     restart: on-failure
@@ -68,6 +75,7 @@ services:
     command: [ "consumer", "setup" ]
 
   streaming-testing-service:
+    platform: linux/amd64
     container_name: streaming-testing-service
     image: caparicioesd/rainbow-test-srv:latest
     restart: always
@@ -75,6 +83,7 @@ services:
       - "1237:1237"
 
   fiware-orion:
+    platform: linux/amd64
     image: fiware/orion
     ports:
       - "1026:1026"
@@ -90,11 +99,13 @@ services:
       - "host.docker.internal:host-gateway"
 
   mongo:
+    platform: linux/amd64
     image: mongo
     ports:
       - "27017:27017"
 
   streaming-service:
+    platform: linux/amd64
     image: caparicioesd/rainbow-testing-streaming
     environment:
       CONTEXT_BROKER_URL: fiware-orion

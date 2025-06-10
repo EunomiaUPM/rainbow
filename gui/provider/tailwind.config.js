@@ -16,8 +16,8 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        "title": ['var(--font-arimo)', 'sans-serif'],
-        "main": ['var(--font-dmSans)', 'sans-serif'],
+        // "title": ['var(--font-arimo)', 'sans-serif'],
+        // "display": ['var(--font-dmSans)', 'sans-serif'],
       },
       fontSize: {
         '2xs': ['0.625rem', { lineHeight: '1.4' }],  /* 10px */
@@ -104,7 +104,7 @@ module.exports = {
       '3xl': '1700px'   
     },
    
-  },
+  }, 
 }
 // export const content = [
 //   "index.css",

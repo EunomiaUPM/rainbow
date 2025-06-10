@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url("https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap');
+
+@theme {
+    --font-title: "Ubuntu", sans-serif; 
+    --font-display: "Source Sans 3", sans-serif;
+}
 * {
     /*@apply border border-red-500;*/
 }
@@ -11,6 +18,18 @@ body {
     --font-sans: "Arial";
     @apply font-sans leading-snug min-h-full text-base text-slate-800;
 
+}
+
+/*FONT TYPOGRAPHY ACCORDING TO LEVEL*/
+h1, h2, h3, h4 {
+
+    font-family: "Ubuntu"
+
+}
+ h5, h6, p, span {
+
+
+    font-family: "Source Sans 3", sans-serif;
 }
 
 @layer base {
@@ -40,7 +59,15 @@ body {
         --chart-4: 43 74% 66%;
         --chart-5: 27 87% 67%;
         --radius: 0.5rem
-    }
+    ;
+        --sidebar-background: 0 0% 98%;
+        --sidebar-foreground: 240 5.3% 26.1%;
+        --sidebar-primary: 240 5.9% 10%;
+        --sidebar-primary-foreground: 0 0% 98%;
+        --sidebar-accent: 240 4.8% 95.9%;
+        --sidebar-accent-foreground: 240 5.9% 10%;
+        --sidebar-border: 220 13% 91%;
+        --sidebar-ring: 217.2 91.2% 59.8%}
 
     .dark {
         --background: 0 0% 3.9%;
@@ -67,7 +94,15 @@ body {
         --chart-3: 30 80% 55%;
         --chart-4: 280 65% 60%;
         --chart-5: 340 75% 55%
-    }
+    ;
+        --sidebar-background: 240 5.9% 10%;
+        --sidebar-foreground: 240 4.8% 95.9%;
+        --sidebar-primary: 224.3 76.3% 48%;
+        --sidebar-primary-foreground: 0 0% 100%;
+        --sidebar-accent: 240 3.7% 15.9%;
+        --sidebar-accent-foreground: 240 4.8% 95.9%;
+        --sidebar-border: 240 3.7% 15.9%;
+        --sidebar-ring: 217.2 91.2% 59.8%}
 }
 
 @layer base {
@@ -80,7 +115,15 @@ body {
     }
 
     a {
-        @apply text-blue-700 underline;
+        @apply text-blue-200;
     }
 }
 
+#root {
+    @apply text-slate-300;
+}
+
+/*CONTAINERS*/
+.main-container {
+    @apply mx-auto;
+}
