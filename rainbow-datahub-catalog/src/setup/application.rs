@@ -20,7 +20,7 @@
 use crate::core::datahub_proxy::datahub_proxy::DatahubProxyService;
 use crate::core::rainbow_entities::rainbow_entites::PolicyTemplatesToDatahubDatasetRelationService;
 use crate::http::datahub_proxy::datahub_proxy::DataHubProxyRouter;
-use crate::http::rainbow_entities::policy_relations_router::RainbowDatahubPolicyRelationsRouter;
+use crate::http::rainbow_entities::policy_relations_router::PolicyRelationsRouter;
 use crate::setup::config::DatahubCatalogApplicationProviderConfig;
 use axum::routing::get;
 use axum::{serve, Router};
@@ -84,10 +84,10 @@ pub async fn create_datahub_catalog_router(config: &DatahubCatalogApplicationPro
 
     // Routers
     let datahub_catalog_router = DataHubProxyRouter::new(datahub_proxy_service.clone());
-    let policy_relations_router = RainbowDatahubPolicyRelationsRouter::new(
-        datahub_proxy_service.clone(),
-        rainbow_policy_relations_service.clone(),
-    );
+    // let policy_relations_router = RainbowDatahubPolicyRelationsRouter::new(
+    //     datahub_proxy_service.clone(),
+    //     rainbow_policy_relations_service.clone(),
+    // );
 
     // RPC Dependency injection
     // TODO
@@ -95,7 +95,7 @@ pub async fn create_datahub_catalog_router(config: &DatahubCatalogApplicationPro
     // Router
     let catalog_application_router = Router::new()
         .merge(datahub_catalog_router.router())
-        .merge(policy_relations_router.router())
+        // .merge(policy_relations_router.router())
         .nest("/api/v1/datahub", subscription_router.clone())
         .nest("/api/v1/datahub", notification_router.clone());
     catalog_application_router

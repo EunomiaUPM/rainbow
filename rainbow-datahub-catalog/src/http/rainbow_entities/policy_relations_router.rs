@@ -13,6 +13,10 @@ use serde::Deserialize;
 use serde_json::json;
 use urn::Urn;
 use rainbow_db::datahub::repo::NewPolicyRelationModel;
+use rainbow_db::datahub::repo::PolicyRelationsRepo; // Import the trait for method resolution
+use axum::routing::{delete};
+use rainbow_db::datahub::repo::{NewPolicyTemplateModel, PolicyTemplatesRepo, PolicyTemplatesRepoErrors};
+
 
 #[derive(Debug, Deserialize)]
 pub struct CreatePolicyRelationRequest {
@@ -21,34 +25,42 @@ pub struct CreatePolicyRelationRequest {
     pub extra_content: Option<serde_json::Value>,
 }
 
-pub struct RainbowDatahubPolicyRelationsRouter<T, U>
+// pub struct RainbowDatahubPolicyRelationsRouter<T, U>
+// where
+//     T: DatahubProxyTrait + Send + Sync + 'static,
+//     U: PolicyTemplatesToDatahubDatasetRelationTrait + PolicyRelationsRepo + Send + Sync + 'static, // Add PolicyRelationsRepo bound
+// {
+//     datahub_service: Arc<T>,
+//     policy_relations_service: Arc<U>,
+// }
+
+pub struct PolicyRelationsRouter<T>
 where
-    T: DatahubProxyTrait + Send + Sync + 'static,
-    U: PolicyTemplatesToDatahubDatasetRelationTrait + Send + Sync + 'static,
+    T: PolicyRelationsRepo + Send + Sync + 'static,
 {
-    datahub_service: Arc<T>,
-    policy_relations_service: Arc<U>,
+    policy_relations_service: Arc<T>,
 }
 
-impl<T, U> RainbowDatahubPolicyRelationsRouter<T, U>
+
+impl<T> PolicyRelationsRouter<T>
 where
-    T: DatahubProxyTrait + Send + Sync,
-    U: PolicyTemplatesToDatahubDatasetRelationTrait + Send + Sync,
-{
-    pub fn new(datahub_service: Arc<T>, policy_relations_service: Arc<U>) -> Self {
+    T: PolicyRelationsRepo + Send + Sync + 'static,
+    {
+    pub fn new(policy_relations_service: Arc<T>) -> Self {
         Self {
-            datahub_service,
             policy_relations_service,
         }
     }
+
+
     pub fn router(self) -> Router {
         Router::new()
             .route("/api/v1/datahub/policy-relations", post(Self::create_policy_relation))
-            .with_state((self.datahub_service, self.policy_relations_service))
+            .with_state((self.policy_relations_service))
     }
 
     async fn create_policy_relation(
-        State((datahub_service, policy_relations_service)): State<(Arc<T>, Arc<U>)>,
+        State((policy_relations_service)): State<(Arc<T>)>,
         Json(payload): Json<CreatePolicyRelationRequest>,
     ) -> impl IntoResponse {
         info!("POST /api/v1/datahub/policy-relations");
@@ -69,19 +81,6 @@ where
     }
 
 }
-
-
-// use crate::core::datahub_proxy::DatahubProxyTrait;
-use rainbow_db::datahub::repo::{NewPolicyTemplateModel, PolicyTemplatesRepo, PolicyTemplatesRepoErrors};
-// use axum::extract::State;
-// use axum::response::IntoResponse;
-use axum::routing::{delete};
-// use axum::{Json, Router};
-// use reqwest::StatusCode;
-
-// use std::sync::Arc;
-// use tracing::info;
-
 
 pub struct PolicyTemplatesRouter<T>
 where
@@ -112,6 +111,7 @@ fn default_limit() -> Option<u64> {
 fn default_page() -> Option<u64> {
     Some(1)
 }
+
 
 impl<T> PolicyTemplatesRouter<T>
 where
@@ -232,3 +232,5 @@ where
         }
     }
 }
+
+
