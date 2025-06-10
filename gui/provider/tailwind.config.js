@@ -41,6 +41,7 @@ module.exports = {
         snow: "#EFF7FB",
         black: "#0D0D1C",
         foreground: "#ffffff",
+        text: "#fefefe",
         primary: { // azul genérico
           DEFAULT: "#056dc1",
           900: "#121212",

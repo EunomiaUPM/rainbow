@@ -17,7 +17,7 @@ function RouteComponent() {
             Participant with id : {participant.participant_id}
         </div>
         <div>
-            <h2>Transfer process info: </h2>
+            <h2 className="text-foreground">Transfer process info: </h2>
             <Table className="text-sm">
                 <TableHeader>
                     <TableRow>

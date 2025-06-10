@@ -12,11 +12,11 @@ function RouteComponent() {
     const {data: transferProcess} = useGetTransferProcessByProviderPid(transferProcessId)
     const {data: transferMessages} = useGetTransferMessagesByProviderPid(transferProcessId)
     return <div className="space-y-4">
-        <div>
+        <div className='text-text'>
             Transfer process with id : {transferProcess.provider_pid}
         </div>
         <div>
-            <h2>Transfer process info: </h2>
+            <h2 className='text-text'>Transfer process info: </h2>
             <Table className="text-sm">
                 <TableHeader>
                     <TableRow>
@@ -58,7 +58,7 @@ function RouteComponent() {
         </div>
 
         <div>
-            <h2>Transfer Messages</h2>
+            <h2 className='text-text'>Transfer Messages</h2>
             <Table className="text-sm">
                 <TableHeader>
                     <TableRow>
