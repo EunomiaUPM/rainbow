@@ -4,6 +4,8 @@ import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "sha
 import {ExternalLink} from "lucide-react";
 import {useContext} from "react";
 import {PubSubContext} from "@/context/PubSubContext.tsx";
+import {Button} from "shared/src/components/ui/button.tsx";
+import {Input} from "shared/src/components/ui/input.tsx";
 
 export const Route = createFileRoute('/participants/')({
     component: RouteComponent,
@@ -13,6 +15,9 @@ function RouteComponent() {
     const {data: participants} = useGetParticipants()
     const {lastHighLightedNotification} = useContext(PubSubContext)!;
     return <div>
+        <div className='pb-3 w-3/5'>
+            <Input type="search"></Input>
+        </div>
         <Table className="text-sm">
             <TableHeader>
                 <TableRow>
@@ -47,12 +52,15 @@ function RouteComponent() {
                             {JSON.stringify(participant.extra_fields)}
                         </TableCell>
                         <TableCell>
+                              <Button
+                                variant="default">
                             <Link
                                 to="/participants/$participantId"
                                 params={{participantId: participant.participant_id}}
                             >
-                                <ExternalLink size={12} className="text-pink-600"/>
+                               See participant
                             </Link>
+                            </Button>
                         </TableCell>
                     </TableRow>
                 ))}

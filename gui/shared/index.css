@@ -4,11 +4,12 @@
 
 @import url("https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap");
 @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap');
 
-@theme {
+/* @theme {
     --font-title: "Ubuntu", sans-serif; 
     --font-display: "Source Sans 3", sans-serif;
-}
+} */
 * {
     /*@apply border border-red-500;*/
 }
@@ -26,10 +27,14 @@ h1, h2, h3, h4 {
     font-family: "Ubuntu",'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif
 
 }
+
  h5, h6, p, span {
-
-
     font-family: "Source Sans 3", sans-serif;
+}
+
+.font-badge {
+    font-family: "Source Code Pro", monospace;
+    font-weight: 600;
 }
 
 @layer base {

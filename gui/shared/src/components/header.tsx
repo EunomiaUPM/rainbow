@@ -1,8 +1,5 @@
 import * as React from "react";
 import {
-  createFileRoute,
-  Link,
-  Outlet,
   useRouterState,
 } from "@tanstack/react-router";
 import {
@@ -18,8 +15,8 @@ import PersonIcon from '@mui/icons-material/Person';
 
 const Header = () => {
   const routerState = useRouterState();
-  console.log("Estado del router:", routerState);
-  console.log("Pathname actual:", routerState.location.pathname);
+  // console.log("Estado del router:", routerState);
+  // console.log("Pathname actual:", routerState.location.pathname);
   // console.log("Ruta activa (última):", routerState.currentLocation.route.id);
 
   // sacar ruta activa. Separar los parametros por "/"

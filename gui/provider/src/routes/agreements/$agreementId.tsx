@@ -2,6 +2,7 @@ import {createFileRoute} from '@tanstack/react-router'
 import {useGetAgreementById} from "@/data/agreement-queries.ts";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "shared/src/components/ui/table.tsx";
 import dayjs from "dayjs";
+import Heading from 'shared/src/components/ui/heading';
 
 export const Route = createFileRoute('/agreements/$agreementId')({
     component: RouteComponent,
@@ -11,11 +12,12 @@ function RouteComponent() {
     const {agreementId} = Route.useParams()
     const {data: agreement} = useGetAgreementById(agreementId);
     return <div className="space-y-4">
-        <div>
+        <Heading level="h4" className="font-display">
             Agreement with id : {agreement.agreement_id}
-        </div>
+        </Heading>
         <div>
-            <h2>Agreement info: </h2>
+            
+            <Heading level="h5" className="text-text">Agreement info:</Heading>
             <Table className="text-sm">
                 <TableHeader>
                     <TableRow>
@@ -58,8 +60,8 @@ function RouteComponent() {
             </Table>
         </div>
         <div>
-            <h2>Agreement ODRL Content: </h2>
-            <div>{JSON.stringify(agreement.agreement_content)}</div>
+           <Heading level="h5" className="text-text">Agreement content</Heading>
+            <div className="max-w-[940px]">{JSON.stringify(agreement.agreement_content)}</div>
         </div>
 
 

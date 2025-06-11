@@ -3,6 +3,7 @@ import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "sha
 import {useGetAgreementsByParticipantId, useGetParticipantById} from "@/data/participant-queries.ts";
 import dayjs from "dayjs";
 import {ExternalLink} from "lucide-react";
+import  Heading  from "../../../../../shared/src/components/ui/heading.tsx";
 
 export const Route = createFileRoute('/participants/$participantId/')({
     component: RouteComponent,
@@ -13,9 +14,9 @@ function RouteComponent() {
     const {data: participant} = useGetParticipantById(participantId)
     const {data: agreements} = useGetAgreementsByParticipantId(participantId)
     return <div className="space-y-4">
-        <div>
+       <Heading level="h4" >
             Participant with id : {participant.participant_id}
-        </div>
+        </Heading>
         <div>
             <h2 className="text-foreground">Transfer process info: </h2>
             <Table className="text-sm">

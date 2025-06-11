@@ -1,5 +1,6 @@
 import {createFileRoute, Link, Outlet} from "@tanstack/react-router";
 import {ArrowLeft} from "lucide-react";
+import Heading from "../../../../../shared/src/components/ui/heading.tsx";
 
 const NotFound = () => {
     return <div>not found</div>;
@@ -10,13 +11,12 @@ const RouteComponent = () => {
     return (
         <div>
             <header className="mb-2">
-                <h2 className="flex gap-2 items-center">
-                    <ArrowLeft className="w-4"/>
+               <Heading level="h4">
                     <Link
                         to="/contract-negotiation/$cnProcess"
                         params={{cnProcess: cnProcess}}
                     >Contract negotiation process pid: {cnProcess}</Link>
-                </h2>
+               </Heading>
             </header>
             <Outlet/>
         </div>
