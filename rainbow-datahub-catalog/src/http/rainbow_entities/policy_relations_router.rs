@@ -2,19 +2,20 @@ use crate::core::datahub_proxy::datahub_proxy_types::{DatasetsQueryOptions, Doma
 use crate::core::datahub_proxy::DatahubProxyTrait;
 use axum::extract::{Path, Query, State};
 use axum::response::IntoResponse;
+use axum::routing::delete;
 use axum::routing::{get, post};
 use axum::{Json, Router};
-use reqwest::StatusCode;
-use std::{sync::Arc, str::FromStr}; 
-use tracing::info;
-use tracing::error;
-use serde::Deserialize;
-use serde_json::json;
-use urn::Urn;
+use rainbow_common::protocol::contract::contract_odrl::{OdrlOffer, OdrlPolicyInfo};
 use rainbow_db::datahub::repo::NewPolicyRelationModel;
 use rainbow_db::datahub::repo::PolicyRelationsRepo;
-use axum::routing::{delete};
 use rainbow_db::datahub::repo::{NewPolicyTemplateModel, PolicyTemplatesRepo, PolicyTemplatesRepoErrors};
+use reqwest::StatusCode;
+use serde::Deserialize;
+use serde_json::{json, to_value};
+use std::{str::FromStr, sync::Arc};
+use tracing::error;
+use tracing::info;
+use urn::Urn;
 
 
 #[derive(Debug, Deserialize)]
@@ -36,7 +37,7 @@ where
 impl<T> PolicyRelationsRouter<T>
 where
     T: PolicyRelationsRepo + Send + Sync + 'static,
-    {
+{
     pub fn new(policy_relations_service: Arc<T>) -> Self {
         Self {
             policy_relations_service,
@@ -59,13 +60,13 @@ where
         Json(payload): Json<CreatePolicyRelationRequest>,
     ) -> impl IntoResponse {
         info!("POST /api/v1/datahub/policy-relations");
-        
+
         let new_relation = NewPolicyRelationModel {
             dataset_id: payload.dataset_id,
             policy_template_id: payload.policy_template_id,
             extra_content: payload.extra_content,
         };
-        
+
         match policy_relations_service.create_policy_relation(new_relation).await {
             Ok(relation) => (StatusCode::CREATED, Json(serde_json::to_value(relation).unwrap())),
             Err(e) => (
@@ -80,7 +81,7 @@ where
         Path(id): Path<String>,
     ) -> impl IntoResponse {
         info!("DELETE /api/v1/datahub/policy-relations/{}", id);
-        
+
         match policy_relations_service.delete_policy_relation_by_id(id).await {
             Ok(_) => {
                 info!("Policy relation eliminada exitosamente");
@@ -88,14 +89,14 @@ where
                     StatusCode::NO_CONTENT,
                     Json(json!({ "message": "Policy relation deleted successfully" }))
                 )
-            },
+            }
             Err(e) => {
                 error!("Error al eliminar policy relation: {}", e);
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
                     Json(json!({ "error": e.to_string() }))
                 )
-            },
+            }
         }
     }
 
@@ -104,7 +105,7 @@ where
         Query(params): Query<GetPolicyTemplatesParams>,
     ) -> impl IntoResponse {
         info!("GET /api/v1/datahub/policy-relations");
-        
+
         match policy_relations_service.get_all_policy_relations(params.limit, params.page).await {
             Ok(relations) => {
                 info!("Policy relations obtenidas exitosamente");
@@ -112,14 +113,14 @@ where
                     StatusCode::OK,
                     Json(json!({ "relations": relations }))
                 )
-            },
+            }
             Err(e) => {
                 error!("Error al obtener policy relations: {}", e);
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
                     Json(json!({ "error": e.to_string() }))
                 )
-            },
+            }
         }
     }
 
@@ -128,7 +129,7 @@ where
         Path(id): Path<String>,
     ) -> impl IntoResponse {
         info!("GET /api/v1/datahub/policy-relations/{}", id);
-        
+
         match policy_relations_service.get_relation_by_id(id).await {
             Ok(Some(relation)) => {
                 info!("Policy relation encontrada exitosamente");
@@ -136,21 +137,21 @@ where
                     StatusCode::OK,
                     Json(json!({ "relation": relation }))
                 )
-            },
+            }
             Ok(None) => {
                 info!("Policy relaiton no encontrada");
                 (
                     StatusCode::NOT_FOUND,
                     Json(json!({ "error": "Policy relation not found" }))
                 )
-            },
+            }
             Err(e) => {
                 error!("Error al obtener policy template: {}", e);
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
                     Json(json!({ "error": e.to_string() }))
                 )
-            },
+            }
         }
     }
 
@@ -159,7 +160,7 @@ where
         Path(template_id): Path<String>,
     ) -> impl IntoResponse {
         info!("GET /api/v1/datahub/policy-relations/template/{}", template_id);
-        
+
         match policy_relations_service.get_all_policy_relations_by_template_id(template_id).await {
             Ok(relations) => {
                 info!("Policy relations obtenidas exitosamente para el template");
@@ -167,18 +168,16 @@ where
                     StatusCode::OK,
                     Json(json!({ "relations": relations }))
                 )
-            },
+            }
             Err(e) => {
                 error!("Error al obtener policy relations para el template: {}", e);
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
                     Json(json!({ "error": e.to_string() }))
                 )
-            },
+            }
         }
     }
-
-    
 }
 
 pub struct PolicyTemplatesRouter<T>
@@ -192,7 +191,7 @@ where
 pub struct CreatePolicyTemplateRequest {
     pub title: Option<String>,
     pub description: Option<String>,
-    pub content: serde_json::Value,
+    pub content: OdrlPolicyInfo,
 }
 
 #[derive(Debug, Deserialize)]
@@ -237,19 +236,19 @@ where
         Json(payload): Json<CreatePolicyTemplateRequest>,
     ) -> impl IntoResponse {
         info!("POST /api/v1/datahub/policy-templates");
-        
+
         let new_template = NewPolicyTemplateModel {
             title: payload.title,
             description: payload.description,
-            content: payload.content,
+            content: to_value(payload.content).unwrap(),
         };
 
         match policy_templates_service.create_policy_template(new_template).await {
-        Ok(template) => (StatusCode::CREATED, Json(serde_json::to_value(template).unwrap())),
-        Err(e) => (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(json!({ "error": e.to_string() })),
-        ),
+            Ok(template) => (StatusCode::CREATED, Json(serde_json::to_value(template).unwrap())),
+            Err(e) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({ "error": e.to_string() })),
+            ),
         }
     }
 
@@ -258,7 +257,7 @@ where
         Path(id): Path<String>,
     ) -> impl IntoResponse {
         info!("DELETE /api/v1/datahub/policy-templates/{}", id);
-        
+
         match policy_templates_service.delete_policy_template_by_id(id).await {
             Ok(_) => {
                 info!("Policy template eliminada exitosamente");
@@ -266,26 +265,24 @@ where
                     StatusCode::NO_CONTENT,
                     Json(json!({ "message": "Policy template deleted successfully" }))
                 )
-            },
+            }
             Err(e) => {
                 error!("Error al eliminar policy template: {}", e);
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
                     Json(json!({ "error": e.to_string() }))
                 )
-            },
+            }
         }
     }
 
-       
 
-    
     async fn get_all_policy_templates(
         State(policy_templates_service): State<Arc<T>>,
         Query(params): Query<GetPolicyTemplatesParams>,  // Añadimos los parámetros de query
     ) -> impl IntoResponse {
         info!("GET /api/v1/datahub/policy-templates");
-        
+
         match policy_templates_service.get_all_policy_templates(params.limit, params.page).await {
             Ok(templates) => {
                 info!("Policy templates obtenidas exitosamente");
@@ -293,14 +290,14 @@ where
                     StatusCode::OK,
                     Json(json!({ "templates": templates }))
                 )
-            },
+            }
             Err(e) => {
                 error!("Error al obtener policy templates: {}", e);
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
                     Json(json!({ "error": e.to_string() }))
                 )
-            },
+            }
         }
     }
 
@@ -309,7 +306,7 @@ where
         Path(id): Path<String>,
     ) -> impl IntoResponse {
         info!("GET /api/v1/datahub/policy-templates/{}", id);
-        
+
         match policy_templates_service.get_policy_template_by_id(id).await {
             Ok(Some(template)) => {
                 info!("Policy template encontrada exitosamente");
@@ -317,21 +314,21 @@ where
                     StatusCode::OK,
                     Json(json!({ "template": template }))
                 )
-            },
+            }
             Ok(None) => {
                 info!("Policy template no encontrada");
                 (
                     StatusCode::NOT_FOUND,
                     Json(json!({ "error": "Policy template not found" }))
                 )
-            },
+            }
             Err(e) => {
                 error!("Error al obtener policy template: {}", e);
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
                     Json(json!({ "error": e.to_string() }))
                 )
-            },
+            }
         }
     }
 
@@ -340,7 +337,7 @@ where
         Path(dataset_id): Path<String>,
     ) -> impl IntoResponse {
         info!("GET /api/v1/datahub/policy-templates/dataset/{}/templates", dataset_id);
-        
+
         match policy_relations_service.get_all_templates_by_dataset_id(dataset_id).await {
             Ok(templates) => {
                 info!("Templates obtenidos exitosamente para el dataset");
@@ -348,14 +345,14 @@ where
                     StatusCode::OK,
                     Json(json!({ "templates": templates }))
                 )
-            },
+            }
             Err(e) => {
                 error!("Error al obtener templates para el dataset: {}", e);
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
                     Json(json!({ "error": e.to_string() }))
                 )
-            },
+            }
         }
     }
 }

@@ -19,4 +19,3 @@
 
 pub mod policy_relations;
 pub mod policy_templates;
-pub mod datahub_datasets;

@@ -61,7 +61,7 @@ impl Default for ApplicationProviderConfig {
             catalog_as_datahub: false,
             datahub_host: Some(HostConfig {
                 protocol: "http".to_string(),
-                url: "127.0.0.1".to_string(),
+                url: "138.4.7.113".to_string(),
                 port: "8086".to_string(),
             }),
             contract_negotiation_host: Some(HostConfig {

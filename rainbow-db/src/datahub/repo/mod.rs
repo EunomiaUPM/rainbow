@@ -17,13 +17,12 @@
  *
  */
 
-use super::entities::{policy_relations, policy_templates, datahub_datasets};
+use super::entities::{policy_relations, policy_templates};
 use crate::transfer_provider::repo::{TransferMessagesRepo, TransferProcessRepo};
 use anyhow::Error;
 use axum::async_trait;
 use sea_orm::DatabaseConnection;
 use thiserror::Error;
-use urn::Urn;
 
 
 pub mod sql;
@@ -62,16 +61,6 @@ pub trait PolicyRelationsRepo {
     async fn get_relation_by_id(&self, policy_relation_id: String) -> anyhow::Result<Option<policy_relations::Model>, PolicyTemplatesRepoErrors>;
     async fn create_policy_relation(&self, new_policy_relation: NewPolicyRelationModel) -> anyhow::Result<policy_relations::Model, PolicyTemplatesRepoErrors>;
     async fn delete_policy_relation_by_id(&self, relation_id: String) -> anyhow::Result<(), PolicyTemplatesRepoErrors>;
-}
-
-pub struct NewDataHubDatasetModel {
-    pub urn: String,
-    pub name: String,
-}
-
-#[async_trait]
-pub trait DatahubDatasetsRepo {
-    async fn create_datahub_dataset(&self, new_dataset: NewDataHubDatasetModel) -> anyhow::Result<datahub_datasets::Model, DatahubDatasetsRepoErrors>;
 }
 
 #[derive(Error, Debug)]

@@ -27,6 +27,7 @@ pub struct DatahubCatalogApplicationProviderConfig {
     business_system_host: Option<HostConfig>,
     catalog_host: Option<HostConfig>,
     datahub_host: Option<HostConfig>,
+    catalog_as_datahub: bool,
     auth_host: Option<HostConfig>,
     ssi_auth_host: Option<HostConfig>,
     database_config: DatabaseConfig,
@@ -64,7 +65,7 @@ impl ApplicationProviderConfigTrait for DatahubCatalogApplicationProviderConfig 
         &self.catalog_host
     }
     fn get_raw_datahub_host(&self) -> &Option<HostConfig> {
-        &None
+        &self.datahub_host
     }
     fn get_raw_contract_negotiation_host(&self) -> &Option<HostConfig> {
         &None
@@ -93,6 +94,7 @@ impl From<ApplicationProviderConfig> for DatahubCatalogApplicationProviderConfig
             business_system_host: value.business_system_host,
             catalog_host: value.catalog_host,
             datahub_host: value.datahub_host,
+            catalog_as_datahub: value.catalog_as_datahub,
             auth_host: value.auth_host,
             ssi_auth_host: value.ssi_auth_host,
             database_config: value.database_config,

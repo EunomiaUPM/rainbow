@@ -22,14 +22,12 @@ use sea_orm_migration::prelude::*;
 mod m20250528_000001_policy_relations;
 mod m20250528_000002_policy_templates;
 mod m20250528_000003_add_policy_relations_fks;
-mod m20250606_000001_datahub_datasets;
 
 pub fn get_datahub_migrations() -> Vec<Box<dyn MigrationTrait>> {
     vec![
         Box::new(m20250528_000001_policy_relations::Migration),
         Box::new(m20250528_000002_policy_templates::Migration),
         Box::new(m20250528_000003_add_policy_relations_fks::Migration),
-        Box::new(m20250606_000001_datahub_datasets::Migration),
     ]
 }
 pub struct Migrator;

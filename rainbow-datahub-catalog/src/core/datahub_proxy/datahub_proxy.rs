@@ -1,18 +1,18 @@
 // use crate::core::datahub_proxy::datahub_proxy_types::{DatahubDataset, DatahubDomain};
 use crate::core::datahub_proxy::datahub_proxy_types::DatasetGraphQLResponseDetailed;
 use crate::core::datahub_proxy::datahub_proxy_types::{
-    DatahubDataset, DatasetGraphQLResponse, GlossaryTerm, DomainProperties, Platform, DatasetBasicInfo
+    DatahubDataset, DatasetBasicInfo, DatasetGraphQLResponse, DomainProperties, GlossaryTerm
     ,
 };
 use crate::core::datahub_proxy::datahub_proxy_types::{
-    DatahubDomain, GraphQLResponse, 
+    DatahubDomain, GraphQLResponse,
 };
 use crate::core::datahub_proxy::DatahubProxyTrait;
 use axum::async_trait;
+use rainbow_common::config::global_config::format_host_config_to_url_string;
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use reqwest::Client;
 use std::time::Duration;
-use serde::Deserialize;
 
 pub struct DatahubProxyService {
     config: ApplicationProviderConfig,
@@ -28,7 +28,6 @@ impl DatahubProxyService {
 }
 
 
-
 #[async_trait]
 impl DatahubProxyTrait for DatahubProxyService {
     async fn get_datahub_domains(&self) -> anyhow::Result<Vec<DatahubDomain>> {
@@ -38,7 +37,8 @@ impl DatahubProxyTrait for DatahubProxyService {
         // let graphql_url = "http://192.168.64.29:8080/api/graphql";
         // let base_url = self.config.get_datahub_host_url().unwrap();
         // let graphql_url = format!("{}//api/graphql", base_url);
-        let graphql_url = "http://localhost:8086/api/graphql";
+        let datahub_host = format_host_config_to_url_string(&self.config.get_raw_datahub_host().clone().unwrap());
+        let graphql_url = format!("{}/api/graphql", datahub_host);
         let query = r#"{
             search(input: { type: DOMAIN, query: "*", start: 0, count: 1000 }) {
                 searchResults {
@@ -59,7 +59,8 @@ impl DatahubProxyTrait for DatahubProxyService {
             "query": query
         });
 
-        let token = "eyJhbGciOiJIUzI1NiJ9.eyJhY3RvclR5cGUiOiJVU0VSIiwiYWN0b3JJZCI6ImRydWdzQGRydWdzLmNvbSIsInR5cGUiOiJQRVJTT05BTCIsInZlcnNpb24iOiIyIiwianRpIjoiYmZkMTA5MjYtODE0MC00ODk1LTliNTgtNTMzMWMxMjY2MWMwIiwic3ViIjoiZHJ1Z3NAZHJ1Z3MuY29tIiwiZXhwIjoxNzUxNTM3NzQxLCJpc3MiOiJkYXRhaHViLW1ldGFkYXRhLXNlcnZpY2UifQ.VvTiXmU98Hnurdg9g_xINtz3zyvtM2SpF6Ad23h7kJM";
+        // TODO go to config in env!!!
+        let token = "eyJhbGciOiJIUzI1NiJ9.eyJhY3RvclR5cGUiOiJVU0VSIiwiYWN0b3JJZCI6ImRydWdzQGRydWdzLmNvbSIsInR5cGUiOiJQRVJTT05BTCIsInZlcnNpb24iOiIyIiwianRpIjoiNTYzNzkzMzEtZWIzMy00YzYwLThiYmMtNjRmYzdhYWY1ZGVhIiwic3ViIjoiZHJ1Z3NAZHJ1Z3MuY29tIiwiZXhwIjoxNzUyMjQxMDAxLCJpc3MiOiJkYXRhaHViLW1ldGFkYXRhLXNlcnZpY2UifQ.JvE0rRozSujgtnIxxyNt-nnOQab8hT5hf3JIsHCXKuc";
 
         let response = self
             .client
@@ -84,7 +85,8 @@ impl DatahubProxyTrait for DatahubProxyService {
     }
 
     async fn get_datahub_datasets_by_domain_id(&self, id: String) -> anyhow::Result<Vec<DatasetBasicInfo>> {
-        let graphql_url = "http://localhost:8086/api/graphql";
+        let datahub_host = format_host_config_to_url_string(&self.config.get_raw_datahub_host().clone().unwrap());
+        let graphql_url = format!("{}/api/graphql", datahub_host);
         let query = format!(
             r#"{{
             searchAcrossEntities(input: {{ 
@@ -113,7 +115,7 @@ impl DatahubProxyTrait for DatahubProxyService {
             "query": query
         });
 
-        let token = "eyJhbGciOiJIUzI1NiJ9.eyJhY3RvclR5cGUiOiJVU0VSIiwiYWN0b3JJZCI6ImRydWdzQGRydWdzLmNvbSIsInR5cGUiOiJQRVJTT05BTCIsInZlcnNpb24iOiIyIiwianRpIjoiYmZkMTA5MjYtODE0MC00ODk1LTliNTgtNTMzMWMxMjY2MWMwIiwic3ViIjoiZHJ1Z3NAZHJ1Z3MuY29tIiwiZXhwIjoxNzUxNTM3NzQxLCJpc3MiOiJkYXRhaHViLW1ldGFkYXRhLXNlcnZpY2UifQ.VvTiXmU98Hnurdg9g_xINtz3zyvtM2SpF6Ad23h7kJM";
+        let token = "eyJhbGciOiJIUzI1NiJ9.eyJhY3RvclR5cGUiOiJVU0VSIiwiYWN0b3JJZCI6ImRydWdzQGRydWdzLmNvbSIsInR5cGUiOiJQRVJTT05BTCIsInZlcnNpb24iOiIyIiwianRpIjoiNTYzNzkzMzEtZWIzMy00YzYwLThiYmMtNjRmYzdhYWY1ZGVhIiwic3ViIjoiZHJ1Z3NAZHJ1Z3MuY29tIiwiZXhwIjoxNzUyMjQxMDAxLCJpc3MiOiJkYXRhaHViLW1ldGFkYXRhLXNlcnZpY2UifQ.JvE0rRozSujgtnIxxyNt-nnOQab8hT5hf3JIsHCXKuc";
 
         let response = self
             .client
@@ -142,7 +144,8 @@ impl DatahubProxyTrait for DatahubProxyService {
     }
 
     async fn get_datahub_dataset_by_id(&self, id: String) -> anyhow::Result<DatahubDataset> {
-        let graphql_url = "http://localhost:8086/api/graphql";
+        let datahub_host = format_host_config_to_url_string(&self.config.get_raw_datahub_host().clone().unwrap());
+        let graphql_url = format!("{}/api/graphql", datahub_host);
         let query = format!(
             r#"{{
             dataset(urn: "{}") {{
@@ -209,7 +212,7 @@ impl DatahubProxyTrait for DatahubProxyService {
             "query": query
         });
 
-        let token = "eyJhbGciOiJIUzI1NiJ9.eyJhY3RvclR5cGUiOiJVU0VSIiwiYWN0b3JJZCI6ImRydWdzQGRydWdzLmNvbSIsInR5cGUiOiJQRVJTT05BTCIsInZlcnNpb24iOiIyIiwianRpIjoiYmZkMTA5MjYtODE0MC00ODk1LTliNTgtNTMzMWMxMjY2MWMwIiwic3ViIjoiZHJ1Z3NAZHJ1Z3MuY29tIiwiZXhwIjoxNzUxNTM3NzQxLCJpc3MiOiJkYXRhaHViLW1ldGFkYXRhLXNlcnZpY2UifQ.VvTiXmU98Hnurdg9g_xINtz3zyvtM2SpF6Ad23h7kJM";
+        let token = "eyJhbGciOiJIUzI1NiJ9.eyJhY3RvclR5cGUiOiJVU0VSIiwiYWN0b3JJZCI6ImRydWdzQGRydWdzLmNvbSIsInR5cGUiOiJQRVJTT05BTCIsInZlcnNpb24iOiIyIiwianRpIjoiNTYzNzkzMzEtZWIzMy00YzYwLThiYmMtNjRmYzdhYWY1ZGVhIiwic3ViIjoiZHJ1Z3NAZHJ1Z3MuY29tIiwiZXhwIjoxNzUyMjQxMDAxLCJpc3MiOiJkYXRhaHViLW1ldGFkYXRhLXNlcnZpY2UifQ.JvE0rRozSujgtnIxxyNt-nnOQab8hT5hf3JIsHCXKuc";
 
         let response = self
             .client
@@ -309,5 +312,5 @@ impl DatahubProxyTrait for DatahubProxyService {
 
     //     Ok(output.status.success())
     // }
-    
+
 }
