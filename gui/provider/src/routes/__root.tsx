@@ -9,7 +9,7 @@ export const Route = createRootRouteWithContext<{
         return (<>
             <div className="p-2 flex gap-2">
                 <Link to="/" className="[&.active]:font-bold text-foreground text-decoration-none">
-                    Home
+                    Home for provider
                 </Link>{" "}
             </div>
             <hr/>

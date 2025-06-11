@@ -1,5 +1,5 @@
 import {createFileRoute, Link} from '@tanstack/react-router'
-import {useGetTransferProcesses} from "@/data/transfer-queries.ts";
+import {useGetTransferProcesses} from "shared/src/data/transfer-queries.ts";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "shared/src/components/ui/table.tsx";
 import dayjs from "dayjs";
 import {ExternalLink} from "lucide-react";

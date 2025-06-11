@@ -169,6 +169,8 @@ declare global {
         data_plane_id: UUID
         state: TransferProcessState
         state_attribute: string
+        associated_consumer: UUID
+        associated_provider: UUID
         created_at: Date
         updated_at: Date
     }

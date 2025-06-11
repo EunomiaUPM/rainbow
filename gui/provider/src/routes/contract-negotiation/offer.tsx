@@ -1,5 +1,4 @@
 import {createFileRoute} from "@tanstack/react-router";
-import {getContractNegotiationProcessesOptions} from "@/data/contract-queries.ts";
 import {
     Form,
     FormControl,
@@ -21,12 +20,13 @@ import {
 } from "shared/src/components/ui/command"
 import {Popover, PopoverContent, PopoverTrigger,} from "shared/src/components/ui/popover"
 import {ChevronsUpDown} from "lucide-react";
-import {useEffect, useState} from "react"; // Import useEffect
-import {getParticipants} from "@/data/participant-queries.ts";
-import {getCatalogs, getDatasetsByCatalogId} from "@/data/catalog-queries.ts";
-import {getPoliciesByDatasetId} from "@/data/policy-queries.ts";
+import {useContext, useEffect, useState} from "react"; // Import useEffect
+import {getParticipants} from "shared/src/data/participant-queries.ts";
+import {getCatalogs, getDatasetsByCatalogId} from "shared/src/data/catalog-queries.ts";
+import {getPoliciesByDatasetId} from "shared/src/data/policy-queries.ts";
 import {Textarea} from "shared/src/components/ui/textarea.tsx";
-import {usePostContractNegotiationRPCOffer} from "@/data/contract-mutations.ts";
+import {usePostContractNegotiationRPCOffer} from "shared/src/data/contract-mutations.ts";
+import {GlobalInfoContext, GlobalInfoContextType} from "shared/src/context/GlobalInfoContext.tsx";
 
 
 type Inputs = {
@@ -39,6 +39,8 @@ type Inputs = {
 
 const RouteComponent = () => {
     const {mutateAsync: sendOfferAsync, isPending} = usePostContractNegotiationRPCOffer()
+    // @ts-ignore
+    const {api_gateway} = useContext<GlobalInfoContextType>(GlobalInfoContext)
 
     // --- State Management ---
     // Consumer Participant
@@ -144,6 +146,7 @@ const RouteComponent = () => {
         console.log("Form data submitted:", data);
         await sendOfferAsync({
             consumerParticipantId: data.consumerParticipantId,
+            api_gateway: api_gateway,
             offer: {
                 "@id": data.id,
                 "@type": "Offer",
@@ -154,7 +157,9 @@ const RouteComponent = () => {
                         constraint: []
                     }
                 ],
+                // @ts-ignore
                 obligation: null,
+                // @ts-ignore
                 prohibition: null,
                 profile: ""
             }
@@ -177,7 +182,7 @@ const RouteComponent = () => {
         setConsumerParticipantOpen(newOpenState);
         if (newOpenState && consumerParticipants.length === 0) {
             try {
-                const participants = await getParticipants();
+                const participants = await getParticipants(api_gateway);
                 setConsumerParticipants(participants);
             } catch (error) {
                 console.error("Failed to fetch participants:", error);
@@ -189,7 +194,7 @@ const RouteComponent = () => {
         setCatalogOpen(newOpenState);
         if (newOpenState) {
             try {
-                const fetchedCatalogs = await getCatalogs();
+                const fetchedCatalogs = await getCatalogs(api_gateway);
                 setCatalogs(fetchedCatalogs.catalog);
             } catch (error) {
                 console.error("Failed to fetch catalogs:", error);
@@ -201,7 +206,7 @@ const RouteComponent = () => {
         setDatasetOpen(newOpenState);
         if (newOpenState && selectedCatalog) { // Only fetch if a catalog is selected
             try {
-                const fetchedDatasets = await getDatasetsByCatalogId(selectedCatalog["@id"]);
+                const fetchedDatasets = await getDatasetsByCatalogId(api_gateway, selectedCatalog["@id"]);
                 setDatasets(fetchedDatasets);
             } catch (error) {
                 console.error("Failed to fetch datasets:", error);
@@ -217,7 +222,7 @@ const RouteComponent = () => {
         setPoliciesOpen(newOpenState);
         if (newOpenState && selectedDataset) { // Only fetch if a dataset is selected
             try {
-                const fetchedPolicies = await getPoliciesByDatasetId(selectedDataset["@id"]);
+                const fetchedPolicies = await getPoliciesByDatasetId(api_gateway, selectedDataset["@id"]);
                 setPolicies(fetchedPolicies);
             } catch (error) {
                 console.error("Failed to fetch policies:", error);
@@ -513,8 +518,4 @@ const RouteComponent = () => {
 export const Route = createFileRoute("/contract-negotiation/offer")({
     component: RouteComponent,
     pendingComponent: () => <div className="p-4 text-center text-gray-600">Loading...</div>,
-    loader: async ({context: {queryClient}}) => {
-        let cnProcesses = await queryClient.ensureQueryData(getContractNegotiationProcessesOptions());
-        return {cnProcesses};
-    },
 });

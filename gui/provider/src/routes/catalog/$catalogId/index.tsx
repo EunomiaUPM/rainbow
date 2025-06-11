@@ -9,7 +9,7 @@ import {
     useGetCatalogsById,
     useGetDataServicesByCatalogId,
     useGetDatasetsByCatalogId
-} from "@/data/catalog-queries.ts";
+} from "shared/src/data/catalog-queries.ts";
 
 const RouteComponent = () => {
     const {catalogId} = Route.useParams();

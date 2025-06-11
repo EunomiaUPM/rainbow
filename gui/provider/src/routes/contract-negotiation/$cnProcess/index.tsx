@@ -2,11 +2,9 @@ import {createFileRoute, Link} from "@tanstack/react-router";
 import dayjs from "dayjs";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "shared/src/components/ui/table";
 import {
-    getContractNegotiationMessagesByCNIDOptions,
-    getContractNegotiationProcessesByCNIDOptions,
     useGetContractNegotiationMessagesByCNID,
     useGetContractNegotiationProcessesByCNID
-} from "@/data/contract-queries.ts";
+} from "shared/src/data/contract-queries.ts";
 import {ContractNegotiationActions} from "shared/src/components/ContractNegotiationActions.tsx";
 
 const RouteComponent = () => {
@@ -97,9 +95,4 @@ const RouteComponent = () => {
 
 export const Route = createFileRoute("/contract-negotiation/$cnProcess/")({
     component: RouteComponent,
-    loader: async ({context: {queryClient}, params: {cnProcess: cnProcessId}}) => {
-        let cnProcess = await queryClient.ensureQueryData(getContractNegotiationProcessesByCNIDOptions(cnProcessId as UUID))
-        let cnMessages = await queryClient.ensureQueryData(getContractNegotiationMessagesByCNIDOptions(cnProcessId as UUID))
-        return {cnProcess, cnMessages};
-    },
 });

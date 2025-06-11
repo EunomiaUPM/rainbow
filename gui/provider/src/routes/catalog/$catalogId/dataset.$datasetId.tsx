@@ -4,11 +4,11 @@ import {
     getDistributionsByDatasetIdOptions,
     useGetDatasetById,
     useGetDistributionsByDatasetId
-} from "@/data/catalog-queries.ts";
+} from "shared/src/data/catalog-queries.ts";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "shared/src/components/ui/table.tsx";
 import dayjs from "dayjs";
 import {ExternalLink} from "lucide-react";
-import {getPoliciesByDatasetIdOptions, useGetPoliciesByDatasetId} from "@/data/policy-queries.ts";
+import {getPoliciesByDatasetIdOptions, useGetPoliciesByDatasetId} from "shared/src/data/policy-queries.ts";
 import {
     Form,
     FormControl,
@@ -21,7 +21,7 @@ import {
 import {SubmitHandler, useForm} from "react-hook-form";
 import {Button} from "shared/src/components/ui/button.tsx";
 import {Textarea} from "shared/src/components/ui/textarea.tsx";
-import {usePostNewPolicyInDataset} from "@/data/catalog-mutations.ts";
+import {usePostNewPolicyInDataset} from "shared/src/data/catalog-mutations.ts";
 
 
 type Inputs = {

@@ -2,7 +2,7 @@ import {createFileRoute, Link} from "@tanstack/react-router";
 import dayjs from "dayjs";
 import {ExternalLink} from "lucide-react";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "shared/src/components/ui/table";
-import {getContractNegotiationProcessesOptions, useGetContractNegotiationProcesses} from "@/data/contract-queries.ts";
+import {useGetContractNegotiationProcesses} from "shared/src/data/contract-queries.ts";
 import {Button} from "shared/src/components/ui/button.tsx";
 import {ContractNegotiationActions} from "shared/src/components/ContractNegotiationActions.tsx";
 
@@ -61,8 +61,4 @@ const RouteComponent = () => {
 export const Route = createFileRoute("/contract-negotiation/")({
     component: RouteComponent,
     pendingComponent: () => <div>Loading...</div>,
-    loader: async ({context: {queryClient}}) => {
-        let cnProcesses = await queryClient.ensureQueryData(getContractNegotiationProcessesOptions())
-        return {cnProcesses};
-    },
 });

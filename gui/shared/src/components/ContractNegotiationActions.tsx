@@ -43,7 +43,7 @@ export const ContractNegotiationActions = ({state, tiny = false}: { state: strin
                 <Button>Terminate</Button>
             </div>)}
             {state === "FINALIZED" && (<div>
-                <Button>Start transfer</Button>
+                
             </div>)}
             {state === "TERMINATED" && (<div>No further actions</div>)}
         </div>

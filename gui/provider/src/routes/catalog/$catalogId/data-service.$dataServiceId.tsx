@@ -1,5 +1,5 @@
 import {createFileRoute} from '@tanstack/react-router'
-import {getDataServiceByIdOptions, useGetDataServiceById} from "@/data/catalog-queries.ts";
+import {getDataServiceByIdOptions, useGetDataServiceById} from "shared/src/data/catalog-queries.ts";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "shared/src/components/ui/table.tsx";
 import dayjs from "dayjs";
 

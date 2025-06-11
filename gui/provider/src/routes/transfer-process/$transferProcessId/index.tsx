@@ -5,7 +5,7 @@ import {
     useGetDataplaneProcessById,
     useGetTransferMessagesByProviderPid,
     useGetTransferProcessByProviderPid
-} from "@/data/transfer-queries.ts";
+} from "shared/src/data/transfer-queries.ts";
 
 export const Route = createFileRoute('/transfer-process/$transferProcessId/')({
     component: RouteComponent,
@@ -40,6 +40,12 @@ function RouteComponent() {
                     <TableRow>
                         <TableCell>Transfer Consumer Provider pid</TableCell>
                         <TableCell>{transferProcess.consumer_pid.slice(0, 20) + "..."}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell>Transfer Associated Consumer Id</TableCell>
+                        <TableCell><Link to="/participants/$participantId" params={{
+                            participantId: transferProcess.associated_consumer
+                        }}>{transferProcess.associated_consumer}</Link></TableCell>
                     </TableRow>
                     <TableRow>
                         <TableCell>Agreement id</TableCell>
