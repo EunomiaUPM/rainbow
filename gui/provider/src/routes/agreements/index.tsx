@@ -3,6 +3,8 @@ import {useGetAgreements} from "@/data/agreement-queries.ts";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "shared/src/components/ui/table.tsx";
 import dayjs from "dayjs";
 import {ExternalLink} from "lucide-react";
+import {Button, buttonVariants} from "shared/src/components/ui/button.tsx";
+import {Input} from "shared/src/components/ui/input.tsx";
 
 export const Route = createFileRoute('/agreements/')({
     component: RouteComponent,
@@ -13,6 +15,9 @@ function RouteComponent() {
 
     return <div>
         <div>
+                    <div className='pb-3 w-3/5'>
+            <Input type="search"></Input>
+        </div>
             <Table className="text-sm">
                 <TableHeader>
                     <TableRow>
@@ -44,15 +49,18 @@ function RouteComponent() {
                                 {agreement.active ? "ACTIVE" : "INACTIVE"}
                             </TableCell>
                             <TableCell>
-                                {dayjs(agreement.created_at).format("DD/MM/YYYY - HH:mm")}
+                                {dayjs(agreement.created_at).format("DD/MM/YY HH:mm")}
                             </TableCell>
                             <TableCell>
+                                 <Button
+                                variant="default">
                                 <Link
                                     to="/agreements/$agreementId"
                                     params={{agreementId: agreement.agreement_id}}
                                 >
-                                    <ExternalLink size={12} className="text-pink-600"/>
+                                See agreement
                                 </Link>
+                                </Button>
                             </TableCell>
                         </TableRow>
                     ))}

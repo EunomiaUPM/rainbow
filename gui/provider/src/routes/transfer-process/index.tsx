@@ -4,7 +4,7 @@ import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "sha
 import dayjs from "dayjs";
 import {ExternalLink} from "lucide-react";
 import {Button, buttonVariants} from "shared/src/components/ui/button.tsx";
-
+import {Input} from "shared/src/components/ui/input.tsx";
 
 export const Route = createFileRoute('/transfer-process/')({
     component: RouteComponent,
@@ -13,6 +13,9 @@ export const Route = createFileRoute('/transfer-process/')({
 function RouteComponent() {
     const {data: transferProcesses} = useGetTransferProcesses()
     return <div>
+          <div className='pb-3 w-3/5'>
+            <Input type="search"></Input>
+        </div>
         <Table className="text-sm">
             <TableHeader>
                 <TableRow>
@@ -38,7 +41,9 @@ function RouteComponent() {
                             {transferProcess.agreement_id?.slice(0, 20) + "..."}
                         </TableCell>
                         <TableCell>
+                            <div className="font-badge">
                             {transferProcess.state}
+                            </div>
                         </TableCell>
                         <TableCell>
                             {dayjs(transferProcess.created_at).format("DD/MM/YY HH:mm")}

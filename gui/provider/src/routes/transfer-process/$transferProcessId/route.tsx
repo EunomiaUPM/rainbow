@@ -14,14 +14,9 @@ const RouteComponent = () => {
         <div className="mb-2">
     
             <header className="mb-2">
-                <Heading level="h1" className="font-display flex gap-2 items-center">
+                <Heading level="h4" className="font-display flex gap-2 items-center">
                     {/* <ArrowLeft className="w-4"/> */}
-                    <Link
-                        to="/transfer-process/$transferProcessId"
-                        params={{
-                            transferProcessId: transferProcessId
-                        }}
-                    >Transfer Process Id {transferProcessId}</Link>
+                    Transfer Process Id {transferProcessId}
                 </Heading>
             </header>
             <Outlet/>
