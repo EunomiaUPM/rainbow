@@ -130,8 +130,8 @@ h1, h2, h3, h4 {
 
 /*CONTAINERS*/
 .page-container {
-    @apply w-full flex flex-col justify-start items-center mt-3
+    @apply w-full flex flex-col justify-start items-center  ml-[14rem]
 }
 .main-container {
-    @apply mt-6;
+    @apply mt-20
 }

@@ -20,9 +20,11 @@ export const Route = createRootRouteWithContext<{
     return (
       <>
         <SidebarProvider>
-          <AppSidebar />
-          <main className="page-container">
+          <div className="fixed flex w-full z-50">
+            <AppSidebar />
             <Header />
+          </div>
+          <main className="page-container">
             {/* <SidebarTrigger /> */}
             {children}
             <div className="main-container">

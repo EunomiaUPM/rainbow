@@ -53,7 +53,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <div className="flex justify-between">
           <SidebarGroupLabel>Application</SidebarGroupLabel>
-          <SidebarTrigger/>
+          {/* <SidebarTrigger/> */}
           </div>
           <SidebarGroupContent>
             <SidebarMenu>
