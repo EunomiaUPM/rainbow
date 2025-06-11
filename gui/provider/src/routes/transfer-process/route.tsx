@@ -9,15 +9,15 @@ const NotFound = () => {
 
 const RouteComponent = () => {
     return (
-        <div className="container mx-auto my-5">
-            <header className="mb-2">
+        <>
+            <div className="mb-6">
                 <Heading level="h4" className="flex gap-2 items-center">
                     {/* <ArrowLeft className="w-4"/> */}
                     <Link to="/transfer-process">Transfer Processes</Link>
                 </Heading>
-            </header>
+            </div>
             <Outlet/>
-        </div>
+        </>
     );
 };
 

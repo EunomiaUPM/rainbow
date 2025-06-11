@@ -3,6 +3,7 @@ import {useGetTransferProcesses} from "@/data/transfer-queries.ts";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "shared/src/components/ui/table.tsx";
 import dayjs from "dayjs";
 import {ExternalLink} from "lucide-react";
+import {Button, buttonVariants} from "shared/src/components/ui/button.tsx";
 
 
 export const Route = createFileRoute('/transfer-process/')({
@@ -40,18 +41,21 @@ function RouteComponent() {
                             {transferProcess.state}
                         </TableCell>
                         <TableCell>
-                            {dayjs(transferProcess.created_at).format("DD/MM/YYYY - HH:mm")}
+                            {dayjs(transferProcess.created_at).format("DD/MM/YY HH:mm")}
                         </TableCell>
                         <TableCell>
-                            {dayjs(transferProcess.updated_at).format("DD/MM/YYYY - HH:mm")}
+                            {dayjs(transferProcess.updated_at).format("DD/MM/YY HH:mm")}
                         </TableCell>
                         <TableCell>
+                            <Button
+                                variant="default">
                             <Link
                                 to="/transfer-process/$transferProcessId"
                                 params={{transferProcessId: transferProcess.provider_pid}}
                             >
-                                <ExternalLink size={12} className="text-pink-600"/>
+                                See transference
                             </Link>
+                            </Button>
                         </TableCell>
                     </TableRow>
                 ))}

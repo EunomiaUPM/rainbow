@@ -124,6 +124,9 @@ h1, h2, h3, h4 {
 }
 
 /*CONTAINERS*/
+.page-container {
+    @apply w-full flex flex-col justify-start items-center mt-3
+}
 .main-container {
-    @apply mx-auto;
+    @apply mt-6;
 }

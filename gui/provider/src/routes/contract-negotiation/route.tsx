@@ -1,5 +1,6 @@
 import {createFileRoute, Link, Outlet} from "@tanstack/react-router";
 import {ArrowLeft} from "lucide-react";
+import Heading from "../../../../shared/src/components/ui/heading.tsx";
 
 const NotFound = () => {
     return <div>not found</div>;
@@ -7,15 +8,15 @@ const NotFound = () => {
 
 const RouteComponent = () => {
     return (
-        <div className="container mx-auto my-5">
-            <header className="mb-2">
-                <h2 className="flex gap-2 items-center">
-                    <ArrowLeft className="w-4"/>
-                    <Link to="/contract-negotiation">Contract negotiation</Link>
-                </h2>
-            </header>
+        <>
+             <div className="mb-6">
+                <Heading level="h4" className="flex gap-2 items-center">
+                    {/* <ArrowLeft className="w-4"/> */}
+                    Contracts
+                </Heading>
+            </div>
             <Outlet/>
-        </div>
+        </>
     );
 };
 
