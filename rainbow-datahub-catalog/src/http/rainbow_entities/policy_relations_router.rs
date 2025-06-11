@@ -177,6 +177,8 @@ where
             },
         }
     }
+
+    
 }
 
 pub struct PolicyTemplatesRouter<T>
@@ -226,6 +228,7 @@ where
             .route("/api/v1/datahub/policy-templates/:id", delete(Self::delete_policy_template_by_id))
             .route("/api/v1/datahub/policy-templates", get(Self::get_all_policy_templates))
             .route("/api/v1/datahub/policy-templates/:id", get(Self::get_policy_template_by_id))
+            .route("/api/v1/datahub/policy-templates/dataset/:dataset_id/templates", get(Self::get_all_templates_by_dataset_id))
             .with_state(self.policy_templates_service)
     }
 
@@ -324,6 +327,30 @@ where
             },
             Err(e) => {
                 error!("Error al obtener policy template: {}", e);
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(json!({ "error": e.to_string() }))
+                )
+            },
+        }
+    }
+
+    async fn get_all_templates_by_dataset_id(
+        State(policy_relations_service): State<Arc<T>>,
+        Path(dataset_id): Path<String>,
+    ) -> impl IntoResponse {
+        info!("GET /api/v1/datahub/policy-templates/dataset/{}/templates", dataset_id);
+        
+        match policy_relations_service.get_all_templates_by_dataset_id(dataset_id).await {
+            Ok(templates) => {
+                info!("Templates obtenidos exitosamente para el dataset");
+                (
+                    StatusCode::OK,
+                    Json(json!({ "templates": templates }))
+                )
+            },
+            Err(e) => {
+                error!("Error al obtener templates para el dataset: {}", e);
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
                     Json(json!({ "error": e.to_string() }))

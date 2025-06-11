@@ -125,6 +125,30 @@ impl PolicyTemplatesRepo for DatahubConnectorRepoForSql {
             Err(err) => Err(PolicyTemplatesRepoErrors::ErrorDeletingPolicyTemplate(err.into())),
         }
     }
+
+    async fn get_all_templates_by_dataset_id(&self, dataset_id: String) -> anyhow::Result<Vec<policy_templates::Model>, PolicyTemplatesRepoErrors> {
+        // 1. Primero obtenemos todas las relaciones para el dataset_id
+        let relations = policy_relations::Entity::find()
+            .filter(policy_relations::Column::DatasetId.eq(dataset_id))
+            .all(&self.db_connection)
+            .await
+            .map_err(|err| PolicyTemplatesRepoErrors::ErrorFetchingPolicyRelation(err.into()))?;
+
+        // 2. Extraemos los IDs de los templates
+        let template_ids: Vec<String> = relations
+            .into_iter()
+            .map(|relation| relation.policy_template_id)
+            .collect();
+
+        // 3. Obtenemos los templates correspondientes
+        let templates = policy_templates::Entity::find()
+            .filter(policy_templates::Column::Id.is_in(template_ids))
+            .all(&self.db_connection)
+            .await
+            .map_err(|err| PolicyTemplatesRepoErrors::ErrorFetchingPolicyTemplate(err.into()))?;
+
+        Ok(templates)
+    }
 }
 
 
