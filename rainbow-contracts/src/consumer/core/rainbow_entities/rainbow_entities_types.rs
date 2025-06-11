@@ -37,6 +37,7 @@ impl Into<NewContractNegotiationProcess> for NewContractNegotiationRequest {
         NewContractNegotiationProcess {
             provider_id: self.provider_id.map(|id| get_urn_from_string(&id).unwrap()),
             consumer_id: None,
+            associated_provider: None,
         }
     }
 }

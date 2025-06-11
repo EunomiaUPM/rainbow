@@ -32,6 +32,8 @@ use axum::async_trait;
 use jsonschema::BasicOutput;
 use log::error;
 use rainbow_common::config::ConfigRoles;
+use rainbow_common::facades::ssi_auth_facade::SSIAuthFacadeTrait;
+use rainbow_common::mates::Mates;
 use rainbow_common::protocol::contract::contract_ack::ContractAckMessage;
 use rainbow_common::protocol::contract::contract_agreement_verification::ContractAgreementVerificationMessage;
 use rainbow_common::protocol::contract::contract_negotiation_event::{
@@ -59,7 +61,7 @@ use std::sync::Arc;
 use tracing::debug;
 use urn::Urn;
 
-pub struct DSProtocolContractNegotiationProviderService<T, U, V, W>
+pub struct DSProtocolContractNegotiationProviderService<T, U, V, W, X>
 where
     T: ContractNegotiationProcessRepo
     + ContractNegotiationMessageRepo
@@ -71,14 +73,17 @@ where
     U: RainbowEventsNotificationTrait + Send + Sync,
     V: CatalogOdrlFacadeTrait + Send + Sync,
     W: MatesFacadeTrait + Send + Sync,
+    X: SSIAuthFacadeTrait + Sync + Send,
 {
     repo: Arc<T>,
     notification_service: Arc<U>,
     catalog_facade: Arc<V>,
     mates_facade: Arc<W>,
+    ssi_auth_facade: Arc<X>,
+
 }
 
-impl<T, U, V, W> DSProtocolContractNegotiationProviderService<T, U, V, W>
+impl<T, U, V, W, X> DSProtocolContractNegotiationProviderService<T, U, V, W, X>
 where
     T: ContractNegotiationProcessRepo
     + ContractNegotiationMessageRepo
@@ -90,9 +95,18 @@ where
     U: RainbowEventsNotificationTrait + Send + Sync,
     V: CatalogOdrlFacadeTrait + Send + Sync,
     W: MatesFacadeTrait + Send + Sync,
+    X: SSIAuthFacadeTrait + Sync + Send,
 {
-    pub fn new(repo: Arc<T>, notification_service: Arc<U>, catalog_facade: Arc<V>, mates_facade: Arc<W>) -> Self {
-        Self { repo, notification_service, catalog_facade, mates_facade }
+    pub fn new(repo: Arc<T>, notification_service: Arc<U>, catalog_facade: Arc<V>, mates_facade: Arc<W>, ssi_auth_facade: Arc<X>) -> Self {
+        Self { repo, notification_service, catalog_facade, mates_facade, ssi_auth_facade }
+    }
+
+    /// Validate auth token
+    async fn validate_auth_token(&self, token: String) -> anyhow::Result<Mates> {
+        let mate = self.ssi_auth_facade
+            .verify_token(token)
+            .await?;
+        Ok(mate)
     }
 
     ///
@@ -112,6 +126,7 @@ where
         &self,
         incoming_provider_pid: Option<&Urn>,
         message: &M,
+        consumer_participant_mate: &Mates,
     ) -> anyhow::Result<Option<cn_process::Model>> {
         debug!("Contract negotiation payload_validation");
 
@@ -158,6 +173,12 @@ where
                 if cn_process_consumer.provider_id != cn_process_provider.provider_id {
                     bail!(IdsaCNError::ValidationError(
                         "ConsumerPid and ProviderPid don't coincide".to_string()
+                    ))
+                }
+                // 3. User id must be also correlated with process
+                if cn_process_provider.associated_consumer.clone().unwrap() != consumer_participant_mate.participant_id {
+                    bail!(IdsaCNError::ValidationError(
+                        "This user is not related with this process".to_string()
                     ))
                 }
                 Ok(Option::from(cn_process_provider))
@@ -270,7 +291,7 @@ where
 }
 
 #[async_trait]
-impl<T, U, V, W> DSProtocolContractNegotiationProviderTrait for DSProtocolContractNegotiationProviderService<T, U, V, W>
+impl<T, U, V, W, X> DSProtocolContractNegotiationProviderTrait for DSProtocolContractNegotiationProviderService<T, U, V, W, X>
 where
     T: ContractNegotiationProcessRepo
     + ContractNegotiationMessageRepo
@@ -282,6 +303,7 @@ where
     U: RainbowEventsNotificationTrait + Send + Sync,
     V: CatalogOdrlFacadeTrait + Send + Sync,
     W: MatesFacadeTrait + Send + Sync,
+    X: SSIAuthFacadeTrait + Sync + Send,
 {
     async fn get_negotiation(&self, provider_pid: Urn) -> anyhow::Result<ContractAckMessage> {
         let cn_process = self
@@ -293,11 +315,12 @@ where
         Ok(cn_process.into())
     }
 
-    async fn post_request(&self, input: ContractRequestMessage) -> anyhow::Result<ContractAckMessage> {
+    async fn post_request(&self, input: ContractRequestMessage, token: String) -> anyhow::Result<ContractAckMessage> {
         // 1. validate request
+        let consumer_participant_mate = self.validate_auth_token(token).await?;
         self.transition_validation(&input).await.map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
         self.json_schema_validation(&input).map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
-        let _ = self.payload_validation(None, &input).await.map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
+        let _ = self.payload_validation(None, &input, &consumer_participant_mate).await.map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
 
         // 2. resolve odrl policy
         let odrl_ids = match &input.odrl_offer {
@@ -330,6 +353,7 @@ where
             .repo
             .create_cn_process(NewContractNegotiationProcess {
                 consumer_id: Option::from(input.consumer_pid.clone()),
+                associated_consumer: Some(get_urn_from_string(&consumer_participant_mate.participant_id)?),
                 state: ContractNegotiationState::Requested,
                 initiated_by: ConfigRoles::Consumer,
             })
@@ -378,12 +402,14 @@ where
         &self,
         provider_pid: Urn,
         input: ContractRequestMessage,
+        token: String,
     ) -> anyhow::Result<ContractAckMessage> {
         // 1. validate request
+        let consumer_participant_mate = self.validate_auth_token(token).await?;
         self.transition_validation(&input).await.map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
         self.json_schema_validation(&input).map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
         let cn_process = self
-            .payload_validation(Some(&provider_pid), &input)
+            .payload_validation(Some(&provider_pid), &input, &consumer_participant_mate)
             .await
             .map_err(|e| IdsaCNError::ValidationError(e.to_string()))?
             .unwrap();
@@ -469,12 +495,14 @@ where
         &self,
         provider_pid: Urn,
         input: ContractNegotiationEventMessage,
+        token: String,
     ) -> anyhow::Result<ContractAckMessage> {
         // 1. validate request
+        let consumer_participant_mate = self.validate_auth_token(token).await?;
         self.transition_validation(&input).await.map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
         self.json_schema_validation(&input).map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
         let cn_process = self
-            .payload_validation(Some(&provider_pid), &input)
+            .payload_validation(Some(&provider_pid), &input, &consumer_participant_mate)
             .await
             .map_err(|e| IdsaCNError::ValidationError(e.to_string()))?
             .unwrap();
@@ -522,12 +550,14 @@ where
         &self,
         provider_pid: Urn,
         input: ContractAgreementVerificationMessage,
+        token: String,
     ) -> anyhow::Result<ContractAckMessage> {
         // 1. validate request
+        let consumer_participant_mate = self.validate_auth_token(token).await?;
         self.transition_validation(&input).await.map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
         self.json_schema_validation(&input).map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
         let cn_process = self
-            .payload_validation(Some(&provider_pid), &input)
+            .payload_validation(Some(&provider_pid), &input, &consumer_participant_mate)
             .await
             .map_err(|e| IdsaCNError::ValidationError(e.to_string()))?
             .unwrap();
@@ -576,12 +606,14 @@ where
         &self,
         provider_id: Urn,
         input: ContractTerminationMessage,
+        token: String,
     ) -> anyhow::Result<ContractAckMessage> {
         // 1. validate request
+        let consumer_participant_mate = self.validate_auth_token(token).await?;
         self.transition_validation(&input).await.map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
         self.json_schema_validation(&input).map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
         let cn_process = self
-            .payload_validation(Some(&provider_id), &input)
+            .payload_validation(Some(&provider_id), &input, &consumer_participant_mate)
             .await
             .map_err(|e| IdsaCNError::ValidationError(e.to_string()))?
             .unwrap();

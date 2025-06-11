@@ -26,6 +26,7 @@ pub struct Model {
     #[sea_orm(primary_key)]
     pub provider_id: String,
     pub consumer_id: Option<String>,
+    pub associated_consumer: Option<String>,
     pub state: String,
     pub initiated_by: String,
     pub created_at: chrono::NaiveDateTime,

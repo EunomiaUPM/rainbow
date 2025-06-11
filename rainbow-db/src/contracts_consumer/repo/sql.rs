@@ -127,6 +127,7 @@ impl ContractNegotiationConsumerProcessRepo for ContractNegotiationConsumerRepoF
             provider_id: ActiveValue::Set(Option::from(
                 get_urn(new_cn_process.provider_id).to_string(),
             )),
+            associated_provider: ActiveValue::Set(new_cn_process.associated_provider.map(|a| a.to_string())),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             updated_at: ActiveValue::Set(None),
         };

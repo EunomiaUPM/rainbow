@@ -42,6 +42,7 @@ impl Into<NewContractNegotiationProcess> for NewContractNegotiationRequest {
     fn into(self) -> NewContractNegotiationProcess {
         NewContractNegotiationProcess {
             consumer_id: self.consumer_id.map(|id| get_urn_from_string(&id).unwrap()),
+            associated_consumer: None,
             state: self.state,
             initiated_by: ConfigRoles::Provider,
         }

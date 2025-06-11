@@ -36,7 +36,9 @@ use rainbow_common::protocol::contract::contract_agreement::ContractAgreementMes
 use rainbow_common::protocol::contract::contract_negotiation_event::{
     ContractNegotiationEventMessage, NegotiationEventType,
 };
-use rainbow_common::protocol::contract::contract_odrl::{ContractRequestMessageOfferTypes, OdrlAgreement, OdrlOffer, OdrlTypes};
+use rainbow_common::protocol::contract::contract_odrl::{
+    ContractRequestMessageOfferTypes, OdrlAgreement, OdrlOffer, OdrlTypes,
+};
 use rainbow_common::protocol::contract::contract_offer::ContractOfferMessage;
 use rainbow_common::protocol::contract::ContractNegotiationMessages;
 use rainbow_common::utils::{get_urn, get_urn_from_string};
@@ -96,24 +98,19 @@ where
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
         Self { repo, notification_service, client, catalog_facade, mates_facade }
     }
-    async fn get_consumer_base_url(&self, consumer_participant_id: &Urn) -> anyhow::Result<String> {
+    /// Get consumer mate based in id
+    async fn get_consumer_mate(&self, provider_participant_id: &Urn) -> anyhow::Result<Mates> {
         let mate = self
             .mates_facade
-            .get_mate_by_id(consumer_participant_id.clone())
+            .get_mate_by_id(provider_participant_id.clone())
             .await
             .map_err(|e| anyhow!("Error parsing mate: {}", e.to_string()))?;
-        match mate.base_url {
-            Some(base_url) => Ok(base_url),
-            None => bail!("Mate with no base_url".to_string())
-        }
+        Ok(mate)
     }
 
     async fn get_provider(&self) -> anyhow::Result<Mates> {
-        let mate = self
-            .mates_facade
-            .get_me_mate()
-            .await
-            .map_err(|e| anyhow!("Error parsing mate: {}", e.to_string()))?;
+        let mate =
+            self.mates_facade.get_me_mate().await.map_err(|e| anyhow!("Error parsing mate: {}", e.to_string()))?;
         Ok(mate)
     }
 
@@ -157,15 +154,23 @@ where
         &self,
         target_url: String,
         message_payload: &M,
+        token: String,
         error_context_provider_pid: Option<Urn>,
         error_context_consumer_pid: Option<Urn>,
     ) -> anyhow::Result<ContractAckMessage> {
-        let response = self.client.post(&target_url).json(message_payload).send().await.map_err(|_| {
-            DSRPCContractNegotiationProviderErrors::ConsumerNotReachable {
-                provider_pid: error_context_provider_pid.clone(),
-                consumer_pid: error_context_consumer_pid.clone(),
-            }
-        })?;
+        let response = self
+            .client
+            .post(&target_url)
+            .header("Authorization", format!("Bearer {}", token))
+            .json(message_payload)
+            .send()
+            .await
+            .map_err(
+                |_| DSRPCContractNegotiationProviderErrors::ConsumerNotReachable {
+                    provider_pid: error_context_provider_pid.clone(),
+                    consumer_pid: error_context_consumer_pid.clone(),
+                },
+            )?;
 
         let status = response.status();
         if !status.is_success() {
@@ -220,7 +225,9 @@ where
     async fn setup_offer(&self, input: SetupOfferRequest) -> anyhow::Result<SetupOfferResponse> {
         let SetupOfferRequest { odrl_offer, consumer_participant_id, .. } = input;
         // 1. fetch participant id
-        let consumer_base_url = self.get_consumer_base_url(&consumer_participant_id).await?;
+        let consumer_mate = self.get_consumer_mate(&consumer_participant_id).await?;
+        let consumer_base_url = consumer_mate.base_url.ok_or(anyhow!("No base url"))?;
+        let consumer_token = consumer_mate.token.ok_or(anyhow!("No token"))?;
         // 2. validate correlation
         // protocol validation??
         // No need of validation since there is no provider or consumer pid at this point
@@ -261,6 +268,7 @@ where
             .send_protocol_message_to_consumer(
                 target_url,
                 &contract_offer_message,
+                consumer_token,
                 Some(provider_pid.clone()),
                 None,
             )
@@ -270,6 +278,7 @@ where
             .repo
             .create_cn_process(NewContractNegotiationProcess {
                 consumer_id: Some(get_urn_from_string(&response.consumer_pid)?),
+                associated_consumer: None,
                 state: response.state,
                 initiated_by: ConfigRoles::Provider,
             })
@@ -329,8 +338,9 @@ where
     async fn setup_reoffer(&self, input: SetupOfferRequest) -> anyhow::Result<SetupOfferResponse> {
         let SetupOfferRequest { odrl_offer, consumer_participant_id, provider_pid, consumer_pid } = input;
         // 1. fetch participant id
-        let consumer_base_url = self.get_consumer_base_url(&consumer_participant_id).await?;
-        // 2. validate correlation
+        let consumer_mate = self.get_consumer_mate(&consumer_participant_id).await?;
+        let consumer_base_url = consumer_mate.base_url.ok_or(anyhow!("No base url"))?;
+        let consumer_token = consumer_mate.token.ok_or(anyhow!("No token"))?;        // 2. validate correlation
         let cn_process = self
             .validate_and_get_correlated_provider_process(
                 &consumer_pid.clone().unwrap(),
@@ -378,6 +388,7 @@ where
             .send_protocol_message_to_consumer(
                 target_url,
                 &contract_offer_message,
+                consumer_token,
                 provider_pid.clone(),
                 consumer_pid.clone(),
             )
@@ -445,23 +456,22 @@ where
     async fn setup_agreement(&self, input: SetupAgreementRequest) -> anyhow::Result<SetupAgreementResponse> {
         let SetupAgreementRequest { consumer_participant_id, consumer_pid, provider_pid } = input;
         // 1. fetch participant id
-        let consumer_base_url = self.get_consumer_base_url(&consumer_participant_id).await?;
+        let consumer_mate = self.get_consumer_mate(&consumer_participant_id).await?;
+        let consumer_base_url = consumer_mate.base_url.ok_or(anyhow!("No base url"))?;
+        let consumer_token = consumer_mate.token.ok_or(anyhow!("No token"))?;
         // 2. validate correlation
         let cn_process =
             self.validate_and_get_correlated_provider_process(&consumer_pid.clone(), &provider_pid.clone()).await?;
 
-
         // 3. Create and validate agreement
         // 3.1. fetch last valid offer in process
         let cn_process_id = get_urn_from_string(&cn_process.provider_id)?;
-        let last_offer_model = self.repo
+        let last_offer_model = self
+            .repo
             .get_last_cn_offers_by_cn_process(cn_process_id.clone())
             .await
             .map_err(CnErrorProvider::DbErr)?
-            .ok_or_else(|| CnErrorProvider::NotFound {
-                id: cn_process_id.clone(),
-                entity: "Offer".to_string(),
-            })?;
+            .ok_or_else(|| CnErrorProvider::NotFound { id: cn_process_id.clone(), entity: "Offer".to_string() })?;
         let last_offer = serde_json::from_value::<OdrlOffer>(last_offer_model.offer_content)?;
 
         // 3.2 fetch participants
@@ -502,6 +512,7 @@ where
             .send_protocol_message_to_consumer(
                 target_url,
                 &contract_agreement_message,
+                consumer_token,
                 Option::from(provider_pid.clone()),
                 Option::from(consumer_pid.clone()),
             )
@@ -513,10 +524,7 @@ where
             .repo
             .put_cn_process(
                 process_id,
-                EditContractNegotiationProcess {
-                    consumer_id: None,
-                    state: Option::from(response.state),
-                },
+                EditContractNegotiationProcess { consumer_id: None, state: Option::from(response.state) },
             )
             .await
             .map_err(CnErrorProvider::DbErr)?;
@@ -577,7 +585,9 @@ where
     async fn setup_finalization(&self, input: SetupFinalizationRequest) -> anyhow::Result<SetupFinalizationResponse> {
         let SetupFinalizationRequest { consumer_participant_id, consumer_pid, provider_pid, .. } = input;
         // 1. fetch participant id
-        let consumer_base_url = self.get_consumer_base_url(&consumer_participant_id).await?;
+        let consumer_mate = self.get_consumer_mate(&consumer_participant_id).await?;
+        let consumer_base_url = consumer_mate.base_url.ok_or(anyhow!("No base url"))?;
+        let consumer_token = consumer_mate.token.ok_or(anyhow!("No token"))?;
         // 2. validate correlation
         let cn_process =
             self.validate_and_get_correlated_provider_process(&consumer_pid.clone(), &provider_pid.clone()).await?;
@@ -598,6 +608,7 @@ where
             .send_protocol_message_to_consumer(
                 target_url,
                 &contract_verification_message,
+                consumer_token,
                 Option::from(provider_pid.clone()),
                 Option::from(consumer_pid.clone()),
             )
@@ -608,10 +619,7 @@ where
             .repo
             .put_cn_process(
                 process_id,
-                EditContractNegotiationProcess {
-                    consumer_id: None,
-                    state: Option::from(response.state),
-                },
+                EditContractNegotiationProcess { consumer_id: None, state: Option::from(response.state) },
             )
             .await
             .map_err(CnErrorProvider::DbErr)?;
@@ -629,7 +637,6 @@ where
             )
             .await
             .map_err(CnErrorProvider::DbErr)?;
-
 
         // TODO load into PDP
 
@@ -658,7 +665,9 @@ where
     async fn setup_termination(&self, input: SetupTerminationRequest) -> anyhow::Result<SetupTerminationResponse> {
         let SetupTerminationRequest { consumer_participant_id, consumer_pid, provider_pid, .. } = input;
         // 1. fetch participant id
-        let consumer_base_url = self.get_consumer_base_url(&consumer_participant_id).await?;
+        let consumer_mate = self.get_consumer_mate(&consumer_participant_id).await?;
+        let consumer_base_url = consumer_mate.base_url.ok_or(anyhow!("No base url"))?;
+        let consumer_token = consumer_mate.token.ok_or(anyhow!("No token"))?;
         // 2. validate correlation
         let cn_process =
             self.validate_and_get_correlated_provider_process(&consumer_pid.clone(), &provider_pid.clone()).await?;
@@ -678,6 +687,7 @@ where
             .send_protocol_message_to_consumer(
                 target_url,
                 &contract_termination_message,
+                consumer_token,
                 Option::from(provider_pid.clone()),
                 Option::from(consumer_pid.clone()),
             )
@@ -689,10 +699,7 @@ where
             .repo
             .put_cn_process(
                 process_id,
-                EditContractNegotiationProcess {
-                    consumer_id: None,
-                    state: Option::from(response.state),
-                },
+                EditContractNegotiationProcess { consumer_id: None, state: Option::from(response.state) },
             )
             .await
             .map_err(CnErrorProvider::DbErr)?;

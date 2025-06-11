@@ -30,6 +30,7 @@ use crate::consumer::setup::config::ContractNegotiationConsumerApplicationConfig
 use axum::{serve, Router};
 use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
 use rainbow_common::config::provider_config::ApplicationProviderConfig;
+use rainbow_common::facades::ssi_auth_facade::ssi_auth_facade::SSIAuthFacadeService;
 use rainbow_db::contracts_consumer::repo::sql::ContractNegotiationConsumerRepoForSql;
 use rainbow_db::contracts_consumer::repo::ContractNegotiationConsumerRepoFactory;
 use rainbow_db::events::repo::sql::EventsRepoForSql;
@@ -80,7 +81,7 @@ pub async fn create_contract_negotiation_consumer_router(config: &ContractNegoti
     // DSRPCProtocol Dependency injection
     let app_config: ApplicationConsumerConfig = config.clone().into();
     let mates_facade = Arc::new(MatesFacadeService::new(
-        app_config.into()
+        app_config.clone().into()
     ));
     let ds_rpc_protocol_service = Arc::new(DSRPCContractNegotiationConsumerService::new(
         consumer_repo.clone(),
@@ -90,9 +91,13 @@ pub async fn create_contract_negotiation_consumer_router(config: &ContractNegoti
     let ds_rpc_protocol_router = DSRPCContractNegotiationConsumerRouter::new(ds_rpc_protocol_service.clone()).router();
 
     // DSProtocol Dependency injection
+    let ssi_auth_facade = Arc::new(SSIAuthFacadeService::new(
+        app_config.clone().into(),
+    ));
     let ds_protocol_service = Arc::new(DSProtocolContractNegotiationConsumerService::new(
         consumer_repo.clone(),
         notification_service.clone(),
+        ssi_auth_facade.clone(),
     ));
     let ds_protocol_router = DSProtocolContractNegotiationConsumerRouter::new(ds_protocol_service.clone()).router();
 

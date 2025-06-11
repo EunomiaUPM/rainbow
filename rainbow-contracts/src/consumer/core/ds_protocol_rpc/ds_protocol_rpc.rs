@@ -29,6 +29,7 @@ use crate::consumer::core::rainbow_entities::rainbow_entities_errors::CnErrorCon
 use anyhow::{anyhow, bail};
 use axum::async_trait;
 use rainbow_common::config::ConfigRoles;
+use rainbow_common::mates::Mates;
 use rainbow_common::protocol::contract::contract_ack::ContractAckMessage;
 use rainbow_common::protocol::contract::contract_agreement_verification::ContractAgreementVerificationMessage;
 use rainbow_common::protocol::contract::contract_negotiation_event::{
@@ -91,6 +92,16 @@ where
         Self { repo, client, notification_service, mates_facade }
     }
 
+    /// Get provider mate based in id
+    async fn get_provider_mate(&self, provider_participant_id: &Urn) -> anyhow::Result<Mates> {
+        let mate = self
+            .mates_facade
+            .get_mate_by_id(provider_participant_id.clone())
+            .await
+            .map_err(|e| anyhow!("Error parsing mate: {}", e.to_string()))?;
+        Ok(mate)
+    }
+
     async fn get_provider_base_url(&self, provider_participant_id: &Urn) -> anyhow::Result<String> {
         let mate = self
             .mates_facade
@@ -99,7 +110,7 @@ where
             .map_err(|e| anyhow!("Error parsing mate: {}", e.to_string()))?;
         match mate.base_url {
             Some(base_url) => Ok(base_url),
-            None => bail!("Mate with no base_url".to_string())
+            None => bail!("Mate with no base_url".to_string()),
         }
     }
 
@@ -138,15 +149,23 @@ where
         &self,
         target_url: String,
         message_payload: &M,
+        token: String,
         error_context_provider_pid: Option<Urn>,
         error_context_consumer_pid: Option<Urn>,
     ) -> anyhow::Result<ContractAckMessage> {
-        let response = self.client.post(&target_url).json(message_payload).send().await.map_err(|_| {
-            DSRPCContractNegotiationConsumerErrors::ProviderNotReachable {
-                provider_pid: error_context_provider_pid.clone(),
-                consumer_pid: error_context_consumer_pid.clone(),
-            }
-        })?;
+        let response = self
+            .client
+            .post(&target_url)
+            .header("Authorization", format!("Bearer {}", token))
+            .json(message_payload)
+            .send()
+            .await
+            .map_err(
+                |_| DSRPCContractNegotiationConsumerErrors::ProviderNotReachable {
+                    provider_pid: error_context_provider_pid.clone(),
+                    consumer_pid: error_context_consumer_pid.clone(),
+                },
+            )?;
 
         let status = response.status();
         if !status.is_success() {
@@ -200,8 +219,10 @@ where
     async fn setup_request(&self, input: SetupRequestRequest) -> anyhow::Result<SetupRequestResponse> {
         let SetupRequestRequest { provider_pid, consumer_pid, odrl_offer, provider_participant_id, .. } = input;
         // 1. fetch participant
-        let provider_base_url = self.get_provider_base_url(&provider_participant_id).await?;
+        let provider_mate = self.get_provider_mate(&provider_participant_id).await?;
+        let provider_base_url = provider_mate.base_url.ok_or(anyhow!("No base url"))?;
         let provider_base_url = provider_base_url.strip_suffix('/').unwrap_or(provider_base_url.as_str());
+        let provider_token = provider_mate.token.ok_or(anyhow!("No token"))?;
         // 2. validate correlation
         // protocol validation??
         // No need of validation since there is no provider or consumer pid at this point
@@ -219,6 +240,7 @@ where
             .send_protocol_message_to_provider(
                 provider_url,
                 &contract_request_message,
+                provider_token,
                 None,
                 Some(consumer_pid.clone()),
             )
@@ -229,6 +251,7 @@ where
             .create_cn_process(NewContractNegotiationProcess {
                 provider_id: Option::from(get_urn_from_string(&response.provider_pid)?),
                 consumer_id: Option::from(get_urn_from_string(&response.consumer_pid)?),
+                associated_provider: Some(get_urn_from_string(&provider_mate.participant_id)?),
             })
             .await
             .map_err(CnErrorConsumer::DbErr)?;
@@ -280,8 +303,10 @@ where
     async fn setup_rerequest(&self, input: SetupRequestRequest) -> anyhow::Result<SetupRequestResponse> {
         let SetupRequestRequest { provider_pid, consumer_pid, odrl_offer, provider_participant_id, .. } = input;
         // 1. fetch participant
-        let provider_base_url = self.get_provider_base_url(&provider_participant_id).await?;
+        let provider_mate = self.get_provider_mate(&provider_participant_id).await?;
+        let provider_base_url = provider_mate.base_url.ok_or(anyhow!("No base url"))?;
         let provider_base_url = provider_base_url.strip_suffix('/').unwrap_or(provider_base_url.as_str());
+        let provider_token = provider_mate.token.ok_or(anyhow!("No token"))?;
         // 2. validate correlation
         let consumer = self
             .validate_and_get_correlated_provider_process(
@@ -306,6 +331,7 @@ where
             .send_protocol_message_to_provider(
                 provider_url,
                 &contract_offer_message,
+                provider_token,
                 provider_pid.clone(),
                 consumer_pid.clone(),
             )
@@ -367,8 +393,10 @@ where
     async fn setup_acceptance(&self, input: SetupAcceptanceRequest) -> anyhow::Result<SetupAcceptanceResponse> {
         let SetupAcceptanceRequest { provider_pid, consumer_pid, provider_participant_id, .. } = input;
         // 1. fetch participant
-        let provider_base_url = self.get_provider_base_url(&provider_participant_id).await?;
+        let provider_mate = self.get_provider_mate(&provider_participant_id).await?;
+        let provider_base_url = provider_mate.base_url.ok_or(anyhow!("No base url"))?;
         let provider_base_url = provider_base_url.strip_suffix('/').unwrap_or(provider_base_url.as_str());
+        let provider_token = provider_mate.token.ok_or(anyhow!("No token"))?;
         // 2. validate correlation
         let consumer =
             self.validate_and_get_correlated_provider_process(&consumer_pid.clone(), &provider_pid.clone()).await?;
@@ -389,6 +417,7 @@ where
             .send_protocol_message_to_provider(
                 provider_url,
                 &contract_acceptance_message,
+                provider_token,
                 Option::from(provider_pid.clone()),
                 Option::from(consumer_pid.clone()),
             )
@@ -435,8 +464,10 @@ where
     async fn setup_verification(&self, input: SetupVerificationRequest) -> anyhow::Result<SetupVerificationResponse> {
         let SetupVerificationRequest { provider_pid, consumer_pid, provider_participant_id, .. } = input;
         // 1. fetch participant
-        let provider_base_url = self.get_provider_base_url(&provider_participant_id).await?;
-        let provider_base_url = provider_base_url.strip_suffix('/').unwrap_or(provider_base_url.as_str());        // 2. validate correlation
+        let provider_mate = self.get_provider_mate(&provider_participant_id).await?;
+        let provider_base_url = provider_mate.base_url.ok_or(anyhow!("No base url"))?;
+        let provider_base_url = provider_base_url.strip_suffix('/').unwrap_or(provider_base_url.as_str());
+        let provider_token = provider_mate.token.ok_or(anyhow!("No token"))?; // 2. validate correlation
         let consumer =
             self.validate_and_get_correlated_provider_process(&consumer_pid.clone(), &provider_pid.clone()).await?;
         // 3. create message
@@ -455,6 +486,7 @@ where
             .send_protocol_message_to_provider(
                 provider_url,
                 &contract_verification_message,
+                provider_token,
                 Option::from(provider_pid.clone()),
                 Option::from(consumer_pid.clone()),
             )
@@ -501,8 +533,10 @@ where
     async fn setup_termination(&self, input: SetupTerminationRequest) -> anyhow::Result<SetupTerminationResponse> {
         let SetupTerminationRequest { provider_pid, consumer_pid, provider_participant_id, .. } = input;
         // 1. fetch participant
-        let provider_base_url = self.get_provider_base_url(&provider_participant_id).await?;
+        let provider_mate = self.get_provider_mate(&provider_participant_id).await?;
+        let provider_base_url = provider_mate.base_url.ok_or(anyhow!("No base url"))?;
         let provider_base_url = provider_base_url.strip_suffix('/').unwrap_or(provider_base_url.as_str());
+        let provider_token = provider_mate.token.ok_or(anyhow!("No token"))?;
         // 2. validate correlation
         let consumer =
             self.validate_and_get_correlated_provider_process(&consumer_pid.clone(), &provider_pid.clone()).await?;
@@ -522,6 +556,7 @@ where
             .send_protocol_message_to_provider(
                 provider_url,
                 &contract_termination_message,
+                provider_token,
                 Option::from(provider_pid.clone()),
                 Option::from(consumer_pid.clone()),
             )

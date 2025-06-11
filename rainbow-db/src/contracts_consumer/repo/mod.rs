@@ -45,6 +45,7 @@ ContractNegotiationConsumerProcessRepo
 pub struct NewContractNegotiationProcess {
     pub provider_id: Option<Urn>,
     pub consumer_id: Option<Urn>,
+    pub associated_provider: Option<Urn>,
 }
 
 pub struct EditContractNegotiationProcess {}

@@ -114,7 +114,7 @@ impl ContractNegotiationProcessRepo for ContractNegotiationProviderRepoForSql {
             .ok_or(CnErrors::CNProcessNotFound)?;
 
         let mut old_active_model: cn_process::ActiveModel = old_model.into();
-        
+
         if let Some(consumer_id) = edit_cn_process.consumer_id {
             old_active_model.consumer_id = ActiveValue::Set(Some(consumer_id.to_string()));
         }
@@ -139,6 +139,7 @@ impl ContractNegotiationProcessRepo for ContractNegotiationProviderRepoForSql {
             consumer_id: ActiveValue::Set(Option::from(
                 get_urn(new_cn_process.consumer_id).to_string(),
             )),
+            associated_consumer: ActiveValue::Set(new_cn_process.associated_consumer.map(|a| a.to_string())),
             state: ActiveValue::Set(new_cn_process.state.to_string()),
             initiated_by: ActiveValue::Set(new_cn_process.initiated_by.to_string()),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),

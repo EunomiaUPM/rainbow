@@ -25,6 +25,7 @@ use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
 use axum::routing::post;
 use axum::{middleware, Extension, Json, Router};
+use rainbow_common::auth::header::{extract_request_info, RequestInfo};
 use rainbow_common::protocol::contract::contract_agreement::ContractAgreementMessage;
 use rainbow_common::protocol::contract::contract_negotiation_event::ContractNegotiationEventMessage;
 use rainbow_common::protocol::contract::contract_negotiation_termination::ContractTerminationMessage;
@@ -89,6 +90,7 @@ where
                 post(Self::handle_post_termination),
             )
             .route_layer(middleware::from_fn(Self::extract_params))
+            .layer(middleware::from_fn(extract_request_info))
             .route("/negotiations/offers", post(Self::handle_post_offers))
             .with_state(self.service)
     }
@@ -108,6 +110,7 @@ where
 
     async fn handle_post_offers(
         State(service): State<Arc<T>>,
+        Extension(info): Extension<Arc<RequestInfo>>,
         input: Result<Json<ContractOfferMessage>, JsonRejection>,
     ) -> impl IntoResponse {
         info!("POST /negotiations/offers");
@@ -115,7 +118,8 @@ where
             Ok(input) => input.0,
             Err(e) => return IdsaCNError::JsonRejection(e).into_response(),
         };
-        match service.post_offers(input).await {
+        let token = info.token.clone();
+        match service.post_offers(input, token).await {
             Ok(negotiation) => negotiation.into_response(),
             Err(err) => match err.downcast::<IdsaCNError>() {
                 Ok(err_) => err_.into_response(),
@@ -130,6 +134,7 @@ where
     async fn handle_post_consumer_offers(
         State(service): State<Arc<T>>,
         Extension(params): Extension<ExtractedParams>,
+        Extension(info): Extension<Arc<RequestInfo>>,
         input: Result<Json<ContractOfferMessage>, JsonRejection>,
     ) -> impl IntoResponse {
         info!(
@@ -145,7 +150,8 @@ where
             Ok(input) => input.0,
             Err(e) => return IdsaCNError::JsonRejection(e).into_response(),
         };
-        match service.post_consumer_offers(consumer_pid, input).await {
+        let token = info.token.clone();
+        match service.post_consumer_offers(consumer_pid, input, token).await {
             Ok(negotiation) => negotiation.into_response(),
             Err(err) => match err.downcast::<IdsaCNError>() {
                 Ok(err_) => err_.into_response(),
@@ -160,6 +166,7 @@ where
     async fn handle_post_agreement(
         State(service): State<Arc<T>>,
         Extension(params): Extension<ExtractedParams>,
+        Extension(info): Extension<Arc<RequestInfo>>,
         input: Result<Json<ContractAgreementMessage>, JsonRejection>,
     ) -> impl IntoResponse {
         info!(
@@ -175,7 +182,8 @@ where
             Ok(input) => input.0,
             Err(e) => return IdsaCNError::JsonRejection(e).into_response(),
         };
-        match service.post_agreement(consumer_pid, input).await {
+        let token = info.token.clone();
+        match service.post_agreement(consumer_pid, input, token).await {
             Ok(negotiation) => negotiation.into_response(),
             Err(err) => match err.downcast::<IdsaCNError>() {
                 Ok(err_) => err_.into_response(),
@@ -190,6 +198,7 @@ where
     async fn handle_post_events(
         State(service): State<Arc<T>>,
         Extension(params): Extension<ExtractedParams>,
+        Extension(info): Extension<Arc<RequestInfo>>,
         input: Result<Json<ContractNegotiationEventMessage>, JsonRejection>,
     ) -> impl IntoResponse {
         info!(
@@ -205,7 +214,8 @@ where
             Ok(input) => input.0,
             Err(e) => return IdsaCNError::JsonRejection(e).into_response(),
         };
-        match service.post_events(consumer_pid, input).await {
+        let token = info.token.clone();
+        match service.post_events(consumer_pid, input, token).await {
             Ok(negotiation) => negotiation.into_response(),
             Err(err) => match err.downcast::<IdsaCNError>() {
                 Ok(err_) => err_.into_response(),
@@ -220,6 +230,7 @@ where
     async fn handle_post_termination(
         State(service): State<Arc<T>>,
         Extension(params): Extension<ExtractedParams>,
+        Extension(info): Extension<Arc<RequestInfo>>,
         input: Result<Json<ContractTerminationMessage>, JsonRejection>,
     ) -> impl IntoResponse {
         info!(
@@ -235,7 +246,8 @@ where
             Ok(input) => input.0,
             Err(e) => return IdsaCNError::JsonRejection(e).into_response(),
         };
-        match service.post_termination(consumer_pid, input).await {
+        let token = info.token.clone();
+        match service.post_termination(consumer_pid, input, token).await {
             Ok(negotiation) => negotiation.into_response(),
             Err(err) => match err.downcast::<IdsaCNError>() {
                 Ok(err_) => err_.into_response(),
