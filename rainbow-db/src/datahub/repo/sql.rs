@@ -191,6 +191,20 @@ impl PolicyRelationsRepo for DatahubConnectorRepoForSql {
             Err(err) => Err(PolicyTemplatesRepoErrors::ErrorFetchingPolicyRelation(err.into())),
         }
     }
+
+    async fn get_all_policy_relations_by_template_id(&self, template_id: String) -> anyhow::Result<Vec<policy_relations::Model>, PolicyTemplatesRepoErrors> {
+        // Construir la consulta para encontrar todas las relaciones con el template_id específico
+        match policy_relations::Entity::find()
+            .filter(policy_relations::Column::PolicyTemplateId.eq(template_id))
+            .order_by_desc(policy_relations::Column::CreatedAt)
+            .all(&self.db_connection)
+            .await
+        {
+            Ok(relations) => Ok(relations),
+            Err(err) => Err(PolicyTemplatesRepoErrors::ErrorFetchingPolicyRelation(err.into())),
+        }
+    }
+    
 }
 
 

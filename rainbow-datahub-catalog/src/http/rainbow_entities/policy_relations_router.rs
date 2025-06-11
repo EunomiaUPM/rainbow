@@ -50,6 +50,7 @@ where
             .route("/api/v1/datahub/policy-relations/:id", delete(Self::delete_policy_relation_by_id))
             .route("/api/v1/datahub/policy-relations", get(Self::get_all_policy_relations))
             .route("/api/v1/datahub/policy-relations/:id", get(Self::get_relation_by_id))
+            .route("/api/v1/datahub/policy-relations/template/:template_id", get(Self::get_policy_relations_by_template_id))
             .with_state(self.policy_relations_service)
     }
 
@@ -145,6 +146,30 @@ where
             },
             Err(e) => {
                 error!("Error al obtener policy template: {}", e);
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(json!({ "error": e.to_string() }))
+                )
+            },
+        }
+    }
+
+    async fn get_policy_relations_by_template_id(
+        State(policy_relations_service): State<Arc<T>>,
+        Path(template_id): Path<String>,
+    ) -> impl IntoResponse {
+        info!("GET /api/v1/datahub/policy-relations/template/{}", template_id);
+        
+        match policy_relations_service.get_all_policy_relations_by_template_id(template_id).await {
+            Ok(relations) => {
+                info!("Policy relations obtenidas exitosamente para el template");
+                (
+                    StatusCode::OK,
+                    Json(json!({ "relations": relations }))
+                )
+            },
+            Err(e) => {
+                error!("Error al obtener policy relations para el template: {}", e);
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
                     Json(json!({ "error": e.to_string() }))
