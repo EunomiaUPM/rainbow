@@ -60,16 +60,17 @@ where
 
     pub fn router(self) -> Router {
         Router::new()
-            .route("/wallet/register", post(Self::wallet_register))
-            .route("/wallet/login", post(Self::wallet_login))
-            .route("/wallet/logout", post(Self::wallet_logout))
-            .route("/wallet/onboard", post(Self::wallet_oboard))
-            .route("/auth/ssi", post(Self::auth_ssi))
-            .route("/callback/:id", post(Self::callback))
-            .route("/auth/manual/ssi", post(Self::manual_auth_ssi))
-            .route("/callback/manual/:id", get(Self::manual_callback))
-            .route("/retrieve/token/:id", get(Self::manual_callback))
-            .route("/.well-known/did.json", get(Self::didweb)) // TODO
+            .route("/api/v1/wallet/register", post(Self::wallet_register))
+            .route("/api/v1/wallet/login", post(Self::wallet_login))
+            .route("/api/v1/wallet/logout", post(Self::wallet_logout))
+            .route("/api/v1/wallet/onboard", post(Self::wallet_oboard))
+            .route("/api/v1/auth/ssi", post(Self::auth_ssi))
+            .route("/api/v1/callback/:id", post(Self::callback))
+            .route("/api/v1/auth/manual/ssi", post(Self::manual_auth_ssi))
+            .route("/api/v1/callback/manual/:id", get(Self::manual_callback))
+            .route("/api/v1/retrieve/token/:id", get(Self::manual_callback))
+            .route("/api/v1/beg/credential", post(Self::beg4credential))
+            .route("/api/v1/.well-known/did.json", get(Self::didweb)) // TODO
             // .route("/provider/:id/renew", post(todo!()))
             // .route("/provider/:id/finalize", post(todo!()))
             .with_state(self.manager)
@@ -298,7 +299,7 @@ where
             Err(e) => return (StatusCode::BAD_REQUEST, format!("continue request failed: {}", e.to_string())).into_response(),
         };
 
-        let grant_endpoint = res.grant_endpoint.replace("/access", "");
+        let grant_endpoint = res.grant_endpoint.replace("/api/v1/access", "");
         match manager.save_mate(res.provider, grant_endpoint, res.token.unwrap(), res.actions).await {
             Ok(a) => (StatusCode::CREATED, Json(a.json::<Value>().await.unwrap())).into_response(),
             Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, format!("mate not saved: {}", e.to_string())).into_response(),
@@ -321,16 +322,22 @@ where
         }
     }
 
+    async fn didweb(State(manager): State<Arc<Mutex<Manager<T>>>>) -> impl IntoResponse {
+        let mut manager = manager.lock().await;
+        Json(manager.didweb().await.unwrap())
+    }
+
+    async fn beg4credential(State(manager): State<Arc<Mutex<Manager<T>>>>) -> impl IntoResponse {
+        let mut manager = manager.lock().await;
+        StatusCode::OK.into_response()
+    }
     async fn fallback(method: Method, uri: Uri) -> (StatusCode, String) {
         let log = format!("{} {}", method, uri);
         info!("{}", log);
         (StatusCode::NOT_FOUND, format!("No route for {uri}"))
     }
 
-    async fn didweb(State(manager): State<Arc<Mutex<Manager<T>>>>) -> impl IntoResponse {
-        let mut manager = manager.lock().await;
-        Json(manager.didweb().await.unwrap())
-    }
+
 }
 
 #[derive(Deserialize)]

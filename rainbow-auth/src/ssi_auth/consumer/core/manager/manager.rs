@@ -94,7 +94,7 @@ where
     T: AuthConsumerRepoTrait + Send + Sync + Clone + 'static,
 {
     async fn register_wallet(&self) -> anyhow::Result<()> {
-        let wallet_portal_url = self.config.get_consumer_wallet_portal_url() + "/wallet-api/auth/register";
+        let wallet_portal_url = format!("http://{}",self.config.get_consumer_wallet_portal_url() + "/wallet-api/auth/register");
         let wallet_data = self.config.get_consumer_wallet_data();
 
         let mut headers = HeaderMap::new();
@@ -399,7 +399,8 @@ where
         let callback = format!("{}/callback/{}", auth_url, id.clone());
         body.update_callback(callback);
 
-        let model = match self.auth_repo.create_auth(id, url.clone(), provider, actions, body.interact.clone()).await {
+        let interact = body.clone().interact.unwrap();
+        let model = match self.auth_repo.create_auth(id, url.clone(), provider, actions, interact).await {
             Ok(model) => {
                 info!("exchange saved successfully");
                 model
@@ -476,10 +477,11 @@ where
         let id = uuid::Uuid::new_v4().to_string();
         body.update_actions(actions.clone());
         let auth_url = self.config.get_auth_host_url().unwrap();
-        let callback = format!("{}/callback/manual/{}", auth_url, id.clone());
+        let callback = format!("{}/api/v1/callback/manual/{}", auth_url, id.clone());
         body.update_callback(callback);
 
-        let model = match self.auth_repo.create_auth(id, url.clone(), provider, actions, body.interact.clone()).await {
+        let interact = body.clone().interact.unwrap();
+        let model = match self.auth_repo.create_auth(id, url.clone(), provider, actions, interact).await {
             Ok(model) => {
                 info!("exchange saved successfully");
                 model
@@ -716,13 +718,10 @@ where
             "interact_ref": interact_ref
         });
 
-        let mut url = Url::parse(&uri)?;
-        let path = url.path();
-        let new_path = path.rsplit('/').skip(1).collect::<Vec<&str>>().join("/");
-        let new_url = url.join(&format!("/{}", new_path))?;
-        let final_url = new_url.join("continue")?;
+        let mut url = uri;
+        url = url.replace("access", "continue");
 
-        let res = self.client.post(final_url).headers(headers).json(&body).send().await;
+        let res = self.client.post(url).headers(headers).json(&body).send().await;
 
         let res = match res {
             Ok(res) => res,
@@ -777,6 +776,11 @@ where
         }
 
         Ok(res)
+    }
+
+    async fn beg4credential(&self, cert: Value) -> anyhow::Result<()> {
+
+        Ok(())
     }
 }
 

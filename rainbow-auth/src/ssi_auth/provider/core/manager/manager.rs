@@ -76,19 +76,21 @@ where
     async fn generate_exchange_uri(&self, payload: GrantRequest) -> anyhow::Result<(String, String, String)> {
         info!("Generating exchange URI");
 
-        if !payload.interact.start.contains(&"oidc4vp".to_string()) {
-            bail!(
-                "Interact Method {} Not supported ",
-                payload.interact.start.first().unwrap()
-            );
+        let interact = payload.interact.unwrap();
+        let start = interact.clone().start;
+
+        if !start.contains(&"oidc4vp".to_string()) {
+            error!("Interact Method {} Not supported ", start.first().unwrap());
+            bail!("Interact Method {} Not supported ", start.first().unwrap());
         }
         let mut provider_url = self.config.get_ssi_auth_host_url().unwrap(); // TODO fix docker internal
         provider_url = provider_url.replace("127.0.0.1", "host.docker.internal");
+        provider_url = format!("{}/api/v1", provider_url);
 
         let client_id = format!("{}/verify", &provider_url);
 
         let actions = payload.access_token.access.actions.unwrap_or_else(|| String::from("talk"));
-        let grant_endpoint = format!("{}/access", self.config.get_ssi_auth_host_url().unwrap());
+        let grant_endpoint = format!("{}/api/v1/access", self.config.get_ssi_auth_host_url().unwrap());
 
         let (auth_model, interaction_model, verification_model) = match self
             .auth_repo
@@ -97,7 +99,7 @@ where
                 client_id.clone(),
                 grant_endpoint,
                 actions,
-                payload.interact,
+                interact,
             )
             .await
         {
@@ -286,7 +288,7 @@ where
 
         let key = jsonwebtoken::DecodingKey::from_jwk(&jwk)?;
         let mut audience = format!(
-            "{}/verify/{}",
+            "{}/api/v1/verify/{}",
             self.config.get_ssi_auth_host_url().unwrap(),
             state
         );

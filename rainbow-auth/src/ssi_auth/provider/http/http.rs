@@ -52,11 +52,11 @@ where
     }
     pub fn router(self) -> Router {
         Router::new()
-            .route("/access", post(Self::access_request))
-            .route("/pd/:state", get(Self::pd))
-            .route("/verify/:state", post(Self::verify))
-            .route("/continue", post(Self::continue_request))
-            .route("/verify/token", post(Self::verify_token))
+            .route("/api/v1/access", post(Self::access_request))
+            .route("/api/v1/pd/:state", get(Self::pd))
+            .route("/api/v1/verify/:state", post(Self::verify))
+            .route("/api/v1/continue", post(Self::continue_request))
+            .route("/api/v1/verify/token", post(Self::verify_token))
             .with_state(self.manager)
         // .fallback(Self::fallback) 2 routers cannot have 1 fallback each
     }

@@ -30,7 +30,7 @@ pub struct GrantRequest {
     pub client: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub user: Option<String>,
-    pub interact: Interact4GR
+    pub interact: Option<Interact4GR>
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -93,12 +93,24 @@ impl GrantRequest {
             subject: None,
             client,
             user: None,
-            interact: Interact4GR::default4oidc(method),
+            interact: Some(Interact4GR::default4oidc(method)),
+        }
+    }
+
+    pub fn default4async(client: String) -> Self {
+        Self {
+            access_token: AccessTokenRequirements4GR::default(),
+            subject: None,
+            client,
+            user: None,
+            interact: None,
         }
     }
 
     pub fn update_callback(&mut self, callback: String) -> &mut Self {
-        self.interact.finish.uri = Some(callback);
+        if let Some(interact) = self.interact.as_mut() {
+            interact.finish.uri = Some(callback);
+        }
         self
     }
 
@@ -136,3 +148,4 @@ impl Interact4GR {
         }
     }
 }
+
