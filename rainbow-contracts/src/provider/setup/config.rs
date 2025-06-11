@@ -28,6 +28,7 @@ pub struct ContractNegotiationApplicationProviderConfig {
     catalog_host: Option<HostConfig>,
     catalog_as_datahub: bool,
     datahub_host: Option<HostConfig>,
+    datahub_token: String,
     contract_negotiation_host: Option<HostConfig>,
     auth_host: Option<HostConfig>,
     ssi_auth_host: Option<HostConfig>,
@@ -68,6 +69,11 @@ impl ApplicationProviderConfigTrait for ContractNegotiationApplicationProviderCo
     fn get_raw_datahub_host(&self) -> &Option<HostConfig> {
         &self.datahub_host
     }
+
+    fn get_raw_datahub_token(&self) -> &String {
+        &self.datahub_token
+    }
+
     fn get_raw_contract_negotiation_host(&self) -> &Option<HostConfig> {
         &self.contract_negotiation_host
     }
@@ -96,6 +102,7 @@ impl From<ApplicationProviderConfig> for ContractNegotiationApplicationProviderC
             catalog_host: value.catalog_host,
             catalog_as_datahub: value.catalog_as_datahub,
             datahub_host: value.datahub_host,
+            datahub_token: value.datahub_token,
             contract_negotiation_host: value.contract_negotiation_host,
             auth_host: value.auth_host,
             ssi_auth_host: value.ssi_auth_host,
@@ -115,6 +122,7 @@ impl Into<ApplicationProviderConfig> for ContractNegotiationApplicationProviderC
             catalog_host: self.catalog_host,
             catalog_as_datahub: self.catalog_as_datahub,
             datahub_host: self.datahub_host,
+            datahub_token: self.datahub_token,
             contract_negotiation_host: self.contract_negotiation_host,
             auth_host: self.auth_host,
             ssi_auth_host: self.ssi_auth_host,

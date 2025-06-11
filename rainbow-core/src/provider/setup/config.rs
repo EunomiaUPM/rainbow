@@ -28,6 +28,7 @@ pub struct CoreApplicationProviderConfig {
     business_system_host: Option<HostConfig>,
     catalog_as_datahub: bool,
     datahub_host: Option<HostConfig>,
+    pub datahub_token: String,
     database_config: DatabaseConfig,
     ssh_user: Option<String>,
     ssh_private_key_path: Option<String>,
@@ -65,6 +66,9 @@ impl ApplicationProviderConfigTrait for CoreApplicationProviderConfig {
     fn get_raw_datahub_host(&self) -> &Option<HostConfig> {
         &self.datahub_host
     }
+    fn get_raw_datahub_token(&self) -> &String {
+        &self.datahub_token
+    }
     fn get_raw_contract_negotiation_host(&self) -> &Option<HostConfig> {
         &self.core_host
     }
@@ -93,6 +97,7 @@ impl From<ApplicationProviderConfig> for CoreApplicationProviderConfig {
             business_system_host: value.business_system_host,
             catalog_as_datahub: value.catalog_as_datahub,
             datahub_host: value.datahub_host,
+            datahub_token: value.datahub_token,
             database_config: value.database_config,
             ssh_user: value.ssh_user,
             ssh_private_key_path: value.ssh_private_key_path,
@@ -109,6 +114,7 @@ impl Into<ApplicationProviderConfig> for CoreApplicationProviderConfig {
             catalog_host: self.core_host.clone(),
             catalog_as_datahub: self.catalog_as_datahub,
             datahub_host: self.datahub_host,
+            datahub_token: self.datahub_token,
             contract_negotiation_host: self.core_host.clone(),
             auth_host: self.core_host.clone(),
             ssi_auth_host: self.core_host.clone(),

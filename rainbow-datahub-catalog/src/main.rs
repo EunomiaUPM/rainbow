@@ -1,50 +1,28 @@
-use crate::core::datahub_proxy::datahub_proxy::DatahubProxyService;
-use crate::core::datahub_proxy::DatahubProxyTrait;
-use crate::http::datahub_proxy::datahub_proxy::DataHubProxyRouter;
-use crate::http::rainbow_entities::policy_relations_router::{PolicyRelationsRouter, PolicyTemplatesRouter};
-use axum::Router;
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
+/*
+ *
+ *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
+
 use rainbow_datahub_catalog::setup::cmd::CatalogCommands;
-use rainbow_db::datahub::repo::sql::DatahubConnectorRepoForSql;
-use rainbow_db::datahub::repo::PolicyRelationsRepo;
-use sea_orm::{Database, DatabaseConnection, EntityTrait};
-use std::sync::Arc;
 use tokio;
 use tracing::info;
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::EnvFilter;
-
-mod core;
-mod http;
-
-// #[tokio::main]
-// async fn main() {
-//     let config = ApplicationProviderConfig::default();
-//     let datahub_service = Arc::new(DatahubProxyService::new(config.clone()));
-//     let db_connection = Database::connect("postgres://ds_transfer_provider:ds_transfer_provider@127.0.0.1:1300/ds_transfer_provider").await.unwrap();
-//
-//     let repo = Arc::new(DatahubConnectorRepoForSql::new(db_connection.clone()));
-//     let policy_templates_service = Arc::new(DatahubConnectorRepoForSql::new(db_connection.clone()));
-//     let policy_relations_service = Arc::new(DatahubConnectorRepoForSql::new(db_connection.clone()));
-//
-//
-//
-//     let datahub_router = DataHubProxyRouter::new(datahub_service.clone());
-//     let policy_templates_router = PolicyTemplatesRouter::new(policy_templates_service.clone());
-//     let policy_relations_router = PolicyRelationsRouter::new(policy_relations_service.clone());
-//
-//
-//
-//     let app = Router::new()
-//         .merge(datahub_router.router())
-//         .merge(policy_templates_router.router())
-//         .merge(policy_relations_router.router());
-//
-//
-//     println!("🚀 Servidor corriendo en http://localhost:3000");
-//     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-//     axum::serve(listener, app).await.unwrap();
-// }
 
 const INFO: &str = r"
 ----------

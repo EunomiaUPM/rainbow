@@ -1,7 +1,25 @@
-// use crate::core::datahub_proxy::datahub_proxy_types::{DatasetsQueryOptions, DomainsQueryOptions};
-use crate::core::datahub_proxy::datahub_proxy_types::{DomainsQueryOptions};
-use crate::core::datahub_proxy::datahub_proxy_types::{DatasetsQueryOptions, DatasetBasicInfo};
-// use crate::core::datahub_proxy::datahub_proxy_types::{AddPolicyRequest};
+/*
+ *
+ *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
+
+use crate::core::datahub_proxy::datahub_proxy_types::DomainsQueryOptions;
+use crate::core::datahub_proxy::datahub_proxy_types::DatasetsQueryOptions;
 use crate::core::datahub_proxy::DatahubProxyTrait;
 use axum::extract::{Path, Query, State};
 use axum::response::IntoResponse;
@@ -38,7 +56,7 @@ where
     }
     async fn handle_get_datahub_domains(
         State(datahub_service): State<Arc<T>>,
-        query: Query<DomainsQueryOptions>,
+        _query: Query<DomainsQueryOptions>,
     ) -> impl IntoResponse {
         info!("GET /api/v1/datahub/domains");
         match datahub_service.get_datahub_domains().await {
@@ -46,11 +64,11 @@ where
             Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
         }
     }
-    
+
     async fn handle_get_datasets_by_domain_id(
         State(datahub_service): State<Arc<T>>,
         Path(domain_id): Path<String>,
-        query: Query<DatasetsQueryOptions>,
+        _query: Query<DatasetsQueryOptions>,
     ) -> impl IntoResponse {
         info!("GET /api/v1/datahub/domains/{}/datasets", domain_id);
         match datahub_service.get_datahub_datasets_by_domain_id(domain_id).await {
@@ -68,6 +86,4 @@ where
             Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
         }
     }
-
-
 }

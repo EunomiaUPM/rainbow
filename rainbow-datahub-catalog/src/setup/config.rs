@@ -28,6 +28,7 @@ pub struct DatahubCatalogApplicationProviderConfig {
     catalog_host: Option<HostConfig>,
     datahub_host: Option<HostConfig>,
     catalog_as_datahub: bool,
+    pub datahub_token: String,
     auth_host: Option<HostConfig>,
     ssi_auth_host: Option<HostConfig>,
     database_config: DatabaseConfig,
@@ -50,7 +51,7 @@ impl ApplicationProviderConfigTrait for DatahubCatalogApplicationProviderConfig 
         self.ssh_private_key_path.clone()
     }
     fn is_datahub_as_catalog(&self) -> bool {
-        false
+        self.catalog_as_datahub
     }
     fn get_role(&self) -> ConfigRoles {
         self.role
@@ -66,6 +67,9 @@ impl ApplicationProviderConfigTrait for DatahubCatalogApplicationProviderConfig 
     }
     fn get_raw_datahub_host(&self) -> &Option<HostConfig> {
         &self.datahub_host
+    }
+    fn get_raw_datahub_token(&self) -> &String {
+        &self.datahub_token
     }
     fn get_raw_contract_negotiation_host(&self) -> &Option<HostConfig> {
         &None
@@ -95,6 +99,7 @@ impl From<ApplicationProviderConfig> for DatahubCatalogApplicationProviderConfig
             catalog_host: value.catalog_host,
             datahub_host: value.datahub_host,
             catalog_as_datahub: value.catalog_as_datahub,
+            datahub_token: value.datahub_token,
             auth_host: value.auth_host,
             ssi_auth_host: value.ssi_auth_host,
             database_config: value.database_config,
@@ -111,8 +116,9 @@ impl Into<ApplicationProviderConfig> for DatahubCatalogApplicationProviderConfig
             transfer_process_host: None,
             business_system_host: self.business_system_host,
             catalog_host: self.catalog_host,
-            catalog_as_datahub: true,
+            catalog_as_datahub: self.catalog_as_datahub,
             datahub_host: self.datahub_host,
+            datahub_token: self.datahub_token,
             contract_negotiation_host: None,
             auth_host: self.auth_host,
             ssi_auth_host: self.ssi_auth_host,

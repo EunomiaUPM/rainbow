@@ -1,43 +1,55 @@
-// use crate::core::datahub_proxy::datahub_proxy_types::{DatahubDataset, DatahubDomain};
+/*
+ *
+ *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 use crate::core::datahub_proxy::datahub_proxy_types::DatasetGraphQLResponseDetailed;
 use crate::core::datahub_proxy::datahub_proxy_types::{
-    DatahubDataset, DatasetBasicInfo, DatasetGraphQLResponse, DomainProperties, GlossaryTerm
-    ,
+    DatahubDataset, DatasetBasicInfo, DatasetGraphQLResponse, DomainProperties, GlossaryTerm,
 };
-use crate::core::datahub_proxy::datahub_proxy_types::{
-    DatahubDomain, GraphQLResponse,
-};
+use crate::core::datahub_proxy::datahub_proxy_types::{DatahubDomain, GraphQLResponse};
 use crate::core::datahub_proxy::DatahubProxyTrait;
+use crate::setup::config::DatahubCatalogApplicationProviderConfig;
 use axum::async_trait;
-use rainbow_common::config::global_config::format_host_config_to_url_string;
-use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
 use reqwest::Client;
 use std::time::Duration;
+use tracing::debug;
 
 pub struct DatahubProxyService {
-    config: ApplicationProviderConfig,
+    config: DatahubCatalogApplicationProviderConfig,
     client: Client,
 }
 
 impl DatahubProxyService {
-    pub fn new(config: ApplicationProviderConfig) -> Self {
+    pub fn new(config: DatahubCatalogApplicationProviderConfig) -> Self {
         let client =
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
         Self { config, client }
     }
 }
 
-
 #[async_trait]
 impl DatahubProxyTrait for DatahubProxyService {
     async fn get_datahub_domains(&self) -> anyhow::Result<Vec<DatahubDomain>> {
-        // URL específica de DataHub
-        // let graphql_url = "http://datahub-gms-federado:8080/api/graphql";
-        // let dh_host = self.config.get_datahub_host_url();
-        // let graphql_url = "http://192.168.64.29:8080/api/graphql";
-        // let base_url = self.config.get_datahub_host_url().unwrap();
-        // let graphql_url = format!("{}//api/graphql", base_url);
-        let datahub_host = format_host_config_to_url_string(&self.config.get_raw_datahub_host().clone().unwrap());
+        let datahub_host = self.config.get_datahub_host_url().expect("Datahub host not created");
+        let datahub_token = self.config.get_datahub_token().expect("Datahub Token not created");
+        debug!("{}", datahub_host);
+        debug!("{}", datahub_token);
         let graphql_url = format!("{}/api/graphql", datahub_host);
         let query = r#"{
             search(input: { type: DOMAIN, query: "*", start: 0, count: 1000 }) {
@@ -54,19 +66,14 @@ impl DatahubProxyTrait for DatahubProxyService {
                 }
             }
         }"#;
-
         let request_body = serde_json::json!({
             "query": query
         });
-
-        // TODO go to config in env!!!
-        let token = "eyJhbGciOiJIUzI1NiJ9.eyJhY3RvclR5cGUiOiJVU0VSIiwiYWN0b3JJZCI6ImRydWdzQGRydWdzLmNvbSIsInR5cGUiOiJQRVJTT05BTCIsInZlcnNpb24iOiIyIiwianRpIjoiNTYzNzkzMzEtZWIzMy00YzYwLThiYmMtNjRmYzdhYWY1ZGVhIiwic3ViIjoiZHJ1Z3NAZHJ1Z3MuY29tIiwiZXhwIjoxNzUyMjQxMDAxLCJpc3MiOiJkYXRhaHViLW1ldGFkYXRhLXNlcnZpY2UifQ.JvE0rRozSujgtnIxxyNt-nnOQab8hT5hf3JIsHCXKuc";
-
         let response = self
             .client
             .post(graphql_url)
             .header("Content-Type", "application/json")
-            .header("Authorization", format!("Bearer {}", token))
+            .header("Authorization", format!("Bearer {}", datahub_token))
             .json(&request_body)
             .send()
             .await?;
@@ -85,7 +92,8 @@ impl DatahubProxyTrait for DatahubProxyService {
     }
 
     async fn get_datahub_datasets_by_domain_id(&self, id: String) -> anyhow::Result<Vec<DatasetBasicInfo>> {
-        let datahub_host = format_host_config_to_url_string(&self.config.get_raw_datahub_host().clone().unwrap());
+        let datahub_host = self.config.get_datahub_host_url().expect("Datahub host not created");
+        let datahub_token = self.config.get_datahub_token().expect("Datahub Token not created");
         let graphql_url = format!("{}/api/graphql", datahub_host);
         let query = format!(
             r#"{{
@@ -115,13 +123,11 @@ impl DatahubProxyTrait for DatahubProxyService {
             "query": query
         });
 
-        let token = "eyJhbGciOiJIUzI1NiJ9.eyJhY3RvclR5cGUiOiJVU0VSIiwiYWN0b3JJZCI6ImRydWdzQGRydWdzLmNvbSIsInR5cGUiOiJQRVJTT05BTCIsInZlcnNpb24iOiIyIiwianRpIjoiNTYzNzkzMzEtZWIzMy00YzYwLThiYmMtNjRmYzdhYWY1ZGVhIiwic3ViIjoiZHJ1Z3NAZHJ1Z3MuY29tIiwiZXhwIjoxNzUyMjQxMDAxLCJpc3MiOiJkYXRhaHViLW1ldGFkYXRhLXNlcnZpY2UifQ.JvE0rRozSujgtnIxxyNt-nnOQab8hT5hf3JIsHCXKuc";
-
         let response = self
             .client
             .post(graphql_url)
             .header("Content-Type", "application/json")
-            .header("Authorization", format!("Bearer {}", token))
+            .header("Authorization", format!("Bearer {}", datahub_token))
             .json(&request_body)
             .send()
             .await?;
@@ -144,7 +150,8 @@ impl DatahubProxyTrait for DatahubProxyService {
     }
 
     async fn get_datahub_dataset_by_id(&self, id: String) -> anyhow::Result<DatahubDataset> {
-        let datahub_host = format_host_config_to_url_string(&self.config.get_raw_datahub_host().clone().unwrap());
+        let datahub_host = self.config.get_datahub_host_url().expect("Datahub host not created");
+        let datahub_token = self.config.get_datahub_token().expect("Datahub Token not created");
         let graphql_url = format!("{}/api/graphql", datahub_host);
         let query = format!(
             r#"{{
@@ -212,13 +219,11 @@ impl DatahubProxyTrait for DatahubProxyService {
             "query": query
         });
 
-        let token = "eyJhbGciOiJIUzI1NiJ9.eyJhY3RvclR5cGUiOiJVU0VSIiwiYWN0b3JJZCI6ImRydWdzQGRydWdzLmNvbSIsInR5cGUiOiJQRVJTT05BTCIsInZlcnNpb24iOiIyIiwianRpIjoiNTYzNzkzMzEtZWIzMy00YzYwLThiYmMtNjRmYzdhYWY1ZGVhIiwic3ViIjoiZHJ1Z3NAZHJ1Z3MuY29tIiwiZXhwIjoxNzUyMjQxMDAxLCJpc3MiOiJkYXRhaHViLW1ldGFkYXRhLXNlcnZpY2UifQ.JvE0rRozSujgtnIxxyNt-nnOQab8hT5hf3JIsHCXKuc";
-
         let response = self
             .client
             .post(graphql_url)
             .header("Content-Type", "application/json")
-            .header("Authorization", format!("Bearer {}", token))
+            .header("Authorization", format!("Bearer {}", datahub_token))
             .json(&request_body)
             .send()
             .await?;
@@ -261,56 +266,4 @@ impl DatahubProxyTrait for DatahubProxyService {
 
         Ok(dataset)
     }
-
-    // async fn get_dataset_policies(&self, dataset_urn: &str) -> anyhow::Result<Option<String>> {
-    //     let graphql_url = "http://localhost:8086/api/graphql";
-    //     let token = "eyJhbGciOiJIUzI1NiJ9.eyJhY3RvclR5cGUiOiJVU0VSIiwiYWN0b3JJZCI6ImRydWdzQGRydWdzLmNvbSIsInR5cGUiOiJQRVJTT05BTCIsInZlcnNpb24iOiIyIiwianRpIjoiNGEzOTExYTgtNWYxYS00OWE4LWI4MTEtMDU4ZDMyOTgwYjZiIiwic3ViIjoiZHJ1Z3NAZHJ1Z3MuY29tIiwiZXhwIjoxNzUxMDE0NDI1LCJpc3MiOiJkYXRhaHViLW1ldGFkYXRhLXNlcnZpY2UifQ.-S7uV_rCesUQ92bse8TzaaeZX_WFsAKc3kh3YsWcvxo";
-
-    //     let query = format!(r#"{{
-    //     dataset(urn: "{}") {{
-    //         properties {{
-    //             customProperties {{
-    //                 key
-    //                 value
-    //             }}
-    //         }}
-    //     }}
-    // }}"#, dataset_urn);
-
-    //     let request_body = serde_json::json!({ "query": query });
-
-    //     let response = self.client
-    //         .post(graphql_url)
-    //         .header("Content-Type", "application/json")
-    //         .header("Authorization", format!("Bearer {}", token))
-    //         .json(&request_body)
-    //         .send()
-    //         .await?;
-
-    //     let graphql_response: DatasetGraphQLResponseDetailed = response.json().await?;
-
-    //     // Buscar la propiedad "policy" dentro de customProperties
-    //     if let Some(custom_props) = graphql_response.data.dataset.properties.custom_properties {
-    //         for cp in custom_props {
-    //             if cp.key == "policy" {
-    //                 return Ok(Some(cp.value));
-    //             }
-    //         }
-    //     }
-
-    //     Ok(None)
-    // }
-
-    // async fn add_policy_to_dataset(&self, dataset_urn: String, property_name: String, property_value: String) -> anyhow::Result<bool> {
-    //     let output = tokio::process::Command::new("python3")
-    //         .arg("../scripts/add_policy_to_dataset.py")
-    //         .arg(dataset_urn)
-    //         .arg(property_name)
-    //         .arg(property_value)
-    //         .output()
-    //         .await?;
-
-    //     Ok(output.status.success())
-    // }
-
 }
