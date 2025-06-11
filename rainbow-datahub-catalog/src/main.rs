@@ -11,8 +11,6 @@ use crate::http::rainbow_entities::policy_relations_router::{PolicyTemplatesRout
 use rainbow_db::datahub::repo::sql::DatahubConnectorRepoForSql;
 use rainbow_db::datahub::repo::{NewDataHubDatasetModel, DatahubDatasetsRepo, PolicyRelationsRepo};
 use sea_orm::{DatabaseConnection, Database, EntityTrait};
-use crate::core::rainbow_entities::rainbow_entites::PolicyTemplatesToDatahubDatasetRelationService;
-
 mod core;
 mod http;
 
@@ -26,15 +24,11 @@ async fn main() {
     let policy_templates_service = Arc::new(DatahubConnectorRepoForSql::new(db_connection.clone()));
     let policy_relations_service = Arc::new(DatahubConnectorRepoForSql::new(db_connection.clone()));
     
-    // Crear el servicio de relaciones de políticas
-    let policy_relations_service = Arc::new(PolicyTemplatesToDatahubDatasetRelationService::new(
-        config.clone(),
-        repo.clone(),
-    ));
+    
 
     let datahub_router = DataHubProxyRouter::new(datahub_service.clone());
     let policy_templates_router = PolicyTemplatesRouter::new(policy_templates_service.clone());
-    let policy_relations_router = PolicyRelationsRouter::new(repo.clone());
+    let policy_relations_router = PolicyRelationsRouter::new(policy_relations_service.clone());
 
 
 

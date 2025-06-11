@@ -49,7 +49,7 @@ impl DatahubConnectorRepoFactory for DatahubConnectorRepoForSql {
 
 #[derive(Debug, Serialize)]
 pub struct PolicyTemplate {
-    pub id: Urn,
+    pub id: String,
     pub content: Value,
     pub created_at: chrono::NaiveDateTime,
 }

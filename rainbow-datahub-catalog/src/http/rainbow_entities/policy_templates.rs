@@ -6,7 +6,7 @@ use crate::core::datahub_proxy::datahub_proxy_types::DatahubDataset;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PolicyTemplate {
-    pub id: Urn,
+    pub id: String,
     pub content: Value,
     pub created_at: chrono::NaiveDateTime,
 }

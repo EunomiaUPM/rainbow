@@ -18,7 +18,6 @@
  */
 
 use crate::core::datahub_proxy::datahub_proxy::DatahubProxyService;
-use crate::core::rainbow_entities::rainbow_entites::PolicyTemplatesToDatahubDatasetRelationService;
 use crate::http::datahub_proxy::datahub_proxy::DataHubProxyRouter;
 use crate::http::rainbow_entities::policy_relations_router::PolicyRelationsRouter;
 use crate::setup::config::DatahubCatalogApplicationProviderConfig;
@@ -76,11 +75,6 @@ pub async fn create_datahub_catalog_router(config: &DatahubCatalogApplicationPro
     // Datahub Connector Dependency Injection
     let datahub_proxy_service = Arc::new(DatahubProxyService::new(application_config.clone()));
 
-    // Rainbow Entities Dependency injection
-    let rainbow_policy_relations_service = Arc::new(PolicyTemplatesToDatahubDatasetRelationService::new(
-        application_config.clone(),
-        datahub_catalog_repo.clone(),
-    ));
 
     // Routers
     let datahub_catalog_router = DataHubProxyRouter::new(datahub_proxy_service.clone());

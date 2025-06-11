@@ -1,6 +1,5 @@
 use crate::core::datahub_proxy::datahub_proxy_types::{DatasetsQueryOptions, DomainsQueryOptions};
 use crate::core::datahub_proxy::DatahubProxyTrait;
-use crate::core::rainbow_entities::PolicyTemplatesToDatahubDatasetRelationTrait;
 use axum::extract::{Path, Query, State};
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
@@ -13,7 +12,7 @@ use serde::Deserialize;
 use serde_json::json;
 use urn::Urn;
 use rainbow_db::datahub::repo::NewPolicyRelationModel;
-use rainbow_db::datahub::repo::PolicyRelationsRepo; // Import the trait for method resolution
+use rainbow_db::datahub::repo::PolicyRelationsRepo;
 use axum::routing::{delete};
 use rainbow_db::datahub::repo::{NewPolicyTemplateModel, PolicyTemplatesRepo, PolicyTemplatesRepoErrors};
 
@@ -25,14 +24,6 @@ pub struct CreatePolicyRelationRequest {
     pub extra_content: Option<serde_json::Value>,
 }
 
-// pub struct RainbowDatahubPolicyRelationsRouter<T, U>
-// where
-//     T: DatahubProxyTrait + Send + Sync + 'static,
-//     U: PolicyTemplatesToDatahubDatasetRelationTrait + PolicyRelationsRepo + Send + Sync + 'static, // Add PolicyRelationsRepo bound
-// {
-//     datahub_service: Arc<T>,
-//     policy_relations_service: Arc<U>,
-// }
 
 pub struct PolicyRelationsRouter<T>
 where
