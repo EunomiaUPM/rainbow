@@ -30,6 +30,7 @@ pub trait DataPlaneConsumerFacadeTrait: Send + Sync {
     async fn get_dataplane_address(&self, session_id: Urn) -> anyhow::Result<DataAddress>;
     async fn on_transfer_request(&self, session_id: Urn, format: DctFormats) -> anyhow::Result<()>;
     async fn on_transfer_start(&self, session_id: Urn, data_address: Option<DataAddress>) -> anyhow::Result<()>;
+    async fn on_transfer_restart(&self, session_id: Urn) -> anyhow::Result<()>;
     async fn on_transfer_suspension(&self, session_id: Urn) -> anyhow::Result<()>;
     async fn on_transfer_completion(&self, session_id: Urn) -> anyhow::Result<()>;
     async fn on_transfer_termination(&self, session_id: Urn) -> anyhow::Result<()>;

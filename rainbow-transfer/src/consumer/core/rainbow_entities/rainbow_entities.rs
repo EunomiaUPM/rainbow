@@ -21,6 +21,7 @@ use crate::consumer::core::rainbow_entities::rainbow_types::{EditTransferConsume
 use crate::consumer::core::rainbow_entities::RainbowTransferConsumerServiceTrait;
 use axum::async_trait;
 use rainbow_db::transfer_consumer::entities::transfer_callback;
+use rainbow_db::transfer_consumer::entities::transfer_message;
 use rainbow_db::transfer_consumer::repo::{TransferConsumerRepoErrors, TransferConsumerRepoFactory};
 use std::sync::Arc;
 use urn::Urn;
@@ -68,7 +69,7 @@ where
 
     async fn get_transfer_by_consumer_id(&self, consumer_pid: Urn) -> anyhow::Result<transfer_callback::Model> {
         let transfer_process = self.repo
-            .get_transfer_callbacks_by_consumer_id(consumer_pid.clone())
+            .get_transfer_callback_by_consumer_id(consumer_pid.clone())
             .await
             .map_err(RainbowTransferConsumerErrors::DbErr)?
             .ok_or(RainbowTransferConsumerErrors::ProcessNotFound {
@@ -127,5 +128,32 @@ where
                 e_ => RainbowTransferConsumerErrors::DbErr(e_),
             })?;
         Ok(())
+    }
+    async fn get_messages_by_transfer(
+        &self,
+        transfer_id: Urn,
+    ) -> anyhow::Result<Vec<transfer_message::Model>> {
+        let messages = self.repo
+            .get_all_transfer_messages_by_consumer(transfer_id)
+            .await
+            .map_err(RainbowTransferConsumerErrors::DbErr)?;
+        Ok(messages)
+    }
+
+    async fn get_messages_by_id(
+        &self,
+        transfer_id: Urn,
+        message_id: Urn,
+    ) -> anyhow::Result<transfer_message::Model> {
+        let message = self.repo
+            .get_transfer_message_by_id(transfer_id.clone(), message_id.clone())
+            .await
+            .map_err(RainbowTransferConsumerErrors::DbErr)?
+            .ok_or(RainbowTransferConsumerErrors::MessageNotFound {
+                transfer_id: Option::from(transfer_id),
+                message_id: Option::from(message_id),
+            })?;
+
+        Ok(message)
     }
 }

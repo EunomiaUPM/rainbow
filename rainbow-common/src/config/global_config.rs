@@ -1,4 +1,4 @@
-use crate::config::consumer_config::ApplicationConsumerConfig;
+use crate::config::consumer_config::{ApplicationConsumerConfig, SSIConsumerConfig, SSIConsumerWalletConfig};
 use crate::config::database::DbType;
 use crate::config::provider_config::ApplicationProviderConfig;
 use crate::config::ConfigRoles;
@@ -45,6 +45,8 @@ pub struct ApplicationGlobalConfig {
     pub contract_negotiation_host: Option<HostConfig>,
     pub auth_host: Option<HostConfig>,
     pub ssi_auth_host: Option<HostConfig>,
+    pub ssi_wallet_config: Option<SSIConsumerWalletConfig>,
+    pub ssi_consumer_client: Option<SSIConsumerConfig>,
     pub gateway_host: Option<HostConfig>,
     pub database_config: DatabaseConfig,
     pub ssh_user: Option<String>,
@@ -85,6 +87,8 @@ impl Into<ApplicationGlobalConfig> for ApplicationProviderConfig {
             contract_negotiation_host: self.contract_negotiation_host,
             auth_host: self.auth_host,
             ssi_auth_host: self.ssi_auth_host,
+            ssi_wallet_config: None,
+            ssi_consumer_client: None,
             gateway_host: self.gateway_host,
             database_config: self.database_config,
             ssh_user: self.ssh_user,
@@ -106,6 +110,18 @@ impl From<ApplicationGlobalConfig> for ApplicationConsumerConfig {
             database_config: value.database_config,
             ssh_user: value.ssh_user,
             ssh_private_key_path: value.ssh_private_key_path,
+            ssi_wallet_config: SSIConsumerWalletConfig {
+                consumer_wallet_portal_url: value.ssi_wallet_config.clone().unwrap().consumer_wallet_portal_url,
+                consumer_wallet_portal_port: value.ssi_wallet_config.clone().unwrap().consumer_wallet_portal_port,
+                consumer_wallet_type: value.ssi_wallet_config.clone().unwrap().consumer_wallet_type,
+                consumer_wallet_name: value.ssi_wallet_config.clone().unwrap().consumer_wallet_portal_url,
+                consumer_wallet_email: value.ssi_wallet_config.clone().unwrap().consumer_wallet_portal_url,
+                consumer_wallet_password: value.ssi_wallet_config.clone().unwrap().consumer_wallet_portal_url,
+                consumer_wallet_id: None,
+            },
+            ssi_consumer_client: SSIConsumerConfig {
+                consumer_client: value.ssi_consumer_client.clone().unwrap().consumer_client,
+            },
             role: value.role,
         }
     }
@@ -123,6 +139,8 @@ impl Into<ApplicationGlobalConfig> for ApplicationConsumerConfig {
             contract_negotiation_host: self.contract_negotiation_host,
             auth_host: self.auth_host,
             ssi_auth_host: self.ssi_auth_host,
+            ssi_wallet_config: Option::from(self.ssi_wallet_config),
+            ssi_consumer_client: Option::from(self.ssi_consumer_client),
             gateway_host: self.gateway_host,
             database_config: self.database_config,
             ssh_user: self.ssh_user,

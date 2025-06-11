@@ -42,7 +42,7 @@ impl IntoResponse for DSRPCTransferProviderErrors {
                     },
                 }),
             ),
-            ref e @ DSRPCTransferProviderErrors::ConsumerInternalError { ref provider_pid, ref consumer_pid } => (
+            ref e @ DSRPCTransferProviderErrors::ConsumerInternalError { ref provider_pid, ref consumer_pid, ref error } => (
                 StatusCode::SERVICE_UNAVAILABLE,
                 Json(DSRPCTransferProviderErrorResponse {
                     provider_pid: provider_pid.clone(),
@@ -51,7 +51,10 @@ impl IntoResponse for DSRPCTransferProviderErrors {
                         provider_pid: provider_pid.clone().map(|pid| pid.to_string()),
                         consumer_pid: consumer_pid.clone().map(|cid| cid.to_string()),
                         code: "CONSUMER_INTERNAL_ERROR".to_string(),
-                        reason: vec![e.to_string()],
+                        reason: vec![
+                            e.to_string(),
+                            error.clone().unwrap_or_default().to_string()
+                        ],
                         ..Default::default()
                     },
                 }),

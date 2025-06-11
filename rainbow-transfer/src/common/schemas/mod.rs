@@ -23,6 +23,8 @@ use once_cell::sync::Lazy;
 use rainbow_common::schemas::schema_compiler_util;
 use serde_json::Value;
 
+pub mod validation;
+
 // TODO make all of this in compile time...
 pub static TRANSFER_REQUEST_SCHEMA: Lazy<Validator> = Lazy::new(|| -> Validator {
     let mut request_schema = schema_compiler_util(include_str!(

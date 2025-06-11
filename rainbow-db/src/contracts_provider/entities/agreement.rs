@@ -42,19 +42,11 @@ pub enum Relation {
         to = "super::cn_message::Column::CnMessageId"
     )]
     CnMessage,
-    #[sea_orm(has_many = "super::participant::Entity")]
-    Participant,
 }
 
 impl Related<super::cn_message::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::CnMessage.def()
-    }
-}
-
-impl Related<super::participant::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::Participant.def()
     }
 }
 

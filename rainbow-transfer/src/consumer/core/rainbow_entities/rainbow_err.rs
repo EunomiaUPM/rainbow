@@ -32,6 +32,11 @@ pub enum RainbowTransferConsumerErrors {
         provider_pid: Option<Urn>,
         consumer_pid: Option<Urn>,
     },
+    #[error("Transfer consumer message not found")]
+    MessageNotFound {
+        transfer_id: Option<Urn>,
+        message_id: Option<Urn>,
+    },
     #[error("Error by parsing. {error}")]
     UUIDParseError {
         provider_pid: Option<String>,

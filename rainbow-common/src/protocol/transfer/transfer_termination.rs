@@ -18,8 +18,11 @@
  */
 
 use crate::protocol::context_field::ContextField;
+use crate::protocol::transfer::transfer_protocol_trait::DSProtocolTransferMessageTrait;
 use crate::protocol::transfer::TransferMessageTypes;
+use crate::utils::get_urn;
 use serde::{Deserialize, Serialize};
+use urn::Urn;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
@@ -27,11 +30,11 @@ pub struct TransferTerminationMessage {
     #[serde(rename = "@context")]
     pub context: ContextField,
     #[serde(rename = "@type")]
-    pub _type: String,
+    pub _type: TransferMessageTypes,
     #[serde(rename = "providerPid")]
-    pub provider_pid: String,
+    pub provider_pid: Urn,
     #[serde(rename = "consumerPid")]
-    pub consumer_pid: String,
+    pub consumer_pid: Urn,
     #[serde(rename = "code")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub code: Option<String>,
@@ -44,11 +47,25 @@ impl Default for TransferTerminationMessage {
     fn default() -> Self {
         Self {
             context: ContextField::default(),
-            _type: TransferMessageTypes::TransferTerminationMessage.to_string(),
-            provider_pid: "".to_string(),
-            consumer_pid: "".to_string(),
+            _type: TransferMessageTypes::TransferTerminationMessage,
+            provider_pid: get_urn(None),
+            consumer_pid: get_urn(None),
             code: None,
             reason: None,
         }
+    }
+}
+
+impl DSProtocolTransferMessageTrait<'_> for TransferTerminationMessage {
+    fn get_message_type(&self) -> anyhow::Result<TransferMessageTypes> {
+        Ok(self._type.clone())
+    }
+
+    fn get_consumer_pid(&self) -> anyhow::Result<Option<&Urn>> {
+        Ok(Some(&self.consumer_pid))
+    }
+
+    fn get_provider_pid(&self) -> anyhow::Result<Option<&Urn>> {
+        Ok(Some(&self.provider_pid))
     }
 }

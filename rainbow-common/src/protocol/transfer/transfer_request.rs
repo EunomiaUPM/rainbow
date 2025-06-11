@@ -20,9 +20,12 @@
 use crate::dcat_formats::{DctFormats, FormatAction, FormatProtocol};
 use crate::protocol::context_field::ContextField;
 use crate::protocol::transfer::transfer_data_address::DataAddress;
+use crate::protocol::transfer::transfer_protocol_trait::DSProtocolTransferMessageTrait;
 use crate::protocol::transfer::TransferMessageTypes;
 use crate::protocol::ProtocolValidate;
+use crate::utils::get_urn;
 use serde::{Deserialize, Serialize};
+use urn::Urn;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(deny_unknown_fields)]
@@ -30,9 +33,9 @@ pub struct TransferRequestMessage {
     #[serde(rename = "@context")]
     pub context: ContextField,
     #[serde(rename = "@type")]
-    pub _type: String,
+    pub _type: TransferMessageTypes,
     #[serde(rename = "consumerPid")]
-    pub consumer_pid: String,
+    pub consumer_pid: Urn,
     #[serde(rename = "agreementId")]
     pub agreement_id: String,
     #[serde(rename = "format")]
@@ -49,8 +52,8 @@ impl Default for TransferRequestMessage {
     fn default() -> Self {
         Self {
             context: ContextField::default(),
-            _type: TransferMessageTypes::TransferRequestMessage.to_string(),
-            consumer_pid: "".to_string(),
+            _type: TransferMessageTypes::TransferRequestMessage,
+            consumer_pid: get_urn(None),
             agreement_id: "".to_string(),
             format: DctFormats { protocol: FormatProtocol::Http, action: FormatAction::Pull },
             callback_address: Some("".to_string()),
@@ -62,5 +65,19 @@ impl Default for TransferRequestMessage {
 impl ProtocolValidate for TransferRequestMessage {
     fn validate(&self) -> anyhow::Result<()> {
         Ok(())
+    }
+}
+
+impl DSProtocolTransferMessageTrait<'_> for TransferRequestMessage {
+    fn get_message_type(&self) -> anyhow::Result<TransferMessageTypes> {
+        Ok(self._type.clone())
+    }
+
+    fn get_consumer_pid(&self) -> anyhow::Result<Option<&Urn>> {
+        Ok(Some(&self.consumer_pid))
+    }
+
+    fn get_provider_pid(&self) -> anyhow::Result<Option<&Urn>> {
+        Ok(None)
     }
 }

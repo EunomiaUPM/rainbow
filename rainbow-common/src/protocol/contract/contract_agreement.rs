@@ -19,19 +19,22 @@
 
 use crate::protocol::context_field::ContextField;
 use crate::protocol::contract::contract_odrl::OdrlAgreement;
+use crate::protocol::contract::contract_protocol_trait::DSProtocolContractNegotiationMessageTrait;
 use crate::protocol::contract::ContractNegotiationMessages;
+use crate::utils::get_urn;
 use serde::{Deserialize, Serialize};
+use urn::Urn;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ContractAgreementMessage {
     #[serde(rename = "@context")]
     pub context: ContextField,
     #[serde(rename = "@type")]
-    pub _type: String,
+    pub _type: ContractNegotiationMessages,
     #[serde(rename = "providerPid")]
-    pub provider_pid: String,
+    pub provider_pid: Urn,
     #[serde(rename = "consumerPid")]
-    pub consumer_pid: String,
+    pub consumer_pid: Urn,
     #[serde(rename = "callbackAddress")]
     pub callback_address: String,
     #[serde(rename = "agreement")]
@@ -42,11 +45,29 @@ impl Default for ContractAgreementMessage {
     fn default() -> Self {
         Self {
             context: ContextField::default(),
-            _type: ContractNegotiationMessages::ContractAgreementMessage.to_string(),
-            provider_pid: "".to_string(),
-            consumer_pid: "".to_string(),
+            _type: ContractNegotiationMessages::ContractAgreementMessage,
+            provider_pid: get_urn(None),
+            consumer_pid: get_urn(None),
             callback_address: "".to_string(),
             odrl_agreement: OdrlAgreement::default(),
         }
+    }
+}
+
+impl DSProtocolContractNegotiationMessageTrait<'_> for ContractAgreementMessage {
+    fn get_message_type(&self) -> anyhow::Result<ContractNegotiationMessages> {
+        Ok(self._type)
+    }
+
+    fn get_consumer_pid(&self) -> anyhow::Result<Option<&Urn>> {
+        Ok(Option::from(&self.consumer_pid))
+    }
+
+    fn get_provider_pid(&self) -> anyhow::Result<Option<&Urn>> {
+        Ok(Some(&self.provider_pid))
+    }
+
+    fn get_odrl_agreement(&self) -> anyhow::Result<Option<&OdrlAgreement>> {
+        Ok(Some(&self.odrl_agreement))
     }
 }

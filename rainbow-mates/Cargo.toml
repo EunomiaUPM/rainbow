@@ -1,0 +1,23 @@
+[package]
+name = "rainbow_mates"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "rainbow_mates"
+path = "src/lib.rs"
+
+[dependencies]
+rainbow_common = { version = "0.1.0", path = "../rainbow-common", default-features = true }
+rainbow_db = { version = "0.1.0", path = "../rainbow-db", default-features = true }
+
+serde = { workspace = true }
+serde_json = { workspace = true }
+clap = { workspace = true }
+tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros"] }
+anyhow = { workspace = true }
+base64 = "0.22.1"
+tracing = { workspace = true }
+axum = { workspace = true }
+reqwest = { workspace = true }
+sea-orm = { workspace = true }

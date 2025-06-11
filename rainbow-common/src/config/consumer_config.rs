@@ -20,8 +20,25 @@ use crate::config::database::DbType;
 use crate::config::global_config::{extract_env, format_host_config_to_url_string, DatabaseConfig, HostConfig};
 use crate::config::ConfigRoles;
 use serde::Serialize;
+use serde_json::json;
 use std::env;
 use std::fmt::Display;
+
+#[derive(Serialize, Clone, Debug)]
+pub struct SSIConsumerWalletConfig {
+    pub consumer_wallet_portal_url: String,
+    pub consumer_wallet_portal_port: String,
+    pub consumer_wallet_type: String,
+    pub consumer_wallet_name: String,
+    pub consumer_wallet_email: String,
+    pub consumer_wallet_password: String,
+    pub consumer_wallet_id: Option<String>,
+}
+
+#[derive(Serialize, Clone, Debug)]
+pub struct SSIConsumerConfig {
+    pub consumer_client: String,
+}
 
 #[derive(Serialize, Clone, Debug)]
 pub struct ApplicationConsumerConfig {
@@ -34,6 +51,8 @@ pub struct ApplicationConsumerConfig {
     pub database_config: DatabaseConfig,
     pub ssh_user: Option<String>,
     pub ssh_private_key_path: Option<String>,
+    pub ssi_wallet_config: SSIConsumerWalletConfig,
+    pub ssi_consumer_client: SSIConsumerConfig,
     pub role: ConfigRoles,
 }
 
@@ -80,6 +99,18 @@ impl Default for ApplicationConsumerConfig {
             },
             ssh_user: None,
             ssh_private_key_path: None,
+            ssi_wallet_config: SSIConsumerWalletConfig {
+                consumer_wallet_portal_url: "127.0.0.1".to_string(),
+                consumer_wallet_portal_port: "7001".to_string(),
+                consumer_wallet_type: "email".to_string(),
+                consumer_wallet_name: "rainbow".to_string(),
+                consumer_wallet_email: "rainbow@rainbow.com".to_string(),
+                consumer_wallet_password: "rainbow".to_string(),
+                consumer_wallet_id: None,
+            },
+            ssi_consumer_client: SSIConsumerConfig {
+                consumer_client: "rainbow_consumer".to_string()
+            },
             role: ConfigRoles::Consumer,
         }
     }
@@ -97,6 +128,8 @@ pub trait ApplicationConsumerConfigTrait {
     fn get_raw_gateway_host(&self) -> &Option<HostConfig>;
     fn get_raw_ssi_auth_host(&self) -> &Option<HostConfig>;
     fn get_raw_database_config(&self) -> &DatabaseConfig;
+    fn get_raw_ssi_wallet_config(&self) -> &SSIConsumerWalletConfig;
+    fn get_raw_ssi_consumer_client(&self) -> &SSIConsumerConfig;
     // implemented stuff
     fn get_transfer_host_url(&self) -> Option<String> {
         self.get_raw_transfer_process_host().as_ref().map(format_host_config_to_url_string)
@@ -130,6 +163,26 @@ pub trait ApplicationConsumerConfigTrait {
                 db_config.name
             ),
         }
+    }
+    fn get_consumer_wallet_portal_url(&self) -> String {
+        let url = self.get_raw_ssi_wallet_config().clone().consumer_wallet_portal_url;
+        let port = self.get_raw_ssi_wallet_config().clone().consumer_wallet_portal_port;
+        format!(
+            "{}:{}",
+            url, port
+        )
+    }
+    fn get_consumer_wallet_data(&self) -> serde_json::Value {
+        let _type = self.get_raw_ssi_wallet_config().clone().consumer_wallet_type;
+        let name = self.get_raw_ssi_wallet_config().clone().consumer_wallet_name;
+        let email = self.get_raw_ssi_wallet_config().clone().consumer_wallet_email;
+        let password = self.get_raw_ssi_wallet_config().clone().consumer_wallet_password;
+        json!({
+            "type": _type,
+            "name": name,
+            "email": email,
+            "password": password,
+        })
     }
     // merge dotenv
     fn merge_dotenv_configuration(&self) -> Self
@@ -166,7 +219,12 @@ impl ApplicationConsumerConfigTrait for ApplicationConsumerConfig {
     fn get_raw_database_config(&self) -> &DatabaseConfig {
         &self.database_config
     }
-
+    fn get_raw_ssi_wallet_config(&self) -> &SSIConsumerWalletConfig {
+        &self.ssi_wallet_config
+    }
+    fn get_raw_ssi_consumer_client(&self) -> &SSIConsumerConfig {
+        &self.ssi_consumer_client
+    }
     fn merge_dotenv_configuration(&self) -> Self {
         dotenvy::dotenv().ok();
         let default = ApplicationConsumerConfig::default();
@@ -244,6 +302,18 @@ impl ApplicationConsumerConfigTrait for ApplicationConsumerConfig {
             },
             ssh_user: env::var("SSH_USER").ok(),
             ssh_private_key_path: env::var("SSH_PKEY_PATH").ok(),
+            ssi_wallet_config: SSIConsumerWalletConfig {
+                consumer_wallet_portal_url: extract_env("CONSUMER_WALLET_PORTAL_URL", default.ssi_wallet_config.consumer_wallet_portal_url),
+                consumer_wallet_portal_port: extract_env("CONSUMER_WALLET_PORTAL_PORT", default.ssi_wallet_config.consumer_wallet_portal_port),
+                consumer_wallet_type: extract_env("CONSUMER_WALLET_PORTAL_TYPE", default.ssi_wallet_config.consumer_wallet_type),
+                consumer_wallet_name: extract_env("CONSUMER_WALLET_PORTAL_NAME", default.ssi_wallet_config.consumer_wallet_name),
+                consumer_wallet_email: extract_env("CONSUMER_WALLET_PORTAL_EMAIL", default.ssi_wallet_config.consumer_wallet_email),
+                consumer_wallet_password: extract_env("CONSUMER_WALLET_PORTAL_PASSWORD", default.ssi_wallet_config.consumer_wallet_password),
+                consumer_wallet_id: None,
+            },
+            ssi_consumer_client: SSIConsumerConfig {
+                consumer_client: extract_env("CONSUMER_CONSUMER_CLIENT", default.ssi_consumer_client.consumer_client),
+            },
             role: ConfigRoles::Consumer,
         };
         compound_config

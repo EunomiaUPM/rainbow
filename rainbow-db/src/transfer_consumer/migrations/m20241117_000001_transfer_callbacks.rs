@@ -40,6 +40,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(TransferCallbacks::UpdatedAt).date_time())
                     .col(ColumnDef::new(TransferCallbacks::DataPlaneId).string())
                     .col(ColumnDef::new(TransferCallbacks::DataAddress).json())
+                    .col(ColumnDef::new(TransferCallbacks::RestartFlag).boolean().not_null().default(false))
                     .to_owned(),
             )
             .await
@@ -60,4 +61,5 @@ pub enum TransferCallbacks {
     CreatedAt,
     UpdatedAt,
     DataPlaneId,
+    RestartFlag,
 }

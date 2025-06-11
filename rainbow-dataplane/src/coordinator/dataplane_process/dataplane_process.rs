@@ -2,9 +2,10 @@ use crate::coordinator::dataplane_process::{DataPlaneDefaultBehaviour, DataPlane
 use crate::coordinator::transfer_event::TransferEvent;
 use axum::async_trait;
 use rainbow_common::utils::get_urn;
+use serde::Serialize;
 use urn::Urn;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct DataPlaneProcess {
     pub id: Urn,
     pub process_direction: DataPlaneProcessDirection,
