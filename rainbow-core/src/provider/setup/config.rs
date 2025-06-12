@@ -32,6 +32,7 @@ pub struct CoreApplicationProviderConfig {
     ssh_user: Option<String>,
     ssh_private_key_path: Option<String>,
     role: ConfigRoles,
+    pub cert_path: String,
 }
 
 impl Default for CoreApplicationProviderConfig {
@@ -80,6 +81,10 @@ impl ApplicationProviderConfigTrait for CoreApplicationProviderConfig {
     fn get_raw_database_config(&self) -> &DatabaseConfig {
         &self.database_config
     }
+    fn get_raw_cert_path(&self) -> &String {
+        &self.cert_path
+    }
+
     fn merge_dotenv_configuration(&self) -> Self {
         let app_config = ApplicationProviderConfig::default().merge_dotenv_configuration();
         CoreApplicationProviderConfig::from(app_config)
@@ -97,6 +102,7 @@ impl From<ApplicationProviderConfig> for CoreApplicationProviderConfig {
             ssh_user: value.ssh_user,
             ssh_private_key_path: value.ssh_private_key_path,
             role: value.role,
+            cert_path: value.cert_path,
         }
     }
 }
@@ -117,6 +123,7 @@ impl Into<ApplicationProviderConfig> for CoreApplicationProviderConfig {
             ssh_user: self.ssh_user,
             ssh_private_key_path: self.ssh_private_key_path,
             role: self.role,
+            cert_path: self.cert_path,
         }
     }
 }

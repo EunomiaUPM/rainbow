@@ -35,6 +35,7 @@ pub struct TransferConsumerApplicationConfig {
     pub ssi_wallet_config: SSIConsumerWalletConfig,
     pub ssi_consumer_client: SSIConsumerConfig,
     pub role: ConfigRoles,
+    pub cert_path: String,
 }
 
 impl Default for TransferConsumerApplicationConfig {
@@ -81,6 +82,11 @@ impl ApplicationConsumerConfigTrait for TransferConsumerApplicationConfig {
     fn get_raw_ssi_consumer_client(&self) -> &SSIConsumerConfig {
         &self.ssi_consumer_client
     }
+
+    fn get_raw_cert_path(&self) -> &String {
+        &self.cert_path
+    }
+
     fn merge_dotenv_configuration(&self) -> Self
     where
         Self: Sized,
@@ -114,6 +120,7 @@ impl From<ApplicationConsumerConfig> for TransferConsumerApplicationConfig {
                 consumer_client: value.ssi_consumer_client.consumer_client,
             },
             role: value.role,
+            cert_path: value.cert_path,
         }
     }
 }
@@ -143,6 +150,7 @@ impl Into<ApplicationConsumerConfig> for TransferConsumerApplicationConfig {
                 consumer_client: self.ssi_consumer_client.consumer_client,
             },
             role: self.role,
+            cert_path: self.cert_path,
         }
     }
 }

@@ -51,6 +51,7 @@ pub struct ApplicationGlobalConfig {
     pub ssh_user: Option<String>,
     pub ssh_private_key_path: Option<String>,
     pub role: ConfigRoles,
+    pub cert_path: String,
 }
 
 impl From<ApplicationGlobalConfig> for ApplicationProviderConfig {
@@ -69,6 +70,7 @@ impl From<ApplicationGlobalConfig> for ApplicationProviderConfig {
             ssh_user: value.ssh_user,
             ssh_private_key_path: value.ssh_private_key_path,
             role: value.role,
+            cert_path: value.cert_path,
         }
     }
 }
@@ -91,6 +93,7 @@ impl Into<ApplicationGlobalConfig> for ApplicationProviderConfig {
             ssh_user: self.ssh_user,
             ssh_private_key_path: self.ssh_private_key_path,
             role: self.role,
+            cert_path: self.cert_path,
         }
     }
 }
@@ -120,6 +123,7 @@ impl From<ApplicationGlobalConfig> for ApplicationConsumerConfig {
                 consumer_client: value.ssi_consumer_client.clone().unwrap().consumer_client,
             },
             role: value.role,
+            cert_path: value.cert_path,
         }
     }
 }
@@ -142,6 +146,7 @@ impl Into<ApplicationGlobalConfig> for ApplicationConsumerConfig {
             ssh_user: self.ssh_user,
             ssh_private_key_path: self.ssh_private_key_path,
             role: self.role,
+            cert_path: self.cert_path,
         }
     }
 }

@@ -17,7 +17,9 @@
  *
  */
 
-use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait, SSIConsumerConfig, SSIConsumerWalletConfig};
+use rainbow_common::config::consumer_config::{
+    ApplicationConsumerConfig, ApplicationConsumerConfigTrait, SSIConsumerConfig, SSIConsumerWalletConfig,
+};
 use rainbow_common::config::global_config::{DatabaseConfig, HostConfig};
 use rainbow_common::config::ConfigRoles;
 use serde::Serialize;
@@ -35,6 +37,7 @@ pub struct MateConsumerApplicationConfig {
     pub ssi_wallet_config: SSIConsumerWalletConfig,
     pub ssi_consumer_client: SSIConsumerConfig,
     pub role: ConfigRoles,
+    pub cert_path: String,
 }
 
 impl Default for MateConsumerApplicationConfig {
@@ -83,6 +86,10 @@ impl ApplicationConsumerConfigTrait for MateConsumerApplicationConfig {
         &self.ssi_consumer_client
     }
 
+    fn get_raw_cert_path(&self) -> &String {
+        &self.cert_path
+    }
+
     fn merge_dotenv_configuration(&self) -> Self
     where
         Self: Sized,
@@ -112,10 +119,9 @@ impl From<ApplicationConsumerConfig> for MateConsumerApplicationConfig {
                 consumer_wallet_password: value.ssi_wallet_config.consumer_wallet_password,
                 consumer_wallet_id: None,
             },
-            ssi_consumer_client: SSIConsumerConfig {
-                consumer_client: value.ssi_consumer_client.consumer_client,
-            },
+            ssi_consumer_client: SSIConsumerConfig { consumer_client: value.ssi_consumer_client.consumer_client },
             role: value.role,
+            cert_path: value.cert_path,
         }
     }
 }
@@ -141,10 +147,9 @@ impl Into<ApplicationConsumerConfig> for MateConsumerApplicationConfig {
                 consumer_wallet_password: self.ssi_wallet_config.consumer_wallet_password,
                 consumer_wallet_id: None,
             },
-            ssi_consumer_client: SSIConsumerConfig {
-                consumer_client: self.ssi_consumer_client.consumer_client
-            },
+            ssi_consumer_client: SSIConsumerConfig { consumer_client: self.ssi_consumer_client.consumer_client },
             role: self.role,
+            cert_path: self.cert_path,
         }
     }
 }

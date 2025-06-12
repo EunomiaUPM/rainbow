@@ -778,7 +778,30 @@ where
         Ok(res)
     }
 
-    async fn beg4credential(&self, cert: Value) -> anyhow::Result<()> {
+    async fn beg4credential(&self, url: String) -> anyhow::Result<()> {
+        let body = GrantRequest::default4async(self.config.ssi_consumer_client.consumer_client.clone());
+
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "application/json".parse()?);
+        headers.insert(ACCEPT, "application/json".parse()?);
+
+        let res = self.client.post(url).headers(headers).json(&body).send().await;
+
+        let res = match res {
+            Ok(res) => res,
+            Err(e) => bail!("Error sending request: {}", e),
+        };
+
+        let mut res: GrantResponse = match res.status().as_u16() {
+            200 => {
+                info!("Grant Response received successfully");
+                res.json().await?
+            }
+            _ => {
+                error!("Grant Response failed: {}", res.status());
+                bail!("Grant Response failed: {}", res.status())
+            }
+        };
 
         Ok(())
     }

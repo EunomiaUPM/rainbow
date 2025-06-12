@@ -54,6 +54,7 @@ pub struct ApplicationConsumerConfig {
     pub ssi_wallet_config: SSIConsumerWalletConfig,
     pub ssi_consumer_client: SSIConsumerConfig,
     pub role: ConfigRoles,
+    pub cert_path: String,
 }
 
 impl Default for ApplicationConsumerConfig {
@@ -108,10 +109,9 @@ impl Default for ApplicationConsumerConfig {
                 consumer_wallet_password: "rainbow".to_string(),
                 consumer_wallet_id: None,
             },
-            ssi_consumer_client: SSIConsumerConfig {
-                consumer_client: "rainbow_consumer".to_string()
-            },
+            ssi_consumer_client: SSIConsumerConfig { consumer_client: "rainbow_consumer".to_string() },
             role: ConfigRoles::Consumer,
+            cert_path: "./../../static/certificates/consumer/".to_string(),
         }
     }
 }
@@ -130,6 +130,8 @@ pub trait ApplicationConsumerConfigTrait {
     fn get_raw_database_config(&self) -> &DatabaseConfig;
     fn get_raw_ssi_wallet_config(&self) -> &SSIConsumerWalletConfig;
     fn get_raw_ssi_consumer_client(&self) -> &SSIConsumerConfig;
+    fn get_raw_cert_path(&self) -> &String;
+
     // implemented stuff
     fn get_transfer_host_url(&self) -> Option<String> {
         self.get_raw_transfer_process_host().as_ref().map(format_host_config_to_url_string)
@@ -167,10 +169,7 @@ pub trait ApplicationConsumerConfigTrait {
     fn get_consumer_wallet_portal_url(&self) -> String {
         let url = self.get_raw_ssi_wallet_config().clone().consumer_wallet_portal_url;
         let port = self.get_raw_ssi_wallet_config().clone().consumer_wallet_portal_port;
-        format!(
-            "{}:{}",
-            url, port
-        )
+        format!("{}:{}", url, port)
     }
     fn get_consumer_wallet_data(&self) -> serde_json::Value {
         let _type = self.get_raw_ssi_wallet_config().clone().consumer_wallet_type;
@@ -184,6 +183,7 @@ pub trait ApplicationConsumerConfigTrait {
             "password": password,
         })
     }
+
     // merge dotenv
     fn merge_dotenv_configuration(&self) -> Self
     where
@@ -225,6 +225,11 @@ impl ApplicationConsumerConfigTrait for ApplicationConsumerConfig {
     fn get_raw_ssi_consumer_client(&self) -> &SSIConsumerConfig {
         &self.ssi_consumer_client
     }
+
+    fn get_raw_cert_path(&self) -> &String {
+        &self.cert_path
+    }
+
     fn merge_dotenv_configuration(&self) -> Self {
         dotenvy::dotenv().ok();
         let default = ApplicationConsumerConfig::default();
@@ -315,6 +320,7 @@ impl ApplicationConsumerConfigTrait for ApplicationConsumerConfig {
                 consumer_client: extract_env("CONSUMER_CONSUMER_CLIENT", default.ssi_consumer_client.consumer_client),
             },
             role: ConfigRoles::Consumer,
+            cert_path: extract_env("CERT_PATH", default.cert_path),
         };
         compound_config
     }

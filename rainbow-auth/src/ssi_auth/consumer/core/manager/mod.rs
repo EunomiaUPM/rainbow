@@ -63,5 +63,5 @@ pub trait RainbowSSIAuthConsumerManagerTrait: Send + Sync {
     async fn check_callback(&self, id: String, interact_ref: String, hash: String) -> anyhow::Result<String>;
     async fn continue_request(&self, id: String, interact_ref: String, uri: String) -> anyhow::Result<auth::Model>;
     async fn save_mate(&self, id: String, url: String, token: String, token_actions: String) -> anyhow::Result<Response>;
-    async fn beg4credential(&self, cert: serde_json::value::Value) -> anyhow::Result<()>;
+    async fn beg4credential(&self, url: String) -> anyhow::Result<()>;
 }
