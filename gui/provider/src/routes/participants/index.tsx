@@ -7,6 +7,7 @@ import {PubSubContext} from "@/context/PubSubContext.tsx";
 import {Button} from "shared/src/components/ui/button.tsx";
 import {Input} from "shared/src/components/ui/input.tsx";
 
+
 export const Route = createFileRoute('/participants/')({
     component: RouteComponent,
 })

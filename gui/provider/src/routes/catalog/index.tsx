@@ -3,6 +3,7 @@ import dayjs from "dayjs";
 import {ExternalLink} from "lucide-react";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "shared/src/components/ui/table";
 import {getCatalogsOptions, useGetCatalogs} from "@/data/catalog-queries.ts";
+import Heading from "../../../../shared/src/components/ui/heading.tsx";
 
 const RouteComponent = () => {
     const {data: catalogs} = useGetCatalogs();
@@ -47,6 +48,13 @@ const RouteComponent = () => {
 
             <div>
                 <h2>Catalogs</h2>
+                <div>
+                    <Heading level="h5">
+                        Title
+                    </Heading>
+                    <p>Catalog Id </p>
+                     <p>Provider ID </p>
+                </div>
                 <Table className="text-sm">
                     <TableHeader>
                         <TableRow>
@@ -57,7 +65,7 @@ const RouteComponent = () => {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {catalogs.catalog.map((catalog) => (
+                        {/* {catalogs.catalog.map((catalog) => (
                             <TableRow key={catalog["@id"].slice(0, 20)}>
                                 <TableCell>
                                     {catalog["@id"].slice(0, 20) + "..."}
@@ -78,7 +86,7 @@ const RouteComponent = () => {
                                     </Link>
                                 </TableCell>
                             </TableRow>
-                        ))}
+                        ))} */}
                     </TableBody>
                 </Table>
             </div>

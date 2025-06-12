@@ -2,6 +2,7 @@ import {createFileRoute, Link} from '@tanstack/react-router'
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "shared/src/components/ui/table.tsx";
 import dayjs from "dayjs";
 import {useGetTransferMessagesByProviderPid, useGetTransferProcessByProviderPid} from "@/data/transfer-queries.ts";
+import { List } from "shared/src/components/ui/list.tsx";
 
 export const Route = createFileRoute('/transfer-process/$transferProcessId/')({
     component: RouteComponent,
@@ -17,6 +18,10 @@ function RouteComponent() {
         </div>
         <div>
             <h2 className='text-text'>Transfer process info: </h2>
+        <List>
+            <li>    hola</li>
+              <li>    hola</li>
+        </List>
             <Table className="text-sm">
                 <TableHeader>
                     <TableRow>

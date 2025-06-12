@@ -1,5 +1,4 @@
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
 import Heading from "../../../../shared/src/components/ui/heading.tsx";
 import { useRouterState } from "@tanstack/react-router";
 

@@ -27,7 +27,7 @@ import {getCatalogs, getDatasetsByCatalogId} from "@/data/catalog-queries.ts";
 import {getPoliciesByDatasetId} from "@/data/policy-queries.ts";
 import {Textarea} from "shared/src/components/ui/textarea.tsx";
 import {usePostContractNegotiationRPCOffer} from "@/data/contract-mutations.ts";
-
+import Heading from "../../../../shared/src/components/ui/heading.tsx";
 
 type Inputs = {
     consumerParticipantId: UUID,
@@ -229,8 +229,8 @@ const RouteComponent = () => {
     }
 
     return (
-        <div className="">
-            <h2 className="text-2xl font-bold mb-6 text-gray-800">New Contract Negotiation Offer</h2>
+        <div className="w-[500px]">
+            <Heading level="h4">New Contract Negotiation Offer</Heading>
             <Form {...form}>
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
 

@@ -34,7 +34,7 @@ const Header = () => {
   paths.splice(0, 1); // Eliminar el primer elemento vacío
   console.log(formatPath(paths[0]), " formatted path");
   return (
-    <div className=" bg-background  w-full border-b py-3 z-50 border-black px-4 flex justify-between items-center">
+    <div className=" bg-background  w-full border-b py-1.5 z-50 border-white/10 px-4 flex justify-between items-center">
       <Breadcrumb>
         <BreadcrumbList>
           {paths.map((path, index) => (

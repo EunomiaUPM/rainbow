@@ -1,4 +1,13 @@
-import { Calendar, Home, Inbox, Search, Settings } from "lucide-react"
+import { Calendar,
+   Home, 
+   Settings,
+   Users,
+   Handshake,
+   ArrowLeftRight,
+   Feather,
+   Archive
+   } 
+   from "lucide-react"
 import React from "react" ;
 import {
   Sidebar,
@@ -12,6 +21,7 @@ import {
   SidebarTrigger
 } from "./ui/sidebar"
 import logoImg from "../img/eunomia_logo_lg_light.svg"
+import { useRouterState } from "@tanstack/react-router";
 
 // Menu items.
 const items = [
@@ -23,31 +33,36 @@ const items = [
   {
     title: "Agreements",
     url: "/agreements",
-    icon: Inbox,
+    icon: Handshake,
   },
   {
     title: "Catalogs",
     url: "/catalog",
-    icon: Calendar,
+    icon: Archive,
   },
   {
     title: "Transferences",
     url: "/transfer-process",
-    icon: Search,
+    icon: ArrowLeftRight
+,
   },
   {
     title: "Contract Negotiation",
     url: "/contract-negotiation",
-    icon: Settings,
+    icon: Feather,
   },
     {
     title: "Participants",
     url: "/participants",
-    icon: Settings,
+    icon: Users,
   }
 ]
 
 export function AppSidebar() {
+   const routerState = useRouterState();
+  // console.log("Router state in SidebarMenuItem:", routerState.location.pathname);
+  
+  
   return (
     <Sidebar>
       <SidebarContent>
@@ -59,9 +74,10 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
+                
+                <SidebarMenuItem key={item.title} >
                   <SidebarMenuButton asChild>
-                    <a href={item.url}>
+                    <a href={item.url} className={routerState.location.pathname === item.url ? "bg-white/10 text-foreground" : ""}>
                       <item.icon />
                       <span>{item.title}</span>
                     </a>

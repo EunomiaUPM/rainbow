@@ -79,7 +79,7 @@ module.exports = {
         },
         background: {
           600: "#2E3356",
-          DEFAULT:"#2E3356",
+          DEFAULT:"#1A1134",
           400:"#2E3356",
           300: "#2E3356", 
           200:  "#2E3356"

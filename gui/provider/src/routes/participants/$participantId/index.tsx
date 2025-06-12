@@ -4,6 +4,7 @@ import {useGetAgreementsByParticipantId, useGetParticipantById} from "@/data/par
 import dayjs from "dayjs";
 import {ExternalLink} from "lucide-react";
 import  Heading  from "../../../../../shared/src/components/ui/heading.tsx";
+import { Button } from 'shared/src/components/ui/button.tsx';
 
 export const Route = createFileRoute('/participants/$participantId/')({
     component: RouteComponent,
@@ -17,15 +18,15 @@ function RouteComponent() {
        <Heading level="h4" >
             Participant with id : {participant.participant_id}
         </Heading>
-        <div>
-            <h2 className="text-foreground">Transfer process info: </h2>
-            <Table className="text-sm">
-                <TableHeader>
+        <div className=" flex flex-col">
+            <Heading level="h6" className="text-foreground"> Participant info: </Heading>
+            {/* <Table className="text-sm flex justify-center" >
+                {/* <TableHeader>
                     <TableRow>
                         <TableHead>Key</TableHead>
                         <TableHead>Value</TableHead>
                     </TableRow>
-                </TableHeader>
+                </TableHeader> 
                 <TableBody>
                     <TableRow>
                         <TableCell>Participant ID</TableCell>
@@ -50,7 +51,34 @@ function RouteComponent() {
                         </TableCell>
                     </TableRow>
                 </TableBody>
-            </Table>
+            </Table> */}
+              <div className="w-1/2 text-sm flex justify-center relative  bg-white/5 overflow-auto border border-foreground/25 rounded-md" >
+        
+                <ul>
+                    <li className="h-6 flex flex-row justify-between gap-20 border-b border-white/20 last-child:border-0 items-center">
+                        <p>Participant ID</p>
+                        <p>{participant.participant_id}</p>
+                    </li>
+                        <li className="h-8 flex flex-row justify-between border-b border-white/20 last-child:border-0 items-center">
+                       <p>Identity Token</p>
+                        <p>{participant.identity_token}</p>
+                    </li>
+                       <li className="flex flex-row">
+                        <Heading level="h6">Participant Type</Heading>
+                        <p>{participant._type}</p>
+                    </li>
+                       <li className="flex flex-row">
+                       <Heading level="h6">Base UR</Heading>
+                        <p>{participant.base_url}</p>
+                    </li>
+                       <li className="flex flex-row">
+                        <Heading level="h6">Extra Info</Heading>
+                        <p>
+                            {JSON.stringify(participant.extra_fields)}
+                        </p>
+                    </li>
+                </ul>
+            </div>
         </div>
 
         <div>
@@ -86,15 +114,18 @@ function RouteComponent() {
                                 {agreement.active ? "ACTIVE" : "INACTIVE"}
                             </TableCell>
                             <TableCell>
-                                {dayjs(agreement.created_at).format("DD/MM/YYYY - HH:mm")}
+                                {dayjs(agreement.created_at).format("DD/MM/YY HH:mm")}
                             </TableCell>
                             <TableCell>
+                                <Button variant="default">
                                 <Link
                                     to="/agreements/$agreementId"
                                     params={{agreementId: agreement.agreement_id}}
                                 >
-                                    <ExternalLink size={12} className="text-pink-600"/>
+                                      See agreement
                                 </Link>
+                              
+                                 </Button>
                             </TableCell>
                         </TableRow>
                     ))}
