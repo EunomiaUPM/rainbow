@@ -1,24 +1,25 @@
+
+@import url("https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,700&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url("https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap");
-@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap');
 
 /* @theme {
     --font-title: "Ubuntu", sans-serif; 
     --font-display: "Source Sans 3", sans-serif;
 } */
 * {
-    /*@apply border border-red-500;*/
+    /* @apply border border-red-500; */
 }
+
 
 html,
 body {
-    --font-sans: "Arial";
-    @apply font-sans leading-snug min-h-full text-base text-slate-800;
-
+    @apply font-source leading-snug min-h-full text-base bg-base-main text-brand-sky;
+    font-family: "Source Sans 3", "Source Sans Pro", sans-serif;
 }
 
 /*FONT TYPOGRAPHY ACCORDING TO LEVEL*/
@@ -29,7 +30,7 @@ h1, h2, h3, h4 {
 }
 
  h5, h6, p, span {
-    font-family: "Source Sans 3", sans-serif;
+    font-family: "Source Sans 3", "Source Sans Pro", sans-serif;
 }
 
 .font-badge {
@@ -112,15 +113,15 @@ h1, h2, h3, h4 {
 
 @layer base {
     * {
-        @apply border-border;
+        @apply border-stroke;
     }
 
     body {
-        @apply bg-background text-foreground;
+        @apply bg-background text-brand-snow;
     }
 
     a {
-        @apply text-blue-200;
+        @apply text-brand-sky;
     }
 }
 
@@ -130,8 +131,8 @@ h1, h2, h3, h4 {
 
 /*CONTAINERS*/
 .page-container {
-    @apply w-full flex flex-col justify-start items-center  ml-[14rem]
+    @apply w-full flex flex-col justify-start items-center  ml-[14rem];
 }
 .main-container {
-    @apply mt-20 mb-10
+    @apply mt-20 mb-10;
 }
