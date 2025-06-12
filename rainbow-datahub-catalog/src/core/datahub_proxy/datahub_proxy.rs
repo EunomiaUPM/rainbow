@@ -21,7 +21,7 @@ use crate::core::datahub_proxy::datahub_proxy_types::DatasetGraphQLResponseDetai
 use crate::core::datahub_proxy::datahub_proxy_types::{
     DatahubDataset, DatasetBasicInfo, DatasetGraphQLResponse, DomainProperties, GlossaryTerm,
 };
-use crate::core::datahub_proxy::datahub_proxy_types::{DatahubDomain, GraphQLResponse};
+use crate::core::datahub_proxy::datahub_proxy_types::{DatahubDomain, GraphQLResponse, Platform};
 use crate::core::datahub_proxy::DatahubProxyTrait;
 use crate::setup::config::DatahubCatalogApplicationProviderConfig;
 use axum::async_trait;
@@ -91,7 +91,7 @@ impl DatahubProxyTrait for DatahubProxyService {
         Ok(domains)
     }
 
-    async fn get_datahub_datasets_by_domain_id(&self, id: String) -> anyhow::Result<Vec<DatasetBasicInfo>> {
+    async fn get_datahub_datasets_by_domain_id(&self, id: String) -> anyhow::Result<Vec<DatahubDataset>> {
         let datahub_host = self.config.get_datahub_host_url().expect("Datahub host not created");
         let datahub_token = self.config.get_datahub_token().expect("Datahub Token not created");
         let graphql_url = format!("{}/api/graphql", datahub_host);
@@ -111,6 +111,58 @@ impl DatahubProxyTrait for DatahubProxyService {
                         urn
                         ... on Dataset {{
                             name
+                            platform {{ name }}
+                            description
+                            properties {{
+                                name
+                                description
+                                customProperties {{
+                                    key
+                                    value
+                                }}
+                            }}
+                            ownership {{
+                                owners {{
+                                    owner {{
+                                        ... on CorpUser {{
+                                            username
+                                        }}
+                                    }}
+                                }}
+                            }}
+                            tags {{
+                                tags {{
+                                    tag {{
+                                        name
+                                    }}
+                                }}
+                            }}
+                            schemaMetadata {{
+                                fields {{
+                                    fieldPath
+                                    type
+                                }}
+                            }}
+                            domain {{
+                                associatedUrn
+                                domain {{
+                                    urn
+                                    properties {{
+                                        name
+                                    }}
+                                }}
+                            }}
+                            glossaryTerms {{
+                                terms {{
+                                    term {{
+                                        urn
+                                        glossaryTermInfo {{
+                                            name
+                                            description
+                                        }}
+                                    }}
+                                }}
+                            }}
                         }}
                     }}
                 }}
@@ -119,32 +171,99 @@ impl DatahubProxyTrait for DatahubProxyService {
             id
         );
 
-        let request_body = serde_json::json!({
-            "query": query
-        });
-
-        let response = self
-            .client
-            .post(graphql_url)
-            .header("Content-Type", "application/json")
-            .header("Authorization", format!("Bearer {}", datahub_token))
-            .json(&request_body)
+        let client = reqwest::Client::new();
+        let res = client
+            .post(&graphql_url)
+            .bearer_auth(datahub_token)
+            .json(&serde_json::json!({ "query": query }))
             .send()
+            .await?
+            .json::<serde_json::Value>()
             .await?;
 
-        let graphql_response: DatasetGraphQLResponse = response.json().await?;
+        let mut datasets = Vec::new();
+        if let Some(results) = res["data"]["searchAcrossEntities"]["searchResults"].as_array() {
+            for result in results {
+                if let Some(entity) = result.get("entity") {
+                    let urn = entity.get("urn").and_then(|v| v.as_str()).unwrap_or_default().to_string();
+                    let name = entity.get("name").and_then(|v| v.as_str()).unwrap_or_default().to_string();
+                    let platform = entity.get("platform")
+                        .cloned()
+                        .and_then(|p| serde_json::from_value(p).ok())
+                        .unwrap_or_else(|| Platform { name: "".to_string() });
+                    let description = entity.get("description").and_then(|v| v.as_str()).map(|s| s.to_string());
 
-        let datasets = graphql_response
-            .data
-            .searchAcrossEntities
-            .searchResults
-            .into_iter()
-            .map(|result| DatasetBasicInfo {
-                urn: result.entity.urn,
-                name: result.entity.name,
-            })
-            .collect();
+                    let tag_names = entity
+                        .get("tags")
+                        .and_then(|tags| tags.get("tags"))
+                        .and_then(|tags| tags.as_array())
+                        .map(|tags| {
+                            tags.iter()
+                                .filter_map(|tw| tw.get("tag").and_then(|tag| tag.get("name")).and_then(|n| n.as_str()).map(|s| s.to_string()))
+                                .collect::<Vec<String>>()
+                        })
+                        .unwrap_or_default();
 
+                    let custom_props: Vec<(String, String)> = entity
+                        .get("properties")
+                        .and_then(|p| p.get("customProperties"))
+                        .and_then(|cp| cp.as_array())
+                        .map(|arr| {
+                            arr.iter()
+                                .filter_map(|cp| {
+                                    let key = cp.get("key")?.as_str()?;
+                                    let value = cp.get("value")?.as_str()?;
+                                    Some((key.to_string(), value.to_string()))
+                                })
+                                .collect()
+                        })
+                        .unwrap_or_default();
+
+                    let domain = entity
+                        .get("domain")
+                        .and_then(|d| d.get("domain"))
+                        .map(|d| DatahubDomain {
+                            urn: d.get("urn").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
+                            properties: DomainProperties {
+                                name: d.get("properties").and_then(|p| p.get("name")).and_then(|n| n.as_str()).unwrap_or_default().to_string(),
+                                description: None,
+                            },
+                        })
+                        .unwrap_or(DatahubDomain {
+                            urn: "".to_string(),
+                            properties: DomainProperties {
+                                name: "".to_string(),
+                                description: None,
+                            },
+                        });
+
+                    let glossary_terms = entity
+                        .get("glossaryTerms")
+                        .and_then(|gt| gt.get("terms"))
+                        .and_then(|terms| terms.as_array())
+                        .map(|terms| {
+                            terms
+                                .iter()
+                                .filter_map(|t| t.get("term"))
+                                .filter_map(|term| serde_json::from_value::<GlossaryTerm>(term.clone()).ok())
+                                .collect::<Vec<GlossaryTerm>>()
+                        });
+
+                    let dataset = DatahubDataset {
+                        urn,
+                        name,
+                        platform,
+                        description,
+                        tag_names,
+                        custom_properties: custom_props,
+                        domain,
+                        glossary_terms,
+                    };
+
+                    datasets.push(dataset);
+                }
+            }
+        }
 
         Ok(datasets)
     }
@@ -232,7 +351,7 @@ impl DatahubProxyTrait for DatahubProxyService {
 
         let dataset = graphql_response.data.dataset;
 
-        let custom_props = dataset.properties.customProperties
+        let custom_props: Vec<(String, String)> = dataset.properties.customProperties
             .unwrap_or_default()
             .into_iter()
             .map(|cp| (cp.key, cp.value))
@@ -264,6 +383,7 @@ impl DatahubProxyTrait for DatahubProxyService {
             glossary_terms,
         };
 
+        
         Ok(dataset)
     }
 }
