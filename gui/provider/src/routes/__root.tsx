@@ -17,7 +17,9 @@ export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
 }>()({
   component: ({ children }: { children: React.ReactNode }) => {
-    return (
+   let widthPage = window.innerWidth;
+   // console.log("Width:", widthPage);
+   return (
       <>
         <SidebarProvider>
           <div className="fixed flex w-full z-50">
@@ -25,7 +27,8 @@ export const Route = createRootRouteWithContext<{
             <Header />
           </div>
           <main className="page-container">
-            {/* <SidebarTrigger /> */}
+            {/* boton de abrir/cerrar sidebar solo para movil/pantalla pequeña */}
+            { widthPage < 768 ? <SidebarTrigger /> : "" }
             {children}
             <div className="main-container">
               <Outlet />

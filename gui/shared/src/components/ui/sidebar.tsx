@@ -279,7 +279,7 @@ const SidebarTrigger = React.forwardRef<
       data-sidebar="trigger"
       variant="ghost"
       size="icon"
-      className={cn("fixed h-7 w-7 mt-2 z-90 left-[20px]",
+      className={cn("top-12 z-50 fixed h-7 w-7 mt-2 z-90 left-[20px]",
           // state === "collapsed" ? "left-[20px]" :  "left-[264px]",
           className)}
       onClick={(event) => {

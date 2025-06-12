@@ -11,6 +11,7 @@ import {
   SidebarMenuItem,
   SidebarTrigger
 } from "./ui/sidebar"
+import logoImg from "../img/eunomia_logo_lg_light.svg"
 
 // Menu items.
 const items = [
@@ -51,10 +52,10 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
-          <div className="flex justify-between">
-          <SidebarGroupLabel>Application</SidebarGroupLabel>
+          <img src={logoImg} className="h-11 mt-2 mb-4 mr-auto ml-1 flex justify-start"></img>
+          {/* <SidebarGroupLabel>Application</SidebarGroupLabel> */}
           {/* <SidebarTrigger/> */}
-          </div>
+      
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (

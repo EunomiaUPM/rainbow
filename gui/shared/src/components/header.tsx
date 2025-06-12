@@ -1,7 +1,8 @@
 import * as React from "react";
 import {
-  useRouterState,
+  useRouterState,Link
 } from "@tanstack/react-router";
+
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -12,6 +13,7 @@ import {
 } from "./ui/breadcrumb";
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import PersonIcon from '@mui/icons-material/Person';
+
 
 const Header = () => {
   const routerState = useRouterState();
@@ -50,7 +52,9 @@ const Header = () => {
         </BreadcrumbList>
       </Breadcrumb>
       <div className="flex flex-row gap-4">
+        <Link to="/subscriptions">
       <NotificationsIcon className="cursor-pointer" />
+      </Link>
         <PersonIcon className="cursor-pointer" />
         {/* <Link to="/user">User</Link> */}
       
