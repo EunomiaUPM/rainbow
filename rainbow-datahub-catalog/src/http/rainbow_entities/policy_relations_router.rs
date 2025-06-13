@@ -37,12 +37,13 @@ use serde_json::{json, to_value};
 use std::sync::Arc;
 use tracing::error;
 use tracing::info;
+use rainbow_common::protocol::contract::odrloffer_wrapper::OdrlOfferWrapper;
 
 #[derive(Debug, Deserialize)]
 pub struct CreatePolicyRelationRequest {
     pub dataset_id: String,
     pub policy_template_id: String,
-    pub extra_content: Option<serde_json::Value>,
+    pub odrl_offer: OdrlOfferWrapper,
 }
 
 pub struct PolicyRelationsRouter<T, U>
@@ -97,7 +98,7 @@ where
         let new_relation = NewPolicyRelationModel {
             dataset_id: payload.dataset_id,
             policy_template_id: payload.policy_template_id,
-            extra_content: payload.extra_content,
+            odrl_offer: payload.odrl_offer,
         };
 
         match policy_relations_service.create_policy_relation(new_relation).await {

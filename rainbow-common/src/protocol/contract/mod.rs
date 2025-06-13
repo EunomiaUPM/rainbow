@@ -32,6 +32,7 @@ pub mod contract_negotiation_termination;
 pub mod contract_odrl;
 pub mod contract_offer;
 pub mod contract_protocol_trait;
+pub mod odrloffer_wrapper;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum ContractNegotiationState {

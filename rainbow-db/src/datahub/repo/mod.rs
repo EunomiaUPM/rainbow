@@ -23,6 +23,7 @@ use anyhow::Error;
 use axum::async_trait;
 use sea_orm::DatabaseConnection;
 use thiserror::Error;
+use rainbow_common::protocol::contract::odrloffer_wrapper::OdrlOfferWrapper;
 
 
 pub mod sql;
@@ -51,7 +52,7 @@ pub trait PolicyTemplatesRepo {
 pub struct NewPolicyRelationModel {
     pub dataset_id: String,
     pub policy_template_id: String,
-    pub extra_content: Option<serde_json::Value>,
+    pub odrl_offer: OdrlOfferWrapper,
 }
 
 #[async_trait]

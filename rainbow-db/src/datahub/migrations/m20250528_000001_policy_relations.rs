@@ -36,7 +36,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(DataHubPolicyRelations::Id).string().not_null().primary_key())
                     .col(ColumnDef::new(DataHubPolicyRelations::DatasetId).string().not_null())
                     .col(ColumnDef::new(DataHubPolicyRelations::PolicyTemplateId).string().not_null())
-                    .col(ColumnDef::new(DataHubPolicyRelations::ExtraContent).json())
+                    .col(ColumnDef::new(DataHubPolicyRelations::OdrlOffer).json())
                     .col(ColumnDef::new(DataHubPolicyRelations::CreatedAt).date_time().not_null())
                     .to_owned(),
             )
@@ -54,6 +54,6 @@ pub enum DataHubPolicyRelations {
     Id,
     DatasetId,
     PolicyTemplateId,
-    ExtraContent,
+    OdrlOffer,
     CreatedAt,
 }

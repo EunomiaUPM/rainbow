@@ -176,7 +176,7 @@ impl PolicyRelationsRepo for DatahubConnectorRepoForSql {
             id: ActiveValue::Set(id.clone()),
             dataset_id: ActiveValue::Set(new_relation.dataset_id.clone()),
             policy_template_id: ActiveValue::Set(new_relation.policy_template_id.clone()),
-            extra_content: ActiveValue::Set(new_relation.extra_content),
+            odrl_offer: ActiveValue::Set(new_relation.odrl_offer),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
         };
 

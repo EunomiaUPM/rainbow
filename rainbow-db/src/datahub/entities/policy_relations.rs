@@ -18,6 +18,9 @@
  */
 
 use sea_orm::entity::prelude::*;
+use rainbow_common::protocol::contract::contract_odrl::OdrlOffer;
+use rainbow_common::protocol::contract::odrloffer_wrapper::OdrlOfferWrapper;
+use sea_orm::Value;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, serde::Serialize)]
 #[sea_orm(table_name = "data_hub_policy_relations")]
@@ -26,9 +29,10 @@ pub struct Model {
     pub id: String,
     pub dataset_id: String,
     pub policy_template_id: String,
-    pub extra_content: Option<serde_json::Value>,
+    pub odrl_offer: OdrlOfferWrapper,
     pub created_at: chrono::NaiveDateTime,
 }
+
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
