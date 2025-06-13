@@ -8,6 +8,7 @@ import {
     useGetContractNegotiationProcessesByCNID
 } from "@/data/contract-queries.ts";
 import {ContractNegotiationActions} from "shared/src/components/ContractNegotiationActions.tsx";
+import { List, ListItem, ListItemKey } from "shared/src/components/ui/list.tsx";
 
 const RouteComponent = () => {
     const {cnProcess} = Route.useParams();
@@ -17,34 +18,27 @@ const RouteComponent = () => {
 
     return (
         <div className="space-y-4">
-            <Table className="text-sm">
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Key</TableHead>
-                        <TableHead>Value</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    <TableRow>
-                        <TableCell>ProviderPid</TableCell>
-                        <TableCell>{process.provider_id}</TableCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableCell>ConsumerPid</TableCell>
-                        <TableCell>{process.consumer_id}</TableCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableCell>State</TableCell>
-                        <TableCell>{process.state}</TableCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableCell>CreatedAt</TableCell>
-                        <TableCell>
+            <List>
+                    <ListItem>
+                        <ListItemKey>ProviderPid</ListItemKey>
+                        <p>{process.provider_id}</p>
+                    </ListItem>
+                    <ListItem>
+                        <ListItemKey>ConsumerPid</ListItemKey>
+                        <p>{process.consumer_id}</p>
+                    </ListItem>
+                    <ListItem>
+                        <ListItemKey>State</ListItemKey>
+                        <p>{process.state}</p>
+                    </ListItem>
+                    <ListItem>
+                        <ListItemKey>CreatedAt</ListItemKey>
+                        <p>
                             {dayjs(process.created_at).format("DD/MM/YYYY - HH:mm")}
-                        </TableCell>
-                    </TableRow>
-                </TableBody>
-            </Table>
+                        </p>
+                    </ListItem>
+              
+            </List>
             <ContractNegotiationActions state={process.state} tiny={false}/>
             <div>
                 <h1>Messages</h1>

@@ -5,6 +5,7 @@ import dayjs from "dayjs";
 import {ExternalLink} from "lucide-react";
 import  Heading  from "../../../../../shared/src/components/ui/heading.tsx";
 import { Button } from 'shared/src/components/ui/button.tsx';
+import { List, ListItem, ListItemKey } from "shared/src/components/ui/list.tsx";
 
 export const Route = createFileRoute('/participants/$participantId/')({
     component: RouteComponent,
@@ -20,64 +21,32 @@ function RouteComponent() {
         </Heading>
         <div className=" flex flex-col">
             <Heading level="h6" className="text-foreground"> Participant info: </Heading>
-            {/* <Table className="text-sm flex justify-center" >
-                {/* <TableHeader>
-                    <TableRow>
-                        <TableHead>Key</TableHead>
-                        <TableHead>Value</TableHead>
-                    </TableRow>
-                </TableHeader> 
-                <TableBody>
-                    <TableRow>
-                        <TableCell>Participant ID</TableCell>
-                        <TableCell>{participant.participant_id}</TableCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableCell>Identity Token</TableCell>
-                        <TableCell>{participant.identity_token}</TableCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableCell>Participant Type</TableCell>
-                        <TableCell>{participant._type}</TableCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableCell>Base UR</TableCell>
-                        <TableCell>{participant.base_url}</TableCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableCell>Extra Info</TableCell>
-                        <TableCell>
-                            {JSON.stringify(participant.extra_fields)}
-                        </TableCell>
-                    </TableRow>
-                </TableBody>
-            </Table> */}
-              <div className="w-1/2 text-sm flex justify-center relative  bg-white/5 overflow-auto border border-foreground/25 rounded-md" >
+              <div>
         
-                <ul>
-                    <li className="h-6 flex flex-row justify-between gap-20 border-b border-white/20 last-child:border-0 items-center">
-                        <p>Participant ID</p>
+                <List>
+                    <ListItem>
+                        <ListItemKey>Participant ID</ListItemKey>
                         <p>{participant.participant_id}</p>
-                    </li>
-                        <li className="h-8 flex flex-row justify-between border-b border-white/20 last-child:border-0 items-center">
-                       <p>Identity Token</p>
+                    </ListItem>
+                    <ListItem> 
+                       <ListItemKey>Identity Token</ListItemKey>
                         <p>{participant.identity_token}</p>
-                    </li>
-                       <li className="flex flex-row">
-                        <Heading level="h6">Participant Type</Heading>
+                    </ListItem>
+                    <ListItem>
+                        <ListItemKey>Participant Type</ListItemKey>
                         <p>{participant._type}</p>
-                    </li>
-                       <li className="flex flex-row">
-                       <Heading level="h6">Base UR</Heading>
+                    </ListItem>
+                       <ListItem>
+                       <ListItemKey>Base UR</ListItemKey>
                         <p>{participant.base_url}</p>
-                    </li>
-                       <li className="flex flex-row">
-                        <Heading level="h6">Extra Info</Heading>
+                    </ListItem>
+                       <ListItem> 
+                        <ListItemKey>Extra Info</ListItemKey>
                         <p>
                             {JSON.stringify(participant.extra_fields)}
                         </p>
-                    </li>
-                </ul>
+                    </ListItem>
+                </List>
             </div>
         </div>
 
