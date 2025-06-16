@@ -32,8 +32,13 @@ function RouteComponent() {
             <TableRow>
               <TableHead>Agreement Id</TableHead>
               <TableHead>Related Message</TableHead>
-              <TableHead>Consumer Participant Id</TableHead>
-              <TableHead>Provider Participant Id</TableHead>
+              <TableHead>
+                {/* <div className="flex gap-3">
+                  <p>Consumer Participant Id</p>
+                  <p> Provider Participant Id</p>
+              </div> */}
+              </TableHead>
+         
               <TableHead>Status</TableHead>
               <TableHead>CreatedAt</TableHead>
               <TableHead>Link</TableHead>
@@ -51,14 +56,15 @@ function RouteComponent() {
                   {agreement.cn_message_id?.slice(0, 20) + "..."}
                 </TableCell>
                 <TableCell>
+                  {/* <div className="flex flex-col gap-1">
                   <Badge variant={"info"}>
                     {agreement.consumer_participant_id?.slice(0, 20) + "..."}
                   </Badge>
-                </TableCell>
-                <TableCell>
+              
                   <Badge variant={"info"}>
                     {agreement.provider_participant_id?.slice(0, 20) + "..."}
                   </Badge>
+                  </div> */}
                 </TableCell>
                 <TableCell>
                   <Badge

@@ -6,6 +6,7 @@ import {ExternalLink} from "lucide-react";
 import  Heading  from "../../../../../shared/src/components/ui/heading.tsx";
 import { Button } from 'shared/src/components/ui/button.tsx';
 import { List, ListItem, ListItemKey } from "shared/src/components/ui/list.tsx";
+import { Badge } from 'shared/src/components/ui/badge.tsx';
 
 export const Route = createFileRoute('/participants/$participantId/')({
     component: RouteComponent,
@@ -26,7 +27,7 @@ function RouteComponent() {
                 <List>
                     <ListItem>
                         <ListItemKey>Participant ID</ListItemKey>
-                        <p>{participant.participant_id}</p>
+                        <Badge variant="info">{participant.participant_id?.slice(0,20) + "..."}</Badge>
                     </ListItem>
                     <ListItem> 
                        <ListItemKey>Identity Token</ListItemKey>

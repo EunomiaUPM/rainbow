@@ -36,7 +36,7 @@ function RouteComponent() {
     useGetTransferMessagesByProviderPid(transferProcessId);
   return (
     <div className="space-y-4">
-      <Tabs defaultValue="account" className="w-[400px]">
+      <Tabs defaultValue="data-control" className="w-[400px]">
         <TabsList>
           <TabsTrigger value="data-control">Data Control</TabsTrigger>
           <TabsTrigger value="data-plane">Data Plane</TabsTrigger>
@@ -79,51 +79,7 @@ function RouteComponent() {
               </ListItem>
             </List>
           </div>
-        </TabsContent>
-      </Tabs>
-      <div>
-        {/* <Table className="text-sm">
-           <TableHeader>
-                    <TableRow>
-                        <TableHead>Key</TableHead>
-                        <TableHead>Value</TableHead>
-                    </TableRow>
-                </TableHeader> 
-          <TableBody> */}
-        {/* <TableRow>
-                        <TableCell>Transfer Process Provider pid</TableCell>
-                        <TableCell>{transferProcess.provider_pid.slice(0, 20) + "..."}</TableCell>
-                    </TableRow> */}
-        {/* <TableRow>
-                        <TableCell>Transfer Consumer Provider pid</TableCell>
-                        <TableCell>{transferProcess.consumer_pid.slice(0, 20) + "..."}</TableCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableCell>Agreement id</TableCell>
-                        <TableCell>{transferProcess.agreement_id.slice(0, 20) + "..."}</TableCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableCell>State</TableCell>
-                        <TableCell>{transferProcess.state}</TableCell>
-                    </TableRow> */}
-        {/* <TableRow>
-              <TableCell>Created At</TableCell>
-              <TableCell>
-                {dayjs(transferProcess.created_at).format("DD/MM/YYYY - HH:mm")}
-              </TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>Updated At</TableCell>
-              <TableCell>
-                {dayjs(transferProcess.updated_at).format("DD/MM/YYYY - HH:mm")}
-              </TableCell>
-            </TableRow> */}
-        {/* </TableBody>
-        </Table> */}
-      </div>
-
-      <div>
-        <Heading level="h6" className="text-text">
+          <Heading level="h6" className="text-text">
           Transfer Messages
         </Heading>
         {transferMessages.map((transferMessage) => (
@@ -188,7 +144,53 @@ function RouteComponent() {
             </div>
           </div>
         ))}
-        <Table className="text-sm">
+        </TabsContent>
+      </Tabs>
+      <div>
+        {/* CATALOGOS CON LAS VARIABLES, NO BORRAR!! */}
+        {/* <Table className="text-sm">
+           <TableHeader>
+                    <TableRow>
+                        <TableHead>Key</TableHead>
+                        <TableHead>Value</TableHead>
+                    </TableRow>
+                </TableHeader> 
+          <TableBody> */}
+        {/* <TableRow>
+                        <TableCell>Transfer Process Provider pid</TableCell>
+                        <TableCell>{transferProcess.provider_pid.slice(0, 20) + "..."}</TableCell>
+                    </TableRow> */}
+        {/* <TableRow>
+                        <TableCell>Transfer Consumer Provider pid</TableCell>
+                        <TableCell>{transferProcess.consumer_pid.slice(0, 20) + "..."}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell>Agreement id</TableCell>
+                        <TableCell>{transferProcess.agreement_id.slice(0, 20) + "..."}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell>State</TableCell>
+                        <TableCell>{transferProcess.state}</TableCell>
+                    </TableRow> */}
+        {/* <TableRow>
+              <TableCell>Created At</TableCell>
+              <TableCell>
+                {dayjs(transferProcess.created_at).format("DD/MM/YYYY - HH:mm")}
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>Updated At</TableCell>
+              <TableCell>
+                {dayjs(transferProcess.updated_at).format("DD/MM/YYYY - HH:mm")}
+              </TableCell>
+            </TableRow> */}
+        {/* </TableBody>
+        </Table> */}
+      </div>
+
+      <div>
+       {/* MENSAJES */}
+        {/* <Table className="text-sm">
           <TableHeader>
             <TableRow>
               <TableHead>Transfer Message Id</TableHead>
@@ -229,7 +231,7 @@ function RouteComponent() {
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+        </Table> */}
       </div>
     </div>
   );
