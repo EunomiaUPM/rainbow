@@ -83,8 +83,8 @@ export function AppSidebar() {
                       href={item.url}
                       className={
                         routerState.location.pathname === item.url
-                          ? "bg-white/10 text-foreground hover:bg-none"
-                          : "hover:bg-white/5"
+                          ? "bg-white/10 text-white"
+                          : ""
                       }
                     >
                       <item.icon />

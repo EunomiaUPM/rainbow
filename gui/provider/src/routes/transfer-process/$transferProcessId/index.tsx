@@ -26,6 +26,9 @@ export const Route = createFileRoute("/transfer-process/$transferProcessId/")({
 });
 
 function RouteComponent() {
+  let addSpacesFromat = (text) => {
+    return text.replace(/(?!^)([A-Z])/g, " $1");
+  };
   const { transferProcessId } = Route.useParams();
   const { data: transferProcess } =
     useGetTransferProcessByProviderPid(transferProcessId);
@@ -35,50 +38,50 @@ function RouteComponent() {
     <div className="space-y-4">
       <Tabs defaultValue="account" className="w-[400px]">
         <TabsList>
-          <TabsTrigger value="account">Account</TabsTrigger>
-          <TabsTrigger value="password">Password</TabsTrigger>
+          <TabsTrigger value="data-control">Data Control</TabsTrigger>
+          <TabsTrigger value="data-plane">Data Plane</TabsTrigger>
         </TabsList>
-        <TabsContent value="account">
-          Make changes to your account here.
+        <TabsContent value="data-plane">// Data plane</TabsContent>
+        <TabsContent value="data-control">
+          {" "}
+          <Heading level="h6">Transfer process info: </Heading>
+          <div className="mb-4">
+            <List>
+              <ListItem>
+                <ListItemKey>Transfer Process Provider pid</ListItemKey>
+                <p>{transferProcess.provider_pid.slice(0, 20) + "..."}</p>
+              </ListItem>
+              <ListItem>
+                <ListItemKey>Transfer Consumer Provider pid</ListItemKey>
+                <p>{transferProcess.consumer_pid.slice(0, 20) + "..."}</p>
+              </ListItem>
+              <ListItem>
+                <ListItemKey>Agreement id</ListItemKey>
+                <p>{transferProcess.agreement_id.slice(0, 20) + "..."}</p>
+              </ListItem>
+              <ListItem>
+                <ListItemKey>Transfer Process Provider pid</ListItemKey>
+                <p>{transferProcess.state}</p>
+              </ListItem>
+              <ListItem>
+                <ListItemKey>Created At</ListItemKey>
+                <p>
+                  {" "}
+                  {dayjs(transferProcess.created_at).format("DD/MM/YY HH:mm")}
+                </p>
+              </ListItem>
+              <ListItem>
+                <ListItemKey>Updated At</ListItemKey>
+                <p>
+                  {" "}
+                  {dayjs(transferProcess.updated_at).format("DD/MM/YY HH:mm")}
+                </p>
+              </ListItem>
+            </List>
+          </div>
         </TabsContent>
-        <TabsContent value="password">Change your password here.</TabsContent>
       </Tabs>
       <div>
-        <Heading level="h6">Transfer process info: </Heading>
-        <div className="mb-4">
-          <List>
-            <ListItem>
-              <ListItemKey>Transfer Process Provider pid</ListItemKey>
-              <p>{transferProcess.provider_pid.slice(0, 20) + "..."}</p>
-            </ListItem>
-            <ListItem>
-              <ListItemKey>Transfer Consumer Provider pid</ListItemKey>
-              <p>{transferProcess.consumer_pid.slice(0, 20) + "..."}</p>
-            </ListItem>
-            <ListItem>
-              <ListItemKey>Agreement id</ListItemKey>
-              <p>{transferProcess.agreement_id.slice(0, 20) + "..."}</p>
-            </ListItem>
-            <ListItem>
-              <ListItemKey>Transfer Process Provider pid</ListItemKey>
-              <p>{transferProcess.state}</p>
-            </ListItem>
-            <ListItem>
-              <ListItemKey>Created At</ListItemKey>
-              <p>
-                {" "}
-                {dayjs(transferProcess.created_at).format("DD/MM/YY HH:mm")}
-              </p>
-            </ListItem>
-            <ListItem>
-              <ListItemKey>Updated At</ListItemKey>
-              <p>
-                {" "}
-                {dayjs(transferProcess.updated_at).format("DD/MM/YY HH:mm")}
-              </p>
-            </ListItem>
-          </List>
-        </div>
         {/* <Table className="text-sm">
            <TableHeader>
                     <TableRow>
@@ -120,7 +123,71 @@ function RouteComponent() {
       </div>
 
       <div>
-        <h2 className="text-text">Transfer Messages</h2>
+        <Heading level="h6" className="text-text">
+          Transfer Messages
+        </Heading>
+        {transferMessages.map((transferMessage) => (
+          <div className="my-4">
+            <div
+              className={`uppercase inline-block  ${
+                transferMessage.from === "Provider"
+                  ? "bg-provider-800 "
+                  : "bg-consumer-800"
+              }`}
+            >
+              {transferMessage.from}
+            </div>
+            <div className={` w-3/5  p-2 rounded-md 
+              ${ transferMessage.from === "Provider"
+                ? "bg-provider-800" 
+                 : "bg-consumer-800"
+              }
+              
+              ` }>
+              <div className="text-20">
+                {" "}
+                {addSpacesFromat(transferMessage.message_type)}{" "}
+              </div>
+              <p>
+                <i>
+                  {" "}
+                  {dayjs(transferMessage.created_at).format(
+                    "DD/MM/YYYY - HH:mm"
+                  )}
+                </i>
+              </p>
+              <div
+                className="flex gap-3 "
+                key={transferMessage.id.slice(0, 20)}
+              >
+                <p className="font-bold "> Transfer Message Id </p>
+                <p className=" w-1/2">
+                  {" "}
+                  {transferMessage.id.slice(0, 20) + "..."}
+                </p>
+              </div>
+              <div
+                className="flex gap-3 "
+                key={transferMessage.id.slice(0, 20)}
+              >
+                <p className="font-bold "> Transfer Process Id </p>
+                <p className=" w-1/2">
+                  {" "}
+                  {transferMessage.transfer_process_id?.slice(0, 20) + "..."}
+                </p>
+              </div>
+              <div
+                className="flex gap-3 "
+                key={transferMessage.id.slice(0, 20)}
+              >
+                <p className="font-bold "> Transfer Process Id </p>
+                <p className=" w-1/2">
+                {JSON.stringify(transferMessage.content)}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
         <Table className="text-sm">
           <TableHeader>
             <TableRow>
