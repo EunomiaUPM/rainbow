@@ -50,6 +50,7 @@ pub async fn execute_proxy(
         "distributions" => "api/v1/distributions",
         "contract-negotiation" => "api/v1/contract-negotiation",
         "mates" => "api/v1/mates",
+        "catalog-bypass" => "api/v1/catalog-bypass",
         "negotiations" => "api/v1/negotiations",
         "transfers" => "api/v1/transfers",
         "auth" => "api/v1/auth",

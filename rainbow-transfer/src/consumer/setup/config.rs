@@ -27,6 +27,7 @@ pub struct TransferConsumerApplicationConfig {
     pub transfer_process_host: Option<HostConfig>,
     pub business_system_host: Option<HostConfig>,
     pub contract_negotiation_host: Option<HostConfig>,
+    pub catalog_bypass_host: Option<HostConfig>,
     pub auth_host: Option<HostConfig>,
     pub ssi_auth_host: Option<HostConfig>,
     pub database_config: DatabaseConfig,
@@ -62,6 +63,9 @@ impl ApplicationConsumerConfigTrait for TransferConsumerApplicationConfig {
     fn get_raw_contract_negotiation_host(&self) -> &Option<HostConfig> {
         &self.contract_negotiation_host
     }
+    fn get_raw_catalog_bypass_host(&self) -> &Option<HostConfig> {
+        &self.catalog_bypass_host
+    }
     fn get_raw_auth_host(&self) -> &Option<HostConfig> {
         &self.auth_host
     }
@@ -96,6 +100,7 @@ impl From<ApplicationConsumerConfig> for TransferConsumerApplicationConfig {
             transfer_process_host: value.transfer_process_host,
             business_system_host: value.business_system_host,
             contract_negotiation_host: value.contract_negotiation_host,
+            catalog_bypass_host: value.catalog_bypass_host,
             auth_host: value.auth_host,
             ssi_auth_host: value.ssi_auth_host,
             database_config: value.database_config,
@@ -124,6 +129,7 @@ impl Into<ApplicationConsumerConfig> for TransferConsumerApplicationConfig {
             transfer_process_host: self.transfer_process_host,
             business_system_host: self.business_system_host,
             contract_negotiation_host: self.contract_negotiation_host,
+            catalog_bypass_host: self.catalog_bypass_host,
             auth_host: self.auth_host,
             ssi_auth_host: self.ssi_auth_host,
             gateway_host: None,

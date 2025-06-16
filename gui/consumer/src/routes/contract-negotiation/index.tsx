@@ -5,14 +5,15 @@ import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "sh
 import {useGetContractNegotiationProcesses} from "shared/src/data/contract-queries.ts";
 import {Button} from "shared/src/components/ui/button.tsx";
 import {ContractNegotiationActions} from "shared/src/components/ContractNegotiationActions.tsx";
+import * as process from "node:process";
 
 const RouteComponent = () => {
     const {data: cnProcesses} = useGetContractNegotiationProcesses();
     return (
         <div>
             <div className="flex justify-end">
-                <Link to="/contract-negotiation/offer" className="text-decoration-none text-foreground">
-                    <Button>Create new offer</Button>
+                <Link to="/contract-negotiation/request" className="text-decoration-none text-foreground">
+                    <Button>Create new request</Button>
                 </Link>
             </div>
             <Table className="text-sm">
@@ -38,7 +39,7 @@ const RouteComponent = () => {
                                 {dayjs(cnProcess.created_at).format("DD/MM/YYYY - HH:mm")}
                             </TableCell>
                             <TableCell>
-                                <ContractNegotiationActions state={cnProcess.state} tiny={true}/>
+                                <ContractNegotiationActions process={process} tiny={true}/>
                             </TableCell>
                             <TableCell>
                                 <Link

@@ -95,7 +95,7 @@ impl RainbowConsumerGateway {
         let microservice_base_url = match service_prefix.as_str() {
             "dataplane" => config.get_transfer_host_url(),
             "subscriptions" => config.get_transfer_host_url(),
-            // "notifications" => config.get_catalog_host_url(),
+            "catalog-bypass" => config.get_catalog_bypass_host_url(),
             // "catalogs" => config.get_catalog_host_url(),
             // "datasets" => config.get_catalog_host_url(),
             // "data-services" => config.get_catalog_host_url(),

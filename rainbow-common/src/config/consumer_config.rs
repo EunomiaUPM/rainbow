@@ -45,6 +45,7 @@ pub struct ApplicationConsumerConfig {
     pub transfer_process_host: Option<HostConfig>,
     pub business_system_host: Option<HostConfig>,
     pub contract_negotiation_host: Option<HostConfig>,
+    pub catalog_bypass_host: Option<HostConfig>,
     pub auth_host: Option<HostConfig>,
     pub ssi_auth_host: Option<HostConfig>,
     pub gateway_host: Option<HostConfig>,
@@ -89,6 +90,11 @@ impl Default for ApplicationConsumerConfig {
                 url: "127.0.0.1".to_string(),
                 port: "1105".to_string(),
             }),
+            catalog_bypass_host: Some(HostConfig {
+                protocol: "http".to_string(),
+                url: "127.0.0.1".to_string(),
+                port: "1106".to_string(),
+            }),
             database_config: DatabaseConfig {
                 db_type: DbType::Postgres,
                 url: "127.0.0.1".to_string(),
@@ -124,6 +130,7 @@ pub trait ApplicationConsumerConfigTrait {
     fn get_raw_transfer_process_host(&self) -> &Option<HostConfig>;
     fn get_raw_business_system_host(&self) -> &Option<HostConfig>;
     fn get_raw_contract_negotiation_host(&self) -> &Option<HostConfig>;
+    fn get_raw_catalog_bypass_host(&self) -> &Option<HostConfig>;
     fn get_raw_auth_host(&self) -> &Option<HostConfig>;
     fn get_raw_gateway_host(&self) -> &Option<HostConfig>;
     fn get_raw_ssi_auth_host(&self) -> &Option<HostConfig>;
@@ -139,6 +146,9 @@ pub trait ApplicationConsumerConfigTrait {
     }
     fn get_contract_negotiation_host_url(&self) -> Option<String> {
         self.get_raw_contract_negotiation_host().as_ref().map(format_host_config_to_url_string)
+    }
+    fn get_catalog_bypass_host_url(&self) -> Option<String> {
+        self.get_raw_catalog_bypass_host().as_ref().map(format_host_config_to_url_string)
     }
     fn get_auth_host_url(&self) -> Option<String> {
         self.get_raw_auth_host().as_ref().map(format_host_config_to_url_string)
@@ -209,6 +219,9 @@ impl ApplicationConsumerConfigTrait for ApplicationConsumerConfig {
     fn get_raw_contract_negotiation_host(&self) -> &Option<HostConfig> {
         &self.contract_negotiation_host
     }
+    fn get_raw_catalog_bypass_host(&self) -> &Option<HostConfig> {
+        &self.catalog_bypass_host
+    }
     fn get_raw_auth_host(&self) -> &Option<HostConfig> {
         &self.auth_host
     }
@@ -268,6 +281,20 @@ impl ApplicationConsumerConfigTrait for ApplicationConsumerConfig {
                 ),
                 port: extract_env(
                     "CONTRACT_NEGOTIATION_PORT",
+                    default.contract_negotiation_host.clone().unwrap().port,
+                ),
+            }),
+            catalog_bypass_host: Some(HostConfig {
+                protocol: extract_env(
+                    "CATALOG_BYPASS_PROTOCOL",
+                    default.contract_negotiation_host.clone().unwrap().protocol,
+                ),
+                url: extract_env(
+                    "CATALOG_BYPASS_URL",
+                    default.contract_negotiation_host.clone().unwrap().url,
+                ),
+                port: extract_env(
+                    "CATALOG_BYPASS_PORT",
                     default.contract_negotiation_host.clone().unwrap().port,
                 ),
             }),

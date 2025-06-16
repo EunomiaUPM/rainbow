@@ -59,6 +59,9 @@ impl ApplicationConsumerConfigTrait for CoreApplicationConsumerConfig {
     fn get_raw_contract_negotiation_host(&self) -> &Option<HostConfig> {
         &self.core_host
     }
+    fn get_raw_catalog_bypass_host(&self) -> &Option<HostConfig> {
+        &self.core_host
+    }
     fn get_raw_auth_host(&self) -> &Option<HostConfig> {
         &self.core_host
     }
@@ -120,6 +123,7 @@ impl Into<ApplicationConsumerConfig> for CoreApplicationConsumerConfig {
             transfer_process_host: self.core_host.clone(),
             business_system_host: self.business_system_host,
             contract_negotiation_host: self.core_host.clone(),
+            catalog_bypass_host: self.core_host.clone(),
             auth_host: self.core_host.clone(),
             ssi_auth_host: self.core_host.clone(),
             gateway_host: None,

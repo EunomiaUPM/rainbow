@@ -25,6 +25,7 @@
 #![allow(unused_imports)]
 #![allow(unused_must_use)]
 
-pub mod core;
-pub mod http;
-pub mod setup;
+pub mod provider;
+pub mod consumer;
+pub mod common;
+pub mod cmd;

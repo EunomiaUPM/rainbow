@@ -19,7 +19,7 @@
 use crate::provider::setup::config::CoreApplicationProviderConfig;
 use axum::Router;
 use rainbow_auth::ssi_auth::provider::setup::router::create_ssi_provider_router;
-use rainbow_catalog::setup::application::create_catalog_router;
+use rainbow_catalog::provider::setup::application::create_catalog_router;
 use rainbow_common::config::provider_config::ApplicationProviderConfig;
 use rainbow_contracts::provider::setup::application::create_contract_negotiation_provider_router;
 use rainbow_mates::provider::setup::application::create_mate_consumer_router;
