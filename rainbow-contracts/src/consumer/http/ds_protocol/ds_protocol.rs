@@ -90,8 +90,8 @@ where
                 post(Self::handle_post_termination),
             )
             .route_layer(middleware::from_fn(Self::extract_params))
-            .layer(middleware::from_fn(extract_request_info))
             .route("/negotiations/offers", post(Self::handle_post_offers))
+            .layer(middleware::from_fn(extract_request_info))
             .with_state(self.service)
     }
 

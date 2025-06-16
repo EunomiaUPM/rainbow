@@ -1,14 +1,9 @@
 import {createFileRoute, Link} from '@tanstack/react-router'
-import {
-    getDatasetByIdOptions,
-    getDistributionsByDatasetIdOptions,
-    useGetDatasetById,
-    useGetDistributionsByDatasetId
-} from "shared/src/data/catalog-queries.ts";
+import {useGetDatasetById, useGetDistributionsByDatasetId} from "shared/src/data/catalog-queries.ts";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "shared/src/components/ui/table.tsx";
 import dayjs from "dayjs";
 import {ExternalLink} from "lucide-react";
-import {getPoliciesByDatasetIdOptions, useGetPoliciesByDatasetId} from "shared/src/data/policy-queries.ts";
+import {useGetPoliciesByDatasetId} from "shared/src/data/policy-queries.ts";
 import {
     Form,
     FormControl,
@@ -163,10 +158,6 @@ function RouteComponent() {
 
 export const Route = createFileRoute('/catalog/$catalogId/dataset/$datasetId')({
     component: RouteComponent,
-    loader: async ({context: {queryClient}, params: {datasetId}}) => {
-        let dataset = await queryClient.ensureQueryData(getDatasetByIdOptions(datasetId))
-        let distributions = await queryClient.ensureQueryData(getDistributionsByDatasetIdOptions(datasetId))
-        let policies = await queryClient.ensureQueryData(getPoliciesByDatasetIdOptions(datasetId))
-        return {dataset, distributions, policies};
-    },
+    pendingComponent: () => <div>Loading...</div>,
+
 })

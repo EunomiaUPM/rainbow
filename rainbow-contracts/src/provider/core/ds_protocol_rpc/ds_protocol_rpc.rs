@@ -36,6 +36,7 @@ use rainbow_common::protocol::contract::contract_agreement::ContractAgreementMes
 use rainbow_common::protocol::contract::contract_negotiation_event::{
     ContractNegotiationEventMessage, NegotiationEventType,
 };
+use rainbow_common::protocol::contract::contract_negotiation_termination::ContractTerminationMessage;
 use rainbow_common::protocol::contract::contract_odrl::{
     ContractRequestMessageOfferTypes, OdrlAgreement, OdrlOffer, OdrlTypes,
 };
@@ -277,8 +278,9 @@ where
         let cn_process = self
             .repo
             .create_cn_process(NewContractNegotiationProcess {
+                provider_id: Some(provider_pid.clone()),
                 consumer_id: Some(get_urn_from_string(&response.consumer_pid)?),
-                associated_consumer: None,
+                associated_consumer: Some(get_urn_from_string(&consumer_mate.participant_id)?),
                 state: response.state,
                 initiated_by: ConfigRoles::Provider,
             })
@@ -472,7 +474,23 @@ where
             .await
             .map_err(CnErrorProvider::DbErr)?
             .ok_or_else(|| CnErrorProvider::NotFound { id: cn_process_id.clone(), entity: "Offer".to_string() })?;
-        let last_offer = serde_json::from_value::<OdrlOffer>(last_offer_model.offer_content)?;
+        // 3.2 modify last offer for void array validation
+        let mut last_offer = serde_json::from_value::<OdrlOffer>(last_offer_model.clone().offer_content)?;
+        if let Some(obligation) = last_offer.obligation.clone() {
+            if obligation.len() == 0 {
+                last_offer.obligation = None;
+            }
+        }
+        if let Some(permission) = last_offer.permission.clone() {
+            if permission.len() == 0 {
+                last_offer.permission = None;
+            }
+        }
+        if let Some(prohibition) = last_offer.prohibition.clone() {
+            if prohibition.len() == 0 {
+                last_offer.prohibition = None;
+            }
+        }
 
         // 3.2 fetch participants
         let provider_participant = self.get_provider().await?;
@@ -672,7 +690,7 @@ where
         let cn_process =
             self.validate_and_get_correlated_provider_process(&consumer_pid.clone(), &provider_pid.clone()).await?;
         // 3. create message
-        let contract_termination_message = ContractNegotiationEventMessage {
+        let contract_termination_message = ContractTerminationMessage {
             provider_pid: provider_pid.clone(),
             consumer_pid: consumer_pid.clone(),
             ..Default::default()

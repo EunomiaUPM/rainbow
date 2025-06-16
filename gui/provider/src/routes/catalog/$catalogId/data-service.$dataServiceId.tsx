@@ -1,5 +1,5 @@
 import {createFileRoute} from '@tanstack/react-router'
-import {getDataServiceByIdOptions, useGetDataServiceById} from "shared/src/data/catalog-queries.ts";
+import {useGetDataServiceById} from "shared/src/data/catalog-queries.ts";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "shared/src/components/ui/table.tsx";
 import dayjs from "dayjs";
 
@@ -48,8 +48,6 @@ function RouteComponent() {
 
 export const Route = createFileRoute('/catalog/$catalogId/data-service/$dataServiceId')({
     component: RouteComponent,
-    loader: async ({context: {queryClient}, params: {dataServiceId}}) => {
-        let dataService = await queryClient.ensureQueryData(getDataServiceByIdOptions(dataServiceId))
-        return {dataService};
-    },
+    pendingComponent: () => <div>Loading...</div>,
+
 })

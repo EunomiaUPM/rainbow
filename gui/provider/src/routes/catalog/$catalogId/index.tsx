@@ -3,9 +3,6 @@ import dayjs from "dayjs";
 import {ExternalLink} from "lucide-react";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "shared/src/components/ui/table";
 import {
-    getCatalogsByIdOptions,
-    getDataServicesByCatalogIdOptions,
-    getDatasetsByCatalogIdOptions,
     useGetCatalogsById,
     useGetDataServicesByCatalogId,
     useGetDatasetsByCatalogId
@@ -138,10 +135,5 @@ const RouteComponent = () => {
 export const Route = createFileRoute("/catalog/$catalogId/")({
     component: RouteComponent,
     pendingComponent: () => <div>Loading...</div>,
-    loader: async ({context: {queryClient}, params: {catalogId}}) => {
-        let catalog = await queryClient.ensureQueryData(getCatalogsByIdOptions(catalogId))
-        let datasets = await queryClient.ensureQueryData(getDatasetsByCatalogIdOptions(catalogId))
-        let dataServices = await queryClient.ensureQueryData(getDataServicesByCatalogIdOptions(catalogId))
-        return {catalog, datasets, dataServices};
-    },
+
 });

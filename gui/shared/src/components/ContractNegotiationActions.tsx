@@ -1,8 +1,13 @@
 import {Button} from "./ui/button";
 import React from "react";
 import {cva} from "class-variance-authority";
+import {Dialog, DialogTrigger,} from "./ui/dialog"
+import {ContractNegotiationOfferDialog} from "./ContractNegotiationOfferDialog";
+import {ContractNegotiationAgreementDialog} from "./ContractNegotiationAgreementDialog";
+import {ContractNegotiationTerminationDialog} from "./ContractNegotiationTerminationDialog";
+import {ContractNegotiationFinalizationDialog} from "./ContractNegotiationFinalizationDialog";
 
-export const ContractNegotiationActions = ({state, tiny = false}: { state: string, tiny: boolean }) => {
+export const ContractNegotiationActions = ({process, tiny = false}: { process: CNProcess, tiny: boolean }) => {
     const h2ClassName = cva("font-semibold mb-4", {
         variants: {
             tiny: {
@@ -23,29 +28,72 @@ export const ContractNegotiationActions = ({state, tiny = false}: { state: strin
     return (
         <div className={containerClassName({tiny})}>
             <h2 className={h2ClassName({tiny})}>Actions</h2>
-            {state === "REQUESTED" && (<div className="space-x-2">
-                <Button>Offer</Button>
-                <Button>Agree</Button>
-                <Button>Terminate</Button>
+            {process.state === "REQUESTED" && (<div className="space-x-2">
+                <Dialog>
+                    <DialogTrigger asChild>
+                        <Button>Offer</Button>
+                    </DialogTrigger>
+                    <ContractNegotiationOfferDialog process={process}/>
+                </Dialog>
+                <Dialog>
+                    <DialogTrigger asChild>
+                        <Button>Agree</Button>
+                    </DialogTrigger>
+                    <ContractNegotiationAgreementDialog process={process}/>
+                </Dialog>
+                <Dialog>
+                    <DialogTrigger asChild>
+                        <Button>Terminate</Button>
+                    </DialogTrigger>
+                    <ContractNegotiationTerminationDialog process={process}/>
+                </Dialog>
             </div>)}
-            {state === "OFFERED" && (<div className="space-x-2">
-                <Button>Terminate</Button>
+            {process.state === "OFFERED" && (<div className="space-x-2">
+                <Dialog>
+                    <DialogTrigger asChild>
+                        <Button>Terminate</Button>
+                    </DialogTrigger>
+                    <ContractNegotiationTerminationDialog process={process}/>
+                </Dialog>
             </div>)}
-            {state === "ACCEPTED" && (<div className="space-x-2">
-                <Button>Agree</Button>
-                <Button>Terminate</Button>
+            {process.state === "ACCEPTED" && (<div className="space-x-2">
+                <Dialog>
+                    <DialogTrigger asChild>
+                        <Button>Agree</Button>
+                    </DialogTrigger>
+                    <ContractNegotiationAgreementDialog process={process}/>
+                </Dialog>
+                <Dialog>
+                    <DialogTrigger asChild>
+                        <Button>Terminate</Button>
+                    </DialogTrigger>
+                    <ContractNegotiationTerminationDialog process={process}/>
+                </Dialog>
             </div>)}
-            {state === "AGREED" && (<div className="space-x-2">
-                <Button>Terminate</Button>
+            {process.state === "AGREED" && (<div className="space-x-2">
+                <Dialog>
+                    <DialogTrigger asChild>
+                        <Button>Terminate</Button>
+                    </DialogTrigger>
+                    <ContractNegotiationTerminationDialog process={process}/>
+                </Dialog>
             </div>)}
-            {state === "VERIFIED" && (<div className="space-x-2">
-                <Button>Finalize</Button>
-                <Button>Terminate</Button>
+            {process.state === "VERIFIED" && (<div className="space-x-2">
+                <Dialog>
+                    <DialogTrigger asChild>
+                        <Button>Finalize</Button>
+                    </DialogTrigger>
+                    <ContractNegotiationFinalizationDialog process={process}/>
+                </Dialog>
+                <Dialog>
+                    <DialogTrigger asChild>
+                        <Button>Terminate</Button>
+                    </DialogTrigger>
+                    <ContractNegotiationTerminationDialog process={process}/>
+                </Dialog>
             </div>)}
-            {state === "FINALIZED" && (<div>
-                
-            </div>)}
-            {state === "TERMINATED" && (<div>No further actions</div>)}
+            {process.state === "FINALIZED" && (<div>No further actions</div>)}
+            {process.state === "TERMINATED" && (<div>No further actions</div>)}
         </div>
     )
 }

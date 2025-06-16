@@ -2,7 +2,7 @@ import {createFileRoute, Link} from "@tanstack/react-router";
 import dayjs from "dayjs";
 import {ExternalLink} from "lucide-react";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "shared/src/components/ui/table";
-import {getCatalogsOptions, useGetCatalogs} from "shared/src/data/catalog-queries.ts";
+import {useGetCatalogs} from "shared/src/data/catalog-queries.ts";
 
 const RouteComponent = () => {
     const {data: catalogs} = useGetCatalogs();
@@ -89,7 +89,4 @@ const RouteComponent = () => {
 export const Route = createFileRoute("/catalog/")({
     component: RouteComponent,
     pendingComponent: () => <div>Loading...</div>,
-    loader: async ({context: {queryClient}}) => {
-        return await queryClient.ensureQueryData(getCatalogsOptions());
-    },
 });

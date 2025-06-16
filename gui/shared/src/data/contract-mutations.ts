@@ -56,6 +56,8 @@ export interface ContractNegotiationRPCProviderOfferBody {
     content: {
         consumerParticipantId: UUID;
         offer: OdrlOffer;
+        consumerPid: UUID;
+        providerPid: UUID;
     }
 }
 
@@ -87,7 +89,6 @@ export const usePostContractNegotiationRPCOffer = () => {
         },
         onSuccess: async ({providerPid}, _variables) => {
             console.log("onSuccess")
-            await router.navigate({to: `/contract-negotiation/${providerPid}`});
         },
         onSettled: () => {
         },
@@ -185,6 +186,7 @@ export const usePostContractNegotiationRPCAgreement = () => {
         },
         onSuccess: async ({providerPid}, _variables) => {
             console.log("onSuccess")
+
         },
         onSettled: () => {
         },
@@ -234,6 +236,7 @@ export const usePostContractNegotiationRPCVerification = () => {
         },
         onSuccess: async ({providerPid}, _variables) => {
             console.log("onSuccess")
+
         },
         onSettled: () => {
         },
@@ -274,6 +277,55 @@ export const usePostContractNegotiationRPCFinalization = () => {
     const router = useRouter();
     const {data, isSuccess, isError, error, mutate, isPending, mutateAsync} = useMutation({
         mutationFn: postContractNegotiationRPCFinalization,
+        onMutate: async () => {
+        },
+        onError: (error) => {
+            console.log("onError")
+            console.log(error)
+        },
+        onSuccess: async ({providerPid}, _variables) => {
+            console.log("onSuccess")
+
+        },
+        onSettled: () => {
+        },
+    })
+    return {data, isSuccess, isError, error, mutate, mutateAsync, isPending}
+}
+
+/**
+ *  POST /negotiation/rpc/setup-termination
+ * */
+
+export interface ContractNegotiationRPCProviderTerminationBody {
+    api_gateway: string,
+    content: {
+        consumerParticipantId: UUID;
+        consumerPid: UUID;
+        providerPid: UUID;
+    }
+}
+
+export const postContractNegotiationRPCTermination = async (body: ContractNegotiationRPCProviderTerminationBody) => {
+    let rpc_response = await (
+        await fetch(body.api_gateway + `/negotiations/rpc/setup-termination`, {
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(body.content),
+            method: "POST",
+        })
+    ).json();
+    if (rpc_response.error) {
+        throw new Error(rpc_response.error);
+    }
+    return {providerPid: rpc_response.providerPid}
+}
+
+export const usePostContractNegotiationRPCTermination = () => {
+    const router = useRouter();
+    const {data, isSuccess, isError, error, mutate, isPending, mutateAsync} = useMutation({
+        mutationFn: postContractNegotiationRPCTermination,
         onMutate: async () => {
         },
         onError: (error) => {

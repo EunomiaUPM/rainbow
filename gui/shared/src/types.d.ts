@@ -4,6 +4,7 @@ declare global {
     export interface CNProcess {
         provider_id: UUID;
         consumer_id: UUID;
+        associated_consumer: UUID;
         state: string;
         created_at: Date;
         updated_at: Date;

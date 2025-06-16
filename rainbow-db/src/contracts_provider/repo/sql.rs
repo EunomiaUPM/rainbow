@@ -135,7 +135,7 @@ impl ContractNegotiationProcessRepo for ContractNegotiationProviderRepoForSql {
         new_cn_process: NewContractNegotiationProcess,
     ) -> anyhow::Result<cn_process::Model, CnErrors> {
         let model = cn_process::ActiveModel {
-            provider_id: ActiveValue::Set(get_urn(None).to_string()),
+            provider_id: ActiveValue::Set(get_urn(new_cn_process.provider_id).to_string()),
             consumer_id: ActiveValue::Set(Option::from(
                 get_urn(new_cn_process.consumer_id).to_string(),
             )),

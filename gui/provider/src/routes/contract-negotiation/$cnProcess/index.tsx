@@ -43,7 +43,7 @@ const RouteComponent = () => {
                     </TableRow>
                 </TableBody>
             </Table>
-            <ContractNegotiationActions state={process.state} tiny={false}/>
+            <ContractNegotiationActions process={process} tiny={false}/>
             <div>
                 <h1>Messages</h1>
                 <Table className="text-sm">

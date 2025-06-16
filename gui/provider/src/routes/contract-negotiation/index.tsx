@@ -4,10 +4,18 @@ import {ExternalLink} from "lucide-react";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "shared/src/components/ui/table";
 import {useGetContractNegotiationProcesses} from "shared/src/data/contract-queries.ts";
 import {Button} from "shared/src/components/ui/button.tsx";
-import {ContractNegotiationActions} from "shared/src/components/ContractNegotiationActions.tsx";
+import {ContractNegotiationActions} from "shared/src/components/ContractNegotiationActions";
+import {useMemo} from "react";
 
 const RouteComponent = () => {
     const {data: cnProcesses} = useGetContractNegotiationProcesses();
+    const cnProcessesSorted = useMemo(() => {
+        if (!cnProcesses) return [];
+        return [...cnProcesses].sort((a, b) => {
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        });
+    }, [cnProcesses]);
+
     return (
         <div>
             <div className="flex justify-end">
@@ -27,7 +35,7 @@ const RouteComponent = () => {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {cnProcesses.map((cnProcess) => (
+                    {cnProcessesSorted.map((cnProcess) => (
                         <TableRow key={cnProcess.provider_id.slice(0, 20)}>
                             <TableCell>
                                 {cnProcess.provider_id?.slice(0, 20) + "..."}
@@ -40,7 +48,7 @@ const RouteComponent = () => {
                                 {dayjs(cnProcess.created_at).format("DD/MM/YYYY - HH:mm")}
                             </TableCell>
                             <TableCell>
-                                <ContractNegotiationActions state={cnProcess.state} tiny={true}/>
+                                <ContractNegotiationActions process={cnProcess} tiny={true}/>
                             </TableCell>
                             <TableCell>
                                 <Link

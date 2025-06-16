@@ -41,6 +41,7 @@ pub struct NewContractNegotiationRequest {
 impl Into<NewContractNegotiationProcess> for NewContractNegotiationRequest {
     fn into(self) -> NewContractNegotiationProcess {
         NewContractNegotiationProcess {
+            provider_id: self.provider_id.map(|id| get_urn_from_string(&id).unwrap()),
             consumer_id: self.consumer_id.map(|id| get_urn_from_string(&id).unwrap()),
             associated_consumer: None,
             state: self.state,

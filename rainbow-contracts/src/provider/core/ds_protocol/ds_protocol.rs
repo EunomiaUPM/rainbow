@@ -44,7 +44,7 @@ use rainbow_common::protocol::contract::contract_negotiation_termination::Contra
 use rainbow_common::protocol::contract::contract_odrl::ContractRequestMessageOfferTypes;
 use rainbow_common::protocol::contract::contract_protocol_trait::DSProtocolContractNegotiationMessageTrait;
 use rainbow_common::protocol::contract::{ContractNegotiationMessages, ContractNegotiationState};
-use rainbow_common::utils::get_urn_from_string;
+use rainbow_common::utils::{get_urn, get_urn_from_string};
 use rainbow_db::contracts_provider::entities::cn_process;
 use rainbow_db::contracts_provider::repo::{
     AgreementRepo, ContractNegotiationMessageRepo, ContractNegotiationOfferRepo, ContractNegotiationProcessRepo,
@@ -352,6 +352,7 @@ where
         let cn_process = self
             .repo
             .create_cn_process(NewContractNegotiationProcess {
+                provider_id: Some(get_urn(None)),
                 consumer_id: Option::from(input.consumer_pid.clone()),
                 associated_consumer: Some(get_urn_from_string(&consumer_participant_mate.participant_id)?),
                 state: ContractNegotiationState::Requested,

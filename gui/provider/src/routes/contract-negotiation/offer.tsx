@@ -145,24 +145,26 @@ const RouteComponent = () => {
     const onSubmit: SubmitHandler<Inputs> = async data => {
         console.log("Form data submitted:", data);
         await sendOfferAsync({
-            consumerParticipantId: data.consumerParticipantId,
+            content: {
+                consumerParticipantId: data.consumerParticipantId,
+                offer: {
+                    "@id": data.id,
+                    "@type": "Offer",
+                    target: data.target,
+                    permission: [
+                        {
+                            action: "use",
+                            constraint: []
+                        }
+                    ],
+                    // @ts-ignore
+                    obligation: null,
+                    // @ts-ignore
+                    prohibition: null,
+                    profile: ""
+                }
+            },
             api_gateway: api_gateway,
-            offer: {
-                "@id": data.id,
-                "@type": "Offer",
-                target: data.target,
-                permission: [
-                    {
-                        action: "use",
-                        constraint: []
-                    }
-                ],
-                // @ts-ignore
-                obligation: null,
-                // @ts-ignore
-                prohibition: null,
-                profile: ""
-            }
         }, {})
 
         form.reset();

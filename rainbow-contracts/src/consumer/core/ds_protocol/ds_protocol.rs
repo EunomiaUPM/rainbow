@@ -16,7 +16,6 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 use crate::common::schemas::validation::validate_payload_schema;
 use crate::consumer::core::ds_protocol::ds_protocol_errors::IdsaCNError;
 use crate::consumer::core::ds_protocol::DSProtocolContractNegotiationConsumerTrait;
@@ -47,6 +46,7 @@ use rainbow_events::core::notification::notification_types::{
 };
 use rainbow_events::core::notification::RainbowEventsNotificationTrait;
 use serde_json::{json, to_value, Value};
+use std::fmt::Debug;
 use std::sync::Arc;
 use tracing::debug;
 use urn::Urn;
@@ -103,7 +103,7 @@ where
         Ok(())
     }
 
-    async fn payload_validation<'a, M: DSProtocolContractNegotiationMessageTrait<'a>>(
+    async fn payload_validation<'a, M: DSProtocolContractNegotiationMessageTrait<'a> + Debug>(
         &self,
         incoming_consumer_pid: Option<&Urn>,
         message: &M,
@@ -146,7 +146,6 @@ where
             ContractNegotiationMessages::ContractNegotiationError => Ok(None),
             ContractNegotiationMessages::ContractOfferMessage if incoming_consumer_pid.is_none() => Ok(None),
             _ => {
-                debug!("{}", message.get_consumer_pid()?.unwrap().to_owned());
                 let cn_process_consumer = self
                     .repo
                     .get_cn_process_by_consumer_id(message.get_consumer_pid()?.unwrap().to_owned())
@@ -165,6 +164,7 @@ where
                         provider_pid: message.get_provider_pid()?.map(|p| p.to_owned()),
                         consumer_pid: Option::from(incoming_consumer_pid.unwrap().to_owned()),
                     })?;
+                
                 if cn_process_consumer.consumer_id != cn_process_provider.consumer_id {
                     bail!(IdsaCNError::ValidationError(
                         "ConsumerPid and ProviderPid don't coincide".to_string()
