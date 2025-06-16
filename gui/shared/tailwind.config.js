@@ -17,6 +17,7 @@ module.exports = {
       fontFamily: {
         ubuntu: ["Ubuntu", "sans-serif"],
         source: ["Source Sans Pro", "Source Sans 3", "sans-serif"],
+        mono: ['"Source Code Pro"', "monospace"],
       },
       fontSize: {
         "2xs": ["0.625rem", { lineHeight: "1.4" }] /* 10px */,
@@ -38,6 +39,12 @@ module.exports = {
         foreground: "#ffffff",
         text: "#fefefe",
         stroke: "#525880",
+        roles: {
+          provider: "#52BFE0",
+          consumer: "#FF852F",
+          bussiness: "#52DBE0",
+          customer: "#FF9E2F",
+        },
         brand: {
           snow: "#EFF7FB", // white
           sky: "#9DD5F2", // light blue
