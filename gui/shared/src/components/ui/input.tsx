@@ -19,6 +19,10 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
       // Si no, texto de entrada normal
       if (type === "search") { 
         placeHolderText = "Search for " + pathFormat;
+        // en la pagina de catálogo lo que se busca es dataset
+        if (pathFormat === "catalog") {
+          placeHolderText = "Search for dataset"
+        }
       } else {
         placeHolderText= "Enter text"
       }

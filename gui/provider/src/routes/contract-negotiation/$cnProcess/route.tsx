@@ -11,11 +11,9 @@ const RouteComponent = () => {
     return (
         <div>
             <header className="mb-2">
-               <Heading level="h4">
-                    <Link
-                        to="/contract-negotiation/$cnProcess"
-                        params={{cnProcess: cnProcess}}
-                    >Contract negotiation process pid: {cnProcess}</Link>
+               <Heading level="h3">
+                   
+                    Contract negotiation process pid: {cnProcess}
                </Heading>
             </header>
             <Outlet/>

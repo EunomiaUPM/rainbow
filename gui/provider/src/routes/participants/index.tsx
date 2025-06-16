@@ -26,7 +26,7 @@ function RouteComponent() {
                     <TableHead>Identity Token</TableHead>
                     <TableHead>Participant Type</TableHead>
                     <TableHead>Base URL</TableHead>
-                    <TableHead>Extra Info</TableHead>
+                    {/* <TableHead>Extra Info</TableHead> */}
                     <TableHead>Link</TableHead>
                 </TableRow>
             </TableHeader>
@@ -49,9 +49,9 @@ function RouteComponent() {
                         <TableCell>
                             {participant.base_url}
                         </TableCell>
-                        <TableCell>
+                        {/* <TableCell>
                             {JSON.stringify(participant.extra_fields)}
-                        </TableCell>
+                        </TableCell> */}
                         <TableCell>
                               <Button
                                 variant="default">

@@ -49,13 +49,13 @@ module.exports = {
         },
         base: {
           main: "#191934",
-          sidebar: "#1D1C3D",
-          //sidebar: "#1f1f33",
+          //sidebar: "#1D1C3D",
+          sidebar: "#1f1f33",
           header: "#24234C",
         },
         background: {
-          DEFAULT:"#191934",
-          //DEFAULT:"#151123",
+          //DEFAULT:"#191934",
+          DEFAULT:"#151123",
         },
         primary: {
           DEFAULT: "#056dc1",

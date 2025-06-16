@@ -5,7 +5,7 @@ const List = ({ className, ...props }) => {
     return (
         <ul 
             className={cn(
-                      " px-2 w-[500px] text-sm flex flex-col justify-center relative  bg-white/5 overflow-auto border border-white/10 rounded-md",
+                      " !mt-0 px-2 w-[500px] text-sm flex flex-col justify-center relative  bg-white/5 overflow-auto border border-white/10 rounded-md",
                       className,
                     )}
             {...props}
@@ -28,7 +28,7 @@ const List = ({ className, ...props }) => {
   const ListItemKey = ({ className, ...props }) => {
     return (
           <p 
-          className="font-bold w-1/2" 
+          className={cn("font-bold w-1/2",className )}
           {...props}>
              {props.children}
           </p>

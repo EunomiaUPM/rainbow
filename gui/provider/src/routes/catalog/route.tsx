@@ -14,12 +14,12 @@ const RouteComponent = () => {
     " por duplicado en la pagina de transferencia single */}
       {routerState.location.pathname !== "/catalog" ? null : (
         <>
-          <div className="mb-6">
+          {/* <div className="mb-6">
             <Heading level="h4" className="flex gap-2 items-center">
-              {/* <ArrowLeft className="w-4"/> */}
+              
              Main Catalog
-            </Heading>
-          </div>
+            </Heading> 
+          </div> */}
         </>
       )}
       <Outlet />

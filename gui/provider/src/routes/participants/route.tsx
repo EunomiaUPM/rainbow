@@ -15,7 +15,7 @@ const RouteComponent = () => {
       {routerState.location.pathname !== "/participants" ? null : (
         <>
           <div className="mb-6">
-            <Heading level="h4" className="flex gap-2 items-center">
+            <Heading level="h3" className="flex gap-2 items-center">
               {/* <ArrowLeft className="w-4"/> */}
               Participants
             </Heading>

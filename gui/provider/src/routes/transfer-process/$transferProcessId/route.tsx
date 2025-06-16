@@ -14,7 +14,7 @@ const RouteComponent = () => {
         <div className=" mb-2">
     
             <header className="mb-2">
-                <Heading level="h4" className="font-display flex gap-2 items-center">
+                <Heading level="h3" className="font-display flex gap-2 items-center">
                     {/* <ArrowLeft className="w-4"/> */}
                     Transfer Process Id {transferProcessId}
                 </Heading>

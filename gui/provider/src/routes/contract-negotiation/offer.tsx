@@ -230,7 +230,7 @@ const RouteComponent = () => {
 
     return (
         <div className="w-[500px]">
-            <Heading level="h4">New Contract Negotiation Offer</Heading>
+            <Heading level="h3">New Contract Negotiation Offer</Heading>
             <Form {...form}>
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
 
@@ -240,7 +240,7 @@ const RouteComponent = () => {
                         name="consumerParticipantId"
                         render={({field}) => (
                             <FormItem>
-                                <FormLabel className="text-gray-700">Consumer Participant Id</FormLabel>
+                                <FormLabel>Consumer Participant Id</FormLabel>
                                 <div>
                                     <FormControl>
                                         <Popover open={consumerParticipantOpen}
@@ -250,12 +250,12 @@ const RouteComponent = () => {
                                                     variant="outline"
                                                     role="combobox"
                                                     aria-expanded={consumerParticipantOpen}
-                                                    className="w-full justify-between font-normal text-gray-600 hover:text-gray-800 transition-colors"
+                                                    className="w-full justify-between font-normal text-gray-300  transition-colors"
                                                 >
                                                     {field.value
                                                         ? consumerParticipants.find((p) => p.participant_id === field.value)?.participant_id
                                                         : "Select participant..."}
-                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50"/>
+                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-80"/>
                                                 </Button>
                                             </PopoverTrigger>
                                             <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
@@ -274,11 +274,11 @@ const RouteComponent = () => {
                                                                         setConsumerParticipantOpen(false);
                                                                         // No fields follow this one that need clearing based on its change
                                                                     }}
-                                                                    className={field.value === consumerParticipant.participant_id ? "bg-blue-50 text-blue-700 font-medium" : ""}
+                                                                    className={field.value === consumerParticipant.participant_id ? "text-blue-300 font-medium" : ""}
                                                                 >
                                                                     {consumerParticipant.participant_id}
                                                                     <span
-                                                                        className="text-gray-500 ml-2 text-sm">({consumerParticipant.base_url})</span>
+                                                                        className="text-gray-400 ml-2 text-sm">({consumerParticipant.base_url})</span>
                                                                 </CommandItem>
                                                             ))}
                                                         </CommandGroup>
@@ -287,7 +287,7 @@ const RouteComponent = () => {
                                             </PopoverContent>
                                         </Popover>
                                     </FormControl>
-                                    <FormDescription className="text-sm text-gray-500 mt-1">Provide the ID of the
+                                    <FormDescription className="text-sm text-gray-400 mt-1">Provide the ID of the
                                         consumer participant for the negotiation.</FormDescription>
                                     <FormMessage/>
                                 </div>
@@ -301,7 +301,7 @@ const RouteComponent = () => {
                         name="catalog"
                         render={({field}) => (
                             <FormItem>
-                                <FormLabel className="text-gray-700">Catalog</FormLabel>
+                                <FormLabel>Catalog</FormLabel>
                                 <div>
                                     <FormControl>
                                         <Popover open={catalogOpen} onOpenChange={handleCatalogOpenChange}>
@@ -351,7 +351,7 @@ const RouteComponent = () => {
                                             </PopoverContent>
                                         </Popover>
                                     </FormControl>
-                                    <FormDescription className="text-sm text-gray-500 mt-1">Select a catalog to browse
+                                    <FormDescription className="text-sm text-gray-400 mt-1">Select a catalog to browse
                                         available datasets.</FormDescription>
                                     <FormMessage/>
                                 </div>
@@ -365,7 +365,7 @@ const RouteComponent = () => {
                         name="target" // This is the dataset ID field
                         render={({field}) => (
                             <FormItem>
-                                <FormLabel className="text-gray-700">Dataset</FormLabel>
+                                <FormLabel>Dataset</FormLabel>
                                 <div>
                                     <FormControl>
                                         <Popover open={datasetOpen} onOpenChange={handleDatasetOpenChange}>
@@ -416,7 +416,7 @@ const RouteComponent = () => {
                                             </PopoverContent>
                                         </Popover>
                                     </FormControl>
-                                    <FormDescription className="text-sm text-gray-500 mt-1">Choose a specific dataset
+                                    <FormDescription className="text-sm text-gray-400 mt-1">Choose a specific dataset
                                         from the selected catalog.</FormDescription>
                                     <FormMessage/>
                                 </div>
@@ -430,7 +430,7 @@ const RouteComponent = () => {
                         name="id" // This is the policy ID field
                         render={({field}) => (
                             <FormItem>
-                                <FormLabel className="text-gray-700">Policy Id</FormLabel>
+                                <FormLabel>Policy Id</FormLabel>
                                 <div>
                                     <FormControl>
                                         <Popover open={policiesOpen} onOpenChange={handlePoliciesOpenChange}>
@@ -476,7 +476,7 @@ const RouteComponent = () => {
                                             </PopoverContent>
                                         </Popover>
                                     </FormControl>
-                                    <FormDescription className="text-sm text-gray-500 mt-1">Select the policy target for
+                                    <FormDescription className="text-sm text-gray-400 mt-1">Select the policy target for
                                         the negotiation.</FormDescription>
                                     <FormMessage/>
                                 </div>
