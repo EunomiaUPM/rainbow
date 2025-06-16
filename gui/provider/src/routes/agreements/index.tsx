@@ -63,7 +63,7 @@ function RouteComponent() {
                 <TableCell>
                   <Badge
                     variant={"status"}
-                    state={agreement.active ? "success" : "paused"}
+                    state={agreement.active ? "process" : "paused"}
                   >
                     {agreement.active ? "ACTIVE" : "INACTIVE"}
                   </Badge>
