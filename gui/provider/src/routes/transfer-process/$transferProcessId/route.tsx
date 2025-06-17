@@ -1,5 +1,7 @@
 import {createFileRoute, Link, Outlet} from '@tanstack/react-router'
 import {ArrowLeft} from "lucide-react";
+import  Heading  from "../../../../../shared/src/components/ui/heading.tsx";
+
 
 
 const NotFound = () => {
@@ -9,17 +11,13 @@ const NotFound = () => {
 const RouteComponent = () => {
     const {transferProcessId} = Route.useParams()
     return (
-        <div className="mb-2">
+        <div className=" mb-2">
+    
             <header className="mb-2">
-                <h2 className="flex gap-2 items-center">
-                    <ArrowLeft className="w-4"/>
-                    <Link
-                        to="/transfer-process/$transferProcessId"
-                        params={{
-                            transferProcessId: transferProcessId
-                        }}
-                    >Transfer Process Id {transferProcessId}</Link>
-                </h2>
+                <Heading level="h3" className="font-display flex gap-2 items-center">
+                    {/* <ArrowLeft className="w-4"/> */}
+                    Transfer Process Id {transferProcessId}
+                </Heading>
             </header>
             <Outlet/>
         </div>
