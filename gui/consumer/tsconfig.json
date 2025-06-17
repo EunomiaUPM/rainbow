@@ -30,7 +30,7 @@
   },
   "include": [
     "src",
-    "../shared/types.d.ts"
+    "../shared/src/types.d.ts"
   ],
   "references": [
     {

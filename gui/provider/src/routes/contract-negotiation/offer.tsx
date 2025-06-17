@@ -27,8 +27,6 @@ import {getPoliciesByDatasetId} from "shared/src/data/policy-queries.ts";
 import {Textarea} from "shared/src/components/ui/textarea.tsx";
 import {usePostContractNegotiationRPCOffer} from "shared/src/data/contract-mutations.ts";
 import {GlobalInfoContext, GlobalInfoContextType} from "shared/src/context/GlobalInfoContext.tsx";
-
-import {usePostContractNegotiationRPCOffer} from "@/data/contract-mutations.ts";
 import Heading from "../../../../shared/src/components/ui/heading.tsx";
 
 type Inputs = {

@@ -135,5 +135,4 @@ const RouteComponent = () => {
 export const Route = createFileRoute("/catalog/$catalogId/")({
     component: RouteComponent,
     pendingComponent: () => <div>Loading...</div>,
-
 });

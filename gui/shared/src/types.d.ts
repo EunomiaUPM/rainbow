@@ -4,10 +4,11 @@ declare global {
     export interface CNProcess {
         provider_id: UUID;
         consumer_id: UUID;
-        associated_consumer: UUID;
         state: string;
         created_at: Date;
         updated_at: Date;
+        associated_provider?: UUID;
+        associated_consumer?: UUID;
     }
 
     export interface CNMessage {
@@ -169,6 +170,9 @@ declare global {
         agreement_id: UUID
         data_plane_id: UUID
         state: TransferProcessState
+        state_attribute: string
+        associated_consumer: UUID
+        associated_provider: UUID
         created_at: Date
         updated_at: Date
     }
@@ -192,11 +196,15 @@ declare global {
     }
 
     export interface Participant {
-        participant_id: UUID
-        identity_token: string
-        _type: string
+        participant_id: string
+        participant_slug: string
+        participant_type: string
         base_url: string
-        extra_fields: any
+        token: any
+        token_actions: any
+        saved_at: string
+        last_interaction: string
+        is_me: boolean
     }
 
     export interface Subscription {
@@ -219,9 +227,22 @@ declare global {
         subscriptionId: string
     }
 
-    export interface ContractNegotiationRPCProviderOfferBody {
-        consumerParticipantId: UUID;
-        offer: OdrlOffer;
+    export interface DataplaneSession {
+        id: string
+        process_direction: string
+        upstream_hop: DataplaneSessionAddress
+        downstream_hop: DataplaneSessionAddress
+        process_address: DataplaneSessionAddress
+        created_at: Date
+        updated_at: Date
+        state: string
+    }
+
+    export interface DataplaneSessionAddress {
+        protocol: string
+        url: string
+        auth_type: string
+        auth_content: string
     }
 }
 
