@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { DragHandleVerticalIcon } from "@radix-ui/react-icons";
 
 const badgeVariants = cva(
-  "inline-flex items-center justify-center rounded-sm border px-2 py-0.5 w-fit whitespace-nowrap shrink-0 gap-1 focus-visible:ring focus-visible:ring-ring/50 focus-visible:ring-[3px] transition-all overflow-hidden",
+  "inline-flex items-center justify-center font-semibold rounded-sm border px-2 py-0.5 w-fit whitespace-nowrap shrink-0 gap-1 focus-visible:ring focus-visible:ring-ring/50 focus-visible:ring-[3px] transition-all overflow-hidden",
   {
     variants: {
       variant: {
@@ -30,11 +30,7 @@ const badgeVariants = cva(
       },
     },
     compoundVariants: [ 
-        /*  Sólo afectan al variant que se especifica
-            Se están usando para el state y SE SUPONE que necesario definirlo como variante, 
-                pero al comentarlas aunque salta error pero funciona igualmente
-            De esta forma state sólo aplica si se usa la variante status
-        */
+
       {
         variant: "status",
         state: "danger",
