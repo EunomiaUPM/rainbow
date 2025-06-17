@@ -20,23 +20,26 @@ import {
   TabsTrigger,
   TabsContent,
 } from "../../../../../shared/src/components/ui/tabs.tsx";
+import { Badge } from "shared/src/components/ui/badge.tsx";
 
 export const Route = createFileRoute("/transfer-process/$transferProcessId/")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  let addSpacesFromat = (text) => {
+  let addSpacesFormat = (text) => {
     return text.replace(/(?!^)([A-Z])/g, " $1");
   };
+
   const { transferProcessId } = Route.useParams();
   const { data: transferProcess } =
     useGetTransferProcessByProviderPid(transferProcessId);
   const { data: transferMessages } =
     useGetTransferMessagesByProviderPid(transferProcessId);
+
   return (
     <div className="space-y-4">
-      <Tabs defaultValue="data-control" className="w-[400px]">
+      <Tabs defaultValue="data-control" className="w-[980px]">
         <TabsList>
           <TabsTrigger value="data-control">Data Control</TabsTrigger>
           <TabsTrigger value="data-plane">Data Plane</TabsTrigger>
@@ -79,71 +82,113 @@ function RouteComponent() {
               </ListItem>
             </List>
           </div>
-          <Heading level="h6" className="text-text">
-          Transfer Messages
-        </Heading>
-        {transferMessages.map((transferMessage) => (
-          <div className="my-4">
-            <div
-              className={`uppercase inline-block  ${
-                transferMessage.from === "Provider"
-                  ? "bg-provider-800 "
-                  : "bg-consumer-800"
-              }`}
-            >
-              {transferMessage.from}
-            </div>
-            <div className={` w-3/5  p-2 rounded-md 
+          <Heading level="h5" className="text-text">
+            Transfer Messages
+          </Heading>
+          {transferMessages.map((transferMessage) => (
+            <div className="my-4 text-sm">
+              <div className={`flex w-3/5 
               ${ transferMessage.from === "Provider"
-                ? "bg-provider-800" 
-                 : "bg-consumer-800"
+                    ? "justify-start"
+                    : "justify-end"
+              }
+                `}>
+                <div
+                  className={`uppercase text-18 px-2 font-medium rounded-t-sm ${
+                    transferMessage.from === "Provider"
+                      ? "bg-roles-provider/20 ml-1 text-roles-provider "
+                      : "bg-roles-consumer/20 mr-1 text-roles-consumer"
+                  }`}
+                >
+                  {transferMessage.from}
+                </div>
+              </div>
+              <div
+                className={` w-3/5 px-4 py-3 rounded-md border
+              ${
+                transferMessage.from === "Provider"
+                  ? "bg-roles-provider/10 border-roles-provider/50"
+                  : "bg-roles-consumer/10 border-roles-consumer/50"
               }
               
-              ` }>
-              <div className="text-20">
-                {" "}
-                {addSpacesFromat(transferMessage.message_type)}{" "}
-              </div>
-              <p>
-                <i>
-                  {" "}
-                  {dayjs(transferMessage.created_at).format(
-                    "DD/MM/YYYY - HH:mm"
-                  )}
-                </i>
-              </p>
-              <div
-                className="flex gap-3 "
-                key={transferMessage.id.slice(0, 20)}
+              `}
               >
-                <p className="font-bold "> Transfer Message Id </p>
-                <p className=" w-1/2">
+                <div className="text-24">
                   {" "}
-                  {transferMessage.id.slice(0, 20) + "..."}
+                  {addSpacesFormat(transferMessage.message_type)}{" "}
+                 
+                </div>
+                <p className="text-gray-100/50 mb-3">
+                  <i>
+                    {" "}
+                    {dayjs(transferMessage.created_at).format(
+                      "DD/MM/YYYY - HH:mm"
+                    )}
+                  </i>
                 </p>
-              </div>
-              <div
-                className="flex gap-3 "
-                key={transferMessage.id.slice(0, 20)}
-              >
-                <p className="font-bold "> Transfer Process Id </p>
-                <p className=" w-1/2">
-                  {" "}
-                  {transferMessage.transfer_process_id?.slice(0, 20) + "..."}
-                </p>
-              </div>
-              <div
-                className="flex gap-3 "
-                key={transferMessage.id.slice(0, 20)}
-              >
-                <p className="font-bold "> Transfer Process Id </p>
-                <p className=" w-1/2">
-                {JSON.stringify(transferMessage.content)}
-                </p>
+                <div
+                  className="flex gap-3 mb-1  text-white/60 "
+                  key={transferMessage.id.slice(0, 20)}
+                >
+                  <p className="font-bold  min-w-40  "> Transfer Message Id </p>
+                  <p className=" w-full">
+                    {" "}
+                    {transferMessage.id.slice(9, 60) }
+                  </p>
+                </div>
+                <div
+                  className="flex gap-3  mb-1  text-white/60 "
+                  key={transferMessage.id.slice(9, 60)}
+                >
+                  <p className="font-bold min-w-40"> Transfer Process Id </p>
+                  <p className=" w-full ">
+                    {" "}
+                    {transferMessage.transfer_process_id?.slice(9, 60) }
+                  </p>
+                </div>
+                <div
+                  className="flex flex-col gap-3 "
+                  key={transferMessage.id.slice(0, 20)}
+                >
+                  <p className="font-bold min-w-40  text-white/60 "> Content: </p>
+                  <div className=" w-full break-all">
+                    {/* Codigo de content formateado */}
+                    <pre
+                      style={{
+                        background: "#07070d",
+                        padding: "1rem",
+                        fontSize: "0.7rem",
+                        wordBreak: "break-all",
+                        borderRadius: "8px",
+                      }}
+                    >
+                      <code
+                        style={{
+                          whiteSpace: "pre-wrap",
+                          wordBreak: "break-word",
+                          color: "#ab97ee",
+                        }}
+                      >
+                        {JSON.stringify(transferMessage.content, null, 2)}
+                      </code>
+                    </pre>
+                    {/* esto por si hace falta en algn momento dividir lo que pone en el content, 
+                   pero por ahora no hace falta!!
+                <div className="flex "> 
+                  <p className="font-bold min-w-[9.4rem] "> Transfer Content: </p>
+                  <p> {transferMessage.content["@context"]} </p>
+                </div> 
+                <div> {transferMessage.content["@type"]}  </div>  
+                <div> {transferMessage.content.agreementId} </div> 
+                  <div className="flex "> 
+                  <p className="font-bold min-w-[9.4rem] "> Agreement ID </p>
+                  <Badge variant="info"> {transferMessage.content["@context"]} </Badge>
+                </div>  */}
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
         </TabsContent>
       </Tabs>
       <div>
@@ -189,7 +234,7 @@ function RouteComponent() {
       </div>
 
       <div>
-       {/* MENSAJES */}
+        {/* MENSAJES */}
         {/* <Table className="text-sm">
           <TableHeader>
             <TableRow>

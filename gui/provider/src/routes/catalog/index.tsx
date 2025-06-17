@@ -17,9 +17,17 @@ import {
   Button,
   ButtonVariants,
 } from "@/../../shared/src/components/ui/button.tsx";
+import { Input } from "@/../../shared/src/components/ui/input.tsx";
 import {
-  Input,
-} from "@/../../shared/src/components/ui/input.tsx";
+  Form,
+  FormField,
+  FormItem,
+  FormMessage,
+  FormDescription,
+  FormControl,
+  FormLabel,
+} from "@/../../shared/src/components/ui/form.tsx";
+import  {Textarea } from "@/../../shared/src/components/ui/textarea.tsx"
 
 const RouteComponent = () => {
   const { data: catalogs } = useGetCatalogs();
@@ -53,9 +61,9 @@ const RouteComponent = () => {
 
       <div>
         <Heading level="h5">Datasets</Heading>
-   <div className='pb-3 w-3/5'>
-  <Input type="search"></Input>
-  </div>
+        <div className="pb-3 w-3/5">
+          <Input type="search"></Input>
+        </div>
         <Table className="text-sm">
           <TableHeader>
             <TableRow>
@@ -82,7 +90,7 @@ const RouteComponent = () => {
               <TableCell>
                 <Button>
                   <Link
-                    to="/catalog/$catalogId"
+                    to="/catalog/catalogId-mockup"
                     // params={{catalogId: catalog["@id"]}}
                   >
                     Create policy
@@ -92,10 +100,10 @@ const RouteComponent = () => {
               <TableCell>
                 <Button>
                   <Link
-                    to="/catalog/$catalogId"
+                    to="/catalog/catalogId-mockup"
                     // params={{catalogId: catalog["@id"]}}
                   >
-                    See catalog
+                    See dataset
                   </Link>
                 </Button>
               </TableCell>
@@ -127,13 +135,13 @@ const RouteComponent = () => {
                     to="/catalog/$catalogId"
                     // params={{catalogId: catalog["@id"]}}
                   >
-                    See catalog
+                    See dataset
                   </Link>
                 </Button>
               </TableCell>
             </TableRow>
 
-<TableRow key="urn:uuid:c4d4449d-a">
+            <TableRow key="urn:uuid:c4d4449d-a">
               <TableCell>
                 <p className="text-18"> Dataset #1 </p>
                 <p className="text-gray-400">
@@ -160,12 +168,42 @@ const RouteComponent = () => {
                     to="/catalog/$catalogId"
                     // params={{catalogId: catalog["@id"]}}
                   >
-                    See catalog
+                    See dataset
                   </Link>
                 </Button>
               </TableCell>
             </TableRow>
-
+          
+            {/* ver creacion de ODRL */}
+            {/* Nada de esto funciona asi que hago mockup */}
+            {/* <div>
+              <h2>Create new odrl policy</h2>
+              <Form>
+                <form>
+                  <FormField
+                    disabled=""
+                    control=""
+                    name="odrl"
+                   ></FormField>
+                      <FormItem>
+                        <FormLabel>Odrl</FormLabel>
+                        <FormControl>
+                          <Textarea />
+                        </FormControl>
+                        <FormDescription>
+                          Provide the ODRL policy content
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                  
+                
+                  <Button type="submit">
+                    Enviar
+                    {isPending && <span>- loading...</span>}
+                  </Button>
+                </form>
+              </Form>
+            </div> */}
 
             {/* {catalogs.catalog.map((catalog) => (
                             <TableRow key={catalog["@id"].slice(0, 20)}>
@@ -191,6 +229,13 @@ const RouteComponent = () => {
                         ))} */}
           </TableBody>
         </Table>
+          <Form>
+            <form>
+{/* <FormField> </FormField> Cannot read properties of undefined (reading "_names") */}
+
+            </form>
+            </Form>
+
       </div>
     </div>
   );

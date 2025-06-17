@@ -73,10 +73,10 @@ module.exports = {
           900: "#524d65",
           800: "#645d7a",
           700: "#786f92",
-          600: "#867ea3", // default
+          600: "#867ea3", 
           500: "#9e9ab8",
           400: "#b9b7ce",
-          300: "#d3d2e0",
+          300: "#d3d2e0", // default, que sino el texto es muy oscuro
           200: "#d3d2e0",
           100: "#f1f1f6",
           50: "#f8f8fa",
