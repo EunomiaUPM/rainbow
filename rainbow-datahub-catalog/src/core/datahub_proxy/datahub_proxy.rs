@@ -19,9 +19,8 @@
 
 use crate::core::datahub_proxy::datahub_proxy_types::DatasetGraphQLResponseDetailed;
 use crate::core::datahub_proxy::datahub_proxy_types::{
-    DatahubDataset, DatasetBasicInfo, DatasetGraphQLResponse, DomainProperties, GlossaryTerm,
-};
-use crate::core::datahub_proxy::datahub_proxy_types::{DatahubDomain, GraphQLResponse, Platform};
+    DatahubDataset, DatasetBasicInfo, DatasetGraphQLResponse, DomainProperties, GlossaryTerm, TagProperties};
+use crate::core::datahub_proxy::datahub_proxy_types::{DatahubDomain, GraphQLResponse, Platform, Tag};
 use crate::core::datahub_proxy::DatahubProxyTrait;
 use crate::setup::config::DatahubCatalogApplicationProviderConfig;
 use axum::async_trait;
@@ -78,7 +77,7 @@ impl DatahubProxyTrait for DatahubProxyService {
             .send()
             .await?;
 
-        let graphql_response: GraphQLResponse = response.json().await?;
+        let graphql_response: GraphQLResponse<DomainProperties> = response.json().await?;
 
         let domains = graphql_response
             .data
@@ -90,6 +89,62 @@ impl DatahubProxyTrait for DatahubProxyService {
 
         Ok(domains)
     }
+
+    async fn get_datahub_tags(&self) -> anyhow::Result<Vec<Tag>> {
+    let datahub_host = self.config.get_datahub_host_url().expect("Datahub host not created");
+    let datahub_token = self.config.get_datahub_token().expect("Datahub Token not created");
+    debug!("{}", datahub_host);
+    debug!("{}", datahub_token);
+    let graphql_url = format!("{}/api/graphql", datahub_host);
+    
+    let query = r#"{
+    search(input: { type: TAG, query: "*", start: 0, count: 1000 }) {
+        searchResults {
+            entity {
+                ... on Tag {
+                    urn
+                    properties {
+                        name
+                        description
+                    }
+                }
+            }
+        }
+    }
+}
+"#;
+
+    let request_body = serde_json::json!({
+        "query": query
+    });
+
+    let response = self
+        .client
+        .post(graphql_url)
+        .header("Content-Type", "application/json")
+        .header("Authorization", format!("Bearer {}", datahub_token))
+        .json(&request_body)
+        .send()
+        .await?;
+
+    
+
+    // Mapear a tu estructura Tag
+    let graphql_response: GraphQLResponse<TagProperties> = response.json().await?;
+
+    let tags = graphql_response
+        .data
+        .search
+        .searchResults
+        .into_iter()
+        .map(|result| Tag { 
+            urn: result.entity.urn, 
+            properties: result.entity.properties 
+        })
+        .collect();
+
+    Ok(tags)
+}
 
     async fn get_datahub_datasets_by_domain_id(&self, id: String) -> anyhow::Result<Vec<DatahubDataset>> {
         let datahub_host = self.config.get_datahub_host_url().expect("Datahub host not created");
@@ -267,7 +322,7 @@ impl DatahubProxyTrait for DatahubProxyService {
 
         Ok(datasets)
     }
-
+    
     async fn get_datahub_dataset_by_id(&self, id: String) -> anyhow::Result<DatahubDataset> {
         let datahub_host = self.config.get_datahub_host_url().expect("Datahub host not created");
         let datahub_token = self.config.get_datahub_token().expect("Datahub Token not created");
@@ -377,7 +432,7 @@ impl DatahubProxyTrait for DatahubProxyService {
             name: dataset.name,
             platform: dataset.platform,
             description: dataset.description,
-            tag_names: dataset.tags.tags.into_iter().map(|tw| tw.tag.name).collect(),
+            tag_names: dataset.tags.tags.into_iter().map(|tw| tw.tag.properties.name).collect(),
             custom_properties: custom_props,
             domain,
             glossary_terms,

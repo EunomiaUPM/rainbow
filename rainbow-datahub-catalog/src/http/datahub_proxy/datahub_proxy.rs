@@ -18,7 +18,7 @@
  */
 
 
-use crate::core::datahub_proxy::datahub_proxy_types::DomainsQueryOptions;
+use crate::core::datahub_proxy::datahub_proxy_types::{TagsQueryOptions, DomainsQueryOptions};
 use crate::core::datahub_proxy::datahub_proxy_types::DatasetsQueryOptions;
 use crate::core::datahub_proxy::DatahubProxyTrait;
 use axum::extract::{Path, Query, State};
@@ -49,6 +49,7 @@ where
     pub fn router(self) -> Router {
         Router::new()
             .route("/api/v1/datahub/domains", get(Self::handle_get_datahub_domains))
+            .route("/api/v1/datahub/tags", get(Self::handle_get_datahub_tags))
             // .route("/api/v1/datahub/domains/:domain_id", get(Self::handle_get_datahub_domain_by_id))
             .route("/api/v1/datahub/domains/:domain_id/datasets", get(Self::handle_get_datasets_by_domain_id))
             .route("/api/v1/datahub/domains/:domain_id/datasets/:dataset_id", get(Self::handle_get_datasets_by_id))
@@ -64,6 +65,17 @@ where
             Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
         }
     }
+
+    async fn handle_get_datahub_tags(
+    State(datahub_service): State<Arc<T>>,
+    Query(options): Query<TagsQueryOptions>,
+) -> impl IntoResponse {
+    info!("GET /api/v1/datahub/tags");
+    match datahub_service.get_datahub_tags().await {
+        Ok(tags) => (StatusCode::OK, Json(tags)).into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    }
+}
 
     async fn handle_get_datasets_by_domain_id(
         State(datahub_service): State<Arc<T>>,

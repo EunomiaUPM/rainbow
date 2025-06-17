@@ -40,31 +40,42 @@ pub struct DomainsQueryOptions {
 
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct SearchResponse {
-    pub search: SearchResults,
+pub struct SearchResponse<T> {
+    pub search: SearchResults<T>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct GraphQLResponse {
-    pub data: SearchResponse,
+pub struct GraphQLResponse<T> {
+    pub data: SearchResponse<T>,
     pub extensions: serde_json::Value,  // Para el campo "extensions" que está vacío
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct SearchResults {
-    pub searchResults: Vec<SearchResult>,
+pub struct SearchResults<T> {
+    pub searchResults: Vec<SearchResult<T>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct SearchResult {
-    pub entity: Entity,
+pub struct SearchResult<T> {
+    pub entity: Entity<T>,
 }
 
+// #[derive(Debug, Serialize, Deserialize)]
+// pub struct Entity {
+//     pub urn: String,
+//     pub properties: DomainProperties,
+// }
+
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Entity {
+pub struct Entity<T> {
     pub urn: String,
-    pub properties: DomainProperties,
+    pub properties: T,
 }
+
+// Definimos los tipos específicos
+pub type DomainEntity = Entity<DomainProperties>;
+pub type TagEntity = Entity<TagProperties>;
+
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DatahubDataset {
@@ -222,7 +233,9 @@ pub struct TagWrapper {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Tag {
-    pub name: String,
+    pub urn: String,
+    pub properties: TagProperties,
+    // pub name: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -242,11 +255,11 @@ pub struct Domain {
     pub domain: DomainEntity,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct DomainEntity {
-    pub urn: String,
-    pub properties: DomainProperties,
-}
+// #[derive(Debug, Serialize, Deserialize)]
+// pub struct DomainEntity {
+//     pub urn: String,
+//     pub properties: DomainProperties,
+// }
 
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -275,4 +288,19 @@ pub struct GlossaryTermInfo {
 pub struct DatasetBasicInfo {
     pub urn: String,
     pub name: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TagProperties {
+    pub name: String,
+    pub description: Option<String>,
+}
+
+
+// Estructura para las opciones de query
+#[derive(Debug, Deserialize)]
+pub struct TagsQueryOptions {
+    pub query: Option<String>,  // Para filtrar por nombre
+    pub start: Option<u32>,     // Para paginación
+    pub count: Option<u32>,     // Para limitar resultados
 }

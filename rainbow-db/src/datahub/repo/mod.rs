@@ -38,6 +38,7 @@ pub struct NewPolicyTemplateModel {
     pub title: Option<String>,
     pub description: Option<String>,
     pub content: serde_json::Value,
+    pub operand_options: Option<serde_json::Value>,
 }
 
 #[async_trait]

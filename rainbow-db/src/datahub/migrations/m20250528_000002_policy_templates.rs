@@ -37,6 +37,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(PolicyTemplates::Title).string())
                     .col(ColumnDef::new(PolicyTemplates::Description).string())
                     .col(ColumnDef::new(PolicyTemplates::Content).json().not_null())
+                    .col(ColumnDef::new(PolicyTemplates::OperandOptions).json().not_null())
                     .col(ColumnDef::new(PolicyTemplates::CreatedAt).date_time().not_null())
                     .to_owned(),
             )
@@ -55,5 +56,6 @@ pub enum PolicyTemplates {
     Title,
     Description,
     Content,
+    OperandOptions,
     CreatedAt,
 }

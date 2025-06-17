@@ -113,6 +113,7 @@ impl PolicyTemplatesRepo for DatahubConnectorRepoForSql {
             title: ActiveValue::Set(new_policy_template.title),
             description: ActiveValue::Set(new_policy_template.description),
             content: ActiveValue::Set(new_policy_template.content),
+            operand_options: ActiveValue::Set(new_policy_template.operand_options),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
         };
 

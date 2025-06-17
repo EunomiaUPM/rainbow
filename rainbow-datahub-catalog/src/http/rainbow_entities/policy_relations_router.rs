@@ -248,6 +248,7 @@ pub struct CreatePolicyTemplateRequest {
     pub title: Option<String>,
     pub description: Option<String>,
     pub content: OdrlPolicyInfo,
+    pub operand_options: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -310,6 +311,8 @@ where
             title: payload.title,
             description: payload.description,
             content: to_value(payload.content).unwrap(),
+            operand_options: payload.operand_options,
+
         };
 
         match policy_templates_service.create_policy_template(new_template).await {
