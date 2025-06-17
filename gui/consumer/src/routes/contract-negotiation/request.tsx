@@ -20,12 +20,13 @@ import {
 } from "shared/src/components/ui/command"
 import {Popover, PopoverContent, PopoverTrigger,} from "shared/src/components/ui/popover"
 import {ChevronsUpDown} from "lucide-react";
-import {useEffect, useState} from "react"; // Import useEffect
+import {useContext, useEffect, useState} from "react"; // Import useEffect
 import {getParticipants} from "shared/src/data/participant-queries.ts";
-import {getCatalogs, getDatasetsByCatalogId} from "shared/src/data/catalog-queries.ts";
-import {getPoliciesByDatasetId} from "shared/src/data/policy-queries.ts";
 import {Textarea} from "shared/src/components/ui/textarea.tsx";
-import {usePostContractNegotiationRPCOffer} from "shared/src/data/contract-mutations.ts";
+import {usePostContractNegotiationRPCRequest} from "shared/src/data/contract-mutations.ts";
+import {GlobalInfoContext, GlobalInfoContextType} from "shared/src/context/GlobalInfoContext.tsx";
+import {getBypassCatalogs, getBypassDatasetsByCatalogId} from "shared/src/data/catalog-bypass-queries.ts";
+import {getBypassPoliciesByDatasetId} from "shared/src/data/policy-bypass-queries.ts";
 
 
 type Inputs = {
@@ -37,12 +38,13 @@ type Inputs = {
 }
 
 const RouteComponent = () => {
-    const {mutateAsync: sendOfferAsync, isPending} = usePostContractNegotiationRPCOffer()
+    const {mutateAsync: sendRequestAsync, isPending} = usePostContractNegotiationRPCRequest()
+    const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!
 
     // --- State Management ---
     // Consumer Participant
     const [consumerParticipantOpen, setConsumerParticipantOpen] = useState(false);
-    const [_consumerSelectedParticipant, setConsumerSelectedParticipant] = useState<Participant | null>(null);
+    const [consumerSelectedParticipant, setConsumerSelectedParticipant] = useState<Participant | null>(null);
     const [consumerParticipants, setConsumerParticipants] = useState<Participant[]>([]);
 
     // Catalog
@@ -141,25 +143,28 @@ const RouteComponent = () => {
     // --- Form Submission Handler ---
     const onSubmit: SubmitHandler<Inputs> = async data => {
         console.log("Form data submitted:", data);
-        await sendOfferAsync({
-            consumerParticipantId: data.consumerParticipantId,
-            offer: {
-                "@id": data.id,
-                "@type": "Offer",
-                target: data.target,
-                permission: [
-                    {
-                        action: "use",
-                        constraint: []
-                    }
-                ],
-                // @ts-ignore
-                obligation: null,
-                // @ts-ignore
-                prohibition: null,
-                profile: ""
+        await sendRequestAsync({
+            api_gateway: api_gateway,
+            content: {
+                providerParticipantId: data.consumerParticipantId,
+                offer: {
+                    "@id": data.id,
+                    "@type": "Offer",
+                    target: data.target,
+                    permission: [
+                        {
+                            action: "use",
+                            constraint: []
+                        }
+                    ],
+                    // @ts-ignore
+                    obligation: null,
+                    // @ts-ignore
+                    prohibition: null,
+                    profile: ""
+                }
             }
-        }, {})
+        })
 
         form.reset();
         // Reset all local states when the form is fully reset
@@ -178,7 +183,7 @@ const RouteComponent = () => {
         setConsumerParticipantOpen(newOpenState);
         if (newOpenState && consumerParticipants.length === 0) {
             try {
-                const participants = await getParticipants();
+                const participants = await getParticipants(api_gateway);
                 setConsumerParticipants(participants);
             } catch (error) {
                 console.error("Failed to fetch participants:", error);
@@ -190,7 +195,7 @@ const RouteComponent = () => {
         setCatalogOpen(newOpenState);
         if (newOpenState) {
             try {
-                const fetchedCatalogs = await getCatalogs();
+                const fetchedCatalogs = await getBypassCatalogs(api_gateway, consumerSelectedParticipant?.participant_id as UUID);
                 setCatalogs(fetchedCatalogs.catalog);
             } catch (error) {
                 console.error("Failed to fetch catalogs:", error);
@@ -202,7 +207,7 @@ const RouteComponent = () => {
         setDatasetOpen(newOpenState);
         if (newOpenState && selectedCatalog) { // Only fetch if a catalog is selected
             try {
-                const fetchedDatasets = await getDatasetsByCatalogId(selectedCatalog["@id"]);
+                const fetchedDatasets = await getBypassDatasetsByCatalogId(api_gateway, consumerSelectedParticipant?.participant_id as UUID, selectedCatalog["@id"]);
                 setDatasets(fetchedDatasets);
             } catch (error) {
                 console.error("Failed to fetch datasets:", error);
@@ -218,7 +223,7 @@ const RouteComponent = () => {
         setPoliciesOpen(newOpenState);
         if (newOpenState && selectedDataset) { // Only fetch if a dataset is selected
             try {
-                const fetchedPolicies = await getPoliciesByDatasetId(selectedDataset["@id"]);
+                const fetchedPolicies = await getBypassPoliciesByDatasetId(api_gateway, consumerSelectedParticipant?.participant_id as UUID, selectedDataset["@id"]);
                 setPolicies(fetchedPolicies);
             } catch (error) {
                 console.error("Failed to fetch policies:", error);
@@ -289,7 +294,7 @@ const RouteComponent = () => {
                                         </Popover>
                                     </FormControl>
                                     <FormDescription className="text-sm text-gray-500 mt-1">Provide the ID of the
-                                        consumer participant for the negotiation.</FormDescription>
+                                        provider participant for the negotiation.</FormDescription>
                                     <FormMessage/>
                                 </div>
                             </FormItem>
@@ -503,7 +508,7 @@ const RouteComponent = () => {
 
                     <Button type="submit" disabled={isPending}
                             className="w-full">
-                        Submit Offer {isPending && <span className="ml-2">...</span>}
+                        Submit Request {isPending && <span className="ml-2">...</span>}
                     </Button>
                 </form>
             </Form>

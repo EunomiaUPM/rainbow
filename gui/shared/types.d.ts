@@ -7,6 +7,8 @@ declare global {
         state: string;
         created_at: Date;
         updated_at: Date;
+        associated_provider?: UUID;
+        associated_consumer?: UUID;
     }
 
     export interface CNMessage {

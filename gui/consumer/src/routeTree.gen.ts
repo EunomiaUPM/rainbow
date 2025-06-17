@@ -10,931 +10,981 @@
 
 // Import Routes
 
-import {Route as rootRoute} from './routes/__root'
-import {Route as TransferProcessRouteImport} from './routes/transfer-process/route'
-import {Route as SubscriptionsRouteImport} from './routes/subscriptions/route'
-import {Route as ProviderCatalogRouteImport} from './routes/provider-catalog/route'
-import {Route as ParticipantsRouteImport} from './routes/participants/route'
-import {Route as GuiRouteImport} from './routes/gui/route'
-import {Route as ContractNegotiationRouteImport} from './routes/contract-negotiation/route'
-import {Route as AgreementsRouteImport} from './routes/agreements/route'
-import {Route as IndexImport} from './routes/index'
-import {Route as TransferProcessIndexImport} from './routes/transfer-process/index'
-import {Route as SubscriptionsIndexImport} from './routes/subscriptions/index'
-import {Route as ProviderCatalogIndexImport} from './routes/provider-catalog/index'
-import {Route as ParticipantsIndexImport} from './routes/participants/index'
-import {Route as LoginIndexImport} from './routes/login/index'
-import {Route as GuiIndexImport} from './routes/gui/index'
-import {Route as ContractNegotiationIndexImport} from './routes/contract-negotiation/index'
-import {Route as AgreementsIndexImport} from './routes/agreements/index'
-import {Route as ContractNegotiationRequestImport} from './routes/contract-negotiation/request'
-import {Route as AgreementsAgreementIdImport} from './routes/agreements/$agreementId'
-import {Route as TransferProcessTransferProcessIdRouteImport} from './routes/transfer-process/$transferProcessId/route'
-import {Route as ProviderCatalogCatalogIdRouteImport} from '@/routes/provider-catalog/$provider/$catalogId/route'
-import {Route as ParticipantsParticipantIdRouteImport} from './routes/participants/$participantId/route'
-import {Route as GuiAgreementsRouteImport} from './routes/gui/agreements/route'
-import {Route as ContractNegotiationCnProcessRouteImport} from './routes/contract-negotiation/$cnProcess/route'
-import {Route as TransferProcessTransferProcessIdIndexImport} from './routes/transfer-process/$transferProcessId/index'
-import {Route as ProviderCatalogCatalogIdIndexImport} from '@/routes/provider-catalog/$provider/$catalogId/index'
-import {Route as ParticipantsParticipantIdIndexImport} from './routes/participants/$participantId/index'
-import {Route as GuiAgreementsIndexImport} from './routes/gui/agreements/index'
-import {Route as ContractNegotiationCnProcessIndexImport} from './routes/contract-negotiation/$cnProcess/index'
-import {Route as GuiAgreementsHolaImport} from './routes/gui/agreements/hola'
-import {Route as GuiAgreementsAgreementidImport} from './routes/gui/agreements/$agreement_id'
-import {
-  Route as TransferProcessTransferProcessIdTransferMessageTransferMessageIdImport
-} from './routes/transfer-process/$transferProcessId/transfer-message.$transferMessageId'
-import {
-  Route as ProviderCatalogCatalogIdDatasetDatasetIdImport
-} from '@/routes/provider-catalog/$provider/$catalogId/dataset.$datasetId'
-import {
-  Route as ProviderCatalogCatalogIdDataServiceDataServiceIdImport
-} from '@/routes/provider-catalog/$provider/$catalogId/data-service.$dataServiceId'
-import {
-  Route as ContractNegotiationCnProcessMessageMessageIdImport
-} from './routes/contract-negotiation/$cnProcess/message.$messageId'
+import { Route as rootRoute } from './routes/__root'
+import { Route as TransferProcessRouteImport } from './routes/transfer-process/route'
+import { Route as SubscriptionsRouteImport } from './routes/subscriptions/route'
+import { Route as ProviderCatalogRouteImport } from './routes/provider-catalog/route'
+import { Route as ParticipantsRouteImport } from './routes/participants/route'
+import { Route as GuiRouteImport } from './routes/gui/route'
+import { Route as ContractNegotiationRouteImport } from './routes/contract-negotiation/route'
+import { Route as AgreementsRouteImport } from './routes/agreements/route'
+import { Route as IndexImport } from './routes/index'
+import { Route as TransferProcessIndexImport } from './routes/transfer-process/index'
+import { Route as SubscriptionsIndexImport } from './routes/subscriptions/index'
+import { Route as ProviderCatalogIndexImport } from './routes/provider-catalog/index'
+import { Route as ParticipantsIndexImport } from './routes/participants/index'
+import { Route as LoginIndexImport } from './routes/login/index'
+import { Route as GuiIndexImport } from './routes/gui/index'
+import { Route as ContractNegotiationIndexImport } from './routes/contract-negotiation/index'
+import { Route as AgreementsIndexImport } from './routes/agreements/index'
+import { Route as ContractNegotiationRequestImport } from './routes/contract-negotiation/request'
+import { Route as AgreementsAgreementIdImport } from './routes/agreements/$agreementId'
+import { Route as TransferProcessTransferProcessIdRouteImport } from './routes/transfer-process/$transferProcessId/route'
+import { Route as ProviderCatalogProviderRouteImport } from './routes/provider-catalog/$provider/route'
+import { Route as ParticipantsParticipantIdRouteImport } from './routes/participants/$participantId/route'
+import { Route as GuiAgreementsRouteImport } from './routes/gui/agreements/route'
+import { Route as ContractNegotiationCnProcessRouteImport } from './routes/contract-negotiation/$cnProcess/route'
+import { Route as TransferProcessTransferProcessIdIndexImport } from './routes/transfer-process/$transferProcessId/index'
+import { Route as ProviderCatalogProviderIndexImport } from './routes/provider-catalog/$provider/index'
+import { Route as ParticipantsParticipantIdIndexImport } from './routes/participants/$participantId/index'
+import { Route as GuiAgreementsIndexImport } from './routes/gui/agreements/index'
+import { Route as ContractNegotiationCnProcessIndexImport } from './routes/contract-negotiation/$cnProcess/index'
+import { Route as GuiAgreementsHolaImport } from './routes/gui/agreements/hola'
+import { Route as GuiAgreementsAgreementidImport } from './routes/gui/agreements/$agreement_id'
+import { Route as TransferProcessTransferProcessIdTransferMessageTransferMessageIdImport } from './routes/transfer-process/$transferProcessId/transfer-message.$transferMessageId'
+import { Route as ContractNegotiationCnProcessMessageMessageIdImport } from './routes/contract-negotiation/$cnProcess/message.$messageId'
+import { Route as ProviderCatalogProviderCatalogCatalogIdRouteImport } from './routes/provider-catalog/$provider/catalog.$catalogId/route'
+import { Route as ProviderCatalogProviderCatalogCatalogIdIndexImport } from './routes/provider-catalog/$provider/catalog.$catalogId/index'
+import { Route as ProviderCatalogProviderCatalogCatalogIdDatasetDatasetIdImport } from './routes/provider-catalog/$provider/catalog.$catalogId/dataset.$datasetId'
+import { Route as ProviderCatalogProviderCatalogCatalogIdDataServiceDataServiceIdImport } from './routes/provider-catalog/$provider/catalog.$catalogId/data-service.$dataServiceId'
 
 // Create/Update Routes
 
 const TransferProcessRouteRoute = TransferProcessRouteImport.update({
-    id: '/transfer-process',
-    path: '/transfer-process',
-    getParentRoute: () => rootRoute,
+  id: '/transfer-process',
+  path: '/transfer-process',
+  getParentRoute: () => rootRoute,
 } as any)
 
 const SubscriptionsRouteRoute = SubscriptionsRouteImport.update({
-    id: '/subscriptions',
-    path: '/subscriptions',
-    getParentRoute: () => rootRoute,
+  id: '/subscriptions',
+  path: '/subscriptions',
+  getParentRoute: () => rootRoute,
 } as any)
 
 const ProviderCatalogRouteRoute = ProviderCatalogRouteImport.update({
-    id: '/provider-catalog',
-    path: '/provider-catalog',
-    getParentRoute: () => rootRoute,
+  id: '/provider-catalog',
+  path: '/provider-catalog',
+  getParentRoute: () => rootRoute,
 } as any)
 
 const ParticipantsRouteRoute = ParticipantsRouteImport.update({
-    id: '/participants',
-    path: '/participants',
-    getParentRoute: () => rootRoute,
+  id: '/participants',
+  path: '/participants',
+  getParentRoute: () => rootRoute,
 } as any)
 
 const GuiRouteRoute = GuiRouteImport.update({
-    id: '/gui',
-    path: '/gui',
-    getParentRoute: () => rootRoute,
+  id: '/gui',
+  path: '/gui',
+  getParentRoute: () => rootRoute,
 } as any)
 
 const ContractNegotiationRouteRoute = ContractNegotiationRouteImport.update({
-    id: '/contract-negotiation',
-    path: '/contract-negotiation',
-    getParentRoute: () => rootRoute,
+  id: '/contract-negotiation',
+  path: '/contract-negotiation',
+  getParentRoute: () => rootRoute,
 } as any)
 
 const AgreementsRouteRoute = AgreementsRouteImport.update({
-    id: '/agreements',
-    path: '/agreements',
-    getParentRoute: () => rootRoute,
+  id: '/agreements',
+  path: '/agreements',
+  getParentRoute: () => rootRoute,
 } as any)
 
 const IndexRoute = IndexImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => rootRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRoute,
 } as any)
 
 const TransferProcessIndexRoute = TransferProcessIndexImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => TransferProcessRouteRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => TransferProcessRouteRoute,
 } as any)
 
 const SubscriptionsIndexRoute = SubscriptionsIndexImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => SubscriptionsRouteRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => SubscriptionsRouteRoute,
 } as any)
 
 const ProviderCatalogIndexRoute = ProviderCatalogIndexImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => ProviderCatalogRouteRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => ProviderCatalogRouteRoute,
 } as any)
 
 const ParticipantsIndexRoute = ParticipantsIndexImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => ParticipantsRouteRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => ParticipantsRouteRoute,
 } as any)
 
 const LoginIndexRoute = LoginIndexImport.update({
-    id: '/login/',
-    path: '/login/',
-    getParentRoute: () => rootRoute,
+  id: '/login/',
+  path: '/login/',
+  getParentRoute: () => rootRoute,
 } as any)
 
 const GuiIndexRoute = GuiIndexImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => GuiRouteRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => GuiRouteRoute,
 } as any)
 
 const ContractNegotiationIndexRoute = ContractNegotiationIndexImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => ContractNegotiationRouteRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => ContractNegotiationRouteRoute,
 } as any)
 
 const AgreementsIndexRoute = AgreementsIndexImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AgreementsRouteRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => AgreementsRouteRoute,
 } as any)
 
 const ContractNegotiationRequestRoute = ContractNegotiationRequestImport.update(
-    {
-        id: '/request',
-        path: '/request',
-        getParentRoute: () => ContractNegotiationRouteRoute,
-    } as any,
+  {
+    id: '/request',
+    path: '/request',
+    getParentRoute: () => ContractNegotiationRouteRoute,
+  } as any,
 )
 
 const AgreementsAgreementIdRoute = AgreementsAgreementIdImport.update({
-    id: '/$agreementId',
-    path: '/$agreementId',
-    getParentRoute: () => AgreementsRouteRoute,
+  id: '/$agreementId',
+  path: '/$agreementId',
+  getParentRoute: () => AgreementsRouteRoute,
 } as any)
 
 const TransferProcessTransferProcessIdRouteRoute =
-    TransferProcessTransferProcessIdRouteImport.update({
-        id: '/$transferProcessId',
-        path: '/$transferProcessId',
-        getParentRoute: () => TransferProcessRouteRoute,
-    } as any)
+  TransferProcessTransferProcessIdRouteImport.update({
+    id: '/$transferProcessId',
+    path: '/$transferProcessId',
+    getParentRoute: () => TransferProcessRouteRoute,
+  } as any)
 
-const ProviderCatalogCatalogIdRouteRoute =
-    ProviderCatalogCatalogIdRouteImport.update({
-        id: '/$catalogId',
-        path: '/$catalogId',
-        getParentRoute: () => ProviderCatalogRouteRoute,
-    } as any)
+const ProviderCatalogProviderRouteRoute =
+  ProviderCatalogProviderRouteImport.update({
+    id: '/$provider',
+    path: '/$provider',
+    getParentRoute: () => ProviderCatalogRouteRoute,
+  } as any)
 
 const ParticipantsParticipantIdRouteRoute =
-    ParticipantsParticipantIdRouteImport.update({
-        id: '/$participantId',
-        path: '/$participantId',
-        getParentRoute: () => ParticipantsRouteRoute,
-    } as any)
+  ParticipantsParticipantIdRouteImport.update({
+    id: '/$participantId',
+    path: '/$participantId',
+    getParentRoute: () => ParticipantsRouteRoute,
+  } as any)
 
 const GuiAgreementsRouteRoute = GuiAgreementsRouteImport.update({
-    id: '/agreements',
-    path: '/agreements',
-    getParentRoute: () => GuiRouteRoute,
+  id: '/agreements',
+  path: '/agreements',
+  getParentRoute: () => GuiRouteRoute,
 } as any)
 
 const ContractNegotiationCnProcessRouteRoute =
-    ContractNegotiationCnProcessRouteImport.update({
-        id: '/$cnProcess',
-        path: '/$cnProcess',
-        getParentRoute: () => ContractNegotiationRouteRoute,
-    } as any)
+  ContractNegotiationCnProcessRouteImport.update({
+    id: '/$cnProcess',
+    path: '/$cnProcess',
+    getParentRoute: () => ContractNegotiationRouteRoute,
+  } as any)
 
 const TransferProcessTransferProcessIdIndexRoute =
-    TransferProcessTransferProcessIdIndexImport.update({
-        id: '/',
-        path: '/',
-        getParentRoute: () => TransferProcessTransferProcessIdRouteRoute,
-    } as any)
-
-const ProviderCatalogCatalogIdIndexRoute =
-    ProviderCatalogCatalogIdIndexImport.update({
-        id: '/',
-        path: '/',
-        getParentRoute: () => ProviderCatalogCatalogIdRouteRoute,
-    } as any)
-
-const ParticipantsParticipantIdIndexRoute =
-    ParticipantsParticipantIdIndexImport.update({
-        id: '/',
-        path: '/',
-        getParentRoute: () => ParticipantsParticipantIdRouteRoute,
-    } as any)
-
-const GuiAgreementsIndexRoute = GuiAgreementsIndexImport.update({
+  TransferProcessTransferProcessIdIndexImport.update({
     id: '/',
     path: '/',
-    getParentRoute: () => GuiAgreementsRouteRoute,
+    getParentRoute: () => TransferProcessTransferProcessIdRouteRoute,
+  } as any)
+
+const ProviderCatalogProviderIndexRoute =
+  ProviderCatalogProviderIndexImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => ProviderCatalogProviderRouteRoute,
+  } as any)
+
+const ParticipantsParticipantIdIndexRoute =
+  ParticipantsParticipantIdIndexImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => ParticipantsParticipantIdRouteRoute,
+  } as any)
+
+const GuiAgreementsIndexRoute = GuiAgreementsIndexImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => GuiAgreementsRouteRoute,
 } as any)
 
 const ContractNegotiationCnProcessIndexRoute =
-    ContractNegotiationCnProcessIndexImport.update({
-        id: '/',
-        path: '/',
-        getParentRoute: () => ContractNegotiationCnProcessRouteRoute,
-    } as any)
+  ContractNegotiationCnProcessIndexImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => ContractNegotiationCnProcessRouteRoute,
+  } as any)
 
 const GuiAgreementsHolaRoute = GuiAgreementsHolaImport.update({
-    id: '/hola',
-    path: '/hola',
-    getParentRoute: () => GuiAgreementsRouteRoute,
+  id: '/hola',
+  path: '/hola',
+  getParentRoute: () => GuiAgreementsRouteRoute,
 } as any)
 
 const GuiAgreementsAgreementidRoute = GuiAgreementsAgreementidImport.update({
-    id: '/$agreement_id',
-    path: '/$agreement_id',
-    getParentRoute: () => GuiAgreementsRouteRoute,
+  id: '/$agreement_id',
+  path: '/$agreement_id',
+  getParentRoute: () => GuiAgreementsRouteRoute,
 } as any)
 
 const TransferProcessTransferProcessIdTransferMessageTransferMessageIdRoute =
-    TransferProcessTransferProcessIdTransferMessageTransferMessageIdImport.update(
-        {
-            id: '/transfer-message/$transferMessageId',
-            path: '/transfer-message/$transferMessageId',
-            getParentRoute: () => TransferProcessTransferProcessIdRouteRoute,
-        } as any,
-    )
-
-const ProviderCatalogCatalogIdDatasetDatasetIdRoute =
-    ProviderCatalogCatalogIdDatasetDatasetIdImport.update({
-        id: '/dataset/$datasetId',
-        path: '/dataset/$datasetId',
-        getParentRoute: () => ProviderCatalogCatalogIdRouteRoute,
-    } as any)
-
-const ProviderCatalogCatalogIdDataServiceDataServiceIdRoute =
-    ProviderCatalogCatalogIdDataServiceDataServiceIdImport.update({
-        id: '/data-service/$dataServiceId',
-        path: '/data-service/$dataServiceId',
-        getParentRoute: () => ProviderCatalogCatalogIdRouteRoute,
-    } as any)
+  TransferProcessTransferProcessIdTransferMessageTransferMessageIdImport.update(
+    {
+      id: '/transfer-message/$transferMessageId',
+      path: '/transfer-message/$transferMessageId',
+      getParentRoute: () => TransferProcessTransferProcessIdRouteRoute,
+    } as any,
+  )
 
 const ContractNegotiationCnProcessMessageMessageIdRoute =
-    ContractNegotiationCnProcessMessageMessageIdImport.update({
-        id: '/message/$messageId',
-        path: '/message/$messageId',
-        getParentRoute: () => ContractNegotiationCnProcessRouteRoute,
-    } as any)
+  ContractNegotiationCnProcessMessageMessageIdImport.update({
+    id: '/message/$messageId',
+    path: '/message/$messageId',
+    getParentRoute: () => ContractNegotiationCnProcessRouteRoute,
+  } as any)
+
+const ProviderCatalogProviderCatalogCatalogIdRouteRoute =
+  ProviderCatalogProviderCatalogCatalogIdRouteImport.update({
+    id: '/catalog/$catalogId',
+    path: '/catalog/$catalogId',
+    getParentRoute: () => ProviderCatalogProviderRouteRoute,
+  } as any)
+
+const ProviderCatalogProviderCatalogCatalogIdIndexRoute =
+  ProviderCatalogProviderCatalogCatalogIdIndexImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => ProviderCatalogProviderCatalogCatalogIdRouteRoute,
+  } as any)
+
+const ProviderCatalogProviderCatalogCatalogIdDatasetDatasetIdRoute =
+  ProviderCatalogProviderCatalogCatalogIdDatasetDatasetIdImport.update({
+    id: '/dataset/$datasetId',
+    path: '/dataset/$datasetId',
+    getParentRoute: () => ProviderCatalogProviderCatalogCatalogIdRouteRoute,
+  } as any)
+
+const ProviderCatalogProviderCatalogCatalogIdDataServiceDataServiceIdRoute =
+  ProviderCatalogProviderCatalogCatalogIdDataServiceDataServiceIdImport.update({
+    id: '/data-service/$dataServiceId',
+    path: '/data-service/$dataServiceId',
+    getParentRoute: () => ProviderCatalogProviderCatalogCatalogIdRouteRoute,
+  } as any)
 
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
-    interface FileRoutesByPath {
-        '/': {
-            id: '/'
-            path: '/'
-            fullPath: '/'
-            preLoaderRoute: typeof IndexImport
-            parentRoute: typeof rootRoute
-        }
-        '/agreements': {
-            id: '/agreements'
-            path: '/agreements'
-            fullPath: '/agreements'
-            preLoaderRoute: typeof AgreementsRouteImport
-            parentRoute: typeof rootRoute
-        }
-        '/contract-negotiation': {
-            id: '/contract-negotiation'
-            path: '/contract-negotiation'
-            fullPath: '/contract-negotiation'
-            preLoaderRoute: typeof ContractNegotiationRouteImport
-            parentRoute: typeof rootRoute
-        }
-        '/gui': {
-            id: '/gui'
-            path: '/gui'
-            fullPath: '/gui'
-            preLoaderRoute: typeof GuiRouteImport
-            parentRoute: typeof rootRoute
-        }
-        '/participants': {
-            id: '/participants'
-            path: '/participants'
-            fullPath: '/participants'
-            preLoaderRoute: typeof ParticipantsRouteImport
-            parentRoute: typeof rootRoute
-        }
-        '/provider-catalog': {
-            id: '/provider-catalog'
-            path: '/provider-catalog'
-            fullPath: '/provider-catalog'
-            preLoaderRoute: typeof ProviderCatalogRouteImport
-            parentRoute: typeof rootRoute
-        }
-        '/subscriptions': {
-            id: '/subscriptions'
-            path: '/subscriptions'
-            fullPath: '/subscriptions'
-            preLoaderRoute: typeof SubscriptionsRouteImport
-            parentRoute: typeof rootRoute
-        }
-        '/transfer-process': {
-            id: '/transfer-process'
-            path: '/transfer-process'
-            fullPath: '/transfer-process'
-            preLoaderRoute: typeof TransferProcessRouteImport
-            parentRoute: typeof rootRoute
-        }
-        '/contract-negotiation/$cnProcess': {
-            id: '/contract-negotiation/$cnProcess'
-            path: '/$cnProcess'
-            fullPath: '/contract-negotiation/$cnProcess'
-            preLoaderRoute: typeof ContractNegotiationCnProcessRouteImport
-            parentRoute: typeof ContractNegotiationRouteImport
-        }
-        '/gui/agreements': {
-            id: '/gui/agreements'
-            path: '/agreements'
-            fullPath: '/gui/agreements'
-            preLoaderRoute: typeof GuiAgreementsRouteImport
-            parentRoute: typeof GuiRouteImport
-        }
-        '/participants/$participantId': {
-            id: '/participants/$participantId'
-            path: '/$participantId'
-            fullPath: '/participants/$participantId'
-            preLoaderRoute: typeof ParticipantsParticipantIdRouteImport
-            parentRoute: typeof ParticipantsRouteImport
-        }
-        '/provider-catalog/$catalogId': {
-            id: '/provider-catalog/$catalogId'
-            path: '/$catalogId'
-            fullPath: '/provider-catalog/$catalogId'
-            preLoaderRoute: typeof ProviderCatalogCatalogIdRouteImport
-            parentRoute: typeof ProviderCatalogRouteImport
-        }
-        '/transfer-process/$transferProcessId': {
-            id: '/transfer-process/$transferProcessId'
-            path: '/$transferProcessId'
-            fullPath: '/transfer-process/$transferProcessId'
-            preLoaderRoute: typeof TransferProcessTransferProcessIdRouteImport
-            parentRoute: typeof TransferProcessRouteImport
-        }
-        '/agreements/$agreementId': {
-            id: '/agreements/$agreementId'
-            path: '/$agreementId'
-            fullPath: '/agreements/$agreementId'
-            preLoaderRoute: typeof AgreementsAgreementIdImport
-            parentRoute: typeof AgreementsRouteImport
-        }
-        '/contract-negotiation/request': {
-            id: '/contract-negotiation/request'
-            path: '/request'
-            fullPath: '/contract-negotiation/request'
-            preLoaderRoute: typeof ContractNegotiationRequestImport
-            parentRoute: typeof ContractNegotiationRouteImport
-        }
-        '/agreements/': {
-            id: '/agreements/'
-            path: '/'
-            fullPath: '/agreements/'
-            preLoaderRoute: typeof AgreementsIndexImport
-            parentRoute: typeof AgreementsRouteImport
-        }
-        '/contract-negotiation/': {
-            id: '/contract-negotiation/'
-            path: '/'
-            fullPath: '/contract-negotiation/'
-            preLoaderRoute: typeof ContractNegotiationIndexImport
-            parentRoute: typeof ContractNegotiationRouteImport
-        }
-        '/gui/': {
-            id: '/gui/'
-            path: '/'
-            fullPath: '/gui/'
-            preLoaderRoute: typeof GuiIndexImport
-            parentRoute: typeof GuiRouteImport
-        }
-        '/login/': {
-            id: '/login/'
-            path: '/login'
-            fullPath: '/login'
-            preLoaderRoute: typeof LoginIndexImport
-            parentRoute: typeof rootRoute
-        }
-        '/participants/': {
-            id: '/participants/'
-            path: '/'
-            fullPath: '/participants/'
-            preLoaderRoute: typeof ParticipantsIndexImport
-            parentRoute: typeof ParticipantsRouteImport
-        }
-        '/provider-catalog/': {
-            id: '/provider-catalog/'
-            path: '/'
-            fullPath: '/provider-catalog/'
-            preLoaderRoute: typeof ProviderCatalogIndexImport
-            parentRoute: typeof ProviderCatalogRouteImport
-        }
-        '/subscriptions/': {
-            id: '/subscriptions/'
-            path: '/'
-            fullPath: '/subscriptions/'
-            preLoaderRoute: typeof SubscriptionsIndexImport
-            parentRoute: typeof SubscriptionsRouteImport
-        }
-        '/transfer-process/': {
-            id: '/transfer-process/'
-            path: '/'
-            fullPath: '/transfer-process/'
-            preLoaderRoute: typeof TransferProcessIndexImport
-            parentRoute: typeof TransferProcessRouteImport
-        }
-        '/gui/agreements/$agreement_id': {
-            id: '/gui/agreements/$agreement_id'
-            path: '/$agreement_id'
-            fullPath: '/gui/agreements/$agreement_id'
-            preLoaderRoute: typeof GuiAgreementsAgreementidImport
-            parentRoute: typeof GuiAgreementsRouteImport
-        }
-        '/gui/agreements/hola': {
-            id: '/gui/agreements/hola'
-            path: '/hola'
-            fullPath: '/gui/agreements/hola'
-            preLoaderRoute: typeof GuiAgreementsHolaImport
-            parentRoute: typeof GuiAgreementsRouteImport
-        }
-        '/contract-negotiation/$cnProcess/': {
-            id: '/contract-negotiation/$cnProcess/'
-            path: '/'
-            fullPath: '/contract-negotiation/$cnProcess/'
-            preLoaderRoute: typeof ContractNegotiationCnProcessIndexImport
-            parentRoute: typeof ContractNegotiationCnProcessRouteImport
-        }
-        '/gui/agreements/': {
-            id: '/gui/agreements/'
-            path: '/'
-            fullPath: '/gui/agreements/'
-            preLoaderRoute: typeof GuiAgreementsIndexImport
-            parentRoute: typeof GuiAgreementsRouteImport
-        }
-        '/participants/$participantId/': {
-            id: '/participants/$participantId/'
-            path: '/'
-            fullPath: '/participants/$participantId/'
-            preLoaderRoute: typeof ParticipantsParticipantIdIndexImport
-            parentRoute: typeof ParticipantsParticipantIdRouteImport
-        }
-        '/provider-catalog/$catalogId/': {
-            id: '/provider-catalog/$catalogId/'
-            path: '/'
-            fullPath: '/provider-catalog/$catalogId/'
-            preLoaderRoute: typeof ProviderCatalogCatalogIdIndexImport
-            parentRoute: typeof ProviderCatalogCatalogIdRouteImport
-        }
-        '/transfer-process/$transferProcessId/': {
-            id: '/transfer-process/$transferProcessId/'
-            path: '/'
-            fullPath: '/transfer-process/$transferProcessId/'
-            preLoaderRoute: typeof TransferProcessTransferProcessIdIndexImport
-            parentRoute: typeof TransferProcessTransferProcessIdRouteImport
-        }
-        '/contract-negotiation/$cnProcess/message/$messageId': {
-            id: '/contract-negotiation/$cnProcess/message/$messageId'
-            path: '/message/$messageId'
-            fullPath: '/contract-negotiation/$cnProcess/message/$messageId'
-            preLoaderRoute: typeof ContractNegotiationCnProcessMessageMessageIdImport
-            parentRoute: typeof ContractNegotiationCnProcessRouteImport
-        }
-        '/provider-catalog/$catalogId/data-service/$dataServiceId': {
-            id: '/provider-catalog/$catalogId/data-service/$dataServiceId'
-            path: '/data-service/$dataServiceId'
-            fullPath: '/provider-catalog/$catalogId/data-service/$dataServiceId'
-            preLoaderRoute: typeof ProviderCatalogCatalogIdDataServiceDataServiceIdImport
-            parentRoute: typeof ProviderCatalogCatalogIdRouteImport
-        }
-        '/provider-catalog/$catalogId/dataset/$datasetId': {
-            id: '/provider-catalog/$catalogId/dataset/$datasetId'
-            path: '/dataset/$datasetId'
-            fullPath: '/provider-catalog/$catalogId/dataset/$datasetId'
-            preLoaderRoute: typeof ProviderCatalogCatalogIdDatasetDatasetIdImport
-            parentRoute: typeof ProviderCatalogCatalogIdRouteImport
-        }
-        '/transfer-process/$transferProcessId/transfer-message/$transferMessageId': {
-            id: '/transfer-process/$transferProcessId/transfer-message/$transferMessageId'
-            path: '/transfer-message/$transferMessageId'
-            fullPath: '/transfer-process/$transferProcessId/transfer-message/$transferMessageId'
-            preLoaderRoute: typeof TransferProcessTransferProcessIdTransferMessageTransferMessageIdImport
-            parentRoute: typeof TransferProcessTransferProcessIdRouteImport
-        }
+  interface FileRoutesByPath {
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexImport
+      parentRoute: typeof rootRoute
     }
+    '/agreements': {
+      id: '/agreements'
+      path: '/agreements'
+      fullPath: '/agreements'
+      preLoaderRoute: typeof AgreementsRouteImport
+      parentRoute: typeof rootRoute
+    }
+    '/contract-negotiation': {
+      id: '/contract-negotiation'
+      path: '/contract-negotiation'
+      fullPath: '/contract-negotiation'
+      preLoaderRoute: typeof ContractNegotiationRouteImport
+      parentRoute: typeof rootRoute
+    }
+    '/gui': {
+      id: '/gui'
+      path: '/gui'
+      fullPath: '/gui'
+      preLoaderRoute: typeof GuiRouteImport
+      parentRoute: typeof rootRoute
+    }
+    '/participants': {
+      id: '/participants'
+      path: '/participants'
+      fullPath: '/participants'
+      preLoaderRoute: typeof ParticipantsRouteImport
+      parentRoute: typeof rootRoute
+    }
+    '/provider-catalog': {
+      id: '/provider-catalog'
+      path: '/provider-catalog'
+      fullPath: '/provider-catalog'
+      preLoaderRoute: typeof ProviderCatalogRouteImport
+      parentRoute: typeof rootRoute
+    }
+    '/subscriptions': {
+      id: '/subscriptions'
+      path: '/subscriptions'
+      fullPath: '/subscriptions'
+      preLoaderRoute: typeof SubscriptionsRouteImport
+      parentRoute: typeof rootRoute
+    }
+    '/transfer-process': {
+      id: '/transfer-process'
+      path: '/transfer-process'
+      fullPath: '/transfer-process'
+      preLoaderRoute: typeof TransferProcessRouteImport
+      parentRoute: typeof rootRoute
+    }
+    '/contract-negotiation/$cnProcess': {
+      id: '/contract-negotiation/$cnProcess'
+      path: '/$cnProcess'
+      fullPath: '/contract-negotiation/$cnProcess'
+      preLoaderRoute: typeof ContractNegotiationCnProcessRouteImport
+      parentRoute: typeof ContractNegotiationRouteImport
+    }
+    '/gui/agreements': {
+      id: '/gui/agreements'
+      path: '/agreements'
+      fullPath: '/gui/agreements'
+      preLoaderRoute: typeof GuiAgreementsRouteImport
+      parentRoute: typeof GuiRouteImport
+    }
+    '/participants/$participantId': {
+      id: '/participants/$participantId'
+      path: '/$participantId'
+      fullPath: '/participants/$participantId'
+      preLoaderRoute: typeof ParticipantsParticipantIdRouteImport
+      parentRoute: typeof ParticipantsRouteImport
+    }
+    '/provider-catalog/$provider': {
+      id: '/provider-catalog/$provider'
+      path: '/$provider'
+      fullPath: '/provider-catalog/$provider'
+      preLoaderRoute: typeof ProviderCatalogProviderRouteImport
+      parentRoute: typeof ProviderCatalogRouteImport
+    }
+    '/transfer-process/$transferProcessId': {
+      id: '/transfer-process/$transferProcessId'
+      path: '/$transferProcessId'
+      fullPath: '/transfer-process/$transferProcessId'
+      preLoaderRoute: typeof TransferProcessTransferProcessIdRouteImport
+      parentRoute: typeof TransferProcessRouteImport
+    }
+    '/agreements/$agreementId': {
+      id: '/agreements/$agreementId'
+      path: '/$agreementId'
+      fullPath: '/agreements/$agreementId'
+      preLoaderRoute: typeof AgreementsAgreementIdImport
+      parentRoute: typeof AgreementsRouteImport
+    }
+    '/contract-negotiation/request': {
+      id: '/contract-negotiation/request'
+      path: '/request'
+      fullPath: '/contract-negotiation/request'
+      preLoaderRoute: typeof ContractNegotiationRequestImport
+      parentRoute: typeof ContractNegotiationRouteImport
+    }
+    '/agreements/': {
+      id: '/agreements/'
+      path: '/'
+      fullPath: '/agreements/'
+      preLoaderRoute: typeof AgreementsIndexImport
+      parentRoute: typeof AgreementsRouteImport
+    }
+    '/contract-negotiation/': {
+      id: '/contract-negotiation/'
+      path: '/'
+      fullPath: '/contract-negotiation/'
+      preLoaderRoute: typeof ContractNegotiationIndexImport
+      parentRoute: typeof ContractNegotiationRouteImport
+    }
+    '/gui/': {
+      id: '/gui/'
+      path: '/'
+      fullPath: '/gui/'
+      preLoaderRoute: typeof GuiIndexImport
+      parentRoute: typeof GuiRouteImport
+    }
+    '/login/': {
+      id: '/login/'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/participants/': {
+      id: '/participants/'
+      path: '/'
+      fullPath: '/participants/'
+      preLoaderRoute: typeof ParticipantsIndexImport
+      parentRoute: typeof ParticipantsRouteImport
+    }
+    '/provider-catalog/': {
+      id: '/provider-catalog/'
+      path: '/'
+      fullPath: '/provider-catalog/'
+      preLoaderRoute: typeof ProviderCatalogIndexImport
+      parentRoute: typeof ProviderCatalogRouteImport
+    }
+    '/subscriptions/': {
+      id: '/subscriptions/'
+      path: '/'
+      fullPath: '/subscriptions/'
+      preLoaderRoute: typeof SubscriptionsIndexImport
+      parentRoute: typeof SubscriptionsRouteImport
+    }
+    '/transfer-process/': {
+      id: '/transfer-process/'
+      path: '/'
+      fullPath: '/transfer-process/'
+      preLoaderRoute: typeof TransferProcessIndexImport
+      parentRoute: typeof TransferProcessRouteImport
+    }
+    '/gui/agreements/$agreement_id': {
+      id: '/gui/agreements/$agreement_id'
+      path: '/$agreement_id'
+      fullPath: '/gui/agreements/$agreement_id'
+      preLoaderRoute: typeof GuiAgreementsAgreementidImport
+      parentRoute: typeof GuiAgreementsRouteImport
+    }
+    '/gui/agreements/hola': {
+      id: '/gui/agreements/hola'
+      path: '/hola'
+      fullPath: '/gui/agreements/hola'
+      preLoaderRoute: typeof GuiAgreementsHolaImport
+      parentRoute: typeof GuiAgreementsRouteImport
+    }
+    '/contract-negotiation/$cnProcess/': {
+      id: '/contract-negotiation/$cnProcess/'
+      path: '/'
+      fullPath: '/contract-negotiation/$cnProcess/'
+      preLoaderRoute: typeof ContractNegotiationCnProcessIndexImport
+      parentRoute: typeof ContractNegotiationCnProcessRouteImport
+    }
+    '/gui/agreements/': {
+      id: '/gui/agreements/'
+      path: '/'
+      fullPath: '/gui/agreements/'
+      preLoaderRoute: typeof GuiAgreementsIndexImport
+      parentRoute: typeof GuiAgreementsRouteImport
+    }
+    '/participants/$participantId/': {
+      id: '/participants/$participantId/'
+      path: '/'
+      fullPath: '/participants/$participantId/'
+      preLoaderRoute: typeof ParticipantsParticipantIdIndexImport
+      parentRoute: typeof ParticipantsParticipantIdRouteImport
+    }
+    '/provider-catalog/$provider/': {
+      id: '/provider-catalog/$provider/'
+      path: '/'
+      fullPath: '/provider-catalog/$provider/'
+      preLoaderRoute: typeof ProviderCatalogProviderIndexImport
+      parentRoute: typeof ProviderCatalogProviderRouteImport
+    }
+    '/transfer-process/$transferProcessId/': {
+      id: '/transfer-process/$transferProcessId/'
+      path: '/'
+      fullPath: '/transfer-process/$transferProcessId/'
+      preLoaderRoute: typeof TransferProcessTransferProcessIdIndexImport
+      parentRoute: typeof TransferProcessTransferProcessIdRouteImport
+    }
+    '/provider-catalog/$provider/catalog/$catalogId': {
+      id: '/provider-catalog/$provider/catalog/$catalogId'
+      path: '/catalog/$catalogId'
+      fullPath: '/provider-catalog/$provider/catalog/$catalogId'
+      preLoaderRoute: typeof ProviderCatalogProviderCatalogCatalogIdRouteImport
+      parentRoute: typeof ProviderCatalogProviderRouteImport
+    }
+    '/contract-negotiation/$cnProcess/message/$messageId': {
+      id: '/contract-negotiation/$cnProcess/message/$messageId'
+      path: '/message/$messageId'
+      fullPath: '/contract-negotiation/$cnProcess/message/$messageId'
+      preLoaderRoute: typeof ContractNegotiationCnProcessMessageMessageIdImport
+      parentRoute: typeof ContractNegotiationCnProcessRouteImport
+    }
+    '/transfer-process/$transferProcessId/transfer-message/$transferMessageId': {
+      id: '/transfer-process/$transferProcessId/transfer-message/$transferMessageId'
+      path: '/transfer-message/$transferMessageId'
+      fullPath: '/transfer-process/$transferProcessId/transfer-message/$transferMessageId'
+      preLoaderRoute: typeof TransferProcessTransferProcessIdTransferMessageTransferMessageIdImport
+      parentRoute: typeof TransferProcessTransferProcessIdRouteImport
+    }
+    '/provider-catalog/$provider/catalog/$catalogId/': {
+      id: '/provider-catalog/$provider/catalog/$catalogId/'
+      path: '/'
+      fullPath: '/provider-catalog/$provider/catalog/$catalogId/'
+      preLoaderRoute: typeof ProviderCatalogProviderCatalogCatalogIdIndexImport
+      parentRoute: typeof ProviderCatalogProviderCatalogCatalogIdRouteImport
+    }
+    '/provider-catalog/$provider/catalog/$catalogId/data-service/$dataServiceId': {
+      id: '/provider-catalog/$provider/catalog/$catalogId/data-service/$dataServiceId'
+      path: '/data-service/$dataServiceId'
+      fullPath: '/provider-catalog/$provider/catalog/$catalogId/data-service/$dataServiceId'
+      preLoaderRoute: typeof ProviderCatalogProviderCatalogCatalogIdDataServiceDataServiceIdImport
+      parentRoute: typeof ProviderCatalogProviderCatalogCatalogIdRouteImport
+    }
+    '/provider-catalog/$provider/catalog/$catalogId/dataset/$datasetId': {
+      id: '/provider-catalog/$provider/catalog/$catalogId/dataset/$datasetId'
+      path: '/dataset/$datasetId'
+      fullPath: '/provider-catalog/$provider/catalog/$catalogId/dataset/$datasetId'
+      preLoaderRoute: typeof ProviderCatalogProviderCatalogCatalogIdDatasetDatasetIdImport
+      parentRoute: typeof ProviderCatalogProviderCatalogCatalogIdRouteImport
+    }
+  }
 }
 
 // Create and export the route tree
 
 interface AgreementsRouteRouteChildren {
-    AgreementsAgreementIdRoute: typeof AgreementsAgreementIdRoute
-    AgreementsIndexRoute: typeof AgreementsIndexRoute
+  AgreementsAgreementIdRoute: typeof AgreementsAgreementIdRoute
+  AgreementsIndexRoute: typeof AgreementsIndexRoute
 }
 
 const AgreementsRouteRouteChildren: AgreementsRouteRouteChildren = {
-    AgreementsAgreementIdRoute: AgreementsAgreementIdRoute,
-    AgreementsIndexRoute: AgreementsIndexRoute,
+  AgreementsAgreementIdRoute: AgreementsAgreementIdRoute,
+  AgreementsIndexRoute: AgreementsIndexRoute,
 }
 
 const AgreementsRouteRouteWithChildren = AgreementsRouteRoute._addFileChildren(
-    AgreementsRouteRouteChildren,
+  AgreementsRouteRouteChildren,
 )
 
 interface ContractNegotiationCnProcessRouteRouteChildren {
-    ContractNegotiationCnProcessIndexRoute: typeof ContractNegotiationCnProcessIndexRoute
-    ContractNegotiationCnProcessMessageMessageIdRoute: typeof ContractNegotiationCnProcessMessageMessageIdRoute
+  ContractNegotiationCnProcessIndexRoute: typeof ContractNegotiationCnProcessIndexRoute
+  ContractNegotiationCnProcessMessageMessageIdRoute: typeof ContractNegotiationCnProcessMessageMessageIdRoute
 }
 
 const ContractNegotiationCnProcessRouteRouteChildren: ContractNegotiationCnProcessRouteRouteChildren =
-    {
-        ContractNegotiationCnProcessIndexRoute:
-        ContractNegotiationCnProcessIndexRoute,
-        ContractNegotiationCnProcessMessageMessageIdRoute:
-        ContractNegotiationCnProcessMessageMessageIdRoute,
-    }
+  {
+    ContractNegotiationCnProcessIndexRoute:
+      ContractNegotiationCnProcessIndexRoute,
+    ContractNegotiationCnProcessMessageMessageIdRoute:
+      ContractNegotiationCnProcessMessageMessageIdRoute,
+  }
 
 const ContractNegotiationCnProcessRouteRouteWithChildren =
-    ContractNegotiationCnProcessRouteRoute._addFileChildren(
-        ContractNegotiationCnProcessRouteRouteChildren,
-    )
+  ContractNegotiationCnProcessRouteRoute._addFileChildren(
+    ContractNegotiationCnProcessRouteRouteChildren,
+  )
 
 interface ContractNegotiationRouteRouteChildren {
-    ContractNegotiationCnProcessRouteRoute: typeof ContractNegotiationCnProcessRouteRouteWithChildren
-    ContractNegotiationRequestRoute: typeof ContractNegotiationRequestRoute
-    ContractNegotiationIndexRoute: typeof ContractNegotiationIndexRoute
+  ContractNegotiationCnProcessRouteRoute: typeof ContractNegotiationCnProcessRouteRouteWithChildren
+  ContractNegotiationRequestRoute: typeof ContractNegotiationRequestRoute
+  ContractNegotiationIndexRoute: typeof ContractNegotiationIndexRoute
 }
 
 const ContractNegotiationRouteRouteChildren: ContractNegotiationRouteRouteChildren =
-    {
-        ContractNegotiationCnProcessRouteRoute:
-        ContractNegotiationCnProcessRouteRouteWithChildren,
-        ContractNegotiationRequestRoute: ContractNegotiationRequestRoute,
-        ContractNegotiationIndexRoute: ContractNegotiationIndexRoute,
-    }
+  {
+    ContractNegotiationCnProcessRouteRoute:
+      ContractNegotiationCnProcessRouteRouteWithChildren,
+    ContractNegotiationRequestRoute: ContractNegotiationRequestRoute,
+    ContractNegotiationIndexRoute: ContractNegotiationIndexRoute,
+  }
 
 const ContractNegotiationRouteRouteWithChildren =
-    ContractNegotiationRouteRoute._addFileChildren(
-        ContractNegotiationRouteRouteChildren,
-    )
+  ContractNegotiationRouteRoute._addFileChildren(
+    ContractNegotiationRouteRouteChildren,
+  )
 
 interface GuiAgreementsRouteRouteChildren {
-    GuiAgreementsAgreementidRoute: typeof GuiAgreementsAgreementidRoute
-    GuiAgreementsHolaRoute: typeof GuiAgreementsHolaRoute
-    GuiAgreementsIndexRoute: typeof GuiAgreementsIndexRoute
+  GuiAgreementsAgreementidRoute: typeof GuiAgreementsAgreementidRoute
+  GuiAgreementsHolaRoute: typeof GuiAgreementsHolaRoute
+  GuiAgreementsIndexRoute: typeof GuiAgreementsIndexRoute
 }
 
 const GuiAgreementsRouteRouteChildren: GuiAgreementsRouteRouteChildren = {
-    GuiAgreementsAgreementidRoute: GuiAgreementsAgreementidRoute,
-    GuiAgreementsHolaRoute: GuiAgreementsHolaRoute,
-    GuiAgreementsIndexRoute: GuiAgreementsIndexRoute,
+  GuiAgreementsAgreementidRoute: GuiAgreementsAgreementidRoute,
+  GuiAgreementsHolaRoute: GuiAgreementsHolaRoute,
+  GuiAgreementsIndexRoute: GuiAgreementsIndexRoute,
 }
 
 const GuiAgreementsRouteRouteWithChildren =
-    GuiAgreementsRouteRoute._addFileChildren(GuiAgreementsRouteRouteChildren)
+  GuiAgreementsRouteRoute._addFileChildren(GuiAgreementsRouteRouteChildren)
 
 interface GuiRouteRouteChildren {
-    GuiAgreementsRouteRoute: typeof GuiAgreementsRouteRouteWithChildren
-    GuiIndexRoute: typeof GuiIndexRoute
+  GuiAgreementsRouteRoute: typeof GuiAgreementsRouteRouteWithChildren
+  GuiIndexRoute: typeof GuiIndexRoute
 }
 
 const GuiRouteRouteChildren: GuiRouteRouteChildren = {
-    GuiAgreementsRouteRoute: GuiAgreementsRouteRouteWithChildren,
-    GuiIndexRoute: GuiIndexRoute,
+  GuiAgreementsRouteRoute: GuiAgreementsRouteRouteWithChildren,
+  GuiIndexRoute: GuiIndexRoute,
 }
 
 const GuiRouteRouteWithChildren = GuiRouteRoute._addFileChildren(
-    GuiRouteRouteChildren,
+  GuiRouteRouteChildren,
 )
 
 interface ParticipantsParticipantIdRouteRouteChildren {
-    ParticipantsParticipantIdIndexRoute: typeof ParticipantsParticipantIdIndexRoute
+  ParticipantsParticipantIdIndexRoute: typeof ParticipantsParticipantIdIndexRoute
 }
 
 const ParticipantsParticipantIdRouteRouteChildren: ParticipantsParticipantIdRouteRouteChildren =
-    {
-        ParticipantsParticipantIdIndexRoute: ParticipantsParticipantIdIndexRoute,
-    }
+  {
+    ParticipantsParticipantIdIndexRoute: ParticipantsParticipantIdIndexRoute,
+  }
 
 const ParticipantsParticipantIdRouteRouteWithChildren =
-    ParticipantsParticipantIdRouteRoute._addFileChildren(
-        ParticipantsParticipantIdRouteRouteChildren,
-    )
+  ParticipantsParticipantIdRouteRoute._addFileChildren(
+    ParticipantsParticipantIdRouteRouteChildren,
+  )
 
 interface ParticipantsRouteRouteChildren {
-    ParticipantsParticipantIdRouteRoute: typeof ParticipantsParticipantIdRouteRouteWithChildren
-    ParticipantsIndexRoute: typeof ParticipantsIndexRoute
+  ParticipantsParticipantIdRouteRoute: typeof ParticipantsParticipantIdRouteRouteWithChildren
+  ParticipantsIndexRoute: typeof ParticipantsIndexRoute
 }
 
 const ParticipantsRouteRouteChildren: ParticipantsRouteRouteChildren = {
-    ParticipantsParticipantIdRouteRoute:
+  ParticipantsParticipantIdRouteRoute:
     ParticipantsParticipantIdRouteRouteWithChildren,
-    ParticipantsIndexRoute: ParticipantsIndexRoute,
+  ParticipantsIndexRoute: ParticipantsIndexRoute,
 }
 
 const ParticipantsRouteRouteWithChildren =
-    ParticipantsRouteRoute._addFileChildren(ParticipantsRouteRouteChildren)
+  ParticipantsRouteRoute._addFileChildren(ParticipantsRouteRouteChildren)
 
-interface ProviderCatalogCatalogIdRouteRouteChildren {
-    ProviderCatalogCatalogIdIndexRoute: typeof ProviderCatalogCatalogIdIndexRoute
-    ProviderCatalogCatalogIdDataServiceDataServiceIdRoute: typeof ProviderCatalogCatalogIdDataServiceDataServiceIdRoute
-    ProviderCatalogCatalogIdDatasetDatasetIdRoute: typeof ProviderCatalogCatalogIdDatasetDatasetIdRoute
+interface ProviderCatalogProviderCatalogCatalogIdRouteRouteChildren {
+  ProviderCatalogProviderCatalogCatalogIdIndexRoute: typeof ProviderCatalogProviderCatalogCatalogIdIndexRoute
+  ProviderCatalogProviderCatalogCatalogIdDataServiceDataServiceIdRoute: typeof ProviderCatalogProviderCatalogCatalogIdDataServiceDataServiceIdRoute
+  ProviderCatalogProviderCatalogCatalogIdDatasetDatasetIdRoute: typeof ProviderCatalogProviderCatalogCatalogIdDatasetDatasetIdRoute
 }
 
-const ProviderCatalogCatalogIdRouteRouteChildren: ProviderCatalogCatalogIdRouteRouteChildren =
-    {
-        ProviderCatalogCatalogIdIndexRoute: ProviderCatalogCatalogIdIndexRoute,
-        ProviderCatalogCatalogIdDataServiceDataServiceIdRoute:
-        ProviderCatalogCatalogIdDataServiceDataServiceIdRoute,
-        ProviderCatalogCatalogIdDatasetDatasetIdRoute:
-        ProviderCatalogCatalogIdDatasetDatasetIdRoute,
-    }
+const ProviderCatalogProviderCatalogCatalogIdRouteRouteChildren: ProviderCatalogProviderCatalogCatalogIdRouteRouteChildren =
+  {
+    ProviderCatalogProviderCatalogCatalogIdIndexRoute:
+      ProviderCatalogProviderCatalogCatalogIdIndexRoute,
+    ProviderCatalogProviderCatalogCatalogIdDataServiceDataServiceIdRoute:
+      ProviderCatalogProviderCatalogCatalogIdDataServiceDataServiceIdRoute,
+    ProviderCatalogProviderCatalogCatalogIdDatasetDatasetIdRoute:
+      ProviderCatalogProviderCatalogCatalogIdDatasetDatasetIdRoute,
+  }
 
-const ProviderCatalogCatalogIdRouteRouteWithChildren =
-    ProviderCatalogCatalogIdRouteRoute._addFileChildren(
-        ProviderCatalogCatalogIdRouteRouteChildren,
-    )
+const ProviderCatalogProviderCatalogCatalogIdRouteRouteWithChildren =
+  ProviderCatalogProviderCatalogCatalogIdRouteRoute._addFileChildren(
+    ProviderCatalogProviderCatalogCatalogIdRouteRouteChildren,
+  )
+
+interface ProviderCatalogProviderRouteRouteChildren {
+  ProviderCatalogProviderIndexRoute: typeof ProviderCatalogProviderIndexRoute
+  ProviderCatalogProviderCatalogCatalogIdRouteRoute: typeof ProviderCatalogProviderCatalogCatalogIdRouteRouteWithChildren
+}
+
+const ProviderCatalogProviderRouteRouteChildren: ProviderCatalogProviderRouteRouteChildren =
+  {
+    ProviderCatalogProviderIndexRoute: ProviderCatalogProviderIndexRoute,
+    ProviderCatalogProviderCatalogCatalogIdRouteRoute:
+      ProviderCatalogProviderCatalogCatalogIdRouteRouteWithChildren,
+  }
+
+const ProviderCatalogProviderRouteRouteWithChildren =
+  ProviderCatalogProviderRouteRoute._addFileChildren(
+    ProviderCatalogProviderRouteRouteChildren,
+  )
 
 interface ProviderCatalogRouteRouteChildren {
-    ProviderCatalogCatalogIdRouteRoute: typeof ProviderCatalogCatalogIdRouteRouteWithChildren
-    ProviderCatalogIndexRoute: typeof ProviderCatalogIndexRoute
+  ProviderCatalogProviderRouteRoute: typeof ProviderCatalogProviderRouteRouteWithChildren
+  ProviderCatalogIndexRoute: typeof ProviderCatalogIndexRoute
 }
 
 const ProviderCatalogRouteRouteChildren: ProviderCatalogRouteRouteChildren = {
-    ProviderCatalogCatalogIdRouteRoute:
-    ProviderCatalogCatalogIdRouteRouteWithChildren,
-    ProviderCatalogIndexRoute: ProviderCatalogIndexRoute,
+  ProviderCatalogProviderRouteRoute:
+    ProviderCatalogProviderRouteRouteWithChildren,
+  ProviderCatalogIndexRoute: ProviderCatalogIndexRoute,
 }
 
 const ProviderCatalogRouteRouteWithChildren =
-    ProviderCatalogRouteRoute._addFileChildren(ProviderCatalogRouteRouteChildren)
+  ProviderCatalogRouteRoute._addFileChildren(ProviderCatalogRouteRouteChildren)
 
 interface SubscriptionsRouteRouteChildren {
-    SubscriptionsIndexRoute: typeof SubscriptionsIndexRoute
+  SubscriptionsIndexRoute: typeof SubscriptionsIndexRoute
 }
 
 const SubscriptionsRouteRouteChildren: SubscriptionsRouteRouteChildren = {
-    SubscriptionsIndexRoute: SubscriptionsIndexRoute,
+  SubscriptionsIndexRoute: SubscriptionsIndexRoute,
 }
 
 const SubscriptionsRouteRouteWithChildren =
-    SubscriptionsRouteRoute._addFileChildren(SubscriptionsRouteRouteChildren)
+  SubscriptionsRouteRoute._addFileChildren(SubscriptionsRouteRouteChildren)
 
 interface TransferProcessTransferProcessIdRouteRouteChildren {
-    TransferProcessTransferProcessIdIndexRoute: typeof TransferProcessTransferProcessIdIndexRoute
-    TransferProcessTransferProcessIdTransferMessageTransferMessageIdRoute: typeof TransferProcessTransferProcessIdTransferMessageTransferMessageIdRoute
+  TransferProcessTransferProcessIdIndexRoute: typeof TransferProcessTransferProcessIdIndexRoute
+  TransferProcessTransferProcessIdTransferMessageTransferMessageIdRoute: typeof TransferProcessTransferProcessIdTransferMessageTransferMessageIdRoute
 }
 
 const TransferProcessTransferProcessIdRouteRouteChildren: TransferProcessTransferProcessIdRouteRouteChildren =
-    {
-        TransferProcessTransferProcessIdIndexRoute:
-        TransferProcessTransferProcessIdIndexRoute,
-        TransferProcessTransferProcessIdTransferMessageTransferMessageIdRoute:
-        TransferProcessTransferProcessIdTransferMessageTransferMessageIdRoute,
-    }
+  {
+    TransferProcessTransferProcessIdIndexRoute:
+      TransferProcessTransferProcessIdIndexRoute,
+    TransferProcessTransferProcessIdTransferMessageTransferMessageIdRoute:
+      TransferProcessTransferProcessIdTransferMessageTransferMessageIdRoute,
+  }
 
 const TransferProcessTransferProcessIdRouteRouteWithChildren =
-    TransferProcessTransferProcessIdRouteRoute._addFileChildren(
-        TransferProcessTransferProcessIdRouteRouteChildren,
-    )
+  TransferProcessTransferProcessIdRouteRoute._addFileChildren(
+    TransferProcessTransferProcessIdRouteRouteChildren,
+  )
 
 interface TransferProcessRouteRouteChildren {
-    TransferProcessTransferProcessIdRouteRoute: typeof TransferProcessTransferProcessIdRouteRouteWithChildren
-    TransferProcessIndexRoute: typeof TransferProcessIndexRoute
+  TransferProcessTransferProcessIdRouteRoute: typeof TransferProcessTransferProcessIdRouteRouteWithChildren
+  TransferProcessIndexRoute: typeof TransferProcessIndexRoute
 }
 
 const TransferProcessRouteRouteChildren: TransferProcessRouteRouteChildren = {
-    TransferProcessTransferProcessIdRouteRoute:
+  TransferProcessTransferProcessIdRouteRoute:
     TransferProcessTransferProcessIdRouteRouteWithChildren,
-    TransferProcessIndexRoute: TransferProcessIndexRoute,
+  TransferProcessIndexRoute: TransferProcessIndexRoute,
 }
 
 const TransferProcessRouteRouteWithChildren =
-    TransferProcessRouteRoute._addFileChildren(TransferProcessRouteRouteChildren)
+  TransferProcessRouteRoute._addFileChildren(TransferProcessRouteRouteChildren)
 
 export interface FileRoutesByFullPath {
-    '/': typeof IndexRoute
-    '/agreements': typeof AgreementsRouteRouteWithChildren
-    '/contract-negotiation': typeof ContractNegotiationRouteRouteWithChildren
-    '/gui': typeof GuiRouteRouteWithChildren
-    '/participants': typeof ParticipantsRouteRouteWithChildren
-    '/provider-catalog': typeof ProviderCatalogRouteRouteWithChildren
-    '/subscriptions': typeof SubscriptionsRouteRouteWithChildren
-    '/transfer-process': typeof TransferProcessRouteRouteWithChildren
-    '/contract-negotiation/$cnProcess': typeof ContractNegotiationCnProcessRouteRouteWithChildren
-    '/gui/agreements': typeof GuiAgreementsRouteRouteWithChildren
-    '/participants/$participantId': typeof ParticipantsParticipantIdRouteRouteWithChildren
-    '/provider-catalog/$catalogId': typeof ProviderCatalogCatalogIdRouteRouteWithChildren
-    '/transfer-process/$transferProcessId': typeof TransferProcessTransferProcessIdRouteRouteWithChildren
-    '/agreements/$agreementId': typeof AgreementsAgreementIdRoute
-    '/contract-negotiation/request': typeof ContractNegotiationRequestRoute
-    '/agreements/': typeof AgreementsIndexRoute
-    '/contract-negotiation/': typeof ContractNegotiationIndexRoute
-    '/gui/': typeof GuiIndexRoute
-    '/login': typeof LoginIndexRoute
-    '/participants/': typeof ParticipantsIndexRoute
-    '/provider-catalog/': typeof ProviderCatalogIndexRoute
-    '/subscriptions/': typeof SubscriptionsIndexRoute
-    '/transfer-process/': typeof TransferProcessIndexRoute
-    '/gui/agreements/$agreement_id': typeof GuiAgreementsAgreementidRoute
-    '/gui/agreements/hola': typeof GuiAgreementsHolaRoute
-    '/contract-negotiation/$cnProcess/': typeof ContractNegotiationCnProcessIndexRoute
-    '/gui/agreements/': typeof GuiAgreementsIndexRoute
-    '/participants/$participantId/': typeof ParticipantsParticipantIdIndexRoute
-    '/provider-catalog/$catalogId/': typeof ProviderCatalogCatalogIdIndexRoute
-    '/transfer-process/$transferProcessId/': typeof TransferProcessTransferProcessIdIndexRoute
-    '/contract-negotiation/$cnProcess/message/$messageId': typeof ContractNegotiationCnProcessMessageMessageIdRoute
-    '/provider-catalog/$catalogId/data-service/$dataServiceId': typeof ProviderCatalogCatalogIdDataServiceDataServiceIdRoute
-    '/provider-catalog/$catalogId/dataset/$datasetId': typeof ProviderCatalogCatalogIdDatasetDatasetIdRoute
-    '/transfer-process/$transferProcessId/transfer-message/$transferMessageId': typeof TransferProcessTransferProcessIdTransferMessageTransferMessageIdRoute
+  '/': typeof IndexRoute
+  '/agreements': typeof AgreementsRouteRouteWithChildren
+  '/contract-negotiation': typeof ContractNegotiationRouteRouteWithChildren
+  '/gui': typeof GuiRouteRouteWithChildren
+  '/participants': typeof ParticipantsRouteRouteWithChildren
+  '/provider-catalog': typeof ProviderCatalogRouteRouteWithChildren
+  '/subscriptions': typeof SubscriptionsRouteRouteWithChildren
+  '/transfer-process': typeof TransferProcessRouteRouteWithChildren
+  '/contract-negotiation/$cnProcess': typeof ContractNegotiationCnProcessRouteRouteWithChildren
+  '/gui/agreements': typeof GuiAgreementsRouteRouteWithChildren
+  '/participants/$participantId': typeof ParticipantsParticipantIdRouteRouteWithChildren
+  '/provider-catalog/$provider': typeof ProviderCatalogProviderRouteRouteWithChildren
+  '/transfer-process/$transferProcessId': typeof TransferProcessTransferProcessIdRouteRouteWithChildren
+  '/agreements/$agreementId': typeof AgreementsAgreementIdRoute
+  '/contract-negotiation/request': typeof ContractNegotiationRequestRoute
+  '/agreements/': typeof AgreementsIndexRoute
+  '/contract-negotiation/': typeof ContractNegotiationIndexRoute
+  '/gui/': typeof GuiIndexRoute
+  '/login': typeof LoginIndexRoute
+  '/participants/': typeof ParticipantsIndexRoute
+  '/provider-catalog/': typeof ProviderCatalogIndexRoute
+  '/subscriptions/': typeof SubscriptionsIndexRoute
+  '/transfer-process/': typeof TransferProcessIndexRoute
+  '/gui/agreements/$agreement_id': typeof GuiAgreementsAgreementidRoute
+  '/gui/agreements/hola': typeof GuiAgreementsHolaRoute
+  '/contract-negotiation/$cnProcess/': typeof ContractNegotiationCnProcessIndexRoute
+  '/gui/agreements/': typeof GuiAgreementsIndexRoute
+  '/participants/$participantId/': typeof ParticipantsParticipantIdIndexRoute
+  '/provider-catalog/$provider/': typeof ProviderCatalogProviderIndexRoute
+  '/transfer-process/$transferProcessId/': typeof TransferProcessTransferProcessIdIndexRoute
+  '/provider-catalog/$provider/catalog/$catalogId': typeof ProviderCatalogProviderCatalogCatalogIdRouteRouteWithChildren
+  '/contract-negotiation/$cnProcess/message/$messageId': typeof ContractNegotiationCnProcessMessageMessageIdRoute
+  '/transfer-process/$transferProcessId/transfer-message/$transferMessageId': typeof TransferProcessTransferProcessIdTransferMessageTransferMessageIdRoute
+  '/provider-catalog/$provider/catalog/$catalogId/': typeof ProviderCatalogProviderCatalogCatalogIdIndexRoute
+  '/provider-catalog/$provider/catalog/$catalogId/data-service/$dataServiceId': typeof ProviderCatalogProviderCatalogCatalogIdDataServiceDataServiceIdRoute
+  '/provider-catalog/$provider/catalog/$catalogId/dataset/$datasetId': typeof ProviderCatalogProviderCatalogCatalogIdDatasetDatasetIdRoute
 }
 
 export interface FileRoutesByTo {
-    '/': typeof IndexRoute
-    '/agreements/$agreementId': typeof AgreementsAgreementIdRoute
-    '/contract-negotiation/request': typeof ContractNegotiationRequestRoute
-    '/agreements': typeof AgreementsIndexRoute
-    '/contract-negotiation': typeof ContractNegotiationIndexRoute
-    '/gui': typeof GuiIndexRoute
-    '/login': typeof LoginIndexRoute
-    '/participants': typeof ParticipantsIndexRoute
-    '/provider-catalog': typeof ProviderCatalogIndexRoute
-    '/subscriptions': typeof SubscriptionsIndexRoute
-    '/transfer-process': typeof TransferProcessIndexRoute
-    '/gui/agreements/$agreement_id': typeof GuiAgreementsAgreementidRoute
-    '/gui/agreements/hola': typeof GuiAgreementsHolaRoute
-    '/contract-negotiation/$cnProcess': typeof ContractNegotiationCnProcessIndexRoute
-    '/gui/agreements': typeof GuiAgreementsIndexRoute
-    '/participants/$participantId': typeof ParticipantsParticipantIdIndexRoute
-    '/provider-catalog/$catalogId': typeof ProviderCatalogCatalogIdIndexRoute
-    '/transfer-process/$transferProcessId': typeof TransferProcessTransferProcessIdIndexRoute
-    '/contract-negotiation/$cnProcess/message/$messageId': typeof ContractNegotiationCnProcessMessageMessageIdRoute
-    '/provider-catalog/$catalogId/data-service/$dataServiceId': typeof ProviderCatalogCatalogIdDataServiceDataServiceIdRoute
-    '/provider-catalog/$catalogId/dataset/$datasetId': typeof ProviderCatalogCatalogIdDatasetDatasetIdRoute
-    '/transfer-process/$transferProcessId/transfer-message/$transferMessageId': typeof TransferProcessTransferProcessIdTransferMessageTransferMessageIdRoute
+  '/': typeof IndexRoute
+  '/agreements/$agreementId': typeof AgreementsAgreementIdRoute
+  '/contract-negotiation/request': typeof ContractNegotiationRequestRoute
+  '/agreements': typeof AgreementsIndexRoute
+  '/contract-negotiation': typeof ContractNegotiationIndexRoute
+  '/gui': typeof GuiIndexRoute
+  '/login': typeof LoginIndexRoute
+  '/participants': typeof ParticipantsIndexRoute
+  '/provider-catalog': typeof ProviderCatalogIndexRoute
+  '/subscriptions': typeof SubscriptionsIndexRoute
+  '/transfer-process': typeof TransferProcessIndexRoute
+  '/gui/agreements/$agreement_id': typeof GuiAgreementsAgreementidRoute
+  '/gui/agreements/hola': typeof GuiAgreementsHolaRoute
+  '/contract-negotiation/$cnProcess': typeof ContractNegotiationCnProcessIndexRoute
+  '/gui/agreements': typeof GuiAgreementsIndexRoute
+  '/participants/$participantId': typeof ParticipantsParticipantIdIndexRoute
+  '/provider-catalog/$provider': typeof ProviderCatalogProviderIndexRoute
+  '/transfer-process/$transferProcessId': typeof TransferProcessTransferProcessIdIndexRoute
+  '/contract-negotiation/$cnProcess/message/$messageId': typeof ContractNegotiationCnProcessMessageMessageIdRoute
+  '/transfer-process/$transferProcessId/transfer-message/$transferMessageId': typeof TransferProcessTransferProcessIdTransferMessageTransferMessageIdRoute
+  '/provider-catalog/$provider/catalog/$catalogId': typeof ProviderCatalogProviderCatalogCatalogIdIndexRoute
+  '/provider-catalog/$provider/catalog/$catalogId/data-service/$dataServiceId': typeof ProviderCatalogProviderCatalogCatalogIdDataServiceDataServiceIdRoute
+  '/provider-catalog/$provider/catalog/$catalogId/dataset/$datasetId': typeof ProviderCatalogProviderCatalogCatalogIdDatasetDatasetIdRoute
 }
 
 export interface FileRoutesById {
-    __root__: typeof rootRoute
-    '/': typeof IndexRoute
-    '/agreements': typeof AgreementsRouteRouteWithChildren
-    '/contract-negotiation': typeof ContractNegotiationRouteRouteWithChildren
-    '/gui': typeof GuiRouteRouteWithChildren
-    '/participants': typeof ParticipantsRouteRouteWithChildren
-    '/provider-catalog': typeof ProviderCatalogRouteRouteWithChildren
-    '/subscriptions': typeof SubscriptionsRouteRouteWithChildren
-    '/transfer-process': typeof TransferProcessRouteRouteWithChildren
-    '/contract-negotiation/$cnProcess': typeof ContractNegotiationCnProcessRouteRouteWithChildren
-    '/gui/agreements': typeof GuiAgreementsRouteRouteWithChildren
-    '/participants/$participantId': typeof ParticipantsParticipantIdRouteRouteWithChildren
-    '/provider-catalog/$catalogId': typeof ProviderCatalogCatalogIdRouteRouteWithChildren
-    '/transfer-process/$transferProcessId': typeof TransferProcessTransferProcessIdRouteRouteWithChildren
-    '/agreements/$agreementId': typeof AgreementsAgreementIdRoute
-    '/contract-negotiation/request': typeof ContractNegotiationRequestRoute
-    '/agreements/': typeof AgreementsIndexRoute
-    '/contract-negotiation/': typeof ContractNegotiationIndexRoute
-    '/gui/': typeof GuiIndexRoute
-    '/login/': typeof LoginIndexRoute
-    '/participants/': typeof ParticipantsIndexRoute
-    '/provider-catalog/': typeof ProviderCatalogIndexRoute
-    '/subscriptions/': typeof SubscriptionsIndexRoute
-    '/transfer-process/': typeof TransferProcessIndexRoute
-    '/gui/agreements/$agreement_id': typeof GuiAgreementsAgreementidRoute
-    '/gui/agreements/hola': typeof GuiAgreementsHolaRoute
-    '/contract-negotiation/$cnProcess/': typeof ContractNegotiationCnProcessIndexRoute
-    '/gui/agreements/': typeof GuiAgreementsIndexRoute
-    '/participants/$participantId/': typeof ParticipantsParticipantIdIndexRoute
-    '/provider-catalog/$catalogId/': typeof ProviderCatalogCatalogIdIndexRoute
-    '/transfer-process/$transferProcessId/': typeof TransferProcessTransferProcessIdIndexRoute
-    '/contract-negotiation/$cnProcess/message/$messageId': typeof ContractNegotiationCnProcessMessageMessageIdRoute
-    '/provider-catalog/$catalogId/data-service/$dataServiceId': typeof ProviderCatalogCatalogIdDataServiceDataServiceIdRoute
-    '/provider-catalog/$catalogId/dataset/$datasetId': typeof ProviderCatalogCatalogIdDatasetDatasetIdRoute
-    '/transfer-process/$transferProcessId/transfer-message/$transferMessageId': typeof TransferProcessTransferProcessIdTransferMessageTransferMessageIdRoute
+  __root__: typeof rootRoute
+  '/': typeof IndexRoute
+  '/agreements': typeof AgreementsRouteRouteWithChildren
+  '/contract-negotiation': typeof ContractNegotiationRouteRouteWithChildren
+  '/gui': typeof GuiRouteRouteWithChildren
+  '/participants': typeof ParticipantsRouteRouteWithChildren
+  '/provider-catalog': typeof ProviderCatalogRouteRouteWithChildren
+  '/subscriptions': typeof SubscriptionsRouteRouteWithChildren
+  '/transfer-process': typeof TransferProcessRouteRouteWithChildren
+  '/contract-negotiation/$cnProcess': typeof ContractNegotiationCnProcessRouteRouteWithChildren
+  '/gui/agreements': typeof GuiAgreementsRouteRouteWithChildren
+  '/participants/$participantId': typeof ParticipantsParticipantIdRouteRouteWithChildren
+  '/provider-catalog/$provider': typeof ProviderCatalogProviderRouteRouteWithChildren
+  '/transfer-process/$transferProcessId': typeof TransferProcessTransferProcessIdRouteRouteWithChildren
+  '/agreements/$agreementId': typeof AgreementsAgreementIdRoute
+  '/contract-negotiation/request': typeof ContractNegotiationRequestRoute
+  '/agreements/': typeof AgreementsIndexRoute
+  '/contract-negotiation/': typeof ContractNegotiationIndexRoute
+  '/gui/': typeof GuiIndexRoute
+  '/login/': typeof LoginIndexRoute
+  '/participants/': typeof ParticipantsIndexRoute
+  '/provider-catalog/': typeof ProviderCatalogIndexRoute
+  '/subscriptions/': typeof SubscriptionsIndexRoute
+  '/transfer-process/': typeof TransferProcessIndexRoute
+  '/gui/agreements/$agreement_id': typeof GuiAgreementsAgreementidRoute
+  '/gui/agreements/hola': typeof GuiAgreementsHolaRoute
+  '/contract-negotiation/$cnProcess/': typeof ContractNegotiationCnProcessIndexRoute
+  '/gui/agreements/': typeof GuiAgreementsIndexRoute
+  '/participants/$participantId/': typeof ParticipantsParticipantIdIndexRoute
+  '/provider-catalog/$provider/': typeof ProviderCatalogProviderIndexRoute
+  '/transfer-process/$transferProcessId/': typeof TransferProcessTransferProcessIdIndexRoute
+  '/provider-catalog/$provider/catalog/$catalogId': typeof ProviderCatalogProviderCatalogCatalogIdRouteRouteWithChildren
+  '/contract-negotiation/$cnProcess/message/$messageId': typeof ContractNegotiationCnProcessMessageMessageIdRoute
+  '/transfer-process/$transferProcessId/transfer-message/$transferMessageId': typeof TransferProcessTransferProcessIdTransferMessageTransferMessageIdRoute
+  '/provider-catalog/$provider/catalog/$catalogId/': typeof ProviderCatalogProviderCatalogCatalogIdIndexRoute
+  '/provider-catalog/$provider/catalog/$catalogId/data-service/$dataServiceId': typeof ProviderCatalogProviderCatalogCatalogIdDataServiceDataServiceIdRoute
+  '/provider-catalog/$provider/catalog/$catalogId/dataset/$datasetId': typeof ProviderCatalogProviderCatalogCatalogIdDatasetDatasetIdRoute
 }
 
 export interface FileRouteTypes {
-    fileRoutesByFullPath: FileRoutesByFullPath
-    fullPaths:
-        | '/'
-        | '/agreements'
-        | '/contract-negotiation'
-        | '/gui'
-        | '/participants'
-        | '/provider-catalog'
-        | '/subscriptions'
-        | '/transfer-process'
-        | '/contract-negotiation/$cnProcess'
-        | '/gui/agreements'
-        | '/participants/$participantId'
-        | '/provider-catalog/$catalogId'
-        | '/transfer-process/$transferProcessId'
-        | '/agreements/$agreementId'
-        | '/contract-negotiation/request'
-        | '/agreements/'
-        | '/contract-negotiation/'
-        | '/gui/'
-        | '/login'
-        | '/participants/'
-        | '/provider-catalog/'
-        | '/subscriptions/'
-        | '/transfer-process/'
-        | '/gui/agreements/$agreement_id'
-        | '/gui/agreements/hola'
-        | '/contract-negotiation/$cnProcess/'
-        | '/gui/agreements/'
-        | '/participants/$participantId/'
-        | '/provider-catalog/$catalogId/'
-        | '/transfer-process/$transferProcessId/'
-        | '/contract-negotiation/$cnProcess/message/$messageId'
-        | '/provider-catalog/$catalogId/data-service/$dataServiceId'
-        | '/provider-catalog/$catalogId/dataset/$datasetId'
-        | '/transfer-process/$transferProcessId/transfer-message/$transferMessageId'
-    fileRoutesByTo: FileRoutesByTo
-    to:
-        | '/'
-        | '/agreements/$agreementId'
-        | '/contract-negotiation/request'
-        | '/agreements'
-        | '/contract-negotiation'
-        | '/gui'
-        | '/login'
-        | '/participants'
-        | '/provider-catalog'
-        | '/subscriptions'
-        | '/transfer-process'
-        | '/gui/agreements/$agreement_id'
-        | '/gui/agreements/hola'
-        | '/contract-negotiation/$cnProcess'
-        | '/gui/agreements'
-        | '/participants/$participantId'
-        | '/provider-catalog/$catalogId'
-        | '/transfer-process/$transferProcessId'
-        | '/contract-negotiation/$cnProcess/message/$messageId'
-        | '/provider-catalog/$catalogId/data-service/$dataServiceId'
-        | '/provider-catalog/$catalogId/dataset/$datasetId'
-        | '/transfer-process/$transferProcessId/transfer-message/$transferMessageId'
-    id:
-        | '__root__'
-        | '/'
-        | '/agreements'
-        | '/contract-negotiation'
-        | '/gui'
-        | '/participants'
-        | '/provider-catalog'
-        | '/subscriptions'
-        | '/transfer-process'
-        | '/contract-negotiation/$cnProcess'
-        | '/gui/agreements'
-        | '/participants/$participantId'
-        | '/provider-catalog/$catalogId'
-        | '/transfer-process/$transferProcessId'
-        | '/agreements/$agreementId'
-        | '/contract-negotiation/request'
-        | '/agreements/'
-        | '/contract-negotiation/'
-        | '/gui/'
-        | '/login/'
-        | '/participants/'
-        | '/provider-catalog/'
-        | '/subscriptions/'
-        | '/transfer-process/'
-        | '/gui/agreements/$agreement_id'
-        | '/gui/agreements/hola'
-        | '/contract-negotiation/$cnProcess/'
-        | '/gui/agreements/'
-        | '/participants/$participantId/'
-        | '/provider-catalog/$catalogId/'
-        | '/transfer-process/$transferProcessId/'
-        | '/contract-negotiation/$cnProcess/message/$messageId'
-        | '/provider-catalog/$catalogId/data-service/$dataServiceId'
-        | '/provider-catalog/$catalogId/dataset/$datasetId'
-        | '/transfer-process/$transferProcessId/transfer-message/$transferMessageId'
-    fileRoutesById: FileRoutesById
+  fileRoutesByFullPath: FileRoutesByFullPath
+  fullPaths:
+    | '/'
+    | '/agreements'
+    | '/contract-negotiation'
+    | '/gui'
+    | '/participants'
+    | '/provider-catalog'
+    | '/subscriptions'
+    | '/transfer-process'
+    | '/contract-negotiation/$cnProcess'
+    | '/gui/agreements'
+    | '/participants/$participantId'
+    | '/provider-catalog/$provider'
+    | '/transfer-process/$transferProcessId'
+    | '/agreements/$agreementId'
+    | '/contract-negotiation/request'
+    | '/agreements/'
+    | '/contract-negotiation/'
+    | '/gui/'
+    | '/login'
+    | '/participants/'
+    | '/provider-catalog/'
+    | '/subscriptions/'
+    | '/transfer-process/'
+    | '/gui/agreements/$agreement_id'
+    | '/gui/agreements/hola'
+    | '/contract-negotiation/$cnProcess/'
+    | '/gui/agreements/'
+    | '/participants/$participantId/'
+    | '/provider-catalog/$provider/'
+    | '/transfer-process/$transferProcessId/'
+    | '/provider-catalog/$provider/catalog/$catalogId'
+    | '/contract-negotiation/$cnProcess/message/$messageId'
+    | '/transfer-process/$transferProcessId/transfer-message/$transferMessageId'
+    | '/provider-catalog/$provider/catalog/$catalogId/'
+    | '/provider-catalog/$provider/catalog/$catalogId/data-service/$dataServiceId'
+    | '/provider-catalog/$provider/catalog/$catalogId/dataset/$datasetId'
+  fileRoutesByTo: FileRoutesByTo
+  to:
+    | '/'
+    | '/agreements/$agreementId'
+    | '/contract-negotiation/request'
+    | '/agreements'
+    | '/contract-negotiation'
+    | '/gui'
+    | '/login'
+    | '/participants'
+    | '/provider-catalog'
+    | '/subscriptions'
+    | '/transfer-process'
+    | '/gui/agreements/$agreement_id'
+    | '/gui/agreements/hola'
+    | '/contract-negotiation/$cnProcess'
+    | '/gui/agreements'
+    | '/participants/$participantId'
+    | '/provider-catalog/$provider'
+    | '/transfer-process/$transferProcessId'
+    | '/contract-negotiation/$cnProcess/message/$messageId'
+    | '/transfer-process/$transferProcessId/transfer-message/$transferMessageId'
+    | '/provider-catalog/$provider/catalog/$catalogId'
+    | '/provider-catalog/$provider/catalog/$catalogId/data-service/$dataServiceId'
+    | '/provider-catalog/$provider/catalog/$catalogId/dataset/$datasetId'
+  id:
+    | '__root__'
+    | '/'
+    | '/agreements'
+    | '/contract-negotiation'
+    | '/gui'
+    | '/participants'
+    | '/provider-catalog'
+    | '/subscriptions'
+    | '/transfer-process'
+    | '/contract-negotiation/$cnProcess'
+    | '/gui/agreements'
+    | '/participants/$participantId'
+    | '/provider-catalog/$provider'
+    | '/transfer-process/$transferProcessId'
+    | '/agreements/$agreementId'
+    | '/contract-negotiation/request'
+    | '/agreements/'
+    | '/contract-negotiation/'
+    | '/gui/'
+    | '/login/'
+    | '/participants/'
+    | '/provider-catalog/'
+    | '/subscriptions/'
+    | '/transfer-process/'
+    | '/gui/agreements/$agreement_id'
+    | '/gui/agreements/hola'
+    | '/contract-negotiation/$cnProcess/'
+    | '/gui/agreements/'
+    | '/participants/$participantId/'
+    | '/provider-catalog/$provider/'
+    | '/transfer-process/$transferProcessId/'
+    | '/provider-catalog/$provider/catalog/$catalogId'
+    | '/contract-negotiation/$cnProcess/message/$messageId'
+    | '/transfer-process/$transferProcessId/transfer-message/$transferMessageId'
+    | '/provider-catalog/$provider/catalog/$catalogId/'
+    | '/provider-catalog/$provider/catalog/$catalogId/data-service/$dataServiceId'
+    | '/provider-catalog/$provider/catalog/$catalogId/dataset/$datasetId'
+  fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
-    IndexRoute: typeof IndexRoute
-    AgreementsRouteRoute: typeof AgreementsRouteRouteWithChildren
-    ContractNegotiationRouteRoute: typeof ContractNegotiationRouteRouteWithChildren
-    GuiRouteRoute: typeof GuiRouteRouteWithChildren
-    ParticipantsRouteRoute: typeof ParticipantsRouteRouteWithChildren
-    ProviderCatalogRouteRoute: typeof ProviderCatalogRouteRouteWithChildren
-    SubscriptionsRouteRoute: typeof SubscriptionsRouteRouteWithChildren
-    TransferProcessRouteRoute: typeof TransferProcessRouteRouteWithChildren
-    LoginIndexRoute: typeof LoginIndexRoute
+  IndexRoute: typeof IndexRoute
+  AgreementsRouteRoute: typeof AgreementsRouteRouteWithChildren
+  ContractNegotiationRouteRoute: typeof ContractNegotiationRouteRouteWithChildren
+  GuiRouteRoute: typeof GuiRouteRouteWithChildren
+  ParticipantsRouteRoute: typeof ParticipantsRouteRouteWithChildren
+  ProviderCatalogRouteRoute: typeof ProviderCatalogRouteRouteWithChildren
+  SubscriptionsRouteRoute: typeof SubscriptionsRouteRouteWithChildren
+  TransferProcessRouteRoute: typeof TransferProcessRouteRouteWithChildren
+  LoginIndexRoute: typeof LoginIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
-    IndexRoute: IndexRoute,
-    AgreementsRouteRoute: AgreementsRouteRouteWithChildren,
-    ContractNegotiationRouteRoute: ContractNegotiationRouteRouteWithChildren,
-    GuiRouteRoute: GuiRouteRouteWithChildren,
-    ParticipantsRouteRoute: ParticipantsRouteRouteWithChildren,
-    ProviderCatalogRouteRoute: ProviderCatalogRouteRouteWithChildren,
-    SubscriptionsRouteRoute: SubscriptionsRouteRouteWithChildren,
-    TransferProcessRouteRoute: TransferProcessRouteRouteWithChildren,
-    LoginIndexRoute: LoginIndexRoute,
+  IndexRoute: IndexRoute,
+  AgreementsRouteRoute: AgreementsRouteRouteWithChildren,
+  ContractNegotiationRouteRoute: ContractNegotiationRouteRouteWithChildren,
+  GuiRouteRoute: GuiRouteRouteWithChildren,
+  ParticipantsRouteRoute: ParticipantsRouteRouteWithChildren,
+  ProviderCatalogRouteRoute: ProviderCatalogRouteRouteWithChildren,
+  SubscriptionsRouteRoute: SubscriptionsRouteRouteWithChildren,
+  TransferProcessRouteRoute: TransferProcessRouteRouteWithChildren,
+  LoginIndexRoute: LoginIndexRoute,
 }
 
 export const routeTree = rootRoute
-    ._addFileChildren(rootRouteChildren)
-    ._addFileTypes<FileRouteTypes>()
+  ._addFileChildren(rootRouteChildren)
+  ._addFileTypes<FileRouteTypes>()
 
 /* ROUTE_MANIFEST_START
 {
@@ -988,7 +1038,7 @@ export const routeTree = rootRoute
     "/provider-catalog": {
       "filePath": "provider-catalog/route.tsx",
       "children": [
-        "/provider-catalog/$catalogId",
+        "/provider-catalog/$provider",
         "/provider-catalog/"
       ]
     },
@@ -1029,13 +1079,12 @@ export const routeTree = rootRoute
         "/participants/$participantId/"
       ]
     },
-    "/provider-catalog/$catalogId": {
-      "filePath": "provider-catalog/$catalogId/route.tsx",
+    "/provider-catalog/$provider": {
+      "filePath": "provider-catalog/$provider/route.tsx",
       "parent": "/provider-catalog",
       "children": [
-        "/provider-catalog/$catalogId/",
-        "/provider-catalog/$catalogId/data-service/$dataServiceId",
-        "/provider-catalog/$catalogId/dataset/$datasetId"
+        "/provider-catalog/$provider/",
+        "/provider-catalog/$provider/catalog/$catalogId"
       ]
     },
     "/transfer-process/$transferProcessId": {
@@ -1105,29 +1154,42 @@ export const routeTree = rootRoute
       "filePath": "participants/$participantId/index.tsx",
       "parent": "/participants/$participantId"
     },
-    "/provider-catalog/$catalogId/": {
-      "filePath": "provider-catalog/$catalogId/index.tsx",
-      "parent": "/provider-catalog/$catalogId"
+    "/provider-catalog/$provider/": {
+      "filePath": "provider-catalog/$provider/index.tsx",
+      "parent": "/provider-catalog/$provider"
     },
     "/transfer-process/$transferProcessId/": {
       "filePath": "transfer-process/$transferProcessId/index.tsx",
       "parent": "/transfer-process/$transferProcessId"
     },
+    "/provider-catalog/$provider/catalog/$catalogId": {
+      "filePath": "provider-catalog/$provider/catalog.$catalogId/route.tsx",
+      "parent": "/provider-catalog/$provider",
+      "children": [
+        "/provider-catalog/$provider/catalog/$catalogId/",
+        "/provider-catalog/$provider/catalog/$catalogId/data-service/$dataServiceId",
+        "/provider-catalog/$provider/catalog/$catalogId/dataset/$datasetId"
+      ]
+    },
     "/contract-negotiation/$cnProcess/message/$messageId": {
       "filePath": "contract-negotiation/$cnProcess/message.$messageId.tsx",
       "parent": "/contract-negotiation/$cnProcess"
     },
-    "/provider-catalog/$catalogId/data-service/$dataServiceId": {
-      "filePath": "provider-catalog/$catalogId/data-service.$dataServiceId.tsx",
-      "parent": "/provider-catalog/$catalogId"
-    },
-    "/provider-catalog/$catalogId/dataset/$datasetId": {
-      "filePath": "provider-catalog/$catalogId/dataset.$datasetId.tsx",
-      "parent": "/provider-catalog/$catalogId"
-    },
     "/transfer-process/$transferProcessId/transfer-message/$transferMessageId": {
       "filePath": "transfer-process/$transferProcessId/transfer-message.$transferMessageId.tsx",
       "parent": "/transfer-process/$transferProcessId"
+    },
+    "/provider-catalog/$provider/catalog/$catalogId/": {
+      "filePath": "provider-catalog/$provider/catalog.$catalogId/index.tsx",
+      "parent": "/provider-catalog/$provider/catalog/$catalogId"
+    },
+    "/provider-catalog/$provider/catalog/$catalogId/data-service/$dataServiceId": {
+      "filePath": "provider-catalog/$provider/catalog.$catalogId/data-service.$dataServiceId.tsx",
+      "parent": "/provider-catalog/$provider/catalog/$catalogId"
+    },
+    "/provider-catalog/$provider/catalog/$catalogId/dataset/$datasetId": {
+      "filePath": "provider-catalog/$provider/catalog.$catalogId/dataset.$datasetId.tsx",
+      "parent": "/provider-catalog/$provider/catalog/$catalogId"
     }
   }
 }

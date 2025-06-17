@@ -296,6 +296,8 @@ where
             "ContractRequestMessage".to_string(),
             json!({
                 "process": cn_process,
+                "message": cn_message,
+                "offer": offer
             }),
         )
             .await?;

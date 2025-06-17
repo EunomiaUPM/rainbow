@@ -186,6 +186,7 @@ export const PubSubContextProvider = ({children}: { children: ReactNode }) => {
                             setLastHighLightedNotification(notification.messageContent.process.cn_process_id)
                             console.log("ContractAgreementMessage Notification:", notification);
                             break;
+                        case "ContractVerificationMessage":
                         case "ContractAgreementVerificationMessage":
                             queryClient.setQueryData(
                                 [
@@ -211,6 +212,7 @@ export const PubSubContextProvider = ({children}: { children: ReactNode }) => {
                             setLastHighLightedNotification(notification.messageContent.process.cn_process_id)
                             console.log("ContractAgreementVerificationMessage Notification:", notification);
                             break;
+                        case "ContractEventMessage:finalized":
                         case "ContractNegotiationEventMessage:finalized":
                             queryClient.setQueryData(
                                 [
@@ -236,7 +238,33 @@ export const PubSubContextProvider = ({children}: { children: ReactNode }) => {
                             setLastHighLightedNotification(notification.messageContent.process.cn_process_id)
                             console.log("ContractNegotiationEventMessage:finalized Notification:", notification);
                             break;
+                        case "ContractAcceptanceMessage":
+                            queryClient.setQueryData(
+                                [
+                                    "CONTRACT_NEGOTIATION_PROCESSES"
+                                ], (oldData: CNProcess[]) => {
+                                    const data = [...oldData]
+                                    const index = data.findIndex(d =>
+                                        d.provider_id === notification.messageContent.process.provider_id
+                                    )
+                                    if (index !== -1) {
+                                        data[index] = notification.messageContent.process as CNProcess
+                                    }
+                                    return data
+                                })
+                            // for single view
+                            queryClient.setQueryData(
+                                ["CONTRACT_NEGOTIATION_PROCESSES_BY_ID", notification.messageContent.process.cn_process_id],
+                                notification.messageContent.process as CNProcess
+                            )
+                            // for messages list
+                            // @ts-ignore
+                            queryClient.refetchQueries(["CONTRACT_NEGOTIATION_MESSAGES_BY_CNID", notification.messageContent.process.cn_process_id])
+                            setLastHighLightedNotification(notification.messageContent.process.cn_process_id)
+                            console.log("ContractAcceptanceMessage Notification:", notification);
+                            break;
                         case "ContractNegotiationTerminationMessage":
+                        case "ContractTerminationMessage":
                             queryClient.setQueryData(
                                 [
                                     "CONTRACT_NEGOTIATION_PROCESSES"

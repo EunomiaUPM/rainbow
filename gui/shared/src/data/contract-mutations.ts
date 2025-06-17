@@ -10,6 +10,8 @@ export interface ContractNegotiationRPCProviderRequestBody {
     content: {
         providerParticipantId: UUID;
         offer: OdrlOffer;
+        consumerPid?: UUID;
+        providerPid?: UUID;
     }
 }
 

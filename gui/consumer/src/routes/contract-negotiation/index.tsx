@@ -5,10 +5,17 @@ import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "sh
 import {useGetContractNegotiationProcesses} from "shared/src/data/contract-queries.ts";
 import {Button} from "shared/src/components/ui/button.tsx";
 import {ContractNegotiationActions} from "shared/src/components/ContractNegotiationActions.tsx";
-import * as process from "node:process";
+import {useMemo} from "react";
 
 const RouteComponent = () => {
     const {data: cnProcesses} = useGetContractNegotiationProcesses();
+    const cnProcessesSorted = useMemo(() => {
+        if (!cnProcesses) return [];
+        return [...cnProcesses].sort((a, b) => {
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        });
+    }, [cnProcesses]);
+
     return (
         <div>
             <div className="flex justify-end">
@@ -21,13 +28,15 @@ const RouteComponent = () => {
                     <TableRow>
                         <TableHead>ProviderPid</TableHead>
                         <TableHead>ConsumerPid</TableHead>
+                        <TableHead>Associated Provide</TableHead>
+                        <TableHead>State</TableHead>
                         <TableHead>CreatedAt</TableHead>
                         <TableHead>Actions</TableHead>
                         <TableHead>Link</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {cnProcesses.map((cnProcess) => (
+                    {cnProcessesSorted.map((cnProcess) => (
                         <TableRow key={cnProcess.provider_id.slice(0, 20)}>
                             <TableCell>
                                 {cnProcess.provider_id?.slice(0, 20) + "..."}
@@ -36,10 +45,16 @@ const RouteComponent = () => {
                                 {cnProcess.consumer_id?.slice(0, 20) + "..."}
                             </TableCell>
                             <TableCell>
+                                {cnProcess.associated_provider?.slice(0, 20) + "..."}
+                            </TableCell>
+                            <TableCell>
+                                {cnProcess.state}
+                            </TableCell>
+                            <TableCell>
                                 {dayjs(cnProcess.created_at).format("DD/MM/YYYY - HH:mm")}
                             </TableCell>
                             <TableCell>
-                                <ContractNegotiationActions process={process} tiny={true}/>
+                                <ContractNegotiationActions process={cnProcess} tiny={true}/>
                             </TableCell>
                             <TableCell>
                                 <Link

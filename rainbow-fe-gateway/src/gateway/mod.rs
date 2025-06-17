@@ -42,8 +42,8 @@ pub async fn execute_proxy(
 
     let microservice_api_path = match service_prefix.as_str() {
         "dataplane" => "api/v1/dataplane",
-        "notifications" => "api/v1/catalog/notifications",
-        "subscriptions" => "api/v1/catalog/subscriptions",
+        "notifications" => "api/v1/contract-negotiation/notifications",
+        "subscriptions" => "api/v1/contract-negotiation/subscriptions",
         "catalogs" => "api/v1/catalogs",
         "datasets" => "api/v1/datasets",
         "data-services" => "api/v1/data-services",
