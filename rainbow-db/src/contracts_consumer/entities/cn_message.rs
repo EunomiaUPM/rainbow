@@ -27,6 +27,7 @@ pub struct Model {
     pub cn_message_id: String,
     pub cn_process_id: String,
     pub _type: String,
+    pub subtype: Option<String>,
     pub from: String,
     pub to: String,
     pub created_at: chrono::NaiveDateTime,

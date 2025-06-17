@@ -22,8 +22,8 @@ use crate::consumer::core::rainbow_entities::rainbow_entities_errors::CnErrorCon
 use crate::consumer::core::rainbow_entities::rainbow_entities_types::{EditAgreementRequest, EditContractNegotiationMessageRequest, EditContractNegotiationOfferRequest, EditContractNegotiationRequest, NewAgreementRequest, NewContractNegotiationMessageRequest, NewContractNegotiationOfferRequest, NewContractNegotiationRequest};
 use crate::consumer::core::rainbow_entities::RainbowEntitiesContractNegotiationConsumerTrait;
 use axum::async_trait;
-use rainbow_db::contracts_consumer::entities::cn_process::Model;
-use rainbow_db::contracts_consumer::entities::{agreement, cn_message, cn_offer};
+use rainbow_common::protocol::contract::consumer_process_ack::CnConsumerProcess;
+use rainbow_db::contracts_consumer::entities::{agreement, cn_message, cn_offer, cn_process};
 use rainbow_db::contracts_consumer::repo::{AgreementConsumerRepo, CnErrors, ContractNegotiationConsumerMessageRepo, ContractNegotiationConsumerOfferRepo, ContractNegotiationConsumerProcessRepo};
 use rainbow_events::core::notification::notification_types::{RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory, RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes};
 use rainbow_events::core::notification::RainbowEventsNotificationTrait;
@@ -74,12 +74,13 @@ where
     + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
 {
-    async fn get_cn_processes(&self) -> anyhow::Result<Vec<Model>> {
+    async fn get_cn_processes(&self) -> anyhow::Result<Vec<CnConsumerProcess>> {
         let processes = self.repo.get_all_cn_processes(None, None).await.map_err(CnErrorConsumer::DbErr)?;
+        let processes = processes.iter().map(|p| CnConsumerProcess::from(p.to_owned())).collect();
         Ok(processes)
     }
 
-    async fn get_cn_process_by_id(&self, process_id: Urn) -> anyhow::Result<Model> {
+    async fn get_cn_process_by_id(&self, process_id: Urn) -> anyhow::Result<cn_process::Model> {
         let process = self
             .repo
             .get_cn_process_by_cn_id(process_id.clone())
@@ -89,34 +90,37 @@ where
         Ok(process)
     }
 
-    async fn get_cn_process_by_provider(&self, provider_id: Urn) -> anyhow::Result<Model> {
+    async fn get_cn_process_by_provider(&self, provider_id: Urn) -> anyhow::Result<CnConsumerProcess> {
         let process =
             self.repo.get_cn_process_by_provider_id(provider_id.clone()).await.map_err(CnErrorConsumer::DbErr)?.ok_or(
                 CnErrorConsumer::ProviderNotFound { provider_id, entity: CNControllerTypes::Process.to_string() },
             )?;
+        let process: CnConsumerProcess = CnConsumerProcess::from(process);
         Ok(process)
     }
 
-    async fn get_cn_process_by_consumer(&self, consumer_id: Urn) -> anyhow::Result<Model> {
+    async fn get_cn_process_by_consumer(&self, consumer_id: Urn) -> anyhow::Result<CnConsumerProcess> {
         let process =
             self.repo.get_cn_process_by_consumer_id(consumer_id.clone()).await.map_err(CnErrorConsumer::DbErr)?.ok_or(
                 CnErrorConsumer::ConsumerNotFound { consumer_id, entity: CNControllerTypes::Process.to_string() },
             )?;
+        let process: CnConsumerProcess = CnConsumerProcess::from(process);
         Ok(process)
     }
 
-    async fn post_cn_process(&self, input: NewContractNegotiationRequest) -> anyhow::Result<Model> {
+    async fn post_cn_process(&self, input: NewContractNegotiationRequest) -> anyhow::Result<cn_process::Model> {
         let process = self.repo.create_cn_process(input.into()).await.map_err(CnErrorConsumer::DbErr)?;
         Ok(process)
     }
 
-    async fn put_cn_process(&self, process_id: Urn, input: EditContractNegotiationRequest) -> anyhow::Result<Model> {
+    async fn put_cn_process(&self, process_id: Urn, input: EditContractNegotiationRequest) -> anyhow::Result<CnConsumerProcess> {
         let process = self.repo.put_cn_process(process_id.clone(), input.into()).await.map_err(|err| match err {
             CnErrors::CNProcessNotFound => {
                 CnErrorConsumer::NotFound { id: process_id, entity: CNControllerTypes::Process.to_string() }
             }
             _ => CnErrorConsumer::DbErr(err),
         })?;
+        let process: CnConsumerProcess = CnConsumerProcess::from(process);
         Ok(process)
     }
 

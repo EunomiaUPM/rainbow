@@ -164,7 +164,7 @@ where
                         provider_pid: message.get_provider_pid()?.map(|p| p.to_owned()),
                         consumer_pid: Option::from(incoming_consumer_pid.unwrap().to_owned()),
                     })?;
-                
+
                 if cn_process_consumer.consumer_id != cn_process_provider.consumer_id {
                     bail!(IdsaCNError::ValidationError(
                         "ConsumerPid and ProviderPid don't coincide".to_string()
@@ -177,7 +177,7 @@ where
                         "This user is not related with this process".to_string()
                     ))
                 }
-                Ok(Option::from(cn_process_consumer))
+                Ok(Option::from(cn_process_consumer).map(|c| c.into()))
             }
         }
     }
@@ -233,6 +233,7 @@ where
                 get_urn_from_string(&cn_process.consumer_id)?,
                 NewContractNegotiationMessage {
                     _type: input._type.to_string(),
+                    subtype: None,
                     from: "Consumer".to_string(),
                     to: "Provider".to_string(),
                     content: serde_json::to_value(&input).unwrap(),
@@ -289,6 +290,7 @@ where
                 consumer_pid.clone(),
                 NewContractNegotiationMessage {
                     _type: input._type.to_string(),
+                    subtype: None,
                     from: "Consumer".to_string(),
                     to: "Provider".to_string(),
                     content: serde_json::to_value(&input).unwrap(),
@@ -346,6 +348,7 @@ where
                 consumer_pid.clone(),
                 NewContractNegotiationMessage {
                     _type: input._type.to_string(),
+                    subtype: None,
                     from: "Consumer".to_string(),
                     to: "Provider".to_string(),
                     content: serde_json::to_value(&input).unwrap(),
@@ -417,6 +420,10 @@ where
                 consumer_pid.clone(),
                 NewContractNegotiationMessage {
                     _type: input._type.to_string(),
+                    subtype: Some(match input.event_type {
+                        NegotiationEventType::Accepted => "accepted",
+                        NegotiationEventType::Finalized => "finalized"
+                    }.to_string()),
                     from: "Consumer".to_string(),
                     to: "Provider".to_string(),
                     content: serde_json::to_value(&input).unwrap(),
@@ -464,6 +471,7 @@ where
                 consumer_pid.clone(),
                 NewContractNegotiationMessage {
                     _type: input._type.to_string(),
+                    subtype: None,
                     from: "Consumer".to_string(),
                     to: "Provider".to_string(),
                     content: serde_json::to_value(&input).unwrap(),

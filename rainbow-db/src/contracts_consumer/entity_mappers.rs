@@ -32,6 +32,7 @@ impl From<cn_process::Model> for ContractAckMessage {
     }
 }
 
+
 impl From<CnErrors> for ContractErrorMessage {
     fn from(error: CnErrors) -> Self {
         match error {
@@ -48,3 +49,4 @@ impl From<CnErrors> for ContractErrorMessage {
         }
     }
 }
+

@@ -17,8 +17,8 @@
  *
  */
 
-use super::entities::cn_process;
-use crate::contracts_consumer::entities::{agreement, cn_message, cn_offer};
+use crate::contracts_consumer::cn_process_projection::CnConsumerProcessFromSQL;
+use crate::contracts_consumer::entities::{agreement, cn_message, cn_offer, cn_process};
 use anyhow::Error;
 use axum::async_trait;
 use rainbow_common::protocol::contract::contract_odrl::OdrlAgreement;
@@ -56,21 +56,21 @@ pub trait ContractNegotiationConsumerProcessRepo {
         &self,
         limit: Option<u64>,
         page: Option<u64>,
-    ) -> anyhow::Result<Vec<cn_process::Model>, CnErrors>;
+    ) -> anyhow::Result<Vec<CnConsumerProcessFromSQL>, CnErrors>;
     async fn get_cn_process_by_provider_id(
         &self,
         provider_id: Urn,
-    ) -> anyhow::Result<Option<cn_process::Model>, CnErrors>;
+    ) -> anyhow::Result<Option<CnConsumerProcessFromSQL>, CnErrors>;
     async fn get_cn_process_by_consumer_id(
         &self,
         consumer_id: Urn,
-    ) -> anyhow::Result<Option<cn_process::Model>, CnErrors>;
+    ) -> anyhow::Result<Option<CnConsumerProcessFromSQL>, CnErrors>;
     async fn get_cn_process_by_cn_id(&self, cn_process_id: Urn) -> anyhow::Result<Option<cn_process::Model>, CnErrors>;
     async fn put_cn_process(
         &self,
         cn_process_id: Urn,
         edit_cn_process: EditContractNegotiationProcess,
-    ) -> anyhow::Result<cn_process::Model, CnErrors>;
+    ) -> anyhow::Result<CnConsumerProcessFromSQL, CnErrors>;
     async fn create_cn_process(
         &self,
         new_cn_process: NewContractNegotiationProcess,
@@ -80,12 +80,14 @@ pub trait ContractNegotiationConsumerProcessRepo {
 
 pub struct NewContractNegotiationMessage {
     pub _type: String,
+    pub subtype: Option<String>,
     pub from: String,
     pub to: String,
     pub content: serde_json::Value,
 }
 pub struct EditContractNegotiationMessage {
     pub _type: Option<String>,
+    pub subtype: Option<String>,
     pub from: Option<String>,
     pub to: Option<String>,
     pub content: Option<serde_json::Value>,

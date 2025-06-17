@@ -37,6 +37,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(CNMessages::CnMessageId).string().not_null().primary_key())
                     .col(ColumnDef::new(CNMessages::CnProcessId).string().not_null())
                     .col(ColumnDef::new(CNMessages::Type).string().not_null())
+                    .col(ColumnDef::new(CNMessages::Subtype).string())
                     .col(ColumnDef::new(CNMessages::From).string().not_null())
                     .col(ColumnDef::new(CNMessages::To).string().not_null())
                     .col(ColumnDef::new(CNMessages::CreatedAt).date_time().not_null())
@@ -64,6 +65,7 @@ pub enum CNMessages {
     CnMessageId,
     CnProcessId,
     Type,
+    Subtype,
     From,
     To,
     CreatedAt,

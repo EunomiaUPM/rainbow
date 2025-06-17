@@ -18,6 +18,7 @@
  */
 
 use super::super::entities::cn_process;
+use crate::contracts_consumer::cn_process_projection::CnConsumerProcessFromSQL;
 use crate::contracts_consumer::entities::{agreement, cn_message, cn_offer};
 use crate::contracts_consumer::repo::{
     AgreementConsumerRepo, CnErrors, ContractNegotiationConsumerMessageRepo, ContractNegotiationConsumerOfferRepo,
@@ -28,8 +29,8 @@ use crate::contracts_consumer::repo::{
 use axum::async_trait;
 use cn_message::Model;
 use json_value_merge::Merge;
-use rainbow_common::utils::get_urn;
-use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, JoinType, QueryFilter, QueryOrder, QuerySelect, RelationTrait};
+use rainbow_common::utils::{get_urn, get_urn_from_string};
+use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, DbBackend, EntityTrait, FromQueryResult, JoinType, ModelTrait, QueryFilter, QueryOrder, QuerySelect, RelationTrait, Statement};
 use serde_json::to_value;
 use urn::Urn;
 
@@ -55,53 +56,147 @@ impl ContractNegotiationConsumerProcessRepo for ContractNegotiationConsumerRepoF
         &self,
         limit: Option<u64>,
         page: Option<u64>,
-    ) -> anyhow::Result<Vec<cn_process::Model>, CnErrors> {
-        let cn_processes = cn_process::Entity::find()
-            .limit(limit.unwrap_or(10000))
-            .offset(page.unwrap_or(0))
+    ) -> anyhow::Result<Vec<CnConsumerProcessFromSQL>, CnErrors> {
+        let sql = r#"
+            WITH RankedMessages AS (
+                SELECT
+                    m.cn_process_id,
+                    m.type,
+                    m.subtype,
+                    m.created_at,
+                    ROW_NUMBER() OVER(PARTITION BY m.cn_process_id ORDER BY m.created_at DESC) as rn
+                FROM
+                    cn_messages m
+            )
+            SELECT
+                p.consumer_id,
+                p.provider_id,
+                p.associated_provider,
+                p.created_at,
+                p.updated_at,
+                rm.type AS "message_type",
+                rm.subtype AS "message_subtype",
+                rm.created_at AS "message_at"
+            FROM
+                cn_processes p
+                    LEFT JOIN
+                RankedMessages rm ON p.consumer_id = rm.cn_process_id
+            WHERE
+                rm.rn = 1
+            ORDER BY
+                p.created_at DESC;
+        "#;
+        let stmt = Statement::from_string(DbBackend::Postgres, sql.to_owned());
+        let cn_processes = CnConsumerProcessFromSQL::find_by_statement(stmt)
             .all(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNProcess(err.into()))?;
+
         Ok(cn_processes)
     }
 
     async fn get_cn_process_by_provider_id(
         &self,
         provider_id: Urn,
-    ) -> anyhow::Result<Option<cn_process::Model>, CnErrors> {
-        let cn_processes = cn_process::Entity::find()
-            .filter(cn_process::Column::ProviderId.eq(provider_id.as_str()))
+    ) -> anyhow::Result<Option<CnConsumerProcessFromSQL>, CnErrors> {
+        let sql = r#"
+            WITH RankedMessages AS (
+                SELECT
+                    m.cn_process_id,
+                    m.type,
+                    m.subtype,
+                    m.created_at,
+                    ROW_NUMBER() OVER(PARTITION BY m.cn_process_id ORDER BY m.created_at DESC) as rn
+                FROM
+                    cn_messages m
+            )
+            SELECT
+                p.consumer_id,
+                p.provider_id,
+                p.associated_provider,
+                p.created_at,
+                p.updated_at,
+                rm.type AS "message_type",
+                rm.subtype AS "message_subtype",
+                rm.created_at AS "message_at"
+            FROM
+                cn_processes p
+                    LEFT JOIN
+                RankedMessages rm ON p.consumer_id = rm.cn_process_id
+            WHERE
+                p.provider_id = $1 AND
+                rm.rn = 1
+            ORDER BY
+                p.created_at DESC;
+        "#;
+        let stmt = Statement::from_sql_and_values(DbBackend::Postgres, sql.to_owned(), [provider_id.to_string().into()]);
+        let cn_processes = CnConsumerProcessFromSQL::find_by_statement(stmt)
             .one(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNProcess(err.into()))?;
+
         Ok(cn_processes)
     }
 
     async fn get_cn_process_by_consumer_id(
         &self,
         consumer_id: Urn,
-    ) -> anyhow::Result<Option<cn_process::Model>, CnErrors> {
-        let cn_processes = cn_process::Entity::find()
-            .filter(cn_process::Column::ConsumerId.eq(consumer_id.as_str()))
+    ) -> anyhow::Result<Option<CnConsumerProcessFromSQL>, CnErrors> {
+        let sql = r#"
+            WITH RankedMessages AS (
+                SELECT
+                    m.cn_process_id,
+                    m.type,
+                    m.subtype,
+                    m.created_at,
+                    ROW_NUMBER() OVER(PARTITION BY m.cn_process_id ORDER BY m.created_at DESC) as rn
+                FROM
+                    cn_messages m
+            )
+            SELECT
+                p.consumer_id,
+                p.provider_id,
+                p.associated_provider,
+                p.created_at,
+                p.updated_at,
+                rm.type AS "message_type",
+                rm.subtype AS "message_subtype",
+                rm.created_at AS "message_at"
+            FROM
+                cn_processes p
+                    LEFT JOIN
+                RankedMessages rm ON p.consumer_id = rm.cn_process_id
+            WHERE
+                p.consumer_id = $1 AND
+                rm.rn = 1
+            ORDER BY
+                p.created_at DESC;
+        "#;
+        let stmt = Statement::from_sql_and_values(DbBackend::Postgres, sql.to_owned(), [consumer_id.to_string().into()]);
+        let cn_processes = CnConsumerProcessFromSQL::find_by_statement(stmt)
             .one(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNProcess(err.into()))?;
+
         Ok(cn_processes)
     }
 
-    async fn get_cn_process_by_cn_id(&self, cn_process_id: Urn) -> anyhow::Result<Option<cn_process::Model>, CnErrors> {
-        let cn_process = cn_process::Entity::find_by_id(cn_process_id.as_str())
+    async fn get_cn_process_by_cn_id(
+        &self,
+        cn_process_id: Urn,
+    ) -> anyhow::Result<Option<cn_process::Model>, CnErrors> {
+        let response = cn_process::Entity::find_by_id(cn_process_id.to_string())
             .one(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNProcess(err.into()))?;
-        Ok(cn_process)
+        Ok(response)
     }
 
     async fn put_cn_process(
         &self,
         cn_process_id: Urn,
         edit_cn_process: EditContractNegotiationProcess,
-    ) -> anyhow::Result<cn_process::Model, CnErrors> {
+    ) -> anyhow::Result<CnConsumerProcessFromSQL, CnErrors> {
         let old_model = cn_process::Entity::find_by_id(cn_process_id.as_str())
             .one(&self.db_connection)
             .await
@@ -115,7 +210,13 @@ impl ContractNegotiationConsumerProcessRepo for ContractNegotiationConsumerRepoF
             .update(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorUpdatingCNProcess(err.into()))?;
-        Ok(model)
+
+        let urn = get_urn_from_string(&model.consumer_id)
+            .map_err(|err| CnErrors::ErrorFetchingCNProcess(err.into()))?;
+        let model_out = self.get_cn_process_by_consumer_id(urn).await?
+            .ok_or(CnErrors::CNProcessNotFound)?;
+
+        Ok(model_out)
     }
 
     async fn create_cn_process(
@@ -136,6 +237,7 @@ impl ContractNegotiationConsumerProcessRepo for ContractNegotiationConsumerRepoF
             .exec_with_returning(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorCreatingCNProcess(err.into()))?;
+
         Ok(cn_process)
     }
 
@@ -188,7 +290,7 @@ impl ContractNegotiationConsumerMessageRepo for ContractNegotiationConsumerRepoF
 
     async fn get_cn_messages_by_provider_id(&self, provider_id: Urn) -> anyhow::Result<Vec<Model>, CnErrors> {
         let cn_process = self
-            .get_cn_process_by_provider_id(provider_id.clone())
+            .get_cn_process_by_cn_id(provider_id.clone())
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNProcess(err.into()))?
             .ok_or(CnErrors::CNProcessNotFound)?;
@@ -204,7 +306,7 @@ impl ContractNegotiationConsumerMessageRepo for ContractNegotiationConsumerRepoF
 
     async fn get_cn_messages_by_consumer_id(&self, consumer_id: Urn) -> anyhow::Result<Vec<Model>, CnErrors> {
         let cn_process = self
-            .get_cn_process_by_consumer_id(consumer_id)
+            .get_cn_process_by_cn_id(consumer_id)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNProcess(err.into()))?
             .ok_or(CnErrors::CNProcessNotFound)?;
@@ -224,7 +326,7 @@ impl ContractNegotiationConsumerMessageRepo for ContractNegotiationConsumerRepoF
         edit_cn_message: EditContractNegotiationMessage,
     ) -> anyhow::Result<Model, CnErrors> {
         let cn_process = self
-            .get_cn_process_by_consumer_id(cn_process_id)
+            .get_cn_process_by_cn_id(cn_process_id)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNProcess(err.into()))?
             .ok_or(CnErrors::CNProcessNotFound)?;
@@ -272,6 +374,7 @@ impl ContractNegotiationConsumerMessageRepo for ContractNegotiationConsumerRepoF
             cn_message_id: ActiveValue::Set(get_urn(None).to_string()),
             cn_process_id: ActiveValue::Set(cn_process_id.to_string()),
             _type: ActiveValue::Set(new_cn_message._type),
+            subtype: ActiveValue::Set(new_cn_message.subtype),
             from: ActiveValue::Set(new_cn_message.from),
             to: ActiveValue::Set(new_cn_message.to),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
@@ -338,10 +441,7 @@ impl ContractNegotiationConsumerOfferRepo for ContractNegotiationConsumerRepoFor
         Ok(cn_offer)
     }
 
-    async fn get_all_cn_offers_by_provider(
-        &self,
-        provider_id: Urn,
-    ) -> anyhow::Result<Vec<cn_offer::Model>, CnErrors> {
+    async fn get_all_cn_offers_by_provider(&self, provider_id: Urn) -> anyhow::Result<Vec<cn_offer::Model>, CnErrors> {
         let cn_offers = cn_offer::Entity::find()
             .join(JoinType::InnerJoin, cn_message::Relation::CnProcesses.def())
             .join(JoinType::InnerJoin, cn_offer::Relation::CnMessage.def())
@@ -352,10 +452,7 @@ impl ContractNegotiationConsumerOfferRepo for ContractNegotiationConsumerRepoFor
         Ok(cn_offers)
     }
 
-    async fn get_all_cn_offers_by_cn_process(
-        &self,
-        process_id: Urn,
-    ) -> anyhow::Result<Vec<cn_offer::Model>, CnErrors> {
+    async fn get_all_cn_offers_by_cn_process(&self, process_id: Urn) -> anyhow::Result<Vec<cn_offer::Model>, CnErrors> {
         let cn_process = self
             .get_cn_process_by_cn_id(process_id.clone())
             .await
@@ -371,10 +468,7 @@ impl ContractNegotiationConsumerOfferRepo for ContractNegotiationConsumerRepoFor
         Ok(cn_offers)
     }
 
-    async fn get_all_cn_offers_by_consumer(
-        &self,
-        consumer_id: Urn,
-    ) -> anyhow::Result<Vec<cn_offer::Model>, CnErrors> {
+    async fn get_all_cn_offers_by_consumer(&self, consumer_id: Urn) -> anyhow::Result<Vec<cn_offer::Model>, CnErrors> {
         let cn_offers = cn_offer::Entity::find()
             .join(JoinType::InnerJoin, cn_message::Relation::CnProcesses.def())
             .join(JoinType::InnerJoin, cn_offer::Relation::CnMessage.def())
@@ -406,10 +500,7 @@ impl ContractNegotiationConsumerOfferRepo for ContractNegotiationConsumerRepoFor
         Ok(cn_offers)
     }
 
-    async fn get_cn_offer_by_id(
-        &self,
-        offer_id: Urn,
-    ) -> anyhow::Result<Option<cn_offer::Model>, CnErrors> {
+    async fn get_cn_offer_by_id(&self, offer_id: Urn) -> anyhow::Result<Option<cn_offer::Model>, CnErrors> {
         let cn_offers = cn_offer::Entity::find_by_id(offer_id.as_str())
             .one(&self.db_connection)
             .await
@@ -425,7 +516,7 @@ impl ContractNegotiationConsumerOfferRepo for ContractNegotiationConsumerRepoFor
         edit_cn_offer: EditContractNegotiationOffer,
     ) -> anyhow::Result<cn_offer::Model, CnErrors> {
         let cn_process = self
-            .get_cn_process_by_cn_id(process_id)
+            .get_cn_process_by_consumer_id(process_id)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNProcess(err.into()))?
             .ok_or(CnErrors::CNProcessNotFound)?;
@@ -464,7 +555,7 @@ impl ContractNegotiationConsumerOfferRepo for ContractNegotiationConsumerRepoFor
         new_cn_offer: NewContractNegotiationOffer,
     ) -> anyhow::Result<cn_offer::Model, CnErrors> {
         let cn_process = self
-            .get_cn_process_by_cn_id(process_id.clone())
+            .get_cn_process_by_consumer_id(process_id.clone())
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNProcess(err.into()))?
             .ok_or(CnErrors::CNProcessNotFound)?;
@@ -530,10 +621,7 @@ impl AgreementConsumerRepo for ContractNegotiationConsumerRepoForSql {
         Ok(agreements)
     }
 
-    async fn get_agreement_by_ag_id(
-        &self,
-        agreement_id: Urn,
-    ) -> anyhow::Result<Option<agreement::Model>, CnErrors> {
+    async fn get_agreement_by_ag_id(&self, agreement_id: Urn) -> anyhow::Result<Option<agreement::Model>, CnErrors> {
         let agreement = agreement::Entity::find_by_id(agreement_id.as_str())
             .one(&self.db_connection)
             .await
@@ -541,10 +629,7 @@ impl AgreementConsumerRepo for ContractNegotiationConsumerRepoForSql {
         Ok(agreement)
     }
 
-    async fn get_agreement_by_process_id(
-        &self,
-        process_id: Urn,
-    ) -> anyhow::Result<Option<agreement::Model>, CnErrors> {
+    async fn get_agreement_by_process_id(&self, process_id: Urn) -> anyhow::Result<Option<agreement::Model>, CnErrors> {
         let cn_process = self
             .get_cn_process_by_cn_id(process_id.clone())
             .await
@@ -560,10 +645,7 @@ impl AgreementConsumerRepo for ContractNegotiationConsumerRepoForSql {
         Ok(agreement)
     }
 
-    async fn get_agreement_by_message_id(
-        &self,
-        message_id: Urn,
-    ) -> anyhow::Result<Option<agreement::Model>, CnErrors> {
+    async fn get_agreement_by_message_id(&self, message_id: Urn) -> anyhow::Result<Option<agreement::Model>, CnErrors> {
         let cn_message = self
             .get_cn_messages_by_cn_message_id(message_id.clone())
             .await
@@ -664,20 +746,14 @@ impl AgreementConsumerRepo for ContractNegotiationConsumerRepoForSql {
         //         new_agreement.provider_participant_id.clone(),
         //     ))?;
 
-        let agreement_as_json = to_value(new_agreement.agreement_content)
-            .map_err(|err| CnErrors::ErrorCreatingAgreement(err.into()))?;
+        let agreement_as_json =
+            to_value(new_agreement.agreement_content).map_err(|err| CnErrors::ErrorCreatingAgreement(err.into()))?;
 
-        let agreement_id = new_agreement.agreement_id
-            .map(|a| a.to_string())
-            .unwrap_or(get_urn(None).to_string());
+        let agreement_id = new_agreement.agreement_id.map(|a| a.to_string()).unwrap_or(get_urn(None).to_string());
         let model = agreement::ActiveModel {
             agreement_id: ActiveValue::Set(agreement_id),
-            consumer_participant_id: ActiveValue::Set(
-                new_agreement.consumer_participant_id.to_string(),
-            ),
-            provider_participant_id: ActiveValue::Set(
-                new_agreement.provider_participant_id.to_string(),
-            ),
+            consumer_participant_id: ActiveValue::Set(new_agreement.consumer_participant_id.to_string()),
+            provider_participant_id: ActiveValue::Set(new_agreement.provider_participant_id.to_string()),
             cn_message_id: ActiveValue::Set(message_id.to_string()),
             agreement_content: ActiveValue::Set(agreement_as_json),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),

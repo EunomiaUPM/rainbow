@@ -304,6 +304,7 @@ impl ContractNegotiationMessageRepo for ContractNegotiationProviderRepoForSql {
             cn_message_id: ActiveValue::Set(get_urn(None).to_string()),
             cn_process_id: ActiveValue::Set(cn_process_id.to_string()),
             _type: ActiveValue::Set(new_cn_message._type),
+            subtype: ActiveValue::Set(new_cn_message.subtype),
             from: ActiveValue::Set(new_cn_message.from),
             to: ActiveValue::Set(new_cn_message.to),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),

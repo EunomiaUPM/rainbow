@@ -292,6 +292,7 @@ where
                 cn_process.provider_id.parse().unwrap(),
                 NewContractNegotiationMessage {
                     _type: ContractNegotiationMessages::ContractOfferMessage.to_string(),
+                    subtype: None,
                     from: ConfigRoles::Provider.to_string(),
                     to: ConfigRoles::Consumer.to_string(),
                     content: serde_json::to_value(contract_offer_message).unwrap(),
@@ -410,6 +411,7 @@ where
                 cn_process.provider_id.parse().unwrap(),
                 NewContractNegotiationMessage {
                     _type: ContractNegotiationMessages::ContractOfferMessage.to_string(),
+                    subtype: None,
                     from: ConfigRoles::Provider.to_string(),
                     to: ConfigRoles::Consumer.to_string(),
                     content: serde_json::to_value(contract_offer_message).unwrap(),
@@ -553,6 +555,7 @@ where
                 cn_process.provider_id.parse().unwrap(),
                 NewContractNegotiationMessage {
                     _type: ContractNegotiationMessages::ContractAgreementMessage.to_string(),
+                    subtype: None,
                     from: ConfigRoles::Provider.to_string(),
                     to: ConfigRoles::Consumer.to_string(),
                     content: serde_json::to_value(contract_agreement_message).unwrap(),
@@ -648,6 +651,7 @@ where
                 cn_process.provider_id.parse().unwrap(),
                 NewContractNegotiationMessage {
                     _type: ContractNegotiationMessages::ContractNegotiationEventMessage.to_string(),
+                    subtype: Some("finalized".to_string()),
                     from: ConfigRoles::Provider.to_string(),
                     to: ConfigRoles::Consumer.to_string(),
                     content: serde_json::to_value(contract_verification_message).unwrap(),
@@ -728,6 +732,7 @@ where
                 cn_process.provider_id.parse().unwrap(),
                 NewContractNegotiationMessage {
                     _type: ContractNegotiationMessages::ContractNegotiationTerminationMessage.to_string(),
+                    subtype: None,
                     from: ConfigRoles::Provider.to_string(),
                     to: ConfigRoles::Consumer.to_string(),
                     content: serde_json::to_value(contract_termination_message).unwrap(),

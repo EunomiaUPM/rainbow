@@ -2357,6 +2357,7 @@ dependencies = [
  "base64",
  "chrono",
  "json_value_merge",
+ "log",
  "once_cell",
  "rainbow_common",
  "rand",

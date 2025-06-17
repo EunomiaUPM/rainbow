@@ -142,7 +142,7 @@ where
                 "ProviderPid and ConsumerPid don't coincide".to_string()
             ));
         }
-        Ok(consumer_process)
+        Ok(consumer_process.into())
     }
 
     async fn send_protocol_message_to_provider<M: serde::Serialize>(
@@ -258,11 +258,12 @@ where
         let cn_message = self
             .repo
             .create_cn_message(
-                cn_process.consumer_id.parse().unwrap(),
+                get_urn_from_string(&response.consumer_pid)?,
                 NewContractNegotiationMessage {
                     _type: ContractNegotiationMessages::ContractRequestMessage.to_string(),
-                    from: ConfigRoles::Provider.to_string(),
-                    to: ConfigRoles::Consumer.to_string(),
+                    subtype: None,
+                    from: ConfigRoles::Consumer.to_string(),
+                    to: ConfigRoles::Provider.to_string(),
                     content: serde_json::to_value(contract_request_message).unwrap(),
                 },
             )
@@ -271,8 +272,8 @@ where
         let offer = self
             .repo
             .create_cn_offer(
-                cn_process.consumer_id.parse().unwrap(),
-                cn_message.cn_message_id.parse().unwrap(),
+                get_urn_from_string(&response.consumer_pid)?,
+                get_urn_from_string(&cn_message.cn_message_id)?,
                 NewContractNegotiationOffer {
                     offer_id: None,
                     offer_content: serde_json::to_value(odrl_offer.clone()).unwrap(),
@@ -280,6 +281,8 @@ where
             )
             .await
             .map_err(CnErrorConsumer::DbErr)?;
+
+
         // 6. create response
         let cn_ack: ContractAckMessage = cn_process.clone().into();
         let response = SetupRequestResponse {
@@ -349,6 +352,7 @@ where
                 cn_process.consumer_id.parse().unwrap(),
                 NewContractNegotiationMessage {
                     _type: ContractNegotiationMessages::ContractRequestMessage.to_string(),
+                    subtype: None,
                     from: ConfigRoles::Provider.to_string(),
                     to: ConfigRoles::Consumer.to_string(),
                     content: serde_json::to_value(contract_offer_message).unwrap(),
@@ -435,6 +439,7 @@ where
                 cn_process.consumer_id.parse().unwrap(),
                 NewContractNegotiationMessage {
                     _type: ContractNegotiationMessages::ContractNegotiationEventMessage.to_string(),
+                    subtype: Some("accepted".to_string()),
                     from: ConfigRoles::Provider.to_string(),
                     to: ConfigRoles::Consumer.to_string(),
                     content: serde_json::to_value(contract_acceptance_message).unwrap(),
@@ -504,6 +509,7 @@ where
                 cn_process.consumer_id.parse().unwrap(),
                 NewContractNegotiationMessage {
                     _type: ContractNegotiationMessages::ContractAgreementVerificationMessage.to_string(),
+                    subtype: None,
                     from: ConfigRoles::Provider.to_string(),
                     to: ConfigRoles::Consumer.to_string(),
                     content: serde_json::to_value(contract_verification_message).unwrap(),
@@ -575,6 +581,7 @@ where
                 cn_process.consumer_id.parse().unwrap(),
                 NewContractNegotiationMessage {
                     _type: ContractNegotiationMessages::ContractNegotiationTerminationMessage.to_string(),
+                    subtype: None,
                     from: ConfigRoles::Provider.to_string(),
                     to: ConfigRoles::Consumer.to_string(),
                     content: serde_json::to_value(contract_termination_message).unwrap(),

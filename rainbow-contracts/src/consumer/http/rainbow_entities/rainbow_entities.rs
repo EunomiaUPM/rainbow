@@ -54,7 +54,7 @@ where
             )
             .route(
                 "/api/v1/contract-negotiation/processes/:process_id",
-                get(Self::handle_get_cn_process_by_id),
+                get(Self::handle_get_cn_process_by_consumer),
             )
             .route(
                 "/api/v1/contract-negotiation/processes/provider/:provider_id",

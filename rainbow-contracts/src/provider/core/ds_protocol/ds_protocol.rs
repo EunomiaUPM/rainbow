@@ -367,6 +367,7 @@ where
                 get_urn_from_string(&cn_process.provider_id)?,
                 NewContractNegotiationMessage {
                     _type: input._type.to_string(),
+                    subtype: None,
                     from: "Consumer".to_string(),
                     to: "Provider".to_string(),
                     content: serde_json::to_value(&input).unwrap(),
@@ -460,6 +461,7 @@ where
                 get_urn_from_string(&cn_process.provider_id)?,
                 NewContractNegotiationMessage {
                     _type: input._type.to_string(),
+                    subtype: None,
                     from: "Consumer".to_string(),
                     to: "Provider".to_string(),
                     content: serde_json::to_value(&input).unwrap(),
@@ -527,6 +529,7 @@ where
                 get_urn_from_string(&cn_process.provider_id)?,
                 NewContractNegotiationMessage {
                     _type: input._type.to_string(),
+                    subtype: Some("accepted".to_string()),
                     from: "Consumer".to_string(),
                     to: "Provider".to_string(),
                     content: serde_json::to_value(&input.clone()).unwrap(),
@@ -583,6 +586,7 @@ where
                 get_urn_from_string(&cn_process.provider_id)?,
                 NewContractNegotiationMessage {
                     _type: _type.to_string(),
+                    subtype: None,
                     from: "Consumer".to_string(),
                     to: "Provider".to_string(),
                     content: serde_json::to_value(&input).unwrap(),
@@ -639,6 +643,7 @@ where
                 get_urn_from_string(&cn_process.provider_id)?,
                 NewContractNegotiationMessage {
                     _type: _type.to_string(),
+                    subtype: None,
                     from: "Consumer".to_string(),
                     to: "Provider".to_string(),
                     content: serde_json::to_value(&input).unwrap(),
