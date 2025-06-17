@@ -36,8 +36,9 @@ module.exports = {
         64: ["4rem", { lineHeight: "1.4" }],
       },
       colors: {
-        text: "#fefefe",
-        stroke: "#525880",
+        foreground: "#f8f8fa",
+        text: "#f1f1f6",
+        stroke: "#645d7a",
         roles: {
           provider: "#52BFE0",
           consumer: "#FF852F",
