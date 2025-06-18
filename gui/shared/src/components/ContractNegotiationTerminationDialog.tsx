@@ -11,16 +11,28 @@ export const ContractNegotiationTerminationDialog = ({process}: { process: CNPro
     const form = useForm({});
     const {handleSubmit, control, setValue, getValues} = form;
     const {mutateAsync: terminateAsync} = usePostContractNegotiationRPCTermination()
-    const {api_gateway} = useContext<GlobalInfoContextType>(GlobalInfoContext)
+    const {api_gateway, role} = useContext<GlobalInfoContextType>(GlobalInfoContext)
     const onSubmit = () => {
-        terminateAsync({
-            api_gateway: api_gateway,
-            content: {
-                consumerParticipantId: process.associated_consumer,
-                consumerPid: process.consumer_id,
-                providerPid: process.provider_id
-            }
-        })
+        if (role === "consumer") {
+            terminateAsync({
+                api_gateway: api_gateway,
+                content: {
+                    providerParticipantId: process.associated_provider,
+                    consumerPid: process.consumer_id,
+                    providerPid: process.provider_id
+                }
+            })
+        }
+        if (role === "provider") {
+            terminateAsync({
+                api_gateway: api_gateway,
+                content: {
+                    consumerParticipantId: process.associated_consumer,
+                    consumerPid: process.consumer_id,
+                    providerPid: process.provider_id
+                }
+            })
+        }
     }
 
 

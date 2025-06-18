@@ -101,20 +101,21 @@ export const ContractNegotiationActions = ({process, tiny = false}: { process: C
                         </DialogTrigger>
                         <ContractNegotiationAgreementDialog process={process}/>
                     </Dialog>
-                    <Dialog>
-                        <DialogTrigger asChild>
-                            <Button>Terminate</Button>
-                        </DialogTrigger>
-                        <ContractNegotiationTerminationDialog process={process}/>
-                    </Dialog>
+                    {/*<Dialog>*/}
+                    {/*    <DialogTrigger asChild>*/}
+                    {/*        <Button>Terminate</Button>*/}
+                    {/*    </DialogTrigger>*/}
+                    {/*    <ContractNegotiationTerminationDialog process={process}/>*/}
+                    {/*</Dialog>*/}
                 </>)}
                 {role === "consumer" && (<>
-                    <Dialog>
-                        <DialogTrigger asChild>
-                            <Button>Terminate</Button>
-                        </DialogTrigger>
-                        <ContractNegotiationTerminationDialog process={process}/>
-                    </Dialog>
+                    <div>No further actions</div>
+                    {/*<Dialog>*/}
+                    {/*    <DialogTrigger asChild>*/}
+                    {/*        <Button>Terminate</Button>*/}
+                    {/*    </DialogTrigger>*/}
+                    {/*    <ContractNegotiationTerminationDialog process={process}/>*/}
+                    {/*</Dialog>*/}
                 </>)}
             </div>)}
             {process.state === "AGREED" && (<div className="space-x-2">

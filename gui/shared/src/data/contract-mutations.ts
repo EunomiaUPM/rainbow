@@ -308,7 +308,16 @@ export interface ContractNegotiationRPCProviderTerminationBody {
     }
 }
 
-export const postContractNegotiationRPCTermination = async (body: ContractNegotiationRPCProviderTerminationBody) => {
+export interface ContractNegotiationRPCConsumerTerminationBody {
+    api_gateway: string,
+    content: {
+        providerParticipantId: UUID;
+        consumerPid: UUID;
+        providerPid: UUID;
+    }
+}
+
+export const postContractNegotiationRPCTermination = async (body: ContractNegotiationRPCProviderTerminationBody | ContractNegotiationRPCConsumerTerminationBody) => {
     let rpc_response = await (
         await fetch(body.api_gateway + `/negotiations/rpc/setup-termination`, {
             headers: {
