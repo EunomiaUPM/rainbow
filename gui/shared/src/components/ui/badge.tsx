@@ -27,7 +27,7 @@ const badgeVariants = cva(
       },
       size: {
         default: "text-sm px-2 py-0.5",
-        lg: "text-base font-bold bg-white/10 px-2 py-0.5", 
+        lg: "text-base font-bold bg-white/10 px-2 py-0", 
         // cambie paddings, sino eran muy grandes -Clara
         // y le meti bg white sino no se veia nada,
         // estas badges estan en titulos, no sobre el fondo

@@ -74,7 +74,7 @@ module.exports = {
           900: "#524d65",
           800: "#645d7a",
           700: "#786f92",
-          600: "#867ea3", 
+          600: "#867ea3",
           500: "#9e9ab8",
           400: "#b9b7ce",
           300: "#d3d2e0", // default, que sino el texto es muy oscuro
@@ -215,6 +215,8 @@ module.exports = {
       xl: "1280px",
       "2xl": "1536px",
       "3xl": "1700px",
+      "4xl": "1920px",
+      "5xl": "2120px",
     },
   },
 };

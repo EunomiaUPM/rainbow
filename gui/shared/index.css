@@ -130,12 +130,14 @@
 
 /*CONTAINERS*/
 .page-container {
-    @apply w-full flex flex-col justify-start items-center ;
+    @apply w-full flex flex-col justify-start items-center ml-[14rem];
+    /*margin left 14rem es por el sidebar, no quitar*/
 }
 
 .main-container {
-    @apply mt-16 mb-10
+    @apply mt-16 mb-10 min-w-[960px] xl:min-w-[960px] 2xl:min-w-[1260px] 3xl:min-w-[1420px] 4xl:min-w-[1560px]
 }
+
 
 .singlePage-container {
     @apply h-fit flex flex-col gap-8 w-full ;

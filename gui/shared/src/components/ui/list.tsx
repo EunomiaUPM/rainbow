@@ -39,4 +39,18 @@ const ListItemKey = ({className, children, ...props}: {
     )
 }
 
-export {List, ListItem, ListItemKey};
+const ListItemDate = ({className, children, ...props}: {
+    className?: string,
+    children: React.ReactNode,
+    props?: any
+}) => {
+    return (
+        <p
+            className={cn("text-gray-400 ", className)}
+            {...props}>
+            {children}
+        </p>
+    )
+}
+
+export {List, ListItem, ListItemKey, ListItemDate};
