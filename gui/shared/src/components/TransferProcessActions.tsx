@@ -4,7 +4,9 @@ import {GlobalInfoContext, GlobalInfoContextType} from "shared/src/context/Globa
 import {Dialog, DialogTrigger} from "shared/src/components/ui/dialog";
 import {Button} from "shared/src/components/ui/button";
 import {TransferProcessStartDialog} from "shared/src/components/TransferProcessStartDialog";
-import {TransferProcessTerminationDialog} from "@/components/TransferProcessTerminationDialog.tsx";
+import {TransferProcessTerminationDialog} from "shared/src/components/TransferProcessTerminationDialog";
+import {TransferProcessSuspensionDialog} from "@/components/TransferProcessSuspensionDialog.tsx";
+import {TransferProcessCompletionDialog} from "@/components/TransferProcessCompletionDialog.tsx";
 
 export const TransferProcessActions = ({process, tiny = false}: { process: TransferProcess, tiny: boolean }) => {
     const {role} = useContext<GlobalInfoContextType>(GlobalInfoContext)!;
@@ -48,7 +50,29 @@ export const TransferProcessActions = ({process, tiny = false}: { process: Trans
                 )}
             </div>)}
             {process.state === "STARTED" && (<div className="space-x-2">
-                {role === "provider" && (<></>
+                {role === "provider" && (<>
+                        {(process.state_attribute === "ON_REQUEST" || process.state_attribute === "BY_PROVIDER") && (<>
+
+                        </>)}
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <Button>Suspend</Button>
+                            </DialogTrigger>
+                            <TransferProcessSuspensionDialog process={process}/>
+                        </Dialog>
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <Button>Complete</Button>
+                            </DialogTrigger>
+                            <TransferProcessCompletionDialog process={process}/>
+                        </Dialog>
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <Button>Terminate</Button>
+                            </DialogTrigger>
+                            <TransferProcessTerminationDialog process={process}/>
+                        </Dialog>
+                    </>
 
                 )}
                 {role === "consumer" && (<>
@@ -57,7 +81,27 @@ export const TransferProcessActions = ({process, tiny = false}: { process: Trans
             </div>)}
             {process.state === "SUSPENDED" && (<div className="space-x-2">
                 {role === "provider" && (<>
+                    {process.state_attribute === "BY_PROVIDER" && (<>
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <Button>Start</Button>
+                            </DialogTrigger>
+                            <TransferProcessStartDialog process={process}/>
+                        </Dialog>
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <Button>Complete</Button>
+                            </DialogTrigger>
+                            <TransferProcessCompletionDialog process={process}/>
+                        </Dialog>
+                    </>)}
 
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Button>Terminate</Button>
+                        </DialogTrigger>
+                        <TransferProcessTerminationDialog process={process}/>
+                    </Dialog>
                 </>)}
                 {role === "consumer" && (<>
 
@@ -65,7 +109,7 @@ export const TransferProcessActions = ({process, tiny = false}: { process: Trans
             </div>)}
             {process.state === "COMPLETED" && (<div className="space-x-2">
                 {role === "provider" && (<>
-
+                    <div>No further actions</div>
                 </>)}
                 {role === "consumer" && (<>
 
@@ -74,7 +118,7 @@ export const TransferProcessActions = ({process, tiny = false}: { process: Trans
             </div>)}
             {process.state === "TERMINATED" && (<div className="space-x-2">
                 {role === "provider" && (<>
-
+                    <div>No further actions</div>
                 </>)}
                 {role === "consumer" && (<>
                     <div>No further actions</div>

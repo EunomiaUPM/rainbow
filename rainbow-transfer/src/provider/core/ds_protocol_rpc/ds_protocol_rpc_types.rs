@@ -156,6 +156,7 @@ pub struct DSRPCTransferProviderTerminationRequest {
     #[serde(rename = "consumerParticipantId")]
     pub consumer_participant_id: Urn,
     #[serde(rename = "consumerCallbackAddress")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub consumer_callback: Option<String>,
     #[serde(rename = "providerPid")]
     pub provider_pid: Urn,

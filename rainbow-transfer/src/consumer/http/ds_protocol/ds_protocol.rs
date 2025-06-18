@@ -33,7 +33,7 @@ use rainbow_common::protocol::transfer::transfer_suspension::TransferSuspensionM
 use rainbow_common::protocol::transfer::transfer_termination::TransferTerminationMessage;
 use rainbow_common::utils::get_urn_from_string;
 use std::sync::Arc;
-use tracing::info;
+use tracing::{debug, info};
 
 pub struct DSProtocolTransferConsumerRouter<T> {
     transfer_service: Arc<T>,
@@ -131,7 +131,7 @@ where
         Extension(info): Extension<Arc<RequestInfo>>,
         input: Result<Json<TransferCompletionMessage>, JsonRejection>,
     ) -> impl IntoResponse {
-        info!("POST /{}/transfers/{}/start", callback, consumer_pid);
+        info!("POST /{}/transfers/{}/completion", callback, consumer_pid);
         let callback = match get_urn_from_string(&callback) {
             Ok(callback) => callback,
             Err(err) => return NotCheckedError { inner_error: err }.into_response(),

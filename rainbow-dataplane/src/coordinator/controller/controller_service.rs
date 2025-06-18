@@ -121,7 +121,12 @@ where
     }
 
     async fn data_plane_stop(&self, input: DataPlaneStop) -> anyhow::Result<DataPlaneStopAck> {
-        self.dataplane_process_service.set_dataplane_process_status(input.session_id.clone(), DataPlaneProcessState::STOPPED).await?;
+        // Ignore error
+        match self.dataplane_process_service.set_dataplane_process_status(input.session_id.clone(), DataPlaneProcessState::STOPPED).await {
+            Ok(_) => {}
+            Err(_) => {}
+        };
+        debug!("hola");
         let ack = DataPlaneStopAck {
             _type: DataPlaneControllerMessages::DataPlaneStopAck,
             version: DataPlaneControllerVersion::Version10,

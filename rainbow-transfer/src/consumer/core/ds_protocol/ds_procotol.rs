@@ -43,7 +43,7 @@ use rainbow_events::core::notification::notification_types::{
 use rainbow_events::core::notification::RainbowEventsNotificationTrait;
 use serde_json::{json, to_value};
 use std::sync::Arc;
-use tracing::debug;
+use tracing::{debug, error};
 use urn::Urn;
 
 pub struct DSProtocolTransferConsumerService<T, U, V, W>
@@ -214,7 +214,8 @@ where
         let provider_participant_mate = self.validate_auth_token(token).await?;
         self.json_schema_validation(&input)
             .map_err(|e| RainbowTransferConsumerErrors::ValidationError(e.to_string()))?;
-        let _existing_process = self.payload_validation(&callback_id, &consumer_pid, &input, &provider_participant_mate).await?;
+        let existing_process = self.payload_validation(&callback_id, &consumer_pid, &input, &provider_participant_mate).await?;
+        let restartable = existing_process.restart_flag.clone();
         // 2. Persist model
         let callback = self
             .transfer_repo
@@ -223,6 +224,7 @@ where
                 EditTransferCallback {
                     provider_pid: Option::from(provider_pid),
                     data_address: Option::from(to_value(data_address.clone())?),
+                    restart_flag: Some(true),
                     ..Default::default()
                 },
             )
@@ -241,7 +243,7 @@ where
             )
             .await?;
         // 3. Data plane hook
-        if callback.restart_flag {
+        if restartable {
             self.data_plane.on_transfer_restart(consumer_pid.clone()).await?;
         } else {
             self.data_plane.on_transfer_start(consumer_pid.clone(), data_address.clone()).await?;
@@ -280,7 +282,9 @@ where
             .transfer_repo
             .put_transfer_callback(
                 callback_id.clone().unwrap(),
-                EditTransferCallback { ..Default::default() },
+                EditTransferCallback {
+                    ..Default::default()
+                },
             )
             .await
             .map_err(DSProtocolTransferConsumerErrors::DbErr)?;
@@ -394,15 +398,17 @@ where
             .create_transfer_message(
                 callback_id.clone().unwrap(),
                 NewTransferMessageModel {
-                    message_type: TransferMessageTypes::TransferSuspensionMessage.to_string(),
+                    message_type: TransferMessageTypes::TransferTerminationMessage.to_string(),
                     from: TransferRoles::Provider,
                     to: TransferRoles::Consumer,
                     content: to_value(&input)?,
                 },
             )
-            .await?;
+            .await
+            .map_err(DSProtocolTransferConsumerErrors::DbErr)?;
         // 3. Data plane hook
         self.data_plane.on_transfer_termination(consumer_pid.clone()).await?;
+
         // 4. Prepare response
         let mut transfer_process: TransferProcessMessage = callback.into();
         transfer_process.state = TransferState::TERMINATED;

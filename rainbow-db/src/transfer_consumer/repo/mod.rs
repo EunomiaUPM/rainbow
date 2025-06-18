@@ -49,6 +49,7 @@ pub struct EditTransferCallback {
     pub provider_pid: Option<Urn>,
     pub data_plane_id: Option<Urn>,
     pub data_address: Option<serde_json::Value>,
+    pub restart_flag: Option<bool>,
 }
 
 #[async_trait]
@@ -160,6 +161,6 @@ pub enum TransferConsumerRepoErrors {
 
 impl Default for EditTransferCallback {
     fn default() -> Self {
-        Self { consumer_pid: None, provider_pid: None, data_plane_id: None, data_address: None }
+        Self { consumer_pid: None, provider_pid: None, data_plane_id: None, data_address: None, restart_flag: None }
     }
 }

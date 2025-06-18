@@ -71,6 +71,7 @@ impl Into<EditTransferCallback> for EditTransferConsumerRequest {
             provider_pid: self.provider_pid,
             data_plane_id: self.data_plane_id,
             data_address: self.data_address.map(|data_address| serde_json::to_value(data_address).unwrap()),
+            restart_flag: None,
         }
     }
 }
