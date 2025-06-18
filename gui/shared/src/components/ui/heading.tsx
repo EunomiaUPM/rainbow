@@ -16,7 +16,7 @@ const Heading = ({ level = "h1", children, className = "" }) => {
     h3: "md:text-28 sm:text-32 mb-4 font-medium",
     h4: "md:text-24 sm:text-28 mb-2 font-medium font-display", // lo de poner la clase de la tipo no funciona aqui
     //por eso lo he metido en el index.css
-    h5: "md:text-20 sm:text-24 mb-2 font-medium",
+    h5: "md:text-20 text-white/70 sm:text-24 mb-2 font-medium",
     h6: "text-base font-medium  mb-2",
     "table": "text-base font-medium ",
     "title-sm": "text-base sm:text-20 font-normal mb-2 leading-snug",

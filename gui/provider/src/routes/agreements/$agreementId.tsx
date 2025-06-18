@@ -11,25 +11,32 @@ import {
 import dayjs from "dayjs";
 import Heading from "shared/src/components/ui/heading";
 import { List, ListItem, ListItemKey } from "shared/src/components/ui/list.tsx";
+import { Badge } from "shared/src/components/ui/badge.tsx";
 
 export const Route = createFileRoute("/agreements/$agreementId")({
   component: RouteComponent,
 });
 
-
 function RouteComponent() {
-  const formatString = (text) =>{
-    let formattedText = text.replace(/[()\[\]{}"]/g, ' ')
-    return formattedText
-
-  }
+  const formatString = (text) => {
+    let formattedText = text.replace(/[()\[\]{}"]/g, " ");
+    return formattedText;
+  };
   const { agreementId } = Route.useParams();
   const { data: agreement } = useGetAgreementById(agreementId);
   return (
     <div className="space-y-4">
-      <Heading level="h3" className="font-display">
-        Agreement with id : {agreement.agreement_id}
+      <Heading
+        level="h3"
+        className="mb-0.5 font-display flex  gap-3 items-center"
+      >
+        Agreement with id
+        <Badge variant="info" size="lg">
+          {" "}
+          {agreement.agreement_id.slice(9, 29) + "[...]"}
+        </Badge>
       </Heading>
+
       <div>
         <Heading level="h6" className="text-text">
           Agreement info
@@ -37,23 +44,29 @@ function RouteComponent() {
         <List>
           <ListItem>
             <ListItemKey>Agreement Id</ListItemKey>
-            <TableCell>{agreement.agreement_id}</TableCell>
+            <TableCell>
+             <Badge variant="info"> {agreement.agreement_id.slice(9,29) + "[...]"}
+              </Badge>
+             </TableCell>
           </ListItem>
+          <div className={"h-12 border-b border-white/20"}>
           <ListItem>
             <ListItemKey>Related Message</ListItemKey>
-            <TableCell>{agreement.cn_message_id}</TableCell>
+            <TableCell>{agreement.cn_message_id.slice(9)}</TableCell>
+         
           </ListItem>
+          </div>
           <ListItem>
             <ListItemKey>Consumer Participant Id</ListItemKey>
-            <TableCell>{agreement.consumer_participant_id}</TableCell>
+            <TableCell>  <Badge variant="info">{agreement.consumer_participant_id.slice(9,29) + "[...]"} </Badge></TableCell>
           </ListItem>
           <ListItem>
             <ListItemKey>Provider Participant Id</ListItemKey>
-            <TableCell>{agreement.provider_participant_id}</TableCell>
+            <TableCell>  <Badge variant="info">{agreement.provider_participant_id.slice(9,29) + "[...]"} </Badge></TableCell>
           </ListItem>
           <ListItem>
             <ListItemKey>Status</ListItemKey>
-            <TableCell>{agreement.active ? "ACTIVE" : "INACTIVE"}</TableCell>
+            <TableCell>  <Badge variant="status" state={agreement.active ? "started" : "pause"} >{agreement.active ? "ACTIVE" : "INACTIVE"} </Badge></TableCell>
           </ListItem>
           <ListItem>
             <ListItemKey>CreatedAt</ListItemKey>
@@ -72,32 +85,46 @@ function RouteComponent() {
       <List>
         <ListItem>
           <ListItemKey> ID </ListItemKey>
-          <p>{formatString(JSON.stringify(agreement.agreement_content["@id"]))}</p>
+          <Badge variant="info">
+            {formatString(JSON.stringify(agreement.agreement_content["@id"].slice(9,29) + "[...]"))}
+           </Badge>
         </ListItem>
         <ListItem>
           <ListItemKey> Type </ListItemKey>
-          <p>{formatString(JSON.stringify(agreement.agreement_content["@type"]))}</p>
+          <p>
+            {formatString(JSON.stringify(agreement.agreement_content["@type"]))}
+          </p>
         </ListItem>
         <ListItem>
           <ListItemKey> Assignee </ListItemKey>
-          <p>{formatString(JSON.stringify(agreement.agreement_content.assignee))}</p>
+        <Badge variant="info">
+            {formatString(JSON.stringify(agreement.agreement_content.assignee.slice(9,29) + "[...]"))}
+         </Badge>
         </ListItem>
         <ListItem>
           <ListItemKey> Assigner </ListItemKey>
-          <p>{formatString(JSON.stringify(agreement.agreement_content.assigner))}</p>
+          <Badge variant="info">
+            {formatString(JSON.stringify(agreement.agreement_content.assigner.slice(9,29) + "[...]"))}
+          </Badge>
         </ListItem>
         <div className="gap-1 flex flex-col">
           <ListItemKey className={" py-2 "}> Policies </ListItemKey>
           <div className="flex py-2 rounded-md border border-[#487a4b] bg-[#1e2422]">
-            <p className="pl-3 w-1/2 font-bold uppercase text-[#a5e6b0] ">Permission</p>
+            <p className="pl-3 w-1/2 font-bold uppercase text-[#a5e6b0] ">
+              Permission
+            </p>
             <p className="">
-              {formatString(JSON.stringify(agreement.agreement_content.permission))}
+              {formatString(
+                JSON.stringify(agreement.agreement_content.permission)
+              )}
             </p>
           </div>
           <div className="flex py-2 ">
             <p className="pl-3 w-1/2 font-bold">Obligation</p>
             <p className="">
-              {formatString(JSON.stringify(agreement.agreement_content.obligation))}
+              {formatString(
+                JSON.stringify(agreement.agreement_content.obligation)
+              )}
             </p>
           </div>
           <div className="flex py-2 ">

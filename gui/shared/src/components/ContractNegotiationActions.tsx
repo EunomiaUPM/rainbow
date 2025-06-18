@@ -15,14 +15,14 @@ export const ContractNegotiationActions = ({state, tiny = false}: { state: strin
         variants: {
             tiny: {
                 true: "inline-flex items-center",
-                false: "bg-gray-100 p-6"
+                false: ""
             }
         }
     })
 
     return (
         <div className={containerClassName({tiny})}>
-            <h2 className={h2ClassName({tiny})}>Actions</h2>
+            {/* <h2 className={h2ClassName({tiny})}>Actions</h2> */}
             {state === "REQUESTED" && (<div className="space-x-2">
                 <Button>Offer</Button>
                 <Button>Agree</Button>

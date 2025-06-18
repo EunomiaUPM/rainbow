@@ -47,7 +47,7 @@ function RouteComponent() {
         <TabsContent value="data-plane">// Data plane</TabsContent>
         <TabsContent value="data-control">
           {" "}
-          <Heading level="h6">Transfer process info: </Heading>
+          <Heading level="h5" className="mt-3">Transfer process info </Heading>
           <div className="mb-4">
             <List>
               <ListItem>
@@ -85,9 +85,15 @@ function RouteComponent() {
           <Heading level="h5" className="text-text">
             Transfer Messages
           </Heading>
+          <div className="bg-white/5  rounded-md px-8 py-4 w-4/5">
           {transferMessages.map((transferMessage) => (
-            <div className="my-4 text-sm">
-              <div className={`flex w-3/5 
+            <div className={`my-4 text-sm
+               ${ transferMessage.from === "Provider"
+                    ? "pr-32"
+                    : "pl-32"
+              }
+            `}>
+              <div className={`flex w-full
               ${ transferMessage.from === "Provider"
                     ? "justify-start"
                     : "justify-end"
@@ -104,7 +110,7 @@ function RouteComponent() {
                 </div>
               </div>
               <div
-                className={` w-3/5 px-4 py-3 rounded-md border
+                className={` w-full px-4 py-3 rounded-md border
               ${
                 transferMessage.from === "Provider"
                   ? "bg-roles-provider/10 border-roles-provider/50"
@@ -188,7 +194,9 @@ function RouteComponent() {
                 </div>
               </div>
             </div>
+            
           ))}
+          </div>
         </TabsContent>
       </Tabs>
       <div>

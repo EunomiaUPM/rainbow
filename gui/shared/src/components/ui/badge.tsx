@@ -19,13 +19,19 @@ const badgeVariants = cva(
         default: "",
         danger: "",
         warn: "",
-        success: "",
-        process: "",
+        finalized: "", // les he metido los nombres que habían ya,
+        // para poner en state={process.state} y que pille el nombre directamente, 
+        completed: "",
+        started: "",
         pause: "",
       },
       size: {
         default: "text-sm px-2 py-0.5",
-        lg: "text-base px-4 py-1.5",
+        lg: "text-base font-bold bg-white/10 px-2 py-0.5", 
+        // cambie paddings, sino eran muy grandes -Clara
+        // y le meti bg white sino no se veia nada,
+        // estas badges estan en titulos, no sobre el fondo
+        //blanco de la tabla, creo que mejor asi.
         sm: "text-xs px-1 py-0.5",
       },
     },
@@ -43,12 +49,18 @@ const badgeVariants = cva(
       },
       {
         variant: "status",
-        state: "success",
+        state: "finalized",
+        class: "bg-success text-success-300 [&>span]:bg-success-400",
+      },
+      // estilo de completed = finalized
+       {
+        variant: "status",
+        state: "completed",
         class: "bg-success text-success-300 [&>span]:bg-success-400",
       },
       {
         variant: "status",
-        state: "process",
+        state: "started",
         class: "bg-process text-process-300 [&>span]:bg-process-400",
       },
       {

@@ -46,14 +46,14 @@ function RouteComponent() {
           </TableHeader>
           <TableBody>
             {agreements.map((agreement) => (
-              <TableRow key={agreement.agreement_id.slice(0, 20)}>
+              <TableRow key={agreement.agreement_id.slice(9, 29)}>
                 <TableCell>
                   <Badge variant={"info"}>
-                    {agreement.agreement_id.slice(0, 20) + "..."}
+                    {agreement.agreement_id.slice(9, 29) + "..."}
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  {agreement.cn_message_id?.slice(0, 20) + "..."}
+                  {agreement.cn_message_id?.slice(9, 29) + "..."}
                 </TableCell>
                 <TableCell>
                   {/* <div className="flex flex-col gap-1">
@@ -69,9 +69,11 @@ function RouteComponent() {
                 <TableCell>
                   <Badge
                     variant={"status"}
-                    state={agreement.active ? "process" : "paused"}
+                    state={agreement.active ? "started" : "paused"}
+                   
                   >
                     {agreement.active ? "ACTIVE" : "INACTIVE"}
+         
                   </Badge>
                 </TableCell>
                 <TableCell>
