@@ -32,6 +32,7 @@ pub mod transfer_process;
 pub mod transfer_error;
 pub mod transfer_data_address;
 pub mod transfer_protocol_trait;
+pub mod transfer_consumer_process;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum TransferState {

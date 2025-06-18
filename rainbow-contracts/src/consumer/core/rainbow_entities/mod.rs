@@ -23,7 +23,7 @@ use crate::consumer::core::rainbow_entities::rainbow_entities_types::{
     NewContractNegotiationOfferRequest, NewContractNegotiationRequest,
 };
 use axum::async_trait;
-use rainbow_common::protocol::contract::consumer_process_ack::CnConsumerProcess;
+use rainbow_common::protocol::contract::cn_consumer_process::CnConsumerProcess;
 use rainbow_db::contracts_consumer::entities::{agreement, cn_message, cn_offer, cn_process};
 use urn::Urn;
 

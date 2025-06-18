@@ -145,7 +145,7 @@ where
                 )
             );
         }
-        Ok(consumer_process)
+        Ok(consumer_process.into())
     }
 
     // Helper function to send protocol messages to the provider

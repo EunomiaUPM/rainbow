@@ -22,7 +22,7 @@ use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
-pub mod consumer_process_ack;
+pub mod cn_consumer_process;
 pub mod contract_ack;
 pub mod contract_agreement;
 pub mod contract_agreement_verification;

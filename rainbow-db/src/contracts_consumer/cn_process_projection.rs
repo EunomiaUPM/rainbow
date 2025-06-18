@@ -1,6 +1,6 @@
 use crate::contracts_consumer::entities::cn_process;
 use crate::contracts_consumer::entities::cn_process::Model;
-use rainbow_common::protocol::contract::consumer_process_ack::CnConsumerProcess;
+use rainbow_common::protocol::contract::cn_consumer_process::CnConsumerProcess;
 use rainbow_common::protocol::contract::contract_ack::ContractAckMessage;
 use rainbow_common::protocol::contract::{ContractNegotiationMessages, ContractNegotiationState};
 use sea_orm::FromQueryResult;

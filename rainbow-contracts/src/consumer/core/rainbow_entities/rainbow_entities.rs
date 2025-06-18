@@ -22,7 +22,7 @@ use crate::consumer::core::rainbow_entities::rainbow_entities_errors::CnErrorCon
 use crate::consumer::core::rainbow_entities::rainbow_entities_types::{EditAgreementRequest, EditContractNegotiationMessageRequest, EditContractNegotiationOfferRequest, EditContractNegotiationRequest, NewAgreementRequest, NewContractNegotiationMessageRequest, NewContractNegotiationOfferRequest, NewContractNegotiationRequest};
 use crate::consumer::core::rainbow_entities::RainbowEntitiesContractNegotiationConsumerTrait;
 use axum::async_trait;
-use rainbow_common::protocol::contract::consumer_process_ack::CnConsumerProcess;
+use rainbow_common::protocol::contract::cn_consumer_process::CnConsumerProcess;
 use rainbow_db::contracts_consumer::entities::{agreement, cn_message, cn_offer, cn_process};
 use rainbow_db::contracts_consumer::repo::{AgreementConsumerRepo, CnErrors, ContractNegotiationConsumerMessageRepo, ContractNegotiationConsumerOfferRepo, ContractNegotiationConsumerProcessRepo};
 use rainbow_events::core::notification::notification_types::{RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory, RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes};

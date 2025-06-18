@@ -24,9 +24,10 @@ use crate::transfer_consumer::repo::{
     TransferConsumerRepoFactory, TransferMessagesConsumerRepo,
 };
 use crate::transfer_consumer::repo::{EditTransferMessageModel, NewTransferMessageModel};
+use crate::transfer_consumer::transfer_process_projection::TransferConsumerProcessFromSQL;
 use axum::async_trait;
 use rainbow_common::utils::get_urn;
-use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect};
+use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, DbBackend, EntityTrait, FromQueryResult, QueryFilter, QuerySelect, Statement};
 use urn::Urn;
 
 pub struct TransferConsumerRepoForSql {
@@ -47,62 +48,210 @@ impl TransferConsumerRepoFactory for TransferConsumerRepoForSql {
 
 #[async_trait]
 impl TransferCallbackRepo for TransferConsumerRepoForSql {
+    // async fn get_all_transfer_callbacks(
+    //     &self,
+    //     limit: Option<u64>,
+    //     page: Option<u64>,
+    // ) -> anyhow::Result<Vec<transfer_callback::Model>, TransferConsumerRepoErrors> {
+    //     let transfer_callbacks = transfer_callback::Entity::find()
+    //         .limit(limit.unwrap_or(100000))
+    //         .offset(page.unwrap_or(0))
+    //         .all(&self.db_connection)
+    //         .await;
+    //     match transfer_callbacks {
+    //         Ok(transfer_callbacks) => Ok(transfer_callbacks),
+    //         Err(e) => Err(TransferConsumerRepoErrors::ErrorFetchingConsumerTransferProcess(e.into())),
+    //     }
+    // }
+
     async fn get_all_transfer_callbacks(
         &self,
         limit: Option<u64>,
         page: Option<u64>,
-    ) -> anyhow::Result<Vec<transfer_callback::Model>, TransferConsumerRepoErrors> {
-        let transfer_callbacks = transfer_callback::Entity::find()
-            .limit(limit.unwrap_or(100000))
-            .offset(page.unwrap_or(0))
+    ) -> anyhow::Result<Vec<TransferConsumerProcessFromSQL>, TransferConsumerRepoErrors> {
+        let sql = r#"
+            WITH RankedMessages AS (
+                SELECT
+                    m.transfer_process_id,
+                    m.message_type,
+                    m.created_at,
+                    ROW_NUMBER() OVER(PARTITION BY m.transfer_process_id ORDER BY m.created_at DESC) as rn
+                FROM
+                    transfer_messages m
+            )
+            SELECT
+                p.*,
+                rm.message_type,
+                rm.created_at AS "message_at"
+            FROM
+                transfer_callbacks p
+                    LEFT JOIN
+                RankedMessages rm ON p.id = rm.transfer_process_id
+            WHERE
+                rm.rn = 1
+            ORDER BY
+                p.created_at DESC;
+        "#;
+        let stmt = Statement::from_string(DbBackend::Postgres, sql.to_owned());
+        let transfer_processes = TransferConsumerProcessFromSQL::find_by_statement(stmt)
             .all(&self.db_connection)
-            .await;
-        match transfer_callbacks {
-            Ok(transfer_callbacks) => Ok(transfer_callbacks),
-            Err(e) => Err(TransferConsumerRepoErrors::ErrorFetchingConsumerTransferProcess(e.into())),
-        }
+            .await
+            .map_err(|err| TransferConsumerRepoErrors::ErrorFetchingConsumerTransferProcess(err.into()))?;
+
+        Ok(transfer_processes)
     }
+
+    // async fn get_transfer_callbacks_by_id(
+    //     &self,
+    //     callback_id: Urn,
+    // ) -> anyhow::Result<Option<transfer_callback::Model>, TransferConsumerRepoErrors> {
+    //     let callback_id = callback_id.to_string();
+    //     let transfer_callback = transfer_callback::Entity::find_by_id(callback_id).one(&self.db_connection).await;
+    //     match transfer_callback {
+    //         Ok(transfer_callback) => Ok(transfer_callback),
+    //         Err(e) => Err(TransferConsumerRepoErrors::ErrorFetchingConsumerTransferProcess(e.into())),
+    //     }
+    // }
 
     async fn get_transfer_callbacks_by_id(
         &self,
         callback_id: Urn,
-    ) -> anyhow::Result<Option<transfer_callback::Model>, TransferConsumerRepoErrors> {
-        let callback_id = callback_id.to_string();
-        let transfer_callback = transfer_callback::Entity::find_by_id(callback_id).one(&self.db_connection).await;
-        match transfer_callback {
-            Ok(transfer_callback) => Ok(transfer_callback),
-            Err(e) => Err(TransferConsumerRepoErrors::ErrorFetchingConsumerTransferProcess(e.into())),
-        }
+    ) -> anyhow::Result<Option<TransferConsumerProcessFromSQL>, TransferConsumerRepoErrors> {
+        let sql = r#"
+            WITH RankedMessages AS (
+                SELECT
+                    m.transfer_process_id,
+                    m.message_type,
+                    m.created_at,
+                    ROW_NUMBER() OVER(PARTITION BY m.transfer_process_id ORDER BY m.created_at DESC) as rn
+                FROM
+                    transfer_messages m
+            )
+            SELECT
+                p.*,
+                rm.message_type,
+                rm.created_at AS "message_at"
+            FROM
+                transfer_callbacks p
+                    LEFT JOIN
+                RankedMessages rm ON p.id = rm.transfer_process_id
+            WHERE
+                p.id = $1 AND
+                rm.rn = 1
+            ORDER BY
+                p.created_at DESC;
+        "#;
+        let stmt = Statement::from_sql_and_values(DbBackend::Postgres, sql.to_owned(), [callback_id.to_string().into()]);
+        let transfer_processes = TransferConsumerProcessFromSQL::find_by_statement(stmt)
+            .one(&self.db_connection)
+            .await
+            .map_err(|err| TransferConsumerRepoErrors::ErrorFetchingConsumerTransferProcess(err.into()))?;
+
+        Ok(transfer_processes)
     }
+
+    // async fn get_transfer_callback_by_consumer_id(
+    //     &self,
+    //     consumer_pid: Urn,
+    // ) -> anyhow::Result<Option<transfer_callback::Model>, TransferConsumerRepoErrors> {
+    //     let consumer_pid = consumer_pid.to_string();
+    //     let transfer_callback = transfer_callback::Entity::find()
+    //         .filter(transfer_callback::Column::ConsumerPid.eq(consumer_pid))
+    //         .one(&self.db_connection)
+    //         .await;
+    //     match transfer_callback {
+    //         Ok(transfer_callback) => Ok(transfer_callback),
+    //         Err(e) => Err(TransferConsumerRepoErrors::ErrorFetchingConsumerTransferProcess(e.into())),
+    //     }
+    // }
 
     async fn get_transfer_callback_by_consumer_id(
         &self,
         consumer_pid: Urn,
-    ) -> anyhow::Result<Option<transfer_callback::Model>, TransferConsumerRepoErrors> {
-        let consumer_pid = consumer_pid.to_string();
-        let transfer_callback = transfer_callback::Entity::find()
-            .filter(transfer_callback::Column::ConsumerPid.eq(consumer_pid))
+    ) -> anyhow::Result<Option<TransferConsumerProcessFromSQL>, TransferConsumerRepoErrors> {
+        let sql = r#"
+            WITH RankedMessages AS (
+                SELECT
+                    m.transfer_process_id,
+                    m.message_type,
+                    m.created_at,
+                    ROW_NUMBER() OVER(PARTITION BY m.transfer_process_id ORDER BY m.created_at DESC) as rn
+                FROM
+                    transfer_messages m
+            )
+            SELECT
+                p.*,
+                rm.message_type,
+                rm.created_at AS "message_at"
+            FROM
+                transfer_callbacks p
+                    LEFT JOIN
+                RankedMessages rm ON p.id = rm.transfer_process_id
+            WHERE
+                p.consumer_pid = $1 AND
+                rm.rn = 1
+            ORDER BY
+                p.created_at DESC;
+        "#;
+        let stmt = Statement::from_sql_and_values(DbBackend::Postgres, sql.to_owned(), [consumer_pid.to_string().into()]);
+        let transfer_processes = TransferConsumerProcessFromSQL::find_by_statement(stmt)
             .one(&self.db_connection)
-            .await;
-        match transfer_callback {
-            Ok(transfer_callback) => Ok(transfer_callback),
-            Err(e) => Err(TransferConsumerRepoErrors::ErrorFetchingConsumerTransferProcess(e.into())),
-        }
+            .await
+            .map_err(|err| TransferConsumerRepoErrors::ErrorFetchingConsumerTransferProcess(err.into()))?;
+
+        Ok(transfer_processes)
     }
+
+    // async fn get_transfer_callback_by_provider_id(
+    //     &self,
+    //     provider_id: Urn,
+    // ) -> anyhow::Result<Option<transfer_callback::Model>, TransferConsumerRepoErrors> {
+    //     let consumer_pid = provider_id.to_string();
+    //     let transfer_callback = transfer_callback::Entity::find()
+    //         .filter(transfer_callback::Column::ProviderPid.eq(consumer_pid))
+    //         .one(&self.db_connection)
+    //         .await;
+    //     match transfer_callback {
+    //         Ok(transfer_callback) => Ok(transfer_callback),
+    //         Err(e) => Err(TransferConsumerRepoErrors::ErrorFetchingConsumerTransferProcess(e.into())),
+    //     }
+    // }
 
     async fn get_transfer_callback_by_provider_id(
         &self,
         provider_id: Urn,
-    ) -> anyhow::Result<Option<transfer_callback::Model>, TransferConsumerRepoErrors> {
-        let consumer_pid = provider_id.to_string();
-        let transfer_callback = transfer_callback::Entity::find()
-            .filter(transfer_callback::Column::ProviderPid.eq(consumer_pid))
+    ) -> anyhow::Result<Option<TransferConsumerProcessFromSQL>, TransferConsumerRepoErrors> {
+        let sql = r#"
+            WITH RankedMessages AS (
+                SELECT
+                    m.transfer_process_id,
+                    m.message_type,
+                    m.created_at,
+                    ROW_NUMBER() OVER(PARTITION BY m.transfer_process_id ORDER BY m.created_at DESC) as rn
+                FROM
+                    transfer_messages m
+            )
+            SELECT
+                p.*,
+                rm.message_type,
+                rm.created_at AS "message_at"
+            FROM
+                transfer_callbacks p
+                    LEFT JOIN
+                RankedMessages rm ON p.id = rm.transfer_process_id
+            WHERE
+                p.provider_pid = $1 AND
+                rm.rn = 1
+            ORDER BY
+                p.created_at DESC;
+        "#;
+        let stmt = Statement::from_sql_and_values(DbBackend::Postgres, sql.to_owned(), [provider_id.to_string().into()]);
+        let transfer_processes = TransferConsumerProcessFromSQL::find_by_statement(stmt)
             .one(&self.db_connection)
-            .await;
-        match transfer_callback {
-            Ok(transfer_callback) => Ok(transfer_callback),
-            Err(e) => Err(TransferConsumerRepoErrors::ErrorFetchingConsumerTransferProcess(e.into())),
-        }
+            .await
+            .map_err(|err| TransferConsumerRepoErrors::ErrorFetchingConsumerTransferProcess(err.into()))?;
+
+        Ok(transfer_processes)
     }
 
     async fn put_transfer_callback(

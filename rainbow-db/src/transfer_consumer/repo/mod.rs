@@ -18,6 +18,7 @@
  */
 
 use crate::transfer_consumer::entities::{transfer_callback, transfer_message};
+use crate::transfer_consumer::transfer_process_projection::TransferConsumerProcessFromSQL;
 use anyhow::Error;
 use axum::async_trait;
 use rainbow_common::protocol::transfer::TransferRoles;
@@ -56,21 +57,21 @@ pub trait TransferCallbackRepo {
         &self,
         limit: Option<u64>,
         page: Option<u64>,
-    ) -> anyhow::Result<Vec<transfer_callback::Model>, TransferConsumerRepoErrors>;
+    ) -> anyhow::Result<Vec<TransferConsumerProcessFromSQL>, TransferConsumerRepoErrors>;
     async fn get_transfer_callbacks_by_id(
         &self,
         callback_id: Urn,
-    ) -> anyhow::Result<Option<transfer_callback::Model>, TransferConsumerRepoErrors>;
+    ) -> anyhow::Result<Option<TransferConsumerProcessFromSQL>, TransferConsumerRepoErrors>;
 
     async fn get_transfer_callback_by_consumer_id(
         &self,
         consumer_pid: Urn,
-    ) -> anyhow::Result<Option<transfer_callback::Model>, TransferConsumerRepoErrors>;
+    ) -> anyhow::Result<Option<TransferConsumerProcessFromSQL>, TransferConsumerRepoErrors>;
 
     async fn get_transfer_callback_by_provider_id(
         &self,
         provider_id: Urn,
-    ) -> anyhow::Result<Option<transfer_callback::Model>, TransferConsumerRepoErrors>;
+    ) -> anyhow::Result<Option<TransferConsumerProcessFromSQL>, TransferConsumerRepoErrors>;
 
     async fn put_transfer_callback(
         &self,

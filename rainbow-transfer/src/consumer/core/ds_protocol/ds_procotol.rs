@@ -147,7 +147,7 @@ where
             ))
         }
 
-        Ok(consumer_transfer_process)
+        Ok(consumer_transfer_process.into())
     }
 
     /// Broadcasts a notification about a transfer process event.

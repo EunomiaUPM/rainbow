@@ -21,3 +21,4 @@ pub mod entities;
 pub mod migrations;
 pub mod repo;
 pub mod entity_mappers;
+pub mod transfer_process_projection;
