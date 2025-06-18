@@ -1,6 +1,4 @@
-import {createFileRoute, Link, Outlet} from '@tanstack/react-router'
-import {ArrowLeft} from "lucide-react";
-
+import {createFileRoute, Outlet} from '@tanstack/react-router'
 
 
 const NotFound = () => {
@@ -11,7 +9,7 @@ const RouteComponent = () => {
     return (
         <div className="mb-2">
             <header className="mb-2">
-             
+
             </header>
             <Outlet/>
         </div>

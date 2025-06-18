@@ -48,7 +48,7 @@ const items = [
     },
 ];
 
-export function AppSidebar() {
+export function AppSidebarProvider() {
     const routerState = useRouterState();
     // console.log("Router state in SidebarMenuItem:", routerState.location.pathname);
 

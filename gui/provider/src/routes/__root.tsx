@@ -3,7 +3,7 @@ import {createRootRouteWithContext, Outlet,} from "@tanstack/react-router";
 import {TanStackRouterDevtools} from "@tanstack/router-devtools";
 import {SidebarProvider, SidebarTrigger,} from "../../../shared/src/components/ui/sidebar";
 import React from "react";
-import {AppSidebar} from "../../../shared/src/components/app-sidebar.tsx";
+import {AppSidebarProvider} from "shared/src/components/AppSidebarProvider.tsx";
 import {Header} from "shared/src/components/header.tsx";
 
 export const Route = createRootRouteWithContext<{
@@ -16,7 +16,7 @@ export const Route = createRootRouteWithContext<{
             <>
                 <SidebarProvider>
                     <div className="fixed flex w-full z-50">
-                        <AppSidebar/>
+                        <AppSidebarProvider/>
                         <Header/>
                     </div>
                     <main className="page-container">

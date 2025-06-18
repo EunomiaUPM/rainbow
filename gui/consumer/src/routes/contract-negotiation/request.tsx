@@ -27,6 +27,7 @@ import {usePostContractNegotiationRPCRequest} from "shared/src/data/contract-mut
 import {GlobalInfoContext, GlobalInfoContextType} from "shared/src/context/GlobalInfoContext.tsx";
 import {getBypassCatalogs, getBypassDatasetsByCatalogId} from "shared/src/data/catalog-bypass-queries.ts";
 import {getBypassPoliciesByDatasetId} from "shared/src/data/policy-bypass-queries.ts";
+import Heading from "shared/src/components/ui/heading.tsx";
 
 
 type Inputs = {
@@ -235,8 +236,8 @@ const RouteComponent = () => {
     }
 
     return (
-        <div className="">
-            <h2 className="text-2xl font-bold mb-6 text-gray-800">New Contract Negotiation Request</h2>
+        <div className="w-[500px]">
+            <Heading level="h3">New Contract Negotiation Request</Heading>
             <Form {...form}>
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
 
@@ -246,7 +247,7 @@ const RouteComponent = () => {
                         name="consumerParticipantId"
                         render={({field}) => (
                             <FormItem>
-                                <FormLabel className="text-gray-700">Consumer Participant Id</FormLabel>
+                                <FormLabel>Consumer Participant Id</FormLabel>
                                 <div>
                                     <FormControl>
                                         <Popover open={consumerParticipantOpen}
@@ -256,12 +257,12 @@ const RouteComponent = () => {
                                                     variant="outline"
                                                     role="combobox"
                                                     aria-expanded={consumerParticipantOpen}
-                                                    className="w-full justify-between font-normal text-gray-600 hover:text-gray-800 transition-colors"
+                                                    className="w-full justify-between font-normal text-gray-300  transition-colors"
                                                 >
                                                     {field.value
                                                         ? consumerParticipants.find((p) => p.participant_id === field.value)?.participant_id
                                                         : "Select participant..."}
-                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50"/>
+                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-80"/>
                                                 </Button>
                                             </PopoverTrigger>
                                             <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
@@ -284,7 +285,7 @@ const RouteComponent = () => {
                                                                 >
                                                                     {consumerParticipant.participant_id}
                                                                     <span
-                                                                        className="text-gray-500 ml-2 text-sm">({consumerParticipant.base_url})</span>
+                                                                        className="text-gray-400 ml-2 text-sm">({consumerParticipant.base_url})</span>
                                                                 </CommandItem>
                                                             ))}
                                                         </CommandGroup>
@@ -307,7 +308,7 @@ const RouteComponent = () => {
                         name="catalog"
                         render={({field}) => (
                             <FormItem>
-                                <FormLabel className="text-gray-700">Catalog</FormLabel>
+                                <FormLabel>Catalog</FormLabel>
                                 <div>
                                     <FormControl>
                                         <Popover open={catalogOpen} onOpenChange={handleCatalogOpenChange}>
@@ -371,7 +372,7 @@ const RouteComponent = () => {
                         name="target" // This is the dataset ID field
                         render={({field}) => (
                             <FormItem>
-                                <FormLabel className="text-gray-700">Dataset</FormLabel>
+                                <FormLabel>Dataset</FormLabel>
                                 <div>
                                     <FormControl>
                                         <Popover open={datasetOpen} onOpenChange={handleDatasetOpenChange}>
@@ -436,7 +437,7 @@ const RouteComponent = () => {
                         name="id" // This is the policy ID field
                         render={({field}) => (
                             <FormItem>
-                                <FormLabel className="text-gray-700">Policy Id</FormLabel>
+                                <FormLabel>Policy Id</FormLabel>
                                 <div>
                                     <FormControl>
                                         <Popover open={policiesOpen} onOpenChange={handlePoliciesOpenChange}>

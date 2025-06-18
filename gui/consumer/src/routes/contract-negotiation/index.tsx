@@ -1,10 +1,11 @@
 import {createFileRoute, Link} from "@tanstack/react-router";
 import dayjs from "dayjs";
-import {ExternalLink} from "lucide-react";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "shared/src/components/ui/table";
-import {useGetContractNegotiationProcesses} from "shared/src/data/contract-queries.ts";
 import {Button} from "shared/src/components/ui/button.tsx";
-import {ContractNegotiationActions} from "shared/src/components/ContractNegotiationActions.tsx";
+import {Badge} from "shared/src/components/ui/badge.tsx";
+import {Input} from "shared/src/components/ui/input.tsx";
+import {useGetContractNegotiationProcesses} from "shared/src/data/contract-queries.ts";
+import {ContractNegotiationActions} from "shared/src/components/ContractNegotiationActions";
 import {useMemo} from "react";
 
 const RouteComponent = () => {
@@ -18,8 +19,14 @@ const RouteComponent = () => {
 
     return (
         <div>
-            <div className="flex justify-end">
-                <Link to="/contract-negotiation/request" className="text-decoration-none text-foreground">
+            <div className="flex justify-between">
+                <div className="pb-3 w-3/5">
+                    <Input type="search"></Input>
+                </div>
+                <Link
+                    to="/contract-negotiation/request"
+                    className="text-decoration-none text-foreground"
+                >
                     <Button>Create new request</Button>
                 </Link>
             </div>
@@ -28,7 +35,6 @@ const RouteComponent = () => {
                     <TableRow>
                         <TableHead>ProviderPid</TableHead>
                         <TableHead>ConsumerPid</TableHead>
-                        <TableHead>Associated Provide</TableHead>
                         <TableHead>State</TableHead>
                         <TableHead>CreatedAt</TableHead>
                         <TableHead>Actions</TableHead>
@@ -37,32 +43,41 @@ const RouteComponent = () => {
                 </TableHeader>
                 <TableBody>
                     {cnProcessesSorted.map((cnProcess) => (
+
                         <TableRow key={cnProcess.provider_id.slice(0, 20)}>
                             <TableCell>
-                                {cnProcess.provider_id?.slice(0, 20) + "..."}
+                                <Badge variant={"info"}>
+                                    {cnProcess.provider_id?.slice(9, 20) + "..."}
+                                </Badge>
                             </TableCell>
                             <TableCell>
-                                {cnProcess.consumer_id?.slice(0, 20) + "..."}
+                                <Badge variant={"info"}>
+                                    {cnProcess.consumer_id?.slice(9, 20) + "..."}
+                                </Badge>
                             </TableCell>
                             <TableCell>
-                                {cnProcess.associated_provider?.slice(0, 20) + "..."}
-                            </TableCell>
-                            <TableCell>
-                                {cnProcess.state}
+                                <Badge variant={"status"} state={'success'}>
+                                    {cnProcess.state.replace("dspace:", "")}
+                                </Badge>
                             </TableCell>
                             <TableCell>
                                 {dayjs(cnProcess.created_at).format("DD/MM/YYYY - HH:mm")}
                             </TableCell>
                             <TableCell>
-                                <ContractNegotiationActions process={cnProcess} tiny={true}/>
+                                <ContractNegotiationActions
+                                    process={cnProcess}
+                                    tiny={true}
+                                />
                             </TableCell>
                             <TableCell>
-                                <Link
-                                    to="/contract-negotiation/$cnProcess"
-                                    params={{cnProcess: cnProcess.consumer_id}}
-                                >
-                                    <ExternalLink size={12} className="text-pink-600"/>
-                                </Link>
+                                <Button variant="default">
+                                    <Link
+                                        to="/contract-negotiation/$cnProcess"
+                                        params={{cnProcess: cnProcess.consumer_id}}
+                                    >
+                                        See contract negotiation
+                                    </Link>
+                                </Button>
                             </TableCell>
                         </TableRow>
                     ))}
