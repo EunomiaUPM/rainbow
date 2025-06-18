@@ -16,20 +16,50 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
+use crate::config::global_config::{format_host_config_to_url_string, ApplicationGlobalConfig};
 use crate::facades::ssi_auth_facade::SSIAuthFacadeTrait;
+use crate::mates::mates::VerifyTokenRequest;
+use crate::mates::Mates;
+use anyhow::bail;
 use axum::async_trait;
+use reqwest::Client;
+use std::time::Duration;
 
-pub struct SSIAuthFacadeService {}
+pub struct SSIAuthFacadeService {
+    config: ApplicationGlobalConfig,
+    client: Client,
+}
 impl SSIAuthFacadeService {
-    pub fn new() -> Self {
-        Self {}
+    pub fn new(config: ApplicationGlobalConfig) -> Self {
+        let client =
+            Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
+        Self { config, client }
     }
 }
 
 #[async_trait]
 impl SSIAuthFacadeTrait for SSIAuthFacadeService {
-    async fn authorize(&self, token: String) -> anyhow::Result<()> {
-        Ok(())
+    async fn verify_token(&self, token: String) -> anyhow::Result<Mates> {
+        let base_url = format_host_config_to_url_string(&self.config.ssi_auth_host.clone().unwrap());
+        let url = format!("{}/api/v1/mates/verify", base_url);
+        let response = self.client
+            .post(url)
+            .json(&VerifyTokenRequest {
+                token: token
+            })
+            .send()
+            .await;
+        let response = match response {
+            Ok(response) => response,
+            Err(e) => bail!("Not able to verify token: {}", e.to_string())
+        };
+        if response.status().is_success() == false {
+            bail!("Not able to verify token, request not accepted")
+        }
+        let mate = match response.json::<Mates>().await {
+            Ok(mate) => mate,
+            Err(e) => bail!("Not able to deserialize mate: {}", e.to_string())
+        };
+        Ok(mate)
     }
 }

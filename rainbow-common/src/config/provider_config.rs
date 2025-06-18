@@ -38,6 +38,7 @@ pub struct ApplicationProviderConfig {
     pub ssh_user: Option<String>,
     pub ssh_private_key_path: Option<String>,
     pub role: ConfigRoles,
+
 }
 
 impl Default for ApplicationProviderConfig {
@@ -139,6 +140,7 @@ pub trait ApplicationProviderConfigTrait {
     fn get_ssi_auth_host_url(&self) -> Option<String> {
         self.get_raw_ssi_auth_host().as_ref().map(format_host_config_to_url_string)
     }
+
     fn get_full_db_url(&self) -> String {
         let db_config = self.get_raw_database_config();
         match db_config.db_type {
@@ -201,7 +203,7 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
     }
 
     fn merge_dotenv_configuration(&self) -> Self {
-        dotenvy::dotenv().ok();
+        dotenvy::from_filename(".env.gateway.provider");
         let default = ApplicationProviderConfig::default();
         let catalog_as_datahub: bool =
             extract_env("CATALOG_AS_DATAHUB", default.catalog_as_datahub.to_string()).parse().unwrap();

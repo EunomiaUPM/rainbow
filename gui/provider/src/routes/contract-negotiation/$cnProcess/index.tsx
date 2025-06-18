@@ -1,20 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import {createFileRoute, Link} from "@tanstack/react-router";
 import dayjs from "dayjs";
+import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "shared/src/components/ui/table";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "shared/src/components/ui/table";
-import {
-  getContractNegotiationMessagesByCNIDOptions,
-  getContractNegotiationProcessesByCNIDOptions,
-  useGetContractNegotiationMessagesByCNID,
-  useGetContractNegotiationProcessesByCNID,
-} from "@/data/contract-queries.ts";
-import { ContractNegotiationActions } from "shared/src/components/ContractNegotiationActions.tsx";
+    useGetContractNegotiationMessagesByCNID,
+    useGetContractNegotiationProcessesByCNID
+} from "shared/src/data/contract-queries.ts";
+import {ContractNegotiationActions} from "shared/src/components/ContractNegotiationActions.tsx";
 import { List, ListItem, ListItemKey } from "shared/src/components/ui/list.tsx";
 import Heading from "../../../../../shared/src/components/ui/heading.tsx";
 import { Badge } from "shared/src/components/ui/badge.tsx";
@@ -47,7 +38,7 @@ const RouteComponent = () => {
           <ListItem>
             <ListItemKey>State</ListItemKey>
             <Badge variant="status" state={process.state.toLowerCase()}>{process.state}</Badge>
-    
+
           </ListItem>
           <ListItem>
             <ListItemKey>CreatedAt</ListItemKey>
@@ -209,17 +200,5 @@ const RouteComponent = () => {
 };
 
 export const Route = createFileRoute("/contract-negotiation/$cnProcess/")({
-  component: RouteComponent,
-  loader: async ({
-    context: { queryClient },
-    params: { cnProcess: cnProcessId },
-  }) => {
-    let cnProcess = await queryClient.ensureQueryData(
-      getContractNegotiationProcessesByCNIDOptions(cnProcessId as UUID)
-    );
-    let cnMessages = await queryClient.ensureQueryData(
-      getContractNegotiationMessagesByCNIDOptions(cnProcessId as UUID)
-    );
-    return { cnProcess, cnMessages };
-  },
+    component: RouteComponent,
 });

@@ -31,29 +31,33 @@ pub mod ds_protocol_errors;
 #[mockall::automock]
 #[async_trait]
 pub trait DSProtocolContractNegotiationConsumerTrait: Send + Sync {
-    async fn post_offers(&self, input: ContractOfferMessage) -> anyhow::Result<ContractAckMessage>;
+    async fn post_offers(&self, input: ContractOfferMessage, token: String) -> anyhow::Result<ContractAckMessage>;
 
     async fn post_consumer_offers(
         &self,
         consumer_pid: Urn,
         input: ContractOfferMessage,
+        token: String,
     ) -> anyhow::Result<ContractAckMessage>;
 
     async fn post_agreement(
         &self,
         consumer_pid: Urn,
         input: ContractAgreementMessage,
+        token: String,
     ) -> anyhow::Result<ContractAckMessage>;
 
     async fn post_events(
         &self,
         consumer_pid: Urn,
         input: ContractNegotiationEventMessage,
+        token: String,
     ) -> anyhow::Result<ContractAckMessage>;
 
     async fn post_termination(
         &self,
         consumer_pid: Urn,
         input: ContractTerminationMessage,
+        token: String,
     ) -> anyhow::Result<ContractAckMessage>;
 }

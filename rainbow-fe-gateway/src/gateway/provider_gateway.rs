@@ -93,6 +93,7 @@ impl RainbowProviderGateway {
         req: Request<Body>,
     ) -> impl IntoResponse {
         let microservice_base_url = match service_prefix.as_str() {
+            "dataplane" => config.get_transfer_host_url(),
             "subscriptions" => config.get_catalog_host_url(),
             "notifications" => config.get_catalog_host_url(),
             "catalogs" => config.get_catalog_host_url(),
@@ -100,13 +101,14 @@ impl RainbowProviderGateway {
             "data-services" => config.get_catalog_host_url(),
             "distributions" => config.get_catalog_host_url(),
             "contract-negotiation" => config.get_contract_negotiation_host_url(),
-            "participants" => config.get_contract_negotiation_host_url(),
+            "mates" => config.get_contract_negotiation_host_url(),
             "negotiations" => config.get_contract_negotiation_host_url(),
             "transfers" => config.get_transfer_host_url(),
             "auth" => config.get_auth_host_url(),
             "ssi-auth" => config.get_ssi_auth_host_url(),
             _ => return (StatusCode::NOT_FOUND, "prefix not found").into_response(),
         };
+
         let microservice_base_url = match microservice_base_url {
             Some(microservice_url) => microservice_url,
             None => return (StatusCode::INTERNAL_SERVER_ERROR, "prefix not configured").into_response(),
@@ -182,12 +184,12 @@ impl RainbowProviderGateway {
     ) -> impl IntoResponse {
         let value_str = match serde_json::to_string(&input) {
             Ok(value_str) => value_str,
-            Err(e) => return (StatusCode::BAD_REQUEST, "Not able to deserialize").into_response(),
+            Err(_e) => return (StatusCode::BAD_REQUEST, "Not able to deserialize").into_response(),
         };
-        let req = match notification_tx.send(value_str) {
+        let _req = match notification_tx.send(value_str) {
             Ok(num_receivers) => num_receivers,
             // Send Pending
-            Err(e) => return (StatusCode::BAD_REQUEST, "Not able to deserialize").into_response(),
+            Err(_e) => return (StatusCode::BAD_REQUEST, "Not able to deserialize").into_response(),
         };
         StatusCode::ACCEPTED.into_response()
     }

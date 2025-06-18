@@ -1,39 +1,31 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useGetAgreements } from "@/data/agreement-queries.ts";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "shared/src/components/ui/table.tsx";
+import {createFileRoute, Link} from "@tanstack/react-router";
+import {useGetAgreements} from "shared/src/data/agreement-queries";
+import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "shared/src/components/ui/table.tsx";
 import dayjs from "dayjs";
-import { ExternalLink } from "lucide-react";
-import { Button, buttonVariants } from "shared/src/components/ui/button.tsx";
-import { Badge, badgeVariants } from "shared/src/components/ui/badge.tsx";
-import { Input } from "shared/src/components/ui/input.tsx";
+import {Button} from "shared/src/components/ui/button.tsx";
+import {Badge} from "shared/src/components/ui/badge.tsx";
+import {Input} from "shared/src/components/ui/input.tsx";
 
 export const Route = createFileRoute("/agreements/")({
-  component: RouteComponent,
+    component: RouteComponent,
 });
 
 function RouteComponent() {
-  const { data: agreements } = useGetAgreements();
+    const {data: agreements} = useGetAgreements();
 
-  return (
-    <div>
-      <div>
-        <div className="pb-3 w-3/5">
-          <Input type="search"></Input>
-        </div>
-        <Table className="text-sm">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Agreement Id</TableHead>
-              <TableHead>Related Message</TableHead>
-              <TableHead>
-                {/* <div className="flex gap-3">
+    return (
+        <div>
+            <div>
+                <div className="pb-3 w-3/5">
+                    <Input type="search"></Input>
+                </div>
+                <Table className="text-sm">
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Agreement Id</TableHead>
+                            <TableHead>Related Message</TableHead>
+                            <TableHead>
+                                {/* <div className="flex gap-3">
                   <p>Consumer Participant Id</p>
                   <p> Provider Participant Id</p>
               </div> */}
@@ -46,14 +38,14 @@ function RouteComponent() {
           </TableHeader>
           <TableBody>
             {agreements.map((agreement) => (
-              <TableRow key={agreement.agreement_id.slice(9, 29)}>
+              <TableRow key={agreement.agreement_id.slice(0, 20)}>
                 <TableCell>
                   <Badge variant={"info"}>
-                    {agreement.agreement_id.slice(9, 29) + "..."}
+                    {agreement.agreement_id.slice(0, 20) + "..."}
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  {agreement.cn_message_id?.slice(9, 29) + "..."}
+                  {agreement.cn_message_id?.slice(0, 20) + "..."}
                 </TableCell>
                 <TableCell>
                   {/* <div className="flex flex-col gap-1">
@@ -70,10 +62,8 @@ function RouteComponent() {
                   <Badge
                     variant={"status"}
                     state={agreement.active ? "started" : "paused"}
-                   
                   >
                     {agreement.active ? "ACTIVE" : "INACTIVE"}
-         
                   </Badge>
                 </TableCell>
                 <TableCell>

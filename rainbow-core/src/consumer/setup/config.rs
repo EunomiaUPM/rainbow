@@ -17,7 +17,7 @@
  *
  */
 
-use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
+use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait, SSIConsumerConfig, SSIConsumerWalletConfig};
 use rainbow_common::config::global_config::{DatabaseConfig, HostConfig};
 use rainbow_common::config::ConfigRoles;
 use serde::Serialize;
@@ -29,6 +29,8 @@ pub struct CoreApplicationConsumerConfig {
     pub database_config: DatabaseConfig,
     pub ssh_user: Option<String>,
     pub ssh_private_key_path: Option<String>,
+    pub ssi_wallet_config: SSIConsumerWalletConfig,
+    pub ssi_consumer_client: SSIConsumerConfig,
     pub role: ConfigRoles,
 }
 
@@ -57,6 +59,9 @@ impl ApplicationConsumerConfigTrait for CoreApplicationConsumerConfig {
     fn get_raw_contract_negotiation_host(&self) -> &Option<HostConfig> {
         &self.core_host
     }
+    fn get_raw_catalog_bypass_host(&self) -> &Option<HostConfig> {
+        &self.core_host
+    }
     fn get_raw_auth_host(&self) -> &Option<HostConfig> {
         &self.core_host
     }
@@ -69,6 +74,15 @@ impl ApplicationConsumerConfigTrait for CoreApplicationConsumerConfig {
     fn get_raw_database_config(&self) -> &DatabaseConfig {
         &self.database_config
     }
+
+    fn get_raw_ssi_wallet_config(&self) -> &SSIConsumerWalletConfig {
+        &self.ssi_wallet_config
+    }
+
+    fn get_raw_ssi_consumer_client(&self) -> &SSIConsumerConfig {
+        &self.ssi_consumer_client
+    }
+
     fn merge_dotenv_configuration(&self) -> Self
     where
         Self: Sized,
@@ -86,6 +100,18 @@ impl From<ApplicationConsumerConfig> for CoreApplicationConsumerConfig {
             database_config: value.database_config,
             ssh_user: value.ssh_user,
             ssh_private_key_path: value.ssh_private_key_path,
+            ssi_wallet_config: SSIConsumerWalletConfig {
+                consumer_wallet_portal_url: value.ssi_wallet_config.consumer_wallet_portal_url,
+                consumer_wallet_portal_port: value.ssi_wallet_config.consumer_wallet_portal_port,
+                consumer_wallet_type: value.ssi_wallet_config.consumer_wallet_type,
+                consumer_wallet_name: value.ssi_wallet_config.consumer_wallet_name,
+                consumer_wallet_email: value.ssi_wallet_config.consumer_wallet_email,
+                consumer_wallet_password: value.ssi_wallet_config.consumer_wallet_password,
+                consumer_wallet_id: None,
+            },
+            ssi_consumer_client: SSIConsumerConfig {
+                consumer_client: value.ssi_consumer_client.consumer_client,
+            },
             role: value.role,
         }
     }
@@ -97,12 +123,25 @@ impl Into<ApplicationConsumerConfig> for CoreApplicationConsumerConfig {
             transfer_process_host: self.core_host.clone(),
             business_system_host: self.business_system_host,
             contract_negotiation_host: self.core_host.clone(),
+            catalog_bypass_host: self.core_host.clone(),
             auth_host: self.core_host.clone(),
             ssi_auth_host: self.core_host.clone(),
             gateway_host: None,
             database_config: self.database_config,
             ssh_user: self.ssh_user,
             ssh_private_key_path: self.ssh_private_key_path,
+            ssi_wallet_config: SSIConsumerWalletConfig {
+                consumer_wallet_portal_url: self.ssi_wallet_config.consumer_wallet_portal_url,
+                consumer_wallet_portal_port: self.ssi_wallet_config.consumer_wallet_portal_port,
+                consumer_wallet_type: self.ssi_wallet_config.consumer_wallet_type,
+                consumer_wallet_name: self.ssi_wallet_config.consumer_wallet_name,
+                consumer_wallet_email: self.ssi_wallet_config.consumer_wallet_email,
+                consumer_wallet_password: self.ssi_wallet_config.consumer_wallet_password,
+                consumer_wallet_id: None,
+            },
+            ssi_consumer_client: SSIConsumerConfig {
+                consumer_client: self.ssi_consumer_client.consumer_client,
+            },
             role: self.role,
         }
     }

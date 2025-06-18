@@ -17,6 +17,7 @@
  *
  */
 
+use crate::contracts_consumer::entities::cn_process;
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -24,14 +25,23 @@ use serde::{Deserialize, Serialize};
 #[sea_orm(table_name = "cn_processes")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub cn_process_id: String,
+    pub consumer_id: String,
     pub provider_id: Option<String>,
-    pub consumer_id: Option<String>,
+    pub associated_provider: Option<String>,
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: Option<chrono::NaiveDateTime>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {}
+pub enum Relation {
+    #[sea_orm(has_many = "super::cn_message::Entity")]
+    CnMessages
+}
+
+impl Related<super::cn_message::Entity> for cn_process::Entity {
+    fn to() -> RelationDef {
+        cn_process::Relation::CnMessages.def()
+    }
+}
 
 impl ActiveModelBehavior for ActiveModel {}

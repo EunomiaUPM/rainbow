@@ -20,7 +20,7 @@
 use crate::transfer_provider::entities::transfer_message;
 use crate::transfer_provider::entities::transfer_process;
 use anyhow::Error;
-use rainbow_common::protocol::transfer::{TransferRoles, TransferState};
+use rainbow_common::protocol::transfer::{TransferRoles, TransferState, TransferStateAttribute};
 use sea_orm::DatabaseConnection;
 use sea_orm_migration::async_trait::async_trait;
 use thiserror::Error;
@@ -38,15 +38,17 @@ pub struct NewTransferProcessModel {
     pub provider_pid: Urn,
     pub consumer_pid: Urn,
     pub agreement_id: Urn,
-    pub data_plane_id: Urn,
+    pub callback_address: String,
+    pub associated_consumer: Option<Urn>,
 }
 
 pub struct EditTransferProcessModel {
     pub provider_pid: Option<Urn>,
     pub consumer_pid: Option<Urn>,
     pub agreement_id: Option<Urn>,
-    pub data_plane_id: Option<Urn>,
+    pub callback_address: Option<String>,
     pub state: Option<TransferState>,
+    pub state_attribute: Option<TransferStateAttribute>,
 }
 
 #[async_trait]
@@ -71,7 +73,7 @@ pub trait TransferProcessRepo {
     async fn put_transfer_process(
         &self,
         pid: Urn,
-        new_transfer_process: EditTransferProcessModel,
+        edit_transfer_process: EditTransferProcessModel,
     ) -> anyhow::Result<transfer_process::Model, TransferProviderRepoErrors>;
     async fn create_transfer_process(
         &self,
@@ -154,8 +156,9 @@ impl Default for EditTransferProcessModel {
             provider_pid: None,
             consumer_pid: None,
             agreement_id: None,
-            data_plane_id: None,
+            callback_address: None,
             state: None,
+            state_attribute: None,
         }
     }
 }

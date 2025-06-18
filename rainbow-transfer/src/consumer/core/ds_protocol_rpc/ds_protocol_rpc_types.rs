@@ -24,11 +24,11 @@ use rainbow_common::protocol::transfer::transfer_process::TransferProcessMessage
 use serde::{Deserialize, Serialize};
 use urn::Urn;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferConsumerRequestRequest {
-    #[serde(rename = "providerAddress")]
-    pub provider_address: String,
+    #[serde(rename = "providerParticipantId")]
+    pub provider_participant_id: Urn,
     #[serde(rename = "agreementId")]
     pub agreement_id: String,
     #[serde(rename = "format")]
@@ -38,7 +38,7 @@ pub struct DSRPCTransferConsumerRequestRequest {
     pub data_address: Option<DataAddress>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferConsumerRequestResponse {
     #[serde(rename = "providerPid")]
@@ -57,11 +57,11 @@ pub struct DSRPCTransferConsumerRequestResponse {
     pub message: TransferProcessMessage,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferConsumerStartRequest {
-    #[serde(rename = "providerAddress")]
-    pub provider_address: String,
+    #[serde(rename = "providerParticipantId")]
+    pub provider_participant_id: Urn,
     #[serde(rename = "providerPid")]
     pub provider_pid: Urn,
     #[serde(rename = "consumerPid")]
@@ -84,11 +84,11 @@ pub struct DSRPCTransferConsumerStartResponse {
     pub message: TransferProcessMessage,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferConsumerSuspensionRequest {
-    #[serde(rename = "providerAddress")]
-    pub provider_address: String,
+    #[serde(rename = "providerParticipantId")]
+    pub provider_participant_id: Urn,
     #[serde(rename = "providerPid")]
     pub provider_pid: Urn,
     #[serde(rename = "consumerPid")]
@@ -111,11 +111,11 @@ pub struct DSRPCTransferConsumerSuspensionResponse {
     pub message: TransferProcessMessage,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferConsumerCompletionRequest {
-    #[serde(rename = "providerAddress")]
-    pub provider_address: String,
+    #[serde(rename = "providerParticipantId")]
+    pub provider_participant_id: Urn,
     #[serde(rename = "providerPid")]
     pub provider_pid: Urn,
     #[serde(rename = "consumerPid")]
@@ -132,11 +132,11 @@ pub struct DSRPCTransferConsumerCompletionResponse {
     pub message: TransferProcessMessage,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferConsumerTerminationRequest {
-    #[serde(rename = "providerAddress")]
-    pub provider_address: String,
+    #[serde(rename = "providerParticipantId")]
+    pub provider_participant_id: Urn,
     #[serde(rename = "providerPid")]
     pub provider_pid: Urn,
     #[serde(rename = "consumerPid")]

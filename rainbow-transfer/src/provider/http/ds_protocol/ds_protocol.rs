@@ -18,7 +18,6 @@
  */
 
 
-use crate::common::http::middleware::{pids_as_urn_validation_middleware, protocol_rules_middleware, schema_validation_middleware};
 use crate::provider::core::ds_protocol::ds_protocol_err::DSProtocolTransferProviderErrors;
 use crate::provider::core::ds_protocol::DSProtocolTransferProviderTrait;
 use axum::extract::rejection::JsonRejection;
@@ -26,7 +25,8 @@ use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
-use axum::{middleware, Json, Router};
+use axum::{middleware, Extension, Json, Router};
+use rainbow_common::auth::header::{extract_request_info, RequestInfo};
 use rainbow_common::err::transfer_err::TransferErrorType;
 use rainbow_common::err::transfer_err::TransferErrorType::{
     NotCheckedError, ProtocolBodyError,
@@ -38,7 +38,7 @@ use rainbow_common::protocol::transfer::transfer_suspension::TransferSuspensionM
 use rainbow_common::protocol::transfer::transfer_termination::TransferTerminationMessage;
 use rainbow_common::utils::get_urn_from_string;
 use std::sync::Arc;
-use tracing::info;
+use tracing::{debug, info};
 
 pub struct DSProtocolTransferProviderRouter<T> {
     transfer_service: Arc<T>,
@@ -70,13 +70,11 @@ where
                 "/transfers/:provider_pid/termination",
                 post(Self::handle_transfer_termination),
             )
-            .route_layer(middleware::from_fn(pids_as_urn_validation_middleware))
-            .route_layer(middleware::from_fn_with_state(self.transfer_service.clone(), protocol_rules_middleware::<T>))
-            .route_layer(middleware::from_fn(schema_validation_middleware))
             .route(
                 "/transfers/:provider_pid",
                 get(Self::handle_get_transfer_by_provider),
             )
+            .layer(middleware::from_fn(extract_request_info))
             .with_state(self.transfer_service)
     }
     async fn handle_get_transfer_by_provider(
@@ -99,6 +97,7 @@ where
 
     async fn handle_transfer_request(
         State(transfer_service): State<Arc<T>>,
+        Extension(info): Extension<Arc<RequestInfo>>,
         input: Result<Json<TransferRequestMessage>, JsonRejection>,
     ) -> impl IntoResponse {
         info!("POST /transfers/request");
@@ -106,8 +105,9 @@ where
             Ok(input) => input.0,
             Err(e) => return ProtocolBodyError { message: e.body_text() }.into_response(),
         };
+        let token = info.token.clone();
 
-        match transfer_service.transfer_request(input).await {
+        match transfer_service.transfer_request(input, token).await {
             Ok(tp) => (StatusCode::CREATED, Json(tp)).into_response(),
             Err(e) => match e.downcast::<DSProtocolTransferProviderErrors>() {
                 Ok(transfer_error) => transfer_error.into_response(),
@@ -119,6 +119,7 @@ where
     async fn handle_transfer_start(
         State(transfer_service): State<Arc<T>>,
         provider_pid: Path<String>,
+        Extension(info): Extension<Arc<RequestInfo>>,
         input: Result<Json<TransferStartMessage>, JsonRejection>,
     ) -> impl IntoResponse {
         info!("POST /transfers/{}/start", provider_pid.to_string());
@@ -133,8 +134,9 @@ where
             Ok(input) => input.0,
             Err(e) => return ProtocolBodyError { message: e.body_text() }.into_response(),
         };
+        let token = info.token.clone();
 
-        match transfer_service.transfer_start(provider_pid, input).await {
+        match transfer_service.transfer_start(provider_pid, input, token).await {
             Ok(tp) => (StatusCode::OK, Json(tp)).into_response(),
             Err(e) => match e.downcast::<DSProtocolTransferProviderErrors>() {
                 Ok(transfer_error) => transfer_error.into_response(),
@@ -146,6 +148,7 @@ where
     async fn handle_transfer_suspension(
         State(transfer_service): State<Arc<T>>,
         provider_pid: Path<String>,
+        Extension(info): Extension<Arc<RequestInfo>>,
         input: Result<Json<TransferSuspensionMessage>, JsonRejection>,
     ) -> impl IntoResponse {
         info!("POST /transfers/{}/suspension", provider_pid.to_string());
@@ -160,8 +163,10 @@ where
             Ok(input) => input.0,
             Err(e) => return ProtocolBodyError { message: e.body_text() }.into_response(),
         };
+        let token = info.token.clone();
 
-        match transfer_service.transfer_suspension(provider_pid, input).await {
+
+        match transfer_service.transfer_suspension(provider_pid, input, token).await {
             Ok(tp) => (StatusCode::OK, Json(tp)).into_response(),
             Err(e) => match e.downcast::<DSProtocolTransferProviderErrors>() {
                 Ok(transfer_error) => transfer_error.into_response(),
@@ -173,6 +178,7 @@ where
     async fn handle_transfer_completion(
         State(transfer_service): State<Arc<T>>,
         provider_pid: Path<String>,
+        Extension(info): Extension<Arc<RequestInfo>>,
         input: Result<Json<TransferCompletionMessage>, JsonRejection>,
     ) -> impl IntoResponse {
         info!("POST /transfers/{}/completion", provider_pid.to_string());
@@ -187,8 +193,9 @@ where
             Ok(input) => input.0,
             Err(e) => return ProtocolBodyError { message: e.body_text() }.into_response(),
         };
+        let token = info.token.clone();
 
-        match transfer_service.transfer_completion(provider_pid, input).await {
+        match transfer_service.transfer_completion(provider_pid, input, token).await {
             Ok(tp) => (StatusCode::OK, Json(tp)).into_response(),
             Err(e) => match e.downcast::<DSProtocolTransferProviderErrors>() {
                 Ok(transfer_error) => transfer_error.into_response(),
@@ -200,6 +207,7 @@ where
     async fn handle_transfer_termination(
         State(transfer_service): State<Arc<T>>,
         provider_pid: Path<String>,
+        Extension(info): Extension<Arc<RequestInfo>>,
         input: Result<Json<TransferTerminationMessage>, JsonRejection>,
     ) -> impl IntoResponse {
         info!("POST /transfers/{}/termination", provider_pid.to_string());
@@ -214,8 +222,9 @@ where
             Ok(input) => input.0,
             Err(e) => return ProtocolBodyError { message: e.body_text() }.into_response(),
         };
+        let token = info.token.clone();
 
-        match transfer_service.transfer_termination(provider_pid, input).await {
+        match transfer_service.transfer_termination(provider_pid, input, token).await {
             Ok(tp) => (StatusCode::OK, Json(tp)).into_response(),
             Err(e) => match e.downcast::<DSProtocolTransferProviderErrors>() {
                 Ok(transfer_error) => transfer_error.into_response(),

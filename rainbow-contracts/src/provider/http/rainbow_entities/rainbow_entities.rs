@@ -160,6 +160,10 @@ where
                 get(Self::handle_get_agreement_by_agreement_id),
             )
             .route(
+                "/api/v1/contract-negotiation/agreements/participant/:participant_id",
+                get(Self::handle_get_agreements_by_participant_id),
+            )
+            .route(
                 "/api/v1/contract-negotiation/processes/:process_id/messages/:message_id/agreements",
                 post(Self::handle_post_agreement),
             )
@@ -170,26 +174,6 @@ where
             .route(
                 "/api/v1/contract-negotiation/processes/:process_id/messages/:message_id/agreements/:agreement_id",
                 delete(Self::handle_delete_agreement),
-            )
-            //
-            // Participants
-            .route("/api/v1/participants", get(Self::handle_get_participants))
-            .route(
-                "/api/v1/participants/:participant_id",
-                get(Self::handle_get_participant_by_id),
-            )
-            .route(
-                "/api/v1/participants/:participant_id/agreements",
-                get(Self::handle_get_participant_agreements),
-            )
-            .route("/api/v1/participants", post(Self::handle_post_participant))
-            .route(
-                "/api/v1/participants/:participant_id",
-                put(Self::handle_put_participant),
-            )
-            .route(
-                "/api/v1/participants/:participant_id",
-                delete(Self::handle_delete_participant),
             )
             .with_state(self.service)
     }
@@ -768,6 +752,27 @@ where
         }
     }
 
+    async fn handle_get_agreements_by_participant_id(
+        State(service): State<Arc<T>>,
+        Path(participant_id): Path<String>,
+    ) -> impl IntoResponse {
+        info!(
+            "GET /api/v1/contract-negotiation/agreements/participant/{}",
+            participant_id
+        );
+        let participant_id = match get_urn_from_string(&participant_id) {
+            Ok(participant_id) => participant_id,
+            Err(err) => return CnErrorProvider::UrnUuidSchema(err.to_string()).into_response(),
+        };
+        match service.get_agreements_by_participant_id(participant_id).await {
+            Ok(agreements) => (StatusCode::OK, Json(agreements)).into_response(),
+            Err(err) => match err.downcast::<CnErrorProvider>() {
+                Ok(e) => e.into_response(),
+                Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+            },
+        }
+    }
+
     async fn handle_post_agreement(
         State(service): State<Arc<T>>,
         Path((process_id, message_id)): Path<(String, String)>,
@@ -853,131 +858,6 @@ where
             Err(err) => return CnErrorProvider::UrnUuidSchema(err.to_string()).into_response(),
         };
         match service.delete_agreement(process_id, message_id, agreement_id).await {
-            Ok(_) => (StatusCode::NO_CONTENT).into_response(),
-            Err(err) => match err.downcast::<CnErrorProvider>() {
-                Ok(e) => e.into_response(),
-                Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
-            },
-        }
-    }
-
-    ///
-    /// Participants
-    ///
-
-    async fn handle_get_participants(State(service): State<Arc<T>>) -> impl IntoResponse {
-        info!("GET /api/v1/participants");
-
-        match service.get_participants().await {
-            Ok(participants) => (StatusCode::OK, Json(participants)).into_response(),
-            Err(err) => match err.downcast::<CnErrorProvider>() {
-                Ok(e) => e.into_response(),
-                Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
-            },
-        }
-    }
-
-    async fn handle_get_participant_by_id(
-        State(service): State<Arc<T>>,
-        Path(participant_id): Path<String>,
-    ) -> impl IntoResponse {
-        info!("GET /api/v1/participants/{}", participant_id);
-        let participant_id = match get_urn_from_string(&participant_id) {
-            Ok(participant_id) => participant_id,
-            Err(err) => return CnErrorProvider::UrnUuidSchema(err.to_string()).into_response(),
-        };
-
-        match service.get_participant_by_id(participant_id).await {
-            Ok(participant) => (StatusCode::OK, Json(participant)).into_response(),
-            Err(err) => match err.downcast::<CnErrorProvider>() {
-                Ok(e) => e.into_response(),
-                Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
-            },
-        }
-    }
-
-    async fn handle_get_participant_agreements(
-        State(service): State<Arc<T>>,
-        Path(participant_id): Path<String>,
-    ) -> impl IntoResponse {
-        info!("GET /api/v1/participants/{}/agreements", participant_id);
-        let participant_id = match get_urn_from_string(&participant_id) {
-            Ok(participant_id) => participant_id,
-            Err(err) => return CnErrorProvider::UrnUuidSchema(err.to_string()).into_response(),
-        };
-
-        match service.get_participant_agreements(participant_id).await {
-            Ok(agreements) => (StatusCode::OK, Json(agreements)).into_response(),
-            Err(err) => match err.downcast::<CnErrorProvider>() {
-                Ok(e) => e.into_response(),
-                Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
-            },
-        }
-    }
-
-    async fn handle_post_participant(
-        State(service): State<Arc<T>>,
-        input: Result<Json<NewParticipantRequest>, JsonRejection>,
-    ) -> impl IntoResponse {
-        info!("POST /api/v1/participants");
-        let input = match input {
-            Ok(input) => input.0,
-            Err(e) => return CnErrorProvider::JsonRejection(e).into_response(),
-        };
-        match input._type.as_str() {
-            "Provider" => match service.post_provider_participant(input).await {
-                Ok(participant) => (StatusCode::CREATED, Json(participant)).into_response(),
-                Err(err) => match err.downcast::<CnErrorProvider>() {
-                    Ok(e) => e.into_response(),
-                    Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
-                },
-            },
-            "Consumer" => match service.post_participant(input).await {
-                Ok(participant) => (StatusCode::CREATED, Json(participant)).into_response(),
-                Err(err) => match err.downcast::<CnErrorProvider>() {
-                    Ok(e) => e.into_response(),
-                    Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
-                },
-            },
-            _ => (StatusCode::INTERNAL_SERVER_ERROR).into_response()
-        }
-    }
-
-    async fn handle_put_participant(
-        State(service): State<Arc<T>>,
-        Path(participant_id): Path<String>,
-        input: Result<Json<EditParticipantRequest>, JsonRejection>,
-    ) -> impl IntoResponse {
-        info!("PUT /api/v1/participants/{}", participant_id);
-        let participant_id = match get_urn_from_string(&participant_id) {
-            Ok(participant_id) => participant_id,
-            Err(err) => return CnErrorProvider::UrnUuidSchema(err.to_string()).into_response(),
-        };
-        let input = match input {
-            Ok(input) => input.0,
-            Err(e) => return CnErrorProvider::JsonRejection(e).into_response(),
-        };
-
-        match service.put_participant(participant_id, input).await {
-            Ok(participant) => (StatusCode::ACCEPTED, Json(participant)).into_response(),
-            Err(err) => match err.downcast::<CnErrorProvider>() {
-                Ok(e) => e.into_response(),
-                Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
-            },
-        }
-    }
-
-    async fn handle_delete_participant(
-        State(service): State<Arc<T>>,
-        Path(participant_id): Path<String>,
-    ) -> impl IntoResponse {
-        info!("DELETE /api/v1/participants/{}", participant_id);
-        let participant_id = match get_urn_from_string(&participant_id) {
-            Ok(participant_id) => participant_id,
-            Err(err) => return CnErrorProvider::UrnUuidSchema(err.to_string()).into_response(),
-        };
-
-        match service.delete_participant(participant_id).await {
             Ok(_) => (StatusCode::NO_CONTENT).into_response(),
             Err(err) => match err.downcast::<CnErrorProvider>() {
                 Ok(e) => e.into_response(),

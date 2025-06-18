@@ -26,11 +26,12 @@ impl From<cn_process::Model> for ContractAckMessage {
     fn from(model: cn_process::Model) -> Self {
         ContractAckMessage {
             provider_pid: model.provider_id.unwrap(),
-            consumer_pid: model.consumer_id.unwrap(),
+            consumer_pid: model.consumer_id,
             ..Default::default()
         }
     }
 }
+
 
 impl From<CnErrors> for ContractErrorMessage {
     fn from(error: CnErrors) -> Self {
@@ -48,3 +49,4 @@ impl From<CnErrors> for ContractErrorMessage {
         }
     }
 }
+

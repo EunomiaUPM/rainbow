@@ -21,16 +21,15 @@ use crate::common::CNControllerTypes;
 use crate::provider::core::rainbow_entities::rainbow_entities_errors::CnErrorProvider;
 use crate::provider::core::rainbow_entities::rainbow_entities_types::{
     EditAgreementRequest, EditContractNegotiationMessageRequest, EditContractNegotiationOfferRequest,
-    EditContractNegotiationRequest, EditParticipantRequest, NewAgreementRequest, NewContractNegotiationMessageRequest,
-    NewContractNegotiationOfferRequest, NewContractNegotiationRequest, NewParticipantRequest,
+    EditContractNegotiationRequest, NewAgreementRequest, NewContractNegotiationMessageRequest,
+    NewContractNegotiationOfferRequest, NewContractNegotiationRequest,
 };
 use crate::provider::core::rainbow_entities::RainbowEntitiesContractNegotiationProviderTrait;
 use axum::async_trait;
-use rainbow_common::utils::get_urn;
 use rainbow_db::contracts_provider::entities::cn_process::Model;
 use rainbow_db::contracts_provider::repo::{
     AgreementRepo, CnErrors, ContractNegotiationMessageRepo, ContractNegotiationOfferRepo,
-    ContractNegotiationProcessRepo, Participant,
+    ContractNegotiationProcessRepo,
 };
 use rainbow_events::core::notification::notification_types::{
     RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory,
@@ -47,7 +46,6 @@ where
     + ContractNegotiationMessageRepo
     + ContractNegotiationOfferRepo
     + AgreementRepo
-    + Participant
     + Send
     + Sync
     + 'static,
@@ -63,7 +61,6 @@ where
     + ContractNegotiationMessageRepo
     + ContractNegotiationOfferRepo
     + AgreementRepo
-    + Participant
     + Send
     + Sync
     + 'static,
@@ -81,7 +78,6 @@ where
     + ContractNegotiationMessageRepo
     + ContractNegotiationOfferRepo
     + AgreementRepo
-    + Participant
     + Send
     + Sync
     + 'static,
@@ -539,6 +535,15 @@ where
         Ok(agreement)
     }
 
+    async fn get_agreements_by_participant_id(&self, participant_id: Urn) -> anyhow::Result<Vec<rainbow_db::contracts_provider::entities::agreement::Model>> {
+        let agreements = self
+            .repo
+            .get_agreements_by_participant_id(participant_id.clone())
+            .await
+            .map_err(CnErrorProvider::DbErr)?;
+        Ok(agreements)
+    }
+
     async fn post_agreement(
         &self,
         process_id: Urn,
@@ -554,11 +559,6 @@ where
                     CnErrors::CNMessageNotFound => {
                         CnErrorProvider::NotFound { id: message_id, entity: CNControllerTypes::Message.to_string() }
                     }
-                    CnErrors::ParticipantNotFound(which, urn) => CnErrorProvider::ParticipantNotFound {
-                        participant_id: urn,
-                        which,
-                        entity: CNControllerTypes::Agreement.to_string(),
-                    },
                     _ => CnErrorProvider::DbErr(err),
                 }
             })?;
@@ -640,135 +640,6 @@ where
                 message_content: json!({
                     "@type": "Agreement",
                     "@id": agreement_id.to_string()
-                }),
-                message_operation: RainbowEventsNotificationMessageOperation::Deletion,
-            })
-            .await?;
-        Ok(())
-    }
-
-    async fn get_participants(
-        &self,
-    ) -> anyhow::Result<Vec<rainbow_db::contracts_provider::entities::participant::Model>> {
-        let participants = self.repo.get_all_participants(None, None).await.map_err(CnErrorProvider::DbErr)?;
-        Ok(participants)
-    }
-
-    async fn get_participant_by_id(
-        &self,
-        participant_id: Urn,
-    ) -> anyhow::Result<rainbow_db::contracts_provider::entities::participant::Model> {
-        let participant =
-            self.repo.get_participant_by_p_id(participant_id.clone()).await.map_err(CnErrorProvider::DbErr)?.ok_or(
-                CnErrorProvider::NotFound { id: participant_id, entity: CNControllerTypes::Participant.to_string() },
-            )?;
-        Ok(participant)
-    }
-
-    async fn get_provider_participant(
-        &self,
-    ) -> anyhow::Result<rainbow_db::contracts_provider::entities::participant::Model> {
-        let participant = self.repo.get_provider_participant().await.map_err(CnErrorProvider::DbErr)?.ok_or(
-            CnErrorProvider::NotFound { id: get_urn(None), entity: CNControllerTypes::Participant.to_string() },
-        )?;
-        Ok(participant)
-    }
-
-    async fn get_participant_agreements(
-        &self,
-        participant_id: Urn,
-    ) -> anyhow::Result<Vec<rainbow_db::contracts_provider::entities::agreement::Model>> {
-        let agreements =
-            self.repo.get_agreements_by_participant_id(participant_id.clone()).await.map_err(|err| match err {
-                CnErrors::ParticipantNotFound(_, _) => {
-                    CnErrorProvider::NotFound { id: participant_id, entity: CNControllerTypes::Participant.to_string() }
-                }
-                _ => CnErrorProvider::DbErr(err),
-            })?;
-        Ok(agreements)
-    }
-
-    async fn post_participant(
-        &self,
-        input: NewParticipantRequest,
-    ) -> anyhow::Result<rainbow_db::contracts_provider::entities::participant::Model> {
-        let participant = self.repo.create_participant(input.into()).await.map_err(CnErrorProvider::DbErr)?;
-        self.notification_service
-            .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
-                category: RainbowEventsNotificationMessageCategory::ContractNegotiation,
-                subcategory: "Participant".to_string(),
-                message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
-                message_content: to_value(&participant)?,
-                message_operation: RainbowEventsNotificationMessageOperation::Creation,
-            })
-            .await?;
-        Ok(participant)
-    }
-
-    async fn post_provider_participant(
-        &self,
-        input: NewParticipantRequest,
-    ) -> anyhow::Result<rainbow_db::contracts_provider::entities::participant::Model> {
-        let provider_participant = self.repo.get_provider_participant().await.map_err(CnErrorProvider::DbErr)?;
-        let participant = match provider_participant {
-            None => {
-                let participant = self.repo.create_participant(input.into()).await.map_err(CnErrorProvider::DbErr)?;
-                self.notification_service
-                    .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
-                        category: RainbowEventsNotificationMessageCategory::ContractNegotiation,
-                        subcategory: "Participant".to_string(),
-                        message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
-                        message_content: to_value(&participant)?,
-                        message_operation: RainbowEventsNotificationMessageOperation::Creation,
-                    })
-                    .await?;
-                participant
-            }
-            Some(participant) => participant,
-        };
-        Ok(participant)
-    }
-
-    async fn put_participant(
-        &self,
-        participant_id: Urn,
-        input: EditParticipantRequest,
-    ) -> anyhow::Result<rainbow_db::contracts_provider::entities::participant::Model> {
-        let participant =
-            self.repo.put_participant(participant_id.clone(), input.into()).await.map_err(|err| match err {
-                CnErrors::ParticipantNotFound(_, _) => {
-                    CnErrorProvider::NotFound { id: participant_id, entity: CNControllerTypes::Participant.to_string() }
-                }
-                _ => CnErrorProvider::DbErr(err),
-            })?;
-        self.notification_service
-            .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
-                category: RainbowEventsNotificationMessageCategory::ContractNegotiation,
-                subcategory: "Participant".to_string(),
-                message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
-                message_content: to_value(&participant)?,
-                message_operation: RainbowEventsNotificationMessageOperation::Update,
-            })
-            .await?;
-        Ok(participant)
-    }
-
-    async fn delete_participant(&self, participant_id: Urn) -> anyhow::Result<()> {
-        let _ = self.repo.delete_participant(participant_id.clone()).await.map_err(|err| match err {
-            CnErrors::ParticipantNotFound(_, _) => CnErrorProvider::NotFound {
-                id: participant_id.clone(),
-                entity: CNControllerTypes::Participant.to_string(),
-            },
-            _ => CnErrorProvider::DbErr(err),
-        })?;
-        self.notification_service
-            .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
-                category: RainbowEventsNotificationMessageCategory::ContractNegotiation,
-                subcategory: "Participant".to_string(),
-                message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
-                message_content: json!({
-                    "@type": "Participant",
-                    "@id": participant_id.to_string()
                 }),
                 message_operation: RainbowEventsNotificationMessageOperation::Deletion,
             })

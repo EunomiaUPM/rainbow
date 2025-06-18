@@ -23,7 +23,8 @@ use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, State};
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
-use axum::{Json, Router};
+use axum::{middleware, Extension, Json, Router};
+use rainbow_common::auth::header::{extract_request_info, RequestInfo};
 use rainbow_common::protocol::contract::contract_agreement_verification::ContractAgreementVerificationMessage;
 use rainbow_common::protocol::contract::contract_negotiation_event::ContractNegotiationEventMessage;
 use rainbow_common::protocol::contract::contract_negotiation_request::ContractRequestMessage;
@@ -70,6 +71,7 @@ where
                 "/negotiations/:provider_pid/termination",
                 post(Self::handle_post_provider_termination),
             )
+            .layer(middleware::from_fn(extract_request_info))
             .with_state(self.service)
     }
 
@@ -105,6 +107,7 @@ where
 
     async fn handle_post_request(
         State(service): State<Arc<T>>,
+        Extension(info): Extension<Arc<RequestInfo>>,
         input: Result<Json<ContractRequestMessage>, JsonRejection>,
     ) -> impl IntoResponse {
         info!("POST /negotiations/request");
@@ -112,7 +115,8 @@ where
             Ok(input) => input.0,
             Err(e) => return IdsaCNError::JsonRejection(e).into_response(),
         };
-        match service.post_request(input).await {
+        let token = info.token.clone();
+        match service.post_request(input, token).await {
             Ok(negotiation) => negotiation.into_response(),
             Err(err) => match err.downcast::<IdsaCNError>() {
                 Ok(err_) => err_.into_response(),
@@ -127,6 +131,7 @@ where
     async fn handle_post_provider_request(
         State(service): State<Arc<T>>,
         Path(provider_pid): Path<String>,
+        Extension(info): Extension<Arc<RequestInfo>>,
         input: Result<Json<ContractRequestMessage>, JsonRejection>,
     ) -> impl IntoResponse {
         info!("POST /negotiations/{}/request", provider_pid.to_string());
@@ -145,8 +150,8 @@ where
             Ok(input) => input.0,
             Err(e) => return IdsaCNError::JsonRejection(e).into_response(),
         };
-
-        match service.post_provider_request(provider_pid, input).await {
+        let token = info.token.clone();
+        match service.post_provider_request(provider_pid, input, token).await {
             Ok(negotiation) => negotiation.into_response(),
             Err(err) => match err.downcast::<IdsaCNError>() {
                 Ok(err_) => err_.into_response(),
@@ -161,6 +166,7 @@ where
     async fn handle_post_provider_events(
         State(service): State<Arc<T>>,
         Path(provider_pid): Path<String>,
+        Extension(info): Extension<Arc<RequestInfo>>,
         input: Result<Json<ContractNegotiationEventMessage>, JsonRejection>,
     ) -> impl IntoResponse {
         info!("POST /negotiations/{}/events", provider_pid.to_string());
@@ -179,8 +185,8 @@ where
             Ok(input) => input.0,
             Err(e) => return IdsaCNError::JsonRejection(e).into_response(),
         };
-
-        match service.post_provider_events(provider_pid, input).await {
+        let token = info.token.clone();
+        match service.post_provider_events(provider_pid, input, token).await {
             Ok(negotiation) => negotiation.into_response(),
             Err(err) => match err.downcast::<IdsaCNError>() {
                 Ok(err_) => err_.into_response(),
@@ -195,6 +201,7 @@ where
     async fn handle_post_provider_agreement_verification(
         State(service): State<Arc<T>>,
         Path(provider_pid): Path<String>,
+        Extension(info): Extension<Arc<RequestInfo>>,
         input: Result<Json<ContractAgreementVerificationMessage>, JsonRejection>,
     ) -> impl IntoResponse {
         info!(
@@ -209,7 +216,8 @@ where
             Ok(input) => input.0,
             Err(e) => return IdsaCNError::JsonRejection(e).into_response(),
         };
-        match service.post_provider_agreement_verification(provider_pid, input).await {
+        let token = info.token.clone();
+        match service.post_provider_agreement_verification(provider_pid, input, token).await {
             Ok(negotiation) => negotiation.into_response(),
             Err(err) => match err.downcast::<IdsaCNError>() {
                 Ok(err_) => err_.into_response(),
@@ -224,6 +232,7 @@ where
     async fn handle_post_provider_termination(
         State(service): State<Arc<T>>,
         Path(provider_pid): Path<String>,
+        Extension(info): Extension<Arc<RequestInfo>>,
         input: Result<Json<ContractTerminationMessage>, JsonRejection>,
     ) -> impl IntoResponse {
         info!(
@@ -238,7 +247,8 @@ where
             Ok(provider_pid) => provider_pid,
             Err(err) => return (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
         };
-        match service.post_provider_termination(provider_pid, input).await {
+        let token = info.token.clone();
+        match service.post_provider_termination(provider_pid, input, token).await {
             Ok(negotiation) => negotiation.into_response(),
             Err(err) => match err.downcast::<IdsaCNError>() {
                 Ok(err_) => err_.into_response(),

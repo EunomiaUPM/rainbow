@@ -17,6 +17,7 @@
  *
  */
 
+use crate::common::core::mates_facade::MatesFacadeTrait;
 use crate::provider::core::catalog_odrl_facade::CatalogOdrlFacadeTrait;
 use crate::provider::core::ds_protocol::ds_protocol_errors::IdsaCNError;
 use crate::provider::core::ds_protocol_rpc::ds_protocol_rpc_errors::DSRPCContractNegotiationProviderErrors;
@@ -26,15 +27,19 @@ use crate::provider::core::ds_protocol_rpc::ds_protocol_rpc_types::{
 };
 use crate::provider::core::ds_protocol_rpc::DSRPCContractNegotiationProviderTrait;
 use crate::provider::core::rainbow_entities::rainbow_entities_errors::CnErrorProvider;
-use anyhow::bail;
+use anyhow::{anyhow, bail};
 use axum::async_trait;
 use rainbow_common::config::ConfigRoles;
+use rainbow_common::mates::Mates;
 use rainbow_common::protocol::contract::contract_ack::ContractAckMessage;
 use rainbow_common::protocol::contract::contract_agreement::ContractAgreementMessage;
 use rainbow_common::protocol::contract::contract_negotiation_event::{
     ContractNegotiationEventMessage, NegotiationEventType,
 };
-use rainbow_common::protocol::contract::contract_odrl::{OdrlAgreement, OdrlOffer, OdrlTypes};
+use rainbow_common::protocol::contract::contract_negotiation_termination::ContractTerminationMessage;
+use rainbow_common::protocol::contract::contract_odrl::{
+    ContractRequestMessageOfferTypes, OdrlAgreement, OdrlOffer, OdrlTypes,
+};
 use rainbow_common::protocol::contract::contract_offer::ContractOfferMessage;
 use rainbow_common::protocol::contract::ContractNegotiationMessages;
 use rainbow_common::utils::{get_urn, get_urn_from_string};
@@ -42,7 +47,7 @@ use rainbow_db::contracts_provider::entities::cn_process;
 use rainbow_db::contracts_provider::repo::{
     AgreementRepo, ContractNegotiationMessageRepo, ContractNegotiationOfferRepo, ContractNegotiationProcessRepo,
     EditContractNegotiationProcess, NewAgreement, NewContractNegotiationMessage, NewContractNegotiationOffer,
-    NewContractNegotiationProcess, Participant,
+    NewContractNegotiationProcess,
 };
 use rainbow_events::core::notification::notification_types::{
     RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory,
@@ -53,57 +58,63 @@ use reqwest::Client;
 use serde_json::{json, Value};
 use std::sync::Arc;
 use std::time::Duration;
+use tracing::debug;
 use urn::Urn;
 
-pub struct DSRPCContractNegotiationProviderService<T, U, V>
+pub struct DSRPCContractNegotiationProviderService<T, U, V, W>
 where
     T: ContractNegotiationProcessRepo
     + ContractNegotiationMessageRepo
     + ContractNegotiationOfferRepo
     + AgreementRepo
-    + Participant
     + Send
     + Sync
     + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
     V: CatalogOdrlFacadeTrait + Send + Sync,
+    W: MatesFacadeTrait + Send + Sync,
 {
     repo: Arc<T>,
     notification_service: Arc<U>,
     client: Client,
     catalog_facade: Arc<V>,
+    mates_facade: Arc<W>,
 }
 
-impl<T, U, V> DSRPCContractNegotiationProviderService<T, U, V>
+impl<T, U, V, W> DSRPCContractNegotiationProviderService<T, U, V, W>
 where
     T: ContractNegotiationProcessRepo
     + ContractNegotiationMessageRepo
     + ContractNegotiationOfferRepo
     + AgreementRepo
-    + Participant
     + Send
     + Sync
     + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
     V: CatalogOdrlFacadeTrait + Send + Sync,
+    W: MatesFacadeTrait + Send + Sync,
 {
-    pub fn new(repo: Arc<T>, notification_service: Arc<U>, catalog_facade: Arc<V>) -> Self {
+    pub fn new(repo: Arc<T>, notification_service: Arc<U>, catalog_facade: Arc<V>, mates_facade: Arc<W>) -> Self {
         let client =
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
-        Self { repo, notification_service, client, catalog_facade }
+        Self { repo, notification_service, client, catalog_facade, mates_facade }
     }
-    async fn get_consumer_base_url(&self, consumer_participant_id: &Urn) -> anyhow::Result<String> {
-        let participant = self
-            .repo
-            .get_participant_by_p_id(consumer_participant_id.clone())
+    /// Get consumer mate based in id
+    async fn get_consumer_mate(&self, provider_participant_id: &Urn) -> anyhow::Result<Mates> {
+        let mate = self
+            .mates_facade
+            .get_mate_by_id(provider_participant_id.clone())
             .await
-            .map_err(CnErrorProvider::DbErr)?
-            .ok_or_else(|| CnErrorProvider::NotFound {
-                id: consumer_participant_id.clone(),
-                entity: "Participant".to_string(),
-            })?;
-        Ok(participant.base_url)
+            .map_err(|e| anyhow!("Error parsing mate: {}", e.to_string()))?;
+        Ok(mate)
     }
+
+    async fn get_provider(&self) -> anyhow::Result<Mates> {
+        let mate =
+            self.mates_facade.get_me_mate().await.map_err(|e| anyhow!("Error parsing mate: {}", e.to_string()))?;
+        Ok(mate)
+    }
+
     async fn validate_and_get_correlated_provider_process(
         &self,
         consumer_pid_urn: &Urn,
@@ -144,15 +155,23 @@ where
         &self,
         target_url: String,
         message_payload: &M,
+        token: String,
         error_context_provider_pid: Option<Urn>,
         error_context_consumer_pid: Option<Urn>,
     ) -> anyhow::Result<ContractAckMessage> {
-        let response = self.client.post(&target_url).json(message_payload).send().await.map_err(|_| {
-            DSRPCContractNegotiationProviderErrors::ConsumerNotReachable {
-                provider_pid: error_context_provider_pid.clone(),
-                consumer_pid: error_context_consumer_pid.clone(),
-            }
-        })?;
+        let response = self
+            .client
+            .post(&target_url)
+            .header("Authorization", format!("Bearer {}", token))
+            .json(message_payload)
+            .send()
+            .await
+            .map_err(
+                |_| DSRPCContractNegotiationProviderErrors::ConsumerNotReachable {
+                    provider_pid: error_context_provider_pid.clone(),
+                    consumer_pid: error_context_consumer_pid.clone(),
+                },
+            )?;
 
         let status = response.status();
         if !status.is_success() {
@@ -191,23 +210,25 @@ where
 }
 
 #[async_trait]
-impl<T, U, V> DSRPCContractNegotiationProviderTrait for DSRPCContractNegotiationProviderService<T, U, V>
+impl<T, U, V, W> DSRPCContractNegotiationProviderTrait for DSRPCContractNegotiationProviderService<T, U, V, W>
 where
     T: ContractNegotiationProcessRepo
     + ContractNegotiationMessageRepo
     + ContractNegotiationOfferRepo
     + AgreementRepo
-    + Participant
     + Send
     + Sync
     + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
     V: CatalogOdrlFacadeTrait + Send + Sync,
+    W: MatesFacadeTrait + Send + Sync,
 {
     async fn setup_offer(&self, input: SetupOfferRequest) -> anyhow::Result<SetupOfferResponse> {
         let SetupOfferRequest { odrl_offer, consumer_participant_id, .. } = input;
         // 1. fetch participant id
-        let consumer_base_url = self.get_consumer_base_url(&consumer_participant_id).await?;
+        let consumer_mate = self.get_consumer_mate(&consumer_participant_id).await?;
+        let consumer_base_url = consumer_mate.base_url.ok_or(anyhow!("No base url"))?;
+        let consumer_token = consumer_mate.token.ok_or(anyhow!("No token"))?;
         // 2. validate correlation
         // protocol validation??
         // No need of validation since there is no provider or consumer pid at this point
@@ -238,8 +259,8 @@ where
         // 3. create message
         let provider_pid = get_urn(None);
         let contract_offer_message = ContractOfferMessage {
-            provider_pid: provider_pid.to_string(),
-            odrl_offer: odrl_offer.clone(),
+            provider_pid: provider_pid.to_string().parse()?,
+            odrl_offer: ContractRequestMessageOfferTypes::OfferMessage(odrl_offer.clone()),
             ..Default::default()
         };
         // 4. send message
@@ -248,6 +269,7 @@ where
             .send_protocol_message_to_consumer(
                 target_url,
                 &contract_offer_message,
+                consumer_token,
                 Some(provider_pid.clone()),
                 None,
             )
@@ -256,7 +278,9 @@ where
         let cn_process = self
             .repo
             .create_cn_process(NewContractNegotiationProcess {
+                provider_id: Some(provider_pid.clone()),
                 consumer_id: Some(get_urn_from_string(&response.consumer_pid)?),
+                associated_consumer: Some(get_urn_from_string(&consumer_mate.participant_id)?),
                 state: response.state,
                 initiated_by: ConfigRoles::Provider,
             })
@@ -268,6 +292,7 @@ where
                 cn_process.provider_id.parse().unwrap(),
                 NewContractNegotiationMessage {
                     _type: ContractNegotiationMessages::ContractOfferMessage.to_string(),
+                    subtype: None,
                     from: ConfigRoles::Provider.to_string(),
                     to: ConfigRoles::Consumer.to_string(),
                     content: serde_json::to_value(contract_offer_message).unwrap(),
@@ -316,8 +341,9 @@ where
     async fn setup_reoffer(&self, input: SetupOfferRequest) -> anyhow::Result<SetupOfferResponse> {
         let SetupOfferRequest { odrl_offer, consumer_participant_id, provider_pid, consumer_pid } = input;
         // 1. fetch participant id
-        let consumer_base_url = self.get_consumer_base_url(&consumer_participant_id).await?;
-        // 2. validate correlation
+        let consumer_mate = self.get_consumer_mate(&consumer_participant_id).await?;
+        let consumer_base_url = consumer_mate.base_url.ok_or(anyhow!("No base url"))?;
+        let consumer_token = consumer_mate.token.ok_or(anyhow!("No token"))?;        // 2. validate correlation
         let cn_process = self
             .validate_and_get_correlated_provider_process(
                 &consumer_pid.clone().unwrap(),
@@ -350,8 +376,9 @@ where
         }
         // 3. create message
         let contract_offer_message = ContractOfferMessage {
-            provider_pid: cn_process.provider_id.clone(), // consumer??
-            odrl_offer: odrl_offer.clone(),
+            consumer_pid: cn_process.consumer_id.map(|a| a.parse().unwrap()),
+            provider_pid: cn_process.provider_id.parse()?,
+            odrl_offer: ContractRequestMessageOfferTypes::OfferMessage(odrl_offer.clone()),
             ..Default::default()
         };
         // 4. send message
@@ -364,6 +391,7 @@ where
             .send_protocol_message_to_consumer(
                 target_url,
                 &contract_offer_message,
+                consumer_token,
                 provider_pid.clone(),
                 consumer_pid.clone(),
             )
@@ -383,6 +411,7 @@ where
                 cn_process.provider_id.parse().unwrap(),
                 NewContractNegotiationMessage {
                     _type: ContractNegotiationMessages::ContractOfferMessage.to_string(),
+                    subtype: None,
                     from: ConfigRoles::Provider.to_string(),
                     to: ConfigRoles::Consumer.to_string(),
                     content: serde_json::to_value(contract_offer_message).unwrap(),
@@ -431,27 +460,42 @@ where
     async fn setup_agreement(&self, input: SetupAgreementRequest) -> anyhow::Result<SetupAgreementResponse> {
         let SetupAgreementRequest { consumer_participant_id, consumer_pid, provider_pid } = input;
         // 1. fetch participant id
-        let consumer_base_url = self.get_consumer_base_url(&consumer_participant_id).await?;
+        let consumer_mate = self.get_consumer_mate(&consumer_participant_id).await?;
+        let consumer_base_url = consumer_mate.base_url.ok_or(anyhow!("No base url"))?;
+        let consumer_token = consumer_mate.token.ok_or(anyhow!("No token"))?;
         // 2. validate correlation
         let cn_process =
             self.validate_and_get_correlated_provider_process(&consumer_pid.clone(), &provider_pid.clone()).await?;
 
-
         // 3. Create and validate agreement
         // 3.1. fetch last valid offer in process
         let cn_process_id = get_urn_from_string(&cn_process.provider_id)?;
-        let last_offer_model = self.repo
+        let last_offer_model = self
+            .repo
             .get_last_cn_offers_by_cn_process(cn_process_id.clone())
             .await
             .map_err(CnErrorProvider::DbErr)?
-            .ok_or_else(|| CnErrorProvider::NotFound {
-                id: cn_process_id.clone(),
-                entity: "Offer".to_string(),
-            })?;
-        let last_offer = serde_json::from_value::<OdrlOffer>(last_offer_model.offer_content)?;
+            .ok_or_else(|| CnErrorProvider::NotFound { id: cn_process_id.clone(), entity: "Offer".to_string() })?;
+        // 3.2 modify last offer for void array validation
+        let mut last_offer = serde_json::from_value::<OdrlOffer>(last_offer_model.clone().offer_content)?;
+        if let Some(obligation) = last_offer.obligation.clone() {
+            if obligation.len() == 0 {
+                last_offer.obligation = None;
+            }
+        }
+        if let Some(permission) = last_offer.permission.clone() {
+            if permission.len() == 0 {
+                last_offer.permission = None;
+            }
+        }
+        if let Some(prohibition) = last_offer.prohibition.clone() {
+            if prohibition.len() == 0 {
+                last_offer.prohibition = None;
+            }
+        }
 
         // 3.2 fetch participants
-        let provider_participant = self.repo.get_provider_participant().await?.unwrap();
+        let provider_participant = self.get_provider().await?;
         let provider_participant_id = get_urn_from_string(&provider_participant.participant_id)?;
 
         // 3.3 arrange agreement
@@ -465,14 +509,16 @@ where
             target: last_offer.target.unwrap(),
             assigner: provider_participant_id.clone(),
             assignee: consumer_participant_id.clone(),
-            timestamp: Option::from(chrono::Utc::now().naive_utc().to_string()),
+            timestamp: Option::from(chrono::Utc::now().to_rfc3339().to_string()),
             prohibition: last_offer.prohibition,
         };
 
+        debug!("{:?}", final_agreement);
+
         // 4. create message
         let contract_agreement_message = ContractAgreementMessage {
-            provider_pid: provider_pid.to_string(),
-            consumer_pid: consumer_pid.to_string(),
+            provider_pid: provider_pid.clone(),
+            consumer_pid: consumer_pid.clone(),
             odrl_agreement: final_agreement.clone(),
             ..Default::default()
         };
@@ -486,6 +532,7 @@ where
             .send_protocol_message_to_consumer(
                 target_url,
                 &contract_agreement_message,
+                consumer_token,
                 Option::from(provider_pid.clone()),
                 Option::from(consumer_pid.clone()),
             )
@@ -497,10 +544,7 @@ where
             .repo
             .put_cn_process(
                 process_id,
-                EditContractNegotiationProcess {
-                    consumer_id: None,
-                    state: Option::from(response.state),
-                },
+                EditContractNegotiationProcess { consumer_id: None, state: Option::from(response.state) },
             )
             .await
             .map_err(CnErrorProvider::DbErr)?;
@@ -511,6 +555,7 @@ where
                 cn_process.provider_id.parse().unwrap(),
                 NewContractNegotiationMessage {
                     _type: ContractNegotiationMessages::ContractAgreementMessage.to_string(),
+                    subtype: None,
                     from: ConfigRoles::Provider.to_string(),
                     to: ConfigRoles::Consumer.to_string(),
                     content: serde_json::to_value(contract_agreement_message).unwrap(),
@@ -561,7 +606,9 @@ where
     async fn setup_finalization(&self, input: SetupFinalizationRequest) -> anyhow::Result<SetupFinalizationResponse> {
         let SetupFinalizationRequest { consumer_participant_id, consumer_pid, provider_pid, .. } = input;
         // 1. fetch participant id
-        let consumer_base_url = self.get_consumer_base_url(&consumer_participant_id).await?;
+        let consumer_mate = self.get_consumer_mate(&consumer_participant_id).await?;
+        let consumer_base_url = consumer_mate.base_url.ok_or(anyhow!("No base url"))?;
+        let consumer_token = consumer_mate.token.ok_or(anyhow!("No token"))?;
         // 2. validate correlation
         let cn_process =
             self.validate_and_get_correlated_provider_process(&consumer_pid.clone(), &provider_pid.clone()).await?;
@@ -582,6 +629,7 @@ where
             .send_protocol_message_to_consumer(
                 target_url,
                 &contract_verification_message,
+                consumer_token,
                 Option::from(provider_pid.clone()),
                 Option::from(consumer_pid.clone()),
             )
@@ -592,10 +640,7 @@ where
             .repo
             .put_cn_process(
                 process_id,
-                EditContractNegotiationProcess {
-                    consumer_id: None,
-                    state: Option::from(response.state),
-                },
+                EditContractNegotiationProcess { consumer_id: None, state: Option::from(response.state) },
             )
             .await
             .map_err(CnErrorProvider::DbErr)?;
@@ -606,6 +651,7 @@ where
                 cn_process.provider_id.parse().unwrap(),
                 NewContractNegotiationMessage {
                     _type: ContractNegotiationMessages::ContractNegotiationEventMessage.to_string(),
+                    subtype: Some("finalized".to_string()),
                     from: ConfigRoles::Provider.to_string(),
                     to: ConfigRoles::Consumer.to_string(),
                     content: serde_json::to_value(contract_verification_message).unwrap(),
@@ -613,7 +659,6 @@ where
             )
             .await
             .map_err(CnErrorProvider::DbErr)?;
-
 
         // TODO load into PDP
 
@@ -642,12 +687,14 @@ where
     async fn setup_termination(&self, input: SetupTerminationRequest) -> anyhow::Result<SetupTerminationResponse> {
         let SetupTerminationRequest { consumer_participant_id, consumer_pid, provider_pid, .. } = input;
         // 1. fetch participant id
-        let consumer_base_url = self.get_consumer_base_url(&consumer_participant_id).await?;
+        let consumer_mate = self.get_consumer_mate(&consumer_participant_id).await?;
+        let consumer_base_url = consumer_mate.base_url.ok_or(anyhow!("No base url"))?;
+        let consumer_token = consumer_mate.token.ok_or(anyhow!("No token"))?;
         // 2. validate correlation
         let cn_process =
             self.validate_and_get_correlated_provider_process(&consumer_pid.clone(), &provider_pid.clone()).await?;
         // 3. create message
-        let contract_termination_message = ContractNegotiationEventMessage {
+        let contract_termination_message = ContractTerminationMessage {
             provider_pid: provider_pid.clone(),
             consumer_pid: consumer_pid.clone(),
             ..Default::default()
@@ -662,6 +709,7 @@ where
             .send_protocol_message_to_consumer(
                 target_url,
                 &contract_termination_message,
+                consumer_token,
                 Option::from(provider_pid.clone()),
                 Option::from(consumer_pid.clone()),
             )
@@ -673,10 +721,7 @@ where
             .repo
             .put_cn_process(
                 process_id,
-                EditContractNegotiationProcess {
-                    consumer_id: None,
-                    state: Option::from(response.state),
-                },
+                EditContractNegotiationProcess { consumer_id: None, state: Option::from(response.state) },
             )
             .await
             .map_err(CnErrorProvider::DbErr)?;
@@ -687,6 +732,7 @@ where
                 cn_process.provider_id.parse().unwrap(),
                 NewContractNegotiationMessage {
                     _type: ContractNegotiationMessages::ContractNegotiationTerminationMessage.to_string(),
+                    subtype: None,
                     from: ConfigRoles::Provider.to_string(),
                     to: ConfigRoles::Consumer.to_string(),
                     content: serde_json::to_value(contract_termination_message).unwrap(),

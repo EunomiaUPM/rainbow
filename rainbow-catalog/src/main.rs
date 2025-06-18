@@ -20,7 +20,7 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-use rainbow_catalog::setup::cmd::CatalogCommands;
+use rainbow_catalog::cmd::cmd::CatalogCommands;
 use tracing::info;
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::EnvFilter;

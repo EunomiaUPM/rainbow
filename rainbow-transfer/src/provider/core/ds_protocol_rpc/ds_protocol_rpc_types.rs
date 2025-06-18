@@ -21,14 +21,18 @@
 use rainbow_common::protocol::transfer::transfer_data_address::DataAddress;
 use rainbow_common::protocol::transfer::transfer_error::TransferError;
 use rainbow_common::protocol::transfer::transfer_process::TransferProcessMessage;
+use rainbow_common::protocol::transfer::transfer_protocol_trait::DSProtocolTransferMessageTrait;
+use rainbow_common::protocol::transfer::TransferMessageTypes;
 use serde::{Deserialize, Serialize};
 use urn::Urn;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferProviderStartRequest {
+    #[serde(rename = "consumerParticipantId")]
+    pub consumer_participant_id: Urn,
     #[serde(rename = "consumerCallbackAddress")]
-    pub consumer_callback: String,
+    pub consumer_callback: Option<String>,
     #[serde(rename = "providerPid")]
     pub provider_pid: Urn,
     #[serde(rename = "consumerPid")]
@@ -37,6 +41,21 @@ pub struct DSRPCTransferProviderStartRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub data_address: Option<DataAddress>,
 }
+
+impl DSProtocolTransferMessageTrait<'_> for DSRPCTransferProviderStartRequest {
+    fn get_message_type(&self) -> anyhow::Result<TransferMessageTypes> {
+        Ok(TransferMessageTypes::TransferStartMessage)
+    }
+
+    fn get_consumer_pid(&self) -> anyhow::Result<Option<&Urn>> {
+        Ok(Some(&self.consumer_pid))
+    }
+
+    fn get_provider_pid(&self) -> anyhow::Result<Option<&Urn>> {
+        Ok(Some(&self.provider_pid))
+    }
+}
+
 
 #[derive(Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
@@ -51,11 +70,13 @@ pub struct DSRPCTransferProviderStartResponse {
     pub message: TransferProcessMessage,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferProviderSuspensionRequest {
+    #[serde(rename = "consumerParticipantId")]
+    pub consumer_participant_id: Urn,
     #[serde(rename = "consumerCallbackAddress")]
-    pub consumer_callback: String,
+    pub consumer_callback: Option<String>,
     #[serde(rename = "providerPid")]
     pub provider_pid: Urn,
     #[serde(rename = "consumerPid")]
@@ -66,6 +87,20 @@ pub struct DSRPCTransferProviderSuspensionRequest {
     #[serde(rename = "reason")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reason: Option<Vec<String>>,
+}
+
+impl DSProtocolTransferMessageTrait<'_> for DSRPCTransferProviderSuspensionRequest {
+    fn get_message_type(&self) -> anyhow::Result<TransferMessageTypes> {
+        Ok(TransferMessageTypes::TransferSuspensionMessage)
+    }
+
+    fn get_consumer_pid(&self) -> anyhow::Result<Option<&Urn>> {
+        Ok(Some(&self.consumer_pid))
+    }
+
+    fn get_provider_pid(&self) -> anyhow::Result<Option<&Urn>> {
+        Ok(Some(&self.provider_pid))
+    }
 }
 
 #[derive(Deserialize, Serialize, Clone)]
@@ -78,15 +113,31 @@ pub struct DSRPCTransferProviderSuspensionResponse {
     pub message: TransferProcessMessage,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferProviderCompletionRequest {
+    #[serde(rename = "consumerParticipantId")]
+    pub consumer_participant_id: Urn,
     #[serde(rename = "consumerCallbackAddress")]
-    pub consumer_callback: String,
+    pub consumer_callback: Option<String>,
     #[serde(rename = "providerPid")]
     pub provider_pid: Urn,
     #[serde(rename = "consumerPid")]
     pub consumer_pid: Urn,
+}
+
+impl DSProtocolTransferMessageTrait<'_> for DSRPCTransferProviderCompletionRequest {
+    fn get_message_type(&self) -> anyhow::Result<TransferMessageTypes> {
+        Ok(TransferMessageTypes::TransferCompletionMessage)
+    }
+
+    fn get_consumer_pid(&self) -> anyhow::Result<Option<&Urn>> {
+        Ok(Some(&self.consumer_pid))
+    }
+
+    fn get_provider_pid(&self) -> anyhow::Result<Option<&Urn>> {
+        Ok(Some(&self.provider_pid))
+    }
 }
 
 #[derive(Deserialize, Serialize, Clone)]
@@ -99,11 +150,13 @@ pub struct DSRPCTransferProviderCompletionResponse {
     pub message: TransferProcessMessage,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferProviderTerminationRequest {
+    #[serde(rename = "consumerParticipantId")]
+    pub consumer_participant_id: Urn,
     #[serde(rename = "consumerCallbackAddress")]
-    pub consumer_callback: String,
+    pub consumer_callback: Option<String>,
     #[serde(rename = "providerPid")]
     pub provider_pid: Urn,
     #[serde(rename = "consumerPid")]
@@ -114,6 +167,18 @@ pub struct DSRPCTransferProviderTerminationRequest {
     #[serde(rename = "reason")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reason: Option<Vec<String>>,
+}
+
+impl DSProtocolTransferMessageTrait<'_> for DSRPCTransferProviderTerminationRequest {
+    fn get_message_type(&self) -> anyhow::Result<TransferMessageTypes> {
+        Ok(TransferMessageTypes::TransferTerminationMessage)
+    }
+    fn get_consumer_pid(&self) -> anyhow::Result<Option<&Urn>> {
+        Ok(Some(&self.consumer_pid))
+    }
+    fn get_provider_pid(&self) -> anyhow::Result<Option<&Urn>> {
+        Ok(Some(&self.provider_pid))
+    }
 }
 
 #[derive(Deserialize, Serialize, Clone)]

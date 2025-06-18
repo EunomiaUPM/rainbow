@@ -22,7 +22,7 @@ use rainbow_common::protocol::contract::contract_odrl::{OdrlAgreement, OdrlMessa
 use serde::{Deserialize, Serialize};
 use urn::Urn;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct SetupOfferRequest {
     #[serde(rename = "consumerParticipantId")]

@@ -41,7 +41,9 @@ pub struct NewContractNegotiationRequest {
 impl Into<NewContractNegotiationProcess> for NewContractNegotiationRequest {
     fn into(self) -> NewContractNegotiationProcess {
         NewContractNegotiationProcess {
+            provider_id: self.provider_id.map(|id| get_urn_from_string(&id).unwrap()),
             consumer_id: self.consumer_id.map(|id| get_urn_from_string(&id).unwrap()),
+            associated_consumer: None,
             state: self.state,
             initiated_by: ConfigRoles::Provider,
         }
@@ -76,6 +78,9 @@ impl Into<EditContractNegotiationProcess> for EditContractNegotiationRequest {
 pub struct NewContractNegotiationMessageRequest {
     #[serde(rename = "@type")]
     pub _type: String,
+    #[serde(rename = "@subtype")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub subtype: Option<String>,
     #[serde(rename = "from")]
     pub from: String,
     #[serde(rename = "to")]
@@ -88,6 +93,7 @@ impl Into<NewContractNegotiationMessage> for NewContractNegotiationMessageReques
     fn into(self) -> NewContractNegotiationMessage {
         NewContractNegotiationMessage {
             _type: self._type,
+            subtype: self.subtype,
             from: self.from,
             to: self.to,
             content: self.content,
@@ -100,6 +106,9 @@ impl Into<NewContractNegotiationMessage> for NewContractNegotiationMessageReques
 pub struct EditContractNegotiationMessageRequest {
     #[serde(rename = "@type")]
     pub _type: String,
+    #[serde(rename = "@subtype")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub subtype: Option<String>,
     #[serde(rename = "from")]
     pub from: String,
     #[serde(rename = "to")]
@@ -112,6 +121,7 @@ impl Into<EditContractNegotiationMessage> for EditContractNegotiationMessageRequ
     fn into(self) -> EditContractNegotiationMessage {
         EditContractNegotiationMessage {
             _type: Option::from(self._type),
+            subtype: self.subtype,
             from: Option::from(self.from),
             to: Option::from(self.to),
             content: Option::from(self.content),

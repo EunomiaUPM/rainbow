@@ -35,9 +35,11 @@ impl MigrationTrait for Migration {
                     .table(TransferProcesses::Table)
                     .col(ColumnDef::new(TransferProcesses::ProviderPid).string().not_null().primary_key())
                     .col(ColumnDef::new(TransferProcesses::ConsumerPid).string())
+                    .col(ColumnDef::new(TransferProcesses::AssociatedConsumer).string())
                     .col(ColumnDef::new(TransferProcesses::AgreementId).string())
                     .col(ColumnDef::new(TransferProcesses::DataPlaneId).string())
                     .col(ColumnDef::new(TransferProcesses::State).string().not_null())
+                    .col(ColumnDef::new(TransferProcesses::StateAttribute).string())
                     .col(ColumnDef::new(TransferProcesses::CreatedAt).date_time().not_null())
                     .col(ColumnDef::new(TransferProcesses::UpdatedAt).date_time())
                     .to_owned(),
@@ -56,8 +58,10 @@ pub enum TransferProcesses {
     ProviderPid,
     ConsumerPid,
     AgreementId,
+    AssociatedConsumer,
     DataPlaneId,
     State,
+    StateAttribute,
     CreatedAt,
     UpdatedAt,
 }

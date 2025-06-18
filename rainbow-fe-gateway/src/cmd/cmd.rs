@@ -19,6 +19,7 @@
 
 use crate::gateway::consumer_gateway::RainbowConsumerGateway;
 use crate::gateway::provider_gateway::RainbowProviderGateway;
+use crate::subscriptions::consumer_subscriptions::RainbowConsumerGatewaySubscriptions;
 use crate::subscriptions::provider_subscriptions::RainbowProviderGatewaySubscriptions;
 use crate::subscriptions::MicroserviceSubscriptionKey;
 use axum::serve;
@@ -113,7 +114,8 @@ impl GatewayCommands {
                         serve(listener, gateway_router).await?;
                     }
                     GatewayCliCommands::Subscribe => {
-                        todo!()
+                        let microservices_subs = RainbowConsumerGatewaySubscriptions::new(config.clone());
+                        microservices_subs.subscribe_to_microservice(MicroserviceSubscriptionKey::ContractNegotiation).await?;
                     }
                 }
             }

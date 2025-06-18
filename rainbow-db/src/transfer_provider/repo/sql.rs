@@ -105,7 +105,7 @@ impl TransferProcessRepo for TransferProviderRepoForSql {
     async fn put_transfer_process(
         &self,
         pid: Urn,
-        new_transfer_process: EditTransferProcessModel,
+        edit_transfer_process: EditTransferProcessModel,
     ) -> anyhow::Result<transfer_process::Model, TransferProviderRepoErrors> {
         let pid = pid.to_string();
 
@@ -119,20 +119,23 @@ impl TransferProcessRepo for TransferProviderRepoForSql {
         };
 
         let mut old_active_model: transfer_process::ActiveModel = old_model.into();
-        if let Some(provider_pid) = new_transfer_process.provider_pid {
+        if let Some(provider_pid) = edit_transfer_process.provider_pid {
             old_active_model.provider_pid = ActiveValue::Set(provider_pid.to_string());
         }
-        if let Some(consumer_pid) = new_transfer_process.consumer_pid {
+        if let Some(consumer_pid) = edit_transfer_process.consumer_pid {
             old_active_model.consumer_pid = ActiveValue::Set(Some(consumer_pid.to_string()));
         }
-        if let Some(agreement_id) = new_transfer_process.agreement_id {
+        if let Some(agreement_id) = edit_transfer_process.agreement_id {
             old_active_model.agreement_id = ActiveValue::Set(agreement_id.to_string());
         }
-        if let Some(data_plane_id) = new_transfer_process.data_plane_id {
+        if let Some(data_plane_id) = edit_transfer_process.callback_address {
             old_active_model.data_plane_id = ActiveValue::Set(Some(data_plane_id.to_string()));
         }
-        if let Some(state) = new_transfer_process.state {
+        if let Some(state) = edit_transfer_process.state {
             old_active_model.state = ActiveValue::Set(state.to_string());
+        }
+        if let Some(state_attribute) = edit_transfer_process.state_attribute {
+            old_active_model.state_attribute = ActiveValue::Set(Option::from(state_attribute.to_string()));
         }
         old_active_model.updated_at = ActiveValue::Set(Some(chrono::Utc::now().naive_utc()));
         let model = old_active_model.update(&self.db_connection).await;
@@ -150,8 +153,10 @@ impl TransferProcessRepo for TransferProviderRepoForSql {
             provider_pid: ActiveValue::Set(new_transfer_process.provider_pid.to_string()),
             consumer_pid: ActiveValue::Set(Some(new_transfer_process.consumer_pid.to_string())),
             agreement_id: ActiveValue::Set(new_transfer_process.agreement_id.to_string()),
-            data_plane_id: ActiveValue::Set(Some(new_transfer_process.data_plane_id.to_string())),
+            data_plane_id: ActiveValue::Set(Some(new_transfer_process.callback_address.to_string())),
+            associated_consumer: ActiveValue::Set(new_transfer_process.associated_consumer.map(|a| a.to_string())),
             state: ActiveValue::Set(TransferState::REQUESTED.to_string()),
+            state_attribute: ActiveValue::Set(None),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             updated_at: ActiveValue::Set(None),
         };

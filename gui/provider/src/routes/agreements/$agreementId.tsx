@@ -1,21 +1,16 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useGetAgreementById } from "@/data/agreement-queries.ts";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "shared/src/components/ui/table.tsx";
+import {createFileRoute} from "@tanstack/react-router";
+import {useGetAgreementById} from "shared/src/data/agreement-queries";
+import {TableCell,} from "shared/src/components/ui/table.tsx";
 import dayjs from "dayjs";
 import Heading from "shared/src/components/ui/heading";
+import {List, ListItem, ListItemKey} from "shared/src/components/ui/list.tsx";
 import { List, ListItem, ListItemKey } from "shared/src/components/ui/list.tsx";
 import { Badge } from "shared/src/components/ui/badge.tsx";
 
 export const Route = createFileRoute("/agreements/$agreementId")({
-  component: RouteComponent,
+    component: RouteComponent,
 });
+
 
 function RouteComponent() {
   const formatString = (text) => {
@@ -53,7 +48,7 @@ function RouteComponent() {
           <ListItem>
             <ListItemKey>Related Message</ListItemKey>
             <TableCell>{agreement.cn_message_id.slice(9)}</TableCell>
-         
+
           </ListItem>
           </div>
           <ListItem>

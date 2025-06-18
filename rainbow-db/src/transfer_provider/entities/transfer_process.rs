@@ -30,7 +30,9 @@ pub struct Model {
     pub consumer_pid: Option<String>,
     pub agreement_id: String,
     pub data_plane_id: Option<String>,
+    pub associated_consumer: Option<String>,
     pub state: String,
+    pub state_attribute: Option<String>,
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: Option<chrono::NaiveDateTime>,
 }

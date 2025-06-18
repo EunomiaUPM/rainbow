@@ -6,7 +6,9 @@ use urn::Urn;
 
 pub trait DSProtocolContractNegotiationMessageTrait<'a>: Serialize + Deserialize<'a> + Clone {
     fn get_message_type(&self) -> anyhow::Result<ContractNegotiationMessages>;
-    fn get_consumer_pid(&self) -> anyhow::Result<&Urn>;
+    fn get_consumer_pid(&self) -> anyhow::Result<Option<&Urn>> {
+        Ok(None)
+    }
     fn get_provider_pid(&self) -> anyhow::Result<Option<&Urn>> {
         Ok(None)
     }

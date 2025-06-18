@@ -24,7 +24,8 @@ use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::post;
-use axum::{Json, Router};
+use axum::{middleware, Extension, Json, Router};
+use rainbow_common::auth::header::{extract_request_info, RequestInfo};
 use rainbow_common::err::transfer_err::TransferErrorType::{NotCheckedError, ProtocolBodyError};
 use rainbow_common::protocol::transfer::transfer_completion::TransferCompletionMessage;
 use rainbow_common::protocol::transfer::transfer_start::TransferStartMessage;
@@ -63,11 +64,13 @@ where
                 "/:callback/transfers/:consumer_pid/termination",
                 post(Self::handle_transfer_termination),
             )
+            .layer(middleware::from_fn(extract_request_info))
             .with_state(self.transfer_service)
     }
     async fn handle_transfer_start(
         State(transfer_service): State<Arc<T>>,
         Path((callback, consumer_pid)): Path<(String, String)>,
+        Extension(info): Extension<Arc<RequestInfo>>,
         input: Result<Json<TransferStartMessage>, JsonRejection>,
     ) -> impl IntoResponse {
         info!("POST /{}/transfers/{}/start", callback, consumer_pid);
@@ -83,8 +86,9 @@ where
             Ok(input) => input.0,
             Err(e) => return ProtocolBodyError { message: e.body_text() }.into_response(),
         };
+        let token = info.token.clone();
 
-        match transfer_service.transfer_start(Some(callback), consumer_pid, input).await {
+        match transfer_service.transfer_start(Some(callback), consumer_pid, input, token).await {
             Ok(transfer_process) => (StatusCode::OK, Json(transfer_process)).into_response(),
             Err(err) => match err.downcast::<DSProtocolTransferConsumerErrors>() {
                 Ok(e) => e.into_response(),
@@ -95,6 +99,7 @@ where
     async fn handle_transfer_suspension(
         State(transfer_service): State<Arc<T>>,
         Path((callback, consumer_pid)): Path<(String, String)>,
+        Extension(info): Extension<Arc<RequestInfo>>,
         input: Result<Json<TransferSuspensionMessage>, JsonRejection>,
     ) -> impl IntoResponse {
         info!("POST /{}/transfers/{}/suspension", callback, consumer_pid);
@@ -110,8 +115,9 @@ where
             Ok(input) => input.0,
             Err(e) => return ProtocolBodyError { message: e.body_text() }.into_response(),
         };
+        let token = info.token.clone();
 
-        match transfer_service.transfer_suspension(Some(callback), consumer_pid, input).await {
+        match transfer_service.transfer_suspension(Some(callback), consumer_pid, input, token).await {
             Ok(transfer_process) => (StatusCode::OK, Json(transfer_process)).into_response(),
             Err(err) => match err.downcast::<DSProtocolTransferConsumerErrors>() {
                 Ok(e) => e.into_response(),
@@ -122,6 +128,7 @@ where
     async fn handle_transfer_completion(
         State(transfer_service): State<Arc<T>>,
         Path((callback, consumer_pid)): Path<(String, String)>,
+        Extension(info): Extension<Arc<RequestInfo>>,
         input: Result<Json<TransferCompletionMessage>, JsonRejection>,
     ) -> impl IntoResponse {
         info!("POST /{}/transfers/{}/start", callback, consumer_pid);
@@ -137,8 +144,9 @@ where
             Ok(input) => input.0,
             Err(e) => return ProtocolBodyError { message: e.body_text() }.into_response(),
         };
+        let token = info.token.clone();
 
-        match transfer_service.transfer_completion(Some(callback), consumer_pid, input).await {
+        match transfer_service.transfer_completion(Some(callback), consumer_pid, input, token).await {
             Ok(transfer_process) => (StatusCode::OK, Json(transfer_process)).into_response(),
             Err(err) => match err.downcast::<DSProtocolTransferConsumerErrors>() {
                 Ok(e) => e.into_response(),
@@ -149,6 +157,7 @@ where
     async fn handle_transfer_termination(
         State(transfer_service): State<Arc<T>>,
         Path((callback, consumer_pid)): Path<(String, String)>,
+        Extension(info): Extension<Arc<RequestInfo>>,
         input: Result<Json<TransferTerminationMessage>, JsonRejection>,
     ) -> impl IntoResponse {
         info!("POST /{}/transfers/{}/termination", callback, consumer_pid);
@@ -164,8 +173,9 @@ where
             Ok(input) => input.0,
             Err(e) => return ProtocolBodyError { message: e.body_text() }.into_response(),
         };
+        let token = info.token.clone();
 
-        match transfer_service.transfer_termination(Some(callback), consumer_pid, input).await {
+        match transfer_service.transfer_termination(Some(callback), consumer_pid, input, token).await {
             Ok(transfer_process) => (StatusCode::OK, Json(transfer_process)).into_response(),
             Err(err) => match err.downcast::<DSProtocolTransferConsumerErrors>() {
                 Ok(e) => e.into_response(),

@@ -36,10 +36,12 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(TransferCallbacks::Id).string().not_null().primary_key())
                     .col(ColumnDef::new(TransferCallbacks::ConsumerPid).string().not_null())
                     .col(ColumnDef::new(TransferCallbacks::ProviderPid).string())
+                    .col(ColumnDef::new(TransferCallbacks::AssociatedProvider).string())
                     .col(ColumnDef::new(TransferCallbacks::CreatedAt).date_time().not_null())
                     .col(ColumnDef::new(TransferCallbacks::UpdatedAt).date_time())
                     .col(ColumnDef::new(TransferCallbacks::DataPlaneId).string())
                     .col(ColumnDef::new(TransferCallbacks::DataAddress).json())
+                    .col(ColumnDef::new(TransferCallbacks::RestartFlag).boolean().not_null().default(false))
                     .to_owned(),
             )
             .await
@@ -56,8 +58,10 @@ pub enum TransferCallbacks {
     Id,
     ProviderPid,
     ConsumerPid,
+    AssociatedProvider,
     DataAddress,
     CreatedAt,
     UpdatedAt,
     DataPlaneId,
+    RestartFlag,
 }

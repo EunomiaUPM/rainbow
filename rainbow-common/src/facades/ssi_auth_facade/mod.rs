@@ -17,6 +17,7 @@
  *
  */
 
+use crate::mates::Mates;
 use axum::async_trait;
 
 pub mod ssi_auth_facade;
@@ -24,5 +25,5 @@ pub mod ssi_auth_facade;
 #[mockall::automock]
 #[async_trait]
 pub trait SSIAuthFacadeTrait: Send + Sync {
-    async fn authorize(&self, token: String) -> anyhow::Result<()>;
+    async fn verify_token(&self, token: String) -> anyhow::Result<Mates>;
 }

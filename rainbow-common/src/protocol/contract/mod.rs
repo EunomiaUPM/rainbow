@@ -17,11 +17,12 @@
  *
  */
 
-use anyhow::anyhow;
+use anyhow::{anyhow, bail};
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
+pub mod cn_consumer_process;
 pub mod contract_ack;
 pub mod contract_agreement;
 pub mod contract_agreement_verification;
@@ -149,6 +150,22 @@ impl Display for ContractNegotiationMessages {
             ContractNegotiationMessages::ContractNegotiationError => {
                 write!(f, "ContractNegotiationError")
             }
+        }
+    }
+}
+
+impl FromStr for ContractNegotiationMessages {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "ContractRequestMessage" => Ok(ContractNegotiationMessages::ContractRequestMessage),
+            "ContractOfferMessage" => Ok(ContractNegotiationMessages::ContractOfferMessage),
+            "ContractAgreementMessage" => Ok(ContractNegotiationMessages::ContractAgreementMessage),
+            "ContractAgreementVerificationMessage" => Ok(ContractNegotiationMessages::ContractAgreementVerificationMessage),
+            "ContractNegotiationEventMessage" => Ok(ContractNegotiationMessages::ContractNegotiationEventMessage),
+            "ContractNegotiationTerminationMessage" => Ok(ContractNegotiationMessages::ContractNegotiationTerminationMessage),
+            _ => bail!("Contract negotiation message not recognized")
         }
     }
 }

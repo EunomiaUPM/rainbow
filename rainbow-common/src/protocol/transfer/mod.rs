@@ -31,7 +31,8 @@ pub mod transfer_termination;
 pub mod transfer_process;
 pub mod transfer_error;
 pub mod transfer_data_address;
-
+pub mod transfer_protocol_trait;
+pub mod transfer_consumer_process;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum TransferState {
@@ -74,6 +75,41 @@ impl fmt::Display for TransferState {
     }
 }
 
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum TransferStateAttribute {
+    #[serde(rename = "ON_REQUEST")]
+    OnRequest,
+    #[serde(rename = "BY_PROVIDER")]
+    ByProvider,
+    #[serde(rename = "BY_CONSUMER")]
+    ByConsumer,
+}
+
+impl FromStr for TransferStateAttribute {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "ON_REQUEST" => Ok(Self::OnRequest),
+            "BY_PROVIDER" => Ok(Self::ByProvider),
+            "BY_CONSUMER" => Ok(Self::ByConsumer),
+            _ => Err(anyhow!("State Attribute not recognized")),
+        }
+    }
+}
+
+impl fmt::Display for TransferStateAttribute {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            TransferStateAttribute::OnRequest => f.write_str("ON_REQUEST"),
+            TransferStateAttribute::ByProvider => f.write_str("BY_PROVIDER"),
+            TransferStateAttribute::ByConsumer => f.write_str("BY_CONSUMER"),
+        }
+    }
+}
+
+
 pub enum TransferRoles {
     Provider,
     Consumer,
@@ -100,7 +136,7 @@ impl ToString for TransferRoles {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum TransferMessageTypes {
     TransferError,
     TransferRequestMessage,

@@ -42,6 +42,7 @@ impl Into<NewTransferCallback> for NewTransferConsumerRequest {
             consumer_pid: None,
             provider_pid: None,
             data_address: self.data_address.map(|data_address| serde_json::to_value(data_address).unwrap()),
+            associated_provider: None,
         }
     }
 }

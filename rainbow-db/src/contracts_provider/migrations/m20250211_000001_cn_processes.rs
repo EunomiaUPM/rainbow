@@ -35,6 +35,7 @@ impl MigrationTrait for Migration {
                     .table(CNProcesses::Table)
                     .col(ColumnDef::new(CNProcesses::ProviderId).string().not_null().primary_key())
                     .col(ColumnDef::new(CNProcesses::ConsumerId).string())
+                    .col(ColumnDef::new(CNProcesses::AssociatedConsumer).string())
                     .col(ColumnDef::new(CNProcesses::State).string())
                     .col(ColumnDef::new(CNProcesses::InitiatedBy).string())
                     .col(ColumnDef::new(CNProcesses::CreatedAt).date_time().not_null())
@@ -54,6 +55,7 @@ pub enum CNProcesses {
     Table,
     ProviderId,
     ConsumerId,
+    AssociatedConsumer,
     State,
     InitiatedBy,
     CreatedAt,

@@ -10,7 +10,12 @@ members = [
     "rainbow-auth",
     "rainbow-db",
     "rainbow-tests",
-    "rainbow-events", "rainbow-proxy-http", "rainbow-proxy-kafka", "rainbow-proxy-nifi", "rainbow-fe-gateway",
+    "rainbow-events",
+    "rainbow-proxy-http",
+    "rainbow-proxy-kafka",
+    "rainbow-proxy-nifi",
+    "rainbow-fe-gateway",
+    "rainbow-mates",
 ]
 exclude = [
     "static",
@@ -29,6 +34,7 @@ clap = { version = "4.4.9", features = [
     "wrap_help",
     "unicode",
 ] }
+base64 = "0.22.1"
 tokio = { version = "1.35.0", features = ["full"] }
 anyhow = "1.0.80"
 tracing = "0.1"
