@@ -359,6 +359,7 @@ where
 
         // 1. Validate request
         let consumer_participant_mate = self.validate_auth_token(token).await?;
+        let callback_address = input.callback_address.clone().unwrap_or(consumer_participant_mate.base_url.unwrap_or("".to_string()));
         self.json_schema_validation(&input)
             .map_err(|e| RainbowTransferProviderErrors::ValidationError(e.to_string()))?;
         self.transition_validation(&input).await?;
@@ -383,7 +384,7 @@ where
                 provider_pid: provider_pid.clone(),
                 consumer_pid,
                 agreement_id,
-                data_plane_id: get_urn(None), // TODO
+                callback_address, // TODO
                 associated_consumer: Some(get_urn_from_string(&consumer_participant_mate.participant_id)?),
             })
             .await

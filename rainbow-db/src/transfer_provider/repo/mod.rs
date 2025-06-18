@@ -38,7 +38,7 @@ pub struct NewTransferProcessModel {
     pub provider_pid: Urn,
     pub consumer_pid: Urn,
     pub agreement_id: Urn,
-    pub data_plane_id: Urn,
+    pub callback_address: String,
     pub associated_consumer: Option<Urn>,
 }
 
@@ -46,7 +46,7 @@ pub struct EditTransferProcessModel {
     pub provider_pid: Option<Urn>,
     pub consumer_pid: Option<Urn>,
     pub agreement_id: Option<Urn>,
-    pub data_plane_id: Option<Urn>,
+    pub callback_address: Option<String>,
     pub state: Option<TransferState>,
     pub state_attribute: Option<TransferStateAttribute>,
 }
@@ -156,7 +156,7 @@ impl Default for EditTransferProcessModel {
             provider_pid: None,
             consumer_pid: None,
             agreement_id: None,
-            data_plane_id: None,
+            callback_address: None,
             state: None,
             state_attribute: None,
         }

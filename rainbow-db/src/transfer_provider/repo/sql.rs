@@ -128,7 +128,7 @@ impl TransferProcessRepo for TransferProviderRepoForSql {
         if let Some(agreement_id) = edit_transfer_process.agreement_id {
             old_active_model.agreement_id = ActiveValue::Set(agreement_id.to_string());
         }
-        if let Some(data_plane_id) = edit_transfer_process.data_plane_id {
+        if let Some(data_plane_id) = edit_transfer_process.callback_address {
             old_active_model.data_plane_id = ActiveValue::Set(Some(data_plane_id.to_string()));
         }
         if let Some(state) = edit_transfer_process.state {
@@ -153,7 +153,7 @@ impl TransferProcessRepo for TransferProviderRepoForSql {
             provider_pid: ActiveValue::Set(new_transfer_process.provider_pid.to_string()),
             consumer_pid: ActiveValue::Set(Some(new_transfer_process.consumer_pid.to_string())),
             agreement_id: ActiveValue::Set(new_transfer_process.agreement_id.to_string()),
-            data_plane_id: ActiveValue::Set(Some(new_transfer_process.data_plane_id.to_string())),
+            data_plane_id: ActiveValue::Set(Some(new_transfer_process.callback_address.to_string())),
             associated_consumer: ActiveValue::Set(new_transfer_process.associated_consumer.map(|a| a.to_string())),
             state: ActiveValue::Set(TransferState::REQUESTED.to_string()),
             state_attribute: ActiveValue::Set(None),

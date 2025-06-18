@@ -366,6 +366,7 @@ where
         };
         // 3. Send message to consumer
         let consumer_callback = consumer_callback.strip_suffix('/').unwrap_or(consumer_callback.as_str());
+        debug!("{}", consumer_callback);
         let consumer_url = format!(
             "{}/transfers/{}/start",
             consumer_callback,

@@ -169,20 +169,12 @@ declare global {
         consumer_pid: UUID
         agreement_id: UUID
         data_plane_id: UUID
-        state: TransferProcessState
+        state: string
         state_attribute: string
         associated_consumer: UUID
         associated_provider: UUID
         created_at: Date
         updated_at: Date
-    }
-
-    export enum TransferProcessState {
-        Requested = "Requested",
-        Started = "Started",
-        Suspended = "Suspended",
-        Completed = "Completed",
-        Terminated = "Terminated",
     }
 
     export interface TransferMessage {
