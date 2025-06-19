@@ -17,10 +17,12 @@ function RouteComponent() {
     const {participantId} = Route.useParams();
     const {data: participant} = useGetParticipantById(participantId);
     const {data: agreements} = useGetAgreementsByParticipantId(participantId);
+
     return (
         <div className="space-y-4">
             <Heading level="h3">
-                Participant with id : {participant.participant_id}
+                Participant with id : {participant.participant_id.slice(9, -1)}
+                {/* <Badge size={'lg'}>{participant.participant_id.slice(9, -1)}</Badge> */}
             </Heading>
             <div className=" flex flex-col">
                 <Heading level="h6" className="text-foreground">

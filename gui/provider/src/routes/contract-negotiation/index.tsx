@@ -56,7 +56,7 @@ const RouteComponent = () => {
                                 </Badge>
                             </TableCell>
                             <TableCell>
-                                <Badge variant={"status"} state={'success'}>
+                                <Badge variant={"status"} state={cnProcess.state}>
                                     {cnProcess.state.replace("dspace:", "")}
                                 </Badge>
                             </TableCell>
