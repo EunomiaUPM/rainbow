@@ -12,6 +12,9 @@ export const Route = createFileRoute("/agreements/")({
 
 function RouteComponent() {
     const {data: agreements} = useGetAgreements();
+  agreements.map((agreement) => {
+    console.log(agreement.active);
+  });
 
     return (
         <div>
@@ -61,7 +64,7 @@ function RouteComponent() {
                 <TableCell>
                   <Badge
                     variant={"status"}
-                    state={agreement.active ? "started" : "paused"}
+                    state={agreement.active ? "ACTIVE" : "SUSPENDED"} // lo dejo para que ponga un color gris, pero se puede poner rojo
                   >
                     {agreement.active ? "ACTIVE" : "INACTIVE"}
                   </Badge>
