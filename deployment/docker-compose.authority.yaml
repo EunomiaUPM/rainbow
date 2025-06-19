@@ -1,0 +1,13 @@
+version: "3.5"
+services:
+
+  ds_authority:
+    container_name: "ds_authority"
+    image: "postgres"
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: ds_authority
+      POSTGRES_USER: ds_authority
+      POSTGRES_DB: ds_authority
+    ports:
+      - "1450:5432"

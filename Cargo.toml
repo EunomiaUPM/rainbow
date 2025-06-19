@@ -16,6 +16,7 @@ members = [
     "rainbow-proxy-nifi",
     "rainbow-fe-gateway",
     "rainbow-mates",
+    "rainbow-authority",
 ]
 exclude = [
     "static",
