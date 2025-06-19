@@ -2,13 +2,17 @@ import {createFileRoute} from '@tanstack/react-router'
 import {useGetDataServiceById} from "shared/src/data/catalog-queries.ts";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "shared/src/components/ui/table.tsx";
 import dayjs from "dayjs";
-
+import Heading from 'shared/src/components/ui/heading';
+import { Badge } from "shared/src/components/ui/badge";
 
 function RouteComponent() {
     const {dataServiceId} = Route.useParams()
     const {data: dataService} = useGetDataServiceById(dataServiceId)
     return <div className="space-y-4">
-        <h2>Data service info with id: {dataService["@id"]} </h2>
+        <Heading level="h3" className="flex gap-2 items-center">
+        Data service info with id
+        <Badge variant="info" size="lg"> {dataService["@id"].slice(9,29)+ "[...]"}
+            </Badge> </Heading>
         <div>
             <Table className="text-sm">
                 <TableHeader>

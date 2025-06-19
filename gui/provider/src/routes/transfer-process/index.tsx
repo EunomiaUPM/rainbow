@@ -51,7 +51,7 @@ function RouteComponent() {
                                 </Badge>
                             </TableCell>
                             <TableCell>
-                                <Badge variant={"status"} state={'process'}>
+                                <Badge variant={"status"} state= {transferProcess.state}>
                                     {/* TO DO STYLE: Casuística state */}
                                     {transferProcess.state}
                                 </Badge>

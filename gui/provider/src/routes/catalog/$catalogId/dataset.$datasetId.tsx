@@ -34,6 +34,17 @@ import {
   ListItemKey,
   ListItemDate,
 } from "shared/src/components/ui/list.tsx";
+import { Badge } from "shared/src/components/ui/badge";
+import {
+  Policy,
+  policyVariants,
+  PolicyConstraint,
+  PolicyItemContainer,
+  PolicyItem,
+  PolicyItemKey,
+  PolicyItemValue,
+  PolicyConstraintsContainer,
+} from "shared/src/components/ui/policy";
 
 type Inputs = {
   odrl: string;
@@ -58,8 +69,13 @@ function RouteComponent() {
 
   return (
     <div className="space-y-4">
-      <Heading level="h3">Dataset info with id: {dataset["@id"]}</Heading>
-
+      <Heading level="h3" className="flex gap-2 items-center">
+        Dataset info with id
+        <Badge variant="info" size="lg">
+          {" "}
+          {dataset["@id"].slice(9, 29) + "[...]"}
+        </Badge>
+      </Heading>
       <div>
         <List className="text-sm">
           <ListItem>
@@ -76,13 +92,13 @@ function RouteComponent() {
       </div>
 
       <div>
-        <h2>Distributions</h2>
+        <Heading level="h5">Distributions</Heading>
         <Table className="text-sm">
           <TableHeader>
             <TableRow>
               <TableHead>Distribution Id</TableHead>
               <TableHead>Distribution Title</TableHead>
-              <TableHead>CreatedAt</TableHead>
+              <TableHead>Created at</TableHead>
               <TableHead>Associated Data service</TableHead>
             </TableRow>
           </TableHeader>
@@ -90,24 +106,30 @@ function RouteComponent() {
             {distributions.map((distribution) => (
               <TableRow key={distribution["@id"].slice(0, 20)}>
                 <TableCell>
-                  {distribution["@id"].slice(0, 20) + "..."}
+                  <Badge variant="info">
+                    {distribution["@id"].slice(9, 29) + "[...]"}
+                  </Badge>
                 </TableCell>
                 <TableCell>
-                  {distribution.title?.slice(0, 20) + "..."}
+                  {distribution.title ? distribution.title : "undefined"}
                 </TableCell>
                 <TableCell>
-                  {dayjs(distribution.issued).format("DD/MM/YYYY - HH:mm")}
+                  <ListItemDate>
+                    {dayjs(distribution.issued).format("DD/MM/YYYY - HH:mm")}
+                  </ListItemDate>
                 </TableCell>
                 <TableCell>
-                  <Link
-                    to="/catalog/$catalogId/data-service/$dataserviceId"
-                    params={{
-                      catalogId: catalogId,
-                      dataserviceId: distribution.accessService["@id"],
-                    }}
-                  >
-                    <ExternalLink size={12} className="text-pink-600" />
-                  </Link>
+                  <Button variant="default">
+                    <Link
+                      to="/catalog/$catalogId/data-service/$dataserviceId"
+                      params={{
+                        catalogId: catalogId,
+                        dataserviceId: distribution.accessService["@id"],
+                      }}
+                    >
+                      See dataservice
+                    </Link>
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -116,66 +138,150 @@ function RouteComponent() {
       </div>
 
       <div>
-     
-             <Heading level="h5"> ODRL Policies </Heading>
+        <Heading level="h5"> ODRL Policies </Heading>
         <div className="container-policies flex gap-4">
-            {policies.map((policy) => (
-              <div className="border border-white/60 bg-white/10 p-4 rounded-md ">
-                  <Heading level="h6" >Policy Id</Heading>
-                <p>{policy["@id"].slice(0, 20) + "..."}</p>
-                  <Heading level="h6">Policy Target</Heading>
-                <p>{policy.target?.slice(0, 20) + "..."}</p>
-                <Heading level="h6"> ODRL CONTENT</Heading>
+          {policies.map((policy) => (
+            <List className=" w-1/2 border border-white/60 bg-white/10 px-4 py-2 rounded-md ">
+              <div className="flex gap-2">
+              <Heading level="h5" className="flex gap-3">
+                <div>Policy with ID</div>
+                <Badge variant="info" className="h-6">{policy["@id"].slice(9, 29) + "[...]"}</Badge>
+              </Heading>
 
-                  <div>
-            
-                    {policy.permission.map((perm) => (
-                      <div className="flex gap-3">
-                        <b>permission</b>
-                        <div>
-                          <p > {perm.action}</p>
-                          <div className="flex gap-3">
-                            <p >
-                              {" "}
-                              {JSON.stringify(perm.constraint[0].leftOperand)}
-                            </p>
-                            <p >
-                              {" "}
-                              {JSON.stringify(perm.constraint[0].operator)}
-                            </p>
-                            <p>
-                              {" "}
-                              {JSON.stringify(perm.constraint[0].rightOperand)}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex gap-3">
-                    {/* TO-DO: HACER LO MISMO CON OBLIGATION Y PROHIBITION QUE CON 
-                    PERMISSION */}
-                    <b>obligation</b>
-                    <div> {JSON.stringify(policy.obligation)}</div>
-                  </div>
-                  <div className="flex gap-3">
-                    <b>prohibition</b>
-                    <div> {JSON.stringify(policy.prohibition)}</div>
-                  </div>
-                  <div className="flex gap-3">
-                    <b>profile</b>
-                    <p> {JSON.stringify(policy.profile)}</p>
-                  </div>
-                  <div className="flex gap-3">
-                    <b>target</b> <p> {JSON.stringify(policy.target)}</p>
-                  </div>
-             
+             </div>
+              <ListItem>
+                <ListItemKey>Policy Target</ListItemKey>
+                <p>{policy.target?.slice(9)}</p>
+              </ListItem>
+
+              <ListItem>
+                <ListItemKey> Profile</ListItemKey>
+                <p> {JSON.stringify(policy.profile)}</p>
+              </ListItem>
+              <ListItem>
+                <ListItemKey> Target</ListItemKey>
+                <p> {JSON.stringify(policy.target.slice(9,29) + "[...]")}</p>
+              </ListItem>
+              <div className="h-5"></div>
+              <Heading level="h6"> ODRL CONTENT</Heading>
+
+              <div className="flex flex-col gap-2">
+                {policy.permission.map((perm) => (
+                  <Policy className="" variant="permission">
+                    <Heading level="h6" className="uppercase text-success-200">
+                      permission
+                    </Heading>
+                    <PolicyItemContainer>
+                      <PolicyItem>
+                        <PolicyItemKey>action:</PolicyItemKey>
+                        <PolicyItemValue>{perm.action}</PolicyItemValue>
+                      </PolicyItem>
+                      <PolicyItem>
+                        <PolicyItemKey>constraint:</PolicyItemKey>
+                        <PolicyConstraintsContainer>
+                          <PolicyConstraint type="rightOperand">
+                            {" "}
+                            {JSON.stringify(perm.constraint[0].rightOperand)}
+                          </PolicyConstraint>
+                          <PolicyConstraint type="operator">
+                            {" "}
+                            {JSON.stringify(perm.constraint[0].operator)}
+                          </PolicyConstraint>
+                          <PolicyConstraint type="leftOperand">
+                            {JSON.stringify(perm.constraint[0].leftOperand)}
+                          </PolicyConstraint>
+                        </PolicyConstraintsContainer>
+                      </PolicyItem>
+                    </PolicyItemContainer>
+                  </Policy>
+                ))}
+
+                <Policy className="" variant="obligation">
+                  <Heading level="h6" className="uppercase text-warn-300">
+                    obligation
+                  </Heading>
+                  {/* COMPROBACIÓN SI HAY ALGUNA OBLIGACIÓN (ARRAY VACIO O NO) */}
+                  {policy.obligation.length === 0 ? (
+                    <div> No obligations </div>
+                  ) : (
+                    <>
+                      {policy.obligation.map((obl) => (
+                        <PolicyItemContainer>
+                          {/* // <div> {JSON.stringify(policy.obligation)}</div> */}
+                          <PolicyItem>
+                            <PolicyItemKey>action:</PolicyItemKey>
+                            <PolicyItemValue>{obl.action}</PolicyItemValue>
+                          </PolicyItem>
+                          <PolicyItem>
+                            <PolicyItemKey>constraint:</PolicyItemKey>
+                            <PolicyConstraintsContainer>
+                              <PolicyConstraint type="rightOperand">
+                                {" "}
+                                {JSON.stringify(obl.constraint[0].rightOperand)}
+                              </PolicyConstraint>
+                              <PolicyConstraint type="operator">
+                                {" "}
+                                {JSON.stringify(obl.constraint[0].operator)}
+                              </PolicyConstraint>
+                              <PolicyConstraint type="leftOperand">
+                                {JSON.stringify(obl.constraint[0].leftOperand)}
+                              </PolicyConstraint>
+                            </PolicyConstraintsContainer>
+                          </PolicyItem>
+                        </PolicyItemContainer>
+                      ))}
+                    </>
+                  )}
+                </Policy>
+
+                <Policy className="" variant="prohibition">
+                  <Heading level="h6" className="uppercase text-danger-400">
+                    prohibition
+                  </Heading>
+                  {/* COMPROBACIÓN SI HAY ALGUNA PROHIBICIÓN (ARRAY VACIO O NO) */}
+                  {policy.prohibition.length === 0 ? (
+                    <div> No prohibitions </div>
+                  ) : (
+                    <>
+                      {policy.prohibition.map((prohib) => (
+                        <PolicyItemContainer>
+                          {/* // <div> {JSON.stringify(policy.prohibition)}</div> */}
+                          <PolicyItem>
+                            <PolicyItemKey>action:</PolicyItemKey>
+                            <PolicyItemValue>{prohib.action}</PolicyItemValue>
+                          </PolicyItem>
+                          <PolicyItem>
+                            <PolicyItemKey>constraint:</PolicyItemKey>
+                            <PolicyConstraintsContainer>
+                              <PolicyConstraint type="rightOperand">
+                                {" "}
+                                {JSON.stringify(
+                                  prohib.constraint[0].rightOperand
+                                )}
+                              </PolicyConstraint>
+                              <PolicyConstraint type="operator">
+                                {" "}
+                                {JSON.stringify(prohib.constraint[0].operator)}
+                              </PolicyConstraint>
+                              <PolicyConstraint type="leftOperand">
+                                {JSON.stringify(
+                                  prohib.constraint[0].leftOperand
+                                )}
+                              </PolicyConstraint>
+                            </PolicyConstraintsContainer>
+                          </PolicyItem>
+                        </PolicyItemContainer>
+                      ))}
+                    </>
+                  )}
+                </Policy>
               </div>
-            ))}
+            </List>
+          ))}
         </div>
       </div>
       <div>
-        <h2>Create new odrl policy</h2>
+        <Heading level="h5">Create new odrl policy </Heading>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <FormField

@@ -18,7 +18,7 @@ import { Badge } from "shared/src/components/ui/badge";
 
 const RouteComponent = () => {
   const { data: catalogs } = useGetCatalogs();
-  console.log(catalogs, " catalogsss");
+  // console.log(catalogs, " catalogsss");
   return (
     <div className="space-y-4">
       {/* <h1 className="text-xl font-bold">Catalogs</h1> */}
@@ -109,6 +109,7 @@ const RouteComponent = () => {
                       params={{ catalogId: catalogItem["@id"] }}
                     >
                       See catalog
+                    
                     </Link>
                   </Button>
                 </TableCell>

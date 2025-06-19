@@ -14,6 +14,7 @@ const badgeVariants = cva(
         info: "font-mono uppercase bg-background-800 text-secondary-400 border-transparent",
         role: "text-white uppercase bg-foreground-950 border-transparent",
         status: "bg-opacity-30 border-transparent text-foreground-300", // base status style
+        constraint: "bg-black/40 text-white/80 font-medium border-0"
       },
       state: {
         default: "",
