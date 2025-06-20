@@ -25,7 +25,7 @@ export const ContractNegotiationActions = ({process, tiny = false}: { process: C
         variants: {
             tiny: {
                 true: "inline-flex items-center",
-                false: "bg-gray-100 p-6"
+                false: " w-full p-6 pt-4 fixed bottom-0 left-0 md:left-[223px] bg-primary-950/10 border border-t-stroke [&>button]:uppercase [&>button]md:min-w-40"
             }
         }
     })
@@ -37,19 +37,19 @@ export const ContractNegotiationActions = ({process, tiny = false}: { process: C
                 {role === "provider" && (<>
                     <Dialog>
                         <DialogTrigger asChild>
-                            <Button>Offer</Button>
-                        </DialogTrigger>
-                        <ContractNegotiationOfferDialog process={process}/>
-                    </Dialog>
-                    <Dialog>
-                        <DialogTrigger asChild>
                             <Button>Agree</Button>
                         </DialogTrigger>
                         <ContractNegotiationAgreementDialog process={process}/>
                     </Dialog>
                     <Dialog>
                         <DialogTrigger asChild>
-                            <Button>Terminate</Button>
+                            <Button variant="outline">Offer</Button>
+                        </DialogTrigger>
+                        <ContractNegotiationOfferDialog process={process}/>
+                    </Dialog>
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Button variant="destructive">Terminate</Button>
                         </DialogTrigger>
                         <ContractNegotiationTerminationDialog process={process}/>
                     </Dialog>
@@ -67,18 +67,12 @@ export const ContractNegotiationActions = ({process, tiny = false}: { process: C
                 {role === "provider" && (
                     <Dialog>
                         <DialogTrigger asChild>
-                            <Button>Terminate</Button>
+                            <Button variant="destructive">Terminate</Button>
                         </DialogTrigger>
                         <ContractNegotiationTerminationDialog process={process}/>
                     </Dialog>
                 )}
                 {role === "consumer" && (<>
-                    <Dialog>
-                        <DialogTrigger asChild>
-                            <Button>Request</Button>
-                        </DialogTrigger>
-                        <ContractNegotiationRequestDialog process={process}/>
-                    </Dialog>
                     <Dialog>
                         <DialogTrigger asChild>
                             <Button>Accept</Button>
@@ -87,7 +81,13 @@ export const ContractNegotiationActions = ({process, tiny = false}: { process: C
                     </Dialog>
                     <Dialog>
                         <DialogTrigger asChild>
-                            <Button>Terminate</Button>
+                            <Button>Request</Button>
+                        </DialogTrigger>
+                        <ContractNegotiationRequestDialog process={process}/>
+                    </Dialog>
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Button variant="destructive">Terminate</Button>
                         </DialogTrigger>
                         <ContractNegotiationTerminationDialog process={process}/>
                     </Dialog>
@@ -103,7 +103,7 @@ export const ContractNegotiationActions = ({process, tiny = false}: { process: C
                     </Dialog>
                     {/*<Dialog>*/}
                     {/*    <DialogTrigger asChild>*/}
-                    {/*        <Button>Terminate</Button>*/}
+                    {/*        <Button variant="destructive">Terminate</Button>*/}
                     {/*    </DialogTrigger>*/}
                     {/*    <ContractNegotiationTerminationDialog process={process}/>*/}
                     {/*</Dialog>*/}
@@ -112,7 +112,7 @@ export const ContractNegotiationActions = ({process, tiny = false}: { process: C
                     <div>No further actions</div>
                     {/*<Dialog>*/}
                     {/*    <DialogTrigger asChild>*/}
-                    {/*        <Button>Terminate</Button>*/}
+                    {/*        <Button variant="destructive">Terminate</Button>*/}
                     {/*    </DialogTrigger>*/}
                     {/*    <ContractNegotiationTerminationDialog process={process}/>*/}
                     {/*</Dialog>*/}
@@ -122,7 +122,7 @@ export const ContractNegotiationActions = ({process, tiny = false}: { process: C
                 {role === "provider" && (<>
                     <Dialog>
                         <DialogTrigger asChild>
-                            <Button>Terminate</Button>
+                            <Button  variant="destructive">Terminate</Button>
                         </DialogTrigger>
                         <ContractNegotiationTerminationDialog process={process}/>
                     </Dialog>
@@ -147,7 +147,7 @@ export const ContractNegotiationActions = ({process, tiny = false}: { process: C
                     </Dialog>
                     <Dialog>
                         <DialogTrigger asChild>
-                            <Button>Terminate</Button>
+                            <Button  variant="destructive">Terminate</Button>
                         </DialogTrigger>
                         <ContractNegotiationTerminationDialog process={process}/>
                     </Dialog>

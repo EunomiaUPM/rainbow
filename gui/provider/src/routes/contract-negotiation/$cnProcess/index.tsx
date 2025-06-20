@@ -50,7 +50,9 @@ const RouteComponent = () => {
           </ListItem>
           <ListItem>
             <ListItemKey>State</ListItemKey>
-            <Badge variant="status" state={process.state}>{process.state}</Badge>
+            <Badge variant="status" state={process.state}>
+              {process.state}
+            </Badge>
           </ListItem>
           <ListItem>
             <ListItemKey>CreatedAt</ListItemKey>
@@ -58,14 +60,15 @@ const RouteComponent = () => {
           </ListItem>
         </List>
       </div>
-      <ContractNegotiationActions process={process} tiny={false} />
       <div>
         {/*  */}
 
         {/* DRAWER */}
         <Drawer direction={"right"}>
           <DrawerTrigger>
-            <Button variant={"secondary"}>See Contract Negociation Messages</Button>
+            <Button variant={"secondary"}>
+              See Contract Negociation Messages
+            </Button>
           </DrawerTrigger>
           <DrawerContent>
             <DrawerHeader>
@@ -104,16 +107,13 @@ const RouteComponent = () => {
                   ? "bg-roles-provider/10 border-roles-provider/50"
                   : "bg-roles-consumer/10 border-roles-consumer/50"
               }
-              
               `}
                   >
                     <div className="text-20">
-                      {" "}
                       {addSpacesFormat(message._type)}{" "}
                     </div>
                     <p className="text-gray-100/50 mb-3">
                       <i>
-                        {" "}
                         {dayjs(message.created_at).format("DD/MM/YYYY - HH:mm")}
                       </i>
                     </p>
@@ -122,11 +122,9 @@ const RouteComponent = () => {
                       key={message.cn_message_id.slice(9, 60)}
                     >
                       <p className="font-bold  min-w-40  ">
-                        {" "}
                         Contract Message Id{" "}
                       </p>
                       <p className=" w-full">
-                        {" "}
                         {message.cn_message_id.slice(9, 60)}
                       </p>
                     </div>
@@ -135,11 +133,9 @@ const RouteComponent = () => {
                       key={message.cn_message_id.slice(9, 60)}
                     >
                       <p className="font-bold  min-w-40  ">
-                        {" "}
                         Contract Process Id{" "}
                       </p>
                       <p className=" w-full">
-                        {" "}
                         {message.cn_process_id.slice(9, 60)}
                       </p>
                     </div>
@@ -148,7 +144,6 @@ const RouteComponent = () => {
                       key={message.cn_message_id.slice(9, 60)}
                     >
                       <p className="font-bold min-w-40  text-white/60 ">
-                        {" "}
                         Content:{" "}
                       </p>
                       <div className=" w-full break-all">
@@ -221,6 +216,9 @@ const RouteComponent = () => {
           </TableBody>
         </Table> */}
       </div>
+
+      {/* ACTIONS */}
+      <ContractNegotiationActions process={process} tiny={false} />
     </div>
   );
 };
