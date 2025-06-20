@@ -38,7 +38,7 @@ function RouteComponent() {
   const { data: agreements } = useGetAgreementsByParticipantId(participantId);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 w-full">
       {/* Page Header */}
       <Heading level="h3" className="flex items-center gap-3">
         Participant with id
@@ -47,39 +47,39 @@ function RouteComponent() {
         </Badge>
       </Heading>
       {/* Page content */}
-      <div className="flex gap-8 [&>div]:w-full bg-blue-500/0">
+      <div className="flexColsLayout bg-blue-500/0">
         {/* Div Participant Info */}
-        <div className=" flex flex-col bg-green-800/0">
-          <Heading level="h6" className="text-foreground h-[42px] place-content-center">
+        <div className="flex flex-col bg-green-800/0">
+          <Heading level="h6" className="text-foreground h-[36px] place-content-center">
             {" "}
             Participant info:{" "}
           </Heading>
-          <div className="bg-green-500/0">
+          <div className="w-fit bg-green-500/0">
             <List className={"min-w-fit"}>
               <ListItem>
-                <ListItemKey>Participant ID</ListItemKey>
+                <ListItemKey className="max-w-[156px]">Participant ID</ListItemKey>
                 <Badge variant={"info"}>
                   {participant.participant_id.slice(9, -1)}
                 </Badge>
               </ListItem>
               <ListItem>
-                <ListItemKey>Identity Token</ListItemKey>
-                <p>{participant.token}</p>
+                <ListItemKey className="max-w-[156px]">Identity Token</ListItemKey>
+                {participant.token}
               </ListItem>
               <ListItem>
-                <ListItemKey>Participant Type</ListItemKey>
+                <ListItemKey className="max-w-[156px]">Participant Type</ListItemKey>
                 <Badge variant={"role"} role={participant.participant_type}>
                   {participant.participant_type}
                 </Badge>
               </ListItem>
               <ListItem>
-                <ListItemKey>Base URL</ListItemKey>
+                <ListItemKey className="max-w-[156px]">Base URL</ListItemKey>
                 <Badge variant={"info"}>{participant.base_url}</Badge>
               </ListItem>
             </List>
           </div>
         </div>
-        {/* <Separator/> */}
+        {/* <Separator orientation="vertical" className="bg-slate-100"/> */}
 
         {/* Div Participant Tabs */}
         <Tabs defaultValue="participant-agreements" className="w-[980px]">

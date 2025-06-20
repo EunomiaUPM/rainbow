@@ -8,6 +8,16 @@ import { ContractNegotiationActions } from "shared/src/components/ContractNegoti
 import { List, ListItem, ListItemKey } from "shared/src/components/ui/list.tsx";
 import Heading from "../../../../../shared/src/components/ui/heading.tsx";
 import { Badge } from "shared/src/components/ui/badge.tsx";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@./../../shared/src/components/ui/drawer.tsx";
+import { Button } from "shared/src/components/ui/button.tsx";
 
 const RouteComponent = () => {
   let addSpacesFormat = (text: string) => {
@@ -40,9 +50,7 @@ const RouteComponent = () => {
           </ListItem>
           <ListItem>
             <ListItemKey>State</ListItemKey>
-            {/*TODO function mapping cnprocess state to badge state*/}
-            {/*<Badge variant="status" state={process.state.toLowerCase()}>{process.state}</Badge>*/}
-            <Badge variant="status">{process.state}</Badge>
+            <Badge variant="status" state={process.state}>{process.state}</Badge>
           </ListItem>
           <ListItem>
             <ListItemKey>CreatedAt</ListItemKey>
@@ -52,33 +60,45 @@ const RouteComponent = () => {
       </div>
       <ContractNegotiationActions process={process} tiny={false} />
       <div>
-        <Heading level="h5" className="text-text">
-          Contract negotiation Messages
-        </Heading>
-        <div className="bg-white/5  rounded-md px-8 py-4 w-4/5">
-          {cnMessages.map((message) => (
-            <div
-              className={`my-4 text-sm
+        {/*  */}
+
+        {/* DRAWER */}
+        <Drawer direction={"right"}>
+          <DrawerTrigger>
+            <Button variant={"secondary"}>See Contract Negociation Messages</Button>
+          </DrawerTrigger>
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle>
+                <Heading level="h5" className="text-text">
+                  Contract negotiation Messages
+                </Heading>
+              </DrawerTitle>
+            </DrawerHeader>
+            <div className="bg-white/5  rounded-md px-8 py-4">
+              {cnMessages.map((message) => (
+                <div
+                  className={`my-4 text-sm
                ${message.from === "Provider" ? "pr-32" : "pl-32"}
             `}
-            >
-              <div
-                className={`flex w-full
+                >
+                  <div
+                    className={`flex w-full
               ${message.from === "Provider" ? "justify-start" : "justify-end"}
                 `}
-              >
-                <div
-                  className={`uppercase text-18 px-2 font-medium rounded-t-sm ${
-                    message.from === "Provider"
-                      ? "bg-roles-provider/20 ml-1 text-roles-provider "
-                      : "bg-roles-consumer/20 mr-1 text-roles-consumer"
-                  }`}
-                >
-                  {message.from}
-                </div>
-              </div>
-              <div
-                className={` w-full px-4 py-3 rounded-md border
+                  >
+                    <div
+                      className={`uppercase text-18 px-2 font-medium rounded-t-sm ${
+                        message.from === "Provider"
+                          ? "bg-roles-provider/20 ml-1 text-roles-provider "
+                          : "bg-roles-consumer/20 mr-1 text-roles-consumer"
+                      }`}
+                    >
+                      {message.from}
+                    </div>
+                  </div>
+                  <div
+                    className={` w-full px-4 py-3 rounded-md rounded-b-xl border
               ${
                 message.from === "Provider"
                   ? "bg-roles-provider/10 border-roles-provider/50"
@@ -86,72 +106,71 @@ const RouteComponent = () => {
               }
               
               `}
-              >
-                <div className="text-20">
-                  {" "}
-                  {addSpacesFormat(message._type)}{" "}
-                </div>
-                <p className="text-gray-100/50 mb-3">
-                  <i>
-                    {" "}
-                    {dayjs(message.created_at).format("DD/MM/YYYY - HH:mm")}
-                  </i>
-                </p>
-                <div
-                  className="flex gap-3 mb-1  text-white/60 "
-                  key={message.cn_message_id.slice(9, 60)}
-                >
-                  <p className="font-bold  min-w-40  "> Contract Message Id </p>
-                  <p className=" w-full">
-                    {" "}
-                    {message.cn_message_id.slice(9, 60)}
-                  </p>
-                </div>
-                <div
-                  className="flex gap-3 mb-1  text-white/60 "
-                  key={message.cn_message_id.slice(9, 60)}
-                >
-                  <p className="font-bold  min-w-40  "> Contract Process Id </p>
-                  <p className=" w-full">
-                    {" "}
-                    {message.cn_process_id.slice(9, 60)}
-                  </p>
-                </div>
-                <div
-                  className="flex flex-col gap-3 "
-                  key={message.cn_message_id.slice(9, 60)}
-                >
-                  <p className="font-bold min-w-40  text-white/60 ">
-                    {" "}
-                    Content:{" "}
-                  </p>
-                  <div className=" w-full break-all">
-                    {/* Codigo de content formateado */}
-                    <pre
-                      style={{
-                        background: "#07070d",
-                        padding: "1rem",
-                        fontSize: "0.7rem",
-                        wordBreak: "break-all",
-                        borderRadius: "8px",
-                      }}
+                  >
+                    <div className="text-20">
+                      {" "}
+                      {addSpacesFormat(message._type)}{" "}
+                    </div>
+                    <p className="text-gray-100/50 mb-3">
+                      <i>
+                        {" "}
+                        {dayjs(message.created_at).format("DD/MM/YYYY - HH:mm")}
+                      </i>
+                    </p>
+                    <div
+                      className="flex gap-3 mb-1  text-white/60 "
+                      key={message.cn_message_id.slice(9, 60)}
                     >
-                      <code
-                        style={{
-                          whiteSpace: "pre-wrap",
-                          wordBreak: "break-word",
-                          color: "#ab97ee",
-                        }}
-                      >
-                        {JSON.stringify(message.content, null, 2)}
-                      </code>
-                    </pre>
+                      <p className="font-bold  min-w-40  ">
+                        {" "}
+                        Contract Message Id{" "}
+                      </p>
+                      <p className=" w-full">
+                        {" "}
+                        {message.cn_message_id.slice(9, 60)}
+                      </p>
+                    </div>
+                    <div
+                      className="flex gap-3 mb-1  text-white/60 "
+                      key={message.cn_message_id.slice(9, 60)}
+                    >
+                      <p className="font-bold  min-w-40  ">
+                        {" "}
+                        Contract Process Id{" "}
+                      </p>
+                      <p className=" w-full">
+                        {" "}
+                        {message.cn_process_id.slice(9, 60)}
+                      </p>
+                    </div>
+                    <div
+                      className="flex flex-col gap-3 "
+                      key={message.cn_message_id.slice(9, 60)}
+                    >
+                      <p className="font-bold min-w-40  text-white/60 ">
+                        {" "}
+                        Content:{" "}
+                      </p>
+                      <div className=" w-full break-all">
+                        {/* Codigo de content formateado */}
+                        <pre className="p-4 rounded-lg break-all text-[11px] bg-black/70 text-secondary-400 break-all">
+                          <code className="whitespace-pre-wrap break-all">
+                            {JSON.stringify(message.content, null, 2)}
+                          </code>
+                        </pre>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
+            <DrawerFooter>
+              <DrawerClose>
+                <Button variant="outline">Hide Messages</Button>
+              </DrawerClose>
+            </DrawerFooter>
+          </DrawerContent>
+        </Drawer>
         {/* <h1>Messages</h1>
         <Table className="text-sm">
           <TableHeader>

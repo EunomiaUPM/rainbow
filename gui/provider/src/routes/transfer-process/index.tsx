@@ -13,6 +13,7 @@ import { Button } from "shared/src/components/ui/button.tsx";
 import { Badge } from "shared/src/components/ui/badge.tsx";
 import { Input } from "shared/src/components/ui/input.tsx";
 import { TransferProcessActions } from "shared/src/components/TransferProcessActions.tsx";
+import { ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/transfer-process/")({
   component: RouteComponent,
@@ -80,14 +81,15 @@ function RouteComponent() {
                 <TransferProcessActions process={transferProcess} tiny={true} />
               </TableCell>
               <TableCell>
-                <Button variant="default">
                   <Link
                     to="/transfer-process/$transferProcessId"
                     params={{ transferProcessId: transferProcess.provider_pid }}
                   >
+                <Button variant="link">
                     See transference
-                  </Link>
+                    <ArrowRight />
                 </Button>
+                  </Link>
               </TableCell>
             </TableRow>
           ))}
