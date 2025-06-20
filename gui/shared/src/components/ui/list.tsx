@@ -18,7 +18,7 @@ const List = ({className, children, ...props}: { className?: string, children: R
 const ListItem = ({className, children, ...props}: { className?: string, children: React.ReactNode, props?: any }) => {
     return (
         <li
-            className="h-9 flex flex-row justify-start gap-4 border-b border-white/20 last:border-0 items-center"
+            className="h-fit py-1 place-content-center flex flex-row justify-start gap-4 border-b border-white/20 last:border-0 items-center"
             {...props}>
             {children}
         </li>
