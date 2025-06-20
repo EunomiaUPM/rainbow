@@ -11,7 +11,7 @@ services:
       POSTGRES_USER: ds_transfer_provider
       POSTGRES_DB: ds_transfer_provider
     ports:
-      - "1300:5432"
+      - "1350:5432"
 
   ds_core_consumer:
     # platform: linux/amd64

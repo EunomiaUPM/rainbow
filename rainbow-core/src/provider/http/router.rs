@@ -19,9 +19,12 @@
 use crate::provider::setup::config::CoreApplicationProviderConfig;
 use axum::Router;
 use rainbow_auth::ssi_auth::provider::setup::router::create_ssi_provider_router;
+use rainbow_catalog::setup::application::create_catalog_router;
+use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_catalog::provider::setup::application::create_catalog_router;
 use rainbow_common::config::provider_config::ApplicationProviderConfig;
 use rainbow_contracts::provider::setup::application::create_contract_negotiation_provider_router;
+use rainbow_datahub_catalog::setup::application::create_datahub_catalog_router;
 use rainbow_mates::provider::setup::application::create_mate_consumer_router;
 use rainbow_transfer::provider::setup::application::create_transfer_provider_router;
 
@@ -31,7 +34,13 @@ pub async fn create_core_provider_router(config: &CoreApplicationProviderConfig)
     let auth_router = create_ssi_provider_router(app_config.clone().into()).await;
     let transfer_router = create_transfer_provider_router(&app_config.clone().into()).await;
     let cn_router = create_contract_negotiation_provider_router(&app_config.clone().into()).await;
-    let catalog_router = create_catalog_router(&app_config.clone().into()).await;
+
+    let mut catalog_router: Router;
+    if CoreApplicationProviderConfig::is_datahub_as_catalog(config) {
+        catalog_router = create_datahub_catalog_router(&app_config.clone().into()).await;
+    } else {
+        catalog_router = create_catalog_router(&app_config.clone().into()).await;
+    }
     let mate_router = create_mate_consumer_router(app_config.clone().into()).await;
 
     Router::new()

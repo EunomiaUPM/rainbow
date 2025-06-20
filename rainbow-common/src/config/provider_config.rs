@@ -19,6 +19,7 @@
 use crate::config::database::DbType;
 use crate::config::global_config::{extract_env, format_host_config_to_url_string, DatabaseConfig, HostConfig};
 use crate::config::ConfigRoles;
+use clap::builder::TypedValueParser;
 use serde::Serialize;
 use std::env;
 use std::fmt::Display;
@@ -30,6 +31,7 @@ pub struct ApplicationProviderConfig {
     pub catalog_host: Option<HostConfig>,
     pub catalog_as_datahub: bool,
     pub datahub_host: Option<HostConfig>,
+    pub datahub_token: String,
     pub contract_negotiation_host: Option<HostConfig>,
     pub auth_host: Option<HostConfig>,
     pub ssi_auth_host: Option<HostConfig>,
@@ -60,7 +62,12 @@ impl Default for ApplicationProviderConfig {
                 port: "1201".to_string(),
             }),
             catalog_as_datahub: false,
-            datahub_host: None,
+            datahub_host: Some(HostConfig {
+                protocol: "http".to_string(),
+                url: "127.0.0.1".to_string(),
+                port: "8086".to_string(),
+            }),
+            datahub_token: "".to_string(),
             contract_negotiation_host: Some(HostConfig {
                 protocol: "http".to_string(),
                 url: "127.0.0.1".to_string(),
@@ -106,6 +113,7 @@ pub trait ApplicationProviderConfigTrait {
     fn get_raw_business_system_host(&self) -> &Option<HostConfig>;
     fn get_raw_catalog_host(&self) -> &Option<HostConfig>;
     fn get_raw_datahub_host(&self) -> &Option<HostConfig>;
+    fn get_raw_datahub_token(&self) -> &String;
     fn get_raw_contract_negotiation_host(&self) -> &Option<HostConfig>;
     fn get_raw_auth_host(&self) -> &Option<HostConfig>;
     fn get_raw_gateway_host(&self) -> &Option<HostConfig>;
@@ -127,6 +135,9 @@ pub trait ApplicationProviderConfigTrait {
         } else {
             None
         }
+    }
+    fn get_datahub_token(&self) -> Option<String> {
+        Some(self.get_raw_datahub_token().to_owned())
     }
     fn get_contract_negotiation_host_url(&self) -> Option<String> {
         self.get_raw_contract_negotiation_host().as_ref().map(format_host_config_to_url_string)
@@ -186,6 +197,9 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
     }
     fn get_raw_datahub_host(&self) -> &Option<HostConfig> {
         &self.datahub_host
+    }
+    fn get_raw_datahub_token(&self) -> &String {
+        &self.datahub_token
     }
     fn get_raw_contract_negotiation_host(&self) -> &Option<HostConfig> {
         &self.contract_negotiation_host
@@ -248,7 +262,7 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
             datahub_host: match catalog_as_datahub {
                 true => Some(HostConfig {
                     protocol: extract_env(
-                        "DATAHUB_HOST",
+                        "DATAHUB_PROTOCOL",
                         default.datahub_host.clone().unwrap().protocol,
                     ),
                     url: extract_env("DATAHUB_URL", default.datahub_host.clone().unwrap().url),
@@ -256,6 +270,10 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
                 }),
                 false => None,
             },
+            datahub_token: extract_env(
+                "DATAHUB_TOKEN",
+                default.datahub_token,
+            ),
             contract_negotiation_host: Some(HostConfig {
                 protocol: extract_env(
                     "CONTRACT_NEGOTIATION_PROTOCOL",

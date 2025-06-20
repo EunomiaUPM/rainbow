@@ -69,6 +69,11 @@ impl ApplicationProviderConfigTrait for TransferProviderApplicationConfig {
     fn get_raw_datahub_host(&self) -> &Option<HostConfig> {
         &self.datahub_host
     }
+
+    fn get_raw_datahub_token(&self) -> &String {
+        todo!()
+    }
+
     fn get_raw_contract_negotiation_host(&self) -> &Option<HostConfig> {
         &self.contract_negotiation_host
     }
@@ -117,6 +122,7 @@ impl Into<ApplicationProviderConfig> for TransferProviderApplicationConfig {
             catalog_host: self.catalog_host,
             catalog_as_datahub: self.catalog_as_datahub,
             datahub_host: self.datahub_host,
+            datahub_token: "".to_string(),
             contract_negotiation_host: self.contract_negotiation_host,
             auth_host: self.auth_host,
             ssi_auth_host: self.ssi_auth_host,

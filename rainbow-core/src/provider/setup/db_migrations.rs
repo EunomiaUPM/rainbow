@@ -24,6 +24,7 @@ use rainbow_common::utils::get_urn;
 use rainbow_db::auth_provider::migrations::get_auth_provider_migrations;
 use rainbow_db::catalog::migrations::get_catalog_migrations;
 use rainbow_db::contracts_provider::migrations::get_contracts_migrations;
+use rainbow_db::datahub::migrations::get_datahub_migrations;
 use rainbow_db::dataplane::migrations::get_dataplane_migrations;
 use rainbow_db::events::migrations::get_events_migrations;
 use rainbow_db::mates::entities::mates;
@@ -45,6 +46,7 @@ impl MigratorTrait for CoreProviderMigration {
         let mut pub_sub_migrations = get_events_migrations();
         let mut auth_migrations = get_auth_provider_migrations();
         let mut dataplane_migrations = get_dataplane_migrations();
+        let mut datahub_migrations = get_datahub_migrations();
         let mut mates_migrations = get_mates_migrations();
 
         migrations.append(&mut transfer_provider_migrations);
@@ -53,6 +55,7 @@ impl MigratorTrait for CoreProviderMigration {
         migrations.append(&mut pub_sub_migrations);
         migrations.append(&mut auth_migrations);
         migrations.append(&mut dataplane_migrations);
+        migrations.append(&mut datahub_migrations);
         migrations.append(&mut mates_migrations);
         migrations
     }
