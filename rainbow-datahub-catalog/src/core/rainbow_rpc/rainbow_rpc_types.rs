@@ -16,4 +16,20 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-pub mod rainbow_rpc;
+
+use serde::{Deserialize, Serialize};
+use urn::Urn;
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RainbowRPCDatahubCatalogResolveDataServiceRequest {
+    #[serde(rename = "dataServiceId")]
+    pub data_service_id: Urn,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RainbowRPCDatahubCatalogResolveOfferByIdRequest {
+    #[serde(rename = "offerId")]
+    pub offer_id: Urn,
+}

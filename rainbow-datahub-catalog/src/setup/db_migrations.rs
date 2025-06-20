@@ -19,7 +19,9 @@
 
 use crate::setup::config::DatahubCatalogApplicationProviderConfig;
 use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
+use rainbow_db::catalog::migrations::get_datahub_catalog_migrations;
 use rainbow_db::datahub::migrations::get_datahub_migrations;
+
 use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
 
@@ -29,7 +31,9 @@ impl MigratorTrait for DatahubCatalogRelationsMigration {
     fn migrations() -> Vec<Box<dyn MigrationTrait>> {
         let mut migrations: Vec<Box<dyn MigrationTrait>> = vec![];
         let mut datahub_migrations = get_datahub_migrations();
+        let mut datahub_policy_migrations = get_datahub_catalog_migrations();
         migrations.append(&mut datahub_migrations);
+        migrations.append(&mut datahub_policy_migrations);
         migrations
     }
 }

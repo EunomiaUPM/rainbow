@@ -18,11 +18,16 @@
  */
 
 use crate::core::datahub_proxy::datahub_proxy::DatahubProxyService;
+use crate::core::rainbow_rpc::rainbow_rpc::RainbowRPCDatahubCatalogService;
 use crate::http::datahub_proxy::datahub_proxy::DataHubProxyRouter;
+use crate::http::rainbow_entities::policies::RainbowCatalogPoliciesRouter;
 use crate::http::rainbow_entities::policy_relations_router::{PolicyRelationsRouter, PolicyTemplatesRouter};
+use crate::http::rainbow_rpc::rainbow_rpc::RainbowRPCDatahubCatalogRouter;
 use crate::setup::config::DatahubCatalogApplicationProviderConfig;
 use axum::{serve, Router};
+use rainbow_catalog::provider::core::rainbow_entities::policies::RainbowCatalogPoliciesService;
 use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
+use rainbow_db::catalog::repo::sql::CatalogRepoForSql;
 use rainbow_db::datahub::repo::sql::DatahubConnectorRepoForSql;
 use rainbow_db::events::repo::sql::EventsRepoForSql;
 use rainbow_db::events::repo::EventsRepoFactory;
@@ -55,8 +60,6 @@ pub async fn create_datahub_catalog_router(config: &DatahubCatalogApplicationPro
     )
         .router();
 
-    debug!("{:?}", config);
-
     // Datahub services
     let repo = Arc::new(DatahubConnectorRepoForSql::new(db_connection.clone()));
     let datahub_service = Arc::new(DatahubProxyService::new(config.clone()));
@@ -64,13 +67,24 @@ pub async fn create_datahub_catalog_router(config: &DatahubCatalogApplicationPro
     let policy_templates_router = PolicyTemplatesRouter::new(repo.clone(), notification_service.clone());
     let policy_relations_router = PolicyRelationsRouter::new(repo.clone(), notification_service.clone());
 
+    // Plain Catalog Policies Router
+    let plain_policies_repo = Arc::new(CatalogRepoForSql::new(db_connection));
+    let plain_policies_service = Arc::new(RainbowCatalogPoliciesService::new(plain_policies_repo.clone(), notification_service.clone()));
+    let plain_policies_router = RainbowCatalogPoliciesRouter::new(plain_policies_service.clone());
+
+    // RPC policies resolver
+    let rpc_service = Arc::new(RainbowRPCDatahubCatalogService::new(plain_policies_repo.clone()));
+    let rpc_router = RainbowRPCDatahubCatalogRouter::new(rpc_service.clone());
+
     // Merge routers
     let datahub_router = Router::new()
         .merge(datahub_router.router())
         .merge(policy_templates_router.router())
         .merge(policy_relations_router.router())
-        .nest("/api/v1/catalog", subscription_router)
-        .nest("/api/v1/catalog", notification_router);
+        .merge(plain_policies_router.router())
+        .merge(rpc_router.router())
+        .nest("/api/v1/datahub", subscription_router)
+        .nest("/api/v1/datahub", notification_router);
 
     datahub_router
 }

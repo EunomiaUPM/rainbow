@@ -34,6 +34,11 @@ pub fn get_catalog_migrations() -> Vec<Box<dyn MigrationTrait>> {
         Box::new(m20241111_000005_odrl_offers::Migration),
     ]
 }
+pub fn get_datahub_catalog_migrations() -> Vec<Box<dyn MigrationTrait>> {
+    vec![
+        Box::new(m20241111_000005_odrl_offers::Migration),
+    ]
+}
 pub struct Migrator;
 #[async_trait::async_trait]
 impl MigratorTrait for Migrator {

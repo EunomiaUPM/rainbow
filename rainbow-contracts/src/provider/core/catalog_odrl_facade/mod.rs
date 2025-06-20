@@ -3,6 +3,7 @@ use rainbow_common::protocol::contract::contract_odrl::OdrlOffer;
 use urn::Urn;
 
 pub mod catalog_odrl_facade;
+pub mod datahub_odrl_facade;
 
 #[mockall::automock]
 #[async_trait]

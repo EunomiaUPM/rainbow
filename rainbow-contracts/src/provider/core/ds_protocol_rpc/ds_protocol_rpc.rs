@@ -61,7 +61,7 @@ use std::time::Duration;
 use tracing::debug;
 use urn::Urn;
 
-pub struct DSRPCContractNegotiationProviderService<T, U, V, W>
+pub struct DSRPCContractNegotiationProviderService<T, U, W>
 where
     T: ContractNegotiationProcessRepo
     + ContractNegotiationMessageRepo
@@ -71,17 +71,17 @@ where
     + Sync
     + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
-    V: CatalogOdrlFacadeTrait + Send + Sync,
+// V: CatalogOdrlFacadeTrait + Send + Sync,
     W: MatesFacadeTrait + Send + Sync,
 {
     repo: Arc<T>,
     notification_service: Arc<U>,
     client: Client,
-    catalog_facade: Arc<V>,
+    catalog_facade: Arc<dyn CatalogOdrlFacadeTrait + Send + Sync>,
     mates_facade: Arc<W>,
 }
 
-impl<T, U, V, W> DSRPCContractNegotiationProviderService<T, U, V, W>
+impl<T, U, W> DSRPCContractNegotiationProviderService<T, U, W>
 where
     T: ContractNegotiationProcessRepo
     + ContractNegotiationMessageRepo
@@ -91,10 +91,15 @@ where
     + Sync
     + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
-    V: CatalogOdrlFacadeTrait + Send + Sync,
+// V: CatalogOdrlFacadeTrait + Send + Sync,
     W: MatesFacadeTrait + Send + Sync,
 {
-    pub fn new(repo: Arc<T>, notification_service: Arc<U>, catalog_facade: Arc<V>, mates_facade: Arc<W>) -> Self {
+    pub fn new(
+        repo: Arc<T>,
+        notification_service: Arc<U>,
+        catalog_facade: Arc<dyn CatalogOdrlFacadeTrait + Send + Sync>,
+        mates_facade: Arc<W>,
+    ) -> Self {
         let client =
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
         Self { repo, notification_service, client, catalog_facade, mates_facade }
@@ -210,7 +215,7 @@ where
 }
 
 #[async_trait]
-impl<T, U, V, W> DSRPCContractNegotiationProviderTrait for DSRPCContractNegotiationProviderService<T, U, V, W>
+impl<T, U, W> DSRPCContractNegotiationProviderTrait for DSRPCContractNegotiationProviderService<T, U, W>
 where
     T: ContractNegotiationProcessRepo
     + ContractNegotiationMessageRepo
@@ -220,7 +225,7 @@ where
     + Sync
     + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
-    V: CatalogOdrlFacadeTrait + Send + Sync,
+// V: CatalogOdrlFacadeTrait + Send + Sync,
     W: MatesFacadeTrait + Send + Sync,
 {
     async fn setup_offer(&self, input: SetupOfferRequest) -> anyhow::Result<SetupOfferResponse> {
@@ -343,7 +348,7 @@ where
         // 1. fetch participant id
         let consumer_mate = self.get_consumer_mate(&consumer_participant_id).await?;
         let consumer_base_url = consumer_mate.base_url.ok_or(anyhow!("No base url"))?;
-        let consumer_token = consumer_mate.token.ok_or(anyhow!("No token"))?;        // 2. validate correlation
+        let consumer_token = consumer_mate.token.ok_or(anyhow!("No token"))?; // 2. validate correlation
         let cn_process = self
             .validate_and_get_correlated_provider_process(
                 &consumer_pid.clone().unwrap(),
