@@ -41,7 +41,7 @@ function RouteComponent() {
                         </ListItem>
                         <ListItem>
                             <ListItemKey>Participant Type</ListItemKey>
-                            <Badge variant={"role"}>{participant.participant_type}</Badge>
+                            <Badge variant={"role"} role={participant.participant_type}>{participant.participant_type}</Badge>
                         </ListItem>
                         <ListItem>
                             <ListItemKey>Base UR</ListItemKey>
@@ -90,7 +90,7 @@ function RouteComponent() {
                                 <TableCell>
                                     <Badge
                                         variant={"status"}
-                                        state={agreement.active ? "started" : "pause"}
+                                        state={agreement.active ? "STARTED" : "PAUSE"}
                                     >
                                         {agreement.active ? "ACTIVE" : "INACTIVE"}
                                     </Badge>

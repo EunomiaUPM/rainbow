@@ -26,7 +26,9 @@ const badgeVariants = cva(
         danger: "",
         warn: "",
         ACTIVE: "bg-process text-process-300 [&>span]:bg-process-400",
+        ACCEPTED: "bg-process text-process-300 [&>span]:bg-process-400",
         STARTED: "bg-process text-process-300 [&>span]:bg-process-400",
+        OFFERED: "bg-warn text-warn-300 [&>span]:bg-warn-400",
         FINALIZED: "bg-success text-success-300 [&>span]:bg-success-400",
         COMPLETED: "bg-success text-success-300 [&>span]:bg-success-400",
         SUSPENDED: "bg-pause text-pause-300 [&>span]:bg-pause-400",
@@ -34,10 +36,10 @@ const badgeVariants = cva(
         TERMINATED: "bg-danger text-danger-300 [&>span]:bg-danger-400",
       },
       role: { // no están funcionando
-        provider: "bg-proviedr",
-        consumer: "bg-consumer",
-        business: "bg-business",
-        customer: "bg-customer",
+        Provider: "bg-roles-provider/30",
+        Consumer: "bg-roles-consumer/30",
+        Business: "bg-roles-business/30",
+        Customer: "bg-roles-customer/30",
       },
       size: {
         default: "text-sm px-2 py-0.5",
@@ -61,7 +63,7 @@ function Badge({
   className,
   variant,
   state,
-  size,
+  size, role,
   asChild = false,
   children,
   ...props
@@ -73,7 +75,7 @@ function Badge({
   return (
     <Comp
       data-slot="badge"
-      className={cn(badgeVariants({ variant, size, state }), className)}
+      className={cn(badgeVariants({ variant, size, state, role }), className)}
       {...props}
     >
       {/* Mete un circulito si la variable es de tipo status y le asigna el color asignado al estado correspondiente */}

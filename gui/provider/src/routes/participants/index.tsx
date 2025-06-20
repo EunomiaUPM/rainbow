@@ -59,7 +59,7 @@ function RouteComponent() {
               </TableCell>
               <TableCell>{participant.token?.slice(0, 20) + "..."}</TableCell>
               <TableCell>
-                <Badge variant={"role"}>
+                <Badge variant={"role"} role={participant.participant_type}>
                   {participant.participant_type}
                 </Badge>
               </TableCell>
