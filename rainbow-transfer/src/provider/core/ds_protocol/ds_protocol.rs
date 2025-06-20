@@ -192,7 +192,6 @@ where
                 // 3. For the rest of messages tp must exist (checked in previous method)
                 let tp = self.transfer_repo.get_transfer_process_by_provider(provider_pid).await?.unwrap();
                 let transfer_state = tp.state.parse()?;
-                let transfer_state_attribute = tp.state_attribute.unwrap().parse()?;
                 match m {
                     // 4. Transfer start transition check
                     TransferMessageTypes::TransferStartMessage => match transfer_state {
@@ -206,6 +205,7 @@ where
                         TransferState::SUSPENDED => {
                             // 5. Transfer state attribute check.
                             // Start from state suspended is only allowed if
+                            let transfer_state_attribute = tp.state_attribute.unwrap().parse()?;
                             match transfer_state_attribute {
                                 TransferStateAttribute::ByConsumer => {}
                                 TransferStateAttribute::OnRequest => {}

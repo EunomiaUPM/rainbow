@@ -11,17 +11,29 @@ export const TransferProcessSuspensionDialog = ({process}: { process: TransferPr
     const form = useForm({});
     const {handleSubmit, control, setValue, getValues} = form;
     const {mutateAsync: suspensionAsync} = usePostTransferRPCSuspension()
-    const {api_gateway} = useContext<GlobalInfoContextType>(GlobalInfoContext)
+    const {api_gateway, role} = useContext<GlobalInfoContextType>(GlobalInfoContext)
     const onSubmit = () => {
-        suspensionAsync({
-            api_gateway: api_gateway,
-            content: {
-                consumerParticipantId: process.associated_consumer,
-                consumerCallbackAddress: process.data_plane_id,
-                consumerPid: process.consumer_pid,
-                providerPid: process.provider_pid
-            }
-        })
+        if (role == "provider") {
+            return suspensionAsync({
+                api_gateway: api_gateway,
+                content: {
+                    consumerParticipantId: process.associated_consumer,
+                    consumerCallbackAddress: process.data_plane_id,
+                    consumerPid: process.consumer_pid,
+                    providerPid: process.provider_pid
+                }
+            })
+        }
+        if (role == "consumer") {
+            suspensionAsync({
+                api_gateway: api_gateway,
+                content: {
+                    providerParticipantId: process.associated_provider,
+                    consumerPid: process.consumer_pid,
+                    providerPid: process.provider_pid
+                }
+            })
+        }
     }
 
     return <DialogContent className="sm:max-w-[425px]">

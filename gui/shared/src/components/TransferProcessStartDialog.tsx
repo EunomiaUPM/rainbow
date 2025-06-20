@@ -11,17 +11,29 @@ export const TransferProcessStartDialog = ({process}: { process: TransferProcess
     const form = useForm({});
     const {handleSubmit, control, setValue, getValues} = form;
     const {mutateAsync: startAsync} = usePostTransferRPCStart()
-    const {api_gateway} = useContext<GlobalInfoContextType>(GlobalInfoContext)
+    const {api_gateway, role} = useContext<GlobalInfoContextType>(GlobalInfoContext)
     const onSubmit = () => {
-        startAsync({
-            api_gateway: api_gateway,
-            content: {
-                consumerParticipantId: process.associated_consumer,
-                consumerCallbackAddress: process.data_plane_id,
-                consumerPid: process.consumer_pid,
-                providerPid: process.provider_pid
-            }
-        })
+        if (role == "provider") {
+            return startAsync({
+                api_gateway: api_gateway,
+                content: {
+                    consumerParticipantId: process.associated_consumer,
+                    consumerCallbackAddress: process.data_plane_id,
+                    consumerPid: process.consumer_pid,
+                    providerPid: process.provider_pid
+                }
+            })
+        }
+        if (role == "consumer") {
+            return startAsync({
+                api_gateway: api_gateway,
+                content: {
+                    providerParticipantId: process.associated_provider,
+                    consumerPid: process.consumer_pid,
+                    providerPid: process.provider_pid
+                }
+            })
+        }
     }
 
     return <DialogContent className="sm:max-w-[425px]">

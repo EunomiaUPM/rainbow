@@ -53,7 +53,8 @@ function RouteComponent() {
                             <TableCell>
                                 <Badge variant={"status"} state={'process'}>
                                     {/* TO DO STYLE: Casuística state */}
-                                    {transferProcess.state} - {transferProcess.state_attribute}
+                                    {transferProcess.state}
+                                    {transferProcess.state == "SUSPENDED" && ` ${transferProcess.state_attribute.replace("_", " ")}`}
                                 </Badge>
                             </TableCell>
                             <TableCell>

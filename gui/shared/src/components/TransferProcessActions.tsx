@@ -45,8 +45,14 @@ export const TransferProcessActions = ({process, tiny = false}: { process: Trans
                         <TransferProcessTerminationDialog process={process}/>
                     </Dialog>
                 </>)}
-                {role === "consumer" && (<></>
-
+                {role === "consumer" && (<>
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <Button>Terminate</Button>
+                            </DialogTrigger>
+                            <TransferProcessTerminationDialog process={process}/>
+                        </Dialog>
+                    </>
                 )}
             </div>)}
             {process.state === "STARTED" && (<div className="space-x-2">
@@ -76,7 +82,24 @@ export const TransferProcessActions = ({process, tiny = false}: { process: Trans
 
                 )}
                 {role === "consumer" && (<>
-
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Button>Suspend</Button>
+                        </DialogTrigger>
+                        <TransferProcessSuspensionDialog process={process}/>
+                    </Dialog>
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Button>Complete</Button>
+                        </DialogTrigger>
+                        <TransferProcessCompletionDialog process={process}/>
+                    </Dialog>
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Button>Terminate</Button>
+                        </DialogTrigger>
+                        <TransferProcessTerminationDialog process={process}/>
+                    </Dialog>
                 </>)}
             </div>)}
             {process.state === "SUSPENDED" && (<div className="space-x-2">
@@ -104,7 +127,24 @@ export const TransferProcessActions = ({process, tiny = false}: { process: Trans
                     </Dialog>
                 </>)}
                 {role === "consumer" && (<>
-
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Button>Start</Button>
+                        </DialogTrigger>
+                        <TransferProcessStartDialog process={process}/>
+                    </Dialog>
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Button>Complete</Button>
+                        </DialogTrigger>
+                        <TransferProcessCompletionDialog process={process}/>
+                    </Dialog>
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Button>Terminate</Button>
+                        </DialogTrigger>
+                        <TransferProcessTerminationDialog process={process}/>
+                    </Dialog>
                 </>)}
             </div>)}
             {process.state === "COMPLETED" && (<div className="space-x-2">

@@ -5,6 +5,7 @@ import dayjs from "dayjs";
 import {Button} from "shared/src/components/ui/button.tsx";
 import {Badge} from "shared/src/components/ui/badge.tsx";
 import {Input} from "shared/src/components/ui/input.tsx";
+import {TransferProcessActions} from "shared/src/components/TransferProcessActions.tsx";
 
 export const Route = createFileRoute("/transfer-process/")({
     component: RouteComponent,
@@ -27,6 +28,7 @@ function RouteComponent() {
                         <TableHead>State</TableHead>
                         <TableHead>Created At</TableHead>
                         <TableHead>Updated At</TableHead>
+                        <TableHead>Actions</TableHead>
                         <TableHead>Link</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -59,6 +61,9 @@ function RouteComponent() {
                             </TableCell>
                             <TableCell>
                                 {dayjs(transferProcess.updated_at).format("DD/MM/YY HH:mm")}
+                            </TableCell>
+                            <TableCell>
+                                <TransferProcessActions process={transferProcess} tiny={true}/>
                             </TableCell>
                             <TableCell>
                                 <Button variant="default">

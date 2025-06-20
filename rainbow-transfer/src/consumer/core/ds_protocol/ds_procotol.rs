@@ -214,7 +214,14 @@ where
         let provider_participant_mate = self.validate_auth_token(token).await?;
         self.json_schema_validation(&input)
             .map_err(|e| RainbowTransferConsumerErrors::ValidationError(e.to_string()))?;
-        let existing_process = self.payload_validation(&callback_id, &consumer_pid, &input, &provider_participant_mate).await?;
+        let existing_process = self
+            .payload_validation(
+                &callback_id,
+                &consumer_pid,
+                &input,
+                &provider_participant_mate,
+            )
+            .await?;
         let restartable = existing_process.restart_flag.clone();
         // 2. Persist model
         let callback = self
@@ -276,15 +283,20 @@ where
         let provider_participant_mate = self.validate_auth_token(token).await?;
         self.json_schema_validation(&input)
             .map_err(|e| RainbowTransferConsumerErrors::ValidationError(e.to_string()))?;
-        let _existing_process = self.payload_validation(&callback_id, &consumer_pid, &input, &provider_participant_mate).await?;
+        let _existing_process = self
+            .payload_validation(
+                &callback_id,
+                &consumer_pid,
+                &input,
+                &provider_participant_mate,
+            )
+            .await?;
         // 2. Persist state
         let callback = self
             .transfer_repo
             .put_transfer_callback(
                 callback_id.clone().unwrap(),
-                EditTransferCallback {
-                    ..Default::default()
-                },
+                EditTransferCallback { ..Default::default() },
             )
             .await
             .map_err(DSProtocolTransferConsumerErrors::DbErr)?;
@@ -330,7 +342,14 @@ where
         let provider_participant_mate = self.validate_auth_token(token).await?;
         self.json_schema_validation(&input)
             .map_err(|e| RainbowTransferConsumerErrors::ValidationError(e.to_string()))?;
-        let _existing_process = self.payload_validation(&callback_id, &consumer_pid, &input, &provider_participant_mate).await?;
+        let _existing_process = self
+            .payload_validation(
+                &callback_id,
+                &consumer_pid,
+                &input,
+                &provider_participant_mate,
+            )
+            .await?;
         // 2. Persist state
         let callback = self
             .transfer_repo
@@ -345,7 +364,7 @@ where
             .create_transfer_message(
                 callback_id.clone().unwrap(),
                 NewTransferMessageModel {
-                    message_type: TransferMessageTypes::TransferSuspensionMessage.to_string(),
+                    message_type: TransferMessageTypes::TransferCompletionMessage.to_string(),
                     from: TransferRoles::Provider,
                     to: TransferRoles::Consumer,
                     content: to_value(&input)?,
@@ -383,7 +402,14 @@ where
         let provider_participant_mate = self.validate_auth_token(token).await?;
         self.json_schema_validation(&input)
             .map_err(|e| RainbowTransferConsumerErrors::ValidationError(e.to_string()))?;
-        let _existing_process = self.payload_validation(&callback_id, &consumer_pid, &input, &provider_participant_mate).await?;
+        let _existing_process = self
+            .payload_validation(
+                &callback_id,
+                &consumer_pid,
+                &input,
+                &provider_participant_mate,
+            )
+            .await?;
         // 2. Persist state
         let callback = self
             .transfer_repo
