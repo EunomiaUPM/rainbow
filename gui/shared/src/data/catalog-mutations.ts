@@ -4,18 +4,20 @@ import {useMutation, useQueryClient} from "@tanstack/react-query";
  *  POST /datasets/{datasetId}/policies
  * */
 interface PostPolicyPayload {
-    datasetId: UUID;
-    body: string; // Consider a more specific type for the ODRL body
     api_gateway: string;
+    datasetId: string;
+    content: {
+        offer: string;
+    }
 }
 
-export const postNewPolicyInDataset = async ({datasetId, body, api_gateway}: PostPolicyPayload) => {
+export const postNewPolicyInDataset = async ({content, datasetId, api_gateway}: PostPolicyPayload) => {
     const policies: OdrlOffer = await (
         await fetch(api_gateway + `/datasets/${datasetId}/policies`, {
             headers: {
                 "Content-Type": "application/json",
             },
-            body: body,
+            body: content.offer,
             method: "POST",
         })
     ).json();
@@ -24,7 +26,7 @@ export const postNewPolicyInDataset = async ({datasetId, body, api_gateway}: Pos
 
 export const usePostNewPolicyInDataset = () => {
     const queryClient = useQueryClient()
-    const {data, isSuccess, isError, error, mutate, isPending} = useMutation({
+    const {data, isSuccess, isError, error, mutate, mutateAsync, isPending} = useMutation({
         mutationFn: postNewPolicyInDataset,
         onMutate: async () => {
         },
@@ -40,5 +42,5 @@ export const usePostNewPolicyInDataset = () => {
         onSettled: () => {
         },
     })
-    return {data, isSuccess, isError, error, mutate, isPending}
+    return {data, isSuccess, isError, error, mutate, mutateAsync, isPending}
 }

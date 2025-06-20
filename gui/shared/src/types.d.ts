@@ -236,6 +236,33 @@ declare global {
         auth_type: string
         auth_content: string
     }
+
+    export interface DatahubDomain {
+        urn: string;
+        properties: {
+            name: string;
+            description: string;
+        }
+    }
+
+    export interface DatahubDataset {
+        urn: string,
+        name: string;
+        platform: {
+            name: string
+        };
+        description: string;
+        tag_names: string[];
+        custom_properties: Array<string[]>,
+        domain: DatahubDomain;
+        glossary_terms: Array<{
+            urn: string;
+            glossaryTermInfo: {
+                name: string;
+                description: string;
+            }
+        }>
+    }
 }
 
 declare module "@tanstack/react-router" {

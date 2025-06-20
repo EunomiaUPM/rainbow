@@ -36,8 +36,8 @@ pub mod rainbow_catalog_err;
 pub mod rainbow_catalog_types;
 pub mod rainbow_policies_types;
 
-#[mockall::automock]
 #[async_trait]
+#[mockall::automock]
 pub trait RainbowCatalogTrait: Send + Sync {
     async fn get_catalog_by_id(&self, id: Urn) -> anyhow::Result<Catalog>;
     async fn post_catalog(&self, input: NewCatalogRequest, is_main: bool) -> anyhow::Result<Catalog>;
@@ -45,8 +45,8 @@ pub trait RainbowCatalogTrait: Send + Sync {
     async fn delete_catalog(&self, id: Urn) -> anyhow::Result<()>;
 }
 
-#[mockall::automock]
 #[async_trait]
+#[mockall::automock]
 pub trait RainbowDatasetTrait: Send + Sync {
     async fn get_dataset_by_id(&self, dataset_id: Urn) -> anyhow::Result<Dataset>;
     async fn get_datasets_by_catalog_id(&self, catalog_id: Urn) -> anyhow::Result<Vec<Dataset>>;
@@ -55,8 +55,8 @@ pub trait RainbowDatasetTrait: Send + Sync {
     async fn delete_dataset(&self, catalog_id: Urn, dataset_id: Urn) -> anyhow::Result<()>;
 }
 
-#[mockall::automock]
 #[async_trait]
+#[mockall::automock]
 pub trait RainbowDataServiceTrait: Send + Sync {
     async fn get_data_service_by_id(&self, data_service_id: Urn) -> anyhow::Result<DataService>;
     async fn get_data_services_by_catalog_id(&self, catalog_id: Urn) -> anyhow::Result<Vec<DataService>>;
@@ -70,8 +70,8 @@ pub trait RainbowDataServiceTrait: Send + Sync {
     async fn delete_data_service(&self, catalog_id: Urn, dataset_id: Urn) -> anyhow::Result<()>;
 }
 
-#[mockall::automock]
 #[async_trait]
+#[mockall::automock]
 pub trait RainbowDistributionTrait: Send + Sync {
     async fn get_distribution_by_id(&self, distribution_id: Urn) -> anyhow::Result<Distribution>;
     async fn get_distributions_by_dataset_id(&self, dataset_id: Urn) -> anyhow::Result<Vec<Distribution>>;
@@ -98,8 +98,8 @@ pub trait RainbowDistributionTrait: Send + Sync {
     ) -> anyhow::Result<()>;
 }
 
-#[mockall::automock]
 #[async_trait]
+#[mockall::automock]
 pub trait RainbowPoliciesTrait: Send + Sync {
     async fn get_catalog_policies(&self, catalog_id: Urn) -> anyhow::Result<Vec<OdrlOffer>>;
     async fn post_catalog_policies(&self, catalog_id: Urn, policy: OdrlPolicyInfo) -> anyhow::Result<OdrlOffer>;

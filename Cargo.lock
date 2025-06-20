@@ -2330,6 +2330,7 @@ dependencies = [
  "log",
  "mockall",
  "once_cell",
+ "rainbow_catalog",
  "rainbow_common",
  "rainbow_db",
  "rainbow_events",

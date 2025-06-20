@@ -48,6 +48,7 @@ pub async fn execute_proxy(
         "datasets" => "api/v1/datasets",
         "data-services" => "api/v1/data-services",
         "distributions" => "api/v1/distributions",
+        "datahub" => "api/v1/datahub",
         "contract-negotiation" => "api/v1/contract-negotiation",
         "mates" => "api/v1/mates",
         "catalog-bypass" => "api/v1/catalog-bypass",

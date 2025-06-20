@@ -217,7 +217,7 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
     }
 
     fn merge_dotenv_configuration(&self) -> Self {
-        dotenvy::from_filename(".env.gateway.provider");
+        dotenvy::from_filename(".env.provider");
         let default = ApplicationProviderConfig::default();
         let catalog_as_datahub: bool =
             extract_env("CATALOG_AS_DATAHUB", default.catalog_as_datahub.to_string()).parse().unwrap();
