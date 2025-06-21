@@ -5,27 +5,33 @@ import {Dialog, DialogTrigger} from "shared/src/components/ui/dialog";
 import {Button} from "shared/src/components/ui/button";
 import {TransferProcessStartDialog} from "shared/src/components/TransferProcessStartDialog";
 import {TransferProcessTerminationDialog} from "shared/src/components/TransferProcessTerminationDialog";
-import {TransferProcessSuspensionDialog} from "@/components/TransferProcessSuspensionDialog.tsx";
-import {TransferProcessCompletionDialog} from "@/components/TransferProcessCompletionDialog.tsx";
+import {TransferProcessSuspensionDialog} from "shared/src/components/TransferProcessSuspensionDialog";
+import {TransferProcessCompletionDialog} from "shared/src/TransferProcessCompletionDialog";
 
-export const TransferProcessActions = ({process, tiny = false}: { process: TransferProcess, tiny: boolean }) => {
-    const {role} = useContext<GlobalInfoContextType>(GlobalInfoContext)!;
-    const h2ClassName = cva("font-semibold mb-4", {
-        variants: {
-            tiny: {
-                true: "hidden",
-                false: null
-            }
-        }
-    })
-    const containerClassName = cva("", {
-        variants: {
-            tiny: {
-                true: "inline-flex items-center",
-                false: "bg-gray-100 p-6"
-            }
-        }
-    })
+export const TransferProcessActions = ({
+  process,
+  tiny = false,
+}: {
+  process: TransferProcess;
+  tiny: boolean;
+}) => {
+  const { role } = useContext<GlobalInfoContextType>(GlobalInfoContext)!;
+  const h2ClassName = cva("font-semibold mb-4", {
+    variants: {
+      tiny: {
+        true: "hidden",
+        false: null,
+      },
+    },
+  });
+  const containerClassName = cva("", {
+    variants: {
+      tiny: {
+        true: "inline-flex items-center",
+        false: "bg-gray-100 p-6",
+      },
+    },
+  });
 
     return (
         <div className={containerClassName({tiny})}>

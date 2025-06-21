@@ -2,32 +2,53 @@ import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 
-import { cn } from "@/lib/utils";
+// @ts-ignore
+import {cn} from "@/lib/utils"
+// @ts-ignore
+
 import { DragHandleVerticalIcon } from "@radix-ui/react-icons";
 
 const badgeVariants = cva(
-  "inline-flex items-center justify-center font-semibold rounded-sm border px-2 py-0.5 w-fit whitespace-nowrap shrink-0 gap-1 focus-visible:ring focus-visible:ring-ring/50 focus-visible:ring-[3px] transition-all overflow-hidden",
+  "px-2 py-0.5 w-fit inline-flex items-center justify-center bg-white/10 font-semibold rounded-sm border whitespace-nowrap shrink-0 gap-1 focus-visible:ring focus-visible:ring-ring/50 focus-visible:ring-[3px] transition-all overflow-hidden",
   {
     variants: {
       variant: {
         default: "bg-primary text-primary-foreground border-transparent",
         info: "font-mono uppercase bg-background-800 text-secondary-400 border-transparent",
-        role: "text-white uppercase bg-foreground-950 border-transparent",
+        role: "text-white uppercase border-transparent",
         status: "bg-opacity-30 border-transparent text-foreground-300", // base status style
+        constraint: "bg-black/40 text-white/80 font-medium border-0",
       },
       state: {
+        /* 
+          Importante que los nombres de estas variantes estén en mayúsculas porque es como llega 
+          el string del atributo y si no coincide el casing se rompe 
+          // para poner en state={process.state} y que pille el nombre directamente
+        */
         default: "",
         danger: "",
         warn: "",
-        finalized: "", // les he metido los nombres que habían ya,
-        // para poner en state={process.state} y que pille el nombre directamente, 
-        completed: "",
-        started: "",
-        pause: "",
+        ACTIVE: "bg-process text-process-300 [&>span]:bg-process-400",
+        ACCEPTED: "bg-process text-process-300 [&>span]:bg-process-400",
+        STARTED: "bg-process text-process-300 [&>span]:bg-process-400",
+        OFFERED: "bg-warn text-warn-300 [&>span]:bg-warn-400",
+        REQUESTED: "bg-warn text-warn-300 [&>span]:bg-warn-400",
+        AGREED: "bg-success text-success-300 [&>span]:bg-success-400",
+        FINALIZED: "bg-pause text-pause-300 [&>span]:bg-pause-400", // CN
+        COMPLETED: "bg-success text-success-300 [&>span]:bg-success-400",
+        SUSPENDED: "bg-pause text-pause-300 [&>span]:bg-pause-400",
+        PAUSE: "bg-pause text-pause-300 [&>span]:bg-pause-400",
+        TERMINATED: "bg-danger text-danger-300 [&>span]:bg-danger-400",
+      },
+      role: {
+        Provider: "bg-roles-provider/30",
+        Consumer: "bg-roles-consumer/30",
+        Business: "bg-roles-business/30",
+        Customer: "bg-roles-customer/30",
       },
       size: {
         default: "text-sm px-2 py-0.5",
-        lg: "text-base font-bold bg-white/10 px-2 py-0.5", 
+        lg: "text-base font-bold bg-white/10 px-2 py-0",
         // cambie paddings, sino eran muy grandes -Clara
         // y le meti bg white sino no se veia nada,
         // estas badges estan en titulos, no sobre el fondo
@@ -35,40 +56,6 @@ const badgeVariants = cva(
         sm: "text-xs px-1 py-0.5",
       },
     },
-    compoundVariants: [ 
-
-      {
-        variant: "status",
-        state: "danger",
-        class: "bg-danger text-danger-300 [&>span]:bg-danger-400",
-      },
-      {
-        variant: "status",
-        state: "warn",
-        class: "bg-warn text-warn-300 [&>span]:bg-warn-400",
-      },
-      {
-        variant: "status",
-        state: "finalized",
-        class: "bg-success text-success-300 [&>span]:bg-success-400",
-      },
-      // estilo de completed = finalized
-       {
-        variant: "status",
-        state: "completed",
-        class: "bg-success text-success-300 [&>span]:bg-success-400",
-      },
-      {
-        variant: "status",
-        state: "started",
-        class: "bg-process text-process-300 [&>span]:bg-process-400",
-      },
-      {
-        variant: "status",
-        state: "pause",
-        class: "bg-pause text-pause-300 [&>span]:bg-pause-400",
-      },
-    ],
     defaultVariants: {
       variant: "default",
       state: "default",
@@ -82,6 +69,7 @@ function Badge({
   variant,
   state,
   size,
+  role,
   asChild = false,
   children,
   ...props
@@ -93,13 +81,11 @@ function Badge({
   return (
     <Comp
       data-slot="badge"
-      className={cn(badgeVariants({ variant, size, state }), className)}
+      className={cn(badgeVariants({ variant, size, state, role }), className)}
       {...props}
     >
       {/* Mete un circulito si la variable es de tipo status y le asigna el color asignado al estado correspondiente */}
-      {showDot && (
-        <span className={cn("w-2 h-2 rounded-full mr-1")} />
-      )}
+      {showDot && <span className={cn("w-2 h-2 rounded-full mr-1")} />}
       {children}
     </Comp>
   );

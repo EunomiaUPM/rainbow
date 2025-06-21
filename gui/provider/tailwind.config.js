@@ -20,6 +20,7 @@ module.exports = {
         mono: ['"Source Code Pro"', "monospace"],
       },
       fontSize: {
+        "3xs": ["0.5rem", { lineHeight: "1.4" }] /* 8px */,
         "2xs": ["0.625rem", { lineHeight: "1.4" }] /* 10px */,
         xs: ["0.75rem", { lineHeight: "1.4" }] /* 12px */,
         sm: ["0.875rem", { lineHeight: "1.4" }] /* 14px */,
@@ -74,7 +75,7 @@ module.exports = {
           900: "#524d65",
           800: "#645d7a",
           700: "#786f92",
-          600: "#867ea3", 
+          600: "#867ea3",
           500: "#9e9ab8",
           400: "#b9b7ce",
           300: "#d3d2e0", // default, que sino el texto es muy oscuro
@@ -127,7 +128,7 @@ module.exports = {
           600: "#d42643", // default
           500: "#eb485b",
           400: "#f47883",
-          300: "#f9a8ae",
+          300: "#f79ea5",
           200: "#fccfd3",
           100: "#fee5e6",
           50: "#fef2f2",
@@ -215,6 +216,8 @@ module.exports = {
       xl: "1280px",
       "2xl": "1536px",
       "3xl": "1700px",
+      "4xl": "1920px",
+      "5xl": "2120px",
     },
   },
 };

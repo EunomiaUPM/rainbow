@@ -20,6 +20,7 @@ module.exports = {
         mono: ['"Source Code Pro"', "monospace"],
       },
       fontSize: {
+        "3xs": ["0.5rem", { lineHeight: "1.4" }] /* 8px */,
         "2xs": ["0.625rem", { lineHeight: "1.4" }] /* 10px */,
         xs: ["0.75rem", { lineHeight: "1.4" }] /* 12px */,
         sm: ["0.875rem", { lineHeight: "1.4" }] /* 14px */,
@@ -215,6 +216,8 @@ module.exports = {
       xl: "1280px",
       "2xl": "1536px",
       "3xl": "1700px",
+      "4xl": "1920px",
+      "5xl": "2120px",
     },
   },
 };

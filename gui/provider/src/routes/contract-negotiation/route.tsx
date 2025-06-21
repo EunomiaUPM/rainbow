@@ -2,6 +2,7 @@ import {createFileRoute, Link, Outlet} from "@tanstack/react-router";
 import {ArrowLeft} from "lucide-react";
 import Heading from "../../../../shared/src/components/ui/heading.tsx";
 import {   useRouterState, } from "@tanstack/react-router";
+import { Badge } from "shared/src/components/ui/badge.tsx";
 
 const NotFound = () => {
     return <div>not found</div>;
@@ -19,6 +20,7 @@ const RouteComponent = () => {
                 <Heading level="h3" className="flex gap-2 items-center">
                     {/* <ArrowLeft className="w-4"/> */}
                    Contracts
+                   
                 </Heading>
             </div>
              </>

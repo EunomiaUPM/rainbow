@@ -24,9 +24,22 @@ const Header = () => {
   // sacar ruta activa. Separar los parametros por "/"
   // por cada parametro un breadcrumb
   let paths = routerState.location.pathname.split("/");
+  console.log(paths, "patitos")
   let formatPath = (path) => {
+    // si el path es un single, y va por id, quitarle las primeras litras
+    if (path.includes("urn")) {
+    let formattedPath = path.slice(13,24) + "[...]"
+    return (
+      formattedPath
+    )
+    } else {
     let formattedPath = path.split("-").join(" ");
-    return console.log("Formatted path:", formattedPath), formattedPath;
+     return (
+      formattedPath
+
+    )
+    }
+   
   }
   paths.forEach((path, index) => {
     console.log(`Path ${index}:`, path);
@@ -39,14 +52,23 @@ const Header = () => {
         <BreadcrumbList>
           {paths.map((path, index) => (
             <>
+            {/* Este condicional es importante porque sino sale un breadcrumb aislado
+            que no lleva a ninguna parte de dataset o dataservice. No pinta este breadcrumb */}
+            { (path === "dataset" || path === "data-service") ? "" :
+            <>
               <BreadcrumbItem key={index}>
                 <BreadcrumbLink
+                  // coger el link del path, sumando los paths
                   href={`/${paths.slice(0, index + 1).join("/")}`}
                 >
+                  {path.includes("urn") && formatPath(paths.slice(index - 1, index) + " " )}
                  {formatPath(path)}
+                 {/* {console.log(path, "incluye" ,path.includes("urn"), "o no?")} */}
                 </BreadcrumbLink>
               </BreadcrumbItem>
               {index < paths.length - 1 ? <BreadcrumbSeparator /> : ""}
+              </>
+            }
             </>
           ))}
         </BreadcrumbList>

@@ -7,7 +7,7 @@ const NotFound = () => {
 
 const RouteComponent = () => {
     const routerState = useRouterState();
-    console.log("Pathname actualch:", routerState.location.pathname);
+    console.log("Pathname actual:", routerState.location.pathname);
     return (
         <>
             {/* Evitar que se pinte el titulo de "transferences
