@@ -1,6 +1,7 @@
 import {createContext, ReactNode} from "react";
 
 export interface GlobalInfoContextType {
+    catalog_type: "rainbow" | "datahub" | "both";
     role: string
     api_gateway_base: string,
     api_gateway: string,
@@ -8,12 +9,14 @@ export interface GlobalInfoContextType {
 }
 
 export const GlobalInfoContext = createContext<GlobalInfoContextType | null>(null)
-export const GlobalInfoContextProvider = ({children, api_gateway_base, role}: {
+export const GlobalInfoContextProvider = ({children, api_gateway_base, role, catalog_type}: {
     children: ReactNode,
     api_gateway_base: string,
-    role: string
+    role: string,
+    catalog_type: "rainbow" | "datahub" | "both"
 }) => {
     const value: GlobalInfoContextType = {
+        catalog_type,
         role: role,
         api_gateway_base: api_gateway_base,
         api_gateway: api_gateway_base + "/gateway/api",

@@ -28,6 +28,7 @@ import {Textarea} from "shared/src/components/ui/textarea.tsx";
 import {usePostContractNegotiationRPCOffer} from "shared/src/data/contract-mutations.ts";
 import {GlobalInfoContext, GlobalInfoContextType} from "shared/src/context/GlobalInfoContext.tsx";
 import Heading from "../../../../shared/src/components/ui/heading.tsx";
+import {getDatahubCatalogs, getDatahubDatasetsByCatalogId} from "shared/src/data/datahub-catalog-queries.ts";
 
 type Inputs = {
     consumerParticipantId: UUID,
@@ -40,7 +41,7 @@ type Inputs = {
 const RouteComponent = () => {
     const {mutateAsync: sendOfferAsync, isPending} = usePostContractNegotiationRPCOffer()
     // @ts-ignore
-    const {api_gateway} = useContext<GlobalInfoContextType>(GlobalInfoContext)
+    const {api_gateway, catalog_type} = useContext<GlobalInfoContextType>(GlobalInfoContext)
 
     // --- State Management ---
     // Consumer Participant
@@ -50,13 +51,13 @@ const RouteComponent = () => {
 
     // Catalog
     const [catalogOpen, setCatalogOpen] = useState(false);
-    const [selectedCatalog, setSelectedCatalog] = useState<Catalog | null>(null);
-    const [catalogs, setCatalogs] = useState<Catalog[]>([]);
+    const [selectedCatalog, setSelectedCatalog] = useState<Catalog | DatahubDomain | null>(null);
+    const [catalogs, setCatalogs] = useState<Catalog[] | DatahubDomain[]>([]);
 
     // Dataset (used for 'id' field in Inputs)
     const [datasetOpen, setDatasetOpen] = useState(false);
-    const [selectedDataset, setSelectedDataset] = useState<Dataset | null>(null);
-    const [datasets, setDatasets] = useState<Dataset[]>([] /* Initial empty array */);
+    const [selectedDataset, setSelectedDataset] = useState<Dataset | DatahubDataset | null>(null);
+    const [datasets, setDatasets] = useState<Dataset[] | DatahubDataset[]>([] /* Initial empty array */);
 
     // Policies (used for 'target' field in Inputs)
     const [policiesOpen, setPoliciesOpen] = useState(false);
@@ -91,10 +92,26 @@ const RouteComponent = () => {
     // Initialize selectedCatalog if default value exists
     useEffect(() => {
         const defaultId = getValues("catalog");
-        if (defaultId && catalogs.length > 0) {
-            const catalog = catalogs.find(c => c["@id"] === defaultId);
-            if (catalog) {
-                setSelectedCatalog(catalog);
+        // catalog rainbow
+        if (catalog_type === "rainbow") {
+            if (defaultId && catalogs.length > 0) {
+                const catalog = catalogs.find(
+                    c => (c as Catalog)["@id"] === defaultId
+                );
+                if (catalog) {
+                    setSelectedCatalog(catalog);
+                }
+            }
+        }
+        // catalog datahub
+        if (catalog_type === "datahub") {
+            if (defaultId && catalogs.length > 0) {
+                const catalog = catalogs.find(
+                    c => (c as DatahubDomain).urn === defaultId
+                );
+                if (catalog) {
+                    setSelectedCatalog(catalog);
+                }
             }
         }
     }, [getValues, catalogs]);
@@ -102,10 +119,25 @@ const RouteComponent = () => {
     // Initialize selectedDataset if default value exists
     useEffect(() => {
         const defaultId = getValues("id"); // 'id' field is for dataset
-        if (defaultId && datasets.length > 0) {
-            const dataset = datasets.find(d => d["@id"] === defaultId);
-            if (dataset) {
-                setSelectedDataset(dataset);
+        // catalog rainbow
+        if (catalog_type === "rainbow") {
+            if (defaultId && datasets.length > 0) {
+                const dataset = datasets.find(
+                    d => (d as Dataset)["@id"] === defaultId
+                );
+                if (dataset) {
+                    setSelectedDataset(dataset);
+                }
+            }
+        }
+        if (catalog_type === "datahub") {
+            if (defaultId && datasets.length > 0) {
+                const dataset = datasets.find(
+                    d => (d as DatahubDataset).urn === defaultId
+                );
+                if (dataset) {
+                    setSelectedDataset(dataset);
+                }
             }
         }
     }, [getValues, datasets]);
@@ -196,8 +228,14 @@ const RouteComponent = () => {
         setCatalogOpen(newOpenState);
         if (newOpenState) {
             try {
-                const fetchedCatalogs = await getCatalogs(api_gateway);
-                setCatalogs(fetchedCatalogs.catalog);
+                if (catalog_type === "rainbow") {
+                    const fetchedCatalogs = await getCatalogs(api_gateway);
+                    setCatalogs(fetchedCatalogs.catalog);
+                }
+                if (catalog_type === "datahub") {
+                    const fetchedCatalogs = await getDatahubCatalogs(api_gateway);
+                    setCatalogs(fetchedCatalogs);
+                }
             } catch (error) {
                 console.error("Failed to fetch catalogs:", error);
             }
@@ -208,8 +246,15 @@ const RouteComponent = () => {
         setDatasetOpen(newOpenState);
         if (newOpenState && selectedCatalog) { // Only fetch if a catalog is selected
             try {
-                const fetchedDatasets = await getDatasetsByCatalogId(api_gateway, selectedCatalog["@id"]);
-                setDatasets(fetchedDatasets);
+                if (catalog_type === "rainbow") {
+                    const fetchedDatasets = await getDatasetsByCatalogId(api_gateway, (selectedCatalog as Catalog)["@id"]);
+                    setDatasets(fetchedDatasets);
+                }
+                if (catalog_type === "datahub") {
+                    const fetchedDatasets = await getDatahubDatasetsByCatalogId(api_gateway, (selectedCatalog as DatahubDomain).urn);
+                    setDatasets(fetchedDatasets);
+                }
+
             } catch (error) {
                 console.error("Failed to fetch datasets:", error);
             }
@@ -224,8 +269,14 @@ const RouteComponent = () => {
         setPoliciesOpen(newOpenState);
         if (newOpenState && selectedDataset) { // Only fetch if a dataset is selected
             try {
-                const fetchedPolicies = await getPoliciesByDatasetId(api_gateway, selectedDataset["@id"]);
-                setPolicies(fetchedPolicies);
+                if (catalog_type === "rainbow") {
+                    const fetchedPolicies = await getPoliciesByDatasetId(api_gateway, (selectedCatalog as Catalog)["@id"]);
+                    setPolicies(fetchedPolicies);
+                }
+                if (catalog_type === "datahub") {
+                    const fetchedPolicies = await getPoliciesByDatasetId(api_gateway, (selectedDataset as DatahubDataset).urn);
+                    setPolicies(fetchedPolicies);
+                }
             } catch (error) {
                 console.error("Failed to fetch policies:", error);
             }
@@ -319,10 +370,21 @@ const RouteComponent = () => {
                                                     aria-expanded={catalogOpen}
                                                     className="w-full justify-between font-normal text-gray-600 hover:text-gray-800 transition-colors"
                                                 >
-                                                    {field.value
-                                                        ? catalogs.find((c) => c["@id"] === field.value)?.title || field.value // Display title if available, otherwise ID
-                                                        : "Select catalog..."
-                                                    }
+                                                    {catalog_type === "rainbow" && (<>
+                                                            {field.value
+                                                                ? (catalogs as Catalog[]).find((c) => c["@id"] === field.value)?.title || field.value // Display title if available, otherwise ID
+                                                                : "Select catalog..."
+                                                            }
+                                                        </>
+                                                    )}
+                                                    {catalog_type === "datahub" && (<>
+                                                            {field.value
+                                                                ? (catalogs as DatahubDomain[]).find((c) => c.properties.name === field.value)?.properties.name || field.value // Display title if available, otherwise ID
+                                                                : "Select catalog..."
+                                                            }
+                                                        </>
+                                                    )}
+
                                                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50"/>
                                                 </Button>
                                             </PopoverTrigger>
@@ -333,24 +395,49 @@ const RouteComponent = () => {
                                                         <CommandEmpty>No catalog found.</CommandEmpty>
                                                         <CommandGroup>
                                                             {catalogs.map((catalog) => (
-                                                                <CommandItem
-                                                                    key={catalog["@id"]}
-                                                                    value={catalog.title || catalog["@id"]} // Use title for search, ID for actual value
-                                                                    onSelect={() => {
-                                                                        if (field.value !== catalog["@id"]) { // Clear subsequent fields ONLY if catalog changes
-                                                                            field.onChange(catalog["@id"]);
-                                                                            setSelectedCatalog(catalog);
-                                                                            setCatalogOpen(false);
-                                                                            // Clear Dataset and Policy fields
-                                                                            clearFields(["id", "target"]);
-                                                                        } else {
-                                                                            setCatalogOpen(false); // Just close if same value
-                                                                        }
-                                                                    }}
-                                                                    className={field.value === catalog["@id"] ? "bg-blue-50 text-blue-700 font-medium" : ""}
-                                                                >
-                                                                    {catalog.title || catalog["@id"]}
-                                                                </CommandItem>
+                                                                <>
+                                                                    {catalog_type === "rainbow" && (
+                                                                        <CommandItem
+                                                                            key={(catalog as Catalog)["@id"]}
+                                                                            value={(catalog as Catalog).title || (catalog as Catalog)["@id"]} // Use title for search, ID for actual value
+                                                                            onSelect={() => {
+                                                                                if (field.value !== (catalog as Catalog)["@id"]) { // Clear subsequent fields ONLY if catalog changes
+                                                                                    field.onChange((catalog as Catalog)["@id"]);
+                                                                                    setSelectedCatalog(catalog);
+                                                                                    setCatalogOpen(false);
+                                                                                    // Clear Dataset and Policy fields
+                                                                                    clearFields(["id", "target"]);
+                                                                                } else {
+                                                                                    setCatalogOpen(false); // Just close if same value
+                                                                                }
+                                                                            }}
+                                                                            className={field.value === (catalog as Catalog)["@id"] ? "bg-blue-50 text-blue-700 font-medium" : ""}
+                                                                        >
+                                                                            {(catalog as Catalog).title || (catalog as Catalog)["@id"]}
+                                                                        </CommandItem>
+                                                                    )}
+                                                                    {catalog_type === "datahub" && (
+                                                                        <CommandItem
+                                                                            key={(catalog as DatahubDomain).properties.name}
+                                                                            value={(catalog as DatahubDomain).properties.name || (catalog as DatahubDomain).urn} // Use title for search, ID for actual value
+                                                                            onSelect={() => {
+                                                                                if (field.value !== (catalog as DatahubDomain).urn) { // Clear subsequent fields ONLY if catalog changes
+                                                                                    field.onChange((catalog as DatahubDomain).urn);
+                                                                                    setSelectedCatalog(catalog);
+                                                                                    setCatalogOpen(false);
+                                                                                    // Clear Dataset and Policy fields
+                                                                                    clearFields(["id", "target"]);
+                                                                                } else {
+                                                                                    setCatalogOpen(false); // Just close if same value
+                                                                                }
+                                                                            }}
+                                                                            className={field.value === (catalog as DatahubDomain).urn ? "bg-blue-50 text-blue-700 font-medium" : ""}
+                                                                        >
+                                                                            {(catalog as DatahubDomain).properties.name || (catalog as DatahubDomain).urn}
+                                                                        </CommandItem>
+                                                                    )}
+
+                                                                </>
                                                             ))}
                                                         </CommandGroup>
                                                     </CommandList>
@@ -384,10 +471,21 @@ const RouteComponent = () => {
                                                     className="w-full justify-between font-normal text-gray-600 hover:text-gray-800 transition-colors"
                                                     disabled={!selectedCatalog} // Disable if no catalog selected
                                                 >
-                                                    {field.value
-                                                        ? datasets.find((d) => d["@id"] === field.value)?.title || field.value
-                                                        : selectedCatalog ? "Select dataset..." : "Select a catalog first"
-                                                    }
+
+                                                    {catalog_type === "rainbow" && (<>
+                                                            {field.value
+                                                                ? (datasets as Dataset[]).find((d) => d["@id"] === field.value)?.title || field.value
+                                                                : selectedCatalog ? "Select dataset..." : "Select a catalog first"
+                                                            }
+                                                        </>
+                                                    )}
+                                                    {catalog_type === "datahub" && (<>
+                                                            {field.value
+                                                                ? (datasets as DatahubDataset[]).find((d) => d.urn === field.value)?.name || field.value
+                                                                : selectedCatalog ? "Select dataset..." : "Select a catalog first"
+                                                            }
+                                                        </>
+                                                    )}
                                                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50"/>
                                                 </Button>
                                             </PopoverTrigger>
@@ -398,24 +496,49 @@ const RouteComponent = () => {
                                                         <CommandEmpty>No dataset found.</CommandEmpty>
                                                         <CommandGroup>
                                                             {datasets.map((dataset) => (
-                                                                <CommandItem
-                                                                    key={dataset["@id"]}
-                                                                    value={dataset.title || dataset["@id"]}
-                                                                    onSelect={() => {
-                                                                        if (field.value !== dataset["@id"]) { // Clear subsequent fields ONLY if dataset changes
-                                                                            field.onChange(dataset["@id"]);
-                                                                            setSelectedDataset(dataset);
-                                                                            setDatasetOpen(false);
-                                                                            // Clear Policy field
-                                                                            clearFields(["id"]);
-                                                                        } else {
-                                                                            setDatasetOpen(false); // Just close if same value
-                                                                        }
-                                                                    }}
-                                                                    className={field.value === dataset["@id"] ? "bg-blue-50 text-blue-700 font-medium" : ""}
-                                                                >
-                                                                    {dataset.title || dataset["@id"]}
-                                                                </CommandItem>
+                                                                <>
+                                                                    {catalog_type === "rainbow" && (
+                                                                        <CommandItem
+                                                                            key={(dataset as Dataset)["@id"]}
+                                                                            value={(dataset as Dataset).title || (dataset as Dataset)["@id"]}
+                                                                            onSelect={() => {
+                                                                                if (field.value !== (dataset as Dataset)["@id"]) { // Clear subsequent fields ONLY if dataset changes
+                                                                                    field.onChange((dataset as Dataset)["@id"]);
+                                                                                    setSelectedDataset(dataset);
+                                                                                    setDatasetOpen(false);
+                                                                                    // Clear Policy field
+                                                                                    clearFields(["id"]);
+                                                                                } else {
+                                                                                    setDatasetOpen(false); // Just close if same value
+                                                                                }
+                                                                            }}
+                                                                            className={field.value === (dataset as Dataset)["@id"] ? "bg-blue-50 text-blue-700 font-medium" : ""}
+                                                                        >
+                                                                            {(dataset as Dataset).title || (dataset as Dataset)["@id"]}
+                                                                        </CommandItem>
+                                                                    )}
+                                                                    {catalog_type === "datahub" && (
+                                                                        <CommandItem
+                                                                            key={(dataset as DatahubDataset).urn}
+                                                                            value={(dataset as DatahubDataset).name || (dataset as DatahubDataset).urn}
+                                                                            onSelect={() => {
+                                                                                if (field.value !== (dataset as DatahubDataset).urn) { // Clear subsequent fields ONLY if dataset changes
+                                                                                    field.onChange((dataset as DatahubDataset).urn);
+                                                                                    setSelectedDataset(dataset);
+                                                                                    setDatasetOpen(false);
+                                                                                    // Clear Policy field
+                                                                                    clearFields(["id"]);
+                                                                                } else {
+                                                                                    setDatasetOpen(false); // Just close if same value
+                                                                                }
+                                                                            }}
+                                                                            className={field.value === (dataset as DatahubDataset).urn ? "bg-blue-50 text-blue-700 font-medium" : ""}
+                                                                        >
+                                                                            {(dataset as DatahubDataset).name || (dataset as DatahubDataset).urn}
+                                                                        </CommandItem>
+                                                                    )}
+                                                                </>
+
                                                             ))}
                                                         </CommandGroup>
                                                     </CommandList>
@@ -450,7 +573,7 @@ const RouteComponent = () => {
                                                     disabled={!selectedDataset} // Disable if no dataset selected
                                                 >
                                                     {field.value
-                                                        ? policies.find((p) => p["@id"] === field.value)?.target || field.value
+                                                        ? policies.find((p) => p["@id"] === field.value)?.["@id"] || field.value
                                                         : selectedDataset ? "Select policy..." : "Select a dataset first"
                                                     }
                                                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50"/>
@@ -474,7 +597,7 @@ const RouteComponent = () => {
                                                                     }}
                                                                     className={field.value === policy["@id"] ? "bg-blue-50 text-blue-700 font-medium" : ""}
                                                                 >
-                                                                    {policy.target || policy["@id"]}
+                                                                    {policy["@id"]}
                                                                 </CommandItem>
                                                             ))}
                                                         </CommandGroup>

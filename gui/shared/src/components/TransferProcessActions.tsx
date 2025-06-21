@@ -6,32 +6,32 @@ import {Button} from "shared/src/components/ui/button";
 import {TransferProcessStartDialog} from "shared/src/components/TransferProcessStartDialog";
 import {TransferProcessTerminationDialog} from "shared/src/components/TransferProcessTerminationDialog";
 import {TransferProcessSuspensionDialog} from "shared/src/components/TransferProcessSuspensionDialog";
-import {TransferProcessCompletionDialog} from "shared/src/TransferProcessCompletionDialog";
+import {TransferProcessCompletionDialog} from "shared/src/components/TransferProcessCompletionDialog";
 
 export const TransferProcessActions = ({
-  process,
-  tiny = false,
-}: {
-  process: TransferProcess;
-  tiny: boolean;
+                                           process,
+                                           tiny = false,
+                                       }: {
+    process: TransferProcess;
+    tiny: boolean;
 }) => {
-  const { role } = useContext<GlobalInfoContextType>(GlobalInfoContext)!;
-  const h2ClassName = cva("font-semibold mb-4", {
-    variants: {
-      tiny: {
-        true: "hidden",
-        false: null,
-      },
-    },
-  });
-  const containerClassName = cva("", {
-    variants: {
-      tiny: {
-        true: "inline-flex items-center",
-        false: "bg-gray-100 p-6",
-      },
-    },
-  });
+    const {role} = useContext<GlobalInfoContextType>(GlobalInfoContext)!;
+    const h2ClassName = cva("font-semibold mb-4", {
+        variants: {
+            tiny: {
+                true: "hidden",
+                false: null,
+            },
+        },
+    });
+    const containerClassName = cva("", {
+        variants: {
+            tiny: {
+                true: "inline-flex items-center",
+                false: "bg-gray-100 p-6",
+            },
+        },
+    });
 
     return (
         <div className={containerClassName({tiny})}>
