@@ -129,7 +129,7 @@ function RouteComponent() {
         <DrawerContent>
           <DrawerHeader>
             <DrawerTitle>
-              <Heading level="h5" className="text-text">
+              <Heading level="h5" className="text-current">
                 Transfer Messages
               </Heading>
             </DrawerTitle>
@@ -191,20 +191,19 @@ function RouteComponent() {
                       {" "}
                       Transfer Message Id{" "}
                     </p>
-                    <p className=" w-full">
-                      {" "}
+                    <Badge variant={"info"}>
                       {transferMessage.id.slice(9, 60)}
-                    </p>
+                    </Badge>
                   </div>
                   <div
                     className="flex gap-3  mb-1  text-white/70 "
                     key={transferMessage.id.slice(9, 60)}
                   >
                     <p className="font-bold min-w-40"> Transfer Process Id </p>
-                    <p className=" w-full ">
+                    <Badge variant={"info"}>
                       {" "}
                       {transferMessage.transfer_process_id?.slice(9, 60)}
-                    </p>
+                    </Badge>
                   </div>
                   <div
                     className="flex flex-col gap-3 "

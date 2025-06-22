@@ -79,7 +79,7 @@ function DrawerHeader({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="drawer-header"
       className={cn(
-        "flex flex-col gap-0.5 p-4 bg-brand-black/70 group-data-[vaul-drawer-direction=bottom]/drawer-content:text-center group-data-[vaul-drawer-direction=top]/drawer-content:text-center md:gap-1.5 md:text-left",
+        "flex flex-col gap-0.5 p-4 bg-brand-black/70 backdrop-blur-sm group-data-[vaul-drawer-direction=bottom]/drawer-content:text-center group-data-[vaul-drawer-direction=top]/drawer-content:text-center md:gap-1.5 md:text-left",
         "group-data-[vaul-drawer-direction=right]/drawer-content:sticky top-0 left-0",
         className
       )}
@@ -92,7 +92,7 @@ function DrawerFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="drawer-footer"
-      className={cn("mt-auto flex flex-col gap-2 p-6 pt-4 bg-brand-black/70 [&>*>*]:flex [&>*>*]:items-start", 
+      className={cn("mt-auto flex flex-col gap-2 p-6 pt-4 bg-brand-black/70 backdrop-blur-sm [&>*>*]:flex [&>*>*]:items-start", 
         "group-data-[vaul-drawer-direction=right]/drawer-content:sticky bottom-0 left-0",
         className)}
       {...props}
@@ -107,7 +107,7 @@ function DrawerTitle({
   return (
     <DrawerPrimitive.Title
       data-slot="drawer-title"
-      className={cn("text-foreground font-semibold mb-0", className)}
+      className={cn("text-primary-100 font-semibold mb-0", className)}
       {...props}
     />
   );

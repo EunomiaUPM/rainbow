@@ -34,7 +34,7 @@ const badgeVariants = cva(
         OFFERED: "bg-warn text-warn-300 [&>span]:bg-warn-400",
         REQUESTED: "bg-warn text-warn-300 [&>span]:bg-warn-400",
         AGREED: "bg-success text-success-300 [&>span]:bg-success-400",
-        FINALIZED: "bg-pause text-pause-300 [&>span]:bg-pause-400", // CN
+        FINALIZED: "bg-success text-success-300 [&>span]:bg-success-400", // CN
         COMPLETED: "bg-success text-success-300 [&>span]:bg-success-400",
         SUSPENDED: "bg-pause text-pause-300 [&>span]:bg-pause-400",
         PAUSE: "bg-pause text-pause-300 [&>span]:bg-pause-400",

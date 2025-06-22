@@ -15,7 +15,7 @@ import {
   GlobalInfoContextType,
 } from "./../context/GlobalInfoContext";
 import { usePostTransferRPCStart } from "shared/src/data/transfer-mutations";
-import { Badge } from "@/components/ui/badge.tsx";
+import { Badge } from "./../components/ui/badge.tsx";
 import { List, ListItem, ListItemKey } from "./ui/list";
 
 export const TransferProcessStartDialog = ({process}: { process: TransferProcess }) => {
