@@ -30,15 +30,15 @@ import {GlobalInfoContext, GlobalInfoContextType} from "shared/src/context/Globa
 import Heading from "../../../../shared/src/components/ui/heading.tsx";
 import {getDatahubCatalogs, getDatahubDatasetsByCatalogId} from "shared/src/data/datahub-catalog-queries.ts";
 
-type Inputs = {
-  consumerParticipantId: UUID;
-  id: UUID; // This seems to be used for dataset ID, consider renaming for clarity
-  catalog: UUID;
-  target: UUID;
-  odrl: string;
+export type Inputs = {
+    consumerParticipantId: UUID;
+    id: UUID; // This seems to be used for dataset ID, consider renaming for clarity
+    catalog: UUID;
+    target: UUID;
+    odrl: string;
 };
 
-const RouteComponent = () => {
+export const RouteComponent = () => {
     const {mutateAsync: sendOfferAsync, isPending} = usePostContractNegotiationRPCOffer()
     // @ts-ignore
     const {api_gateway, catalog_type} = useContext<GlobalInfoContextType>(GlobalInfoContext)
@@ -74,8 +74,8 @@ const RouteComponent = () => {
         },
     });
 
-  // Destructure form methods for easier use
-  const { handleSubmit, control, setValue, getValues } = form;
+    // Destructure form methods for easier use
+    const {handleSubmit, control, setValue, getValues} = form;
 
     // --- Effects for Initializing Selected Values ---
     // Initialize consumerSelectedParticipant if default value exists
@@ -89,10 +89,10 @@ const RouteComponent = () => {
         }
     }, [getValues, consumerParticipants]); // Add getValues to dependency array
 
-  // Initialize selectedCatalog if default value exists
-  useEffect(() => {
-    const defaultId = getValues("catalog");
-    // catalog rainbow
+    // Initialize selectedCatalog if default value exists
+    useEffect(() => {
+        const defaultId = getValues("catalog");
+        // catalog rainbow
         if (catalog_type === "rainbow") {
             if (defaultId && catalogs.length > 0) {
                 const catalog = catalogs.find(
@@ -112,14 +112,14 @@ const RouteComponent = () => {
                 if (catalog) {
                     setSelectedCatalog(catalog);
                 }
-      }
-    }
-  }, [getValues, catalogs]);
+            }
+        }
+    }, [getValues, catalogs]);
 
-  // Initialize selectedDataset if default value exists
-  useEffect(() => {
-    const defaultId = getValues("id"); // 'id' field is for dataset
-    // catalog rainbow
+    // Initialize selectedDataset if default value exists
+    useEffect(() => {
+        const defaultId = getValues("id"); // 'id' field is for dataset
+        // catalog rainbow
         if (catalog_type === "rainbow") {
             if (defaultId && datasets.length > 0) {
                 const dataset = datasets.find(
@@ -138,9 +138,9 @@ const RouteComponent = () => {
                 if (dataset) {
                     setSelectedDataset(dataset);
                 }
-      }
-    }
-  }, [getValues, datasets]);
+            }
+        }
+    }, [getValues, datasets]);
 
     // Initialize selectedPolicy if default value exists
     useEffect(() => {
@@ -222,14 +222,13 @@ const RouteComponent = () => {
                 console.error("Failed to fetch participants:", error);
             }
         }
-    }
-  };
+    };
 
-  const handleCatalogOpenChange = async (newOpenState: boolean) => {
-    setCatalogOpen(newOpenState);
-    if (newOpenState) {
-      try {
-        if (catalog_type === "rainbow") {
+    const handleCatalogOpenChange = async (newOpenState: boolean) => {
+        setCatalogOpen(newOpenState);
+        if (newOpenState) {
+            try {
+                if (catalog_type === "rainbow") {
                     const fetchedCatalogs = await getCatalogs(api_gateway);
                     setCatalogs(fetchedCatalogs.catalog);
                 }
@@ -237,20 +236,21 @@ const RouteComponent = () => {
                     const fetchedCatalogs = await getDatahubCatalogs(api_gateway);
                     setCatalogs(fetchedCatalogs);
                 }
-      } catch (error) {
-        console.error("Failed to fetch catalogs:", error);
-      }
-    }
-  };
+            } catch (error) {
+                console.error("Failed to fetch catalogs:", error);
+            }
+        }
+    };
 
-  const handleDatasetOpenChange = async (newOpenState: boolean) => {
-    setDatasetOpen(newOpenState);
-    if (newOpenState && selectedCatalog) {
-      // Only fetch if a catalog is selected
-      try {
-        if (catalog_type === "rainbow") {
+    const handleDatasetOpenChange = async (newOpenState: boolean) => {
+        setDatasetOpen(newOpenState);
+        if (newOpenState && selectedCatalog) {
+            // Only fetch if a catalog is selected
+            try {
+                if (catalog_type === "rainbow") {
                     const fetchedDatasets = await getDatasetsByCatalogId(api_gateway, (selectedCatalog as Catalog)["@id"]
-            );        setDatasets(fetchedDatasets);
+                    );
+                    setDatasets(fetchedDatasets);
                 }
                 if (catalog_type === "datahub") {
                     const fetchedDatasets = await getDatahubDatasetsByCatalogId(api_gateway, (selectedCatalog as DatahubDomain).urn);
@@ -265,8 +265,8 @@ const RouteComponent = () => {
             console.warn("Please select a catalog first.");
             setDatasetOpen(false); // Prevent popover from opening
 
-    }
-  };
+        }
+    };
 
     const handlePoliciesOpenChange = async (newOpenState: boolean) => {
         setPoliciesOpen(newOpenState);
@@ -287,8 +287,7 @@ const RouteComponent = () => {
             console.warn("Please select a dataset first.");
             setPoliciesOpen(false);
         }
-    }
-  };
+    };
 
     return (
         <div className="w-[500px]">
@@ -517,11 +516,11 @@ const RouteComponent = () => {
                                                                                 }
                                                                             }}
                                                                             className={field.value === (dataset as Dataset)["@id"]
-                                      ? "bg-blue-50 text-blue-700 font-medium"
-                                                                        : ""
-                                          }
-                                >
-                                  {(dataset as Dataset).title || (dataset as Dataset)["@id"]}
+                                                                                ? "bg-blue-50 text-blue-700 font-medium"
+                                                                                : ""
+                                                                            }
+                                                                        >
+                                                                            {(dataset as Dataset).title || (dataset as Dataset)["@id"]}
                                                                         </CommandItem>
                                                                     )}
                                                                     {catalog_type === "datahub" && (
@@ -561,106 +560,106 @@ const RouteComponent = () => {
                         )}
                     />
 
-          {/* Policy Target Field (mapped to 'target' in Inputs) */}
-          <FormField
-            control={control}
-            name="id" // This is the policy ID field
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Policy Id</FormLabel>
-                <div>
-                  <FormControl>
-                    <Popover
-                      open={policiesOpen}
-                      onOpenChange={handlePoliciesOpenChange}
-                    >
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={policiesOpen}
-                          className="w-full justify-between font-normal text-gray-600 hover:text-gray-800 transition-colors"
-                          disabled={!selectedDataset} // Disable if no dataset selected
-                        >
-                          {field.value
-                            ? policies.find((p) => p["@id"] === field.value)
-                                ?.["@id"] || field.value
-                            : selectedDataset
-                              ? "Select policy..."
-                              : "Select a dataset first"}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                        <Command>
-                          <CommandInput placeholder="Search policies..." />
-                          <CommandList>
-                            <CommandEmpty>No policies found.</CommandEmpty>
-                            <CommandGroup>
-                              {policies.map((policy) => (
-                                <CommandItem
-                                  key={policy["@id"]}
-                                  value={policy.target || policy["@id"]}
-                                  onSelect={() => {
-                                    field.onChange(policy["@id"]);
-                                    setSelectedPolicy(policy);
-                                    setPoliciesOpen(false);
-                                    // No fields follow this one that need clearing based on its change
-                                  }}
-                                  className={
-                                    field.value === policy["@id"]
-                                      ? "bg-blue-50 text-blue-700 font-medium"
-                                      : ""
-                                  }
-                                >
-                                  {policy["@id"]}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                  </FormControl>
-                  <FormDescription className="text-sm text-gray-400 mt-1">
-                    Select the policy target for the negotiation.
-                  </FormDescription>
-                  <FormMessage />
-                </div>
-              </FormItem>
-            )}
-          />
+                    {/* Policy Target Field (mapped to 'target' in Inputs) */}
+                    <FormField
+                        control={control}
+                        name="id" // This is the policy ID field
+                        render={({field}) => (
+                            <FormItem>
+                                <FormLabel>Policy Id</FormLabel>
+                                <div>
+                                    <FormControl>
+                                        <Popover
+                                            open={policiesOpen}
+                                            onOpenChange={handlePoliciesOpenChange}
+                                        >
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant="outline"
+                                                    role="combobox"
+                                                    aria-expanded={policiesOpen}
+                                                    className="w-full justify-between font-normal text-gray-600 hover:text-gray-800 transition-colors"
+                                                    disabled={!selectedDataset} // Disable if no dataset selected
+                                                >
+                                                    {field.value
+                                                        ? policies.find((p) => p["@id"] === field.value)
+                                                        ?.["@id"] || field.value
+                                                        : selectedDataset
+                                                            ? "Select policy..."
+                                                            : "Select a dataset first"}
+                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50"/>
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                                                <Command>
+                                                    <CommandInput placeholder="Search policies..."/>
+                                                    <CommandList>
+                                                        <CommandEmpty>No policies found.</CommandEmpty>
+                                                        <CommandGroup>
+                                                            {policies.map((policy) => (
+                                                                <CommandItem
+                                                                    key={policy["@id"]}
+                                                                    value={policy.target || policy["@id"]}
+                                                                    onSelect={() => {
+                                                                        field.onChange(policy["@id"]);
+                                                                        setSelectedPolicy(policy);
+                                                                        setPoliciesOpen(false);
+                                                                        // No fields follow this one that need clearing based on its change
+                                                                    }}
+                                                                    className={
+                                                                        field.value === policy["@id"]
+                                                                            ? "bg-blue-50 text-blue-700 font-medium"
+                                                                            : ""
+                                                                    }
+                                                                >
+                                                                    {policy["@id"]}
+                                                                </CommandItem>
+                                                            ))}
+                                                        </CommandGroup>
+                                                    </CommandList>
+                                                </Command>
+                                            </PopoverContent>
+                                        </Popover>
+                                    </FormControl>
+                                    <FormDescription className="text-sm text-gray-400 mt-1">
+                                        Select the policy target for the negotiation.
+                                    </FormDescription>
+                                    <FormMessage/>
+                                </div>
+                            </FormItem>
+                        )}
+                    />
 
-          <FormField
-            control={form.control}
-            name="odrl"
-            disabled={!selectedPolicy}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Odrl</FormLabel>
-                <FormControl>
-                  <Textarea {...field} />
-                </FormControl>
-                <FormDescription>
-                  Provide the ODRL policy content
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                    <FormField
+                        control={form.control}
+                        name="odrl"
+                        disabled={!selectedPolicy}
+                        render={({field}) => (
+                            <FormItem>
+                                <FormLabel>Odrl</FormLabel>
+                                <FormControl>
+                                    <Textarea {...field} />
+                                </FormControl>
+                                <FormDescription>
+                                    Provide the ODRL policy content
+                                </FormDescription>
+                                <FormMessage/>
+                            </FormItem>
+                        )}
+                    />
 
-          <Button type="submit" disabled={isPending} className="w-full">
-            Submit Offer {isPending && <span className="ml-2">...</span>}
-          </Button>
-        </form>
-      </Form>
-    </div>
-  );
+                    <Button type="submit" disabled={isPending} className="w-full">
+                        Submit Offer {isPending && <span className="ml-2">...</span>}
+                    </Button>
+                </form>
+            </Form>
+        </div>
+    );
 };
 
 export const Route = createFileRoute("/contract-negotiation/offer")({
-  component: RouteComponent,
-  pendingComponent: () => (
-    <div className="p-4 text-center text-gray-600">Loading...</div>
-  ),
+    component: RouteComponent,
+    pendingComponent: () => (
+        <div className="p-4 text-center text-gray-600">Loading...</div>
+    ),
 });

@@ -24,8 +24,8 @@ type Inputs = {
 }
 
 function RouteComponent() {
-    const {catalogId, datasetId} = Route.useParams()
-    const {data: dataset} = useGetDatahubDataset(catalogId, datasetId)
+    const {datasetId} = Route.useParams()
+    const {data: dataset} = useGetDatahubDataset(datasetId)
     const {data: policies} = useGetPoliciesByDatasetId(datasetId)
     const {mutateAsync: createPolicyAsync, isPending} = usePostNewPolicyInDataset()
     const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!

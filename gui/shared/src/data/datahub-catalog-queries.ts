@@ -48,20 +48,20 @@ export const useGetDatahubDatasetsByCatalogId = (urn: string) => {
 /**
  *  GET /datahub/domains/:urn/datasets/:datasetId
  * */
-export const getDatahubDataset = async (api_gateway: string, urn: string, datasetId: string) => {
+export const getDatahubDataset = async (api_gateway: string, datasetId: string) => {
     const catalogs: DatahubDataset = await (
-        await fetch(api_gateway + `/datahub/domains/${urn}/datasets/${datasetId}`)
+        await fetch(api_gateway + `/datahub/domains/datasets/${datasetId}`)
     ).json();
     return catalogs;
 }
 
-export const getDatahubDatasetOptions = (api_gateway: string, urn: string, datasetId: string) => queryOptions({
-    queryKey: ["DATAHUB_DATASET", urn, datasetId],
-    queryFn: () => getDatahubDataset(api_gateway, urn, datasetId)
+export const getDatahubDatasetOptions = (api_gateway: string, datasetId: string) => queryOptions({
+    queryKey: ["DATAHUB_DATASET", datasetId],
+    queryFn: () => getDatahubDataset(api_gateway, datasetId)
 })
 
-export const useGetDatahubDataset = (urn: string, datasetId: string) => {
+export const useGetDatahubDataset = (datasetId: string) => {
     const {api_gateway} = useContext<GlobalInfoContextType>(GlobalInfoContext);
-    const {data, isLoading, isError, error} = useSuspenseQuery(getDatahubDatasetOptions(api_gateway, urn, datasetId))
+    const {data, isLoading, isError, error} = useSuspenseQuery(getDatahubDatasetOptions(api_gateway, datasetId))
     return {data, isLoading, isError, error}
 }

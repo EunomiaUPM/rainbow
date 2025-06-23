@@ -19,7 +19,9 @@
 
 use crate::common::core::mates_facade::mates_facade::MatesFacadeService;
 use crate::provider::core::data_plane_facade::data_plane_facade::DataPlaneProviderFacadeForDSProtocol;
+use crate::provider::core::data_service_resolver_facade::data_service_resolver_datahub_facade::DataServiceFacadeServiceForDatahub;
 use crate::provider::core::data_service_resolver_facade::data_service_resolver_facade::DataServiceFacadeServiceForDSProtocol;
+use crate::provider::core::data_service_resolver_facade::DataServiceFacadeTrait;
 use crate::provider::core::ds_protocol::ds_protocol::DSProtocolTransferProviderImpl;
 use crate::provider::core::ds_protocol_rpc::ds_protocol_rpc::DSRPCTransferProviderService;
 use crate::provider::core::rainbow_entities::rainbow_entities::RainbowTransferProviderServiceImpl;
@@ -114,7 +116,14 @@ pub async fn create_transfer_provider_router(config: &TransferProviderApplicatio
         dataplane_controller.clone(),
         config.clone(),
     ));
-    let data_service_facade = Arc::new(DataServiceFacadeServiceForDSProtocol::new(config.clone()));
+    // let data_service_facade = Arc::new(DataServiceFacadeServiceForDSProtocol::new(config.clone()));
+    let data_service_facade: Arc<dyn DataServiceFacadeTrait + Send + Sync>;
+    if config.is_datahub_as_catalog() {
+        data_service_facade = Arc::new(DataServiceFacadeServiceForDatahub::new(config.clone()))
+    } else {
+        data_service_facade = Arc::new(DataServiceFacadeServiceForDSProtocol::new(config.clone()))
+    }
+
     let ds_protocol_service = Arc::new(DSProtocolTransferProviderImpl::new(
         provider_repo.clone(),
         data_service_facade.clone(),

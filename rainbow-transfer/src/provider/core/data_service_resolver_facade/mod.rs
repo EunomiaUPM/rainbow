@@ -23,6 +23,7 @@ use rainbow_common::protocol::catalog::dataservice_definition::DataService;
 use urn::Urn;
 
 pub mod data_service_resolver_facade;
+pub mod data_service_resolver_datahub_facade;
 
 #[mockall::automock]
 #[async_trait]
