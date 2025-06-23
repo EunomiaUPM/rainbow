@@ -143,3 +143,18 @@
     @apply h-fit flex flex-col gap-8 w-full ;
     /* @apply lg:flex-row;  */
 }
+
+/*POLICY*/
+.constraint-policy-container {
+
+    .constraint-item {
+        display: none
+    }
+    &:hover {
+        .constraint-item {
+            display: flex;
+            position: absolute;
+            margin-top: -46px
+        }
+    }
+}

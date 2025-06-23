@@ -32,14 +32,14 @@ const Policy = React.forwardRef<HTMLDivElement, PolicyProps>(
 Policy.displayName = "Policy";
 const PolicyItemContainer = ({  children, ...props}) => {
 return (
-        <div className={cn("flex flex-col gap-1" )}  {...props}>
+        <div className={cn("flex flex-col gap-1 py-3 border-b border-white/20 last:border-0 first:pt-1 last:pb-1" )}  {...props}>
                 {children}
         </div>
     )
 }
 const PolicyItem = ({  children, ...props}) => {
 return (
-        <div className={cn("flex" )}  {...props}>
+        <div className={cn("flex " )}  {...props}>
                 {children}
         </div>
     )
@@ -47,7 +47,7 @@ return (
 
 const PolicyItemKey = ({ children, ...props}) => {
     return (
-        <div className={cn("w-32 font-semibold" )}  {...props}>
+        <div className={cn("w-32 font-semibold text-white/60" )}  {...props}>
           {children}
         </div>
     )
@@ -70,7 +70,7 @@ const PolicyConstraintsContainer = ({  children, ...props}) => {
     //     return formattedText
     // }
     return (
-        <div className={cn("flex gap-2")}  {...props}>
+        <div className={cn("flex gap-1.5 bg-black/20 w-fit p-1 rounded-md")}  {...props}>
                 {children}
         </div>
     )
@@ -85,12 +85,36 @@ const PolicyConstraint = ({ type, className, children, ...props}) => {
     // SI NO LO ES, PASARLO A STRING PARA PODER FORMATEARLO
       const childText = typeof children === 'string' ? children : String(children)
     return (
-        <div className={className} {...props}>
-               <Badge variant="constraint"> {formatString(childText)}
-                </Badge>
-               <div className="text-2xs opacity-60 mt-1">{type}</div>
+        <div className={cn("constraint-policy-container", className)} {...props}>
+         
+               <span
+  className={`flex justify-start items-start h-full px-2 py-0.5 w-fit max-w-[185px] rounded-sm gap-1 focus-visible:ring focus-visible:ring-ring/50 focus-visible:ring-[3px] transition-all  text-white/60 font-medium break-all border border-white/15 bg-gray-300/5
+    ${childText.length >= 16 ? 'nowrap' : ''
+  }`}
+>
+                <p className="break-all">{formatString(childText)}</p>
+                   {console.log(childText.length, " childText")}
+                </span>
+               <div className="constraint-item text-2xs px-1.5 rounded-sm py-0.5 cursor-pointer bg-black/90 opacity-80 mt-1">{type}</div>
         </div>
     )
 }
 
-export { Policy, policyVariants,PolicyItemContainer, PolicyItem, PolicyItemKey,PolicyItemValue, PolicyConstraint, PolicyConstraintsContainer };
+const PolicyConstraintsWrapper = ({children}) => {
+    return (
+       <div className="flex flex-col gap-2"> 
+       {children} 
+       </div>
+    )
+
+}
+export { Policy, 
+    policyVariants,
+    PolicyItemContainer, 
+    PolicyItem,
+    PolicyItemKey,
+    PolicyItemValue, 
+    PolicyConstraint,
+    PolicyConstraintsContainer,
+    PolicyConstraintsWrapper 
+};

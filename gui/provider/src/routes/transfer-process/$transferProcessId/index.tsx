@@ -5,9 +5,10 @@ import {
     useGetTransferMessagesByProviderPid,
     useGetTransferProcessByProviderPid,
 } from "shared/src/data/transfer-queries.ts";
-import {List, ListItem, ListItemKey} from "shared/src/components/ui/list.tsx";
+import {List, ListItem, ListItemKey, ListItemDate} from "shared/src/components/ui/list.tsx";
 import Heading from "shared/src/components/ui/heading.tsx";
 import {Tabs, TabsContent, TabsList, TabsTrigger,} from "../../../../../shared/src/components/ui/tabs.tsx";
+import { Badge } from "shared/src/components/ui/badge.tsx";
 
 export const Route = createFileRoute("/transfer-process/$transferProcessId/")({
     component: RouteComponent,
@@ -32,7 +33,16 @@ function RouteComponent() {
                     <TabsTrigger value="data-control">Data Control</TabsTrigger>
                     <TabsTrigger value="data-plane">Data Plane</TabsTrigger>
                 </TabsList>
-                <TabsContent value="data-plane">{JSON.stringify(dataPlane)}</TabsContent>
+                <TabsContent value="data-plane">
+                    {/* {JSON.stringify(dataPlane)} */}
+                    <List></List>
+                        {JSON.stringify(dataPlane.created_at)}
+                          {JSON.stringify(dataPlane.updated_at)}
+                            {JSON.stringify(dataPlane.process_direction)}
+                       <Badge variant="info">  {JSON.stringify(dataPlane.id)}</Badge>
+                       {JSON.stringify(dataPlane.state)}
+                    
+                </TabsContent>
                 <TabsContent value="data-control">
                     {" "}
                     <Heading level="h5" className="mt-3">Transfer process info </Heading>
