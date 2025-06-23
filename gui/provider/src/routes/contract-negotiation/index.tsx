@@ -23,7 +23,7 @@ import { Input } from "shared/src/components/ui/input.tsx";
 import { useGetContractNegotiationProcesses } from "shared/src/data/contract-queries.ts";
 import { ContractNegotiationActions } from "shared/src/components/ContractNegotiationActions";
 import { useMemo } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Plus } from "lucide-react";
 import Heading from "shared/src/components/ui/heading";
 import { RouteComponent as OfferForm } from "@/routes/contract-negotiation/offer";
 
@@ -41,21 +41,16 @@ const RouteComponent = () => {
 
   return (
     <div>
-      <div className="flex justify-between items-start">
-        <div className="pb-3 w-3/5">
+      <div className=" pb-3 flex justify-between items-start">
+        <div className=" basis-3/5">
           <Input type="search"></Input>
         </div>
-        <Link
-          to="/contract-negotiation/offer"
-          className="text-decoration-none text-foreground"
-        >
-          <Button>Create new offer</Button>
-        </Link>
         {/* DRAWER CONTRACT OFFER*/}
         <Drawer direction={"right"}>
           <DrawerTrigger>
-            <Button variant={"secondary"}>
+            <Button>
               Create new offer
+              <Plus className="mb-1"/>
             </Button>
           </DrawerTrigger>
           <DrawerContent>
@@ -69,12 +64,12 @@ const RouteComponent = () => {
             <OfferForm/>
             <DrawerFooter>
               <DrawerClose className="flex justify-start gap-4">
-                <Button variant="outline" className="w-40">Cancel</Button>
+                <Button variant="ghost" className="w-40">Cancel</Button>
                 {/* <Button className="w-40">Send Offer</Button> */}
               </DrawerClose>
             </DrawerFooter>
           </DrawerContent>
-        </Drawer>{/* /Drawer COotract Offer*/}
+        </Drawer>{/* /Drawer Contract Offer*/}
       </div>
       <Table className="text-sm">
         <TableHeader>
@@ -117,7 +112,7 @@ const RouteComponent = () => {
                   params={{ cnProcess: cnProcess.provider_id }}
                 >
                   <Button variant="link">
-                    See contract negotiation
+                    See details
                     <ArrowRight />
                   </Button>
                 </Link>

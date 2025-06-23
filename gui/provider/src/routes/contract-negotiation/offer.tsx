@@ -322,7 +322,7 @@ export const RouteComponent = () => {
                                     className={
                                       field.value ===
                                       consumerParticipant.participant_id
-                                        ? "text-blue-300 font-medium"
+                                        ? "text-role-consumer font-medium"
                                         : ""
                                     }
                                   >

@@ -68,7 +68,7 @@ const RouteComponent = () => {
         <Drawer direction={"right"}>
           <DrawerTrigger>
             <Button variant={"secondary"}>
-              See Contract Negociation Messages
+              See Contract Negotiation Messages
             </Button>
           </DrawerTrigger>
           <DrawerContent>
@@ -163,7 +163,7 @@ const RouteComponent = () => {
             </div>
             <DrawerFooter>
               <DrawerClose>
-                <Button variant="outline">Hide Messages</Button>
+                <Button variant="ghost">Hide Messages</Button>
               </DrawerClose>
             </DrawerFooter>
           </DrawerContent>

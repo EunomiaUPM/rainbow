@@ -37,6 +37,8 @@ function RouteComponent() {
   const { data: participant } = useGetParticipantById(participantId);
   const { data: agreements } = useGetAgreementsByParticipantId(participantId);
 
+  const scopedListItemKeyClasses = 'basis-[28%]'
+
   return (
     <div className="space-y-4 w-full">
       {/* Page Header */}
@@ -57,23 +59,23 @@ function RouteComponent() {
           <div className="w-fit bg-green-500/0">
             <List className={"min-w-fit"}>
               <ListItem>
-                <ListItemKey className="max-w-[156px]">Participant ID</ListItemKey>
-                <Badge variant={"info"}>
+                <ListItemKey className={scopedListItemKeyClasses}>Participant ID</ListItemKey>
+                <Badge variant={"info"} className="grow-1">
                   {participant.participant_id.slice(9, -1)}
                 </Badge>
               </ListItem>
               <ListItem>
-                <ListItemKey className="max-w-[156px]">Identity Token</ListItemKey>
+                <ListItemKey className={scopedListItemKeyClasses}>Identity Token</ListItemKey>
                 {participant.token}
               </ListItem>
               <ListItem>
-                <ListItemKey className="max-w-[156px]">Participant Type</ListItemKey>
+                <ListItemKey className={scopedListItemKeyClasses}>Participant Type</ListItemKey>
                 <Badge variant={"role"} role={participant.participant_type}>
                   {participant.participant_type}
                 </Badge>
               </ListItem>
               <ListItem>
-                <ListItemKey className="max-w-[156px]">Base URL</ListItemKey>
+                <ListItemKey className={scopedListItemKeyClasses}>Base URL</ListItemKey>
                 <Badge variant={"info"}>{participant.base_url}</Badge>
               </ListItem>
             </List>
@@ -86,7 +88,7 @@ function RouteComponent() {
           <TabsList>
             <TabsTrigger value="participant-agreements">Agreements</TabsTrigger>
             {/* <TabsTrigger value="participant-transferences">Transferences</TabsTrigger> */}
-            {/* <TabsTrigger value="participant-contracts">Contract Negociations</TabsTrigger> */}
+            {/* <TabsTrigger value="participant-contracts">Contract Negotiations</TabsTrigger> */}
           </TabsList>
           <TabsContent value="participant-agreements">
             <div className=" bg-pink-500/0">
