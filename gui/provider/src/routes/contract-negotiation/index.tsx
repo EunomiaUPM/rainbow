@@ -106,7 +106,7 @@ const RouteComponent = () => {
                 </Badge>
               </TableCell>
               <TableCell>
-                {dayjs(cnProcess.created_at).format("DD/MM/YYYY - HH:mm")}
+                {dayjs(cnProcess.created_at).format("DD/MM/YY - HH:mm")}
               </TableCell>
               <TableCell>
                 <ContractNegotiationActions process={cnProcess} tiny={true} />

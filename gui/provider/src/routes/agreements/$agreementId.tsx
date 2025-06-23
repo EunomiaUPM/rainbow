@@ -70,7 +70,7 @@ function RouteComponent() {
               </Badge>
             </ListItem>
             <ListItem>
-              <ListItemKey>CreatedAt</ListItemKey>
+              <ListItemKey>Created at</ListItemKey>
               {dayjs(agreement.created_at).format("DD/MM/YYYY - HH:mm")}
             </ListItem>
           </List>

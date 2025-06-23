@@ -49,26 +49,18 @@ function RouteComponent() {
           <TabsTrigger value="data-plane">Data Plane</TabsTrigger>
         </TabsList>
         <TabsContent value="data-plane">
+        <div className=" w-full break-all">
           <pre
-            style={{
-              background: "#07070d",
-              padding: "1rem",
-              fontSize: "0.7rem",
-              wordBreak: "break-all",
-              borderRadius: "8px",
-            }}
-            className="max-w-[500px]"
+           
+            className="max-w-[500px] p-4 rounded-lg break-all text-[11px] bg-black/70 text-secondary-400 break-all"
           >
             <code
-              style={{
-                whiteSpace: "pre-wrap",
-                wordBreak: "break-word",
-                color: "#ab97ee",
-              }}
+             className="whitespace-pre-wrap break-all"
             >
-              {JSON.stringify(dataPlane)}
+              {JSON.stringify(dataPlane, null, 2)}
             </code>
           </pre>
+          </div>
         </TabsContent>
         <TabsContent value="data-control">
           {" "}
