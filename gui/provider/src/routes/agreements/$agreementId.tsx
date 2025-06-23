@@ -136,7 +136,7 @@ function RouteComponent() {
             <div className="gap-1 flex flex-col">
               <ListItemKey className={" py-2 "}> Policies </ListItemKey>
            
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2 mb-2">
             
             <PolicyComponent
                 policyItem={agreement.agreement_content.permission}

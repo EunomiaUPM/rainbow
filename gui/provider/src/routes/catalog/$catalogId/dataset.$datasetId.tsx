@@ -157,7 +157,7 @@ function RouteComponent() {
               <div className="h-5"></div>
               <Heading level="h6"> ODRL CONTENT</Heading>
 
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2 mb-2">
                   <PolicyComponent 
                     policyItem={policy.permission}
                     variant={"permission"}
