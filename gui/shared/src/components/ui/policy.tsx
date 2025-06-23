@@ -2,6 +2,7 @@ import * as React from "react";
 import { cn } from "./../../lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Badge } from "./badge"
+import  Heading  from "./heading";
 
 const policyVariants = cva("gap-3 border px-3 py-2 rounded-md", {
   variants: {
@@ -12,6 +13,19 @@ const policyVariants = cva("gap-3 border px-3 py-2 rounded-md", {
     },
   },
 });
+
+const HeadingColor = ({variant}) => {
+    switch (variant) {
+        case "permission":
+            return "text-success-200";
+        case "obligation":
+            return "text-warn-300";
+        case "prohibition":
+            return "text-danger-400";
+        default:
+            return "text-white/60"; // Default color if no variant matches
+    }
+}
 
 
 export interface PolicyProps
@@ -24,6 +38,7 @@ const Policy = React.forwardRef<HTMLDivElement, PolicyProps>(
   ({ className, variant, children, ...props }, ref) => {
     return (
       <div className={cn(policyVariants({ variant, className }))} {...props}>
+       <Heading level="h6" className={`uppercase ${HeadingColor(variant)}`}>{variant}</Heading>
         {children}
       </div>
     );
@@ -37,6 +52,14 @@ return (
         </div>
     )
 }
+const PolicyHeading = ({  children, ...props}) => {
+return (
+        <div className={cn("flex " )}  {...props}>
+                {children}
+        </div>
+    )
+}
+
 const PolicyItem = ({  children, ...props}) => {
 return (
         <div className={cn("flex " )}  {...props}>
@@ -102,7 +125,7 @@ const PolicyConstraint = ({ type, className, children, ...props}) => {
 
 const PolicyConstraintsWrapper = ({children}) => {
     return (
-       <div className="flex flex-col gap-2"> 
+       <div className="flex flex-col gap-1"> 
        {children} 
        </div>
     )
@@ -111,6 +134,7 @@ const PolicyConstraintsWrapper = ({children}) => {
 export { Policy, 
     policyVariants,
     PolicyItemContainer, 
+    PolicyHeading,
     PolicyItem,
     PolicyItemKey,
     PolicyItemValue, 

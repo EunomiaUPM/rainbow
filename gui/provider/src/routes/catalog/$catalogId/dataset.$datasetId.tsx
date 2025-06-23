@@ -35,17 +35,7 @@ import {
   ListItemDate,
 } from "shared/src/components/ui/list.tsx";
 import { Badge } from "shared/src/components/ui/badge";
-import {
-  Policy,
-  policyVariants,
-  PolicyConstraint,
-  PolicyItemContainer,
-  PolicyItem,
-  PolicyItemKey,
-  PolicyItemValue,
-  PolicyConstraintsContainer,
-  PolicyConstraintsWrapper,
-} from "shared/src/components/ui/policy";
+import PolicyComponent from "shared/src/components/ui/PolicyComponent.tsx";
 
 type Inputs = {
   odrl: string;
@@ -142,7 +132,7 @@ function RouteComponent() {
         <Heading level="h5"> ODRL Policies </Heading>
         <div className="container-policies flex flex-wrap gap-4">
           {policies.map((policy) => (
-            <List className=" border border-white/30 bg-white/10 px-4 py-2 rounded-md ">
+            <List className=" border border-white/30 bg-white/10 px-4 py-2 rounded-md justify-start">
               <div className="flex">
                 <Heading level="h5" className="flex gap-3">
                   <div>Policy with ID</div>
@@ -153,169 +143,34 @@ function RouteComponent() {
               </div>
               <ListItem>
                 <ListItemKey>Policy Target</ListItemKey>
-                <p>{policy.target?.slice(9)}</p>
+                <p>{policy["@type"]}</p>
               </ListItem>
 
               <ListItem>
                 <ListItemKey> Profile</ListItemKey>
-                <p> {JSON.stringify(policy.profile)}</p>
+                <p className="whitespace-normal"> {JSON.stringify(policy.profile)}</p>
               </ListItem>
               <ListItem>
                 <ListItemKey> Target</ListItemKey>
-                <p> {JSON.stringify(policy.target.slice(9, 29) + "[...]")}</p>
+               <p>  {policy.target.slice(9)}</p>
               </ListItem>
               <div className="h-5"></div>
               <Heading level="h6"> ODRL CONTENT</Heading>
 
               <div className="flex flex-col gap-2">
-                {/* {policy.permission.map((perm) => ( */}
-                  <Policy className="" variant="permission">
-                    <Heading level="h6" className="uppercase text-success-200">
-                      permission
-                    </Heading>
-                    {policy.permission.length === 0 ? (
-                      <div> No permissions </div>
-                    ) : (
-                      <div className="flex flex-col">
-                        {policy.permission.map((perm) => (
-                          <PolicyItemContainer>
-                            <PolicyItem>
-                              <PolicyItemKey>action:</PolicyItemKey>
-                              <PolicyItemValue>{perm.action}</PolicyItemValue>
-                            </PolicyItem>
-                            <PolicyItem>
-                              <PolicyItemKey>constraints:</PolicyItemKey>
-                              <PolicyConstraintsContainer>
-                                <PolicyConstraint type="rightOperand">
-                                  {" "}
-                                  {JSON.stringify(
-                                    perm.constraint[0].rightOperand
-                                  )}
-                                </PolicyConstraint>
-                                <PolicyConstraint type="operator">
-                                  {" "}
-                                  {JSON.stringify(perm.constraint[0].operator)}
-                                </PolicyConstraint>
-                                <PolicyConstraint type="leftOperand">
-                                  {JSON.stringify(
-                                    perm.constraint[0].leftOperand
-                                  )}
-                                </PolicyConstraint>
-                              </PolicyConstraintsContainer>
-                            </PolicyItem>
-                          </PolicyItemContainer>
-                        ))}
-                      </div>
-                    )}
-                  </Policy>
-                
-                <Policy className="" variant="obligation">
-                  <Heading level="h6" className="uppercase text-warn-300">
-                    obligation
-                  </Heading>
-
-                  {/* COMPROBACIÓN SI HAY ALGUNA OBLIGACIÓN (ARRAY VACIO O NO) */}
-                  {policy.obligation.length === 0 ? (
-                    <div> No obligations </div>
-                  ) : (
-                         <div className="flex flex-col">
-                      {policy.obligation.map((obl) => (
-                        <PolicyItemContainer>
-                          <PolicyItem>
-                            <PolicyItemKey>action:</PolicyItemKey>
-                            <PolicyItemValue>{obl.action}</PolicyItemValue>
-                          </PolicyItem>
-                          <PolicyItem>
-                            <PolicyItemKey>constraints:</PolicyItemKey>
-                            <PolicyConstraintsWrapper>
-                              {/* comprobar que el constraint no sea null o un array vacio. 
-                                Si no lo es, pintar los rightoperand, leftoperand, operator */}
-                              {obl.constraint == null ||
-                              obl.constraint.length === 0 ? (
-                                "No constraints"
-                              ) : (
-                                <>
-                                {obl.constraint.map((constr) => (
-                                <PolicyConstraintsContainer>
-                                    {console.log(constr, "brrrr brrrr")}
-                                  <PolicyConstraint type="rightOperand">
-                                    {JSON.stringify(
-                                      constr.rightOperand
-                                    )}
-                                  </PolicyConstraint>
-                                  <PolicyConstraint type="operator">
-                                    {JSON.stringify(constr.operator)}
-                                  </PolicyConstraint>
-                                  <PolicyConstraint type="leftOperand">
-                                    {JSON.stringify(
-                                      constr.leftOperand
-                                    )}
-                                  </PolicyConstraint>
-                                </PolicyConstraintsContainer>
-                                ))}
-                                </>
-                              )}
-                            </PolicyConstraintsWrapper>
-                          </PolicyItem>
-                        </PolicyItemContainer>
-                      ))}
-                    </div>
-                  )}
-                </Policy>
-
-                <Policy className="" variant="prohibition">
-                  <Heading level="h6" className="uppercase text-danger-400">
-                    prohibition
-                
-                  </Heading>
-
-                  {/* COMPROBACIÓN SI HAY ALGUNA PROHIBICIÓN (ARRAY VACIO O NO) */}
-                  {policy.prohibition.length === 0 ? (
-                    <div> No prohibitions </div>
-                  ) : (
-                         <div className="flex flex-col">
-                      {policy.prohibition.map((prohib) => (
-                        <PolicyItemContainer>
-                          {/* // <div> {JSON.stringify(policy.prohibition)}</div> */}
-                          <PolicyItem>
-                            <PolicyItemKey>action:</PolicyItemKey>
-                            <PolicyItemValue>{prohib.action}</PolicyItemValue>
-                          </PolicyItem>
-                          <PolicyItem>
-                            <PolicyItemKey>constraints:</PolicyItemKey>
-                            <PolicyConstraintsWrapper>
-                              {/* comprobar que el constraint no sea null o un array vacio. 
-                                Si no lo es, pintar los rightoperand, leftoperand, operator */}
-                              {prohib.constraint == null ||
-                              prohib.constraint.length === 0 ? (
-                                "No constraints"
-                              ) : (
-                                <>
-                                  {/* {console.log(prohib.constraint, " prohib constr")} */}
-                                  {prohib.constraint.map((constr) => (
-                                    <PolicyConstraintsContainer>
-                                      <PolicyConstraint type="rightOperand">
-                                        {/* {console.log(constr, "constrrrr")} */}
-                                        {JSON.stringify(constr.rightOperand)}
-                                      </PolicyConstraint>
-                                      <PolicyConstraint type="operator">
-                                        {" "}
-                                        {JSON.stringify(constr.operator)}
-                                      </PolicyConstraint>
-                                      <PolicyConstraint type="leftOperand">
-                                        {JSON.stringify(constr.leftOperand)}
-                                      </PolicyConstraint>
-                                    </PolicyConstraintsContainer>
-                                  ))}
-                                </>
-                              )}
-                            </PolicyConstraintsWrapper>
-                          </PolicyItem>
-                        </PolicyItemContainer>
-                      ))}
-                    </div>
-                  )}
-                </Policy>
+                  <PolicyComponent 
+                    policyItem={policy.permission}
+                    variant={"permission"}
+                   />
+                  <PolicyComponent 
+                    policyItem={policy.obligation}
+                    variant={"obligation"}
+                   />
+                  
+                  <PolicyComponent 
+                    policyItem={policy.prohibition}
+                    variant={"prohibition"}
+                   />
               </div>
             </List>
           ))}

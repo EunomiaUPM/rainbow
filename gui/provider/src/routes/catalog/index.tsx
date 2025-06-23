@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import dayjs from "dayjs";
-import { ExternalLink } from "lucide-react";
+import { ArrowRight, ExternalLink } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -11,7 +11,12 @@ import {
 } from "shared/src/components/ui/table";
 import { useGetCatalogs } from "shared/src/data/catalog-queries.ts";
 import Heading from "shared/src/components/ui/heading.tsx";
-import { List, ListItem, ListItemKey, ListItemDate } from "shared/src/components/ui/list.tsx";
+import {
+  List,
+  ListItem,
+  ListItemKey,
+  ListItemDate,
+} from "shared/src/components/ui/list.tsx";
 import { Button } from "shared/src/components/ui/button.tsx";
 import { Input } from "shared/src/components/ui/input.tsx";
 import { Badge } from "shared/src/components/ui/badge";
@@ -48,7 +53,9 @@ const RouteComponent = () => {
           </ListItem>
           <ListItem>
             <ListItemKey>Catalog creation date</ListItemKey>
-            <ListItemDate>{dayjs(catalogs.issued).format("DD/MM/YYYY - HH:mm")}</ListItemDate>
+            <ListItemDate>
+              {dayjs(catalogs.issued).format("DD/MM/YYYY - HH:mm")}
+            </ListItemDate>
           </ListItem>
         </List>
       </div>
@@ -76,7 +83,6 @@ const RouteComponent = () => {
                 </TableCell>
                 <TableCell>
                   <ListItemDate> 23/6/25 16:34 </ListItemDate>
-                 
                 </TableCell>
                 <TableCell>
                   {" "}
@@ -90,28 +96,15 @@ const RouteComponent = () => {
                     {catalogItem.participantId.slice(9, 29) + "[...]"}
                   </Badge>
                 </TableCell>
-                
-
-                {/*<TableCell>*/}
-                {/*    <Button>*/}
-                {/*        <Link*/}
-                {/*            to="/catalog/$catalogId"*/}
-                {/*            // params={{catalogId: catalog["@id"]}}*/}
-                {/*        >*/}
-                {/*            Create policy*/}
-                {/*        </Link>*/}
-                {/*    </Button>*/}
-                {/*</TableCell>*/}
                 <TableCell>
-                  <Button>
-                    <Link
-                      to="/catalog/$catalogId"
-                      params={{ catalogId: catalogItem["@id"] }}
-                    >
-                      See catalog
-                    
-                    </Link>
-                  </Button>
+                  <Link
+                    to="/catalog/$catalogId"
+                    params={{ catalogId: catalogItem["@id"] }}
+                  >
+                    <Button variant={'link'}>See catalog
+                      <ArrowRight />
+                    </Button>
+                  </Link>
                 </TableCell>
               </TableRow>
             ))}

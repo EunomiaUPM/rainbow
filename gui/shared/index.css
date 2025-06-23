@@ -29,7 +29,7 @@
 
     html,
     body {
-        @apply font-source leading-snug min-h-full text-base bg-background text-brand-sky;
+        @apply font-source leading-snug min-h-[100dvh] text-base bg-background text-brand-sky;
         font-family: "Source Sans 3", "Source Sans Pro", sans-serif;
     }
 
@@ -135,7 +135,8 @@
 }
 
 .main-container {
-    @apply mt-16 mb-10 min-w-[960px] xl:min-w-[960px] 2xl:min-w-[1260px] 3xl:min-w-[1420px] 4xl:min-w-[1560px]
+    @apply w-full p-16 max-w-screen-xl; 
+    /* @apply mt-16 mb-10 min-w-[960px] xl:min-w-[960px] 2xl:min-w-[1260px] 3xl:min-w-[1420px] 4xl:min-w-[1560px]; */
 }
 
 
@@ -157,4 +158,9 @@
             margin-top: -46px
         }
     }
+}
+
+.flexColsLayout {
+    @apply flex h-full gap-8 [&>div]:w-full ; 
+    @apply [&>*:first-child]:pr-8 [&>*:first-child]:border-r [&>*:first-child]:border-r-stroke;
 }

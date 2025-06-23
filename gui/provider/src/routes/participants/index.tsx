@@ -13,6 +13,7 @@ import { PubSubContext } from "shared/src/context/PubSubContext.tsx";
 import { Button } from "shared/src/components/ui/button.tsx";
 import { Input } from "shared/src/components/ui/input.tsx";
 import { Badge } from "shared/src/components/ui/badge";
+import { ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/participants/")({
   component: RouteComponent,
@@ -22,9 +23,9 @@ function RouteComponent() {
   const { data: participants } = useGetParticipants();
   const { lastHighLightedNotification } = useContext(PubSubContext)!;
 
-//     participants.map((participant) => {
-//     console.log(participant.participant_type);
-//   });
+  //     participants.map((participant) => {
+  //     console.log(participant.participant_type);
+  //   });
 
   return (
     <div>
@@ -68,14 +69,15 @@ function RouteComponent() {
               </TableCell>
               {/* <TableCell>{JSON.stringify(participant.extra_fields)}</TableCell> */}
               <TableCell>
-                <Button variant="default">
-                  <Link
-                    to="/participants/$participantId"
-                    params={{ participantId: participant.participant_id }}
-                  >
+                <Link
+                  to="/participants/$participantId"
+                  params={{ participantId: participant.participant_id }}
+                >
+                  <Button variant="link">
                     See participant
-                  </Link>
-                </Button>
+                    <ArrowRight/>
+                  </Button>
+                </Link>
               </TableCell>
             </TableRow>
           ))}

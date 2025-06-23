@@ -2,7 +2,10 @@ import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 
-import { cn } from "@/lib/utils";
+// @ts-ignore
+import {cn} from "@/lib/utils"
+// @ts-ignore
+
 import { DragHandleVerticalIcon } from "@radix-ui/react-icons";
 
 const badgeVariants = cva(
@@ -29,14 +32,15 @@ const badgeVariants = cva(
         ACCEPTED: "bg-process text-process-300 [&>span]:bg-process-400",
         STARTED: "bg-process text-process-300 [&>span]:bg-process-400",
         OFFERED: "bg-warn text-warn-300 [&>span]:bg-warn-400",
-         REQUESTED: "bg-warn text-warn-300 [&>span]:bg-warn-400",
-        FINALIZED: "bg-success text-success-300 [&>span]:bg-success-400",
+        REQUESTED: "bg-warn text-warn-300 [&>span]:bg-warn-400",
+        AGREED: "bg-success text-success-300 [&>span]:bg-success-400",
+        FINALIZED: "bg-success text-success-300 [&>span]:bg-success-400", // CN
         COMPLETED: "bg-success text-success-300 [&>span]:bg-success-400",
         SUSPENDED: "bg-pause text-pause-300 [&>span]:bg-pause-400",
         PAUSE: "bg-pause text-pause-300 [&>span]:bg-pause-400",
         TERMINATED: "bg-danger text-danger-300 [&>span]:bg-danger-400",
       },
-      role: { // no están funcionando
+      role: {
         Provider: "bg-roles-provider/30",
         Consumer: "bg-roles-consumer/30",
         Business: "bg-roles-business/30",
@@ -64,7 +68,8 @@ function Badge({
   className,
   variant,
   state,
-  size, role,
+  size,
+  role,
   asChild = false,
   children,
   ...props
