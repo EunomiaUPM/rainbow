@@ -147,10 +147,6 @@
     @apply h-fit flex flex-col gap-8 w-full ;
     /* @apply lg:flex-row;  */
 }
-.flexColsLayout {
-    @apply flex h-full gap-8 [&>div]:w-full ; 
-    @apply [&>*:first-child]:pr-8 [&>*:first-child]:border-r [&>*:first-child]:border-r-stroke;
-}
 
 
 /*POLICY*/
@@ -166,6 +162,13 @@
         }
     }
 }
+
+
+.flexColsLayout {
+    @apply flex !h-fit gap-4 [&>div]:w-full [&>div]:min-w-fit; 
+    /* @apply [&>*:first-child]:border-r [&>*:first-child]:border-r-stroke; */
+}
+
 .policy-item-create {
     @apply first:mt-3 border-t pt-3  pb-5 border-white/20 last:pb-2
 }

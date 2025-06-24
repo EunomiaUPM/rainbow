@@ -9,7 +9,7 @@ import {cn} from "@/lib/utils"
 import { DragHandleVerticalIcon } from "@radix-ui/react-icons";
 
 const badgeVariants = cva(
-  "px-2 py-0.5 w-fit inline-flex items-center justify-center bg-white/10 font-semibold rounded-sm border whitespace-nowrap shrink-0 gap-1 focus-visible:ring focus-visible:ring-ring/50 focus-visible:ring-[3px] transition-all overflow-hidden",
+  "px-2 py-0.5 w-fit max-w-full inline-flex justify-start items-center bg-white/10 font-semibold rounded-sm border whitespace-nowrap shrink-0 gap-1 focus-visible:ring focus-visible:ring-ring/50 focus-visible:ring-[3px] transition-all overflow-hidden",
   {
     variants: {
       variant: {
@@ -86,7 +86,7 @@ function Badge({
       {...props}
     >
       {/* Mete un circulito si la variable es de tipo status y le asigna el color asignado al estado correspondiente */}
-      {showDot && <span className={cn("w-2 h-2 rounded-full mr-1")} />}
+      {showDot && <span className={cn("w-2 h-2 rounded-full mr-1 mb-[2px]")} />}
       {children}
     </Comp>
   );

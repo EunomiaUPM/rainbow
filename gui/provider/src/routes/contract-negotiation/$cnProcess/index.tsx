@@ -5,11 +5,21 @@ import {
   useGetContractNegotiationProcessesByCNID,
 } from "shared/src/data/contract-queries.ts";
 import { ContractNegotiationActions } from "shared/src/components/ContractNegotiationActions.tsx";
-import { List, ListItem, ListItemKey } from "shared/src/components/ui/list.tsx";
+import { List, ListItem, ListItemKey, ListItemDate } from "shared/src/components/ui/list.tsx";
+import {
+  MessageBody,
+  MessageContent,
+  RoleHeader,
+  MessageLog,
+  MessageMeta,
+  MessageTimestamp,
+  MessageTitle,
+} from "shared/src/components/ui/message.tsx";
 import Heading from "../../../../../shared/src/components/ui/heading.tsx";
 import { Badge } from "shared/src/components/ui/badge.tsx";
 import {
   Drawer,
+  DrawerBody,
   DrawerClose,
   DrawerContent,
   DrawerFooter,
@@ -17,8 +27,9 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@./../../shared/src/components/ui/drawer.tsx";
-import { CnProcessMessageContainer } from "@./../../shared/src/components/CnProcessMessageContainer.tsx"
 import { Button } from "shared/src/components/ui/button.tsx";
+import { useEffect } from "react";
+import CnProcessMessageComponent from "@./../../shared/src/components/CnProcessMessageComponent.tsx";
 
 const RouteComponent = () => {
   let addSpacesFormat = (text: string) => {
@@ -29,6 +40,9 @@ const RouteComponent = () => {
   const process = data as CNProcess;
   const { data: cnMessages } =
     useGetContractNegotiationMessagesByCNID(cnProcess);
+  useEffect(() => {
+    console.log("📨 cnMessages:", cnMessages);
+  }, [cnMessages]);
 
   return (
     <div className="space-y-4">
@@ -56,8 +70,8 @@ const RouteComponent = () => {
             </Badge>
           </ListItem>
           <ListItem>
-            <ListItemKey>CreatedAt</ListItemKey>
-            <p>{dayjs(process.created_at).format("DD/MM/YYYY - HH:mm")}</p>
+            <ListItemKey>Created at</ListItemKey>
+            <ListItemDate>{dayjs(process.created_at).format("DD/MM/YYYY - HH:mm")}</ListItemDate>
           </ListItem>
         </List>
       </div>
@@ -74,93 +88,18 @@ const RouteComponent = () => {
           <DrawerContent>
             <DrawerHeader>
               <DrawerTitle>
-                <Heading level="h5"  className="text-current">
+                <Heading level="h5" className="text-current">
                   Contract negotiation Messages
                 </Heading>
               </DrawerTitle>
             </DrawerHeader>
-            <div className="bg-white/5  rounded-md px-6 py-4">
+            <DrawerBody>
+              {/* New message subcomponent */}
               {cnMessages.map((message) => (
-                <CnProcessMessageContainer key={message.cn_message_id} message={message} />
-            //     <div
-            //       className={`my-4 text-sm
-            //    ${message.from === "Provider" ? "pr-12" : "pl-12"}
-            // `}
-            //     >
-            //       <div
-            //         className={`flex w-full
-            //   ${message.from === "Provider" ? "justify-start" : "justify-end"}
-            //     `}
-            //       >
-            //         <div
-            //           className={`uppercase text-18 px-2 font-medium rounded-t-sm ${
-            //             message.from === "Provider"
-            //               ? "bg-roles-provider/20 ml-1 text-roles-provider "
-            //               : "bg-roles-consumer/20 mr-1 text-roles-consumer"
-            //           }`}
-            //         >
-            //           {message.from}
-            //         </div>
-            //       </div>
-            //       <div
-            //         className={` w-full px-4 py-3 rounded-md rounded-b-xl border
-            //   ${
-            //     message.from === "Provider"
-            //       ? "bg-roles-provider/10 border-roles-provider/50"
-            //       : "bg-roles-consumer/10 border-roles-consumer/50"
-            //   }
-            //   `}
-            //       >
-            //         <div className="text-20">
-            //           {addSpacesFormat(message._type)}{" "}
-            //         </div>
-            //         <p className="text-gray-100/50 mb-3">
-            //           <i>
-            //             {dayjs(message.created_at).format("DD/MM/YYYY - HH:mm")}
-            //           </i>
-            //         </p>
-            //         <div
-            //           className="flex gap-3 mb-1  text-white/60 "
-            //           key={message.cn_message_id.slice(9, 60)}
-            //         >
-            //           <p className="font-bold  min-w-40  ">
-            //             Contract Message Id{" "}
-            //           </p>
-            //           <p className=" w-full">
-            //             {message.cn_message_id.slice(9, 60)}
-            //           </p>
-            //         </div>
-            //         <div
-            //           className="flex gap-3 mb-1  text-white/60 "
-            //           key={message.cn_message_id.slice(9, 60)}
-            //         >
-            //           <p className="font-bold  min-w-40  ">
-            //             Contract Process Id{" "}
-            //           </p>
-            //           <p className=" w-full">
-            //             {message.cn_process_id.slice(9, 60)}
-            //           </p>
-            //         </div>
-            //         <div
-            //           className="flex flex-col gap-3 "
-            //           key={message.cn_message_id.slice(9, 60)}
-            //         >
-            //           <p className="font-bold min-w-40  text-white/60 ">
-            //             Content:{" "}
-            //           </p>
-            //           <div className=" w-full break-all">
-            //             {/* Codigo de content formateado */}
-            //             <pre className="p-4 rounded-lg break-all text-[11px] bg-black/70 text-secondary-400 break-all">
-            //               <code className="whitespace-pre-wrap break-all">
-            //                 {JSON.stringify(message.content, null, 2)}
-            //               </code>
-            //             </pre>
-            //           </div>
-            //         </div>
-            //       </div>
-            //     </div>
+                <CnProcessMessageComponent message={message} />
               ))}
-            </div>
+              {/* / New message subcomponent */}
+            </DrawerBody>
             <DrawerFooter>
               <DrawerClose>
                 <Button variant="ghost">Hide Messages</Button>

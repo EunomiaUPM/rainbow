@@ -37,14 +37,14 @@ export const ContractNegotiationActions = ({
       tiny: {
         true: "inline-flex items-center ",
         false:
-          " w-full p-6 pt-4 fixed bottom-0 left-0 md:left-[223px] bg-primary-950/10 border border-t-stroke [&>*>button]:min-w-20",
+          "w-full p-6 fixed bottom-0 left-0 md:left-[223px] bg-primary-950/10 border border-t-stroke [&>*>button]:min-w-20",
       },
     },
   });
 
   return (
     <div className={containerClassName({ tiny })}>
-      <h2 className={h2ClassName({ tiny })}>Actions</h2>
+      {/* <h2 className={h2ClassName({ tiny })}></h2> */}
       {process.state === "REQUESTED" && (
         <div className="space-x-2">
           {role === "provider" && (
@@ -72,7 +72,7 @@ export const ContractNegotiationActions = ({
           {role === "consumer" && (
             <Dialog>
               <DialogTrigger asChild>
-                <Button size={tiny ? "sm" : ""}>Terminate</Button>
+                <Button variant="destructive" size={tiny ? "sm" : ""}>Terminate</Button>
               </DialogTrigger>
               <ContractNegotiationTerminationDialog process={process} />
             </Dialog>
@@ -99,7 +99,7 @@ export const ContractNegotiationActions = ({
               </Dialog>
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button size={tiny ? "sm" : ""}>Request</Button>
+                  <Button variant="outline"  size={tiny ? "sm" : ""}>Request</Button>
                 </DialogTrigger>
                 <ContractNegotiationRequestDialog process={process} />
               </Dialog>

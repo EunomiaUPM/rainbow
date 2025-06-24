@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "shared/src/components/ui/table.tsx";
 import dayjs from "dayjs";
-import { ArrowRight, ExternalLink } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useGetPoliciesByDatasetId } from "shared/src/data/policy-queries.ts";
 import {
   Form,
@@ -43,7 +43,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "shared/src/components/ui/accordion";
-import { Separator } from "shared/src/components/ui/separator";
 import {
   Select,
   SelectContent,
@@ -86,7 +85,7 @@ function RouteComponent() {
   return (
     <div className="space-y-4">
       <Heading level="h3" className="flex gap-2 items-center">
-        Dataset info with id
+        Dataset with id
         <Badge variant="info" size="lg">
           {" "}
           {dataset["@id"].slice(9, 29) + "[...]"}

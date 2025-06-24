@@ -3,7 +3,7 @@ import { useGetAgreementById } from "shared/src/data/agreement-queries";
 import { TableCell } from "shared/src/components/ui/table.tsx";
 import dayjs from "dayjs";
 import Heading from "shared/src/components/ui/heading";
-import { List, ListItem, ListItemKey } from "shared/src/components/ui/list";
+import { List, ListItem, ListItemKey, ListItemDate } from "shared/src/components/ui/list";
 import { Badge } from "shared/src/components/ui/badge.tsx";
 import {
   Policy,
@@ -84,7 +84,7 @@ function RouteComponent() {
             </ListItem>
             <ListItem>
               <ListItemKey>Created at</ListItemKey>
-              {dayjs(agreement.created_at).format("DD/MM/YYYY - HH:mm")}
+              <ListItemDate>{dayjs(agreement.created_at).format("DD/MM/YYYY - HH:mm")}</ListItemDate>
             </ListItem>
           </List>
         </div>
@@ -146,7 +146,7 @@ function RouteComponent() {
                 policyItem={agreement.agreement_content.obligation}
                 variant={"obligation"}
             />
-             {console.log(agreement.agreement_content.obligation, "brrummm brum")}
+             {/* {console.log(agreement.agreement_content.obligation, "")} */}
              <PolicyComponent
                 policyItem={agreement.agreement_content.prohibition}
                 variant={"prohibition"}

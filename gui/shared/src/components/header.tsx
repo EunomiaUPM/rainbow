@@ -45,7 +45,7 @@ const Header = () => {
     console.log(`Path ${index}:`, path);
   });
   paths.splice(0, 1); // Eliminar el primer elemento vacío
-  console.log(formatPath(paths[0]), " formatted path");
+  // console.log(formatPath(paths[0]), " formatted path");
   return (
     <div className=" bg-background  w-full border-b py-1.5 z-50 border-stroke px-4 flex justify-between items-center">
       <Breadcrumb>
@@ -54,7 +54,9 @@ const Header = () => {
             <>
             {/* Este condicional es importante porque sino sale un breadcrumb aislado
             que no lleva a ninguna parte de dataset o dataservice. No pinta este breadcrumb */}
-            { (path === "dataset" || path === "data-service") ? "" :
+            {/* Sólo en consumer aplica el mismo principio para catalog (Provider.-catalog solo existe 
+            en consumer) Si paths contiene provider-catalog, entonces "catalog" no pinta un breadcrumb */}
+            { (path === "dataset" || path === "data-service" || paths.includes("provider-catalog") && path == "catalog") ? "" :
             <>
               <BreadcrumbItem key={index}>
                 <BreadcrumbLink

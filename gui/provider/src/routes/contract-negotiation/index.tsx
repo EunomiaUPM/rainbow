@@ -14,6 +14,7 @@ import {
   DrawerContent,
   DrawerFooter,
   DrawerHeader,
+  DrawerBody,
   DrawerTitle,
   DrawerTrigger,
 } from "shared/src/components/ui/drawer";
@@ -26,7 +27,6 @@ import { useMemo } from "react";
 import { ArrowRight, Plus } from "lucide-react";
 import Heading from "shared/src/components/ui/heading";
 import { RouteComponent as OfferForm } from "@/routes/contract-negotiation/offer";
-
 
 const RouteComponent = () => {
   const { data: cnProcesses } = useGetContractNegotiationProcesses();
@@ -50,7 +50,7 @@ const RouteComponent = () => {
           <DrawerTrigger>
             <Button>
               Create new offer
-              <Plus className="mb-1"/>
+              <Plus className="mb-1" />
             </Button>
           </DrawerTrigger>
           <DrawerContent>
@@ -61,15 +61,19 @@ const RouteComponent = () => {
                 </Heading>
               </DrawerTitle>
             </DrawerHeader>
-            <OfferForm/>
+            <DrawerBody>
+              <OfferForm />
+            </DrawerBody>
             <DrawerFooter>
               <DrawerClose className="flex justify-start gap-4">
-                <Button variant="ghost" className="w-40">Cancel</Button>
-                {/* <Button className="w-40">Send Offer</Button> */}
+                <Button variant="ghost" className="w-40">
+                  Cancel
+                </Button>
               </DrawerClose>
             </DrawerFooter>
           </DrawerContent>
-        </Drawer>{/* /Drawer Contract Offer*/}
+        </Drawer>
+        {/* /Drawer Contract Offer*/}
       </div>
       <Table className="text-sm">
         <TableHeader>

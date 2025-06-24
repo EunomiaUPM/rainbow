@@ -266,7 +266,7 @@ export const RouteComponent = () => {
   };
 
   return (
-    <div className="w-[500px] mx-auto py-4">
+    <div className="max-w-[500px] w-full m-auto">
       <Heading level="h3">New Contract Negotiation Offer</Heading>
       <Form {...form}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
