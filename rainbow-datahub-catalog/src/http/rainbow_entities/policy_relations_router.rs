@@ -23,6 +23,7 @@ use axum::routing::delete;
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use rainbow_common::protocol::contract::contract_odrl::OdrlPolicyInfo;
+use rainbow_common::protocol::contract::odrloffer_wrapper::OdrlOfferWrapper;
 use rainbow_db::datahub::repo::NewPolicyRelationModel;
 use rainbow_db::datahub::repo::PolicyRelationsRepo;
 use rainbow_db::datahub::repo::{NewPolicyTemplateModel, PolicyTemplatesRepo};
@@ -37,7 +38,6 @@ use serde_json::{json, to_value};
 use std::sync::Arc;
 use tracing::error;
 use tracing::info;
-use rainbow_common::protocol::contract::odrloffer_wrapper::OdrlOfferWrapper;
 
 #[derive(Debug, Deserialize)]
 pub struct CreatePolicyRelationRequest {
@@ -383,14 +383,14 @@ where
         match policy_templates_service.get_all_policy_templates(params.limit, params.page).await {
             Ok(templates) => {
                 info!("Policy templates obtenidas exitosamente");
-                (StatusCode::OK, Json(json!({ "templates": templates })))
+                (StatusCode::OK, Json(templates)).into_response()
             }
             Err(e) => {
                 error!("Error al obtener policy templates: {}", e);
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
                     Json(json!({ "error": e.to_string() })),
-                )
+                ).into_response()
             }
         }
     }
@@ -404,21 +404,21 @@ where
         match policy_templates_service.get_policy_template_by_id(id.clone()).await {
             Ok(Some(template)) => {
                 info!("Policy template encontrada exitosamente");
-                (StatusCode::OK, Json(json!({ "template": template })))
+                (StatusCode::OK, Json(template)).into_response()
             }
             Ok(None) => {
                 info!("Policy template no encontrada");
                 (
                     StatusCode::NOT_FOUND,
                     Json(json!({ "error": "Policy template not found" })),
-                )
+                ).into_response()
             }
             Err(e) => {
                 error!("Error al obtener policy template: {}", e);
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
                     Json(json!({ "error": e.to_string() })),
-                )
+                ).into_response()
             }
         }
     }
