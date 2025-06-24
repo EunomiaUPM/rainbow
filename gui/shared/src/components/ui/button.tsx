@@ -22,7 +22,7 @@ const buttonVariants = cva(
         secondary:
           "bg-secondary/70 text-secondary-foreground shadow-sm hover:bg-secondary/90",
         ghost: "text-brand-snow bg-foreground/10 hover:bg-foreground/20",
-        link: "!px-0 normal-case text-snow underline-offset-4 hover:underline", // ok
+        link: "!px-0 flex-no-wrap normal-case text-snow underline-offset-4 hover:underline", // ok
       },
       size: {
         default: "h-9 px-4 py-2",

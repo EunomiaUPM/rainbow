@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "shared/src/components/ui/table.tsx";
 import dayjs from "dayjs";
-import { ExternalLink } from "lucide-react";
+import { ArrowRight, ExternalLink } from "lucide-react";
 import { useGetPoliciesByDatasetId } from "shared/src/data/policy-queries.ts";
 import {
   Form,
@@ -110,7 +110,6 @@ function RouteComponent() {
                   </ListItemDate>
                 </TableCell>
                 <TableCell>
-                  <Button variant="default">
                     <Link
                       to="/catalog/$catalogId/data-service/$dataserviceId"
                       params={{
@@ -118,9 +117,11 @@ function RouteComponent() {
                         dataserviceId: distribution.accessService["@id"],
                       }}
                     >
+                  <Button variant="link">
                       See dataservice
-                    </Link>
+                      <ArrowRight />
                   </Button>
+                    </Link>
                 </TableCell>
               </TableRow>
             ))}
