@@ -10,6 +10,7 @@ import {
 } from "shared/src/components/ui/table.tsx";
 import {
   Drawer,
+  DrawerBody,
   DrawerClose,
   DrawerContent,
   DrawerFooter,
@@ -61,7 +62,9 @@ function RouteComponent() {
                 </Heading>
               </DrawerTitle>
             </DrawerHeader>
+            <DrawerBody>
             {/* <NewParticipantForm/> */}
+            </DrawerBody>
             <DrawerFooter>
               <DrawerClose className="flex justify-start gap-4">
                 <Button variant="ghost" className="w-40">

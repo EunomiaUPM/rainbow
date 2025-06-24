@@ -5,7 +5,12 @@ import {
   useGetTransferMessagesByProviderPid,
   useGetTransferProcessByProviderPid,
 } from "shared/src/data/transfer-queries.ts";
-import {List, ListItem, ListItemKey, ListItemDate} from "shared/src/components/ui/list.tsx";
+import {
+  List,
+  ListItem,
+  ListItemKey,
+  ListItemDate,
+} from "shared/src/components/ui/list.tsx";
 import Heading from "shared/src/components/ui/heading.tsx";
 import { Badge } from "shared/src/components/ui/badge.tsx";
 import {
@@ -16,6 +21,7 @@ import {
 } from "../../../../../shared/src/components/ui/tabs.tsx";
 import {
   Drawer,
+  DrawerBody,
   DrawerClose,
   DrawerContent,
   DrawerFooter,
@@ -25,15 +31,16 @@ import {
 } from "@./../../shared/src/components/ui/drawer.tsx";
 import { Button } from "shared/src/components/ui/button.tsx";
 import { TransferProcessActions } from "shared/src/components/TransferProcessActions.tsx";
+import TransferProcessMessageComponent from "shared/src/components/TransferProcessMessageComponent.tsx";
 
 export const Route = createFileRoute("/transfer-process/$transferProcessId/")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  let addSpacesFormat = (text: string = "") => {
-    return text.replace(/(?!^)([A-Z])/g, " $1");
-  };
+  // let addSpacesFormat = (text: string = "") => {
+  //   return text.replace(/(?!^)([A-Z])/g, " $1");
+  // };
 
   const { transferProcessId } = Route.useParams();
   const { data: transferProcess } =
@@ -50,17 +57,12 @@ function RouteComponent() {
           <TabsTrigger value="data-plane">Data Plane</TabsTrigger>
         </TabsList>
         <TabsContent value="data-plane">
-        <div className=" w-full break-all">
-          <pre
-           
-            className="max-w-[500px] p-4 rounded-lg break-all text-[11px] bg-black/70 text-secondary-400 break-all"
-          >
-            <code
-             className="whitespace-pre-wrap break-all"
-            >
-              {JSON.stringify(dataPlane, null, 2)}
-            </code>
-          </pre>
+          <div className=" w-full break-all">
+            <pre className="max-w-[500px] p-4 rounded-lg break-all text-[11px] bg-black/70 text-secondary-400 break-all">
+              <code className="whitespace-pre-wrap break-all">
+                {JSON.stringify(dataPlane, null, 2)}
+              </code>
+            </pre>
           </div>
         </TabsContent>
         <TabsContent value="data-control">
@@ -110,7 +112,6 @@ function RouteComponent() {
               </ListItem>
             </List>
           </div>
-          {/* ssssssssssssssssssssssss */}
         </TabsContent>
       </Tabs>
 
@@ -128,109 +129,34 @@ function RouteComponent() {
             </DrawerTitle>
           </DrawerHeader>
           {/* Messages */}
-          <div className="bg-white/5  rounded-md px-8 py-4">
-            {transferMessages.map((transferMessage) => (
-              <div
-                className={`my-4 text-sm
-               ${transferMessage.from === "Provider" ? "pr-32" : "pl-32"}
-            `}
-              >
-                <div
-                  className={`flex w-full
-              ${
-                transferMessage.from === "Provider"
-                  ? "justify-start"
-                  : "justify-end"
-              }
-                `}
-                >
-                  <div
-                    className={`uppercase text-18 px-2 font-medium rounded-t-sm ${
-                      transferMessage.from === "Provider"
-                        ? "bg-roles-provider/20 ml-1 text-roles-provider "
-                        : "bg-roles-consumer/20 mr-1 text-roles-consumer"
-                    }`}
-                  >
-                    {transferMessage.from}
-                  </div>
-                </div>
-                <div
-                  className={` w-full px-4 py-3 rounded-md rounded-b-xl border
-              ${
-                transferMessage.from === "Provider"
-                  ? "bg-roles-provider/10 border-roles-provider/50"
-                  : "bg-roles-consumer/10 border-roles-consumer/50"
-              }
-              
-              `}
-                >
-                  <div className="text-24">
-                    {" "}
-                    {addSpacesFormat(transferMessage.message_type)}{" "}
-                  </div>
-                  <p className="text-gray-100/50 mb-3">
-                    <i>
-                      {" "}
-                      {dayjs(transferMessage.created_at).format(
-                        "DD/MM/YYYY - HH:mm"
-                      )}
-                    </i>
-                  </p>
-                  <div
-                    className="flex gap-3 mb-1  text-white/70 "
-                    key={transferMessage.id.slice(0, 20)}
-                  >
-                    <p className="font-bold  min-w-40  ">
-                      {" "}
-                      Transfer Message Id{" "}
-                    </p>
-                    <Badge variant={"info"}>
-                      {transferMessage.id.slice(9, 60)}
-                    </Badge>
-                  </div>
-                  <div
-                    className="flex gap-3  mb-1  text-white/70 "
-                    key={transferMessage.id.slice(9, 60)}
-                  >
-                    <p className="font-bold min-w-40"> Transfer Process Id </p>
-                    <Badge variant={"info"}>
-                      {" "}
-                      {transferMessage.transfer_process_id?.slice(9, 60)}
-                    </Badge>
-                  </div>
-                  <div
-                    className="flex flex-col gap-3 "
-                    key={transferMessage.id.slice(0, 20)}
-                  >
-                    <p className="font-bold min-w-40  text-white/70 ">
-                      {" "}
-                      Content:{" "}
-                    </p>
-                    <div className=" w-full break-all">
-                      {/* Codigo de content formateado */}
-                      <pre className="p-4 rounded-lg break-all text-[11px] bg-black/70 text-secondary-400 break-all">
-                        <code className="whitespace-pre-wrap break-all">
-                          {JSON.stringify(transferMessage.content, null, 2)}
-                        </code>
-                      </pre>
-                      {/* esto por si hace falta en algn momento dividir lo que pone en el content,
-                   pero por ahora no hace falta!!
-                <div className="flex "> 
-                  <p className="font-bold min-w-[9.4rem] "> Transfer Content: </p>
-                  <p> {transferMessage.content["@context"]} </p>
-                </div> 
-                <div> {transferMessage.content["@type"]}  </div>  
-                <div> {transferMessage.content.agreementId} </div> 
-                  <div className="flex "> 
-                  <p className="font-bold min-w-[9.4rem] "> Agreement ID </p>
-                  <Badge variant="info"> {transferMessage.content["@context"]} </Badge>
-                </div>  */}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
+          <DrawerBody>
+            {transferMessages.map((message) => {
+              // console.log(message);
+              return (
+                // <pre key={message.id}>{JSON.stringify(message, null, 2)}</pre>
+                <TransferProcessMessageComponent
+                  key={message.id}
+                  message={message}
+                />
+              );
+            })}
+          </DrawerBody>
+          {/* esto por si hace falta en algn momento dividir lo que pone en el
+          content, pero por ahora no hace falta!!
+          <div className="flex ">
+            <p className="font-bold min-w-[9.4rem] "> Transfer Content: </p>
+            <p> {transferMessage.content["@context"]} </p>
           </div>
+          <div> {transferMessage.content["@type"]} </div>
+          <div> {transferMessage.content.agreementId} </div>
+          <div className="flex ">
+            <p className="font-bold min-w-[9.4rem] "> Agreement ID </p>
+            <Badge variant="info">
+              {" "}
+              {transferMessage.content["@context"]}{" "}
+            </Badge>
+          </div> */}
+
           <DrawerFooter>
             <DrawerClose>
               <Button variant="ghost">Hide Messages</Button>

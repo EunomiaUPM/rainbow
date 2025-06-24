@@ -161,6 +161,6 @@
 }
 
 .flexColsLayout {
-    @apply flex h-full gap-8 [&>div]:w-full ; 
-    @apply [&>*:first-child]:pr-8 [&>*:first-child]:border-r [&>*:first-child]:border-r-stroke;
+    @apply flex !h-fit gap-4 [&>div]:w-full [&>div]:min-w-fit; 
+    /* @apply [&>*:first-child]:border-r [&>*:first-child]:border-r-stroke; */
 }

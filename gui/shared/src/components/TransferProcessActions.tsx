@@ -30,7 +30,7 @@ export const TransferProcessActions = ({
       tiny: {
         true: "inline-flex items-center ",
         false:
-          " w-full p-6 pt-4 fixed bottom-0 left-0 md:left-[223px] bg-primary-950/10 border border-t-stroke [&>*>button]:min-w-20",
+          "w-full p-6 pt-4 fixed bottom-0 left-0 md:left-[223px] bg-primary-950/10 border border-t-stroke [&>*>button]:min-w-20",
       },
     },
   });

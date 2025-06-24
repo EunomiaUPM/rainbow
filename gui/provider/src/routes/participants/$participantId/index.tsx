@@ -40,7 +40,7 @@ function RouteComponent() {
   const scopedListItemKeyClasses = 'basis-[28%]'
 
   return (
-    <div className="space-y-4 w-full">
+    <div className="w-full">
       {/* Page Header */}
       <Heading level="h3" className="flex items-center gap-3">
         Participant with id
@@ -56,7 +56,7 @@ function RouteComponent() {
             {" "}
             Participant info:{" "}
           </Heading>
-          <div className="w-fit bg-green-500/0">
+          <div className="w-full bg-green-500/0">
             <List className={"min-w-fit"}>
               <ListItem>
                 <ListItemKey className={scopedListItemKeyClasses}>Participant ID</ListItemKey>
@@ -81,10 +81,10 @@ function RouteComponent() {
             </List>
           </div>
         </div>
-        {/* <Separator orientation="vertical" className="bg-slate-100"/> */}
+        <Separator orientation="vertical"/>
 
         {/* Div Participant Tabs */}
-        <Tabs defaultValue="participant-agreements" className="w-[980px]">
+        <Tabs defaultValue="participant-agreements">
           <TabsList>
             <TabsTrigger value="participant-agreements">Agreements</TabsTrigger>
             {/* <TabsTrigger value="participant-transferences">Transferences</TabsTrigger> */}
@@ -94,8 +94,8 @@ function RouteComponent() {
             <div className=" bg-pink-500/0">
               {/* <h2>Agreements</h2> */}
               <Table className="text-sm">
-                <TableHeader className="w-fit">
-                  <TableRow className="w-fit">
+                <TableHeader>
+                  <TableRow >
                     <TableHead>Agreement Id</TableHead>
                     {/* <TableHead>Related Message</TableHead> */}
                     {/* <TableHead>Consumer Participant Id</TableHead> */}
