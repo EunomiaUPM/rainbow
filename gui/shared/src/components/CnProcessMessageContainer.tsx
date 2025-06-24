@@ -3,6 +3,8 @@ import dayjs from "dayjs";
 // @ts-ignore
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/badge";
+import Heading from "./ui/heading";
+import { ListItem, ListItemKey } from "./ui/list";
 // @ts-ignore
 
 type MessageType = {
@@ -17,6 +19,8 @@ type MessageType = {
 type ContractMessageProps = {
   message: MessageType;
 };
+// Styles
+const listItemPrimitiveResetClasses = " border-none p-0 m-0";
 
 /**
  * Testeo para crear componente que sirva para los message containers
@@ -34,7 +38,12 @@ export const CnProcessMessageContainer: React.FC<ContractMessageProps> = ({
   };
 
   return (
-    <div className={cn("my-4 text-sm", isProvider ? "pr-12" : "pl-12")}>
+    <div
+      className={cn(
+        "my-4 text-sm overflow-hidden",
+        isProvider ? "pr-12" : "pl-12"
+      )}
+    >
       {/* Header */}
       <div
         className={cn(
@@ -56,12 +65,14 @@ export const CnProcessMessageContainer: React.FC<ContractMessageProps> = ({
       {/* Message Body */}
       <div
         className={cn(
-          "w-full px-4 py-3 rounded-md rounded-b-xl border",
+          "w-full px-4 py-3 rounded-md rounded-b-xl border flex flex-col gap-2",
           `bg-roles-${baseColor}/10 border-roles-${baseColor}/50`
         )}
       >
         {/* Type */}
-        <div className="text-20">{addSpacesFormat(message._type)} </div>
+        <Heading level="h5" className=" mb-0 text-20 ">
+          {addSpacesFormat(message._type)}{" "}
+        </Heading>
 
         {/* Timestamp */}
         <p className="text-gray-100/50 mb-3">
@@ -69,28 +80,14 @@ export const CnProcessMessageContainer: React.FC<ContractMessageProps> = ({
         </p>
 
         {/* IDs */}
-        {/* <MessageRow
+        <MessageRow
           label="Contract Message Id"
           value={message.cn_message_id.slice(9, 60)}
-        /> */}
-        <div
-          className="flex gap-3 mb-1  text-white/70 "
-          key={message.cn_message_id.slice(0, 20)}
-        >
-          <p className="font-bold  min-w-40  ">Contract Message Id</p>
-          <Badge variant={"info"}>{message.cn_message_id.slice(9, 60)}</Badge>
-        </div>
-        {/* <MessageRow
+        />
+        <MessageRow
           label="Contract Process Id"
           value={message.cn_process_id.slice(9, 60)}
-        /> */}
-        <div
-          className="flex gap-3 mb-1  text-white/70 "
-          key={message.cn_process_id.slice(0, 20)}
-        >
-          <p className="font-bold  min-w-40  ">Contract Process Id</p>
-          <Badge variant={"info"}>{message.cn_process_id.slice(9, 60)}</Badge>
-        </div>
+        />
 
         {/* Content */}
         <div className="flex flex-col gap-3">
@@ -109,8 +106,10 @@ export const CnProcessMessageContainer: React.FC<ContractMessageProps> = ({
 };
 
 const MessageRow = ({ label, value }: { label: string; value: string }) => (
-  <div className="flex gap-3 mb-1 text-white/70">
-    <p className="font-bold min-w-40">{label}</p>
-    <p className="w-full">{value}</p>
-  </div>
+  <ListItem
+    className={"flex flex-row flex-wrap gap-1 mb-1 text-white/70" + listItemPrimitiveResetClasses}
+  >
+    <ListItemKey className="font-bold max-w-40">{label}</ListItemKey>
+    <Badge variant="info">{value}</Badge>
+  </ListItem>
 );

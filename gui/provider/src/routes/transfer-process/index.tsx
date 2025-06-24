@@ -35,9 +35,9 @@ function RouteComponent() {
       <Table className="text-sm">
         <TableHeader>
           <TableRow>
-            <TableHead>Transfer Process Provider pid</TableHead>
-            <TableHead>Transfer Consumer Provider pid</TableHead>
-            <TableHead>Agreement id</TableHead>
+            <TableHead>Provider pid</TableHead>
+            {/* <TableHead>Consumer pid</TableHead> */}
+            {/* <TableHead>Agreement id</TableHead> */}
             <TableHead>State</TableHead>
             <TableHead>Created At</TableHead>
             <TableHead>Updated At</TableHead>
@@ -53,16 +53,16 @@ function RouteComponent() {
                   {transferProcess.provider_pid.slice(9, 20) + "..."}
                 </Badge>
               </TableCell>
-              <TableCell>
+              {/* <TableCell>
                 <Badge variant={"info"}>
                   {transferProcess.consumer_pid?.slice(9, 20) + "..."}
                 </Badge>
-              </TableCell>
-              <TableCell>
+              </TableCell> */}
+              {/* <TableCell>
                 <Badge variant={"info"}>
                   {transferProcess.agreement_id?.slice(9, 20) + "..."}
                 </Badge>
-              </TableCell>
+              </TableCell> */}
               <TableCell>
                 <Badge
                   variant={"status"}
@@ -86,7 +86,7 @@ function RouteComponent() {
                     params={{ transferProcessId: transferProcess.provider_pid }}
                   >
                 <Button variant="link">
-                    See transference
+                    See details
                     <ArrowRight />
                 </Button>
                   </Link>

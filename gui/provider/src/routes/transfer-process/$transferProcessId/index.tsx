@@ -24,6 +24,7 @@ import {
   DrawerTrigger,
 } from "@./../../shared/src/components/ui/drawer.tsx";
 import { Button } from "shared/src/components/ui/button.tsx";
+import { TransferProcessActions } from "shared/src/components/TransferProcessActions.tsx";
 
 export const Route = createFileRoute("/transfer-process/$transferProcessId/")({
   component: RouteComponent,
@@ -70,13 +71,13 @@ function RouteComponent() {
           <div className="mb-4">
             <List>
               <ListItem>
-                <ListItemKey>Transfer Process Provider pid</ListItemKey>
+                <ListItemKey>Process pid</ListItemKey>
                 <Badge variant={"info"}>
                   {transferProcess.provider_pid.slice(9, 20) + "..."}
                 </Badge>
               </ListItem>
               <ListItem>
-                <ListItemKey>Transfer Consumer Provider pid</ListItemKey>
+                <ListItemKey>Consumer pid</ListItemKey>
                 <Badge variant={"info"}>
                   {transferProcess.consumer_pid.slice(9, 20) + "..."}
                 </Badge>
@@ -88,7 +89,7 @@ function RouteComponent() {
                 </Badge>
               </ListItem>
               <ListItem>
-                <ListItemKey>Transfer Process Provider pid</ListItemKey>
+                <ListItemKey>Transfer Process State</ListItemKey>
                 <Badge variant={"status"} state={transferProcess.state}>
                   {transferProcess.state}
                 </Badge>
@@ -232,7 +233,7 @@ function RouteComponent() {
           </div>
           <DrawerFooter>
             <DrawerClose>
-              <Button variant="outline">Hide Messages</Button>
+              <Button variant="ghost">Hide Messages</Button>
             </DrawerClose>
           </DrawerFooter>
         </DrawerContent>
@@ -325,6 +326,9 @@ function RouteComponent() {
           </TableBody>
         </Table> */}
       </div>
+
+      {/* ACTIONS */}
+      <TransferProcessActions process={transferProcess} tiny={false} />
     </div>
   );
 }

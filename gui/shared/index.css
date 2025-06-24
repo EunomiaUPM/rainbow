@@ -135,8 +135,8 @@
 }
 
 .main-container {
-    @apply w-full p-16 max-w-screen-xl; 
     /* @apply mt-16 mb-10 min-w-[960px] xl:min-w-[960px] 2xl:min-w-[1260px] 3xl:min-w-[1420px] 4xl:min-w-[1560px]; */
+    @apply w-full p-16 max-w-screen-xl;
 }
 
 

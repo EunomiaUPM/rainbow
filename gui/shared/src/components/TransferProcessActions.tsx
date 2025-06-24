@@ -7,7 +7,7 @@ import {
 import { Dialog, DialogTrigger } from "shared/src/components/ui/dialog";
 import { Button } from "shared/src/components/ui/button";
 import { TransferProcessStartDialog } from "shared/src/components/TransferProcessStartDialog";
-import { TransferProcessTerminationDialog } from "@/components/TransferProcessTerminationDialog.tsx";
+import { TransferProcessTerminationDialog } from "shared/src/components/TransferProcessTerminationDialog";
 
 export const TransferProcessActions = ({
   process,
@@ -28,8 +28,9 @@ export const TransferProcessActions = ({
   const containerClassName = cva("", {
     variants: {
       tiny: {
-        true: "inline-flex items-center",
-        false: "bg-gray-100 p-6",
+        true: "inline-flex items-center ",
+        false:
+          " w-full p-6 pt-4 fixed bottom-0 left-0 md:left-[223px] bg-primary-950/10 border border-t-stroke [&>*>button]:min-w-20",
       },
     },
   });
@@ -43,13 +44,13 @@ export const TransferProcessActions = ({
             <>
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button variant="destructive">Terminate</Button>
+                  <Button variant="destructive" size={tiny ? "sm" : ""}>Terminate</Button>
                 </DialogTrigger>
                 <TransferProcessTerminationDialog process={process} />
               </Dialog>
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button>Start</Button>
+                  <Button size={tiny ? "sm" : ""}>Start</Button>
                 </DialogTrigger>
                 <TransferProcessStartDialog process={process} />
               </Dialog>

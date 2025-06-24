@@ -17,7 +17,7 @@ const Table = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     className={
-      "relative overflow-auto bg-white/5 border border-foreground/25 rounded-md "
+      "relative w-full  overflow-auto bg-white/5 border border-foreground/25 rounded-md "
     }
   > {/* + tableWidthClasses*/}{" "}
     <table

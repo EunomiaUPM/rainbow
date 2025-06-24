@@ -41,61 +41,85 @@ export const TransferProcessTerminationDialog = ({
     });
   };
 
+  const scopedListItemKeyClasses = "basis-[33%]";
+
   return (
-    <DialogContent className="max-w-fit sm:max-w-fit">
+    <DialogContent className="max-w-fit sm:max-w-fit ">
       <DialogHeader>
         <DialogTitle>Transfer termination dialog</DialogTitle>
-        <DialogDescription className="break-all">
-          <span>You are about to terminate the transfer process.</span>
+        <DialogDescription className="max-w-full flex flex-wrap break-all">
+          <span className="max-w-full flex flex-wrap">
+            You are about to terminate the transfer process.
+          </span>
           {/* <span>{JSON.stringify(process)}</span> */}
         </DialogDescription>
       </DialogHeader>
+
       {/* List */}
-      <List className="min-w-fit">
+      <List className="min-w-fit w-full">
         <ListItem>
-          <ListItemKey>Provider Participant id:</ListItemKey>
+          <ListItemKey className={scopedListItemKeyClasses}>
+            Provider Participant id:
+          </ListItemKey>
           <Badge variant={"info"}>{process.provider_pid.slice(9, -1)}</Badge>
         </ListItem>
         <ListItem>
-          <ListItemKey>Consumer Participant id:</ListItemKey>
+          <ListItemKey className={scopedListItemKeyClasses}>
+            Consumer Participant id:
+          </ListItemKey>
           <Badge variant={"info"}>{process.consumer_pid.slice(9, -1)}</Badge>
         </ListItem>
         <ListItem>
-          <ListItemKey>Agreement id:</ListItemKey>
+          <ListItemKey className={scopedListItemKeyClasses}>
+            Agreement id:
+          </ListItemKey>
           <Badge variant={"info"}>{process.agreement_id.slice(9, -1)}</Badge>
         </ListItem>
         <ListItem className="flex flex-col gap-1 items-start flex-wrap">
-          <ListItemKey>Data plane id:</ListItemKey>
+          <ListItemKey className={scopedListItemKeyClasses}>
+            Data plane id:
+          </ListItemKey>
+          {/* No hace flex-col del resto de cosas por esta info que no cabe, pero funcionar funciona :) */}
           <Badge variant={"info"}>{process.data_plane_id.slice(9, -1)}</Badge>
         </ListItem>
         <ListItem>
-          <ListItemKey>Associated consumer:</ListItemKey>
+          <ListItemKey className={scopedListItemKeyClasses}>
+            Associated consumer:
+          </ListItemKey>
           <Badge variant={"info"}>
             {process.associated_consumer.slice(9, -1)}
           </Badge>
         </ListItem>
         <ListItem>
-          <ListItemKey>Current state:</ListItemKey>
+          <ListItemKey className={scopedListItemKeyClasses}>
+            Current state:
+          </ListItemKey>
           <Badge variant={"status"} state={process.state}>
             {process.state}
           </Badge>
         </ListItem>
         {process.state_attribute && (
           <ListItem>
-            <ListItemKey>State attribute:</ListItemKey>
+            <ListItemKey className={scopedListItemKeyClasses}>
+              State attribute:
+            </ListItemKey>
             <Badge variant={"status"} state={process.state_attribute}>
               {process.state_attribute}
             </Badge>
           </ListItem>
         )}
         <ListItem>
-          <ListItemKey>Created at:</ListItemKey>
+          <ListItemKey className={scopedListItemKeyClasses}>
+            Created at:
+          </ListItemKey>
           {process.created_at}
           {/* Formatear la fecha estaría bien */}
         </ListItem>
         {process.updated_at && (
           <ListItem>
-            <ListItemKey>Updated at:</ListItemKey>
+            <ListItemKey className={scopedListItemKeyClasses}>
+              Updated at:
+            </ListItemKey>
             {process.updated_at}
           </ListItem>
         )}
@@ -103,13 +127,15 @@ export const TransferProcessTerminationDialog = ({
       {/* / List content */}
       <Form {...form}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <DialogFooter  className="[&>*]:w-full">
+          <DialogFooter className="[&>*]:w-full">
             <DialogClose asChild>
-              <Button variant="outline" type="reset" >
+              <Button variant="ghost" type="reset">
                 Cancel
               </Button>
             </DialogClose>
-            <Button variant="destructive" type="submit">Terminate</Button>
+            <Button variant="destructive" type="submit">
+              Terminate
+            </Button>
           </DialogFooter>
         </form>
       </Form>

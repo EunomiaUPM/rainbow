@@ -28,17 +28,18 @@ const badgeVariants = cva(
         default: "",
         danger: "",
         warn: "",
-        ACTIVE: "bg-process text-process-300 [&>span]:bg-process-400",
-        ACCEPTED: "bg-process text-process-300 [&>span]:bg-process-400",
-        STARTED: "bg-process text-process-300 [&>span]:bg-process-400",
-        OFFERED: "bg-warn text-warn-300 [&>span]:bg-warn-400",
-        REQUESTED: "bg-warn text-warn-300 [&>span]:bg-warn-400",
-        AGREED: "bg-success text-success-300 [&>span]:bg-success-400",
+        ACTIVE: "bg-process text-process-300 [&>span]:bg-process-400", // Agreements
+        ACCEPTED: "bg-process text-process-300 [&>span]:bg-process-400", //
+        VERIFIED: "bg-process text-process-300 [&>span]:bg-process-400", // CN
+        STARTED: "bg-process text-process-300 [&>span]:bg-process-400", // Transfers
+        OFFERED: "bg-warn text-warn-300 [&>span]:bg-warn-400", // CN
+        REQUESTED: "bg-warn text-warn-300 [&>span]:bg-warn-400", // CN
+        AGREED: "bg-success text-success-300 [&>span]:bg-success-400", //
         FINALIZED: "bg-success text-success-300 [&>span]:bg-success-400", // CN
-        COMPLETED: "bg-success text-success-300 [&>span]:bg-success-400",
-        SUSPENDED: "bg-pause text-pause-300 [&>span]:bg-pause-400",
-        PAUSE: "bg-pause text-pause-300 [&>span]:bg-pause-400",
-        TERMINATED: "bg-danger text-danger-300 [&>span]:bg-danger-400",
+        COMPLETED: "bg-success text-success-300 [&>span]:bg-success-400", // Transfers
+        SUSPENDED: "bg-pause text-pause-300 [&>span]:bg-pause-400", //
+        PAUSE: "bg-pause text-pause-300 [&>span]:bg-pause-400", //
+        TERMINATED: "bg-danger text-danger-300 [&>span]:bg-danger-400", //
       },
       role: {
         Provider: "bg-roles-provider/30",

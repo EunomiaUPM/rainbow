@@ -19,7 +19,7 @@ const RouteComponent = () => {
             <div className="mb-6">
                 <Heading level="h3" className="flex gap-2 items-center">
                     {/* <ArrowLeft className="w-4"/> */}
-                   Contracts
+                   Contract Negotiations
                    
                 </Heading>
             </div>

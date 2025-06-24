@@ -53,7 +53,7 @@ export const TransferProcessStartDialog = ({
         </DialogDescription>
       </DialogHeader>
       {/* List */}
-      <List className="min-w-fit">
+      <List className="min-w-fit w-full">
         <ListItem>
           <ListItemKey>Provider Participant id:</ListItemKey>
           <Badge variant={"info"}>{process.provider_pid.slice(9, -1)}</Badge>
@@ -107,7 +107,7 @@ export const TransferProcessStartDialog = ({
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <DialogFooter className="[&>*]:w-full">
             <DialogClose asChild>
-              <Button variant="outline" type="reset">
+              <Button variant="ghost" type="reset">
                 Cancel
               </Button>
             </DialogClose>

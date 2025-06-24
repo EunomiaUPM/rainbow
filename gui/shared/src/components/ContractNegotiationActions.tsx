@@ -33,9 +33,9 @@ export const ContractNegotiationActions = ({
   const containerClassName = cva("", {
     variants: {
       tiny: {
-        true: "inline-flex items-center",
+        true: "inline-flex items-center ",
         false:
-          " w-full p-6 pt-4 fixed bottom-0 left-0 md:left-[223px] bg-primary-950/10 border border-t-stroke [&>button]:uppercase [&>button]md:min-w-40",
+          " w-full p-6 pt-4 fixed bottom-0 left-0 md:left-[223px] bg-primary-950/10 border border-t-stroke [&>*>button]:min-w-20",
       },
     },
   });
@@ -49,19 +49,19 @@ export const ContractNegotiationActions = ({
             <>
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button variant="destructive">Terminate</Button>
+                  <Button variant="destructive" size={tiny ? "sm" : ""}>Terminate</Button>
                 </DialogTrigger>
                 <ContractNegotiationTerminationDialog process={process} />
               </Dialog>
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button variant="outline">Offer</Button>
+                  <Button variant="outline" size={tiny ? "sm" : ""}>Offer</Button>
                 </DialogTrigger>
                 <ContractNegotiationOfferDialog process={process} />
               </Dialog>
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button>Agree</Button>
+                  <Button size={tiny ? "sm" : ""}>Agree</Button>
                 </DialogTrigger>
                 <ContractNegotiationAgreementDialog process={process} />
               </Dialog>

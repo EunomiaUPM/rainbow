@@ -34,41 +34,42 @@ function RouteComponent() {
           <TableHeader>
             <TableRow>
               <TableHead>Agreement Id</TableHead>
-              <TableHead>Related Message</TableHead>
-              <TableHead>
-                {/* <div className="flex gap-3">
-                  <p>Consumer Participant Id</p>
-                  <p> Provider Participant Id</p>
-              </div> */}
-              </TableHead>
-
+              {/* <TableHead>Related Message</TableHead> */}
+              <TableHead>Consumer Participant Id</TableHead>
+              {/* <TableHead>Provider Participant Id</TableHead> */}
               <TableHead>Status</TableHead>
-              <TableHead>CreatedAt</TableHead>
+              <TableHead>Created At</TableHead>
               <TableHead>Link</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {agreements.map((agreement) => (
-              <TableRow key={agreement.agreement_id.slice(9, 29)}>
+              <TableRow key={agreement.agreement_id.slice(0, 20)}>
+                {/* Agreement Id */}
                 <TableCell>
                   <Badge variant={"info"}>
-                    {agreement.agreement_id.slice(9, 29) + "[...]"}
+                    {agreement.agreement_id.slice(9, 20) + "..."}
                   </Badge>
                 </TableCell>
-                <TableCell>
-                  {agreement.cn_message_id?.slice(9, 29) + "[...]"}
-                </TableCell>
-                <TableCell>
-                  {/* <div className="flex flex-col gap-1">
+                {/* Related Message */}
+                {/* <TableCell>
                   <Badge variant={"info"}>
-                    {agreement.consumer_participant_id?.slice(0, 20) + "..."}
+                    {agreement.cn_message_id?.slice(9, 20) + "..."}
                   </Badge>
-              
+                </TableCell> */}
+                {/* Consumer Participant Id */}
+                <TableCell>
+                  <div className="flex flex-col gap-1">
+                    <Badge variant={"info"}>
+                      {agreement.consumer_participant_id?.slice(9, 20) + "..."}
+                    </Badge>
+                  </div>
+                </TableCell>
+                {/* 
                   <Badge variant={"info"}>
                     {agreement.provider_participant_id?.slice(0, 20) + "..."}
                   </Badge>
                   </div> */}
-                </TableCell>
                 <TableCell>
                   <Badge
                     variant={"status"}
@@ -86,7 +87,7 @@ function RouteComponent() {
                     params={{ agreementId: agreement.agreement_id }}
                   >
                     <Button variant="link">
-                      See agreement
+                      See details
                       <ArrowRight />
                     </Button>
                   </Link>
