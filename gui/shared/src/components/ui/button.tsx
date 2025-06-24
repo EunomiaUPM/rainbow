@@ -22,14 +22,16 @@ const buttonVariants = cva(
         secondary:
           "bg-secondary/70 text-secondary-foreground shadow-sm hover:bg-secondary/90",
         ghost: "text-brand-snow bg-foreground/10 hover:bg-foreground/20",
-        ghost_destructive: " text-white/20 hover:text-danger-500 hover:bg-foreground/10 p-0",
-        link: "!px-0 normal-case text-snow underline-offset-4 hover:underline", // ok
+        icon_destructive: " text-white/20 hover:text-danger-500 bg-foreground/5 hover:bg-foreground/10 p-0 ",
+        link: "!px-0 flex-no-wrap normal-case text-snow underline-offset-4 hover:underline", // ok
       },
       size: {
         default: "h-9 px-4 py-2",
-        sm: "h-8 rounded-md px-2 text-xs",
+        sm: "h-8 rounded-md px-3 text-xs",
+         xs: "h-7 rounded-md px-3 text-xs",
         lg: "h-10 rounded-md px-8",
         icon: "h-9 w-9 rounded-full p-0",
+        icon_sm: "h-7 w-7 rounded-full p-0",
       },
       policy: {
         default:"",

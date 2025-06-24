@@ -3,7 +3,12 @@ import dayjs from "dayjs";
 import { ExternalLink } from "lucide-react";
 import { Badge } from "shared/src/components/ui/badge";
 import Heading from "shared/src/components/ui/heading";
-import { List, ListItem, ListItemKey, ListItemDate } from "shared/src/components/ui/list";
+import {
+  List,
+  ListItem,
+  ListItemKey,
+  ListItemDate,
+} from "shared/src/components/ui/list";
 import {
   Table,
   TableBody,
@@ -18,6 +23,8 @@ import {
   useGetDatasetsByCatalogId,
 } from "shared/src/data/catalog-queries.ts";
 import { Button, buttonVariants } from "shared/src/components/ui/button";
+// Icons
+import { ArrowRight } from "lucide-react";
 
 const RouteComponent = () => {
   const { catalogId } = Route.useParams();
@@ -47,14 +54,16 @@ const RouteComponent = () => {
           </ListItem>
           <ListItem>
             <ListItemKey>Catalog creation date</ListItemKey>
-            <ListItemDate>{dayjs(catalog.issued).format("DD/MM/YYYY - HH:mm")}</ListItemDate>
+            <ListItemDate>
+              {dayjs(catalog.issued).format("DD/MM/YYYY - HH:mm")}
+            </ListItemDate>
           </ListItem>
         </List>
       </div>
 
       <div>
-          <Heading level="h5">Datasets</Heading>
-      
+        <Heading level="h5">Datasets</Heading>
+
         <Table className="text-sm">
           <TableHeader>
             <TableRow>
@@ -62,22 +71,30 @@ const RouteComponent = () => {
               <TableHead>Title</TableHead>
               <TableHead>Provider ID</TableHead>
               <TableHead>Created at</TableHead>
-               <TableHead>Link</TableHead>
+              <TableHead>Link</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {datasets.map((dataset) => (
               <TableRow key={dataset["@id"].slice(9, 29)}>
                 <TableCell>
-                    <Badge variant="info"> {dataset["@id"].slice(9, 29) + "..."}</Badge></TableCell>
+                  <Badge variant="info">
+                    {" "}
+                    {dataset["@id"].slice(9, 29) + "..."}
+                  </Badge>
+                </TableCell>
                 <TableCell>{dataset.title}</TableCell>
                 <TableCell>
-                    <Badge variant="info">{catalog.participantId.slice(9, 29) + "..."}</Badge></TableCell>
-                <TableCell>
-                 <ListItemDate>{dayjs(catalog.issued).format("DD/MM/YYYY - HH:mm")}</ListItemDate> 
+                  <Badge variant="info">
+                    {catalog.participantId.slice(9, 29) + "..."}
+                  </Badge>
                 </TableCell>
                 <TableCell>
-                     <Button variant="default">
+                  <ListItemDate>
+                    {dayjs(catalog.issued).format("DD/MM/YYYY - HH:mm")}
+                  </ListItemDate>
+                </TableCell>
+                <TableCell>
                   <Link
                     to="/catalog/$catalogId/dataset/$datasetId"
                     params={{
@@ -85,9 +102,11 @@ const RouteComponent = () => {
                       datasetId: dataset["@id"],
                     }}
                   >
-                  See dataset
+                    <Button variant="link">
+                      See dataset
+                      <ArrowRight />
+                    </Button>
                   </Link>
-                  </Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -95,7 +114,7 @@ const RouteComponent = () => {
         </Table>
       </div>
       <div>
-          <Heading level="h5">Dataservices</Heading>
+        <Heading level="h5">Dataservices</Heading>
         <Table className="text-sm">
           <TableHeader>
             <TableRow>
@@ -109,14 +128,20 @@ const RouteComponent = () => {
           <TableBody>
             {dataservices.map((dataservice) => (
               <TableRow key={dataservice["@id"].slice(9, 29)}>
-                <TableCell><Badge variant="info">{dataservice["@id"].slice(9, 29) + "..."}</Badge></TableCell>
+                <TableCell>
+                  <Badge variant="info">
+                    {dataservice["@id"].slice(9, 29) + "..."}
+                  </Badge>
+                </TableCell>
                 <TableCell>{dataservice.endpointURL}</TableCell>
                 <TableCell>{dataservice.endpointDescription}</TableCell>
                 <TableCell>
-                 <ListItemDate>  {dayjs(dataservice.issued).format("DD/MM/YYYY - HH:mm")}</ListItemDate> 
+                  <ListItemDate>
+                    {" "}
+                    {dayjs(dataservice.issued).format("DD/MM/YYYY - HH:mm")}
+                  </ListItemDate>
                 </TableCell>
                 <TableCell>
-                       <Button variant="default">
                   <Link
                     to="/catalog/$catalogId/data-service/$dataserviceId"
                     params={{
@@ -124,9 +149,11 @@ const RouteComponent = () => {
                       dataserviceId: dataservice["@id"],
                     }}
                   >
-                   See dataservice
+                    <Button variant="link">
+                      See dataservice
+                      <ArrowRight />
+                    </Button>
                   </Link>
-                  </Button>
                 </TableCell>
               </TableRow>
             ))}

@@ -36,7 +36,7 @@ const RouteComponent = () => {
                         <TableHead>ProviderPid</TableHead>
                         <TableHead>ConsumerPid</TableHead>
                         <TableHead>State</TableHead>
-                        <TableHead>CreatedAt</TableHead>
+                        <TableHead>Created at</TableHead>
                         <TableHead>Actions</TableHead>
                         <TableHead>Link</TableHead>
                     </TableRow>
@@ -44,7 +44,7 @@ const RouteComponent = () => {
                 <TableBody>
                     {cnProcessesSorted.map((cnProcess) => (
 
-                        <TableRow key={cnProcess.provider_id.slice(0, 20)}>
+                        <TableRow key={cnProcess.provider_id?.slice(0, 20)}>
                             <TableCell>
                                 <Badge variant={"info"}>
                                     {cnProcess.provider_id?.slice(9, 20) + "..."}

@@ -8,6 +8,7 @@ import { Dialog, DialogTrigger } from "shared/src/components/ui/dialog";
 import { Button } from "shared/src/components/ui/button";
 import { TransferProcessStartDialog } from "shared/src/components/TransferProcessStartDialog";
 import { TransferProcessTerminationDialog } from "shared/src/components/TransferProcessTerminationDialog";
+import NoFurtherActions from "./ui/noFurtherActions";
 
 export const TransferProcessActions = ({
   process,
@@ -82,7 +83,7 @@ export const TransferProcessActions = ({
           {role === "provider" && <></>}
           {role === "consumer" && (
             <>
-              <div>No further actions</div>
+            <NoFurtherActions />
             </>
           )}
         </div>
