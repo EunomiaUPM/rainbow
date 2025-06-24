@@ -356,105 +356,78 @@ export const RouteComponent = () => {
                         )}
                     />
 
-                    {/* Catalog Field */}
-                    <FormField
-                        control={control}
-                        name="catalog"
-                        render={({field}) => (
-                            <FormItem>
-                                <FormLabel>Catalog</FormLabel>
-                                <div>
-                                    <FormControl>
-                                        <Popover open={catalogOpen} onOpenChange={handleCatalogOpenChange}>
-                                            <PopoverTrigger asChild>
-                                                <Button
-                                                    variant="outline"
-                                                    role="combobox"
-                                                    aria-expanded={catalogOpen}
-                                                    className="w-full justify-between font-normal text-gray-600 hover:text-gray-800 transition-colors"
-                                                >
-                                                    {catalog_type === "rainbow" && (<>
-                                                            {field.value
-                                                                ? (catalogs as Catalog[]).find((c) => c["@id"] === field.value)?.title || field.value // Display title if available, otherwise ID
-                                                                : "Select catalog..."
-                                                            }
-                                                        </>
-                                                    )}
-                                                    {catalog_type === "datahub" && (<>
-                                                            {field.value
-                                                                ? (catalogs as DatahubDomain[]).find((c) => c.properties.name === field.value)?.properties.name || field.value // Display title if available, otherwise ID
-                                                                : "Select catalog..."
-                                                            }
-                                                        </>
-                                                    )}
-
-                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50"/>
-                                                </Button>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                                                <Command>
-                                                    <CommandInput placeholder="Search catalog..."/>
-                                                    <CommandList>
-                                                        <CommandEmpty>No catalog found.</CommandEmpty>
-                                                        <CommandGroup>
-                                                            {catalogs.map((catalog) => (
-                                                                <>
-                                                                    {catalog_type === "rainbow" && (
-                                                                        <CommandItem
-                                                                            key={(catalog as Catalog)["@id"]}
-                                                                            value={(catalog as Catalog).title || (catalog as Catalog)["@id"]} // Use title for search, ID for actual value
-                                                                            onSelect={() => {
-                                                                                if (field.value !== (catalog as Catalog)["@id"]) { // Clear subsequent fields ONLY if catalog changes
-                                                                                    field.onChange((catalog as Catalog)["@id"]);
-                                                                                    setSelectedCatalog(catalog);
-                                                                                    setCatalogOpen(false);
-                                                                                    // Clear Dataset and Policy fields
-                                                                                    clearFields(["id", "target"]);
-                                                                                } else {
-                                                                                    setCatalogOpen(false); // Just close if same value
-                                                                                }
-                                                                            }}
-                                                                            className={field.value === (catalog as Catalog)["@id"] ? "bg-blue-50 text-blue-700 font-medium" : ""}
-                                                                        >
-                                                                            {(catalog as Catalog).title || (catalog as Catalog)["@id"]}
-                                                                        </CommandItem>
-                                                                    )}
-                                                                    {catalog_type === "datahub" && (
-                                                                        <CommandItem
-                                                                            key={(catalog as DatahubDomain).properties.name}
-                                                                            value={(catalog as DatahubDomain).properties.name || (catalog as DatahubDomain).urn} // Use title for search, ID for actual value
-                                                                            onSelect={() => {
-                                                                                if (field.value !== (catalog as DatahubDomain).urn) { // Clear subsequent fields ONLY if catalog changes
-                                                                                    field.onChange((catalog as DatahubDomain).urn);
-                                                                                    setSelectedCatalog(catalog);
-                                                                                    setCatalogOpen(false);
-                                                                                    // Clear Dataset and Policy fields
-                                                                                    clearFields(["id", "target"]);
-                                                                                } else {
-                                                                                    setCatalogOpen(false); // Just close if same value
-                                                                                }
-                                                                            }}
-                                                                            className={field.value === (catalog as DatahubDomain).urn ? "bg-blue-50 text-blue-700 font-medium" : ""}
-                                                                        >
-                                                                            {(catalog as DatahubDomain).properties.name || (catalog as DatahubDomain).urn}
-                                                                        </CommandItem>
-                                                                    )}
-
-                                                                </>
-                                                            ))}
-                                                        </CommandGroup>
-                                                    </CommandList>
-                                                </Command>
-                                            </PopoverContent>
-                                        </Popover>
-                                    </FormControl>
-                                    <FormDescription className="text-sm text-gray-400 mt-1">Select a catalog to browse
-                                        available datasets.</FormDescription>
-                                    <FormMessage/>
-                                </div>
-                            </FormItem>
-                        )}
-                    />
+          {/* Catalog Field */}
+          <FormField
+            control={control}
+            name="catalog"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Catalog</FormLabel>
+                <div>
+                  <FormControl>
+                    <Popover
+                      open={catalogOpen}
+                      onOpenChange={handleCatalogOpenChange}
+                    >
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={catalogOpen}
+                          className="w-full justify-between font-normal text-gray-600 hover:text-gray-800 transition-colors"
+                        >
+                          {field.value
+                            ? catalogs.find((c) => c["@id"] === field.value)
+                                ?.title || field.value // Display title if available, otherwise ID
+                            : "Select catalog..."}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                        <Command>
+                          <CommandInput placeholder="Search catalog..." />
+                          <CommandList>
+                            <CommandEmpty>No catalog found.</CommandEmpty>
+                            <CommandGroup>
+                              {catalogs.map((catalog) => (
+                                <CommandItem
+                                  key={catalog["@id"]}
+                                  value={catalog.title || catalog["@id"]} // Use title for search, ID for actual value
+                                  onSelect={() => {
+                                    if (field.value !== catalog["@id"]) {
+                                      // Clear subsequent fields ONLY if catalog changes
+                                      field.onChange(catalog["@id"]);
+                                      setSelectedCatalog(catalog);
+                                      setCatalogOpen(false);
+                                      // Clear Dataset and Policy fields
+                                      clearFields(["id", "target"]);
+                                    } else {
+                                      setCatalogOpen(false); // Just close if same value
+                                    }
+                                  }}
+                                  className={
+                                    field.value === catalog["@id"]
+                                      ? "bg-blue-50 text-blue-700 font-medium"
+                                      : ""
+                                  }
+                                >
+                                  {catalog.title || catalog["@id"]}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </FormControl>
+                  <FormDescription className="text-sm text-gray-400 mt-1">
+                    Select a catalog to browse available datasets.
+                  </FormDescription>
+                  <FormMessage />
+                </div>
+              </FormItem>
+            )}
+          />
 
                     {/* Dataset Field (mapped to 'id' in Inputs) */}
                     <FormField

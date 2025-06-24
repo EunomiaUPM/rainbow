@@ -5,7 +5,7 @@ import {
   useGetTransferMessagesByProviderPid,
   useGetTransferProcessByProviderPid,
 } from "shared/src/data/transfer-queries.ts";
-import { List, ListItem, ListItemKey } from "shared/src/components/ui/list.tsx";
+import {List, ListItem, ListItemKey, ListItemDate} from "shared/src/components/ui/list.tsx";
 import Heading from "shared/src/components/ui/heading.tsx";
 import { Badge } from "shared/src/components/ui/badge.tsx";
 import {
@@ -24,6 +24,7 @@ import {
   DrawerTrigger,
 } from "@./../../shared/src/components/ui/drawer.tsx";
 import { Button } from "shared/src/components/ui/button.tsx";
+import { TransferProcessActions } from "shared/src/components/TransferProcessActions.tsx";
 
 export const Route = createFileRoute("/transfer-process/$transferProcessId/")({
   component: RouteComponent,
@@ -49,26 +50,18 @@ function RouteComponent() {
           <TabsTrigger value="data-plane">Data Plane</TabsTrigger>
         </TabsList>
         <TabsContent value="data-plane">
+        <div className=" w-full break-all">
           <pre
-            style={{
-              background: "#07070d",
-              padding: "1rem",
-              fontSize: "0.7rem",
-              wordBreak: "break-all",
-              borderRadius: "8px",
-            }}
-            className="max-w-[500px]"
+           
+            className="max-w-[500px] p-4 rounded-lg break-all text-[11px] bg-black/70 text-secondary-400 break-all"
           >
             <code
-              style={{
-                whiteSpace: "pre-wrap",
-                wordBreak: "break-word",
-                color: "#ab97ee",
-              }}
+             className="whitespace-pre-wrap break-all"
             >
-              {JSON.stringify(dataPlane)}
+              {JSON.stringify(dataPlane, null, 2)}
             </code>
           </pre>
+          </div>
         </TabsContent>
         <TabsContent value="data-control">
           {" "}
@@ -78,13 +71,13 @@ function RouteComponent() {
           <div className="mb-4">
             <List>
               <ListItem>
-                <ListItemKey>Transfer Process Provider pid</ListItemKey>
+                <ListItemKey>Process pid</ListItemKey>
                 <Badge variant={"info"}>
                   {transferProcess.provider_pid.slice(9, 20) + "..."}
                 </Badge>
               </ListItem>
               <ListItem>
-                <ListItemKey>Transfer Consumer Provider pid</ListItemKey>
+                <ListItemKey>Consumer pid</ListItemKey>
                 <Badge variant={"info"}>
                   {transferProcess.consumer_pid.slice(9, 20) + "..."}
                 </Badge>
@@ -96,7 +89,7 @@ function RouteComponent() {
                 </Badge>
               </ListItem>
               <ListItem>
-                <ListItemKey>Transfer Process Provider pid</ListItemKey>
+                <ListItemKey>Transfer Process State</ListItemKey>
                 <Badge variant={"status"} state={transferProcess.state}>
                   {transferProcess.state}
                 </Badge>
@@ -240,7 +233,7 @@ function RouteComponent() {
           </div>
           <DrawerFooter>
             <DrawerClose>
-              <Button variant="outline">Hide Messages</Button>
+              <Button variant="ghost">Hide Messages</Button>
             </DrawerClose>
           </DrawerFooter>
         </DrawerContent>
@@ -333,6 +326,9 @@ function RouteComponent() {
           </TableBody>
         </Table> */}
       </div>
+
+      {/* ACTIONS */}
+      <TransferProcessActions process={transferProcess} tiny={false} />
     </div>
   );
 }

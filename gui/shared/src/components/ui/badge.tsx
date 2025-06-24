@@ -17,7 +17,7 @@ const badgeVariants = cva(
         info: "font-mono uppercase bg-background-800 text-secondary-400 border-transparent",
         role: "text-white uppercase border-transparent",
         status: "bg-opacity-30 border-transparent text-foreground-300", // base status style
-        constraint: "bg-black/40 text-white/80 font-medium border-0",
+        // constraint: "bg-white/10 border-0 border-white/15 text-white/60 font-medium break-all"
       },
       state: {
         /* 
@@ -28,17 +28,18 @@ const badgeVariants = cva(
         default: "",
         danger: "",
         warn: "",
-        ACTIVE: "bg-process text-process-300 [&>span]:bg-process-400",
-        ACCEPTED: "bg-process text-process-300 [&>span]:bg-process-400",
-        STARTED: "bg-process text-process-300 [&>span]:bg-process-400",
-        OFFERED: "bg-warn text-warn-300 [&>span]:bg-warn-400",
-        REQUESTED: "bg-warn text-warn-300 [&>span]:bg-warn-400",
-        AGREED: "bg-success text-success-300 [&>span]:bg-success-400",
+        ACTIVE: "bg-process text-process-300 [&>span]:bg-process-400", // Agreements
+        ACCEPTED: "bg-process text-process-300 [&>span]:bg-process-400", //
+        VERIFIED: "bg-process text-process-300 [&>span]:bg-process-400", // CN
+        STARTED: "bg-process text-process-300 [&>span]:bg-process-400", // Transfers
+        OFFERED: "bg-warn text-warn-300 [&>span]:bg-warn-400", // CN
+        REQUESTED: "bg-warn text-warn-300 [&>span]:bg-warn-400", // CN
+        AGREED: "bg-success text-success-300 [&>span]:bg-success-400", //
         FINALIZED: "bg-success text-success-300 [&>span]:bg-success-400", // CN
-        COMPLETED: "bg-success text-success-300 [&>span]:bg-success-400",
-        SUSPENDED: "bg-pause text-pause-300 [&>span]:bg-pause-400",
-        PAUSE: "bg-pause text-pause-300 [&>span]:bg-pause-400",
-        TERMINATED: "bg-danger text-danger-300 [&>span]:bg-danger-400",
+        COMPLETED: "bg-success text-success-300 [&>span]:bg-success-400", // Transfers
+        SUSPENDED: "bg-pause text-pause-300 [&>span]:bg-pause-400", //
+        PAUSE: "bg-pause text-pause-300 [&>span]:bg-pause-400", //
+        TERMINATED: "bg-danger text-danger-300 [&>span]:bg-danger-400", //
       },
       role: {
         Provider: "bg-roles-provider/30",

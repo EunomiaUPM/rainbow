@@ -27,149 +27,65 @@ export const TransferProcessActions = ({
     const containerClassName = cva("", {
         variants: {
             tiny: {
-                true: "inline-flex items-center",
-                false: "bg-gray-100 p-6",
+                true: "inline-flex items-center ",
+                false:
+          " w-full p-6 pt-4 fixed bottom-0 left-0 md:left-[223px] bg-primary-950/10 border border-t-stroke [&>*>button]:min-w-20",
             },
         },
     });
 
-    return (
-        <div className={containerClassName({tiny})}>
-            <h2 className={h2ClassName({tiny})}>Actions</h2>
-            {process.state === "REQUESTED" && (<div className="space-x-2">
-                {role === "provider" && (<>
-                    <Dialog>
-                        <DialogTrigger asChild>
-                            <Button>Start</Button>
-                        </DialogTrigger>
-                        <TransferProcessStartDialog process={process}/>
-                    </Dialog>
-                    <Dialog>
-                        <DialogTrigger asChild>
-                            <Button>Terminate</Button>
-                        </DialogTrigger>
-                        <TransferProcessTerminationDialog process={process}/>
-                    </Dialog>
-                </>)}
-                {role === "consumer" && (<>
-                        <Dialog>
-                            <DialogTrigger asChild>
-                                <Button>Terminate</Button>
-                            </DialogTrigger>
-                            <TransferProcessTerminationDialog process={process}/>
-                        </Dialog>
-                    </>
-                )}
-            </div>)}
-            {process.state === "STARTED" && (<div className="space-x-2">
-                {role === "provider" && (<>
-                        {(process.state_attribute === "ON_REQUEST" || process.state_attribute === "BY_PROVIDER") && (<>
-
-                        </>)}
-                        <Dialog>
-                            <DialogTrigger asChild>
-                                <Button>Suspend</Button>
-                            </DialogTrigger>
-                            <TransferProcessSuspensionDialog process={process}/>
-                        </Dialog>
-                        <Dialog>
-                            <DialogTrigger asChild>
-                                <Button>Complete</Button>
-                            </DialogTrigger>
-                            <TransferProcessCompletionDialog process={process}/>
-                        </Dialog>
-                        <Dialog>
-                            <DialogTrigger asChild>
-                                <Button>Terminate</Button>
-                            </DialogTrigger>
-                            <TransferProcessTerminationDialog process={process}/>
-                        </Dialog>
-                    </>
-
-                )}
-                {role === "consumer" && (<>
-                    <Dialog>
-                        <DialogTrigger asChild>
-                            <Button>Suspend</Button>
-                        </DialogTrigger>
-                        <TransferProcessSuspensionDialog process={process}/>
-                    </Dialog>
-                    <Dialog>
-                        <DialogTrigger asChild>
-                            <Button>Complete</Button>
-                        </DialogTrigger>
-                        <TransferProcessCompletionDialog process={process}/>
-                    </Dialog>
-                    <Dialog>
-                        <DialogTrigger asChild>
-                            <Button>Terminate</Button>
-                        </DialogTrigger>
-                        <TransferProcessTerminationDialog process={process}/>
-                    </Dialog>
-                </>)}
-            </div>)}
-            {process.state === "SUSPENDED" && (<div className="space-x-2">
-                {role === "provider" && (<>
-                    {process.state_attribute === "BY_PROVIDER" && (<>
-                        <Dialog>
-                            <DialogTrigger asChild>
-                                <Button>Start</Button>
-                            </DialogTrigger>
-                            <TransferProcessStartDialog process={process}/>
-                        </Dialog>
-                        <Dialog>
-                            <DialogTrigger asChild>
-                                <Button>Complete</Button>
-                            </DialogTrigger>
-                            <TransferProcessCompletionDialog process={process}/>
-                        </Dialog>
-                    </>)}
-
-                    <Dialog>
-                        <DialogTrigger asChild>
-                            <Button>Terminate</Button>
-                        </DialogTrigger>
-                        <TransferProcessTerminationDialog process={process}/>
-                    </Dialog>
-                </>)}
-                {role === "consumer" && (<>
-                    <Dialog>
-                        <DialogTrigger asChild>
-                            <Button>Start</Button>
-                        </DialogTrigger>
-                        <TransferProcessStartDialog process={process}/>
-                    </Dialog>
-                    <Dialog>
-                        <DialogTrigger asChild>
-                            <Button>Complete</Button>
-                        </DialogTrigger>
-                        <TransferProcessCompletionDialog process={process}/>
-                    </Dialog>
-                    <Dialog>
-                        <DialogTrigger asChild>
-                            <Button>Terminate</Button>
-                        </DialogTrigger>
-                        <TransferProcessTerminationDialog process={process}/>
-                    </Dialog>
-                </>)}
-            </div>)}
-            {process.state === "COMPLETED" && (<div className="space-x-2">
-                {role === "provider" && (<>
-                    <div>No further actions</div>
-                </>)}
-                {role === "consumer" && (<>
-
-                </>)}
-
-            </div>)}
-            {process.state === "TERMINATED" && (<div className="space-x-2">
-                {role === "provider" && (<>
-                    <div>No further actions</div>
-                </>)}
-                {role === "consumer" && (<>
-                    <div>No further actions</div>
-                </>)}
-            </div>)}
+  return (
+    <div className={containerClassName({ tiny })}>
+      <h2 className={h2ClassName({ tiny })}>Actions</h2>
+      {process.state === "REQUESTED" && (
+        <div className="space-x-2">
+          {role === "provider" && (
+            <>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="destructive" size={tiny ? "sm" : ""}>Terminate</Button>
+                </DialogTrigger>
+                <TransferProcessTerminationDialog process={process} />
+              </Dialog>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button size={tiny ? "sm" : ""}>Start</Button>
+                </DialogTrigger>
+                <TransferProcessStartDialog process={process} />
+              </Dialog>
+            </>
+          )}
+          {role === "consumer" && <></>}
         </div>
-    )
-}
+      )}
+      {process.state === "STARTED" && (
+        <div className="space-x-2">
+          {role === "provider" && <></>}
+          {role === "consumer" && <></>}
+        </div>
+      )}
+      {process.state === "SUSPENDED" && (
+        <div className="space-x-2">
+          {role === "provider" && <></>}
+          {role === "consumer" && <></>}
+        </div>
+      )}
+      {process.state === "COMPLETED" && (
+        <div className="space-x-2">
+          {role === "provider" && <></>}
+          {role === "consumer" && <></>}
+        </div>
+      )}
+      {process.state === "TERMINATED" && (
+        <div className="space-x-2">
+          {role === "provider" && <></>}
+          {role === "consumer" && (
+            <>
+              <div>No further actions</div>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};

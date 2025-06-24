@@ -197,9 +197,9 @@ module.exports = {
         border: {
           DEFAULT: "#121212",
         },
-        // ring: {
-        //   DEFAULT: "#cbe0ed",
-        // },
+        ring: {
+          DEFAULT: "#9DD5F2",
+        },
         // shadow: {
         //   DEFAULT: "#cbd5e1",
         // },

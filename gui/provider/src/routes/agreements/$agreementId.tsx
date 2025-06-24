@@ -5,6 +5,19 @@ import dayjs from "dayjs";
 import Heading from "shared/src/components/ui/heading";
 import { List, ListItem, ListItemKey } from "shared/src/components/ui/list";
 import { Badge } from "shared/src/components/ui/badge.tsx";
+import {
+  Policy,
+  policyVariants,
+  PolicyConstraint,
+  PolicyItemContainer,
+  PolicyItem,
+  PolicyItemKey,
+  PolicyItemValue,
+  PolicyConstraintsContainer,
+  PolicyConstraintsWrapper,
+} from "shared/src/components/ui/policy";
+import PolicyComponent from "shared/src/components/ui/PolicyComponent.tsx";
+
 
 export const Route = createFileRoute("/agreements/$agreementId")({
   component: RouteComponent,
@@ -70,7 +83,7 @@ function RouteComponent() {
               </Badge>
             </ListItem>
             <ListItem>
-              <ListItemKey>CreatedAt</ListItemKey>
+              <ListItemKey>Created at</ListItemKey>
               {dayjs(agreement.created_at).format("DD/MM/YYYY - HH:mm")}
             </ListItem>
           </List>
@@ -119,41 +132,30 @@ function RouteComponent() {
                 )}
               </Badge>
             </ListItem>
+
             <div className="gap-1 flex flex-col">
               <ListItemKey className={" py-2 "}> Policies </ListItemKey>
-              <div className="flex py-2 rounded-md border border-[#487a4b] bg-[#1e2422]">
-                <p className="pl-3 w-1/2 font-bold uppercase text-[#a5e6b0] ">
-                  Permission
-                </p>
-                <p className="">
-                  {formatString(
-                    JSON.stringify(agreement.agreement_content.permission)
-                  )}
-                </p>
+           
+              <div className="flex flex-col gap-2 mb-2">
+            
+            <PolicyComponent
+                policyItem={agreement.agreement_content.permission}
+                variant={"permission"}
+            />
+             <PolicyComponent
+                policyItem={agreement.agreement_content.obligation}
+                variant={"obligation"}
+            />
+             {console.log(agreement.agreement_content.obligation, "brrummm brum")}
+             <PolicyComponent
+                policyItem={agreement.agreement_content.prohibition}
+                variant={"prohibition"}
+            />
               </div>
-              <div className="flex py-2 ">
-                <p className="pl-3 w-1/2 font-bold">Obligation</p>
-                <p className="">
-                  {formatString(
-                    JSON.stringify(agreement.agreement_content.obligation)
-                  )}
-                </p>
-              </div>
-              <div className="flex py-2 ">
-                <p className="pl-3 w-1/2 font-bold">Prohibition</p>
-                <p className="">
-                  {JSON.stringify(agreement.agreement_content.prohibition)}
-                </p>
-              </div>
+
+
             </div>
-            {/* <ListItem>
-                <ListItemKey> Obligation </ListItemKey>
-                <p>{JSON.stringify(agreement.agreement_content.obligation)}</p>
-            </ListItem>
-             <ListItem>
-                <ListItemKey> Prohibition </ListItemKey>
-                <p>{JSON.stringify(agreement.agreement_content.prohibition)}</p>
-            </ListItem> */}
+          
           </List>
         </div>
       </div>

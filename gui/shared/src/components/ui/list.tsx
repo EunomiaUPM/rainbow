@@ -35,7 +35,7 @@ const ListItem = ({
   return (
     <li
       className={cn(
-        "h-fit py-1.5 place-content-center flex flex-row justify-start items-center gap-4 border-b border-white/20 last:border-0 items-center",
+        "h-fit max-w-full py-1.5 flex flex-row flex-wrap justify-start items-center gap-2 border-b border-white/20 last:border-0", // place-content-center 
         className
       )}
       {...props}
@@ -55,7 +55,7 @@ const ListItemKey = ({
   props?: any;
 }) => {
   return (
-    <p className={cn("font-bold w-1/2", className)} {...props}>
+    <p className={cn("font-bold basis-[35%] min-w-fit", className)} {...props}>
       {children}
     </p>
   );

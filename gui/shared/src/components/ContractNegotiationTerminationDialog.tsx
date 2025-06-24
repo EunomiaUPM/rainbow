@@ -53,6 +53,8 @@ export const ContractNegotiationTerminationDialog = ({
     }
   };
 
+  const scopedListItemKeyClasses = 'basis-[30%]'
+
   return (
     <DialogContent className="max-w-fit sm:max-w-fit ">
       <DialogHeader>
@@ -67,40 +69,40 @@ export const ContractNegotiationTerminationDialog = ({
         </DialogDescription>
       </DialogHeader>
       {/* List */}
-      <List className="min-w-fit">
+      <List className="min-w-fit w-full">
         <ListItem>
-          <ListItemKey>Provider id:</ListItemKey>
+          <ListItemKey className={scopedListItemKeyClasses}>Provider id:</ListItemKey>
           <Badge variant={"info"}>{process.provider_id.slice(9, -1)}</Badge>
         </ListItem>
         <ListItem>
-          <ListItemKey>Consumer id:</ListItemKey>
+          <ListItemKey className={scopedListItemKeyClasses}>Consumer id:</ListItemKey>
           <Badge variant={"info"}>{process.consumer_id.slice(9, -1)}</Badge>
         </ListItem>
         <ListItem>
-          <ListItemKey>Associated Consumer:</ListItemKey>
+          <ListItemKey className={scopedListItemKeyClasses}>Associated Consumer:</ListItemKey>
           <Badge variant={"info"}>
             {process.associated_consumer.slice(9, -1)}
           </Badge>
         </ListItem>
         <ListItem>
-          <ListItemKey>State:</ListItemKey>
+          <ListItemKey className={scopedListItemKeyClasses}>State:</ListItemKey>
           <Badge variant={"status"} state={process.state}>
             {process.state}
           </Badge>
         </ListItem>
         <ListItem>
-          <ListItemKey>Iniciated by:</ListItemKey>
+          <ListItemKey className={scopedListItemKeyClasses}>Iniciated by:</ListItemKey>
           <Badge variant={"role"} role={process.initiated_by}>
             {process.initiated_by}
           </Badge>
         </ListItem>
         <ListItem>
-          <ListItemKey>Created at:</ListItemKey>
+          <ListItemKey className={scopedListItemKeyClasses}>Created at:</ListItemKey>
           {process.created_at}
         </ListItem>
         {process.updated_at && (
           <ListItem>
-            <ListItemKey>Updated at:</ListItemKey>
+            <ListItemKey className={scopedListItemKeyClasses}>Updated at:</ListItemKey>
             {process.updated_at}
           </ListItem>
         )}
@@ -110,7 +112,7 @@ export const ContractNegotiationTerminationDialog = ({
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <DialogFooter className="[&>*]:w-full">
             <DialogClose asChild>
-              <Button variant="outline" type="reset">
+              <Button variant="ghost" type="reset">
                 Cancel
               </Button>
             </DialogClose>
