@@ -94,7 +94,10 @@ where
     T: AuthConsumerRepoTrait + Send + Sync + Clone + 'static,
 {
     async fn register_wallet(&self) -> anyhow::Result<()> {
-        let wallet_portal_url = format!("http://{}",self.config.get_consumer_wallet_portal_url() + "/wallet-api/auth/register");
+        let wallet_portal_url = format!(
+            "http://{}",
+            self.config.get_consumer_wallet_portal_url() + "/wallet-api/auth/register"
+        );
         let wallet_data = self.config.get_consumer_wallet_data();
 
         let mut headers = HeaderMap::new();
@@ -387,7 +390,7 @@ impl<T> RainbowSSIAuthConsumerManagerTrait for Manager<T>
 where
     T: AuthConsumerRepoTrait + Send + Sync + Clone + 'static,
 {
-    async fn request_access(&self, url: String, provider: String, actions: String) -> anyhow::Result<Model> {
+    async fn request_access(&self, url: String, provider_id: String, provider_slug: String, actions: String) -> anyhow::Result<Model> {
         let mut body = GrantRequest::default4oidc(
             self.config.ssi_consumer_client.consumer_client.clone(), // TODO change with did:web
             "push".to_string(),
@@ -400,7 +403,7 @@ where
         body.update_callback(callback);
 
         let interact = body.clone().interact.unwrap();
-        let model = match self.auth_repo.create_auth(id, url.clone(), provider, actions, interact).await {
+        let model = match self.auth_repo.create_auth(id, url.clone(), provider_id, provider_slug, actions, interact).await {
             Ok(model) => {
                 info!("exchange saved successfully");
                 model
@@ -439,6 +442,7 @@ where
             .auth_pending(
                 model.id.clone(),
                 res.instance_id.unwrap(),
+                res.r#continue.unwrap().uri,
                 interact.finish.unwrap(),
             )
             .await
@@ -460,8 +464,14 @@ where
         Ok(model)
     }
 
-    async fn manual_request_access(&self, url: String, provider: String, actions: String) -> anyhow::Result<Model> {
-        let _ = match self.auth_repo.create_prov(provider.clone(), url.clone()).await {
+    async fn manual_request_access(
+        &self,
+        url: String,
+        provider_id: String,
+        provider_slug: String,
+        actions: String,
+    ) -> anyhow::Result<Model> {
+        let _ = match self.auth_repo.create_prov(provider_id.clone(), url.clone()).await {
             Ok(model) => {
                 info!("Provider saved successfully");
                 model
@@ -481,7 +491,18 @@ where
         body.update_callback(callback);
 
         let interact = body.clone().interact.unwrap();
-        let model = match self.auth_repo.create_auth(id, url.clone(), provider, actions, interact).await {
+        let model = match self
+            .auth_repo
+            .create_auth(
+                id,
+                url.clone(),
+                provider_id,
+                provider_slug,
+                actions,
+                interact,
+            )
+            .await
+        {
             Ok(model) => {
                 info!("exchange saved successfully");
                 model
@@ -520,6 +541,7 @@ where
             .auth_pending(
                 model.id.clone(),
                 res.instance_id.unwrap(),
+                res.r#continue.unwrap().uri,
                 interact.finish.unwrap(),
             )
             .await
@@ -749,14 +771,24 @@ where
         Ok(model)
     }
 
-    async fn save_mate(&self, id: String, base_url: String, token: String, token_actions: String) -> anyhow::Result<Response> {
-        let url = format!("{}/api/v1/mates", self.config.get_ssi_auth_host_url().unwrap()); // TODO fix 4 microservices
+    async fn save_mate(
+        &self,
+        global_id: Option<String>,
+        slug: String,
+        base_url: String,
+        token: String,
+        token_actions: String,
+    ) -> anyhow::Result<Response> {
+        let url = format!(
+            "{}/api/v1/mates",
+            self.config.get_ssi_auth_host_url().unwrap()
+        ); // TODO fix 4 microservices
 
         let mut headers = HeaderMap::new();
         headers.insert(CONTENT_TYPE, "application/json".parse()?);
         headers.insert(ACCEPT, "application/json".parse()?);
 
-        let body = Mates::default4consumer(id, base_url, token, token_actions);
+        let body = Mates::default4consumer(global_id, slug, base_url, token, token_actions); // TODO
 
         let res = self.client.post(url).headers(headers).json(&body).send().await;
 

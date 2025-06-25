@@ -22,7 +22,7 @@
 // use rainbow_common::err::transfer_err::TransferErrorType;
 
 use crate::ssi_auth::consumer::core::manager::{RainbowSSIAuthConsumerManagerTrait, RainbowSSIAuthConsumerWalletTrait};
-use crate::ssi_auth::consumer::core::types::ReachProvider;
+use crate::ssi_auth::consumer::core::types::{CallbackResponse, ReachAuthority, ReachProvider};
 use crate::ssi_auth::consumer::core::Manager;
 use anyhow::bail;
 use axum::extract::{Path, Query, State};
@@ -138,7 +138,7 @@ where
         }
 
         let mut auth_ver;
-        match manager.request_access(payload.url, payload.id, payload.actions).await {
+        match manager.request_access(payload.url, payload.id, payload.slug, payload.actions).await {
             // TODO Carlos pasame did:web
             Ok(auth_ver_model) => auth_ver = auth_ver_model,
             Err(e) => {
@@ -253,7 +253,7 @@ where
         let mut manager = manager.lock().await;
 
         let mut auth_ver;
-        match manager.manual_request_access(payload.url, payload.id, payload.actions).await {
+        match manager.manual_request_access(payload.url, payload.id, payload.slug, payload.actions).await {
             // TODO Carlos pasame did:web
             Ok(auth_ver_model) => auth_ver = auth_ver_model,
             Err(e) => {
@@ -300,7 +300,7 @@ where
         };
 
         let grant_endpoint = res.grant_endpoint.replace("/api/v1/access", "");
-        match manager.save_mate(res.provider, grant_endpoint, res.token.unwrap(), res.actions).await {
+        match manager.save_mate(Some(res.provider_id), res.provider_slug, grant_endpoint, res.token.unwrap(), res.actions).await {
             Ok(a) => (StatusCode::CREATED, Json(a.json::<Value>().await.unwrap())).into_response(),
             Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, format!("mate not saved: {}", e.to_string())).into_response(),
         }
@@ -327,8 +327,12 @@ where
         Json(manager.didweb().await.unwrap())
     }
 
-    async fn beg4credential(State(manager): State<Arc<Mutex<Manager<T>>>>) -> impl IntoResponse {
+    async fn beg4credential(State(manager): State<Arc<Mutex<Manager<T>>>>, Json(payload): Json<ReachAuthority>,) -> impl IntoResponse {
         let mut manager = manager.lock().await;
+        match manager.beg4credential(payload.url).await{
+            Ok(()) => {},
+            Err(e) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+        };
         StatusCode::OK.into_response()
     }
     async fn fallback(method: Method, uri: Uri) -> (StatusCode, String) {
@@ -340,8 +344,4 @@ where
 
 }
 
-#[derive(Deserialize)]
-pub struct CallbackResponse {
-    pub hash: String,
-    pub interact_ref: String,
-}
+

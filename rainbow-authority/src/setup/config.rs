@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use rainbow_common::config::database::DbType;
 use rainbow_common::config::global_config::{extract_env, DatabaseConfig, HostConfig};
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_common::config::ConfigRoles;
@@ -28,11 +29,29 @@ pub struct AuthorityApplicationConfig {
     database_config: DatabaseConfig,
     ssh_user: Option<String>,
     ssh_private_key_path: Option<String>,
+    cert_path: String,
 }
 
 impl Default for AuthorityApplicationConfig {
     fn default() -> Self {
-        AuthorityApplicationConfig::from(ApplicationProviderConfig::default())
+        Self {
+            authority_host: Some(HostConfig {
+                protocol: "http".to_string(),
+                url: "127.0.0.1".to_string(),
+                port: "1400".to_string(),
+            }),
+            database_config: DatabaseConfig {
+                db_type: DbType::Postgres,
+                url: "127.0.0.1".to_string(),
+                port: "1450".to_string(),
+                user: "ds_authority".to_string(),
+                password: "ds_authority".to_string(),
+                name: "ds_authority".to_string(),
+            },
+            ssh_user: None,
+            ssh_private_key_path: None,
+            cert_path: ".".to_string(),
+        }
     }
 }
 
@@ -76,22 +95,26 @@ impl ApplicationProviderConfigTrait for AuthorityApplicationConfig {
     fn get_raw_database_config(&self) -> &DatabaseConfig {
         &self.database_config
     }
+    fn get_raw_cert_path(&self) -> &String {
+        &self.cert_path
+    }
+
     fn merge_dotenv_configuration(&self) -> Self {
         dotenvy::dotenv().ok();
-        let default = ApplicationProviderConfig::default();
+        let default = AuthorityApplicationConfig::default();
         let compound_config = Self {
             authority_host: Some(HostConfig {
                 protocol: extract_env(
                     "AUTHORITY_HOST_PROTOCOL",
-                    default.auth_host.clone().unwrap().protocol,
+                    default.authority_host.clone().unwrap().protocol,
                 ),
                 url: extract_env(
                     "AUTHORITY_HOST_URL",
-                    default.auth_host.clone().unwrap().url,
+                    default.authority_host.clone().unwrap().url,
                 ),
                 port: extract_env(
                     "AUTHORITY_HOST_PORT",
-                    default.auth_host.clone().unwrap().port,
+                    default.authority_host.clone().unwrap().port,
                 ),
             }),
             database_config: DatabaseConfig {
@@ -104,8 +127,25 @@ impl ApplicationProviderConfigTrait for AuthorityApplicationConfig {
             },
             ssh_user: env::var("SSH_USER").ok(),
             ssh_private_key_path: env::var("SSH_PKEY_PATH").ok(),
+            cert_path: ".".to_string(),
         };
         compound_config
+    }
+}
+
+pub trait AuthorityFunctions {
+    fn get_host(&self) -> String;
+    fn get_host_without_protocol(&self) -> String;
+}
+
+impl AuthorityFunctions for AuthorityApplicationConfig {
+    fn get_host(&self) -> String {
+        let host = self.authority_host.clone().unwrap();
+        format!("{}://{}:{}", host.protocol, host.url, host.port)
+    }
+    fn get_host_without_protocol(&self) -> String {
+        let host = self.authority_host.clone().unwrap();
+        format!("{}:{}", host.url, host.port)
     }
 }
 
@@ -116,6 +156,7 @@ impl From<ApplicationProviderConfig> for AuthorityApplicationConfig {
             database_config: value.database_config,
             ssh_user: value.ssh_user,
             ssh_private_key_path: value.ssh_private_key_path,
+            cert_path: value.cert_path,
         }
     }
 }

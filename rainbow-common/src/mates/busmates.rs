@@ -20,11 +20,9 @@ use crate::utils::get_urn;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Mates {
+pub struct BusMates {
     pub participant_id: String,
-    pub participant_slug: String,
     pub participant_type: String,
-    pub base_url: Option<String>,
     pub token: Option<String>,
     pub token_actions: Option<String>,
     pub saved_at: chrono::NaiveDateTime,
@@ -32,23 +30,18 @@ pub struct Mates {
     pub is_me: bool,
 }
 
-impl Mates {
+impl BusMates {
     pub fn default4consumer(
         id: Option<String>,
-        slug: String,
-        url: String,
         token: String,
-        token_actions: String,
     ) -> Self {
         let participant_id = id.unwrap_or_else(|| get_urn(None).to_string());
 
         Self {
             participant_id,
-            participant_slug: slug,
-            participant_type: "Provider".to_string(),
-            base_url: Some(url),
+            participant_type: "BusinessProvider".to_string(),
             token: Some(token),
-            token_actions: Some(token_actions),
+            token_actions: Some("talk".to_string()),
             saved_at: chrono::Utc::now().naive_utc(),
             last_interaction: chrono::Utc::now().naive_utc(),
             is_me: false,
@@ -57,20 +50,15 @@ impl Mates {
 
     pub fn default4provider(
         id: Option<String>,
-        slug: String,
-        url: String,
         token: String,
-        token_actions: String,
     ) -> Self {
         let participant_id = id.unwrap_or_else(|| get_urn(None).to_string());
 
         Self {
             participant_id,
-            participant_slug: slug,
-            participant_type: "Consumer".to_string(),
-            base_url: Some(url),
+            participant_type: "BusinessConsumer".to_string(),
             token: Some(token),
-            token_actions: Some(token_actions),
+            token_actions: Some("talk".to_string()),
             saved_at: chrono::Utc::now().naive_utc(),
             last_interaction: chrono::Utc::now().naive_utc(),
             is_me: false,

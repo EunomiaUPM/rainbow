@@ -25,6 +25,7 @@ use crate::setup::config::AuthorityApplicationConfig;
 use axum::{serve, Router};
 use rainbow_common::config::global_config::ApplicationGlobalConfig;
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use crate::setup::config::AuthorityFunctions;
 use sea_orm::Database;
 use std::sync::Arc;
 use tokio::net::TcpListener;
@@ -39,7 +40,7 @@ pub async fn create_authority_router(config: &AuthorityApplicationConfig) -> Rou
 
     // Services
     let vc_requests_service = Arc::new(VCRequestService::new(authority_repo.clone()));
-    let vc_requests_router = AuthorityRouter::new(vc_requests_service.clone()).router();
+    let vc_requests_router = AuthorityRouter::new(vc_requests_service.clone(), config.clone()).router();
 
     // Router
     let authority_application_router = Router::new()
@@ -55,13 +56,12 @@ impl AuthorityApplication {
         // Init server
         let server_message = format!(
             "Starting provider server in {}",
-            config.get_auth_host_url().unwrap()
+            config.get_host()
         );
         info!("{}", server_message);
         let listener = TcpListener::bind(format!(
-            "{}:{}",
-            config.get_raw_ssi_auth_host().clone().unwrap().url,
-            config.get_raw_ssi_auth_host().clone().unwrap().port
+            "{}",
+            config.get_host_without_protocol().clone(),
         ))
             .await?;
         serve(listener, router).await?;

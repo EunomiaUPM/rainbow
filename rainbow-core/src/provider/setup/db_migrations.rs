@@ -26,13 +26,12 @@ use rainbow_db::catalog::migrations::get_catalog_migrations;
 use rainbow_db::contracts_provider::migrations::get_contracts_migrations;
 use rainbow_db::dataplane::migrations::get_dataplane_migrations;
 use rainbow_db::events::migrations::get_events_migrations;
-use rainbow_db::mates::entities::mates;
+use rainbow_db::mates::entities::{busmates, mates};
 use rainbow_db::mates::migrations::get_mates_migrations;
 use rainbow_db::transfer_provider::migrations::get_transfer_provider_migrations;
 use sea_orm::sqlx::types::chrono;
 use sea_orm::{ActiveValue, Database, DatabaseConnection, EntityTrait};
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
-
 
 pub struct CoreProviderMigration;
 
@@ -67,11 +66,12 @@ impl CoreProviderMigration {
         Self::refresh(&db_connection).await?;
         // run seedings
         Self::seed_provider_mate(&db_connection, config.get_ssi_auth_host_url().unwrap()).await?;
+        Self::seed_provider_busmate(&db_connection).await?;
         Ok(())
     }
     async fn seed_provider_mate(db: &DatabaseConnection, base_url: String) -> anyhow::Result<()> {
         let provider = mates::ActiveModel {
-            participant_id: ActiveValue::Set(get_urn(None).to_string()),
+            participant_id: ActiveValue::Set(get_urn(None).to_string()), // TODO PONER DID BIEN
             participant_slug: ActiveValue::Set("Provider".to_string()),
             participant_type: ActiveValue::Set(ConfigRoles::Provider.to_string()),
             base_url: ActiveValue::Set(Some(base_url)),
@@ -81,10 +81,23 @@ impl CoreProviderMigration {
             last_interaction: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             is_me: ActiveValue::Set(true),
         };
-        mates::Entity::insert(provider)
-            .exec(db)
-            .await
-            .map_err(|e| anyhow!(e))?;
+
+        mates::Entity::insert(provider).exec(db).await.map_err(|e| anyhow!(e))?;
+        Ok(())
+    }
+
+    async fn seed_provider_busmate(db: &DatabaseConnection) -> anyhow::Result<()> {
+        let busprovider = busmates::ActiveModel {
+            participant_id: ActiveValue::Set(get_urn(None).to_string()), // TODO PONER DID BIEN FALSEAR
+            participant_type: ActiveValue::Set("Myself".to_string()),
+            token: ActiveValue::Set(None),
+            token_actions: ActiveValue::Set(None),
+            saved_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
+            last_interaction: ActiveValue::Set(chrono::Utc::now().naive_utc()),
+            is_me: ActiveValue::Set(true),
+        };
+
+        busmates::Entity::insert(busprovider).exec(db).await.map_err(|e| anyhow!(e))?;
         Ok(())
     }
 }

@@ -23,6 +23,7 @@ pub mod m20250403_094651_auth;
 pub mod m20250403_094651_auth_interaction;
 pub mod m20250403_094651_auth_verification;
 pub mod m20250403_094651_prov;
+pub mod m20250403_094651_authority;
 
 pub fn get_auth_consumer_migrations() -> Vec<Box<dyn MigrationTrait>> {
     vec![
@@ -30,6 +31,7 @@ pub fn get_auth_consumer_migrations() -> Vec<Box<dyn MigrationTrait>> {
         Box::new(m20250403_094651_auth_interaction::Migration),
         Box::new(m20250403_094651_auth_verification::Migration),
         Box::new(m20250403_094651_prov::Migration),
+        Box::new(m20250403_094651_authority::Migration),
     ]
 }
 

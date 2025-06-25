@@ -17,14 +17,12 @@
  *
  */
 
-use sea_orm::sea_query::extension::postgres::Type;
-use sea_orm::Iterable;
 use sea_orm_migration::prelude::*;
 
 pub struct Migration;
 impl MigrationName for Migration {
     fn name(&self) -> &str {
-        "m20250403_094651_auth"
+        "m20250403_094651_busmates"
     }
 }
 
@@ -34,32 +32,32 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(Auth::Table)
-                    .col(ColumnDef::new(Auth::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(Auth::Consumer).string())
-                    .col(ColumnDef::new(Auth::Actions).string().not_null())
-                    .col(ColumnDef::new(Auth::Status).string().not_null())
-                    .col(ColumnDef::new(Auth::Token).string())
-                    .col(ColumnDef::new(Auth::CreatedAt).date_time().not_null())
-                    .col(ColumnDef::new(Auth::EndedAt).date_time())
+                    .table(BusMates::Table)
+                    .col(ColumnDef::new(BusMates::ParticipantId).string().not_null().primary_key())
+                    .col(ColumnDef::new(BusMates::ParticipantType).string().not_null())
+                    .col(ColumnDef::new(BusMates::Token).string())
+                    .col(ColumnDef::new(BusMates::TokenActions).string())
+                    .col(ColumnDef::new(BusMates::SavedAt).date_time().not_null())
+                    .col(ColumnDef::new(BusMates::LastInteraction).date_time().not_null())
+                    .col(ColumnDef::new(BusMates::IsMe).boolean().not_null())
                     .to_owned(),
             )
             .await
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(Auth::Table).to_owned()).await
+        manager.drop_table(Table::drop().table(BusMates::Table).to_owned()).await
     }
 }
 
 #[derive(Iden)]
-pub enum Auth {
+pub enum BusMates {
     Table,
-    Id,
-    Consumer,
-    Actions,
-    Status,
+    ParticipantId,
+    ParticipantType,
     Token,
-    CreatedAt,
-    EndedAt,
+    TokenActions,
+    SavedAt,
+    LastInteraction,
+    IsMe,
 }

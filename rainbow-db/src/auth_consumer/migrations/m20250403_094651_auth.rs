@@ -36,10 +36,12 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(Auth::Table)
                     .col(ColumnDef::new(Auth::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(Auth::Provider).string().not_null())
+                    .col(ColumnDef::new(Auth::ProviderId).string().not_null())
+                    .col(ColumnDef::new(Auth::ProviderSlug).string().not_null())
                     .col(ColumnDef::new(Auth::Status).string().not_null())
                     .col(ColumnDef::new(Auth::AssignedId).string())
                     .col(ColumnDef::new(Auth::GrantEndpoint).string())
+                    .col(ColumnDef::new(Auth::ContinueEndpoint).string())
                     .col(ColumnDef::new(Auth::Actions).string().not_null())
                     .col(ColumnDef::new(Auth::Token).string())
                     .col(ColumnDef::new(Auth::CreatedAt).date_time().not_null())
@@ -59,8 +61,10 @@ pub enum Auth {
     Table,
     Id,
     AssignedId,
-    Provider,
+    ProviderId,
+    ProviderSlug,
     GrantEndpoint,
+    ContinueEndpoint,
     Actions,
     Status,
     Token,

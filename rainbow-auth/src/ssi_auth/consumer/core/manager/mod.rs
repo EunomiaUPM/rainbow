@@ -46,13 +46,15 @@ pub trait RainbowSSIAuthConsumerManagerTrait: Send + Sync {
     async fn request_access(
         &self,
         url: String,
-        provider: String,
+        provider_id: String,
+        provider_slug: String,
         actions: String,
     ) -> anyhow::Result<auth_verification::Model>;
     async fn manual_request_access(
         &self,
         url: String,
-        provider: String,
+        provider_id: String,
+        provider_slug: String,
         actions: String,
     ) -> anyhow::Result<auth_verification::Model>;
     async fn join_exchange(&self, exchange_url: String) -> anyhow::Result<String>;
@@ -62,6 +64,13 @@ pub trait RainbowSSIAuthConsumerManagerTrait: Send + Sync {
     async fn do_callback(&self, uri: String) -> anyhow::Result<()>;
     async fn check_callback(&self, id: String, interact_ref: String, hash: String) -> anyhow::Result<String>;
     async fn continue_request(&self, id: String, interact_ref: String, uri: String) -> anyhow::Result<auth::Model>;
-    async fn save_mate(&self, id: String, url: String, token: String, token_actions: String) -> anyhow::Result<Response>;
+    async fn save_mate(
+        &self,
+        global_id: Option<String>,
+        slug: String,
+        url: String,
+        token: String,
+        token_actions: String,
+    ) -> anyhow::Result<Response>;
     async fn beg4credential(&self, url: String) -> anyhow::Result<()>;
 }

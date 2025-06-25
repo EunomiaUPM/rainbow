@@ -17,8 +17,7 @@
  *
  */
 
-use crate::auth_consumer::entities::{auth_interaction, prov};
-use crate::auth_consumer::entities::{auth, auth_verification};
+use crate::auth_consumer::entities::{auth, auth_verification, auth_interaction, prov, authority};
 use axum::async_trait;
 use rainbow_common::auth::gnap::grant_request::Interact4GR;
 use sea_orm::DatabaseConnection;
@@ -42,12 +41,13 @@ pub trait AuthConsumerRepoTrait {
         &self,
         id: String,
         uri: String,
-        provider: String,
+        provider_id: String,
+        provider_slug: String,
         actions: String,
         interact: Interact4GR,
     ) -> anyhow::Result<auth::Model>;
 
-    async fn auth_pending(&self, id: String, assigned_id: String, as_nonce: String) -> anyhow::Result<auth::Model>;
+    async fn auth_pending(&self, id: String, assigned_id: String, continue_uri: String, as_nonce: String) -> anyhow::Result<auth::Model>;
 
     async fn delete_auth(&self, id: String) -> anyhow::Result<auth::Model>;
 
@@ -66,4 +66,10 @@ pub trait AuthConsumerRepoTrait {
     async fn prov_onboard(&self, provider: String) -> anyhow::Result<()>;
     async fn get_all_provs(&self) -> anyhow::Result<Vec<prov::Model>>;
     async fn get_prov(&self, provider: String) -> anyhow::Result<prov::Model>;
+}
+
+
+#[async_trait]
+pub trait ParticipantRepoTrait {
+    // async fn create_process(&self, id: Option<String>, authority: String, assigned_id: String, grant_endpoint: String) -> anyhow::Result<authority::Model>;
 }

@@ -70,8 +70,15 @@ pub struct WalletInfoResponse {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ReachProvider {
     pub id: String,
+    pub slug: String,
     pub url: String,
     pub actions: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ReachAuthority {
+    // pub id: String,
+    pub url: String,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -93,4 +100,15 @@ pub struct MatchingVCs {
 pub struct RedirectResponse {
     #[serde(rename = "redirectUri")]
     pub redirect_uri: String,
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct CallbackResponse {
+    pub hash: String,
+    pub interact_ref: String,
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct Url2RequestVC {
+    pub url: String,
 }

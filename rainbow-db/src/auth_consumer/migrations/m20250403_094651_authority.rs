@@ -24,7 +24,7 @@ use sea_orm_migration::prelude::*;
 pub struct Migration;
 impl MigrationName for Migration {
     fn name(&self) -> &str {
-        "m20250403_094651_auth"
+        "m20250403_094651_authority"
     }
 }
 
@@ -34,32 +34,36 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(Auth::Table)
-                    .col(ColumnDef::new(Auth::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(Auth::Consumer).string())
-                    .col(ColumnDef::new(Auth::Actions).string().not_null())
-                    .col(ColumnDef::new(Auth::Status).string().not_null())
-                    .col(ColumnDef::new(Auth::Token).string())
-                    .col(ColumnDef::new(Auth::CreatedAt).date_time().not_null())
-                    .col(ColumnDef::new(Auth::EndedAt).date_time())
+                    .table(Authority::Table)
+                    .col(ColumnDef::new(Authority::Id).string().not_null().primary_key())
+                    .col(ColumnDef::new(Authority::Authority).string().not_null())
+                    .col(ColumnDef::new(Authority::Status).string().not_null())
+                    .col(ColumnDef::new(Authority::AssignedId).string())
+                    .col(ColumnDef::new(Authority::GrantEndpoint).string())
+                    .col(ColumnDef::new(Authority::ContinueEndpoint).string())
+                    .col(ColumnDef::new(Authority::Actions).string().not_null())
+                    .col(ColumnDef::new(Authority::CreatedAt).date_time().not_null())
+                    .col(ColumnDef::new(Authority::EndedAt).date_time())
                     .to_owned(),
             )
             .await
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(Auth::Table).to_owned()).await
+        manager.drop_table(Table::drop().table(Authority::Table).to_owned()).await
     }
 }
 
 #[derive(Iden)]
-pub enum Auth {
+pub enum Authority {
     Table,
     Id,
-    Consumer,
+    AssignedId,
+    Authority,
+    GrantEndpoint,
+    ContinueEndpoint,
     Actions,
     Status,
-    Token,
     CreatedAt,
     EndedAt,
 }

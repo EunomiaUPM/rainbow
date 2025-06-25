@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use std::format;
 use axum::async_trait;
 use rainbow_common::auth::gnap::GrantRequest;
 use serde_json::Value;
@@ -35,6 +36,9 @@ pub trait RainbowSSIAuthProviderManagerTrait: Send + Sync {
     ) -> anyhow::Result<(Vec<String>, String)>;
     async fn verify_vc(&self, vc_token: String, vp_holder: String) -> anyhow::Result<()>;
 
-    async fn continue_req(&self, interact_ref: String) -> anyhow::Result<(Value, String)>;
-    async fn save_mate(&self, id: String, token: String, base_url: String, token_actions: String) -> anyhow::Result<()>;
+    async fn continue_req(&self, interact_ref: String) -> anyhow::Result<(Value, String, String)>;
+    async fn save_mate(&self, global_id: Option<String>, slug: String, token: String, base_url: String, token_actions: String) -> anyhow::Result<()>;
+    async fn save_busmate(&self, global_id: Option<String>, token: String) -> anyhow::Result<()>;
+    fn get_continue_uri(&self) -> anyhow::Result<String>;
+    async fn generate_uri(&self) -> anyhow::Result<String>; // TODO Fix
 }

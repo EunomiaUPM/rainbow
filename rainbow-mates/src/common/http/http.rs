@@ -24,7 +24,7 @@ use axum::http::{Method, Uri};
 use axum::response::IntoResponse;
 use axum::routing::{delete, get, post, put};
 use axum::{Json, Router};
-use rainbow_common::mates::Mates;
+use rainbow_common::mates::{Mates, BusMates};
 use rainbow_db::mates::repo::{MateRepoFactory, MateRepoTrait};
 use reqwest::StatusCode;
 use serde::Deserialize;
@@ -58,6 +58,13 @@ where
             .route("/api/v1/mates/:id", get(Self::get_singular_mate))
             .route("/api/v1/mates/:id", put(Self::edit_mate))
             .route("/api/v1/mates/:id", delete(Self::delete_mate))
+            .route("/api/v1/busmates", get(Self::get_busmates))
+            .route("/api/v1/busmates", post(Self::new_busmate))
+            .route("/api/v1/busmates/me", get(Self::get_me_busmate))
+            // .route("/api/v1/busmates/me", post(Self::bootstrap_busmate))
+            .route("/api/v1/busmates/:id", get(Self::get_singular_busmate))
+            .route("/api/v1/busmates/:id", put(Self::edit_busmate))
+            .route("/api/v1/busmates/:id", delete(Self::delete_busmate))
             .with_state(self.mate_repo)
             .fallback(Self::fallback)
     }
@@ -136,6 +143,85 @@ where
         info!("DELETE /mates/{}", id);
 
         match mate_repo.delete_mate(id).await {
+            Ok(_) => StatusCode::OK.into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        }
+    }
+
+    async fn get_busmates(State(mate_repo): State<Arc<T>>) -> impl IntoResponse {
+        info!("GET /api/v1/busmates");
+
+        match mate_repo.get_all_busmates(None, None).await {
+            Ok(mates) => (StatusCode::OK, Json(mates)).into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        }
+    }
+
+    async fn new_busmate(State(mate_repo): State<Arc<T>>, input: Result<Json<BusMates>, JsonRejection>) -> impl IntoResponse {
+        info!("POST /api/v1/busmates");
+
+        let input = match input {
+            Ok(input) => input.0,
+            Err(e) => return (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
+        };
+        match mate_repo.create_busmate(input, false).await {
+            Ok(mates) => (StatusCode::OK, Json(mates)).into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        }
+    }
+
+    // async fn bootstrap_busmate(State(mate_repo): State<Arc<T>>, input: Result<Json<BootstrapMateRequest>, JsonRejection>) -> impl IntoResponse {
+    //     info!("POST /api/v1/busmates/me");
+    //
+    //     let input = match input {
+    //         Ok(input) => input.0,
+    //         Err(e) => return (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
+    //     };
+    //     match mate_repo.create_busmate(input.into(), true).await {
+    //         Ok(mates) => (StatusCode::OK, Json(mates)).into_response(),
+    //         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    //     }
+    // }
+
+    async fn get_singular_busmate(State(mate_repo): State<Arc<T>>, Path(id): Path<String>) -> impl IntoResponse {
+        info!("GET /busmates/{}", id);
+
+        match mate_repo.get_busmate_by_id(id).await {
+            Ok(mates) => (StatusCode::OK, Json(mates)).into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        }
+    }
+
+    async fn get_me_busmate(State(mate_repo): State<Arc<T>>) -> impl IntoResponse {
+        info!("GET /busmates/me");
+
+        match mate_repo.get_busmate_me().await {
+            Ok(mates) => (StatusCode::OK, Json(mates)).into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        }
+    }
+
+    async fn edit_busmate(
+        State(mate_repo): State<Arc<T>>,
+        Path(id): Path<String>,
+        input: Result<Json<BusMates>, JsonRejection>,
+    ) -> impl IntoResponse {
+        info!("PUT /busmates/{}", id);
+
+        let input = match input {
+            Ok(input) => input.0,
+            Err(e) => return (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
+        };
+        match mate_repo.update_busmate(input).await {
+            Ok(mates) => (StatusCode::OK, Json(mates)).into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        }
+    }
+
+    async fn delete_busmate(State(mate_repo): State<Arc<T>>, Path(id): Path<String>) -> impl IntoResponse {
+        info!("DELETE /busmates/{}", id);
+
+        match mate_repo.delete_busmate(id).await {
             Ok(_) => StatusCode::OK.into_response(),
             Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
         }

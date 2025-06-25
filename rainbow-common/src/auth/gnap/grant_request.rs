@@ -99,7 +99,7 @@ impl GrantRequest {
 
     pub fn default4async(client: String) -> Self {
         Self {
-            access_token: AccessTokenRequirements4GR::default(),
+            access_token: AccessTokenRequirements4GR::request_vc(), // TODO Fix, es none en este caso
             subject: None,
             client,
             user: None,
@@ -133,6 +133,21 @@ impl AccessTokenRequirements4GR {
             },
             label: None,
             flags: Some("Bearer".to_string()), // TODO
+        }
+    }
+
+    pub fn request_vc() -> Self {
+        Self {
+            access: Access4AT {
+                r#type: String::from("vc-exchange"),
+                actions: Some(String::from("vc-request")),
+                locations: None,
+                datatypes: None,
+                identifier: None,
+                privileges: None,
+            },
+            label: None,
+            flags: None, // TODO
         }
     }
 }
