@@ -23,7 +23,7 @@ function RouteComponent() {
     const {data: cnOffer, isError: offerError} = useGetContractNegotiationOfferByCNMessageId(messageId);
     const {data: cnAgreement, isError: agreementError} = useGetAgreementByCNMessageId(messageId);
     
-    return <div className="space-y-4">
+    return <div className="space-y-4 pb-4">
         <div>
             {JSON.stringify(cnMessage)}
         </div>

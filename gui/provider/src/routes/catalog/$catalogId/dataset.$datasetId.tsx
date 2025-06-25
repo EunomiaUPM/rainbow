@@ -83,7 +83,7 @@ function RouteComponent() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-4">
       <Heading level="h3" className="flex gap-2 items-center">
         Dataset with id
         <Badge variant="info" size="lg">

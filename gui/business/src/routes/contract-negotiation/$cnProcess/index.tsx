@@ -16,7 +16,7 @@ const RouteComponent = () => {
     const {data: cnMessages} = useGetContractNegotiationMessagesByCNID(cnProcess);
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-4 pb-4">
             <Table className="text-sm">
                 <TableHeader>
                     <TableRow>

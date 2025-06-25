@@ -9,6 +9,7 @@ import {
   MessageTitle,
   MessageTimestamp,
   MessageMeta,
+    MessageMetaContainer,
   MessageContent,
   type MessageType,
 } from "./ui/message";
@@ -29,6 +30,7 @@ const TransferProcessMessageComponent: React.FC<TransferProcessMessageComponentP
           {addSpacesFormat(message.message_type)}
         </MessageTitle>
         <MessageTimestamp created_at={message.created_at} />
+          <MessageMetaContainer>
         <MessageMeta
           label=" Transfer Message Id"
           value={message.id.slice(9, 60)}
@@ -37,7 +39,9 @@ const TransferProcessMessageComponent: React.FC<TransferProcessMessageComponentP
           label=" Transfer Process Id"
           value={message.transfer_process_id.slice(9, 60)}
         />
+          </MessageMetaContainer>
         <MessageContent content={message.content} />
+      
       </MessageBody>
     </MessageLog>
   );

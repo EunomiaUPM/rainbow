@@ -33,7 +33,7 @@ const RouteComponent = () => {
   const { data: dataservices } = useGetDataServicesByCatalogId(catalogId);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-4">
       <div>
         <Heading level="h5">Catalog info:</Heading>
 

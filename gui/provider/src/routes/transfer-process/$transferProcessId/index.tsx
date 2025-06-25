@@ -50,8 +50,8 @@ function RouteComponent() {
   const { data: dataPlane } = useGetDataplaneProcessById(transferProcessId);
 
   return (
-    <div className="space-y-4">
-      <Tabs defaultValue="data-control" className="w-[980px]">
+    <div className="space-y-4 pb-4">
+      <Tabs defaultValue="data-control" className="w-full">
         <TabsList>
           <TabsTrigger value="data-control">Data Control</TabsTrigger>
           <TabsTrigger value="data-plane">Data Plane</TabsTrigger>
@@ -112,10 +112,7 @@ function RouteComponent() {
               </ListItem>
             </List>
           </div>
-        </TabsContent>
-      </Tabs>
-
-      {/* DRAWER */}
+            {/* DRAWER */}
       <Drawer direction={"right"}>
         <DrawerTrigger>
           <Button variant={"secondary"}>See Transfer Process Messages</Button>
@@ -164,6 +161,10 @@ function RouteComponent() {
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
+        </TabsContent>
+      </Tabs>
+
+    
 
       <div>
         {/* CATALOGOS CON LAS VARIABLES, NO BORRAR!! */}

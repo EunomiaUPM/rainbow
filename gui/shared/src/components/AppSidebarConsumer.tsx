@@ -14,11 +14,11 @@ import logoImg from "./../img/eunomia_logo_lg_light.svg";
 
 // Menu items.
 const items = [
-    {
-        title: "Home",
-        url: "/",
-        icon: Home,
-    },
+    // {
+    //     title: "Home",
+    //     url: "/",
+    //     icon: Home,
+    // },
     {
         title: "Provider Catalogs",
         url: "/provider-catalog",

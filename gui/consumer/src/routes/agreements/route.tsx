@@ -20,6 +20,12 @@ const RouteComponent = () => {
                             {/* <ArrowLeft className="w-4"/> */}
                             Agreements
                         </Heading>
+                        {/* <p className="w-[75ch] text-sm"> 
+                            Here you can find the established agreements with the provider that allow you to request transferences for the requested datasets and/or services, in compliance with the defined policies.
+                        </p> */}
+                           <p className="w-[75ch] text-sm"> 
+                          A succesful contract negotiation with a provider will result in an agreement that allows you to request transferences for the requested datasets and/or services, in compliance with the defined policies.
+                        </p> 
                     </div>
                 </>
             }

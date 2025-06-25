@@ -236,7 +236,7 @@ const RouteComponent = () => {
     }
 
     return (
-        <div className="w-[500px]">
+        <div className="xl:w-[440px] 2xl:w-[500px]">
             <Heading level="h3">New Contract Negotiation Request</Heading>
             <Form {...form}>
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

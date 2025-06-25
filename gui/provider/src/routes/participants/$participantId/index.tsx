@@ -37,7 +37,7 @@ function RouteComponent() {
   const { data: participant } = useGetParticipantById(participantId);
   const { data: agreements } = useGetAgreementsByParticipantId(participantId);
 
-  const scopedListItemKeyClasses = 'basis-[28%]'
+  const scopedListItemKeyClasses = "basis-[28%]";
 
   return (
     <div className="w-full">
@@ -52,36 +52,47 @@ function RouteComponent() {
       <div className="flexColsLayout bg-blue-500/0">
         {/* Div Participant Info */}
         <div className="flex flex-col bg-green-800/0">
-          <Heading level="h6" className="text-foreground h-[36px] place-content-center">
+          <Heading
+            level="h6"
+            className="text-foreground h-[36px] place-content-center"
+          >
             {" "}
             Participant info:{" "}
           </Heading>
           <div className="w-full bg-green-500/0">
-            <List className={"min-w-fit"}>
+            <List className={" xl:w-[400px] 2xl:min-w-fit"}>
               <ListItem>
-                <ListItemKey className={scopedListItemKeyClasses}>Participant ID</ListItemKey>
+                <ListItemKey className={scopedListItemKeyClasses}>
+                  Participant ID
+                </ListItemKey>
                 <Badge variant={"info"} className="grow-1">
-                  {participant.participant_id.slice(9, -1)}
+                  {participant.participant_id.slice(9, -1) + "[...]"}
                 </Badge>
               </ListItem>
               <ListItem>
-                <ListItemKey className={scopedListItemKeyClasses}>Identity Token</ListItemKey>
+                <ListItemKey className={scopedListItemKeyClasses}>
+                  Identity Token
+                </ListItemKey>
                 {participant.token}
               </ListItem>
               <ListItem>
-                <ListItemKey className={scopedListItemKeyClasses}>Participant Type</ListItemKey>
+                <ListItemKey className={scopedListItemKeyClasses}>
+                  Participant Type
+                </ListItemKey>
                 <Badge variant={"role"} role={participant.participant_type}>
                   {participant.participant_type}
                 </Badge>
               </ListItem>
               <ListItem>
-                <ListItemKey className={scopedListItemKeyClasses}>Base URL</ListItemKey>
+                <ListItemKey className={scopedListItemKeyClasses}>
+                  Base URL
+                </ListItemKey>
                 <Badge variant={"info"}>{participant.base_url}</Badge>
               </ListItem>
             </List>
           </div>
         </div>
-        <Separator orientation="vertical"/>
+        <Separator orientation="vertical" />
 
         {/* Div Participant Tabs */}
         <Tabs defaultValue="participant-agreements">
@@ -95,7 +106,7 @@ function RouteComponent() {
               {/* <h2>Agreements</h2> */}
               <Table className="text-sm">
                 <TableHeader>
-                  <TableRow >
+                  <TableRow>
                     <TableHead>Agreement Id</TableHead>
                     {/* <TableHead>Related Message</TableHead> */}
                     {/* <TableHead>Consumer Participant Id</TableHead> */}
@@ -128,6 +139,7 @@ function RouteComponent() {
                   </Badge>
                 </TableCell> */}
                       <TableCell>
+                        {console.log(agreements, "agreements en provider")}
                         <Badge
                           variant={"status"}
                           state={agreement.active ? "STARTED" : "PAUSE"}

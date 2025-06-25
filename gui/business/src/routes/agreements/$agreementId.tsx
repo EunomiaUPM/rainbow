@@ -10,7 +10,7 @@ export const Route = createFileRoute('/agreements/$agreementId')({
 function RouteComponent() {
     const {agreementId} = Route.useParams()
     const {data: agreement} = useGetAgreementById(agreementId);
-    return <div className="space-y-4">
+    return <div className="space-y-4 pb-4">
         <div>
             Agreement with id : {agreement.agreement_id}
         </div>

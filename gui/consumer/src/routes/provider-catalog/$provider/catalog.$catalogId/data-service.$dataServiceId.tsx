@@ -13,7 +13,7 @@ import {
 function RouteComponent() {
     const {provider, dataServiceId} = Route.useParams()
     const {data: dataService} = useGetBypassDataServiceById(provider, dataServiceId)
-    return <div className="space-y-4">
+    return <div className="space-y-4 pb-4">
         <Heading level="h3" className="flex gap-2 items-center">
         Data service info with id
         <Badge variant="info" size="lg">

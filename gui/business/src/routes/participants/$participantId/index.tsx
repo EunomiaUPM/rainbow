@@ -27,7 +27,7 @@ function RouteComponent() {
   const { data: participant } = useGetParticipantById(participantId);
   const { data: agreements } = useGetAgreementsByParticipantId(participantId);
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-4">
       <div>Participant with id : {participant.participant_id}</div>
       <div>
         <h2>Transfer process info: </h2>

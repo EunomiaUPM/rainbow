@@ -5,17 +5,6 @@ import dayjs from "dayjs";
 import Heading from "shared/src/components/ui/heading";
 import { List, ListItem, ListItemKey, ListItemDate } from "shared/src/components/ui/list";
 import { Badge } from "shared/src/components/ui/badge.tsx";
-import {
-  Policy,
-  policyVariants,
-  PolicyConstraint,
-  PolicyItemContainer,
-  PolicyItem,
-  PolicyItemKey,
-  PolicyItemValue,
-  PolicyConstraintsContainer,
-  PolicyConstraintsWrapper,
-} from "shared/src/components/ui/policy";
 import PolicyComponent from "shared/src/components/ui/policyComponent.tsx";
 
 
@@ -31,7 +20,7 @@ function RouteComponent() {
   const { agreementId } = Route.useParams();
   const { data: agreement } = useGetAgreementById(agreementId);
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-4">
       <Heading
         level="h3"
         className="mb-0.5 font-display flex gap-3 items-center"

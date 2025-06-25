@@ -42,7 +42,7 @@ const RouteComponent = () => {
     useGetContractNegotiationMessagesByCNID(cnProcess);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-4">
           <Heading level="h5" className="mt-3">
                 Contract negotiation info{" "}
               </Heading>

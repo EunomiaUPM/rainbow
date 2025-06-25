@@ -25,7 +25,7 @@ const RouteComponent = () => {
   const { data: catalogs } = useGetCatalogs();
   // console.log(catalogs, " catalogsss");
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-4">
       {/* <h1 className="text-xl font-bold">Catalogs</h1> */}
       <Heading level="h3" className="flex gap-2 items-center">
         Main Catalog with id

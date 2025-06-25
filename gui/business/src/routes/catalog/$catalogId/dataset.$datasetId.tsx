@@ -45,7 +45,7 @@ function RouteComponent() {
         form.reset()
     }
 
-    return <div className="space-y-4">
+    return <div className="space-y-4 pb-4">
         <h2>Dataset info with id: {dataset["@id"]} </h2>
         <div>
             <Table className="text-sm">
