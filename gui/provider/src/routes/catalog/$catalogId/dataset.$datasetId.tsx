@@ -35,7 +35,7 @@ import {
   ListItemDate,
 } from "shared/src/components/ui/list.tsx";
 import { Badge } from "shared/src/components/ui/badge";
-import PolicyComponent from "shared/src/components/ui/PolicyComponent.tsx";
+import PolicyComponent from "shared/src/components/ui/policyComponent.tsx";
 import { Plus, Trash } from "lucide-react";
 import {
   Accordion,

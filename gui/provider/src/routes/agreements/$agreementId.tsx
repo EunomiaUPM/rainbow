@@ -16,7 +16,7 @@ import {
   PolicyConstraintsContainer,
   PolicyConstraintsWrapper,
 } from "shared/src/components/ui/policy";
-import PolicyComponent from "shared/src/components/ui/PolicyComponent.tsx";
+import PolicyComponent from "shared/src/components/ui/policyComponent.tsx";
 
 
 export const Route = createFileRoute("/agreements/$agreementId")({

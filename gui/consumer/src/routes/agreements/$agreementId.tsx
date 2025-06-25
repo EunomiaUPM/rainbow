@@ -10,7 +10,7 @@ import {
   ListItemDate,
 } from "shared/src/components/ui/list.tsx";
 import { Badge } from "shared/src/components/ui/badge.tsx";
-import PolicyComponent from "shared/src/components/ui/PolicyComponent.tsx";
+import PolicyComponent from "shared/src/components/ui/policyComponent.tsx";
 
 export const Route = createFileRoute("/agreements/$agreementId")({
   component: RouteComponent,

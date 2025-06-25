@@ -24,7 +24,7 @@ import {
   ListItemDate,
 } from "shared/src/components/ui/list.tsx";
 import { Badge } from "shared/src/components/ui/badge";
-import PolicyComponent from "shared/src/components/ui/PolicyComponent.tsx";
+import PolicyComponent from "shared/src/components/ui/policyComponent.tsx";
 import { ArrowRight } from "lucide-react";
 
 function RouteComponent() {
