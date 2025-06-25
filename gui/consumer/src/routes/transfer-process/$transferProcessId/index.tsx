@@ -1,154 +1,186 @@
-import {createFileRoute} from "@tanstack/react-router";
-import {Tabs, TabsList, TabsTrigger,} from "shared/src/components/ui/tabs.tsx";
+import { createFileRoute } from "@tanstack/react-router";
+import dayjs from "dayjs";
+import {
+  useGetDataplaneProcessById,
+  useGetTransferMessagesByProviderPid,
+  useGetTransferProcessByProviderPid,
+} from "shared/src/data/transfer-queries.ts";
+import {
+  List,
+  ListItem,
+  ListItemKey,
+  ListItemDate,
+} from "shared/src/components/ui/list.tsx";
+import Heading from "shared/src/components/ui/heading.tsx";
+import { Badge } from "shared/src/components/ui/badge.tsx";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../../../../../shared/src/components/ui/tabs.tsx";
+import {
+  Drawer,
+  DrawerBody,
+  DrawerClose,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@./../../shared/src/components/ui/drawer.tsx";
+import { Button } from "shared/src/components/ui/button.tsx";
+import { TransferProcessActions } from "shared/src/components/TransferProcessActions.tsx";
+import TransferProcessMessageComponent from "shared/src/components/TransferProcessMessageComponent.tsx";
 
 export const Route = createFileRoute("/transfer-process/$transferProcessId/")({
-    component: RouteComponent,
+  component: RouteComponent,
 });
 
 function RouteComponent() {
-    let addSpacesFromat = (text: string) => {
-        return text.replace(/(?!^)([A-Z])/g, " $1");
-    };
-    const {transferProcessId} = Route.useParams();
-    // const {data: transferProcess} =
-    //     useGetTransferProcessByProviderPid(transferProcessId);
-    // const {data: transferMessages} =
-    //     useGetTransferMessagesByProviderPid(transferProcessId);
-    // const {data: dataPlane} = useGetDataplaneProcessById(transferProcessId);
-    return (
-        <div className="space-y-4">
-            <Tabs defaultValue="data-control" className="w-[400px]">
-                <TabsList>
-                    <TabsTrigger value="data-control">Data Control</TabsTrigger>
-                    <TabsTrigger value="data-plane">Data Plane</TabsTrigger>
-                </TabsList>
-                {/*  <TabsContent value="data-plane">*/}
-                {/*      <Heading level="h6" className="text-text">*/}
-                {/*          Data Plane info*/}
-                {/*      </Heading>*/}
-                {/*      <div className="mb-4">*/}
-                {/*          {JSON.stringify(dataPlane)}*/}
-                {/*      </div>*/}
-                {/*  </TabsContent>*/}
-                {/*  <TabsContent value="data-control">*/}
-                {/*      {" "}*/}
-                {/*      <Heading level="h6">Transfer process info: </Heading>*/}
-                {/*      <div className="mb-4">*/}
-                {/*          <List>*/}
-                {/*              <ListItem>*/}
-                {/*                  <ListItemKey>Transfer Process Provider pid</ListItemKey>*/}
-                {/*                  <p>{transferProcess.provider_pid.slice(0, 20) + "..."}</p>*/}
-                {/*              </ListItem>*/}
-                {/*              <ListItem>*/}
-                {/*                  <ListItemKey>Transfer Consumer Provider pid</ListItemKey>*/}
-                {/*                  <p>{transferProcess.consumer_pid.slice(0, 20) + "..."}</p>*/}
-                {/*              </ListItem>*/}
-                {/*              <ListItem>*/}
-                {/*                  <ListItemKey>Agreement id</ListItemKey>*/}
-                {/*                  <p>{transferProcess.agreement_id.slice(0, 20) + "..."}</p>*/}
-                {/*              </ListItem>*/}
-                {/*              <ListItem>*/}
-                {/*                  <ListItemKey>Transfer Process Provider pid</ListItemKey>*/}
-                {/*                  <p>{transferProcess.state}</p>*/}
-                {/*              </ListItem>*/}
-                {/*              <ListItem>*/}
-                {/*                  <ListItemKey>Created At</ListItemKey>*/}
-                {/*                  <p>*/}
-                {/*                      {" "}*/}
-                {/*                      {dayjs(transferProcess.created_at).format("DD/MM/YY HH:mm")}*/}
-                {/*                  </p>*/}
-                {/*              </ListItem>*/}
-                {/*              <ListItem>*/}
-                {/*                  <ListItemKey>Updated At</ListItemKey>*/}
-                {/*                  <p>*/}
-                {/*                      {" "}*/}
-                {/*                      {dayjs(transferProcess.updated_at).format("DD/MM/YY HH:mm")}*/}
-                {/*                  </p>*/}
-                {/*              </ListItem>*/}
-                {/*          </List>*/}
-                {/*      </div>*/}
-                {/*      <Heading level="h6" className="text-text">*/}
-                {/*          Transfer Messages*/}
-                {/*      </Heading>*/}
-                {/*      {transferMessages.map((transferMessage) => (*/}
-                {/*          <div className="my-4">*/}
-                {/*              <div*/}
-                {/*                  className={`uppercase inline-block  ${*/}
-                {/*                      transferMessage.from === "Provider"*/}
-                {/*                          ? "bg-provider-800 "*/}
-                {/*                          : "bg-consumer-800"*/}
-                {/*                  }`}*/}
-                {/*              >*/}
-                {/*                  {transferMessage.from}*/}
-                {/*              </div>*/}
-                {/*              <div className={` w-3/5  p-2 rounded-md */}
-                {/*${transferMessage.from === "Provider"*/}
-                {/*                  ? "bg-provider-800"*/}
-                {/*                  : "bg-consumer-800"*/}
-                {/*              }*/}
+  // let addSpacesFormat = (text: string = "") => {
+  //   return text.replace(/(?!^)([A-Z])/g, " $1");
+  // };
 
-                {/*`}>*/}
-                {/*                  <div className="text-20">*/}
-                {/*                      {" "}*/}
-                {/*                      {addSpacesFromat(transferMessage.message_type)}{" "}*/}
-                {/*                  </div>*/}
-                {/*                  <p>*/}
-                {/*                      <i>*/}
-                {/*                          {" "}*/}
-                {/*                          {dayjs(transferMessage.created_at).format(*/}
-                {/*                              "DD/MM/YYYY - HH:mm"*/}
-                {/*                          )}*/}
-                {/*                      </i>*/}
-                {/*                  </p>*/}
-                {/*                  <div*/}
-                {/*                      className="flex gap-3 "*/}
-                {/*                      key={transferMessage.id.slice(0, 20)}*/}
-                {/*                  >*/}
-                {/*                      <p className="font-bold "> Transfer Message Id </p>*/}
-                {/*                      <p className=" w-1/2">*/}
-                {/*                          {" "}*/}
-                {/*                          {transferMessage.id.slice(0, 20) + "..."}*/}
-                {/*                      </p>*/}
-                {/*                  </div>*/}
-                {/*                  <div*/}
-                {/*                      className="flex gap-3 "*/}
-                {/*                      key={transferMessage.id.slice(0, 20)}*/}
-                {/*                  >*/}
-                {/*                      <p className="font-bold "> Transfer Process Id </p>*/}
-                {/*                      <p className=" w-1/2">*/}
-                {/*                          {" "}*/}
-                {/*                          {transferMessage.transfer_process_id?.slice(0, 20) + "..."}*/}
-                {/*                      </p>*/}
-                {/*                  </div>*/}
-                {/*                  <div*/}
-                {/*                      className="flex gap-3 "*/}
-                {/*                      key={transferMessage.id.slice(0, 20)}*/}
-                {/*                  >*/}
-                {/*                      <p className="font-bold "> Transfer Process Id </p>*/}
-                {/*                      <p className=" w-1/2">*/}
-                {/*                          {JSON.stringify(transferMessage.content)}*/}
-                {/*                      </p>*/}
-                {/*                  </div>*/}
-                {/*              </div>*/}
-                {/*          </div>*/}
-                {/*      ))}*/}
-                {/*  </TabsContent>*/}
-            </Tabs>
-            <div>
-                {/* CATALOGOS CON LAS VARIABLES, NO BORRAR!! */}
-                {/* <Table className="text-sm">
+  const { transferProcessId } = Route.useParams();
+  const { data: transferProcess } =
+    useGetTransferProcessByProviderPid(transferProcessId);
+  const { data: transferMessages } =
+    useGetTransferMessagesByProviderPid(transferProcessId);
+  const { data: dataPlane } = useGetDataplaneProcessById(transferProcessId);
+  
+  return (
+    <div className="space-y-4 pb-4">
+      <Tabs defaultValue="data-control" className="w-full">
+        <TabsList>
+          <TabsTrigger value="data-control">Data Control</TabsTrigger>
+          <TabsTrigger value="data-plane">Data Plane</TabsTrigger>
+        </TabsList>
+        <TabsContent value="data-plane">
+          <div className=" w-full break-all">
+            <pre className="max-w-[500px] p-4 rounded-lg break-all text-[11px] bg-black/70 text-secondary-400 break-all">
+              <code className="whitespace-pre-wrap break-all">
+                {/* {JSON.stringify(dataPlane, null, 2)} */}
+              </code>
+            </pre>
+          </div>
+        </TabsContent>
+        <TabsContent value="data-control">
+          {" "}
+          <Heading level="h5" className="mt-3">
+            Transfer process info{" "}
+          </Heading>
+          <div className="mb-4">
+            <List>
+              <ListItem>
+                <ListItemKey>Process pid</ListItemKey>
+                <Badge variant={"info"}>
+                  {transferProcess.provider_pid?.slice(9, 20) + "..."}
+                </Badge>
+              </ListItem>
+              <ListItem>
+                <ListItemKey>Consumer pid</ListItemKey>
+                <Badge variant={"info"}>
+                  {transferProcess.consumer_pid?.slice(9, 20) + "..."}
+                </Badge>
+              </ListItem>
+              <ListItem>
+                <ListItemKey>Agreement id</ListItemKey>
+                <Badge variant={"info"}>
+                  {transferProcess.agreement_id?.slice(9, 20) + "..."}
+                </Badge>
+              </ListItem>
+              <ListItem>
+                <ListItemKey>Transfer Process State</ListItemKey>
+                <Badge variant={"status"} state={transferProcess?.state}>
+                  {transferProcess?.state}
+                </Badge>
+              </ListItem>
+              <ListItem>
+                <ListItemKey>Created At</ListItemKey>
+                <p>
+                  {" "}
+                  {dayjs(transferProcess?.created_at).format("DD/MM/YY HH:mm")}
+                </p>
+              </ListItem>
+              <ListItem>
+                <ListItemKey>Updated At</ListItemKey>
+                <p>
+                  {" "}
+                  {dayjs(transferProcess?.updated_at).format("DD/MM/YY HH:mm")}
+                </p>
+              </ListItem>
+            </List>
+          </div>
+           {/* DRAWER */}
+      <Drawer direction={"right"}>
+        <DrawerTrigger>
+          <Button variant={"secondary"}>See Transfer Process Messages</Button>
+        </DrawerTrigger>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>
+              <Heading level="h5" className="text-current">
+                Transfer Messages
+              </Heading>
+            </DrawerTitle>
+          </DrawerHeader>
+          {/* Messages */}
+          <DrawerBody>
+            {/* {transferMessages.map((message) => {
+              // console.log(message);
+              return (
+                // <pre key={message.id}>{JSON.stringify(message, null, 2)}</pre>
+                <TransferProcessMessageComponent
+                  key={message?.id}
+                  message={message}
+                />
+              );
+            })} */}
+          </DrawerBody>
+          {/* esto por si hace falta en algn momento dividir lo que pone en el
+          content, pero por ahora no hace falta!!
+          <div className="flex ">
+            <p className="font-bold min-w-[9.4rem] "> Transfer Content: </p>
+            <p> {transferMessage.content["@context"]} </p>
+          </div>
+          <div> {transferMessage.content["@type"]} </div>
+          <div> {transferMessage.content.agreementId} </div>
+          <div className="flex ">
+            <p className="font-bold min-w-[9.4rem] "> Agreement ID </p>
+            <Badge variant="info">
+              {" "}
+              {transferMessage.content["@context"]}{" "}
+            </Badge>
+          </div> */}
+
+          <DrawerFooter>
+            <DrawerClose>
+              <Button variant="ghost">Hide Messages</Button>
+            </DrawerClose>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+
+        </TabsContent>
+      </Tabs>
+
+     
+      <div>
+        {/* CATALOGOS CON LAS VARIABLES, NO BORRAR!! */}
+        {/* <Table className="text-sm">
            <TableHeader>
                     <TableRow>
                         <TableHead>Key</TableHead>
                         <TableHead>Value</TableHead>
                     </TableRow>
-                </TableHeader>
+                </TableHeader> 
           <TableBody> */}
-                {/* <TableRow>
+        {/* <TableRow>
                         <TableCell>Transfer Process Provider pid</TableCell>
                         <TableCell>{transferProcess.provider_pid.slice(0, 20) + "..."}</TableCell>
                     </TableRow> */}
-                {/* <TableRow>
+        {/* <TableRow>
                         <TableCell>Transfer Consumer Provider pid</TableCell>
                         <TableCell>{transferProcess.consumer_pid.slice(0, 20) + "..."}</TableCell>
                     </TableRow>
@@ -160,7 +192,7 @@ function RouteComponent() {
                         <TableCell>State</TableCell>
                         <TableCell>{transferProcess.state}</TableCell>
                     </TableRow> */}
-                {/* <TableRow>
+        {/* <TableRow>
               <TableCell>Created At</TableCell>
               <TableCell>
                 {dayjs(transferProcess.created_at).format("DD/MM/YYYY - HH:mm")}
@@ -172,13 +204,13 @@ function RouteComponent() {
                 {dayjs(transferProcess.updated_at).format("DD/MM/YYYY - HH:mm")}
               </TableCell>
             </TableRow> */}
-                {/* </TableBody>
+        {/* </TableBody>
         </Table> */}
-            </div>
+      </div>
 
-            <div>
-                {/* MENSAJES */}
-                {/* <Table className="text-sm">
+      <div>
+        {/* MENSAJES */}
+        {/* <Table className="text-sm">
           <TableHeader>
             <TableRow>
               <TableHead>Transfer Message Id</TableHead>
@@ -220,7 +252,10 @@ function RouteComponent() {
             ))}
           </TableBody>
         </Table> */}
-            </div>
-        </div>
-    );
+      </div>
+
+      {/* ACTIONS */}
+      <TransferProcessActions process={transferProcess} tiny={false} />
+    </div>
+  );
 }

@@ -7,6 +7,7 @@ import {Input} from "shared/src/components/ui/input.tsx";
 import {useGetContractNegotiationProcesses} from "shared/src/data/contract-queries.ts";
 import {ContractNegotiationActions} from "shared/src/components/ContractNegotiationActions";
 import {useMemo} from "react";
+import { ArrowRight, Plus } from "lucide-react";
 
 const RouteComponent = () => {
     const {data: cnProcesses} = useGetContractNegotiationProcesses();
@@ -36,7 +37,7 @@ const RouteComponent = () => {
                         <TableHead>ProviderPid</TableHead>
                         <TableHead>ConsumerPid</TableHead>
                         <TableHead>State</TableHead>
-                        <TableHead>CreatedAt</TableHead>
+                        <TableHead>Created at</TableHead>
                         <TableHead>Actions</TableHead>
                         <TableHead>Link</TableHead>
                     </TableRow>
@@ -44,7 +45,7 @@ const RouteComponent = () => {
                 <TableBody>
                     {cnProcessesSorted.map((cnProcess) => (
 
-                        <TableRow key={cnProcess.provider_id.slice(0, 20)}>
+                        <TableRow key={cnProcess.provider_id?.slice(0, 20)}>
                             <TableCell>
                                 <Badge variant={"info"}>
                                     {cnProcess.provider_id?.slice(9, 20) + "..."}
@@ -70,14 +71,16 @@ const RouteComponent = () => {
                                 />
                             </TableCell>
                             <TableCell>
-                                <Button variant="default">
-                                    <Link
+                                  <Link
                                         to="/contract-negotiation/$cnProcess"
                                         params={{cnProcess: cnProcess.consumer_id}}
                                     >
-                                        See contract negotiation
-                                    </Link>
+                                <Button variant="link">
+                                  
+                                        See contract 
+                                       <ArrowRight />
                                 </Button>
+                                  </Link>
                             </TableCell>
                         </TableRow>
                     ))}

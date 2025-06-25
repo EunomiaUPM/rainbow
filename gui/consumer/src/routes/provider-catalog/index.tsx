@@ -6,6 +6,13 @@ import {PubSubContext} from "shared/src/context/PubSubContext.tsx";
 import {Button} from "shared/src/components/ui/button.tsx";
 import {Input} from "shared/src/components/ui/input.tsx";
 import {Badge} from "shared/src/components/ui/badge";
+import {
+  List,
+  ListItem,
+  ListItemKey,
+  ListItemDate,
+} from "shared/src/components/ui/list.tsx";
+import Heading from "shared/src/components/ui/heading.tsx";
 
 export const Route = createFileRoute("/provider-catalog/")({
     component: RouteComponent,
@@ -16,6 +23,9 @@ function RouteComponent() {
     const {lastHighLightedNotification} = useContext(PubSubContext)!;
     return (
         <div>
+            <Heading level="h3" className="flex gap-2 items-center">
+                Provider Catalog
+               </Heading>
             <div className="pb-3 w-3/5">
                 <Input type="search"></Input>
             </div>

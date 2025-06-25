@@ -18,7 +18,7 @@ const RouteComponent = () => {
     const {data: dataservices} = useGetDataServicesByCatalogId(catalogId);
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-4 pb-4">
             <h1 className="text-xl font-bold">Catalogs</h1>
             <div>
                 Catalog with id : {catalog["@id"]}

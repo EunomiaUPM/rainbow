@@ -13,13 +13,19 @@ const RouteComponent = () => {
         <>
             {/* Evitar que se pinte el titulo de "transferences
     " por duplicado en la pagina de transferencia single */}
-            {routerState.location.pathname !== '/contract-negotiation' ? null :
+            {routerState.location.pathname !== '/agreements' ? null :
                 <>
                     <div className="mb-6">
                         <Heading level="h3" className="flex gap-2 items-center">
                             {/* <ArrowLeft className="w-4"/> */}
-                            Contracts
+                            Agreements
                         </Heading>
+                        {/* <p className="w-[75ch] text-sm"> 
+                            Here you can find the established agreements with the provider that allow you to request transferences for the requested datasets and/or services, in compliance with the defined policies.
+                        </p> */}
+                           <p className="w-[75ch] text-sm"> 
+                          A succesful contract negotiation with a provider will result in an agreement that allows you to request transferences for the requested datasets and/or services, in compliance with the defined policies.
+                        </p> 
                     </div>
                 </>
             }

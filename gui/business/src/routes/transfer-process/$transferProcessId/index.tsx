@@ -11,7 +11,7 @@ function RouteComponent() {
     const {transferProcessId} = Route.useParams();
     const {data: transferProcess} = useGetTransferProcessByProviderPid(transferProcessId)
     const {data: transferMessages} = useGetTransferMessagesByProviderPid(transferProcessId)
-    return <div className="space-y-4">
+    return <div className="space-y-4 pb-4">
         <div>
             Transfer process with id : {transferProcess.provider_pid}
         </div>

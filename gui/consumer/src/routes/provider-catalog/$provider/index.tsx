@@ -1,99 +1,117 @@
-import {createFileRoute, Link} from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import dayjs from "dayjs";
-import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "shared/src/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "shared/src/components/ui/table";
 import Heading from "shared/src/components/ui/heading.tsx";
-import {List, ListItem, ListItemKey} from "shared/src/components/ui/list.tsx";
-import {Button,} from "@/../../shared/src/components/ui/button.tsx";
-import {Input,} from "@/../../shared/src/components/ui/input.tsx";
-import {useGetBypassCatalogs} from "shared/src/data/catalog-bypass-queries.ts";
+import { List, ListItem, ListItemKey } from "shared/src/components/ui/list.tsx";
+import { Button } from "@/../../shared/src/components/ui/button.tsx";
+import { Input } from "@/../../shared/src/components/ui/input.tsx";
+import { useGetBypassCatalogs } from "shared/src/data/catalog-bypass-queries.ts";
+import { Badge } from "shared/src/components/ui/badge";
+import { ArrowRight } from "lucide-react";
 
 const RouteComponent = () => {
-    const {provider} = Route.useParams()
-    const {data: catalogs} = useGetBypassCatalogs(provider);
-    return (
-        <div className="space-y-4">
-            {/* <h1 className="text-xl font-bold">Catalogs</h1> */}
-            <Heading level="h3" className="flex gap-2 items-center">
-                Main Catalog with id : {catalogs["@id"]}
-            </Heading>
-            <div>
-                <Heading level="h5">Main Catalog info: </Heading>
-                <List className="text-sm">
-                    <ListItem>
-                        <ListItemKey>Catalog title</ListItemKey>
-                        <p>{catalogs.title}</p>
-                    </ListItem>
-                    <ListItem>
-                        <ListItemKey>Catalog participant id</ListItemKey>
-                        <p>{catalogs.participantId}</p>
-                    </ListItem>
-                    <ListItem>
-                        <ListItemKey>Catalog homepage</ListItemKey>
-                        <p>{catalogs.homepage}</p>
-                    </ListItem>
-                    <ListItem>
-                        <ListItemKey>Catalog creation date</ListItemKey>
-                        <p>{dayjs(catalogs.issued).format("DD/MM/YYYY - HH:mm")}</p>
-                    </ListItem>
-                </List>
-            </div>
+  const { provider } = Route.useParams();
+  const { data: catalogs } = useGetBypassCatalogs(provider);
+  return (
+    <div className="space-y-4 pb-4">
+      {/* <h1 className="text-xl font-bold">Catalogs</h1> */}
+      <Heading level="h3" className="flex gap-2 items-center">
+        Main Catalog with id
+        <Badge variant="info" size="lg">
+          {catalogs["@id"].slice(9, 29) + "[...]"}{" "}
+        </Badge>
+      </Heading>
+      <div>
+        <Heading level="h5">Main Catalog info: </Heading>
+        <List className="text-sm">
+          <ListItem>
+            <ListItemKey>Catalog title</ListItemKey>
+            <p>{catalogs.title}</p>
+          </ListItem>
+          <ListItem>
+            <ListItemKey>Catalog participant id</ListItemKey>
+            <Badge variant="info">
+              {" "}
+              {catalogs.participantId.slice(9, 29) + "[...]"}{" "}
+            </Badge>
+          </ListItem>
+          <ListItem>
+            <ListItemKey>Catalog homepage</ListItemKey>
+            <p>{catalogs.homepage}</p>
+          </ListItem>
+          <ListItem>
+            <ListItemKey>Catalog creation date</ListItemKey>
+            <p>{dayjs(catalogs.issued).format("DD/MM/YYYY - HH:mm")}</p>
+          </ListItem>
+        </List>
+      </div>
 
-            <div>
-                <Heading level="h5">Catalogs</Heading>
-                <div className='pb-3 w-3/5'>
-                    <Input type="search"></Input>
-                </div>
-                <Table className="text-sm">
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Title</TableHead>
-                            <TableHead>Catalog Id</TableHead>
-                            <TableHead>Provider ID</TableHead>
-                            <TableHead>CreatedAt</TableHead>
-                            <TableHead>Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {catalogs.catalog.map(catalogItem => (<TableRow key="urn:uuid:c4d4449d-a">
+      <div>
+        <Heading level="h5">Catalogs</Heading>
+        <div className="pb-3 w-3/5">
+          <Input type="search"></Input>
+        </div>
+        <Table className="text-sm">
+          <TableHeader>
+            <TableRow>
+              <TableHead>Title</TableHead>
+              <TableHead>Created at</TableHead>
+              <TableHead>Catalog ID</TableHead>
+              <TableHead>Provider ID</TableHead>
 
-                            <TableCell>{catalogItem.title}</TableCell>
-                            <TableCell>{catalogItem.title}</TableCell>
-                            <TableCell>{catalogItem.participantId}</TableCell>
-                            <TableCell>
-                                <p className="text-18"> Dataset #1 </p>
-                                <p className="text-gray-400">
-                                    {" "}
-                                    <i>Created at: 23/6/25 16:34 </i>
-                                </p>
-                            </TableCell>
+              <TableHead>Link</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {catalogs.catalog.map((catalogItem) => (
+              <TableRow key="urn:uuid:c4d4449d-a">
+                <TableCell>
+                  {" "}
+                  <p className="text-18">{catalogItem.title}</p>
+                </TableCell>
+                <TableCell>
+                  <p className="text-gray-400"> 23/6/25 16:34</p>
+                </TableCell>
 
-                            {/*<TableCell>*/}
-                            {/*    <Button>*/}
-                            {/*        <Link*/}
-                            {/*            to="/catalog/$catalogId"*/}
-                            {/*            // params={{catalogId: catalog["@id"]}}*/}
-                            {/*        >*/}
-                            {/*            Create policy*/}
-                            {/*        </Link>*/}
-                            {/*    </Button>*/}
-                            {/*</TableCell>*/}
-                            <TableCell>
-                                <Button>
-                                    <Link
-                                        to="/provider-catalog/$provider/catalog/$catalogId"
-                                        params={{
-                                            provider: provider,
-                                            catalogId: catalogItem["@id"]
-                                        }}
-                                    >
-                                        See catalog
-                                    </Link>
-                                </Button>
-                            </TableCell>
-                        </TableRow>))}
+                <TableCell>
+                          <Badge variant="info">
+                    {catalogItem["@id"].slice(9, 29) + "[...]"}
+                    </Badge>
+                    </TableCell>
+                <TableCell>
+                     <Badge variant="info">
+                    {catalogItem.participantId.slice(9, 29) + "[...]"}
+                   </Badge> 
+                    </TableCell>
 
+     
+                <TableCell>
+                 
+                    <Link
+                      to="/provider-catalog/$provider/catalog/$catalogId"
+                      params={{
+                        provider: provider,
+                        catalogId: catalogItem["@id"],
+                      }}
+                    >
+                         <Button variant="link">
+                      See catalog
+                        <ArrowRight />
+                        </Button>
+                    </Link>
+            
+                </TableCell>
+              </TableRow>
+            ))}
 
-                        {/* {catalogs.catalog.map((catalog) => (
+            {/* {catalogs.catalog.map((catalog) => (
                             <TableRow key={catalog["@id"].slice(0, 20)}>
                                 <p>
                                     {catalog["@id"].slice(0, 20) + "..."}
@@ -115,14 +133,14 @@ const RouteComponent = () => {
                                 </p>
                             </TableRow>
                         ))} */}
-                    </TableBody>
-                </Table>
-            </div>
-        </div>
-    );
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
 };
 
 export const Route = createFileRoute("/provider-catalog/$provider/")({
-    component: RouteComponent,
-    pendingComponent: () => <div>Loading...</div>,
+  component: RouteComponent,
+  pendingComponent: () => <div>Loading...</div>,
 });

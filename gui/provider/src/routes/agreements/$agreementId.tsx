@@ -3,20 +3,9 @@ import { useGetAgreementById } from "shared/src/data/agreement-queries";
 import { TableCell } from "shared/src/components/ui/table.tsx";
 import dayjs from "dayjs";
 import Heading from "shared/src/components/ui/heading";
-import { List, ListItem, ListItemKey } from "shared/src/components/ui/list";
+import { List, ListItem, ListItemKey, ListItemDate } from "shared/src/components/ui/list";
 import { Badge } from "shared/src/components/ui/badge.tsx";
-import {
-  Policy,
-  policyVariants,
-  PolicyConstraint,
-  PolicyItemContainer,
-  PolicyItem,
-  PolicyItemKey,
-  PolicyItemValue,
-  PolicyConstraintsContainer,
-  PolicyConstraintsWrapper,
-} from "shared/src/components/ui/policy";
-import PolicyComponent from "shared/src/components/ui/PolicyComponent.tsx";
+import PolicyComponent from "shared/src/components/ui/policyComponent.tsx";
 
 
 export const Route = createFileRoute("/agreements/$agreementId")({
@@ -31,7 +20,7 @@ function RouteComponent() {
   const { agreementId } = Route.useParams();
   const { data: agreement } = useGetAgreementById(agreementId);
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-4">
       <Heading
         level="h3"
         className="mb-0.5 font-display flex gap-3 items-center"
@@ -84,7 +73,7 @@ function RouteComponent() {
             </ListItem>
             <ListItem>
               <ListItemKey>Created at</ListItemKey>
-              {dayjs(agreement.created_at).format("DD/MM/YYYY - HH:mm")}
+              <ListItemDate>{dayjs(agreement.created_at).format("DD/MM/YYYY - HH:mm")}</ListItemDate>
             </ListItem>
           </List>
         </div>
@@ -146,7 +135,7 @@ function RouteComponent() {
                 policyItem={agreement.agreement_content.obligation}
                 variant={"obligation"}
             />
-             {console.log(agreement.agreement_content.obligation, "brrummm brum")}
+             {/* {console.log(agreement.agreement_content.obligation, "")} */}
              <PolicyComponent
                 policyItem={agreement.agreement_content.prohibition}
                 variant={"prohibition"}

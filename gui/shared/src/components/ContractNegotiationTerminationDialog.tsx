@@ -72,16 +72,16 @@ export const ContractNegotiationTerminationDialog = ({
       <List className="min-w-fit w-full">
         <ListItem>
           <ListItemKey className={scopedListItemKeyClasses}>Provider id:</ListItemKey>
-          <Badge variant={"info"}>{process.provider_id.slice(9, -1)}</Badge>
+          <Badge variant={"info"}>{process.provider_id?.slice(9, -1)}</Badge>
         </ListItem>
         <ListItem>
           <ListItemKey className={scopedListItemKeyClasses}>Consumer id:</ListItemKey>
-          <Badge variant={"info"}>{process.consumer_id.slice(9, -1)}</Badge>
+          <Badge variant={"info"}>{process.consumer_id?.slice(9, -1)}</Badge>
         </ListItem>
         <ListItem>
           <ListItemKey className={scopedListItemKeyClasses}>Associated Consumer:</ListItemKey>
           <Badge variant={"info"}>
-            {process.associated_consumer.slice(9, -1)}
+            {process.associated_consumer?.slice(9, -1)}
           </Badge>
         </ListItem>
         <ListItem>

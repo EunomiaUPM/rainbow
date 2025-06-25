@@ -7,7 +7,7 @@ import {getCatalogsOptions, useGetCatalogs} from "@/data/catalog-queries.ts";
 const RouteComponent = () => {
     const {data: catalogs} = useGetCatalogs();
     return (
-        <div className="space-y-4">
+        <div className="space-y-4 pb-4">
             <h1 className="text-xl font-bold">Catalogs</h1>
             <div>
                 Main Catalog with id : {catalogs["@id"]}

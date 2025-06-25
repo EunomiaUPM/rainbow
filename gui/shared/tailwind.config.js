@@ -6,7 +6,8 @@ import {
 /** @type {import('tailwindcss').Config} */
 
 module.exports = {
-  content: [
+    darkMode: ["class"],
+    content: [
     "index.css",
     "./src/**/*.{ts,tsx,js,jsx,css,sass,scss}",
     "./../shared/src/**/*.{ts,tsx,js,jsx,css,sass,scss}",

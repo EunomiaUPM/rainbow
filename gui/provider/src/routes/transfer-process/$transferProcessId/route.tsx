@@ -17,7 +17,7 @@ const RouteComponent = () => {
           className="mb-0.5 font-display flex  gap-3 items-center"
         >
         
-          Transfer Process{" "}
+          Transfer Process 
               <Badge variant="info" size="lg">
             {" "}
             {transferProcessId.slice(9,29) + "[...]"}{" "}

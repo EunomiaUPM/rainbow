@@ -11,7 +11,7 @@ const RouteComponent = () => {
     const {data: subscription} = useGetSubscriptionById(subscriptionId!);
     const {data: notifications} = useGetNotificationsBySubscriptionId(subscriptionId!);
     return (
-        <div className="space-y-4">
+        <div className="space-y-4 pb-4">
             <h1 className="text-xl font-bold">Subscription</h1>
             <div>
                 Subscription with id : {subscription.subscriptionId}

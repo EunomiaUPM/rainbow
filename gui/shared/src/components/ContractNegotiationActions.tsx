@@ -13,6 +13,8 @@ import {
 import { ContractNegotiationRequestDialog } from "./ContractNegotiationRequestDialog";
 import { ContractNegotiationAcceptanceDialog } from "./ContractNegotiationAcceptanceDialog";
 import { ContractNegotiationVerificationDialog } from "./ContractNegotiationVerificationDialog";
+import NoFurtherActions from "./ui/noFurtherActions";
+
 
 export const ContractNegotiationActions = ({
   process,
@@ -35,14 +37,14 @@ export const ContractNegotiationActions = ({
       tiny: {
         true: "inline-flex items-center ",
         false:
-          " w-full p-6 pt-4 fixed bottom-0 left-0 md:left-[223px] bg-primary-950/10 border border-t-stroke [&>*>button]:min-w-20",
+          " w-full p-6 fixed bottom-0 left-0 md:left-[223px] bg-background/80 backdrop-blur-sm border border-t-stroke [&>*>button]:min-w-20",
       },
     },
   });
 
   return (
     <div className={containerClassName({ tiny })}>
-      <h2 className={h2ClassName({ tiny })}>Actions</h2>
+      {/* <h2 className={h2ClassName({ tiny })}></h2> */}
       {process.state === "REQUESTED" && (
         <div className="space-x-2">
           {role === "provider" && (
@@ -70,7 +72,7 @@ export const ContractNegotiationActions = ({
           {role === "consumer" && (
             <Dialog>
               <DialogTrigger asChild>
-                <Button>Terminate</Button>
+                <Button variant="destructive" size={tiny ? "sm" : ""}>Terminate</Button>
               </DialogTrigger>
               <ContractNegotiationTerminationDialog process={process} />
             </Dialog>
@@ -82,7 +84,7 @@ export const ContractNegotiationActions = ({
           {role === "provider" && (
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant="destructive">Terminate</Button>
+                <Button variant="destructive" size={tiny ? "sm" : ""}>Terminate</Button>
               </DialogTrigger>
               <ContractNegotiationTerminationDialog process={process} />
             </Dialog>
@@ -91,19 +93,19 @@ export const ContractNegotiationActions = ({
             <>
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button>Accept</Button>
+                  <Button size={tiny ? "sm" : ""}>Accept</Button>
                 </DialogTrigger>
                 <ContractNegotiationAcceptanceDialog process={process} />
               </Dialog>
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button>Request</Button>
+                  <Button variant="outline"  size={tiny ? "sm" : ""}>Request</Button>
                 </DialogTrigger>
                 <ContractNegotiationRequestDialog process={process} />
               </Dialog>
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button variant="destructive">Terminate</Button>
+                  <Button variant="destructive" size={tiny ? "sm" : ""}>Terminate</Button>
                 </DialogTrigger>
                 <ContractNegotiationTerminationDialog process={process} />
               </Dialog>
@@ -117,7 +119,7 @@ export const ContractNegotiationActions = ({
             <>
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button>Agree</Button>
+                  <Button size={tiny ? "sm" : ""}>Agree</Button>
                 </DialogTrigger>
                 <ContractNegotiationAgreementDialog process={process} />
               </Dialog>
@@ -131,7 +133,7 @@ export const ContractNegotiationActions = ({
           )}
           {role === "consumer" && (
             <>
-              <div>No further actions</div>
+              <NoFurtherActions />
               {/*<Dialog>*/}
               {/*    <DialogTrigger asChild>*/}
               {/*        <Button variant="destructive">Terminate</Button>*/}
@@ -148,7 +150,7 @@ export const ContractNegotiationActions = ({
             <>
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button variant="destructive">Terminate</Button>
+                  <Button variant="destructive" size={tiny ? "sm" : ""}>Terminate</Button>
                 </DialogTrigger>
                 <ContractNegotiationTerminationDialog process={process} />
               </Dialog>
@@ -158,7 +160,7 @@ export const ContractNegotiationActions = ({
             <>
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button>Verify</Button>
+                  <Button size={tiny ? "sm" : ""}>Verify</Button>
                 </DialogTrigger>
                 <ContractNegotiationVerificationDialog process={process} />
               </Dialog>
@@ -172,13 +174,13 @@ export const ContractNegotiationActions = ({
             <>
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button>Finalize</Button>
+                  <Button size={tiny ? "sm" : ""}>Finalize</Button>
                 </DialogTrigger>
                 <ContractNegotiationFinalizationDialog process={process} />
               </Dialog>
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button variant="destructive">Terminate</Button>
+                  <Button variant="destructive" size={tiny ? "sm" : ""}>Terminate</Button>
                 </DialogTrigger>
                 <ContractNegotiationTerminationDialog process={process} />
               </Dialog>
@@ -186,13 +188,13 @@ export const ContractNegotiationActions = ({
           )}
           {role === "consumer" && (
             <>
-              <div>No further actions</div>
+             <NoFurtherActions />
             </>
           )}
         </div>
       )}
-      {process.state === "FINALIZED" && <div>No further actions</div>}
-      {process.state === "TERMINATED" && <div>No further actions</div>}
+      {process.state === "FINALIZED" && <NoFurtherActions /> }
+      {process.state === "TERMINATED" && <NoFurtherActions />}
     </div>
   );
 };

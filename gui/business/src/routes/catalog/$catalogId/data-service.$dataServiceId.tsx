@@ -7,7 +7,7 @@ import dayjs from "dayjs";
 function RouteComponent() {
     const {dataServiceId} = Route.useParams()
     const {data: dataService} = useGetDataServiceById(dataServiceId)
-    return <div className="space-y-4">
+    return <div className="space-y-4 pb-4">
         <h2>Data service info with id: {dataService["@id"]} </h2>
         <div>
             <Table className="text-sm">

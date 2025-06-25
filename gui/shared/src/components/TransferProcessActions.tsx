@@ -1,38 +1,40 @@
-import React, {useContext} from "react";
-import {cva} from "class-variance-authority";
-import {GlobalInfoContext, GlobalInfoContextType} from "shared/src/context/GlobalInfoContext";
-import {Dialog, DialogTrigger} from "shared/src/components/ui/dialog";
-import {Button} from "shared/src/components/ui/button";
-import {TransferProcessStartDialog} from "shared/src/components/TransferProcessStartDialog";
-import {TransferProcessTerminationDialog} from "shared/src/components/TransferProcessTerminationDialog";
-import {TransferProcessSuspensionDialog} from "shared/src/components/TransferProcessSuspensionDialog";
-import {TransferProcessCompletionDialog} from "shared/src/components/TransferProcessCompletionDialog";
+import React, { useContext } from "react";
+import { cva } from "class-variance-authority";
+import {
+  GlobalInfoContext,
+  GlobalInfoContextType,
+} from "shared/src/context/GlobalInfoContext";
+import { Dialog, DialogTrigger } from "shared/src/components/ui/dialog";
+import { Button } from "shared/src/components/ui/button";
+import { TransferProcessStartDialog } from "shared/src/components/TransferProcessStartDialog";
+import { TransferProcessTerminationDialog } from "shared/src/components/TransferProcessTerminationDialog";
+import NoFurtherActions from "./ui/noFurtherActions";
 
 export const TransferProcessActions = ({
-                                           process,
-                                           tiny = false,
-                                       }: {
-    process: TransferProcess;
-    tiny: boolean;
+  process,
+  tiny = false,
+}: {
+  process: TransferProcess;
+  tiny: boolean;
 }) => {
-    const {role} = useContext<GlobalInfoContextType>(GlobalInfoContext)!;
-    const h2ClassName = cva("font-semibold mb-4", {
-        variants: {
-            tiny: {
-                true: "hidden",
-                false: null,
-            },
-        },
-    });
-    const containerClassName = cva("", {
-        variants: {
-            tiny: {
-                true: "inline-flex items-center ",
-                false:
+  const { role } = useContext<GlobalInfoContextType>(GlobalInfoContext)!;
+  const h2ClassName = cva("font-semibold mb-4", {
+    variants: {
+      tiny: {
+        true: "hidden",
+        false: null,
+      },
+    },
+  });
+  const containerClassName = cva("", {
+    variants: {
+      tiny: {
+        true: "inline-flex items-center ",
+        false:
           " w-full p-6 pt-4 fixed bottom-0 left-0 md:left-[223px] bg-primary-950/10 border border-t-stroke [&>*>button]:min-w-20",
-            },
-        },
-    });
+      },
+    },
+  });
 
   return (
     <div className={containerClassName({ tiny })}>
@@ -81,7 +83,7 @@ export const TransferProcessActions = ({
           {role === "provider" && <></>}
           {role === "consumer" && (
             <>
-              <div>No further actions</div>
+            <NoFurtherActions />
             </>
           )}
         </div>
