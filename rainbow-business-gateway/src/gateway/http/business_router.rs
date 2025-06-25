@@ -1,10 +1,13 @@
 use crate::gateway::core::business::BusinessCatalogTrait;
+use crate::gateway::http::business_router_types::RainbowBusinessNegotiationRequest;
+use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::{delete, get, post};
 use axum::{middleware, Extension, Json, Router};
 use rainbow_common::auth::header::{extract_request_info, RequestInfo};
+use rainbow_common::protocol::contract::contract_odrl::OdrlPolicyInfo;
 use rainbow_common::utils::get_urn_from_string;
 use serde_json::json;
 use std::sync::Arc;
@@ -25,14 +28,24 @@ where
     }
     pub fn router(self) -> Router {
         Router::new()
+            // Common
             .route("/gateway/api/catalogs", get(Self::handle_business_get_catalogs))
             .route("/gateway/api/catalogs/:catalog_id/datasets", get(Self::handle_business_get_datasets_by_catalog))
             .route("/gateway/api/catalogs/datasets/:dataset_id", get(Self::handle_business_get_dataset))
+            .route("/gateway/api/catalogs/:catalog_id/datasets/:dataset_id/policies", get(Self::handle_business_get_policy_offers_by_dataset))
+            // Business User
             .route("/gateway/api/policy-templates", get(Self::handle_business_get_policy_templates))
             .route("/gateway/api/policy-templates/:pt_id", get(Self::handle_business_get_policy_template_by_id))
-            .route("/gateway/api/catalogs/:catalog_id/datasets/:dataset_id/policies", get(Self::handle_business_get_policy_offers_by_dataset))
             .route("/gateway/api/catalogs/:catalog_id/datasets/:dataset_id/policies", post(Self::handle_business_post_policy_offer))
             .route("/gateway/api/catalogs/:catalog_id/datasets/:dataset_id/policies/:policy_id", delete(Self::handle_business_delete_policy_offer))
+            .route("/gateway/api/negotiation/business/requests", get(Self::handle_get_business_negotiation_requests))
+            .route("/gateway/api/negotiation/business/requests/:request_id", get(Self::handle_get_business_negotiation_request_by_id))
+            .route("/gateway/api/negotiation/rpc/accept", post(Self::handle_accept_request))
+            // Customer
+            .route("/gateway/api/negotiation/customer/requests", get(Self::handle_get_customer_negotiation_requests))
+            .route("/gateway/api/negotiation/customer/requests/:request_id", get(Self::handle_get_consumer_negotiation_request_by_id))
+            .route("/gateway/api/negotiation/rpc/request", post(Self::handle_create_request))
+            // Others
             .layer(middleware::from_fn(extract_request_info))
             .with_state(self.service)
     }
@@ -113,23 +126,35 @@ where
     ) -> impl IntoResponse {
         info!("GET /gateway/api/catalogs/{}/datasets/{}/policies", catalog_id, dataset_id);
         let token = &info.token;
+        let dataset_id = match get_urn_from_string(&dataset_id) {
+            Ok(dataset_id) => dataset_id,
+            Err(err) => return (StatusCode::BAD_REQUEST, Json(json!({"error": "urn not serializable"}))).into_response(),
+        };
 
-        match service.get_catalogs(token.to_string()).await {
-            Ok(catalogs) => (StatusCode::OK, Json(json!({"hola": 2}))).into_response(),
-            Err(_) => (StatusCode::BAD_REQUEST, Json(json!({"error": 2}))).into_response()
+        match service.get_policy_offers_by_dataset(dataset_id, token.to_string()).await {
+            Ok(offers) => (StatusCode::OK, Json(offers)).into_response(),
+            Err(e) => (StatusCode::BAD_REQUEST, Json(json!({"error": e.to_string()}))).into_response()
         }
     }
     async fn handle_business_post_policy_offer(
         State(service): State<Arc<T>>,
         Extension(info): Extension<Arc<RequestInfo>>,
         Path((catalog_id, dataset_id)): Path<(String, String)>,
+        input: Result<Json<OdrlPolicyInfo>, JsonRejection>,
     ) -> impl IntoResponse {
         info!("POST /gateway/api/catalogs/{}/datasets/{}/policies", catalog_id, dataset_id);
         let token = &info.token;
-
-        match service.get_catalogs(token.to_string()).await {
-            Ok(catalogs) => (StatusCode::OK, Json(json!({"hola": 2}))).into_response(),
-            Err(_) => (StatusCode::BAD_REQUEST, Json(json!({"error": 2}))).into_response()
+        let dataset_id = match get_urn_from_string(&dataset_id) {
+            Ok(dataset_id) => dataset_id,
+            Err(err) => return (StatusCode::BAD_REQUEST, Json(json!({"error": "urn not serializable"}))).into_response(),
+        };
+        let input = match input {
+            Ok(input) => input.0,
+            Err(err) => return (StatusCode::BAD_REQUEST, Json(json!({"error": err.to_string()}))).into_response(),
+        };
+        match service.post_policy_offer(dataset_id, input, token.to_string()).await {
+            Ok(policy) => (StatusCode::OK, Json(policy)).into_response(),
+            Err(e) => (StatusCode::BAD_REQUEST, Json(json!({"error": e.to_string()}))).into_response()
         }
     }
     async fn handle_business_delete_policy_offer(
@@ -139,10 +164,63 @@ where
     ) -> impl IntoResponse {
         info!("DELETE /gateway/api/catalogs/{}/datasets/{}/policies/{}", catalog_id, dataset_id, policy_id);
         let token = &info.token;
-
-        match service.get_catalogs(token.to_string()).await {
-            Ok(catalogs) => (StatusCode::OK, Json(json!({"hola": 2}))).into_response(),
-            Err(_) => (StatusCode::BAD_REQUEST, Json(json!({"error": 2}))).into_response()
+        let dataset_id = match get_urn_from_string(&dataset_id) {
+            Ok(dataset_id) => dataset_id,
+            Err(err) => return (StatusCode::BAD_REQUEST, Json(json!({"error": "urn not serializable"}))).into_response(),
+        };
+        let policy_id = match get_urn_from_string(&policy_id) {
+            Ok(policy_id) => policy_id,
+            Err(err) => return (StatusCode::BAD_REQUEST, Json(json!({"error": "urn not serializable"}))).into_response(),
+        };
+        match service.delete_policy_offer(dataset_id, policy_id, token.to_string()).await {
+            Ok(_) => (StatusCode::OK).into_response(),
+            Err(e) => (StatusCode::BAD_REQUEST, Json(json!({"error": e.to_string()}))).into_response()
+        }
+    }
+    async fn handle_get_business_negotiation_requests(
+        State(service): State<Arc<T>>,
+        Extension(info): Extension<Arc<RequestInfo>>,
+    ) -> impl IntoResponse {
+        "ok"
+    }
+    async fn handle_get_business_negotiation_request_by_id(
+        State(service): State<Arc<T>>,
+        Extension(info): Extension<Arc<RequestInfo>>,
+    ) -> impl IntoResponse {
+        "ok"
+    }
+    async fn handle_get_customer_negotiation_requests(
+        State(service): State<Arc<T>>,
+        Extension(info): Extension<Arc<RequestInfo>>,
+    ) -> impl IntoResponse {
+        "ok"
+    }
+    async fn handle_get_consumer_negotiation_request_by_id(
+        State(service): State<Arc<T>>,
+        Extension(info): Extension<Arc<RequestInfo>>,
+    ) -> impl IntoResponse {
+        "ok"
+    }
+    async fn handle_accept_request(
+        State(service): State<Arc<T>>,
+        Extension(info): Extension<Arc<RequestInfo>>,
+    ) -> impl IntoResponse {
+        (StatusCode::OK, Json(json!({"hola": 2}))).into_response()
+    }
+    async fn handle_create_request(
+        State(service): State<Arc<T>>,
+        Extension(info): Extension<Arc<RequestInfo>>,
+        input: Result<Json<RainbowBusinessNegotiationRequest>, JsonRejection>,
+    ) -> impl IntoResponse {
+        info!("POST /gateway/api/negotiation/rpc/request");
+        let token = &info.token;
+        let input = match input {
+            Ok(input) => input.0,
+            Err(err) => return (StatusCode::BAD_REQUEST, Json(json!({"error": err.body_text()}))).into_response()
+        };
+        match service.create_request(input, token.to_string()).await {
+            Ok(res) => (StatusCode::ACCEPTED, Json(res)).into_response(),
+            Err(e) => (StatusCode::BAD_REQUEST, Json(json!({"error": e.to_string()}))).into_response()
         }
     }
 }

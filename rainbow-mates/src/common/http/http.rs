@@ -27,12 +27,13 @@ use axum::{Json, Router};
 use rainbow_common::mates::mates::VerifyTokenRequest;
 use rainbow_common::mates::Mates;
 use rainbow_db::mates::repo::{MateRepoFactory, MateRepoTrait};
-use reqwest::StatusCode;
+use reqwest::{Client, Error, Response, StatusCode};
 use serde::Deserialize;
 use serde_json::json;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::time::Duration;
 use tracing::info;
 
 pub struct RainbowMatesRouter<T>
@@ -63,6 +64,14 @@ where
             .route("/api/v1/mates/:id", get(Self::get_singular_mate))
             .route("/api/v1/mates/:id", put(Self::edit_mate))
             .route("/api/v1/mates/:id", delete(Self::delete_mate))
+            .route(
+                "/api/v1/mates/bypass/:id_participant",
+                get(Self::bypass_mates),
+            )
+            .route(
+                "/api/v1/mates/bypass/:id_participant/:id",
+                get(Self::bypass_mates_by_id),
+            )
             .with_state(self.mate_repo)
             .fallback(Self::fallback)
     }
@@ -160,6 +169,60 @@ where
         match mate_repo.delete_mate(id).await {
             Ok(_) => StatusCode::OK.into_response(),
             Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        }
+    }
+
+    async fn bypass_mates(
+        State(mate_repo): State<Arc<T>>,
+        Path(bypassing_participant_id): Path<String>,
+    ) -> impl IntoResponse {
+        info!("GET /api/v1/mates/bypass/{}", bypassing_participant_id);
+        let client =
+            Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
+
+        let base_url = match mate_repo.get_mate_by_id(bypassing_participant_id).await {
+            Ok(mate) => mate.base_url.unwrap_or_default(),
+            Err(e) => return (StatusCode::NOT_FOUND, e.to_string()).into_response(),
+        };
+        let url = format!("{}/api/v1/mates", base_url);
+        match client.get(url).send().await {
+            Ok(res) => {
+                if res.status().is_success() == false {
+                    return (res.status(), res.text().await.unwrap()).into_response();
+                }
+                let mates = res.json::<Vec<Mates>>().await.unwrap();
+                (StatusCode::OK, Json(mates)).into_response()
+            }
+            Err(e) => (StatusCode::BAD_GATEWAY, e.to_string()).into_response(),
+        }
+    }
+
+    async fn bypass_mates_by_id(
+        State(mate_repo): State<Arc<T>>,
+        Path((bypassing_participant_id, participant_id)): Path<(String, String)>,
+    ) -> impl IntoResponse {
+        info!(
+            "GET /api/v1/mates/bypass/{}/{}",
+            bypassing_participant_id, participant_id
+        );
+        let client =
+            Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
+
+
+        let base_url = match mate_repo.get_mate_by_id(bypassing_participant_id).await {
+            Ok(mate) => mate.base_url.unwrap_or_default(),
+            Err(e) => return (StatusCode::NOT_FOUND, e.to_string()).into_response(),
+        };
+        let url = format!("{}/api/v1/mates/{}", base_url, participant_id);
+        match client.get(url).send().await {
+            Ok(res) => {
+                if res.status().is_success() == false {
+                    return (res.status(), res.text().await.unwrap()).into_response();
+                }
+                let mates = res.json::<Mates>().await.unwrap();
+                (StatusCode::OK, Json(mates)).into_response()
+            }
+            Err(e) => (StatusCode::BAD_GATEWAY, e.to_string()).into_response(),
         }
     }
 

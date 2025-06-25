@@ -17,23 +17,22 @@
  *
  */
 
-
 #![allow(unused_imports)]
 #![allow(dead_code)]
 #![allow(unused_variables)]
 #![allow(unused_mut)]
 #![allow(unused_imports)]
 #![allow(unused_must_use)]
+pub mod adv_protocol;
+pub mod auth;
 pub mod config;
 pub mod dcat_formats;
 pub mod err;
-pub mod forwarding;
-pub mod misc_router;
-pub mod protocol;
-pub mod utils;
-pub mod auth;
-
-pub mod schemas;
 pub mod facades;
-pub mod adv_protocol;
+pub mod forwarding;
 pub mod mates;
+pub mod misc_router;
+pub mod policy_templates;
+pub mod protocol;
+pub mod schemas;
+pub mod utils;

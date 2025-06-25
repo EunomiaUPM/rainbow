@@ -22,6 +22,7 @@ use axum::response::IntoResponse;
 use axum::routing::delete;
 use axum::routing::{get, post};
 use axum::{Json, Router};
+use rainbow_common::policy_templates::CreatePolicyTemplateRequest;
 use rainbow_common::protocol::contract::contract_odrl::OdrlPolicyInfo;
 use rainbow_common::protocol::contract::odrloffer_wrapper::OdrlOfferWrapper;
 use rainbow_db::datahub::repo::NewPolicyRelationModel;
@@ -244,14 +245,6 @@ where
 }
 
 #[derive(Debug, Deserialize)]
-pub struct CreatePolicyTemplateRequest {
-    pub title: Option<String>,
-    pub description: Option<String>,
-    pub content: OdrlPolicyInfo,
-    pub operand_options: Option<serde_json::Value>,
-}
-
-#[derive(Debug, Deserialize)]
 pub struct GetPolicyTemplatesParams {
     #[serde(default = "default_limit")]
     pub limit: Option<u64>,
@@ -307,14 +300,7 @@ where
     ) -> impl IntoResponse {
         info!("POST /api/v1/datahub/policy-templates");
 
-        let new_template = NewPolicyTemplateModel {
-            title: payload.title,
-            description: payload.description,
-            content: to_value(payload.content).unwrap(),
-            operand_options: payload.operand_options,
-
-        };
-
+        let new_template: NewPolicyTemplateModel = payload.into();
         match policy_templates_service.create_policy_template(new_template).await {
             Ok(template) => {
                 notification_service
