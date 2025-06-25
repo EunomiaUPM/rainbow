@@ -21,9 +21,11 @@ use super::entities::{policy_relations, policy_templates};
 use crate::transfer_provider::repo::{TransferMessagesRepo, TransferProcessRepo};
 use anyhow::Error;
 use axum::async_trait;
-use sea_orm::DatabaseConnection;
-use thiserror::Error;
+use rainbow_common::policy_templates::CreatePolicyTemplateRequest;
 use rainbow_common::protocol::contract::odrloffer_wrapper::OdrlOfferWrapper;
+use sea_orm::DatabaseConnection;
+use serde_json::to_value;
+use thiserror::Error;
 
 
 pub mod sql;
@@ -39,6 +41,17 @@ pub struct NewPolicyTemplateModel {
     pub description: Option<String>,
     pub content: serde_json::Value,
     pub operand_options: Option<serde_json::Value>,
+}
+
+impl From<CreatePolicyTemplateRequest> for NewPolicyTemplateModel {
+    fn from(value: CreatePolicyTemplateRequest) -> Self {
+        Self {
+            title: Some(value.title),
+            description: Some(value.description),
+            content: to_value(value.content).unwrap(),
+            operand_options: Some(to_value(value.template_operands).unwrap()),
+        }
+    }
 }
 
 #[async_trait]

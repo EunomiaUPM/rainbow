@@ -16,7 +16,7 @@ members = [
     "rainbow-proxy-nifi",
     "rainbow-fe-gateway",
     "rainbow-datahub-catalog",
-    "rainbow-mates",
+    "rainbow-mates", "rainbow-business-gateway",
 ]
 exclude = [
     "static",

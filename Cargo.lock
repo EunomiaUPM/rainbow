@@ -2187,6 +2187,37 @@ dependencies = [
 ]
 
 [[package]]
+name = "rainbow_business_gateway"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "chrono",
+ "clap",
+ "dotenvy",
+ "json_to_table",
+ "jsonschema",
+ "log",
+ "mockall",
+ "once_cell",
+ "rainbow_common",
+ "rainbow_db",
+ "reqwest",
+ "sea-orm",
+ "sea-orm-migration",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.12",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "tracing-test",
+ "url",
+ "urn",
+ "uuid",
+]
+
+[[package]]
 name = "rainbow_catalog"
 version = "0.1.0"
 dependencies = [
