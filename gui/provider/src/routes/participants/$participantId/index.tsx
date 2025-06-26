@@ -139,7 +139,7 @@ function RouteComponent() {
                   </Badge>
                 </TableCell> */}
                       <TableCell>
-                        {console.log(agreements, "agreements en provider")}
+                        {/* {console.log(agreements, "agreements en provider")} */}
                         <Badge
                           variant={"status"}
                           state={agreement.active ? "STARTED" : "PAUSE"}

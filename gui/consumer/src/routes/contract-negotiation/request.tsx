@@ -38,7 +38,7 @@ type Inputs = {
     odrl: string
 }
 
-const RouteComponent = () => {
+export const RouteComponent = () => {
     const {mutateAsync: sendRequestAsync, isPending} = usePostContractNegotiationRPCRequest()
     const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!
 
