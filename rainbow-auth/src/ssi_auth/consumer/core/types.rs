@@ -19,6 +19,7 @@
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use rainbow_common::ssi_wallet::WalletInfo;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct WalletLoginResponse {
@@ -37,29 +38,6 @@ pub struct AuthJwtClaims {
     pub aud: String,
 }
 
-#[derive(Deserialize, Serialize, PartialEq, Eq, Clone, Debug)]
-pub struct WalletInfo {
-    pub id: String,
-    pub name: String,
-    #[serde(rename = "createdOn")]
-    pub created_on: String,
-    #[serde(rename = "addedOn")]
-    pub added_on: String,
-    pub permission: String, // TODO
-    pub dids: Option<Vec<DidsInfo>>,
-}
-
-#[derive(Deserialize, Serialize, PartialEq, Eq, Clone, Debug)]
-pub struct DidsInfo {
-    pub did: String,
-    pub alias: String,
-    pub document: String,
-    #[serde(rename = "keyId")]
-    pub key_id: String,
-    pub default: bool,
-    #[serde(rename = "createdOn")]
-    pub created_on: String,
-}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct WalletInfoResponse {

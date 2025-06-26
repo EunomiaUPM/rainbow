@@ -16,10 +16,17 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use std::format;
+use crate::ssi_auth::consumer::core::types::{AuthJwtClaims, WalletInfoResponse, WalletLoginResponse};
+use anyhow::bail;
 use axum::async_trait;
+use axum::http::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
+use axum::http::HeaderMap;
+use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use rainbow_common::auth::gnap::GrantRequest;
+use rainbow_common::mates::Mates;
 use serde_json::Value;
+use std::{format, println, vec};
+use tracing::info;
 
 pub mod manager;
 
@@ -37,8 +44,15 @@ pub trait RainbowSSIAuthProviderManagerTrait: Send + Sync {
     async fn verify_vc(&self, vc_token: String, vp_holder: String) -> anyhow::Result<()>;
 
     async fn continue_req(&self, interact_ref: String) -> anyhow::Result<(Value, String, String)>;
-    async fn save_mate(&self, global_id: Option<String>, slug: String, token: String, base_url: String, token_actions: String) -> anyhow::Result<()>;
+    async fn save_mate(
+        &self,
+        global_id: Option<String>,
+        slug: String,
+        token: String,
+        base_url: String,
+        token_actions: String,
+    ) -> anyhow::Result<()>;
     async fn save_busmate(&self, global_id: Option<String>, token: String) -> anyhow::Result<()>;
     fn get_continue_uri(&self) -> anyhow::Result<String>;
-    async fn generate_uri(&self) -> anyhow::Result<String>; // TODO Fix
+    async fn generate_uri(&self) -> anyhow::Result<String>;
 }

@@ -34,25 +34,29 @@ use reqwest::StatusCode;
 use serde::Deserialize;
 use serde_json::json;
 use std::sync::Arc;
+use tokio::sync::Mutex;
 use tracing::info;
+use rainbow_common::ssi_wallet::RainbowSSIAuthWalletTrait;
+use crate::ssi_auth::provider::core::Manager;
 
 pub struct RainbowAuthProviderRouter<T>
 where
-    T: RainbowSSIAuthProviderManagerTrait + Send + Sync + 'static,
+    T: AuthProviderRepoTrait + Send + Sync + Clone + 'static,
 {
-    pub manager: Arc<T>,
+    pub manager: Arc<Manager<T>>,
 }
 
 impl<T> RainbowAuthProviderRouter<T>
 where
-    T: RainbowSSIAuthProviderManagerTrait + Send + Sync + 'static,
+    T: AuthProviderRepoTrait + Send + Sync + Clone + 'static,
 {
-    pub fn new(manager: Arc<T>) -> Self {
+    pub fn new(manager: Arc<Manager<T>>) -> Self {
         Self { manager }
     }
     pub fn router(self) -> Router {
         Router::new()
             .route("/api/v1/access", post(Self::access_request))
+            .route("/api/v1/wallet/onboard", post(Self::wallet_oboard))
             .route("/api/v1/pd/:state", get(Self::pd))
             .route("/api/v1/verify/:state", post(Self::verify))
             .route("/api/v1/continue", post(Self::continue_request))
@@ -62,7 +66,7 @@ where
         // .fallback(Self::fallback) 2 routers cannot have 1 fallback each
     }
 
-    async fn access_request(State(manager): State<Arc<T>>, Json(payload): Json<GrantRequest>) -> impl IntoResponse {
+    async fn access_request(State(manager): State<Arc<Manager<T>>>, Json(payload): Json<GrantRequest>) -> impl IntoResponse {
         info!("POST /access");
 
         let exchange = manager.generate_exchange_uri(payload).await;
@@ -77,7 +81,7 @@ where
         Json(res)
     }
 
-    async fn pd(State(manager): State<Arc<T>>, Path(state): Path<String>) -> impl IntoResponse {
+    async fn pd(State(manager): State<Arc<Manager<T>>>, Path(state): Path<String>) -> impl IntoResponse {
         let log = format!("GET /pd/{}", state);
         info!("{}", log);
 
@@ -90,9 +94,17 @@ where
             }
         }
     }
+    async fn wallet_oboard(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
+        info!("POST /wallet/onboard");
+
+        match manager.onboard().await {
+            Ok(()) => StatusCode::CREATED,
+            Err(e) => StatusCode::INTERNAL_SERVER_ERROR,
+        }
+    }
 
     async fn verify(
-        State(manager): State<Arc<T>>,
+        State(manager): State<Arc<Manager<T>>>,
         Path(state): Path<String>,
         Form(payload): Form<VerifyPayload>,
     ) -> impl IntoResponse {
@@ -108,7 +120,7 @@ where
         }
     }
 
-    async fn continue_request(State(manager): State<Arc<T>>, Json(payload): Json<RefBody>) -> impl IntoResponse {
+    async fn continue_request(State(manager): State<Arc<Manager<T>>>, Json(payload): Json<RefBody>) -> impl IntoResponse {
         info!("POST /continue");
 
         let (model, base_url, global_id) = match manager.continue_req(payload.interact_ref).await {
@@ -133,13 +145,13 @@ where
         (StatusCode::OK, Json(json)).into_response()
     }
 
-    async fn verify_token(State(manager): State<Arc<T>>) -> impl IntoResponse {
+    async fn verify_token(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
         info!("POST /verify/token");
 
         let token: String;
     }
 
-    async fn generate_uri(State(manager): State<Arc<T>>) -> impl IntoResponse {
+    async fn generate_uri(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
         info!("POST /generate/uri");
 
         let uri = match manager.generate_uri().await {

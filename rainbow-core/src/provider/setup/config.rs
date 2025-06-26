@@ -21,6 +21,7 @@ use rainbow_common::config::global_config::{DatabaseConfig, HostConfig};
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_common::config::ConfigRoles;
 use serde::Serialize;
+use rainbow_common::ssi_wallet::{ClientConfig, SSIWalletConfig};
 
 #[derive(Serialize, Clone, Debug)]
 pub struct CoreApplicationProviderConfig {
@@ -32,7 +33,9 @@ pub struct CoreApplicationProviderConfig {
     ssh_user: Option<String>,
     ssh_private_key_path: Option<String>,
     role: ConfigRoles,
-    pub cert_path: String,
+    cert_path: String,
+    ssi_wallet_config: SSIWalletConfig,
+    client_config: ClientConfig,
 }
 
 impl Default for CoreApplicationProviderConfig {
@@ -66,6 +69,11 @@ impl ApplicationProviderConfigTrait for CoreApplicationProviderConfig {
     fn get_raw_datahub_host(&self) -> &Option<HostConfig> {
         &self.datahub_host
     }
+
+    fn get_raw_ssi_wallet_config(&self) -> &SSIWalletConfig {
+        &self.ssi_wallet_config
+    }
+
     fn get_raw_contract_negotiation_host(&self) -> &Option<HostConfig> {
         &self.core_host
     }
@@ -81,6 +89,11 @@ impl ApplicationProviderConfigTrait for CoreApplicationProviderConfig {
     fn get_raw_database_config(&self) -> &DatabaseConfig {
         &self.database_config
     }
+
+    fn get_raw_client_config(&self) -> &ClientConfig {
+        &self.client_config
+    }
+
     fn get_raw_cert_path(&self) -> &String {
         &self.cert_path
     }
@@ -103,6 +116,8 @@ impl From<ApplicationProviderConfig> for CoreApplicationProviderConfig {
             ssh_private_key_path: value.ssh_private_key_path,
             role: value.role,
             cert_path: value.cert_path,
+            ssi_wallet_config: value.ssi_wallet_config,
+            client_config: value.client_config,
         }
     }
 }
@@ -122,6 +137,8 @@ impl Into<ApplicationProviderConfig> for CoreApplicationProviderConfig {
             database_config: self.database_config,
             ssh_user: self.ssh_user,
             ssh_private_key_path: self.ssh_private_key_path,
+            ssi_wallet_config: self.ssi_wallet_config,
+            client_config: self.client_config,
             role: self.role,
             cert_path: self.cert_path,
         }

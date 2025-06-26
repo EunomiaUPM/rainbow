@@ -21,7 +21,7 @@
 // use anyhow::bail;
 // use rainbow_common::err::transfer_err::TransferErrorType;
 
-use crate::ssi_auth::consumer::core::manager::{RainbowSSIAuthConsumerManagerTrait, RainbowSSIAuthConsumerWalletTrait};
+use crate::ssi_auth::consumer::core::manager::{RainbowSSIAuthConsumerManagerTrait};
 use crate::ssi_auth::consumer::core::types::{CallbackResponse, ReachAuthority, ReachProvider};
 use crate::ssi_auth::consumer::core::Manager;
 use anyhow::bail;
@@ -42,19 +42,20 @@ use tokio::sync::Mutex;
 use tracing::{debug, info};
 use url::Url;
 use urlencoding::decode;
+use rainbow_common::ssi_wallet::RainbowSSIAuthWalletTrait;
 
 pub struct RainbowAuthConsumerRouter<T>
 where
     T: AuthConsumerRepoTrait + Send + Sync + Clone + 'static,
 {
-    pub manager: Arc<Mutex<Manager<T>>>,
+    pub manager: Arc<Manager<T>>,
 }
 
 impl<T> RainbowAuthConsumerRouter<T>
 where
     T: AuthConsumerRepoTrait + Send + Sync + Clone + 'static,
 {
-    pub fn new(manager: Arc<Mutex<Manager<T>>>) -> Self {
+    pub fn new(manager: Arc<Manager<T>>) -> Self {
         Self { manager }
     }
 
@@ -77,39 +78,35 @@ where
         // .fallback(Self::fallback) 2 routers cannot have 1 fallback each
     }
 
-    async fn wallet_register(State(manager): State<Arc<Mutex<Manager<T>>>>) -> impl IntoResponse {
+    async fn wallet_register(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
         info!("POST /wallet/register");
 
-        let mut manager = manager.lock().await;
         match manager.register_wallet().await {
             Ok(()) => StatusCode::CREATED,
             Err(e) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
-    async fn wallet_login(State(manager): State<Arc<Mutex<Manager<T>>>>) -> impl IntoResponse {
+    async fn wallet_login(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
         info!("POST /wallet/login");
 
-        let mut manager = manager.lock().await;
         match manager.login_wallet().await {
             Ok(()) => StatusCode::OK,
             Err(e) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 
-    async fn wallet_logout(State(manager): State<Arc<Mutex<Manager<T>>>>) -> impl IntoResponse {
+    async fn wallet_logout(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
         info!("POST /wallet/logout");
 
-        let mut manager = manager.lock().await;
         match manager.logout_wallet().await {
             Ok(()) => StatusCode::OK,
             Err(e) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 
-    async fn wallet_oboard(State(manager): State<Arc<Mutex<Manager<T>>>>) -> impl IntoResponse {
+    async fn wallet_oboard(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
         info!("POST /wallet/onboard");
 
-        let mut manager = manager.lock().await;
         match manager.onboard().await {
             Ok(()) => StatusCode::CREATED,
             Err(e) => StatusCode::INTERNAL_SERVER_ERROR,
@@ -117,12 +114,10 @@ where
     }
 
     async fn auth_ssi(
-        State(manager): State<Arc<Mutex<Manager<T>>>>,
+        State(manager): State<Arc<Manager<T>>>,
         Json(payload): Json<ReachProvider>,
     ) -> impl IntoResponse {
         info!("POST /auth/ssi");
-
-        let mut manager = manager.lock().await;
 
         match manager.onboard().await {
             Ok(()) => {}
@@ -219,7 +214,7 @@ where
 
 
     async fn callback(
-        State(manager): State<Arc<Mutex<Manager<T>>>>,
+        State(manager): State<Arc<Manager<T>>>,
         Path(id): Path<String>,
         Json(payload): Json<CallbackResponse>,
     ) -> impl IntoResponse {
@@ -228,8 +223,6 @@ where
 
         let hash = payload.hash;
         let interact_ref = payload.interact_ref;
-
-        let mut manager = manager.lock().await;
 
         let uri = match manager.check_callback(id.clone(), interact_ref.to_string(), hash.to_string()).await {
             Ok(uri) => uri,
@@ -245,12 +238,10 @@ where
     }
 
     async fn manual_auth_ssi(
-        State(manager): State<Arc<Mutex<Manager<T>>>>,
+        State(manager): State<Arc<Manager<T>>>,
         Json(payload): Json<ReachProvider>,
     ) -> impl IntoResponse {
         info!("POST /auth/manual/ssi");
-
-        let mut manager = manager.lock().await;
 
         let mut auth_ver;
         match manager.manual_request_access(payload.url, payload.id, payload.slug, payload.actions).await {
@@ -270,7 +261,7 @@ where
     }
 
     async fn manual_callback(
-        State(manager): State<Arc<Mutex<Manager<T>>>>,
+        State(manager): State<Arc<Manager<T>>>,
         Path(id): Path<String>,
         Query(params): Query<HashMap<String, String>>,
     ) -> impl IntoResponse {
@@ -286,8 +277,6 @@ where
             Some(interact_ref) => interact_ref,
             None => return (StatusCode::BAD_REQUEST, "interact ref not available").into_response(),
         };
-
-        let mut manager = manager.lock().await;
 
         let uri = match manager.check_callback(id.clone(), interact_ref.to_string(), hash.to_string()).await {
             Ok(uri) => uri,
@@ -306,11 +295,10 @@ where
         }
     }
 
-    async fn get_token(State(manager): State<Arc<Mutex<Manager<T>>>>, Path(id): Path<String>) -> impl IntoResponse {
+    async fn get_token(State(manager): State<Arc<Manager<T>>>, Path(id): Path<String>) -> impl IntoResponse {
         let log = format!("GET /callback/manual/{}", id);
         info!(log);
 
-        let mut manager = manager.lock().await;
         let token = match manager.auth_repo.get_auth_by_id(id).await {
             Ok(model) => model.token,
             Err(e) => return StatusCode::BAD_REQUEST.into_response(),
@@ -322,13 +310,12 @@ where
         }
     }
 
-    async fn didweb(State(manager): State<Arc<Mutex<Manager<T>>>>) -> impl IntoResponse {
-        let mut manager = manager.lock().await;
+    async fn didweb(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
         Json(manager.didweb().await.unwrap())
     }
 
-    async fn beg4credential(State(manager): State<Arc<Mutex<Manager<T>>>>, Json(payload): Json<ReachAuthority>,) -> impl IntoResponse {
-        let mut manager = manager.lock().await;
+    async fn beg4credential(State(manager): State<Arc<Manager<T>>>, Json(payload): Json<ReachAuthority>,) -> impl IntoResponse {
+        info!("POST /beg/credential");
         match manager.beg4credential(payload.url).await{
             Ok(()) => {},
             Err(e) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),

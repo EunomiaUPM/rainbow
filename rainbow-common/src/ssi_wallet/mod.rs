@@ -17,24 +17,15 @@
  *
  */
 
-
-#![allow(unused_imports)]
-#![allow(dead_code)]
-#![allow(unused_variables)]
-#![allow(unused_mut)]
-#![allow(unused_imports)]
-#![allow(unused_must_use)]
-pub mod config;
-pub mod dcat_formats;
-pub mod err;
-pub mod forwarding;
-pub mod misc_router;
-pub mod protocol;
-pub mod utils;
-pub mod auth;
-
-pub mod schemas;
-pub mod facades;
-pub mod adv_protocol;
-pub mod mates;
-pub mod ssi_wallet;
+pub use wallet_config::SSIWalletConfig;
+pub use wallet_session::WalletSession;
+pub use wallet_info::WalletInfo;
+pub use dids_info::DidsInfo;
+pub use wallet_trait::RainbowSSIAuthWalletTrait;
+pub use self_client::ClientConfig;
+mod wallet_config;
+mod wallet_session;
+mod wallet_info;
+mod dids_info;
+mod wallet_trait;
+mod self_client;

@@ -65,7 +65,7 @@ impl CoreConsumerMigration {
         // run migration
         Self::refresh(&db_connection).await?;
         // run seeders
-        Self::seed_consumer_mate(&db_connection, config.get_ssi_auth_host_url().unwrap()).await?;
+        //Self::seed_consumer_mate(&db_connection, config.get_ssi_auth_host_url().unwrap()).await?;
         Ok(())
     }
     async fn seed_consumer_mate(db: &DatabaseConnection, base_url: String) -> anyhow::Result<()> {
