@@ -17,11 +17,11 @@
  *
  */
 
-use crate::auth_consumer::entities::auth;
+use crate::auth_consumer::entities::{auth, authority};
 use crate::auth_consumer::entities::auth_interaction;
 use crate::auth_consumer::entities::auth_verification;
 use crate::auth_consumer::entities::prov;
-use crate::auth_consumer::repo::{AuthConsumerRepoFactory, AuthConsumerRepoTrait};
+use crate::auth_consumer::repo::{AuthConsumerRepoFactory, AuthConsumerRepoTrait, ParticipantRepoTrait};
 use anyhow::{anyhow, bail};
 use axum::async_trait;
 use chrono;
@@ -80,7 +80,8 @@ impl AuthConsumerRepoTrait for AuthConsumerRepoForSql {
         &self,
         id: String,
         uri: String,
-        provider: String,
+        provider_id: String,
+        provider_slug: String,
         actions: String,
         interact: Interact4GR,
     ) -> anyhow::Result<auth::Model> {
@@ -89,13 +90,15 @@ impl AuthConsumerRepoTrait for AuthConsumerRepoForSql {
         let auth_model = auth::ActiveModel {
             id: ActiveValue::Set(id.clone()),
             assigned_id: ActiveValue::Set(None),
-            provider: ActiveValue::Set(provider),
+            provider_id: ActiveValue::Set(provider_id),
+            provider_slug: ActiveValue::Set(provider_slug),
             actions: ActiveValue::Set(actions),
             status: ActiveValue::Set("Processing".to_string()), // TODO Revisar esto Rodrigo
             token: ActiveValue::Set(None),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             ended_at: ActiveValue::Set(None),
             grant_endpoint: ActiveValue::Set(uri.clone()),
+            continue_endpoint: ActiveValue::Set(None),
         };
 
         let auth_interaction_model = auth_interaction::ActiveModel {
@@ -119,7 +122,7 @@ impl AuthConsumerRepoTrait for AuthConsumerRepoForSql {
         Ok(auth)
     }
 
-    async fn auth_pending(&self, id: String, assigned_id: String, as_nonce: String) -> anyhow::Result<auth::Model> {
+    async fn auth_pending(&self, id: String, assigned_id: String, continue_uri: String, as_nonce: String) -> anyhow::Result<auth::Model> {
         let mut entry = match auth::Entity::find_by_id(&id).one(&self.db_connection).await {
             Ok(Some(entry)) => entry.into_active_model(),
             Ok(None) => bail!("No entry auth with ID: {}", id),
@@ -135,6 +138,7 @@ impl AuthConsumerRepoTrait for AuthConsumerRepoForSql {
         entry_int.as_nonce = ActiveValue::Set(Some(as_nonce));
         entry.status = ActiveValue::Set("Pending".to_string());
         entry.assigned_id = ActiveValue::Set(Some(assigned_id));
+        entry.continue_endpoint = ActiveValue::Set(Some(continue_uri));
 
         let upd_entry = entry.update(&self.db_connection).await?;
         entry_int.update(&self.db_connection).await?;
@@ -221,7 +225,7 @@ impl AuthConsumerRepoTrait for AuthConsumerRepoForSql {
         Ok(auth_verification_model)
     }
 
-    async fn grant_req_approved(&self, id: String, jwt: String) -> anyhow::Result<(auth::Model)> {
+    async fn grant_req_approved(&self, id: String, jwt: String) -> anyhow::Result<auth::Model> {
         let mut entry = match auth::Entity::find_by_id(&id).one(&self.db_connection).await {
             Ok(Some(entry)) => entry.into_active_model(),
             Ok(None) => bail!("No entry auth with ID: {}", id),
@@ -292,4 +296,24 @@ impl AuthConsumerRepoTrait for AuthConsumerRepoForSql {
             Err(e) => bail!("Failed to fetch data: {}", e),
         }
     }
+}
+
+impl ParticipantRepoTrait for AuthConsumerRepoForSql {
+    // async fn create_process(&self, id: Option<String>, authority: String, assigned_id: String, grant_endpoint: String) -> anyhow::Result<authority::Model> {
+    //     let id = id.unwrap_or(uuid::Uuid::new_v4().to_string());
+    //     let model = authority::ActiveModel {
+    //         id: ActiveValue::Set(id),
+    //         authority: ActiveValue::Set(authority),
+    //         status: ActiveValue::Set("Processing".to_string()),
+    //         assigned_id: ActiveValue::Set(None),
+    //         grant_endpoint: ActiveValue::Set(grant_endpoint),
+    //         continue_endpoint: ActiveValue::Set(None),
+    //         actions: ActiveValue::Set("vc-request".to_string()),
+    //         created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
+    //         ended_at: ActiveValue::Set(None),
+    //     };
+    //
+    //     let ans = authority::Entity::insert(model).exec_with_returning(&self.db_connection).await?;
+    //     Ok(ans)
+    // }
 }

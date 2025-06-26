@@ -18,9 +18,11 @@
  */
 
 use crate::mates::entities::mates;
+use crate::mates::entities::busmates;
 use axum::async_trait;
 use rainbow_common::mates::mates::VerifyTokenRequest;
 use rainbow_common::mates::Mates;
+use rainbow_common::mates::BusMates;
 use sea_orm::DatabaseConnection;
 
 pub mod sql;
@@ -40,4 +42,10 @@ pub trait MateRepoTrait {
     async fn create_mate(&self, mate: Mates, is_me: bool) -> anyhow::Result<mates::Model>;
     async fn update_mate(&self, mate: Mates) -> anyhow::Result<mates::Model>;
     async fn delete_mate(&self, id: String) -> anyhow::Result<()>;
+    async fn get_all_busmates(&self, limit: Option<u64>, offset: Option<u64>) -> anyhow::Result<Vec<busmates::Model>>;
+    async fn get_busmate_by_id(&self, id: String) -> anyhow::Result<busmates::Model>;
+    async fn get_busmate_me(&self) -> anyhow::Result<Option<busmates::Model>>;
+    async fn create_busmate(&self, mate: BusMates, is_me: bool) -> anyhow::Result<busmates::Model>;
+    async fn update_busmate(&self, mate: BusMates) -> anyhow::Result<busmates::Model>;
+    async fn delete_busmate(&self, id: String) -> anyhow::Result<()>;
 }

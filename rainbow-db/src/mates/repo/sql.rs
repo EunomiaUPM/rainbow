@@ -18,13 +18,14 @@
  */
 
 use crate::mates::entities::mates;
-use crate::mates::entities::mates::Model;
+use crate::mates::entities::busmates;
 use crate::mates::repo::{MateRepoFactory, MateRepoTrait};
 use anyhow::{anyhow, bail};
 use axum::async_trait;
 use chrono;
 use rainbow_common::mates::mates::VerifyTokenRequest;
 use rainbow_common::mates::Mates;
+use rainbow_common::mates::BusMates;
 use sea_orm::sea_query::OnConflict;
 use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter, QuerySelect};
 
@@ -54,7 +55,7 @@ impl MateRepoTrait for MateRepoForSql {
         &self,
         limit: Option<u64>,
         offset: Option<u64>,
-    ) -> anyhow::Result<Vec<crate::mates::entities::mates::Model>> {
+    ) -> anyhow::Result<Vec<mates::Model>> {
         let mates = mates::Entity::find()
             .limit(limit.unwrap_or(100000))
             .offset(offset.unwrap_or(0))
@@ -76,7 +77,7 @@ impl MateRepoTrait for MateRepoForSql {
         }
     }
 
-    async fn get_mate_me(&self) -> anyhow::Result<Option<Model>> {
+    async fn get_mate_me(&self) -> anyhow::Result<Option<mates::Model>> {
         let mate = mates::Entity::find()
             .filter(mates::Column::IsMe.eq(true))
             .one(&self.db_connection)
@@ -138,7 +139,7 @@ impl MateRepoTrait for MateRepoForSql {
         Ok(mate)
     }
 
-    async fn update_mate(&self, mate: Mates) -> anyhow::Result<Model> {
+    async fn update_mate(&self, mate: Mates) -> anyhow::Result<mates::Model> {
         let id = mate.participant_id;
         let mate = mates::Entity::find_by_id(&id).one(&self.db_connection).await;
 
@@ -151,6 +152,105 @@ impl MateRepoTrait for MateRepoForSql {
 
     async fn delete_mate(&self, id: String) -> anyhow::Result<()> {
         let mut entry = match mates::Entity::find_by_id(&id).one(&self.db_connection).await {
+            Ok(Some(entry)) => entry,
+            Ok(None) => bail!("No entry found with ID: {}", id),
+            Err(e) => bail!("Failed to fetch data: {}", e),
+        };
+        let ret = entry.clone();
+        let active_model = entry.into_active_model();
+        active_model.delete(&self.db_connection).await?;
+
+        Ok(())
+    }
+
+    async fn get_all_busmates(
+        &self,
+        limit: Option<u64>,
+        offset: Option<u64>,
+    ) -> anyhow::Result<Vec<busmates::Model>> {
+        let busmates = busmates::Entity::find()
+            .limit(limit.unwrap_or(100000))
+            .offset(offset.unwrap_or(0))
+            .all(&self.db_connection)
+            .await;
+        match busmates {
+            Ok(busmates) => Ok(busmates),
+            Err(e) => bail!("Failed to fetch data: {}", e),
+        }
+    }
+
+    async fn get_busmate_by_id(&self, id: String) -> anyhow::Result<busmates::Model> {
+        let busmates = busmates::Entity::find_by_id(&id).one(&self.db_connection).await;
+
+        match busmates {
+            Ok(Some(busmates)) => Ok(busmates),
+            Ok(None) => bail!("NO authentication with id {}", id),
+            Err(e) => bail!("Failed to fetch data: {}", e),
+        }
+    }
+
+    async fn get_busmate_me(&self) -> anyhow::Result<Option<busmates::Model>> {
+        let busmates = busmates::Entity::find()
+            .filter(busmates::Column::IsMe.eq(true))
+            .one(&self.db_connection)
+            .await
+            .map_err(|e| anyhow!("No able to save {}", e.to_string()))?;
+        Ok(busmates)
+    }
+
+    async fn create_busmate(&self, busmate: BusMates, is_me: bool) -> anyhow::Result<busmates::Model> {
+        if is_me {
+            if let Some(busmates) = self.get_busmate_me().await? {
+                bail!("busmates owner already exists: {:?}", busmates)
+            }
+        }
+
+        let busmate = busmates::ActiveModel {
+            participant_id: ActiveValue::Set(busmate.participant_id),
+            participant_type: ActiveValue::Set(busmate.participant_type),
+            token: ActiveValue::Set(busmate.token),
+            token_actions: ActiveValue::Set(busmate.token_actions),
+            saved_at: ActiveValue::Set(busmate.saved_at),
+            last_interaction: ActiveValue::Set(busmate.last_interaction),
+            is_me: ActiveValue::Set(is_me),
+        };
+
+        let busmate = match busmates::Entity::insert(busmate)
+            .on_conflict(
+                OnConflict::column(busmates::Column::ParticipantId)
+                    .update_columns([
+                        busmates::Column::Token,
+                        busmates::Column::TokenActions,
+                        busmates::Column::LastInteraction,
+                    ])
+                    .to_owned(),
+            )
+            .exec_with_returning(&self.db_connection)
+            .await
+        {
+            Ok(busmate) => busmate,
+            Err(e) => {
+                println!("Failed to insert busmate: {}", e);
+                bail!("Failed to insert busmate: {}", e)
+            }
+        };
+
+        Ok(busmate)
+    }
+
+    async fn update_busmate(&self, busmate: BusMates) -> anyhow::Result<busmates::Model> {
+        let id = busmate.participant_id;
+        let busmate = busmates::Entity::find_by_id(&id).one(&self.db_connection).await;
+
+        match busmate {
+            Ok(Some(busmate)) => Ok(busmate),
+            Ok(None) => bail!("NO authentication with id {}", id),
+            Err(e) => bail!("Failed to fetch data: {}", e),
+        }
+    }
+
+    async fn delete_busmate(&self, id: String) -> anyhow::Result<()> {
+        let mut entry = match busmates::Entity::find_by_id(&id).one(&self.db_connection).await {
             Ok(Some(entry)) => entry,
             Ok(None) => bail!("No entry found with ID: {}", id),
             Err(e) => bail!("Failed to fetch data: {}", e),

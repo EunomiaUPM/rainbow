@@ -52,11 +52,12 @@ where
     }
     pub fn router(self) -> Router {
         Router::new()
-            .route("/access", post(Self::access_request))
-            .route("/pd/:state", get(Self::pd))
-            .route("/verify/:state", post(Self::verify))
-            .route("/continue", post(Self::continue_request))
-            .route("/verify/token", post(Self::verify_token))
+            .route("/api/v1/access", post(Self::access_request))
+            .route("/api/v1/pd/:state", get(Self::pd))
+            .route("/api/v1/verify/:state", post(Self::verify))
+            .route("/api/v1/continue", post(Self::continue_request))
+            .route("/api/v1/verify/token", post(Self::verify_token))
+            .route("/api/v1/generate/uri", post(Self::generate_uri))
             .with_state(self.manager)
         // .fallback(Self::fallback) 2 routers cannot have 1 fallback each
     }
@@ -65,10 +66,10 @@ where
         info!("POST /access");
 
         let exchange = manager.generate_exchange_uri(payload).await;
-
+        let continue_uri = manager.get_continue_uri().unwrap();
         let res = match exchange {
             Ok((client_id, oidc4vp_uri, consumer_nonce)) => {
-                GrantResponse::default4oidc4vp(client_id, oidc4vp_uri, consumer_nonce)
+                GrantResponse::default4oidc4vp(client_id, oidc4vp_uri, continue_uri, consumer_nonce)
             }
             Err(e) => GrantResponse::error(e.to_string()),
         };
@@ -110,7 +111,7 @@ where
     async fn continue_request(State(manager): State<Arc<T>>, Json(payload): Json<RefBody>) -> impl IntoResponse {
         info!("POST /continue");
 
-        let (model, base_url) = match manager.continue_req(payload.interact_ref).await {
+        let (model, base_url, global_id) = match manager.continue_req(payload.interact_ref).await {
             Ok(model) => model,
             Err(e) => {
                 let error = json!({"error": "error"});
@@ -119,17 +120,15 @@ where
             }
         };
 
-
-        let id = model["consumer"].as_str().unwrap().to_string();
+        let slug = model["consumer"].as_str().unwrap().to_string();
         let token = model["token"].as_str().unwrap().to_string();
         let actions = model["actions"].as_str().unwrap().to_string();
-        match manager.save_mate(id, token.clone(), base_url, actions).await {
+        match manager.save_mate(Some(global_id), slug, token.clone(), base_url, actions).await {
             Ok(_) => (),
             Err(e) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
         }
 
         let json = AccessToken::default(token);
-
 
         (StatusCode::OK, Json(json)).into_response()
     }
@@ -138,6 +137,17 @@ where
         info!("POST /verify/token");
 
         let token: String;
+    }
+
+    async fn generate_uri(State(manager): State<Arc<T>>) -> impl IntoResponse {
+        info!("POST /generate/uri");
+
+        let uri = match manager.generate_uri().await {
+            Ok(uri) => uri,
+            Err(e) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+        };
+
+        uri.into_response()
     }
 
     async fn fallback(method: Method, uri: Uri) -> (StatusCode, String) {
@@ -152,4 +162,3 @@ struct VerifyPayload {
     vp_token: String,
     presentation_submission: String,
 }
-

@@ -39,11 +39,21 @@ pub struct GrantResponse {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Continue4GResponse {
-    uri: String,
+    pub uri: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    wait: Option<u64>,
+    pub wait: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    access_token: Option<AccessToken>,
+    pub access_token: Option<AccessToken>,
+}
+
+impl Continue4GResponse {
+    pub fn default4async(uri: String) -> Self {
+        Self {
+            uri,
+            wait: Some(60),
+            access_token: None,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -74,9 +84,13 @@ pub struct Subject4GResponse {
 }
 
 impl GrantResponse {
-    pub fn default4oidc4vp(id: String, uri: String, consumer_nonce: String) -> Self {
+    pub fn default4oidc4vp(id: String, uri: String, continue_uri:String, consumer_nonce: String) -> Self {
         Self {
-            r#continue: None,
+            r#continue: Some(Continue4GResponse {
+                uri: continue_uri, // TODO Get here
+                wait: None, // TODO Manage wait time
+                access_token: None,
+            }),
             access_token: None,
             interact: Some(Interact4GResponse::default4oidc4vp(uri, consumer_nonce)),
             subject: None,
@@ -93,6 +107,17 @@ impl GrantResponse {
             subject: None,
             instance_id: None,
             error: Some(error),
+        }
+    }
+
+    pub fn default4async(id: String, uri: String) -> Self {
+        Self {
+            r#continue: Some(Continue4GResponse::default4async(uri)),
+            access_token: None,
+            interact: None,
+            subject: None,
+            instance_id: Some(id),
+            error: None,
         }
     }
 }

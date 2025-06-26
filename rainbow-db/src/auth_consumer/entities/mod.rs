@@ -21,3 +21,4 @@ pub mod auth;
 pub mod auth_interaction;
 pub mod auth_verification;
 pub mod prov;
+pub mod authority;

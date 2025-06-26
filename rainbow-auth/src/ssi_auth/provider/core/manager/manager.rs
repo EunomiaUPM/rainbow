@@ -34,7 +34,7 @@ use jsonwebtoken::{Algorithm, Validation};
 use log::error;
 use rainbow_common::auth::gnap::{GrantRequest, GrantResponse};
 use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
-use rainbow_common::mates::Mates;
+use rainbow_common::mates::{Mates, BusMates};
 use rainbow_db::auth_provider::repo::AuthProviderRepoTrait;
 use rand::{distributions::Alphanumeric, Rng};
 use reqwest::Client;
@@ -76,19 +76,24 @@ where
     async fn generate_exchange_uri(&self, payload: GrantRequest) -> anyhow::Result<(String, String, String)> {
         info!("Generating exchange URI");
 
-        if !payload.interact.start.contains(&"oidc4vp".to_string()) {
-            bail!(
-                "Interact Method {} Not supported ",
-                payload.interact.start.first().unwrap()
-            );
+        let interact = payload.interact.unwrap();
+        let start = interact.clone().start;
+
+        if !start.contains(&"oidc4vp".to_string()) {
+            error!("Interact Method {} Not supported ", start.first().unwrap());
+            bail!("Interact Method {} Not supported ", start.first().unwrap());
         }
         let mut provider_url = self.config.get_ssi_auth_host_url().unwrap(); // TODO fix docker internal
         provider_url = provider_url.replace("127.0.0.1", "host.docker.internal");
+        provider_url = format!("{}/api/v1", provider_url);
 
         let client_id = format!("{}/verify", &provider_url);
 
         let actions = payload.access_token.access.actions.unwrap_or_else(|| String::from("talk"));
-        let grant_endpoint = format!("{}/access", self.config.get_ssi_auth_host_url().unwrap());
+        let grant_endpoint = format!(
+            "{}/api/v1/access",
+            self.config.get_ssi_auth_host_url().unwrap()
+        );
 
         let (auth_model, interaction_model, verification_model) = match self
             .auth_repo
@@ -97,7 +102,7 @@ where
                 client_id.clone(),
                 grant_endpoint,
                 actions,
-                payload.interact,
+                interact,
             )
             .await
         {
@@ -158,16 +163,16 @@ where
         //     ]
         // })
 
-        let id = match self.auth_repo.get_auth_by_state(state.clone()).await {
-            Ok(id) => id,
+        let auth = match self.auth_repo.get_auth_by_state(state.clone()).await {
+            Ok(auth) => auth,
             Err(e) => bail!("No exchange for state {}", state),
         };
 
         Ok(json!({
-          "id": id,
+          "id": auth.id,
           "input_descriptors": [
             {
-              "id": "VerifiableId",
+              "id": "DataspaceParticipantCredential",
               "format": {
                 "jwt_vc_json": {
                   "alg": [
@@ -183,7 +188,7 @@ where
                     ],
                     "filter": {
                       "type": "string",
-                      "pattern": "VerifiableId"
+                      "pattern": "DataspaceParticipantCredential"
                     }
                   }
                 ]
@@ -194,10 +199,11 @@ where
     }
 
     async fn verify_all(&self, state: String, vp_token: String) -> anyhow::Result<Option<String>> {
-        let exchange = match self.auth_repo.get_auth_by_state(state.clone()).await {
+        let exchange_model = match self.auth_repo.get_auth_by_state(state.clone()).await {
             Ok(auth) => auth,
             Err(e) => bail!("No exchange for state {}", state),
         };
+        let exchange = exchange_model.id;
 
         let (vcts, holder) = match self.verify_vp(exchange.clone(), state, vp_token).await {
             Ok(v) => v,
@@ -234,10 +240,46 @@ where
             }
         }
 
-        let interact = match self.auth_repo.get_interaction_by_id(exchange).await {
+        // TODO
+
+        let interact = match self.auth_repo.get_interaction_by_id(exchange.clone()).await {
             Ok(interact) => interact,
             Err(e) => {
-                bail!("{}", e)
+                if e.to_string().contains("No Interaction from authentication with id") {
+
+                    let url = format!(
+                        "{}/api/v1/busmates",
+                        self.config.get_ssi_auth_host_url().unwrap()
+                    ); // TODO fix 4 microservices
+
+                    let mut headers = HeaderMap::new();
+                    headers.insert(CONTENT_TYPE, "application/json".parse()?);
+                    headers.insert(ACCEPT, "application/json".parse()?);
+
+                    let token: String = create_opaque_token();
+
+                    let body = BusMates::default4provider(Some(exchange_model.holder.unwrap()), token); // TODO
+
+                    let res = self.client.post(url).headers(headers).json(&body).send().await;
+
+                    let res = match res {
+                        Ok(res) => res,
+                        Err(e) => bail!("Error sending request: {}", e),
+                    };
+
+                    match res.status().as_u16() {
+                        200 => {
+                            info!("Business Mate saved successfully");
+                        }
+                        _ => {
+                            error!("Business Mate saving failed: {}", res.status());
+                            bail!("Mate saving failed: {}", res.status());
+                        }
+                    }
+                    return Ok(None)
+                } else {
+                    bail!("{}", e)
+                }
             }
         };
 
@@ -286,7 +328,7 @@ where
 
         let key = jsonwebtoken::DecodingKey::from_jwk(&jwk)?;
         let mut audience = format!(
-            "{}/verify/{}",
+            "{}/api/v1/verify/{}",
             self.config.get_ssi_auth_host_url().unwrap(),
             state
         );
@@ -399,7 +441,7 @@ where
         info!("VCT token signature is correct");
         debug!("{:#?}", token);
 
-        if token.claims["iss"].as_str().unwrap() != kid || kid != token.claims["vc"]["issuer"].as_str().unwrap() {
+        if token.claims["iss"].as_str().unwrap() != kid || kid != token.claims["vc"]["issuer"]["id"].as_str().unwrap() {
             // VALIDATE IF ISSUER IS THE SAME AS KID
             error!("VCT token issuer & kid does not match");
             bail!("VCT token issuer & kid does not match");
@@ -450,7 +492,7 @@ where
         Ok(())
     }
 
-    async fn continue_req(&self, interact_ref: String) -> anyhow::Result<(Value, String)> {
+    async fn continue_req(&self, interact_ref: String) -> anyhow::Result<(Value, String, String)> {
         let auth_interact = match self.auth_repo.get_auth_by_interact_ref(interact_ref).await {
             Ok(auth_interact) => auth_interact,
             Err(e) => bail!("No interact reference expected"),
@@ -489,12 +531,18 @@ where
             }
         };
 
-        Ok((serde_json::to_value(&model)?, base_url))
+        let holder = match self.auth_repo.get_auth_ver_by_id(model.id.clone()).await {
+            Ok(ver_model) => ver_model.holder.unwrap(),
+            Err(e) => {bail!("Unexpected error")}
+        };
+
+        Ok((serde_json::to_value(&model)?, base_url, holder))
     }
 
     async fn save_mate(
         &self,
-        id: String,
+        global_id: Option<String>,
+        slug: String,
         token: String,
         base_url: String,
         token_actions: String,
@@ -508,7 +556,8 @@ where
         headers.insert(CONTENT_TYPE, "application/json".parse()?);
         headers.insert(ACCEPT, "application/json".parse()?);
 
-        let body = Mates::default4provider(id, base_url, token, token_actions);
+        let body = Mates::default4provider(global_id, slug, base_url, token, token_actions); // TODO
+
 
         let res = self.client.post(url).headers(headers).json(&body).send().await;
 
@@ -528,5 +577,94 @@ where
         }
 
         Ok(())
+    }
+
+    async fn save_busmate(&self, global_id: Option<String>, token: String) -> anyhow::Result<()> {
+        let url = format!(
+            "{}/api/v1/busmates",
+            self.config.get_ssi_auth_host_url().unwrap()
+        ); // TODO fix 4 microservices
+
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "application/json".parse()?);
+        headers.insert(ACCEPT, "application/json".parse()?);
+
+        let body = BusMates::default4provider(global_id, token); // TODO
+
+        let res = self.client.post(url).headers(headers).json(&body).send().await;
+
+        let res = match res {
+            Ok(res) => res,
+            Err(e) => bail!("Error sending request: {}", e),
+        };
+
+        match res.status().as_u16() {
+            200 => {
+                info!("BusMate saved successfully");
+            }
+            _ => {
+                error!("Mate saving failed: {}", res.status());
+                bail!("Mate saving failed: {}", res.status());
+            }
+        }
+
+        Ok(())
+    }
+
+    fn get_continue_uri(&self) -> anyhow::Result<String> {
+        Ok(format!(
+            "{}/api/v1/continue",
+            self.config.get_auth_host_url().unwrap()
+        ))
+    }
+
+    async fn generate_uri(&self) -> anyhow::Result<String> {
+        info!("Generating exchange URI");
+
+        let mut provider_url = self.config.get_ssi_auth_host_url().unwrap(); // TODO fix docker internal
+        provider_url = provider_url.replace("127.0.0.1", "host.docker.internal");
+        provider_url = format!("{}/api/v1", provider_url);
+
+        let client_id = format!("{}/verify", &provider_url);
+
+        let actions =  String::from("talk");
+        let grant_endpoint = format!(
+            "{}/api/v1/access",
+            self.config.get_ssi_auth_host_url().unwrap()
+        );
+
+        let (auth_model, verification_model) = match self
+            .auth_repo.create_truncated_auth(client_id.clone())
+            .await
+        {
+            Ok(model) => {
+                info!("exchange saved successfully");
+                model
+            }
+            Err(e) => bail!("Unable to save exchange in db: {}", e),
+        };
+
+        let base_url = "openid4vp://authorize";
+
+        let encoded_client_id = encode(&verification_model.audience);
+
+        let state = verification_model.state;
+        let nonce = verification_model.nonce;
+
+        let presentation_definition_uri = format!("{}/pd/{}", &provider_url, state);
+        let encoded_presentation_definition_uri = encode(&presentation_definition_uri);
+
+        let response_uri = format!("{}/verify/{}", &provider_url, state);
+        let encoded_response_uri = encode(&response_uri);
+
+        let response_type = "vp_token";
+        let response_mode = "direct_post";
+        let client_id_scheme = "redirect_uri";
+
+        // TODO let client_metadata = r#"{"authorization_encrypted_response_alg":"ECDH-ES","authorization_encrypted_response_enc":"A256GCM"}"#;
+
+        let uri = format!("{}?response_type={}&client_id={}&response_mode={}&presentation_definition_uri={}&client_id_scheme={}&nonce={}&response_uri={}", base_url, response_type, encoded_client_id, response_mode, encoded_presentation_definition_uri, client_id_scheme, nonce, encoded_response_uri);
+        info!("uri generated successfully: {}", uri);
+        Ok(uri)
     }
 }

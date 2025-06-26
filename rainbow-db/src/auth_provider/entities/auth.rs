@@ -27,7 +27,7 @@ use serde_json::Value as JsonValue;
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: String,
-    pub consumer: String,
+    pub consumer: Option<String>,
     pub actions: String, // IT IS A VEC!!
     pub status: String,
     pub token: Option<String>,

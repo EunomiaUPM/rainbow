@@ -18,11 +18,11 @@
  */
 
 use sea_orm_migration::prelude::*;
-
+pub mod m20250403_094651_busmates;
 pub mod m20250403_094651_mates;
 
 pub fn get_mates_migrations() -> Vec<Box<dyn MigrationTrait>> {
-    vec![Box::new(m20250403_094651_mates::Migration)]
+    vec![Box::new(m20250403_094651_mates::Migration), Box::new(m20250403_094651_busmates::Migration)]
 }
 
 pub struct Migrator;

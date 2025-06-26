@@ -1,0 +1,67 @@
+/*
+ *
+ *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+use crate::utils::get_urn;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct BusMates {
+    pub participant_id: String,
+    pub participant_type: String,
+    pub token: Option<String>,
+    pub token_actions: Option<String>,
+    pub saved_at: chrono::NaiveDateTime,
+    pub last_interaction: chrono::NaiveDateTime,
+    pub is_me: bool,
+}
+
+impl BusMates {
+    pub fn default4consumer(
+        id: Option<String>,
+        token: String,
+    ) -> Self {
+        let participant_id = id.unwrap_or_else(|| get_urn(None).to_string());
+
+        Self {
+            participant_id,
+            participant_type: "BusinessProvider".to_string(),
+            token: Some(token),
+            token_actions: Some("talk".to_string()),
+            saved_at: chrono::Utc::now().naive_utc(),
+            last_interaction: chrono::Utc::now().naive_utc(),
+            is_me: false,
+        }
+    }
+
+    pub fn default4provider(
+        id: Option<String>,
+        token: String,
+    ) -> Self {
+        let participant_id = id.unwrap_or_else(|| get_urn(None).to_string());
+
+        Self {
+            participant_id,
+            participant_type: "BusinessConsumer".to_string(),
+            token: Some(token),
+            token_actions: Some("talk".to_string()),
+            saved_at: chrono::Utc::now().naive_utc(),
+            last_interaction: chrono::Utc::now().naive_utc(),
+            is_me: false,
+        }
+    }
+}

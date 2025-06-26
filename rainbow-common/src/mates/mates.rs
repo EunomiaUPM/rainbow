@@ -33,10 +33,18 @@ pub struct Mates {
 }
 
 impl Mates {
-    pub fn default4consumer(id: String, url: String, token: String, token_actions: String) -> Self {
+    pub fn default4consumer(
+        id: Option<String>,
+        slug: String,
+        url: String,
+        token: String,
+        token_actions: String,
+    ) -> Self {
+        let participant_id = id.unwrap_or_else(|| get_urn(None).to_string());
+
         Self {
-            participant_id: get_urn(None).to_string(),
-            participant_slug: id,
+            participant_id,
+            participant_slug: slug,
             participant_type: "Provider".to_string(),
             base_url: Some(url),
             token: Some(token),
@@ -47,10 +55,18 @@ impl Mates {
         }
     }
 
-    pub fn default4provider(id: String, url: String, token: String, token_actions: String) -> Self {
+    pub fn default4provider(
+        id: Option<String>,
+        slug: String,
+        url: String,
+        token: String,
+        token_actions: String,
+    ) -> Self {
+        let participant_id = id.unwrap_or_else(|| get_urn(None).to_string());
+
         Self {
-            participant_id: get_urn(None).to_string(),
-            participant_slug: id,
+            participant_id,
+            participant_slug: slug,
             participant_type: "Consumer".to_string(),
             base_url: Some(url),
             token: Some(token),

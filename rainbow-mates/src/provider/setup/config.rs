@@ -37,6 +37,7 @@ pub struct MateProviderApplicationConfig {
     ssh_user: Option<String>,
     ssh_private_key_path: Option<String>,
     role: ConfigRoles,
+    cert_path: String,
 }
 
 impl Default for MateProviderApplicationConfig {
@@ -88,6 +89,11 @@ impl ApplicationProviderConfigTrait for MateProviderApplicationConfig {
     fn get_raw_database_config(&self) -> &DatabaseConfig {
         &self.database_config
     }
+
+    fn get_raw_cert_path(&self) -> &String {
+        &self.cert_path
+    }
+
     fn merge_dotenv_configuration(&self) -> Self {
         let app_config = ApplicationProviderConfig::default().merge_dotenv_configuration();
         MateProviderApplicationConfig::from(app_config)
@@ -110,6 +116,7 @@ impl From<ApplicationProviderConfig> for MateProviderApplicationConfig {
             ssh_user: value.ssh_user,
             ssh_private_key_path: value.ssh_private_key_path,
             role: value.role,
+            cert_path: value.cert_path,
         }
     }
 }
@@ -131,6 +138,7 @@ impl Into<ApplicationProviderConfig> for MateProviderApplicationConfig {
             ssh_user: self.ssh_user,
             ssh_private_key_path: self.ssh_private_key_path,
             role: self.role,
+            cert_path: self.cert_path,
         }
     }
 }
