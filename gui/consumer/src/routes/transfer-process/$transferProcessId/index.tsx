@@ -97,14 +97,14 @@ function RouteComponent() {
                 </Badge>
               </ListItem>
               <ListItem>
-                <ListItemKey>Created At</ListItemKey>
+                <ListItemKey>Created at</ListItemKey>
                 <p>
                   {" "}
                   {dayjs(transferProcess?.created_at).format("DD/MM/YY HH:mm")}
                 </p>
               </ListItem>
               <ListItem>
-                <ListItemKey>Updated At</ListItemKey>
+                <ListItemKey>Updated at</ListItemKey>
                 <p>
                   {" "}
                   {dayjs(transferProcess?.updated_at).format("DD/MM/YY HH:mm")}

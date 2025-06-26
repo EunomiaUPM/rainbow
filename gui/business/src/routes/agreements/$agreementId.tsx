@@ -49,7 +49,7 @@ function RouteComponent() {
                         </TableCell>
                     </TableRow>
                     <TableRow>
-                        <TableCell>CreatedAt</TableCell>
+                        <TableCell>Created at</TableCell>
                         <TableCell>
                             {dayjs(agreement.created_at).format("DD/MM/YYYY - HH:mm")}
                         </TableCell>

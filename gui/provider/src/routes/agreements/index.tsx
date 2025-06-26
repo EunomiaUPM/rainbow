@@ -38,7 +38,7 @@ function RouteComponent() {
               <TableHead>Consumer Participant Id</TableHead>
               {/* <TableHead>Provider Participant Id</TableHead> */}
               <TableHead>Status</TableHead>
-              <TableHead>Created At</TableHead>
+              <TableHead>Created at</TableHead>
               <TableHead>Link</TableHead>
             </TableRow>
           </TableHeader>

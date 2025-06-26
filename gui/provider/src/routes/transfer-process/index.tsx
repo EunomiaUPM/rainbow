@@ -39,8 +39,8 @@ function RouteComponent() {
             {/* <TableHead>Consumer pid</TableHead> */}
             {/* <TableHead>Agreement id</TableHead> */}
             <TableHead>State</TableHead>
-            <TableHead>Created At</TableHead>
-            <TableHead>Updated At</TableHead>
+            <TableHead>Created at</TableHead>
+            <TableHead>Updated at</TableHead>
             <TableHead>Actions</TableHead>
             <TableHead>Link</TableHead>
           </TableRow>

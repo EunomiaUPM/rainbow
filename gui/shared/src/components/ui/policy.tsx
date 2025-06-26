@@ -116,7 +116,7 @@ const PolicyConstraint = ({ type, className, children, ...props }) => {
   return (
     <div className={cn("constraint-policy-container", className)} {...props}>
       <span
-        className={`flex justify-start items-start h-full px-2 py-0.5 w-fit max-w-[185px] rounded-sm gap-1 focus-visible:ring focus-visible:ring-ring/50 focus-visible:ring-[3px] transition-all   font-medium break-all border border-white/15 bg-gray-300/5
+        className={`flex justify-start items-start h-full px-2 py-0.5 w-fit max-w-[165px] rounded-sm gap-1 focus-visible:ring focus-visible:ring-ring/50 focus-visible:ring-[3px] transition-all   font-medium break-all border border-white/15 bg-gray-300/5
     ${childText.length >= 16 ? "nowrap" : ""}`}
       >
         <p className="break-all text-white/80">{formatString(childText)}</p>

@@ -3,6 +3,18 @@ import dayjs from "dayjs";
 import { ExternalLink } from "lucide-react";
 import { Badge } from "shared/src/components/ui/badge";
 import Heading from "shared/src/components/ui/heading";
+import { RouteComponent as OfferForm } from "@/routes/contract-negotiation/offer";
+
+import {
+  Drawer,
+  DrawerBody,
+  DrawerClose,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@./../../shared/src/components/ui/drawer.tsx";
 import {
   List,
   ListItem,
@@ -71,6 +83,7 @@ const RouteComponent = () => {
               <TableHead>Title</TableHead>
               <TableHead>Provider ID</TableHead>
               <TableHead>Created at</TableHead>
+              <TableHead>Actions</TableHead>
               <TableHead>Link</TableHead>
             </TableRow>
           </TableHeader>
@@ -93,6 +106,34 @@ const RouteComponent = () => {
                   <ListItemDate>
                     {dayjs(catalog.issued).format("DD/MM/YYYY - HH:mm")}
                   </ListItemDate>
+                </TableCell>
+                <TableCell>
+                  <Drawer direction={"right"}>
+                    <DrawerTrigger>
+                      <Button variant="outline" size="sm">
+                        + Offer dataset
+                      </Button>
+                    </DrawerTrigger>
+                    <DrawerContent>
+                      <DrawerHeader>
+                        <DrawerTitle>
+                          <Heading level="h5" className="text-current">
+                            New Contract Negotiation Offer
+                          </Heading>
+                        </DrawerTitle>
+                      </DrawerHeader>
+                      <DrawerBody>
+                        <OfferForm />
+                      </DrawerBody>
+                      <DrawerFooter>
+                        <DrawerClose className="flex justify-start gap-4">
+                          <Button variant="ghost" className="w-40">
+                            Cancel
+                          </Button>
+                        </DrawerClose>
+                      </DrawerFooter>
+                    </DrawerContent>
+                  </Drawer>
                 </TableCell>
                 <TableCell>
                   <Link

@@ -42,13 +42,13 @@ function RouteComponent() {
                         <TableCell>{transferProcess.state}</TableCell>
                     </TableRow>
                     <TableRow>
-                        <TableCell>Created At</TableCell>
+                        <TableCell>Created at</TableCell>
                         <TableCell>
                             {dayjs(transferProcess.created_at).format("DD/MM/YYYY - HH:mm")}
                         </TableCell>
                     </TableRow>
                     <TableRow>
-                        <TableCell>Updated At</TableCell>
+                        <TableCell>Updated at</TableCell>
                         <TableCell>
                             {dayjs(transferProcess.updated_at).format("DD/MM/YYYY - HH:mm")}
                         </TableCell>

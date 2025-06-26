@@ -22,11 +22,12 @@ function RouteComponent() {
                 <TableHeader>
                     <TableRow>
                         <TableHead>Transfer Process Provider pid</TableHead>
-                        <TableHead>Transfer Consumer Provider pid</TableHead>
+                        {/* <TableHead>Transfer Consumer Provider pid</TableHead> */}
                         <TableHead>Agreement id</TableHead>
                         <TableHead>State</TableHead>
-                        <TableHead>Created At</TableHead>
-                        <TableHead>Updated At</TableHead>
+                        <TableHead>Created at</TableHead>
+                        {/* <TableHead>Updated at</TableHead> */}
+                         <TableHead>Actions</TableHead>
                         <TableHead>Link</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -38,11 +39,11 @@ function RouteComponent() {
                                     {transferProcess.provider_pid.slice(9, 20) + "..."}
                                 </Badge>
                             </TableCell>
-                            <TableCell>
+                            {/* <TableCell>
                                 <Badge variant={"info"}>
                                     {transferProcess.consumer_pid?.slice(9, 20) + "..."}
                                 </Badge>
-                            </TableCell>
+                            </TableCell> */}
                             <TableCell>
                                 <Badge variant={"info"}>
                                     {transferProcess.agreement_id?.slice(9, 20) + "..."}
@@ -57,18 +58,24 @@ function RouteComponent() {
                             <TableCell>
                                 {dayjs(transferProcess.created_at).format("DD/MM/YY HH:mm")}
                             </TableCell>
-                            <TableCell>
+                            {/* <TableCell>
                                 {dayjs(transferProcess.updated_at).format("DD/MM/YY HH:mm")}
-                            </TableCell>
+                            </TableCell> */} 
+                                 <TableCell className="gap-2 flex" >
+                                    <Button size="sm" variant="outline"> Suspend</Button>
+                                    <Button size="sm" variant="destructive"> Terminate</Button>
+                                 </TableCell>
                             <TableCell>
-                                <Button variant="default">
-                                    <Link
-                                        to="/transfer-process/$transferProcessId"
-                                        params={{transferProcessId: transferProcess.provider_pid}}
+                               
+                                    <Link  to="/transfer-process/$transferProcessId"
+                                        params={{transferProcessId: transferProcess.provider_pid}}>
+                                     <Button variant="link" size="sm"
+                                      
                                     >
                                         See transference
+                                         </Button>
                                     </Link>
-                                </Button>
+                               
                             </TableCell>
                         </TableRow>
                     ))}

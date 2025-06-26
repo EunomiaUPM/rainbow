@@ -61,10 +61,10 @@ const RouteComponent = () => {
                 <Table className="text-sm">
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Dataset Id</TableHead>
+                            <TableHead>Dataset ID</TableHead>
                             <TableHead>Title</TableHead>
                             <TableHead>Provider ID</TableHead>
-                            <TableHead>CreatedAt</TableHead>
+                            <TableHead>Created at</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -101,10 +101,10 @@ const RouteComponent = () => {
                 <Table className="text-sm">
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Dataservice Id</TableHead>
+                            <TableHead>Dataservice ID</TableHead>
                             <TableHead>Endpoint</TableHead>
                             <TableHead>Endpoint Description</TableHead>
-                            <TableHead>CreatedAt</TableHead>
+                            <TableHead>Created at</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>

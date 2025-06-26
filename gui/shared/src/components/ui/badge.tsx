@@ -34,7 +34,7 @@ const badgeVariants = cva(
         STARTED: "bg-process text-process-300 [&>span]:bg-process-400", // Transfers
         OFFERED: "bg-warn text-warn-300 [&>span]:bg-warn-400", // CN
         REQUESTED: "bg-warn text-warn-300 [&>span]:bg-warn-400", // CN
-        AGREED: "bg-success text-success-300 [&>span]:bg-success-400", //
+        AGREED: "bg-process text-process-300 [&>span]:bg-process-400", //
         FINALIZED: "bg-success text-success-300 [&>span]:bg-success-400", // CN
         COMPLETED: "bg-success text-success-300 [&>span]:bg-success-400", // Transfers
         SUSPENDED: "bg-pause text-pause-300 [&>span]:bg-pause-400", //

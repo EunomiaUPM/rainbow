@@ -38,7 +38,7 @@ const RouteComponent = () => {
                         <TableCell>{process.state}</TableCell>
                     </TableRow>
                     <TableRow>
-                        <TableCell>CreatedAt</TableCell>
+                        <TableCell>Created at</TableCell>
                         <TableCell>
                             {dayjs(process.created_at).format("DD/MM/YYYY - HH:mm")}
                         </TableCell>
@@ -56,7 +56,7 @@ const RouteComponent = () => {
                             <TableHead>Type</TableHead>
                             <TableHead>From</TableHead>
                             <TableHead>To</TableHead>
-                            <TableHead>CreatedAt</TableHead>
+                            <TableHead>Created at</TableHead>
                             <TableHead>Content</TableHead>
                             <TableHead>Offer</TableHead>
                             <TableHead>Agreement</TableHead>

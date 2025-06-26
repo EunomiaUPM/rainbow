@@ -77,7 +77,7 @@ function RouteComponent() {
                     <TableRow>
                         <TableHead>Distribution Id</TableHead>
                         <TableHead>Distribution Title</TableHead>
-                        <TableHead>CreatedAt</TableHead>
+                        <TableHead>Created at</TableHead>
                         <TableHead>Associated Data service</TableHead>
                     </TableRow>
                 </TableHeader>

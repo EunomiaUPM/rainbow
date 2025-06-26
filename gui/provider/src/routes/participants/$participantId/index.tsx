@@ -107,12 +107,12 @@ function RouteComponent() {
               <Table className="text-sm">
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Agreement Id</TableHead>
+                    <TableHead>Agreement ID</TableHead>
                     {/* <TableHead>Related Message</TableHead> */}
                     {/* <TableHead>Consumer Participant Id</TableHead> */}
                     {/* <TableHead>Provider Participant Id</TableHead> */}
                     <TableHead>Status</TableHead>
-                    <TableHead>CreatedAt</TableHead>
+                    <TableHead>Created at</TableHead>
                     <TableHead>Link</TableHead>
                   </TableRow>
                 </TableHeader>

@@ -21,7 +21,7 @@ const RouteComponent = () => {
                         <TableHead>ProviderPid</TableHead>
                         <TableHead>ConsumerPid</TableHead>
                         <TableHead>State</TableHead>
-                        <TableHead>CreatedAt</TableHead>
+                        <TableHead>Created at</TableHead>
                         <TableHead>Actions</TableHead>
                         <TableHead>Link</TableHead>
                     </TableRow>

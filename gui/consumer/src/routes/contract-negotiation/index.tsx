@@ -64,7 +64,7 @@ const RouteComponent = () => {
                             <TableCell>
                                 {dayjs(cnProcess.created_at).format("DD/MM/YYYY - HH:mm")}
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="w-[270px]">
                                 <ContractNegotiationActions
                                     process={cnProcess}
                                     tiny={true}

@@ -15,7 +15,8 @@ import {
   useGetBypassDatasetsByCatalogId,
 } from "shared/src/data/catalog-bypass-queries.ts";
 import { Badge } from "shared/src/components/ui/badge";
-import Heading from "shared/src/components/ui/heading";import {
+import Heading from "shared/src/components/ui/heading";
+import {
   List,
   ListItem,
   ListItemKey,
@@ -46,8 +47,8 @@ const RouteComponent = () => {
       </Heading>
 
       <div>
-         <Heading level="h5">Catalog info:</Heading>
-          <List>
+        <Heading level="h5">Catalog info:</Heading>
+        <List>
           <ListItem>
             <ListItemKey>Catalog title</ListItemKey>
             <p>{catalog.title}</p>
@@ -72,7 +73,7 @@ const RouteComponent = () => {
       </div>
 
       <div>
-  <Heading level="h5">Datasets</Heading>
+        <Heading level="h5">Datasets</Heading>
         <Table className="text-sm">
           <TableHeader>
             <TableRow>
@@ -80,11 +81,12 @@ const RouteComponent = () => {
               <TableHead>Title</TableHead>
               <TableHead>Provider ID</TableHead>
               <TableHead>Created at</TableHead>
+               <TableHead>Actions</TableHead>
               <TableHead>Link</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-             {datasets.map((dataset) => (
+            {datasets.map((dataset) => (
               <TableRow key={dataset["@id"].slice(9, 29)}>
                 <TableCell>
                   <Badge variant="info">
@@ -102,6 +104,11 @@ const RouteComponent = () => {
                   <ListItemDate>
                     {dayjs(catalog.issued).format("DD/MM/YYYY - HH:mm")}
                   </ListItemDate>
+                </TableCell>
+                 <TableCell>
+                  <Button size="sm" variant="outline">
+                    + Request dataset
+                  </Button>
                 </TableCell>
                 <TableCell>
                   <Link
@@ -123,7 +130,7 @@ const RouteComponent = () => {
         </Table>
       </div>
       <div>
- <Heading level="h5">Dataservices</Heading>
+        <Heading level="h5">Dataservices</Heading>
         <Table className="text-sm">
           <TableHeader>
             <TableRow>
@@ -131,11 +138,12 @@ const RouteComponent = () => {
               <TableHead>Endpoint</TableHead>
               <TableHead>Endpoint Description</TableHead>
               <TableHead>Created at</TableHead>
+              <TableHead>Actions</TableHead>
               <TableHead>Link</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-           {dataservices.map((dataservice) => (
+            {dataservices.map((dataservice) => (
               <TableRow key={dataservice["@id"].slice(9, 29)}>
                 <TableCell>
                   <Badge variant="info">
@@ -149,6 +157,11 @@ const RouteComponent = () => {
                     {" "}
                     {dayjs(dataservice.issued).format("DD/MM/YYYY - HH:mm")}
                   </ListItemDate>
+                </TableCell>
+                <TableCell>
+                  <Button size="sm" variant="outline">
+                    + Request dataservice
+                  </Button>
                 </TableCell>
                 <TableCell>
                   <Link

@@ -40,7 +40,7 @@ function RouteComponent() {
                             <TableCell>{transferMessage.message_type}</TableCell>
                         </TableRow>
                         <TableRow>
-                            <TableCell>Created At</TableCell>
+                            <TableCell>Created at</TableCell>
                             <TableCell>{dayjs(transferMessage.created_at).format("DD/MM/YYYY - HH:mm")}</TableCell>
                         </TableRow>
                         <TableRow>

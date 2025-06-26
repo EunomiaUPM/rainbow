@@ -32,7 +32,8 @@ function RouteComponent() {
                             </TableHead>
 
                             <TableHead>Status</TableHead>
-                            <TableHead>CreatedAt</TableHead>
+                            <TableHead>Created at</TableHead>
+                               <TableHead>Actions</TableHead>
                             <TableHead>Link</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -69,15 +70,21 @@ function RouteComponent() {
                                 <TableCell>
                                     {dayjs(agreement.created_at).format("DD/MM/YY HH:mm")}
                                 </TableCell>
+                                 <TableCell>
+                                    <Button variant="default" size="xs">
+                                            Request transference
+                                               </Button>
+                                </TableCell>
                                 <TableCell>
-                                    <Button variant="default">
+                                    
                                         <Link
                                             to="/agreements/$agreementId"
                                             params={{agreementId: agreement.agreement_id}}
-                                        >
+                                        ><Button size="sm" variant="link">
                                             See agreement
+                                               </Button>
                                         </Link>
-                                    </Button>
+                                 
                                 </TableCell>
                             </TableRow>
                         ))}

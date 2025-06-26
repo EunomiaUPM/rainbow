@@ -53,7 +53,7 @@ const RouteComponent = () => {
                             <TableHead>Catalog Id</TableHead>
                             <TableHead>Title</TableHead>
                             <TableHead>Provider ID</TableHead>
-                            <TableHead>CreatedAt</TableHead>
+                            <TableHead>Created at</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
