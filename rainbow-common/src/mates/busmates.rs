@@ -23,42 +23,36 @@ use serde::{Deserialize, Serialize};
 pub struct BusMates {
     pub id: String,
     pub participant_id: String,
-    pub participant_type: String,
     pub token: Option<String>,
     pub token_actions: Option<String>,
     pub saved_at: chrono::NaiveDateTime,
     pub last_interaction: chrono::NaiveDateTime,
-    pub is_me: bool,
 }
 
 impl BusMates {
-    pub fn default4consumer(id: String, participant_id: Option<String>, token: Option<String>, is_me: bool) -> Self {
+    pub fn default4consumer(id: String, participant_id: Option<String>, token: Option<String>) -> Self {
         let participant_id = participant_id.unwrap_or_else(|| get_urn(None).to_string());
 
         Self {
             id,
             participant_id,
-            participant_type: "BusinessProvider".to_string(),
             token,
             token_actions: Some("talk".to_string()),
             saved_at: chrono::Utc::now().naive_utc(),
             last_interaction: chrono::Utc::now().naive_utc(),
-            is_me,
         }
     }
 
-    pub fn default4provider(id: String, participant_id: Option<String>, token: Option<String>, is_me: bool) -> Self {
+    pub fn default4provider(id: String, participant_id: Option<String>, token: Option<String>) -> Self {
         let participant_id = participant_id.unwrap_or_else(|| get_urn(None).to_string());
 
         Self {
             id,
             participant_id,
-            participant_type: "BusinessConsumer".to_string(),
             token,
             token_actions: Some("talk".to_string()),
             saved_at: chrono::Utc::now().naive_utc(),
             last_interaction: chrono::Utc::now().naive_utc(),
-            is_me,
         }
     }
 }

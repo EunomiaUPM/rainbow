@@ -282,7 +282,6 @@ where
                         state,
                         Some(exchange_model.holder.unwrap()),
                         Some(token),
-                        false,
                     ); // TODO
 
                     println!("{:#?}", body);
@@ -303,7 +302,7 @@ where
                             bail!("Mate saving failed: {}", res.status());
                         }
                     }
-                    return Ok(None);
+                    return Ok(None); // TODO CARLOS VISTA
                 } else {
                     bail!("{}", e)
                 }

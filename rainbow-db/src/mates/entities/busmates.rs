@@ -28,12 +28,10 @@ pub struct Model {
     #[sea_orm(primary_key)]
     pub id: String,
     pub participant_id: String,
-    pub participant_type: String,
     pub token: Option<String>,
     pub token_actions: Option<String>,
     pub saved_at: chrono::NaiveDateTime,
     pub last_interaction: chrono::NaiveDateTime,
-    pub is_me: bool,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

@@ -183,25 +183,16 @@ impl MateRepoTrait for MateRepoForSql {
         }
     }
 
-    async fn get_busmate_me(&self) -> anyhow::Result<Option<busmates::Model>> {
-        let busmates = busmates::Entity::find()
-            .filter(busmates::Column::IsMe.eq(true))
-            .one(&self.db_connection)
-            .await
-            .map_err(|e| anyhow!("No able to save {}", e.to_string()))?;
-        Ok(busmates)
-    }
+
 
     async fn create_busmate(&self, busmate: BusMates) -> anyhow::Result<busmates::Model> {
         let busmate = busmates::ActiveModel {
             id: ActiveValue::Set(busmate.id),
             participant_id: ActiveValue::Set(busmate.participant_id),
-            participant_type: ActiveValue::Set(busmate.participant_type),
             token: ActiveValue::Set(busmate.token),
             token_actions: ActiveValue::Set(busmate.token_actions),
             saved_at: ActiveValue::Set(busmate.saved_at),
             last_interaction: ActiveValue::Set(busmate.last_interaction),
-            is_me: ActiveValue::Set(busmate.is_me),
         };
 
         let busmate = match busmates::Entity::insert(busmate)

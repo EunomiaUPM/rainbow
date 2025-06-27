@@ -35,12 +35,10 @@ impl MigrationTrait for Migration {
                     .table(BusMates::Table)
                     .col(ColumnDef::new(BusMates::Id).string().not_null().primary_key())
                     .col(ColumnDef::new(BusMates::ParticipantId).string().not_null())
-                    .col(ColumnDef::new(BusMates::ParticipantType).string().not_null())
                     .col(ColumnDef::new(BusMates::Token).string())
                     .col(ColumnDef::new(BusMates::TokenActions).string())
                     .col(ColumnDef::new(BusMates::SavedAt).date_time().not_null())
                     .col(ColumnDef::new(BusMates::LastInteraction).date_time().not_null())
-                    .col(ColumnDef::new(BusMates::IsMe).boolean().not_null())
                     .to_owned(),
             )
             .await
@@ -56,10 +54,8 @@ pub enum BusMates {
     Table,
     Id,
     ParticipantId,
-    ParticipantType,
     Token,
     TokenActions,
     SavedAt,
     LastInteraction,
-    IsMe,
 }
