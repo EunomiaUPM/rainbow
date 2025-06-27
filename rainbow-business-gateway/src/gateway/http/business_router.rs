@@ -55,6 +55,7 @@ where
                 get(Self::handle_business_get_policy_offers_by_dataset),
             )
             .route("/gateway/api/login", post(Self::handle_login))
+            .route("/gateway/api/login/poll", post(Self::handle_login_poll))
             // Business User
             .route(
                 "/gateway/api/policy-templates",
@@ -385,6 +386,31 @@ where
             }
         };
         match service.login(input).await {
+            Ok(uri) => (StatusCode::ACCEPTED, uri).into_response(),
+            Err(e) => (
+                StatusCode::BAD_REQUEST,
+                Json(json!({"error": e.to_string()})),
+            )
+                .into_response(),
+        }
+    }
+
+    async fn handle_login_poll(
+        State(service): State<Arc<T>>,
+        input: Result<Json<RainbowBusinessLoginRequest>, JsonRejection>,
+    ) -> impl IntoResponse {
+        info!("POST /gateway/api/login/poll");
+        let input = match input {
+            Ok(input) => input.0,
+            Err(err) => {
+                return (
+                    StatusCode::BAD_REQUEST,
+                    Json(json!({"error": err.body_text()})),
+                )
+                    .into_response()
+            }
+        };
+        match service.login_poll(input).await {
             Ok(uri) => (StatusCode::ACCEPTED, uri).into_response(),
             Err(e) => (
                 StatusCode::BAD_REQUEST,
