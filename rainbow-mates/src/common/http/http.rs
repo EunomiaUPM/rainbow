@@ -24,8 +24,9 @@ use axum::http::{Method, Uri};
 use axum::response::IntoResponse;
 use axum::routing::{delete, get, post, put};
 use axum::{Json, Router};
+use rainbow_common::auth::business::RainbowBusinessLoginRequest;
 use rainbow_common::mates::mates::VerifyTokenRequest;
-use rainbow_common::mates::{Mates, BusMates};
+use rainbow_common::mates::{BusMates, Mates};
 use rainbow_db::mates::repo::{MateRepoFactory, MateRepoTrait};
 use reqwest::{Client, Error, Response, StatusCode};
 use serde::Deserialize;
@@ -79,6 +80,7 @@ where
             .route("/api/v1/busmates/:id", get(Self::get_singular_busmate))
             .route("/api/v1/busmates/:id", put(Self::edit_busmate))
             .route("/api/v1/busmates/:id", delete(Self::delete_busmate))
+            .route("/api/v1/busmates/token", post(Self::give_token))
             .with_state(self.mate_repo)
             .fallback(Self::fallback)
     }
@@ -188,9 +190,11 @@ where
         }
     }
 
-    async fn new_busmate(State(mate_repo): State<Arc<T>>, input: Result<Json<BusMates>, JsonRejection>) -> impl IntoResponse {
+    async fn new_busmate(
+        State(mate_repo): State<Arc<T>>,
+        input: Result<Json<BusMates>, JsonRejection>,
+    ) -> impl IntoResponse {
         info!("POST /api/v1/busmates");
-
 
         let input = match input {
             Ok(input) => input.0,
@@ -295,7 +299,6 @@ where
         let client =
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
 
-
         let base_url = match mate_repo.get_mate_by_id(bypassing_participant_id).await {
             Ok(mate) => mate.base_url.unwrap_or_default(),
             Err(e) => return (StatusCode::NOT_FOUND, e.to_string()).into_response(),
@@ -310,6 +313,23 @@ where
                 (StatusCode::OK, Json(mates)).into_response()
             }
             Err(e) => (StatusCode::BAD_GATEWAY, e.to_string()).into_response(),
+        }
+    }
+
+    async fn give_token(
+        State(mate_repo): State<Arc<T>>,
+        Json(payload): Json<RainbowBusinessLoginRequest>,
+    ) -> impl IntoResponse {
+        info!("GET /api/v1/busmates/token");
+
+        let model = match mate_repo.get_busmate_by_id(payload.auth_request_id).await {
+            Ok(model) => model,
+            Err(e) => return (StatusCode::NOT_FOUND, e.to_string()).into_response(),
+        };
+
+        match model.token {
+            Some(token) => (StatusCode::OK, Json(token)).into_response(),
+            None => StatusCode::PROCESSING.into_response()
         }
     }
 

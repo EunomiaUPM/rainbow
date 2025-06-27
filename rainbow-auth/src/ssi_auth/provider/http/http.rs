@@ -36,6 +36,7 @@ use serde_json::json;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tracing::info;
+use rainbow_common::auth::business::RainbowBusinessLoginRequest;
 use rainbow_common::ssi_wallet::RainbowSSIAuthWalletTrait;
 use crate::ssi_auth::provider::core::Manager;
 
@@ -178,11 +179,5 @@ where
 struct VerifyPayload {
     vp_token: String,
     presentation_submission: String,
-}
-
-#[derive(Debug, Deserialize)]
-struct RainbowBusinessLoginRequest {
-    #[serde(rename="authRequestId")]
-    pub auth_request_id: String,
 }
 
