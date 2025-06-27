@@ -99,7 +99,7 @@ where
             Ok(input) => input.0,
             Err(e) => return (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
         };
-        match mate_repo.create_mate(input, false).await {
+        match mate_repo.create_mate(input).await {
             Ok(mates) => (StatusCode::OK, Json(mates)).into_response(),
             Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
         }
@@ -115,7 +115,7 @@ where
             Ok(input) => input.0,
             Err(e) => return (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
         };
-        match mate_repo.create_mate(input.into(), true).await {
+        match mate_repo.create_mate(input.into()).await {
             Ok(mates) => (StatusCode::OK, Json(mates)).into_response(),
             Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
         }
@@ -191,11 +191,12 @@ where
     async fn new_busmate(State(mate_repo): State<Arc<T>>, input: Result<Json<BusMates>, JsonRejection>) -> impl IntoResponse {
         info!("POST /api/v1/busmates");
 
+
         let input = match input {
             Ok(input) => input.0,
             Err(e) => return (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
         };
-        match mate_repo.create_busmate(input, false).await {
+        match mate_repo.create_busmate(input).await {
             Ok(mates) => (StatusCode::OK, Json(mates)).into_response(),
             Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
         }

@@ -17,8 +17,8 @@
  *
  */
 
-use crate::mates::entities::busmates;
 use crate::mates::entities::mates;
+use crate::mates::entities::busmates;
 use crate::mates::repo::{MateRepoFactory, MateRepoTrait};
 use anyhow::{anyhow, bail};
 use axum::async_trait;
@@ -96,12 +96,7 @@ impl MateRepoTrait for MateRepoForSql {
         Ok(mate)
     }
 
-    async fn create_mate(&self, mate: Mates, is_me: bool) -> anyhow::Result<mates::Model> {
-        if is_me {
-            if let Some(mate_me) = self.get_mate_me().await? {
-                bail!("mate owner already exists: {:?}", mate_me)
-            }
-        }
+    async fn create_mate(&self, mate: Mates) -> anyhow::Result<mates::Model> {
 
         let mate = mates::ActiveModel {
             participant_id: ActiveValue::Set(mate.participant_id),
@@ -112,7 +107,7 @@ impl MateRepoTrait for MateRepoForSql {
             token_actions: ActiveValue::Set(mate.token_actions),
             saved_at: ActiveValue::Set(mate.saved_at),
             last_interaction: ActiveValue::Set(mate.last_interaction),
-            is_me: ActiveValue::Set(is_me),
+            is_me: ActiveValue::Set(mate.is_me),
         };
 
         let mate = match mates::Entity::insert(mate)
@@ -206,18 +201,19 @@ impl MateRepoTrait for MateRepoForSql {
         }
 
         let busmate = busmates::ActiveModel {
+            id: ActiveValue::Set(busmate.id),
             participant_id: ActiveValue::Set(busmate.participant_id),
             participant_type: ActiveValue::Set(busmate.participant_type),
             token: ActiveValue::Set(busmate.token),
             token_actions: ActiveValue::Set(busmate.token_actions),
             saved_at: ActiveValue::Set(busmate.saved_at),
             last_interaction: ActiveValue::Set(busmate.last_interaction),
-            is_me: ActiveValue::Set(is_me),
+            is_me: ActiveValue::Set(busmate.is_me),
         };
 
         let busmate = match busmates::Entity::insert(busmate)
             .on_conflict(
-                OnConflict::column(busmates::Column::ParticipantId)
+                OnConflict::column(busmates::Column::Id)
                     .update_columns([
                         busmates::Column::Token,
                         busmates::Column::TokenActions,

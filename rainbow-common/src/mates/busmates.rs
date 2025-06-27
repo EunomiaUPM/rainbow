@@ -21,6 +21,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct BusMates {
+    pub id: String,
     pub participant_id: String,
     pub participant_type: String,
     pub token: Option<String>,
@@ -31,37 +32,33 @@ pub struct BusMates {
 }
 
 impl BusMates {
-    pub fn default4consumer(
-        id: Option<String>,
-        token: String,
-    ) -> Self {
-        let participant_id = id.unwrap_or_else(|| get_urn(None).to_string());
+    pub fn default4consumer(id: String, participant_id: Option<String>, token: Option<String>, is_me: bool) -> Self {
+        let participant_id = participant_id.unwrap_or_else(|| get_urn(None).to_string());
 
         Self {
+            id,
             participant_id,
             participant_type: "BusinessProvider".to_string(),
-            token: Some(token),
+            token,
             token_actions: Some("talk".to_string()),
             saved_at: chrono::Utc::now().naive_utc(),
             last_interaction: chrono::Utc::now().naive_utc(),
-            is_me: false,
+            is_me,
         }
     }
 
-    pub fn default4provider(
-        id: Option<String>,
-        token: String,
-    ) -> Self {
-        let participant_id = id.unwrap_or_else(|| get_urn(None).to_string());
+    pub fn default4provider(id: String, participant_id: Option<String>, token: Option<String>, is_me: bool) -> Self {
+        let participant_id = participant_id.unwrap_or_else(|| get_urn(None).to_string());
 
         Self {
+            id,
             participant_id,
             participant_type: "BusinessConsumer".to_string(),
-            token: Some(token),
+            token,
             token_actions: Some("talk".to_string()),
             saved_at: chrono::Utc::now().naive_utc(),
             last_interaction: chrono::Utc::now().naive_utc(),
-            is_me: false,
+            is_me,
         }
     }
 }

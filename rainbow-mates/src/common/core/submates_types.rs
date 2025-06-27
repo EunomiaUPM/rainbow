@@ -13,6 +13,7 @@ pub struct BootstrapMateRequest {
 impl Into<BusMates> for BootstrapMateRequest {
     fn into(self) -> BusMates {
         BusMates {
+            id: "".to_string(),
             participant_id: get_urn(None).to_string(),
             participant_type: self.participant_type,
             token: None,

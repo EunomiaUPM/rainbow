@@ -37,8 +37,9 @@ impl Mates {
         id: Option<String>,
         slug: String,
         url: String,
-        token: String,
-        token_actions: String,
+        token: Option<String>,
+        token_actions: Option<String>,
+        is_me: bool,
     ) -> Self {
         let participant_id = id.unwrap_or_else(|| get_urn(None).to_string());
 
@@ -47,11 +48,11 @@ impl Mates {
             participant_slug: slug,
             participant_type: "Provider".to_string(),
             base_url: Some(url),
-            token: Some(token),
-            token_actions: Some(token_actions),
+            token,
+            token_actions,
             saved_at: chrono::Utc::now().naive_utc(),
             last_interaction: chrono::Utc::now().naive_utc(),
-            is_me: false,
+            is_me,
         }
     }
 
@@ -59,8 +60,9 @@ impl Mates {
         id: Option<String>,
         slug: String,
         url: String,
-        token: String,
-        token_actions: String,
+        token: Option<String>,
+        token_actions: Option<String>,
+        is_me: bool
     ) -> Self {
         let participant_id = id.unwrap_or_else(|| get_urn(None).to_string());
 
@@ -69,11 +71,11 @@ impl Mates {
             participant_slug: slug,
             participant_type: "Consumer".to_string(),
             base_url: Some(url),
-            token: Some(token),
-            token_actions: Some(token_actions),
+            token,
+            token_actions,
             saved_at: chrono::Utc::now().naive_utc(),
             last_interaction: chrono::Utc::now().naive_utc(),
-            is_me: false,
+            is_me,
         }
     }
 }

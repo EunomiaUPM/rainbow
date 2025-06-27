@@ -21,6 +21,8 @@ use rainbow_common::config::global_config::{DatabaseConfig, HostConfig};
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_common::config::ConfigRoles;
 use serde::Serialize;
+use rainbow_common::config::consumer_config;
+use rainbow_common::ssi_wallet::{ClientConfig, SSIWalletConfig};
 
 #[derive(Serialize, Clone, Debug)]
 pub struct SSIAuthProviderApplicationConfig {
@@ -38,6 +40,8 @@ pub struct SSIAuthProviderApplicationConfig {
     ssh_private_key_path: Option<String>,
     role: ConfigRoles,
     cert_path: String,
+    ssi_wallet_config: SSIWalletConfig,
+    client_config: ClientConfig,
 }
 
 impl Default for SSIAuthProviderApplicationConfig {
@@ -74,6 +78,15 @@ impl ApplicationProviderConfigTrait for SSIAuthProviderApplicationConfig {
     fn get_raw_datahub_token(&self) -> &String {
         &self.datahub_token
     }
+
+    fn get_raw_ssi_wallet_config(&self) -> &SSIWalletConfig {
+        &self.ssi_wallet_config
+    }
+
+    fn get_raw_client_config(&self) -> &ClientConfig {
+        &self.client_config
+    }
+
     fn get_raw_contract_negotiation_host(&self) -> &Option<HostConfig> {
         &self.contract_negotiation_host
     }
@@ -117,6 +130,8 @@ impl From<ApplicationProviderConfig> for SSIAuthProviderApplicationConfig {
             ssh_private_key_path: value.ssh_private_key_path,
             role: value.role,
             cert_path: value.cert_path,
+            ssi_wallet_config: value.ssi_wallet_config,
+            client_config: value.client_config,
         }
     }
 }
@@ -137,6 +152,8 @@ impl Into<ApplicationProviderConfig> for SSIAuthProviderApplicationConfig {
             database_config: self.database_config,
             ssh_user: self.ssh_user,
             ssh_private_key_path: self.ssh_private_key_path,
+            ssi_wallet_config: self.ssi_wallet_config,
+            client_config: self.client_config,
             role: self.role,
             cert_path: self.cert_path,
         }

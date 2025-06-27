@@ -16,28 +16,12 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
-
-#![allow(unused_imports)]
-#![allow(dead_code)]
-#![allow(unused_variables)]
-#![allow(unused_mut)]
-#![allow(unused_imports)]
-#![allow(unused_must_use)]
-pub mod adv_protocol;
-pub mod auth;
-pub mod config;
-pub mod dcat_formats;
-pub mod err;
-pub mod facades;
-pub mod forwarding;
-pub mod mates;
-pub mod misc_router;
-pub mod policy_templates;
-pub mod protocol;
-pub mod schemas;
-pub mod utils;
-pub mod facades;
-pub mod adv_protocol;
-pub mod mates;
-pub mod ssi_wallet;
+use serde::{Deserialize, Serialize};
+use super::wallet_info::WalletInfo;
+#[derive(Serialize, Deserialize, Debug)]
+pub struct WalletSession {
+    pub account_id: Option<String>,
+    pub token: Option<String>,
+    pub token_exp: Option<u64>,
+    pub wallets: Vec<WalletInfo>,
+}

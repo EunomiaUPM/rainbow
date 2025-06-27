@@ -20,7 +20,9 @@ use crate::config::database::DbType;
 use crate::config::global_config::{extract_env, format_host_config_to_url_string, DatabaseConfig, HostConfig};
 use crate::config::ConfigRoles;
 use clap::builder::TypedValueParser;
+use crate::ssi_wallet::{ClientConfig, SSIWalletConfig};
 use serde::Serialize;
+use serde_json::json;
 use std::env;
 use std::fmt::Display;
 
@@ -39,9 +41,10 @@ pub struct ApplicationProviderConfig {
     pub database_config: DatabaseConfig,
     pub ssh_user: Option<String>,
     pub ssh_private_key_path: Option<String>,
+    pub ssi_wallet_config: SSIWalletConfig,
+    pub client_config: ClientConfig,
     pub role: ConfigRoles,
     pub cert_path: String,
-
 }
 
 impl Default for ApplicationProviderConfig {
@@ -99,8 +102,18 @@ impl Default for ApplicationProviderConfig {
             },
             ssh_user: None,
             ssh_private_key_path: None,
+            ssi_wallet_config: SSIWalletConfig {
+                wallet_portal_url: "127.0.0.1".to_string(),
+                wallet_portal_port: "7001".to_string(),
+                wallet_type: "email".to_string(),
+                wallet_name: "RainbowProvider".to_string(),
+                wallet_email: "RainbowProvider@rainbow.com".to_string(),
+                wallet_password: "rainbow".to_string(),
+                wallet_id: None,
+            },
+            client_config: ClientConfig { self_client: "rainbow_provider".to_string() },
             role: ConfigRoles::Provider,
-            cert_path: "./../../static/certificates/provider/".to_string(),
+            cert_path: "./../static/certificates/provider/cert.pem".to_string(),
         }
     }
 }
@@ -116,11 +129,13 @@ pub trait ApplicationProviderConfigTrait {
     fn get_raw_catalog_host(&self) -> &Option<HostConfig>;
     fn get_raw_datahub_host(&self) -> &Option<HostConfig>;
     fn get_raw_datahub_token(&self) -> &String;
+    fn get_raw_ssi_wallet_config(&self) -> &SSIWalletConfig;
     fn get_raw_contract_negotiation_host(&self) -> &Option<HostConfig>;
     fn get_raw_auth_host(&self) -> &Option<HostConfig>;
     fn get_raw_gateway_host(&self) -> &Option<HostConfig>;
     fn get_raw_ssi_auth_host(&self) -> &Option<HostConfig>;
     fn get_raw_database_config(&self) -> &DatabaseConfig;
+    fn get_raw_client_config(&self) -> &ClientConfig;
     fn get_raw_cert_path(&self) -> &String;
     // implemented stuff
     fn get_transfer_host_url(&self) -> Option<String> {
@@ -170,6 +185,24 @@ pub trait ApplicationProviderConfigTrait {
             ),
         }
     }
+    fn get_wallet_portal_url(&self) -> String {
+        let url = self.get_raw_ssi_wallet_config().clone().wallet_portal_url;
+        let port = self.get_raw_ssi_wallet_config().clone().wallet_portal_port;
+        format!("http://{}:{}", url, port)
+    }
+    fn get_wallet_data(&self) -> serde_json::Value {
+        let _type = self.get_raw_ssi_wallet_config().clone().wallet_type;
+        let name = self.get_raw_ssi_wallet_config().clone().wallet_name;
+        let email = self.get_raw_ssi_wallet_config().clone().wallet_email;
+        let password = self.get_raw_ssi_wallet_config().clone().wallet_password;
+        json!({
+            "type": _type,
+            "name": name,
+            "email": email,
+            "password": password,
+        })
+    }
+
     // merge dotenv
     fn merge_dotenv_configuration(&self) -> Self
     where
@@ -204,13 +237,20 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
     fn get_raw_datahub_token(&self) -> &String {
         &self.datahub_token
     }
+
+    fn get_raw_ssi_wallet_config(&self) -> &SSIWalletConfig {
+        &self.ssi_wallet_config
+    }
+
     fn get_raw_contract_negotiation_host(&self) -> &Option<HostConfig> {
         &self.contract_negotiation_host
     }
     fn get_raw_auth_host(&self) -> &Option<HostConfig> {
         &self.auth_host
     }
-    fn get_raw_gateway_host(&self) -> &Option<HostConfig> { &self.gateway_host }
+    fn get_raw_gateway_host(&self) -> &Option<HostConfig> {
+        &self.gateway_host
+    }
 
     fn get_raw_ssi_auth_host(&self) -> &Option<HostConfig> {
         &self.ssi_auth_host
@@ -218,6 +258,11 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
     fn get_raw_database_config(&self) -> &DatabaseConfig {
         &self.database_config
     }
+
+    fn get_raw_client_config(&self) -> &ClientConfig {
+        &self.client_config
+    }
+
     fn get_raw_cert_path(&self) -> &String {
         &self.cert_path
     }
@@ -325,6 +370,33 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
             },
             ssh_user: env::var("SSH_USER").ok(),
             ssh_private_key_path: env::var("SSH_PKEY_PATH").ok(),
+            ssi_wallet_config: SSIWalletConfig {
+                wallet_portal_url: extract_env(
+                    "WALLET_PORTAL_URL",
+                    default.ssi_wallet_config.wallet_portal_url,
+                ),
+                wallet_portal_port: extract_env(
+                    "WALLET_PORTAL_PORT",
+                    default.ssi_wallet_config.wallet_portal_port,
+                ),
+                wallet_type: extract_env("WALLET_PORTAL_TYPE", default.ssi_wallet_config.wallet_type),
+                wallet_name: extract_env("WALLET_PORTAL_NAME", default.ssi_wallet_config.wallet_name),
+                wallet_email: extract_env(
+                    "WALLET_PORTAL_EMAIL",
+                    default.ssi_wallet_config.wallet_email,
+                ),
+                wallet_password: extract_env(
+                    "WALLET_PORTAL_PASSWORD",
+                    default.ssi_wallet_config.wallet_password,
+                ),
+                wallet_id: None,
+            },
+            client_config: ClientConfig {
+                self_client: extract_env(
+                    "SELF_CLIENT",
+                    default.client_config.self_client,
+                ),
+            },
             role: ConfigRoles::Provider,
             cert_path: extract_env("CERT_PATH", default.cert_path),
         };

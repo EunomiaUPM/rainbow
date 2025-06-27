@@ -27,19 +27,6 @@ use rainbow_db::auth_consumer::entities::{auth, auth_verification};
 use reqwest::Response;
 use serde_json::Value;
 
-#[async_trait]
-pub trait RainbowSSIAuthConsumerWalletTrait: Send + Sync {
-    async fn register_wallet(&self) -> anyhow::Result<()>;
-    async fn login_wallet(&mut self) -> anyhow::Result<()>;
-    async fn logout_wallet(&mut self) -> anyhow::Result<()>;
-    async fn get_wallet_info(&mut self) -> anyhow::Result<()>;
-    async fn get_wallet_dids(&mut self) -> anyhow::Result<()>;
-    async fn onboard(&mut self) -> anyhow::Result<()>; //ESTA
-    async fn token_expired(&self) -> anyhow::Result<bool>;
-    async fn update_token(&mut self) -> anyhow::Result<()>;
-    async fn ok(&mut self) -> anyhow::Result<()>;
-    async fn didweb(&mut self) -> anyhow::Result<Value>;
-}
 
 #[async_trait]
 pub trait RainbowSSIAuthConsumerManagerTrait: Send + Sync {

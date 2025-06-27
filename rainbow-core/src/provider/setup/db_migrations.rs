@@ -68,8 +68,8 @@ impl CoreProviderMigration {
         // run migration
         Self::refresh(&db_connection).await?;
         // run seedings
-        Self::seed_provider_mate(&db_connection, config.get_ssi_auth_host_url().unwrap()).await?;
-        Self::seed_provider_busmate(&db_connection).await?;
+        // Self::seed_provider_mate(&db_connection, config.get_ssi_auth_host_url().unwrap()).await?;
+        // Self::seed_provider_busmate(&db_connection).await?;
         Ok(())
     }
     async fn seed_provider_mate(db: &DatabaseConnection, base_url: String) -> anyhow::Result<()> {
@@ -91,6 +91,7 @@ impl CoreProviderMigration {
 
     async fn seed_provider_busmate(db: &DatabaseConnection) -> anyhow::Result<()> {
         let busprovider = busmates::ActiveModel {
+            id: ActiveValue::Set("".to_string()),
             participant_id: ActiveValue::Set(get_urn(None).to_string()), // TODO PONER DID BIEN FALSEAR
             participant_type: ActiveValue::Set("Myself".to_string()),
             token: ActiveValue::Set(None),

@@ -20,6 +20,7 @@ use rainbow_common::config::database::DbType;
 use rainbow_common::config::global_config::{extract_env, DatabaseConfig, HostConfig};
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_common::config::ConfigRoles;
+use rainbow_common::ssi_wallet::{ClientConfig, SSIWalletConfig};
 use serde::Serialize;
 use std::env;
 
@@ -30,6 +31,8 @@ pub struct AuthorityApplicationConfig {
     ssh_user: Option<String>,
     ssh_private_key_path: Option<String>,
     cert_path: String,
+    ssi_wallet_config: SSIWalletConfig,
+    client_config: ClientConfig,
 }
 
 impl Default for AuthorityApplicationConfig {
@@ -51,6 +54,16 @@ impl Default for AuthorityApplicationConfig {
             ssh_user: None,
             ssh_private_key_path: None,
             cert_path: ".".to_string(),
+            ssi_wallet_config: SSIWalletConfig {
+                wallet_portal_url: "".to_string(),
+                wallet_portal_port: "".to_string(),
+                wallet_type: "".to_string(),
+                wallet_name: "".to_string(),
+                wallet_email: "".to_string(),
+                wallet_password: "".to_string(),
+                wallet_id: None,
+            },
+            client_config: ClientConfig { self_client: "".to_string() },
         }
     }
 }
@@ -80,6 +93,9 @@ impl ApplicationProviderConfigTrait for AuthorityApplicationConfig {
     fn get_raw_datahub_host(&self) -> &Option<HostConfig> {
         &None
     }
+
+    fn get_raw_ssi_wallet_config(&self) -> &SSIWalletConfig {&self.ssi_wallet_config}
+
     fn get_raw_contract_negotiation_host(&self) -> &Option<HostConfig> {
         &None
     }
@@ -95,6 +111,9 @@ impl ApplicationProviderConfigTrait for AuthorityApplicationConfig {
     fn get_raw_database_config(&self) -> &DatabaseConfig {
         &self.database_config
     }
+
+    fn get_raw_client_config(&self) -> &ClientConfig {&self.client_config}
+
     fn get_raw_cert_path(&self) -> &String {
         &self.cert_path
     }
@@ -128,6 +147,16 @@ impl ApplicationProviderConfigTrait for AuthorityApplicationConfig {
             ssh_user: env::var("SSH_USER").ok(),
             ssh_private_key_path: env::var("SSH_PKEY_PATH").ok(),
             cert_path: ".".to_string(),
+            ssi_wallet_config: SSIWalletConfig {
+                wallet_portal_url: "".to_string(),
+                wallet_portal_port: "".to_string(),
+                wallet_type: "".to_string(),
+                wallet_name: "".to_string(),
+                wallet_email: "".to_string(),
+                wallet_password: "".to_string(),
+                wallet_id: None,
+            },
+            client_config: ClientConfig { self_client: "".to_string() },
         };
         compound_config
     }
@@ -157,6 +186,8 @@ impl From<ApplicationProviderConfig> for AuthorityApplicationConfig {
             ssh_user: value.ssh_user,
             ssh_private_key_path: value.ssh_private_key_path,
             cert_path: value.cert_path,
+            ssi_wallet_config: value.ssi_wallet_config,
+            client_config: value.client_config,
         }
     }
 }

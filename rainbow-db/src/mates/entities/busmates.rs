@@ -26,6 +26,7 @@ use serde::{Deserialize, Serialize};
 #[sea_orm(table_name = "bus_mates")]
 pub struct Model {
     #[sea_orm(primary_key)]
+    pub id: String,
     pub participant_id: String,
     pub participant_type: String,
     pub token: Option<String>,

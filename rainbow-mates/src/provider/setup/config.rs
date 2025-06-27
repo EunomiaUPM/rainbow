@@ -20,6 +20,7 @@
 use rainbow_common::config::global_config::{DatabaseConfig, HostConfig};
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_common::config::ConfigRoles;
+use rainbow_common::ssi_wallet::{ClientConfig, SSIWalletConfig};
 use serde::Serialize;
 
 #[derive(Serialize, Clone, Debug)]
@@ -34,6 +35,8 @@ pub struct MateProviderApplicationConfig {
     auth_host: Option<HostConfig>,
     ssi_auth_host: Option<HostConfig>,
     database_config: DatabaseConfig,
+    ssi_wallet_config: SSIWalletConfig,
+    client_config: ClientConfig,
     ssh_user: Option<String>,
     ssh_private_key_path: Option<String>,
     role: ConfigRoles,
@@ -71,6 +74,11 @@ impl ApplicationProviderConfigTrait for MateProviderApplicationConfig {
     fn get_raw_datahub_host(&self) -> &Option<HostConfig> {
         &self.datahub_host
     }
+
+    fn get_raw_ssi_wallet_config(&self) -> &SSIWalletConfig {
+        &self.ssi_wallet_config
+    }
+
     fn get_raw_datahub_token(&self) -> &String {
         &self.datahub_token
     }
@@ -88,6 +96,10 @@ impl ApplicationProviderConfigTrait for MateProviderApplicationConfig {
     }
     fn get_raw_database_config(&self) -> &DatabaseConfig {
         &self.database_config
+    }
+
+    fn get_raw_client_config(&self) -> &ClientConfig {
+        &self.client_config
     }
 
     fn get_raw_cert_path(&self) -> &String {
@@ -113,6 +125,8 @@ impl From<ApplicationProviderConfig> for MateProviderApplicationConfig {
             auth_host: value.auth_host,
             ssi_auth_host: value.ssi_auth_host,
             database_config: value.database_config,
+            ssi_wallet_config: value.ssi_wallet_config,
+            client_config: value.client_config,
             ssh_user: value.ssh_user,
             ssh_private_key_path: value.ssh_private_key_path,
             role: value.role,
@@ -137,6 +151,8 @@ impl Into<ApplicationProviderConfig> for MateProviderApplicationConfig {
             database_config: self.database_config,
             ssh_user: self.ssh_user,
             ssh_private_key_path: self.ssh_private_key_path,
+            ssi_wallet_config: self.ssi_wallet_config,
+            client_config: self.client_config,
             role: self.role,
             cert_path: self.cert_path,
         }

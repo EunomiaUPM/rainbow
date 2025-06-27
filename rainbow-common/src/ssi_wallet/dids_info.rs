@@ -17,27 +17,16 @@
  *
  */
 
+use serde::{Deserialize, Serialize};
 
-#![allow(unused_imports)]
-#![allow(dead_code)]
-#![allow(unused_variables)]
-#![allow(unused_mut)]
-#![allow(unused_imports)]
-#![allow(unused_must_use)]
-pub mod adv_protocol;
-pub mod auth;
-pub mod config;
-pub mod dcat_formats;
-pub mod err;
-pub mod facades;
-pub mod forwarding;
-pub mod mates;
-pub mod misc_router;
-pub mod policy_templates;
-pub mod protocol;
-pub mod schemas;
-pub mod utils;
-pub mod facades;
-pub mod adv_protocol;
-pub mod mates;
-pub mod ssi_wallet;
+#[derive(Deserialize, Serialize, PartialEq, Eq, Clone, Debug)]
+pub struct DidsInfo {
+    pub did: String,
+    pub alias: String,
+    pub document: String,
+    #[serde(rename = "keyId")]
+    pub key_id: String,
+    pub default: bool,
+    #[serde(rename = "createdOn")]
+    pub created_on: String,
+}

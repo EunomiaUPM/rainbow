@@ -17,5 +17,6 @@
  *
  */
 
+pub use manager::manager::Manager;
 pub mod manager;
 pub mod types;

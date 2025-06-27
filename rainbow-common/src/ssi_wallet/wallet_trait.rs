@@ -16,28 +16,18 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
-
-#![allow(unused_imports)]
-#![allow(dead_code)]
-#![allow(unused_variables)]
-#![allow(unused_mut)]
-#![allow(unused_imports)]
-#![allow(unused_must_use)]
-pub mod adv_protocol;
-pub mod auth;
-pub mod config;
-pub mod dcat_formats;
-pub mod err;
-pub mod facades;
-pub mod forwarding;
-pub mod mates;
-pub mod misc_router;
-pub mod policy_templates;
-pub mod protocol;
-pub mod schemas;
-pub mod utils;
-pub mod facades;
-pub mod adv_protocol;
-pub mod mates;
-pub mod ssi_wallet;
+use serde_json::Value;
+use axum::async_trait;
+#[async_trait]
+pub trait RainbowSSIAuthWalletTrait: Send + Sync {
+    async fn register_wallet(&self) -> anyhow::Result<()>;
+    async fn login_wallet(&self) -> anyhow::Result<()>;
+    async fn logout_wallet(&self) -> anyhow::Result<()>;
+    async fn get_wallet_info(&self) -> anyhow::Result<()>;
+    async fn get_wallet_dids(&self) -> anyhow::Result<()>;
+    async fn onboard(&self) -> anyhow::Result<()>; //ESTA
+    async fn token_expired(&self) -> anyhow::Result<bool>;
+    async fn update_token(&self) -> anyhow::Result<()>;
+    async fn ok(&self) -> anyhow::Result<()>;
+    async fn didweb(&self) -> anyhow::Result<Value>;
+}
