@@ -327,10 +327,28 @@ where
             Err(e) => return (StatusCode::NOT_FOUND, e.to_string()).into_response(),
         };
 
-        match model.token {
-            Some(token) => (StatusCode::OK, Json(token)).into_response(),
-            None => StatusCode::PROCESSING.into_response()
-        }
+        let mate = match mate_repo.get_mate_by_id(model.id).await {
+            Ok(mate) => mate,
+            Err(e) => {
+                return (
+                    StatusCode::NOT_FOUND,
+                    "You need to onboard on the Provider first",
+                )
+                    .into_response()
+            }
+        };
+
+        let token = match model.token {
+            Some(token) => token,
+            None => return StatusCode::PROCESSING.into_response(),
+        };
+
+        let answer = json!({
+            "token": token,
+            "owner": mate.is_me
+
+        });
+        (StatusCode::OK, Json(answer)).into_response()
     }
 
     async fn fallback(method: Method, uri: Uri) -> (StatusCode, String) {
