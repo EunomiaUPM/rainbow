@@ -17,8 +17,8 @@
  *
  */
 
-use crate::mates::entities::mates;
 use crate::mates::entities::busmates;
+use crate::mates::entities::mates;
 use crate::mates::repo::{MateRepoFactory, MateRepoTrait};
 use anyhow::{anyhow, bail};
 use axum::async_trait;
@@ -97,7 +97,6 @@ impl MateRepoTrait for MateRepoForSql {
     }
 
     async fn create_mate(&self, mate: Mates) -> anyhow::Result<mates::Model> {
-
         let mate = mates::ActiveModel {
             participant_id: ActiveValue::Set(mate.participant_id),
             participant_slug: ActiveValue::Set(mate.participant_slug),
@@ -193,13 +192,7 @@ impl MateRepoTrait for MateRepoForSql {
         Ok(busmates)
     }
 
-    async fn create_busmate(&self, busmate: BusMates, is_me: bool) -> anyhow::Result<busmates::Model> {
-        if is_me {
-            if let Some(busmates) = self.get_busmate_me().await? {
-                bail!("busmates owner already exists: {:?}", busmates)
-            }
-        }
-
+    async fn create_busmate(&self, busmate: BusMates) -> anyhow::Result<busmates::Model> {
         let busmate = busmates::ActiveModel {
             id: ActiveValue::Set(busmate.id),
             participant_id: ActiveValue::Set(busmate.participant_id),

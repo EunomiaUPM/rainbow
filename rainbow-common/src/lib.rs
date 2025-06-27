@@ -37,7 +37,4 @@ pub mod policy_templates;
 pub mod protocol;
 pub mod schemas;
 pub mod utils;
-pub mod facades;
-pub mod adv_protocol;
-pub mod mates;
 pub mod ssi_wallet;
