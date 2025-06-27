@@ -8,8 +8,9 @@ const Index = () => {
 
 export const Route = createFileRoute("/")({
     component: Index,
-    beforeLoad: () => {
-        if (2 == 2) {
+    beforeLoad: ({context}) => {
+        // @ts-ignore
+        if (!context.auth.isAuthenticated) {
             throw redirect({
                 to: '/login', // Redirige a la página de login si no está autenticado
                 search: {

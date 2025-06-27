@@ -293,14 +293,19 @@ impl BusinessCatalogTrait for BusinessServiceForDatahub {
         Ok(res)
     }
 
-    async fn login_poll(&self, input: RainbowBusinessLoginRequest) -> anyhow::Result<String> {
+    async fn login_poll(&self, input: RainbowBusinessLoginRequest) -> anyhow::Result<Value> {
         let base_url = self.config.get_contract_negotiation_host_url().unwrap();
         let url = format!("{}/api/v1/busmates/token", base_url);
         let req = self.client.post(url).json(&input).send().await.map_err(|e| anyhow!("lol {}", e.to_string()))?;
-        if req.status().is_success() == false {
+
+        if req.status().is_client_error() || req.status().is_server_error() {
             bail!("not able to poll login in provider");
         }
-        let res = req.text().await.map_err(|e| anyhow!("not deserializable, {}", e.to_string()))?;
+        if req.status().is_informational() {
+            bail!("user still using the wallet");
+        }
+
+        let res = req.json::<Value>().await.map_err(|e| anyhow!("not deserializable, {}", e.to_string()))?;
         Ok(res)
     }
 }

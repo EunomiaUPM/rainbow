@@ -44,5 +44,5 @@ pub trait BusinessCatalogTrait: Send + Sync + 'static {
     async fn accept_request(&self, request_id: Urn, token: String) -> anyhow::Result<()>;
     async fn create_request(&self, input: RainbowBusinessNegotiationRequest, token: String) -> anyhow::Result<Value>;
     async fn login(&self, input: RainbowBusinessLoginRequest) -> anyhow::Result<String>;
-    async fn login_poll(&self, input: RainbowBusinessLoginRequest) -> anyhow::Result<String>;
+    async fn login_poll(&self, input: RainbowBusinessLoginRequest) -> anyhow::Result<Value>;
 }

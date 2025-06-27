@@ -7,6 +7,7 @@ import QRCode from "react-qr-code";
 import {Button} from "shared/src/components/ui/button.tsx";
 import {generateRandomString} from "shared/src/lib/utils.ts";
 import {useQuery} from "@tanstack/react-query";
+import {AuthContext, AuthContextType} from "shared/src/context/AuthContext.tsx";
 
 export const Route = createFileRoute('/login/')({
     component: RouteComponent,
@@ -15,6 +16,7 @@ export const Route = createFileRoute('/login/')({
 
 function RouteComponent() {
     const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+    const {setAuthentication} = useContext<AuthContextType | null>(AuthContext)!;
     const {mutateAsync: loginAsync} = usePostLogin();
     const [oidcString, setOidcString] = useState("");
     const [copyStatus, setCopyStatus] = useState('');
@@ -34,27 +36,30 @@ function RouteComponent() {
             });
             setOidcString(oidc);
         };
-        getOidcLogin();
+        getOidcLogin().then(() => {
+        });
     }, [api_gateway, loginAsync]);
 
     // Step 2: Use useQuery for polling
     const {data: pollData, isSuccess: pollSuccess} = useQuery({
         queryKey: ['LOGIN_POLL', authRequestId],
         queryFn: async () => {
-            // This function will only run if 'enabled' is true
-            // So, authRequestId should be available here.
-            const loginStatus = await postLoginPoll({
+            return await postLoginPoll({
                 api_gateway,
                 content: {authRequestId}
             });
-            return loginStatus;
         },
         // Enable the query only when authRequestId is truly available and oidcString is set
         enabled: !!authRequestId && authRequestId !== "" && oidcString !== "",
         refetchInterval: (data) => {
             // Stop polling if the login is successful
-            if (data === "LOGIN_SUCCESS") { // Adjust "LOGIN_SUCCESS" to your actual success condition
-                return false; // Return `false` to stop polling
+            if (data && data.state.data != undefined) { // Adjust "LOGIN_SUCCESS" to your actual success condition
+                const data_json = JSON.parse(data.state.data)
+                console.log(data_json)
+                if (data_json.error == undefined) {
+                    setAuthentication(data_json.mate as Participant, data_json.token)
+                    return false; // Return `false` to stop polling
+                }
             }
             return 1000; // Poll every 3 seconds
         },
@@ -64,7 +69,7 @@ function RouteComponent() {
     });
 
     useEffect(() => {
-        if (pollSuccess && pollData === "LOGIN_SUCCESS") { // Adjust "LOGIN_SUCCESS" to your actual condition
+        if (pollSuccess) { // Adjust "LOGIN_SUCCESS" to your actual condition
             console.log("Login successful! Redirecting...");
             // Handle successful login (e.g., redirect to dashboard)
             // For example: navigate('/dashboard');

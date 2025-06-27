@@ -411,7 +411,7 @@ where
             }
         };
         match service.login_poll(input).await {
-            Ok(uri) => (StatusCode::ACCEPTED, uri).into_response(),
+            Ok(uri) => (StatusCode::ACCEPTED, Json(uri)).into_response(),
             Err(e) => (
                 StatusCode::BAD_REQUEST,
                 Json(json!({"error": e.to_string()})),

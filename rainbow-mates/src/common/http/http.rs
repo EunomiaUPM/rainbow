@@ -35,7 +35,7 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
-use tracing::info;
+use tracing::{debug, info};
 
 pub struct RainbowMatesRouter<T>
 where
@@ -322,12 +322,15 @@ where
     ) -> impl IntoResponse {
         info!("GET /api/v1/busmates/token");
 
+        debug!("{:?}", payload);
+
+
         let model = match mate_repo.get_busmate_by_id(payload.auth_request_id).await {
             Ok(model) => model,
             Err(e) => return (StatusCode::NOT_FOUND, e.to_string()).into_response(),
         };
 
-        let mate = match mate_repo.get_mate_by_id(model.id).await {
+        let mate = match mate_repo.get_mate_by_id(model.participant_id).await {
             Ok(mate) => mate,
             Err(e) => {
                 return (
@@ -338,6 +341,7 @@ where
             }
         };
 
+
         let token = match model.token {
             Some(token) => token,
             None => return StatusCode::PROCESSING.into_response(),
@@ -345,7 +349,7 @@ where
 
         let answer = json!({
             "token": token,
-            "owner": mate.is_me
+            "mate": mate
 
         });
         (StatusCode::OK, Json(answer)).into_response()

@@ -2,22 +2,24 @@ import {QueryClient} from "@tanstack/react-query";
 import {createRootRouteWithContext, Outlet,} from "@tanstack/react-router";
 import {TanStackRouterDevtools} from "@tanstack/router-devtools";
 import {SidebarProvider, SidebarTrigger,} from "shared/src/components/ui/sidebar";
-import React from "react";
+import React, {useContext} from "react";
 import {Header} from "shared/src/components/header.tsx";
 import {AppSidebarBusiness} from "shared/src/components/AppSidebarBusiness";
+import {AuthContext, AuthContextType} from "shared/src/context/AuthContext.tsx";
 
 export const Route = createRootRouteWithContext<{
     queryClient: QueryClient;
 }>()({
     component: ({children}: { children: React.ReactNode }) => {
         let widthPage = window.innerWidth;
+        const {isAuthenticated} = useContext<AuthContextType | null>(AuthContext)!;
         // console.log("Width:", widthPage);
 
         return (
             <>
                 <SidebarProvider>
                     <div className="fixed flex w-full z-50">
-                        {(2 === 3) && <AppSidebarBusiness/>}
+                        {isAuthenticated && <AppSidebarBusiness/>}
                         <Header/>
                     </div>
                     <main className="page-container">
