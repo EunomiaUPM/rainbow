@@ -62,6 +62,7 @@ where
             .route("/api/v1/continue", post(Self::continue_request))
             .route("/api/v1/verify/token", post(Self::verify_token))
             .route("/api/v1/generate/uri", post(Self::generate_uri))
+            .route("/api/v1/.well-known/did.json", get(Self::didweb)) // TODO
             .with_state(self.manager)
         // .fallback(Self::fallback) 2 routers cannot have 1 fallback each
     }
@@ -93,6 +94,10 @@ where
                 (StatusCode::BAD_REQUEST, body).into_response()
             }
         }
+    }
+
+    async fn didweb(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
+        Json(manager.didweb().await.unwrap())
     }
     async fn wallet_oboard(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
         info!("POST /wallet/onboard");

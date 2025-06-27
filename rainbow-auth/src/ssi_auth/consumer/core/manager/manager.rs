@@ -399,43 +399,18 @@ where
     }
 
     async fn didweb(&self) -> anyhow::Result<Value> {
-        Ok(json!({
-          "@context": [
-            "https://www.w3.org/ns/did/v1",
-            "https://w3id.org/security/suites/jws-2020/v1"
-          ],
-          "id": "did:web:host.docker.internal%3A1235",
-          "verificationMethod": [
-            {
-              "id": "did:web:host.docker.internal%3A1235#vfn_5i43O2Rs7vFjrpIBUln9LwG2-ALMyfQ-G4_F_8U",
-              "type": "JsonWebKey2020",
-              "controller": "did:web:host.docker.internal%3A1235",
-              "publicKeyJwk": {
-                "kty": "OKP",
-                "crv": "Ed25519",
-                "kid": "vfn_5i43O2Rs7vFjrpIBUln9LwG2-ALMyfQ-G4_F_8U",
-                "x": "6OmRPulFw3MX44mbZ0bedcULKSrPdZlqqsIrwgBhyLs"
-              }
-            }
-          ],
-          "assertionMethod": [
-            "did:web:host.docker.internal%3A1235#vfn_5i43O2Rs7vFjrpIBUln9LwG2-ALMyfQ-G4_F_8U"
-          ],
-          "authentication": [
-            "did:web:host.docker.internal%3A1235#vfn_5i43O2Rs7vFjrpIBUln9LwG2-ALMyfQ-G4_F_8U"
-          ],
-          "capabilityInvocation": [
-            "did:web:host.docker.internal%3A1235#vfn_5i43O2Rs7vFjrpIBUln9LwG2-ALMyfQ-G4_F_8U"
-          ],
-          "capabilityDelegation": [
-            "did:web:host.docker.internal%3A1235#vfn_5i43O2Rs7vFjrpIBUln9LwG2-ALMyfQ-G4_F_8U"
-          ],
-          "keyAgreement": [
-            "did:web:host.docker.internal%3A1235#vfn_5i43O2Rs7vFjrpIBUln9LwG2-ALMyfQ-G4_F_8U"
-          ]
-        }))
+        let wallet_session = self.wallet_session.lock().await;
 
-        // Ok(self.didweb.clone())
+        match wallet_session.wallets.first() {
+            Some(wallet) => {
+                let dids = wallet.clone().dids.unwrap();
+                let did= dids.first().unwrap();
+                let did_doc= did.clone().document;
+                let json: Value = serde_json::from_str(&did_doc)?;
+                Ok(json)
+                            }
+            None => {bail!("No wallets available")}
+        }
     }
 }
 
