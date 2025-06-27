@@ -3,8 +3,8 @@ import "shared/index.css";
 import {createRouter, RouterProvider} from "@tanstack/react-router";
 import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
 import {routeTree} from "./routeTree.gen";
-import {PubSubContextProvider} from "@/context/PubSubContext.tsx";
-import {AuthContextProvider} from "@/context/AuthContext.tsx";
+import {AuthContextProvider} from "shared/src/context/AuthContext.tsx";
+import {GlobalInfoContextProvider} from "shared/src/context/GlobalInfoContext.tsx";
 
 export const queryClient = new QueryClient();
 
@@ -12,11 +12,11 @@ export const queryClient = new QueryClient();
 const router = createRouter({routeTree, context: {queryClient}});
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
-    <QueryClientProvider client={queryClient}>
-        <AuthContextProvider>
-            <PubSubContextProvider>
+    <GlobalInfoContextProvider api_gateway_base="http://127.0.0.1:1206" role="business" catalog_type="datahub">
+        <QueryClientProvider client={queryClient}>
+            <AuthContextProvider>
                 <RouterProvider router={router}/>
-            </PubSubContextProvider>
-        </AuthContextProvider>
-    </QueryClientProvider>
+            </AuthContextProvider>
+        </QueryClientProvider>
+    </GlobalInfoContextProvider>
 );

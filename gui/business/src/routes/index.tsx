@@ -1,18 +1,23 @@
-import {createFileRoute, Link} from "@tanstack/react-router";
+import {createFileRoute, redirect} from "@tanstack/react-router";
 
 const Index = () => {
     return <div className="space-y-2 p-4">
-        <div><Link to="/contract-negotiation">Contract negotiation</Link></div>
-        <div><Link to="/catalog">Catalog</Link></div>
-        <div><Link to="/agreements">Agreements</Link></div>
-        <div><Link to="/transfer-process">Transfer Processes</Link></div>
-        <div><Link to="/participants">Participants</Link></div>
-        <div><Link to="/subscriptions">Subscriptions</Link></div>
+
     </div>;
 };
 
 export const Route = createFileRoute("/")({
     component: Index,
+    beforeLoad: () => {
+        if (2 == 2) {
+            throw redirect({
+                to: '/login', // Redirige a la página de login si no está autenticado
+                search: {
+                    redirect: location.pathname, // Opcional: para redirigir de vuelta después del login
+                },
+            });
+        }
+    },
 });
 
 export default Index;

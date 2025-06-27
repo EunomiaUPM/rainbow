@@ -8,3 +8,4 @@ pub struct RainbowBusinessNegotiationRequest {
     pub consumer_participant_id: Urn,
     pub offer: ContractRequestMessageOfferTypes,
 }
+

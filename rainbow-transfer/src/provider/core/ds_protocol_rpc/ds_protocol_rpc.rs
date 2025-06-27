@@ -163,13 +163,9 @@ where
         let message_type = message.get_message_type()?;
         // For RPC transfer process is always there
         let tp = self.transfer_repo.get_transfer_process_by_provider(provider_pid).await?.unwrap();
-        debug!("{:?}", tp);
         let transfer_state = tp.state.parse()?;
         let transfer_state_attribute =
             tp.state_attribute.unwrap_or(TransferStateAttribute::OnRequest.to_string()).parse()?;
-
-        debug!("{:?}", transfer_state);
-        debug!("{:?}", transfer_state_attribute);
 
         match message_type {
             TransferMessageTypes::TransferStartMessage => match transfer_state {

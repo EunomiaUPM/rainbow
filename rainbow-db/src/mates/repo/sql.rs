@@ -17,15 +17,15 @@
  *
  */
 
-use crate::mates::entities::mates;
 use crate::mates::entities::busmates;
+use crate::mates::entities::mates;
 use crate::mates::repo::{MateRepoFactory, MateRepoTrait};
 use anyhow::{anyhow, bail};
 use axum::async_trait;
 use chrono;
 use rainbow_common::mates::mates::VerifyTokenRequest;
-use rainbow_common::mates::Mates;
 use rainbow_common::mates::BusMates;
+use rainbow_common::mates::Mates;
 use sea_orm::sea_query::OnConflict;
 use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter, QuerySelect};
 
@@ -86,7 +86,7 @@ impl MateRepoTrait for MateRepoForSql {
         Ok(mate)
     }
 
-    async fn get_mate_by_token(&self, verify_token_request: VerifyTokenRequest) -> anyhow::Result<Model> {
+    async fn get_mate_by_token(&self, verify_token_request: VerifyTokenRequest) -> anyhow::Result<mates::Model> {
         let mate = mates::Entity::find()
             .filter(mates::Column::Token.eq(verify_token_request.token))
             .one(&self.db_connection)

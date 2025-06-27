@@ -18,7 +18,8 @@
  */
 use crate::gateway::core::business::business::BusinessServiceForDatahub;
 use crate::gateway::http::business_router::RainbowBusinessRouter;
-use axum::serve;
+use crate::gateway::http::notifications_router::BusinessNotificationsRouter;
+use axum::{serve, Router};
 use clap::{Parser, Subcommand};
 use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
@@ -58,7 +59,11 @@ impl GatewayCommands {
                 info!("Current config:\n{}", table);
 
                 let gateway_service = Arc::new(BusinessServiceForDatahub::new(config.clone()));
+                let notifications_router = BusinessNotificationsRouter::new(config.clone()).router();
                 let gateway_router = RainbowBusinessRouter::new(gateway_service).router();
+                let global_router = Router::new()
+                    .merge(notifications_router)
+                    .merge(gateway_router);
                 let server_message = format!(
                     "Starting provider gateway server in {}",
                     config.get_gateway_host_url().unwrap()
@@ -70,7 +75,7 @@ impl GatewayCommands {
                     config.get_raw_gateway_host().clone().unwrap().port
                 ))
                     .await?;
-                serve(listener, gateway_router).await?;
+                serve(listener, global_router).await?;
             }
             GatewayCliCommands::Subscribe => {
                 debug!("Subscribe to provider")

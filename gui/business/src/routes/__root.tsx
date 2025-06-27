@@ -1,21 +1,42 @@
 import {QueryClient} from "@tanstack/react-query";
-import {createRootRouteWithContext, Link, Outlet,} from "@tanstack/react-router";
+import {createRootRouteWithContext, Outlet,} from "@tanstack/react-router";
 import {TanStackRouterDevtools} from "@tanstack/router-devtools";
+import {SidebarProvider, SidebarTrigger,} from "shared/src/components/ui/sidebar";
+import React from "react";
+import {Header} from "shared/src/components/header.tsx";
+import {AppSidebarBusiness} from "shared/src/components/AppSidebarBusiness";
 
 export const Route = createRootRouteWithContext<{
     queryClient: QueryClient;
 }>()({
-    component: () => {
-        return (<>
-            <div className="p-2 flex gap-2">
-                <Link to="/" className="[&.active]:font-bold">
-                    Home
-                </Link>{" "}
-            </div>
-            <hr/>
-            <Outlet/>
-            <TanStackRouterDevtools/>
-        </>)
+    component: ({children}: { children: React.ReactNode }) => {
+        let widthPage = window.innerWidth;
+        // console.log("Width:", widthPage);
 
-    }
+        return (
+            <>
+                <SidebarProvider>
+                    <div className="fixed flex w-full z-50">
+                        {(2 === 3) && <AppSidebarBusiness/>}
+                        <Header/>
+                    </div>
+                    <main className="page-container">
+                        {/* boton de abrir/cerrar sidebar solo para movil/pantalla pequeña */}
+                        {widthPage < 768 ? <SidebarTrigger/> : ""}
+                        {children}
+                        <div className="main-container">
+                            <Outlet/>
+                        </div>
+                    </main>
+                </SidebarProvider>
+                {/* <div className="p-2 flex gap-2">
+                <Link to="/" className="[&.active]:font-bold text-foreground text-decoration-none">
+                    Home for provider
+                </Link>{" "}
+            </div> */}
+                <hr/>
+                <TanStackRouterDevtools/>
+            </>
+        );
+    },
 });
