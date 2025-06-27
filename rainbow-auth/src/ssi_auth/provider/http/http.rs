@@ -156,10 +156,10 @@ where
         let token: String;
     }
 
-    async fn generate_uri(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
+    async fn generate_uri(State(manager): State<Arc<Manager<T>>>, Json(payload): Json<RainbowBusinessLoginRequest>) -> impl IntoResponse {
         info!("POST /generate/uri");
 
-        let uri = match manager.generate_uri().await {
+        let uri = match manager.generate_uri(payload.auth_request_id).await {
             Ok(uri) => uri,
             Err(e) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
         };
@@ -179,3 +179,10 @@ struct VerifyPayload {
     vp_token: String,
     presentation_submission: String,
 }
+
+#[derive(Debug, Deserialize)]
+struct RainbowBusinessLoginRequest {
+    #[serde(rename="authRequestId")]
+    pub auth_request_id: String,
+}
+

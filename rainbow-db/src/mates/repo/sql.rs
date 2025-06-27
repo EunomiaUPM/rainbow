@@ -185,6 +185,7 @@ impl MateRepoTrait for MateRepoForSql {
     async fn create_busmate(&self, busmate: BusMates) -> anyhow::Result<busmates::Model> {
 
         let busmate = busmates::ActiveModel {
+            id: ActiveValue::Set(busmate.id),
             participant_id: ActiveValue::Set(busmate.participant_id),
             participant_type: ActiveValue::Set(busmate.participant_type),
             token: ActiveValue::Set(busmate.token),
@@ -196,7 +197,7 @@ impl MateRepoTrait for MateRepoForSql {
 
         let busmate = match busmates::Entity::insert(busmate)
             .on_conflict(
-                OnConflict::column(busmates::Column::ParticipantId)
+                OnConflict::column(busmates::Column::Id)
                     .update_columns([
                         busmates::Column::Token,
                         busmates::Column::TokenActions,

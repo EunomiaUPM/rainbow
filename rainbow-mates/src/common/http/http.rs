@@ -160,6 +160,7 @@ where
     async fn new_busmate(State(mate_repo): State<Arc<T>>, input: Result<Json<BusMates>, JsonRejection>) -> impl IntoResponse {
         info!("POST /api/v1/busmates");
 
+
         let input = match input {
             Ok(input) => input.0,
             Err(e) => return (StatusCode::BAD_REQUEST, e.to_string()).into_response(),

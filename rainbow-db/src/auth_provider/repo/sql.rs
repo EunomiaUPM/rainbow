@@ -161,10 +161,9 @@ impl AuthProviderRepoTrait for AuthProviderRepoForSql {
         Ok((auth, auth_interaction, auth_verification))
     }
 
-    async fn create_truncated_auth(&self, audience: String) -> anyhow::Result<(auth::Model, auth_verification::Model)> {
+    async fn create_truncated_auth(&self, audience: String, state: String) -> anyhow::Result<(auth::Model, auth_verification::Model)> {
         let id = uuid::Uuid::new_v4().to_string();
 
-        let state: String = rand::thread_rng().sample_iter(&Alphanumeric).take(12).map(char::from).collect();
         let as_nonce: String = rand::thread_rng().sample_iter(&Alphanumeric).take(36).map(char::from).collect();
         let nonce: String = rand::thread_rng().sample_iter(&Alphanumeric).take(12).map(char::from).collect();
         let interact_ref: String = rand::thread_rng().sample_iter(&Alphanumeric).take(16).map(char::from).collect();
@@ -310,7 +309,7 @@ impl AuthProviderRepoTrait for AuthProviderRepoForSql {
         }
     }
 
-    async fn update_verification_result(&self, id: String, result: bool) -> anyhow::Result<()> {
+    async fn update_verification_result(&self, id: String, result: bool) -> anyhow::Result<auth_verification::Model> {
         let auth_ver = auth_verification::Entity::find_by_id(&id).one(&self.db_connection).await;
         let auth = auth::Entity::find_by_id(&id).one(&self.db_connection).await;
 
@@ -336,12 +335,12 @@ impl AuthProviderRepoTrait for AuthProviderRepoForSql {
         let upd_entry = ver_entry.update(&self.db_connection).await;
         let upd_entry2 = auth_entry.update(&self.db_connection).await;
 
-        match upd_entry {
-            Ok(upd_entry) => {}
+        match upd_entry2 {
+            Ok(auth_entry) => (),
             Err(e) => bail!("Failed to update status: {}", e),
         }
-        match upd_entry2 {
-            Ok(auth_entry) => Ok(()),
+        match upd_entry {
+            Ok(upd_entry) => {Ok(upd_entry)}
             Err(e) => bail!("Failed to update status: {}", e),
         }
     }

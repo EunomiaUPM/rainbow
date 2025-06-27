@@ -52,7 +52,7 @@ pub trait RainbowSSIAuthProviderManagerTrait: Send + Sync {
         base_url: String,
         token_actions: String,
     ) -> anyhow::Result<()>;
-    async fn save_busmate(&self, global_id: Option<String>, token: String) -> anyhow::Result<()>;
+    // async fn save_busmate(&self, global_id: Option<String>, token: String) -> anyhow::Result<()>;
     fn get_continue_uri(&self) -> anyhow::Result<String>;
-    async fn generate_uri(&self) -> anyhow::Result<String>;
+    async fn generate_uri(&self, id: String) -> anyhow::Result<String>;
 }

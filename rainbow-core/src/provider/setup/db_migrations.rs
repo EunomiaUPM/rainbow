@@ -88,6 +88,7 @@ impl CoreProviderMigration {
 
     async fn seed_provider_busmate(db: &DatabaseConnection) -> anyhow::Result<()> {
         let busprovider = busmates::ActiveModel {
+            id: ActiveValue::Set("".to_string()),
             participant_id: ActiveValue::Set(get_urn(None).to_string()), // TODO PONER DID BIEN FALSEAR
             participant_type: ActiveValue::Set("Myself".to_string()),
             token: ActiveValue::Set(None),

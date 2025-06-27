@@ -33,7 +33,8 @@ impl MigrationTrait for Migration {
             .create_table(
                 Table::create()
                     .table(BusMates::Table)
-                    .col(ColumnDef::new(BusMates::ParticipantId).string().not_null().primary_key())
+                    .col(ColumnDef::new(BusMates::Id).string().not_null().primary_key())
+                    .col(ColumnDef::new(BusMates::ParticipantId).string().not_null())
                     .col(ColumnDef::new(BusMates::ParticipantType).string().not_null())
                     .col(ColumnDef::new(BusMates::Token).string())
                     .col(ColumnDef::new(BusMates::TokenActions).string())
@@ -53,6 +54,7 @@ impl MigrationTrait for Migration {
 #[derive(Iden)]
 pub enum BusMates {
     Table,
+    Id,
     ParticipantId,
     ParticipantType,
     Token,

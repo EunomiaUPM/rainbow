@@ -254,12 +254,12 @@ where
         }
         info!("VP & VP Validated successfully");
 
-        match self.auth_repo.update_verification_result(exchange.clone(), true).await {
-            Ok(_) => {}
+        let state = match self.auth_repo.update_verification_result(exchange.clone(), true).await {
+            Ok(model) => model.state,
             Err(e) => {
                 bail!("{}", e)
             }
-        }
+        };
 
         // TODO
 
@@ -278,7 +278,14 @@ where
 
                     let token: String = create_opaque_token();
 
-                    let body = BusMates::default4provider(Some(exchange_model.holder.unwrap()), Some(token), false); // TODO
+                    let body = BusMates::default4provider(
+                        state,
+                        Some(exchange_model.holder.unwrap()),
+                        Some(token),
+                        false,
+                    ); // TODO
+
+                    println!("{:#?}", body);
 
                     let res = self.client.post(url).headers(headers).json(&body).send().await;
 
@@ -578,7 +585,14 @@ where
         headers.insert(CONTENT_TYPE, "application/json".parse()?);
         headers.insert(ACCEPT, "application/json".parse()?);
 
-        let body = Mates::default4provider(global_id, slug, base_url, Some(token), Some(token_actions), false); // TODO
+        let body = Mates::default4provider(
+            global_id,
+            slug,
+            base_url,
+            Some(token),
+            Some(token_actions),
+            false,
+        ); // TODO
 
         let res = self.client.post(url).headers(headers).json(&body).send().await;
 
@@ -600,37 +614,37 @@ where
         Ok(())
     }
 
-    async fn save_busmate(&self, global_id: Option<String>, token: String) -> anyhow::Result<()> {
-        let url = format!(
-            "{}/api/v1/busmates",
-            self.config.get_ssi_auth_host_url().unwrap()
-        ); // TODO fix 4 microservices
-
-        let mut headers = HeaderMap::new();
-        headers.insert(CONTENT_TYPE, "application/json".parse()?);
-        headers.insert(ACCEPT, "application/json".parse()?);
-
-        let body = BusMates::default4provider(global_id, Some(token), false); // TODO
-
-        let res = self.client.post(url).headers(headers).json(&body).send().await;
-
-        let res = match res {
-            Ok(res) => res,
-            Err(e) => bail!("Error sending request: {}", e),
-        };
-
-        match res.status().as_u16() {
-            200 => {
-                info!("BusMate saved successfully");
-            }
-            _ => {
-                error!("Mate saving failed: {}", res.status());
-                bail!("Mate saving failed: {}", res.status());
-            }
-        }
-
-        Ok(())
-    }
+    // async fn save_busmate(&self, global_id: Option<String>, token: String) -> anyhow::Result<()> {
+    //     let url = format!(
+    //         "{}/api/v1/busmates",
+    //         self.config.get_ssi_auth_host_url().unwrap()
+    //     ); // TODO fix 4 microservices
+    //
+    //     let mut headers = HeaderMap::new();
+    //     headers.insert(CONTENT_TYPE, "application/json".parse()?);
+    //     headers.insert(ACCEPT, "application/json".parse()?);
+    //
+    //     let body = BusMates::default4provider(global_id, Some(token), false); // TODO
+    //
+    //     let res = self.client.post(url).headers(headers).json(&body).send().await;
+    //
+    //     let res = match res {
+    //         Ok(res) => res,
+    //         Err(e) => bail!("Error sending request: {}", e),
+    //     };
+    //
+    //     match res.status().as_u16() {
+    //         200 => {
+    //             info!("BusMate saved successfully");
+    //         }
+    //         _ => {
+    //             error!("Mate saving failed: {}", res.status());
+    //             bail!("Mate saving failed: {}", res.status());
+    //         }
+    //     }
+    //
+    //     Ok(())
+    // }
 
     fn get_continue_uri(&self) -> anyhow::Result<String> {
         Ok(format!(
@@ -639,7 +653,7 @@ where
         ))
     }
 
-    async fn generate_uri(&self) -> anyhow::Result<String> {
+    async fn generate_uri(&self, state: String) -> anyhow::Result<String> {
         info!("Generating exchange URI");
 
         let mut provider_url = self.config.get_ssi_auth_host_url().unwrap(); // TODO fix docker internal
@@ -654,13 +668,14 @@ where
             self.config.get_ssi_auth_host_url().unwrap()
         );
 
-        let (auth_model, verification_model) = match self.auth_repo.create_truncated_auth(client_id.clone()).await {
-            Ok(model) => {
-                info!("exchange saved successfully");
-                model
-            }
-            Err(e) => bail!("Unable to save exchange in db: {}", e),
-        };
+        let (auth_model, verification_model) =
+            match self.auth_repo.create_truncated_auth(client_id.clone(), state).await {
+                Ok(model) => {
+                    info!("exchange saved successfully");
+                    model
+                }
+                Err(e) => bail!("Unable to save exchange in db: {}", e),
+            };
 
         let base_url = "openid4vp://authorize";
 
@@ -956,36 +971,36 @@ where
             }
         }
 
-        let url2 = format!(
-            "{}/api/v1/busmates",
-            self.config.get_ssi_auth_host_url().unwrap()
-        ); // TODO fix 4 microservices
-
-        let mut headers = HeaderMap::new();
-        headers.insert(CONTENT_TYPE, "application/json".parse()?);
-        headers.insert(ACCEPT, "application/json".parse()?);
+        // let url2 = format!(
+        //     "{}/api/v1/busmates",
+        //     self.config.get_ssi_auth_host_url().unwrap()
+        // ); // TODO fix 4 microservices
+        //
+        // let mut headers = HeaderMap::new();
+        // headers.insert(CONTENT_TYPE, "application/json".parse()?);
+        // headers.insert(ACCEPT, "application/json".parse()?);
 
         // let mut wallet_session = self.wallet_session.lock().await;
 
-        let did = wallet_session.wallets.first().unwrap().dids.clone().unwrap().first().unwrap().did.clone();
-        let body = BusMates::default4consumer(Some(did), None, true);
+        // let did = wallet_session.wallets.first().unwrap().dids.clone().unwrap().first().unwrap().did.clone();
+        // let body = BusMates::default4consumer(Some(did), None, true);
 
-        let res = self.client.post(url2).headers(headers).json(&body).send().await;
-
-        let res = match res {
-            Ok(res) => res,
-            Err(e) => bail!("Error sending request: {}", e),
-        };
-
-        match res.status().as_u16() {
-            200 => {
-                info!("Mate saved successfully");
-            }
-            _ => {
-                tracing::error!("Mate saving failed: {}", res.status());
-                bail!("Mate saving failed: {}", res.status());
-            }
-        }
+        // let res = self.client.post(url2).headers(headers).json(&body).send().await;
+        //
+        // let res = match res {
+        //     Ok(res) => res,
+        //     Err(e) => bail!("Error sending request: {}", e),
+        // };
+        //
+        // match res.status().as_u16() {
+        //     200 => {
+        //         info!("Mate saved successfully");
+        //     }
+        //     _ => {
+        //         tracing::error!("Mate saving failed: {}", res.status());
+        //         bail!("Mate saving failed: {}", res.status());
+        //     }
+        // }
 
         Ok(())
     }
@@ -1035,12 +1050,14 @@ where
         match wallet_session.wallets.first() {
             Some(wallet) => {
                 let dids = wallet.clone().dids.unwrap();
-                let did= dids.first().unwrap();
-                let did_doc= did.clone().document;
+                let did = dids.first().unwrap();
+                let did_doc = did.clone().document;
                 let json: Value = serde_json::from_str(&did_doc)?;
                 Ok(json)
             }
-            None => {bail!("No wallets available")}
+            None => {
+                bail!("No wallets available")
+            }
         }
     }
 }
