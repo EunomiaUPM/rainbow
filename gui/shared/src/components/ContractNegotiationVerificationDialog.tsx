@@ -52,7 +52,7 @@ export const ContractNegotiationVerificationDialog = ({
             You are about to verify the agreement. <br />
             Please review the details carefully before proceeding.
           </span>
-          <span>{JSON.stringify(process)}</span>
+          {/* <span>{JSON.stringify(process)}</span> */}
         </DialogDescription>
       </DialogHeader>
       {/* List JSON */}

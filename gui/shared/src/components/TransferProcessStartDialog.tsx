@@ -46,7 +46,7 @@ export const TransferProcessStartDialog = ({
     <DialogContent className="w-[70dvw] sm:max-w-fit">
       <DialogHeader>
         <DialogTitle>Transfer start dialog</DialogTitle>
-        <DialogDescription className="break-all">
+        <DialogDescription>
           <span>
             You are about to start the transfer process with the following
             information.

@@ -48,7 +48,7 @@ export const TransferProcessTerminationDialog = ({
     <DialogContent className="w-[70dvw] sm:max-w-fit">
       <DialogHeader>
         <DialogTitle>Transfer termination dialog</DialogTitle>
-        <DialogDescription className="max-w-full flex flex-wrap break-all">
+        <DialogDescription className="max-w-full flex flex-wrap">
           <span className="max-w-full flex flex-wrap">
             You are about to terminate the transfer process.
           </span>

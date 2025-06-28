@@ -68,6 +68,7 @@ export const ContractNegotiationActions = ({
                 <DialogTrigger asChild>
                   <Button size={tiny ? "sm" : ""}>Agree</Button>
                 </DialogTrigger>
+
                 <ContractNegotiationAgreementDialog process={process} />
               </Dialog>
             </>
@@ -198,6 +199,7 @@ export const ContractNegotiationActions = ({
                     Terminate
                   </Button>
                 </DialogTrigger>
+
                 <ContractNegotiationTerminationDialog process={process} />
               </Dialog>
             </>
