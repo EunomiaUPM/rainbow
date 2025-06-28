@@ -17,6 +17,7 @@ import {
   GlobalInfoContext,
   GlobalInfoContextType,
 } from "./../context/GlobalInfoContext";
+import dayjs from "dayjs";
 
 export const ContractNegotiationTerminationDialog = ({
   process,
@@ -53,33 +54,40 @@ export const ContractNegotiationTerminationDialog = ({
     }
   };
 
-  const scopedListItemKeyClasses = 'basis-[30%]'
+  const scopedListItemKeyClasses = "basis-[30%]";
 
   return (
-    <DialogContent className="max-w-fit sm:max-w-fit ">
+    <DialogContent className="w-[70dvw] sm:max-w-fit">
       <DialogHeader>
         <DialogTitle>Termination dialog</DialogTitle>
         <DialogDescription className="max-w-full flex flex-wrap">
           <span className="max-w-full flex flex-wrap">
             {" "}
             You are about to terminate to the terms of the contract negotiation.
-            <br />Please review the details carefully before proceeding.
+            <br />
+            Please review the details carefully before proceeding.
           </span>
           {/* <code>{JSON.stringify(process)}</code> */}
         </DialogDescription>
       </DialogHeader>
       {/* List */}
-      <List className="min-w-fit w-full">
+      <List className="min-w-full overflow-x-scroll px-2">
         <ListItem>
-          <ListItemKey className={scopedListItemKeyClasses}>Provider id:</ListItemKey>
+          <ListItemKey className={scopedListItemKeyClasses}>
+            Provider id:
+          </ListItemKey>
           <Badge variant={"info"}>{process.provider_id?.slice(9, -1)}</Badge>
         </ListItem>
         <ListItem>
-          <ListItemKey className={scopedListItemKeyClasses}>Consumer id:</ListItemKey>
+          <ListItemKey className={scopedListItemKeyClasses}>
+            Consumer id:
+          </ListItemKey>
           <Badge variant={"info"}>{process.consumer_id?.slice(9, -1)}</Badge>
         </ListItem>
         <ListItem>
-          <ListItemKey className={scopedListItemKeyClasses}>Associated Consumer:</ListItemKey>
+          <ListItemKey className={scopedListItemKeyClasses}>
+            Associated Consumer:
+          </ListItemKey>
           <Badge variant={"info"}>
             {process.associated_consumer?.slice(9, -1)}
           </Badge>
@@ -91,19 +99,25 @@ export const ContractNegotiationTerminationDialog = ({
           </Badge>
         </ListItem>
         <ListItem>
-          <ListItemKey className={scopedListItemKeyClasses}>Iniciated by:</ListItemKey>
+          <ListItemKey className={scopedListItemKeyClasses}>
+            Iniciated by:
+          </ListItemKey>
           <Badge variant={"role"} role={process.initiated_by}>
             {process.initiated_by}
           </Badge>
         </ListItem>
         <ListItem>
-          <ListItemKey className={scopedListItemKeyClasses}>Created at:</ListItemKey>
-          {process.created_at}
+          <ListItemKey className={scopedListItemKeyClasses}>
+            Created at:
+          </ListItemKey>
+          {dayjs(process.created_at).format("DD/MM/YY HH:mm")}
         </ListItem>
         {process.updated_at && (
           <ListItem>
-            <ListItemKey className={scopedListItemKeyClasses}>Updated at:</ListItemKey>
-            {process.updated_at}
+            <ListItemKey className={scopedListItemKeyClasses}>
+              Updated at:
+            </ListItemKey>
+            {dayjs(process.updated_at).format("DD/MM/YY HH:mm")}
           </ListItem>
         )}
       </List>

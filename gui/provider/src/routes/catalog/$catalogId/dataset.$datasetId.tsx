@@ -83,7 +83,7 @@ function RouteComponent() {
   };
 
   return (
-    <div className="space-y-4 pb-4">
+    <div className="space-y-8 pb-4">
       <Heading level="h3" className="flex gap-2 items-center">
         Dataset with id
         <Badge variant="info" size="lg">
@@ -155,7 +155,7 @@ function RouteComponent() {
 
       <div>
         <div className=" flex flex-row mb-2 items-center">
-          <Heading level="h5"> ODRL Policies </Heading>
+          <Heading level="h5" className="mb-0"> ODRL Policies </Heading>
           <Drawer direction={"right"}>
             <DrawerTrigger>
               <Button variant="default" size="sm" className="mb-1 ml-3">

@@ -1,4 +1,10 @@
 import {
+  GlobalInfoContext,
+  GlobalInfoContextType,
+} from "./../context/GlobalInfoContext";
+import { usePostTransferRPCStart } from "shared/src/data/transfer-mutations";
+import dayjs from "dayjs";
+import {
   DialogClose,
   DialogContent,
   DialogDescription,
@@ -10,11 +16,6 @@ import { Button } from "./ui/button";
 import React, { useContext } from "react";
 import { Form } from "./ui/form";
 import { useForm } from "react-hook-form";
-import {
-  GlobalInfoContext,
-  GlobalInfoContextType,
-} from "./../context/GlobalInfoContext";
-import { usePostTransferRPCStart } from "shared/src/data/transfer-mutations";
 import { Badge } from "./../components/ui/badge.tsx";
 import { List, ListItem, ListItemKey } from "./ui/list";
 
@@ -39,9 +40,10 @@ export const TransferProcessStartDialog = ({
       },
     });
   };
+  const scopedListItemKeyClasses = "basis-[32%]";
 
   return (
-    <DialogContent className="max-w-fit sm:max-w-fit">
+    <DialogContent className="w-[70dvw] sm:max-w-fit">
       <DialogHeader>
         <DialogTitle>Transfer start dialog</DialogTitle>
         <DialogDescription className="break-all">
@@ -53,52 +55,73 @@ export const TransferProcessStartDialog = ({
         </DialogDescription>
       </DialogHeader>
       {/* List */}
-      <List className="min-w-fit w-full">
+      <List className="min-w-full overflow-x-scroll px-2">
         <ListItem>
-          <ListItemKey>Provider Participant id:</ListItemKey>
-          <Badge variant={"info"}>{process.provider_pid.slice(9, -1)}</Badge>
+          <ListItemKey className={scopedListItemKeyClasses}>
+            Provider Participant id:
+          </ListItemKey>
+          <Badge variant={"info"}>
+            {process.provider_pid.slice(9, -1)}
+          </Badge>
         </ListItem>
         <ListItem>
-          <ListItemKey>Consumer Participant id:</ListItemKey>
-          <Badge variant={"info"}>{process.consumer_pid.slice(9, -1)}</Badge>
+          <ListItemKey className={scopedListItemKeyClasses}>Consumer Participant id:</ListItemKey>
+          <Badge variant={"info"}>
+            {process.consumer_pid.slice(9, -1)}
+          </Badge>
         </ListItem>
         <ListItem>
-          <ListItemKey>Agreement id:</ListItemKey>
-          <Badge variant={"info"}>{process.agreement_id.slice(9, -1)}</Badge>
+          <ListItemKey className={scopedListItemKeyClasses}>
+            Agreement id:
+          </ListItemKey>
+          <Badge variant={"info"}>
+            {process.agreement_id.slice(9, -1)}
+          </Badge>
         </ListItem>
-        <ListItem className="flex flex-col gap-1 items-start flex-wrap">
-          <ListItemKey>Data plane id:</ListItemKey>
+        <ListItem>
+          <ListItemKey className={scopedListItemKeyClasses}>
+            Data plane id:
+          </ListItemKey>
           <Badge variant={"info"}>{process.data_plane_id.slice(9, -1)}</Badge>
         </ListItem>
         <ListItem>
-          <ListItemKey>Associated consumer:</ListItemKey>
+          <ListItemKey className={scopedListItemKeyClasses}>
+            Associated consumer:
+          </ListItemKey>
           <Badge variant={"info"}>
             {process.associated_consumer.slice(9, -1)}
           </Badge>
         </ListItem>
         <ListItem>
-          <ListItemKey>Current state:</ListItemKey>
+          <ListItemKey className={scopedListItemKeyClasses}>
+            Current state:
+          </ListItemKey>
           <Badge variant={"status"} state={process.state}>
             {process.state}
           </Badge>
         </ListItem>
         {process.state_attribute && (
           <ListItem>
-            <ListItemKey>State attribute:</ListItemKey>
+            <ListItemKey className={scopedListItemKeyClasses}>
+              State attribute:
+            </ListItemKey>
             <Badge variant={"status"} state={process.state_attribute}>
               {process.state_attribute}
             </Badge>
           </ListItem>
         )}
         <ListItem>
-          <ListItemKey>Created at:</ListItemKey>
-          {process.created_at}
-          {/* Formatear la fecha estaría bien */}
+          <ListItemKey className={scopedListItemKeyClasses}>
+            Created at:
+          </ListItemKey>
+          {dayjs(process.created_at).format("DD/MM/YY HH:mm")}
         </ListItem>
         {process.updated_at && (
           <ListItem>
-            <ListItemKey>Updated at:</ListItemKey>
-            {process.updated_at}
+            <ListItemKey className={scopedListItemKeyClasses}>
+              Updated at:
+            </ListItemKey>
+            {dayjs(process.updated_at).format("DD/MM/YY HH:mm")}
           </ListItem>
         )}
       </List>
@@ -111,9 +134,7 @@ export const TransferProcessStartDialog = ({
                 Cancel
               </Button>
             </DialogClose>
-            <Button type="submit">
-              Start
-            </Button>
+            <Button type="submit">Start</Button>
           </DialogFooter>
         </form>
       </Form>
