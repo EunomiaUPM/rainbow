@@ -15,7 +15,6 @@ import { ContractNegotiationAcceptanceDialog } from "./ContractNegotiationAccept
 import { ContractNegotiationVerificationDialog } from "./ContractNegotiationVerificationDialog";
 import NoFurtherActions from "./ui/noFurtherActions";
 
-
 export const ContractNegotiationActions = ({
   process,
   tiny = false,
@@ -46,18 +45,22 @@ export const ContractNegotiationActions = ({
     <div className={containerClassName({ tiny })}>
       {/* <h2 className={h2ClassName({ tiny })}></h2> */}
       {process.state === "REQUESTED" && (
-        <div className="space-x-2">
+        <div className="flex justify-start gap-2">
           {role === "provider" && (
             <>
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button variant="destructive" size={tiny ? "sm" : ""}>Terminate</Button>
+                  <Button variant="destructive" size={tiny ? "sm" : ""}>
+                    Terminate
+                  </Button>
                 </DialogTrigger>
                 <ContractNegotiationTerminationDialog process={process} />
               </Dialog>
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button variant="outline" size={tiny ? "sm" : ""}>Offer</Button>
+                  <Button variant="outline" size={tiny ? "sm" : ""}>
+                    Offer
+                  </Button>
                 </DialogTrigger>
                 <ContractNegotiationOfferDialog process={process} />
               </Dialog>
@@ -72,7 +75,9 @@ export const ContractNegotiationActions = ({
           {role === "consumer" && (
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant="destructive" size={tiny ? "sm" : ""}>Terminate</Button>
+                <Button variant="destructive" size={tiny ? "sm" : ""}>
+                  Terminate
+                </Button>
               </DialogTrigger>
               <ContractNegotiationTerminationDialog process={process} />
             </Dialog>
@@ -80,11 +85,13 @@ export const ContractNegotiationActions = ({
         </div>
       )}
       {process.state === "OFFERED" && (
-        <div className="space-x-2">
+        <div className="flex justify-end flex-row-reverse gap-2">
           {role === "provider" && (
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant="destructive" size={tiny ? "sm" : ""}>Terminate</Button>
+                <Button variant="destructive" size={tiny ? "sm" : ""}>
+                  Terminate
+                </Button>
               </DialogTrigger>
               <ContractNegotiationTerminationDialog process={process} />
             </Dialog>
@@ -95,17 +102,22 @@ export const ContractNegotiationActions = ({
                 <DialogTrigger asChild>
                   <Button size={tiny ? "sm" : ""}>Accept</Button>
                 </DialogTrigger>
+
                 <ContractNegotiationAcceptanceDialog process={process} />
               </Dialog>
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button variant="outline"  size={tiny ? "sm" : ""}>Request</Button>
+                  <Button variant="outline" size={tiny ? "sm" : ""}>
+                    Request
+                  </Button>
                 </DialogTrigger>
                 <ContractNegotiationRequestDialog process={process} />
               </Dialog>
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button variant="destructive" size={tiny ? "sm" : ""}>Terminate</Button>
+                  <Button variant="destructive" size={tiny ? "sm" : ""}>
+                    Terminate
+                  </Button>
                 </DialogTrigger>
                 <ContractNegotiationTerminationDialog process={process} />
               </Dialog>
@@ -114,7 +126,7 @@ export const ContractNegotiationActions = ({
         </div>
       )}
       {process.state === "ACCEPTED" && (
-        <div className="space-x-2">
+        <div className="flex justify-end flex-row-reverse gap-2">
           {role === "provider" && (
             <>
               <Dialog>
@@ -145,12 +157,14 @@ export const ContractNegotiationActions = ({
         </div>
       )}
       {process.state === "AGREED" && (
-        <div className="space-x-2">
+        <div className="flex justify-start gap-2">
           {role === "provider" && (
             <>
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button variant="destructive" size={tiny ? "sm" : ""}>Terminate</Button>
+                  <Button variant="destructive" size={tiny ? "sm" : ""}>
+                    Terminate
+                  </Button>
                 </DialogTrigger>
                 <ContractNegotiationTerminationDialog process={process} />
               </Dialog>
@@ -169,7 +183,7 @@ export const ContractNegotiationActions = ({
         </div>
       )}
       {process.state === "VERIFIED" && (
-        <div className="space-x-2">
+        <div className="flex justify-end flex-row-reverse gap-2">
           {role === "provider" && (
             <>
               <Dialog>
@@ -180,7 +194,9 @@ export const ContractNegotiationActions = ({
               </Dialog>
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button variant="destructive" size={tiny ? "sm" : ""}>Terminate</Button>
+                  <Button variant="destructive" size={tiny ? "sm" : ""}>
+                    Terminate
+                  </Button>
                 </DialogTrigger>
                 <ContractNegotiationTerminationDialog process={process} />
               </Dialog>
@@ -188,12 +204,12 @@ export const ContractNegotiationActions = ({
           )}
           {role === "consumer" && (
             <>
-             <NoFurtherActions />
+              <NoFurtherActions />
             </>
           )}
         </div>
       )}
-      {process.state === "FINALIZED" && <NoFurtherActions /> }
+      {process.state === "FINALIZED" && <NoFurtherActions />}
       {process.state === "TERMINATED" && <NoFurtherActions />}
     </div>
   );

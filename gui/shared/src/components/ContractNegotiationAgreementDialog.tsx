@@ -44,7 +44,7 @@ export const ContractNegotiationAgreementDialog = ({
     <DialogContent className="w-[70dvw] sm:max-w-fit">
       <DialogHeader>
         <DialogTitle>Agreement dialog</DialogTitle>
-        <DialogDescription className="break-all">
+        <DialogDescription>
           <span>
             You are about to agree to the terms of the contract negotiation.
             <br />

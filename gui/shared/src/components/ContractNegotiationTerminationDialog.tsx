@@ -84,28 +84,45 @@ export const ContractNegotiationTerminationDialog = ({
           </ListItemKey>
           <Badge variant={"info"}>{process.consumer_id?.slice(9, -1)}</Badge>
         </ListItem>
-        <ListItem>
-          <ListItemKey className={scopedListItemKeyClasses}>
-            Associated Consumer:
-          </ListItemKey>
-          <Badge variant={"info"}>
-            {process.associated_consumer?.slice(9, -1)}
-          </Badge>
-        </ListItem>
+        {process.associated_consumer && (
+          // Provider GUI
+          <ListItem>
+            <ListItemKey className={scopedListItemKeyClasses}>
+              Associated Consumer:
+            </ListItemKey>
+            <Badge variant={"info"}>
+              {process.associated_consumer?.slice(9, -1)}
+            </Badge>
+          </ListItem>
+        )}
+        {process.associated_provider && (
+          // Consumer GUI
+          <ListItem>
+            <ListItemKey className={scopedListItemKeyClasses}>
+              Associated Provider:
+            </ListItemKey>
+            <Badge variant={"info"}>
+              {process.associated_provider?.slice(9, -1)}
+            </Badge>
+          </ListItem>
+        )}
         <ListItem>
           <ListItemKey className={scopedListItemKeyClasses}>State:</ListItemKey>
           <Badge variant={"status"} state={process.state}>
             {process.state}
           </Badge>
         </ListItem>
-        <ListItem>
-          <ListItemKey className={scopedListItemKeyClasses}>
-            Iniciated by:
-          </ListItemKey>
-          <Badge variant={"role"} role={process.initiated_by}>
-            {process.initiated_by}
-          </Badge>
-        </ListItem>
+        {process.initiated_by && (
+          // Provider GUI
+          <ListItem>
+            <ListItemKey className={scopedListItemKeyClasses}>
+              Iniciated by:
+            </ListItemKey>
+            <Badge variant={"role"} role={process.initiated_by}>
+              {process.initiated_by}
+            </Badge>
+          </ListItem>
+        )}
         <ListItem>
           <ListItemKey className={scopedListItemKeyClasses}>
             Created at:

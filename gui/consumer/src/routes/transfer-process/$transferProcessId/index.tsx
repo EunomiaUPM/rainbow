@@ -48,6 +48,11 @@ function RouteComponent() {
   const { data: transferMessages } =
     useGetTransferMessagesByProviderPid(transferProcessId);
   const { data: dataPlane } = useGetDataplaneProcessById(transferProcessId);
+  // Transfer proccess info
+  console.log(transferProcessId);
+  console.log(transferProcess); // returns error
+  console.log(transferMessages); // returns error
+  
   
   return (
     <div className="space-y-4 pb-4">

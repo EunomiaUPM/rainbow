@@ -122,7 +122,7 @@ const RouteComponent = () => {
                   params={{ cnProcess: cnProcess.consumer_id }}
                 >
                   <Button variant="link">
-                    See contract
+                    See details
                     <ArrowRight />
                   </Button>
                 </Link>

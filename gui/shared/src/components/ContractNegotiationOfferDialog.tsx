@@ -62,7 +62,7 @@ export const ContractNegotiationOfferDialog = ({
     <DialogContent className="w-[70dvw] sm:max-w-fit">
       <DialogHeader>
         <DialogTitle>Contract Negotiation Offer</DialogTitle>
-        <DialogDescription className="break-all">
+        <DialogDescription>
           <p>Make changes on the Contract Negotiation Offer.</p>
           {/* <p>{JSON.stringify(process)}</p> */}
         </DialogDescription>
