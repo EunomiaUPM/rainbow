@@ -45,7 +45,7 @@ function RouteComponent() {
         Dataset with id
         <Badge variant="info" size="lg">
           {" "}
-          {dataset["@id"].slice(9, 29) + "[...]"}
+          {dataset["@id"] /*.slice(9, 29) + "[...]"*/}
         </Badge>
       </Heading>
       <div>

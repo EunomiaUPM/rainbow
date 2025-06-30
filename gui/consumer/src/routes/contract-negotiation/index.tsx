@@ -107,7 +107,7 @@ const RouteComponent = () => {
               </TableCell>
               <TableCell>
                 <Badge variant={"status"} state={cnProcess.state}>
-                  {cnProcess.state.replace("dspace:", "")}
+                  {cnProcess.state?.replace("dspace:", "")}
                 </Badge>
               </TableCell>
               <TableCell>

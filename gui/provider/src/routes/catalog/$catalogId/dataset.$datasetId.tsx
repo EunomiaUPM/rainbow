@@ -557,7 +557,7 @@ function RouteComponent() {
                 <Heading level="h5" className="flex gap-3">
                   <div>Policy with ID</div>
                   <Badge variant="info" className="h-6">
-                    {policy["@id"].slice(9, 29) + "[...]"}
+                    {policy["@id"] /*.slice(9, 29) + "[...]"*/}
                   </Badge>
                 </Heading>
               </div>
