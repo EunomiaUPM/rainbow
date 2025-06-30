@@ -27,6 +27,7 @@ import {
   GlobalInfoContext,
   GlobalInfoContextType,
 } from "./../context/GlobalInfoContext";
+import dayjs from "dayjs";
 
 export const ContractNegotiationOfferDialog = ({
   process,
@@ -58,26 +59,32 @@ export const ContractNegotiationOfferDialog = ({
   const scopedListItemKeyClasses = "basis-[30%]";
 
   return (
-    <DialogContent className="sm:max-w-[425px]">
+    <DialogContent className="w-[70dvw] sm:max-w-fit">
       <DialogHeader>
         <DialogTitle>Contract Negotiation Offer</DialogTitle>
-        <DialogDescription className="break-all">
+        <DialogDescription>
           <p>Make changes on the Contract Negotiation Offer.</p>
           {/* <p>{JSON.stringify(process)}</p> */}
         </DialogDescription>
       </DialogHeader>
       {/* List */}
-      <List className="min-w-fit w-full">
+      <List className="min-w-full overflow-x-scroll px-2">
         <ListItem>
-          <ListItemKey className={scopedListItemKeyClasses}>Provider id:</ListItemKey>
+          <ListItemKey className={scopedListItemKeyClasses}>
+            Provider id:
+          </ListItemKey>
           <Badge variant={"info"}>{process.provider_id.slice(9, -1)}</Badge>
         </ListItem>
         <ListItem>
-          <ListItemKey className={scopedListItemKeyClasses}>Consumer id:</ListItemKey>
+          <ListItemKey className={scopedListItemKeyClasses}>
+            Consumer id:
+          </ListItemKey>
           <Badge variant={"info"}>{process.consumer_id.slice(9, -1)}</Badge>
         </ListItem>
         <ListItem>
-          <ListItemKey className={scopedListItemKeyClasses}>Associated Consumer:</ListItemKey>
+          <ListItemKey className={scopedListItemKeyClasses}>
+            Associated Consumer:
+          </ListItemKey>
           <Badge variant={"info"}>
             {process.associated_consumer.slice(9, -1)}
           </Badge>
@@ -89,19 +96,25 @@ export const ContractNegotiationOfferDialog = ({
           </Badge>
         </ListItem>
         <ListItem>
-          <ListItemKey className={scopedListItemKeyClasses}>Iniciated by:</ListItemKey>
+          <ListItemKey className={scopedListItemKeyClasses}>
+            Iniciated by:
+          </ListItemKey>
           <Badge variant={"role"} role={process.initiated_by}>
             {process.initiated_by}
           </Badge>
         </ListItem>
         <ListItem>
-          <ListItemKey className={scopedListItemKeyClasses}>Created at:</ListItemKey>
-          {process.created_at}
+          <ListItemKey className={scopedListItemKeyClasses}>
+            Created at:
+          </ListItemKey>
+          {dayjs(process.created_at).format("DD/MM/YY HH:mm")}
         </ListItem>
         {process.updated_at && (
           <ListItem>
-            <ListItemKey className={scopedListItemKeyClasses}>Updated at:</ListItemKey>
-            {process.updated_at}
+            <ListItemKey className={scopedListItemKeyClasses}>
+              Updated at:
+            </ListItemKey>
+            {dayjs(process.updated_at).format("DD/MM/YY HH:mm")}
           </ListItem>
         )}
       </List>
@@ -130,7 +143,9 @@ export const ContractNegotiationOfferDialog = ({
                 Cancel
               </Button>
             </DialogClose>
-            <Button type="submit" variant="outline">Offer</Button>
+            <Button type="submit" variant="outline">
+              Offer
+            </Button>
           </DialogFooter>
         </form>
       </Form>

@@ -126,9 +126,9 @@ const MessageTitle = React.forwardRef<
   React.HTMLAttributes<HTMLHeadingElement>
 >(({ className, children, ...props }, ref) => (
   <Heading
-    level="h5"
+    level="h4"
     ref={ref}
-    className={cn("mb-0 text-20", className)}
+    className={cn("mb-0 !text-[20px] !text-foreground-400", className)}
     {...props}
   >
     {children}
@@ -175,7 +175,7 @@ const MessageMeta = React.forwardRef<
     {...props}
   >
     <ListItemKey className="font-bold max-w-40">{label}</ListItemKey>
-    <Badge variant="info">{value}</Badge>
+    <Badge className="max-w-full overflow-hidden" variant="info">{value}</Badge>
   </ListItem>
 ));
 MessageMeta.displayName = "MessageMeta";

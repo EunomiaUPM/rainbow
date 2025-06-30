@@ -28,6 +28,7 @@ import { Route as ContractNegotiationIndexImport } from './routes/contract-negot
 import { Route as CatalogIndexImport } from './routes/catalog/index'
 import { Route as AgreementsIndexImport } from './routes/agreements/index'
 import { Route as ContractNegotiationOfferImport } from './routes/contract-negotiation/offer'
+import { Route as ContractNegotiationCounterOfferImport } from './routes/contract-negotiation/counter-offer'
 import { Route as AgreementsAgreementIdImport } from './routes/agreements/$agreementId'
 import { Route as TransferProcessTransferProcessIdRouteImport } from './routes/transfer-process/$transferProcessId/route'
 import { Route as ParticipantsParticipantIdRouteImport } from './routes/participants/$participantId/route'
@@ -149,6 +150,13 @@ const ContractNegotiationOfferRoute = ContractNegotiationOfferImport.update({
   path: '/offer',
   getParentRoute: () => ContractNegotiationRouteRoute,
 } as any)
+
+const ContractNegotiationCounterOfferRoute =
+  ContractNegotiationCounterOfferImport.update({
+    id: '/counter-offer',
+    path: '/counter-offer',
+    getParentRoute: () => ContractNegotiationRouteRoute,
+  } as any)
 
 const AgreementsAgreementIdRoute = AgreementsAgreementIdImport.update({
   id: '/$agreementId',
@@ -366,6 +374,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AgreementsAgreementIdImport
       parentRoute: typeof AgreementsRouteImport
     }
+    '/contract-negotiation/counter-offer': {
+      id: '/contract-negotiation/counter-offer'
+      path: '/counter-offer'
+      fullPath: '/contract-negotiation/counter-offer'
+      preLoaderRoute: typeof ContractNegotiationCounterOfferImport
+      parentRoute: typeof ContractNegotiationRouteImport
+    }
     '/contract-negotiation/offer': {
       id: '/contract-negotiation/offer'
       path: '/offer'
@@ -577,6 +592,7 @@ const ContractNegotiationCnProcessRouteRouteWithChildren =
 
 interface ContractNegotiationRouteRouteChildren {
   ContractNegotiationCnProcessRouteRoute: typeof ContractNegotiationCnProcessRouteRouteWithChildren
+  ContractNegotiationCounterOfferRoute: typeof ContractNegotiationCounterOfferRoute
   ContractNegotiationOfferRoute: typeof ContractNegotiationOfferRoute
   ContractNegotiationIndexRoute: typeof ContractNegotiationIndexRoute
 }
@@ -585,6 +601,7 @@ const ContractNegotiationRouteRouteChildren: ContractNegotiationRouteRouteChildr
   {
     ContractNegotiationCnProcessRouteRoute:
       ContractNegotiationCnProcessRouteRouteWithChildren,
+    ContractNegotiationCounterOfferRoute: ContractNegotiationCounterOfferRoute,
     ContractNegotiationOfferRoute: ContractNegotiationOfferRoute,
     ContractNegotiationIndexRoute: ContractNegotiationIndexRoute,
   }
@@ -709,6 +726,7 @@ export interface FileRoutesByFullPath {
   '/participants/$participantId': typeof ParticipantsParticipantIdRouteRouteWithChildren
   '/transfer-process/$transferProcessId': typeof TransferProcessTransferProcessIdRouteRouteWithChildren
   '/agreements/$agreementId': typeof AgreementsAgreementIdRoute
+  '/contract-negotiation/counter-offer': typeof ContractNegotiationCounterOfferRoute
   '/contract-negotiation/offer': typeof ContractNegotiationOfferRoute
   '/agreements/': typeof AgreementsIndexRoute
   '/catalog/': typeof CatalogIndexRoute
@@ -734,6 +752,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/agreements/$agreementId': typeof AgreementsAgreementIdRoute
+  '/contract-negotiation/counter-offer': typeof ContractNegotiationCounterOfferRoute
   '/contract-negotiation/offer': typeof ContractNegotiationOfferRoute
   '/agreements': typeof AgreementsIndexRoute
   '/catalog': typeof CatalogIndexRoute
@@ -772,6 +791,7 @@ export interface FileRoutesById {
   '/participants/$participantId': typeof ParticipantsParticipantIdRouteRouteWithChildren
   '/transfer-process/$transferProcessId': typeof TransferProcessTransferProcessIdRouteRouteWithChildren
   '/agreements/$agreementId': typeof AgreementsAgreementIdRoute
+  '/contract-negotiation/counter-offer': typeof ContractNegotiationCounterOfferRoute
   '/contract-negotiation/offer': typeof ContractNegotiationOfferRoute
   '/agreements/': typeof AgreementsIndexRoute
   '/catalog/': typeof CatalogIndexRoute
@@ -811,6 +831,7 @@ export interface FileRouteTypes {
     | '/participants/$participantId'
     | '/transfer-process/$transferProcessId'
     | '/agreements/$agreementId'
+    | '/contract-negotiation/counter-offer'
     | '/contract-negotiation/offer'
     | '/agreements/'
     | '/catalog/'
@@ -835,6 +856,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/agreements/$agreementId'
+    | '/contract-negotiation/counter-offer'
     | '/contract-negotiation/offer'
     | '/agreements'
     | '/catalog'
@@ -871,6 +893,7 @@ export interface FileRouteTypes {
     | '/participants/$participantId'
     | '/transfer-process/$transferProcessId'
     | '/agreements/$agreementId'
+    | '/contract-negotiation/counter-offer'
     | '/contract-negotiation/offer'
     | '/agreements/'
     | '/catalog/'
@@ -960,6 +983,7 @@ export const routeTree = rootRoute
       "filePath": "contract-negotiation/route.tsx",
       "children": [
         "/contract-negotiation/$cnProcess",
+        "/contract-negotiation/counter-offer",
         "/contract-negotiation/offer",
         "/contract-negotiation/"
       ]
@@ -1035,6 +1059,10 @@ export const routeTree = rootRoute
     "/agreements/$agreementId": {
       "filePath": "agreements/$agreementId.tsx",
       "parent": "/agreements"
+    },
+    "/contract-negotiation/counter-offer": {
+      "filePath": "contract-negotiation/counter-offer.tsx",
+      "parent": "/contract-negotiation"
     },
     "/contract-negotiation/offer": {
       "filePath": "contract-negotiation/offer.tsx",

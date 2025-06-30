@@ -86,8 +86,7 @@ function RouteComponent() {
   };
 
   return (
-    <div className="space-y-4 pb-4">
-   
+    <div className="space-y-8 pb-4">
       <Heading level="h3" className="flex gap-2 items-center">
         Dataset with id
         <Badge variant="info" size="lg">
@@ -159,7 +158,7 @@ function RouteComponent() {
 
       <div>
         <div className=" flex flex-row mb-2 items-center">
-          <Heading level="h5"> ODRL Policies </Heading>
+          <Heading level="h5" className="mb-0"> ODRL Policies </Heading>
           <Drawer direction={"right"}>
             <DrawerTrigger>
               <Button variant="default" size="sm" className="mb-1 ml-3">
@@ -195,9 +194,9 @@ function RouteComponent() {
                       value="item-1"
                       className="bg-success-500/10 border border-success-600/20"
                     >
-                      <AccordionTrigger className="text-white/60 flex bg-success-400/10 uppercase">
+                      <AccordionTrigger className="text-white/70 flex bg-success-400/25 uppercase overflow-hidden rounded-md data-[state=open]:rounded-b-none">
                         <div className="flex items-center w-full">
-                          <p>permission</p>
+                          <p className="text-current">permission</p>
                         </div>
                       </AccordionTrigger>
                       <AccordionContent className="relative">
@@ -480,9 +479,9 @@ function RouteComponent() {
                       value="item-1"
                       className="bg-warn-500/10 border border-warn-600/20"
                     >
-                      <AccordionTrigger className="text-white/60 flex bg-warn-400/10 uppercase">
+                      <AccordionTrigger className="text-white/70 flex bg-warn-400/25 uppercase overflow-hidden rounded-md data-[state=open]:rounded-b-none">
                         <div className="flex items-center w-full">
-                          <p>obligation</p>
+                          <p className="text-current">obligation</p>
                         </div>
                       </AccordionTrigger>
                       <AccordionContent className="relative">
@@ -495,9 +494,9 @@ function RouteComponent() {
                       value="item-1"
                       className="bg-danger-500/10 border border-danger-600/20"
                     >
-                      <AccordionTrigger className="text-white/60 flex bg-danger-400/10 uppercase">
+                      <AccordionTrigger className="text-white/70 flex bg-danger-500/25 uppercase overflow-hidden rounded-md data-[state=open]:rounded-b-none">
                         <div className="flex items-center w-full">
-                          <p>prohibition</p>
+                          <p className="text-current">prohibition</p>
                         </div>
                       </AccordionTrigger>
                       <AccordionContent className="relative">
@@ -523,8 +522,8 @@ function RouteComponent() {
                           <FormControl>
                             <Textarea className="h-24" {...field} />
                           </FormControl>
-                          <FormDescription >
-                            <i >Type or paste the ODRL policy content here.</i>
+                          <FormDescription>
+                            <i>Type or paste the ODRL policy content here.</i>
                           </FormDescription>
                           <FormMessage />
                         </FormItem>

@@ -18,6 +18,7 @@ import {
   GlobalInfoContextType,
 } from "./../context/GlobalInfoContext";
 import { usePostTransferRPCStart } from "shared/src/data/transfer-mutations";
+import dayjs from "dayjs";
 
 export const TransferProcessTerminationDialog = ({
   process,
@@ -41,13 +42,13 @@ export const TransferProcessTerminationDialog = ({
     });
   };
 
-  const scopedListItemKeyClasses = "basis-[33%]";
+  const scopedListItemKeyClasses = "basis-[32%]";
 
   return (
-    <DialogContent className="max-w-fit sm:max-w-fit ">
+    <DialogContent className="w-[70dvw] sm:max-w-fit">
       <DialogHeader>
         <DialogTitle>Transfer termination dialog</DialogTitle>
-        <DialogDescription className="max-w-full flex flex-wrap break-all">
+        <DialogDescription className="max-w-full flex flex-wrap">
           <span className="max-w-full flex flex-wrap">
             You are about to terminate the transfer process.
           </span>
@@ -56,18 +57,22 @@ export const TransferProcessTerminationDialog = ({
       </DialogHeader>
 
       {/* List */}
-      <List className="min-w-fit w-full">
+      <List className="min-w-full overflow-x-scroll px-2">
         <ListItem>
           <ListItemKey className={scopedListItemKeyClasses}>
             Provider Participant id:
           </ListItemKey>
-          <Badge variant={"info"}>{process.provider_pid.slice(9, -1)}</Badge>
+          <Badge variant={"info"}>
+            {process.provider_pid.slice(9, -1)}
+          </Badge>
         </ListItem>
         <ListItem>
           <ListItemKey className={scopedListItemKeyClasses}>
             Consumer Participant id:
           </ListItemKey>
-          <Badge variant={"info"}>{process.consumer_pid.slice(9, -1)}</Badge>
+          <Badge variant={"info"}>
+            {process.consumer_pid.slice(9, -1)}
+          </Badge>
         </ListItem>
         <ListItem>
           <ListItemKey className={scopedListItemKeyClasses}>
@@ -75,12 +80,14 @@ export const TransferProcessTerminationDialog = ({
           </ListItemKey>
           <Badge variant={"info"}>{process.agreement_id.slice(9, -1)}</Badge>
         </ListItem>
-        <ListItem className="flex flex-col gap-1 items-start flex-wrap">
+        <ListItem>
           <ListItemKey className={scopedListItemKeyClasses}>
             Data plane id:
           </ListItemKey>
           {/* No hace flex-col del resto de cosas por esta info que no cabe, pero funcionar funciona :) */}
-          <Badge variant={"info"}>{process.data_plane_id.slice(9, -1)}</Badge>
+          <Badge variant={"info"}>
+            {process.data_plane_id.slice(9, -1)}
+          </Badge>
         </ListItem>
         <ListItem>
           <ListItemKey className={scopedListItemKeyClasses}>
@@ -112,15 +119,14 @@ export const TransferProcessTerminationDialog = ({
           <ListItemKey className={scopedListItemKeyClasses}>
             Created at:
           </ListItemKey>
-          {process.created_at}
-          {/* Formatear la fecha estaría bien */}
+          {dayjs(process.created_at).format("DD/MM/YY HH:mm")}
         </ListItem>
         {process.updated_at && (
           <ListItem>
             <ListItemKey className={scopedListItemKeyClasses}>
               Updated at:
             </ListItemKey>
-            {process.updated_at}
+            {dayjs(process.updated_at).format("DD/MM/YY HH:mm")}
           </ListItem>
         )}
       </List>

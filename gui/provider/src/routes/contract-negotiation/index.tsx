@@ -45,6 +45,12 @@ const RouteComponent = () => {
         <div className=" basis-3/5">
           <Input type="search"></Input>
         </div>
+        <Link
+         to="/contract-negotiation/counter-offer.tsx">
+        <Button> 
+
+        </Button>
+        </Link>
         {/* DRAWER CONTRACT OFFER*/}
         <Drawer direction={"right"}>
           <DrawerTrigger>
@@ -88,7 +94,7 @@ const RouteComponent = () => {
         </TableHeader>
         <TableBody>
           {cnProcessesSorted.map((cnProcess) => (
-            <TableRow key={cnProcess.provider_id.slice(0, 20)}>
+            <TableRow key={cnProcess.provider_id?.slice(0, 20)}>
               <TableCell>
                 <Badge variant={"info"}>
                   {cnProcess.provider_id?.slice(9, 20) + "..."}

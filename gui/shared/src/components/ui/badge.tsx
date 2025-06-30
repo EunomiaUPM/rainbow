@@ -9,7 +9,7 @@ import {cn} from "@/lib/utils"
 import { DragHandleVerticalIcon } from "@radix-ui/react-icons";
 
 const badgeVariants = cva(
-  "px-2 py-0.5 w-fit max-w-full inline-flex justify-start items-center bg-white/10 font-semibold rounded-sm border whitespace-nowrap shrink-0 gap-1 focus-visible:ring focus-visible:ring-ring/50 focus-visible:ring-[3px] transition-all overflow-hidden",
+  "px-2 py-0.5 w-fit  inline-flex justify-start items-center bg-white/10 font-semibold rounded-sm border whitespace-nowrap shrink-0 gap-1 focus-visible:ring focus-visible:ring-ring/50 focus-visible:ring-[3px] transition-all ",
   {
     variants: {
       variant: {
