@@ -45,12 +45,7 @@ const RouteComponent = () => {
         <div className=" basis-3/5">
           <Input type="search"></Input>
         </div>
-        <Link
-         to="/contract-negotiation/counter-offer.tsx">
-        <Button> 
-
-        </Button>
-        </Link>
+      
         {/* DRAWER CONTRACT OFFER*/}
         <Drawer direction={"right"}>
           <DrawerTrigger>
@@ -114,7 +109,7 @@ const RouteComponent = () => {
                 {dayjs(cnProcess.created_at).format("DD/MM/YY - HH:mm")}
               </TableCell>
               <TableCell>
-                <ContractNegotiationActions process={cnProcess} tiny={true} />
+                <ContractNegotiationActions  process={cnProcess} tiny={true} />
               </TableCell>
               <TableCell>
                 <Link

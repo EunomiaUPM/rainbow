@@ -85,8 +85,8 @@ export const RouteComponent = ({ catalog, dataset }) => {
   const form = useForm<Inputs>({
     defaultValues: {
       consumerParticipantId: "",
-      id: dataset["@id"], // Dataset ID
-      catalog: catalog["@id"], // Catalog ID
+      id: dataset?.["@id"], // Dataset ID
+      catalog: catalog?.["@id"], // Catalog ID
       target: "", // Policy ID
     },
   });
@@ -110,7 +110,7 @@ export const RouteComponent = ({ catalog, dataset }) => {
 
   // Initialize selectedCatalog if default value exists
   useEffect(() => {
-    const defaultId = catalog["@id"];
+    const defaultId = catalog?.["@id"];
     // console.log(defaultId, "defaultId in offer form");
     setSelectedCatalog(catalog);
     // console.log(selectedCatalog, " selectedCatalog__");
@@ -125,10 +125,10 @@ export const RouteComponent = ({ catalog, dataset }) => {
 
   // Initialize selectedDataset if default value exists
   useEffect(() => {
-    const defaultId = dataset["@id"];
+    const defaultId = dataset?.["@id"];
     console.log(defaultId, "defaultId dataset in offer form");
     setSelectedDataset(dataset);
-    form.setValue("target", dataset["@id"]);
+    form.setValue("target", dataset?.["@id"]);
     console.log(selectedDataset, " selectedDataset__");
     // !!!!! modificacion 3
     // 'id' field is for dataset
@@ -145,7 +145,7 @@ export const RouteComponent = ({ catalog, dataset }) => {
     const defaultId = "" ; // 'target' field is for policy
 
     if (defaultId && policies.length > 0) {
-      const policy = policies.find((p) => p["@id"] === defaultId);
+      const policy = policies.find((p) => p?.["@id"] === defaultId);
       if (policy) {
         setSelectedPolicy(policy);
       }
@@ -159,7 +159,7 @@ export const RouteComponent = ({ catalog, dataset }) => {
         try {
           const fetchedPolicies = await getPoliciesByDatasetId(
             api_gateway,
-            selectedDataset["@id"]
+            selectedDataset?.["@id"]
           );
           setPolicies(fetchedPolicies);
         } catch (error) {
@@ -264,7 +264,7 @@ export const RouteComponent = ({ catalog, dataset }) => {
       try {
         const fetchedDatasets = await getDatasetsByCatalogId(
           api_gateway,
-          selectedCatalog["@id"]
+          selectedCatalog?.["@id"]
         );
         setDatasets(fetchedDatasets);
       } catch (error) {
@@ -299,7 +299,7 @@ export const RouteComponent = ({ catalog, dataset }) => {
 
   return (
     <div className="max-w-[500px] w-full m-auto">
-      {/* <Heading level="h3">New Contract Negotiation Offer</Heading> */}
+      <Heading level="h3">CounterOffer</Heading>
       <Form {...form}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         
@@ -308,7 +308,7 @@ export const RouteComponent = ({ catalog, dataset }) => {
           <div>
             {" "}
            {/* <p className="text-xs"> Chosen catalog:  </p> */}
-           <p>{catalog.title}</p> <Badge variant="info" >{catalog["@id"].slice(9,29) + "[...]"}</Badge> 
+           <p>{catalog?.title}</p> <Badge variant="info" >{catalog?.["@id"].slice(9,29) + "[...]"}</Badge> 
           </div>
           {/* {console.log(selectedCatalog, " selectedCatalogº")} */}
           <FormField
@@ -389,7 +389,7 @@ export const RouteComponent = ({ catalog, dataset }) => {
 
  <div>
                   {" "}
-                  Chosen dataset: {dataset.title} {dataset["@id"]}
+                  Chosen dataset: {dataset?.title} {dataset?.["@id"]}
                 </div>
                 {/* 
           <FormField
@@ -558,7 +558,7 @@ export const RouteComponent = ({ catalog, dataset }) => {
             <div className={selectedPolicy === policy  ? `border-white border-2` : ""}
               onClick={() => {
                 setSelectedPolicy(policy);
-                 form.setValue("id", policy["@id"])
+                 form.setValue("id", policy?.["@id"])
                 }}
                 >
               <PolicyComponent

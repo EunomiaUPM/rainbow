@@ -13,7 +13,7 @@ const List = ({
   return (
     <ul
       className={cn(
-        "mt-0 px-2 min-w-fit w-full lg:max-w-[48%] xl:w-[500px] 2xl:w-[500px] text-sm flex flex-col justify-center relative  bg-brand-sky/5 overflow-auto border border-white/10 rounded-md",
+        "mt-0 px-2 min-w-fit w-full  text-sm flex flex-col justify-center relative  bg-brand-sky/5 overflow-auto border border-white/10 rounded-md",
         className
       )}
       {...props}

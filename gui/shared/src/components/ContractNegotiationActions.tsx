@@ -14,6 +14,7 @@ import { ContractNegotiationRequestDialog } from "./ContractNegotiationRequestDi
 import { ContractNegotiationAcceptanceDialog } from "./ContractNegotiationAcceptanceDialog";
 import { ContractNegotiationVerificationDialog } from "./ContractNegotiationVerificationDialog";
 import NoFurtherActions from "./ui/noFurtherActions";
+import { Link } from "@tanstack/react-router";
 
 export const ContractNegotiationActions = ({
   process,
@@ -56,14 +57,16 @@ export const ContractNegotiationActions = ({
                 </DialogTrigger>
                 <ContractNegotiationTerminationDialog process={process} />
               </Dialog>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size={tiny ? "sm" : ""}>
-                    Offer
-                  </Button>
-                </DialogTrigger>
+              {/* <Dialog> */}
+                {/* <DialogTrigger asChild> */}
+                  <Link to="/contract-negotiation/counter-offer">
+                    <Button  variant="outline" size={tiny ? "sm" : ""}>
+                    C/Offer
+                    </Button>
+                  </Link>
+                {/* </DialogTrigger>
                 <ContractNegotiationOfferDialog process={process} />
-              </Dialog>
+              </Dialog> */}
               <Dialog>
                 <DialogTrigger asChild>
                   <Button size={tiny ? "sm" : ""}>Agree</Button>
@@ -126,6 +129,7 @@ export const ContractNegotiationActions = ({
           )}
         </div>
       )}
+
       {process.state === "ACCEPTED" && (
         <div className="flex justify-end flex-row-reverse gap-2">
           {role === "provider" && (

@@ -550,7 +550,7 @@ function RouteComponent() {
             </DrawerContent>
           </Drawer>
         </div>
-        <div className="container-policies flex flex-wrap gap-4">
+        <div className="grid grid-cols-2 gap-4">
           {policies.map((policy) => (
             <List className=" border border-white/30 bg-white/10 px-4 py-2 rounded-md justify-start">
               <div className="flex">
