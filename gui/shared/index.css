@@ -165,9 +165,15 @@
 
 
 .flexColsLayout {
-    @apply flex !h-fit gap-4 [&>div]:w-full [&>div]:min-w-fit; 
+    @apply flex flex-wrap !h-fit gap-4 [&>div]:w-full [&>div]:min-w-fit; 
     /* @apply [&>*:first-child]:border-r [&>*:first-child]:border-r-stroke; */
 }
+
+.gridColsLayout {
+    @apply grid grid-cols-1 gap-4 xl:grid-cols-2 xl:gap-8; 
+}
+
+
 
 .policy-item-create {
     @apply first:mt-3 border-t pt-3  pb-5 border-white/20 last:pb-2

@@ -94,7 +94,7 @@ function RouteComponent() {
           {dataset["@id"].slice(9, 29) + "[...]"}
         </Badge>
       </Heading>
-      <div>
+      <div className="gridColsLayout">
         <List className="text-sm">
           <ListItem>
             <ListItemKey>Dataset title</ListItemKey>
@@ -550,14 +550,14 @@ function RouteComponent() {
             </DrawerContent>
           </Drawer>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="gridColsLayout">
           {policies.map((policy) => (
             <List className=" border border-white/30 bg-white/10 px-4 py-2 rounded-md justify-start">
               <div className="flex">
                 <Heading level="h5" className="flex gap-3">
                   <div>Policy with ID</div>
                   <Badge variant="info" className="h-6">
-                    {policy["@id"] /*.slice(9, 29) + "[...]"*/}
+                    {policy["@id"].slice(9, 29) + "[...]"}
                   </Badge>
                 </Heading>
               </div>

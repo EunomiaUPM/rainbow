@@ -3,10 +3,14 @@ import { useGetAgreementById } from "shared/src/data/agreement-queries";
 import { TableCell } from "shared/src/components/ui/table.tsx";
 import dayjs from "dayjs";
 import Heading from "shared/src/components/ui/heading";
-import { List, ListItem, ListItemKey, ListItemDate } from "shared/src/components/ui/list";
+import {
+  List,
+  ListItem,
+  ListItemKey,
+  ListItemDate,
+} from "shared/src/components/ui/list";
 import { Badge } from "shared/src/components/ui/badge.tsx";
 import PolicyComponent from "shared/src/components/ui/policyComponent.tsx";
-
 
 export const Route = createFileRoute("/agreements/$agreementId")({
   component: RouteComponent,
@@ -31,7 +35,7 @@ function RouteComponent() {
           {agreement.agreement_id.slice(9, 29) + "[...]"}
         </Badge>
       </Heading>
-      <div className="flexColsLayout">
+      <div className="gridColsLayout">
         <div className=" ">
           <Heading level="h6" className="text-text">
             Agreement info
@@ -40,30 +44,29 @@ function RouteComponent() {
             <ListItem>
               <ListItemKey>Agreement Id</ListItemKey>
               <Badge variant="info">
-                {" "}
                 {agreement.agreement_id.slice(9, 29) + "[...]"}
               </Badge>
             </ListItem>
-            <div className={"h-12 border-b border-white/20"}>
+            <div className={"border-b border-white/20"}>
               <ListItem>
                 <ListItemKey>Related Message</ListItemKey>
-                {agreement.cn_message_id.slice(9)}
+                <Badge variant="info">{agreement.cn_message_id.slice(9, 29) + "[...]"}</Badge>
               </ListItem>
             </div>
             <ListItem>
               <ListItemKey>Consumer Participant Id</ListItemKey>
               <Badge variant="info">
-                {agreement.consumer_participant_id.slice(9, 29) + "[...]"}{" "}
+                {agreement.consumer_participant_id.slice(9, 29) + "[...]"}
               </Badge>
             </ListItem>
             <ListItem>
               <ListItemKey>Provider Participant Id</ListItemKey>{" "}
               <Badge variant="info">
-                {agreement.provider_participant_id.slice(9, 29) + "[...]"}{" "}
+                {agreement.provider_participant_id.slice(9, 29) + "[...]"}
               </Badge>
             </ListItem>
             <ListItem>
-              <ListItemKey>Status</ListItemKey>{" "}
+              <ListItemKey>Status</ListItemKey>
               <Badge
                 variant="status"
                 state={agreement.active ? "ACTIVE" : "PAUSE"}
@@ -73,7 +76,9 @@ function RouteComponent() {
             </ListItem>
             <ListItem>
               <ListItemKey>Created at</ListItemKey>
-              <ListItemDate>{dayjs(agreement.created_at).format("DD/MM/YYYY - HH:mm")}</ListItemDate>
+              <ListItemDate>
+                {dayjs(agreement.created_at).format("DD/MM/YYYY - HH:mm")}
+              </ListItemDate>
             </ListItem>
           </List>
         </div>
@@ -124,27 +129,23 @@ function RouteComponent() {
 
             <div className="gap-1 flex flex-col">
               <ListItemKey className={" py-2 "}> Policies </ListItemKey>
-           
+
               <div className="flex flex-col gap-2 mb-2">
-            
-            <PolicyComponent
-                policyItem={agreement.agreement_content.permission}
-                variant={"permission"}
-            />
-             <PolicyComponent
-                policyItem={agreement.agreement_content.obligation}
-                variant={"obligation"}
-            />
-             {/* {console.log(agreement.agreement_content.obligation, "")} */}
-             <PolicyComponent
-                policyItem={agreement.agreement_content.prohibition}
-                variant={"prohibition"}
-            />
+                <PolicyComponent
+                  policyItem={agreement.agreement_content.permission}
+                  variant={"permission"}
+                />
+                <PolicyComponent
+                  policyItem={agreement.agreement_content.obligation}
+                  variant={"obligation"}
+                />
+                {/* {console.log(agreement.agreement_content.obligation, "")} */}
+                <PolicyComponent
+                  policyItem={agreement.agreement_content.prohibition}
+                  variant={"prohibition"}
+                />
               </div>
-
-
             </div>
-          
           </List>
         </div>
       </div>

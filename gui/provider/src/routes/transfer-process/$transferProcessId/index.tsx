@@ -70,7 +70,7 @@ function RouteComponent() {
           <Heading level="h5" className="mt-3">
             Transfer process info{" "}
           </Heading>
-          <div className="mb-4">
+          <div className="mb-4 gridColsLayout">
             <List>
               <ListItem>
                 <ListItemKey>Process pid</ListItemKey>
@@ -112,33 +112,35 @@ function RouteComponent() {
               </ListItem>
             </List>
           </div>
-            {/* DRAWER */}
-      <Drawer direction={"right"}>
-        <DrawerTrigger>
-          <Button variant={"secondary"}>See Transfer Process Messages</Button>
-        </DrawerTrigger>
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>
-              <Heading level="h5" className="text-current">
-                Transfer Messages
-              </Heading>
-            </DrawerTitle>
-          </DrawerHeader>
-          {/* Messages */}
-          <DrawerBody>
-            {transferMessages.map((message) => {
-              // console.log(message);
-              return (
-                // <pre key={message.id}>{JSON.stringify(message, null, 2)}</pre>
-                <TransferProcessMessageComponent
-                  key={message.id}
-                  message={message}
-                />
-              );
-            })}
-          </DrawerBody>
-          {/* esto por si hace falta en algn momento dividir lo que pone en el
+          {/* DRAWER */}
+          <Drawer direction={"right"}>
+            <DrawerTrigger>
+              <Button variant={"secondary"}>
+                See Transfer Process Messages
+              </Button>
+            </DrawerTrigger>
+            <DrawerContent>
+              <DrawerHeader>
+                <DrawerTitle>
+                  <Heading level="h5" className="text-current">
+                    Transfer Messages
+                  </Heading>
+                </DrawerTitle>
+              </DrawerHeader>
+              {/* Messages */}
+              <DrawerBody>
+                {transferMessages.map((message) => {
+                  // console.log(message);
+                  return (
+                    // <pre key={message.id}>{JSON.stringify(message, null, 2)}</pre>
+                    <TransferProcessMessageComponent
+                      key={message.id}
+                      message={message}
+                    />
+                  );
+                })}
+              </DrawerBody>
+              {/* esto por si hace falta en algn momento dividir lo que pone en el
           content, pero por ahora no hace falta!!
           <div className="flex ">
             <p className="font-bold min-w-[9.4rem] "> Transfer Content: </p>
@@ -154,17 +156,15 @@ function RouteComponent() {
             </Badge>
           </div> */}
 
-          <DrawerFooter>
-            <DrawerClose>
-              <Button variant="ghost">Hide Messages</Button>
-            </DrawerClose>
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
+              <DrawerFooter>
+                <DrawerClose>
+                  <Button variant="ghost">Hide Messages</Button>
+                </DrawerClose>
+              </DrawerFooter>
+            </DrawerContent>
+          </Drawer>
         </TabsContent>
       </Tabs>
-
-    
 
       <div>
         {/* CATALOGOS CON LAS VARIABLES, NO BORRAR!! */}
