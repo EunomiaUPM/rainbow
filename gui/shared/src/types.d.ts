@@ -263,6 +263,31 @@ declare global {
             }
         }>
     }
+
+    export interface PolicyTemplateLabel {
+        "@language": string
+        "@value": string
+    }
+
+    export interface PolicyTemplate {
+        id: string,
+        title: string,
+        description: string,
+        content: OdrlOffer,
+        created_at: Date,
+        operand_options: {
+            [key: string]: {
+                dataType: string,
+                defaultValue: string,
+                formType: string,
+                label: PolicyTemplateLabel[],
+                options: Array<{
+                    label: PolicyTemplateLabel[],
+                    value: string
+                }>
+            }
+        }
+    }
 }
 
 declare module "@tanstack/react-router" {

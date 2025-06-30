@@ -15,12 +15,10 @@ impl Into<BusMates> for BootstrapMateRequest {
         BusMates {
             id: "".to_string(),
             participant_id: get_urn(None).to_string(),
-            participant_type: self.participant_type,
             token: None,
             token_actions: Some("talk".to_string()),
             saved_at: chrono::Utc::now().naive_utc(),
             last_interaction: chrono::Utc::now().naive_utc(),
-            is_me: true,
         }
     }
 }

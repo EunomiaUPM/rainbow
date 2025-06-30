@@ -16,8 +16,8 @@ import logoImg from "./../img/eunomia_logo_lg_light.svg";
 // Menu items.
 const items = [
     {
-        title: "Catalogs",
-        url: "/catalog",
+        title: "Datahub Catalogs",
+        url: "/datahub-catalog",
         icon: Archive,
     },
 ];

@@ -12,14 +12,25 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login/route'
+import { Route as DatahubCatalogRouteImport } from './routes/datahub-catalog/route'
 import { Route as IndexImport } from './routes/index'
 import { Route as LoginIndexImport } from './routes/login/index'
+import { Route as DatahubCatalogIndexImport } from './routes/datahub-catalog/index'
+import { Route as DatahubCatalogCatalogIdRouteImport } from './routes/datahub-catalog/$catalogId/route'
+import { Route as DatahubCatalogCatalogIdIndexImport } from './routes/datahub-catalog/$catalogId/index'
+import { Route as DatahubCatalogCatalogIdDatasetDatasetIdImport } from './routes/datahub-catalog/$catalogId/dataset.$datasetId'
 
 // Create/Update Routes
 
 const LoginRouteRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const DatahubCatalogRouteRoute = DatahubCatalogRouteImport.update({
+  id: '/datahub-catalog',
+  path: '/datahub-catalog',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -35,6 +46,33 @@ const LoginIndexRoute = LoginIndexImport.update({
   getParentRoute: () => LoginRouteRoute,
 } as any)
 
+const DatahubCatalogIndexRoute = DatahubCatalogIndexImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DatahubCatalogRouteRoute,
+} as any)
+
+const DatahubCatalogCatalogIdRouteRoute =
+  DatahubCatalogCatalogIdRouteImport.update({
+    id: '/$catalogId',
+    path: '/$catalogId',
+    getParentRoute: () => DatahubCatalogRouteRoute,
+  } as any)
+
+const DatahubCatalogCatalogIdIndexRoute =
+  DatahubCatalogCatalogIdIndexImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => DatahubCatalogCatalogIdRouteRoute,
+  } as any)
+
+const DatahubCatalogCatalogIdDatasetDatasetIdRoute =
+  DatahubCatalogCatalogIdDatasetDatasetIdImport.update({
+    id: '/dataset/$datasetId',
+    path: '/dataset/$datasetId',
+    getParentRoute: () => DatahubCatalogCatalogIdRouteRoute,
+  } as any)
+
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
@@ -46,12 +84,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
+    '/datahub-catalog': {
+      id: '/datahub-catalog'
+      path: '/datahub-catalog'
+      fullPath: '/datahub-catalog'
+      preLoaderRoute: typeof DatahubCatalogRouteImport
+      parentRoute: typeof rootRoute
+    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRoute
+    }
+    '/datahub-catalog/$catalogId': {
+      id: '/datahub-catalog/$catalogId'
+      path: '/$catalogId'
+      fullPath: '/datahub-catalog/$catalogId'
+      preLoaderRoute: typeof DatahubCatalogCatalogIdRouteImport
+      parentRoute: typeof DatahubCatalogRouteImport
+    }
+    '/datahub-catalog/': {
+      id: '/datahub-catalog/'
+      path: '/'
+      fullPath: '/datahub-catalog/'
+      preLoaderRoute: typeof DatahubCatalogIndexImport
+      parentRoute: typeof DatahubCatalogRouteImport
     }
     '/login/': {
       id: '/login/'
@@ -60,10 +119,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginIndexImport
       parentRoute: typeof LoginRouteImport
     }
+    '/datahub-catalog/$catalogId/': {
+      id: '/datahub-catalog/$catalogId/'
+      path: '/'
+      fullPath: '/datahub-catalog/$catalogId/'
+      preLoaderRoute: typeof DatahubCatalogCatalogIdIndexImport
+      parentRoute: typeof DatahubCatalogCatalogIdRouteImport
+    }
+    '/datahub-catalog/$catalogId/dataset/$datasetId': {
+      id: '/datahub-catalog/$catalogId/dataset/$datasetId'
+      path: '/dataset/$datasetId'
+      fullPath: '/datahub-catalog/$catalogId/dataset/$datasetId'
+      preLoaderRoute: typeof DatahubCatalogCatalogIdDatasetDatasetIdImport
+      parentRoute: typeof DatahubCatalogCatalogIdRouteImport
+    }
   }
 }
 
 // Create and export the route tree
+
+interface DatahubCatalogCatalogIdRouteRouteChildren {
+  DatahubCatalogCatalogIdIndexRoute: typeof DatahubCatalogCatalogIdIndexRoute
+  DatahubCatalogCatalogIdDatasetDatasetIdRoute: typeof DatahubCatalogCatalogIdDatasetDatasetIdRoute
+}
+
+const DatahubCatalogCatalogIdRouteRouteChildren: DatahubCatalogCatalogIdRouteRouteChildren =
+  {
+    DatahubCatalogCatalogIdIndexRoute: DatahubCatalogCatalogIdIndexRoute,
+    DatahubCatalogCatalogIdDatasetDatasetIdRoute:
+      DatahubCatalogCatalogIdDatasetDatasetIdRoute,
+  }
+
+const DatahubCatalogCatalogIdRouteRouteWithChildren =
+  DatahubCatalogCatalogIdRouteRoute._addFileChildren(
+    DatahubCatalogCatalogIdRouteRouteChildren,
+  )
+
+interface DatahubCatalogRouteRouteChildren {
+  DatahubCatalogCatalogIdRouteRoute: typeof DatahubCatalogCatalogIdRouteRouteWithChildren
+  DatahubCatalogIndexRoute: typeof DatahubCatalogIndexRoute
+}
+
+const DatahubCatalogRouteRouteChildren: DatahubCatalogRouteRouteChildren = {
+  DatahubCatalogCatalogIdRouteRoute:
+    DatahubCatalogCatalogIdRouteRouteWithChildren,
+  DatahubCatalogIndexRoute: DatahubCatalogIndexRoute,
+}
+
+const DatahubCatalogRouteRouteWithChildren =
+  DatahubCatalogRouteRoute._addFileChildren(DatahubCatalogRouteRouteChildren)
 
 interface LoginRouteRouteChildren {
   LoginIndexRoute: typeof LoginIndexRoute
@@ -79,38 +183,75 @@ const LoginRouteRouteWithChildren = LoginRouteRoute._addFileChildren(
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/datahub-catalog': typeof DatahubCatalogRouteRouteWithChildren
   '/login': typeof LoginRouteRouteWithChildren
+  '/datahub-catalog/$catalogId': typeof DatahubCatalogCatalogIdRouteRouteWithChildren
+  '/datahub-catalog/': typeof DatahubCatalogIndexRoute
   '/login/': typeof LoginIndexRoute
+  '/datahub-catalog/$catalogId/': typeof DatahubCatalogCatalogIdIndexRoute
+  '/datahub-catalog/$catalogId/dataset/$datasetId': typeof DatahubCatalogCatalogIdDatasetDatasetIdRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/datahub-catalog': typeof DatahubCatalogIndexRoute
   '/login': typeof LoginIndexRoute
+  '/datahub-catalog/$catalogId': typeof DatahubCatalogCatalogIdIndexRoute
+  '/datahub-catalog/$catalogId/dataset/$datasetId': typeof DatahubCatalogCatalogIdDatasetDatasetIdRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
+  '/datahub-catalog': typeof DatahubCatalogRouteRouteWithChildren
   '/login': typeof LoginRouteRouteWithChildren
+  '/datahub-catalog/$catalogId': typeof DatahubCatalogCatalogIdRouteRouteWithChildren
+  '/datahub-catalog/': typeof DatahubCatalogIndexRoute
   '/login/': typeof LoginIndexRoute
+  '/datahub-catalog/$catalogId/': typeof DatahubCatalogCatalogIdIndexRoute
+  '/datahub-catalog/$catalogId/dataset/$datasetId': typeof DatahubCatalogCatalogIdDatasetDatasetIdRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/login/'
+  fullPaths:
+    | '/'
+    | '/datahub-catalog'
+    | '/login'
+    | '/datahub-catalog/$catalogId'
+    | '/datahub-catalog/'
+    | '/login/'
+    | '/datahub-catalog/$catalogId/'
+    | '/datahub-catalog/$catalogId/dataset/$datasetId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login'
-  id: '__root__' | '/' | '/login' | '/login/'
+  to:
+    | '/'
+    | '/datahub-catalog'
+    | '/login'
+    | '/datahub-catalog/$catalogId'
+    | '/datahub-catalog/$catalogId/dataset/$datasetId'
+  id:
+    | '__root__'
+    | '/'
+    | '/datahub-catalog'
+    | '/login'
+    | '/datahub-catalog/$catalogId'
+    | '/datahub-catalog/'
+    | '/login/'
+    | '/datahub-catalog/$catalogId/'
+    | '/datahub-catalog/$catalogId/dataset/$datasetId'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DatahubCatalogRouteRoute: typeof DatahubCatalogRouteRouteWithChildren
   LoginRouteRoute: typeof LoginRouteRouteWithChildren
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DatahubCatalogRouteRoute: DatahubCatalogRouteRouteWithChildren,
   LoginRouteRoute: LoginRouteRouteWithChildren,
 }
 
@@ -125,11 +266,19 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
+        "/datahub-catalog",
         "/login"
       ]
     },
     "/": {
       "filePath": "index.tsx"
+    },
+    "/datahub-catalog": {
+      "filePath": "datahub-catalog/route.tsx",
+      "children": [
+        "/datahub-catalog/$catalogId",
+        "/datahub-catalog/"
+      ]
     },
     "/login": {
       "filePath": "login/route.tsx",
@@ -137,9 +286,29 @@ export const routeTree = rootRoute
         "/login/"
       ]
     },
+    "/datahub-catalog/$catalogId": {
+      "filePath": "datahub-catalog/$catalogId/route.tsx",
+      "parent": "/datahub-catalog",
+      "children": [
+        "/datahub-catalog/$catalogId/",
+        "/datahub-catalog/$catalogId/dataset/$datasetId"
+      ]
+    },
+    "/datahub-catalog/": {
+      "filePath": "datahub-catalog/index.tsx",
+      "parent": "/datahub-catalog"
+    },
     "/login/": {
       "filePath": "login/index.tsx",
       "parent": "/login"
+    },
+    "/datahub-catalog/$catalogId/": {
+      "filePath": "datahub-catalog/$catalogId/index.tsx",
+      "parent": "/datahub-catalog/$catalogId"
+    },
+    "/datahub-catalog/$catalogId/dataset/$datasetId": {
+      "filePath": "datahub-catalog/$catalogId/dataset.$datasetId.tsx",
+      "parent": "/datahub-catalog/$catalogId"
     }
   }
 }

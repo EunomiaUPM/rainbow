@@ -93,12 +93,10 @@ impl CoreProviderMigration {
         let busprovider = busmates::ActiveModel {
             id: ActiveValue::Set("".to_string()),
             participant_id: ActiveValue::Set(get_urn(None).to_string()), // TODO PONER DID BIEN FALSEAR
-            participant_type: ActiveValue::Set("Myself".to_string()),
             token: ActiveValue::Set(None),
             token_actions: ActiveValue::Set(None),
             saved_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             last_interaction: ActiveValue::Set(chrono::Utc::now().naive_utc()),
-            is_me: ActiveValue::Set(true),
         };
 
         busmates::Entity::insert(busprovider).exec(db).await.map_err(|e| anyhow!(e))?;

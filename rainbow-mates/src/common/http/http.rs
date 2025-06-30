@@ -75,7 +75,7 @@ where
             )
             .route("/api/v1/busmates", get(Self::get_busmates))
             .route("/api/v1/busmates", post(Self::new_busmate))
-            .route("/api/v1/busmates/me", get(Self::get_me_busmate))
+            // .route("/api/v1/busmates/me", get(Self::get_me_busmate))
             // .route("/api/v1/busmates/me", post(Self::bootstrap_busmate))
             .route("/api/v1/busmates/:id", get(Self::get_singular_busmate))
             .route("/api/v1/busmates/:id", put(Self::edit_busmate))
@@ -228,14 +228,14 @@ where
         }
     }
 
-    async fn get_me_busmate(State(mate_repo): State<Arc<T>>) -> impl IntoResponse {
-        info!("GET /busmates/me");
-
-        match mate_repo.get_busmate_me().await {
-            Ok(mates) => (StatusCode::OK, Json(mates)).into_response(),
-            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
-        }
-    }
+    // async fn get_me_busmate(State(mate_repo): State<Arc<T>>) -> impl IntoResponse {
+    //     info!("GET /busmates/me");
+    //
+    //     match mate_repo.get_busmate_me().await {
+    //         Ok(mates) => (StatusCode::OK, Json(mates)).into_response(),
+    //         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    //     }
+    // }
 
     async fn edit_busmate(
         State(mate_repo): State<Arc<T>>,
