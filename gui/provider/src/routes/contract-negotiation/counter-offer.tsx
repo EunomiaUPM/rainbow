@@ -49,7 +49,7 @@ type Inputs = {
   odrl: string;
 };
 
-export const RouteComponent = ({ catalog, dataset }) => {
+export const RouteComponent = ({ cnProcess, catalog, dataset }) => {
   const { mutateAsync: sendOfferAsync, isPending } =
     usePostContractNegotiationRPCOffer();
   // @ts-ignore
@@ -85,8 +85,8 @@ export const RouteComponent = ({ catalog, dataset }) => {
   const form = useForm<Inputs>({
     defaultValues: {
       consumerParticipantId: "",
-      id: dataset?.["@id"], // Dataset ID
-      catalog: catalog?.["@id"], // Catalog ID
+      // id: dataset?.["@id"], // Dataset ID
+      // catalog: catalog?.["@id"], // Catalog ID
       target: "", // Policy ID
     },
   });
@@ -112,7 +112,7 @@ export const RouteComponent = ({ catalog, dataset }) => {
   useEffect(() => {
     const defaultId = catalog?.["@id"];
     // console.log(defaultId, "defaultId in offer form");
-    setSelectedCatalog(catalog);
+    // setSelectedCatalog(catalog);
     // console.log(selectedCatalog, " selectedCatalog__");
     /// !!!!! modificacion 1
     // if (defaultId && catalogs.length > 0) {
@@ -298,259 +298,13 @@ export const RouteComponent = ({ catalog, dataset }) => {
   };
 
   return (
-    <div className="max-w-[500px] w-full m-auto">
+     <div className="flex gap-4 justify-start items-start">
+    <div className=" w-full m-auto">
       <Heading level="h3">CounterOffer</Heading>
       <Form {...form}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        
+             
 
-          {/* Catalog Field */}
-          <div>
-            {" "}
-           {/* <p className="text-xs"> Chosen catalog:  </p> */}
-           <p>{catalog?.title}</p> <Badge variant="info" >{catalog?.["@id"].slice(9,29) + "[...]"}</Badge> 
-          </div>
-          {/* {console.log(selectedCatalog, " selectedCatalogº")} */}
-          <FormField
-            control={control}
-            name="catalog"
-            render={({ field }) => (
-              <FormItem>
-                {/* <FormLabel>Catalog</FormLabel>
-                <div>
-                  <FormControl>
-                    <Popover
-                      open={catalogOpen}
-                      onOpenChange={handleCatalogOpenChange}
-                    >
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={catalogOpen}
-                          className="w-full justify-between font-normal text-gray-600 hover:text-gray-800 transition-colors"
-                        >
-                          {
-                            field.value
-                            // ? catalogs.find((c) => c["@id"] === field.value)
-                            //     ?.title || field.value // Display title if available, otherwise ID
-                            // : "Select catalog..."
-                          }
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                        <Command>
-                          <CommandInput placeholder="Search catalog..." />
-                          <CommandList>
-                            <CommandEmpty>No catalog found.</CommandEmpty>
-                            <CommandGroup>
-                              {catalogs.map((catalog) => (
-                                <CommandItem
-                                  key={catalog["@id"]}
-                                  value={catalog.title || catalog["@id"]} // Use title for search, ID for actual value
-                                  onSelect={() => {
-                                    if (field.value !== catalog["@id"]) {
-                                      // Clear subsequent fields ONLY if catalog changes
-                                      field.onChange(catalog.title);
-                                      setSelectedCatalog(catalog);
-                                      setCatalogOpen(false);
-                                      // Clear Dataset and Policy fields
-                                      clearFields(["id", "target"]);
-                                    } else {
-                                      setCatalogOpen(false); // Just close if same value
-                                    }
-                                  }}
-                                  className={
-                                    field.value === catalog["@id"]
-                                      ? "bg-blue-50 text-blue-700 font-medium"
-                                      : ""
-                                  }
-                                >
-                                  {catalog.title || catalog["@id"]}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                  </FormControl>
-                  <FormDescription className="text-sm text-gray-400 mt-1">
-                    Select a catalog to browse available datasets.
-                  </FormDescription>
-                  <FormMessage />
-                </div> */}
-              </FormItem>
-            )}
-          />
-
-          {/* Dataset Field (mapped to 'id' in Inputs) */}
-
- <div>
-                  {" "}
-                  Chosen dataset: {dataset?.title} {dataset?.["@id"]}
-                </div>
-                {/* 
-          <FormField
-            control={control}
-            name="target" // This is the dataset ID field
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Dataset</FormLabel>
-                <div>
-                  {" "}
-                  Chosen dataset: {dataset.title} {dataset["@id"]}
-                </div>
-                {console.log(selectedDataset, " selectedDatasetº")}
-                <div>
-                  <FormControl>
-                    <Popover
-                      open={datasetOpen}
-                      onOpenChange={handleDatasetOpenChange}
-                    >
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={datasetOpen}
-                          className="w-full justify-between font-normal text-gray-600 hover:text-gray-800 transition-colors"
-                          disabled={!selectedCatalog} // Disable if no catalog selected
-                        >
-                          {
-                            field.value
-                            // ? datasets.find((d) => d["@id"] === field.value)
-                            //     ?.title || field.value
-                            // : selectedCatalog
-                            //   ?   <div>{console.log(dataset, "alguien?")}</div>
-                            //   : "Select a catalog first"
-                          }
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                        <Command>
-                          <CommandInput placeholder="Search dataset..." />
-                          <CommandList>
-                            <CommandEmpty>No dataset found.</CommandEmpty>
-                            <CommandGroup>
-                              {/* {datasets.map((dataset) => ( */}
-                                {/* <CommandItem
-                                  key={selectedDataset["@id"]}
-                                  value={selectedDataset?.title || selectedDataset?.["@id"]}
-                                  onSelect={() => {
-                                    if (field.value !== dataset["@id"]) {
-                                      // Clear subsequent fields ONLY if dataset changes
-                                      // field.onChange(dataset["@id"]);
-                                      // setSelectedDataset(dataset);
-                                      // setDatasetOpen(false);
-                                      // Clear Policy field
-                                      clearFields(["id"]);
-                                    } else {
-                                      setDatasetOpen(false); // Just close if same value
-                                    }
-                                  }}
-                                  className={
-                                    field.value === dataset["@id"]
-                                      ? "bg-blue-50 text-blue-700 font-medium"
-                                      : ""
-                                  }
-                                >
-                                  {dataset.title || dataset["@id"]}
-                                </CommandItem>
-                              {/* ))} */}
-                            {/* </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                  </FormControl>
-                  <FormDescription className="text-sm text-gray-400 mt-1">
-                    Choose a specific dataset from the selected catalog.
-                  </FormDescription>
-                  <FormMessage />
-                </div>
-              </FormItem>
-            )}
-          /> */} 
-            {/* Consumer Participant Field */}
-          <FormField
-            control={control}
-            name="consumerParticipantId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Consumer Participant Id</FormLabel>
-                <div>
-                  <FormControl>
-                    <Popover
-                      open={consumerParticipantOpen}
-                      onOpenChange={handleConsumerParticipantOpenChange}
-                    >
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={consumerParticipantOpen}
-                          className="w-full justify-between font-normal text-gray-300  transition-colors"
-                        >
-                          {field.value
-                            ? consumerParticipants.find(
-                                (p) => p.participant_id === field.value
-                              )?.participant_id
-                            : "Select participant..."}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-80" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                        <Command>
-                          <CommandInput placeholder="Search participant..." />
-                          <CommandList>
-                            <CommandEmpty>No participant found.</CommandEmpty>
-                            <CommandGroup>
-                              {consumerParticipants.map(
-                                (consumerParticipant) => (
-                                  <CommandItem
-                                    key={consumerParticipant.participant_id}
-                                    value={consumerParticipant.participant_id}
-                                    onSelect={() => {
-                                      field.onChange(
-                                        consumerParticipant.participant_id
-                                      );
-                                      setConsumerSelectedParticipant(
-                                        consumerParticipant
-                                      );
-                                      setConsumerParticipantOpen(false);
-                                      // No fields follow this one that need clearing based on its change
-                                    }}
-                                    className={
-                                      field.value ===
-                                      consumerParticipant.participant_id
-                                        ? "text-role-consumer font-medium"
-                                        : ""
-                                    }
-                                  >
-                                    {consumerParticipant.participant_id}
-                                    <span className="text-gray-400 ml-2 text-sm">
-                                      ({consumerParticipant.base_url})
-                                    </span>
-                                  </CommandItem>
-                                )
-                              )}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                  </FormControl>
-                  <FormDescription className="text-sm text-gray-400 mt-1">
-                    Provide the ID of the consumer participant for the
-                    negotiation.
-                  </FormDescription>
-                  <FormMessage />
-                </div>
-              </FormItem>
-            )}
-          />
           <div> POLICIES</div>
           {console.log(policies, "policiessss")}
           {policies.map((policy) => (
@@ -579,82 +333,6 @@ export const RouteComponent = ({ catalog, dataset }) => {
             
             </div>
           ))}
-  {console.log(selectedPolicy, "selectedPolicy")}
-          {/* Policy Target Field (mapped to 'target' in Inputs) */}
-          {/* <FormField
-            control={control}
-            name="id" // This is the policy ID field
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Policy Id</FormLabel>
-       
-                <div>
-                  <FormControl>
-                    <Popover
-                      open={policiesOpen}
-                      onOpenChange={handlePoliciesOpenChange}
-                    >
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={policiesOpen}
-                          className="w-full justify-between font-normal text-gray-600 hover:text-gray-800 transition-colors"
-                          disabled={!selectedDataset} // Disable if no dataset selected
-                        >
-                          {console.log(selectedPolicy?.target, "selectedPolicdy")}
-                          {field.value
-                            // ? policies.find((p) => p["@id"] === field.value)
-                            //     ?.target || field.value
-                            // : selectedDataset
-                            //   ? "Select policy..."
-                            //   : "Select a dataset first"
-                              }
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                        <Command>
-                          <CommandInput placeholder="Search policies..." />
-                          <CommandList>
-                            <CommandEmpty>No policies found.</CommandEmpty>
-                            <CommandGroup>
-                              {/* {policies.map((policy) => ( */}
-                             
-                                {/* <CommandItem
-                                  key={selectedPolicy?.["@id"]}
-                                  value={selectedPolicy?.target ||selectedPolicy?.["@id"]}
-                                  onSelect={() => {
-                                
-                                    // field.onChange(policy["@id"]);
-                                    // setSelectedPolicy(policy);
-                                    // setPoliciesOpen(false);
-                                    // No fields follow this one that need clearing based on its change
-                                  }}
-                                  className={
-                                    field.value === selectedPolicy?.["@id"]
-                                      ? "bg-blue-50 text-blue-700 font-medium"
-                                      : ""
-                                  }
-                                >
-                                       {console.log(field.value, "field value")}
-                                  {selectedPolicy?.target || selectedPolicy?.["@id"]}
-                                </CommandItem>
-                              {/* ))} */}
-                            {/* </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                  </FormControl>
-                  <FormDescription className="text-sm text-gray-400 mt-1">
-                    Select the policy target for the negotiation.
-                  </FormDescription>
-                  <FormMessage />
-                </div>
-              </FormItem>
-            )} 
-          /> */}
 
           <FormField
             control={form.control}
@@ -680,6 +358,10 @@ export const RouteComponent = ({ catalog, dataset }) => {
         </form>
       </Form>
     </div>
+      <div className=" w-full m-auto">
+          <Heading level="h3">CounterOffer</Heading>
+      </div>
+     </div>
   );
 };
 

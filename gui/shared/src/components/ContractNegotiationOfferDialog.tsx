@@ -144,7 +144,7 @@ export const ContractNegotiationOfferDialog = ({
               </Button>
             </DialogClose>
             <Button type="submit" variant="outline">
-              Offer
+              Counteroffer
             </Button>
           </DialogFooter>
         </form>

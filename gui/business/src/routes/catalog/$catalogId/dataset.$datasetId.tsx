@@ -85,7 +85,7 @@ function RouteComponent() {
                     {distributions.map((distribution) => (
                         <TableRow key={distribution["@id"].slice(0, 20)}>
                             <TableCell>
-                                {distribution["@id"].slice(0, 20) + "..."}
+                                {distribution["@id"] /* .slice(0, 20) + "..."*/}
                             </TableCell>
                             <TableCell>
                                 {distribution.title?.slice(0, 20) + "..."}

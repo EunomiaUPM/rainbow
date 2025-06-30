@@ -59,8 +59,9 @@ export const ContractNegotiationActions = ({
               </Dialog>
               {/* <Dialog> */}
                 {/* <DialogTrigger asChild> */}
-                  <Link to="/contract-negotiation/counter-offer">
-                    <Button  variant="outline" size={tiny ? "sm" : ""}>
+                  <Link to="/contract-negotiation/counter-offer"
+                  state={{cnProcess}}>
+                    <Button variant="outline" size={tiny ? "sm" : ""}>
                     C/Offer
                     </Button>
                   </Link>
@@ -112,7 +113,8 @@ export const ContractNegotiationActions = ({
               <Dialog>
                 <DialogTrigger asChild>
                   <Button variant="outline" size={tiny ? "sm" : ""}>
-                    Request
+                    Counter request
+                    {/* Request */}
                   </Button>
                 </DialogTrigger>
                 <ContractNegotiationRequestDialog process={process} />
