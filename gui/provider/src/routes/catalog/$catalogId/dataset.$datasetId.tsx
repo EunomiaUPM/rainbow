@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouterState } from "@tanstack/react-router";
 import {
   useGetDatasetById,
   useGetDistributionsByDatasetId,
@@ -66,6 +66,9 @@ type Inputs = {
 };
 
 function RouteComponent() {
+  const routerState = useRouterState();
+   let paths = routerState.location.pathname.split("/");
+   console.log(paths, "patapimmm")
   const { catalogId, datasetId } = Route.useParams();
   const { data: dataset } = useGetDatasetById(datasetId);
   const { data: distributions } = useGetDistributionsByDatasetId(datasetId);

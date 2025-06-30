@@ -47,7 +47,7 @@ type Inputs = {
   odrl: string;
 };
 
-export const RouteComponent = () => {
+export const RouteComponent = ({ catalogTitle, catalogId, dataset}) => {
   const { mutateAsync: sendOfferAsync, isPending } =
     usePostContractNegotiationRPCOffer();
   // @ts-ignore
@@ -106,15 +106,19 @@ export const RouteComponent = () => {
     }
   }, [getValues, consumerParticipants]); // Add getValues to dependency array
 
+
+  
   // Initialize selectedCatalog if default value exists
   useEffect(() => {
-    const defaultId = getValues("catalog");
-    if (defaultId && catalogs.length > 0) {
-      const catalog = catalogs.find((c) => c["@id"] === defaultId);
-      if (catalog) {
-        setSelectedCatalog(catalog);
-      }
-    }
+    const defaultId = catalogId;
+    console.log(defaultId, "defaultId in offer form");
+    setSelectedCatalog(catalogId)
+    // if (defaultId && catalogs.length > 0) {
+    //   const catalog = catalogs.find((c) => c["@id"] === defaultId);
+    //   if (catalog) {
+    //     setSelectedCatalog(catalog);
+    //   }
+    // }
   }, [getValues, catalogs]);
 
   // Initialize selectedDataset if default value exists
@@ -267,7 +271,7 @@ export const RouteComponent = () => {
 
   return (
     <div className="max-w-[500px] w-full m-auto">
-      <Heading level="h3">New Contract Negotiation Offer</Heading>
+      {/* <Heading level="h3">New Contract Negotiation Offer</Heading> */}
       <Form {...form}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Consumer Participant Field */}
@@ -350,7 +354,9 @@ export const RouteComponent = () => {
           />
 
           {/* Catalog Field */}
-          <FormField
+          <div> Chosen catalog: {catalogTitle} {catalogId}</div>
+          {console.log(selectedCatalog, " selectedCatalogº")}
+          {/* <FormField
             control={control}
             name="catalog"
             render={({ field }) => (
@@ -361,7 +367,7 @@ export const RouteComponent = () => {
                     <Popover
                       open={catalogOpen}
                       onOpenChange={handleCatalogOpenChange}
-                    >
+                    > 
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
@@ -420,7 +426,7 @@ export const RouteComponent = () => {
                 </div>
               </FormItem>
             )}
-          />
+          />*/}
 
           {/* Dataset Field (mapped to 'id' in Inputs) */}
           <FormField

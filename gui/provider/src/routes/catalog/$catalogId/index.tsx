@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link  } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import { ExternalLink } from "lucide-react";
 import { Badge } from "shared/src/components/ui/badge";
@@ -53,6 +53,8 @@ const RouteComponent = () => {
           <ListItem>
             <ListItemKey>Catalog title</ListItemKey>
             <p>{catalog.title}</p>
+            {catalog["@id"]}
+            
           </ListItem>
           <ListItem>
             <ListItemKey>Catalog participant ID</ListItemKey>
@@ -123,7 +125,7 @@ const RouteComponent = () => {
                         </DrawerTitle>
                       </DrawerHeader>
                       <DrawerBody>
-                        <OfferForm />
+                        <OfferForm catalogTitle={catalog.title} catalogId={catalog["@id"]} />
                       </DrawerBody>
                       <DrawerFooter>
                         <DrawerClose className="flex justify-start gap-4">

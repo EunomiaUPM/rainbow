@@ -39,6 +39,10 @@ function RouteComponent() {
 
   const scopedListItemKeyClasses = "basis-[28%]";
 
+        agreements.map((agreement) => {
+      console.log(agreement);
+    });
+
   return (
     <div className="w-full">
       {/* Page Header */}
@@ -117,16 +121,15 @@ function RouteComponent() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {/* {console.log(agreements, "agreements en consumer")} */}
-                  {/* {agreements.map((agreement) => (
+                  {agreements.map((agreement) => (
+
                     <TableRow key={agreement.agreement_id.slice(0, 20)}>
                       <TableCell className="!w-fit !max-w-fit">
                         <Badge variant={"info"}>
                           {agreement.agreement_id.slice(9, 20) + "..."}{" "}
-                       
                         </Badge>
                       </TableCell>
-                     
+                      {/* 
                       <TableCell>
                         <Badge
                           variant={"status"}
@@ -148,9 +151,9 @@ function RouteComponent() {
                             <ArrowRight />
                           </Button>
                         </Link>
-                      </TableCell>
+                      </TableCell> */}
                     </TableRow>
-                  ))} */}
+                  ))}
                 </TableBody>
               </Table>
             </div>
