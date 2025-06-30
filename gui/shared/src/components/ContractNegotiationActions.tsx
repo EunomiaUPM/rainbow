@@ -60,7 +60,7 @@ export const ContractNegotiationActions = ({
               {/* <Dialog> */}
                 {/* <DialogTrigger asChild> */}
                   <Link to="/contract-negotiation/counter-offer"
-                  state={{cnProcess}}>
+                  state={process}>
                     <Button variant="outline" size={tiny ? "sm" : ""}>
                     C/Offer
                     </Button>

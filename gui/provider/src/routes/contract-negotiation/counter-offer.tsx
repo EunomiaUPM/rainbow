@@ -49,7 +49,7 @@ type Inputs = {
   odrl: string;
 };
 
-export const RouteComponent = ({ cnProcess, catalog, dataset }) => {
+export const RouteComponent = ({ process, catalog, dataset }) => {
   const { mutateAsync: sendOfferAsync, isPending } =
     usePostContractNegotiationRPCOffer();
   // @ts-ignore
@@ -300,10 +300,10 @@ export const RouteComponent = ({ cnProcess, catalog, dataset }) => {
   return (
      <div className="flex gap-4 justify-start items-start">
     <div className=" w-full m-auto">
-      <Heading level="h3">CounterOffer</Heading>
+      <Heading level="h3">Request from Consumer </Heading>
       <Form {...form}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-             
+           <p>  {process}</p>
 
           <div> POLICIES</div>
           {console.log(policies, "policiessss")}
@@ -358,8 +358,8 @@ export const RouteComponent = ({ cnProcess, catalog, dataset }) => {
         </form>
       </Form>
     </div>
-      <div className=" w-full m-auto">
-          <Heading level="h3">CounterOffer</Heading>
+      <div className=" w-full ">
+          <Heading level="h3">Counter-Offer</Heading>
       </div>
      </div>
   );
