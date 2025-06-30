@@ -74,7 +74,7 @@ function RouteComponent() {
               <TableCell>
                   <Link
                     to="/transfer-process/$transferProcessId"
-                    params={{ transferProcessId: transferProcess.provider_pid }}
+                    params={{ transferProcessId: transferProcess.consumer_pid }}
                   >
                 <Button variant="link">
                     See details

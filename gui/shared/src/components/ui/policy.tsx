@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { Badge } from "./badge";
 import Heading from "./heading";
 
-const policyVariants = cva("gap-3 border px-3 py-2 rounded-md", {
+const policyVariants = cva("gap-1.5 border px-2 py-1 rounded-md", {
   variants: {
     variant: {
       permission: "bg-success-600/20 border-success-700 text-sucess-100",
@@ -23,7 +23,7 @@ const HeadingColor = ({ variant }) => {
     case "prohibition":
       return "text-danger-400";
     default:
-      return "text-white/60"; // Default color if no variant matches
+      return "text-white/80"; // Default color if no variant matches
   }
 };
 
@@ -37,9 +37,9 @@ const Policy = React.forwardRef<HTMLDivElement, PolicyProps>(
   ({ className, variant, children, ...props }, ref) => {
     return (
       <div className={cn(policyVariants({ variant, className }))} {...props}>
-        <Heading level="h6" className={`uppercase ${HeadingColor(variant)}`}>
+        <p className={`uppercase mb-0 font-bold ${HeadingColor({variant})}`}>
           {variant}
-        </Heading>
+        </p>
         {children}
       </div>
     );
@@ -120,7 +120,7 @@ const PolicyConstraint = ({ type, className, children, ...props }) => {
     ${childText.length >= 16 ? "nowrap" : ""}`}
       >
         <p className="break-all text-white/80">{formatString(childText)}</p>
-        {console.log(childText.length, " childText")}
+        {/* {console.log(childText.length, " childText")} */}
       </span>
       <div className="constraint-item text-2xs px-1.5 rounded-sm py-0.5 cursor-pointer bg-black/90 opacity-80 mt-1">
         {type}

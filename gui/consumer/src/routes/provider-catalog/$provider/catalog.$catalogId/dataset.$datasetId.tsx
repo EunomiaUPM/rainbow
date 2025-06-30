@@ -141,8 +141,7 @@ function RouteComponent() {
               </ListItem>
               <div className="h-5"></div>
               <Heading level="h6"> ODRL CONTENT</Heading>
-
-              <div className="flex flex-col gap-2 mb-2">
+              <div className="flex flex-col gap-1 mb-2">
                 <PolicyComponent
                   policyItem={policy.permission}
                   variant={"permission"}
@@ -151,7 +150,6 @@ function RouteComponent() {
                   policyItem={policy.obligation}
                   variant={"obligation"}
                 />
-
                 <PolicyComponent
                   policyItem={policy.prohibition}
                   variant={"prohibition"}

@@ -46,7 +46,7 @@ export const ContractNegotiationActions = ({
     <div className={containerClassName({ tiny })}>
       {/* <h2 className={h2ClassName({ tiny })}></h2> */}
       {process.state === "REQUESTED" && (
-        <div className="space-x-2">
+        <div className="space-x-2 min-w-[260px]">
           {role === "provider" && (
             <>
               <Dialog>

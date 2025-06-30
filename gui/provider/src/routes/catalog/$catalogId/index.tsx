@@ -1,5 +1,6 @@
 import { createFileRoute, Link  } from "@tanstack/react-router";
 import dayjs from "dayjs";
+import { useState } from "react";
 import { ExternalLink } from "lucide-react";
 import { Badge } from "shared/src/components/ui/badge";
 import Heading from "shared/src/components/ui/heading";
@@ -43,6 +44,7 @@ const RouteComponent = () => {
   const { data: catalog } = useGetCatalogsById(catalogId);
   const { data: datasets } = useGetDatasetsByCatalogId(catalogId);
   const { data: dataservices } = useGetDataServicesByCatalogId(catalogId);
+  const [selectedDataset, setSelectedDataset] = useState();
 
   return (
     <div className="space-y-4 pb-4">
@@ -53,7 +55,6 @@ const RouteComponent = () => {
           <ListItem>
             <ListItemKey>Catalog title</ListItemKey>
             <p>{catalog.title}</p>
-            {catalog["@id"]}
             
           </ListItem>
           <ListItem>
@@ -125,7 +126,9 @@ const RouteComponent = () => {
                         </DrawerTitle>
                       </DrawerHeader>
                       <DrawerBody>
-                        <OfferForm catalogTitle={catalog.title} catalogId={catalog["@id"]} />
+                        {/* {console.log("datasetto", dataset)} */}
+
+                        <OfferForm catalog={catalog} dataset={dataset}  />
                       </DrawerBody>
                       <DrawerFooter>
                         <DrawerClose className="flex justify-start gap-4">

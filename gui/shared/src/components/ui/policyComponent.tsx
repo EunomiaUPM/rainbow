@@ -17,7 +17,7 @@ const PolicyComponent = ({policyItem, variant}) => {
                
                   {/* COMPROBACIÓN SI HAY ALGUNA PROHIBICIÓN (ARRAY VACIO O NO) */}
                   {(policyItem?.length === 0 || policyItem == null ) ? (
-                    <div> No {variant}s </div>
+                    <p className='text-xs mt-0.5 text-white/70'> No {variant}s </p>
                   ) : (
                          <div className="flex flex-col">
                       {policyItem?.map((prohib) => (

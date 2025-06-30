@@ -8,7 +8,7 @@ import {
   FormLabel,
   FormMessage,
 } from "shared/src/components/ui/form";
-import { SubmitHandler, useForm } from "react-hook-form";
+import { set, SubmitHandler, useForm } from "react-hook-form";
 import { Button } from "shared/src/components/ui/button.tsx";
 import {
   Command,
@@ -38,6 +38,8 @@ import {
   GlobalInfoContextType,
 } from "shared/src/context/GlobalInfoContext.tsx";
 import Heading from "../../../../shared/src/components/ui/heading.tsx";
+import { Badge } from "shared/src/components/ui/badge";
+import PolicyComponent from "shared/src/components/ui/policyComponent.tsx";
 
 type Inputs = {
   consumerParticipantId: UUID;
@@ -47,7 +49,7 @@ type Inputs = {
   odrl: string;
 };
 
-export const RouteComponent = ({ catalogTitle, catalogId, dataset}) => {
+export const RouteComponent = ({ catalog, dataset }) => {
   const { mutateAsync: sendOfferAsync, isPending } =
     usePostContractNegotiationRPCOffer();
   // @ts-ignore
@@ -64,12 +66,12 @@ export const RouteComponent = ({ catalogTitle, catalogId, dataset}) => {
 
   // Catalog
   const [catalogOpen, setCatalogOpen] = useState(false);
-  const [selectedCatalog, setSelectedCatalog] = useState<Catalog | null>(null);
+  const [selectedCatalog, setSelectedCatalog] = useState(catalog || null); // Initialize with catalog prop
   const [catalogs, setCatalogs] = useState<Catalog[]>([]);
 
   // Dataset (used for 'id' field in Inputs)
   const [datasetOpen, setDatasetOpen] = useState(false);
-  const [selectedDataset, setSelectedDataset] = useState<Dataset | null>(null);
+  const [selectedDataset, setSelectedDataset] =  useState(dataset || null);
   const [datasets, setDatasets] = useState<Dataset[]>(
     [] /* Initial empty array */
   );
@@ -83,8 +85,8 @@ export const RouteComponent = ({ catalogTitle, catalogId, dataset}) => {
   const form = useForm<Inputs>({
     defaultValues: {
       consumerParticipantId: "",
-      id: "", // Dataset ID
-      catalog: "",
+      id: dataset["@id"], // Dataset ID
+      catalog: catalog["@id"], // Catalog ID
       target: "", // Policy ID
     },
   });
@@ -106,13 +108,13 @@ export const RouteComponent = ({ catalogTitle, catalogId, dataset}) => {
     }
   }, [getValues, consumerParticipants]); // Add getValues to dependency array
 
-
-  
   // Initialize selectedCatalog if default value exists
   useEffect(() => {
-    const defaultId = catalogId;
-    console.log(defaultId, "defaultId in offer form");
-    setSelectedCatalog(catalogId)
+    const defaultId = catalog["@id"];
+    // console.log(defaultId, "defaultId in offer form");
+    setSelectedCatalog(catalog);
+    // console.log(selectedCatalog, " selectedCatalog__");
+    /// !!!!! modificacion 1
     // if (defaultId && catalogs.length > 0) {
     //   const catalog = catalogs.find((c) => c["@id"] === defaultId);
     //   if (catalog) {
@@ -123,18 +125,25 @@ export const RouteComponent = ({ catalogTitle, catalogId, dataset}) => {
 
   // Initialize selectedDataset if default value exists
   useEffect(() => {
-    const defaultId = getValues("id"); // 'id' field is for dataset
-    if (defaultId && datasets.length > 0) {
-      const dataset = datasets.find((d) => d["@id"] === defaultId);
-      if (dataset) {
-        setSelectedDataset(dataset);
-      }
-    }
+    const defaultId = dataset["@id"];
+    console.log(defaultId, "defaultId dataset in offer form");
+    setSelectedDataset(dataset);
+    form.setValue("target", dataset["@id"]);
+    console.log(selectedDataset, " selectedDataset__");
+    // !!!!! modificacion 3
+    // 'id' field is for dataset
+    // if (defaultId && datasets.length > 0) {
+    //   const dataset = datasets.find((d) => d["@id"] === defaultId);
+    //   if (dataset) {
+    //     setSelectedDataset(dataset);
+    //   }
+    // }
   }, [getValues, datasets]);
 
   // Initialize selectedPolicy if default value exists
   useEffect(() => {
-    const defaultId = getValues("target"); // 'target' field is for policy
+    const defaultId = "" ; // 'target' field is for policy
+
     if (defaultId && policies.length > 0) {
       const policy = policies.find((p) => p["@id"] === defaultId);
       if (policy) {
@@ -143,18 +152,36 @@ export const RouteComponent = ({ catalogTitle, catalogId, dataset}) => {
     }
   }, [getValues, policies]);
 
+  // Load policies on mount
+  useEffect(() => {
+    const loadPolicies = async () => {
+      if (selectedDataset) {
+        try {
+          const fetchedPolicies = await getPoliciesByDatasetId(
+            api_gateway,
+            selectedDataset["@id"]
+          );
+          setPolicies(fetchedPolicies);
+        } catch (error) {
+          console.error("Failed to fetch policies:", error);
+        }
+      }
+    };
+    loadPolicies();
+  }, [selectedDataset]);
+
   // --- Helper to Clear Subsequent Fields ---
   const clearFields = (fieldsToClear: Array<keyof Inputs>) => {
     fieldsToClear.forEach((fieldName) => {
       setValue(fieldName, "", { shouldValidate: true }); // Clear form value
       // Clear associated local states
       if (fieldName === "catalog") {
-        setSelectedCatalog(null);
-        setCatalogs([]); // Clear catalog options if needed
+        // setSelectedCatalog(null);
+        // setCatalogs([]); // Clear catalog options if needed
       } else if (fieldName === "target") {
         // Dataset field
-        setSelectedDataset(null);
-        setDatasets([]); // Clear dataset options
+        // setSelectedDataset(null);
+        // setDatasets([]); // Clear dataset options
       } else if (fieldName === "id") {
         // Policy field
         setSelectedPolicy(null);
@@ -197,9 +224,9 @@ export const RouteComponent = ({ catalogTitle, catalogId, dataset}) => {
     // Reset all local states when the form is fully reset
     setConsumerSelectedParticipant(null);
     setConsumerParticipantOpen(false);
-    setSelectedCatalog(null);
+    // setSelectedCatalog(null);
     setCatalogOpen(false);
-    setSelectedDataset(null);
+    // setSelectedDataset(null);
     setDatasetOpen(false);
     setSelectedPolicy(null);
     setPoliciesOpen(false);
@@ -253,6 +280,7 @@ export const RouteComponent = ({ catalogTitle, catalogId, dataset}) => {
   const handlePoliciesOpenChange = async (newOpenState: boolean) => {
     setPoliciesOpen(newOpenState);
     if (newOpenState && selectedDataset) {
+        // if (newOpenState && selectedDataset) {
       // Only fetch if a dataset is selected
       try {
         const fetchedPolicies = await getPoliciesByDatasetId(
@@ -274,7 +302,178 @@ export const RouteComponent = ({ catalogTitle, catalogId, dataset}) => {
       {/* <Heading level="h3">New Contract Negotiation Offer</Heading> */}
       <Form {...form}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Consumer Participant Field */}
+        
+
+          {/* Catalog Field */}
+          <div>
+            {" "}
+           {/* <p className="text-xs"> Chosen catalog:  </p> */}
+           <p>{catalog.title}</p> <Badge variant="info" >{catalog["@id"].slice(9,29) + "[...]"}</Badge> 
+          </div>
+          {/* {console.log(selectedCatalog, " selectedCatalogº")} */}
+          <FormField
+            control={control}
+            name="catalog"
+            render={({ field }) => (
+              <FormItem>
+                {/* <FormLabel>Catalog</FormLabel>
+                <div>
+                  <FormControl>
+                    <Popover
+                      open={catalogOpen}
+                      onOpenChange={handleCatalogOpenChange}
+                    >
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={catalogOpen}
+                          className="w-full justify-between font-normal text-gray-600 hover:text-gray-800 transition-colors"
+                        >
+                          {
+                            field.value
+                            // ? catalogs.find((c) => c["@id"] === field.value)
+                            //     ?.title || field.value // Display title if available, otherwise ID
+                            // : "Select catalog..."
+                          }
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                        <Command>
+                          <CommandInput placeholder="Search catalog..." />
+                          <CommandList>
+                            <CommandEmpty>No catalog found.</CommandEmpty>
+                            <CommandGroup>
+                              {catalogs.map((catalog) => (
+                                <CommandItem
+                                  key={catalog["@id"]}
+                                  value={catalog.title || catalog["@id"]} // Use title for search, ID for actual value
+                                  onSelect={() => {
+                                    if (field.value !== catalog["@id"]) {
+                                      // Clear subsequent fields ONLY if catalog changes
+                                      field.onChange(catalog.title);
+                                      setSelectedCatalog(catalog);
+                                      setCatalogOpen(false);
+                                      // Clear Dataset and Policy fields
+                                      clearFields(["id", "target"]);
+                                    } else {
+                                      setCatalogOpen(false); // Just close if same value
+                                    }
+                                  }}
+                                  className={
+                                    field.value === catalog["@id"]
+                                      ? "bg-blue-50 text-blue-700 font-medium"
+                                      : ""
+                                  }
+                                >
+                                  {catalog.title || catalog["@id"]}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </FormControl>
+                  <FormDescription className="text-sm text-gray-400 mt-1">
+                    Select a catalog to browse available datasets.
+                  </FormDescription>
+                  <FormMessage />
+                </div> */}
+              </FormItem>
+            )}
+          />
+
+          {/* Dataset Field (mapped to 'id' in Inputs) */}
+
+ <div>
+                  {" "}
+                  Chosen dataset: {dataset.title} {dataset["@id"]}
+                </div>
+                {/* 
+          <FormField
+            control={control}
+            name="target" // This is the dataset ID field
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Dataset</FormLabel>
+                <div>
+                  {" "}
+                  Chosen dataset: {dataset.title} {dataset["@id"]}
+                </div>
+                {console.log(selectedDataset, " selectedDatasetº")}
+                <div>
+                  <FormControl>
+                    <Popover
+                      open={datasetOpen}
+                      onOpenChange={handleDatasetOpenChange}
+                    >
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={datasetOpen}
+                          className="w-full justify-between font-normal text-gray-600 hover:text-gray-800 transition-colors"
+                          disabled={!selectedCatalog} // Disable if no catalog selected
+                        >
+                          {
+                            field.value
+                            // ? datasets.find((d) => d["@id"] === field.value)
+                            //     ?.title || field.value
+                            // : selectedCatalog
+                            //   ?   <div>{console.log(dataset, "alguien?")}</div>
+                            //   : "Select a catalog first"
+                          }
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                        <Command>
+                          <CommandInput placeholder="Search dataset..." />
+                          <CommandList>
+                            <CommandEmpty>No dataset found.</CommandEmpty>
+                            <CommandGroup>
+                              {/* {datasets.map((dataset) => ( */}
+                                {/* <CommandItem
+                                  key={selectedDataset["@id"]}
+                                  value={selectedDataset?.title || selectedDataset?.["@id"]}
+                                  onSelect={() => {
+                                    if (field.value !== dataset["@id"]) {
+                                      // Clear subsequent fields ONLY if dataset changes
+                                      // field.onChange(dataset["@id"]);
+                                      // setSelectedDataset(dataset);
+                                      // setDatasetOpen(false);
+                                      // Clear Policy field
+                                      clearFields(["id"]);
+                                    } else {
+                                      setDatasetOpen(false); // Just close if same value
+                                    }
+                                  }}
+                                  className={
+                                    field.value === dataset["@id"]
+                                      ? "bg-blue-50 text-blue-700 font-medium"
+                                      : ""
+                                  }
+                                >
+                                  {dataset.title || dataset["@id"]}
+                                </CommandItem>
+                              {/* ))} */}
+                            {/* </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </FormControl>
+                  <FormDescription className="text-sm text-gray-400 mt-1">
+                    Choose a specific dataset from the selected catalog.
+                  </FormDescription>
+                  <FormMessage />
+                </div>
+              </FormItem>
+            )}
+          /> */} 
+            {/* Consumer Participant Field */}
           <FormField
             control={control}
             name="consumerParticipantId"
@@ -352,165 +551,43 @@ export const RouteComponent = ({ catalogTitle, catalogId, dataset}) => {
               </FormItem>
             )}
           />
+          <div> POLICIES</div>
+          {console.log(policies, "policiessss")}
+          {policies.map((policy) => (
+            
+            <div className={selectedPolicy === policy  ? `border-white border-2` : ""}
+              onClick={() => {
+                setSelectedPolicy(policy);
+                 form.setValue("id", policy["@id"])
+                }}
+                >
+              <PolicyComponent
+                policyItem={policy.permission}
+                variant={"permission"}
+            
+              />
+              
+              <PolicyComponent
+                policyItem={policy.obligation}
+                variant={"obligation"}
+              />
 
-          {/* Catalog Field */}
-          <div> Chosen catalog: {catalogTitle} {catalogId}</div>
-          {console.log(selectedCatalog, " selectedCatalogº")}
-          {/* <FormField
-            control={control}
-            name="catalog"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Catalog</FormLabel>
-                <div>
-                  <FormControl>
-                    <Popover
-                      open={catalogOpen}
-                      onOpenChange={handleCatalogOpenChange}
-                    > 
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={catalogOpen}
-                          className="w-full justify-between font-normal text-gray-600 hover:text-gray-800 transition-colors"
-                        >
-                          {field.value
-                            ? catalogs.find((c) => c["@id"] === field.value)
-                                ?.title || field.value // Display title if available, otherwise ID
-                            : "Select catalog..."}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                        <Command>
-                          <CommandInput placeholder="Search catalog..." />
-                          <CommandList>
-                            <CommandEmpty>No catalog found.</CommandEmpty>
-                            <CommandGroup>
-                              {catalogs.map((catalog) => (
-                                <CommandItem
-                                  key={catalog["@id"]}
-                                  value={catalog.title || catalog["@id"]} // Use title for search, ID for actual value
-                                  onSelect={() => {
-                                    if (field.value !== catalog["@id"]) {
-                                      // Clear subsequent fields ONLY if catalog changes
-                                      field.onChange(catalog["@id"]);
-                                      setSelectedCatalog(catalog);
-                                      setCatalogOpen(false);
-                                      // Clear Dataset and Policy fields
-                                      clearFields(["id", "target"]);
-                                    } else {
-                                      setCatalogOpen(false); // Just close if same value
-                                    }
-                                  }}
-                                  className={
-                                    field.value === catalog["@id"]
-                                      ? "bg-blue-50 text-blue-700 font-medium"
-                                      : ""
-                                  }
-                                >
-                                  {catalog.title || catalog["@id"]}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                  </FormControl>
-                  <FormDescription className="text-sm text-gray-400 mt-1">
-                    Select a catalog to browse available datasets.
-                  </FormDescription>
-                  <FormMessage />
-                </div>
-              </FormItem>
-            )}
-          />*/}
-
-          {/* Dataset Field (mapped to 'id' in Inputs) */}
-          <FormField
-            control={control}
-            name="target" // This is the dataset ID field
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Dataset</FormLabel>
-                <div>
-                  <FormControl>
-                    <Popover
-                      open={datasetOpen}
-                      onOpenChange={handleDatasetOpenChange}
-                    >
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={datasetOpen}
-                          className="w-full justify-between font-normal text-gray-600 hover:text-gray-800 transition-colors"
-                          disabled={!selectedCatalog} // Disable if no catalog selected
-                        >
-                          {field.value
-                            ? datasets.find((d) => d["@id"] === field.value)
-                                ?.title || field.value
-                            : selectedCatalog
-                              ? "Select dataset..."
-                              : "Select a catalog first"}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                        <Command>
-                          <CommandInput placeholder="Search dataset..." />
-                          <CommandList>
-                            <CommandEmpty>No dataset found.</CommandEmpty>
-                            <CommandGroup>
-                              {datasets.map((dataset) => (
-                                <CommandItem
-                                  key={dataset["@id"]}
-                                  value={dataset.title || dataset["@id"]}
-                                  onSelect={() => {
-                                    if (field.value !== dataset["@id"]) {
-                                      // Clear subsequent fields ONLY if dataset changes
-                                      field.onChange(dataset["@id"]);
-                                      setSelectedDataset(dataset);
-                                      setDatasetOpen(false);
-                                      // Clear Policy field
-                                      clearFields(["id"]);
-                                    } else {
-                                      setDatasetOpen(false); // Just close if same value
-                                    }
-                                  }}
-                                  className={
-                                    field.value === dataset["@id"]
-                                      ? "bg-blue-50 text-blue-700 font-medium"
-                                      : ""
-                                  }
-                                >
-                                  {dataset.title || dataset["@id"]}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                  </FormControl>
-                  <FormDescription className="text-sm text-gray-400 mt-1">
-                    Choose a specific dataset from the selected catalog.
-                  </FormDescription>
-                  <FormMessage />
-                </div>
-              </FormItem>
-            )}
-          />
-
+              <PolicyComponent
+                policyItem={policy.prohibition}
+                variant={"prohibition"}
+              />
+            
+            </div>
+          ))}
+  {console.log(selectedPolicy, "selectedPolicy")}
           {/* Policy Target Field (mapped to 'target' in Inputs) */}
-          <FormField
+          {/* <FormField
             control={control}
             name="id" // This is the policy ID field
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Policy Id</FormLabel>
+       
                 <div>
                   <FormControl>
                     <Popover
@@ -525,12 +602,14 @@ export const RouteComponent = ({ catalogTitle, catalogId, dataset}) => {
                           className="w-full justify-between font-normal text-gray-600 hover:text-gray-800 transition-colors"
                           disabled={!selectedDataset} // Disable if no dataset selected
                         >
+                          {console.log(selectedPolicy?.target, "selectedPolicdy")}
                           {field.value
-                            ? policies.find((p) => p["@id"] === field.value)
-                                ?.target || field.value
-                            : selectedDataset
-                              ? "Select policy..."
-                              : "Select a dataset first"}
+                            // ? policies.find((p) => p["@id"] === field.value)
+                            //     ?.target || field.value
+                            // : selectedDataset
+                            //   ? "Select policy..."
+                            //   : "Select a dataset first"
+                              }
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </PopoverTrigger>
@@ -540,26 +619,29 @@ export const RouteComponent = ({ catalogTitle, catalogId, dataset}) => {
                           <CommandList>
                             <CommandEmpty>No policies found.</CommandEmpty>
                             <CommandGroup>
-                              {policies.map((policy) => (
-                                <CommandItem
-                                  key={policy["@id"]}
-                                  value={policy.target || policy["@id"]}
+                              {/* {policies.map((policy) => ( */}
+                             
+                                {/* <CommandItem
+                                  key={selectedPolicy?.["@id"]}
+                                  value={selectedPolicy?.target ||selectedPolicy?.["@id"]}
                                   onSelect={() => {
-                                    field.onChange(policy["@id"]);
-                                    setSelectedPolicy(policy);
-                                    setPoliciesOpen(false);
+                                
+                                    // field.onChange(policy["@id"]);
+                                    // setSelectedPolicy(policy);
+                                    // setPoliciesOpen(false);
                                     // No fields follow this one that need clearing based on its change
                                   }}
                                   className={
-                                    field.value === policy["@id"]
+                                    field.value === selectedPolicy?.["@id"]
                                       ? "bg-blue-50 text-blue-700 font-medium"
                                       : ""
                                   }
                                 >
-                                  {policy.target || policy["@id"]}
+                                       {console.log(field.value, "field value")}
+                                  {selectedPolicy?.target || selectedPolicy?.["@id"]}
                                 </CommandItem>
-                              ))}
-                            </CommandGroup>
+                              {/* ))} */}
+                            {/* </CommandGroup>
                           </CommandList>
                         </Command>
                       </PopoverContent>
@@ -571,8 +653,8 @@ export const RouteComponent = ({ catalogTitle, catalogId, dataset}) => {
                   <FormMessage />
                 </div>
               </FormItem>
-            )}
-          />
+            )} 
+          /> */}
 
           <FormField
             control={form.control}

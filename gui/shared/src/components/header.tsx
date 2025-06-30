@@ -24,7 +24,7 @@ const Header = () => {
   // sacar ruta activa. Separar los parametros por "/"
   // por cada parametro un breadcrumb
   let paths = routerState.location.pathname.split("/");
-  console.log(paths, "patitos")
+  // console.log(paths, "patitos")
   let formatPath = (path) => {
     // si el path es un single, y va por id, quitarle las primeras litras
     if (path.includes("urn")) {

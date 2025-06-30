@@ -68,7 +68,7 @@ type Inputs = {
 function RouteComponent() {
   const routerState = useRouterState();
    let paths = routerState.location.pathname.split("/");
-   console.log(paths, "patapimmm")
+ 
   const { catalogId, datasetId } = Route.useParams();
   const { data: dataset } = useGetDatasetById(datasetId);
   const { data: distributions } = useGetDistributionsByDatasetId(datasetId);
@@ -87,6 +87,7 @@ function RouteComponent() {
 
   return (
     <div className="space-y-4 pb-4">
+   
       <Heading level="h3" className="flex gap-2 items-center">
         Dataset with id
         <Badge variant="info" size="lg">
