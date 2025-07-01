@@ -38,6 +38,12 @@ declare global {
         profile: string
     }
 
+    export interface OdrlInfo {
+        obligation: OdrlPermission[];
+        permission: OdrlPermission[];
+        prohibition: OdrlPermission[];
+    }
+
     export interface OdrlPermission {
         action: string;
         constraint: OdrlConstraint[];

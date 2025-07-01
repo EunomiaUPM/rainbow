@@ -2,23 +2,23 @@ import * as React from "react";
 import {useContext} from "react";
 import {Link, useRouterState} from "@tanstack/react-router";
 
-import {Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator,} from "./ui/breadcrumb";
+import {
+    Breadcrumb,
+    BreadcrumbItem,
+    BreadcrumbLink,
+    BreadcrumbList,
+    BreadcrumbSeparator,
+} from "shared/src/components/ui/breadcrumb";
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import PersonIcon from '@mui/icons-material/Person';
-import {AuthContext, AuthContextType} from "@/context/AuthContext.tsx";
-import {Button} from "@/components/ui/button.tsx";
+import {AuthContext, AuthContextType} from "shared/src/context/AuthContext";
+import {Button} from "shared/src/components/ui/button";
 
 
 const Header = () => {
     const routerState = useRouterState();
     const {isAuthenticated, unsetAuthentication} = useContext<AuthContextType | null>(AuthContext)!;
 
-    // console.log("Estado del router:", routerState);
-    // console.log("Pathname actual:", routerState.location.pathname);
-    // console.log("Ruta activa (última):", routerState.currentLocation.route.id);
-
-    // sacar ruta activa. Separar los parametros por "/"
-    // por cada parametro un breadcrumb
     let paths = routerState.location.pathname.split("/");
     let formatPath = (path) => {
         // si el path es un single, y va por id, quitarle las primeras litras

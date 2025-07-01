@@ -1,5 +1,5 @@
-import {Archive, ArrowLeftRight, Feather, Handshake, Home, Users,} from "lucide-react";
-import React from "react";
+import {Archive, ArrowLeftRight, Feather, Handshake, Users,} from "lucide-react";
+import React, {useContext} from "react";
 import {Link, useRouterState} from "@tanstack/react-router"
 import {
     Sidebar,
@@ -11,50 +11,61 @@ import {
     SidebarMenuItem,
 } from "./ui/sidebar";
 import logoImg from "./../img/eunomia_logo_lg_light.svg";
+import {GlobalInfoContext, GlobalInfoContextType} from "shared/src/context/GlobalInfoContext";
 
-// Menu items.
-const items = [
-    // {
-    //     title: "Home",
-    //     url: "/",
-    //     icon: Home,
-    // },
-    {
-        title: "Catalogs",
-        url: "/catalog",
-        icon: Archive,
-    },
-    {
-        title: "Datahub Catalogs",
-        url: "/datahub-catalog",
-        icon: Archive,
-    },
-
-    {
-        title: "Contract Negotiation",
-        url: "/contract-negotiation",
-        icon: Feather,
-    },
-    {
-        title: "Agreements",
-        url: "/agreements",
-        icon: Handshake,
-    },
-    {
-        title: "Transferences",
-        url: "/transfer-process",
-        icon: ArrowLeftRight,
-    },
-
-    {
-        title: "Participants",
-        url: "/participants",
-        icon: Users,
-    },
-];
 
 export function AppSidebarProvider() {
     const routerState = useRouterState();
+    const {catalog_type} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!
+
+    // Menu items.
+    const items = [
+        {
+            title: "Catalogs",
+            url: "/catalog",
+            icon: Archive,
+        },
+        {
+            title: "Datahub Catalogs",
+            url: "/datahub-catalog",
+            icon: Archive,
+        },
+
+        {
+            title: "Contract Negotiation",
+            url: "/contract-negotiation",
+            icon: Feather,
+        },
+        {
+            title: "Agreements",
+            url: "/agreements",
+            icon: Handshake,
+        },
+        {
+            title: "Transferences",
+            url: "/transfer-process",
+            icon: ArrowLeftRight,
+        },
+
+        {
+            title: "Participants",
+            url: "/participants",
+            icon: Users,
+        },
+    ];
+
+
+    // @ts-ignore
+    const itemsFiltered = items.filter(item => {
+        if (catalog_type == "datahub") {
+            if (item.title == "Catalogs") return false
+        }
+        if (catalog_type == "rainbow") {
+            if (item.title == "Datahub Catalogs") return false
+        }
+        return true
+    })
+
     // console.log("Router state in SidebarMenuItem:", routerState.location.pathname);
 
     return (
@@ -70,7 +81,7 @@ export function AppSidebarProvider() {
 
                     <SidebarGroupContent>
                         <SidebarMenu>
-                            {items.map((item) => (
+                            {itemsFiltered.map((item) => (
                                 <SidebarMenuItem key={item.title}>
                                     <SidebarMenuButton asChild>
                                         <Link to={item.url} className={
