@@ -104,7 +104,7 @@ impl RainbowConsumerGateway {
             "mates" => config.get_contract_negotiation_host_url(),
             "negotiations" => config.get_contract_negotiation_host_url(),
             "transfers" => config.get_transfer_host_url(),
-            "auth" => config.get_auth_host_url(),
+            "auth" => config.get_transfer_host_url(),
             "wallet" => config.get_transfer_host_url(),
             "ssi-auth" => config.get_ssi_auth_host_url(),
             _ => return (StatusCode::NOT_FOUND, "prefix not found").into_response(),

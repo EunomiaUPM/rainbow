@@ -140,6 +140,44 @@ export const useGetContractNegotiationOfferByCNMessageId = (contractNegotiationM
     return {data, isLoading, isError, error}
 }
 
+
+/**
+ *  GET /contract-negotiation/processes/{contractProcess}/offer/last
+ * */
+export const getLastContractNegotiationOfferByCNMessageId = async (api_gateway: string, contractProcess: UUID) => {
+    const response = await fetch(api_gateway + `/contract-negotiation/processes/${contractProcess}/offers/last`);
+    if (response.status === 404) {
+        throw new NotFoundError(`Offer not found for message ID: ${contractProcess}`);
+    }
+    const cnOffer: CNOffer = await response.json();
+    console.log(cnOffer)
+    return cnOffer;
+}
+
+export const getLastContractNegotiationOfferByCNMessageIdOptions = (api_gateway: string, contractProcess: UUID) => queryOptions({
+    queryKey: ["CONTRACT_NEGOTIATION_LAST_OFFER_BY_MESSAGE_ID", contractProcess],
+    queryFn: () => getLastContractNegotiationOfferByCNMessageId(api_gateway, contractProcess),
+    enabled: !!contractProcess,
+    retry: (failureCount, error) => {
+        if (error instanceof NotFoundError) {
+            return false;
+        }
+        return failureCount < 3;
+    }
+})
+
+export const useGetLastContractNegotiationOfferByCNMessageId = (contractProcess: UUID) => {
+    const {api_gateway} = useContext<GlobalInfoContextType>(GlobalInfoContext);
+    const {
+        data,
+        isLoading,
+        isError,
+        error
+    } = useQuery(getLastContractNegotiationOfferByCNMessageIdOptions(api_gateway, contractProcess))
+    return {data, isLoading, isError, error}
+}
+
+
 /**
  *  GET /contract-negotiation/messages/{contractNegotiationMessageId}/agreement
  * */

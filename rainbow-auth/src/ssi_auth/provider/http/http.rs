@@ -22,23 +22,24 @@
 
 use crate::ssi_auth::provider::core::manager::RainbowSSIAuthProviderManagerTrait;
 use crate::ssi_auth::provider::core::types::RefBody;
+use crate::ssi_auth::provider::core::Manager;
 use anyhow::bail;
 use axum::extract::{Form, Path, State};
 use axum::http::{Method, Uri};
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::{Json, Router};
+use rainbow_common::auth::business::RainbowBusinessLoginRequest;
 use rainbow_common::auth::gnap::{AccessToken, GrantRequest, GrantResponse};
+use rainbow_common::ssi_wallet::RainbowSSIAuthWalletTrait;
 use rainbow_db::auth_provider::repo::AuthProviderRepoTrait;
 use reqwest::StatusCode;
 use serde::Deserialize;
 use serde_json::json;
 use std::sync::Arc;
 use tokio::sync::Mutex;
+use tower_http::cors::{Any, CorsLayer};
 use tracing::info;
-use rainbow_common::auth::business::RainbowBusinessLoginRequest;
-use rainbow_common::ssi_wallet::RainbowSSIAuthWalletTrait;
-use crate::ssi_auth::provider::core::Manager;
 
 pub struct RainbowAuthProviderRouter<T>
 where
@@ -55,6 +56,11 @@ where
         Self { manager }
     }
     pub fn router(self) -> Router {
+        let cors_layer = CorsLayer::new()
+            .allow_origin(Any)
+            .allow_headers(Any)
+            .allow_methods(Any);
+
         Router::new()
             .route("/api/v1/access", post(Self::access_request))
             .route("/api/v1/wallet/onboard", post(Self::wallet_oboard))
@@ -63,7 +69,7 @@ where
             .route("/api/v1/continue", post(Self::continue_request))
             .route("/api/v1/verify/token", post(Self::verify_token))
             .route("/api/v1/generate/uri", post(Self::generate_uri))
-            .route("/api/v1/.well-known/did.json", get(Self::didweb)) // TODO
+            .route("/api/v1/.well-known/did.json", get(Self::didweb).layer(cors_layer))
             .with_state(self.manager)
         // .fallback(Self::fallback) 2 routers cannot have 1 fallback each
     }

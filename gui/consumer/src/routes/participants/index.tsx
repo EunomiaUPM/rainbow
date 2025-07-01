@@ -11,7 +11,7 @@ import {
     DrawerTitle,
     DrawerTrigger,
 } from "shared/src/components/ui/drawer";
-import {useContext, useMemo} from "react";
+import {useContext, useEffect, useMemo, useState} from "react";
 import {PubSubContext} from "shared/src/context/PubSubContext.tsx";
 import {Button} from "shared/src/components/ui/button.tsx";
 import {Input} from "shared/src/components/ui/input.tsx";
@@ -20,8 +20,24 @@ import Heading from "shared/src/components/ui/heading";
 
 // Icons
 import {ArrowRight, Plus} from "lucide-react";
-import {useWalletOnboard} from "../../../../shared/src/data/wallet-mutations.ts";
+import {useGetOidc, useGetProviderDid, useWalletOnboard} from "../../../../shared/src/data/wallet-mutations.ts";
 import {GlobalInfoContext, GlobalInfoContextType} from "shared/src/context/GlobalInfoContext.tsx";
+import {
+    Form,
+    FormControl,
+    FormDescription,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage
+} from "shared/src/components/ui/form.tsx";
+import {SubmitHandler, useForm} from "react-hook-form";
+import QRCode from "react-qr-code";
+
+
+type Inputs = {
+    providerBaseUrl: string
+}
 
 export const Route = createFileRoute("/participants/")({
     component: RouteComponent,
@@ -32,6 +48,26 @@ function RouteComponent() {
     const {lastHighLightedNotification} = useContext(PubSubContext)!;
     const {mutateAsync: onboardAsync} = useWalletOnboard()
     const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+    const {mutateAsync: didGetterAsync} = useGetProviderDid();
+    const form = useForm<Inputs>({
+        defaultValues: {
+            providerBaseUrl: ""
+        },
+    });
+    const {handleSubmit, control} = form;
+    const [did, setDid] = useState<string | null>(null)
+    const [providerBaseUrl, setProviderBaseUrl] = useState<string | null>(null)
+    const [oidc, setOidc] = useState<string | null>(null)
+    const {mutateAsync: oidcGetterAsync} = useGetOidc()
+    const [copyStatus, setCopyStatus] = useState('');
+
+    const onSubmitDidGetter: SubmitHandler<Inputs> = async data => {
+        let did = await didGetterAsync({
+            did_url: data.providerBaseUrl
+        })
+        setProviderBaseUrl(data.providerBaseUrl)
+        setDid(did.id)
+    }
 
     const hasProvider = useMemo(() => {
         const participant = participants.find(p => p.participant_type == "Provider")
@@ -47,6 +83,43 @@ function RouteComponent() {
             api_gateway
         })
     }
+    const getOidcHandler = async () => {
+        const oidc = await oidcGetterAsync({
+            api_gateway,
+            content: {
+                url: providerBaseUrl + "/api/v1/access",
+                id: did!,
+                actions: "talk",
+                slug: "provider"
+            }
+        })
+        setOidc(oidc)
+    }
+
+    useEffect(() => {
+        if (did) {
+            getOidcHandler()
+        }
+    }, [did]);
+
+    const handleCopy = async () => {
+        try {
+            await navigator.clipboard.writeText(oidc!);
+            setCopyStatus('Copied!');
+            setTimeout(() => setCopyStatus(''), 2000); // Clear message after 2 seconds
+        } catch (err) {
+            console.error('Failed to copy: ', err);
+            setCopyStatus('Failed to copy.');
+            setTimeout(() => setCopyStatus(''), 2000); // Clear message after 2 seconds
+        }
+    };
+    const handleCancel = async () => {
+        setDid(null)
+        setDid(null)
+        setProviderBaseUrl(null)
+        setCopyStatus("")
+        form.reset()
+    };
 
     return (
         <div>
@@ -59,7 +132,7 @@ function RouteComponent() {
                 <Drawer direction={"right"}>
                     <DrawerTrigger>
                         <Button>
-                            Add participant
+                            Authenticate in provider
                             <Plus className="mb-1"/>
                         </Button>
                     </DrawerTrigger>
@@ -72,7 +145,63 @@ function RouteComponent() {
                             </DrawerTitle>
                         </DrawerHeader>
                         <DrawerBody>
-                            {/* <NewParticipantForm/> */}
+
+                            {/**/}
+                            {/**/}
+                            {/**/}
+                            {/**/}
+                            {!did && (
+                                <Form {...form}>
+                                    <form onSubmit={handleSubmit(onSubmitDidGetter)} className="space-y-6">
+                                        {/* Consumer Participant Field */}
+                                        <FormField
+                                            control={control}
+                                            name="providerBaseUrl"
+                                            render={({field}) => ( // <--
+                                                <FormItem>
+                                                    <FormLabel>Provider base url:</FormLabel>
+                                                    <div>
+                                                        <FormControl>
+                                                            <Input {...field} />
+                                                        </FormControl>
+                                                        <FormDescription className="text-sm text-gray-500 mt-1">Provide
+                                                            base
+                                                            url</FormDescription>
+                                                        <FormMessage/>
+                                                    </div>
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <Button type="submit"
+                                                className="w-full">
+                                            Submit Request
+                                        </Button>
+                                    </form>
+                                </Form>
+                            )}
+
+                            {/**/}
+                            {/**/}
+                            {/**/}
+                            {/**/}
+                            {(did && oidc) && (
+                                <div>
+                                    <div className="max-w-[400px]">
+                                        {oidc != "" &&
+                                            <QRCode size={32} value={oidc}
+                                                    style={{height: "auto", maxWidth: "100%", width: "100%"}}
+
+                                                    fgColor="#fff" bgColor="#0a0a1b"/>}
+                                    </div>
+                                    <div>
+                                        <div className="break-words">{oidc}</div>
+                                        <Button onClick={handleCopy}>{copyStatus || 'Copy Text'}</Button>
+                                        <Button onClick={handleCancel}>Cancel</Button>
+                                    </div>
+                                </div>
+                            )}
+
+
                         </DrawerBody>
                         <DrawerFooter>
                             <DrawerClose className="flex justify-start gap-4">

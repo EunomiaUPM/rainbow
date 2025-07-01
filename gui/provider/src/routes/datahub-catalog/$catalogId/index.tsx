@@ -14,18 +14,12 @@ import {
     DrawerTitle,
     DrawerTrigger
 } from "shared/src/components/ui/drawer.tsx";
-import {useGetDatahubCatalogs} from "../../../../../shared/src/data/datahub-catalog-queries.ts";
-import {useMemo} from "react";
 import {useGetParticipants} from "shared/src/data/participant-queries.ts";
+import {OfferDrawer} from "@/components/OfferDrawer.tsx";
 
 const RouteComponent = () => {
     const {catalogId} = Route.useParams();
-    const {data: catalogs} = useGetDatahubCatalogs();
     const {data: datasets} = useGetDatahubDatasetsByCatalogId(catalogId);
-
-    const currentCatalog = useMemo(() => {
-        return catalogs.find(catalog => catalog.urn == catalogId)
-    }, [catalogs])
 
     const {data: participants} = useGetParticipants();
 
@@ -77,9 +71,7 @@ const RouteComponent = () => {
                                             </DrawerTitle>
                                         </DrawerHeader>
                                         <DrawerBody>
-                                            {/* {console.log("datasetto", dataset)} */}
-                                            {JSON.stringify(participants)}
-
+                                            <OfferDrawer catalogId={catalogId} datasetId={dataset.urn}/>
                                         </DrawerBody>
                                         <DrawerFooter>
                                             <DrawerClose className="flex justify-start gap-4">

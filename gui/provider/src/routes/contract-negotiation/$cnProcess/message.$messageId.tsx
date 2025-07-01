@@ -2,7 +2,7 @@ import {createFileRoute} from '@tanstack/react-router'
 import {
     useGetAgreementByCNMessageId,
     useGetContractNegotiationMessageById,
-    useGetContractNegotiationOfferByCNMessageId
+    useGetLastContractNegotiationOfferByCNMessageId
 } from "shared/src/data/contract-queries.ts";
 
 export const Route = createFileRoute(
@@ -15,7 +15,7 @@ function RouteComponent() {
     const {messageId} = Route.useParams();
 
     const {data: cnMessage} = useGetContractNegotiationMessageById(messageId)
-    const {data: cnOffer, isError: offerError} = useGetContractNegotiationOfferByCNMessageId(messageId);
+    const {data: cnOffer, isError: offerError} = useGetLastContractNegotiationOfferByCNMessageId(messageId);
     const {data: cnAgreement, isError: agreementError} = useGetAgreementByCNMessageId(messageId);
 
     return <div className="space-y-4">
