@@ -35,29 +35,32 @@ const RouteComponent = () => {
       </Heading>
       <div>
         <Heading level="h5">Main Catalog info: </Heading>
-        <List className="text-sm">
-          <ListItem>
-            <ListItemKey>Catalog title</ListItemKey>
-            <p>{catalogs.title}</p>
-          </ListItem>
-          <ListItem>
-            <ListItemKey>Catalog participant id</ListItemKey>
-            <Badge variant="info">
-              {" "}
-              {catalogs.participantId.slice(9, 29) + "[...]"}{" "}
-            </Badge>
-          </ListItem>
-          <ListItem>
-            <ListItemKey>Catalog homepage</ListItemKey>
-            <p>{catalogs.homepage}</p>
-          </ListItem>
-          <ListItem>
-            <ListItemKey>Catalog creation date</ListItemKey>
-            <ListItemDate>
-              {dayjs(catalogs.issued).format("DD/MM/YYYY - HH:mm")}
-            </ListItemDate>
-          </ListItem>
-        </List>
+        <div className="gridColsLayout">
+          <List className="text-sm">
+            <ListItem>
+              <ListItemKey>Catalog title</ListItemKey>
+              <p>{catalogs.title}</p>
+            </ListItem>
+            <ListItem>
+              <ListItemKey>Catalog participant id</ListItemKey>
+              <Badge variant="info">
+                {" "}
+                {catalogs.participantId.slice(9, 29) + "[...]"}{" "}
+              </Badge>
+            </ListItem>
+            <ListItem>
+              <ListItemKey>Catalog homepage</ListItemKey>
+              <p>{catalogs.homepage}</p>
+            </ListItem>
+            <ListItem>
+              <ListItemKey>Catalog creation date</ListItemKey>
+              <ListItemDate>
+                {dayjs(catalogs.issued).format("DD/MM/YYYY - HH:mm")}
+              </ListItemDate>
+            </ListItem>
+          </List>
+          <div className="filler"></div>
+        </div>
       </div>
 
       <div>
@@ -101,7 +104,8 @@ const RouteComponent = () => {
                     to="/catalog/$catalogId"
                     params={{ catalogId: catalogItem["@id"] }}
                   >
-                    <Button variant={'link'}>See catalog
+                    <Button variant={"link"}>
+                      See catalog
                       <ArrowRight />
                     </Button>
                   </Link>

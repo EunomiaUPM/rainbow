@@ -45,10 +45,10 @@ function RouteComponent() {
         Dataset with id
         <Badge variant="info" size="lg">
           {" "}
-          {dataset["@id"] /*.slice(9, 29) + "[...]"*/}
+          {dataset["@id"].slice(9, 29) + "[...]"}
         </Badge>
       </Heading>
-      <div>
+      <div className="gridColsLayout">
         <List className="text-sm">
           <ListItem>
             <ListItemKey>Dataset title</ListItemKey>
@@ -110,56 +110,56 @@ function RouteComponent() {
         </Table>
       </div>
 
-    
-          <Heading level="h5"> ODRL Policies </Heading>
-          <div className="container-policies flex flex-wrap gap-4">
-          {policies.map((policy) => (
-            <List className=" border border-white/30 bg-white/10 px-4 py-2 rounded-md justify-start">
-              <div className="flex">
-                <Heading level="h5" className="flex gap-3">
-                  <div>Policy with ID</div>
-                  <Badge variant="info" className="h-6">
-                    {policy["@id"].slice(9, 29) + "[...]"}
-                  </Badge>
-                </Heading>
-              </div>
-              <ListItem>
-                <ListItemKey>Policy Target</ListItemKey>
-                <p>{policy["@type"]}</p>
-              </ListItem>
+      <Heading level="h5"> ODRL Policies </Heading>
+      <div className="gridColsLayout">
+        {policies.map((policy) => (
+          <List className=" border border-white/30 bg-white/10 px-4 py-2 rounded-md justify-start">
+            <div className="flex">
+              <Heading level="h5" className="flex gap-3">
+                <div>Policy with ID</div>
+                <Badge variant="info" className="h-6">
+                  {policy["@id"].slice(9, 29) + "[...]"}
+                </Badge>
+              </Heading>
+            </div>
+            <ListItem>
+              <ListItemKey>Policy Target</ListItemKey>
+              <p>{policy["@type"]}</p>
+            </ListItem>
 
-              <ListItem>
-                <ListItemKey> Profile</ListItemKey>
-                <p className="whitespace-normal">
-                  {" "}
-                  {JSON.stringify(policy.profile)}
-                </p>
-              </ListItem>
-              <ListItem>
-                <ListItemKey> Target</ListItemKey>
-                <p> {policy.target.slice(9)}</p>
-              </ListItem>
-              <div className="h-5"></div>
-              <Heading level="h6"> ODRL CONTENT</Heading>
-              <div className="flex flex-col gap-1 mb-2">
-                <PolicyComponent
-                  policyItem={policy.permission}
-                  variant={"permission"}
-                />
-                <PolicyComponent
-                  policyItem={policy.obligation}
-                  variant={"obligation"}
-                />
-                <PolicyComponent
-                  policyItem={policy.prohibition}
-                  variant={"prohibition"}
-                />
-              </div>
-            </List>
-          ))}
-        </div>
+            <ListItem>
+              <ListItemKey> Profile</ListItemKey>
+              <p className="whitespace-normal">
+                {" "}
+                {JSON.stringify(policy.profile)}
+              </p>
+            </ListItem>
+            <ListItem>
+              <ListItemKey> Target</ListItemKey>
+              <p> {policy.target.slice(9)}</p>
+            </ListItem>
+            <div className="h-5"></div>
+            <Heading level="h6"> ODRL CONTENT</Heading>
+            <div className="flex flex-col gap-1 mb-2">
+              <PolicyComponent
+                policyItem={policy.permission}
+                variant={"permission"}
+              />
+              <PolicyComponent
+                policyItem={policy.obligation}
+                variant={"obligation"}
+              />
+              <PolicyComponent
+                policyItem={policy.prohibition}
+                variant={"prohibition"}
+              />
+            </div>
+          </List>
+          
+        ))}
+        
       </div>
-
+    </div>
   );
 }
 

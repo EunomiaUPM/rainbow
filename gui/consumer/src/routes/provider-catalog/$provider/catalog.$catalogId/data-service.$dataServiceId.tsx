@@ -21,7 +21,7 @@ function RouteComponent() {
           {dataService["@id"].slice(9, 29) + "[...]"}
         </Badge>{" "}
       </Heading>
-      <div>
+      <div className='gridColsLayout'>
         <List className="text-sm">
           <ListItem>
             <ListItemKey>Data service title</ListItemKey>

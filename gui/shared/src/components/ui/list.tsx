@@ -13,7 +13,8 @@ const List = ({
   return (
     <ul
       className={cn(
-        "mt-0 px-2 min-w-fit w-full  text-sm flex flex-col justify-center relative  bg-brand-sky/5 overflow-auto border border-white/10 rounded-md",
+        "mt-0 px-2 min-w-fit w-full text-sm flex flex-col justify-center relative bg-brand-sky/5 overflow-auto border border-white/10 rounded-md",
+        // si el salto es muy horrible se le puede sustituir el min-w-fit por un min-w en pixeles
         className
       )}
       {...props}

@@ -49,7 +49,7 @@ const RouteComponent = () => {
       <Heading level="h5" className="mt-3">
         Contract negotiation info{" "}
       </Heading>
-      <div className="mb-4">
+      <div className="mb-4 gridColsLayout">
         <List>
           <ListItem>
             <ListItemKey>ProviderPid</ListItemKey>

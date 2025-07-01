@@ -49,18 +49,17 @@ function RouteComponent() {
         </Badge>
       </Heading>
       {/* Page content */}
-      <div className="flexColsLayout bg-blue-500/0">
+      <div className="gridColsLayout lg:gap-8 bg-blue-500/0">
         {/* Div Participant Info */}
         <div className="flex flex-col bg-green-800/0">
           <Heading
             level="h6"
             className="text-foreground h-[36px] place-content-center"
           >
-            {" "}
-            Participant info:{" "}
+            Participant info:
           </Heading>
           <div className="w-full bg-green-500/0">
-            <List className={" xl:w-[400px] 2xl:min-w-fit"}>
+            <List>
               <ListItem>
                 <ListItemKey className={scopedListItemKeyClasses}>
                   Participant ID
@@ -92,7 +91,7 @@ function RouteComponent() {
             </List>
           </div>
         </div>
-        <Separator orientation="vertical" />
+        {/* <Separator orientation="vertical" /> */}
 
         {/* Div Participant Tabs */}
         <Tabs defaultValue="participant-agreements">

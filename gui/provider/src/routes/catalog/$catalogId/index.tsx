@@ -1,4 +1,4 @@
-import { createFileRoute, Link  } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import { useState } from "react";
 import { ExternalLink } from "lucide-react";
@@ -50,30 +50,31 @@ const RouteComponent = () => {
     <div className="space-y-4 pb-4">
       <div>
         <Heading level="h5">Catalog info:</Heading>
-
-        <List>
-          <ListItem>
-            <ListItemKey>Catalog title</ListItemKey>
-            <p>{catalog.title}</p>
-            
-          </ListItem>
-          <ListItem>
-            <ListItemKey>Catalog participant ID</ListItemKey>
-            <Badge variant="info">
-              {catalog.participantId.slice(9, 29) + "[...]"}
-            </Badge>
-          </ListItem>
-          <ListItem>
-            <ListItemKey>Catalog homepage</ListItemKey>
-            <p>{catalog.homepage}</p>
-          </ListItem>
-          <ListItem>
-            <ListItemKey>Catalog creation date</ListItemKey>
-            <ListItemDate>
-              {dayjs(catalog.issued).format("DD/MM/YYYY - HH:mm")}
-            </ListItemDate>
-          </ListItem>
-        </List>
+        <div className="gridColsLayout">
+          <List>
+            <ListItem>
+              <ListItemKey>Catalog title</ListItemKey>
+              <p>{catalog.title}</p>
+            </ListItem>
+            <ListItem>
+              <ListItemKey>Catalog participant ID</ListItemKey>
+              <Badge variant="info">
+                {catalog.participantId.slice(9, 29) + "[...]"}
+              </Badge>
+            </ListItem>
+            <ListItem>
+              <ListItemKey>Catalog homepage</ListItemKey>
+              <p>{catalog.homepage}</p>
+            </ListItem>
+            <ListItem>
+              <ListItemKey>Catalog creation date</ListItemKey>
+              <ListItemDate>
+                {dayjs(catalog.issued).format("DD/MM/YYYY - HH:mm")}
+              </ListItemDate>
+            </ListItem>
+          </List>
+          <div className="filler"></div>
+        </div>
       </div>
 
       <div>
@@ -128,7 +129,7 @@ const RouteComponent = () => {
                       <DrawerBody>
                         {/* {console.log("datasetto", dataset)} */}
 
-                        <OfferForm catalog={catalog} dataset={dataset}  />
+                        <OfferForm catalog={catalog} dataset={dataset} />
                       </DrawerBody>
                       <DrawerFooter>
                         <DrawerClose className="flex justify-start gap-4">

@@ -40,7 +40,7 @@ export const TransferProcessStartDialog = ({
       },
     });
   };
-  const scopedListItemKeyClasses = "basis-[32%]";
+  const scopedListItemKeyClasses = "";
 
   return (
     <DialogContent className="w-[70dvw] sm:max-w-fit">

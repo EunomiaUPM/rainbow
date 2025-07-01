@@ -75,7 +75,7 @@ function RouteComponent() {
           <Heading level="h5" className="mt-3">
             Transfer process info{" "}
           </Heading>
-          <div className="mb-4">
+          <div className="gridColsLayout mb-4">
             <List>
               <ListItem>
                 <ListItemKey>Process pid</ListItemKey>

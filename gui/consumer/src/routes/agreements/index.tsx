@@ -17,9 +17,11 @@ import { ArrowRight } from "lucide-react";
 export const Route = createFileRoute("/agreements/")({
   component: RouteComponent,
 });
-
 function RouteComponent() {
   const { data: agreements } = useGetAgreements();
+  agreements.map((agreement) => {
+    console.log(agreement);
+  });
 
   return (
     <div>
@@ -34,7 +36,6 @@ function RouteComponent() {
               {/* <TableHead>Related Message</TableHead> */}
               <TableHead>
                 {/*Consumer Participant Id */}
-                {/* quito el <p>, que se carga los estilos de table head */}
                 Provider Participant Id
               </TableHead>
 
@@ -51,38 +52,44 @@ function RouteComponent() {
                     {agreement.agreement_id.slice(9, 20) + "..."}
                   </Badge>
                 </TableCell>
+                <TableCell>
+                  <Badge variant={"info"}>
+                    {agreement.provider_participant_id.slice(9, 20) + "..."}
+                  </Badge>
+                </TableCell>
                 {/* <TableCell>
                   <Badge variant={"info"}>
                     {agreement.cn_message_id?.slice(9, 20) + "..."}
                   </Badge>
                   </div> */}
-                                {/* </TableCell> */}
-                                <TableCell>
-                                    <Badge
-                                        variant={"status"}
-                                        state={agreement.active ? "process" : "paused"}
-                                    >
-                                        {agreement.active ? "ACTIVE" : "INACTIVE"}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell>
-                                    {dayjs(agreement.created_at).format("DD/MM/YY HH:mm")}
-                                </TableCell>
-                                <TableCell>
-                                    <Button variant="default">
-                                        <Link
-                                            to="/agreements/$agreementId"
-                                            params={{agreementId: agreement.agreement_id}}
-                                        >
-                                            See agreement
-                                        </Link>
-                                    </Button>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </div>
-        </div>
-    );
+                {/* </TableCell> */}
+                <TableCell>
+                  <Badge
+                    variant={"status"}
+                    state={agreement.active ? "ACTIVE" : "INACTIVE"}
+                  >
+                    {agreement.active ? "ACTIVE" : "INACTIVE"}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  {dayjs(agreement.created_at).format("DD/MM/YY HH:mm")}
+                </TableCell>
+                <TableCell>
+                  <Link
+                    to="/agreements/$agreementId"
+                    params={{ agreementId: agreement.agreement_id }}
+                  >
+                    <Button variant="link">
+                      See details
+                      <ArrowRight />
+                    </Button>
+                  </Link>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
 }

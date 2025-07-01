@@ -30,27 +30,29 @@ const RouteComponent = () => {
       </Heading>
       <div>
         <Heading level="h5">Main Catalog info: </Heading>
-        <List className="text-sm">
-          <ListItem>
-            <ListItemKey>Catalog title</ListItemKey>
-            <p>{catalogs.title}</p>
-          </ListItem>
-          <ListItem>
-            <ListItemKey>Catalog participant id</ListItemKey>
-            <Badge variant="info">
-              {" "}
-              {catalogs.participantId.slice(9, 29) + "[...]"}{" "}
-            </Badge>
-          </ListItem>
-          <ListItem>
-            <ListItemKey>Catalog homepage</ListItemKey>
-            <p>{catalogs.homepage}</p>
-          </ListItem>
-          <ListItem>
-            <ListItemKey>Catalog creation date</ListItemKey>
-            <p>{dayjs(catalogs.issued).format("DD/MM/YYYY - HH:mm")}</p>
-          </ListItem>
-        </List>
+        <div className="gridColsLayout">
+          <List className="text-sm">
+            <ListItem>
+              <ListItemKey>Catalog title</ListItemKey>
+              <p>{catalogs.title}</p>
+            </ListItem>
+            <ListItem>
+              <ListItemKey>Catalog participant id</ListItemKey>
+              <Badge variant="info">
+                {" "}
+                {catalogs.participantId.slice(9, 29) + "[...]"}{" "}
+              </Badge>
+            </ListItem>
+            <ListItem>
+              <ListItemKey>Catalog homepage</ListItemKey>
+              <p>{catalogs.homepage}</p>
+            </ListItem>
+            <ListItem>
+              <ListItemKey>Catalog creation date</ListItemKey>
+              <p>{dayjs(catalogs.issued).format("DD/MM/YYYY - HH:mm")}</p>
+            </ListItem>
+          </List>
+        </div>
       </div>
 
       <div>
@@ -81,32 +83,29 @@ const RouteComponent = () => {
                 </TableCell>
 
                 <TableCell>
-                          <Badge variant="info">
+                  <Badge variant="info">
                     {catalogItem["@id"].slice(9, 29) + "[...]"}
-                    </Badge>
-                    </TableCell>
+                  </Badge>
+                </TableCell>
                 <TableCell>
-                     <Badge variant="info">
+                  <Badge variant="info">
                     {catalogItem.participantId.slice(9, 29) + "[...]"}
-                   </Badge> 
-                    </TableCell>
+                  </Badge>
+                </TableCell>
 
-     
                 <TableCell>
-                 
-                    <Link
-                      to="/provider-catalog/$provider/catalog/$catalogId"
-                      params={{
-                        provider: provider,
-                        catalogId: catalogItem["@id"],
-                      }}
-                    >
-                         <Button variant="link">
+                  <Link
+                    to="/provider-catalog/$provider/catalog/$catalogId"
+                    params={{
+                      provider: provider,
+                      catalogId: catalogItem["@id"],
+                    }}
+                  >
+                    <Button variant="link">
                       See catalog
-                        <ArrowRight />
-                        </Button>
-                    </Link>
-            
+                      <ArrowRight />
+                    </Button>
+                  </Link>
                 </TableCell>
               </TableRow>
             ))}

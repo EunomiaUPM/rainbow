@@ -29,6 +29,7 @@ const badgeVariants = cva(
         danger: "",
         warn: "",
         ACTIVE: "bg-process text-process-300 [&>span]:bg-process-400", // Agreements
+        INACTIVE: "bg-paused text-paused-300 [&>span]:bg-paused-400", // Agreements
         ACCEPTED: "bg-process text-process-300 [&>span]:bg-process-400", //
         VERIFIED: "bg-process text-process-300 [&>span]:bg-process-400", // CN
         STARTED: "bg-process text-process-300 [&>span]:bg-process-400", // Transfers

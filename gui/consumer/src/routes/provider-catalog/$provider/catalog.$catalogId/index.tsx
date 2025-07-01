@@ -48,28 +48,30 @@ const RouteComponent = () => {
 
       <div>
         <Heading level="h5">Catalog info:</Heading>
-        <List>
-          <ListItem>
-            <ListItemKey>Catalog title</ListItemKey>
-            <p>{catalog.title}</p>
-          </ListItem>
-          <ListItem>
-            <ListItemKey>Catalog participant ID</ListItemKey>
-            <Badge variant="info">
-              {catalog.participantId.slice(9, 29) + "[...]"}
-            </Badge>
-          </ListItem>
-          <ListItem>
-            <ListItemKey>Catalog homepage</ListItemKey>
-            <p>{catalog.homepage}</p>
-          </ListItem>
-          <ListItem>
-            <ListItemKey>Catalog creation date</ListItemKey>
-            <ListItemDate>
-              {dayjs(catalog.issued).format("DD/MM/YYYY - HH:mm")}
-            </ListItemDate>
-          </ListItem>
-        </List>
+        <div className="gridColsLayout">
+          <List>
+            <ListItem>
+              <ListItemKey>Catalog title</ListItemKey>
+              <p>{catalog.title}</p>
+            </ListItem>
+            <ListItem>
+              <ListItemKey>Catalog participant ID</ListItemKey>
+              <Badge variant="info">
+                {catalog.participantId.slice(9, 29) + "[...]"}
+              </Badge>
+            </ListItem>
+            <ListItem>
+              <ListItemKey>Catalog homepage</ListItemKey>
+              <p>{catalog.homepage}</p>
+            </ListItem>
+            <ListItem>
+              <ListItemKey>Catalog creation date</ListItemKey>
+              <ListItemDate>
+                {dayjs(catalog.issued).format("DD/MM/YYYY - HH:mm")}
+              </ListItemDate>
+            </ListItem>
+          </List>
+        </div>
       </div>
 
       <div>
@@ -81,7 +83,7 @@ const RouteComponent = () => {
               <TableHead>Title</TableHead>
               <TableHead>Provider ID</TableHead>
               <TableHead>Created at</TableHead>
-               <TableHead>Actions</TableHead>
+              <TableHead>Actions</TableHead>
               <TableHead>Link</TableHead>
             </TableRow>
           </TableHeader>
@@ -105,7 +107,7 @@ const RouteComponent = () => {
                     {dayjs(catalog.issued).format("DD/MM/YYYY - HH:mm")}
                   </ListItemDate>
                 </TableCell>
-                 <TableCell>
+                <TableCell>
                   <Button size="sm" variant="outline">
                     + Request dataset
                   </Button>

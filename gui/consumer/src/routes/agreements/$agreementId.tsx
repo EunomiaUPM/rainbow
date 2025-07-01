@@ -23,6 +23,8 @@ function RouteComponent() {
   };
   const { agreementId } = Route.useParams();
   const { data: agreement } = useGetAgreementById(agreementId);
+
+  const scopedListItemKeyClasses = " "; // basis-[33%] min-w-[100px]
   return (
     <div className="space-y-4 pb-4">
       <Heading
@@ -35,39 +37,59 @@ function RouteComponent() {
           {agreement.agreement_id.slice(9, 29) + "[...]"}
         </Badge>
       </Heading>
-      <div className="flexColsLayout">
+      <div className="gridColsLayout">
         <div>
           <Heading level="h6" className="text-text">
             Agreement info
           </Heading>
           <List>
             <ListItem>
-              <ListItemKey>Agreement Id</ListItemKey>
+              <ListItemKey className={scopedListItemKeyClasses}>
+                Agreement Id
+              </ListItemKey>
               <Badge variant="info">
                 {" "}
                 {agreement.agreement_id.slice(9, 29) + "[...]"}
               </Badge>
             </ListItem>
-            <div className={"h-12 border-b border-white/20"}>
+            <ListItem>
+              <ListItemKey className={scopedListItemKeyClasses}>
+                Provider Participant id:
+              </ListItemKey>
+              <Badge variant={"info"}>
+                {agreement.agreement_id.slice(9, 29) + "[...]"}
+              </Badge>
+            </ListItem>
+            <div className={"border-b border-white/20"}>
               <ListItem>
-                <ListItemKey>Related Message</ListItemKey>
-                {agreement.cn_message_id.slice(9)}
+                <ListItemKey className={scopedListItemKeyClasses}>
+                  Related Message
+                </ListItemKey>
+                <Badge variant="info">
+                  {agreement.cn_message_id.slice(9, 29) + "[...]"}
+                </Badge>
               </ListItem>
             </div>
             <ListItem>
-              <ListItemKey>Consumer Participant Id</ListItemKey>
+              <ListItemKey className={scopedListItemKeyClasses}>
+                Consumer Participant Id
+              </ListItemKey>
               <Badge variant="info">
                 {agreement.consumer_participant_id.slice(9, 29) + "[...]"}{" "}
               </Badge>
             </ListItem>
             <ListItem>
-              <ListItemKey>Provider Participant Id</ListItemKey>{" "}
+              <ListItemKey className={scopedListItemKeyClasses}>
+                Provider Participant Id
+              </ListItemKey>{" "}
               <Badge variant="info">
                 {agreement.provider_participant_id.slice(9, 29) + "[...]"}{" "}
               </Badge>
             </ListItem>
             <ListItem>
-              <ListItemKey>Status</ListItemKey>{" "}
+              <ListItemKey className={scopedListItemKeyClasses}>
+                Status
+              </ListItemKey>{" "}
               <Badge
                 variant="status"
                 state={agreement.active ? "ACTIVE" : "PAUSE"}
@@ -76,81 +98,82 @@ function RouteComponent() {
               </Badge>
             </ListItem>
             <ListItem>
-              <ListItemKey>Created at</ListItemKey>
+              <ListItemKey className={scopedListItemKeyClasses}>
+                Created at
+              </ListItemKey>
               <ListItemDate>
                 {dayjs(agreement.created_at).format("DD/MM/YYYY - HH:mm")}{" "}
               </ListItemDate>
             </ListItem>
           </List>
         </div>
-        
-       <div>
+
+        <div>
           <Heading level="h6" className="text-text">
             Agreement content
           </Heading>
-        <List>
-          <ListItem>
-            <ListItemKey> ID </ListItemKey>
-            <Badge variant="info">
-              {formatString(
-                JSON.stringify(
-                  agreement.agreement_content["@id"].slice(9, 29) + "[...]"
-                )
-              )}
-            </Badge>
-          </ListItem>
-          <ListItem>
-            <ListItemKey> Type </ListItemKey>
-            <p>
-              {formatString(
-                JSON.stringify(agreement.agreement_content["@type"])
-              )}
-            </p>
-          </ListItem>
-          <ListItem>
-            <ListItemKey> Assignee </ListItemKey>
-            <Badge variant="info">
-              {formatString(
-                JSON.stringify(
-                  agreement.agreement_content.assignee.slice(9, 29) + "[...]"
-                )
-              )}
-            </Badge>
-          </ListItem>
-          <ListItem>
-            <ListItemKey> Assigner </ListItemKey>
-            <Badge variant="info">
-              {formatString(
-                JSON.stringify(
-                  agreement.agreement_content.assigner.slice(9, 29) + "[...]"
-                )
-              )}
-            </Badge>
-          </ListItem>
+          <List>
+            <ListItem>
+              <ListItemKey> ID </ListItemKey>
+              <Badge variant="info">
+                {formatString(
+                  JSON.stringify(
+                    agreement.agreement_content["@id"].slice(9, 29) + "[...]"
+                  )
+                )}
+              </Badge>
+            </ListItem>
+            <ListItem>
+              <ListItemKey> Type </ListItemKey>
+              <p>
+                {formatString(
+                  JSON.stringify(agreement.agreement_content["@type"])
+                )}
+              </p>
+            </ListItem>
+            <ListItem>
+              <ListItemKey> Assignee </ListItemKey>
+              <Badge variant="info">
+                {formatString(
+                  JSON.stringify(
+                    agreement.agreement_content.assignee.slice(9, 29) + "[...]"
+                  )
+                )}
+              </Badge>
+            </ListItem>
+            <ListItem>
+              <ListItemKey> Assigner </ListItemKey>
+              <Badge variant="info">
+                {formatString(
+                  JSON.stringify(
+                    agreement.agreement_content.assigner.slice(9, 29) + "[...]"
+                  )
+                )}
+              </Badge>
+            </ListItem>
 
-          <div className="gap-1 flex flex-col">
-            <ListItemKey className={" py-2 "}> Policies </ListItemKey>
+            <div className="gap-1 flex flex-col">
+              <ListItemKey className={" py-2 "}> Policies </ListItemKey>
 
-            <div className="flex flex-col gap-2 mb-2">
-              <PolicyComponent
-                policyItem={agreement.agreement_content.permission}
-                variant={"permission"}
-              />
-              <PolicyComponent
-                policyItem={agreement.agreement_content.obligation}
-                variant={"obligation"}
-              />
+              <div className="flex flex-col gap-2 mb-2">
+                <PolicyComponent
+                  policyItem={agreement.agreement_content.permission}
+                  variant={"permission"}
+                />
+                <PolicyComponent
+                  policyItem={agreement.agreement_content.obligation}
+                  variant={"obligation"}
+                />
 
-              <PolicyComponent
-                policyItem={agreement.agreement_content.prohibition}
-                variant={"prohibition"}
-              />
+                <PolicyComponent
+                  policyItem={agreement.agreement_content.prohibition}
+                  variant={"prohibition"}
+                />
+              </div>
             </div>
-          </div>
-
-        </List>
+          </List>
+        </div>
       </div>
-    </div>
     </div>
   );
 }
