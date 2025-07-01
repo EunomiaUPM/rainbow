@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import dayjs from "dayjs";
 import {
   Table,
@@ -27,6 +28,8 @@ import { useMemo } from "react";
 import { ArrowRight, Plus } from "lucide-react";
 import Heading from "shared/src/components/ui/heading";
 import { RouteComponent as OfferForm } from "@/routes/contract-negotiation/offer";
+import { RouteComponent as CounterOfferForm } from "@/routes/contract-negotiation/counter-offer";
+
 
 const RouteComponent = () => {
   const { data: cnProcesses } = useGetContractNegotiationProcesses();
@@ -38,9 +41,13 @@ const RouteComponent = () => {
       );
     });
   }, [cnProcesses]);
-
+ const [openCounterOffer, setOpenCounterOffer] = useState(false)
+  const [selectedCnProcess, setSelectedCnProcess] = useState("")
   return (
     <div>
+      <div className={openCounterOffer === true ? `flex fixed   z-50` : `hidden absolute`}> 
+            <CounterOfferForm process={selectedCnProcess} /> 
+            </div>
       <div className=" pb-3 flex justify-between items-start">
         <div className=" basis-3/5">
           <Input type="search"></Input>
@@ -109,6 +116,21 @@ const RouteComponent = () => {
                 {dayjs(cnProcess.created_at).format("DD/MM/YY - HH:mm")}
               </TableCell>
               <TableCell>
+                {console.log(selectedCnProcess, " selected cnproc")}
+                  {cnProcess.state === "REQUESTED" ?  
+                  <Button variant="outline" size="sm" className="" onClick={() => 
+                    // toggle dialog
+               { ( openCounterOffer === true ? setOpenCounterOffer(false) : setOpenCounterOffer(true));
+                    (setSelectedCnProcess(cnProcess))
+                }
+              
+                      
+                 }>
+                    C/Offer
+                    </Button> : ""}
+                   
+                  
+              
                 <ContractNegotiationActions  process={cnProcess} tiny={true} />
               </TableCell>
               <TableCell>

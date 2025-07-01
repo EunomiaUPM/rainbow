@@ -1,5 +1,5 @@
 import { Button } from "./ui/button";
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { cva } from "class-variance-authority";
 import { Dialog, DialogTrigger } from "./ui/dialog";
 import { ContractNegotiationOfferDialog } from "./ContractNegotiationOfferDialog";
@@ -15,6 +15,7 @@ import { ContractNegotiationAcceptanceDialog } from "./ContractNegotiationAccept
 import { ContractNegotiationVerificationDialog } from "./ContractNegotiationVerificationDialog";
 import NoFurtherActions from "./ui/noFurtherActions";
 import { Link } from "@tanstack/react-router";
+import { RouteComponent as CounterOfferForm } from "./../../../provider/src/routes/contract-negotiation/counter-offer";
 
 export const ContractNegotiationActions = ({
   process,
@@ -43,6 +44,8 @@ export const ContractNegotiationActions = ({
   });
 
   return (
+    <>
+  
     <div className={containerClassName({ tiny })}>
       {/* <h2 className={h2ClassName({ tiny })}></h2> */}
       {process.state === "REQUESTED" && (
@@ -59,12 +62,7 @@ export const ContractNegotiationActions = ({
               </Dialog>
               {/* <Dialog> */}
                 {/* <DialogTrigger asChild> */}
-                  <Link to="/contract-negotiation/counter-offer"
-                  state={process}>
-                    <Button variant="outline" size={tiny ? "sm" : ""}>
-                    C/Offer
-                    </Button>
-                  </Link>
+  
                 {/* </DialogTrigger>
                 <ContractNegotiationOfferDialog process={process} />
               </Dialog> */}
@@ -220,5 +218,6 @@ export const ContractNegotiationActions = ({
       {process.state === "FINALIZED" && <NoFurtherActions />}
       {process.state === "TERMINATED" && <NoFurtherActions />}
     </div>
+    </>
   );
 };
