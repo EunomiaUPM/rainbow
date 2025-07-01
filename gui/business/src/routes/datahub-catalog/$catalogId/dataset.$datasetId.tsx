@@ -1,7 +1,6 @@
 import {createFileRoute} from '@tanstack/react-router'
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "shared/src/components/ui/table.tsx";
 import {FormProvider, useForm} from "react-hook-form"; // Import FormProvider
-import {usePostNewPolicyInDataset} from "shared/src/data/catalog-mutations.ts";
 import {useContext, useEffect} from "react";
 import {GlobalInfoContext, GlobalInfoContextType} from "shared/src/context/GlobalInfoContext.tsx";
 import {
@@ -21,97 +20,66 @@ import {
 import {Textarea} from "shared/src/components/ui/textarea.tsx";
 import {Button} from "shared/src/components/ui/button.tsx";
 import {Input} from "shared/src/components/ui/input.tsx";
-
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "shared/src/components/ui/select.tsx";
+import {usePostBusinessNewPolicyInDataset} from "shared/src/data/business-mutations.ts";
+import {Dialog, DialogTrigger} from "shared/src/components/ui/dialog.tsx";
+import {BusinessRemovePolicyDialog} from "shared/src/components/BusinessRemovePolicyDialog.tsx";
+import {BusinessRequestAccessDialog} from "shared/src/components/BusinessRequestAccessDialog.tsx";
 
-// Define the interface for PolicyTemplate, as it's crucial for type safety
-interface PolicyTemplate {
-    id: string;
-    title: string;
-    description: string;
-    content: any; // ODRL content structure
-    operand_options: {
-        [key: string]: {
-            dataType: string;
-            defaultValue: string;
-            formType: 'datetime' | 'select' | 'text'; // Added 'text' for generic input
-            label: { "@language": string; "@value": string }[];
-            options?: { label: { "@language": string; "@value": string }[]; value: string }[] | null;
-        }
-    };
-}
 
-// Define a type for the form values, which will be dynamic
 type DynamicFormValues = {
-    [key: string]: string; // Keys will be "$location", "$expiry_date", etc.
+    [key: string]: string;
 };
 
 function RouteComponent() {
     const {catalogId, datasetId} = Route.useParams()
     const {participant} = useContext<AuthContextType | null>(AuthContext)!;
-    // Use optional chaining for data properties as they might be undefined initially
     const {data: dataset} = useGetBusinessDatahubDataset(datasetId)
     const {data: policies} = useBusinessGetPoliciesByDatasetId(catalogId, datasetId)
-    // Cast policy_templates data to the defined interface for better type checking
     const {data: policy_templates} = useGetBusinessPolicyTemplates() as { data: PolicyTemplate[] };
-    const {mutateAsync: createPolicyAsync, isPending} = usePostNewPolicyInDataset()
+    const {mutateAsync: createPolicyAsync, isPending} = usePostBusinessNewPolicyInDataset()
     const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!
-
-    // Initialize useForm with the DynamicFormValues type and an empty defaultValues object
     const form = useForm<DynamicFormValues>({
         defaultValues: {},
     })
 
-    // This effect will populate the form with default values from policy_templates
-    // when the policy_templates data becomes available.
     useEffect(() => {
         if (policy_templates) {
             const initialValues: DynamicFormValues = {};
             policy_templates.forEach(template => {
-                // Iterate through each template's operand_options to set initial values
                 Object.entries(template.operand_options).forEach(([key, value]) => {
                     if (key && value.defaultValue !== undefined) {
                         initialValues[key] = value.defaultValue;
                     }
                 });
             });
-            // Reset the form with the collected default values.
-            // This is crucial to ensure react-hook-form recognizes the fields.
             form.reset(initialValues);
         }
-    }, [policy_templates, form]); // Dependencies: re-run if policy_templates or form instance changes
+    }, [policy_templates, form]);
 
-    // onSubmit function to handle form submission
-    const onSubmit = (formData: DynamicFormValues, currentPolicyTemplate: PolicyTemplate) => {
+    const onSubmit = async (formData: DynamicFormValues, currentPolicyTemplate: PolicyTemplate) => {
         let odrlContent = JSON.parse(JSON.stringify(currentPolicyTemplate.content));
 
-        // Iterate over the submitted form data to replace placeholders in the ODRL content
         for (const key in formData) {
             if (formData.hasOwnProperty(key)) {
                 const value = formData[key];
-                // Convert the ODRL content to a string to perform string replacement
                 let contentString = JSON.stringify(odrlContent);
-                // Replace all occurrences of the placeholder (e.g., "$location") with the actual value
-                // The RegExp is used to ensure all instances of the placeholder are replaced globally.
-                contentString = contentString.replace(new RegExp(`"${key}"`, 'g'), `"${value}"`);
-                // Parse the string back to a JSON object
+                const escapedKey = key.replace(/[$]/g, '\\$&');
+                contentString = contentString.replace(new RegExp(escapedKey, 'g'), value);
                 odrlContent = JSON.parse(contentString);
             }
         }
 
         console.log("ODRL conformed:", odrlContent);
-
-
-        //
-        // // Call the mutation to post the new policy
-        // createPolicyAsync({
-        //     api_gateway,
-        //     datasetId,
-        //     content: {
-        //         offer: odrlContent // The modified ODRL content with placeholders replaced
-        //     }
-        // });
-        form.reset(); // Reset the form fields after successful submission
+        await createPolicyAsync({
+            api_gateway,
+            datasetId,
+            catalogId,
+            content: {
+                offer: odrlContent
+            }
+        });
+        form.reset();
     }
 
 
@@ -146,6 +114,7 @@ function RouteComponent() {
                             <TableHead>Policy Id</TableHead>
                             <TableHead>Policy Target</TableHead>
                             <TableHead>ODRL Content</TableHead>
+                            <TableHead>Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -161,6 +130,29 @@ function RouteComponent() {
                                 <TableCell>
                                     {JSON.stringify(policy)}
                                 </TableCell>
+                                {participant?.participant_type == "Provider" && <>
+                                    <TableCell>
+                                        <Dialog>
+                                            <DialogTrigger asChild>
+                                                <Button variant="destructive" size="sm">Remove policy</Button>
+                                            </DialogTrigger>
+                                            <BusinessRemovePolicyDialog policy={policy} catalogId={catalogId}
+                                                                        datasetId={datasetId}/>
+                                        </Dialog>
+                                    </TableCell>
+                                </>}
+                                {participant?.participant_type == "Consumer" && <>
+                                    <TableCell>
+                                        <Dialog>
+                                            <DialogTrigger asChild>
+                                                <Button variant="default" size="sm">Request access</Button>
+                                            </DialogTrigger>
+                                            <BusinessRequestAccessDialog policy={policy} catalogId={catalogId}
+                                                                         datasetId={datasetId}/>
+                                        </Dialog>
+                                    </TableCell>
+                                </>}
+
                             </TableRow>
                         ))}
                     </TableBody>

@@ -54,6 +54,7 @@ use reqwest::Client;
 use serde_json::{json, Value};
 use std::sync::Arc;
 use std::time::Duration;
+use tracing::debug;
 use urn::Urn;
 
 pub struct DSRPCContractNegotiationConsumerService<T, U, V>
@@ -93,7 +94,7 @@ where
     }
 
     /// Get provider mate based in id
-    async fn get_provider_mate(&self, provider_participant_id: &Urn) -> anyhow::Result<Mates> {
+    async fn get_provider_mate(&self, provider_participant_id: &String) -> anyhow::Result<Mates> {
         let mate = self
             .mates_facade
             .get_mate_by_id(provider_participant_id.clone())
@@ -102,7 +103,7 @@ where
         Ok(mate)
     }
 
-    async fn get_provider_base_url(&self, provider_participant_id: &Urn) -> anyhow::Result<String> {
+    async fn get_provider_base_url(&self, provider_participant_id: &String) -> anyhow::Result<String> {
         let mate = self
             .mates_facade
             .get_mate_by_id(provider_participant_id.clone())
@@ -245,13 +246,17 @@ where
                 Some(consumer_pid.clone()),
             )
             .await?;
+
+        debug!("\n\n10. {:?}\n", response);
+
+
         // 5. persist process, message and offer
         let cn_process = self
             .repo
             .create_cn_process(NewContractNegotiationProcess {
                 provider_id: Option::from(get_urn_from_string(&response.provider_pid)?),
                 consumer_id: Option::from(get_urn_from_string(&response.consumer_pid)?),
-                associated_provider: Some(get_urn_from_string(&provider_mate.participant_id)?),
+                associated_provider: Some(provider_mate.participant_id.clone()),
             })
             .await
             .map_err(CnErrorConsumer::DbErr)?;

@@ -1,4 +1,4 @@
-import {Archive,} from "lucide-react";
+import {Apple, Archive, ChartBarIncreasing} from "lucide-react";
 import React from "react";
 import {Link, useRouterState} from "@tanstack/react-router"
 import {
@@ -19,6 +19,16 @@ const items = [
         title: "Datahub Catalogs",
         url: "/datahub-catalog",
         icon: Archive,
+    },
+    {
+        title: "Data Access Requests",
+        url: "/requests",
+        icon: Apple,
+    },
+    {
+        title: "Dashboard",
+        url: "/dashboard",
+        icon: ChartBarIncreasing,
     },
 ];
 

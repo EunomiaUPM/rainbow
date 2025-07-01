@@ -41,8 +41,8 @@ impl AgreementResolverFacadeTrait for AgreementResolverFacadeService {
             obligation: None,
             _type: OdrlTypes::Agreement,
             target: get_urn(None),
-            assigner: get_urn(None),
-            assignee: get_urn(None),
+            assigner: "".to_string(),
+            assignee: "".to_string(),
             timestamp: None,
             prohibition: None,
         })

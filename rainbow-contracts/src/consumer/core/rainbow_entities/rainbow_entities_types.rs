@@ -139,9 +139,9 @@ impl Into<EditContractNegotiationOffer> for EditContractNegotiationOfferRequest 
 #[serde(deny_unknown_fields)]
 pub struct NewAgreementRequest {
     #[serde(rename = "consumerParticipantId")]
-    pub consumer_participant_id: Urn,
+    pub consumer_participant_id: String,
     #[serde(rename = "providerParticipantId")]
-    pub provider_participant_id: Urn,
+    pub provider_participant_id: String,
     #[serde(rename = "agreement")]
     pub agreement_content: OdrlAgreement,
 }

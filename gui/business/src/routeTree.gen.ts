@@ -11,16 +11,26 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as RequestsRouteImport } from './routes/requests/route'
 import { Route as LoginRouteImport } from './routes/login/route'
 import { Route as DatahubCatalogRouteImport } from './routes/datahub-catalog/route'
+import { Route as DashboardRouteImport } from './routes/dashboard/route'
 import { Route as IndexImport } from './routes/index'
+import { Route as RequestsIndexImport } from './routes/requests/index'
 import { Route as LoginIndexImport } from './routes/login/index'
 import { Route as DatahubCatalogIndexImport } from './routes/datahub-catalog/index'
+import { Route as DashboardIndexImport } from './routes/dashboard/index'
 import { Route as DatahubCatalogCatalogIdRouteImport } from './routes/datahub-catalog/$catalogId/route'
 import { Route as DatahubCatalogCatalogIdIndexImport } from './routes/datahub-catalog/$catalogId/index'
 import { Route as DatahubCatalogCatalogIdDatasetDatasetIdImport } from './routes/datahub-catalog/$catalogId/dataset.$datasetId'
 
 // Create/Update Routes
+
+const RequestsRouteRoute = RequestsRouteImport.update({
+  id: '/requests',
+  path: '/requests',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const LoginRouteRoute = LoginRouteImport.update({
   id: '/login',
@@ -34,10 +44,22 @@ const DatahubCatalogRouteRoute = DatahubCatalogRouteImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const DashboardRouteRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRoute,
+} as any)
+
+const RequestsIndexRoute = RequestsIndexImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => RequestsRouteRoute,
 } as any)
 
 const LoginIndexRoute = LoginIndexImport.update({
@@ -50,6 +72,12 @@ const DatahubCatalogIndexRoute = DatahubCatalogIndexImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => DatahubCatalogRouteRoute,
+} as any)
+
+const DashboardIndexRoute = DashboardIndexImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardRouteRoute,
 } as any)
 
 const DatahubCatalogCatalogIdRouteRoute =
@@ -84,6 +112,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRoute
+    }
     '/datahub-catalog': {
       id: '/datahub-catalog'
       path: '/datahub-catalog'
@@ -98,12 +133,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRoute
     }
+    '/requests': {
+      id: '/requests'
+      path: '/requests'
+      fullPath: '/requests'
+      preLoaderRoute: typeof RequestsRouteImport
+      parentRoute: typeof rootRoute
+    }
     '/datahub-catalog/$catalogId': {
       id: '/datahub-catalog/$catalogId'
       path: '/$catalogId'
       fullPath: '/datahub-catalog/$catalogId'
       preLoaderRoute: typeof DatahubCatalogCatalogIdRouteImport
       parentRoute: typeof DatahubCatalogRouteImport
+    }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexImport
+      parentRoute: typeof DashboardRouteImport
     }
     '/datahub-catalog/': {
       id: '/datahub-catalog/'
@@ -118,6 +167,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/login/'
       preLoaderRoute: typeof LoginIndexImport
       parentRoute: typeof LoginRouteImport
+    }
+    '/requests/': {
+      id: '/requests/'
+      path: '/'
+      fullPath: '/requests/'
+      preLoaderRoute: typeof RequestsIndexImport
+      parentRoute: typeof RequestsRouteImport
     }
     '/datahub-catalog/$catalogId/': {
       id: '/datahub-catalog/$catalogId/'
@@ -137,6 +193,18 @@ declare module '@tanstack/react-router' {
 }
 
 // Create and export the route tree
+
+interface DashboardRouteRouteChildren {
+  DashboardIndexRoute: typeof DashboardIndexRoute
+}
+
+const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
+  DashboardIndexRoute: DashboardIndexRoute,
+}
+
+const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(
+  DashboardRouteRouteChildren,
+)
 
 interface DatahubCatalogCatalogIdRouteRouteChildren {
   DatahubCatalogCatalogIdIndexRoute: typeof DatahubCatalogCatalogIdIndexRoute
@@ -181,21 +249,39 @@ const LoginRouteRouteWithChildren = LoginRouteRoute._addFileChildren(
   LoginRouteRouteChildren,
 )
 
+interface RequestsRouteRouteChildren {
+  RequestsIndexRoute: typeof RequestsIndexRoute
+}
+
+const RequestsRouteRouteChildren: RequestsRouteRouteChildren = {
+  RequestsIndexRoute: RequestsIndexRoute,
+}
+
+const RequestsRouteRouteWithChildren = RequestsRouteRoute._addFileChildren(
+  RequestsRouteRouteChildren,
+)
+
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRouteRouteWithChildren
   '/datahub-catalog': typeof DatahubCatalogRouteRouteWithChildren
   '/login': typeof LoginRouteRouteWithChildren
+  '/requests': typeof RequestsRouteRouteWithChildren
   '/datahub-catalog/$catalogId': typeof DatahubCatalogCatalogIdRouteRouteWithChildren
+  '/dashboard/': typeof DashboardIndexRoute
   '/datahub-catalog/': typeof DatahubCatalogIndexRoute
   '/login/': typeof LoginIndexRoute
+  '/requests/': typeof RequestsIndexRoute
   '/datahub-catalog/$catalogId/': typeof DatahubCatalogCatalogIdIndexRoute
   '/datahub-catalog/$catalogId/dataset/$datasetId': typeof DatahubCatalogCatalogIdDatasetDatasetIdRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/dashboard': typeof DashboardIndexRoute
   '/datahub-catalog': typeof DatahubCatalogIndexRoute
   '/login': typeof LoginIndexRoute
+  '/requests': typeof RequestsIndexRoute
   '/datahub-catalog/$catalogId': typeof DatahubCatalogCatalogIdIndexRoute
   '/datahub-catalog/$catalogId/dataset/$datasetId': typeof DatahubCatalogCatalogIdDatasetDatasetIdRoute
 }
@@ -203,11 +289,15 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRouteRouteWithChildren
   '/datahub-catalog': typeof DatahubCatalogRouteRouteWithChildren
   '/login': typeof LoginRouteRouteWithChildren
+  '/requests': typeof RequestsRouteRouteWithChildren
   '/datahub-catalog/$catalogId': typeof DatahubCatalogCatalogIdRouteRouteWithChildren
+  '/dashboard/': typeof DashboardIndexRoute
   '/datahub-catalog/': typeof DatahubCatalogIndexRoute
   '/login/': typeof LoginIndexRoute
+  '/requests/': typeof RequestsIndexRoute
   '/datahub-catalog/$catalogId/': typeof DatahubCatalogCatalogIdIndexRoute
   '/datahub-catalog/$catalogId/dataset/$datasetId': typeof DatahubCatalogCatalogIdDatasetDatasetIdRoute
 }
@@ -216,28 +306,38 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/dashboard'
     | '/datahub-catalog'
     | '/login'
+    | '/requests'
     | '/datahub-catalog/$catalogId'
+    | '/dashboard/'
     | '/datahub-catalog/'
     | '/login/'
+    | '/requests/'
     | '/datahub-catalog/$catalogId/'
     | '/datahub-catalog/$catalogId/dataset/$datasetId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/dashboard'
     | '/datahub-catalog'
     | '/login'
+    | '/requests'
     | '/datahub-catalog/$catalogId'
     | '/datahub-catalog/$catalogId/dataset/$datasetId'
   id:
     | '__root__'
     | '/'
+    | '/dashboard'
     | '/datahub-catalog'
     | '/login'
+    | '/requests'
     | '/datahub-catalog/$catalogId'
+    | '/dashboard/'
     | '/datahub-catalog/'
     | '/login/'
+    | '/requests/'
     | '/datahub-catalog/$catalogId/'
     | '/datahub-catalog/$catalogId/dataset/$datasetId'
   fileRoutesById: FileRoutesById
@@ -245,14 +345,18 @@ export interface FileRouteTypes {
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
   DatahubCatalogRouteRoute: typeof DatahubCatalogRouteRouteWithChildren
   LoginRouteRoute: typeof LoginRouteRouteWithChildren
+  RequestsRouteRoute: typeof RequestsRouteRouteWithChildren
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DashboardRouteRoute: DashboardRouteRouteWithChildren,
   DatahubCatalogRouteRoute: DatahubCatalogRouteRouteWithChildren,
   LoginRouteRoute: LoginRouteRouteWithChildren,
+  RequestsRouteRoute: RequestsRouteRouteWithChildren,
 }
 
 export const routeTree = rootRoute
@@ -266,12 +370,20 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
+        "/dashboard",
         "/datahub-catalog",
-        "/login"
+        "/login",
+        "/requests"
       ]
     },
     "/": {
       "filePath": "index.tsx"
+    },
+    "/dashboard": {
+      "filePath": "dashboard/route.tsx",
+      "children": [
+        "/dashboard/"
+      ]
     },
     "/datahub-catalog": {
       "filePath": "datahub-catalog/route.tsx",
@@ -286,6 +398,12 @@ export const routeTree = rootRoute
         "/login/"
       ]
     },
+    "/requests": {
+      "filePath": "requests/route.tsx",
+      "children": [
+        "/requests/"
+      ]
+    },
     "/datahub-catalog/$catalogId": {
       "filePath": "datahub-catalog/$catalogId/route.tsx",
       "parent": "/datahub-catalog",
@@ -294,6 +412,10 @@ export const routeTree = rootRoute
         "/datahub-catalog/$catalogId/dataset/$datasetId"
       ]
     },
+    "/dashboard/": {
+      "filePath": "dashboard/index.tsx",
+      "parent": "/dashboard"
+    },
     "/datahub-catalog/": {
       "filePath": "datahub-catalog/index.tsx",
       "parent": "/datahub-catalog"
@@ -301,6 +423,10 @@ export const routeTree = rootRoute
     "/login/": {
       "filePath": "login/index.tsx",
       "parent": "/login"
+    },
+    "/requests/": {
+      "filePath": "requests/index.tsx",
+      "parent": "/requests"
     },
     "/datahub-catalog/$catalogId/": {
       "filePath": "datahub-catalog/$catalogId/index.tsx",

@@ -45,7 +45,7 @@ ContractNegotiationConsumerProcessRepo
 pub struct NewContractNegotiationProcess {
     pub provider_id: Option<Urn>,
     pub consumer_id: Option<Urn>,
-    pub associated_provider: Option<Urn>,
+    pub associated_provider: Option<String>,
 }
 
 pub struct EditContractNegotiationProcess {}
@@ -171,8 +171,8 @@ pub trait ContractNegotiationConsumerOfferRepo {
 
 pub struct NewAgreement {
     pub agreement_id: Option<Urn>,
-    pub consumer_participant_id: Urn,
-    pub provider_participant_id: Urn,
+    pub consumer_participant_id: String,
+    pub provider_participant_id: String,
     pub agreement_content: OdrlAgreement,
     pub active: bool,
 }

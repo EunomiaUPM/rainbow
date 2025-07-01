@@ -26,7 +26,7 @@ use urn::Urn;
 #[serde(deny_unknown_fields)]
 pub struct SetupOfferRequest {
     #[serde(rename = "consumerParticipantId")]
-    pub consumer_participant_id: Urn,
+    pub consumer_participant_id: String,
     #[serde(rename = "consumerPid")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub consumer_pid: Option<Urn>,
@@ -39,7 +39,7 @@ pub struct SetupOfferRequest {
 #[derive(Deserialize, Serialize, Debug)]
 pub struct SetupOfferResponse {
     #[serde(rename = "consumerParticipantId")]
-    pub consumer_participant_id: Urn,
+    pub consumer_participant_id: String,
     #[serde(rename = "consumerPid")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub consumer_pid: Option<Urn>,
@@ -55,7 +55,7 @@ pub struct SetupOfferResponse {
 #[serde(deny_unknown_fields)]
 pub struct SetupAgreementRequest {
     #[serde(rename = "consumerParticipantId")]
-    pub consumer_participant_id: Urn,
+    pub consumer_participant_id: String,
     #[serde(rename = "consumerPid")]
     pub consumer_pid: Urn,
     #[serde(rename = "providerPid")]
@@ -78,7 +78,7 @@ pub struct SetupAgreementResponse {
 #[serde(deny_unknown_fields)]
 pub struct SetupFinalizationRequest {
     #[serde(rename = "consumerParticipantId")]
-    pub consumer_participant_id: Urn,
+    pub consumer_participant_id: String,
     #[serde(rename = "consumerPid")]
     pub consumer_pid: Urn,
     #[serde(rename = "providerPid")]
@@ -99,7 +99,7 @@ pub struct SetupFinalizationResponse {
 #[serde(deny_unknown_fields)]
 pub struct SetupTerminationRequest {
     #[serde(rename = "consumerParticipantId")]
-    pub consumer_participant_id: Urn,
+    pub consumer_participant_id: String,
     #[serde(rename = "consumerPid")]
     pub consumer_pid: Urn,
     #[serde(rename = "providerPid")]

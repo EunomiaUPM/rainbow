@@ -355,20 +355,24 @@ where
             ContractRequestMessageOfferTypes::OfferId(_) => {}
         }
 
+        debug!("\n\n8. {}\n", "todo bien hasta aquí");
+
+
         // 3. persist process, message and offer
         let cn_process = self
             .repo
             .create_cn_process(NewContractNegotiationProcess {
                 provider_id: Some(get_urn(None)),
                 consumer_id: Option::from(input.consumer_pid.clone()),
-                associated_consumer: Some(get_urn_from_string(
-                    &consumer_participant_mate.participant_id,
-                )?),
+                associated_consumer: Some(consumer_participant_mate.participant_id.clone()),
                 state: ContractNegotiationState::Requested,
                 initiated_by: ConfigRoles::Consumer,
             })
             .await
             .map_err(IdsaCNError::DbErr)?;
+
+        debug!("\n\n8. {:?}\n", cn_process);
+
 
         let cn_message = self
             .repo
@@ -405,6 +409,8 @@ where
             }),
         )
             .await?;
+
+        debug!("\n\n9. {:?}\n", cn_process);
 
         Ok(cn_process.into())
     }

@@ -73,8 +73,9 @@ where
                 "/gateway/api/catalogs/:catalog_id/datasets/:dataset_id/policies/:policy_id",
                 delete(Self::handle_business_delete_policy_offer),
             )
+            // HERE Business routes
             .route(
-                "/gateway/api/negotiation/business/requests",
+                "/gateway/api/negotiation/:participant_id/requests",
                 get(Self::handle_get_business_negotiation_requests),
             )
             .route(
@@ -87,7 +88,7 @@ where
             )
             // Customer
             .route(
-                "/gateway/api/negotiation/customer/requests",
+                "/gateway/api/negotiation/customer/:participant_id/requests",
                 get(Self::handle_get_customer_negotiation_requests),
             )
             .route(

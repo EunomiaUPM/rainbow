@@ -223,7 +223,7 @@ where
             .create_cn_process(NewContractNegotiationProcess {
                 provider_id: Some(input.provider_pid.clone()),
                 consumer_id: None,
-                associated_provider: Some(get_urn_from_string(&provider_participant_mate.participant_id)?),
+                associated_provider: Some(provider_participant_mate.participant_id.clone()),
             })
             .await
             .map_err(IdsaCNError::DbErr)?;

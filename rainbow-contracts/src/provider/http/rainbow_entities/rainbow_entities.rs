@@ -68,6 +68,10 @@ where
                 get(Self::handle_get_cn_process_by_consumer),
             )
             .route(
+                "/api/v1/contract-negotiation/processes/participant/:participant_id",
+                get(Self::handle_get_cn_processes_by_participant),
+            )
+            .route(
                 "/api/v1/contract-negotiation/processes",
                 post(Self::handle_post_cn_process),
             )
@@ -247,6 +251,23 @@ where
             Err(err) => return CnErrorProvider::UrnUuidSchema(err.to_string()).into_response(),
         };
         match service.get_cn_process_by_consumer(consumer_id).await {
+            Ok(process) => (StatusCode::OK, Json(process)).into_response(),
+            Err(err) => match err.downcast::<CnErrorProvider>() {
+                Ok(e) => e.into_response(),
+                Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+            },
+        }
+    }
+
+    async fn handle_get_cn_processes_by_participant(
+        State(service): State<Arc<T>>,
+        Path(participant_id): Path<String>,
+    ) -> impl IntoResponse {
+        info!(
+            "GET /api/v1/contract-negotiation/processes/participant/{}",
+            participant_id
+        );
+        match service.get_cn_processes_by_participant(participant_id).await {
             Ok(process) => (StatusCode::OK, Json(process)).into_response(),
             Err(err) => match err.downcast::<CnErrorProvider>() {
                 Ok(e) => e.into_response(),

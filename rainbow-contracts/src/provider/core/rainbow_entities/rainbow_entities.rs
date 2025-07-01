@@ -116,6 +116,15 @@ where
         Ok(process)
     }
 
+    async fn get_cn_processes_by_participant(&self, participant_id: String) -> anyhow::Result<Vec<Model>> {
+        let processes = self
+            .repo
+            .get_cn_processes_by_participant_id(participant_id)
+            .await
+            .map_err(CnErrorProvider::DbErr)?;
+        Ok(processes)
+    }
+
     async fn post_cn_process(&self, input: NewContractNegotiationRequest) -> anyhow::Result<Model> {
         let process = self.repo.create_cn_process(input.into()).await.map_err(CnErrorProvider::DbErr)?;
         self.notification_service

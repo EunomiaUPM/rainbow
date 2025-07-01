@@ -133,10 +133,10 @@ impl BusinessCatalogTrait for BusinessServiceForDatahub {
 
     async fn delete_policy_offer(&self, dataset_id: Urn, policy_id: Urn, _token: String) -> anyhow::Result<()> {
         let base_url = self.config.get_catalog_host_url().unwrap();
-        let url = format!("{}/api/v1/datasets/{}/policies", base_url, dataset_id);
+        let url = format!("{}/api/v1/datasets/{}/policies/{}", base_url, dataset_id, policy_id);
         let req = self.client.delete(url).send().await.map_err(|e| anyhow!("lol {}", e.to_string()))?;
         if req.status().is_success() == false {
-            bail!("not able to fetch policy-templates");
+            bail!("not able to delete policy");
         }
         Ok(())
     }
@@ -214,12 +214,12 @@ impl BusinessCatalogTrait for BusinessServiceForDatahub {
 
     async fn create_request(&self, input: RainbowBusinessNegotiationRequest, _token: String) -> anyhow::Result<Value> {
         // fetch base url for consumer and its token
-        // TODO replace bypassing by Rodrigo's implementation
         let base_url = self.config.get_contract_negotiation_host_url().unwrap();
         let url = format!(
             "{}/api/v1/mates/{}",
             base_url, input.consumer_participant_id
         );
+
         let req = self.client.get(url).send().await.map_err(|e| anyhow!("lol {}", e.to_string()))?;
         if req.status().is_success() == false {
             bail!("not able to fetch consumer user");
@@ -237,26 +237,9 @@ impl BusinessCatalogTrait for BusinessServiceForDatahub {
         let provider_participant =
             req.json::<Mates>().await.map_err(|e| anyhow!("not deserializable, {}", e.to_string()))?;
 
-        // fetch providerParticipantId by consumer
-        // first we get all data from consumer
-        let base_url = self.config.get_contract_negotiation_host_url().unwrap();
-        let url = format!(
-            "{}/api/v1/mates/bypass/{}",
-            base_url,
-            consumer_participant.participant_id.clone()
-        );
-        let req = self.client.get(url).send().await.map_err(|e| anyhow!("lol {}", e.to_string()))?;
-        if req.status().is_success() == false {
-            bail!("not able to fetch provider user");
-        }
-        let consumer_participants_bypassed =
-            req.json::<Vec<Mates>>().await.map_err(|e| anyhow!("not deserializable in mates, {}", e.to_string()))?;
-        let a =
-            consumer_participants_bypassed.iter().find(|p| p.participant_type == "Provider").expect("aaa").to_owned();
-
         // create SetupContractNegotiationRequest message
         let setup_request_message = json!({
-            "providerParticipantId": a.participant_id,
+            "providerParticipantId": provider_participant.participant_id,
             "offer": input.offer.clone()
         });
 
@@ -274,6 +257,7 @@ impl BusinessCatalogTrait for BusinessServiceForDatahub {
             .send()
             .await
             .map_err(|e| anyhow!("lol {}", e.to_string()))?;
+
         if req.status().is_success() == false {
             bail!("not able to start contract negotiation from consumer");
         }

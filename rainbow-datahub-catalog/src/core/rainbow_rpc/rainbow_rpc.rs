@@ -27,6 +27,7 @@ use rainbow_common::protocol::catalog::EntityTypes;
 use rainbow_common::protocol::contract::contract_odrl::OdrlOffer;
 use rainbow_db::catalog::repo::{CatalogRepo, DataServiceRepo, DatasetRepo, DistributionRepo, OdrlOfferRepo};
 use std::sync::Arc;
+use tracing::debug;
 
 pub struct RainbowRPCDatahubCatalogService<T>
 where
@@ -68,13 +69,23 @@ where
 
     // END DATAHUB SERVICES AND REPOS
     async fn resolve_offer(&self, input: RainbowRPCDatahubCatalogResolveOfferByIdRequest) -> anyhow::Result<OdrlOffer> {
+        debug!("\n\n5. {:?}\n", input);
+
         let offer = self
             .repo
             .get_odrl_offer_by_id(input.offer_id.clone())
             .await
             .map_err(|e| CatalogError::DbErr(e.into()))?
             .ok_or(CatalogError::NotFound { id: input.offer_id, entity: EntityTypes::DataService.to_string() })?;
+
+        debug!("\n\n6. {:?}\n", offer);
+
+
         let offer = OdrlOffer::try_from(offer)?;
+
+        debug!("\n\n7. {:?}\n", offer);
+
+
         Ok(offer)
     }
 }

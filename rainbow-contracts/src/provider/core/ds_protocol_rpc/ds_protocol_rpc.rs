@@ -105,7 +105,7 @@ where
         Self { repo, notification_service, client, catalog_facade, mates_facade }
     }
     /// Get consumer mate based in id
-    async fn get_consumer_mate(&self, provider_participant_id: &Urn) -> anyhow::Result<Mates> {
+    async fn get_consumer_mate(&self, provider_participant_id: &String) -> anyhow::Result<Mates> {
         let mate = self
             .mates_facade
             .get_mate_by_id(provider_participant_id.clone())
@@ -285,7 +285,7 @@ where
             .create_cn_process(NewContractNegotiationProcess {
                 provider_id: Some(provider_pid.clone()),
                 consumer_id: Some(get_urn_from_string(&response.consumer_pid)?),
-                associated_consumer: Some(get_urn_from_string(&consumer_mate.participant_id)?),
+                associated_consumer: Some(consumer_mate.participant_id.clone()),
                 state: response.state,
                 initiated_by: ConfigRoles::Provider,
             })
@@ -501,7 +501,7 @@ where
 
         // 3.2 fetch participants
         let provider_participant = self.get_provider().await?;
-        let provider_participant_id = get_urn_from_string(&provider_participant.participant_id)?;
+        let provider_participant_id = provider_participant.participant_id;
 
         // 3.3 arrange agreement
         let agreement_id = get_urn(None);

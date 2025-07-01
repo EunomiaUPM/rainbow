@@ -25,8 +25,6 @@ use serde_json::Value;
 use urn::Urn;
 // use sea_orm_migration::prelude::ValueType;
 
-use sea_orm::sea_query::ValueType;
-
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum OdrlTypes {
     #[serde(rename = "Offer")]
@@ -164,8 +162,6 @@ impl ProtocolValidate for OdrlOffer {
 }
 
 
-
-
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct OdrlAgreement {
@@ -187,9 +183,9 @@ pub struct OdrlAgreement {
     #[serde(rename = "target")]
     pub target: Urn,
     #[serde(rename = "assigner")]
-    pub assigner: Urn,
+    pub assigner: String,
     #[serde(rename = "assignee")]
-    pub assignee: Urn,
+    pub assignee: String,
     #[serde(rename = "timestamp")]
     pub timestamp: Option<String>,
     #[serde(rename = "prohibition")]
@@ -206,8 +202,8 @@ impl Default for OdrlAgreement {
             obligation: None,
             _type: OdrlTypes::Agreement,
             target: get_urn(None),
-            assigner: get_urn(None),
-            assignee: get_urn(None),
+            assigner: "".to_string(),
+            assignee: "".to_string(),
             timestamp: None,
             prohibition: None,
         }
