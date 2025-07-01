@@ -100,6 +100,7 @@ impl RainbowProviderGateway {
             "datasets" => config.get_catalog_host_url(),
             "data-services" => config.get_catalog_host_url(),
             "distributions" => config.get_catalog_host_url(),
+            "datahub" => config.get_catalog_host_url(), // TODO config datahub_host_url
             "contract-negotiation" => config.get_contract_negotiation_host_url(),
             "mates" => config.get_contract_negotiation_host_url(),
             "negotiations" => config.get_contract_negotiation_host_url(),

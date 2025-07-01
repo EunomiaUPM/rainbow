@@ -49,7 +49,7 @@ ContractNegotiationProcessRepo
 pub struct NewContractNegotiationProcess {
     pub provider_id: Option<Urn>,
     pub consumer_id: Option<Urn>,
-    pub associated_consumer: Option<Urn>,
+    pub associated_consumer: Option<String>,
     pub state: ContractNegotiationState,
     pub initiated_by: ConfigRoles,
 }
@@ -73,6 +73,10 @@ pub trait ContractNegotiationProcessRepo {
         &self,
         consumer_id: Urn,
     ) -> anyhow::Result<Option<cn_process::Model>, CnErrors>;
+    async fn get_cn_processes_by_participant_id(
+        &self,
+        participant_id: String,
+    ) -> anyhow::Result<Vec<cn_process::Model>, CnErrors>;
     async fn get_cn_process_by_cn_id(&self, cn_process_id: Urn) -> anyhow::Result<Option<cn_process::Model>, CnErrors>;
     async fn put_cn_process(
         &self,
@@ -179,8 +183,8 @@ pub trait ContractNegotiationOfferRepo {
 
 pub struct NewAgreement {
     pub agreement_id: Option<Urn>,
-    pub consumer_participant_id: Urn,
-    pub provider_participant_id: Urn,
+    pub consumer_participant_id: String,
+    pub provider_participant_id: String,
     pub agreement_content: OdrlAgreement,
     pub active: bool,
 }

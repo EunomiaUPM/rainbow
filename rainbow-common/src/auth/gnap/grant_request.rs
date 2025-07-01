@@ -20,17 +20,17 @@
 use rand::distributions::Alphanumeric;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde_json::{Value, json};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GrantRequest {
     pub access_token: AccessTokenRequirements4GR,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub subject: Option<Subject4GR>, // REQUIRED if requesting subject information
-    pub client: String,
+    pub client: Value,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub user: Option<String>,
-    pub interact: Interact4GR
+    pub interact: Option<Interact4GR>
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -91,14 +91,33 @@ impl GrantRequest {
         Self {
             access_token: AccessTokenRequirements4GR::default(),
             subject: None,
-            client,
+            client: Value::String(client),
             user: None,
-            interact: Interact4GR::default4oidc(method),
+            interact: Some(Interact4GR::default4oidc(method)),
+        }
+    }
+
+
+    pub fn default4await(cert: String, uri: String) -> Self {
+        Self {
+            access_token: AccessTokenRequirements4GR::request_vc(), // TODO Fix, es none en este caso
+            subject: None,
+            client: json!({
+                "key" : {
+                    "proof": "mtls",
+                    "cert#S256": cert
+                }
+
+            }),
+            user: None,
+            interact: Some(Interact4GR::default4oidc(uri)),
         }
     }
 
     pub fn update_callback(&mut self, callback: String) -> &mut Self {
-        self.interact.finish.uri = Some(callback);
+        if let Some(interact) = self.interact.as_mut() {
+            interact.finish.uri = Some(callback);
+        }
         self
     }
 
@@ -123,6 +142,21 @@ impl AccessTokenRequirements4GR {
             flags: Some("Bearer".to_string()), // TODO
         }
     }
+
+    pub fn request_vc() -> Self {
+        Self {
+            access: Access4AT {
+                r#type: String::from("vc-exchange"),
+                actions: Some(String::from("vc-request")),
+                locations: None,
+                datatypes: None,
+                identifier: None,
+                privileges: None,
+            },
+            label: None,
+            flags: None, // TODO
+        }
+    }
 }
 
 impl Interact4GR {
@@ -135,4 +169,14 @@ impl Interact4GR {
             hints: None,
         }
     }
+
+    pub fn default4await(uri: String) -> Self {
+        let nonce: String = rand::thread_rng().sample_iter(&Alphanumeric).take(36).map(char::from).collect();
+        Self {
+            start: vec![String::from("await")],
+            finish: Finish4Interact { method: "await".to_string(), uri: Some(uri), nonce, hash_method: None },
+            hints: None,
+        }
+    }
 }
+

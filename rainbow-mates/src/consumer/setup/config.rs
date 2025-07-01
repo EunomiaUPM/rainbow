@@ -17,9 +17,10 @@
  *
  */
 
-use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait, SSIConsumerConfig, SSIConsumerWalletConfig};
+use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
 use rainbow_common::config::global_config::{DatabaseConfig, HostConfig};
 use rainbow_common::config::ConfigRoles;
+use rainbow_common::ssi_wallet::{ClientConfig, SSIWalletConfig};
 use serde::Serialize;
 
 #[derive(Serialize, Clone, Debug)]
@@ -33,9 +34,10 @@ pub struct MateConsumerApplicationConfig {
     pub database_config: DatabaseConfig,
     pub ssh_user: Option<String>,
     pub ssh_private_key_path: Option<String>,
-    pub ssi_wallet_config: SSIConsumerWalletConfig,
-    pub ssi_consumer_client: SSIConsumerConfig,
+    pub ssi_wallet_config: SSIWalletConfig,
+    pub client_config: ClientConfig,
     pub role: ConfigRoles,
+    pub cert_path: String,
 }
 
 impl Default for MateConsumerApplicationConfig {
@@ -79,12 +81,16 @@ impl ApplicationConsumerConfigTrait for MateConsumerApplicationConfig {
         &self.database_config
     }
 
-    fn get_raw_ssi_wallet_config(&self) -> &SSIConsumerWalletConfig {
+    fn get_raw_ssi_wallet_config(&self) -> &SSIWalletConfig {
         &self.ssi_wallet_config
     }
 
-    fn get_raw_ssi_consumer_client(&self) -> &SSIConsumerConfig {
-        &self.ssi_consumer_client
+    fn get_raw_client_config(&self) -> &ClientConfig {
+        &self.client_config
+    }
+
+    fn get_raw_cert_path(&self) -> &String {
+        &self.cert_path
     }
 
     fn merge_dotenv_configuration(&self) -> Self
@@ -108,19 +114,10 @@ impl From<ApplicationConsumerConfig> for MateConsumerApplicationConfig {
             database_config: value.database_config,
             ssh_user: value.ssh_user,
             ssh_private_key_path: value.ssh_private_key_path,
-            ssi_wallet_config: SSIConsumerWalletConfig {
-                consumer_wallet_portal_url: value.ssi_wallet_config.consumer_wallet_portal_url,
-                consumer_wallet_portal_port: value.ssi_wallet_config.consumer_wallet_portal_port,
-                consumer_wallet_type: value.ssi_wallet_config.consumer_wallet_type,
-                consumer_wallet_name: value.ssi_wallet_config.consumer_wallet_name,
-                consumer_wallet_email: value.ssi_wallet_config.consumer_wallet_email,
-                consumer_wallet_password: value.ssi_wallet_config.consumer_wallet_password,
-                consumer_wallet_id: None,
-            },
-            ssi_consumer_client: SSIConsumerConfig {
-                consumer_client: value.ssi_consumer_client.consumer_client,
-            },
+            ssi_wallet_config: value.ssi_wallet_config,
+            client_config: value.client_config,
             role: value.role,
+            cert_path: value.cert_path,
         }
     }
 }
@@ -138,19 +135,10 @@ impl Into<ApplicationConsumerConfig> for MateConsumerApplicationConfig {
             database_config: self.database_config,
             ssh_user: self.ssh_user,
             ssh_private_key_path: self.ssh_private_key_path,
-            ssi_wallet_config: SSIConsumerWalletConfig {
-                consumer_wallet_portal_url: self.ssi_wallet_config.consumer_wallet_portal_url,
-                consumer_wallet_portal_port: self.ssi_wallet_config.consumer_wallet_portal_port,
-                consumer_wallet_type: self.ssi_wallet_config.consumer_wallet_type,
-                consumer_wallet_name: self.ssi_wallet_config.consumer_wallet_name,
-                consumer_wallet_email: self.ssi_wallet_config.consumer_wallet_email,
-                consumer_wallet_password: self.ssi_wallet_config.consumer_wallet_password,
-                consumer_wallet_id: None,
-            },
-            ssi_consumer_client: SSIConsumerConfig {
-                consumer_client: self.ssi_consumer_client.consumer_client
-            },
+            ssi_wallet_config: self.ssi_wallet_config,
+            client_config: self.client_config,
             role: self.role,
+            cert_path: self.cert_path,
         }
     }
 }

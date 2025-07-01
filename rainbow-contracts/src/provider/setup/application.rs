@@ -19,6 +19,8 @@
 
 use crate::common::core::mates_facade::mates_facade::MatesFacadeService;
 use crate::provider::core::catalog_odrl_facade::catalog_odrl_facade::CatalogOdrlFacadeService;
+use crate::provider::core::catalog_odrl_facade::datahub_odrl_facade::DatahubOdrlFacadeService;
+use crate::provider::core::catalog_odrl_facade::CatalogOdrlFacadeTrait;
 use crate::provider::core::ds_protocol::ds_protocol::DSProtocolContractNegotiationProviderService;
 use crate::provider::core::ds_protocol_rpc::ds_protocol_rpc::DSRPCContractNegotiationProviderService;
 use crate::provider::core::rainbow_entities::rainbow_entities::RainbowEntitiesContractNegotiationProviderService;
@@ -85,11 +87,18 @@ pub async fn create_contract_negotiation_provider_router(config: &ContractNegoti
     let mates_facade = Arc::new(MatesFacadeService::new(
         app_config.into()
     ));
-    let catalog_odrl_facade = Arc::new(CatalogOdrlFacadeService::new());
+
+
+    let catalog_facade: Arc<dyn CatalogOdrlFacadeTrait + Send + Sync>;
+    if config.is_datahub_as_catalog() {
+        catalog_facade = Arc::new(DatahubOdrlFacadeService::new());
+    } else {
+        catalog_facade = Arc::new(CatalogOdrlFacadeService::new());
+    }
     let ds_protocol_service = Arc::new(DSProtocolContractNegotiationProviderService::new(
         provider_repo.clone(),
         notification_service.clone(),
-        catalog_odrl_facade.clone(),
+        catalog_facade.clone(),
         mates_facade.clone(),
         ssi_auth_facade.clone(),
     ));
@@ -99,7 +108,7 @@ pub async fn create_contract_negotiation_provider_router(config: &ContractNegoti
     let ds_protocol_rpc_service = Arc::new(DSRPCContractNegotiationProviderService::new(
         provider_repo.clone(),
         notification_service.clone(),
-        catalog_odrl_facade.clone(),
+        catalog_facade.clone(),
         mates_facade.clone(),
     ));
     let ds_protocol_rpc = DSRPCContractNegotiationProviderRouter::new(ds_protocol_rpc_service.clone()).router();

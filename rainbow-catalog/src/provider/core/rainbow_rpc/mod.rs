@@ -25,8 +25,8 @@ use rainbow_common::protocol::contract::contract_odrl::OdrlOffer;
 pub mod rainbow_rpc;
 pub mod rainbow_rpc_types;
 
-#[async_trait]
 #[mockall::automock]
+#[async_trait]
 pub trait RainbowRPCCatalogTrait: Send + Sync {
     async fn resolve_data_service(&self, input: RainbowRPCCatalogResolveDataServiceRequest) -> anyhow::Result<DataService>;
     async fn resolve_offer(&self, input: RainbowRPCCatalogResolveOfferByIdRequest) -> anyhow::Result<OdrlOffer>;

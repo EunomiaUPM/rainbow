@@ -21,6 +21,7 @@ use super::super::entities::agreement;
 use super::super::entities::cn_message;
 use super::super::entities::cn_offer;
 use super::super::entities::cn_process;
+use crate::contracts_provider::entities::cn_process::Model;
 use crate::contracts_provider::repo::{
     AgreementRepo, CnErrors, ContractNegotiationMessageRepo, ContractNegotiationOfferRepo,
     ContractNegotiationProcessRepo, ContractNegotiationProviderRepoFactory, EditAgreement,
@@ -89,6 +90,15 @@ impl ContractNegotiationProcessRepo for ContractNegotiationProviderRepoForSql {
         let cn_processes = cn_process::Entity::find()
             .filter(cn_process::Column::ConsumerId.eq(consumer_id.as_str()))
             .one(&self.db_connection)
+            .await
+            .map_err(|err| CnErrors::ErrorFetchingCNProcess(err.into()))?;
+        Ok(cn_processes)
+    }
+
+    async fn get_cn_processes_by_participant_id(&self, participant_id: String) -> anyhow::Result<Vec<Model>, CnErrors> {
+        let cn_processes = cn_process::Entity::find()
+            .filter(cn_process::Column::AssociatedConsumer.eq(participant_id))
+            .all(&self.db_connection)
             .await
             .map_err(|err| CnErrors::ErrorFetchingCNProcess(err.into()))?;
         Ok(cn_processes)

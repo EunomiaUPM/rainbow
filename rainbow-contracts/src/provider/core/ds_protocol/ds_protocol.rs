@@ -61,7 +61,7 @@ use std::sync::Arc;
 use tracing::debug;
 use urn::Urn;
 
-pub struct DSProtocolContractNegotiationProviderService<T, U, V, W, X>
+pub struct DSProtocolContractNegotiationProviderService<T, U, W, X>
 where
     T: ContractNegotiationProcessRepo
     + ContractNegotiationMessageRepo
@@ -71,19 +71,18 @@ where
     + Sync
     + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
-    V: CatalogOdrlFacadeTrait + Send + Sync,
+// V: CatalogOdrlFacadeTrait + Send + Sync,
     W: MatesFacadeTrait + Send + Sync,
     X: SSIAuthFacadeTrait + Sync + Send,
 {
     repo: Arc<T>,
     notification_service: Arc<U>,
-    catalog_facade: Arc<V>,
+    catalog_facade: Arc<dyn CatalogOdrlFacadeTrait + Send + Sync>,
     mates_facade: Arc<W>,
     ssi_auth_facade: Arc<X>,
-
 }
 
-impl<T, U, V, W, X> DSProtocolContractNegotiationProviderService<T, U, V, W, X>
+impl<T, U, W, X> DSProtocolContractNegotiationProviderService<T, U, W, X>
 where
     T: ContractNegotiationProcessRepo
     + ContractNegotiationMessageRepo
@@ -93,19 +92,23 @@ where
     + Sync
     + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
-    V: CatalogOdrlFacadeTrait + Send + Sync,
+// V: CatalogOdrlFacadeTrait + Send + Sync,
     W: MatesFacadeTrait + Send + Sync,
     X: SSIAuthFacadeTrait + Sync + Send,
 {
-    pub fn new(repo: Arc<T>, notification_service: Arc<U>, catalog_facade: Arc<V>, mates_facade: Arc<W>, ssi_auth_facade: Arc<X>) -> Self {
+    pub fn new(
+        repo: Arc<T>,
+        notification_service: Arc<U>,
+        catalog_facade: Arc<dyn CatalogOdrlFacadeTrait + Send + Sync>,
+        mates_facade: Arc<W>,
+        ssi_auth_facade: Arc<X>,
+    ) -> Self {
         Self { repo, notification_service, catalog_facade, mates_facade, ssi_auth_facade }
     }
 
     /// Validate auth token
     async fn validate_auth_token(&self, token: String) -> anyhow::Result<Mates> {
-        let mate = self.ssi_auth_facade
-            .verify_token(token)
-            .await?;
+        let mate = self.ssi_auth_facade.verify_token(token).await?;
         Ok(mate)
     }
 
@@ -176,7 +179,8 @@ where
                     ))
                 }
                 // 3. User id must be also correlated with process
-                if cn_process_provider.associated_consumer.clone().unwrap() != consumer_participant_mate.participant_id {
+                if cn_process_provider.associated_consumer.clone().unwrap() != consumer_participant_mate.participant_id
+                {
                     bail!(IdsaCNError::ValidationError(
                         "This user is not related with this process".to_string()
                     ))
@@ -291,7 +295,7 @@ where
 }
 
 #[async_trait]
-impl<T, U, V, W, X> DSProtocolContractNegotiationProviderTrait for DSProtocolContractNegotiationProviderService<T, U, V, W, X>
+impl<T, U, W, X> DSProtocolContractNegotiationProviderTrait for DSProtocolContractNegotiationProviderService<T, U, W, X>
 where
     T: ContractNegotiationProcessRepo
     + ContractNegotiationMessageRepo
@@ -301,7 +305,7 @@ where
     + Sync
     + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
-    V: CatalogOdrlFacadeTrait + Send + Sync,
+// V: CatalogOdrlFacadeTrait + Send + Sync,
     W: MatesFacadeTrait + Send + Sync,
     X: SSIAuthFacadeTrait + Sync + Send,
 {
@@ -320,7 +324,10 @@ where
         let consumer_participant_mate = self.validate_auth_token(token).await?;
         self.transition_validation(&input).await.map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
         self.json_schema_validation(&input).map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
-        let _ = self.payload_validation(None, &input, &consumer_participant_mate).await.map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
+        let _ = self
+            .payload_validation(None, &input, &consumer_participant_mate)
+            .await
+            .map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
 
         // 2. resolve odrl policy
         let odrl_ids = match &input.odrl_offer {
@@ -332,7 +339,7 @@ where
             Err(_) => bail!(IdsaCNError::NotCheckedError {
                 provider_pid: None,
                 consumer_pid: None,
-                error: "Id not found".to_string()
+                error: "Offer not found".to_string()
             }),
         };
         match &input.odrl_offer {
@@ -348,18 +355,24 @@ where
             ContractRequestMessageOfferTypes::OfferId(_) => {}
         }
 
+        debug!("\n\n8. {}\n", "todo bien hasta aquí");
+
+
         // 3. persist process, message and offer
         let cn_process = self
             .repo
             .create_cn_process(NewContractNegotiationProcess {
                 provider_id: Some(get_urn(None)),
                 consumer_id: Option::from(input.consumer_pid.clone()),
-                associated_consumer: Some(get_urn_from_string(&consumer_participant_mate.participant_id)?),
+                associated_consumer: Some(consumer_participant_mate.participant_id.clone()),
                 state: ContractNegotiationState::Requested,
                 initiated_by: ConfigRoles::Consumer,
             })
             .await
             .map_err(IdsaCNError::DbErr)?;
+
+        debug!("\n\n8. {:?}\n", cn_process);
+
 
         let cn_message = self
             .repo
@@ -396,6 +409,8 @@ where
             }),
         )
             .await?;
+
+        debug!("\n\n9. {:?}\n", cn_process);
 
         Ok(cn_process.into())
     }
@@ -515,10 +530,7 @@ where
             .repo
             .put_cn_process(
                 get_urn_from_string(&cn_process.provider_id)?,
-                EditContractNegotiationProcess {
-                    consumer_id: None,
-                    state: Some(input.event_type.clone().into()),
-                },
+                EditContractNegotiationProcess { consumer_id: None, state: Some(input.event_type.clone().into()) },
             )
             .await
             .map_err(IdsaCNError::DbErr)?;
@@ -572,10 +584,7 @@ where
             .repo
             .put_cn_process(
                 get_urn_from_string(&cn_process.provider_id)?,
-                EditContractNegotiationProcess {
-                    consumer_id: None,
-                    state: Some(ContractNegotiationState::Verified),
-                },
+                EditContractNegotiationProcess { consumer_id: None, state: Some(ContractNegotiationState::Verified) },
             )
             .await
             .map_err(IdsaCNError::DbErr)?;
@@ -629,10 +638,7 @@ where
             .repo
             .put_cn_process(
                 get_urn_from_string(&cn_process.provider_id)?,
-                EditContractNegotiationProcess {
-                    consumer_id: None,
-                    state: Some(ContractNegotiationState::Terminated),
-                },
+                EditContractNegotiationProcess { consumer_id: None, state: Some(ContractNegotiationState::Terminated) },
             )
             .await
             .map_err(IdsaCNError::DbErr)?;

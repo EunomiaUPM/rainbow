@@ -1,7 +1,8 @@
-use crate::config::consumer_config::{ApplicationConsumerConfig, SSIConsumerConfig, SSIConsumerWalletConfig};
+use crate::config::consumer_config::ApplicationConsumerConfig;
 use crate::config::database::DbType;
 use crate::config::provider_config::ApplicationProviderConfig;
 use crate::config::ConfigRoles;
+use crate::ssi_wallet::{ClientConfig, SSIWalletConfig};
 use serde::Serialize;
 use std::env;
 
@@ -42,16 +43,18 @@ pub struct ApplicationGlobalConfig {
     pub catalog_as_datahub: bool,
     pub catalog_bypass_host: Option<HostConfig>,
     pub datahub_host: Option<HostConfig>,
+    pub datahub_token: String,
     pub contract_negotiation_host: Option<HostConfig>,
     pub auth_host: Option<HostConfig>,
     pub ssi_auth_host: Option<HostConfig>,
-    pub ssi_wallet_config: Option<SSIConsumerWalletConfig>,
-    pub ssi_consumer_client: Option<SSIConsumerConfig>,
+    pub ssi_wallet_config: Option<SSIWalletConfig>,
+    pub client_config: Option<ClientConfig>,
     pub gateway_host: Option<HostConfig>,
     pub database_config: DatabaseConfig,
     pub ssh_user: Option<String>,
     pub ssh_private_key_path: Option<String>,
     pub role: ConfigRoles,
+    pub cert_path: String,
 }
 
 impl From<ApplicationGlobalConfig> for ApplicationProviderConfig {
@@ -62,6 +65,7 @@ impl From<ApplicationGlobalConfig> for ApplicationProviderConfig {
             catalog_host: value.catalog_host,
             catalog_as_datahub: value.catalog_as_datahub,
             datahub_host: value.datahub_host,
+            datahub_token: value.datahub_token,
             contract_negotiation_host: value.contract_negotiation_host,
             auth_host: value.auth_host,
             ssi_auth_host: value.ssi_auth_host,
@@ -69,7 +73,18 @@ impl From<ApplicationGlobalConfig> for ApplicationProviderConfig {
             database_config: value.database_config,
             ssh_user: value.ssh_user,
             ssh_private_key_path: value.ssh_private_key_path,
+            ssi_wallet_config: SSIWalletConfig {
+                wallet_portal_url: value.ssi_wallet_config.clone().unwrap().wallet_portal_url,
+                wallet_portal_port: value.ssi_wallet_config.clone().unwrap().wallet_portal_port,
+                wallet_type: value.ssi_wallet_config.clone().unwrap().wallet_type,
+                wallet_name: value.ssi_wallet_config.clone().unwrap().wallet_portal_url,
+                wallet_email: value.ssi_wallet_config.clone().unwrap().wallet_portal_url,
+                wallet_password: value.ssi_wallet_config.clone().unwrap().wallet_portal_url,
+                wallet_id: None,
+            },
+            client_config: ClientConfig { self_client: value.client_config.clone().unwrap().self_client },
             role: value.role,
+            cert_path: value.cert_path,
         }
     }
 }
@@ -83,16 +98,18 @@ impl Into<ApplicationGlobalConfig> for ApplicationProviderConfig {
             catalog_as_datahub: self.catalog_as_datahub,
             catalog_bypass_host: None,
             datahub_host: self.datahub_host,
+            datahub_token: self.datahub_token,
             contract_negotiation_host: self.contract_negotiation_host,
             auth_host: self.auth_host,
             ssi_auth_host: self.ssi_auth_host,
-            ssi_wallet_config: None,
-            ssi_consumer_client: None,
+            ssi_wallet_config: Option::from(self.ssi_wallet_config),
+            client_config: Option::from(self.client_config),
             gateway_host: self.gateway_host,
             database_config: self.database_config,
             ssh_user: self.ssh_user,
             ssh_private_key_path: self.ssh_private_key_path,
             role: self.role,
+            cert_path: self.cert_path,
         }
     }
 }
@@ -110,19 +127,18 @@ impl From<ApplicationGlobalConfig> for ApplicationConsumerConfig {
             database_config: value.database_config,
             ssh_user: value.ssh_user,
             ssh_private_key_path: value.ssh_private_key_path,
-            ssi_wallet_config: SSIConsumerWalletConfig {
-                consumer_wallet_portal_url: value.ssi_wallet_config.clone().unwrap().consumer_wallet_portal_url,
-                consumer_wallet_portal_port: value.ssi_wallet_config.clone().unwrap().consumer_wallet_portal_port,
-                consumer_wallet_type: value.ssi_wallet_config.clone().unwrap().consumer_wallet_type,
-                consumer_wallet_name: value.ssi_wallet_config.clone().unwrap().consumer_wallet_portal_url,
-                consumer_wallet_email: value.ssi_wallet_config.clone().unwrap().consumer_wallet_portal_url,
-                consumer_wallet_password: value.ssi_wallet_config.clone().unwrap().consumer_wallet_portal_url,
-                consumer_wallet_id: None,
-            },
-            ssi_consumer_client: SSIConsumerConfig {
-                consumer_client: value.ssi_consumer_client.clone().unwrap().consumer_client,
+            ssi_wallet_config: SSIWalletConfig {
+                wallet_portal_url: value.ssi_wallet_config.clone().unwrap().wallet_portal_url,
+                wallet_portal_port: value.ssi_wallet_config.clone().unwrap().wallet_portal_port,
+                wallet_type: value.ssi_wallet_config.clone().unwrap().wallet_type,
+                wallet_name: value.ssi_wallet_config.clone().unwrap().wallet_portal_url,
+                wallet_email: value.ssi_wallet_config.clone().unwrap().wallet_portal_url,
+                wallet_password: value.ssi_wallet_config.clone().unwrap().wallet_portal_url,
+                wallet_id: None,
             },
             role: value.role,
+            cert_path: value.cert_path,
+            client_config: ClientConfig { self_client: value.client_config.clone().unwrap().self_client },
         }
     }
 }
@@ -136,16 +152,18 @@ impl Into<ApplicationGlobalConfig> for ApplicationConsumerConfig {
             catalog_as_datahub: false,
             catalog_bypass_host: self.catalog_bypass_host,
             datahub_host: None,
+            datahub_token: "".to_string(),
             contract_negotiation_host: self.contract_negotiation_host,
             auth_host: self.auth_host,
             ssi_auth_host: self.ssi_auth_host,
             ssi_wallet_config: Option::from(self.ssi_wallet_config),
-            ssi_consumer_client: Option::from(self.ssi_consumer_client),
+            client_config: Option::from(self.client_config),
             gateway_host: self.gateway_host,
             database_config: self.database_config,
             ssh_user: self.ssh_user,
             ssh_private_key_path: self.ssh_private_key_path,
             role: self.role,
+            cert_path: self.cert_path,
         }
     }
 }

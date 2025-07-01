@@ -55,33 +55,33 @@ use std::time::Duration;
 use tracing::debug;
 use urn::Urn;
 
-pub struct DSRPCTransferProviderService<T, U, V, W, X>
+pub struct DSRPCTransferProviderService<T, V, W, X>
 where
     T: TransferProviderRepoFactory + Send + Sync,
-    U: DataServiceFacadeTrait + Send + Sync,
+// U: DataServiceFacadeTrait + Send + Sync,
     V: DataPlaneProviderFacadeTrait + Send + Sync,
     W: RainbowEventsNotificationTrait + Sync + Send,
     X: MatesFacadeTrait + Send + Sync,
 {
     transfer_repo: Arc<T>,
-    _data_service_facade: Arc<U>,
+    _data_service_facade: Arc<dyn DataServiceFacadeTrait + Send + Sync>,
     data_plane_facade: Arc<V>,
     notification_service: Arc<W>,
     client: Client,
     mates_facade: Arc<X>,
 }
 
-impl<T, U, V, W, X> DSRPCTransferProviderService<T, U, V, W, X>
+impl<T, V, W, X> DSRPCTransferProviderService<T, V, W, X>
 where
     T: TransferProviderRepoFactory + Send + Sync,
-    U: DataServiceFacadeTrait + Send + Sync,
+// U: DataServiceFacadeTrait + Send + Sync,
     V: DataPlaneProviderFacadeTrait + Send + Sync,
     W: RainbowEventsNotificationTrait + Sync + Send,
     X: MatesFacadeTrait + Send + Sync,
 {
     pub fn new(
         transfer_repo: Arc<T>,
-        _data_service_facade: Arc<U>,
+        _data_service_facade: Arc<dyn DataServiceFacadeTrait + Send + Sync>,
         data_plane_facade: Arc<V>,
         notification_service: Arc<W>,
         mates_facade: Arc<X>,
@@ -163,13 +163,9 @@ where
         let message_type = message.get_message_type()?;
         // For RPC transfer process is always there
         let tp = self.transfer_repo.get_transfer_process_by_provider(provider_pid).await?.unwrap();
-        debug!("{:?}", tp);
         let transfer_state = tp.state.parse()?;
         let transfer_state_attribute =
             tp.state_attribute.unwrap_or(TransferStateAttribute::OnRequest.to_string()).parse()?;
-
-        debug!("{:?}", transfer_state);
-        debug!("{:?}", transfer_state_attribute);
 
         match message_type {
             TransferMessageTypes::TransferStartMessage => match transfer_state {
@@ -330,10 +326,10 @@ where
 }
 
 #[async_trait]
-impl<T, U, V, W, X> DSRPCTransferProviderTrait for DSRPCTransferProviderService<T, U, V, W, X>
+impl<T, V, W, X> DSRPCTransferProviderTrait for DSRPCTransferProviderService<T, V, W, X>
 where
     T: TransferProviderRepoFactory + Send + Sync,
-    U: DataServiceFacadeTrait + Send + Sync,
+// U: DataServiceFacadeTrait + Send + Sync,
     V: DataPlaneProviderFacadeTrait + Send + Sync,
     W: RainbowEventsNotificationTrait + Sync + Send,
     X: MatesFacadeTrait + Send + Sync,

@@ -18,4 +18,6 @@
  */
 
 pub use self::mates::Mates;
+pub use self::busmates::BusMates;
 pub mod mates;
+pub mod busmates;

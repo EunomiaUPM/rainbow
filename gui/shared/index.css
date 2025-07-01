@@ -53,6 +53,7 @@
     a {
         @apply text-brand-sky;
     }
+
     p {
         @apply text-gray-400
     }
@@ -79,11 +80,11 @@
         --border: 0 0% 89.8%;
         --input: 0 0% 89.8%;
         --ring: 0 0% 3.9%;
-        --chart-1: 12 76% 61%;
-        --chart-2: 173 58% 39%;
-        --chart-3: 197 37% 24%;
-        --chart-4: 43 74% 66%;
-        --chart-5: 27 87% 67%;
+        --chart-1: oklch(0.488 0.243 264.376);
+        --chart-2: oklch(0.611 0.117 251.283);
+        --chart-3: oklch(0.769 0.188 70.08);
+        --chart-4: oklch(0.627 0.265 303.9);
+        --chart-5: oklch(0.645 0.246 16.439);
         --radius: 0.5rem;
         --sidebar-background: 0 0% 98%;
         --sidebar-foreground: 240 5.3% 26.1%;
@@ -154,6 +155,7 @@
     .constraint-item {
         display: none
     }
+
     &:hover {
         .constraint-item {
             display: flex;
@@ -165,12 +167,13 @@
 
 
 .flexColsLayout {
-    @apply flex flex-wrap !h-fit gap-4 [&>div]:w-full [&>div]:min-w-fit; 
+    @apply flex !h-fit gap-4 [&>div]:w-full [&>div]:min-w-fit;
+    @apply flex flex-wrap !h-fit gap-4 [&>div]:w-full [&>div]:min-w-fit;
     /* @apply [&>*:first-child]:border-r [&>*:first-child]:border-r-stroke; */
 }
 
 .gridColsLayout {
-    @apply grid grid-cols-1 gap-4 xl:grid-cols-2 xl:gap-8; 
+    @apply grid grid-cols-1 gap-4 xl:grid-cols-2 xl:gap-8;
 }
 
 
@@ -180,58 +183,58 @@
 }
 
 /*SCROLLBAR*/
-  /* * {
-    scrollbar-width: thin;
-    scrollbar-color: #5a5893 #292938;
-  } */
+/* * {
+  scrollbar-width: thin;
+  scrollbar-color: #5a5893 #292938;
+} */
 
-  /* Chrome, Edge, and Safari */
-  /* *::-webkit-scrollbar {
-    width: 11px;
-  }
-
-  *::-webkit-scrollbar-track {
-    background: #292938;
-  }
-
-  *::-webkit-scrollbar-thumb {
-    background-color: #5a5893;
-    border-radius: 10px;
-    border: 3px none #ffffff;
-  } */
-
-  
-* {
-  --sb-track-color: #292a3c;
-  --sb-thumb-color: #404b71;
-  --sb-size: 9px;
- 
-}
-
-*::-webkit-scrollbar {
-  width: var(--sb-size);
-    height: var(--sb-size);  /* para scrollbars horizontales */
+/* Chrome, Edge, and Safari */
+/* *::-webkit-scrollbar {
+  width: 11px;
 }
 
 *::-webkit-scrollbar-track {
-  background: var(--sb-track-color);
-  border-radius: 5px;
+  background: #292938;
 }
 
 *::-webkit-scrollbar-thumb {
-        transition: ease-in-out 0.2s;
-  background: var(--sb-thumb-color);
-  border-radius: 5px;
-  border: 1px solid #232E33;
+  background-color: #5a5893;
+  border-radius: 10px;
+  border: 3px none #ffffff;
+} */
+
+
+* {
+    --sb-track-color: #292a3c;
+    --sb-thumb-color: #404b71;
+    --sb-size: 9px;
+
 }
+
+*::-webkit-scrollbar {
+    width: var(--sb-size);
+    height: var(--sb-size); /* para scrollbars horizontales */
+}
+
+*::-webkit-scrollbar-track {
+    background: var(--sb-track-color);
+    border-radius: 5px;
+}
+
+*::-webkit-scrollbar-thumb {
+    transition: ease-in-out 0.2s;
+    background: var(--sb-thumb-color);
+    border-radius: 5px;
+    border: 1px solid #232E33;
+}
+
 *::-webkit-scrollbar-thumb:hover {
     transition: ease-in-out 0.2s;
-  background: hsl(226, 17%, 50%); /* o el color claro que prefieras */
+    background: hsl(226, 17%, 50%); /* o el color claro que prefieras */
 }
 
 @supports not selector(::-webkit-scrollbar) {
-  body {
-      scrollbar-color: var(--sb-thumb-color)
-                     var(--sb-track-color);
-  }
+    body {
+        scrollbar-color: var(--sb-thumb-color) var(--sb-track-color);
+    }
 }

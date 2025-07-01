@@ -17,12 +17,13 @@
  *
  */
 
+use crate::ssi_auth::consumer::core::types::{AuthJwtClaims, WalletInfoResponse, WalletLoginResponse};
 use crate::ssi_auth::provider::core::manager::RainbowSSIAuthProviderManagerTrait;
 use crate::ssi_auth::provider::setup::config::SSIAuthProviderApplicationConfig;
 use crate::ssi_auth::provider::utils::{compare_with_margin, create_opaque_token, create_token, split_did};
 use anyhow::bail;
 use axum::async_trait;
-use axum::http::header::{ACCEPT, CONTENT_TYPE};
+use axum::http::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 use axum::http::HeaderMap;
 use base64::engine::general_purpose::{STANDARD, URL_SAFE_NO_PAD};
 use base64::Engine;
@@ -33,28 +34,36 @@ use jsonwebtoken::jwk::{Jwk, KeyAlgorithm};
 use jsonwebtoken::{Algorithm, Validation};
 use log::error;
 use rainbow_common::auth::gnap::{GrantRequest, GrantResponse};
+use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
 use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
-use rainbow_common::mates::Mates;
+use rainbow_common::mates::{BusMates, Mates};
+use rainbow_common::ssi_wallet::{DidsInfo, RainbowSSIAuthWalletTrait, WalletSession};
+use rainbow_db::auth_consumer::repo::AuthConsumerRepoTrait;
 use rainbow_db::auth_provider::repo::AuthProviderRepoTrait;
 use rand::{distributions::Alphanumeric, Rng};
 use reqwest::Client;
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashSet;
 use std::sync::Arc;
-use std::time::Duration;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use tokio::sync::Mutex;
 use tracing::field::debug;
 use tracing::{debug, info};
 use url::Url;
 use urlencoding::{decode, encode};
 
-#[derive(Clone)]
+#[derive(Debug)]
 pub struct Manager<T>
 where
     T: AuthProviderRepoTrait + Send + Sync + Clone + 'static,
 {
+    pub wallet_session: Mutex<WalletSession>,
+    pub wallet_onboard: bool,
+    pub auth_repo: Arc<T>,
     client: Client,
-    auth_repo: Arc<T>,
     config: SSIAuthProviderApplicationConfig,
+    didweb: Value,
 }
 
 impl<T> Manager<T>
@@ -64,7 +73,19 @@ where
     pub fn new(auth_repo: Arc<T>, config: SSIAuthProviderApplicationConfig) -> Self {
         let client =
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
-        Self { client, auth_repo, config }
+        Self {
+            wallet_session: Mutex::new(WalletSession {
+                account_id: None,
+                token: None,
+                token_exp: None,
+                wallets: Vec::new(),
+            }),
+            wallet_onboard: false,
+            auth_repo,
+            client,
+            config,
+            didweb: Value::Null,
+        }
     }
 }
 
@@ -76,28 +97,33 @@ where
     async fn generate_exchange_uri(&self, payload: GrantRequest) -> anyhow::Result<(String, String, String)> {
         info!("Generating exchange URI");
 
-        if !payload.interact.start.contains(&"oidc4vp".to_string()) {
-            bail!(
-                "Interact Method {} Not supported ",
-                payload.interact.start.first().unwrap()
-            );
+        let interact = payload.interact.unwrap();
+        let start = interact.clone().start;
+
+        if !start.contains(&"oidc4vp".to_string()) {
+            error!("Interact Method {} Not supported ", start.first().unwrap());
+            bail!("Interact Method {} Not supported ", start.first().unwrap());
         }
         let mut provider_url = self.config.get_ssi_auth_host_url().unwrap(); // TODO fix docker internal
         provider_url = provider_url.replace("127.0.0.1", "host.docker.internal");
+        provider_url = format!("{}/api/v1", provider_url);
 
         let client_id = format!("{}/verify", &provider_url);
 
         let actions = payload.access_token.access.actions.unwrap_or_else(|| String::from("talk"));
-        let grant_endpoint = format!("{}/access", self.config.get_ssi_auth_host_url().unwrap());
+        let grant_endpoint = format!(
+            "{}/api/v1/access",
+            self.config.get_ssi_auth_host_url().unwrap()
+        );
 
         let (auth_model, interaction_model, verification_model) = match self
             .auth_repo
             .create_auth(
-                payload.client,
+                payload.client.to_string(),
                 client_id.clone(),
                 grant_endpoint,
                 actions,
-                payload.interact,
+                interact,
             )
             .await
         {
@@ -158,16 +184,16 @@ where
         //     ]
         // })
 
-        let id = match self.auth_repo.get_auth_by_state(state.clone()).await {
-            Ok(id) => id,
+        let auth = match self.auth_repo.get_auth_by_state(state.clone()).await {
+            Ok(auth) => auth,
             Err(e) => bail!("No exchange for state {}", state),
         };
 
         Ok(json!({
-          "id": id,
+          "id": auth.id,
           "input_descriptors": [
             {
-              "id": "VerifiableId",
+              "id": "DataspaceParticipantCredential",
               "format": {
                 "jwt_vc_json": {
                   "alg": [
@@ -183,7 +209,7 @@ where
                     ],
                     "filter": {
                       "type": "string",
-                      "pattern": "VerifiableId"
+                      "pattern": "DataspaceParticipantCredential"
                     }
                   }
                 ]
@@ -194,10 +220,11 @@ where
     }
 
     async fn verify_all(&self, state: String, vp_token: String) -> anyhow::Result<Option<String>> {
-        let exchange = match self.auth_repo.get_auth_by_state(state.clone()).await {
+        let exchange_model = match self.auth_repo.get_auth_by_state(state.clone()).await {
             Ok(auth) => auth,
             Err(e) => bail!("No exchange for state {}", state),
         };
+        let exchange = exchange_model.id;
 
         let (vcts, holder) = match self.verify_vp(exchange.clone(), state, vp_token).await {
             Ok(v) => v,
@@ -227,17 +254,58 @@ where
         }
         info!("VP & VP Validated successfully");
 
-        match self.auth_repo.update_verification_result(exchange.clone(), true).await {
-            Ok(_) => {}
+        let state = match self.auth_repo.update_verification_result(exchange.clone(), true).await {
+            Ok(model) => model.state,
             Err(e) => {
                 bail!("{}", e)
             }
-        }
+        };
 
-        let interact = match self.auth_repo.get_interaction_by_id(exchange).await {
+        // TODO
+
+        let interact = match self.auth_repo.get_interaction_by_id(exchange.clone()).await {
             Ok(interact) => interact,
             Err(e) => {
-                bail!("{}", e)
+                if e.to_string().contains("No Interaction from authentication with id") {
+                    let url = format!(
+                        "{}/api/v1/busmates",
+                        self.config.get_ssi_auth_host_url().unwrap()
+                    ); // TODO fix 4 microservices
+
+                    let mut headers = HeaderMap::new();
+                    headers.insert(CONTENT_TYPE, "application/json".parse()?);
+                    headers.insert(ACCEPT, "application/json".parse()?);
+
+                    let token: String = create_opaque_token();
+
+                    let body = BusMates::default4provider(
+                        state,
+                        Some(exchange_model.holder.unwrap()),
+                        Some(token),
+                    ); // TODO
+
+                    println!("{:#?}", body);
+
+                    let res = self.client.post(url).headers(headers).json(&body).send().await;
+
+                    let res = match res {
+                        Ok(res) => res,
+                        Err(e) => bail!("Error sending request: {}", e),
+                    };
+
+                    match res.status().as_u16() {
+                        200 => {
+                            info!("Business Mate saved successfully");
+                        }
+                        _ => {
+                            error!("Business Mate saving failed: {}", res.status());
+                            bail!("Mate saving failed: {}", res.status());
+                        }
+                    }
+                    return Ok(None); // TODO CARLOS VISTA
+                } else {
+                    bail!("{}", e)
+                }
             }
         };
 
@@ -286,7 +354,7 @@ where
 
         let key = jsonwebtoken::DecodingKey::from_jwk(&jwk)?;
         let mut audience = format!(
-            "{}/verify/{}",
+            "{}/api/v1/verify/{}",
             self.config.get_ssi_auth_host_url().unwrap(),
             state
         );
@@ -399,7 +467,7 @@ where
         info!("VCT token signature is correct");
         debug!("{:#?}", token);
 
-        if token.claims["iss"].as_str().unwrap() != kid || kid != token.claims["vc"]["issuer"].as_str().unwrap() {
+        if token.claims["iss"].as_str().unwrap() != kid || kid != token.claims["vc"]["issuer"]["id"].as_str().unwrap() {
             // VALIDATE IF ISSUER IS THE SAME AS KID
             error!("VCT token issuer & kid does not match");
             bail!("VCT token issuer & kid does not match");
@@ -450,7 +518,7 @@ where
         Ok(())
     }
 
-    async fn continue_req(&self, interact_ref: String) -> anyhow::Result<(Value, String)> {
+    async fn continue_req(&self, interact_ref: String) -> anyhow::Result<(Value, String, String)> {
         let auth_interact = match self.auth_repo.get_auth_by_interact_ref(interact_ref).await {
             Ok(auth_interact) => auth_interact,
             Err(e) => bail!("No interact reference expected"),
@@ -489,12 +557,20 @@ where
             }
         };
 
-        Ok((serde_json::to_value(&model)?, base_url))
+        let holder = match self.auth_repo.get_auth_ver_by_id(model.id.clone()).await {
+            Ok(ver_model) => ver_model.holder.unwrap(),
+            Err(e) => {
+                bail!("Unexpected error")
+            }
+        };
+
+        Ok((serde_json::to_value(&model)?, base_url, holder))
     }
 
     async fn save_mate(
         &self,
-        id: String,
+        global_id: Option<String>,
+        slug: String,
         token: String,
         base_url: String,
         token_actions: String,
@@ -508,7 +584,14 @@ where
         headers.insert(CONTENT_TYPE, "application/json".parse()?);
         headers.insert(ACCEPT, "application/json".parse()?);
 
-        let body = Mates::default4provider(id, base_url, token, token_actions);
+        let body = Mates::default4provider(
+            global_id,
+            slug,
+            base_url,
+            Some(token),
+            Some(token_actions),
+            false,
+        ); // TODO
 
         let res = self.client.post(url).headers(headers).json(&body).send().await;
 
@@ -528,5 +611,452 @@ where
         }
 
         Ok(())
+    }
+
+    // async fn save_busmate(&self, global_id: Option<String>, token: String) -> anyhow::Result<()> {
+    //     let url = format!(
+    //         "{}/api/v1/busmates",
+    //         self.config.get_ssi_auth_host_url().unwrap()
+    //     ); // TODO fix 4 microservices
+    //
+    //     let mut headers = HeaderMap::new();
+    //     headers.insert(CONTENT_TYPE, "application/json".parse()?);
+    //     headers.insert(ACCEPT, "application/json".parse()?);
+    //
+    //     let body = BusMates::default4provider(global_id, Some(token), false); // TODO
+    //
+    //     let res = self.client.post(url).headers(headers).json(&body).send().await;
+    //
+    //     let res = match res {
+    //         Ok(res) => res,
+    //         Err(e) => bail!("Error sending request: {}", e),
+    //     };
+    //
+    //     match res.status().as_u16() {
+    //         200 => {
+    //             info!("BusMate saved successfully");
+    //         }
+    //         _ => {
+    //             error!("Mate saving failed: {}", res.status());
+    //             bail!("Mate saving failed: {}", res.status());
+    //         }
+    //     }
+    //
+    //     Ok(())
+    // }
+
+    fn get_continue_uri(&self) -> anyhow::Result<String> {
+        Ok(format!(
+            "{}/api/v1/continue",
+            self.config.get_auth_host_url().unwrap()
+        ))
+    }
+
+    async fn generate_uri(&self, state: String) -> anyhow::Result<String> {
+        info!("Generating exchange URI");
+
+        let mut provider_url = self.config.get_ssi_auth_host_url().unwrap(); // TODO fix docker internal
+        provider_url = provider_url.replace("127.0.0.1", "host.docker.internal");
+        provider_url = format!("{}/api/v1", provider_url);
+
+        let client_id = format!("{}/verify", &provider_url);
+
+        let actions = String::from("talk");
+        let grant_endpoint = format!(
+            "{}/api/v1/access",
+            self.config.get_ssi_auth_host_url().unwrap()
+        );
+
+        let (auth_model, verification_model) =
+            match self.auth_repo.create_truncated_auth(client_id.clone(), state).await {
+                Ok(model) => {
+                    info!("exchange saved successfully");
+                    model
+                }
+                Err(e) => bail!("Unable to save exchange in db: {}", e),
+            };
+
+        let base_url = "openid4vp://authorize";
+
+        let encoded_client_id = encode(&verification_model.audience);
+
+        let state = verification_model.state;
+        let nonce = verification_model.nonce;
+
+        let presentation_definition_uri = format!("{}/pd/{}", &provider_url, state);
+        let encoded_presentation_definition_uri = encode(&presentation_definition_uri);
+
+        let response_uri = format!("{}/verify/{}", &provider_url, state);
+        let encoded_response_uri = encode(&response_uri);
+
+        let response_type = "vp_token";
+        let response_mode = "direct_post";
+        let client_id_scheme = "redirect_uri";
+
+        // TODO let client_metadata = r#"{"authorization_encrypted_response_alg":"ECDH-ES","authorization_encrypted_response_enc":"A256GCM"}"#;
+
+        let uri = format!("{}?response_type={}&client_id={}&response_mode={}&presentation_definition_uri={}&client_id_scheme={}&nonce={}&response_uri={}", base_url, response_type, encoded_client_id, response_mode, encoded_presentation_definition_uri, client_id_scheme, nonce, encoded_response_uri);
+        info!("uri generated successfully: {}", uri);
+        Ok(uri)
+    }
+}
+
+#[async_trait]
+impl<T> RainbowSSIAuthWalletTrait for Manager<T>
+where
+    T: AuthProviderRepoTrait + Send + Sync + Clone + 'static,
+{
+    async fn register_wallet(&self) -> anyhow::Result<()> {
+        let url = format!(
+            "{}/wallet-api/auth/register",
+            self.config.get_wallet_portal_url()
+        );
+        let wallet_data = self.config.get_wallet_data();
+
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "application/json".parse()?);
+        headers.insert(ACCEPT, "application/json".parse()?);
+
+        let res = self.client.post(url).headers(headers).json(&wallet_data).send().await;
+
+        let res = match res {
+            Ok(res) => res,
+            Err(e) => bail!("Error sending request: {}", e),
+        };
+
+        match res.status().as_u16() {
+            201 => {
+                info!("WaltId account registration successful");
+            }
+            409 => {
+                info!("This WaltId account has already registered");
+            }
+            _ => {
+                tracing::error!("WaltId account registration failed: {}", res.status());
+                bail!("WaltId account registration failed: {}", res.status());
+            }
+        }
+        Ok(())
+    }
+
+    async fn login_wallet(&self) -> anyhow::Result<()> {
+        let url = format!(
+            "{}/wallet-api/auth/login",
+            self.config.get_wallet_portal_url()
+        );
+
+        let mut wallet_data = self.config.get_wallet_data();
+        wallet_data.as_object_mut().map(|obj| obj.remove("name"));
+
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "application/json".parse()?);
+        headers.insert(ACCEPT, "application/json".parse()?);
+
+        let res = self.client.post(url).headers(headers).json(&wallet_data).send().await;
+
+        let res = match res {
+            Ok(res) => res,
+            Err(e) => bail!("Error sending request: {}", e),
+        };
+
+        match res.status().as_u16() {
+            200 => {
+                info!("WaltId account login successful");
+
+                let json_res: WalletLoginResponse = res.json().await?;
+
+                let mut wallet_session = self.wallet_session.lock().await;
+                wallet_session.account_id = Some(json_res.id);
+                wallet_session.token = Some(json_res.token.clone());
+
+                let jwt_parts: Vec<&str> = json_res.token.split('.').collect();
+
+                if jwt_parts.len() != 3 {
+                    bail!("JWT token does not have the correct format");
+                }
+
+                let decoded = URL_SAFE_NO_PAD.decode(jwt_parts[1])?;
+
+                let claims: AuthJwtClaims = serde_json::from_slice(&decoded)?;
+
+                wallet_session.token_exp = Some(claims.exp);
+
+                Ok(())
+            }
+            _ => {
+                tracing::error!("WaltId account login failed: {}", res.status());
+                bail!("WaltId account login failed: {}", res.status())
+            }
+        }
+    }
+
+    async fn logout_wallet(&self) -> anyhow::Result<()> {
+        let url = format!(
+            "{}/wallet-api/auth/logout",
+            self.config.get_wallet_portal_url()
+        );
+
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "application/json".parse()?);
+        headers.insert(ACCEPT, "application/json".parse()?);
+
+        let res = self.client.post(url).headers(headers).send().await;
+
+        let res = match res {
+            Ok(res) => res,
+            Err(e) => bail!("Error sending request: {}", e),
+        };
+
+        match res.status().as_u16() {
+            200 => {
+                info!("WaltId account logout successful");
+                let mut wallet_session = self.wallet_session.lock().await;
+                wallet_session.token = None;
+            }
+            _ => {
+                tracing::error!("WaltId account logout failed: {}", res.status());
+                bail!("WaltId account logout failed: {}", res.status())
+            }
+        }
+
+        Ok(())
+    }
+
+    async fn get_wallet_info(&self) -> anyhow::Result<()> {
+        let url = format!(
+            "{}/wallet-api/wallet/accounts/wallets",
+            self.config.get_wallet_portal_url()
+        );
+
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "application/json".parse()?);
+        headers.insert(ACCEPT, "application/json".parse()?);
+        let mut wallet_session = self.wallet_session.lock().await;
+        match &wallet_session.token {
+            Some(token) => headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?),
+            None => bail!("No token available for wallet authentication"),
+        };
+
+        let res = self.client.get(url).headers(headers).send().await;
+
+        let res = match res {
+            Ok(res) => res,
+            Err(e) => bail!("Error sending request: {}", e),
+        };
+
+        match res.status().as_u16() {
+            200 => {
+                let wallets = res.json::<WalletInfoResponse>().await?.wallets;
+                for wallet in wallets {
+                    if wallet_session.wallets.contains(&wallet) {
+                        info!("Wallet {} already exists", wallet.id);
+                    } else {
+                        wallet_session.wallets.push(wallet);
+                    }
+                }
+
+                info!("Wallet data loaded successfully");
+            }
+            _ => {
+                tracing::error!("Wallet data loading failed: {}", res.status());
+                bail!("Wallet data loading failed: {}", res.status())
+            }
+        }
+
+        Ok(())
+    }
+
+    async fn get_wallet_dids(&self) -> anyhow::Result<()> {
+        let mut wallet_session = self.wallet_session.lock().await;
+
+        if wallet_session.wallets.first().is_none() {
+            bail!("There is not a wallet registered")
+        };
+
+        let url = format!(
+            "{}/wallet-api/wallet/{}/dids",
+            self.config.get_wallet_portal_url(),
+            &wallet_session.wallets.first().unwrap().id
+        );
+
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "application/json".parse()?);
+        headers.insert(ACCEPT, "application/json".parse()?);
+
+        match &wallet_session.token {
+            Some(token) => headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?),
+            None => bail!("No token available for authentication"),
+        };
+
+        let res = self.client.get(url).headers(headers).send().await;
+
+        let res = match res {
+            Ok(res) => res,
+            Err(e) => bail!("Error sending request: {}", e),
+        };
+
+        match res.status().as_u16() {
+            200 => {
+                let dids: Vec<DidsInfo> = res.json().await?;
+
+                for did in dids {
+                    if let Some(wallet) = wallet_session.wallets.first_mut() {
+                        if let Some(dids) = &mut wallet.dids {
+                            if dids.contains(&did) {
+                                info!("Did {} already exists", did.did);
+                            } else {
+                                dids.push(did);
+                            }
+                        } else {
+                            wallet.dids = Some(vec![did]);
+                        }
+                    }
+                }
+
+                info!("Wallet Dids data loaded successfully");
+            }
+            _ => {
+                tracing::error!("Wallet Dids data loading failed: {}", res.status());
+                bail!("Wallet Dids data loading failed: {}", res.status())
+            }
+        }
+
+        Ok(())
+    }
+
+    async fn onboard(&self) -> anyhow::Result<()> {
+        if !self.wallet_onboard {
+            self.register_wallet().await?
+        }
+        self.login_wallet().await?;
+        self.get_wallet_info().await?;
+        self.get_wallet_dids().await?;
+
+        let url = format!(
+            "{}/api/v1/mates",
+            self.config.get_ssi_auth_host_url().unwrap()
+        ); // TODO fix 4 microservices
+
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "application/json".parse()?);
+        headers.insert(ACCEPT, "application/json".parse()?);
+
+        let mut wallet_session = self.wallet_session.lock().await;
+
+        let did = wallet_session.wallets.first().unwrap().dids.clone().unwrap().first().unwrap().did.clone();
+        let body = Mates::default4consumer(
+            Some(did),
+            "Myself".to_string(),
+            self.config.get_auth_host_url().unwrap(),
+            None,
+            None,
+            true,
+        ); // TODO
+
+        let res = self.client.post(url).headers(headers).json(&body).send().await;
+
+        let res = match res {
+            Ok(res) => res,
+            Err(e) => bail!("Error sending request: {}", e),
+        };
+
+        match res.status().as_u16() {
+            200 => {
+                info!("Mate saved successfully");
+            }
+            _ => {
+                tracing::error!("Mate saving failed: {}", res.status());
+                bail!("Mate saving failed: {}", res.status());
+            }
+        }
+
+        // let url2 = format!(
+        //     "{}/api/v1/busmates",
+        //     self.config.get_ssi_auth_host_url().unwrap()
+        // ); // TODO fix 4 microservices
+        //
+        // let mut headers = HeaderMap::new();
+        // headers.insert(CONTENT_TYPE, "application/json".parse()?);
+        // headers.insert(ACCEPT, "application/json".parse()?);
+
+        // let mut wallet_session = self.wallet_session.lock().await;
+
+        // let did = wallet_session.wallets.first().unwrap().dids.clone().unwrap().first().unwrap().did.clone();
+        // let body = BusMates::default4consumer(Some(did), None, true);
+
+        // let res = self.client.post(url2).headers(headers).json(&body).send().await;
+        //
+        // let res = match res {
+        //     Ok(res) => res,
+        //     Err(e) => bail!("Error sending request: {}", e),
+        // };
+        //
+        // match res.status().as_u16() {
+        //     200 => {
+        //         info!("Mate saved successfully");
+        //     }
+        //     _ => {
+        //         tracing::error!("Mate saving failed: {}", res.status());
+        //         bail!("Mate saving failed: {}", res.status());
+        //     }
+        // }
+
+        Ok(())
+    }
+
+    async fn token_expired(&self) -> anyhow::Result<bool> {
+        let mut wallet_session = self.wallet_session.lock().await;
+
+        match wallet_session.token_exp {
+            Some(expiration_time) => {
+                let now = SystemTime::now().duration_since(UNIX_EPOCH).expect("Time went backwards").as_secs();
+
+                if now >= expiration_time {
+                    info!("Token expired");
+                    return Ok(true);
+                };
+                Ok(false)
+            }
+            None => {
+                bail!("No token available for authentication")
+            }
+        }
+    }
+
+    async fn update_token(&self) -> anyhow::Result<()> {
+        match self.login_wallet().await {
+            Ok(()) => {
+                info!("Token updated successfully");
+                Ok(())
+            }
+            Err(e) => {
+                tracing::error!("Token update failed: {}", e);
+                bail!("Error updating token: {}", e);
+            }
+        }
+    }
+
+    async fn ok(&self) -> anyhow::Result<()> {
+        if self.token_expired().await? {
+            self.update_token().await?;
+        }
+        Ok(())
+    }
+
+    async fn didweb(&self) -> anyhow::Result<Value> {
+        let wallet_session = self.wallet_session.lock().await;
+
+        match wallet_session.wallets.first() {
+            Some(wallet) => {
+                let dids = wallet.clone().dids.unwrap();
+                let did = dids.first().unwrap();
+                let did_doc = did.clone().document;
+                let json: Value = serde_json::from_str(&did_doc)?;
+                Ok(json)
+            }
+            None => {
+                bail!("No wallets available")
+            }
+        }
     }
 }

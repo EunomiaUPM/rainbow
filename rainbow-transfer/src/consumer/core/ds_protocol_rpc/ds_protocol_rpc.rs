@@ -367,6 +367,7 @@ where
                     provider_pid: None,
                     data_plane_id: None,
                     data_address: None,
+                    restart_flag: Some(true),
                 },
             )
             .await
@@ -464,6 +465,7 @@ where
                     provider_pid: None,
                     data_plane_id: None,
                     data_address: None,
+                    restart_flag: Some(true),
                 },
             )
             .await
@@ -553,6 +555,7 @@ where
                     provider_pid: None,
                     data_plane_id: None,
                     data_address: None,
+                    restart_flag: Some(false),
                 },
             )
             .await
@@ -645,6 +648,7 @@ where
                     provider_pid: None,
                     data_plane_id: None,
                     data_address: None,
+                    restart_flag: Some(false),
                 },
             )
             .await

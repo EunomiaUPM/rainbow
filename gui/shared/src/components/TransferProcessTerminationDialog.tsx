@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from "./ui/dialog";
 import { Button } from "./ui/button";
-import { Badge } from "@/components/ui/badge.tsx";
+import { Badge } from "shared/src/components/ui/badge";
 import { List, ListItem, ListItemKey } from "./ui/list";
 
 import React, { useContext } from "react";
@@ -17,30 +17,38 @@ import {
   GlobalInfoContext,
   GlobalInfoContextType,
 } from "./../context/GlobalInfoContext";
-import { usePostTransferRPCStart } from "shared/src/data/transfer-mutations";
+import {usePostTransferRPCTermination} from "shared/src/data/transfer-mutations";
 import dayjs from "dayjs";
 
-export const TransferProcessTerminationDialog = ({
-  process,
-}: {
-  process: TransferProcess;
-}) => {
-  // --- Form Setup ---
-  const form = useForm({});
-  const { handleSubmit, control, setValue, getValues } = form;
-  const { mutateAsync: startAsync } = usePostTransferRPCStart();
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  const onSubmit = () => {
-    startAsync({
-      api_gateway: api_gateway,
-      content: {
-        consumerParticipantId: process.associated_consumer,
-        consumerCallbackAddress: process.data_plane_id,
-        consumerPid: process.consumer_pid,
-        providerPid: process.provider_pid,
-      },
-    });
-  };
+export const TransferProcessTerminationDialog = ({process}: { process: TransferProcess }) => {
+    // --- Form Setup ---
+    const form = useForm({});
+    const {handleSubmit, control, setValue, getValues} = form;
+    const {mutateAsync: startAsync} = usePostTransferRPCTermination()
+    const {api_gateway, role} = useContext<GlobalInfoContextType>(GlobalInfoContext)
+    const onSubmit = () => {
+        if (role == "provider") {
+            startAsync({
+                api_gateway: api_gateway,
+                content: {
+                    consumerParticipantId: process.associated_consumer,
+                    consumerCallbackAddress: process.data_plane_id,
+                    consumerPid: process.consumer_pid,
+                    providerPid: process.provider_pid
+                }
+            })
+        }
+        if (role == "consumer") {
+            startAsync({
+                api_gateway: api_gateway,
+                content: {
+                    providerParticipantId: process.associated_provider,
+                    consumerPid: process.consumer_pid,
+                    providerPid: process.provider_pid
+                }
+            })
+        }
+    }
 
   const scopedListItemKeyClasses = "basis-[32%]";
 

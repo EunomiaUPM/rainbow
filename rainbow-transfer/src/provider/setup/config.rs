@@ -21,6 +21,7 @@ use rainbow_common::config::global_config::{DatabaseConfig, HostConfig};
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_common::config::ConfigRoles;
 use serde::Serialize;
+use rainbow_common::ssi_wallet::{ClientConfig, SSIWalletConfig};
 
 #[derive(Serialize, Clone, Debug)]
 pub struct TransferProviderApplicationConfig {
@@ -35,7 +36,10 @@ pub struct TransferProviderApplicationConfig {
     database_config: DatabaseConfig,
     ssh_user: Option<String>,
     ssh_private_key_path: Option<String>,
+    ssi_wallet_config: SSIWalletConfig,
+    client_config: ClientConfig,
     role: ConfigRoles,
+    cert_path: String,
 }
 
 impl Default for TransferProviderApplicationConfig {
@@ -69,6 +73,16 @@ impl ApplicationProviderConfigTrait for TransferProviderApplicationConfig {
     fn get_raw_datahub_host(&self) -> &Option<HostConfig> {
         &self.datahub_host
     }
+
+    fn get_raw_ssi_wallet_config(&self) -> &SSIWalletConfig {
+        &self.ssi_wallet_config
+    }
+
+
+    fn get_raw_datahub_token(&self) -> &String {
+        todo!()
+    }
+
     fn get_raw_contract_negotiation_host(&self) -> &Option<HostConfig> {
         &self.contract_negotiation_host
     }
@@ -84,6 +98,15 @@ impl ApplicationProviderConfigTrait for TransferProviderApplicationConfig {
     fn get_raw_database_config(&self) -> &DatabaseConfig {
         &self.database_config
     }
+
+    fn get_raw_client_config(&self) -> &ClientConfig {
+        &self.client_config
+    }
+
+    fn get_raw_cert_path(&self) -> &String {
+        &self.cert_path
+    }
+
     fn merge_dotenv_configuration(&self) -> Self {
         let app_config = ApplicationProviderConfig::default().merge_dotenv_configuration();
         TransferProviderApplicationConfig::from(app_config)
@@ -104,7 +127,10 @@ impl From<ApplicationProviderConfig> for TransferProviderApplicationConfig {
             database_config: value.database_config,
             ssh_user: value.ssh_user,
             ssh_private_key_path: value.ssh_private_key_path,
+            ssi_wallet_config: value.ssi_wallet_config,
+            client_config: value.client_config,
             role: value.role,
+            cert_path: value.cert_path,
         }
     }
 }
@@ -117,6 +143,7 @@ impl Into<ApplicationProviderConfig> for TransferProviderApplicationConfig {
             catalog_host: self.catalog_host,
             catalog_as_datahub: self.catalog_as_datahub,
             datahub_host: self.datahub_host,
+            datahub_token: "".to_string(),
             contract_negotiation_host: self.contract_negotiation_host,
             auth_host: self.auth_host,
             ssi_auth_host: self.ssi_auth_host,
@@ -124,7 +151,10 @@ impl Into<ApplicationProviderConfig> for TransferProviderApplicationConfig {
             database_config: self.database_config,
             ssh_user: self.ssh_user,
             ssh_private_key_path: self.ssh_private_key_path,
+            ssi_wallet_config: self.ssi_wallet_config,
+            client_config: self.client_config,
             role: self.role,
+            cert_path: self.cert_path,
         }
     }
 }

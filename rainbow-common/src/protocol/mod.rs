@@ -25,6 +25,7 @@ pub mod contract;
 pub mod transfer;
 pub mod context_field;
 pub mod catalog;
+pub mod datahub_proxy;
 
 pub trait ProtocolValidate {
     fn validate(&self) -> anyhow::Result<()>;

@@ -24,6 +24,11 @@ const items = [
         url: "/catalog",
         icon: Archive,
     },
+    {
+        title: "Datahub Catalogs",
+        url: "/datahub-catalog",
+        icon: Archive,
+    },
 
     {
         title: "Contract Negotiation",

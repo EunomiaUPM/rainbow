@@ -64,8 +64,10 @@ impl CoreCommands {
             CoreCliRoles::Provider(cmd) => {
                 let config = CoreApplicationProviderConfig::default();
                 let config = config.merge_dotenv_configuration();
+                let mut config_table = config.clone();
+                config_table.datahub_token = format!("{}...", config_table.datahub_token[0..20].to_string());
                 let table =
-                    json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
+                    json_to_table::json_to_table(&serde_json::to_value(&config_table)?).collapse().to_string();
                 info!("Current config:\n{}", table);
                 match cmd {
                     CoreCliCommands::Start => CoreProviderApplication::run(&config).await?,

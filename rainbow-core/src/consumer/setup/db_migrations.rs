@@ -65,12 +65,12 @@ impl CoreConsumerMigration {
         // run migration
         Self::refresh(&db_connection).await?;
         // run seeders
-        Self::seed_consumer_mate(&db_connection, config.get_ssi_auth_host_url().unwrap()).await?;
+        //Self::seed_consumer_mate(&db_connection, config.get_ssi_auth_host_url().unwrap()).await?;
         Ok(())
     }
     async fn seed_consumer_mate(db: &DatabaseConnection, base_url: String) -> anyhow::Result<()> {
         let consumer = mates::ActiveModel {
-            participant_id: ActiveValue::Set(get_urn(None).to_string()),
+            participant_id: ActiveValue::Set(get_urn(None).to_string()), // TODO PONER DID BIEN
             participant_slug: ActiveValue::Set("Consumer".to_string()),
             participant_type: ActiveValue::Set(ConfigRoles::Consumer.to_string()),
             base_url: ActiveValue::Set(Some(base_url)),

@@ -36,7 +36,7 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(Auth::Table)
                     .col(ColumnDef::new(Auth::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(Auth::Consumer).string().not_null())
+                    .col(ColumnDef::new(Auth::Consumer).string())
                     .col(ColumnDef::new(Auth::Actions).string().not_null())
                     .col(ColumnDef::new(Auth::Status).string().not_null())
                     .col(ColumnDef::new(Auth::Token).string())

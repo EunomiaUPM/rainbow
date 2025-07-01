@@ -57,12 +57,13 @@ pub trait AuthProviderRepoTrait {
         auth_interaction::Model,
         auth_verification::Model,
     )>;
+    async fn create_truncated_auth(&self, audience: String, state: String) -> anyhow::Result<(auth::Model, auth_verification::Model)>;
     async fn update_auth_status(&self, id: String, status: String, end: bool) -> anyhow::Result<auth::Model>;
     async fn delete_auth(&self, id: String) -> anyhow::Result<auth::Model>;
 
     async fn get_interaction_by_id(&self, id: String) -> anyhow::Result<auth_interaction::Model>;
 
-    async fn get_auth_by_state(&self, state: String) -> anyhow::Result<String>;
+    async fn get_auth_by_state(&self, state: String) -> anyhow::Result<auth_verification::Model>;
 
     async fn get_av_by_id_update_holder(
         &self,
@@ -71,10 +72,11 @@ pub trait AuthProviderRepoTrait {
         holder: String,
     ) -> anyhow::Result<auth_verification::Model>;
 
-    async fn update_verification_result(&self, id: String, result: bool) -> anyhow::Result<()>;
+    async fn update_verification_result(&self, id: String, result: bool) -> anyhow::Result<auth_verification::Model>;
 
     async fn save_token(&self, id: String, base_url: String, token: String) -> anyhow::Result<auth::Model>;
 
     async fn get_auth_by_interact_ref(&self, interact_ref: String) -> anyhow::Result<auth_interaction::Model>;
     async fn is_token_in_db(&self, token: String) -> anyhow::Result<bool>;
+    async fn get_auth_ver_by_id(&self, id: String) -> anyhow::Result<auth_verification::Model>;
 }

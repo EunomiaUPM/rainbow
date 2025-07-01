@@ -16,11 +16,11 @@ import { TransferProcessActions } from "shared/src/components/TransferProcessAct
 import { ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/transfer-process/")({
-  component: RouteComponent,
+    component: RouteComponent,
 });
 
 function RouteComponent() {
-  const { data: transferProcesses } = useGetTransferProcesses();
+    const {data: transferProcesses} = useGetTransferProcesses();
 
   // para ver casuísticas de estados
   // transferProcesses.map((transferProcess) => {

@@ -58,32 +58,32 @@ use std::sync::Arc;
 use tracing::debug;
 use urn::Urn;
 
-pub struct DSProtocolTransferProviderImpl<T, U, V, W, X>
+pub struct DSProtocolTransferProviderImpl<T, V, W, X>
 where
     T: TransferProviderRepoFactory + Send + Sync,
-    U: DataServiceFacadeTrait + Send + Sync,
+// U: DataServiceFacadeTrait + Send + Sync,
     V: DataPlaneProviderFacadeTrait + Send + Sync,
     W: RainbowEventsNotificationTrait + Sync + Send,
     X: SSIAuthFacadeTrait + Sync + Send,
 {
     transfer_repo: Arc<T>,
-    data_service_facade: Arc<U>,
+    data_service_facade: Arc<dyn DataServiceFacadeTrait + Send + Sync>,
     data_plane: Arc<V>,
     notification_service: Arc<W>,
     ssi_auth_facade: Arc<X>,
 }
 
-impl<T, U, V, W, X> DSProtocolTransferProviderImpl<T, U, V, W, X>
+impl<T, V, W, X> DSProtocolTransferProviderImpl<T, V, W, X>
 where
     T: TransferProviderRepoFactory + Send + Sync,
-    U: DataServiceFacadeTrait + Send + Sync,
+// U: DataServiceFacadeTrait + Send + Sync,
     V: DataPlaneProviderFacadeTrait + Send + Sync,
     W: RainbowEventsNotificationTrait + Sync + Send,
     X: SSIAuthFacadeTrait + Sync + Send,
 {
     pub fn new(
         transfer_repo: Arc<T>,
-        data_service_facade: Arc<U>,
+        data_service_facade: Arc<dyn DataServiceFacadeTrait + Send + Sync>,
         data_plane: Arc<V>,
         notification_service: Arc<W>,
         ssi_auth_facade: Arc<X>,
@@ -192,7 +192,6 @@ where
                 // 3. For the rest of messages tp must exist (checked in previous method)
                 let tp = self.transfer_repo.get_transfer_process_by_provider(provider_pid).await?.unwrap();
                 let transfer_state = tp.state.parse()?;
-                let transfer_state_attribute = tp.state_attribute.unwrap().parse()?;
                 match m {
                     // 4. Transfer start transition check
                     TransferMessageTypes::TransferStartMessage => match transfer_state {
@@ -206,6 +205,7 @@ where
                         TransferState::SUSPENDED => {
                             // 5. Transfer state attribute check.
                             // Start from state suspended is only allowed if
+                            let transfer_state_attribute = tp.state_attribute.unwrap().parse()?;
                             match transfer_state_attribute {
                                 TransferStateAttribute::ByConsumer => {}
                                 TransferStateAttribute::OnRequest => {}
@@ -312,10 +312,10 @@ where
 }
 
 #[async_trait]
-impl<T, U, V, W, X> DSProtocolTransferProviderTrait for DSProtocolTransferProviderImpl<T, U, V, W, X>
+impl<T, V, W, X> DSProtocolTransferProviderTrait for DSProtocolTransferProviderImpl<T, V, W, X>
 where
     T: TransferProviderRepoFactory + Send + Sync,
-    U: DataServiceFacadeTrait + Send + Sync,
+// U: DataServiceFacadeTrait + Send + Sync,
     V: DataPlaneProviderFacadeTrait + Send + Sync,
     W: RainbowEventsNotificationTrait + Sync + Send,
     X: SSIAuthFacadeTrait + Sync + Send,
