@@ -61,13 +61,13 @@ export const ContractNegotiationAcceptanceDialog = ({
           <ListItemKey className={scopedListItemKeyClasses}>
             Provider id:
           </ListItemKey>
-          <Badge variant={"info"}>{process.provider_id.slice(9, -1)}</Badge>
+          <Badge variant={"info"}>{process.provider_id.slice(9)}</Badge>
         </ListItem>
         <ListItem>
           <ListItemKey className={scopedListItemKeyClasses}>
             Consumer id:
           </ListItemKey>
-          <Badge variant={"info"}>{process.consumer_id.slice(9, -1)}</Badge>
+          <Badge variant={"info"}>{process.consumer_id.slice(9)}</Badge>
         </ListItem>
         {process.associated_consumer && (
           <ListItem>
@@ -75,7 +75,7 @@ export const ContractNegotiationAcceptanceDialog = ({
               Associated Consumer id:
             </ListItemKey>
             <Badge variant={"info"}>
-              {process.associated_consumer.slice(9, -1)}
+              {process.associated_consumer.slice(9, 40) + "[...]"}
             </Badge>
           </ListItem>
         )}
@@ -85,7 +85,7 @@ export const ContractNegotiationAcceptanceDialog = ({
               Associated Provider id:
             </ListItemKey>
             <Badge variant={"info"}>
-              {process.associated_provider.slice(9, -1)}
+              {process.associated_provider.slice(9,40) + "[...]"}
             </Badge>
           </ListItem>
         )}

@@ -67,7 +67,7 @@ export const ContractNegotiationRequestDialog = ({
       </DialogHeader>
       {/* List */}
       <div className=" overflow-y-scroll px-6">
-        <List className="min-w-full overflow-x-scroll px-2">
+        <List className="w-[70vw] overflow-x-scroll px-2">
           <ListItem>
             <ListItemKey className={scopedListItemKeyClasses}>
               Provider id:
