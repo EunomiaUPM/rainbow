@@ -19,20 +19,22 @@ import { ArrowRight } from "lucide-react";
 const RouteComponent = () => {
   const { provider } = Route.useParams();
   const { data: catalogs } = useGetBypassCatalogs(provider);
+  
   return (
     <div className="space-y-4 pb-4">
       {/* <h1 className="text-xl font-bold">Catalogs</h1> */}
       <Heading level="h3" className="flex gap-2 items-center">
         Main Catalog with id
         <Badge variant="info" size="lg">
-          {catalogs["@id"].slice(9, 29) + "[...]"}{" "}
+          {/* {catalogs["@id"].slice(9, 29) + "[...]"}{" "} */}
         </Badge>
       </Heading>
       <div>
         <Heading level="h5">Main Catalog info: </Heading>
+        {console.log(catalogs, " aqui señores catalogos")}
         <div className="gridColsLayout">
-          <List className="text-sm">
-            <ListItem>
+           {/* <List className="text-sm">
+           <ListItem>
               <ListItemKey>Catalog title</ListItemKey>
               <p>{catalogs.title}</p>
             </ListItem>
@@ -51,7 +53,7 @@ const RouteComponent = () => {
               <ListItemKey>Catalog creation date</ListItemKey>
               <p>{dayjs(catalogs.issued).format("DD/MM/YYYY - HH:mm")}</p>
             </ListItem>
-          </List>
+          </List> */}
         </div>
       </div>
 
@@ -72,7 +74,7 @@ const RouteComponent = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {catalogs.catalog.map((catalogItem) => (
+            {/* {catalogs.catalog.map((catalogItem) => (
               <TableRow key="urn:uuid:c4d4449d-a">
                 <TableCell>
                   {" "}
@@ -108,30 +110,9 @@ const RouteComponent = () => {
                   </Link>
                 </TableCell>
               </TableRow>
-            ))}
+            ))} */}
 
-            {/* {catalogs.catalog.map((catalog) => (
-                            <TableRow key={catalog["@id"].slice(0, 20)}>
-                                <p>
-                                    {catalog["@id"].slice(0, 20) + "..."}
-                                </p>
-                                <p>
-                                    {catalog.title?.slice(0, 20) + "..."}
-                                </p>
-                                <p>{catalog.participantId}</p>
-                                <p>
-                                    {dayjs(catalog.issued).format("DD/MM/YYYY - HH:mm")}
-                                </p>
-                                <p>
-                                    <Link
-                                        to="/catalog/$catalogId"
-                                        params={{catalogId: catalog["@id"]}}
-                                    >
-                                        <ExternalLink size={12} className="text-pink-600"/>
-                                    </Link>
-                                </p>
-                            </TableRow>
-                        ))} */}
+         
           </TableBody>
         </Table>
       </div>

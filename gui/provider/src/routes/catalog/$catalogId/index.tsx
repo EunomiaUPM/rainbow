@@ -1,7 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import dayjs from "dayjs";
-import { useState } from "react";
-import { ExternalLink } from "lucide-react";
 import { Badge } from "shared/src/components/ui/badge";
 import Heading from "shared/src/components/ui/heading";
 import { RouteComponent as OfferForm } from "@/routes/contract-negotiation/offer";
@@ -15,7 +13,7 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from "@./../../shared/src/components/ui/drawer.tsx";
+} from "@./../../shared/src/components/ui/drawer";
 import {
   List,
   ListItem,
@@ -44,7 +42,7 @@ const RouteComponent = () => {
   const { data: catalog } = useGetCatalogsById(catalogId);
   const { data: datasets } = useGetDatasetsByCatalogId(catalogId);
   const { data: dataservices } = useGetDataServicesByCatalogId(catalogId);
-  const [selectedDataset, setSelectedDataset] = useState();
+
 
   return (
     <div className="space-y-4 pb-4">

@@ -1,6 +1,5 @@
 import {
   createFileRoute,
-  Link,
   Outlet,
   useRouterState,
 } from "@tanstack/react-router";
@@ -22,9 +21,7 @@ function RouteComponent() {
 
   // formatear id del catalogo para que sea igual que el pathname
   const catalogIdURL = "/catalog/" + catalogId.replace(/:/g, "%3A") ;
-//   console.log(catalogIdURL, "pathname     ?");
-//   console.log(routerState.location.pathname, "pathname 2?");
-//   console.log(catalogIdURL === routerState.location.pathname ? "vamoooos" : "todavia no")
+
   return (
     <div>
       <header className="mb-2">

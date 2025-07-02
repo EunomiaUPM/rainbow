@@ -69,14 +69,16 @@ function RouteComponent() {
         setDid(did.id)
     }
 
-    const hasProvider = useMemo(() => {
-        const participant = participants.find(p => p.participant_type == "Provider")
+  
+    const hasConsumer = useMemo(() => {
+        const participant = participants.find(p => p.participant_type == "Consumer")
         if (!participant) {
             return false
         } else {
             return true
         }
     }, participants)
+
 
     const onboardHandler = async () => {
         await onboardAsync({
@@ -178,7 +180,7 @@ function RouteComponent() {
                                         </Button>
                                     </form>
                                 </Form>
-                            )}
+                            )} 
 
                             {/**/}
                             {/**/}
@@ -199,7 +201,7 @@ function RouteComponent() {
                                         <Button onClick={handleCancel}>Cancel</Button>
                                     </div>
                                 </div>
-                            )}
+                            )} 
 
 
                         </DrawerBody>
@@ -218,7 +220,7 @@ function RouteComponent() {
 
 
             <div>
-                {!hasProvider && (<div>
+                {!hasConsumer && (<div>
                     mmm... parece que no hay un consumer..., tienes que hacer onboard en tu wallet
                 </div>)}
                 <Button onClick={() => onboardHandler()}>

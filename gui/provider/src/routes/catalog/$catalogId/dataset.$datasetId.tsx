@@ -10,7 +10,7 @@ import {Button} from "shared/src/components/ui/button.tsx";
 import {Textarea} from "shared/src/components/ui/textarea.tsx";
 import {usePostNewPolicyInDataset} from "shared/src/data/catalog-mutations.ts";
 import Heading from "shared/src/components/ui/heading";
-import {List, ListItem, ListItemDate, ListItemKey,} from "shared/src/components/ui/list.tsx";
+import {List, ListItem, ListItemDate, ListItemKey,} from "shared/src/components/ui/list";
 import {Badge} from "shared/src/components/ui/badge";
 import PolicyComponent from "shared/src/components/PolicyComponent.tsx";
 import {Accordion, AccordionContent, AccordionItem, AccordionTrigger,} from "shared/src/components/ui/accordion";

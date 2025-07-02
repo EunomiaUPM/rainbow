@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 // @ts-ignore
 
 const buttonVariants = cva(
-  "inline-flex items-center flex-nowrap min-w-fit tracking-wider !leading-0 justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium uppercase transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center flex-nowrap min-w-fit tracking-wider !leading-none justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium uppercase transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -22,7 +22,7 @@ const buttonVariants = cva(
         secondary:
           "bg-secondary/70 text-secondary-foreground shadow-sm hover:bg-secondary/90",
         ghost: "text-brand-snow bg-foreground/10 hover:bg-foreground/20",
-        icon_destructive: " text-white/20 hover:text-danger-500 bg-foreground/5 hover:bg-foreground/10 p-0 ",
+        icon_destructive: "flex text-white/20 hover:text-danger-500 bg-foreground/5 hover:bg-foreground/10 p-0 mb-0 [&_svg]:w-5 [&_svg]:h-5 p-1",
         link: "!px-0 flex-no-wrap normal-case text-snow underline-offset-4 hover:underline", // ok
       },
       size: {
@@ -30,8 +30,9 @@ const buttonVariants = cva(
         sm: "h-8 rounded-md px-3 text-xs",
          xs: "h-7 rounded-md px-3 text-xs",
         lg: "h-10 rounded-md px-8",
-        icon: "h-9 w-9 rounded-full p-0",
+        icon: "h-9 w-9 rounded-full p-1",
         icon_sm: "h-7 w-7 rounded-full p-0",
+        
       },
       policy: {
         default:"",

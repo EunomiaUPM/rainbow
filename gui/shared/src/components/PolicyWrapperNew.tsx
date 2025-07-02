@@ -75,15 +75,15 @@ export const PolicyWrapperNew = ({onSubmit}) => {
         onSubmit(newPolicy)
         setNewPolicy({
             permission: [],
-            prohibition: [],
-            obligation: []
+            obligation: [],
+            prohibition: []
         })
     }
 
 
     return (
-        <div>
-            <div className="flex flex-col gap-4">
+        <div className="h-screen flex flex-col">
+            <div className="flex flex-col gap-4 overflow-y-scroll h-[calc(100vh-180px)]  p-8 ">
                 <Accordion type="single" collapsible className="w-full">
                     <AccordionItem
                         value="item-1"
@@ -113,7 +113,7 @@ export const PolicyWrapperNew = ({onSubmit}) => {
                                         <Button
                                             variant="destructive"
                                             size="xs"
-                                            className="ml-4"
+                                            className="ml-4 "
                                             onClick={() => removeComponentHandler("permission", i)}
                                         >
                                             <Trash className="mb-0.5"/>
@@ -135,7 +135,7 @@ export const PolicyWrapperNew = ({onSubmit}) => {
                                     <p className="mb-2"> Constraints: </p>
                                     {permission.constraint.map((constraint, j) => (
                                         <div className="flex flex-col gap-2">
-                                            <div className="constraint-create flex gap-3">
+                                            <div className="constraint-create flex gap-3 justify-end items-end">
                                                 <Select
                                                     onValueChange={(value: string) => operandValueChangeHandler("permission", i, j, "leftOperand", value)}
                                                 >
@@ -177,14 +177,17 @@ export const PolicyWrapperNew = ({onSubmit}) => {
                                                     <Input placeholder="Type value"
                                                            onChange={(ev) => operandValueChangeHandler("permission", i, j, "rightOperand", ev.currentTarget.value)}/>
                                                 </div>
+                                                <div>
+                                                {/*  importante este div sino se deforma el boton */}
                                                 <Button
                                                     variant="icon_destructive"
-                                                    size="icon_sm"
-                                                    className="ml-2 self-end mb-1"
+                                                    size="icon"
+                    
                                                     onClick={() => removeConstraintHandler("permission", i, j)}
                                                 >
-                                                    <Trash className="mb-0.5"/>
+                                                    <Trash className="mb-0.5 "/>
                                                 </Button>
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
@@ -216,13 +219,13 @@ export const PolicyWrapperNew = ({onSubmit}) => {
                         <AccordionContent className="relative">
                             <Button
                                 className="border-b border-white/15"
-                                policy="permission"
+                                policy="obligation"
                                 variant="outline"
                                 size="xs"
                                 onClick={() => addComponentHandler("obligation")}
                             >
                                 <Plus/>
-                                Add permission
+                                Add obligation
                             </Button>
                             {newPolicy.obligation.map((obligation, i) => (<div>
                                 <div className="policy-item-create">
@@ -235,7 +238,7 @@ export const PolicyWrapperNew = ({onSubmit}) => {
                                             onClick={() => removeComponentHandler("obligation", i)}
                                         >
                                             <Trash className="mb-0.5"/>
-                                            Remove permission
+                                            Remove obligation
                                         </Button>
                                     </div>
                                     <Select
@@ -252,7 +255,7 @@ export const PolicyWrapperNew = ({onSubmit}) => {
                                     <p className="mb-2"> Constraints: </p>
                                     {obligation.constraint.map((constraint, j) => (
                                         <div className="flex flex-col gap-2">
-                                            <div className="constraint-create flex gap-3">
+                                            <div className="constraint-create flex gap-3 justify-end items-end">
                                                 <Select
                                                     onValueChange={(value: string) => operandValueChangeHandler("obligation", i, j, "leftOperand", value)}
                                                 >
@@ -294,14 +297,16 @@ export const PolicyWrapperNew = ({onSubmit}) => {
                                                     <Input placeholder="Type value"
                                                            onChange={(ev) => operandValueChangeHandler("obligation", i, j, "rightOperand", ev.currentTarget.value)}/>
                                                 </div>
+                                                <div>
                                                 <Button
                                                     variant="icon_destructive"
-                                                    size="icon_sm"
-                                                    className="ml-2 self-end mb-1"
+                                                    size="icon"
+                                                 
                                                     onClick={() => removeConstraintHandler("obligation", i, j)}
                                                 >
                                                     <Trash className="mb-0.5"/>
                                                 </Button>
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
@@ -322,24 +327,24 @@ export const PolicyWrapperNew = ({onSubmit}) => {
                 <Accordion type="single" collapsible className="w-full">
                     <AccordionItem
                         value="item-1"
-                        className="bg-danger-500/10 border border-danger-600/20"
+                        className="bg-danger-500/10 border border-danger-600/20 mb-24"
                     >
                         <AccordionTrigger
                             className="text-white/70 flex bg-danger-500/25 uppercase overflow-hidden rounded-md data-[state=open]:rounded-b-none">
                             <div className="flex items-center w-full">
-                                <p className="text-current">prohibition</p>
+                                <p className="text-current"> prohibition </p>
                             </div>
                         </AccordionTrigger>
                         <AccordionContent className="relative">
                             <Button
                                 className="border-b border-white/15"
-                                policy="permission"
+                                policy="prohibition"
                                 variant="outline"
                                 size="xs"
                                 onClick={() => addComponentHandler("prohibition")}
                             >
                                 <Plus/>
-                                Add permission
+                                Add prohibition
                             </Button>
                             {newPolicy.prohibition.map((prohibition, i) => (<div>
                                 <div className="policy-item-create">
@@ -352,7 +357,7 @@ export const PolicyWrapperNew = ({onSubmit}) => {
                                             onClick={() => removeComponentHandler("prohibition", i)}
                                         >
                                             <Trash className="mb-0.5"/>
-                                            Remove permission
+                                            Remove prohibition
                                         </Button>
                                     </div>
                                     <Select
@@ -369,7 +374,7 @@ export const PolicyWrapperNew = ({onSubmit}) => {
                                     <p className="mb-2"> Constraints: </p>
                                     {prohibition.constraint.map((constraint, j) => (
                                         <div className="flex flex-col gap-2">
-                                            <div className="constraint-create flex gap-3">
+                                            <div className="constraint-create flex gap-3 justify-end items-end">
                                                 <Select
                                                     onValueChange={(value: string) => operandValueChangeHandler("prohibition", i, j, "leftOperand", value)}
                                                 >
@@ -411,14 +416,16 @@ export const PolicyWrapperNew = ({onSubmit}) => {
                                                     <Input placeholder="Type value"
                                                            onChange={(ev) => operandValueChangeHandler("prohibition", i, j, "rightOperand", ev.currentTarget.value)}/>
                                                 </div>
+                                                <div>
                                                 <Button
                                                     variant="icon_destructive"
-                                                    size="icon_sm"
-                                                    className="ml-2 self-end mb-1"
+                                                    size="icon"
+                                                  
                                                     onClick={() => removeConstraintHandler("prohibition", i, j)}
                                                 >
                                                     <Trash className="mb-0.5"/>
                                                 </Button>
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
@@ -436,10 +443,11 @@ export const PolicyWrapperNew = ({onSubmit}) => {
                         </AccordionContent>
                     </AccordionItem>
                 </Accordion>
+               
             </div>
-            <div>
+            <div className="h-24  bottom-0 bg-background border-t border-white/30 w-full p-6" >
                 <Button onClick={() => submitHandler()}>
-                    Enviar
+                    Add policy
                 </Button>
             </div>
         </div>
