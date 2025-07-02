@@ -1,13 +1,13 @@
 import React, {useEffect, useState} from "react"
-import Heading from "@/components/ui/heading.tsx";
-import {Badge} from "@/components/ui/badge.tsx";
-import {List, ListItem, ListItemKey} from "@/components/ui/list.tsx";
-import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "@/components/ui/accordion.tsx";
-import {Button} from "@/components/ui/button.tsx";
+import Heading from "shared/src/components/ui/heading";
+import {Badge} from "shared/src/components/ui/badge";
+import {List, ListItem, ListItemKey} from "shared/src/components/ui/list";
+import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "shared/src/components/ui/accordion";
+import {Button} from "shared/src/components/ui/button";
 import {Plus, Trash} from "lucide-react";
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select.tsx";
-import {leftOperands, odrlActions, operators} from "@/odrl_actions";
-import {Input} from "@/components/ui/input.tsx";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "shared/src/components/ui/select";
+import {leftOperands, odrlActions, operators} from "shared/src/odrl_actions";
+import {Input} from "shared/src/components/ui/input";
 
 type ComponentType = "permission" | "obligation" | "prohibition";
 type OperandType = "leftOperand" | "rightOperand" | "operator";
@@ -36,14 +36,12 @@ export const PolicyWrapperEdit = ({policy, onSubmit}: { policy: OdrlOffer, onSub
         const _newPolicy = {...newPolicy};
         _newPolicy[componentType].push(newComponent)
         setNewPolicy(_newPolicy)
-        console.log(newPolicy)
     }
     const removeComponentHandler = (componentType: ComponentType, index: number) => {
         const _newPolicy = {...newPolicy};
         _newPolicy[componentType].splice(index, 1)
         console.log(_newPolicy)
         setNewPolicy(_newPolicy)
-        console.log(newPolicy)
 
     }
 
@@ -55,31 +53,25 @@ export const PolicyWrapperEdit = ({policy, onSubmit}: { policy: OdrlOffer, onSub
             rightOperand: "bbb"
         })
         setNewPolicy(_newPolicy)
-        console.log(newPolicy)
 
     }
-
 
     const removeConstraintHandler = (componentType: ComponentType, componentIndex: number, constraintIndex: number) => {
         const _newPolicy = {...newPolicy}
         _newPolicy[componentType][componentIndex].constraint.splice(constraintIndex, 1)
         setNewPolicy(_newPolicy)
-        console.log(newPolicy)
-
     }
 
     const fieldValueChangeHandler = (componentType: ComponentType, componentIndex: number, value: string) => {
         const _newPolicy = {...newPolicy}
         _newPolicy[componentType][componentIndex].action = value
         setNewPolicy(_newPolicy)
-        console.log(newPolicy)
     }
 
     const operandValueChangeHandler = (componentType: ComponentType, componentIndex: number, constraintIndex: number, operand: OperandType, value: string) => {
         const _newPolicy = {...newPolicy}
         _newPolicy[componentType][componentIndex].constraint[constraintIndex][operand] = value
         setNewPolicy(_newPolicy)
-        console.log(newPolicy)
     }
 
     const submitHandler = () => {

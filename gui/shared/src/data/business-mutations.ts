@@ -8,7 +8,7 @@ interface PostPolicyPayload {
     datasetId: string;
     catalogId: string;
     content: {
-        offer: string;
+        offer: OdrlInfo;
     }
 }
 
