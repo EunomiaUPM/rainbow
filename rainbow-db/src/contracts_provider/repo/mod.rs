@@ -52,6 +52,7 @@ pub struct NewContractNegotiationProcess {
     pub associated_consumer: Option<String>,
     pub state: ContractNegotiationState,
     pub initiated_by: ConfigRoles,
+    pub is_business: bool,
 }
 pub struct EditContractNegotiationProcess {
     pub consumer_id: Option<Urn>,

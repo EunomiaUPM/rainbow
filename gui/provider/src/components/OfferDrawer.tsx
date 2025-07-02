@@ -93,11 +93,11 @@ export const OfferDrawer = ({catalogId, datasetId}: { catalogId: string, dataset
                         "@type": "Offer",
                         target: policy.target,
                         //@ts-ignore
-                        permission: policy.permission.length == 0 ? null : policy.permission,
+                        permission: policy.permission == undefined || policy.permission.length == 0 ? null : policy.permission,
                         //@ts-ignore
-                        obligation: policy.obligation.length == 0 ? null : policy.obligation,
+                        obligation: policy.obligation == undefined || policy.obligation.length == 0 ? null : policy.obligation,
                         //@ts-ignore
-                        prohibition: policy.prohibition.length == 0 ? null : policy.prohibition,
+                        prohibition: policy.prohibition == undefined || policy.prohibition.length == 0 ? null : policy.prohibition,
                         profile: policy.profile,
                     },
                 },

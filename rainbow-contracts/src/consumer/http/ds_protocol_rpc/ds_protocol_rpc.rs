@@ -26,13 +26,14 @@ use crate::consumer::core::rainbow_entities::rainbow_entities_errors::CnErrorCon
 use anyhow::Error;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::State;
-use axum::http::StatusCode;
+use axum::http::header::ToStrError;
+use axum::http::{HeaderMap, HeaderValue, StatusCode};
 use axum::response::IntoResponse;
 use axum::routing::post;
 use axum::{Json, Router};
 use rainbow_common::err::transfer_err::TransferErrorType::NotCheckedError;
 use std::sync::Arc;
-use tracing::info;
+use tracing::{debug, info};
 
 pub struct DSRPCContractNegotiationConsumerRouter<T>
 where
@@ -70,6 +71,7 @@ where
     }
     async fn handle_setup_request(
         State(service): State<Arc<T>>,
+        headers: HeaderMap,
         input: Result<Json<SetupRequestRequest>, JsonRejection>,
     ) -> impl IntoResponse {
         info!("POST /api/v1/negotiations/rpc/setup-request");
@@ -77,9 +79,22 @@ where
             Ok(input) => input.0,
             Err(e) => return CnErrorConsumer::JsonRejection(e).into_response(),
         };
+
+        let client_type = match headers.get("rainbow-client-type") {
+            Some(header_value) => {
+                match header_value.to_str() {
+                    Ok(s) => s,
+                    Err(e) => {
+                        return NotCheckedError { inner_error: e.into() }.into_response();
+                    }
+                }
+            }
+            None => "standard",
+        }.to_string();
+
         let is_rerequest = input.provider_pid.clone().is_some() && input.consumer_pid.clone().is_some();
         match is_rerequest {
-            false => match service.setup_request(input).await {
+            false => match service.setup_request(input, client_type).await {
                 Ok(res) => (StatusCode::CREATED, Json(res)).into_response(),
                 Err(err) => match err.downcast::<CnErrorConsumer>() {
                     Ok(e_) => e_.into_response(),

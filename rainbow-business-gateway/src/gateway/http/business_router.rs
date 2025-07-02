@@ -73,9 +73,8 @@ where
                 "/gateway/api/catalogs/:catalog_id/datasets/:dataset_id/policies/:policy_id",
                 delete(Self::handle_business_delete_policy_offer),
             )
-            // HERE Business routes
             .route(
-                "/gateway/api/negotiation/:participant_id/requests",
+                "/gateway/api/negotiation/business/requests",
                 get(Self::handle_get_business_negotiation_requests),
             )
             .route(
@@ -92,7 +91,7 @@ where
                 get(Self::handle_get_customer_negotiation_requests),
             )
             .route(
-                "/gateway/api/negotiation/customer/requests/:request_id",
+                "/gateway/api/negotiation/customer/:participant_id/requests/:request_id",
                 get(Self::handle_get_consumer_negotiation_request_by_id),
             )
             .route(
@@ -319,25 +318,90 @@ where
         State(service): State<Arc<T>>,
         Extension(info): Extension<Arc<RequestInfo>>,
     ) -> impl IntoResponse {
-        "ok"
+        info!("GET /gateway/api/negotiation/business/requests");
+        let token = &info.token;
+        match service.get_business_negotiation_requests(token.to_string()).await {
+            Ok(requests) => (StatusCode::OK, Json(requests)).into_response(),
+            Err(e) => (
+                StatusCode::BAD_REQUEST,
+                Json(json!({"error": e.to_string()})),
+            )
+                .into_response(),
+        }
     }
     async fn handle_get_business_negotiation_request_by_id(
         State(service): State<Arc<T>>,
         Extension(info): Extension<Arc<RequestInfo>>,
+        Path(request_id): Path<String>,
     ) -> impl IntoResponse {
-        "ok"
+        info!("GET /gateway/api/negotiation/business/requests/:request_id");
+        let token = &info.token;
+        let request_id = match get_urn_from_string(&request_id) {
+            Ok(request_id) => request_id,
+            Err(err) => {
+                return (
+                    StatusCode::BAD_REQUEST,
+                    Json(json!({"error": "urn not serializable"})),
+                )
+                    .into_response()
+            }
+        };
+        match service.get_business_negotiation_request_by_id(request_id, token.to_string()).await {
+            Ok(requests) => (StatusCode::OK, Json(requests)).into_response(),
+            Err(e) => (
+                StatusCode::BAD_REQUEST,
+                Json(json!({"error": e.to_string()})),
+            )
+                .into_response(),
+        }
     }
     async fn handle_get_customer_negotiation_requests(
         State(service): State<Arc<T>>,
         Extension(info): Extension<Arc<RequestInfo>>,
+        Path(participant_id): Path<String>,
     ) -> impl IntoResponse {
-        "ok"
+        info!(
+            "GET /gateway/api/negotiation/consumer/{}/requests",
+            participant_id
+        );
+        let token = &info.token;
+        match service.get_consumer_negotiation_requests(participant_id, token.to_string()).await {
+            Ok(requests) => (StatusCode::OK, Json(requests)).into_response(),
+            Err(e) => (
+                StatusCode::BAD_REQUEST,
+                Json(json!({"error": e.to_string()})),
+            )
+                .into_response(),
+        }
     }
     async fn handle_get_consumer_negotiation_request_by_id(
         State(service): State<Arc<T>>,
         Extension(info): Extension<Arc<RequestInfo>>,
+        Path((participant_id, request_id)): Path<(String, String)>,
     ) -> impl IntoResponse {
-        "ok"
+        info!(
+            "GET /gateway/api/negotiation/customer/{}/requests/{}",
+            participant_id, request_id
+        );
+        let token = &info.token;
+        let request_id = match get_urn_from_string(&request_id) {
+            Ok(request_id) => request_id,
+            Err(err) => {
+                return (
+                    StatusCode::BAD_REQUEST,
+                    Json(json!({"error": "urn not serializable"})),
+                )
+                    .into_response()
+            }
+        };
+        match service.get_consumer_negotiation_request_by_id(participant_id, request_id, token.to_string()).await {
+            Ok(requests) => (StatusCode::OK, Json(requests)).into_response(),
+            Err(e) => (
+                StatusCode::BAD_REQUEST,
+                Json(json!({"error": e.to_string()})),
+            )
+                .into_response(),
+        }
     }
     async fn handle_accept_request(
         State(service): State<Arc<T>>,

@@ -46,6 +46,7 @@ impl Into<NewContractNegotiationProcess> for NewContractNegotiationRequest {
             associated_consumer: None,
             state: self.state,
             initiated_by: ConfigRoles::Provider,
+            is_business: false,
         }
     }
 }

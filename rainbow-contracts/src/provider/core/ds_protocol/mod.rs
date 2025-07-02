@@ -35,7 +35,7 @@ pub trait DSProtocolContractNegotiationProviderTrait: Send + Sync {
     async fn get_negotiation(
         &self, provider_pid: Urn) -> anyhow::Result<ContractAckMessage>;
     async fn post_request(
-        &self, input: ContractRequestMessage, token: String, ) -> anyhow::Result<ContractAckMessage>;
+        &self, input: ContractRequestMessage, token: String, client_type: String) -> anyhow::Result<ContractAckMessage>;
     async fn post_provider_request(
         &self,
         provider_pid: Urn,

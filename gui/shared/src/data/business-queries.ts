@@ -208,3 +208,27 @@ export const useGetBusinessPolicyTemplates = () => {
     } = useSuspenseQuery(getBusinessPolicyTemplatesOptions(api_gateway))
     return {data, isLoading, isError, error}
 }
+
+/**
+ *  GET /negotiation/business/requests
+ * */
+export const getBusinessRequests = async (api_gateway: string) => {
+    const processes: CNProcess[] = await (
+        await fetch(api_gateway + `/negotiation/business/requests`)
+    ).json();
+    return processes;
+}
+export const getBusinessRequestsOptions = (api_gateway: string) => queryOptions({
+    queryKey: ["CN_REQUESTS"],
+    queryFn: () => getBusinessRequests(api_gateway),
+})
+export const useGetBusinessRequests = () => {
+    const {api_gateway} = useContext<GlobalInfoContextType>(GlobalInfoContext);
+    const {
+        data,
+        isLoading,
+        isError,
+        error
+    } = useSuspenseQuery(getBusinessRequestsOptions(api_gateway))
+    return {data, isLoading, isError, error}
+}

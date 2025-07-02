@@ -95,7 +95,7 @@ export const useDeleteBusinessNewPolicyInDataset = () => {
 }
 
 /**
- *  POST /catalogs/{catalogId}/datasets/{datasetId}/policies
+ *  POST /negotiation/rpc/request
  * */
 interface BusinessRequestPayload {
     api_gateway: string;

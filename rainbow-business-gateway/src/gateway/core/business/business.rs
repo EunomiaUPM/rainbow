@@ -141,7 +141,7 @@ impl BusinessCatalogTrait for BusinessServiceForDatahub {
         Ok(())
     }
 
-    async fn get_business_negotiation_requests(&self, _token: String) -> anyhow::Result<Vec<ContractAckMessage>> {
+    async fn get_business_negotiation_requests(&self, _token: String) -> anyhow::Result<Value> {
         let base_url = self.config.get_contract_negotiation_host_url().unwrap();
         let url = format!("{}/api/v1/contract-negotiation/processes", base_url);
         let req = self.client.get(url).send().await.map_err(|e| anyhow!("lol {}", e.to_string()))?;
@@ -149,7 +149,7 @@ impl BusinessCatalogTrait for BusinessServiceForDatahub {
             bail!("not able to fetch contract negotiation processes");
         }
         let res = req
-            .json::<Vec<ContractAckMessage>>()
+            .json()
             .await
             .map_err(|e| anyhow!("not deserializable, {}", e.to_string()))?;
         Ok(res)
@@ -174,7 +174,7 @@ impl BusinessCatalogTrait for BusinessServiceForDatahub {
         Ok(res)
     }
 
-    async fn get_consumer_negotiation_requests(&self, _token: String) -> anyhow::Result<Vec<ContractAckMessage>> {
+    async fn get_consumer_negotiation_requests(&self, participant_id: String, _token: String) -> anyhow::Result<Vec<ContractAckMessage>> {
         let base_url = self.config.get_contract_negotiation_host_url().unwrap();
         let url = format!("{}/api/v1/contract-negotiation/processes", base_url);
         let req = self.client.get(url).send().await.map_err(|e| anyhow!("lol {}", e.to_string()))?;
@@ -190,6 +190,7 @@ impl BusinessCatalogTrait for BusinessServiceForDatahub {
 
     async fn get_consumer_negotiation_request_by_id(
         &self,
+        participant_id: String,
         request_id: Urn,
         _token: String,
     ) -> anyhow::Result<ContractAckMessage> {
@@ -253,6 +254,9 @@ impl BusinessCatalogTrait for BusinessServiceForDatahub {
             .header(
                 "Authorization",
                 format!("Bearer {}", consumer_participant.token.unwrap_or_default()),
+            )
+            .header(
+                "Rainbow-Client-Type", "business",
             )
             .send()
             .await

@@ -150,6 +150,7 @@ impl ContractNegotiationProcessRepo for ContractNegotiationProviderRepoForSql {
                 get_urn(new_cn_process.consumer_id).to_string(),
             )),
             associated_consumer: ActiveValue::Set(new_cn_process.associated_consumer.map(|a| a.to_string())),
+            is_business: ActiveValue::Set(new_cn_process.is_business),
             state: ActiveValue::Set(new_cn_process.state.to_string()),
             initiated_by: ActiveValue::Set(new_cn_process.initiated_by.to_string()),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),

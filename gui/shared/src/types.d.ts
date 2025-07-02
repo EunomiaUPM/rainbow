@@ -9,6 +9,7 @@ declare global {
         updated_at: Date;
         associated_provider?: UUID;
         associated_consumer?: UUID;
+        is_business: boolean
     }
 
     export interface CNMessage {

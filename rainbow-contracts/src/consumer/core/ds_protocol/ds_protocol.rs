@@ -224,6 +224,7 @@ where
                 provider_id: Some(input.provider_pid.clone()),
                 consumer_id: None,
                 associated_provider: Some(provider_participant_mate.participant_id.clone()),
+                is_business: false,
             })
             .await
             .map_err(IdsaCNError::DbErr)?;

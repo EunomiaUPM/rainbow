@@ -29,15 +29,16 @@ pub trait BusinessCatalogTrait: Send + Sync + 'static {
         token: String,
     ) -> anyhow::Result<OdrlOffer>;
     async fn delete_policy_offer(&self, dataset_id: Urn, policy_id: Urn, token: String) -> anyhow::Result<()>;
-    async fn get_business_negotiation_requests(&self, token: String) -> anyhow::Result<Vec<ContractAckMessage>>;
+    async fn get_business_negotiation_requests(&self, token: String) -> anyhow::Result<Value>;
     async fn get_business_negotiation_request_by_id(
         &self,
         request_id: Urn,
         token: String,
     ) -> anyhow::Result<ContractAckMessage>;
-    async fn get_consumer_negotiation_requests(&self, token: String) -> anyhow::Result<Vec<ContractAckMessage>>;
+    async fn get_consumer_negotiation_requests(&self, participant_id: String, token: String) -> anyhow::Result<Vec<ContractAckMessage>>;
     async fn get_consumer_negotiation_request_by_id(
         &self,
+        participant_id: String,
         request_id: Urn,
         token: String,
     ) -> anyhow::Result<ContractAckMessage>;

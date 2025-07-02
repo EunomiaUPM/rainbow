@@ -28,6 +28,7 @@ pub struct Model {
     pub consumer_id: String,
     pub provider_id: Option<String>,
     pub associated_provider: Option<String>,
+    pub is_business: bool,
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: Option<chrono::NaiveDateTime>,
 }

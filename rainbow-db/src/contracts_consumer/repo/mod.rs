@@ -46,6 +46,7 @@ pub struct NewContractNegotiationProcess {
     pub provider_id: Option<Urn>,
     pub consumer_id: Option<Urn>,
     pub associated_provider: Option<String>,
+    pub is_business: bool,
 }
 
 pub struct EditContractNegotiationProcess {}

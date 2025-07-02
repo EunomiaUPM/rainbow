@@ -11,6 +11,7 @@ pub struct CnConsumerProcessFromSQL {
     pub consumer_id: String,
     pub provider_id: Option<String>,
     pub associated_provider: Option<String>,
+    pub is_business: bool,
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: Option<chrono::NaiveDateTime>,
     pub message_type: Option<String>,
@@ -44,6 +45,7 @@ impl From<CnConsumerProcessFromSQL> for CnConsumerProcess {
             consumer_id: value.consumer_id,
             provider_id: value.provider_id,
             associated_provider: value.associated_provider,
+            is_business: value.is_business,
             created_at: value.created_at,
             updated_at: value.updated_at,
             state,
@@ -57,6 +59,7 @@ impl Into<cn_process::Model> for CnConsumerProcessFromSQL {
             consumer_id: self.consumer_id,
             provider_id: self.provider_id,
             associated_provider: self.associated_provider,
+            is_business: self.is_business,
             created_at: self.created_at,
             updated_at: self.updated_at,
         }
