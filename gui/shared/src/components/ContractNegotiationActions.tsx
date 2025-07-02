@@ -108,7 +108,7 @@ export const ContractNegotiationActions = ({
 
                 <ContractNegotiationAcceptanceDialog process={process} />
               </Dialog>
-              <Dialog>
+              <Dialog className="w-full">
                 <DialogTrigger asChild>
                   <Button variant="outline" size={tiny ? "sm" : ""}>
                     Counter request
