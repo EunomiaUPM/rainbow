@@ -111,7 +111,7 @@ export const PolicyWrapperNew = ({onSubmit}) => {
                                     <div className="flex justify-between">
                                         <p className="mb-2"> Action: </p>
                                         <Button
-                                            variant="destructive"
+                                            variant="icon_destructive"
                                             size="xs"
                                             className="ml-4 "
                                             onClick={() => removeComponentHandler("permission", i)}
@@ -232,7 +232,7 @@ export const PolicyWrapperNew = ({onSubmit}) => {
                                     <div className="flex justify-between">
                                         <p className="mb-2"> Action: </p>
                                         <Button
-                                            variant="destructive"
+                                            variant="icon_destructive"
                                             size="xs"
                                             className="ml-4"
                                             onClick={() => removeComponentHandler("obligation", i)}
@@ -351,7 +351,7 @@ export const PolicyWrapperNew = ({onSubmit}) => {
                                     <div className="flex justify-between">
                                         <p className="mb-2"> Action: </p>
                                         <Button
-                                            variant="destructive"
+                                            variant="icon_destructive"
                                             size="xs"
                                             className="ml-4"
                                             onClick={() => removeComponentHandler("prohibition", i)}
