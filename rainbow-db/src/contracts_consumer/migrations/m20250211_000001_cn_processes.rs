@@ -36,6 +36,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(CnProcesses::ConsumerId).string().not_null().primary_key())
                     .col(ColumnDef::new(CnProcesses::ProviderId).string())
                     .col(ColumnDef::new(CnProcesses::AssociatedProvider).string())
+                    .col(ColumnDef::new(CnProcesses::IsBusiness).boolean())
                     .col(ColumnDef::new(CnProcesses::CreatedAt).date_time().not_null())
                     .col(ColumnDef::new(CnProcesses::UpdatedAt).date_time())
                     .to_owned(),
@@ -54,6 +55,7 @@ pub enum CnProcesses {
     ProviderId,
     ConsumerId,
     AssociatedProvider,
+    IsBusiness,
     CreatedAt,
     UpdatedAt,
 }

@@ -1,5 +1,5 @@
 import {Apple, Archive, ChartBarIncreasing} from "lucide-react";
-import React from "react";
+import React, {useContext} from "react";
 import {Link, useRouterState} from "@tanstack/react-router"
 import {
     Sidebar,
@@ -12,9 +12,10 @@ import {
 } from "./ui/sidebar";
 // @ts-ignore
 import logoImg from "./../img/eunomia_logo_lg_light.svg";
+import {AuthContext, AuthContextType} from "shared/src/context/AuthContext";
 
 // Menu items.
-const items = [
+const businessItems = [
     {
         title: "Datahub Catalogs",
         url: "/datahub-catalog",
@@ -22,7 +23,7 @@ const items = [
     },
     {
         title: "Data Access Requests",
-        url: "/requests",
+        url: "/business-requests",
         icon: Apple,
     },
     {
@@ -31,9 +32,22 @@ const items = [
         icon: ChartBarIncreasing,
     },
 ];
+const customerItems = [
+    {
+        title: "Datahub Catalogs",
+        url: "/datahub-catalog",
+        icon: Archive,
+    },
+    {
+        title: "Customer Requests",
+        url: "/customer-requests",
+        icon: Apple,
+    }
+];
 
 export function AppSidebarBusiness() {
     const routerState = useRouterState();
+    const {participant} = useContext<AuthContextType | null>(AuthContext)!
     // console.log("Router state in SidebarMenuItem:", routerState.location.pathname);
 
     return (
@@ -49,7 +63,22 @@ export function AppSidebarBusiness() {
 
                     <SidebarGroupContent>
                         <SidebarMenu>
-                            {items.map((item) => (
+                            {participant?.participant_type == "Provider" && businessItems.map((item) => (
+                                <SidebarMenuItem key={item.title}>
+                                    <SidebarMenuButton asChild>
+                                        <Link to={item.url} className={
+                                            routerState.location.pathname === item.url
+                                                ? "bg-white/10 text-white"
+                                                : ""
+                                        }>
+                                            <item.icon/>
+                                            <span>{item.title}</span>
+                                        </Link>
+
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            ))}
+                            {participant?.participant_type == "Consumer" && customerItems.map((item) => (
                                 <SidebarMenuItem key={item.title}>
                                     <SidebarMenuButton asChild>
                                         <Link to={item.url} className={

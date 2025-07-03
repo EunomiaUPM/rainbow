@@ -1,5 +1,5 @@
 use crate::gateway::core::business::BusinessCatalogTrait;
-use crate::gateway::http::business_router_types::RainbowBusinessNegotiationRequest;
+use crate::gateway::http::business_router_types::{RainbowBusinessAcceptanceRequest, RainbowBusinessNegotiationRequest, RainbowBusinessTerminationRequest};
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, State};
 use axum::http::header::{AUTHORIZATION, CONTENT_TYPE};
@@ -56,6 +56,7 @@ where
             )
             .route("/gateway/api/login", post(Self::handle_login))
             .route("/gateway/api/login/poll", post(Self::handle_login_poll))
+            .route("/gateway/api/negotiation/rpc/terminate", post(Self::handle_terminate_request))
             // Business User
             .route(
                 "/gateway/api/policy-templates",
@@ -73,9 +74,8 @@ where
                 "/gateway/api/catalogs/:catalog_id/datasets/:dataset_id/policies/:policy_id",
                 delete(Self::handle_business_delete_policy_offer),
             )
-            // HERE Business routes
             .route(
-                "/gateway/api/negotiation/:participant_id/requests",
+                "/gateway/api/negotiation/business/requests",
                 get(Self::handle_get_business_negotiation_requests),
             )
             .route(
@@ -88,11 +88,11 @@ where
             )
             // Customer
             .route(
-                "/gateway/api/negotiation/customer/:participant_id/requests",
+                "/gateway/api/negotiation/consumer/:participant_id/requests",
                 get(Self::handle_get_customer_negotiation_requests),
             )
             .route(
-                "/gateway/api/negotiation/customer/requests/:request_id",
+                "/gateway/api/negotiation/consumer/:participant_id/requests/:request_id",
                 get(Self::handle_get_consumer_negotiation_request_by_id),
             )
             .route(
@@ -319,31 +319,142 @@ where
         State(service): State<Arc<T>>,
         Extension(info): Extension<Arc<RequestInfo>>,
     ) -> impl IntoResponse {
-        "ok"
+        info!("GET /gateway/api/negotiation/business/requests");
+        let token = &info.token;
+        match service.get_business_negotiation_requests(token.to_string()).await {
+            Ok(requests) => (StatusCode::OK, Json(requests)).into_response(),
+            Err(e) => (
+                StatusCode::BAD_REQUEST,
+                Json(json!({"error": e.to_string()})),
+            )
+                .into_response(),
+        }
     }
     async fn handle_get_business_negotiation_request_by_id(
         State(service): State<Arc<T>>,
         Extension(info): Extension<Arc<RequestInfo>>,
+        Path(request_id): Path<String>,
     ) -> impl IntoResponse {
-        "ok"
+        info!("GET /gateway/api/negotiation/business/requests/:request_id");
+        let token = &info.token;
+        let request_id = match get_urn_from_string(&request_id) {
+            Ok(request_id) => request_id,
+            Err(err) => {
+                return (
+                    StatusCode::BAD_REQUEST,
+                    Json(json!({"error": "urn not serializable"})),
+                )
+                    .into_response()
+            }
+        };
+        match service.get_business_negotiation_request_by_id(request_id, token.to_string()).await {
+            Ok(requests) => (StatusCode::OK, Json(requests)).into_response(),
+            Err(e) => (
+                StatusCode::BAD_REQUEST,
+                Json(json!({"error": e.to_string()})),
+            )
+                .into_response(),
+        }
     }
     async fn handle_get_customer_negotiation_requests(
         State(service): State<Arc<T>>,
         Extension(info): Extension<Arc<RequestInfo>>,
+        Path(participant_id): Path<String>,
     ) -> impl IntoResponse {
-        "ok"
+        info!(
+            "GET /gateway/api/negotiation/consumer/{}/requests",
+            participant_id
+        );
+        let token = &info.token;
+        match service.get_consumer_negotiation_requests(participant_id, token.to_string()).await {
+            Ok(requests) => (StatusCode::OK, Json(requests)).into_response(),
+            Err(e) => (
+                StatusCode::BAD_REQUEST,
+                Json(json!({"error": e.to_string()})),
+            )
+                .into_response(),
+        }
     }
     async fn handle_get_consumer_negotiation_request_by_id(
         State(service): State<Arc<T>>,
         Extension(info): Extension<Arc<RequestInfo>>,
+        Path((participant_id, request_id)): Path<(String, String)>,
     ) -> impl IntoResponse {
-        "ok"
+        info!(
+            "GET /gateway/api/negotiation/customer/{}/requests/{}",
+            participant_id, request_id
+        );
+        let token = &info.token;
+        let request_id = match get_urn_from_string(&request_id) {
+            Ok(request_id) => request_id,
+            Err(err) => {
+                return (
+                    StatusCode::BAD_REQUEST,
+                    Json(json!({"error": "urn not serializable"})),
+                )
+                    .into_response()
+            }
+        };
+        match service.get_consumer_negotiation_request_by_id(participant_id, request_id, token.to_string()).await {
+            Ok(requests) => (StatusCode::OK, Json(requests)).into_response(),
+            Err(e) => (
+                StatusCode::BAD_REQUEST,
+                Json(json!({"error": e.to_string()})),
+            )
+                .into_response(),
+        }
     }
     async fn handle_accept_request(
         State(service): State<Arc<T>>,
         Extension(info): Extension<Arc<RequestInfo>>,
+        input: Result<Json<RainbowBusinessAcceptanceRequest>, JsonRejection>,
     ) -> impl IntoResponse {
-        (StatusCode::OK, Json(json!({"hola": 2}))).into_response()
+        info!("POST /gateway/api/negotiation/rpc/accept");
+        let token = &info.token;
+        let input = match input {
+            Ok(input) => input.0,
+            Err(err) => {
+                return (
+                    StatusCode::BAD_REQUEST,
+                    Json(json!({"error": err.body_text()})),
+                )
+                    .into_response()
+            }
+        };
+        match service.accept_request(input, token.to_string()).await {
+            Ok(res) => (StatusCode::ACCEPTED, Json(res)).into_response(),
+            Err(e) => (
+                StatusCode::BAD_REQUEST,
+                Json(json!({"error": e.to_string()})),
+            )
+                .into_response(),
+        }
+    }
+    async fn handle_terminate_request(
+        State(service): State<Arc<T>>,
+        Extension(info): Extension<Arc<RequestInfo>>,
+        input: Result<Json<RainbowBusinessTerminationRequest>, JsonRejection>,
+    ) -> impl IntoResponse {
+        info!("POST /gateway/api/negotiation/rpc/terminate");
+        let token = &info.token;
+        let input = match input {
+            Ok(input) => input.0,
+            Err(err) => {
+                return (
+                    StatusCode::BAD_REQUEST,
+                    Json(json!({"error": err.body_text()})),
+                )
+                    .into_response()
+            }
+        };
+        match service.terminate_request(input, token.to_string()).await {
+            Ok(res) => (StatusCode::ACCEPTED, Json(res)).into_response(),
+            Err(e) => (
+                StatusCode::BAD_REQUEST,
+                Json(json!({"error": e.to_string()})),
+            )
+                .into_response(),
+        }
     }
     async fn handle_create_request(
         State(service): State<Arc<T>>,

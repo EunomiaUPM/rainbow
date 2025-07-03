@@ -61,8 +61,15 @@ impl ContractNegotiationProcessRepo for ContractNegotiationProviderRepoForSql {
         &self,
         limit: Option<u64>,
         page: Option<u64>,
+        client_type: Option<String>,
     ) -> anyhow::Result<Vec<cn_process::Model>, CnErrors> {
-        let cn_processes = cn_process::Entity::find()
+        let mut query = cn_process::Entity::find();
+        if let Some(ct) = client_type {
+            if ct == "business" {
+                query = query.filter(cn_process::Column::IsBusiness.eq(true));
+            }
+        }
+        let cn_processes = query
             .limit(limit.unwrap_or(10000))
             .offset(page.unwrap_or(0))
             .all(&self.db_connection)
@@ -95,8 +102,14 @@ impl ContractNegotiationProcessRepo for ContractNegotiationProviderRepoForSql {
         Ok(cn_processes)
     }
 
-    async fn get_cn_processes_by_participant_id(&self, participant_id: String) -> anyhow::Result<Vec<Model>, CnErrors> {
-        let cn_processes = cn_process::Entity::find()
+    async fn get_cn_processes_by_participant_id(&self, participant_id: String, client_type: Option<String>) -> anyhow::Result<Vec<Model>, CnErrors> {
+        let mut query = cn_process::Entity::find();
+        if let Some(ct) = client_type {
+            if ct == "business" {
+                query = query.filter(cn_process::Column::IsBusiness.eq(true));
+            }
+        }
+        let cn_processes = query
             .filter(cn_process::Column::AssociatedConsumer.eq(participant_id))
             .all(&self.db_connection)
             .await
@@ -150,6 +163,7 @@ impl ContractNegotiationProcessRepo for ContractNegotiationProviderRepoForSql {
                 get_urn(new_cn_process.consumer_id).to_string(),
             )),
             associated_consumer: ActiveValue::Set(new_cn_process.associated_consumer.map(|a| a.to_string())),
+            is_business: ActiveValue::Set(new_cn_process.is_business),
             state: ActiveValue::Set(new_cn_process.state.to_string()),
             initiated_by: ActiveValue::Set(new_cn_process.initiated_by.to_string()),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),

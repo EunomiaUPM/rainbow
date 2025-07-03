@@ -1,4 +1,5 @@
 import {useMutation, useQueryClient} from "@tanstack/react-query";
+import {useRouter} from "@tanstack/react-router";
 
 /**
  *  POST /catalogs/{catalogId}/datasets/{datasetId}/policies
@@ -8,7 +9,7 @@ interface PostPolicyPayload {
     datasetId: string;
     catalogId: string;
     content: {
-        offer: string;
+        offer: OdrlInfo;
     }
 }
 
@@ -86,7 +87,7 @@ export const useDeleteBusinessNewPolicyInDataset = () => {
         onSuccess: async (_data, variables) => {
             console.log("onSuccess")
             // @ts-ignore
-            await queryClient.refetchQueries(["POLICIES_BY_DATASET_ID", variables.datasetId as string]);
+            await queryClient.refetchQueries(["POLICIES_BY_DATASET_ID"]);
         },
         onSettled: () => {
         },
@@ -95,7 +96,7 @@ export const useDeleteBusinessNewPolicyInDataset = () => {
 }
 
 /**
- *  POST /catalogs/{catalogId}/datasets/{datasetId}/policies
+ *  POST /negotiation/rpc/request
  * */
 interface BusinessRequestPayload {
     api_gateway: string;
@@ -125,6 +126,7 @@ export const postNewBusinessRequest = async ({
 
 export const usePostNewBusinessRequest = () => {
     const queryClient = useQueryClient()
+    const router = useRouter()
     const {data, isSuccess, isError, error, mutate, mutateAsync, isPending} = useMutation({
         mutationFn: postNewBusinessRequest,
         onMutate: async () => {
@@ -136,7 +138,8 @@ export const usePostNewBusinessRequest = () => {
         onSuccess: async (_data, variables) => {
             console.log("onSuccess")
             // @ts-ignore
-            await queryClient.refetchQueries(["POLICIES_BY_DATASET_ID", variables.datasetId as string]);
+            await queryClient.refetchQueries(["CN_REQUESTS"])
+            await router.navigate({to: `/customer-requests`});
         },
         onSettled: () => {
         },
@@ -144,3 +147,102 @@ export const usePostNewBusinessRequest = () => {
     return {data, isSuccess, isError, error, mutate, mutateAsync, isPending}
 }
 
+
+/**
+ *  POST /negotiation/rpc/terminate
+ * */
+interface BusinessTerminationPayload {
+    api_gateway: string,
+    content: {
+        consumerParticipantId: string;
+        consumerPid: string;
+        providerPid: string;
+    }
+}
+
+export const postBusinessTerminationRequest = async ({
+                                                         content,
+                                                         api_gateway,
+                                                     }: BusinessTerminationPayload) => {
+    const res: any = await (
+        await fetch(api_gateway + `/negotiation/rpc/terminate`, {
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(content),
+            method: "POST",
+        })
+    ).json();
+    return res;
+}
+
+export const usePostBusinessTerminationRequest = () => {
+    const queryClient = useQueryClient()
+    const {data, isSuccess, isError, error, mutate, mutateAsync, isPending} = useMutation({
+        mutationFn: postBusinessTerminationRequest,
+        onMutate: async () => {
+        },
+        onError: (error) => {
+            console.log("onError")
+            console.log(error)
+        },
+        onSuccess: async (_data, variables) => {
+            console.log("onSuccess")
+            // @ts-ignore
+            await queryClient.refetchQueries(["CN_REQUESTS"])
+        },
+        onSettled: () => {
+        },
+    })
+    return {data, isSuccess, isError, error, mutate, mutateAsync, isPending}
+}
+
+
+/**
+ *  POST /negotiation/rpc/accept
+ * */
+interface BusinessAcceptationPayload {
+    api_gateway: string,
+    content: {
+        consumerParticipantId: string;
+        consumerPid: string;
+        providerPid: string;
+    }
+}
+
+export const postBusinessAcceptationRequest = async ({
+                                                         content,
+                                                         api_gateway,
+                                                     }: BusinessAcceptationPayload) => {
+    const res: any = await (
+        await fetch(api_gateway + `/negotiation/rpc/accept`, {
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(content),
+            method: "POST",
+        })
+    ).json();
+    return res;
+}
+
+export const usePostBusinessAcceptationRequest = () => {
+    const queryClient = useQueryClient()
+    const {data, isSuccess, isError, error, mutate, mutateAsync, isPending} = useMutation({
+        mutationFn: postBusinessAcceptationRequest,
+        onMutate: async () => {
+        },
+        onError: (error) => {
+            console.log("onError")
+            console.log(error)
+        },
+        onSuccess: async (_data, variables) => {
+            console.log("onSuccess")
+            // @ts-ignore
+            await queryClient.refetchQueries(["CN_REQUESTS"])
+        },
+        onSettled: () => {
+        },
+    })
+    return {data, isSuccess, isError, error, mutate, mutateAsync, isPending}
+}

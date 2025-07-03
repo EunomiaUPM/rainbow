@@ -1,6 +1,6 @@
 import {createFileRoute, Outlet, redirect} from '@tanstack/react-router'
 
-export const Route = createFileRoute('/dashboard')({
+export const Route = createFileRoute('/customer-requests')({
     component: RouteComponent,
     beforeLoad: ({context}) => {
         // @ts-ignore
@@ -10,9 +10,9 @@ export const Route = createFileRoute('/dashboard')({
             });
         }
         // @ts-ignore
-        if (context.auth.participant.participant_type == "Consumer") {
+        if (context.auth.participant.participant_type == "Provider") {
             throw redirect({
-                to: '/customer-requests',
+                to: '/business-requests',
             });
         }
     }

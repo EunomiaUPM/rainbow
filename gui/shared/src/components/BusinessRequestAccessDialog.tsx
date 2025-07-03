@@ -1,11 +1,12 @@
 import {DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle} from "./ui/dialog";
-import {Button} from "./ui/button";
+import {Button} from "shared/src/components/ui/button";
 import React, {useContext, useRef} from "react";
-import {Form} from "./ui/form";
+import {Form} from "shared/src/components/ui/form";
 import {useForm} from "react-hook-form";
-import {GlobalInfoContext, GlobalInfoContextType} from "./../context/GlobalInfoContext";
+import {GlobalInfoContext, GlobalInfoContextType} from "shared/src/context/GlobalInfoContext";
 import {usePostNewBusinessRequest} from "shared/src/data/business-mutations";
 import {AuthContext, AuthContextType} from "shared/src/context/AuthContext";
+import {PolicyWrapperShow} from "shared/src/components/PolicyWrapperShow";
 
 export const BusinessRequestAccessDialog = ({policy, catalogId, datasetId}: {
     policy: OdrlOffer,
@@ -50,7 +51,7 @@ export const BusinessRequestAccessDialog = ({policy, catalogId, datasetId}: {
                         {datasetId}
                     </div>
                     <div>
-                        {JSON.stringify(policy)}
+                        <PolicyWrapperShow policy={policy}/>
                     </div>
                 </DialogDescription>
             </DialogHeader>

@@ -93,7 +93,7 @@ where
     }
 
     /// Get provider mate based in id
-    async fn get_provider_mate(&self, provider_participant_id: &Urn) -> anyhow::Result<Mates> {
+    async fn get_provider_mate(&self, provider_participant_id: &String) -> anyhow::Result<Mates> {
         let mate = self
             .mates_facade
             .get_mate_by_id(provider_participant_id.clone())
@@ -269,7 +269,7 @@ where
                 consumer_pid: Some(consumer_pid.clone()),
                 provider_pid: Some(get_urn_from_string(&response.provider_pid)?),
                 data_address: None,
-                associated_provider: Some(get_urn_from_string(&provider_mate.participant_id)?),
+                associated_provider: Some(provider_mate.participant_id),
             })
             .await
             .map_err(|e| {

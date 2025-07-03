@@ -83,8 +83,8 @@ where
     + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
 {
-    async fn get_cn_processes(&self) -> anyhow::Result<Vec<Model>> {
-        let processes = self.repo.get_all_cn_processes(None, None).await.map_err(CnErrorProvider::DbErr)?;
+    async fn get_cn_processes(&self, client_type: Option<String>) -> anyhow::Result<Vec<Model>> {
+        let processes = self.repo.get_all_cn_processes(None, None, client_type).await.map_err(CnErrorProvider::DbErr)?;
         Ok(processes)
     }
 
@@ -116,10 +116,10 @@ where
         Ok(process)
     }
 
-    async fn get_cn_processes_by_participant(&self, participant_id: String) -> anyhow::Result<Vec<Model>> {
+    async fn get_cn_processes_by_participant(&self, participant_id: String, client_type: Option<String>) -> anyhow::Result<Vec<Model>> {
         let processes = self
             .repo
-            .get_cn_processes_by_participant_id(participant_id)
+            .get_cn_processes_by_participant_id(participant_id, client_type)
             .await
             .map_err(CnErrorProvider::DbErr)?;
         Ok(processes)

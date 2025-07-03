@@ -319,7 +319,7 @@ where
         Ok(cn_process.into())
     }
 
-    async fn post_request(&self, input: ContractRequestMessage, token: String) -> anyhow::Result<ContractAckMessage> {
+    async fn post_request(&self, input: ContractRequestMessage, token: String, client_type: String) -> anyhow::Result<ContractAckMessage> {
         // 1. validate request
         let consumer_participant_mate = self.validate_auth_token(token).await?;
         self.transition_validation(&input).await.map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
@@ -359,6 +359,10 @@ where
 
 
         // 3. persist process, message and offer
+        let is_business = match client_type.as_str() {
+            "business" => true,
+            _ => false
+        };
         let cn_process = self
             .repo
             .create_cn_process(NewContractNegotiationProcess {
@@ -367,6 +371,7 @@ where
                 associated_consumer: Some(consumer_participant_mate.participant_id.clone()),
                 state: ContractNegotiationState::Requested,
                 initiated_by: ConfigRoles::Consumer,
+                is_business,
             })
             .await
             .map_err(IdsaCNError::DbErr)?;

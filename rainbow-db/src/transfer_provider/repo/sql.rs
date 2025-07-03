@@ -154,7 +154,7 @@ impl TransferProcessRepo for TransferProviderRepoForSql {
             consumer_pid: ActiveValue::Set(Some(new_transfer_process.consumer_pid.to_string())),
             agreement_id: ActiveValue::Set(new_transfer_process.agreement_id.to_string()),
             data_plane_id: ActiveValue::Set(Some(new_transfer_process.callback_address.to_string())),
-            associated_consumer: ActiveValue::Set(new_transfer_process.associated_consumer.map(|a| a.to_string())),
+            associated_consumer: ActiveValue::Set(new_transfer_process.associated_consumer),
             state: ActiveValue::Set(TransferState::REQUESTED.to_string()),
             state_attribute: ActiveValue::Set(None),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),

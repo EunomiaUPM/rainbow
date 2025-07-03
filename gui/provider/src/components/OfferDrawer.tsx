@@ -101,23 +101,20 @@ export const OfferDrawer = ({
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     console.log("Form data submitted:", data);
     const policy = policies.find((p) => p["@id"] == data.id)!;
-    await sendOfferAsync(
-      {
-        content: {
-          consumerParticipantId: data.consumerParticipantId,
-          offer: {
-            "@id": policy["@id"],
-            "@type": "Offer",
-            target: policy.target,
-            //@ts-ignore
-            permission:
-              policy.permission.length == 0 ? null : policy.permission,
-            //@ts-ignore
-            obligation:
-              policy.obligation.length == 0 ? null : policy.obligation,
-            //@ts-ignore
-            prohibition:
-              policy.prohibition.length == 0 ? null : policy.prohibition,
+        await sendOfferAsync(
+            {
+                content: {
+                    consumerParticipantId: data.consumerParticipantId,
+                    offer: {
+                        "@id": policy["@id"],
+                        "@type": "Offer",
+                        target: policy.target,
+                        //@ts-ignore
+                        permission: policy.permission == undefined || policy.permission.length == 0 ? null : policy.permission,
+                        //@ts-ignore
+                        obligation: policy.obligation == undefined || policy.obligation.length == 0 ? null : policy.obligation,
+                        //@ts-ignore
+                        prohibition: policy.prohibition == undefined || policy.prohibition.length == 0 ? null : policy.prohibition,
             profile: policy.profile,
           },
         },

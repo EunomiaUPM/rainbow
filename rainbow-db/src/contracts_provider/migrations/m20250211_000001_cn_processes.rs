@@ -17,6 +17,7 @@
  *
  */
 
+use crate::contracts_consumer::migrations::m20250211_000001_cn_processes::CnProcesses;
 use sea_orm_migration::prelude::*;
 
 pub struct Migration;
@@ -36,6 +37,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(CNProcesses::ProviderId).string().not_null().primary_key())
                     .col(ColumnDef::new(CNProcesses::ConsumerId).string())
                     .col(ColumnDef::new(CNProcesses::AssociatedConsumer).string())
+                    .col(ColumnDef::new(CnProcesses::IsBusiness).boolean())
                     .col(ColumnDef::new(CNProcesses::State).string())
                     .col(ColumnDef::new(CNProcesses::InitiatedBy).string())
                     .col(ColumnDef::new(CNProcesses::CreatedAt).date_time().not_null())
@@ -56,6 +58,7 @@ pub enum CNProcesses {
     ProviderId,
     ConsumerId,
     AssociatedConsumer,
+    IsBusiness,
     State,
     InitiatedBy,
     CreatedAt,

@@ -288,6 +288,7 @@ where
                 associated_consumer: Some(consumer_mate.participant_id.clone()),
                 state: response.state,
                 initiated_by: ConfigRoles::Provider,
+                is_business: false,
             })
             .await
             .map_err(CnErrorProvider::DbErr)?;

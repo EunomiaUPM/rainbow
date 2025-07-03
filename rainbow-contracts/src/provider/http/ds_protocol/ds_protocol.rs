@@ -21,10 +21,12 @@ use crate::provider::core::ds_protocol::ds_protocol_errors::IdsaCNError;
 use crate::provider::core::ds_protocol::DSProtocolContractNegotiationProviderTrait;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, State};
+use axum::http::HeaderMap;
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::{middleware, Extension, Json, Router};
 use rainbow_common::auth::header::{extract_request_info, RequestInfo};
+use rainbow_common::err::transfer_err::TransferErrorType::NotCheckedError;
 use rainbow_common::protocol::contract::contract_agreement_verification::ContractAgreementVerificationMessage;
 use rainbow_common::protocol::contract::contract_negotiation_event::ContractNegotiationEventMessage;
 use rainbow_common::protocol::contract::contract_negotiation_request::ContractRequestMessage;
@@ -107,6 +109,7 @@ where
 
     async fn handle_post_request(
         State(service): State<Arc<T>>,
+        headers: HeaderMap,
         Extension(info): Extension<Arc<RequestInfo>>,
         input: Result<Json<ContractRequestMessage>, JsonRejection>,
     ) -> impl IntoResponse {
@@ -115,8 +118,19 @@ where
             Ok(input) => input.0,
             Err(e) => return IdsaCNError::JsonRejection(e).into_response(),
         };
+        let client_type = match headers.get("rainbow-client-type") {
+            Some(header_value) => {
+                match header_value.to_str() {
+                    Ok(s) => s,
+                    Err(e) => {
+                        return NotCheckedError { inner_error: e.into() }.into_response();
+                    }
+                }
+            }
+            None => "standard",
+        }.to_string();
         let token = info.token.clone();
-        match service.post_request(input, token).await {
+        match service.post_request(input, token, client_type).await {
             Ok(negotiation) => negotiation.into_response(),
             Err(err) => match err.downcast::<IdsaCNError>() {
                 Ok(err_) => err_.into_response(),

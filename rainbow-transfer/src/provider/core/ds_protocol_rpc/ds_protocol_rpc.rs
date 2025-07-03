@@ -92,7 +92,7 @@ where
     }
 
     /// Get consumer mate based in id
-    async fn get_consumer_mate(&self, consumer_participant_id: &Urn) -> anyhow::Result<Mates> {
+    async fn get_consumer_mate(&self, consumer_participant_id: &String) -> anyhow::Result<Mates> {
         let mate = self
             .mates_facade
             .get_mate_by_id(consumer_participant_id.clone())

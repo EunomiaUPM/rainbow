@@ -52,6 +52,7 @@ pub struct NewContractNegotiationProcess {
     pub associated_consumer: Option<String>,
     pub state: ContractNegotiationState,
     pub initiated_by: ConfigRoles,
+    pub is_business: bool,
 }
 pub struct EditContractNegotiationProcess {
     pub consumer_id: Option<Urn>,
@@ -64,6 +65,7 @@ pub trait ContractNegotiationProcessRepo {
         &self,
         limit: Option<u64>,
         page: Option<u64>,
+        client_type: Option<String>,
     ) -> anyhow::Result<Vec<cn_process::Model>, CnErrors>;
     async fn get_cn_processes_by_provider_id(
         &self,
@@ -76,6 +78,7 @@ pub trait ContractNegotiationProcessRepo {
     async fn get_cn_processes_by_participant_id(
         &self,
         participant_id: String,
+        client_type: Option<String>,
     ) -> anyhow::Result<Vec<cn_process::Model>, CnErrors>;
     async fn get_cn_process_by_cn_id(&self, cn_process_id: Urn) -> anyhow::Result<Option<cn_process::Model>, CnErrors>;
     async fn put_cn_process(

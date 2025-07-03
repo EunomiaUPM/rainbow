@@ -25,6 +25,14 @@ use rainbow_db::contracts_provider::repo::{EditAgreement, EditContractNegotiatio
 use serde::{Deserialize, Serialize};
 use urn::Urn;
 
+
+#[derive(Deserialize)]
+pub struct ProcessesQuery {
+    pub client_type: Option<String>,
+    pub page: Option<usize>,
+    pub per_page: Option<usize>,
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct NewContractNegotiationRequest {
@@ -46,6 +54,7 @@ impl Into<NewContractNegotiationProcess> for NewContractNegotiationRequest {
             associated_consumer: None,
             state: self.state,
             initiated_by: ConfigRoles::Provider,
+            is_business: false,
         }
     }
 }

@@ -153,11 +153,16 @@ where
         token: String,
         error_context_provider_pid: Option<Urn>,
         error_context_consumer_pid: Option<Urn>,
+        client_type: Option<String>,
     ) -> anyhow::Result<ContractAckMessage> {
-        let response = self
+        let mut request_builder = self
             .client
             .post(&target_url)
-            .header("Authorization", format!("Bearer {}", token))
+            .header("Authorization", format!("Bearer {}", token));
+        if let Some(value) = &client_type {
+            request_builder = request_builder.header("Rainbow-Client-Type", value);
+        }
+        let response = request_builder
             .json(message_payload)
             .send()
             .await
@@ -217,7 +222,7 @@ where
     U: RainbowEventsNotificationTrait + Send + Sync,
     V: MatesFacadeTrait + Send + Sync,
 {
-    async fn setup_request(&self, input: SetupRequestRequest) -> anyhow::Result<SetupRequestResponse> {
+    async fn setup_request(&self, input: SetupRequestRequest, client_type: String) -> anyhow::Result<SetupRequestResponse> {
         let SetupRequestRequest { provider_pid, consumer_pid, odrl_offer, provider_participant_id, .. } = input;
         // 1. fetch participant
         let provider_mate = self.get_provider_mate(&provider_participant_id).await?;
@@ -244,6 +249,7 @@ where
                 provider_token,
                 None,
                 Some(consumer_pid.clone()),
+                Some(client_type.clone()),
             )
             .await?;
 
@@ -251,12 +257,17 @@ where
 
 
         // 5. persist process, message and offer
+        let is_business = match client_type.as_str() {
+            "business" => true,
+            _ => false
+        };
         let cn_process = self
             .repo
             .create_cn_process(NewContractNegotiationProcess {
                 provider_id: Option::from(get_urn_from_string(&response.provider_pid)?),
                 consumer_id: Option::from(get_urn_from_string(&response.consumer_pid)?),
                 associated_provider: Some(provider_mate.participant_id.clone()),
+                is_business,
             })
             .await
             .map_err(CnErrorConsumer::DbErr)?;
@@ -344,6 +355,7 @@ where
                 provider_token,
                 provider_pid.clone(),
                 consumer_pid.clone(),
+                None,
             )
             .await?;
         // 5. persist process, message and offer
@@ -431,6 +443,7 @@ where
                 provider_token,
                 Option::from(provider_pid.clone()),
                 Option::from(consumer_pid.clone()),
+                None,
             )
             .await?;
         // 5. persist process, message and offer
@@ -501,6 +514,7 @@ where
                 provider_token,
                 Option::from(provider_pid.clone()),
                 Option::from(consumer_pid.clone()),
+                None,
             )
             .await?;
         // 5. persist process, message and offer
@@ -572,6 +586,7 @@ where
                 provider_token,
                 Option::from(provider_pid.clone()),
                 Option::from(consumer_pid.clone()),
+                None,
             )
             .await?;
         // 5. persist process, message and offer
