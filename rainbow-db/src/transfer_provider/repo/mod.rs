@@ -39,7 +39,7 @@ pub struct NewTransferProcessModel {
     pub consumer_pid: Urn,
     pub agreement_id: Urn,
     pub callback_address: String,
-    pub associated_consumer: Option<Urn>,
+    pub associated_consumer: Option<String>,
 }
 
 pub struct EditTransferProcessModel {

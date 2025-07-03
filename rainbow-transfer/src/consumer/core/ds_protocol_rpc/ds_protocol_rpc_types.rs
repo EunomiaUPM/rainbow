@@ -28,7 +28,7 @@ use urn::Urn;
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferConsumerRequestRequest {
     #[serde(rename = "providerParticipantId")]
-    pub provider_participant_id: Urn,
+    pub provider_participant_id: String,
     #[serde(rename = "agreementId")]
     pub agreement_id: String,
     #[serde(rename = "format")]
@@ -61,7 +61,7 @@ pub struct DSRPCTransferConsumerRequestResponse {
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferConsumerStartRequest {
     #[serde(rename = "providerParticipantId")]
-    pub provider_participant_id: Urn,
+    pub provider_participant_id: String,
     #[serde(rename = "providerPid")]
     pub provider_pid: Urn,
     #[serde(rename = "consumerPid")]
@@ -88,7 +88,7 @@ pub struct DSRPCTransferConsumerStartResponse {
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferConsumerSuspensionRequest {
     #[serde(rename = "providerParticipantId")]
-    pub provider_participant_id: Urn,
+    pub provider_participant_id: String,
     #[serde(rename = "providerPid")]
     pub provider_pid: Urn,
     #[serde(rename = "consumerPid")]
@@ -115,7 +115,7 @@ pub struct DSRPCTransferConsumerSuspensionResponse {
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferConsumerCompletionRequest {
     #[serde(rename = "providerParticipantId")]
-    pub provider_participant_id: Urn,
+    pub provider_participant_id: String,
     #[serde(rename = "providerPid")]
     pub provider_pid: Urn,
     #[serde(rename = "consumerPid")]
@@ -136,7 +136,7 @@ pub struct DSRPCTransferConsumerCompletionResponse {
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferConsumerTerminationRequest {
     #[serde(rename = "providerParticipantId")]
-    pub provider_participant_id: Urn,
+    pub provider_participant_id: String,
     #[serde(rename = "providerPid")]
     pub provider_pid: Urn,
     #[serde(rename = "consumerPid")]

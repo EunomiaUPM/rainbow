@@ -42,7 +42,7 @@ pub struct NewTransferCallback {
     pub consumer_pid: Option<Urn>,
     pub provider_pid: Option<Urn>,
     pub data_address: Option<serde_json::Value>,
-    pub associated_provider: Option<Urn>,
+    pub associated_provider: Option<String>,
 }
 pub struct EditTransferCallback {
     pub consumer_pid: Option<Urn>,

@@ -377,6 +377,7 @@ where
             self.data_service_facade.resolve_data_service_by_agreement_id(agreement_id.clone(), Some(formats)).await?;
         // 3. Data plane hook
         self.data_plane.on_transfer_request(provider_pid.clone(), data_service, input.format.clone()).await?;
+
         // 4. Persist model
         let transfer_process = self
             .transfer_repo
@@ -385,7 +386,7 @@ where
                 consumer_pid,
                 agreement_id,
                 callback_address, // TODO
-                associated_consumer: Some(get_urn_from_string(&consumer_participant_mate.participant_id)?),
+                associated_consumer: Some(consumer_participant_mate.participant_id),
             })
             .await
             .map_err(DSProtocolTransferProviderErrors::DbErr)?;

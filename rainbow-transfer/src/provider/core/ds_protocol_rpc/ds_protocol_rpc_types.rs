@@ -30,7 +30,7 @@ use urn::Urn;
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferProviderStartRequest {
     #[serde(rename = "consumerParticipantId")]
-    pub consumer_participant_id: Urn,
+    pub consumer_participant_id: String,
     #[serde(rename = "consumerCallbackAddress")]
     pub consumer_callback: Option<String>,
     #[serde(rename = "providerPid")]
@@ -74,7 +74,7 @@ pub struct DSRPCTransferProviderStartResponse {
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferProviderSuspensionRequest {
     #[serde(rename = "consumerParticipantId")]
-    pub consumer_participant_id: Urn,
+    pub consumer_participant_id: String,
     #[serde(rename = "consumerCallbackAddress")]
     pub consumer_callback: Option<String>,
     #[serde(rename = "providerPid")]
@@ -117,7 +117,7 @@ pub struct DSRPCTransferProviderSuspensionResponse {
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferProviderCompletionRequest {
     #[serde(rename = "consumerParticipantId")]
-    pub consumer_participant_id: Urn,
+    pub consumer_participant_id: String,
     #[serde(rename = "consumerCallbackAddress")]
     pub consumer_callback: Option<String>,
     #[serde(rename = "providerPid")]
@@ -154,7 +154,7 @@ pub struct DSRPCTransferProviderCompletionResponse {
 #[serde(deny_unknown_fields)]
 pub struct DSRPCTransferProviderTerminationRequest {
     #[serde(rename = "consumerParticipantId")]
-    pub consumer_participant_id: Urn,
+    pub consumer_participant_id: String,
     #[serde(rename = "consumerCallbackAddress")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub consumer_callback: Option<String>,
