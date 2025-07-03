@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import dayjs from "dayjs";
-import { ArrowRight, ExternalLink } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -23,11 +23,9 @@ import { Badge } from "shared/src/components/ui/badge";
 
 const RouteComponent = () => {
   const { data: catalogs } = useGetCatalogs();
-  // console.log(catalogs, " catalogsss");
   return (
     <div className="space-y-4 pb-4">
-      {/* <h1 className="text-xl font-bold">Catalogs</h1> */}
-      <Heading level="h3" className="flex gap-2 items-center">
+         <Heading level="h3" className="flex gap-2 items-center">
         Main Catalog with id
         <Badge variant="info" size="lg">
           {catalogs["@id"].slice(9, 29) + "[...]"}{" "}
@@ -72,7 +70,7 @@ const RouteComponent = () => {
           <TableHeader>
             <TableRow>
               <TableHead>Title</TableHead>
-              <TableHead>Created at </TableHead>
+              <TableHead>Created at</TableHead>
               <TableHead>Catalog ID</TableHead>
               <TableHead>Provider ID</TableHead>
               <TableHead>Link</TableHead>
