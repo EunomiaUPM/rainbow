@@ -134,7 +134,7 @@
 
 /*CONTAINERS*/
 .page-container {
-    @apply w-full flex flex-col justify-start items-center ml-[14rem];
+    @apply w-screen flex flex-col justify-start items-center ml-[14rem];
     /*margin left 14rem es por el sidebar, no quitar*/
 }
 

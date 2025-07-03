@@ -39,9 +39,9 @@ function RouteComponent() {
 
   const scopedListItemKeyClasses = "basis-[28%]";
 
-        agreements.map((agreement) => {
-      console.log(agreement);
-    });
+  agreements.map((agreement) => {
+    console.log(agreement);
+  });
 
   return (
     <div className="w-full">
@@ -99,37 +99,41 @@ function RouteComponent() {
         <Separator orientation="vertical" />
 
         {/* Div Participant Tabs */}
-        <Tabs defaultValue="participant-agreements">
-          <TabsList>
-            <TabsTrigger value="participant-agreements">Agreements</TabsTrigger>
-            {/* <TabsTrigger value="participant-transferences">Transferences</TabsTrigger> */}
-            {/* <TabsTrigger value="participant-contracts">Contract Negotiations</TabsTrigger> */}
-          </TabsList>
-          <TabsContent value="participant-agreements">
-            <div className=" bg-pink-500/0">
-              {/* <h2>Agreements</h2> */}
-              <Table className="text-sm">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Agreement Id</TableHead>
-                    {/* <TableHead>Related Message</TableHead> */}
-                    {/* <TableHead>Consumer Participant Id</TableHead> */}
-                    {/* <TableHead>Provider Participant Id</TableHead> */}
-                    <TableHead>Status</TableHead>
-                    <TableHead>Created at</TableHead>
-                    <TableHead>Link</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {agreements.map((agreement) => (
-
-                    <TableRow key={agreement.agreement_id.slice(0, 20)}>
-                      <TableCell className="!w-fit !max-w-fit">
-                        <Badge variant={"info"}>
-                          {agreement.agreement_id.slice(9, 20) + "..."}{" "}
-                        </Badge>
-                      </TableCell>
-                      {/* 
+        {agreements && agreements.length > 0 && (
+          // Lo de arriba: evita que pete si no hay agreements que mostrar,
+          // si se añaden otros tabs habría que añadirlos
+          <Tabs defaultValue="participant-agreements">
+            <TabsList>
+              <TabsTrigger value="participant-agreements">
+                Agreements
+              </TabsTrigger>
+              {/* <TabsTrigger value="participant-transferences">Transferences</TabsTrigger> */}
+              {/* <TabsTrigger value="participant-contracts">Contract Negotiations</TabsTrigger> */}
+            </TabsList>
+            <TabsContent value="participant-agreements">
+              <div className=" bg-pink-500/0">
+                {/* <h2>Agreements</h2> */}
+                <Table className="text-sm">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Agreement Id</TableHead>
+                      {/* <TableHead>Related Message</TableHead> */}
+                      {/* <TableHead>Consumer Participant Id</TableHead> */}
+                      {/* <TableHead>Provider Participant Id</TableHead> */}
+                      <TableHead>Status</TableHead>
+                      <TableHead>Created at</TableHead>
+                      <TableHead>Link</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {agreements.map((agreement) => (
+                      <TableRow key={agreement.agreement_id.slice(0, 20)}>
+                        <TableCell className="!w-fit !max-w-fit">
+                          <Badge variant={"info"}>
+                            {agreement.agreement_id.slice(9, 20) + "..."}{" "}
+                          </Badge>
+                        </TableCell>
+                        {/* 
                       <TableCell>
                         <Badge
                           variant={"status"}
@@ -152,13 +156,14 @@ function RouteComponent() {
                           </Button>
                         </Link>
                       </TableCell> */}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </TabsContent>
-        </Tabs>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </TabsContent>
+          </Tabs>
+        )}
       </div>
     </div>
   );

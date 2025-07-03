@@ -40,16 +40,20 @@ function RouteComponent() {
   const scopedListItemKeyClasses = "basis-[28%]";
 
   return (
-    <div className="w-full">
+    <div>
       {/* Page Header */}
       <Heading level="h3" className="flex items-center gap-3">
         Participant with id
-        <Badge variant={"info"} size={"lg"}>
+        <Badge
+          variant={"info"}
+          size={"lg"}
+          className="max-w-[50%] truncate text-overflow-ellipsis"
+        >
           {participant.participant_id.slice(9, -1)}
         </Badge>
       </Heading>
       {/* Page content */}
-      <div className="gridColsLayout lg:gap-8 bg-blue-500/0">
+      <div className="gridColsLayout bg-blue-500/0">
         {/* Div Participant Info */}
         <div className="flex flex-col bg-green-800/0">
           <Heading
@@ -58,14 +62,14 @@ function RouteComponent() {
           >
             Participant info:
           </Heading>
-          <div className="w-full bg-green-500/0">
+          <div className="max-w-screen-md bg-green-500/0">
             <List>
               <ListItem>
                 <ListItemKey className={scopedListItemKeyClasses}>
                   Participant ID
                 </ListItemKey>
-                <Badge variant={"info"} className="grow-1">
-                  {participant.participant_id.slice(9, -1) + "[...]"}
+                <Badge variant={"info"}>
+                  {participant.participant_id.slice(9, 29) + "[...]"}
                 </Badge>
               </ListItem>
               <ListItem>
@@ -91,82 +95,92 @@ function RouteComponent() {
             </List>
           </div>
         </div>
+
         {/* <Separator orientation="vertical" /> */}
 
         {/* Div Participant Tabs */}
-        <Tabs defaultValue="participant-agreements">
-          <TabsList>
-            <TabsTrigger value="participant-agreements">Agreements</TabsTrigger>
-            {/* <TabsTrigger value="participant-transferences">Transferences</TabsTrigger> */}
-            {/* <TabsTrigger value="participant-contracts">Contract Negotiations</TabsTrigger> */}
-          </TabsList>
-          <TabsContent value="participant-agreements">
-            <div className=" bg-pink-500/0">
-              {/* <h2>Agreements</h2> */}
-              <Table className="text-sm">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Agreement ID</TableHead>
-                    {/* <TableHead>Related Message</TableHead> */}
-                    {/* <TableHead>Consumer Participant Id</TableHead> */}
-                    {/* <TableHead>Provider Participant Id</TableHead> */}
-                    <TableHead>Status</TableHead>
-                    <TableHead>Created at</TableHead>
-                    <TableHead>Link</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {agreements.map((agreement) => (
-                    <TableRow key={agreement.agreement_id.slice(0, 20)}>
-                      <TableCell className="!w-fit !max-w-fit">
-                        <Badge variant={"info"}>
-                          {agreement.agreement_id.slice(9, 20) + "..."}{" "}
-                          {/* Desde 9 -> Sólo número */}
-                        </Badge>
-                      </TableCell>
-                      {/* <TableCell>
+        {agreements && agreements.length > 0 && ( 
+          // Lo de arriba: evita que pete si no hay agreements que mostrar,
+          // si se añaden otros tabs habría que añadirlos
+          <Tabs defaultValue="participant-agreements">
+            <TabsList>
+              <TabsTrigger value="participant-agreements">
+                Agreements
+              </TabsTrigger>
+              {/* <TabsTrigger value="participant-transferences">Transferences</TabsTrigger> */}
+              {/* <TabsTrigger value="participant-contracts">Contract Negotiations</TabsTrigger> */}
+            </TabsList>
+            <TabsContent value="participant-agreements">
+              <div className=" bg-pink-500/0">
+                <h2>Agreements</h2>
+                <Table className="text-sm">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Agreement ID</TableHead>
+                      <TableHead className="hidden">Related Message</TableHead>
+                      <TableHead className="hidden">
+                        Consumer Participant Id
+                      </TableHead>
+                      <TableHead className="hidden">
+                        Provider Participant Id
+                      </TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Created at</TableHead>
+                      <TableHead>Link</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {agreements.map((agreement) => (
+                      <TableRow key={agreement.agreement_id.slice(0, 20)}>
+                        <TableCell className="!w-fit !max-w-fit">
+                          <Badge variant={"info"}>
+                            {agreement.agreement_id.slice(9, 20) + "..."}{" "}
+                          </Badge>
+                        </TableCell>
+                        {/* <TableCell>
                   {agreement.cn_message_id?.slice(0, 20) + "..."}
-                </TableCell> */}
-                      {/* <TableCell>
+                </TableCell className="hidden"> */}
+                        {/* <TableCell>
                   <Badge variant={"info"}>
                     {agreement.consumer_participant_id?.slice(9, 20) + "..."}
                   </Badge>
                 </TableCell> */}
-                      {/* <TableCell>
-                  <Badge variant={"info"}>
-                    {agreement.provider_participant_id?.slice(9, 20) + "..."}
-                  </Badge>
-                </TableCell> */}
-                      <TableCell>
-                        {/* {console.log(agreements, "agreements en provider")} */}
-                        <Badge
-                          variant={"status"}
-                          state={agreement.active ? "STARTED" : "PAUSE"}
-                        >
-                          {agreement.active ? "ACTIVE" : "INACTIVE"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {dayjs(agreement.created_at).format("DD/MM/YY HH:mm")}
-                      </TableCell>
-                      <TableCell>
-                        <Link
-                          to="/agreements/$agreementId"
-                          params={{ agreementId: agreement.agreement_id }}
-                        >
-                          <Button variant="link">
-                            See agreement
-                            <ArrowRight />
-                          </Button>
-                        </Link>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </TabsContent>
-        </Tabs>
+                        <TableCell className="hidden">
+                          <Badge variant={"info"}>
+                            {agreement.provider_participant_id?.slice(9, 20) +
+                              "..."}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={"status"}
+                            state={agreement.active ? "STARTED" : "PAUSE"}
+                          >
+                            {agreement.active ? "ACTIVE" : "INACTIVE"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {dayjs(agreement.created_at).format("DD/MM/YY HH:mm")}
+                        </TableCell>
+                        <TableCell>
+                          <Link
+                            to="/agreements/$agreementId"
+                            params={{ agreementId: agreement.agreement_id }}
+                          >
+                            <Button variant="link">
+                              See agreement
+                              <ArrowRight />
+                            </Button>
+                          </Link>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </TabsContent>
+          </Tabs>
+        )}
       </div>
     </div>
   );
