@@ -232,3 +232,28 @@ export const useGetBusinessRequests = () => {
     } = useSuspenseQuery(getBusinessRequestsOptions(api_gateway))
     return {data, isLoading, isError, error}
 }
+
+
+/**
+ *  GET /negotiation/consumer/{participant_id}/requests
+ * */
+export const getConsumerRequests = async (api_gateway: string, participant_id: string) => {
+    const processes: CNProcess[] = await (
+        await fetch(api_gateway + `/negotiation/consumer/${participant_id}/requests`)
+    ).json();
+    return processes;
+}
+export const getConsumerRequestsOptions = (api_gateway: string, participant_id: string) => queryOptions({
+    queryKey: ["CN_REQUESTS", participant_id],
+    queryFn: () => getConsumerRequests(api_gateway, participant_id),
+})
+export const useGetConsumerRequests = (participant_id: string) => {
+    const {api_gateway} = useContext<GlobalInfoContextType>(GlobalInfoContext);
+    const {
+        data,
+        isLoading,
+        isError,
+        error
+    } = useSuspenseQuery(getConsumerRequestsOptions(api_gateway, participant_id))
+    return {data, isLoading, isError, error}
+}

@@ -87,11 +87,11 @@ where
             )
             // Customer
             .route(
-                "/gateway/api/negotiation/customer/:participant_id/requests",
+                "/gateway/api/negotiation/consumer/:participant_id/requests",
                 get(Self::handle_get_customer_negotiation_requests),
             )
             .route(
-                "/gateway/api/negotiation/customer/:participant_id/requests/:request_id",
+                "/gateway/api/negotiation/consumer/:participant_id/requests/:request_id",
                 get(Self::handle_get_consumer_negotiation_request_by_id),
             )
             .route(

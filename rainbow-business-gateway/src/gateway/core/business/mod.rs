@@ -35,7 +35,7 @@ pub trait BusinessCatalogTrait: Send + Sync + 'static {
         request_id: Urn,
         token: String,
     ) -> anyhow::Result<ContractAckMessage>;
-    async fn get_consumer_negotiation_requests(&self, participant_id: String, token: String) -> anyhow::Result<Vec<ContractAckMessage>>;
+    async fn get_consumer_negotiation_requests(&self, participant_id: String, token: String) -> anyhow::Result<Value>;
     async fn get_consumer_negotiation_request_by_id(
         &self,
         participant_id: String,

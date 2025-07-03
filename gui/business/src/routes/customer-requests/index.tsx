@@ -1,20 +1,20 @@
-import {createFileRoute, Link} from '@tanstack/react-router'
-import {useGetBusinessRequests} from "shared/src/data/business-queries.ts";
+import {createFileRoute} from '@tanstack/react-router'
+import {useGetConsumerRequests} from "shared/src/data/business-queries.ts";
 import {Input} from "shared/src/components/ui/input.tsx";
-import {Button} from "shared/src/components/ui/button.tsx";
-import {ArrowRight} from "lucide-react";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "shared/src/components/ui/table.tsx";
 import {Badge} from "shared/src/components/ui/badge.tsx";
 import dayjs from "dayjs";
 import {ContractNegotiationActions} from "shared/src/components/ContractNegotiationActions.tsx";
-import {useMemo} from "react";
+import {useContext, useMemo} from "react";
+import {AuthContext, AuthContextType} from "shared/src/context/AuthContext.tsx";
 
-export const Route = createFileRoute('/requests/')({
+export const Route = createFileRoute('/customer-requests/')({
     component: RouteComponent,
 })
 
 function RouteComponent() {
-    const {data: requests} = useGetBusinessRequests()
+    const {participant} = useContext<AuthContextType | null>(AuthContext)!
+    const {data: requests} = useGetConsumerRequests(participant?.participant_id!)
     const cnProcessesSorted = useMemo(() => {
         if (!requests) return [];
         return [...requests].sort((a, b) => {
@@ -36,10 +36,8 @@ function RouteComponent() {
                         <TableHead>ProviderPid</TableHead>
                         <TableHead>ConsumerPid</TableHead>
                         <TableHead>State</TableHead>
-                        <TableHead>Client Type</TableHead>
                         <TableHead>Created at</TableHead>
                         <TableHead>Actions</TableHead>
-                        <TableHead>Link</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -61,40 +59,10 @@ function RouteComponent() {
                                 </Badge>
                             </TableCell>
                             <TableCell>
-                                <Badge variant={"status"} state={cnProcess.state}>
-                                    {cnProcess.is_business ? "Business" : "Standard"}
-                                </Badge>
-                            </TableCell>
-                            <TableCell>
                                 {dayjs(cnProcess.created_at).format("DD/MM/YY - HH:mm")}
                             </TableCell>
                             <TableCell>
-                                {/*{cnProcess.state === "REQUESTED" ?*/}
-                                {/*    <Button variant="outline" size="sm" className="" onClick={() =>*/}
-                                {/*        // toggle dialog*/}
-                                {/*    {*/}
-                                {/*      (openCounterOffer === true ? setOpenCounterOffer(false) : setOpenCounterOffer(true));*/}
-                                {/*      (setSelectedCnProcess(cnProcess))*/}
-                                {/*    }*/}
-
-
-                                {/*    }>*/}
-                                {/*      C/Offer*/}
-                                {/*    </Button> : ""}*/}
-
-
                                 <ContractNegotiationActions process={cnProcess} tiny={true}/>
-                            </TableCell>
-                            <TableCell>
-                                <Link
-                                    to="/contract-negotiation/$cnProcess"
-                                    params={{cnProcess: cnProcess.provider_id}}
-                                >
-                                    <Button variant="link">
-                                        See details
-                                        <ArrowRight/>
-                                    </Button>
-                                </Link>
                             </TableCell>
                         </TableRow>
                     ))}

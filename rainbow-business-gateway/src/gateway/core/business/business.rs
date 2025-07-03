@@ -143,7 +143,7 @@ impl BusinessCatalogTrait for BusinessServiceForDatahub {
 
     async fn get_business_negotiation_requests(&self, _token: String) -> anyhow::Result<Value> {
         let base_url = self.config.get_contract_negotiation_host_url().unwrap();
-        let url = format!("{}/api/v1/contract-negotiation/processes", base_url);
+        let url = format!("{}/api/v1/contract-negotiation/processes?client_type=business", base_url);
         let req = self.client.get(url).send().await.map_err(|e| anyhow!("lol {}", e.to_string()))?;
         if req.status().is_success() == false {
             bail!("not able to fetch contract negotiation processes");
@@ -174,15 +174,15 @@ impl BusinessCatalogTrait for BusinessServiceForDatahub {
         Ok(res)
     }
 
-    async fn get_consumer_negotiation_requests(&self, participant_id: String, _token: String) -> anyhow::Result<Vec<ContractAckMessage>> {
+    async fn get_consumer_negotiation_requests(&self, participant_id: String, _token: String) -> anyhow::Result<Value> {
         let base_url = self.config.get_contract_negotiation_host_url().unwrap();
-        let url = format!("{}/api/v1/contract-negotiation/processes", base_url);
+        let url = format!("{}/api/v1/contract-negotiation/processes/participant/{}?client_type=business", base_url, participant_id);
         let req = self.client.get(url).send().await.map_err(|e| anyhow!("lol {}", e.to_string()))?;
         if req.status().is_success() == false {
             bail!("not able to fetch contract negotiation processes");
         }
         let res = req
-            .json::<Vec<ContractAckMessage>>()
+            .json()
             .await
             .map_err(|e| anyhow!("not deserializable, {}", e.to_string()))?;
         Ok(res)

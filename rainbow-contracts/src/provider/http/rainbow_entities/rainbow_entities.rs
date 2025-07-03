@@ -18,21 +18,19 @@
  */
 
 use crate::provider::core::rainbow_entities::rainbow_entities_errors::CnErrorProvider;
-use crate::provider::core::rainbow_entities::rainbow_entities_types::{
-    EditAgreementRequest, EditContractNegotiationMessageRequest, EditContractNegotiationOfferRequest,
-    EditContractNegotiationRequest, EditParticipantRequest, NewAgreementRequest, NewContractNegotiationMessageRequest,
-    NewContractNegotiationOfferRequest, NewContractNegotiationRequest, NewParticipantRequest,
-};
+use crate::provider::core::rainbow_entities::rainbow_entities_types::{EditAgreementRequest, EditContractNegotiationMessageRequest, EditContractNegotiationOfferRequest, EditContractNegotiationRequest, EditParticipantRequest, NewAgreementRequest, NewContractNegotiationMessageRequest, NewContractNegotiationOfferRequest, NewContractNegotiationRequest, NewParticipantRequest, ProcessesQuery};
 use crate::provider::core::rainbow_entities::RainbowEntitiesContractNegotiationProviderTrait;
 use axum::extract::rejection::JsonRejection;
-use axum::extract::{Path, State};
+use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::{delete, get, post, put};
 use axum::{Json, Router};
 use rainbow_common::utils::get_urn_from_string;
+use serde::Deserialize;
 use std::sync::Arc;
 use tracing::info;
+
 
 pub struct RainbowEntitesContractNegotiationProviderRouter<T>
 where
@@ -185,9 +183,13 @@ where
     ///
     /// CNProcess Rainbow API
     ///
-    async fn handle_get_cn_processes(State(service): State<Arc<T>>) -> impl IntoResponse {
+    async fn handle_get_cn_processes(
+        State(service): State<Arc<T>>,
+        query: Query<ProcessesQuery>,
+    ) -> impl IntoResponse {
         info!("GET /api/v1/contract-negotiation/processes");
-        match service.get_cn_processes().await {
+        let client_type = query.0.client_type;
+        match service.get_cn_processes(client_type).await {
             Ok(processes) => (StatusCode::OK, Json(processes)).into_response(),
             Err(err) => match err.downcast::<CnErrorProvider>() {
                 Ok(e) => e.into_response(),
@@ -261,13 +263,15 @@ where
 
     async fn handle_get_cn_processes_by_participant(
         State(service): State<Arc<T>>,
+        query: Query<ProcessesQuery>,
         Path(participant_id): Path<String>,
     ) -> impl IntoResponse {
         info!(
             "GET /api/v1/contract-negotiation/processes/participant/{}",
             participant_id
         );
-        match service.get_cn_processes_by_participant(participant_id).await {
+        let client_type = query.0.client_type;
+        match service.get_cn_processes_by_participant(participant_id, client_type).await {
             Ok(process) => (StatusCode::OK, Json(process)).into_response(),
             Err(err) => match err.downcast::<CnErrorProvider>() {
                 Ok(e) => e.into_response(),
