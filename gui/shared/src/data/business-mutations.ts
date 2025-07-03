@@ -87,7 +87,7 @@ export const useDeleteBusinessNewPolicyInDataset = () => {
         onSuccess: async (_data, variables) => {
             console.log("onSuccess")
             // @ts-ignore
-            await queryClient.refetchQueries(["POLICIES_BY_DATASET_ID", variables.datasetId as string]);
+            await queryClient.refetchQueries(["POLICIES_BY_DATASET_ID"]);
         },
         onSettled: () => {
         },
