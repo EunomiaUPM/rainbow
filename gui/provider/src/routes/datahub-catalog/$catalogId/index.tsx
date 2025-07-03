@@ -32,7 +32,7 @@ import {
 } from "shared/src/components/ui/list";
 import { useGetParticipants } from "shared/src/data/participant-queries.ts";
 import { OfferDrawer } from "@/components/OfferDrawer.tsx";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Plus } from "lucide-react";
 
 const RouteComponent = () => {
    const [open, setOpen] = useState(false)
@@ -50,7 +50,7 @@ const RouteComponent = () => {
         </div>
         <Table className="text-sm">
           <TableHeader>
-            <TableRow>
+            <TableRow className="">
               {/* <TableHead>Id</TableHead> */}
               <TableHead>Name</TableHead>
               <TableHead>ETL system</TableHead>
@@ -63,16 +63,18 @@ const RouteComponent = () => {
           </TableHeader>
           <TableBody>
             {datasets.map((dataset) => (
-              <TableRow key="urn:uuid:c4d4449d-a">
+              <TableRow key="" >
                 {/* <TableCell>{dataset.urn.slice(19,25)}...</TableCell> */}
-                <TableCell>{dataset.name}</TableCell>
+                <TableCell className="min-w-[196px] max-w-[300px] break-all">{dataset.name}</TableCell>
                 <TableCell>
                     <Badge variant="info">
                     {dataset.platform.name}
                     </Badge>
                     </TableCell>
-                <TableCell className="min-w-[220px]">
-                  <p className="text-xs"> {dataset.description}</p> 
+                <TableCell className="min-w-[200px]">
+                  <p className="text-xs"> {dataset.description.length > 70
+    ? dataset.description.slice(0, 70) + "..."
+    : dataset.description} </p>
                     </TableCell>
                 {/* <TableCell>{dataset.tag_names.join(", ")}</TableCell> */}
                 <TableCell>
@@ -86,7 +88,8 @@ const RouteComponent = () => {
                   <Drawer direction={"right"}>
                     <DrawerTrigger>
                       <Button variant="outline" size="sm">
-                        + Offer dataset
+                        {/* <Plus/> */}
+                     + Offer dataset
                       </Button>
                     </DrawerTrigger>
                     <DrawerContent>

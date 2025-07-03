@@ -51,13 +51,13 @@ const RouteComponent = () => {
         >
           <Button>Create new request</Button>
         </Link> */}
-        {/* DRAWER CONTRACT REQUEST*/}
+        {/* DRAWER CONTRACT REQUEST*
         <Drawer direction={"right"}>
           <DrawerTrigger>
-            <Button>
+            {/* <Button>
               Create new Request
               <Plus className="mb-1" />
-            </Button>
+            </Button> 
           </DrawerTrigger>
           <DrawerContent>
             <DrawerHeader>
@@ -79,7 +79,7 @@ const RouteComponent = () => {
             </DrawerFooter>
           </DrawerContent>
         </Drawer>
-        {/* /Drawer Contract Request*/}
+        {/* /Drawer Contract Request */}
       </div>
       <Table className="text-sm">
         <TableHeader>
