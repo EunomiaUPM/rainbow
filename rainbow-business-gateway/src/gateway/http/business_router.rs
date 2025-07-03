@@ -1,5 +1,5 @@
 use crate::gateway::core::business::BusinessCatalogTrait;
-use crate::gateway::http::business_router_types::RainbowBusinessNegotiationRequest;
+use crate::gateway::http::business_router_types::{RainbowBusinessAcceptanceRequest, RainbowBusinessNegotiationRequest, RainbowBusinessTerminationRequest};
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, State};
 use axum::http::header::{AUTHORIZATION, CONTENT_TYPE};
@@ -56,6 +56,7 @@ where
             )
             .route("/gateway/api/login", post(Self::handle_login))
             .route("/gateway/api/login/poll", post(Self::handle_login_poll))
+            .route("/gateway/api/negotiation/rpc/terminate", post(Self::handle_terminate_request))
             // Business User
             .route(
                 "/gateway/api/policy-templates",
@@ -406,8 +407,54 @@ where
     async fn handle_accept_request(
         State(service): State<Arc<T>>,
         Extension(info): Extension<Arc<RequestInfo>>,
+        input: Result<Json<RainbowBusinessAcceptanceRequest>, JsonRejection>,
     ) -> impl IntoResponse {
-        (StatusCode::OK, Json(json!({"hola": 2}))).into_response()
+        info!("POST /gateway/api/negotiation/rpc/accept");
+        let token = &info.token;
+        let input = match input {
+            Ok(input) => input.0,
+            Err(err) => {
+                return (
+                    StatusCode::BAD_REQUEST,
+                    Json(json!({"error": err.body_text()})),
+                )
+                    .into_response()
+            }
+        };
+        match service.accept_request(input, token.to_string()).await {
+            Ok(res) => (StatusCode::ACCEPTED, Json(res)).into_response(),
+            Err(e) => (
+                StatusCode::BAD_REQUEST,
+                Json(json!({"error": e.to_string()})),
+            )
+                .into_response(),
+        }
+    }
+    async fn handle_terminate_request(
+        State(service): State<Arc<T>>,
+        Extension(info): Extension<Arc<RequestInfo>>,
+        input: Result<Json<RainbowBusinessTerminationRequest>, JsonRejection>,
+    ) -> impl IntoResponse {
+        info!("POST /gateway/api/negotiation/rpc/terminate");
+        let token = &info.token;
+        let input = match input {
+            Ok(input) => input.0,
+            Err(err) => {
+                return (
+                    StatusCode::BAD_REQUEST,
+                    Json(json!({"error": err.body_text()})),
+                )
+                    .into_response()
+            }
+        };
+        match service.terminate_request(input, token.to_string()).await {
+            Ok(res) => (StatusCode::ACCEPTED, Json(res)).into_response(),
+            Err(e) => (
+                StatusCode::BAD_REQUEST,
+                Json(json!({"error": e.to_string()})),
+            )
+                .into_response(),
+        }
     }
     async fn handle_create_request(
         State(service): State<Arc<T>>,

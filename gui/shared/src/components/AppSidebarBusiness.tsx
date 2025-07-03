@@ -12,7 +12,7 @@ import {
 } from "./ui/sidebar";
 // @ts-ignore
 import logoImg from "./../img/eunomia_logo_lg_light.svg";
-import {AuthContext, AuthContextType} from "@/context/AuthContext.tsx";
+import {AuthContext, AuthContextType} from "shared/src/context/AuthContext";
 
 // Menu items.
 const businessItems = [

@@ -1,5 +1,5 @@
 use crate::gateway::core::business::BusinessCatalogTrait;
-use crate::gateway::http::business_router_types::RainbowBusinessNegotiationRequest;
+use crate::gateway::http::business_router_types::{RainbowBusinessAcceptanceRequest, RainbowBusinessNegotiationRequest, RainbowBusinessTerminationRequest};
 use anyhow::{anyhow, bail};
 use axum::async_trait;
 use rainbow_common::auth::business::RainbowBusinessLoginRequest;
@@ -208,9 +208,69 @@ impl BusinessCatalogTrait for BusinessServiceForDatahub {
         Ok(res)
     }
 
-    async fn accept_request(&self, request_id: Urn, _token: String) -> anyhow::Result<()> {
-        // get cn request, use
-        Ok(())
+    async fn accept_request(&self, input: RainbowBusinessAcceptanceRequest, _token: String) -> anyhow::Result<Value> {
+        let base_url = self.config.get_contract_negotiation_host_url().unwrap();
+        let setup_message = json!({
+            "consumerParticipantId": input.consumer_participant_id,
+            "consumerPid": input.consumer_pid,
+            "providerPid": input.provider_pid
+        });
+
+        // agreement phase
+        let url = format!("{}/api/v1/negotiations/rpc/setup-agreement", base_url);
+        let req = self
+            .client
+            .post(url)
+            .json(&setup_message)
+            .send()
+            .await
+            .map_err(|e| anyhow!("error on request {}", e.to_string()))?;
+
+        if req.status().is_success() == false {
+            bail!("not able to create agreement");
+        }
+
+        // finalization phase
+        let url = format!("{}/api/v1/negotiations/rpc/setup-finalization", base_url);
+        let req = self
+            .client
+            .post(url)
+            .json(&setup_message)
+            .send()
+            .await
+            .map_err(|e| anyhow!("error on request {}", e.to_string()))?;
+
+        if req.status().is_success() == false {
+            bail!("not able to finalize contract process");
+        }
+
+        let res = req.json().await.map_err(|e| anyhow!("not deserializable, {}", e.to_string()))?;
+        Ok(res)
+    }
+
+    async fn terminate_request(&self, input: RainbowBusinessTerminationRequest, _token: String) -> anyhow::Result<Value> {
+        // fetch base url for provider
+        let base_url = self.config.get_contract_negotiation_host_url().unwrap();
+        let url = format!("{}/api/v1/negotiations/rpc/setup-termination", base_url);
+
+        let setup_termination_message = json!({
+            "consumerParticipantId": input.consumer_participant_id,
+            "consumerPid": input.consumer_pid,
+            "providerPid": input.provider_pid
+        });
+        let req = self
+            .client
+            .post(url)
+            .json(&setup_termination_message)
+            .send()
+            .await
+            .map_err(|e| anyhow!("error on request {}", e.to_string()))?;
+
+        if req.status().is_success() == false {
+            bail!("not able to terminate contract negotiation");
+        }
+        let res = req.json().await.map_err(|e| anyhow!("not deserializable, {}", e.to_string()))?;
+        Ok(res)
     }
 
     async fn create_request(&self, input: RainbowBusinessNegotiationRequest, _token: String) -> anyhow::Result<Value> {

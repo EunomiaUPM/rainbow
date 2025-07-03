@@ -4,9 +4,9 @@ import {Input} from "shared/src/components/ui/input.tsx";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "shared/src/components/ui/table.tsx";
 import {Badge} from "shared/src/components/ui/badge.tsx";
 import dayjs from "dayjs";
-import {ContractNegotiationActions} from "shared/src/components/ContractNegotiationActions.tsx";
 import {useContext, useMemo} from "react";
 import {AuthContext, AuthContextType} from "shared/src/context/AuthContext.tsx";
+import {BusinessActions} from "../../../../shared/src/components/BusinessActions.tsx";
 
 export const Route = createFileRoute('/customer-requests/')({
     component: RouteComponent,
@@ -62,7 +62,7 @@ function RouteComponent() {
                                 {dayjs(cnProcess.created_at).format("DD/MM/YY - HH:mm")}
                             </TableCell>
                             <TableCell>
-                                <ContractNegotiationActions process={cnProcess} tiny={true}/>
+                                <BusinessActions process={cnProcess}/>
                             </TableCell>
                         </TableRow>
                     ))}
