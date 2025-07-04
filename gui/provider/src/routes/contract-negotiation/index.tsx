@@ -2,24 +2,12 @@ import {createFileRoute, Link} from "@tanstack/react-router";
 import {useMemo, useState} from "react";
 import dayjs from "dayjs";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "shared/src/components/ui/table";
-import {
-  Drawer,
-  DrawerBody,
-  DrawerClose,
-  DrawerContent,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "shared/src/components/ui/drawer";
 import {Button} from "shared/src/components/ui/button.tsx";
 import {Badge} from "shared/src/components/ui/badge.tsx";
 import {Input} from "shared/src/components/ui/input.tsx";
 import {useGetContractNegotiationProcesses} from "shared/src/data/contract-queries.ts";
 import {ContractNegotiationActions} from "shared/src/components/ContractNegotiationActions";
-import {ArrowRight, Plus} from "lucide-react";
-import Heading from "shared/src/components/ui/heading";
-import {RouteComponent as OfferForm} from "@/routes/contract-negotiation/offer";
+import {ArrowRight} from "lucide-react";
 import {RouteComponent as CounterOfferForm} from "@/routes/contract-negotiation/counter-offer";
 
 
@@ -44,36 +32,6 @@ const RouteComponent = () => {
                 <div className=" basis-3/5">
                     <Input type="search"></Input>
                 </div>
-
-                {/* DRAWER CONTRACT OFFER*/}
-                <Drawer direction={"right"}>
-                    <DrawerTrigger>
-                        <Button>
-                            Create new offer
-                            <Plus className="mb-1"/>
-                        </Button>
-                    </DrawerTrigger>
-                    <DrawerContent>
-                        <DrawerHeader>
-                            <DrawerTitle>
-                                <Heading level="h5" className="text-current">
-                                    New Contract Negotiation Offer
-                                </Heading>
-                            </DrawerTitle>
-                        </DrawerHeader>
-                        <DrawerBody>
-                            <OfferForm/>
-                        </DrawerBody>
-                        <DrawerFooter>
-                            <DrawerClose className="flex justify-start gap-4">
-                                <Button variant="ghost" className="w-40">
-                                    Cancel
-                                </Button>
-                            </DrawerClose>
-                        </DrawerFooter>
-                    </DrawerContent>
-                </Drawer>
-                {/* /Drawer Contract Offer*/}
             </div>
             <Table className="text-sm">
                 <TableHeader>

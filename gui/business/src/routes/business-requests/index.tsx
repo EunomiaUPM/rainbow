@@ -6,6 +6,7 @@ import {Badge} from "shared/src/components/ui/badge.tsx";
 import dayjs from "dayjs";
 import {useMemo} from "react";
 import {BusinessActions} from "../../../../shared/src/components/BusinessActions.tsx";
+import {renameCNTagsForBusiness} from "@/utils";
 
 export const Route = createFileRoute('/business-requests/')({
     component: RouteComponent,
@@ -59,7 +60,7 @@ function RouteComponent() {
                             </TableCell>
                             <TableCell>
                                 <Badge variant={"status"} state={cnProcess.state}>
-                                    {cnProcess.state.replace("dspace:", "")}
+                                    {renameCNTagsForBusiness(cnProcess.state.replace("dspace:", ""))}
                                 </Badge>
                             </TableCell>
                             <TableCell>
