@@ -2,7 +2,7 @@
 
 ![Rainbow front](./docs/static/img/rainbow.png)
 
-## What is Rainbow
+## What is Rainbow 
 
 Rainbow or also known as Dataspace Rainbow is an implementation
 of [Dataspace Protocol 2024-1](https://docs.internationaldataspaces.org/ids-knowledgebase/dataspace-protocol) promoted
