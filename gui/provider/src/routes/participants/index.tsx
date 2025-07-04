@@ -68,9 +68,9 @@ function RouteComponent() {
       {!hasProvider && (
         <div className="mx-auto w-fit bg-blue-500/0">
           <div>
-            mmm... parece que no hay un provider, tienes que hacer onboard en tu
-            wallet
-            <Button onClick={() => onboardHandler()}>Onboard!!!!</Button>
+            Your wallet is not yet connected as a provider. Please complete the
+            onboarding process to get started.
+            <Button onClick={() => onboardHandler()}>Onboard wallet</Button>
           </div>
         </div>
       )}
@@ -86,8 +86,9 @@ function RouteComponent() {
             </div>
 
             {/* DRAWER ADD PARTICIPANT*/}
+            {/** TO DO: DELETE */}
             <Drawer direction={"right"}>
-              <DrawerTrigger>
+              <DrawerTrigger className="hidden">
                 <Button>
                   Add participant
                   <Plus className="mb-1" />
@@ -113,6 +114,7 @@ function RouteComponent() {
               </DrawerContent>
             </Drawer>
             {/* /DRAWER ADD PARTICIPANT*/}
+            {/** TO DO: DELETE */}
           </div>
           {/* /HEADER CONTAINER */}
 
@@ -134,7 +136,7 @@ function RouteComponent() {
                   key={participant.participant_id.slice(0, 20)}
                   className={
                     participant.participant_id === lastHighLightedNotification
-                      ? "bg-blue-200"
+                      ? "bg-primary-200"
                       : ""
                   }
                 >
@@ -144,7 +146,9 @@ function RouteComponent() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {participant.token?.slice(0, 20) + "..."}
+                    <Badge variant={"info"}>
+                      {participant.token?.slice(0, 20) + "..."}
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     <Badge variant={"role"} role={participant.participant_type}>

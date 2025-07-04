@@ -64,7 +64,7 @@ const RouteComponent = () => {
                                 </Badge>
                             </TableCell>
                             <TableCell>
-                                <Badge variant={"status"} state={cnProcess.state}>
+                                <Badge>
                                     {cnProcess.is_business ? "Business" : "Standard"}
                                 </Badge>
                             </TableCell>

@@ -55,7 +55,7 @@ const RouteComponent = () => {
                     </ListItem>
                     <ListItem>
                         <ListItemKey>Client type</ListItemKey>
-                        <Badge variant={"status"} state={cnProcess.state}>
+                        <Badge>
                             {process.is_business ? "Business" : "Standard"}
                         </Badge>
                     </ListItem>

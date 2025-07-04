@@ -13,7 +13,7 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground border-transparent",
+        default: "bg-brand-snow/15 text-brand-snow border-transparent",
         info: "font-mono uppercase bg-background-800 text-secondary-400 border-transparent",
         role: "text-white uppercase border-transparent",
         status: "bg-opacity-30 border-transparent text-foreground-300", // base status style

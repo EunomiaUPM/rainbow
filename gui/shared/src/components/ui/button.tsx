@@ -22,7 +22,7 @@ const buttonVariants = cva(
         secondary:
           "bg-secondary/70 text-secondary-foreground shadow-sm hover:bg-secondary/90",
         ghost: "text-brand-snow bg-foreground/10 hover:bg-foreground/20",
-        icon_destructive: "flex text-white/20 hover:text-danger-500 bg-foreground/5 hover:bg-foreground/10 p-0 mb-0 [&_svg]:w-5 [&_svg]:h-5 p-1",
+        icon_destructive: "flex text-danger-400 border border-danger hover:text-danger-500 bg-foreground/5 hover:bg-foreground/10 p-0 mb-0 [&_svg]:w-5 [&_svg]:h-5 p-1",
         link: "!px-0 flex-no-wrap normal-case text-snow underline-offset-4 hover:underline", // ok
       },
       size: {
