@@ -5,6 +5,7 @@ import {Form} from "./ui/form";
 import {useForm} from "react-hook-form";
 import {GlobalInfoContext, GlobalInfoContextType} from "./../context/GlobalInfoContext";
 import {useDeleteBusinessNewPolicyInDataset} from "shared/src/data/business-mutations";
+import {Badge} from "shared/src/components/ui/badge";
 
 export const BusinessRemovePolicyDialog = ({policy, catalogId, datasetId}: {
     policy: OdrlOffer,
@@ -31,7 +32,9 @@ export const BusinessRemovePolicyDialog = ({policy, catalogId, datasetId}: {
                 <DialogTitle>Delete policy dialog</DialogTitle>
                 <DialogDescription className="max-w-full flex flex-wrap break-all">
           <span className="max-w-full flex flex-wrap">
-            You are about to delete a policy.
+            Are you sure you want to delete Policy with ID <Badge variant="info">
+                {policy["@id"].slice(9,29) + "[...]"}
+            </Badge>
           </span>
                 </DialogDescription>
             </DialogHeader>

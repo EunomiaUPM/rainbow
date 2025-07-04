@@ -58,7 +58,7 @@ export const ContractNegotiationFinalizationDialog = ({
       </DialogHeader>
 
       {/* List JSON */}
-      <List className="min-w-full overflow-x-scroll px-2">
+      <List className="min-w-full px-2">
         <ListItem>
           <ListItemKey className={scopedListItemKeyClasses}>
             Provider id:

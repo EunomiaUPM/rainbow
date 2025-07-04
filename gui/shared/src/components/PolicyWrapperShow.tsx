@@ -5,10 +5,13 @@ import { Badge } from "shared/src/components/ui/badge";
 import PolicyComponent from "shared/src/components/PolicyComponent";
 import { Trash } from "lucide-react";
 import { Button } from "./ui/button";
-import {   useRouterState, } from "@tanstack/react-router";
+import { useRouterState } from "@tanstack/react-router";
+import { BusinessRemovePolicyDialog } from "shared/src/components/BusinessRemovePolicyDialog";
+import { Dialog, DialogTrigger } from "shared/src/components/ui/dialog";
 
-export const PolicyWrapperShow = ({ policy }: { policy: OdrlOffer }) => {
-        const routerState = useRouterState();
+export const PolicyWrapperShow = ({ policy, datasetId, catalogId,participant }: { policy: OdrlOffer, datasetId: any, catalogId: any, participant: any }) => {
+  const routerState = useRouterState();
+  // console.log("en policy wrapper, datasetid-catalogid",datasetId, catalogId )
   return (
     <div className="">
       <List className="h-full flex flex-col items-start justify-start border border-white/30 bg-white/10 px-4 pb-4 pt-2 rounded-md ">
@@ -18,25 +21,31 @@ export const PolicyWrapperShow = ({ policy }: { policy: OdrlOffer }) => {
             <Badge variant="info" className="h-6">
               {policy["@id"].slice(9, 27) + "[...]"}
             </Badge>
-        
-          
           </Heading>
-          
+
           {/* Si el componente está dentro de provider (ruta contiene datahub-catalog)
           y no se encuentra dentro de la pagina de dataset, añade la papelera para borrar
           - el otro caso es que esté en "new offer" o similares, y no haya la opción de borrar 
           desde ahí */}
-             {!routerState.location.pathname.includes("datahub-catalog") ? "" :
-              !routerState.location.pathname.includes("dataset") ? null :
-            <Button
-              variant="icon_destructive"
-              size="icon"
-              className="mb-2"
-            //   onClick={() => }
-            >
-              <Trash className="mb-0.5" />
-            </Button>
-}
+
+          {!routerState.location.pathname.includes("datahub-catalog") ? (
+            ""
+          ) : !routerState.location.pathname.includes("dataset") ? null : (
+            <Dialog>
+              <DialogTrigger asChild>
+                  {participant?.participant_type == "Provider" &&
+                <Button
+                  variant="icon_destructive"
+                  size="icon"
+                  className="mb-2"
+                  //   onClick={() => }
+                >
+                  <Trash className="mb-0.5" />
+                </Button>}
+              </DialogTrigger>
+         <BusinessRemovePolicyDialog policy={policy} catalogId={catalogId} datasetId={datasetId}/>
+            </Dialog>
+          )}
         </div>
         <ListItem>
           <ListItemKey>Policy Target</ListItemKey>

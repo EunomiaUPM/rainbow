@@ -1,23 +1,13 @@
-import {createFileRoute, Outlet, redirect, useRouterState} from "@tanstack/react-router";
+import {createFileRoute, Outlet, redirect} from "@tanstack/react-router";
 
 const NotFound = () => {
     return <div>not found</div>;
 };
 
 const RouteComponent = () => {
-    const routerState = useRouterState();
+    
     return (
         <>
-            {routerState.location.pathname !== "/catalog" ? null : (
-                <>
-                    {/* <div className="mb-6">
-            <Heading level="h4" className="flex gap-2 items-center">
-              
-             Main Catalog
-            </Heading> 
-          </div> */}
-                </>
-            )}
             <Outlet/>
         </>
     );

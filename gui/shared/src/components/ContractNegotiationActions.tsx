@@ -45,13 +45,38 @@ export const ContractNegotiationActions = ({
 
   return (
     <>
-  
-    <div className={containerClassName({ tiny })}>
-      {/* <h2 className={h2ClassName({ tiny })}></h2> */}
-      {process.state === "REQUESTED" && (
-        <div className="space-x-2 min-w-[260px]">
-          {role === "provider" && (
-            <>
+      <div className={containerClassName({ tiny })}>
+        {/* <h2 className={h2ClassName({ tiny })}></h2> */}
+        {process.state === "REQUESTED" && (
+          <div className="space-x-2 min-w-[260px]">
+            {role === "provider" && (
+              <>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="destructive" size={tiny ? "sm" : ""}>
+                      Terminate
+                    </Button>
+                  </DialogTrigger>
+                  <ContractNegotiationTerminationDialog process={process} />
+                </Dialog>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size={tiny ? "sm" : ""}>
+                      Counter offer
+                    </Button>
+                  </DialogTrigger>
+                  <ContractNegotiationOfferDialog process={process} />
+                </Dialog>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button size={tiny ? "sm" : ""}>Agree</Button>
+                  </DialogTrigger>
+
+                  <ContractNegotiationAgreementDialog process={process} />
+                </Dialog>
+              </>
+            )}
+            {role === "consumer" && (
               <Dialog>
                 <DialogTrigger asChild>
                   <Button variant="destructive" size={tiny ? "sm" : ""}>
@@ -60,63 +85,12 @@ export const ContractNegotiationActions = ({
                 </DialogTrigger>
                 <ContractNegotiationTerminationDialog process={process} />
               </Dialog>
-              {/* <Dialog> */}
-                {/* <DialogTrigger asChild> */}
-  
-                {/* </DialogTrigger>
-                <ContractNegotiationOfferDialog process={process} />
-              </Dialog> */}
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button size={tiny ? "sm" : ""}>Agree</Button>
-                </DialogTrigger>
-
-                <ContractNegotiationAgreementDialog process={process} />
-              </Dialog>
-            </>
-          )}
-          {role === "consumer" && (
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="destructive" size={tiny ? "sm" : ""}>
-                  Terminate
-                </Button>
-              </DialogTrigger>
-              <ContractNegotiationTerminationDialog process={process} />
-            </Dialog>
-          )}
-        </div>
-      )}
-      {process.state === "OFFERED" && (
-        <div className="flex justify-end flex-row-reverse gap-2">
-          {role === "provider" && (
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="destructive" size={tiny ? "sm" : ""}>
-                  Terminate
-                </Button>
-              </DialogTrigger>
-              <ContractNegotiationTerminationDialog process={process} />
-            </Dialog>
-          )}
-          {role === "consumer" && (
-            <>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button size={tiny ? "sm" : ""}>Accept</Button>
-                </DialogTrigger>
-
-                <ContractNegotiationAcceptanceDialog process={process} />
-              </Dialog>
-              <Dialog className="w-full">
-                <DialogTrigger asChild>
-                  <Button variant="outline" size={tiny ? "sm" : ""}>
-                    Counter request
-                    {/* Request */}
-                  </Button>
-                </DialogTrigger>
-                <ContractNegotiationRequestDialog process={process} />
-              </Dialog>
+            )}
+          </div>
+        )}
+        {process.state === "OFFERED" && (
+          <div className="flex justify-end flex-row-reverse gap-2">
+            {role === "provider" && (
               <Dialog>
                 <DialogTrigger asChild>
                   <Button variant="destructive" size={tiny ? "sm" : ""}>
@@ -125,99 +99,126 @@ export const ContractNegotiationActions = ({
                 </DialogTrigger>
                 <ContractNegotiationTerminationDialog process={process} />
               </Dialog>
-            </>
-          )}
-        </div>
-      )}
+            )}
+            {role === "consumer" && (
+              <>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button size={tiny ? "sm" : ""}>Accept</Button>
+                  </DialogTrigger>
 
-      {process.state === "ACCEPTED" && (
-        <div className="flex justify-end flex-row-reverse gap-2">
-          {role === "provider" && (
-            <>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button size={tiny ? "sm" : ""}>Agree</Button>
-                </DialogTrigger>
-                <ContractNegotiationAgreementDialog process={process} />
-              </Dialog>
-              {/*<Dialog>*/}
-              {/*    <DialogTrigger asChild>*/}
-              {/*        <Button variant="destructive">Terminate</Button>*/}
-              {/*    </DialogTrigger>*/}
-              {/*    <ContractNegotiationTerminationDialog process={process}/>*/}
-              {/*</Dialog>*/}
-            </>
-          )}
-          {role === "consumer" && (
-            <>
-              <NoFurtherActions />
-              {/*<Dialog>*/}
-              {/*    <DialogTrigger asChild>*/}
-              {/*        <Button variant="destructive">Terminate</Button>*/}
-              {/*    </DialogTrigger>*/}
-              {/*    <ContractNegotiationTerminationDialog process={process}/>*/}
-              {/*</Dialog>*/}
-            </>
-          )}
-        </div>
-      )}
-      {process.state === "AGREED" && (
-        <div className="flex justify-start gap-2">
-          {role === "provider" && (
-            <>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="destructive" size={tiny ? "sm" : ""}>
-                    Terminate
-                  </Button>
-                </DialogTrigger>
-                <ContractNegotiationTerminationDialog process={process} />
-              </Dialog>
-            </>
-          )}
-          {role === "consumer" && (
-            <>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button size={tiny ? "sm" : ""}>Verify</Button>
-                </DialogTrigger>
-                <ContractNegotiationVerificationDialog process={process} />
-              </Dialog>
-            </>
-          )}
-        </div>
-      )}
-      {process.state === "VERIFIED" && (
-        <div className="flex justify-end flex-row-reverse gap-2">
-          {role === "provider" && (
-            <>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button size={tiny ? "sm" : ""}>Finalize</Button>
-                </DialogTrigger>
-                <ContractNegotiationFinalizationDialog process={process} />
-              </Dialog>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="destructive" size={tiny ? "sm" : ""}>
-                    Terminate
-                  </Button>
-                </DialogTrigger>
+                  <ContractNegotiationAcceptanceDialog process={process} />
+                </Dialog>
+                <Dialog className="w-full">
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size={tiny ? "sm" : ""}>
+                      Counter request
+                      {/* Request */}
+                    </Button>
+                  </DialogTrigger>
+                  <ContractNegotiationRequestDialog process={process} />
+                </Dialog>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="destructive" size={tiny ? "sm" : ""}>
+                      Terminate
+                    </Button>
+                  </DialogTrigger>
+                  <ContractNegotiationTerminationDialog process={process} />
+                </Dialog>
+              </>
+            )}
+          </div>
+        )}
 
-                <ContractNegotiationTerminationDialog process={process} />
-              </Dialog>
-            </>
-          )}
-          {role === "consumer" && (
-            <>
-              <NoFurtherActions />
-            </>
-          )}
-        </div>
-      )}
-      {process.state === "FINALIZED" && <NoFurtherActions />}
-      {process.state === "TERMINATED" && <NoFurtherActions />}
-    </div>
+        {process.state === "ACCEPTED" && (
+          <div className="flex justify-end flex-row-reverse gap-2">
+            {role === "provider" && (
+              <>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button size={tiny ? "sm" : ""}>Agree</Button>
+                  </DialogTrigger>
+                  <ContractNegotiationAgreementDialog process={process} />
+                </Dialog>
+                {/*<Dialog>*/}
+                {/*    <DialogTrigger asChild>*/}
+                {/*        <Button variant="destructive">Terminate</Button>*/}
+                {/*    </DialogTrigger>*/}
+                {/*    <ContractNegotiationTerminationDialog process={process}/>*/}
+                {/*</Dialog>*/}
+              </>
+            )}
+            {role === "consumer" && (
+              <>
+                <NoFurtherActions />
+                {/*<Dialog>*/}
+                {/*    <DialogTrigger asChild>*/}
+                {/*        <Button variant="destructive">Terminate</Button>*/}
+                {/*    </DialogTrigger>*/}
+                {/*    <ContractNegotiationTerminationDialog process={process}/>*/}
+                {/*</Dialog>*/}
+              </>
+            )}
+          </div>
+        )}
+        {process.state === "AGREED" && (
+          <div className="flex justify-start gap-2">
+            {role === "provider" && (
+              <>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="destructive" size={tiny ? "sm" : ""}>
+                      Terminate
+                    </Button>
+                  </DialogTrigger>
+                  <ContractNegotiationTerminationDialog process={process} />
+                </Dialog>
+              </>
+            )}
+            {role === "consumer" && (
+              <>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button size={tiny ? "sm" : ""}>Verify</Button>
+                  </DialogTrigger>
+                  <ContractNegotiationVerificationDialog process={process} />
+                </Dialog>
+              </>
+            )}
+          </div>
+        )}
+        {process.state === "VERIFIED" && (
+          <div className="flex justify-end flex-row-reverse gap-2">
+            {role === "provider" && (
+              <>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button size={tiny ? "sm" : ""}>Finalize</Button>
+                  </DialogTrigger>
+                  <ContractNegotiationFinalizationDialog process={process} />
+                </Dialog>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="destructive" size={tiny ? "sm" : ""}>
+                      Terminate
+                    </Button>
+                  </DialogTrigger>
+
+                  <ContractNegotiationTerminationDialog process={process} />
+                </Dialog>
+              </>
+            )}
+            {role === "consumer" && (
+              <>
+                <NoFurtherActions />
+              </>
+            )}
+          </div>
+        )}
+        {process.state === "FINALIZED" && <NoFurtherActions />}
+        {process.state === "TERMINATED" && <NoFurtherActions />}
+      </div>
     </>
   );
 };

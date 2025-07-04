@@ -57,8 +57,8 @@ export const ContractNegotiationRequestDialog = ({
   const scopedListItemKeyClasses = "basis-[30%]";
 
   return (
-    <DialogContent className=" min-w-[1200px] p-0 flex flex-col sm:max-w-fit h-[calc(100vh-40px)]">
-      <DialogHeader className="px-6 pt-6 w-[90vw]">
+    <DialogContent className=" p-0 flex flex-col  h-[calc(100vh-40px)]">
+      <DialogHeader className="px-6 pt-6">
         <DialogTitle>Contract Negotiation Request</DialogTitle>
         <DialogDescription className="break-all">
           <p>Make changes on the Contract Negotiation Request.</p>
@@ -67,7 +67,7 @@ export const ContractNegotiationRequestDialog = ({
       </DialogHeader>
       {/* List */}
       <div className=" overflow-y-scroll px-6">
-        <List className="w-[70vw] overflow-x-scroll px-2">
+        <List className="w-fit  px-2">
           <ListItem>
             <ListItemKey className={scopedListItemKeyClasses}>
               Provider id:
@@ -140,14 +140,14 @@ export const ContractNegotiationRequestDialog = ({
         <Form {...form}>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {offer && (
-              <div className="grid grid-cols-2 gap-4 ">
-                <div>
+              <div className="flex w-full ">
+                {/* <div>
                   <p className="mb-2">Current policy</p>
                   <PolicyWrapperShow
                     className="w-full"
                     policy={offer.offer_content}
                   />
-                </div>
+                </div> */}
                 <div>
                   <p className="mb-2">New policy request</p>
                   <PolicyWrapperEdit
@@ -158,6 +158,7 @@ export const ContractNegotiationRequestDialog = ({
                 </div>
               </div>
             )}
+            
           </form>
         </Form>
       </div>

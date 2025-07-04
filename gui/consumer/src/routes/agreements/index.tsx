@@ -21,7 +21,19 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
+  DialogClose
 } from "shared/src/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "shared/src/components/ui/select";
+import { FormLabel } from "shared/src/components/ui/form";
 
 export const Route = createFileRoute("/agreements/")({
   component: RouteComponent,
@@ -97,13 +109,59 @@ function RouteComponent() {
                         <DialogTitle>Transfer request dialog</DialogTitle>
                         <DialogDescription className="max-w-full flex flex-wrap break-all">
                           <span className="max-w-full flex flex-wrap">
-                            Select the transference's parameters for 
-                         <Badge variant="info">  {agreement.agreement_id.slice(9, 30) + "[...]"} </Badge> 
+                            Select the transference's parameters for
+                            <Badge variant="info">
+                              {" "}
+                              {agreement.agreement_id.slice(9, 30) +
+                                "[...]"}{" "}
+                            </Badge>
                             associated to dataset $xxxxx
                           </span>
                         </DialogDescription>
+                         </DialogHeader>
+                       
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-sm mb-1"> Method</p>
+                            <Select>
+                              <SelectTrigger className="w-[240px]">
+                                <SelectValue placeholder="Select a method" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectGroup>
+                                  <SelectItem value="pull">PULL</SelectItem>
+                                  <SelectItem value="push">PUSH</SelectItem>
+                                </SelectGroup>
+                              </SelectContent>
+                            </Select>
+                          </div>
 
-                      </DialogHeader>
+                          <div>
+                            <p className="text-sm mb-1"> Transfer protocol</p>
+                            <Select>
+                              <SelectTrigger className="w-[240px]">
+                                <SelectValue placeholder="Select a transfer protocol" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectGroup>
+                                  <SelectItem value="http">http</SelectItem>
+                                  <SelectItem value="kafka">kafka</SelectItem>
+                                  <SelectItem value="kafka">FTP</SelectItem>
+                                </SelectGroup>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                     <DialogFooter className="[&>*]:w-full">
+                     <DialogClose asChild >
+                            <Button variant="ghost" type="reset">
+                                Cancel
+                            </Button>
+                        </DialogClose>
+                        <Button variant="default" type="submit">
+                            Request access
+                        </Button>
+                     </DialogFooter>
                     </DialogContent>
                   </Dialog>
                 </TableCell>
