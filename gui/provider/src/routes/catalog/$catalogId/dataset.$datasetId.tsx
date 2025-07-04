@@ -180,9 +180,9 @@ function RouteComponent() {
                                                         <div className="flex justify-between">
                                                             <p className="mb-2"> Action: </p>
                                                             <Button
-                                                                variant="destructive"
+                                                                variant="icon_destructive"
                                                                 size="xs"
-                                                                className="ml-4"
+                                                                className="ml-4 border"
                                                             >
                                                                 <Trash className="mb-0.5"/>
                                                                 Remove permission
@@ -277,7 +277,7 @@ function RouteComponent() {
                                                         <div className="flex justify-between">
                                                             <p className="mb-2"> Action: </p>
                                                             <Button
-                                                                variant="destructive"
+                                                                variant="icon_destructive"
                                                                 size="xs"
                                                                 className="ml-4"
                                                             >

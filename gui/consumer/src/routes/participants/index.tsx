@@ -144,10 +144,10 @@ function RouteComponent() {
       {!hasConsumer && (
         <div className="mx-auto w-fit bg-blue-500/0">
           <div>
-            mmm... parece que no hay un consumer..., tienes que hacer onboard en
-            tu wallet
+            Your wallet is not yet connected as a consumer. Please complete the
+            onboarding process to get started.
           </div>
-          <Button onClick={() => onboardHandler()}>Onboard!!!!</Button>
+          <Button onClick={() => onboardHandler()}>Onboard wallet</Button>
         </div>
       )}
       {/* NO WALLET */}
@@ -159,7 +159,8 @@ function RouteComponent() {
           <div className="pb-3 w-full flex justify-between items-center">
             <div className="basis-3/5">
               <Input type="search"></Input>
-            </div>{/* /HEADER CONTAINER */}
+            </div>
+            {/* /HEADER CONTAINER */}
 
             {/* DRAWER ADD PARTICIPANT*/}
             <Drawer direction={"right"}>
@@ -173,7 +174,7 @@ function RouteComponent() {
                 <DrawerHeader>
                   <DrawerTitle>
                     <Heading level="h5" className="text-current">
-                      New Participant
+                      Authenticate in provider
                     </Heading>
                   </DrawerTitle>
                 </DrawerHeader>
@@ -195,13 +196,13 @@ function RouteComponent() {
                             { field } // <--
                           ) => (
                             <FormItem>
-                              <FormLabel>Provider base url:</FormLabel>
+                              <FormLabel>Provider base URL:</FormLabel>
                               <div>
                                 <FormControl>
                                   <Input {...field} />
                                 </FormControl>
-                                <FormDescription className="text-sm text-gray-500 mt-1">
-                                  Provide base url
+                                <FormDescription className="text-sm text-foreground/70 mt-1">
+                                  Provide base URL
                                 </FormDescription>
                                 <FormMessage />
                               </div>
@@ -220,36 +221,53 @@ function RouteComponent() {
                   {/**/}
                   {/**/}
                   {did && oidc && (
-                    <div>
-                      <div className="max-w-[400px]">
+                    <div className="m-auto max-w-[90%] p-6 flex flex-col gap-4 text-center bg-brand-sky/[3%] rounded-md">
+                      <Heading
+                        level="h4"
+                        className="text-center text-brand-sky"
+                      >
+                        Claim your credential!
+                      </Heading>
+                      <p>Scan the QR code...</p>
+                      <div className="w-[350px] mx-auto">
                         {oidc != "" && (
                           <QRCode
+                            className="h-auto max-w-full w-full "
                             size={32}
                             value={oidc}
-                            style={{
-                              height: "auto",
-                              maxWidth: "100%",
-                              width: "100%",
-                            }}
                             fgColor="#fff"
                             bgColor="#0a0a1b"
                           />
                         )}
                       </div>
+                        <p>... or copy your URI bellow</p>
                       <div>
-                        <div className="break-words">{oidc}</div>
-                        <Button onClick={handleCopy}>
-                          {copyStatus || "Copy Text"}
-                        </Button>
-                        <Button onClick={handleCancel}>Cancel</Button>
+                        <div className="max-w-full break-all p-2 bg-background-200/40 border border-stroke rounded-md">
+                        <code className="text-xs text-foreground-200">{oidc}</code>
+                        </div>
+                        <div className="mt-4 [&>button]:w-32 flex gap-4 justify-center">
+                          <Button
+                            variant={"destructive"}
+                            onClick={handleCancel}
+                          >
+                            Cancel
+                          </Button>
+                          <Button onClick={handleCopy}>
+                            {copyStatus || "Copy Text"}
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   )}
+                  {/**/}
+                  {/**/}
+                  {/**/}
+                  {/**/}
                 </DrawerBody>
                 <DrawerFooter>
                   <DrawerClose className="flex justify-start gap-4">
                     <Button variant="ghost" className="w-40">
-                      Cancel
+                      Close
                     </Button>
                     {/* <Button className="w-40">Add Participant</Button> */}
                   </DrawerClose>
@@ -288,7 +306,9 @@ function RouteComponent() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {participant.token?.slice(0, 20) + "..."}
+                    <Badge variant={"info"}>
+                      {participant.token?.slice(0, 20) + "..."}
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     <Badge variant={"role"} role={participant.participant_type}>
