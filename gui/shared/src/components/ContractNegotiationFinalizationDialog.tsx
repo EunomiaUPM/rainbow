@@ -77,7 +77,7 @@ export const ContractNegotiationFinalizationDialog = ({
               Associated Consumer id:
             </ListItemKey>
             <Badge variant={"info"}>
-              {process.associated_consumer.slice(9, -1)}
+              {process.associated_consumer.slice(9, 40) + "[...]"}
             </Badge>
           </ListItem>
         )}
@@ -87,7 +87,7 @@ export const ContractNegotiationFinalizationDialog = ({
               Associated Provider id:
             </ListItemKey>
             <Badge variant={"info"}>
-              {process.associated_provider.slice(9, -1)}
+              {process.associated_provider}
             </Badge>
           </ListItem>
         )}
@@ -117,7 +117,7 @@ export const ContractNegotiationFinalizationDialog = ({
         </ListItem>
         {process.updated_at && (
           <ListItem>
-            <ListItemKey>Updated at:</ListItemKey>
+            <ListItemKey className={scopedListItemKeyClasses}>Updated at:</ListItemKey>
             <p> {dayjs(process.updated_at).format("DD/MM/YY HH:mm")}</p>
           </ListItem>
         )}

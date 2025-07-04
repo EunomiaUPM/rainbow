@@ -80,7 +80,7 @@ export const BusinessRequestTerminationDialog = ({
                             Associated Consumer:
                         </ListItemKey>
                         <Badge variant={"info"}>
-                            {process.associated_consumer?.slice(9, -1)}
+                            {process.associated_consumer?.slice(9, 40) + "[...]"}
                         </Badge>
                     </ListItem>
                 )}
@@ -91,7 +91,7 @@ export const BusinessRequestTerminationDialog = ({
                             Associated Provider:
                         </ListItemKey>
                         <Badge variant={"info"}>
-                            {process.associated_provider?.slice(9, -1)}
+                            {process.associated_provider?.slice(9, 40) + "[...]"}
                         </Badge>
                     </ListItem>
                 )}
