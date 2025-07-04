@@ -1,5 +1,5 @@
-import {Archive, ArrowLeftRight, Feather, Handshake, Home, Users,} from "lucide-react";
-import React from "react";
+import {Archive, ArrowLeftRight, Feather, Handshake, Users,} from "lucide-react";
+import React, {useContext} from "react";
 import {Link, useRouterState} from "@tanstack/react-router"
 import {
     Sidebar,
@@ -11,20 +11,20 @@ import {
     SidebarMenuItem,
 } from "./ui/sidebar";
 import logoImg from "./../img/eunomia_logo_lg_light.svg";
+import {GlobalInfoContext, GlobalInfoContextType} from "@/context/GlobalInfoContext.tsx";
 
 // Menu items.
 const items = [
-    // {
-    //     title: "Home",
-    //     url: "/",
-    //     icon: Home,
-    // },
     {
         title: "Provider Catalogs",
         url: "/provider-catalog",
         icon: Archive,
     },
-
+    {
+        title: "Provider Catalogs",
+        url: "/provider-datahub-catalog",
+        icon: Archive,
+    },
     {
         title: "Contract Negotiation",
         url: "/contract-negotiation",
@@ -50,7 +50,20 @@ const items = [
 
 export function AppSidebarConsumer() {
     const routerState = useRouterState();
-    // console.log("Router state in SidebarMenuItem:", routerState.location.pathname);
+    const {catalog_type} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!
+    const filteredItems = items.filter(item => {
+        if (catalog_type == "rainbow") {
+            if (item.url == "/provider-datahub-catalog") {
+                return false
+            }
+        }
+        if (catalog_type == "datahub") {
+            if (item.url == "/provider-catalog") {
+                return false
+            }
+        }
+        return true
+    })
 
     return (
         <Sidebar className="bg-base-sidebar">
@@ -60,12 +73,10 @@ export function AppSidebarConsumer() {
                         src={logoImg}
                         className="h-11 mt-2 mb-4 mr-auto ml-1 flex justify-start object-contain"
                     ></img>
-                    {/* <SidebarGroupLabel>Application</SidebarGroupLabel> */}
-                    {/* <SidebarTrigger/> */}
 
                     <SidebarGroupContent>
                         <SidebarMenu>
-                            {items.map((item) => (
+                            {filteredItems.map((item) => (
                                 <SidebarMenuItem key={item.title}>
                                     <SidebarMenuButton asChild>
                                         <Link to={item.url} className={

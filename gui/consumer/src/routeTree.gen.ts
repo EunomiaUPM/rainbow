@@ -13,6 +13,7 @@
 import { Route as rootRoute } from './routes/__root'
 import { Route as TransferProcessRouteImport } from './routes/transfer-process/route'
 import { Route as SubscriptionsRouteImport } from './routes/subscriptions/route'
+import { Route as ProviderDatahubCatalogRouteImport } from './routes/provider-datahub-catalog/route'
 import { Route as ProviderCatalogRouteImport } from './routes/provider-catalog/route'
 import { Route as ParticipantsRouteImport } from './routes/participants/route'
 import { Route as GuiRouteImport } from './routes/gui/route'
@@ -21,6 +22,7 @@ import { Route as AgreementsRouteImport } from './routes/agreements/route'
 import { Route as IndexImport } from './routes/index'
 import { Route as TransferProcessIndexImport } from './routes/transfer-process/index'
 import { Route as SubscriptionsIndexImport } from './routes/subscriptions/index'
+import { Route as ProviderDatahubCatalogIndexImport } from './routes/provider-datahub-catalog/index'
 import { Route as ProviderCatalogIndexImport } from './routes/provider-catalog/index'
 import { Route as ParticipantsIndexImport } from './routes/participants/index'
 import { Route as LoginIndexImport } from './routes/login/index'
@@ -30,11 +32,13 @@ import { Route as AgreementsIndexImport } from './routes/agreements/index'
 import { Route as ContractNegotiationRequestImport } from './routes/contract-negotiation/request'
 import { Route as AgreementsAgreementIdImport } from './routes/agreements/$agreementId'
 import { Route as TransferProcessTransferProcessIdRouteImport } from './routes/transfer-process/$transferProcessId/route'
+import { Route as ProviderDatahubCatalogProviderRouteImport } from './routes/provider-datahub-catalog/$provider/route'
 import { Route as ProviderCatalogProviderRouteImport } from './routes/provider-catalog/$provider/route'
 import { Route as ParticipantsParticipantIdRouteImport } from './routes/participants/$participantId/route'
 import { Route as GuiAgreementsRouteImport } from './routes/gui/agreements/route'
 import { Route as ContractNegotiationCnProcessRouteImport } from './routes/contract-negotiation/$cnProcess/route'
 import { Route as TransferProcessTransferProcessIdIndexImport } from './routes/transfer-process/$transferProcessId/index'
+import { Route as ProviderDatahubCatalogProviderIndexImport } from './routes/provider-datahub-catalog/$provider/index'
 import { Route as ProviderCatalogProviderIndexImport } from './routes/provider-catalog/$provider/index'
 import { Route as ParticipantsParticipantIdIndexImport } from './routes/participants/$participantId/index'
 import { Route as GuiAgreementsIndexImport } from './routes/gui/agreements/index'
@@ -43,8 +47,12 @@ import { Route as GuiAgreementsHolaImport } from './routes/gui/agreements/hola'
 import { Route as GuiAgreementsAgreementidImport } from './routes/gui/agreements/$agreement_id'
 import { Route as TransferProcessTransferProcessIdTransferMessageTransferMessageIdImport } from './routes/transfer-process/$transferProcessId/transfer-message.$transferMessageId'
 import { Route as ContractNegotiationCnProcessMessageMessageIdImport } from './routes/contract-negotiation/$cnProcess/message.$messageId'
+import { Route as ProviderDatahubCatalogProviderCatalogCatalogIdRouteImport } from './routes/provider-datahub-catalog/$provider/catalog.$catalogId/route'
 import { Route as ProviderCatalogProviderCatalogCatalogIdRouteImport } from './routes/provider-catalog/$provider/catalog.$catalogId/route'
+import { Route as ProviderDatahubCatalogProviderCatalogCatalogIdIndexImport } from './routes/provider-datahub-catalog/$provider/catalog.$catalogId/index'
 import { Route as ProviderCatalogProviderCatalogCatalogIdIndexImport } from './routes/provider-catalog/$provider/catalog.$catalogId/index'
+import { Route as ProviderDatahubCatalogProviderCatalogCatalogIdDatasetDatasetIdImport } from './routes/provider-datahub-catalog/$provider/catalog.$catalogId/dataset.$datasetId'
+import { Route as ProviderDatahubCatalogProviderCatalogCatalogIdDataServiceDataServiceIdImport } from './routes/provider-datahub-catalog/$provider/catalog.$catalogId/data-service.$dataServiceId'
 import { Route as ProviderCatalogProviderCatalogCatalogIdDatasetDatasetIdImport } from './routes/provider-catalog/$provider/catalog.$catalogId/dataset.$datasetId'
 import { Route as ProviderCatalogProviderCatalogCatalogIdDataServiceDataServiceIdImport } from './routes/provider-catalog/$provider/catalog.$catalogId/data-service.$dataServiceId'
 
@@ -61,6 +69,13 @@ const SubscriptionsRouteRoute = SubscriptionsRouteImport.update({
   path: '/subscriptions',
   getParentRoute: () => rootRoute,
 } as any)
+
+const ProviderDatahubCatalogRouteRoute =
+  ProviderDatahubCatalogRouteImport.update({
+    id: '/provider-datahub-catalog',
+    path: '/provider-datahub-catalog',
+    getParentRoute: () => rootRoute,
+  } as any)
 
 const ProviderCatalogRouteRoute = ProviderCatalogRouteImport.update({
   id: '/provider-catalog',
@@ -109,6 +124,13 @@ const SubscriptionsIndexRoute = SubscriptionsIndexImport.update({
   path: '/',
   getParentRoute: () => SubscriptionsRouteRoute,
 } as any)
+
+const ProviderDatahubCatalogIndexRoute =
+  ProviderDatahubCatalogIndexImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => ProviderDatahubCatalogRouteRoute,
+  } as any)
 
 const ProviderCatalogIndexRoute = ProviderCatalogIndexImport.update({
   id: '/',
@@ -167,6 +189,13 @@ const TransferProcessTransferProcessIdRouteRoute =
     getParentRoute: () => TransferProcessRouteRoute,
   } as any)
 
+const ProviderDatahubCatalogProviderRouteRoute =
+  ProviderDatahubCatalogProviderRouteImport.update({
+    id: '/$provider',
+    path: '/$provider',
+    getParentRoute: () => ProviderDatahubCatalogRouteRoute,
+  } as any)
+
 const ProviderCatalogProviderRouteRoute =
   ProviderCatalogProviderRouteImport.update({
     id: '/$provider',
@@ -199,6 +228,13 @@ const TransferProcessTransferProcessIdIndexRoute =
     id: '/',
     path: '/',
     getParentRoute: () => TransferProcessTransferProcessIdRouteRoute,
+  } as any)
+
+const ProviderDatahubCatalogProviderIndexRoute =
+  ProviderDatahubCatalogProviderIndexImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => ProviderDatahubCatalogProviderRouteRoute,
   } as any)
 
 const ProviderCatalogProviderIndexRoute =
@@ -256,11 +292,26 @@ const ContractNegotiationCnProcessMessageMessageIdRoute =
     getParentRoute: () => ContractNegotiationCnProcessRouteRoute,
   } as any)
 
+const ProviderDatahubCatalogProviderCatalogCatalogIdRouteRoute =
+  ProviderDatahubCatalogProviderCatalogCatalogIdRouteImport.update({
+    id: '/catalog/$catalogId',
+    path: '/catalog/$catalogId',
+    getParentRoute: () => ProviderDatahubCatalogProviderRouteRoute,
+  } as any)
+
 const ProviderCatalogProviderCatalogCatalogIdRouteRoute =
   ProviderCatalogProviderCatalogCatalogIdRouteImport.update({
     id: '/catalog/$catalogId',
     path: '/catalog/$catalogId',
     getParentRoute: () => ProviderCatalogProviderRouteRoute,
+  } as any)
+
+const ProviderDatahubCatalogProviderCatalogCatalogIdIndexRoute =
+  ProviderDatahubCatalogProviderCatalogCatalogIdIndexImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () =>
+      ProviderDatahubCatalogProviderCatalogCatalogIdRouteRoute,
   } as any)
 
 const ProviderCatalogProviderCatalogCatalogIdIndexRoute =
@@ -269,6 +320,24 @@ const ProviderCatalogProviderCatalogCatalogIdIndexRoute =
     path: '/',
     getParentRoute: () => ProviderCatalogProviderCatalogCatalogIdRouteRoute,
   } as any)
+
+const ProviderDatahubCatalogProviderCatalogCatalogIdDatasetDatasetIdRoute =
+  ProviderDatahubCatalogProviderCatalogCatalogIdDatasetDatasetIdImport.update({
+    id: '/dataset/$datasetId',
+    path: '/dataset/$datasetId',
+    getParentRoute: () =>
+      ProviderDatahubCatalogProviderCatalogCatalogIdRouteRoute,
+  } as any)
+
+const ProviderDatahubCatalogProviderCatalogCatalogIdDataServiceDataServiceIdRoute =
+  ProviderDatahubCatalogProviderCatalogCatalogIdDataServiceDataServiceIdImport.update(
+    {
+      id: '/data-service/$dataServiceId',
+      path: '/data-service/$dataServiceId',
+      getParentRoute: () =>
+        ProviderDatahubCatalogProviderCatalogCatalogIdRouteRoute,
+    } as any,
+  )
 
 const ProviderCatalogProviderCatalogCatalogIdDatasetDatasetIdRoute =
   ProviderCatalogProviderCatalogCatalogIdDatasetDatasetIdImport.update({
@@ -330,6 +399,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProviderCatalogRouteImport
       parentRoute: typeof rootRoute
     }
+    '/provider-datahub-catalog': {
+      id: '/provider-datahub-catalog'
+      path: '/provider-datahub-catalog'
+      fullPath: '/provider-datahub-catalog'
+      preLoaderRoute: typeof ProviderDatahubCatalogRouteImport
+      parentRoute: typeof rootRoute
+    }
     '/subscriptions': {
       id: '/subscriptions'
       path: '/subscriptions'
@@ -371,6 +447,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/provider-catalog/$provider'
       preLoaderRoute: typeof ProviderCatalogProviderRouteImport
       parentRoute: typeof ProviderCatalogRouteImport
+    }
+    '/provider-datahub-catalog/$provider': {
+      id: '/provider-datahub-catalog/$provider'
+      path: '/$provider'
+      fullPath: '/provider-datahub-catalog/$provider'
+      preLoaderRoute: typeof ProviderDatahubCatalogProviderRouteImport
+      parentRoute: typeof ProviderDatahubCatalogRouteImport
     }
     '/transfer-process/$transferProcessId': {
       id: '/transfer-process/$transferProcessId'
@@ -435,6 +518,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProviderCatalogIndexImport
       parentRoute: typeof ProviderCatalogRouteImport
     }
+    '/provider-datahub-catalog/': {
+      id: '/provider-datahub-catalog/'
+      path: '/'
+      fullPath: '/provider-datahub-catalog/'
+      preLoaderRoute: typeof ProviderDatahubCatalogIndexImport
+      parentRoute: typeof ProviderDatahubCatalogRouteImport
+    }
     '/subscriptions/': {
       id: '/subscriptions/'
       path: '/'
@@ -491,6 +581,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProviderCatalogProviderIndexImport
       parentRoute: typeof ProviderCatalogProviderRouteImport
     }
+    '/provider-datahub-catalog/$provider/': {
+      id: '/provider-datahub-catalog/$provider/'
+      path: '/'
+      fullPath: '/provider-datahub-catalog/$provider/'
+      preLoaderRoute: typeof ProviderDatahubCatalogProviderIndexImport
+      parentRoute: typeof ProviderDatahubCatalogProviderRouteImport
+    }
     '/transfer-process/$transferProcessId/': {
       id: '/transfer-process/$transferProcessId/'
       path: '/'
@@ -504,6 +601,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/provider-catalog/$provider/catalog/$catalogId'
       preLoaderRoute: typeof ProviderCatalogProviderCatalogCatalogIdRouteImport
       parentRoute: typeof ProviderCatalogProviderRouteImport
+    }
+    '/provider-datahub-catalog/$provider/catalog/$catalogId': {
+      id: '/provider-datahub-catalog/$provider/catalog/$catalogId'
+      path: '/catalog/$catalogId'
+      fullPath: '/provider-datahub-catalog/$provider/catalog/$catalogId'
+      preLoaderRoute: typeof ProviderDatahubCatalogProviderCatalogCatalogIdRouteImport
+      parentRoute: typeof ProviderDatahubCatalogProviderRouteImport
     }
     '/contract-negotiation/$cnProcess/message/$messageId': {
       id: '/contract-negotiation/$cnProcess/message/$messageId'
@@ -526,6 +630,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProviderCatalogProviderCatalogCatalogIdIndexImport
       parentRoute: typeof ProviderCatalogProviderCatalogCatalogIdRouteImport
     }
+    '/provider-datahub-catalog/$provider/catalog/$catalogId/': {
+      id: '/provider-datahub-catalog/$provider/catalog/$catalogId/'
+      path: '/'
+      fullPath: '/provider-datahub-catalog/$provider/catalog/$catalogId/'
+      preLoaderRoute: typeof ProviderDatahubCatalogProviderCatalogCatalogIdIndexImport
+      parentRoute: typeof ProviderDatahubCatalogProviderCatalogCatalogIdRouteImport
+    }
     '/provider-catalog/$provider/catalog/$catalogId/data-service/$dataServiceId': {
       id: '/provider-catalog/$provider/catalog/$catalogId/data-service/$dataServiceId'
       path: '/data-service/$dataServiceId'
@@ -539,6 +650,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/provider-catalog/$provider/catalog/$catalogId/dataset/$datasetId'
       preLoaderRoute: typeof ProviderCatalogProviderCatalogCatalogIdDatasetDatasetIdImport
       parentRoute: typeof ProviderCatalogProviderCatalogCatalogIdRouteImport
+    }
+    '/provider-datahub-catalog/$provider/catalog/$catalogId/data-service/$dataServiceId': {
+      id: '/provider-datahub-catalog/$provider/catalog/$catalogId/data-service/$dataServiceId'
+      path: '/data-service/$dataServiceId'
+      fullPath: '/provider-datahub-catalog/$provider/catalog/$catalogId/data-service/$dataServiceId'
+      preLoaderRoute: typeof ProviderDatahubCatalogProviderCatalogCatalogIdDataServiceDataServiceIdImport
+      parentRoute: typeof ProviderDatahubCatalogProviderCatalogCatalogIdRouteImport
+    }
+    '/provider-datahub-catalog/$provider/catalog/$catalogId/dataset/$datasetId': {
+      id: '/provider-datahub-catalog/$provider/catalog/$catalogId/dataset/$datasetId'
+      path: '/dataset/$datasetId'
+      fullPath: '/provider-datahub-catalog/$provider/catalog/$catalogId/dataset/$datasetId'
+      preLoaderRoute: typeof ProviderDatahubCatalogProviderCatalogCatalogIdDatasetDatasetIdImport
+      parentRoute: typeof ProviderDatahubCatalogProviderCatalogCatalogIdRouteImport
     }
   }
 }
@@ -705,6 +830,62 @@ const ProviderCatalogRouteRouteChildren: ProviderCatalogRouteRouteChildren = {
 const ProviderCatalogRouteRouteWithChildren =
   ProviderCatalogRouteRoute._addFileChildren(ProviderCatalogRouteRouteChildren)
 
+interface ProviderDatahubCatalogProviderCatalogCatalogIdRouteRouteChildren {
+  ProviderDatahubCatalogProviderCatalogCatalogIdIndexRoute: typeof ProviderDatahubCatalogProviderCatalogCatalogIdIndexRoute
+  ProviderDatahubCatalogProviderCatalogCatalogIdDataServiceDataServiceIdRoute: typeof ProviderDatahubCatalogProviderCatalogCatalogIdDataServiceDataServiceIdRoute
+  ProviderDatahubCatalogProviderCatalogCatalogIdDatasetDatasetIdRoute: typeof ProviderDatahubCatalogProviderCatalogCatalogIdDatasetDatasetIdRoute
+}
+
+const ProviderDatahubCatalogProviderCatalogCatalogIdRouteRouteChildren: ProviderDatahubCatalogProviderCatalogCatalogIdRouteRouteChildren =
+  {
+    ProviderDatahubCatalogProviderCatalogCatalogIdIndexRoute:
+      ProviderDatahubCatalogProviderCatalogCatalogIdIndexRoute,
+    ProviderDatahubCatalogProviderCatalogCatalogIdDataServiceDataServiceIdRoute:
+      ProviderDatahubCatalogProviderCatalogCatalogIdDataServiceDataServiceIdRoute,
+    ProviderDatahubCatalogProviderCatalogCatalogIdDatasetDatasetIdRoute:
+      ProviderDatahubCatalogProviderCatalogCatalogIdDatasetDatasetIdRoute,
+  }
+
+const ProviderDatahubCatalogProviderCatalogCatalogIdRouteRouteWithChildren =
+  ProviderDatahubCatalogProviderCatalogCatalogIdRouteRoute._addFileChildren(
+    ProviderDatahubCatalogProviderCatalogCatalogIdRouteRouteChildren,
+  )
+
+interface ProviderDatahubCatalogProviderRouteRouteChildren {
+  ProviderDatahubCatalogProviderIndexRoute: typeof ProviderDatahubCatalogProviderIndexRoute
+  ProviderDatahubCatalogProviderCatalogCatalogIdRouteRoute: typeof ProviderDatahubCatalogProviderCatalogCatalogIdRouteRouteWithChildren
+}
+
+const ProviderDatahubCatalogProviderRouteRouteChildren: ProviderDatahubCatalogProviderRouteRouteChildren =
+  {
+    ProviderDatahubCatalogProviderIndexRoute:
+      ProviderDatahubCatalogProviderIndexRoute,
+    ProviderDatahubCatalogProviderCatalogCatalogIdRouteRoute:
+      ProviderDatahubCatalogProviderCatalogCatalogIdRouteRouteWithChildren,
+  }
+
+const ProviderDatahubCatalogProviderRouteRouteWithChildren =
+  ProviderDatahubCatalogProviderRouteRoute._addFileChildren(
+    ProviderDatahubCatalogProviderRouteRouteChildren,
+  )
+
+interface ProviderDatahubCatalogRouteRouteChildren {
+  ProviderDatahubCatalogProviderRouteRoute: typeof ProviderDatahubCatalogProviderRouteRouteWithChildren
+  ProviderDatahubCatalogIndexRoute: typeof ProviderDatahubCatalogIndexRoute
+}
+
+const ProviderDatahubCatalogRouteRouteChildren: ProviderDatahubCatalogRouteRouteChildren =
+  {
+    ProviderDatahubCatalogProviderRouteRoute:
+      ProviderDatahubCatalogProviderRouteRouteWithChildren,
+    ProviderDatahubCatalogIndexRoute: ProviderDatahubCatalogIndexRoute,
+  }
+
+const ProviderDatahubCatalogRouteRouteWithChildren =
+  ProviderDatahubCatalogRouteRoute._addFileChildren(
+    ProviderDatahubCatalogRouteRouteChildren,
+  )
+
 interface SubscriptionsRouteRouteChildren {
   SubscriptionsIndexRoute: typeof SubscriptionsIndexRoute
 }
@@ -755,12 +936,14 @@ export interface FileRoutesByFullPath {
   '/gui': typeof GuiRouteRouteWithChildren
   '/participants': typeof ParticipantsRouteRouteWithChildren
   '/provider-catalog': typeof ProviderCatalogRouteRouteWithChildren
+  '/provider-datahub-catalog': typeof ProviderDatahubCatalogRouteRouteWithChildren
   '/subscriptions': typeof SubscriptionsRouteRouteWithChildren
   '/transfer-process': typeof TransferProcessRouteRouteWithChildren
   '/contract-negotiation/$cnProcess': typeof ContractNegotiationCnProcessRouteRouteWithChildren
   '/gui/agreements': typeof GuiAgreementsRouteRouteWithChildren
   '/participants/$participantId': typeof ParticipantsParticipantIdRouteRouteWithChildren
   '/provider-catalog/$provider': typeof ProviderCatalogProviderRouteRouteWithChildren
+  '/provider-datahub-catalog/$provider': typeof ProviderDatahubCatalogProviderRouteRouteWithChildren
   '/transfer-process/$transferProcessId': typeof TransferProcessTransferProcessIdRouteRouteWithChildren
   '/agreements/$agreementId': typeof AgreementsAgreementIdRoute
   '/contract-negotiation/request': typeof ContractNegotiationRequestRoute
@@ -770,6 +953,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginIndexRoute
   '/participants/': typeof ParticipantsIndexRoute
   '/provider-catalog/': typeof ProviderCatalogIndexRoute
+  '/provider-datahub-catalog/': typeof ProviderDatahubCatalogIndexRoute
   '/subscriptions/': typeof SubscriptionsIndexRoute
   '/transfer-process/': typeof TransferProcessIndexRoute
   '/gui/agreements/$agreement_id': typeof GuiAgreementsAgreementidRoute
@@ -778,13 +962,18 @@ export interface FileRoutesByFullPath {
   '/gui/agreements/': typeof GuiAgreementsIndexRoute
   '/participants/$participantId/': typeof ParticipantsParticipantIdIndexRoute
   '/provider-catalog/$provider/': typeof ProviderCatalogProviderIndexRoute
+  '/provider-datahub-catalog/$provider/': typeof ProviderDatahubCatalogProviderIndexRoute
   '/transfer-process/$transferProcessId/': typeof TransferProcessTransferProcessIdIndexRoute
   '/provider-catalog/$provider/catalog/$catalogId': typeof ProviderCatalogProviderCatalogCatalogIdRouteRouteWithChildren
+  '/provider-datahub-catalog/$provider/catalog/$catalogId': typeof ProviderDatahubCatalogProviderCatalogCatalogIdRouteRouteWithChildren
   '/contract-negotiation/$cnProcess/message/$messageId': typeof ContractNegotiationCnProcessMessageMessageIdRoute
   '/transfer-process/$transferProcessId/transfer-message/$transferMessageId': typeof TransferProcessTransferProcessIdTransferMessageTransferMessageIdRoute
   '/provider-catalog/$provider/catalog/$catalogId/': typeof ProviderCatalogProviderCatalogCatalogIdIndexRoute
+  '/provider-datahub-catalog/$provider/catalog/$catalogId/': typeof ProviderDatahubCatalogProviderCatalogCatalogIdIndexRoute
   '/provider-catalog/$provider/catalog/$catalogId/data-service/$dataServiceId': typeof ProviderCatalogProviderCatalogCatalogIdDataServiceDataServiceIdRoute
   '/provider-catalog/$provider/catalog/$catalogId/dataset/$datasetId': typeof ProviderCatalogProviderCatalogCatalogIdDatasetDatasetIdRoute
+  '/provider-datahub-catalog/$provider/catalog/$catalogId/data-service/$dataServiceId': typeof ProviderDatahubCatalogProviderCatalogCatalogIdDataServiceDataServiceIdRoute
+  '/provider-datahub-catalog/$provider/catalog/$catalogId/dataset/$datasetId': typeof ProviderDatahubCatalogProviderCatalogCatalogIdDatasetDatasetIdRoute
 }
 
 export interface FileRoutesByTo {
@@ -797,6 +986,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginIndexRoute
   '/participants': typeof ParticipantsIndexRoute
   '/provider-catalog': typeof ProviderCatalogIndexRoute
+  '/provider-datahub-catalog': typeof ProviderDatahubCatalogIndexRoute
   '/subscriptions': typeof SubscriptionsIndexRoute
   '/transfer-process': typeof TransferProcessIndexRoute
   '/gui/agreements/$agreement_id': typeof GuiAgreementsAgreementidRoute
@@ -805,12 +995,16 @@ export interface FileRoutesByTo {
   '/gui/agreements': typeof GuiAgreementsIndexRoute
   '/participants/$participantId': typeof ParticipantsParticipantIdIndexRoute
   '/provider-catalog/$provider': typeof ProviderCatalogProviderIndexRoute
+  '/provider-datahub-catalog/$provider': typeof ProviderDatahubCatalogProviderIndexRoute
   '/transfer-process/$transferProcessId': typeof TransferProcessTransferProcessIdIndexRoute
   '/contract-negotiation/$cnProcess/message/$messageId': typeof ContractNegotiationCnProcessMessageMessageIdRoute
   '/transfer-process/$transferProcessId/transfer-message/$transferMessageId': typeof TransferProcessTransferProcessIdTransferMessageTransferMessageIdRoute
   '/provider-catalog/$provider/catalog/$catalogId': typeof ProviderCatalogProviderCatalogCatalogIdIndexRoute
+  '/provider-datahub-catalog/$provider/catalog/$catalogId': typeof ProviderDatahubCatalogProviderCatalogCatalogIdIndexRoute
   '/provider-catalog/$provider/catalog/$catalogId/data-service/$dataServiceId': typeof ProviderCatalogProviderCatalogCatalogIdDataServiceDataServiceIdRoute
   '/provider-catalog/$provider/catalog/$catalogId/dataset/$datasetId': typeof ProviderCatalogProviderCatalogCatalogIdDatasetDatasetIdRoute
+  '/provider-datahub-catalog/$provider/catalog/$catalogId/data-service/$dataServiceId': typeof ProviderDatahubCatalogProviderCatalogCatalogIdDataServiceDataServiceIdRoute
+  '/provider-datahub-catalog/$provider/catalog/$catalogId/dataset/$datasetId': typeof ProviderDatahubCatalogProviderCatalogCatalogIdDatasetDatasetIdRoute
 }
 
 export interface FileRoutesById {
@@ -821,12 +1015,14 @@ export interface FileRoutesById {
   '/gui': typeof GuiRouteRouteWithChildren
   '/participants': typeof ParticipantsRouteRouteWithChildren
   '/provider-catalog': typeof ProviderCatalogRouteRouteWithChildren
+  '/provider-datahub-catalog': typeof ProviderDatahubCatalogRouteRouteWithChildren
   '/subscriptions': typeof SubscriptionsRouteRouteWithChildren
   '/transfer-process': typeof TransferProcessRouteRouteWithChildren
   '/contract-negotiation/$cnProcess': typeof ContractNegotiationCnProcessRouteRouteWithChildren
   '/gui/agreements': typeof GuiAgreementsRouteRouteWithChildren
   '/participants/$participantId': typeof ParticipantsParticipantIdRouteRouteWithChildren
   '/provider-catalog/$provider': typeof ProviderCatalogProviderRouteRouteWithChildren
+  '/provider-datahub-catalog/$provider': typeof ProviderDatahubCatalogProviderRouteRouteWithChildren
   '/transfer-process/$transferProcessId': typeof TransferProcessTransferProcessIdRouteRouteWithChildren
   '/agreements/$agreementId': typeof AgreementsAgreementIdRoute
   '/contract-negotiation/request': typeof ContractNegotiationRequestRoute
@@ -836,6 +1032,7 @@ export interface FileRoutesById {
   '/login/': typeof LoginIndexRoute
   '/participants/': typeof ParticipantsIndexRoute
   '/provider-catalog/': typeof ProviderCatalogIndexRoute
+  '/provider-datahub-catalog/': typeof ProviderDatahubCatalogIndexRoute
   '/subscriptions/': typeof SubscriptionsIndexRoute
   '/transfer-process/': typeof TransferProcessIndexRoute
   '/gui/agreements/$agreement_id': typeof GuiAgreementsAgreementidRoute
@@ -844,13 +1041,18 @@ export interface FileRoutesById {
   '/gui/agreements/': typeof GuiAgreementsIndexRoute
   '/participants/$participantId/': typeof ParticipantsParticipantIdIndexRoute
   '/provider-catalog/$provider/': typeof ProviderCatalogProviderIndexRoute
+  '/provider-datahub-catalog/$provider/': typeof ProviderDatahubCatalogProviderIndexRoute
   '/transfer-process/$transferProcessId/': typeof TransferProcessTransferProcessIdIndexRoute
   '/provider-catalog/$provider/catalog/$catalogId': typeof ProviderCatalogProviderCatalogCatalogIdRouteRouteWithChildren
+  '/provider-datahub-catalog/$provider/catalog/$catalogId': typeof ProviderDatahubCatalogProviderCatalogCatalogIdRouteRouteWithChildren
   '/contract-negotiation/$cnProcess/message/$messageId': typeof ContractNegotiationCnProcessMessageMessageIdRoute
   '/transfer-process/$transferProcessId/transfer-message/$transferMessageId': typeof TransferProcessTransferProcessIdTransferMessageTransferMessageIdRoute
   '/provider-catalog/$provider/catalog/$catalogId/': typeof ProviderCatalogProviderCatalogCatalogIdIndexRoute
+  '/provider-datahub-catalog/$provider/catalog/$catalogId/': typeof ProviderDatahubCatalogProviderCatalogCatalogIdIndexRoute
   '/provider-catalog/$provider/catalog/$catalogId/data-service/$dataServiceId': typeof ProviderCatalogProviderCatalogCatalogIdDataServiceDataServiceIdRoute
   '/provider-catalog/$provider/catalog/$catalogId/dataset/$datasetId': typeof ProviderCatalogProviderCatalogCatalogIdDatasetDatasetIdRoute
+  '/provider-datahub-catalog/$provider/catalog/$catalogId/data-service/$dataServiceId': typeof ProviderDatahubCatalogProviderCatalogCatalogIdDataServiceDataServiceIdRoute
+  '/provider-datahub-catalog/$provider/catalog/$catalogId/dataset/$datasetId': typeof ProviderDatahubCatalogProviderCatalogCatalogIdDatasetDatasetIdRoute
 }
 
 export interface FileRouteTypes {
@@ -862,12 +1064,14 @@ export interface FileRouteTypes {
     | '/gui'
     | '/participants'
     | '/provider-catalog'
+    | '/provider-datahub-catalog'
     | '/subscriptions'
     | '/transfer-process'
     | '/contract-negotiation/$cnProcess'
     | '/gui/agreements'
     | '/participants/$participantId'
     | '/provider-catalog/$provider'
+    | '/provider-datahub-catalog/$provider'
     | '/transfer-process/$transferProcessId'
     | '/agreements/$agreementId'
     | '/contract-negotiation/request'
@@ -877,6 +1081,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/participants/'
     | '/provider-catalog/'
+    | '/provider-datahub-catalog/'
     | '/subscriptions/'
     | '/transfer-process/'
     | '/gui/agreements/$agreement_id'
@@ -885,13 +1090,18 @@ export interface FileRouteTypes {
     | '/gui/agreements/'
     | '/participants/$participantId/'
     | '/provider-catalog/$provider/'
+    | '/provider-datahub-catalog/$provider/'
     | '/transfer-process/$transferProcessId/'
     | '/provider-catalog/$provider/catalog/$catalogId'
+    | '/provider-datahub-catalog/$provider/catalog/$catalogId'
     | '/contract-negotiation/$cnProcess/message/$messageId'
     | '/transfer-process/$transferProcessId/transfer-message/$transferMessageId'
     | '/provider-catalog/$provider/catalog/$catalogId/'
+    | '/provider-datahub-catalog/$provider/catalog/$catalogId/'
     | '/provider-catalog/$provider/catalog/$catalogId/data-service/$dataServiceId'
     | '/provider-catalog/$provider/catalog/$catalogId/dataset/$datasetId'
+    | '/provider-datahub-catalog/$provider/catalog/$catalogId/data-service/$dataServiceId'
+    | '/provider-datahub-catalog/$provider/catalog/$catalogId/dataset/$datasetId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -903,6 +1113,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/participants'
     | '/provider-catalog'
+    | '/provider-datahub-catalog'
     | '/subscriptions'
     | '/transfer-process'
     | '/gui/agreements/$agreement_id'
@@ -911,12 +1122,16 @@ export interface FileRouteTypes {
     | '/gui/agreements'
     | '/participants/$participantId'
     | '/provider-catalog/$provider'
+    | '/provider-datahub-catalog/$provider'
     | '/transfer-process/$transferProcessId'
     | '/contract-negotiation/$cnProcess/message/$messageId'
     | '/transfer-process/$transferProcessId/transfer-message/$transferMessageId'
     | '/provider-catalog/$provider/catalog/$catalogId'
+    | '/provider-datahub-catalog/$provider/catalog/$catalogId'
     | '/provider-catalog/$provider/catalog/$catalogId/data-service/$dataServiceId'
     | '/provider-catalog/$provider/catalog/$catalogId/dataset/$datasetId'
+    | '/provider-datahub-catalog/$provider/catalog/$catalogId/data-service/$dataServiceId'
+    | '/provider-datahub-catalog/$provider/catalog/$catalogId/dataset/$datasetId'
   id:
     | '__root__'
     | '/'
@@ -925,12 +1140,14 @@ export interface FileRouteTypes {
     | '/gui'
     | '/participants'
     | '/provider-catalog'
+    | '/provider-datahub-catalog'
     | '/subscriptions'
     | '/transfer-process'
     | '/contract-negotiation/$cnProcess'
     | '/gui/agreements'
     | '/participants/$participantId'
     | '/provider-catalog/$provider'
+    | '/provider-datahub-catalog/$provider'
     | '/transfer-process/$transferProcessId'
     | '/agreements/$agreementId'
     | '/contract-negotiation/request'
@@ -940,6 +1157,7 @@ export interface FileRouteTypes {
     | '/login/'
     | '/participants/'
     | '/provider-catalog/'
+    | '/provider-datahub-catalog/'
     | '/subscriptions/'
     | '/transfer-process/'
     | '/gui/agreements/$agreement_id'
@@ -948,13 +1166,18 @@ export interface FileRouteTypes {
     | '/gui/agreements/'
     | '/participants/$participantId/'
     | '/provider-catalog/$provider/'
+    | '/provider-datahub-catalog/$provider/'
     | '/transfer-process/$transferProcessId/'
     | '/provider-catalog/$provider/catalog/$catalogId'
+    | '/provider-datahub-catalog/$provider/catalog/$catalogId'
     | '/contract-negotiation/$cnProcess/message/$messageId'
     | '/transfer-process/$transferProcessId/transfer-message/$transferMessageId'
     | '/provider-catalog/$provider/catalog/$catalogId/'
+    | '/provider-datahub-catalog/$provider/catalog/$catalogId/'
     | '/provider-catalog/$provider/catalog/$catalogId/data-service/$dataServiceId'
     | '/provider-catalog/$provider/catalog/$catalogId/dataset/$datasetId'
+    | '/provider-datahub-catalog/$provider/catalog/$catalogId/data-service/$dataServiceId'
+    | '/provider-datahub-catalog/$provider/catalog/$catalogId/dataset/$datasetId'
   fileRoutesById: FileRoutesById
 }
 
@@ -965,6 +1188,7 @@ export interface RootRouteChildren {
   GuiRouteRoute: typeof GuiRouteRouteWithChildren
   ParticipantsRouteRoute: typeof ParticipantsRouteRouteWithChildren
   ProviderCatalogRouteRoute: typeof ProviderCatalogRouteRouteWithChildren
+  ProviderDatahubCatalogRouteRoute: typeof ProviderDatahubCatalogRouteRouteWithChildren
   SubscriptionsRouteRoute: typeof SubscriptionsRouteRouteWithChildren
   TransferProcessRouteRoute: typeof TransferProcessRouteRouteWithChildren
   LoginIndexRoute: typeof LoginIndexRoute
@@ -977,6 +1201,8 @@ const rootRouteChildren: RootRouteChildren = {
   GuiRouteRoute: GuiRouteRouteWithChildren,
   ParticipantsRouteRoute: ParticipantsRouteRouteWithChildren,
   ProviderCatalogRouteRoute: ProviderCatalogRouteRouteWithChildren,
+  ProviderDatahubCatalogRouteRoute:
+    ProviderDatahubCatalogRouteRouteWithChildren,
   SubscriptionsRouteRoute: SubscriptionsRouteRouteWithChildren,
   TransferProcessRouteRoute: TransferProcessRouteRouteWithChildren,
   LoginIndexRoute: LoginIndexRoute,
@@ -998,6 +1224,7 @@ export const routeTree = rootRoute
         "/gui",
         "/participants",
         "/provider-catalog",
+        "/provider-datahub-catalog",
         "/subscriptions",
         "/transfer-process",
         "/login/"
@@ -1040,6 +1267,13 @@ export const routeTree = rootRoute
       "children": [
         "/provider-catalog/$provider",
         "/provider-catalog/"
+      ]
+    },
+    "/provider-datahub-catalog": {
+      "filePath": "provider-datahub-catalog/route.tsx",
+      "children": [
+        "/provider-datahub-catalog/$provider",
+        "/provider-datahub-catalog/"
       ]
     },
     "/subscriptions": {
@@ -1087,6 +1321,14 @@ export const routeTree = rootRoute
         "/provider-catalog/$provider/catalog/$catalogId"
       ]
     },
+    "/provider-datahub-catalog/$provider": {
+      "filePath": "provider-datahub-catalog/$provider/route.tsx",
+      "parent": "/provider-datahub-catalog",
+      "children": [
+        "/provider-datahub-catalog/$provider/",
+        "/provider-datahub-catalog/$provider/catalog/$catalogId"
+      ]
+    },
     "/transfer-process/$transferProcessId": {
       "filePath": "transfer-process/$transferProcessId/route.tsx",
       "parent": "/transfer-process",
@@ -1126,6 +1368,10 @@ export const routeTree = rootRoute
       "filePath": "provider-catalog/index.tsx",
       "parent": "/provider-catalog"
     },
+    "/provider-datahub-catalog/": {
+      "filePath": "provider-datahub-catalog/index.tsx",
+      "parent": "/provider-datahub-catalog"
+    },
     "/subscriptions/": {
       "filePath": "subscriptions/index.tsx",
       "parent": "/subscriptions"
@@ -1158,6 +1404,10 @@ export const routeTree = rootRoute
       "filePath": "provider-catalog/$provider/index.tsx",
       "parent": "/provider-catalog/$provider"
     },
+    "/provider-datahub-catalog/$provider/": {
+      "filePath": "provider-datahub-catalog/$provider/index.tsx",
+      "parent": "/provider-datahub-catalog/$provider"
+    },
     "/transfer-process/$transferProcessId/": {
       "filePath": "transfer-process/$transferProcessId/index.tsx",
       "parent": "/transfer-process/$transferProcessId"
@@ -1169,6 +1419,15 @@ export const routeTree = rootRoute
         "/provider-catalog/$provider/catalog/$catalogId/",
         "/provider-catalog/$provider/catalog/$catalogId/data-service/$dataServiceId",
         "/provider-catalog/$provider/catalog/$catalogId/dataset/$datasetId"
+      ]
+    },
+    "/provider-datahub-catalog/$provider/catalog/$catalogId": {
+      "filePath": "provider-datahub-catalog/$provider/catalog.$catalogId/route.tsx",
+      "parent": "/provider-datahub-catalog/$provider",
+      "children": [
+        "/provider-datahub-catalog/$provider/catalog/$catalogId/",
+        "/provider-datahub-catalog/$provider/catalog/$catalogId/data-service/$dataServiceId",
+        "/provider-datahub-catalog/$provider/catalog/$catalogId/dataset/$datasetId"
       ]
     },
     "/contract-negotiation/$cnProcess/message/$messageId": {
@@ -1183,6 +1442,10 @@ export const routeTree = rootRoute
       "filePath": "provider-catalog/$provider/catalog.$catalogId/index.tsx",
       "parent": "/provider-catalog/$provider/catalog/$catalogId"
     },
+    "/provider-datahub-catalog/$provider/catalog/$catalogId/": {
+      "filePath": "provider-datahub-catalog/$provider/catalog.$catalogId/index.tsx",
+      "parent": "/provider-datahub-catalog/$provider/catalog/$catalogId"
+    },
     "/provider-catalog/$provider/catalog/$catalogId/data-service/$dataServiceId": {
       "filePath": "provider-catalog/$provider/catalog.$catalogId/data-service.$dataServiceId.tsx",
       "parent": "/provider-catalog/$provider/catalog/$catalogId"
@@ -1190,6 +1453,14 @@ export const routeTree = rootRoute
     "/provider-catalog/$provider/catalog/$catalogId/dataset/$datasetId": {
       "filePath": "provider-catalog/$provider/catalog.$catalogId/dataset.$datasetId.tsx",
       "parent": "/provider-catalog/$provider/catalog/$catalogId"
+    },
+    "/provider-datahub-catalog/$provider/catalog/$catalogId/data-service/$dataServiceId": {
+      "filePath": "provider-datahub-catalog/$provider/catalog.$catalogId/data-service.$dataServiceId.tsx",
+      "parent": "/provider-datahub-catalog/$provider/catalog/$catalogId"
+    },
+    "/provider-datahub-catalog/$provider/catalog/$catalogId/dataset/$datasetId": {
+      "filePath": "provider-datahub-catalog/$provider/catalog.$catalogId/dataset.$datasetId.tsx",
+      "parent": "/provider-datahub-catalog/$provider/catalog/$catalogId"
     }
   }
 }

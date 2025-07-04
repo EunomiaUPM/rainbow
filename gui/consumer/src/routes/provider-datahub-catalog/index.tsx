@@ -9,7 +9,7 @@ import {Badge} from "shared/src/components/ui/badge";
 import Heading from "shared/src/components/ui/heading.tsx";
 import {ArrowRight} from "lucide-react";
 
-export const Route = createFileRoute("/provider-catalog/")({
+export const Route = createFileRoute("/provider-datahub-catalog/")({
     component: RouteComponent,
 });
 

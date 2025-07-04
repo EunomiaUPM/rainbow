@@ -13,7 +13,7 @@ const RouteComponent = () => {
     );
 };
 
-export const Route = createFileRoute("/provider-catalog/$provider")({
+export const Route = createFileRoute("/provider-datahub-catalog/$provider")({
     component: RouteComponent,
     notFoundComponent: NotFound,
 });
