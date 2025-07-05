@@ -12,4 +12,5 @@ pub struct TransferConsumerProcess {
     pub data_address: Option<serde_json::Value>,
     pub restart_flag: bool,
     pub state: String,
+    pub state_attribute: String,
 }

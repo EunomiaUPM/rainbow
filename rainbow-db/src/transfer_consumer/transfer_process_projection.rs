@@ -19,6 +19,7 @@ pub struct TransferConsumerProcessFromSQL {
     pub data_address: Option<serde_json::Value>,
     pub restart_flag: bool,
     pub message_type: Option<String>,
+    pub from: String,
 }
 
 impl From<TransferConsumerProcessFromSQL> for TransferConsumerProcess {
@@ -34,6 +35,10 @@ impl From<TransferConsumerProcessFromSQL> for TransferConsumerProcess {
                 _ => "".to_string(),
             }
         };
+        let state_attribute = match value.from.as_str() {
+            "Consumer" => "BY_CONSUMER".to_string(),
+            _ => "BY_PROVIDER".to_string()
+        };
         Self {
             id: value.id,
             consumer_pid: value.consumer_pid,
@@ -45,6 +50,7 @@ impl From<TransferConsumerProcessFromSQL> for TransferConsumerProcess {
             data_address: value.data_address,
             restart_flag: value.restart_flag,
             state,
+            state_attribute,
         }
     }
 }

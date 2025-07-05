@@ -74,6 +74,7 @@ impl TransferCallbackRepo for TransferConsumerRepoForSql {
                 SELECT
                     m.transfer_process_id,
                     m.message_type,
+                    m.from,
                     m.created_at,
                     ROW_NUMBER() OVER(PARTITION BY m.transfer_process_id ORDER BY m.created_at DESC) as rn
                 FROM
@@ -82,6 +83,7 @@ impl TransferCallbackRepo for TransferConsumerRepoForSql {
             SELECT
                 p.*,
                 rm.message_type,
+                rm.from,
                 rm.created_at AS "message_at"
             FROM
                 transfer_callbacks p
@@ -122,6 +124,7 @@ impl TransferCallbackRepo for TransferConsumerRepoForSql {
                 SELECT
                     m.transfer_process_id,
                     m.message_type,
+                    m.from,
                     m.created_at,
                     ROW_NUMBER() OVER(PARTITION BY m.transfer_process_id ORDER BY m.created_at DESC) as rn
                 FROM
@@ -130,6 +133,7 @@ impl TransferCallbackRepo for TransferConsumerRepoForSql {
             SELECT
                 p.*,
                 rm.message_type,
+                rm.from,
                 rm.created_at AS "message_at"
             FROM
                 transfer_callbacks p
@@ -174,6 +178,7 @@ impl TransferCallbackRepo for TransferConsumerRepoForSql {
                 SELECT
                     m.transfer_process_id,
                     m.message_type,
+                    m.from,
                     m.created_at,
                     ROW_NUMBER() OVER(PARTITION BY m.transfer_process_id ORDER BY m.created_at DESC) as rn
                 FROM
@@ -182,6 +187,7 @@ impl TransferCallbackRepo for TransferConsumerRepoForSql {
             SELECT
                 p.*,
                 rm.message_type,
+                rm.from,
                 rm.created_at AS "message_at"
             FROM
                 transfer_callbacks p
@@ -226,6 +232,7 @@ impl TransferCallbackRepo for TransferConsumerRepoForSql {
                 SELECT
                     m.transfer_process_id,
                     m.message_type,
+                    m.from,
                     m.created_at,
                     ROW_NUMBER() OVER(PARTITION BY m.transfer_process_id ORDER BY m.created_at DESC) as rn
                 FROM
@@ -234,6 +241,7 @@ impl TransferCallbackRepo for TransferConsumerRepoForSql {
             SELECT
                 p.*,
                 rm.message_type,
+                rm.from,
                 rm.created_at AS "message_at"
             FROM
                 transfer_callbacks p

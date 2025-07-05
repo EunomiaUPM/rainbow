@@ -7,6 +7,7 @@ import {Badge} from "shared/src/components/ui/badge.tsx";
 import {Input} from "shared/src/components/ui/input.tsx";
 import {TransferProcessActions} from "shared/src/components/TransferProcessActions.tsx";
 import {ArrowRight} from "lucide-react";
+import {mergeStateAndAttribute} from "shared/src/lib/utils.ts";
 
 export const Route = createFileRoute("/transfer-process/")({
     component: RouteComponent,
@@ -42,7 +43,7 @@ function RouteComponent() {
                             <TableCell>
                                 <Badge variant={"status"} state={transferProcess.state}>
                                     {/* TO DO STYLE: Casuística state */}
-                                    {transferProcess.state}
+                                    {mergeStateAndAttribute(transferProcess.state, transferProcess.state_attribute)}
                                 </Badge>
                             </TableCell>
                             <TableCell>
