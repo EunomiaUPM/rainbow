@@ -9,13 +9,12 @@ import {
   MessageTitle,
   MessageTimestamp,
   MessageMeta,
-    MessageMetaContainer,
+  MessageMetaContainer,
   MessageContent,
-  type MessageType,
 } from "./ui/message";
 
 type TransferProcessMessageComponentProps = {
-  message: MessageType;
+  message: TransferMessage;
 };
 let addSpacesFormat = (text: string) => {
   return text.replace(/(?!^)([A-Z])/g, " $1");

@@ -1,7 +1,4 @@
 import React from "react";
-// @ts-ignore
-import { cn } from "@/lib/utils";
-// @ts-ignore
 import {
   MessageLog,
   RoleHeader,
@@ -11,18 +8,26 @@ import {
   MessageMeta,
   MessageMetaContainer,
   MessageContent,
-  type MessageType,
 } from "./ui/message";
 
 type MessageComponentProps = {
-  message: MessageType;
+  message: CNMessage;
 };
 let addSpacesFormat = (text: string) => {
-    if (!text) return "";
+  if (!text) return "";
   return text.replace(/(?!^)([A-Z])/g, " $1");
 };
 
 const MessageComponent: React.FC<MessageComponentProps> = ({ message }) => {
+  //   const {
+  //   from,
+  //   cn_message_id,
+  //   cn_process_id,
+  //   created_at,
+  //   content,
+  //   _type,
+  // } = message;
+  
   return (
     <MessageLog key={message.cn_message_id} variant={message.from}>
       <RoleHeader from={message.from} />
@@ -31,15 +36,15 @@ const MessageComponent: React.FC<MessageComponentProps> = ({ message }) => {
           {addSpacesFormat(message._type)}
         </MessageTitle>
         <MessageTimestamp created_at={message.created_at} />
-         <MessageMetaContainer>
+        <MessageMetaContainer>
           <MessageMeta
-          label="Contract Message Id"
-          value={message.cn_message_id.slice(9, 60)}
-        />
-        <MessageMeta
-          label="Contract Process Id"
-          value={message.cn_process_id.slice(9, 60)}
-        />
+            label="Contract Message Id"
+            value={message.cn_message_id.slice(9, 60)}
+          />
+          <MessageMeta
+            label="Contract Process Id"
+            value={message.cn_process_id.slice(9, 60)}
+          />
         </MessageMetaContainer>
         <MessageContent content={message.content} />
       </MessageBody>

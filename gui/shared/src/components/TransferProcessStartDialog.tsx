@@ -49,7 +49,7 @@ export const TransferProcessStartDialog = ({process}: { process: TransferProcess
         }
     }
 
-    const scopedListItemKeyClasses = "";
+    const scopedListItemKeyClasses = "basis-[33%]";
 
 
     return (
@@ -99,7 +99,7 @@ export const TransferProcessStartDialog = ({process}: { process: TransferProcess
             Associated consumer:
           </ListItemKey>
           <Badge variant={"info"}>
-            {process.associated_consumer.slice(9, -1)}
+            {process.associated_consumer.slice(9, 40) + " [...]"}
           </Badge>
         </ListItem>
         <ListItem>

@@ -72,7 +72,7 @@ const ListItemDate = ({
   props?: any;
 }) => {
   return (
-    <p className={cn("text-gray-400 ", className)} {...props}>
+    <p className={cn("text-foreground-400", className)} {...props}>
       {children}
     </p>
   );

@@ -131,7 +131,7 @@ export const PolicyWrapperEdit = ({
 
   return (
     <div>
-      <List className=" border border-white/30 bg-white/10 px-4 py-2 rounded-md justify-start">
+      <List className=" border border-white/30 bg-white/10 p-4 pt-2 rounded-md justify-start">
         <div className="flex">
           <Heading level="h5" className="flex gap-3">
             <div>Policy with ID</div>

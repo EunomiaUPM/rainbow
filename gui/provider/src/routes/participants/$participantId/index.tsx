@@ -40,7 +40,7 @@ function RouteComponent() {
   const scopedListItemKeyClasses = "basis-[28%]";
 
   return (
-    <div>
+    <div className="w-full">
       {/* Page Header */}
       <Heading level="h3" className="flex items-center gap-3">
         Participant with id
@@ -63,7 +63,7 @@ function RouteComponent() {
             Participant info:
           </Heading>
           <div className="max-w-screen-md bg-green-500/0">
-            <List>
+            <List className={"min-w-fit"}>
               <ListItem>
                 <ListItemKey className={scopedListItemKeyClasses}>
                   Participant ID
@@ -76,7 +76,7 @@ function RouteComponent() {
                 <ListItemKey className={scopedListItemKeyClasses}>
                   Identity Token
                 </ListItemKey>
-                {participant.token}
+                <Badge variant={"info"}>{participant.token}</Badge>
               </ListItem>
               <ListItem>
                 <ListItemKey className={scopedListItemKeyClasses}>
@@ -96,10 +96,8 @@ function RouteComponent() {
           </div>
         </div>
 
-        {/* <Separator orientation="vertical" /> */}
-
         {/* Div Participant Tabs */}
-        {agreements && agreements.length > 0 && ( 
+        {agreements && agreements.length > 0 && (
           // Lo de arriba: evita que pete si no hay agreements que mostrar,
           // si se añaden otros tabs habría que añadirlos
           <Tabs defaultValue="participant-agreements">
@@ -145,12 +143,12 @@ function RouteComponent() {
                     {agreement.consumer_participant_id?.slice(9, 20) + "..."}
                   </Badge>
                 </TableCell> */}
-                        <TableCell className="hidden">
+                        {/* <TableCell className="hidden">
                           <Badge variant={"info"}>
                             {agreement.provider_participant_id?.slice(9, 20) +
                               "..."}
                           </Badge>
-                        </TableCell>
+                        </TableCell> */}
                         <TableCell>
                           <Badge
                             variant={"status"}

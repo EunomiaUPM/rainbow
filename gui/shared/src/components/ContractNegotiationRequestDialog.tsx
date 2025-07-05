@@ -5,6 +5,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogBody,
 } from "./ui/dialog";
 import { Button } from "./ui/button";
 import React, { useContext } from "react";
@@ -57,7 +58,7 @@ export const ContractNegotiationRequestDialog = ({
   const scopedListItemKeyClasses = "basis-[30%]";
 
   return (
-    <DialogContent className=" p-0 flex flex-col  h-[calc(100vh-40px)]">
+    <DialogContent className=" p-0 flex flex-col h-fit max-h-[90dvh]">
       <DialogHeader className="px-6 pt-6">
         <DialogTitle>Contract Negotiation Request</DialogTitle>
         <DialogDescription className="break-all">
@@ -66,8 +67,8 @@ export const ContractNegotiationRequestDialog = ({
         </DialogDescription>
       </DialogHeader>
       {/* List */}
-      <div className=" overflow-y-scroll px-6">
-        <List className="w-fit  px-2">
+      <DialogBody>
+        <List className="w-fit py-2">
           <ListItem>
             <ListItemKey className={scopedListItemKeyClasses}>
               Provider id:
@@ -161,7 +162,7 @@ export const ContractNegotiationRequestDialog = ({
             
           </form>
         </Form>
-      </div>
+      </DialogBody>
       <DialogFooter className="[&>*]:w-full p-6 pt-0">
         <DialogClose asChild>
           <Button variant="ghost" type="reset">

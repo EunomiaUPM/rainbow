@@ -542,7 +542,7 @@ export const RouteComponent = ({catalog, dataset}) => {
                     />
                     <div> POLICIES</div>
                     {console.log(policies, "policiessss")}
-                    {policies.map((policy) => (
+                    {policies && policies.map((policy) => (
 
                         <div className={selectedPolicy === policy ? `border-white border-2` : ""}
                              onClick={() => {

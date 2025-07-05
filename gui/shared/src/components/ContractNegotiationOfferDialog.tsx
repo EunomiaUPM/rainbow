@@ -65,7 +65,7 @@ export const ContractNegotiationOfferDialog = ({
   const scopedListItemKeyClasses = "basis-[30%]";
 
   return (
-    <DialogContent className="p-0 flex flex-col h-[calc(100vh-40px)]">
+    <DialogContent className="p-0 flex flex-col h-fit max-h-[90dvh]">
       <DialogHeader className="px-6 pt-6 w-[90vw]">
         <DialogTitle>Contract Negotiation Offer</DialogTitle>
         <DialogDescription>

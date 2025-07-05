@@ -50,7 +50,7 @@ export const TransferProcessTerminationDialog = ({process}: { process: TransferP
         }
     }
 
-  const scopedListItemKeyClasses = "basis-[32%]";
+  const scopedListItemKeyClasses = "basis-[33%]";
 
   return (
     <DialogContent className="w-[70dvw] sm:max-w-fit">
@@ -102,7 +102,7 @@ export const TransferProcessTerminationDialog = ({process}: { process: TransferP
             Associated consumer:
           </ListItemKey>
           <Badge variant={"info"}>
-            {process.associated_consumer.slice(9, -1)}
+            {process.associated_consumer.slice(9, 40) + " [...]"}
           </Badge>
         </ListItem>
         <ListItem>

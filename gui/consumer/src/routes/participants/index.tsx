@@ -142,14 +142,22 @@ function RouteComponent() {
     <div>
       {/* NO WALLET */}
       {!hasConsumer && (
-        <div className="mx-auto w-fit bg-blue-500/0">
-          <div>
-            Your wallet is not yet connected as a consumer. Please complete the
-            onboarding process to get started.
-          </div>
-          <Button onClick={() => onboardHandler()}>Onboard wallet</Button>
+        <div className="p-8 py-6 mx-auto w-fit max-w-[70ch] bg-brand-sky/5 border border-stroke rounded-md">
+          <Heading level="h3">Missing wallet...</Heading>
+          <Heading level="h5">
+            Your wallet is not yet connected as Consumer. <br /> Please complete
+            the onboarding process to get started.
+          </Heading>
+          <Button
+            size={"lg"}
+            className="w-full mt-4"
+            onClick={() => onboardHandler()}
+          >
+            Onboard wallet
+          </Button>
         </div>
       )}
+      {/* TO DO - loading screen */}
       {/* NO WALLET */}
 
       {/* WALLET OK */}
@@ -240,10 +248,12 @@ function RouteComponent() {
                           />
                         )}
                       </div>
-                        <p>... or copy your URI bellow</p>
+                      <p>... or copy your URI bellow</p>
                       <div>
                         <div className="max-w-full break-all p-2 bg-background-200/40 border border-stroke rounded-md">
-                        <code className="text-xs text-foreground-200">{oidc}</code>
+                          <code className="text-xs text-foreground-200">
+                            {oidc}
+                          </code>
                         </div>
                         <div className="mt-4 [&>button]:w-32 flex gap-4 justify-center">
                           <Button

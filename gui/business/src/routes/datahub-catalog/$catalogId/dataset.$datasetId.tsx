@@ -105,7 +105,7 @@ function RouteComponent() {
       </div>
 
         <div className="grid grid-cols-2 gap-4">
-          {policies.map((policy) => (
+          {policies && policies.map((policy) => (
             <PolicyWrapperShow participant={participant} policy={policy} catalogId={catalogId} datasetId={datasetId}>
             </PolicyWrapperShow> 
           ))}

@@ -18,7 +18,7 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "../../../../../shared/src/components/ui/tabs.tsx";
+} from "../../../../../shared/src/components/ui/tabs";
 import {
   Drawer,
   DrawerBody,
@@ -28,10 +28,11 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from "@./../../shared/src/components/ui/drawer.tsx";
-import { Button } from "shared/src/components/ui/button.tsx";
-import { TransferProcessActions } from "shared/src/components/TransferProcessActions.tsx";
-import TransferProcessMessageComponent from "shared/src/components/TransferProcessMessageComponent.tsx";
+} from "@./../../shared/src/components/ui/drawer";
+import { Button } from "shared/src/components/ui/button";
+import { TransferProcessActions } from "shared/src/components/TransferProcessActions";
+import TransferProcessMessageComponent from "shared/src/components/TransferProcessMessageComponent";
+import TransferProcessDataPlaneComponent from "shared/src/components/TransferProcessDataPlaneComponent";
 
 export const Route = createFileRoute("/transfer-process/$transferProcessId/")({
   component: RouteComponent,
@@ -49,6 +50,8 @@ function RouteComponent() {
     useGetTransferMessagesByProviderPid(transferProcessId);
   const { data: dataPlane } = useGetDataplaneProcessById(transferProcessId);
 
+  const scopedListItemKeyClasses = "basis-[30%]";
+
   return (
     <div className="space-y-4 pb-4">
       <Tabs defaultValue="data-control" className="w-full">
@@ -56,14 +59,19 @@ function RouteComponent() {
           <TabsTrigger value="data-control">Data Control</TabsTrigger>
           <TabsTrigger value="data-plane">Data Plane</TabsTrigger>
         </TabsList>
-        <TabsContent value="data-plane">
-          <div className=" w-full break-all">
+        <TabsContent value="data-plane" className="gridColsLayout">
+          {/* <div className=" w-full break-all">
             <pre className="max-w-[500px] p-4 rounded-lg break-all text-[11px] bg-black/70 text-secondary-400 break-all">
               <code className="whitespace-pre-wrap break-all">
                 {JSON.stringify(dataPlane, null, 2)}
               </code>
             </pre>
-          </div>
+          </div> */}
+          {dataPlane && (
+            <div>
+              <TransferProcessDataPlaneComponent dataPlane={dataPlane} />
+            </div>
+          )}
         </TabsContent>
         <TabsContent value="data-control">
           {" "}
