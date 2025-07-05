@@ -18,3 +18,23 @@ export const generateRandomString = (length: number) => {
     }
     return result;
 }
+
+export const mergeStateAndAttribute = (state: string, attribute: string): string => {
+    let textOut = ""
+    switch (state) {
+        case "STARTED":
+        case "SUSPENDED":
+            switch (attribute) {
+                case "BY_PROVIDER":
+                case "BY_CONSUMER":
+                    textOut = `${state} ${attribute.replace("_", " ")}`
+                    break;
+                default:
+                    textOut = state
+            }
+            break;
+        default:
+            textOut = state
+    }
+    return textOut
+}

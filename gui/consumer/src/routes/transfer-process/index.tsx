@@ -6,7 +6,7 @@ import {Button} from "shared/src/components/ui/button.tsx";
 import {Badge} from "shared/src/components/ui/badge.tsx";
 import {Input} from "shared/src/components/ui/input.tsx";
 import {TransferProcessActions} from "shared/src/components/TransferProcessActions.tsx";
-import { ArrowRight } from "lucide-react";
+import {ArrowRight} from "lucide-react";
 
 export const Route = createFileRoute("/transfer-process/")({
     component: RouteComponent,
@@ -24,8 +24,6 @@ function RouteComponent() {
                 <TableHeader>
                     <TableRow>
                         <TableHead>Transfer Process Provider pid</TableHead>
-                        {/* <TableHead>Transfer Consumer Provider pid</TableHead>
-                        <TableHead>Agreement id</TableHead> */}
                         <TableHead>State</TableHead>
                         <TableHead>Created at</TableHead>
                         <TableHead>Updated at</TableHead>
@@ -41,18 +39,8 @@ function RouteComponent() {
                                     {transferProcess.provider_pid.slice(9, 20) + "..."}
                                 </Badge>
                             </TableCell>
-                            {/* <TableCell>
-                                <Badge variant={"info"}>
-                                    {transferProcess.consumer_pid?.slice(9, 20) + "..."}
-                                </Badge>
-                            </TableCell>
                             <TableCell>
-                                <Badge variant={"info"}>
-                                    {transferProcess.agreement_id?.slice(9, 20) + "..."}
-                                </Badge>
-                            </TableCell> */}
-                            <TableCell>
-                                <Badge variant={"status"}  state={transferProcess.state}>
+                                <Badge variant={"status"} state={transferProcess.state}>
                                     {/* TO DO STYLE: Casuística state */}
                                     {transferProcess.state}
                                 </Badge>
@@ -67,17 +55,17 @@ function RouteComponent() {
                                 <TransferProcessActions process={transferProcess} tiny={true}/>
                             </TableCell>
                             <TableCell>
-                               
-                                    <Link
-                                        to="/transfer-process/$transferProcessId"
-                                        params={{transferProcessId: transferProcess.provider_pid}}
-                                    >
-                                         <Button variant="link">
+
+                                <Link
+                                    to="/transfer-process/$transferProcessId"
+                                    params={{transferProcessId: transferProcess.provider_pid}}
+                                >
+                                    <Button variant="link">
                                         See details
                                         <ArrowRight/>
-                                         </Button>
-                                    </Link>
-                               
+                                    </Button>
+                                </Link>
+
                             </TableCell>
                         </TableRow>
                     ))}
