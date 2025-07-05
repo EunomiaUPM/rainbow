@@ -21,13 +21,8 @@ import {PolicyEditorHandle, PolicyWrapperEdit} from "shared/src/components/Polic
 export const ContractNegotiationRequestDialog = ({process}: {
     process: CNProcess;
 }) => {
-    // --- Form Setup ---
     const policyWrapperRef = useRef<PolicyEditorHandle>()
-    const form = useForm({
-        defaultValues: {
-            odrl: '{"@id":"urn:uuid:071c9c85-cddd-4cb8-9b9b-fcacf88d4687","@type":"Offer","permission":[{"action":"use","constraint":[{"leftOperand":"did:web:hola.es","operator":"eq","rightOperand":"user"}]}],"target":"urn:uuid:c9d4516d-dc86-4662-931b-12f92edfe94b"}',
-        },
-    });
+    const form = useForm();
     const {handleSubmit} = form;
     const {mutateAsync: dataRequestAsync} =
         usePostContractNegotiationRPCRequest();
@@ -37,19 +32,15 @@ export const ContractNegotiationRequestDialog = ({process}: {
     );
     const {data: lastOffer} = useGetLastContractNegotiationOfferByCNMessageId(process.consumer_id)
 
-    const onSubmit = async (data) => {
+    const onSubmit = async () => {
         if (policyWrapperRef.current) {
             const policy = policyWrapperRef.current.getPolicy()
-            console.log(policy)
-            console.log(lastOffer)
             const outputOffer = {
                 ...lastOffer.offer_content,
                 prohibition: policy.prohibition && policy.prohibition.length > 0 ? policy.prohibition : null,
                 permission: policy.permission && policy.permission.length > 0 ? policy.permission : null,
                 obligation: policy.obligation && policy.obligation.length > 0 ? policy.obligation : null
             };
-            console.log(outputOffer)
-
             await dataRequestAsync({
                 api_gateway: api_gateway,
                 content: {
@@ -151,7 +142,6 @@ export const ContractNegotiationRequestDialog = ({process}: {
                                 <div className="w-full">
                                     <p className="mb-2">New policy request</p>
                                     <PolicyWrapperEdit
-                                        className="w-full"
                                         policy={offer.offer_content}
                                         ref={policyWrapperRef}
                                     />
