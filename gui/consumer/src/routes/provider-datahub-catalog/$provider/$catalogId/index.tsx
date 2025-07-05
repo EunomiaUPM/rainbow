@@ -16,6 +16,7 @@ import {
 import {useGetParticipants} from "shared/src/data/participant-queries.ts";
 import {ArrowRight} from "lucide-react";
 import {useGetDatahubBypassDatasetsByCatalogId} from "shared/src/data/catalog-datahub-bypass-queries.ts";
+import {DatahubRequestDrawer} from "@/components/DatahubRequestDrawer.tsx";
 
 const RouteComponent = () => {
     const [open, setOpen] = useState(false)
@@ -80,15 +81,9 @@ const RouteComponent = () => {
                                                 </DrawerTitle>
                                             </DrawerHeader>
                                             <DrawerBody className="items-start">
-                                                ... request drawer
+                                                <DatahubRequestDrawer catalogId={catalogId} datasetId={dataset.urn}
+                                                                      participantId={provider}/>
                                             </DrawerBody>
-                                            {/* <DrawerFooter>
-                         <DrawerClose className="flex justify-start gap-4">
-                          <Button variant="ghost" className="w-40">
-                            Cancel
-                          </Button>
-                        </DrawerClose> 
-                      </DrawerFooter> */}
                                         </DrawerContent>
                                     </Drawer>
                                 </TableCell>

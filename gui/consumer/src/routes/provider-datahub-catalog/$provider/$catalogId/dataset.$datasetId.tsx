@@ -1,14 +1,13 @@
 import {createFileRoute} from "@tanstack/react-router";
-import {SubmitHandler} from "react-hook-form";
-import {usePostNewPolicyInDataset} from "shared/src/data/catalog-mutations.ts";
-import {useContext} from "react";
-import {GlobalInfoContext, GlobalInfoContextType,} from "shared/src/context/GlobalInfoContext.tsx";
 import Heading from "shared/src/components/ui/heading.tsx";
 import {Badge} from "shared/src/components/ui/badge.tsx";
 import {List, ListItem, ListItemKey} from "shared/src/components/ui/list";
 import {useGetDatahubBypassDatasetById} from "shared/src/data/catalog-datahub-bypass-queries.ts";
 import {useGetBypassPoliciesByDatasetId} from "shared/src/data/policy-bypass-queries.ts";
 import {PolicyWrapperShow} from "shared/src/components/PolicyWrapperShow.tsx";
+import {Dialog, DialogTrigger} from "shared/src/components/ui/dialog.tsx";
+import {Button} from "shared/src/components/ui/button.tsx";
+import {ContractNegotiationNewRequestDialog} from "shared/src/components/ContractNegotiationNewRequestDialog.tsx";
 
 type Inputs = {
     odrl: string;
@@ -18,22 +17,6 @@ function RouteComponent() {
     const {provider, catalogId, datasetId} = Route.useParams();
     const {data: dataset} = useGetDatahubBypassDatasetById(provider, datasetId);
     const {data: policies} = useGetBypassPoliciesByDatasetId(provider, datasetId);
-    const {mutateAsync: createPolicyAsync, isPending} =
-        usePostNewPolicyInDataset();
-    const {api_gateway} = useContext<GlobalInfoContextType | null>(
-        GlobalInfoContext
-    )!;
-
-    const onSubmit: SubmitHandler<Inputs> = (data) => {
-        // @ts-ignore
-        createPolicyAsync({
-            api_gateway,
-            datasetId,
-            content: {
-                offer: JSON.stringify(data),
-            },
-        });
-    };
 
     return (
         <div className="space-y-4 pb-4">
@@ -61,7 +44,18 @@ function RouteComponent() {
             </div>
             <div className="grid grid-cols-2 gap-4">
                 {policies.map((policy) => (
-                    <PolicyWrapperShow policy={policy}/>
+                    <div className="flex flex-col gap-2">
+                        <PolicyWrapperShow policy={policy} datasetId={datasetId} catalogId={catalogId}
+                                           participant={provider}/>
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <Button variant="default" size="sm" className="self-start">Request Contract
+                                    Negotiation</Button>
+                            </DialogTrigger>
+                            <ContractNegotiationNewRequestDialog policy={policy} catalogId={catalogId}
+                                                                 datasetId={datasetId} participantId={provider}/>
+                        </Dialog>
+                    </div>
                 ))}
             </div>
         </div>

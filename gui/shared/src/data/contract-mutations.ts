@@ -1,4 +1,4 @@
-import {useMutation} from "@tanstack/react-query";
+import {useMutation, useQueryClient} from "@tanstack/react-query";
 import {useRouter} from "@tanstack/react-router";
 
 
@@ -32,6 +32,7 @@ export const postContractNegotiationRPCRequest = async (body: ContractNegotiatio
 }
 
 export const usePostContractNegotiationRPCRequest = () => {
+    const router = useRouter()
     const {data, isSuccess, isError, error, mutate, isPending, mutateAsync} = useMutation({
         mutationFn: postContractNegotiationRPCRequest,
         onMutate: async () => {
@@ -41,7 +42,7 @@ export const usePostContractNegotiationRPCRequest = () => {
             console.log(error)
         },
         onSuccess: async ({}, _variables) => {
-            console.log("onSuccess")
+            await router.navigate({to: `/contract-negotiation`});
         },
         onSettled: () => {
         },
@@ -177,7 +178,7 @@ export const postContractNegotiationRPCAgreement = async (body: ContractNegotiat
 }
 
 export const usePostContractNegotiationRPCAgreement = () => {
-    const router = useRouter();
+    const queryClient = useQueryClient()
     const {data, isSuccess, isError, error, mutate, isPending, mutateAsync} = useMutation({
         mutationFn: postContractNegotiationRPCAgreement,
         onMutate: async () => {
@@ -187,8 +188,8 @@ export const usePostContractNegotiationRPCAgreement = () => {
             console.log(error)
         },
         onSuccess: async ({providerPid}, _variables) => {
-            console.log("onSuccess")
-
+            // @ts-ignore
+            await queryClient.refetchQueries(["CN_REQUESTS"]);
         },
         onSettled: () => {
         },
@@ -227,7 +228,7 @@ export const postContractNegotiationRPCVerification = async (body: ContractNegot
 }
 
 export const usePostContractNegotiationRPCVerification = () => {
-    const router = useRouter();
+    const queryClient = useQueryClient()
     const {data, isSuccess, isError, error, mutate, isPending, mutateAsync} = useMutation({
         mutationFn: postContractNegotiationRPCVerification,
         onMutate: async () => {
@@ -237,8 +238,8 @@ export const usePostContractNegotiationRPCVerification = () => {
             console.log(error)
         },
         onSuccess: async ({providerPid}, _variables) => {
-            console.log("onSuccess")
-
+            // @ts-ignore
+            await queryClient.refetchQueries(["CN_REQUESTS"]);
         },
         onSettled: () => {
         },
@@ -276,7 +277,7 @@ export const postContractNegotiationRPCFinalization = async (body: ContractNegot
 }
 
 export const usePostContractNegotiationRPCFinalization = () => {
-    const router = useRouter();
+    const queryClient = useQueryClient()
     const {data, isSuccess, isError, error, mutate, isPending, mutateAsync} = useMutation({
         mutationFn: postContractNegotiationRPCFinalization,
         onMutate: async () => {
@@ -286,8 +287,8 @@ export const usePostContractNegotiationRPCFinalization = () => {
             console.log(error)
         },
         onSuccess: async ({providerPid}, _variables) => {
-            console.log("onSuccess")
-
+            // @ts-ignore
+            await queryClient.refetchQueries(["CN_REQUESTS"]);
         },
         onSettled: () => {
         },
@@ -334,6 +335,7 @@ export const postContractNegotiationRPCTermination = async (body: ContractNegoti
 }
 
 export const usePostContractNegotiationRPCTermination = () => {
+    const queryClient = useQueryClient()
     const router = useRouter();
     const {data, isSuccess, isError, error, mutate, isPending, mutateAsync} = useMutation({
         mutationFn: postContractNegotiationRPCTermination,
@@ -344,7 +346,8 @@ export const usePostContractNegotiationRPCTermination = () => {
             console.log(error)
         },
         onSuccess: async ({providerPid}, _variables) => {
-            console.log("onSuccess")
+            // @ts-ignore
+            await queryClient.refetchQueries(["CN_REQUESTS"]);
         },
         onSettled: () => {
         },
