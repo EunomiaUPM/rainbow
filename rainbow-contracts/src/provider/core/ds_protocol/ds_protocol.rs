@@ -469,7 +469,7 @@ where
                 get_urn_from_string(&cn_process.provider_id)?,
                 EditContractNegotiationProcess {
                     consumer_id: None,
-                    state: Option::from(ContractNegotiationState::Offered),
+                    state: Option::from(ContractNegotiationState::Requested),
                 },
             )
             .await

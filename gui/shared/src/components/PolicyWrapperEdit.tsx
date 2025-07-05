@@ -1,32 +1,35 @@
-import React, {useEffect, useState} from "react";
-import Heading from "@/components/ui/heading.tsx";
-import {Badge} from "@/components/ui/badge.tsx";
-import {List, ListItem, ListItemKey} from "@/components/ui/list.tsx";
-import {Accordion, AccordionContent, AccordionItem, AccordionTrigger,} from "@/components/ui/accordion.tsx";
-import {Button} from "@/components/ui/button.tsx";
+import React, {forwardRef, useEffect, useImperativeHandle, useState} from "react";
+import Heading from "shared/src/components/ui/heading";
+import {Badge} from "shared/src/components/ui/badge";
+import {List, ListItem, ListItemKey} from "shared/src/components/ui/list";
+import {Accordion, AccordionContent, AccordionItem, AccordionTrigger,} from "shared/src/components/ui/accordion";
+import {Button} from "shared/src/components/ui/button";
 import {Plus, Trash} from "lucide-react";
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from "@/components/ui/select.tsx";
-import {leftOperands, odrlActions, operators} from "@/odrl_actions";
-import {Input} from "@/components/ui/input.tsx";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from "shared/src/components/ui/select";
+import {leftOperands, odrlActions, operators} from "shared/src/odrl_actions";
+import {Input} from "shared/src/components/ui/input";
 
 type ComponentType = "permission" | "obligation" | "prohibition";
 type OperandType = "leftOperand" | "rightOperand" | "operator";
+export type PolicyEditorHandle = {
+    getPolicy: () => OdrlInfo;
+};
 
-export const PolicyWrapperEdit = ({
-                                      policy,
-                                      onSubmit,
-                                  }: {
-    policy: OdrlOffer;
-    onSubmit: any;
-}) => {
+
+export const PolicyWrapperEdit = forwardRef<PolicyEditorHandle, { policy: OdrlOffer }>(({policy}, ref) => {
     const [newPolicy, setNewPolicy] = useState<OdrlInfo>({
         obligation: [],
         permission: [],
         prohibition: [],
     });
 
+    useImperativeHandle(ref, () => ({
+        getPolicy: () => {
+            return newPolicy;
+        },
+    }));
+
     useEffect(() => {
-        console.log(policy);
         setNewPolicy({
             obligation: policy.obligation || [],
             permission: policy.permission || [],
@@ -42,7 +45,6 @@ export const PolicyWrapperEdit = ({
         const _newPolicy = {...newPolicy};
         _newPolicy[componentType].push(newComponent);
         setNewPolicy(_newPolicy);
-        console.log(newPolicy);
     };
     const removeComponentHandler = (
         componentType: ComponentType,
@@ -52,7 +54,6 @@ export const PolicyWrapperEdit = ({
         _newPolicy[componentType].splice(index, 1);
         console.log(_newPolicy);
         setNewPolicy(_newPolicy);
-        console.log(newPolicy);
     };
 
     const addConstraintHandler = (
@@ -61,12 +62,11 @@ export const PolicyWrapperEdit = ({
     ) => {
         const _newPolicy = {...newPolicy};
         _newPolicy[componentType][componentIndex].constraint.push({
-            leftOperand: "aa",
-            operator: "eq",
-            rightOperand: "bbb",
+            leftOperand: "",
+            operator: "",
+            rightOperand: "",
         });
         setNewPolicy(_newPolicy);
-        console.log(newPolicy);
     };
 
     const removeConstraintHandler = (
@@ -80,7 +80,6 @@ export const PolicyWrapperEdit = ({
             1
         );
         setNewPolicy(_newPolicy);
-        console.log(newPolicy);
     };
 
     const fieldValueChangeHandler = (
@@ -91,7 +90,6 @@ export const PolicyWrapperEdit = ({
         const _newPolicy = {...newPolicy};
         _newPolicy[componentType][componentIndex].action = value;
         setNewPolicy(_newPolicy);
-        console.log(newPolicy);
     };
 
     const operandValueChangeHandler = (
@@ -106,16 +104,6 @@ export const PolicyWrapperEdit = ({
             operand
             ] = value;
         setNewPolicy(_newPolicy);
-        console.log(newPolicy);
-    };
-
-    const submitHandler = () => {
-        onSubmit(newPolicy);
-        setNewPolicy({
-            permission: [],
-            prohibition: [],
-            obligation: [],
-        });
     };
 
     return (
@@ -168,7 +156,7 @@ export const PolicyWrapperEdit = ({
                                         Add permission
                                     </Button>
                                     {newPolicy.permission.map((permission, i) => (
-                                        <div>
+                                        <div key={permission.action}>
                                             <div className="policy-item-create">
                                                 <div className="flex justify-between">
                                                     <p className="mb-2"> Action: </p>
@@ -195,7 +183,7 @@ export const PolicyWrapperEdit = ({
                                                     </SelectTrigger>
                                                     <SelectContent>
                                                         {odrlActions.map((odrlAction) => (
-                                                            <SelectItem value={odrlAction}>
+                                                            <SelectItem value={odrlAction} key={odrlAction}>
                                                                 {odrlAction}
                                                             </SelectItem>
                                                         ))}
@@ -204,7 +192,7 @@ export const PolicyWrapperEdit = ({
                                                 <div className="h-6"></div>
                                                 <p className="mb-2"> Constraints: </p>
                                                 {permission.constraint.map((constraint, j) => (
-                                                    <div className="flex flex-col gap-2">
+                                                    <div className="flex flex-col gap-2" key={j}>
                                                         <div className="constraint-create flex gap-3 items-end">
                                                             <Select
                                                                 onValueChange={(value: string) =>
@@ -227,7 +215,8 @@ export const PolicyWrapperEdit = ({
                                                                     </SelectTrigger>
                                                                     <SelectContent>
                                                                         {leftOperands.map((leftOperand) => (
-                                                                            <SelectItem value={leftOperand}>
+                                                                            <SelectItem value={leftOperand}
+                                                                                        key={leftOperand}>
                                                                                 {leftOperand}
                                                                             </SelectItem>
                                                                         ))}
@@ -255,7 +244,7 @@ export const PolicyWrapperEdit = ({
                                                                     </SelectTrigger>
                                                                     <SelectContent>
                                                                         {operators.map((operator) => (
-                                                                            <SelectItem value={operator}>
+                                                                            <SelectItem value={operator} key={operator}>
                                                                                 {operator}
                                                                             </SelectItem>
                                                                         ))}
@@ -643,5 +632,5 @@ export const PolicyWrapperEdit = ({
                 </div>
             </List>
         </div>
-    );
-};
+    )
+})

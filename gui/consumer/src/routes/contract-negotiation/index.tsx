@@ -8,7 +8,7 @@ import {useGetContractNegotiationProcesses} from "shared/src/data/contract-queri
 import {ContractNegotiationActions} from "shared/src/components/ContractNegotiationActions";
 import {useMemo} from "react";
 import Heading from "shared/src/components/ui/heading";
-import {ArrowRight, Plus} from "lucide-react";
+import {ArrowRight} from "lucide-react";
 import {
     Drawer,
     DrawerBody,
@@ -38,13 +38,6 @@ const RouteComponent = () => {
                 <div className="basis-3/5">
                     <Input type="search"></Input>
                 </div>
-                {/* <Link
-          to="/contract-negotiation/request"
-          className="text-decoration-none text-foreground"
-        >
-          <Button>Create new request</Button>
-        </Link> */}
-                {/* DRAWER CONTRACT REQUEST*/}
                 <Drawer direction={"right"}>
                     <DrawerTrigger>
                         {/* <Button>
@@ -72,13 +65,11 @@ const RouteComponent = () => {
                         </DrawerFooter>
                     </DrawerContent>
                 </Drawer>
-                {/* /Drawer Contract Request*/}
             </div>
             <Table className="text-sm">
                 <TableHeader>
                     <TableRow>
                         <TableHead>ProviderPid</TableHead>
-                        {/* <TableHead>ConsumerPid</TableHead> */}
                         <TableHead>State</TableHead>
                         <TableHead>Client type</TableHead>
                         <TableHead>Created at</TableHead>
@@ -94,11 +85,6 @@ const RouteComponent = () => {
                                     {cnProcess.provider_id?.slice(9, 20) + "..."}
                                 </Badge>
                             </TableCell>
-                            {/* <TableCell>
-                                <Badge variant={"info"}>
-                                    {cnProcess.consumer_id?.slice(9, 20) + "..."}
-                                </Badge>
-                            </TableCell> */}
                             <TableCell>
                                 <Badge variant={"status"} state={cnProcess.state}>
                                     {cnProcess.state?.replace("dspace:", "")}

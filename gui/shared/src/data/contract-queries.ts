@@ -150,7 +150,6 @@ export const getLastContractNegotiationOfferByCNMessageId = async (api_gateway: 
         throw new NotFoundError(`Offer not found for message ID: ${contractProcess}`);
     }
     const cnOffer: CNOffer = await response.json();
-    console.log(cnOffer)
     return cnOffer;
 }
 
