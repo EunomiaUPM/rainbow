@@ -5,7 +5,6 @@ use rainbow_common::config::global_config::{format_host_config_to_url_string, Ap
 use rainbow_common::mates::Mates;
 use reqwest::Client;
 use std::time::Duration;
-use urn::Urn;
 
 pub struct MatesFacadeService {
     config: ApplicationGlobalConfig,
@@ -22,7 +21,7 @@ impl MatesFacadeService {
 
 #[async_trait]
 impl MatesFacadeTrait for MatesFacadeService {
-    async fn get_mate_by_id(&self, mate_id: Urn) -> anyhow::Result<Mates> {
+    async fn get_mate_by_id(&self, mate_id: String) -> anyhow::Result<Mates> {
         let ssi_auth_url = format_host_config_to_url_string(&self.config.ssi_auth_host.clone().expect("Auth host not configured"));
         let mates_url = format!("{}/api/v1/mates/{}", ssi_auth_url, mate_id);
         let response = self.client

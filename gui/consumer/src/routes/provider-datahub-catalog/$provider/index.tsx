@@ -5,11 +5,11 @@ import {Input} from "@/../../shared/src/components/ui/input.tsx";
 import {Badge} from "shared/src/components/ui/badge";
 import {Button} from "shared/src/components/ui/button.tsx";
 import {ArrowRight} from "lucide-react";
-import {useGetBypassCatalogs} from "shared/src/data/catalog-bypass-queries.ts";
+import {useGetDatahubBypassCatalogs,} from "shared/src/data/catalog-datahub-bypass-queries.ts";
 
 const RouteComponent = () => {
     const {provider} = Route.useParams();
-    const {data: datahubCatalogs} = useGetBypassCatalogs(provider);
+    const {data: datahubCatalogs} = useGetDatahubBypassCatalogs(provider);
     console.log(datahubCatalogs)
 
     return (
@@ -39,8 +39,8 @@ const RouteComponent = () => {
                             <TableCell>{datahubCatalog.properties.description}</TableCell>
                             <TableCell>
                                 <Link
-                                    to="/datahub-catalog/$catalogId"
-                                    params={{catalogId: datahubCatalog.urn}}
+                                    to="/provider-datahub-catalog/$provider/$catalogId"
+                                    params={{provider: provider, catalogId: datahubCatalog.urn}}
                                 >
                                     <Button variant="link">
 

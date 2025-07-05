@@ -7,7 +7,7 @@ use rainbow_common::utils::get_urn_from_string;
 use reqwest::{Client, StatusCode};
 use std::sync::Arc;
 use std::time::Duration;
-use tracing::info;
+use tracing::{debug, info};
 
 pub struct CatalogBypassRouter<T>
 where
@@ -24,6 +24,7 @@ where
         Self { service }
     }
     pub fn router(self) -> Router {
+        debug!("router loading");
         Router::new()
             .route(
                 "/api/v1/catalog-bypass/:participant_id/*extra",
@@ -36,10 +37,6 @@ where
         Path((participant_id, extra)): Path<(String, String)>,
     ) -> impl IntoResponse {
         info!("GET /api/v1/catalog-bypass/{}/{}", participant_id, extra);
-        let participant_id = match get_urn_from_string(&participant_id) {
-            Ok(participant_id) => participant_id,
-            Err(e) => return (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
-        };
         match service.bypass(participant_id, extra).await {
             Ok(value) => (StatusCode::OK, Json(value)).into_response(),
             Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),

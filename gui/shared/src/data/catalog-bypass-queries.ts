@@ -18,10 +18,8 @@ export const getBypassCatalogsOptions = (api_gateway: string, provider_id: UUID)
 })
 
 export const useGetBypassCatalogs = (provider_id: UUID) => {
-    console.log("provider_id:", provider_id);
-
     const {api_gateway} = useContext<GlobalInfoContextType>(GlobalInfoContext);
-          console.log("api_gateway:", api_gateway);
+    console.log("api_gateway:", api_gateway);
     const {data, isLoading, isError, error} = useSuspenseQuery(getBypassCatalogsOptions(api_gateway, provider_id))
     return {data, isLoading, isError, error}
 }

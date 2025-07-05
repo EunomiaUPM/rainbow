@@ -1,0 +1,22 @@
+# https://editorconfig.org
+# Este es el archivo de configuración de nivel superior
+root = true
+
+# Reglas globales para todos los tipos de archivo
+[*]
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+# Reglas específicas para archivos JavaScript, JSX, TypeScript y TSX
+# Estos son los estándares más comunes en la comunidad de React.
+[*.{js,jsx,ts,tsx}]
+indent_style = space
+indent_size = 2
+max_line_length = 100
+
+# Reglas consistentes para otros archivos comunes del proyecto
+[*.{json,yml,md}]
+indent_style = space
+indent_size = 2

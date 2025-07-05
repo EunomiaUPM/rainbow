@@ -33,7 +33,7 @@ impl<T> ByPassTrait for CatalogBypassService<T>
 where
     T: MatesFacadeTrait + Send + Sync + 'static,
 {
-    async fn bypass(&self, participant_id: Urn, path: String) -> anyhow::Result<Value> {
+    async fn bypass(&self, participant_id: String, path: String) -> anyhow::Result<Value> {
         let mate = self.mates_facade.get_mate_by_id(participant_id).await;
         let mate = match mate {
             Ok(mate) => mate,

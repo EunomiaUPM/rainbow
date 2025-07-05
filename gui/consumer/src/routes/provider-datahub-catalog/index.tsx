@@ -16,6 +16,7 @@ export const Route = createFileRoute("/provider-datahub-catalog/")({
 function RouteComponent() {
     const {data: participants} = useGetParticipants();
     const {lastHighLightedNotification} = useContext(PubSubContext)!;
+    // @ts-ignore
     return (
         <div>
             <Heading level="h3" className="flex gap-2 items-center">
@@ -60,7 +61,7 @@ function RouteComponent() {
                                 </TableCell>
                                 <TableCell>
                                     <Link
-                                        to="/provider-catalog/$provider"
+                                        to="/provider-datahub-catalog/$provider"
                                         params={{provider: participant.participant_id}}
                                     >
                                         <Button variant="link">
