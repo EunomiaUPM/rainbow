@@ -30,6 +30,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         <QueryClientProvider client={queryClient}>
             <AuthContextProvider>
                 <InnerApp/>
+                
             </AuthContextProvider>
         </QueryClientProvider>
     </GlobalInfoContextProvider>

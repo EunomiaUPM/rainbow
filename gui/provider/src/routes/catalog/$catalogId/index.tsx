@@ -35,7 +35,7 @@ import {
 } from "shared/src/data/catalog-queries.ts";
 import { Button, buttonVariants } from "shared/src/components/ui/button";
 // Icons
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Plus } from "lucide-react";
 
 const RouteComponent = () => {
   const { catalogId } = Route.useParams();
@@ -113,7 +113,8 @@ const RouteComponent = () => {
                   <Drawer direction={"right"}>
                     <DrawerTrigger>
                       <Button variant="outline" size="sm">
-                        + Offer dataset
+                        <Plus/>
+                        Offer dataset
                       </Button>
                     </DrawerTrigger>
                     <DrawerContent>

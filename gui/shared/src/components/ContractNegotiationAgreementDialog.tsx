@@ -55,7 +55,7 @@ export const ContractNegotiationAgreementDialog = ({
       </DialogHeader>
 
       {/* List JSON */}
-      <List className="min-w-full overflow-x-scroll px-2">
+      <List className="min-w-full px-2">
         <ListItem>
           <ListItemKey className={scopedListItemKeyClasses}>
             Provider id:
@@ -73,7 +73,7 @@ export const ContractNegotiationAgreementDialog = ({
             Associated Consumer id:
           </ListItemKey>
           <Badge variant={"info"}>
-            {process.associated_consumer.slice(9, -1)}
+            {process.associated_consumer.slice(9, 40) + "[...]"}
           </Badge>
         </ListItem>
         <ListItem>
@@ -100,7 +100,7 @@ export const ContractNegotiationAgreementDialog = ({
         </ListItem>
         {process.updated_at && (
           <ListItem>
-            <ListItemKey>Updated at:</ListItemKey>
+            <ListItemKey className={scopedListItemKeyClasses}>Updated at:</ListItemKey>
             <p> {dayjs(process.updated_at).format("DD/MM/YY HH:mm")}</p>
           </ListItem>
         )}

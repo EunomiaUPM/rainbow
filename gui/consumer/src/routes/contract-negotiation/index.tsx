@@ -47,10 +47,10 @@ const RouteComponent = () => {
                 {/* DRAWER CONTRACT REQUEST*/}
                 <Drawer direction={"right"}>
                     <DrawerTrigger>
-                        <Button>
+                        {/* <Button>
                             Create new Request
                             <Plus className="mb-1"/>
-                        </Button>
+                        </Button> */}
                     </DrawerTrigger>
                     <DrawerContent>
                         <DrawerHeader>
@@ -78,7 +78,7 @@ const RouteComponent = () => {
                 <TableHeader>
                     <TableRow>
                         <TableHead>ProviderPid</TableHead>
-                        <TableHead>ConsumerPid</TableHead>
+                        {/* <TableHead>ConsumerPid</TableHead> */}
                         <TableHead>State</TableHead>
                         <TableHead>Client type</TableHead>
                         <TableHead>Created at</TableHead>
@@ -94,11 +94,11 @@ const RouteComponent = () => {
                                     {cnProcess.provider_id?.slice(9, 20) + "..."}
                                 </Badge>
                             </TableCell>
-                            <TableCell>
+                            {/* <TableCell>
                                 <Badge variant={"info"}>
                                     {cnProcess.consumer_id?.slice(9, 20) + "..."}
                                 </Badge>
-                            </TableCell>
+                            </TableCell> */}
                             <TableCell>
                                 <Badge variant={"status"} state={cnProcess.state}>
                                     {cnProcess.state?.replace("dspace:", "")}

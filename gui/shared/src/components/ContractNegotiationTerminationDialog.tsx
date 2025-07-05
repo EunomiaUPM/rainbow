@@ -71,7 +71,7 @@ export const ContractNegotiationTerminationDialog = ({
         </DialogDescription>
       </DialogHeader>
       {/* List */}
-      <List className="min-w-full overflow-x-scroll px-2">
+      <List className="min-w-full px-2">
         <ListItem>
           <ListItemKey className={scopedListItemKeyClasses}>
             Provider id:
@@ -91,7 +91,7 @@ export const ContractNegotiationTerminationDialog = ({
               Associated Consumer:
             </ListItemKey>
             <Badge variant={"info"}>
-              {process.associated_consumer?.slice(9, -1)}
+              {process.associated_consumer?.slice(9, 40) + "[...]"}
             </Badge>
           </ListItem>
         )}
@@ -102,7 +102,7 @@ export const ContractNegotiationTerminationDialog = ({
               Associated Provider:
             </ListItemKey>
             <Badge variant={"info"}>
-              {process.associated_provider?.slice(9, -1)}
+              {process.associated_provider?.slice(9, 40) + "[...]"}
             </Badge>
           </ListItem>
         )}

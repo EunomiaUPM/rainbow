@@ -23,11 +23,13 @@ import {
 import { useForm } from "react-hook-form";
 import { Textarea } from "./ui/textarea";
 import { usePostContractNegotiationRPCOffer } from "./../data/contract-mutations";
+import { useGetLastContractNegotiationOfferByCNMessageId } from "@/data/contract-queries.ts";
 import {
   GlobalInfoContext,
   GlobalInfoContextType,
 } from "./../context/GlobalInfoContext";
 import dayjs from "dayjs";
+import { PolicyWrapperEdit } from "./PolicyWrapperEdit";
 
 export const ContractNegotiationOfferDialog = ({
   process,
@@ -43,6 +45,10 @@ export const ContractNegotiationOfferDialog = ({
   const { handleSubmit, control, setValue, getValues } = form;
   const { mutateAsync: dataOfferAsync } = usePostContractNegotiationRPCOffer();
   const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
+   const { data: offer } = useGetLastContractNegotiationOfferByCNMessageId(
+      process.consumer_id
+    );
+  
   const onSubmit = (data: any) => {
     console.log("Form submitted with data:", data);
     dataOfferAsync({
@@ -59,8 +65,8 @@ export const ContractNegotiationOfferDialog = ({
   const scopedListItemKeyClasses = "basis-[30%]";
 
   return (
-    <DialogContent className="w-[70dvw] sm:max-w-fit">
-      <DialogHeader>
+    <DialogContent className="p-0 flex flex-col h-[calc(100vh-40px)]">
+      <DialogHeader className="px-6 pt-6 w-[90vw]">
         <DialogTitle>Contract Negotiation Offer</DialogTitle>
         <DialogDescription>
           <p>Make changes on the Contract Negotiation Offer.</p>
@@ -68,7 +74,8 @@ export const ContractNegotiationOfferDialog = ({
         </DialogDescription>
       </DialogHeader>
       {/* List */}
-      <List className="min-w-full overflow-x-scroll px-2">
+      <div className=" overflow-y-scroll px-6">
+             <List className="w-full  px-2">
         <ListItem>
           <ListItemKey className={scopedListItemKeyClasses}>
             Provider id:
@@ -86,7 +93,7 @@ export const ContractNegotiationOfferDialog = ({
             Associated Consumer:
           </ListItemKey>
           <Badge variant={"info"}>
-            {process.associated_consumer.slice(9, -1)}
+            {process.associated_consumer.slice(9, 40) + "[...]"}
           </Badge>
         </ListItem>
         <ListItem>
@@ -118,37 +125,45 @@ export const ContractNegotiationOfferDialog = ({
           </ListItem>
         )}
       </List>
+     
       {/* / List content */}
+           <div className="h-6"></div>
       <Form {...form}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <FormField
-            control={form.control}
-            name="odrl"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Odrl</FormLabel>
-                <FormControl>
-                  <Textarea {...field} />
-                </FormControl>
-                <FormDescription>
-                  Provide the ODRL policy content
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <DialogFooter className="[&>*]:w-full">
+      {offer && (
+                   <div className="flex w-full ">
+                     {/* <div>
+                       <p className="mb-2">Current policy</p>
+                       <PolicyWrapperShow
+                         className="w-full"
+                         policy={offer.offer_content}
+                       />
+                     </div> */}
+                     <div>
+                       <p className="mb-2">New policy request</p>
+                      
+                       <PolicyWrapperEdit
+                         className="w-full"
+                         policy={offer.offer_content}
+                         onSubmit={onSubmit}
+                       />
+                     </div>
+                   </div>
+                 )}
+                 
+        </form>
+      </Form>
+       </div>
+         <DialogFooter className="[&>*]:w-full p-6 pt-0">
             <DialogClose asChild>
               <Button variant="ghost" type="reset">
                 Cancel
               </Button>
             </DialogClose>
             <Button type="submit" variant="outline">
-              Counteroffer
+              Counter offer
             </Button>
           </DialogFooter>
-        </form>
-      </Form>
     </DialogContent>
   );
 };

@@ -32,7 +32,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "shared/src/components/ui/drawer";
-import { ArrowRight, Plus } from "lucide-react";
+import {  Plus } from "lucide-react";
 
 type Inputs = {
   odrl: string;

@@ -13,6 +13,7 @@ import NotificationsIcon from "@mui/icons-material/Notifications";
 import PersonIcon from "@mui/icons-material/Person";
 import { AuthContext, AuthContextType } from "shared/src/context/AuthContext";
 import { Button } from "shared/src/components/ui/button";
+import { LogOut } from "lucide-react";
 
 const Header = () => {
   const routerState = useRouterState();
@@ -51,7 +52,7 @@ const Header = () => {
                 ""
               ) : (
                 <>
-                  <BreadcrumbItem key={index}className="max-w-40 truncate">
+                  <BreadcrumbItem key={index} className="max-w-40 truncate">
                     <BreadcrumbLink
                       // coger el link del path, sumando los paths
                       href={`/${paths.slice(0, index + 1).join("/")}`}
@@ -73,9 +74,14 @@ const Header = () => {
         <Link to="/subscriptions">
           <NotificationsIcon className="cursor-pointer" />
         </Link>
-        <PersonIcon className="cursor-pointer" />
+        <Link to="">
+          <PersonIcon className="cursor-pointer" />
+        </Link>
         {isAuthenticated && (
-          <Button onClick={() => unsetAuthentication()}>Logout</Button>
+          <Button variant="ghost" size="xs" onClick={() => unsetAuthentication()}>
+            Logout
+            <LogOut/>
+            </Button>
         )}
         {/* <Link to="/user">User</Link> */}
       </div>

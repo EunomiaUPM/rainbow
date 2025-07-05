@@ -10,11 +10,25 @@ import {
 import {AuthContext, AuthContextType} from "shared/src/context/AuthContext.tsx";
 import {Button} from "shared/src/components/ui/button.tsx";
 import {usePostBusinessNewPolicyInDataset} from "shared/src/data/business-mutations.ts";
-import {Dialog, DialogTrigger} from "shared/src/components/ui/dialog.tsx";
 import {BusinessRemovePolicyDialog} from "shared/src/components/BusinessRemovePolicyDialog.tsx";
 import {BusinessRequestAccessDialog} from "shared/src/components/BusinessRequestAccessDialog.tsx";
 import {PolicyWrapperShow} from "shared/src/components/PolicyWrapperShow.tsx";
 import {PolicyTemplateWrapperEdit} from "../../../../../shared/src/components/PolicyTemplateWrapperEdit.tsx";
+import Heading from "shared/src/components/ui/heading.tsx";
+import {  Plus } from "lucide-react";
+import {
+  Drawer,
+  DrawerBody,
+  DrawerClose,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "shared/src/components/ui/drawer";
+import { List, ListItem, ListItemKey } from "shared/src/components/ui/list";
+import { Badge } from "shared/src/components/ui/badge";
+import { PolicyWrapperNew } from "shared/src/components/PolicyWrapperNew";
 
 
 function RouteComponent() {
@@ -39,71 +53,67 @@ function RouteComponent() {
 
     return (
         <div className="space-y-4">
-            <h2>Dataset info with id: {dataset?.name} </h2> {/* Use optional chaining */}
-            <div>
-                <Table className="text-sm">
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Key</TableHead>
-                            <TableHead>Value</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {/* Use optional chaining for dataset and custom_properties */}
-                        {dataset?.custom_properties?.map((property => (
-                            <TableRow key={property[0]}>
-                                <TableCell>{property[0]}</TableCell>
-                                <TableCell>{property[1]}</TableCell>
-                            </TableRow>
-                        )))}
-                    </TableBody>
-                </Table>
-            </div>
+            <Heading level="h3" className="flex gap-2 items-center">
+        Dataset
+        <Badge variant="info" size="lg">
+          {" "}
+          {dataset.name}
+        </Badge>
+      </Heading>
+             <List className="text-sm w-2/3">
+        {dataset.custom_properties.map((property) => (
+          <ListItem key={property[0]}>
+            <ListItemKey className="basis-[30%] text-sky-300">{property[0]}</ListItemKey>
+            <p className="text-gray-300/90">{property[1]}</p>
+          </ListItem>
+        ))}
+      </List>
 
-            <div>
-                <h2>ODRL Policies</h2>
-                <div className="grid grid-cols-2 gap-4">
-                    {policies.map(policy => (
-                        <div>
-                            <PolicyWrapperShow policy={policy}/>
-                            {participant?.participant_type == "Provider" && <>
-                                <TableCell>
-                                    <Dialog>
-                                        <DialogTrigger asChild>
-                                            <Button variant="destructive" size="sm">Remove policy</Button>
-                                        </DialogTrigger>
-                                        <BusinessRemovePolicyDialog policy={policy} catalogId={catalogId}
-                                                                    datasetId={datasetId}/>
-                                    </Dialog>
-                                </TableCell>
-                            </>}
-                            {participant?.participant_type == "Consumer" && <>
-                                <TableCell>
-                                    <Dialog>
-                                        <DialogTrigger asChild>
-                                            <Button variant="default" size="sm">Request access</Button>
-                                        </DialogTrigger>
-                                        <BusinessRequestAccessDialog policy={policy} catalogId={catalogId}
-                                                                     datasetId={datasetId}/>
-                                    </Dialog>
-                                </TableCell>
-                            </>}
-                        </div>
-                    ))}
-                </div>
-            </div>
+            <div className="h-2"></div>
+      <div className=" flex flex-row  justify-between items-center">
+        <Heading level="h5" className="mb-0">
+          {" "}
+          ODRL Policies{" "}
+        </Heading>
+        <Drawer direction={"right"}>
+          <DrawerTrigger>
+             {participant?.participant_type == "Provider" && policy_templates &&
+            <Button variant="default" size="sm" className="mb-1 ml-3">
+              Add ODRL policy
+              <Plus className="" />
+            </Button>}
+          </DrawerTrigger>
+          <DrawerContent>
+            <DrawerHeader className="px-8">
+              <DrawerTitle>
+                <Heading level="h4" className="text-current mb-1 ">
+                  New ODRL Policy
+                </Heading>
+                <p className="font-normal text-brand-sky">
+                  {" "}
+                  for Dataset
+                  <Badge variant="info" size="sm" className="ml-2">
+                    {" "}
+                    {dataset.name}
+                  </Badge>
+                </p>
+              </DrawerTitle>
+            </DrawerHeader>
+            <PolicyWrapperNew onSubmit={onSubmit} />
+          </DrawerContent>
+        </Drawer>
+      </div>
 
-            {/* Render this section only if participant is a Provider and policy_templates are loaded */}
-            {
-                participant?.participant_type == "Provider" && policy_templates &&
-                (<>
-                    <h2>Create new ODRL policy from template</h2>
-                    <div className="grid grid-cols-2 gap-4">
-                        {policy_templates.map(policy_template => (
-                            <PolicyTemplateWrapperEdit policyTemplate={policy_template} onSubmit={onSubmit}/>))}
-                    </div>
-                </>)
-            }
+        <div className="grid grid-cols-2 gap-4">
+          {policies.map((policy) => (
+            <PolicyWrapperShow participant={participant} policy={policy} catalogId={catalogId} datasetId={datasetId}>
+            </PolicyWrapperShow> 
+          ))}
+        </div>
+        
+
+    
+      
         </div>
     );
 }

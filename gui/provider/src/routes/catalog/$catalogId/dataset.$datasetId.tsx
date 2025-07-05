@@ -128,7 +128,7 @@ function RouteComponent() {
                         <DrawerTrigger>
                             <Button variant="default" size="sm" className="mb-1 ml-3">
                                 Add ODRL policy
-                                <Plus className="mb-1"/>
+                                <Plus className=""/>
                             </Button>
                         </DrawerTrigger>
                         <DrawerContent>

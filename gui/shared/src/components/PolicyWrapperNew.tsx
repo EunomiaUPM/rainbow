@@ -1,85 +1,115 @@
-import React, {useState} from "react"
-import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "shared/src/components/ui/accordion";
-import {Button} from "shared/src/components/ui/button";
-import {Plus, Trash} from "lucide-react";
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "shared/src/components/ui/select";
-import {Input} from "shared/src/components/ui/input";
-import {leftOperands, odrlActions, operators} from "shared/src/odrl_actions";
-
+import React, { useState } from "react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "shared/src/components/ui/accordion";
+import { Button } from "shared/src/components/ui/button";
+import { Plus, Trash } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "shared/src/components/ui/select";
+import { Input } from "shared/src/components/ui/input";
+import { leftOperands, odrlActions, operators } from "shared/src/odrl_actions";
 
 type ComponentType = "permission" | "obligation" | "prohibition";
 type OperandType = "leftOperand" | "rightOperand" | "operator";
 
-export const PolicyWrapperNew = ({onSubmit}) => {
-    const [newPolicy, setNewPolicy] = useState<OdrlInfo>({
-        obligation: [],
-        permission: [],
-        prohibition: []
+export const PolicyWrapperNew = ({ onSubmit }) => {
+  const [newPolicy, setNewPolicy] = useState<OdrlInfo>({
+    obligation: [],
+    permission: [],
+    prohibition: [],
+  });
+
+  const addComponentHandler = (componentType: ComponentType) => {
+    const newComponent: OdrlPermission = {
+      action: "",
+      constraint: [],
+    };
+    const _newPolicy = { ...newPolicy };
+    _newPolicy[componentType].push(newComponent);
+    setNewPolicy(_newPolicy);
+    console.log(newPolicy);
+  };
+  const removeComponentHandler = (
+    componentType: ComponentType,
+    index: number
+  ) => {
+    const _newPolicy = { ...newPolicy };
+    _newPolicy[componentType].splice(index, 1);
+    console.log(_newPolicy);
+    setNewPolicy(_newPolicy);
+    console.log(newPolicy);
+  };
+
+  const addConstraintHandler = (
+    componentType: ComponentType,
+    componentIndex: number
+  ) => {
+    const _newPolicy = { ...newPolicy };
+    _newPolicy[componentType][componentIndex].constraint.push({
+      leftOperand: "aa",
+      operator: "eq",
+      rightOperand: "bbb",
     });
+    setNewPolicy(_newPolicy);
+    console.log(newPolicy);
+  };
 
-    const addComponentHandler = (componentType: ComponentType) => {
-        const newComponent: OdrlPermission = {
-            action: "",
-            constraint: []
-        }
-        const _newPolicy = {...newPolicy};
-        _newPolicy[componentType].push(newComponent)
-        setNewPolicy(_newPolicy)
-        console.log(newPolicy)
-    }
-    const removeComponentHandler = (componentType: ComponentType, index: number) => {
-        const _newPolicy = {...newPolicy};
-        _newPolicy[componentType].splice(index, 1)
-        console.log(_newPolicy)
-        setNewPolicy(_newPolicy)
-        console.log(newPolicy)
+  const removeConstraintHandler = (
+    componentType: ComponentType,
+    componentIndex: number,
+    constraintIndex: number
+  ) => {
+    const _newPolicy = { ...newPolicy };
+    _newPolicy[componentType][componentIndex].constraint.splice(
+      constraintIndex,
+      1
+    );
+    setNewPolicy(_newPolicy);
+    console.log(newPolicy);
+  };
 
-    }
+  const fieldValueChangeHandler = (
+    componentType: ComponentType,
+    componentIndex: number,
+    value: string
+  ) => {
+    const _newPolicy = { ...newPolicy };
+    _newPolicy[componentType][componentIndex].action = value;
+    setNewPolicy(_newPolicy);
+    console.log(newPolicy);
+  };
 
-    const addConstraintHandler = (componentType: ComponentType, componentIndex: number) => {
-        const _newPolicy = {...newPolicy}
-        _newPolicy[componentType][componentIndex].constraint.push({
-            leftOperand: "aa",
-            operator: "eq",
-            rightOperand: "bbb"
-        })
-        setNewPolicy(_newPolicy)
-        console.log(newPolicy)
+  const operandValueChangeHandler = (
+    componentType: ComponentType,
+    componentIndex: number,
+    constraintIndex: number,
+    operand: OperandType,
+    value: string
+  ) => {
+    const _newPolicy = { ...newPolicy };
+    _newPolicy[componentType][componentIndex].constraint[constraintIndex][
+      operand
+    ] = value;
+    setNewPolicy(_newPolicy);
+    console.log(newPolicy);
+  };
 
-    }
-
-
-    const removeConstraintHandler = (componentType: ComponentType, componentIndex: number, constraintIndex: number) => {
-        const _newPolicy = {...newPolicy}
-        _newPolicy[componentType][componentIndex].constraint.splice(constraintIndex, 1)
-        setNewPolicy(_newPolicy)
-        console.log(newPolicy)
-
-    }
-
-    const fieldValueChangeHandler = (componentType: ComponentType, componentIndex: number, value: string) => {
-        const _newPolicy = {...newPolicy}
-        _newPolicy[componentType][componentIndex].action = value
-        setNewPolicy(_newPolicy)
-        console.log(newPolicy)
-    }
-
-    const operandValueChangeHandler = (componentType: ComponentType, componentIndex: number, constraintIndex: number, operand: OperandType, value: string) => {
-        const _newPolicy = {...newPolicy}
-        _newPolicy[componentType][componentIndex].constraint[constraintIndex][operand] = value
-        setNewPolicy(_newPolicy)
-        console.log(newPolicy)
-    }
-
-    const submitHandler = () => {
-        onSubmit(newPolicy)
-        setNewPolicy({
-            permission: [],
-            obligation: [],
-            prohibition: []
-        })
-    }
-
+  const submitHandler = () => {
+    onSubmit(newPolicy);
+    setNewPolicy({
+      permission: [],
+      obligation: [],
+      prohibition: [],
+    });
+  };
 
     return (
         <div className="h-screen flex flex-col">
