@@ -197,7 +197,7 @@ const mockPolicyTemplate2 = {
           {
             leftOperand: "payment_status",
             operator: "eq",
-            rightOperand: "paid"
+            rightOperand: "payment_status"
           }
         ]
       }
