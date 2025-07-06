@@ -17,6 +17,7 @@ export const Route = createRootRouteWithContext<{
 
         return (
             <>
+                {isAuthenticated ? (
                 <SidebarProvider>
                     <div className="fixed flex w-full z-50">
                         {isAuthenticated && <AppSidebarBusiness/>}
@@ -31,6 +32,20 @@ export const Route = createRootRouteWithContext<{
                         </div>
                     </main>
                 </SidebarProvider>
+                ) : (    
+                    <div>
+                        <Header/>
+                        <main className="login-container">
+                            {/*trigger y children se pueden quitar del login?? */}
+                            {widthPage < 768 ? <SidebarTrigger/> : ""}
+                            {children}
+                            <div className="flex h-full w-full ">
+                                <Outlet/>
+                            </div>
+                        </main>
+                    </div>      
+                    )
+                }
                 {/* <div className="p-2 flex gap-2">
                 <Link to="/" className="[&.active]:font-bold text-foreground text-decoration-none">
                     Home for provider

@@ -144,6 +144,10 @@
   @apply w-full p-16 max-w-screen-xl;
 }
 
+.login-container {
+  @apply w-screen h-[calc(100dvh-39px)] mx-auto max-w-screen-2xl;
+}
+
 .singlePage-container {
   @apply h-fit flex flex-col gap-8 w-full;
   /* @apply lg:flex-row;  */
@@ -194,6 +198,7 @@
   --sb-size: 9px;
 }
 
+/* Corrección del fondo blanco en el input focus */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
@@ -203,8 +208,8 @@ textarea:-webkit-autofill:focus,
 select:-webkit-autofill,
 select:-webkit-autofill:hover,
 select:-webkit-autofill:focus {
-  -webkit-box-shadow: 0 0 0 1000px transparent inset;
-  -webkit-text-fill-color: #f8fafc;
+  -webkit-box-shadow: 0 0 0 1000px transparent inset; /* fondo transparente */
+  -webkit-text-fill-color: #f8fafc; /* texto blanco */
   transition: background-color 5000s ease-in-out 0s;
 }
 
