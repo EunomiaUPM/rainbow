@@ -8,9 +8,25 @@ import { Button } from "./ui/button";
 import { useRouterState } from "@tanstack/react-router";
 import { BusinessRemovePolicyDialog } from "shared/src/components/BusinessRemovePolicyDialog";
 import { Dialog, DialogTrigger } from "shared/src/components/ui/dialog";
+import { BusinessRequestAccessDialog } from "./BusinessRequestAccessDialog";
 
-export const PolicyWrapperShow = ({ policy, datasetId, catalogId,participant }: { policy: OdrlOffer, datasetId: any, catalogId: any, participant: any }) => {
+export const PolicyWrapperShow = ({
+  policy,
+  datasetId,
+  catalogId,
+  participant,
+  datasetName
+}: {
+  policy: OdrlOffer;
+  datasetId: any;
+  catalogId: any;
+  participant: any;
+  datasetName: string
+}) => {
   const routerState = useRouterState();
+  {
+    console.log(participant?.participant_type, "participant type");
+  }
   // console.log("en policy wrapper, datasetid-catalogid",datasetId, catalogId )
   return (
     <div className="">
@@ -19,34 +35,42 @@ export const PolicyWrapperShow = ({ policy, datasetId, catalogId,participant }: 
           <Heading level="h5" className="flex gap-3">
             <div>Policy with ID</div>
             <Badge variant="info" className="h-6">
-              {policy["@id"].slice(9, 27) + "[...]"}
+              {policy["@id"].slice(9, 24) + "[...]"}
             </Badge>
           </Heading>
-
-          {/* Si el componente está dentro de provider (ruta contiene datahub-catalog)
+            {/* Si el componente está dentro de provider (ruta contiene datahub-catalog)
           y no se encuentra dentro de la pagina de dataset, añade la papelera para borrar
           - el otro caso es que esté en "new offer" o similares, y no haya la opción de borrar 
-          desde ahí */}
-
-          {!routerState.location.pathname.includes("datahub-catalog") ? (
-            ""
-          ) : !routerState.location.pathname.includes("dataset") ? null : (
-            <Dialog>
-              <DialogTrigger asChild>
-                  {participant?.participant_type == "Provider" &&
-                <Button
-                  variant="icon_destructive"
-                  size="icon"
-                  className="mb-2"
-                  //   onClick={() => }
-                >
-                  <Trash className="mb-0.5" />
-                </Button>}
-              </DialogTrigger>
-         <BusinessRemovePolicyDialog policy={policy} catalogId={catalogId} datasetId={datasetId}/>
-            </Dialog>
-          )}
+          desde ahí, AÚN ESTANDO EN EL PERFIL DE PROVIDER */}
+        {!routerState.location.pathname.includes("datahub-catalog") ? (
+          ""
+        ) : !routerState.location.pathname.includes("dataset") ? null : (
+          <>
+            {participant?.participant_type === "Provider" && (
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="icon_destructive"
+                    size="icon"
+                    className="mb-2"
+                    //   onClick={() => }
+                  >
+                    {console.log(participant.participant_type, "participant")}
+                   {console.log(!routerState.location.pathname.includes("datahub-catalog"), "opartor")}
+                    <Trash className="mb-0.5" />
+                  </Button>
+                </DialogTrigger>
+                <BusinessRemovePolicyDialog
+                  policy={policy}
+                  catalogId={catalogId}
+                  datasetId={datasetId}
+                />
+              </Dialog>
+            )}
+          </>
+        )}
         </div>
+
         <ListItem>
           <ListItemKey>Policy Target</ListItemKey>
           <p>{policy["@type"]}</p>
@@ -75,6 +99,24 @@ export const PolicyWrapperShow = ({ policy, datasetId, catalogId,participant }: 
             variant="obligation"
           />
         </div>
+        <div className="h-4"></div>
+      
+
+        {participant?.participant_type === "Consumer" && (
+          <Dialog>
+            <DialogTrigger>
+              {" "}
+              <Button >Request dataset with Policy</Button>
+            </DialogTrigger>
+
+            <BusinessRequestAccessDialog
+              policy={policy}
+              catalogId={catalogId}
+              datasetId={datasetId}
+              datasetName={datasetName}
+            />
+          </Dialog>
+        )}
       </List>
     </div>
   );

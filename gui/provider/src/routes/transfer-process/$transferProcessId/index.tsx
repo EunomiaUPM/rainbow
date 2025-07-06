@@ -164,7 +164,7 @@ function RouteComponent() {
             </Badge>
           </div> */}
 
-              <DrawerFooter>
+              <DrawerFooter >
                 <DrawerClose>
                   <Button variant="ghost">Hide Messages</Button>
                 </DrawerClose>

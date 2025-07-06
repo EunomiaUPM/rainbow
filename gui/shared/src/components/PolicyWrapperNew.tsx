@@ -113,7 +113,7 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
 
     return (
         <div className="h-screen flex flex-col">
-            <div className="flex flex-col gap-4 overflow-y-scroll h-[calc(100vh-180px)]  p-8 ">
+            <div className="flex flex-col gap-3 overflow-y-scroll h-[calc(100vh-180px)]  p-8 ">
                 <Accordion type="single" collapsible className="w-full">
                     <AccordionItem
                         value="item-1"
@@ -165,7 +165,7 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
                                     <p className="mb-2"> Constraints: </p>
                                     {permission.constraint.map((constraint, j) => (
                                         <div className="flex flex-col gap-2">
-                                            <div className="constraint-create flex gap-3 justify-end items-end">
+                                            <div className="constraint-create mb-2 flex gap-3 justify-end items-end">
                                                 <Select
                                                     onValueChange={(value: string) => operandValueChangeHandler("permission", i, j, "leftOperand", value)}
                                                 >
@@ -285,7 +285,7 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
                                     <p className="mb-2"> Constraints: </p>
                                     {obligation.constraint.map((constraint, j) => (
                                         <div className="flex flex-col gap-2">
-                                            <div className="constraint-create flex gap-3 justify-end items-end">
+                                            <div className="constraint-create mb-2 flex gap-3 justify-end items-end">
                                                 <Select
                                                     onValueChange={(value: string) => operandValueChangeHandler("obligation", i, j, "leftOperand", value)}
                                                 >
@@ -404,7 +404,7 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
                                     <p className="mb-2"> Constraints: </p>
                                     {prohibition.constraint.map((constraint, j) => (
                                         <div className="flex flex-col gap-2">
-                                            <div className="constraint-create flex gap-3 justify-end items-end">
+                                            <div className="constraint-create flex gap-3 justify-end items-end mb-2">
                                                 <Select
                                                     onValueChange={(value: string) => operandValueChangeHandler("prohibition", i, j, "leftOperand", value)}
                                                 >

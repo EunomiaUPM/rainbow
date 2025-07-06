@@ -25,6 +25,10 @@ function RouteComponent() {
         datasetId
     );
 
+     const participant = {
+    participant_type:"Consumer"
+  }
+
     return (
         <div className="space-y-4 pb-4">
             <Heading level="h3" className="flex gap-2 items-center">
