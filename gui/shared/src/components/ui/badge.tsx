@@ -44,6 +44,7 @@ const badgeVariants = cva(
                 BY_CONSUMER: "bg-pause text-pause-300 [&>span]:bg-pause-400", //
                 ON_REQUEST: "bg-pause text-pause-300 [&>span]:bg-pause-400", //
                 STOP: "bg-pause text-pause-300 [&>span]:bg-pause-400", //
+                STOPPED: "bg-pause text-pause-300 [&>span]:bg-pause-400", //
                 TERMINATED: "bg-danger text-danger-300 [&>span]:bg-danger-400", //
             },
             role: {

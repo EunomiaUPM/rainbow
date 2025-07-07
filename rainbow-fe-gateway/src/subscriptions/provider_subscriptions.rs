@@ -19,8 +19,12 @@ impl RainbowProviderGatewaySubscriptions {
         Self { config, client }
     }
     pub async fn subscribe_to_microservice(&self, microservice_key_name: MicroserviceSubscriptionKey) -> anyhow::Result<()> {
+        let is_datahub = self.config.is_datahub_as_catalog();
         let microservice_url = match microservice_key_name {
-            MicroserviceSubscriptionKey::Catalog => self.config.get_catalog_host_url().unwrap(),
+            MicroserviceSubscriptionKey::Catalog => match is_datahub {
+                true => self.config.get_contract_negotiation_host_url().unwrap(),
+                false => self.config.get_catalog_host_url().unwrap(),
+            }
             MicroserviceSubscriptionKey::ContractNegotiation => {
                 self.config.get_contract_negotiation_host_url().unwrap()
             }
@@ -29,7 +33,10 @@ impl RainbowProviderGatewaySubscriptions {
         };
         let microservice_url = microservice_url.trim_end_matches("/");
         let microservice_tag = match microservice_key_name {
-            MicroserviceSubscriptionKey::Catalog => "catalog",
+            MicroserviceSubscriptionKey::Catalog => match is_datahub {
+                true => "contract-negotiation",
+                false => "catalog",
+            },
             MicroserviceSubscriptionKey::ContractNegotiation => "contract-negotiation",
             MicroserviceSubscriptionKey::TransferControlPlane => "transfers",
             _ => todo!(),
@@ -37,7 +44,7 @@ impl RainbowProviderGatewaySubscriptions {
         let subscription_base = format!("/api/v1/{}/subscriptions", microservice_tag);
         let subscription_url = format!("{}{}", microservice_url, subscription_base);
         debug!(subscription_url);
-        
+
         let notification_gateway_endpoint = "/incoming-notification";
         let notification_gateway_url = format!(
             "{}{}",

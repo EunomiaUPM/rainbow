@@ -306,8 +306,8 @@ where
         self.notify_subscribers(
             "TransferRequestMessage".to_string(),
             json!({
-                "transfer_process": transfer_process,
-                "transfer_message": message,
+                "process": transfer_process,
+                "message": message,
             }),
         )
             .await?;
@@ -403,8 +403,8 @@ where
         self.notify_subscribers(
             "TransferStartMessage".to_string(),
             json!({
-                "transfer_process": transfer_process,
-                "transfer_message": message,
+                "process": transfer_process,
+                "message": message,
             }),
         )
             .await?;
@@ -496,8 +496,8 @@ where
         self.notify_subscribers(
             "TransferSuspensionMessage".to_string(),
             json!({
-                "transfer_process": transfer_process,
-                "transfer_message": message,
+                "process": transfer_process,
+                "message": message,
             }),
         )
             .await?;
@@ -586,8 +586,8 @@ where
         self.notify_subscribers(
             "TransferCompletionMessage".to_string(),
             json!({
-                "transfer_process": transfer_process,
-                "transfer_message": message,
+                "process": transfer_process,
+                "message": message,
             }),
         )
             .await?;
@@ -679,8 +679,8 @@ where
         self.notify_subscribers(
             "TransferTerminationMessage".to_string(),
             json!({
-                "transfer_process": transfer_process,
-                "transfer_message": message,
+                "process": transfer_process,
+                "message": message,
             }),
         )
             .await?;

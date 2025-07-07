@@ -1,19 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router";
+import {createFileRoute} from "@tanstack/react-router";
 import dayjs from "dayjs";
 import {
   useGetDataplaneProcessById,
   useGetTransferMessagesByProviderPid,
   useGetTransferProcessByProviderPid,
 } from "shared/src/data/transfer-queries.ts";
-import { List, ListItem, ListItemKey, ListItemDate } from "shared/src/components/ui/list.tsx";
+import {List, ListItem, ListItemKey} from "shared/src/components/ui/list.tsx";
 import Heading from "shared/src/components/ui/heading.tsx";
-import { Badge } from "shared/src/components/ui/badge.tsx";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../../../../../shared/src/components/ui/tabs";
+import {Badge} from "shared/src/components/ui/badge.tsx";
+import {Tabs, TabsContent, TabsList, TabsTrigger,} from "../../../../../shared/src/components/ui/tabs";
 import {
   Drawer,
   DrawerBody,
@@ -24,107 +19,101 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@./../../shared/src/components/ui/drawer";
-import { Button } from "shared/src/components/ui/button";
-import { TransferProcessActions } from "shared/src/components/TransferProcessActions";
+import {Button} from "shared/src/components/ui/button";
+import {TransferProcessActions} from "shared/src/components/TransferProcessActions";
 import TransferProcessMessageComponent from "shared/src/components/TransferProcessMessageComponent";
 import TransferProcessDataPlaneComponent from "shared/src/components/TransferProcessDataPlaneComponent";
 
 export const Route = createFileRoute("/transfer-process/$transferProcessId/")({
-  component: RouteComponent,
+    component: RouteComponent,
 });
 
 function RouteComponent() {
-  // let addSpacesFormat = (text: string = "") => {
-  //   return text.replace(/(?!^)([A-Z])/g, " $1");
-  // };
+    const {transferProcessId} = Route.useParams();
+    const {data: transferProcess} = useGetTransferProcessByProviderPid(transferProcessId);
+    const {data: transferMessages} = useGetTransferMessagesByProviderPid(transferProcessId);
+    const {data: dataPlane} = useGetDataplaneProcessById(transferProcessId);
 
-  const { transferProcessId } = Route.useParams();
-  const { data: transferProcess } = useGetTransferProcessByProviderPid(transferProcessId);
-  const { data: transferMessages } = useGetTransferMessagesByProviderPid(transferProcessId);
-  const { data: dataPlane } = useGetDataplaneProcessById(transferProcessId);
-
-  const scopedListItemKeyClasses = "basis-[30%]";
-
-  return (
-    <div className="space-y-4 pb-4">
-      <Tabs defaultValue="data-control" className="w-full">
-        <TabsList>
-          <TabsTrigger value="data-control">Data Control</TabsTrigger>
-          <TabsTrigger value="data-plane">Data Plane</TabsTrigger>
-        </TabsList>
-        <TabsContent value="data-plane" className="gridColsLayout">
-          {/* <div className=" w-full break-all">
+    return (
+        <div className="space-y-4 pb-4">
+            <Tabs defaultValue="data-control" className="w-full">
+                <TabsList>
+                    <TabsTrigger value="data-control">Data Control</TabsTrigger>
+                    <TabsTrigger value="data-plane">Data Plane</TabsTrigger>
+                </TabsList>
+                <TabsContent value="data-plane" className="gridColsLayout">
+                    {/* <div className=" w-full break-all">
             <pre className="max-w-[500px] p-4 rounded-lg break-all text-[11px] bg-black/70 text-secondary-400 break-all">
               <code className="whitespace-pre-wrap break-all">
                 {JSON.stringify(dataPlane, null, 2)}
               </code>
             </pre>
           </div> */}
-          {dataPlane && (
-            <div>
-              <TransferProcessDataPlaneComponent dataPlane={dataPlane} />
-            </div>
-          )}
-        </TabsContent>
-        <TabsContent value="data-control">
-          {" "}
-          <Heading level="h5" className="mt-3">
-            Transfer process info{" "}
-          </Heading>
-          <div className="mb-4 gridColsLayout">
-            <List>
-              <ListItem>
-                <ListItemKey>Process pid</ListItemKey>
-                <Badge variant={"info"}>{transferProcess.provider_pid.slice(9, 20) + "..."}</Badge>
-              </ListItem>
-              <ListItem>
-                <ListItemKey>Consumer pid</ListItemKey>
-                <Badge variant={"info"}>{transferProcess.consumer_pid.slice(9, 20) + "..."}</Badge>
-              </ListItem>
-              <ListItem>
-                <ListItemKey>Agreement id</ListItemKey>
-                <Badge variant={"info"}>{transferProcess.agreement_id.slice(9, 20) + "..."}</Badge>
-              </ListItem>
-              <ListItem>
-                <ListItemKey>Transfer Process State</ListItemKey>
-                <Badge variant={"status"} state={transferProcess.state}>
-                  {transferProcess.state}
-                </Badge>
-              </ListItem>
-              <ListItem>
-                <ListItemKey>Created at</ListItemKey>
-                <p> {dayjs(transferProcess.created_at).format("DD/MM/YY HH:mm")}</p>
-              </ListItem>
-              <ListItem>
-                <ListItemKey>Updated at</ListItemKey>
-                <p> {dayjs(transferProcess.updated_at).format("DD/MM/YY HH:mm")}</p>
-              </ListItem>
-            </List>
-          </div>
-          {/* DRAWER */}
-          <Drawer direction={"right"}>
-            <DrawerTrigger>
-              <Button variant={"secondary"}>See Transfer Process Messages</Button>
-            </DrawerTrigger>
-            <DrawerContent>
-              <DrawerHeader>
-                <DrawerTitle>
-                  <Heading level="h5" className="text-current">
-                    Transfer Messages
-                  </Heading>
-                </DrawerTitle>
-              </DrawerHeader>
-              {/* Messages */}
-              <DrawerBody>
-                {transferMessages.map((message) => {
-                  // console.log(message);
-                  return (
-                    // <pre key={message.id}>{JSON.stringify(message, null, 2)}</pre>
-                    <TransferProcessMessageComponent key={message.id} message={message} />
-                  );
-                })}
-              </DrawerBody>
-              {/* esto por si hace falta en algn momento dividir lo que pone en el
+                    {dataPlane && (
+                        <div>
+                            <TransferProcessDataPlaneComponent dataPlane={dataPlane}/>
+                        </div>
+                    )}
+                </TabsContent>
+                <TabsContent value="data-control">
+                    {" "}
+                    <Heading level="h5" className="mt-3">
+                        Transfer process info{" "}
+                    </Heading>
+                    <div className="mb-4 gridColsLayout">
+                        <List>
+                            <ListItem>
+                                <ListItemKey>Process pid</ListItemKey>
+                                <Badge variant={"info"}>{transferProcess.provider_pid.slice(9, 20) + "..."}</Badge>
+                            </ListItem>
+                            <ListItem>
+                                <ListItemKey>Consumer pid</ListItemKey>
+                                <Badge variant={"info"}>{transferProcess.consumer_pid.slice(9, 20) + "..."}</Badge>
+                            </ListItem>
+                            <ListItem>
+                                <ListItemKey>Agreement id</ListItemKey>
+                                <Badge variant={"info"}>{transferProcess.agreement_id.slice(9, 20) + "..."}</Badge>
+                            </ListItem>
+                            <ListItem>
+                                <ListItemKey>Transfer Process State</ListItemKey>
+                                <Badge variant={"status"} state={transferProcess.state}>
+                                    {transferProcess.state}
+                                </Badge>
+                            </ListItem>
+                            <ListItem>
+                                <ListItemKey>Created at</ListItemKey>
+                                <p> {dayjs(transferProcess.created_at).format("DD/MM/YY HH:mm")}</p>
+                            </ListItem>
+                            <ListItem>
+                                <ListItemKey>Updated at</ListItemKey>
+                                <p> {dayjs(transferProcess.updated_at).format("DD/MM/YY HH:mm")}</p>
+                            </ListItem>
+                        </List>
+                    </div>
+                    {/* DRAWER */}
+                    <Drawer direction={"right"}>
+                        <DrawerTrigger>
+                            <Button variant={"secondary"}>See Transfer Process Messages</Button>
+                        </DrawerTrigger>
+                        <DrawerContent>
+                            <DrawerHeader>
+                                <DrawerTitle>
+                                    <Heading level="h5" className="text-current">
+                                        Transfer Messages
+                                    </Heading>
+                                </DrawerTitle>
+                            </DrawerHeader>
+                            {/* Messages */}
+                            <DrawerBody>
+                                {transferMessages.map((message) => {
+                                    // console.log(message);
+                                    return (
+                                        // <pre key={message.id}>{JSON.stringify(message, null, 2)}</pre>
+                                        <TransferProcessMessageComponent key={message.id} message={message}/>
+                                    );
+                                })}
+                            </DrawerBody>
+                            {/* esto por si hace falta en algn momento dividir lo que pone en el
           content, pero por ahora no hace falta!!
           <div className="flex ">
             <p className="font-bold min-w-[9.4rem] "> Transfer Content: </p>
@@ -140,19 +129,19 @@ function RouteComponent() {
             </Badge>
           </div> */}
 
-              <DrawerFooter>
-                <DrawerClose>
-                  <Button variant="ghost">Hide Messages</Button>
-                </DrawerClose>
-              </DrawerFooter>
-            </DrawerContent>
-          </Drawer>
-        </TabsContent>
-      </Tabs>
+                            <DrawerFooter>
+                                <DrawerClose>
+                                    <Button variant="ghost">Hide Messages</Button>
+                                </DrawerClose>
+                            </DrawerFooter>
+                        </DrawerContent>
+                    </Drawer>
+                </TabsContent>
+            </Tabs>
 
-      <div>
-        {/* CATALOGOS CON LAS VARIABLES, NO BORRAR!! */}
-        {/* <Table className="text-sm">
+            <div>
+                {/* CATALOGOS CON LAS VARIABLES, NO BORRAR!! */}
+                {/* <Table className="text-sm">
            <TableHeader>
                     <TableRow>
                         <TableHead>Key</TableHead>
@@ -160,11 +149,11 @@ function RouteComponent() {
                     </TableRow>
                 </TableHeader> 
           <TableBody> */}
-        {/* <TableRow>
+                {/* <TableRow>
                         <TableCell>Transfer Process Provider pid</TableCell>
                         <TableCell>{transferProcess.provider_pid.slice(0, 20) + "..."}</TableCell>
                     </TableRow> */}
-        {/* <TableRow>
+                {/* <TableRow>
                         <TableCell>Transfer Consumer Provider pid</TableCell>
                         <TableCell>{transferProcess.consumer_pid.slice(0, 20) + "..."}</TableCell>
                     </TableRow>
@@ -176,7 +165,7 @@ function RouteComponent() {
                         <TableCell>State</TableCell>
                         <TableCell>{transferProcess.state}</TableCell>
                     </TableRow> */}
-        {/* <TableRow>
+                {/* <TableRow>
               <TableCell>Created At</TableCell>
               <TableCell>
                 {dayjs(transferProcess.created_at).format("DD/MM/YYYY - HH:mm")}
@@ -188,13 +177,13 @@ function RouteComponent() {
                 {dayjs(transferProcess.updated_at).format("DD/MM/YYYY - HH:mm")}
               </TableCell>
             </TableRow> */}
-        {/* </TableBody>
+                {/* </TableBody>
         </Table> */}
-      </div>
+            </div>
 
-      <div>
-        {/* MENSAJES */}
-        {/* <Table className="text-sm">
+            <div>
+                {/* MENSAJES */}
+                {/* <Table className="text-sm">
           <TableHeader>
             <TableRow>
               <TableHead>Transfer Message Id</TableHead>
@@ -236,10 +225,10 @@ function RouteComponent() {
             ))}
           </TableBody>
         </Table> */}
-      </div>
+            </div>
 
-      {/* ACTIONS */}
-      <TransferProcessActions process={transferProcess} tiny={false} />
-    </div>
-  );
+            {/* ACTIONS */}
+            <TransferProcessActions process={transferProcess} tiny={false}/>
+        </div>
+    );
 }
