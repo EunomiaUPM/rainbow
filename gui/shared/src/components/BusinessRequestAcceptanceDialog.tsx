@@ -75,7 +75,7 @@ export const BusinessRequestAcceptanceDialog = ({
                             Associated Consumer:
                         </ListItemKey>
                         <Badge variant={"info"}>
-                            {process.associated_consumer?.slice(9, -1)}
+                            {process.associated_consumer?.slice(9, 29) + "[...]"}
                         </Badge>
                     </ListItem>
                 )}

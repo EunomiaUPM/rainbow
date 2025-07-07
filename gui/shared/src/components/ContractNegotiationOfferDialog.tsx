@@ -48,8 +48,8 @@ export const ContractNegotiationOfferDialog = ({process}: {
     return (
         <DialogContent className="p-0">
             <Form {...form}>
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 flex flex-col h-[calc(100vh-40px)]">
-                    <DialogHeader className="px-6 pt-6">
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 flex flex-col h-fit max-h-[90dvh]">
+                    <DialogHeader className="px-6 pt-6 w-[90vw]">
                         <DialogTitle>Contract Negotiation Offer</DialogTitle>
                         <DialogDescription>
                             <p>Make changes on the Contract Negotiation Offer.</p>

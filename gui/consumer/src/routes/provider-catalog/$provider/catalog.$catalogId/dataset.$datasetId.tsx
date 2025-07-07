@@ -25,6 +25,10 @@ function RouteComponent() {
         datasetId
     );
 
+     const participant = {
+    participant_type:"Consumer"
+  }
+
     return (
         <div className="space-y-4 pb-4">
             <Heading level="h3" className="flex gap-2 items-center">
@@ -98,7 +102,7 @@ function RouteComponent() {
 
             <Heading level="h5"> ODRL Policies </Heading>
             <div className="gridColsLayout">
-                {policies.map((policy) => (
+                {policies && policies.map((policy) => (
                     <List className=" border border-white/30 bg-white/10 px-4 py-2 rounded-md justify-start">
                         <div className="flex">
                             <Heading level="h5" className="flex gap-3">

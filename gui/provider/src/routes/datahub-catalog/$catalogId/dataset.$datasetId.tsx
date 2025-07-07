@@ -17,6 +17,7 @@ import {
   GlobalInfoContext,
   GlobalInfoContextType,
 } from "shared/src/context/GlobalInfoContext.tsx";
+
 import { PolicyWrapperNew } from "shared/src/components/PolicyWrapperNew.tsx";
 import { PolicyWrapperShow } from "shared/src/components/PolicyWrapperShow.tsx";
 import Heading from "shared/src/components/ui/heading.tsx";
@@ -41,12 +42,17 @@ type Inputs = {
 function RouteComponent() {
   const { datasetId } = Route.useParams();
   const { data: dataset } = useGetDatahubDataset(datasetId);
+
   const { data: policies } = useGetPoliciesByDatasetId(datasetId);
   const { mutateAsync: createPolicyAsync, isPending } =
     usePostNewPolicyInDataset();
   const { api_gateway } = useContext<GlobalInfoContextType | null>(
     GlobalInfoContext
   )!;
+
+  const participant = {
+    participant_type:"Provider"
+  }
 
   const onSubmit: SubmitHandler<Inputs> = (data) => {
     // @ts-ignore
@@ -78,7 +84,7 @@ function RouteComponent() {
         ))}
       </List>
       <div className="h-2"></div>
-      <div className=" flex flex-row  justify-between items-center">
+      <div className=" flex flex-row  justify-start gap-3 items-center">
         <Heading level="h5" className="mb-0">
           {" "}
           ODRL Policies{" "}
@@ -112,8 +118,8 @@ function RouteComponent() {
       </div>
 
         <div className="grid grid-cols-2 gap-4">
-          {policies.map((policy) => (
-            <PolicyWrapperShow policy={policy} />
+          {policies && policies.map((policy) => (
+            <PolicyWrapperShow policy={policy} participant={participant} />
           ))}
         </div>
 

@@ -39,45 +39,44 @@ function RouteComponent() {
 
   const scopedListItemKeyClasses = "basis-[28%]";
 
-  agreements.map((agreement) => {
-    console.log(agreement);
-  });
-
   return (
     <div className="w-full">
       {/* Page Header */}
       <Heading level="h3" className="flex items-center gap-3">
         Participant with id
-        <Badge variant={"info"} size={"lg"}>
+        <Badge
+          variant={"info"}
+          size={"lg"}
+          className="max-w-[50%] truncate text-overflow-ellipsis"
+        >
           {participant.participant_id.slice(9, -1)}
         </Badge>
       </Heading>
       {/* Page content */}
-      <div className="flexColsLayout bg-blue-500/0">
+      <div className="gridColsLayout bg-blue-500/0">
         {/* Div Participant Info */}
         <div className="flex flex-col bg-green-800/0">
           <Heading
             level="h6"
             className="text-foreground h-[36px] place-content-center"
           >
-            {" "}
-            Participant info:{" "}
+            Participant info:
           </Heading>
-          <div className="w-full bg-green-500/0">
+          <div className="max-w-screen-md bg-green-500/0">
             <List className={"min-w-fit"}>
               <ListItem>
                 <ListItemKey className={scopedListItemKeyClasses}>
                   Participant ID
                 </ListItemKey>
-                <Badge variant={"info"} className="grow-1">
-                  {participant.participant_id.slice(9, -1) + "[...]"}
+                <Badge variant={"info"}>
+                  {participant.participant_id.slice(9, 29) + "[...]"}
                 </Badge>
               </ListItem>
               <ListItem>
                 <ListItemKey className={scopedListItemKeyClasses}>
                   Identity Token
                 </ListItemKey>
-                {participant.token}
+                <Badge variant={"info"}>{participant.token}</Badge>
               </ListItem>
               <ListItem>
                 <ListItemKey className={scopedListItemKeyClasses}>
@@ -96,7 +95,6 @@ function RouteComponent() {
             </List>
           </div>
         </div>
-        <Separator orientation="vertical" />
 
         {/* Div Participant Tabs */}
         {agreements && agreements.length > 0 && (
@@ -117,9 +115,13 @@ function RouteComponent() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Agreement Id</TableHead>
-                      {/* <TableHead>Related Message</TableHead> */}
-                      {/* <TableHead>Consumer Participant Id</TableHead> */}
-                      {/* <TableHead>Provider Participant Id</TableHead> */}
+                      <TableHead className="hidden">Related Message</TableHead>
+                      <TableHead className="hidden">
+                        Consumer Participant Id
+                      </TableHead>
+                      <TableHead className="hidden">
+                        Provider Participant Id
+                      </TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Created at</TableHead>
                       <TableHead>Link</TableHead>
@@ -133,29 +135,42 @@ function RouteComponent() {
                             {agreement.agreement_id.slice(9, 20) + "..."}{" "}
                           </Badge>
                         </TableCell>
-                        {/* 
-                      <TableCell>
-                        <Badge
-                          variant={"status"}
-                          state={agreement.active ? "STARTED" : "PAUSE"}
-                        >
-                          {agreement.active ? "ACTIVE" : "INACTIVE"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {dayjs(agreement.created_at).format("DD/MM/YY HH:mm")}
-                      </TableCell>
-                      <TableCell>
-                        <Link
-                          to="/agreements/$agreementId"
-                          params={{ agreementId: agreement.agreement_id }}
-                        >
-                          <Button variant="link">
-                            See agreement
-                            <ArrowRight />
-                          </Button>
-                        </Link>
-                      </TableCell> */}
+                        {/* <TableCell>
+                  {agreement.cn_message_id?.slice(0, 20) + "..."}
+                </TableCell className="hidden"> */}
+                        {/* <TableCell>
+                  <Badge variant={"info"}>
+                    {agreement.consumer_participant_id?.slice(9, 20) + "..."}
+                  </Badge>
+                </TableCell> */}
+                        {/* <TableCell className="hidden">
+                          <Badge variant={"info"}>
+                            {agreement.provider_participant_id?.slice(9, 20) +
+                              "..."}
+                          </Badge>
+                        </TableCell> */}
+                        <TableCell>
+                          <Badge
+                            variant={"status"}
+                            state={agreement.active ? "STARTED" : "PAUSE"}
+                          >
+                            {agreement.active ? "ACTIVE" : "INACTIVE"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {dayjs(agreement.created_at).format("DD/MM/YY HH:mm")}
+                        </TableCell>
+                        <TableCell>
+                          <Link
+                            to="/agreements/$agreementId"
+                            params={{ agreementId: agreement.agreement_id }}
+                          >
+                            <Button variant="link">
+                              See agreement
+                              <ArrowRight />
+                            </Button>
+                          </Link>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

@@ -65,6 +65,20 @@ const DialogHeader = ({
 );
 DialogHeader.displayName = "DialogHeader";
 
+const DialogBody = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    className={cn(
+      "py-4 overflow-y-scroll px-6",
+      className
+    )}
+    {...props}
+  />
+);
+DialogBody.displayName = "DialogBody";
+
 const DialogFooter = ({
   className,
   ...props
@@ -108,6 +122,7 @@ DialogDescription.displayName = DialogPrimitive.Description.displayName;
 
 export {
   Dialog,
+  DialogBody,
   DialogPortal,
   DialogOverlay,
   DialogTrigger,

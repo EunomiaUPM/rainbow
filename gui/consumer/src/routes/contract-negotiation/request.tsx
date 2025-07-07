@@ -462,7 +462,7 @@ export const RouteComponent = () => {
                                                     <CommandList>
                                                         <CommandEmpty>No policies found.</CommandEmpty>
                                                         <CommandGroup>
-                                                            {policies.map((policy) => (
+                                                            {policies && policies.map((policy) => (
                                                                 <CommandItem
                                                                     key={policy["@id"]}
                                                                     value={policy.target || policy["@id"]}

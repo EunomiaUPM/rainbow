@@ -40,7 +40,7 @@ export const TransferProcessTerminationDialog = ({process}: { process: TransferP
         }
     }
 
-    const scopedListItemKeyClasses = "basis-[32%]";
+    const scopedListItemKeyClasses = "basis-[33%]";
 
     return (
         <DialogContent className="w-[70dvw] sm:max-w-fit">

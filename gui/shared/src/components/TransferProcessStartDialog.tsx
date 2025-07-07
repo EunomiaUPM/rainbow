@@ -39,7 +39,7 @@ export const TransferProcessStartDialog = ({process}: { process: TransferProcess
         }
     }
 
-    const scopedListItemKeyClasses = "";
+    const scopedListItemKeyClasses = "basis-[33%]";
 
 
     return (

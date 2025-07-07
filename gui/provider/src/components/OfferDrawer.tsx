@@ -232,7 +232,7 @@ export const OfferDrawer = ({
               Select the policy from the dataset that best matches your needs.
             </p>
             <div className="flex flex-wrap gap-4 mt-3 mb-24">
-              {policies.map((policy) => (
+              {policies && policies.map((policy) => (
                 <div
                   className={
                     selectedPolicy === policy

@@ -66,14 +66,22 @@ function RouteComponent() {
     <div>
       {/* NO WALLET */}
       {!hasProvider && (
-        <div className="mx-auto w-fit bg-blue-500/0">
-          <div>
-            Your wallet is not yet connected as a provider. Please complete the
-            onboarding process to get started.
-            <Button onClick={() => onboardHandler()}>Onboard wallet</Button>
-          </div>
+        <div className="p-8 py-6 mx-auto w-fit max-w-[70ch] bg-brand-sky/5 border border-stroke rounded-md">
+          <Heading level="h3">Missing wallet...</Heading>
+          <Heading level="h5">
+            Your wallet is not yet connected as Provider. <br /> Please complete
+            the onboarding process to get started.
+          </Heading>
+          <Button
+            size={"lg"}
+            className="w-full mt-4"
+            onClick={() => onboardHandler()}
+          >
+            Onboard wallet
+          </Button>
         </div>
       )}
+      {/* TO DO - loading screen */}
       {/* /NO WALLET */}
 
       {/* WALLET OK */}

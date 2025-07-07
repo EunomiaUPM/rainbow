@@ -92,7 +92,7 @@ function DrawerBody({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="drawer-body"
-      className={cn("overflow-y-scroll h-full  flex flex-col gap-4 px-6 py-4 bg-brand-sky/[2%]", className)}
+      className={cn("overflow-y-scroll h-full py-4 flex flex-col gap-4 px-6 py-4 bg-brand-sky/[2%]", className)}
       {...props}
     />
   );

@@ -15,6 +15,7 @@ const badgeVariants = cva(
       variant: {
         default: "bg-brand-snow/15 text-brand-snow border-transparent",
         info: "font-mono uppercase bg-background-800 text-secondary-400 border-transparent",
+         infoLighter: "font-mono uppercase bg-white/10 text-secondary-400 border-transparent",
         role: "text-white uppercase border-transparent",
         status: "bg-opacity-30 border-transparent text-foreground-300", // base status style
         // constraint: "bg-white/10 border-0 border-white/15 text-white/60 font-medium break-all"
@@ -40,6 +41,7 @@ const badgeVariants = cva(
         COMPLETED: "bg-success text-success-300 [&>span]:bg-success-400", // Transfers
         SUSPENDED: "bg-pause text-pause-300 [&>span]:bg-pause-400", //
         PAUSE: "bg-pause text-pause-300 [&>span]:bg-pause-400", //
+        STOP: "bg-pause text-pause-300 [&>span]:bg-pause-400", //
         TERMINATED: "bg-danger text-danger-300 [&>span]:bg-danger-400", //
       },
       role: {
@@ -50,7 +52,7 @@ const badgeVariants = cva(
       },
       size: {
         default: "text-sm px-2 py-0.5",
-        lg: "text-base font-bold bg-white/10 px-2 py-0",
+        lg: "text-lg font-bold px-2 py-0",
         // cambie paddings, sino eran muy grandes -Clara
         // y le meti bg white sino no se veia nada,
         // estas badges estan en titulos, no sobre el fondo
