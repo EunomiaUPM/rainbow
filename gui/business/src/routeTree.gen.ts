@@ -10,398 +10,388 @@
 
 // Import Routes
 
-import { Route as rootRoute } from './routes/__root'
-import { Route as LoginRouteImport } from './routes/login/route'
-import { Route as DatahubCatalogRouteImport } from './routes/datahub-catalog/route'
-import { Route as DashboardRouteImport } from './routes/dashboard/route'
-import { Route as CustomerRequestsRouteImport } from './routes/customer-requests/route'
-import { Route as BusinessRequestsRouteImport } from './routes/business-requests/route'
-import { Route as IndexImport } from './routes/index'
-import { Route as LoginIndexImport } from './routes/login/index'
-import { Route as DatahubCatalogIndexImport } from './routes/datahub-catalog/index'
-import { Route as DashboardIndexImport } from './routes/dashboard/index'
-import { Route as CustomerRequestsIndexImport } from './routes/customer-requests/index'
-import { Route as BusinessRequestsIndexImport } from './routes/business-requests/index'
-import { Route as DatahubCatalogCatalogIdRouteImport } from './routes/datahub-catalog/$catalogId/route'
-import { Route as DatahubCatalogCatalogIdIndexImport } from './routes/datahub-catalog/$catalogId/index'
-import { Route as DatahubCatalogCatalogIdDatasetDatasetIdImport } from './routes/datahub-catalog/$catalogId/dataset.$datasetId'
+import { Route as rootRoute } from "./routes/__root";
+import { Route as LoginRouteImport } from "./routes/login/route";
+import { Route as DatahubCatalogRouteImport } from "./routes/datahub-catalog/route";
+import { Route as DashboardRouteImport } from "./routes/dashboard/route";
+import { Route as CustomerRequestsRouteImport } from "./routes/customer-requests/route";
+import { Route as BusinessRequestsRouteImport } from "./routes/business-requests/route";
+import { Route as IndexImport } from "./routes/index";
+import { Route as LoginIndexImport } from "./routes/login/index";
+import { Route as DatahubCatalogIndexImport } from "./routes/datahub-catalog/index";
+import { Route as DashboardIndexImport } from "./routes/dashboard/index";
+import { Route as CustomerRequestsIndexImport } from "./routes/customer-requests/index";
+import { Route as BusinessRequestsIndexImport } from "./routes/business-requests/index";
+import { Route as DatahubCatalogCatalogIdRouteImport } from "./routes/datahub-catalog/$catalogId/route";
+import { Route as DatahubCatalogCatalogIdIndexImport } from "./routes/datahub-catalog/$catalogId/index";
+import { Route as DatahubCatalogCatalogIdDatasetDatasetIdImport } from "./routes/datahub-catalog/$catalogId/dataset.$datasetId";
 
 // Create/Update Routes
 
 const LoginRouteRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
+  id: "/login",
+  path: "/login",
   getParentRoute: () => rootRoute,
-} as any)
+} as any);
 
 const DatahubCatalogRouteRoute = DatahubCatalogRouteImport.update({
-  id: '/datahub-catalog',
-  path: '/datahub-catalog',
+  id: "/datahub-catalog",
+  path: "/datahub-catalog",
   getParentRoute: () => rootRoute,
-} as any)
+} as any);
 
 const DashboardRouteRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
+  id: "/dashboard",
+  path: "/dashboard",
   getParentRoute: () => rootRoute,
-} as any)
+} as any);
 
 const CustomerRequestsRouteRoute = CustomerRequestsRouteImport.update({
-  id: '/customer-requests',
-  path: '/customer-requests',
+  id: "/customer-requests",
+  path: "/customer-requests",
   getParentRoute: () => rootRoute,
-} as any)
+} as any);
 
 const BusinessRequestsRouteRoute = BusinessRequestsRouteImport.update({
-  id: '/business-requests',
-  path: '/business-requests',
+  id: "/business-requests",
+  path: "/business-requests",
   getParentRoute: () => rootRoute,
-} as any)
+} as any);
 
 const IndexRoute = IndexImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => rootRoute,
-} as any)
+} as any);
 
 const LoginIndexRoute = LoginIndexImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => LoginRouteRoute,
-} as any)
+} as any);
 
 const DatahubCatalogIndexRoute = DatahubCatalogIndexImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => DatahubCatalogRouteRoute,
-} as any)
+} as any);
 
 const DashboardIndexRoute = DashboardIndexImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => DashboardRouteRoute,
-} as any)
+} as any);
 
 const CustomerRequestsIndexRoute = CustomerRequestsIndexImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => CustomerRequestsRouteRoute,
-} as any)
+} as any);
 
 const BusinessRequestsIndexRoute = BusinessRequestsIndexImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => BusinessRequestsRouteRoute,
-} as any)
+} as any);
 
-const DatahubCatalogCatalogIdRouteRoute =
-  DatahubCatalogCatalogIdRouteImport.update({
-    id: '/$catalogId',
-    path: '/$catalogId',
-    getParentRoute: () => DatahubCatalogRouteRoute,
-  } as any)
+const DatahubCatalogCatalogIdRouteRoute = DatahubCatalogCatalogIdRouteImport.update({
+  id: "/$catalogId",
+  path: "/$catalogId",
+  getParentRoute: () => DatahubCatalogRouteRoute,
+} as any);
 
-const DatahubCatalogCatalogIdIndexRoute =
-  DatahubCatalogCatalogIdIndexImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => DatahubCatalogCatalogIdRouteRoute,
-  } as any)
+const DatahubCatalogCatalogIdIndexRoute = DatahubCatalogCatalogIdIndexImport.update({
+  id: "/",
+  path: "/",
+  getParentRoute: () => DatahubCatalogCatalogIdRouteRoute,
+} as any);
 
 const DatahubCatalogCatalogIdDatasetDatasetIdRoute =
   DatahubCatalogCatalogIdDatasetDatasetIdImport.update({
-    id: '/dataset/$datasetId',
-    path: '/dataset/$datasetId',
+    id: "/dataset/$datasetId",
+    path: "/dataset/$datasetId",
     getParentRoute: () => DatahubCatalogCatalogIdRouteRoute,
-  } as any)
+  } as any);
 
 // Populate the FileRoutesByPath interface
 
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/business-requests': {
-      id: '/business-requests'
-      path: '/business-requests'
-      fullPath: '/business-requests'
-      preLoaderRoute: typeof BusinessRequestsRouteImport
-      parentRoute: typeof rootRoute
-    }
-    '/customer-requests': {
-      id: '/customer-requests'
-      path: '/customer-requests'
-      fullPath: '/customer-requests'
-      preLoaderRoute: typeof CustomerRequestsRouteImport
-      parentRoute: typeof rootRoute
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRoute
-    }
-    '/datahub-catalog': {
-      id: '/datahub-catalog'
-      path: '/datahub-catalog'
-      fullPath: '/datahub-catalog'
-      preLoaderRoute: typeof DatahubCatalogRouteImport
-      parentRoute: typeof rootRoute
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRoute
-    }
-    '/datahub-catalog/$catalogId': {
-      id: '/datahub-catalog/$catalogId'
-      path: '/$catalogId'
-      fullPath: '/datahub-catalog/$catalogId'
-      preLoaderRoute: typeof DatahubCatalogCatalogIdRouteImport
-      parentRoute: typeof DatahubCatalogRouteImport
-    }
-    '/business-requests/': {
-      id: '/business-requests/'
-      path: '/'
-      fullPath: '/business-requests/'
-      preLoaderRoute: typeof BusinessRequestsIndexImport
-      parentRoute: typeof BusinessRequestsRouteImport
-    }
-    '/customer-requests/': {
-      id: '/customer-requests/'
-      path: '/'
-      fullPath: '/customer-requests/'
-      preLoaderRoute: typeof CustomerRequestsIndexImport
-      parentRoute: typeof CustomerRequestsRouteImport
-    }
-    '/dashboard/': {
-      id: '/dashboard/'
-      path: '/'
-      fullPath: '/dashboard/'
-      preLoaderRoute: typeof DashboardIndexImport
-      parentRoute: typeof DashboardRouteImport
-    }
-    '/datahub-catalog/': {
-      id: '/datahub-catalog/'
-      path: '/'
-      fullPath: '/datahub-catalog/'
-      preLoaderRoute: typeof DatahubCatalogIndexImport
-      parentRoute: typeof DatahubCatalogRouteImport
-    }
-    '/login/': {
-      id: '/login/'
-      path: '/'
-      fullPath: '/login/'
-      preLoaderRoute: typeof LoginIndexImport
-      parentRoute: typeof LoginRouteImport
-    }
-    '/datahub-catalog/$catalogId/': {
-      id: '/datahub-catalog/$catalogId/'
-      path: '/'
-      fullPath: '/datahub-catalog/$catalogId/'
-      preLoaderRoute: typeof DatahubCatalogCatalogIdIndexImport
-      parentRoute: typeof DatahubCatalogCatalogIdRouteImport
-    }
-    '/datahub-catalog/$catalogId/dataset/$datasetId': {
-      id: '/datahub-catalog/$catalogId/dataset/$datasetId'
-      path: '/dataset/$datasetId'
-      fullPath: '/datahub-catalog/$catalogId/dataset/$datasetId'
-      preLoaderRoute: typeof DatahubCatalogCatalogIdDatasetDatasetIdImport
-      parentRoute: typeof DatahubCatalogCatalogIdRouteImport
-    }
+    "/": {
+      id: "/";
+      path: "/";
+      fullPath: "/";
+      preLoaderRoute: typeof IndexImport;
+      parentRoute: typeof rootRoute;
+    };
+    "/business-requests": {
+      id: "/business-requests";
+      path: "/business-requests";
+      fullPath: "/business-requests";
+      preLoaderRoute: typeof BusinessRequestsRouteImport;
+      parentRoute: typeof rootRoute;
+    };
+    "/customer-requests": {
+      id: "/customer-requests";
+      path: "/customer-requests";
+      fullPath: "/customer-requests";
+      preLoaderRoute: typeof CustomerRequestsRouteImport;
+      parentRoute: typeof rootRoute;
+    };
+    "/dashboard": {
+      id: "/dashboard";
+      path: "/dashboard";
+      fullPath: "/dashboard";
+      preLoaderRoute: typeof DashboardRouteImport;
+      parentRoute: typeof rootRoute;
+    };
+    "/datahub-catalog": {
+      id: "/datahub-catalog";
+      path: "/datahub-catalog";
+      fullPath: "/datahub-catalog";
+      preLoaderRoute: typeof DatahubCatalogRouteImport;
+      parentRoute: typeof rootRoute;
+    };
+    "/login": {
+      id: "/login";
+      path: "/login";
+      fullPath: "/login";
+      preLoaderRoute: typeof LoginRouteImport;
+      parentRoute: typeof rootRoute;
+    };
+    "/datahub-catalog/$catalogId": {
+      id: "/datahub-catalog/$catalogId";
+      path: "/$catalogId";
+      fullPath: "/datahub-catalog/$catalogId";
+      preLoaderRoute: typeof DatahubCatalogCatalogIdRouteImport;
+      parentRoute: typeof DatahubCatalogRouteImport;
+    };
+    "/business-requests/": {
+      id: "/business-requests/";
+      path: "/";
+      fullPath: "/business-requests/";
+      preLoaderRoute: typeof BusinessRequestsIndexImport;
+      parentRoute: typeof BusinessRequestsRouteImport;
+    };
+    "/customer-requests/": {
+      id: "/customer-requests/";
+      path: "/";
+      fullPath: "/customer-requests/";
+      preLoaderRoute: typeof CustomerRequestsIndexImport;
+      parentRoute: typeof CustomerRequestsRouteImport;
+    };
+    "/dashboard/": {
+      id: "/dashboard/";
+      path: "/";
+      fullPath: "/dashboard/";
+      preLoaderRoute: typeof DashboardIndexImport;
+      parentRoute: typeof DashboardRouteImport;
+    };
+    "/datahub-catalog/": {
+      id: "/datahub-catalog/";
+      path: "/";
+      fullPath: "/datahub-catalog/";
+      preLoaderRoute: typeof DatahubCatalogIndexImport;
+      parentRoute: typeof DatahubCatalogRouteImport;
+    };
+    "/login/": {
+      id: "/login/";
+      path: "/";
+      fullPath: "/login/";
+      preLoaderRoute: typeof LoginIndexImport;
+      parentRoute: typeof LoginRouteImport;
+    };
+    "/datahub-catalog/$catalogId/": {
+      id: "/datahub-catalog/$catalogId/";
+      path: "/";
+      fullPath: "/datahub-catalog/$catalogId/";
+      preLoaderRoute: typeof DatahubCatalogCatalogIdIndexImport;
+      parentRoute: typeof DatahubCatalogCatalogIdRouteImport;
+    };
+    "/datahub-catalog/$catalogId/dataset/$datasetId": {
+      id: "/datahub-catalog/$catalogId/dataset/$datasetId";
+      path: "/dataset/$datasetId";
+      fullPath: "/datahub-catalog/$catalogId/dataset/$datasetId";
+      preLoaderRoute: typeof DatahubCatalogCatalogIdDatasetDatasetIdImport;
+      parentRoute: typeof DatahubCatalogCatalogIdRouteImport;
+    };
   }
 }
 
 // Create and export the route tree
 
 interface BusinessRequestsRouteRouteChildren {
-  BusinessRequestsIndexRoute: typeof BusinessRequestsIndexRoute
+  BusinessRequestsIndexRoute: typeof BusinessRequestsIndexRoute;
 }
 
 const BusinessRequestsRouteRouteChildren: BusinessRequestsRouteRouteChildren = {
   BusinessRequestsIndexRoute: BusinessRequestsIndexRoute,
-}
+};
 
-const BusinessRequestsRouteRouteWithChildren =
-  BusinessRequestsRouteRoute._addFileChildren(
-    BusinessRequestsRouteRouteChildren,
-  )
+const BusinessRequestsRouteRouteWithChildren = BusinessRequestsRouteRoute._addFileChildren(
+  BusinessRequestsRouteRouteChildren,
+);
 
 interface CustomerRequestsRouteRouteChildren {
-  CustomerRequestsIndexRoute: typeof CustomerRequestsIndexRoute
+  CustomerRequestsIndexRoute: typeof CustomerRequestsIndexRoute;
 }
 
 const CustomerRequestsRouteRouteChildren: CustomerRequestsRouteRouteChildren = {
   CustomerRequestsIndexRoute: CustomerRequestsIndexRoute,
-}
+};
 
-const CustomerRequestsRouteRouteWithChildren =
-  CustomerRequestsRouteRoute._addFileChildren(
-    CustomerRequestsRouteRouteChildren,
-  )
+const CustomerRequestsRouteRouteWithChildren = CustomerRequestsRouteRoute._addFileChildren(
+  CustomerRequestsRouteRouteChildren,
+);
 
 interface DashboardRouteRouteChildren {
-  DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardIndexRoute: typeof DashboardIndexRoute;
 }
 
 const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardIndexRoute: DashboardIndexRoute,
-}
+};
 
 const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(
   DashboardRouteRouteChildren,
-)
+);
 
 interface DatahubCatalogCatalogIdRouteRouteChildren {
-  DatahubCatalogCatalogIdIndexRoute: typeof DatahubCatalogCatalogIdIndexRoute
-  DatahubCatalogCatalogIdDatasetDatasetIdRoute: typeof DatahubCatalogCatalogIdDatasetDatasetIdRoute
+  DatahubCatalogCatalogIdIndexRoute: typeof DatahubCatalogCatalogIdIndexRoute;
+  DatahubCatalogCatalogIdDatasetDatasetIdRoute: typeof DatahubCatalogCatalogIdDatasetDatasetIdRoute;
 }
 
-const DatahubCatalogCatalogIdRouteRouteChildren: DatahubCatalogCatalogIdRouteRouteChildren =
-  {
-    DatahubCatalogCatalogIdIndexRoute: DatahubCatalogCatalogIdIndexRoute,
-    DatahubCatalogCatalogIdDatasetDatasetIdRoute:
-      DatahubCatalogCatalogIdDatasetDatasetIdRoute,
-  }
+const DatahubCatalogCatalogIdRouteRouteChildren: DatahubCatalogCatalogIdRouteRouteChildren = {
+  DatahubCatalogCatalogIdIndexRoute: DatahubCatalogCatalogIdIndexRoute,
+  DatahubCatalogCatalogIdDatasetDatasetIdRoute: DatahubCatalogCatalogIdDatasetDatasetIdRoute,
+};
 
 const DatahubCatalogCatalogIdRouteRouteWithChildren =
-  DatahubCatalogCatalogIdRouteRoute._addFileChildren(
-    DatahubCatalogCatalogIdRouteRouteChildren,
-  )
+  DatahubCatalogCatalogIdRouteRoute._addFileChildren(DatahubCatalogCatalogIdRouteRouteChildren);
 
 interface DatahubCatalogRouteRouteChildren {
-  DatahubCatalogCatalogIdRouteRoute: typeof DatahubCatalogCatalogIdRouteRouteWithChildren
-  DatahubCatalogIndexRoute: typeof DatahubCatalogIndexRoute
+  DatahubCatalogCatalogIdRouteRoute: typeof DatahubCatalogCatalogIdRouteRouteWithChildren;
+  DatahubCatalogIndexRoute: typeof DatahubCatalogIndexRoute;
 }
 
 const DatahubCatalogRouteRouteChildren: DatahubCatalogRouteRouteChildren = {
-  DatahubCatalogCatalogIdRouteRoute:
-    DatahubCatalogCatalogIdRouteRouteWithChildren,
+  DatahubCatalogCatalogIdRouteRoute: DatahubCatalogCatalogIdRouteRouteWithChildren,
   DatahubCatalogIndexRoute: DatahubCatalogIndexRoute,
-}
+};
 
-const DatahubCatalogRouteRouteWithChildren =
-  DatahubCatalogRouteRoute._addFileChildren(DatahubCatalogRouteRouteChildren)
+const DatahubCatalogRouteRouteWithChildren = DatahubCatalogRouteRoute._addFileChildren(
+  DatahubCatalogRouteRouteChildren,
+);
 
 interface LoginRouteRouteChildren {
-  LoginIndexRoute: typeof LoginIndexRoute
+  LoginIndexRoute: typeof LoginIndexRoute;
 }
 
 const LoginRouteRouteChildren: LoginRouteRouteChildren = {
   LoginIndexRoute: LoginIndexRoute,
-}
+};
 
-const LoginRouteRouteWithChildren = LoginRouteRoute._addFileChildren(
-  LoginRouteRouteChildren,
-)
+const LoginRouteRouteWithChildren = LoginRouteRoute._addFileChildren(LoginRouteRouteChildren);
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/business-requests': typeof BusinessRequestsRouteRouteWithChildren
-  '/customer-requests': typeof CustomerRequestsRouteRouteWithChildren
-  '/dashboard': typeof DashboardRouteRouteWithChildren
-  '/datahub-catalog': typeof DatahubCatalogRouteRouteWithChildren
-  '/login': typeof LoginRouteRouteWithChildren
-  '/datahub-catalog/$catalogId': typeof DatahubCatalogCatalogIdRouteRouteWithChildren
-  '/business-requests/': typeof BusinessRequestsIndexRoute
-  '/customer-requests/': typeof CustomerRequestsIndexRoute
-  '/dashboard/': typeof DashboardIndexRoute
-  '/datahub-catalog/': typeof DatahubCatalogIndexRoute
-  '/login/': typeof LoginIndexRoute
-  '/datahub-catalog/$catalogId/': typeof DatahubCatalogCatalogIdIndexRoute
-  '/datahub-catalog/$catalogId/dataset/$datasetId': typeof DatahubCatalogCatalogIdDatasetDatasetIdRoute
+  "/": typeof IndexRoute;
+  "/business-requests": typeof BusinessRequestsRouteRouteWithChildren;
+  "/customer-requests": typeof CustomerRequestsRouteRouteWithChildren;
+  "/dashboard": typeof DashboardRouteRouteWithChildren;
+  "/datahub-catalog": typeof DatahubCatalogRouteRouteWithChildren;
+  "/login": typeof LoginRouteRouteWithChildren;
+  "/datahub-catalog/$catalogId": typeof DatahubCatalogCatalogIdRouteRouteWithChildren;
+  "/business-requests/": typeof BusinessRequestsIndexRoute;
+  "/customer-requests/": typeof CustomerRequestsIndexRoute;
+  "/dashboard/": typeof DashboardIndexRoute;
+  "/datahub-catalog/": typeof DatahubCatalogIndexRoute;
+  "/login/": typeof LoginIndexRoute;
+  "/datahub-catalog/$catalogId/": typeof DatahubCatalogCatalogIdIndexRoute;
+  "/datahub-catalog/$catalogId/dataset/$datasetId": typeof DatahubCatalogCatalogIdDatasetDatasetIdRoute;
 }
 
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/business-requests': typeof BusinessRequestsIndexRoute
-  '/customer-requests': typeof CustomerRequestsIndexRoute
-  '/dashboard': typeof DashboardIndexRoute
-  '/datahub-catalog': typeof DatahubCatalogIndexRoute
-  '/login': typeof LoginIndexRoute
-  '/datahub-catalog/$catalogId': typeof DatahubCatalogCatalogIdIndexRoute
-  '/datahub-catalog/$catalogId/dataset/$datasetId': typeof DatahubCatalogCatalogIdDatasetDatasetIdRoute
+  "/": typeof IndexRoute;
+  "/business-requests": typeof BusinessRequestsIndexRoute;
+  "/customer-requests": typeof CustomerRequestsIndexRoute;
+  "/dashboard": typeof DashboardIndexRoute;
+  "/datahub-catalog": typeof DatahubCatalogIndexRoute;
+  "/login": typeof LoginIndexRoute;
+  "/datahub-catalog/$catalogId": typeof DatahubCatalogCatalogIdIndexRoute;
+  "/datahub-catalog/$catalogId/dataset/$datasetId": typeof DatahubCatalogCatalogIdDatasetDatasetIdRoute;
 }
 
 export interface FileRoutesById {
-  __root__: typeof rootRoute
-  '/': typeof IndexRoute
-  '/business-requests': typeof BusinessRequestsRouteRouteWithChildren
-  '/customer-requests': typeof CustomerRequestsRouteRouteWithChildren
-  '/dashboard': typeof DashboardRouteRouteWithChildren
-  '/datahub-catalog': typeof DatahubCatalogRouteRouteWithChildren
-  '/login': typeof LoginRouteRouteWithChildren
-  '/datahub-catalog/$catalogId': typeof DatahubCatalogCatalogIdRouteRouteWithChildren
-  '/business-requests/': typeof BusinessRequestsIndexRoute
-  '/customer-requests/': typeof CustomerRequestsIndexRoute
-  '/dashboard/': typeof DashboardIndexRoute
-  '/datahub-catalog/': typeof DatahubCatalogIndexRoute
-  '/login/': typeof LoginIndexRoute
-  '/datahub-catalog/$catalogId/': typeof DatahubCatalogCatalogIdIndexRoute
-  '/datahub-catalog/$catalogId/dataset/$datasetId': typeof DatahubCatalogCatalogIdDatasetDatasetIdRoute
+  __root__: typeof rootRoute;
+  "/": typeof IndexRoute;
+  "/business-requests": typeof BusinessRequestsRouteRouteWithChildren;
+  "/customer-requests": typeof CustomerRequestsRouteRouteWithChildren;
+  "/dashboard": typeof DashboardRouteRouteWithChildren;
+  "/datahub-catalog": typeof DatahubCatalogRouteRouteWithChildren;
+  "/login": typeof LoginRouteRouteWithChildren;
+  "/datahub-catalog/$catalogId": typeof DatahubCatalogCatalogIdRouteRouteWithChildren;
+  "/business-requests/": typeof BusinessRequestsIndexRoute;
+  "/customer-requests/": typeof CustomerRequestsIndexRoute;
+  "/dashboard/": typeof DashboardIndexRoute;
+  "/datahub-catalog/": typeof DatahubCatalogIndexRoute;
+  "/login/": typeof LoginIndexRoute;
+  "/datahub-catalog/$catalogId/": typeof DatahubCatalogCatalogIdIndexRoute;
+  "/datahub-catalog/$catalogId/dataset/$datasetId": typeof DatahubCatalogCatalogIdDatasetDatasetIdRoute;
 }
 
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
+  fileRoutesByFullPath: FileRoutesByFullPath;
   fullPaths:
-    | '/'
-    | '/business-requests'
-    | '/customer-requests'
-    | '/dashboard'
-    | '/datahub-catalog'
-    | '/login'
-    | '/datahub-catalog/$catalogId'
-    | '/business-requests/'
-    | '/customer-requests/'
-    | '/dashboard/'
-    | '/datahub-catalog/'
-    | '/login/'
-    | '/datahub-catalog/$catalogId/'
-    | '/datahub-catalog/$catalogId/dataset/$datasetId'
-  fileRoutesByTo: FileRoutesByTo
+    | "/"
+    | "/business-requests"
+    | "/customer-requests"
+    | "/dashboard"
+    | "/datahub-catalog"
+    | "/login"
+    | "/datahub-catalog/$catalogId"
+    | "/business-requests/"
+    | "/customer-requests/"
+    | "/dashboard/"
+    | "/datahub-catalog/"
+    | "/login/"
+    | "/datahub-catalog/$catalogId/"
+    | "/datahub-catalog/$catalogId/dataset/$datasetId";
+  fileRoutesByTo: FileRoutesByTo;
   to:
-    | '/'
-    | '/business-requests'
-    | '/customer-requests'
-    | '/dashboard'
-    | '/datahub-catalog'
-    | '/login'
-    | '/datahub-catalog/$catalogId'
-    | '/datahub-catalog/$catalogId/dataset/$datasetId'
+    | "/"
+    | "/business-requests"
+    | "/customer-requests"
+    | "/dashboard"
+    | "/datahub-catalog"
+    | "/login"
+    | "/datahub-catalog/$catalogId"
+    | "/datahub-catalog/$catalogId/dataset/$datasetId";
   id:
-    | '__root__'
-    | '/'
-    | '/business-requests'
-    | '/customer-requests'
-    | '/dashboard'
-    | '/datahub-catalog'
-    | '/login'
-    | '/datahub-catalog/$catalogId'
-    | '/business-requests/'
-    | '/customer-requests/'
-    | '/dashboard/'
-    | '/datahub-catalog/'
-    | '/login/'
-    | '/datahub-catalog/$catalogId/'
-    | '/datahub-catalog/$catalogId/dataset/$datasetId'
-  fileRoutesById: FileRoutesById
+    | "__root__"
+    | "/"
+    | "/business-requests"
+    | "/customer-requests"
+    | "/dashboard"
+    | "/datahub-catalog"
+    | "/login"
+    | "/datahub-catalog/$catalogId"
+    | "/business-requests/"
+    | "/customer-requests/"
+    | "/dashboard/"
+    | "/datahub-catalog/"
+    | "/login/"
+    | "/datahub-catalog/$catalogId/"
+    | "/datahub-catalog/$catalogId/dataset/$datasetId";
+  fileRoutesById: FileRoutesById;
 }
 
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  BusinessRequestsRouteRoute: typeof BusinessRequestsRouteRouteWithChildren
-  CustomerRequestsRouteRoute: typeof CustomerRequestsRouteRouteWithChildren
-  DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
-  DatahubCatalogRouteRoute: typeof DatahubCatalogRouteRouteWithChildren
-  LoginRouteRoute: typeof LoginRouteRouteWithChildren
+  IndexRoute: typeof IndexRoute;
+  BusinessRequestsRouteRoute: typeof BusinessRequestsRouteRouteWithChildren;
+  CustomerRequestsRouteRoute: typeof CustomerRequestsRouteRouteWithChildren;
+  DashboardRouteRoute: typeof DashboardRouteRouteWithChildren;
+  DatahubCatalogRouteRoute: typeof DatahubCatalogRouteRouteWithChildren;
+  LoginRouteRoute: typeof LoginRouteRouteWithChildren;
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -411,11 +401,11 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRouteRoute: DashboardRouteRouteWithChildren,
   DatahubCatalogRouteRoute: DatahubCatalogRouteRouteWithChildren,
   LoginRouteRoute: LoginRouteRouteWithChildren,
-}
+};
 
 export const routeTree = rootRoute
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>()
+  ._addFileTypes<FileRouteTypes>();
 
 /* ROUTE_MANIFEST_START
 {

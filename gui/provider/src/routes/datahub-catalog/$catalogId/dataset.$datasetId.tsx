@@ -13,10 +13,7 @@ import { useGetDatahubDataset } from "../../../../../shared/src/data/datahub-cat
 import { useGetPoliciesByDatasetId } from "shared/src/data/policy-queries.ts";
 import { usePostNewPolicyInDataset } from "shared/src/data/catalog-mutations.ts";
 import { useContext } from "react";
-import {
-  GlobalInfoContext,
-  GlobalInfoContextType,
-} from "shared/src/context/GlobalInfoContext.tsx";
+import { GlobalInfoContext, GlobalInfoContextType } from "shared/src/context/GlobalInfoContext.tsx";
 
 import { PolicyWrapperNew } from "shared/src/components/PolicyWrapperNew.tsx";
 import { PolicyWrapperShow } from "shared/src/components/PolicyWrapperShow.tsx";
@@ -33,7 +30,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "shared/src/components/ui/drawer";
-import {  Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 
 type Inputs = {
   odrl: string;
@@ -44,15 +41,12 @@ function RouteComponent() {
   const { data: dataset } = useGetDatahubDataset(datasetId);
 
   const { data: policies } = useGetPoliciesByDatasetId(datasetId);
-  const { mutateAsync: createPolicyAsync, isPending } =
-    usePostNewPolicyInDataset();
-  const { api_gateway } = useContext<GlobalInfoContextType | null>(
-    GlobalInfoContext
-  )!;
+  const { mutateAsync: createPolicyAsync, isPending } = usePostNewPolicyInDataset();
+  const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
 
   const participant = {
-    participant_type:"Provider"
-  }
+    participant_type: "Provider",
+  };
 
   const onSubmit: SubmitHandler<Inputs> = (data) => {
     // @ts-ignore
@@ -117,20 +111,15 @@ function RouteComponent() {
         </Drawer>
       </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          {policies && policies.map((policy) => (
-            <PolicyWrapperShow policy={policy} participant={participant} />
-          ))}
-        </div>
-
-    
+      <div className="grid grid-cols-2 gap-4">
+        {policies &&
+          policies.map((policy) => <PolicyWrapperShow policy={policy} participant={participant} />)}
+      </div>
     </div>
   );
 }
 
-export const Route = createFileRoute(
-  "/datahub-catalog/$catalogId/dataset/$datasetId"
-)({
+export const Route = createFileRoute("/datahub-catalog/$catalogId/dataset/$datasetId")({
   component: RouteComponent,
   pendingComponent: () => <div>Loading...</div>,
 });

@@ -5,12 +5,7 @@ import {
   useGetTransferMessagesByProviderPid,
   useGetTransferProcessByProviderPid,
 } from "shared/src/data/transfer-queries.ts";
-import {
-  List,
-  ListItem,
-  ListItemKey,
-  ListItemDate,
-} from "shared/src/components/ui/list.tsx";
+import { List, ListItem, ListItemKey, ListItemDate } from "shared/src/components/ui/list.tsx";
 import Heading from "shared/src/components/ui/heading.tsx";
 import { Badge } from "shared/src/components/ui/badge.tsx";
 import {
@@ -44,10 +39,8 @@ function RouteComponent() {
   // };
 
   const { transferProcessId } = Route.useParams();
-  const { data: transferProcess } =
-    useGetTransferProcessByProviderPid(transferProcessId);
-  const { data: transferMessages } =
-    useGetTransferMessagesByProviderPid(transferProcessId);
+  const { data: transferProcess } = useGetTransferProcessByProviderPid(transferProcessId);
+  const { data: transferMessages } = useGetTransferMessagesByProviderPid(transferProcessId);
   const { data: dataPlane } = useGetDataplaneProcessById(transferProcessId);
 
   const scopedListItemKeyClasses = "basis-[30%]";
@@ -82,21 +75,15 @@ function RouteComponent() {
             <List>
               <ListItem>
                 <ListItemKey>Process pid</ListItemKey>
-                <Badge variant={"info"}>
-                  {transferProcess.provider_pid.slice(9, 20) + "..."}
-                </Badge>
+                <Badge variant={"info"}>{transferProcess.provider_pid.slice(9, 20) + "..."}</Badge>
               </ListItem>
               <ListItem>
                 <ListItemKey>Consumer pid</ListItemKey>
-                <Badge variant={"info"}>
-                  {transferProcess.consumer_pid.slice(9, 20) + "..."}
-                </Badge>
+                <Badge variant={"info"}>{transferProcess.consumer_pid.slice(9, 20) + "..."}</Badge>
               </ListItem>
               <ListItem>
                 <ListItemKey>Agreement id</ListItemKey>
-                <Badge variant={"info"}>
-                  {transferProcess.agreement_id.slice(9, 20) + "..."}
-                </Badge>
+                <Badge variant={"info"}>{transferProcess.agreement_id.slice(9, 20) + "..."}</Badge>
               </ListItem>
               <ListItem>
                 <ListItemKey>Transfer Process State</ListItemKey>
@@ -106,26 +93,18 @@ function RouteComponent() {
               </ListItem>
               <ListItem>
                 <ListItemKey>Created at</ListItemKey>
-                <p>
-                  {" "}
-                  {dayjs(transferProcess.created_at).format("DD/MM/YY HH:mm")}
-                </p>
+                <p> {dayjs(transferProcess.created_at).format("DD/MM/YY HH:mm")}</p>
               </ListItem>
               <ListItem>
                 <ListItemKey>Updated at</ListItemKey>
-                <p>
-                  {" "}
-                  {dayjs(transferProcess.updated_at).format("DD/MM/YY HH:mm")}
-                </p>
+                <p> {dayjs(transferProcess.updated_at).format("DD/MM/YY HH:mm")}</p>
               </ListItem>
             </List>
           </div>
           {/* DRAWER */}
           <Drawer direction={"right"}>
             <DrawerTrigger>
-              <Button variant={"secondary"}>
-                See Transfer Process Messages
-              </Button>
+              <Button variant={"secondary"}>See Transfer Process Messages</Button>
             </DrawerTrigger>
             <DrawerContent>
               <DrawerHeader>
@@ -141,10 +120,7 @@ function RouteComponent() {
                   // console.log(message);
                   return (
                     // <pre key={message.id}>{JSON.stringify(message, null, 2)}</pre>
-                    <TransferProcessMessageComponent
-                      key={message.id}
-                      message={message}
-                    />
+                    <TransferProcessMessageComponent key={message.id} message={message} />
                   );
                 })}
               </DrawerBody>
@@ -164,7 +140,7 @@ function RouteComponent() {
             </Badge>
           </div> */}
 
-              <DrawerFooter >
+              <DrawerFooter>
                 <DrawerClose>
                   <Button variant="ghost">Hide Messages</Button>
                 </DrawerClose>

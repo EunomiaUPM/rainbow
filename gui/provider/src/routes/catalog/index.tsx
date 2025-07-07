@@ -11,12 +11,7 @@ import {
 } from "shared/src/components/ui/table";
 import { useGetCatalogs } from "shared/src/data/catalog-queries.ts";
 import Heading from "shared/src/components/ui/heading.tsx";
-import {
-  List,
-  ListItem,
-  ListItemKey,
-  ListItemDate,
-} from "shared/src/components/ui/list.tsx";
+import { List, ListItem, ListItemKey, ListItemDate } from "shared/src/components/ui/list.tsx";
 import { Button } from "shared/src/components/ui/button.tsx";
 import { Input } from "shared/src/components/ui/input.tsx";
 import { Badge } from "shared/src/components/ui/badge";
@@ -25,7 +20,7 @@ const RouteComponent = () => {
   const { data: catalogs } = useGetCatalogs();
   return (
     <div className="space-y-4 pb-4">
-         <Heading level="h3" className="flex gap-2 items-center">
+      <Heading level="h3" className="flex gap-2 items-center">
         Main Catalog with id
         <Badge variant="info" size="lg">
           {catalogs["@id"].slice(9, 29) + "[...]"}{" "}
@@ -41,10 +36,7 @@ const RouteComponent = () => {
             </ListItem>
             <ListItem>
               <ListItemKey>Catalog participant id</ListItemKey>
-              <Badge variant="info">
-                {" "}
-                {catalogs.participantId.slice(9, 29) + "[...]"}{" "}
-              </Badge>
+              <Badge variant="info"> {catalogs.participantId.slice(9, 29) + "[...]"} </Badge>
             </ListItem>
             <ListItem>
               <ListItemKey>Catalog homepage</ListItemKey>
@@ -52,9 +44,7 @@ const RouteComponent = () => {
             </ListItem>
             <ListItem>
               <ListItemKey>Catalog creation date</ListItemKey>
-              <ListItemDate>
-                {dayjs(catalogs.issued).format("DD/MM/YYYY - HH:mm")}
-              </ListItemDate>
+              <ListItemDate>{dayjs(catalogs.issued).format("DD/MM/YYYY - HH:mm")}</ListItemDate>
             </ListItem>
           </List>
           <div className="filler"></div>
@@ -87,21 +77,14 @@ const RouteComponent = () => {
                 </TableCell>
                 <TableCell>
                   {" "}
-                  <Badge variant="info">
-                    {catalogItem["@id"].slice(9, 29) + "[...]"}{" "}
-                  </Badge>
+                  <Badge variant="info">{catalogItem["@id"].slice(9, 29) + "[...]"} </Badge>
                 </TableCell>
                 <TableCell>
                   {" "}
-                  <Badge variant="info">
-                    {catalogItem.participantId.slice(9, 29) + "[...]"}
-                  </Badge>
+                  <Badge variant="info">{catalogItem.participantId.slice(9, 29) + "[...]"}</Badge>
                 </TableCell>
                 <TableCell>
-                  <Link
-                    to="/catalog/$catalogId"
-                    params={{ catalogId: catalogItem["@id"] }}
-                  >
+                  <Link to="/catalog/$catalogId" params={{ catalogId: catalogItem["@id"] }}>
                     <Button variant={"link"}>
                       See catalog
                       <ArrowRight />

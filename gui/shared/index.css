@@ -182,13 +182,13 @@
   @apply first:mt-3 border-t pt-3  pb-5 border-white/20 last:pb-2;
 }
 .policy-item-template {
-  @apply   pb-5  last:pb-2 ;
+  @apply pb-5  last:pb-2;
 }
 .key-policy-template {
-  @apply flex justify-center items-center h-fit uppercase px-2 py-0.5 w-fit max-w-[165px] rounded-sm gap-1 focus-visible:ring transition-all   font-bold break-all border border-white/15 bg-gray-900/50
+  @apply flex justify-center items-center h-fit uppercase px-2 py-0.5 w-fit max-w-[165px] rounded-sm gap-1 focus-visible:ring transition-all   font-bold break-all border border-white/15 bg-gray-900/50;
 }
 .constraint-template-group {
-  @apply flex flex-col gap-2 mb-3 last:mb-0
+  @apply flex flex-col gap-2 mb-3 last:mb-0;
 }
 
 /*SCROLLBAR*/

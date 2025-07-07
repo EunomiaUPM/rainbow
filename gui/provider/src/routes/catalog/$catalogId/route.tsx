@@ -1,8 +1,4 @@
-import {
-  createFileRoute,
-  Outlet,
-  useRouterState,
-} from "@tanstack/react-router";
+import { createFileRoute, Outlet, useRouterState } from "@tanstack/react-router";
 import { Badge } from "shared/src/components/ui/badge";
 import Heading from "shared/src/components/ui/heading";
 
@@ -20,7 +16,7 @@ function RouteComponent() {
   const routerState = useRouterState();
 
   // formatear id del catalogo para que sea igual que el pathname
-  const catalogIdURL = "/catalog/" + catalogId.replace(/:/g, "%3A") ;
+  const catalogIdURL = "/catalog/" + catalogId.replace(/:/g, "%3A");
 
   return (
     <div>

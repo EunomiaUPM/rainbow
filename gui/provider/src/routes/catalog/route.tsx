@@ -1,21 +1,18 @@
-import {createFileRoute, Outlet} from "@tanstack/react-router";
-
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 const NotFound = () => {
-    return <div>not found</div>;
+  return <div>not found</div>;
 };
 
 const RouteComponent = () => {
- 
-    return (
-             <>
-     
+  return (
+    <>
       <Outlet />
     </>
-    );
+  );
 };
 
 export const Route = createFileRoute("/catalog")({
-    component: RouteComponent,
-    notFoundComponent: NotFound,
+  component: RouteComponent,
+  notFoundComponent: NotFound,
 });

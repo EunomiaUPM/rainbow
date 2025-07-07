@@ -32,10 +32,7 @@ import {
   useGetProviderDid,
   useWalletOnboard,
 } from "../../../../shared/src/data/wallet-mutations.ts";
-import {
-  GlobalInfoContext,
-  GlobalInfoContextType,
-} from "shared/src/context/GlobalInfoContext.tsx";
+import { GlobalInfoContext, GlobalInfoContextType } from "shared/src/context/GlobalInfoContext.tsx";
 import {
   Form,
   FormControl,
@@ -60,9 +57,7 @@ function RouteComponent() {
   const { data: participants } = useGetParticipants();
   const { lastHighLightedNotification } = useContext(PubSubContext)!;
   const { mutateAsync: onboardAsync } = useWalletOnboard();
-  const { api_gateway } = useContext<GlobalInfoContextType | null>(
-    GlobalInfoContext
-  )!;
+  const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
   const { mutateAsync: didGetterAsync } = useGetProviderDid();
   const form = useForm<Inputs>({
     defaultValues: {
@@ -85,9 +80,7 @@ function RouteComponent() {
   };
 
   const hasConsumer = useMemo(() => {
-    const participant = participants.find(
-      (p) => p.participant_type == "Consumer"
-    );
+    const participant = participants.find((p) => p.participant_type == "Consumer");
     if (!participant) {
       return false;
     } else {
@@ -145,14 +138,10 @@ function RouteComponent() {
         <div className="p-8 py-6 mx-auto w-fit max-w-[70ch] bg-brand-sky/5 border border-stroke rounded-md">
           <Heading level="h3">Missing wallet...</Heading>
           <Heading level="h5">
-            Your wallet is not yet connected as Consumer. <br /> Please complete
-            the onboarding process to get started.
+            Your wallet is not yet connected as Consumer. <br /> Please complete the onboarding
+            process to get started.
           </Heading>
-          <Button
-            size={"lg"}
-            className="w-full mt-4"
-            onClick={() => onboardHandler()}
-          >
+          <Button size={"lg"} className="w-full mt-4" onClick={() => onboardHandler()}>
             Onboard wallet
           </Button>
         </div>
@@ -192,16 +181,13 @@ function RouteComponent() {
                   {/**/}
                   {!did && (
                     <Form {...form}>
-                      <form
-                        onSubmit={handleSubmit(onSubmitDidGetter)}
-                        className="space-y-6"
-                      >
+                      <form onSubmit={handleSubmit(onSubmitDidGetter)} className="space-y-6">
                         {/* Consumer Participant Field */}
                         <FormField
                           control={control}
                           name="providerBaseUrl"
                           render={(
-                            { field } // <--
+                            { field }, // <--
                           ) => (
                             <FormItem>
                               <FormLabel>Provider base URL:</FormLabel>
@@ -230,10 +216,7 @@ function RouteComponent() {
                   {/**/}
                   {did && oidc && (
                     <div className="m-auto max-w-[90%] p-6 flex flex-col gap-4 text-center bg-brand-sky/[3%] rounded-md">
-                      <Heading
-                        level="h4"
-                        className="text-center text-brand-sky"
-                      >
+                      <Heading level="h4" className="text-center text-brand-sky">
                         Claim your credential!
                       </Heading>
                       <p>Scan the QR code...</p>
@@ -251,20 +234,13 @@ function RouteComponent() {
                       <p>... or copy your URI bellow</p>
                       <div>
                         <div className="max-w-full break-all p-2 bg-background-200/40 border border-stroke rounded-md">
-                          <code className="text-xs text-foreground-200">
-                            {oidc}
-                          </code>
+                          <code className="text-xs text-foreground-200">{oidc}</code>
                         </div>
                         <div className="mt-4 [&>button]:w-32 flex gap-4 justify-center">
-                          <Button
-                            variant={"destructive"}
-                            onClick={handleCancel}
-                          >
+                          <Button variant={"destructive"} onClick={handleCancel}>
                             Cancel
                           </Button>
-                          <Button onClick={handleCopy}>
-                            {copyStatus || "Copy Text"}
-                          </Button>
+                          <Button onClick={handleCopy}>{copyStatus || "Copy Text"}</Button>
                         </div>
                       </div>
                     </div>
@@ -305,9 +281,7 @@ function RouteComponent() {
                 <TableRow
                   key={participant.participant_id.slice(0, 20)}
                   className={
-                    participant.participant_id === lastHighLightedNotification
-                      ? "bg-blue-200"
-                      : ""
+                    participant.participant_id === lastHighLightedNotification ? "bg-blue-200" : ""
                   }
                 >
                   <TableCell>
@@ -316,9 +290,7 @@ function RouteComponent() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={"info"}>
-                      {participant.token?.slice(0, 20) + "..."}
-                    </Badge>
+                    <Badge variant={"info"}>{participant.token?.slice(0, 20) + "..."}</Badge>
                   </TableCell>
                   <TableCell>
                     <Badge variant={"role"} role={participant.participant_type}>

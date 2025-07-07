@@ -10,12 +10,7 @@ import {
 import dayjs from "dayjs";
 import Heading from "shared/src/components/ui/heading";
 import { Badge } from "shared/src/components/ui/badge";
-import {
-  List,
-  ListItem,
-  ListItemKey,
-  ListItemDate,
-} from "shared/src/components/ui/list";
+import { List, ListItem, ListItemKey, ListItemDate } from "shared/src/components/ui/list";
 
 function RouteComponent() {
   const { dataServiceId } = Route.useParams();
@@ -37,9 +32,7 @@ function RouteComponent() {
           </ListItem>
           <ListItem>
             <ListItemKey>Data service creation date</ListItemKey>
-            <ListItemDate>
-              {dayjs(dataService.issued).format("DD/MM/YYYY - HH:mm")}
-            </ListItemDate>
+            <ListItemDate>{dayjs(dataService.issued).format("DD/MM/YYYY - HH:mm")}</ListItemDate>
           </ListItem>
           <ListItem>
             <ListItemKey>Data service endpoint URL</ListItemKey>
@@ -55,9 +48,7 @@ function RouteComponent() {
   );
 }
 
-export const Route = createFileRoute(
-  "/catalog/$catalogId/data-service/$dataServiceId"
-)({
+export const Route = createFileRoute("/catalog/$catalogId/data-service/$dataServiceId")({
   component: RouteComponent,
   pendingComponent: () => <div>Loading...</div>,
 });

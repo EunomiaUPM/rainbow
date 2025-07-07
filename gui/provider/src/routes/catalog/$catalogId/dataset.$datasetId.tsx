@@ -27,12 +27,7 @@ import { Button } from "shared/src/components/ui/button.tsx";
 import { Textarea } from "shared/src/components/ui/textarea.tsx";
 import { usePostNewPolicyInDataset } from "shared/src/data/catalog-mutations.ts";
 import Heading from "shared/src/components/ui/heading";
-import {
-  List,
-  ListItem,
-  ListItemDate,
-  ListItemKey,
-} from "shared/src/components/ui/list";
+import { List, ListItem, ListItemDate, ListItemKey } from "shared/src/components/ui/list";
 import { Badge } from "shared/src/components/ui/badge";
 import PolicyComponent from "shared/src/components/PolicyComponent.tsx";
 import {
@@ -100,9 +95,7 @@ function RouteComponent() {
           </ListItem>
           <ListItem>
             <ListItemKey>Catalog creation date</ListItemKey>
-            <ListItemDate>
-              {dayjs(dataset.issued).format("DD/MM/YYYY - HH:mm")}
-            </ListItemDate>
+            <ListItemDate>{dayjs(dataset.issued).format("DD/MM/YYYY - HH:mm")}</ListItemDate>
           </ListItem>
         </List>
       </div>
@@ -122,13 +115,9 @@ function RouteComponent() {
             {distributions.map((distribution) => (
               <TableRow key={distribution["@id"].slice(0, 20)}>
                 <TableCell>
-                  <Badge variant="info">
-                    {distribution["@id"].slice(9, 29) + "[...]"}
-                  </Badge>
+                  <Badge variant="info">{distribution["@id"].slice(9, 29) + "[...]"}</Badge>
                 </TableCell>
-                <TableCell>
-                  {distribution.title ? distribution.title : "undefined"}
-                </TableCell>
+                <TableCell>{distribution.title ? distribution.title : "undefined"}</TableCell>
                 <TableCell>
                   <ListItemDate>
                     {dayjs(distribution.issued).format("DD/MM/YYYY - HH:mm")}
@@ -185,9 +174,8 @@ function RouteComponent() {
               </DrawerHeader>
               <div className="px-8 overflow-y-auto ">
                 <p className="mb-5">
-                  Add permissions, obligations and prohibitions to apply to the
-                  dataset. Select the action and constraints for each
-                  permission, obligation or prohibition.
+                  Add permissions, obligations and prohibitions to apply to the dataset. Select the
+                  action and constraints for each permission, obligation or prohibition.
                 </p>
                 <div className="flex flex-col gap-4">
                   <Accordion type="single" collapsible className="w-full">
@@ -214,11 +202,7 @@ function RouteComponent() {
                           <div className="policy-item-create">
                             <div className="flex justify-between">
                               <p className="mb-2"> Action: </p>
-                              <Button
-                                variant="icon_destructive"
-                                size="xs"
-                                className="ml-4 border"
-                              >
+                              <Button variant="icon_destructive" size="xs" className="ml-4 border">
                                 <Trash className="mb-0.5" />
                                 Remove permission
                               </Button>
@@ -239,55 +223,38 @@ function RouteComponent() {
                               <div className="constraint-create flex gap-3">
                                 <Select>
                                   <div className="flex flex-col">
-                                    <p className="text-xs text-gray-400 mb-1">
-                                      {" "}
-                                      Left Operand:{" "}
-                                    </p>
+                                    <p className="text-xs text-gray-400 mb-1"> Left Operand: </p>
                                     <SelectTrigger className="w-[180px]">
                                       <SelectValue placeholder="Select item" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      <SelectItem value="light">
-                                        Date
-                                      </SelectItem>
+                                      <SelectItem value="light">Date</SelectItem>
                                       <SelectItem value="dark">User</SelectItem>
-                                      <SelectItem value="system">
-                                        Location
-                                      </SelectItem>
+                                      <SelectItem value="system">Location</SelectItem>
                                     </SelectContent>
                                   </div>
                                 </Select>
                                 <Select>
                                   <div className="flex flex-col">
-                                    <p className="text-xs text-gray-400 mb-1">
-                                      {" "}
-                                      Operator:{" "}
-                                    </p>
+                                    <p className="text-xs text-gray-400 mb-1"> Operator: </p>
                                     <SelectTrigger className="w-[140px]">
                                       <SelectValue placeholder="Select operator" />
                                     </SelectTrigger>
                                     <SelectContent>
                                       <SelectItem value="light">eq</SelectItem>
                                       <SelectItem value="dark">neq</SelectItem>
-                                      <SelectItem value="system">
-                                        gteq
-                                      </SelectItem>
+                                      <SelectItem value="system">gteq</SelectItem>
                                     </SelectContent>
                                   </div>
                                 </Select>
                                 <Select>
                                   <div className="flex flex-col">
-                                    <p className="text-xs text-gray-400 mb-1">
-                                      {" "}
-                                      Right Operand:{" "}
-                                    </p>
+                                    <p className="text-xs text-gray-400 mb-1"> Right Operand: </p>
                                     <Input placeholder="Type value" />
                                   </div>
                                 </Select>
                                 <div className="flex flex-col">
-                                  <p className="text-xs text-gray-400 mb-1">
-                                    Unity
-                                  </p>
+                                  <p className="text-xs text-gray-400 mb-1">Unity</p>
                                   <p className="mt-2">Unity</p>
                                 </div>
                                 <Button
@@ -299,11 +266,7 @@ function RouteComponent() {
                                 </Button>
                               </div>
                             </div>
-                            <Button
-                              size="xs"
-                              variant="outline"
-                              className="mt-3"
-                            >
+                            <Button size="xs" variant="outline" className="mt-3">
                               <Plus />
                               Add constraint
                             </Button>
@@ -311,11 +274,7 @@ function RouteComponent() {
                           <div className="policy-item-create">
                             <div className="flex justify-between">
                               <p className="mb-2"> Action: </p>
-                              <Button
-                                variant="icon_destructive"
-                                size="xs"
-                                className="ml-4"
-                              >
+                              <Button variant="icon_destructive" size="xs" className="ml-4">
                                 <Trash className="mb-0.5" />
                                 Remove permission
                               </Button>
@@ -336,57 +295,38 @@ function RouteComponent() {
                               <div className="constraint-create flex gap-3">
                                 <Select>
                                   <div className="flex flex-col">
-                                    <p className="text-xs text-gray-400 mb-1">
-                                      {" "}
-                                      Left Operand:{" "}
-                                    </p>
+                                    <p className="text-xs text-gray-400 mb-1"> Left Operand: </p>
                                     <SelectTrigger className="w-[180px]">
                                       <SelectValue placeholder="Select an item" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      <SelectItem value="light">
-                                        Date
-                                      </SelectItem>
+                                      <SelectItem value="light">Date</SelectItem>
                                       <SelectItem value="dark">User</SelectItem>
-                                      <SelectItem value="system">
-                                        Location
-                                      </SelectItem>
+                                      <SelectItem value="system">Location</SelectItem>
                                     </SelectContent>
                                   </div>
                                 </Select>
                                 <Select>
                                   <div className="flex flex-col">
-                                    <p className="text-xs text-gray-400 mb-1">
-                                      {" "}
-                                      Operator:{" "}
-                                    </p>
+                                    <p className="text-xs text-gray-400 mb-1"> Operator: </p>
                                     <SelectTrigger className="w-[140px]">
                                       <SelectValue placeholder="Select an operator" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      <SelectItem value="light">
-                                        Date
-                                      </SelectItem>
+                                      <SelectItem value="light">Date</SelectItem>
                                       <SelectItem value="dark">User</SelectItem>
-                                      <SelectItem value="system">
-                                        Location
-                                      </SelectItem>
+                                      <SelectItem value="system">Location</SelectItem>
                                     </SelectContent>
                                   </div>
                                 </Select>
                                 <Select>
                                   <div className="flex flex-col">
-                                    <p className="text-xs text-gray-400 mb-1">
-                                      {" "}
-                                      Right Operand:{" "}
-                                    </p>
+                                    <p className="text-xs text-gray-400 mb-1"> Right Operand: </p>
                                     <Input placeholder="Type value" />
                                   </div>
                                 </Select>
                                 <div className="flex flex-col">
-                                  <p className="text-xs text-gray-400 mb-1">
-                                    Unity
-                                  </p>
+                                  <p className="text-xs text-gray-400 mb-1">Unity</p>
                                   <p className="mt-2">Unity</p>
                                 </div>
                                 <Button
@@ -400,57 +340,38 @@ function RouteComponent() {
                               <div className="constraint-create flex gap-3">
                                 <Select>
                                   <div className="flex flex-col">
-                                    <p className="text-xs text-gray-400 mb-1">
-                                      {" "}
-                                      Left Operand:{" "}
-                                    </p>
+                                    <p className="text-xs text-gray-400 mb-1"> Left Operand: </p>
                                     <SelectTrigger className="w-[180px]">
                                       <SelectValue placeholder="Select an item" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      <SelectItem value="light">
-                                        Date
-                                      </SelectItem>
+                                      <SelectItem value="light">Date</SelectItem>
                                       <SelectItem value="dark">User</SelectItem>
-                                      <SelectItem value="system">
-                                        Location
-                                      </SelectItem>
+                                      <SelectItem value="system">Location</SelectItem>
                                     </SelectContent>
                                   </div>
                                 </Select>
                                 <Select>
                                   <div className="flex flex-col">
-                                    <p className="text-xs text-gray-400 mb-1">
-                                      {" "}
-                                      Operator:{" "}
-                                    </p>
+                                    <p className="text-xs text-gray-400 mb-1"> Operator: </p>
                                     <SelectTrigger className="w-[140px]">
                                       <SelectValue placeholder="Select an operator" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      <SelectItem value="light">
-                                        Date
-                                      </SelectItem>
+                                      <SelectItem value="light">Date</SelectItem>
                                       <SelectItem value="dark">User</SelectItem>
-                                      <SelectItem value="system">
-                                        Location
-                                      </SelectItem>
+                                      <SelectItem value="system">Location</SelectItem>
                                     </SelectContent>
                                   </div>
                                 </Select>
                                 <Select>
                                   <div className="flex flex-col">
-                                    <p className="text-xs text-gray-400 mb-1">
-                                      {" "}
-                                      Right Operand:{" "}
-                                    </p>
+                                    <p className="text-xs text-gray-400 mb-1"> Right Operand: </p>
                                     <Input placeholder="Type value" />
                                   </div>
                                 </Select>
                                 <div className="flex flex-col">
-                                  <p className="text-xs text-gray-400 mb-1">
-                                    Unity
-                                  </p>
+                                  <p className="text-xs text-gray-400 mb-1">Unity</p>
                                   <p className="mt-2">Unity</p>
                                 </div>
                                 <Button
@@ -462,11 +383,7 @@ function RouteComponent() {
                                 </Button>
                               </div>
                             </div>
-                            <Button
-                              size="xs"
-                              variant="outline"
-                              className="mt-3"
-                            >
+                            <Button size="xs" variant="outline" className="mt-3">
                               <Plus />
                               Add constraint
                             </Button>
@@ -485,9 +402,7 @@ function RouteComponent() {
                           <p className="text-current">obligation</p>
                         </div>
                       </AccordionTrigger>
-                      <AccordionContent className="relative">
-                        content obligation
-                      </AccordionContent>
+                      <AccordionContent className="relative">content obligation</AccordionContent>
                     </AccordionItem>
                   </Accordion>
                   <Accordion type="single" collapsible className="w-full">
@@ -500,16 +415,13 @@ function RouteComponent() {
                           <p className="text-current">prohibition</p>
                         </div>
                       </AccordionTrigger>
-                      <AccordionContent className="relative">
-                        content prohibition
-                      </AccordionContent>
+                      <AccordionContent className="relative">content prohibition</AccordionContent>
                     </AccordionItem>
                   </Accordion>
                 </div>
                 <div className="h-6"></div>
                 <p className="mb-5">
-                  ...or paste the ODRL policy content directly in the textarea
-                  below.
+                  ...or paste the ODRL policy content directly in the textarea below.
                 </p>
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -552,52 +464,41 @@ function RouteComponent() {
           </Drawer>
         </div>
         <div className="gridColsLayout">
-          {policies && policies.map((policy) => (
-            <List className=" border border-white/30 bg-white/10 px-4 py-2 rounded-md justify-start">
-              <div className="flex">
-                <Heading level="h5" className="flex gap-3">
-                  <div>Policy with ID</div>
-                  <Badge variant="info" className="h-6">
-                    {policy["@id"].slice(9, 29) + "[...]"}
-                  </Badge>
-                </Heading>
-              </div>
-              <ListItem>
-                <ListItemKey>Policy Target</ListItemKey>
-                <p>{policy["@type"]}</p>
-              </ListItem>
+          {policies &&
+            policies.map((policy) => (
+              <List className=" border border-white/30 bg-white/10 px-4 py-2 rounded-md justify-start">
+                <div className="flex">
+                  <Heading level="h5" className="flex gap-3">
+                    <div>Policy with ID</div>
+                    <Badge variant="info" className="h-6">
+                      {policy["@id"].slice(9, 29) + "[...]"}
+                    </Badge>
+                  </Heading>
+                </div>
+                <ListItem>
+                  <ListItemKey>Policy Target</ListItemKey>
+                  <p>{policy["@type"]}</p>
+                </ListItem>
 
-              <ListItem>
-                <ListItemKey> Profile</ListItemKey>
-                <p className="whitespace-normal">
-                  {" "}
-                  {JSON.stringify(policy.profile)}
-                </p>
-              </ListItem>
-              <ListItem>
-                <ListItemKey> Target</ListItemKey>
-                <p> {policy.target.slice(9)}</p>
-              </ListItem>
-              <div className="h-5"></div>
-              <Heading level="h6"> ODRL CONTENT</Heading>
+                <ListItem>
+                  <ListItemKey> Profile</ListItemKey>
+                  <p className="whitespace-normal"> {JSON.stringify(policy.profile)}</p>
+                </ListItem>
+                <ListItem>
+                  <ListItemKey> Target</ListItemKey>
+                  <p> {policy.target.slice(9)}</p>
+                </ListItem>
+                <div className="h-5"></div>
+                <Heading level="h6"> ODRL CONTENT</Heading>
 
-              <div className="flex flex-col gap-2 mb-2">
-                <PolicyComponent
-                  policyItem={policy.permission}
-                  variant={"permission"}
-                />
-                <PolicyComponent
-                  policyItem={policy.obligation}
-                  variant={"obligation"}
-                />
+                <div className="flex flex-col gap-2 mb-2">
+                  <PolicyComponent policyItem={policy.permission} variant={"permission"} />
+                  <PolicyComponent policyItem={policy.obligation} variant={"obligation"} />
 
-                <PolicyComponent
-                  policyItem={policy.prohibition}
-                  variant={"prohibition"}
-                />
-              </div>
-            </List>
-          ))}
+                  <PolicyComponent policyItem={policy.prohibition} variant={"prohibition"} />
+                </div>
+              </List>
+            ))}
         </div>
       </div>
       <div>

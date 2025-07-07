@@ -1,9 +1,6 @@
 import { usePostContractNegotiationRPCOffer } from "shared/src/data/contract-mutations.ts";
 import { useContext, useState } from "react";
-import {
-  GlobalInfoContext,
-  GlobalInfoContextType,
-} from "shared/src/context/GlobalInfoContext.tsx";
+import { GlobalInfoContext, GlobalInfoContextType } from "shared/src/context/GlobalInfoContext.tsx";
 import {
   Form,
   FormControl,
@@ -13,11 +10,7 @@ import {
   FormLabel,
   FormMessage,
 } from "shared/src/components/ui/form.tsx";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "shared/src/components/ui/popover.tsx";
+import { Popover, PopoverContent, PopoverTrigger } from "shared/src/components/ui/popover.tsx";
 import { Button } from "shared/src/components/ui/button.tsx";
 import { ChevronsUpDown } from "lucide-react";
 import {
@@ -53,8 +46,7 @@ export const OfferDrawer = ({
   datasetId: string;
   closeDrawer: () => void;
 }) => {
-  const { mutateAsync: sendOfferAsync, isPending } =
-    usePostContractNegotiationRPCOffer();
+  const { mutateAsync: sendOfferAsync, isPending } = usePostContractNegotiationRPCOffer();
   const { data: policies } = useGetPoliciesByDatasetId(datasetId);
   const { data: datasetInfo } = useGetDatahubDataset(datasetId);
 
@@ -66,9 +58,7 @@ export const OfferDrawer = ({
   const [consumerParticipantOpen, setConsumerParticipantOpen] = useState(false);
   const [_consumerSelectedParticipant, setConsumerSelectedParticipant] =
     useState<Participant | null>(null);
-  const [consumerParticipants, setConsumerParticipants] = useState<
-    Participant[]
-  >([]);
+  const [consumerParticipants, setConsumerParticipants] = useState<Participant[]>([]);
   const [selectedPolicy, setSelectedPolicy] = useState<OdrlOffer | null>(null);
 
   // --- Form Setup ---
@@ -88,9 +78,7 @@ export const OfferDrawer = ({
     if (newOpenState && consumerParticipants.length === 0) {
       try {
         const participants = await getParticipants(api_gateway);
-        const participantsFiltered = participants.filter(
-          (p) => p.participant_type == "Consumer"
-        );
+        const participantsFiltered = participants.filter((p) => p.participant_type == "Consumer");
         setConsumerParticipants(participantsFiltered);
       } catch (error) {
         console.error("Failed to fetch participants:", error);
@@ -101,26 +89,35 @@ export const OfferDrawer = ({
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     console.log("Form data submitted:", data);
     const policy = policies.find((p) => p["@id"] == data.id)!;
-        await sendOfferAsync(
-            {
-                content: {
-                    consumerParticipantId: data.consumerParticipantId,
-                    offer: {
-                        "@id": policy["@id"],
-                        "@type": "Offer",
-                        target: policy.target,
-                        //@ts-ignore
-                        permission: policy.permission == undefined || policy.permission.length == 0 ? null : policy.permission,
-                        //@ts-ignore
-                        obligation: policy.obligation == undefined || policy.obligation.length == 0 ? null : policy.obligation,
-                        //@ts-ignore
-                        prohibition: policy.prohibition == undefined || policy.prohibition.length == 0 ? null : policy.prohibition,
+    await sendOfferAsync(
+      {
+        content: {
+          consumerParticipantId: data.consumerParticipantId,
+          offer: {
+            "@id": policy["@id"],
+            "@type": "Offer",
+            target: policy.target,
+            //@ts-ignore
+            permission:
+              policy.permission == undefined || policy.permission.length == 0
+                ? null
+                : policy.permission,
+            //@ts-ignore
+            obligation:
+              policy.obligation == undefined || policy.obligation.length == 0
+                ? null
+                : policy.obligation,
+            //@ts-ignore
+            prohibition:
+              policy.prohibition == undefined || policy.prohibition.length == 0
+                ? null
+                : policy.prohibition,
             profile: policy.profile,
           },
         },
         api_gateway: api_gateway,
       },
-      {}
+      {},
     );
   };
 
@@ -154,8 +151,7 @@ export const OfferDrawer = ({
                     Consumer Participant Id
                   </FormLabel>
                   <p className="text-xs text-gray-500 mb-1">
-                    Select the ID of the consumer participant for the
-                    negotiation.
+                    Select the ID of the consumer participant for the negotiation.
                   </p>
                 </div>
                 <div>
@@ -172,9 +168,9 @@ export const OfferDrawer = ({
                           className="w-full justify-between font-normal text-gray-300  transition-colors"
                         >
                           {field.value
-                            ? consumerParticipants.find(
-                                (p) => p.participant_id === field.value
-                              )?.participant_id.slice(4,32) + "[...]"
+                            ? consumerParticipants
+                                .find((p) => p.participant_id === field.value)
+                                ?.participant_id.slice(4, 32) + "[...]"
                             : "Select participant..."}
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-80" />
                         </Button>
@@ -185,35 +181,28 @@ export const OfferDrawer = ({
                           <CommandList>
                             <CommandEmpty>No participants found.</CommandEmpty>
                             <CommandGroup>
-                              {consumerParticipants.map(
-                                (consumerParticipant) => (
-                                  <CommandItem
-                                    key={consumerParticipant.participant_id}
-                                    value={consumerParticipant.participant_id}
-                                    onSelect={() => {
-                                      field.onChange(
-                                        consumerParticipant.participant_id
-                                      );
-                                      setConsumerSelectedParticipant(
-                                        consumerParticipant
-                                      );
-                                      setConsumerParticipantOpen(false);
-                                      // No fields follow this one that need clearing based on its change
-                                    }}
-                                    className={
-                                      field.value ===
-                                      consumerParticipant.participant_id
-                                        ? "text-role-consumer font-medium"
-                                        : ""
-                                    }
-                                  >
-                                    {consumerParticipant.participant_id.slice(4,32) + "[...]"}
-                                    <span className="text-gray-400 ml-2 text-sm">
-                                      ({consumerParticipant.base_url})
-                                    </span>
-                                  </CommandItem>
-                                )
-                              )}
+                              {consumerParticipants.map((consumerParticipant) => (
+                                <CommandItem
+                                  key={consumerParticipant.participant_id}
+                                  value={consumerParticipant.participant_id}
+                                  onSelect={() => {
+                                    field.onChange(consumerParticipant.participant_id);
+                                    setConsumerSelectedParticipant(consumerParticipant);
+                                    setConsumerParticipantOpen(false);
+                                    // No fields follow this one that need clearing based on its change
+                                  }}
+                                  className={
+                                    field.value === consumerParticipant.participant_id
+                                      ? "text-role-consumer font-medium"
+                                      : ""
+                                  }
+                                >
+                                  {consumerParticipant.participant_id.slice(4, 32) + "[...]"}
+                                  <span className="text-gray-400 ml-2 text-sm">
+                                    ({consumerParticipant.base_url})
+                                  </span>
+                                </CommandItem>
+                              ))}
                             </CommandGroup>
                           </CommandList>
                         </Command>
@@ -232,24 +221,28 @@ export const OfferDrawer = ({
               Select the policy from the dataset that best matches your needs.
             </p>
             <div className="flex flex-wrap gap-4 mt-3 mb-24">
-              {policies && policies.map((policy) => (
-                <div
-                  className={
-                    selectedPolicy === policy
-                      ? ` outline outline-offset-2 outline-secondary-500 rounded-[6px] `
-                      : "opacity-70"
-                  }
-                  onClick={() => {
-                    setSelectedPolicy(policy);
-                    form.setValue("id", policy["@id"]);
-                  }}
-                >
-                  <PolicyWrapperShow policy={policy} />
-                </div>
-              ))}
+              {policies &&
+                policies.map((policy) => (
+                  <div
+                    className={
+                      selectedPolicy === policy
+                        ? ` outline outline-offset-2 outline-secondary-500 rounded-[6px] `
+                        : "opacity-70"
+                    }
+                    onClick={() => {
+                      setSelectedPolicy(policy);
+                      form.setValue("id", policy["@id"]);
+                    }}
+                  >
+                    <PolicyWrapperShow policy={policy} />
+                  </div>
+                ))}
             </div>
           </div>
-          <div className="flex gap-2 border-t fixed bottom-0  p-6 w-full bg-background border-white/30" style={{marginLeft: -48}}>
+          <div
+            className="flex gap-2 border-t fixed bottom-0  p-6 w-full bg-background border-white/30"
+            style={{ marginLeft: -48 }}
+          >
             <Button type="submit" disabled={isPending} className="w-48">
               Submit Offer {isPending && <span className="ml-2">...</span>}
             </Button>

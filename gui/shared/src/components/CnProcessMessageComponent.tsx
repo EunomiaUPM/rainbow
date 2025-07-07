@@ -27,7 +27,7 @@ const MessageComponent: React.FC<MessageComponentProps> = ({ message }) => {
   //   content,
   //   _type,
   // } = message;
-  
+
   return (
     <MessageLog key={message.cn_message_id} variant={message.from}>
       <RoleHeader from={message.from} />
@@ -37,14 +37,8 @@ const MessageComponent: React.FC<MessageComponentProps> = ({ message }) => {
         </MessageTitle>
         <MessageTimestamp created_at={message.created_at} />
         <MessageMetaContainer>
-          <MessageMeta
-            label="Contract Message Id"
-            value={message.cn_message_id.slice(9, 60)}
-          />
-          <MessageMeta
-            label="Contract Process Id"
-            value={message.cn_process_id.slice(9, 60)}
-          />
+          <MessageMeta label="Contract Message Id" value={message.cn_message_id.slice(9, 60)} />
+          <MessageMeta label="Contract Process Id" value={message.cn_process_id.slice(9, 60)} />
         </MessageMetaContainer>
         <MessageContent content={message.content} />
       </MessageBody>

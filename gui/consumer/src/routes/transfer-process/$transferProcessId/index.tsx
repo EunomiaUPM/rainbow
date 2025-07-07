@@ -5,12 +5,7 @@ import {
   useGetTransferMessagesByProviderPid,
   useGetTransferProcessByProviderPid,
 } from "shared/src/data/transfer-queries.ts";
-import {
-  List,
-  ListItem,
-  ListItemKey,
-  ListItemDate,
-} from "shared/src/components/ui/list.tsx";
+import { List, ListItem, ListItemKey, ListItemDate } from "shared/src/components/ui/list.tsx";
 import Heading from "shared/src/components/ui/heading.tsx";
 import { Badge } from "shared/src/components/ui/badge.tsx";
 import {
@@ -43,17 +38,14 @@ function RouteComponent() {
   // };
 
   const { transferProcessId } = Route.useParams();
-  const { data: transferProcess } =
-    useGetTransferProcessByProviderPid(transferProcessId);
-  const { data: transferMessages } =
-    useGetTransferMessagesByProviderPid(transferProcessId);
+  const { data: transferProcess } = useGetTransferProcessByProviderPid(transferProcessId);
+  const { data: transferMessages } = useGetTransferMessagesByProviderPid(transferProcessId);
   const { data: dataPlane } = useGetDataplaneProcessById(transferProcessId);
   // Transfer proccess info
   console.log(transferProcessId);
   console.log(transferProcess); // returns error
   console.log(transferMessages); // returns error
-  
-  
+
   return (
     <div className="space-y-4 pb-4">
       <Tabs defaultValue="data-control" className="w-full">
@@ -79,21 +71,15 @@ function RouteComponent() {
             <List>
               <ListItem>
                 <ListItemKey>Process pid</ListItemKey>
-                <Badge variant={"info"}>
-                  {transferProcess.provider_pid?.slice(9, 20) + "..."}
-                </Badge>
+                <Badge variant={"info"}>{transferProcess.provider_pid?.slice(9, 20) + "..."}</Badge>
               </ListItem>
               <ListItem>
                 <ListItemKey>Consumer pid</ListItemKey>
-                <Badge variant={"info"}>
-                  {transferProcess.consumer_pid?.slice(9, 20) + "..."}
-                </Badge>
+                <Badge variant={"info"}>{transferProcess.consumer_pid?.slice(9, 20) + "..."}</Badge>
               </ListItem>
               <ListItem>
                 <ListItemKey>Agreement id</ListItemKey>
-                <Badge variant={"info"}>
-                  {transferProcess.agreement_id?.slice(9, 20) + "..."}
-                </Badge>
+                <Badge variant={"info"}>{transferProcess.agreement_id?.slice(9, 20) + "..."}</Badge>
               </ListItem>
               <ListItem>
                 <ListItemKey>Transfer Process State</ListItemKey>
@@ -103,36 +89,30 @@ function RouteComponent() {
               </ListItem>
               <ListItem>
                 <ListItemKey>Created at</ListItemKey>
-                <p>
-                  {" "}
-                  {dayjs(transferProcess?.created_at).format("DD/MM/YY HH:mm")}
-                </p>
+                <p> {dayjs(transferProcess?.created_at).format("DD/MM/YY HH:mm")}</p>
               </ListItem>
               <ListItem>
                 <ListItemKey>Updated at</ListItemKey>
-                <p>
-                  {" "}
-                  {dayjs(transferProcess?.updated_at).format("DD/MM/YY HH:mm")}
-                </p>
+                <p> {dayjs(transferProcess?.updated_at).format("DD/MM/YY HH:mm")}</p>
               </ListItem>
             </List>
           </div>
-           {/* DRAWER */}
-      <Drawer direction={"right"}>
-        <DrawerTrigger>
-          <Button variant={"secondary"}>See Transfer Process Messages</Button>
-        </DrawerTrigger>
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>
-              <Heading level="h5" className="text-current">
-                Transfer Messages
-              </Heading>
-            </DrawerTitle>
-          </DrawerHeader>
-          {/* Messages */}
-          <DrawerBody>
-            {/* {transferMessages.map((message) => {
+          {/* DRAWER */}
+          <Drawer direction={"right"}>
+            <DrawerTrigger>
+              <Button variant={"secondary"}>See Transfer Process Messages</Button>
+            </DrawerTrigger>
+            <DrawerContent>
+              <DrawerHeader>
+                <DrawerTitle>
+                  <Heading level="h5" className="text-current">
+                    Transfer Messages
+                  </Heading>
+                </DrawerTitle>
+              </DrawerHeader>
+              {/* Messages */}
+              <DrawerBody>
+                {/* {transferMessages.map((message) => {
               // console.log(message);
               return (
                 // <pre key={message.id}>{JSON.stringify(message, null, 2)}</pre>
@@ -142,8 +122,8 @@ function RouteComponent() {
                 />
               );
             })} */}
-          </DrawerBody>
-          {/* esto por si hace falta en algn momento dividir lo que pone en el
+              </DrawerBody>
+              {/* esto por si hace falta en algn momento dividir lo que pone en el
           content, pero por ahora no hace falta!!
           <div className="flex ">
             <p className="font-bold min-w-[9.4rem] "> Transfer Content: </p>
@@ -159,18 +139,16 @@ function RouteComponent() {
             </Badge>
           </div> */}
 
-          <DrawerFooter>
-            <DrawerClose>
-              <Button variant="ghost">Hide Messages</Button>
-            </DrawerClose>
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
-
+              <DrawerFooter>
+                <DrawerClose>
+                  <Button variant="ghost">Hide Messages</Button>
+                </DrawerClose>
+              </DrawerFooter>
+            </DrawerContent>
+          </Drawer>
         </TabsContent>
       </Tabs>
 
-     
       <div>
         {/* CATALOGOS CON LAS VARIABLES, NO BORRAR!! */}
         {/* <Table className="text-sm">

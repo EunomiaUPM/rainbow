@@ -16,26 +16,15 @@ import {
 } from "shared/src/data/catalog-bypass-queries.ts";
 import { Badge } from "shared/src/components/ui/badge";
 import Heading from "shared/src/components/ui/heading";
-import {
-  List,
-  ListItem,
-  ListItemKey,
-  ListItemDate,
-} from "shared/src/components/ui/list";
+import { List, ListItem, ListItemKey, ListItemDate } from "shared/src/components/ui/list";
 import { Button, buttonVariants } from "shared/src/components/ui/button";
 import { ArrowRight } from "lucide-react";
 
 const RouteComponent = () => {
   const { provider, catalogId } = Route.useParams();
   const { data: catalog } = useGetBypassCatalogsById(provider, catalogId);
-  const { data: datasets } = useGetBypassDatasetsByCatalogId(
-    provider,
-    catalogId
-  );
-  const { data: dataservices } = useGetBypassDataServicesByCatalogId(
-    provider,
-    catalogId
-  );
+  const { data: datasets } = useGetBypassDatasetsByCatalogId(provider, catalogId);
+  const { data: dataservices } = useGetBypassDataServicesByCatalogId(provider, catalogId);
 
   return (
     <div className="space-y-4 pb-4">
@@ -56,9 +45,7 @@ const RouteComponent = () => {
             </ListItem>
             <ListItem>
               <ListItemKey>Catalog participant ID</ListItemKey>
-              <Badge variant="info">
-                {catalog.participantId.slice(9, 29) + "[...]"}
-              </Badge>
+              <Badge variant="info">{catalog.participantId.slice(9, 29) + "[...]"}</Badge>
             </ListItem>
             <ListItem>
               <ListItemKey>Catalog homepage</ListItemKey>
@@ -66,9 +53,7 @@ const RouteComponent = () => {
             </ListItem>
             <ListItem>
               <ListItemKey>Catalog creation date</ListItemKey>
-              <ListItemDate>
-                {dayjs(catalog.issued).format("DD/MM/YYYY - HH:mm")}
-              </ListItemDate>
+              <ListItemDate>{dayjs(catalog.issued).format("DD/MM/YYYY - HH:mm")}</ListItemDate>
             </ListItem>
           </List>
         </div>
@@ -91,21 +76,14 @@ const RouteComponent = () => {
             {datasets.map((dataset) => (
               <TableRow key={dataset["@id"].slice(9, 29)}>
                 <TableCell>
-                  <Badge variant="info">
-                    {" "}
-                    {dataset["@id"].slice(9, 29) + "..."}
-                  </Badge>
+                  <Badge variant="info"> {dataset["@id"].slice(9, 29) + "..."}</Badge>
                 </TableCell>
                 <TableCell>{dataset.title}</TableCell>
                 <TableCell>
-                  <Badge variant="info">
-                    {catalog.participantId.slice(9, 29) + "..."}
-                  </Badge>
+                  <Badge variant="info">{catalog.participantId.slice(9, 29) + "..."}</Badge>
                 </TableCell>
                 <TableCell>
-                  <ListItemDate>
-                    {dayjs(catalog.issued).format("DD/MM/YYYY - HH:mm")}
-                  </ListItemDate>
+                  <ListItemDate>{dayjs(catalog.issued).format("DD/MM/YYYY - HH:mm")}</ListItemDate>
                 </TableCell>
                 <TableCell>
                   <Button size="sm" variant="outline">
@@ -148,9 +126,7 @@ const RouteComponent = () => {
             {dataservices.map((dataservice) => (
               <TableRow key={dataservice["@id"].slice(9, 29)}>
                 <TableCell>
-                  <Badge variant="info">
-                    {dataservice["@id"].slice(9, 29) + "..."}
-                  </Badge>
+                  <Badge variant="info">{dataservice["@id"].slice(9, 29) + "..."}</Badge>
                 </TableCell>
                 <TableCell>{dataservice.endpointURL}</TableCell>
                 <TableCell>{dataservice.endpointDescription}</TableCell>
@@ -188,9 +164,7 @@ const RouteComponent = () => {
   );
 };
 
-export const Route = createFileRoute(
-  "/provider-catalog/$provider/catalog/$catalogId/"
-)({
+export const Route = createFileRoute("/provider-catalog/$provider/catalog/$catalogId/")({
   component: RouteComponent,
   pendingComponent: () => <div>Loading...</div>,
 });

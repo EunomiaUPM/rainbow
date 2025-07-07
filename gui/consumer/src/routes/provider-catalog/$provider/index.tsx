@@ -1,43 +1,42 @@
-import {createFileRoute} from "@tanstack/react-router";
-import {Table, TableBody, TableHead, TableHeader, TableRow,} from "shared/src/components/ui/table";
+import { createFileRoute } from "@tanstack/react-router";
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "shared/src/components/ui/table";
 import Heading from "shared/src/components/ui/heading.tsx";
-import {Input} from "@/../../shared/src/components/ui/input.tsx";
-import {useGetBypassCatalogs} from "shared/src/data/catalog-bypass-queries.ts";
-import {Badge} from "shared/src/components/ui/badge";
+import { Input } from "@/../../shared/src/components/ui/input.tsx";
+import { useGetBypassCatalogs } from "shared/src/data/catalog-bypass-queries.ts";
+import { Badge } from "shared/src/components/ui/badge";
 
 const RouteComponent = () => {
-    const {provider} = Route.useParams();
-    const {data: catalogs} = useGetBypassCatalogs(provider);
+  const { provider } = Route.useParams();
+  const { data: catalogs } = useGetBypassCatalogs(provider);
 
-    return (
-        <div className="space-y-4 pb-4">
-            <Heading level="h3" className="flex gap-2 items-center">
-                Main Catalog with id
-                <Badge variant="info" size="lg">
-                </Badge>
-            </Heading>
-            <div>
-                <Heading level="h5">Main Catalog info: </Heading>
-            </div>
+  return (
+    <div className="space-y-4 pb-4">
+      <Heading level="h3" className="flex gap-2 items-center">
+        Main Catalog with id
+        <Badge variant="info" size="lg"></Badge>
+      </Heading>
+      <div>
+        <Heading level="h5">Main Catalog info: </Heading>
+      </div>
 
-            <div>
-                <Heading level="h5">Catalogs</Heading>
-                <div className="pb-3 w-3/5">
-                    <Input type="search"></Input>
-                </div>
-                <Table className="text-sm">
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Title</TableHead>
-                            <TableHead>Created at</TableHead>
-                            <TableHead>Catalog ID</TableHead>
-                            <TableHead>Provider ID</TableHead>
+      <div>
+        <Heading level="h5">Catalogs</Heading>
+        <div className="pb-3 w-3/5">
+          <Input type="search"></Input>
+        </div>
+        <Table className="text-sm">
+          <TableHeader>
+            <TableRow>
+              <TableHead>Title</TableHead>
+              <TableHead>Created at</TableHead>
+              <TableHead>Catalog ID</TableHead>
+              <TableHead>Provider ID</TableHead>
 
-                            <TableHead>Link</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {/* {catalogs.catalog.map((catalogItem) => (
+              <TableHead>Link</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {/* {catalogs.catalog.map((catalogItem) => (
               <TableRow key="urn:uuid:c4d4449d-a">
                 <TableCell>
                   {" "}
@@ -74,16 +73,14 @@ const RouteComponent = () => {
                 </TableCell>
               </TableRow>
             ))} */}
-
-
-                    </TableBody>
-                </Table>
-            </div>
-        </div>
-    );
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
 };
 
 export const Route = createFileRoute("/provider-catalog/$provider/")({
-    component: RouteComponent,
-    pendingComponent: () => <div>Loading...</div>,
+  component: RouteComponent,
+  pendingComponent: () => <div>Loading...</div>,
 });

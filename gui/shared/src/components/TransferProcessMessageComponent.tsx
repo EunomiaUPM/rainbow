@@ -20,7 +20,9 @@ let addSpacesFormat = (text: string) => {
   return text.replace(/(?!^)([A-Z])/g, " $1");
 };
 
-const TransferProcessMessageComponent: React.FC<TransferProcessMessageComponentProps> = ({ message }) => {
+const TransferProcessMessageComponent: React.FC<TransferProcessMessageComponentProps> = ({
+  message,
+}) => {
   return (
     <MessageLog key={message.id} variant={message.from}>
       <RoleHeader from={message.from} />
@@ -29,18 +31,14 @@ const TransferProcessMessageComponent: React.FC<TransferProcessMessageComponentP
           {addSpacesFormat(message.message_type)}
         </MessageTitle>
         <MessageTimestamp created_at={message.created_at} />
-          <MessageMetaContainer>
-        <MessageMeta
-          label=" Transfer Message Id"
-          value={message.id.slice(9, 60)}
-        />
-        <MessageMeta
-          label=" Transfer Process Id"
-          value={message.transfer_process_id.slice(9, 60)}
-        />
-          </MessageMetaContainer>
+        <MessageMetaContainer>
+          <MessageMeta label=" Transfer Message Id" value={message.id.slice(9, 60)} />
+          <MessageMeta
+            label=" Transfer Process Id"
+            value={message.transfer_process_id.slice(9, 60)}
+          />
+        </MessageMetaContainer>
         <MessageContent content={message.content} />
-      
       </MessageBody>
     </MessageLog>
   );

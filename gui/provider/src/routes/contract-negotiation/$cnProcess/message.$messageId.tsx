@@ -1,34 +1,33 @@
-import {createFileRoute} from '@tanstack/react-router'
+import { createFileRoute } from "@tanstack/react-router";
 import {
-    useGetAgreementByCNMessageId,
-    useGetContractNegotiationMessageById,
-    useGetLastContractNegotiationOfferByCNMessageId
+  useGetAgreementByCNMessageId,
+  useGetContractNegotiationMessageById,
+  useGetLastContractNegotiationOfferByCNMessageId,
 } from "shared/src/data/contract-queries.ts";
 
-export const Route = createFileRoute(
-    '/contract-negotiation/$cnProcess/message/$messageId',
-)({
-    component: RouteComponent,
-})
+export const Route = createFileRoute("/contract-negotiation/$cnProcess/message/$messageId")({
+  component: RouteComponent,
+});
 
 function RouteComponent() {
-    const {messageId} = Route.useParams();
+  const { messageId } = Route.useParams();
 
-    const {data: cnMessage} = useGetContractNegotiationMessageById(messageId)
-    const {data: cnOffer, isError: offerError} = useGetLastContractNegotiationOfferByCNMessageId(messageId);
-    const {data: cnAgreement, isError: agreementError} = useGetAgreementByCNMessageId(messageId);
+  const { data: cnMessage } = useGetContractNegotiationMessageById(messageId);
+  const { data: cnOffer, isError: offerError } =
+    useGetLastContractNegotiationOfferByCNMessageId(messageId);
+  const { data: cnAgreement, isError: agreementError } = useGetAgreementByCNMessageId(messageId);
 
-    return <div className="space-y-4">
-        <div>
-            {JSON.stringify(cnMessage)}
-        </div>
-        <div>
-            {offerError && "no offer found"}
-            {offerError || JSON.stringify(cnOffer)}
-        </div>
-        <div>
-            {agreementError && "no agreement found"}
-            {agreementError || JSON.stringify(cnAgreement)}
-        </div>
+  return (
+    <div className="space-y-4">
+      <div>{JSON.stringify(cnMessage)}</div>
+      <div>
+        {offerError && "no offer found"}
+        {offerError || JSON.stringify(cnOffer)}
+      </div>
+      <div>
+        {agreementError && "no agreement found"}
+        {agreementError || JSON.stringify(cnAgreement)}
+      </div>
     </div>
+  );
 }

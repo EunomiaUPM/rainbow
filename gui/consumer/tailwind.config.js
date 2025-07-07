@@ -1,7 +1,4 @@
-import {
-  plugins as plugins_,
-  theme as theme_,
-} from "./../shared/tailwind.config";
+import { plugins as plugins_, theme as theme_ } from "./../shared/tailwind.config";
 
 /** @type {import('tailwindcss').Config} */
 

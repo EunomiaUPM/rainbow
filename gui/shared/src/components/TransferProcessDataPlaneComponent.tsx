@@ -7,9 +7,9 @@ type TransferProcessDataPlaneComponentProps = {
   dataPlane: DataplaneSession;
 };
 
-const TransferProcessDataPlaneComponent: React.FC<
-  TransferProcessDataPlaneComponentProps
-> = ({ dataPlane }) => {
+const TransferProcessDataPlaneComponent: React.FC<TransferProcessDataPlaneComponentProps> = ({
+  dataPlane,
+}) => {
   const scopedListItemKeyClasses = "basis-[33%]";
 
   return (
@@ -31,14 +31,12 @@ const TransferProcessDataPlaneComponent: React.FC<
       {dataPlane.downstream_hop.url && (
         <ListItem>
           <ListItemKey className={scopedListItemKeyClasses}>Downstream protocol</ListItemKey>
-          <Badge className="uppercase">
-            {dataPlane.downstream_hop.protocol}
-          </Badge>
+          <Badge className="uppercase">{dataPlane.downstream_hop.protocol}</Badge>
         </ListItem>
       )}
       <ListItem>
         <ListItemKey className={scopedListItemKeyClasses}>Process address</ListItemKey>
-        <Badge variant={"info"}>{dataPlane.process_address.url.slice(0, -45) + '[...]'}</Badge>
+        <Badge variant={"info"}>{dataPlane.process_address.url.slice(0, -45) + "[...]"}</Badge>
       </ListItem>
       <ListItem>
         <ListItemKey className={scopedListItemKeyClasses}>Created At</ListItemKey>

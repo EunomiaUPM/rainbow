@@ -14,12 +14,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@./../../shared/src/components/ui/drawer";
-import {
-  List,
-  ListItem,
-  ListItemKey,
-  ListItemDate,
-} from "shared/src/components/ui/list";
+import { List, ListItem, ListItemKey, ListItemDate } from "shared/src/components/ui/list";
 import {
   Table,
   TableBody,
@@ -43,7 +38,6 @@ const RouteComponent = () => {
   const { data: datasets } = useGetDatasetsByCatalogId(catalogId);
   const { data: dataservices } = useGetDataServicesByCatalogId(catalogId);
 
-
   return (
     <div className="space-y-4 pb-4">
       <div>
@@ -56,9 +50,7 @@ const RouteComponent = () => {
             </ListItem>
             <ListItem>
               <ListItemKey>Catalog participant ID</ListItemKey>
-              <Badge variant="info">
-                {catalog.participantId.slice(9, 29) + "[...]"}
-              </Badge>
+              <Badge variant="info">{catalog.participantId.slice(9, 29) + "[...]"}</Badge>
             </ListItem>
             <ListItem>
               <ListItemKey>Catalog homepage</ListItemKey>
@@ -66,9 +58,7 @@ const RouteComponent = () => {
             </ListItem>
             <ListItem>
               <ListItemKey>Catalog creation date</ListItemKey>
-              <ListItemDate>
-                {dayjs(catalog.issued).format("DD/MM/YYYY - HH:mm")}
-              </ListItemDate>
+              <ListItemDate>{dayjs(catalog.issued).format("DD/MM/YYYY - HH:mm")}</ListItemDate>
             </ListItem>
           </List>
           <div className="filler"></div>
@@ -93,27 +83,20 @@ const RouteComponent = () => {
             {datasets.map((dataset) => (
               <TableRow key={dataset["@id"].slice(9, 29)}>
                 <TableCell>
-                  <Badge variant="info">
-                    {" "}
-                    {dataset["@id"].slice(9, 29) + "..."}
-                  </Badge>
+                  <Badge variant="info"> {dataset["@id"].slice(9, 29) + "..."}</Badge>
                 </TableCell>
                 <TableCell>{dataset.title}</TableCell>
                 <TableCell>
-                  <Badge variant="info">
-                    {catalog.participantId.slice(9, 29) + "..."}
-                  </Badge>
+                  <Badge variant="info">{catalog.participantId.slice(9, 29) + "..."}</Badge>
                 </TableCell>
                 <TableCell>
-                  <ListItemDate>
-                    {dayjs(catalog.issued).format("DD/MM/YYYY - HH:mm")}
-                  </ListItemDate>
+                  <ListItemDate>{dayjs(catalog.issued).format("DD/MM/YYYY - HH:mm")}</ListItemDate>
                 </TableCell>
                 <TableCell>
                   <Drawer direction={"right"}>
                     <DrawerTrigger>
                       <Button variant="outline" size="sm">
-                        <Plus/>
+                        <Plus />
                         Offer dataset
                       </Button>
                     </DrawerTrigger>
@@ -175,9 +158,7 @@ const RouteComponent = () => {
             {dataservices.map((dataservice) => (
               <TableRow key={dataservice["@id"].slice(9, 29)}>
                 <TableCell>
-                  <Badge variant="info">
-                    {dataservice["@id"].slice(9, 29) + "..."}
-                  </Badge>
+                  <Badge variant="info">{dataservice["@id"].slice(9, 29) + "..."}</Badge>
                 </TableCell>
                 <TableCell>{dataservice.endpointURL}</TableCell>
                 <TableCell>{dataservice.endpointDescription}</TableCell>

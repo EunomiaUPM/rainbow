@@ -3,7 +3,7 @@ import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 
 // @ts-ignore
-import {cn} from "@/lib/utils"
+import { cn } from "@/lib/utils";
 // @ts-ignore
 
 import { DragHandleVerticalIcon } from "@radix-ui/react-icons";
@@ -15,7 +15,7 @@ const badgeVariants = cva(
       variant: {
         default: "bg-brand-snow/15 text-brand-snow border-transparent",
         info: "font-mono uppercase bg-background-800 text-secondary-400 border-transparent",
-         infoLighter: "font-mono uppercase bg-white/10 text-secondary-400 border-transparent",
+        infoLighter: "font-mono uppercase bg-white/10 text-secondary-400 border-transparent",
         role: "text-white uppercase border-transparent",
         status: "bg-opacity-30 border-transparent text-foreground-300", // base status style
         // constraint: "bg-white/10 border-0 border-white/15 text-white/60 font-medium break-all"
@@ -65,7 +65,7 @@ const badgeVariants = cva(
       state: "default",
       size: "default",
     },
-  }
+  },
 );
 
 function Badge({
@@ -77,8 +77,7 @@ function Badge({
   asChild = false,
   children,
   ...props
-}: React.ComponentProps<"span"> &
-  VariantProps<typeof badgeVariants> & { asChild?: boolean }) {
+}: React.ComponentProps<"span"> & VariantProps<typeof badgeVariants> & { asChild?: boolean }) {
   const Comp = asChild ? Slot : "span";
   const showDot = variant === "status";
 

@@ -39,7 +39,7 @@ function RouteComponent() {
               {/* <TableHead>Provider Participant Id</TableHead> */}
               <TableHead>Status</TableHead>
               <TableHead>Created at</TableHead>
-              
+
               <TableHead>Link</TableHead>
             </TableRow>
           </TableHeader>
@@ -48,9 +48,7 @@ function RouteComponent() {
               <TableRow key={agreement.agreement_id.slice(0, 20)}>
                 {/* Agreement Id */}
                 <TableCell>
-                  <Badge variant={"info"}>
-                    {agreement.agreement_id.slice(9, 20) + "..."}
-                  </Badge>
+                  <Badge variant={"info"}>{agreement.agreement_id.slice(9, 20) + "..."}</Badge>
                 </TableCell>
                 {/* Related Message */}
                 {/* <TableCell>
@@ -79,9 +77,7 @@ function RouteComponent() {
                     {agreement.active ? "ACTIVE" : "INACTIVE"}
                   </Badge>
                 </TableCell>
-                <TableCell>
-                  {dayjs(agreement.created_at).format("DD/MM/YY HH:mm")}
-                </TableCell>
+                <TableCell>{dayjs(agreement.created_at).format("DD/MM/YY HH:mm")}</TableCell>
                 <TableCell>
                   <Link
                     to="/agreements/$agreementId"

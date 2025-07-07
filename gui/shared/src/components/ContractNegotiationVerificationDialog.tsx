@@ -11,24 +11,16 @@ import React, { useContext } from "react";
 import { Form } from "./ui/form";
 import { useForm } from "react-hook-form";
 import { usePostContractNegotiationRPCVerification } from "./../data/contract-mutations";
-import {
-  GlobalInfoContext,
-  GlobalInfoContextType,
-} from "./../context/GlobalInfoContext";
+import { GlobalInfoContext, GlobalInfoContextType } from "./../context/GlobalInfoContext";
 import { Badge } from "./../components/ui/badge";
 import { List, ListItem, ListItemKey } from "./../components/ui/list";
 import dayjs from "dayjs";
 
-export const ContractNegotiationVerificationDialog = ({
-  process,
-}: {
-  process: CNProcess;
-}) => {
+export const ContractNegotiationVerificationDialog = ({ process }: { process: CNProcess }) => {
   // --- Form Setup ---
   const form = useForm({});
   const { handleSubmit, control, setValue, getValues } = form;
-  const { mutateAsync: agreeAsync } =
-    usePostContractNegotiationRPCVerification();
+  const { mutateAsync: agreeAsync } = usePostContractNegotiationRPCVerification();
   const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
   const onSubmit = () => {
     agreeAsync({
@@ -58,59 +50,41 @@ export const ContractNegotiationVerificationDialog = ({
       {/* List JSON */}
       <List className="min-w-full px-2">
         <ListItem>
-          <ListItemKey className={scopedListItemKeyClasses}>
-            Provider id:
-          </ListItemKey>
+          <ListItemKey className={scopedListItemKeyClasses}>Provider id:</ListItemKey>
           <Badge variant={"info"}>{process.provider_id.slice(9, -1)}</Badge>
         </ListItem>
         <ListItem>
-          <ListItemKey className={scopedListItemKeyClasses}>
-            Consumer id:
-          </ListItemKey>
+          <ListItemKey className={scopedListItemKeyClasses}>Consumer id:</ListItemKey>
           <Badge variant={"info"}>{process.consumer_id.slice(9, -1)}</Badge>
         </ListItem>
         {process.associated_consumer && (
           <ListItem>
-            <ListItemKey className={scopedListItemKeyClasses}>
-              Associated Consumer id:
-            </ListItemKey>
-            <Badge variant={"info"}>
-              {process.associated_consumer}
-            </Badge>
+            <ListItemKey className={scopedListItemKeyClasses}>Associated Consumer id:</ListItemKey>
+            <Badge variant={"info"}>{process.associated_consumer}</Badge>
           </ListItem>
         )}
         {process.associated_provider && (
           <ListItem>
-            <ListItemKey className={scopedListItemKeyClasses}>
-              Associated Provider id:
-            </ListItemKey>
-            <Badge variant={"info"}>
-              {process.associated_provider.slice(9, 40) + "[...]"}
-            </Badge>
+            <ListItemKey className={scopedListItemKeyClasses}>Associated Provider id:</ListItemKey>
+            <Badge variant={"info"}>{process.associated_provider.slice(9, 40) + "[...]"}</Badge>
           </ListItem>
         )}
         <ListItem>
-          <ListItemKey className={scopedListItemKeyClasses}>
-            Current state:
-          </ListItemKey>
+          <ListItemKey className={scopedListItemKeyClasses}>Current state:</ListItemKey>
           <Badge variant={"status"} state={process.state}>
             {process.state}
           </Badge>
         </ListItem>
         {process.initiated_by && (
           <ListItem>
-            <ListItemKey className={scopedListItemKeyClasses}>
-              Initiated by:
-            </ListItemKey>
+            <ListItemKey className={scopedListItemKeyClasses}>Initiated by:</ListItemKey>
             <Badge variant={"role"} role={process.initiated_by}>
               {process.initiated_by}
             </Badge>
           </ListItem>
         )}
         <ListItem>
-          <ListItemKey className={scopedListItemKeyClasses}>
-            Created at:
-          </ListItemKey>
+          <ListItemKey className={scopedListItemKeyClasses}>Created at:</ListItemKey>
           <p> {dayjs(process.created_at).format("DD/MM/YY HH:mm")}</p>
         </ListItem>
         {process.updated_at && (

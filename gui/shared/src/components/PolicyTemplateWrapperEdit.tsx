@@ -49,7 +49,7 @@ export const PolicyTemplateWrapperEdit = ({
   // On submit conform ODRL and use onSubmit method from parent component
   const submitHandler = async (
     formData: DynamicFormValues,
-    currentPolicyTemplate: PolicyTemplate
+    currentPolicyTemplate: PolicyTemplate,
   ) => {
     let odrlContent = JSON.parse(JSON.stringify(currentPolicyTemplate.content));
     for (const key in formData) {
@@ -57,10 +57,7 @@ export const PolicyTemplateWrapperEdit = ({
         const value = formData[key];
         let contentString = JSON.stringify(odrlContent);
         const escapedKey = key.replace(/[$]/g, "\\$&");
-        contentString = contentString.replace(
-          new RegExp(escapedKey, "g"),
-          value
-        );
+        contentString = contentString.replace(new RegExp(escapedKey, "g"), value);
         odrlContent = JSON.parse(contentString);
       }
     }
@@ -78,9 +75,7 @@ export const PolicyTemplateWrapperEdit = ({
     switch (formType) {
       case "date":
       case "text":
-        component = (
-          <Input type={formType} defaultValue={defaultValue} {...field} />
-        );
+        component = <Input type={formType} defaultValue={defaultValue} {...field} />;
         break;
       case "select":
         component = (
@@ -90,11 +85,7 @@ export const PolicyTemplateWrapperEdit = ({
             </SelectTrigger>
             <SelectContent>
               {innerOptions?.map((opt) => (
-                <SelectItem
-                  className=" text-white/70 min-w-fit"
-                  key={opt.value}
-                  value={opt.value}
-                >
+                <SelectItem className=" text-white/70 min-w-fit" key={opt.value} value={opt.value}>
                   {opt.label.find((l) => l["@language"] == "en")?.["@value"]}
                   {opt.value}
                 </SelectItem>
@@ -125,18 +116,14 @@ export const PolicyTemplateWrapperEdit = ({
     <div>
       <FormProvider {...form}>
         <form
-          onSubmit={form.handleSubmit((data) =>
-            submitHandler(data, policyTemplate)
-          )}
+          onSubmit={form.handleSubmit((data) => submitHandler(data, policyTemplate))}
           className="space-y-4 " // Add some spacing to the form
         >
           <List className="border border-white/30 bg-white/10 px-4 py-2 pb-4 rounded-md justify-start max-h-[80vh] overflow-y-auto">
             <div className="flex">
               <Heading level="h5" className="flex gap-3">
-              
-                
-                 <span className="font-light">Policy template:</span>
-           {policyTemplate.title} 
+                <span className="font-light">Policy template:</span>
+                {policyTemplate.title}
               </Heading>
             </div>
             {/* <ListItem>
@@ -164,62 +151,42 @@ export const PolicyTemplateWrapperEdit = ({
                     </AccordionTrigger>
                     <AccordionContent className="relative ">
                       {(policyTemplate.content.permission == undefined ||
-                        policyTemplate.content.permission?.length == 0) && (
-                        <p>No policy defined</p>
-                      )}
+                        policyTemplate.content.permission?.length == 0) && <p>No policy defined</p>}
                       {policyTemplate.content.permission !== undefined &&
-                        (policyTemplate.content.permission || []).map(
-                          (permission, i) => (
-                            <div className="border-b border-white/20 last:border-0 first:mt-0 mt-3">
-                              <div className="policy-item-template">
-                                <div className="flex gap-3">
-                                  <p className="mb-2 opacity-80 font-bold">
-                                    {" "}
-                                    Action:{" "}
-                                  </p>
-                                  <p> {permission.action.toUpperCase()} </p>
-                                </div>
-                                <div className="h-2"></div>
-                                <p className="mb-1 opacity-80 font-bold">
-                                  {" "}
-                                  Constraints:{" "}
-                                </p>
-                                {permission.constraint?.map((constraint, j) => (
-                                  <div className="constraint-template-group">
-                                    <div className="constraint-create flex gap-3">
-                                      <div className="flex flex-col">
-                                        <p className="text-xs text-gray-500 mb-1">
-                                          Left Operand:
-                                        </p>
-                                        <p className="key-policy-template">
-                                          {constraint.leftOperand}
-                                        </p>
-                                      </div>
-                                      <div className="flex flex-col">
-                                        <p className="text-xs text-gray-500 mb-1">
-                                          Operator:
-                                        </p>
-                                        <p className="key-policy-template">
-                                          {constraint.operator}
-                                        </p>
-                                      </div>
-                                      <div className="flex flex-col">
-                                        <p className="text-xs text-gray-500 mb-1">
-                                          Right Operand:
-                                        </p>
-                                        <Select>
-                                          {renderOperandOptionsFormControl(
-                                            constraint.rightOperand
-                                          )}
-                                        </Select>
-                                      </div>
+                        (policyTemplate.content.permission || []).map((permission, i) => (
+                          <div className="border-b border-white/20 last:border-0 first:mt-0 mt-3">
+                            <div className="policy-item-template">
+                              <div className="flex gap-3">
+                                <p className="mb-2 opacity-80 font-bold"> Action: </p>
+                                <p> {permission.action.toUpperCase()} </p>
+                              </div>
+                              <div className="h-2"></div>
+                              <p className="mb-1 opacity-80 font-bold"> Constraints: </p>
+                              {permission.constraint?.map((constraint, j) => (
+                                <div className="constraint-template-group">
+                                  <div className="constraint-create flex gap-3">
+                                    <div className="flex flex-col">
+                                      <p className="text-xs text-gray-500 mb-1">Left Operand:</p>
+                                      <p className="key-policy-template">
+                                        {constraint.leftOperand}
+                                      </p>
+                                    </div>
+                                    <div className="flex flex-col">
+                                      <p className="text-xs text-gray-500 mb-1">Operator:</p>
+                                      <p className="key-policy-template">{constraint.operator}</p>
+                                    </div>
+                                    <div className="flex flex-col">
+                                      <p className="text-xs text-gray-500 mb-1">Right Operand:</p>
+                                      <Select>
+                                        {renderOperandOptionsFormControl(constraint.rightOperand)}
+                                      </Select>
                                     </div>
                                   </div>
-                                ))}
-                              </div>
+                                </div>
+                              ))}
                             </div>
-                          )
-                        )}
+                          </div>
+                        ))}
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
@@ -235,54 +202,39 @@ export const PolicyTemplateWrapperEdit = ({
                     </AccordionTrigger>
                     <AccordionContent className="relative">
                       {(policyTemplate.content.obligation == undefined ||
-                        policyTemplate.content.obligation?.length == 0) && (
-                        <p>No policy defined</p>
-                      )}
-                      {(policyTemplate.content.obligation || []).map(
-                        (obligation, i) => (
-                          <div>
-                            <div className="policy-item-template">
-                              <div className="flex gap-3">
-                                <p className="mb-2 opacity-80 font-bold">
-                                  {" "}
-                                  Action:{" "}
-                                </p>
-                                <p>{obligation.action?.toUpperCase()}</p>
-                              </div>
-                              <div className="h-2"></div>
-                              <p className="mb-2"> Constraints: </p>
-                              {obligation.constraint?.map((constraint, j) => (
-                               <div className="constraint-template-group">
-                                  <div className="constraint-create flex gap-3">
-                                    <div className="flex flex-col">
-                                      <p className="text-xs text-gray-500 mb-1">
-                                        Left Operand:
-                                      </p>
-                                      <p className="key-policy-template">{constraint.leftOperand}</p>
-                                    </div>
-                                    <div className="flex flex-col">
-                                      <p className="text-xs text-gray-500 mb-1">
-                                        Operator:
-                                      </p>
-                                      <p className="key-policy-template">{constraint.operator}</p>
-                                    </div>
-                                    <div className="flex flex-col">
-                                      <p className="text-xs text-gray-500 mb-1">
-                                        Right Operand:
-                                      </p>
-                                      <div>
-                                        {renderOperandOptionsFormControl(
-                                          constraint.rightOperand
-                                        )}
-                                      </div>
+                        policyTemplate.content.obligation?.length == 0) && <p>No policy defined</p>}
+                      {(policyTemplate.content.obligation || []).map((obligation, i) => (
+                        <div>
+                          <div className="policy-item-template">
+                            <div className="flex gap-3">
+                              <p className="mb-2 opacity-80 font-bold"> Action: </p>
+                              <p>{obligation.action?.toUpperCase()}</p>
+                            </div>
+                            <div className="h-2"></div>
+                            <p className="mb-2"> Constraints: </p>
+                            {obligation.constraint?.map((constraint, j) => (
+                              <div className="constraint-template-group">
+                                <div className="constraint-create flex gap-3">
+                                  <div className="flex flex-col">
+                                    <p className="text-xs text-gray-500 mb-1">Left Operand:</p>
+                                    <p className="key-policy-template">{constraint.leftOperand}</p>
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <p className="text-xs text-gray-500 mb-1">Operator:</p>
+                                    <p className="key-policy-template">{constraint.operator}</p>
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <p className="text-xs text-gray-500 mb-1">Right Operand:</p>
+                                    <div>
+                                      {renderOperandOptionsFormControl(constraint.rightOperand)}
                                     </div>
                                   </div>
                                 </div>
-                              ))}
-                            </div>
+                              </div>
+                            ))}
                           </div>
-                        )
-                      )}
+                        </div>
+                      ))}
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
@@ -301,59 +253,48 @@ export const PolicyTemplateWrapperEdit = ({
                         policyTemplate.content.prohibition?.length == 0) && (
                         <p>No policy defined</p>
                       )}
-                      {(policyTemplate.content.prohibition || []).map(
-                        (prohibition, i) => (
-                          <div>
-                            <div className="policy-item-template">
-                                  <div className="flex gap-3">
-                                  <p className="mb-2 opacity-80 font-bold">
-                                    {" "}
-                                    Action:{" "}
-                                  </p>
-                           <p> {prohibition.action?.toUpperCase()} </p>  
-                                 </div>
-                              <div className="h-2"></div>
-                              <p className="mb-2"> Constraints: </p>
-                              {prohibition.constraint?.map((constraint, j) => (
-                               <div className="constraint-template-group">
-                                  <div className="constraint-create flex gap-3">
-                                    <div className="flex flex-col">
-                                      <p className="text-xs text-gray-500 mb-1">
-                                        Left Operand:
-                                      </p>
-                                      <p className="key-policy-template">{constraint.leftOperand}</p>
-                                    </div>
-                                    <div className="flex flex-col">
-                                      <p className="text-xs text-gray-500 mb-1">
-                                        Operator:
-                                      </p>
-                                      <p className="key-policy-template">{constraint.operator}</p>
-                                    </div>
-                                    <div className="flex flex-col">
-                                      <p className="text-xs text-gray-500 mb-1">
-                                        Right Operand:
-                                      </p>
-                                      <div>
-                                        {renderOperandOptionsFormControl(
-                                          constraint.rightOperand
-                                        )}
-                                      </div>
+                      {(policyTemplate.content.prohibition || []).map((prohibition, i) => (
+                        <div>
+                          <div className="policy-item-template">
+                            <div className="flex gap-3">
+                              <p className="mb-2 opacity-80 font-bold"> Action: </p>
+                              <p> {prohibition.action?.toUpperCase()} </p>
+                            </div>
+                            <div className="h-2"></div>
+                            <p className="mb-2"> Constraints: </p>
+                            {prohibition.constraint?.map((constraint, j) => (
+                              <div className="constraint-template-group">
+                                <div className="constraint-create flex gap-3">
+                                  <div className="flex flex-col">
+                                    <p className="text-xs text-gray-500 mb-1">Left Operand:</p>
+                                    <p className="key-policy-template">{constraint.leftOperand}</p>
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <p className="text-xs text-gray-500 mb-1">Operator:</p>
+                                    <p className="key-policy-template">{constraint.operator}</p>
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <p className="text-xs text-gray-500 mb-1">Right Operand:</p>
+                                    <div>
+                                      {renderOperandOptionsFormControl(constraint.rightOperand)}
                                     </div>
                                   </div>
                                 </div>
-                              ))}
-                            </div>
+                              </div>
+                            ))}
                           </div>
-                        )
-                      )}
+                        </div>
+                      ))}
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
-                 {/* <Button className="w-fit mt-4" type="submit">Create policy</Button> */}
+                {/* <Button className="w-fit mt-4" type="submit">Create policy</Button> */}
               </div>
             </div>
           </List>
-           <Button className="w-fit mt-4" type="submit">Create policy</Button>
+          <Button className="w-fit mt-4" type="submit">
+            Create policy
+          </Button>
         </form>
       </FormProvider>
     </div>

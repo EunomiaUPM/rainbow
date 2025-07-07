@@ -12,15 +12,11 @@ const RouteComponent = () => {
   return (
     <div className=" mb-2">
       <header className="mb-6">
-        <Heading
-          level="h3"
-          className="mb-0.5 font-display flex  gap-3 items-center"
-        >
-        
-          Transfer Process 
-              <Badge variant="info" size="lg">
+        <Heading level="h3" className="mb-0.5 font-display flex  gap-3 items-center">
+          Transfer Process
+          <Badge variant="info" size="lg">
             {" "}
-            {transferProcessId.slice(9,29) + "[...]"}{" "}
+            {transferProcessId.slice(9, 29) + "[...]"}{" "}
           </Badge>
         </Heading>
         {/* no borrar */}

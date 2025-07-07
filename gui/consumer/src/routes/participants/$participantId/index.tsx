@@ -44,11 +44,7 @@ function RouteComponent() {
       {/* Page Header */}
       <Heading level="h3" className="flex items-center gap-3">
         Participant with id
-        <Badge
-          variant={"info"}
-          size={"lg"}
-          className="max-w-[50%] truncate text-overflow-ellipsis"
-        >
+        <Badge variant={"info"} size={"lg"} className="max-w-[50%] truncate text-overflow-ellipsis">
           {participant.participant_id.slice(9, -1)}
         </Badge>
       </Heading>
@@ -56,40 +52,27 @@ function RouteComponent() {
       <div className="gridColsLayout bg-blue-500/0">
         {/* Div Participant Info */}
         <div className="flex flex-col bg-green-800/0">
-          <Heading
-            level="h6"
-            className="text-foreground h-[36px] place-content-center"
-          >
+          <Heading level="h6" className="text-foreground h-[36px] place-content-center">
             Participant info:
           </Heading>
           <div className="max-w-screen-md bg-green-500/0">
             <List className={"min-w-fit"}>
               <ListItem>
-                <ListItemKey className={scopedListItemKeyClasses}>
-                  Participant ID
-                </ListItemKey>
-                <Badge variant={"info"}>
-                  {participant.participant_id.slice(9, 29) + "[...]"}
-                </Badge>
+                <ListItemKey className={scopedListItemKeyClasses}>Participant ID</ListItemKey>
+                <Badge variant={"info"}>{participant.participant_id.slice(9, 29) + "[...]"}</Badge>
               </ListItem>
               <ListItem>
-                <ListItemKey className={scopedListItemKeyClasses}>
-                  Identity Token
-                </ListItemKey>
+                <ListItemKey className={scopedListItemKeyClasses}>Identity Token</ListItemKey>
                 <Badge variant={"info"}>{participant.token}</Badge>
               </ListItem>
               <ListItem>
-                <ListItemKey className={scopedListItemKeyClasses}>
-                  Participant Type
-                </ListItemKey>
+                <ListItemKey className={scopedListItemKeyClasses}>Participant Type</ListItemKey>
                 <Badge variant={"role"} role={participant.participant_type}>
                   {participant.participant_type}
                 </Badge>
               </ListItem>
               <ListItem>
-                <ListItemKey className={scopedListItemKeyClasses}>
-                  Base URL
-                </ListItemKey>
+                <ListItemKey className={scopedListItemKeyClasses}>Base URL</ListItemKey>
                 <Badge variant={"info"}>{participant.base_url}</Badge>
               </ListItem>
             </List>
@@ -102,9 +85,7 @@ function RouteComponent() {
           // si se añaden otros tabs habría que añadirlos
           <Tabs defaultValue="participant-agreements">
             <TabsList>
-              <TabsTrigger value="participant-agreements">
-                Agreements
-              </TabsTrigger>
+              <TabsTrigger value="participant-agreements">Agreements</TabsTrigger>
               {/* <TabsTrigger value="participant-transferences">Transferences</TabsTrigger> */}
               {/* <TabsTrigger value="participant-contracts">Contract Negotiations</TabsTrigger> */}
             </TabsList>
@@ -116,12 +97,8 @@ function RouteComponent() {
                     <TableRow>
                       <TableHead>Agreement Id</TableHead>
                       <TableHead className="hidden">Related Message</TableHead>
-                      <TableHead className="hidden">
-                        Consumer Participant Id
-                      </TableHead>
-                      <TableHead className="hidden">
-                        Provider Participant Id
-                      </TableHead>
+                      <TableHead className="hidden">Consumer Participant Id</TableHead>
+                      <TableHead className="hidden">Provider Participant Id</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Created at</TableHead>
                       <TableHead>Link</TableHead>
@@ -150,10 +127,7 @@ function RouteComponent() {
                           </Badge>
                         </TableCell> */}
                         <TableCell>
-                          <Badge
-                            variant={"status"}
-                            state={agreement.active ? "STARTED" : "PAUSE"}
-                          >
+                          <Badge variant={"status"} state={agreement.active ? "STARTED" : "PAUSE"}>
                             {agreement.active ? "ACTIVE" : "INACTIVE"}
                           </Badge>
                         </TableCell>

@@ -28,10 +28,7 @@ import Heading from "shared/src/components/ui/heading";
 // Icons
 import { ArrowRight, Plus } from "lucide-react";
 import { useWalletOnboard } from "../../../../shared/src/data/wallet-mutations.ts";
-import {
-  GlobalInfoContext,
-  GlobalInfoContextType,
-} from "shared/src/context/GlobalInfoContext.tsx";
+import { GlobalInfoContext, GlobalInfoContextType } from "shared/src/context/GlobalInfoContext.tsx";
 
 export const Route = createFileRoute("/participants/")({
   component: RouteComponent,
@@ -41,14 +38,10 @@ function RouteComponent() {
   const { data: participants } = useGetParticipants();
   const { lastHighLightedNotification } = useContext(PubSubContext)!;
   const { mutateAsync: onboardAsync } = useWalletOnboard();
-  const { api_gateway } = useContext<GlobalInfoContextType | null>(
-    GlobalInfoContext
-  )!;
+  const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
 
   const hasProvider = useMemo(() => {
-    const participant = participants.find(
-      (p) => p.participant_type == "Provider"
-    );
+    const participant = participants.find((p) => p.participant_type == "Provider");
     if (!participant) {
       return false;
     } else {
@@ -69,14 +62,10 @@ function RouteComponent() {
         <div className="p-8 py-6 mx-auto w-fit max-w-[70ch] bg-brand-sky/5 border border-stroke rounded-md">
           <Heading level="h3">Missing wallet...</Heading>
           <Heading level="h5">
-            Your wallet is not yet connected as Provider. <br /> Please complete
-            the onboarding process to get started.
+            Your wallet is not yet connected as Provider. <br /> Please complete the onboarding
+            process to get started.
           </Heading>
-          <Button
-            size={"lg"}
-            className="w-full mt-4"
-            onClick={() => onboardHandler()}
-          >
+          <Button size={"lg"} className="w-full mt-4" onClick={() => onboardHandler()}>
             Onboard wallet
           </Button>
         </div>
@@ -154,9 +143,7 @@ function RouteComponent() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={"info"}>
-                      {participant.token?.slice(0, 20) + "..."}
-                    </Badge>
+                    <Badge variant={"info"}>{participant.token?.slice(0, 20) + "..."}</Badge>
                   </TableCell>
                   <TableCell>
                     <Badge variant={"role"} role={participant.participant_type}>

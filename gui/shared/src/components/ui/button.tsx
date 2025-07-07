@@ -12,8 +12,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         // primary
-        default:
-          "bg-primary text-brand-snow hover:bg-primary/90 hover:text-white shadow",
+        default: "bg-primary text-brand-snow hover:bg-primary/90 hover:text-white shadow",
         // destructive: "bg-danger text-danger-50 hover:bg-danger/90 shadow-sm",
         destructive:
           "border border-danger text-danger-300 bg-foreground/10 shadow-sm hover:bg-foreground/20 hover:text-danger-400",
@@ -21,8 +20,7 @@ const buttonVariants = cva(
           "border border-primary-300 text-primary-300 bg-foreground/10 shadow-sm hover:bg-foreground/15 hover:border-primary-400 hover:text-primary-200",
         outline_destructive:
           "border border-danger text-danger-300 bg-foreground/10 shadow-sm hover:bg-foreground/20 hover:text-danger-400",
-        secondary:
-          "bg-secondary/70 text-secondary-foreground shadow-sm hover:bg-secondary/90",
+        secondary: "bg-secondary/70 text-secondary-foreground shadow-sm hover:bg-secondary/90",
         ghost: "text-brand-snow bg-foreground/10 hover:bg-foreground/20",
         icon_destructive:
           "flex text-danger-400 border border-danger hover:text-danger-500 bg-foreground/5 hover:bg-foreground/10 p-0 mb-0 [&_svg]:w-5 [&_svg]:h-5 p-1",
@@ -38,12 +36,9 @@ const buttonVariants = cva(
       },
       policy: {
         default: "",
-        permission:
-          "bg-success-600/20 border-success-700 text-success-100 hover:bg-success-600/30",
-        obligation:
-          "bg-warn-700/20 border-warn-700 text-warn-100 hover:bg-warn-700/30",
-        prohibition:
-          "bg-danger-600/20 border-danger-700 text-danger-100 hover:bg-danger-600/30",
+        permission: "bg-success-600/20 border-success-700 text-success-100 hover:bg-success-600/30",
+        obligation: "bg-warn-700/20 border-warn-700 text-warn-100 hover:bg-warn-700/30",
+        prohibition: "bg-danger-600/20 border-danger-700 text-danger-100 hover:bg-danger-600/30",
       },
     },
     defaultVariants: {
@@ -51,7 +46,7 @@ const buttonVariants = cva(
       size: "default",
       policy: "default",
     },
-  }
+  },
 );
 
 export interface ButtonProps
@@ -70,7 +65,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       />
     );
-  }
+  },
 );
 Button.displayName = "Button";
 

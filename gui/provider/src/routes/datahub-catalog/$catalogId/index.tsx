@@ -24,12 +24,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "shared/src/components/ui/drawer";
-import {
-  List,
-  ListItem,
-  ListItemKey,
-  ListItemDate,
-} from "shared/src/components/ui/list";
+import { List, ListItem, ListItemKey, ListItemDate } from "shared/src/components/ui/list";
 import { useGetParticipants } from "shared/src/data/participant-queries.ts";
 import { OfferDrawer } from "@/components/OfferDrawer.tsx";
 import { ArrowRight, Plus } from "lucide-react";

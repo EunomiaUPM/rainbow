@@ -4,15 +4,11 @@ import path from "path";
 import tsconfigPaths from "vite-tsconfig-paths";
 import tailwind from "tailwindcss";
 import autoprefixer from "autoprefixer";
-import { TanStackRouterVite } from '@tanstack/router-plugin/vite'
+import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [
-    react(),
-    tsconfigPaths(),
-    TanStackRouterVite({ autoCodeSplitting: true }),
-  ],
+  plugins: [react(), tsconfigPaths(), TanStackRouterVite({ autoCodeSplitting: true })],
   publicDir: path.resolve(__dirname, "../shared/public"),
   css: {
     postcss: {

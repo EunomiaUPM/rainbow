@@ -60,7 +60,7 @@ const MessageLog = React.forwardRef<
         layoutVariants({ variant: styleVariant }),
         "w-full min-h-fit flex flex-col",
         isLeft ? "justify-start items-start" : "justify-end items-end",
-        className
+        className,
       )}
       {...props}
     >
@@ -87,7 +87,7 @@ const RoleHeader = React.forwardRef<
         className={cn(
           roleVariants({ variant: styleVariant }),
           "w-fit max-w-[640px] uppercase text-18 px-4 py-1 font-medium rounded-t-sm border-none",
-          isLeft ? "ml-2 text-roles-provider" : "mr-2 text-roles-consumer"
+          isLeft ? "ml-2 text-roles-provider" : "mr-2 text-roles-consumer",
         )}
       >
         {from}
@@ -109,7 +109,7 @@ const MessageBody = React.forwardRef<
       className={cn(
         roleVariants({ variant: styleVariant }),
         "w-full max-w-[640px] px-4 py-3 rounded-md rounded-b-xl border flex flex-col gap-2",
-        className
+        className,
       )}
       {...props}
     >
@@ -119,20 +119,18 @@ const MessageBody = React.forwardRef<
 });
 MessageBody.displayName = "MessageBody";
 
-
-const MessageTitle = React.forwardRef<
-  HTMLHeadingElement,
-  React.HTMLAttributes<HTMLHeadingElement>
->(({ className, children, ...props }, ref) => (
-  <Heading
-    level="h4"
-    ref={ref}
-    className={cn("mb-0 !text-[20px] !text-foreground-400", className)}
-    {...props}
-  >
-    {children}
-  </Heading>
-));
+const MessageTitle = React.forwardRef<HTMLHeadingElement, React.HTMLAttributes<HTMLHeadingElement>>(
+  ({ className, children, ...props }, ref) => (
+    <Heading
+      level="h4"
+      ref={ref}
+      className={cn("mb-0 !text-[20px] !text-foreground-400", className)}
+      {...props}
+    >
+      {children}
+    </Heading>
+  ),
+);
 MessageTitle.displayName = "MessageTitle";
 
 const MessageTimestamp = React.forwardRef<
@@ -166,7 +164,7 @@ const MessageMeta = React.forwardRef<HTMLDivElement, MessageMetaProps>(
       ref={ref}
       className={cn(
         "min-h-8 flex flex-row flex-wrap gap-1 mb-1 text-white/70 border-none p-0 m-0",
-        className
+        className,
       )}
       {...props}
     >
@@ -175,7 +173,7 @@ const MessageMeta = React.forwardRef<HTMLDivElement, MessageMetaProps>(
         {value}
       </Badge>
     </ListItem>
-  )
+  ),
 );
 MessageMeta.displayName = "MessageMeta";
 
@@ -194,7 +192,7 @@ const MessageContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTM
         </div>
       </div>
     );
-  }
+  },
 );
 MessageContent.displayName = "MessageContent";
 
