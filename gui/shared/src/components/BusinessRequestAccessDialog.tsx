@@ -1,4 +1,12 @@
-import {DialogClose, DialogContent, DialogBody, DialogDescription, DialogFooter, DialogHeader, DialogTitle} from "./ui/dialog";
+import {
+    DialogBody,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle
+} from "./ui/dialog";
 import {Button} from "shared/src/components/ui/button";
 import {Badge} from "shared/src/components/ui/badge";
 import React, {useContext, useRef} from "react";
@@ -13,7 +21,7 @@ export const BusinessRequestAccessDialog = ({policy, catalogId, datasetId, datas
     policy: OdrlOffer,
     catalogId: UUID,
     datasetId: UUID,
-      datasetName: string
+    datasetName: string
 }) => {
     // --- Form Setup ---
     const closeDialogRef = useRef<HTMLButtonElement>(null);
@@ -31,7 +39,6 @@ export const BusinessRequestAccessDialog = ({policy, catalogId, datasetId, datas
                 offer: {
                     "@id": policy["@id"]
                 }
-
             }
         })
         form.reset()
@@ -40,23 +47,24 @@ export const BusinessRequestAccessDialog = ({policy, catalogId, datasetId, datas
 
     return (
         <DialogContent className=" p-0 flex flex-col h-fit max-h-[90dvh]">
-            <DialogHeader className="px-6 pt-6" >
+            <DialogHeader className="px-6 pt-6">
                 <DialogTitle>Dataset access dialog</DialogTitle>
                 <DialogDescription className="max-w-full flex flex-col break-all gap-2">
-                    <div className="max-w-full flex flex-col gap-0 mb-0">
-                        <p> You are about to request access to dataset 
-                            {console.log(datasetId, "datasetID")}
-                            <Badge variant="infoLighter"  className="mx-1 mt-1">{datasetName }</Badge> 
-                            in catalog <Badge variant="infoLighter"  className="mx-1 mt-1">{catalogId.slice(14) }</Badge>  
-                            under policy with ID  <Badge variant="infoLighter"  className="mx-1 mt-1">{policy["@id"].slice(9,27) + "[...]"}</Badge></p>
-                    </div>
-                 
-                            </DialogDescription>
+                    <span className="max-w-full flex flex-col gap-0 mb-0">
+                        <span> You are about to request access to dataset
+                            <Badge variant="infoLighter" className="mx-1 mt-1">{datasetName}</Badge>
+                            in catalog <Badge variant="infoLighter" className="mx-1 mt-1">{catalogId.slice(14)}</Badge>
+                            under policy with ID <Badge variant="infoLighter"
+                                                        className="mx-1 mt-1">{policy["@id"].slice(9, 27) + "[...]"}</Badge>
+                        </span>
+                    </span>
+
+                </DialogDescription>
             </DialogHeader>
-                 <DialogBody>
-                        <PolicyWrapperShow policy={policy}/>
-                    </DialogBody>
-        
+            <DialogBody>
+                <PolicyWrapperShow policy={policy}/>
+            </DialogBody>
+
 
             <Form {...form}>
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -72,7 +80,7 @@ export const BusinessRequestAccessDialog = ({policy, catalogId, datasetId, datas
                     </DialogFooter>
                 </form>
             </Form>
- 
+
         </DialogContent>
     );
 };
