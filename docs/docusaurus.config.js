@@ -7,7 +7,7 @@ module.exports = {
     title: 'My Site',
     tagline: 'Dinosaurs are cool',
     url: 'http://localhost:3000/',
-    baseUrl: '/',
+    baseUrl: '/rainbow/',
     onBrokenLinks: 'throw',
     onBrokenMarkdownLinks: 'warn',
     favicon: '/img/favicon.ico',
