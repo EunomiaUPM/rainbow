@@ -70,7 +70,7 @@ export const getDatahubBypassDatasetById = async (
   provider_id: UUID,
   datasetId: UUID,
 ) => {
-  const catalog: Dataset = await (
+  const catalog: DatahubDataset = await (
     await fetch(
       api_gateway + `/catalog-bypass/${provider_id}/datahub/domains/datasets/${datasetId}`,
     )

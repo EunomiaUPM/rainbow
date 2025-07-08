@@ -171,6 +171,7 @@ declare global {
   }
 
   export interface TransferProcess {
+    id?: UUID;
     provider_pid: UUID;
     consumer_pid: UUID;
     agreement_id: UUID;

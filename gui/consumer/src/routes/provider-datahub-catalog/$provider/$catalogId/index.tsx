@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
 import Heading from "shared/src/components/ui/heading.tsx";
 import { Input } from "shared/src/components/ui/input.tsx";
 import { Badge } from "shared/src/components/ui/badge";
@@ -20,16 +19,13 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "shared/src/components/ui/drawer";
-import { useGetParticipants } from "shared/src/data/participant-queries.ts";
 import { ArrowRight } from "lucide-react";
 import { useGetDatahubBypassDatasetsByCatalogId } from "shared/src/data/catalog-datahub-bypass-queries.ts";
 import { DatahubRequestDrawer } from "@/components/DatahubRequestDrawer.tsx";
 
 const RouteComponent = () => {
-  const [open, setOpen] = useState(false);
   const { provider, catalogId } = Route.useParams();
   const { data: datasets } = useGetDatahubBypassDatasetsByCatalogId(provider, catalogId);
-  const { data: participants } = useGetParticipants();
 
   return (
     <div className="space-y-4 pb-4">

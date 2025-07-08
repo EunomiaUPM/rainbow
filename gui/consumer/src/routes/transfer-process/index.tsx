@@ -10,7 +10,7 @@ import {
 } from "shared/src/components/ui/table.tsx";
 import dayjs from "dayjs";
 import { Button } from "shared/src/components/ui/button.tsx";
-import { Badge } from "shared/src/components/ui/badge.tsx";
+import { Badge, BadgeState } from "shared/src/components/ui/badge.tsx";
 import { Input } from "shared/src/components/ui/input.tsx";
 import { TransferProcessActions } from "shared/src/components/TransferProcessActions.tsx";
 import { ArrowRight } from "lucide-react";
@@ -46,7 +46,7 @@ function RouteComponent() {
                 <Badge variant={"info"}>{transferProcess.provider_pid.slice(9, 20) + "..."}</Badge>
               </TableCell>
               <TableCell>
-                <Badge variant={"status"} state={transferProcess.state}>
+                <Badge variant={"status"} state={transferProcess.state as BadgeState}>
                   {/* TO DO STYLE: Casuística state */}
                   {mergeStateAndAttribute(transferProcess.state, transferProcess.state_attribute)}
                 </Badge>

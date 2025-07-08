@@ -9,10 +9,6 @@ import { Dialog, DialogTrigger } from "shared/src/components/ui/dialog.tsx";
 import { Button } from "shared/src/components/ui/button.tsx";
 import { ContractNegotiationNewRequestDialog } from "shared/src/components/ContractNegotiationNewRequestDialog.tsx";
 
-type Inputs = {
-  odrl: string;
-};
-
 function RouteComponent() {
   const { provider, catalogId, datasetId } = Route.useParams();
   const { data: dataset } = useGetDatahubBypassDatasetById(provider, datasetId);
@@ -50,6 +46,7 @@ function RouteComponent() {
               datasetId={datasetId}
               catalogId={catalogId}
               participant={provider}
+              datasetName={""}
             />
             <Dialog>
               <DialogTrigger asChild>

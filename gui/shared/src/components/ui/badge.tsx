@@ -21,10 +21,10 @@ const badgeVariants = cva(
       },
       state: {
         /*
-                  Importante que los nombres de estas variantes estén en mayúsculas porque es como llega
-                  el string del atributo y si no coincide el casing se rompe
-                  // para poner en state={process.state} y que pille el nombre directamente
-                */
+                          Importante que los nombres de estas variantes estén en mayúsculas porque es como llega
+                          el string del atributo y si no coincide el casing se rompe
+                          // para poner en state={process.state} y que pille el nombre directamente
+                        */
         default: "",
         danger: "",
         warn: "",
@@ -70,6 +70,9 @@ const badgeVariants = cva(
     },
   },
 );
+
+export type BadgeState = VariantProps<typeof badgeVariants>["state"];
+export type BadgeRole = VariantProps<typeof badgeVariants>["role"];
 
 function Badge({
   className,

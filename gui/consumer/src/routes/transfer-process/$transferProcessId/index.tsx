@@ -7,7 +7,7 @@ import {
 } from "shared/src/data/transfer-queries.ts";
 import { List, ListItem, ListItemKey } from "shared/src/components/ui/list.tsx";
 import Heading from "shared/src/components/ui/heading.tsx";
-import { Badge } from "shared/src/components/ui/badge.tsx";
+import { Badge, BadgeState } from "shared/src/components/ui/badge.tsx";
 import {
   Tabs,
   TabsContent,
@@ -77,7 +77,7 @@ function RouteComponent() {
               </ListItem>
               <ListItem>
                 <ListItemKey>Transfer Process State</ListItemKey>
-                <Badge variant={"status"} state={transferProcess.state}>
+                <Badge variant={"status"} state={transferProcess.state as BadgeState}>
                   {transferProcess.state}
                 </Badge>
               </ListItem>

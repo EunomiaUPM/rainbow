@@ -12,7 +12,7 @@ import { useContext } from "react";
 import { PubSubContext } from "shared/src/context/PubSubContext.tsx";
 import { Button } from "shared/src/components/ui/button.tsx";
 import { Input } from "shared/src/components/ui/input.tsx";
-import { Badge } from "shared/src/components/ui/badge";
+import { Badge, BadgeRole } from "shared/src/components/ui/badge";
 import Heading from "shared/src/components/ui/heading.tsx";
 import { ArrowRight } from "lucide-react";
 
@@ -55,7 +55,7 @@ function RouteComponent() {
                   <Badge variant={"info"}>{participant.participant_id.slice(9, 20) + "..."}</Badge>
                 </TableCell>
                 <TableCell>
-                  <Badge variant={"role"} role={participant.participant_type}>
+                  <Badge variant={"role"} role={participant.participant_type as BadgeRole}>
                     {participant.participant_type}
                   </Badge>
                 </TableCell>
