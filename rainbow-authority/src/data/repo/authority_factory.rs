@@ -17,6 +17,14 @@
  *
  */
 
-pub mod auth;
-pub mod auth_interaction;
-pub mod auth_verification;
+use sea_orm::DatabaseConnection;
+use super::basic_repo_trait::BasicRepoTrait;
+use super::{auth, auth_interaction, auth_verification};
+
+pub trait AuthorityRepoFactory: Send + Sync + Clone + 'static {
+    fn create_repo(db_connection: DatabaseConnection) -> Box<dyn AuthorityRepoTrait>;
+}
+
+pub trait AuthorityRepoTrait: BasicRepoTrait<auth::Model> +BasicRepoTrait<auth_interaction::Model>+ BasicRepoTrait<auth_verification>+ Send + Sync + 'static {
+
+}

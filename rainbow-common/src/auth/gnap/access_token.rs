@@ -28,6 +28,7 @@ pub struct AccessToken {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub manage: Option<Value>,
     pub access: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub expires_in: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub key: Option<Value>, // TODO DecodingKey
