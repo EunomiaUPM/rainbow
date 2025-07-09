@@ -17,19 +17,36 @@
  *
  */
 
-use chrono;
 use sea_orm::entity::prelude::*;
-use sea_orm_migration::seaql_migrations::Relation;
-use serde::{Deserialize, Serialize};
+use serde_json::Value as JsonValue;
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
-#[sea_orm(table_name = "vc_requests")]
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
+#[sea_orm(table_name = "auth_interaction")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: String,
-    pub content: serde_json::Value,
-    pub state: String,
-    pub created_at: chrono::NaiveDateTime,
+    pub start: JsonValue, // IT IS A VEC!!
+    pub method: String,
+    pub uri: Option<String>,
+    pub client_nonce: String,
+    pub as_nonce: String,
+    pub interact_ref: String,
+    pub grant_endpoint: String,
+    pub hash: String,
+    pub hash_method: Option<String>,
+    pub hints: Option<String>, // In reality, it is a value
+}
+
+#[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
+pub enum Relation {
+    #[sea_orm(has_one = "super::auth::Entity")]
+    Auth,
+}
+
+impl Related<super::auth::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Auth.def()
+    }
 }
 
 impl ActiveModelBehavior for ActiveModel {}

@@ -21,7 +21,7 @@
 // use anyhow::bail;
 // use rainbow_common::err::transfer_err::TransferErrorType;
 
-use crate::ssi_auth::consumer::core::manager::{RainbowSSIAuthConsumerManagerTrait};
+use crate::ssi_auth::consumer::core::manager::RainbowSSIAuthConsumerManagerTrait;
 use crate::ssi_auth::consumer::core::types::{CallbackResponse, ReachAuthority, ReachProvider};
 use crate::ssi_auth::consumer::core::Manager;
 use anyhow::bail;
@@ -31,6 +31,7 @@ use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use once_cell::sync::Lazy;
+use rainbow_common::ssi_wallet::RainbowSSIAuthWalletTrait;
 use rainbow_db::auth_consumer::repo::AuthConsumerRepoTrait;
 use reqwest::StatusCode;
 use serde::Deserialize;
@@ -42,7 +43,6 @@ use tokio::sync::Mutex;
 use tracing::{debug, info};
 use url::Url;
 use urlencoding::decode;
-use rainbow_common::ssi_wallet::RainbowSSIAuthWalletTrait;
 
 pub struct RainbowAuthConsumerRouter<T>
 where
@@ -71,7 +71,7 @@ where
             .route("/api/v1/callback/manual/:id", get(Self::manual_callback))
             .route("/api/v1/retrieve/token/:id", get(Self::manual_callback))
             .route("/api/v1/beg/credential", post(Self::beg4credential))
-            .route("/api/v1/.well-known/did.json", get(Self::didweb)) // TODO
+            .route("/api/v1/did.json", get(Self::didweb)) // TODO
             // .route("/provider/:id/renew", post(todo!()))
             // .route("/provider/:id/finalize", post(todo!()))
             .with_state(self.manager)
@@ -113,10 +113,7 @@ where
         }
     }
 
-    async fn auth_ssi(
-        State(manager): State<Arc<Manager<T>>>,
-        Json(payload): Json<ReachProvider>,
-    ) -> impl IntoResponse {
+    async fn auth_ssi(State(manager): State<Arc<Manager<T>>>, Json(payload): Json<ReachProvider>) -> impl IntoResponse {
         info!("POST /auth/ssi");
 
         match manager.onboard().await {
@@ -212,7 +209,6 @@ where
         res // TODO HABLAR CON CARLOS
     }
 
-
     async fn callback(
         State(manager): State<Arc<Manager<T>>>,
         Path(id): Path<String>,
@@ -280,18 +276,43 @@ where
 
         let uri = match manager.check_callback(id.clone(), interact_ref.to_string(), hash.to_string()).await {
             Ok(uri) => uri,
-            Err(e) => return (StatusCode::BAD_REQUEST, format!("check callback failed: {}", e.to_string())).into_response(),
+            Err(e) => {
+                return (
+                    StatusCode::BAD_REQUEST,
+                    format!("check callback failed: {}", e.to_string()),
+                )
+                    .into_response()
+            }
         };
 
         let res = match manager.continue_request(id, interact_ref.to_string(), uri).await {
             Ok(res) => res,
-            Err(e) => return (StatusCode::BAD_REQUEST, format!("continue request failed: {}", e.to_string())).into_response(),
+            Err(e) => {
+                return (
+                    StatusCode::BAD_REQUEST,
+                    format!("continue request failed: {}", e.to_string()),
+                )
+                    .into_response()
+            }
         };
 
         let grant_endpoint = res.grant_endpoint.replace("/api/v1/access", "");
-        match manager.save_mate(Some(res.provider_id), res.provider_slug, grant_endpoint, res.token.unwrap(), res.actions).await {
+        match manager
+            .save_mate(
+                Some(res.provider_id),
+                res.provider_slug,
+                grant_endpoint,
+                res.token.unwrap(),
+                res.actions,
+            )
+            .await
+        {
             Ok(a) => (StatusCode::CREATED, Json(a.json::<Value>().await.unwrap())).into_response(),
-            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, format!("mate not saved: {}", e.to_string())).into_response(),
+            Err(e) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("mate not saved: {}", e.to_string()),
+            )
+                .into_response(),
         }
     }
 
@@ -311,13 +332,52 @@ where
     }
 
     async fn didweb(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
+        info!("GET /did.json");
         Json(manager.didweb().await.unwrap())
+        // Json(json!({
+        //   "@context": [
+        //     "https://www.w3.org/ns/did/v1",
+        //     "https://w3id.org/security/suites/jws-2020/v1"
+        //   ],
+        //   "id": "did:web:host.docker.internal%3A1100:api:v1",
+        //   "verificationMethod": [
+        //     {
+        //       "id": "did:web:host.docker.internal%3A1100:api:v1#on2sEy4NMq7Tg1m6oRwJqA4Q8VPL8aXdR0_PwgavF-Y",
+        //       "type": "JsonWebKey2020",
+        //       "controller": "did:web:host.docker.internal%3A1100:api:v1",
+        //       "publicKeyJwk": {
+        //         "kty": "OKP",
+        //         "crv": "Ed25519",
+        //         "kid": "on2sEy4NMq7Tg1m6oRwJqA4Q8VPL8aXdR0_PwgavF-Y",
+        //         "x": "K6vWHohi7kkQ5rjWbdjCGW6h1HsFICdS-TpEG7dicnc"
+        //       }
+        //     }
+        //   ],
+        //   "assertionMethod": [
+        //     "did:web:host.docker.internal%3A1100:api:v1#on2sEy4NMq7Tg1m6oRwJqA4Q8VPL8aXdR0_PwgavF-Y"
+        //   ],
+        //   "authentication": [
+        //     "did:web:host.docker.internal%3A1100:api:v1#on2sEy4NMq7Tg1m6oRwJqA4Q8VPL8aXdR0_PwgavF-Y"
+        //   ],
+        //   "capabilityInvocation": [
+        //     "did:web:host.docker.internal%3A1100:api:v1#on2sEy4NMq7Tg1m6oRwJqA4Q8VPL8aXdR0_PwgavF-Y"
+        //   ],
+        //   "capabilityDelegation": [
+        //     "did:web:host.docker.internal%3A1100:api:v1#on2sEy4NMq7Tg1m6oRwJqA4Q8VPL8aXdR0_PwgavF-Y"
+        //   ],
+        //   "keyAgreement": [
+        //     "did:web:host.docker.internal%3A1100:api:v1#on2sEy4NMq7Tg1m6oRwJqA4Q8VPL8aXdR0_PwgavF-Y"
+        //   ]
+        // }))
     }
 
-    async fn beg4credential(State(manager): State<Arc<Manager<T>>>, Json(payload): Json<ReachAuthority>,) -> impl IntoResponse {
+    async fn beg4credential(
+        State(manager): State<Arc<Manager<T>>>,
+        Json(payload): Json<ReachAuthority>,
+    ) -> impl IntoResponse {
         info!("POST /beg/credential");
-        match manager.beg4credential(payload.url).await{
-            Ok(()) => {},
+        match manager.beg4credential(payload.url).await {
+            Ok(()) => {}
             Err(e) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
         };
         StatusCode::OK.into_response()
@@ -327,8 +387,4 @@ where
         info!("{}", log);
         (StatusCode::NOT_FOUND, format!("No route for {uri}"))
     }
-
-
 }
-
-

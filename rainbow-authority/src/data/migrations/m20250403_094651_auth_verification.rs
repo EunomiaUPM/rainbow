@@ -17,12 +17,14 @@
  *
  */
 
+use sea_orm::sea_query::extension::postgres::Type;
+use sea_orm::Iterable;
 use sea_orm_migration::prelude::*;
 
 pub struct Migration;
 impl MigrationName for Migration {
     fn name(&self) -> &str {
-        "m20250529_000001_authority"
+        "m20250403_094651_auth_verification"
     }
 }
 
@@ -32,26 +34,38 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(VerifiableCredentialRequests::Table)
-                    .col(ColumnDef::new(VerifiableCredentialRequests::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(VerifiableCredentialRequests::Content).json().not_null())
-                    .col(ColumnDef::new(VerifiableCredentialRequests::Status).string().not_null())
-                    .col(ColumnDef::new(VerifiableCredentialRequests::CreatedAt).date_time().not_null())
+                    .table(AuthVerification::Table)
+                    .col(ColumnDef::new(AuthVerification::Id).string().not_null().primary_key())
+                    .col(ColumnDef::new(AuthVerification::State).string().not_null())
+                    .col(ColumnDef::new(AuthVerification::Nonce).string().not_null())
+                    .col(ColumnDef::new(AuthVerification::Audience).string().not_null())
+                    .col(ColumnDef::new(AuthVerification::Holder).string())
+                    .col(ColumnDef::new(AuthVerification::VPT).string())
+                    .col(ColumnDef::new(AuthVerification::Success).boolean())
+                    .col(ColumnDef::new(AuthVerification::Status).string())
+                    .col(ColumnDef::new(AuthVerification::CreatedAt).date_time().not_null())
+                    .col(ColumnDef::new(AuthVerification::EndedAt).date_time())
                     .to_owned(),
             )
             .await
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(VerifiableCredentialRequests::Table).to_owned()).await
+        manager.drop_table(Table::drop().table(AuthVerification::Table).to_owned()).await
     }
 }
 
 #[derive(Iden)]
-pub enum VerifiableCredentialRequests {
+pub enum AuthVerification {
     Table,
     Id,
-    Content,
+    State,
+    Nonce,
+    Audience,
+    Holder,
+    VPT,
+    Success,
     Status,
     CreatedAt,
+    EndedAt,
 }

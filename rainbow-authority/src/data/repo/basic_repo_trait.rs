@@ -17,6 +17,13 @@
  *
  */
 
-pub mod auth;
-pub mod auth_interaction;
-pub mod auth_verification;
+use axum::async_trait;
+
+#[async_trait]
+pub trait BasicRepoTrait<T>: Send + Sync {
+    async fn get_all(&self, limit: Option<u64>, offset: Option<u64>) -> anyhow::Result<Vec<T>>;
+    async fn get_by_id(&self, id: &str) -> anyhow::Result<Option<T>>;
+    async fn create(&self, model: T) -> anyhow::Result<T>;
+    async fn delete(&self, id: &str) -> anyhow::Result<()>;
+    async fn edit(&self, model: T) -> anyhow::Result<T>;
+}

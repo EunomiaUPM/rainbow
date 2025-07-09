@@ -404,12 +404,14 @@ where
         match wallet_session.wallets.first() {
             Some(wallet) => {
                 let dids = wallet.clone().dids.unwrap();
-                let did= dids.first().unwrap();
-                let did_doc= did.clone().document;
+                let did = dids.first().unwrap();
+                let did_doc = did.clone().document;
                 let json: Value = serde_json::from_str(&did_doc)?;
                 Ok(json)
-                            }
-            None => {bail!("No wallets available")}
+            }
+            None => {
+                bail!("No wallets available")
+            }
         }
     }
 }
@@ -867,22 +869,17 @@ where
     }
 
     async fn beg4credential(&self, url: String) -> anyhow::Result<()> {
-        let body = GrantRequest::default4await(
-            "".to_string(),
-            self.config.client_config.self_client.clone(),
-        );
-
         let mut headers = HeaderMap::new();
         headers.insert(CONTENT_TYPE, "application/json".parse()?);
         headers.insert(ACCEPT, "application/json".parse()?);
-        match std::env::current_dir() {
-            Ok(path) => println!("Directorio actual: {}", path.display()),
-            Err(e) => println!("Error obteniendo directorio actual: {}", e),
-        }
-        let _ = match fs::read(&self.config.cert_path) {
-            Ok(bytes) => println!("{}", String::from_utf8_lossy(&bytes)),
-            Err(e) => println!("FALLO"),
+
+        let cert = match fs::read(&self.config.cert_path) {
+            Ok(bytes) => String::from_utf8_lossy(&bytes).to_string(),
+            Err(e) => bail!("Error parsing the certificate"),
         };
+
+        let body = GrantRequest::default4await(cert, self.config.client_config.self_client.clone());
+
         let res = self.client.post(url).headers(headers).json(&body).send().await;
 
         let res = match res {

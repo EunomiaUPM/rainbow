@@ -57,7 +57,11 @@ pub trait AuthProviderRepoTrait {
         auth_interaction::Model,
         auth_verification::Model,
     )>;
-    async fn create_truncated_auth(&self, audience: String, state: String) -> anyhow::Result<(auth::Model, auth_verification::Model)>;
+    async fn create_truncated_auth(
+        &self,
+        audience: String,
+        state: String,
+    ) -> anyhow::Result<(auth::Model, auth_verification::Model)>;
     async fn update_auth_status(&self, id: String, status: String, end: bool) -> anyhow::Result<auth::Model>;
     async fn delete_auth(&self, id: String) -> anyhow::Result<auth::Model>;
 
