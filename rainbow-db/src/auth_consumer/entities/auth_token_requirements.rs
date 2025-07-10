@@ -19,35 +19,39 @@
 
 use chrono;
 use sea_orm::entity::prelude::*;
+use sea_orm::ActiveValue;
 use serde_json::Value as JsonValue;
-// use crate::auth_consumer::status::Status;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
-#[sea_orm(table_name = "auth")]
+#[sea_orm(table_name = "auth_token_requirements")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: String,
-    pub provider_id: String,
-    pub provider_slug: String,
-    pub status: String,
-    pub assigned_id: Option<String>,
-    pub grant_endpoint: String,
-    pub continue_endpoint: Option<String>,
-    pub actions: String,
-    pub token: Option<String>,
-    pub created_at: chrono::NaiveDateTime,
-    pub ended_at: Option<chrono::NaiveDateTime>,
-
+    pub id: String, // REQUEST
+    pub r#type: String,                  // REQUEST
+    pub actions: Vec<String>,            // REQUEST
+    pub locations: Option<Vec<String>>,  // REQUEST
+    pub datatypes: Option<Vec<String>>,  // REQUEST
+    pub identifier: Option<String>,      // REQUEST
+    pub privileges: Option<Vec<String>>, // REQUEST
+    pub label: Option<String>,           // REQUEST
+    pub flags: Option<Vec<String>>,      // REQUEST
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
+    #[sea_orm(has_one = "super::auth_request::Entity")]
+    AuthRequest,
     #[sea_orm(has_one = "super::auth_interaction::Entity")]
     AuthInteraction,
     #[sea_orm(has_one = "super::auth_verification::Entity")]
     AuthVerification,
 }
 
+impl Related<super::auth_request::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::AuthRequest.def()
+    }
+}
 impl Related<super::auth_interaction::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::AuthInteraction.def()
@@ -61,5 +65,3 @@ impl Related<super::auth_verification::Entity> for Entity {
 }
 
 impl ActiveModelBehavior for ActiveModel {}
-
-

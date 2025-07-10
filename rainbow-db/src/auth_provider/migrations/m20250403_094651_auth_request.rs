@@ -24,7 +24,7 @@ use sea_orm_migration::prelude::*;
 pub struct Migration;
 impl MigrationName for Migration {
     fn name(&self) -> &str {
-        "m20250403_094651_prov"
+        "m20250403_094651_auth_request"
     }
 }
 
@@ -34,24 +34,30 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(Prov::Table)
-                    .col(ColumnDef::new(Prov::Provider).string().not_null().primary_key())
-                    .col(ColumnDef::new(Prov::ProviderRoute).string().not_null())
-                    .col(ColumnDef::new(Prov::Onboard).boolean().not_null())
+                    .table(Auth::Table)
+                    .col(ColumnDef::new(Auth::Id).string().not_null().primary_key())
+                    .col(ColumnDef::new(Auth::ConsumerId).string().not_null())
+                    .col(ColumnDef::new(Auth::Token).string())
+                    .col(ColumnDef::new(Auth::Status).string().not_null())
+                    .col(ColumnDef::new(Auth::CreatedAt).date_time().not_null())
+                    .col(ColumnDef::new(Auth::EndedAt).date_time())
                     .to_owned(),
             )
             .await
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(Prov::Table).to_owned()).await
+        manager.drop_table(Table::drop().table(Auth::Table).to_owned()).await
     }
 }
 
 #[derive(Iden)]
-pub enum Prov {
+pub enum Auth {
     Table,
-    Provider,
-    ProviderRoute,
-    Onboard,
+    Id,
+    ConsumerId,
+    Token,
+    Status,
+    CreatedAt,
+    EndedAt,
 }

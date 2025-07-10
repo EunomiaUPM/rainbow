@@ -17,14 +17,12 @@
  *
  */
 
-use sea_orm::sea_query::extension::postgres::Type;
-use sea_orm::Iterable;
 use sea_orm_migration::prelude::*;
 
 pub struct Migration;
 impl MigrationName for Migration {
     fn name(&self) -> &str {
-        "m20250403_094651_auth"
+        "m20250403_094651_mates"
     }
 }
 
@@ -34,32 +32,34 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(Auth::Table)
-                    .col(ColumnDef::new(Auth::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(Auth::Consumer).string())
-                    .col(ColumnDef::new(Auth::Actions).string().not_null())
-                    .col(ColumnDef::new(Auth::Status).string().not_null())
-                    .col(ColumnDef::new(Auth::Token).string())
-                    .col(ColumnDef::new(Auth::CreatedAt).date_time().not_null())
-                    .col(ColumnDef::new(Auth::EndedAt).date_time())
+                    .table(Mates::Table)
+                    .col(ColumnDef::new(Mates::ParticipantId).string().not_null().primary_key())
+                    .col(ColumnDef::new(Mates::ParticipantSlug).string().not_null())
+                    .col(ColumnDef::new(Mates::ParticipantType).string().not_null())
+                    .col(ColumnDef::new(Mates::BaseUrl).string())
+                    .col(ColumnDef::new(Mates::Token).string())
+                    .col(ColumnDef::new(Mates::SavedAt).date_time().not_null())
+                    .col(ColumnDef::new(Mates::LastInteraction).date_time().not_null())
+                    .col(ColumnDef::new(Mates::IsMe).boolean().not_null())
                     .to_owned(),
             )
             .await
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(Auth::Table).to_owned()).await
+        manager.drop_table(Table::drop().table(Mates::Table).to_owned()).await
     }
 }
 
 #[derive(Iden)]
-pub enum Auth {
+pub enum Mates {
     Table,
-    Id,
-    Consumer,
-    Actions,
-    Status,
+    ParticipantId,
+    ParticipantSlug,
+    ParticipantType,
+    BaseUrl,
     Token,
-    CreatedAt,
-    EndedAt,
+    SavedAt,
+    LastInteraction,
+    IsMe,
 }

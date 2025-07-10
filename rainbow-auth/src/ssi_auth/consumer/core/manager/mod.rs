@@ -22,7 +22,7 @@ pub mod manager;
 use crate::ssi_auth::consumer::core::types::{MatchingVCs, RedirectResponse};
 use axum::async_trait;
 pub use manager::Manager;
-use rainbow_db::auth_consumer::entities::{auth, auth_verification};
+use rainbow_db::auth_consumer::entities::{auth_request, auth_verification};
 
 use reqwest::Response;
 use serde_json::Value;
@@ -50,7 +50,7 @@ pub trait RainbowSSIAuthConsumerManagerTrait: Send + Sync {
     async fn present_vp(&self, preq: String, creds: Vec<String>) -> anyhow::Result<RedirectResponse>;
     async fn do_callback(&self, uri: String) -> anyhow::Result<()>;
     async fn check_callback(&self, id: String, interact_ref: String, hash: String) -> anyhow::Result<String>;
-    async fn continue_request(&self, id: String, interact_ref: String, uri: String) -> anyhow::Result<auth::Model>;
+    async fn continue_request(&self, id: String, interact_ref: String, uri: String) -> anyhow::Result<auth_request::Model>;
     async fn save_mate(
         &self,
         global_id: Option<String>,

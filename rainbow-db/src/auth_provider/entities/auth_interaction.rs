@@ -16,37 +16,102 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
+use base64::engine::general_purpose::URL_SAFE_NO_PAD;
+use base64::Engine;
+use rand::distributions::Alphanumeric;
+use rand::Rng;
 use sea_orm::entity::prelude::*;
+use sea_orm::ActiveValue;
 use serde_json::Value as JsonValue;
+use sha2::{Digest, Sha256};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
 #[sea_orm(table_name = "auth_interaction")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: String,
-    pub start: JsonValue, // IT IS A VEC!!
-    pub method: String,
-    pub uri: Option<String>,
-    pub client_nonce: String,
-    pub as_nonce: String,
-    pub interact_ref: String,
-    pub grant_endpoint: String,
-    pub hash: String,
-    pub hash_method: Option<String>,
-    pub hints: Option<String>, // In reality, it is a value
+    pub id: String, // RESPONSE
+    pub start: Vec<String>,     // RESPONSE
+    pub method: String,         // RESPONSE
+    pub uri: String,            // RESPONSE
+    pub client_nonce: String,   // RESPONSE
+    pub hash_method: String,    // RESPONSE
+    pub hints: Option<String>,  // RESPONSE
+    pub grant_endpoint: String, // RESPONSE
+    pub as_nonce: String,       // RANDOM
+    pub interact_ref: String,   // RANDOM
+    pub hash: String,           // RANDOM
+}
+
+#[derive(Clone, Debug)]
+pub struct NewModel {
+    pub id: String,                  // REQUEST
+    pub start: Vec<String>,          // REQUEST
+    pub method: String,              // REQUEST
+    pub uri: String,                 // REQUEST
+    pub client_nonce: String,        // REQUEST
+    pub hash_method: Option<String>, // REQUEST
+    pub hints: Option<String>,       // REQUEST
+    pub grant_endpoint: String,      // REQUEST
+}
+
+impl From<NewModel> for ActiveModel {
+    fn from(model: NewModel) -> ActiveModel {
+        let as_nonce: String = rand::thread_rng().sample_iter(&Alphanumeric).take(36).map(char::from).collect();
+        let interact_ref: String = rand::thread_rng().sample_iter(&Alphanumeric).take(16).map(char::from).collect();
+
+        let hash_method = model.hash_method.unwrap_or_else(|| "sha-256".to_string()); // TODO
+        let hash_input = format!(
+            "{}\n{}\n{}\n{}",
+            model.client_nonce, as_nonce, interact_ref, model.grant_endpoint
+        );
+
+        let mut hasher = Sha256::new();
+        hasher.update(hash_input.as_bytes());
+        let result = hasher.finalize();
+
+        let hash = URL_SAFE_NO_PAD.encode(result);
+
+        Self {
+            id: ActiveValue::Set(model.id),
+            start: ActiveValue::Set(model.start),
+            method: ActiveValue::Set(model.method),
+            uri: ActiveValue::Set(model.uri),
+            client_nonce: ActiveValue::Set(model.client_nonce),
+            hash_method: ActiveValue::Set(hash_method),
+            hints: ActiveValue::Set(model.hints),
+            grant_endpoint: ActiveValue::Set(model.grant_endpoint),
+            as_nonce: ActiveValue::Set(as_nonce),
+            interact_ref: ActiveValue::Set(interact_ref),
+            hash: ActiveValue::Set(hash),
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(has_one = "super::auth::Entity")]
-    Auth,
+    #[sea_orm(has_one = "super::auth_request::Entity")]
+    AuthRequest,
+    #[sea_orm(has_one = "super::auth_verification::Entity")]
+    AuthVerification,
+    #[sea_orm(has_one = "super::auth_token_requirements::Entity")]
+    AuthTokenRequirements,
 }
 
-impl Related<super::auth::Entity> for Entity {
+impl Related<super::auth_request::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Auth.def()
+        Relation::AuthRequest.def()
     }
 }
 
+impl Related<super::auth_verification::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::AuthVerification.def()
+    }
+}
+
+impl Related<super::auth_token_requirements::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::AuthTokenRequirements.def()
+    }
+}
 impl ActiveModelBehavior for ActiveModel {}

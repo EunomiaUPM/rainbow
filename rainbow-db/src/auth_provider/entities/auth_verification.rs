@@ -16,35 +16,77 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
+use rand::distributions::Alphanumeric;
+use rand::Rng;
 use sea_orm::entity::prelude::*;
+use sea_orm::ActiveValue;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
 #[sea_orm(table_name = "auth_verification")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: String,
-    pub state: String,
-    pub nonce: String,
-    pub audience: String,
-    // pub requirements: Value, TODO Hablar con Carlos
-    pub holder: Option<String>,
-    pub vpt: Option<String>,
-    pub success: Option<bool>,
-    pub status: String,
-    pub created_at: chrono::NaiveDateTime,
-    pub ended_at: Option<chrono::NaiveDateTime>,
+    pub id: String,                                 // REQUEST
+    pub state: String,                              // RANDOM
+    pub nonce: String,                              // RANDOM
+    pub audience: String,                           // SEMI-RANDOM
+    pub holder: Option<String>,                     // RESPONSE
+    pub vpt: Option<String>,                        // RESPONSE
+    pub success: Option<bool>,                      // RESPONSE
+    pub status: String,                             // DEFAULT
+    pub created_at: chrono::NaiveDateTime,          // DEFAULT
+    pub ended_at: Option<chrono::NaiveDateTime>,    // RESPONSE
+    // pub requirements: Value, TODO
+}
+
+#[derive(Clone, Debug)]
+pub struct NewModel {
+    pub id: String, // REQUEST
+    pub audience: String, // SEMI-RANDOM
+}
+
+impl From<NewModel> for ActiveModel {
+    fn from(model: NewModel) -> ActiveModel {
+        let state: String = rand::thread_rng().sample_iter(&Alphanumeric).take(12).map(char::from).collect();
+        let nonce: String = rand::thread_rng().sample_iter(&Alphanumeric).take(12).map(char::from).collect();
+        let audience = format!("{}/{}", model.audience, &state);
+        Self {
+            id: ActiveValue::Set(model.id),
+            state: ActiveValue::Set(state),
+            nonce: ActiveValue::Set(nonce),
+            audience: ActiveValue::Set(audience),
+            holder: ActiveValue::Set(None),
+            vpt: ActiveValue::Set(None),
+            success: ActiveValue::Set(None),
+            status: ActiveValue::Set("Pending".to_string()),
+            created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
+            ended_at: ActiveValue::Set(None),
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(has_one = "super::auth::Entity")]
-    Auth,
+    #[sea_orm(has_one = "super::auth_request::Entity")]
+    AuthRequest,
+    #[sea_orm(has_one = "super::auth_interaction::Entity")]
+    AuthInteraction,
+    #[sea_orm(has_one = "super::auth_token_requirements::Entity")]
+    AuthTokenRequirements,
 }
 
-impl Related<super::auth::Entity> for Entity {
+impl Related<super::auth_request::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Auth.def()
+        Relation::AuthRequest.def()
+    }
+}
+impl Related<super::auth_interaction::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::AuthInteraction.def()
+    }
+}
+impl Related<super::auth_token_requirements::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::AuthTokenRequirements.def()
     }
 }
 

@@ -17,8 +17,8 @@
  *
  */
 
-pub mod auth;
 pub mod auth_interaction;
+pub mod auth_request;
+pub mod auth_token_requirements;
 pub mod auth_verification;
-pub mod prov;
-pub mod authority;
+pub mod mates;

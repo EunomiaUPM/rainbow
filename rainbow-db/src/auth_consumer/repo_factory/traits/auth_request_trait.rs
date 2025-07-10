@@ -17,30 +17,11 @@
  *
  */
 
-use chrono;
-use sea_orm::entity::prelude::*;
-use serde_json::Value as JsonValue;
-// use crate::auth_consumer::status::Status;
+use super::BasicRepoTrait;
+use crate::auth_consumer::entities::auth_request::{Model, NewModel};
+use axum::async_trait;
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
-#[sea_orm(table_name = "authority")]
-pub struct Model {
-    #[sea_orm(primary_key)]
-    pub id: String,
-    pub authority: String,
-    pub status: String,
-    pub assigned_id: Option<String>,
-    pub grant_endpoint: String,
-    pub continue_endpoint: Option<String>,
-    pub actions: String,
-    pub created_at: chrono::NaiveDateTime,
-    pub ended_at: Option<chrono::NaiveDateTime>,
+#[async_trait]
+pub trait AuthRequestRepoTrait: BasicRepoTrait<Model, NewModel> + Send + Sync {
 
 }
-
-#[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {}
-
-impl ActiveModelBehavior for ActiveModel {}
-
-

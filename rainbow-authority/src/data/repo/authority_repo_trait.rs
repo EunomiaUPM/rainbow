@@ -43,19 +43,7 @@ impl AuthorityRepoFactory for AuthorityRepoForSql {
 #[async_trait]
 impl<T> BasicRepoTrait<T> for AuthorityRepoForSql {
     async fn get_all(&self, limit: Option<u64>, offset: Option<u64>) -> anyhow::Result<Vec<T>> {
-
-        let model = auth::ActiveModel {
-            id: ActiveValue::Set(model.id),
-            client: ActiveValue::Set(model.client),
-            actions: ActiveValue::Set(model.actions),
-            status: ActiveValue::Set(model.status),
-            token: ActiveValue::Set(model.token),
-            created_at: ActiveValue::Set(model.created_at),
-            ended_at: ActiveValue::Set(model.ended_at),
-        };
-
-        let new_model = auth::Entity::insert(model).exec_with_returning(&self.db_connection).await?;
-        Ok(new_model)
+        todo!()
     }
 
     async fn get_by_id(&self, id: &str) -> anyhow::Result<Option<T>> {

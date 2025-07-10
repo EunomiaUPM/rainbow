@@ -42,7 +42,6 @@ pub struct Continue4GResponse {
     pub uri: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub wait: Option<u64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub access_token: AccessToken,
 }
 

@@ -32,7 +32,7 @@ use axum::routing::{get, post};
 use axum::{Json, Router};
 use once_cell::sync::Lazy;
 use rainbow_common::ssi_wallet::RainbowSSIAuthWalletTrait;
-use rainbow_db::auth_consumer::repo::AuthConsumerRepoTrait;
+use rainbow_db::auth_consumer::repo_factory::AuthConsumerRepoTrait;
 use reqwest::StatusCode;
 use serde::Deserialize;
 use serde_json::json;

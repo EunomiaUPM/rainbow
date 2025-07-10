@@ -38,7 +38,7 @@ use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
 use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
 use rainbow_common::mates::{BusMates, Mates};
 use rainbow_common::ssi_wallet::{DidsInfo, RainbowSSIAuthWalletTrait, WalletSession};
-use rainbow_db::auth_consumer::repo::AuthConsumerRepoTrait;
+use rainbow_db::auth_consumer::repo_factory::AuthConsumerRepoTrait;
 use rainbow_db::auth_provider::repo::AuthProviderRepoTrait;
 use rand::{distributions::Alphanumeric, Rng};
 use reqwest::Client;

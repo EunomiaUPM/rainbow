@@ -33,9 +33,9 @@ use rainbow_common::auth::gnap::{AccessToken, GrantRequest, GrantResponse};
 use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
 use rainbow_common::mates::Mates;
 use rainbow_common::ssi_wallet::{DidsInfo, RainbowSSIAuthWalletTrait, WalletSession};
-use rainbow_db::auth_consumer::entities::auth;
+use rainbow_db::auth_consumer::entities::auth_request;
 use rainbow_db::auth_consumer::entities::auth_verification::Model;
-use rainbow_db::auth_consumer::repo::AuthConsumerRepoTrait;
+use rainbow_db::auth_consumer::repo_factory::AuthConsumerRepoTrait;
 use reqwest::header::{HeaderMap, ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 use reqwest::{Client, Response};
 use sea_orm_migration::cli::Cli;
@@ -780,7 +780,7 @@ where
         Ok(model.grant_endpoint)
     }
 
-    async fn continue_request(&self, id: String, interact_ref: String, uri: String) -> anyhow::Result<auth::Model> {
+    async fn continue_request(&self, id: String, interact_ref: String, uri: String) -> anyhow::Result<auth_request::Model> {
         // TODO WAIT 5 SECONDS
         info!("Continuing request");
         let mut headers = HeaderMap::new();

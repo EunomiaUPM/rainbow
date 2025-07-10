@@ -17,14 +17,12 @@
  *
  */
 
-use sea_orm::sea_query::extension::postgres::Type;
-use sea_orm::Iterable;
 use sea_orm_migration::prelude::*;
 
 pub struct Migration;
 impl MigrationName for Migration {
     fn name(&self) -> &str {
-        "m20250403_094651_authority"
+        "m20250403_094651_busmates"
     }
 }
 
@@ -34,36 +32,30 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(Authority::Table)
-                    .col(ColumnDef::new(Authority::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(Authority::Authority).string().not_null())
-                    .col(ColumnDef::new(Authority::Status).string().not_null())
-                    .col(ColumnDef::new(Authority::AssignedId).string())
-                    .col(ColumnDef::new(Authority::GrantEndpoint).string())
-                    .col(ColumnDef::new(Authority::ContinueEndpoint).string())
-                    .col(ColumnDef::new(Authority::Actions).string().not_null())
-                    .col(ColumnDef::new(Authority::CreatedAt).date_time().not_null())
-                    .col(ColumnDef::new(Authority::EndedAt).date_time())
+                    .table(BusMates::Table)
+                    .col(ColumnDef::new(BusMates::Id).string().not_null().primary_key())
+                    .col(ColumnDef::new(BusMates::ParticipantId).string().not_null())
+                    .col(ColumnDef::new(BusMates::Token).string())
+                    .col(ColumnDef::new(BusMates::TokenActions).string())
+                    .col(ColumnDef::new(BusMates::SavedAt).date_time().not_null())
+                    .col(ColumnDef::new(BusMates::LastInteraction).date_time().not_null())
                     .to_owned(),
             )
             .await
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(Authority::Table).to_owned()).await
+        manager.drop_table(Table::drop().table(BusMates::Table).to_owned()).await
     }
 }
 
 #[derive(Iden)]
-pub enum Authority {
+pub enum BusMates {
     Table,
     Id,
-    AssignedId,
-    Authority,
-    GrantEndpoint,
-    ContinueEndpoint,
-    Actions,
-    Status,
-    CreatedAt,
-    EndedAt,
+    ParticipantId,
+    Token,
+    TokenActions,
+    SavedAt,
+    LastInteraction,
 }

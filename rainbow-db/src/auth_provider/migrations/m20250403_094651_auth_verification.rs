@@ -18,11 +18,10 @@
  */
 
 use sea_orm::sea_query::extension::postgres::Type;
-use sea_orm::Iterable;
 use sea_orm_migration::prelude::*;
-use crate::auth_provider::migrations::m20250403_094651_auth::Auth;
 
 pub struct Migration;
+
 impl MigrationName for Migration {
     fn name(&self) -> &str {
         "m20250403_094651_auth_verification"
@@ -41,11 +40,11 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(AuthVerification::Nonce).string().not_null())
                     .col(ColumnDef::new(AuthVerification::Audience).string().not_null())
                     .col(ColumnDef::new(AuthVerification::Holder).string())
-                    .col(ColumnDef::new(AuthVerification::VPT).string())
-                    .col(ColumnDef::new(AuthVerification::Success).boolean())
-                    .col(ColumnDef::new(AuthVerification::Status).string())
-                    .col(ColumnDef::new(Auth::CreatedAt).date_time().not_null())
-                    .col(ColumnDef::new(Auth::EndedAt).date_time())
+                    .col(ColumnDef::new(AuthVerification::Vpt).string())
+                    .col(ColumnDef::new(AuthVerification::Success).string())
+                    .col(ColumnDef::new(AuthVerification::Status).string().not_null())
+                    .col(ColumnDef::new(AuthVerification::CreatedAt).date_time().not_null())
+                    .col(ColumnDef::new(AuthVerification::EndedAt).date_time())
                     .to_owned(),
             )
             .await
@@ -64,7 +63,7 @@ pub enum AuthVerification {
     Nonce,
     Audience,
     Holder,
-    VPT,
+    Vpt,
     Success,
     Status,
     CreatedAt,

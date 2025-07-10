@@ -18,35 +18,84 @@
  */
 
 use sea_orm::entity::prelude::*;
+use sea_orm::ActiveValue;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
 #[sea_orm(table_name = "auth_verification")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: String,
-    pub status: String,
-    pub scheme: String,
-    pub response_type: String,
-    pub client_id: String,
-    pub response_mode: String,
-    pub pd_uri: String,
-    pub client_id_scheme: String,
-    pub nonce: String,
-    pub response_uri: String,
-    pub uri: String,
-    pub created_at: chrono::NaiveDateTime,
-    pub ended_at: Option<chrono::NaiveDateTime>,
+    pub id: String, // REQUEST
+    pub uri: String,                             // REQUEST
+    pub scheme: String,                          // REQUEST
+    pub response_type: String,                   // REQUEST
+    pub client_id: String,                       // REQUEST
+    pub response_mode: String,                   // REQUEST
+    pub pd_uri: String,                          // REQUEST
+    pub client_id_scheme: String,                // REQUEST
+    pub nonce: String,                           // REQUEST
+    pub response_uri: String,                    // REQUEST
+    pub status: String,                          // DEFAULT
+    pub created_at: chrono::NaiveDateTime,       // DEFAULT
+    pub ended_at: Option<chrono::NaiveDateTime>, // RESPONSE
+}
+
+#[derive(Clone, Debug)]
+pub struct NewModel {
+    pub id: String,                        // REQUEST
+    pub uri: String,                       // REQUEST
+    pub scheme: String,                    // REQUEST
+    pub response_type: String,             // REQUEST
+    pub client_id: String,                 // REQUEST
+    pub response_mode: String,             // REQUEST
+    pub pd_uri: String,                    // REQUEST
+    pub client_id_scheme: String,          // REQUEST
+    pub nonce: String,                     // REQUEST
+    pub response_uri: String,              // REQUEST
+}
+
+impl From<NewModel> for ActiveModel {
+    fn from(model: NewModel) -> ActiveModel {
+        Self {
+            id: ActiveValue::Set(model.id),
+            uri: ActiveValue::Set(model.uri),
+            scheme: ActiveValue::Set(model.scheme),
+            response_type: ActiveValue::Set(model.response_type),
+            client_id: ActiveValue::Set(model.client_id),
+            response_mode: ActiveValue::Set(model.response_mode),
+            pd_uri: ActiveValue::Set(model.pd_uri),
+            client_id_scheme: ActiveValue::Set(model.client_id_scheme),
+            nonce: ActiveValue::Set(model.nonce),
+            response_uri: ActiveValue::Set(model.response_uri),
+            status: ActiveValue::Set("Pending".to_string()),
+            created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
+            ended_at: ActiveValue::Set(None),
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(has_one = "super::auth::Entity")]
-    Auth,
+    #[sea_orm(has_one = "super::auth_request::Entity")]
+    AuthRequest,
+    #[sea_orm(has_one = "super::auth_interaction::Entity")]
+    AuthInteraction,
+    #[sea_orm(has_one = "super::auth_token_requirements::Entity")]
+    AuthTokenRequirements,
 }
 
-impl Related<super::auth::Entity> for Entity {
+impl Related<super::auth_request::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Auth.def()
+        Relation::AuthRequest.def()
+    }
+}
+impl Related<super::auth_interaction::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::AuthInteraction.def()
+    }
+}
+impl Related<super::auth_token_requirements::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::AuthTokenRequirements.def()
     }
 }
 

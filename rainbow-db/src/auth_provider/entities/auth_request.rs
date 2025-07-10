@@ -19,20 +19,38 @@
 
 use chrono;
 use sea_orm::entity::prelude::*;
-use serde::{Deserialize, Serialize};
+use sea_orm::ActiveValue;
 use serde_json::Value as JsonValue;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, DeriveEntityModel)]
-#[sea_orm(table_name = "auth")]
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
+#[sea_orm(table_name = "auth_request")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: String,
-    pub consumer: Option<String>,
-    pub actions: String, // IT IS A VEC!!
-    pub status: String,
-    pub token: Option<String>,
-    pub created_at: chrono::NaiveDateTime,
-    pub ended_at: Option<chrono::NaiveDateTime>,
+    pub id: String, // REQUEST
+    pub consumer_id: String,                     // REQUEST
+    pub token: Option<String>,                   // COMPLETION
+    pub status: String,                          // DEFAULT
+    pub created_at: chrono::NaiveDateTime,       // DEFAULT
+    pub ended_at: Option<chrono::NaiveDateTime>, // COMPLETION
+}
+
+#[derive(Clone, Debug)]
+pub struct NewModel {
+    pub id: String,          // REQUEST
+    pub consumer_id: String, // REQUEST
+}
+
+impl From<NewModel> for ActiveModel {
+    fn from(model: NewModel) -> ActiveModel {
+        Self {
+            id: ActiveValue::Set(model.id),
+            consumer_id: ActiveValue::Set(model.consumer_id),
+            token: ActiveValue::Set(None),
+            status: ActiveValue::Set("Pending".to_string()),
+            created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
+            ended_at: ActiveValue::Set(None),
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
@@ -41,6 +59,8 @@ pub enum Relation {
     AuthInteraction,
     #[sea_orm(has_one = "super::auth_verification::Entity")]
     AuthVerification,
+    #[sea_orm(has_one = "super::auth_token_requirements::Entity")]
+    AuthTokenRequirements,
 }
 
 impl Related<super::auth_interaction::Entity> for Entity {
@@ -54,5 +74,9 @@ impl Related<super::auth_verification::Entity> for Entity {
         Relation::AuthVerification.def()
     }
 }
-
+impl Related<super::auth_token_requirements::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::AuthTokenRequirements.def()
+    }
+}
 impl ActiveModelBehavior for ActiveModel {}

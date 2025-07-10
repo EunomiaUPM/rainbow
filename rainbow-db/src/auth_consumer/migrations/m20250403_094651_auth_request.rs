@@ -24,7 +24,7 @@ use sea_orm_migration::prelude::*;
 pub struct Migration;
 impl MigrationName for Migration {
     fn name(&self) -> &str {
-        "m20250403_094651_auth"
+        "m20250403_094651_auth_request"
     }
 }
 
@@ -38,12 +38,13 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Auth::Id).string().not_null().primary_key())
                     .col(ColumnDef::new(Auth::ProviderId).string().not_null())
                     .col(ColumnDef::new(Auth::ProviderSlug).string().not_null())
-                    .col(ColumnDef::new(Auth::Status).string().not_null())
-                    .col(ColumnDef::new(Auth::AssignedId).string())
-                    .col(ColumnDef::new(Auth::GrantEndpoint).string())
+                    .col(ColumnDef::new(Auth::GrantEndpoint).string().not_null())
                     .col(ColumnDef::new(Auth::ContinueEndpoint).string())
-                    .col(ColumnDef::new(Auth::Actions).string().not_null())
+                    .col(ColumnDef::new(Auth::ContinueWait).big_integer())
+                    .col(ColumnDef::new(Auth::ContinueToken).string())
+                    .col(ColumnDef::new(Auth::AssignedId).string())
                     .col(ColumnDef::new(Auth::Token).string())
+                    .col(ColumnDef::new(Auth::Status).string().not_null())
                     .col(ColumnDef::new(Auth::CreatedAt).date_time().not_null())
                     .col(ColumnDef::new(Auth::EndedAt).date_time())
                     .to_owned(),
@@ -60,14 +61,15 @@ impl MigrationTrait for Migration {
 pub enum Auth {
     Table,
     Id,
-    AssignedId,
     ProviderId,
     ProviderSlug,
     GrantEndpoint,
     ContinueEndpoint,
-    Actions,
-    Status,
+    ContinueWait,
+    ContinueToken,
+    AssignedId,
     Token,
+    Status,
     CreatedAt,
     EndedAt,
 }
