@@ -21,7 +21,6 @@ use super::contract_odrl::{ContractRequestMessageOfferTypes, OdrlMessageOffer, O
 use crate::protocol::context_field::ContextField;
 use crate::protocol::contract::contract_protocol_trait::DSProtocolContractNegotiationMessageTrait;
 use crate::protocol::contract::ContractNegotiationMessages;
-use crate::protocol::ProtocolValidate;
 use crate::utils::get_urn;
 use serde::{Deserialize, Serialize};
 use urn::Urn;

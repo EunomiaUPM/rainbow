@@ -19,12 +19,10 @@
 use crate::config::database::DbType;
 use crate::config::global_config::{extract_env, format_host_config_to_url_string, DatabaseConfig, HostConfig};
 use crate::config::ConfigRoles;
-use clap::builder::TypedValueParser;
 use crate::ssi_wallet::{ClientConfig, SSIWalletConfig};
 use serde::Serialize;
 use serde_json::json;
 use std::env;
-use std::fmt::Display;
 
 #[derive(Serialize, Clone, Debug)]
 pub struct ApplicationProviderConfig {
@@ -268,7 +266,7 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
     }
 
     fn merge_dotenv_configuration(&self) -> Self {
-        dotenvy::from_filename(".env.provider");
+        dotenvy::from_filename(".env.provider").expect("TODO: panic message");
         let default = ApplicationProviderConfig::default();
         let catalog_as_datahub: bool =
             extract_env("CATALOG_AS_DATAHUB", default.catalog_as_datahub.to_string()).parse().unwrap();

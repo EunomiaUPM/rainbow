@@ -23,7 +23,6 @@ use crate::ssi_wallet::{ClientConfig, SSIWalletConfig};
 use serde::Serialize;
 use serde_json::json;
 use std::env;
-use std::fmt::Display;
 
 
 #[derive(Serialize, Clone, Debug)]
@@ -232,7 +231,7 @@ impl ApplicationConsumerConfigTrait for ApplicationConsumerConfig {
     }
 
     fn merge_dotenv_configuration(&self) -> Self {
-        dotenvy::from_filename(".env.gateway.consumer");
+        dotenvy::from_filename(".env.gateway.consumer").expect("TODO: panic message");
         let default = ApplicationConsumerConfig::default();
         let compound_config = Self {
             transfer_process_host: Some(HostConfig {
