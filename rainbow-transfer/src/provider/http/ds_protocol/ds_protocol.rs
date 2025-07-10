@@ -38,7 +38,7 @@ use rainbow_common::protocol::transfer::transfer_suspension::TransferSuspensionM
 use rainbow_common::protocol::transfer::transfer_termination::TransferTerminationMessage;
 use rainbow_common::utils::get_urn_from_string;
 use std::sync::Arc;
-use tracing::{debug, info};
+use tracing::info;
 
 pub struct DSProtocolTransferProviderRouter<T> {
     transfer_service: Arc<T>,

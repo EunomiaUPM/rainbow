@@ -17,21 +17,16 @@
  *
  */
 use crate::provider::setup::config::CoreApplicationProviderConfig;
-use anyhow::anyhow;
 use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
-use rainbow_common::config::ConfigRoles;
-use rainbow_common::utils::get_urn;
 use rainbow_db::auth_provider::migrations::get_auth_provider_migrations;
 use rainbow_db::catalog::migrations::get_catalog_migrations;
 use rainbow_db::contracts_provider::migrations::get_contracts_migrations;
 use rainbow_db::datahub::migrations::get_datahub_migrations;
 use rainbow_db::dataplane::migrations::get_dataplane_migrations;
 use rainbow_db::events::migrations::get_events_migrations;
-use rainbow_db::mates::entities::{busmates, mates};
 use rainbow_db::mates::migrations::get_mates_migrations;
 use rainbow_db::transfer_provider::migrations::get_transfer_provider_migrations;
-use sea_orm::sqlx::types::chrono;
-use sea_orm::{ActiveValue, Database, DatabaseConnection, EntityTrait};
+use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
 
 pub struct CoreProviderMigration;
@@ -68,38 +63,6 @@ impl CoreProviderMigration {
         // run migration
         Self::refresh(&db_connection).await?;
         // run seedings
-        // Self::seed_provider_mate(&db_connection, config.get_ssi_auth_host_url().unwrap()).await?;
-        // Self::seed_provider_busmate(&db_connection).await?;
-        Ok(())
-    }
-    async fn seed_provider_mate(db: &DatabaseConnection, base_url: String) -> anyhow::Result<()> {
-        let provider = mates::ActiveModel {
-            participant_id: ActiveValue::Set(get_urn(None).to_string()), // TODO PONER DID BIEN
-            participant_slug: ActiveValue::Set("Provider".to_string()),
-            participant_type: ActiveValue::Set(ConfigRoles::Provider.to_string()),
-            base_url: ActiveValue::Set(Some(base_url)),
-            token: ActiveValue::Set(None),
-            token_actions: ActiveValue::Set(None),
-            saved_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
-            last_interaction: ActiveValue::Set(chrono::Utc::now().naive_utc()),
-            is_me: ActiveValue::Set(true),
-        };
-
-        mates::Entity::insert(provider).exec(db).await.map_err(|e| anyhow!(e))?;
-        Ok(())
-    }
-
-    async fn seed_provider_busmate(db: &DatabaseConnection) -> anyhow::Result<()> {
-        let busprovider = busmates::ActiveModel {
-            id: ActiveValue::Set("".to_string()),
-            participant_id: ActiveValue::Set(get_urn(None).to_string()), // TODO PONER DID BIEN FALSEAR
-            token: ActiveValue::Set(None),
-            token_actions: ActiveValue::Set(None),
-            saved_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
-            last_interaction: ActiveValue::Set(chrono::Utc::now().naive_utc()),
-        };
-
-        busmates::Entity::insert(busprovider).exec(db).await.map_err(|e| anyhow!(e))?;
         Ok(())
     }
 }

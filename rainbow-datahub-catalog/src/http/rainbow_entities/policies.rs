@@ -17,7 +17,6 @@
  *
  */
 
-use anyhow::bail;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, State};
 use axum::response::IntoResponse;
@@ -29,9 +28,7 @@ use rainbow_catalog::provider::core::rainbow_entities::RainbowPoliciesTrait;
 use rainbow_common::protocol::contract::contract_odrl::OdrlPolicyInfo;
 use rainbow_common::utils::get_urn_from_string;
 use reqwest::StatusCode;
-use serde_json::Value;
 use std::sync::Arc;
-use tower_http::trace::TraceLayer;
 
 pub struct RainbowCatalogPoliciesRouter<T> {
     policies_service: Arc<T>,
@@ -114,7 +111,7 @@ where
             Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
         };
         match policies_service.delete_dataset_policies(dataset_id, policy_id).await {
-            Ok(d) => (StatusCode::ACCEPTED).into_response(),
+            Ok(_d) => (StatusCode::ACCEPTED).into_response(),
             Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
         }
     }

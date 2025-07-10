@@ -52,7 +52,7 @@ pub struct GraphQLResponse<T> {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SearchResults<T> {
-    pub searchResults: Vec<SearchResult<T>>,
+    pub search_results: Vec<SearchResult<T>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -97,12 +97,12 @@ pub struct DatasetGraphQLResponse {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DatasetSearchResponse {
-    pub searchAcrossEntities: DatasetSearchResults,
+    pub search_across_entities: DatasetSearchResults,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DatasetSearchResults {
-    pub searchResults: Vec<DatasetSearchResult>,
+    pub search_results: Vec<DatasetSearchResult>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -147,7 +147,7 @@ pub struct DatasetEntityDetailed {
     pub ownership: Ownership,
     pub tags: Tags,
     pub domain: Option<DatahubDomain>,
-    pub glossaryTerms: Option<GlossaryTerms>,
+    pub glossary_terms: Option<GlossaryTerms>,
 }
 
 
@@ -183,9 +183,9 @@ pub struct DatasetEntity {
     pub properties: DatasetProperties,
     pub ownership: Ownership,
     pub tags: Tags,
-    pub schemaMetadata: Option<SchemaMetadata>,
+    pub schema_metadata: Option<SchemaMetadata>,
     pub domain: Domain,
-    pub glossaryTerms: Option<GlossaryTerms>,
+    pub glossary_terms: Option<GlossaryTerms>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -197,7 +197,7 @@ pub struct Platform {
 pub struct DatasetProperties {
     pub name: String,
     pub description: Option<String>,
-    pub customProperties: Option<Vec<CustomProperty>>,
+    pub custom_properties: Option<Vec<CustomProperty>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -245,13 +245,13 @@ pub struct SchemaMetadata {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Field {
-    pub fieldPath: String,
+    pub field_path: String,
     pub r#type: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Domain {
-    pub associatedUrn: String,
+    pub associated_urn: String,
     pub domain: DomainEntity,
 }
 
@@ -275,7 +275,7 @@ pub struct TermWrapper {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GlossaryTerm {
     pub urn: String,
-    pub glossaryTermInfo: GlossaryTermInfo,
+    pub glossary_term_info: GlossaryTermInfo,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

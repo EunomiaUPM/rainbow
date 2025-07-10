@@ -19,18 +19,11 @@
 
 use crate::common::core::mates_facade::MatesFacadeTrait;
 use crate::common::schemas::validation::validate_payload_schema;
-use crate::common::schemas::{
-    CONTRACT_AGREEMENT_MESSAGE_SCHEMA, CONTRACT_AGREEMENT_VERIFICATION_MESSAGE_SCHEMA,
-    CONTRACT_NEGOTIATION_EVENT_MESSAGE_SCHEMA, CONTRACT_OFFER_MESSAGE_SCHEMA, CONTRACT_REQUEST_MESSAGE_SCHEMA,
-    CONTRACT_TERMINATION_MESSAGE_SCHEMA,
-};
 use crate::provider::core::catalog_odrl_facade::CatalogOdrlFacadeTrait;
 use crate::provider::core::ds_protocol::ds_protocol_errors::IdsaCNError;
 use crate::provider::core::ds_protocol::DSProtocolContractNegotiationProviderTrait;
 use anyhow::bail;
 use axum::async_trait;
-use jsonschema::BasicOutput;
-use log::error;
 use rainbow_common::config::ConfigRoles;
 use rainbow_common::facades::ssi_auth_facade::SSIAuthFacadeTrait;
 use rainbow_common::mates::Mates;
@@ -56,7 +49,7 @@ use rainbow_events::core::notification::notification_types::{
     RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes,
 };
 use rainbow_events::core::notification::RainbowEventsNotificationTrait;
-use serde_json::{json, to_value, Value};
+use serde_json::{json, Value};
 use std::sync::Arc;
 use tracing::debug;
 use urn::Urn;
@@ -71,14 +64,13 @@ where
     + Sync
     + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
-// V: CatalogOdrlFacadeTrait + Send + Sync,
     W: MatesFacadeTrait + Send + Sync,
     X: SSIAuthFacadeTrait + Sync + Send,
 {
     repo: Arc<T>,
     notification_service: Arc<U>,
     catalog_facade: Arc<dyn CatalogOdrlFacadeTrait + Send + Sync>,
-    mates_facade: Arc<W>,
+    _mates_facade: Arc<W>,
     ssi_auth_facade: Arc<X>,
 }
 
@@ -92,7 +84,6 @@ where
     + Sync
     + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
-// V: CatalogOdrlFacadeTrait + Send + Sync,
     W: MatesFacadeTrait + Send + Sync,
     X: SSIAuthFacadeTrait + Sync + Send,
 {
@@ -103,7 +94,7 @@ where
         mates_facade: Arc<W>,
         ssi_auth_facade: Arc<X>,
     ) -> Self {
-        Self { repo, notification_service, catalog_facade, mates_facade, ssi_auth_facade }
+        Self { repo, notification_service, catalog_facade, _mates_facade: mates_facade, ssi_auth_facade }
     }
 
     /// Validate auth token
@@ -319,7 +310,12 @@ where
         Ok(cn_process.into())
     }
 
-    async fn post_request(&self, input: ContractRequestMessage, token: String, client_type: String) -> anyhow::Result<ContractAckMessage> {
+    async fn post_request(
+        &self,
+        input: ContractRequestMessage,
+        token: String,
+        client_type: String,
+    ) -> anyhow::Result<ContractAckMessage> {
         // 1. validate request
         let consumer_participant_mate = self.validate_auth_token(token).await?;
         self.transition_validation(&input).await.map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
@@ -357,11 +353,10 @@ where
 
         debug!("\n\n8. {}\n", "todo bien hasta aquí");
 
-
         // 3. persist process, message and offer
         let is_business = match client_type.as_str() {
             "business" => true,
-            _ => false
+            _ => false,
         };
         let cn_process = self
             .repo
@@ -377,7 +372,6 @@ where
             .map_err(IdsaCNError::DbErr)?;
 
         debug!("\n\n8. {:?}\n", cn_process);
-
 
         let cn_message = self
             .repo

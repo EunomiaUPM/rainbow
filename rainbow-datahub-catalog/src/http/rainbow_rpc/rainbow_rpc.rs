@@ -19,23 +19,16 @@
 
 use crate::core::rainbow_rpc::rainbow_rpc_types::{RainbowRPCDatahubCatalogResolveDataServiceRequest, RainbowRPCDatahubCatalogResolveOfferByIdRequest};
 use crate::core::rainbow_rpc::RainbowRPCDatahubCatalogTrait;
-use anyhow::Error;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use axum::routing::{get, post};
+use axum::routing::post;
 use axum::{Json, Router};
 use rainbow_catalog::provider::core::rainbow_entities::rainbow_catalog_err::CatalogError;
-use rainbow_catalog::provider::core::rainbow_rpc::rainbow_rpc_types::{
-    RainbowRPCCatalogResolveDataServiceRequest, RainbowRPCCatalogResolveOfferByIdRequest,
-};
 use rainbow_common::err::transfer_err::TransferErrorType::NotCheckedError;
-use serde_json::Value;
-use std::future::Future;
-use std::pin::Pin;
 use std::sync::Arc;
-use tracing::{debug, info};
+use tracing::info;
 
 pub struct RainbowRPCDatahubCatalogRouter<T>
 where

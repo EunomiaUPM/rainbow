@@ -68,7 +68,7 @@ where
 
     async fn handle_get_datahub_tags(
         State(datahub_service): State<Arc<T>>,
-        Query(options): Query<TagsQueryOptions>,
+        Query(_options): Query<TagsQueryOptions>,
     ) -> impl IntoResponse {
         info!("GET /api/v1/datahub/tags");
         match datahub_service.get_datahub_tags().await {

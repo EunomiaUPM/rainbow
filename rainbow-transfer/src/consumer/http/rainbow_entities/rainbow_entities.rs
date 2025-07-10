@@ -21,7 +21,6 @@ use crate::consumer::core::ds_protocol_rpc::ds_protocol_rpc_err::DSRPCTransferCo
 use crate::consumer::core::rainbow_entities::rainbow_err::RainbowTransferConsumerErrors;
 use crate::consumer::core::rainbow_entities::rainbow_types::{EditTransferConsumerRequest, NewTransferConsumerRequest};
 use crate::consumer::core::rainbow_entities::RainbowTransferConsumerServiceTrait;
-use crate::provider::core::rainbow_entities::rainbow_err::RainbowTransferProviderErrors;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;

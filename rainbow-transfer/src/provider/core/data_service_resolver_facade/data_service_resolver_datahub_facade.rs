@@ -54,16 +54,12 @@ struct RainbowRPCCatalogResolveDataServiceRequest {
 
 #[async_trait]
 impl DataServiceFacadeTrait for DataServiceFacadeServiceForDatahub {
-    async fn resolve_data_service_by_agreement_id(&self, agreement_id: Urn, formats: Option<DctFormats>) -> anyhow::Result<DataService> {
+    async fn resolve_data_service_by_agreement_id(&self, agreement_id: Urn, _formats: Option<DctFormats>) -> anyhow::Result<DataService> {
         let contracts_url = self.config.get_contract_negotiation_host_url().unwrap();
         let catalog_url = self.config.get_catalog_host_url().unwrap();
         let agreement_url = format!(
             "{}/api/v1/contract-negotiation/agreements/{}",
             contracts_url, agreement_id
-        );
-        let data_service_url = format!(
-            "{}/api/v1/catalog/rpc/resolve-data-service",
-            catalog_url
         );
 
         // resolve agreement

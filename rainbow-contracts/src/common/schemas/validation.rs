@@ -5,7 +5,6 @@ use log::error;
 use rainbow_common::protocol::contract::contract_protocol_trait::DSProtocolContractNegotiationMessageTrait;
 use rainbow_common::protocol::contract::ContractNegotiationMessages;
 use serde_json::to_value;
-use tracing::debug;
 
 pub fn validate_payload_schema<'a, M: DSProtocolContractNegotiationMessageTrait<'a>>(message: &M) -> anyhow::Result<()> {
     let validation = match message.get_message_type()? {

@@ -1,17 +1,15 @@
 use crate::coordinator::dataplane_process::DataPlaneProcessTrait;
-use axum::body::{to_bytes, Body, Bytes};
+use axum::body::{to_bytes, Body};
 use axum::extract::{Path, Request, State};
 use axum::response::{IntoResponse, Response};
-use axum::routing::{any, post};
-use axum::{Error, Router};
+use axum::routing::any;
+use axum::Router;
 use hyper::Method;
 use rainbow_common::adv_protocol::interplane::{DataPlaneProcessDirection, DataPlaneProcessState};
 use rainbow_common::config::global_config::ApplicationGlobalConfig;
-use rainbow_common::config::ConfigRoles;
 use rainbow_common::utils::get_urn_from_string;
 use reqwest::Response as ReqwestResponse;
 use reqwest::{Client, StatusCode};
-use std::convert::Infallible;
 use std::sync::Arc;
 use tracing::info;
 
@@ -25,6 +23,7 @@ where
 }
 
 #[derive(Clone)]
+#[allow(dead_code)]
 struct TestingHTTPProxyState<T>
 where
     T: DataPlaneProcessTrait + Send + Sync + 'static,
@@ -51,7 +50,7 @@ where
     }
 
     async fn forward_request(
-        State((client, config, dataplane_service)): State<(Client, ApplicationGlobalConfig, Arc<T>)>,
+        State((client, _config, dataplane_service)): State<(Client, ApplicationGlobalConfig, Arc<T>)>,
         Path(data_plane_id): Path<String>,
         mut req: Request,
     ) -> impl IntoResponse {

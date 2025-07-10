@@ -183,7 +183,7 @@ where
         }
     }
 
-    async fn handle_get_cn_process_by_id(
+    async fn _handle_get_cn_process_by_id(
         State(service): State<Arc<T>>,
         Path(process_id): Path<String>,
     ) -> impl IntoResponse {

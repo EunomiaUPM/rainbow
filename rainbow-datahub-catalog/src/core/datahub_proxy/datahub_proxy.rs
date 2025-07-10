@@ -17,16 +17,14 @@
  *
  */
 
-use crate::core::datahub_proxy::datahub_proxy_types::DatasetGraphQLResponseDetailed;
 use crate::core::datahub_proxy::datahub_proxy_types::{
-    DatahubDataset, DatasetBasicInfo, DatasetGraphQLResponse, DomainProperties, GlossaryTerm, TagProperties};
+    DatahubDataset, DomainProperties, GlossaryTerm, TagProperties};
 use crate::core::datahub_proxy::datahub_proxy_types::{DatahubDomain, GraphQLResponse, Platform, Tag};
 use crate::core::datahub_proxy::DatahubProxyTrait;
 use crate::setup::config::DatahubCatalogApplicationProviderConfig;
 use axum::async_trait;
 use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
 use reqwest::Client;
-use serde_json::Value;
 use std::time::Duration;
 use tracing::debug;
 
@@ -83,7 +81,7 @@ impl DatahubProxyTrait for DatahubProxyService {
         let domains = graphql_response
             .data
             .search
-            .searchResults
+            .search_results
             .into_iter()
             .map(|result| DatahubDomain { urn: result.entity.urn, properties: result.entity.properties })
             .collect();
@@ -135,7 +133,7 @@ impl DatahubProxyTrait for DatahubProxyService {
         let tags = graphql_response
             .data
             .search
-            .searchResults
+            .search_results
             .into_iter()
             .map(|result| Tag {
                 urn: result.entity.urn,

@@ -19,7 +19,7 @@
 
 use crate::common::core::mates_types::BootstrapMateRequest;
 use axum::extract::rejection::JsonRejection;
-use axum::extract::{Path, Query, State};
+use axum::extract::{Path, State};
 use axum::http::{Method, Uri};
 use axum::response::IntoResponse;
 use axum::routing::{delete, get, post, put};
@@ -27,12 +27,9 @@ use axum::{Json, Router};
 use rainbow_common::auth::business::RainbowBusinessLoginRequest;
 use rainbow_common::mates::mates::VerifyTokenRequest;
 use rainbow_common::mates::{BusMates, Mates};
-use rainbow_db::mates::repo::{MateRepoFactory, MateRepoTrait};
-use reqwest::{Client, Error, Response, StatusCode};
-use serde::Deserialize;
+use rainbow_db::mates::repo::MateRepoTrait;
+use reqwest::{Client, StatusCode};
 use serde_json::json;
-use serde_json::Value;
-use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 use tracing::{debug, info};
@@ -332,7 +329,7 @@ where
 
         let mate = match mate_repo.get_mate_by_id(model.participant_id).await {
             Ok(mate) => mate,
-            Err(e) => {
+            Err(_) => {
                 return (
                     StatusCode::NOT_FOUND,
                     "You need to onboard on the Provider first",

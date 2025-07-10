@@ -18,7 +18,7 @@
  */
 
 use crate::provider::core::rainbow_entities::rainbow_entities_errors::CnErrorProvider;
-use crate::provider::core::rainbow_entities::rainbow_entities_types::{EditAgreementRequest, EditContractNegotiationMessageRequest, EditContractNegotiationOfferRequest, EditContractNegotiationRequest, EditParticipantRequest, NewAgreementRequest, NewContractNegotiationMessageRequest, NewContractNegotiationOfferRequest, NewContractNegotiationRequest, NewParticipantRequest, ProcessesQuery};
+use crate::provider::core::rainbow_entities::rainbow_entities_types::{EditAgreementRequest, EditContractNegotiationMessageRequest, EditContractNegotiationOfferRequest, EditContractNegotiationRequest, NewAgreementRequest, NewContractNegotiationMessageRequest, NewContractNegotiationOfferRequest, NewContractNegotiationRequest, ProcessesQuery};
 use crate::provider::core::rainbow_entities::RainbowEntitiesContractNegotiationProviderTrait;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, Query, State};
@@ -27,7 +27,6 @@ use axum::response::IntoResponse;
 use axum::routing::{delete, get, post, put};
 use axum::{Json, Router};
 use rainbow_common::utils::get_urn_from_string;
-use serde::Deserialize;
 use std::sync::Arc;
 use tracing::info;
 

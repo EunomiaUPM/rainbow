@@ -17,20 +17,15 @@
  *
  */
 use crate::consumer::setup::config::CoreApplicationConsumerConfig;
-use anyhow::anyhow;
 use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
-use rainbow_common::config::ConfigRoles;
-use rainbow_common::utils::get_urn;
 use rainbow_db::auth_consumer::migrations::get_auth_consumer_migrations;
 use rainbow_db::catalog::migrations::get_catalog_migrations;
 use rainbow_db::contracts_consumer::migrations::get_contracts_migrations;
 use rainbow_db::dataplane::migrations::get_dataplane_migrations;
 use rainbow_db::events::migrations::get_events_migrations;
-use rainbow_db::mates::entities::mates;
 use rainbow_db::mates::migrations::get_mates_migrations;
 use rainbow_db::transfer_consumer::migrations::get_transfer_consumer_migrations;
-use sea_orm::sqlx::types::chrono;
-use sea_orm::{ActiveValue, Database, DatabaseConnection, EntityTrait};
+use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
 
 pub struct CoreConsumerMigration;
@@ -65,25 +60,6 @@ impl CoreConsumerMigration {
         // run migration
         Self::refresh(&db_connection).await?;
         // run seeders
-        //Self::seed_consumer_mate(&db_connection, config.get_ssi_auth_host_url().unwrap()).await?;
-        Ok(())
-    }
-    async fn seed_consumer_mate(db: &DatabaseConnection, base_url: String) -> anyhow::Result<()> {
-        let consumer = mates::ActiveModel {
-            participant_id: ActiveValue::Set(get_urn(None).to_string()), // TODO PONER DID BIEN
-            participant_slug: ActiveValue::Set("Consumer".to_string()),
-            participant_type: ActiveValue::Set(ConfigRoles::Consumer.to_string()),
-            base_url: ActiveValue::Set(Some(base_url)),
-            token: ActiveValue::Set(None),
-            token_actions: ActiveValue::Set(None),
-            saved_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
-            last_interaction: ActiveValue::Set(chrono::Utc::now().naive_utc()),
-            is_me: ActiveValue::Set(true),
-        };
-        mates::Entity::insert(consumer)
-            .exec(db)
-            .await
-            .map_err(|e| anyhow!(e))?;
         Ok(())
     }
 }

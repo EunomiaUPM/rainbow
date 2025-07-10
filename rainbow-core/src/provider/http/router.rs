@@ -33,7 +33,7 @@ pub async fn create_core_provider_router(config: &CoreApplicationProviderConfig)
     let transfer_router = create_transfer_provider_router(&app_config.clone().into()).await;
     let cn_router = create_contract_negotiation_provider_router(&app_config.clone().into()).await;
 
-    let mut catalog_router: Router;
+    let catalog_router: Router;
     if CoreApplicationProviderConfig::is_datahub_as_catalog(config) {
         catalog_router = create_datahub_catalog_router(&app_config.clone().into()).await;
     } else {

@@ -30,8 +30,6 @@ use crate::provider::http::ds_protocol_rpc::ds_protocol_rpc::DSRPCTransferProvid
 use crate::provider::http::rainbow_entities::rainbow_entities::RainbowTransferProviderEntitiesRouter;
 use crate::provider::setup::config::TransferProviderApplicationConfig;
 use axum::{serve, Router};
-use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
-use rainbow_common::config::global_config::ApplicationGlobalConfig;
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_common::facades::ssi_auth_facade::ssi_auth_facade::SSIAuthFacadeService;
 use rainbow_dataplane::coordinator::controller::controller_service::DataPlaneControllerService;

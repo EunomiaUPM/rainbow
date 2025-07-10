@@ -23,7 +23,6 @@ use axum::routing::delete;
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use rainbow_common::policy_templates::CreatePolicyTemplateRequest;
-use rainbow_common::protocol::contract::contract_odrl::OdrlPolicyInfo;
 use rainbow_common::protocol::contract::odrloffer_wrapper::OdrlOfferWrapper;
 use rainbow_db::datahub::repo::NewPolicyRelationModel;
 use rainbow_db::datahub::repo::PolicyRelationsRepo;

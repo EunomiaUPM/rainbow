@@ -29,7 +29,6 @@ use crate::consumer::http::rainbow_entities::rainbow_entities::RainbowEntitiesCo
 use crate::consumer::setup::config::ContractNegotiationConsumerApplicationConfig;
 use axum::{serve, Router};
 use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
 use rainbow_common::facades::ssi_auth_facade::ssi_auth_facade::SSIAuthFacadeService;
 use rainbow_db::contracts_consumer::repo::sql::ContractNegotiationConsumerRepoForSql;
 use rainbow_db::contracts_consumer::repo::ContractNegotiationConsumerRepoFactory;

@@ -38,7 +38,7 @@ where
     T: DataPlaneControllerTrait + Sync + Send,
 {
     dataplane_controller: Arc<T>,
-    config: TransferConsumerApplicationConfig,
+    _config: TransferConsumerApplicationConfig,
 }
 
 impl<'a, T> DataPlaneConsumerFacadeForDSProtocol<T>
@@ -47,7 +47,7 @@ where
     'a: 'static,
 {
     pub fn new(dataplane_controller: Arc<T>, config: TransferConsumerApplicationConfig) -> Self {
-        Self { dataplane_controller, config }
+        Self { dataplane_controller, _config: config }
     }
 }
 
@@ -116,7 +116,7 @@ where
 
     async fn on_transfer_request(
         &self,
-        session_id: Urn,
+        _session_id: Urn,
         format: DctFormats,
     ) -> anyhow::Result<()> {
         let _dataplane_response = match format.action {

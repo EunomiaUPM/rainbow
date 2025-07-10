@@ -39,7 +39,7 @@ use rainbow_events::http::subscription::subscription::RainbowEventsSubscriptionR
 use sea_orm::Database;
 use std::sync::Arc;
 use tokio::net::TcpListener;
-use tracing::{debug, info};
+use tracing::info;
 
 pub struct DatahubCatalogApplication;
 
