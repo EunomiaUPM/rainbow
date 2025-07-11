@@ -18,10 +18,10 @@
  */
 
 use crate::provider::setup::application::CatalogApplication;
-use crate::provider::setup::config::CatalogApplicationProviderConfig;
 use crate::provider::setup::db_migrations::CatalogMigration;
 use clap::{Parser, Subcommand};
-use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
+use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
+use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use std::cmp::PartialEq;
 use tracing::{debug, info};
 
@@ -35,9 +35,16 @@ struct CatalogCli {
 
 #[derive(Subcommand, Debug, PartialEq)]
 pub enum CatalogCliCommands {
-    Start,
-    Setup,
+    Start(CatalogCliArgs),
+    Setup(CatalogCliArgs),
 }
+
+#[derive(Parser, Debug, PartialEq)]
+pub struct CatalogCliArgs {
+    #[arg(short, long)]
+    env_file: Option<String>,
+}
+
 
 pub struct CatalogCommands;
 
@@ -47,20 +54,36 @@ impl CatalogCommands {
         debug!("Init the command line application");
         let cli = CatalogCli::parse();
 
-        // config
-        let config = CatalogApplicationProviderConfig::default();
-        let config = config.merge_dotenv_configuration();
-
-        let table =
-            json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
-        info!("Current config:\n{}", table);
-
         // run scripts
         match cli.command {
-            CatalogCliCommands::Start => CatalogApplication::run(&config).await?,
-            CatalogCliCommands::Setup => CatalogMigration::run(&config).await?,
+            CatalogCliCommands::Start(args) => {
+                let config = Self::extract_provider_config(args.env_file)?;
+                CatalogApplication::run(&config).await?
+            }
+            CatalogCliCommands::Setup(args) => {
+                let config = Self::extract_provider_config(args.env_file)?;
+                CatalogMigration::run(&config).await?
+            }
         }
 
         Ok(())
+    }
+    fn extract_provider_config(env_file: Option<String>) -> anyhow::Result<ApplicationProviderConfig> {
+        let config = ApplicationProviderConfig::default();
+        let config = config.merge_dotenv_configuration(env_file);
+        let mut config_table = config.clone();
+        config_table.datahub_token = format!("{}...", config_table.datahub_token[0..20].to_string());
+        let table =
+            json_to_table::json_to_table(&serde_json::to_value(&config_table)?).collapse().to_string();
+        info!("Current Application Provider Config:\n{}", table);
+        Ok(config)
+    }
+    fn extract_consumer_config(env_file: Option<String>) -> anyhow::Result<ApplicationConsumerConfig> {
+        let config = ApplicationConsumerConfig::default();
+        let config = config.merge_dotenv_configuration(env_file);
+        let table =
+            json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
+        info!("Current Application Consumer Config:\n{}", table);
+        Ok(config)
     }
 }

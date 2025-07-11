@@ -2277,6 +2277,7 @@ dependencies = [
  "clap",
  "dotenvy",
  "http-body-util",
+ "json_to_table",
  "jsonschema",
  "jsonwebtoken",
  "log",

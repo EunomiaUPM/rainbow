@@ -19,7 +19,6 @@
 
 use crate::ssi_auth::consumer::core::types::{AuthJwtClaims, WalletInfoResponse, WalletLoginResponse};
 use crate::ssi_auth::provider::core::manager::RainbowSSIAuthProviderManagerTrait;
-use crate::ssi_auth::provider::setup::config::SSIAuthProviderApplicationConfig;
 use crate::ssi_auth::provider::utils::{compare_with_margin, create_opaque_token, create_token, split_did};
 use anyhow::bail;
 use axum::async_trait;
@@ -35,7 +34,7 @@ use jsonwebtoken::{Algorithm, Validation};
 use log::error;
 use rainbow_common::auth::gnap::{GrantRequest, GrantResponse};
 use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
-use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
+use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_common::mates::{BusMates, Mates};
 use rainbow_common::ssi_wallet::{DidsInfo, RainbowSSIAuthWalletTrait, WalletSession};
 use rainbow_db::auth_consumer::repo::AuthConsumerRepoTrait;
@@ -62,7 +61,7 @@ where
     pub wallet_onboard: bool,
     pub auth_repo: Arc<T>,
     client: Client,
-    config: SSIAuthProviderApplicationConfig,
+    config: ApplicationProviderConfig,
     didweb: Value,
 }
 
@@ -70,7 +69,7 @@ impl<T> Manager<T>
 where
     T: AuthProviderRepoTrait + Send + Sync + Clone + 'static,
 {
-    pub fn new(auth_repo: Arc<T>, config: SSIAuthProviderApplicationConfig) -> Self {
+    pub fn new(auth_repo: Arc<T>, config: ApplicationProviderConfig) -> Self {
         let client =
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
         Self {

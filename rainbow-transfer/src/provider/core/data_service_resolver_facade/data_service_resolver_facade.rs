@@ -17,10 +17,9 @@
  *
  */
 use crate::provider::core::data_service_resolver_facade::DataServiceFacadeTrait;
-use crate::provider::setup::config::TransferProviderApplicationConfig;
 use anyhow::{anyhow, bail};
 use axum::async_trait;
-use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
+use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_common::dcat_formats::DctFormats;
 use rainbow_common::protocol::catalog::dataservice_definition::DataService;
 use rainbow_common::protocol::catalog::dataset_definition::Dataset;
@@ -34,12 +33,12 @@ use std::time::Duration;
 use urn::Urn;
 
 pub struct DataServiceFacadeServiceForDSProtocol {
-    config: TransferProviderApplicationConfig,
+    config: ApplicationProviderConfig,
     client: Client,
 }
 
 impl DataServiceFacadeServiceForDSProtocol {
-    pub fn new(config: TransferProviderApplicationConfig) -> Self {
+    pub fn new(config: ApplicationProviderConfig) -> Self {
         let client =
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
         Self { config, client }

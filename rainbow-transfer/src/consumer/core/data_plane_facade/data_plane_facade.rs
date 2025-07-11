@@ -17,7 +17,6 @@
  *
  */
 use crate::consumer::core::data_plane_facade::DataPlaneConsumerFacadeTrait;
-use crate::consumer::setup::config::TransferConsumerApplicationConfig;
 use axum::async_trait;
 use rainbow_common::adv_protocol::interplane::data_plane_provision::DataPlaneProvisionRequest;
 use rainbow_common::adv_protocol::interplane::data_plane_start::DataPlaneStart;
@@ -27,6 +26,7 @@ use rainbow_common::adv_protocol::interplane::{
     DataPlaneControllerMessages, DataPlaneControllerVersion, DataPlaneSDPConfigField, DataPlaneSDPConfigTypes,
     DataPlaneSDPFieldTypes, DataPlaneSDPRequestField,
 };
+use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
 use rainbow_common::dcat_formats::{DctFormats, FormatAction};
 use rainbow_common::protocol::transfer::transfer_data_address::{DataAddress, EndpointProperty};
 use rainbow_dataplane::coordinator::controller::DataPlaneControllerTrait;
@@ -38,7 +38,7 @@ where
     T: DataPlaneControllerTrait + Sync + Send,
 {
     dataplane_controller: Arc<T>,
-    _config: TransferConsumerApplicationConfig,
+    _config: ApplicationConsumerConfig,
 }
 
 impl<'a, T> DataPlaneConsumerFacadeForDSProtocol<T>
@@ -46,7 +46,7 @@ where
     T: DataPlaneControllerTrait + Sync + Send,
     'a: 'static,
 {
-    pub fn new(dataplane_controller: Arc<T>, config: TransferConsumerApplicationConfig) -> Self {
+    pub fn new(dataplane_controller: Arc<T>, config: ApplicationConsumerConfig) -> Self {
         Self { dataplane_controller, _config: config }
     }
 }
@@ -114,11 +114,7 @@ where
         Ok(data_address)
     }
 
-    async fn on_transfer_request(
-        &self,
-        _session_id: Urn,
-        format: DctFormats,
-    ) -> anyhow::Result<()> {
+    async fn on_transfer_request(&self, _session_id: Urn, format: DctFormats) -> anyhow::Result<()> {
         let _dataplane_response = match format.action {
             FormatAction::Push => {
                 // TODO push case next_hop should point to consumer dataplane
@@ -147,8 +143,7 @@ where
                     },
                     DataPlaneSDPRequestField {
                         _type: DataPlaneSDPFieldTypes::DataPlaneAddressAuthType,
-                        format: "https://www.iana.org/assignments/http-authschemes/http-authschemes.xhtml"
-                            .to_string(),
+                        format: "https://www.iana.org/assignments/http-authschemes/http-authschemes.xhtml".to_string(),
                     },
                     DataPlaneSDPRequestField {
                         _type: DataPlaneSDPFieldTypes::DataPlaneAddressAuthToken,
@@ -160,9 +155,7 @@ where
                     Some(data_address) => Some(vec![
                         DataPlaneSDPConfigField {
                             _type: DataPlaneSDPConfigTypes::NextHopAddressScheme,
-                            format: Some(
-                                "https://www.iana.org/assignments/uri-schemes/uri-schemes.xhtml".to_string(),
-                            ),
+                            format: Some("https://www.iana.org/assignments/uri-schemes/uri-schemes.xhtml".to_string()),
                             content: data_address.endpoint_type,
                         },
                         DataPlaneSDPConfigField {
@@ -175,11 +168,10 @@ where
                             format: Some("dcterms:transferDirection".to_string()),
                             content: FormatAction::Pull.to_string(),
                         },
-                    ])
+                    ]),
                 },
             })
             .await?;
-
 
         let _ack = self
             .dataplane_controller

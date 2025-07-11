@@ -19,5 +19,3 @@
 
 pub mod application;
 pub mod db_migrations;
-pub mod config;
-// pub mod config_mappers;

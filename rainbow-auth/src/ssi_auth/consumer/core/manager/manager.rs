@@ -21,7 +21,6 @@ use super::RainbowSSIAuthConsumerManagerTrait;
 use crate::ssi_auth::consumer::core::types::{
     AuthJwtClaims, MatchingVCs, RedirectResponse, WalletInfoResponse, WalletLoginResponse,
 };
-use crate::ssi_auth::consumer::setup::config::SSIAuthConsumerApplicationConfig;
 use anyhow::bail;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
@@ -30,7 +29,7 @@ use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
 use once_cell::sync::Lazy;
 use rainbow_common::auth::gnap::{AccessToken, GrantRequest, GrantResponse};
-use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
+use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
 use rainbow_common::mates::Mates;
 use rainbow_common::ssi_wallet::{DidsInfo, RainbowSSIAuthWalletTrait, WalletSession};
 use rainbow_db::auth_consumer::entities::auth;
@@ -59,7 +58,7 @@ where
     pub wallet_onboard: bool,
     pub auth_repo: Arc<T>,
     client: Client,
-    config: SSIAuthConsumerApplicationConfig,
+    config: ApplicationConsumerConfig,
     didweb: Value,
 }
 
@@ -67,7 +66,7 @@ impl<T> Manager<T>
 where
     T: AuthConsumerRepoTrait + Send + Sync + Clone + 'static,
 {
-    pub fn new(auth_repo: Arc<T>, config: SSIAuthConsumerApplicationConfig) -> Self {
+    pub fn new(auth_repo: Arc<T>, config: ApplicationConsumerConfig) -> Self {
         info!("Manager created");
         let client =
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
@@ -404,12 +403,12 @@ where
         match wallet_session.wallets.first() {
             Some(wallet) => {
                 let dids = wallet.clone().dids.unwrap();
-                let did= dids.first().unwrap();
-                let did_doc= did.clone().document;
+                let did = dids.first().unwrap();
+                let did_doc = did.clone().document;
                 let json: Value = serde_json::from_str(&did_doc)?;
                 Ok(json)
-                            }
-            None => {bail!("No wallets available")}
+            }
+            None => { bail!("No wallets available") }
         }
     }
 }

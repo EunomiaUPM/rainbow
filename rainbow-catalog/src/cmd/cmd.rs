@@ -18,12 +18,14 @@
  */
 
 
+use crate::consumer::setup::application::CatalogBypassConsumerApplication;
+use crate::consumer::setup::db_migrations::CatalogBypassConsumerMigration;
 use crate::provider::setup::application::CatalogApplication;
-use crate::provider::setup::config::CatalogApplicationProviderConfig;
 use crate::provider::setup::db_migrations::CatalogMigration;
 use clap::{Parser, Subcommand};
-use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
-use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
+use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
+use rainbow_common::config::env_extraction::EnvExtraction;
+use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use std::cmp::PartialEq;
 use tracing::{debug, info};
 
@@ -45,11 +47,19 @@ pub enum CatalogCliRoles {
 
 #[derive(Subcommand, Debug, PartialEq)]
 pub enum CatalogCliCommands {
-    Start,
-    Setup,
+    Start(CatalogCliArgs),
+    Setup(CatalogCliArgs),
+}
+
+#[derive(Parser, Debug, PartialEq)]
+pub struct CatalogCliArgs {
+    #[arg(short, long)]
+    env_file: Option<String>,
 }
 
 pub struct CatalogCommands;
+
+impl EnvExtraction for CatalogCommands {}
 
 impl CatalogCommands {
     pub async fn init_command_line() -> anyhow::Result<()> {
@@ -60,25 +70,27 @@ impl CatalogCommands {
         // run scripts
         match cli.role {
             CatalogCliRoles::Provider(cmd) => {
-                let config = CatalogApplicationProviderConfig::default();
-                let config = config.merge_dotenv_configuration();
-                let table =
-                    json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
-                info!("Current config:\n{}", table);
                 match cmd {
-                    CatalogCliCommands::Start => CatalogApplication::run(&config).await?,
-                    CatalogCliCommands::Setup => CatalogMigration::run(&config).await?,
+                    CatalogCliCommands::Start(args) => {
+                        let config = Self::extract_provider_config(args.env_file)?;
+                        CatalogApplication::run(&config).await?
+                    }
+                    CatalogCliCommands::Setup(args) => {
+                        let config = Self::extract_provider_config(args.env_file)?;
+                        CatalogMigration::run(&config).await?
+                    }
                 }
             }
             CatalogCliRoles::Consumer(cmd) => {
-                let config = CatalogApplicationProviderConfig::default();
-                let config = config.merge_dotenv_configuration();
-                let table =
-                    json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
-                info!("Current config:\n{}", table);
                 match cmd {
-                    CatalogCliCommands::Start => CatalogApplication::run(&config).await?,
-                    CatalogCliCommands::Setup => CatalogMigration::run(&config).await?
+                    CatalogCliCommands::Start(args) => {
+                        let config = Self::extract_consumer_config(args.env_file)?;
+                        CatalogBypassConsumerApplication::run(&config).await?
+                    }
+                    CatalogCliCommands::Setup(args) => {
+                        let config = Self::extract_consumer_config(args.env_file)?;
+                        CatalogBypassConsumerMigration::run(&config).await?
+                    }
                 }
             }
         };

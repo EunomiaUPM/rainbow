@@ -17,8 +17,7 @@
  *
  */
 
-use crate::provider::setup::config::ContractNegotiationApplicationProviderConfig;
-use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
+use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_db::contracts_provider::migrations::get_contracts_migrations;
 use rainbow_db::events::migrations::get_events_migrations;
 use sea_orm::Database;
@@ -38,7 +37,7 @@ impl MigratorTrait for ContractNegotiationProviderMigration {
 }
 
 impl ContractNegotiationProviderMigration {
-    pub async fn run(config: &ContractNegotiationApplicationProviderConfig) -> anyhow::Result<()> {
+    pub async fn run(config: &ApplicationProviderConfig) -> anyhow::Result<()> {
         // db_connection
         let db_url = config.get_full_db_url();
         let db_connection = Database::connect(db_url).await.expect("Database can't connect");

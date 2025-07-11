@@ -202,7 +202,7 @@ pub trait ApplicationProviderConfigTrait {
     }
 
     // merge dotenv
-    fn merge_dotenv_configuration(&self) -> Self
+    fn merge_dotenv_configuration(&self, env_file: Option<String>) -> Self
     where
         Self: Sized;
 }
@@ -265,8 +265,11 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
         &self.cert_path
     }
 
-    fn merge_dotenv_configuration(&self) -> Self {
-        dotenvy::from_filename(".env.provider").expect("TODO: panic message");
+    fn merge_dotenv_configuration(&self, env_file: Option<String>) -> Self {
+        if let Some(env_file) = env_file {
+            dotenvy::from_filename(env_file).expect("No env file found");
+        }
+
         let default = ApplicationProviderConfig::default();
         let catalog_as_datahub: bool =
             extract_env("CATALOG_AS_DATAHUB", default.catalog_as_datahub.to_string()).parse().unwrap();
@@ -319,10 +322,7 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
                 }),
                 false => None,
             },
-            datahub_token: extract_env(
-                "DATAHUB_TOKEN",
-                default.datahub_token,
-            ),
+            datahub_token: extract_env("DATAHUB_TOKEN", default.datahub_token),
             contract_negotiation_host: Some(HostConfig {
                 protocol: extract_env(
                     "CONTRACT_NEGOTIATION_PROTOCOL",
@@ -389,12 +389,7 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
                 ),
                 wallet_id: None,
             },
-            client_config: ClientConfig {
-                self_client: extract_env(
-                    "SELF_CLIENT",
-                    default.client_config.self_client,
-                ),
-            },
+            client_config: ClientConfig { self_client: extract_env("SELF_CLIENT", default.client_config.self_client) },
             role: ConfigRoles::Provider,
             cert_path: extract_env("CERT_PATH", default.cert_path),
         };

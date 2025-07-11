@@ -28,7 +28,6 @@ use crate::provider::core::rainbow_entities::rainbow_entities::RainbowTransferPr
 use crate::provider::http::ds_protocol::ds_protocol::DSProtocolTransferProviderRouter;
 use crate::provider::http::ds_protocol_rpc::ds_protocol_rpc::DSRPCTransferProviderProviderRouter;
 use crate::provider::http::rainbow_entities::rainbow_entities::RainbowTransferProviderEntitiesRouter;
-use crate::provider::setup::config::TransferProviderApplicationConfig;
 use axum::{serve, Router};
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_common::facades::ssi_auth_facade::ssi_auth_facade::SSIAuthFacadeService;
@@ -55,7 +54,7 @@ use tracing::info;
 
 pub struct TransferProviderApplication;
 
-pub async fn create_transfer_provider_router(config: &TransferProviderApplicationConfig) -> Router {
+pub async fn create_transfer_provider_router(config: &ApplicationProviderConfig) -> Router {
     let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
 
     // Dataplane services
@@ -159,7 +158,7 @@ pub async fn create_transfer_provider_router(config: &TransferProviderApplicatio
 }
 
 impl TransferProviderApplication {
-    pub async fn run(config: &TransferProviderApplicationConfig) -> anyhow::Result<()> {
+    pub async fn run(config: &ApplicationProviderConfig) -> anyhow::Result<()> {
         // db_connection
         let router = create_transfer_provider_router(config).await;
         // Init server

@@ -17,13 +17,12 @@
  *
  */
 
-use crate::setup::application::DatahubCatalogApplication;
-use crate::setup::config::DatahubCatalogApplicationProviderConfig;
-use crate::setup::db_migrations::DatahubCatalogRelationsMigration;
 use clap::{Parser, Subcommand};
-use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
+use rainbow_catalog::provider::setup::application::CatalogApplication;
+use rainbow_catalog::provider::setup::db_migrations::CatalogMigration;
+use rainbow_common::config::env_extraction::EnvExtraction;
 use std::cmp::PartialEq;
-use tracing::{debug, info};
+use tracing::debug;
 
 #[derive(Parser, Debug)]
 #[command(name = "Rainbow Dataspace Connector Datahub Catalog Server")]
@@ -35,11 +34,19 @@ struct CatalogCli {
 
 #[derive(Subcommand, Debug, PartialEq)]
 pub enum CatalogCliCommands {
-    Start,
-    Setup,
+    Start(CatalogCliArgs),
+    Setup(CatalogCliArgs),
+}
+
+#[derive(Parser, Debug, PartialEq)]
+pub struct CatalogCliArgs {
+    #[arg(short, long)]
+    env_file: Option<String>,
 }
 
 pub struct CatalogCommands;
+
+impl EnvExtraction for CatalogCommands {}
 
 impl CatalogCommands {
     pub async fn init_command_line() -> anyhow::Result<()> {
@@ -47,19 +54,16 @@ impl CatalogCommands {
         debug!("Init the command line application");
         let cli = CatalogCli::parse();
 
-        // config
-        let config = DatahubCatalogApplicationProviderConfig::default();
-        let config = config.merge_dotenv_configuration();
-        let mut config_table = config.clone();
-        config_table.datahub_token = format!("{}...", config_table.datahub_token[0..20].to_string());
-        let table =
-            json_to_table::json_to_table(&serde_json::to_value(&config_table)?).collapse().to_string();
-        info!("Current config:\n{}", table);
-
         // run scripts
         match cli.command {
-            CatalogCliCommands::Start => DatahubCatalogApplication::run(&config).await?,
-            CatalogCliCommands::Setup => DatahubCatalogRelationsMigration::run(&config).await?,
+            CatalogCliCommands::Start(args) => {
+                let config = Self::extract_provider_config(args.env_file)?;
+                CatalogApplication::run(&config).await?
+            }
+            CatalogCliCommands::Setup(args) => {
+                let config = Self::extract_provider_config(args.env_file)?;
+                CatalogMigration::run(&config).await?
+            }
         }
 
         Ok(())

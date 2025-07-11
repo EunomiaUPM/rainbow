@@ -27,7 +27,6 @@ use crate::provider::core::rainbow_entities::rainbow_entities::RainbowEntitiesCo
 use crate::provider::http::ds_protocol::ds_protocol::DSProtocolContractNegotiationProviderRouter;
 use crate::provider::http::ds_protocol_rpc::ds_protocol_rpc::DSRPCContractNegotiationProviderRouter;
 use crate::provider::http::rainbow_entities::rainbow_entities::RainbowEntitesContractNegotiationProviderRouter;
-use crate::provider::setup::config::ContractNegotiationApplicationProviderConfig;
 use axum::{serve, Router};
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_common::facades::ssi_auth_facade::ssi_auth_facade::SSIAuthFacadeService;
@@ -47,7 +46,7 @@ use tracing::info;
 
 pub struct ContractNegotiationProviderApplication;
 
-pub async fn create_contract_negotiation_provider_router(config: &ContractNegotiationApplicationProviderConfig) -> Router {
+pub async fn create_contract_negotiation_provider_router(config: &ApplicationProviderConfig) -> Router {
     let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
     let application_global_config: ApplicationProviderConfig = config.clone().into();
     let provider_repo = Arc::new(ContractNegotiationProviderRepoForSql::create_repo(
@@ -123,7 +122,7 @@ pub async fn create_contract_negotiation_provider_router(config: &ContractNegoti
 }
 
 impl ContractNegotiationProviderApplication {
-    pub async fn run(config: &ContractNegotiationApplicationProviderConfig) -> anyhow::Result<()> {
+    pub async fn run(config: &ApplicationProviderConfig) -> anyhow::Result<()> {
         // db_connection
         let router = create_contract_negotiation_provider_router(config).await;
         // Init server

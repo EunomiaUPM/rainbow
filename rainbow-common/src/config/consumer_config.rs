@@ -180,7 +180,7 @@ pub trait ApplicationConsumerConfigTrait {
     }
 
     // merge dotenv
-    fn merge_dotenv_configuration(&self) -> Self
+    fn merge_dotenv_configuration(&self, env_file: Option<String>) -> Self
     where
         Self: Sized;
 }
@@ -230,8 +230,10 @@ impl ApplicationConsumerConfigTrait for ApplicationConsumerConfig {
         &self.cert_path
     }
 
-    fn merge_dotenv_configuration(&self) -> Self {
-        dotenvy::from_filename(".env.gateway.consumer").expect("TODO: panic message");
+    fn merge_dotenv_configuration(&self, env_file: Option<String>) -> Self {
+        if let Some(env_file) = env_file {
+            dotenvy::from_filename(env_file).expect("No env file found");
+        }
         let default = ApplicationConsumerConfig::default();
         let compound_config = Self {
             transfer_process_host: Some(HostConfig {
