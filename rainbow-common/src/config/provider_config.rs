@@ -269,6 +269,7 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
         if let Some(env_file) = env_file {
             dotenvy::from_filename(env_file).expect("No env file found");
         }
+        dotenvy::dotenv().ok();
 
         let default = ApplicationProviderConfig::default();
         let catalog_as_datahub: bool =

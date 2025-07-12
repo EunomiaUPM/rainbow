@@ -80,7 +80,7 @@ impl DatahubProxyTrait for DatahubProxyService {
         let domains = graphql_response
             .data
             .search
-            .search_results
+            .searchResults
             .into_iter()
             .map(|result| DatahubDomain { urn: result.entity.urn, properties: result.entity.properties })
             .collect();
@@ -132,7 +132,7 @@ impl DatahubProxyTrait for DatahubProxyService {
         let tags = graphql_response
             .data
             .search
-            .search_results
+            .searchResults
             .into_iter()
             .map(|result| Tag {
                 urn: result.entity.urn,
@@ -149,14 +149,14 @@ impl DatahubProxyTrait for DatahubProxyService {
         let graphql_url = format!("{}/api/graphql", datahub_host);
         let query = format!(
             r#"{{
-            searchAcrossEntities(input: {{ 
-                query: "*", 
+            searchAcrossEntities(input: {{
+                query: "*",
                 filters: [
                     {{field: "domains", values: ["{}"]}}
-                ], 
-                types: [DATASET], 
-                start: 0, 
-                count: 1000 
+                ],
+                types: [DATASET],
+                start: 0,
+                count: 1000
             }}) {{
                 searchResults {{
                     entity {{

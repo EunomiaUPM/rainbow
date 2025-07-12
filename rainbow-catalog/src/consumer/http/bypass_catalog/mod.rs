@@ -24,7 +24,6 @@ where
         Self { service }
     }
     pub fn router(self) -> Router {
-        debug!("router loading");
         Router::new()
             .route(
                 "/api/v1/catalog-bypass/:participant_id/*extra",

@@ -16,7 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
+#![allow(non_snake_case)]
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -52,7 +52,8 @@ pub struct GraphQLResponse<T> {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SearchResults<T> {
-    pub search_results: Vec<SearchResult<T>>,
+    #[allow(non_snake_case)]
+    pub searchResults: Vec<SearchResult<T>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -97,12 +98,14 @@ pub struct DatasetGraphQLResponse {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DatasetSearchResponse {
-    pub search_across_entities: DatasetSearchResults,
+    #[allow(non_snake_case)]
+    pub searchAcrossEntities: DatasetSearchResults,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DatasetSearchResults {
-    pub search_results: Vec<DatasetSearchResult>,
+    #[allow(non_snake_case)]
+    pub searchResults: Vec<DatasetSearchResult>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -147,7 +150,8 @@ pub struct DatasetEntityDetailed {
     pub ownership: Ownership,
     pub tags: Tags,
     pub domain: Option<DatahubDomain>,
-    pub glossary_terms: Option<GlossaryTerms>,
+    #[allow(non_snake_case)]
+    pub glossaryTerms: Option<GlossaryTerms>,
 }
 
 
@@ -183,9 +187,11 @@ pub struct DatasetEntity {
     pub properties: DatasetProperties,
     pub ownership: Ownership,
     pub tags: Tags,
-    pub schema_metadata: Option<SchemaMetadata>,
+    #[allow(non_snake_case)]
+    pub schemaMetadata: Option<SchemaMetadata>,
     pub domain: Domain,
-    pub glossary_terms: Option<GlossaryTerms>,
+    #[allow(non_snake_case)]
+    pub glossaryTerms: Option<GlossaryTerms>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -197,7 +203,8 @@ pub struct Platform {
 pub struct DatasetProperties {
     pub name: String,
     pub description: Option<String>,
-    pub custom_properties: Option<Vec<CustomProperty>>,
+    #[allow(non_snake_case)]
+    pub customProperties: Option<Vec<CustomProperty>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -245,13 +252,15 @@ pub struct SchemaMetadata {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Field {
-    pub field_path: String,
+    #[allow(non_snake_case)]
+    pub fieldPath: String,
     pub r#type: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Domain {
-    pub associated_urn: String,
+    #[allow(non_snake_case)]
+    pub associatedUrn: String,
     pub domain: DomainEntity,
 }
 
@@ -275,7 +284,8 @@ pub struct TermWrapper {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GlossaryTerm {
     pub urn: String,
-    pub glossary_term_info: GlossaryTermInfo,
+    #[allow(non_snake_case)]
+    pub glossaryTermInfo: GlossaryTermInfo,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

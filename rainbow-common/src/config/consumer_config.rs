@@ -234,6 +234,7 @@ impl ApplicationConsumerConfigTrait for ApplicationConsumerConfig {
         if let Some(env_file) = env_file {
             dotenvy::from_filename(env_file).expect("No env file found");
         }
+        dotenvy::dotenv().ok();
         let default = ApplicationConsumerConfig::default();
         let compound_config = Self {
             transfer_process_host: Some(HostConfig {
