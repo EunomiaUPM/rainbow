@@ -179,8 +179,8 @@ impl DatahubProxyTrait for DatahubProxyService {
                             ownership {{
                                 owners {{
                                     owner {{
-                                        ... on CorpUser {{
-                                            username
+                                        ... on CorpGroup {{
+                                            name
                                         }}
                                     }}
                                 }}
@@ -347,8 +347,8 @@ impl DatahubProxyTrait for DatahubProxyService {
                     ownership {{
                         owners {{
                             owner {{
-                                ... on CorpUser {{
-                                    username
+                                ... on CorpGroup {{
+                                    name
                                 }}
                             }}
                         }}

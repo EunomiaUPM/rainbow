@@ -188,6 +188,7 @@ pub struct DatasetEntity {
     pub glossaryTerms: Option<GlossaryTerms>,
 }
 
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Platform {
     pub name: String,
@@ -303,4 +304,12 @@ pub struct TagsQueryOptions {
     pub query: Option<String>,  // Para filtrar por nombre
     pub start: Option<u32>,     // Para paginación
     pub count: Option<u32>,     // Para limitar resultados
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Catalogs {
+    pub urn: String,
+    pub name: String,
+    pub description: Option<String>,
+    pub datasets: Vec<DatahubDataset>,
 }

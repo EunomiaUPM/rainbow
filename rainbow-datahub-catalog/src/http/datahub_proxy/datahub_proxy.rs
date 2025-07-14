@@ -19,7 +19,7 @@
 
 
 use crate::core::datahub_proxy::datahub_proxy_types::DatasetsQueryOptions;
-use crate::core::datahub_proxy::datahub_proxy_types::{DomainsQueryOptions, TagsQueryOptions};
+use crate::core::datahub_proxy::datahub_proxy_types::{DomainsQueryOptions, TagsQueryOptions, Catalogs};
 use crate::core::datahub_proxy::DatahubProxyTrait;
 use axum::extract::{Path, Query, State};
 use axum::response::IntoResponse;
@@ -28,6 +28,10 @@ use axum::{Json, Router};
 use reqwest::StatusCode;
 use std::sync::Arc;
 use tracing::info;
+use crate::core::datahub_proxy::datahub_proxy_types::DatahubDataset;
+use serde::Serialize;
+
+
 
 pub struct DataHubProxyRouter<T>
 where
@@ -52,7 +56,8 @@ where
             .route("/api/v1/datahub/tags", get(Self::handle_get_datahub_tags))
             // .route("/api/v1/datahub/domains/:domain_id", get(Self::handle_get_datahub_domain_by_id))
             .route("/api/v1/datahub/domains/:domain_id/datasets", get(Self::handle_get_datasets_by_domain_id))
-            .route("/api/v1/datahub/domains/datasets/:dataset_id", get(Self::handle_get_datasets_by_id))
+            .route("/api/v1/datahub/datasets/:dataset_id", get(Self::handle_get_datasets_by_id))
+            .route("/api/v1/datahub/domains_with_datasets", get(Self::handle_get_domains_with_datasets))
             .with_state(self.datahub_service)
     }
     async fn handle_get_datahub_domains(
@@ -95,6 +100,45 @@ where
         info!("GET /api/v1/datahub/datasets/{}", dataset_id);
         match datahub_service.get_datahub_dataset_by_id(dataset_id).await {
             Ok(dataset) => (StatusCode::OK, Json(dataset)).into_response(),
+            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        }
+    }
+
+    async fn handle_get_domains_with_datasets(
+        State(datahub_service): State<Arc<T>>,
+    ) -> impl IntoResponse {
+        use futures::future::join_all;
+        info!("GET /api/v1/datahub/domains_with_datasets");
+        match datahub_service.get_datahub_domains().await {
+            Ok(domains) => {
+                let mut results = Vec::new();
+                for domain in &domains {
+                    let datasets = match datahub_service.get_datahub_datasets_by_domain_id(domain.urn.clone()).await {
+                        Ok(ds) => ds,
+                        Err(_) => Vec::new(),
+                    };
+                    let dataset_futures = datasets.into_iter().map(|d| {
+                        let datahub_service = datahub_service.clone();
+                        let urn = d.urn.clone();
+                        async move {
+                            match datahub_service.get_datahub_dataset_by_id(urn).await {
+                                Ok(detail) => Some(detail),
+                                Err(_) => None,
+                            }
+                        }
+                    });
+                    let detailed_datasets: Vec<DatahubDataset> = join_all(dataset_futures).await.into_iter().filter_map(|d| d).collect();
+
+                    let catalog = Catalogs {
+                        urn: domain.urn.clone(),
+                        name: domain.properties.name.clone(),
+                        description: domain.properties.description.clone(),
+                        datasets: detailed_datasets,
+                    };
+                    results.push(catalog);
+                }
+                (StatusCode::OK, Json(results)).into_response()
+            },
             Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
         }
     }

@@ -41,3 +41,5 @@ serde_yaml = "0.9.33"
 json_to_table = { workspace = true }
 mockall = { workspace = true }
 hyper = "1.1"
+futures = "0.3"
+indexmap = "2.2"
