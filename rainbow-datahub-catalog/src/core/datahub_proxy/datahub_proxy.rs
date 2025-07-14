@@ -20,7 +20,7 @@
 use crate::core::datahub_proxy::datahub_proxy_types::DatasetGraphQLResponseDetailed;
 use crate::core::datahub_proxy::datahub_proxy_types::{
     DatahubDataset, DatasetBasicInfo, DatasetGraphQLResponse, DomainProperties, GlossaryTerm, TagProperties};
-use crate::core::datahub_proxy::datahub_proxy_types::{DatahubDomain, GraphQLResponse, Platform, Tag};
+use crate::core::datahub_proxy::datahub_proxy_types::{DatahubDomain, GraphQLResponse, Platform, Tag, Catalogs};
 use crate::core::datahub_proxy::DatahubProxyTrait;
 use crate::setup::config::DatahubCatalogApplicationProviderConfig;
 use axum::async_trait;
@@ -29,6 +29,7 @@ use reqwest::Client;
 use serde_json::Value;
 use std::time::Duration;
 use tracing::debug;
+use futures::future::join_all;
 
 pub struct DatahubProxyService {
     config: DatahubCatalogApplicationProviderConfig,
@@ -482,5 +483,30 @@ impl DatahubProxyTrait for DatahubProxyService {
         };
 
         Ok(dataset)
+    }
+
+    async fn get_catalogs (&self) -> anyhow::Result<Vec<Catalogs>> {
+        let mut results = Vec::new();
+        let domains = self.get_datahub_domains().await?;
+        for domain in &domains {
+            let datasets = self.get_datahub_datasets_by_domain_id(domain.urn.clone()).await.unwrap_or_default();
+            let dataset_futures = datasets.into_iter().map(|d| {
+                let this = self;
+                let urn = d.urn.clone();
+                async move {
+                    this.get_datahub_dataset_by_id(urn).await.ok()
+                }
+
+            });
+            let detailed_datasets: Vec<_> = join_all(dataset_futures).await.into_iter().filter_map(|d| d).collect();
+
+            results.push(Catalogs {
+                urn: domain.urn.clone(),
+                name: domain.properties.name.clone(),
+                description: domain.properties.description.clone(),
+                datasets: detailed_datasets,
+            });
+        }
+        Ok(results)
     }
 }

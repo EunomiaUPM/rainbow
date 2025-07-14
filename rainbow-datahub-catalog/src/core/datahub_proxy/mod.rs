@@ -18,7 +18,7 @@
  */
 
 use crate::core::datahub_proxy::datahub_proxy_types::DatahubDomain;
-use crate::core::datahub_proxy::datahub_proxy_types::{DatahubDataset, DatasetBasicInfo, Tag};
+use crate::core::datahub_proxy::datahub_proxy_types::{DatahubDataset, DatasetBasicInfo, Tag, Catalogs};
 use axum::async_trait;
 
 pub mod datahub_proxy;
@@ -30,5 +30,6 @@ pub trait DatahubProxyTrait: Send + Sync + 'static {
     async fn get_datahub_domains(&self) -> anyhow::Result<Vec<DatahubDomain>>;
     async fn get_datahub_datasets_by_domain_id(&self, id: String) -> anyhow::Result<Vec<DatahubDataset>>;
     async fn get_datahub_dataset_by_id(&self, id: String) -> anyhow::Result<DatahubDataset>;
-    async fn get_datahub_tags(&self) -> anyhow::Result<Vec<Tag>> ;
+    async fn get_datahub_tags(&self) -> anyhow::Result<Vec<Tag>>;
+    async fn get_catalogs(&self) -> anyhow::Result<Vec<Catalogs>>;
 }
