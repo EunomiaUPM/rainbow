@@ -57,7 +57,7 @@ where
             // .route("/api/v1/datahub/domains/:domain_id", get(Self::handle_get_datahub_domain_by_id))
             .route("/api/v1/datahub/domains/:domain_id/datasets", get(Self::handle_get_datasets_by_domain_id))
             .route("/api/v1/datahub/datasets/:dataset_id", get(Self::handle_get_datasets_by_id))
-            .route("/api/v1/datahub/domains_with_datasets", get(Self::handle_get_catalogs))
+            .route("/api/v1/datahub/catalogs", get(Self::handle_get_catalogs))
             .with_state(self.datahub_service)
     }
     async fn handle_get_datahub_domains(
