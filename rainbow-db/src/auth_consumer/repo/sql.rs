@@ -17,20 +17,18 @@
  *
  */
 
-use crate::auth_consumer::entities::{auth, authority};
+use crate::auth_consumer::entities::auth;
 use crate::auth_consumer::entities::auth_interaction;
 use crate::auth_consumer::entities::auth_verification;
 use crate::auth_consumer::entities::prov;
-use crate::auth_consumer::repo::{AuthConsumerRepoFactory, AuthConsumerRepoTrait, ParticipantRepoTrait};
-use anyhow::{anyhow, bail};
+use crate::auth_consumer::repo::{AuthConsumerRepoErrors, AuthConsumerRepoFactory, AuthConsumerRepoTrait};
+use anyhow::anyhow;
 use axum::async_trait;
 use chrono;
 use rainbow_common::auth::gnap::grant_request::Interact4GR;
-use sea_orm::sqlx::types::uuid;
 use sea_orm::{ActiveModelTrait, ActiveValue, DatabaseConnection, EntityTrait, IntoActiveModel, QuerySelect};
 use serde_json::Value;
 use url::Url;
-use crate::auth_consumer::entities::prov::Model;
 
 #[derive(Clone)]
 pub struct AuthConsumerRepoForSql {
@@ -54,26 +52,27 @@ impl AuthConsumerRepoFactory for AuthConsumerRepoForSql {
 
 #[async_trait]
 impl AuthConsumerRepoTrait for AuthConsumerRepoForSql {
-    async fn get_all_auths(&self, limit: Option<u64>, offset: Option<u64>) -> anyhow::Result<Vec<auth::Model>> {
+    async fn get_all_auths(
+        &self,
+        limit: Option<u64>,
+        offset: Option<u64>,
+    ) -> anyhow::Result<Vec<auth::Model>, AuthConsumerRepoErrors> {
         let auths = auth::Entity::find()
             .limit(limit.unwrap_or(100000))
             .offset(offset.unwrap_or(0))
             .all(&self.db_connection)
-            .await;
-        match auths {
-            Ok(auths) => Ok(auths),
-            Err(e) => bail!("Failed to fetch data: {}", e),
-        }
+            .await
+            .map_err(|e| AuthConsumerRepoErrors::ErrorFetchingAuth(e.into()))?;
+        Ok(auths)
     }
 
-    async fn get_auth_by_id(&self, auth_id: String) -> anyhow::Result<auth::Model> {
-        let auth = auth::Entity::find_by_id(&auth_id).one(&self.db_connection).await;
-
-        match auth {
-            Ok(Some(auth)) => Ok(auth),
-            Ok(None) => bail!("NO authentication with id {}", auth_id),
-            Err(e) => bail!("Failed to fetch data: {}", e),
-        }
+    async fn get_auth_by_id(&self, auth_id: String) -> anyhow::Result<auth::Model, AuthConsumerRepoErrors> {
+        let auth = auth::Entity::find_by_id(&auth_id)
+            .one(&self.db_connection)
+            .await
+            .map_err(|e| AuthConsumerRepoErrors::ErrorFetchingAuth(e.into()))?
+            .ok_or(AuthConsumerRepoErrors::AuthNotFound)?;
+        Ok(auth)
     }
 
     async fn create_auth(
@@ -84,8 +83,10 @@ impl AuthConsumerRepoTrait for AuthConsumerRepoForSql {
         provider_slug: String,
         actions: String,
         interact: Interact4GR,
-    ) -> anyhow::Result<auth::Model> {
-        let start: Value = Value::String(serde_json::to_string(&interact.start)?);
+    ) -> anyhow::Result<auth::Model, AuthConsumerRepoErrors> {
+        let start: Value = Value::String(
+            serde_json::to_string(&interact.start).map_err(|e| AuthConsumerRepoErrors::ErrorCreatingAuth(e.into()))?,
+        );
 
         let auth_model = auth::ActiveModel {
             id: ActiveValue::Set(id.clone()),
@@ -115,58 +116,83 @@ impl AuthConsumerRepoTrait for AuthConsumerRepoForSql {
             hints: ActiveValue::Set(None), // TODO ??
         };
 
-        let auth = auth::Entity::insert(auth_model).exec_with_returning(&self.db_connection).await?;
-        let auth_interaction =
-            auth_interaction::Entity::insert(auth_interaction_model).exec_with_returning(&self.db_connection).await?;
+        let auth = auth::Entity::insert(auth_model)
+            .exec_with_returning(&self.db_connection)
+            .await
+            .map_err(|e| AuthConsumerRepoErrors::ErrorCreatingAuth(e.into()))?;
 
+        let auth_interaction = auth_interaction::Entity::insert(auth_interaction_model)
+            .exec_with_returning(&self.db_connection)
+            .await
+            .map_err(|e| AuthConsumerRepoErrors::ErrorCreatingAuthInteraction(e.into()))?;
         Ok(auth)
     }
 
-    async fn auth_pending(&self, id: String, assigned_id: String, continue_uri: String, as_nonce: String) -> anyhow::Result<auth::Model> {
-        let mut entry = match auth::Entity::find_by_id(&id).one(&self.db_connection).await {
-            Ok(Some(entry)) => entry.into_active_model(),
-            Ok(None) => bail!("No entry auth with ID: {}", id),
-            Err(e) => bail!("Failed to fetch data: {}", e),
-        };
+    async fn auth_pending(
+        &self,
+        id: String,
+        assigned_id: String,
+        continue_uri: String,
+        as_nonce: String,
+    ) -> anyhow::Result<auth::Model, AuthConsumerRepoErrors> {
+        let mut entry = auth::Entity::find_by_id(&id)
+            .one(&self.db_connection)
+            .await
+            .map_err(|e| AuthConsumerRepoErrors::ErrorCreatingAuth(e.into()))?
+            .ok_or(AuthConsumerRepoErrors::AuthNotFound)?
+            .into_active_model();
 
-        let mut entry_int = match auth_interaction::Entity::find_by_id(&id).one(&self.db_connection).await {
-            Ok(Some(entry)) => entry.into_active_model(),
-            Ok(None) => bail!("No entry auth with ID: {}", id),
-            Err(e) => bail!("Failed to fetch data: {}", e),
-        };
+        let mut entry_int = auth_interaction::Entity::find_by_id(&id)
+            .one(&self.db_connection)
+            .await
+            .map_err(|e| AuthConsumerRepoErrors::ErrorCreatingAuthInteraction(e.into()))?
+            .ok_or(AuthConsumerRepoErrors::AuthNotFound)?
+            .into_active_model();
 
         entry_int.as_nonce = ActiveValue::Set(Some(as_nonce));
         entry.status = ActiveValue::Set("Pending".to_string());
         entry.assigned_id = ActiveValue::Set(Some(assigned_id));
         entry.continue_endpoint = ActiveValue::Set(Some(continue_uri));
 
-        let upd_entry = entry.update(&self.db_connection).await?;
-        entry_int.update(&self.db_connection).await?;
+        let upd_entry =
+            entry.update(&self.db_connection).await.map_err(|e| AuthConsumerRepoErrors::ErrorUpdatingAuth(e.into()))?;
+
+        let _ = entry_int
+            .update(&self.db_connection)
+            .await
+            .map_err(|e| AuthConsumerRepoErrors::ErrorUpdatingAuthInteraction(e.into()))?;
 
         Ok(upd_entry)
     }
 
-    async fn delete_auth(&self, id: String) -> anyhow::Result<auth::Model> {
-        let mut entry = match auth::Entity::find_by_id(&id).one(&self.db_connection).await {
-            Ok(Some(entry)) => entry,
-            Ok(None) => bail!("No entry found with ID: {}", id),
-            Err(e) => bail!("Failed to fetch data: {}", e),
-        };
+    async fn delete_auth(&self, id: String) -> anyhow::Result<auth::Model, AuthConsumerRepoErrors> {
+        let mut entry = auth::Entity::find_by_id(&id)
+            .one(&self.db_connection)
+            .await
+            .map_err(|e| AuthConsumerRepoErrors::ErrorCreatingAuth(e.into()))?
+            .ok_or(AuthConsumerRepoErrors::AuthNotFound)?;
+
         let ret = entry.clone();
         let active_model = entry.into_active_model();
-        active_model.delete(&self.db_connection).await?;
+        active_model
+            .delete(&self.db_connection)
+            .await
+            .map_err(|e| AuthConsumerRepoErrors::ErrorDeletingAuth(e.into()))?;
 
         Ok(ret)
     }
 
-    async fn get_interaction_by_id(&self, id: String) -> anyhow::Result<auth_interaction::Model> {
-        let auth_interaction = auth_interaction::Entity::find_by_id(&id).one(&self.db_connection).await;
+    async fn get_interaction_by_id(
+        &self,
+        id: String,
+    ) -> anyhow::Result<auth_interaction::Model, AuthConsumerRepoErrors> {
+        let auth_interaction = auth_interaction::Entity::find_by_id(&id)
+            .one(&self.db_connection)
+            .await
+            .map_err(|e| AuthConsumerRepoErrors::ErrorFetchingAuthInteraction(e.into()))?
+            .ok_or(AuthConsumerRepoErrors::AuthInteractionNotFound)?;
 
-        match auth_interaction {
-            Ok(Some(auth_interaction)) => Ok(auth_interaction),
-            Ok(None) => bail!("No Interaction from authentication with id {}", id),
-            Err(e) => bail!("Failed to fetch data: {}", e),
-        }
+        Ok(auth_interaction)
     }
 
     async fn update_interaction_by_id(
@@ -174,27 +200,37 @@ impl AuthConsumerRepoTrait for AuthConsumerRepoForSql {
         id: String,
         interact_ref: String,
         hash: String,
-    ) -> anyhow::Result<auth_interaction::Model> {
-        let mut entry = match auth_interaction::Entity::find_by_id(&id).one(&self.db_connection).await {
-            Ok(Some(entry)) => entry.into_active_model(),
-            Ok(None) => bail!("No entry auth with ID: {}", id),
-            Err(e) => bail!("Failed to fetch data: {}", e),
-        };
+    ) -> anyhow::Result<auth_interaction::Model, AuthConsumerRepoErrors> {
+        let mut entry = auth_interaction::Entity::find_by_id(&id)
+            .one(&self.db_connection)
+            .await
+            .map_err(|e| AuthConsumerRepoErrors::ErrorFetchingAuthInteraction(e.into()))?
+            .ok_or(AuthConsumerRepoErrors::AuthInteractionNotFound)?
+            .into_active_model();
 
         entry.interact_ref = ActiveValue::Set(Some(interact_ref));
         entry.hash = ActiveValue::Set(Some(hash));
-
-        let upd_entry = entry.update(&self.db_connection).await?;
-
+        let upd_entry = entry
+            .update(&self.db_connection)
+            .await
+            .map_err(|e| AuthConsumerRepoErrors::ErrorUpdatingAuthInteraction(e.into()))?;
         Ok(upd_entry)
     }
 
-    async fn create_auth_verification(&self, id: String, uri: String) -> anyhow::Result<auth_verification::Model> {
+    async fn create_auth_verification(
+        &self,
+        id: String,
+        uri: String,
+    ) -> anyhow::Result<auth_verification::Model, AuthConsumerRepoErrors> {
         if !uri.contains("openid4vp") {
-            bail!("Invalid format for uri")
+            return Err(AuthConsumerRepoErrors::ErrorCreatingAuthVerification(
+                anyhow!("Invalid format for uri, not contains openid4vp"),
+            ));
         }
         let fixed_uri = uri.replacen("openid4vp://", "https://", 1);
-        let url = Url::parse(&fixed_uri).map_err(|_| anyhow!("Invalid URI: {}", fixed_uri))?;
+        let url = Url::parse(&fixed_uri).map_err(|e| {
+            AuthConsumerRepoErrors::ErrorCreatingAuthVerification(anyhow!("Invalid URI: {}", fixed_uri))
+        })?;
 
         let response_type = url.query_pairs().find(|(k, _)| k == "response_type").map(|(_, v)| v.into_owned());
         let client_id = url.query_pairs().find(|(k, _)| k == "client_id").map(|(_, v)| v.into_owned());
@@ -220,28 +256,32 @@ impl AuthConsumerRepoTrait for AuthConsumerRepoForSql {
             ended_at: ActiveValue::Set(None),
         };
 
-        let auth_verification_model =
-            auth_verification::Entity::insert(auth_verification_model).exec_with_returning(&self.db_connection).await?;
+        let auth_verification_model = auth_verification::Entity::insert(auth_verification_model)
+            .exec_with_returning(&self.db_connection)
+            .await
+            .map_err(|e| AuthConsumerRepoErrors::ErrorCreatingAuthVerification(e.into()))?;
         Ok(auth_verification_model)
     }
 
-    async fn grant_req_approved(&self, id: String, jwt: String) -> anyhow::Result<auth::Model> {
-        let mut entry = match auth::Entity::find_by_id(&id).one(&self.db_connection).await {
-            Ok(Some(entry)) => entry.into_active_model(),
-            Ok(None) => bail!("No entry auth with ID: {}", id),
-            Err(e) => bail!("Failed to fetch data: {}", e),
-        };
-
+    async fn grant_req_approved(&self, id: String, jwt: String) -> anyhow::Result<auth::Model, AuthConsumerRepoErrors> {
+        let mut entry = auth::Entity::find_by_id(&id)
+            .one(&self.db_connection)
+            .await
+            .map_err(|e| AuthConsumerRepoErrors::ErrorFetchingAuth(e.into()))?
+            .ok_or(AuthConsumerRepoErrors::AuthNotFound)?
+            .into_active_model();
         entry.status = ActiveValue::Set("Approved".to_string());
         entry.token = ActiveValue::Set(Some(jwt));
-
-        let upd_entry = entry.update(&self.db_connection).await?;
-
+        let upd_entry =
+            entry.update(&self.db_connection).await.map_err(|e| AuthConsumerRepoErrors::ErrorUpdatingAuth(e.into()))?;
         Ok(upd_entry)
     }
 
-    async fn create_prov(&self, provider: String, provider_route: String) -> anyhow::Result<()> {
-
+    async fn create_prov(
+        &self,
+        provider: String,
+        provider_route: String,
+    ) -> anyhow::Result<(), AuthConsumerRepoErrors> {
         let prov_model = prov::ActiveModel {
             provider: ActiveValue::Set(provider.clone()),
             provider_route: ActiveValue::Set(provider_route),
@@ -251,69 +291,45 @@ impl AuthConsumerRepoTrait for AuthConsumerRepoForSql {
         let prov = prov::Entity::insert(prov_model).exec_with_returning(&self.db_connection).await;
 
         match prov {
-            Ok(prov) => Ok(()),
-            Err(e) if e.to_string().contains("duplicate key") => {
-                // Trying to save a provider that already exists
-                Ok(())
-            }
-            Err(e) => Err(e.into()),
+            Ok(_) => Ok(()),
+            Err(e) if e.to_string().contains("duplicate key") => Ok(()),
+            Err(e) => Err(AuthConsumerRepoErrors::ErrorCreatingAuthProvider(e.into())),
         }
-
     }
 
-    async fn prov_onboard(&self, provider: String) -> anyhow::Result<()> {
-        let mut entry = match prov::Entity::find_by_id(&provider).one(&self.db_connection).await {
-            Ok(Some(entry)) => entry.into_active_model(),
-            Ok(None) => bail!("No provider auth with ID: {}", provider),
-            Err(e) => bail!("Failed to fetch data: {}", e),
-        };
+    async fn prov_onboard(&self, provider: String) -> anyhow::Result<(), AuthConsumerRepoErrors> {
+        let mut entry = prov::Entity::find_by_id(&provider)
+            .one(&self.db_connection)
+            .await
+            .map_err(|e| AuthConsumerRepoErrors::ErrorFetchingAuthProvider(e.into()))?
+            .ok_or(AuthConsumerRepoErrors::AuthProviderNotFound)?
+            .into_active_model();
 
         entry.onboard = ActiveValue::Set(true);
-
-        let upd_entry = entry.update(&self.db_connection).await?;
+        let upd_entry = entry
+            .update(&self.db_connection)
+            .await
+            .map_err(|e| AuthConsumerRepoErrors::ErrorUpdatingAuthProvider(e.into()))?;
 
         Ok(())
     }
 
-    async fn get_all_provs(&self) -> anyhow::Result<Vec<Model>> {
+    async fn get_all_provs(&self) -> anyhow::Result<Vec<prov::Model>, AuthConsumerRepoErrors> {
         let provs = prov::Entity::find()
             .limit(100000)
             .offset(0)
             .all(&self.db_connection)
-            .await;
-        match provs {
-            Ok(provs) => Ok(provs),
-            Err(e) => bail!("Failed to fetch data: {}", e),
-        }
+            .await
+            .map_err(|e| AuthConsumerRepoErrors::ErrorFetchingAuthProvider(e.into()))?;
+        Ok(provs)
     }
 
-    async fn get_prov(&self, provider: String) -> anyhow::Result<Model> {
-        let prov = prov::Entity::find_by_id(&provider).one(&self.db_connection).await;
-
-        match prov {
-            Ok(Some(prov)) => Ok(prov),
-            Ok(None) => bail!("NO authentication with id {}", provider),
-            Err(e) => bail!("Failed to fetch data: {}", e),
-        }
+    async fn get_prov(&self, provider: String) -> anyhow::Result<prov::Model, AuthConsumerRepoErrors> {
+        let prov = prov::Entity::find_by_id(&provider)
+            .one(&self.db_connection)
+            .await
+            .map_err(|e| AuthConsumerRepoErrors::ErrorFetchingAuthProvider(e.into()))?
+            .ok_or(AuthConsumerRepoErrors::AuthProviderNotFound)?;
+        Ok(prov)
     }
-}
-
-impl ParticipantRepoTrait for AuthConsumerRepoForSql {
-    // async fn create_process(&self, id: Option<String>, authority: String, assigned_id: String, grant_endpoint: String) -> anyhow::Result<authority::Model> {
-    //     let id = id.unwrap_or(uuid::Uuid::new_v4().to_string());
-    //     let model = authority::ActiveModel {
-    //         id: ActiveValue::Set(id),
-    //         authority: ActiveValue::Set(authority),
-    //         status: ActiveValue::Set("Processing".to_string()),
-    //         assigned_id: ActiveValue::Set(None),
-    //         grant_endpoint: ActiveValue::Set(grant_endpoint),
-    //         continue_endpoint: ActiveValue::Set(None),
-    //         actions: ActiveValue::Set("vc-request".to_string()),
-    //         created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
-    //         ended_at: ActiveValue::Set(None),
-    //     };
-    //
-    //     let ans = authority::Entity::insert(model).exec_with_returning(&self.db_connection).await?;
-    //     Ok(ans)
-    // }
 }

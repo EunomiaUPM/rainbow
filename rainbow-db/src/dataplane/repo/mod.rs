@@ -16,12 +16,13 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 use crate::dataplane::entities::data_plane_field;
 use crate::dataplane::entities::data_plane_process;
+use anyhow::Error;
 use axum::async_trait;
 use rainbow_common::adv_protocol::interplane::{DataPlaneProcessDirection, DataPlaneProcessState};
 use sea_orm::DatabaseConnection;
+use thiserror::Error;
 use urn::Urn;
 
 pub mod sql;
@@ -48,27 +49,22 @@ pub trait DataPlaneProcessRepo {
         &self,
         limit: Option<u64>,
         offset: Option<u64>,
-    ) -> anyhow::Result<Vec<data_plane_process::Model>>;
+    ) -> anyhow::Result<Vec<data_plane_process::Model>, DataplaneRepoErrors>;
     async fn get_data_plane_process_by_id(
         &self,
         data_plane_process_id: Urn,
-    ) -> anyhow::Result<Option<data_plane_process::Model>>;
-
-    async fn get_data_plane_process_by_id_in_url(
-        &self,
-        id: Urn,
-    ) -> anyhow::Result<Option<data_plane_process::Model>>;
+    ) -> anyhow::Result<Option<data_plane_process::Model>, DataplaneRepoErrors>;
 
     async fn put_data_plane_process(
         &self,
         data_plane_process_id: Urn,
         new_data_plane_process: EditDataPlaneProcess,
-    ) -> anyhow::Result<data_plane_process::Model>;
+    ) -> anyhow::Result<data_plane_process::Model, DataplaneRepoErrors>;
     async fn create_data_plane_process(
         &self,
         new_data_plane_process: NewDataPlaneProcess,
-    ) -> anyhow::Result<data_plane_process::Model>;
-    async fn delete_data_plane_process(&self, data_plane_process_id: Urn) -> anyhow::Result<()>;
+    ) -> anyhow::Result<data_plane_process::Model, DataplaneRepoErrors>;
+    async fn delete_data_plane_process(&self, data_plane_process_id: Urn) -> anyhow::Result<(), DataplaneRepoErrors>;
 }
 
 pub struct NewDataPlaneField {
@@ -87,28 +83,54 @@ pub trait DataPlaneFieldRepo {
         &self,
         limit: Option<u64>,
         offset: Option<u64>,
-    ) -> anyhow::Result<Vec<data_plane_field::Model>>;
+    ) -> anyhow::Result<Vec<data_plane_field::Model>, DataplaneRepoErrors>;
 
     async fn get_all_data_plane_fields_by_process(
         &self,
         data_plane_process_id: Urn,
-    ) -> anyhow::Result<Vec<data_plane_field::Model>>;
+    ) -> anyhow::Result<Vec<data_plane_field::Model>, DataplaneRepoErrors>;
 
     async fn get_data_plane_field_by_id(
         &self,
         data_plane_field_id: Urn,
-    ) -> anyhow::Result<Option<data_plane_field::Model>>;
+    ) -> anyhow::Result<Option<data_plane_field::Model>, DataplaneRepoErrors>;
 
     async fn put_data_plane_field_by_id(
         &self,
         data_plane_field_id: Urn,
         new_data_plane_field: EditDataPlaneField,
-    ) -> anyhow::Result<data_plane_field::Model>;
+    ) -> anyhow::Result<data_plane_field::Model, DataplaneRepoErrors>;
 
     async fn create_data_plane_field(
         &self,
         new_data_plane_field: NewDataPlaneField,
-    ) -> anyhow::Result<data_plane_field::Model>;
+    ) -> anyhow::Result<data_plane_field::Model, DataplaneRepoErrors>;
 
-    async fn delete_data_plane_field(&self, data_plane_field_id: Urn) -> anyhow::Result<()>;
+    async fn delete_data_plane_field(&self, data_plane_field_id: Urn) -> anyhow::Result<(), DataplaneRepoErrors>;
+}
+
+#[derive(Debug, Error)]
+pub enum DataplaneRepoErrors {
+    #[error("Dataplane process not found")]
+    DataplaneProcessNotFound,
+    #[error("Dataplane field not found")]
+    DataplaneFieldNotFound,
+
+    #[error("Error fetching dataplane process. {0}")]
+    ErrorFetchingDataplaneProcess(Error),
+    #[error("Error creating dataplane process. {0}")]
+    ErrorCreatingDataplaneProcess(Error),
+    #[error("Error deleting dataplane process. {0}")]
+    ErrorDeletingDataplaneProcess(Error),
+    #[error("Error updating dataplane process. {0}")]
+    ErrorUpdatingDataplaneProcess(Error),
+
+    #[error("Error fetching dataplane field. {0}")]
+    ErrorFetchingDataplaneField(Error),
+    #[error("Error creating dataplane field. {0}")]
+    ErrorCreatingDataplaneField(Error),
+    #[error("Error deleting dataplane field. {0}")]
+    ErrorDeletingDataplaneField(Error),
+    #[error("Error updating dataplane field. {0}")]
+    ErrorUpdatingDataplaneField(Error),
 }

@@ -17,12 +17,11 @@
  *
  */
 
-use super::entities::{policy_relations, policy_templates};
+use super::entities::policy_templates;
 use crate::transfer_provider::repo::{TransferMessagesRepo, TransferProcessRepo};
 use anyhow::Error;
 use axum::async_trait;
 use rainbow_common::policy_templates::CreatePolicyTemplateRequest;
-use rainbow_common::protocol::contract::odrloffer_wrapper::OdrlOfferWrapper;
 use sea_orm::DatabaseConnection;
 use serde_json::to_value;
 use thiserror::Error;
@@ -30,7 +29,7 @@ use thiserror::Error;
 
 pub mod sql;
 
-pub trait DatahubConnectorRepoFactory: PolicyTemplatesRepo + PolicyRelationsRepo + Send + Sync + 'static {
+pub trait DatahubConnectorRepoFactory: PolicyTemplatesRepo + Send + Sync + 'static {
     fn create_repo(db_connection: DatabaseConnection) -> Self
     where
         Self: Sized;
@@ -60,22 +59,6 @@ pub trait PolicyTemplatesRepo {
     async fn get_policy_template_by_id(&self, template_id: String) -> anyhow::Result<Option<policy_templates::Model>, PolicyTemplatesRepoErrors>;
     async fn create_policy_template(&self, new_policy_template: NewPolicyTemplateModel) -> anyhow::Result<policy_templates::Model, PolicyTemplatesRepoErrors>;
     async fn delete_policy_template_by_id(&self, template_id: String) -> anyhow::Result<(), PolicyTemplatesRepoErrors>;
-    async fn get_all_templates_by_dataset_id(&self, dataset_id: String) -> anyhow::Result<Vec<policy_templates::Model>, PolicyTemplatesRepoErrors>;
-}
-
-pub struct NewPolicyRelationModel {
-    pub dataset_id: String,
-    pub policy_template_id: String,
-    pub odrl_offer: OdrlOfferWrapper,
-}
-
-#[async_trait]
-pub trait PolicyRelationsRepo {
-    async fn get_all_policy_relations(&self, limit: Option<u64>, page: Option<u64>) -> anyhow::Result<Vec<policy_relations::Model>, PolicyTemplatesRepoErrors>;
-    async fn get_all_policy_relations_by_template_id(&self, template_id: String) -> anyhow::Result<Vec<policy_relations::Model>, PolicyTemplatesRepoErrors>;
-    async fn get_relation_by_id(&self, policy_relation_id: String) -> anyhow::Result<Option<policy_relations::Model>, PolicyTemplatesRepoErrors>;
-    async fn create_policy_relation(&self, new_policy_relation: NewPolicyRelationModel) -> anyhow::Result<policy_relations::Model, PolicyTemplatesRepoErrors>;
-    async fn delete_policy_relation_by_id(&self, relation_id: String) -> anyhow::Result<(), PolicyTemplatesRepoErrors>;
 }
 
 #[derive(Error, Debug)]
@@ -88,19 +71,4 @@ pub enum PolicyTemplatesRepoErrors {
     ErrorCreatingPolicyTemplate(Error),
     #[error("Error deleting policy template. {0}")]
     ErrorDeletingPolicyTemplate(Error),
-
-    #[error("PolicyRelation not found")]
-    PolicyRelationNotFound,
-    #[error("Error fetching policy relation. {0}")]
-    ErrorFetchingPolicyRelation(Error),
-    #[error("Error creating policy relation. {0}")]
-    ErrorCreatingPolicyRelation(Error),
-    #[error("Error deleting policy relation. {0}")]
-    ErrorDeletingPolicyRelation(Error),
-}
-
-#[derive(Error, Debug)]
-pub enum DatahubDatasetsRepoErrors {
-    #[error("Error creating dataset. {0}")]
-    ErrorCreatingDataset(Error),
 }

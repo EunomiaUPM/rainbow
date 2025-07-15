@@ -16,24 +16,14 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 use crate::auth_provider::entities::{auth, auth_interaction, auth_verification};
+use anyhow::Error;
 use axum::async_trait;
 use rainbow_common::auth::gnap::grant_request::Interact4GR;
 use sea_orm::DatabaseConnection;
+use thiserror::Error;
 
 pub mod sql;
-
-// pub static AUTH_PROVIDER_REPO: Lazy<Box<dyn AuthProviderRepoTrait + Send + Sync>> =
-//     Lazy::new(|| {
-//         let repo_type = GLOBAL_CONFIG.get().unwrap().db_type.clone();
-//         match repo_type.as_str() {
-//             "postgres" => Box::new(AuthProviderRepo {}),
-//             "memory" => Box::new(AuthProviderRepo {}),
-//             "mysql" => Box::new(AuthProviderRepo {}),
-//             _ => panic!("Unknown REPO_TYPE: {}", repo_type),
-//         }
-//     });
 
 pub trait AuthProviderRepoFactory: AuthProviderRepoTrait + Send + Sync + Clone + 'static {
     fn create_repo(db_connection: DatabaseConnection) -> Self
@@ -43,8 +33,12 @@ pub trait AuthProviderRepoFactory: AuthProviderRepoTrait + Send + Sync + Clone +
 
 #[async_trait]
 pub trait AuthProviderRepoTrait {
-    async fn get_all_auths(&self, limit: Option<u64>, offset: Option<u64>) -> anyhow::Result<Vec<auth::Model>>;
-    async fn get_auth_by_id(&self, id: String) -> anyhow::Result<auth::Model>;
+    async fn get_all_auths(
+        &self,
+        limit: Option<u64>,
+        offset: Option<u64>,
+    ) -> anyhow::Result<Vec<auth::Model>, AuthProviderRepoErrors>;
+    async fn get_auth_by_id(&self, id: String) -> anyhow::Result<auth::Model, AuthProviderRepoErrors>;
     async fn create_auth(
         &self,
         consumer: String,
@@ -52,31 +46,98 @@ pub trait AuthProviderRepoTrait {
         grant_uri: String,
         actions: String,
         interact: Interact4GR,
-    ) -> anyhow::Result<(
-        auth::Model,
-        auth_interaction::Model,
-        auth_verification::Model,
-    )>;
-    async fn create_truncated_auth(&self, audience: String, state: String) -> anyhow::Result<(auth::Model, auth_verification::Model)>;
-    async fn update_auth_status(&self, id: String, status: String, end: bool) -> anyhow::Result<auth::Model>;
-    async fn delete_auth(&self, id: String) -> anyhow::Result<auth::Model>;
+    ) -> anyhow::Result<
+        (
+            auth::Model,
+            auth_interaction::Model,
+            auth_verification::Model,
+        ),
+        AuthProviderRepoErrors,
+    >;
+    async fn create_truncated_auth(
+        &self,
+        audience: String,
+        state: String,
+    ) -> anyhow::Result<(auth::Model, auth_verification::Model), AuthProviderRepoErrors>;
+    async fn update_auth_status(
+        &self,
+        id: String,
+        status: String,
+        end: bool,
+    ) -> anyhow::Result<auth::Model, AuthProviderRepoErrors>;
+    async fn delete_auth(&self, id: String) -> anyhow::Result<auth::Model, AuthProviderRepoErrors>;
 
-    async fn get_interaction_by_id(&self, id: String) -> anyhow::Result<auth_interaction::Model>;
+    async fn get_interaction_by_id(
+        &self,
+        id: String,
+    ) -> anyhow::Result<auth_interaction::Model, AuthProviderRepoErrors>;
 
-    async fn get_auth_by_state(&self, state: String) -> anyhow::Result<auth_verification::Model>;
+    async fn get_auth_by_state(
+        &self,
+        state: String,
+    ) -> anyhow::Result<auth_verification::Model, AuthProviderRepoErrors>;
 
     async fn get_av_by_id_update_holder(
         &self,
         id: String,
         vpt: String,
         holder: String,
-    ) -> anyhow::Result<auth_verification::Model>;
+    ) -> anyhow::Result<auth_verification::Model, AuthProviderRepoErrors>;
 
-    async fn update_verification_result(&self, id: String, result: bool) -> anyhow::Result<auth_verification::Model>;
+    async fn update_verification_result(
+        &self,
+        id: String,
+        result: bool,
+    ) -> anyhow::Result<auth_verification::Model, AuthProviderRepoErrors>;
 
-    async fn save_token(&self, id: String, base_url: String, token: String) -> anyhow::Result<auth::Model>;
+    async fn save_token(
+        &self,
+        id: String,
+        base_url: String,
+        token: String,
+    ) -> anyhow::Result<auth::Model, AuthProviderRepoErrors>;
 
-    async fn get_auth_by_interact_ref(&self, interact_ref: String) -> anyhow::Result<auth_interaction::Model>;
-    async fn is_token_in_db(&self, token: String) -> anyhow::Result<bool>;
-    async fn get_auth_ver_by_id(&self, id: String) -> anyhow::Result<auth_verification::Model>;
+    async fn get_auth_by_interact_ref(
+        &self,
+        interact_ref: String,
+    ) -> anyhow::Result<auth_interaction::Model, AuthProviderRepoErrors>;
+    async fn is_token_in_db(&self, token: String) -> anyhow::Result<bool, AuthProviderRepoErrors>;
+    async fn get_auth_ver_by_id(&self, id: String) -> anyhow::Result<auth_verification::Model, AuthProviderRepoErrors>;
+}
+
+#[derive(Debug, Error)]
+pub enum AuthProviderRepoErrors {
+    #[error("Auth not found")]
+    AuthNotFound,
+    #[error("Auth interaction not found")]
+    AuthInteractionNotFound,
+    #[error("Auth verification not found")]
+    AuthVerificationNotFound,
+
+    #[error("Error fetching auth. {0}")]
+    ErrorFetchingAuth(Error),
+    #[error("Error creating auth. {0}")]
+    ErrorCreatingAuth(Error),
+    #[error("Error deleting auth. {0}")]
+    ErrorDeletingAuth(Error),
+    #[error("Error updating auth. {0}")]
+    ErrorUpdatingAuth(Error),
+
+    #[error("Error fetching auth interaction. {0}")]
+    ErrorFetchingAuthInteraction(Error),
+    #[error("Error creating auth interaction. {0}")]
+    ErrorCreatingAuthInteraction(Error),
+    #[error("Error deleting auth interaction. {0}")]
+    ErrorDeletingAuthInteraction(Error),
+    #[error("Error updating auth interaction. {0}")]
+    ErrorUpdatingAuthInteraction(Error),
+
+    #[error("Error fetching auth verification. {0}")]
+    ErrorFetchingAuthVerification(Error),
+    #[error("Error creating auth verification. {0}")]
+    ErrorCreatingAuthVerification(Error),
+    #[error("Error deleting auth verification. {0}")]
+    ErrorDeletingAuthVerification(Error),
+    #[error("Error updating auth verification. {0}")]
+    ErrorUpdatingAuthVerification(Error),
 }

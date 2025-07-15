@@ -27,7 +27,7 @@ use axum::{Json, Router};
 use rainbow_common::auth::business::RainbowBusinessLoginRequest;
 use rainbow_common::mates::mates::VerifyTokenRequest;
 use rainbow_common::mates::{BusMates, Mates};
-use rainbow_db::mates::repo::MateRepoTrait;
+use rainbow_db::mates::repo::{BusmateRepoTrait, MateRepoTrait};
 use reqwest::{Client, StatusCode};
 use serde_json::json;
 use std::sync::Arc;
@@ -36,14 +36,14 @@ use tracing::{debug, info};
 
 pub struct RainbowMatesRouter<T>
 where
-    T: MateRepoTrait + Send + Sync + Clone + 'static,
+    T: MateRepoTrait + BusmateRepoTrait + Send + Sync + Clone + 'static,
 {
     pub mate_repo: Arc<T>,
 }
 
 impl<T> RainbowMatesRouter<T>
 where
-    T: MateRepoTrait + Send + Sync + Clone + 'static,
+    T: MateRepoTrait + BusmateRepoTrait + Send + Sync + Clone + 'static,
 {
     pub fn new(mate_repo: Arc<T>) -> Self {
         Self { mate_repo }

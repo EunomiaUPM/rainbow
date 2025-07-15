@@ -19,9 +19,10 @@
 
 use crate::dataplane::entities::data_plane_field;
 use crate::dataplane::entities::data_plane_process;
-use crate::dataplane::entities::data_plane_process::Model;
-use crate::dataplane::repo::{DataPlaneFieldRepo, DataPlaneProcessRepo, DataPlaneRepoFactory, EditDataPlaneField, EditDataPlaneProcess, NewDataPlaneField, NewDataPlaneProcess};
-use anyhow::bail;
+use crate::dataplane::repo::{
+    DataPlaneFieldRepo, DataPlaneProcessRepo, DataPlaneRepoFactory, DataplaneRepoErrors, EditDataPlaneField,
+    EditDataPlaneProcess, NewDataPlaneField, NewDataPlaneProcess,
+};
 use axum::async_trait;
 use rainbow_common::utils::get_urn;
 use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect};
@@ -52,50 +53,41 @@ impl DataPlaneProcessRepo for DataPlaneRepoForSql {
         &self,
         limit: Option<u64>,
         offset: Option<u64>,
-    ) -> anyhow::Result<Vec<data_plane_process::Model>> {
+    ) -> anyhow::Result<Vec<data_plane_process::Model>, DataplaneRepoErrors> {
         let data_plane_processes = data_plane_process::Entity::find()
             .limit(limit.unwrap_or(100000))
             .offset(offset.unwrap_or(0))
             .all(&self.db_connection)
-            .await;
-        match data_plane_processes {
-            Ok(data_plane_processes) => Ok(data_plane_processes),
-            Err(_) => bail!("Failed to fetch data plane processes"),
-        }
+            .await
+            .map_err(|e| DataplaneRepoErrors::ErrorFetchingDataplaneProcess(e.into()))?;
+        Ok(data_plane_processes)
     }
 
     async fn get_data_plane_process_by_id(
         &self,
         data_plane_process_id: Urn,
-    ) -> anyhow::Result<Option<data_plane_process::Model>> {
+    ) -> anyhow::Result<Option<data_plane_process::Model>, DataplaneRepoErrors> {
         let data_plane_process_id = data_plane_process_id.to_string();
-        let data_plane_process =
-            data_plane_process::Entity::find_by_id(data_plane_process_id).one(&self.db_connection).await;
-        match data_plane_process {
-            Ok(data_plane_process) => Ok(data_plane_process),
-            Err(_) => bail!("Failed to fetch data plane process"),
-        }
-    }
-
-    async fn get_data_plane_process_by_id_in_url(&self, id: Urn) -> anyhow::Result<Option<Model>> {
-        todo!()
+        let data_plane_process = data_plane_process::Entity::find_by_id(data_plane_process_id)
+            .one(&self.db_connection)
+            .await
+            .map_err(|e| DataplaneRepoErrors::ErrorFetchingDataplaneProcess(e.into()))?;
+        Ok(data_plane_process)
     }
 
     async fn put_data_plane_process(
         &self,
         data_plane_process_id: Urn,
         new_data_plane_process: EditDataPlaneProcess,
-    ) -> anyhow::Result<data_plane_process::Model> {
+    ) -> anyhow::Result<data_plane_process::Model, DataplaneRepoErrors> {
         let data_plane_process_id = data_plane_process_id.to_string();
-
-        let old_model =
-            data_plane_process::Entity::find_by_id(data_plane_process_id).one(&self.db_connection).await;
+        let old_model = data_plane_process::Entity::find_by_id(data_plane_process_id).one(&self.db_connection).await;
         let old_model = match old_model {
             Ok(old_model) => match old_model {
                 Some(old_model) => old_model,
-                None => bail!("Failed to fetch old model"),
+                None => return Err(DataplaneRepoErrors::DataplaneProcessNotFound),
             },
-            Err(_) => bail!("Failed to fetch old model"),
+            Err(e) => return Err(DataplaneRepoErrors::ErrorFetchingDataplaneProcess(e.into())),
         };
 
         let mut old_active_model: data_plane_process::ActiveModel = old_model.into();
@@ -107,14 +99,14 @@ impl DataPlaneProcessRepo for DataPlaneRepoForSql {
         let model = old_active_model.update(&self.db_connection).await;
         match model {
             Ok(model) => Ok(model),
-            Err(_) => bail!("Failed to update model"),
+            Err(e) => Err(DataplaneRepoErrors::ErrorUpdatingDataplaneProcess(e.into())),
         }
     }
 
     async fn create_data_plane_process(
         &self,
         new_data_plane_process: NewDataPlaneProcess,
-    ) -> anyhow::Result<data_plane_process::Model> {
+    ) -> anyhow::Result<data_plane_process::Model, DataplaneRepoErrors> {
         let model = data_plane_process::ActiveModel {
             id: ActiveValue::Set(new_data_plane_process.id.to_string()),
             state: ActiveValue::Set(new_data_plane_process.state.to_string()),
@@ -127,21 +119,20 @@ impl DataPlaneProcessRepo for DataPlaneRepoForSql {
 
         match data_plane_process {
             Ok(data_plane_process) => Ok(data_plane_process),
-            Err(_) => bail!("Failed to create model"),
+            Err(e) => Err(DataplaneRepoErrors::ErrorCreatingDataplaneProcess(e.into())),
         }
     }
 
-    async fn delete_data_plane_process(&self, data_plane_process_id: Urn) -> anyhow::Result<()> {
+    async fn delete_data_plane_process(&self, data_plane_process_id: Urn) -> anyhow::Result<(), DataplaneRepoErrors> {
         let data_plane_process_id = data_plane_process_id.to_string();
-        let data_plane_p = data_plane_process::Entity::delete_by_id(data_plane_process_id)
-            .exec(&self.db_connection)
-            .await;
+        let data_plane_p =
+            data_plane_process::Entity::delete_by_id(data_plane_process_id).exec(&self.db_connection).await;
         match data_plane_p {
             Ok(delete_result) => match delete_result.rows_affected {
-                0 => bail!("Not found"),
+                0 => Err(DataplaneRepoErrors::DataplaneProcessNotFound),
                 _ => Ok(()),
             },
-            Err(_) => bail!("Failed to fetch transfer callback"),
+            Err(e) => Err(DataplaneRepoErrors::ErrorDeletingDataplaneProcess(e.into())),
         }
     }
 }
@@ -152,117 +143,95 @@ impl DataPlaneFieldRepo for DataPlaneRepoForSql {
         &self,
         limit: Option<u64>,
         offset: Option<u64>,
-    ) -> anyhow::Result<Vec<data_plane_field::Model>> {
+    ) -> anyhow::Result<Vec<data_plane_field::Model>, DataplaneRepoErrors> {
         let data_plane_fields = data_plane_field::Entity::find()
             .limit(limit.unwrap_or(100000))
             .offset(offset.unwrap_or(0))
             .all(&self.db_connection)
-            .await;
-        match data_plane_fields {
-            Ok(data_plane_fields) => Ok(data_plane_fields),
-            Err(_) => bail!("Failed to fetch data plane fields"),
-        }
+            .await
+            .map_err(|e| DataplaneRepoErrors::ErrorFetchingDataplaneField(e.into()))?;
+        Ok(data_plane_fields)
     }
 
     async fn get_all_data_plane_fields_by_process(
         &self,
         data_plane_process_id: Urn,
-    ) -> anyhow::Result<Vec<data_plane_field::Model>> {
-        let data_plane_process_id = data_plane_process_id.to_string();
-        let data_plane_process = match data_plane_process::Entity::find_by_id(data_plane_process_id)
-            .one(&self.db_connection)
+    ) -> anyhow::Result<Vec<data_plane_field::Model>, DataplaneRepoErrors> {
+        let data_plane_process = self
+            .get_data_plane_process_by_id(data_plane_process_id.clone())
             .await
-        {
-            Ok(data_plane_process) => match data_plane_process {
-                Some(data_plane_process) => data_plane_process,
-                None => bail!("Data plane process not found"),
-            },
-            Err(_) => bail!("Failed to fetch data plane fields"),
-        };
+            .map_err(|e| DataplaneRepoErrors::ErrorFetchingDataplaneField(e.into()))?
+            .ok_or(DataplaneRepoErrors::DataplaneProcessNotFound)?;
+
         let data_plane_fields = data_plane_field::Entity::find()
             .filter(data_plane_field::Column::DataPlaneProcessId.eq(data_plane_process.id))
             .all(&self.db_connection)
-            .await;
+            .await
+            .map_err(|e| DataplaneRepoErrors::ErrorFetchingDataplaneField(e.into()))?;
 
-        match data_plane_fields {
-            Ok(data_plane_fields) => Ok(data_plane_fields),
-            Err(_) => bail!("Failed to fetch data plane fields"),
-        }
+        Ok(data_plane_fields)
     }
 
     async fn get_data_plane_field_by_id(
         &self,
         data_plane_field_id: Urn,
-    ) -> anyhow::Result<Option<data_plane_field::Model>> {
+    ) -> anyhow::Result<Option<data_plane_field::Model>, DataplaneRepoErrors> {
         let data_plane_field_id = data_plane_field_id.to_string();
-        let data_plane_f =
-            data_plane_field::Entity::find_by_id(data_plane_field_id).one(&self.db_connection).await;
-        match data_plane_f {
-            Ok(data_plane_f) => Ok(data_plane_f),
-            Err(_) => bail!("Failed to fetch data plane field"),
-        }
+        let data_plane_field = data_plane_field::Entity::find_by_id(data_plane_field_id)
+            .one(&self.db_connection)
+            .await
+            .map_err(|e| DataplaneRepoErrors::ErrorFetchingDataplaneField(e.into()))?;
+        Ok(data_plane_field)
     }
 
     async fn put_data_plane_field_by_id(
         &self,
         data_plane_field_id: Urn,
         new_data_plane_field: EditDataPlaneField,
-    ) -> anyhow::Result<data_plane_field::Model> {
-        let data_plane_field_id = data_plane_field_id.to_string();
-
-        let old_model =
-            data_plane_field::Entity::find_by_id(data_plane_field_id).one(&self.db_connection).await;
-        let old_model = match old_model {
-            Ok(old_model) => match old_model {
-                Some(old_model) => old_model,
-                None => bail!("Failed to fetch old model"),
-            },
-            Err(_) => bail!("Failed to fetch old model"),
-        };
-
+    ) -> anyhow::Result<data_plane_field::Model, DataplaneRepoErrors> {
+        let old_model = self
+            .get_data_plane_field_by_id(data_plane_field_id.clone())
+            .await?
+            .ok_or(DataplaneRepoErrors::DataplaneFieldNotFound)?;
         let mut old_active_model: data_plane_field::ActiveModel = old_model.into();
         if let Some(value) = new_data_plane_field.value {
             old_active_model.value = ActiveValue::Set(value);
         }
-
         let model = old_active_model.update(&self.db_connection).await;
         match model {
             Ok(model) => Ok(model),
-            Err(_) => bail!("Failed to update model"),
+            Err(e) => Err(DataplaneRepoErrors::ErrorUpdatingDataplaneField(e.into())),
         }
     }
 
     async fn create_data_plane_field(
         &self,
         new_data_plane_field: NewDataPlaneField,
-    ) -> anyhow::Result<data_plane_field::Model> {
+    ) -> anyhow::Result<data_plane_field::Model, DataplaneRepoErrors> {
         let model = data_plane_field::ActiveModel {
             id: ActiveValue::Set(get_urn(None).to_string()),
             key: ActiveValue::Set(new_data_plane_field.key),
             value: ActiveValue::Set(new_data_plane_field.value),
-            data_plane_process_id: ActiveValue::Set(
-                new_data_plane_field.data_plane_process_id.to_string(),
-            ),
+            data_plane_process_id: ActiveValue::Set(new_data_plane_field.data_plane_process_id.to_string()),
         };
-        let transfer_callback =
-            data_plane_field::Entity::insert(model).exec_with_returning(&self.db_connection).await;
+        let transfer_callback = data_plane_field::Entity::insert(model).exec_with_returning(&self.db_connection).await;
 
         match transfer_callback {
             Ok(transfer_callback) => Ok(transfer_callback),
-            Err(_) => bail!("Failed to create model"),
+            Err(e) => Err(DataplaneRepoErrors::ErrorCreatingDataplaneField(e.into())),
         }
     }
 
-    async fn delete_data_plane_field(&self, data_plane_field_id: Urn) -> anyhow::Result<()> {
+    async fn delete_data_plane_field(&self, data_plane_field_id: Urn) -> anyhow::Result<(), DataplaneRepoErrors> {
         let data_plane_field_id = data_plane_field_id.to_string();
         let transfer_callback =
             data_plane_field::Entity::delete_by_id(data_plane_field_id).exec(&self.db_connection).await;
         match transfer_callback {
             Ok(delete_result) => match delete_result.rows_affected {
-                0 => bail!("Not found"),
+                0 => Err(DataplaneRepoErrors::DataplaneFieldNotFound),
                 _ => Ok(()),
             },
-            Err(_) => bail!("Failed to fetch data plane field"),
+            Err(e) => Err(DataplaneRepoErrors::ErrorDeletingDataplaneField(e.into())),
         }
     }
 }

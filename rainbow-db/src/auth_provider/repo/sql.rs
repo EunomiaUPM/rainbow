@@ -20,8 +20,7 @@
 use crate::auth_provider::entities::auth;
 use crate::auth_provider::entities::auth_interaction;
 use crate::auth_provider::entities::auth_verification;
-use crate::auth_provider::repo::{AuthProviderRepoFactory, AuthProviderRepoTrait};
-use anyhow::bail;
+use crate::auth_provider::repo::{AuthProviderRepoErrors, AuthProviderRepoFactory, AuthProviderRepoTrait};
 use axum::async_trait;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
@@ -58,26 +57,27 @@ impl AuthProviderRepoFactory for AuthProviderRepoForSql {
 
 #[async_trait]
 impl AuthProviderRepoTrait for AuthProviderRepoForSql {
-    async fn get_all_auths(&self, limit: Option<u64>, offset: Option<u64>) -> anyhow::Result<Vec<auth::Model>> {
+    async fn get_all_auths(
+        &self,
+        limit: Option<u64>,
+        offset: Option<u64>,
+    ) -> anyhow::Result<Vec<auth::Model>, AuthProviderRepoErrors> {
         let auths = auth::Entity::find()
             .limit(limit.unwrap_or(100000))
             .offset(offset.unwrap_or(0))
             .all(&self.db_connection)
-            .await;
-        match auths {
-            Ok(auths) => Ok(auths),
-            Err(e) => bail!("Failed to fetch data: {}", e),
-        }
+            .await
+            .map_err(|e| AuthProviderRepoErrors::ErrorFetchingAuth(e.into()))?;
+        Ok(auths)
     }
 
-    async fn get_auth_by_id(&self, auth_id: String) -> anyhow::Result<auth::Model> {
-        let auth = auth::Entity::find_by_id(auth_id.clone()).one(&self.db_connection).await;
-
-        match auth {
-            Ok(Some(auth)) => Ok(auth),
-            Ok(None) => bail!("NO authentication with id {}", auth_id),
-            Err(e) => bail!("Failed to fetch data: {}", e),
-        }
+    async fn get_auth_by_id(&self, auth_id: String) -> anyhow::Result<auth::Model, AuthProviderRepoErrors> {
+        let auth = auth::Entity::find_by_id(auth_id.clone())
+            .one(&self.db_connection)
+            .await
+            .map_err(|e| AuthProviderRepoErrors::ErrorFetchingAuth(e.into()))?
+            .ok_or(AuthProviderRepoErrors::AuthNotFound)?;
+        Ok(auth)
     }
 
     async fn create_auth(
@@ -87,20 +87,24 @@ impl AuthProviderRepoTrait for AuthProviderRepoForSql {
         grant_uri: String,
         actions: String,
         interact: Interact4GR,
-    ) -> anyhow::Result<(
-        auth::Model,
-        auth_interaction::Model,
-        auth_verification::Model,
-    )> {
+    ) -> anyhow::Result<
+        (
+            auth::Model,
+            auth_interaction::Model,
+            auth_verification::Model,
+        ),
+        AuthProviderRepoErrors,
+    > {
+        // create variables
         let id = uuid::Uuid::new_v4().to_string();
-
         let state: String = rand::thread_rng().sample_iter(&Alphanumeric).take(12).map(char::from).collect();
         let as_nonce: String = rand::thread_rng().sample_iter(&Alphanumeric).take(36).map(char::from).collect();
         let nonce: String = rand::thread_rng().sample_iter(&Alphanumeric).take(12).map(char::from).collect();
         let interact_ref: String = rand::thread_rng().sample_iter(&Alphanumeric).take(16).map(char::from).collect();
 
-        let start: Value = Value::String(serde_json::to_string(&interact.start)?);
-
+        let start: Value = Value::String(
+            serde_json::to_string(&interact.start).map_err(|e| AuthProviderRepoErrors::ErrorCreatingAuth(e.into()))?,
+        );
         let hash_method = interact.finish.hash_method.unwrap_or_else(|| "sha-256".to_string());
         let hash_input = format!(
             "{}\n{}\n{}\n{}",
@@ -110,9 +114,9 @@ impl AuthProviderRepoTrait for AuthProviderRepoForSql {
         let mut hasher = Sha256::new();
         hasher.update(hash_input.as_bytes());
         let result = hasher.finalize();
-
         let hash = URL_SAFE_NO_PAD.encode(result);
 
+        // create models
         let auth_model = auth::ActiveModel {
             id: ActiveValue::Set(id.clone()),
             consumer: ActiveValue::Set(Some(consumer)),
@@ -123,7 +127,6 @@ impl AuthProviderRepoTrait for AuthProviderRepoForSql {
             ended_at: ActiveValue::Set(None),
             ..Default::default()
         };
-
         let auth_interaction_model = auth_interaction::ActiveModel {
             id: ActiveValue::Set(id.clone()),
             start: ActiveValue::Set(start),
@@ -138,7 +141,6 @@ impl AuthProviderRepoTrait for AuthProviderRepoForSql {
             hints: ActiveValue::Set(None), // TODO
             ..Default::default()
         };
-
         let auth_verification_model = auth_verification::ActiveModel {
             id: ActiveValue::Set(id.clone()),
             state: ActiveValue::Set(state.clone()),
@@ -152,35 +154,35 @@ impl AuthProviderRepoTrait for AuthProviderRepoForSql {
             ended_at: ActiveValue::Set(None),
         };
 
-        let auth = auth::Entity::insert(auth_model).exec_with_returning(&self.db_connection).await?;
-        let auth_interaction =
-            auth_interaction::Entity::insert(auth_interaction_model).exec_with_returning(&self.db_connection).await?;
-        let auth_verification =
-            auth_verification::Entity::insert(auth_verification_model).exec_with_returning(&self.db_connection).await?;
+        // persist models
+        let auth = auth::Entity::insert(auth_model)
+            .exec_with_returning(&self.db_connection)
+            .await
+            .map_err(|e| AuthProviderRepoErrors::ErrorCreatingAuth(e.into()))?;
+
+        let auth_interaction = auth_interaction::Entity::insert(auth_interaction_model)
+            .exec_with_returning(&self.db_connection)
+            .await
+            .map_err(|e| AuthProviderRepoErrors::ErrorCreatingAuthInteraction(e.into()))?;
+
+        let auth_verification = auth_verification::Entity::insert(auth_verification_model)
+            .exec_with_returning(&self.db_connection)
+            .await
+            .map_err(|e| AuthProviderRepoErrors::ErrorCreatingAuthVerification(e.into()))?;
 
         Ok((auth, auth_interaction, auth_verification))
     }
 
-    async fn create_truncated_auth(&self, audience: String, state: String) -> anyhow::Result<(auth::Model, auth_verification::Model)> {
+    async fn create_truncated_auth(
+        &self,
+        audience: String,
+        state: String,
+    ) -> anyhow::Result<(auth::Model, auth_verification::Model), AuthProviderRepoErrors> {
+        // create vars
         let id = uuid::Uuid::new_v4().to_string();
-
         let as_nonce: String = rand::thread_rng().sample_iter(&Alphanumeric).take(36).map(char::from).collect();
         let nonce: String = rand::thread_rng().sample_iter(&Alphanumeric).take(12).map(char::from).collect();
         let interact_ref: String = rand::thread_rng().sample_iter(&Alphanumeric).take(16).map(char::from).collect();
-
-        // let start: Value = Value::String(serde_json::to_string(&interact.start)?);
-
-        // let hash_method = interact.finish.hash_method.unwrap_or_else(|| "sha-256".to_string());
-        // let hash_input = format!(
-        //     "{}\n{}\n{}\n{}",
-        //     interact.finish.nonce, as_nonce, interact_ref, grant_uri
-        // );
-
-        // let mut hasher = Sha256::new();
-        // hasher.update(hash_input.as_bytes());
-        // let result = hasher.finalize();
-
-        // let hash = URL_SAFE_NO_PAD.encode(result);
 
         let auth_model = auth::ActiveModel {
             id: ActiveValue::Set(id.clone()),
@@ -192,20 +194,6 @@ impl AuthProviderRepoTrait for AuthProviderRepoForSql {
             ended_at: ActiveValue::Set(None),
         };
 
-        // let auth_interaction_model = auth_interaction::ActiveModel {
-        //     id: ActiveValue::Set(id.clone()),
-        //     start: ActiveValue::Set(start),
-        //     method: ActiveValue::Set(interact.finish.method),
-        //     uri: ActiveValue::Set(interact.finish.uri),
-        //     client_nonce: ActiveValue::Set(interact.finish.nonce),
-        //     as_nonce: ActiveValue::Set(as_nonce),
-        //     interact_ref: ActiveValue::Set(interact_ref),
-        //     grant_endpoint: ActiveValue::Set(grant_uri),
-        //     hash: ActiveValue::Set(hash),
-        //     hash_method: ActiveValue::Set(Some(hash_method)),
-        //     hints: ActiveValue::Set(None), // TODO
-        // };
-
         let auth_verification_model = auth_verification::ActiveModel {
             id: ActiveValue::Set(id.clone()),
             state: ActiveValue::Set(state.clone()),
@@ -219,69 +207,82 @@ impl AuthProviderRepoTrait for AuthProviderRepoForSql {
             ended_at: ActiveValue::Set(None),
         };
 
-        let auth = auth::Entity::insert(auth_model).exec_with_returning(&self.db_connection).await?;
-        // let auth_interaction =
-        //     auth_interaction::Entity::insert(auth_interaction_model).exec_with_returning(&self.db_connection).await?;
-        let auth_verification =
-            auth_verification::Entity::insert(auth_verification_model).exec_with_returning(&self.db_connection).await?;
+        // persist models
+        let auth = auth::Entity::insert(auth_model)
+            .exec_with_returning(&self.db_connection)
+            .await
+            .map_err(|e| AuthProviderRepoErrors::ErrorCreatingAuth(e.into()))?;
+
+        let auth_verification = auth_verification::Entity::insert(auth_verification_model)
+            .exec_with_returning(&self.db_connection)
+            .await
+            .map_err(|e| AuthProviderRepoErrors::ErrorCreatingAuthVerification(e.into()))?;
 
         Ok((auth, auth_verification))
     }
 
-    async fn update_auth_status(&self, id: String, status: String, end: bool) -> anyhow::Result<auth::Model> {
-        let mut entry = match auth::Entity::find_by_id(id.clone()).one(&self.db_connection).await {
-            Ok(Some(entry)) => entry.into_active_model(),
-            Ok(None) => bail!("No entry auth with ID: {}", id),
-            Err(e) => bail!("Failed to fetch data: {}", e),
-        };
+    async fn update_auth_status(
+        &self,
+        id: String,
+        status: String,
+        end: bool,
+    ) -> anyhow::Result<auth::Model, AuthProviderRepoErrors> {
+        let mut entry = auth::Entity::find_by_id(id.clone())
+            .one(&self.db_connection)
+            .await
+            .map_err(|e| AuthProviderRepoErrors::ErrorFetchingAuth(e.into()))?
+            .ok_or(AuthProviderRepoErrors::AuthNotFound)?
+            .into_active_model();
 
         entry.status = ActiveValue::Set(status);
         if end {
             entry.ended_at = ActiveValue::Set(Some(chrono::Utc::now().naive_utc()));
         }
-
         let upd_entry = entry.update(&self.db_connection).await;
-
         match upd_entry {
             Ok(upd_entry) => Ok(upd_entry),
-            Err(e) => bail!("Failed to update status: {}", e),
+            Err(e) => Err(AuthProviderRepoErrors::ErrorFetchingAuth(e.into())),
         }
     }
 
-    async fn delete_auth(&self, id: String) -> anyhow::Result<auth::Model> {
-        let mut entry = match auth::Entity::find_by_id(id.clone()).one(&self.db_connection).await {
-            Ok(Some(entry)) => entry,
-            Ok(None) => bail!("No entry found with ID: {}", id),
-            Err(e) => bail!("Failed to fetch data: {}", e),
-        };
+    async fn delete_auth(&self, id: String) -> anyhow::Result<auth::Model, AuthProviderRepoErrors> {
+        let mut entry = auth::Entity::find_by_id(id.clone())
+            .one(&self.db_connection)
+            .await
+            .map_err(|e| AuthProviderRepoErrors::ErrorFetchingAuth(e.into()))?
+            .ok_or(AuthProviderRepoErrors::AuthNotFound)?;
         let ret = entry.clone();
         let active_model = entry.into_active_model();
-        active_model.delete(&self.db_connection).await?;
-
+        let _ = active_model
+            .delete(&self.db_connection)
+            .await
+            .map_err(|e| AuthProviderRepoErrors::ErrorDeletingAuth(e.into()))?;
         Ok(ret)
     }
 
-    async fn get_interaction_by_id(&self, id: String) -> anyhow::Result<auth_interaction::Model> {
-        let auth_interaction = auth_interaction::Entity::find_by_id(id.clone()).one(&self.db_connection).await;
-
-        match auth_interaction {
-            Ok(Some(auth_interaction)) => Ok(auth_interaction),
-            Ok(None) => bail!("No Interaction from authentication with id {}", id),
-            Err(e) => bail!("Failed to fetch data: {}", e),
-        }
+    async fn get_interaction_by_id(
+        &self,
+        id: String,
+    ) -> anyhow::Result<auth_interaction::Model, AuthProviderRepoErrors> {
+        let auth_interaction = auth_interaction::Entity::find_by_id(id.clone())
+            .one(&self.db_connection)
+            .await
+            .map_err(|e| AuthProviderRepoErrors::ErrorFetchingAuthInteraction(e.into()))?
+            .ok_or(AuthProviderRepoErrors::AuthInteractionNotFound)?;
+        Ok(auth_interaction)
     }
 
-    async fn get_auth_by_state(&self, state: String) -> anyhow::Result<auth_verification::Model> {
+    async fn get_auth_by_state(
+        &self,
+        state: String,
+    ) -> anyhow::Result<auth_verification::Model, AuthProviderRepoErrors> {
         let auth = auth_verification::Entity::find()
             .filter(auth_verification::Column::State.eq(state.clone()))
             .one(&self.db_connection)
-            .await;
-
-        match auth {
-            Ok(Some(auth)) => Ok(auth),
-            Ok(None) => bail!("No verification from authentication with state {}", state),
-            Err(e) => bail!("Failed to fetch data: {}", e),
-        }
+            .await
+            .map_err(|e| AuthProviderRepoErrors::ErrorFetchingAuthVerification(e.into()))?
+            .ok_or(AuthProviderRepoErrors::AuthVerificationNotFound)?;
+        Ok(auth)
     }
 
     async fn get_av_by_id_update_holder(
@@ -289,41 +290,43 @@ impl AuthProviderRepoTrait for AuthProviderRepoForSql {
         id: String,
         vpt: String,
         holder: String,
-    ) -> anyhow::Result<auth_verification::Model> {
-        let auth_ver = auth_verification::Entity::find_by_id(&id).one(&self.db_connection).await;
+    ) -> anyhow::Result<auth_verification::Model, AuthProviderRepoErrors> {
+        let auth_ver = auth_verification::Entity::find_by_id(&id)
+            .one(&self.db_connection)
+            .await
+            .map_err(|e| AuthProviderRepoErrors::ErrorFetchingAuthVerification(e.into()))?
+            .ok_or(AuthProviderRepoErrors::AuthVerificationNotFound)?;
 
-        let mut entry = match auth_ver {
-            Ok(Some(auth_ver)) => auth_ver.into_active_model(),
-            Ok(None) => bail!("No Verification from authentication with id {}", id),
-            Err(e) => bail!("Failed to fetch data: {}", e),
-        };
-
+        let mut entry = auth_ver.into_active_model();
         entry.holder = ActiveValue::Set(Some(holder));
         entry.vpt = ActiveValue::Set(Some(vpt));
 
-        let upd_entry = entry.update(&self.db_connection).await;
-
-        match upd_entry {
-            Ok(upd_entry) => Ok(upd_entry),
-            Err(e) => bail!("Failed to update status: {}", e),
-        }
+        let upd_entry = entry
+            .update(&self.db_connection)
+            .await
+            .map_err(|e| AuthProviderRepoErrors::ErrorUpdatingAuthVerification(e.into()))?;
+        Ok(upd_entry)
     }
 
-    async fn update_verification_result(&self, id: String, result: bool) -> anyhow::Result<auth_verification::Model> {
-        let auth_ver = auth_verification::Entity::find_by_id(&id).one(&self.db_connection).await;
-        let auth = auth::Entity::find_by_id(&id).one(&self.db_connection).await;
+    async fn update_verification_result(
+        &self,
+        id: String,
+        result: bool,
+    ) -> anyhow::Result<auth_verification::Model, AuthProviderRepoErrors> {
+        let auth_ver = auth_verification::Entity::find_by_id(&id)
+            .one(&self.db_connection)
+            .await
+            .map_err(|e| AuthProviderRepoErrors::ErrorFetchingAuthVerification(e.into()))?
+            .ok_or(AuthProviderRepoErrors::AuthVerificationNotFound)?;
 
-        let mut ver_entry = match auth_ver {
-            Ok(Some(auth_ver)) => auth_ver.into_active_model(),
-            Ok(None) => bail!("No Verification from authentication with id {}", id),
-            Err(e) => bail!("Failed to fetch data: {}", e),
-        };
-        let mut auth_entry = match auth {
-            Ok(Some(auth)) => auth.into_active_model(),
-            Ok(None) => bail!("No authentication with id {}", id),
-            Err(e) => bail!("Failed to fetch data: {}", e),
-        };
+        let auth = auth::Entity::find_by_id(&id)
+            .one(&self.db_connection)
+            .await
+            .map_err(|e| AuthProviderRepoErrors::ErrorFetchingAuth(e.into()))?
+            .ok_or(AuthProviderRepoErrors::AuthNotFound)?;
 
+        let mut ver_entry = auth_ver.into_active_model();
+        let mut auth_entry = auth.into_active_model();
         ver_entry.success = ActiveValue::Set(Some(result));
         ver_entry.ended_at = ActiveValue::Set(Some(chrono::Utc::now().naive_utc()));
         if result {
@@ -332,72 +335,70 @@ impl AuthProviderRepoTrait for AuthProviderRepoForSql {
             auth_entry.status = ActiveValue::Set("Finalized".to_string());
         }
 
-        let upd_entry = ver_entry.update(&self.db_connection).await;
-        let upd_entry2 = auth_entry.update(&self.db_connection).await;
+        let upd_entry = ver_entry
+            .update(&self.db_connection)
+            .await
+            .map_err(|e| AuthProviderRepoErrors::ErrorUpdatingAuthVerification(e.into()))?;
+        let upd_entry2 = auth_entry
+            .update(&self.db_connection)
+            .await
+            .map_err(|e| AuthProviderRepoErrors::ErrorUpdatingAuth(e.into()))?;
 
-        match upd_entry2 {
-            Ok(auth_entry) => (),
-            Err(e) => bail!("Failed to update status: {}", e),
-        }
-        match upd_entry {
-            Ok(upd_entry) => {Ok(upd_entry)}
-            Err(e) => bail!("Failed to update status: {}", e),
-        }
+        Ok(upd_entry)
     }
 
-    async fn save_token(&self, id: String, base_url: String, token: String) -> anyhow::Result<auth::Model> {
-        let auth = auth::Entity::find_by_id(&id).one(&self.db_connection).await;
+    async fn save_token(
+        &self,
+        id: String,
+        base_url: String,
+        token: String,
+    ) -> anyhow::Result<auth::Model, AuthProviderRepoErrors> {
+        let auth = auth::Entity::find_by_id(&id)
+            .one(&self.db_connection)
+            .await
+            .map_err(|e| AuthProviderRepoErrors::ErrorFetchingAuth(e.into()))?
+            .ok_or(AuthProviderRepoErrors::AuthNotFound)?;
 
-        let mut auth_entry = match auth {
-            Ok(Some(auth)) => auth.into_active_model(),
-            Ok(None) => bail!("No authentication with id {}", id),
-            Err(e) => bail!("Failed to fetch data: {}", e),
-        };
-
+        let mut auth_entry = auth.into_active_model();
         auth_entry.token = ActiveValue::Set(Some(token));
         auth_entry.status = ActiveValue::Set("Approved".to_string());
 
-        let upd_model = auth_entry.update(&self.db_connection).await;
+        let upd_model = auth_entry
+            .update(&self.db_connection)
+            .await
+            .map_err(|e| AuthProviderRepoErrors::ErrorUpdatingAuth(e.into()))?;
 
-        match upd_model {
-            Ok(upd_entry) => Ok(upd_entry),
-            Err(e) => bail!("Failed to save in db: {}", e),
-        }
+        Ok(upd_model)
     }
 
-    async fn get_auth_by_interact_ref(&self, interact_ref: String) -> anyhow::Result<auth_interaction::Model> {
+    async fn get_auth_by_interact_ref(
+        &self,
+        interact_ref: String,
+    ) -> anyhow::Result<auth_interaction::Model, AuthProviderRepoErrors> {
         let auth = auth_interaction::Entity::find()
             .filter(auth_interaction::Column::InteractRef.eq(interact_ref.clone()))
             .one(&self.db_connection)
-            .await;
-
-        match auth {
-            Ok(Some(auth)) => Ok(auth),
-            Ok(None) => bail!(
-                "No verification from authentication with interact_ref {}",
-                interact_ref
-            ),
-            Err(e) => bail!("Failed to fetch data: {}", e),
-        }
+            .await
+            .map_err(|e| AuthProviderRepoErrors::ErrorFetchingAuthInteraction(e.into()))?
+            .ok_or(AuthProviderRepoErrors::AuthInteractionNotFound)?;
+        Ok(auth)
     }
 
-    async fn is_token_in_db(&self, token: String) -> anyhow::Result<bool> {
-        let auth = auth::Entity::find().filter(auth::Column::Token.eq(token)).one(&self.db_connection).await;
-
-        match auth {
-            Ok(Some(auth)) => Ok(true),
-            Ok(None) => Ok(false),
-            Err(e) => bail!("Failed to fetch data: {}", e),
-        }
+    async fn is_token_in_db(&self, token: String) -> anyhow::Result<bool, AuthProviderRepoErrors> {
+        let auth = auth::Entity::find()
+            .filter(auth::Column::Token.eq(token))
+            .one(&self.db_connection)
+            .await
+            .map_err(|e| AuthProviderRepoErrors::ErrorFetchingAuth(e.into()))?;
+        Ok(auth.is_some())
     }
 
-    async fn get_auth_ver_by_id(&self, id: String) -> anyhow::Result<auth_verification::Model> {
-        let auth = auth_verification::Entity::find_by_id(id.clone()).one(&self.db_connection).await;
-
-        match auth {
-            Ok(Some(auth)) => Ok(auth),
-            Ok(None) => bail!("NO authentication with id {}", id),
-            Err(e) => bail!("Failed to fetch data: {}", e),
-        }
+    async fn get_auth_ver_by_id(&self, id: String) -> anyhow::Result<auth_verification::Model, AuthProviderRepoErrors> {
+        let auth = auth_verification::Entity::find_by_id(id.clone())
+            .one(&self.db_connection)
+            .await
+            .map_err(|e| AuthProviderRepoErrors::ErrorFetchingAuth(e.into()))?
+            .ok_or(AuthProviderRepoErrors::AuthNotFound)?;
+        Ok(auth)
     }
 }
