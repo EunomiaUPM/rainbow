@@ -21,7 +21,7 @@ use crate::core::datahub_proxy::datahub_proxy::DatahubProxyService;
 use crate::core::rainbow_rpc::rainbow_rpc::RainbowRPCDatahubCatalogService;
 use crate::http::datahub_proxy::datahub_proxy::DataHubProxyRouter;
 use crate::http::rainbow_entities::policies::RainbowCatalogPoliciesRouter;
-use crate::http::rainbow_entities::policy_relations_router::{PolicyRelationsRouter, PolicyTemplatesRouter};
+use crate::http::rainbow_entities::policy_relations_router::PolicyTemplatesRouter;
 use crate::http::rainbow_rpc::rainbow_rpc::RainbowRPCDatahubCatalogRouter;
 use axum::{serve, Router};
 use rainbow_catalog::provider::core::rainbow_entities::policies::RainbowCatalogPoliciesService;
@@ -64,7 +64,6 @@ pub async fn create_datahub_catalog_router(config: &ApplicationProviderConfig) -
     let datahub_service = Arc::new(DatahubProxyService::new(config.clone()));
     let datahub_router = DataHubProxyRouter::new(datahub_service.clone());
     let policy_templates_router = PolicyTemplatesRouter::new(repo.clone(), notification_service.clone());
-    let policy_relations_router = PolicyRelationsRouter::new(repo.clone(), notification_service.clone());
 
     // Plain Catalog Policies Router
     let plain_policies_repo = Arc::new(CatalogRepoForSql::new(db_connection));
@@ -79,7 +78,6 @@ pub async fn create_datahub_catalog_router(config: &ApplicationProviderConfig) -
     let datahub_router = Router::new()
         .merge(datahub_router.router())
         .merge(policy_templates_router.router())
-        .merge(policy_relations_router.router())
         .merge(plain_policies_router.router())
         .merge(rpc_router.router())
         .nest("/api/v1/datahub", subscription_router)
