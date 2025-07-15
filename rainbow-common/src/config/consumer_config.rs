@@ -294,9 +294,9 @@ impl ApplicationConsumerConfigTrait for ApplicationConsumerConfig {
                 ),
             }),
             auth_host: Some(HostConfig {
-                protocol: extract_env("AUTH_PROTOCOL", default.auth_host.clone().unwrap().protocol),
-                url: extract_env("AUTH_URL", default.auth_host.clone().unwrap().url),
-                port: extract_env("AUTH_PORT", default.auth_host.clone().unwrap().port),
+                protocol: extract_env("AUTH_HOST_PROTOCOL", default.auth_host.clone().unwrap().protocol),
+                url: extract_env("AUTH_HOST_URL", default.auth_host.clone().unwrap().url),
+                port: extract_env("AUTH_HOST_PORT", default.auth_host.clone().unwrap().port),
             }),
             ssi_auth_host: Some(HostConfig {
                 protocol: extract_env(

@@ -92,7 +92,7 @@ where
         State(datahub_service): State<Arc<T>>,
         Path(dataset_id): Path<String>,
     ) -> impl IntoResponse {
-        info!("GET /api/v1/datahub/datasets/{}", dataset_id);
+        info!("GET /api/v1/datahub/domains/datasets/{}", dataset_id);
         match datahub_service.get_datahub_dataset_by_id(dataset_id).await {
             Ok(dataset) => (StatusCode::OK, Json(dataset)).into_response(),
             Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),

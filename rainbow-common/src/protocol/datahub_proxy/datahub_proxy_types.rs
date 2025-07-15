@@ -1,3 +1,4 @@
+#![allow(non_snake_case)]
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -9,6 +10,7 @@ pub struct DatahubDomain {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DomainProperties {
     pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
 }
 
@@ -243,7 +245,7 @@ pub struct TermWrapper {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GlossaryTerm {
     pub urn: String,
-    pub glossary_term_info: GlossaryTermInfo,
+    pub glossaryTermInfo: GlossaryTermInfo,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
