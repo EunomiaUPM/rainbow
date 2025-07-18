@@ -18,19 +18,19 @@ RUN apt-get update && \
 
 # app building
 # https://docs.docker.com/guides/rust/develop/
-RUN --mount=type=bind,source=./../Cargo.toml,target=/app/Cargo.toml \
-    --mount=type=bind,source=./../Cargo.lock,target=/app/Cargo.lock \
-    --mount=type=bind,source=./../rainbow-core,target=/app/rainbow-core \
-    --mount=type=bind,source=./../rainbow-catalog,target=/app/rainbow-catalog \
-    --mount=type=bind,source=./../rainbow-contracts,target=/app/rainbow-contracts \
-    --mount=type=bind,source=./../rainbow-dataplane,target=/app/rainbow-dataplane \
-    --mount=type=bind,source=./../rainbow-transfer,target=/app/rainbow-transfer \
-    --mount=type=bind,source=./../rainbow-common,target=/app/rainbow-common \
-    --mount=type=bind,source=./../rainbow-auth,target=/app/rainbow-auth \
-    --mount=type=bind,source=./../rainbow-db,target=/app/rainbow-db \
-    --mount=type=bind,source=./../rainbow-events,target=/app/rainbow-events \
-    --mount=type=bind,source=./../rainbow-datahub-catalog,target=/app/rainbow-datahub-catalog \
-    --mount=type=bind,source=./../rainbow-mates,target=/app/rainbow-mates \
+RUN --mount=type=bind,source=./Cargo.toml,target=/app/Cargo.toml \
+    --mount=type=bind,source=./Cargo.lock,target=/app/Cargo.lock \
+    --mount=type=bind,source=./rainbow-core,target=/app/rainbow-core \
+    --mount=type=bind,source=./rainbow-catalog,target=/app/rainbow-catalog \
+    --mount=type=bind,source=./rainbow-contracts,target=/app/rainbow-contracts \
+    --mount=type=bind,source=./rainbow-dataplane,target=/app/rainbow-dataplane \
+    --mount=type=bind,source=./rainbow-transfer,target=/app/rainbow-transfer \
+    --mount=type=bind,source=./rainbow-common,target=/app/rainbow-common \
+    --mount=type=bind,source=./rainbow-auth,target=/app/rainbow-auth \
+    --mount=type=bind,source=./rainbow-db,target=/app/rainbow-db \
+    --mount=type=bind,source=./rainbow-events,target=/app/rainbow-events \
+    --mount=type=bind,source=./rainbow-datahub-catalog,target=/app/rainbow-datahub-catalog \
+    --mount=type=bind,source=./rainbow-mates,target=/app/rainbow-mates \
     --mount=type=cache,target=/app/target/ \
     --mount=type=cache,target=/usr/local/cargo/registry/ \
     /bin/sh -c "\

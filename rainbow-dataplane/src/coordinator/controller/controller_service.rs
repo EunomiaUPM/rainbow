@@ -125,7 +125,6 @@ where
             Ok(_) => {}
             Err(_) => {}
         };
-        debug!("hola");
         let ack = DataPlaneStopAck {
             _type: DataPlaneControllerMessages::DataPlaneStopAck,
             version: DataPlaneControllerVersion::Version10,

@@ -94,7 +94,7 @@ impl GatewayCommands {
             }
             GatewayCliRoles::Consumer(cmd) => {
                 let config = ApplicationConsumerConfig::default();
-                let config = config.merge_dotenv_configuration();
+                let config = config.merge_dotenv_configuration(None);
                 let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
                 info!("Current config:\n{}", table);
                 match cmd {
