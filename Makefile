@@ -1,37 +1,105 @@
+# Define variables
+DOCKER_USERNAME ?= caparicioesd
+VERSION ?= latest
 
-BINARY_NAME=rainbow
-RELEASE_DIR=target/release
-RELEASE_BIN_DIR=bin
-VERSION=0_1
-PROVIDER_DATABASE_URL=postgresql://ds-protocol-provider:ds-protocol-provider@localhost:5433/ds-protocol-provider
-CONSUMER_DATABASE_URL=postgresql://ds-protocol:ds-protocol@localhost:5434/ds-protocol
-
-all:
-	build
-
-build:
-	cargo build --release
-	mkdir -p $(RELEASE_BIN_DIR)
-	cp $(RELEASE_DIR)/$(BINARY_NAME) $(RELEASE_BIN_DIR)/$(BINARY_NAME)-$(VERSION)
-
-clean:
-	cargo clean
-	rm -rf $(RELEASE_BIN_DIR)
-
-dev:
-	docker compose -f ./deployment/docker-compose.dev.yaml up -d
-
-start-static-server:
-	cd ./test/data-servers/static-parquet-server \
-	cargo run \
-		1236
-
-build-container:
+#
+#
+#
+# Transfer Microservice
+#
+#
+build-transfer:
 	docker build \
 		--progress plain \
-		-t caparicioesd/rainbow:latest \
+		-t $(DOCKER_USERNAME)/rainbow-transfer:$(VERSION) \
+		--build-arg APP_NAME=rainbow_transfer \
 		-f deployment/Dockerfile \
 		.
 
-push-container:
-	docker push caparicioesd/rainbow:latest
+push-transfer:
+	docker push $(DOCKER_USERNAME)/rainbow-transfer:$(VERSION)
+
+
+#
+#
+#
+# Contract negotiation Microservice
+#
+#
+build-contracts:
+	docker build \
+		--progress plain \
+		-t $(DOCKER_USERNAME)/rainbow-contracts:$(VERSION) \
+		--build-arg APP_NAME=rainbow_contracts \
+		-f deployment/Dockerfile \
+		.
+
+push-contracts:
+	docker push $(DOCKER_USERNAME)/rainbow-contracts:$(VERSION)
+
+
+#
+#
+#
+# Rainbow Catalog Microservice
+#
+#
+build-catalog:
+	docker build \
+		--progress plain \
+		-t $(DOCKER_USERNAME)/rainbow-catalog:$(VERSION) \
+		--build-arg APP_NAME=rainbow_catalog \
+		-f deployment/Dockerfile \
+		.
+
+push-catalog:
+	docker push $(DOCKER_USERNAME)/rainbow-catalog:$(VERSION)
+
+
+#
+#
+#
+# Rainbow Auth
+#
+#
+build-auth:
+	docker build \
+		--progress plain \
+		-t $(DOCKER_USERNAME)/rainbow-auth:$(VERSION) \
+		--build-arg APP_NAME=rainbow_auth \
+		-f deployment/Dockerfile \
+		.
+
+push-auth:
+	docker push $(DOCKER_USERNAME)/rainbow-auth:$(VERSION)
+
+
+#
+#
+#
+# Rainbow Core as Monolith
+#
+#
+build-core:
+	docker build \
+		--progress plain \
+		-t $(DOCKER_USERNAME)/rainbow:$(VERSION) \
+		--build-arg APP_NAME=rainbow_core \
+		-f deployment/Dockerfile \
+		.
+
+push-core:
+	docker push $(DOCKER_USERNAME)/rainbow:$(VERSION)
+
+
+#
+#
+#
+# General
+#
+#
+build-containers: build-core build-catalog build-contracts build-transfer build-auth
+
+push-containers: push-core push-catalog push-contracts push-transfer push-auth
+
+.PHONY: build-ƒtransfer push-transfer build-contracts push-contracts build-catalog push-catalog build-auth push-auth build-core push-core build-containers push-containers

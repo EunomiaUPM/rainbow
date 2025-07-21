@@ -1,11 +1,10 @@
 use crate::subscriptions::MicroserviceSubscriptionKey;
 use anyhow::bail;
 use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
-use reqwest::{Client, Error, Response};
+use reqwest::Client;
 use serde_json::json;
 use std::time::Duration;
 use tracing::{debug, error};
-use tracing_subscriber::fmt::format;
 
 pub struct RainbowConsumerGatewaySubscriptions {
     config: ApplicationConsumerConfig,

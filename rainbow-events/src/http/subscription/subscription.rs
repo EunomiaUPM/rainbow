@@ -85,7 +85,6 @@ where
         State((service, entity)): State<(Arc<T>, Option<SubscriptionEntities>)>,
         query: Query<SubscriptionQueryParams>,
     ) -> impl IntoResponse {
-        info!("bien");
         let cb = query.callback_address.clone();
         if cb.is_some() {
             info!("GET {}/subscriptions?callback_address={}", Self::serialize_entity_type(&entity), cb.clone().unwrap());

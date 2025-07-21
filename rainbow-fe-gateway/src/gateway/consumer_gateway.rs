@@ -125,7 +125,7 @@ impl RainbowConsumerGateway {
             .await
     }
     async fn websocket_handler(
-        State((config, client, notification_tx)): State<(ApplicationConsumerConfig, Client, broadcast::Sender<String>)>,
+        State((_config, _client, notification_tx)): State<(ApplicationConsumerConfig, Client, broadcast::Sender<String>)>,
         ws: WebSocketUpgrade,
     ) -> impl IntoResponse {
         ws.on_upgrade(move |mut socket| async move {
@@ -180,17 +180,17 @@ impl RainbowConsumerGateway {
         })
     }
     async fn incoming_notification(
-        State((config, client, notification_tx)): State<(ApplicationConsumerConfig, Client, broadcast::Sender<String>)>,
+        State((_config, _client, notification_tx)): State<(ApplicationConsumerConfig, Client, broadcast::Sender<String>)>,
         Json(input): Json<Value>,
     ) -> impl IntoResponse {
         let value_str = match serde_json::to_string(&input) {
             Ok(value_str) => value_str,
-            Err(e) => return (StatusCode::BAD_REQUEST, "Not able to deserialize").into_response(),
+            Err(_e) => return (StatusCode::BAD_REQUEST, "Not able to deserialize").into_response(),
         };
-        let req = match notification_tx.send(value_str) {
+        let _req = match notification_tx.send(value_str) {
             Ok(num_receivers) => num_receivers,
             // Send Pending
-            Err(e) => return (StatusCode::BAD_REQUEST, "Not able to deserialize").into_response(),
+            Err(_e) => return (StatusCode::BAD_REQUEST, "Not able to deserialize").into_response(),
         };
         StatusCode::ACCEPTED.into_response()
     }

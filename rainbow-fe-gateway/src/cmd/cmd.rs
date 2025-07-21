@@ -24,8 +24,9 @@ use crate::subscriptions::provider_subscriptions::RainbowProviderGatewaySubscrip
 use crate::subscriptions::MicroserviceSubscriptionKey;
 use axum::serve;
 use clap::{Parser, Subcommand};
-use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
-use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
+use rainbow_common::config::env_extraction::EnvExtraction;
+use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
 use std::cmp::PartialEq;
 use tokio::net::TcpListener;
 use tracing::{debug, info};
@@ -48,11 +49,19 @@ pub enum GatewayCliRoles {
 
 #[derive(Subcommand, Debug, PartialEq)]
 pub enum GatewayCliCommands {
-    Start,
-    Subscribe,
+    Start(GatewayCliArgs),
+    Subscribe(GatewayCliArgs),
+}
+
+#[derive(Parser, Debug, PartialEq)]
+pub struct GatewayCliArgs {
+    #[arg(short, long)]
+    env_file: Option<String>,
 }
 
 pub struct GatewayCommands;
+
+impl EnvExtraction for GatewayCommands {}
 
 impl GatewayCommands {
     pub async fn init_command_line() -> anyhow::Result<()> {
@@ -63,12 +72,9 @@ impl GatewayCommands {
         // run scripts
         match cli.role {
             GatewayCliRoles::Provider(cmd) => {
-                let config = ApplicationProviderConfig::default();
-                let config = config.merge_dotenv_configuration();
-                let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
-                info!("Current config:\n{}", table);
                 match cmd {
-                    GatewayCliCommands::Start => {
+                    GatewayCliCommands::Start(args) => {
+                        let config = Self::extract_provider_config(args.env_file)?;
                         let gateway_router = RainbowProviderGateway::new(config.clone()).router();
                         let server_message = format!(
                             "Starting provider gateway server in {}",
@@ -83,7 +89,8 @@ impl GatewayCommands {
                             .await?;
                         serve(listener, gateway_router).await?;
                     }
-                    GatewayCliCommands::Subscribe => {
+                    GatewayCliCommands::Subscribe(args) => {
+                        let config = Self::extract_provider_config(args.env_file)?;
                         let microservices_subs = RainbowProviderGatewaySubscriptions::new(config.clone());
                         microservices_subs.subscribe_to_microservice(MicroserviceSubscriptionKey::Catalog).await?;
                         // TODO when pubsub refactor
@@ -93,12 +100,9 @@ impl GatewayCommands {
                 }
             }
             GatewayCliRoles::Consumer(cmd) => {
-                let config = ApplicationConsumerConfig::default();
-                let config = config.merge_dotenv_configuration(None);
-                let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
-                info!("Current config:\n{}", table);
                 match cmd {
-                    GatewayCliCommands::Start => {
+                    GatewayCliCommands::Start(args) => {
+                        let config = Self::extract_consumer_config(args.env_file)?;
                         let gateway_router = RainbowConsumerGateway::new(config.clone()).router();
                         let server_message = format!(
                             "Starting consumer gateway server in {}",
@@ -113,7 +117,8 @@ impl GatewayCommands {
                             .await?;
                         serve(listener, gateway_router).await?;
                     }
-                    GatewayCliCommands::Subscribe => {
+                    GatewayCliCommands::Subscribe(args) => {
+                        let config = Self::extract_consumer_config(args.env_file)?;
                         let microservices_subs = RainbowConsumerGatewaySubscriptions::new(config.clone());
                         microservices_subs.subscribe_to_microservice(MicroserviceSubscriptionKey::ContractNegotiation).await?;
                     }

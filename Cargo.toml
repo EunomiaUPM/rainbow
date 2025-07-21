@@ -9,15 +9,15 @@ members = [
     "rainbow-common",
     "rainbow-auth",
     "rainbow-db",
-    #"rainbow-tests",
+    "rainbow-tests",
     "rainbow-events",
     #"rainbow-proxy-http",
     #"rainbow-proxy-kafka",
     #"rainbow-proxy-nifi",
-    #"rainbow-fe-gateway",
+    "rainbow-fe-gateway",
     "rainbow-datahub-catalog",
     "rainbow-mates",
-    #"rainbow-business-gateway",
+    "rainbow-business-gateway",
     #"rainbow-authority",
 ]
 exclude = [
