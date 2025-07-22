@@ -95,11 +95,47 @@ push-core:
 #
 #
 #
+# Rainbow FE Gateway
+#
+#
+build-fe-gateway:
+	docker build \
+		--progress plain \
+		-t $(DOCKER_USERNAME)/rainbow_fe_gateway:$(VERSION) \
+		--build-arg APP_NAME=rainbow_fe_gateway \
+		-f deployment/Dockerfile \
+		.
+
+push-fe-gateway:
+	docker push $(DOCKER_USERNAME)/rainbow_fe_gateway:$(VERSION)
+
+
+#
+#
+#
+# Rainbow Business Gateway
+#
+#
+build-business-gateway:
+	docker build \
+		--progress plain \
+		-t $(DOCKER_USERNAME)/rainbow_business_gateway:$(VERSION) \
+		--build-arg APP_NAME=rainbow_business_gateway \
+		-f deployment/Dockerfile \
+		.
+
+push-business-gateway:
+	docker push $(DOCKER_USERNAME)/rainbow_business_gateway:$(VERSION)
+
+
+#
+#
+#
 # General
 #
 #
-build-containers: build-core build-catalog build-contracts build-transfer build-auth
+build-containers: build-core build-catalog build-contracts build-transfer build-auth build-fe-gateway build-business-gateway
 
-push-containers: push-core push-catalog push-contracts push-transfer push-auth
+push-containers: push-core push-catalog push-contracts push-transfer push-auth push-fe-gateway push-business-gateway
 
-.PHONY: build-ƒtransfer push-transfer build-contracts push-contracts build-catalog push-catalog build-auth push-auth build-core push-core build-containers push-containers
+.PHONY: build-transfer push-transfer build-contracts push-contracts build-catalog push-catalog build-auth push-auth build-core push-core build-containers push-containers

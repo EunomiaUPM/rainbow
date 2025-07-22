@@ -1,6 +1,5 @@
 use crate::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
 use crate::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
-use log::debug;
 use tracing::info;
 
 pub trait EnvExtraction {
@@ -9,9 +8,7 @@ pub trait EnvExtraction {
         let config = config.merge_dotenv_configuration(env_file);
         let mut config_table = config.clone();
         let len = config_table.datahub_token.len();
-        debug!("{}", len);
         let max_len = if len > 20 { 20 } else { len };
-        debug!("{}", max_len);
         config_table.datahub_token = format!("{}...", config_table.datahub_token[0..max_len].to_string());
         let table =
             json_to_table::json_to_table(&serde_json::to_value(&config_table)?).collapse().to_string();

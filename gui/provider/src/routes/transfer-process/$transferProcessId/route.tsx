@@ -1,14 +1,13 @@
-import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import {createFileRoute, Outlet} from "@tanstack/react-router";
 import Heading from "../../../../../shared/src/components/ui/heading.tsx";
-import { Badge } from "shared/src/components/ui/badge.tsx";
+import {Badge} from "shared/src/components/ui/badge.tsx";
 
 const NotFound = () => {
   return <div>not found</div>;
 };
 
 const RouteComponent = () => {
-  const { transferProcessId } = Route.useParams();
+  const {transferProcessId} = Route.useParams();
   return (
     <div className=" mb-2">
       <header className="mb-6">
@@ -28,7 +27,7 @@ const RouteComponent = () => {
           </Badge>
         </div> */}
       </header>
-      <Outlet />
+      <Outlet/>
     </div>
   );
 };

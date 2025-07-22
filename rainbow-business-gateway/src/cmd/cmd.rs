@@ -21,8 +21,8 @@ use crate::gateway::http::business_router::RainbowBusinessRouter;
 use crate::gateway::http::notifications_router::BusinessNotificationsRouter;
 use axum::{serve, Router};
 use clap::{Parser, Subcommand};
-use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
-use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_common::config::env_extraction::EnvExtraction;
+use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 use tracing::{debug, info};
@@ -37,12 +37,22 @@ struct GatewayCli {
 
 #[derive(Subcommand, Debug, PartialEq)]
 pub enum GatewayCliCommands {
-    Start,
-    Subscribe,
-    Build,
+    Start(GatewayCliArgs),
+    Subscribe(GatewayCliArgs),
+    Build(GatewayCliArgs),
 }
 
+#[derive(Parser, Debug, PartialEq)]
+pub struct GatewayCliArgs {
+    #[arg(short, long)]
+    env_file: Option<String>,
+}
+
+
 pub struct GatewayCommands;
+
+impl EnvExtraction for GatewayCommands {}
+
 
 impl GatewayCommands {
     pub async fn init_command_line() -> anyhow::Result<()> {
@@ -52,12 +62,8 @@ impl GatewayCommands {
 
         // run scripts
         match cli.command {
-            GatewayCliCommands::Start => {
-                let config = ApplicationProviderConfig::default();
-                let config = config.merge_dotenv_configuration();
-                let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
-                info!("Current config:\n{}", table);
-
+            GatewayCliCommands::Start(args) => {
+                let config = Self::extract_provider_config(args.env_file)?;
                 let gateway_service = Arc::new(BusinessServiceForDatahub::new(config.clone()));
                 let notifications_router = BusinessNotificationsRouter::new(config.clone()).router();
                 let gateway_router = RainbowBusinessRouter::new(gateway_service).router();
@@ -77,10 +83,10 @@ impl GatewayCommands {
                     .await?;
                 serve(listener, global_router).await?;
             }
-            GatewayCliCommands::Subscribe => {
+            GatewayCliCommands::Subscribe(_args) => {
                 debug!("Subscribe to provider")
             }
-            GatewayCliCommands::Build => {
+            GatewayCliCommands::Build(_args) => {
                 debug!("Subscribe to build fe into app")
             }
         }

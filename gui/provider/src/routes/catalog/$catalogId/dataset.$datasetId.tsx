@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useRouterState } from "@tanstack/react-router";
+import {createFileRoute, Link} from "@tanstack/react-router";
 import {
   useGetDatasetById,
   useGetDistributionsByDatasetId,
@@ -12,8 +12,8 @@ import {
   TableRow,
 } from "shared/src/components/ui/table.tsx";
 import dayjs from "dayjs";
-import { ArrowRight, Plus, Trash } from "lucide-react";
-import { useGetPoliciesByDatasetId } from "shared/src/data/policy-queries.ts";
+import {ArrowRight, Plus, Trash} from "lucide-react";
+import {useGetPoliciesByDatasetId} from "shared/src/data/policy-queries.ts";
 import {
   Form,
   FormControl,
@@ -22,13 +22,13 @@ import {
   FormItem,
   FormMessage,
 } from "shared/src/components/ui/form";
-import { SubmitHandler, useForm } from "react-hook-form";
-import { Button } from "shared/src/components/ui/button.tsx";
-import { Textarea } from "shared/src/components/ui/textarea.tsx";
-import { usePostNewPolicyInDataset } from "shared/src/data/catalog-mutations.ts";
+import {SubmitHandler, useForm} from "react-hook-form";
+import {Button} from "shared/src/components/ui/button.tsx";
+import {Textarea} from "shared/src/components/ui/textarea.tsx";
+import {usePostNewPolicyInDataset} from "shared/src/data/catalog-mutations.ts";
 import Heading from "shared/src/components/ui/heading";
-import { List, ListItem, ListItemDate, ListItemKey } from "shared/src/components/ui/list";
-import { Badge } from "shared/src/components/ui/badge";
+import {List, ListItem, ListItemDate, ListItemKey} from "shared/src/components/ui/list";
+import {Badge} from "shared/src/components/ui/badge";
 import PolicyComponent from "shared/src/components/PolicyComponent.tsx";
 import {
   Accordion,
@@ -43,7 +43,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "shared/src/components/ui/select.tsx";
-import { Input } from "shared/src/components/ui/input";
+import {Input} from "shared/src/components/ui/input";
 import {
   Drawer,
   DrawerClose,
@@ -59,22 +59,18 @@ type Inputs = {
 };
 
 function RouteComponent() {
-  const routerState = useRouterState();
-  let paths = routerState.location.pathname.split("/");
-
-  const { catalogId, datasetId } = Route.useParams();
-  const { data: dataset } = useGetDatasetById(datasetId);
-  const { data: distributions } = useGetDistributionsByDatasetId(datasetId);
-  const { data: policies } = useGetPoliciesByDatasetId(datasetId);
-  const { mutate: postNewPolicy, isPending } = usePostNewPolicyInDataset();
+  const {catalogId, datasetId} = Route.useParams();
+  const {data: dataset} = useGetDatasetById(datasetId);
+  const {data: distributions} = useGetDistributionsByDatasetId(datasetId);
+  const {data: policies} = useGetPoliciesByDatasetId(datasetId);
+  const {mutate: postNewPolicy, isPending} = usePostNewPolicyInDataset();
   const form = useForm<Inputs>({
     defaultValues: {
       odrl: '{"permission":[{"action":"use","constraint":[{"rightOperand":"user","leftOperand":"did:web:hola.es","operator":"eq"}]}],"obligation":[],"prohibition":[]}',
     },
   });
   const onSubmit: SubmitHandler<Inputs> = (data) => {
-    // @ts-ignore
-    postNewPolicy({ datasetId, body: data.odrl });
+    postNewPolicy({datasetId, body: data.odrl});
     form.reset();
   };
 
@@ -133,7 +129,7 @@ function RouteComponent() {
                   >
                     <Button variant="link">
                       See dataservice
-                      <ArrowRight />
+                      <ArrowRight/>
                     </Button>
                   </Link>
                 </TableCell>
@@ -153,7 +149,7 @@ function RouteComponent() {
             <DrawerTrigger>
               <Button variant="default" size="sm" className="mb-1 ml-3">
                 Add ODRL policy
-                <Plus className="" />
+                <Plus className=""/>
               </Button>
             </DrawerTrigger>
             <DrawerContent>
@@ -183,7 +179,8 @@ function RouteComponent() {
                       value="item-1"
                       className="bg-success-500/10 border border-success-600/20"
                     >
-                      <AccordionTrigger className="text-white/70 flex bg-success-400/25 uppercase overflow-hidden rounded-md data-[state=open]:rounded-b-none">
+                      <AccordionTrigger
+                        className="text-white/70 flex bg-success-400/25 uppercase overflow-hidden rounded-md data-[state=open]:rounded-b-none">
                         <div className="flex items-center w-full">
                           <p className="text-current">permission</p>
                         </div>
@@ -195,7 +192,7 @@ function RouteComponent() {
                           variant="outline"
                           size="xs"
                         >
-                          <Plus />
+                          <Plus/>
                           Add permission
                         </Button>
                         <div>
@@ -203,13 +200,13 @@ function RouteComponent() {
                             <div className="flex justify-between">
                               <p className="mb-2"> Action: </p>
                               <Button variant="icon_destructive" size="xs" className="ml-4 border">
-                                <Trash className="mb-0.5" />
+                                <Trash className="mb-0.5"/>
                                 Remove permission
                               </Button>
                             </div>
                             <Select>
                               <SelectTrigger className="w-[240px]">
-                                <SelectValue placeholder="Select action" />
+                                <SelectValue placeholder="Select action"/>
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="light">Read</SelectItem>
@@ -225,7 +222,7 @@ function RouteComponent() {
                                   <div className="flex flex-col">
                                     <p className="text-xs text-gray-400 mb-1"> Left Operand: </p>
                                     <SelectTrigger className="w-[180px]">
-                                      <SelectValue placeholder="Select item" />
+                                      <SelectValue placeholder="Select item"/>
                                     </SelectTrigger>
                                     <SelectContent>
                                       <SelectItem value="light">Date</SelectItem>
@@ -238,7 +235,7 @@ function RouteComponent() {
                                   <div className="flex flex-col">
                                     <p className="text-xs text-gray-400 mb-1"> Operator: </p>
                                     <SelectTrigger className="w-[140px]">
-                                      <SelectValue placeholder="Select operator" />
+                                      <SelectValue placeholder="Select operator"/>
                                     </SelectTrigger>
                                     <SelectContent>
                                       <SelectItem value="light">eq</SelectItem>
@@ -250,7 +247,7 @@ function RouteComponent() {
                                 <Select>
                                   <div className="flex flex-col">
                                     <p className="text-xs text-gray-400 mb-1"> Right Operand: </p>
-                                    <Input placeholder="Type value" />
+                                    <Input placeholder="Type value"/>
                                   </div>
                                 </Select>
                                 <div className="flex flex-col">
@@ -262,12 +259,12 @@ function RouteComponent() {
                                   size="icon_sm"
                                   className="ml-2 self-end mb-1"
                                 >
-                                  <Trash className="mb-0.5" />
+                                  <Trash className="mb-0.5"/>
                                 </Button>
                               </div>
                             </div>
                             <Button size="xs" variant="outline" className="mt-3">
-                              <Plus />
+                              <Plus/>
                               Add constraint
                             </Button>
                           </div>
@@ -275,13 +272,13 @@ function RouteComponent() {
                             <div className="flex justify-between">
                               <p className="mb-2"> Action: </p>
                               <Button variant="icon_destructive" size="xs" className="ml-4">
-                                <Trash className="mb-0.5" />
+                                <Trash className="mb-0.5"/>
                                 Remove permission
                               </Button>
                             </div>
                             <Select>
                               <SelectTrigger className="w-[180px]">
-                                <SelectValue placeholder="Select action" />
+                                <SelectValue placeholder="Select action"/>
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="light">Read</SelectItem>
@@ -297,7 +294,7 @@ function RouteComponent() {
                                   <div className="flex flex-col">
                                     <p className="text-xs text-gray-400 mb-1"> Left Operand: </p>
                                     <SelectTrigger className="w-[180px]">
-                                      <SelectValue placeholder="Select an item" />
+                                      <SelectValue placeholder="Select an item"/>
                                     </SelectTrigger>
                                     <SelectContent>
                                       <SelectItem value="light">Date</SelectItem>
@@ -310,7 +307,7 @@ function RouteComponent() {
                                   <div className="flex flex-col">
                                     <p className="text-xs text-gray-400 mb-1"> Operator: </p>
                                     <SelectTrigger className="w-[140px]">
-                                      <SelectValue placeholder="Select an operator" />
+                                      <SelectValue placeholder="Select an operator"/>
                                     </SelectTrigger>
                                     <SelectContent>
                                       <SelectItem value="light">Date</SelectItem>
@@ -322,7 +319,7 @@ function RouteComponent() {
                                 <Select>
                                   <div className="flex flex-col">
                                     <p className="text-xs text-gray-400 mb-1"> Right Operand: </p>
-                                    <Input placeholder="Type value" />
+                                    <Input placeholder="Type value"/>
                                   </div>
                                 </Select>
                                 <div className="flex flex-col">
@@ -334,7 +331,7 @@ function RouteComponent() {
                                   size="icon_sm"
                                   className="ml-2 self-end mb-1"
                                 >
-                                  <Trash className="mb-0.5" />
+                                  <Trash className="mb-0.5"/>
                                 </Button>
                               </div>
                               <div className="constraint-create flex gap-3">
@@ -342,7 +339,7 @@ function RouteComponent() {
                                   <div className="flex flex-col">
                                     <p className="text-xs text-gray-400 mb-1"> Left Operand: </p>
                                     <SelectTrigger className="w-[180px]">
-                                      <SelectValue placeholder="Select an item" />
+                                      <SelectValue placeholder="Select an item"/>
                                     </SelectTrigger>
                                     <SelectContent>
                                       <SelectItem value="light">Date</SelectItem>
@@ -355,7 +352,7 @@ function RouteComponent() {
                                   <div className="flex flex-col">
                                     <p className="text-xs text-gray-400 mb-1"> Operator: </p>
                                     <SelectTrigger className="w-[140px]">
-                                      <SelectValue placeholder="Select an operator" />
+                                      <SelectValue placeholder="Select an operator"/>
                                     </SelectTrigger>
                                     <SelectContent>
                                       <SelectItem value="light">Date</SelectItem>
@@ -367,7 +364,7 @@ function RouteComponent() {
                                 <Select>
                                   <div className="flex flex-col">
                                     <p className="text-xs text-gray-400 mb-1"> Right Operand: </p>
-                                    <Input placeholder="Type value" />
+                                    <Input placeholder="Type value"/>
                                   </div>
                                 </Select>
                                 <div className="flex flex-col">
@@ -379,12 +376,12 @@ function RouteComponent() {
                                   size="icon_sm"
                                   className="ml-2 self-end mb-1"
                                 >
-                                  <Trash className="mb-0.5" />
+                                  <Trash className="mb-0.5"/>
                                 </Button>
                               </div>
                             </div>
                             <Button size="xs" variant="outline" className="mt-3">
-                              <Plus />
+                              <Plus/>
                               Add constraint
                             </Button>
                           </div>
@@ -397,7 +394,8 @@ function RouteComponent() {
                       value="item-1"
                       className="bg-warn-500/10 border border-warn-600/20"
                     >
-                      <AccordionTrigger className="text-white/70 flex bg-warn-400/25 uppercase overflow-hidden rounded-md data-[state=open]:rounded-b-none">
+                      <AccordionTrigger
+                        className="text-white/70 flex bg-warn-400/25 uppercase overflow-hidden rounded-md data-[state=open]:rounded-b-none">
                         <div className="flex items-center w-full">
                           <p className="text-current">obligation</p>
                         </div>
@@ -410,7 +408,8 @@ function RouteComponent() {
                       value="item-1"
                       className="bg-danger-500/10 border border-danger-600/20"
                     >
-                      <AccordionTrigger className="text-white/70 flex bg-danger-500/25 uppercase overflow-hidden rounded-md data-[state=open]:rounded-b-none">
+                      <AccordionTrigger
+                        className="text-white/70 flex bg-danger-500/25 uppercase overflow-hidden rounded-md data-[state=open]:rounded-b-none">
                         <div className="flex items-center w-full">
                           <p className="text-current">prohibition</p>
                         </div>
@@ -429,7 +428,7 @@ function RouteComponent() {
                       disabled={isPending}
                       control={form.control}
                       name="odrl"
-                      render={({ field }) => (
+                      render={({field}) => (
                         <FormItem>
                           {/* <FormLabel>Odrl</FormLabel> */}
                           <FormControl>
@@ -438,7 +437,7 @@ function RouteComponent() {
                           <FormDescription>
                             <i>Type or paste the ODRL policy content here.</i>
                           </FormDescription>
-                          <FormMessage />
+                          <FormMessage/>
                         </FormItem>
                       )}
                     />
@@ -466,7 +465,8 @@ function RouteComponent() {
         <div className="gridColsLayout">
           {policies &&
             policies.map((policy) => (
-              <List className=" border border-white/30 bg-white/10 px-4 py-2 rounded-md justify-start">
+              <List
+                className=" border border-white/30 bg-white/10 px-4 py-2 rounded-md justify-start">
                 <div className="flex">
                   <Heading level="h5" className="flex gap-3">
                     <div>Policy with ID</div>
@@ -492,10 +492,10 @@ function RouteComponent() {
                 <Heading level="h6"> ODRL CONTENT</Heading>
 
                 <div className="flex flex-col gap-2 mb-2">
-                  <PolicyComponent policyItem={policy.permission} variant={"permission"} />
-                  <PolicyComponent policyItem={policy.obligation} variant={"obligation"} />
+                  <PolicyComponent policyItem={policy.permission} variant={"permission"}/>
+                  <PolicyComponent policyItem={policy.obligation} variant={"obligation"}/>
 
-                  <PolicyComponent policyItem={policy.prohibition} variant={"prohibition"} />
+                  <PolicyComponent policyItem={policy.prohibition} variant={"prohibition"}/>
                 </div>
               </List>
             ))}

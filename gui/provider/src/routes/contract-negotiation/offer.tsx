@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import {createFileRoute} from "@tanstack/react-router";
 import {
   Form,
   FormControl,
@@ -8,8 +8,8 @@ import {
   FormLabel,
   FormMessage,
 } from "shared/src/components/ui/form";
-import { SubmitHandler, useForm } from "react-hook-form";
-import { Button } from "shared/src/components/ui/button.tsx";
+import {SubmitHandler, useForm} from "react-hook-form";
+import {Button} from "shared/src/components/ui/button.tsx";
 import {
   Command,
   CommandEmpty,
@@ -18,16 +18,15 @@ import {
   CommandItem,
   CommandList,
 } from "shared/src/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "shared/src/components/ui/popover";
-import { ChevronsUpDown } from "lucide-react";
-import { useContext, useEffect, useState } from "react"; // Import useEffect
-import { getParticipants } from "shared/src/data/participant-queries.ts";
-import { getCatalogs, getDatasetsByCatalogId } from "shared/src/data/catalog-queries.ts";
-import { getPoliciesByDatasetId } from "shared/src/data/policy-queries.ts";
-import { Textarea } from "shared/src/components/ui/textarea.tsx";
-import { usePostContractNegotiationRPCOffer } from "shared/src/data/contract-mutations.ts";
-import { GlobalInfoContext, GlobalInfoContextType } from "shared/src/context/GlobalInfoContext.tsx";
-import { Badge } from "shared/src/components/ui/badge";
+import {Popover, PopoverContent, PopoverTrigger} from "shared/src/components/ui/popover";
+import {ChevronsUpDown} from "lucide-react";
+import {useContext, useEffect, useState} from "react"; // Import useEffect
+import {getParticipants} from "shared/src/data/participant-queries.ts";
+import {getPoliciesByDatasetId} from "shared/src/data/policy-queries.ts";
+import {Textarea} from "shared/src/components/ui/textarea.tsx";
+import {usePostContractNegotiationRPCOffer} from "shared/src/data/contract-mutations.ts";
+import {GlobalInfoContext, GlobalInfoContextType} from "shared/src/context/GlobalInfoContext.tsx";
+import {Badge} from "shared/src/components/ui/badge";
 import PolicyComponent from "shared/src/components/PolicyComponent.tsx";
 
 type Inputs = {
@@ -38,10 +37,9 @@ type Inputs = {
   odrl: string;
 };
 
-export const RouteComponent = ({ catalog, dataset }) => {
-  const { mutateAsync: sendOfferAsync, isPending } = usePostContractNegotiationRPCOffer();
-  // @ts-ignore
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
+export const RouteComponent = ({catalog, dataset}) => {
+  const {mutateAsync: sendOfferAsync, isPending} = usePostContractNegotiationRPCOffer();
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
 
   // --- State Management ---
   // Consumer Participant
@@ -51,17 +49,17 @@ export const RouteComponent = ({ catalog, dataset }) => {
   const [consumerParticipants, setConsumerParticipants] = useState<Participant[]>([]);
 
   // Catalog
-  const [catalogOpen, setCatalogOpen] = useState(false);
-  const [selectedCatalog, setSelectedCatalog] = useState(catalog || null); // Initialize with catalog prop
-  const [catalogs, setCatalogs] = useState<Catalog[]>([]);
+  const [_catalogOpen, setCatalogOpen] = useState(false);
+  const [_selectedCatalog, setSelectedCatalog] = useState(catalog || null); // Initialize with catalog prop
+  const [catalogs, _setCatalogs] = useState<Catalog[]>([]);
 
   // Dataset (used for 'id' field in Inputs)
-  const [datasetOpen, setDatasetOpen] = useState(false);
+  const [_datasetOpen, setDatasetOpen] = useState(false);
   const [selectedDataset, setSelectedDataset] = useState(dataset || null);
-  const [datasets, setDatasets] = useState<Dataset[]>([] /* Initial empty array */);
+  const [datasets, _setDatasets] = useState<Dataset[]>([] /* Initial empty array */);
 
   // Policies (used for 'target' field in Inputs)
-  const [policiesOpen, setPoliciesOpen] = useState(false);
+  const [_policiesOpen, setPoliciesOpen] = useState(false);
   const [selectedPolicy, setSelectedPolicy] = useState<OdrlOffer | null>(null);
   const [policies, setPolicies] = useState<OdrlOffer[]>([]);
 
@@ -76,7 +74,7 @@ export const RouteComponent = ({ catalog, dataset }) => {
   });
 
   // Destructure form methods for easier use
-  const { handleSubmit, control, setValue, getValues } = form;
+  const {handleSubmit, control, setValue, getValues} = form;
 
   // --- Effects for Initializing Selected Values ---
   // Initialize consumerSelectedParticipant if default value exists
@@ -92,7 +90,6 @@ export const RouteComponent = ({ catalog, dataset }) => {
 
   // Initialize selectedCatalog if default value exists
   useEffect(() => {
-    const defaultId = catalog["@id"];
     // console.log(defaultId, "defaultId in offer form");
     setSelectedCatalog(catalog);
     // console.log(selectedCatalog, " selectedCatalog__");
@@ -103,7 +100,7 @@ export const RouteComponent = ({ catalog, dataset }) => {
     //     setSelectedCatalog(catalog);
     //   }
     // }
-  }, [getValues, catalogs]);
+  }, [getValues, catalogs, catalog]);
 
   // Initialize selectedDataset if default value exists
   useEffect(() => {
@@ -120,7 +117,7 @@ export const RouteComponent = ({ catalog, dataset }) => {
     //     setSelectedDataset(dataset);
     //   }
     // }
-  }, [getValues, datasets]);
+  }, [getValues, datasets, dataset, form, selectedDataset]);
 
   // Initialize selectedPolicy if default value exists
   useEffect(() => {
@@ -147,12 +144,12 @@ export const RouteComponent = ({ catalog, dataset }) => {
       }
     };
     loadPolicies();
-  }, [selectedDataset]);
+  }, [selectedDataset, api_gateway]);
 
   // --- Helper to Clear Subsequent Fields ---
-  const clearFields = (fieldsToClear: Array<keyof Inputs>) => {
+  const _clearFields = (fieldsToClear: Array<keyof Inputs>) => {
     fieldsToClear.forEach((fieldName) => {
-      setValue(fieldName, "", { shouldValidate: true }); // Clear form value
+      setValue(fieldName, "", {shouldValidate: true}); // Clear form value
       // Clear associated local states
       if (fieldName === "catalog") {
         // setSelectedCatalog(null);
@@ -187,9 +184,7 @@ export const RouteComponent = ({ catalog, dataset }) => {
                 constraint: [],
               },
             ],
-            // @ts-ignore
             obligation: null,
-            // @ts-ignore
             prohibition: null,
             profile: "",
           },
@@ -224,51 +219,6 @@ export const RouteComponent = ({ catalog, dataset }) => {
     }
   };
 
-  const handleCatalogOpenChange = async (newOpenState: boolean) => {
-    setCatalogOpen(newOpenState);
-    if (newOpenState) {
-      try {
-        const fetchedCatalogs = await getCatalogs(api_gateway);
-        setCatalogs(fetchedCatalogs.catalog);
-      } catch (error) {
-        console.error("Failed to fetch catalogs:", error);
-      }
-    }
-  };
-
-  const handleDatasetOpenChange = async (newOpenState: boolean) => {
-    setDatasetOpen(newOpenState);
-    if (newOpenState && selectedCatalog) {
-      // Only fetch if a catalog is selected
-      try {
-        const fetchedDatasets = await getDatasetsByCatalogId(api_gateway, selectedCatalog["@id"]);
-        setDatasets(fetchedDatasets);
-      } catch (error) {
-        console.error("Failed to fetch datasets:", error);
-      }
-    } else if (newOpenState && !selectedCatalog) {
-      // Optionally, show a warning or prevent opening if no catalog is selected
-      console.warn("Please select a catalog first.");
-      setDatasetOpen(false); // Prevent popover from opening
-    }
-  };
-
-  const handlePoliciesOpenChange = async (newOpenState: boolean) => {
-    setPoliciesOpen(newOpenState);
-    if (newOpenState && selectedDataset) {
-      // if (newOpenState && selectedDataset) {
-      // Only fetch if a dataset is selected
-      try {
-        const fetchedPolicies = await getPoliciesByDatasetId(api_gateway, selectedDataset["@id"]);
-        setPolicies(fetchedPolicies);
-      } catch (error) {
-        console.error("Failed to fetch policies:", error);
-      }
-    } else if (newOpenState && !selectedDataset) {
-      console.warn("Please select a dataset first.");
-      setPoliciesOpen(false);
-    }
-  };
 
   return (
     <div className="max-w-[500px] w-full m-auto">
@@ -286,7 +236,7 @@ export const RouteComponent = ({ catalog, dataset }) => {
           <FormField
             control={control}
             name="catalog"
-            render={({ field }) => (
+            render={() => (
               <FormItem>
                 {/* <FormLabel>Catalog</FormLabel>
                 <div>
@@ -363,6 +313,7 @@ export const RouteComponent = ({ catalog, dataset }) => {
             {" "}
             Chosen dataset: {dataset.title} {dataset["@id"]}
           </div>
+
           {/*
           <FormField
             control={control}
@@ -407,30 +358,7 @@ export const RouteComponent = ({ catalog, dataset }) => {
                             <CommandEmpty>No dataset found.</CommandEmpty>
                             <CommandGroup>
                               {/* {datasets.map((dataset) => ( */}
-          {/* <CommandItem
-                                  key={selectedDataset["@id"]}
-                                  value={selectedDataset?.title || selectedDataset?.["@id"]}
-                                  onSelect={() => {
-                                    if (field.value !== dataset["@id"]) {
-                                      // Clear subsequent fields ONLY if dataset changes
-                                      // field.onChange(dataset["@id"]);
-                                      // setSelectedDataset(dataset);
-                                      // setDatasetOpen(false);
-                                      // Clear Policy field
-                                      clearFields(["id"]);
-                                    } else {
-                                      setDatasetOpen(false); // Just close if same value
-                                    }
-                                  }}
-                                  className={
-                                    field.value === dataset["@id"]
-                                      ? "bg-blue-50 text-blue-700 font-medium"
-                                      : ""
-                                  }
-                                >
-                                  {dataset.title || dataset["@id"]}
-                                </CommandItem>
-                              {/* ))} */}
+
           {/* </CommandGroup>
                           </CommandList>
                         </Command>
@@ -449,7 +377,7 @@ export const RouteComponent = ({ catalog, dataset }) => {
           <FormField
             control={control}
             name="consumerParticipantId"
-            render={({ field }) => (
+            render={({field}) => (
               <FormItem>
                 <FormLabel>Consumer Participant Id</FormLabel>
                 <div>
@@ -467,14 +395,14 @@ export const RouteComponent = ({ catalog, dataset }) => {
                         >
                           {field.value
                             ? consumerParticipants.find((p) => p.participant_id === field.value)
-                                ?.participant_id
+                              ?.participant_id
                             : "Select participant..."}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-80" />
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-80"/>
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                         <Command>
-                          <CommandInput placeholder="Search participant..." />
+                          <CommandInput placeholder="Search participant..."/>
                           <CommandList>
                             <CommandEmpty>No participant found.</CommandEmpty>
                             <CommandGroup>
@@ -509,7 +437,7 @@ export const RouteComponent = ({ catalog, dataset }) => {
                   <FormDescription className="text-sm text-gray-400 mt-1">
                     Provide the ID of the consumer participant for the negotiation.
                   </FormDescription>
-                  <FormMessage />
+                  <FormMessage/>
                 </div>
               </FormItem>
             )}
@@ -525,11 +453,11 @@ export const RouteComponent = ({ catalog, dataset }) => {
                   form.setValue("id", policy["@id"]);
                 }}
               >
-                <PolicyComponent policyItem={policy.permission} variant={"permission"} />
+                <PolicyComponent policyItem={policy.permission} variant={"permission"}/>
 
-                <PolicyComponent policyItem={policy.obligation} variant={"obligation"} />
+                <PolicyComponent policyItem={policy.obligation} variant={"obligation"}/>
 
-                <PolicyComponent policyItem={policy.prohibition} variant={"prohibition"} />
+                <PolicyComponent policyItem={policy.prohibition} variant={"prohibition"}/>
               </div>
             ))}
           {console.log(selectedPolicy, "selectedPolicy")}
@@ -540,7 +468,7 @@ export const RouteComponent = ({ catalog, dataset }) => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Policy Id</FormLabel>
-       
+
                 <div>
                   <FormControl>
                     <Popover
@@ -578,7 +506,7 @@ export const RouteComponent = ({ catalog, dataset }) => {
                                   key={selectedPolicy?.["@id"]}
                                   value={selectedPolicy?.target ||selectedPolicy?.["@id"]}
                                   onSelect={() => {
-                                
+
                                     // field.onChange(policy["@id"]);
                                     // setSelectedPolicy(policy);
                                     // setPoliciesOpen(false);
@@ -606,21 +534,21 @@ export const RouteComponent = ({ catalog, dataset }) => {
                   <FormMessage />
                 </div>
               </FormItem>
-            )} 
+            )}
           /> */}
 
           <FormField
             control={form.control}
             name="odrl"
             disabled={!selectedPolicy}
-            render={({ field }) => (
+            render={({field}) => (
               <FormItem>
                 <FormLabel>Odrl</FormLabel>
                 <FormControl>
                   <Textarea {...field} />
                 </FormControl>
                 <FormDescription>Provide the ODRL policy content</FormDescription>
-                <FormMessage />
+                <FormMessage/>
               </FormItem>
             )}
           />

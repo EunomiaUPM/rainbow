@@ -12,7 +12,6 @@ use rainbow_common::auth::header::{extract_request_info, RequestInfo};
 use rainbow_common::protocol::contract::contract_odrl::OdrlPolicyInfo;
 use rainbow_common::utils::get_urn_from_string;
 use serde_json::json;
-use std::future::Future;
 use std::sync::Arc;
 use tower_http::cors::{AllowHeaders, Any, CorsLayer};
 use tracing::info;
@@ -129,7 +128,7 @@ where
         let token = &info.token;
         let catalog_id = match get_urn_from_string(&catalog_id) {
             Ok(catalog_id) => catalog_id,
-            Err(err) => {
+            Err(_err) => {
                 return (
                     StatusCode::BAD_REQUEST,
                     Json(json!({"error": "urn not serializable"})),
@@ -156,7 +155,7 @@ where
         let token = &info.token;
         let dataset_id = match get_urn_from_string(&dataset_id) {
             Ok(dataset_id) => dataset_id,
-            Err(err) => {
+            Err(_err) => {
                 return (
                     StatusCode::BAD_REQUEST,
                     Json(json!({"error": "urn not serializable"})),
@@ -218,7 +217,7 @@ where
         let token = &info.token;
         let dataset_id = match get_urn_from_string(&dataset_id) {
             Ok(dataset_id) => dataset_id,
-            Err(err) => {
+            Err(_err) => {
                 return (
                     StatusCode::BAD_REQUEST,
                     Json(json!({"error": "urn not serializable"})),
@@ -249,7 +248,7 @@ where
         let token = &info.token;
         let dataset_id = match get_urn_from_string(&dataset_id) {
             Ok(dataset_id) => dataset_id,
-            Err(err) => {
+            Err(_err) => {
                 return (
                     StatusCode::BAD_REQUEST,
                     Json(json!({"error": "urn not serializable"})),
@@ -288,7 +287,7 @@ where
         let token = &info.token;
         let dataset_id = match get_urn_from_string(&dataset_id) {
             Ok(dataset_id) => dataset_id,
-            Err(err) => {
+            Err(_err) => {
                 return (
                     StatusCode::BAD_REQUEST,
                     Json(json!({"error": "urn not serializable"})),
@@ -298,7 +297,7 @@ where
         };
         let policy_id = match get_urn_from_string(&policy_id) {
             Ok(policy_id) => policy_id,
-            Err(err) => {
+            Err(_err) => {
                 return (
                     StatusCode::BAD_REQUEST,
                     Json(json!({"error": "urn not serializable"})),
@@ -339,7 +338,7 @@ where
         let token = &info.token;
         let request_id = match get_urn_from_string(&request_id) {
             Ok(request_id) => request_id,
-            Err(err) => {
+            Err(_err) => {
                 return (
                     StatusCode::BAD_REQUEST,
                     Json(json!({"error": "urn not serializable"})),
@@ -387,7 +386,7 @@ where
         let token = &info.token;
         let request_id = match get_urn_from_string(&request_id) {
             Ok(request_id) => request_id,
-            Err(err) => {
+            Err(_err) => {
                 return (
                     StatusCode::BAD_REQUEST,
                     Json(json!({"error": "urn not serializable"})),

@@ -190,7 +190,7 @@ impl BusinessCatalogTrait for BusinessServiceForDatahub {
 
     async fn get_consumer_negotiation_request_by_id(
         &self,
-        participant_id: String,
+        _participant_id: String,
         request_id: Urn,
         _token: String,
     ) -> anyhow::Result<ContractAckMessage> {

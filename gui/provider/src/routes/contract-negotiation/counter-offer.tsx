@@ -1,18 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+import {createFileRoute} from "@tanstack/react-router";
 import dayjs from "dayjs";
-import { Button } from "shared/src/components/ui/button.tsx";
+import {Button} from "shared/src/components/ui/button.tsx";
 import Heading from "../../../../shared/src/components/ui/heading.tsx";
 import PolicyComponent from "shared/src/components/PolicyComponent.tsx";
 
-type Inputs = {
-  consumerParticipantId: UUID;
-  id: UUID; // This seems to be used for dataset ID, consider renaming for clarity
-  catalog: UUID;
-  target: UUID;
-  odrl: string;
-};
-
-export const RouteComponent = ({ process }) => {
+export const RouteComponent = ({process}) => {
   console.log(process, " procesito 2");
 
   return (
