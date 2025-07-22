@@ -25,6 +25,18 @@ mod m20241111_000003_distribution;
 mod m20241111_000004_dataservice;
 pub mod m20241111_000005_odrl_offers;
 
+mod m20250718_000001_catalogrecord;
+mod m20250718_000002_datasetseries;
+
+mod m20250721_000001_resources;
+mod m20250721_000002_themes;
+mod m20250721_000003_keywords;
+mod m20250721_000004_relations;
+mod m20250721_000005_qualifiedrelations;
+mod m20250721_000006_references;
+
+mod m20250722_000001_foreign_keys;
+
 pub fn get_catalog_migrations() -> Vec<Box<dyn MigrationTrait>> {
     vec![
         Box::new(m20241111_000001_catalog::Migration),
@@ -32,6 +44,17 @@ pub fn get_catalog_migrations() -> Vec<Box<dyn MigrationTrait>> {
         Box::new(m20241111_000003_distribution::Migration),
         Box::new(m20241111_000004_dataservice::Migration),
         Box::new(m20241111_000005_odrl_offers::Migration),
+
+        Box::new(m20250718_000001_catalogrecord::Migration),
+        Box::new(m20250718_000002_datasetseries::Migration),
+
+        Box::new(m20250721_000003_keywords::Migration),
+        Box::new(m20250721_000002_themes::Migration),
+        Box::new(m20250721_000001_resources::Migration),
+        Box::new(m20250721_000004_relations::Migration),
+        Box::new(m20250721_000005_qualifiedrelations::Migration),
+        Box::new(m20250721_000006_references::Migration),
+        Box::new(m20250722_000001_foreign_keys::Migration),
     ]
 }
 pub fn get_datahub_catalog_migrations() -> Vec<Box<dyn MigrationTrait>> {

@@ -17,7 +17,9 @@
  *
  */
 
-use crate::catalog::migrations::m20241111_000001_catalog::CatalogCatalogs;
+use super::m20241111_000001_catalog::CatalogCatalogs;
+use super::m20241111_000002_dataset::CatalogDatasets;
+use super::m20241111_000005_odrl_offers::CatalogODRLOffers;
 use sea_orm_migration::prelude::*;
 
 pub struct Migration;
@@ -45,13 +47,81 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(CatalogDataServices::DctTitle).string())
                     .col(ColumnDef::new(CatalogDataServices::DctDescription).string())
                     .col(ColumnDef::new(CatalogDataServices::CatalogId).string().not_null())
-                    .foreign_key(
-                        ForeignKey::create()
-                            .name("fk_dataservice_catalog")
-                            .from(CatalogDataServices::Table, CatalogDataServices::CatalogId)
-                            .to(CatalogCatalogs::Table, CatalogCatalogs::Id)
-                            .on_delete(ForeignKeyAction::Cascade),
-                    )
+                    .col(ColumnDef::new(CatalogDataServices::DcatServesDataset).string().not_null())
+                    .col(ColumnDef::new(CatalogDataServices::DctAccessRights).string())
+                    .col(ColumnDef::new(CatalogDataServices::OrdlHasPolicy).string())
+                    .col(ColumnDef::new(CatalogDataServices::DcatContactPoint).string())
+                    .col(ColumnDef::new(CatalogDataServices::DcatLandingPage).string())
+                    .col(ColumnDef::new(CatalogDataServices::DctLicence).string())
+                    .col(ColumnDef::new(CatalogDataServices::DctRights).string())
+                    .col(ColumnDef::new(CatalogDataServices::DctPublisher).string())
+                    .col(ColumnDef::new(CatalogDataServices::ProvQualifiedAttribution).string())
+                    .col(ColumnDef::new(CatalogDataServices::DcatHasCurrentVersion).string())
+                    .col(ColumnDef::new(CatalogDataServices::DcatVersion).string().not_null())
+                    .col(ColumnDef::new(CatalogDataServices::DcatPreviousVersion).string())
+                    .col(ColumnDef::new(CatalogDataServices::DcatReplaces).string())
+                    .col(ColumnDef::new(CatalogDataServices::AmdsStatus).string())
+                    .col(ColumnDef::new(CatalogDataServices::AdmsVersionNotes).string())
+                    .col(ColumnDef::new(CatalogDataServices::DcatFirst).string())
+                    .col(ColumnDef::new(CatalogDataServices::DcatLast).string())
+                    .col(ColumnDef::new(CatalogDataServices::DcatPrev).string())
+                    // .foreign_key(
+                    //     ForeignKey::create()
+                    //         .name("fk_dataservice_catalog")
+                    //         .from(CatalogDataServices::Table, CatalogDataServices::CatalogId)
+                    //         .to(CatalogCatalogs::Table, CatalogCatalogs::Id)
+                    //         .on_delete(ForeignKeyAction::Cascade),
+                    // )
+                    // .foreign_key(
+                    //     ForeignKey::create()
+                    //         .name("fk_dataservice_ordl_policy")
+                    //         .from(CatalogDataServices::Table, CatalogDataServices::OrdlHasPolicy)
+                    //         .to(CatalogODRLOffers::Table, CatalogODRLOffers::Id)
+                    //         .on_delete(ForeignKeyAction::Cascade),
+                    // )
+                    // .foreign_key(
+                    //     ForeignKey::create()
+                    //         .name("fk_dataservice_dcat_serves_dataset")
+                    //         .from(CatalogDataServices::Table, CatalogDataServices::DcatServesDataset)
+                    //         .to(CatalogDatasets::Table, CatalogDatasets::Id)
+                    //         .on_delete(ForeignKeyAction::Cascade)
+                    // )
+                    // .foreign_key(
+                    //         ForeignKey::create()
+                    //         .name("fk_dataservice_dcat_replaces")
+                    //         .from(CatalogDataServices::Table, CatalogDataServices::DcatReplaces)
+                    //         .to(CatalogDataServices::Table, CatalogDataServices::Id)
+                    //         .on_delete(ForeignKeyAction::Cascade),
+                    // )
+                    // .foreign_key(
+                    //     ForeignKey::create()
+                    //         .name("fk_dataservice_dcat_previous_version")
+                    //         .from(CatalogDataServices::Table, CatalogDataServices::DcatPreviousVersion)
+                    //         .to(CatalogDataServices::Table, CatalogDataServices::Id)
+                    //         .on_delete(ForeignKeyAction::Cascade),
+                    // )
+                    // .foreign_key(
+                    //     ForeignKey::create()
+                    //         .name("fk_first_dataservice")
+                    //         .from(CatalogDataServices::Table, CatalogDataServices::DcatFirst)
+                    //         .to(CatalogDataServices::Table, CatalogDataServices::Id)
+                    //         .on_delete(ForeignKeyAction::Cascade),
+                    
+                    // )
+                    // .foreign_key(
+                    //     ForeignKey::create()
+                    //         .name("fk_last_dataservice")
+                    //         .from(CatalogDataServices::Table, CatalogDataServices::DcatLast)
+                    //         .to(CatalogDataServices::Table, CatalogDataServices::Id)
+                    //         .on_delete(ForeignKeyAction::Cascade),
+                    // )
+                    // .foreign_key(
+                    //     ForeignKey::create()
+                    //         .name("fk_prev_dataservice")
+                    //         .from(CatalogDataServices::Table, CatalogDataServices::DcatPrev)
+                    //         .to(CatalogDataServices::Table, CatalogDataServices::Id)
+                    //         .on_delete(ForeignKeyAction::Cascade),
+                    // )
                     .to_owned(),
             )
             .await
@@ -76,5 +146,23 @@ pub enum CatalogDataServices {
     DctTitle,
     DctDescription,
     CatalogId,
+    DcatServesDataset,
+    DctAccessRights,
+    OrdlHasPolicy,
+    DcatContactPoint,
+    DcatLandingPage,
+    DctLicence,
+    DctRights,
+    DctPublisher,
+    ProvQualifiedAttribution,
+    DcatHasCurrentVersion,
+    DcatVersion,
+    DcatPreviousVersion,
+    DcatReplaces,
+    AmdsStatus,
+    AdmsVersionNotes,
+    DcatFirst,
+    DcatLast,
+    DcatPrev,
 }
 

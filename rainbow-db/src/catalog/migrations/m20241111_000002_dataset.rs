@@ -18,6 +18,8 @@
  */
 
 use super::m20241111_000001_catalog::CatalogCatalogs;
+use super::m20250718_000002_datasetseries::DatasetSeries;
+use super::m20241111_000005_odrl_offers::CatalogODRLOffers;
 use sea_orm_migration::prelude::*;
 
 pub struct Migration;
@@ -43,15 +45,82 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(CatalogDatasets::DctTitle).string())
                     .col(ColumnDef::new(CatalogDatasets::DctDescription).string())
                     .col(ColumnDef::new(CatalogDatasets::CatalogId).string().not_null())
-                    .foreign_key(
-                        ForeignKey::create()
-                            .name("fk_dataset_catalog")
-                            .from(CatalogDatasets::Table, CatalogDatasets::CatalogId)
-                            .to(CatalogCatalogs::Table, CatalogCatalogs::Id)
-                            .on_delete(ForeignKeyAction::Cascade),
-                    )
+                    .col(ColumnDef::new(CatalogDatasets::DcatDatasetSeries).string())
+                    .col(ColumnDef::new(CatalogDatasets::DctSpatial).string())
+                    .col(ColumnDef::new(CatalogDatasets::DcatSpatialResolutionMeters).float())
+                    .col(ColumnDef::new(CatalogDatasets::DctTemporal).string())
+                    .col(ColumnDef::new(CatalogDatasets::DctTemporalResolution).string())
+                    .col(ColumnDef::new(CatalogDatasets::ProvGeneratedBy).string())
+                    .col(ColumnDef::new(CatalogDatasets::DctAccessRights).string())
+                    .col(ColumnDef::new(CatalogDatasets::DctLicense).string())
+                    .col(ColumnDef::new(CatalogDatasets::OrdlHasPolicy).string())
+                    .col(ColumnDef::new(CatalogDatasets::DcatLandingPage).string())
+                    .col(ColumnDef::new(CatalogDatasets::DcatContactPoint).string())
+                    .col(ColumnDef::new(CatalogDatasets::DctLanguage).string())
+                    .col(ColumnDef::new(CatalogDatasets::DctRights).string())
+                    .col(ColumnDef::new(CatalogDatasets::DctPublisher).string())
+                    .col(ColumnDef::new(CatalogDatasets::DctType).string())
+                    .col(ColumnDef::new(CatalogDatasets::ProvQualifiedAttribution).string())
+                    .col(ColumnDef::new(CatalogDatasets::DcatVersion).string().not_null())
+                    .col(ColumnDef::new(CatalogDatasets::DcatHasCurrentVersion).string().not_null())
+                    .col(ColumnDef::new(CatalogDatasets::DcatPreviousVersion).string())
+                    .col(ColumnDef::new(CatalogDatasets::DcatFirst).string())
+                    .col(ColumnDef::new(CatalogDatasets::DcatLast).string())
+                    .col(ColumnDef::new(CatalogDatasets::DcatPrev).string())
+                    .col(ColumnDef::new(CatalogDatasets::DctReplaces).string())
+                    .col(ColumnDef::new(CatalogDatasets::AdmsStatus).string())
+                    .col(ColumnDef::new(CatalogDatasets::AdmsVersionNotes).string())
+                    // .foreign_key(
+                    //     ForeignKey::create()
+                    //         .name("fk_dataset_catalog")
+                    //         .from(CatalogDatasets::Table, CatalogDatasets::CatalogId)
+                    //         .to(CatalogCatalogs::Table, CatalogCatalogs::Id)
+                    //         .on_delete(ForeignKeyAction::Cascade),
+                    // )
+                    // .foreign_key(
+                    //     ForeignKey::create()
+                    //         .name("fk_dataset_dcat_dataset_series")
+                    //         .from(CatalogDatasets::Table, CatalogDatasets::DcatDatasetSeries)
+                    //         .to(DatasetSeries::Table, DatasetSeries::Id)
+                    //         .on_delete(ForeignKeyAction::Cascade),
+                    // )
+                    // .foreign_key(
+                    //     ForeignKey::create()
+                    //         .name("fk_dataset_ordl_policy")
+                    //         .from(CatalogDatasets::Table, CatalogDatasets::OrdlHasPolicy)
+                    //         .to(CatalogODRLOffers::Table, CatalogODRLOffers::Id)
+                    //         .on_delete(ForeignKeyAction::Cascade),
+                    // )
+                    // .foreign_key(
+                    //     ForeignKey::create()
+                    //         .name("fk_first_dataset")
+                    //         .from(CatalogDatasets::Table, CatalogDatasets::DcatFirst)
+                    //         .to(CatalogDatasets::Table, CatalogDatasets::Id)
+                    //         .on_delete(ForeignKeyAction::Cascade),
+                    // )
+                    // .foreign_key(
+                    //     ForeignKey::create()
+                    //         .name("fk_last_dataset")
+                    //         .from(CatalogDatasets::Table, CatalogDatasets::DcatLast)
+                    //         .to(CatalogDatasets::Table, CatalogDatasets::Id)
+                    //         .on_delete(ForeignKeyAction::Cascade),
+                    // )
+                    // .foreign_key(
+                    //     ForeignKey::create()
+                    //         .name("fk_prev_dataset")
+                    //         .from(CatalogDatasets::Table, CatalogDatasets::DcatPrev)
+                    //         .to(CatalogDatasets::Table, CatalogDatasets::Id)
+                    //         .on_delete(ForeignKeyAction::Cascade),
+                    // )
+                    // .foreign_key(
+                    //     ForeignKey::create()
+                    //         .name("fk_replaces_dataset")
+                    //         .from(CatalogDatasets::Table, CatalogDatasets::DctReplaces)
+                    //         .to(CatalogDatasets::Table, CatalogDatasets::Id)
+                    //         .on_delete(ForeignKeyAction::Cascade),
+                    // )
                     .to_owned(),
-            )
+                )
             .await
     }
 
@@ -72,4 +141,29 @@ pub enum CatalogDatasets {
     DctTitle,
     DctDescription,
     CatalogId,
+    DcatDatasetSeries,
+    DctSpatial,
+    DcatSpatialResolutionMeters,
+    DctTemporal,
+    DctTemporalResolution,
+    ProvGeneratedBy,
+    DctAccessRights,
+    DctLicense,
+    OrdlHasPolicy,
+    DcatLandingPage,
+    DcatContactPoint,
+    DctLanguage,
+    DctRights,
+    DctPublisher,
+    DctType,
+    ProvQualifiedAttribution,
+    DcatVersion,
+    DcatHasCurrentVersion,
+    DcatPreviousVersion,
+    DcatFirst,
+    DcatLast,
+    DcatPrev,
+    DctReplaces,
+    AdmsStatus,
+    AdmsVersionNotes,
 }

@@ -17,6 +17,7 @@
  *
  */
 
+use super::m20241111_000005_odrl_offers::CatalogODRLOffers;
 use sea_orm_migration::prelude::*;
 
 pub struct Migration;
@@ -37,12 +38,78 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(CatalogCatalogs::FoafHomePage).string())
                     .col(ColumnDef::new(CatalogCatalogs::DctConformsTo).string())
                     .col(ColumnDef::new(CatalogCatalogs::DctCreator).string())
-                    .col(ColumnDef::new(CatalogCatalogs::DctIdentifier).string())
+                    .col(ColumnDef::new(CatalogCatalogs::DctIdentifier).string().not_null())
                     .col(ColumnDef::new(CatalogCatalogs::DctIssued).date_time().not_null())
                     .col(ColumnDef::new(CatalogCatalogs::DctModified).date_time())
                     .col(ColumnDef::new(CatalogCatalogs::DctTitle).string())
                     .col(ColumnDef::new(CatalogCatalogs::DspaceParticipantId).string())
                     .col(ColumnDef::new(CatalogCatalogs::DspaceMainCatalog).boolean().not_null().default(false))
+                    .col(ColumnDef::new(CatalogCatalogs::DctDescription).string())
+                    .col(ColumnDef::new(CatalogCatalogs::DctAccessRights).string())
+                    .col(ColumnDef::new(CatalogCatalogs::DcatContactPoint).string())
+                    .col(ColumnDef::new(CatalogCatalogs::OrdlHasPolicy).string().not_null())
+                    .col(ColumnDef::new(CatalogCatalogs::DcatLandingPage).string())
+                    .col(ColumnDef::new(CatalogCatalogs::DctLicence).string())
+                    .col(ColumnDef::new(CatalogCatalogs::DctPublisher).string())
+                    .col(ColumnDef::new(CatalogCatalogs::ProvQualifiedAttribution).string())
+                    .col(ColumnDef::new(CatalogCatalogs::DcatHasCurrentVersion).string())
+                    .col(ColumnDef::new(CatalogCatalogs::DcatVersion).string().not_null())
+                    .col(ColumnDef::new(CatalogCatalogs::DcatPreviousVersion).string())
+                    .col(ColumnDef::new(CatalogCatalogs::AdmsVersionNotes).string())
+                    .col(ColumnDef::new(CatalogCatalogs::DcatFirst).string())
+                    .col(ColumnDef::new(CatalogCatalogs::DcatLast).string())
+                    .col(ColumnDef::new(CatalogCatalogs::DcatPrev).string())
+                    .col(ColumnDef::new(CatalogCatalogs::DctReplaces).string())
+                    .col(ColumnDef::new(CatalogCatalogs::AdmsStatus).string())
+                    // .foreign_key(
+                    //     ForeignKey::create()
+                    //         .name("fk_catalog_ordl_policy")
+                    //         .from(CatalogCatalogs::Table, CatalogCatalogs::OrdlHasPolicy)
+                    //         .to(CatalogODRLOffers::Table, CatalogODRLOffers::Id)
+                    //         .on_delete(ForeignKeyAction::Cascade)
+                    // )
+                    // .foreign_key(
+                    //     ForeignKey::create()
+                    //         .name("fk_catalog_current_version")
+                    //         .from(CatalogCatalogs::Table, CatalogCatalogs::DcatHasCurrentVersion)
+                    //         .to(CatalogCatalogs::Table, CatalogCatalogs::Id)
+                    //         .on_delete(ForeignKeyAction::Cascade)
+                    // )
+                    // .foreign_key(
+                    //     ForeignKey::create()
+                    //         .name("fk_catalog_previous_version")
+                    //         .from(CatalogCatalogs::Table, CatalogCatalogs::DcatPreviousVersion)
+                    //         .to(CatalogCatalogs::Table, CatalogCatalogs::Id)
+                    //         .on_delete(ForeignKeyAction::Cascade)
+                    // )
+                    // .foreign_key(
+                    //     ForeignKey::create()
+                    //         .name("fk_catalog_replaces")
+                    //         .from(CatalogCatalogs::Table, CatalogCatalogs::DctReplaces)
+                    //         .to(CatalogCatalogs::Table, CatalogCatalogs::Id)
+                    //         .on_delete(ForeignKeyAction::Cascade)
+                    // )
+                    // .foreign_key(
+                    //     ForeignKey::create()
+                    //         .name("fk_catalog_first")
+                    //         .from(CatalogCatalogs::Table, CatalogCatalogs::DcatFirst)
+                    //         .to(CatalogCatalogs::Table, CatalogCatalogs::Id)
+                    //         .on_delete(ForeignKeyAction::Cascade)
+                    // )
+                    // .foreign_key(
+                    //     ForeignKey::create()
+                    //         .name("fk_catalog_last")
+                    //         .from(CatalogCatalogs::Table, CatalogCatalogs::DcatLast)
+                    //         .to(CatalogCatalogs::Table, CatalogCatalogs::Id)
+                    //         .on_delete(ForeignKeyAction::Cascade)
+                    // )
+                    // .foreign_key(
+                    //     ForeignKey::create()
+                    //         .name("fk_catalog_prev")
+                    //         .from(CatalogCatalogs::Table, CatalogCatalogs::DcatPrev)
+                    //         .to(CatalogCatalogs::Table, CatalogCatalogs::Id)
+                    //         .on_delete(ForeignKeyAction::Cascade)
+                    // )
                     .to_owned(),
             )
             .await
@@ -64,6 +131,23 @@ pub enum CatalogCatalogs {
     DctIssued,
     DctModified,
     DctTitle,
-    DspaceParticipantId,
-    DspaceMainCatalog,
+    DspaceParticipantId, // ¿A qué atributo de DCAT corresponde?
+    DspaceMainCatalog, // ¿A qué atributo de DCAT corresponde?
+    DctDescription,
+    DctAccessRights,
+    DcatContactPoint,
+    OrdlHasPolicy,
+    DcatLandingPage,
+    DctLicence,
+    DctPublisher,
+    ProvQualifiedAttribution,
+    DcatHasCurrentVersion,
+    DcatVersion,
+    DcatPreviousVersion,
+    AdmsVersionNotes,
+    DcatFirst,
+    DcatLast,
+    DcatPrev,
+    DctReplaces,
+    AdmsStatus,
 }
