@@ -16,8 +16,9 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use serde_json::Value;
+
 use axum::async_trait;
+use serde_json::Value;
 #[async_trait]
 pub trait RainbowSSIAuthWalletTrait: Send + Sync {
     async fn register_wallet(&self) -> anyhow::Result<()>;

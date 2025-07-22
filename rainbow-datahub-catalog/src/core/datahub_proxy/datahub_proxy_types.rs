@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 #![allow(non_snake_case)]
 use serde::{Deserialize, Serialize};
 

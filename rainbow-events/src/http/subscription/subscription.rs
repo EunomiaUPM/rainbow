@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::core::subscription::subscription_err::SubscriptionErrors;
 use crate::core::subscription::subscription_types::{RainbowEventsSubscriptionCreationRequest, SubscriptionEntities};
 use crate::core::subscription::RainbowEventsSubscriptionTrait;

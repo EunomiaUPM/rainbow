@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_db::auth_provider::migrations::get_auth_provider_migrations;
 use rainbow_db::catalog::migrations::get_catalog_migrations;

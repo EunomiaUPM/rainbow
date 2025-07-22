@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::config::global_config::{format_host_config_to_url_string, ApplicationGlobalConfig};
 use crate::facades::ssi_auth_facade::SSIAuthFacadeTrait;
 use crate::mates::mates::VerifyTokenRequest;

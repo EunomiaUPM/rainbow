@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::consumer::core::rainbow_entities::rainbow_err::RainbowTransferConsumerErrors;
 use crate::consumer::core::rainbow_entities::rainbow_types::{EditTransferConsumerRequest, NewTransferConsumerRequest};
 use crate::consumer::core::rainbow_entities::RainbowTransferConsumerServiceTrait;

@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
 use rainbow_db::auth_consumer::migrations::get_auth_consumer_migrations;
 use rainbow_db::catalog::migrations::get_catalog_migrations;

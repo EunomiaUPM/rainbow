@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::provider::core::rainbow_entities::rainbow_catalog_err::CatalogError;
 use crate::provider::core::rainbow_entities::rainbow_catalog_types::EditDistributionRequest;
 use crate::provider::core::rainbow_entities::{RainbowDistributionTrait, RainbowPoliciesTrait};

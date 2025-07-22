@@ -16,8 +16,9 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use serde::{Deserialize, Serialize};
+
 use super::wallet_info::WalletInfo;
+use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug)]
 pub struct WalletSession {
     pub account_id: Option<String>,

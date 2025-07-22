@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use serde_json::Value;
 
 pub fn schema_compiler_util(schema_content: &str) -> Value {

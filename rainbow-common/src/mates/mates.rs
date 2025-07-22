@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::utils::get_urn;
 use serde::{Deserialize, Serialize};
 
@@ -62,7 +63,7 @@ impl Mates {
         url: String,
         token: Option<String>,
         token_actions: Option<String>,
-        is_me: bool
+        is_me: bool,
     ) -> Self {
         let participant_id = id.unwrap_or_else(|| get_urn(None).to_string());
 

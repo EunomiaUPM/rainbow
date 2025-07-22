@@ -17,7 +17,5 @@
  *
  */
 
-// TODO http and service decoupling
-
 pub mod mates_types;
 pub mod submates_types;

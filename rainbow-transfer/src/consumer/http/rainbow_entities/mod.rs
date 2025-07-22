@@ -16,7 +16,5 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
-
 pub mod rainbow_entities;
 pub mod rainbow_entities_errors;

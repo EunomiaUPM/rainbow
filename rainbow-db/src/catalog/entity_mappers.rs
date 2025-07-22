@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::catalog::entities::{catalog, dataservice, dataset, distribution, odrl_offer};
 use rainbow_common::protocol::catalog::catalog_definition::{Catalog, CatalogDSpaceDeclaration, CatalogDcatDeclaration, CatalogDctDeclaration, CatalogFoafDeclaration};
 use rainbow_common::protocol::catalog::dataservice_definition::{DataService, DataServiceDcatDeclaration, DataServiceDctDeclaration};

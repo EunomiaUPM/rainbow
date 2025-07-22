@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use rainbow_common::protocol::transfer::transfer_data_address::DataAddress;
 use rainbow_db::transfer_consumer::repo::{EditTransferCallback, NewTransferCallback};
 use serde::{Deserialize, Serialize};

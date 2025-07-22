@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::auth_provider::entities::{auth, auth_interaction, auth_verification};
 use anyhow::Error;
 use axum::async_trait;

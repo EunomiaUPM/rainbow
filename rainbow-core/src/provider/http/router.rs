@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use axum::Router;
 use rainbow_auth::ssi_auth::provider::setup::router::create_ssi_provider_router;
 use rainbow_catalog::provider::setup::application::create_catalog_router;
