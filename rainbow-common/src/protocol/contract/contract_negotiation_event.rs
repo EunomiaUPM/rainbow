@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
  *  *
  *  * This program is free software: you can redistribute it and/or modify
  *  * it under the terms of the GNU General Public License as published by
@@ -75,7 +75,7 @@ impl DSProtocolContractNegotiationMessageTrait<'_> for ContractNegotiationEventM
     fn get_consumer_pid(&self) -> anyhow::Result<Option<&Urn>> {
         Ok(Option::from(&self.consumer_pid))
     }
-    
+
     fn get_provider_pid(&self) -> anyhow::Result<Option<&Urn>> {
         Ok(Some(&self.provider_pid))
     }

@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
  *  *
  *  * This program is free software: you can redistribute it and/or modify
  *  * it under the terms of the GNU General Public License as published by
@@ -314,10 +314,10 @@ where
         Json(manager.didweb().await.unwrap())
     }
 
-    async fn beg4credential(State(manager): State<Arc<Manager<T>>>, Json(payload): Json<ReachAuthority>,) -> impl IntoResponse {
+    async fn beg4credential(State(manager): State<Arc<Manager<T>>>, Json(payload): Json<ReachAuthority>) -> impl IntoResponse {
         info!("POST /beg/credential");
-        match manager.beg4credential(payload.url).await{
-            Ok(()) => {},
+        match manager.beg4credential(payload.url).await {
+            Ok(()) => {}
             Err(e) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
         };
         StatusCode::OK.into_response()
@@ -327,8 +327,6 @@ where
         info!("{}", log);
         (StatusCode::NOT_FOUND, format!("No route for {uri}"))
     }
-
-
 }
 
 

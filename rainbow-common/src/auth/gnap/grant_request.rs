@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
  *  *
  *  * This program is free software: you can redistribute it and/or modify
  *  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ pub struct GrantRequest {
     pub client: Value,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub user: Option<String>,
-    pub interact: Option<Interact4GR>
+    pub interact: Option<Interact4GR>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

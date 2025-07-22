@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
  *  *
  *  * This program is free software: you can redistribute it and/or modify
  *  * it under the terms of the GNU General Public License as published by
@@ -94,7 +94,7 @@ impl ApplicationProviderConfigTrait for AuthorityApplicationConfig {
         &None
     }
 
-    fn get_raw_ssi_wallet_config(&self) -> &SSIWalletConfig {&self.ssi_wallet_config}
+    fn get_raw_ssi_wallet_config(&self) -> &SSIWalletConfig { &self.ssi_wallet_config }
 
     fn get_raw_contract_negotiation_host(&self) -> &Option<HostConfig> {
         &None
@@ -112,7 +112,7 @@ impl ApplicationProviderConfigTrait for AuthorityApplicationConfig {
         &self.database_config
     }
 
-    fn get_raw_client_config(&self) -> &ClientConfig {&self.client_config}
+    fn get_raw_client_config(&self) -> &ClientConfig { &self.client_config }
 
     fn get_raw_cert_path(&self) -> &String {
         &self.cert_path

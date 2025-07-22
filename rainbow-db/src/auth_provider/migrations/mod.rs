@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
  *  *
  *  * This program is free software: you can redistribute it and/or modify
  *  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,6 @@ pub fn get_auth_provider_migrations() -> Vec<Box<dyn MigrationTrait>> {
         Box::new(m20250403_094651_auth::Migration),
         Box::new(m20250403_094651_auth_interaction::Migration),
         Box::new(m20250403_094651_auth_verification::Migration),
-
     ]
 }
 
