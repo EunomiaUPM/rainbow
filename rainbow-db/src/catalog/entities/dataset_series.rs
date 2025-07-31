@@ -18,29 +18,37 @@
  */
 
 use sea_orm::entity::prelude::*;
+use serde::{Serialize, Deserialize};
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
-#[sea_orm(table_name = "catalog_catalogs")]
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
+#[sea_orm(table_name = "catalog_dataset_series")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: String,
-    pub foaf_home_page: Option<String>,
     pub dct_conforms_to: Option<String>,
     pub dct_creator: Option<String>,
     pub dct_identifier: String,
     pub dct_issued: chrono::NaiveDateTime,
     pub dct_modified: Option<chrono::NaiveDateTime>,
     pub dct_title: Option<String>,
-    pub dspace_participant_id: Option<String>,
-    pub dspace_main_catalog: bool,
     pub dct_description: Option<String>,
+    pub dct_spatial: Option<String>,
+    pub dcat_spatial_resolution_meters: Option<f64>,
+    pub dct_temporal: Option<String>,
+    pub dct_temporal_resolution: Option<String>,
+    pub prov_generated_by: Option<String>,
     pub dct_access_rights: Option<String>,
-    pub dcat_contact_point: Option<String>,
     pub ordl_has_policy: String,
-    pub dcat_landing_page: Option<String>,
     pub dct_licence: Option<String>,
-    pub dct_publisher: Option<String>,
+    pub dcat_inseries: Option<String>,
+    pub dcat_landing_page: Option<String>,
+    pub dcat_contact_point: Option<String>,
+    pub dct_language: Option<String>,
+    pub dct_rights: Option<String>,
+    pub dct_publisher: String,
+    pub dct_type: Option<String>,
     pub prov_qualified_attribution: Option<String>,
+    pub dct_accrual_periodicity: Option<String>,
     pub dcat_has_current_version: Option<String>,
     pub dcat_version: String,
     pub dcat_previous_version: Option<String>,
@@ -54,83 +62,58 @@ pub struct Model {
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(has_many = "super::catalog::Entity")]
-    Catalog,
-    #[sea_orm(has_many = "super::dataset::Entity")]
-    Dataset,
-    #[sea_orm(has_many = "super::dataservice::Entity")]
-    DataService,
+    
     #[sea_orm(has_many = "super::odrl_offer::Entity")]
     OdrlOffer,
-
+    
     #[sea_orm(
-        belongs_to = "super::catalog::Entity",
-        from = "Column::DcatHasCurrentVersion",
-        to = "Column::Id"
+        belongs_to = "super::dataset_series::Entity",
+        from = "Column::DcatInseries",
+        to = "super::dataset_series::Column::Id"
     )]
-    CurrentVersion,
+    InSeries,
 
     #[sea_orm(
-        belongs_to = "super::catalog::Entity",
+        belongs_to = "super::dataset_series::Entity",
         from = "Column::DcatPreviousVersion",
-        to = "Column::Id"
+        to = "super::dataset_series::Column::Id"
     )]
     PreviousVersion,
 
     #[sea_orm(
-        belongs_to = "super::catalog::Entity",
+        belongs_to = "super::dataset_series::Entity",
         from = "Column::DctReplaces",
-        to = "Column::Id"
+        to = "super::dataset_series::Column::Id"
     )]
     Replaces,
 
     #[sea_orm(
-        belongs_to = "super::catalog::Entity",
+        belongs_to = "super::dataset_series::Entity",
         from = "Column::DcatLast",
-        to = "Column::Id"
+        to = "super::dataset_series::Column::Id"
     )]
     Last,
 
     #[sea_orm(
-        belongs_to = "super::catalog::Entity",
+        belongs_to = "super::dataset_series::Entity",
         from = "Column::DcatFirst",
-        to = "Column::Id"
+        to = "super::dataset_series::Column::Id"
     )]
     First,
 
     #[sea_orm(
-        belongs_to = "super::catalog::Entity",
+        belongs_to = "super::dataset_series::Entity",
         from = "Column::DcatPrev",
-        to = "Column::Id"
+        to = "super::dataset_series::Column::Id"
     )]
     Prev,
-
 }
 
-pub struct BelongsToCurrentVersion;
 pub struct BelongsToPreviousVersion;
 pub struct BelongsToReplaces;
 pub struct BelongsToLast;
 pub struct BelongsToFirst;
 pub struct BelongsToPrev;
-
-impl Related<super::catalog::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::Catalog.def()
-    }
-}
-
-impl Related<super::dataset::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::Dataset.def()
-    }
-}
-
-impl Related<super::dataservice::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::DataService.def()
-    }
-}
 
 impl Related<super::odrl_offer::Entity> for Entity {
     fn to() -> RelationDef {
@@ -138,41 +121,40 @@ impl Related<super::odrl_offer::Entity> for Entity {
     }
 }
 
-impl Related<super::catalog::Entity> for BelongsToCurrentVersion {
+impl Related<super::dataset_series::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::CurrentVersion.def()
+        Relation::InSeries.def()
     }
 }
 
-impl Related<super::catalog::Entity> for BelongsToPreviousVersion {
+impl Related<super::dataset_series::Entity> for BelongsToPreviousVersion {
     fn to() -> RelationDef {
         Relation::PreviousVersion.def()
     }
 }
 
-impl Related<super::catalog::Entity> for BelongsToReplaces {
+impl Related<super::dataset_series::Entity> for BelongsToReplaces {
     fn to() -> RelationDef {
         Relation::Replaces.def()
     }
 }
 
-impl Related<super::catalog::Entity> for BelongsToLast {
+impl Related<super::dataset_series::Entity> for BelongsToLast {
     fn to() -> RelationDef {
         Relation::Last.def()
     }
 }
 
-impl Related<super::catalog::Entity> for BelongsToFirst {
+impl Related<super::dataset_series::Entity> for BelongsToFirst {
     fn to() -> RelationDef {
         Relation::First.def()
     }
 }
 
-impl Related<super::catalog::Entity> for BelongsToPrev {
+impl Related<super::dataset_series::Entity> for BelongsToPrev {
     fn to() -> RelationDef {
         Relation::Prev.def()
     }
 }
-
 
 impl ActiveModelBehavior for ActiveModel {}

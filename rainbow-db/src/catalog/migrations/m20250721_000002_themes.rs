@@ -37,13 +37,6 @@ impl MigrationTrait for Migration {
                     .table(Themes::Table)
                     .col(ColumnDef::new(Themes::DcatTheme).string().not_null())
                     .col(ColumnDef::new(Themes::DcatResource).string().not_null())
-                    // .foreign_key(
-                    //     ForeignKey::create()
-                    //         .name("fk_themes_resource_id")
-                    //         .from(Themes::Table, Themes::DcatResource)
-                    //         .to(Resources::Table, Resources::ResourceId)
-                    //         .on_delete(ForeignKeyAction::Cascade)
-                    // )
                     .to_owned(),
             )
             .await

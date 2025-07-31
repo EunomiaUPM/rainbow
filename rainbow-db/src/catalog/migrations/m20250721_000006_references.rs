@@ -36,13 +36,6 @@ impl MigrationTrait for Migration {
                     .table(References::Table)
                     .col(ColumnDef::new(References::ReferencedResourceId).string().not_null())
                     .col(ColumnDef::new(References::Reference).string().not_null())
-                    // .foreign_key(
-                    //     ForeignKey::create()
-                    //         .name("fk_references_resource")
-                    //         .from(References::Table, References::ReferencedResourceId)
-                    //         .to(Resources::Table, Resources::ResourceId)
-                    //         .on_delete(ForeignKeyAction::Cascade)
-                    // )
                     .to_owned(),
             )
             .await

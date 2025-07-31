@@ -65,63 +65,6 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(CatalogDataServices::DcatFirst).string())
                     .col(ColumnDef::new(CatalogDataServices::DcatLast).string())
                     .col(ColumnDef::new(CatalogDataServices::DcatPrev).string())
-                    // .foreign_key(
-                    //     ForeignKey::create()
-                    //         .name("fk_dataservice_catalog")
-                    //         .from(CatalogDataServices::Table, CatalogDataServices::CatalogId)
-                    //         .to(CatalogCatalogs::Table, CatalogCatalogs::Id)
-                    //         .on_delete(ForeignKeyAction::Cascade),
-                    // )
-                    // .foreign_key(
-                    //     ForeignKey::create()
-                    //         .name("fk_dataservice_ordl_policy")
-                    //         .from(CatalogDataServices::Table, CatalogDataServices::OrdlHasPolicy)
-                    //         .to(CatalogODRLOffers::Table, CatalogODRLOffers::Id)
-                    //         .on_delete(ForeignKeyAction::Cascade),
-                    // )
-                    // .foreign_key(
-                    //     ForeignKey::create()
-                    //         .name("fk_dataservice_dcat_serves_dataset")
-                    //         .from(CatalogDataServices::Table, CatalogDataServices::DcatServesDataset)
-                    //         .to(CatalogDatasets::Table, CatalogDatasets::Id)
-                    //         .on_delete(ForeignKeyAction::Cascade)
-                    // )
-                    // .foreign_key(
-                    //         ForeignKey::create()
-                    //         .name("fk_dataservice_dcat_replaces")
-                    //         .from(CatalogDataServices::Table, CatalogDataServices::DcatReplaces)
-                    //         .to(CatalogDataServices::Table, CatalogDataServices::Id)
-                    //         .on_delete(ForeignKeyAction::Cascade),
-                    // )
-                    // .foreign_key(
-                    //     ForeignKey::create()
-                    //         .name("fk_dataservice_dcat_previous_version")
-                    //         .from(CatalogDataServices::Table, CatalogDataServices::DcatPreviousVersion)
-                    //         .to(CatalogDataServices::Table, CatalogDataServices::Id)
-                    //         .on_delete(ForeignKeyAction::Cascade),
-                    // )
-                    // .foreign_key(
-                    //     ForeignKey::create()
-                    //         .name("fk_first_dataservice")
-                    //         .from(CatalogDataServices::Table, CatalogDataServices::DcatFirst)
-                    //         .to(CatalogDataServices::Table, CatalogDataServices::Id)
-                    //         .on_delete(ForeignKeyAction::Cascade),
-                    
-                    // )
-                    // .foreign_key(
-                    //     ForeignKey::create()
-                    //         .name("fk_last_dataservice")
-                    //         .from(CatalogDataServices::Table, CatalogDataServices::DcatLast)
-                    //         .to(CatalogDataServices::Table, CatalogDataServices::Id)
-                    //         .on_delete(ForeignKeyAction::Cascade),
-                    // )
-                    // .foreign_key(
-                    //     ForeignKey::create()
-                    //         .name("fk_prev_dataservice")
-                    //         .from(CatalogDataServices::Table, CatalogDataServices::DcatPrev)
-                    //         .to(CatalogDataServices::Table, CatalogDataServices::Id)
-                    //         .on_delete(ForeignKeyAction::Cascade),
-                    // )
                     .to_owned(),
             )
             .await

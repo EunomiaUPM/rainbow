@@ -45,7 +45,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(CatalogDatasets::DctTitle).string())
                     .col(ColumnDef::new(CatalogDatasets::DctDescription).string())
                     .col(ColumnDef::new(CatalogDatasets::CatalogId).string().not_null())
-                    .col(ColumnDef::new(CatalogDatasets::DcatDatasetSeries).string())
+                    .col(ColumnDef::new(CatalogDatasets::DcatInSeries).string())
                     .col(ColumnDef::new(CatalogDatasets::DctSpatial).string())
                     .col(ColumnDef::new(CatalogDatasets::DcatSpatialResolutionMeters).float())
                     .col(ColumnDef::new(CatalogDatasets::DctTemporal).string())
@@ -70,55 +70,6 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(CatalogDatasets::DctReplaces).string())
                     .col(ColumnDef::new(CatalogDatasets::AdmsStatus).string())
                     .col(ColumnDef::new(CatalogDatasets::AdmsVersionNotes).string())
-                    // .foreign_key(
-                    //     ForeignKey::create()
-                    //         .name("fk_dataset_catalog")
-                    //         .from(CatalogDatasets::Table, CatalogDatasets::CatalogId)
-                    //         .to(CatalogCatalogs::Table, CatalogCatalogs::Id)
-                    //         .on_delete(ForeignKeyAction::Cascade),
-                    // )
-                    // .foreign_key(
-                    //     ForeignKey::create()
-                    //         .name("fk_dataset_dcat_dataset_series")
-                    //         .from(CatalogDatasets::Table, CatalogDatasets::DcatDatasetSeries)
-                    //         .to(DatasetSeries::Table, DatasetSeries::Id)
-                    //         .on_delete(ForeignKeyAction::Cascade),
-                    // )
-                    // .foreign_key(
-                    //     ForeignKey::create()
-                    //         .name("fk_dataset_ordl_policy")
-                    //         .from(CatalogDatasets::Table, CatalogDatasets::OrdlHasPolicy)
-                    //         .to(CatalogODRLOffers::Table, CatalogODRLOffers::Id)
-                    //         .on_delete(ForeignKeyAction::Cascade),
-                    // )
-                    // .foreign_key(
-                    //     ForeignKey::create()
-                    //         .name("fk_first_dataset")
-                    //         .from(CatalogDatasets::Table, CatalogDatasets::DcatFirst)
-                    //         .to(CatalogDatasets::Table, CatalogDatasets::Id)
-                    //         .on_delete(ForeignKeyAction::Cascade),
-                    // )
-                    // .foreign_key(
-                    //     ForeignKey::create()
-                    //         .name("fk_last_dataset")
-                    //         .from(CatalogDatasets::Table, CatalogDatasets::DcatLast)
-                    //         .to(CatalogDatasets::Table, CatalogDatasets::Id)
-                    //         .on_delete(ForeignKeyAction::Cascade),
-                    // )
-                    // .foreign_key(
-                    //     ForeignKey::create()
-                    //         .name("fk_prev_dataset")
-                    //         .from(CatalogDatasets::Table, CatalogDatasets::DcatPrev)
-                    //         .to(CatalogDatasets::Table, CatalogDatasets::Id)
-                    //         .on_delete(ForeignKeyAction::Cascade),
-                    // )
-                    // .foreign_key(
-                    //     ForeignKey::create()
-                    //         .name("fk_replaces_dataset")
-                    //         .from(CatalogDatasets::Table, CatalogDatasets::DctReplaces)
-                    //         .to(CatalogDatasets::Table, CatalogDatasets::Id)
-                    //         .on_delete(ForeignKeyAction::Cascade),
-                    // )
                     .to_owned(),
                 )
             .await
@@ -141,7 +92,7 @@ pub enum CatalogDatasets {
     DctTitle,
     DctDescription,
     CatalogId,
-    DcatDatasetSeries,
+    DcatInSeries,
     DctSpatial,
     DcatSpatialResolutionMeters,
     DctTemporal,

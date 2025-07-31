@@ -56,6 +56,12 @@ pub enum Relation {
         to = "super::distribution::Column::Id"
     )]
     Distribution,
+    #[sea_orm(
+        belongs_to = "super::dataset_series::Entity",
+        from = "Column::Entity",
+        to = "super::dataset_series::Column::Id"
+    )]
+    DatasetSeries,
 }
 impl Related<super::catalog::Entity> for Entity {
     fn to() -> RelationDef {
@@ -77,5 +83,9 @@ impl Related<super::distribution::Entity> for Entity {
         Relation::Distribution.def()
     }
 }
-
+impl Related<super::dataset_series::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::DatasetSeries.def()
+    }
+}
 impl ActiveModelBehavior for ActiveModel {}

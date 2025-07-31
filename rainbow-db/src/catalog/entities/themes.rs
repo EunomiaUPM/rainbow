@@ -17,17 +17,33 @@
  *
  */
 
-pub mod catalog;
-pub mod dataservice;
-pub mod dataset;
-pub mod distribution;
-pub mod odrl_offer;
-pub mod dataset_series;
-pub mod keyword;
-pub mod resource;
-pub mod themes;
-pub mod relations;
-pub mod qualified_relations;
-pub mod references;
-pub mod catalog_record;
+use sea_orm::entity::prelude::*;
+use serde::{Serialize, Deserialize};
 
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
+#[sea_orm(table_name = "catalog_themes")]
+pub struct Model {
+    #[sea_orm(primary_key)]
+    pub id: String,
+    pub theme: String,
+    pub dcat_resource: String,
+}
+
+#[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
+pub enum Relation {
+    #[sea_orm(
+        belongs_to = "super::resource::Entity",
+        from = "Column::DcatResource",
+        to = "super::resource::Column::ResourceId"
+    )]
+    Theme,
+}
+
+impl Related<super::resource::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Theme.def()
+    }
+}
+
+
+impl ActiveModelBehavior for ActiveModel {}

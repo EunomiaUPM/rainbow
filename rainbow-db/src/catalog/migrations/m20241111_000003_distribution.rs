@@ -49,7 +49,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(CatalogDistributions::DcatAccessURL).string())
                     .col(ColumnDef::new(CatalogDistributions::DcatDownloadURL).string())
                     .col(ColumnDef::new(CatalogDistributions::DctAccessRights).string())
-                    .col(ColumnDef::new(CatalogDistributions::OrdlHasPolicy).string())
+                    .col(ColumnDef::new(CatalogDistributions::OrdlHasPolicy).string().not_null())
                     .col(ColumnDef::new(CatalogDistributions::DctConformsTo).string())
                     .col(ColumnDef::new(CatalogDistributions::DctMediaType).string())
                     .col(ColumnDef::new(CatalogDistributions::DcatCompressFormat).string())
@@ -61,35 +61,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(CatalogDistributions::DcatSpatialResolutionMeters).float())
                     .col(ColumnDef::new(CatalogDistributions::DctTemporalResolution).string())
                     .col(ColumnDef::new(CatalogDistributions::DcatByteSize).big_integer())
-                    .col(ColumnDef::new(CatalogDistributions::SpdxChecksum).string())
-                    // .foreign_key(
-                    //     ForeignKey::create()
-                    //         .name("fk_distribution_dataset")
-                    //         .from(CatalogDistributions::Table, CatalogDistributions::DatasetId)
-                    //         .to(CatalogDatasets::Table, CatalogDatasets::Id)
-                    //         .on_delete(ForeignKeyAction::Cascade),
-                    // )
-                    // .foreign_key(
-                    //     ForeignKey::create()
-                    //         .name("fk_distribution_access_service")
-                    //         .from(CatalogDistributions::Table, CatalogDistributions::AccessServiceId)
-                    //         .to(CatalogDataServices::Table, CatalogDataServices::Id)
-                    //         .on_delete(ForeignKeyAction::Cascade),
-                    // )
-                    // .foreign_key(
-                    //     ForeignKey::create()
-                    //         .name("fk_distribution_dataset_series")
-                    //         .from(CatalogDistributions::Table, CatalogDistributions::DatasetSeriesId)
-                    //         .to(DatasetSeries::Table, DatasetSeries::Id)
-                    //         .on_delete(ForeignKeyAction::Cascade),
-                    // )
-                    // .foreign_key(
-                    //     ForeignKey::create()
-                    //         .name("fk_distribution_ordl_policy")
-                    //         .from(CatalogDistributions::Table, CatalogDistributions::OrdlHasPolicy)
-                    //         .to(CatalogODRLOffers::Table, CatalogODRLOffers::Id)
-                    //         .on_delete(ForeignKeyAction::Cascade),
-                    // )
+                    .col(ColumnDef::new(CatalogDistributions::SpdxChecksum).string().not_null())
                     .to_owned(),
             )
             .await

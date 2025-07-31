@@ -61,55 +61,6 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(CatalogCatalogs::DcatPrev).string())
                     .col(ColumnDef::new(CatalogCatalogs::DctReplaces).string())
                     .col(ColumnDef::new(CatalogCatalogs::AdmsStatus).string())
-                    // .foreign_key(
-                    //     ForeignKey::create()
-                    //         .name("fk_catalog_ordl_policy")
-                    //         .from(CatalogCatalogs::Table, CatalogCatalogs::OrdlHasPolicy)
-                    //         .to(CatalogODRLOffers::Table, CatalogODRLOffers::Id)
-                    //         .on_delete(ForeignKeyAction::Cascade)
-                    // )
-                    // .foreign_key(
-                    //     ForeignKey::create()
-                    //         .name("fk_catalog_current_version")
-                    //         .from(CatalogCatalogs::Table, CatalogCatalogs::DcatHasCurrentVersion)
-                    //         .to(CatalogCatalogs::Table, CatalogCatalogs::Id)
-                    //         .on_delete(ForeignKeyAction::Cascade)
-                    // )
-                    // .foreign_key(
-                    //     ForeignKey::create()
-                    //         .name("fk_catalog_previous_version")
-                    //         .from(CatalogCatalogs::Table, CatalogCatalogs::DcatPreviousVersion)
-                    //         .to(CatalogCatalogs::Table, CatalogCatalogs::Id)
-                    //         .on_delete(ForeignKeyAction::Cascade)
-                    // )
-                    // .foreign_key(
-                    //     ForeignKey::create()
-                    //         .name("fk_catalog_replaces")
-                    //         .from(CatalogCatalogs::Table, CatalogCatalogs::DctReplaces)
-                    //         .to(CatalogCatalogs::Table, CatalogCatalogs::Id)
-                    //         .on_delete(ForeignKeyAction::Cascade)
-                    // )
-                    // .foreign_key(
-                    //     ForeignKey::create()
-                    //         .name("fk_catalog_first")
-                    //         .from(CatalogCatalogs::Table, CatalogCatalogs::DcatFirst)
-                    //         .to(CatalogCatalogs::Table, CatalogCatalogs::Id)
-                    //         .on_delete(ForeignKeyAction::Cascade)
-                    // )
-                    // .foreign_key(
-                    //     ForeignKey::create()
-                    //         .name("fk_catalog_last")
-                    //         .from(CatalogCatalogs::Table, CatalogCatalogs::DcatLast)
-                    //         .to(CatalogCatalogs::Table, CatalogCatalogs::Id)
-                    //         .on_delete(ForeignKeyAction::Cascade)
-                    // )
-                    // .foreign_key(
-                    //     ForeignKey::create()
-                    //         .name("fk_catalog_prev")
-                    //         .from(CatalogCatalogs::Table, CatalogCatalogs::DcatPrev)
-                    //         .to(CatalogCatalogs::Table, CatalogCatalogs::Id)
-                    //         .on_delete(ForeignKeyAction::Cascade)
-                    // )
                     .to_owned(),
             )
             .await
@@ -131,8 +82,8 @@ pub enum CatalogCatalogs {
     DctIssued,
     DctModified,
     DctTitle,
-    DspaceParticipantId, // ¿A qué atributo de DCAT corresponde?
-    DspaceMainCatalog, // ¿A qué atributo de DCAT corresponde?
+    DspaceParticipantId,
+    DspaceMainCatalog,
     DctDescription,
     DctAccessRights,
     DcatContactPoint,

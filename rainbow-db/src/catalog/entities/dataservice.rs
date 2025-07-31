@@ -34,6 +34,24 @@ pub struct Model {
     pub dct_title: Option<String>,
     pub dct_description: Option<String>,
     pub catalog_id: String,
+    pub dcat_serves_dataset: String,
+    pub dcat_access_rights: Option<String>,
+    pub ordl_has_policy: String,
+    pub dcat_contact_point: Option<String>,
+    pub dcat_landing_page: Option<String>,
+    pub dct_licence: Option<String>,
+    pub dct_rights: Option<String>,
+    pub dct_publisher: Option<String>,
+    pub prov_qualifed_attribution: Option<String>,
+    pub dcat_has_current_version: Option<String>,
+    pub dcat_version: String,
+    pub dcat_previous_version: Option<String>,
+    pub adms_version_notes: Option<String>,
+    pub dcat_first: Option<String>,
+    pub dcat_last: Option<String>,
+    pub dcat_prev: Option<String>,
+    pub dct_replaces: Option<String>,
+    pub adms_status: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
@@ -46,7 +64,65 @@ pub enum Relation {
     Catalog,
     #[sea_orm(has_many = "super::odrl_offer::Entity")]
     OdrlOffer,
+
+    #[sea_orm(
+        belongs_to = "super::dataset::Entity",
+        from = "Column::DcatServesDataset",
+        to = "super::dataset::Column::Id"
+    )]
+    Dataset,
+
+    #[sea_orm(
+        belongs_to = "super::dataservice::Entity",
+        from = "Column::DcatHasCurrentVersion",
+        to = "Column::Id"
+    )]
+    CurrentVersion,
+
+    #[sea_orm(
+        belongs_to = "super::dataservice::Entity",
+        from = "Column::DcatPreviousVersion",
+        to = "Column::Id"
+    )]
+    PreviousVersion,
+
+    #[sea_orm(
+        belongs_to = "super::dataservice::Entity",
+        from = "Column::DctReplaces",
+        to = "Column::Id"
+    )]
+    Replaces,
+
+    #[sea_orm(
+        belongs_to = "super::dataservice::Entity",
+        from = "Column::DcatLast",
+        to = "Column::Id"
+    )]
+    Last,
+
+    #[sea_orm(
+        belongs_to = "super::dataservice::Entity",
+        from = "Column::DcatFirst",
+        to = "Column::Id"
+    )]
+    First,
+
+    #[sea_orm(
+        belongs_to = "super::dataservice::Entity",
+        from = "Column::DcatPrev",
+        to = "Column::Id"
+    )]
+    Prev,
 }
+
+
+pub struct BelongsToCurrentVersion;
+pub struct BelongsToPreviousVersion;
+pub struct BelongsToReplaces;
+pub struct BelongsToLast;
+pub struct BelongsToFirst;
+pub struct BelongsToPrev;
+
 
 impl Related<super::catalog::Entity> for Entity {
     fn to() -> RelationDef {
@@ -57,6 +133,48 @@ impl Related<super::catalog::Entity> for Entity {
 impl Related<super::odrl_offer::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::OdrlOffer.def()
+    }
+}
+
+impl Related<super::dataset::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Dataset.def()
+    }
+}
+
+impl Related<super::dataservice::Entity> for BelongsToCurrentVersion {
+    fn to() -> RelationDef {
+        Relation::CurrentVersion.def()
+    }
+}
+
+impl Related<super::dataservice::Entity> for BelongsToPreviousVersion {
+    fn to() -> RelationDef {
+        Relation::PreviousVersion.def()
+    }
+}
+
+impl Related<super::dataservice::Entity> for BelongsToReplaces {
+    fn to() -> RelationDef {
+        Relation::Replaces.def()
+    }
+}
+
+impl Related<super::dataservice::Entity> for BelongsToLast {
+    fn to() -> RelationDef {
+        Relation::Last.def()
+    }
+}
+
+impl Related<super::dataservice::Entity> for BelongsToFirst {
+    fn to() -> RelationDef {
+        Relation::First.def()
+    }
+}
+
+impl Related<super::dataservice::Entity> for BelongsToPrev {
+    fn to() -> RelationDef {
+        Relation::Prev.def()
     }
 }
 

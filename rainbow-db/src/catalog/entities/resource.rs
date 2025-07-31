@@ -17,17 +17,23 @@
  *
  */
 
-pub mod catalog;
-pub mod dataservice;
-pub mod dataset;
-pub mod distribution;
-pub mod odrl_offer;
-pub mod dataset_series;
-pub mod keyword;
-pub mod resource;
-pub mod themes;
-pub mod relations;
-pub mod qualified_relations;
-pub mod references;
-pub mod catalog_record;
+// TODO still to be done...
 
+use sea_orm::entity::prelude::*;
+use serde::{Serialize, Deserialize};
+
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
+#[sea_orm(table_name = "cataloged_resource")]
+pub struct Model {
+    #[sea_orm(primary_key)]
+    pub resource_id: String,
+    pub resource_type: String,
+}
+
+#[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
+pub enum Relation {
+
+}
+
+
+impl ActiveModelBehavior for ActiveModel {}

@@ -37,20 +37,6 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(QualifiedRelations::DcatQualifiedRelation).string().not_null())
                     .col(ColumnDef::new(QualifiedRelations::DcatResource1).string().not_null())
                     .col(ColumnDef::new(QualifiedRelations::DcatResource2).string().not_null())
-                    // .foreign_key(
-                    //     ForeignKey::create()
-                    //         .name("fk_relations_resource1")
-                    //         .from(QualifiedRelations::Table, QualifiedRelations::DcatResource1)
-                    //         .to(Resources::Table, Resources::ResourceId)
-                    //         .on_delete(ForeignKeyAction::Cascade)
-                    // )
-                    // .foreign_key(
-                    //     ForeignKey::create()
-                    //         .name("fk_relations_resource2")
-                    //         .from(QualifiedRelations::Table, QualifiedRelations::DcatResource2)
-                    //         .to(Resources::Table, Resources::ResourceId)
-                    //         .on_delete(ForeignKeyAction::Cascade)
-                    // )
                     .to_owned(),
             )
             .await

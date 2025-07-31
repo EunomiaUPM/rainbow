@@ -142,6 +142,18 @@ impl MigrationTrait for Migration {
         manager
             .create_foreign_key(
                 ForeignKey::create()
+                    .name("fk_dataset_inseries")
+                    .from(CatalogDatasets::Table, CatalogDatasets::DcatInSeries)
+                    .to(DatasetSeries::Table, DatasetSeries::Id)
+                    .on_delete(ForeignKeyAction::Cascade)
+                    .on_update(ForeignKeyAction::Cascade)
+                    .to_owned()
+            )
+            .await?;
+
+        manager
+            .create_foreign_key(
+                ForeignKey::create()
                     .name("fk_dataset_ordl_policy")
                     .from(CatalogDatasets::Table, CatalogDatasets::OrdlHasPolicy)
                     .to(CatalogODRLOffers::Table, CatalogODRLOffers::Id)
@@ -238,7 +250,7 @@ impl MigrationTrait for Migration {
         manager
             .create_foreign_key(
                 ForeignKey::create()
-                    .name("fk_distribution_access_service")
+                    .name("fk_distribution_dataservice")
                     .from(CatalogDistributions::Table, CatalogDistributions::AccessServiceId)
                     .to(CatalogDataServices::Table, CatalogDataServices::Id)
                     .on_delete(ForeignKeyAction::Cascade)
@@ -391,10 +403,22 @@ impl MigrationTrait for Migration {
             )
             .await?;
         
+
         manager
             .create_foreign_key(
                 ForeignKey::create()
-                    .name("fk_first_dataset")
+                    .name("fk_dataset_series_inseries")
+                    .from(DatasetSeries::Table, DatasetSeries::DcatInSeries)
+                    .to(DatasetSeries::Table, DatasetSeries::Id)
+                    .on_delete(ForeignKeyAction::Cascade)
+                    .on_update(ForeignKeyAction::Cascade)
+                    .to_owned()
+            )
+            .await?;
+        manager
+            .create_foreign_key(
+                ForeignKey::create()
+                    .name("fk_first_datasetseries")
                     .from(DatasetSeries::Table, DatasetSeries::DcatFirst)
                     .to(DatasetSeries::Table, DatasetSeries::Id)
                     .on_delete(ForeignKeyAction::Cascade)
@@ -406,7 +430,7 @@ impl MigrationTrait for Migration {
         manager
             .create_foreign_key(
                 ForeignKey::create()
-                    .name("fk_last_dataset")
+                    .name("fk_last_datasetseries")
                     .from(DatasetSeries::Table, DatasetSeries::DcatLast)
                     .to(DatasetSeries::Table, DatasetSeries::Id)
                     .on_delete(ForeignKeyAction::Cascade)
@@ -418,7 +442,7 @@ impl MigrationTrait for Migration {
         manager
             .create_foreign_key(
                 ForeignKey::create()
-                    .name("fk_prev_dataset")
+                    .name("fk_prev_datasetseries")
                     .from(DatasetSeries::Table, DatasetSeries::DcatPrev)
                     .to(DatasetSeries::Table, DatasetSeries::Id)
                     .on_delete(ForeignKeyAction::Cascade)
@@ -589,6 +613,15 @@ impl MigrationTrait for Migration {
             )
             .await?;
         
+        manager
+            .drop_foreign_key(
+                ForeignKey::drop()
+                    .name("fk_dataset_inseries")
+                    .table(CatalogDatasets::Table)
+                    .to_owned(),
+            )
+            .await?;
+
         manager
             .drop_foreign_key(
                 ForeignKey::drop()
@@ -777,11 +810,11 @@ impl MigrationTrait for Migration {
                     .to_owned(),
             )
             .await?;
-        
+
         manager
             .drop_foreign_key(
                 ForeignKey::drop()
-                    .name("fk_first_dataset")
+                    .name("fk_dataset_series_inseries")
                     .table(DatasetSeries::Table)
                     .to_owned(),
             )
@@ -790,7 +823,16 @@ impl MigrationTrait for Migration {
         manager
             .drop_foreign_key(
                 ForeignKey::drop()
-                    .name("fk_last_dataset")
+                    .name("fk_first_datasetseries")
+                    .table(DatasetSeries::Table)
+                    .to_owned(),
+            )
+            .await?;
+        
+        manager
+            .drop_foreign_key(
+                ForeignKey::drop()
+                    .name("fk_last_datasetseries")
                     .table(DatasetSeries::Table)
                     .to_owned(),
             )
@@ -799,7 +841,7 @@ impl MigrationTrait for Migration {
         manager
             .drop_foreign_key(
                 ForeignKey::drop()
-                    .name("fk_prev_dataset")
+                    .name("fk_prev_datasetseries")
                     .table(DatasetSeries::Table)
                     .to_owned(),
             )
@@ -809,7 +851,7 @@ impl MigrationTrait for Migration {
             .drop_foreign_key(
                 ForeignKey::drop()
                     .name("fk_themes_resource_id")
-                    .table(Resources::Table)
+                    .table(Themes::Table)
                     .to_owned(),
             )
             .await?;
@@ -818,7 +860,7 @@ impl MigrationTrait for Migration {
             .drop_foreign_key(
                 ForeignKey::drop()
                     .name("fk_keywords_resource_id")
-                    .table(Resources::Table)
+                    .table(Keywords::Table)
                     .to_owned(),
             )
             .await?;
@@ -827,7 +869,7 @@ impl MigrationTrait for Migration {
             .drop_foreign_key(
                 ForeignKey::drop()
                     .name("fk_relations_resource1")
-                    .table(Resources::Table)
+                    .table(Relations::Table)
                     .to_owned()
             )
             .await?;
@@ -836,7 +878,7 @@ impl MigrationTrait for Migration {
             .drop_foreign_key(
                 ForeignKey::drop()
                     .name("fk_relations_resource2")
-                    .table(Resources::Table)
+                    .table(Relations::Table)
                     .to_owned()
             )
             .await?;
@@ -844,8 +886,8 @@ impl MigrationTrait for Migration {
         manager
             .drop_foreign_key(
                 ForeignKey::drop()
-                    .name("fk_relations_resource1")
-                    .table(Resources::Table)
+                    .name("fk_qualified_relations_resource1")
+                    .table(QualifiedRelations::Table)
                     .to_owned()
             )
             .await?;
@@ -853,8 +895,8 @@ impl MigrationTrait for Migration {
         manager
             .drop_foreign_key(
                 ForeignKey::drop()
-                    .name("fk_relations_resource2")
-                    .table(Resources::Table)
+                    .name("fk_qualified_relations_resource2")
+                    .table(QualifiedRelations::Table)
                     .to_owned()
             )
             .await?;
@@ -863,7 +905,7 @@ impl MigrationTrait for Migration {
             .drop_foreign_key(
                 ForeignKey::drop()
                     .name("fk_references_resource")
-                    .table(Resources::Table)
+                    .table(References::Table)
                     .to_owned()
             )
             .await?;

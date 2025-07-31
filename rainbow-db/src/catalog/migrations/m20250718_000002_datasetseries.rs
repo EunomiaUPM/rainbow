@@ -42,7 +42,6 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(DatasetSeries::DctModified).date_time())
                     .col(ColumnDef::new(DatasetSeries::DctTitle).string())
                     .col(ColumnDef::new(DatasetSeries::DctDescription).string())
-                    .col(ColumnDef::new(DatasetSeries::DcatDatasetSeries).string())
                     .col(ColumnDef::new(DatasetSeries::DctSpatial).string())
                     .col(ColumnDef::new(DatasetSeries::DcatSpatialResolutionMeters).float())
                     .col(ColumnDef::new(DatasetSeries::DctTemporal).string())
@@ -56,10 +55,10 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(DatasetSeries::DcatContactPoint).string())
                     .col(ColumnDef::new(DatasetSeries::DctLanguage).string())
                     .col(ColumnDef::new(DatasetSeries::DctRights).string())
-                    .col(ColumnDef::new(DatasetSeries::DctPublisher).string())
+                    .col(ColumnDef::new(DatasetSeries::DctPublisher).string().not_null())
                     .col(ColumnDef::new(DatasetSeries::DctType).string())
                     .col(ColumnDef::new(DatasetSeries::ProvQualifiedAttribution).string())
-                    .col(ColumnDef::new(DatasetSeries::AccrualPeriodicity).string())
+                    .col(ColumnDef::new(DatasetSeries::DctAccrualPeriodicity).string())
                     .col(ColumnDef::new(DatasetSeries::DcatVersion).string().not_null())
                     .col(ColumnDef::new(DatasetSeries::DcatHasCurrentVersion).string().not_null())
                     .col(ColumnDef::new(DatasetSeries::DcatPreviousVersion).string())
@@ -69,34 +68,6 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(DatasetSeries::DctReplaces).string())
                     .col(ColumnDef::new(DatasetSeries::AdmsStatus).string())
                     .col(ColumnDef::new(DatasetSeries::AdmsVersionNotes).string())
-                    // .foreign_key(
-                    //     ForeignKey::create()
-                    //         .name("fk_dataset_series_ordl_policy")
-                    //         .from(DatasetSeries::Table, DatasetSeries::OrdlHasPolicy)
-                    //         .to(CatalogODRLOffers::Table, CatalogODRLOffers::Id)
-                    //         .on_delete(ForeignKeyAction::Cascade),
-                    // )
-                    // .foreign_key(
-                    //     ForeignKey::create()
-                    //         .name("fk_first_dataset")
-                    //         .from(DatasetSeries::Table, DatasetSeries::DcatFirst)
-                    //         .to(DatasetSeries::Table, DatasetSeries::Id)
-                    //         .on_delete(ForeignKeyAction::Cascade),
-                    // )
-                    // .foreign_key(
-                    //     ForeignKey::create()
-                    //         .name("fk_last_dataset")
-                    //         .from(DatasetSeries::Table, DatasetSeries::DcatLast)
-                    //         .to(DatasetSeries::Table, DatasetSeries::Id)
-                    //         .on_delete(ForeignKeyAction::Cascade),
-                    // )
-                    // .foreign_key(
-                    //     ForeignKey::create()
-                    //         .name("fk_prev_dataset")
-                    //         .from(DatasetSeries::Table, DatasetSeries::DcatPrev)
-                    //         .to(DatasetSeries::Table, DatasetSeries::Id)
-                    //         .on_delete(ForeignKeyAction::Cascade),
-                    // )
                     .to_owned(),
                 )
             .await
@@ -118,7 +89,6 @@ pub enum DatasetSeries {
     DctModified,
     DctTitle,
     DctDescription,
-    DcatDatasetSeries,
     DctSpatial,
     DcatSpatialResolutionMeters,
     DctTemporal,
@@ -135,7 +105,7 @@ pub enum DatasetSeries {
     DctPublisher,
     DctType,
     ProvQualifiedAttribution,
-    AccrualPeriodicity,
+    DctAccrualPeriodicity,
     DcatVersion,
     DcatHasCurrentVersion,
     DcatPreviousVersion,

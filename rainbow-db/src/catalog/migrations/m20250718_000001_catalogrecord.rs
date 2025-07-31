@@ -40,13 +40,6 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(CatalogRecord::DctDescription).string().not_null())
                     .col(ColumnDef::new(CatalogRecord::DctIssued).timestamp().not_null())
                     .col(ColumnDef::new(CatalogRecord::FoafPrimaryTopic).string().not_null())
-                    // .foreign_key(
-                    //     ForeignKey::create()
-                    //         .name("fk_catalog_record_catalog")
-                    //         .from(CatalogRecord::Table, CatalogRecord::DcatCatalog)
-                    //         .to(CatalogCatalogs::Table, CatalogCatalogs::Id)
-                    //         .on_delete(ForeignKeyAction::Cascade),
-                    // )
                     .to_owned(),
             )
             .await

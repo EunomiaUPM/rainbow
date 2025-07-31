@@ -37,13 +37,6 @@ impl MigrationTrait for Migration {
                     .table(Keywords::Table)
                     .col(ColumnDef::new(Keywords::KeywordName).string().not_null())
                     .col(ColumnDef::new(Keywords::DcatResource).string().not_null())
-                    // .foreign_key(
-                    //     ForeignKey::create()
-                    //         .name("fk_keywords_resource_id")
-                    //         .from(Keywords::Table, Keywords::DcatResource)
-                    //         .to(Resources::Table, Resources::ResourceId)
-                    //         .on_delete(ForeignKeyAction::Cascade)
-                    // )
                     .to_owned(),
             )
             .await

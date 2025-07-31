@@ -21,29 +21,45 @@ use sea_orm::entity::prelude::*;
 use serde::{Serialize, Deserialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
-#[sea_orm(table_name = "catalog_keywords")]
+#[sea_orm(table_name = "catalog_qualified_relations")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: String,
-    pub keyword: String,
-    pub dcat_resource: String,
+    pub dcat_qualified_relation: String,
+    pub dcat_resource1: String,
+    pub dcat_resource2: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
     #[sea_orm(
         belongs_to = "super::resource::Entity",
-        from = "Column::DcatResource",
+        from = "Column::DcatResource1",
         to = "super::resource::Column::ResourceId"
     )]
-    Keyword,
+    QualifiedRelation1,
+
+    #[sea_orm(
+        belongs_to = "super::resource::Entity",
+        from = "Column::DcatResource2",
+        to = "super::resource::Column::ResourceId"
+    )]
+    QualifiedRelation2,
 }
 
-impl Related<super::resource::Entity> for Entity {
+pub struct ToResource1;
+pub struct ToResource2;
+
+impl Related<super::resource::Entity> for ToResource1 {
     fn to() -> RelationDef {
-        Relation::Keyword.def()
+        Relation::QualifiedRelation1.def()
     }
 }
 
+impl Related<super::resource::Entity> for ToResource2 {
+    fn to() -> RelationDef {
+        Relation::QualifiedRelation2.def()
+    }
+}
 
 impl ActiveModelBehavior for ActiveModel {}
