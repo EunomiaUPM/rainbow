@@ -110,7 +110,7 @@ where
         input: EditDataServiceRequest,
     ) -> anyhow::Result<DataService> {
         let data_service_entity =
-            self.repo.put_data_service_by_id(catalog_id.clone(), data_service_id, input.into()).await.map_err(
+            self.repo.put_data_service_by_id(data_service_id, input.into()).await.map_err(
                 |err| match err {
                     rainbow_db::catalog::repo::CatalogRepoErrors::DataServiceNotFound => {
                         CatalogError::NotFound { id: catalog_id, entity: EntityTypes::DataService.to_string() }
@@ -130,7 +130,7 @@ where
     }
 
     async fn delete_data_service(&self, catalog_id: Urn, dataset_id: Urn) -> anyhow::Result<()> {
-        let _ = self.repo.delete_data_service_by_id(catalog_id.clone(), dataset_id.clone()).await.map_err(|err| match err {
+        let _ = self.repo.delete_data_service_by_id(dataset_id.clone()).await.map_err(|err| match err {
             rainbow_db::catalog::repo::CatalogRepoErrors::DataServiceNotFound => {
                 CatalogError::NotFound { id: catalog_id, entity: EntityTypes::DataService.to_string() }
             }

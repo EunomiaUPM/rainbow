@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 /*
  *
  *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
@@ -16,37 +18,47 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::catalog::entities::catalog;
-use crate::catalog::entities::catalog_record;
-use crate::catalog::entities::dataservice;
-use crate::catalog::entities::dataset;
-use crate::catalog::entities::dataset_series;
-use crate::catalog::entities::distribution;
-use crate::catalog::entities::keyword;
-use crate::catalog::entities::odrl_offer;
 
-use crate::catalog::entities::catalog::Model;
-use crate::catalog::entities::themes;
-use crate::catalog::repo::CatalogRecordRepo;
-use crate::catalog::repo::DatasetSeriesRepo;
-use crate::catalog::repo::EditCatalogRecordModel;
-use crate::catalog::repo::EditDatasetSeriesModel;
-use crate::catalog::repo::NewCatalogRecordModel;
-use crate::catalog::repo::NewDatasetSeriesModel;
-use crate::catalog::repo::{
-    CatalogRepo, CatalogRepoErrors, CatalogRepoFactory, DataServiceRepo, DatasetRepo, DistributionRepo,
-    EditCatalogModel, EditDataServiceModel, EditDatasetModel, EditDistributionModel, NewCatalogModel,
-    NewDataServiceModel, NewDatasetModel, NewDistributionModel, NewOdrlOfferModel, OdrlOfferRepo,
-};
 use axum::async_trait;
+
 use rainbow_common::dcat_formats::DctFormats;
 use rainbow_common::utils::get_urn;
+
+use sea_orm::sqlx::types::uuid;
+use sea_orm::Condition;
 use sea_orm::SelectGetableTuple;
 use sea_orm::{
     ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, ModelTrait, QueryFilter, QuerySelect,
 };
 use sea_orm_migration::async_trait;
+
 use urn::Urn;
+
+use crate::catalog::entities::catalog::Model;
+
+use crate::catalog::entities::{catalog, catalog_record, dataservice, dataset,
+    dataset_series, distribution, keyword, odrl_offer, relations, qualified_relations, resource,
+    themes
+};
+
+use crate::catalog::repo::{CatalogRepo, CatalogRepoErrors, CatalogRepoFactory};
+
+use crate::catalog::repo::{
+    CatalogRecordRepo, DataServiceRepo, DatasetRepo, DatasetSeriesRepo, DistributionRepo,
+    OdrlOfferRepo, RelationRepo, QualifiedRelationRepo, 
+};
+
+use crate::catalog::repo::{
+    NewCatalogModel, NewCatalogRecordModel, NewDataServiceModel, NewDatasetModel,
+    NewDatasetSeriesModel, NewDistributionModel, NewOdrlOfferModel, NewRelationModel, 
+    NewQualifiedRelationModel, 
+};
+
+use crate::catalog::repo::{
+    EditCatalogModel, EditCatalogRecordModel, EditDataServiceModel, EditDatasetModel,
+    EditDatasetSeriesModel, EditDistributionModel, EditRelationModel, EditQualifiedRelationModel
+};
+
 
 pub struct CatalogRepoForSql {
     db_connection: DatabaseConnection,
@@ -184,16 +196,8 @@ impl CatalogRepo for CatalogRepoForSql {
         catalog_id: Urn,
         edit_catalog_model: EditCatalogModel,
     ) -> anyhow::Result<catalog::Model, CatalogRepoErrors> {
-        let catalog_id = catalog_id.to_string();
-        let old_model = catalog::Entity::find_by_id(catalog_id).one(&self.db_connection).await;
-        let old_model = match old_model {
-            Ok(old_model) => match old_model {
-                Some(old_model) => old_model,
-                None => return Err(CatalogRepoErrors::CatalogNotFound),
-            },
-            Err(err) => return Err(CatalogRepoErrors::ErrorFetchingCatalog(err.into())),
-        };
-
+        let old_model = self.get_catalog_by_id(catalog_id.clone()).await?
+            .ok_or(CatalogRepoErrors::CatalogNotFound)?;
         let mut old_active_model: catalog::ActiveModel = old_model.into();
         if let Some(foaf_home_page) = edit_catalog_model.foaf_home_page {
             old_active_model.foaf_home_page = ActiveValue::Set(Some(foaf_home_page));
@@ -206,6 +210,69 @@ impl CatalogRepo for CatalogRepoForSql {
         }
         if let Some(dct_title) = edit_catalog_model.dct_title {
             old_active_model.dct_title = ActiveValue::Set(Some(dct_title));
+        }
+        if let Some(dct_identifier) = edit_catalog_model.dct_identifier {
+            old_active_model.dct_identifier = ActiveValue::Set(dct_identifier);
+        }
+        if let Some(dct_issued) = edit_catalog_model.dct_issued {
+            old_active_model.dct_issued = ActiveValue::Set(dct_issued);
+        }
+        if let Some(dspace_participant_id) = edit_catalog_model.dspace_participant_id {
+            old_active_model.dspace_participant_id = ActiveValue::Set(Some(dspace_participant_id));
+        }
+        if let Some(dspace_main_catalog) = edit_catalog_model.dspace_main_catalog {
+            old_active_model.dspace_main_catalog = ActiveValue::Set(dspace_main_catalog);
+        }
+        if let Some(dct_description) = edit_catalog_model.dct_description {
+            old_active_model.dct_description = ActiveValue::Set(Some(dct_description));
+        }
+        if let Some(dct_access_rights) = edit_catalog_model.dct_access_rights {
+            old_active_model.dct_access_rights = ActiveValue::Set(Some(dct_access_rights));
+        }
+        if let Some(dcat_contact_point) = edit_catalog_model.dcat_contact_point {
+            old_active_model.dcat_contact_point = ActiveValue::Set(Some(dcat_contact_point));
+        }
+        if let Some(ordl_has_policy) = edit_catalog_model.ordl_has_policy {
+            old_active_model.ordl_has_policy = ActiveValue::Set(ordl_has_policy);
+        }
+        if let Some(dcat_landing_page) = edit_catalog_model.dcat_landing_page {
+            old_active_model.dcat_landing_page = ActiveValue::Set(Some(dcat_landing_page));
+        }
+        if let Some(dct_licence) = edit_catalog_model.dct_licence {
+            old_active_model.dct_licence = ActiveValue::Set(Some(dct_licence));
+        }
+        if let Some(dct_publisher) = edit_catalog_model.dct_publisher {
+            old_active_model.dct_publisher = ActiveValue::Set(Some(dct_publisher));
+        }
+        if let Some(prov_qualified_attribution) = edit_catalog_model.prov_qualified_attribution {
+            old_active_model.prov_qualified_attribution = ActiveValue::Set(Some(prov_qualified_attribution));
+        }
+        if let Some(dcat_has_current_version) = edit_catalog_model.dcat_has_current_version {
+            old_active_model.dcat_has_current_version = ActiveValue::Set(Some(dcat_has_current_version));
+        }
+        if let Some(dcat_version) = edit_catalog_model.dcat_version {
+            old_active_model.dcat_version = ActiveValue::Set(dcat_version);
+        }
+        if let Some(dcat_previous_version) = edit_catalog_model.dcat_previous_version {
+            old_active_model.dcat_previous_version = ActiveValue::Set(Some(dcat_previous_version));
+        }
+        if let Some(adms_version_notes) = edit_catalog_model.adms_version_notes {
+            old_active_model.adms_version_notes = ActiveValue::Set(Some(adms_version_notes));
+        }
+        if let Some(dcat_first) = edit_catalog_model.dcat_first {
+            old_active_model.dcat_first = ActiveValue::Set(Some(dcat_first));
+        }
+        if let Some(dcat_last) = edit_catalog_model.dcat_last {
+            old_active_model.dcat_last = ActiveValue::Set(Some(dcat_last));
+        }
+        if let Some(dcat_prev) = edit_catalog_model.dcat_prev {
+            old_active_model.dcat_prev = ActiveValue::Set(Some(dcat_prev));
+        }
+        if let Some(dct_replaces) = edit_catalog_model.dct_replaces {
+            old_active_model.dct_replaces = ActiveValue::Set(Some(dct_replaces));
+        }
+        if let Some(adms_status) = edit_catalog_model.adms_status {
+            old_active_model.adms_status = ActiveValue::Set(Some(adms_status));
         }
         old_active_model.dct_modified = ActiveValue::Set(Some(chrono::Utc::now().naive_utc()));
 
@@ -456,30 +523,11 @@ impl DatasetRepo for CatalogRepoForSql {
     }
     async fn put_datasets_by_id(
         &self,
-        catalog_id: Urn,
         dataset_id: Urn,
         edit_dataset_model: EditDatasetModel,
     ) -> anyhow::Result<dataset::Model, CatalogRepoErrors> {
-        let dataset_id = dataset_id.to_string();
-        let catalog_id = catalog_id.to_string();
-
-        let catalog = catalog::Entity::find_by_id(catalog_id.clone())
-            .one(&self.db_connection)
-            .await
-            .map_err(|e| CatalogRepoErrors::ErrorFetchingCatalog(e.into()))?;
-        if catalog.is_none() {
-            return Err(CatalogRepoErrors::CatalogNotFound);
-        }
-
-        let old_model = dataset::Entity::find_by_id(dataset_id).one(&self.db_connection).await;
-        let old_model = match old_model {
-            Ok(old_model) => match old_model {
-                Some(old_model) => old_model,
-                None => return Err(CatalogRepoErrors::DatasetNotFound),
-            },
-            Err(err) => return Err(CatalogRepoErrors::ErrorFetchingDataset(err.into())),
-        };
-
+        let old_model = self.get_datasets_by_id(dataset_id.clone()).await?
+            .ok_or(CatalogRepoErrors::DatasetNotFound)?;
         let mut old_active_model: dataset::ActiveModel = old_model.into();
         if let Some(dct_conforms_to) = edit_dataset_model.dct_conforms_to {
             old_active_model.dct_conforms_to = ActiveValue::Set(Some(dct_conforms_to));
@@ -492,6 +540,81 @@ impl DatasetRepo for CatalogRepoForSql {
         }
         if let Some(dct_description) = edit_dataset_model.dct_description {
             old_active_model.dct_description = ActiveValue::Set(Some(dct_description));
+        }
+        if let Some(dct_identifier) = edit_dataset_model.dct_identifier {
+            old_active_model.dct_identifier = ActiveValue::Set(Some(dct_identifier));
+        }
+        if let Some(dct_issued) = edit_dataset_model.dct_issued {
+            old_active_model.dct_issued = ActiveValue::Set(dct_issued);
+        }
+        if let Some(catalog_id) = edit_dataset_model.catalog_id {
+            old_active_model.catalog_id = ActiveValue::Set(catalog_id);
+        }
+        if let Some(dcat_inseries) = edit_dataset_model.dcat_inseries {
+            old_active_model.dcat_inseries = ActiveValue::Set(Some(dcat_inseries));
+        }
+        if let Some(dct_spatial) = edit_dataset_model.dct_spatial {
+            old_active_model.dct_spatial = ActiveValue::Set(Some(dct_spatial));
+        }
+        if let Some(dcat_spatial_resolution_meters) = edit_dataset_model.dcat_spatial_resolution_meters {
+            old_active_model.dcat_spatial_resolution_meters = ActiveValue::Set(Some(dcat_spatial_resolution_meters));
+        }
+        if let Some(dct_temporal) = edit_dataset_model.dct_temporal {
+            old_active_model.dct_temporal = ActiveValue::Set(Some(dct_temporal));
+        }
+        if let Some(dct_temporal_resolution) = edit_dataset_model.dct_temporal_resolution {
+            old_active_model.dct_temporal_resolution = ActiveValue::Set(Some(dct_temporal_resolution));
+        }
+        if let Some(prov_generated_by) = edit_dataset_model.prov_generated_by {
+            old_active_model.prov_generated_by = ActiveValue::Set(Some(prov_generated_by));
+        }
+        if let Some(dct_access_rights) = edit_dataset_model.dct_access_rights {
+            old_active_model.dct_access_rights = ActiveValue::Set(Some(dct_access_rights));
+        }
+        if let Some(dct_license) = edit_dataset_model.dct_license {
+            old_active_model.dct_license = ActiveValue::Set(Some(dct_license));
+        }
+        if let Some(ordl_has_policy) = edit_dataset_model.ordl_has_policy {
+            old_active_model.ordl_has_policy = ActiveValue::Set(ordl_has_policy);
+        }
+        if let Some(dcat_landing_page) = edit_dataset_model.dcat_landing_page {
+            old_active_model.dcat_landing_page = ActiveValue::Set(Some(dcat_landing_page));
+        }
+        if let Some(dcat_contact_point) = edit_dataset_model.dcat_contact_point {
+            old_active_model.dcat_contact_point = ActiveValue::Set(Some(dcat_contact_point));
+        }
+        if let Some(dct_language) = edit_dataset_model.dct_language {
+            old_active_model.dct_language = ActiveValue::Set(Some(dct_language));
+        }
+        if let Some(dct_rights) = edit_dataset_model.dct_rights {
+            old_active_model.dct_rights = ActiveValue::Set(Some(dct_rights));
+        }
+        if let Some(dct_replaces) = edit_dataset_model.dct_replaces {
+            old_active_model.dct_replaces = ActiveValue::Set(Some(dct_replaces));
+        }
+        if let Some(dcat_has_current_version) = edit_dataset_model.dcat_has_current_version {
+            old_active_model.dcat_has_current_version = ActiveValue::Set(Some(dcat_has_current_version));
+        }
+        if let Some(dcat_version) = edit_dataset_model.dcat_version {
+            old_active_model.dcat_version = ActiveValue::Set(dcat_version);
+        }
+        if let Some(dcat_previous_version) = edit_dataset_model.dcat_previous_version {
+            old_active_model.dcat_previous_version = ActiveValue::Set(Some(dcat_previous_version));
+        }
+        if let Some(adms_version_notes) = edit_dataset_model.adms_version_notes {
+            old_active_model.adms_version_notes = ActiveValue::Set(Some(adms_version_notes));
+        }
+        if let Some(dcat_first) = edit_dataset_model.dcat_first {
+            old_active_model.dcat_first = ActiveValue::Set(Some(dcat_first));
+        }
+        if let Some(dcat_last) = edit_dataset_model.dcat_last {
+            old_active_model.dcat_last = ActiveValue::Set(Some(dcat_last));
+        }
+        if let Some(dcat_prev) = edit_dataset_model.dcat_prev {
+            old_active_model.dcat_prev = ActiveValue::Set(Some(dcat_prev));
+        }
+        if let Some(adms_status) = edit_dataset_model.adms_status {
+            old_active_model.adms_status = ActiveValue::Set(Some(adms_status));
         }
         old_active_model.dct_modified = ActiveValue::Set(Some(chrono::Utc::now().naive_utc()));
 
@@ -507,16 +630,8 @@ impl DatasetRepo for CatalogRepoForSql {
         catalog_id: Urn,
         new_dataset_model: NewDatasetModel,
     ) -> anyhow::Result<dataset::Model, CatalogRepoErrors> {
-        let catalog_id = catalog_id.to_string();
-
-        let catalog = catalog::Entity::find_by_id(catalog_id.clone())
-            .one(&self.db_connection)
-            .await
-            .map_err(|e| CatalogRepoErrors::ErrorFetchingCatalog(e.into()))?;
-        if catalog.is_none() {
-            return Err(CatalogRepoErrors::CatalogNotFound);
-        }
-
+        let catalog = self.get_catalog_by_id(catalog_id.clone()).await?
+            .ok_or(CatalogRepoErrors::CatalogNotFound)?;
         let urn = new_dataset_model.id.unwrap_or_else(|| get_urn(None));
         let model = dataset::ActiveModel {
             id:ActiveValue::Set(urn.to_string()),
@@ -527,7 +642,7 @@ impl DatasetRepo for CatalogRepoForSql {
             dct_modified:ActiveValue::Set(None),
             dct_title:ActiveValue::Set(new_dataset_model.dct_title),
             dct_description:ActiveValue::Set(new_dataset_model.dct_description),
-            catalog_id:ActiveValue::Set(catalog_id),
+            catalog_id:ActiveValue::Set(catalog_id.to_string()),
             dcat_inseries:ActiveValue::Set(new_dataset_model.dcat_inseries),
             dct_spatial:ActiveValue::Set(new_dataset_model.dct_spatial),
             dcat_spatial_resolution_meters:ActiveValue::Set(new_dataset_model.dcat_spatial_resolution_meters),
@@ -736,49 +851,11 @@ impl DistributionRepo for CatalogRepoForSql {
     }
     async fn put_distribution_by_id(
         &self,
-        catalog_id: Urn,
-        dataset_id: Urn,
         distribution_id: Urn,
         edit_distribution_model: EditDistributionModel,
     ) -> anyhow::Result<distribution::Model, CatalogRepoErrors> {
-        let distribution_id = distribution_id.to_string();
-        let catalog_id = catalog_id.to_string();
-        let dataset_id = dataset_id.to_string();
-
-        let catalog = catalog::Entity::find_by_id(catalog_id.clone())
-            .one(&self.db_connection)
-            .await
-            .map_err(|e| CatalogRepoErrors::ErrorFetchingCatalog(e.into()))?;
-        if catalog.is_none() {
-            return Err(CatalogRepoErrors::CatalogNotFound);
-        }
-
-        let dataset = dataset::Entity::find_by_id(dataset_id.clone())
-            .one(&self.db_connection)
-            .await
-            .map_err(|e| CatalogRepoErrors::ErrorFetchingDataset(e.into()))?;
-        if dataset.is_none() {
-            return Err(CatalogRepoErrors::DatasetNotFound);
-        }
-
-        if let Some(ds) = edit_distribution_model.dcat_access_service.clone() {
-            let data_service = dataservice::Entity::find_by_id(ds)
-                .one(&self.db_connection)
-                .await
-                .map_err(|e| CatalogRepoErrors::ErrorFetchingDataService(e.into()))?;
-            if data_service.is_none() {
-                return Err(CatalogRepoErrors::DataServiceNotFound);
-            }
-        }
-
-        let old_model = distribution::Entity::find_by_id(distribution_id).one(&self.db_connection).await;
-        let old_model = match old_model {
-            Ok(old_model) => match old_model {
-                Some(old_model) => old_model,
-                None => return Err(CatalogRepoErrors::DistributionNotFound),
-            },
-            Err(err) => return Err(CatalogRepoErrors::ErrorFetchingDistribution(err.into())),
-        };
+        let old_model = self.get_distribution_by_id(distribution_id.clone()).await?
+            .ok_or(CatalogRepoErrors::DistributionNotFound)?;
         let mut old_active_model: distribution::ActiveModel = old_model.into();
         if let Some(dct_title) = edit_distribution_model.dct_title {
             old_active_model.dct_title = ActiveValue::Set(Some(dct_title));
@@ -787,7 +864,67 @@ impl DistributionRepo for CatalogRepoForSql {
             old_active_model.dct_description = ActiveValue::Set(Some(dct_description));
         }
         if let Some(dcat_access_service) = edit_distribution_model.dcat_access_service {
-            old_active_model.dcat_access_service = ActiveValue::Set(dcat_access_service);
+            old_active_model.dcat_access_service = ActiveValue::Set(dcat_access_service.to_string());
+        }
+        if let Some(dct_issued) = edit_distribution_model.dct_issued {
+            old_active_model.dct_issued = ActiveValue::Set(dct_issued);
+        }
+        if let Some(dataset_id) = edit_distribution_model.dataset_id {
+            old_active_model.dataset_id = ActiveValue::Set(dataset_id);
+        }
+        if let Some(dct_format) = edit_distribution_model.dct_format {
+            old_active_model.dct_format = ActiveValue::Set(Some(dct_format.to_string()));
+        }
+        if let Some(dcat_inseries) = edit_distribution_model.dcat_inseries {
+            old_active_model.dcat_inseries = ActiveValue::Set(dcat_inseries);
+        }
+        if let Some(dcat_access_url) = edit_distribution_model.dcat_access_url {
+            old_active_model.dcat_access_url = ActiveValue::Set(Some(dcat_access_url));
+        }
+        if let Some(dcat_download_url) = edit_distribution_model.dcat_download_url {
+            old_active_model.dcat_download_url = ActiveValue::Set(Some(dcat_download_url));
+        }
+        if let Some(dct_access_rights) = edit_distribution_model.dct_access_rights {
+            old_active_model.dct_access_rights = ActiveValue::Set(Some(dct_access_rights));
+        }
+        if let Some(ordl_has_policy) = edit_distribution_model.ordl_has_policy {
+            old_active_model.ordl_has_policy = ActiveValue::Set(ordl_has_policy);
+        }
+        if let Some(dct_conforms_to) = edit_distribution_model.dct_conforms_to {
+            old_active_model.dct_conforms_to = ActiveValue::Set(Some(dct_conforms_to));
+        }
+        if let Some(dct_media_type) = edit_distribution_model.dct_media_type {
+            old_active_model.dct_media_type = ActiveValue::Set(Some(dct_media_type));
+        }
+        if let Some(dcat_compress_format) = edit_distribution_model.dcat_compress_format {
+            old_active_model.dcat_compress_format = ActiveValue::Set(Some(dcat_compress_format));
+        }
+        if let Some(dcat_package_format) = edit_distribution_model.dcat_package_format {
+            old_active_model.dcat_package_format = ActiveValue::Set(Some(dcat_package_format));
+        }
+        if let Some(dct_licence) = edit_distribution_model.dct_licence {
+            old_active_model.dct_licence = ActiveValue::Set(Some(dct_licence));
+        }
+        if let Some(dct_rights) = edit_distribution_model.dct_rights {
+            old_active_model.dct_rights = ActiveValue::Set(dct_rights);
+        }
+        if let Some(dct_spatial) = edit_distribution_model.dct_spatial {
+            old_active_model.dct_spatial = ActiveValue::Set(Some(dct_spatial));
+        }
+        if let Some(dct_temporal) = edit_distribution_model.dct_temporal {
+            old_active_model.dct_temporal = ActiveValue::Set(Some(dct_temporal));
+        }
+        if let Some(dcat_spatial_resolution_meters) = edit_distribution_model.dcat_spatial_resolution_meters {
+            old_active_model.dcat_spatial_resolution_meters = ActiveValue::Set(Some(dcat_spatial_resolution_meters));
+        }
+        if let Some(dct_temporal_resolution) = edit_distribution_model.dct_temporal_resolution {
+            old_active_model.dct_temporal_resolution = ActiveValue::Set(Some(dct_temporal_resolution));
+        }
+        if let Some(dcat_byte_size) = edit_distribution_model.dcat_byte_size {
+            old_active_model.dcat_byte_size = ActiveValue::Set(Some(dcat_byte_size));
+        }
+        if let Some(spdc_checksum) = edit_distribution_model.spdc_checksum {
+            old_active_model.spdc_checksum = ActiveValue::Set(spdc_checksum);
         }
         old_active_model.dct_modified = ActiveValue::Set(Some(chrono::Utc::now().naive_utc()));
         let model = old_active_model.update(&self.db_connection).await;
@@ -822,7 +959,7 @@ impl DistributionRepo for CatalogRepoForSql {
             return Err(CatalogRepoErrors::DatasetNotFound);
         }
 
-        let data_service = dataservice::Entity::find_by_id(new_distribution_model.dcat_access_service.clone())
+        let data_service = dataservice::Entity::find_by_id(new_distribution_model.dcat_access_service.to_string())
             .one(&self.db_connection)
             .await
             .map_err(|e| CatalogRepoErrors::ErrorFetchingDataService(e.into()))?;
@@ -837,7 +974,7 @@ impl DistributionRepo for CatalogRepoForSql {
             dct_modified:ActiveValue::Set(None),
             dct_title:ActiveValue::Set(new_distribution_model.dct_title),
             dct_description:ActiveValue::Set(new_distribution_model.dct_description),
-            dcat_access_service:ActiveValue::Set(new_distribution_model.dcat_access_service),
+            dcat_access_service:ActiveValue::Set(new_distribution_model.dcat_access_service.to_string()),
             dataset_id:ActiveValue::Set(dataset_id),
             dct_format:ActiveValue::Set(new_distribution_model.dct_format.map(|f|f.to_string())),
             dcat_inseries:ActiveValue::Set(new_distribution_model.dcat_inseries),
@@ -953,33 +1090,15 @@ impl DataServiceRepo for CatalogRepoForSql {
             Err(err) => Err(CatalogRepoErrors::ErrorFetchingDataService(err.into())),
         }
     }
-
     async fn put_data_service_by_id(
         &self,
-        catalog_id: Urn,
         data_service_id: Urn,
         edit_data_service_model: EditDataServiceModel,
     ) -> anyhow::Result<dataservice::Model, CatalogRepoErrors> {
-        let data_service_id = data_service_id.to_string();
-        let catalog_id = catalog_id.to_string();
-
-        let catalog = catalog::Entity::find_by_id(catalog_id.clone())
-            .one(&self.db_connection)
-            .await
-            .map_err(|e| CatalogRepoErrors::ErrorFetchingCatalog(e.into()))?;
-        if catalog.is_none() {
-            return Err(CatalogRepoErrors::CatalogNotFound);
-        }
-
-        let old_model = dataservice::Entity::find_by_id(data_service_id).one(&self.db_connection).await;
-        let old_model = match old_model {
-            Ok(old_model) => match old_model {
-                Some(old_model) => old_model,
-                None => return Err(CatalogRepoErrors::DataServiceNotFound),
-            },
-            Err(err) => return Err(CatalogRepoErrors::ErrorFetchingDataService(err.into())),
-        };
+        let old_model = self.get_data_service_by_id(data_service_id.clone()).await?
+            .ok_or(CatalogRepoErrors::DataServiceNotFound)?;
         let mut old_active_model: dataservice::ActiveModel = old_model.into();
+
         if let Some(dcat_endpoint_description) = edit_data_service_model.dcat_endpoint_description {
             old_active_model.dcat_endpoint_description = ActiveValue::Set(Some(dcat_endpoint_description));
         }
@@ -998,7 +1117,69 @@ impl DataServiceRepo for CatalogRepoForSql {
         if let Some(dct_description) = edit_data_service_model.dct_description {
             old_active_model.dct_description = ActiveValue::Set(Some(dct_description));
         }
-
+        if let Some(dct_identifier) = edit_data_service_model.dct_identifier {
+            old_active_model.dct_identifier = ActiveValue::Set(Some(dct_identifier));
+        }
+        if let Some(dct_issued) = edit_data_service_model.dct_issued {
+            old_active_model.dct_issued = ActiveValue::Set(dct_issued);
+        }
+        if let Some(catalog_id) = edit_data_service_model.catalog_id {
+            old_active_model.catalog_id = ActiveValue::Set(catalog_id);
+        }
+        if let Some(dcat_serves_dataset) = edit_data_service_model.dcat_serves_dataset {
+            old_active_model.dcat_serves_dataset = ActiveValue::Set(dcat_serves_dataset);
+        }
+        if let Some(dcat_access_rights) = edit_data_service_model.dcat_access_rights {
+            old_active_model.dcat_access_rights = ActiveValue::Set(Some(dcat_access_rights));
+        }
+        if let Some(ordl_has_policy) = edit_data_service_model.ordl_has_policy {
+            old_active_model.ordl_has_policy = ActiveValue::Set(ordl_has_policy);
+        }
+        if let Some(dcat_contact_point) = edit_data_service_model.dcat_contact_point {
+            old_active_model.dcat_contact_point = ActiveValue::Set(Some(dcat_contact_point));
+        }
+        if let Some(dcat_landing_page) = edit_data_service_model.dcat_landing_page {
+            old_active_model.dcat_landing_page = ActiveValue::Set(Some(dcat_landing_page));
+        }
+        if let Some(dct_licence) = edit_data_service_model.dct_licence {
+            old_active_model.dct_licence = ActiveValue::Set(Some(dct_licence));
+        }
+        if let Some(dct_rights) = edit_data_service_model.dct_rights {
+            old_active_model.dct_rights = ActiveValue::Set(Some(dct_rights));
+        }
+        if let Some(dct_publisher) = edit_data_service_model.dct_publisher {
+            old_active_model.dct_publisher = ActiveValue::Set(Some(dct_publisher));
+        }
+        if let Some(prov_qualifed_attribution) = edit_data_service_model.prov_qualifed_attribution {
+            old_active_model.prov_qualifed_attribution = ActiveValue::Set(Some(prov_qualifed_attribution));
+        }
+        if let Some(dcat_has_current_version) = edit_data_service_model.dcat_has_current_version {
+            old_active_model.dcat_has_current_version = ActiveValue::Set(Some(dcat_has_current_version));
+        }
+        if let Some(dcat_version) = edit_data_service_model.dcat_version {
+            old_active_model.dcat_version = ActiveValue::Set(dcat_version);
+        }
+        if let Some(dcat_previous_version) = edit_data_service_model.dcat_previous_version {
+            old_active_model.dcat_previous_version = ActiveValue::Set(Some(dcat_previous_version));
+        }
+        if let Some(adms_version_notes) = edit_data_service_model.adms_version_notes {
+            old_active_model.adms_version_notes = ActiveValue::Set(Some(adms_version_notes));
+        }
+        if let Some(dcat_first) = edit_data_service_model.dcat_first {
+            old_active_model.dcat_first = ActiveValue::Set(Some(dcat_first));
+        }
+        if let Some(dcat_last) = edit_data_service_model.dcat_last {
+            old_active_model.dcat_last = ActiveValue::Set(Some(dcat_last));
+        }
+        if let Some(dcat_prev) = edit_data_service_model.dcat_prev {
+            old_active_model.dcat_prev = ActiveValue::Set(Some(dcat_prev));
+        }
+        if let Some(dct_replaces) = edit_data_service_model.dct_replaces {
+            old_active_model.dct_replaces = ActiveValue::Set(Some(dct_replaces));
+        }
+        if let Some(adms_status) = edit_data_service_model.adms_status {
+            old_active_model.adms_status = ActiveValue::Set(Some(adms_status));
+        }
         old_active_model.dct_modified = ActiveValue::Set(Some(chrono::Utc::now().naive_utc()));
         let model = old_active_model.update(&self.db_connection).await;
         match model {
@@ -1062,20 +1243,9 @@ impl DataServiceRepo for CatalogRepoForSql {
 
     async fn delete_data_service_by_id(
         &self,
-        catalog_id: Urn,
         data_service_id: Urn,
     ) -> anyhow::Result<(), CatalogRepoErrors> {
         let data_service_id = data_service_id.to_string();
-        let catalog_id = catalog_id.to_string();
-
-        let catalog = catalog::Entity::find_by_id(catalog_id.clone())
-            .one(&self.db_connection)
-            .await
-            .map_err(|e| CatalogRepoErrors::ErrorFetchingCatalog(e.into()))?;
-        if catalog.is_none() {
-            return Err(CatalogRepoErrors::CatalogNotFound);
-        }
-
         let data_service = dataservice::Entity::delete_by_id(data_service_id).exec(&self.db_connection).await;
         match data_service {
             Ok(delete_result) => match delete_result.rows_affected {
@@ -1264,15 +1434,8 @@ impl DatasetSeriesRepo for CatalogRepoForSql {
         dataset_series_id: Urn,
         edit_dataset_series_model: EditDatasetSeriesModel,
     ) -> anyhow::Result<dataset_series::Model, CatalogRepoErrors> {
-        let dataset_series_id = dataset_series_id.to_string();
-        let old_model = dataset_series::Entity::find_by_id(dataset_series_id).one(&self.db_connection).await;
-        let old_model = match old_model {
-            Ok(old_model) => match old_model {
-                Some(old_model) => old_model,
-                None => return Err(CatalogRepoErrors::DatasetSeriesNotfound),
-            },
-            Err(err) => return Err(CatalogRepoErrors::ErrorFetchingDatasetSeries(err.into()))
-        };
+        let old_model = self.get_dataset_series_by_id(dataset_series_id.clone()).await?
+            .ok_or(CatalogRepoErrors::DatasetSeriesNotfound)?;        
         let mut old_active_model: dataset_series::ActiveModel = old_model.into();
         if let Some(dct_conforms_to) = edit_dataset_series_model.dct_conforms_to {
             old_active_model.dct_conforms_to = ActiveValue::Set(Some(dct_conforms_to));
@@ -1410,6 +1573,16 @@ impl CatalogRecordRepo for CatalogRepoForSql {
             Err(err) => Err(CatalogRepoErrors::ErrorFetchingCatalogRecords(err.into())),
         }
     }
+    async fn get_catalog_record_by_id (
+        &self,
+        catalog_record_id: Urn,
+    ) -> anyhow::Result<Option<catalog_record::Model>, CatalogRepoErrors> {
+        let catalog_record = catalog_record::Entity::find_by_id(catalog_record_id.to_string()).one(&self.db_connection).await;
+        match catalog_record {
+            Ok(catalog_record) => Ok(catalog_record),
+            Err(err) => Err(CatalogRepoErrors::ErrorFetchingCatalogRecords(err.into())),
+        }
+    }
     async fn get_all_catalog_records_by_catalog_id(
         &self,
         catalog_id: Urn,
@@ -1434,9 +1607,8 @@ impl CatalogRecordRepo for CatalogRepoForSql {
         &self,
         new_catalog_record_model: NewCatalogRecordModel,
     ) -> anyhow::Result<catalog_record::Model, CatalogRepoErrors> {
-        let urn = new_catalog_record_model.id.unwrap_or_else(|| get_urn(None));
         let model = catalog_record::ActiveModel {
-            id:ActiveValue::Set(urn.to_string()),
+            id:ActiveValue::Set(uuid::Uuid::new_v4().to_string()),
             dcat_catalog:ActiveValue::Set(new_catalog_record_model.dcat_catalog),
             dct_title:ActiveValue::Set(new_catalog_record_model.dct_title),
             dct_description:ActiveValue::Set(new_catalog_record_model.dct_description),
@@ -1454,15 +1626,8 @@ impl CatalogRecordRepo for CatalogRepoForSql {
         catalog_record_id: Urn,
         edit_catalog_record_model: EditCatalogRecordModel,
     ) -> anyhow::Result<catalog_record::Model, CatalogRepoErrors> {
-        let catalog_record_id = catalog_record_id.to_string();
-        let old_model = catalog_record::Entity::find_by_id(catalog_record_id).one(&self.db_connection).await;
-        let old_model = match old_model {
-            Ok(old_model) => match old_model {
-                Some(old_model) => old_model,
-                None => return Err(CatalogRepoErrors::CatalogRecordNotfound),
-            },
-            Err(err) => return Err(CatalogRepoErrors::ErrorFetchingCatalogRecords(err.into())),
-        };
+        let old_model = self.get_catalog_record_by_id(catalog_record_id.clone()).await?
+            .ok_or(CatalogRepoErrors::CatalogRecordNotfound)?;
         let mut old_active_model: catalog_record::ActiveModel = old_model.into();
 
         if let Some(dcat_catalog) = edit_catalog_record_model.dcat_catalog {
@@ -1500,4 +1665,353 @@ impl CatalogRecordRepo for CatalogRepoForSql {
         Err(err) => Err(CatalogRepoErrors::ErrorDeletingCatalogRecord(err.into())),
         }
     }
+}
+
+#[async_trait]
+impl RelationRepo for CatalogRepoForSql{
+
+    async fn get_all_relations(
+        &self,
+        limit: Option<u64>,
+        page: Option<u64>,
+    ) -> anyhow::Result<Vec<relations::Model>, CatalogRepoErrors> {
+        let relations = relations::Entity::find()
+            .limit(limit.unwrap_or(100000))
+            .offset(page.unwrap_or(0))
+            .all(&self.db_connection)
+            .await;
+        match relations {
+            Ok(relations) => Ok(relations),
+            Err(err) => Err(CatalogRepoErrors::ErrorFetchingRelation(err.into())),
+        }
+    }
+
+    async fn get_relations_by_resource(
+        &self,
+        limit: Option<u64>,
+        page: Option<u64>,
+        resource_id : Urn,
+    ) -> anyhow::Result<Vec<relations::Model>, CatalogRepoErrors> {
+        let resource_id = resource_id.to_string();
+        let resource = resource::Entity::find_by_id(resource_id.clone())
+            .one(&self.db_connection)
+            .await
+            .map_err(|e| CatalogRepoErrors::ErrorFetchingResource(e.into()))?;
+        if resource.is_none() {
+            return Err(CatalogRepoErrors::ResourceNotfound);
+        }
+        let relations_by_resource = relations::Entity::find().filter(
+            Condition::any()
+                .add(relations::Column::DcatResource1.eq(resource_id.clone()))
+                .add(relations::Column::DcatResource2.eq(resource_id))
+            )
+            .limit(limit.unwrap_or(100000))
+            .offset(page.unwrap_or(0))
+            .all(&self.db_connection)
+            .await;
+        match relations_by_resource {
+            Ok(relations_by_resource) => Ok(relations_by_resource),
+            Err(err) => Err(CatalogRepoErrors::ErrorFetchingRelation(err.into())),
+        }
+    }
+    async fn get_resources_by_relation(
+        &self,
+        limit: Option<u64>,
+        page: Option<u64>,
+        relation_type: String,
+    ) -> anyhow::Result<Vec<(resource::Model, resource::Model)>, CatalogRepoErrors> {
+        let relations = relations::Entity::find()
+            .filter(relations::Column::DcatRelationship.eq(relation_type))
+            .all(&self.db_connection)
+            .await
+            .map_err(|e| CatalogRepoErrors::ErrorFetchingRelation(e.into()))?;
+        
+        let mut result = vec![];
+        for rel in relations {
+            let res1 = resource::Entity::find_by_id(rel.dcat_resource1.clone())
+                .one(&self.db_connection)
+                .await
+                .map_err(|e| CatalogRepoErrors::ErrorFetchingResource(e.into()))?;
+            let res2 = resource::Entity::find_by_id(rel.dcat_resource2.clone())
+                .one(&self.db_connection)
+                .await
+                .map_err(|e| CatalogRepoErrors::ErrorFetchingResource(e.into()))?;
+            if let (Some(r1), Some(r2)) = (res1, res2) {
+                result.push((r1, r2));
+            }
+        }
+    Ok(result)
+    }
+    async fn get_related_resource_by_relation_and_resource(
+        &self,
+        limit: Option<u64>,
+        page: Option<u64>,
+        relation: String,
+        resource_id: Urn,
+    ) -> anyhow::Result<Vec<resource::Model>, CatalogRepoErrors> {
+        let resource_id = resource_id.to_string();
+        let condition = Condition::all()
+            .add(
+                Condition::any()
+                    .add(relations::Column::DcatResource1.eq(resource_id.clone()))
+                    .add(relations::Column::DcatResource2.eq(resource_id)),
+            )
+            .add(relations::Column::DcatRelationship.eq(relation));
+        let relations = relations::Entity::find()
+            .filter(condition)
+            .all(&self.db_connection)
+            .await
+            .map_err(|e| CatalogRepoErrors::ErrorFetchingRelation(e.into()))?;
+        let mut resources_ids: HashSet<String> = HashSet::new();
+        for rel in &relations {
+            resources_ids.insert(rel.dcat_resource1.clone());
+            resources_ids.insert(rel.dcat_resource2.clone());
+        }
+
+        let related_resources =  resource::Entity::find()
+            .filter(resource::Column::ResourceId.is_in(resources_ids))
+            .limit(limit.unwrap_or(100000))
+            .offset(page.unwrap_or(0))
+            .all(&self.db_connection)
+            .await
+            .map_err(|e| CatalogRepoErrors::ErrorFetchingResource(e.into()))?;
+        
+        Ok(related_resources)
+    }
+    async fn put_relation_by_id(
+        &self,
+        relation_id: Urn,
+        edit_ralation_model: EditRelationModel,
+    ) -> anyhow::Result<relations::Model, CatalogRepoErrors> {
+        let relation_id = relation_id.to_string();
+        let old_model = relations::Entity::find_by_id(relation_id).one(&self.db_connection).await;
+        let old_model = match old_model {
+            Ok(old_model) => match old_model {
+                Some(old_model) => old_model,
+                None => return Err(CatalogRepoErrors::RelationNotfound),
+            },
+            Err(err) => return Err(CatalogRepoErrors::ErrorFetchingRelation(err.into())),
+        };
+        let mut old_active_model: relations::ActiveModel = old_model.into();
+        if let Some(dcat_resource1) = edit_ralation_model.dcat_resource1 {
+            old_active_model.dcat_resource1 = ActiveValue::Set(dcat_resource1);
+        }
+        if let Some(dcat_resource2) = edit_ralation_model.dcat_resource2 {
+            old_active_model.dcat_resource2 = ActiveValue::Set(dcat_resource2);
+        }
+        if let Some(dcat_relationship) = edit_ralation_model.dcat_relationship {
+            old_active_model.dcat_relationship = ActiveValue::Set(dcat_relationship);
+        }
+
+        let model = old_active_model.update(&self.db_connection).await;
+        match model {
+            Ok(model) => Ok(model),
+            Err(err) => Err(CatalogRepoErrors::ErrorUpdatingRelation(err.into())),
+        }
+    }
+    async fn create_relation(
+        &self,
+        new_relation_model: NewRelationModel,
+    ) -> anyhow::Result<relations::Model, CatalogRepoErrors> {
+        let model = relations::ActiveModel {
+            id:ActiveValue::Set(uuid::Uuid::new_v4().to_string()),
+            dcat_relationship: ActiveValue::Set(new_relation_model.dcat_relationship),
+            dcat_resource1: ActiveValue::Set(new_relation_model.dcat_resource1),
+            dcat_resource2: ActiveValue::Set(new_relation_model.dcat_resource2),
+        };
+        let relation = relations::Entity::insert(model).exec_with_returning(&self.db_connection).await;
+        match relation {
+            Ok(relation) => Ok(relation),
+            Err(err) => Err(CatalogRepoErrors::ErrorCreatingRelation(err.into())),
+        }
+    }
+    async fn delete_relation_by_id(
+        &self,
+        relation_id: Urn,
+    ) -> anyhow::Result<(), CatalogRepoErrors> {
+        let relation_id = relation_id.to_string();
+        let relation = relations::Entity::delete_by_id(relation_id).exec(&self.db_connection).await;
+        match relation {
+            Ok(delete_result) => match delete_result.rows_affected {
+                0 => Err(CatalogRepoErrors::RelationNotfound),
+                _ => Ok(()),
+            },
+            Err(err) => Err(CatalogRepoErrors::ErrorDeletingRelation(err.into())),
+        }
+    }
+    
+}
+#[async_trait]
+impl QualifiedRelationRepo for CatalogRepoForSql{
+
+    async fn get_all_qualified_relations(
+        &self,
+        limit: Option<u64>,
+        page: Option<u64>,
+    ) -> anyhow::Result<Vec<qualified_relations::Model>, CatalogRepoErrors> {
+        let relations = qualified_relations::Entity::find()
+            .limit(limit.unwrap_or(100000))
+            .offset(page.unwrap_or(0))
+            .all(&self.db_connection)
+            .await;
+        match relations {
+            Ok(relations) => Ok(relations),
+            Err(err) => Err(CatalogRepoErrors::ErrorFetchingRelation(err.into())),
+        }
+    }
+
+    async fn get_qualified_relations_by_resource(
+        &self,
+        limit: Option<u64>,
+        page: Option<u64>,
+        resource_id : Urn,
+    ) -> anyhow::Result<Vec<qualified_relations::Model>, CatalogRepoErrors> {
+        let resource_id = resource_id.to_string();
+        let resource = resource::Entity::find_by_id(resource_id.clone())
+            .one(&self.db_connection)
+            .await
+            .map_err(|e| CatalogRepoErrors::ErrorFetchingResource(e.into()))?;
+        if resource.is_none() {
+            return Err(CatalogRepoErrors::ResourceNotfound);
+        }
+        let relations_by_resource = qualified_relations::Entity::find().filter(
+            Condition::any()
+                .add(qualified_relations::Column::DcatResource1.eq(resource_id.clone()))
+                .add(qualified_relations::Column::DcatResource2.eq(resource_id))
+            )
+            .limit(limit.unwrap_or(100000))
+            .offset(page.unwrap_or(0))
+            .all(&self.db_connection)
+            .await;
+        match relations_by_resource {
+            Ok(relations_by_resource) => Ok(relations_by_resource),
+            Err(err) => Err(CatalogRepoErrors::ErrorFetchingQualifiedRelation(err.into())),
+        }
+    }
+    async fn get_resources_by_qualified_relation(
+        &self,
+        limit: Option<u64>,
+        page: Option<u64>,
+        relation_type: String,
+    ) -> anyhow::Result<Vec<(resource::Model, resource::Model)>, CatalogRepoErrors> {
+        let relations = qualified_relations::Entity::find()
+            .filter(qualified_relations::Column::DcatQualifiedRelation.eq(relation_type))
+            .all(&self.db_connection)
+            .await
+            .map_err(|e| CatalogRepoErrors::ErrorFetchingQualifiedRelation(e.into()))?;
+        
+        let mut result = vec![];
+        for rel in relations {
+            let res1 = resource::Entity::find_by_id(rel.dcat_resource1.clone())
+                .one(&self.db_connection)
+                .await
+                .map_err(|e| CatalogRepoErrors::ErrorFetchingResource(e.into()))?;
+            let res2 = resource::Entity::find_by_id(rel.dcat_resource2.clone())
+                .one(&self.db_connection)
+                .await
+                .map_err(|e| CatalogRepoErrors::ErrorFetchingResource(e.into()))?;
+            if let (Some(r1), Some(r2)) = (res1, res2) {
+                result.push((r1, r2));
+            }
+        }
+    Ok(result)
+    }
+    async fn get_related_resource_by_qualified_relation_and_resource(
+        &self,
+        limit: Option<u64>,
+        page: Option<u64>,
+        relation: String,
+        resource_id: Urn,
+    ) -> anyhow::Result<Vec<resource::Model>, CatalogRepoErrors> {
+        let resource_id = resource_id.to_string();
+        let condition = Condition::all()
+            .add(
+                Condition::any()
+                    .add(qualified_relations::Column::DcatResource1.eq(resource_id.clone()))
+                    .add(qualified_relations::Column::DcatResource2.eq(resource_id)),
+            )
+            .add(qualified_relations::Column::DcatQualifiedRelation.eq(relation));
+        let relations = qualified_relations::Entity::find()
+            .filter(condition)
+            .all(&self.db_connection)
+            .await
+            .map_err(|e| CatalogRepoErrors::ErrorFetchingRelation(e.into()))?;
+        let mut resources_ids: HashSet<String> = HashSet::new();
+        for rel in &relations {
+            resources_ids.insert(rel.dcat_resource1.clone());
+            resources_ids.insert(rel.dcat_resource2.clone());
+        }
+
+        let related_resources =  resource::Entity::find()
+            .filter(resource::Column::ResourceId.is_in(resources_ids))
+            .limit(limit.unwrap_or(100000))
+            .offset(page.unwrap_or(0))
+            .all(&self.db_connection)
+            .await
+            .map_err(|e| CatalogRepoErrors::ErrorFetchingResource(e.into()))?;
+        
+        Ok(related_resources)
+    }
+    async fn put_qualified_relation_by_id(
+        &self,
+        relation_id: Urn,
+        edit_ralation_model: EditQualifiedRelationModel,
+    ) -> anyhow::Result<qualified_relations::Model, CatalogRepoErrors> {
+        let relation_id = relation_id.to_string();
+        let old_model = qualified_relations::Entity::find_by_id(relation_id).one(&self.db_connection).await;
+        let old_model = match old_model {
+            Ok(old_model) => match old_model {
+                Some(old_model) => old_model,
+                None => return Err(CatalogRepoErrors::QualifiedRelationNotfound),
+            },
+            Err(err) => return Err(CatalogRepoErrors::ErrorFetchingQualifiedRelation(err.into())),
+        };
+        let mut old_active_model: qualified_relations::ActiveModel = old_model.into();
+        if let Some(dcat_resource1) = edit_ralation_model.dcat_resource1 {
+            old_active_model.dcat_resource1 = ActiveValue::Set(dcat_resource1);
+        }
+        if let Some(dcat_resource2) = edit_ralation_model.dcat_resource2 {
+            old_active_model.dcat_resource2 = ActiveValue::Set(dcat_resource2);
+        }
+        if let Some(dcat_qualified_relation) = edit_ralation_model.dcat_qualified_relation {
+            old_active_model.dcat_qualified_relation = ActiveValue::Set(dcat_qualified_relation);
+        }
+
+        let model = old_active_model.update(&self.db_connection).await;
+        match model {
+            Ok(model) => Ok(model),
+            Err(err) => Err(CatalogRepoErrors::ErrorUpdatingQualifiedRelation(err.into())),
+        }
+    }
+    async fn create_qualified_relation(
+        &self,
+        new_relation_model: NewQualifiedRelationModel,
+    ) -> anyhow::Result<qualified_relations::Model, CatalogRepoErrors> {
+        let model = qualified_relations::ActiveModel {
+            id:ActiveValue::Set(uuid::Uuid::new_v4().to_string()),
+            dcat_qualified_relation: ActiveValue::Set(new_relation_model.dcat_qualified_relation),
+            dcat_resource1: ActiveValue::Set(new_relation_model.dcat_resource1),
+            dcat_resource2: ActiveValue::Set(new_relation_model.dcat_resource2),
+        };
+        let relation = qualified_relations::Entity::insert(model).exec_with_returning(&self.db_connection).await;
+        match relation {
+            Ok(relation) => Ok(relation),
+            Err(err) => Err(CatalogRepoErrors::ErrorCreatingRelation(err.into())),
+        }
+    }
+    async fn delete_qualified_relation_by_id(
+        &self,
+        relation_id: Urn,
+    ) -> anyhow::Result<(), CatalogRepoErrors> {
+        let relation_id = relation_id.to_string();
+        let relation = qualified_relations::Entity::delete_by_id(relation_id).exec(&self.db_connection).await;
+        match relation {
+            Ok(delete_result) => match delete_result.rows_affected {
+                0 => Err(CatalogRepoErrors::RelationNotfound),
+                _ => Ok(()),
+            },
+            Err(err) => Err(CatalogRepoErrors::ErrorDeletingRelation(err.into())),
+        }
+    }
+    
 }

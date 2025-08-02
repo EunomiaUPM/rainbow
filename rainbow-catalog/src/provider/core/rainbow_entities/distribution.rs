@@ -147,8 +147,6 @@ where
         let distribution_entity = self
             .repo
             .put_distribution_by_id(
-                catalog_id.clone(),
-                dataset_id.clone(),
                 distribution_id.clone(),
                 input.clone().into(),
             )

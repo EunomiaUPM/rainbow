@@ -43,7 +43,7 @@ use urn::Urn;
 pub mod sql;
 
 pub trait CatalogRepoFactory:
-CatalogRepo + DatasetRepo + DistributionRepo + DataServiceRepo + OdrlOfferRepo + DatasetSeriesRepo + CatalogRecordRepo + Send + Sync + 'static
+CatalogRepo + DatasetRepo + DistributionRepo + DataServiceRepo + OdrlOfferRepo + DatasetSeriesRepo + CatalogRecordRepo + RelationRepo + QualifiedRelationRepo + Send + Sync + 'static
 {
     fn create_repo(db_connection: DatabaseConnection) -> Self
     where
@@ -55,10 +55,10 @@ pub struct NewCatalogModel {
     pub foaf_home_page: Option<String>,
     pub dct_conforms_to: Option<String>,
     pub dct_creator: Option<String>,
+    pub dct_title: Option<String>,
     pub dct_identifier: String,
     pub dct_issued: chrono::NaiveDateTime,
     pub dct_modified: Option<chrono::NaiveDateTime>,
-    pub dct_title: Option<String>,
     pub dspace_participant_id: Option<String>,
     pub dspace_main_catalog: bool,
     pub dct_description: Option<String>,
@@ -84,10 +84,10 @@ pub struct EditCatalogModel {
     pub foaf_home_page: Option<String>,
     pub dct_conforms_to: Option<String>,
     pub dct_creator: Option<String>,
+    pub dct_title: Option<String>,
+    pub dct_modified: Option<chrono::NaiveDateTime>,
     pub dct_identifier: Option<String>,
     pub dct_issued: Option<chrono::NaiveDateTime>,
-    pub dct_modified: Option<chrono::NaiveDateTime>,
-    pub dct_title: Option<String>,
     pub dspace_participant_id: Option<String>,
     pub dspace_main_catalog: Option<bool>,
     pub dct_description: Option<String>,
@@ -153,11 +153,11 @@ pub struct NewDatasetModel {
     pub id: Option<Urn>,
     pub dct_conforms_to: Option<String>,
     pub dct_creator: Option<String>,
+    pub dct_title: Option<String>,
+    pub dct_description: Option<String>,
     pub dct_identifier: Option<String>,
     pub dct_issued: chrono::NaiveDateTime,
     pub dct_modified: Option<chrono::NaiveDateTime>,
-    pub dct_title: Option<String>,
-    pub dct_description: Option<String>,
     pub catalog_id: Urn,
     pub dcat_inseries: Option<String>,
     pub dct_spatial: Option<String>,
@@ -186,11 +186,11 @@ pub struct NewDatasetModel {
 pub struct EditDatasetModel {
     pub dct_conforms_to: Option<String>,
     pub dct_creator: Option<String>,
-    pub dct_identifier: Option<String>,
-    pub dct_issued: chrono::NaiveDateTime,
-    pub dct_modified: Option<chrono::NaiveDateTime>,
     pub dct_title: Option<String>,
     pub dct_description: Option<String>,
+    pub dct_modified: Option<chrono::NaiveDateTime>,
+    pub dct_identifier: Option<String>,
+    pub dct_issued: Option<chrono::NaiveDateTime>,
     pub catalog_id: Option<String>,
     pub dcat_inseries: Option<String>,
     pub dct_spatial: Option<String>,
@@ -243,7 +243,6 @@ pub trait DatasetRepo {
     ) -> anyhow::Result<Vec<dataset::Model>, CatalogRepoErrors>;
     async fn put_datasets_by_id(
         &self,
-        catalog_id: Urn,
         dataset_id: Urn,
         edit_dataset_model: EditDatasetModel,
     ) -> anyhow::Result<dataset::Model, CatalogRepoErrors>;
@@ -262,13 +261,13 @@ pub trait DatasetRepo {
 #[derive(Debug)]
 pub struct NewDistributionModel {
     pub id: Option<Urn>,
+    pub dct_format: Option<DctFormats>,
+    pub dct_title: Option<String>,
+    pub dcat_access_service: Urn,
     pub dct_issued: chrono::NaiveDateTime,
     pub dct_modified: Option<chrono::NaiveDateTime>,
-    pub dct_title: Option<String>,
     pub dct_description: Option<String>,
-    pub dcat_access_service: String,
     pub dataset_id: Urn,
-    pub dct_format: Option<String>,
     pub dcat_inseries: String,
     pub dcat_access_url: Option<String>,
     pub dcat_download_url: Option<String>,
@@ -288,13 +287,13 @@ pub struct NewDistributionModel {
     pub spdc_checksum: String
 }
 pub struct EditDistributionModel {
-    pub dct_issued: Option<chrono::NaiveDateTime>,
-    pub dct_modified: Option<chrono::NaiveDateTime>,
     pub dct_title: Option<String>,
     pub dct_description: Option<String>,
-    pub dcat_access_service: Option<String>,
+    pub dcat_access_service: Option<Urn>,
+    pub dct_modified: Option<chrono::NaiveDateTime>,
+    pub dct_issued: Option<chrono::NaiveDateTime>,
     pub dataset_id: Option<String>,
-    pub dct_format: Option<String>,
+    pub dct_format: Option<DctFormats>,
     pub dcat_inseries: Option<String>,
     pub dcat_access_url: Option<String>,
     pub dcat_download_url: Option<String>,
@@ -348,8 +347,6 @@ pub trait DistributionRepo {
     ) -> anyhow::Result<Vec<distribution::Model>, CatalogRepoErrors>;
     async fn put_distribution_by_id(
         &self,
-        catalog_id: Urn,
-        dataset_id: Urn,
         distribution_id: Urn,
         edit_distribution_model: EditDistributionModel,
     ) -> anyhow::Result<distribution::Model, CatalogRepoErrors>;
@@ -369,15 +366,15 @@ pub trait DistributionRepo {
 
 pub struct NewDataServiceModel {
     pub id: Option<Urn>,
-    pub dcat_endpoint_description: Option<String>,
-    pub dcat_endpoint_url: String,
     pub dct_conforms_to: Option<String>,
     pub dct_creator: Option<String>,
+    pub dct_title: Option<String>,
+    pub dcat_endpoint_description: Option<String>,
+    pub dcat_endpoint_url: String,
+    pub dct_description: Option<String>,
     pub dct_identifier: Option<String>,
     pub dct_issued: chrono::NaiveDateTime,
     pub dct_modified: Option<chrono::NaiveDateTime>,
-    pub dct_title: Option<String>,
-    pub dct_description: Option<String>,
     pub catalog_id: Urn,
     pub dcat_serves_dataset: String,
     pub dcat_access_rights: Option<String>,
@@ -399,15 +396,15 @@ pub struct NewDataServiceModel {
     pub adms_status: Option<String>,
 }
 pub struct EditDataServiceModel {
-    pub dcat_endpoint_description: Option<String>,
-    pub dcat_endpoint_url: Option<String>,
     pub dct_conforms_to: Option<String>,
     pub dct_creator: Option<String>,
+    pub dct_title: Option<String>,
+    pub dcat_endpoint_description: Option<String>,
+    pub dcat_endpoint_url: Option<String>,
+    pub dct_description: Option<String>,
     pub dct_identifier: Option<String>,
     pub dct_issued: Option<chrono::NaiveDateTime>,
     pub dct_modified: Option<chrono::NaiveDateTime>,
-    pub dct_title: Option<String>,
-    pub dct_description: Option<String>,
     pub catalog_id: Option<String>,
     pub dcat_serves_dataset: Option<String>,
     pub dcat_access_rights: Option<String>,
@@ -448,7 +445,6 @@ pub trait DataServiceRepo {
     ) -> anyhow::Result<Option<dataservice::Model>, CatalogRepoErrors>;
     async fn put_data_service_by_id(
         &self,
-        catalog_id: Urn,
         data_service_id: Urn,
         edit_data_service_model: EditDataServiceModel,
     ) -> anyhow::Result<dataservice::Model, CatalogRepoErrors>;
@@ -459,7 +455,6 @@ pub trait DataServiceRepo {
     ) -> anyhow::Result<dataservice::Model, CatalogRepoErrors>;
     async fn delete_data_service_by_id(
         &self,
-        catalog_id: Urn,
         data_service_id: Urn,
     ) -> anyhow::Result<(), CatalogRepoErrors>;
 }
@@ -620,6 +615,10 @@ pub trait CatalogRecordRepo {
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<catalog_record::Model>, CatalogRepoErrors>;
+    async fn get_catalog_record_by_id (
+        &self,
+        catalog_record_id: Urn,
+    ) -> anyhow::Result<Option<catalog_record::Model>, CatalogRepoErrors>;
     async fn get_all_catalog_records_by_catalog_id(
         &self,
         catalog_id: Urn,
@@ -641,6 +640,116 @@ pub trait CatalogRecordRepo {
     ) -> anyhow::Result<(), CatalogRepoErrors>;
 }
 
+
+pub struct NewRelationModel {
+    pub id: Option<Urn>,
+    pub dcat_relationship: String,
+    pub dcat_resource1: String,
+    pub dcat_resource2: String,
+}
+
+pub struct EditRelationModel {
+    pub dcat_relationship: Option<String>,
+    pub dcat_resource1: Option<String>,
+    pub dcat_resource2: Option<String>,
+}
+
+#[async_trait]
+pub trait RelationRepo {
+    async fn get_all_relations(
+        &self,
+        limit: Option<u64>,
+        page: Option<u64>,
+    ) -> anyhow::Result<Vec<relations::Model>, CatalogRepoErrors>;
+    async fn get_relations_by_resource(
+        &self,
+        limit: Option<u64>,
+        page: Option<u64>,
+        resource_id: Urn
+    ) -> anyhow::Result<Vec<relations::Model>, CatalogRepoErrors>;
+    async fn get_resources_by_relation(
+        &self,
+        limit: Option<u64>,
+        page: Option<u64>,
+        relation_type: String,
+    ) -> anyhow::Result<Vec<(resource::Model, resource::Model)>, CatalogRepoErrors>;
+    async fn get_related_resource_by_relation_and_resource(
+        &self,
+        limit: Option<u64>,
+        page: Option<u64>,
+        relation: String,
+        resource_id: Urn,
+    ) -> anyhow::Result<Vec<resource::Model>, CatalogRepoErrors>;
+    async fn put_relation_by_id(
+        &self,
+        relation_id: Urn,
+        relation_model: EditRelationModel,
+    ) -> anyhow::Result<relations::Model, CatalogRepoErrors>;
+    async fn create_relation(
+        &self,
+        relation_model: NewRelationModel,
+    ) -> anyhow::Result<relations::Model, CatalogRepoErrors>;
+    async fn delete_relation_by_id(
+        &self,
+        relation_id: Urn,
+    ) -> anyhow::Result<(), CatalogRepoErrors>;
+}
+
+
+pub struct NewQualifiedRelationModel {
+    pub id: Option<Urn>,
+    pub dcat_qualified_relation: String,
+    pub dcat_resource1: String,
+    pub dcat_resource2: String,
+}
+
+pub struct EditQualifiedRelationModel {
+    pub dcat_qualified_relation: Option<String>,
+    pub dcat_resource1: Option<String>,
+    pub dcat_resource2: Option<String>,
+}
+#[async_trait]
+pub trait QualifiedRelationRepo {
+    async fn get_all_qualified_relations(
+        &self,
+        limit: Option<u64>,
+        page: Option<u64>,
+    ) -> anyhow::Result<Vec<qualified_relations::Model>, CatalogRepoErrors>;
+    async fn get_qualified_relations_by_resource(
+        &self,
+        limit: Option<u64>,
+        page: Option<u64>,
+        resource_id: Urn
+    ) -> anyhow::Result<Vec<qualified_relations::Model>, CatalogRepoErrors>;
+    async fn get_resources_by_qualified_relation(
+        &self,
+        limit: Option<u64>,
+        page: Option<u64>,
+        relation_type: String,
+    ) -> anyhow::Result<Vec<(resource::Model, resource::Model)>, CatalogRepoErrors>;
+    async fn get_related_resource_by_qualified_relation_and_resource(
+        &self,
+        limit: Option<u64>,
+        page: Option<u64>,
+        relation: String,
+        resource_id: Urn,
+    ) -> anyhow::Result<Vec<resource::Model>, CatalogRepoErrors>;
+    async fn put_qualified_relation_by_id(
+        &self,
+        relation_id: Urn,
+        relation_model: EditQualifiedRelationModel,
+    ) -> anyhow::Result<qualified_relations::Model, CatalogRepoErrors>;
+    async fn create_qualified_relation(
+        &self,
+        relation_model: NewQualifiedRelationModel,
+    ) -> anyhow::Result<qualified_relations::Model, CatalogRepoErrors>;
+    async fn delete_qualified_relation_by_id(
+        &self,
+        relation_id: Urn,
+    ) -> anyhow::Result<(), CatalogRepoErrors>;
+}
+
+
 #[derive(Error, Debug)]
 pub enum CatalogRepoErrors {
     #[error("Catalog not found")]
@@ -659,6 +768,12 @@ pub enum CatalogRepoErrors {
     CatalogRecordNotfound,
     #[error("Theme not found")]
     ThemeNotfound,
+    #[error("Relation not found")]
+    RelationNotfound,
+    #[error("Qualified Relation not found")]
+    QualifiedRelationNotfound,
+    #[error("Resource not found")]
+    ResourceNotfound,
 
     #[error("Error fetching catalog. {0}")]
     ErrorFetchingCatalog(Error),
@@ -678,6 +793,12 @@ pub enum CatalogRepoErrors {
     ErrorFetchingThemes(Error),
     #[error("Error fetching keywords. {0}")]
     ErrorFetchingKeywords(Error),
+    #[error("Error fetching relation. {0}")]
+    ErrorFetchingRelation(Error),
+    #[error("Error fetching qualified relation. {0}")]
+    ErrorFetchingQualifiedRelation(Error),
+    #[error("Error fetching resource. {0}")]
+    ErrorFetchingResource(Error),
 
     #[error("Error creating catalog. {0}")]
     ErrorCreatingCatalog(Error),
@@ -695,7 +816,13 @@ pub enum CatalogRepoErrors {
     ErrorCreatingCatalogRecord(Error),
     #[error("Error creating theme. {0}")]
     ErrorCreatingTheme(Error),
-
+    #[error("Error creating realtion. {0}")]
+    ErrorCreatingRelation(Error),
+    #[error("Error creating qualified realtion. {0}")]
+    ErrorCreatingQualifiedRelation(Error),
+    #[error("Error creating resource. {0}")]
+    ErrorCreatingResource(Error),
+    
     #[error("Error deleting catalog. {0}")]
     ErrorDeletingCatalog(Error),
     #[error("Error deleting dataset. {0}")]
@@ -712,6 +839,12 @@ pub enum CatalogRepoErrors {
     ErrorDeletingCatalogRecord(Error),
     #[error("Error deleting theme. {0}")]
     ErrorDeletingTheme(Error),
+    #[error("Error deleting relation. {0}")]
+    ErrorDeletingRelation(Error),
+    #[error("Error deleting qualified relation. {0}")]
+    ErrorDeletingQualifiedRelation(Error),
+    #[error("Error deleting resource. {0}")]
+    ErrorDeletingResource(Error),
 
     #[error("Error updating catalog. {0}")]
     ErrorUpdatingCatalog(Error),
@@ -729,6 +862,12 @@ pub enum CatalogRepoErrors {
     ErrorUpdatingCatalogRecord(Error),
     #[error("Error updating theme. {0}")]
     ErrorUpdatingThemes(Error),
+    #[error("Error updating relation. {0}")]
+    ErrorUpdatingRelation(Error),
+    #[error("Error updating qualified relation. {0}")]
+    ErrorUpdatingQualifiedRelation(Error),
+    #[error("Error updating resource. {0}")]
+    ErrorUpdatingResource(Error),
 
     #[error("Error fetching offer ids. {missing_ids:?}")]
     SomeOdrlOffersNotFound { missing_ids: String },

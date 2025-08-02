@@ -18,7 +18,8 @@
  */
 
 use crate::provider::core::rainbow_entities::rainbow_catalog_err::CatalogError;
-use crate::provider::core::rainbow_entities::rainbow_catalog_types::{NewDataServiceRequest, NewDatasetRequest};
+use crate::provider::core::rainbow_entities::rainbow_catalog_types::{NewDataServiceRequest, NewDatasetRequest,
+    EditDataServiceRequest, EditDatasetRequest};
 use crate::provider::core::rainbow_entities::RainbowDatasetTrait;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, State};
@@ -127,7 +128,7 @@ where
     async fn handle_put_dataset(
         State(dataset_service): State<Arc<T>>,
         Path((c_id, d_id)): Path<(String, String)>,
-        input: Result<Json<NewDatasetRequest>, JsonRejection>,
+        input: Result<Json<EditDatasetRequest>, JsonRejection>,
     ) -> impl IntoResponse {
         info!("PUT /api/v1/catalogs/{}/datasets/{}", c_id, d_id);
         let catalog_id = match get_urn_from_string(&c_id) {
@@ -142,7 +143,7 @@ where
             Ok(input) => input.0,
             Err(e) => return CatalogError::JsonRejection(e).into_response(),
         };
-        match dataset_service.put_dataset(catalog_id, dataset_id, input).await {
+        match dataset_service.put_dataset(dataset_id, input).await {
             Ok(d) => (StatusCode::ACCEPTED, Json(d)).into_response(),
             Err(err) => match err.downcast::<CatalogError>() {
                 Ok(e) => e.into_response(),

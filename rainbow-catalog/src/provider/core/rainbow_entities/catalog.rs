@@ -19,6 +19,7 @@
 
 use crate::provider::core::rainbow_entities::rainbow_catalog_err::CatalogError;
 use crate::provider::core::rainbow_entities::rainbow_catalog_types::NewCatalogRequest;
+use crate::provider::core::rainbow_entities::rainbow_catalog_types::EditCatalogRequest;
 use crate::provider::core::rainbow_entities::RainbowCatalogTrait;
 use anyhow::bail;
 use axum::async_trait;
@@ -94,7 +95,7 @@ where
         Ok(catalog)
     }
 
-    async fn put_catalog(&self, id: Urn, input: NewCatalogRequest) -> anyhow::Result<Catalog> {
+    async fn put_catalog(&self, id: Urn, input: EditCatalogRequest) -> anyhow::Result<Catalog> {
         let catalog_entity = self.repo.put_catalog_by_id(id.clone(), input.into()).await.map_err(|err| match err {
             rainbow_db::catalog::repo::CatalogRepoErrors::CatalogNotFound => {
                 CatalogError::NotFound { id, entity: EntityTypes::Catalog.to_string() }

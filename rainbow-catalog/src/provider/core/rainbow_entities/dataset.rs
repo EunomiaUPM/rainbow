@@ -18,7 +18,7 @@
  */
 
 use crate::provider::core::rainbow_entities::rainbow_catalog_err::CatalogError;
-use crate::provider::core::rainbow_entities::rainbow_catalog_types::NewDatasetRequest;
+use crate::provider::core::rainbow_entities::rainbow_catalog_types::{NewDatasetRequest, EditDatasetRequest};
 use crate::provider::core::rainbow_entities::RainbowDatasetTrait;
 use anyhow::bail;
 use axum::async_trait;
@@ -103,13 +103,10 @@ where
         Ok(dataset)
     }
 
-    async fn put_dataset(&self, catalog_id: Urn, dataset_id: Urn, input: NewDatasetRequest) -> anyhow::Result<Dataset> {
+    async fn put_dataset(&self, dataset_id: Urn, input: EditDatasetRequest) -> anyhow::Result<Dataset> {
         let dataset_entity =
-            self.repo.put_datasets_by_id(catalog_id.clone(), dataset_id.clone(), input.into()).await.map_err(
+            self.repo.put_datasets_by_id(dataset_id.clone(), input.into()).await.map_err(
                 |err| match err {
-                    rainbow_db::catalog::repo::CatalogRepoErrors::CatalogNotFound => {
-                        CatalogError::NotFound { id: catalog_id, entity: EntityTypes::Catalog.to_string() }
-                    }
                     rainbow_db::catalog::repo::CatalogRepoErrors::DatasetNotFound => {
                         CatalogError::NotFound { id: dataset_id, entity: EntityTypes::Dataset.to_string() }
                     }

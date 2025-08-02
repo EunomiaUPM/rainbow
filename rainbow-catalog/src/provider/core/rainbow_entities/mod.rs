@@ -17,7 +17,9 @@
  *
  */
 
-use crate::provider::core::rainbow_entities::rainbow_catalog_types::{EditDataServiceRequest, EditDistributionRequest, NewCatalogRequest, NewDataServiceRequest, NewDatasetRequest, NewDistributionRequest};
+use crate::provider::core::rainbow_entities::rainbow_catalog_types::{
+    EditDataServiceRequest, EditDistributionRequest, NewCatalogRequest, EditCatalogRequest, 
+    NewDataServiceRequest, NewDatasetRequest, EditDatasetRequest, NewDistributionRequest};
 use axum::async_trait;
 use rainbow_common::dcat_formats::DctFormats;
 use rainbow_common::protocol::catalog::catalog_definition::Catalog;
@@ -41,7 +43,7 @@ pub mod rainbow_policies_types;
 pub trait RainbowCatalogTrait: Send + Sync {
     async fn get_catalog_by_id(&self, id: Urn) -> anyhow::Result<Catalog>;
     async fn post_catalog(&self, input: NewCatalogRequest, is_main: bool) -> anyhow::Result<Catalog>;
-    async fn put_catalog(&self, id: Urn, input: NewCatalogRequest) -> anyhow::Result<Catalog>;
+    async fn put_catalog(&self, id: Urn, input: EditCatalogRequest) -> anyhow::Result<Catalog>;
     async fn delete_catalog(&self, id: Urn) -> anyhow::Result<()>;
 }
 
@@ -51,7 +53,7 @@ pub trait RainbowDatasetTrait: Send + Sync {
     async fn get_dataset_by_id(&self, dataset_id: Urn) -> anyhow::Result<Dataset>;
     async fn get_datasets_by_catalog_id(&self, catalog_id: Urn) -> anyhow::Result<Vec<Dataset>>;
     async fn post_dataset(&self, catalog_id: Urn, input: NewDatasetRequest) -> anyhow::Result<Dataset>;
-    async fn put_dataset(&self, catalog_id: Urn, dataset_id: Urn, input: NewDatasetRequest) -> anyhow::Result<Dataset>;
+    async fn put_dataset(&self, dataset_id: Urn, input: EditDatasetRequest) -> anyhow::Result<Dataset>;
     async fn delete_dataset(&self, catalog_id: Urn, dataset_id: Urn) -> anyhow::Result<()>;
 }
 

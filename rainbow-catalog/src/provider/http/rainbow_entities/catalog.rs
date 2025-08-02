@@ -20,7 +20,7 @@
 use crate::provider::core::ds_protocol::ds_protocol_errors::DSProtocolCatalogErrors;
 use crate::provider::core::ds_protocol::DSProtocolCatalogTrait;
 use crate::provider::core::rainbow_entities::rainbow_catalog_err::CatalogError;
-use crate::provider::core::rainbow_entities::rainbow_catalog_types::NewCatalogRequest;
+use crate::provider::core::rainbow_entities::rainbow_catalog_types::{NewCatalogRequest, EditCatalogRequest};
 use crate::provider::core::rainbow_entities::RainbowCatalogTrait;
 use anyhow::Error;
 use axum::extract::rejection::JsonRejection;
@@ -133,7 +133,7 @@ where
     async fn handle_put_catalog(
         State((catalog_service, ds_service)): State<(Arc<T>, Arc<U>)>,
         Path(id): Path<String>,
-        input: Result<Json<NewCatalogRequest>, JsonRejection>,
+        input: Result<Json<EditCatalogRequest>, JsonRejection>,
     ) -> impl IntoResponse {
         info!("PUT /api/v1/catalogs/{}", id);
         let catalog_id = match get_urn_from_string(&id) {
