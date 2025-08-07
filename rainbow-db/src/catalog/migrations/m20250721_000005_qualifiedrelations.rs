@@ -34,6 +34,7 @@ impl MigrationTrait for Migration {
             .create_table(
                 Table::create()
                     .table(QualifiedRelations::Table)
+                    .col(ColumnDef::new(QualifiedRelations::Id).string().not_null().primary_key())
                     .col(ColumnDef::new(QualifiedRelations::DcatQualifiedRelation).string().not_null())
                     .col(ColumnDef::new(QualifiedRelations::DcatResource1).string().not_null())
                     .col(ColumnDef::new(QualifiedRelations::DcatResource2).string().not_null())
@@ -50,6 +51,7 @@ impl MigrationTrait for Migration {
 #[derive(Iden)]
 pub enum QualifiedRelations {
     Table,
+    Id,
     DcatQualifiedRelation,
     DcatResource1,
     DcatResource2,

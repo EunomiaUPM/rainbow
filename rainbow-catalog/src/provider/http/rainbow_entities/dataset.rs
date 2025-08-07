@@ -47,25 +47,14 @@ where
     pub fn router(self) -> Router {
         Router::new()
             .route("/api/v1/datasets/:id", get(Self::handle_get_dataset_by_id))
-            .route(
-                "/api/v1/catalogs/:id/datasets",
-                get(Self::handle_get_datasets_by_catalog_id),
-            )
-            .route(
-                "/api/v1/catalogs/:id/datasets",
-                post(Self::handle_post_dataset),
-            )
-            .route(
-                "/api/v1/catalogs/:id/datasets/:did",
-                put(Self::handle_put_dataset),
-            )
-            .route(
-                "/api/v1/catalogs/:id/datasets/:did",
-                delete(Self::handle_delete_dataset),
-            )
+            .route("/api/v1/catalogs/:id/datasets",get(Self::handle_get_datasets_by_catalog_id),)
+            .route("/api/v1/catalogs/:id/datasets",post(Self::handle_post_dataset),)
+            .route("/api/v1/catalogs/:id/datasets/:did",put(Self::handle_put_dataset),)
+            .route("/api/v1/catalogs/:id/datasets/:did",delete(Self::handle_delete_dataset),)
             .with_state(self.dataset_service)
     }
 
+    
     async fn handle_get_dataset_by_id(
         State(dataset_service): State<Arc<T>>,
         Path(id): Path<String>,

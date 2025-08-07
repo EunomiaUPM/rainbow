@@ -46,30 +46,13 @@ where
     }
     pub fn router(self) -> Router {
         Router::new()
-            .route(
-                "/api/v1/distributions/:id",
-                get(Self::handle_get_distributions_by_id),
+            .route("/api/v1/distributions/:id",get(Self::handle_get_distributions_by_id),
             )
-            .route(
-                "/api/v1/datasets/:id/distributions",
-                get(Self::handle_get_distributions_by_dataset_id),
-            )
-            .route(
-                "/api/v1/datasets/:id/distributions/dct-formats/:dct_format",
-                get(Self::handle_get_distributions_by_dataset_id_and_dct_format),
-            )
-            .route(
-                "/api/v1/catalogs/:id/datasets/:did/distributions",
-                post(Self::handle_post_distribution),
-            )
-            .route(
-                "/api/v1/catalogs/:id/datasets/:did/distributions/:ddid",
-                put(Self::handle_put_distribution),
-            )
-            .route(
-                "/api/v1/catalogs/:id/datasets/:did/distributions/:ddid",
-                delete(Self::handle_delete_distribution),
-            )
+            .route("/api/v1/datasets/:id/distributions",get(Self::handle_get_distributions_by_dataset_id),)
+            .route("/api/v1/datasets/:id/distributions/dct-formats/:dct_format",get(Self::handle_get_distributions_by_dataset_id_and_dct_format),)
+            .route("/api/v1/catalogs/:id/datasets/:did/distributions",post(Self::handle_post_distribution),)
+            .route("/api/v1/catalogs/:id/datasets/:did/distributions/:ddid",put(Self::handle_put_distribution),)
+            .route("/api/v1/catalogs/:id/datasets/:did/distributions/:ddid",delete(Self::handle_delete_distribution),)
             .with_state(self.distribution_service)
     }
 

@@ -25,9 +25,9 @@ pub mod odrl_offer;
 pub mod dataset_series;
 pub mod keyword;
 pub mod resource;
-pub mod themes;
-pub mod relations;
-pub mod qualified_relations;
-pub mod references;
+pub mod theme;
+pub mod relation;
+pub mod qualified_relation;
+pub mod reference;
 pub mod catalog_record;
 

@@ -23,13 +23,13 @@ use super::m20241111_000003_distribution::CatalogDistributions;
 use super::m20241111_000004_dataservice::CatalogDataServices;
 use super::m20241111_000005_odrl_offers::CatalogODRLOffers;
 
-use super::m20250718_000001_catalogrecord::CatalogRecord;
+use super::m20250718_000001_catalogrecord::CatalogRecords;
 use super::m20250718_000002_datasetseries::DatasetSeries;
 
 use super::m20250721_000003_keywords::Keywords;
 use super::m20250721_000002_themes::Themes;
 use super::m20250721_000001_resources::Resources;
-use super::m20250721_000004_relations::Relations;
+use super::m20250721_000004_relations::CatalogRelations;
 use super::m20250721_000005_qualifiedrelations::QualifiedRelations;
 use super::m20250721_000006_references::References;
 
@@ -383,7 +383,7 @@ impl MigrationTrait for Migration {
             .create_foreign_key(
                 ForeignKey::create()
                     .name("fk_catalog_record_catalog")
-                    .from(CatalogRecord::Table, CatalogRecord::DcatCatalog)
+                    .from(CatalogRecords::Table, CatalogRecords::DcatCatalog)
                     .to(CatalogCatalogs::Table, CatalogCatalogs::Id)
                     .on_delete(ForeignKeyAction::Cascade)
                     .on_update(ForeignKeyAction::Cascade)
@@ -479,7 +479,7 @@ impl MigrationTrait for Migration {
             .create_foreign_key(
                 ForeignKey::create()
                     .name("fk_relations_resource1")
-                    .from(Relations::Table, Relations::DcatResource1)
+                    .from(CatalogRelations::Table, CatalogRelations::DcatResource1)
                     .to(Resources::Table, Resources::ResourceId)
                     .on_delete(ForeignKeyAction::Cascade)
                     .on_update(ForeignKeyAction::Cascade)
@@ -491,7 +491,7 @@ impl MigrationTrait for Migration {
             .create_foreign_key(
                 ForeignKey::create()
                     .name("fk_relations_resource2")
-                    .from(Relations::Table, Relations::DcatResource2)
+                    .from(CatalogRelations::Table, CatalogRelations::DcatResource2)
                     .to(Resources::Table, Resources::ResourceId)
                     .on_delete(ForeignKeyAction::Cascade)
                     .on_update(ForeignKeyAction::Cascade)
@@ -502,7 +502,7 @@ impl MigrationTrait for Migration {
         manager
             .create_foreign_key(
                 ForeignKey::create()
-                    .name("fk_relations_resource1")
+                    .name("fk_qualified_relations_resource1")
                     .from(QualifiedRelations::Table, QualifiedRelations::DcatResource1)
                     .to(Resources::Table, Resources::ResourceId)
                     .on_delete(ForeignKeyAction::Cascade)
@@ -514,7 +514,7 @@ impl MigrationTrait for Migration {
         manager
             .create_foreign_key(
                 ForeignKey::create()
-                    .name("fk_relations_resource2")
+                    .name("fk_qualified_relations_resource2")
                     .from(QualifiedRelations::Table, QualifiedRelations::DcatResource2)
                     .to(Resources::Table, Resources::ResourceId)
                     .on_delete(ForeignKeyAction::Cascade)
@@ -697,7 +697,7 @@ impl MigrationTrait for Migration {
         manager
             .drop_foreign_key(
                 ForeignKey::drop()
-                    .name("fk_distribution_access_service")
+                    .name("fk_distribution_dataservice")
                     .table(CatalogDistributions::Table) // Specify the table from which the FK is dropped
                     .to_owned(),
             )
@@ -797,7 +797,7 @@ impl MigrationTrait for Migration {
             .drop_foreign_key(
                 ForeignKey::drop()
                     .name("fk_catalog_record_catalog")
-                    .table(CatalogCatalogs::Table)
+                    .table(CatalogRecords::Table)
                     .to_owned(),
             )
             .await?;
@@ -806,7 +806,7 @@ impl MigrationTrait for Migration {
             .drop_foreign_key(
                 ForeignKey::drop()
                     .name("fk_dataset_series_ordl_policy")
-                    .table(CatalogODRLOffers::Table)
+                    .table(DatasetSeries::Table)
                     .to_owned(),
             )
             .await?;
@@ -869,7 +869,7 @@ impl MigrationTrait for Migration {
             .drop_foreign_key(
                 ForeignKey::drop()
                     .name("fk_relations_resource1")
-                    .table(Relations::Table)
+                    .table(CatalogRelations::Table)
                     .to_owned()
             )
             .await?;
@@ -878,7 +878,7 @@ impl MigrationTrait for Migration {
             .drop_foreign_key(
                 ForeignKey::drop()
                     .name("fk_relations_resource2")
-                    .table(Relations::Table)
+                    .table(CatalogRelations::Table)
                     .to_owned()
             )
             .await?;

@@ -43,26 +43,11 @@ where
     }
     pub fn router(self) -> Router {
         Router::new()
-            .route(
-                "/api/v1/data-services/:id",
-                get(Self::handle_get_data_service_by_id),
-            )
-            .route(
-                "/api/v1/catalogs/:id/data-services",
-                get(Self::handle_get_data_services_by_catalog_id),
-            )
-            .route(
-                "/api/v1/catalogs/:id/data-services",
-                post(Self::handle_post_data_service),
-            )
-            .route(
-                "/api/v1/catalogs/:id/data-services/:did",
-                put(Self::handle_put_data_service),
-            )
-            .route(
-                "/api/v1/catalogs/:id/data-services/:did",
-                delete(Self::handle_delete_data_service),
-            )
+            .route("/api/v1/data-services/:id", get(Self::handle_get_data_service_by_id),)
+            .route("/api/v1/catalogs/:id/data-services",get(Self::handle_get_data_services_by_catalog_id),)
+            .route("/api/v1/catalogs/:id/data-services",post(Self::handle_post_data_service),)
+            .route("/api/v1/catalogs/:id/data-services/:did",put(Self::handle_put_data_service),)
+            .route("/api/v1/catalogs/:id/data-services/:did",delete(Self::handle_delete_data_service),)
             .with_state(self.data_service_service)
     }
     async fn handle_get_data_service_by_id(

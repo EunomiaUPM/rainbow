@@ -46,57 +46,21 @@ where
     }
     pub fn router(self) -> Router {
         Router::new()
-            .route(
-                "/api/v1/catalogs/:id/policies",
-                get(Self::handle_get_catalog_policies),
-            )
-            .route(
-                "/api/v1/catalogs/:id/policies",
-                post(Self::handle_post_catalog_policies),
-            )
-            .route(
-                "/api/v1/catalogs/:id/policies/:pid",
-                delete(Self::handle_delete_catalog_policies),
-            )
+            .route("/api/v1/catalogs/:id/policies",get(Self::handle_get_catalog_policies),)
+            .route("/api/v1/catalogs/:id/policies",post(Self::handle_post_catalog_policies),)
+            .route("/api/v1/catalogs/:id/policies/:pid",delete(Self::handle_delete_catalog_policies),)
             // DATASET POLICIES
-            .route(
-                "/api/v1/datasets/:id/policies",
-                get(Self::handle_get_dataset_policies),
-            )
-            .route(
-                "/api/v1/datasets/:id/policies",
-                post(Self::handle_post_dataset_policies),
-            )
-            .route(
-                "/api/v1/datasets/:id/policies/:pid",
-                delete(Self::handle_delete_dataset_policies),
-            )
+            .route("/api/v1/datasets/:id/policies",get(Self::handle_get_dataset_policies),)
+            .route("/api/v1/datasets/:id/policies",post(Self::handle_post_dataset_policies),)
+            .route("/api/v1/datasets/:id/policies/:pid",delete(Self::handle_delete_dataset_policies),)
             // DATA SERVICES POLICIES
-            .route(
-                "/api/v1/data-services/:id/policies",
-                get(Self::handle_get_dataservices_policies),
-            )
-            .route(
-                "/api/v1/data-services/:id/policies",
-                post(Self::handle_post_dataservices_policies),
-            )
-            .route(
-                "/api/v1/data-services/:id/policies/:pid",
-                delete(Self::handle_delete_dataservices_policies),
-            )
+            .route("/api/v1/data-services/:id/policies",get(Self::handle_get_dataservices_policies),)
+            .route("/api/v1/data-services/:id/policies",post(Self::handle_post_dataservices_policies),)
+            .route("/api/v1/data-services/:id/policies/:pid",delete(Self::handle_delete_dataservices_policies),)
             // DISTRIBUTION POLICIES
-            .route(
-                "/api/v1/distributions/:id/policies",
-                get(Self::handle_get_distributions_policies),
-            )
-            .route(
-                "/api/v1/distributions/:id/policies",
-                post(Self::handle_post_distributions_policies),
-            )
-            .route(
-                "/api/v1/distributions/:id/policies/:pid",
-                delete(Self::handle_delete_distributions_policies),
-            )
+            .route("/api/v1/distributions/:id/policies",get(Self::handle_get_distributions_policies),)
+            .route("/api/v1/distributions/:id/policies",post(Self::handle_post_distributions_policies),)
+            .route("/api/v1/distributions/:id/policies/:pid",delete(Self::handle_delete_distributions_policies),)
             .with_state(self.policies_service)
     }
 

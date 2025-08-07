@@ -17,35 +17,51 @@
  *
  */
 
+use crate::provider::core::rainbow_entities::dataset_series::RainbowCatalogDatasetSeriesService;
+use crate::provider::http::ds_protocol::ds_protocol::DSProcotolCatalogRouter;
 use crate::provider::core::ds_protocol::ds_protocol::DSProtocolCatalogService;
+
 use crate::provider::core::rainbow_entities::catalog::RainbowCatalogCatalogService;
+use crate::provider::core::rainbow_entities::catalog_record::RainbowCatalogCatalogRecordService;
+use crate::provider::core::rainbow_entities::resources::RainbowCatalogResourceService;
 use crate::provider::core::rainbow_entities::data_service::RainbowCatalogDataServiceService;
 use crate::provider::core::rainbow_entities::dataset::RainbowCatalogDatasetService;
 use crate::provider::core::rainbow_entities::distribution::RainbowCatalogDistributionService;
 use crate::provider::core::rainbow_entities::policies::RainbowCatalogPoliciesService;
 use crate::provider::core::rainbow_rpc::rainbow_rpc::RainbowRPCCatalogService;
-use crate::provider::http::ds_protocol::ds_protocol::DSProcotolCatalogRouter;
-use crate::provider::http::openapi::route_openapi;
+
 use crate::provider::http::rainbow_entities::catalog::RainbowCatalogCatalogRouter;
 use crate::provider::http::rainbow_entities::data_service::RainbowCatalogDataServiceRouter;
 use crate::provider::http::rainbow_entities::dataset::RainbowCatalogDatasetRouter;
+use crate::provider::http::rainbow_entities::dataset_series::RainbowCatalogDatasetSeriesRouter;
 use crate::provider::http::rainbow_entities::distribution::RainbowCatalogDistributionRouter;
 use crate::provider::http::rainbow_entities::policies::RainbowCatalogPoliciesRouter;
+use crate::provider::http::rainbow_entities::catalog_record::RainbowCatalogRecordRouter;
+use crate::provider::http::rainbow_entities::resources::RainbowCatalogResourceRouter;
+
+use crate::provider::http::openapi::route_openapi;
+
 use crate::provider::http::rainbow_rpc::rainbow_rpc::RainbowRPCCatalogRouter;
 use axum::routing::get;
 use axum::{serve, Router};
+
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+
 use rainbow_db::catalog::repo::sql::CatalogRepoForSql;
 use rainbow_db::catalog::repo::CatalogRepoFactory;
+
 use rainbow_db::events::repo::sql::EventsRepoForSql;
 use rainbow_db::events::repo::EventsRepoFactory;
+
 use rainbow_db::transfer_consumer::repo::sql::TransferConsumerRepoForSql;
 use rainbow_db::transfer_consumer::repo::TransferConsumerRepoFactory;
+
 use rainbow_events::core::notification::notification::RainbowEventsNotificationsService;
 use rainbow_events::core::subscription::subscription::RainbowEventsSubscriptionService;
 use rainbow_events::core::subscription::subscription_types::SubscriptionEntities;
 use rainbow_events::http::notification::notification::RainbowEventsNotificationRouter;
 use rainbow_events::http::subscription::subscription::RainbowEventsSubscriptionRouter;
+
 use sea_orm::Database;
 use std::sync::Arc;
 use tokio::net::TcpListener;
@@ -89,13 +105,18 @@ pub async fn create_catalog_router(config: &ApplicationProviderConfig) -> Router
     let rainbow_dataset_service = Arc::new(RainbowCatalogDatasetService::new(catalog_repo.clone(), notification_service.clone()));
     let rainbow_distribution_service = Arc::new(RainbowCatalogDistributionService::new(catalog_repo.clone(), notification_service.clone()));
     let rainbow_policies_service = Arc::new(RainbowCatalogPoliciesService::new(catalog_repo.clone(), notification_service.clone()));
+    let raimbow_catalog_record_service = Arc::new(RainbowCatalogCatalogRecordService::new(catalog_repo.clone(), notification_service.clone()));
+    let rainbow_catalog_resources_service = Arc::new(RainbowCatalogResourceService::new(catalog_repo.clone(), notification_service.clone()));
+    let rainbow_dataset_series_service = Arc::new(RainbowCatalogDatasetSeriesService::new(catalog_repo.clone(), notification_service.clone()));
 
     let rainbow_catalog_router = RainbowCatalogCatalogRouter::new(rainbow_catalog_service, ds_protocol_service.clone());
     let rainbow_data_service_router = RainbowCatalogDataServiceRouter::new(rainbow_data_service_service.clone());
     let rainbow_dataset_router = RainbowCatalogDatasetRouter::new(rainbow_dataset_service.clone());
     let rainbow_distributions_router = RainbowCatalogDistributionRouter::new(rainbow_distribution_service.clone());
     let rainbow_policies_router = RainbowCatalogPoliciesRouter::new(rainbow_policies_service.clone());
-
+    let rainbow_catalog_record_router = RainbowCatalogRecordRouter::new(raimbow_catalog_record_service.clone());
+    let rainbow_catalog_resources_router = RainbowCatalogResourceRouter::new(rainbow_catalog_resources_service.clone());
+    let raimboe_dataset_series_router = RainbowCatalogDatasetSeriesRouter::new(rainbow_dataset_series_service.clone());
     // RPC Dependency injection
     let rainbow_rpc_service = Arc::new(RainbowRPCCatalogService::new(catalog_repo.clone()));
     let rainbow_rpc_router = RainbowRPCCatalogRouter::new(rainbow_rpc_service.clone());
@@ -108,6 +129,7 @@ pub async fn create_catalog_router(config: &ApplicationProviderConfig) -> Router
         .merge(rainbow_dataset_router.router())
         .merge(rainbow_distributions_router.router())
         .merge(rainbow_policies_router.router())
+        .merge(rainbow_catalog_record_router.router())
         .merge(rainbow_rpc_router.router())
         .merge(ds_protocol_router.router())
         .nest("/api/v1/catalog", subscription_router.clone())
@@ -131,3 +153,4 @@ impl CatalogApplication {
         Ok(())
     }
 }
+

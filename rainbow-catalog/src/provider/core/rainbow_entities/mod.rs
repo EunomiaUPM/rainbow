@@ -18,8 +18,11 @@
  */
 
 use crate::provider::core::rainbow_entities::rainbow_catalog_types::{
-    EditDataServiceRequest, EditDistributionRequest, NewCatalogRequest, EditCatalogRequest, 
-    NewDataServiceRequest, NewDatasetRequest, EditDatasetRequest, NewDistributionRequest};
+    EditCatalogRecordRequest, EditCatalogRequest, EditDataServiceRequest, EditDatasetRequest, EditDatasetSeriesRequest, EditDistributionRequest, EditResourceRequest, NewCatalogRecordRequest, NewCatalogRequest, NewDataServiceRequest, NewDatasetRequest, NewDatasetSeriesRequest, NewDistributionRequest, NewResourceRequest
+};
+
+use rainbow_db::catalog::entities::{dataset as dataset_model, catalog_record as catalog_record_model, resource, dataset_series as dataset_series_model};
+
 use axum::async_trait;
 use rainbow_common::dcat_formats::DctFormats;
 use rainbow_common::protocol::catalog::catalog_definition::Catalog;
@@ -34,9 +37,12 @@ pub mod data_service;
 pub mod dataset;
 pub mod distribution;
 pub mod policies;
+pub mod catalog_record;
 pub mod rainbow_catalog_err;
 pub mod rainbow_catalog_types;
 pub mod rainbow_policies_types;
+pub mod resources; 
+pub mod dataset_series;
 
 #[mockall::automock]
 #[async_trait]
@@ -123,4 +129,36 @@ pub trait RainbowPoliciesTrait: Send + Sync {
         policy: OdrlPolicyInfo,
     ) -> anyhow::Result<OdrlOffer>;
     async fn delete_distribution_policies(&self, distribution_id: Urn, policy_id: Urn) -> anyhow::Result<()>;
+}
+
+#[mockall::automock]
+#[async_trait]
+pub trait RainbowCatalogRecrodTrait: Send + Sync {
+    async fn get_catalog_records(&self) -> anyhow::Result<Vec<catalog_record_model::Model>>;
+    async fn get_catalog_records_by_catalog(&self, catalog_id: Urn) -> anyhow::Result<Vec<catalog_record_model::Model>>;
+    async fn get_catalog_records_by_id(&self, id: Urn) -> anyhow::Result<catalog_record_model::Model>;
+    async fn post_catalog_record(&self, input: NewCatalogRecordRequest) ->  anyhow::Result<catalog_record_model::Model>;
+    async fn put_catalog_record_by_id(&self, catalog_record_id: Urn, input: EditCatalogRecordRequest) -> anyhow::Result<catalog_record_model::Model>;
+    async fn delete_catalog_record_by_id(&self, catalog_record_id: Urn) -> anyhow::Result<()>;
+}
+
+#[mockall::automock]
+#[async_trait]
+pub trait RainbowCatalogResourceTrait: Send + Sync {
+    async fn get_all_resources(&self) -> anyhow::Result<Vec<resource::Model>>;
+    async fn post_resource(&self, input: NewResourceRequest) -> anyhow::Result<resource::Model>;
+    async fn get_resource_by_id(&self, id: Urn) -> anyhow::Result<resource::Model>;
+    async fn put_resource_by_id(&self, id: Urn, input: EditResourceRequest) -> anyhow::Result<resource::Model>;
+    async fn delete_resoruce_by_id(&self, id: Urn) -> anyhow::Result<()>;
+}
+
+#[mockall::automock]
+#[async_trait]
+pub trait RainbowCatalogDatasetSeriesTrait: Send + Sync {
+    async fn get_all_dataset_series(&self) -> anyhow::Result<Vec<dataset_series_model::Model>>;
+    async fn post_dataset_series(&self, input: NewDatasetSeriesRequest) -> anyhow::Result<dataset_series_model::Model>;
+    async fn get_dataset_series_by_id(&self, dataset_series_id: Urn) -> anyhow::Result<dataset_series_model::Model>;
+    async fn get_datasets_from_dataset_series_by_id(&self, dataset_series_id: Urn) -> anyhow::Result<Vec<dataset_model::Model>>;
+    async fn put_dataset_series_by_id(&self, dataset_series_id: Urn, input: EditDatasetSeriesRequest) -> anyhow::Result<dataset_series_model::Model>;
+    async fn delete_dataset_series_by_id(&self, dataset_series_id: Urn) -> anyhow::Result<()>;
 }

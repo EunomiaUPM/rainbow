@@ -33,25 +33,25 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(CatalogRecord::Table)
-                    .col(ColumnDef::new(CatalogRecord::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(CatalogRecord::DcatCatalog).string().not_null())
-                    .col(ColumnDef::new(CatalogRecord::DctTitle).string().not_null())
-                    .col(ColumnDef::new(CatalogRecord::DctDescription).string().not_null())
-                    .col(ColumnDef::new(CatalogRecord::DctIssued).timestamp().not_null())
-                    .col(ColumnDef::new(CatalogRecord::FoafPrimaryTopic).string().not_null())
+                    .table(CatalogRecords::Table)
+                    .col(ColumnDef::new(CatalogRecords::Id).string().not_null().primary_key())
+                    .col(ColumnDef::new(CatalogRecords::DcatCatalog).string().not_null())
+                    .col(ColumnDef::new(CatalogRecords::DctTitle).string().not_null())
+                    .col(ColumnDef::new(CatalogRecords::DctDescription).string().not_null())
+                    .col(ColumnDef::new(CatalogRecords::DctIssued).timestamp().not_null())
+                    .col(ColumnDef::new(CatalogRecords::FoafPrimaryTopic).string().not_null())
                     .to_owned(),
             )
             .await
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(CatalogRecord::Table).to_owned()).await
+        manager.drop_table(Table::drop().table(CatalogRecords::Table).to_owned()).await
     }
 }
 
 #[derive(Iden)]
-pub enum CatalogRecord {
+pub enum CatalogRecords {
     Table,
     Id,
     DcatCatalog,

@@ -17,6 +17,8 @@
  *
  */
 
+use crate::catalog::entities::keyword;
+
 use super::m20250721_000001_resources::Resources;
 use sea_orm_migration::prelude::*;
 
@@ -35,6 +37,7 @@ impl MigrationTrait for Migration {
             .create_table(
                 Table::create()
                     .table(Keywords::Table)
+                    .col(ColumnDef::new(Keywords::Id).string().not_null().primary_key())
                     .col(ColumnDef::new(Keywords::KeywordName).string().not_null())
                     .col(ColumnDef::new(Keywords::DcatResource).string().not_null())
                     .to_owned(),
@@ -50,6 +53,7 @@ impl MigrationTrait for Migration {
 #[derive(Iden)]
 pub enum Keywords {
     Table,
+    Id,
     KeywordName,
     DcatResource,
 }

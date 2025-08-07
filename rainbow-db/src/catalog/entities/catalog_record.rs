@@ -21,7 +21,7 @@ use sea_orm::entity::prelude::*;
 use serde::{Serialize, Deserialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
-#[sea_orm(table_name = "catalog_relations")]
+#[sea_orm(table_name = "catalog_records")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: String,
@@ -34,8 +34,19 @@ pub struct Model {
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-
+    #[sea_orm(
+        belongs_to = "super::catalog::Entity",
+        from = "Column::DcatCatalog",
+        to = "super::catalog::Column::Id"
+    )]
+    Catalog,
 }
 
+
+impl Related<super::catalog::Entity> for ActiveModel {
+    fn to() -> RelationDef {
+        Relation::Catalog.def()
+    }
+}
 
 impl ActiveModelBehavior for ActiveModel {}

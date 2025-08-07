@@ -17,11 +17,21 @@
  *
  */
 
+use core::slice;
+
 use rainbow_common::dcat_formats::DctFormats;
 use rainbow_common::utils::get_urn_from_string;
 use rainbow_db::catalog::repo::{
-    EditCatalogModel, EditDataServiceModel, EditDatasetModel, EditDistributionModel,
-    NewCatalogModel, NewDataServiceModel, NewDatasetModel, NewDistributionModel,
+    NewCatalogModel, EditCatalogModel, 
+    NewDataServiceModel, EditDataServiceModel, 
+    NewDatasetModel, EditDatasetModel, 
+    NewDistributionModel, EditDistributionModel, 
+    NewCatalogRecordModel, EditCatalogRecordModel, 
+    NewDatasetSeriesModel, EditDatasetSeriesModel, 
+    NewRelationModel, EditRelationModel,
+    NewQualifiedRelationModel, EditQualifiedRelationModel,
+    NewKeywordModel, NewReferenceModel, EditReferenceModel,
+    NewThemeModel, NewResourceModel, EditResourceModel
 };
 use serde::{Deserialize, Serialize};
 use urn::Urn;
@@ -534,68 +544,68 @@ pub struct NewDataServiceRequest {
     pub dcat_endpoint_description: Option<String>,
     #[serde(rename = "dcat:endpointURL")]
     pub dcat_endpoint_url: String,
-    #[serde(rename = "dct_identifier")]
+    #[serde(rename = "dct:identifier")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dct_identifier: Option<String>,
-    #[serde(rename = "dct_description")]
+    #[serde(rename = "dct:description")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dct_description: Option<String>,
-    #[serde(rename = "dct_issued")]
+    #[serde(rename = "dct:issued")]
     pub dct_issued: chrono::NaiveDateTime,
-    #[serde(rename = "dct_modified")]
+    #[serde(rename = "dct:modified")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dct_modified: Option<chrono::NaiveDateTime>,
-    #[serde(rename = "catalog_id")]
+    #[serde(rename = "catalogId")]
     pub catalog_id: Urn,
-    #[serde(rename = "dcat_serves_dataset")]
+    #[serde(rename = "dcat:servesDataset")]
     pub dcat_serves_dataset: String,
-    #[serde(rename = "dcat_access_rights")]
+    #[serde(rename = "dcat:accessRights")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dcat_access_rights: Option<String>,
-    #[serde(rename = "ordl_has_policy")]
+    #[serde(rename = "ordl:hasPolicy")]
     pub ordl_has_policy: String,
-    #[serde(rename = "dcat_contact_point")]
+    #[serde(rename = "dcat:contactPoint")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dcat_contact_point: Option<String>,
-    #[serde(rename = "dcat_landing_page")]
+    #[serde(rename = "dcat_landingPage")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dcat_landing_page: Option<String>,
-    #[serde(rename = "dct_licence")]
+    #[serde(rename = "dct:licence")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dct_licence: Option<String>,
-    #[serde(rename = "dct_rights")]
+    #[serde(rename = "dct:rights")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dct_rights: Option<String>,
-    #[serde(rename = "dct_publisher")]
+    #[serde(rename = "dct:publisher")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dct_publisher: Option<String>,
-    #[serde(rename = "prov_qualifed_attribution")]
+    #[serde(rename = "prov:qualifedAttribution")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub prov_qualifed_attribution: Option<String>,
-    #[serde(rename = "dcat_has_current_version")]
+    #[serde(rename = "dcat:has_currentVersion")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dcat_has_current_version: Option<String>,
-    #[serde(rename = "dcat_version")]
+    #[serde(rename = "dcat:version")]
     pub dcat_version: String,
-    #[serde(rename = "dcat_previous_version")]
+    #[serde(rename = "dcat:previousVersion")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dcat_previous_version: Option<String>,
-    #[serde(rename = "adms_version_notes")]
+    #[serde(rename = "adms:versionNotes")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub adms_version_notes: Option<String>,
-    #[serde(rename = "dcat_first")]
+    #[serde(rename = "dcat:first")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dcat_first: Option<String>,
-    #[serde(rename = "dcat_last")]
+    #[serde(rename = "dcat:last")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dcat_last: Option<String>,
     #[serde(rename = "dcat_prev")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dcat_prev: Option<String>,
-    #[serde(rename = "dct_replaces")]
+    #[serde(rename = "dct:replaces")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dct_replaces: Option<String>,
-    #[serde(rename = "adms_status")]
+    #[serde(rename = "adms:status")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub adms_status: Option<String>,
 }
@@ -866,7 +876,7 @@ impl Into<NewDistributionModel> for NewDistributionRequest {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct EditDistributionRequest {
-    #[serde(rename = "dcttitle")]
+    #[serde(rename = "dct:title")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dct_title: Option<String>,
     #[serde(rename = "dct:description")]
@@ -969,22 +979,548 @@ impl Into<EditDistributionModel> for EditDistributionRequest {
     }
 }
 
-// #[derive(Debug, Serialize, Deserialize, Clone)]
-// pub struct EditDistributionRequest {
-//     #[serde(rename = "dct:title")]
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub dct_title: Option<String>,
-//     #[serde(rename = "dcat:accessService")]
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub dcat_access_service: Option<Urn>,
-// }
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct NewDatasetSeriesRequest {
+    #[serde(rename = "id" )]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<Urn>,
+    #[serde(rename = "dct:conformsTo" )]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_conforms_to: Option<String>,
+    #[serde(rename = "dct:creator" )]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_creator: Option<String>,
+    #[serde(rename = "dct:identifier" )]
+    pub dct_identifier: String,
+    #[serde(rename = "dct:issued" )]
+    pub dct_issued: chrono::NaiveDateTime,
+    #[serde(rename = "dct:modified" )]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_modified: Option<chrono::NaiveDateTime>,
+    #[serde(rename = "dct:title" )]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_title: Option<String>,
+    #[serde(rename = "dct:description" )]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_description: Option<String>,
+    #[serde(rename = "dct:spatial" )]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_spatial: Option<String>,
+    #[serde(rename = "dcat:spatialResolutionMeters" )]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dcat_spatial_resolution_meters: Option<f64>,
+    #[serde(rename = "dct:temporal" )]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_temporal: Option<String>,
+    #[serde(rename = "dct:temporalResolution" )]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_temporal_resolution: Option<String>,
+    #[serde(rename = "prov:generatedBy" )]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub prov_generated_by: Option<String>,
+    #[serde(rename = "dct:accessRights" )]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_access_rights: Option<String>,
+    #[serde(rename = "ordl:hasPolicy" )]
+    pub ordl_has_policy: String,
+    #[serde(rename = "dct:licence" )]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_licence: Option<String>,
+    #[serde(rename = "dcat:inseries" )]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dcat_inseries: Option<String>,
+    #[serde(rename = "dcat:landingpage" )]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dcat_landing_page: Option<String>,
+    #[serde(rename = "dcat:contactPoint" )]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dcat_contact_point: Option<String>,
+    #[serde(rename = "dct:language" )]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_language: Option<String>,
+    #[serde(rename = "dct:rights" )]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_rights: Option<String>,
+    #[serde(rename = "dct:publisher" )]
+    pub dct_publisher: String,
+    #[serde(rename = "dct:type" )]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_type: Option<String>,
+    #[serde(rename = "prov:qualifiedAttribution" )]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub prov_qualified_attribution: Option<String>,
+    #[serde(rename = "dct:accrualPeriodicity" )]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_accrual_periodicity: Option<String>,
+    #[serde(rename = "dcat:hasCurrentVersion" )]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dcat_has_current_version: Option<String>,
+    #[serde(rename = "dcat:version" )]
+    pub dcat_version: String,
+    #[serde(rename = "dcat:previousVersion" )]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dcat_previous_version: Option<String>,
+    #[serde(rename = "adms:versionNotes" )]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub adms_version_notes: Option<String>,
+    #[serde(rename = "dcat:first" )]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dcat_first: Option<String>,
+    #[serde(rename = "dcat:last" )]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dcat_last: Option<String>,
+    #[serde(rename = "dcat:prev" )]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dcat_prev: Option<String>,
+    #[serde(rename = "dct:replaces" )]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_replaces: Option<String>,
+    #[serde(rename = "adms:status" )]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub adms_status: Option<String>,
+}
 
-// impl Into<EditDistributionModel> for EditDistributionRequest {
-//     fn into(self) -> EditDistributionModel {
-//         EditDistributionModel {
-//             dct_title: self.dct_title,
-//             dct_description: None,
-//             dcat_access_service: self.dcat_access_service.map(|a| a.to_string()),
-//         }
-//     }
-// }
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct EditDatasetSeriesRequest {
+    #[serde(rename = "dct:conformsTo")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_conforms_to: Option<String>,
+    #[serde(rename = "dct:creator")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_creator: Option<String>,
+    #[serde(rename = "dct:issued")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_issued: Option<chrono::NaiveDateTime>,
+    #[serde(rename = "dct:modified")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_modified: Option<chrono::NaiveDateTime>,
+    #[serde(rename = "dct:title")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_title: Option<String>,
+    #[serde(rename = "dct:description")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_description: Option<String>,
+    #[serde(rename = "dct:spatial")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_spatial: Option<String>,
+    #[serde(rename = "dcat:spatialResolutionMeters")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dcat_spatial_resolution_meters: Option<f64>,
+    #[serde(rename = "dct:temporal")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_temporal: Option<String>,
+    #[serde(rename = "dct:temporalResolution")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_temporal_resolution: Option<String>,
+    #[serde(rename = "prov:generatedBy")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub prov_generated_by: Option<String>,
+    #[serde(rename = "dct:accessRights")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_access_rights: Option<String>,
+    #[serde(rename = "ordl:hasPolicy")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ordl_has_policy: Option<String>,
+    #[serde(rename = "dct:licence")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_licence: Option<String>,
+    #[serde(rename = "dcat:inseries")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dcat_inseries: Option<String>,
+    #[serde(rename = "dcat:landingPage")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dcat_landing_page: Option<String>,
+    #[serde(rename = "dcat:contactPoint")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dcat_contact_point: Option<String>,
+    #[serde(rename = "dct:language")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_language: Option<String>,
+    #[serde(rename = "dct:rights")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_rights: Option<String>,
+    #[serde(rename = "dctPublisher")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_publisher: Option<String>,
+    #[serde(rename = "dct:type")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_type: Option<String>,
+    #[serde(rename = "prov:qualifiedAttribution")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub prov_qualified_attribution: Option<String>,
+    #[serde(rename = "dct:accrualPeriodicity")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_accrual_periodicity: Option<String>,
+    #[serde(rename = "dcat:hasCurrentVersion")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dcat_has_current_version: Option<String>,
+    #[serde(rename = "dcat:version")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dcat_version: Option<String>,
+    #[serde(rename = "dcat:previousVersion")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dcat_previous_version: Option<String>,
+    #[serde(rename = "adms:versionNotes")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub adms_version_notes: Option<String>,
+    #[serde(rename = "dcat:first")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dcat_first: Option<String>,
+    #[serde(rename = "dcat:last")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dcat_last: Option<String>,
+    #[serde(rename = "dcat:prev")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dcat_prev: Option<String>,
+    #[serde(rename = "dct:replaces")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_replaces: Option<String>,
+    #[serde(rename = "adms:status")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub adms_status: Option<String>,
+}
+
+impl Into<NewDatasetSeriesModel> for NewDatasetSeriesRequest {
+    fn into(self) -> NewDatasetSeriesModel {
+        NewDatasetSeriesModel {
+            id: self.id,
+            dct_conforms_to: self.dct_conforms_to,
+            dct_creator: self.dct_creator,
+            dct_identifier: self.dct_identifier,
+            dct_issued: self.dct_issued,
+            dct_modified: self.dct_modified,
+            dct_title: self.dct_title,
+            dct_description: self.dct_description,
+            dct_spatial: self.dct_spatial,
+            dcat_spatial_resolution_meters: self.dcat_spatial_resolution_meters,
+            dct_temporal: self.dct_temporal,
+            dct_temporal_resolution: self.dct_temporal_resolution,
+            prov_generated_by: self.prov_generated_by,
+            dct_access_rights: self.dct_access_rights,
+            ordl_has_policy: self.ordl_has_policy,
+            dct_licence: self.dct_licence,
+            dcat_inseries: self.dcat_inseries,
+            dcat_landing_page: self.dcat_landing_page,
+            dcat_contact_point: self.dcat_contact_point,
+            dct_language: self.dct_language,
+            dct_rights: self.dct_rights,
+            dct_publisher: self.dct_publisher,
+            dct_type: self.dct_type,
+            prov_qualified_attribution: self.prov_qualified_attribution,
+            dct_accrual_periodicity: self.dct_accrual_periodicity,
+            dcat_has_current_version: self.dcat_has_current_version,
+            dcat_version: self.dcat_version,
+            dcat_previous_version: self.dcat_previous_version,
+            adms_version_notes: self.adms_version_notes,
+            dcat_first: self.dcat_first,
+            dcat_last: self.dcat_last,
+            dcat_prev: self.dcat_prev,
+            dct_replaces: self.dct_replaces,
+            adms_status: self.adms_status,
+        }
+    }
+}
+
+impl Into<EditDatasetSeriesModel> for EditDatasetSeriesRequest {
+    fn into(self) -> EditDatasetSeriesModel {
+        EditDatasetSeriesModel{
+            dct_conforms_to: self.dct_conforms_to,
+            dct_creator: self.dct_creator,
+            dct_issued: self.dct_issued,
+            dct_modified: self.dct_modified,
+            dct_title: self.dct_title,
+            dct_description: self.dct_description,
+            dct_spatial: self.dct_spatial,
+            dcat_spatial_resolution_meters: self.dcat_spatial_resolution_meters,
+            dct_temporal: self.dct_temporal,
+            dct_temporal_resolution: self.dct_temporal_resolution,
+            prov_generated_by: self.prov_generated_by,
+            dct_access_rights: self.dct_access_rights,
+            ordl_has_policy: self.ordl_has_policy,
+            dct_licence: self.dct_licence,
+            dcat_inseries: self.dcat_inseries,
+            dcat_landing_page: self.dcat_landing_page,
+            dcat_contact_point: self.dcat_contact_point,
+            dct_language: self.dct_language,
+            dct_rights: self.dct_rights,
+            dct_publisher: self.dct_publisher,
+            dct_type: self.dct_type,
+            prov_qualified_attribution: self.prov_qualified_attribution,
+            dct_accrual_periodicity: self.dct_accrual_periodicity,
+            dcat_has_current_version: self.dcat_has_current_version,
+            dcat_version: self.dcat_version,
+            dcat_previous_version: self.dcat_previous_version,
+            adms_version_notes: self.adms_version_notes,
+            dcat_first: self.dcat_first,
+            dcat_last: self.dcat_last,
+            dcat_prev: self.dcat_prev,
+            dct_replaces: self.dct_replaces,
+            adms_status: self.adms_status,
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct NewCatalogRecordRequest {
+    #[serde(rename = "id")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<Urn>,
+    #[serde(rename = "dcat:catalog")]
+    pub dcat_catalog: String,
+    #[serde(rename = "dct:title")]
+    pub dct_title: String,
+    #[serde(rename = "dct:description")]
+    pub dct_description: String,
+    #[serde(rename = "dct:issued")]
+    pub dct_issued: chrono::NaiveDateTime,
+    #[serde(rename = "foaf:primaryTopic")]
+    pub foaf_primary_topic: String
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct EditCatalogRecordRequest {
+    #[serde(rename = "dcat:catalog")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dcat_catalog: Option<String>,
+    #[serde(rename = "dct:title")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_title: Option<String>,
+    #[serde(rename = "dct:description")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_description: Option<String>,
+    #[serde(rename = "dct:issued")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_issued: Option<chrono::NaiveDateTime>,
+    #[serde(rename = "foaf:primary_topic")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub foaf_primary_topic: Option<String>
+}
+
+impl Into<NewCatalogRecordModel> for NewCatalogRecordRequest {
+    fn into(self) -> NewCatalogRecordModel {
+        NewCatalogRecordModel{
+            id: self.id,
+            dcat_catalog: self.dcat_catalog,
+            dct_title: self.dct_title,
+            dct_description: self.dct_description,
+            dct_issued: self.dct_issued,
+            foaf_primary_topic: self.foaf_primary_topic,
+        }
+    }
+}
+
+impl Into<EditCatalogRecordModel> for EditCatalogRecordRequest {
+    fn into(self) -> EditCatalogRecordModel {
+        EditCatalogRecordModel{
+            dcat_catalog: self.dcat_catalog,
+            dct_title: self.dct_title,
+            dct_description: self.dct_description,
+            dct_issued: self.dct_issued,
+            foaf_primary_topic: self.foaf_primary_topic,
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct NewRelationRequest {
+    #[serde(rename = "id")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<Urn>,
+    #[serde(rename = "dcat:relationship")]
+    pub dcat_relationship: String,
+    #[serde(rename = "dcat:resource1")]
+    pub dcat_resource1: String,
+    #[serde(rename = "dcat:resource2")]
+    pub dcat_resource2: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct EditRelationRequest {
+    #[serde(rename = "dcat:relationship")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dcat_relationship: Option<String>,
+    #[serde(rename = "dcat:resource1")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dcat_resource1: Option<String>,
+    #[serde(rename = "dcat:resource2")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dcat_resource2: Option<String>,
+}
+
+impl Into<NewRelationModel> for NewRelationRequest {
+    fn into(self) -> NewRelationModel {
+        NewRelationModel {
+            id: self.id,
+            dcat_relationship: self.dcat_relationship,
+            dcat_resource1: self.dcat_resource1,
+            dcat_resource2: self.dcat_resource2,
+        }
+    }
+}
+
+impl Into<EditRelationModel> for EditRelationRequest {
+    fn into(self) -> EditRelationModel {
+        EditRelationModel {
+            dcat_relationship: self.dcat_relationship,
+            dcat_resource1: self.dcat_resource1,
+            dcat_resource2: self.dcat_resource2,
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct NewQualifiedRelationRequest {
+    #[serde(rename = "id")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<Urn>,
+    #[serde(rename = "dcat:qualifiedRelation")]
+    pub dcat_qualified_relation: String,
+    #[serde(rename = "dcat:resource1")]
+    pub dcat_resource1: String,
+    #[serde(rename = "dcat:resource2")]
+    pub dcat_resource2: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct EditQualifiedRelationRequest {
+    #[serde(rename = "dcat:qualifiedRelation")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dcat_qualified_relation: Option<String>,
+    #[serde(rename = "dcat:resource1")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dcat_resource1: Option<String>,
+    #[serde(rename = "dcat:resource2")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dcat_resource2: Option<String>,
+}
+
+impl Into<NewQualifiedRelationModel> for NewQualifiedRelationRequest {
+    fn into(self) -> NewQualifiedRelationModel {
+        NewQualifiedRelationModel {
+            id: self.id,
+            dcat_qualified_relation: self.dcat_qualified_relation,
+            dcat_resource1: self.dcat_resource1,
+            dcat_resource2: self.dcat_resource2,
+        }
+    }
+}
+
+impl Into<EditQualifiedRelationModel> for EditQualifiedRelationRequest {
+    fn into(self) -> EditQualifiedRelationModel {
+        EditQualifiedRelationModel {
+            dcat_qualified_relation: self.dcat_qualified_relation,
+            dcat_resource1: self.dcat_resource1,
+            dcat_resource2: self.dcat_resource2,
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct NewResourceRequest {
+    #[serde(rename = "resource_id")]
+    pub resource_id: Urn,
+    #[serde(rename = "resource_type")]
+    pub resource_type: String
+}
+
+impl Into<NewResourceModel> for NewResourceRequest {
+    fn into(self) -> NewResourceModel {
+        NewResourceModel { 
+            resource_id: self.resource_id, 
+            resource_type: self.resource_type }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct EditResourceRequest {
+    #[serde(rename = "resource_id")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub resource_id: Option<Urn>,
+    #[serde(rename = "resource_type")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub resource_type: Option<String>
+}
+impl Into<EditResourceModel> for EditResourceRequest {
+    fn into(self) -> EditResourceModel {
+        EditResourceModel { 
+            resource_id: self.resource_id, 
+            resource_type: self.resource_type 
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct NewReferenceRequest {
+    #[serde(rename= "id")]
+    pub id: Urn,
+    #[serde(rename = "referenced_resource_id")]
+    pub referenced_resource_id: Urn,
+    #[serde(rename = "reference")]
+    pub reference: String
+}
+
+impl Into<NewReferenceModel> for NewReferenceRequest{
+    fn into(self) -> NewReferenceModel {
+        NewReferenceModel {
+            id: self.id,
+            referenced_resource_id: self.referenced_resource_id,
+            reference: self.reference,
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct EditReferenceRequest {
+    #[serde(rename = "referenced_resource_id")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub referenced_resource_id: Option<Urn>,
+    #[serde(rename = "reference")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reference: Option<String>
+}
+
+impl Into<EditReferenceModel> for EditReferenceRequest {
+    fn into(self) -> EditReferenceModel {
+        EditReferenceModel { 
+            referenced_resource_id: self.referenced_resource_id, 
+            reference: self.reference}
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct NewKeywordRequest {
+    #[serde(rename = "id")]
+    pub id: Urn,
+    #[serde(rename = "dcat:keyword")]
+    pub keyword: String,
+    #[serde(rename = "dcat:resource")]
+    pub dcat_resource: Urn,
+}
+
+impl Into<NewKeywordModel> for NewKeywordRequest {
+    fn into(self) -> NewKeywordModel {
+        NewKeywordModel { 
+            id: self.id, 
+            keyword: self.keyword, 
+            dcat_resource: self.dcat_resource }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct NewThemeRequest {
+    #[serde(rename = "id")]
+    pub id: Urn,
+    #[serde(rename = "dcat:theme")]
+    pub theme: String,
+    #[serde(rename = "dcat:resource")]
+    pub dcat_resource: Urn,
+}
+
+impl Into<NewThemeModel> for NewThemeRequest {
+    fn into(self) -> NewThemeModel {
+        NewThemeModel { 
+            id: self.id, 
+            theme: self.theme, 
+            dcat_resource: self.dcat_resource }
+    }
+}

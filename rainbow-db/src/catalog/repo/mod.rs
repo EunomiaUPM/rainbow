@@ -17,6 +17,8 @@
  *
  */
 
+use std::any;
+
 use super::entities::catalog;
 use super::entities::dataservice;
 use super::entities::dataset;
@@ -25,10 +27,10 @@ use super::entities::odrl_offer;
 use super::entities::dataset_series;
 use super::entities::resource;
 use super::entities::keyword;
-use super::entities::themes;
-use super::entities::relations;
-use super::entities::qualified_relations;
-use super::entities::references;
+use super::entities::theme;
+use super::entities::relation;
+use super::entities::qualified_relation;
+use super::entities::reference;
 use super::entities::catalog_record;
 
 use crate::transfer_provider::repo::{TransferMessagesRepo, TransferProcessRepo};
@@ -36,14 +38,23 @@ use anyhow::Error;
 use axum::async_trait;
 use rainbow_common::dcat_formats::DctFormats;
 use rainbow_common::protocol::catalog::catalog_definition;
+use sea_orm::sqlx::sqlite::SqliteValueRef;
 use sea_orm::DatabaseConnection;
+use serde::Deserialize;
 use thiserror::Error;
 use urn::Urn;
 
 pub mod sql;
 
 pub trait CatalogRepoFactory:
-CatalogRepo + DatasetRepo + DistributionRepo + DataServiceRepo + OdrlOfferRepo + DatasetSeriesRepo + CatalogRecordRepo + RelationRepo + QualifiedRelationRepo + Send + Sync + 'static
+    CatalogRepo + DatasetRepo + 
+    DistributionRepo + DataServiceRepo + 
+    OdrlOfferRepo + DatasetSeriesRepo + 
+    CatalogRecordRepo + RelationRepo + 
+    QualifiedRelationRepo + ResourceRepo + 
+    ReferenceRepo + KeywordThemesRepo +
+    Send + Sync + 'static
+
 {
     fn create_repo(db_connection: DatabaseConnection) -> Self
     where
@@ -629,7 +640,7 @@ pub trait CatalogRecordRepo {
         &self,
         new_catalog_record_model: NewCatalogRecordModel,
     ) -> anyhow::Result<catalog_record::Model, CatalogRepoErrors>;
-    async fn put_catalog_record(
+    async fn put_catalog_record_by_id(
         &self,
         catalog_record_id: Urn,
         edit_catalog_record_model: EditCatalogRecordModel
@@ -660,13 +671,13 @@ pub trait RelationRepo {
         &self,
         limit: Option<u64>,
         page: Option<u64>,
-    ) -> anyhow::Result<Vec<relations::Model>, CatalogRepoErrors>;
+    ) -> anyhow::Result<Vec<relation::Model>, CatalogRepoErrors>;
     async fn get_relations_by_resource(
         &self,
         limit: Option<u64>,
         page: Option<u64>,
         resource_id: Urn
-    ) -> anyhow::Result<Vec<relations::Model>, CatalogRepoErrors>;
+    ) -> anyhow::Result<Vec<relation::Model>, CatalogRepoErrors>;
     async fn get_resources_by_relation(
         &self,
         limit: Option<u64>,
@@ -684,11 +695,11 @@ pub trait RelationRepo {
         &self,
         relation_id: Urn,
         relation_model: EditRelationModel,
-    ) -> anyhow::Result<relations::Model, CatalogRepoErrors>;
+    ) -> anyhow::Result<relation::Model, CatalogRepoErrors>;
     async fn create_relation(
         &self,
         relation_model: NewRelationModel,
-    ) -> anyhow::Result<relations::Model, CatalogRepoErrors>;
+    ) -> anyhow::Result<relation::Model, CatalogRepoErrors>;
     async fn delete_relation_by_id(
         &self,
         relation_id: Urn,
@@ -714,13 +725,13 @@ pub trait QualifiedRelationRepo {
         &self,
         limit: Option<u64>,
         page: Option<u64>,
-    ) -> anyhow::Result<Vec<qualified_relations::Model>, CatalogRepoErrors>;
+    ) -> anyhow::Result<Vec<qualified_relation::Model>, CatalogRepoErrors>;
     async fn get_qualified_relations_by_resource(
         &self,
         limit: Option<u64>,
         page: Option<u64>,
         resource_id: Urn
-    ) -> anyhow::Result<Vec<qualified_relations::Model>, CatalogRepoErrors>;
+    ) -> anyhow::Result<Vec<qualified_relation::Model>, CatalogRepoErrors>;
     async fn get_resources_by_qualified_relation(
         &self,
         limit: Option<u64>,
@@ -738,18 +749,134 @@ pub trait QualifiedRelationRepo {
         &self,
         relation_id: Urn,
         relation_model: EditQualifiedRelationModel,
-    ) -> anyhow::Result<qualified_relations::Model, CatalogRepoErrors>;
+    ) -> anyhow::Result<qualified_relation::Model, CatalogRepoErrors>;
     async fn create_qualified_relation(
         &self,
         relation_model: NewQualifiedRelationModel,
-    ) -> anyhow::Result<qualified_relations::Model, CatalogRepoErrors>;
+    ) -> anyhow::Result<qualified_relation::Model, CatalogRepoErrors>;
     async fn delete_qualified_relation_by_id(
         &self,
         relation_id: Urn,
     ) -> anyhow::Result<(), CatalogRepoErrors>;
 }
 
+pub struct NewResourceModel {
+    pub resource_id: Urn,
+    pub resource_type: String
+}
 
+pub struct EditResourceModel {
+    pub resource_id: Option<Urn>,
+    pub resource_type: Option<String>
+}
+
+#[async_trait]
+pub trait ResourceRepo {
+    async fn get_all_resources (
+        &self,
+        limit: Option<u64>,
+        page: Option<u64>
+    ) -> anyhow::Result<Vec<resource::Model>, CatalogRepoErrors>;
+    async fn get_resource_by_id (
+        &self,
+        resource_id: Urn,
+    ) -> anyhow::Result<Option<resource::Model>, CatalogRepoErrors>;
+    async fn get_all_resources_by_type (
+        &self,
+        limit: Option<u64>,
+        page: Option<u64>,
+        resource_type: String,
+    ) -> anyhow::Result<Vec<resource::Model>, CatalogRepoErrors>;
+    async fn put_resource_by_id (
+        &self,
+        resource_id: Urn,
+        edit_resource_model: EditResourceModel
+    ) -> anyhow::Result<resource::Model, CatalogRepoErrors>;
+    async fn create_resource (
+        &self,
+        new_resource: NewResourceModel,
+    ) -> anyhow::Result<resource::Model, CatalogRepoErrors>;
+    async fn delete_resource_by_id (
+        &self,
+        resource_id: Urn,
+    ) -> anyhow::Result<(), CatalogRepoErrors>;
+}
+
+
+pub struct NewReferenceModel {
+    pub id: Urn,
+    pub referenced_resource_id: Urn,
+    pub reference: String,
+}
+pub struct EditReferenceModel {
+    pub referenced_resource_id: Option<Urn>,
+    pub reference: Option<String>,
+}
+
+#[async_trait]
+pub trait ReferenceRepo {
+    async fn get_all_references(
+        &self,
+        limit: Option<u64>,
+        page: Option<u64>,
+    ) -> anyhow::Result<Vec<reference::Model>, CatalogRepoErrors>;
+    async fn get_all_references_by_referenced_resource (
+        &self,
+        referenced_resource_id: Urn,
+        limit: Option<u64>,
+        page: Option<u64>,
+    ) -> anyhow::Result<Vec<reference::Model>, CatalogRepoErrors>;
+    async fn put_reference_by_id (
+        self,
+        reference_id: Urn,
+        edit_reference: EditReferenceModel,
+    ) -> anyhow::Result<reference::Model, CatalogRepoErrors>;
+    async fn create_reference (
+        self,
+        new_reference: NewReferenceModel,
+    ) -> anyhow::Result<reference::Model, CatalogRepoErrors>;
+    async fn delete_reference (
+        self,
+        reference_id: Urn,
+    ) -> anyhow::Result<(), CatalogRepoErrors>;
+}
+
+pub struct NewKeywordModel {
+    pub id: Urn,
+    pub keyword: String,
+    pub dcat_resource: Urn,
+}
+pub struct NewThemeModel {
+    pub id: Urn,
+    pub theme: String,
+    pub dcat_resource: Urn,
+}
+
+#[async_trait]
+pub trait KeywordThemesRepo {
+    async fn get_all_keywords(
+        &self,
+    ) -> anyhow::Result<Vec<keyword::Model>, CatalogRepoErrors>;
+    async fn get_all_themes(
+        &self,
+    ) -> anyhow::Result<Vec<theme::Model>, CatalogRepoErrors>;
+    async fn create_keyword(
+        &self,
+        new_keyword: NewKeywordModel,
+    ) -> anyhow::Result<keyword::Model, CatalogRepoErrors>;
+    async fn create_theme(
+        &self,
+        new_theme: NewThemeModel,
+    ) -> anyhow::Result<theme::Model, CatalogRepoErrors>;
+    async fn delete_keyword(
+        &self,
+        keyword_id: Urn,
+    ) -> anyhow::Result<(), CatalogRepoErrors>;
+    async fn delete_theme(
+        &self,
+        theme_id: Urn,
+    ) -> anyhow::Result<(), CatalogRepoErrors>;
+}
 #[derive(Error, Debug)]
 pub enum CatalogRepoErrors {
     #[error("Catalog not found")]
@@ -768,12 +895,16 @@ pub enum CatalogRepoErrors {
     CatalogRecordNotfound,
     #[error("Theme not found")]
     ThemeNotfound,
+    #[error("Keyword not found")]
+    KeywordNotfound,
     #[error("Relation not found")]
     RelationNotfound,
     #[error("Qualified Relation not found")]
     QualifiedRelationNotfound,
     #[error("Resource not found")]
     ResourceNotfound,
+    #[error("Reference not found")]
+    ReferenceNotfound,
 
     #[error("Error fetching catalog. {0}")]
     ErrorFetchingCatalog(Error),
@@ -799,6 +930,8 @@ pub enum CatalogRepoErrors {
     ErrorFetchingQualifiedRelation(Error),
     #[error("Error fetching resource. {0}")]
     ErrorFetchingResource(Error),
+    #[error("Error fetching reference. {0}")]
+    ErrorFetchingReference(Error),
 
     #[error("Error creating catalog. {0}")]
     ErrorCreatingCatalog(Error),
@@ -816,12 +949,16 @@ pub enum CatalogRepoErrors {
     ErrorCreatingCatalogRecord(Error),
     #[error("Error creating theme. {0}")]
     ErrorCreatingTheme(Error),
+    #[error("Error creating keyword. {0}")]
+    ErrorCreatingKeyword(Error),
     #[error("Error creating realtion. {0}")]
     ErrorCreatingRelation(Error),
     #[error("Error creating qualified realtion. {0}")]
     ErrorCreatingQualifiedRelation(Error),
     #[error("Error creating resource. {0}")]
     ErrorCreatingResource(Error),
+    #[error("Error creating reference. {0}")]
+    ErrorCreatingReference(Error),
     
     #[error("Error deleting catalog. {0}")]
     ErrorDeletingCatalog(Error),
@@ -839,12 +976,16 @@ pub enum CatalogRepoErrors {
     ErrorDeletingCatalogRecord(Error),
     #[error("Error deleting theme. {0}")]
     ErrorDeletingTheme(Error),
+    #[error("Error deleting keyword. {0}")]
+    ErrorDeletingKeyword(Error),
     #[error("Error deleting relation. {0}")]
     ErrorDeletingRelation(Error),
     #[error("Error deleting qualified relation. {0}")]
     ErrorDeletingQualifiedRelation(Error),
     #[error("Error deleting resource. {0}")]
     ErrorDeletingResource(Error),
+    #[error("Error deleting reference. {0}")]
+    ErrorDeletingReference(Error),
 
     #[error("Error updating catalog. {0}")]
     ErrorUpdatingCatalog(Error),
@@ -868,6 +1009,8 @@ pub enum CatalogRepoErrors {
     ErrorUpdatingQualifiedRelation(Error),
     #[error("Error updating resource. {0}")]
     ErrorUpdatingResource(Error),
+    #[error("Error updating reference. {0}")]
+    ErrorUpdatingReference(Error),
 
     #[error("Error fetching offer ids. {missing_ids:?}")]
     SomeOdrlOffersNotFound { missing_ids: String },

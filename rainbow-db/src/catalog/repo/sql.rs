@@ -36,27 +36,30 @@ use urn::Urn;
 
 use crate::catalog::entities::catalog::Model;
 
+use crate::catalog::entities::reference;
 use crate::catalog::entities::{catalog, catalog_record, dataservice, dataset,
-    dataset_series, distribution, keyword, odrl_offer, relations, qualified_relations, resource,
-    themes
+    dataset_series, distribution, keyword, odrl_offer, relation, qualified_relation, resource,
+    theme
 };
 
+use crate::catalog::repo::KeywordThemesRepo;
 use crate::catalog::repo::{CatalogRepo, CatalogRepoErrors, CatalogRepoFactory};
 
 use crate::catalog::repo::{
     CatalogRecordRepo, DataServiceRepo, DatasetRepo, DatasetSeriesRepo, DistributionRepo,
-    OdrlOfferRepo, RelationRepo, QualifiedRelationRepo, 
+    OdrlOfferRepo, RelationRepo, QualifiedRelationRepo, ResourceRepo, ReferenceRepo
 };
 
 use crate::catalog::repo::{
     NewCatalogModel, NewCatalogRecordModel, NewDataServiceModel, NewDatasetModel,
     NewDatasetSeriesModel, NewDistributionModel, NewOdrlOfferModel, NewRelationModel, 
-    NewQualifiedRelationModel, 
+    NewQualifiedRelationModel, NewReferenceModel, NewThemeModel, NewKeywordModel
 };
 
 use crate::catalog::repo::{
     EditCatalogModel, EditCatalogRecordModel, EditDataServiceModel, EditDatasetModel,
-    EditDatasetSeriesModel, EditDistributionModel, EditRelationModel, EditQualifiedRelationModel
+    EditDatasetSeriesModel, EditDistributionModel, EditRelationModel, EditQualifiedRelationModel,
+    NewResourceModel, EditResourceModel, EditReferenceModel
 };
 
 
@@ -138,8 +141,8 @@ impl CatalogRepo for CatalogRepoForSql {
         if themes.is_empty() {
             return Ok(vec![]);
         }
-        let themes = themes::Entity::find() // lista de entidades "themes" (id+tema+resourceId)
-            .filter(themes::Column::Theme.is_in(themes))
+        let themes = theme::Entity::find() // lista de entidades "themes" (id+tema+resourceId)
+            .filter(theme::Column::Theme.is_in(themes))
             .all(&self.db_connection)
             .await
             .map_err(|e| CatalogRepoErrors::ErrorFetchingThemes(e.into()))?;
@@ -469,8 +472,8 @@ impl DatasetRepo for CatalogRepoForSql {
         if themes.is_empty() {
             return Ok(vec![]);
         }
-        let themes = themes::Entity::find() // lista de entidades "themes" (id+tema+resourceId)
-            .filter(themes::Column::Theme.is_in(themes))
+        let themes = theme::Entity::find() // lista de entidades "themes" (id+tema+resourceId)
+            .filter(theme::Column::Theme.is_in(themes))
             .all(&self.db_connection)
             .await
             .map_err(|e| CatalogRepoErrors::ErrorFetchingThemes(e.into()))?;
@@ -797,8 +800,8 @@ impl DistributionRepo for CatalogRepoForSql {
         if themes.is_empty() {
             return Ok(vec![]);
         }
-        let themes = themes::Entity::find() // lista de entidades "themes" (id+tema+resourceId)
-            .filter(themes::Column::Theme.is_in(themes))
+        let themes = theme::Entity::find() // lista de entidades "themes" (id+tema+resourceId)
+            .filter(theme::Column::Theme.is_in(themes))
             .all(&self.db_connection)
             .await
             .map_err(|e| CatalogRepoErrors::ErrorFetchingThemes(e.into()))?;
@@ -841,7 +844,7 @@ impl DistributionRepo for CatalogRepoForSql {
             return Ok(vec![]);
         }
         let distributions = distribution::Entity::find()
-            .filter(dataset::Column::Id.is_in(distributions_ids))
+            .filter(distribution::Column::Id.is_in(distributions_ids))
             .limit(limit.unwrap_or(100000))
             .offset(page.unwrap_or(0))
             .all(&self.db_connection)
@@ -942,7 +945,6 @@ impl DistributionRepo for CatalogRepoForSql {
     ) -> anyhow::Result<distribution::Model, CatalogRepoErrors> {
         let catalog_id = catalog_id.to_string();
         let dataset_id = dataset_id.to_string();
-
         let catalog = catalog::Entity::find_by_id(catalog_id.clone())
             .one(&self.db_connection)
             .await
@@ -950,7 +952,6 @@ impl DistributionRepo for CatalogRepoForSql {
         if catalog.is_none() {
             return Err(CatalogRepoErrors::CatalogNotFound);
         }
-
         let dataset = dataset::Entity::find_by_id(dataset_id.clone())
             .one(&self.db_connection)
             .await
@@ -958,7 +959,6 @@ impl DistributionRepo for CatalogRepoForSql {
         if dataset.is_none() {
             return Err(CatalogRepoErrors::DatasetNotFound);
         }
-
         let data_service = dataservice::Entity::find_by_id(new_distribution_model.dcat_access_service.to_string())
             .one(&self.db_connection)
             .await
@@ -966,7 +966,6 @@ impl DistributionRepo for CatalogRepoForSql {
         if data_service.is_none() {
             return Err(CatalogRepoErrors::DataServiceNotFound);
         }
-
         let urn = new_distribution_model.id.unwrap_or_else(|| get_urn(None));
         let model = distribution::ActiveModel {
             id:ActiveValue::Set(urn.to_string()),
@@ -1067,7 +1066,7 @@ impl DataServiceRepo for CatalogRepoForSql {
             .await
             .map_err(|e| CatalogRepoErrors::ErrorFetchingCatalog(e.into()))?;
         if catalog.is_none() {
-            return Err(CatalogRepoErrors::CatalogNotFound);
+             return Err(CatalogRepoErrors::CatalogNotFound);
         }
         let data_services = dataservice::Entity::find()
             .filter(dataservice::Column::CatalogId.eq(catalog_id))
@@ -1621,7 +1620,7 @@ impl CatalogRecordRepo for CatalogRepoForSql {
             Err(err) => Err(CatalogRepoErrors::ErrorCreatingCatalogRecord(err.into())),
         }
     }
-    async fn put_catalog_record(
+    async fn put_catalog_record_by_id(
         &self,
         catalog_record_id: Urn,
         edit_catalog_record_model: EditCatalogRecordModel,
@@ -1674,8 +1673,8 @@ impl RelationRepo for CatalogRepoForSql{
         &self,
         limit: Option<u64>,
         page: Option<u64>,
-    ) -> anyhow::Result<Vec<relations::Model>, CatalogRepoErrors> {
-        let relations = relations::Entity::find()
+    ) -> anyhow::Result<Vec<relation::Model>, CatalogRepoErrors> {
+        let relations = relation::Entity::find()
             .limit(limit.unwrap_or(100000))
             .offset(page.unwrap_or(0))
             .all(&self.db_connection)
@@ -1691,7 +1690,7 @@ impl RelationRepo for CatalogRepoForSql{
         limit: Option<u64>,
         page: Option<u64>,
         resource_id : Urn,
-    ) -> anyhow::Result<Vec<relations::Model>, CatalogRepoErrors> {
+    ) -> anyhow::Result<Vec<relation::Model>, CatalogRepoErrors> {
         let resource_id = resource_id.to_string();
         let resource = resource::Entity::find_by_id(resource_id.clone())
             .one(&self.db_connection)
@@ -1700,10 +1699,10 @@ impl RelationRepo for CatalogRepoForSql{
         if resource.is_none() {
             return Err(CatalogRepoErrors::ResourceNotfound);
         }
-        let relations_by_resource = relations::Entity::find().filter(
+        let relations_by_resource = relation::Entity::find().filter(
             Condition::any()
-                .add(relations::Column::DcatResource1.eq(resource_id.clone()))
-                .add(relations::Column::DcatResource2.eq(resource_id))
+                .add(relation::Column::DcatResource1.eq(resource_id.clone()))
+                .add(relation::Column::DcatResource2.eq(resource_id))
             )
             .limit(limit.unwrap_or(100000))
             .offset(page.unwrap_or(0))
@@ -1720,8 +1719,8 @@ impl RelationRepo for CatalogRepoForSql{
         page: Option<u64>,
         relation_type: String,
     ) -> anyhow::Result<Vec<(resource::Model, resource::Model)>, CatalogRepoErrors> {
-        let relations = relations::Entity::find()
-            .filter(relations::Column::DcatRelationship.eq(relation_type))
+        let relations = relation::Entity::find()
+            .filter(relation::Column::DcatRelationship.eq(relation_type))
             .all(&self.db_connection)
             .await
             .map_err(|e| CatalogRepoErrors::ErrorFetchingRelation(e.into()))?;
@@ -1753,11 +1752,11 @@ impl RelationRepo for CatalogRepoForSql{
         let condition = Condition::all()
             .add(
                 Condition::any()
-                    .add(relations::Column::DcatResource1.eq(resource_id.clone()))
-                    .add(relations::Column::DcatResource2.eq(resource_id)),
+                    .add(relation::Column::DcatResource1.eq(resource_id.clone()))
+                    .add(relation::Column::DcatResource2.eq(resource_id)),
             )
-            .add(relations::Column::DcatRelationship.eq(relation));
-        let relations = relations::Entity::find()
+            .add(relation::Column::DcatRelationship.eq(relation));
+        let relations = relation::Entity::find()
             .filter(condition)
             .all(&self.db_connection)
             .await
@@ -1782,9 +1781,9 @@ impl RelationRepo for CatalogRepoForSql{
         &self,
         relation_id: Urn,
         edit_ralation_model: EditRelationModel,
-    ) -> anyhow::Result<relations::Model, CatalogRepoErrors> {
+    ) -> anyhow::Result<relation::Model, CatalogRepoErrors> {
         let relation_id = relation_id.to_string();
-        let old_model = relations::Entity::find_by_id(relation_id).one(&self.db_connection).await;
+        let old_model = relation::Entity::find_by_id(relation_id).one(&self.db_connection).await;
         let old_model = match old_model {
             Ok(old_model) => match old_model {
                 Some(old_model) => old_model,
@@ -1792,7 +1791,7 @@ impl RelationRepo for CatalogRepoForSql{
             },
             Err(err) => return Err(CatalogRepoErrors::ErrorFetchingRelation(err.into())),
         };
-        let mut old_active_model: relations::ActiveModel = old_model.into();
+        let mut old_active_model: relation::ActiveModel = old_model.into();
         if let Some(dcat_resource1) = edit_ralation_model.dcat_resource1 {
             old_active_model.dcat_resource1 = ActiveValue::Set(dcat_resource1);
         }
@@ -1812,14 +1811,14 @@ impl RelationRepo for CatalogRepoForSql{
     async fn create_relation(
         &self,
         new_relation_model: NewRelationModel,
-    ) -> anyhow::Result<relations::Model, CatalogRepoErrors> {
-        let model = relations::ActiveModel {
+    ) -> anyhow::Result<relation::Model, CatalogRepoErrors> {
+        let model = relation::ActiveModel {
             id:ActiveValue::Set(uuid::Uuid::new_v4().to_string()),
             dcat_relationship: ActiveValue::Set(new_relation_model.dcat_relationship),
             dcat_resource1: ActiveValue::Set(new_relation_model.dcat_resource1),
             dcat_resource2: ActiveValue::Set(new_relation_model.dcat_resource2),
         };
-        let relation = relations::Entity::insert(model).exec_with_returning(&self.db_connection).await;
+        let relation = relation::Entity::insert(model).exec_with_returning(&self.db_connection).await;
         match relation {
             Ok(relation) => Ok(relation),
             Err(err) => Err(CatalogRepoErrors::ErrorCreatingRelation(err.into())),
@@ -1830,7 +1829,7 @@ impl RelationRepo for CatalogRepoForSql{
         relation_id: Urn,
     ) -> anyhow::Result<(), CatalogRepoErrors> {
         let relation_id = relation_id.to_string();
-        let relation = relations::Entity::delete_by_id(relation_id).exec(&self.db_connection).await;
+        let relation = relation::Entity::delete_by_id(relation_id).exec(&self.db_connection).await;
         match relation {
             Ok(delete_result) => match delete_result.rows_affected {
                 0 => Err(CatalogRepoErrors::RelationNotfound),
@@ -1848,8 +1847,8 @@ impl QualifiedRelationRepo for CatalogRepoForSql{
         &self,
         limit: Option<u64>,
         page: Option<u64>,
-    ) -> anyhow::Result<Vec<qualified_relations::Model>, CatalogRepoErrors> {
-        let relations = qualified_relations::Entity::find()
+    ) -> anyhow::Result<Vec<qualified_relation::Model>, CatalogRepoErrors> {
+        let relations = qualified_relation::Entity::find()
             .limit(limit.unwrap_or(100000))
             .offset(page.unwrap_or(0))
             .all(&self.db_connection)
@@ -1865,7 +1864,7 @@ impl QualifiedRelationRepo for CatalogRepoForSql{
         limit: Option<u64>,
         page: Option<u64>,
         resource_id : Urn,
-    ) -> anyhow::Result<Vec<qualified_relations::Model>, CatalogRepoErrors> {
+    ) -> anyhow::Result<Vec<qualified_relation::Model>, CatalogRepoErrors> {
         let resource_id = resource_id.to_string();
         let resource = resource::Entity::find_by_id(resource_id.clone())
             .one(&self.db_connection)
@@ -1874,10 +1873,10 @@ impl QualifiedRelationRepo for CatalogRepoForSql{
         if resource.is_none() {
             return Err(CatalogRepoErrors::ResourceNotfound);
         }
-        let relations_by_resource = qualified_relations::Entity::find().filter(
+        let relations_by_resource = qualified_relation::Entity::find().filter(
             Condition::any()
-                .add(qualified_relations::Column::DcatResource1.eq(resource_id.clone()))
-                .add(qualified_relations::Column::DcatResource2.eq(resource_id))
+                .add(qualified_relation::Column::DcatResource1.eq(resource_id.clone()))
+                .add(qualified_relation::Column::DcatResource2.eq(resource_id))
             )
             .limit(limit.unwrap_or(100000))
             .offset(page.unwrap_or(0))
@@ -1894,8 +1893,8 @@ impl QualifiedRelationRepo for CatalogRepoForSql{
         page: Option<u64>,
         relation_type: String,
     ) -> anyhow::Result<Vec<(resource::Model, resource::Model)>, CatalogRepoErrors> {
-        let relations = qualified_relations::Entity::find()
-            .filter(qualified_relations::Column::DcatQualifiedRelation.eq(relation_type))
+        let relations = qualified_relation::Entity::find()
+            .filter(qualified_relation::Column::DcatQualifiedRelation.eq(relation_type))
             .all(&self.db_connection)
             .await
             .map_err(|e| CatalogRepoErrors::ErrorFetchingQualifiedRelation(e.into()))?;
@@ -1927,11 +1926,11 @@ impl QualifiedRelationRepo for CatalogRepoForSql{
         let condition = Condition::all()
             .add(
                 Condition::any()
-                    .add(qualified_relations::Column::DcatResource1.eq(resource_id.clone()))
-                    .add(qualified_relations::Column::DcatResource2.eq(resource_id)),
+                    .add(qualified_relation::Column::DcatResource1.eq(resource_id.clone()))
+                    .add(qualified_relation::Column::DcatResource2.eq(resource_id)),
             )
-            .add(qualified_relations::Column::DcatQualifiedRelation.eq(relation));
-        let relations = qualified_relations::Entity::find()
+            .add(qualified_relation::Column::DcatQualifiedRelation.eq(relation));
+        let relations = qualified_relation::Entity::find()
             .filter(condition)
             .all(&self.db_connection)
             .await
@@ -1956,9 +1955,9 @@ impl QualifiedRelationRepo for CatalogRepoForSql{
         &self,
         relation_id: Urn,
         edit_ralation_model: EditQualifiedRelationModel,
-    ) -> anyhow::Result<qualified_relations::Model, CatalogRepoErrors> {
+    ) -> anyhow::Result<qualified_relation::Model, CatalogRepoErrors> {
         let relation_id = relation_id.to_string();
-        let old_model = qualified_relations::Entity::find_by_id(relation_id).one(&self.db_connection).await;
+        let old_model = qualified_relation::Entity::find_by_id(relation_id).one(&self.db_connection).await;
         let old_model = match old_model {
             Ok(old_model) => match old_model {
                 Some(old_model) => old_model,
@@ -1966,7 +1965,7 @@ impl QualifiedRelationRepo for CatalogRepoForSql{
             },
             Err(err) => return Err(CatalogRepoErrors::ErrorFetchingQualifiedRelation(err.into())),
         };
-        let mut old_active_model: qualified_relations::ActiveModel = old_model.into();
+        let mut old_active_model: qualified_relation::ActiveModel = old_model.into();
         if let Some(dcat_resource1) = edit_ralation_model.dcat_resource1 {
             old_active_model.dcat_resource1 = ActiveValue::Set(dcat_resource1);
         }
@@ -1986,14 +1985,14 @@ impl QualifiedRelationRepo for CatalogRepoForSql{
     async fn create_qualified_relation(
         &self,
         new_relation_model: NewQualifiedRelationModel,
-    ) -> anyhow::Result<qualified_relations::Model, CatalogRepoErrors> {
-        let model = qualified_relations::ActiveModel {
+    ) -> anyhow::Result<qualified_relation::Model, CatalogRepoErrors> {
+        let model = qualified_relation::ActiveModel {
             id:ActiveValue::Set(uuid::Uuid::new_v4().to_string()),
             dcat_qualified_relation: ActiveValue::Set(new_relation_model.dcat_qualified_relation),
             dcat_resource1: ActiveValue::Set(new_relation_model.dcat_resource1),
             dcat_resource2: ActiveValue::Set(new_relation_model.dcat_resource2),
         };
-        let relation = qualified_relations::Entity::insert(model).exec_with_returning(&self.db_connection).await;
+        let relation = qualified_relation::Entity::insert(model).exec_with_returning(&self.db_connection).await;
         match relation {
             Ok(relation) => Ok(relation),
             Err(err) => Err(CatalogRepoErrors::ErrorCreatingRelation(err.into())),
@@ -2004,7 +2003,7 @@ impl QualifiedRelationRepo for CatalogRepoForSql{
         relation_id: Urn,
     ) -> anyhow::Result<(), CatalogRepoErrors> {
         let relation_id = relation_id.to_string();
-        let relation = qualified_relations::Entity::delete_by_id(relation_id).exec(&self.db_connection).await;
+        let relation = qualified_relation::Entity::delete_by_id(relation_id).exec(&self.db_connection).await;
         match relation {
             Ok(delete_result) => match delete_result.rows_affected {
                 0 => Err(CatalogRepoErrors::RelationNotfound),
@@ -2014,4 +2013,283 @@ impl QualifiedRelationRepo for CatalogRepoForSql{
         }
     }
     
+}
+
+#[async_trait]
+impl ResourceRepo for CatalogRepoForSql {
+    async fn get_all_resources (
+        &self,
+        limit: Option<u64>,
+        page: Option<u64>,
+    ) -> anyhow::Result<Vec<resource::Model>, CatalogRepoErrors> {
+        let resources = resource::Entity::find() 
+            .limit(limit.unwrap_or(100000))
+            .offset(page.unwrap_or(0))
+            .all(&self.db_connection)
+            .await;
+        match resources {
+            Ok(resources) => Ok(resources),
+            Err(err) => Err(CatalogRepoErrors::ErrorFetchingResource(err.into())),
+        }
+    }
+    async fn get_resource_by_id (
+        &self,
+        resource_id: Urn,
+    ) -> anyhow::Result<Option<resource::Model>, CatalogRepoErrors> {
+        let resource_id = resource_id.to_string();
+        let resource = resource::Entity::find_by_id(resource_id)
+            .one(&self.db_connection)
+            .await;
+        match resource {
+            Ok(resource) => Ok(resource),
+            Err(err) => Err(CatalogRepoErrors::ErrorFetchingResource(err.into())),
+        }
+    }
+    async fn get_all_resources_by_type (
+        &self,
+        limit: Option<u64>,
+        page: Option<u64>,
+        resource_type: String
+    ) -> anyhow::Result<Vec<resource::Model>, CatalogRepoErrors> {
+        let resources = resource::Entity::find()
+            .filter(resource::Column::ResourceType.eq(resource_type))
+            .limit(limit.unwrap_or(100000))
+            .offset(page.unwrap_or(0))
+            .all(&self.db_connection)
+            .await;
+        match resources {
+            Ok(resources) => Ok(resources),
+            Err(err) => Err(CatalogRepoErrors::ErrorFetchingResource(err.into())),
+        }
+    }
+    async fn put_resource_by_id (
+        &self,
+        resource_id: Urn,
+        edit_resource_model: EditResourceModel,
+    ) -> anyhow::Result<resource::Model, CatalogRepoErrors> {
+        let resource_id = resource_id.to_string();
+        let old_model = resource::Entity::find_by_id(resource_id).one(&self.db_connection).await;
+        let old_model = match old_model {
+            Ok(old_model) => match old_model {
+                Some(old_model) => old_model,
+                None => return Err(CatalogRepoErrors::ResourceNotfound),
+            },
+            Err(err) => return Err(CatalogRepoErrors::ErrorFetchingResource(err.into())),
+        };
+        let mut old_active_model: resource::ActiveModel = old_model.into();
+        if let Some(resource_id) = edit_resource_model.resource_id {
+            old_active_model.resource_id = ActiveValue::Set(resource_id.to_string());
+        }
+        if let Some(resource_type) = edit_resource_model.resource_type {
+            old_active_model.resource_type = ActiveValue::Set(resource_type);
+        }
+        let model = old_active_model.update(&self.db_connection).await;
+        match model {
+            Ok(model) => Ok(model),
+            Err(err) => Err(CatalogRepoErrors::ErrorUpdatingResource(err.into())),
+        }
+    }
+    async fn create_resource (
+        &self,
+        new_reosurce: NewResourceModel,
+    ) -> anyhow::Result<resource::Model, CatalogRepoErrors> {
+        let model = resource::ActiveModel {
+            resource_id:ActiveValue::Set(uuid::Uuid::new_v4().to_string()),
+            resource_type: ActiveValue::Set(new_reosurce.resource_type),
+        };
+        let resource = resource::Entity::insert(model).exec_with_returning(&self.db_connection).await;
+        match resource {
+            Ok(resource) => Ok(resource),
+            Err(err) => Err(CatalogRepoErrors::ErrorCreatingRelation(err.into())),
+        }
+    }
+    async fn delete_resource_by_id (
+        &self,
+        resource_id: Urn,
+    ) -> anyhow::Result<(), CatalogRepoErrors> {
+        let resource_id = resource_id.to_string();
+        let resource = qualified_relation::Entity::delete_by_id(resource_id).exec(&self.db_connection).await;
+        match resource {
+            Ok(delete_result) => match delete_result.rows_affected {
+                0 => Err(CatalogRepoErrors::ResourceNotfound),
+                _ => Ok(()),
+            },
+            Err(err) => Err(CatalogRepoErrors::ErrorDeletingResource(err.into())),
+        }
+    }
+}
+
+#[async_trait]
+impl ReferenceRepo for CatalogRepoForSql{
+    async fn get_all_references(
+        &self,
+        limit: Option<u64>,
+        page: Option<u64>,
+    ) -> anyhow::Result<Vec<reference::Model>, CatalogRepoErrors>{
+        let references = reference::Entity::find()
+            .limit(limit.unwrap_or(100000))
+            .offset(page.unwrap_or(0))
+            .all(&self.db_connection)
+            .await;
+    match references {
+            Ok(references) => Ok(references),
+            Err(err) => Err(CatalogRepoErrors::ErrorFetchingReference(err.into())),
+       }
+    }
+    async fn get_all_references_by_referenced_resource (
+        &self,
+        referenced_resource_id: Urn,
+        limit: Option<u64>,
+        page: Option<u64>,
+    ) -> anyhow::Result<Vec<reference::Model>, CatalogRepoErrors> {
+        let resource = self.get_resource_by_id(referenced_resource_id.clone()).await?;
+        let referenced_resource_id = referenced_resource_id.to_string();
+        let references = reference::Entity::find()
+            .filter(reference::Column::ReferencedResourceId.eq(referenced_resource_id))
+            .limit(limit.unwrap_or(100000))
+            .offset(page.unwrap_or(0))
+            .all(&self.db_connection)
+            .await;
+        match references {
+            Ok(references) => Ok(references),
+            Err(err) => Err(CatalogRepoErrors::ErrorFetchingReference(err.into())),
+        }
+    }
+    async fn put_reference_by_id (
+        self,
+        reference_id: Urn,
+        edit_reference: EditReferenceModel,
+    ) -> anyhow::Result<reference::Model, CatalogRepoErrors>{
+        let reference_id = reference_id.to_string();
+        let old_model = reference::Entity::find_by_id(reference_id).one(&self.db_connection).await;
+        let old_model = match old_model {
+            Ok(old_model) => match old_model {
+                Some(old_model) => old_model,
+                None => return Err(CatalogRepoErrors::ReferenceNotfound),
+            },
+            Err(err) => return Err(CatalogRepoErrors::ErrorFetchingReference(err.into())),
+        };
+        let mut old_active_model: reference::ActiveModel = old_model.into();
+        if let Some(referenced_resource_id) = edit_reference.referenced_resource_id {
+            old_active_model.referenced_resource_id = ActiveValue::Set(referenced_resource_id.to_string());
+        }
+        if let Some(reference) = edit_reference.reference {
+            old_active_model.reference = ActiveValue::Set(reference);
+        }
+        let model = old_active_model.update(&self.db_connection).await;
+        match model {
+            Ok(model) => Ok(model),
+            Err(err) => Err(CatalogRepoErrors::ErrorUpdatingReference(err.into())),
+        }
+    }
+    async fn create_reference (
+        self,
+        new_reference: NewReferenceModel,
+    ) -> anyhow::Result<reference::Model, CatalogRepoErrors> {
+        let model = reference::ActiveModel {
+            id:ActiveValue::Set(uuid::Uuid::new_v4().to_string()),
+            referenced_resource_id: ActiveValue::Set(new_reference.referenced_resource_id.to_string()),
+            reference: ActiveValue::Set(new_reference.reference),
+        };
+        let reference = reference::Entity::insert(model).exec_with_returning(&self.db_connection).await;
+        match reference {
+            Ok(reference) => Ok(reference),
+            Err(err) => Err(CatalogRepoErrors::ErrorCreatingReference(err.into())),
+        }
+    }
+    async fn delete_reference (
+        self,
+        reference_id: Urn,
+    ) -> anyhow::Result<(), CatalogRepoErrors> {
+        let reference_id = reference_id.to_string();
+        let reference = reference::Entity::delete_by_id(reference_id).exec(&self.db_connection).await;
+        match reference {
+            Ok(delete_result) => match delete_result.rows_affected {
+                0 => Err(CatalogRepoErrors::ReferenceNotfound),
+                _ => Ok(()),
+            },
+            Err(err) => Err(CatalogRepoErrors::ErrorDeletingReference(err.into())),
+        }
+    }
+}
+
+#[async_trait]
+impl KeywordThemesRepo for CatalogRepoForSql {
+    async fn get_all_keywords(
+        &self,
+    ) -> anyhow::Result<Vec<keyword::Model>, CatalogRepoErrors> {
+        let keywords = keyword::Entity::find().all(&self.db_connection).await;
+        match keywords {
+            Ok(keywords) => Ok(keywords),
+            Err(err) => Err(CatalogRepoErrors::ErrorFetchingKeywords(err.into())),
+       }
+    }
+    async fn get_all_themes(
+        &self,
+    ) -> anyhow::Result<Vec<theme::Model>, CatalogRepoErrors> {
+        let themes = theme::Entity::find().all(&self.db_connection).await;
+        match themes {
+            Ok(themes) => Ok(themes),
+            Err(err) => Err(CatalogRepoErrors::ErrorFetchingThemes(err.into()))
+        }
+    }
+    async fn create_keyword(
+        &self,
+        new_keyword: NewKeywordModel,
+    ) -> anyhow::Result<keyword::Model, CatalogRepoErrors> {
+        let model = keyword::ActiveModel {
+            id:ActiveValue::Set(uuid::Uuid::new_v4().to_string()),
+            keyword: ActiveValue::Set(new_keyword.keyword),
+            dcat_resource: ActiveValue::Set(new_keyword.dcat_resource.to_string()),
+        };
+        let keyword = keyword::Entity::insert(model).exec_with_returning(&self.db_connection).await;
+        match keyword {
+            Ok(keyword) => Ok(keyword),
+            Err(err) => Err(CatalogRepoErrors::ErrorCreatingKeyword(err.into())),
+        }
+    }
+    async fn create_theme(
+        &self,
+        new_theme: NewThemeModel,
+    ) -> anyhow::Result<theme::Model, CatalogRepoErrors> {
+        let model = theme::ActiveModel {
+            id:ActiveValue::Set(uuid::Uuid::new_v4().to_string()),
+            theme: ActiveValue::Set(new_theme.theme),
+            dcat_resource: ActiveValue::Set(new_theme.dcat_resource.to_string()),
+        };
+        let theme = theme::Entity::insert(model).exec_with_returning(&self.db_connection).await;
+        match theme {
+            Ok(theme) => Ok(theme),
+            Err(err) => Err(CatalogRepoErrors::ErrorCreatingTheme(err.into())),
+        }
+    }
+    async fn delete_keyword(
+        &self,
+        keyword_id: Urn,
+    ) -> anyhow::Result<(), CatalogRepoErrors> {
+        let keyword_id = keyword_id.to_string();
+        let keyword = keyword::Entity::delete_by_id(keyword_id).exec(&self.db_connection).await;
+        match keyword {
+            Ok(delete_result) => match delete_result.rows_affected {
+                0 => Err(CatalogRepoErrors::KeywordNotfound),
+                _ => Ok(()),
+            },
+            Err(err) => Err(CatalogRepoErrors::ErrorDeletingKeyword(err.into())),
+        }
+    }
+    async fn delete_theme(
+        &self,
+        theme_id: Urn,
+    ) -> anyhow::Result<(), CatalogRepoErrors> {
+        let theme_id = theme_id.to_string();
+        let theme = theme::Entity::delete_by_id(theme_id).exec(&self.db_connection).await;
+        match theme {
+            Ok(delete_result) => match delete_result.rows_affected {
+                0 => Err(CatalogRepoErrors::ThemeNotfound),
+                _ => Ok(()),
+            },
+            Err(err) => Err(CatalogRepoErrors::ErrorDeletingTheme(err.into())),
+        }
+    }
+
 }

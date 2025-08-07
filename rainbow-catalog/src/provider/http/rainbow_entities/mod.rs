@@ -23,3 +23,6 @@ pub mod data_service;
 pub mod dataset;
 pub mod distribution;
 pub mod policies;
+pub mod catalog_record;
+pub mod resources;
+pub mod dataset_series;

@@ -32,6 +32,9 @@ pub enum EntityTypes {
     Dataset,
     DataService,
     Distribution,
+    CatalogRecord,
+    Resource,
+    DatasetSeries,
 }
 
 impl TryFrom<&str> for EntityTypes {
@@ -43,6 +46,9 @@ impl TryFrom<&str> for EntityTypes {
             "Dataset" => Ok(EntityTypes::Dataset),
             "DataService" => Ok(EntityTypes::DataService),
             "Distribution" => Ok(EntityTypes::Distribution),
+            "CatalogRecord" => Ok(EntityTypes::CatalogRecord),
+            "Resource" => Ok(EntityTypes::Resource),
+            "DatasetSeries" => Ok(EntityTypes::DatasetSeries),
             _ => Err(anyhow!("Invalid Entity Type")),
         }
     }
@@ -55,6 +61,9 @@ impl Display for EntityTypes {
             EntityTypes::Dataset => "Dataset".to_string(),
             EntityTypes::DataService => "DataService".to_string(),
             EntityTypes::Distribution => "Distribution".to_string(),
+            EntityTypes::CatalogRecord => "CatalogRecord".to_string(),
+            EntityTypes::Resource => "Resource".to_string(),
+            EntityTypes::DatasetSeries => "DatasetSeries".to_string(),
         };
         write!(f, "{}", str)
     }

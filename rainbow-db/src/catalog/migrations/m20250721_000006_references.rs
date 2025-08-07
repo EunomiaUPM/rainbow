@@ -34,6 +34,7 @@ impl MigrationTrait for Migration {
             .create_table(
                 Table::create()
                     .table(References::Table)
+                    .col(ColumnDef::new(References::Id).string().not_null().primary_key())
                     .col(ColumnDef::new(References::ReferencedResourceId).string().not_null())
                     .col(ColumnDef::new(References::Reference).string().not_null())
                     .to_owned(),
@@ -49,6 +50,7 @@ impl MigrationTrait for Migration {
 #[derive(Iden)]
 pub enum References {
     Table,
+    Id,
     ReferencedResourceId,
     Reference,
 }

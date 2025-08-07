@@ -33,10 +33,11 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(Relations::Table)
-                    .col(ColumnDef::new(Relations::DcatRelationship).string().not_null())
-                    .col(ColumnDef::new(Relations::DcatResource1).string().not_null())
-                    .col(ColumnDef::new(Relations::DcatResource2).string().not_null())
+                    .table(CatalogRelations::Table)
+                    .col(ColumnDef::new(CatalogRelations::Id).string().not_null().primary_key())
+                    .col(ColumnDef::new(CatalogRelations::DcatRelationship).string().not_null())
+                    .col(ColumnDef::new(CatalogRelations::DcatResource1).string().not_null())
+                    .col(ColumnDef::new(CatalogRelations::DcatResource2).string().not_null())
                     .to_owned(),
             )
             .await
@@ -48,8 +49,9 @@ impl MigrationTrait for Migration {
 }
 
 #[derive(Iden)]
-pub enum Relations {
+pub enum CatalogRelations {
     Table,
+    Id,
     DcatRelationship,
     DcatResource1,
     DcatResource2,
