@@ -53,18 +53,18 @@ T: RainbowCatalogResourceTrait + Send + Sync + 'static
     }
     pub fn router(self) -> Router {
         Router::new()
-            .route("/api/v2/resources", get(Self::handle_get_all_resources))
-            .route("/api/v2/resources", post(Self::handle_post_resoruce))
-            .route("/api/v2/resources/:resource_id", get(Self::handle_get_resoruce_by_id))
-            .route("/api/v2/resources/:resource_id", put(Self::handle_put_resoruce_by_id))
-            .route("/api/v2/resources/:resource_id", delete(Self::handle_delete_resoruce_by_id))
+            .route("/api/v1/resources", get(Self::handle_get_all_resources))
+            .route("/api/v1/resources", post(Self::handle_post_resoruce))
+            .route("/api/v1/resources/:resource_id", get(Self::handle_get_resoruce_by_id))
+            .route("/api/v1/resources/:resource_id", put(Self::handle_put_resoruce_by_id))
+            .route("/api/v1/resources/:resource_id", delete(Self::handle_delete_resoruce_by_id))
             .with_state(self.resource_service)
     }
 
     async fn handle_get_all_resources(
         State(resource_service): State<Arc<T>>,
     ) -> impl IntoResponse {
-        info!("GET /api/v2/resources");
+        info!("GET /api/v1/resources");
         match resource_service.get_all_resources().await {
             Ok(res) => (StatusCode::OK, Json(res)).into_response(),
             Err(err) => match err.downcast::<CatalogError>() {
@@ -80,7 +80,7 @@ T: RainbowCatalogResourceTrait + Send + Sync + 'static
         State(resource_service): State<Arc<T>>,
         input: Result<Json<NewResourceRequest>, JsonRejection>,
     ) -> impl IntoResponse {
-        info!("POST /api/v2/resources");
+        info!("POST /api/v1/resources");
         let input = match input {
             Ok(input) => input.0,
             Err(e) => return CatalogError::JsonRejection(e).into_response(),
@@ -97,7 +97,7 @@ T: RainbowCatalogResourceTrait + Send + Sync + 'static
         State(resource_service): State<Arc<T>>,
         Path(resource_id): Path<String>,
     ) -> impl IntoResponse {
-        info!("GET /api/v2/resources/:resource_id");
+        info!("GET /api/v1/resources/:resource_id");
         let resource_id = match get_urn_from_string(&resource_id) {
             Ok(id) => id,
             Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response()
@@ -118,7 +118,7 @@ T: RainbowCatalogResourceTrait + Send + Sync + 'static
         Path(resource_id): Path<String>,
         input: Result<Json<EditResourceRequest>, JsonRejection>,
     ) -> impl IntoResponse {
-        info!("PUT /api/v2/resources/:resource_id");
+        info!("PUT /api/v1/resources/:resource_id");
         let resource_id = match get_urn_from_string(&resource_id) {
             Ok(id) => id,
             Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),            
@@ -139,7 +139,7 @@ T: RainbowCatalogResourceTrait + Send + Sync + 'static
         State(resource_service): State<Arc<T>>,
         Path(resource_id): Path<String>,
     ) -> impl IntoResponse {
-        info!("DELETE /api/v2/resources/:resource_id");
+        info!("DELETE /api/v1/resources/:resource_id");
         let resource_id = match get_urn_from_string(&resource_id) {
             Ok(id) => id,
             Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response()
