@@ -26,3 +26,7 @@ pub mod policies;
 pub mod catalog_record;
 pub mod resources;
 pub mod dataset_series;
+pub mod references;
+pub mod keywords_themes;
+pub mod relations;
+pub mod qualifeid_relations;

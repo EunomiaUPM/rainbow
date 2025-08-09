@@ -1684,7 +1684,19 @@ impl RelationRepo for CatalogRepoForSql{
             Err(err) => Err(CatalogRepoErrors::ErrorFetchingRelation(err.into())),
         }
     }
-
+    async fn get_relation_by_id(
+        &self,
+        id: Urn,
+    ) -> anyhow::Result<Option<relation::Model>, CatalogRepoErrors> {
+        let id = id.to_string();
+        let relation = relation::Entity::find_by_id(id.clone())
+            .one(&self.db_connection)
+            .await;
+        match relation {
+            Ok(relation) => Ok(relation),
+            Err(err) => Err(CatalogRepoErrors::ErrorFetchingRelation(err.into())),
+        }
+    }
     async fn get_relations_by_resource(
         &self,
         limit: Option<u64>,
@@ -1741,7 +1753,7 @@ impl RelationRepo for CatalogRepoForSql{
         }
     Ok(result)
     }
-    async fn get_related_resource_by_relation_and_resource(
+    async fn get_related_resource_by_relation_and_resource( 
         &self,
         limit: Option<u64>,
         page: Option<u64>,
@@ -1858,7 +1870,19 @@ impl QualifiedRelationRepo for CatalogRepoForSql{
             Err(err) => Err(CatalogRepoErrors::ErrorFetchingRelation(err.into())),
         }
     }
-
+    async fn get_qualified_relation_by_id(
+        &self,
+        id: Urn,
+    ) -> anyhow::Result<Option<qualified_relation::Model>, CatalogRepoErrors> {
+        let id = id.to_string();
+        let qualified_relation = qualified_relation::Entity::find_by_id(id.clone())
+            .one(&self.db_connection)
+            .await;
+        match qualified_relation {
+            Ok(qualified_relation) => Ok(qualified_relation),
+            Err(err) => Err(CatalogRepoErrors::ErrorFetchingQualifiedRelation(err.into())),
+        }
+    }
     async fn get_qualified_relations_by_resource(
         &self,
         limit: Option<u64>,
@@ -2136,6 +2160,20 @@ impl ReferenceRepo for CatalogRepoForSql{
             Err(err) => Err(CatalogRepoErrors::ErrorFetchingReference(err.into())),
        }
     }
+    async fn get_reference_by_id(
+        &self,
+        reference_id: Urn,
+    ) -> anyhow::Result<Option<reference::Model>, CatalogRepoErrors> {
+        let reference_id = reference_id.to_string();
+        let reference = reference::Entity::find_by_id(reference_id)
+            .one(&self.db_connection)
+            .await;
+       match reference {
+            Ok(reference) => Ok(reference),
+            Err(err) => Err(CatalogRepoErrors::ErrorFetchingResource(err.into())),
+        }
+    }
+
     async fn get_all_references_by_referenced_resource (
         &self,
         referenced_resource_id: Urn,
@@ -2156,7 +2194,7 @@ impl ReferenceRepo for CatalogRepoForSql{
         }
     }
     async fn put_reference_by_id (
-        self,
+        &self,
         reference_id: Urn,
         edit_reference: EditReferenceModel,
     ) -> anyhow::Result<reference::Model, CatalogRepoErrors>{
@@ -2183,7 +2221,7 @@ impl ReferenceRepo for CatalogRepoForSql{
         }
     }
     async fn create_reference (
-        self,
+        &self,
         new_reference: NewReferenceModel,
     ) -> anyhow::Result<reference::Model, CatalogRepoErrors> {
         let model = reference::ActiveModel {
@@ -2198,7 +2236,7 @@ impl ReferenceRepo for CatalogRepoForSql{
         }
     }
     async fn delete_reference (
-        self,
+        &self,
         reference_id: Urn,
     ) -> anyhow::Result<(), CatalogRepoErrors> {
         let reference_id = reference_id.to_string();

@@ -18,10 +18,30 @@
  */
 
 use crate::provider::core::rainbow_entities::rainbow_catalog_types::{
-    EditCatalogRecordRequest, EditCatalogRequest, EditDataServiceRequest, EditDatasetRequest, EditDatasetSeriesRequest, EditDistributionRequest, EditResourceRequest, NewCatalogRecordRequest, NewCatalogRequest, NewDataServiceRequest, NewDatasetRequest, NewDatasetSeriesRequest, NewDistributionRequest, NewResourceRequest
+    EditCatalogRecordRequest, EditCatalogRequest, 
+    EditDataServiceRequest, EditDatasetRequest, 
+    EditDatasetSeriesRequest, EditDistributionRequest, 
+    EditReferenceRequest, EditResourceRequest, 
+    NewCatalogRecordRequest, NewCatalogRequest, 
+    NewDataServiceRequest, NewDatasetRequest, 
+    NewDatasetSeriesRequest, NewDistributionRequest, 
+    NewKeywordRequest, NewThemeRequest,
+    NewReferenceRequest, NewResourceRequest,
+    NewRelationRequest, EditRelationRequest,
+    NewQualifiedRelationRequest, EditQualifiedRelationRequest
 };
 
-use rainbow_db::catalog::entities::{dataset as dataset_model, catalog_record as catalog_record_model, resource, dataset_series as dataset_series_model};
+use rainbow_db::catalog::entities::{
+    catalog_record as catalog_record_model,
+     dataset as dataset_model, 
+     dataset_series as dataset_series_model, 
+     keyword,
+     theme,
+     reference as referece_model, 
+     resource,
+     relation,
+     qualified_relation,
+};
 
 use axum::async_trait;
 use rainbow_common::dcat_formats::DctFormats;
@@ -43,6 +63,10 @@ pub mod rainbow_catalog_types;
 pub mod rainbow_policies_types;
 pub mod resources; 
 pub mod dataset_series;
+pub mod references;
+pub mod keywords_themes;
+pub mod relations;
+pub mod qualified_relations;
 
 #[mockall::automock]
 #[async_trait]
@@ -161,4 +185,48 @@ pub trait RainbowCatalogDatasetSeriesTrait: Send + Sync {
     async fn get_datasets_from_dataset_series_by_id(&self, dataset_series_id: Urn) -> anyhow::Result<Vec<dataset_model::Model>>;
     async fn put_dataset_series_by_id(&self, dataset_series_id: Urn, input: EditDatasetSeriesRequest) -> anyhow::Result<dataset_series_model::Model>;
     async fn delete_dataset_series_by_id(&self, dataset_series_id: Urn) -> anyhow::Result<()>;
+}
+
+#[mockall::automock]
+#[async_trait]
+pub trait RainbowCatalogReferencesTrait: Send + Sync {
+    async fn get_all_references(&self) -> anyhow::Result<Vec<referece_model::Model>>;
+    async fn get_reference_by_id(&self, reference_id: Urn) -> anyhow::Result<referece_model::Model>;
+    async fn post_reference(&self, input: NewReferenceRequest) -> anyhow::Result<referece_model::Model>;
+    async fn put_reference_by_id(&self, reference_id: Urn, input: EditReferenceRequest) -> anyhow::Result<referece_model::Model>;
+    async fn delete_reference_by_id(&self, reference_id: Urn) -> anyhow::Result<()>;
+    async fn get_all_references_by_reosurce(&self, resource_id: Urn) -> anyhow::Result<Vec<referece_model::Model>>;
+}
+
+#[mockall::automock]
+#[async_trait]
+pub trait RainbowCatalogKeywordsThemesTrait: Send + Sync {
+    async fn get_all_keywords(&self) -> anyhow::Result<Vec<keyword::Model>>;
+    async fn post_keyword(&self, input: NewKeywordRequest) -> anyhow::Result<keyword::Model>;
+    async fn delete_keyword(&self, id: Urn) -> anyhow::Result<()>;
+    async fn get_all_themes(&self) -> anyhow::Result<Vec<theme::Model>>;
+    async fn post_theme(&self, input: NewThemeRequest) -> anyhow::Result<theme::Model>;
+    async fn delete_theme(&self, id: Urn) -> anyhow::Result<()>;
+}
+
+#[mockall::automock]
+#[async_trait]
+pub trait RainbowRelationsTrait: Send + Sync {
+    async fn get_relations(&self) -> anyhow::Result<Vec<relation::Model>>;
+    async fn post_relation(&self, input: NewRelationRequest) -> anyhow::Result<relation::Model>;
+    async fn get_relation_by_id(&self, id: Urn) -> anyhow::Result<relation::Model>;
+    async fn put_relation_by_id(&self, id: Urn, inpur: EditRelationRequest) -> anyhow::Result<relation::Model>;
+    async fn delete_relation(&self, id: Urn) -> anyhow::Result<()>;
+    async fn get_relations_from_resource(&self, resource_id: Urn) -> anyhow::Result<Vec<relation::Model>>;
+}
+
+#[mockall::automock]
+#[async_trait]
+pub trait RainbowQualifiedRelationsTrait: Send + Sync {
+    async fn get_qualified_relations(&self) -> anyhow::Result<Vec<qualified_relation::Model>>;
+    async fn post_qualified_relation(&self, input: NewQualifiedRelationRequest) -> anyhow::Result<qualified_relation::Model>;
+    async fn get_qualified_relation_by_id(&self, id: Urn) -> anyhow::Result<qualified_relation::Model>;
+    async fn put_qualified_relation_by_id(&self, id: Urn, inpur: EditQualifiedRelationRequest) -> anyhow::Result<qualified_relation::Model>;
+    async fn delete_qualified_relation(&self, id: Urn) -> anyhow::Result<()>;
+    async fn get_qualified_relations_from_resource(&self, resource_id: Urn) -> anyhow::Result<Vec<qualified_relation::Model>>;
 }

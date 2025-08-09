@@ -52,7 +52,7 @@ where
     U: RainbowEventsNotificationTrait + Send + Sync,
 {
     pub fn new(repo: Arc<T>, notification_service: Arc<U>) -> Self {
-        Self { repo, notification_service}
+        Self {repo, notification_service}
     }
 }
 

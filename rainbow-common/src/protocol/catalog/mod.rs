@@ -35,6 +35,11 @@ pub enum EntityTypes {
     CatalogRecord,
     Resource,
     DatasetSeries,
+    Reference,
+    Keyword,
+    Theme,
+    Relation,
+    QualifiedRelation,
 }
 
 impl TryFrom<&str> for EntityTypes {
@@ -49,6 +54,11 @@ impl TryFrom<&str> for EntityTypes {
             "CatalogRecord" => Ok(EntityTypes::CatalogRecord),
             "Resource" => Ok(EntityTypes::Resource),
             "DatasetSeries" => Ok(EntityTypes::DatasetSeries),
+            "Reference" => Ok(EntityTypes::Reference),
+            "Keyword" => Ok(EntityTypes::Keyword),
+            "Theme" => Ok(EntityTypes::Theme),
+            "Relation" => Ok(EntityTypes::Relation),
+            "QualifiedRelation" => Ok(EntityTypes::QualifiedRelation),
             _ => Err(anyhow!("Invalid Entity Type")),
         }
     }
@@ -64,6 +74,11 @@ impl Display for EntityTypes {
             EntityTypes::CatalogRecord => "CatalogRecord".to_string(),
             EntityTypes::Resource => "Resource".to_string(),
             EntityTypes::DatasetSeries => "DatasetSeries".to_string(),
+            EntityTypes::Reference => "Reference".to_string(),
+            EntityTypes::Keyword => "Keyword".to_string(),
+            EntityTypes::Theme => "Theme".to_string(),
+            EntityTypes::Relation => "Relation".to_string(),
+            EntityTypes::QualifiedRelation => "QualifiedRelation".to_string(),
         };
         write!(f, "{}", str)
     }
