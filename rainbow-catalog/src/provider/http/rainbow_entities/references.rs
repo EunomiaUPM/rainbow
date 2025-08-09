@@ -54,11 +54,11 @@ T: RainbowCatalogReferencesTrait + Send + Sync + 'static
     }
     pub fn router(self) -> Router {
         Router::new()
-            .route("api/v1/references", get(Self::handle_get_all_references))
-            .route("api/v1/references", post(Self::handle_post_reference))
-            .route("api/v1/references/:reference_id", put(Self::handle_put_reference_by_id))
-            .route("api/v1/references/:reference_id", delete(Self::handle_delete_reference_by_id))
-            .route("api/v1/resources/:resource_id/referneces", get(Self::handle_get_references_by_resource))
+            .route("/api/v1/references", get(Self::handle_get_all_references))
+            .route("/api/v1/references", post(Self::handle_post_reference))
+            .route("/api/v1/references/:reference_id", put(Self::handle_put_reference_by_id))
+            .route("/api/v1/references/:reference_id", delete(Self::handle_delete_reference_by_id))
+            .route("/api/v1/resources/:resource_id/referneces", get(Self::handle_get_references_by_resource))
             .with_state(self.reference_service)
     }
     async fn handle_get_all_references(

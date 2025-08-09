@@ -55,11 +55,11 @@ T: RainbowCatalogKeywordsThemesTrait + Send + Sync + 'static
     pub fn router(self) -> Router {
         Router::new()
             .route("/api/v1/keywords", get(Self::handle_get_all_keywords))
-            .route("/api/v1/keywords", get(Self::handle_post_keyword))
-            .route("/api/v1/keywords/:keyword_id", get(Self::handle_delete_keyword))
+            .route("/api/v1/keywords", post(Self::handle_post_keyword))
+            .route("/api/v1/keywords/:keyword_id", delete(Self::handle_delete_keyword))
             .route("/api/v1/themes", get(Self::handle_get_all_themes))
-            .route("/api/v1/themes", get(Self::handle_post_theme))
-            .route("/api/v1/themes/:theme_id", get(Self::handle_delete_theme))
+            .route("/api/v1/themes", post(Self::handle_post_theme))
+            .route("/api/v1/themes/:theme_id", delete(Self::handle_delete_theme))
             .with_state(self.kt_service)
     }
     async  fn handle_get_all_keywords(

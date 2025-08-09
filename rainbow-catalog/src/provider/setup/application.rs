@@ -118,7 +118,7 @@ pub async fn create_catalog_router(config: &ApplicationProviderConfig) -> Router
     let rainbow_catalog_resources_service = Arc::new(RainbowCatalogResourceService::new(catalog_repo.clone(), notification_service.clone()));
     let rainbow_dataset_series_service = Arc::new(RainbowCatalogDatasetSeriesService::new(catalog_repo.clone(), notification_service.clone()));
     let raimbow_reference_service = Arc::new(RainbowCatalogReferenceService::new(catalog_repo.clone(), notification_service.clone()));
-    let rainbow_keyrods_themes_service = Arc::new(RainbowCatalogKeywordThemeService::new(catalog_repo.clone(), notification_service.clone()));
+    let rainbow_keywords_themes_service = Arc::new(RainbowCatalogKeywordThemeService::new(catalog_repo.clone(), notification_service.clone()));
     let rainbow_relation_service = Arc::new(RainbowCatalogRelationsService::new(catalog_repo.clone(), notification_service.clone()));
     let rainbow_qualified_relation_service = Arc::new(RainbowCatalogQualifiedRelationsService::new(catalog_repo.clone(), notification_service.clone())); 
 
@@ -131,7 +131,7 @@ pub async fn create_catalog_router(config: &ApplicationProviderConfig) -> Router
     let rainbow_catalog_resources_router = RainbowCatalogResourceRouter::new(rainbow_catalog_resources_service.clone());
     let rainbow_dataset_series_router = RainbowCatalogDatasetSeriesRouter::new(rainbow_dataset_series_service.clone());
     let rainbow_reference_router = RainbowCatalogReferenceRouter::new(raimbow_reference_service.clone());
-    let rainbow_keywords_themes_router = RainbowCatalogKeywordsThemesRouter::new(rainbow_keyrods_themes_service.clone());
+    let rainbow_keywords_themes_router = RainbowCatalogKeywordsThemesRouter::new(rainbow_keywords_themes_service.clone());
     let rainbow_relations_router = RainbowRelationsRouter::new(rainbow_relation_service.clone());
     let rainbow_qualified_relations_router = RainbowQualifiedRelationsRouter::new(rainbow_qualified_relation_service.clone());
     // RPC Dependency injection
