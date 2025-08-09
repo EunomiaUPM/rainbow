@@ -17,10 +17,6 @@
  *
  */
 
-use crate::provider::core::rainbow_entities::dataset_series::RainbowCatalogDatasetSeriesService;
-use crate::provider::core::rainbow_entities::keywords_themes::RainbowCatalogKeywordThemeService;
-use crate::provider::core::rainbow_entities::references::RainbowCatalogReferenceService;
-use crate::provider::core::rainbow_entities::relations::RainbowCatalogRelationsService;
 use crate::provider::http::ds_protocol::ds_protocol::DSProcotolCatalogRouter;
 use crate::provider::core::ds_protocol::ds_protocol::DSProtocolCatalogService;
 
@@ -30,6 +26,11 @@ use crate::provider::core::rainbow_entities::resources::RainbowCatalogResourceSe
 use crate::provider::core::rainbow_entities::data_service::RainbowCatalogDataServiceService;
 use crate::provider::core::rainbow_entities::dataset::RainbowCatalogDatasetService;
 use crate::provider::core::rainbow_entities::distribution::RainbowCatalogDistributionService;
+use crate::provider::core::rainbow_entities::keywords_themes::RainbowCatalogKeywordThemeService;
+use crate::provider::core::rainbow_entities::dataset_series::RainbowCatalogDatasetSeriesService;
+use crate::provider::core::rainbow_entities::references::RainbowCatalogReferenceService;
+use crate::provider::core::rainbow_entities::relations::RainbowCatalogRelationsService;
+use crate::provider::core::rainbow_entities::qualified_relations::RainbowCatalogQualifiedRelationsService;
 use crate::provider::core::rainbow_entities::policies::RainbowCatalogPoliciesService;
 use crate::provider::core::rainbow_rpc::rainbow_rpc::RainbowRPCCatalogService;
 
@@ -41,6 +42,7 @@ use crate::provider::http::rainbow_entities::distribution::RainbowCatalogDistrib
 use crate::provider::http::rainbow_entities::keywords_themes::RainbowCatalogKeywordsThemesRouter;
 use crate::provider::http::rainbow_entities::policies::RainbowCatalogPoliciesRouter;
 use crate::provider::http::rainbow_entities::catalog_record::RainbowCatalogRecordRouter;
+use crate::provider::http::rainbow_entities::qualifeid_relations::RainbowQualifiedRelationsRouter;
 use crate::provider::http::rainbow_entities::references::RainbowCatalogReferenceRouter;
 use crate::provider::http::rainbow_entities::relations::RainbowRelationsRouter;
 use crate::provider::http::rainbow_entities::resources::RainbowCatalogResourceRouter;
@@ -118,6 +120,7 @@ pub async fn create_catalog_router(config: &ApplicationProviderConfig) -> Router
     let raimbow_reference_service = Arc::new(RainbowCatalogReferenceService::new(catalog_repo.clone(), notification_service.clone()));
     let rainbow_keyrods_themes_service = Arc::new(RainbowCatalogKeywordThemeService::new(catalog_repo.clone(), notification_service.clone()));
     let rainbow_relation_service = Arc::new(RainbowCatalogRelationsService::new(catalog_repo.clone(), notification_service.clone()));
+    let rainbow_qualified_relation_service = Arc::new(RainbowCatalogQualifiedRelationsService::new(catalog_repo.clone(), notification_service.clone())); 
 
     let rainbow_catalog_router = RainbowCatalogCatalogRouter::new(rainbow_catalog_service, ds_protocol_service.clone());
     let rainbow_data_service_router = RainbowCatalogDataServiceRouter::new(rainbow_data_service_service.clone());
@@ -130,6 +133,7 @@ pub async fn create_catalog_router(config: &ApplicationProviderConfig) -> Router
     let rainbow_reference_router = RainbowCatalogReferenceRouter::new(raimbow_reference_service.clone());
     let rainbow_keywords_themes_router = RainbowCatalogKeywordsThemesRouter::new(rainbow_keyrods_themes_service.clone());
     let rainbow_relations_router = RainbowRelationsRouter::new(rainbow_relation_service.clone());
+    let rainbow_qualified_relations_router = RainbowQualifiedRelationsRouter::new(rainbow_qualified_relation_service.clone());
     // RPC Dependency injection
     let rainbow_rpc_service = Arc::new(RainbowRPCCatalogService::new(catalog_repo.clone()));
     let rainbow_rpc_router = RainbowRPCCatalogRouter::new(rainbow_rpc_service.clone());
@@ -148,6 +152,7 @@ pub async fn create_catalog_router(config: &ApplicationProviderConfig) -> Router
         .merge(rainbow_reference_router.router())
         .merge(rainbow_keywords_themes_router.router())
         .merge(rainbow_relations_router.router())
+        .merge(rainbow_qualified_relations_router.router())
         .merge(rainbow_rpc_router.router())
         .merge(ds_protocol_router.router())
         .nest("/api/v1/catalog", subscription_router.clone())
