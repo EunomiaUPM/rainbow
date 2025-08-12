@@ -23,7 +23,6 @@ use rainbow_auth::ssi_auth::consumer::setup::router::create_ssi_consumer_router;
 use rainbow_catalog::consumer::setup::application::create_catalog_bypass_consumer_router;
 use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
 use rainbow_contracts::consumer::setup::application::create_contract_negotiation_consumer_router;
-use rainbow_mates::consumer::setup::application::create_mate_consumer_router;
 use rainbow_transfer::consumer::setup::application::create_transfer_consumer_router;
 
 pub async fn create_core_consumer_router(config: &CoreApplicationConsumerConfig) -> Router {
@@ -31,13 +30,11 @@ pub async fn create_core_consumer_router(config: &CoreApplicationConsumerConfig)
     let auth_router = create_ssi_consumer_router(app_config.clone().into()).await;
     let transfer_router = create_transfer_consumer_router(&app_config.clone().into()).await;
     let cn_router = create_contract_negotiation_consumer_router(&app_config.clone().into()).await;
-    let mate_router = create_mate_consumer_router(app_config.clone().into()).await;
     let catalog_bypass_router = create_catalog_bypass_consumer_router(app_config.clone().into()).await;
 
     Router::new()
         .merge(transfer_router)
         .merge(cn_router)
         .merge(auth_router)
-        .merge(mate_router)
         .merge(catalog_bypass_router)
 }

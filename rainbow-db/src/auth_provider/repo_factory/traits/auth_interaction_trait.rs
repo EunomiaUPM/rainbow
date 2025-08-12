@@ -24,4 +24,5 @@ use axum::async_trait;
 #[async_trait]
 pub trait AuthInteractionRepoTrait: BasicRepoTrait<Model, NewModel> + Send + Sync {
     async fn get_by_reference(&self, reference: &str) -> anyhow::Result<Option<Model>>;
+    async fn get_by_cont_id(&self, cont_id: &str) -> anyhow::Result<Option<Model>>;
 }

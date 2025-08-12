@@ -16,7 +16,6 @@ members = [
     "rainbow-proxy-nifi",
     "rainbow-fe-gateway",
     "rainbow-datahub-catalog",
-    "rainbow-mates",
     "rainbow-business-gateway",
     "rainbow-authority",
 ]

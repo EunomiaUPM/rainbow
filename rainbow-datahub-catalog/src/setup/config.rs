@@ -38,7 +38,6 @@ pub struct DatahubCatalogApplicationProviderConfig {
     pub ssi_wallet_config: SSIWalletConfig,
     pub client_config: ClientConfig,
     role: ConfigRoles,
-    cert_path: String,
 }
 
 impl Default for DatahubCatalogApplicationProviderConfig {
@@ -96,9 +95,6 @@ impl ApplicationProviderConfigTrait for DatahubCatalogApplicationProviderConfig 
     fn get_raw_client_config(&self) -> &ClientConfig {
         &self.client_config
     }
-    fn get_raw_cert_path(&self) -> &String {
-        &self.cert_path
-    }
     fn merge_dotenv_configuration(&self) -> Self {
         let app_config = ApplicationProviderConfig::default().merge_dotenv_configuration();
         DatahubCatalogApplicationProviderConfig::from(app_config)
@@ -121,7 +117,6 @@ impl From<ApplicationProviderConfig> for DatahubCatalogApplicationProviderConfig
             ssi_wallet_config: value.ssi_wallet_config,
             client_config: value.client_config,
             role: value.role,
-            cert_path: value.cert_path,
         }
     }
 }
@@ -145,7 +140,6 @@ impl Into<ApplicationProviderConfig> for DatahubCatalogApplicationProviderConfig
             ssi_wallet_config: self.ssi_wallet_config,
             client_config: self.client_config,
             role: self.role,
-            cert_path: self.cert_path,
         }
     }
 }

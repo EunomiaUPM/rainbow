@@ -52,23 +52,23 @@ impl AuthConsumerRepoForSql {
 }
 
 impl AuthRepoFactoryTrait for AuthConsumerRepoForSql {
-    fn request_repo(&self) -> Arc<dyn AuthRequestRepoTrait> {
+    fn request(&self) -> Arc<dyn AuthRequestRepoTrait> {
         self.request_repo.clone()
     }
 
-    fn interaction_repo(&self) -> Arc<dyn AuthInteractionRepoTrait> {
+    fn interaction(&self) -> Arc<dyn AuthInteractionRepoTrait> {
         self.interaction_repo.clone()
     }
 
-    fn verification_repo(&self) -> Arc<dyn AuthVerificationRepoTrait> {
+    fn verification(&self) -> Arc<dyn AuthVerificationRepoTrait> {
         self.verification_repo.clone()
     }
 
-    fn token_requirements_repo(&self) -> Arc<dyn AuthTokenRequirementsRepoTrait> {
+    fn token_requirements(&self) -> Arc<dyn AuthTokenRequirementsRepoTrait> {
         self.token_req_repo.clone()
     }
 
-    fn mates_repo(&self) -> Arc<dyn MatesRepoTrait> {
+    fn mates(&self) -> Arc<dyn MatesRepoTrait> {
         self.mates_repo.clone()
     }
 }

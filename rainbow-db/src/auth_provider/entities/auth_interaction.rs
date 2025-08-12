@@ -30,16 +30,19 @@ use sha2::{Digest, Sha256};
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: String, // RESPONSE
-    pub start: Vec<String>,     // RESPONSE
-    pub method: String,         // RESPONSE
-    pub uri: String,            // RESPONSE
-    pub client_nonce: String,   // RESPONSE
-    pub hash_method: String,    // RESPONSE
-    pub hints: Option<String>,  // RESPONSE
-    pub grant_endpoint: String, // RESPONSE
-    pub as_nonce: String,       // RANDOM
-    pub interact_ref: String,   // RANDOM
-    pub hash: String,           // RANDOM
+    pub start: Vec<String>,         // RESPONSE
+    pub method: String,             // RESPONSE
+    pub uri: String,                // RESPONSE
+    pub client_nonce: String,       // RESPONSE
+    pub hash_method: String,        // RESPONSE
+    pub hints: Option<String>,      // RESPONSE
+    pub grant_endpoint: String,     // RESPONSE
+    pub continue_endpoint: String,  // RESPONSE
+    pub continue_id: String,        // RESPONSE
+    pub continue_token: String,     // RESPONSE
+    pub as_nonce: String,           // RANDOM
+    pub interact_ref: String,       // RANDOM
+    pub hash: String,               // RANDOM
 }
 
 #[derive(Clone, Debug)]
@@ -52,12 +55,15 @@ pub struct NewModel {
     pub hash_method: Option<String>, // REQUEST
     pub hints: Option<String>,       // REQUEST
     pub grant_endpoint: String,      // REQUEST
+    pub continue_endpoint: String,  // RESPONSE
+    pub continue_token: String,     // RESPONSE
 }
 
 impl From<NewModel> for ActiveModel {
     fn from(model: NewModel) -> ActiveModel {
         let as_nonce: String = rand::thread_rng().sample_iter(&Alphanumeric).take(36).map(char::from).collect();
         let interact_ref: String = rand::thread_rng().sample_iter(&Alphanumeric).take(16).map(char::from).collect();
+        let continue_id: String = rand::thread_rng().sample_iter(&Alphanumeric).take(12).map(char::from).collect();
 
         let hash_method = model.hash_method.unwrap_or_else(|| "sha-256".to_string()); // TODO
         let hash_input = format!(
@@ -65,6 +71,7 @@ impl From<NewModel> for ActiveModel {
             model.client_nonce, as_nonce, interact_ref, model.grant_endpoint
         );
 
+        let cont_endpoint = format!("{}/{}", model.continue_endpoint, continue_id);
         let mut hasher = Sha256::new();
         hasher.update(hash_input.as_bytes());
         let result = hasher.finalize();
@@ -80,6 +87,9 @@ impl From<NewModel> for ActiveModel {
             hash_method: ActiveValue::Set(hash_method),
             hints: ActiveValue::Set(model.hints),
             grant_endpoint: ActiveValue::Set(model.grant_endpoint),
+            continue_endpoint: ActiveValue::Set(cont_endpoint),
+            continue_id: ActiveValue::Set(continue_id),
+            continue_token: ActiveValue::Set(model.continue_token),
             as_nonce: ActiveValue::Set(as_nonce),
             interact_ref: ActiveValue::Set(interact_ref),
             hash: ActiveValue::Set(hash),

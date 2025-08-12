@@ -62,4 +62,9 @@ impl AuthInteractionRepoTrait for AuthInteractionProviderRepo {
         let model = Entity::find().filter(Column::InteractRef.eq(reference)).one(&self.inner.db_connection).await?;
         Ok(model)
     }
+
+    async fn get_by_cont_id(&self, cont_id: &str) -> anyhow::Result<Option<Model>> {
+        let model = Entity::find().filter(Column::ContinueId.eq(cont_id)).one(&self.inner.db_connection).await?;
+        Ok(model)
+    }
 }

@@ -34,25 +34,25 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(Auth::Table)
-                    .col(ColumnDef::new(Auth::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(Auth::ConsumerId).string().not_null())
-                    .col(ColumnDef::new(Auth::Token).string())
-                    .col(ColumnDef::new(Auth::Status).string().not_null())
-                    .col(ColumnDef::new(Auth::CreatedAt).date_time().not_null())
-                    .col(ColumnDef::new(Auth::EndedAt).date_time())
+                    .table(AuthRequest::Table)
+                    .col(ColumnDef::new(AuthRequest::Id).string().not_null().primary_key())
+                    .col(ColumnDef::new(AuthRequest::ConsumerId).string().not_null())
+                    .col(ColumnDef::new(AuthRequest::Token).string())
+                    .col(ColumnDef::new(AuthRequest::Status).string().not_null())
+                    .col(ColumnDef::new(AuthRequest::CreatedAt).date_time().not_null())
+                    .col(ColumnDef::new(AuthRequest::EndedAt).date_time())
                     .to_owned(),
             )
             .await
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(Auth::Table).to_owned()).await
+        manager.drop_table(Table::drop().table(AuthRequest::Table).to_owned()).await
     }
 }
 
 #[derive(Iden)]
-pub enum Auth {
+pub enum AuthRequest {
     Table,
     Id,
     ConsumerId,

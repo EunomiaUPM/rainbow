@@ -31,7 +31,7 @@ pub struct Model {
     pub provider_slug: String,                   // REQUEST
     pub grant_endpoint: String,                  // REQUEST
     pub continue_endpoint: Option<String>,       // RESPONSE
-    pub continue_wait: Option<u64>,              // RESPONSE
+    pub continue_wait: Option<i64>,              // RESPONSE
     pub continue_token: Option<String>,          // RESPONSE
     pub assigned_id: Option<String>,             // RESPONSE
     pub token: Option<String>,                   // COMPLETION

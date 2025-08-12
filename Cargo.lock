@@ -2369,7 +2369,6 @@ dependencies = [
  "rainbow_dataplane",
  "rainbow_db",
  "rainbow_events",
- "rainbow_mates",
  "rainbow_transfer",
  "sea-orm",
  "sea-orm-migration",
@@ -2532,24 +2531,6 @@ dependencies = [
  "urlencoding",
  "urn",
  "uuid",
-]
-
-[[package]]
-name = "rainbow_mates"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "axum",
- "base64",
- "clap",
- "rainbow_common",
- "rainbow_db",
- "reqwest",
- "sea-orm",
- "serde",
- "serde_json",
- "tokio",
- "tracing",
 ]
 
 [[package]]

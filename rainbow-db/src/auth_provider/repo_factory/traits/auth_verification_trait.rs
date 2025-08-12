@@ -24,4 +24,5 @@ use axum::async_trait;
 #[async_trait]
 pub trait AuthVerificationRepoTrait: BasicRepoTrait<Model, NewModel> + Send + Sync {
     async fn get_by_state(&self, state: &str) -> anyhow::Result<Option<Model>>;
+    async fn create_extra(&self, model: Model) -> anyhow::Result<Model>;
 }

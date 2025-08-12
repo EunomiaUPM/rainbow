@@ -17,13 +17,13 @@
  *
  */
 
+use crate::ssi_auth::provider::core::Manager   ;
+use crate::ssi_auth::provider::http::RainbowAuthProviderRouter;
 use crate::ssi_auth::provider::setup::config::SSIAuthProviderApplicationConfig;
-use crate::ssi_auth::provider::core::manager::manager::Manager;
-use crate::ssi_auth::provider::http::http::RainbowAuthProviderRouter;
 use axum::Router;
 use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
-use rainbow_db::auth_provider::repo::sql::AuthProviderRepoForSql;
-use rainbow_db::auth_provider::repo::AuthProviderRepoFactory;
+use rainbow_db::auth_provider::repo_factory::factory::AuthProviderRepoForSql;
+use rainbow_db::auth_provider::repo_factory::factory_trait::AuthRepoFactoryTrait;
 use sea_orm::Database;
 use std::sync::Arc;
 

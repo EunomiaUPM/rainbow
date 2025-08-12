@@ -72,13 +72,10 @@ where
         let active_model: T::ActiveModel = model.into();
         let model: T::Model = active_model.insert(&self.db_connection).await?;
         Ok(model)
-        // let active_model: T::ActiveModel = model.into();
-        // let model = T::insert(active_model).exec_with_returning(&self.db_connection).await?;
-        // Ok(model)
     }
 
     async fn update(&self, model: T::Model) -> anyhow::Result<T::Model> {
-        let mut active_model: T::ActiveModel = model.into_active_model();
+        let mut active_model: T::ActiveModel = model.into();
         let new_model: T::Model = active_model.update(&self.db_connection).await?;
         Ok(new_model)
     }

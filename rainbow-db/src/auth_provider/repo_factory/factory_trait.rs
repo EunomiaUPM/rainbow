@@ -25,10 +25,10 @@ use sea_orm::DatabaseConnection;
 use std::sync::Arc;
 
 pub trait AuthRepoFactoryTrait: Send + Sync + Clone + 'static {
-    fn request_repo(&self) -> Arc<dyn AuthRequestRepoTrait>;
-    fn interaction_repo(&self) -> Arc<dyn AuthInteractionRepoTrait>;
-    fn verification_repo(&self) -> Arc<dyn AuthVerificationRepoTrait>;
-    fn token_requirements_repo(&self) -> Arc<dyn AuthTokenRequirementsRepoTrait>;
-    fn mates_repo(&self) -> Arc<dyn MatesRepoTrait>;
-    fn business_mates_repo(&self) -> Arc<dyn BusinessMatesRepoTrait>;
+    fn request(&self) -> Arc<dyn AuthRequestRepoTrait>;
+    fn interaction(&self) -> Arc<dyn AuthInteractionRepoTrait>;
+    fn verification(&self) -> Arc<dyn AuthVerificationRepoTrait>;
+    fn token_requirements(&self) -> Arc<dyn AuthTokenRequirementsRepoTrait>;
+    fn mates(&self) -> Arc<dyn MatesRepoTrait>;
+    fn business_mates(&self) -> Arc<dyn BusinessMatesRepoTrait>;
 }

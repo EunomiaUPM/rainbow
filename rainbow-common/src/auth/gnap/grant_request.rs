@@ -39,14 +39,14 @@ pub struct AccessTokenRequirements4GR {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub label: Option<String>, // REQUIRED if used as part of a request for multiple access tokens
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub flags: Option<String>, // A set of flags that indicate desired attributes or behavior to be attached to the access token by the AS
+    pub flags: Option<Vec<String>>, // A set of flags that indicate desired attributes or behavior to be attached to the access token by the AS
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Access4AT {
     pub r#type: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub actions: Option<String>, // Actions4Access4AT COMPLETAR
+    pub actions: Option<Vec<String>>, // Actions4Access4AT COMPLETAR
     #[serde(skip_serializing_if = "Option::is_none")]
     pub locations: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -72,7 +72,7 @@ pub struct Interact4GR {
     pub start: Vec<String>,
     pub finish: Finish4Interact, // REQUIRED because DataSpace Protocol is based on redirects
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub hints: Option<Value>,
+    pub hints: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -119,7 +119,7 @@ impl GrantRequest {
         self
     }
 
-    pub fn update_actions(&mut self, actions: String) -> &mut Self {
+    pub fn update_actions(&mut self, actions: Vec<String>) -> &mut Self {
         self.access_token.access.actions = Some(actions);
         self
     }
@@ -130,14 +130,14 @@ impl AccessTokenRequirements4GR {
         Self {
             access: Access4AT {
                 r#type: String::from("api-access"),
-                actions: Some(String::from("talk")),
+                actions: Some(vec![String::from("talk")]),
                 locations: None,
                 datatypes: None,
                 identifier: None,
                 privileges: None,
             },
             label: None,
-            flags: Some("Bearer".to_string()),
+            flags: Some(vec!["Bearer".to_string()]),
         }
     }
 
@@ -145,7 +145,7 @@ impl AccessTokenRequirements4GR {
         Self {
             access: Access4AT {
                 r#type: String::from("api-access"),
-                actions: Some(String::from("talk")),
+                actions: Some(vec![String::from("talk")]),
                 locations: None,
                 datatypes: None,
                 identifier: None,
@@ -160,7 +160,7 @@ impl AccessTokenRequirements4GR {
         Self {
             access: Access4AT {
                 r#type: String::from("vc-exchange"),
-                actions: Some(String::from("vc-request")),
+                actions: Some(vec![String::from("talk")]),
                 locations: None,
                 datatypes: None,
                 identifier: None,

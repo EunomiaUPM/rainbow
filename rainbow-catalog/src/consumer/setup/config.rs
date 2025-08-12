@@ -37,7 +37,6 @@ pub struct CatalogBypassConsumerApplicationConfig {
     pub ssi_wallet_config: SSIWalletConfig,
     pub client_config: ClientConfig,
     pub role: ConfigRoles,
-    pub cert_path: String,
 }
 
 impl Default for CatalogBypassConsumerApplicationConfig {
@@ -86,9 +85,6 @@ impl ApplicationConsumerConfigTrait for CatalogBypassConsumerApplicationConfig {
     fn get_raw_client_config(&self) -> &ClientConfig {
         &self.client_config
     }
-    fn get_raw_cert_path(&self) -> &String {
-        &self.cert_path
-    }
     fn merge_dotenv_configuration(&self) -> Self
     where
         Self: Sized,
@@ -113,7 +109,6 @@ impl From<ApplicationConsumerConfig> for CatalogBypassConsumerApplicationConfig 
             ssi_wallet_config: value.ssi_wallet_config,
             client_config: value.client_config,
             role: value.role,
-            cert_path: value.cert_path,
         }
     }
 }
@@ -133,7 +128,6 @@ impl Into<ApplicationConsumerConfig> for CatalogBypassConsumerApplicationConfig 
             ssh_private_key_path: self.ssh_private_key_path,
             ssi_wallet_config: self.ssi_wallet_config,
             role: self.role,
-            cert_path: self.cert_path,
             client_config: self.client_config,
         }
     }

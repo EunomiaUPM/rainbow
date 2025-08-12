@@ -20,8 +20,8 @@
 use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
 use rainbow_common::config::global_config::{DatabaseConfig, HostConfig};
 use rainbow_common::config::ConfigRoles;
-use serde::Serialize;
 use rainbow_common::ssi_wallet::{ClientConfig, SSIWalletConfig};
+use serde::Serialize;
 
 #[derive(Serialize, Clone)]
 pub struct ContractNegotiationConsumerApplicationConfig {
@@ -37,7 +37,6 @@ pub struct ContractNegotiationConsumerApplicationConfig {
     pub ssi_wallet_config: SSIWalletConfig,
     pub client_config: ClientConfig,
     pub role: ConfigRoles,
-    pub cert_path: String,
 }
 
 impl Default for ContractNegotiationConsumerApplicationConfig {
@@ -88,10 +87,6 @@ impl ApplicationConsumerConfigTrait for ContractNegotiationConsumerApplicationCo
         &self.client_config
     }
 
-    fn get_raw_cert_path(&self) -> &String {
-        &self.cert_path
-    }
-
     fn merge_dotenv_configuration(&self) -> Self
     where
         Self: Sized,
@@ -99,7 +94,6 @@ impl ApplicationConsumerConfigTrait for ContractNegotiationConsumerApplicationCo
         let app_config = ApplicationConsumerConfig::default().merge_dotenv_configuration();
         ContractNegotiationConsumerApplicationConfig::from(app_config)
     }
-
 }
 
 impl From<ApplicationConsumerConfig> for ContractNegotiationConsumerApplicationConfig {
@@ -116,7 +110,6 @@ impl From<ApplicationConsumerConfig> for ContractNegotiationConsumerApplicationC
             ssh_private_key_path: value.ssh_private_key_path,
             ssi_wallet_config: value.ssi_wallet_config,
             role: value.role,
-            cert_path: value.cert_path,
             client_config: value.client_config,
         }
     }
@@ -138,7 +131,6 @@ impl Into<ApplicationConsumerConfig> for ContractNegotiationConsumerApplicationC
             ssi_wallet_config: self.ssi_wallet_config,
             client_config: self.client_config,
             role: self.role,
-            cert_path: self.cert_path,
         }
     }
 }

@@ -43,6 +43,8 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(AuthInteraction::HashMethod).string().not_null())
                     .col(ColumnDef::new(AuthInteraction::Hints).string())
                     .col(ColumnDef::new(AuthInteraction::GrantEndpoint).string().not_null())
+                    .col(ColumnDef::new(AuthInteraction::ContinueEndpoint).string())
+                    .col(ColumnDef::new(AuthInteraction::ContinueToken).string())
                     .col(ColumnDef::new(AuthInteraction::ASNonce).string())
                     .col(ColumnDef::new(AuthInteraction::InteractRef).string())
                     .col(ColumnDef::new(AuthInteraction::Hash).string())
@@ -67,6 +69,8 @@ pub enum AuthInteraction {
     ASNonce,
     InteractRef,
     GrantEndpoint,
+    ContinueEndpoint,
+    ContinueToken,
     Hash,
     HashMethod,
     Hints,

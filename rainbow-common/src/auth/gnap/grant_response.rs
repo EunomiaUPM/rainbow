@@ -41,7 +41,7 @@ pub struct GrantResponse {
 pub struct Continue4GResponse {
     pub uri: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub wait: Option<u64>,
+    pub wait: Option<i64>,
     pub access_token: AccessToken,
 }
 
@@ -77,7 +77,7 @@ pub struct Subject4GResponse {
 }
 
 impl GrantResponse {
-    pub fn default4oidc4vp(id: String, continue_uri:String, token: String, consumer_nonce: String, oidc4vp_uri: String) -> Self {
+    pub fn default4oidc4vp(id: String, continue_uri:String, token: String, nonce: String, oidc4vp_uri: String) -> Self {
         Self {
             r#continue: Some(Continue4GResponse {
                 uri: continue_uri,
@@ -85,7 +85,7 @@ impl GrantResponse {
                 access_token: AccessToken::default(token),
             }),
             access_token: None,
-            interact: Some(Interact4GResponse::default4oidc4vp(oidc4vp_uri, consumer_nonce)),
+            interact: Some(Interact4GResponse::default4oidc4vp(oidc4vp_uri, nonce)),
             subject: None,
             instance_id: Some(id),
             error: None,
@@ -120,14 +120,14 @@ impl GrantResponse {
 }
 
 impl Interact4GResponse {
-    fn default4oidc4vp(oidc4vp_uri: String, consumer_nonce: String) -> Self {
+    fn default4oidc4vp(oidc4vp_uri: String, nonce: String) -> Self {
         Self {
             oidc4vp: Some(oidc4vp_uri),
             redirect: None,
             app: None,
             user_code: None,
             user_code_uri: None,
-            finish: Some(consumer_nonce),
+            finish: Some(nonce),
             expires_in: None,
         }
     }

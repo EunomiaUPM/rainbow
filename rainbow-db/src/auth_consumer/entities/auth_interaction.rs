@@ -27,16 +27,18 @@ use serde_json::Value as JsonValue;
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: String, // REQUEST
-    pub start: Vec<String>,           // REQUEST
-    pub method: String,               // REQUEST
-    pub uri: String,                  // REQUEST
-    pub client_nonce: String,         // RANDOM
-    pub hash_method: String,          // REQUEST
-    pub hints: Option<String>,        // REQUEST
-    pub grant_endpoint: String,       // REQUEST
-    pub as_nonce: Option<String>,     // RESPONSE
-    pub interact_ref: Option<String>, // POST-RESPONSE
-    pub hash: Option<String>,         // POST-RESPONSE
+    pub start: Vec<String>,                // REQUEST
+    pub method: String,                    // REQUEST
+    pub uri: String,                       // REQUEST
+    pub client_nonce: String,              // RANDOM
+    pub hash_method: String,               // REQUEST
+    pub hints: Option<String>,             // REQUEST
+    pub grant_endpoint: String,            // REQUEST
+    pub continue_endpoint: Option<String>, // RESPONSE
+    pub continue_token: Option<String>,    // RESPONSE
+    pub as_nonce: Option<String>,          // RESPONSE
+    pub interact_ref: Option<String>,      // POST-RESPONSE
+    pub hash: Option<String>,              // POST-RESPONSE
 }
 
 #[derive(Clone, Debug)]
@@ -63,6 +65,8 @@ impl From<NewModel> for ActiveModel {
             hash_method: ActiveValue::Set(hash_method),
             hints: ActiveValue::Set(model.hints),
             grant_endpoint: ActiveValue::Set(model.grant_endpoint),
+            continue_endpoint: ActiveValue::Set(None),
+            continue_token: ActiveValue::Set(None),
             as_nonce: ActiveValue::Set(None),
             interact_ref: ActiveValue::Set(None),
             hash: ActiveValue::Set(None),

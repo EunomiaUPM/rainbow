@@ -39,7 +39,6 @@ pub struct ContractNegotiationApplicationProviderConfig {
     ssi_wallet_config: SSIWalletConfig,
     client_config: ClientConfig,
     role: ConfigRoles,
-    cert_path: String,
 }
 
 impl Default for ContractNegotiationApplicationProviderConfig {
@@ -78,7 +77,6 @@ impl ApplicationProviderConfigTrait for ContractNegotiationApplicationProviderCo
         &self.datahub_token
     }
 
-
     fn get_raw_ssi_wallet_config(&self) -> &SSIWalletConfig {
         &self.ssi_wallet_config
     }
@@ -101,10 +99,6 @@ impl ApplicationProviderConfigTrait for ContractNegotiationApplicationProviderCo
 
     fn get_raw_client_config(&self) -> &ClientConfig {
         &self.client_config
-    }
-
-    fn get_raw_cert_path(&self) -> &String {
-        &self.cert_path
     }
 
     fn merge_dotenv_configuration(&self) -> Self {
@@ -130,7 +124,6 @@ impl From<ApplicationProviderConfig> for ContractNegotiationApplicationProviderC
             ssi_wallet_config: value.ssi_wallet_config,
             client_config: value.client_config,
             role: value.role,
-            cert_path: value.cert_path,
         }
     }
 }
@@ -154,7 +147,6 @@ impl Into<ApplicationProviderConfig> for ContractNegotiationApplicationProviderC
             ssi_wallet_config: self.ssi_wallet_config,
             client_config: self.client_config,
             role: self.role,
-            cert_path: self.cert_path,
         }
     }
 }

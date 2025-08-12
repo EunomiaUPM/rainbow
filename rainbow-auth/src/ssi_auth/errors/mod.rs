@@ -17,4 +17,8 @@
  *
  */
 
-pub mod setup;
+mod auth_errors;
+mod error_adapter;
+
+pub use auth_errors::AuthErrors;
+pub use error_adapter::CustomToResponse;
