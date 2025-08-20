@@ -54,12 +54,12 @@ where
         info!("Requesting access to the provider");
         let id = uuid::Uuid::new_v4().to_string();
         let callback_uri = format!(
-            "{}/api/v1/callback/manual/{}",
+            "{}/api/v1/callback/{}",
             self.config.get_auth_host_url().unwrap(),
             &id
         );
         let client = serde_json::to_value(self.config.get_raw_client_config())?;
-        let body = GrantRequest::default4oidc(client, "redirect".to_string(), Some(callback_uri));
+        let mut body = GrantRequest::default4oidc(client, "redirect".to_string(), Some(callback_uri));
 
         let new_request_model =
             auth_request::NewModel { id: id.clone(), provider_id, provider_slug, grant_endpoint: url.clone() };
@@ -150,6 +150,8 @@ where
 
         info!("Sending Grant Petition to Provider");
 
+        body.update_nonce(interaction_model.client_nonce.clone());
+
         let res = self.client.post(&url).headers(headers).json(&body).send().await;
 
         let res = match res {
@@ -199,9 +201,7 @@ where
         let cont_data = res.r#continue.unwrap();
         request_model.status = "Pending".to_string();
         request_model.assigned_id = res.instance_id;
-        request_model.continue_endpoint = Some(cont_data.uri);
-        request_model.continue_wait = cont_data.wait;
-        request_model.continue_token = Some(cont_data.access_token.value);
+
         let _ = match self.repo.request().update(request_model).await {
             Ok(model) => {
                 info!("Authentication request updated successfully");
@@ -222,7 +222,11 @@ where
         };
 
         let res_interact = res.interact.unwrap();
+
         interaction_model.as_nonce = res_interact.finish;
+        interaction_model.continue_token = Some(cont_data.access_token.value);
+        interaction_model.continue_endpoint = Some(cont_data.uri);
+        interaction_model.continue_wait = cont_data.wait;
 
         let _ = match self.repo.interaction().update(interaction_model).await {
             Ok(model) => {
@@ -363,6 +367,9 @@ where
 
         let calculated_hash = URL_SAFE_NO_PAD.encode(result);
 
+        println!("{}", calculated_hash);
+        println!("{}", hash);
+
         if calculated_hash != hash {
             let error = CommonErrors::InvalidError {
                 info: ErrorInfo { message: "Invalid hash".to_string(), error_code: 1700, details: None },
@@ -409,16 +416,49 @@ where
             }
         };
 
+        let interact_model = match self.repo.interaction().get_by_id(id.as_str()).await {
+            Ok(Some(model)) => model,
+            Ok(None) => {
+                let error = CommonErrors::MissingError {
+                    info: ErrorInfo {
+                        message: format!("There is no process with id: {}", &id),
+                        error_code: 1600,
+                        details: None,
+                    },
+                    id: id.clone(),
+                    cause: None,
+                };
+                error.log();
+                bail!(error);
+            }
+            Err(e) => {
+                let error = CommonErrors::DatabaseError {
+                    info: ErrorInfo {
+                        message: format!("Error retrieving the process with id: {}", &id),
+                        error_code: 1300,
+                        details: None,
+                    },
+                    cause: Some(e.to_string()),
+                };
+                error.log();
+                bail!(error);
+            }
+        };
+
+        let url = interact_model.continue_endpoint.unwrap();
+        let token = format!("GNAP {}", interact_model.continue_token.unwrap());
+
         let mut headers = HeaderMap::new();
         headers.insert(CONTENT_TYPE, "application/json".parse()?);
         headers.insert(ACCEPT, "application/json".parse()?);
+        headers.insert(AUTHORIZATION, token.parse()?);
 
         let body = json!({
             "interact_ref": interact_ref
         });
 
-        let url = request_model.clone().continue_endpoint.unwrap();
         let res = self.client.post(&url).headers(headers).json(&body).send().await;
+
         let res = match res {
             Ok(res) => res,
             Err(e) => {

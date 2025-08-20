@@ -17,10 +17,10 @@
  *
  */
 
+use crate::common::IntoActiveSet;
 use chrono;
 use sea_orm::entity::prelude::*;
 use sea_orm::ActiveValue;
-use serde_json::Value as JsonValue;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
 #[sea_orm(table_name = "auth_token_requirements")]
@@ -35,6 +35,22 @@ pub struct Model {
     pub privileges: Option<Vec<String>>, // REQUEST
     pub label: Option<String>,           // REQUEST
     pub flags: Option<Vec<String>>,      // REQUEST
+}
+
+impl IntoActiveSet<ActiveModel> for Model {
+    fn to_active(self) -> ActiveModel {
+        ActiveModel {
+            id: ActiveValue::Set(self.id),
+            r#type: ActiveValue::Set(self.r#type),
+            actions: ActiveValue::Set(self.actions),
+            locations: ActiveValue::Set(self.locations),
+            datatypes: ActiveValue::Set(self.datatypes),
+            identifier: ActiveValue::Set(self.identifier),
+            privileges: ActiveValue::Set(self.privileges),
+            label: ActiveValue::Set(self.label),
+            flags: ActiveValue::Set(self.flags),
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

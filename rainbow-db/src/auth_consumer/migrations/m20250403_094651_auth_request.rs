@@ -17,8 +17,6 @@
  *
  */
 
-use sea_orm::sea_query::extension::postgres::Type;
-use sea_orm::Iterable;
 use sea_orm_migration::prelude::*;
 
 pub struct Migration;
@@ -39,9 +37,6 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(AuthRequest::ProviderId).string().not_null())
                     .col(ColumnDef::new(AuthRequest::ProviderSlug).string().not_null())
                     .col(ColumnDef::new(AuthRequest::GrantEndpoint).string().not_null())
-                    .col(ColumnDef::new(AuthRequest::ContinueEndpoint).string())
-                    .col(ColumnDef::new(AuthRequest::ContinueWait).big_integer())
-                    .col(ColumnDef::new(AuthRequest::ContinueToken).string())
                     .col(ColumnDef::new(AuthRequest::AssignedId).string())
                     .col(ColumnDef::new(AuthRequest::Token).string())
                     .col(ColumnDef::new(AuthRequest::Status).string().not_null())
@@ -64,9 +59,6 @@ pub enum AuthRequest {
     ProviderId,
     ProviderSlug,
     GrantEndpoint,
-    ContinueEndpoint,
-    ContinueWait,
-    ContinueToken,
     AssignedId,
     Token,
     Status,

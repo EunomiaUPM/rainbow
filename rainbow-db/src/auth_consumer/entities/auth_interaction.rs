@@ -16,11 +16,11 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use crate::common::IntoActiveSet;
 use rand::distributions::Alphanumeric;
 use rand::Rng;
 use sea_orm::entity::prelude::*;
 use sea_orm::ActiveValue;
-use serde_json::Value as JsonValue;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
 #[sea_orm(table_name = "auth_interaction")]
@@ -36,6 +36,7 @@ pub struct Model {
     pub grant_endpoint: String,            // REQUEST
     pub continue_endpoint: Option<String>, // RESPONSE
     pub continue_token: Option<String>,    // RESPONSE
+    pub continue_wait: Option<i64>,        // RESPONSE
     pub as_nonce: Option<String>,          // RESPONSE
     pub interact_ref: Option<String>,      // POST-RESPONSE
     pub hash: Option<String>,              // POST-RESPONSE
@@ -52,24 +53,46 @@ pub struct NewModel {
     pub grant_endpoint: String,      // REQUEST
 }
 
-impl From<NewModel> for ActiveModel {
-    fn from(model: NewModel) -> ActiveModel {
+impl IntoActiveSet<ActiveModel> for NewModel {
+    fn to_active(self) -> ActiveModel {
         let nonce: String = rand::thread_rng().sample_iter(&Alphanumeric).take(36).map(char::from).collect();
-        let hash_method = model.hash_method.unwrap_or_else(|| "sha-256".to_string()); // TODO
-        Self {
-            id: ActiveValue::Set(model.id),
-            start: ActiveValue::Set(model.start),
-            method: ActiveValue::Set(model.method),
-            uri: ActiveValue::Set(model.uri),
+        let hash_method = self.hash_method.unwrap_or_else(|| "sha-256".to_string()); // TODO
+        ActiveModel {
+            id: ActiveValue::Set(self.id),
+            start: ActiveValue::Set(self.start),
+            method: ActiveValue::Set(self.method),
+            uri: ActiveValue::Set(self.uri),
             client_nonce: ActiveValue::Set(nonce),
             hash_method: ActiveValue::Set(hash_method),
-            hints: ActiveValue::Set(model.hints),
-            grant_endpoint: ActiveValue::Set(model.grant_endpoint),
+            hints: ActiveValue::Set(self.hints),
+            grant_endpoint: ActiveValue::Set(self.grant_endpoint),
             continue_endpoint: ActiveValue::Set(None),
             continue_token: ActiveValue::Set(None),
+            continue_wait: ActiveValue::Set(None),
             as_nonce: ActiveValue::Set(None),
             interact_ref: ActiveValue::Set(None),
             hash: ActiveValue::Set(None),
+        }
+    }
+}
+
+impl IntoActiveSet<ActiveModel> for Model {
+    fn to_active(self) -> ActiveModel {
+        ActiveModel {
+            id: ActiveValue::Set(self.id),
+            start: ActiveValue::Set(self.start),
+            method: ActiveValue::Set(self.method),
+            uri: ActiveValue::Set(self.uri),
+            client_nonce: ActiveValue::Set(self.client_nonce),
+            hash_method: ActiveValue::Set(self.hash_method),
+            hints: ActiveValue::Set(self.hints),
+            grant_endpoint: ActiveValue::Set(self.grant_endpoint),
+            continue_endpoint: ActiveValue::Set(self.continue_endpoint),
+            continue_token: ActiveValue::Set(self.continue_token),
+            continue_wait: ActiveValue::Set(self.continue_wait),
+            as_nonce: ActiveValue::Set(self.as_nonce),
+            interact_ref: ActiveValue::Set(self.interact_ref),
+            hash: ActiveValue::Set(self.hash),
         }
     }
 }

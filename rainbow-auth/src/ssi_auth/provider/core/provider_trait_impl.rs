@@ -679,13 +679,9 @@ where
         let mut model = model.clone();
         model.holder = Some(token.claims["sub"].as_str().unwrap().to_string());
         model.vpt = Some(vp_token);
-        println!("{:#?}", model);
 
         let new_model = match self.repo.verification().update(model).await {
-            Ok(model) => {
-                println!("{:#?}", model);
-                model
-            },
+            Ok(model) => model,
             Err(e) => {
                 let error = CommonErrors::DatabaseError {
                     info: ErrorInfo {

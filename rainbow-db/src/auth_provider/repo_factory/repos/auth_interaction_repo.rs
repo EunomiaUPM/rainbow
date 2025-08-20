@@ -16,10 +16,11 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
+use crate::auth_provider::entities::auth_interaction::{Column, Entity, Model, NewModel};
+use crate::auth_provider::repo_factory::traits::AuthInteractionRepoTrait;
+use crate::common::{BasicRepoTrait, GenericRepo};
 use axum::async_trait;
-use crate::auth_provider::entities::auth_interaction::{Entity, Model, NewModel, Column};
-use crate::auth_provider::repo_factory::repos::GenericRepo;
-use crate::auth_provider::repo_factory::traits::{AuthInteractionRepoTrait, BasicRepoTrait};
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 
 #[derive(Clone)]

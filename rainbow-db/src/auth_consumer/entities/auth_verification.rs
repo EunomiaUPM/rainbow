@@ -17,6 +17,7 @@
  *
  */
 
+use crate::common::IntoActiveSet;
 use sea_orm::entity::prelude::*;
 use sea_orm::ActiveValue;
 
@@ -41,34 +42,54 @@ pub struct Model {
 
 #[derive(Clone, Debug)]
 pub struct NewModel {
-    pub id: String,                        // REQUEST
-    pub uri: String,                       // REQUEST
-    pub scheme: String,                    // REQUEST
-    pub response_type: String,             // REQUEST
-    pub client_id: String,                 // REQUEST
-    pub response_mode: String,             // REQUEST
-    pub pd_uri: String,                    // REQUEST
-    pub client_id_scheme: String,          // REQUEST
-    pub nonce: String,                     // REQUEST
-    pub response_uri: String,              // REQUEST
+    pub id: String,               // REQUEST
+    pub uri: String,              // REQUEST
+    pub scheme: String,           // REQUEST
+    pub response_type: String,    // REQUEST
+    pub client_id: String,        // REQUEST
+    pub response_mode: String,    // REQUEST
+    pub pd_uri: String,           // REQUEST
+    pub client_id_scheme: String, // REQUEST
+    pub nonce: String,            // REQUEST
+    pub response_uri: String,     // REQUEST
 }
 
-impl From<NewModel> for ActiveModel {
-    fn from(model: NewModel) -> ActiveModel {
-        Self {
-            id: ActiveValue::Set(model.id),
-            uri: ActiveValue::Set(model.uri),
-            scheme: ActiveValue::Set(model.scheme),
-            response_type: ActiveValue::Set(model.response_type),
-            client_id: ActiveValue::Set(model.client_id),
-            response_mode: ActiveValue::Set(model.response_mode),
-            pd_uri: ActiveValue::Set(model.pd_uri),
-            client_id_scheme: ActiveValue::Set(model.client_id_scheme),
-            nonce: ActiveValue::Set(model.nonce),
-            response_uri: ActiveValue::Set(model.response_uri),
+impl IntoActiveSet<ActiveModel> for NewModel {
+    fn to_active(self) -> ActiveModel {
+        ActiveModel {
+            id: ActiveValue::Set(self.id),
+            uri: ActiveValue::Set(self.uri),
+            scheme: ActiveValue::Set(self.scheme),
+            response_type: ActiveValue::Set(self.response_type),
+            client_id: ActiveValue::Set(self.client_id),
+            response_mode: ActiveValue::Set(self.response_mode),
+            pd_uri: ActiveValue::Set(self.pd_uri),
+            client_id_scheme: ActiveValue::Set(self.client_id_scheme),
+            nonce: ActiveValue::Set(self.nonce),
+            response_uri: ActiveValue::Set(self.response_uri),
             status: ActiveValue::Set("Pending".to_string()),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             ended_at: ActiveValue::Set(None),
+        }
+    }
+}
+
+impl IntoActiveSet<ActiveModel> for Model {
+    fn to_active(self) -> ActiveModel {
+        ActiveModel {
+            id: ActiveValue::Set(self.id),
+            uri: ActiveValue::Set(self.uri),
+            scheme: ActiveValue::Set(self.scheme),
+            response_type: ActiveValue::Set(self.response_type),
+            client_id: ActiveValue::Set(self.client_id),
+            response_mode: ActiveValue::Set(self.response_mode),
+            pd_uri: ActiveValue::Set(self.pd_uri),
+            client_id_scheme: ActiveValue::Set(self.client_id_scheme),
+            nonce: ActiveValue::Set(self.nonce),
+            response_uri: ActiveValue::Set(self.response_uri),
+            status: ActiveValue::Set(self.status),
+            created_at: ActiveValue::Set(self.created_at),
+            ended_at: ActiveValue::Set(self.ended_at),
         }
     }
 }

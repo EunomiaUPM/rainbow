@@ -17,7 +17,7 @@
  *
  */
 
-use super::BasicRepoTrait;
+use crate::common::BasicRepoTrait;
 use crate::auth_provider::entities::business_mates::{Model, NewModel};
 use axum::async_trait;
 

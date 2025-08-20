@@ -17,7 +17,7 @@
  *
  */
 
-use crate::auth_consumer::repo_factory::traits::BasicRepoTrait;
+use super::{BasicRepoTrait, IntoActiveSet};
 use anyhow::bail;
 use axum::async_trait;
 use sea_orm::{ActiveModelTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QuerySelect};
@@ -44,9 +44,9 @@ where
 impl<T, U> BasicRepoTrait<T::Model, U> for GenericRepo<T, U>
 where
     T: EntityTrait + Sync + Send,
-    T::Model: Send + Sync + Clone + IntoActiveModel<T::ActiveModel>,
+    T::Model: Send + Sync + Clone + IntoActiveModel<T::ActiveModel> + IntoActiveSet<T::ActiveModel>,
     T::ActiveModel: ActiveModelTrait<Entity = T> + Send + Sync,
-    U: Into<T::ActiveModel> + Send + Sync,
+    U: IntoActiveSet<T::ActiveModel> + Send + Sync,
     <T as EntityTrait>::PrimaryKey: sea_orm::PrimaryKeyTrait<ValueType = String>,
 {
     async fn get_all(&self, limit: Option<u64>, offset: Option<u64>) -> anyhow::Result<Vec<T::Model>> {
@@ -69,16 +69,13 @@ where
     }
 
     async fn create(&self, model: U) -> anyhow::Result<T::Model> {
-        let active_model: T::ActiveModel = model.into();
+        let active_model: T::ActiveModel = model.to_active();
         let model: T::Model = active_model.insert(&self.db_connection).await?;
         Ok(model)
-        // let active_model: T::ActiveModel = model.into();
-        // let model = T::insert(active_model).exec_with_returning(&self.db_connection).await?;
-        // Ok(model)
     }
 
     async fn update(&self, model: T::Model) -> anyhow::Result<T::Model> {
-        let mut active_model: T::ActiveModel = model.into_active_model();
+        let mut active_model: T::ActiveModel = model.to_active();
         let new_model: T::Model = active_model.update(&self.db_connection).await?;
         Ok(new_model)
     }

@@ -16,9 +16,10 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::auth_consumer::entities::mates::{Column, Entity, Model, NewModel};
-use crate::auth_consumer::repo_factory::repos::GenericRepo;
-use crate::auth_consumer::repo_factory::traits::{BasicRepoTrait, MatesRepoTrait};
+use crate::auth_consumer::repo_factory::traits::MatesRepoTrait;
+use crate::common::{BasicRepoTrait, GenericRepo};
 use axum::async_trait;
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 

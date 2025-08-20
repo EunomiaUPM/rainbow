@@ -16,10 +16,11 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use axum::async_trait;
+
 use crate::auth_provider::entities::auth_token_requirements::{Entity, Model};
-use crate::auth_provider::repo_factory::repos::GenericRepo;
-use crate::auth_provider::repo_factory::traits::{AuthTokenRequirementsRepoTrait, BasicRepoTrait};
+use crate::auth_provider::repo_factory::traits::AuthTokenRequirementsRepoTrait;
+use crate::common::{BasicRepoTrait, GenericRepo};
+use axum::async_trait;
 use sea_orm::DatabaseConnection;
 
 #[derive(Clone)]

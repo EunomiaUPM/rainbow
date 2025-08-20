@@ -21,7 +21,6 @@ use crate::auth_consumer::repo_factory::traits::{
     AuthInteractionRepoTrait, AuthRequestRepoTrait, AuthTokenRequirementsRepoTrait, AuthVerificationRepoTrait,
     MatesRepoTrait,
 };
-use sea_orm::DatabaseConnection;
 use std::sync::Arc;
 
 pub trait AuthRepoFactoryTrait: Send + Sync + Clone + 'static {

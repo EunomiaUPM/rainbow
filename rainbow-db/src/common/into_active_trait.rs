@@ -17,16 +17,7 @@
  *
  */
 
-use anyhow::bail;
-use axum::async_trait;
-use sea_orm::entity::prelude::*;
-use sea_orm::{ActiveValue, IntoActiveModel, QuerySelect};
 
-#[async_trait]
-pub trait BasicRepoTrait<T, U>: Send + Sync {
-    async fn get_all(&self, limit: Option<u64>, offset: Option<u64>) -> anyhow::Result<Vec<T>>;
-    async fn get_by_id(&self, id: &str) -> anyhow::Result<Option<T>>;
-    async fn create(&self, model: U) -> anyhow::Result<T>;
-    async fn update(&self, model: T) -> anyhow::Result<T>;
-    async fn delete(&self, id: &str) -> anyhow::Result<()>;
+pub trait IntoActiveSet<T> {
+    fn to_active(self) -> T;
 }

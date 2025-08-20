@@ -16,9 +16,10 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::auth_provider::entities::auth_verification::{Column, Entity, Model, NewModel};
-use crate::auth_provider::repo_factory::repos::GenericRepo;
-use crate::auth_provider::repo_factory::traits::{AuthVerificationRepoTrait, BasicRepoTrait};
+use crate::auth_provider::repo_factory::traits::AuthVerificationRepoTrait;
+use crate::common::{BasicRepoTrait, GenericRepo};
 use axum::async_trait;
 use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter};
 

@@ -123,6 +123,11 @@ impl GrantRequest {
         self.access_token.access.actions = Some(actions);
         self
     }
+
+    pub fn update_nonce(&mut self, nonce: String) -> &mut Self {
+        self.interact.as_mut().unwrap().finish.nonce = nonce;
+        self
+    }
 }
 
 impl AccessTokenRequirements4GR {

@@ -17,10 +17,10 @@
  *
  */
 
+use crate::common::IntoActiveSet;
 use chrono;
 use sea_orm::entity::prelude::*;
 use sea_orm::ActiveValue;
-use serde_json::Value as JsonValue;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
 #[sea_orm(table_name = "auth_request")]
@@ -40,15 +40,28 @@ pub struct NewModel {
     pub consumer_id: String, // REQUEST
 }
 
-impl From<NewModel> for ActiveModel {
-    fn from(model: NewModel) -> ActiveModel {
-        Self {
-            id: ActiveValue::Set(model.id),
-            consumer_id: ActiveValue::Set(model.consumer_id),
+impl IntoActiveSet<ActiveModel> for NewModel {
+    fn to_active(self) -> ActiveModel {
+        ActiveModel {
+            id: ActiveValue::Set(self.id),
+            consumer_id: ActiveValue::Set(self.consumer_id),
             token: ActiveValue::Set(None),
             status: ActiveValue::Set("Pending".to_string()),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             ended_at: ActiveValue::Set(None),
+        }
+    }
+}
+
+impl IntoActiveSet<ActiveModel> for Model {
+    fn to_active(self) -> ActiveModel {
+        ActiveModel {
+            id: ActiveValue::Set(self.id),
+            consumer_id: ActiveValue::Set(self.consumer_id),
+            token: ActiveValue::Set(self.token),
+            status: ActiveValue::Set(self.status),
+            created_at: ActiveValue::Set(self.created_at),
+            ended_at: ActiveValue::Set(self.ended_at),
         }
     }
 }

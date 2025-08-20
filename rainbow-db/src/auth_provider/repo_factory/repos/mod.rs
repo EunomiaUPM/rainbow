@@ -22,7 +22,6 @@ mod auth_request_repo;
 mod auth_token_requirements_repo;
 mod auth_verification_repo;
 mod business_mates_repo;
-mod generic_repo;
 mod mates_repo;
 
 pub use auth_interaction_repo::AuthInteractionProviderRepo;
@@ -30,5 +29,4 @@ pub use auth_request_repo::AuthRequestProviderRepo;
 pub use auth_token_requirements_repo::AuthTokenRequirementsProviderRepo;
 pub use auth_verification_repo::AuthVerificationProviderRepo;
 pub use business_mates_repo::BusinessMatesProviderRepo;
-pub use generic_repo::GenericRepo;
 pub use mates_repo::MatesProviderRepo;

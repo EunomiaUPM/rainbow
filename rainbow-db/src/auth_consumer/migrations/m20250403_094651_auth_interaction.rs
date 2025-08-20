@@ -17,8 +17,6 @@
  *
  */
 
-use sea_orm::sea_query::extension::postgres::Type;
-use sea_orm::Iterable;
 use sea_orm_migration::prelude::*;
 
 pub struct Migration;
@@ -45,6 +43,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(AuthInteraction::GrantEndpoint).string().not_null())
                     .col(ColumnDef::new(AuthInteraction::ContinueEndpoint).string())
                     .col(ColumnDef::new(AuthInteraction::ContinueToken).string())
+                    .col(ColumnDef::new(AuthInteraction::ContinueWait).string())
                     .col(ColumnDef::new(AuthInteraction::ASNonce).string())
                     .col(ColumnDef::new(AuthInteraction::InteractRef).string())
                     .col(ColumnDef::new(AuthInteraction::Hash).string())
@@ -71,6 +70,7 @@ pub enum AuthInteraction {
     GrantEndpoint,
     ContinueEndpoint,
     ContinueToken,
+    ContinueWait,
     Hash,
     HashMethod,
     Hints,

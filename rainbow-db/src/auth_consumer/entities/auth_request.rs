@@ -17,22 +17,19 @@
  *
  */
 
+use crate::common::IntoActiveSet;
 use chrono;
 use sea_orm::entity::prelude::*;
 use sea_orm::ActiveValue;
-use serde_json::Value as JsonValue;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
 #[sea_orm(table_name = "auth_request")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: String,                              // REQUEST
+    pub id: String, // REQUEST
     pub provider_id: String,                     // REQUEST
     pub provider_slug: String,                   // REQUEST
     pub grant_endpoint: String,                  // REQUEST
-    pub continue_endpoint: Option<String>,       // RESPONSE
-    pub continue_wait: Option<i64>,              // RESPONSE
-    pub continue_token: Option<String>,          // RESPONSE
     pub assigned_id: Option<String>,             // RESPONSE
     pub token: Option<String>,                   // COMPLETION
     pub status: String,                          // DEFAULT
@@ -48,21 +45,34 @@ pub struct NewModel {
     pub grant_endpoint: String, // REQUEST
 }
 
-impl From<NewModel> for ActiveModel {
-    fn from(model: NewModel) -> ActiveModel {
-        Self {
-            id: ActiveValue::Set(model.id),
-            provider_id: ActiveValue::Set(model.provider_id),
-            provider_slug: ActiveValue::Set(model.provider_slug),
-            grant_endpoint: ActiveValue::Set(model.grant_endpoint),
-            continue_endpoint: ActiveValue::Set(None),
-            continue_wait: ActiveValue::Set(None),
-            continue_token: ActiveValue::Set(None),
+impl IntoActiveSet<ActiveModel> for NewModel {
+    fn to_active(self) -> ActiveModel {
+        ActiveModel {
+            id: ActiveValue::Set(self.id),
+            provider_id: ActiveValue::Set(self.provider_id),
+            provider_slug: ActiveValue::Set(self.provider_slug),
+            grant_endpoint: ActiveValue::Set(self.grant_endpoint),
             assigned_id: ActiveValue::Set(None),
             token: ActiveValue::Set(None),
             status: ActiveValue::Set("Processing".to_string()),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             ended_at: ActiveValue::Set(None),
+        }
+    }
+}
+
+impl IntoActiveSet<ActiveModel> for Model {
+    fn to_active(self) -> ActiveModel {
+        ActiveModel {
+            id: ActiveValue::Set(self.id),
+            provider_id: ActiveValue::Set(self.provider_id),
+            provider_slug: ActiveValue::Set(self.provider_slug),
+            grant_endpoint: ActiveValue::Set(self.grant_endpoint),
+            assigned_id: ActiveValue::Set(self.assigned_id),
+            token: ActiveValue::Set(self.token),
+            status: ActiveValue::Set(self.status),
+            created_at: ActiveValue::Set(self.created_at),
+            ended_at: ActiveValue::Set(self.ended_at),
         }
     }
 }

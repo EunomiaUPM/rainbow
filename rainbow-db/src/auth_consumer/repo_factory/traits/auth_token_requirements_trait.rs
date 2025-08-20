@@ -17,7 +17,7 @@
  *
  */
 
-use super::BasicRepoTrait;
+use crate::common::BasicRepoTrait;
 use crate::auth_consumer::entities::auth_token_requirements::{Model};
 use axum::async_trait;
 

@@ -17,6 +17,7 @@
  *
  */
 
+use crate::common::IntoActiveSet;
 use chrono;
 use sea_orm::entity::prelude::*;
 use sea_orm::{ActiveValue, DeriveEntityModel};
@@ -46,17 +47,32 @@ pub struct NewModel {
     pub is_me: bool,
 }
 
-impl From<NewModel> for ActiveModel {
-    fn from(model: NewModel) -> ActiveModel {
-        Self {
-            participant_id: ActiveValue::Set(model.participant_id),
-            participant_slug: ActiveValue::Set(model.participant_slug),
-            participant_type: ActiveValue::Set(model.participant_type),
-            base_url: ActiveValue::Set(model.base_url),
-            token: ActiveValue::Set(model.token),
+impl IntoActiveSet<ActiveModel> for NewModel {
+    fn to_active(self) -> ActiveModel {
+        ActiveModel {
+            participant_id: ActiveValue::Set(self.participant_id),
+            participant_slug: ActiveValue::Set(self.participant_slug),
+            participant_type: ActiveValue::Set(self.participant_type),
+            base_url: ActiveValue::Set(self.base_url),
+            token: ActiveValue::Set(self.token),
             saved_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             last_interaction: ActiveValue::Set(chrono::Utc::now().naive_utc()),
-            is_me: ActiveValue::Set(model.is_me),
+            is_me: ActiveValue::Set(self.is_me),
+        }
+    }
+}
+
+impl IntoActiveSet<ActiveModel> for Model {
+    fn to_active(self) -> ActiveModel {
+        ActiveModel {
+            participant_id: ActiveValue::Set(self.participant_id),
+            participant_slug: ActiveValue::Set(self.participant_slug),
+            participant_type: ActiveValue::Set(self.participant_type),
+            base_url: ActiveValue::Set(self.base_url),
+            token: ActiveValue::Set(self.token),
+            saved_at: ActiveValue::Set(self.saved_at),
+            last_interaction: ActiveValue::Set(self.last_interaction),
+            is_me: ActiveValue::Set(self.is_me),
         }
     }
 }

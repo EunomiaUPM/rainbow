@@ -17,7 +17,6 @@
  *
  */
 
-use sea_orm::sea_query::extension::postgres::Type;
 use sea_orm_migration::prelude::*;
 
 pub struct Migration;
