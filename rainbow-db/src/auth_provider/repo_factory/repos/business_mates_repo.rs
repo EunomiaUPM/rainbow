@@ -19,8 +19,9 @@
 
 use crate::auth_provider::entities::business_mates::{Column, Entity, Model, NewModel};
 use crate::auth_provider::repo_factory::traits::BusinessMatesRepoTrait;
-use crate::common::{BasicRepoTrait, GenericRepo};
+use crate::common::{BasicRepoTrait, GenericRepo, IntoActiveSet};
 use axum::async_trait;
+use sea_orm::sea_query::OnConflict;
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 
 #[derive(Clone)]
@@ -61,6 +62,19 @@ impl BasicRepoTrait<Model, NewModel> for BusinessMatesProviderRepo {
 impl BusinessMatesRepoTrait for BusinessMatesProviderRepo {
     async fn get_by_token(&self, token: &str) -> anyhow::Result<Option<Model>> {
         let mate = Entity::find().filter(Column::Token.eq(token)).one(&self.inner.db_connection).await?;
+        Ok(mate)
+    }
+
+    async fn force_create(&self, mate: NewModel) -> anyhow::Result<Model> {
+        let active_mate = mate.to_active();
+        let mate = Entity::insert(active_mate)
+            .on_conflict(
+                OnConflict::column(Column::ParticipantId)
+                    .update_columns([Column::Token, Column::LastInteraction])
+                    .to_owned(),
+            )
+            .exec_with_returning(&self.inner.db_connection)
+            .await?;
         Ok(mate)
     }
 }

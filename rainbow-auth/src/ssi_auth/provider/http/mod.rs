@@ -72,7 +72,7 @@ where
             .route("/api/v1/verify/:state", post(Self::verify))
             // EXTRAS
             // .route("/api/v1/verify/token", post(Self::verify_token)) // TODO
-            .route("/api/v1/generate/uri", post(Self::generate_uri))
+            .route("/api/v1/business/login", post(Self::fast_login))
             .with_state(self.manager)
         // .fallback(Self::fallback) 2 routers cannot have 1 fallback each
     }
@@ -188,7 +188,7 @@ where
     //     let token: String;
     // }
 
-    async fn generate_uri(
+    async fn fast_login(
         State(manager): State<Arc<Manager<T>>>,
         Json(payload): Json<RainbowBusinessLoginRequest>,
     ) -> impl IntoResponse {

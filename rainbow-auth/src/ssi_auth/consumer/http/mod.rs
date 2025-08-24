@@ -20,7 +20,7 @@
 use crate::ssi_auth::consumer::core::consumer_trait::RainbowSSIAuthConsumerManagerTrait;
 use crate::ssi_auth::consumer::core::Manager;
 use crate::ssi_auth::errors::CustomToResponse;
-use crate::ssi_auth::types::ReachProvider;
+use crate::ssi_auth::types::{trim_4_base, ReachProvider};
 use anyhow::bail;
 use axum::extract::{Path, Query, State};
 use axum::http::{Method, Uri};
@@ -187,11 +187,12 @@ where
             Err(e) => return e.to_response(),
         };
 
+        let base_url = trim_4_base(request_model.grant_endpoint.as_str());
         let mate = mates::NewModel {
             participant_id: request_model.provider_id,
             participant_slug: request_model.provider_slug,
             participant_type: "Provider".to_string(),
-            base_url: request_model.grant_endpoint,
+            base_url,
             token: request_model.token,
             is_me: false,
         };

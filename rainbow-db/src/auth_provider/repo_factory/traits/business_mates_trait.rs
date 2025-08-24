@@ -24,4 +24,5 @@ use axum::async_trait;
 #[async_trait]
 pub trait BusinessMatesRepoTrait: BasicRepoTrait<Model, NewModel> + Send + Sync {
     async fn get_by_token(&self, token: &str) -> anyhow::Result<Option<Model>>;
+    async fn force_create(&self, mate: NewModel) -> anyhow::Result<Model>;
 }

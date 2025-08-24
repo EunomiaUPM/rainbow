@@ -116,3 +116,15 @@ impl Claims {
         Self { jti, sub, iss, aud, scopes, exp, nbf }
     }
 }
+
+pub fn trim_4_base(input: &str) -> String {
+    let slashes: Vec<usize> = input.match_indices('/').map(|(i, _)| i).collect();
+
+    if slashes.len() < 3 {
+        return input.to_string();
+    }
+
+    let cut_index = slashes[2];
+
+    input[..cut_index].to_string()
+}

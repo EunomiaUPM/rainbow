@@ -451,7 +451,7 @@ where
         let model = mates::NewModel {
             participant_id: did.clone(),
             participant_slug: "Myself".to_string(),
-            participant_type: "Consumer".to_string(),
+            participant_type: "Provider".to_string(),
             base_url: self.config.get_auth_host_url(),
             token: None,
             is_me: true,

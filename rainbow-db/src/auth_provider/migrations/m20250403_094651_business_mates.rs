@@ -22,7 +22,7 @@ use sea_orm_migration::prelude::*;
 pub struct Migration;
 impl MigrationName for Migration {
     fn name(&self) -> &str {
-        "m20250403_094651_busmates"
+        "m20250403_094651_business_mates"
     }
 }
 
@@ -32,25 +32,25 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(BusMates::Table)
-                    .col(ColumnDef::new(BusMates::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(BusMates::ParticipantId).string().not_null())
-                    .col(ColumnDef::new(BusMates::Token).string())
-                    .col(ColumnDef::new(BusMates::TokenActions).string())
-                    .col(ColumnDef::new(BusMates::SavedAt).date_time().not_null())
-                    .col(ColumnDef::new(BusMates::LastInteraction).date_time().not_null())
+                    .table(BusinessMates::Table)
+                    .col(ColumnDef::new(BusinessMates::Id).string().not_null().primary_key())
+                    .col(ColumnDef::new(BusinessMates::ParticipantId).string().not_null())
+                    .col(ColumnDef::new(BusinessMates::Token).string())
+                    .col(ColumnDef::new(BusinessMates::TokenActions).string())
+                    .col(ColumnDef::new(BusinessMates::SavedAt).date_time().not_null())
+                    .col(ColumnDef::new(BusinessMates::LastInteraction).date_time().not_null())
                     .to_owned(),
             )
             .await
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(BusMates::Table).to_owned()).await
+        manager.drop_table(Table::drop().table(BusinessMates ::Table).to_owned()).await
     }
 }
 
 #[derive(Iden)]
-pub enum BusMates {
+pub enum BusinessMates {
     Table,
     Id,
     ParticipantId,

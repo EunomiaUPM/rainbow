@@ -21,6 +21,7 @@ use super::Manager;
 use crate::ssi_auth::errors::AuthErrors;
 use crate::ssi_auth::provider::core::provider_trait::RainbowSSIAuthProviderManagerTrait;
 use crate::ssi_auth::provider::utils::{compare_with_margin, create_opaque_token, split_did};
+use crate::ssi_auth::types::trim_4_base;
 use anyhow::bail;
 use axum::async_trait;
 use base64::engine::general_purpose::{STANDARD, URL_SAFE_NO_PAD};
@@ -430,11 +431,12 @@ where
             }
         };
 
+        let base_url = Some(trim_4_base(int_model.uri.as_str()));
         let mate = mates::NewModel {
             participant_id: ver_model.holder.unwrap(),
             participant_slug: req_model.consumer_id,
             participant_type: "Consumer".to_string(),
-            base_url: Some(int_model.uri),
+            base_url,
             token: req_model.token,
             is_me: false,
         };
@@ -442,7 +444,7 @@ where
     }
 
     async fn save_mate(&self, mate: mates::NewModel) -> anyhow::Result<mates::Model> {
-        match self.repo.mates().create(mate).await {
+        match self.repo.mates().force_create(mate).await {
             Ok(model) => Ok(model),
             Err(e) => {
                 let error = CommonErrors::DatabaseError {
@@ -951,7 +953,7 @@ where
         let client_id = format!("{}/verify", &provider_url);
         let audience = format!("{}/{}", client_id, &state);
         let new_ver_model = auth_verification::Model {
-            id,
+            id: id.clone(),
             state,
             nonce,
             audience,
@@ -981,6 +983,27 @@ where
                 bail!(error);
             }
         };
+
+        let new_req_model = auth_request::NewModel { id, consumer_id: "--".to_string() };
+        let _ = match self.repo.request().create(new_req_model).await {
+            Ok(model) => {
+                info!("Request authentication saved successfully");
+                model
+            }
+            Err(e) => {
+                let error = CommonErrors::DatabaseError {
+                    info: ErrorInfo {
+                        message: "Error saving the verification model into the database".to_string(),
+                        error_code: 1300,
+                        details: None,
+                    },
+                    cause: Some(e.to_string()),
+                };
+                error.log();
+                bail!(error);
+            }
+        };
+
         let uri = self.generate_uri(ver_model).await?;
         Ok(uri)
     }

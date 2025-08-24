@@ -527,7 +527,7 @@ where
     }
 
     async fn save_mate(&self, mate: mates::NewModel) -> anyhow::Result<mates::Model> {
-        match self.repo.mates().create(mate).await {
+        match self.repo.mates().force_create(mate).await {
             Ok(model) => Ok(model),
             Err(e) => {
                 let error = CommonErrors::DatabaseError {
