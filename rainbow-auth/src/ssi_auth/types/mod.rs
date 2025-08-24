@@ -128,3 +128,4 @@ pub fn trim_4_base(input: &str) -> String {
 
     input[..cut_index].to_string()
 }
+

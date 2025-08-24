@@ -34,6 +34,7 @@ use axum::{Json, Router};
 use rainbow_common::auth::business::RainbowBusinessLoginRequest;
 use rainbow_common::auth::gnap::{AccessToken, GrantRequest, GrantResponse};
 use rainbow_common::errors::{CommonErrors, ErrorInfo};
+use rainbow_common::mates::mates::VerifyTokenRequest;
 use rainbow_common::ssi_wallet::RainbowSSIAuthWalletTrait;
 use rainbow_db::auth_provider::entities::mates;
 use rainbow_db::auth_provider::repo_factory::factory_trait::AuthRepoFactoryTrait;
@@ -70,11 +71,15 @@ where
             // OIDC4VP
             .route("/api/v1/pd/:state", get(Self::pd))
             .route("/api/v1/verify/:state", post(Self::verify))
-            // EXTRAS
-            // .route("/api/v1/verify/token", post(Self::verify_token)) // TODO
+            // MATES
+            .route("/api/v1/verify/mate/token", post(Self::verify_mate_token))
+            .route(
+                "/api/v1/retrieve/business/token",
+                post(Self::retrieve_business_mate_token),
+            )
             .route("/api/v1/business/login", post(Self::fast_login))
             .with_state(self.manager)
-        // .fallback(Self::fallback) 2 routers cannot have 1 fallback each
+        .fallback(Self::fallback) // 2 routers cannot have 1 fallback each
     }
 
     async fn wallet_onboard(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
@@ -87,7 +92,7 @@ where
     }
 
     async fn didweb(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
-        info!("GET /well-known/did.json");
+        info!("GET /did.json");
         Json(manager.didweb().await.unwrap())
     }
 
@@ -182,17 +187,38 @@ where
         }
     }
 
-    // async fn verify_token(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
-    //     info!("POST /verify/token");
-    //
-    //     let token: String;
-    // }
+    async fn verify_mate_token(
+        State(manager): State<Arc<Manager<T>>>,
+        Json(payload): Json<VerifyTokenRequest>,
+    ) -> impl IntoResponse {
+        info!("POST /verify/mate/token");
+
+        let mate = match manager.verify_token(payload.token).await {
+            Ok(model) => model,
+            Err(e) => return e.to_response(),
+        };
+        (StatusCode::OK, Json(mate)).into_response()
+    }
+
+    async fn retrieve_business_mate_token(
+        State(manager): State<Arc<Manager<T>>>,
+        Json(payload): Json<RainbowBusinessLoginRequest>,
+    ) -> impl IntoResponse {
+        info!("POST /retrieve/business/token");
+
+        let response = match manager.retrieve_business_token(payload.auth_request_id).await {
+            Ok(res) => res,
+            Err(e) => return e.to_response(),
+        };
+
+        (StatusCode::OK, Json(response)).into_response()
+    }
 
     async fn fast_login(
         State(manager): State<Arc<Manager<T>>>,
         Json(payload): Json<RainbowBusinessLoginRequest>,
     ) -> impl IntoResponse {
-        info!("POST /generate/uri");
+        info!("POST /business/login");
 
         let uri = match manager.fast_login(payload.auth_request_id).await {
             Ok(uri) => uri,

@@ -78,7 +78,7 @@ where
             // .route("/provider/:id/renew", post(todo!()))
             // .route("/provider/:id/finalize", post(todo!()))
             .with_state(self.manager)
-        // .fallback(Self::fallback) 2 routers cannot have 1 fallback each
+            .fallback(Self::fallback) // 2 routers cannot have 1 fallback each
     }
 
     // WALLET ------------------------------------------------------------------------------------->

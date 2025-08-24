@@ -33,6 +33,7 @@ use rainbow_common::auth::gnap::{GrantRequest, GrantResponse};
 use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
 use rainbow_common::errors::{CommonErrors, ErrorInfo};
 use rainbow_common::ssi_wallet::ClientConfig;
+use rainbow_db::auth_provider::entities::mates::Model;
 use rainbow_db::auth_provider::entities::{
     auth_interaction, auth_request, auth_token_requirements, auth_verification, business_mates, mates,
 };
@@ -1006,5 +1007,109 @@ where
 
         let uri = self.generate_uri(ver_model).await?;
         Ok(uri)
+    }
+
+    async fn verify_token(&self, token: String) -> anyhow::Result<Model> {
+        info!("Validating token");
+
+        let model = match self.repo.mates().get_by_token(token.as_str()).await {
+            Ok(Some(model)) => model,
+            Ok(None) => {
+                let error = CommonErrors::MissingError {
+                    info: ErrorInfo {
+                        message: format!("There is no token: {}", &token),
+                        error_code: 1600,
+                        details: None,
+                    },
+                    id: token,
+                    cause: None,
+                };
+                error.log();
+                bail!(error);
+            }
+            Err(e) => {
+                let error = CommonErrors::DatabaseError {
+                    info: ErrorInfo {
+                        message: format!("Error retrieving the process with token: {}", &token),
+                        error_code: 1300,
+                        details: None,
+                    },
+                    cause: Some(e.to_string()),
+                };
+                error.log();
+                bail!(error);
+            }
+        };
+        Ok(model)
+    }
+
+    async fn retrieve_business_token(&self, id: String) -> anyhow::Result<Value> {
+        let model = match self.repo.business_mates().get_by_id(id.as_str()).await {
+            Ok(Some(model)) => model,
+            Ok(None) => {
+                let error = CommonErrors::MissingError {
+                    info: ErrorInfo {
+                        message: format!("There is proccess with id: {}", &id),
+                        error_code: 1600,
+                        details: None,
+                    },
+                    id: id,
+                    cause: None,
+                };
+                error.log();
+                bail!(error);
+            }
+            Err(e) => {
+                let error = CommonErrors::DatabaseError {
+                    info: ErrorInfo {
+                        message: format!("Error retrieving the process with id: {}", &id),
+                        error_code: 1300,
+                        details: None,
+                    },
+                    cause: Some(e.to_string()),
+                };
+                error.log();
+                bail!(error);
+            }
+        };
+
+        let mate = match self.repo.mates().get_by_id(model.participant_id.as_str()).await {
+            Ok(Some(model)) => model,
+            Ok(None) => {
+                let error = CommonErrors::MissingError {
+                    info: ErrorInfo {
+                        message: "Onboarding is a requisite to access this service".to_string(),
+                        error_code: 1600,
+                        details: None,
+                    },
+                    id: model.participant_id.clone(),
+                    cause: Some(format!(
+                        "There is no mate with id: {}",
+                        &model.participant_id
+                    )),
+                };
+                error.log();
+                bail!(error);
+            }
+            Err(e) => {
+                let error = CommonErrors::DatabaseError {
+                    info: ErrorInfo {
+                        message: format!("Error retrieving the mate with id: {}", &id),
+                        error_code: 1300,
+                        details: None,
+                    },
+                    cause: Some(e.to_string()),
+                };
+                error.log();
+                bail!(error);
+            }
+        };
+
+        let response = json!({
+            "token": model.token.unwrap(),
+            "mate": mate
+        });
+
+        Ok(response)
     }
 }
