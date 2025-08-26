@@ -43,14 +43,14 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(DatasetSeries::DctTitle).string())
                     .col(ColumnDef::new(DatasetSeries::DctDescription).string())
                     .col(ColumnDef::new(DatasetSeries::DctSpatial).string())
-                    .col(ColumnDef::new(DatasetSeries::DcatSpatialResolutionMeters).float())
+                    .col(ColumnDef::new(DatasetSeries::DcatSpatialResolutionMeters).double())
                     .col(ColumnDef::new(DatasetSeries::DctTemporal).string())
                     .col(ColumnDef::new(DatasetSeries::DctTemporalResolution).string())
                     .col(ColumnDef::new(DatasetSeries::ProvGeneratedBy).string())
                     .col(ColumnDef::new(DatasetSeries::DctAccessRights).string())
                     .col(ColumnDef::new(DatasetSeries::DctLicense).string())
                     .col(ColumnDef::new(DatasetSeries::OrdlHasPolicy).string())
-                    .col(ColumnDef::new(DatasetSeries::DcatInSeries).string())
+                    .col(ColumnDef::new(DatasetSeries::DcatInseries).string())
                     .col(ColumnDef::new(DatasetSeries::DcatLandingPage).string())
                     .col(ColumnDef::new(DatasetSeries::DcatContactPoint).string())
                     .col(ColumnDef::new(DatasetSeries::DctLanguage).string())
@@ -60,7 +60,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(DatasetSeries::ProvQualifiedAttribution).string())
                     .col(ColumnDef::new(DatasetSeries::DctAccrualPeriodicity).string())
                     .col(ColumnDef::new(DatasetSeries::DcatVersion).string().not_null())
-                    .col(ColumnDef::new(DatasetSeries::DcatHasCurrentVersion).string().not_null())
+                    .col(ColumnDef::new(DatasetSeries::DcatHasCurrentVersion).string())
                     .col(ColumnDef::new(DatasetSeries::DcatPreviousVersion).string())
                     .col(ColumnDef::new(DatasetSeries::DcatFirst).string())
                     .col(ColumnDef::new(DatasetSeries::DcatLast).string())
@@ -97,7 +97,7 @@ pub enum DatasetSeries {
     DctAccessRights,
     DctLicense,
     OrdlHasPolicy,
-    DcatInSeries,
+    DcatInseries,
     DcatLandingPage,
     DcatContactPoint,
     DctLanguage,

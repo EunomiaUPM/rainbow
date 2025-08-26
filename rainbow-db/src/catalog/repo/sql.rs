@@ -236,7 +236,7 @@ impl CatalogRepo for CatalogRepoForSql {
             old_active_model.dcat_contact_point = ActiveValue::Set(Some(dcat_contact_point));
         }
         if let Some(ordl_has_policy) = edit_catalog_model.ordl_has_policy {
-            old_active_model.ordl_has_policy = ActiveValue::Set(ordl_has_policy);
+            old_active_model.ordl_has_policy = ActiveValue::Set(Some(ordl_has_policy));
         }
         if let Some(dcat_landing_page) = edit_catalog_model.dcat_landing_page {
             old_active_model.dcat_landing_page = ActiveValue::Set(Some(dcat_landing_page));
@@ -578,7 +578,7 @@ impl DatasetRepo for CatalogRepoForSql {
             old_active_model.dct_license = ActiveValue::Set(Some(dct_license));
         }
         if let Some(ordl_has_policy) = edit_dataset_model.ordl_has_policy {
-            old_active_model.ordl_has_policy = ActiveValue::Set(ordl_has_policy);
+            old_active_model.ordl_has_policy = ActiveValue::Set(Some(ordl_has_policy));
         }
         if let Some(dcat_landing_page) = edit_dataset_model.dcat_landing_page {
             old_active_model.dcat_landing_page = ActiveValue::Set(Some(dcat_landing_page));
@@ -891,7 +891,7 @@ impl DistributionRepo for CatalogRepoForSql {
             old_active_model.dct_access_rights = ActiveValue::Set(Some(dct_access_rights));
         }
         if let Some(ordl_has_policy) = edit_distribution_model.ordl_has_policy {
-            old_active_model.ordl_has_policy = ActiveValue::Set(ordl_has_policy);
+            old_active_model.ordl_has_policy = ActiveValue::Set(Some(ordl_has_policy));
         }
         if let Some(dct_conforms_to) = edit_distribution_model.dct_conforms_to {
             old_active_model.dct_conforms_to = ActiveValue::Set(Some(dct_conforms_to));
@@ -927,7 +927,7 @@ impl DistributionRepo for CatalogRepoForSql {
             old_active_model.dcat_byte_size = ActiveValue::Set(Some(dcat_byte_size));
         }
         if let Some(spdc_checksum) = edit_distribution_model.spdc_checksum {
-            old_active_model.spdc_checksum = ActiveValue::Set(spdc_checksum);
+            old_active_model.spdx_checksum = ActiveValue::Set(spdc_checksum);
         }
         old_active_model.dct_modified = ActiveValue::Set(Some(chrono::Utc::now().naive_utc()));
         let model = old_active_model.update(&self.db_connection).await;
@@ -992,7 +992,7 @@ impl DistributionRepo for CatalogRepoForSql {
             dcat_spatial_resolution_meters:ActiveValue::Set(new_distribution_model.dcat_spatial_resolution_meters),
             dct_temporal_resolution:ActiveValue::Set(new_distribution_model.dct_temporal_resolution),
             dcat_byte_size:ActiveValue::Set(new_distribution_model.dcat_byte_size),
-            spdc_checksum:ActiveValue::Set(new_distribution_model.spdc_checksum)
+            spdx_checksum:ActiveValue::Set(new_distribution_model.spdx_checksum)
         };
         let distribution = distribution::Entity::insert(model).exec_with_returning(&self.db_connection).await;
         match distribution {
@@ -1117,7 +1117,7 @@ impl DataServiceRepo for CatalogRepoForSql {
             old_active_model.dct_description = ActiveValue::Set(Some(dct_description));
         }
         if let Some(dct_identifier) = edit_data_service_model.dct_identifier {
-            old_active_model.dct_identifier = ActiveValue::Set(Some(dct_identifier));
+            old_active_model.dct_identifier = ActiveValue::Set(dct_identifier);
         }
         if let Some(dct_issued) = edit_data_service_model.dct_issued {
             old_active_model.dct_issued = ActiveValue::Set(dct_issued);
@@ -1132,7 +1132,7 @@ impl DataServiceRepo for CatalogRepoForSql {
             old_active_model.dcat_access_rights = ActiveValue::Set(Some(dcat_access_rights));
         }
         if let Some(ordl_has_policy) = edit_data_service_model.ordl_has_policy {
-            old_active_model.ordl_has_policy = ActiveValue::Set(ordl_has_policy);
+            old_active_model.ordl_has_policy = ActiveValue::Set(Some(ordl_has_policy));
         }
         if let Some(dcat_contact_point) = edit_data_service_model.dcat_contact_point {
             old_active_model.dcat_contact_point = ActiveValue::Set(Some(dcat_contact_point));
@@ -1149,8 +1149,8 @@ impl DataServiceRepo for CatalogRepoForSql {
         if let Some(dct_publisher) = edit_data_service_model.dct_publisher {
             old_active_model.dct_publisher = ActiveValue::Set(Some(dct_publisher));
         }
-        if let Some(prov_qualifed_attribution) = edit_data_service_model.prov_qualifed_attribution {
-            old_active_model.prov_qualifed_attribution = ActiveValue::Set(Some(prov_qualifed_attribution));
+        if let Some(prov_qualified_attribution) = edit_data_service_model.prov_qualified_attribution {
+            old_active_model.prov_qualified_attribution = ActiveValue::Set(Some(prov_qualified_attribution));
         }
         if let Some(dcat_has_current_version) = edit_data_service_model.dcat_has_current_version {
             old_active_model.dcat_has_current_version = ActiveValue::Set(Some(dcat_has_current_version));
@@ -1173,8 +1173,8 @@ impl DataServiceRepo for CatalogRepoForSql {
         if let Some(dcat_prev) = edit_data_service_model.dcat_prev {
             old_active_model.dcat_prev = ActiveValue::Set(Some(dcat_prev));
         }
-        if let Some(dct_replaces) = edit_data_service_model.dct_replaces {
-            old_active_model.dct_replaces = ActiveValue::Set(Some(dct_replaces));
+        if let Some(dcat_replaces) = edit_data_service_model.dcat_replaces {
+            old_active_model.dcat_replaces = ActiveValue::Set(Some(dcat_replaces));
         }
         if let Some(adms_status) = edit_data_service_model.adms_status {
             old_active_model.adms_status = ActiveValue::Set(Some(adms_status));
@@ -1208,7 +1208,7 @@ impl DataServiceRepo for CatalogRepoForSql {
             dcat_endpoint_url:ActiveValue::Set(new_data_service_model.dcat_endpoint_url),
             dct_conforms_to:ActiveValue::Set(new_data_service_model.dct_conforms_to),
             dct_creator:ActiveValue::Set(new_data_service_model.dct_creator),
-            dct_identifier:ActiveValue::Set(Option::from(urn.to_string())),
+            dct_identifier:ActiveValue::Set(urn.to_string()),
             dct_issued:ActiveValue::Set(chrono::Utc::now().naive_utc()),
             dct_modified:ActiveValue::Set(None),
             dct_title:ActiveValue::Set(new_data_service_model.dct_title),
@@ -1222,7 +1222,7 @@ impl DataServiceRepo for CatalogRepoForSql {
             dct_licence:ActiveValue::Set(new_data_service_model.dct_licence),
             dct_rights:ActiveValue::Set(new_data_service_model.dct_rights),
             dct_publisher:ActiveValue::Set(new_data_service_model.dct_publisher),
-            prov_qualifed_attribution:ActiveValue::Set(new_data_service_model.prov_qualifed_attribution),
+            prov_qualified_attribution:ActiveValue::Set(new_data_service_model.prov_qualified_attribution),
             dcat_has_current_version:ActiveValue::Set(new_data_service_model.dcat_has_current_version),
             dcat_version:ActiveValue::Set(new_data_service_model.dcat_version),
             dcat_previous_version:ActiveValue::Set(new_data_service_model.dcat_previous_version),
@@ -1230,7 +1230,7 @@ impl DataServiceRepo for CatalogRepoForSql {
             dcat_first:ActiveValue::Set(new_data_service_model.dcat_first),
             dcat_last:ActiveValue::Set(new_data_service_model.dcat_last),
             dcat_prev:ActiveValue::Set(new_data_service_model.dcat_prev),
-            dct_replaces:ActiveValue::Set(new_data_service_model.dct_replaces),
+            dcat_replaces:ActiveValue::Set(new_data_service_model.dcat_replaces),
             adms_status:ActiveValue::Set(new_data_service_model.adms_status)
         };
         let data_service = dataservice::Entity::insert(model).exec_with_returning(&self.db_connection).await;
@@ -1401,7 +1401,7 @@ impl DatasetSeriesRepo for CatalogRepoForSql {
             prov_generated_by:ActiveValue::Set(new_dataset_series_model.prov_generated_by),
             dct_access_rights:ActiveValue::Set(new_dataset_series_model.dct_access_rights),
             ordl_has_policy:ActiveValue::Set(new_dataset_series_model.ordl_has_policy),
-            dct_licence:ActiveValue::Set(new_dataset_series_model.dct_licence),
+            dct_license:ActiveValue::Set(new_dataset_series_model.dct_license),
             dcat_inseries:ActiveValue::Set(new_dataset_series_model.dcat_inseries),
             dcat_landing_page:ActiveValue::Set(new_dataset_series_model.dcat_landing_page),
             dcat_contact_point:ActiveValue::Set(new_dataset_series_model.dcat_contact_point),
@@ -1470,10 +1470,10 @@ impl DatasetSeriesRepo for CatalogRepoForSql {
             old_active_model.dct_access_rights = ActiveValue::Set(Some(dct_access_rights));
         }
         if let Some(ordl_has_policy) = edit_dataset_series_model.ordl_has_policy {
-            old_active_model.ordl_has_policy = ActiveValue::Set(ordl_has_policy);
+            old_active_model.ordl_has_policy = ActiveValue::Set(Some(ordl_has_policy));
         }
-        if let Some(dct_licence) = edit_dataset_series_model.dct_licence {
-            old_active_model.dct_licence = ActiveValue::Set(Some(dct_licence));
+        if let Some(dct_license) = edit_dataset_series_model.dct_license {
+            old_active_model.dct_license = ActiveValue::Set(Some(dct_license));
         }
         if let Some(dcat_inseries) = edit_dataset_series_model.dcat_inseries {
             old_active_model.dcat_inseries = ActiveValue::Set(Some(dcat_inseries));
@@ -2117,8 +2117,9 @@ impl ResourceRepo for CatalogRepoForSql {
         &self,
         new_reosurce: NewResourceModel,
     ) -> anyhow::Result<resource::Model, CatalogRepoErrors> {
+        let id = new_reosurce.resource_id.to_string();
         let model = resource::ActiveModel {
-            resource_id:ActiveValue::Set(uuid::Uuid::new_v4().to_string()),
+            resource_id: ActiveValue::Set(id),
             resource_type: ActiveValue::Set(new_reosurce.resource_type),
         };
         let resource = resource::Entity::insert(model).exec_with_returning(&self.db_connection).await;
@@ -2132,7 +2133,7 @@ impl ResourceRepo for CatalogRepoForSql {
         resource_id: Urn,
     ) -> anyhow::Result<(), CatalogRepoErrors> {
         let resource_id = resource_id.to_string();
-        let resource = qualified_relation::Entity::delete_by_id(resource_id).exec(&self.db_connection).await;
+        let resource = resource::Entity::delete_by_id(resource_id).exec(&self.db_connection).await;
         match resource {
             Ok(delete_result) => match delete_result.rows_affected {
                 0 => Err(CatalogRepoErrors::ResourceNotfound),

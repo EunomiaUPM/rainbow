@@ -37,7 +37,7 @@ pub struct Model {
     pub dcat_access_url: Option<String>,
     pub dcat_download_url: Option<String>,
     pub dct_access_rights: Option<String>,
-    pub ordl_has_policy: String,
+    pub ordl_has_policy: Option<String>,
     pub dct_conforms_to: Option<String>,
     pub dct_media_type: Option<String>,
     pub dcat_compress_format: Option<String>,
@@ -49,7 +49,7 @@ pub struct Model {
     pub dcat_spatial_resolution_meters: Option<f64>,
     pub dct_temporal_resolution: Option<String>,
     pub dcat_byte_size: Option<i64>,
-    pub spdc_checksum: String
+    pub spdx_checksum: String
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

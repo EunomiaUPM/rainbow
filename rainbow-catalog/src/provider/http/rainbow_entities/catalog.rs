@@ -20,8 +20,9 @@
 use crate::provider::core::ds_protocol::ds_protocol_errors::DSProtocolCatalogErrors;
 use crate::provider::core::ds_protocol::DSProtocolCatalogTrait;
 use crate::provider::core::rainbow_entities::rainbow_catalog_err::CatalogError;
-use crate::provider::core::rainbow_entities::rainbow_catalog_types::{NewCatalogRequest, EditCatalogRequest};
+use crate::provider::core::rainbow_entities::rainbow_catalog_types::{EditCatalogRequest, NewCatalogRequest, NewResourceRequest};
 use crate::provider::core::rainbow_entities::RainbowCatalogTrait;
+use crate::provider::core::rainbow_entities::RainbowCatalogResourceTrait;
 use anyhow::Error;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, State};
@@ -45,7 +46,7 @@ where
     U: DSProtocolCatalogTrait + Send + Sync + 'static,
 {
     pub fn new(catalog_service: Arc<T>, ds_service: Arc<U>) -> Self {
-        Self { catalog_service, ds_service }
+        Self { catalog_service, ds_service  }
     }
     pub fn router(self) -> Router {
         Router::new()
@@ -58,10 +59,11 @@ where
             .with_state((self.catalog_service, self.ds_service))
     }
 
-    async fn handle_get_catalogs(State((catalog_service, ds_service)): State<(Arc<T>, Arc<U>)>) -> impl IntoResponse {
+    async fn handle_get_catalogs(
+        State((catalog_service, ds_service)): State<(Arc<T>, Arc<U>)>)
+        -> impl IntoResponse {
         info!("GET /api/v1/catalogs");
-
-        match ds_service.catalog_request().await {
+        match catalog_service.get_all_catalogs().await {
             Ok(c) => (StatusCode::OK, Json(c)).into_response(),
             Err(err) => match err.downcast::<CatalogError>() {
                 Ok(e) => e.into_response(),
@@ -69,7 +71,7 @@ where
                     Ok(e_) => e_.into_response(),
                     Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
                 },
-            },
+            }
         }
     }
 
@@ -82,7 +84,7 @@ where
             Ok(catalog_id) => catalog_id,
             Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
         };
-        match ds_service.catalog_request_by_id(catalog_id).await {
+        match catalog_service.get_catalog_by_id(catalog_id).await {
             Ok(c) => (StatusCode::OK, Json(c)).into_response(),
             Err(err) => match err.downcast::<CatalogError>() {
                 Ok(e) => e.into_response(),

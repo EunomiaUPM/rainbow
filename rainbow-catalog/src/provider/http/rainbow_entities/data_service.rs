@@ -92,7 +92,7 @@ where
         input: Result<Json<NewDataServiceRequest>, JsonRejection>,
     ) -> impl IntoResponse {
         info!("POST /api/v1/catalogs/{}/data-services", id);
-        let dataservice_id = match get_urn_from_string(&id) {
+        let catalog_id = match get_urn_from_string(&id) {
             Ok(id) => id,
             Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
         };
@@ -100,7 +100,7 @@ where
             Ok(input) => input.0,
             Err(e) => return CatalogError::JsonRejection(e).into_response(),
         };
-        match data_service_service.post_data_service(dataservice_id, input).await {
+        match data_service_service.post_data_service(catalog_id, input).await {
             Ok(d) => (StatusCode::CREATED, Json(d)).into_response(),
             Err(err) => match err.downcast::<CatalogError>() {
                 Ok(e) => e.into_response(),

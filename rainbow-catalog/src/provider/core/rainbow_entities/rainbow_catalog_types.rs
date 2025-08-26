@@ -59,7 +59,8 @@ pub struct NewCatalogRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dct_modified: Option<chrono::NaiveDateTime>,
     #[serde(rename = "dct:identifier")]
-    pub dct_identifier: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_identifier: Option<String>,
     #[serde(rename = "dspace:participantId")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dspace_participant_id: Option<String>,
@@ -75,7 +76,8 @@ pub struct NewCatalogRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dcat_contact_point: Option<String>,
     #[serde(rename = "ordl:hasPolicy")]
-    pub ordl_has_policy: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ordl_has_policy: Option<String>,
     #[serde(rename = "dcat:landingPage")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dcat_landing_page: Option<String>,
@@ -315,7 +317,8 @@ pub struct NewDatasetRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dct_license: Option<String>,
     #[serde(rename = "ordl:hasPolicy")]
-    pub ordl_has_policy: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ordl_has_policy: Option<String>,
     #[serde(rename = "dcat:landingPage")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dcat_landing_page: Option<String>,
@@ -563,7 +566,8 @@ pub struct NewDataServiceRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dcat_access_rights: Option<String>,
     #[serde(rename = "ordl:hasPolicy")]
-    pub ordl_has_policy: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ordl_has_policy: Option<String>,
     #[serde(rename = "dcat:contactPoint")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dcat_contact_point: Option<String>,
@@ -579,9 +583,9 @@ pub struct NewDataServiceRequest {
     #[serde(rename = "dct:publisher")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dct_publisher: Option<String>,
-    #[serde(rename = "prov:qualifedAttribution")]
+    #[serde(rename = "prov:qualifiedAttribution")]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub prov_qualifed_attribution: Option<String>,
+    pub prov_qualified_attribution: Option<String>,
     #[serde(rename = "dcat:has_currentVersion")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dcat_has_current_version: Option<String>,
@@ -604,7 +608,7 @@ pub struct NewDataServiceRequest {
     pub dcat_prev: Option<String>,
     #[serde(rename = "dct:replaces")]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub dct_replaces: Option<String>,
+    pub dcat_replaces: Option<String>,
     #[serde(rename = "adms:status")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub adms_status: Option<String>,
@@ -632,7 +636,7 @@ impl Into<NewDataServiceModel> for NewDataServiceRequest {
             dct_licence: self.dct_licence,
             dct_rights: self.dct_rights,
             dct_publisher: self.dct_publisher,
-            prov_qualifed_attribution: self.prov_qualifed_attribution,
+            prov_qualified_attribution: self.prov_qualified_attribution,
             dcat_has_current_version: self.dcat_has_current_version,
             dcat_version: self.dcat_version,
             dcat_previous_version: self.dcat_previous_version,
@@ -640,7 +644,7 @@ impl Into<NewDataServiceModel> for NewDataServiceRequest {
             dcat_first: self.dcat_first,
             dcat_last: self.dcat_last,
             dcat_prev: self.dcat_prev,
-            dct_replaces: self.dct_replaces,
+            dcat_replaces: self.dcat_replaces,
             adms_status: self.adms_status,
         }
     }
@@ -702,9 +706,9 @@ pub struct EditDataServiceRequest {
     #[serde(rename = "dct:publisher")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dct_publisher: Option<String>,
-    #[serde(rename = "prov:qualifedAttribution")]
+    #[serde(rename = "prov:qualifiedAttribution")]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub prov_qualifed_attribution: Option<String>,
+    pub prov_qualified_attribution: Option<String>,
     #[serde(rename = "dcat:has_currentVersion")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dcat_has_current_version: Option<String>,
@@ -728,7 +732,7 @@ pub struct EditDataServiceRequest {
     pub dcat_prev: Option<String>,
     #[serde(rename = "dct:replaces")]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub dct_replaces: Option<String>,
+    pub dcat_replaces: Option<String>,
     #[serde(rename = "adms:status")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub adms_status: Option<String>
@@ -755,7 +759,7 @@ impl Into<EditDataServiceModel> for EditDataServiceRequest {
             dct_licence: self.dct_licence,
             dct_rights: self.dct_rights,
             dct_publisher: self.dct_publisher,
-            prov_qualifed_attribution: self.prov_qualifed_attribution,
+            prov_qualified_attribution: self.prov_qualified_attribution,
             dcat_has_current_version: self.dcat_has_current_version,
             dcat_version: self.dcat_version,
             dcat_previous_version: self.dcat_previous_version,
@@ -763,7 +767,7 @@ impl Into<EditDataServiceModel> for EditDataServiceRequest {
             dcat_first: self.dcat_first,
             dcat_last: self.dcat_last,
             dcat_prev: self.dcat_prev,
-            dct_replaces: self.dct_replaces,
+            dcat_replaces: self.dcat_replaces,
             adms_status: self.adms_status,
         }
     }
@@ -804,7 +808,8 @@ pub struct NewDistributionRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dct_access_rights: Option<String>,
     #[serde(rename = "ordl:has_policy")]
-    pub ordl_has_policy: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ordl_has_policy: Option<String>,
     #[serde(rename = "dct:conforms_to")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dct_conforms_to: Option<String>,
@@ -838,7 +843,7 @@ pub struct NewDistributionRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dcat_byte_size: Option<i64>,
     #[serde(rename = "spdc:checksum")]
-    pub spdc_checksum: String,
+    pub spdx_checksum: String,
 }
 
 impl Into<NewDistributionModel> for NewDistributionRequest {
@@ -869,7 +874,7 @@ impl Into<NewDistributionModel> for NewDistributionRequest {
             dcat_spatial_resolution_meters: self.dcat_spatial_resolution_meters,
             dct_temporal_resolution: self.dct_temporal_resolution,
             dcat_byte_size: self.dcat_byte_size,
-            spdc_checksum: self.spdc_checksum,
+            spdx_checksum: self.spdx_checksum,
         }
     }
 }
@@ -1022,10 +1027,11 @@ pub struct NewDatasetSeriesRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dct_access_rights: Option<String>,
     #[serde(rename = "ordl:hasPolicy" )]
-    pub ordl_has_policy: String,
-    #[serde(rename = "dct:licence" )]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub dct_licence: Option<String>,
+    pub ordl_has_policy: Option<String>,
+    #[serde(rename = "dct:license" )]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dct_license: Option<String>,
     #[serde(rename = "dcat:inseries" )]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dcat_inseries: Option<String>,
@@ -1121,9 +1127,9 @@ pub struct EditDatasetSeriesRequest {
     #[serde(rename = "ordl:hasPolicy")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ordl_has_policy: Option<String>,
-    #[serde(rename = "dct:licence")]
+    #[serde(rename = "dct:license")]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub dct_licence: Option<String>,
+    pub dct_license: Option<String>,
     #[serde(rename = "dcat:inseries")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dcat_inseries: Option<String>,
@@ -1198,7 +1204,7 @@ impl Into<NewDatasetSeriesModel> for NewDatasetSeriesRequest {
             prov_generated_by: self.prov_generated_by,
             dct_access_rights: self.dct_access_rights,
             ordl_has_policy: self.ordl_has_policy,
-            dct_licence: self.dct_licence,
+            dct_license: self.dct_license,
             dcat_inseries: self.dcat_inseries,
             dcat_landing_page: self.dcat_landing_page,
             dcat_contact_point: self.dcat_contact_point,
@@ -1237,7 +1243,7 @@ impl Into<EditDatasetSeriesModel> for EditDatasetSeriesRequest {
             prov_generated_by: self.prov_generated_by,
             dct_access_rights: self.dct_access_rights,
             ordl_has_policy: self.ordl_has_policy,
-            dct_licence: self.dct_licence,
+            dct_license: self.dct_license,
             dcat_inseries: self.dcat_inseries,
             dcat_landing_page: self.dcat_landing_page,
             dcat_contact_point: self.dcat_contact_point,

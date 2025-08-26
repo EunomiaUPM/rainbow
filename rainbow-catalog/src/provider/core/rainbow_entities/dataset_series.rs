@@ -22,6 +22,7 @@ use crate::provider::core::rainbow_entities::data_service;
 use crate::provider::core::rainbow_entities::rainbow_catalog_err::CatalogError;
 use crate::provider::core::rainbow_entities::rainbow_catalog_types::NewDatasetSeriesRequest;
 use crate::provider::core::rainbow_entities::rainbow_catalog_types::EditDatasetSeriesRequest;
+use crate::provider::core::rainbow_entities::rainbow_catalog_types::NewResourceRequest;
 use crate::provider::core::rainbow_entities::RainbowCatalogDatasetSeriesTrait;
 use anyhow::bail;
 use axum::async_trait;
@@ -33,6 +34,7 @@ use rainbow_db::catalog::entities::dataset;
 use rainbow_db::catalog::entities::dataset::Model as dataset_model;
 use rainbow_db::catalog::entities::dataset_series;
 use rainbow_db::catalog::entities::dataset_series::Model;
+use rainbow_db::catalog::repo::ResourceRepo;
 use rainbow_db::catalog::repo::{CatalogRepo, DataServiceRepo, DatasetRepo, DistributionRepo, OdrlOfferRepo, CatalogRecordRepo, DatasetSeriesRepo};
 use rainbow_events::core::notification::notification_types::{RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory, RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes};
 use rainbow_events::core::notification::RainbowEventsNotificationTrait;
@@ -42,7 +44,7 @@ use urn::Urn;
 
 pub struct RainbowCatalogDatasetSeriesService<T, U>
 where
-    T: CatalogRepo + DatasetRepo + DistributionRepo + DataServiceRepo + OdrlOfferRepo + CatalogRecordRepo + DatasetSeriesRepo + Send + Sync + 'static,
+    T: CatalogRepo + DatasetRepo + DistributionRepo + DataServiceRepo + OdrlOfferRepo + CatalogRecordRepo + DatasetSeriesRepo + ResourceRepo + Send + Sync + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
 {
     repo: Arc<T>,
@@ -51,7 +53,7 @@ where
 
 impl<T, U> RainbowCatalogDatasetSeriesService<T, U>
 where 
-    T: CatalogRepo + DatasetRepo + DistributionRepo + DataServiceRepo + OdrlOfferRepo + CatalogRecordRepo + DatasetSeriesRepo + Send + Sync + 'static,
+    T: CatalogRepo + DatasetRepo + DistributionRepo + DataServiceRepo + OdrlOfferRepo + CatalogRecordRepo + DatasetSeriesRepo + ResourceRepo + Send + Sync + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
 {
     pub fn new(repo: Arc<T>, notification_service: Arc<U>) -> Self {
@@ -62,7 +64,7 @@ where
 #[async_trait]
 impl<T, U> RainbowCatalogDatasetSeriesTrait for RainbowCatalogDatasetSeriesService<T, U>
 where 
-    T: CatalogRepo + DatasetRepo + DistributionRepo + DataServiceRepo + OdrlOfferRepo + CatalogRecordRepo + DatasetSeriesRepo + Send + Sync + 'static,
+    T: CatalogRepo + DatasetRepo + DistributionRepo + DataServiceRepo + OdrlOfferRepo + CatalogRecordRepo + DatasetSeriesRepo + ResourceRepo + Send + Sync + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
 {
     async fn get_all_dataset_series(&self) -> anyhow::Result<Vec<Model>> {
@@ -96,6 +98,15 @@ where
             .create_dataset_series(input.into())
             .await
             .map_err(CatalogError::DbErr)?;
+        let id_str = dataset_series.id.clone();
+        let resource = NewResourceRequest {
+            resource_id: get_urn_from_string(&id_str).expect("[!] Error al asignar Urn"),
+            resource_type: "dcat:datasetSeries".to_string()
+        };
+        let resource = self.repo
+            .create_resource(resource.into())
+            .await
+            .map_err(DSProtocolCatalogErrors::DbErr)?;
         Ok(dataset_series)
     }
     async fn put_dataset_series_by_id(&self, id: Urn, input: EditDatasetSeriesRequest) -> anyhow::Result<Model> {

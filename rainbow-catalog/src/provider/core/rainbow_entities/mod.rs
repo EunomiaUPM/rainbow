@@ -71,6 +71,7 @@ pub mod qualified_relations;
 #[mockall::automock]
 #[async_trait]
 pub trait RainbowCatalogTrait: Send + Sync {
+    async fn get_all_catalogs(&self) -> anyhow::Result<Vec<Catalog>>;
     async fn get_catalog_by_id(&self, id: Urn) -> anyhow::Result<Catalog>;
     async fn post_catalog(&self, input: NewCatalogRequest, is_main: bool) -> anyhow::Result<Catalog>;
     async fn put_catalog(&self, id: Urn, input: EditCatalogRequest) -> anyhow::Result<Catalog>;

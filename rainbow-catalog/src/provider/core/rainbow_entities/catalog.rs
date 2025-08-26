@@ -17,16 +17,21 @@
  *
  */
 
+use crate::provider::core::ds_protocol::ds_protocol_errors::DSProtocolCatalogErrors;
 use crate::provider::core::rainbow_entities::rainbow_catalog_err::CatalogError;
 use crate::provider::core::rainbow_entities::rainbow_catalog_types::NewCatalogRequest;
 use crate::provider::core::rainbow_entities::rainbow_catalog_types::EditCatalogRequest;
+use crate::provider::core::rainbow_entities::rainbow_catalog_types::NewResourceRequest;
 use crate::provider::core::rainbow_entities::RainbowCatalogTrait;
+use crate::provider::http::ds_protocol::ds_protocol::DSProcotolCatalogRouter;
 use anyhow::bail;
 use axum::async_trait;
+use rainbow_common::protocol::catalog;
 use rainbow_common::protocol::catalog::catalog_definition::Catalog;
 use rainbow_common::protocol::catalog::EntityTypes;
 use rainbow_common::protocol::contract::contract_odrl::OdrlOffer;
 use rainbow_common::utils::get_urn_from_string;
+use rainbow_db::catalog::repo::ResourceRepo;
 use rainbow_db::catalog::repo::{CatalogRepo, DataServiceRepo, DatasetRepo, DistributionRepo, OdrlOfferRepo};
 use rainbow_events::core::notification::notification_types::{RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory, RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes};
 use rainbow_events::core::notification::RainbowEventsNotificationTrait;
@@ -36,33 +41,57 @@ use urn::Urn;
 
 pub struct RainbowCatalogCatalogService<T, U>
 where
-    T: CatalogRepo + DatasetRepo + DistributionRepo + DataServiceRepo + OdrlOfferRepo + Send + Sync + 'static,
-    U: RainbowEventsNotificationTrait + Send + Sync,
+    T: CatalogRepo + DatasetRepo + DistributionRepo + DataServiceRepo + OdrlOfferRepo + ResourceRepo + Send + Sync + 'static,
+    U: RainbowEventsNotificationTrait + Send + Sync
 {
     repo: Arc<T>,
-    notification_service: Arc<U>,
+    notification_service: Arc<U>
 }
 
-impl<T, U> RainbowCatalogCatalogService<T, U>
+impl<T, U> RainbowCatalogCatalogService<T, U, >
 where
-    T: CatalogRepo + DatasetRepo + DistributionRepo + DataServiceRepo + OdrlOfferRepo + Send + Sync + 'static,
-    U: RainbowEventsNotificationTrait + Send + Sync,
+    T: CatalogRepo + DatasetRepo + DistributionRepo + DataServiceRepo + OdrlOfferRepo + ResourceRepo + Send + Sync + 'static,
+    U: RainbowEventsNotificationTrait + Send + Sync
 {
     pub fn new(repo: Arc<T>, notification_service: Arc<U>) -> Self {
-        Self { repo, notification_service }
+        Self { repo, notification_service}
     }
 }
 
 #[async_trait]
 impl<T, U> RainbowCatalogTrait for RainbowCatalogCatalogService<T, U>
 where
-    T: CatalogRepo + DatasetRepo + DistributionRepo + DataServiceRepo + OdrlOfferRepo + Send + Sync + 'static,
+    T: CatalogRepo + DatasetRepo + DistributionRepo + DataServiceRepo + OdrlOfferRepo + ResourceRepo + Send + Sync + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
 
 {
+    async fn get_all_catalogs(&self) -> anyhow::Result<Vec<Catalog>> {
+          let models: Vec<rainbow_db::catalog::entities::catalog::Model> = self.repo
+            .get_all_catalogs(None, None, false)
+            .await
+            .map_err(CatalogError::DbErr)?;
+        let mut catalogs: Vec<Catalog> = models
+            .into_iter()
+            .map(|model| Catalog::try_from(model).map_err(CatalogError::ConversionError))
+            .collect::<Result<Vec<_>, _>>()?;
+        for catalog in &mut catalogs {
+            let catalog_id = catalog.id.clone();
+            let odrl = self.repo
+                .get_all_odrl_offers_by_entity(catalog_id)
+                .await
+                .map_err(CatalogError::DbErr)?;
+            let odrl = Some(
+                odrl.into_iter()
+                    .map(|o| OdrlOffer::try_from(o).unwrap())
+                    .collect()
+            );
+            catalog.odrl_offer = odrl;
+        }
+        Ok(catalogs)
+    }
+
     async fn get_catalog_by_id(&self, id: Urn) -> anyhow::Result<Catalog> {
         let catalog = self.repo.get_catalog_by_id(id.clone()).await.map_err(CatalogError::DbErr)?;
-
         match catalog {
             Some(catalog_entity) => {
                 let mut catalog_out =
@@ -84,6 +113,12 @@ where
             true => self.repo.create_main_catalog(input.into()).await.map_err(CatalogError::DbErr)?,
             false => self.repo.create_catalog(input.into()).await.map_err(CatalogError::DbErr)?,
         };
+        let id: Urn = catalog_entity.dct_identifier.parse().expect("[!] error al paresar urn");
+        let resource = NewResourceRequest {
+            // resource_id: get_urn_from_string(&id_str).expect("[!] Error al asignar Urn"),
+            resource_id: id,
+            resource_type: "dcat:catalog".to_string()
+        };
         let catalog = Catalog::try_from(catalog_entity).map_err(CatalogError::ConversionError)?;
         self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
             category: RainbowEventsNotificationMessageCategory::Catalog,
@@ -92,6 +127,12 @@ where
             message_content: to_value(&catalog)?,
             message_operation: RainbowEventsNotificationMessageOperation::Creation,
         }).await?;
+        // let id_str = catalog_entity.dct_identifier.clone();
+        let resource = self.repo
+            .create_resource(resource.into())
+            .await
+            .map_err(DSProtocolCatalogErrors::DbErr)?;
+
         Ok(catalog)
     }
 
@@ -117,6 +158,12 @@ where
         let _ = self.repo.delete_catalog_by_id(id.clone()).await.map_err(|err| match err {
             rainbow_db::catalog::repo::CatalogRepoErrors::CatalogNotFound => {
                 CatalogError::NotFound { id: id.clone(), entity: EntityTypes::Catalog.to_string() }
+            }
+            _ => CatalogError::DbErr(err),
+        })?;
+        let _ = self.repo.delete_resource_by_id(id.clone()).await.map_err(|err| match err {
+            rainbow_db::catalog::repo::CatalogRepoErrors::CatalogNotFound => {
+                CatalogError::NotFound { id: id.clone(), entity: EntityTypes::Resource.to_string() }
             }
             _ => CatalogError::DbErr(err),
         })?;

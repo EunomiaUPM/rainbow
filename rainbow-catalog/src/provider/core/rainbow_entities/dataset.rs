@@ -17,14 +17,17 @@
  *
  */
 
+use crate::provider::core::ds_protocol::ds_protocol_errors::DSProtocolCatalogErrors;
 use crate::provider::core::rainbow_entities::rainbow_catalog_err::CatalogError;
-use crate::provider::core::rainbow_entities::rainbow_catalog_types::{NewDatasetRequest, EditDatasetRequest};
+use crate::provider::core::rainbow_entities::rainbow_catalog_types::{EditDatasetRequest, NewDatasetRequest, NewResourceRequest};
 use crate::provider::core::rainbow_entities::RainbowDatasetTrait;
 use anyhow::bail;
 use axum::async_trait;
 use rainbow_common::protocol::catalog::dataset_definition::Dataset;
 use rainbow_common::protocol::catalog::EntityTypes;
-use rainbow_db::catalog::repo::{CatalogRepo, CatalogRepoErrors, DataServiceRepo, DatasetRepo, DistributionRepo, OdrlOfferRepo};
+use rainbow_common::utils::get_urn_from_string;
+use rainbow_db::catalog::entities::dataset_series;
+use rainbow_db::catalog::repo::{CatalogRepo, CatalogRepoErrors, DataServiceRepo, DatasetRepo, DistributionRepo, OdrlOfferRepo, ResourceRepo};
 use rainbow_events::core::notification::notification_types::{RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory, RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes};
 use rainbow_events::core::notification::RainbowEventsNotificationTrait;
 use serde_json::{json, to_value};
@@ -33,7 +36,7 @@ use urn::Urn;
 
 pub struct RainbowCatalogDatasetService<T, U>
 where
-    T: CatalogRepo + DatasetRepo + DistributionRepo + DataServiceRepo + OdrlOfferRepo + Send + Sync + 'static,
+    T: CatalogRepo + DatasetRepo + DistributionRepo + DataServiceRepo + OdrlOfferRepo + ResourceRepo + Send + Sync + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
 {
     repo: Arc<T>,
@@ -43,7 +46,7 @@ where
 
 impl<T, U> RainbowCatalogDatasetService<T, U>
 where
-    T: CatalogRepo + DatasetRepo + DistributionRepo + DataServiceRepo + OdrlOfferRepo + Send + Sync + 'static,
+    T: CatalogRepo + DatasetRepo + DistributionRepo + DataServiceRepo + OdrlOfferRepo + ResourceRepo + Send + Sync + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
 {
     pub fn new(repo: Arc<T>, notification_service: Arc<U>) -> Self {
@@ -54,7 +57,7 @@ where
 #[async_trait]
 impl<T, U> RainbowDatasetTrait for RainbowCatalogDatasetService<T, U>
 where
-    T: CatalogRepo + DatasetRepo + DistributionRepo + DataServiceRepo + OdrlOfferRepo + Send + Sync + 'static,
+    T: CatalogRepo + DatasetRepo + DistributionRepo + DataServiceRepo + OdrlOfferRepo + ResourceRepo + Send + Sync + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
 {
     async fn get_dataset_by_id(&self, dataset_id: Urn) -> anyhow::Result<Dataset> {
@@ -92,6 +95,11 @@ where
                 }
                 _ => CatalogError::DbErr(err),
             })?;
+        let id_str = dataset_entity.id.clone();
+        let resource = NewResourceRequest {
+            resource_id: get_urn_from_string(&id_str).expect("[!] Error al asignar Urn"),
+            resource_type: "dcat:dataset".to_string()
+        };
         let dataset = Dataset::try_from(dataset_entity).map_err(CatalogError::ConversionError)?;
         self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
             category: RainbowEventsNotificationMessageCategory::Catalog,
@@ -100,6 +108,10 @@ where
             message_content: to_value(&dataset)?,
             message_operation: RainbowEventsNotificationMessageOperation::Creation,
         }).await?;
+        let resource = self.repo
+            .create_resource(resource.into())
+            .await
+            .map_err(DSProtocolCatalogErrors::DbErr)?;
         Ok(dataset)
     }
 

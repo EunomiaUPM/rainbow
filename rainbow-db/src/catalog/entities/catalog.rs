@@ -36,7 +36,7 @@ pub struct Model {
     pub dct_description: Option<String>,
     pub dct_access_rights: Option<String>,
     pub dcat_contact_point: Option<String>,
-    pub ordl_has_policy: String,
+    pub ordl_has_policy: Option<String>,
     pub dcat_landing_page: Option<String>,
     pub dct_licence: Option<String>,
     pub dct_publisher: Option<String>,

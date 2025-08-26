@@ -45,9 +45,9 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(CatalogDatasets::DctTitle).string())
                     .col(ColumnDef::new(CatalogDatasets::DctDescription).string())
                     .col(ColumnDef::new(CatalogDatasets::CatalogId).string().not_null())
-                    .col(ColumnDef::new(CatalogDatasets::DcatInSeries).string())
+                    .col(ColumnDef::new(CatalogDatasets::DcatInseries).string())
                     .col(ColumnDef::new(CatalogDatasets::DctSpatial).string())
-                    .col(ColumnDef::new(CatalogDatasets::DcatSpatialResolutionMeters).float())
+                    .col(ColumnDef::new(CatalogDatasets::DcatSpatialResolutionMeters).double())
                     .col(ColumnDef::new(CatalogDatasets::DctTemporal).string())
                     .col(ColumnDef::new(CatalogDatasets::DctTemporalResolution).string())
                     .col(ColumnDef::new(CatalogDatasets::ProvGeneratedBy).string())
@@ -62,7 +62,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(CatalogDatasets::DctType).string())
                     .col(ColumnDef::new(CatalogDatasets::ProvQualifiedAttribution).string())
                     .col(ColumnDef::new(CatalogDatasets::DcatVersion).string().not_null())
-                    .col(ColumnDef::new(CatalogDatasets::DcatHasCurrentVersion).string().not_null())
+                    .col(ColumnDef::new(CatalogDatasets::DcatHasCurrentVersion).string())
                     .col(ColumnDef::new(CatalogDatasets::DcatPreviousVersion).string())
                     .col(ColumnDef::new(CatalogDatasets::DcatFirst).string())
                     .col(ColumnDef::new(CatalogDatasets::DcatLast).string())
@@ -92,7 +92,7 @@ pub enum CatalogDatasets {
     DctTitle,
     DctDescription,
     CatalogId,
-    DcatInSeries,
+    DcatInseries,
     DctSpatial,
     DcatSpatialResolutionMeters,
     DctTemporal,

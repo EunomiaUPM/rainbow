@@ -41,7 +41,7 @@ pub struct Model {
     pub prov_generated_by: Option<String>,
     pub dct_access_rights: Option<String>,
     pub dct_license: Option<String>,
-    pub ordl_has_policy: String,
+    pub ordl_has_policy: Option<String>,
     pub dcat_landing_page: Option<String>,
     pub dcat_contact_point: Option<String>,
     pub dct_language: Option<String>,

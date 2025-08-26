@@ -143,7 +143,7 @@ impl MigrationTrait for Migration {
             .create_foreign_key(
                 ForeignKey::create()
                     .name("fk_dataset_inseries")
-                    .from(CatalogDatasets::Table, CatalogDatasets::DcatInSeries)
+                    .from(CatalogDatasets::Table, CatalogDatasets::DcatInseries)
                     .to(DatasetSeries::Table, DatasetSeries::Id)
                     .on_delete(ForeignKeyAction::Cascade)
                     .on_update(ForeignKeyAction::Cascade)
@@ -251,7 +251,7 @@ impl MigrationTrait for Migration {
             .create_foreign_key(
                 ForeignKey::create()
                     .name("fk_distribution_dataservice")
-                    .from(CatalogDistributions::Table, CatalogDistributions::AccessServiceId)
+                    .from(CatalogDistributions::Table, CatalogDistributions::DcatAccessService)
                     .to(CatalogDataServices::Table, CatalogDataServices::Id)
                     .on_delete(ForeignKeyAction::Cascade)
                     .on_update(ForeignKeyAction::Cascade)
@@ -263,7 +263,7 @@ impl MigrationTrait for Migration {
             .create_foreign_key(
                 ForeignKey::create()
                     .name("fk_distribution_dataset_series")
-                    .from(CatalogDistributions::Table, CatalogDistributions::DatasetSeriesId)
+                    .from(CatalogDistributions::Table, CatalogDistributions::DcatInseries)
                     .to(DatasetSeries::Table, DatasetSeries::Id)
                     .on_delete(ForeignKeyAction::Cascade)
                     .on_update(ForeignKeyAction::Cascade)
@@ -408,7 +408,7 @@ impl MigrationTrait for Migration {
             .create_foreign_key(
                 ForeignKey::create()
                     .name("fk_dataset_series_inseries")
-                    .from(DatasetSeries::Table, DatasetSeries::DcatInSeries)
+                    .from(DatasetSeries::Table, DatasetSeries::DcatInseries)
                     .to(DatasetSeries::Table, DatasetSeries::Id)
                     .on_delete(ForeignKeyAction::Cascade)
                     .on_update(ForeignKeyAction::Cascade)

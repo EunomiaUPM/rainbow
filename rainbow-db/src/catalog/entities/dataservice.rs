@@ -28,7 +28,7 @@ pub struct Model {
     pub dcat_endpoint_url: String,
     pub dct_conforms_to: Option<String>,
     pub dct_creator: Option<String>,
-    pub dct_identifier: Option<String>,
+    pub dct_identifier: String,
     pub dct_issued: chrono::NaiveDateTime,
     pub dct_modified: Option<chrono::NaiveDateTime>,
     pub dct_title: Option<String>,
@@ -36,13 +36,13 @@ pub struct Model {
     pub catalog_id: String,
     pub dcat_serves_dataset: String,
     pub dcat_access_rights: Option<String>,
-    pub ordl_has_policy: String,
+    pub ordl_has_policy: Option<String>,
     pub dcat_contact_point: Option<String>,
     pub dcat_landing_page: Option<String>,
     pub dct_licence: Option<String>,
     pub dct_rights: Option<String>,
     pub dct_publisher: Option<String>,
-    pub prov_qualifed_attribution: Option<String>,
+    pub prov_qualified_attribution: Option<String>,
     pub dcat_has_current_version: Option<String>,
     pub dcat_version: String,
     pub dcat_previous_version: Option<String>,
@@ -50,7 +50,7 @@ pub struct Model {
     pub dcat_first: Option<String>,
     pub dcat_last: Option<String>,
     pub dcat_prev: Option<String>,
-    pub dct_replaces: Option<String>,
+    pub dcat_replaces: Option<String>,
     pub adms_status: Option<String>,
 }
 
@@ -88,7 +88,7 @@ pub enum Relation {
 
     #[sea_orm(
         belongs_to = "super::dataservice::Entity",
-        from = "Column::DctReplaces",
+        from = "Column::DcatReplaces",
         to = "Column::Id"
     )]
     Replaces,

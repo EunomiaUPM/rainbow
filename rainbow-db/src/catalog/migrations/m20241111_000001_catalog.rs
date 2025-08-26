@@ -47,7 +47,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(CatalogCatalogs::DctDescription).string())
                     .col(ColumnDef::new(CatalogCatalogs::DctAccessRights).string())
                     .col(ColumnDef::new(CatalogCatalogs::DcatContactPoint).string())
-                    .col(ColumnDef::new(CatalogCatalogs::OrdlHasPolicy).string().not_null())
+                    .col(ColumnDef::new(CatalogCatalogs::OrdlHasPolicy).string())
                     .col(ColumnDef::new(CatalogCatalogs::DcatLandingPage).string())
                     .col(ColumnDef::new(CatalogCatalogs::DctLicence).string())
                     .col(ColumnDef::new(CatalogCatalogs::DctPublisher).string())

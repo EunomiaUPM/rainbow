@@ -21,7 +21,7 @@ use sea_orm::entity::prelude::*;
 use serde::{Serialize, Deserialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
-#[sea_orm(table_name = "catalog_dataset_series")]
+#[sea_orm(table_name = "dataset_series")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: String,
@@ -38,8 +38,8 @@ pub struct Model {
     pub dct_temporal_resolution: Option<String>,
     pub prov_generated_by: Option<String>,
     pub dct_access_rights: Option<String>,
-    pub ordl_has_policy: String,
-    pub dct_licence: Option<String>,
+    pub ordl_has_policy: Option<String>,
+    pub dct_license: Option<String>,
     pub dcat_inseries: Option<String>,
     pub dcat_landing_page: Option<String>,
     pub dcat_contact_point: Option<String>,

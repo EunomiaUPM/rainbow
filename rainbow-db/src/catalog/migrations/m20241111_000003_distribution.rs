@@ -43,13 +43,13 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(CatalogDistributions::DctTitle).string())
                     .col(ColumnDef::new(CatalogDistributions::DctDescription).string())
                     .col(ColumnDef::new(CatalogDistributions::DctFormat).string())
-                    .col(ColumnDef::new(CatalogDistributions::AccessServiceId).string().not_null())
+                    .col(ColumnDef::new(CatalogDistributions::DcatAccessService).string().not_null())
                     .col(ColumnDef::new(CatalogDistributions::DatasetId).string().not_null())
-                    .col(ColumnDef::new(CatalogDistributions::DatasetSeriesId).string().not_null())
+                    .col(ColumnDef::new(CatalogDistributions::DcatInseries).string().not_null())
                     .col(ColumnDef::new(CatalogDistributions::DcatAccessURL).string())
                     .col(ColumnDef::new(CatalogDistributions::DcatDownloadURL).string())
                     .col(ColumnDef::new(CatalogDistributions::DctAccessRights).string())
-                    .col(ColumnDef::new(CatalogDistributions::OrdlHasPolicy).string().not_null())
+                    .col(ColumnDef::new(CatalogDistributions::OrdlHasPolicy).string())
                     .col(ColumnDef::new(CatalogDistributions::DctConformsTo).string())
                     .col(ColumnDef::new(CatalogDistributions::DctMediaType).string())
                     .col(ColumnDef::new(CatalogDistributions::DcatCompressFormat).string())
@@ -58,7 +58,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(CatalogDistributions::DctRights).string().not_null())
                     .col(ColumnDef::new(CatalogDistributions::DctSpatial).string())
                     .col(ColumnDef::new(CatalogDistributions::DctTemporal).string())
-                    .col(ColumnDef::new(CatalogDistributions::DcatSpatialResolutionMeters).float())
+                    .col(ColumnDef::new(CatalogDistributions::DcatSpatialResolutionMeters).double())
                     .col(ColumnDef::new(CatalogDistributions::DctTemporalResolution).string())
                     .col(ColumnDef::new(CatalogDistributions::DcatByteSize).big_integer())
                     .col(ColumnDef::new(CatalogDistributions::SpdxChecksum).string().not_null())
@@ -78,8 +78,8 @@ pub enum CatalogDistributions {
     Id,
     DctIdentifier,
     DatasetId,
-    AccessServiceId,
-    DatasetSeriesId,
+    DcatAccessService,
+    DcatInseries,
     DcatAccessURL,
     DcatDownloadURL,
     DctAccessRights,

@@ -23,7 +23,7 @@ use sea_orm::entity::prelude::*;
 use serde::{Serialize, Deserialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
-#[sea_orm(table_name = "cataloged_resource")]
+#[sea_orm(table_name = "resources")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub resource_id: String,

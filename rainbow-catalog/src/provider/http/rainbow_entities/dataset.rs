@@ -97,7 +97,7 @@ where
         input: Result<Json<NewDatasetRequest>, JsonRejection>,
     ) -> impl IntoResponse {
         info!("POST /api/v1/catalogs/{}/datasets", id);
-        let dataset_id = match get_urn_from_string(&id) {
+        let catalog_id = match get_urn_from_string(&id) {
             Ok(id) => id,
             Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
         };
@@ -105,7 +105,7 @@ where
             Ok(input) => input.0,
             Err(e) => return CatalogError::JsonRejection(e).into_response(),
         };
-        match dataset_service.post_dataset(dataset_id, input).await {
+        match dataset_service.post_dataset(catalog_id, input).await {
             Ok(d) => (StatusCode::CREATED, Json(d)).into_response(),
             Err(err) => match err.downcast::<CatalogError>() {
                 Ok(e) => e.into_response(),

@@ -48,7 +48,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(CatalogDataServices::DctDescription).string())
                     .col(ColumnDef::new(CatalogDataServices::CatalogId).string().not_null())
                     .col(ColumnDef::new(CatalogDataServices::DcatServesDataset).string().not_null())
-                    .col(ColumnDef::new(CatalogDataServices::DctAccessRights).string())
+                    .col(ColumnDef::new(CatalogDataServices::DcatAccessRights).string())
                     .col(ColumnDef::new(CatalogDataServices::OrdlHasPolicy).string())
                     .col(ColumnDef::new(CatalogDataServices::DcatContactPoint).string())
                     .col(ColumnDef::new(CatalogDataServices::DcatLandingPage).string())
@@ -60,7 +60,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(CatalogDataServices::DcatVersion).string().not_null())
                     .col(ColumnDef::new(CatalogDataServices::DcatPreviousVersion).string())
                     .col(ColumnDef::new(CatalogDataServices::DcatReplaces).string())
-                    .col(ColumnDef::new(CatalogDataServices::AmdsStatus).string())
+                    .col(ColumnDef::new(CatalogDataServices::AdmsStatus).string())
                     .col(ColumnDef::new(CatalogDataServices::AdmsVersionNotes).string())
                     .col(ColumnDef::new(CatalogDataServices::DcatFirst).string())
                     .col(ColumnDef::new(CatalogDataServices::DcatLast).string())
@@ -90,7 +90,7 @@ pub enum CatalogDataServices {
     DctDescription,
     CatalogId,
     DcatServesDataset,
-    DctAccessRights,
+    DcatAccessRights,
     OrdlHasPolicy,
     DcatContactPoint,
     DcatLandingPage,
@@ -102,7 +102,7 @@ pub enum CatalogDataServices {
     DcatVersion,
     DcatPreviousVersion,
     DcatReplaces,
-    AmdsStatus,
+    AdmsStatus,
     AdmsVersionNotes,
     DcatFirst,
     DcatLast,

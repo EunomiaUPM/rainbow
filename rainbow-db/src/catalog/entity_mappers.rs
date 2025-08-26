@@ -83,8 +83,7 @@ impl TryFrom<dataservice::Model> for DataService {
                 conforms_to: dataservice_model.dct_conforms_to,
                 creator: dataservice_model.dct_creator,
                 identifier: dataservice_model
-                    .dct_identifier
-                    .unwrap_or_else(|| dataservice_model.id.to_string()),
+                    .dct_identifier,
                 issued: dataservice_model.dct_issued,
                 modified: dataservice_model.dct_modified,
                 title: dataservice_model.dct_title,
