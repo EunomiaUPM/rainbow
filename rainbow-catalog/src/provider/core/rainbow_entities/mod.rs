@@ -203,9 +203,11 @@ pub trait RainbowCatalogReferencesTrait: Send + Sync {
 #[async_trait]
 pub trait RainbowCatalogKeywordsThemesTrait: Send + Sync {
     async fn get_all_keywords(&self) -> anyhow::Result<Vec<keyword::Model>>;
+    async fn get_resources_by_keyword(&self, keyword: String) -> anyhow::Result<Vec<resource::Model>>;
     async fn post_keyword(&self, input: NewKeywordRequest) -> anyhow::Result<keyword::Model>;
     async fn delete_keyword(&self, id: Urn) -> anyhow::Result<()>;
     async fn get_all_themes(&self) -> anyhow::Result<Vec<theme::Model>>;
+    async fn get_resources_by_theme(&self, theme: String) -> anyhow::Result<Vec<resource::Model>>;
     async fn post_theme(&self, input: NewThemeRequest) -> anyhow::Result<theme::Model>;
     async fn delete_theme(&self, id: Urn) -> anyhow::Result<()>;
 }

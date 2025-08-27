@@ -60,8 +60,8 @@ where
     }
 
     async fn handle_get_catalogs(
-        State((catalog_service, ds_service)): State<(Arc<T>, Arc<U>)>)
-        -> impl IntoResponse {
+        State((catalog_service, ds_service)): State<(Arc<T>, Arc<U>)>
+    ) -> impl IntoResponse {
         info!("GET /api/v1/catalogs");
         match catalog_service.get_all_catalogs().await {
             Ok(c) => (StatusCode::OK, Json(c)).into_response(),

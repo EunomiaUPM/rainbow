@@ -1496,7 +1496,8 @@ impl Into<EditReferenceModel> for EditReferenceRequest {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct NewKeywordRequest {
     #[serde(rename = "id")]
-    pub id: Urn,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<Urn>,
     #[serde(rename = "dcat:keyword")]
     pub keyword: String,
     #[serde(rename = "dcat:resource")]
@@ -1515,7 +1516,8 @@ impl Into<NewKeywordModel> for NewKeywordRequest {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct NewThemeRequest {
     #[serde(rename = "id")]
-    pub id: Urn,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<Urn>,
     #[serde(rename = "dcat:theme")]
     pub theme: String,
     #[serde(rename = "dcat:resource")]

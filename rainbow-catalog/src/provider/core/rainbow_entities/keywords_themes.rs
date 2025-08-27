@@ -29,6 +29,7 @@ use rainbow_common::protocol::contract::contract_odrl::OdrlOffer;
 use rainbow_common::utils::get_urn_from_string;
 use rainbow_db::catalog::entities::keyword;
 use rainbow_db::catalog::entities::keyword::Model as key_Model;
+use rainbow_db::catalog::entities::resource::Model as resource_model;
 use rainbow_db::catalog::entities::theme::Model as theme_Model;
 use rainbow_db::catalog::repo::{CatalogRepo, DataServiceRepo, DatasetRepo, DistributionRepo, OdrlOfferRepo, CatalogRecordRepo, KeywordThemesRepo};
 use rainbow_events::core::notification::notification_types::{RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory, RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes};
@@ -69,6 +70,13 @@ where
             .map_err(DSProtocolCatalogErrors::DbErr)?;
         Ok(keywords)
     }
+    async fn get_resources_by_keyword(&self, keyword: String) -> anyhow::Result<Vec<resource_model>> {
+        let resources = self.repo
+            .get_all_resources_by_keyword(keyword)
+            .await
+            .map_err(DSProtocolCatalogErrors::DbErr)?;
+        Ok(resources)
+    }
     async fn post_keyword(&self, input: NewKeywordRequest) -> anyhow::Result<key_Model> {
         let keyword = self.repo 
             .create_keyword(input.into())
@@ -88,12 +96,21 @@ where
             })?;
         Ok(())
     }
+
+
     async fn get_all_themes(&self) -> anyhow::Result<Vec<theme_Model>>  {
         let keywords = self.repo
             .get_all_themes()
             .await
             .map_err(DSProtocolCatalogErrors::DbErr)?;
         Ok(keywords)
+    }
+    async fn get_resources_by_theme(&self, theme: String) -> anyhow::Result<Vec<resource_model>> {
+        let resources = self.repo
+            .get_all_resources_by_theme(theme)
+            .await
+            .map_err(DSProtocolCatalogErrors::DbErr)?;
+        Ok(resources)
     }
     async fn post_theme(&self, input: NewThemeRequest) -> anyhow::Result<theme_Model> {
         let keyword = self.repo 

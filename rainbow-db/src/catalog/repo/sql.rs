@@ -173,7 +173,7 @@ impl CatalogRepo for CatalogRepoForSql {
             return Ok(vec![]);
         }
         let keywords = keyword::Entity::find() // lista de entidades "themes" (id+tema+resourceId)
-            .filter(keyword::Column::Keyword.is_in(keywords))
+            .filter(keyword::Column::KeywordName.is_in(keywords))
             .all(&self.db_connection)
             .await
             .map_err(|e| CatalogRepoErrors::ErrorFetchingKeywords(e.into()))?;
@@ -438,23 +438,18 @@ impl DatasetRepo for CatalogRepoForSql {
         }
     }
 
-    async fn get_datasets_from_dataset_series_by_dataset_id(
+    async fn get_datasets_from_dataset_series_by_id(
         &self,
-        dataset_id: Urn,
+        dataset_series_id: Urn,
     ) -> anyhow::Result<Vec<dataset::Model>, CatalogRepoErrors> {
-        let dataset_id = dataset_id.to_string();
-        let dataset = dataset::Entity::find_by_id(dataset_id).one(&self.db_connection).await;
-        let dataset = match dataset {
-            Ok(dataset) => match dataset {
-                Some(dataset) => dataset,
-                None => return Err(CatalogRepoErrors::DatasetNotFound),
-            },
-            Err(err) => return Err(CatalogRepoErrors::ErrorFetchingDataset(err.into())),
-        };
-        let dataset_series_id = match &dataset.dcat_inseries {
-            Some(series_id) => series_id.clone(),
-            None => return Ok(vec![]),
-        };
+        let dataset_series_id = dataset_series_id.to_string();
+        let dataset_series = dataset_series::Entity::find_by_id(dataset_series_id.clone())
+            .one(&self.db_connection)
+            .await
+            .map_err(|e| CatalogRepoErrors::ErrorFetchingCatalog(e.into()))?;
+        if dataset_series.is_none() {
+            return Err(CatalogRepoErrors::DatasetSeriesNotfound);
+        }
         let datasets_in_series = dataset::Entity::find()
             .filter(dataset::Column::DcatInseries.eq(dataset_series_id))
             .all(&self.db_connection)
@@ -504,7 +499,7 @@ impl DatasetRepo for CatalogRepoForSql {
             return Ok(vec![]);
         }
         let keywords = keyword::Entity::find() // lista de entidades "themes" (id+tema+resourceId)
-            .filter(keyword::Column::Keyword.is_in(keywords))
+            .filter(keyword::Column::KeywordName.is_in(keywords))
             .all(&self.db_connection)
             .await
             .map_err(|e| CatalogRepoErrors::ErrorFetchingKeywords(e.into()))?;
@@ -832,7 +827,7 @@ impl DistributionRepo for CatalogRepoForSql {
             return Ok(vec![]);
         }
         let keywords = keyword::Entity::find() // lista de entidades "themes" (id+tema+resourceId)
-            .filter(keyword::Column::Keyword.is_in(keywords))
+            .filter(keyword::Column::KeywordName.is_in(keywords))
             .all(&self.db_connection)
             .await
             .map_err(|e| CatalogRepoErrors::ErrorFetchingKeywords(e.into()))?;
@@ -1824,8 +1819,11 @@ impl RelationRepo for CatalogRepoForSql{
         &self,
         new_relation_model: NewRelationModel,
     ) -> anyhow::Result<relation::Model, CatalogRepoErrors> {
+        let id = new_relation_model.id
+            .map(|urn| urn.to_string())
+            .unwrap_or_else(|| format!("urn:uuid:{}", uuid::Uuid::new_v4()));
         let model = relation::ActiveModel {
-            id:ActiveValue::Set(uuid::Uuid::new_v4().to_string()),
+            id:ActiveValue::Set(id),
             dcat_relationship: ActiveValue::Set(new_relation_model.dcat_relationship),
             dcat_resource1: ActiveValue::Set(new_relation_model.dcat_resource1),
             dcat_resource2: ActiveValue::Set(new_relation_model.dcat_resource2),
@@ -2263,6 +2261,29 @@ impl KeywordThemesRepo for CatalogRepoForSql {
             Err(err) => Err(CatalogRepoErrors::ErrorFetchingKeywords(err.into())),
        }
     }
+    async fn get_all_resources_by_keyword(
+        &self,
+        keyword: String,
+    ) -> anyhow::Result<Vec<resource::Model>, CatalogRepoErrors> {
+        let key_resources = keyword::Entity::find()
+            .filter(keyword::Column::KeywordName.eq(&keyword))
+            .all(&self.db_connection)
+            .await
+            .map_err(|e| CatalogRepoErrors::ErrorFetchingKeywords(e.into()))?;
+        let res_ids: Vec<String> = key_resources
+            .into_iter()
+            .map(|kw| kw.dcat_resource)
+            .collect();
+        if res_ids.is_empty() {
+            return Ok(vec![]);
+        }
+        let resources = resource::Entity::find()
+            .filter(resource::Column::ResourceId.is_in(res_ids))
+            .all(&self.db_connection)
+            .await
+            .map_err(|e| CatalogRepoErrors::ErrorFetchingResource(e.into()))?;
+        Ok(resources)
+    }
     async fn get_all_themes(
         &self,
     ) -> anyhow::Result<Vec<theme::Model>, CatalogRepoErrors> {
@@ -2272,13 +2293,39 @@ impl KeywordThemesRepo for CatalogRepoForSql {
             Err(err) => Err(CatalogRepoErrors::ErrorFetchingThemes(err.into()))
         }
     }
+    async fn get_all_resources_by_theme(
+        &self,
+        theme: String,
+    ) -> anyhow::Result<Vec<resource::Model>, CatalogRepoErrors> {
+        let theme_resources = theme::Entity::find()
+            .filter(theme::Column::Theme.eq(&theme))
+            .all(&self.db_connection)
+            .await
+            .map_err(|e| CatalogRepoErrors::ErrorFetchingThemes(e.into()))?;
+        let res_ids: Vec<String> = theme_resources
+            .into_iter()
+            .map(|th| th.dcat_resource)
+            .collect();
+        if res_ids.is_empty() {
+            return Ok(vec![]);
+        }
+        let resources = resource::Entity::find()
+            .filter(resource::Column::ResourceId.is_in(res_ids))
+            .all(&self.db_connection)
+            .await
+            .map_err(|e| CatalogRepoErrors::ErrorFetchingResource(e.into()))?;
+        Ok(resources)
+    }
     async fn create_keyword(
         &self,
         new_keyword: NewKeywordModel,
     ) -> anyhow::Result<keyword::Model, CatalogRepoErrors> {
+        let id = new_keyword.id
+            .map(|urn| urn.to_string())
+            .unwrap_or_else(|| format!("urn:uuid:{}", uuid::Uuid::new_v4()));
         let model = keyword::ActiveModel {
-            id:ActiveValue::Set(uuid::Uuid::new_v4().to_string()),
-            keyword: ActiveValue::Set(new_keyword.keyword),
+            id:ActiveValue::Set(id),
+            keyword_name: ActiveValue::Set(new_keyword.keyword),
             dcat_resource: ActiveValue::Set(new_keyword.dcat_resource.to_string()),
         };
         let keyword = keyword::Entity::insert(model).exec_with_returning(&self.db_connection).await;

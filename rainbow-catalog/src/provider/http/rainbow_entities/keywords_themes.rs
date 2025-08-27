@@ -55,9 +55,11 @@ T: RainbowCatalogKeywordsThemesTrait + Send + Sync + 'static
     pub fn router(self) -> Router {
         Router::new()
             .route("/api/v1/keywords", get(Self::handle_get_all_keywords))
+            .route("/api/v1/keywords/:keyword_id", get(Self::handle_get_resources_by_keyword))
             .route("/api/v1/keywords", post(Self::handle_post_keyword))
             .route("/api/v1/keywords/:keyword_id", delete(Self::handle_delete_keyword))
             .route("/api/v1/themes", get(Self::handle_get_all_themes))
+            .route("/api/v1/themes/:theme_id", get(Self::handle_get_resources_by_theme))
             .route("/api/v1/themes", post(Self::handle_post_theme))
             .route("/api/v1/themes/:theme_id", delete(Self::handle_delete_theme))
             .with_state(self.kt_service)
@@ -76,7 +78,24 @@ T: RainbowCatalogKeywordsThemesTrait + Send + Sync + 'static
                 }
             }
         }
-    }async fn handle_post_keyword(
+    }
+    async fn handle_get_resources_by_keyword(
+        State(kt_service): State<Arc<T>>,
+        Path(keyword): Path<String>,
+    ) -> impl IntoResponse {
+        info!("GET /api/v1/keywords/{}", keyword);
+        match kt_service.get_resources_by_keyword(keyword).await {
+            Ok(res) => (StatusCode::OK, Json(res)).into_response(),
+            Err(err) => match err.downcast::<CatalogError>() {
+                Ok(e) => e.into_response(),
+                Err(e) => match e.downcast::<DSProtocolCatalogErrors>() {
+                    Ok(e_) => e_.into_response(),
+                    Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
+                }
+            }
+        }
+    }
+    async fn handle_post_keyword(
         State(kt_service): State<Arc<T>>,
         input: Result<Json<NewKeywordRequest>, JsonRejection>,
     ) -> impl IntoResponse {
@@ -124,7 +143,26 @@ T: RainbowCatalogKeywordsThemesTrait + Send + Sync + 'static
                 }
             }
         }
-    }async fn handle_post_theme(
+    }
+    
+    async fn handle_get_resources_by_theme(
+        State(kt_service): State<Arc<T>>,
+        Path(theme): Path<String>,
+    ) -> impl IntoResponse {
+        info!("GET /api/v1/themes/{}", theme);
+        match kt_service.get_resources_by_theme(theme).await {
+            Ok(res) => (StatusCode::OK, Json(res)).into_response(),
+            Err(err) => match err.downcast::<CatalogError>() {
+                Ok(e) => e.into_response(),
+                Err(e) => match e.downcast::<DSProtocolCatalogErrors>() {
+                    Ok(e_) => e_.into_response(),
+                    Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
+                }
+            }
+        }
+    }
+    
+    async fn handle_post_theme(
         State(kt_service): State<Arc<T>>,
         input: Result<Json<NewThemeRequest>, JsonRejection>,
     ) -> impl IntoResponse {

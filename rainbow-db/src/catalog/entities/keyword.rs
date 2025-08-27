@@ -21,11 +21,11 @@ use sea_orm::entity::prelude::*;
 use serde::{Serialize, Deserialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
-#[sea_orm(table_name = "catalog_keywords")]
+#[sea_orm(table_name = "keywords")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: String,
-    pub keyword: String,
+    pub keyword_name: String,
     pub dcat_resource: String,
 }
 

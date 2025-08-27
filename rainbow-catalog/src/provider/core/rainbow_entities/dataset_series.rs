@@ -88,7 +88,7 @@ where
     }
     async fn get_datasets_from_dataset_series_by_id(&self, id: Urn) -> anyhow::Result<Vec<dataset_model>> {
         let datasets = self.repo
-            .get_datasets_from_dataset_series_by_dataset_id(id.clone())
+            .get_datasets_from_dataset_series_by_id(id.clone())
             .await
             .map_err(DSProtocolCatalogErrors::DbErr)?;
         Ok(datasets)

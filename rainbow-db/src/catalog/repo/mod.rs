@@ -236,9 +236,9 @@ pub trait DatasetRepo {
     ) -> anyhow::Result<Vec<dataset::Model>, CatalogRepoErrors>;
     async fn get_datasets_by_catalog_id(&self, catalog_id: Urn) -> anyhow::Result<Vec<dataset::Model>, CatalogRepoErrors>;
     async fn get_datasets_by_id(&self, dataset_id: Urn) -> anyhow::Result<Option<dataset::Model>, CatalogRepoErrors>;
-    async fn get_datasets_from_dataset_series_by_dataset_id(
+    async fn get_datasets_from_dataset_series_by_id(
         &self,
-        dataset_id: Urn,
+        dataset_series_id: Urn,
     ) -> anyhow::Result<Vec<dataset::Model>, CatalogRepoErrors>;
     async fn get_datasets_by_themes(
         &self,
@@ -854,12 +854,12 @@ pub trait ReferenceRepo {
 }
 
 pub struct NewKeywordModel {
-    pub id: Urn,
+    pub id: Option<Urn>,
     pub keyword: String,
     pub dcat_resource: Urn,
 }
 pub struct NewThemeModel {
-    pub id: Urn,
+    pub id: Option<Urn>,
     pub theme: String,
     pub dcat_resource: Urn,
 }
@@ -869,9 +869,17 @@ pub trait KeywordThemesRepo {
     async fn get_all_keywords(
         &self,
     ) -> anyhow::Result<Vec<keyword::Model>, CatalogRepoErrors>;
+    async fn get_all_resources_by_keyword(
+        &self,
+        keyword: String,
+    ) -> anyhow::Result<Vec<resource::Model>, CatalogRepoErrors>;
     async fn get_all_themes(
         &self,
     ) -> anyhow::Result<Vec<theme::Model>, CatalogRepoErrors>;
+    async fn get_all_resources_by_theme(
+        &self,
+        theme: String,
+    ) -> anyhow::Result<Vec<resource::Model>, CatalogRepoErrors>;
     async fn create_keyword(
         &self,
         new_keyword: NewKeywordModel,
