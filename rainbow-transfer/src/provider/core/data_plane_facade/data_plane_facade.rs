@@ -16,8 +16,8 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::provider::core::data_plane_facade::DataPlaneProviderFacadeTrait;
-use crate::provider::setup::config::TransferProviderApplicationConfig;
 use axum::async_trait;
 use rainbow_common::adv_protocol::interplane::data_plane_provision::DataPlaneProvisionRequest;
 use rainbow_common::adv_protocol::interplane::data_plane_start::DataPlaneStart;
@@ -27,6 +27,7 @@ use rainbow_common::adv_protocol::interplane::{
     DataPlaneControllerMessages, DataPlaneControllerVersion, DataPlaneSDPConfigField, DataPlaneSDPConfigTypes,
     DataPlaneSDPFieldTypes, DataPlaneSDPRequestField,
 };
+use rainbow_common::config::provider_config::ApplicationProviderConfig;
 use rainbow_common::dcat_formats::{DctFormats, FormatAction};
 use rainbow_common::protocol::catalog::dataservice_definition::{DataService, DataServiceDcatDeclaration};
 use rainbow_common::protocol::transfer::transfer_data_address::{DataAddress, EndpointProperty};
@@ -40,7 +41,7 @@ where
     T: DataPlaneControllerTrait + Sync + Send,
 {
     dataplane_controller: Arc<T>,
-    config: TransferProviderApplicationConfig,
+    _config: ApplicationProviderConfig,
 }
 
 impl<'a, T> DataPlaneProviderFacadeForDSProtocol<T>
@@ -48,8 +49,8 @@ where
     T: DataPlaneControllerTrait + Sync + Send,
     'a: 'static,
 {
-    pub fn new(dataplane_controller: Arc<T>, config: TransferProviderApplicationConfig) -> Self {
-        Self { dataplane_controller, config }
+    pub fn new(dataplane_controller: Arc<T>, config: ApplicationProviderConfig) -> Self {
+        Self { dataplane_controller, _config: config }
     }
 }
 
@@ -186,7 +187,7 @@ where
     }
 
     async fn on_transfer_start(&self, session_id: Urn) -> anyhow::Result<()> {
-        let ack = self
+        let _ = self
             .dataplane_controller
             .data_plane_start(DataPlaneStart {
                 _type: DataPlaneControllerMessages::DataPlaneStart,
@@ -198,7 +199,7 @@ where
     }
 
     async fn on_transfer_suspension(&self, session_id: Urn) -> anyhow::Result<()> {
-        let ack = self
+        let _ = self
             .dataplane_controller
             .data_plane_stop(DataPlaneStop {
                 _type: DataPlaneControllerMessages::DataPlaneStop,
@@ -210,7 +211,7 @@ where
     }
 
     async fn on_transfer_completion(&self, session_id: Urn) -> anyhow::Result<()> {
-        let ack = self
+        let _ = self
             .dataplane_controller
             .data_plane_stop(DataPlaneStop {
                 _type: DataPlaneControllerMessages::DataPlaneStop,
@@ -222,7 +223,7 @@ where
     }
 
     async fn on_transfer_termination(&self, session_id: Urn) -> anyhow::Result<()> {
-        let ack = self
+        let _ = self
             .dataplane_controller
             .data_plane_stop(DataPlaneStop {
                 _type: DataPlaneControllerMessages::DataPlaneStop,

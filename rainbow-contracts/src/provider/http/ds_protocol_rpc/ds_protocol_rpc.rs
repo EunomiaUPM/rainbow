@@ -17,8 +17,6 @@
  *
  */
 
-use crate::consumer::core::ds_protocol_rpc::ds_protocol_rpc_errors::DSRPCContractNegotiationConsumerErrors;
-use crate::consumer::core::rainbow_entities::rainbow_entities_errors::CnErrorConsumer;
 use crate::provider::core::ds_protocol_rpc::ds_protocol_rpc_errors::DSRPCContractNegotiationProviderErrors;
 use crate::provider::core::ds_protocol_rpc::ds_protocol_rpc_types::{
     SetupAgreementRequest, SetupFinalizationRequest, SetupOfferRequest, SetupTerminationRequest,
@@ -31,7 +29,6 @@ use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::post;
 use axum::{Json, Router};
-use log::debug;
 use rainbow_common::err::transfer_err::TransferErrorType::NotCheckedError;
 use std::sync::Arc;
 use tracing::info;

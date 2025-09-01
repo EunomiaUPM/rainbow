@@ -18,16 +18,13 @@
  */
 
 use crate::consumer::setup::application::TransferConsumerApplication;
-use crate::consumer::setup::config::TransferConsumerApplicationConfig;
 use crate::consumer::setup::db_migrations::TransferConsumerMigration;
 use crate::provider::setup::application::TransferProviderApplication;
-use crate::provider::setup::config::TransferProviderApplicationConfig;
 use crate::provider::setup::db_migrations::TransferProviderMigration;
 use clap::{Parser, Subcommand};
-use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
-use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
+use rainbow_common::config::env_extraction::EnvExtraction;
 use std::cmp::PartialEq;
-use tracing::{debug, info};
+use tracing::debug;
 
 #[derive(Parser, Debug)]
 #[command(name = "Rainbow Dataspace Connector Transfer Provider Server")]
@@ -47,11 +44,19 @@ pub enum TransferCliRoles {
 
 #[derive(Subcommand, Debug, PartialEq)]
 pub enum TransferCliCommands {
-    Start,
-    Setup,
+    Start(TransferCliArgs),
+    Setup(TransferCliArgs),
+}
+
+#[derive(Parser, Debug, PartialEq)]
+pub struct TransferCliArgs {
+    #[arg(short, long)]
+    env_file: Option<String>,
 }
 
 pub struct TransferCommands;
+
+impl EnvExtraction for TransferCommands {}
 
 impl TransferCommands {
     pub async fn init_command_line() -> anyhow::Result<()> {
@@ -62,25 +67,27 @@ impl TransferCommands {
         // run scripts
         match cli.role {
             TransferCliRoles::Provider(cmd) => {
-                let config = TransferProviderApplicationConfig::default();
-                let config = config.merge_dotenv_configuration();
-                let table =
-                    json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
-                info!("Current config:\n{}", table);
                 match cmd {
-                    TransferCliCommands::Start => TransferProviderApplication::run(&config).await?,
-                    TransferCliCommands::Setup => TransferProviderMigration::run(&config).await?,
+                    TransferCliCommands::Start(args) => {
+                        let config = Self::extract_provider_config(args.env_file)?;
+                        TransferProviderApplication::run(&config).await?
+                    }
+                    TransferCliCommands::Setup(args) => {
+                        let config = Self::extract_provider_config(args.env_file)?;
+                        TransferProviderMigration::run(&config).await?
+                    }
                 }
             }
             TransferCliRoles::Consumer(cmd) => {
-                let config = TransferConsumerApplicationConfig::default();
-                let config = config.merge_dotenv_configuration();
-                let table =
-                    json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
-                info!("Current config:\n{}", table);
                 match cmd {
-                    TransferCliCommands::Start => TransferConsumerApplication::run(&config.clone()).await?,
-                    TransferCliCommands::Setup => TransferConsumerMigration::run(config.clone()).await?
+                    TransferCliCommands::Start(args) => {
+                        let config = Self::extract_consumer_config(args.env_file)?;
+                        TransferConsumerApplication::run(&config).await?
+                    }
+                    TransferCliCommands::Setup(args) => {
+                        let config = Self::extract_consumer_config(args.env_file)?;
+                        TransferConsumerMigration::run(&config).await?
+                    }
                 }
             }
         };

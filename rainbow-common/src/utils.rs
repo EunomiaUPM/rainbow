@@ -37,6 +37,6 @@ pub fn get_urn_from_string(string_in: &String) -> anyhow::Result<Urn> {
     let urn_res = string_in.parse::<Urn>();
     match urn_res {
         Ok(urn_res) => Ok(urn_res),
-        Err(e) => bail!(TransferErrorType::PidSchemeError),
+        Err(_) => bail!(TransferErrorType::PidSchemeError),
     }
 }

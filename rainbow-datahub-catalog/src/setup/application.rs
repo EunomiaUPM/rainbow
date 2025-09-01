@@ -21,12 +21,11 @@ use crate::core::datahub_proxy::datahub_proxy::DatahubProxyService;
 use crate::core::rainbow_rpc::rainbow_rpc::RainbowRPCDatahubCatalogService;
 use crate::http::datahub_proxy::datahub_proxy::DataHubProxyRouter;
 use crate::http::rainbow_entities::policies::RainbowCatalogPoliciesRouter;
-use crate::http::rainbow_entities::policy_relations_router::{PolicyRelationsRouter, PolicyTemplatesRouter};
+use crate::http::rainbow_entities::policy_relations_router::PolicyTemplatesRouter;
 use crate::http::rainbow_rpc::rainbow_rpc::RainbowRPCDatahubCatalogRouter;
-use crate::setup::config::DatahubCatalogApplicationProviderConfig;
 use axum::{serve, Router};
 use rainbow_catalog::provider::core::rainbow_entities::policies::RainbowCatalogPoliciesService;
-use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
+use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_db::catalog::repo::sql::CatalogRepoForSql;
 use rainbow_db::datahub::repo::sql::DatahubConnectorRepoForSql;
 use rainbow_db::events::repo::sql::EventsRepoForSql;
@@ -39,11 +38,11 @@ use rainbow_events::http::subscription::subscription::RainbowEventsSubscriptionR
 use sea_orm::Database;
 use std::sync::Arc;
 use tokio::net::TcpListener;
-use tracing::{debug, info};
+use tracing::info;
 
 pub struct DatahubCatalogApplication;
 
-pub async fn create_datahub_catalog_router(config: &DatahubCatalogApplicationProviderConfig) -> Router {
+pub async fn create_datahub_catalog_router(config: &ApplicationProviderConfig) -> Router {
     let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
 
     // Events router
@@ -65,7 +64,6 @@ pub async fn create_datahub_catalog_router(config: &DatahubCatalogApplicationPro
     let datahub_service = Arc::new(DatahubProxyService::new(config.clone()));
     let datahub_router = DataHubProxyRouter::new(datahub_service.clone());
     let policy_templates_router = PolicyTemplatesRouter::new(repo.clone(), notification_service.clone());
-    let policy_relations_router = PolicyRelationsRouter::new(repo.clone(), notification_service.clone());
 
     // Plain Catalog Policies Router
     let plain_policies_repo = Arc::new(CatalogRepoForSql::new(db_connection));
@@ -80,7 +78,6 @@ pub async fn create_datahub_catalog_router(config: &DatahubCatalogApplicationPro
     let datahub_router = Router::new()
         .merge(datahub_router.router())
         .merge(policy_templates_router.router())
-        .merge(policy_relations_router.router())
         .merge(plain_policies_router.router())
         .merge(rpc_router.router())
         .nest("/api/v1/datahub", subscription_router)
@@ -90,7 +87,7 @@ pub async fn create_datahub_catalog_router(config: &DatahubCatalogApplicationPro
 }
 
 impl DatahubCatalogApplication {
-    pub async fn run(config: &DatahubCatalogApplicationProviderConfig) -> anyhow::Result<()> {
+    pub async fn run(config: &ApplicationProviderConfig) -> anyhow::Result<()> {
         // db_connection
         let router = create_datahub_catalog_router(config).await;
         // Init server

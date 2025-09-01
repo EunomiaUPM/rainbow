@@ -22,4 +22,3 @@ pub mod ds_protocol;
 pub mod data_service_resolver_facade;
 pub mod data_plane_facade;
 pub mod ds_protocol_rpc;
-pub mod agreement_resolver_facade;

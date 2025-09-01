@@ -24,10 +24,8 @@ use crate::consumer::core::rainbow_entities::rainbow_entities::RainbowTransferCo
 use crate::consumer::http::ds_protocol::ds_protocol::DSProtocolTransferConsumerRouter;
 use crate::consumer::http::ds_protocol_rpc::ds_protocol_rpc::DSRPCTransferConsumerRouter;
 use crate::consumer::http::rainbow_entities::rainbow_entities::RainbowTransferConsumerEntitiesRouter;
-use crate::consumer::setup::config::TransferConsumerApplicationConfig;
 use axum::{serve, Router};
 use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
 use rainbow_common::facades::ssi_auth_facade::ssi_auth_facade::SSIAuthFacadeService;
 use rainbow_dataplane::coordinator::controller::controller_service::DataPlaneControllerService;
 use rainbow_dataplane::coordinator::dataplane_process::dataplane_process_service::DataPlaneProcessService;
@@ -52,7 +50,7 @@ use tracing::info;
 
 pub struct TransferConsumerApplication;
 
-pub async fn create_transfer_consumer_router(config: &TransferConsumerApplicationConfig) -> Router {
+pub async fn create_transfer_consumer_router(config: &ApplicationConsumerConfig) -> Router {
     let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
 
     // Events router
@@ -143,9 +141,9 @@ pub async fn create_transfer_consumer_router(config: &TransferConsumerApplicatio
 }
 
 impl TransferConsumerApplication {
-    pub async fn run(config: &TransferConsumerApplicationConfig) -> anyhow::Result<()> {
+    pub async fn run(config: &ApplicationConsumerConfig) -> anyhow::Result<()> {
         // db_connection
-        let router = create_transfer_consumer_router(&config.clone()).await;
+        let router = create_transfer_consumer_router(&config).await;
         // Init server
         let server_message = format!(
             "Starting consumer server in {}",

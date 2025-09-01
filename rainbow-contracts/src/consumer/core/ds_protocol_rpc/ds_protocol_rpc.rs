@@ -103,7 +103,7 @@ where
         Ok(mate)
     }
 
-    async fn get_provider_base_url(&self, provider_participant_id: &String) -> anyhow::Result<String> {
+    async fn _get_provider_base_url(&self, provider_participant_id: &String) -> anyhow::Result<String> {
         let mate = self
             .mates_facade
             .get_mate_by_id(provider_participant_id.clone())
@@ -223,7 +223,7 @@ where
     V: MatesFacadeTrait + Send + Sync,
 {
     async fn setup_request(&self, input: SetupRequestRequest, client_type: String) -> anyhow::Result<SetupRequestResponse> {
-        let SetupRequestRequest { provider_pid, consumer_pid, odrl_offer, provider_participant_id, .. } = input;
+        let SetupRequestRequest { provider_pid, odrl_offer, provider_participant_id, .. } = input;
         // 1. fetch participant
         let provider_mate = self.get_provider_mate(&provider_participant_id).await?;
         let provider_base_url = provider_mate.base_url.ok_or(anyhow!("No base url"))?;
@@ -329,7 +329,7 @@ where
         let provider_base_url = provider_base_url.strip_suffix('/').unwrap_or(provider_base_url.as_str());
         let provider_token = provider_mate.token.ok_or(anyhow!("No token"))?;
         // 2. validate correlation
-        let consumer = self
+        let _consumer = self
             .validate_and_get_correlated_provider_process(
                 &consumer_pid.clone().unwrap(),
                 &provider_pid.clone().unwrap(),
@@ -421,7 +421,7 @@ where
         let provider_base_url = provider_base_url.strip_suffix('/').unwrap_or(provider_base_url.as_str());
         let provider_token = provider_mate.token.ok_or(anyhow!("No token"))?;
         // 2. validate correlation
-        let consumer =
+        let _consumer =
             self.validate_and_get_correlated_provider_process(&consumer_pid.clone(), &provider_pid.clone()).await?;
         // 3. create message
         let contract_acceptance_message = ContractNegotiationEventMessage {
@@ -493,7 +493,7 @@ where
         let provider_base_url = provider_mate.base_url.ok_or(anyhow!("No base url"))?;
         let provider_base_url = provider_base_url.strip_suffix('/').unwrap_or(provider_base_url.as_str());
         let provider_token = provider_mate.token.ok_or(anyhow!("No token"))?; // 2. validate correlation
-        let consumer =
+        let _consumer =
             self.validate_and_get_correlated_provider_process(&consumer_pid.clone(), &provider_pid.clone()).await?;
         // 3. create message
         let contract_verification_message = ContractAgreementVerificationMessage {
@@ -565,7 +565,7 @@ where
         let provider_base_url = provider_base_url.strip_suffix('/').unwrap_or(provider_base_url.as_str());
         let provider_token = provider_mate.token.ok_or(anyhow!("No token"))?;
         // 2. validate correlation
-        let consumer =
+        let _consumer =
             self.validate_and_get_correlated_provider_process(&consumer_pid.clone(), &provider_pid.clone()).await?;
         // 3. create message
         let contract_termination_message = ContractTerminationMessage {

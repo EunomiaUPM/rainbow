@@ -68,7 +68,7 @@ impl IntoResponse for DSRPCContractNegotiationConsumerErrors {
                     ..Default::default()
                 }),
             ),
-            ref e @ DSRPCContractNegotiationConsumerErrors::DSProtocolContractNegotiationError(ref idsa_err) => (
+            ref e @ DSRPCContractNegotiationConsumerErrors::DSProtocolContractNegotiationError(..) => (
                 StatusCode::SERVICE_UNAVAILABLE,
                 Json(ContractErrorMessage {
                     provider_pid: None,

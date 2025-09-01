@@ -16,14 +16,14 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::datahub::entities::{policy_relations, policy_templates};
+
+use crate::datahub::entities::policy_templates;
 use crate::datahub::repo::{
-    DatahubConnectorRepoFactory, NewPolicyRelationModel, NewPolicyTemplateModel, PolicyRelationsRepo,
-    PolicyTemplatesRepo, PolicyTemplatesRepoErrors,
+    DatahubConnectorRepoFactory, NewPolicyTemplateModel, PolicyTemplatesRepo, PolicyTemplatesRepoErrors,
 };
 use axum::async_trait;
 use rainbow_common::protocol::datahub_proxy::datahub_proxy_types::DatahubDataset;
-use sea_orm::{ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder, QuerySelect};
+use sea_orm::{ActiveValue, DatabaseConnection, EntityTrait, QueryOrder, QuerySelect};
 use serde::Serialize;
 use serde_json::Value;
 use std::fmt::Debug;
@@ -131,124 +131,6 @@ impl PolicyTemplatesRepo for DatahubConnectorRepoForSql {
         match policy_templates::Entity::delete_by_id(template_id).exec(&self.db_connection).await {
             Ok(_) => Ok(()),
             Err(err) => Err(PolicyTemplatesRepoErrors::ErrorDeletingPolicyTemplate(
-                err.into(),
-            )),
-        }
-    }
-
-    async fn get_all_templates_by_dataset_id(
-        &self,
-        dataset_id: String,
-    ) -> anyhow::Result<Vec<policy_templates::Model>, PolicyTemplatesRepoErrors> {
-        // 1. Primero obtenemos todas las relaciones para el dataset_id
-        let relations = policy_relations::Entity::find()
-            .filter(policy_relations::Column::DatasetId.eq(dataset_id))
-            .all(&self.db_connection)
-            .await
-            .map_err(|err| PolicyTemplatesRepoErrors::ErrorFetchingPolicyRelation(err.into()))?;
-
-        // 2. Extraemos los IDs de los templates
-        let template_ids: Vec<String> = relations.into_iter().map(|relation| relation.policy_template_id).collect();
-
-        // 3. Obtenemos los templates correspondientes
-        let templates = policy_templates::Entity::find()
-            .filter(policy_templates::Column::Id.is_in(template_ids))
-            .all(&self.db_connection)
-            .await
-            .map_err(|err| PolicyTemplatesRepoErrors::ErrorFetchingPolicyTemplate(err.into()))?;
-
-        Ok(templates)
-    }
-}
-
-#[async_trait]
-impl PolicyRelationsRepo for DatahubConnectorRepoForSql {
-    async fn create_policy_relation(
-        &self,
-        new_relation: NewPolicyRelationModel,
-    ) -> anyhow::Result<policy_relations::Model, PolicyTemplatesRepoErrors> {
-        let id = format!("relation_{}", chrono::Utc::now().timestamp());
-        let policy_template_id = self.get_policy_template_by_id(new_relation.policy_template_id.clone()).await?;
-        let policy_template_id = match policy_template_id {
-            Some(policy_template_id) => policy_template_id,
-            None => return Err(PolicyTemplatesRepoErrors::PolicyTemplateNotFound),
-        };
-        let model = policy_relations::ActiveModel {
-            id: ActiveValue::Set(id.clone()),
-            dataset_id: ActiveValue::Set(new_relation.dataset_id.clone()),
-            policy_template_id: ActiveValue::Set(new_relation.policy_template_id.clone()),
-            odrl_offer: ActiveValue::Set(new_relation.odrl_offer),
-            created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
-        };
-
-        match policy_relations::Entity::insert(model).exec_with_returning(&self.db_connection).await {
-            Ok(relation) => Ok(relation),
-            Err(err) => Err(PolicyTemplatesRepoErrors::ErrorCreatingPolicyRelation(
-                err.into(),
-            )),
-        }
-    }
-
-    async fn delete_policy_relation_by_id(&self, relation_id: String) -> anyhow::Result<(), PolicyTemplatesRepoErrors> {
-        match policy_relations::Entity::delete_by_id(relation_id).exec(&self.db_connection).await {
-            Ok(_) => Ok(()),
-            Err(err) => Err(PolicyTemplatesRepoErrors::ErrorDeletingPolicyRelation(
-                err.into(),
-            )),
-        }
-    }
-
-    async fn get_all_policy_relations(
-        &self,
-        limit: Option<u64>,
-        page: Option<u64>,
-    ) -> anyhow::Result<Vec<policy_relations::Model>, PolicyTemplatesRepoErrors> {
-        // Configurar la paginación
-        let page = page.unwrap_or(1);
-        let limit = limit.unwrap_or(10);
-        let offset = (page - 1) * limit;
-
-        // Construir la consulta
-        match policy_relations::Entity::find()
-            .order_by_desc(policy_relations::Column::CreatedAt)
-            .limit(limit)
-            .offset(offset)
-            .all(&self.db_connection)
-            .await
-        {
-            Ok(relations) => Ok(relations),
-            Err(err) => Err(PolicyTemplatesRepoErrors::ErrorFetchingPolicyRelation(
-                err.into(),
-            )),
-        }
-    }
-
-    async fn get_relation_by_id(
-        &self,
-        relation_id: String,
-    ) -> anyhow::Result<Option<policy_relations::Model>, PolicyTemplatesRepoErrors> {
-        // Buscar la plantilla por ID
-        match policy_relations::Entity::find_by_id(relation_id).one(&self.db_connection).await {
-            Ok(relation) => Ok(relation),
-            Err(err) => Err(PolicyTemplatesRepoErrors::ErrorFetchingPolicyRelation(
-                err.into(),
-            )),
-        }
-    }
-
-    async fn get_all_policy_relations_by_template_id(
-        &self,
-        template_id: String,
-    ) -> anyhow::Result<Vec<policy_relations::Model>, PolicyTemplatesRepoErrors> {
-        // Construir la consulta para encontrar todas las relaciones con el template_id específico
-        match policy_relations::Entity::find()
-            .filter(policy_relations::Column::PolicyTemplateId.eq(template_id))
-            .order_by_desc(policy_relations::Column::CreatedAt)
-            .all(&self.db_connection)
-            .await
-        {
-            Ok(relations) => Ok(relations),
-            Err(err) => Err(PolicyTemplatesRepoErrors::ErrorFetchingPolicyRelation(
                 err.into(),
             )),
         }

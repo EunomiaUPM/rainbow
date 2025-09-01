@@ -94,7 +94,7 @@ impl ProtocolValidate for OdrlMessageOffer {
 
         // Validate any of permission or prohibition
         match (&self.permission, &self.prohibition) {
-            (Some(pr), Some(ph)) => {
+            (Some(_), Some(_)) => {
                 bail!("Either one of dspace:offer.permission or dspace:offer.prohibition must be present".to_string(),)
             }
             (None, None) => {
@@ -149,7 +149,7 @@ impl ProtocolValidate for OdrlOffer {
     fn validate(&self) -> anyhow::Result<()> {
         // Validate any of permission or prohibition
         match (&self.permission, &self.prohibition) {
-            (Some(pr), Some(ph)) => {
+            (Some(_), Some(_)) => {
                 bail!("Either one of dspace:offer.permission or dspace:offer.prohibition must be present".to_string(),)
             }
             (None, None) => {

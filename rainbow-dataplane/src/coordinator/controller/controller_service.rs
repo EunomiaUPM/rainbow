@@ -9,7 +9,6 @@ use rainbow_common::adv_protocol::interplane::data_plane_stop::{DataPlaneStop, D
 use rainbow_common::adv_protocol::interplane::{DataPlaneControllerMessages, DataPlaneControllerVersion, DataPlaneProcessDirection, DataPlaneProcessState, DataPlaneSDPConfigTypes, DataPlaneSDPFieldTypes, DataPlaneSDPResponseField};
 use rainbow_common::config::global_config::ApplicationGlobalConfig;
 use rainbow_common::dcat_formats::FormatAction;
-use rainbow_db::dataplane::repo::{DataPlaneFieldRepo, DataPlaneProcessRepo};
 use std::sync::Arc;
 use tracing::debug;
 
@@ -41,7 +40,7 @@ where
     async fn data_plane_provision_request(&self, input: DataPlaneProvisionRequest) -> anyhow::Result<DataPlaneProvisionResponse> {
         debug!("DataPlaneControllerService -> data_plane_provision_request");
         let process_address = self.config.transfer_process_host.clone().unwrap();
-        let sdp_config = input.sdp_config.unwrap();;
+        let sdp_config = input.sdp_config.unwrap();
         let next_hop_protocol = sdp_config.iter()
             .find(|s| s._type == DataPlaneSDPConfigTypes::NextHopAddressScheme)
             .expect("DataPlaneSDPConfigTypes::NextHopAddressScheme must be defined");
@@ -126,7 +125,6 @@ where
             Ok(_) => {}
             Err(_) => {}
         };
-        debug!("hola");
         let ack = DataPlaneStopAck {
             _type: DataPlaneControllerMessages::DataPlaneStopAck,
             version: DataPlaneControllerVersion::Version10,

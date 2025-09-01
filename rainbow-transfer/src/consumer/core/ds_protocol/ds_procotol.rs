@@ -33,7 +33,6 @@ use rainbow_common::protocol::transfer::transfer_start::TransferStartMessage;
 use rainbow_common::protocol::transfer::transfer_suspension::TransferSuspensionMessage;
 use rainbow_common::protocol::transfer::transfer_termination::TransferTerminationMessage;
 use rainbow_common::protocol::transfer::{TransferMessageTypes, TransferRoles, TransferState};
-use rainbow_common::utils::get_urn_from_string;
 use rainbow_db::transfer_consumer::entities::transfer_callback;
 use rainbow_db::transfer_consumer::repo::{EditTransferCallback, NewTransferMessageModel, TransferConsumerRepoFactory};
 use rainbow_events::core::notification::notification_types::{
@@ -43,7 +42,7 @@ use rainbow_events::core::notification::notification_types::{
 use rainbow_events::core::notification::RainbowEventsNotificationTrait;
 use serde_json::{json, to_value};
 use std::sync::Arc;
-use tracing::{debug, error};
+use tracing::debug;
 use urn::Urn;
 
 pub struct DSProtocolTransferConsumerService<T, U, V, W>
@@ -92,7 +91,7 @@ where
     /// Ensures correlation between URIs and message body PIDs.
     async fn payload_validation<'a, M: DSProtocolTransferMessageTrait<'a>>(
         &self,
-        callback_id: &Option<Urn>,   // Optional callback_id from URL
+        _callback_id: &Option<Urn>,   // Optional callback_id from URL
         consumer_pid_from_uri: &Urn, // Consumer PID from URL path
         message: &M,                 // The incoming message
         provider_participant_mate: &Mates,
@@ -209,7 +208,7 @@ where
         input: TransferStartMessage,
         token: String,
     ) -> anyhow::Result<TransferProcessMessage> {
-        let TransferStartMessage { provider_pid, consumer_pid: consumer_pid_, data_address, .. } = input.clone();
+        let TransferStartMessage { provider_pid, data_address, .. } = input.clone();
         // 1. Validate request
         let provider_participant_mate = self.validate_auth_token(token).await?;
         self.json_schema_validation(&input)
@@ -278,7 +277,7 @@ where
         input: TransferSuspensionMessage,
         token: String,
     ) -> anyhow::Result<TransferProcessMessage> {
-        let TransferSuspensionMessage { provider_pid, consumer_pid: consumer_pid_, .. } = input.clone();
+        let TransferSuspensionMessage { .. } = input.clone();
         // 1. Validate request
         let provider_participant_mate = self.validate_auth_token(token).await?;
         self.json_schema_validation(&input)
@@ -337,7 +336,7 @@ where
         input: TransferCompletionMessage,
         token: String,
     ) -> anyhow::Result<TransferProcessMessage> {
-        let TransferCompletionMessage { provider_pid, consumer_pid: consumer_pid_, .. } = input.clone();
+        let TransferCompletionMessage { .. } = input.clone();
         // 1. Validate request
         let provider_participant_mate = self.validate_auth_token(token).await?;
         self.json_schema_validation(&input)
@@ -397,7 +396,7 @@ where
         input: TransferTerminationMessage,
         token: String,
     ) -> anyhow::Result<TransferProcessMessage> {
-        let TransferTerminationMessage { provider_pid, consumer_pid: consumer_pid_, .. } = input.clone();
+        let TransferTerminationMessage { .. } = input.clone();
         // 1. Validate request
         let provider_participant_mate = self.validate_auth_token(token).await?;
         self.json_schema_validation(&input)

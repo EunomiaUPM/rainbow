@@ -39,3 +39,4 @@ rand = "0.8.5"
 jsonwebtoken = "9.3.1"
 mockall = { workspace = true }
 serde_valid = { workspace = true }
+json_to_table = { workspace = true }

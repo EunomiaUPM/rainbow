@@ -17,8 +17,7 @@
  *
  */
 
-use crate::consumer::setup::config::CatalogBypassConsumerApplicationConfig;
-use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
+use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
 use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
 
@@ -32,7 +31,7 @@ impl MigratorTrait for CatalogBypassConsumerMigration {
 }
 
 impl CatalogBypassConsumerMigration {
-    pub async fn run(config: CatalogBypassConsumerApplicationConfig) -> anyhow::Result<()> {
+    pub async fn run(config: &ApplicationConsumerConfig) -> anyhow::Result<()> {
         // db_connection
         let db_url = config.get_full_db_url();
         let db_connection = Database::connect(db_url).await.expect("Database can't connect");

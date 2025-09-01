@@ -32,9 +32,8 @@ use rainbow_common::protocol::contract::contract_negotiation_termination::Contra
 use rainbow_common::protocol::contract::contract_offer::ContractOfferMessage;
 use rainbow_common::protocol::contract::contract_protocol_trait::DSProtocolContractNegotiationMessageTrait;
 use rainbow_common::protocol::contract::{ContractNegotiationMessages, ContractNegotiationState};
-use rainbow_common::utils::{get_urn, get_urn_from_string};
+use rainbow_common::utils::get_urn_from_string;
 use rainbow_db::contracts_consumer::entities::cn_process;
-use rainbow_db::contracts_consumer::entities::cn_process::Model;
 use rainbow_db::contracts_consumer::repo::{
     AgreementConsumerRepo, CnErrors, ContractNegotiationConsumerMessageRepo, ContractNegotiationConsumerOfferRepo,
     ContractNegotiationConsumerProcessRepo, NewAgreement, NewContractNegotiationProcess,
@@ -45,7 +44,7 @@ use rainbow_events::core::notification::notification_types::{
     RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes,
 };
 use rainbow_events::core::notification::RainbowEventsNotificationTrait;
-use serde_json::{json, to_value, Value};
+use serde_json::{json, Value};
 use std::fmt::Debug;
 use std::sync::Arc;
 use tracing::debug;
@@ -134,7 +133,7 @@ where
         match (incoming_consumer_pid, message.get_consumer_pid()?) {
             (None, _) => {}
             (Some(i), Some(p)) if i == p => {}
-            out => bail!(IdsaCNError::ValidationError(
+            _out => bail!(IdsaCNError::ValidationError(
                 "Consumer pid in body should coincide with URL path".to_string()
             )),
         }

@@ -16,7 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
+#![allow(non_snake_case)]
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -52,6 +52,7 @@ pub struct GraphQLResponse<T> {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SearchResults<T> {
+    #[allow(non_snake_case)]
     pub searchResults: Vec<SearchResult<T>>,
 }
 
@@ -97,11 +98,13 @@ pub struct DatasetGraphQLResponse {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DatasetSearchResponse {
+    #[allow(non_snake_case)]
     pub searchAcrossEntities: DatasetSearchResults,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DatasetSearchResults {
+    #[allow(non_snake_case)]
     pub searchResults: Vec<DatasetSearchResult>,
 }
 
@@ -147,6 +150,7 @@ pub struct DatasetEntityDetailed {
     pub ownership: Ownership,
     pub tags: Tags,
     pub domain: Option<DatahubDomain>,
+    #[allow(non_snake_case)]
     pub glossaryTerms: Option<GlossaryTerms>,
 }
 
@@ -183,8 +187,10 @@ pub struct DatasetEntity {
     pub properties: DatasetProperties,
     pub ownership: Ownership,
     pub tags: Tags,
+    #[allow(non_snake_case)]
     pub schemaMetadata: Option<SchemaMetadata>,
     pub domain: Domain,
+    #[allow(non_snake_case)]
     pub glossaryTerms: Option<GlossaryTerms>,
 }
 
@@ -197,6 +203,7 @@ pub struct Platform {
 pub struct DatasetProperties {
     pub name: String,
     pub description: Option<String>,
+    #[allow(non_snake_case)]
     pub customProperties: Option<Vec<CustomProperty>>,
 }
 
@@ -245,12 +252,14 @@ pub struct SchemaMetadata {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Field {
+    #[allow(non_snake_case)]
     pub fieldPath: String,
     pub r#type: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Domain {
+    #[allow(non_snake_case)]
     pub associatedUrn: String,
     pub domain: DomainEntity,
 }
@@ -275,6 +284,7 @@ pub struct TermWrapper {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GlossaryTerm {
     pub urn: String,
+    #[allow(non_snake_case)]
     pub glossaryTermInfo: GlossaryTermInfo,
 }
 

@@ -17,47 +17,6 @@
  *
  */
 
-use clap::{Parser, Subcommand};
-use sea_orm_migration::MigratorTrait;
-
-pub mod config;
 pub mod application;
-pub mod db_migrations;
 pub mod cmd;
-// #[derive(Parser, Debug)]
-// #[command(name = "Dataspace protocol catalog")]
-// #[command(version = "0.1")]
-// #[command(about = "Dataspace protocol catalog", long_about = "Dataspace protocol catalog")]
-// struct CatalogCli {
-//     #[command(subcommand)]
-//     command: DataSpaceCatalogCommands,
-// }
-// #[derive(Subcommand, Debug)]
-// enum DataSpaceCatalogCommands {
-//     #[command(about = "Migrate database")]
-//     MigrateDatabase,
-//     #[command(about = "Start the catalog servers")]
-//     Start,
-// }
-//
-// pub async fn init_command_line() -> anyhow::Result<()> {
-//     let cli = CatalogCli::parse();
-//     match &cli.command {
-//         DataSpaceCatalogCommands::MigrateDatabase => {
-//             let db_connection = get_db_connection().await;
-//             Migrator::refresh(db_connection).await?;
-//             Ok(())
-//         }
-//         DataSpaceCatalogCommands::Start => {
-//             let server_message = "Starting provider server in 0.0.0.0:1234".to_string();
-//             info!("{}", server_message);
-//             let listener = TcpListener::bind("0.0.0.0:1234").await?;
-//             let router = Router::new()
-//                 .merge(catalog_router().await?)
-//                 .merge(catalog_api_router().await?)
-//                 .merge(catalog_policies_api_router().await?);
-//             let _ = serve(listener, router).await;
-//             Ok(())
-//         }
-//     }
-// }
+pub mod db_migrations;

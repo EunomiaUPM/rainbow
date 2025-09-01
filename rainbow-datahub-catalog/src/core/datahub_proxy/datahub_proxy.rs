@@ -17,26 +17,23 @@
  *
  */
 
-use crate::core::datahub_proxy::datahub_proxy_types::DatasetGraphQLResponseDetailed;
 use crate::core::datahub_proxy::datahub_proxy_types::{
-    DatahubDataset, DatasetBasicInfo, DatasetGraphQLResponse, DomainProperties, GlossaryTerm, TagProperties};
+    DatahubDataset, DomainProperties, GlossaryTerm, TagProperties};
 use crate::core::datahub_proxy::datahub_proxy_types::{DatahubDomain, GraphQLResponse, Platform, Tag};
 use crate::core::datahub_proxy::DatahubProxyTrait;
-use crate::setup::config::DatahubCatalogApplicationProviderConfig;
 use axum::async_trait;
-use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
+use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use reqwest::Client;
-use serde_json::Value;
 use std::time::Duration;
 use tracing::debug;
 
 pub struct DatahubProxyService {
-    config: DatahubCatalogApplicationProviderConfig,
+    config: ApplicationProviderConfig,
     client: Client,
 }
 
 impl DatahubProxyService {
-    pub fn new(config: DatahubCatalogApplicationProviderConfig) -> Self {
+    pub fn new(config: ApplicationProviderConfig) -> Self {
         let client =
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
         Self { config, client }
@@ -152,14 +149,14 @@ impl DatahubProxyTrait for DatahubProxyService {
         let graphql_url = format!("{}/api/graphql", datahub_host);
         let query = format!(
             r#"{{
-            searchAcrossEntities(input: {{ 
-                query: "*", 
+            searchAcrossEntities(input: {{
+                query: "*",
                 filters: [
                     {{field: "domains", values: ["{}"]}}
-                ], 
-                types: [DATASET], 
-                start: 0, 
-                count: 1000 
+                ],
+                types: [DATASET],
+                start: 0,
+                count: 1000
             }}) {{
                 searchResults {{
                     entity {{

@@ -26,10 +26,8 @@ use crate::consumer::http::ds_protocol::ds_protocol::DSProtocolContractNegotiati
 use crate::consumer::http::ds_protocol_rpc::ds_protocol_rpc::DSRPCContractNegotiationConsumerRouter;
 // use crate::consumer::http::ds_protocol_rpc::ds_protocol_rpc::DSRPCContractNegotiationConsumerRouter;
 use crate::consumer::http::rainbow_entities::rainbow_entities::RainbowEntitiesContractNegotiationConsumerRouter;
-use crate::consumer::setup::config::ContractNegotiationConsumerApplicationConfig;
 use axum::{serve, Router};
 use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
 use rainbow_common::facades::ssi_auth_facade::ssi_auth_facade::SSIAuthFacadeService;
 use rainbow_db::contracts_consumer::repo::sql::ContractNegotiationConsumerRepoForSql;
 use rainbow_db::contracts_consumer::repo::ContractNegotiationConsumerRepoFactory;
@@ -47,7 +45,7 @@ use tracing::info;
 
 pub struct ContractNegotiationConsumerApplication;
 
-pub async fn create_contract_negotiation_consumer_router(config: &ContractNegotiationConsumerApplicationConfig) -> Router {
+pub async fn create_contract_negotiation_consumer_router(config: &ApplicationConsumerConfig) -> Router {
     let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
     let consumer_repo = Arc::new(ContractNegotiationConsumerRepoForSql::create_repo(
         db_connection.clone(),
@@ -111,7 +109,7 @@ pub async fn create_contract_negotiation_consumer_router(config: &ContractNegoti
 }
 
 impl ContractNegotiationConsumerApplication {
-    pub async fn run(config: &ContractNegotiationConsumerApplicationConfig) -> anyhow::Result<()> {
+    pub async fn run(config: &ApplicationConsumerConfig) -> anyhow::Result<()> {
         // db_connection
         let router = create_contract_negotiation_consumer_router(config).await;
         // Init server

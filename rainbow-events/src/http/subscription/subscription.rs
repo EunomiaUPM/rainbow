@@ -29,7 +29,7 @@ use rainbow_common::utils::get_urn_from_string;
 use reqwest::StatusCode;
 use serde::Deserialize;
 use std::sync::Arc;
-use tracing::{debug, info};
+use tracing::info;
 
 pub struct RainbowEventsSubscriptionRouter<T>
 where

@@ -20,7 +20,6 @@
 use crate::consumer::core::bypass_service::bypass_service::CatalogBypassService;
 use crate::consumer::core::mates_facade::mates_facade::MatesFacadeService;
 use crate::consumer::http::bypass_catalog::CatalogBypassRouter;
-use crate::consumer::setup::config::CatalogBypassConsumerApplicationConfig;
 use axum::{serve, Router};
 use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
 use rainbow_common::config::global_config::ApplicationGlobalConfig;
@@ -44,7 +43,7 @@ use tracing::info;
 
 pub struct CatalogBypassConsumerApplication;
 
-pub async fn create_catalog_bypass_consumer_router(config: CatalogBypassConsumerApplicationConfig) -> Router {
+pub async fn create_catalog_bypass_consumer_router(config: ApplicationConsumerConfig) -> Router {
     let global_config: ApplicationConsumerConfig = config.clone().into();
     let mates_facade = Arc::new(MatesFacadeService::new(global_config.clone().into()));
     let bypass_service = Arc::new(CatalogBypassService::new(mates_facade.clone()));
@@ -54,7 +53,7 @@ pub async fn create_catalog_bypass_consumer_router(config: CatalogBypassConsumer
 }
 
 impl CatalogBypassConsumerApplication {
-    pub async fn run(config: &CatalogBypassConsumerApplicationConfig) -> anyhow::Result<()> {
+    pub async fn run(config: &ApplicationConsumerConfig) -> anyhow::Result<()> {
         // db_connection
         let router = create_catalog_bypass_consumer_router(config.clone()).await;
         // Init server

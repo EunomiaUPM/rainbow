@@ -23,17 +23,15 @@ use crate::consumer::core::ds_protocol_rpc::ds_protocol_rpc_types::{
 };
 use crate::consumer::core::ds_protocol_rpc::DSRPCContractNegotiationConsumerTrait;
 use crate::consumer::core::rainbow_entities::rainbow_entities_errors::CnErrorConsumer;
-use anyhow::Error;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::State;
-use axum::http::header::ToStrError;
-use axum::http::{HeaderMap, HeaderValue, StatusCode};
+use axum::http::{HeaderMap, StatusCode};
 use axum::response::IntoResponse;
 use axum::routing::post;
 use axum::{Json, Router};
 use rainbow_common::err::transfer_err::TransferErrorType::NotCheckedError;
 use std::sync::Arc;
-use tracing::{debug, info};
+use tracing::info;
 
 pub struct DSRPCContractNegotiationConsumerRouter<T>
 where

@@ -29,10 +29,9 @@ use crate::consumer::core::ds_protocol_rpc::ds_protocol_rpc_types::{
     DSRPCTransferConsumerTerminationResponse,
 };
 use crate::consumer::core::ds_protocol_rpc::DSRPCTransferConsumerTrait;
-use crate::consumer::setup::config::TransferConsumerApplicationConfig;
 use anyhow::{anyhow, bail};
 use axum::async_trait;
-use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
+use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
 use rainbow_common::mates::Mates;
 use rainbow_common::protocol::transfer::transfer_completion::TransferCompletionMessage;
 use rainbow_common::protocol::transfer::transfer_process::TransferProcessMessage;
@@ -67,7 +66,7 @@ where
 {
     transfer_repo: Arc<T>,
     data_plane_facade: Arc<U>,
-    config: TransferConsumerApplicationConfig,
+    config: ApplicationConsumerConfig,
     notification_service: Arc<V>,
     client: Client,
     mates_facade: Arc<W>,
@@ -83,7 +82,7 @@ where
     pub fn new(
         transfer_repo: Arc<T>,
         data_plane_facade: Arc<U>,
-        config: TransferConsumerApplicationConfig,
+        config: ApplicationConsumerConfig,
         notification_service: Arc<V>,
         mates_facade: Arc<W>,
     ) -> Self {

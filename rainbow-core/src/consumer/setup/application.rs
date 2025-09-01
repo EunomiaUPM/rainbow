@@ -18,16 +18,15 @@
  */
 
 use crate::consumer::http::router::create_core_consumer_router;
-use crate::consumer::setup::config::CoreApplicationConsumerConfig;
 use axum::serve;
-use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
+use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
 use tokio::net::TcpListener;
 use tracing::info;
 
 pub struct CoreConsumerApplication;
 
 impl CoreConsumerApplication {
-    pub async fn run(config: &CoreApplicationConsumerConfig) -> anyhow::Result<()> {
+    pub async fn run(config: &ApplicationConsumerConfig) -> anyhow::Result<()> {
         // db_connection
         let router = create_core_consumer_router(config).await;
         // Init server

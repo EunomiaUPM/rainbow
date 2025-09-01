@@ -18,15 +18,12 @@
  */
 
 use crate::consumer::setup::application::ContractNegotiationConsumerApplication;
-use crate::consumer::setup::config::ContractNegotiationConsumerApplicationConfig;
 use crate::consumer::setup::db_migrations::ContractNegotiationConsumerMigration;
 use crate::provider::setup::application::ContractNegotiationProviderApplication;
-use crate::provider::setup::config::ContractNegotiationApplicationProviderConfig;
 use crate::provider::setup::db_migrations::ContractNegotiationProviderMigration;
 use clap::{Parser, Subcommand};
-use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
-use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
-use tracing::{debug, info};
+use rainbow_common::config::env_extraction::EnvExtraction;
+use tracing::debug;
 
 #[derive(Parser, Debug)]
 #[command(name = "Rainbow Dataspace Connector Contract Negotiation Server")]
@@ -46,11 +43,20 @@ pub enum ContractNegotiationCliRoles {
 
 #[derive(Subcommand, Debug, PartialEq)]
 pub enum ContractNegotiationCliCommands {
-    Start,
-    Setup,
+    Start(ContractNegotiationCliArgs),
+    Setup(ContractNegotiationCliArgs),
 }
 
+#[derive(Parser, Debug, PartialEq)]
+pub struct ContractNegotiationCliArgs {
+    #[arg(short, long)]
+    env_file: Option<String>,
+}
+
+
 pub struct ContractNegotiationCommands;
+
+impl EnvExtraction for ContractNegotiationCommands {}
 
 impl ContractNegotiationCommands {
     pub async fn init_command_line() -> anyhow::Result<()> {
@@ -61,25 +67,27 @@ impl ContractNegotiationCommands {
         // run scripts
         match cli.role {
             ContractNegotiationCliRoles::Provider(cmd) => {
-                let config = ContractNegotiationApplicationProviderConfig::default();
-                let config = config.merge_dotenv_configuration();
-                let table =
-                    json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
-                info!("Current config:\n{}", table);
                 match cmd {
-                    ContractNegotiationCliCommands::Start => ContractNegotiationProviderApplication::run(&config).await?,
-                    ContractNegotiationCliCommands::Setup => ContractNegotiationProviderMigration::run(&config).await?,
+                    ContractNegotiationCliCommands::Start(args) => {
+                        let config = Self::extract_provider_config(args.env_file)?;
+                        ContractNegotiationProviderApplication::run(&config).await?
+                    }
+                    ContractNegotiationCliCommands::Setup(args) => {
+                        let config = Self::extract_provider_config(args.env_file)?;
+                        ContractNegotiationProviderMigration::run(&config).await?
+                    }
                 }
             }
             ContractNegotiationCliRoles::Consumer(cmd) => {
-                let config = ContractNegotiationConsumerApplicationConfig::default();
-                let config = config.merge_dotenv_configuration();
-                let table =
-                    json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
-                info!("Current config:\n{}", table);
                 match cmd {
-                    ContractNegotiationCliCommands::Start => ContractNegotiationConsumerApplication::run(&config.clone()).await?,
-                    ContractNegotiationCliCommands::Setup => ContractNegotiationConsumerMigration::run(&config.clone()).await?
+                    ContractNegotiationCliCommands::Start(args) => {
+                        let config = Self::extract_consumer_config(args.env_file)?;
+                        ContractNegotiationConsumerApplication::run(&config).await?
+                    }
+                    ContractNegotiationCliCommands::Setup(args) => {
+                        let config = Self::extract_consumer_config(args.env_file)?;
+                        ContractNegotiationConsumerMigration::run(&config).await?
+                    }
                 }
             }
         };

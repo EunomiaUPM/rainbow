@@ -28,7 +28,7 @@ impl MatesFacadeTrait for MatesFacadeService {
             .get(mates_url)
             .send()
             .await
-            .map_err(|e| anyhow!("not able to connect with ssi-auth server"))?;
+            .map_err(|_e| anyhow!("not able to connect with ssi-auth server"))?;
         if response.status().is_success() == false {
             bail!("response failed");
         }
@@ -46,7 +46,7 @@ impl MatesFacadeTrait for MatesFacadeService {
             .get(mates_url)
             .send()
             .await
-            .map_err(|e| anyhow!("not able to connect with ssi-auth server"))?;
+            .map_err(|_e| anyhow!("not able to connect with ssi-auth server"))?;
         if response.status().is_success() == false {
             bail!("response failed");
         }
@@ -64,7 +64,7 @@ impl MatesFacadeTrait for MatesFacadeService {
             .get(mates_url)
             .send()
             .await
-            .map_err(|e| anyhow!("not able to connect with ssi-auth server"))?;
+            .map_err(|_e| anyhow!("not able to connect with ssi-auth server"))?;
         if response.status().is_success() == false {
             bail!("response failed");
         }

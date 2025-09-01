@@ -22,7 +22,6 @@ use rainbow_common::adv_protocol::interplane::data_plane_provision::{DataPlanePr
 use rainbow_common::adv_protocol::interplane::data_plane_start::{DataPlaneStart, DataPlaneStartAck};
 use rainbow_common::adv_protocol::interplane::data_plane_status::{DataPlaneStatusRequest, DataPlaneStatusResponse};
 use rainbow_common::adv_protocol::interplane::data_plane_stop::{DataPlaneStop, DataPlaneStopAck};
-use serde::{Deserialize, Serialize};
 
 pub mod controller_errors;
 pub mod controller_service;

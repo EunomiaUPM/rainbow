@@ -19,7 +19,6 @@
 
 use crate::common::schemas::validation::validate_payload_schema;
 use crate::common::utils::has_data_address_in_push;
-use crate::consumer::core::ds_protocol::ds_protocol_err::DSProtocolTransferConsumerErrors;
 use crate::provider::core::data_plane_facade::DataPlaneProviderFacadeTrait;
 use crate::provider::core::data_service_resolver_facade::DataServiceFacadeTrait;
 use crate::provider::core::ds_protocol::ds_protocol_err::DSProtocolTransferProviderErrors;
@@ -30,8 +29,6 @@ use axum::async_trait;
 use rainbow_common::err::transfer_err::TransferErrorType;
 use rainbow_common::facades::ssi_auth_facade::SSIAuthFacadeTrait;
 use rainbow_common::mates::Mates;
-use rainbow_common::protocol::contract::contract_protocol_trait::DSProtocolContractNegotiationMessageTrait;
-use rainbow_common::protocol::contract::ContractNegotiationMessages;
 use rainbow_common::protocol::transfer::transfer_completion::TransferCompletionMessage;
 use rainbow_common::protocol::transfer::transfer_process::TransferProcessMessage;
 use rainbow_common::protocol::transfer::transfer_protocol_trait::DSProtocolTransferMessageTrait;
@@ -41,9 +38,7 @@ use rainbow_common::protocol::transfer::transfer_suspension::TransferSuspensionM
 use rainbow_common::protocol::transfer::transfer_termination::TransferTerminationMessage;
 use rainbow_common::protocol::transfer::{TransferMessageTypes, TransferRoles, TransferState, TransferStateAttribute};
 use rainbow_common::utils::{get_urn, get_urn_from_string};
-use rainbow_dataplane::coordinator::controller::DataPlaneControllerTrait;
 use rainbow_db::transfer_provider::entities::transfer_process;
-use rainbow_db::transfer_provider::entities::transfer_process::Model;
 use rainbow_db::transfer_provider::repo::{
     EditTransferProcessModel, NewTransferMessageModel, NewTransferProcessModel, TransferProviderRepoErrors,
     TransferProviderRepoFactory,
@@ -61,7 +56,6 @@ use urn::Urn;
 pub struct DSProtocolTransferProviderImpl<T, V, W, X>
 where
     T: TransferProviderRepoFactory + Send + Sync,
-// U: DataServiceFacadeTrait + Send + Sync,
     V: DataPlaneProviderFacadeTrait + Send + Sync,
     W: RainbowEventsNotificationTrait + Sync + Send,
     X: SSIAuthFacadeTrait + Sync + Send,
@@ -76,7 +70,6 @@ where
 impl<T, V, W, X> DSProtocolTransferProviderImpl<T, V, W, X>
 where
     T: TransferProviderRepoFactory + Send + Sync,
-// U: DataServiceFacadeTrait + Send + Sync,
     V: DataPlaneProviderFacadeTrait + Send + Sync,
     W: RainbowEventsNotificationTrait + Sync + Send,
     X: SSIAuthFacadeTrait + Sync + Send,
@@ -315,7 +308,6 @@ where
 impl<T, V, W, X> DSProtocolTransferProviderTrait for DSProtocolTransferProviderImpl<T, V, W, X>
 where
     T: TransferProviderRepoFactory + Send + Sync,
-// U: DataServiceFacadeTrait + Send + Sync,
     V: DataPlaneProviderFacadeTrait + Send + Sync,
     W: RainbowEventsNotificationTrait + Sync + Send,
     X: SSIAuthFacadeTrait + Sync + Send,

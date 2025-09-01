@@ -18,16 +18,15 @@
  */
 
 use crate::provider::http::router::create_core_provider_router;
-use crate::provider::setup::config::CoreApplicationProviderConfig;
 use axum::serve;
-use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
+use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use tokio::net::TcpListener;
 use tracing::info;
 
 pub struct CoreProviderApplication;
 
 impl CoreProviderApplication {
-    pub async fn run(config: &CoreApplicationProviderConfig) -> anyhow::Result<()> {
+    pub async fn run(config: &ApplicationProviderConfig) -> anyhow::Result<()> {
         // db_connection
         let router = create_core_provider_router(&config).await;
         // Init server

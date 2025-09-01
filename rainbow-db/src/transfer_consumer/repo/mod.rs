@@ -145,14 +145,17 @@ pub enum TransferConsumerRepoErrors {
     ErrorFetchingConsumerTransferProcess(Error),
     #[error("Error fetching consumer transfer message. {0}")]
     ErrorFetchingConsumerTransferMessage(Error),
+
     #[error("Error creating consumer transfer process. {0}")]
     ErrorCreatingConsumerTransferProcess(Error),
     #[error("Error creating consumer transfer message. {0}")]
     ErrorCreatingConsumerTransferMessage(Error),
+
     #[error("Error deleting consumer transfer process. {0}")]
     ErrorDeletingConsumerTransferProcess(Error),
     #[error("Error deleting consumer transfer message. {0}")]
     ErrorDeletingConsumerTransferMessage(Error),
+
     #[error("Error updating consumer transfer process. {0}")]
     ErrorUpdatingConsumerTransferProcess(Error),
     #[error("Error updating consumer transfer message. {0}")]

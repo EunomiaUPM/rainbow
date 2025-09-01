@@ -25,6 +25,7 @@ pub mod provider_config;
 pub mod database;
 pub mod consumer_config;
 pub mod global_config;
+pub mod env_extraction;
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Copy)]
 pub enum ConfigRoles {

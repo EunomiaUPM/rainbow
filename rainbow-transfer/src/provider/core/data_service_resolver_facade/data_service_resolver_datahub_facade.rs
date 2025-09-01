@@ -17,10 +17,9 @@
  *
  */
 use crate::provider::core::data_service_resolver_facade::DataServiceFacadeTrait;
-use crate::provider::setup::config::TransferProviderApplicationConfig;
 use anyhow::{anyhow, bail};
 use axum::async_trait;
-use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
+use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_common::dcat_formats::DctFormats;
 use rainbow_common::protocol::catalog::dataservice_definition::{DataService, DataServiceDcatDeclaration, DataServiceDctDeclaration};
 use rainbow_common::protocol::context_field::ContextField;
@@ -33,12 +32,12 @@ use std::time::Duration;
 use urn::Urn;
 
 pub struct DataServiceFacadeServiceForDatahub {
-    config: TransferProviderApplicationConfig,
+    config: ApplicationProviderConfig,
     client: Client,
 }
 
 impl DataServiceFacadeServiceForDatahub {
-    pub fn new(config: TransferProviderApplicationConfig) -> Self {
+    pub fn new(config: ApplicationProviderConfig) -> Self {
         let client =
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
         Self { config, client }
@@ -54,16 +53,12 @@ struct RainbowRPCCatalogResolveDataServiceRequest {
 
 #[async_trait]
 impl DataServiceFacadeTrait for DataServiceFacadeServiceForDatahub {
-    async fn resolve_data_service_by_agreement_id(&self, agreement_id: Urn, formats: Option<DctFormats>) -> anyhow::Result<DataService> {
+    async fn resolve_data_service_by_agreement_id(&self, agreement_id: Urn, _formats: Option<DctFormats>) -> anyhow::Result<DataService> {
         let contracts_url = self.config.get_contract_negotiation_host_url().unwrap();
         let catalog_url = self.config.get_catalog_host_url().unwrap();
         let agreement_url = format!(
             "{}/api/v1/contract-negotiation/agreements/{}",
             contracts_url, agreement_id
-        );
-        let data_service_url = format!(
-            "{}/api/v1/catalog/rpc/resolve-data-service",
-            catalog_url
         );
 
         // resolve agreement

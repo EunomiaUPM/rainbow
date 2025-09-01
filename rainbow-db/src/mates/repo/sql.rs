@@ -19,15 +19,17 @@
 
 use crate::mates::entities::busmates;
 use crate::mates::entities::mates;
-use crate::mates::repo::{MateRepoFactory, MateRepoTrait};
-use anyhow::{anyhow, bail};
+use crate::mates::repo::{BusmateRepoErrors, BusmateRepoTrait, MateRepoErrors, MateRepoFactory, MateRepoTrait};
 use axum::async_trait;
 use chrono;
 use rainbow_common::mates::mates::VerifyTokenRequest;
 use rainbow_common::mates::BusMates;
 use rainbow_common::mates::Mates;
 use sea_orm::sea_query::OnConflict;
-use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter, QuerySelect};
+use sea_orm::{
+    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter,
+    QuerySelect,
+};
 
 #[derive(Clone)]
 pub struct MateRepoForSql {
@@ -55,48 +57,48 @@ impl MateRepoTrait for MateRepoForSql {
         &self,
         limit: Option<u64>,
         offset: Option<u64>,
-    ) -> anyhow::Result<Vec<mates::Model>> {
+    ) -> anyhow::Result<Vec<mates::Model>, MateRepoErrors> {
         let mates = mates::Entity::find()
             .limit(limit.unwrap_or(100000))
             .offset(offset.unwrap_or(0))
             .all(&self.db_connection)
-            .await;
-        match mates {
-            Ok(mates) => Ok(mates),
-            Err(e) => bail!("Failed to fetch data: {}", e),
-        }
+            .await
+            .map_err(|e| MateRepoErrors::ErrorFetchingMates(e.into()))?;
+        Ok(mates)
     }
 
-    async fn get_mate_by_id(&self, id: String) -> anyhow::Result<mates::Model> {
-        let mate = mates::Entity::find_by_id(&id).one(&self.db_connection).await;
-
-        match mate {
-            Ok(Some(mate)) => Ok(mate),
-            Ok(None) => bail!("NO authentication with id {}", id),
-            Err(e) => bail!("Failed to fetch data: {}", e),
-        }
+    async fn get_mate_by_id(&self, id: String) -> anyhow::Result<mates::Model, MateRepoErrors> {
+        let mate = mates::Entity::find_by_id(&id)
+            .one(&self.db_connection)
+            .await
+            .map_err(|e| MateRepoErrors::ErrorFetchingMates(e.into()))?
+            .ok_or(MateRepoErrors::MateNotFound)?;
+        Ok(mate)
     }
 
-    async fn get_mate_me(&self) -> anyhow::Result<Option<mates::Model>> {
+    async fn get_mate_me(&self) -> anyhow::Result<Option<mates::Model>, MateRepoErrors> {
         let mate = mates::Entity::find()
             .filter(mates::Column::IsMe.eq(true))
             .one(&self.db_connection)
             .await
-            .map_err(|e| anyhow!("No able to save {}", e.to_string()))?;
+            .map_err(|e| MateRepoErrors::ErrorFetchingMates(e.into()))?;
         Ok(mate)
     }
 
-    async fn get_mate_by_token(&self, verify_token_request: VerifyTokenRequest) -> anyhow::Result<mates::Model> {
+    async fn get_mate_by_token(
+        &self,
+        verify_token_request: VerifyTokenRequest,
+    ) -> anyhow::Result<mates::Model, MateRepoErrors> {
         let mate = mates::Entity::find()
             .filter(mates::Column::Token.eq(verify_token_request.token))
             .one(&self.db_connection)
             .await
-            .map_err(|e| anyhow!("No able to fetch {}", e.to_string()))?
-            .ok_or(anyhow!("No mate associated with token"))?;
+            .map_err(|e| MateRepoErrors::ErrorFetchingMates(e.into()))?
+            .ok_or(MateRepoErrors::MateNotFound)?;
         Ok(mate)
     }
 
-    async fn create_mate(&self, mate: Mates) -> anyhow::Result<mates::Model> {
+    async fn create_mate(&self, mate: Mates) -> anyhow::Result<mates::Model, MateRepoErrors> {
         let mate = mates::ActiveModel {
             participant_id: ActiveValue::Set(mate.participant_id),
             participant_slug: ActiveValue::Set(mate.participant_slug),
@@ -124,68 +126,58 @@ impl MateRepoTrait for MateRepoForSql {
             .await
         {
             Ok(mate) => mate,
-            Err(e) => {
-                println!("Failed to insert mate: {}", e);
-                bail!("Failed to insert mate: {}", e)
-            }
+            Err(e) => return Err(MateRepoErrors::ErrorCreatingMates(e.into())),
         };
 
         Ok(mate)
     }
 
-    async fn update_mate(&self, mate: Mates) -> anyhow::Result<mates::Model> {
+    async fn update_mate(&self, mate: Mates) -> anyhow::Result<mates::Model, MateRepoErrors> {
         let id = mate.participant_id;
-        let mate = mates::Entity::find_by_id(&id).one(&self.db_connection).await;
-
-        match mate {
-            Ok(Some(mate)) => Ok(mate),
-            Ok(None) => bail!("NO authentication with id {}", id),
-            Err(e) => bail!("Failed to fetch data: {}", e),
-        }
+        let mate = mates::Entity::find_by_id(&id)
+            .one(&self.db_connection)
+            .await
+            .map_err(|e| MateRepoErrors::ErrorUpdatingMates(e.into()))?
+            .ok_or(MateRepoErrors::MateNotFound)?;
+        Ok(mate)
     }
 
-    async fn delete_mate(&self, id: String) -> anyhow::Result<()> {
-        let mut entry = match mates::Entity::find_by_id(&id).one(&self.db_connection).await {
-            Ok(Some(entry)) => entry,
-            Ok(None) => bail!("No entry found with ID: {}", id),
-            Err(e) => bail!("Failed to fetch data: {}", e),
-        };
+    async fn delete_mate(&self, id: String) -> anyhow::Result<(), MateRepoErrors> {
+        let mut entry = self.get_mate_by_id(id).await?;
         let ret = entry.clone();
         let active_model = entry.into_active_model();
-        active_model.delete(&self.db_connection).await?;
-
+        let _ =
+            active_model.delete(&self.db_connection).await.map_err(|e| MateRepoErrors::ErrorDeletingMates(e.into()))?;
         Ok(())
     }
+}
 
+#[async_trait]
+impl BusmateRepoTrait for MateRepoForSql {
     async fn get_all_busmates(
         &self,
         limit: Option<u64>,
         offset: Option<u64>,
-    ) -> anyhow::Result<Vec<busmates::Model>> {
+    ) -> anyhow::Result<Vec<busmates::Model>, BusmateRepoErrors> {
         let busmates = busmates::Entity::find()
             .limit(limit.unwrap_or(100000))
             .offset(offset.unwrap_or(0))
             .all(&self.db_connection)
-            .await;
-        match busmates {
-            Ok(busmates) => Ok(busmates),
-            Err(e) => bail!("Failed to fetch data: {}", e),
-        }
+            .await
+            .map_err(|e| BusmateRepoErrors::ErrorFetchingBusmates(e.into()))?;
+        Ok(busmates)
     }
 
-    async fn get_busmate_by_id(&self, id: String) -> anyhow::Result<busmates::Model> {
-        let busmates = busmates::Entity::find_by_id(&id).one(&self.db_connection).await;
-
-        match busmates {
-            Ok(Some(busmates)) => Ok(busmates),
-            Ok(None) => bail!("NO authentication with id {}", id),
-            Err(e) => bail!("Failed to fetch data: {}", e),
-        }
+    async fn get_busmate_by_id(&self, id: String) -> anyhow::Result<busmates::Model, BusmateRepoErrors> {
+        let busmates = busmates::Entity::find_by_id(&id)
+            .one(&self.db_connection)
+            .await
+            .map_err(|e| BusmateRepoErrors::ErrorFetchingBusmates(e.into()))?
+            .ok_or(BusmateRepoErrors::BusmateNotFound)?;
+        Ok(busmates)
     }
 
-
-
-    async fn create_busmate(&self, busmate: BusMates) -> anyhow::Result<busmates::Model> {
+    async fn create_busmate(&self, busmate: BusMates) -> anyhow::Result<busmates::Model, BusmateRepoErrors> {
         let busmate = busmates::ActiveModel {
             id: ActiveValue::Set(busmate.id),
             participant_id: ActiveValue::Set(busmate.participant_id),
@@ -209,36 +201,30 @@ impl MateRepoTrait for MateRepoForSql {
             .await
         {
             Ok(busmate) => busmate,
-            Err(e) => {
-                println!("Failed to insert busmate: {}", e);
-                bail!("Failed to insert busmate: {}", e)
-            }
+            Err(e) => return Err(BusmateRepoErrors::ErrorCreatingBusmates(e.into())),
         };
 
         Ok(busmate)
     }
 
-    async fn update_busmate(&self, busmate: BusMates) -> anyhow::Result<busmates::Model> {
+    async fn update_busmate(&self, busmate: BusMates) -> anyhow::Result<busmates::Model, BusmateRepoErrors> {
         let id = busmate.participant_id;
-        let busmate = busmates::Entity::find_by_id(&id).one(&self.db_connection).await;
-
-        match busmate {
-            Ok(Some(busmate)) => Ok(busmate),
-            Ok(None) => bail!("NO authentication with id {}", id),
-            Err(e) => bail!("Failed to fetch data: {}", e),
-        }
+        let busmate = busmates::Entity::find_by_id(&id)
+            .one(&self.db_connection)
+            .await
+            .map_err(|e| BusmateRepoErrors::ErrorUpdatingBusmates(e.into()))?
+            .ok_or(BusmateRepoErrors::BusmateNotFound)?;
+        Ok(busmate)
     }
 
-    async fn delete_busmate(&self, id: String) -> anyhow::Result<()> {
-        let mut entry = match busmates::Entity::find_by_id(&id).one(&self.db_connection).await {
-            Ok(Some(entry)) => entry,
-            Ok(None) => bail!("No entry found with ID: {}", id),
-            Err(e) => bail!("Failed to fetch data: {}", e),
-        };
+    async fn delete_busmate(&self, id: String) -> anyhow::Result<(), BusmateRepoErrors> {
+        let mut entry = self.get_busmate_by_id(id).await?;
         let ret = entry.clone();
         let active_model = entry.into_active_model();
-        active_model.delete(&self.db_connection).await?;
-
+        let _ = active_model
+            .delete(&self.db_connection)
+            .await
+            .map_err(|e| return BusmateRepoErrors::ErrorDeletingBusmates(e.into()))?;
         Ok(())
     }
 }

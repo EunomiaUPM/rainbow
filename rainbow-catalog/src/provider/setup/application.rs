@@ -32,10 +32,9 @@ use crate::provider::http::rainbow_entities::dataset::RainbowCatalogDatasetRoute
 use crate::provider::http::rainbow_entities::distribution::RainbowCatalogDistributionRouter;
 use crate::provider::http::rainbow_entities::policies::RainbowCatalogPoliciesRouter;
 use crate::provider::http::rainbow_rpc::rainbow_rpc::RainbowRPCCatalogRouter;
-use crate::provider::setup::config::CatalogApplicationProviderConfig;
 use axum::routing::get;
 use axum::{serve, Router};
-use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
+use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_db::catalog::repo::sql::CatalogRepoForSql;
 use rainbow_db::catalog::repo::CatalogRepoFactory;
 use rainbow_db::events::repo::sql::EventsRepoForSql;
@@ -54,7 +53,7 @@ use tracing::info;
 
 pub struct CatalogApplication;
 
-pub async fn create_catalog_router(config: &CatalogApplicationProviderConfig) -> Router {
+pub async fn create_catalog_router(config: &ApplicationProviderConfig) -> Router {
     let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
 
     // Repos
@@ -117,7 +116,7 @@ pub async fn create_catalog_router(config: &CatalogApplicationProviderConfig) ->
 }
 
 impl CatalogApplication {
-    pub async fn run(config: &CatalogApplicationProviderConfig) -> anyhow::Result<()> {
+    pub async fn run(config: &ApplicationProviderConfig) -> anyhow::Result<()> {
         // db_connection
         let router = create_catalog_router(config).await;
         // Init server

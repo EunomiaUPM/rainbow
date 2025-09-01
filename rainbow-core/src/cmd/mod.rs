@@ -18,16 +18,13 @@
  */
 
 use crate::consumer::setup::application::CoreConsumerApplication;
-use crate::consumer::setup::config::CoreApplicationConsumerConfig;
 use crate::consumer::setup::db_migrations::CoreConsumerMigration;
 use crate::provider::setup::application::CoreProviderApplication;
-use crate::provider::setup::config::CoreApplicationProviderConfig;
 use crate::provider::setup::db_migrations::CoreProviderMigration;
 use clap::{Parser, Subcommand};
-use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
-use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
+use rainbow_common::config::env_extraction::EnvExtraction;
 use std::cmp::PartialEq;
-use tracing::{debug, info};
+use tracing::debug;
 
 #[derive(Parser, Debug)]
 #[command(name = "Rainbow Dataspace Connector Core Server")]
@@ -47,11 +44,20 @@ pub enum CoreCliRoles {
 
 #[derive(Subcommand, Debug, PartialEq)]
 pub enum CoreCliCommands {
-    Start,
-    Setup,
+    Start(CoreCliArgs),
+    Setup(CoreCliArgs),
 }
 
+#[derive(Parser, Debug, PartialEq)]
+pub struct CoreCliArgs {
+    #[arg(short, long)]
+    env_file: Option<String>,
+}
+
+
 pub struct CoreCommands;
+
+impl EnvExtraction for CoreCommands {}
 
 impl CoreCommands {
     pub async fn init_command_line() -> anyhow::Result<()> {
@@ -62,27 +68,27 @@ impl CoreCommands {
         // run scripts
         match cli.role {
             CoreCliRoles::Provider(cmd) => {
-                let config = CoreApplicationProviderConfig::default();
-                let config = config.merge_dotenv_configuration();
-                let mut config_table = config.clone();
-                config_table.datahub_token = format!("{}...", config_table.datahub_token[0..20].to_string());
-                let table =
-                    json_to_table::json_to_table(&serde_json::to_value(&config_table)?).collapse().to_string();
-                info!("Current config:\n{}", table);
                 match cmd {
-                    CoreCliCommands::Start => CoreProviderApplication::run(&config).await?,
-                    CoreCliCommands::Setup => CoreProviderMigration::run(&config).await?,
+                    CoreCliCommands::Start(args) => {
+                        let config = Self::extract_provider_config(args.env_file)?;
+                        CoreProviderApplication::run(&config).await?
+                    }
+                    CoreCliCommands::Setup(args) => {
+                        let config = Self::extract_provider_config(args.env_file)?;
+                        CoreProviderMigration::run(&config).await?
+                    }
                 }
             }
             CoreCliRoles::Consumer(cmd) => {
-                let config = CoreApplicationConsumerConfig::default();
-                let config = config.merge_dotenv_configuration();
-                let table =
-                    json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
-                info!("Current config:\n{}", table);
                 match cmd {
-                    CoreCliCommands::Start => CoreConsumerApplication::run(&config).await?,
-                    CoreCliCommands::Setup => CoreConsumerMigration::run(&config).await?,
+                    CoreCliCommands::Start(args) => {
+                        let config = Self::extract_consumer_config(args.env_file)?;
+                        CoreConsumerApplication::run(&config).await?
+                    }
+                    CoreCliCommands::Setup(args) => {
+                        let config = Self::extract_consumer_config(args.env_file)?;
+                        CoreConsumerMigration::run(&config).await?
+                    }
                 }
             }
         };

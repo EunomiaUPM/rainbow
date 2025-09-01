@@ -17,7 +17,7 @@
  *
  */
 
-use rainbow::cmd::CoreCommands;
+use rainbow_core::cmd::CoreCommands;
 use tracing::info;
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::EnvFilter;

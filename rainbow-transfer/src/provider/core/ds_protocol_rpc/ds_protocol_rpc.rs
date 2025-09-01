@@ -158,7 +158,7 @@ where
     ) -> anyhow::Result<()> {
         // Negotiation state
         // For RPC consumer_pid and provider_pid are always some
-        let consumer_pid = message.get_consumer_pid()?.unwrap().to_owned();
+        let _consumer_pid = message.get_consumer_pid()?.unwrap().to_owned();
         let provider_pid = message.get_provider_pid()?.unwrap().to_owned();
         let message_type = message.get_message_type()?;
         // For RPC transfer process is always there
