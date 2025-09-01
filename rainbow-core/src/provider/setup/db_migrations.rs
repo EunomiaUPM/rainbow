@@ -16,7 +16,8 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::provider::setup::config::CoreApplicationProviderConfig;
+
+use rainbow_common::config::provider_config::ApplicationProviderConfig;
 use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
 use rainbow_db::auth_provider::migrations::get_auth_provider_migrations;
 use rainbow_db::catalog::migrations::get_catalog_migrations;
@@ -53,14 +54,13 @@ impl MigratorTrait for CoreProviderMigration {
 }
 
 impl CoreProviderMigration {
-    pub async fn run(config: &CoreApplicationProviderConfig) -> anyhow::Result<()> {
+    pub async fn run(config: &ApplicationProviderConfig) -> anyhow::Result<()> {
         // db_connection
         let db_url = config.get_full_db_url();
         let db_connection = Database::connect(db_url).await.expect("Database can't connect");
         // run migration
         Self::refresh(&db_connection).await?;
-        // run seedings
+        // run seeding
         Ok(())
     }
-
 }

@@ -181,7 +181,7 @@ pub trait ApplicationConsumerConfigTrait {
     }
 
     // merge dotenv
-    fn merge_dotenv_configuration(&self) -> Self
+    fn merge_dotenv_configuration(&self, env_file: Option<String>) -> Self
     where
         Self: Sized;
 }
@@ -227,8 +227,11 @@ impl ApplicationConsumerConfigTrait for ApplicationConsumerConfig {
         &self.client_config
     }
 
-    fn merge_dotenv_configuration(&self) -> Self {
-        dotenvy::from_filename(".env.gateway.consumer");
+    fn merge_dotenv_configuration(&self, env_file: Option<String>) -> Self {
+        if let Some(env_file) = env_file {
+            dotenvy::from_filename(env_file).expect("No env file found");
+        }
+        dotenvy::dotenv().ok();
         let default = ApplicationConsumerConfig::default();
         let compound_config = Self {
             transfer_process_host: Some(HostConfig {
@@ -288,9 +291,9 @@ impl ApplicationConsumerConfigTrait for ApplicationConsumerConfig {
                 ),
             }),
             auth_host: Some(HostConfig {
-                protocol: extract_env("AUTH_PROTOCOL", default.auth_host.clone().unwrap().protocol),
-                url: extract_env("AUTH_URL", default.auth_host.clone().unwrap().url),
-                port: extract_env("AUTH_PORT", default.auth_host.clone().unwrap().port),
+                protocol: extract_env("AUTH_HOST_PROTOCOL", default.auth_host.clone().unwrap().protocol),
+                url: extract_env("AUTH_HOST_URL", default.auth_host.clone().unwrap().url),
+                port: extract_env("AUTH_HOST_PORT", default.auth_host.clone().unwrap().port),
             }),
             ssi_auth_host: Some(HostConfig {
                 protocol: extract_env(
@@ -340,7 +343,7 @@ impl ApplicationConsumerConfigTrait for ApplicationConsumerConfig {
                 wallet_id: None,
             },
             client_config: ClientConfig {
-                class_id: extract_env("SELF_CLIENT", default.client_config.class_id),
+                class_id: extract_env("CLIENT_DEF", default.client_config.class_id),
                 cert_path: extract_env("CERT_PATH", default.client_config.cert_path),
                 display: None,
             },

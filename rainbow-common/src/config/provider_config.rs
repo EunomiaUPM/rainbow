@@ -205,7 +205,7 @@ pub trait ApplicationProviderConfigTrait {
     }
 
     // merge dotenv
-    fn merge_dotenv_configuration(&self) -> Self
+    fn merge_dotenv_configuration(&self, env_file: Option<String>) -> Self
     where
         Self: Sized;
 }
@@ -264,8 +264,12 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
         &self.client_config
     }
 
-    fn merge_dotenv_configuration(&self) -> Self {
-        dotenvy::from_filename(".env.provider");
+    fn merge_dotenv_configuration(&self, env_file: Option<String>) -> Self {
+        if let Some(env_file) = env_file {
+            dotenvy::from_filename(env_file).expect("No env file found");
+        }
+        dotenvy::dotenv().ok();
+
         let default = ApplicationProviderConfig::default();
         let catalog_as_datahub: bool =
             extract_env("CATALOG_AS_DATAHUB", default.catalog_as_datahub.to_string()).parse().unwrap();
@@ -386,12 +390,11 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
                 wallet_id: None,
             },
             client_config: ClientConfig {
-                class_id: extract_env("SELF_CLIENT", default.client_config.class_id),
+                class_id: extract_env("CLIENT_DEF", default.client_config.class_id),
                 cert_path: extract_env("CERT_PATH", default.client_config.cert_path),
                 display: None,
             },
             role: ConfigRoles::Provider,
         };
         compound_config
-    }
-}
+    }}

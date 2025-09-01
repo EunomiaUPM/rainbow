@@ -21,7 +21,7 @@ pub mod consumer_trait;
 mod consumer_trait_impl;
 mod wallet_trait_impl;
 
-use crate::ssi_auth::consumer::setup::config::SSIAuthConsumerApplicationConfig;
+use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
 use rainbow_common::ssi_wallet::WalletSession;
 use rainbow_db::auth_consumer::repo_factory::factory_trait::AuthRepoFactoryTrait;
 use reqwest::Client;
@@ -39,7 +39,7 @@ where
     pub wallet_onboard: bool,
     pub repo: Arc<T>,
     client: Client,
-    config: SSIAuthConsumerApplicationConfig,
+    config: ApplicationConsumerConfig,
     didweb: Value,
 }
 
@@ -47,7 +47,7 @@ impl<T> Manager<T>
 where
     T: AuthRepoFactoryTrait + Send + Sync + Clone + 'static,
 {
-    pub fn new(repo: Arc<T>, config: SSIAuthConsumerApplicationConfig) -> Self {
+    pub fn new(repo: Arc<T>, config: ApplicationConsumerConfig) -> Self {
         let client =
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
         Self {

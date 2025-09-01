@@ -17,18 +17,18 @@
  *
  */
 
-pub mod wallet_trait_impl;
 pub mod provider_trait;
 pub mod provider_trait_impl;
+pub mod wallet_trait_impl;
 
-use std::sync::Arc;
-use std::time::Duration;
-use reqwest::Client;
-use serde_json::Value;
-use tokio::sync::Mutex;
+use rainbow_common::config::provider_config::ApplicationProviderConfig;
 use rainbow_common::ssi_wallet::WalletSession;
 use rainbow_db::auth_provider::repo_factory::factory_trait::AuthRepoFactoryTrait;
-use crate::ssi_auth::provider::setup::config::SSIAuthProviderApplicationConfig;
+use reqwest::Client;
+use serde_json::Value;
+use std::sync::Arc;
+use std::time::Duration;
+use tokio::sync::Mutex;
 
 #[derive(Debug)]
 pub struct Manager<T>
@@ -39,7 +39,7 @@ where
     pub wallet_onboard: bool,
     pub repo: Arc<T>,
     client: Client,
-    config: SSIAuthProviderApplicationConfig,
+    config: ApplicationProviderConfig,
     didweb: Value,
 }
 
@@ -47,7 +47,7 @@ impl<T> Manager<T>
 where
     T: AuthRepoFactoryTrait + Send + Sync + Clone + 'static,
 {
-    pub fn new(repo: Arc<T>, config: SSIAuthProviderApplicationConfig) -> Self {
+    pub fn new(repo: Arc<T>, config: ApplicationProviderConfig) -> Self {
         let client =
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
         Self {
