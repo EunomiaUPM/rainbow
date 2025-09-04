@@ -50,15 +50,15 @@ where
                 "/api/v1/transfers/:id",
                 get(Self::handle_get_transfer_by_id),
             )
-            .route("/api/v1/transfers", post(Self::handle_post_transfer))
-            .route(
-                "/api/v1/transfers/:id",
-                put(Self::handle_put_transfer_by_id),
-            )
-            .route(
-                "/api/v1/transfers/:id",
-                delete(Self::handle_delete_transfer_by_id),
-            )
+            // .route("/api/v1/transfers", post(Self::handle_post_transfer))
+            // .route(
+            //     "/api/v1/transfers/:id",
+            //     put(Self::handle_put_transfer_by_id),
+            // )
+            // .route(
+            //     "/api/v1/transfers/:id",
+            //     delete(Self::handle_delete_transfer_by_id),
+            // )
             .route(
                 "/api/v1/transfers/:id/messages",
                 get(Self::handle_get_messages_by_transfer),
