@@ -17,10 +17,10 @@
  *
  */
 
+use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
 use rainbow_common::errors::ErrorInfo;
-use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use thiserror::Error;
@@ -28,17 +28,17 @@ use tracing::error;
 
 #[derive(Error, Debug, Serialize)]
 pub enum AuthErrors {
-    #[error("Petition Error")]
-    ProviderError {
+    #[error("Wallet Error")]
+    WalletError {
         #[serde(flatten)]
         info: ErrorInfo,
-        http_code: Option<u16>,
+        http_code: u16,
         url: String,
         method: String,
         cause: Option<String>,
     },
-    #[error("Petition Error")]
-    ConsumerError {
+    #[error("Security Error")]
+    SecurityError {
         #[serde(flatten)]
         info: ErrorInfo,
         cause: Option<String>,
@@ -47,28 +47,31 @@ pub enum AuthErrors {
 
 impl IntoResponse for &AuthErrors {
     fn into_response(self) -> Response {
-        let (status, body) = match self {
-            AuthErrors::ProviderError { info, .. } => (StatusCode::BAD_GATEWAY, info),
-            AuthErrors::ConsumerError { info, .. } => (StatusCode::BAD_REQUEST, info),
+        let info = match self {
+            AuthErrors::WalletError { info, .. } | AuthErrors::SecurityError { info, .. } => info,
         };
 
-        (status, Json(body)).into_response()
+        (info.status_code, Json(info)).into_response()
     }
 }
 
 impl AuthErrors {
     pub fn log(&self) {
         match self {
-            AuthErrors::ProviderError { info, http_code, url, method, cause } => {
-                let http_code = format!("Http Code: {}", http_code.unwrap_or(0));
-                let cause = format!("Cause: {}", cause.as_deref().unwrap_or("No Cause"));
+            AuthErrors::WalletError { info, http_code, url, method, cause } => {
+                let http_code = format!("Http Code: {}", http_code);
                 let details = format!(
                     "Details: {}",
                     info.details.as_deref().unwrap_or("No details")
                 );
-                error!("\n{}\n Method: {}\n Url: {}\n Http Code: {}\n Error Code: {}\n Message: {}\n Details: {}\n Cause: {}", self, method, url,http_code,info.error_code, info.message, details, cause);
+                let cause = format!("Cause: {}", cause.as_deref().unwrap_or("No Cause"));
+
+                error!(
+                    "\n{}\n Method: {}\n Url: {}\n {}\n Error Code: {}\n Message: {}\n {}\n {}",
+                    self, method, url, http_code, info.error_code, info.message, details, cause
+                );
             }
-            AuthErrors::ConsumerError { info, cause } => {
+            AuthErrors::SecurityError { info, cause } => {
                 let cause = format!("Cause: {}", cause.as_deref().unwrap_or("No Cause"));
                 let details = format!(
                     "Details: {}",
@@ -80,6 +83,32 @@ impl AuthErrors {
                     self, info.error_code, info.message, details, cause
                 );
             }
+        }
+    }
+
+    pub fn wallet_new(url: String, method: String, http_code: u16, cause: Option<String>) -> AuthErrors {
+        AuthErrors::WalletError {
+            info: ErrorInfo {
+                message: "Unexpected response from the Wallet".to_string(),
+                error_code: 2100,
+                status_code: StatusCode::BAD_GATEWAY,
+                details: None,
+            },
+            http_code,
+            url,
+            method,
+            cause,
+        }
+    }
+    pub fn security_new(cause: Option<String>) -> AuthErrors {
+        AuthErrors::SecurityError {
+            info: ErrorInfo {
+                message: "Invalid petition".to_string(),
+                error_code: 4400,
+                status_code: StatusCode::UNPROCESSABLE_ENTITY,
+                details: None,
+            },
+            cause,
         }
     }
 }

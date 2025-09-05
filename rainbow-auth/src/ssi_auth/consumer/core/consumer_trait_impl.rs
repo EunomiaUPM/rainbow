@@ -19,7 +19,7 @@
 
 use super::Manager;
 use crate::ssi_auth::consumer::core::consumer_trait::RainbowSSIAuthConsumerManagerTrait;
-use crate::ssi_auth::errors::AuthErrors;
+// use crate::ssi_auth::errors::AuthErrors;
 use crate::ssi_auth::types::{MatchingVCs, RedirectResponse};
 use anyhow::bail;
 use axum::async_trait;
@@ -28,7 +28,7 @@ use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
 use rainbow_common::auth::gnap::{AccessToken, GrantRequest, GrantResponse};
 use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
-use rainbow_common::errors::{CommonErrors, ErrorInfo};
+use rainbow_common::errors::CommonErrors;
 use rainbow_db::auth_consumer::entities::{
     auth_interaction, auth_request, auth_token_requirements, auth_verification, mates,
 };
@@ -39,6 +39,9 @@ use sha2::{Digest, Sha256};
 use tracing::{error, info};
 use url::Url;
 use urlencoding::decode;
+use rainbow_common::auth::gnap::grant_response::{Continue4GResponse, Interact4GResponse};
+use rainbow_common::errors::helpers::MissingAction;
+use crate::ssi_auth::errors::AuthErrors;
 
 #[async_trait]
 impl<T> RainbowSSIAuthConsumerManagerTrait for Manager<T>
@@ -69,26 +72,19 @@ where
                 model
             }
             Err(e) => {
-                let error = CommonErrors::DatabaseError {
-                    info: ErrorInfo {
-                        message: "Error saving the authentication request into the database".to_string(),
-                        error_code: 1300,
-                        details: None,
-                    },
-                    cause: Some(e.to_string()),
-                };
+                let error = CommonErrors::database_new(Some(e.to_string()));
                 error.log();
                 bail!(error);
             }
         };
 
-        let interact = body.interact.as_ref().unwrap();
+        let interact = body.interact.as_ref().unwrap(); // // EXPECTED ALWAYS
 
         let new_interaction_model = auth_interaction::NewModel {
             id: id.clone(),
             start: interact.start.clone(),
             method: interact.finish.method.clone(),
-            uri: interact.finish.uri.as_ref().unwrap().clone(),
+            uri: interact.finish.uri.as_ref().unwrap().clone(), // // EXPECTED ALWAYS
             hash_method: interact.finish.hash_method.clone(),
             hints: interact.hints.clone(),
             grant_endpoint: url.clone(),
@@ -100,14 +96,7 @@ where
                 model
             }
             Err(e) => {
-                let error = CommonErrors::DatabaseError {
-                    info: ErrorInfo {
-                        message: "Error saving the authentication interaction into the database".to_string(),
-                        error_code: 1300,
-                        details: None,
-                    },
-                    cause: Some(e.to_string()),
-                };
+                let error = CommonErrors::database_new(Some(e.to_string()));
                 error.log();
                 bail!(error);
             }
@@ -131,14 +120,7 @@ where
                 model
             }
             Err(e) => {
-                let error = CommonErrors::DatabaseError {
-                    info: ErrorInfo {
-                        message: "Error saving the token requirements into the database".to_string(),
-                        error_code: 1300,
-                        details: None,
-                    },
-                    cause: Some(e.to_string()),
-                };
+                let error = CommonErrors::database_new(Some(e.to_string()));
                 error.log();
                 bail!(error);
             }
@@ -161,17 +143,7 @@ where
                     Some(status) => Some(status.as_u16()),
                     None => None,
                 };
-                let error = CommonErrors::PetitionError {
-                    info: ErrorInfo {
-                        message: "Error contacting the provider".to_string(),
-                        error_code: 1000,
-                        details: None,
-                    },
-                    http_code,
-                    url,
-                    method: "POST".to_string(),
-                    cause: e.to_string(),
-                };
+                let error = CommonErrors::petition_new(url, "POST".to_string(), http_code, e.to_string());
                 error.log();
                 bail!(error);
             }
@@ -185,20 +157,31 @@ where
             _ => {
                 let http_code = Some(res.status().as_u16());
                 let error_res: GrantResponse = res.json().await?;
-                let error = AuthErrors::ProviderError {
-                    info: ErrorInfo { message: "Grant response failed".to_string(), error_code: 1400, details: None },
+                let error = CommonErrors::provider_new(
+                    Some(url),
+                    Some("POST".to_string()),
                     http_code,
-                    url,
-                    method: "POST".to_string(),
-                    cause: error_res.error,
-                };
-
+                    error_res.error,
+                );
                 error.log();
                 bail!(error);
             }
         };
 
-        let cont_data = res.r#continue.unwrap();
+
+        let cont_data = match res.r#continue {
+            Some(data) => {data}
+            None => {
+                let error = CommonErrors::provider_new(
+                    Some(url),
+                    Some("POST".to_string()),
+                    None,
+                    Some("The expected 'continue' field was missing".to_string()),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
         request_model.status = "Pending".to_string();
         request_model.assigned_id = res.instance_id;
 
@@ -208,20 +191,25 @@ where
                 model
             }
             Err(e) => {
-                let error = CommonErrors::DatabaseError {
-                    info: ErrorInfo {
-                        message: "Error updating the authentication request into the database".to_string(),
-                        error_code: 1300,
-                        details: None,
-                    },
-                    cause: Some(e.to_string()),
-                };
+                let error = CommonErrors::database_new(Some(e.to_string()));
                 error.log();
                 bail!(error);
             }
         };
 
-        let res_interact = res.interact.unwrap();
+        let res_interact = match res.interact {
+            Some(data) => {data}
+            None => {
+                let error = CommonErrors::provider_new(
+                    Some(url),
+                    Some("POST".to_string()),
+                    None,
+                    Some("The expected 'interact' field was missing".to_string()),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
 
         interaction_model.as_nonce = res_interact.finish;
         interaction_model.continue_token = Some(cont_data.access_token.value);
@@ -234,38 +222,130 @@ where
                 model
             }
             Err(e) => {
-                let error = CommonErrors::DatabaseError {
-                    info: ErrorInfo {
-                        message: "Error updating the interaction information into the database".to_string(),
-                        error_code: 1300,
-                        details: None,
-                    },
-                    cause: Some(e.to_string()),
-                };
+                let error = CommonErrors::database_new(Some(e.to_string()));
                 error.log();
                 bail!(error);
             }
         };
 
-        let uri = res_interact.oidc4vp.as_ref().unwrap();
+
+        let uri = match res_interact.oidc4vp.as_ref() {
+            Some(data) => {data}
+            None => {
+                let error = CommonErrors::provider_new(
+                    Some(url),
+                    Some("POST".to_string()),
+                    None,
+                    Some("The expected 'oidc4vp' field was missing".to_string()),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
+
         let fixed_uri = uri.replacen("openid4vp://", "https://", 1);
         let parsed_uri = Url::parse(&fixed_uri)?;
 
-        let response_type =
-            parsed_uri.query_pairs().find(|(k, _)| k == "response_type").map(|(_, v)| v.into_owned()).unwrap();
-        let client_id = parsed_uri.query_pairs().find(|(k, _)| k == "client_id").map(|(_, v)| v.into_owned()).unwrap();
-        let response_mode =
-            parsed_uri.query_pairs().find(|(k, _)| k == "response_mode").map(|(_, v)| v.into_owned()).unwrap();
-        let pd_uri = parsed_uri
+        let response_type = match parsed_uri.query_pairs().find(|(k, _)| k == "response_type").map(|(_, v)| v.into_owned()) {
+            Some(data) => {data}
+            None => {
+                let error = CommonErrors::provider_new(
+                    Some(url),
+                    Some("POST".to_string()),
+                    None,
+                    Some("The expected 'response_type' field was missing in the oidc4vp uri".to_string()),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
+
+        let client_id = match parsed_uri.query_pairs().find(|(k, _)| k == "client_id").map(|(_, v)| v.into_owned()) {
+            Some(data) => {data}
+            None => {
+                let error = CommonErrors::provider_new(
+                    Some(url),
+                    Some("POST".to_string()),
+                    None,
+                    Some("The expected 'client_id' field was missing in the oidc4vp uri".to_string()),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
+
+        let response_mode = match parsed_uri.query_pairs().find(|(k, _)| k == "response_mode").map(|(_, v)| v.into_owned()) {
+            Some(data) => {data}
+            None => {
+                let error = CommonErrors::provider_new(
+                    Some(url),
+                    Some("POST".to_string()),
+                    None,
+                    Some("The expected 'response_mode' field was missing in the oidc4vp uri".to_string()),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
+
+        let pd_uri = match parsed_uri
             .query_pairs()
             .find(|(k, _)| k == "presentation_definition_uri")
-            .map(|(_, v)| v.into_owned())
-            .unwrap();
-        let client_id_scheme =
-            parsed_uri.query_pairs().find(|(k, _)| k == "client_id_scheme").map(|(_, v)| v.into_owned()).unwrap();
-        let nonce = parsed_uri.query_pairs().find(|(k, _)| k == "nonce").map(|(_, v)| v.into_owned()).unwrap();
-        let response_uri =
-            parsed_uri.query_pairs().find(|(k, _)| k == "response_uri").map(|(_, v)| v.into_owned()).unwrap();
+            .map(|(_, v)| v.into_owned()) {
+            Some(data) => {data}
+            None => {
+                let error = CommonErrors::provider_new(
+                    Some(url),
+                    Some("POST".to_string()),
+                    None,
+                    Some("The expected 'presentation_definition_uri' field was missing in the oidc4vp uri".to_string()),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
+
+        let client_id_scheme = match parsed_uri.query_pairs().find(|(k, _)| k == "client_id_scheme").map(|(_, v)| v.into_owned()) {
+            Some(data) => {data}
+            None => {
+                let error = CommonErrors::provider_new(
+                    Some(url),
+                    Some("POST".to_string()),
+                    None,
+                    Some("The expected 'client_id_scheme' field was missing in the oidc4vp uri".to_string()),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
+
+        let nonce = match parsed_uri.query_pairs().find(|(k, _)| k == "nonce").map(|(_, v)| v.into_owned()) {
+            Some(data) => {data}
+            None => {
+                let error = CommonErrors::provider_new(
+                    Some(url),
+                    Some("POST".to_string()),
+                    None,
+                    Some("The expected 'nonce' field was missing in the oidc4vp uri".to_string()),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
+
+        let response_uri = match parsed_uri.query_pairs().find(|(k, _)| k == "response_uri").map(|(_, v)| v.into_owned()) {
+            Some(data) => {data}
+            None => {
+                let error = CommonErrors::provider_new(
+                    Some(url),
+                    Some("POST".to_string()),
+                    None,
+                    Some("The expected 'response_uri' field was missing in the oidc4vp uri".to_string()),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
 
         let new_verification_model = auth_verification::NewModel {
             id: id.clone(),
@@ -286,14 +366,7 @@ where
                 model
             }
             Err(e) => {
-                let error = CommonErrors::DatabaseError {
-                    info: ErrorInfo {
-                        message: "Error saving the verification data into the database".to_string(),
-                        error_code: 1300,
-                        details: None,
-                    },
-                    cause: Some(e.to_string()),
-                };
+                let error = CommonErrors::database_new(Some(e.to_string()));
                 error.log();
                 bail!(error);
             }
@@ -307,27 +380,12 @@ where
         let mut interaction_model = match self.repo.interaction().get_by_id(&id).await {
             Ok(Some(model)) => model,
             Ok(None) => {
-                let error = CommonErrors::MissingError {
-                    info: ErrorInfo {
-                        message: format!("There is no process with id: {}", &id),
-                        error_code: 1600,
-                        details: None,
-                    },
-                    id: id.clone(),
-                    cause: None,
-                };
+                let error = CommonErrors::missing_resource_new(id.clone(), Some(format!("There is no process with id: {}", &id)));
                 error.log();
                 bail!(error);
             }
             Err(e) => {
-                let error = CommonErrors::DatabaseError {
-                    info: ErrorInfo {
-                        message: format!("Error retrieving the process with id: {}", &id),
-                        error_code: 1300,
-                        details: None,
-                    },
-                    cause: Some(e.to_string()),
-                };
+                let error = CommonErrors::database_new(Some(e.to_string()));
                 error.log();
                 bail!(error);
             }
@@ -339,14 +397,7 @@ where
         let upd_interaction_model = match self.repo.interaction().update(interaction_model).await {
             Ok(model) => model,
             Err(e) => {
-                let error = CommonErrors::DatabaseError {
-                    info: ErrorInfo {
-                        message: format!("Error updating the process with id: {}", &id),
-                        error_code: 1300,
-                        details: None,
-                    },
-                    cause: Some(e.to_string()),
-                };
+                let error = CommonErrors::database_new(Some(e.to_string()));
                 error.log();
                 bail!(error);
             }
@@ -356,8 +407,8 @@ where
         let hash_input = format!(
             "{}\n{}\n{}\n{}",
             upd_interaction_model.client_nonce,
-            upd_interaction_model.as_nonce.unwrap(),
-            upd_interaction_model.interact_ref.unwrap(),
+            upd_interaction_model.as_nonce.unwrap(), // EXPECTED ALWAYS
+            upd_interaction_model.interact_ref.unwrap(), // EXPECTED ALWAYS
             upd_interaction_model.grant_endpoint
         );
 
@@ -367,14 +418,8 @@ where
 
         let calculated_hash = URL_SAFE_NO_PAD.encode(result);
 
-        println!("{}", calculated_hash);
-        println!("{}", hash);
-
         if calculated_hash != hash {
-            let error = CommonErrors::InvalidError {
-                info: ErrorInfo { message: "Invalid hash".to_string(), error_code: 1700, details: None },
-                cause: Some("Hash does not match the calculated one".to_string()),
-            };
+            let error = AuthErrors::security_new(Some("Hash does not match the calculated one".to_string()));
             error.log();
             bail!(error);
         }
@@ -390,27 +435,12 @@ where
         let mut request_model = match self.repo.request().get_by_id(id.as_str()).await {
             Ok(Some(model)) => model,
             Ok(None) => {
-                let error = CommonErrors::MissingError {
-                    info: ErrorInfo {
-                        message: format!("There is no process with id: {}", &id),
-                        error_code: 1600,
-                        details: None,
-                    },
-                    id: id.clone(),
-                    cause: None,
-                };
+                let error = CommonErrors::missing_resource_new(id.clone(), Some(format!("There is no process with id: {}", &id)));
                 error.log();
                 bail!(error);
             }
             Err(e) => {
-                let error = CommonErrors::DatabaseError {
-                    info: ErrorInfo {
-                        message: format!("Error retrieving the process with id: {}", &id),
-                        error_code: 1300,
-                        details: None,
-                    },
-                    cause: Some(e.to_string()),
-                };
+                let error = CommonErrors::database_new(Some(e.to_string()));
                 error.log();
                 bail!(error);
             }
@@ -419,34 +449,19 @@ where
         let interact_model = match self.repo.interaction().get_by_id(id.as_str()).await {
             Ok(Some(model)) => model,
             Ok(None) => {
-                let error = CommonErrors::MissingError {
-                    info: ErrorInfo {
-                        message: format!("There is no process with id: {}", &id),
-                        error_code: 1600,
-                        details: None,
-                    },
-                    id: id.clone(),
-                    cause: None,
-                };
+                let error = CommonErrors::missing_resource_new(id.clone(), Some(format!("There is no process with id: {}", &id)));
                 error.log();
                 bail!(error);
             }
             Err(e) => {
-                let error = CommonErrors::DatabaseError {
-                    info: ErrorInfo {
-                        message: format!("Error retrieving the process with id: {}", &id),
-                        error_code: 1300,
-                        details: None,
-                    },
-                    cause: Some(e.to_string()),
-                };
+                let error = CommonErrors::database_new(Some(e.to_string()));
                 error.log();
                 bail!(error);
             }
         };
 
-        let url = interact_model.continue_endpoint.unwrap();
-        let token = format!("GNAP {}", interact_model.continue_token.unwrap());
+        let url = interact_model.continue_endpoint.unwrap(); // EXPECTED ALWAYS
+        let token = format!("GNAP {}", interact_model.continue_token.unwrap()); // EXPECTED ALWAYS
 
         let mut headers = HeaderMap::new();
         headers.insert(CONTENT_TYPE, "application/json".parse()?);
@@ -466,17 +481,7 @@ where
                     Some(code) => Some(code.as_u16()),
                     None => None,
                 };
-                let error = CommonErrors::PetitionError {
-                    info: ErrorInfo {
-                        message: "Error contacting the Provider".to_string(),
-                        error_code: 1000,
-                        details: None,
-                    },
-                    http_code,
-                    url,
-                    method: "POST".to_string(),
-                    cause: e.to_string(),
-                };
+                let error = CommonErrors::petition_new(url, "POST".to_string(), http_code, e.to_string());
                 error.log();
                 bail!(error);
             }
@@ -492,13 +497,7 @@ where
             _ => {
                 let http_code = Some(res.status().as_u16());
                 let error_res: GrantResponse = res.json().await?;
-                let error = AuthErrors::ProviderError {
-                    info: ErrorInfo { message: "Continue request failed".to_string(), error_code: 1400, details: None },
-                    http_code,
-                    url,
-                    method: "POST".to_string(),
-                    cause: error_res.error,
-                };
+                let error = CommonErrors::provider_new(Some(url), Some("POST".to_string()), http_code, error_res.error);
                 error.log();
                 bail!(error);
             }
@@ -510,14 +509,7 @@ where
         let upd_request_model = match self.repo.request().update(request_model).await {
             Ok(model) => model,
             Err(e) => {
-                let error = CommonErrors::DatabaseError {
-                    info: ErrorInfo {
-                        message: format!("Error updating process with id: {}", &id),
-                        error_code: 1300,
-                        details: None,
-                    },
-                    cause: Some(e.to_string()),
-                };
+                let error = CommonErrors::database_new(Some(e.to_string()));
                 error.log();
                 bail!(error);
             }
@@ -530,10 +522,7 @@ where
         match self.repo.mates().force_create(mate).await {
             Ok(model) => Ok(model),
             Err(e) => {
-                let error = CommonErrors::DatabaseError {
-                    info: ErrorInfo { message: "Error saving mate".to_string(), error_code: 1300, details: None },
-                    cause: Some(e.to_string()),
-                };
+                let error = CommonErrors::database_new(Some(e.to_string()));
                 error.log();
                 bail!(error);
             }
@@ -544,14 +533,24 @@ where
 
     async fn join_exchange(&self, exchange_url: String) -> anyhow::Result<String> {
         let wallet_session = self.wallet_session.lock().await;
-        if wallet_session.wallets.first().is_none() {
-            bail!("There is not a wallet registered")
+
+        let wallet = match wallet_session.wallets.first() {
+            Some(w) => w,
+            None => {
+                let error = CommonErrors::missing_action_new(
+                    "There is no wallet associated to this session".to_string(),
+                    MissingAction::Wallet,
+                    Some("There is no wallet to retrieve dids from".to_string()),
+                );
+                error.log();
+                bail!(error)
+            }
         };
 
         let url = format!(
             "{}/wallet-api/wallet/{}/exchange/resolvePresentationRequest",
             self.config.get_wallet_portal_url(),
-            wallet_session.wallets.first().unwrap().id
+            &wallet.id
         );
 
         let mut headers = HeaderMap::new();

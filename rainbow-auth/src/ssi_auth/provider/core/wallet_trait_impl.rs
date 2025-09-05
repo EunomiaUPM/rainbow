@@ -18,15 +18,17 @@
  */
 
 use super::Manager;
+use crate::ssi_auth::errors::AuthErrors;
 use crate::ssi_auth::provider::core::provider_trait::RainbowSSIAuthProviderManagerTrait;
 use crate::ssi_auth::types::{AuthJwtClaims, WalletInfoResponse, WalletLoginResponse};
 use anyhow::bail;
 use axum::async_trait;
 use axum::http::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
-use axum::http::HeaderMap;
+use axum::http::{HeaderMap, StatusCode};
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
 use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
+use rainbow_common::errors::helpers::{BadFormat, MissingAction};
 use rainbow_common::errors::{CommonErrors, ErrorInfo};
 use rainbow_common::ssi_wallet::{DidsInfo, RainbowSSIAuthWalletTrait};
 use rainbow_db::auth_provider::entities::{business_mates, mates};
@@ -61,17 +63,7 @@ where
                     Some(status) => Some(status.as_u16()),
                     None => None,
                 };
-                let error = CommonErrors::PetitionError {
-                    info: ErrorInfo {
-                        message: "Error contacting the wallet for registration".to_string(),
-                        error_code: 1000,
-                        details: None,
-                    },
-                    http_code,
-                    url,
-                    method: "POST".to_string(),
-                    cause: e.to_string(),
-                };
+                let error = CommonErrors::petition_new(url, "POST".to_string(), http_code, e.to_string());
                 error.log();
                 bail!(error);
             }
@@ -85,15 +77,12 @@ where
                 warn!("Wallet account has already registered");
             }
             _ => {
-                let error = CommonErrors::WalletError {
-                    info: ErrorInfo {
-                        message: "Wallet account registration failed".to_string(),
-                        error_code: 1100,
-                        details: None,
-                    },
-                    http_code: Some(res.status().as_u16()),
-                    cause: None,
-                };
+                let error = AuthErrors::wallet_new(
+                    url,
+                    "POST".to_string(),
+                    res.status().as_u16(),
+                    Some("Petition to register Wallet failed".to_string()),
+                );
                 error.log();
                 bail!(error);
             }
@@ -124,17 +113,7 @@ where
                     Some(status) => Some(status.as_u16()),
                     None => None,
                 };
-                let error = CommonErrors::PetitionError {
-                    info: ErrorInfo {
-                        message: "Error contacting the wallet for login".to_string(),
-                        error_code: 1000,
-                        details: None,
-                    },
-                    http_code,
-                    url,
-                    method: "POST".to_string(),
-                    cause: e.to_string(),
-                };
+                let error = CommonErrors::petition_new(url, "POST".to_string(), http_code, e.to_string());
                 error.log();
                 bail!(error);
             }
@@ -153,14 +132,10 @@ where
                 let jwt_parts: Vec<&str> = json_res.token.split('.').collect();
 
                 if jwt_parts.len() != 3 {
-                    let error = CommonErrors::FormatError {
-                        info: ErrorInfo {
-                            message: "The jwt does not have the correct format".to_string(),
-                            error_code: 1200,
-                            details: None,
-                        },
-                        cause: None,
-                    };
+                    let error = CommonErrors::format_new(
+                        BadFormat::Sent,
+                        Some("The jwt does not have the correct format".to_string()),
+                    );
                     error.log();
                     bail!(error);
                 }
@@ -174,11 +149,12 @@ where
                 Ok(())
             }
             _ => {
-                let error = CommonErrors::WalletError {
-                    info: ErrorInfo { message: "Wallet login failed".to_string(), error_code: 1100, details: None },
-                    http_code: Some(res.status().as_u16()),
-                    cause: None,
-                };
+                let error = AuthErrors::wallet_new(
+                    url,
+                    "POST".to_string(),
+                    res.status().as_u16(),
+                    Some("Petition to login into Wallet failed".to_string()),
+                );
                 error.log();
                 bail!(error);
             }
@@ -205,17 +181,7 @@ where
                     Some(status) => Some(status.as_u16()),
                     None => None,
                 };
-                let error = CommonErrors::PetitionError {
-                    info: ErrorInfo {
-                        message: "Error contacting the wallet for logout".to_string(),
-                        error_code: 1000,
-                        details: None,
-                    },
-                    http_code,
-                    url,
-                    method: "POST".to_string(),
-                    cause: e.to_string(),
-                };
+                let error = CommonErrors::petition_new(url, "POST".to_string(), http_code, e.to_string());
                 error.log();
                 bail!(error);
             }
@@ -228,11 +194,12 @@ where
                 wallet_session.token = None;
             }
             _ => {
-                let error = CommonErrors::WalletError {
-                    info: ErrorInfo { message: "Wallet logout failed".to_string(), error_code: 1100, details: None },
-                    http_code: Some(res.status().as_u16()),
-                    cause: None,
-                };
+                let error = AuthErrors::wallet_new(
+                    url,
+                    "POST".to_string(),
+                    res.status().as_u16(),
+                    Some("Petition to logout from Wallet failed".to_string()),
+                );
                 error.log();
                 bail!(error);
             }
@@ -255,15 +222,11 @@ where
         match &wallet_session.token {
             Some(token) => headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?),
             None => {
-                let error = CommonErrors::WalletError {
-                    info: ErrorInfo {
-                        message: "No token available for use into the wallet".to_string(),
-                        error_code: 1100,
-                        details: None,
-                    },
-                    http_code: None,
-                    cause: None,
-                };
+                let mut error = CommonErrors::missing_action_new(
+                    "Login is needed".to_string(),
+                    MissingAction::Token,
+                    Some("No token available for use into the wallet".to_string()),
+                );
                 error.log();
                 bail!(error);
             }
@@ -278,17 +241,7 @@ where
                     Some(status) => Some(status.as_u16()),
                     None => None,
                 };
-                let error = CommonErrors::PetitionError {
-                    info: ErrorInfo {
-                        message: "Error contacting the wallet for retrieving information".to_string(),
-                        error_code: 1000,
-                        details: None,
-                    },
-                    http_code,
-                    url,
-                    method: "GET".to_string(),
-                    cause: e.to_string(),
-                };
+                let error = CommonErrors::petition_new(url, "GET".to_string(), http_code, e.to_string());
                 error.log();
                 bail!(error);
             }
@@ -307,15 +260,12 @@ where
                 info!("Wallet data loaded successfully");
             }
             _ => {
-                let error = CommonErrors::WalletError {
-                    info: ErrorInfo {
-                        message: "Wallet information acquisition failed".to_string(),
-                        error_code: 1100,
-                        details: None,
-                    },
-                    http_code: Some(res.status().as_u16()),
-                    cause: None,
-                };
+                let error = AuthErrors::wallet_new(
+                    url,
+                    "GET".to_string(),
+                    res.status().as_u16(),
+                    Some("Petition to retrieve Wallet information failed".to_string()),
+                );
                 error.log();
                 bail!(error);
             }
@@ -328,24 +278,23 @@ where
         info!("Retrieving dids from Wallet");
         let mut wallet_session = self.wallet_session.lock().await;
 
-        if wallet_session.wallets.first().is_none() {
-            let error = CommonErrors::WalletError {
-                info: ErrorInfo {
-                    message: "There is no wallet to retrieve dids from".to_string(),
-                    error_code: 1100,
-                    details: None,
-                },
-                http_code: None,
-                cause: None,
-            };
-            error.log();
-            bail!(error);
+        let wallet = match wallet_session.wallets.first() {
+            Some(w) => w,
+            None => {
+                let error = CommonErrors::missing_action_new(
+                    "There is no wallet associated to this session".to_string(),
+                    MissingAction::Wallet,
+                    Some("There is no wallet to retrieve dids from".to_string()),
+                );
+                error.log();
+                bail!(error)
+            }
         };
 
         let url = format!(
             "{}/wallet-api/wallet/{}/dids",
             self.config.get_wallet_portal_url(),
-            &wallet_session.wallets.first().unwrap().id
+            &wallet.id
         );
 
         let mut headers = HeaderMap::new();
@@ -355,15 +304,11 @@ where
         match &wallet_session.token {
             Some(token) => headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?),
             None => {
-                let error = CommonErrors::WalletError {
-                    info: ErrorInfo {
-                        message: "No token available for use into the wallet".to_string(),
-                        error_code: 1100,
-                        details: None,
-                    },
-                    http_code: None,
-                    cause: None,
-                };
+                let error = CommonErrors::missing_action_new(
+                    "There is no token associated to this session".to_string(),
+                    MissingAction::Token,
+                    Some("There is no token available for use".to_string()),
+                );
                 error.log();
                 bail!(error);
             }
@@ -378,17 +323,7 @@ where
                     Some(status) => Some(status.as_u16()),
                     None => None,
                 };
-                let error = CommonErrors::PetitionError {
-                    info: ErrorInfo {
-                        message: "Error contacting the wallet for retrieving dids".to_string(),
-                        error_code: 1000,
-                        details: None,
-                    },
-                    http_code,
-                    url,
-                    method: "GET".to_string(),
-                    cause: e.to_string(),
-                };
+                let error = CommonErrors::petition_new(url, "GET".to_string(), http_code, e.to_string());
                 error.log();
                 bail!(error);
             }
@@ -414,15 +349,12 @@ where
                 info!("Wallet Dids data loaded successfully");
             }
             _ => {
-                let error = CommonErrors::WalletError {
-                    info: ErrorInfo {
-                        message: "Wallet dids acquisition failed".to_string(),
-                        error_code: 1100,
-                        details: None,
-                    },
-                    http_code: Some(res.status().as_u16()),
-                    cause: None,
-                };
+                let error = AuthErrors::wallet_new(
+                    url,
+                    "GET".to_string(),
+                    res.status().as_u16(),
+                    Some("Petition to retrieve Wallet DIDs failed".to_string()),
+                );
                 error.log();
                 bail!(error);
             }
@@ -446,7 +378,31 @@ where
 
         let mut wallet_session = self.wallet_session.lock().await;
 
-        let did = wallet_session.wallets.first().unwrap().dids.clone().unwrap().first().unwrap().did.clone();
+        let wallet = match wallet_session.wallets.first() {
+            Some(w) => w,
+            None => {
+                let error = CommonErrors::missing_action_new(
+                    "There is no wallet associated to this session".to_string(),
+                    MissingAction::Wallet,
+                    Some("There is no wallet to retrieve dids from".to_string()),
+                );
+                error.log();
+                bail!(error)
+            }
+        };
+
+        let did = match wallet.dids.as_ref().and_then(|d| d.first()) {
+            Some(did_entry) => did_entry.did.clone(),
+            None => {
+                let error = CommonErrors::missing_action_new(
+                    "A DID is needed".to_string(),
+                    MissingAction::Did,
+                    Some("No DIDs found in wallet".to_string()),
+                );
+                error.log();
+                bail!(error)
+            }
+        };
 
         let model = mates::NewModel {
             participant_id: did.clone(),
@@ -476,15 +432,7 @@ where
                 Ok(false)
             }
             None => {
-                let error = CommonErrors::WalletError {
-                    info: ErrorInfo {
-                        message: "No token available for use into the wallet".to_string(),
-                        error_code: 1100,
-                        details: None,
-                    },
-                    http_code: None,
-                    cause: None,
-                };
+                let error = CommonErrors::unauthorized_new(Some("There is no token".to_string()));
                 error.log();
                 bail!(error);
             }
@@ -516,27 +464,33 @@ where
         info!("Retrieving did");
         let wallet_session = self.wallet_session.lock().await;
 
-        match wallet_session.wallets.first() {
-            Some(wallet) => {
-                let dids = wallet.clone().dids.unwrap();
-                let did = dids.first().unwrap();
-                let did_doc = did.clone().document;
-                let json: Value = serde_json::from_str(&did_doc)?;
-                Ok(json)
-            }
+        let wallet = match wallet_session.wallets.first() {
+            Some(w) => w,
             None => {
-                let error = CommonErrors::WalletError {
-                    info: ErrorInfo {
-                        message: "There is no wallet to retrieve dids from".to_string(),
-                        error_code: 1100,
-                        details: None,
-                    },
-                    http_code: None,
-                    cause: None,
-                };
+                let error = CommonErrors::missing_action_new(
+                    "There is no wallet associated to this session".to_string(),
+                    MissingAction::Wallet,
+                    Some("There is no wallet to retrieve dids from".to_string()),
+                );
                 error.log();
-                bail!(error);
+                bail!(error)
             }
-        }
+        };
+
+        let did = match wallet.dids.as_ref().and_then(|d| d.first()) {
+            Some(did_entry) => did_entry.clone().document,
+            None => {
+                let error = CommonErrors::missing_action_new(
+                    "A DID is needed".to_string(),
+                    MissingAction::Did,
+                    Some("No DIDs found in wallet".to_string()),
+                );
+                error.log();
+                bail!(error)
+            }
+        };
+
+        let json: Value = serde_json::from_str(did.as_str())?;
+        Ok(json)
     }
 }

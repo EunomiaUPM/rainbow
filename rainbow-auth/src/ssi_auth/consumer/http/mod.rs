@@ -120,7 +120,10 @@ where
 
     async fn didweb(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
         info!("GET /did.json");
-        Json(manager.didweb().await.unwrap())
+        match manager.didweb().await {
+            Ok(did) => Json(did).into_response(),
+            Err(e) => e.to_response(),
+        }
     }
 
     // DATASPACE PROVIDER ------------------------------------------------------------------------->
@@ -135,7 +138,7 @@ where
             Ok(uri) => uri,
             Err(e) => return e.to_response(),
         };
-        println!("{}", uri);
+        info!("{}", uri);
         uri.into_response()
     }
 

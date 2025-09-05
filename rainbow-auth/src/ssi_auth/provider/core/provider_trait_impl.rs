@@ -31,9 +31,9 @@ use jsonwebtoken::jwk::Jwk;
 use jsonwebtoken::Validation;
 use rainbow_common::auth::gnap::{GrantRequest, GrantResponse};
 use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
+use rainbow_common::errors::helpers::{BadFormat, MissingAction};
 use rainbow_common::errors::{CommonErrors, ErrorInfo};
 use rainbow_common::ssi_wallet::ClientConfig;
-use rainbow_db::auth_provider::entities::mates::Model;
 use rainbow_db::auth_provider::entities::{
     auth_interaction, auth_request, auth_token_requirements, auth_verification, business_mates, mates,
 };
@@ -54,7 +54,7 @@ where
     async fn generate_uri(&self, ver_model: auth_verification::Model) -> anyhow::Result<String> {
         info!("Generating verification exchange URI");
 
-        let provider_url = self.config.get_ssi_auth_host_url().unwrap(); // TODO fix docker internal
+        let provider_url = self.config.get_ssi_auth_host_url().unwrap(); // ALWAYS EXPECTED TODO fix docker internal
         let provider_url = provider_url.replace("127.0.0.1", "host.docker.internal");
         let provider_url = format!("{}/api/v1", provider_url);
 
@@ -84,34 +84,25 @@ where
         let interact = match payload.interact {
             Some(model) => model,
             None => {
-                let error = CommonErrors::FormatError {
-                    // TODO
-                    info: ErrorInfo {
-                        message: "There is no interact method in the request".to_string(),
-                        error_code: 1200,
-                        details: None,
-                    },
-                    cause: None,
-                };
+                let error = CommonErrors::not_impl_new(
+                    "Only petitions with an 'interact field' are supported right now".to_string(),
+                    Some("Only petitions with an 'interact field' are supported right now".to_string()),
+                );
                 error.log();
                 bail!(error);
             }
         };
 
         if !&interact.start.contains(&"oidc4vp".to_string()) {
-            let error = CommonErrors::FormatError {
-                info: ErrorInfo {
-                    message: "Interact method not supported".to_string(),
-                    error_code: 1200,
-                    details: None,
-                },
-                cause: None,
-            };
+            let error = CommonErrors::not_impl_new(
+                "Interact method not supported yet".to_string(),
+                Some("Interact method not supported yet".to_string()),
+            );
             error.log();
             bail!(error);
         }
 
-        let mut provider_url = self.config.get_ssi_auth_host_url().unwrap(); // TODO fix docker internal
+        let mut provider_url = self.config.get_ssi_auth_host_url().unwrap(); //  EXPECTED ALWAYS TODO fix docker internal
         let provider_url = provider_url.replace("127.0.0.1", "host.docker.internal");
         let provider_url = format!("{}/api/v1", provider_url);
 
@@ -119,7 +110,7 @@ where
 
         let grant_endpoint = format!(
             "{}/api/v1/access",
-            self.config.get_ssi_auth_host_url().unwrap()
+            self.config.get_ssi_auth_host_url().unwrap() // EXPECTED ALWAYS
         );
 
         let id = uuid::Uuid::new_v4().to_string();
@@ -134,14 +125,7 @@ where
                 model
             }
             Err(e) => {
-                let error = CommonErrors::DatabaseError {
-                    info: ErrorInfo {
-                        message: "Error saving the authentication request into the database".to_string(),
-                        error_code: 1300,
-                        details: None,
-                    },
-                    cause: Some(e.to_string()),
-                };
+                let error = CommonErrors::database_new(Some(e.to_string()));
                 error.log();
                 bail!(error);
             }
@@ -149,14 +133,14 @@ where
 
         let continue_endpoint = format!(
             "{}/api/v1/continue",
-            self.config.get_ssi_auth_host_url().unwrap()
+            self.config.get_ssi_auth_host_url().unwrap() // EXPECTED ALWAYS
         );
         let continue_token = create_opaque_token();
         let new_interaction_model = auth_interaction::NewModel {
             id: id.clone(),
             start: interact.start,
             method: interact.finish.method,
-            uri: interact.finish.uri.unwrap(),
+            uri: interact.finish.uri.unwrap(), // EXPECTED ALWAYS
             client_nonce: interact.finish.nonce,
             hash_method: interact.finish.hash_method,
             hints: interact.hints,
@@ -171,14 +155,7 @@ where
                 model
             }
             Err(e) => {
-                let error = CommonErrors::DatabaseError {
-                    info: ErrorInfo {
-                        message: "Error saving the authentication interaction into the database".to_string(),
-                        error_code: 1300,
-                        details: None,
-                    },
-                    cause: Some(e.to_string()),
-                };
+                let error = CommonErrors::database_new(Some(e.to_string()));
                 error.log();
                 bail!(error);
             }
@@ -202,14 +179,7 @@ where
                 model
             }
             Err(e) => {
-                let error = CommonErrors::DatabaseError {
-                    info: ErrorInfo {
-                        message: "Error saving the token requirements into the database".to_string(),
-                        error_code: 1300,
-                        details: None,
-                    },
-                    cause: Some(e.to_string()),
-                };
+                let error = CommonErrors::database_new(Some(e.to_string()));
                 error.log();
                 bail!(error);
             }
@@ -223,14 +193,7 @@ where
                 model
             }
             Err(e) => {
-                let error = CommonErrors::DatabaseError {
-                    info: ErrorInfo {
-                        message: "Error saving the verification data into the database".to_string(),
-                        error_code: 1300,
-                        details: None,
-                    },
-                    cause: Some(e.to_string()),
-                };
+                let error = CommonErrors::database_new(Some(e.to_string()));
                 error.log();
                 bail!(error);
             }
@@ -258,52 +221,34 @@ where
         let int_model = match self.repo.interaction().get_by_cont_id(cont_id.as_str()).await {
             Ok(Some(model)) => model,
             Ok(None) => {
-                let error = CommonErrors::MissingError {
-                    info: ErrorInfo {
-                        message: format!("There is no process with cont_id: {}", &cont_id),
-                        error_code: 1600,
-                        details: None,
-                    },
-                    id: cont_id,
-                    cause: None,
-                };
+                let error = CommonErrors::missing_resource_new(
+                    cont_id.to_string(),
+                    Some(format!("There is no process with cont_id: {}", &cont_id)),
+                );
                 error.log();
                 bail!(error);
             }
             Err(e) => {
-                let error = CommonErrors::DatabaseError {
-                    info: ErrorInfo {
-                        message: format!("Error retrieving the process with cont_id: {}", &cont_id),
-                        error_code: 1300,
-                        details: None,
-                    },
-                    cause: Some(e.to_string()),
-                };
+                let error = CommonErrors::database_new(Some(e.to_string()));
                 error.log();
                 bail!(error);
             }
         };
 
         if interact_ref != int_model.interact_ref {
-            let error = CommonErrors::InvalidError {
-                info: ErrorInfo { message: "Invalid petition".to_string(), error_code: 1300, details: None },
-                cause: Some(format!(
-                    "Interact reference '{}' does not match '{}'",
-                    interact_ref, int_model.interact_ref
-                )),
-            };
+            let error = AuthErrors::security_new(Some(format!(
+                "Interact reference '{}' does not match '{}'",
+                interact_ref, int_model.interact_ref
+            )));
             error.log();
             bail!(error);
         }
 
         if token != int_model.continue_token {
-            let error = CommonErrors::InvalidError {
-                info: ErrorInfo { message: "Invalid petition".to_string(), error_code: 1300, details: None },
-                cause: Some(format!(
-                    "Token '{}' does not match '{}'",
-                    token, int_model.continue_token
-                )),
-            };
+            let error = AuthErrors::security_new(Some(format!(
+                "Token '{}' does not match '{}'",
+                token, int_model.continue_token
+            )));
             error.log();
             bail!(error);
         }
@@ -315,27 +260,15 @@ where
         let mut request_model = match self.repo.request().get_by_id(id.as_str()).await {
             Ok(Some(model)) => model,
             Ok(None) => {
-                let error = CommonErrors::MissingError {
-                    info: ErrorInfo {
-                        message: format!("There is no process with id: {}", &id),
-                        error_code: 1600,
-                        details: None,
-                    },
-                    id,
-                    cause: None,
-                };
+                let error = CommonErrors::missing_resource_new(
+                    id.clone(),
+                    Some(format!("There is no process with cont_id: {}", &id)),
+                );
                 error.log();
                 bail!(error);
             }
             Err(e) => {
-                let error = CommonErrors::DatabaseError {
-                    info: ErrorInfo {
-                        message: format!("Error retrieving the process with id: {}", &id),
-                        error_code: 1300,
-                        details: None,
-                    },
-                    cause: Some(e.to_string()),
-                };
+                let error = CommonErrors::database_new(Some(e.to_string()));
                 error.log();
                 bail!(error);
             }
@@ -348,14 +281,7 @@ where
         let new_request_model = match self.repo.request().update(request_model).await {
             Ok(model) => model,
             Err(e) => {
-                let error = CommonErrors::DatabaseError {
-                    info: ErrorInfo {
-                        message: format!("Error updating process with id: {}", &id),
-                        error_code: 1300,
-                        details: None,
-                    },
-                    cause: Some(e.to_string()),
-                };
+                let error = CommonErrors::database_new(Some(e.to_string()));
                 error.log();
                 bail!(error);
             }
@@ -372,7 +298,7 @@ where
                     format!(
                         "{}://{}:{}",
                         parsed_url.scheme(),
-                        parsed_url.host_str().unwrap(),
+                        parsed_url.host_str().unwrap(), // EXPECTED ALWAYS
                         port
                     )
                 }
@@ -380,15 +306,15 @@ where
                     format!(
                         "{}://{}",
                         parsed_url.scheme(),
-                        parsed_url.host_str().unwrap()
+                        parsed_url.host_str().unwrap() // EXPECTED ALWAYS
                     )
                 }
             },
             Err(e) => {
-                let error = CommonErrors::FormatError {
-                    info: ErrorInfo { message: "Error parsing the url".to_string(), error_code: 1200, details: None },
-                    cause: Some(format!("Error parsing the url -> {}", e)),
-                };
+                let error = CommonErrors::format_new(
+                    BadFormat::Unknown,
+                    Some(format!("Error parsing the url -> {}", e.to_string())),
+                );
                 error.log();
                 bail!(error);
             }
@@ -406,27 +332,15 @@ where
         let ver_model = match self.repo.verification().get_by_id(id.as_str()).await {
             Ok(Some(model)) => model,
             Ok(None) => {
-                let error = CommonErrors::MissingError {
-                    info: ErrorInfo {
-                        message: format!("There is no process with id: {}", &id),
-                        error_code: 1600,
-                        details: None,
-                    },
-                    id: id,
-                    cause: None,
-                };
+                let error = CommonErrors::missing_resource_new(
+                    id.clone(),
+                    Some(format!("There is no process with id: {}", &id)),
+                );
                 error.log();
                 bail!(error);
             }
             Err(e) => {
-                let error = CommonErrors::DatabaseError {
-                    info: ErrorInfo {
-                        message: format!("Error retrieving the process with id: {}", &id),
-                        error_code: 1300,
-                        details: None,
-                    },
-                    cause: Some(e.to_string()),
-                };
+                let error = CommonErrors::database_new(Some(e.to_string()));
                 error.log();
                 bail!(error);
             }
@@ -434,7 +348,7 @@ where
 
         let base_url = Some(trim_4_base(int_model.uri.as_str()));
         let mate = mates::NewModel {
-            participant_id: ver_model.holder.unwrap(),
+            participant_id: ver_model.holder.unwrap(), // EXPECTED ALWAYS
             participant_slug: req_model.consumer_id,
             participant_type: "Consumer".to_string(),
             base_url,
@@ -448,10 +362,7 @@ where
         match self.repo.mates().force_create(mate).await {
             Ok(model) => Ok(model),
             Err(e) => {
-                let error = CommonErrors::DatabaseError {
-                    info: ErrorInfo { message: format!("Error saving mate"), error_code: 1300, details: None },
-                    cause: Some(e.to_string()),
-                };
+                let error = CommonErrors::database_new(Some(e.to_string()));
                 error.log();
                 bail!(error);
             }
@@ -462,27 +373,15 @@ where
         let model = match self.repo.verification().get_by_state(state.as_str()).await {
             Ok(Some(model)) => model,
             Ok(None) => {
-                let error = CommonErrors::MissingError {
-                    info: ErrorInfo {
-                        message: format!("There is no process with state: {}", &state),
-                        error_code: 1600,
-                        details: None,
-                    },
-                    id: state,
-                    cause: None,
-                };
+                let error = CommonErrors::missing_resource_new(
+                    state.clone(),
+                    Some(format!("There is no process with state: {}", &state)),
+                );
                 error.log();
                 bail!(error);
             }
             Err(e) => {
-                let error = CommonErrors::DatabaseError {
-                    info: ErrorInfo {
-                        message: format!("Error retrieving the process with state: {}", &state),
-                        error_code: 1300,
-                        details: None,
-                    },
-                    cause: Some(e.to_string()),
-                };
+                let error = CommonErrors::database_new(Some(e.to_string()));
                 error.log();
                 bail!(error);
             }
@@ -522,27 +421,15 @@ where
         let verification_model = match self.repo.verification().get_by_state(state.as_str()).await {
             Ok(Some(model)) => model,
             Ok(None) => {
-                let error = CommonErrors::MissingError {
-                    info: ErrorInfo {
-                        message: format!("There is no process with state: {}", &state),
-                        error_code: 1600,
-                        details: None,
-                    },
-                    id: state,
-                    cause: None,
-                };
+                let error = CommonErrors::missing_resource_new(
+                    state.clone(),
+                    Some(format!("There is no process with state: {}", &state)),
+                );
                 error.log();
                 bail!(error);
             }
             Err(e) => {
-                let error = CommonErrors::DatabaseError {
-                    info: ErrorInfo {
-                        message: format!("Error retrieving the process with state: {}", &state),
-                        error_code: 1300,
-                        details: None,
-                    },
-                    cause: Some(e.to_string()),
-                };
+                let error = CommonErrors::database_new(Some(e.to_string()));
                 error.log();
                 bail!(error);
             }
@@ -551,10 +438,36 @@ where
         let (vcts, holder) = match self.verify_vp(verification_model.clone(), vp_token).await {
             Ok((vcts, holder)) => (vcts, holder),
             Err(e) => {
-                let mut new_model = self.repo.verification().get_by_id(verification_model.id.as_str()).await?.unwrap();
+                let mut new_model = match self.repo.verification().get_by_id(verification_model.id.as_str()).await {
+                    Ok(Some(model)) => model,
+                    Ok(None) => {
+                        let error = CommonErrors::missing_resource_new(
+                            verification_model.id.clone(),
+                            Some(format!(
+                                "There is no process with id: {}",
+                                &verification_model.id
+                            )),
+                        );
+                        error.log();
+                        bail!(error);
+                    }
+                    Err(e) => {
+                        let error = CommonErrors::database_new(Some(e.to_string()));
+                        error.log();
+                        bail!(error);
+                    }
+                };
+
                 new_model.success = Some(false);
                 new_model.ended_at = Some(Utc::now().naive_utc());
-                self.repo.verification().update(new_model).await?;
+                match self.repo.verification().update(new_model).await {
+                    Ok(_) => {}
+                    Err(e) => {
+                        let error = CommonErrors::database_new(Some(e.to_string()));
+                        error.log();
+                        bail!(error);
+                    }
+                };
                 bail!(e)
             }
         };
@@ -563,11 +476,35 @@ where
             match self.verify_vc(cred, holder.clone()).await {
                 Ok(()) => {}
                 Err(e) => {
-                    let mut new_model =
-                        self.repo.verification().get_by_id(verification_model.id.as_str()).await?.unwrap();
+                    let mut new_model = match self.repo.verification().get_by_id(verification_model.id.as_str()).await {
+                        Ok(Some(model)) => model,
+                        Ok(None) => {
+                            let error = CommonErrors::missing_resource_new(
+                                verification_model.id.clone(),
+                                Some(format!(
+                                    "There is no process with id: {}",
+                                    &verification_model.id
+                                )),
+                            );
+                            error.log();
+                            bail!(error);
+                        }
+                        Err(e) => {
+                            let error = CommonErrors::database_new(Some(e.to_string()));
+                            error.log();
+                            bail!(error);
+                        }
+                    };
                     new_model.success = Some(false);
                     new_model.ended_at = Some(Utc::now().naive_utc());
-                    self.repo.verification().update(new_model).await?;
+                    match self.repo.verification().update(new_model).await {
+                        Ok(_) => {}
+                        Err(e) => {
+                            let error = CommonErrors::database_new(Some(e.to_string()));
+                            error.log();
+                            bail!(error);
+                        }
+                    };
                     bail!(e)
                 }
             }
@@ -583,14 +520,7 @@ where
         match self.repo.request().update(new_request_model).await {
             Ok(model) => model,
             Err(e) => {
-                let error = CommonErrors::DatabaseError {
-                    info: ErrorInfo {
-                        message: format!("Error updating process with id: {}", &verification_model.id),
-                        error_code: 1300,
-                        details: None,
-                    },
-                    cause: Some(e.to_string()),
-                };
+                let error = CommonErrors::database_new(Some(e.to_string()));
                 error.log();
                 bail!(error);
             }
@@ -598,14 +528,7 @@ where
         match self.repo.verification().update(new_ver_model).await {
             Ok(model) => model,
             Err(e) => {
-                let error = CommonErrors::DatabaseError {
-                    info: ErrorInfo {
-                        message: format!("Error updating process with id: {}", &verification_model.id),
-                        error_code: 1300,
-                        details: None,
-                    },
-                    cause: Some(e.to_string()),
-                };
+                let error = CommonErrors::database_new(Some(e.to_string()));
                 error.log();
                 bail!(error);
             }
@@ -621,7 +544,17 @@ where
     ) -> anyhow::Result<(Vec<String>, String)> {
         info!("Verifying VP");
         let header = jsonwebtoken::decode_header(&vp_token)?;
-        let kid_str = header.kid.as_ref().unwrap();
+        let kid_str = match header.kid.as_ref() {
+            Some(data) => data,
+            None => {
+                let error = CommonErrors::format_new(
+                    BadFormat::Received,
+                    Some("Jwt does not contain a token".to_string()),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
         // let (kid, kid_id) = split_did(kid_str.as_str()); // TODO KID_ID
         let (kid, _) = split_did(kid_str.as_str()); // TODO KID_ID
         let alg = header.alg;
@@ -632,7 +565,7 @@ where
         let key = jsonwebtoken::DecodingKey::from_jwk(&jwk)?;
         let mut audience = format!(
             "{}/api/v1/verify/{}",
-            self.config.get_ssi_auth_host_url().unwrap(),
+            self.config.get_ssi_auth_host_url().unwrap(), // EXPECTED ALWAYS
             &model.state
         );
         audience = audience.replace("127.0.0.1", "host.docker.internal"); // TODO fix docker
@@ -648,14 +581,10 @@ where
         let token = match jsonwebtoken::decode::<Value>(&vp_token, &key, &val) {
             Ok(token) => token,
             Err(e) => {
-                let error = CommonErrors::InvalidError {
-                    info: ErrorInfo {
-                        message: "VPT token signature is incorrect".to_string(),
-                        error_code: 1700,
-                        details: None,
-                    },
-                    cause: Some(e.to_string()),
-                };
+                let error = AuthErrors::security_new(Some(format!(
+                    "VPT signature is incorrect -> {}",
+                    e.to_string()
+                )));
                 error.log();
                 bail!(error);
             }
@@ -663,37 +592,70 @@ where
 
         info!("VPT token signature is correct");
 
-        let id = token.claims["jti"].as_str().unwrap();
-        let nonce = token.claims["nonce"].as_str().unwrap();
+        // let id = match token.claims["jti"].as_str() {
+        //     Some(data) => data,
+        //     None => {
+        //         let error = CommonErrors::format_new(
+        //             BadFormat::Received,
+        //             Some("VPT does not contain the 'jti' field".to_string()),
+        //         );
+        //         error.log();
+        //         bail!(error);
+        //     }
+        // };
+        let nonce = match token.claims["nonce"].as_str() {
+            Some(data) => data,
+            None => {
+                let error = CommonErrors::format_new(
+                    BadFormat::Received,
+                    Some("VPT does not contain the 'nonce' field".to_string()),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
 
-        if token.claims["sub"].as_str().unwrap() != token.claims["iss"].as_str().unwrap()
-            || token.claims["iss"].as_str().unwrap() != kid
-        {
+        let sub = match token.claims["sub"].as_str() {
+            Some(data) => data,
+            None => {
+                let error = CommonErrors::format_new(
+                    BadFormat::Received,
+                    Some("VPT does not contain the 'sub' field".to_string()),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
+        let iss = match token.claims["iss"].as_str() {
+            Some(data) => data,
+            None => {
+                let error = CommonErrors::format_new(
+                    BadFormat::Received,
+                    Some("VPT does not contain the 'iss' field".to_string()),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
+
+        if sub != iss || iss != kid {
             // VALIDATE HOLDER 1
-            let error = CommonErrors::InvalidError {
-                info: ErrorInfo { message: "VPT token  is incorrect".to_string(), error_code: 1700, details: None },
-                cause: Some("VPT token issuer, subject & kid does not match".to_string()),
-            };
+            let error = AuthErrors::security_new(Some(
+                "VPT token issuer, subject & kid does not match".to_string(),
+            ));
             error.log();
             bail!(error);
         }
         info!("VPT issuer, subject & kid matches");
 
         let mut model = model.clone();
-        model.holder = Some(token.claims["sub"].as_str().unwrap().to_string());
+        model.holder = Some(sub.to_string());
         model.vpt = Some(vp_token);
 
         let new_model = match self.repo.verification().update(model).await {
             Ok(model) => model,
             Err(e) => {
-                let error = CommonErrors::DatabaseError {
-                    info: ErrorInfo {
-                        message: format!("Error updating process with id: {}", &id),
-                        error_code: 1300,
-                        details: None,
-                    },
-                    cause: Some(e.to_string()),
-                };
+                let error = CommonErrors::database_new(Some(e.to_string()));
                 error.log();
                 bail!(error);
             }
@@ -701,43 +663,45 @@ where
 
         if new_model.nonce != nonce {
             // VALIDATE NONCE
-            let error = CommonErrors::InvalidError {
-                info: ErrorInfo {
-                    message: "VPT token signature is incorrect".to_string(),
-                    error_code: 1700,
-                    details: None,
-                },
-                cause: Some("Invalid nonce, it does not match".to_string()),
-            };
+            let error = AuthErrors::security_new(Some("Invalid nonce, it does not match".to_string()));
             error.log();
             bail!(error);
         }
         info!("VPT Nonce matches");
 
-        if new_model.id != token.claims["vp"]["id"].as_str().unwrap() {
+        let vp_id = match token.claims["vp"]["id"].as_str() {
+            Some(data) => data,
+            None => {
+                let error = CommonErrors::format_new(
+                    BadFormat::Received,
+                    Some("VPT does not contain the 'vp_id' field".to_string()),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
+        if new_model.id != vp_id {
             // VALIDATE ID MATCHES JTI
-            let error = CommonErrors::InvalidError {
-                info: ErrorInfo {
-                    message: "VPT token signature is incorrect".to_string(),
-                    error_code: 1700,
-                    details: None,
-                },
-                cause: Some("Invalid id, it does not match".to_string()),
-            };
+            let error = AuthErrors::security_new(Some("Invalid id, it does not match".to_string()));
             error.log();
             bail!(error);
         }
         info!("Exchange is valid");
 
-        if new_model.holder.unwrap() != token.claims["vp"]["holder"].as_str().unwrap() {
-            let error = CommonErrors::InvalidError {
-                info: ErrorInfo {
-                    message: "VPT token signature is incorrect".to_string(),
-                    error_code: 1700,
-                    details: None,
-                },
-                cause: Some("VP id does not match sub & issuer".to_string()),
-            };
+        let vp_holder = match token.claims["vp"]["holder"].as_str() {
+            Some(data) => data,
+            None => {
+                let error = CommonErrors::format_new(
+                    BadFormat::Received,
+                    Some("VPT does not contain the 'vp_holder' field".to_string()),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
+        if new_model.holder.unwrap() != vp_holder {
+            // EXPECTED ALWAYS
+            let error = AuthErrors::security_new(Some("Invalid holder, it does not match".to_string()));
             error.log();
             bail!(error);
         }
@@ -745,19 +709,15 @@ where
         info!("VP Verification successful");
 
         let vct: Vec<String> = match serde_json::from_value(token.claims["vp"]["verifiableCredential"].clone()) {
-            Ok(vc) => vc,
+            Ok(data) => data,
             Err(e) => {
-                let error = CommonErrors::InvalidError {
-                    info: ErrorInfo {
-                        message: "VPT token signature is incorrect".to_string(),
-                        error_code: 1700,
-                        details: None,
-                    },
-                    cause: Some(format!(
-                        "VPresentation is based on a nonexistent credential -> {}",
+                let error = CommonErrors::format_new(
+                    BadFormat::Received,
+                    Some(format!(
+                        "VPT does not contain the 'verifiableCredential' field -> {}",
                         e.to_string()
                     )),
-                };
+                );
                 error.log();
                 bail!(error);
             }
@@ -768,13 +728,23 @@ where
     async fn verify_vc(&self, vc_token: String, vp_holder: String) -> anyhow::Result<()> {
         info!("Verifying VC");
         let header = jsonwebtoken::decode_header(&vc_token)?;
-        let kid_str = header.kid.as_ref().unwrap();
+        let kid_str = match header.kid.as_ref() {
+            Some(data) => data,
+            None => {
+                let error = CommonErrors::format_new(
+                    BadFormat::Received,
+                    Some("Jwt does not contain a token".to_string()),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
         // let (kid, kid_id) = split_did(kid_str.as_str()); // TODO KID_ID
         let (kid, _) = split_did(kid_str.as_str()); // TODO KID_ID
         let alg = header.alg;
 
         let vec = URL_SAFE_NO_PAD.decode(&(kid.replace("did:jwk:", "")))?; // TODO
-        let mut jwk: Jwk = serde_json::from_slice(&vec)?;
+        let jwk: Jwk = serde_json::from_slice(&vec)?;
 
         let key = jsonwebtoken::DecodingKey::from_jwk(&jwk)?;
 
@@ -787,14 +757,7 @@ where
         let token = match jsonwebtoken::decode::<Value>(&vc_token, &key, &val) {
             Ok(token) => token,
             Err(e) => {
-                let error = CommonErrors::InvalidError {
-                    info: ErrorInfo {
-                        message: "VPT token signature is incorrect".to_string(),
-                        error_code: 1700,
-                        details: None,
-                    },
-                    cause: Some(e.to_string()),
-                };
+                let error = CommonErrors::format_new(BadFormat::Received, Some(e.to_string()));
                 error.log();
                 bail!(error);
             }
@@ -802,16 +765,25 @@ where
 
         info!("VCT token signature is correct");
 
-        if token.claims["iss"].as_str().unwrap() != kid || kid != token.claims["vc"]["issuer"]["id"].as_str().unwrap() {
+        let iss = match token.claims["iss"].as_str() {
+            Some(data) => data,
+            None => {
+                let error = CommonErrors::format_new(BadFormat::Received, Some("No issuer in the vc".to_string()));
+                error.log();
+                bail!(error);
+            }
+        };
+        let vc_iss_id = match token.claims["vc"]["issuer"]["id"].as_str() {
+            Some(data) => data,
+            None => {
+                let error = CommonErrors::format_new(BadFormat::Received, Some("No issuer id in the vc".to_string()));
+                error.log();
+                bail!(error);
+            }
+        };
+        if iss != kid || kid != vc_iss_id {
             // VALIDATE IF ISSUER IS THE SAME AS KID
-            let error = CommonErrors::InvalidError {
-                info: ErrorInfo {
-                    message: "VPT token signature is incorrect".to_string(),
-                    error_code: 1700,
-                    details: None,
-                },
-                cause: Some("VCT token issuer & kid does not match".to_string()),
-            };
+            let error = AuthErrors::security_new(Some("VCT token issuer & kid does not match".to_string()));
             error.log();
             bail!(error);
         }
@@ -824,66 +796,105 @@ where
         // }
         // info!("VCT issuer is on the trusted issuers list");
 
-        if token.claims["sub"].as_str().unwrap() != &vp_holder
-            || &vp_holder != token.claims["vc"]["credentialSubject"]["id"].as_str().unwrap()
-        {
-            let error = CommonErrors::InvalidError {
-                info: ErrorInfo {
-                    message: "VPT token signature is incorrect".to_string(),
-                    error_code: 1700,
-                    details: None,
-                },
-                cause: Some("VCT token sub, credential subject & VP Holder do not match".to_string()),
-            };
+        let sub = match token.claims["sub"].as_str() {
+            Some(data) => data,
+            None => {
+                let error = CommonErrors::format_new(BadFormat::Received, Some("No sub field in the vc".to_string()));
+                error.log();
+                bail!(error);
+            }
+        };
+
+        let cred_sub_id = match token.claims["vc"]["credentialSubject"]["id"].as_str() {
+            Some(data) => data,
+            None => {
+                let error = CommonErrors::format_new(
+                    BadFormat::Received,
+                    Some("No credentialSubject id field in the vc".to_string()),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
+        if sub != &vp_holder || &vp_holder != cred_sub_id {
+            let error = AuthErrors::security_new(Some(
+                "VCT token sub, credential subject & VP Holder do not match".to_string(),
+            ));
             error.log();
             bail!(error);
         }
         info!("VC Holder Data is Correct");
 
-        if token.claims["jti"].as_str().unwrap() != token.claims["vc"]["id"].as_str().unwrap() {
-            let error = CommonErrors::InvalidError {
-                info: ErrorInfo {
-                    message: "VPT token signature is incorrect".to_string(),
-                    error_code: 1700,
-                    details: None,
-                },
-                cause: Some("VCT jti & VC id do not match".to_string()),
-            };
+        let jti = match token.claims["jti"].as_str() {
+            Some(data) => data,
+            None => {
+                let error = CommonErrors::format_new(BadFormat::Received, Some("No jti id field in the vc".to_string()));
+                error.log();
+                bail!(error);
+            }
+        };
+
+        let vc_id = match token.claims["vc"]["id"].as_str() {
+            Some(data) => data,
+            None => {
+                let error = CommonErrors::format_new(BadFormat::Received, Some("No vc_id id field in the vc".to_string()));
+                error.log();
+                bail!(error);
+            }
+        };
+        if jti != vc_id {
+            let error = AuthErrors::security_new(Some("VCT jti & VC id do not match".to_string()));
             error.log();
             bail!(error);
         }
         info!("VCT jti & VC id match");
 
-        let (keep, message) = compare_with_margin(
-            token.claims["iat"].as_i64().unwrap(),
-            token.claims["vc"]["issuanceDate"].as_str().unwrap(),
-            2,
-        );
+        let iat = match token.claims["iat"].as_i64() {
+            Some(data) => data,
+            None => {
+                let error = CommonErrors::format_new(
+                    BadFormat::Received,
+                    Some("No credentialSubject id field in the vc".to_string()),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
+
+        let iss_date = match token.claims["vc"]["issuanceDate"].as_str() {
+            Some(data) => data,
+            None => {
+                let error = CommonErrors::format_new(
+                    BadFormat::Received,
+                    Some("No credentialSubject id field in the vc".to_string()),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
+        let (keep, message) = compare_with_margin(iat, iss_date, 2);
         if keep {
-            let error = CommonErrors::InvalidError {
-                info: ErrorInfo {
-                    message: "VPT token signature is incorrect".to_string(),
-                    error_code: 1700,
-                    details: None,
-                },
-                cause: Some(message.to_string()),
-            };
+            let error = AuthErrors::security_new(Some(message.to_string()));
             error.log();
             bail!(error);
         }
         info!("VC IssuanceDate and iat field match");
 
-        match DateTime::parse_from_rfc3339(token.claims["vc"]["validFrom"].as_str().unwrap()) {
+        let valid_from = match token.claims["vc"]["validFrom"].as_str() {
+            Some(data) => data,
+            None => {
+                let error = CommonErrors::format_new(BadFormat::Received, Some("No validFrom id field in the vc".to_string()));
+                error.log();
+                bail!(error);
+            }
+        };
+        match DateTime::parse_from_rfc3339(valid_from) {
             Ok(parsed_date) => parsed_date <= Utc::now(),
             Err(e) => {
-                let error = CommonErrors::InvalidError {
-                    info: ErrorInfo {
-                        message: "VPT token signature is incorrect".to_string(),
-                        error_code: 1700,
-                        details: None,
-                    },
-                    cause: Some(format!("VC iat and issuanceDate do not match -> {}", e)),
-                };
+                let error = AuthErrors::security_new(Some(format!(
+                    "VC iat and issuanceDate do not match -> {}",
+                    e
+                )));
                 error.log();
                 bail!(error);
             }
@@ -906,14 +917,10 @@ where
                     // TODO
                     return Ok(None);
                 } else {
-                    let error = CommonErrors::InvalidError {
-                        info: ErrorInfo {
-                            message: "Interact method not supported".to_string(),
-                            error_code: 1700,
-                            details: None,
-                        },
-                        cause: Some(format!("Interact method {} not supported", model.method)),
-                    };
+                    let error = CommonErrors::not_impl_new(
+                        "Interact method not supported".to_string(),
+                        Some(format!("Interact method {} not supported", model.method)),
+                    );
                     error.log();
                     bail!(error);
                 }
@@ -930,14 +937,7 @@ where
                 Ok(None)
             }
             Err(e) => {
-                let error = CommonErrors::DatabaseError {
-                    info: ErrorInfo {
-                        message: format!("Error retrieving the process with id: {}", &id),
-                        error_code: 1300,
-                        details: None,
-                    },
-                    cause: Some(e.to_string()),
-                };
+                let error = CommonErrors::database_new(Some(e.to_string()));
                 error.log();
                 bail!(error);
             }
@@ -947,7 +947,7 @@ where
     async fn fast_login(&self, state: String) -> anyhow::Result<String> {
         let id = uuid::Uuid::new_v4().to_string();
         let nonce: String = rand::thread_rng().sample_iter(&Alphanumeric).take(12).map(char::from).collect();
-        let provider_url = self.config.get_ssi_auth_host_url().unwrap(); // TODO fix docker internal
+        let provider_url = self.config.get_ssi_auth_host_url().unwrap(); //  EXPECTED ALWAYS TODO fix docker internal
         let provider_url = provider_url.replace("127.0.0.1", "host.docker.internal");
         let provider_url = format!("{}/api/v1", provider_url);
 
@@ -972,14 +972,7 @@ where
                 model
             }
             Err(e) => {
-                let error = CommonErrors::DatabaseError {
-                    info: ErrorInfo {
-                        message: "Error saving the verification model into the database".to_string(),
-                        error_code: 1300,
-                        details: None,
-                    },
-                    cause: Some(e.to_string()),
-                };
+                let error = CommonErrors::database_new(Some(e.to_string()));
                 error.log();
                 bail!(error);
             }
@@ -992,14 +985,7 @@ where
                 model
             }
             Err(e) => {
-                let error = CommonErrors::DatabaseError {
-                    info: ErrorInfo {
-                        message: "Error saving the verification model into the database".to_string(),
-                        error_code: 1300,
-                        details: None,
-                    },
-                    cause: Some(e.to_string()),
-                };
+                let error = CommonErrors::database_new(Some(e.to_string()));
                 error.log();
                 bail!(error);
             }
@@ -1009,33 +995,18 @@ where
         Ok(uri)
     }
 
-    async fn verify_token(&self, token: String) -> anyhow::Result<Model> {
+    async fn verify_token(&self, token: String) -> anyhow::Result<mates::Model> {
         info!("Validating token");
 
         let model = match self.repo.mates().get_by_token(token.as_str()).await {
             Ok(Some(model)) => model,
             Ok(None) => {
-                let error = CommonErrors::MissingError {
-                    info: ErrorInfo {
-                        message: format!("There is no token: {}", &token),
-                        error_code: 1600,
-                        details: None,
-                    },
-                    id: token,
-                    cause: None,
-                };
+                let error = CommonErrors::missing_resource_new(token.clone(), Some(format!("There is no token: {}", &token)));
                 error.log();
                 bail!(error);
             }
             Err(e) => {
-                let error = CommonErrors::DatabaseError {
-                    info: ErrorInfo {
-                        message: format!("Error retrieving the process with token: {}", &token),
-                        error_code: 1300,
-                        details: None,
-                    },
-                    cause: Some(e.to_string()),
-                };
+                let error = CommonErrors::database_new(Some(e.to_string()));
                 error.log();
                 bail!(error);
             }
@@ -1047,27 +1018,12 @@ where
         let model = match self.repo.business_mates().get_by_id(id.as_str()).await {
             Ok(Some(model)) => model,
             Ok(None) => {
-                let error = CommonErrors::MissingError {
-                    info: ErrorInfo {
-                        message: format!("There is proccess with id: {}", &id),
-                        error_code: 1600,
-                        details: None,
-                    },
-                    id: id,
-                    cause: None,
-                };
+                let error = CommonErrors::missing_resource_new(id.clone(), Some(format!("There is process with id: {}", &id)));
                 error.log();
                 bail!(error);
             }
             Err(e) => {
-                let error = CommonErrors::DatabaseError {
-                    info: ErrorInfo {
-                        message: format!("Error retrieving the process with id: {}", &id),
-                        error_code: 1300,
-                        details: None,
-                    },
-                    cause: Some(e.to_string()),
-                };
+                let error = CommonErrors::database_new(Some(e.to_string()));
                 error.log();
                 bail!(error);
             }
@@ -1076,37 +1032,19 @@ where
         let mate = match self.repo.mates().get_by_id(model.participant_id.as_str()).await {
             Ok(Some(model)) => model,
             Ok(None) => {
-                let error = CommonErrors::MissingError {
-                    info: ErrorInfo {
-                        message: "Onboarding is a requisite to access this service".to_string(),
-                        error_code: 1600,
-                        details: None,
-                    },
-                    id: model.participant_id.clone(),
-                    cause: Some(format!(
-                        "There is no mate with id: {}",
-                        &model.participant_id
-                    )),
-                };
+                let error = CommonErrors::missing_action_new("Onboarding".to_string(), MissingAction::Onboarding, Some("Onboarding is a requisite to access this service".to_string()));
                 error.log();
                 bail!(error);
             }
             Err(e) => {
-                let error = CommonErrors::DatabaseError {
-                    info: ErrorInfo {
-                        message: format!("Error retrieving the mate with id: {}", &id),
-                        error_code: 1300,
-                        details: None,
-                    },
-                    cause: Some(e.to_string()),
-                };
+                let error = CommonErrors::database_new(Some(e.to_string()));
                 error.log();
                 bail!(error);
             }
         };
 
         let response = json!({
-            "token": model.token.unwrap(),
+            "token": model.token.unwrap(), // EXPECTED ALWAYS
             "mate": mate
         });
 

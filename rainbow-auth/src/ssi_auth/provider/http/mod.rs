@@ -63,6 +63,9 @@ where
     pub fn router(self) -> Router {
         Router::new()
             // WALLET
+            .route("/api/v1/wallet/register", post(Self::wallet_register))
+            .route("/api/v1/wallet/login", post(Self::wallet_login))
+            .route("/api/v1/wallet/logout", post(Self::wallet_logout))
             .route("/api/v1/wallet/onboard", post(Self::wallet_onboard))
             .route("/api/v1/did.json", get(Self::didweb))
             // GNAP
@@ -82,6 +85,32 @@ where
         .fallback(Self::fallback) // 2 routers cannot have 1 fallback each
     }
 
+    async fn wallet_register(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
+        info!("POST /wallet/register");
+
+        match manager.register_wallet().await {
+            Ok(()) => StatusCode::CREATED.into_response(),
+            Err(e) => e.to_response(),
+        }
+    }
+    async fn wallet_login(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
+        info!("POST /wallet/login");
+
+        match manager.login_wallet().await {
+            Ok(()) => StatusCode::OK.into_response(),
+            Err(e) => e.to_response(),
+        }
+    }
+
+    async fn wallet_logout(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
+        info!("POST /wallet/logout");
+
+        match manager.logout_wallet().await {
+            Ok(()) => StatusCode::OK.into_response(),
+            Err(e) => e.to_response(),
+        }
+    }
+
     async fn wallet_onboard(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
         info!("POST /wallet/onboard");
 
@@ -93,7 +122,7 @@ where
 
     async fn didweb(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
         info!("GET /did.json");
-        Json(manager.didweb().await.unwrap())
+        Json(manager.didweb().await.unwrap()) // TODO
     }
 
     async fn access_request(
@@ -120,10 +149,7 @@ where
         let token = match extract_gnap_token(headers) {
             Some(token) => token,
             None => {
-                let error = CommonErrors::InvalidError {
-                    info: ErrorInfo { message: "Missing token".to_string(), error_code: 1700, details: None },
-                    cause: Some("Token is missing".to_string()),
-                };
+                let error = CommonErrors::unauthorized_new(Some("Missing token".to_string()));
                 error.log();
                 return error.into_response();
             }
