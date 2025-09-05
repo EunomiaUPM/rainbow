@@ -1,30 +1,54 @@
 {
-  "openapi": "3.1.1",
+  "openapi": "3.0.1",
   "info": {
-    "title": "Contract Negotiation Protocol - Rainbow Provider API",
-    "description": "Contract Negotiation Protocol - Rainbow Provider API",
+    "title": "Contract Negotiation Protocol API - Rainbow Provider",
+    "description": "This API provides endpoints for a provider to manage the entire lifecycle of a contract negotiation process. It includes operations for handling negotiation processes, exchanging messages and offers, finalizing agreements, and managing data space participants. The API also exposes RPC endpoints for initiating key negotiation states.",
     "version": "1.0.0"
   },
   "servers": [
     {
+      "url": "https://api.rainbow-provider.com",
+      "description": "Production Server"
+    },
+    {
       "url": "http://127.0.0.1:1234",
-      "description": "Testing server"
+      "description": "Local Testing Server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Negotiation Processes",
+      "description": "Manage the lifecycle of contract negotiation processes."
+    },
+    {
+      "name": "Messages",
+      "description": "Send, retrieve, and manage messages within a negotiation process."
+    },
+    {
+      "name": "Offers",
+      "description": "Create and manage contract offers."
+    },
+    {
+      "name": "Agreements",
+      "description": "Manage finalized contract agreements."
+    },
+    {
+      "name": "RPC",
+      "description": "Endpoints for remote lifecycle control of a contract negotiation (Remote Procedure Call)."
     }
   ],
   "paths": {
     "/api/v1/contract-negotiation/processes": {
       "get": {
-        "summary": "Retrieves all contract negotiation processes in provider",
-        "operationId": "rainbow_entities/get_cn_processes",
         "tags": [
-          "Processes"
+          "Negotiation Processes"
         ],
-        "security": [],
-        "description": "",
+        "summary": "List all contract negotiation processes",
+        "operationId": "getNegotiationProcesses",
+        "description": "Retrieves a list of all contract negotiation processes handled by the provider.",
         "responses": {
           "200": {
-            "description": "Retrieves all contract negotiation processes in provider",
-            "headers": {},
+            "description": "A list of contract negotiation processes.",
             "content": {
               "application/json": {
                 "schema": {
@@ -36,22 +60,12 @@
               }
             }
           },
-          "4XX": {
-            "description": "Error by JSON malformed or bad schema, or event not found entities",
+          "500": {
+            "description": "Internal Server Error.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "General error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
+                  "$ref": "#/components/schemas/RainbowCNError"
                 }
               }
             }
@@ -59,76 +73,25 @@
         }
       },
       "post": {
-        "summary": "Creates a contract negotiation processes in provider",
-        "operationId": "rainbow_entities/post_cn_process",
         "tags": [
-          "Processes"
+          "Negotiation Processes"
         ],
-        "security": [],
-        "description": "",
+        "summary": "Create a contract negotiation process",
+        "operationId": "createNegotiationProcess",
+        "description": "Initiates a new contract negotiation process.",
         "requestBody": {
-          "$ref": "#/components/schemas/NewContractNegotiationRequest"
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewContractNegotiationRequest"
+              }
+            }
+          }
         },
         "responses": {
           "201": {
-            "description": "Creates a contract negotiation processes in provider",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RainbowCNProcess"
-                }
-              }
-            }
-          },
-          "4XX": {
-            "description": "Error by JSON malformed or bad schema, or event not found entities",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "General error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/contract-negotiation/processes/{process_id}": {
-      "parameters": [
-        {
-          "name": "process_id",
-          "in": "path",
-          "required": true,
-          "description": "The ID of the contract negotiation process to retrieve",
-          "schema": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          }
-        }
-      ],
-      "get": {
-        "summary": "Retrieves contract negotiation in provider by id",
-        "operationId": "rainbow_entities/get_cn_process_by_id",
-        "tags": [
-          "Processes"
-        ],
-        "security": [],
-        "description": "Retrieves contract negotiation in provider by id",
-        "responses": {
-          "200": {
-            "description": "Retrieves transfer processes in provider by id",
-            "headers": {},
+            "description": "The contract negotiation process was created successfully.",
             "content": {
               "application/json": {
                 "schema": {
@@ -138,34 +101,85 @@
             }
           },
           "400": {
-            "description": "Error in urn:uuid:<uuid> schema",
-            "headers": {},
+            "description": "Bad Request: The request body is malformed or invalid.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
+                  "$ref": "#/components/schemas/RainbowCNError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RainbowCNError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contract-negotiation/processes/{processId}": {
+      "parameters": [
+        {
+          "name": "processId",
+          "in": "path",
+          "required": true,
+          "description": "The unique identifier of the contract negotiation process.",
+          "schema": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "Negotiation Processes"
+        ],
+        "summary": "Get a negotiation process by ID",
+        "operationId": "getNegotiationProcessById",
+        "description": "Retrieves a single contract negotiation process by its unique ID.",
+        "responses": {
+          "200": {
+            "description": "Details of the contract negotiation process.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RainbowCNProcess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request: The provided process ID has an invalid format.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RainbowCNError"
                 }
               }
             }
           },
           "404": {
-            "description": "Error not transfer process to be found",
-            "headers": {},
+            "description": "Not Found: The process with the specified ID was not found.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
+                  "$ref": "#/components/schemas/RainbowCNError"
                 }
               }
             }
           },
-          "5XX": {
-            "description": "General error",
-            "headers": {},
+          "500": {
+            "description": "Internal Server Error.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
+                  "$ref": "#/components/schemas/RainbowCNError"
                 }
               }
             }
@@ -173,20 +187,25 @@
         }
       },
       "put": {
-        "summary": "Edits contract negotiation in provider by id",
-        "operationId": "rainbow_entities/put_cn_process_by_id",
         "tags": [
-          "Processes"
+          "Negotiation Processes"
         ],
-        "security": [],
-        "description": "Edits contract negotiation in provider by id",
+        "summary": "Update a negotiation process",
+        "operationId": "updateNegotiationProcess",
+        "description": "Updates the state or details of an existing contract negotiation process.",
         "requestBody": {
-          "$ref": "#/components/schemas/EditContractNegotiationRequest"
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditContractNegotiationRequest"
+              }
+            }
+          }
         },
         "responses": {
           "202": {
-            "description": "Edits contract negotiation in provider by id",
-            "headers": {},
+            "description": "The negotiation process was updated successfully.",
             "content": {
               "application/json": {
                 "schema": {
@@ -196,34 +215,31 @@
             }
           },
           "400": {
-            "description": "Error in urn:uuid:<uuid> schema",
-            "headers": {},
+            "description": "Bad Request: The request body is malformed or the ID is invalid.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
+                  "$ref": "#/components/schemas/RainbowCNError"
                 }
               }
             }
           },
           "404": {
-            "description": "Error not transfer process to be found",
-            "headers": {},
+            "description": "Not Found: The process with the specified ID was not found.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
+                  "$ref": "#/components/schemas/RainbowCNError"
                 }
               }
             }
           },
-          "5XX": {
-            "description": "General error",
-            "headers": {},
+          "500": {
+            "description": "Internal Server Error.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
+                  "$ref": "#/components/schemas/RainbowCNError"
                 }
               }
             }
@@ -231,48 +247,42 @@
         }
       },
       "delete": {
-        "summary": "Deletes contract negotiation in provider by id",
-        "operationId": "rainbow_entities/delete_cn_process_by_id",
         "tags": [
-          "Processes"
+          "Negotiation Processes"
         ],
-        "security": [],
-        "description": "Deletes contract negotiation in provider by id",
+        "summary": "Delete a negotiation process",
+        "operationId": "deleteNegotiationProcess",
+        "description": "Deletes a contract negotiation process and all its associated messages and offers.",
         "responses": {
           "204": {
-            "description": "Deletes contract negotiation in provider by id",
-            "headers": {},
-            "content": {}
+            "description": "The negotiation process was deleted successfully."
           },
           "400": {
-            "description": "Error in urn:uuid:<uuid> schema",
-            "headers": {},
+            "description": "Bad Request: The provided process ID has an invalid format.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
+                  "$ref": "#/components/schemas/RainbowCNError"
                 }
               }
             }
           },
           "404": {
-            "description": "Error not contract negotiation to be found",
-            "headers": {},
+            "description": "Not Found: The process with the specified ID was not found.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
+                  "$ref": "#/components/schemas/RainbowCNError"
                 }
               }
             }
           },
-          "5XX": {
-            "description": "General error",
-            "headers": {},
+          "500": {
+            "description": "Internal Server Error.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
+                  "$ref": "#/components/schemas/RainbowCNError"
                 }
               }
             }
@@ -280,157 +290,22 @@
         }
       }
     },
-    "/api/v1/contract-negotiation/processes/provider/{provider_id}": {
+    "/api/v1/contract-negotiation/processes/{processId}/messages": {
       "parameters": [
         {
-          "name": "provider_id",
-          "in": "path",
-          "required": true,
-          "description": "The ID of the contract negotiation process to retrieve by provider pid",
-          "schema": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          }
+          "$ref": "#/components/parameters/processId"
         }
       ],
       "get": {
-        "summary": "Retrieves contract negotiation in provider by provider id",
-        "operationId": "rainbow_entities/get_cn_process_by_provider",
-        "tags": [
-          "Processes"
-        ],
-        "security": [],
-        "description": "Retrieves contract negotiation in provider by provider id",
-        "responses": {
-          "200": {
-            "description": "Retrieves transfer processes in provider by provider id",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RainbowCNProcess"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error in urn:uuid:<uuid> schema",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error not contract negotiation to be found",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "General error",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/contract-negotiation/processes/consumer/{consumer_id}": {
-      "parameters": [
-        {
-          "name": "consumer_id",
-          "in": "path",
-          "required": true,
-          "description": "The ID of the contract negotiation process to retrieve by consumer pid",
-          "schema": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          }
-        }
-      ],
-      "get": {
-        "summary": "Retrieves contract negotiation in provider by consumer id",
-        "operationId": "rainbow_entities/get_cn_process_by_consumer",
-        "tags": [
-          "Processes"
-        ],
-        "security": [],
-        "description": "Retrieves contract negotiation in provider by id",
-        "responses": {
-          "200": {
-            "description": "Retrieves transfer processes in provider by id",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RainbowCNProcess"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error in urn:uuid:<uuid> schema",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error not contract negotiation to be found",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "General error",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/contract-negotiation/messages": {
-      "get": {
-        "summary": "Retrieves all transfer messages",
-        "operationId": "rainbow_entities/get_cn_messages",
         "tags": [
           "Messages"
         ],
-        "security": [],
-        "description": "Retrieves all transfer messages",
+        "summary": "Get all messages for a process",
+        "operationId": "getMessagesByProcessId",
+        "description": "Retrieves all messages associated with a specific contract negotiation process.",
         "responses": {
           "200": {
-            "description": "Retrieves all transfer messages",
-            "headers": {},
+            "description": "A list of messages for the given process.",
             "content": {
               "application/json": {
                 "schema": {
@@ -443,34 +318,31 @@
             }
           },
           "400": {
-            "description": "Error in urn:uuid:<uuid> schema",
-            "headers": {},
+            "description": "Bad Request: The provided process ID has an invalid format.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
+                  "$ref": "#/components/schemas/RainbowCNError"
                 }
               }
             }
           },
           "404": {
-            "description": "Error not transfer process to be found",
-            "headers": {},
+            "description": "Not Found: The process with the specified ID was not found.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
+                  "$ref": "#/components/schemas/RainbowCNError"
                 }
               }
             }
           },
-          "5XX": {
-            "description": "Error by retrieving all transfer processes in provider",
-            "headers": {},
+          "500": {
+            "description": "Internal Server Error.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
+                  "$ref": "#/components/schemas/RainbowCNError"
                 }
               }
             }
@@ -478,130 +350,56 @@
         }
       }
     },
-    "/api/v1/contract-negotiation/processes/{process_id}/messages": {
+    "/api/v1/contract-negotiation/messages/{messageId}": {
       "parameters": [
         {
-          "name": "process_id",
-          "in": "path",
-          "required": true,
-          "description": "The ID of the contract negotiation process",
-          "schema": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          }
+          "$ref": "#/components/parameters/messageId"
         }
       ],
       "get": {
-        "summary": "Retrieves all transfer messages by process id",
-        "operationId": "rainbow_entities/get_cn_messages_by_cn_process",
         "tags": [
           "Messages"
         ],
-        "security": [],
-        "description": "Retrieves all transfer messages by process id",
+        "summary": "Get a message by ID",
+        "operationId": "getMessageById",
+        "description": "Retrieves a single negotiation message by its unique ID.",
         "responses": {
           "200": {
-            "description": "Retrieves all transfer messages by process id",
-            "headers": {},
+            "description": "Details of the negotiation message.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/RainbowCNMessage"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error in urn:uuid:<uuid> schema",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error not transfer process to be found",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "Error by retrieving all transfer processes in provider",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "summary": "Creates a transfer message by process id",
-        "operationId": "rainbow_entities/post_cn_message_by_cn_process",
-        "tags": [
-          "Messages"
-        ],
-        "security": [],
-        "description": "Creates a transfer message by process id",
-        "requestBody": {
-          "$ref": "#/components/schemas/NewContractNegotiationRequest"
-        },
-        "responses": {
-          "201": {
-            "description": "Creates a transfer message by process id",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
                   "$ref": "#/components/schemas/RainbowCNMessage"
                 }
               }
             }
           },
           "400": {
-            "description": "Error in urn:uuid:<uuid> schema",
-            "headers": {},
+            "description": "Bad Request: The provided message ID has an invalid format.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
+                  "$ref": "#/components/schemas/RainbowCNError"
                 }
               }
             }
           },
           "404": {
-            "description": "Error not transfer process to be found",
-            "headers": {},
+            "description": "Not Found: The message with the specified ID was not found.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
+                  "$ref": "#/components/schemas/RainbowCNError"
                 }
               }
             }
           },
-          "5XX": {
-            "description": "General error",
-            "headers": {},
+          "500": {
+            "description": "Internal Server Error.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
+                  "$ref": "#/components/schemas/RainbowCNError"
                 }
               }
             }
@@ -609,376 +407,22 @@
         }
       }
     },
-    "/api/v1/contract-negotiation/processes/provider/{provider_id}/messages": {
+    "/api/v1/contract-negotiation/processes/{processId}/offers": {
       "parameters": [
         {
-          "name": "provider_id",
-          "in": "path",
-          "required": true,
-          "description": "The ID of the provider pid in contract negotiation process",
-          "schema": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          }
+          "$ref": "#/components/parameters/processId"
         }
       ],
       "get": {
-        "summary": "Retrieves all transfer messages by provider id",
-        "operationId": "rainbow_entities/get_cn_messages_by_cn_provider_id",
-        "tags": [
-          "Messages"
-        ],
-        "security": [],
-        "description": "Retrieves all transfer messages by provider id",
-        "responses": {
-          "200": {
-            "description": "Retrieves all transfer messages by provider id",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/RainbowCNMessage"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error in urn:uuid:<uuid> schema",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error not provider pid to be found",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "General error",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/contract-negotiation/processes/consumer/{consumer_id}/messages": {
-      "parameters": [
-        {
-          "name": "consumer_id",
-          "in": "path",
-          "required": true,
-          "description": "The ID of the consumer pid in contract negotiation process",
-          "schema": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          }
-        }
-      ],
-      "get": {
-        "summary": "Retrieves all transfer messages by consumer id",
-        "operationId": "rainbow_entities/get_cn_messages_by_cn_consumer_id",
-        "tags": [
-          "Messages"
-        ],
-        "security": [],
-        "description": "Retrieves all transfer messages by consumer id",
-        "responses": {
-          "200": {
-            "description": "Retrieves all transfer messages by consumer id",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/RainbowCNMessage"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error in urn:uuid:<uuid> schema",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error not consumer pid to be found",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "General error",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/contract-negotiation/messages/{message_id}": {
-      "parameters": [
-        {
-          "name": "message_id",
-          "in": "path",
-          "required": true,
-          "description": "The ID of a message within a contact negotiation process",
-          "schema": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          }
-        }
-      ],
-      "get": {
-        "summary": "Retrieves a transfer messages by id",
-        "operationId": "rainbow_entities/get_cn_messages_by_cn_message_id",
-        "tags": [
-          "Messages"
-        ],
-        "security": [],
-        "description": "Retrieves a transfer messages by id",
-        "responses": {
-          "200": {
-            "description": "Retrieves a transfer messages by id",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "$ref": "#/components/schemas/RainbowCNMessage"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error in urn:uuid:<uuid> schema",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error not message id to be found",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "General error",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/contract-negotiation/processes/{process_id}/messages/{message_id}": {
-      "parameters": [
-        {
-          "name": "process_id",
-          "in": "path",
-          "required": true,
-          "description": "The ID of the contract negotiation process",
-          "schema": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          }
-        },
-        {
-          "name": "message_id",
-          "in": "path",
-          "required": true,
-          "description": "The ID of a message within a contact negotiation process",
-          "schema": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          }
-        }
-      ],
-      "put": {
-        "summary": "Updates a transfer messages by id",
-        "operationId": "rainbow_entities/put_cn_message_by_cn_process",
-        "tags": [
-          "Messages"
-        ],
-        "security": [],
-        "description": "Updates a transfer messages by id",
-        "requestBody": {
-          "$ref": "#/components/schemas/EditContractNegotiationMessageRequest"
-        },
-        "responses": {
-          "201": {
-            "description": "Updates a transfer messages by id",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "$ref": "#/components/schemas/RainbowCNMessage"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error in urn:uuid:<uuid> schema",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error not message or process id to be found",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "General error",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "summary": "Deletes a transfer messages by id",
-        "operationId": "rainbow_entities/delete_cn_message_by_cn_process",
-        "tags": [
-          "Messages"
-        ],
-        "security": [],
-        "description": "Deletes a transfer messages by id",
-        "responses": {
-          "204": {
-            "description": "Deletes a transfer messages by id",
-            "headers": {}
-          },
-          "400": {
-            "description": "Error in urn:uuid:<uuid> schema",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error not message or process id to be found",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "General error",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/contract-negotiation/processes/{process_id}/offers": {
-      "parameters": [
-        {
-          "name": "process_id",
-          "in": "path",
-          "required": true,
-          "description": "The ID of the contract negotiation process to retrieve",
-          "schema": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          }
-        }
-      ],
-      "get": {
-        "summary": "Retrieves all offers by process id",
-        "operationId": "rainbow_entities/get_cn_offers_by_cn_process_id",
         "tags": [
           "Offers"
         ],
-        "security": [],
-        "description": "Retrieves all offers by process id",
+        "summary": "Get all offers for a process",
+        "operationId": "getOffersByProcessId",
+        "description": "Retrieves all offers made within a specific contract negotiation process.",
         "responses": {
           "200": {
-            "description": "Retrieves all offers by process id",
-            "headers": {},
+            "description": "A list of offers for the given process.",
             "content": {
               "application/json": {
                 "schema": {
@@ -991,34 +435,31 @@
             }
           },
           "400": {
-            "description": "Error in urn:uuid:<uuid> schema",
-            "headers": {},
+            "description": "Bad Request: The provided process ID has an invalid format.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
+                  "$ref": "#/components/schemas/RainbowCNError"
                 }
               }
             }
           },
           "404": {
-            "description": "Error not transfer process to be found",
-            "headers": {},
+            "description": "Not Found: The process with the specified ID was not found.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
+                  "$ref": "#/components/schemas/RainbowCNError"
                 }
               }
             }
           },
-          "5XX": {
-            "description": "Error by retrieving all transfer processes in provider",
-            "headers": {},
+          "500": {
+            "description": "Internal Server Error.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
+                  "$ref": "#/components/schemas/RainbowCNError"
                 }
               }
             }
@@ -1026,573 +467,56 @@
         }
       }
     },
-    "/api/v1/contract-negotiation/processes/{process_id}/offers/last": {
+    "/api/v1/contract-negotiation/offers/{offerId}": {
       "parameters": [
         {
-          "name": "process_id",
-          "in": "path",
-          "required": true,
-          "description": "The ID of the contract negotiation process to retrieve",
-          "schema": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          }
+          "$ref": "#/components/parameters/offerId"
         }
       ],
       "get": {
-        "summary": "Retrieves last offer by process id",
-        "operationId": "rainbow_entities/get_cn_offers_by_cn_process_id",
         "tags": [
           "Offers"
         ],
-        "security": [],
-        "description": "Retrieves last offer by process id",
+        "summary": "Get an offer by ID",
+        "operationId": "getOfferById",
+        "description": "Retrieves a single offer by its unique ID.",
         "responses": {
           "200": {
-            "description": "Retrieves last offer by process id",
-            "headers": {},
+            "description": "Details of the offer.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
                   "$ref": "#/components/schemas/RainbowCNOffer"
                 }
               }
             }
           },
           "400": {
-            "description": "Error in urn:uuid:<uuid> schema",
-            "headers": {},
+            "description": "Bad Request: The provided offer ID has an invalid format.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
+                  "$ref": "#/components/schemas/RainbowCNError"
                 }
               }
             }
           },
           "404": {
-            "description": "Error not transfer process to be found",
-            "headers": {},
+            "description": "Not Found: The offer with the specified ID was not found.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
+                  "$ref": "#/components/schemas/RainbowCNError"
                 }
               }
             }
           },
-          "5XX": {
-            "description": "Error by retrieving all transfer processes in provider",
-            "headers": {},
+          "500": {
+            "description": "Internal Server Error.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/contract-negotiation/messages/{message_id}/offer": {
-      "parameters": [
-        {
-          "name": "message_id",
-          "in": "path",
-          "required": true,
-          "description": "The ID of a message within a contact negotiation process",
-          "schema": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          }
-        }
-      ],
-      "get": {
-        "summary": "Retrieves offer related to a message id",
-        "operationId": "rainbow_entities/get_cn_offer_by_cn_message_id",
-        "tags": [
-          "Offers"
-        ],
-        "security": [],
-        "description": "Retrieves offer related to a message id",
-        "responses": {
-          "200": {
-            "description": "Retrieves offer related to a message id",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "$ref": "#/components/schemas/RainbowCNOffer"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error in urn:uuid:<uuid> schema",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error not transfer message to be found",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "Error by retrieving all transfer processes in provider",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/contract-negotiation/offers/{offer_id}": {
-      "parameters": [
-        {
-          "name": "offer_id",
-          "in": "path",
-          "required": true,
-          "description": "The ID of an offer within a contact negotiation process",
-          "schema": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          }
-        }
-      ],
-      "get": {
-        "summary": "Retrieves an offer by id",
-        "operationId": "rainbow_entities/get_cn_offer_by_offer_id",
-        "tags": [
-          "Offers"
-        ],
-        "security": [],
-        "description": "Retrieves an offer by id",
-        "responses": {
-          "200": {
-            "description": "Retrieves an offer by id",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "$ref": "#/components/schemas/RainbowCNOffer"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error in urn:uuid:<uuid> schema",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error not offer to be found",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "Error by retrieving all transfer processes in provider",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/contract-negotiation/processes/{process_id}/messages/{message_id}/offers": {
-      "parameters": [
-        {
-          "name": "process_id",
-          "in": "path",
-          "required": true,
-          "description": "The ID of the contract negotiation process",
-          "schema": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          }
-        },
-        {
-          "name": "message_id",
-          "in": "path",
-          "required": true,
-          "description": "The ID of a message within a contact negotiation process",
-          "schema": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          }
-        }
-      ],
-      "post": {
-        "summary": "Creates an offer by message and process id",
-        "operationId": "rainbow_entities/post_cn_offer_by_cn_process_id_and_message_id",
-        "tags": [
-          "Offers"
-        ],
-        "security": [],
-        "description": "Creates an offer by message and process id",
-        "requestBody": {
-          "$ref": "#/components/schemas/NewContractNegotiationOfferRequest"
-        },
-        "responses": {
-          "201": {
-            "description": "Creates an offer by message and process id",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "$ref": "#/components/schemas/RainbowCNOffer"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error in urn:uuid:<uuid> schema",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error not message or process to be found",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "Error by retrieving all transfer processes in provider",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/contract-negotiation/processes/{process_id}/messages/{message_id}/offers/{offer_id}": {
-      "parameters": [
-        {
-          "name": "process_id",
-          "in": "path",
-          "required": true,
-          "description": "The ID of the contract negotiation process",
-          "schema": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          }
-        },
-        {
-          "name": "message_id",
-          "in": "path",
-          "required": true,
-          "description": "The ID of a message within a contact negotiation process",
-          "schema": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          }
-        },
-        {
-          "name": "offer_id",
-          "in": "path",
-          "required": true,
-          "description": "The ID of an offer within a contact negotiation process",
-          "schema": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          }
-        }
-      ],
-      "put": {
-        "summary": "Updates an offer by message and process id",
-        "operationId": "rainbow_entities/put_cn_offer_by_cn_process_id_and_message_id",
-        "tags": [
-          "Offers"
-        ],
-        "security": [],
-        "description": "Updates an offer by message and process id",
-        "requestBody": {
-          "$ref": "#/components/schemas/NewContractNegotiationOfferRequest"
-        },
-        "responses": {
-          "202": {
-            "description": "Updates an offer by message and process id",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "$ref": "#/components/schemas/RainbowCNOffer"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error in urn:uuid:<uuid> schema",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error not message, process or offer to be found",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "Error by retrieving all transfer processes in provider",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "summary": "Deletes an offer by message and process id",
-        "operationId": "rainbow_entities/delete_cn_offer_by_cn_process_id_and_message_id",
-        "tags": [
-          "Offers"
-        ],
-        "security": [],
-        "description": "Deletes an offer by message and process id",
-        "responses": {
-          "204": {
-            "description": "Deletes an offer by message and process id",
-            "headers": {}
-          },
-          "400": {
-            "description": "Error in urn:uuid:<uuid> schema",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error not message, process or offer to be found",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "Error by retrieving all transfer processes in provider",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/contract-negotiation/processes/{process_id}/agreement": {
-      "parameters": [
-        {
-          "name": "process_id",
-          "in": "path",
-          "required": true,
-          "description": "The ID of the contract negotiation process",
-          "schema": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          }
-        }
-      ],
-      "get": {
-        "summary": "Retrieves an agreement related to a process by id",
-        "operationId": "rainbow_entities/get_agreement_by_cn_process_id",
-        "tags": [
-          "Agreements"
-        ],
-        "security": [],
-        "description": "Retrieves an agreement related to a process by id",
-        "responses": {
-          "200": {
-            "description": "Retrieves an agreement related to a process by id",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "$ref": "#/components/schemas/RainbowAgreement"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error in urn:uuid:<uuid> schema",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error not process to be found",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "General Error",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/contract-negotiation/messages/{message_id}/agreement": {
-      "parameters": [
-        {
-          "name": "message_id",
-          "in": "path",
-          "required": true,
-          "description": "The ID of a message within a contact negotiation process",
-          "schema": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          }
-        }
-      ],
-      "get": {
-        "summary": "Retrieves an agreement related to a message by id",
-        "operationId": "rainbow_entities/get_agreement_by_cn_message_id",
-        "tags": [
-          "Agreements"
-        ],
-        "security": [],
-        "description": "Retrieves an agreement related to a message by id",
-        "responses": {
-          "200": {
-            "description": "Retrieves an agreement related to a message by id",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "$ref": "#/components/schemas/RainbowAgreement"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error in urn:uuid:<uuid> schema",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error not message to be found",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "General Error",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
+                  "$ref": "#/components/schemas/RainbowCNError"
                 }
               }
             }
@@ -1602,17 +526,15 @@
     },
     "/api/v1/contract-negotiation/agreements": {
       "get": {
-        "summary": "Retrieves all agreements",
-        "operationId": "rainbow_entities/get_agreements",
         "tags": [
           "Agreements"
         ],
-        "security": [],
-        "description": "Retrieves all agreements",
+        "summary": "List all agreements",
+        "operationId": "getAllAgreements",
+        "description": "Retrieves a list of all finalized contract agreements.",
         "responses": {
           "200": {
-            "description": "Retrieves all agreements",
-            "headers": {},
+            "description": "A list of all agreements.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1624,13 +546,12 @@
               }
             }
           },
-          "5XX": {
-            "description": "General Error",
-            "headers": {},
+          "500": {
+            "description": "Internal Server Error.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
+                  "$ref": "#/components/schemas/RainbowCNError"
                 }
               }
             }
@@ -1638,628 +559,56 @@
         }
       }
     },
-    "/api/v1/contract-negotiation/agreements/{agreement_id}": {
+    "/api/v1/contract-negotiation/agreements/{agreementId}": {
       "parameters": [
         {
-          "name": "agreement_id",
-          "in": "path",
-          "required": true,
-          "description": "The ID of a agreement",
-          "schema": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          }
+          "$ref": "#/components/parameters/agreementId"
         }
       ],
       "get": {
-        "summary": "Retrieves agreement by id",
-        "operationId": "rainbow_entities/get_agreement_by_agreement_id",
         "tags": [
           "Agreements"
         ],
-        "security": [],
-        "description": "Retrieves agreement by id",
+        "summary": "Get an agreement by ID",
+        "operationId": "getAgreementById",
+        "description": "Retrieves a single contract agreement by its unique ID.",
         "responses": {
           "200": {
-            "description": "Retrieves agreement by id",
-            "headers": {},
+            "description": "Details of the agreement.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
                   "$ref": "#/components/schemas/RainbowAgreement"
                 }
               }
             }
           },
           "400": {
-            "description": "Error in urn:uuid:<uuid> schema",
-            "headers": {},
+            "description": "Bad Request: The provided agreement ID has an invalid format.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
+                  "$ref": "#/components/schemas/RainbowCNError"
                 }
               }
             }
           },
           "404": {
-            "description": "Error not agreement to be found",
-            "headers": {},
+            "description": "Not Found: The agreement with the specified ID was not found.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
+                  "$ref": "#/components/schemas/RainbowCNError"
                 }
               }
             }
           },
-          "5XX": {
-            "description": "General Error",
-            "headers": {},
+          "500": {
+            "description": "Internal Server Error.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/contract-negotiation/processes/{process_id}/messages/{message_id}/agreements": {
-      "parameters": [
-        {
-          "name": "process_id",
-          "in": "path",
-          "required": true,
-          "description": "The ID of a process",
-          "schema": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          }
-        },
-        {
-          "name": "message_id",
-          "in": "path",
-          "required": true,
-          "description": "The ID of a message",
-          "schema": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          }
-        }
-      ],
-      "post": {
-        "summary": "Creates an agreement",
-        "operationId": "rainbow_entities/post_agreement",
-        "tags": [
-          "Agreements"
-        ],
-        "security": [],
-        "description": "Creates an agreement",
-        "requestBody": {
-          "$ref": "#/components/schemas/NewAgreementRequest"
-        },
-        "responses": {
-          "201": {
-            "description": "Creates an agreement",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "$ref": "#/components/schemas/RainbowAgreement"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error in urn:uuid:<uuid> schema",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error not message or process to be found",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "General Error",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/contract-negotiation/processes/{process_id}/messages/{message_id}/agreements/{agreement_id}": {
-      "parameters": [
-        {
-          "name": "process_id",
-          "in": "path",
-          "required": true,
-          "description": "The ID of a process",
-          "schema": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          }
-        },
-        {
-          "name": "message_id",
-          "in": "path",
-          "required": true,
-          "description": "The ID of a message",
-          "schema": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          }
-        },
-        {
-          "name": "agreement_id",
-          "in": "path",
-          "required": true,
-          "description": "The ID of an agreement",
-          "schema": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          }
-        }
-      ],
-      "put": {
-        "summary": "Updates an agreement",
-        "operationId": "rainbow_entities/put_agreement",
-        "tags": [
-          "Agreements"
-        ],
-        "security": [],
-        "description": "Updates an agreement",
-        "requestBody": {
-          "$ref": "#/components/schemas/EditAgreementRequest"
-        },
-        "responses": {
-          "202": {
-            "description": "Updates an agreement",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "$ref": "#/components/schemas/RainbowAgreement"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error in urn:uuid:<uuid> schema",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error not message, process or agreement to be found",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "General Error",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "summary": "Deletes an agreement",
-        "operationId": "rainbow_entities/delete_agreement",
-        "tags": [
-          "Agreements"
-        ],
-        "security": [],
-        "description": "Deletes an agreement",
-        "responses": {
-          "204": {
-            "description": "Deletes an agreement",
-            "headers": {}
-          },
-          "400": {
-            "description": "Error in urn:uuid:<uuid> schema",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error not message, process or agreement to be found",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "General Error",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/participants": {
-      "get": {
-        "summary": "Retrieves all participants",
-        "operationId": "rainbow_entities/get_participants",
-        "tags": [
-          "Participants"
-        ],
-        "security": [],
-        "description": "Retrieves all participants",
-        "responses": {
-          "200": {
-            "description": "Retrieves all participants",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/RainbowParticipant"
-                  }
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "General Error",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "summary": "Creates an participant",
-        "operationId": "rainbow_entities/post_cn_offer_by_cn_process_id_and_message_id",
-        "tags": [
-          "Participants"
-        ],
-        "security": [],
-        "description": "Creates an participant",
-        "requestBody": {
-          "$ref": "#/components/schemas/NewParticipantRequest"
-        },
-        "responses": {
-          "201": {
-            "description": "Creates an participant",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "$ref": "#/components/schemas/RainbowParticipant"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error in urn:uuid:<uuid> schema",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "General Error",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/participants/{participant_id}": {
-      "parameters": [
-        {
-          "name": "participant_id",
-          "in": "path",
-          "required": true,
-          "description": "The ID of a participant",
-          "schema": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          }
-        }
-      ],
-      "get": {
-        "summary": "Retrieves participant by id",
-        "operationId": "rainbow_entities/get_participant_by_id",
-        "tags": [
-          "Participants"
-        ],
-        "security": [],
-        "description": "Retrieves participant by id",
-        "responses": {
-          "200": {
-            "description": "Retrieves participant by id",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "$ref": "#/components/schemas/RainbowParticipant"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error in urn:uuid:<uuid> schema",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error no participant to be found",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "General Error",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "summary": "Updates participant by id",
-        "operationId": "rainbow_entities/put_participant",
-        "tags": [
-          "Participants"
-        ],
-        "security": [],
-        "description": "Updates participant by id",
-        "requestBody": {
-          "$ref": "#/components/schemas/EditParticipantRequest"
-        },
-        "responses": {
-          "202": {
-            "description": "Updates participant by id",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "$ref": "#/components/schemas/RainbowParticipant"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error in urn:uuid:<uuid> schema",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error no participant to be found",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "General Error",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "summary": "Deletes participant by id",
-        "operationId": "rainbow_entities/delete_participant",
-        "tags": [
-          "Participants"
-        ],
-        "security": [],
-        "description": "Deletes participant by id",
-        "responses": {
-          "204": {
-            "description": "Deletes participant by id",
-            "headers": {}
-          },
-          "400": {
-            "description": "Error in urn:uuid:<uuid> schema",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error no participant to be found",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "General Error",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/participants/{participant_id}/agreements": {
-      "parameters": [
-        {
-          "name": "participant_id",
-          "in": "path",
-          "required": true,
-          "description": "The ID of a participant",
-          "schema": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          }
-        }
-      ],
-      "get": {
-        "summary": "Retrieves all agreements by participant",
-        "operationId": "rainbow_entities/get_participant_agreements",
-        "tags": [
-          "Participants"
-        ],
-        "security": [],
-        "description": "Retrieves all agreements by participant",
-        "responses": {
-          "200": {
-            "description": "Retrieves all agreements by participant",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/RainbowAgreement"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error in urn:uuid:<uuid> schema",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error no participant to be found",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "General Error",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CnErrorProviderError"
+                  "$ref": "#/components/schemas/RainbowCNError"
                 }
               }
             }
@@ -2269,60 +618,58 @@
     },
     "/api/v1/negotiations/rpc/setup-offer": {
       "post": {
-        "summary": "Creates a contract offer message and sends it to consumer, if works, establishes data plane and persist process and messages",
-        "operationId": "ds_rcp_contracts_provider/setup_offer",
         "tags": [
           "RPC"
         ],
-        "security": [],
-        "description": "Creates a contract offer message and sends it to consumer, if works, establishes data plane and persist process and messages",
+        "summary": "Send a contract offer",
+        "operationId": "rpcSetupOffer",
+        "description": "Creates and sends a contract offer message to a consumer, initiating or continuing a negotiation process.",
         "requestBody": {
-          "$ref": "#/components/schemas/SetupOfferRequest"
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetupOfferRequest"
+              }
+            }
+          }
         },
         "responses": {
           "201": {
-            "description": "Consumer returns SetupOfferResponse message and start process is persisted",
-            "headers": {},
+            "description": "Offer sent and acknowledged by the consumer.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
                   "$ref": "#/components/schemas/SetupOfferResponse"
                 }
               }
             }
           },
           "400": {
-            "description": "Json malformed",
-            "headers": {},
+            "description": "Bad Request: The request body is malformed.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
                   "$ref": "#/components/schemas/DSRPCCNProviderErrorResponse"
                 }
               }
             }
           },
           "500": {
-            "description": "General Error",
-            "headers": {},
+            "description": "Internal Server Error.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
                   "$ref": "#/components/schemas/DSRPCCNProviderErrorResponse"
                 }
               }
             }
           },
           "503": {
-            "description": "Peer service is not available or throws error",
-            "headers": {},
+            "description": "Service Unavailable: The consumer is not reachable.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
                   "$ref": "#/components/schemas/DSRPCCNProviderErrorResponse"
                 }
               }
@@ -2333,60 +680,58 @@
     },
     "/api/v1/negotiations/rpc/setup-agreement": {
       "post": {
-        "summary": "Creates a contract agreement message and sends it to consumer, if works, establishes data plane and persist process and messages",
-        "operationId": "ds_rcp_contracts_provider/setup_agreement",
         "tags": [
           "RPC"
         ],
-        "security": [],
-        "description": "Creates a contract agreement message and sends it to consumer, if works, establishes data plane and persist process and messages",
+        "summary": "Send a contract agreement",
+        "operationId": "rpcSetupAgreement",
+        "description": "Sends a finalized contract agreement to the consumer to be verified.",
         "requestBody": {
-          "$ref": "#/components/schemas/SetupAgreementRequest"
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetupAgreementRequest"
+              }
+            }
+          }
         },
         "responses": {
           "201": {
-            "description": "Consumer returns SetupAgreementResponse message and start process is persisted",
-            "headers": {},
+            "description": "Agreement sent and acknowledged by the consumer.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
                   "$ref": "#/components/schemas/SetupAgreementResponse"
                 }
               }
             }
           },
           "400": {
-            "description": "Json malformed",
-            "headers": {},
+            "description": "Bad Request: The request body is malformed.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
                   "$ref": "#/components/schemas/DSRPCCNProviderErrorResponse"
                 }
               }
             }
           },
           "500": {
-            "description": "General Error",
-            "headers": {},
+            "description": "Internal Server Error.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
                   "$ref": "#/components/schemas/DSRPCCNProviderErrorResponse"
                 }
               }
             }
           },
           "503": {
-            "description": "Peer service is not available or throws error",
-            "headers": {},
+            "description": "Service Unavailable: The consumer is not reachable.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
                   "$ref": "#/components/schemas/DSRPCCNProviderErrorResponse"
                 }
               }
@@ -2397,60 +742,58 @@
     },
     "/api/v1/negotiations/rpc/setup-finalization": {
       "post": {
-        "summary": "Creates a contract finalization message and sends it to consumer, if works, establishes data plane and persist process and messages",
-        "operationId": "ds_rcp_contracts_provider/setup_finalization",
         "tags": [
           "RPC"
         ],
-        "security": [],
-        "description": "Creates a contract finalization message and sends it to consumer, if works, establishes data plane and persist process and messages",
+        "summary": "Finalize a negotiation",
+        "operationId": "rpcSetupFinalization",
+        "description": "Sends a finalization message to the consumer, confirming the contract agreement from the provider's side.",
         "requestBody": {
-          "$ref": "#/components/schemas/SetupFinalizationRequest"
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetupFinalizationRequest"
+              }
+            }
+          }
         },
         "responses": {
           "201": {
-            "description": "Consumer returns SetupFinalizationRequest message and start process is persisted",
-            "headers": {},
+            "description": "Finalization message sent and acknowledged by the consumer.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
                   "$ref": "#/components/schemas/SetupFinalizationResponse"
                 }
               }
             }
           },
           "400": {
-            "description": "Json malformed",
-            "headers": {},
+            "description": "Bad Request: The request body is malformed.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
                   "$ref": "#/components/schemas/DSRPCCNProviderErrorResponse"
                 }
               }
             }
           },
           "500": {
-            "description": "General Error",
-            "headers": {},
+            "description": "Internal Server Error.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
                   "$ref": "#/components/schemas/DSRPCCNProviderErrorResponse"
                 }
               }
             }
           },
           "503": {
-            "description": "Peer service is not available or throws error",
-            "headers": {},
+            "description": "Service Unavailable: The consumer is not reachable.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
                   "$ref": "#/components/schemas/DSRPCCNProviderErrorResponse"
                 }
               }
@@ -2461,60 +804,58 @@
     },
     "/api/v1/negotiations/rpc/setup-termination": {
       "post": {
-        "summary": "Creates a contract termination message and sends it to consumer, if works, establishes data plane and persist process and messages",
-        "operationId": "ds_rcp_contracts_provider/setup_termination",
         "tags": [
           "RPC"
         ],
-        "security": [],
-        "description": "Creates a contract termination message and sends it to consumer, if works, establishes data plane and persist process and messages",
+        "summary": "Terminate a negotiation",
+        "operationId": "rpcSetupTermination",
+        "description": "Sends a termination message to the consumer to end the negotiation process.",
         "requestBody": {
-          "$ref": "#/components/schemas/SetupTerminationRequest"
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetupTerminationRequest"
+              }
+            }
+          }
         },
         "responses": {
           "201": {
-            "description": "Consumer returns SetupTerminationRequest message and start process is persisted",
-            "headers": {},
+            "description": "Termination message sent and acknowledged by the consumer.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
                   "$ref": "#/components/schemas/SetupTerminationResponse"
                 }
               }
             }
           },
           "400": {
-            "description": "Json malformed",
-            "headers": {},
+            "description": "Bad Request: The request body is malformed.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
                   "$ref": "#/components/schemas/DSRPCCNProviderErrorResponse"
                 }
               }
             }
           },
           "500": {
-            "description": "General Error",
-            "headers": {},
+            "description": "Internal Server Error.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
                   "$ref": "#/components/schemas/DSRPCCNProviderErrorResponse"
                 }
               }
             }
           },
           "503": {
-            "description": "Peer service is not available or throws error",
-            "headers": {},
+            "description": "Service Unavailable: The consumer is not reachable.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
                   "$ref": "#/components/schemas/DSRPCCNProviderErrorResponse"
                 }
               }
@@ -2525,17 +866,16 @@
     },
     "/api/v1/contract-negotiation/subscriptions": {
       "get": {
-        "summary": "Retrieves all subscriptions",
-        "operationId": "rainbow_events/subscription/get_all_subscriptions",
         "tags": [
-          "Events"
+          "Subscriptions"
         ],
+        "summary": "List all subscriptions",
+        "operationId": "getAllSubscriptions",
         "security": [],
-        "description": "Retrieves all subscriptions",
+        "description": "Retrieves a list of all event subscriptions (webhooks) currently configured on the provider.",
         "responses": {
           "200": {
-            "description": "Retrieves all subscriptions",
-            "headers": {},
+            "description": "A list of subscription objects.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2546,24 +886,41 @@
                 }
               }
             }
+          },
+          "500": {
+            "description": "Internal Server Error: A general error occurred on the provider.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionErrorMessage"
+                }
+              }
+            }
           }
         }
       },
       "post": {
-        "summary": "Create a new subscription to receive notifications",
-        "operationId": "rainbow_events/subscription/create_subscription",
-        "security": [],
         "tags": [
-          "Events"
+          "Subscriptions"
         ],
-        "description": "Create a new subscription to receive notifications",
+        "summary": "Create a new subscription",
+        "operationId": "createSubscription",
+        "security": [],
+        "description": "Registers a new subscription to receive event notifications at a specified callback URL. This allows external systems to react to changes in the transfer lifecycle.",
         "requestBody": {
-          "$ref": "#/components/schemas/RainbowEventsSubscriptionCreationRequest"
+          "description": "Details of the subscription to be created.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RainbowEventsSubscriptionCreationRequest"
+              }
+            }
+          }
         },
         "responses": {
           "201": {
-            "description": "Provider returns information about subscription",
-            "headers": {},
+            "description": "Subscription created successfully.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2573,8 +930,7 @@
             }
           },
           "400": {
-            "description": "Json malformed",
-            "headers": {},
+            "description": "Bad Request: The request body is malformed or the callback URL is invalid.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2583,20 +939,8 @@
               }
             }
           },
-          "404": {
-            "description": "Subscription not found",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SubscriptionErrorMessage"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "General error",
-            "headers": {},
+          "500": {
+            "description": "Internal Server Error: An error occurred while creating the subscription.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2611,28 +955,20 @@
     "/api/v1/contract-negotiation/subscriptions/{subscription_id}": {
       "parameters": [
         {
-          "name": "subscription_id",
-          "in": "path",
-          "required": true,
-          "description": "The ID of the subscription to retrieve",
-          "schema": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          }
+          "$ref": "#/components/parameters/subscription_id"
         }
       ],
       "get": {
-        "summary": "Retrieves subscription by id",
-        "operationId": "rainbow_events/subscription/get_subscription_by_id",
         "tags": [
-          "Events"
+          "Subscriptions"
         ],
+        "summary": "Get a subscription by ID",
+        "operationId": "getSubscriptionById",
         "security": [],
-        "description": "Retrieves subscription by id",
+        "description": "Retrieves the details of a specific subscription using its unique identifier.",
         "responses": {
           "200": {
-            "description": "Retrieves subscription by id",
-            "headers": {},
+            "description": "Subscription details successfully retrieved.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2642,8 +978,7 @@
             }
           },
           "400": {
-            "description": "Json malformed",
-            "headers": {},
+            "description": "Bad Request: The provided `subscription_id` does not follow the required 'urn:uuid:<uuid>' format.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2653,8 +988,7 @@
             }
           },
           "404": {
-            "description": "Subscription not found",
-            "headers": {},
+            "description": "Not Found: No subscription was found with the specified ID.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2663,9 +997,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "General error",
-            "headers": {},
+          "500": {
+            "description": "Internal Server Error: An error occurred while retrieving the subscription.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2677,20 +1010,27 @@
         }
       },
       "put": {
-        "summary": "Edits subscription by id",
-        "operationId": "rainbow_events/subscription/put_subscription_by_id",
         "tags": [
-          "Events"
+          "Subscriptions"
         ],
+        "summary": "Update a subscription by ID",
+        "operationId": "updateSubscriptionById",
         "security": [],
-        "description": "Edits subscription by id",
+        "description": "Modifies an existing subscription. Allows changing the callback URL or expiration date.",
         "requestBody": {
-          "$ref": "#/components/schemas/RainbowEventsSubscriptionEditionRequest"
+          "description": "Fields of the subscription to be updated.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RainbowEventsSubscriptionEditionRequest"
+              }
+            }
+          }
         },
         "responses": {
           "202": {
-            "description": "Edits subscription by id",
-            "headers": {},
+            "description": "Subscription updated successfully.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2700,8 +1040,7 @@
             }
           },
           "400": {
-            "description": "Json malformed",
-            "headers": {},
+            "description": "Bad Request: The request body is malformed or the `subscription_id` is invalid.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2711,8 +1050,7 @@
             }
           },
           "404": {
-            "description": "Subscription not found",
-            "headers": {},
+            "description": "Not Found: No subscription was found with the specified ID.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2721,9 +1059,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "General error",
-            "headers": {},
+          "500": {
+            "description": "Internal Server Error: An error occurred while updating the subscription.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2735,21 +1072,19 @@
         }
       },
       "delete": {
-        "summary": "Deletes subscription by id",
-        "operationId": "rainbow_events/subscription/delete_subscription_by_id",
         "tags": [
-          "Events"
+          "Subscriptions"
         ],
+        "summary": "Delete a subscription by ID",
+        "operationId": "deleteSubscriptionById",
         "security": [],
-        "description": "Deletes subscription by id",
+        "description": "Permanently deletes a subscription. The provider will stop sending notifications to the associated callback URL.",
         "responses": {
           "204": {
-            "description": "Deletes subscription by id",
-            "headers": {}
+            "description": "Subscription deleted successfully. No content is returned."
           },
           "404": {
-            "description": "Subscription not found",
-            "headers": {},
+            "description": "Not Found: No subscription was found with the specified ID.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2758,9 +1093,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "General error",
-            "headers": {},
+          "500": {
+            "description": "Internal Server Error: An error occurred while deleting the subscription.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2774,17 +1108,16 @@
     },
     "/api/v1/contract-negotiation/notifications": {
       "get": {
-        "summary": "Retrieves all notifications",
-        "operationId": "rainbow_events/notification/get_all_notifications",
         "tags": [
-          "Events"
+          "Notifications"
         ],
+        "summary": "List all notifications",
+        "operationId": "getAllNotifications",
         "security": [],
-        "description": "Retrieves all notifications",
+        "description": "Retrieves a history of all notifications sent by the provider to all subscriptions.",
         "responses": {
           "200": {
-            "description": "Retrieves all notifications",
-            "headers": {},
+            "description": "A list of all notifications.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2800,18 +1133,22 @@
       }
     },
     "/api/v1/contract-negotiation/subscriptions/{subscription_id}/notifications": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/subscription_id"
+        }
+      ],
       "get": {
-        "summary": "Retrieves all notifications belonging to a subscription",
-        "operationId": "rainbow_events/notification/get_notifications_by_subscription_id",
         "tags": [
-          "Events"
+          "Notifications"
         ],
+        "summary": "List notifications for a subscription",
+        "operationId": "getNotificationsBySubscriptionId",
         "security": [],
-        "description": "Retrieves all notifications belonging to a subscription",
+        "description": "Retrieves all notifications (sent and pending) associated with a specific subscription.",
         "responses": {
           "200": {
-            "description": "Retrieves all notifications belonging to a subscription",
-            "headers": {},
+            "description": "A list of notifications for the specified subscription.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2824,8 +1161,7 @@
             }
           },
           "400": {
-            "description": "Json malformed",
-            "headers": {},
+            "description": "Bad Request: The provided `subscription_id` is invalid.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2835,8 +1171,7 @@
             }
           },
           "404": {
-            "description": "Subscription or notification not found",
-            "headers": {},
+            "description": "Not Found: The specified subscription was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2845,9 +1180,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "General error",
-            "headers": {},
+          "500": {
+            "description": "Internal Server Error: An error occurred on the server.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2860,18 +1194,22 @@
       }
     },
     "/api/v1/contract-negotiation/subscriptions/{subscription_id}/notifications-pending": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/subscription_id"
+        }
+      ],
       "get": {
-        "summary": "Retrieves all pending notifications belonging to a subscription",
-        "operationId": "rainbow_events/notification/get_pending_notifications_by_subscription_id",
         "tags": [
-          "Events"
+          "Notifications"
         ],
+        "summary": "List pending notifications for a subscription",
+        "operationId": "getPendingNotificationsBySubscriptionId",
         "security": [],
-        "description": "Retrieves all pending notifications belonging to a subscription",
+        "description": "Retrieves a list of notifications that have not yet been sent or confirmed by a specific subscription's callback. Useful for debugging and retries.",
         "responses": {
           "200": {
-            "description": "Retrieves all pending notifications belonging to a subscription",
-            "headers": {},
+            "description": "A list of pending notifications.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2884,8 +1222,7 @@
             }
           },
           "400": {
-            "description": "Json malformed",
-            "headers": {},
+            "description": "Bad Request: The provided `subscription_id` is invalid.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2895,8 +1232,7 @@
             }
           },
           "404": {
-            "description": "Subscription or notification not found",
-            "headers": {},
+            "description": "Not Found: The specified subscription was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2905,9 +1241,69 @@
               }
             }
           },
-          "5XX": {
-            "description": "General error",
-            "headers": {},
+          "500": {
+            "description": "Internal Server Error: An error occurred on the server.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationErrorMessage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contract-negotiation/subscriptions/{subscription_id}/ack-notifications-pending": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/subscription_id"
+        }
+      ],
+      "post": {
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Returns pending notifications for a subscription and sets them as acknowledged",
+        "operationId": "ackPendingNotificationsBySubscriptionId",
+        "security": [],
+        "description": "Retrieves a list of notifications that have not yet been sent or confirmed by a specific subscription's callback. Once retrieved, these notifications are marked as acknowledged to prevent future retrievals.",
+        "responses": {
+          "202": {
+            "description": "A list of pending notifications.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RainbowEventsNotificationResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request: The provided `subscription_id` is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationErrorMessage"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found: The specified subscription was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationErrorMessage"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error: An error occurred on the server.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2920,18 +1316,25 @@
       }
     },
     "/api/v1/contract-negotiation/subscriptions/{subscription_id}/notifications/{notification_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/subscription_id"
+        },
+        {
+          "$ref": "#/components/parameters/notification_id"
+        }
+      ],
       "get": {
-        "summary": "Retrieves a notification by id and subscription",
-        "operationId": "rainbow_events/notification/get_notification_by_id",
         "tags": [
-          "Events"
+          "Notifications"
         ],
+        "summary": "Get a specific notification by ID",
+        "operationId": "getNotificationById",
         "security": [],
-        "description": "Retrieves a notification by id and subscription",
+        "description": "Retrieves the details of a specific notification within the context of its subscription.",
         "responses": {
           "200": {
-            "description": "Retrieves a notification by id and subscription",
-            "headers": {},
+            "description": "Notification details successfully retrieved.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2941,8 +1344,7 @@
             }
           },
           "400": {
-            "description": "Json malformed",
-            "headers": {},
+            "description": "Bad Request: The `subscription_id` or `notification_id` is invalid.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2952,8 +1354,7 @@
             }
           },
           "404": {
-            "description": "Subscription or notification not found",
-            "headers": {},
+            "description": "Not Found: The subscription or notification with the specified IDs was not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2962,9 +1363,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "General error",
-            "headers": {},
+          "500": {
+            "description": "Internal Server Error: An error occurred on the server.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2978,40 +1378,177 @@
     }
   },
   "components": {
-    "requestBodies": {},
+    "parameters": {
+      "processId": {
+        "name": "processId",
+        "in": "path",
+        "required": true,
+        "description": "The unique identifier of the contract negotiation process.",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "messageId": {
+        "name": "messageId",
+        "in": "path",
+        "required": true,
+        "description": "The unique identifier of the message.",
+        "schema": {
+          "type": "string",
+          "format": "uri"
+        }
+      },
+      "offerId": {
+        "name": "offerId",
+        "in": "path",
+        "required": true,
+        "description": "The unique identifier of the offer.",
+        "schema": {
+          "type": "string",
+          "format": "uri"
+        }
+      },
+      "agreementId": {
+        "name": "agreementId",
+        "in": "path",
+        "required": true,
+        "description": "The unique identifier of the agreement.",
+        "schema": {
+          "type": "string",
+          "format": "uri"
+        }
+      },
+      "subscription_id": {
+        "name": "subscription_id",
+        "in": "path",
+        "required": true,
+        "description": "The unique identifier of the subscription.",
+        "schema": {
+          "type": "string",
+          "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
+          "examples": [
+            "urn:uuid:987a6543-e21b-54d3-a456-112233445566"
+          ]
+        }
+      },
+      "notification_id": {
+        "name": "notification_id",
+        "in": "path",
+        "required": true,
+        "description": "The unique identifier of the notification.",
+        "schema": {
+          "type": "string",
+          "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
+          "examples": [
+            "urn:uuid:543b2109-cba0-45f8-8123-abcdefabcdef"
+          ]
+        }
+      }
+    },
     "schemas": {
-      "CnErrorProviderError": {
+      "RainbowCNError": {
         "type": "object",
-        "description": "Rainbow entity contract entity error",
+        "description": "Standard error response for the Contract Negotiation API.",
         "properties": {
           "code": {
             "type": "string",
-            "description": "Numeric code for error",
-            "nullable": false,
-            "example": "400"
+            "description": "HTTP status code.",
+            "examples": [
+              "404"
+            ]
           },
           "title": {
             "type": "string",
-            "description": "Textual code for error",
-            "nullable": false,
-            "example": "BAD_REQUEST"
+            "description": "A short, machine-readable error code.",
+            "examples": [
+              "PROCESS_NOT_FOUND"
+            ]
           },
           "message": {
             "type": "string",
-            "description": "Textual description for error",
-            "nullable": false,
-            "example": "Error from deserializing path. Identifiers must have urn:uuid:<uuid> schema"
+            "description": "A human-readable explanation of the error.",
+            "examples": [
+              "Contract negotiation process with the specified ID was not found."
+            ]
           }
         }
       },
       "RainbowCNProcess": {
         "type": "object",
-        "description": "Rainbow entity contract negotiation process",
+        "description": "Represents the state of a contract negotiation process.",
         "properties": {
-          "cnProcessId": {
+          "providerPid": {
             "type": "string",
             "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
           },
+          "consumerPid": {
+            "type": "string",
+            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
+          },
+          "associated_consumer": {
+            "type": "string",
+            "description": "Consumer participant DID.",
+            "examples": [
+              "did:web:example.com"
+            ]
+          },
+          "is_business": {
+            "type": "boolean",
+            "description": "Indicates if the negotiation is business-related."
+          },
+          "state": {
+            "type": "string",
+            "description": "The state of the process associated with the message.",
+            "enum": [
+              "REQUESTED",
+              "OFFERED",
+              "ACCEPTED",
+              "AGREED",
+              "VERIFIED",
+              "FINALIZED",
+              "TERMINATED"
+            ]
+          },
+          "initiated_by": {
+            "type": "string",
+            "description": "Which role has begun the process.",
+            "enum": [
+              "Consumer",
+              "Provider"
+            ],
+            "examples": [
+              "Consumer"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Timestamp (ISO 8601) of the process creation.",
+            "format": "date-time",
+            "examples": [
+              "2025-03-07T09:56:28.105105Z"
+            ]
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Timestamp (ISO 8601) of the process update.",
+            "format": "date-time",
+            "examples": [
+              "2025-03-07T09:56:28.105105Z"
+            ]
+          }
+        },
+        "required": [
+          "provider_id",
+          "is_business",
+          "state",
+          "initiated_by",
+          "created_at"
+        ]
+      },
+      "NewContractNegotiationRequest": {
+        "type": "object",
+        "description": "Request to create a new contract negotiation process.",
+        "properties": {
           "providerPid": {
             "type": "string",
             "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
@@ -3022,8 +1559,30 @@
           },
           "state": {
             "type": "string",
-            "nullable": false,
-            "description": "Contract negotiation process current state",
+            "enum": [
+              "REQUESTED"
+            ],
+            "default": "REQUESTED"
+          }
+        },
+        "required": [
+          "state"
+        ]
+      },
+      "EditContractNegotiationRequest": {
+        "type": "object",
+        "description": "Request to edit a contract negotiation process.",
+        "properties": {
+          "providerPid": {
+            "type": "string",
+            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
+          },
+          "consumerPid": {
+            "type": "string",
+            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
+          },
+          "state": {
+            "type": "string",
             "enum": [
               "REQUESTED",
               "OFFERED",
@@ -3032,64 +1591,38 @@
               "VERIFIED",
               "FINALIZED",
               "TERMINATED"
-            ],
-            "example": "REQUESTED"
-          },
-          "initiatedBy": {
-            "type": "string",
-            "nullable": false,
-            "description": "Contract negotiation initiator",
-            "enum": [
-              "Consumer",
-              "Provider"
-            ],
-            "example": "Consumer"
-          },
-          "createdAt": {
-            "type": "string",
-            "nullable": false,
-            "format": "date-time",
-            "example": "2025-03-07T09:56:28.105105"
-          },
-          "updatedAt": {
-            "type": "string",
-            "nullable": true,
-            "format": "date-time",
-            "example": "2025-03-07T09:56:28.105105"
+            ]
           }
         }
       },
       "RainbowCNMessage": {
         "type": "object",
-        "description": "Rainbow entity contract negotiation message",
+        "description": "Represents a message within a contract negotiation process.",
         "properties": {
-          "cnMessageId": {
+          "cn_message_id": {
             "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
-            "nullable": false
+            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
           },
-          "cnProcessId": {
+          "cn_process_id": {
             "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
-            "nullable": false
+            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
           },
-          "@type": {
+          "_type": {
             "type": "string",
-            "nullable": false,
             "enum": [
               "ContractRequestMessage",
               "ContractOfferMessage",
               "ContractAgreementMessage",
               "ContractAgreementVerificationMessage",
               "ContractNegotiationEventMessage",
-              "ContractNegotiationTerminationMessage",
-              "ContractNegotiation",
-              "ContractNegotiationError"
+              "ContractNegotiationTerminationMessage"
             ]
+          },
+          "subtype": {
+            "type": "string"
           },
           "from": {
             "type": "string",
-            "nullable": false,
             "enum": [
               "Consumer",
               "Provider"
@@ -3097,499 +1630,183 @@
           },
           "to": {
             "type": "string",
-            "nullable": false,
             "enum": [
               "Consumer",
               "Provider"
             ]
           },
-          "createdAt": {
+          "created_at": {
             "type": "string",
-            "nullable": false,
+            "description": "Timestamp (ISO 8601) of the message creation.",
             "format": "date-time",
-            "example": "2025-03-07T09:56:28.105105"
+            "examples": [
+              "2025-03-07T09:56:28.105105Z"
+            ]
           },
           "content": {
-            "type": "object",
-            "nullable": false
+            "type": "object"
           }
         }
       },
       "RainbowCNOffer": {
         "type": "object",
-        "description": "Rainbow entity contract negotiation process",
+        "description": "Represents a contract offer within a negotiation process.",
         "properties": {
-          "cnProcessId": {
+          "offer_id": {
             "type": "string",
             "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
           },
-          "providerPid": {
+          "cn_message_id": {
             "type": "string",
             "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
           },
-          "consumerPid": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
+          "offer_content": {
+            "type": "object"
           },
-          "state": {
+          "created_at": {
             "type": "string",
-            "nullable": false,
-            "description": "Contract negotiation process current state",
-            "enum": [
-              "REQUESTED",
-              "OFFERED",
-              "ACCEPTED",
-              "AGREED",
-              "VERIFIED",
-              "FINALIZED",
-              "TERMINATED"
-            ],
-            "example": "REQUESTED"
-          },
-          "initiatedBy": {
-            "type": "string",
-            "nullable": false,
-            "description": "Contract negotiation initiator",
-            "enum": [
-              "Consumer",
-              "Provider"
-            ],
-            "example": "Consumer"
-          },
-          "createdAt": {
-            "type": "string",
-            "nullable": false,
+            "description": "Timestamp (ISO 8601) of the message creation.",
             "format": "date-time",
-            "example": "2025-03-07T09:56:28.105105"
-          },
-          "updatedAt": {
-            "type": "string",
-            "nullable": true,
-            "format": "date-time",
-            "example": "2025-03-07T09:56:28.105105"
+            "examples": [
+              "2025-03-07T09:56:28.105105Z"
+            ]
           }
         }
       },
       "RainbowAgreement": {
         "type": "object",
-        "description": "Rainbow entity contract negotiation process",
+        "description": "Represents a finalized contract agreement.",
         "properties": {
-          "cnProcessId": {
+          "agreement_id": {
             "type": "string",
             "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
           },
-          "providerPid": {
+          "consumer_participant_id": {
             "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          },
-          "consumerPid": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          },
-          "state": {
-            "type": "string",
-            "nullable": false,
-            "description": "Contract negotiation process current state",
-            "enum": [
-              "REQUESTED",
-              "OFFERED",
-              "ACCEPTED",
-              "AGREED",
-              "VERIFIED",
-              "FINALIZED",
-              "TERMINATED"
-            ],
-            "example": "REQUESTED"
-          },
-          "initiatedBy": {
-            "type": "string",
-            "nullable": false,
-            "description": "Contract negotiation initiator",
-            "enum": [
-              "Consumer",
-              "Provider"
-            ],
-            "example": "Consumer"
-          },
-          "createdAt": {
-            "type": "string",
-            "nullable": false,
-            "format": "date-time",
-            "example": "2025-03-07T09:56:28.105105"
-          },
-          "updatedAt": {
-            "type": "string",
-            "nullable": true,
-            "format": "date-time",
-            "example": "2025-03-07T09:56:28.105105"
-          }
-        }
-      },
-      "RainbowParticipant": {
-        "type": "object",
-        "description": "Rainbow entity contract negotiation process",
-        "properties": {
-          "cnProcessId": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          },
-          "providerPid": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          },
-          "consumerPid": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          },
-          "state": {
-            "type": "string",
-            "nullable": false,
-            "description": "Contract negotiation process current state",
-            "enum": [
-              "REQUESTED",
-              "OFFERED",
-              "ACCEPTED",
-              "AGREED",
-              "VERIFIED",
-              "FINALIZED",
-              "TERMINATED"
-            ],
-            "example": "REQUESTED"
-          },
-          "initiatedBy": {
-            "type": "string",
-            "nullable": false,
-            "description": "Contract negotiation initiator",
-            "enum": [
-              "Consumer",
-              "Provider"
-            ],
-            "example": "Consumer"
-          },
-          "createdAt": {
-            "type": "string",
-            "nullable": false,
-            "format": "date-time",
-            "example": "2025-03-07T09:56:28.105105"
-          },
-          "updatedAt": {
-            "type": "string",
-            "nullable": true,
-            "format": "date-time",
-            "example": "2025-03-07T09:56:28.105105"
-          }
-        }
-      },
-      "NewContractNegotiationRequest": {
-        "type": "object",
-        "description": "Request to create a new contract negotiation process",
-        "properties": {
-          "providerPid": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
-            "nullable": true
-          },
-          "consumerPid": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
-            "nullable": true
-          },
-          "state": {
-            "type": "string",
-            "nullable": false,
-            "enum": [
-              "REQUESTED",
-              "OFFERED",
-              "ACCEPTED",
-              "AGREED",
-              "VERIFIED",
-              "FINALIZED",
-              "TERMINATED"
-            ],
-            "example": "REQUESTED"
-          }
-        }
-      },
-      "EditContractNegotiationRequest": {
-        "type": "object",
-        "description": "Request to edit a contract negotiation process",
-        "properties": {
-          "providerPid": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
-            "nullable": true
-          },
-          "consumerPid": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
-            "nullable": true
-          },
-          "state": {
-            "type": "string",
-            "nullable": true,
-            "enum": [
-              "REQUESTED",
-              "OFFERED",
-              "ACCEPTED",
-              "AGREED",
-              "VERIFIED",
-              "FINALIZED",
-              "TERMINATED"
-            ],
-            "example": "REQUESTED"
-          }
-        }
-      },
-      "NewContractNegotiationMessageRequest": {
-        "type": "object",
-        "description": "Request to create a new contract negotiation message",
-        "properties": {
-          "@type": {
-            "type": "string",
-            "nullable": false,
-            "enum": [
-              "ContractRequestMessage",
-              "ContractOfferMessage",
-              "ContractAgreementMessage",
-              "ContractAgreementVerificationMessage",
-              "ContractNegotiationEventMessage",
-              "ContractNegotiationTerminationMessage",
-              "ContractNegotiation",
-              "ContractNegotiationError"
+            "description": "Consumer participant DID.",
+            "examples": [
+              "did:web:example.com"
             ]
           },
-          "from": {
+          "provider_participant_id": {
             "type": "string",
-            "enum": [
-              "Consumer",
-              "Provider"
-            ],
-            "nullable": false
+            "description": "Consumer participant DID.",
+            "examples": [
+              "did:web:example.com"
+            ]
           },
-          "to": {
+          "cn_message_id": {
             "type": "string",
-            "enum": [
-              "Consumer",
-              "Provider"
-            ],
-            "nullable": false
+            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
           },
-          "content": {
-            "type": "object",
-            "nullable": false,
-            "example": "{}"
-          }
-        }
-      },
-      "EditContractNegotiationMessageRequest": {
-        "type": "object",
-        "description": "Request to edit a contract negotiation message",
-        "$ref": "#/components/schemas/NewContractNegotiationMessageRequest"
-      },
-      "NewContractNegotiationOfferRequest": {
-        "type": "object",
-        "description": "Request to create a contract negotiation offer",
-        "properties": {
-          "offer": {
-            "type": "object",
-            "nullable": false,
-            "example": "{}"
-          }
-        }
-      },
-      "NewAgreementRequest": {
-        "type": "object",
-        "description": "Request to create an agreement",
-        "properties": {
-          "consumerParticipantId": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
-            "nullable": false
+          "agreement_content": {
+            "type": "object"
           },
-          "providerParticipantId": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
-            "nullable": false
-          },
-          "agreement": {
-            "type": "object",
-            "nullable": false,
-            "example": "{}"
-          }
-        }
-      },
-      "EditAgreementRequest": {
-        "type": "object",
-        "description": "Request to edit an agreement",
-        "properties": {
           "active": {
-            "type": "boolean",
-            "nullable": true
-          }
-        }
-      },
-      "NewParticipantRequest": {
-        "type": "object",
-        "description": "Request to register a new participant in data space provider",
-        "properties": {
-          "participantId": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
-            "nullable": true
+            "type": "boolean"
           },
-          "participantType": {
+          "created_at": {
             "type": "string",
-            "enum": [
-              "Consumer",
-              "Provider"
-            ],
-            "nullable": true
-          },
-          "baseUrl": {
-            "type": "string",
-            "nullable": false
-          },
-          "extra_fields": {
-            "type": "object",
-            "nullable": false,
-            "example": "{}"
-          }
-        }
-      },
-      "EditParticipantRequest": {
-        "type": "object",
-        "description": "Request to edit a new participant in data space provider",
-        "properties": {
-          "baseUrl": {
-            "type": "string",
-            "nullable": true
-          },
-          "extra_fields": {
-            "type": "object",
-            "nullable": true,
-            "example": "{}"
+            "description": "Timestamp (ISO 8601) of the message creation.",
+            "format": "date-time",
+            "examples": [
+              "2025-03-07T09:56:28.105105Z"
+            ]
           }
         }
       },
       "SetupOfferRequest": {
         "type": "object",
-        "description": "Send Offer Request to consumer",
-        "additionalProperties": false,
+        "description": "Request body for the RPC call to send an offer.",
         "properties": {
           "consumerParticipantId": {
             "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
-            "nullable": false
+            "description": "Consumer participant DID.",
+            "examples": [
+              "did:web:example.com"
+            ]
           },
           "consumerPid": {
             "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
-            "nullable": true
+            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
           },
           "providerPid": {
             "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
-            "nullable": true
+            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
           },
           "offer": {
-            "type": "object",
-            "nullable": false,
-            "properties": {
-              "$ref": "#/components/schemas/OdrlOffer"
-            }
+            "$ref": "#/components/schemas/OdrlOffer"
           }
         },
         "required": [
-          "offer",
-          "consumerParticipantId"
+          "consumerParticipantId",
+          "offer"
         ]
       },
       "SetupOfferResponse": {
         "type": "object",
-        "description": "Send Offer Request to consumer",
-        "additionalProperties": false,
         "properties": {
           "consumerParticipantId": {
             "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
-            "nullable": false
+            "description": "Consumer participant DID.",
+            "examples": [
+              "did:web:example.com"
+            ]
           },
           "consumerPid": {
             "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
-            "nullable": true
+            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
           },
           "providerPid": {
             "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
-            "nullable": true
+            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
           },
           "offer": {
-            "type": "object",
-            "properties": {
-              "$ref": "#/components/schemas/OdrlOffer"
-            },
-            "nullable": false
+            "$ref": "#/components/schemas/OdrlOffer"
           },
           "message": {
-            "type": "object",
-            "properties": {
-              "$ref": "#/components/schemas/ContractAckMessage"
-            },
-            "nullable": false
-          }
-        },
-        "required": [
-          "offer",
-          "consumerParticipantId",
-          "message"
-        ]
-      },
-      "SetupAgreementRequest": {
-        "type": "object",
-        "required": [
-          "dspace:consumerParticipantId",
-          "dspace:consumerPid",
-          "dspace:providerPid",
-          "dspace:agreement"
-        ],
-        "properties": {
-          "dspace:consumerParticipantId": {
-            "type": "string",
-            "format": "uri"
-          },
-          "dspace:consumerPid": {
-            "type": "string",
-            "format": "uri"
-          },
-          "dspace:providerPid": {
-            "type": "string",
-            "format": "uri"
-          },
-          "dspace:agreement": {
-            "$ref": "#/components/schemas/OdrlAgreement"
+            "$ref": "#/components/schemas/ContractAckMessage"
           }
         }
       },
+      "SetupAgreementRequest": {
+        "type": "object",
+        "properties": {
+          "consumerParticipantId": {
+            "type": "string",
+            "description": "Consumer participant DID.",
+            "examples": [
+              "did:web:example.com"
+            ]
+          },
+          "consumerPid": {
+            "type": "string",
+            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
+          },
+          "providerPid": {
+            "type": "string",
+            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
+          }
+        },
+        "required": [
+          "consumerParticipantId",
+          "consumerPid",
+          "providerPid"
+        ]
+      },
       "SetupAgreementResponse": {
         "type": "object",
-        "required": [
-          "dspace:consumerPid",
-          "dspace:providerPid",
-          "dspace:agreement",
-          "message"
-        ],
         "properties": {
-          "dspace:consumerPid": {
+          "consumerPid": {
             "type": "string",
-            "format": "uri"
+            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
           },
-          "dspace:providerPid": {
+          "providerPid": {
             "type": "string",
-            "format": "uri"
+            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
           },
-          "dspace:agreement": {
-            "$ref": "#/components/schemas/OdrlAgreement"
+          "agreement": {
+            "$ref": "#/components/schemas/RainbowAgreement"
           },
           "message": {
             "$ref": "#/components/schemas/ContractAckMessage"
@@ -3598,41 +1815,39 @@
       },
       "SetupFinalizationRequest": {
         "type": "object",
-        "required": [
-          "dspace:consumerParticipantId",
-          "dspace:consumerPid",
-          "dspace:providerPid"
-        ],
         "properties": {
-          "dspace:consumerParticipantId": {
+          "consumerParticipantId": {
             "type": "string",
-            "format": "uri"
+            "description": "Consumer participant DID.",
+            "examples": [
+              "did:web:example.com"
+            ]
           },
-          "dspace:consumerPid": {
+          "consumerPid": {
             "type": "string",
-            "format": "uri"
+            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
           },
-          "dspace:providerPid": {
+          "providerPid": {
             "type": "string",
-            "format": "uri"
+            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
           }
-        }
+        },
+        "required": [
+          "consumerParticipantId",
+          "consumerPid",
+          "providerPid"
+        ]
       },
       "SetupFinalizationResponse": {
         "type": "object",
-        "required": [
-          "dspace:consumerPid",
-          "dspace:providerPid",
-          "message"
-        ],
         "properties": {
-          "dspace:consumerPid": {
+          "consumerPid": {
             "type": "string",
-            "format": "uri"
+            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
           },
-          "dspace:providerPid": {
+          "providerPid": {
             "type": "string",
-            "format": "uri"
+            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
           },
           "message": {
             "$ref": "#/components/schemas/ContractAckMessage"
@@ -3641,41 +1856,39 @@
       },
       "SetupTerminationRequest": {
         "type": "object",
-        "required": [
-          "dspace:consumerParticipantId",
-          "dspace:consumerPid",
-          "dspace:providerPid"
-        ],
         "properties": {
-          "dspace:consumerParticipantId": {
+          "consumerParticipantId": {
             "type": "string",
-            "format": "uri"
+            "description": "Consumer participant DID.",
+            "examples": [
+              "did:web:example.com"
+            ]
           },
-          "dspace:consumerPid": {
+          "consumerPid": {
             "type": "string",
-            "format": "uri"
+            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
           },
-          "dspace:providerPid": {
+          "providerPid": {
             "type": "string",
-            "format": "uri"
+            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
           }
-        }
+        },
+        "required": [
+          "consumerParticipantId",
+          "consumerPid",
+          "providerPid"
+        ]
       },
       "SetupTerminationResponse": {
         "type": "object",
-        "required": [
-          "dspace:consumerPid",
-          "dspace:providerPid",
-          "message"
-        ],
         "properties": {
-          "dspace:consumerPid": {
+          "consumerPid": {
             "type": "string",
-            "format": "uri"
+            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
           },
-          "dspace:providerPid": {
+          "providerPid": {
             "type": "string",
-            "format": "uri"
+            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
           },
           "message": {
             "$ref": "#/components/schemas/ContractAckMessage"
@@ -3684,419 +1897,189 @@
       },
       "DSRPCCNProviderErrorResponse": {
         "type": "object",
-        "description": "Error response for contract negotiation provider process",
         "properties": {
-          "error": {
-            "$ref": "#/components/schemas/CnErrorProviderError"
+          "consumerPid": {
+            "type": "string",
+            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
+          },
+          "providerPid": {
+            "type": "string",
+            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
+          },
+          "code": {
+            "type": "string",
+            "description": "A short, machine-readable error code.",
+            "examples": [
+              "ODRL_VALIDATION_ERROR"
+            ]
+          },
+          "reason": {
+            "type": "array",
+            "description": "A human-readable explanation of the error.",
+            "items": {
+              "type": "string"
+            },
+            "examples": [
+              [
+                "The provided ODRL policy is invalid."
+              ]
+            ]
           }
-        },
-        "required": [
-          "consumerPid",
-          "message"
-        ]
+        }
       },
       "OdrlOffer": {
         "type": "object",
-        "required": [
-          "@id",
-          "@type"
-        ],
-        "properties": {
-          "@id": {
-            "type": "string",
-            "format": "uri"
-          },
-          "@type": {
-            "type": "string",
-            "enum": [
-              "dspace:Offer",
-              "dspace:Agreement"
-            ]
-          },
-          "odrl:profile": {
-            "oneOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "array",
-                "items": {
-                  "type": "string"
+        "description": "An ODRL offer object as per the ODRL specification.",
+        "default": {
+          "@context": "https://www.w3.org/ns/odrl.jsonld",
+          "type": "Offer",
+          "target": "urn:uuid:123e4567-e89b-12d3-a456-426614174000",
+          "assigner": "did:web:provider.example.com",
+          "assignee": "did:web:consumer.example.com",
+          "permission": [
+            {
+              "type": "use",
+              "constraint": [
+                {
+                  "leftOperand": "purpose",
+                  "operator": "eq",
+                  "rightOperand": "research"
                 }
-              }
-            ]
-          },
-          "odrl:permission": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/OdrlPermission"
+              ]
             }
-          },
-          "odrl:prohibition": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/OdrlObligation"
+          ],
+          "prohibition": [
+            {
+              "type": "sell"
             }
-          },
-          "odrl:obligation": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/OdrlObligation"
-            }
-          },
-          "odrl:target": {
-            "type": "string",
-            "format": "uri"
-          }
-        },
-        "oneOf": [
-          {
-            "required": [
-              "odrl:permission"
-            ]
-          },
-          {
-            "required": [
-              "odrl:prohibition"
-            ]
-          }
-        ]
-      },
-      "OdrlMessageOffer": {
-        "type": "object",
-        "required": [
-          "@id",
-          "@type"
-        ],
-        "properties": {
-          "@id": {
-            "type": "string",
-            "format": "uri"
-          },
-          "@type": {
-            "type": "string",
-            "enum": [
-              "dspace:Offer",
-              "dspace:Agreement"
-            ]
-          },
-          "odrl:profile": {
-            "oneOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "array",
-                "items": {
-                  "type": "string"
+          ],
+          "obligation": [
+            {
+              "type": "attribute",
+              "action": "notify",
+              "constraint": [
+                {
+                  "leftOperand": "event",
+                  "operator": "eq",
+                  "rightOperand": "dataBreach"
                 }
-              }
-            ]
-          },
-          "odrl:permission": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/OdrlPermission"
+              ]
             }
-          },
-          "odrl:prohibition": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/OdrlObligation"
-            }
-          },
-          "odrl:obligation": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/OdrlObligation"
-            }
-          }
-        },
-        "oneOf": [
-          {
-            "required": [
-              "odrl:permission"
-            ]
-          },
-          {
-            "required": [
-              "odrl:prohibition"
-            ]
-          }
-        ]
+          ]
+        }
       },
       "OdrlAgreement": {
         "type": "object",
-        "required": [
-          "@id",
-          "@type",
-          "odrl:target",
-          "odrl:assigner",
-          "odrl:assignee"
-        ],
-        "properties": {
-          "@id": {
-            "type": "string"
-          },
-          "@type": {
-            "type": "string",
-            "enum": [
-              "dspace:Offer",
-              "dspace:Agreement"
-            ]
-          },
-          "odrl:profile": {
-            "oneOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "array",
-                "items": {
-                  "type": "string"
+        "description": "An ODRL agreement object as per the ODRL specification.",
+        "default": {
+          "@context": "https://www.w3.org/ns/odrl.jsonld",
+          "type": "Agreement",
+          "target": "urn:uuid:123e4567-e89b-12d3-a456-426614174000",
+          "assigner": "did:web:provider.example.com",
+          "assignee": "did:web:consumer.example.com",
+          "permission": [
+            {
+              "type": "use",
+              "constraint": [
+                {
+                  "leftOperand": "purpose",
+                  "operator": "eq",
+                  "rightOperand": "research"
                 }
-              }
-            ]
-          },
-          "odrl:permission": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/OdrlPermission"
+              ]
             }
-          },
-          "odrl:prohibition": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/OdrlObligation"
+          ],
+          "prohibition": [
+            {
+              "type": "sell"
             }
-          },
-          "odrl:obligation": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/OdrlObligation"
+          ],
+          "obligation": [
+            {
+              "type": "attribute",
+              "action": "notify",
+              "constraint": [
+                {
+                  "leftOperand": "event",
+                  "operator": "eq",
+                  "rightOperand": "dataBreach"
+                }
+              ]
             }
-          },
-          "odrl:target": {
-            "type": "string",
-            "format": "uri"
-          },
-          "odrl:assigner": {
-            "type": "string",
-            "format": "uri"
-          },
-          "odrl:assignee": {
-            "type": "string",
-            "format": "uri"
-          },
-          "odrl:timestamp": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
-      "OdrlPermission": {
-        "type": "object",
-        "required": [
-          "odrl:action"
-        ],
-        "properties": {
-          "odrl:action": {
-            "type": "string"
-          },
-          "odrl:constraint": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/OdrlConstraint"
-            }
-          },
-          "odrl:duty": {
-            "$ref": "#/components/schemas/OdrlDuty"
-          }
-        }
-      },
-      "OdrlDuty": {
-        "type": "object",
-        "required": [
-          "odrl:action"
-        ],
-        "properties": {
-          "odrl:action": {
-            "type": "string"
-          },
-          "odrl:constraint": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/OdrlConstraint"
-            }
-          }
-        }
-      },
-      "OdrlObligation": {
-        "$ref": "#/components/schemas/OdrlDuty"
-      },
-      "OdrlConstraint": {
-        "oneOf": [
-          {
-            "$ref": "#/components/schemas/OdrlAtomicConstraint"
-          },
-          {
-            "$ref": "#/components/schemas/OdrlLogicalConstraint"
-          }
-        ]
-      },
-      "OdrlAtomicConstraint": {
-        "type": "object",
-        "required": [
-          "odrl:rightOperand",
-          "odrl:leftOperand",
-          "odrl:operator"
-        ],
-        "properties": {
-          "odrl:rightOperand": {
-            "type": [
-              "string",
-              "object",
-              "array"
-            ]
-          },
-          "odrl:leftOperand": {
-            "type": "string"
-          },
-          "odrl:operator": {
-            "type": "string",
-            "enum": [
-              "odrl:eq",
-              "odrl:gt",
-              "odrl:gteq",
-              "odrl:lteq",
-              "odrl:hasPart",
-              "odrl:isA",
-              "odrl:isAllOf",
-              "odrl:isAnyOf",
-              "odrl:isNoneOf",
-              "odrl:isPartOf",
-              "odrl:lt",
-              "odrl:termLteq",
-              "odrl:neq"
-            ]
-          }
-        }
-      },
-      "OdrlLogicalConstraint": {
-        "$ref": "#/components/schemas/OdrlLogicalConstraintBase"
-      },
-      "OdrlLogicalConstraintBase": {
-        "type": "object",
-        "properties": {
-          "odrl:and": {
-            "$ref": "#/components/schemas/OdrlLogicalArray"
-          },
-          "andSequence": {
-            "$ref": "#/components/schemas/OdrlLogicalArray"
-          },
-          "odrl:or": {
-            "$ref": "#/components/schemas/OdrlLogicalArray"
-          },
-          "odrl:xone": {
-            "$ref": "#/components/schemas/OdrlLogicalArray"
-          }
-        },
-        "oneOf": [
-          {
-            "required": [
-              "odrl:and"
-            ]
-          },
-          {
-            "required": [
-              "andSequence"
-            ]
-          },
-          {
-            "required": [
-              "odrl:or"
-            ]
-          },
-          {
-            "required": [
-              "odrl:xone"
-            ]
-          }
-        ]
-      },
-      "OdrlLogicalArray": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/OdrlConstraint"
+          ]
         }
       },
       "ContractAckMessage": {
         "type": "object",
-        "required": [
-          "@context",
-          "@type",
-          "dspace:providerPid",
-          "dspace:consumerPid",
-          "dspace:state"
-        ],
+        "description": "A generic message that is part of the transfer protocol.",
         "properties": {
-          "@context": {
-            "oneOf": [
-              {
-                "type": "string",
-                "const": "https://w3id.org/dspace/2025/1/context.jsonld"
-              },
-              {
-                "type": "array",
-                "items": {
-                  "type": "string",
-                  "const": "https://w3id.org/dspace/2025/1/context.jsonld"
-                },
-                "maxItems": 1
-              }
+          "context": {
+            "type": "string",
+            "description": "JSON-LD context of the message.",
+            "default": "https://w3id.org/dspace/2025/1/context.jsonld",
+            "examples": [
+              "https://w3id.org/dspace/2025/1/context.jsonld"
             ]
           },
-          "@type": {
-            "type": "string"
+          "type": {
+            "type": "string",
+            "description": "The type of transfer message.",
+            "enum": [
+              "ContractRequestMessage",
+              "ContractOfferMessage",
+              "ContractAgreementMessage",
+              "ContractAgreementVerificationMessage",
+              "ContractNegotiationEventMessage",
+              "ContractNegotiationTerminationMessage"
+            ],
+            "examples": [
+              "ContractRequestMessage"
+            ]
           },
-          "dspace:providerPid": {
-            "type": "string"
+          "providerPid": {
+            "type": "string",
+            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
           },
-          "dspace:consumerPid": {
-            "type": "string"
+          "consumerPid": {
+            "type": "string",
+            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
           },
-          "dspace:state": {
-            "$ref": "#/components/schemas/ContractNegotiationState"
+          "state": {
+            "type": "string",
+            "description": "The state of the process associated with the message.",
+            "enum": [
+              "REQUESTED",
+              "OFFERED",
+              "ACCEPTED",
+              "AGREED",
+              "VERIFIED",
+              "FINALIZED",
+              "TERMINATED"
+            ],
+            "examples": [
+              "REQUESTED"
+            ]
           }
         }
       },
-      "ContractNegotiationState": {
-        "type": "string",
-        "enum": [
-          "dspace:REQUESTED",
-          "dspace:OFFERED",
-          "dspace:ACCEPTED",
-          "dspace:AGREED",
-          "dspace:VERIFIED",
-          "dspace:FINALIZED",
-          "dspace:TERMINATED"
-        ]
-      },
       "RainbowEventsSubscriptionCreationRequest": {
         "type": "object",
-        "description": "Request to create a subscription",
-        "additionalProperties": false,
+        "description": "Request body to create a new event subscription.",
         "properties": {
           "callbackAddress": {
             "type": "string",
-            "nullable": false,
-            "example": "https://callback.example.com"
+            "description": "The URL where event notifications (webhooks) will be sent.",
+            "examples": [
+              "https://myservice.com/webhooks/rainbow"
+            ]
           },
           "expirationTime": {
             "type": "string",
-            "nullable": true,
             "format": "date-time",
-            "example": "2025-03-07T09:56:28.105105"
+            "description": "Optional timestamp (ISO 8601) of when the subscription will expire.",
+            "examples": [
+              "2026-01-01T00:00:00Z"
+            ]
           }
         },
         "required": [
@@ -4105,169 +2088,207 @@
       },
       "RainbowEventsSubscriptionEditionRequest": {
         "type": "object",
-        "description": "Request to create a subscription",
-        "additionalProperties": false,
+        "description": "Request body to edit an existing subscription.",
         "properties": {
           "callbackAddress": {
             "type": "string",
-            "nullable": true,
-            "example": "https://callback.example.com"
+            "description": "The new URL where notifications will be sent.",
+            "examples": [
+              "https://myservice.com/webhooks/new-endpoint"
+            ]
           },
           "expirationTime": {
             "type": "string",
-            "nullable": true,
             "format": "date-time",
-            "example": "2025-03-07T09:56:28.105105"
+            "description": "The new expiration date for the subscription.",
+            "examples": [
+              "2027-01-01T00:00:00Z"
+            ]
           }
-        },
-        "required": []
+        }
       },
       "RainbowEventsSubscriptionCreationResponse": {
         "type": "object",
-        "description": "Response to create a subscription",
-        "additionalProperties": false,
+        "description": "Represents an event subscription, returned when creating, getting, or updating one.",
         "properties": {
           "subscriptionId": {
             "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
+            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
+            "description": "The unique identifier of the subscription."
           },
           "callbackAddress": {
             "type": "string",
-            "example": "https://callback.example.com"
+            "description": "The URL where notifications are sent.",
+            "examples": [
+              "https://myservice.com/webhooks/rainbow"
+            ]
           },
           "timestamp": {
             "type": "string",
-            "nullable": false,
             "format": "date-time",
-            "example": "2025-03-07T09:56:28.105105"
+            "description": "Timestamp of the subscription's creation.",
+            "examples": [
+              "2025-03-07T09:56:28.105105Z"
+            ]
           },
           "expirationTime": {
             "type": "string",
-            "nullable": true,
             "format": "date-time",
-            "example": "2025-03-07T09:56:28.105105"
+            "description": "Timestamp of the subscription's expiration (if it exists).",
+            "examples": [
+              "2026-01-01T00:00:00Z"
+            ]
           },
           "subscriptionEntity": {
             "type": "string",
-            "nullable": false,
-            "description": "Transfer process current state",
+            "description": "The entity being subscribed to.",
             "enum": [
               "TransferProcess",
               "Catalog",
               "ContractNegotiationProcess",
               "DataPlaneProcess"
             ],
-            "example": "TransferProcess"
+            "examples": [
+              "TransferProcess"
+            ]
           },
           "active": {
             "type": "boolean",
-            "nullable": false
+            "description": "Indicates if the subscription is active and sending notifications."
           }
         },
         "required": [
           "subscriptionId",
           "callbackAddress",
           "timestamp",
-          "expirationTime",
           "subscriptionEntity",
           "active"
         ]
       },
       "RainbowEventsNotificationResponse": {
         "type": "object",
-        "description": "Response to create a notification and notifications to further systems",
-        "additionalProperties": false,
+        "description": "Represents an event notification sent to a subscription.",
         "properties": {
           "notificationId": {
             "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
+            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
+            "description": "The unique identifier of the notification."
           },
           "timestamp": {
             "type": "string",
-            "nullable": false,
             "format": "date-time",
-            "example": "2025-03-07T09:56:28.105105"
+            "description": "Timestamp of when the notification was generated.",
+            "examples": [
+              "2025-03-07T10:15:00.500200Z"
+            ]
           },
           "category": {
             "type": "string",
-            "nullable": false,
-            "description": "Notification category",
+            "description": "The category of the event that generated the notification.",
             "enum": [
               "TransferProcess",
               "Catalog",
               "ContractNegotiationProcess",
               "DataPlaneProcess"
             ],
-            "example": "TransferProcess"
+            "examples": [
+              "TransferProcess"
+            ]
           },
           "messageType": {
             "type": "string",
-            "nullable": false,
-            "description": "Notification message type",
+            "description": "The type of message contained in the notification.",
             "enum": [
               "RPCMessage",
               "DSProtocolMessage",
               "RainbowEntitiesMessage"
             ],
-            "example": "RainbowEntitiesMessage"
+            "examples": [
+              "RainbowEntitiesMessage"
+            ]
           },
           "messageContent": {
             "type": "object",
-            "nullable": false
+            "description": "The content of the notification message, usually an entity like `RainbowTransferProcess`."
           },
           "subscriptionId": {
             "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
+            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
+            "description": "The ID of the subscription that received this notification."
           }
-        }
+        },
+        "required": [
+          "notificationId",
+          "timestamp",
+          "category",
+          "messageType",
+          "messageContent",
+          "subscriptionId"
+        ]
       },
       "SubscriptionErrorMessage": {
         "type": "object",
-        "description": "Rainbow entity transfer process error",
+        "description": "Error structure for subscription management endpoints.",
         "properties": {
           "code": {
             "type": "string",
-            "description": "Numeric code for error",
-            "nullable": false,
-            "example": "400"
+            "description": "HTTP status code.",
+            "examples": [
+              "404"
+            ]
           },
           "title": {
             "type": "string",
-            "description": "Textual code for error",
-            "nullable": false,
-            "example": "BAD_REQUEST"
+            "description": "Short title for the error.",
+            "examples": [
+              "SUBSCRIPTION_NOT_FOUND"
+            ]
           },
           "message": {
             "type": "string",
-            "description": "Textual description for error",
-            "nullable": false,
-            "example": "Error from deserializing path. Identifiers must have urn:uuid:<uuid> schema"
+            "description": "Descriptive error message.",
+            "examples": [
+              "A subscription with the provided ID was not found."
+            ]
           }
-        }
+        },
+        "required": [
+          "code",
+          "title",
+          "message"
+        ]
       },
       "NotificationErrorMessage": {
         "type": "object",
-        "description": "Rainbow entity transfer process error",
+        "description": "Error structure for notification query endpoints.",
         "properties": {
           "code": {
             "type": "string",
-            "description": "Numeric code for error",
-            "nullable": false,
-            "example": "400"
+            "description": "HTTP status code.",
+            "examples": [
+              "404"
+            ]
           },
           "title": {
             "type": "string",
-            "description": "Textual code for error",
-            "nullable": false,
-            "example": "BAD_REQUEST"
+            "description": "Short title for the error.",
+            "examples": [
+              "NOTIFICATION_NOT_FOUND"
+            ]
           },
           "message": {
             "type": "string",
-            "description": "Textual description for error",
-            "nullable": false,
-            "example": "Error from deserializing path. Identifiers must have urn:uuid:<uuid> schema"
+            "description": "Descriptive error message.",
+            "examples": [
+              "A notification with the provided ID was not found for the given subscription."
+            ]
           }
-        }
+        },
+        "required": [
+          "code",
+          "title",
+          "message"
+        ]
       }
     }
   }

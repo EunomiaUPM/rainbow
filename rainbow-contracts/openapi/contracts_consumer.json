@@ -1,54 +1,79 @@
 {
-  "openapi": "3.1.1",
+  "openapi": "3.1.0",
   "info": {
-    "title": "Transfer Process Protocol - Rainbow Provider API",
-    "description": "Transfer Process Protocol - Rainbow Provider API",
+    "title": "Contract Negotiation Protocol API - Rainbow Consumer",
+    "description": "This API provides endpoints for a consumer to manage the entire lifecycle of a contract negotiation process. It includes operations for initiating negotiations, handling messages and offers, managing agreements, and discovering data space participants. The API also exposes RPC endpoints for key negotiation actions and protocol message handling.",
     "version": "1.0.0"
   },
   "servers": [
     {
-      "url": "http://127.0.0.1:1234",
-      "description": "Testing server"
+      "url": "https://api.rainbow-consumer.com",
+      "description": "Production Server"
+    },
+    {
+      "url": "http://127.0.0.1:1235",
+      "description": "Local Testing Server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Negotiation Processes",
+      "description": "Manage the lifecycle of contract negotiation processes."
+    },
+    {
+      "name": "Messages",
+      "description": "Retrieve messages within a negotiation process."
+    },
+    {
+      "name": "Offers",
+      "description": "Manage contract offers."
+    },
+    {
+      "name": "Agreements",
+      "description": "Manage finalized contract agreements."
+    },
+    {
+      "name": "Participants",
+      "description": "Manage registered participants in the data space."
+    },
+    {
+      "name": "RPC",
+      "description": "Endpoints for remote lifecycle control of a contract negotiation (Remote Procedure Call)."
+    },
+    {
+      "name": "Protocol",
+      "description": "Endpoints for receiving asynchronous protocol messages from a provider."
     }
   ],
   "paths": {
-    "/api/v1/transfers": {
+    "/api/v1/contract-negotiation/processes": {
       "get": {
-        "summary": "Retrieves all transfer processes in provider",
-        "operationId": "rainbow_entities/get_all_transfers",
-        "security": [],
-        "description": "",
+        "tags": [
+          "Negotiation Processes"
+        ],
+        "summary": "List all contract negotiation processes",
+        "operationId": "getNegotiationProcesses",
+        "description": "Retrieves a list of all contract negotiation processes initiated or handled by the consumer.",
         "responses": {
           "200": {
-            "description": "Retrieves all transfer processes in provider",
-            "headers": {},
+            "description": "A list of contract negotiation processes.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/RainbowTransferProcess"
+                    "$ref": "#/components/schemas/RainbowCNProcess"
                   }
                 }
               }
             }
           },
-          "4XX": {
-            "description": "Error by retrieving all transfer processes in provider",
+          "500": {
+            "description": "Internal Server Error.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RainbowTransferError"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "Error by retrieving all transfer processes in provider",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RainbowTransferError"
+                  "$ref": "#/components/schemas/ContractNegotiationError"
                 }
               }
             }
@@ -56,65 +81,63 @@
         }
       }
     },
-    "/api/v1/transfers/{transfer_id}": {
+    "/api/v1/contract-negotiation/processes/{processId}": {
       "parameters": [
         {
-          "name": "transfer_id",
+          "name": "processId",
           "in": "path",
           "required": true,
-          "description": "The ID of the transfer to retrieve",
+          "description": "The unique identifier of the contract negotiation process.",
           "schema": {
             "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
+            "format": "uri"
           }
         }
       ],
       "get": {
-        "summary": "Retrieves transfer processes in provider by id",
-        "operationId": "rainbow_entities/get_transfer_by_id",
-        "security": [],
-        "description": "Retrieves transfer processes in provider by id",
+        "tags": [
+          "Negotiation Processes"
+        ],
+        "summary": "Get a negotiation process by ID",
+        "operationId": "getNegotiationProcessById",
+        "description": "Retrieves a single contract negotiation process by its unique ID.",
         "responses": {
           "200": {
-            "description": "Retrieves transfer processes in provider by id",
-            "headers": {},
+            "description": "Details of the contract negotiation process.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RainbowTransferProcess"
+                  "$ref": "#/components/schemas/RainbowCNProcess"
                 }
               }
             }
           },
           "400": {
-            "description": "Error in urn:uuid:<uuid> schema",
-            "headers": {},
+            "description": "Bad Request: The provided process ID has an invalid format.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RainbowTransferError"
+                  "$ref": "#/components/schemas/ContractNegotiationError"
                 }
               }
             }
           },
           "404": {
-            "description": "Error not transfer process to be found",
-            "headers": {},
+            "description": "Not Found: The process with the specified ID was not found.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RainbowTransferError"
+                  "$ref": "#/components/schemas/ContractNegotiationError"
                 }
               }
             }
           },
-          "5XX": {
-            "description": "Error by retrieving all transfer processes in provider",
-            "headers": {},
+          "500": {
+            "description": "Internal Server Error.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RainbowTransferError"
+                  "$ref": "#/components/schemas/ContractNegotiationError"
                 }
               }
             }
@@ -122,585 +145,457 @@
         }
       }
     },
-    "/api/v1/transfers/{transfer_id}/messages": {
+    "/api/v1/contract-negotiation/processes/{processId}/messages": {
       "parameters": [
         {
-          "$ref": "#/components/parameters/transfer_id"
-        }
-      ],
-      "get": {
-        "summary": "Retrieves transfer messages in provider by id",
-        "operationId": "rainbow_entities/handle_get_messages_by_transfer",
-        "security": [],
-        "description": "Retrieves transfer messages in provider by id",
-        "responses": {
-          "200": {
-            "description": "Retrieves transfer messages in provider by id",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/RainbowTransferMessage"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error in urn:uuid:<uuid> schema",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RainbowTransferError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error not transfer process to be found",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RainbowTransferError"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "Error by retrieving all transfer processes in provider",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RainbowTransferError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/transfers/{transfer_id}/messages/{message_id}": {
-      "parameters": [
-        {
-          "$ref": "#/components/parameters/transfer_id"
-        },
-        {
-          "$ref": "#/components/parameters/message_id"
-        }
-      ],
-      "get": {
-        "summary": "Retrieves transfer message by provider and message id",
-        "operationId": "rainbow_entities/get_messages_by_id",
-        "security": [],
-        "description": "Retrieves transfer message by provider and message id",
-        "responses": {
-          "200": {
-            "description": "Retrieves transfer message by provider and message id",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RainbowTransferMessage"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error in urn:uuid:<uuid> schema",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RainbowTransferError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error not transfer process to be found or message",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RainbowTransferError"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "Error by retrieving all transfer processes in provider",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RainbowTransferError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/transfers/rpc/setup-start": {
-      "post": {
-        "summary": "Creates a transfer start message and sends it to consumer, if works, establishes data plane and persist process and messages",
-        "operationId": "ds_rcp_transfer_provider/setup_start",
-        "security": [],
-        "description": "Creates a transfer start message and sends it to consumer, if works, establishes data plane and persist process and messages",
-        "requestBody": {
-          "$ref": "#/components/schemas/DSRPCTransferProviderStartRequest"
-        },
-        "responses": {
-          "201": {
-            "description": "Consumer returns TransferProcess message and start process is persisted",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DSRPCTransferProviderStartResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Json malformed",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DSRPCTransferProviderErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "General Error",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DSRPCTransferProviderErrorResponse"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Peer service is not available or throws error",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DSRPCTransferProviderErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/transfers/rpc/setup-suspension": {
-      "post": {
-        "summary": "Creates a transfer suspension message and sends it to consumer, if works, establishes data plane and persist process and messages",
-        "operationId": "ds_rcp_transfer_provider/setup_suspension",
-        "security": [],
-        "description": "Creates a transfer suspension message and sends it to consumer, if works, establishes data plane and persist process and messages",
-        "requestBody": {
-          "$ref": "#/components/schemas/DSRPCTransferProviderSuspensionRequest"
-        },
-        "responses": {
-          "201": {
-            "description": "Consumer returns TransferProcess message and suspension process is persisted",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DSRPCTransferProviderSuspensionResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Json malformed",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DSRPCTransferProviderErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "General Error",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DSRPCTransferProviderErrorResponse"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Peer service is not available or throws error",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DSRPCTransferProviderErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/transfers/rpc/setup-completion": {
-      "post": {
-        "summary": "Creates a transfer completion message and sends it to consumer, if works, establishes data plane and persist process and messages",
-        "operationId": "ds_rcp_transfer_provider/setup_completion",
-        "security": [],
-        "description": "Creates a transfer completion message and sends it to consumer, if works, establishes data plane and persist process and messages",
-        "requestBody": {
-          "$ref": "#/components/schemas/DSRPCTransferProviderCompletionRequest"
-        },
-        "responses": {
-          "201": {
-            "description": "Consumer returns TransferProcess message and completion process is persisted",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DSRPCTransferProviderCompletionResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Json malformed",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DSRPCTransferProviderErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "General Error",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DSRPCTransferProviderErrorResponse"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Peer service is not available or throws error",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DSRPCTransferProviderErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/transfers/rpc/setup-termination": {
-      "post": {
-        "summary": "Creates a transfer termination message and sends it to consumer, if works, establishes data plane and persist process and messages",
-        "operationId": "ds_rcp_transfer_provider/setup_termination",
-        "security": [],
-        "description": "Creates a transfer termination message and sends it to consumer, if works, establishes data plane and persist process and messages",
-        "requestBody": {
-          "$ref": "#/components/schemas/DSRPCTransferProviderTerminationRequest"
-        },
-        "responses": {
-          "201": {
-            "description": "Consumer returns TransferProcess message and termination process is persisted",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DSRPCTransferProviderTerminationResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Json malformed",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DSRPCTransferProviderErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "General Error",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DSRPCTransferProviderErrorResponse"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Peer service is not available or throws error",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DSRPCTransferProviderErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/transfers/subscriptions": {
-      "get": {
-        "summary": "Retrieves all subscriptions",
-        "operationId": "rainbow_events/subscription/get_all_subscriptions",
-        "security": [],
-        "description": "Retrieves all subscriptions",
-        "responses": {
-          "200": {
-            "description": "Retrieves all subscriptions",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/RainbowEventsSubscriptionCreationResponse"
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "summary": "Create a new subscription to receive notifications",
-        "operationId": "rainbow_events/subscription/create_subscription",
-        "security": [],
-        "description": "Create a new subscription to receive notifications",
-        "requestBody": {
-          "$ref": "#/components/schemas/RainbowEventsSubscriptionCreationRequest"
-        },
-        "responses": {
-          "201": {
-            "description": "Provider returns information about subscription",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RainbowEventsSubscriptionCreationResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Json malformed",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SubscriptionErrorMessage"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Subscription not found",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SubscriptionErrorMessage"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "General error",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SubscriptionErrorMessage"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/transfers/subscriptions/{subscription_id}": {
-      "parameters": [
-        {
-          "name": "subscription_id",
+          "name": "processId",
           "in": "path",
           "required": true,
-          "description": "The ID of the subscription to retrieve",
+          "description": "The unique identifier of the contract negotiation process.",
           "schema": {
             "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
+            "format": "uri"
           }
         }
       ],
       "get": {
-        "summary": "Retrieves subscription by id",
-        "operationId": "rainbow_events/subscription/get_subscription_by_id",
-        "security": [],
-        "description": "Retrieves subscription by id",
+        "tags": [
+          "Messages"
+        ],
+        "summary": "Get all messages for a process",
+        "operationId": "getMessagesByProcessId",
+        "description": "Retrieves all messages associated with a specific contract negotiation process.",
         "responses": {
           "200": {
-            "description": "Retrieves subscription by id",
-            "headers": {},
+            "description": "A list of messages for the given process.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RainbowEventsSubscriptionCreationResponse"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RainbowCNMessage"
+                  }
                 }
               }
             }
           },
           "400": {
-            "description": "Json malformed",
-            "headers": {},
+            "description": "Bad Request: The provided process ID has an invalid format.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SubscriptionErrorMessage"
+                  "$ref": "#/components/schemas/ContractNegotiationError"
                 }
               }
             }
           },
           "404": {
-            "description": "Subscription not found",
-            "headers": {},
+            "description": "Not Found: The process with the specified ID was not found.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SubscriptionErrorMessage"
+                  "$ref": "#/components/schemas/ContractNegotiationError"
                 }
               }
             }
           },
-          "5XX": {
-            "description": "General error",
-            "headers": {},
+          "500": {
+            "description": "Internal Server Error.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SubscriptionErrorMessage"
+                  "$ref": "#/components/schemas/ContractNegotiationError"
                 }
               }
             }
           }
         }
-      },
-      "put": {
-        "summary": "Edits subscription by id",
-        "operationId": "rainbow_events/subscription/put_subscription_by_id",
-        "security": [],
-        "description": "Edits subscription by id",
+      }
+    },
+    "/api/v1/contract-negotiation/messages/{messageId}": {
+      "parameters": [
+        {
+          "name": "messageId",
+          "in": "path",
+          "required": true,
+          "description": "The unique identifier of the message.",
+          "schema": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "Messages"
+        ],
+        "summary": "Get a message by ID",
+        "operationId": "getMessageById",
+        "description": "Retrieves a single negotiation message by its unique ID.",
+        "responses": {
+          "200": {
+            "description": "Details of the negotiation message.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RainbowCNMessage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request: The provided message ID has an invalid format.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractNegotiationError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found: The message with the specified ID was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractNegotiationError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractNegotiationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contract-negotiation/processes/{processId}/offers": {
+      "parameters": [
+        {
+          "name": "processId",
+          "in": "path",
+          "required": true,
+          "description": "The unique identifier of the contract negotiation process.",
+          "schema": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "Offers"
+        ],
+        "summary": "Get all offers for a process",
+        "operationId": "getOffersByProcessId",
+        "description": "Retrieves all offers made within a specific contract negotiation process.",
+        "responses": {
+          "200": {
+            "description": "A list of offers for the given process.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RainbowCNOffer"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request: The provided process ID has an invalid format.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractNegotiationError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found: The process with the specified ID was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractNegotiationError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractNegotiationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contract-negotiation/offers/{offerId}": {
+      "parameters": [
+        {
+          "name": "offerId",
+          "in": "path",
+          "required": true,
+          "description": "The unique identifier of the offer.",
+          "schema": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "Offers"
+        ],
+        "summary": "Get an offer by ID",
+        "operationId": "getOfferById",
+        "description": "Retrieves a single offer by its unique ID.",
+        "responses": {
+          "200": {
+            "description": "Details of the offer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RainbowCNOffer"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request: The provided offer ID has an invalid format.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractNegotiationError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found: The offer with the specified ID was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractNegotiationError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractNegotiationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contract-negotiation/agreements": {
+      "get": {
+        "tags": [
+          "Agreements"
+        ],
+        "summary": "List all agreements",
+        "operationId": "getAllAgreements",
+        "description": "Retrieves a list of all finalized contract agreements.",
+        "responses": {
+          "200": {
+            "description": "A list of all agreements.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RainbowAgreement"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractNegotiationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contract-negotiation/agreements/{agreementId}": {
+      "parameters": [
+        {
+          "name": "agreementId",
+          "in": "path",
+          "required": true,
+          "description": "The unique identifier of the agreement.",
+          "schema": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "Agreements"
+        ],
+        "summary": "Get an agreement by ID",
+        "operationId": "getAgreementById",
+        "description": "Retrieves a single contract agreement by its unique ID.",
+        "responses": {
+          "200": {
+            "description": "Details of the agreement.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RainbowAgreement"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request: The provided agreement ID has an invalid format.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractNegotiationError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found: The agreement with the specified ID was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractNegotiationError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractNegotiationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/participants": {
+      "get": {
+        "tags": [
+          "Participants"
+        ],
+        "summary": "List all participants",
+        "operationId": "getAllParticipants",
+        "description": "Retrieves a list of all registered participants in the data space.",
+        "responses": {
+          "200": {
+            "description": "A list of participants.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RainbowParticipant"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractNegotiationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/negotiations/rpc/setup-request": {
+      "post": {
+        "tags": [
+          "RPC"
+        ],
+        "summary": "Send a contract request",
+        "operationId": "rpcSetupRequest",
+        "description": "Creates and sends a contract request message to a provider to initiate a negotiation process.",
         "requestBody": {
-          "$ref": "#/components/schemas/RainbowEventsSubscriptionEditionRequest"
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetupRequest"
+              }
+            }
+          }
         },
         "responses": {
-          "202": {
-            "description": "Edits subscription by id",
-            "headers": {},
+          "201": {
+            "description": "Request sent and acknowledged by the provider.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RainbowEventsSubscriptionCreationResponse"
+                  "$ref": "#/components/schemas/SetupRequestResponse"
                 }
               }
             }
           },
           "400": {
-            "description": "Json malformed",
-            "headers": {},
+            "description": "Bad Request: The request body is malformed.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SubscriptionErrorMessage"
+                  "$ref": "#/components/schemas/DSRPCCNConsumerErrorResponse"
                 }
               }
             }
           },
-          "404": {
-            "description": "Subscription not found",
-            "headers": {},
+          "500": {
+            "description": "Internal Server Error.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SubscriptionErrorMessage"
+                  "$ref": "#/components/schemas/DSRPCCNConsumerErrorResponse"
                 }
               }
             }
           },
-          "5XX": {
-            "description": "General error",
-            "headers": {},
+          "503": {
+            "description": "Service Unavailable: The provider is not reachable.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SubscriptionErrorMessage"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "summary": "Deletes subscription by id",
-        "operationId": "rainbow_events/subscription/delete_subscription_by_id",
-        "security": [],
-        "description": "Deletes subscription by id",
-        "responses": {
-          "204": {
-            "description": "Deletes subscription by id",
-            "headers": {}
-          },
-          "404": {
-            "description": "Subscription not found",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SubscriptionErrorMessage"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "General error",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SubscriptionErrorMessage"
+                  "$ref": "#/components/schemas/DSRPCCNConsumerErrorResponse"
                 }
               }
             }
@@ -708,23 +603,61 @@
         }
       }
     },
-    "/api/v1/transfers/notifications": {
-      "get": {
-        "summary": "Retrieves all notifications",
-        "operationId": "rainbow_events/notification/get_all_notifications",
-        "security": [],
-        "description": "Retrieves all notifications",
+    "/api/v1/negotiations/rpc/setup-acceptance": {
+      "post": {
+        "tags": [
+          "RPC"
+        ],
+        "summary": "Accept a contract offer",
+        "operationId": "rpcSetupAcceptance",
+        "description": "Sends a message to the provider to accept a received contract offer.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetupAcceptanceRequest"
+              }
+            }
+          }
+        },
         "responses": {
-          "200": {
-            "description": "Retrieves all notifications",
-            "headers": {},
+          "201": {
+            "description": "Acceptance message sent and acknowledged by the provider.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/RainbowEventsNotificationResponse"
-                  }
+                  "$ref": "#/components/schemas/SetupAcceptanceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request: The request body is malformed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DSRPCCNConsumerErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DSRPCCNConsumerErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable: The provider is not reachable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DSRPCCNConsumerErrorResponse"
                 }
               }
             }
@@ -732,56 +665,61 @@
         }
       }
     },
-    "/api/v1/transfers/subscriptions/{subscription_id}/notifications": {
-      "get": {
-        "summary": "Retrieves all notifications belonging to a subscription",
-        "operationId": "rainbow_events/notification/get_notifications_by_subscription_id",
-        "security": [],
-        "description": "Retrieves all notifications belonging to a subscription",
+    "/api/v1/negotiations/rpc/setup-verification": {
+      "post": {
+        "tags": [
+          "RPC"
+        ],
+        "summary": "Verify a contract agreement",
+        "operationId": "rpcSetupVerification",
+        "description": "Sends a verification message to the provider after receiving a contract agreement.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetupVerificationRequest"
+              }
+            }
+          }
+        },
         "responses": {
-          "200": {
-            "description": "Retrieves all notifications belonging to a subscription",
-            "headers": {},
+          "201": {
+            "description": "Verification message sent and acknowledged by the provider.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/RainbowEventsNotificationResponse"
-                  }
+                  "$ref": "#/components/schemas/SetupVerificationResponse"
                 }
               }
             }
           },
           "400": {
-            "description": "Json malformed",
-            "headers": {},
+            "description": "Bad Request: The request body is malformed.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NotificationErrorMessage"
+                  "$ref": "#/components/schemas/DSRPCCNConsumerErrorResponse"
                 }
               }
             }
           },
-          "404": {
-            "description": "Subscription or notification not found",
-            "headers": {},
+          "500": {
+            "description": "Internal Server Error.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NotificationErrorMessage"
+                  "$ref": "#/components/schemas/DSRPCCNConsumerErrorResponse"
                 }
               }
             }
           },
-          "5XX": {
-            "description": "General error",
-            "headers": {},
+          "503": {
+            "description": "Service Unavailable: The provider is not reachable.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NotificationErrorMessage"
+                  "$ref": "#/components/schemas/DSRPCCNConsumerErrorResponse"
                 }
               }
             }
@@ -789,56 +727,51 @@
         }
       }
     },
-    "/api/v1/transfers/subscriptions/{subscription_id}/notifications-pending": {
-      "get": {
-        "summary": "Retrieves all pending notifications belonging to a subscription",
-        "operationId": "rainbow_events/notification/get_pending_notifications_by_subscription_id",
-        "security": [],
-        "description": "Retrieves all pending notifications belonging to a subscription",
+    "/api/v1/negotiations/protocol/offer": {
+      "post": {
+        "tags": [
+          "Protocol"
+        ],
+        "summary": "Receive a contract offer",
+        "operationId": "protocolReceiveOffer",
+        "description": "Callback endpoint for receiving an asynchronous `ContractOfferMessage` from a provider.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContractOfferMessage"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Retrieves all pending notifications belonging to a subscription",
-            "headers": {},
+            "description": "Offer received and processed successfully.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/RainbowEventsNotificationResponse"
-                  }
+                  "$ref": "#/components/schemas/ContractAckMessage"
                 }
               }
             }
           },
           "400": {
-            "description": "Json malformed",
-            "headers": {},
+            "description": "Bad Request: Malformed message.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NotificationErrorMessage"
+                  "$ref": "#/components/schemas/ContractErrorMessage"
                 }
               }
             }
           },
-          "404": {
-            "description": "Subscription or notification not found",
-            "headers": {},
+          "500": {
+            "description": "Internal Server Error.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NotificationErrorMessage"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "General error",
-            "headers": {},
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NotificationErrorMessage"
+                  "$ref": "#/components/schemas/ContractErrorMessage"
                 }
               }
             }
@@ -846,53 +779,155 @@
         }
       }
     },
-    "/api/v1/transfers/subscriptions/{subscription_id}/notifications/{notification_id}": {
-      "get": {
-        "summary": "Retrieves a notification by id and subscription",
-        "operationId": "rainbow_events/notification/get_notification_by_id",
-        "security": [],
-        "description": "Retrieves a notification by id and subscription",
+    "/api/v1/negotiations/protocol/agreement": {
+      "post": {
+        "tags": [
+          "Protocol"
+        ],
+        "summary": "Receive a contract agreement",
+        "operationId": "protocolReceiveAgreement",
+        "description": "Callback endpoint for receiving an asynchronous `ContractAgreementMessage` from a provider.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContractAgreementMessage"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Retrieves a notification by id and subscription",
-            "headers": {},
+            "description": "Agreement received and processed successfully.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RainbowEventsNotificationResponse"
+                  "$ref": "#/components/schemas/ContractAckMessage"
                 }
               }
             }
           },
           "400": {
-            "description": "Json malformed",
-            "headers": {},
+            "description": "Bad Request: Malformed message.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NotificationErrorMessage"
+                  "$ref": "#/components/schemas/ContractErrorMessage"
                 }
               }
             }
           },
-          "404": {
-            "description": "Subscription or notification not found",
-            "headers": {},
+          "500": {
+            "description": "Internal Server Error.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NotificationErrorMessage"
+                  "$ref": "#/components/schemas/ContractErrorMessage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/negotiations/protocol/finalization": {
+      "post": {
+        "tags": [
+          "Protocol"
+        ],
+        "summary": "Receive a negotiation finalization",
+        "operationId": "protocolReceiveFinalization",
+        "description": "Callback endpoint for receiving an asynchronous finalization message (`ContractNegotiationEventMessage`) from a provider.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContractNegotiationEventMessage"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Finalization message received and processed successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractAckMessage"
                 }
               }
             }
           },
-          "5XX": {
-            "description": "General error",
-            "headers": {},
+          "400": {
+            "description": "Bad Request: Malformed message.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NotificationErrorMessage"
+                  "$ref": "#/components/schemas/ContractErrorMessage"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractErrorMessage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/negotiations/protocol/termination": {
+      "post": {
+        "tags": [
+          "Protocol"
+        ],
+        "summary": "Receive a negotiation termination",
+        "operationId": "protocolReceiveTermination",
+        "description": "Callback endpoint for receiving an asynchronous `ContractNegotiationTerminationMessage` from a provider.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContractNegotiationTerminationMessage"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Termination message received and processed successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractAckMessage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request: Malformed message.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractErrorMessage"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractErrorMessage"
                 }
               }
             }
@@ -902,772 +937,451 @@
     }
   },
   "components": {
-    "parameters": {
-      "transfer_id": {
-        "name": "transfer_id",
-        "in": "path",
-        "required": true,
-        "description": "The ID of the transfer to retrieve",
-        "schema": {
-          "type": "string",
-          "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
+    "schemas": {
+      "ContractNegotiationError": {
+        "type": "object",
+        "description": "Standard error response for the Contract Negotiation API.",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "HTTP status code.",
+            "example": "404"
+          },
+          "title": {
+            "type": "string",
+            "description": "A short, machine-readable error code.",
+            "example": "PROCESS_NOT_FOUND"
+          },
+          "message": {
+            "type": "string",
+            "description": "A human-readable explanation of the error.",
+            "example": "Contract negotiation process with the specified ID was not found."
+          }
         }
       },
-      "message_id": {
-        "name": "message_id",
-        "in": "path",
-        "required": true,
-        "description": "The ID of the message to retrieve",
-        "schema": {
-          "type": "string",
-          "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-        }
-      }
-    },
-    "schemas": {
-      "RainbowTransferProcess": {
+      "RainbowCNProcess": {
         "type": "object",
-        "description": "Rainbow entity transfer process",
+        "description": "Represents the state of a contract negotiation process.",
         "properties": {
-          "provider_pid": {
+          "cnProcessId": {
             "type": "string",
-            "nullable": false,
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
-            "description": "urn:uuid scheme with unique provider pid identifier",
-            "example": "urn:uuid:221e21b0-e295-469a-bbc7-8565acd7d8e6"
+            "format": "uri"
           },
-          "consumer_pid": {
+          "providerPid": {
             "type": "string",
-            "nullable": false,
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
-            "description": "urn:uuid scheme with unique consumer pid identifier",
-            "example": "urn:uuid:221e21b0-e295-469a-bbc7-8565acd7d8e6"
+            "format": "uri"
           },
-          "agreement_pid": {
+          "consumerPid": {
             "type": "string",
-            "nullable": false,
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
-            "description": "urn:uuid scheme with unique agreement id identifier",
-            "example": "urn:uuid:221e21b0-e295-469a-bbc7-8565acd7d8e6"
-          },
-          "data_plane_pid": {
-            "type": "string",
-            "nullable": false,
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
-            "description": "urn:uuid scheme with unique data plane id identifier",
-            "example": "urn:uuid:221e21b0-e295-469a-bbc7-8565acd7d8e6"
+            "format": "uri"
           },
           "state": {
             "type": "string",
-            "nullable": false,
-            "description": "Transfer process current state",
             "enum": [
               "REQUESTED",
-              "STARTED",
-              "SUSPENDED",
-              "COMPLETED",
+              "OFFERED",
+              "ACCEPTED",
+              "AGREED",
+              "VERIFIED",
+              "FINALIZED",
               "TERMINATED"
-            ],
-            "example": "REQUESTED"
+            ]
           },
-          "created_at": {
+          "initiatedBy": {
             "type": "string",
-            "nullable": false,
-            "description": "Transfer process creation timestamp",
-            "format": "date-time",
-            "example": "2025-03-07T09:56:28.105105"
-          },
-          "updated_at": {
-            "type": "string",
-            "nullable": true,
-            "description": "Transfer process updating timestamp",
-            "format": "date-time",
-            "example": "2025-03-07T09:56:28.105105"
-          }
-        },
-        "required": [
-          "provider_pid",
-          "consumer_pid",
-          "agreement_pid",
-          "data_plane_pid",
-          "state",
-          "created_at",
-          "updated_at"
-        ]
-      },
-      "RainbowTransferMessage": {
-        "type": "object",
-        "description": "Rainbow entity transfer message",
-        "properties": {
-          "id": {
-            "type": "string",
-            "nullable": false,
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
-            "description": "urn:uuid scheme with unique provider pid identifier",
-            "example": "urn:uuid:221e21b0-e295-469a-bbc7-8565acd7d8e6"
-          },
-          "transfer_process_id": {
-            "type": "string",
-            "nullable": false,
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
-            "description": "urn:uuid scheme with unique consumer pid identifier",
-            "example": "urn:uuid:221e21b0-e295-469a-bbc7-8565acd7d8e6"
-          },
-          "created_at": {
-            "type": "string",
-            "nullable": false,
-            "description": "Transfer message creation timestamp",
-            "format": "date-time",
-            "example": "2025-03-07T09:56:28.105105"
-          },
-          "message_type": {
-            "type": "string",
-            "nullable": false,
-            "description": "Transfer message type",
             "enum": [
-              "TransferRequestMessage",
-              "TransferStartMessage",
-              "TransferSuspensionMessage",
-              "TransferCompletionMessage",
-              "TransferTerminationMessage"
+              "Consumer",
+              "Provider"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "NewContractNegotiationRequest": {
+        "type": "object",
+        "description": "Request to create a new contract negotiation process.",
+        "properties": {
+          "providerPid": {
+            "type": "string",
+            "format": "uri"
+          },
+          "consumerPid": {
+            "type": "string",
+            "format": "uri"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "REQUESTED"
             ],
-            "example": "TransferRequestMessage"
+            "default": "REQUESTED"
+          }
+        }
+      },
+      "EditContractNegotiationRequest": {
+        "type": "object",
+        "description": "Request to edit a contract negotiation process.",
+        "properties": {
+          "providerPid": {
+            "type": "string",
+            "format": "uri"
+          },
+          "consumerPid": {
+            "type": "string",
+            "format": "uri"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "REQUESTED",
+              "OFFERED",
+              "ACCEPTED",
+              "AGREED",
+              "VERIFIED",
+              "FINALIZED",
+              "TERMINATED"
+            ]
+          }
+        }
+      },
+      "RainbowCNMessage": {
+        "type": "object",
+        "description": "Represents a message within a contract negotiation process.",
+        "properties": {
+          "cnMessageId": {
+            "type": "string",
+            "format": "uri"
+          },
+          "cnProcessId": {
+            "type": "string",
+            "format": "uri"
+          },
+          "@type": {
+            "type": "string",
+            "enum": [
+              "ContractRequestMessage",
+              "ContractOfferMessage",
+              "ContractAgreementMessage",
+              "ContractAgreementVerificationMessage",
+              "ContractNegotiationEventMessage",
+              "ContractNegotiationTerminationMessage"
+            ]
           },
           "from": {
             "type": "string",
-            "nullable": false,
-            "description": "Message sent by",
             "enum": [
-              "Provider",
-              "Consumer"
-            ],
-            "example": "Provider"
+              "Consumer",
+              "Provider"
+            ]
           },
           "to": {
             "type": "string",
-            "nullable": false,
-            "description": "Message sent to",
             "enum": [
-              "Provider",
-              "Consumer"
-            ],
-            "example": "Consumer"
+              "Consumer",
+              "Provider"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
           },
           "content": {
-            "type": "object",
-            "nullable": false,
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
-            "description": "Message content",
-            "example": {
-              "@context": [
-                "https://w3id.org/dspace/2025/1/context.jsonld"
-              ],
-              "@type": "TransferRequestMessage",
-              "agreementId": "urn:uuid:5c758db2-cf27-400e-8e30-634eb4c12022",
-              "callbackAddress": "",
-              "consumerPid": "urn:uuid:2b4436b2-6663-45f0-9fae-7b0b80be1b48",
-              "format": "http+pull"
-            }
-          }
-        },
-        "required": [
-          "id",
-          "transfer_process_id",
-          "created_at",
-          "message_type",
-          "from",
-          "to",
-          "content"
-        ]
-      },
-      "RainbowTransferError": {
-        "type": "object",
-        "description": "Rainbow entity transfer process error",
-        "properties": {
-          "error": {
-            "type": "object",
-            "nullable": false,
-            "properties": {
-              "code": {
-                "type": "string",
-                "description": "Numeric code for error",
-                "nullable": false,
-                "example": "400"
-              },
-              "title": {
-                "type": "string",
-                "description": "Textual code for error",
-                "nullable": false,
-                "example": "BAD_REQUEST"
-              },
-              "message": {
-                "type": "string",
-                "description": "Textual description for error",
-                "nullable": false,
-                "example": "Error from deserializing path. Identifiers must have urn:uuid:<uuid> schema"
-              }
-            },
-            "required": [
-              "code",
-              "title",
-              "message"
-            ]
-          }
-        },
-        "required": [
-          "error"
-        ]
-      },
-      "DSRPCTransferProviderStartRequest": {
-        "type": "object",
-        "description": "Request to start a transfer provider process",
-        "additionalProperties": false,
-        "properties": {
-          "consumerCallbackAddress": {
-            "type": "string",
-            "example": "https://callback.example.com"
-          },
-          "providerPid": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          },
-          "consumerPid": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          },
-          "dataAddress": {
-            "$ref": "#/components/schemas/DataAddress",
-            "nullable": true
-          }
-        },
-        "required": [
-          "consumerCallbackAddress",
-          "providerPid",
-          "consumerPid"
-        ]
-      },
-      "DSRPCTransferProviderStartResponse": {
-        "type": "object",
-        "description": "Response to start a transfer provider process",
-        "properties": {
-          "providerPid": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          },
-          "consumerPid": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          },
-          "message": {
-            "$ref": "#/components/schemas/TransferProcessMessage"
-          },
-          "dataAddress": {
-            "$ref": "#/components/schemas/DataAddress",
-            "nullable": true
-          }
-        },
-        "required": [
-          "providerPid",
-          "consumerPid",
-          "message"
-        ]
-      },
-      "DSRPCTransferProviderSuspensionRequest": {
-        "type": "object",
-        "description": "Request to suspend a transfer provider process",
-        "additionalProperties": false,
-        "properties": {
-          "consumerCallbackAddress": {
-            "type": "string",
-            "example": "https://callback.example.com"
-          },
-          "providerPid": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          },
-          "consumerPid": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          },
-          "code": {
-            "type": "string",
-            "nullable": true
-          },
-          "reason": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "nullable": true
-          }
-        },
-        "required": [
-          "consumerCallbackAddress",
-          "providerPid",
-          "consumerPid"
-        ]
-      },
-      "DSRPCTransferProviderSuspensionResponse": {
-        "type": "object",
-        "description": "Response to suspend a transfer provider process",
-        "properties": {
-          "providerPid": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          },
-          "consumerPid": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          },
-          "message": {
-            "$ref": "#/components/schemas/TransferProcessMessage"
-          }
-        },
-        "required": [
-          "providerPid",
-          "consumerPid",
-          "message"
-        ]
-      },
-      "DSRPCTransferProviderCompletionRequest": {
-        "type": "object",
-        "description": "Request to complete a transfer provider process",
-        "additionalProperties": false,
-        "properties": {
-          "consumerCallbackAddress": {
-            "type": "string"
-          },
-          "providerPid": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          },
-          "consumerPid": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          }
-        },
-        "required": [
-          "consumerCallbackAddress",
-          "providerPid",
-          "consumerPid"
-        ]
-      },
-      "DSRPCTransferProviderCompletionResponse": {
-        "type": "object",
-        "description": "Response after completing transfer provider process",
-        "properties": {
-          "providerPid": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          },
-          "consumerPid": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          },
-          "message": {
-            "$ref": "#/components/schemas/TransferProcessMessage"
-          }
-        },
-        "required": [
-          "providerPid",
-          "consumerPid",
-          "message"
-        ]
-      },
-      "DSRPCTransferProviderErrorResponse": {
-        "type": "object",
-        "description": "Error response for transfer provider process",
-        "additionalProperties": false,
-        "properties": {
-          "providerPid": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
-            "nullable": true
-          },
-          "consumerPid": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          },
-          "error": {
-            "$ref": "#/components/schemas/TransferError"
-          }
-        },
-        "required": [
-          "consumerPid",
-          "message"
-        ]
-      },
-      "DSRPCTransferProviderTerminationRequest": {
-        "type": "object",
-        "description": "Request to suspend a transfer provider process",
-        "additionalProperties": false,
-        "properties": {
-          "consumerCallbackAddress": {
-            "type": "string",
-            "example": "https://callback.example.com"
-          },
-          "providerPid": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          },
-          "consumerPid": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          },
-          "code": {
-            "type": "string",
-            "nullable": true
-          },
-          "reason": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "nullable": true
-          }
-        },
-        "required": [
-          "consumerCallbackAddress",
-          "providerPid",
-          "consumerPid"
-        ]
-      },
-      "DSRPCTransferProviderTerminationResponse": {
-        "type": "object",
-        "description": "Response to suspend a transfer provider process",
-        "properties": {
-          "providerPid": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          },
-          "consumerPid": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          },
-          "message": {
-            "$ref": "#/components/schemas/TransferProcessMessage"
-          }
-        },
-        "required": [
-          "providerPid",
-          "consumerPid",
-          "message"
-        ]
-      },
-      "DataAddress": {
-        "type": "object",
-        "description": "Data address details",
-        "additionalProperties": false,
-        "properties": {
-          "endpointType": {
-            "type": "string",
-            "description": "Endpoint type definition"
-          },
-          "endpoint": {
-            "type": "string"
-          },
-          "endpointProperties": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/EndpointProperty"
-            }
-          }
-        },
-        "required": [
-          "endpointType",
-          "endpoint",
-          "endpointProperties"
-        ]
-      },
-      "EndpointProperty": {
-        "type": "object",
-        "description": "Properties for endpoint",
-        "additionalProperties": false,
-        "properties": {
-          "key": {
-            "type": "string"
-          },
-          "value": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "key",
-          "value"
-        ]
-      },
-      "TransferProcessMessage": {
-        "type": "object",
-        "description": "DSProtocol process message definition",
-        "additionalProperties": false,
-        "properties": {
-          "context": {
-            "type": "string",
-            "description": "context field"
-          },
-          "type": {
-            "type": "string",
-            "nullable": false,
-            "description": "Transfer message type",
-            "enum": [
-              "TransferRequestMessage",
-              "TransferStartMessage",
-              "TransferSuspensionMessage",
-              "TransferCompletionMessage",
-              "TransferTerminationMessage"
-            ],
-            "example": "TransferRequestMessage"
-          },
-          "providerPid": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
-            "nullable": true
-          },
-          "consumerPid": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
-            "nullable": true
-          },
-          "state": {
-            "type": "string",
-            "nullable": false,
-            "description": "Transfer process current state",
-            "enum": [
-              "REQUESTED",
-              "STARTED",
-              "SUSPENDED",
-              "COMPLETED",
-              "TERMINATED"
-            ],
-            "example": "REQUESTED"
+            "type": "object"
           }
         }
       },
-      "TransferError": {
+      "RainbowCNOffer": {
         "type": "object",
-        "description": "DSProtocol error message",
-        "additionalProperties": false,
+        "description": "Represents a contract offer within a negotiation process.",
         "properties": {
-          "context": {
+          "cnOfferId": {
             "type": "string",
-            "description": "context field"
+            "format": "uri"
           },
-          "type": {
+          "cnMessageId": {
             "type": "string",
-            "nullable": false,
-            "description": "Transfer message type",
-            "example": "TransferError"
+            "format": "uri"
           },
-          "providerPid": {
+          "offer": {
+            "type": "object"
+          },
+          "createdAt": {
             "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
-            "nullable": true
-          },
-          "consumerPid": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
-            "nullable": true
-          },
-          "code": {
-            "type": "string",
-            "nullable": true,
-            "example": "CONSUMER_INTERNAL_ERROR"
-          },
-          "reason": {
-            "type": "array",
-            "nullable": true,
-            "items": {
-              "type": "string"
-            }
+            "format": "date-time"
           }
         }
       },
-      "RainbowEventsSubscriptionCreationRequest": {
+      "RainbowAgreement": {
         "type": "object",
-        "description": "Request to create a subscription",
-        "additionalProperties": false,
+        "description": "Represents a finalized contract agreement.",
         "properties": {
-          "callbackAddress": {
+          "agreementId": {
             "type": "string",
-            "nullable": false,
-            "example": "https://callback.example.com"
+            "format": "uri"
           },
-          "expirationTime": {
+          "cnMessageId": {
             "type": "string",
-            "nullable": true,
-            "format": "date-time",
-            "example": "2025-03-07T09:56:28.105105"
-          }
-        },
-        "required": [
-          "callbackAddress"
-        ]
-      },
-      "RainbowEventsSubscriptionEditionRequest": {
-        "type": "object",
-        "description": "Request to create a subscription",
-        "additionalProperties": false,
-        "properties": {
-          "callbackAddress": {
-            "type": "string",
-            "nullable": true,
-            "example": "https://callback.example.com"
+            "format": "uri"
           },
-          "expirationTime": {
-            "type": "string",
-            "nullable": true,
-            "format": "date-time",
-            "example": "2025-03-07T09:56:28.105105"
-          }
-        },
-        "required": []
-      },
-      "RainbowEventsSubscriptionCreationResponse": {
-        "type": "object",
-        "description": "Response to create a subscription",
-        "additionalProperties": false,
-        "properties": {
-          "subscriptionId": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
-          },
-          "callbackAddress": {
-            "type": "string",
-            "example": "https://callback.example.com"
-          },
-          "timestamp": {
-            "type": "string",
-            "nullable": false,
-            "format": "date-time",
-            "example": "2025-03-07T09:56:28.105105"
-          },
-          "expirationTime": {
-            "type": "string",
-            "nullable": true,
-            "format": "date-time",
-            "example": "2025-03-07T09:56:28.105105"
-          },
-          "subscriptionEntity": {
-            "type": "string",
-            "nullable": false,
-            "description": "Transfer process current state",
-            "enum": [
-              "TransferProcess",
-              "Catalog",
-              "ContractNegotiationProcess",
-              "DataPlaneProcess"
-            ],
-            "example": "TransferProcess"
+          "agreement": {
+            "type": "object"
           },
           "active": {
-            "type": "boolean",
-            "nullable": false
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "RainbowParticipant": {
+        "type": "object",
+        "description": "Represents a participant in the data space.",
+        "properties": {
+          "participantId": {
+            "type": "string",
+            "format": "uri"
+          },
+          "participantType": {
+            "type": "string",
+            "enum": [
+              "Consumer",
+              "Provider"
+            ]
+          },
+          "baseUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "extra_fields": {
+            "type": "object"
+          }
+        }
+      },
+      "NewParticipantRequest": {
+        "type": "object",
+        "properties": {
+          "participantId": {
+            "type": "string",
+            "format": "uri"
+          },
+          "participantType": {
+            "type": "string",
+            "enum": [
+              "Consumer",
+              "Provider"
+            ]
+          },
+          "baseUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "extra_fields": {
+            "type": "object"
           }
         },
         "required": [
-          "subscriptionId",
-          "callbackAddress",
-          "timestamp",
-          "expirationTime",
-          "subscriptionEntity",
-          "active"
+          "baseUrl",
+          "extra_fields"
         ]
       },
-      "RainbowEventsNotificationResponse": {
+      "EditParticipantRequest": {
         "type": "object",
-        "description": "Response to create a notification and notifications to further systems",
-        "additionalProperties": false,
         "properties": {
-          "notificationId": {
+          "baseUrl": {
             "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
+            "format": "uri"
           },
-          "timestamp": {
-            "type": "string",
-            "nullable": false,
-            "format": "date-time",
-            "example": "2025-03-07T09:56:28.105105"
-          },
-          "category": {
-            "type": "string",
-            "nullable": false,
-            "description": "Notification category",
-            "enum": [
-              "TransferProcess",
-              "Catalog",
-              "ContractNegotiationProcess",
-              "DataPlaneProcess"
-            ],
-            "example": "TransferProcess"
-          },
-          "messageType": {
-            "type": "string",
-            "nullable": false,
-            "description": "Notification message type",
-            "enum": [
-              "RPCMessage",
-              "DSProtocolMessage",
-              "RainbowEntitiesMessage"
-            ],
-            "example": "RainbowEntitiesMessage"
-          },
-          "messageContent": {
-            "type": "object",
-            "nullable": false
-          },
-          "subscriptionId": {
-            "type": "string",
-            "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$"
+          "extra_fields": {
+            "type": "object"
           }
         }
       },
-      "SubscriptionErrorMessage": {
+      "SetupRequest": {
         "type": "object",
-        "description": "Rainbow entity transfer process error",
         "properties": {
-          "code": {
+          "providerParticipantId": {
             "type": "string",
-            "description": "Numeric code for error",
-            "nullable": false,
-            "example": "400"
+            "format": "uri"
           },
-          "title": {
+          "offer": {
+            "$ref": "#/components/schemas/OdrlOffer"
+          }
+        },
+        "required": [
+          "providerParticipantId",
+          "offer"
+        ]
+      },
+      "SetupRequestResponse": {
+        "type": "object",
+        "properties": {
+          "consumerPid": {
             "type": "string",
-            "description": "Textual code for error",
-            "nullable": false,
-            "example": "BAD_REQUEST"
+            "format": "uri"
+          },
+          "providerPid": {
+            "type": "string",
+            "format": "uri"
           },
           "message": {
-            "type": "string",
-            "description": "Textual description for error",
-            "nullable": false,
-            "example": "Error from deserializing path. Identifiers must have urn:uuid:<uuid> schema"
+            "$ref": "#/components/schemas/ContractAckMessage"
           }
         }
       },
-      "NotificationErrorMessage": {
+      "SetupAcceptanceRequest": {
         "type": "object",
-        "description": "Rainbow entity transfer process error",
         "properties": {
-          "code": {
+          "providerParticipantId": {
             "type": "string",
-            "description": "Numeric code for error",
-            "nullable": false,
-            "example": "400"
+            "format": "uri"
           },
-          "title": {
+          "consumerPid": {
             "type": "string",
-            "description": "Textual code for error",
-            "nullable": false,
-            "example": "BAD_REQUEST"
+            "format": "uri"
+          },
+          "providerPid": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": [
+          "providerParticipantId",
+          "consumerPid",
+          "providerPid"
+        ]
+      },
+      "SetupAcceptanceResponse": {
+        "type": "object",
+        "properties": {
+          "consumerPid": {
+            "type": "string",
+            "format": "uri"
+          },
+          "providerPid": {
+            "type": "string",
+            "format": "uri"
           },
           "message": {
-            "type": "string",
-            "description": "Textual description for error",
-            "nullable": false,
-            "example": "Error from deserializing path. Identifiers must have urn:uuid:<uuid> schema"
+            "$ref": "#/components/schemas/ContractAckMessage"
           }
         }
+      },
+      "SetupVerificationRequest": {
+        "type": "object",
+        "properties": {
+          "providerParticipantId": {
+            "type": "string",
+            "format": "uri"
+          },
+          "consumerPid": {
+            "type": "string",
+            "format": "uri"
+          },
+          "providerPid": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": [
+          "providerParticipantId",
+          "consumerPid",
+          "providerPid"
+        ]
+      },
+      "SetupVerificationResponse": {
+        "type": "object",
+        "properties": {
+          "consumerPid": {
+            "type": "string",
+            "format": "uri"
+          },
+          "providerPid": {
+            "type": "string",
+            "format": "uri"
+          },
+          "message": {
+            "$ref": "#/components/schemas/ContractAckMessage"
+          }
+        }
+      },
+      "SetupTerminationRequest": {
+        "type": "object",
+        "properties": {
+          "providerParticipantId": {
+            "type": "string",
+            "format": "uri"
+          },
+          "consumerPid": {
+            "type": "string",
+            "format": "uri"
+          },
+          "providerPid": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": [
+          "providerParticipantId",
+          "consumerPid",
+          "providerPid"
+        ]
+      },
+      "SetupTerminationResponse": {
+        "type": "object",
+        "properties": {
+          "consumerPid": {
+            "type": "string",
+            "format": "uri"
+          },
+          "providerPid": {
+            "type": "string",
+            "format": "uri"
+          },
+          "message": {
+            "$ref": "#/components/schemas/ContractAckMessage"
+          }
+        }
+      },
+      "DSRPCCNConsumerErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ContractNegotiationError"
+          }
+        }
+      },
+      "OdrlOffer": {
+        "type": "object"
+      },
+      "OdrlAgreement": {
+        "type": "object"
+      },
+      "ContractAckMessage": {
+        "type": "object"
+      },
+      "ContractOfferMessage": {
+        "type": "object"
+      },
+      "ContractAgreementMessage": {
+        "type": "object"
+      },
+      "ContractNegotiationEventMessage": {
+        "type": "object"
+      },
+      "ContractNegotiationTerminationMessage": {
+        "type": "object"
+      },
+      "ContractErrorMessage": {
+        "type": "object"
       }
     }
   }
