@@ -28,6 +28,8 @@ use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use once_cell::sync::Lazy;
+use rainbow_common::errors::helpers::BadFormat;
+use rainbow_common::errors::CommonErrors;
 use rainbow_common::ssi_wallet::RainbowSSIAuthWalletTrait;
 use rainbow_db::auth_consumer::entities::mates;
 use rainbow_db::auth_consumer::repo_factory::factory_trait::AuthRepoFactoryTrait;
@@ -153,30 +155,24 @@ where
         let hash = match params.get("hash") {
             Some(hash) => hash,
             None => {
-                error!("Unable to retrieve hash callback");
-                return (
-                    StatusCode::BAD_REQUEST,
-                    Json(json!({
-                        "message": "Unable to retrieve hash from callback",
-                        "error_code": 1200
-                    })),
-                )
-                    .into_response();
+                let error = CommonErrors::format_new(
+                    BadFormat::Received,
+                    Some("Unable to retrieve hash from callback".to_string()),
+                );
+                error.log();
+                return error.into_response();
             }
         };
 
         let interact_ref = match params.get("interact_ref") {
             Some(interact_ref) => interact_ref,
             None => {
-                error!("Unable to retrieve interact reference");
-                return (
-                    StatusCode::BAD_REQUEST,
-                    Json(json!({
-                        "message": "Unable to retrieve interact reference",
-                        "error_code": 1200
-                    })),
-                )
-                    .into_response();
+                let error = CommonErrors::format_new(
+                    BadFormat::Received,
+                    Some("Unable to retrieve interact reference".to_string()),
+                );
+                error.log();
+                return error.into_response();
             }
         };
 

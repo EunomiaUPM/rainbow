@@ -776,7 +776,10 @@ where
         let vc_iss_id = match token.claims["vc"]["issuer"]["id"].as_str() {
             Some(data) => data,
             None => {
-                let error = CommonErrors::format_new(BadFormat::Received, Some("No issuer id in the vc".to_string()));
+                let error = CommonErrors::format_new(
+                    BadFormat::Received,
+                    Some("No issuer id in the vc".to_string()),
+                );
                 error.log();
                 bail!(error);
             }
@@ -799,7 +802,10 @@ where
         let sub = match token.claims["sub"].as_str() {
             Some(data) => data,
             None => {
-                let error = CommonErrors::format_new(BadFormat::Received, Some("No sub field in the vc".to_string()));
+                let error = CommonErrors::format_new(
+                    BadFormat::Received,
+                    Some("No sub field in the vc".to_string()),
+                );
                 error.log();
                 bail!(error);
             }
@@ -828,7 +834,10 @@ where
         let jti = match token.claims["jti"].as_str() {
             Some(data) => data,
             None => {
-                let error = CommonErrors::format_new(BadFormat::Received, Some("No jti id field in the vc".to_string()));
+                let error = CommonErrors::format_new(
+                    BadFormat::Received,
+                    Some("No jti id field in the vc".to_string()),
+                );
                 error.log();
                 bail!(error);
             }
@@ -837,7 +846,10 @@ where
         let vc_id = match token.claims["vc"]["id"].as_str() {
             Some(data) => data,
             None => {
-                let error = CommonErrors::format_new(BadFormat::Received, Some("No vc_id id field in the vc".to_string()));
+                let error = CommonErrors::format_new(
+                    BadFormat::Received,
+                    Some("No vc_id id field in the vc".to_string()),
+                );
                 error.log();
                 bail!(error);
             }
@@ -883,7 +895,10 @@ where
         let valid_from = match token.claims["vc"]["validFrom"].as_str() {
             Some(data) => data,
             None => {
-                let error = CommonErrors::format_new(BadFormat::Received, Some("No validFrom id field in the vc".to_string()));
+                let error = CommonErrors::format_new(
+                    BadFormat::Received,
+                    Some("No validFrom id field in the vc".to_string()),
+                );
                 error.log();
                 bail!(error);
             }
@@ -1001,7 +1016,7 @@ where
         let model = match self.repo.mates().get_by_token(token.as_str()).await {
             Ok(Some(model)) => model,
             Ok(None) => {
-                let error = CommonErrors::missing_resource_new(token.clone(), Some(format!("There is no token: {}", &token)));
+                let error = CommonErrors::unauthorized_new(Some(format!("Invalid token: {}", &token)));
                 error.log();
                 bail!(error);
             }
@@ -1018,7 +1033,10 @@ where
         let model = match self.repo.business_mates().get_by_id(id.as_str()).await {
             Ok(Some(model)) => model,
             Ok(None) => {
-                let error = CommonErrors::missing_resource_new(id.clone(), Some(format!("There is process with id: {}", &id)));
+                let error = CommonErrors::missing_resource_new(
+                    id.clone(),
+                    Some(format!("There is process with id: {}", &id)),
+                );
                 error.log();
                 bail!(error);
             }
@@ -1032,7 +1050,11 @@ where
         let mate = match self.repo.mates().get_by_id(model.participant_id.as_str()).await {
             Ok(Some(model)) => model,
             Ok(None) => {
-                let error = CommonErrors::missing_action_new("Onboarding".to_string(), MissingAction::Onboarding, Some("Onboarding is a requisite to access this service".to_string()));
+                let error = CommonErrors::missing_action_new(
+                    "Onboarding".to_string(),
+                    MissingAction::Onboarding,
+                    Some("Onboarding is a requisite to access this service".to_string()),
+                );
                 error.log();
                 bail!(error);
             }
@@ -1043,8 +1065,16 @@ where
             }
         };
 
+        let token = match model.token {
+            Some(token) => token,
+            None => {
+                let error = CommonErrors::unauthorized_new(Some("He does not have a token".to_string()));
+                error.log();
+                bail!(error);
+            }
+        };
         let response = json!({
-            "token": model.token.unwrap(), // EXPECTED ALWAYS
+            "token": token,
             "mate": mate
         });
 

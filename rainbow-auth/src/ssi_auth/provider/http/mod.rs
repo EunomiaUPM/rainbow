@@ -82,7 +82,7 @@ where
             )
             .route("/api/v1/business/login", post(Self::fast_login))
             .with_state(self.manager)
-        .fallback(Self::fallback) // 2 routers cannot have 1 fallback each
+            .fallback(Self::fallback) // 2 routers cannot have 1 fallback each
     }
 
     async fn wallet_register(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
@@ -122,7 +122,10 @@ where
 
     async fn didweb(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
         info!("GET /did.json");
-        Json(manager.didweb().await.unwrap()) // TODO
+        match manager.didweb().await {
+            Ok(did) => Json(did).into_response(),
+            Err(e) => e.to_response(),
+        }
     }
 
     async fn access_request(
@@ -132,7 +135,7 @@ where
         info!("POST /access");
 
         match manager.manage_access(payload).await {
-            Ok(response) => (StatusCode::CREATED, Json(response)).into_response(),
+            Ok(response) => (StatusCode::OK, Json(response)).into_response(),
             Err(e) => e.to_response(),
         }
     }
@@ -196,7 +199,7 @@ where
         Path(state): Path<String>,
         Form(payload): Form<VerifyPayload>,
     ) -> impl IntoResponse {
-        let log = format!("GET /verify/{}", state);
+        let log = format!("POST /verify/{}", state);
         info!("{}", log);
 
         // {payload.vp_token,payload.presentation_submission}

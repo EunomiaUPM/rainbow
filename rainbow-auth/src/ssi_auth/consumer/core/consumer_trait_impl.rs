@@ -20,14 +20,17 @@
 use super::Manager;
 use crate::ssi_auth::consumer::core::consumer_trait::RainbowSSIAuthConsumerManagerTrait;
 // use crate::ssi_auth::errors::AuthErrors;
+use crate::ssi_auth::errors::AuthErrors;
 use crate::ssi_auth::types::{MatchingVCs, RedirectResponse};
 use anyhow::bail;
 use axum::async_trait;
 use axum::http::StatusCode;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
+use rainbow_common::auth::gnap::grant_response::{Continue4GResponse, Interact4GResponse};
 use rainbow_common::auth::gnap::{AccessToken, GrantRequest, GrantResponse};
 use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
+use rainbow_common::errors::helpers::MissingAction;
 use rainbow_common::errors::CommonErrors;
 use rainbow_db::auth_consumer::entities::{
     auth_interaction, auth_request, auth_token_requirements, auth_verification, mates,
@@ -39,9 +42,6 @@ use sha2::{Digest, Sha256};
 use tracing::{error, info};
 use url::Url;
 use urlencoding::decode;
-use rainbow_common::auth::gnap::grant_response::{Continue4GResponse, Interact4GResponse};
-use rainbow_common::errors::helpers::MissingAction;
-use crate::ssi_auth::errors::AuthErrors;
 
 #[async_trait]
 impl<T> RainbowSSIAuthConsumerManagerTrait for Manager<T>
@@ -168,9 +168,8 @@ where
             }
         };
 
-
         let cont_data = match res.r#continue {
-            Some(data) => {data}
+            Some(data) => data,
             None => {
                 let error = CommonErrors::provider_new(
                     Some(url),
@@ -198,7 +197,7 @@ where
         };
 
         let res_interact = match res.interact {
-            Some(data) => {data}
+            Some(data) => data,
             None => {
                 let error = CommonErrors::provider_new(
                     Some(url),
@@ -228,9 +227,8 @@ where
             }
         };
 
-
         let uri = match res_interact.oidc4vp.as_ref() {
-            Some(data) => {data}
+            Some(data) => data,
             None => {
                 let error = CommonErrors::provider_new(
                     Some(url),
@@ -246,22 +244,23 @@ where
         let fixed_uri = uri.replacen("openid4vp://", "https://", 1);
         let parsed_uri = Url::parse(&fixed_uri)?;
 
-        let response_type = match parsed_uri.query_pairs().find(|(k, _)| k == "response_type").map(|(_, v)| v.into_owned()) {
-            Some(data) => {data}
-            None => {
-                let error = CommonErrors::provider_new(
-                    Some(url),
-                    Some("POST".to_string()),
-                    None,
-                    Some("The expected 'response_type' field was missing in the oidc4vp uri".to_string()),
-                );
-                error.log();
-                bail!(error);
-            }
-        };
+        let response_type =
+            match parsed_uri.query_pairs().find(|(k, _)| k == "response_type").map(|(_, v)| v.into_owned()) {
+                Some(data) => data,
+                None => {
+                    let error = CommonErrors::provider_new(
+                        Some(url),
+                        Some("POST".to_string()),
+                        None,
+                        Some("The expected 'response_type' field was missing in the oidc4vp uri".to_string()),
+                    );
+                    error.log();
+                    bail!(error);
+                }
+            };
 
         let client_id = match parsed_uri.query_pairs().find(|(k, _)| k == "client_id").map(|(_, v)| v.into_owned()) {
-            Some(data) => {data}
+            Some(data) => data,
             None => {
                 let error = CommonErrors::provider_new(
                     Some(url),
@@ -274,25 +273,27 @@ where
             }
         };
 
-        let response_mode = match parsed_uri.query_pairs().find(|(k, _)| k == "response_mode").map(|(_, v)| v.into_owned()) {
-            Some(data) => {data}
-            None => {
-                let error = CommonErrors::provider_new(
-                    Some(url),
-                    Some("POST".to_string()),
-                    None,
-                    Some("The expected 'response_mode' field was missing in the oidc4vp uri".to_string()),
-                );
-                error.log();
-                bail!(error);
-            }
-        };
+        let response_mode =
+            match parsed_uri.query_pairs().find(|(k, _)| k == "response_mode").map(|(_, v)| v.into_owned()) {
+                Some(data) => data,
+                None => {
+                    let error = CommonErrors::provider_new(
+                        Some(url),
+                        Some("POST".to_string()),
+                        None,
+                        Some("The expected 'response_mode' field was missing in the oidc4vp uri".to_string()),
+                    );
+                    error.log();
+                    bail!(error);
+                }
+            };
 
         let pd_uri = match parsed_uri
             .query_pairs()
             .find(|(k, _)| k == "presentation_definition_uri")
-            .map(|(_, v)| v.into_owned()) {
-            Some(data) => {data}
+            .map(|(_, v)| v.into_owned())
+        {
+            Some(data) => data,
             None => {
                 let error = CommonErrors::provider_new(
                     Some(url),
@@ -305,22 +306,23 @@ where
             }
         };
 
-        let client_id_scheme = match parsed_uri.query_pairs().find(|(k, _)| k == "client_id_scheme").map(|(_, v)| v.into_owned()) {
-            Some(data) => {data}
-            None => {
-                let error = CommonErrors::provider_new(
-                    Some(url),
-                    Some("POST".to_string()),
-                    None,
-                    Some("The expected 'client_id_scheme' field was missing in the oidc4vp uri".to_string()),
-                );
-                error.log();
-                bail!(error);
-            }
-        };
+        let client_id_scheme =
+            match parsed_uri.query_pairs().find(|(k, _)| k == "client_id_scheme").map(|(_, v)| v.into_owned()) {
+                Some(data) => data,
+                None => {
+                    let error = CommonErrors::provider_new(
+                        Some(url),
+                        Some("POST".to_string()),
+                        None,
+                        Some("The expected 'client_id_scheme' field was missing in the oidc4vp uri".to_string()),
+                    );
+                    error.log();
+                    bail!(error);
+                }
+            };
 
         let nonce = match parsed_uri.query_pairs().find(|(k, _)| k == "nonce").map(|(_, v)| v.into_owned()) {
-            Some(data) => {data}
+            Some(data) => data,
             None => {
                 let error = CommonErrors::provider_new(
                     Some(url),
@@ -333,19 +335,20 @@ where
             }
         };
 
-        let response_uri = match parsed_uri.query_pairs().find(|(k, _)| k == "response_uri").map(|(_, v)| v.into_owned()) {
-            Some(data) => {data}
-            None => {
-                let error = CommonErrors::provider_new(
-                    Some(url),
-                    Some("POST".to_string()),
-                    None,
-                    Some("The expected 'response_uri' field was missing in the oidc4vp uri".to_string()),
-                );
-                error.log();
-                bail!(error);
-            }
-        };
+        let response_uri =
+            match parsed_uri.query_pairs().find(|(k, _)| k == "response_uri").map(|(_, v)| v.into_owned()) {
+                Some(data) => data,
+                None => {
+                    let error = CommonErrors::provider_new(
+                        Some(url),
+                        Some("POST".to_string()),
+                        None,
+                        Some("The expected 'response_uri' field was missing in the oidc4vp uri".to_string()),
+                    );
+                    error.log();
+                    bail!(error);
+                }
+            };
 
         let new_verification_model = auth_verification::NewModel {
             id: id.clone(),
@@ -380,7 +383,10 @@ where
         let mut interaction_model = match self.repo.interaction().get_by_id(&id).await {
             Ok(Some(model)) => model,
             Ok(None) => {
-                let error = CommonErrors::missing_resource_new(id.clone(), Some(format!("There is no process with id: {}", &id)));
+                let error = CommonErrors::missing_resource_new(
+                    id.clone(),
+                    Some(format!("There is no process with id: {}", &id)),
+                );
                 error.log();
                 bail!(error);
             }
@@ -407,7 +413,7 @@ where
         let hash_input = format!(
             "{}\n{}\n{}\n{}",
             upd_interaction_model.client_nonce,
-            upd_interaction_model.as_nonce.unwrap(), // EXPECTED ALWAYS
+            upd_interaction_model.as_nonce.unwrap(),     // EXPECTED ALWAYS
             upd_interaction_model.interact_ref.unwrap(), // EXPECTED ALWAYS
             upd_interaction_model.grant_endpoint
         );
@@ -435,7 +441,10 @@ where
         let mut request_model = match self.repo.request().get_by_id(id.as_str()).await {
             Ok(Some(model)) => model,
             Ok(None) => {
-                let error = CommonErrors::missing_resource_new(id.clone(), Some(format!("There is no process with id: {}", &id)));
+                let error = CommonErrors::missing_resource_new(
+                    id.clone(),
+                    Some(format!("There is no process with id: {}", &id)),
+                );
                 error.log();
                 bail!(error);
             }
@@ -449,7 +458,10 @@ where
         let interact_model = match self.repo.interaction().get_by_id(id.as_str()).await {
             Ok(Some(model)) => model,
             Ok(None) => {
-                let error = CommonErrors::missing_resource_new(id.clone(), Some(format!("There is no process with id: {}", &id)));
+                let error = CommonErrors::missing_resource_new(
+                    id.clone(),
+                    Some(format!("There is no process with id: {}", &id)),
+                );
                 error.log();
                 bail!(error);
             }
@@ -497,7 +509,12 @@ where
             _ => {
                 let http_code = Some(res.status().as_u16());
                 let error_res: GrantResponse = res.json().await?;
-                let error = CommonErrors::provider_new(Some(url), Some("POST".to_string()), http_code, error_res.error);
+                let error = CommonErrors::provider_new(
+                    Some(url),
+                    Some("POST".to_string()),
+                    http_code,
+                    error_res.error,
+                );
                 error.log();
                 bail!(error);
             }
