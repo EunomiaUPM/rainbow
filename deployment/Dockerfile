@@ -31,6 +31,9 @@ RUN --mount=type=bind,source=./../Cargo.toml,target=/app/Cargo.toml \
     --mount=type=bind,source=./../rainbow-events,target=/app/rainbow-events \
     --mount=type=bind,source=./../rainbow-datahub-catalog,target=/app/rainbow-datahub-catalog \
     --mount=type=bind,source=./../rainbow-mates,target=/app/rainbow-mates \
+    --mount=type=bind,source=./../rainbow-fe-gateway,target=/app/rainbow-fe-gateway \
+    --mount=type=bind,source=./../rainbow-business-gateway,target=/app/rainbow-business-gateway \
+    --mount=type=bind,source=./../rainbow-tests,target=/app/rainbow-tests \
     --mount=type=cache,target=/app/target/ \
     --mount=type=cache,target=/usr/local/cargo/registry/ \
     /bin/sh -c "\

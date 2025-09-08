@@ -1,8 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import {createFileRoute, Link} from "@tanstack/react-router";
 import dayjs from "dayjs";
-import { Badge } from "shared/src/components/ui/badge";
+import {Badge} from "shared/src/components/ui/badge";
 import Heading from "shared/src/components/ui/heading";
-import { RouteComponent as OfferForm } from "@/routes/contract-negotiation/offer";
+import {RouteComponent as OfferForm} from "@/routes/contract-negotiation/offer";
 
 import {
   Drawer,
@@ -14,7 +14,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@./../../shared/src/components/ui/drawer";
-import { List, ListItem, ListItemKey, ListItemDate } from "shared/src/components/ui/list";
+import {List, ListItem, ListItemDate, ListItemKey} from "shared/src/components/ui/list";
 import {
   Table,
   TableBody,
@@ -28,15 +28,15 @@ import {
   useGetDataServicesByCatalogId,
   useGetDatasetsByCatalogId,
 } from "shared/src/data/catalog-queries.ts";
-import { Button, buttonVariants } from "shared/src/components/ui/button";
+import {Button} from "shared/src/components/ui/button";
 // Icons
-import { ArrowRight, Plus } from "lucide-react";
+import {ArrowRight, Plus} from "lucide-react";
 
 const RouteComponent = () => {
-  const { catalogId } = Route.useParams();
-  const { data: catalog } = useGetCatalogsById(catalogId);
-  const { data: datasets } = useGetDatasetsByCatalogId(catalogId);
-  const { data: dataservices } = useGetDataServicesByCatalogId(catalogId);
+  const {catalogId} = Route.useParams();
+  const {data: catalog} = useGetCatalogsById(catalogId);
+  const {data: datasets} = useGetDatasetsByCatalogId(catalogId);
+  const {data: dataservices} = useGetDataServicesByCatalogId(catalogId);
 
   return (
     <div className="space-y-4 pb-4">
@@ -96,7 +96,7 @@ const RouteComponent = () => {
                   <Drawer direction={"right"}>
                     <DrawerTrigger>
                       <Button variant="outline" size="sm">
-                        <Plus />
+                        <Plus/>
                         Offer dataset
                       </Button>
                     </DrawerTrigger>
@@ -111,7 +111,7 @@ const RouteComponent = () => {
                       <DrawerBody>
                         {/* {console.log("datasetto", dataset)} */}
 
-                        <OfferForm catalog={catalog} dataset={dataset} />
+                        <OfferForm catalog={catalog} dataset={dataset}/>
                       </DrawerBody>
                       <DrawerFooter>
                         <DrawerClose className="flex justify-start gap-4">
@@ -133,7 +133,7 @@ const RouteComponent = () => {
                   >
                     <Button variant="link">
                       See dataset
-                      <ArrowRight />
+                      <ArrowRight/>
                     </Button>
                   </Link>
                 </TableCell>
@@ -178,7 +178,7 @@ const RouteComponent = () => {
                   >
                     <Button variant="link">
                       See dataservice
-                      <ArrowRight />
+                      <ArrowRight/>
                     </Button>
                   </Link>
                 </TableCell>

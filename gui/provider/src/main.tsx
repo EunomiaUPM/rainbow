@@ -14,7 +14,7 @@ const router = createRouter({ routeTree, context: { queryClient } });
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <GlobalInfoContextProvider
-    api_gateway_base="http://127.0.0.1:1205"
+    api_gateway_base="http://127.0.0.1:1206"
     role="provider"
     catalog_type="datahub"
   >

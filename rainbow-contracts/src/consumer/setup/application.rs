@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
  *  *
  *  * This program is free software: you can redistribute it and/or modify
  *  * it under the terms of the GNU General Public License as published by
@@ -20,11 +20,9 @@
 use crate::common::core::mates_facade::mates_facade::MatesFacadeService;
 use crate::consumer::core::ds_protocol::ds_protocol::DSProtocolContractNegotiationConsumerService;
 use crate::consumer::core::ds_protocol_rpc::ds_protocol_rpc::DSRPCContractNegotiationConsumerService;
-// use crate::consumer::core::ds_protocol_rpc::ds_protocol_rpc::DSRPCContractNegotiationConsumerService;
 use crate::consumer::core::rainbow_entities::rainbow_entities::RainbowEntitiesContractNegotiationConsumerService;
 use crate::consumer::http::ds_protocol::ds_protocol::DSProtocolContractNegotiationConsumerRouter;
 use crate::consumer::http::ds_protocol_rpc::ds_protocol_rpc::DSRPCContractNegotiationConsumerRouter;
-// use crate::consumer::http::ds_protocol_rpc::ds_protocol_rpc::DSRPCContractNegotiationConsumerRouter;
 use crate::consumer::http::rainbow_entities::rainbow_entities::RainbowEntitiesContractNegotiationConsumerRouter;
 use axum::{serve, Router};
 use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};

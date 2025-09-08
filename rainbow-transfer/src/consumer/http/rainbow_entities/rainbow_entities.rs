@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
  *  *
  *  * This program is free software: you can redistribute it and/or modify
  *  * it under the terms of the GNU General Public License as published by
@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::consumer::core::ds_protocol::ds_protocol_err::DSProtocolTransferConsumerErrors;
 use crate::consumer::core::ds_protocol_rpc::ds_protocol_rpc_err::DSRPCTransferConsumerErrors;
 use crate::consumer::core::rainbow_entities::rainbow_err::RainbowTransferConsumerErrors;
@@ -49,15 +50,15 @@ where
                 "/api/v1/transfers/:id",
                 get(Self::handle_get_transfer_by_id),
             )
-            .route("/api/v1/transfers", post(Self::handle_post_transfer))
-            .route(
-                "/api/v1/transfers/:id",
-                put(Self::handle_put_transfer_by_id),
-            )
-            .route(
-                "/api/v1/transfers/:id",
-                delete(Self::handle_delete_transfer_by_id),
-            )
+            // .route("/api/v1/transfers", post(Self::handle_post_transfer))
+            // .route(
+            //     "/api/v1/transfers/:id",
+            //     put(Self::handle_put_transfer_by_id),
+            // )
+            // .route(
+            //     "/api/v1/transfers/:id",
+            //     delete(Self::handle_delete_transfer_by_id),
+            // )
             .route(
                 "/api/v1/transfers/:id/messages",
                 get(Self::handle_get_messages_by_transfer),

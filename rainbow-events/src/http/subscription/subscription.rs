@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
  *  *
  *  * This program is free software: you can redistribute it and/or modify
  *  * it under the terms of the GNU General Public License as published by
@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::core::subscription::subscription_err::SubscriptionErrors;
 use crate::core::subscription::subscription_types::{RainbowEventsSubscriptionCreationRequest, SubscriptionEntities};
 use crate::core::subscription::RainbowEventsSubscriptionTrait;
@@ -85,7 +86,6 @@ where
         State((service, entity)): State<(Arc<T>, Option<SubscriptionEntities>)>,
         query: Query<SubscriptionQueryParams>,
     ) -> impl IntoResponse {
-        info!("bien");
         let cb = query.callback_address.clone();
         if cb.is_some() {
             info!("GET {}/subscriptions?callback_address={}", Self::serialize_entity_type(&entity), cb.clone().unwrap());

@@ -1,9 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useGetAgreementById } from "shared/src/data/agreement-queries";
+import {createFileRoute} from "@tanstack/react-router";
+import {useGetAgreementById} from "shared/src/data/agreement-queries";
 import dayjs from "dayjs";
 import Heading from "shared/src/components/ui/heading";
-import { List, ListItem, ListItemDate, ListItemKey } from "shared/src/components/ui/list";
-import { Badge } from "shared/src/components/ui/badge.tsx";
+import {List, ListItem, ListItemDate, ListItemKey} from "shared/src/components/ui/list";
+import {Badge} from "shared/src/components/ui/badge.tsx";
 import PolicyComponent from "shared/src/components/PolicyComponent.tsx";
 
 export const Route = createFileRoute("/agreements/$agreementId")({
@@ -12,11 +12,10 @@ export const Route = createFileRoute("/agreements/$agreementId")({
 
 function RouteComponent() {
   const formatString = (text: string = "") => {
-    let formattedText = text.replace(/[()\[\]{}"]/g, " ");
-    return formattedText;
+    return text.replace(/[()[]{}"]/g, " ");
   };
-  const { agreementId } = Route.useParams();
-  const { data: agreement } = useGetAgreementById(agreementId);
+  const {agreementId} = Route.useParams();
+  const {data: agreement} = useGetAgreementById(agreementId);
   return (
     <div className="space-y-4 pb-4">
       <Heading level="h3" className="mb-0.5 font-display flex gap-3 items-center">

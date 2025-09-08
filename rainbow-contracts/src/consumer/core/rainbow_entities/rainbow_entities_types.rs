@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
  *  *
  *  * This program is free software: you can redistribute it and/or modify
  *  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ use urn::Urn;
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct NewContractNegotiationRequest {
-    #[serde(rename = "dspace:providerPid")]
+    #[serde(rename = "providerPid")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub provider_id: Option<String>,
 }

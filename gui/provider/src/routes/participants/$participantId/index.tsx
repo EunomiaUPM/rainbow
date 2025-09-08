@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import {createFileRoute, Link} from "@tanstack/react-router";
 import {
   useGetAgreementsByParticipantId,
   useGetParticipantById,
@@ -21,21 +21,20 @@ import {
   TableRow,
 } from "shared/src/components/ui/table.tsx";
 import Heading from "../../../../../shared/src/components/ui/heading.tsx";
-import { Button } from "shared/src/components/ui/button.tsx";
-import { Badge } from "shared/src/components/ui/badge.tsx";
-import { List, ListItem, ListItemKey } from "shared/src/components/ui/list.tsx";
+import {Button} from "shared/src/components/ui/button.tsx";
+import {Badge} from "shared/src/components/ui/badge.tsx";
+import {List, ListItem, ListItemKey} from "shared/src/components/ui/list.tsx";
 // Icons
-import { ArrowRight } from "lucide-react";
-import { Separator } from "shared/src/components/ui/separator.tsx";
+import {ArrowRight} from "lucide-react";
 
 export const Route = createFileRoute("/participants/$participantId/")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const { participantId } = Route.useParams();
-  const { data: participant } = useGetParticipantById(participantId);
-  const { data: agreements } = useGetAgreementsByParticipantId(participantId);
+  const {participantId} = Route.useParams();
+  const {data: participant} = useGetParticipantById(participantId);
+  const {data: agreements} = useGetAgreementsByParticipantId(participantId);
 
   const scopedListItemKeyClasses = "basis-[28%]";
 
@@ -137,11 +136,11 @@ function RouteComponent() {
                         <TableCell>
                           <Link
                             to="/agreements/$agreementId"
-                            params={{ agreementId: agreement.agreement_id }}
+                            params={{agreementId: agreement.agreement_id}}
                           >
                             <Button variant="link">
                               See agreement
-                              <ArrowRight />
+                              <ArrowRight/>
                             </Button>
                           </Link>
                         </TableCell>
