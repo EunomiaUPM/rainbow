@@ -17,7 +17,6 @@
  *
  */
 
-use sea_orm::sea_query::extension::postgres::Type;
 use sea_orm_migration::prelude::*;
 
 pub struct Migration;
@@ -36,7 +35,7 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(AuthVerification::Table)
                     .col(ColumnDef::new(AuthVerification::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(AuthVerification::Status).string().not_null())
+                    .col(ColumnDef::new(AuthVerification::Uri).string().not_null())
                     .col(ColumnDef::new(AuthVerification::Scheme).string().not_null())
                     .col(ColumnDef::new(AuthVerification::ResponseType).string().not_null())
                     .col(ColumnDef::new(AuthVerification::ClientId).string().not_null())
@@ -45,7 +44,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(AuthVerification::ClientIdScheme).string().not_null())
                     .col(ColumnDef::new(AuthVerification::Nonce).string().not_null())
                     .col(ColumnDef::new(AuthVerification::ResponseUri).string().not_null())
-                    .col(ColumnDef::new(AuthVerification::Uri).string().not_null())
+                    .col(ColumnDef::new(AuthVerification::Status).string().not_null())
                     .col(ColumnDef::new(AuthVerification::CreatedAt).date_time().not_null())
                     .col(ColumnDef::new(AuthVerification::EndedAt).date_time())
                     .to_owned(),

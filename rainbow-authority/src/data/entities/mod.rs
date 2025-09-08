@@ -17,4 +17,6 @@
  *
  */
 
-pub(crate) mod vc_requests;
+pub mod auth;
+pub mod auth_interaction;
+pub mod auth_verification;

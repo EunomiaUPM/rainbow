@@ -54,7 +54,6 @@ pub struct ApplicationGlobalConfig {
     pub ssh_user: Option<String>,
     pub ssh_private_key_path: Option<String>,
     pub role: ConfigRoles,
-    pub cert_path: String,
 }
 
 impl From<ApplicationGlobalConfig> for ApplicationProviderConfig {
@@ -82,9 +81,8 @@ impl From<ApplicationGlobalConfig> for ApplicationProviderConfig {
                 wallet_password: value.ssi_wallet_config.clone().unwrap().wallet_portal_url,
                 wallet_id: None,
             },
-            client_config: ClientConfig { self_client: value.client_config.clone().unwrap().self_client },
+            client_config: value.client_config.unwrap(),
             role: value.role,
-            cert_path: value.cert_path,
         }
     }
 }
@@ -109,7 +107,6 @@ impl Into<ApplicationGlobalConfig> for ApplicationProviderConfig {
             ssh_user: self.ssh_user,
             ssh_private_key_path: self.ssh_private_key_path,
             role: self.role,
-            cert_path: self.cert_path,
         }
     }
 }
@@ -137,8 +134,7 @@ impl From<ApplicationGlobalConfig> for ApplicationConsumerConfig {
                 wallet_id: None,
             },
             role: value.role,
-            cert_path: value.cert_path,
-            client_config: ClientConfig { self_client: value.client_config.clone().unwrap().self_client },
+            client_config: value.client_config.unwrap(),
         }
     }
 }
@@ -163,7 +159,6 @@ impl Into<ApplicationGlobalConfig> for ApplicationConsumerConfig {
             ssh_user: self.ssh_user,
             ssh_private_key_path: self.ssh_private_key_path,
             role: self.role,
-            cert_path: self.cert_path,
         }
     }
 }

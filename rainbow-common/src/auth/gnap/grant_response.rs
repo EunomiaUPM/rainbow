@@ -34,26 +34,19 @@ pub struct GrantResponse {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub instance_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub error: Option<String>,
+    pub error: Option<String>, // TODO
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Continue4GResponse {
     pub uri: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub wait: Option<u64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub access_token: Option<AccessToken>,
+    pub wait: Option<i64>,
+    pub access_token: AccessToken,
 }
 
 impl Continue4GResponse {
-    pub fn default4async(uri: String) -> Self {
-        Self {
-            uri,
-            wait: Some(60),
-            access_token: None,
-        }
-    }
+
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -84,15 +77,15 @@ pub struct Subject4GResponse {
 }
 
 impl GrantResponse {
-    pub fn default4oidc4vp(id: String, uri: String, continue_uri:String, consumer_nonce: String) -> Self {
+    pub fn default4oidc4vp(id: String, continue_uri:String, token: String, nonce: String, oidc4vp_uri: String) -> Self {
         Self {
             r#continue: Some(Continue4GResponse {
-                uri: continue_uri, // TODO Get here
+                uri: continue_uri,
                 wait: None, // TODO Manage wait time
-                access_token: None,
+                access_token: AccessToken::default(token),
             }),
             access_token: None,
-            interact: Some(Interact4GResponse::default4oidc4vp(uri, consumer_nonce)),
+            interact: Some(Interact4GResponse::default4oidc4vp(oidc4vp_uri, nonce)),
             subject: None,
             instance_id: Some(id),
             error: None,
@@ -110,9 +103,13 @@ impl GrantResponse {
         }
     }
 
-    pub fn default4async(id: String, uri: String) -> Self {
+    pub fn default4async(id: String, uri: String, token: String) -> Self {
         Self {
-            r#continue: Some(Continue4GResponse::default4async(uri)),
+            r#continue: Some(Continue4GResponse{
+                uri,
+                wait: None,
+                access_token: AccessToken::default(token),
+            }),
             access_token: None,
             interact: None,
             subject: None,
@@ -123,15 +120,15 @@ impl GrantResponse {
 }
 
 impl Interact4GResponse {
-    fn default4oidc4vp(uri: String, consumer_nonce: String) -> Self {
+    fn default4oidc4vp(oidc4vp_uri: String, nonce: String) -> Self {
         Self {
-            oidc4vp: Some(uri),
+            oidc4vp: Some(oidc4vp_uri),
             redirect: None,
             app: None,
             user_code: None,
             user_code_uri: None,
-            finish: Some(consumer_nonce),
-            expires_in: None, // TODO COMPLETAR
+            finish: Some(nonce),
+            expires_in: None,
         }
     }
 }

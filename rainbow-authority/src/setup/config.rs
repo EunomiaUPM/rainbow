@@ -33,6 +33,7 @@ pub struct AuthorityApplicationConfig {
     cert_path: String,
     ssi_wallet_config: SSIWalletConfig,
     client_config: ClientConfig,
+    datahub_token: String,
 }
 
 impl Default for AuthorityApplicationConfig {
@@ -64,6 +65,7 @@ impl Default for AuthorityApplicationConfig {
                 wallet_id: None,
             },
             client_config: ClientConfig { self_client: "".to_string() },
+            datahub_token: "".to_string(),
         }
     }
 }
@@ -92,6 +94,10 @@ impl ApplicationProviderConfigTrait for AuthorityApplicationConfig {
     }
     fn get_raw_datahub_host(&self) -> &Option<HostConfig> {
         &None
+    }
+
+    fn get_raw_datahub_token(&self) -> &String {
+        &self.datahub_token
     }
 
     fn get_raw_ssi_wallet_config(&self) -> &SSIWalletConfig {&self.ssi_wallet_config}
@@ -157,6 +163,7 @@ impl ApplicationProviderConfigTrait for AuthorityApplicationConfig {
                 wallet_id: None,
             },
             client_config: ClientConfig { self_client: "".to_string() },
+            datahub_token: "".to_string(),
         };
         compound_config
     }
@@ -188,6 +195,7 @@ impl From<ApplicationProviderConfig> for AuthorityApplicationConfig {
             cert_path: value.cert_path,
             ssi_wallet_config: value.ssi_wallet_config,
             client_config: value.client_config,
+            datahub_token: value.datahub_token,
         }
     }
 }

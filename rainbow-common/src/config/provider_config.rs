@@ -20,9 +20,11 @@ use crate::config::database::DbType;
 use crate::config::global_config::{extract_env, format_host_config_to_url_string, DatabaseConfig, HostConfig};
 use crate::config::ConfigRoles;
 use crate::ssi_wallet::{ClientConfig, SSIWalletConfig};
+use clap::builder::TypedValueParser;
 use serde::Serialize;
 use serde_json::json;
 use std::env;
+use std::fmt::Display;
 
 #[derive(Serialize, Clone, Debug)]
 pub struct ApplicationProviderConfig {
@@ -42,7 +44,6 @@ pub struct ApplicationProviderConfig {
     pub ssi_wallet_config: SSIWalletConfig,
     pub client_config: ClientConfig,
     pub role: ConfigRoles,
-    pub cert_path: String,
 }
 
 impl Default for ApplicationProviderConfig {
@@ -109,9 +110,12 @@ impl Default for ApplicationProviderConfig {
                 wallet_password: "rainbow".to_string(),
                 wallet_id: None,
             },
-            client_config: ClientConfig { self_client: "rainbow_provider".to_string() },
+            client_config: ClientConfig {
+                class_id: "rainbow_provider".to_string(),
+                cert_path: "./../static/certificates/provider/cert.pem".to_string(),
+                display: None,
+            },
             role: ConfigRoles::Provider,
-            cert_path: "./../static/certificates/provider/cert.pem".to_string(),
         }
     }
 }
@@ -134,7 +138,6 @@ pub trait ApplicationProviderConfigTrait {
     fn get_raw_ssi_auth_host(&self) -> &Option<HostConfig>;
     fn get_raw_database_config(&self) -> &DatabaseConfig;
     fn get_raw_client_config(&self) -> &ClientConfig;
-    fn get_raw_cert_path(&self) -> &String;
     // implemented stuff
     fn get_transfer_host_url(&self) -> Option<String> {
         self.get_raw_transfer_process_host().as_ref().map(format_host_config_to_url_string)
@@ -259,10 +262,6 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
 
     fn get_raw_client_config(&self) -> &ClientConfig {
         &self.client_config
-    }
-
-    fn get_raw_cert_path(&self) -> &String {
-        &self.cert_path
     }
 
     fn merge_dotenv_configuration(&self, env_file: Option<String>) -> Self {
@@ -390,10 +389,12 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
                 ),
                 wallet_id: None,
             },
-            client_config: ClientConfig { self_client: extract_env("SELF_CLIENT", default.client_config.self_client) },
+            client_config: ClientConfig {
+                class_id: extract_env("CLIENT_DEF", default.client_config.class_id),
+                cert_path: extract_env("CERT_PATH", default.client_config.cert_path),
+                display: None,
+            },
             role: ConfigRoles::Provider,
-            cert_path: extract_env("CERT_PATH", default.cert_path),
         };
         compound_config
-    }
-}
+    }}

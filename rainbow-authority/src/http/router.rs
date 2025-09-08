@@ -8,7 +8,7 @@ use axum::http::{Method, Uri};
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::{Json, Router};
-use rainbow_common::auth::gnap::GrantResponse;
+use rainbow_common::auth::gnap::{GrantRequest, GrantResponse};
 use rainbow_common::err::transfer_err::TransferErrorType::ProtocolBodyError;
 use rainbow_common::protocol::transfer::transfer_request::TransferRequestMessage;
 use rainbow_common::utils::get_urn_from_string;
@@ -49,7 +49,7 @@ where
     pub fn router(self) -> Router {
         Router::new()
             .route("/api/v1/ping", get(Self::ping))
-            .route("/api/v1/authority/request", post(Self::access_request))
+            .route("/api/v1/authority/request-vc", post(Self::access_request))
             // .route("/api/v1/authority/vc-requests", get(Self::handler_get_all_vc_requests))
             // .route("/api/v1/authority/vc-requests/:vc_id", get(Self::handler_get_vc_request_by_id))
             // .route("/api/v1/authority/vc-requests/:vc_id/validate", post(Self::handler_get_validate_vc_request))
@@ -64,8 +64,9 @@ where
         StatusCode::OK.into_response()
     }
 
-    async fn access_request(State(authority): State<Authority<T>>) -> impl IntoResponse {
-        info!("POST /api/v1/authority/request");
+    async fn access_request(State(authority): State<Authority<T>>, Json(payload): Json<GrantRequest>) -> impl IntoResponse {
+        info!("POST /api/v1/authority/request-vc");
+        println!("{:#?}", payload);
         let id = uuid::Uuid::new_v4().to_string();
         let continue_uri = format!("{}/continue", authority.config.get_host());
         let response = GrantResponse::default4async(id, continue_uri);

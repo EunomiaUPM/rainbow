@@ -16,9 +16,18 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Clone, Debug)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct ClientConfig {
-    pub self_client: String, // como se denomina una entidad a si misma
+    pub class_id: String, // como se denomina una entidad a si misma
+    pub cert_path: String,
+    pub display: Option<DisplayInfo>,
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug)]
+pub struct DisplayInfo {
+    pub name: String,
+    pub uri: Option<String>,
+    pub logo_uri: Option<String>,
 }
