@@ -1,1469 +1,284 @@
 {
-  "openapi": "3.1.0",
+  "openapi": "3.0.1",
   "info": {
-    "title": "DCAT Catalog Management API - Rainbow Provider",
-    "description": "This API provides a comprehensive interface for managing DCAT-AP compliant resources, including catalogs, datasets, data services, and distributions. It allows providers to create, retrieve, update, and delete these resources, as well as manage associated ODRL policies to define access and usage conditions. The API is designed to facilitate interoperability and data exchange within a data space ecosystem.",
+    "title": "DataHub Catalog and Policy API - Rainbow",
+    "description": "This API provides a comprehensive interface for managing policies and interacting with a DataHub instance as a federated catalog. It allows for the full lifecycle management of ODRL policies and policy templates, establishment of relationships between policies and data resources, and proxies requests to a backing DataHub service for entity management and discovery.",
     "version": "1.0.0"
   },
   "servers": [
     {
-      "url": "https://api.rainbow-catalog.com",
+      "url": "https://api.rainbow-datahub.com",
       "description": "Production Server"
     },
     {
-      "url": "http://127.0.0.1:1102",
+      "url": "http://127.0.0.1:8003",
       "description": "Local Testing Server"
     }
   ],
   "tags": [
     {
-      "name": "Catalogs",
-      "description": "Endpoints for managing DCAT Catalogs."
+      "name": "DataHub Proxy",
+      "description": "Endpoints that proxy requests to a DataHub instance."
     },
     {
-      "name": "Datasets",
-      "description": "Endpoints for managing DCAT Datasets within a Catalog."
-    },
-    {
-      "name": "Data Services",
-      "description": "Endpoints for managing DCAT Data Services within a Catalog."
-    },
-    {
-      "name": "Distributions",
-      "description": "Endpoints for managing DCAT Distributions for a Dataset."
-    },
-    {
-      "name": "Policies",
-      "description": "Endpoints for managing ODRL policies for catalog resources."
+      "name": "Policy Templates",
+      "description": "Endpoints for managing reusable policy templates."
     }
   ],
   "paths": {
-    "/api/v1/catalogs": {
+    "/api/v1/datahub/entities": {
       "get": {
         "tags": [
-          "Catalogs"
+          "DataHub Proxy"
         ],
-        "summary": "Get all catalogs",
-        "operationId": "getAllCatalogs",
-        "description": "Retrieves a summary of all available catalogs from the provider.",
+        "summary": "Get entities from DataHub",
+        "operationId": "getDataHubEntities",
+        "description": "Proxies a request to the DataHub entities endpoint.",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "count",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "A list of all catalogs.",
+            "description": "A list of DataHub entities."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        }
+      }
+    },
+    "/api/v1/datahub/entities/{urn}": {
+      "get": {
+        "tags": [
+          "DataHub Proxy"
+        ],
+        "summary": "Get an entity by URN",
+        "operationId": "getDataHubEntityByUrn",
+        "description": "Proxies a request to get a specific DataHub entity by its URN.",
+        "parameters": [
+          {
+            "name": "urn",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "DataHub entity details."
+          },
+          "404": {
+            "description": "Not Found: Entity not found in DataHub."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        }
+      }
+    },
+    "/api/v1/policy-templates": {
+      "get": {
+        "tags": [
+          "Policy Templates"
+        ],
+        "summary": "List all policy templates",
+        "operationId": "getAllPolicyTemplates",
+        "description": "Retrieves a list of all available policy templates.",
+        "responses": {
+          "200": {
+            "description": "A list of policy templates.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Catalog"
+                    "$ref": "#/components/schemas/PolicyTemplate"
                   }
                 }
               }
             }
           },
           "500": {
-            "description": "Internal Server Error"
+            "description": "Internal Server Error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       },
       "post": {
         "tags": [
-          "Catalogs"
+          "Policy Templates"
         ],
-        "summary": "Create a new catalog",
-        "operationId": "createCatalog",
-        "description": "Creates a new catalog. By default, this catalog will not be the main one.",
+        "summary": "Create a new policy template",
+        "operationId": "createPolicyTemplate",
+        "description": "Creates a new reusable policy template.",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/NewCatalogRequest"
+                "$ref": "#/components/schemas/NewPolicyTemplateRequest"
               }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "Catalog created successfully.",
+            "description": "Policy template created successfully.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Catalog"
+                  "$ref": "#/components/schemas/PolicyTemplate"
                 }
               }
             }
           },
           "400": {
-            "description": "Bad Request: Malformed JSON or validation error."
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      }
-    },
-    "/api/v1/catalogs/main": {
-      "post": {
-        "tags": [
-          "Catalogs"
-        ],
-        "summary": "Create a new main catalog",
-        "operationId": "createMainCatalog",
-        "description": "Creates a new catalog and sets it as the main catalog. Any previous main catalog will be updated to a regular catalog.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NewCatalogRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Main catalog created successfully.",
+            "description": "Bad Request: Malformed JSON or validation error.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Catalog"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
           },
-          "400": {
-            "description": "Bad Request: Malformed JSON or validation error."
-          },
           "500": {
-            "description": "Internal Server Error"
+            "description": "Internal Server Error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
     },
-    "/api/v1/catalogs/{id}": {
+    "/api/v1/policy-templates/{id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/id"
+        }
+      ],
       "get": {
         "tags": [
-          "Catalogs"
+          "Policy Templates"
         ],
-        "summary": "Get a catalog by ID",
-        "operationId": "getCatalogById",
-        "description": "Retrieves the details of a specific catalog by its unique identifier.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/id"
-          }
-        ],
+        "summary": "Get a policy template by ID",
+        "operationId": "getPolicyTemplateById",
+        "description": "Retrieves a specific policy template by its unique identifier.",
         "responses": {
           "200": {
-            "description": "Catalog details.",
+            "description": "Policy template details.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Catalog"
+                  "$ref": "#/components/schemas/PolicyTemplate"
                 }
               }
             }
           },
           "400": {
-            "description": "Bad Request: Invalid ID format."
-          },
-          "404": {
-            "description": "Not Found: Catalog not found."
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "Catalogs"
-        ],
-        "summary": "Update a catalog",
-        "operationId": "updateCatalog",
-        "description": "Updates the details of an existing catalog.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/id"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NewCatalogRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "202": {
-            "description": "Catalog updated successfully.",
+            "description": "Bad Request: Invalid ID format.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Catalog"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
           },
-          "400": {
-            "description": "Bad Request: Invalid ID format or malformed JSON."
-          },
           "404": {
-            "description": "Not Found: Catalog not found."
+            "description": "Not Found: Policy template not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "500": {
-            "description": "Internal Server Error"
+            "description": "Internal Server Error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       },
       "delete": {
         "tags": [
-          "Catalogs"
+          "Policy Templates"
         ],
-        "summary": "Delete a catalog",
-        "operationId": "deleteCatalog",
-        "description": "Deletes a catalog and all its associated resources (datasets, data services, distributions, and policies).",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/id"
-          }
-        ],
+        "summary": "Delete a policy template",
+        "operationId": "deletePolicyTemplate",
+        "description": "Deletes a policy template.",
         "responses": {
           "202": {
-            "description": "Catalog deleted successfully."
+            "description": "Policy template deleted successfully."
           },
           "400": {
-            "description": "Bad Request: Invalid ID format."
+            "description": "Bad Request: Invalid ID format.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "404": {
-            "description": "Not Found: Catalog not found."
+            "description": "Not Found: Policy template not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      }
-    },
-    "/api/v1/datasets/{id}": {
-      "get": {
-        "tags": [
-          "Datasets"
-        ],
-        "summary": "Get a dataset by ID",
-        "operationId": "getDatasetById",
-        "description": "Retrieves a specific dataset by its unique identifier.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/id"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Dataset details.",
+            "description": "Internal Server Error.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Dataset"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
-          },
-          "400": {
-            "description": "Bad Request: Invalid ID format."
-          },
-          "404": {
-            "description": "Not Found: Dataset not found."
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      }
-    },
-    "/api/v1/catalogs/{id}/datasets": {
-      "get": {
-        "tags": [
-          "Datasets"
-        ],
-        "summary": "Get datasets by catalog ID",
-        "operationId": "getDatasetsByCatalogId",
-        "description": "Retrieves all datasets belonging to a specific catalog.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/id"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "A list of datasets.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Dataset"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request: Invalid ID format."
-          },
-          "404": {
-            "description": "Not Found: Catalog not found."
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Datasets"
-        ],
-        "summary": "Create a dataset in a catalog",
-        "operationId": "createDataset",
-        "description": "Creates a new dataset within a specified catalog.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/id"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NewDatasetRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Dataset created successfully.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Dataset"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request: Invalid ID format or malformed JSON."
-          },
-          "404": {
-            "description": "Not Found: Catalog not found."
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      }
-    },
-    "/api/v1/catalogs/{id}/datasets/{did}": {
-      "put": {
-        "tags": [
-          "Datasets"
-        ],
-        "summary": "Update a dataset",
-        "operationId": "updateDataset",
-        "description": "Updates the details of an existing dataset within a specific catalog.",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "description": "The ID of the catalog.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "did",
-            "in": "path",
-            "required": true,
-            "description": "The ID of the dataset.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NewDatasetRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "202": {
-            "description": "Dataset updated successfully.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Dataset"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request: Invalid ID format or malformed JSON."
-          },
-          "404": {
-            "description": "Not Found: Catalog or dataset not found."
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "Datasets"
-        ],
-        "summary": "Delete a dataset",
-        "operationId": "deleteDataset",
-        "description": "Deletes a dataset and all its associated distributions and policies.",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "description": "The ID of the catalog.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "did",
-            "in": "path",
-            "required": true,
-            "description": "The ID of the dataset.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "202": {
-            "description": "Dataset deleted successfully."
-          },
-          "400": {
-            "description": "Bad Request: Invalid ID format."
-          },
-          "404": {
-            "description": "Not Found: Catalog or dataset not found."
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      }
-    },
-    "/api/v1/data-services/{id}": {
-      "get": {
-        "tags": [
-          "Data Services"
-        ],
-        "summary": "Get a data service by ID",
-        "operationId": "getDataServiceById",
-        "description": "Retrieves a specific data service by its unique identifier.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/id"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Data service details.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DataService"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request: Invalid ID format."
-          },
-          "404": {
-            "description": "Not Found: Data service not found."
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      }
-    },
-    "/api/v1/catalogs/{id}/data-services": {
-      "get": {
-        "tags": [
-          "Data Services"
-        ],
-        "summary": "Get data services by catalog ID",
-        "operationId": "getDataServicesByCatalogId",
-        "description": "Retrieves all data services belonging to a specific catalog.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/id"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "A list of data services.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/DataService"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request: Invalid ID format."
-          },
-          "404": {
-            "description": "Not Found: Catalog not found."
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Data Services"
-        ],
-        "summary": "Create a data service in a catalog",
-        "operationId": "createDataService",
-        "description": "Creates a new data service within a specified catalog.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/id"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NewDataServiceRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Data service created successfully.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DataService"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request: Invalid ID format or malformed JSON."
-          },
-          "404": {
-            "description": "Not Found: Catalog not found."
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      }
-    },
-    "/api/v1/catalogs/{id}/data-services/{did}": {
-      "put": {
-        "tags": [
-          "Data Services"
-        ],
-        "summary": "Update a data service",
-        "operationId": "updateDataService",
-        "description": "Updates the details of an existing data service within a specific catalog.",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "description": "The ID of the catalog.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "did",
-            "in": "path",
-            "required": true,
-            "description": "The ID of the data service.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/EditDataServiceRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "202": {
-            "description": "Data service updated successfully.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DataService"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request: Invalid ID format or malformed JSON."
-          },
-          "404": {
-            "description": "Not Found: Catalog or data service not found."
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "Data Services"
-        ],
-        "summary": "Delete a data service",
-        "operationId": "deleteDataService",
-        "description": "Deletes a data service and its associated policies.",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "description": "The ID of the catalog.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "did",
-            "in": "path",
-            "required": true,
-            "description": "The ID of the data service.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "202": {
-            "description": "Data service deleted successfully."
-          },
-          "400": {
-            "description": "Bad Request: Invalid ID format."
-          },
-          "404": {
-            "description": "Not Found: Catalog or data service not found."
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      }
-    },
-    "/api/v1/distributions/{id}": {
-      "get": {
-        "tags": [
-          "Distributions"
-        ],
-        "summary": "Get a distribution by ID",
-        "operationId": "getDistributionById",
-        "description": "Retrieves a specific distribution by its unique identifier.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/id"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Distribution details.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Distribution"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request: Invalid ID format."
-          },
-          "404": {
-            "description": "Not Found: Distribution not found."
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      }
-    },
-    "/api/v1/datasets/{id}/distributions": {
-      "get": {
-        "tags": [
-          "Distributions"
-        ],
-        "summary": "Get distributions by dataset ID",
-        "operationId": "getDistributionsByDatasetId",
-        "description": "Retrieves all distributions for a specific dataset.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/id"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "A list of distributions.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Distribution"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request: Invalid ID format."
-          },
-          "404": {
-            "description": "Not Found: Dataset not found."
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      }
-    },
-    "/api/v1/datasets/{id}/distributions/dct-formats/{dct_format}": {
-      "get": {
-        "tags": [
-          "Distributions"
-        ],
-        "summary": "Get distributions by dataset ID and format",
-        "operationId": "getDistributionsByDatasetIdAndFormat",
-        "description": "Retrieves all distributions for a specific dataset that match a given DCT format.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/id"
-          },
-          {
-            "name": "dct_format",
-            "in": "path",
-            "required": true,
-            "description": "The DCT format of the distribution.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "A list of distributions.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Distribution"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request: Invalid ID or DCT format."
-          },
-          "404": {
-            "description": "Not Found: Dataset not found."
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      }
-    },
-    "/api/v1/catalogs/{id}/datasets/{did}/distributions": {
-      "post": {
-        "tags": [
-          "Distributions"
-        ],
-        "summary": "Create a distribution",
-        "operationId": "createDistribution",
-        "description": "Creates a new distribution for a specific dataset within a catalog.",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "description": "The ID of the catalog.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "did",
-            "in": "path",
-            "required": true,
-            "description": "The ID of the dataset.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NewDistributionRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Distribution created successfully.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Distribution"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request: Invalid ID format or malformed JSON."
-          },
-          "404": {
-            "description": "Not Found: Catalog or dataset not found."
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      }
-    },
-    "/api/v1/catalogs/{id}/datasets/{did}/distributions/{ddid}": {
-      "put": {
-        "tags": [
-          "Distributions"
-        ],
-        "summary": "Update a distribution",
-        "operationId": "updateDistribution",
-        "description": "Updates an existing distribution for a specific dataset within a catalog.",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "description": "The ID of the catalog.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "did",
-            "in": "path",
-            "required": true,
-            "description": "The ID of the dataset.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "ddid",
-            "in": "path",
-            "required": true,
-            "description": "The ID of the distribution.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/EditDistributionRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "202": {
-            "description": "Distribution updated successfully.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Distribution"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request: Invalid ID format or malformed JSON."
-          },
-          "404": {
-            "description": "Not Found: Catalog, dataset, or distribution not found."
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "Distributions"
-        ],
-        "summary": "Delete a distribution",
-        "operationId": "deleteDistribution",
-        "description": "Deletes a distribution and its associated policies.",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "description": "The ID of the catalog.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "did",
-            "in": "path",
-            "required": true,
-            "description": "The ID of the dataset.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "ddid",
-            "in": "path",
-            "required": true,
-            "description": "The ID of the distribution.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "202": {
-            "description": "Distribution deleted successfully."
-          },
-          "400": {
-            "description": "Bad Request: Invalid ID format."
-          },
-          "404": {
-            "description": "Not Found: Catalog, dataset, or distribution not found."
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      }
-    },
-    "/api/v1/catalogs/{id}/policies": {
-      "get": {
-        "tags": [
-          "Policies"
-        ],
-        "summary": "Get policies for a catalog",
-        "operationId": "getCatalogPolicies",
-        "description": "Retrieves all policies associated with a specific catalog.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/id"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "A list of policies.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/OdrlPolicyInfo"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request: Invalid ID format."
-          },
-          "404": {
-            "description": "Not Found: Catalog not found."
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Policies"
-        ],
-        "summary": "Add a policy to a catalog",
-        "operationId": "addCatalogPolicy",
-        "description": "Adds a new ODRL policy to a specific catalog.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/id"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/OdrlPolicyInfo"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Policy added successfully.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OdrlPolicyInfo"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request: Invalid ID format or malformed JSON."
-          },
-          "404": {
-            "description": "Not Found: Catalog not found."
-          }
-        }
-      }
-    },
-    "/api/v1/catalogs/{id}/policies/{pid}": {
-      "delete": {
-        "tags": [
-          "Policies"
-        ],
-        "summary": "Remove a policy from a catalog",
-        "operationId": "removeCatalogPolicy",
-        "description": "Removes an ODRL policy from a specific catalog.",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "description": "The ID of the catalog.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "pid",
-            "in": "path",
-            "required": true,
-            "description": "The ID of the policy.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "202": {
-            "description": "Policy removed successfully."
-          },
-          "400": {
-            "description": "Bad Request: Invalid ID format."
-          },
-          "404": {
-            "description": "Not Found: Catalog or policy not found."
-          }
-        }
-      }
-    },
-    "/api/v1/datasets/{id}/policies": {
-      "get": {
-        "tags": [
-          "Policies"
-        ],
-        "summary": "Get policies for a dataset",
-        "operationId": "getDatasetPolicies",
-        "description": "Retrieves all policies associated with a specific dataset.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/id"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "A list of policies.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/OdrlPolicyInfo"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request: Invalid ID format."
-          },
-          "404": {
-            "description": "Not Found: Dataset not found."
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Policies"
-        ],
-        "summary": "Add a policy to a dataset",
-        "operationId": "addDatasetPolicy",
-        "description": "Adds a new ODRL policy to a specific dataset.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/id"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/OdrlPolicyInfo"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Policy added successfully.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OdrlPolicyInfo"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request: Invalid ID format or malformed JSON."
-          },
-          "404": {
-            "description": "Not Found: Dataset not found."
-          }
-        }
-      }
-    },
-    "/api/v1/datasets/{id}/policies/{pid}": {
-      "delete": {
-        "tags": [
-          "Policies"
-        ],
-        "summary": "Remove a policy from a dataset",
-        "operationId": "removeDatasetPolicy",
-        "description": "Removes an ODRL policy from a specific dataset.",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "description": "The ID of the dataset.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "pid",
-            "in": "path",
-            "required": true,
-            "description": "The ID of the policy.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "202": {
-            "description": "Policy removed successfully."
-          },
-          "400": {
-            "description": "Bad Request: Invalid ID format."
-          },
-          "404": {
-            "description": "Not Found: Dataset or policy not found."
-          }
-        }
-      }
-    },
-    "/api/v1/data-services/{id}/policies": {
-      "get": {
-        "tags": [
-          "Policies"
-        ],
-        "summary": "Get policies for a data service",
-        "operationId": "getDataServicePolicies",
-        "description": "Retrieves all policies associated with a specific data service.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/id"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "A list of policies.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/OdrlPolicyInfo"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request: Invalid ID format."
-          },
-          "404": {
-            "description": "Not Found: Data service not found."
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Policies"
-        ],
-        "summary": "Add a policy to a data service",
-        "operationId": "addDataServicePolicy",
-        "description": "Adds a new ODRL policy to a specific data service.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/id"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/OdrlPolicyInfo"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Policy added successfully.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OdrlPolicyInfo"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request: Invalid ID format or malformed JSON."
-          },
-          "404": {
-            "description": "Not Found: Data service not found."
-          }
-        }
-      }
-    },
-    "/api/v1/data-services/{id}/policies/{pid}": {
-      "delete": {
-        "tags": [
-          "Policies"
-        ],
-        "summary": "Remove a policy from a data service",
-        "operationId": "removeDataServicePolicy",
-        "description": "Removes an ODRL policy from a specific data service.",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "description": "The ID of the data service.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "pid",
-            "in": "path",
-            "required": true,
-            "description": "The ID of the policy.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "202": {
-            "description": "Policy removed successfully."
-          },
-          "400": {
-            "description": "Bad Request: Invalid ID format."
-          },
-          "404": {
-            "description": "Not Found: Data service or policy not found."
-          }
-        }
-      }
-    },
-    "/api/v1/distributions/{id}/policies": {
-      "get": {
-        "tags": [
-          "Policies"
-        ],
-        "summary": "Get policies for a distribution",
-        "operationId": "getDistributionPolicies",
-        "description": "Retrieves all policies associated with a specific distribution.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/id"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "A list of policies.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/OdrlPolicyInfo"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request: Invalid ID format."
-          },
-          "404": {
-            "description": "Not Found: Distribution not found."
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Policies"
-        ],
-        "summary": "Add a policy to a distribution",
-        "operationId": "addDistributionPolicy",
-        "description": "Adds a new ODRL policy to a specific distribution.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/id"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/OdrlPolicyInfo"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Policy added successfully.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OdrlPolicyInfo"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request: Invalid ID format or malformed JSON."
-          },
-          "404": {
-            "description": "Not Found: Distribution not found."
-          }
-        }
-      }
-    },
-    "/api/v1/distributions/{id}/policies/{pid}": {
-      "delete": {
-        "tags": [
-          "Policies"
-        ],
-        "summary": "Remove a policy from a distribution",
-        "operationId": "removeDistributionPolicy",
-        "description": "Removes an ODRL policy from a specific distribution.",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "description": "The ID of the distribution.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "pid",
-            "in": "path",
-            "required": true,
-            "description": "The ID of the policy.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "202": {
-            "description": "Policy removed successfully."
-          },
-          "400": {
-            "description": "Bad Request: Invalid ID format."
-          },
-          "404": {
-            "description": "Not Found: Distribution or policy not found."
           }
         }
       }
@@ -1484,252 +299,97 @@
       }
     },
     "schemas": {
-      "Catalog": {
+      "ErrorResponse": {
         "type": "object",
         "properties": {
-          "@id": {
+          "code": {
             "type": "string",
-            "format": "uri"
+            "example": "404"
           },
-          "foaf:homepage": {
+          "title": {
             "type": "string",
-            "format": "uri"
+            "example": "NOT_FOUND"
           },
-          "dct:conformsTo": {
+          "message": {
             "type": "string",
-            "format": "uri"
-          },
-          "dct:creator": {
-            "type": "string"
-          },
-          "dct:title": {
-            "type": "string"
+            "example": "The requested resource was not found."
           }
         }
       },
-      "NewCatalogRequest": {
+      "Policy": {
         "type": "object",
         "properties": {
-          "@id": {
+          "id": {
             "type": "string",
-            "format": "uri",
-            "description": "The unique identifier for the catalog."
+            "format": "uri"
           },
-          "foaf:homepage": {
-            "type": "string",
-            "format": "uri",
-            "description": "The homepage of the catalog."
+          "policy": {
+            "type": "object",
+            "description": "An ODRL policy object."
           },
-          "dct:conformsTo": {
+          "created_at": {
             "type": "string",
-            "format": "uri",
-            "description": "A profile or standard to which the catalog conforms."
-          },
-          "dct:creator": {
-            "type": "string",
-            "description": "The entity responsible for creating the catalog."
-          },
-          "dct:title": {
-            "type": "string",
-            "description": "The title of the catalog."
+            "format": "date-time"
           }
         }
       },
-      "Dataset": {
+      "NewPolicyRequest": {
         "type": "object",
         "properties": {
-          "@id": {
-            "type": "string",
-            "format": "uri"
-          },
-          "dct:conformsTo": {
-            "type": "string",
-            "format": "uri"
-          },
-          "dct:creator": {
-            "type": "string"
-          },
-          "dct:title": {
-            "type": "string"
-          }
-        }
-      },
-      "NewDatasetRequest": {
-        "type": "object",
-        "properties": {
-          "@id": {
+          "id": {
             "type": "string",
             "format": "uri",
-            "description": "The unique identifier for the dataset."
-          },
-          "dct:conformsTo": {
-            "type": "string",
-            "format": "uri",
-            "description": "A profile or standard to which the dataset conforms."
-          },
-          "dct:creator": {
-            "type": "string",
-            "description": "The entity responsible for creating the dataset."
-          },
-          "dct:title": {
-            "type": "string",
-            "description": "The title of the dataset."
-          }
-        }
-      },
-      "DataService": {
-        "type": "object",
-        "properties": {
-          "@id": {
-            "type": "string",
-            "format": "uri"
-          },
-          "dct:conformsTo": {
-            "type": "string",
-            "format": "uri"
-          },
-          "dct:creator": {
-            "type": "string"
-          },
-          "dct:title": {
-            "type": "string"
-          },
-          "dcat:endpointDescription": {
-            "type": "string",
-            "format": "uri"
-          },
-          "dcat:endpointURL": {
-            "type": "string",
-            "format": "uri"
-          }
-        }
-      },
-      "NewDataServiceRequest": {
-        "type": "object",
-        "properties": {
-          "@id": {
-            "type": "string",
-            "format": "uri",
-            "description": "The unique identifier for the data service."
-          },
-          "dct:conformsTo": {
-            "type": "string",
-            "format": "uri",
-            "description": "A profile or standard to which the data service conforms."
-          },
-          "dct:creator": {
-            "type": "string",
-            "description": "The entity responsible for creating the data service."
-          },
-          "dct:title": {
-            "type": "string",
-            "description": "The title of the data service."
-          },
-          "dcat:endpointDescription": {
-            "type": "string",
-            "format": "uri",
-            "description": "A description of the endpoint."
-          },
-          "dcat:endpointURL": {
-            "type": "string",
-            "format": "uri",
-            "description": "The URL of the endpoint."
-          }
-        },
-        "required": [
-          "dcat:endpointURL"
-        ]
-      },
-      "EditDataServiceRequest": {
-        "type": "object",
-        "properties": {
-          "dct:conformsTo": {
-            "type": "string",
-            "format": "uri"
-          },
-          "dct:creator": {
-            "type": "string"
-          },
-          "dct:title": {
-            "type": "string"
-          },
-          "dcat:endpointDescription": {
-            "type": "string",
-            "format": "uri"
-          },
-          "dcat:endpointURL": {
-            "type": "string",
-            "format": "uri"
-          }
-        }
-      },
-      "Distribution": {
-        "type": "object",
-        "properties": {
-          "@id": {
-            "type": "string",
-            "format": "uri"
-          },
-          "dct:formats": {
-            "type": "string"
-          },
-          "dct:title": {
-            "type": "string"
-          },
-          "dcat:accessService": {
-            "type": "string",
-            "format": "uri"
-          }
-        }
-      },
-      "NewDistributionRequest": {
-        "type": "object",
-        "properties": {
-          "@id": {
-            "type": "string",
-            "format": "uri"
-          },
-          "dct:formats": {
-            "type": "string"
-          },
-          "dct:title": {
-            "type": "string"
-          },
-          "dcat:accessService": {
-            "type": "string",
-            "format": "uri"
-          }
-        },
-        "required": [
-          "dcat:accessService"
-        ]
-      },
-      "EditDistributionRequest": {
-        "type": "object",
-        "properties": {
-          "dct:title": {
-            "type": "string"
-          },
-          "dcat:accessService": {
-            "type": "string",
-            "format": "uri"
-          }
-        }
-      },
-      "OdrlPolicyInfo": {
-        "type": "object",
-        "description": "Represents an ODRL policy with its associated information.",
-        "properties": {
-          "uid": {
-            "type": "string",
-            "format": "uri",
-            "description": "The unique identifier of the policy."
+            "description": "Optional unique identifier for the policy."
           },
           "policy": {
             "type": "object",
             "description": "The ODRL policy definition."
           }
+        },
+        "required": [
+          "policy"
+        ]
+      },
+      "PolicyTemplate": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uri"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "template": {
+            "type": "object",
+            "description": "The policy template structure."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
         }
+      },
+      "NewPolicyTemplateRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "template": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "name",
+          "template"
+        ]
       }
     }
   }

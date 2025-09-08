@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "https://api.rainbow-provider.com",
+      "url": "https://api.rainbow-catalog.com",
       "description": "Production Server"
     },
     {
@@ -2860,7 +2860,7 @@
           "message"
         ]
       },
-      "OdrlPolicyInfo":  {
+      "OdrlPolicyInfo": {
         "description": "ODRL policy information."
       },
       "OdrlOffer": {
