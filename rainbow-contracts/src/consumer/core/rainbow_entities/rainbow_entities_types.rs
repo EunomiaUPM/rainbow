@@ -27,7 +27,7 @@ use urn::Urn;
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct NewContractNegotiationRequest {
-    #[serde(rename = "dspace:providerPid")]
+    #[serde(rename = "providerPid")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub provider_id: Option<String>,
 }

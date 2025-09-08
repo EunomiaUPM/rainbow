@@ -97,18 +97,18 @@ where
                 "/api/v1/contract-negotiation/messages/:message_id",
                 get(Self::handle_get_cn_messages_by_cn_message_id),
             )
-            .route(
-                "/api/v1/contract-negotiation/processes/:process_id/messages",
-                post(Self::handle_post_cn_message_by_cn_process),
-            )
-            .route(
-                "/api/v1/contract-negotiation/processes/:process_id/messages/:message_id",
-                put(Self::handle_put_cn_message_by_cn_process),
-            )
-            .route(
-                "/api/v1/contract-negotiation/processes/:process_id/messages/:message_id",
-                delete(Self::handle_delete_cn_message_by_cn_process),
-            )
+            // .route(
+            //     "/api/v1/contract-negotiation/processes/:process_id/messages",
+            //     post(Self::handle_post_cn_message_by_cn_process),
+            // )
+            // .route(
+            //     "/api/v1/contract-negotiation/processes/:process_id/messages/:message_id",
+            //     put(Self::handle_put_cn_message_by_cn_process),
+            // )
+            // .route(
+            //     "/api/v1/contract-negotiation/processes/:process_id/messages/:message_id",
+            //     delete(Self::handle_delete_cn_message_by_cn_process),
+            // )
             // CNOffers
             .route(
                 "/api/v1/contract-negotiation/processes/:process_id/offers",
@@ -126,18 +126,18 @@ where
                 "/api/v1/contract-negotiation/offers/:offer_id",
                 get(Self::handle_get_cn_offer_by_offer_id),
             )
-            .route(
-                "/api/v1/contract-negotiation/processes/:process_id/messages/:message_id/offers",
-                post(Self::handle_post_cn_offers_by_cn_process_id_and_message_id),
-            )
-            .route(
-                "/api/v1/contract-negotiation/processes/:process_id/messages/:message_id/offers/:offer_id",
-                put(Self::handle_put_cn_offers_by_cn_process_id_and_message_id),
-            )
-            .route(
-                "/api/v1/contract-negotiation/processes/:process_id/messages/:message_id/offers/:offer_id",
-                delete(Self::handle_delete_cn_offers_by_cn_process_id_and_message_id),
-            )
+            // .route(
+            //     "/api/v1/contract-negotiation/processes/:process_id/messages/:message_id/offers",
+            //     post(Self::handle_post_cn_offers_by_cn_process_id_and_message_id),
+            // )
+            // .route(
+            //     "/api/v1/contract-negotiation/processes/:process_id/messages/:message_id/offers/:offer_id",
+            //     put(Self::handle_put_cn_offers_by_cn_process_id_and_message_id),
+            // )
+            // .route(
+            //     "/api/v1/contract-negotiation/processes/:process_id/messages/:message_id/offers/:offer_id",
+            //     delete(Self::handle_delete_cn_offers_by_cn_process_id_and_message_id),
+            // )
             //
             // Agreements
             .route(
@@ -156,18 +156,18 @@ where
                 "/api/v1/contract-negotiation/agreements/:agreement_id",
                 get(Self::handle_get_agreement_by_agreement_id),
             )
-            .route(
-                "/api/v1/contract-negotiation/processes/:process_id/messages/:message_id/agreements",
-                post(Self::handle_post_agreement),
-            )
-            .route(
-                "/api/v1/contract-negotiation/processes/:process_id/messages/:message_id/agreements/:agreement_id",
-                put(Self::handle_put_agreement),
-            )
-            .route(
-                "/api/v1/contract-negotiation/processes/:process_id/messages/:message_id/agreements/:agreement_id",
-                delete(Self::handle_delete_agreement),
-            )
+            // .route(
+            //     "/api/v1/contract-negotiation/processes/:process_id/messages/:message_id/agreements",
+            //     post(Self::handle_post_agreement),
+            // )
+            // .route(
+            //     "/api/v1/contract-negotiation/processes/:process_id/messages/:message_id/agreements/:agreement_id",
+            //     put(Self::handle_put_agreement),
+            // )
+            // .route(
+            //     "/api/v1/contract-negotiation/processes/:process_id/messages/:message_id/agreements/:agreement_id",
+            //     delete(Self::handle_delete_agreement),
+            // )
             .with_state(self.service)
     }
 
