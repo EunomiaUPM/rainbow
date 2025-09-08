@@ -20,7 +20,7 @@
 use rand::distributions::Alphanumeric;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-use serde_json::{Value, json};
+use serde_json::{json, Value};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GrantRequest {
@@ -39,15 +39,14 @@ pub struct AccessTokenRequirements4GR {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub label: Option<String>, // REQUIRED if used as part of a request for multiple access tokens
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub flags: Option<String>, // A set of flags that indicate desired attributes or behavior to be attached to the access token by the AS
-    // TODO if Bearer is included the token is not binded to a key
+    pub flags: Option<Vec<String>>, // A set of flags that indicate desired attributes or behavior to be attached to the access token by the AS
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Access4AT {
     pub r#type: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub actions: Option<String>, // Actions4Access4AT COMPLETAR
+    pub actions: Option<Vec<String>>, // Actions4Access4AT COMPLETAR
     #[serde(skip_serializing_if = "Option::is_none")]
     pub locations: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -73,7 +72,7 @@ pub struct Interact4GR {
     pub start: Vec<String>,
     pub finish: Finish4Interact, // REQUIRED because DataSpace Protocol is based on redirects
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub hints: Option<Value>,
+    pub hints: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -87,20 +86,19 @@ pub struct Finish4Interact {
 }
 
 impl GrantRequest {
-    pub fn default4oidc(client: String, method: String) -> Self {
+    pub fn default4oidc(client: Value, method: String, uri: Option<String>) -> Self {
         Self {
-            access_token: AccessTokenRequirements4GR::default(),
+            access_token: AccessTokenRequirements4GR::key_default(),
             subject: None,
-            client: Value::String(client),
+            client,
             user: None,
-            interact: Some(Interact4GR::default4oidc(method)),
+            interact: Some(Interact4GR::default4oidc(method, uri)),
         }
     }
 
-
-    pub fn default4await(cert: String, uri: String) -> Self {
+    pub fn default4await(cert: String, uri: Option<String>) -> Self {
         Self {
-            access_token: AccessTokenRequirements4GR::request_vc(), // TODO Fix, es none en este caso
+            access_token: AccessTokenRequirements4GR::request_vc(),
             subject: None,
             client: json!({
                 "key" : {
@@ -110,7 +108,7 @@ impl GrantRequest {
 
             }),
             user: None,
-            interact: Some(Interact4GR::default4oidc(uri)),
+            interact: Some(Interact4GR::default4await(uri)),
         }
     }
 
@@ -121,25 +119,45 @@ impl GrantRequest {
         self
     }
 
-    pub fn update_actions(&mut self, actions: String) -> &mut Self {
+    pub fn update_actions(&mut self, actions: Vec<String>) -> &mut Self {
         self.access_token.access.actions = Some(actions);
+        self
+    }
+
+    pub fn update_nonce(&mut self, nonce: String) -> &mut Self {
+        self.interact.as_mut().unwrap().finish.nonce = nonce;
         self
     }
 }
 
 impl AccessTokenRequirements4GR {
-    pub fn default() -> Self {
+    pub fn bearer_default() -> Self {
         Self {
             access: Access4AT {
                 r#type: String::from("api-access"),
-                actions: Some(String::from("talk")),
+                actions: Some(vec![String::from("talk")]),
                 locations: None,
                 datatypes: None,
                 identifier: None,
                 privileges: None,
             },
             label: None,
-            flags: Some("Bearer".to_string()), // TODO
+            flags: Some(vec!["Bearer".to_string()]),
+        }
+    }
+
+    pub fn key_default() -> Self {
+        Self {
+            access: Access4AT {
+                r#type: String::from("api-access"),
+                actions: Some(vec![String::from("talk")]),
+                locations: None,
+                datatypes: None,
+                identifier: None,
+                privileges: None,
+            },
+            label: None,
+            flags: None,
         }
     }
 
@@ -147,36 +165,40 @@ impl AccessTokenRequirements4GR {
         Self {
             access: Access4AT {
                 r#type: String::from("vc-exchange"),
-                actions: Some(String::from("vc-request")),
+                actions: Some(vec![String::from("talk")]),
                 locations: None,
                 datatypes: None,
                 identifier: None,
                 privileges: None,
             },
             label: None,
-            flags: None, // TODO
+            flags: None,
         }
     }
 }
 
 impl Interact4GR {
-    pub fn default4oidc(method: String) -> Self {
+    pub fn default4oidc(method: String, uri: Option<String>) -> Self {
         let nonce: String = rand::thread_rng().sample_iter(&Alphanumeric).take(36).map(char::from).collect();
 
         Self {
             start: vec![String::from("oidc4vp")],
-            finish: Finish4Interact { method, uri: None, nonce, hash_method: None },
+            finish: Finish4Interact { method, uri, nonce, hash_method: Some("sha-256".to_string()) },
             hints: None,
         }
     }
 
-    pub fn default4await(uri: String) -> Self {
+    pub fn default4await(uri: Option<String>) -> Self {
         let nonce: String = rand::thread_rng().sample_iter(&Alphanumeric).take(36).map(char::from).collect();
         Self {
             start: vec![String::from("await")],
-            finish: Finish4Interact { method: "await".to_string(), uri: Some(uri), nonce, hash_method: None },
+            finish: Finish4Interact {
+                method: "await".to_string(),
+                uri,
+                nonce,
+                hash_method: Some("sha-256".to_string()),
+            },
             hints: None,
         }
     }
 }
-

@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
+ *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
  *  *
  *  * This program is free software: you can redistribute it and/or modify
  *  * it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@ pub struct AuthorityApplicationConfig {
     cert_path: String,
     ssi_wallet_config: SSIWalletConfig,
     client_config: ClientConfig,
+    datahub_token: String,
 }
 
 impl Default for AuthorityApplicationConfig {
@@ -64,6 +65,7 @@ impl Default for AuthorityApplicationConfig {
                 wallet_id: None,
             },
             client_config: ClientConfig { self_client: "".to_string() },
+            datahub_token: "".to_string(),
         }
     }
 }
@@ -94,7 +96,11 @@ impl ApplicationProviderConfigTrait for AuthorityApplicationConfig {
         &None
     }
 
-    fn get_raw_ssi_wallet_config(&self) -> &SSIWalletConfig { &self.ssi_wallet_config }
+    fn get_raw_datahub_token(&self) -> &String {
+        &self.datahub_token
+    }
+
+    fn get_raw_ssi_wallet_config(&self) -> &SSIWalletConfig {&self.ssi_wallet_config}
 
     fn get_raw_contract_negotiation_host(&self) -> &Option<HostConfig> {
         &None
@@ -112,7 +118,7 @@ impl ApplicationProviderConfigTrait for AuthorityApplicationConfig {
         &self.database_config
     }
 
-    fn get_raw_client_config(&self) -> &ClientConfig { &self.client_config }
+    fn get_raw_client_config(&self) -> &ClientConfig {&self.client_config}
 
     fn get_raw_cert_path(&self) -> &String {
         &self.cert_path
@@ -157,6 +163,7 @@ impl ApplicationProviderConfigTrait for AuthorityApplicationConfig {
                 wallet_id: None,
             },
             client_config: ClientConfig { self_client: "".to_string() },
+            datahub_token: "".to_string(),
         };
         compound_config
     }
@@ -188,6 +195,7 @@ impl From<ApplicationProviderConfig> for AuthorityApplicationConfig {
             cert_path: value.cert_path,
             ssi_wallet_config: value.ssi_wallet_config,
             client_config: value.client_config,
+            datahub_token: value.datahub_token,
         }
     }
 }

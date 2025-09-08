@@ -17,6 +17,51 @@
  *
  */
 
-pub use manager::manager::Manager;
-pub mod manager;
-pub mod types;
+pub mod provider_trait;
+pub mod provider_trait_impl;
+pub mod wallet_trait_impl;
+
+use rainbow_common::config::provider_config::ApplicationProviderConfig;
+use rainbow_common::ssi_wallet::WalletSession;
+use rainbow_db::auth_provider::repo_factory::factory_trait::AuthRepoFactoryTrait;
+use reqwest::Client;
+use serde_json::Value;
+use std::sync::Arc;
+use std::time::Duration;
+use tokio::sync::Mutex;
+
+#[derive(Debug)]
+pub struct Manager<T>
+where
+    T: AuthRepoFactoryTrait + Send + Sync + Clone + 'static,
+{
+    pub wallet_session: Mutex<WalletSession>,
+    pub wallet_onboard: bool,
+    pub repo: Arc<T>,
+    client: Client,
+    config: ApplicationProviderConfig,
+    didweb: Value,
+}
+
+impl<T> Manager<T>
+where
+    T: AuthRepoFactoryTrait + Send + Sync + Clone + 'static,
+{
+    pub fn new(repo: Arc<T>, config: ApplicationProviderConfig) -> Self {
+        let client =
+            Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
+        Self {
+            wallet_session: Mutex::new(WalletSession {
+                account_id: None,
+                token: None,
+                token_exp: None,
+                wallets: Vec::new(),
+            }),
+            wallet_onboard: false,
+            repo,
+            client,
+            config,
+            didweb: Value::Null,
+        }
+    }
+}

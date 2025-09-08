@@ -22,7 +22,7 @@ axum = { workspace = true }
 thiserror = { workspace = true }
 chrono = { workspace = true }
 urn = { workspace = true }
-sea-orm = { workspace = true }
+sea-orm = { workspace = true, features = ["postgres-array"] }
 sea-orm-migration = { workspace = true }
 json_value_merge = "2.0.1"
 rand = "0.8.5"

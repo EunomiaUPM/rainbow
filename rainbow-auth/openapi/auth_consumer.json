@@ -1,0 +1,319 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Rainbow Authentication Consumer API",
+    "description": "Rainbow Authentication Module - Rainbow Consumer API",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:1000",
+      "description": "Testing server"
+    }
+  ],
+  "paths": {
+    "/api/v1/wallet/register": {
+      "post": {
+        "summary": "Register a new wallet",
+        "description": "Creates a new wallet in the system.",
+        "operationId": "wallet_register",
+        "responses": {
+          "201": {
+            "description": "Wallet successfully registered."
+          },
+          "502": {
+            "description": "The petition to the wallet went wrong"
+          },
+          "500": {
+            "description": "Unexpected internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/wallet/login": {
+      "post": {
+        "summary": "Login a wallet",
+        "description": "Authenticates an existing wallet in the system.",
+        "operationId": "wallet_login",
+        "responses": {
+          "200": {
+            "description": "Wallet successfully logged in."
+          },
+          "502": {
+            "description": "The petition to the wallet went wrong"
+          },
+          "500": {
+            "description": "Unexpected internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/wallet/logout": {
+      "post": {
+        "summary": "Logout a wallet",
+        "description": "Logs out an authenticated wallet from the system.",
+        "operationId": "wallet_logout",
+        "responses": {
+          "200": {
+            "description": "Wallet successfully logged out."
+          },
+          "502": {
+            "description": "The petition to the wallet went wrong"
+          },
+          "500": {
+            "description": "Unexpected internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/wallet/onboard": {
+      "post": {
+        "summary": "Onboard a wallet",
+        "description": "Performs the onboarding process for a wallet in the system.",
+        "operationId": "wallet_onboard",
+        "responses": {
+          "201": {
+            "description": "Wallet successfully onboarded."
+          },
+          "502": {
+            "description": "The petition to the wallet went wrong"
+          },
+          "500": {
+            "description": "Unexpected internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/did.json": {
+      "get": {
+        "summary": "Retrieve DID document",
+        "description": "Gets the DID document of the wallet.",
+        "operationId": "didweb",
+        "responses": {
+          "200": {
+            "description": "DID document successfully retrieved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "@context": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "verificationMethod": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          },
+                          "controller": {
+                            "type": "string"
+                          },
+                          "publicKeyBase58": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "type",
+                          "controller",
+                          "publicKeyBase58"
+                        ]
+                      }
+                    },
+                    "authentication": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "@context",
+                    "id",
+                    "verificationMethod",
+                    "authentication"
+                  ]
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "There is no wallet associated with the session or the Wallet does not have any dids."
+          },
+          "500": {
+            "description": "Unexpected internal server error."
+          }
+        }
+      }
+    },
+    "/api/v1/request/onboard/provider": {
+      "post": {
+        "summary": "Request provider onboarding",
+        "description": "Sends a request to onboard a new provider into the system.",
+        "operationId": "request_provider_onboard",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "slug": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string"
+                  },
+                  "actions": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "slug",
+                  "url",
+                  "actions"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Request completed successfully, returns URI for authentication.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request was malformed."
+          },
+          "502": {
+            "description": "Request to provider failed or provider responded unexpectedly."
+          },
+          "500": {
+            "description": "Database error or unexpected internal server error."
+          }
+        }
+      }
+    },
+    "/api/v1/callback/{id}": {
+      "get": {
+        "summary": "Callback to complete provider onboarding",
+        "description": "Handles the callback from a provider after onboarding. Saves the request in the system database.",
+        "operationId": "callback",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Request identifier",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "hash",
+            "in": "query",
+            "required": true,
+            "description": "Randomly generated hash for request validation",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "interact_ref",
+            "in": "query",
+            "required": true,
+            "description": "Randomly generated interaction reference",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Mate information successfully returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "participant_id": {
+                      "type": "string"
+                    },
+                    "participant_slug": {
+                      "type": "string"
+                    },
+                    "participant_type": {
+                      "type": "string"
+                    },
+                    "base_url": {
+                      "type": "string"
+                    },
+                    "token": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "saved_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "last_interaction": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "is_me": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "participant_id",
+                    "participant_slug",
+                    "participant_type",
+                    "base_url",
+                    "saved_at",
+                    "last_interaction",
+                    "is_me"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request: hash or interact_ref is missing."
+          },
+          "404": {
+            "description": "Request with given id not found."
+          },
+          "422": {
+            "description": "Hash does not match the expected value."
+          },
+          "502": {
+            "description": "Request to provider failed or provider returned unexpected response."
+          },
+          "500": {
+            "description": "Database error or unexpected internal server error."
+          }
+        }
+      }
+    }
+  }
+}

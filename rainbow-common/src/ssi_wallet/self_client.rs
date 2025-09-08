@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
+ *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
  *  *
  *  * This program is free software: you can redistribute it and/or modify
  *  * it under the terms of the GNU General Public License as published by
@@ -16,10 +16,18 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use serde::{Deserialize, Serialize};
 
-use serde::Serialize;
-
-#[derive(Serialize, Clone, Debug)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct ClientConfig {
-    pub self_client: String, // como se denomina una entidad a si misma
+    pub class_id: String, // como se denomina una entidad a si misma
+    pub cert_path: String,
+    pub display: Option<DisplayInfo>,
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug)]
+pub struct DisplayInfo {
+    pub name: String,
+    pub uri: Option<String>,
+    pub logo_uri: Option<String>,
 }

@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
+ *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
  *  *
  *  * This program is free software: you can redistribute it and/or modify
  *  * it under the terms of the GNU General Public License as published by
@@ -17,14 +17,17 @@
  *
  */
 
-use sea_orm::prelude::*;
-use sea_orm_migration::{MigrationTrait, MigratorTrait};
+use sea_orm_migration::prelude::*;
+pub mod m20250403_094651_auth;
+pub mod m20250403_094651_auth_interaction;
+pub mod m20250403_094651_auth_verification;
 
-pub mod m20250529_000001_vc_requests;
-
-pub fn get_authority_migrations() -> Vec<Box<dyn MigrationTrait>> {
+pub fn get_auth_provider_migrations() -> Vec<Box<dyn MigrationTrait>> {
     vec![
-        Box::new(m20250529_000001_vc_requests::Migration),
+        Box::new(m20250403_094651_auth::Migration),
+        Box::new(m20250403_094651_auth_interaction::Migration),
+        Box::new(m20250403_094651_auth_verification::Migration),
+
     ]
 }
 
@@ -32,6 +35,6 @@ pub struct Migrator;
 #[async_trait::async_trait]
 impl MigratorTrait for Migrator {
     fn migrations() -> Vec<Box<dyn MigrationTrait>> {
-        get_authority_migrations()
+        get_auth_provider_migrations()
     }
 }

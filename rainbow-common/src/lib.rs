@@ -30,3 +30,4 @@ pub mod protocol;
 pub mod schemas;
 pub mod utils;
 pub mod ssi_wallet;
+pub mod errors;

@@ -17,7 +17,8 @@
  *
  */
 
-use crate::ssi_auth::provider::core::types::Claims;
+use crate::ssi_auth::types::Claims;
+use axum::http::HeaderMap;
 use base64::{engine::general_purpose, Engine as _};
 use chrono::{DateTime, Utc};
 use jsonwebtoken::{encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
@@ -27,7 +28,7 @@ use std::time::{Duration, SystemTime};
 
 pub fn split_did(did: &str) -> (&str, Option<&str>) {
     match did.split_once('#') {
-        Some((didkid, id)) => (didkid, Some(id)),
+        Some((did_kid, id)) => (did_kid, Some(id)),
         None => (did, None),
     }
 }
@@ -129,4 +130,12 @@ fn generate_exp() -> u64 {
     let ten_minutes_from_now = now + Duration::new(600, 0); // 600 segundos = 10 minutos
     let exp = ten_minutes_from_now.duration_since(SystemTime::UNIX_EPOCH).expect("Time went backwards").as_secs();
     exp
+}
+
+pub fn extract_gnap_token(headers: HeaderMap) -> Option<String> {
+    headers
+        .get("Authorization")
+        .and_then(|value| value.to_str().ok())
+        .and_then(|s| s.strip_prefix("GNAP "))
+        .map(|token| token.to_string())
 }
