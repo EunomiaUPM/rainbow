@@ -17,9 +17,9 @@
  *
  */
 
+use super::access_token::AccessToken;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use crate::auth::gnap::access_token::AccessToken;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GrantResponse {
@@ -43,10 +43,6 @@ pub struct Continue4GResponse {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub wait: Option<i64>,
     pub access_token: AccessToken,
-}
-
-impl Continue4GResponse {
-
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -77,7 +73,13 @@ pub struct Subject4GResponse {
 }
 
 impl GrantResponse {
-    pub fn default4oidc4vp(id: String, continue_uri:String, token: String, nonce: String, oidc4vp_uri: String) -> Self {
+    pub fn default4oidc4vp(
+        id: String,
+        continue_uri: String,
+        token: String,
+        nonce: String,
+        oidc4vp_uri: String,
+    ) -> Self {
         Self {
             r#continue: Some(Continue4GResponse {
                 uri: continue_uri,
@@ -103,15 +105,11 @@ impl GrantResponse {
         }
     }
 
-    pub fn default4async(id: String, uri: String, token: String) -> Self {
+    pub fn default4cross_user(id: String, uri: String, token: String, nonce: String) -> Self {
         Self {
-            r#continue: Some(Continue4GResponse{
-                uri,
-                wait: None,
-                access_token: AccessToken::default(token),
-            }),
+            r#continue: Some(Continue4GResponse { uri, wait: None, access_token: AccessToken::default(token) }),
             access_token: None,
-            interact: None,
+            interact: Some(Interact4GResponse::default4cross_user(nonce)),
             subject: None,
             instance_id: Some(id),
             error: None,
@@ -123,6 +121,17 @@ impl Interact4GResponse {
     fn default4oidc4vp(oidc4vp_uri: String, nonce: String) -> Self {
         Self {
             oidc4vp: Some(oidc4vp_uri),
+            redirect: None,
+            app: None,
+            user_code: None,
+            user_code_uri: None,
+            finish: Some(nonce),
+            expires_in: None,
+        }
+    }
+    fn default4cross_user(nonce: String) -> Self {
+        Self {
+            oidc4vp: None,
             redirect: None,
             app: None,
             user_code: None,

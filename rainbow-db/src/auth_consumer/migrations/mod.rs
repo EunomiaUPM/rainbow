@@ -19,11 +19,12 @@
 
 use sea_orm_migration::prelude::*;
 
-pub mod m20250403_094651_auth_interaction;
-pub mod m20250403_094651_auth_request;
-pub mod m20250403_094651_auth_token_requirements;
-pub mod m20250403_094651_auth_verification;
-pub mod m20250403_094651_mates;
+mod m20250403_094651_auth_interaction;
+mod m20250403_094651_auth_request;
+mod m20250403_094651_auth_token_requirements;
+mod m20250403_094651_auth_verification;
+mod m20250403_094651_mates;
+mod m20250403_094651_authority_request;
 
 pub fn get_auth_consumer_migrations() -> Vec<Box<dyn MigrationTrait>> {
     vec![
@@ -32,6 +33,7 @@ pub fn get_auth_consumer_migrations() -> Vec<Box<dyn MigrationTrait>> {
         Box::new(m20250403_094651_auth_verification::Migration),
         Box::new(m20250403_094651_auth_token_requirements::Migration),
         Box::new(m20250403_094651_mates::Migration),
+        Box::new(m20250403_094651_authority_request::Migration),
     ]
 }
 

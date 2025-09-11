@@ -22,8 +22,8 @@ use crate::config::ConfigRoles;
 use crate::ssi_wallet::{ClientConfig, SSIWalletConfig};
 use clap::builder::TypedValueParser;
 use serde::Serialize;
-use serde_json::json;
-use std::env;
+use serde_json::{json, Value};
+use std::{env, fs};
 use std::fmt::Display;
 
 #[derive(Serialize, Clone, Debug)]
@@ -204,10 +204,13 @@ pub trait ApplicationProviderConfigTrait {
         })
     }
 
+
+
     // merge dotenv
     fn merge_dotenv_configuration(&self, env_file: Option<String>) -> Self
     where
         Self: Sized;
+    fn get_pretty_client_config(&self) -> Value;
 }
 
 impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
@@ -262,6 +265,19 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
 
     fn get_raw_client_config(&self) -> &ClientConfig {
         &self.client_config
+    }
+
+    fn get_pretty_client_config(&self) -> Value {
+        let cert = String::from_utf8(fs::read(self.client_config.cert_path.clone()).unwrap()).unwrap();
+        let key = json!({
+            "proof": "httpsig",
+            "cert": cert
+        });
+        json!({
+            "key" : key,
+            "class_id" : self.client_config.class_id,
+            "display" : self.client_config.display,
+        })
     }
 
     fn merge_dotenv_configuration(&self, env_file: Option<String>) -> Self {

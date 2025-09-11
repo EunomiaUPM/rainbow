@@ -17,9 +17,8 @@
  *
  */
 
-pub mod provider_trait;
-pub mod provider_trait_impl;
-pub mod wallet_trait_impl;
+pub mod traits;
+pub mod impls;
 
 use rainbow_common::config::provider_config::ApplicationProviderConfig;
 use rainbow_common::ssi_wallet::WalletSession;

@@ -46,7 +46,7 @@ pub enum CommonErrors {
         method: String,
         cause: String,
     },
-    #[error("Petition Error")]
+    #[error("Provider Error")]
     ProviderError {
         #[serde(flatten)]
         info: ErrorInfo,
@@ -55,8 +55,17 @@ pub enum CommonErrors {
         method: Option<String>,
         cause: Option<String>,
     },
-    #[error("Petition Error")]
+    #[error("Consumer Error")]
     ConsumerError {
+        #[serde(flatten)]
+        info: ErrorInfo,
+        http_code: Option<u16>,
+        url: Option<String>,
+        method: Option<String>,
+        cause: Option<String>,
+    },
+    #[error("Authority Error")]
+    AuthorityError {
         #[serde(flatten)]
         info: ErrorInfo,
         http_code: Option<u16>,
@@ -117,6 +126,7 @@ impl IntoResponse for &CommonErrors {
             CommonErrors::PetitionError { info, .. }
             | CommonErrors::ProviderError { info, .. }
             | CommonErrors::ConsumerError { info, .. }
+            | CommonErrors::AuthorityError { info, .. }
             | CommonErrors::MissingActionError { info, .. }
             | CommonErrors::MissingResourceError { info, .. }
             | CommonErrors::FormatError { info, .. }
@@ -160,6 +170,20 @@ impl CommonErrors {
                 );
             }
             CommonErrors::ConsumerError { info, http_code, url, method, cause } => {
+                let http_code = format!("Http Code: {}", http_code.unwrap_or(0));
+                let cause = format!("Cause: {}", cause.as_deref().unwrap_or("No Cause"));
+                let url = format!("Url: {}", url.as_deref().unwrap_or("No url"));
+                let method = format!("Method: {}", method.as_deref().unwrap_or("No method"));
+                let details = format!(
+                    "Details: {}",
+                    info.details.as_deref().unwrap_or("No details")
+                );
+                error!(
+                    "\n{}\n {}\n {}\n Http Code: {}\n Error Code: {}\n Message: {}\n Details: {}\n Cause: {}",
+                    self, method, url, http_code, info.error_code, info.message, details, cause
+                );
+            }
+            CommonErrors::AuthorityError { info, http_code, url, method, cause } => {
                 let http_code = format!("Http Code: {}", http_code.unwrap_or(0));
                 let cause = format!("Cause: {}", cause.as_deref().unwrap_or("No Cause"));
                 let url = format!("Url: {}", url.as_deref().unwrap_or("No url"));
@@ -303,6 +327,25 @@ impl CommonErrors {
             info: ErrorInfo {
                 message: "Unexpected response from the Consumer".to_string(),
                 error_code: 2300,
+                status_code: StatusCode::BAD_GATEWAY,
+                details: None,
+            },
+            http_code,
+            url,
+            method,
+            cause,
+        }
+    }
+    pub fn authority_new(
+        url: Option<String>,
+        method: Option<String>,
+        http_code: Option<u16>,
+        cause: Option<String>,
+    ) -> CommonErrors {
+        CommonErrors::AuthorityError {
+            info: ErrorInfo {
+                message: "Unexpected response from the Authority".to_string(),
+                error_code: 2400,
                 status_code: StatusCode::BAD_GATEWAY,
                 details: None,
             },

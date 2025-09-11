@@ -12,7 +12,7 @@ name = "rainbow_authority"
 path = "src/main.rs"
 
 [dependencies]
-rainbow_common = { version = "0.1.0", path = "../rainbow-common", default-features = false }
+# rainbow_common = { version = "0.1.0", path = "../rainbow-common", default-features = false }
 
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -24,16 +24,13 @@ tracing-subscriber = { workspace = true }
 axum = { workspace = true }
 dotenvy = { workspace = true }
 reqwest = { workspace = true }
-once_cell = { workspace = true }
 thiserror = { workspace = true }
-jsonschema = { workspace = true }
 chrono = { workspace = true }
-urn = { workspace = true }
 uuid = { workspace = true }
-log = { workspace = true }
-tracing-test = { workspace = true }
 sea-orm = { workspace = true }
 sea-orm-migration = { workspace = true }
 json_to_table = { workspace = true }
-mockall = { workspace = true }
-url = { workspace = true }
+base64 = { workspace = true }
+rand = { workspace = true }
+sha2 = { workspace = true }
+urlencoding = { workspace = true }

@@ -17,10 +17,10 @@
  *
  */
 
-use crate::ssi_auth::consumer::core::consumer_trait::RainbowSSIAuthConsumerManagerTrait;
+use crate::ssi_auth::consumer::core::traits::consumer_trait::RainbowSSIAuthConsumerManagerTrait;
 use crate::ssi_auth::consumer::core::Manager;
 use crate::ssi_auth::errors::CustomToResponse;
-use crate::ssi_auth::types::{trim_4_base, ReachProvider};
+use crate::ssi_auth::types::{trim_4_base, ReachAuthority, ReachProvider};
 use anyhow::bail;
 use axum::extract::{Path, Query, State};
 use axum::http::{Method, Uri};
@@ -76,7 +76,7 @@ where
             // 4 MICROSERVICES
             // .route("/api/v1/retrieve/token/:id", get(Self::manual_callback))
             // AUTHORITY
-            // .route("/api/v1/beg/credential", post(Self::beg4credential))
+            .route("/api/v1/beg/credential", post(Self::beg4credential))
             // .route("/provider/:id/renew", post(todo!()))
             // .route("/provider/:id/finalize", post(todo!()))
             .with_state(self.manager)
@@ -202,17 +202,18 @@ where
         }
     }
 
-    // async fn beg4credential(
-    //     State(manager): State<Arc<Manager<T>>>,
-    //     Json(payload): Json<ReachAuthority>,
-    // ) -> impl IntoResponse {
-    //     info!("POST /beg/credential");
-    //     match manager.beg4credential(payload.url).await {
-    //         Ok(()) => {}
-    //         Err(e) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
-    //     };
-    //     StatusCode::OK.into_response()
-    // }
+    async fn beg4credential(
+        State(manager): State<Arc<Manager<T>>>,
+        Json(payload): Json<ReachAuthority>,
+    ) -> impl IntoResponse {
+        info!("POST /beg/credential");
+        let res = match manager.beg_credential(payload.id, payload.slug, payload.url).await {
+            Ok(()) => (),
+            Err(e) => return e.to_response(),
+        };
+
+        StatusCode::OK.into_response()
+    }
 
     async fn fallback(method: Method, uri: Uri) -> (StatusCode, String) {
         let log = format!("{} {}", method, uri);

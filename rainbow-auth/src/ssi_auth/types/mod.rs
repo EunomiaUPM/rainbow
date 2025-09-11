@@ -56,7 +56,8 @@ pub struct ReachProvider {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ReachAuthority {
-    // pub id: String,
+    pub id: String,
+    pub slug: String,
     pub url: String,
 }
 

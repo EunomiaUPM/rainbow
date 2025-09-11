@@ -20,7 +20,7 @@
 use rand::distributions::Alphanumeric;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::Value;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GrantRequest {
@@ -96,19 +96,13 @@ impl GrantRequest {
         }
     }
 
-    pub fn default4await(cert: String, uri: Option<String>) -> Self {
+    pub fn default4cross_user(client: Value, uri: Option<String>) -> Self {
         Self {
             access_token: AccessTokenRequirements4GR::request_vc(),
             subject: None,
-            client: json!({
-                "key" : {
-                    "proof": "mtls",
-                    "cert#S256": cert
-                }
-
-            }),
+            client,
             user: None,
-            interact: Some(Interact4GR::default4await(uri)),
+            interact: Some(Interact4GR::default4cross_user(uri)),
         }
     }
 
@@ -188,12 +182,12 @@ impl Interact4GR {
         }
     }
 
-    pub fn default4await(uri: Option<String>) -> Self {
+    pub fn default4cross_user(uri: Option<String>) -> Self {
         let nonce: String = rand::thread_rng().sample_iter(&Alphanumeric).take(36).map(char::from).collect();
         Self {
             start: vec![String::from("await")],
             finish: Finish4Interact {
-                method: "await".to_string(),
+                method: "push".to_string(),
                 uri,
                 nonce,
                 hash_method: Some("sha-256".to_string()),

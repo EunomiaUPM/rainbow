@@ -17,15 +17,13 @@
  *
  */
 
-use crate::core::vc_request_service::vc_request_service::VCRequestService;
-use crate::data::repo::sql::VCRequestsRepoForSql;
-use crate::data::repo::VCRequestsFactory;
-use crate::http::router::AuthorityRouter;
+use crate::core::Authority;
+use crate::data::repo_factory::factory::AuthRepoForSql;
+use crate::http::RainbowAuthorityRouter;
 use crate::setup::config::AuthorityApplicationConfig;
-use axum::{serve, Router};
-use rainbow_common::config::global_config::ApplicationGlobalConfig;
-use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use crate::setup::config::AuthorityFunctions;
+use crate::setup::AuthorityApplicationConfigTrait;
+use axum::{serve, Router};
 use sea_orm::Database;
 use std::sync::Arc;
 use tokio::net::TcpListener;
@@ -35,18 +33,10 @@ pub struct AuthorityApplication;
 
 pub async fn create_authority_router(config: &AuthorityApplicationConfig) -> Router {
     let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
-    // Repo
-    let authority_repo = Arc::new(VCRequestsRepoForSql::create_repo(db_connection.clone()));
-
-    // Services
-    let vc_requests_service = Arc::new(VCRequestService::new(authority_repo.clone()));
-    let vc_requests_router = AuthorityRouter::new(vc_requests_service.clone(), config.clone()).router();
-
-    // Router
-    let authority_application_router = Router::new()
-        .merge(vc_requests_router);
-
-    authority_application_router
+    let authority_repo = Arc::new(AuthRepoForSql::create_repo(db_connection.clone()));
+    let authority = Arc::new(Authority::new(authority_repo.clone(), config.clone()));
+    let authority_router = RainbowAuthorityRouter::new(authority.clone()).router();
+    Router::new().merge(authority_router)
 }
 
 impl AuthorityApplication {
@@ -54,16 +44,9 @@ impl AuthorityApplication {
         // db_connection
         let router = create_authority_router(config).await;
         // Init server
-        let server_message = format!(
-            "Starting provider server in {}",
-            config.get_host()
-        );
+        let server_message = format!("Starting Authority server in {}", config.get_host());
         info!("{}", server_message);
-        let listener = TcpListener::bind(format!(
-            "{}",
-            config.get_host_without_protocol().clone(),
-        ))
-            .await?;
+        let listener = TcpListener::bind(format!("{}", config.get_host_without_protocol().clone(),)).await?;
         serve(listener, router).await?;
         Ok(())
     }

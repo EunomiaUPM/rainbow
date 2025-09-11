@@ -19,7 +19,7 @@
 
 use crate::auth_consumer::repo_factory::traits::{
     AuthInteractionRepoTrait, AuthRequestRepoTrait, AuthTokenRequirementsRepoTrait, AuthVerificationRepoTrait,
-    MatesRepoTrait,
+    AuthorityRequestRepoTrait, MatesRepoTrait,
 };
 use std::sync::Arc;
 
@@ -29,4 +29,5 @@ pub trait AuthRepoFactoryTrait: Send + Sync + Clone + 'static {
     fn verification(&self) -> Arc<dyn AuthVerificationRepoTrait>;
     fn token_requirements(&self) -> Arc<dyn AuthTokenRequirementsRepoTrait>;
     fn mates(&self) -> Arc<dyn MatesRepoTrait>;
+    fn authority(&self) -> Arc<dyn AuthorityRequestRepoTrait>;
 }

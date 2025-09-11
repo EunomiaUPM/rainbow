@@ -19,11 +19,11 @@
 use super::factory_trait::AuthRepoFactoryTrait;
 use crate::auth_consumer::repo_factory::repos::{
     AuthInteractionConsumerRepo, AuthRequestConsumerRepo, AuthTokenRequirementsConsumerRepo,
-    AuthVerificationConsumerRepo, MatesConsumerRepo,
+    AuthVerificationConsumerRepo, AuthorityRequestConsumerRepo, MatesConsumerRepo,
 };
 use crate::auth_consumer::repo_factory::traits::{
     AuthInteractionRepoTrait, AuthRequestRepoTrait, AuthTokenRequirementsRepoTrait, AuthVerificationRepoTrait,
-    MatesRepoTrait,
+    AuthorityRequestRepoTrait, MatesRepoTrait,
 };
 use sea_orm::DatabaseConnection;
 use std::sync::Arc;
@@ -35,6 +35,7 @@ pub struct AuthConsumerRepoForSql {
     verification_repo: Arc<dyn AuthVerificationRepoTrait>,
     token_req_repo: Arc<dyn AuthTokenRequirementsRepoTrait>,
     mates_repo: Arc<dyn MatesRepoTrait>,
+    authority_repo: Arc<dyn AuthorityRequestRepoTrait>,
 }
 
 impl AuthConsumerRepoForSql {
@@ -46,7 +47,8 @@ impl AuthConsumerRepoForSql {
             token_req_repo: Arc::new(AuthTokenRequirementsConsumerRepo::new(
                 db_connection.clone(),
             )),
-            mates_repo: Arc::new(MatesConsumerRepo::new(db_connection)),
+            mates_repo: Arc::new(MatesConsumerRepo::new(db_connection.clone())),
+            authority_repo: Arc::new(AuthorityRequestConsumerRepo::new(db_connection.clone())),
         }
     }
 }
@@ -70,5 +72,9 @@ impl AuthRepoFactoryTrait for AuthConsumerRepoForSql {
 
     fn mates(&self) -> Arc<dyn MatesRepoTrait> {
         self.mates_repo.clone()
+    }
+
+    fn authority(&self) -> Arc<dyn AuthorityRequestRepoTrait> {
+        self.authority_repo.clone()
     }
 }

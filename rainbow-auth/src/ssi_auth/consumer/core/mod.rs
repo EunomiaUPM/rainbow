@@ -17,9 +17,8 @@
  *
  */
 
-pub mod consumer_trait;
-mod consumer_trait_impl;
-mod wallet_trait_impl;
+pub mod impls;
+pub mod traits;
 
 use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
 use rainbow_common::ssi_wallet::WalletSession;

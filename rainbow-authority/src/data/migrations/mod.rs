@@ -18,16 +18,17 @@
  */
 
 use sea_orm_migration::prelude::*;
-pub mod m20250403_094651_auth;
 pub mod m20250403_094651_auth_interaction;
+pub mod m20250403_094651_auth_request;
 pub mod m20250403_094651_auth_verification;
+pub mod m20250403_094651_minions;
 
-pub fn get_auth_provider_migrations() -> Vec<Box<dyn MigrationTrait>> {
+pub fn get_authority_migrations() -> Vec<Box<dyn MigrationTrait>> {
     vec![
-        Box::new(m20250403_094651_auth::Migration),
+        Box::new(m20250403_094651_auth_request::Migration),
         Box::new(m20250403_094651_auth_interaction::Migration),
         Box::new(m20250403_094651_auth_verification::Migration),
-
+        Box::new(m20250403_094651_minions::Migration),
     ]
 }
 
@@ -35,6 +36,6 @@ pub struct Migrator;
 #[async_trait::async_trait]
 impl MigratorTrait for Migrator {
     fn migrations() -> Vec<Box<dyn MigrationTrait>> {
-        get_auth_provider_migrations()
+        get_authority_migrations()
     }
 }

@@ -21,9 +21,9 @@ use crate::config::global_config::{extract_env, format_host_config_to_url_string
 use crate::config::ConfigRoles;
 use crate::ssi_wallet::{ClientConfig, SSIWalletConfig};
 use serde::Serialize;
-use serde_json::json;
-use std::env;
+use serde_json::{json, Value};
 use std::fmt::Display;
+use std::{env, fs};
 
 #[derive(Serialize, Clone, Debug)]
 pub struct ApplicationConsumerConfig {
@@ -184,6 +184,7 @@ pub trait ApplicationConsumerConfigTrait {
     fn merge_dotenv_configuration(&self, env_file: Option<String>) -> Self
     where
         Self: Sized;
+    fn get_pretty_client_config(&self) -> Value;
 }
 
 impl ApplicationConsumerConfigTrait for ApplicationConsumerConfig {
@@ -225,6 +226,23 @@ impl ApplicationConsumerConfigTrait for ApplicationConsumerConfig {
     }
     fn get_raw_client_config(&self) -> &ClientConfig {
         &self.client_config
+    }
+
+    fn get_pretty_client_config(&self) -> Value {
+        let path = fs::read(self.client_config.cert_path.clone()).unwrap();
+        let cert = String::from_utf8(path).unwrap();
+
+        let clean_cert = cert.lines().filter(|line| !line.starts_with("-----")).collect::<String>();
+
+        let key = json!({
+            "proof": "httpsig",
+            "cert": clean_cert
+        });
+        json!({
+            "key" : key,
+            "class_id" : self.client_config.class_id,
+            "display" : self.client_config.display,
+        })
     }
 
     fn merge_dotenv_configuration(&self, env_file: Option<String>) -> Self {
@@ -291,7 +309,10 @@ impl ApplicationConsumerConfigTrait for ApplicationConsumerConfig {
                 ),
             }),
             auth_host: Some(HostConfig {
-                protocol: extract_env("AUTH_HOST_PROTOCOL", default.auth_host.clone().unwrap().protocol),
+                protocol: extract_env(
+                    "AUTH_HOST_PROTOCOL",
+                    default.auth_host.clone().unwrap().protocol,
+                ),
                 url: extract_env("AUTH_HOST_URL", default.auth_host.clone().unwrap().url),
                 port: extract_env("AUTH_HOST_PORT", default.auth_host.clone().unwrap().port),
             }),
