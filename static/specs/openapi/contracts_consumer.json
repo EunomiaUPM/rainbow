@@ -1759,7 +1759,7 @@
       "SetupVerificationRequest": {
         "type": "object",
         "properties": {
-          "consumerParticipantId": {
+          "providerParticipantId": {
             "type": "string",
             "description": "Consumer participant DID.",
             "examples": [
@@ -1776,7 +1776,7 @@
           }
         },
         "required": [
-          "consumerParticipantId",
+          "providerParticipantId",
           "consumerPid",
           "providerPid"
         ]
