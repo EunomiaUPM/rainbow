@@ -16,13 +16,36 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::data::entities::{auth_verification, minions};
+
+use crate::data::entities::{auth_interaction, auth_request, auth_verification, minions};
 use crate::types::gnap::{GrantRequest, GrantResponse};
 use axum::async_trait;
+use serde_json::Value;
 
 #[async_trait]
 pub trait AuthorityTrait: Send + Sync {
     async fn manage_access(&self, payload: GrantRequest) -> anyhow::Result<GrantResponse>;
     async fn save_minion(&self, mate: minions::NewModel) -> anyhow::Result<minions::Model>;
     async fn generate_uri(&self, ver_model: auth_verification::Model) -> anyhow::Result<String>;
+    async fn validate_continue_request(
+        &self,
+        cont_id: String,
+        interact_ref: String,
+        token: String,
+    ) -> anyhow::Result<auth_interaction::Model>;
+    async fn continue_req(&self, int_model: auth_interaction::Model) -> anyhow::Result<auth_request::Model>;
+    async fn retrieve_data(
+        &self,
+        req_model: auth_request::Model,
+        int_model: auth_interaction::Model,
+    ) -> anyhow::Result<minions::NewModel>;
+    async fn generate_vp_def(&self, state: String) -> anyhow::Result<Value>;
+    async fn verify_all(&self, state: String, vp_token: String) -> anyhow::Result<String>;
+    async fn verify_vp(
+        &self,
+        model: auth_verification::Model,
+        vp_token: String,
+    ) -> anyhow::Result<(Vec<String>, String)>;
+    async fn verify_vc(&self, vc_token: String, vp_holder: String) -> anyhow::Result<()>;
+    async fn end_verification(&self, id: String) -> anyhow::Result<Option<String>>;
 }

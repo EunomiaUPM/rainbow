@@ -37,7 +37,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Mates::ParticipantSlug).string().not_null())
                     .col(ColumnDef::new(Mates::ParticipantType).string().not_null())
                     .col(ColumnDef::new(Mates::BaseUrl).string())
-                    .col(ColumnDef::new(Mates::Token).string())
+                    .col(ColumnDef::new(Mates::VcUri).string())
                     .col(ColumnDef::new(Mates::SavedAt).date_time().not_null())
                     .col(ColumnDef::new(Mates::LastInteraction).date_time().not_null())
                     .col(ColumnDef::new(Mates::IsMe).boolean().not_null())
@@ -58,7 +58,7 @@ pub enum Mates {
     ParticipantSlug,
     ParticipantType,
     BaseUrl,
-    Token,
+    VcUri,
     SavedAt,
     LastInteraction,
     IsMe,

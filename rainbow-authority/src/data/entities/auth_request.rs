@@ -27,7 +27,9 @@ use sea_orm::ActiveValue;
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: String, // REQUEST
-    pub participant_slug: String,                // REQUEST
+    pub participant_slug: String, // REQUEST
+    pub cert: Option<String>,
+    pub vc_uri: Option<String>,                  // RESPONSE
     pub status: String,                          // DEFAULT
     pub created_at: chrono::NaiveDateTime,       // DEFAULT
     pub ended_at: Option<chrono::NaiveDateTime>, // COMPLETION
@@ -37,6 +39,7 @@ pub struct Model {
 pub struct NewModel {
     pub id: String,               // REQUEST
     pub participant_slug: String, // REQUEST
+    pub cert: Option<String>,
 }
 
 impl IntoActiveSet<ActiveModel> for NewModel {
@@ -44,6 +47,8 @@ impl IntoActiveSet<ActiveModel> for NewModel {
         ActiveModel {
             id: ActiveValue::Set(self.id),
             participant_slug: ActiveValue::Set(self.participant_slug),
+            cert: ActiveValue::Set(self.cert),
+            vc_uri: ActiveValue::Set(None),
             status: ActiveValue::Set("Pending".to_string()),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             ended_at: ActiveValue::Set(None),
@@ -56,6 +61,8 @@ impl IntoActiveSet<ActiveModel> for Model {
         ActiveModel {
             id: ActiveValue::Set(self.id),
             participant_slug: ActiveValue::Set(self.participant_slug),
+            cert: ActiveValue::Set(self.cert),
+            vc_uri: ActiveValue::Set(self.vc_uri),
             status: ActiveValue::Set(self.status),
             created_at: ActiveValue::Set(self.created_at),
             ended_at: ActiveValue::Set(self.ended_at),

@@ -408,7 +408,7 @@ where
             participant_slug: "Myself".to_string(),
             participant_type: "Provider".to_string(),
             base_url: Some(self.config.get_wallet_portal_url()),
-            token: None,
+            vc_uri: None,
             is_me: true,
         };
         self.save_minion(model).await?;

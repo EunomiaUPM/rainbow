@@ -24,6 +24,5 @@ use axum::async_trait;
 #[async_trait]
 pub trait MinionsRepoTrait: BasicRepoTrait<Model, NewModel> + Send + Sync {
     async fn get_me(&self) -> anyhow::Result<Option<Model>>;
-    async fn get_by_token(&self, token: &str) -> anyhow::Result<Option<Model>>;
     async fn force_create(&self, mate: NewModel) -> anyhow::Result<Model>;
 }

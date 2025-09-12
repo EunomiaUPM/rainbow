@@ -31,7 +31,7 @@ pub struct Model {
     pub participant_slug: String,                // REQUEST
     pub participant_type: String,                // REQUEST
     pub base_url: Option<String>,                // REQUEST
-    pub token: Option<String>,                   // REQUEST
+    pub vc_uri: Option<String>,                   // REQUEST
     pub saved_at: chrono::NaiveDateTime,         // DEFAULT
     pub last_interaction: chrono::NaiveDateTime, // DEFAULT
     pub is_me: bool,                             // REQUEST
@@ -43,7 +43,7 @@ pub struct NewModel {
     pub participant_slug: String,
     pub participant_type: String,
     pub base_url: Option<String>,
-    pub token: Option<String>,
+    pub vc_uri: Option<String>,
     pub is_me: bool,
 }
 
@@ -54,7 +54,7 @@ impl IntoActiveSet<ActiveModel> for NewModel {
             participant_slug: ActiveValue::Set(self.participant_slug),
             participant_type: ActiveValue::Set(self.participant_type),
             base_url: ActiveValue::Set(self.base_url),
-            token: ActiveValue::Set(self.token),
+            vc_uri: ActiveValue::Set(self.vc_uri),
             saved_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             last_interaction: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             is_me: ActiveValue::Set(self.is_me),
@@ -69,7 +69,7 @@ impl IntoActiveSet<ActiveModel> for Model {
             participant_slug: ActiveValue::Set(self.participant_slug),
             participant_type: ActiveValue::Set(self.participant_type),
             base_url: ActiveValue::Set(self.base_url),
-            token: ActiveValue::Set(self.token),
+            vc_uri: ActiveValue::Set(self.vc_uri),
             saved_at: ActiveValue::Set(self.saved_at),
             last_interaction: ActiveValue::Set(self.last_interaction),
             is_me: ActiveValue::Set(self.is_me),

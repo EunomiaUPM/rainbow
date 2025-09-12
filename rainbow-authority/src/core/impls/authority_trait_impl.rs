@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use super::super::traits::AuthorityTrait;
 use super::super::Authority;
 use crate::data::entities::{auth_interaction, auth_request, auth_verification, minions};
@@ -25,9 +26,17 @@ use crate::errors::Errors;
 use crate::setup::config::client_config::ClientConfig;
 use crate::setup::config::AuthorityFunctions;
 use crate::types::gnap::{GrantRequest, GrantResponse};
-use crate::utils::create_opaque_token;
+use crate::utils::{compare_with_margin, create_opaque_token, split_did, trim_4_base};
 use anyhow::bail;
 use axum::async_trait;
+use base64::engine::general_purpose::{STANDARD, URL_SAFE_NO_PAD};
+use base64::Engine;
+use chrono::{DateTime, Utc};
+use jsonwebtoken::jwk::Jwk;
+use jsonwebtoken::Validation;
+use reqwest::Url;
+use serde_json::{json, Value};
+use std::collections::HashSet;
 use tracing::info;
 use urlencoding::{decode, encode};
 
@@ -39,7 +48,6 @@ where
     async fn manage_access(&self, payload: GrantRequest) -> anyhow::Result<GrantResponse> {
         info!("Managing access");
 
-        println!("{:#?}", payload);
         let interact = match payload.interact {
             Some(model) => model,
             None => {
@@ -81,9 +89,14 @@ where
                 bail!(error);
             }
         };
+
+        let cert: Option<String> = match serde_json::from_value(client["key"]["cert"].clone()) {
+            Ok(data) => Some(data),
+            Err(_) => None,
+        };
         // let client: ClientConfig = serde_json::from_value(payload.client)?;
 
-        let new_request_model = auth_request::NewModel { id: id.clone(), participant_slug: class_id };
+        let new_request_model = auth_request::NewModel { id: id.clone(), participant_slug: class_id, cert };
 
         let _ = match self.repo.request().create(new_request_model).await {
             Ok(model) => {
@@ -204,5 +217,737 @@ where
         info!("Uri generated successfully: {}", uri);
 
         Ok(uri)
+    }
+
+    async fn validate_continue_request(
+        &self,
+        cont_id: String,
+        interact_ref: String,
+        token: String,
+    ) -> anyhow::Result<auth_interaction::Model> {
+        info!("Validating continue request");
+        let int_model = match self.repo.interaction().get_by_cont_id(cont_id.as_str()).await {
+            Ok(Some(model)) => model,
+            Ok(None) => {
+                let error = Errors::missing_resource_new(
+                    cont_id.to_string(),
+                    Some(format!("There is no process with cont_id: {}", &cont_id)),
+                );
+                error.log();
+                bail!(error);
+            }
+            Err(e) => {
+                let error = Errors::database_new(Some(e.to_string()));
+                error.log();
+                bail!(error);
+            }
+        };
+
+        if interact_ref != int_model.interact_ref {
+            let error = Errors::security_new(Some(format!(
+                "Interact reference '{}' does not match '{}'",
+                interact_ref, int_model.interact_ref
+            )));
+            error.log();
+            bail!(error);
+        }
+
+        if token != int_model.continue_token {
+            let error = Errors::security_new(Some(format!(
+                "Token '{}' does not match '{}'",
+                token, int_model.continue_token
+            )));
+            error.log();
+            bail!(error);
+        }
+        Ok(int_model)
+    }
+
+    async fn continue_req(&self, int_model: auth_interaction::Model) -> anyhow::Result<auth_request::Model> {
+        let id = int_model.clone().id;
+        let mut request_model = match self.repo.request().get_by_id(id.as_str()).await {
+            Ok(Some(model)) => model,
+            Ok(None) => {
+                let error = Errors::missing_resource_new(
+                    id.clone(),
+                    Some(format!("There is no process with cont_id: {}", &id)),
+                );
+                error.log();
+                bail!(error);
+            }
+            Err(e) => {
+                let error = Errors::database_new(Some(e.to_string()));
+                error.log();
+                bail!(error);
+            }
+        };
+
+        let uri = create_opaque_token(); // TODO
+        request_model.status = "Approved".to_string();
+        request_model.vc_uri = Some(uri);
+
+        let new_request_model = match self.repo.request().update(request_model).await {
+            Ok(model) => model,
+            Err(e) => {
+                let error = Errors::database_new(Some(e.to_string()));
+                error.log();
+                bail!(error);
+            }
+        };
+
+        // if model.status != "pending" {
+        //     bail!("Too many attempts"); // TODO
+        // }
+
+        let base_url = int_model.uri;
+        match Url::parse(base_url.as_str()) {
+            Ok(parsed_url) => match parsed_url.port() {
+                Some(port) => {
+                    format!(
+                        "{}://{}:{}",
+                        parsed_url.scheme(),
+                        parsed_url.host_str().unwrap(), // EXPECTED ALWAYS
+                        port
+                    )
+                }
+                None => {
+                    format!(
+                        "{}://{}",
+                        parsed_url.scheme(),
+                        parsed_url.host_str().unwrap() // EXPECTED ALWAYS
+                    )
+                }
+            },
+            Err(e) => {
+                let error = Errors::format_new(
+                    BadFormat::Unknown,
+                    Some(format!("Error parsing the url -> {}", e.to_string())),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
+
+        Ok(new_request_model)
+    }
+
+    async fn retrieve_data(
+        &self,
+        req_model: auth_request::Model,
+        int_model: auth_interaction::Model,
+    ) -> anyhow::Result<minions::NewModel> {
+        let id = int_model.id;
+
+        for starts in int_model.start {
+            // --------------AWAIT------------------------------------------------------------------
+            if starts.contains("await") {}
+            // -------------OIDC4VP-----------------------------------------------------------------
+            if starts.contains("oidc4vp") {
+                let ver_model = match self.repo.verification().get_by_id(id.as_str()).await {
+                    Ok(Some(model)) => model,
+                    Ok(None) => {
+                        let error = Errors::missing_resource_new(
+                            id.clone(),
+                            Some(format!("There is no process with id: {}", &id)),
+                        );
+                        error.log();
+                        bail!(error);
+                    }
+                    Err(e) => {
+                        let error = Errors::database_new(Some(e.to_string()));
+                        error.log();
+                        bail!(error);
+                    }
+                };
+
+                let base_url = Some(trim_4_base(int_model.uri.as_str()));
+                let mate = minions::NewModel {
+                    participant_id: ver_model.holder.unwrap(), // EXPECTED ALWAYS
+                    participant_slug: req_model.participant_slug,
+                    participant_type: "Consumer".to_string(),
+                    base_url,
+                    vc_uri: req_model.vc_uri,
+                    is_me: false,
+                };
+                return Ok(mate);
+            }
+        }
+        bail!("EROR")
+    }
+
+    async fn generate_vp_def(&self, state: String) -> anyhow::Result<Value> {
+        let model = match self.repo.verification().get_by_state(state.as_str()).await {
+            Ok(Some(model)) => model,
+            Ok(None) => {
+                let error = Errors::missing_resource_new(
+                    state.clone(),
+                    Some(format!("There is no process with state: {}", &state)),
+                );
+                error.log();
+                bail!(error);
+            }
+            Err(e) => {
+                let error = Errors::database_new(Some(e.to_string()));
+                error.log();
+                bail!(error);
+            }
+        };
+
+        Ok(json!({
+            "id": model.id,
+            "input_descriptors": [
+              {
+                "id": "IdentityCredential",
+                "format": {
+                  "jwt_vc_json": {
+                    "alg": [
+                      "EdDSA"
+                    ]
+                  }
+                },
+                "constraints": {
+                  "fields": [
+                    {
+                      "path": [
+                        "$.vc.type"
+                      ],
+                      "filter": {
+                        "type": "string",
+                        "pattern": "IdentityCredential"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+        }))
+    }
+
+    async fn verify_all(&self, state: String, vp_token: String) -> anyhow::Result<String> {
+        let verification_model = match self.repo.verification().get_by_state(state.as_str()).await {
+            Ok(Some(model)) => model,
+            Ok(None) => {
+                let error = Errors::missing_resource_new(
+                    state.clone(),
+                    Some(format!("There is no process with state: {}", &state)),
+                );
+                error.log();
+                bail!(error);
+            }
+            Err(e) => {
+                let error = Errors::database_new(Some(e.to_string()));
+                error.log();
+                bail!(error);
+            }
+        };
+
+        let (vcts, holder) = match self.verify_vp(verification_model.clone(), vp_token).await {
+            Ok((vcts, holder)) => (vcts, holder),
+            Err(e) => {
+                let mut new_model = match self.repo.verification().get_by_id(verification_model.id.as_str()).await {
+                    Ok(Some(model)) => model,
+                    Ok(None) => {
+                        let error = Errors::missing_resource_new(
+                            verification_model.id.clone(),
+                            Some(format!(
+                                "There is no process with id: {}",
+                                &verification_model.id
+                            )),
+                        );
+                        error.log();
+                        bail!(error);
+                    }
+                    Err(e) => {
+                        let error = Errors::database_new(Some(e.to_string()));
+                        error.log();
+                        bail!(error);
+                    }
+                };
+
+                new_model.success = Some(false);
+                new_model.ended_at = Some(Utc::now().naive_utc());
+                match self.repo.verification().update(new_model).await {
+                    Ok(_) => {}
+                    Err(e) => {
+                        let error = Errors::database_new(Some(e.to_string()));
+                        error.log();
+                        bail!(error);
+                    }
+                };
+                bail!(e)
+            }
+        };
+
+        for cred in vcts {
+            match self.verify_vc(cred, holder.clone()).await {
+                Ok(()) => {}
+                Err(e) => {
+                    let mut new_model = match self.repo.verification().get_by_id(verification_model.id.as_str()).await {
+                        Ok(Some(model)) => model,
+                        Ok(None) => {
+                            let error = Errors::missing_resource_new(
+                                verification_model.id.clone(),
+                                Some(format!(
+                                    "There is no process with id: {}",
+                                    &verification_model.id
+                                )),
+                            );
+                            error.log();
+                            bail!(error);
+                        }
+                        Err(e) => {
+                            let error = Errors::database_new(Some(e.to_string()));
+                            error.log();
+                            bail!(error);
+                        }
+                    };
+                    new_model.success = Some(false);
+                    new_model.ended_at = Some(Utc::now().naive_utc());
+                    match self.repo.verification().update(new_model).await {
+                        Ok(_) => {}
+                        Err(e) => {
+                            let error = Errors::database_new(Some(e.to_string()));
+                            error.log();
+                            bail!(error);
+                        }
+                    };
+                    bail!(e)
+                }
+            }
+        }
+        info!("VP & VC Validated successfully");
+
+        let mut new_request_model = self.repo.request().get_by_id(verification_model.id.as_str()).await?.unwrap();
+        let mut new_ver_model = self.repo.verification().get_by_id(verification_model.id.as_str()).await?.unwrap();
+
+        new_ver_model.ended_at = Some(Utc::now().naive_utc());
+        new_request_model.status = "Processing".to_string();
+
+        match self.repo.request().update(new_request_model).await {
+            Ok(model) => model,
+            Err(e) => {
+                let error = Errors::database_new(Some(e.to_string()));
+                error.log();
+                bail!(error);
+            }
+        };
+        match self.repo.verification().update(new_ver_model).await {
+            Ok(model) => model,
+            Err(e) => {
+                let error = Errors::database_new(Some(e.to_string()));
+                error.log();
+                bail!(error);
+            }
+        };
+
+        Ok(verification_model.id)
+    }
+
+    async fn verify_vp(
+        &self,
+        model: auth_verification::Model,
+        vp_token: String,
+    ) -> anyhow::Result<(Vec<String>, String)> {
+        info!("Verifying VP");
+        let header = jsonwebtoken::decode_header(&vp_token)?;
+        let kid_str = match header.kid.as_ref() {
+            Some(data) => data,
+            None => {
+                let error = Errors::format_new(
+                    BadFormat::Received,
+                    Some("Jwt does not contain a token".to_string()),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
+        // let (kid, kid_id) = split_did(kid_str.as_str()); // TODO KID_ID
+        let (kid, _) = split_did(kid_str.as_str()); // TODO KID_ID
+        let alg = header.alg;
+
+        let vec = URL_SAFE_NO_PAD.decode(&(kid.replace("did:jwk:", "")))?;
+        let mut jwk: Jwk = serde_json::from_slice(&vec)?;
+
+        let key = jsonwebtoken::DecodingKey::from_jwk(&jwk)?;
+        let mut audience = format!("{}/api/v1/verify/{}", self.config.get_host(), &model.state);
+        audience = audience.replace("127.0.0.1", "host.docker.internal"); // TODO fix docker
+
+        let mut val = Validation::new(alg);
+
+        val.required_spec_claims = HashSet::new();
+        val.validate_aud = true;
+        val.set_audience(&[&(audience)]);
+        val.validate_exp = false;
+        val.validate_nbf = true;
+
+        let token = match jsonwebtoken::decode::<Value>(&vp_token, &key, &val) {
+            Ok(token) => token,
+            Err(e) => {
+                let error = Errors::security_new(Some(format!(
+                    "VPT signature is incorrect -> {}",
+                    e.to_string()
+                )));
+                error.log();
+                bail!(error);
+            }
+        };
+
+        info!("VPT token signature is correct");
+
+        // let id = match token.claims["jti"].as_str() {
+        //     Some(data) => data,
+        //     None => {
+        //         let error = CommonErrors::format_new(
+        //             BadFormat::Received,
+        //             Some("VPT does not contain the 'jti' field".to_string()),
+        //         );
+        //         error.log();
+        //         bail!(error);
+        //     }
+        // };
+        let nonce = match token.claims["nonce"].as_str() {
+            Some(data) => data,
+            None => {
+                let error = Errors::format_new(
+                    BadFormat::Received,
+                    Some("VPT does not contain the 'nonce' field".to_string()),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
+
+        let sub = match token.claims["sub"].as_str() {
+            Some(data) => data,
+            None => {
+                let error = Errors::format_new(
+                    BadFormat::Received,
+                    Some("VPT does not contain the 'sub' field".to_string()),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
+        let iss = match token.claims["iss"].as_str() {
+            Some(data) => data,
+            None => {
+                let error = Errors::format_new(
+                    BadFormat::Received,
+                    Some("VPT does not contain the 'iss' field".to_string()),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
+
+        if sub != iss || iss != kid {
+            // VALIDATE HOLDER 1
+            let error = Errors::security_new(Some(
+                "VPT token issuer, subject & kid does not match".to_string(),
+            ));
+            error.log();
+            bail!(error);
+        }
+        info!("VPT issuer, subject & kid matches");
+
+        let mut model = model.clone();
+        model.holder = Some(sub.to_string());
+        model.vpt = Some(vp_token);
+
+        let new_model = match self.repo.verification().update(model).await {
+            Ok(model) => model,
+            Err(e) => {
+                let error = Errors::database_new(Some(e.to_string()));
+                error.log();
+                bail!(error);
+            }
+        };
+
+        if new_model.nonce != nonce {
+            // VALIDATE NONCE
+            let error = Errors::security_new(Some("Invalid nonce, it does not match".to_string()));
+            error.log();
+            bail!(error);
+        }
+        info!("VPT Nonce matches");
+
+        let vp_id = match token.claims["vp"]["id"].as_str() {
+            Some(data) => data,
+            None => {
+                let error = Errors::format_new(
+                    BadFormat::Received,
+                    Some("VPT does not contain the 'vp_id' field".to_string()),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
+        if new_model.id != vp_id {
+            // VALIDATE ID MATCHES JTI
+            let error = Errors::security_new(Some("Invalid id, it does not match".to_string()));
+            error.log();
+            bail!(error);
+        }
+        info!("Exchange is valid");
+
+        let vp_holder = match token.claims["vp"]["holder"].as_str() {
+            Some(data) => data,
+            None => {
+                let error = Errors::format_new(
+                    BadFormat::Received,
+                    Some("VPT does not contain the 'vp_holder' field".to_string()),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
+        if new_model.holder.unwrap() != vp_holder {
+            // EXPECTED ALWAYS
+            let error = Errors::security_new(Some("Invalid holder, it does not match".to_string()));
+            error.log();
+            bail!(error);
+        }
+        info!("vp holder matches vpt subject & issuer");
+        info!("VP Verification successful");
+
+        let vct: Vec<String> = match serde_json::from_value(token.claims["vp"]["verifiableCredential"].clone()) {
+            Ok(data) => data,
+            Err(e) => {
+                let error = Errors::format_new(
+                    BadFormat::Received,
+                    Some(format!(
+                        "VPT does not contain the 'verifiableCredential' field -> {}",
+                        e.to_string()
+                    )),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
+        Ok((vct, kid.to_string()))
+    }
+
+    async fn verify_vc(&self, vc_token: String, vp_holder: String) -> anyhow::Result<()> {
+        info!("Verifying VC");
+        let header = jsonwebtoken::decode_header(&vc_token)?;
+        let kid_str = match header.kid.as_ref() {
+            Some(data) => data,
+            None => {
+                let error = Errors::format_new(
+                    BadFormat::Received,
+                    Some("Jwt does not contain a token".to_string()),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
+        // let (kid, kid_id) = split_did(kid_str.as_str()); // TODO KID_ID
+        let (kid, _) = split_did(kid_str.as_str()); // TODO KID_ID
+        let alg = header.alg;
+
+        let vec = URL_SAFE_NO_PAD.decode(&(kid.replace("did:jwk:", "")))?; // TODO
+        let jwk: Jwk = serde_json::from_slice(&vec)?;
+
+        let key = jsonwebtoken::DecodingKey::from_jwk(&jwk)?;
+
+        let mut val = Validation::new(alg);
+        val.required_spec_claims = HashSet::new();
+        val.validate_aud = false;
+        val.validate_exp = false; // TODO de momemnto las VCs no caducan
+        val.validate_nbf = true;
+
+        let token = match jsonwebtoken::decode::<Value>(&vc_token, &key, &val) {
+            Ok(token) => token,
+            Err(e) => {
+                let error = Errors::format_new(BadFormat::Received, Some(e.to_string()));
+                error.log();
+                bail!(error);
+            }
+        };
+
+        info!("VCT token signature is correct");
+
+        let iss = match token.claims["iss"].as_str() {
+            Some(data) => data,
+            None => {
+                let error = Errors::format_new(BadFormat::Received, Some("No issuer in the vc".to_string()));
+                error.log();
+                bail!(error);
+            }
+        };
+        let vc_iss_id = match token.claims["vc"]["issuer"]["id"].as_str() {
+            Some(data) => data,
+            None => {
+                let error = Errors::format_new(
+                    BadFormat::Received,
+                    Some("No issuer id in the vc".to_string()),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
+        if iss != kid || kid != vc_iss_id {
+            // VALIDATE IF ISSUER IS THE SAME AS KID
+            let error = Errors::security_new(Some("VCT token issuer & kid does not match".to_string()));
+            error.log();
+            bail!(error);
+        }
+        info!("VCT issuer & kid matches");
+
+        // if issuers_list.contains(kid) {
+        //     // TODO
+        //     error!("VCT issuer is not on the trusted issuers list");
+        //     bail!("VCT issuer is not on the trusted issuers list");
+        // }
+        // info!("VCT issuer is on the trusted issuers list");
+
+        let sub = match token.claims["sub"].as_str() {
+            Some(data) => data,
+            None => {
+                let error = Errors::format_new(
+                    BadFormat::Received,
+                    Some("No sub field in the vc".to_string()),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
+
+        let cred_sub_id = match token.claims["vc"]["credentialSubject"]["id"].as_str() {
+            Some(data) => data,
+            None => {
+                let error = Errors::format_new(
+                    BadFormat::Received,
+                    Some("No credentialSubject id field in the vc".to_string()),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
+        if sub != &vp_holder || &vp_holder != cred_sub_id {
+            let error = Errors::security_new(Some(
+                "VCT token sub, credential subject & VP Holder do not match".to_string(),
+            ));
+            error.log();
+            bail!(error);
+        }
+        info!("VC Holder Data is Correct");
+
+        let jti = match token.claims["jti"].as_str() {
+            Some(data) => data,
+            None => {
+                let error = Errors::format_new(
+                    BadFormat::Received,
+                    Some("No jti id field in the vc".to_string()),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
+
+        let vc_id = match token.claims["vc"]["id"].as_str() {
+            Some(data) => data,
+            None => {
+                let error = Errors::format_new(
+                    BadFormat::Received,
+                    Some("No vc_id id field in the vc".to_string()),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
+        if jti != vc_id {
+            let error = Errors::security_new(Some("VCT jti & VC id do not match".to_string()));
+            error.log();
+            bail!(error);
+        }
+        info!("VCT jti & VC id match");
+
+        let iat = match token.claims["iat"].as_i64() {
+            Some(data) => data,
+            None => {
+                let error = Errors::format_new(
+                    BadFormat::Received,
+                    Some("No credentialSubject id field in the vc".to_string()),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
+
+        let iss_date = match token.claims["vc"]["issuanceDate"].as_str() {
+            Some(data) => data,
+            None => {
+                let error = Errors::format_new(
+                    BadFormat::Received,
+                    Some("No credentialSubject id field in the vc".to_string()),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
+        let (keep, message) = compare_with_margin(iat, iss_date, 2);
+        if keep {
+            let error = Errors::security_new(Some(message.to_string()));
+            error.log();
+            bail!(error);
+        }
+        info!("VC IssuanceDate and iat field match");
+
+        let valid_from = match token.claims["vc"]["validFrom"].as_str() {
+            Some(data) => data,
+            None => {
+                let error = Errors::format_new(
+                    BadFormat::Received,
+                    Some("No validFrom id field in the vc".to_string()),
+                );
+                error.log();
+                bail!(error);
+            }
+        };
+        match DateTime::parse_from_rfc3339(valid_from) {
+            Ok(parsed_date) => parsed_date <= Utc::now(),
+            Err(e) => {
+                let error = Errors::security_new(Some(format!(
+                    "VC iat and issuanceDate do not match -> {}",
+                    e
+                )));
+                error.log();
+                bail!(error);
+            }
+        };
+        info!("VC validFrom is correct");
+        info!("VC Verification successful");
+        Ok(())
+    }
+
+    async fn end_verification(&self, id: String) -> anyhow::Result<Option<String>> {
+        match self.repo.interaction().get_by_id(id.as_str()).await {
+            Ok(Some(model)) => {
+                if model.method == "redirect" {
+                    let redirect_uri = format!(
+                        "{}?hash={}&interact_ref={}",
+                        model.uri, model.hash, model.interact_ref
+                    );
+                    Ok(Some(redirect_uri))
+                } else if model.method == "else" {
+                    // TODO
+                    return Ok(None);
+                } else {
+                    let error = Errors::not_impl_new(
+                        "Interact method not supported".to_string(),
+                        Some(format!("Interact method {} not supported", model.method)),
+                    );
+                    error.log();
+                    bail!(error);
+                }
+            }
+            Ok(None) => Ok(None),
+            Err(e) => {
+                let error = Errors::database_new(Some(e.to_string()));
+                error.log();
+                bail!(error);
+            }
+        }
     }
 }

@@ -20,9 +20,10 @@
 use crate::core::traits::{AuthorityTrait, RainbowSSIAuthWalletTrait};
 use crate::core::Authority;
 use crate::data::repo_factory::factory_trait::AuthRepoFactoryTrait;
-use crate::errors::CustomToResponse;
+use crate::errors::{CustomToResponse, Errors};
 use crate::types::gnap::{GrantRequest, RefBody};
 use crate::types::oidc::VerifyPayload;
+use crate::utils::extract_gnap_token;
 use axum::extract::{Path, State};
 use axum::http::{HeaderMap, Method, StatusCode, Uri};
 use axum::response::IntoResponse;
@@ -124,10 +125,47 @@ where
     ) -> impl IntoResponse {
         let log = format!("POST /continue/{}", id);
         info!("{}", log);
+
+        let token = match extract_gnap_token(headers) {
+            Some(token) => token,
+            None => {
+                let error = Errors::unauthorized_new(Some("Missing token".to_string()));
+                error.log();
+                return error.into_response();
+            }
+        };
+
+        let int_model = match authority.validate_continue_request(id, payload.interact_ref, token).await {
+            Ok(model) => model,
+            Err(e) => return e.to_response(),
+        };
+
+        let req_model = match authority.continue_req(int_model.clone()).await {
+            Ok(model) => model,
+            Err(e) => return e.to_response(),
+        };
+
+        let minion = match authority.retrieve_data(req_model.clone(), int_model).await {
+            Ok(minion) => minion,
+            Err(e) => return e.to_response(),
+        };
+
+        match authority.save_minion(minion).await {
+            Ok(_) => {}
+            Err(e) => return e.to_response(),
+        }
+
+        let uri = req_model.vc_uri.unwrap(); // EXPECTED ALWAYS
+        uri.into_response()
     }
     async fn pd(State(authority): State<Arc<Authority<T>>>, Path(state): Path<String>) -> impl IntoResponse {
         let log = format!("GET /pd/{}", state);
         info!("{}", log);
+
+        match authority.generate_vp_def(state).await {
+            Ok(vpd) => Json(vpd).into_response(),
+            Err(e) => e.to_response(),
+        }
     }
     async fn verify(
         State(authority): State<Arc<Authority<T>>>,
@@ -136,6 +174,19 @@ where
     ) -> impl IntoResponse {
         let log = format!("POST /verify/{}", state);
         info!("{}", log);
+
+        // {payload.vp_token,payload.presentation_submission}
+
+        let id = match authority.verify_all(state, payload.vp_token).await {
+            Ok(id) => id,
+            Err(e) => return e.to_response(),
+        };
+
+        match authority.end_verification(id).await {
+            Ok(Some(uri)) => (StatusCode::OK, uri).into_response(),
+            Ok(None) => StatusCode::OK.into_response(),
+            Err(e) => e.to_response(),
+        }
     }
 
     async fn fallback(method: Method, uri: Uri) -> (StatusCode, String) {

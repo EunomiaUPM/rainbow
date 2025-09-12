@@ -64,18 +64,14 @@ impl MinionsRepoTrait for MinionsRepo {
         let me = Entity::find().filter(Column::IsMe.eq(true)).one(&self.inner.db_connection).await?;
         Ok(me)
     }
-
-    async fn get_by_token(&self, token: &str) -> anyhow::Result<Option<Model>> {
-        let mate = Entity::find().filter(Column::Token.eq(token)).one(&self.inner.db_connection).await?;
-        Ok(mate)
-    }
+    
 
     async fn force_create(&self, minion: NewModel) -> anyhow::Result<Model> {
         let active_mate = minion.to_active();
         let mate = Entity::insert(active_mate)
             .on_conflict(
                 OnConflict::column(Column::ParticipantId)
-                    .update_columns([Column::BaseUrl, Column::LastInteraction, Column::Token, Column::ParticipantSlug])
+                    .update_columns([Column::BaseUrl, Column::LastInteraction, Column::VcUri, Column::ParticipantSlug])
                     .to_owned(),
             )
             .exec_with_returning(&self.inner.db_connection)
