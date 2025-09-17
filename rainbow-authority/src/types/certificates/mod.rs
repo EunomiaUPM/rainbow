@@ -16,10 +16,6 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+mod cert_struct;
 
-use serde::{Deserialize, Serialize};
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct RefBody {
-    pub interact_ref: String,
-}
+pub use cert_struct::ParsedCert;

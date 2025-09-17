@@ -151,7 +151,7 @@ impl CommonErrors {
                 );
 
                 error!(
-                    "\n{}\n Method: {}\n Url: {}\n {}\n Error Code: {}\n Message: {}\n {}\n Cause: {}",
+                    "\n{}\n Method: {}\n Url: {}\n {}\n Error Code: {}\n Message: {}\n {}\n Cause: {}\n",
                     self, method, url, http_code, info.error_code, info.message, details, cause
                 );
             }
@@ -165,7 +165,7 @@ impl CommonErrors {
                     info.details.as_deref().unwrap_or("No details")
                 );
                 error!(
-                    "\n{}\n {}\n {}\n Http Code: {}\n Error Code: {}\n Message: {}\n Details: {}\n Cause: {}",
+                    "\n{}\n {}\n {}\n {}\n Error Code: {}\n Message: {}\n {}\n {}\n",
                     self, method, url, http_code, info.error_code, info.message, details, cause
                 );
             }
@@ -179,7 +179,7 @@ impl CommonErrors {
                     info.details.as_deref().unwrap_or("No details")
                 );
                 error!(
-                    "\n{}\n {}\n {}\n Http Code: {}\n Error Code: {}\n Message: {}\n Details: {}\n Cause: {}",
+                    "\n{}\n {}\n {}\n {}\n Error Code: {}\n Message: {}\n {}\n {}\n",
                     self, method, url, http_code, info.error_code, info.message, details, cause
                 );
             }
@@ -193,7 +193,7 @@ impl CommonErrors {
                     info.details.as_deref().unwrap_or("No details")
                 );
                 error!(
-                    "\n{}\n {}\n {}\n Http Code: {}\n Error Code: {}\n Message: {}\n Details: {}\n Cause: {}",
+                    "\n{}\n {}\n {}\n {}\n Error Code: {}\n Message: {}\n {}\n {}\n",
                     self, method, url, http_code, info.error_code, info.message, details, cause
                 );
             }
@@ -204,7 +204,7 @@ impl CommonErrors {
                     info.details.as_deref().unwrap_or("No details")
                 );
                 error!(
-                    "\n{}\n Error Code: {}\n Message: {}\n Details: {}\n MissingAction: {}\n Cause: {}",
+                    "\n{}\n Error Code: {}\n Message: {}\n {}\n MissingAction: {}\n {}\n",
                     self, info.error_code, info.message, details, action, cause
                 );
             }
@@ -216,7 +216,7 @@ impl CommonErrors {
                 );
 
                 error!(
-                    "\n{}\n Id: {}\n Error Code: {}\n Message: {}\n {}\n {}",
+                    "\n{}\n Id: {}\n Error Code: {}\n Message: {}\n {}\n {}\n",
                     self, resource_id, info.error_code, info.message, details, cause
                 );
             }
@@ -228,7 +228,7 @@ impl CommonErrors {
                 );
 
                 error!(
-                    "\n{}\n Error Code: {}\n Message: {}\n {}\n {}",
+                    "\n{}\n Error Code: {}\n Message: {}\n {}\n {}\n",
                     self, info.error_code, info.message, details, cause
                 );
             }
@@ -240,7 +240,7 @@ impl CommonErrors {
                 );
 
                 error!(
-                    "\n{}\n Error Code: {}\n Message: {}\n {}\n {}",
+                    "\n{}\n Error Code: {}\n Message: {}\n {}\n {}\n",
                     self, info.error_code, info.message, details, cause
                 );
             }
@@ -252,7 +252,7 @@ impl CommonErrors {
                 );
 
                 error!(
-                    "\n{}\n Error Code: {}\n Message: {}\n {}\n {}",
+                    "\n{}\n Error Code: {}\n Message: {}\n {}\n {}\n",
                     self, info.error_code, info.message, details, cause
                 );
             }
@@ -264,7 +264,7 @@ impl CommonErrors {
                 );
 
                 error!(
-                    "\n{}\n Error Code: {}\n Message: {}\n {}\n {}",
+                    "\n{}\n Error Code: {}\n Message: {}\n {}\n {}\n",
                     self, info.error_code, info.message, details, cause
                 );
             }
@@ -277,7 +277,7 @@ impl CommonErrors {
                 );
 
                 error!(
-                    "\n{}\n Feature: {}\n Error Code: {}\n Message: {}\n {}\n {}",
+                    "\n{}\n Feature: {}\n Error Code: {}\n Message: {}\n {}\n {}\n",
                     self, feature, info.error_code, info.message, details, cause
                 );
             }

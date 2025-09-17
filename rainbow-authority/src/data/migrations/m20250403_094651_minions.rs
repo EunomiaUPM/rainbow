@@ -22,7 +22,7 @@ use sea_orm_migration::prelude::*;
 pub struct Migration;
 impl MigrationName for Migration {
     fn name(&self) -> &str {
-        "m20250403_094651_mates"
+        "m20250403_094651_minions"
     }
 }
 
@@ -32,27 +32,27 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(Mates::Table)
-                    .col(ColumnDef::new(Mates::ParticipantId).string().not_null().primary_key())
-                    .col(ColumnDef::new(Mates::ParticipantSlug).string().not_null())
-                    .col(ColumnDef::new(Mates::ParticipantType).string().not_null())
-                    .col(ColumnDef::new(Mates::BaseUrl).string())
-                    .col(ColumnDef::new(Mates::VcUri).string())
-                    .col(ColumnDef::new(Mates::SavedAt).date_time().not_null())
-                    .col(ColumnDef::new(Mates::LastInteraction).date_time().not_null())
-                    .col(ColumnDef::new(Mates::IsMe).boolean().not_null())
+                    .table(Minions::Table)
+                    .col(ColumnDef::new(Minions::ParticipantId).string().not_null().primary_key())
+                    .col(ColumnDef::new(Minions::ParticipantSlug).string().not_null())
+                    .col(ColumnDef::new(Minions::ParticipantType).string().not_null())
+                    .col(ColumnDef::new(Minions::BaseUrl).string())
+                    .col(ColumnDef::new(Minions::VcUri).string())
+                    .col(ColumnDef::new(Minions::SavedAt).date_time().not_null())
+                    .col(ColumnDef::new(Minions::LastInteraction).date_time().not_null())
+                    .col(ColumnDef::new(Minions::IsMe).boolean().not_null())
                     .to_owned(),
             )
             .await
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(Mates::Table).to_owned()).await
+        manager.drop_table(Table::drop().table(Minions::Table).to_owned()).await
     }
 }
 
 #[derive(Iden)]
-pub enum Mates {
+pub enum Minions {
     Table,
     ParticipantId,
     ParticipantSlug,

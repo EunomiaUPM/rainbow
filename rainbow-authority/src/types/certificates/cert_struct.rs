@@ -16,10 +16,10 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use std::borrow::Cow;
+use x509_parser::certificate::X509Certificate;
 
-use serde::{Deserialize, Serialize};
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct RefBody {
-    pub interact_ref: String,
+pub struct ParsedCert {
+    pub cert: X509Certificate<'static>,
+    pub cert_bytes: Vec<u8>,
 }

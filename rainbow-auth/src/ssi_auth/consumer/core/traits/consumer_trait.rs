@@ -16,10 +16,9 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
-use crate::ssi_auth::types::{MatchingVCs, RedirectResponse};
+use crate::ssi_auth::types::{MatchingVCs, RedirectResponse, WhatEntity};
 use axum::async_trait;
-use rainbow_db::auth_consumer::entities::{auth_request, mates};
+use rainbow_db::auth_consumer::entities::{auth_request, authority_request, mates};
 use serde_json::Value;
 
 #[async_trait]
@@ -31,7 +30,7 @@ pub trait RainbowSSIAuthConsumerManagerTrait: Send + Sync {
         provider_slug: String,
     ) -> anyhow::Result<String>;
     async fn check_callback(&self, id: String, interact_ref: String, hash: String) -> anyhow::Result<()>;
-    async fn continue_request(&self, id: String, interact_ref: String) -> anyhow::Result<auth_request::Model>;
+    async fn continue_request(&self, id: String, interact_ref: String) -> anyhow::Result<Value>;
     async fn save_mate(&self, mate: mates::NewModel) -> anyhow::Result<mates::Model>;
     async fn beg_credential(
         &self,
@@ -39,6 +38,14 @@ pub trait RainbowSSIAuthConsumerManagerTrait: Send + Sync {
         authority_slug: String,
         grant_endpoint: String,
     ) -> anyhow::Result<()>;
+    async fn who_is_it(
+        &self,
+        id: String,
+    ) -> anyhow::Result<(
+        WhatEntity,
+        Option<auth_request::Model>,
+        Option<authority_request::Model>,
+    )>;
 
     // EXTRAS ------------------------------------------------------------------------------------->
     async fn join_exchange(&self, exchange_url: String) -> anyhow::Result<String>;

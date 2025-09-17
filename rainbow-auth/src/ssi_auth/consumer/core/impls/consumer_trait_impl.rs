@@ -16,11 +16,10 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 use crate::ssi_auth::consumer::core::traits::consumer_trait::RainbowSSIAuthConsumerManagerTrait;
 use crate::ssi_auth::consumer::core::Manager;
 use crate::ssi_auth::errors::AuthErrors;
-use crate::ssi_auth::types::{MatchingVCs, RedirectResponse};
+use crate::ssi_auth::types::{trim_4_base, MatchingVCs, RedirectResponse, RefBody, WhatEntity};
 use anyhow::bail;
 use axum::async_trait;
 use axum::http::StatusCode;
@@ -38,7 +37,8 @@ use rainbow_db::auth_consumer::repo_factory::factory_trait::AuthRepoFactoryTrait
 use reqwest::header::{HeaderMap, ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
-use tracing::{error, info};
+use std::future::Future;
+use tracing::{debug, error, info};
 use url::Url;
 use urlencoding::decode;
 
@@ -433,26 +433,10 @@ where
         Ok(())
     }
 
-    async fn continue_request(&self, id: String, interact_ref: String) -> anyhow::Result<auth_request::Model> {
+    async fn continue_request(&self, id: String, interact_ref: String) -> anyhow::Result<Value> {
         // TODO WAIT 5 SECONDS
-        info!("Continuing request");
 
-        let mut request_model = match self.repo.request().get_by_id(id.as_str()).await {
-            Ok(Some(model)) => model,
-            Ok(None) => {
-                let error = CommonErrors::missing_resource_new(
-                    id.clone(),
-                    Some(format!("There is no process with id: {}", &id)),
-                );
-                error.log();
-                bail!(error);
-            }
-            Err(e) => {
-                let error = CommonErrors::database_new(Some(e.to_string()));
-                error.log();
-                bail!(error);
-            }
-        };
+        let (who, request_model, authority_model) = self.who_is_it(id.clone()).await?;
 
         let interact_model = match self.repo.interaction().get_by_id(id.as_str()).await {
             Ok(Some(model)) => model,
@@ -471,59 +455,180 @@ where
             }
         };
 
-        let url = interact_model.continue_endpoint.unwrap(); // EXPECTED ALWAYS
-        let token = format!("GNAP {}", interact_model.continue_token.unwrap()); // EXPECTED ALWAYS
+        match who {
+            WhatEntity::Provider => {
+                info!("Continuing provider request");
 
-        let mut headers = HeaderMap::new();
-        headers.insert(CONTENT_TYPE, "application/json".parse()?);
-        headers.insert(ACCEPT, "application/json".parse()?);
-        headers.insert(AUTHORIZATION, token.parse()?);
+                let url = interact_model.continue_endpoint.unwrap(); // EXPECTED ALWAYS
+                let token = format!("GNAP {}", interact_model.continue_token.unwrap()); // EXPECTED ALWAYS
 
-        let body = json!({
-            "interact_ref": interact_ref
-        });
+                let mut headers = HeaderMap::new();
+                headers.insert(CONTENT_TYPE, "application/json".parse()?);
+                headers.insert(ACCEPT, "application/json".parse()?);
+                headers.insert(AUTHORIZATION, token.parse()?);
 
-        let res = self.client.post(&url).headers(headers).json(&body).send().await;
+                let body = RefBody { interact_ref };
 
-        let res = match res {
-            Ok(res) => res,
-            Err(e) => {
-                let http_code = match e.status() {
-                    Some(code) => Some(code.as_u16()),
-                    None => None,
+                let res = self.client.post(&url).headers(headers).json(&body).send().await;
+
+                let res = match res {
+                    Ok(res) => res,
+                    Err(e) => {
+                        let http_code = match e.status() {
+                            Some(code) => Some(code.as_u16()),
+                            None => None,
+                        };
+                        let error = CommonErrors::petition_new(url, "POST".to_string(), http_code, e.to_string());
+                        error.log();
+                        bail!(error);
+                    }
                 };
-                let error = CommonErrors::petition_new(url, "POST".to_string(), http_code, e.to_string());
-                error.log();
-                bail!(error);
+
+                // TODO Is it worth putting "processing" as state??
+
+                let res: AccessToken = match res.status().as_u16() {
+                    200 => {
+                        info!("Success retrieving the token");
+                        res.json().await?
+                    }
+                    _ => {
+                        let http_code = Some(res.status().as_u16());
+                        let error_res: GrantResponse = res.json().await?;
+                        let error = CommonErrors::provider_new(
+                            Some(url),
+                            Some("POST".to_string()),
+                            http_code,
+                            error_res.error,
+                        );
+                        error.log();
+                        bail!(error);
+                    }
+                };
+
+                let mut request_model = request_model.unwrap(); // EXPECTED ALWAYS
+                request_model.status = "Approved".to_string();
+                request_model.token = Some(res.value); // TODO Save al token data (pending)
+
+                let upd_request_model = match self.repo.request().update(request_model).await {
+                    Ok(model) => model,
+                    Err(e) => {
+                        let error = CommonErrors::database_new(Some(e.to_string()));
+                        error.log();
+                        bail!(error);
+                    }
+                };
+
+                let base_url = trim_4_base(upd_request_model.grant_endpoint.as_str());
+                let mate = mates::NewModel {
+                    participant_id: upd_request_model.provider_id,
+                    participant_slug: upd_request_model.provider_slug,
+                    participant_type: "Provider".to_string(),
+                    base_url,
+                    token: upd_request_model.token,
+                    is_me: false,
+                };
+
+                let mate = serde_json::to_value(self.save_mate(mate).await?)?;
+
+                Ok(mate)
             }
-        };
+            WhatEntity::Authority => {
+                info!("Continuing authority request");
 
-        // TODO Is it worth putting "processing" as state??
+                let url = interact_model.continue_endpoint.unwrap(); // EXPECTED ALWAYS
+                let token = format!("GNAP {}", interact_model.continue_token.unwrap()); // EXPECTED ALWAYS
 
-        let res: AccessToken = match res.status().as_u16() {
-            200 => {
-                info!("Success retrieving the token");
-                res.json().await?
+                let mut headers = HeaderMap::new();
+                headers.insert(CONTENT_TYPE, "application/json".parse()?);
+                headers.insert(ACCEPT, "application/json".parse()?);
+                headers.insert(AUTHORIZATION, token.parse()?);
+
+                let body = RefBody { interact_ref };
+
+                let res = self.client.post(&url).headers(headers).json(&body).send().await;
+
+                let res = match res {
+                    Ok(res) => res,
+                    Err(e) => {
+                        let http_code = match e.status() {
+                            Some(code) => Some(code.as_u16()),
+                            None => None,
+                        };
+                        let error = CommonErrors::petition_new(url, "POST".to_string(), http_code, e.to_string());
+                        error.log();
+                        bail!(error);
+                    }
+                };
+
+                // TODO Is it worth putting "processing" as state??
+
+                let res = match res.status().as_u16() {
+                    200 => {
+                        info!("Success retrieving the vc_uri");
+                        res.text().await?
+                    }
+                    _ => {
+                        let http_code = Some(res.status().as_u16());
+                        let error_res: GrantResponse = res.json().await?;
+                        let error = CommonErrors::authority_new(
+                            Some(url),
+                            Some("POST".to_string()),
+                            http_code,
+                            error_res.error,
+                        );
+                        error.log();
+                        bail!(error);
+                    }
+                };
+
+                info!("{}", res);
+                let mut authority_model = authority_model.unwrap();
+                authority_model.vc_uri = Some(res);
+                authority_model.status = "Approved".to_string();
+
+                let upd_request_model = match self.repo.authority().update(authority_model).await {
+                    Ok(model) => model,
+                    Err(e) => {
+                        let error = CommonErrors::database_new(Some(e.to_string()));
+                        error.log();
+                        bail!(error);
+                    }
+                };
+
+                let base_url = trim_4_base(upd_request_model.grant_endpoint.as_str());
+                let mate = mates::NewModel {
+                    participant_id: upd_request_model.authority_id,
+                    participant_slug: upd_request_model.authority_slug,
+                    participant_type: "Authority".to_string(),
+                    base_url,
+                    token: None,
+                    is_me: false,
+                };
+
+                let mate = serde_json::to_value(self.save_mate(mate).await?)?;
+
+                Ok(mate)
             }
-            _ => {
-                let http_code = Some(res.status().as_u16());
-                let error_res: GrantResponse = res.json().await?;
-                let error = CommonErrors::provider_new(
-                    Some(url),
-                    Some("POST".to_string()),
-                    http_code,
-                    error_res.error,
-                );
-                error.log();
-                bail!(error);
+        }
+    }
+
+    async fn who_is_it(
+        &self,
+        id: String,
+    ) -> anyhow::Result<(
+        WhatEntity,
+        Option<auth_request::Model>,
+        Option<authority_request::Model>,
+    )> {
+        // TODO WAIT 5 SECONDS
+        info!("Continuing request");
+
+        match self.repo.request().get_by_id(id.as_str()).await {
+            Ok(Some(model)) => {
+                info!("It is a request 4 the provider");
+                return Ok((WhatEntity::Provider, Some(model), None));
             }
-        };
-
-        request_model.status = "Approved".to_string();
-        request_model.token = Some(res.value); // TODO Save al token data (pending)
-
-        let upd_request_model = match self.repo.request().update(request_model).await {
-            Ok(model) => model,
+            Ok(None) => info!("It is not a request 4 the provider"),
             Err(e) => {
                 let error = CommonErrors::database_new(Some(e.to_string()));
                 error.log();
@@ -531,7 +636,25 @@ where
             }
         };
 
-        Ok(upd_request_model)
+        match self.repo.authority().get_by_id(id.as_str()).await {
+            Ok(Some(model)) => {
+                info!("It is a request 4 an authority");
+                return Ok((WhatEntity::Authority, None, Some(model)));
+            }
+            Ok(None) => info!("It is not a request 4 an authority"),
+            Err(e) => {
+                let error = CommonErrors::database_new(Some(e.to_string()));
+                error.log();
+                bail!(error);
+            }
+        };
+
+        let error = CommonErrors::missing_resource_new(
+            id.clone(),
+            Some(format!("Missing resource with id: {}", &id)),
+        );
+        error.log();
+        bail!(error)
     }
 
     async fn save_mate(&self, mate: mates::NewModel) -> anyhow::Result<mates::Model> {
@@ -554,7 +677,7 @@ where
             self.config.get_auth_host_url().unwrap(),
             &id
         );
-        let grant_request = GrantRequest::default4cross_user(client, Some(callback_uri.clone()));
+        let mut grant_request = GrantRequest::default4cross_user(client, Some(callback_uri.clone()));
 
         let new_authority_request_model =
             authority_request::NewModel { id: id.clone(), authority_id, authority_slug, grant_endpoint: url.clone() };
@@ -592,6 +715,8 @@ where
         headers.insert(ACCEPT, "application/json".parse()?);
 
         info!("Sending Grant Petition to Authority");
+
+        grant_request.update_nonce(interact_model.client_nonce.clone());
 
         let res = self.client.post(&url).headers(headers).json(&grant_request).send().await;
 

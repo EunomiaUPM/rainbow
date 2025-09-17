@@ -16,10 +16,9 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use serde::Deserialize;
 
-use serde::{Deserialize, Serialize};
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct RefBody {
-    pub interact_ref: String,
+#[derive(Deserialize)]
+pub struct VcManager {
+    pub approve: bool,
 }

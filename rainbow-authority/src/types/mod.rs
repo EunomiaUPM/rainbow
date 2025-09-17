@@ -21,3 +21,5 @@ pub mod gnap;
 pub mod oidc;
 pub mod wallet;
 pub mod jwt;
+pub mod manager;
+pub mod certificates;

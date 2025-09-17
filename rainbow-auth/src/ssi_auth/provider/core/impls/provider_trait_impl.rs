@@ -934,9 +934,11 @@ where
                         model.uri, model.hash, model.interact_ref
                     );
                     Ok(Some(redirect_uri))
-                } else if model.method == "else" {
+                } else if model.method == "push" {
                     // TODO
-                    return Ok(None);
+                    let error = CommonErrors::not_impl_new("push".to_string(), Some("push methods are not implemented for this petition".to_string()));
+                    error.log();
+                    bail!(error)
                 } else {
                     let error = CommonErrors::not_impl_new(
                         "Interact method not supported".to_string(),

@@ -21,8 +21,9 @@ use crate::data::repo_factory::traits::IntoActiveSet;
 use chrono;
 use sea_orm::entity::prelude::*;
 use sea_orm::ActiveValue;
+use serde::Serialize;
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
+#[derive(Serialize, Clone, Debug, PartialEq, DeriveEntityModel)]
 #[sea_orm(table_name = "auth_request")]
 pub struct Model {
     #[sea_orm(primary_key)]
@@ -30,6 +31,7 @@ pub struct Model {
     pub participant_slug: String, // REQUEST
     pub cert: Option<String>,
     pub vc_uri: Option<String>,                  // RESPONSE
+    pub vc_issuing: Option<String>,              // RESPONSE
     pub status: String,                          // DEFAULT
     pub created_at: chrono::NaiveDateTime,       // DEFAULT
     pub ended_at: Option<chrono::NaiveDateTime>, // COMPLETION
@@ -49,6 +51,7 @@ impl IntoActiveSet<ActiveModel> for NewModel {
             participant_slug: ActiveValue::Set(self.participant_slug),
             cert: ActiveValue::Set(self.cert),
             vc_uri: ActiveValue::Set(None),
+            vc_issuing: ActiveValue::Set(None),
             status: ActiveValue::Set("Pending".to_string()),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             ended_at: ActiveValue::Set(None),
@@ -63,6 +66,7 @@ impl IntoActiveSet<ActiveModel> for Model {
             participant_slug: ActiveValue::Set(self.participant_slug),
             cert: ActiveValue::Set(self.cert),
             vc_uri: ActiveValue::Set(self.vc_uri),
+            vc_issuing: ActiveValue::Set(self.vc_issuing),
             status: ActiveValue::Set(self.status),
             created_at: ActiveValue::Set(self.created_at),
             ended_at: ActiveValue::Set(self.ended_at),

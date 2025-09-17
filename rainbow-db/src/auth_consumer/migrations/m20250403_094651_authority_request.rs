@@ -38,6 +38,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(AuthorityRequest::AuthoritySlug).string().not_null())
                     .col(ColumnDef::new(AuthorityRequest::GrantEndpoint).string().not_null())
                     .col(ColumnDef::new(AuthorityRequest::AssignedId).string())
+                    .col(ColumnDef::new(AuthorityRequest::VcUri).string())
                     .col(ColumnDef::new(AuthorityRequest::Status).string().not_null())
                     .col(ColumnDef::new(AuthorityRequest::CreatedAt).date_time().not_null())
                     .col(ColumnDef::new(AuthorityRequest::EndedAt).date_time())
@@ -59,6 +60,7 @@ pub enum AuthorityRequest {
     AuthoritySlug,
     GrantEndpoint,
     AssignedId,
+    VcUri,
     Status,
     CreatedAt,
     EndedAt,

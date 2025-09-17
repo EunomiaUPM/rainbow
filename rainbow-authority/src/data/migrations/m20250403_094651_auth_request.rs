@@ -37,6 +37,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(AuthRequest::ParticipantSlug).string().not_null())
                     .col(ColumnDef::new(AuthRequest::Cert).string())
                     .col(ColumnDef::new(AuthRequest::VcUri).string())
+                    .col(ColumnDef::new(AuthRequest::VcIssuing).string())
                     .col(ColumnDef::new(AuthRequest::Status).string().not_null())
                     .col(ColumnDef::new(AuthRequest::CreatedAt).date_time().not_null())
                     .col(ColumnDef::new(AuthRequest::EndedAt).date_time())
@@ -57,6 +58,7 @@ pub enum AuthRequest {
     ParticipantSlug,
     Cert,
     VcUri,
+    VcIssuing,
     Status,
     CreatedAt,
     EndedAt,

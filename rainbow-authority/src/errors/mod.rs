@@ -160,7 +160,7 @@ impl Errors {
                 );
 
                 error!(
-                    "\n{}\n Method: {}\n Url: {}\n {}\n Error Code: {}\n Message: {}\n {}\n Cause: {}",
+                    "\n{}\n Method: {}\n Url: {}\n {}\n Error Code: {}\n Message: {}\n {}\n {}",
                     self, method, url, http_code, info.error_code, info.message, details, cause
                 );
             }
@@ -174,7 +174,7 @@ impl Errors {
                     info.details.as_deref().unwrap_or("No details")
                 );
                 error!(
-                    "\n{}\n {}\n {}\n Http Code: {}\n Error Code: {}\n Message: {}\n Details: {}\n Cause: {}",
+                    "\n{}\n {}\n {}\n {}\n Error Code: {}\n Message: {}\n Details: {}\n {}",
                     self, method, url, http_code, info.error_code, info.message, details, cause
                 );
             }
@@ -188,7 +188,7 @@ impl Errors {
                     info.details.as_deref().unwrap_or("No details")
                 );
                 error!(
-                    "\n{}\n {}\n {}\n Http Code: {}\n Error Code: {}\n Message: {}\n Details: {}\n Cause: {}",
+                    "\n{}\n {}\n {}\n {}\n Error Code: {}\n Message: {}\n Details: {}\n {}",
                     self, method, url, http_code, info.error_code, info.message, details, cause
                 );
             }
@@ -199,7 +199,7 @@ impl Errors {
                     info.details.as_deref().unwrap_or("No details")
                 );
                 error!(
-                    "\n{}\n Error Code: {}\n Message: {}\n Details: {}\n MissingAction: {}\n Cause: {}",
+                    "\n{}\n Error Code: {}\n Message: {}\n Details: {}\n MissingAction: {}\n {}",
                     self, info.error_code, info.message, details, action, cause
                 );
             }

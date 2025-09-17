@@ -16,17 +16,26 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 use crate::data::entities::{auth_interaction, auth_request, auth_verification, minions};
 use crate::types::gnap::{GrantRequest, GrantResponse};
+use crate::types::manager::VcManager;
 use axum::async_trait;
 use serde_json::Value;
+use std::println;
+use tracing::info;
 
 #[async_trait]
 pub trait AuthorityTrait: Send + Sync {
     async fn manage_access(&self, payload: GrantRequest) -> anyhow::Result<GrantResponse>;
     async fn save_minion(&self, mate: minions::NewModel) -> anyhow::Result<minions::Model>;
-    async fn generate_uri(&self, ver_model: auth_verification::Model) -> anyhow::Result<String>;
+    async fn generate_verification_uri(&self, ver_model: auth_verification::Model) -> anyhow::Result<String>;
+    async fn generate_issuing_uri(
+        &self,
+        id: String,
+        name: String,
+        website: String,
+        fake: bool,
+    ) -> anyhow::Result<String>;
     async fn validate_continue_request(
         &self,
         cont_id: String,
@@ -48,4 +57,6 @@ pub trait AuthorityTrait: Send + Sync {
     ) -> anyhow::Result<(Vec<String>, String)>;
     async fn verify_vc(&self, vc_token: String, vp_holder: String) -> anyhow::Result<()>;
     async fn end_verification(&self, id: String) -> anyhow::Result<Option<String>>;
+    async fn manage_vc_request(&self, id: String, payload: VcManager) -> anyhow::Result<()>;
+    async fn manage_callback(&self, id: String, payload: Value) -> anyhow::Result<()>;
 }

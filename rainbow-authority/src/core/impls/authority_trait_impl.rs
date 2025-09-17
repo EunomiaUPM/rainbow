@@ -19,26 +19,39 @@
 
 use super::super::traits::AuthorityTrait;
 use super::super::Authority;
+use crate::core::traits::RainbowSSIAuthWalletTrait;
 use crate::data::entities::{auth_interaction, auth_request, auth_verification, minions};
 use crate::data::repo_factory::factory_trait::AuthRepoFactoryTrait;
 use crate::errors::helpers::BadFormat;
 use crate::errors::Errors;
 use crate::setup::config::client_config::ClientConfig;
 use crate::setup::config::AuthorityFunctions;
-use crate::types::gnap::{GrantRequest, GrantResponse};
-use crate::utils::{compare_with_margin, create_opaque_token, split_did, trim_4_base};
+use crate::setup::AuthorityApplicationConfigTrait;
+use crate::types::certificates::ParsedCert;
+use crate::types::gnap::{CallbackBody, GrantRequest, GrantResponse, RejectedCallbackBody};
+use crate::types::manager::VcManager;
+use crate::utils::{compare_with_margin, create_opaque_token, split_did, trim_4_base, trim_path};
 use anyhow::bail;
-use axum::async_trait;
+use axum::http::header::{ACCEPT, CONTENT_TYPE};
+use axum::http::{HeaderMap, StatusCode};
+use axum::response::IntoResponse;
+use axum::{async_trait, Json};
 use base64::engine::general_purpose::{STANDARD, URL_SAFE_NO_PAD};
 use base64::Engine;
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Duration, Utc};
 use jsonwebtoken::jwk::Jwk;
-use jsonwebtoken::Validation;
-use reqwest::Url;
+use jsonwebtoken::{EncodingKey, Validation};
+use reqwest::{Error, Response, Url};
+use rsa::pkcs8::DecodePrivateKey;
+use rsa::traits::{PrivateKeyParts, PublicKeyParts};
+use rsa::RsaPrivateKey;
 use serde_json::{json, Value};
 use std::collections::HashSet;
-use tracing::info;
+use std::fs;
+use tracing::{debug, info, warn};
 use urlencoding::{decode, encode};
+use x509_parser::parse_x509_certificate;
+use x509_parser::prelude::X509Certificate;
 
 #[async_trait]
 impl<T> AuthorityTrait for Authority<T>
@@ -111,7 +124,7 @@ where
         };
 
         let continue_endpoint = format!("{}/continue", &host_url);
-        let grant_endpoint = format!("{}/credential/request", &host_url);
+        let grant_endpoint = format!("{}/request/credential", &host_url);
         let continue_token = create_opaque_token();
         let new_interaction_model = auth_interaction::NewModel {
             id: id.clone(),
@@ -156,7 +169,7 @@ where
                 }
             };
 
-            let uri = self.generate_uri(verification_model).await?;
+            let uri = self.generate_verification_uri(verification_model).await?;
 
             let response = GrantResponse::default4oidc4vp(
                 interaction_model.id,
@@ -190,7 +203,7 @@ where
         }
     }
 
-    async fn generate_uri(&self, ver_model: auth_verification::Model) -> anyhow::Result<String> {
+    async fn generate_verification_uri(&self, ver_model: auth_verification::Model) -> anyhow::Result<String> {
         info!("Generating verification exchange URI");
 
         let host_url = self.config.get_host();
@@ -217,6 +230,140 @@ where
         info!("Uri generated successfully: {}", uri);
 
         Ok(uri)
+    }
+
+    async fn generate_issuing_uri(
+        &self,
+        callback_id: String,
+        name: String,
+        website: String,
+        real: bool,
+    ) -> anyhow::Result<String> {
+        info!("Generating an issuing uri");
+
+        match real {
+            true => {
+                // TODO THE MODULE SHOULD BE ABLE TO DO IT ITSELF
+                let error = Errors::not_impl_new("REAL URI".to_string(), None);
+                error.log();
+                bail!(error)
+            }
+            false => {
+                let url = "http://127.0.0.1:7002/openid4vc/jwt/issue".to_string();
+                // let issuer_id = match self.didweb["id"].as_str() {
+                //     Some(data) => data,
+                //     None => {
+                //         bail!("Error parsing the DID identifier")
+                //     }
+                // };
+                let path = trim_path(self.config.get_raw_client_config().cert_path.as_str());
+                let pkey_path = format!("{}/private_key.pem", path);
+
+                let pkey = fs::read_to_string(pkey_path)?;
+
+                let key = RsaPrivateKey::from_pkcs8_pem(pkey.as_str())?;
+
+                let jwk = json!({
+                    "kty" : "RSA",
+                    "n" : URL_SAFE_NO_PAD.encode(key.n().to_bytes_be()),
+                    "e" : URL_SAFE_NO_PAD.encode(key.e().to_bytes_be()),
+                    "d" : URL_SAFE_NO_PAD.encode(key.d().to_bytes_be()),
+                    "kid" : "0"
+                });
+
+                let did = self.didweb().await?;
+                let didweb = did["id"].as_str().unwrap();
+
+                println!();
+                println!("{}", name);
+                println!("{}", website);
+                println!();
+
+                let body = json!({
+                    "issuerKey": { // TODO
+                        "type": "jwk",
+                        "jwk": jwk
+                    },
+                    "credentialConfigurationId": "DataspaceParticipantCredential_jwt_vc_json",
+                    "credentialData": {
+                        "@context": [
+                            "https://www.w3.org/2018/credentials/v1"
+                        ],
+                    "id": "https://example.gov/credentials/3732", // DISAPPEARS
+                    "type": [
+                        "VerifiableCredential",
+                        "DataspaceParticipantCredential"
+                    ],
+                    "issuer": {
+                        "id": "did:web:vc.transmute.world", // DISAPPEARS
+                        "name": "did:web:vc.transmute.world", // DISAPPEARS
+                    },
+                    "issuanceDate": "2020-03-10T04:24:12.164Z", // DISAPPEARS
+                    "credentialSubject": {
+                        "id": "did:example:ebfeb1f712ebc6f1c276e12ec21", // DISAPPEARS
+                        "type": "DataspaceParticipant",
+                        "dataspaceId": "Rainbow DataSpace",
+                        "legalName": "deltaDAO AG",
+                        "website": website,
+                        }
+                    },
+                    "mapping": {
+                    "id": "<uuid>",
+                    "issuer": {
+                        "id": "<issuerDid>"
+                    },
+                    "credentialSubject": {
+                        "id": "<subjectDid>"
+                    },
+                    "issuanceDate": "<timestamp>",
+                    "expirationDate": "<timestamp-in:365d>"
+                    },
+                    "issuerDid": didweb,
+                });
+
+                let host_url = self.config.get_host();
+                let docker_host_url = host_url.clone().replace("127.0.0.1", "host.docker.internal"); // TODO FIX 4 MICROSERICES
+                let callback_uri = format!("{}/callback/{}", docker_host_url, callback_id);
+                let mut headers = HeaderMap::new();
+                headers.insert(CONTENT_TYPE, "application/json".parse()?);
+                headers.insert(ACCEPT, "application/json".parse()?);
+                headers.insert("statusCallbackUri", callback_uri.parse()?);
+
+                let res = self.client.post(&url).headers(headers).json(&body).send().await;
+
+                let res = match res {
+                    Ok(data) => data,
+                    Err(e) => {
+                        let http_code = match e.status() {
+                            Some(status) => Some(status.as_u16()),
+                            None => None,
+                        };
+                        let error = Errors::petition_new(url, "POST".to_string(), http_code, e.to_string());
+                        error.log();
+                        bail!(error);
+                    }
+                };
+
+                match res.status().as_u16() {
+                    200 => {
+                        let response = res.text().await?;
+                        info!("URI generated successfully");
+                        info!("{}", response);
+                        Ok(response)
+                    }
+                    _ => {
+                        let error = Errors::wallet_new(
+                            url,
+                            "POST".to_string(),
+                            res.status().as_u16(),
+                            Some("Petition to register Wallet failed".to_string()),
+                        );
+                        error.log();
+                        bail!(error);
+                    }
+                }
+            }
+        }
     }
 
     async fn validate_continue_request(
@@ -260,10 +407,12 @@ where
             error.log();
             bail!(error);
         }
+
         Ok(int_model)
     }
 
     async fn continue_req(&self, int_model: auth_interaction::Model) -> anyhow::Result<auth_request::Model> {
+        info!("Continuing request");
         let id = int_model.clone().id;
         let mut request_model = match self.repo.request().get_by_id(id.as_str()).await {
             Ok(Some(model)) => model,
@@ -282,9 +431,58 @@ where
             }
         };
 
-        let uri = create_opaque_token(); // TODO
+        let name = request_model.participant_slug.clone();
+        let mut website = "null".to_string();
+        for starts in int_model.start {
+            // --------------AWAIT------------------------------------------------------------------
+            if starts.contains("await") {
+                let base_cert = match request_model.cert.clone() {
+                    Some(data) => data,
+                    None => {
+                        let error = Errors::format_new(
+                            BadFormat::Received,
+                            Some("There was no cert in the Grant Request".to_string()),
+                        );
+                        error.log();
+                        bail!(error)
+                    }
+                };
+
+                let cert_bytes = STANDARD.decode(base_cert)?;
+                let (_, cert) = parse_x509_certificate(&cert_bytes)?;
+                let test = cert.subject.to_string();
+                let clean = test.strip_prefix("CN=").unwrap_or(test.as_str());
+                website = format!("http://{}", clean.to_string());
+                break;
+            }
+            // -------------OIDC4VP-----------------------------------------------------------------
+            if starts.contains("oidc4vp") {
+                let ver_request = match self.repo.verification().get_by_id(id.as_str()).await {
+                    Ok(Some(data)) => data,
+                    Ok(None) => {
+                        let error = Errors::missing_resource_new(id.clone(), None);
+                        error.log();
+                        bail!(error)
+                    }
+                    Err(e) => {
+                        let error = Errors::database_new(Some(e.to_string()));
+                        error.log();
+                        bail!(error)
+                    }
+                };
+
+                // TODO COMPROBAR WEBSITE BIEN
+                website = ver_request.holder.unwrap(); // EXPECTED ALWAYS
+                break;
+            }
+            let error = Errors::format_new(BadFormat::Received, None);
+            error.log();
+            bail!(error)
+        }
+
+        let vc_uri = self.generate_issuing_uri(id, name, website, false).await?;
         request_model.status = "Approved".to_string();
-        request_model.vc_uri = Some(uri);
+        request_model.vc_uri = Some(vc_uri);
 
         let new_request_model = match self.repo.request().update(request_model).await {
             Ok(model) => model,
@@ -299,35 +497,6 @@ where
         //     bail!("Too many attempts"); // TODO
         // }
 
-        let base_url = int_model.uri;
-        match Url::parse(base_url.as_str()) {
-            Ok(parsed_url) => match parsed_url.port() {
-                Some(port) => {
-                    format!(
-                        "{}://{}:{}",
-                        parsed_url.scheme(),
-                        parsed_url.host_str().unwrap(), // EXPECTED ALWAYS
-                        port
-                    )
-                }
-                None => {
-                    format!(
-                        "{}://{}",
-                        parsed_url.scheme(),
-                        parsed_url.host_str().unwrap() // EXPECTED ALWAYS
-                    )
-                }
-            },
-            Err(e) => {
-                let error = Errors::format_new(
-                    BadFormat::Unknown,
-                    Some(format!("Error parsing the url -> {}", e.to_string())),
-                );
-                error.log();
-                bail!(error);
-            }
-        };
-
         Ok(new_request_model)
     }
 
@@ -340,7 +509,33 @@ where
 
         for starts in int_model.start {
             // --------------AWAIT------------------------------------------------------------------
-            if starts.contains("await") {}
+            if starts.contains("await") {
+                let base_cert = match req_model.cert {
+                    Some(data) => data,
+                    None => {
+                        let error = Errors::format_new(
+                            BadFormat::Received,
+                            Some("There was no cert in the Grant Request".to_string()),
+                        );
+                        error.log();
+                        bail!(error)
+                    }
+                };
+
+                let cert_bytes = STANDARD.decode(base_cert)?;
+                let (_, cert) = parse_x509_certificate(&cert_bytes)?;
+
+                let base_url = Some(trim_4_base(int_model.uri.as_str()));
+                let minion = minions::NewModel {
+                    participant_id: cert.subject.to_string(),
+                    participant_slug: req_model.participant_slug,
+                    participant_type: "Minion".to_string(),
+                    base_url,
+                    vc_uri: req_model.vc_uri,
+                    is_me: false,
+                };
+                return Ok(minion);
+            }
             // -------------OIDC4VP-----------------------------------------------------------------
             if starts.contains("oidc4vp") {
                 let ver_model = match self.repo.verification().get_by_id(id.as_str()).await {
@@ -361,7 +556,7 @@ where
                 };
 
                 let base_url = Some(trim_4_base(int_model.uri.as_str()));
-                let mate = minions::NewModel {
+                let minion = minions::NewModel {
                     participant_id: ver_model.holder.unwrap(), // EXPECTED ALWAYS
                     participant_slug: req_model.participant_slug,
                     participant_type: "Consumer".to_string(),
@@ -369,10 +564,12 @@ where
                     vc_uri: req_model.vc_uri,
                     is_me: false,
                 };
-                return Ok(mate);
+                return Ok(minion);
             }
         }
-        bail!("EROR")
+        let error = Errors::format_new(BadFormat::Received, None);
+        error.log();
+        bail!(error)
     }
 
     async fn generate_vp_def(&self, state: String) -> anyhow::Result<Value> {
@@ -949,5 +1146,112 @@ where
                 bail!(error);
             }
         }
+    }
+
+    async fn manage_vc_request(&self, id: String, payload: VcManager) -> anyhow::Result<()> {
+        info!("Managing vc request");
+        let mut req_model = match self.repo.request().get_by_id(id.as_str()).await {
+            Ok(Some(data)) => data,
+            Ok(None) => {
+                let error = Errors::missing_resource_new(id.clone(), Some(format!("Missing request with id: {}", id)));
+                error.log();
+                bail!(error)
+            }
+            Err(e) => {
+                let error = Errors::database_new(Some(e.to_string()));
+                error.log();
+                bail!(error)
+            }
+        };
+
+        let int_model = match self.repo.interaction().get_by_id(id.as_str()).await {
+            Ok(Some(data)) => data,
+            Ok(None) => {
+                let error = Errors::missing_resource_new(id.clone(), Some(format!("Missing request with id: {}", id)));
+                error.log();
+                bail!(error)
+            }
+            Err(e) => {
+                let error = Errors::database_new(Some(e.to_string()));
+                error.log();
+                bail!(error)
+            }
+        };
+
+        let body = match payload.approve {
+            true => {
+                info!("Approving petition to obtain a VC");
+                req_model.status = "Approved".to_string();
+                let _ = match self.repo.request().update(req_model).await {
+                    Ok(model) => model,
+                    Err(e) => {
+                        let error = Errors::database_new(Some(e.to_string()));
+                        error.log();
+                        bail!(error);
+                    }
+                };
+
+                let body = CallbackBody { interact_ref: int_model.interact_ref, hash: int_model.hash };
+                serde_json::to_value(body)?
+            }
+            false => {
+                info!("Rejecting petition to obtain a VC");
+                req_model.status = "Finalized".to_string();
+                let _ = match self.repo.request().update(req_model).await {
+                    Ok(model) => model,
+                    Err(e) => {
+                        let error = Errors::database_new(Some(e.to_string()));
+                        error.log();
+                        bail!(error);
+                    }
+                };
+
+                let body = RejectedCallbackBody { rejected: "Petition was rejected".to_string() };
+                serde_json::to_value(body)?
+            }
+        };
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "application/json".parse()?);
+        headers.insert(ACCEPT, "application/json".parse()?);
+
+        let res = self.client.post(&int_model.uri).headers(headers).json(&body).send().await;
+
+        let res = match res {
+            Ok(data) => data,
+            Err(e) => {
+                let http_code = match e.status() {
+                    Some(status) => Some(status.as_u16()),
+                    None => None,
+                };
+                let error = Errors::petition_new(int_model.uri, "POST".to_string(), http_code, e.to_string());
+                error.log();
+                bail!(error);
+            }
+        };
+
+        match res.status().as_u16() {
+            200 => {
+                info!("Callback received successfully");
+            }
+            _ => {
+                let error = Errors::consumer_new(
+                    Some(int_model.uri),
+                    Some("POST".to_string()),
+                    Some(res.status().as_u16()),
+                    None,
+                );
+                error.log();
+                bail!(error);
+            }
+        }
+
+        Ok(())
+    }
+
+    async fn manage_callback(&self, id: String, payload: Value) -> anyhow::Result<()> {
+        info!("Managing callback");
+
+        println!("{:#?}", payload);
+        Ok(())
     }
 }

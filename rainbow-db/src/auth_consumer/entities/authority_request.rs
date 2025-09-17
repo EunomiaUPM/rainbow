@@ -21,16 +21,18 @@ use crate::common::IntoActiveSet;
 use chrono;
 use sea_orm::entity::prelude::*;
 use sea_orm::ActiveValue;
+use serde::Serialize;
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
+#[derive(Serialize, Clone, Debug, PartialEq, DeriveEntityModel)]
 #[sea_orm(table_name = "authority_request")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: String, // REQUEST
-    pub authority_id: String,                    // REQUEST
-    pub authority_slug: String,                  // REQUEST
-    pub grant_endpoint: String,                  // REQUEST
-    pub assigned_id: Option<String>,             // RESPONSE
+    pub authority_id: String,        // REQUEST
+    pub authority_slug: String,      // REQUEST
+    pub grant_endpoint: String,      // REQUEST
+    pub assigned_id: Option<String>, // RESPONSE
+    pub vc_uri: Option<String>,
     pub status: String,                          // DEFAULT
     pub created_at: chrono::NaiveDateTime,       // DEFAULT
     pub ended_at: Option<chrono::NaiveDateTime>, // COMPLETION
@@ -52,6 +54,7 @@ impl IntoActiveSet<ActiveModel> for NewModel {
             authority_slug: ActiveValue::Set(self.authority_slug),
             grant_endpoint: ActiveValue::Set(self.grant_endpoint),
             assigned_id: ActiveValue::Set(None),
+            vc_uri: ActiveValue::Set(None),
             status: ActiveValue::Set("Processing".to_string()),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             ended_at: ActiveValue::Set(None),
@@ -67,6 +70,7 @@ impl IntoActiveSet<ActiveModel> for Model {
             authority_slug: ActiveValue::Set(self.authority_slug),
             grant_endpoint: ActiveValue::Set(self.grant_endpoint),
             assigned_id: ActiveValue::Set(self.assigned_id),
+            vc_uri: ActiveValue::Set(self.vc_uri),
             status: ActiveValue::Set(self.status),
             created_at: ActiveValue::Set(self.created_at),
             ended_at: ActiveValue::Set(self.ended_at),

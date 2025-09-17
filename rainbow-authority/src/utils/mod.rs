@@ -81,3 +81,12 @@ pub fn compare_with_margin(iat: i64, issuance_date: &str, margin_seconds: i64) -
 
     (false, "Ignore this".to_string())
 }
+
+pub fn trim_path(path: &str) -> String {
+    if let Some(pos) = path.rfind('/') {
+        let trimmed = &path[..pos];
+        trimmed.to_string()
+    } else {
+        path.to_string()
+    }
+}

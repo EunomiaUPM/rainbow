@@ -92,9 +92,15 @@ pub struct Url2RequestVC {
     pub url: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct RefBody {
     pub interact_ref: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct CallbackBody {
+    pub interact_ref: String,
+    pub hash: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -130,3 +136,7 @@ pub fn trim_4_base(input: &str) -> String {
     input[..cut_index].to_string()
 }
 
+pub enum WhatEntity {
+    Provider,
+    Authority
+}

@@ -22,6 +22,7 @@ use crate::core::Authority;
 use crate::data::repo_factory::factory_trait::AuthRepoFactoryTrait;
 use crate::errors::{CustomToResponse, Errors};
 use crate::types::gnap::{GrantRequest, RefBody};
+use crate::types::manager::VcManager;
 use crate::types::oidc::VerifyPayload;
 use crate::utils::extract_gnap_token;
 use axum::extract::{Path, State};
@@ -30,6 +31,7 @@ use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::{Form, Json, Router};
 use std::sync::Arc;
+use serde_json::Value;
 use tracing::info;
 
 pub struct RainbowAuthorityRouter<T>
@@ -56,11 +58,17 @@ where
             .route("/api/v1/wallet/onboard", post(Self::wallet_onboard))
             .route("/api/v1/did.json", get(Self::didweb))
             // GNAP
-            .route("/api/v1/credential/request", post(Self::access_request))
             .route("/api/v1/continue/:id", post(Self::continue_request))
             // OIDC4VP
             .route("/api/v1/pd/:state", get(Self::pd))
             .route("/api/v1/verify/:state", post(Self::verify))
+            // VC REQUESTS
+            .route("/api/v1/request/credential", post(Self::access_request))
+            .route("/api/v1/request/all", get(Self::get_all_requests))
+            .route("/api/v1/request/:id", get(Self::get_one))
+            .route("/api/v1/request/:id", post(Self::manage_request))
+            // OTHER
+            .route("/api/v1/callback/:id", post(Self::callback))
             .with_state(self.authority)
             .fallback(Self::fallback)
     }
@@ -188,6 +196,73 @@ where
             Err(e) => e.to_response(),
         }
     }
+
+    async fn get_all_requests(State(authority): State<Arc<Authority<T>>>) -> impl IntoResponse {
+        info!("GET /request/all");
+
+        match authority.repo.request().get_all(None, None).await {
+            Ok(data) => {
+                let res = serde_json::to_value(data).unwrap(); // EXPECTED ALWAYS
+                (StatusCode::OK, Json(res)).into_response()
+            }
+            Err(e) => {
+                let error = Errors::database_new(Some(e.to_string()));
+                error.log();
+                error.into_response()
+            }
+        }
+    }
+
+    async fn get_one(State(authority): State<Arc<Authority<T>>>, Path(id): Path<String>) -> impl IntoResponse {
+        let log = format!("GET /request/{}", &id);
+        info!("{}", log);
+
+        match authority.repo.request().get_by_id(id.as_str()).await {
+            Ok(Some(data)) => {
+                let res = serde_json::to_value(data).unwrap();
+                (StatusCode::OK, Json(res)).into_response()
+            }
+            Ok(None) => {
+                let error = Errors::missing_resource_new(id.clone(), Some(format!("Missing request with id: {}", id)));
+                error.log();
+                error.into_response()
+            }
+            Err(e) => {
+                let error = Errors::database_new(Some(e.to_string()));
+                error.log();
+                error.into_response()
+            }
+        }
+    }
+
+    async fn manage_request(
+        State(authority): State<Arc<Authority<T>>>,
+        Path(id): Path<String>,
+        Json(payload): Json<VcManager>,
+    ) -> impl IntoResponse {
+        let log = format!("POST /request/{}", &id);
+        info!("{}", log);
+
+        match authority.manage_vc_request(id, payload).await {
+            Ok(_) => StatusCode::OK.into_response(),
+            Err(e) => e.to_response(),
+        }
+    }
+
+    async fn callback(
+        State(authority): State<Arc<Authority<T>>>,
+        Path(id): Path<String>,
+        Json(payload): Json<Value>,
+    ) -> impl IntoResponse {
+        let log = format!("POST /callback/{}", &id);
+        info!("{}", log);
+
+        match authority.manage_callback(id, payload).await {
+            Ok(_) => StatusCode::OK.into_response(),
+            Err(e) => e.to_response(),
+        }
+    }
+
 
     async fn fallback(method: Method, uri: Uri) -> (StatusCode, String) {
         let log = format!("{} {}", method, uri);
