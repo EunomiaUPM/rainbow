@@ -20,7 +20,7 @@
 use crate::core::traits::{AuthorityTrait, RainbowSSIAuthWalletTrait};
 use crate::core::Authority;
 use crate::data::repo_factory::factory_trait::AuthRepoFactoryTrait;
-use crate::errors::{CustomToResponse, Errors};
+use crate::errors::{CustomToResponse, ErrorLog, Errors};
 use crate::types::gnap::{GrantRequest, RefBody};
 use crate::types::manager::VcManager;
 use crate::types::oidc::VerifyPayload;
@@ -109,7 +109,7 @@ where
         info!("GET /did.json");
 
         match authority.didweb().await {
-            Ok(_) => StatusCode::OK.into_response(),
+            Ok(did) => Json(did).into_response(),
             Err(e) => e.to_response(),
         }
     }
@@ -138,7 +138,7 @@ where
             Some(token) => token,
             None => {
                 let error = Errors::unauthorized_new(Some("Missing token".to_string()));
-                error.log();
+                error!("{}", error.log());
                 return error.into_response();
             }
         };
@@ -197,7 +197,7 @@ where
             }
             Err(e) => {
                 let error = Errors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 error.into_response()
             }
         }
@@ -214,12 +214,12 @@ where
             }
             Ok(None) => {
                 let error = Errors::missing_resource_new(id.clone(), Some(format!("Missing request with id: {}", id)));
-                error.log();
+                error!("{}", error.log());
                 error.into_response()
             }
             Err(e) => {
                 let error = Errors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 error.into_response()
             }
         }

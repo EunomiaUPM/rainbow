@@ -17,8 +17,11 @@
  *
  */
 mod error_adapter;
+mod error_log_trait;
 pub mod helpers;
+
 pub use error_adapter::CustomToResponse;
+pub use error_log_trait::ErrorLog;
 
 use crate::errors::helpers::{BadFormat, MissingAction};
 use axum::http::StatusCode;
@@ -149,8 +152,8 @@ impl IntoResponse for &Errors {
     }
 }
 
-impl Errors {
-    pub fn log(&self) {
+impl ErrorLog for Errors {
+    fn log(&self) -> String {
         match self {
             Errors::PetitionError { info, http_code, url, method, cause } => {
                 let http_code = format!("Http Code: {}", http_code.unwrap_or(0));
@@ -159,10 +162,10 @@ impl Errors {
                     info.details.as_deref().unwrap_or("No details")
                 );
 
-                error!(
+                format!(
                     "\n{}\n Method: {}\n Url: {}\n {}\n Error Code: {}\n Message: {}\n {}\n {}",
                     self, method, url, http_code, info.error_code, info.message, details, cause
-                );
+                )
             }
             Errors::ProviderError { info, http_code, url, method, cause } => {
                 let http_code = format!("Http Code: {}", http_code.unwrap_or(0));
@@ -173,10 +176,10 @@ impl Errors {
                     "Details: {}",
                     info.details.as_deref().unwrap_or("No details")
                 );
-                error!(
+                format!(
                     "\n{}\n {}\n {}\n {}\n Error Code: {}\n Message: {}\n Details: {}\n {}",
                     self, method, url, http_code, info.error_code, info.message, details, cause
-                );
+                )
             }
             Errors::ConsumerError { info, http_code, url, method, cause } => {
                 let http_code = format!("Http Code: {}", http_code.unwrap_or(0));
@@ -187,10 +190,10 @@ impl Errors {
                     "Details: {}",
                     info.details.as_deref().unwrap_or("No details")
                 );
-                error!(
+                format!(
                     "\n{}\n {}\n {}\n {}\n Error Code: {}\n Message: {}\n Details: {}\n {}",
                     self, method, url, http_code, info.error_code, info.message, details, cause
-                );
+                )
             }
             Errors::MissingActionError { info, action, cause } => {
                 let cause = format!("Cause: {}", cause.as_deref().unwrap_or("No Cause"));
@@ -198,10 +201,10 @@ impl Errors {
                     "Details: {}",
                     info.details.as_deref().unwrap_or("No details")
                 );
-                error!(
+                format!(
                     "\n{}\n Error Code: {}\n Message: {}\n Details: {}\n MissingAction: {}\n {}",
                     self, info.error_code, info.message, details, action, cause
-                );
+                )
             }
             Errors::MissingResourceError { info, resource_id, cause } => {
                 let cause = format!("Cause: {}", cause.as_deref().unwrap_or("No Cause"));
@@ -210,10 +213,10 @@ impl Errors {
                     info.details.as_deref().unwrap_or("No details")
                 );
 
-                error!(
+                format!(
                     "\n{}\n Id: {}\n Error Code: {}\n Message: {}\n {}\n {}",
                     self, resource_id, info.error_code, info.message, details, cause
-                );
+                )
             }
             Errors::FormatError { info, cause } => {
                 let cause = format!("Cause: {}", cause.as_deref().unwrap_or("No Cause"));
@@ -222,10 +225,10 @@ impl Errors {
                     info.details.as_deref().unwrap_or("No details")
                 );
 
-                error!(
+                format!(
                     "\n{}\n Error Code: {}\n Message: {}\n {}\n {}",
                     self, info.error_code, info.message, details, cause
-                );
+                )
             }
             Errors::UnauthorizedError { info, cause } => {
                 let cause = format!("Cause: {}", cause.as_deref().unwrap_or("No Cause"));
@@ -234,10 +237,10 @@ impl Errors {
                     info.details.as_deref().unwrap_or("No details")
                 );
 
-                error!(
+                format!(
                     "\n{}\n Error Code: {}\n Message: {}\n {}\n {}",
                     self, info.error_code, info.message, details, cause
-                );
+                )
             }
             Errors::ForbiddenError { info, cause } => {
                 let cause = format!("Cause: {}", cause.as_deref().unwrap_or("No Cause"));
@@ -246,10 +249,10 @@ impl Errors {
                     info.details.as_deref().unwrap_or("No details")
                 );
 
-                error!(
+                format!(
                     "\n{}\n Error Code: {}\n Message: {}\n {}\n {}",
                     self, info.error_code, info.message, details, cause
-                );
+                )
             }
             Errors::DatabaseError { info, cause } => {
                 let cause = format!("Cause: {}", cause.as_deref().unwrap_or("No Cause"));
@@ -258,10 +261,10 @@ impl Errors {
                     info.details.as_deref().unwrap_or("No details")
                 );
 
-                error!(
+                format!(
                     "\n{}\n Error Code: {}\n Message: {}\n {}\n {}",
                     self, info.error_code, info.message, details, cause
-                );
+                )
             }
 
             Errors::FeatureNotImplError { info, feature, cause } => {
@@ -271,10 +274,10 @@ impl Errors {
                     info.details.as_deref().unwrap_or("No details")
                 );
 
-                error!(
+                format!(
                     "\n{}\n Feature: {}\n Error Code: {}\n Message: {}\n {}\n {}",
                     self, feature, info.error_code, info.message, details, cause
-                );
+                )
             }
             Errors::WalletError { info, http_code, url, method, cause } => {
                 let http_code = format!("Http Code: {}", http_code);
@@ -284,10 +287,10 @@ impl Errors {
                 );
                 let cause = format!("Cause: {}", cause.as_deref().unwrap_or("No Cause"));
 
-                error!(
+                format!(
                     "\n{}\n Method: {}\n Url: {}\n {}\n Error Code: {}\n Message: {}\n {}\n {}",
                     self, method, url, http_code, info.error_code, info.message, details, cause
-                );
+                )
             }
             Errors::SecurityError { info, cause } => {
                 let cause = format!("Cause: {}", cause.as_deref().unwrap_or("No Cause"));
@@ -296,14 +299,16 @@ impl Errors {
                     info.details.as_deref().unwrap_or("No details")
                 );
 
-                error!(
+                format!(
                     "\n{}\n Error Code: {}\n Message: {}\n {}\n {}",
                     self, info.error_code, info.message, details, cause
-                );
+                )
             }
         }
     }
+}
 
+impl Errors {
     pub fn petition_new(url: String, method: String, http_code: Option<u16>, cause: String) -> Errors {
         Errors::PetitionError {
             info: ErrorInfo {

@@ -16,7 +16,25 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use serde::{Deserialize, Serialize};
 
-pub mod http;
-pub mod core;
-pub mod setup;
+#[derive(Serialize, Deserialize, Debug)]
+pub struct AuthJwtClaims {
+    pub sub: String,
+    pub exp: u64,
+    pub iat: u64,
+    pub jti: String,
+    pub iss: String,
+    pub aud: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Claims {
+    pub jti: String,
+    pub sub: String, // Optional. Subject (whom token refers to)
+    pub iss: String, // Optional. Issuer
+    pub aud: String, // Optional. Audience
+    pub scopes: String,
+    pub exp: usize, // Required (validate_exp defaults to true in validation). Expiration time (as UTC timestamp)
+    pub nbf: usize, // Optional. not before
+}

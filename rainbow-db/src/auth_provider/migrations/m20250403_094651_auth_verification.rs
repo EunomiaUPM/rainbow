@@ -40,7 +40,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(AuthVerification::Audience).string().not_null())
                     .col(ColumnDef::new(AuthVerification::Holder).string())
                     .col(ColumnDef::new(AuthVerification::Vpt).string())
-                    .col(ColumnDef::new(AuthVerification::Success).string())
+                    .col(ColumnDef::new(AuthVerification::Success).boolean())
                     .col(ColumnDef::new(AuthVerification::Status).string().not_null())
                     .col(ColumnDef::new(AuthVerification::CreatedAt).date_time().not_null())
                     .col(ColumnDef::new(AuthVerification::EndedAt).date_time())

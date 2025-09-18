@@ -20,7 +20,7 @@
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
-use rainbow_common::errors::ErrorInfo;
+use rainbow_common::errors::{ErrorInfo, ErrorLog};
 use serde::Serialize;
 use thiserror::Error;
 use tracing::error;
@@ -54,8 +54,8 @@ impl IntoResponse for &AuthErrors {
     }
 }
 
-impl AuthErrors {
-    pub fn log(&self) {
+impl ErrorLog for AuthErrors {
+    fn log(&self) -> String {
         match self {
             AuthErrors::WalletError { info, http_code, url, method, cause } => {
                 let http_code = format!("Http Code: {}", http_code);
@@ -65,10 +65,10 @@ impl AuthErrors {
                 );
                 let cause = format!("Cause: {}", cause.as_deref().unwrap_or("No Cause"));
 
-                error!(
+                format!(
                     "\n{}\n Method: {}\n Url: {}\n {}\n Error Code: {}\n Message: {}\n {}\n {}",
                     self, method, url, http_code, info.error_code, info.message, details, cause
-                );
+                )
             }
             AuthErrors::SecurityError { info, cause } => {
                 let cause = format!("Cause: {}", cause.as_deref().unwrap_or("No Cause"));
@@ -77,14 +77,16 @@ impl AuthErrors {
                     info.details.as_deref().unwrap_or("No details")
                 );
 
-                error!(
+                format!(
                     "\n{}\n Error Code: {}\n Message: {}\n {}\n {}",
                     self, info.error_code, info.message, details, cause
-                );
+                )
             }
         }
     }
+}
 
+impl AuthErrors {
     pub fn wallet_new(url: String, method: String, http_code: u16, cause: Option<String>) -> AuthErrors {
         AuthErrors::WalletError {
             info: ErrorInfo {

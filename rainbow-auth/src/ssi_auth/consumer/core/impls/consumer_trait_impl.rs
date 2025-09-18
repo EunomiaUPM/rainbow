@@ -19,7 +19,10 @@
 use crate::ssi_auth::consumer::core::traits::consumer_trait::RainbowSSIAuthConsumerManagerTrait;
 use crate::ssi_auth::consumer::core::Manager;
 use crate::ssi_auth::errors::AuthErrors;
-use crate::ssi_auth::types::{trim_4_base, MatchingVCs, RedirectResponse, RefBody, WhatEntity};
+use crate::ssi_auth::types::entities::WhatEntity;
+use crate::ssi_auth::types::gnap::RefBody;
+use crate::ssi_auth::types::wallet::{MatchingVCs, RedirectResponse};
+use crate::ssi_auth::utils::format::trim_4_base;
 use anyhow::bail;
 use axum::async_trait;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
@@ -27,7 +30,7 @@ use base64::Engine;
 use rainbow_common::auth::gnap::{AccessToken, GrantRequest, GrantResponse};
 use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
 use rainbow_common::errors::helpers::{BadFormat, MissingAction};
-use rainbow_common::errors::CommonErrors;
+use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_db::auth_consumer::entities::{
     auth_interaction, auth_request, auth_token_requirements, auth_verification, authority_request, mates,
 };
@@ -69,7 +72,7 @@ where
             }
             Err(e) => {
                 let error = CommonErrors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -93,7 +96,7 @@ where
             }
             Err(e) => {
                 let error = CommonErrors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -117,7 +120,7 @@ where
             }
             Err(e) => {
                 let error = CommonErrors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -140,7 +143,7 @@ where
                     None => None,
                 };
                 let error = CommonErrors::petition_new(url, "POST".to_string(), http_code, e.to_string());
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -159,7 +162,7 @@ where
                     http_code,
                     error_res.error,
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -173,7 +176,7 @@ where
                     None,
                     Some("The expected 'continue' field was missing".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -187,7 +190,7 @@ where
             }
             Err(e) => {
                 let error = CommonErrors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -201,7 +204,7 @@ where
                     None,
                     Some("The expected 'interact' field was missing".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -218,7 +221,7 @@ where
             }
             Err(e) => {
                 let error = CommonErrors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -232,7 +235,7 @@ where
                     None,
                     Some("The expected 'oidc4vp' field was missing".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -250,7 +253,7 @@ where
                         None,
                         Some("The expected 'response_type' field was missing in the oidc4vp uri".to_string()),
                     );
-                    error.log();
+                    error!("{}", error.log());
                     bail!(error);
                 }
             };
@@ -264,7 +267,7 @@ where
                     None,
                     Some("The expected 'client_id' field was missing in the oidc4vp uri".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -279,7 +282,7 @@ where
                         None,
                         Some("The expected 'response_mode' field was missing in the oidc4vp uri".to_string()),
                     );
-                    error.log();
+                    error!("{}", error.log());
                     bail!(error);
                 }
             };
@@ -297,7 +300,7 @@ where
                     None,
                     Some("The expected 'presentation_definition_uri' field was missing in the oidc4vp uri".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -312,7 +315,7 @@ where
                         None,
                         Some("The expected 'client_id_scheme' field was missing in the oidc4vp uri".to_string()),
                     );
-                    error.log();
+                    error!("{}", error.log());
                     bail!(error);
                 }
             };
@@ -326,7 +329,7 @@ where
                     None,
                     Some("The expected 'nonce' field was missing in the oidc4vp uri".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -341,7 +344,7 @@ where
                         None,
                         Some("The expected 'response_uri' field was missing in the oidc4vp uri".to_string()),
                     );
-                    error.log();
+                    error!("{}", error.log());
                     bail!(error);
                 }
             };
@@ -366,7 +369,7 @@ where
             }
             Err(e) => {
                 let error = CommonErrors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -383,12 +386,12 @@ where
                     id.clone(),
                     Some(format!("There is no process with id: {}", &id)),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
             Err(e) => {
                 let error = CommonErrors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -400,7 +403,7 @@ where
             Ok(model) => model,
             Err(e) => {
                 let error = CommonErrors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -422,7 +425,7 @@ where
 
         if calculated_hash != hash {
             let error = AuthErrors::security_new(Some("Hash does not match the calculated one".to_string()));
-            error.log();
+            error!("{}", error.log());
             bail!(error);
         }
 
@@ -442,12 +445,12 @@ where
                     id.clone(),
                     Some(format!("There is no process with id: {}", &id)),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
             Err(e) => {
                 let error = CommonErrors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -476,7 +479,7 @@ where
                             None => None,
                         };
                         let error = CommonErrors::petition_new(url, "POST".to_string(), http_code, e.to_string());
-                        error.log();
+                        error!("{}", error.log());
                         bail!(error);
                     }
                 };
@@ -497,7 +500,7 @@ where
                             http_code,
                             error_res.error,
                         );
-                        error.log();
+                        error!("{}", error.log());
                         bail!(error);
                     }
                 };
@@ -510,7 +513,7 @@ where
                     Ok(model) => model,
                     Err(e) => {
                         let error = CommonErrors::database_new(Some(e.to_string()));
-                        error.log();
+                        error!("{}", error.log());
                         bail!(error);
                     }
                 };
@@ -552,7 +555,7 @@ where
                             None => None,
                         };
                         let error = CommonErrors::petition_new(url, "POST".to_string(), http_code, e.to_string());
-                        error.log();
+                        error!("{}", error.log());
                         bail!(error);
                     }
                 };
@@ -573,7 +576,7 @@ where
                             http_code,
                             error_res.error,
                         );
-                        error.log();
+                        error!("{}", error.log());
                         bail!(error);
                     }
                 };
@@ -587,7 +590,7 @@ where
                     Ok(model) => model,
                     Err(e) => {
                         let error = CommonErrors::database_new(Some(e.to_string()));
-                        error.log();
+                        error!("{}", error.log());
                         bail!(error);
                     }
                 };
@@ -614,7 +617,7 @@ where
             Ok(model) => Ok(model),
             Err(e) => {
                 let error = CommonErrors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         }
@@ -638,7 +641,7 @@ where
             Ok(model) => model,
             Err(e) => {
                 let error = CommonErrors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -657,7 +660,7 @@ where
             Ok(model) => model,
             Err(e) => {
                 let error = CommonErrors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -680,7 +683,7 @@ where
                     None => None,
                 };
                 let error = CommonErrors::petition_new(url, "POST".to_string(), http_code, e.to_string());
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -699,7 +702,7 @@ where
                     http_code,
                     error_res.error,
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -713,7 +716,7 @@ where
             }
             Err(e) => {
                 let error = CommonErrors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -725,7 +728,7 @@ where
                     BadFormat::Sent,
                     Some("Missing field interact in the response".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error)
             }
         };
@@ -737,7 +740,7 @@ where
                     BadFormat::Sent,
                     Some("Missing field continue in the response".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error)
             }
         };
@@ -754,7 +757,7 @@ where
             }
             Err(e) => {
                 let error = CommonErrors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -781,7 +784,7 @@ where
             Ok(None) => info!("It is not a request 4 the provider"),
             Err(e) => {
                 let error = CommonErrors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -794,7 +797,7 @@ where
             Ok(None) => info!("It is not a request 4 an authority"),
             Err(e) => {
                 let error = CommonErrors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -803,7 +806,7 @@ where
             id.clone(),
             Some(format!("Missing resource with id: {}", &id)),
         );
-        error.log();
+        error!("{}", error.log());
         bail!(error)
     }
 
@@ -820,7 +823,7 @@ where
                     MissingAction::Wallet,
                     Some("There is no wallet to retrieve dids from".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error)
             }
         };

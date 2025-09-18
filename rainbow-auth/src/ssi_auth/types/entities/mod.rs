@@ -17,6 +17,29 @@
  *
  */
 
-pub mod http;
-pub mod core;
-pub mod setup;
+use serde::{Deserialize, Serialize};
+
+#[derive(Deserialize, Serialize)]
+pub struct Url2RequestVC {
+    pub url: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ReachAuthority {
+    pub id: String,
+    pub slug: String,
+    pub url: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ReachProvider {
+    pub id: String,
+    pub slug: String,
+    pub url: String,
+    pub actions: String,
+}
+
+pub enum WhatEntity {
+    Provider,
+    Authority
+}

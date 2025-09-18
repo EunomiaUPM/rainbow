@@ -23,7 +23,7 @@ use crate::core::traits::RainbowSSIAuthWalletTrait;
 use crate::data::entities::{auth_interaction, auth_request, auth_verification, minions};
 use crate::data::repo_factory::factory_trait::AuthRepoFactoryTrait;
 use crate::errors::helpers::BadFormat;
-use crate::errors::Errors;
+use crate::errors::{ErrorLog, Errors};
 use crate::setup::config::AuthorityFunctions;
 use crate::setup::AuthorityApplicationConfigTrait;
 use crate::types::gnap::{CallbackBody, GrantRequest, GrantResponse, RejectedCallbackBody};
@@ -44,7 +44,7 @@ use rsa::RsaPrivateKey;
 use serde_json::{json, Value};
 use std::collections::HashSet;
 use std::fs;
-use tracing::{debug, info};
+use tracing::{debug, error, info};
 use urlencoding::encode;
 use x509_parser::parse_x509_certificate;
 
@@ -63,7 +63,7 @@ where
                     "Only petitions with an 'interact field' are supported right now".to_string(),
                     Some("Only petitions with an 'interact field' are supported right now".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -74,7 +74,7 @@ where
                 "Interact method not supported yet".to_string(),
                 Some("Interact method not supported yet".to_string()),
             );
-            error.log();
+            error!("{}", error.log());
             bail!(error);
         }
 
@@ -93,7 +93,7 @@ where
                     BadFormat::Received,
                     Some("Missing field class_id in the petition".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -113,7 +113,7 @@ where
             }
             Err(e) => {
                 let error = Errors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -141,7 +141,7 @@ where
             }
             Err(e) => {
                 let error = Errors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -159,7 +159,7 @@ where
                 }
                 Err(e) => {
                     let error = Errors::database_new(Some(e.to_string()));
-                    error.log();
+                    error!("{}", error.log());
                     bail!(error);
                 }
             };
@@ -192,7 +192,7 @@ where
             Ok(model) => Ok(model),
             Err(e) => {
                 let error = Errors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         }
@@ -240,7 +240,7 @@ where
             true => {
                 // TODO THE MODULE SHOULD BE ABLE TO DO IT ITSELF
                 let error = Errors::not_impl_new("REAL URI".to_string(), None);
-                error.log();
+                error!("{}", error.log());
                 bail!(error)
             }
             false => {
@@ -332,7 +332,7 @@ where
                             None => None,
                         };
                         let error = Errors::petition_new(url, "POST".to_string(), http_code, e.to_string());
-                        error.log();
+                        error!("{}", error.log());
                         bail!(error);
                     }
                 };
@@ -351,7 +351,7 @@ where
                             res.status().as_u16(),
                             Some("Petition to register Wallet failed".to_string()),
                         );
-                        error.log();
+                        error!("{}", error.log());
                         bail!(error);
                     }
                 }
@@ -373,12 +373,12 @@ where
                     cont_id.to_string(),
                     Some(format!("There is no process with cont_id: {}", &cont_id)),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
             Err(e) => {
                 let error = Errors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -388,7 +388,7 @@ where
                 "Interact reference '{}' does not match '{}'",
                 interact_ref, int_model.interact_ref
             )));
-            error.log();
+            error!("{}", error.log());
             bail!(error);
         }
 
@@ -397,7 +397,7 @@ where
                 "Token '{}' does not match '{}'",
                 token, int_model.continue_token
             )));
-            error.log();
+            error!("{}", error.log());
             bail!(error);
         }
 
@@ -414,12 +414,12 @@ where
                     id.clone(),
                     Some(format!("There is no process with cont_id: {}", &id)),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
             Err(e) => {
                 let error = Errors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -436,7 +436,7 @@ where
                             BadFormat::Received,
                             Some("There was no cert in the Grant Request".to_string()),
                         );
-                        error.log();
+                        error!("{}", error.log());
                         bail!(error)
                     }
                 };
@@ -454,12 +454,12 @@ where
                     Ok(Some(data)) => data,
                     Ok(None) => {
                         let error = Errors::missing_resource_new(id.clone(), None);
-                        error.log();
+                        error!("{}", error.log());
                         bail!(error)
                     }
                     Err(e) => {
                         let error = Errors::database_new(Some(e.to_string()));
-                        error.log();
+                        error!("{}", error.log());
                         bail!(error)
                     }
                 };
@@ -469,7 +469,7 @@ where
                 break;
             }
             let error = Errors::format_new(BadFormat::Received, None);
-            error.log();
+            error!("{}", error.log());
             bail!(error)
         }
 
@@ -481,7 +481,7 @@ where
             Ok(model) => model,
             Err(e) => {
                 let error = Errors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -507,12 +507,12 @@ where
                     id.to_string(),
                     Some(format!("Missing process with id: {}", id)),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error)
             }
             Err(e) => {
                 let error = Errors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 bail!(error)
             }
         };
@@ -528,7 +528,7 @@ where
                             BadFormat::Received,
                             Some("There was no cert in the Grant Request".to_string()),
                         );
-                        error.log();
+                        error!("{}", error.log());
                         bail!(error)
                     }
                 };
@@ -560,12 +560,12 @@ where
                             id.clone(),
                             Some(format!("There is no process with id: {}", &id)),
                         );
-                        error.log();
+                        error!("{}", error.log());
                         bail!(error);
                     }
                     Err(e) => {
                         let error = Errors::database_new(Some(e.to_string()));
-                        error.log();
+                        error!("{}", error.log());
                         bail!(error);
                     }
                 };
@@ -584,7 +584,7 @@ where
             }
         }
         let error = Errors::format_new(BadFormat::Received, None);
-        error.log();
+        error!("{}", error.log());
         bail!(error)
     }
 
@@ -596,12 +596,12 @@ where
                     state.clone(),
                     Some(format!("There is no process with state: {}", &state)),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
             Err(e) => {
                 let error = Errors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -644,12 +644,12 @@ where
                     state.clone(),
                     Some(format!("There is no process with state: {}", &state)),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
             Err(e) => {
                 let error = Errors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -667,12 +667,12 @@ where
                                 &verification_model.id
                             )),
                         );
-                        error.log();
+                        error!("{}", error.log());
                         bail!(error);
                     }
                     Err(e) => {
                         let error = Errors::database_new(Some(e.to_string()));
-                        error.log();
+                        error!("{}", error.log());
                         bail!(error);
                     }
                 };
@@ -683,7 +683,7 @@ where
                     Ok(_) => {}
                     Err(e) => {
                         let error = Errors::database_new(Some(e.to_string()));
-                        error.log();
+                        error!("{}", error.log());
                         bail!(error);
                     }
                 };
@@ -705,12 +705,12 @@ where
                                     &verification_model.id
                                 )),
                             );
-                            error.log();
+                            error!("{}", error.log());
                             bail!(error);
                         }
                         Err(e) => {
                             let error = Errors::database_new(Some(e.to_string()));
-                            error.log();
+                            error!("{}", error.log());
                             bail!(error);
                         }
                     };
@@ -720,7 +720,7 @@ where
                         Ok(_) => {}
                         Err(e) => {
                             let error = Errors::database_new(Some(e.to_string()));
-                            error.log();
+                            error!("{}", error.log());
                             bail!(error);
                         }
                     };
@@ -740,7 +740,7 @@ where
             Ok(model) => model,
             Err(e) => {
                 let error = Errors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -748,7 +748,7 @@ where
             Ok(model) => model,
             Err(e) => {
                 let error = Errors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -770,7 +770,7 @@ where
                     BadFormat::Received,
                     Some("Jwt does not contain a token".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -800,7 +800,7 @@ where
                     "VPT signature is incorrect -> {}",
                     e.to_string()
                 )));
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -814,7 +814,7 @@ where
         //             BadFormat::Received,
         //             Some("VPT does not contain the 'jti' field".to_string()),
         //         );
-        //         error.log();
+        //         error!("{}", error.log());
         //         bail!(error);
         //     }
         // };
@@ -825,7 +825,7 @@ where
                     BadFormat::Received,
                     Some("VPT does not contain the 'nonce' field".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -837,7 +837,7 @@ where
                     BadFormat::Received,
                     Some("VPT does not contain the 'sub' field".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -848,7 +848,7 @@ where
                     BadFormat::Received,
                     Some("VPT does not contain the 'iss' field".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -858,7 +858,7 @@ where
             let error = Errors::security_new(Some(
                 "VPT token issuer, subject & kid does not match".to_string(),
             ));
-            error.log();
+            error!("{}", error.log());
             bail!(error);
         }
         info!("VPT issuer, subject & kid matches");
@@ -871,7 +871,7 @@ where
             Ok(model) => model,
             Err(e) => {
                 let error = Errors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -879,7 +879,7 @@ where
         if new_model.nonce != nonce {
             // VALIDATE NONCE
             let error = Errors::security_new(Some("Invalid nonce, it does not match".to_string()));
-            error.log();
+            error!("{}", error.log());
             bail!(error);
         }
         info!("VPT Nonce matches");
@@ -891,14 +891,14 @@ where
                     BadFormat::Received,
                     Some("VPT does not contain the 'vp_id' field".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
         if new_model.id != vp_id {
             // VALIDATE ID MATCHES JTI
             let error = Errors::security_new(Some("Invalid id, it does not match".to_string()));
-            error.log();
+            error!("{}", error.log());
             bail!(error);
         }
         info!("Exchange is valid");
@@ -910,14 +910,14 @@ where
                     BadFormat::Received,
                     Some("VPT does not contain the 'vp_holder' field".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
         if new_model.holder.unwrap() != vp_holder {
             // EXPECTED ALWAYS
             let error = Errors::security_new(Some("Invalid holder, it does not match".to_string()));
-            error.log();
+            error!("{}", error.log());
             bail!(error);
         }
         info!("vp holder matches vpt subject & issuer");
@@ -933,7 +933,7 @@ where
                         e.to_string()
                     )),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -950,7 +950,7 @@ where
                     BadFormat::Received,
                     Some("Jwt does not contain a token".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -973,7 +973,7 @@ where
             Ok(token) => token,
             Err(e) => {
                 let error = Errors::format_new(BadFormat::Received, Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -984,7 +984,7 @@ where
             Some(data) => data,
             None => {
                 let error = Errors::format_new(BadFormat::Received, Some("No issuer in the vc".to_string()));
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -995,14 +995,14 @@ where
                     BadFormat::Received,
                     Some("No issuer id in the vc".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
         if iss != kid || kid != vc_iss_id {
             // VALIDATE IF ISSUER IS THE SAME AS KID
             let error = Errors::security_new(Some("VCT token issuer & kid does not match".to_string()));
-            error.log();
+            error!("{}", error.log());
             bail!(error);
         }
         info!("VCT issuer & kid matches");
@@ -1021,7 +1021,7 @@ where
                     BadFormat::Received,
                     Some("No sub field in the vc".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -1033,7 +1033,7 @@ where
                     BadFormat::Received,
                     Some("No credentialSubject id field in the vc".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -1041,7 +1041,7 @@ where
             let error = Errors::security_new(Some(
                 "VCT token sub, credential subject & VP Holder do not match".to_string(),
             ));
-            error.log();
+            error!("{}", error.log());
             bail!(error);
         }
         info!("VC Holder Data is Correct");
@@ -1053,7 +1053,7 @@ where
                     BadFormat::Received,
                     Some("No jti id field in the vc".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -1065,13 +1065,13 @@ where
                     BadFormat::Received,
                     Some("No vc_id id field in the vc".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
         if jti != vc_id {
             let error = Errors::security_new(Some("VCT jti & VC id do not match".to_string()));
-            error.log();
+            error!("{}", error.log());
             bail!(error);
         }
         info!("VCT jti & VC id match");
@@ -1083,7 +1083,7 @@ where
                     BadFormat::Received,
                     Some("No credentialSubject id field in the vc".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -1095,14 +1095,14 @@ where
                     BadFormat::Received,
                     Some("No credentialSubject id field in the vc".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
         let (keep, message) = compare_with_margin(iat, iss_date, 2);
         if keep {
             let error = Errors::security_new(Some(message.to_string()));
-            error.log();
+            error!("{}", error.log());
             bail!(error);
         }
         info!("VC IssuanceDate and iat field match");
@@ -1114,7 +1114,7 @@ where
                     BadFormat::Received,
                     Some("No validFrom id field in the vc".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -1125,7 +1125,7 @@ where
                     "VC iat and issuanceDate do not match -> {}",
                     e
                 )));
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -1151,14 +1151,14 @@ where
                         "Interact method not supported".to_string(),
                         Some(format!("Interact method {} not supported", model.method)),
                     );
-                    error.log();
+                    error!("{}", error.log());
                     bail!(error);
                 }
             }
             Ok(None) => Ok(None),
             Err(e) => {
                 let error = Errors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         }
@@ -1170,12 +1170,12 @@ where
             Ok(Some(data)) => data,
             Ok(None) => {
                 let error = Errors::missing_resource_new(id.clone(), Some(format!("Missing request with id: {}", id)));
-                error.log();
+                error!("{}", error.log());
                 bail!(error)
             }
             Err(e) => {
                 let error = Errors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 bail!(error)
             }
         };
@@ -1184,12 +1184,12 @@ where
             Ok(Some(data)) => data,
             Ok(None) => {
                 let error = Errors::missing_resource_new(id.clone(), Some(format!("Missing request with id: {}", id)));
-                error.log();
+                error!("{}", error.log());
                 bail!(error)
             }
             Err(e) => {
                 let error = Errors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 bail!(error)
             }
         };
@@ -1202,7 +1202,7 @@ where
                     Ok(model) => model,
                     Err(e) => {
                         let error = Errors::database_new(Some(e.to_string()));
-                        error.log();
+                        error!("{}", error.log());
                         bail!(error);
                     }
                 };
@@ -1217,7 +1217,7 @@ where
                     Ok(model) => model,
                     Err(e) => {
                         let error = Errors::database_new(Some(e.to_string()));
-                        error.log();
+                        error!("{}", error.log());
                         bail!(error);
                     }
                 };
@@ -1240,7 +1240,7 @@ where
                     None => None,
                 };
                 let error = Errors::petition_new(int_model.uri, "POST".to_string(), http_code, e.to_string());
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -1256,7 +1256,7 @@ where
                     Some(res.status().as_u16()),
                     None,
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         }
@@ -1276,7 +1276,7 @@ where
                                 BadFormat::Received,
                                 Some("There was no field jwt".to_string()),
                             );
-                            error.log();
+                            error!("{}", error.log());
                             error
                         })?;
                     info!("Credential issued successfully");
@@ -1293,7 +1293,7 @@ where
                 BadFormat::Received,
                 Some("There was no field type".to_string()),
             );
-            error.log();
+            error!("{}", error.log());
             bail!(error)
         };
 
@@ -1301,12 +1301,12 @@ where
             Ok(Some(data)) => data,
             Ok(None) => {
                 let error = Errors::missing_resource_new(id.clone(), Some(format!("Missing procces with id: {}", id)));
-                error.log();
+                error!("{}", error.log());
                 bail!(error)
             }
             Err(e) => {
                 let error = Errors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 bail!(error)
             }
         };
@@ -1321,7 +1321,7 @@ where
             Ok(data) => data,
             Err(e) => {
                 let error = Errors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 bail!(error)
             }
         };
@@ -1336,7 +1336,7 @@ where
                 BadFormat::Received,
                 Some("JWT does not have 3 parts".to_string()),
             );
-            error.log();
+            error!("{}", error.log());
             bail!(error);
         }
 
@@ -1347,7 +1347,7 @@ where
                     BadFormat::Received,
                     Some(format!("Base64 decode error: {}", e)),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error)
             }
         };
@@ -1359,7 +1359,7 @@ where
                     BadFormat::Received,
                     Some(format!("JSON parse error: {}", e)),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error)
             }
         };
@@ -1375,7 +1375,7 @@ where
                     BadFormat::Received,
                     Some("No credentialSubject id field in the vc".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         }

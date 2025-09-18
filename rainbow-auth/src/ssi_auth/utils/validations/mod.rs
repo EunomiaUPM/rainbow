@@ -16,18 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
-use axum::http::HeaderMap;
-use base64::{engine::general_purpose, Engine as _};
 use chrono::{DateTime, Utc};
-use rand::Rng;
-
-pub fn split_did(did: &str) -> (&str, Option<&str>) {
-    match did.split_once('#') {
-        Some((did_kid, id)) => (did_kid, Some(id)),
-        None => (did, None),
-    }
-}
 
 pub fn compare_with_margin(iat: i64, issuance_date: &str, margin_seconds: i64) -> (bool, String) {
     let datetime = match DateTime::from_timestamp(iat, 0) {
@@ -55,18 +44,4 @@ pub fn compare_with_margin(iat: i64, issuance_date: &str, margin_seconds: i64) -
     }
 
     (false, "Ignore this".to_string())
-}
-
-pub fn create_opaque_token() -> String {
-    let mut bytes = [0u8; 32]; // 256 bits
-    rand::thread_rng().fill(&mut bytes);
-    general_purpose::URL_SAFE_NO_PAD.encode(&bytes)
-}
-
-pub fn extract_gnap_token(headers: HeaderMap) -> Option<String> {
-    headers
-        .get("Authorization")
-        .and_then(|value| value.to_str().ok())
-        .and_then(|s| s.strip_prefix("GNAP "))
-        .map(|token| token.to_string())
 }

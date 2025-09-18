@@ -20,8 +20,8 @@
 use crate::ssi_auth::errors::CustomToResponse;
 use crate::ssi_auth::provider::core::traits::provider_trait::RainbowSSIAuthProviderManagerTrait;
 use crate::ssi_auth::provider::core::Manager;
-use crate::ssi_auth::provider::utils::extract_gnap_token;
-use crate::ssi_auth::types::RefBody;
+use crate::ssi_auth::types::gnap::RefBody;
+use crate::ssi_auth::utils::token::extract_gnap_token;
 use axum::extract::{Form, Path, State};
 use axum::http::{HeaderMap, Method, Uri};
 use axum::response::IntoResponse;
@@ -29,14 +29,14 @@ use axum::routing::{get, post};
 use axum::{Json, Router};
 use rainbow_common::auth::business::RainbowBusinessLoginRequest;
 use rainbow_common::auth::gnap::{AccessToken, GrantRequest};
-use rainbow_common::errors::CommonErrors;
+use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::mates::mates::VerifyTokenRequest;
 use rainbow_common::ssi_wallet::RainbowSSIAuthWalletTrait;
 use rainbow_db::auth_provider::repo_factory::factory_trait::AuthRepoFactoryTrait;
 use reqwest::StatusCode;
 use serde::Deserialize;
 use std::sync::Arc;
-use tracing::info;
+use tracing::{error, info};
 
 pub struct RainbowAuthProviderRouter<T>
 where
@@ -145,7 +145,7 @@ where
             Some(token) => token,
             None => {
                 let error = CommonErrors::unauthorized_new(Some("Missing token".to_string()));
-                error.log();
+                error!("{}", error.log());
                 return error.into_response();
             }
         };

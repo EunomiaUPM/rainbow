@@ -17,6 +17,21 @@
  *
  */
 
-pub mod http;
-pub mod core;
-pub mod setup;
+pub fn split_did(did: &str) -> (&str, Option<&str>) {
+    match did.split_once('#') {
+        Some((did_kid, id)) => (did_kid, Some(id)),
+        None => (did, None),
+    }
+}
+
+pub fn trim_4_base(input: &str) -> String {
+    let slashes: Vec<usize> = input.match_indices('/').map(|(i, _)| i).collect();
+
+    if slashes.len() < 3 {
+        return input.to_string();
+    }
+
+    let cut_index = slashes[2];
+
+    input[..cut_index].to_string()
+}

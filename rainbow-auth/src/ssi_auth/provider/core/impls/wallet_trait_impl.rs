@@ -20,7 +20,8 @@
 use crate::ssi_auth::errors::AuthErrors;
 use crate::ssi_auth::provider::core::traits::provider_trait::RainbowSSIAuthProviderManagerTrait;
 use crate::ssi_auth::provider::core::Manager;
-use crate::ssi_auth::types::{AuthJwtClaims, WalletInfoResponse, WalletLoginResponse};
+use crate::ssi_auth::types::jwt::AuthJwtClaims;
+use crate::ssi_auth::types::wallet::{WalletInfoResponse, WalletLoginResponse};
 use anyhow::bail;
 use axum::async_trait;
 use axum::http::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
@@ -29,7 +30,7 @@ use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
 use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
 use rainbow_common::errors::helpers::{BadFormat, MissingAction};
-use rainbow_common::errors::CommonErrors;
+use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::ssi_wallet::{DidsInfo, RainbowSSIAuthWalletTrait};
 use rainbow_db::auth_provider::entities::mates;
 use rainbow_db::auth_provider::repo_factory::factory_trait::AuthRepoFactoryTrait;
@@ -64,7 +65,7 @@ where
                     None => None,
                 };
                 let error = CommonErrors::petition_new(url, "POST".to_string(), http_code, e.to_string());
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -83,7 +84,7 @@ where
                     res.status().as_u16(),
                     Some("Petition to register Wallet failed".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         }
@@ -114,7 +115,7 @@ where
                     None => None,
                 };
                 let error = CommonErrors::petition_new(url, "POST".to_string(), http_code, e.to_string());
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -136,7 +137,7 @@ where
                         BadFormat::Sent,
                         Some("The jwt does not have the correct format".to_string()),
                     );
-                    error.log();
+                    error!("{}", error.log());
                     bail!(error);
                 }
 
@@ -155,7 +156,7 @@ where
                     res.status().as_u16(),
                     Some("Petition to login into Wallet failed".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         }
@@ -182,7 +183,7 @@ where
                     None => None,
                 };
                 let error = CommonErrors::petition_new(url, "POST".to_string(), http_code, e.to_string());
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -200,7 +201,7 @@ where
                     res.status().as_u16(),
                     Some("Petition to logout from Wallet failed".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         }
@@ -227,7 +228,7 @@ where
                     MissingAction::Token,
                     Some("No token available for use into the wallet".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -242,7 +243,7 @@ where
                     None => None,
                 };
                 let error = CommonErrors::petition_new(url, "GET".to_string(), http_code, e.to_string());
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -266,7 +267,7 @@ where
                     res.status().as_u16(),
                     Some("Petition to retrieve Wallet information failed".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         }
@@ -286,7 +287,7 @@ where
                     MissingAction::Wallet,
                     Some("There is no wallet to retrieve dids from".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error)
             }
         };
@@ -309,7 +310,7 @@ where
                     MissingAction::Token,
                     Some("There is no token available for use".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -324,7 +325,7 @@ where
                     None => None,
                 };
                 let error = CommonErrors::petition_new(url, "GET".to_string(), http_code, e.to_string());
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         };
@@ -355,7 +356,7 @@ where
                     res.status().as_u16(),
                     Some("Petition to retrieve Wallet DIDs failed".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         }
@@ -386,7 +387,7 @@ where
                     MissingAction::Wallet,
                     Some("There is no wallet to retrieve dids from".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error)
             }
         };
@@ -399,7 +400,7 @@ where
                     MissingAction::Did,
                     Some("No DIDs found in wallet".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error)
             }
         };
@@ -433,7 +434,7 @@ where
             }
             None => {
                 let error = CommonErrors::unauthorized_new(Some("There is no token".to_string()));
-                error.log();
+                error!("{}", error.log());
                 bail!(error);
             }
         }
@@ -472,7 +473,7 @@ where
                     MissingAction::Wallet,
                     Some("There is no wallet to retrieve dids from".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error)
             }
         };
@@ -485,7 +486,7 @@ where
                     MissingAction::Did,
                     Some("No DIDs found in wallet".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 bail!(error)
             }
         };

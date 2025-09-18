@@ -20,14 +20,15 @@
 use crate::ssi_auth::consumer::core::traits::consumer_trait::RainbowSSIAuthConsumerManagerTrait;
 use crate::ssi_auth::consumer::core::Manager;
 use crate::ssi_auth::errors::CustomToResponse;
-use crate::ssi_auth::types::{CallbackBody, ReachAuthority, ReachProvider};
+use crate::ssi_auth::types::entities::{ReachAuthority, ReachProvider};
+use crate::ssi_auth::types::gnap::CallbackBody;
 use axum::extract::{Path, Query, State};
 use axum::http::{Method, Uri};
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use rainbow_common::errors::helpers::BadFormat;
-use rainbow_common::errors::CommonErrors;
+use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::ssi_wallet::RainbowSSIAuthWalletTrait;
 use rainbow_db::auth_consumer::repo_factory::factory_trait::AuthRepoFactoryTrait;
 use reqwest::StatusCode;
@@ -69,6 +70,7 @@ where
             // .route("/api/v1/retrieve/token/:id", get(Self::manual_callback))
             // AUTHORITY
             .route("/api/v1/authority/beg", post(Self::beg4credential))
+            .route("/api/v1/authority/beg/oidc", post(Self::beg4credential))
             .route(
                 "/api/v1/authority/request/all",
                 get(Self::get_all_authority),
@@ -159,7 +161,7 @@ where
                     BadFormat::Received,
                     Some("Unable to retrieve hash from callback".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 return error.into_response();
             }
         };
@@ -171,7 +173,7 @@ where
                     BadFormat::Received,
                     Some("Unable to retrieve interact reference".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 return error.into_response();
             }
         };
@@ -235,7 +237,7 @@ where
             }
             Err(e) => {
                 let error = CommonErrors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 error.into_response()
             }
         }
@@ -253,12 +255,12 @@ where
             Ok(None) => {
                 let error =
                     CommonErrors::missing_resource_new(id.clone(), Some(format!("Missing request with id: {}", id)));
-                error.log();
+                error!("{}", error.log());
                 error.into_response()
             }
             Err(e) => {
                 let error = CommonErrors::database_new(Some(e.to_string()));
-                error.log();
+                error!("{}", error.log());
                 error.into_response()
             }
         }

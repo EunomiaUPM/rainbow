@@ -17,6 +17,6 @@
  *
  */
 
-pub mod http;
-pub mod core;
-pub mod setup;
+pub trait ErrorLog {
+    fn log(&self) -> String;
+}

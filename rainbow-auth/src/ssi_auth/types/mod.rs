@@ -16,115 +16,11 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+pub mod wallet;
+pub mod jwt;
+pub mod gnap;
+pub mod entities;
 
-use rainbow_common::ssi_wallet::WalletInfo;
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct WalletLoginResponse {
-    pub id: String,
-    pub username: String,
-    pub token: String,
-}
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct AuthJwtClaims {
-    pub sub: String,
-    pub exp: u64,
-    pub iat: u64,
-    pub jti: String,
-    pub iss: String,
-    pub aud: String,
-}
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct WalletInfoResponse {
-    pub account: String,
-    pub wallets: Vec<WalletInfo>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct ReachProvider {
-    pub id: String,
-    pub slug: String,
-    pub url: String,
-    pub actions: String,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct ReachAuthority {
-    pub id: String,
-    pub slug: String,
-    pub url: String,
-}
-
-#[derive(Deserialize, Serialize, Debug)]
-pub struct MatchingVCs {
-    #[serde(rename = "addedOn")]
-    pub added_on: String,
-    pub disclosures: String,
-    pub document: String,
-    pub format: String,
-    pub id: String,
-    #[serde(rename = "parsedDocument")]
-    pub parsed_document: Value,
-    pub pending: bool,
-    pub wallet: String,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct RedirectResponse {
-    #[serde(rename = "redirectUri")]
-    pub redirect_uri: String,
-}
-
-#[derive(Deserialize, Serialize)]
-pub struct CallbackResponse {
-    pub hash: String,
-    pub interact_ref: String,
-}
-
-#[derive(Deserialize, Serialize)]
-pub struct Url2RequestVC {
-    pub url: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct RefBody {
-    pub interact_ref: String,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct CallbackBody {
-    pub interact_ref: String,
-    pub hash: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Claims {
-    pub jti: String,
-    pub sub: String, // Optional. Subject (whom token refers to)
-    pub iss: String, // Optional. Issuer
-    pub aud: String, // Optional. Audience
-    pub scopes: String,
-    pub exp: usize, // Required (validate_exp defaults to true in validation). Expiration time (as UTC timestamp)
-    pub nbf: usize, // Optional. not before
-}
-
-pub fn trim_4_base(input: &str) -> String {
-    let slashes: Vec<usize> = input.match_indices('/').map(|(i, _)| i).collect();
-
-    if slashes.len() < 3 {
-        return input.to_string();
-    }
-
-    let cut_index = slashes[2];
-
-    input[..cut_index].to_string()
-}
-
-pub enum WhatEntity {
-    Provider,
-    Authority
-}

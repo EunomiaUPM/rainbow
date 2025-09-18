@@ -21,3 +21,4 @@ pub mod consumer;
 pub mod provider;
 pub mod errors;
 mod types;
+mod utils;
