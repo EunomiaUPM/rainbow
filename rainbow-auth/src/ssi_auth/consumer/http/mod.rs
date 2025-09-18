@@ -59,6 +59,7 @@ where
             .route("/api/v1/wallet/logout", post(Self::wallet_logout))
             .route("/api/v1/wallet/onboard", post(Self::wallet_onboard))
             .route("/api/v1/did.json", get(Self::didweb))
+            .route("/api/v1/wallet/key", post(Self::register_key))
             // PROVIDER
             .route(
                 "/api/v1/request/onboard/provider",
@@ -81,6 +82,7 @@ where
             )
             // .route("/provider/:id/renew", post(todo!()))
             // .route("/provider/:id/finalize", post(todo!()))
+            // TEST
             .with_state(self.manager)
             .fallback(Self::fallback) // 2 routers cannot have 1 fallback each
     }
@@ -126,6 +128,14 @@ where
         info!("GET /did.json");
         match manager.didweb().await {
             Ok(did) => Json(did).into_response(),
+            Err(e) => e.to_response(),
+        }
+    }
+    async fn register_key(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
+        info!("POST /wallet/key");
+        manager.register_key().await.unwrap();
+        match manager.register_did().await {
+            Ok(_) => StatusCode::OK.into_response(),
             Err(e) => e.to_response(),
         }
     }

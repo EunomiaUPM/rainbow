@@ -184,6 +184,9 @@ pub trait ApplicationConsumerConfigTrait {
     where
         Self: Sized;
     fn get_pretty_client_config(&self) -> Value;
+    fn get_pub_key(&self) -> String;
+    fn get_priv_key(&self) -> String;
+    fn get_cert(&self) -> String;
 }
 
 impl ApplicationConsumerConfigTrait for ApplicationConsumerConfig {
@@ -225,6 +228,31 @@ impl ApplicationConsumerConfigTrait for ApplicationConsumerConfig {
     }
     fn get_raw_client_config(&self) -> &ClientConfig {
         &self.client_config
+    }
+
+    fn get_cert(&self) -> String {
+        let path = fs::read(self.client_config.cert_path.clone()).unwrap();
+        String::from_utf8(path).unwrap()
+    }
+    fn get_priv_key(&self) -> String {
+        let bad_path = self.client_config.cert_path.clone();
+        let inc_path = match bad_path.rfind('/') {
+            Some(pos) => (&bad_path[..pos]).to_string(),
+            None => bad_path,
+        };
+        let path = format!("{}/private_key.pem", inc_path);
+        let file = fs::read(path).unwrap();
+        String::from_utf8(file).unwrap()
+    }
+    fn get_pub_key(&self) -> String {
+        let bad_path = self.client_config.cert_path.clone();
+        let inc_path = match bad_path.rfind('/') {
+            Some(pos) => (&bad_path[..pos]).to_string(),
+            None => bad_path,
+        };
+        let path = format!("{}/public_key.pem", inc_path);
+        let file = fs::read(path).unwrap();
+        String::from_utf8(file).unwrap()
     }
 
     fn merge_dotenv_configuration(&self, env_file: Option<String>) -> Self {

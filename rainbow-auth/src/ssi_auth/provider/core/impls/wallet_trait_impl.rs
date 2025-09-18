@@ -494,4 +494,175 @@ where
         let json: Value = serde_json::from_str(did.as_str())?;
         Ok(json)
     }
+    async fn register_key(&self) -> anyhow::Result<()> {
+        info!("Registering key in wallet");
+        let wallet_session = self.wallet_session.lock().await;
+
+        let wallet = match wallet_session.wallets.first() {
+            Some(w) => w,
+            None => {
+                let error = CommonErrors::missing_action_new(
+                    "There is no wallet associated to this session".to_string(),
+                    MissingAction::Wallet,
+                    Some("There is no wallet to retrieve dids from".to_string()),
+                );
+                error!("{}", error.log());
+                bail!(error)
+            }
+        };
+
+        let url = format!(
+            "{}/wallet-api/wallet/{}/keys/import",
+            self.config.get_wallet_portal_url(),
+            &wallet.id
+        );
+
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "text/plain".parse()?);
+        headers.insert(ACCEPT, "application/json".parse()?);
+
+        match &wallet_session.token {
+            Some(token) => headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?),
+            None => {
+                let error = CommonErrors::missing_action_new(
+                    "There is no token associated to this session".to_string(),
+                    MissingAction::Token,
+                    Some("There is no token available for use".to_string()),
+                );
+                error!("{}", error.log());
+                bail!(error);
+            }
+        };
+
+        let body = self.config.get_priv_key();
+
+        let res = self.client.post(&url).headers(headers).body(body).send().await;
+
+        let res = match res {
+            Ok(res) => res,
+            Err(e) => {
+                let http_code = match e.status() {
+                    Some(status) => Some(status.as_u16()),
+                    None => None,
+                };
+                let error = CommonErrors::petition_new(url, "GET".to_string(), http_code, e.to_string());
+                error!("{}", error.log());
+                bail!(error);
+            }
+        };
+
+        match res.status().as_u16() {
+            201 => {
+                info!("Key registered successfully");
+                let res = res.text().await?;
+                let mut keydata = self.key_data.lock().await;
+                keydata.key_id = Some(res);
+            }
+            _ => {
+                let error = AuthErrors::wallet_new(
+                    url,
+                    "POST".to_string(),
+                    res.status().as_u16(),
+                    Some("Petition to register key failed".to_string()),
+                );
+                error!("{}", error.log());
+                bail!(error);
+            }
+        }
+
+        Ok(())
+    }
+
+    async fn register_did(&self) -> anyhow::Result<()> {
+        info!("Registering did in wallet");
+        let mut wallet_session = self.wallet_session.lock().await;
+
+        let wallet = match wallet_session.wallets.first() {
+            Some(w) => w,
+            None => {
+                let error = CommonErrors::missing_action_new(
+                    "There is no wallet associated to this session".to_string(),
+                    MissingAction::Wallet,
+                    Some("There is no wallet to retrieve dids from".to_string()),
+                );
+                error!("{}", error.log());
+                bail!(error)
+            }
+        };
+
+        let key_data = self.key_data.lock().await;
+        let key_id = match key_data.key_id.clone() {
+            Some(data) => data,
+            None => {
+                let error = CommonErrors::missing_action_new(
+                    "Import key".to_string(),
+                    MissingAction::ImportKey,
+                    Some("A key has not been imported yet".to_string()),
+                );
+                error!("{}", error.log());
+                bail!(error);
+            }
+        };
+
+        let url = format!(
+            "{}/wallet-api/wallet/{}/dids/create/jwk?keyId={}",
+            self.config.get_wallet_portal_url(),
+            &wallet.id,
+            key_id
+        );
+
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "application/json".parse()?);
+        headers.insert(ACCEPT, "application/json".parse()?);
+
+        match &wallet_session.token {
+            Some(token) => headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?),
+            None => {
+                let error = CommonErrors::missing_action_new(
+                    "There is no token associated to this session".to_string(),
+                    MissingAction::Token,
+                    Some("There is no token available for use".to_string()),
+                );
+                error!("{}", error.log());
+                bail!(error);
+            }
+        };
+
+        let body = self.config.get_priv_key();
+
+        let res = self.client.post(&url).headers(headers).send().await;
+
+        let res = match res {
+            Ok(res) => res,
+            Err(e) => {
+                let http_code = match e.status() {
+                    Some(status) => Some(status.as_u16()),
+                    None => None,
+                };
+                let error = CommonErrors::petition_new(url, "GET".to_string(), http_code, e.to_string());
+                error!("{}", error.log());
+                bail!(error);
+            }
+        };
+
+        match res.status().as_u16() {
+            201 => {
+                info!("Did registered successfully");
+                let res = res.json().await?;
+                println!("{:#?}", res);
+            }
+            _ => {
+                let error = AuthErrors::wallet_new(
+                    url,
+                    "POST".to_string(),
+                    res.status().as_u16(),
+                    Some("Petition to register key failed".to_string()),
+                );
+                error!("{}", error.log());
+                bail!(error);
+            }
+        }
+
+        Ok(())
+    }
 }

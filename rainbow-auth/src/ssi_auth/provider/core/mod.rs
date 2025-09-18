@@ -21,7 +21,7 @@ pub mod traits;
 pub mod impls;
 
 use rainbow_common::config::provider_config::ApplicationProviderConfig;
-use rainbow_common::ssi_wallet::WalletSession;
+use rainbow_common::ssi_wallet::{KeyInfo, WalletSession};
 use rainbow_db::auth_provider::repo_factory::factory_trait::AuthRepoFactoryTrait;
 use reqwest::Client;
 use std::sync::Arc;
@@ -36,6 +36,7 @@ where
     pub wallet_session: Mutex<WalletSession>,
     pub wallet_onboard: bool,
     pub repo: Arc<T>,
+    key_data: Mutex<KeyInfo>,
     client: Client,
     config: ApplicationProviderConfig,
 }
@@ -56,6 +57,7 @@ where
             }),
             wallet_onboard: false,
             repo,
+            key_data: Mutex::new(KeyInfo { key_id: None }),
             client,
             config,
         }

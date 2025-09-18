@@ -365,6 +365,7 @@ impl CommonErrors {
             MissingAction::Wallet => 3120,
             MissingAction::Did => 3130,
             MissingAction::Onboarding => 3140,
+            MissingAction::ImportKey => 3150,
             _ => 3100,
         };
         CommonErrors::MissingActionError {

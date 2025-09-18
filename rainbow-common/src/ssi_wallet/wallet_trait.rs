@@ -30,4 +30,6 @@ pub trait RainbowSSIAuthWalletTrait: Send + Sync {
     async fn update_token(&self) -> anyhow::Result<()>;
     async fn ok(&self) -> anyhow::Result<()>;
     async fn didweb(&self) -> anyhow::Result<Value>;
+    async fn register_key(&self) -> anyhow::Result<()>;
+    async fn register_did(&self) -> anyhow::Result<()>;
 }

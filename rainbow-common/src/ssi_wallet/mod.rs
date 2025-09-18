@@ -17,15 +17,69 @@
  *
  */
 
-pub use wallet_config::SSIWalletConfig;
-pub use wallet_session::WalletSession;
-pub use wallet_info::WalletInfo;
-pub use dids_info::DidsInfo;
-pub use wallet_trait::RainbowSSIAuthWalletTrait;
-pub use self_client::ClientConfig;
-mod wallet_config;
-mod wallet_session;
-mod wallet_info;
-mod dids_info;
 mod wallet_trait;
-mod self_client;
+pub use wallet_trait::RainbowSSIAuthWalletTrait;
+
+use serde::{Deserialize, Serialize};
+
+#[derive(Deserialize, Serialize, PartialEq, Eq, Clone, Debug)]
+pub struct DidsInfo {
+    pub did: String,
+    pub alias: String,
+    pub document: String,
+    #[serde(rename = "keyId")]
+    pub key_id: String,
+    pub default: bool,
+    #[serde(rename = "createdOn")]
+    pub created_on: String,
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug)]
+pub struct ClientConfig {
+    pub class_id: String, // como se denomina una entidad a si misma
+    pub cert_path: String,
+    pub display: Option<DisplayInfo>,
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug)]
+pub struct DisplayInfo {
+    pub name: String,
+    pub uri: Option<String>,
+    pub logo_uri: Option<String>,
+}
+
+#[derive(Serialize, Clone, Debug)]
+pub struct SSIWalletConfig {
+    pub wallet_portal_url: String,
+    pub wallet_portal_port: String,
+    pub wallet_type: String,
+    pub wallet_name: String,
+    pub wallet_email: String,
+    pub wallet_password: String,
+    pub wallet_id: Option<String>,
+}
+
+#[derive(Deserialize, Serialize, PartialEq, Eq, Clone, Debug)]
+pub struct WalletInfo {
+    pub id: String,
+    pub name: String,
+    #[serde(rename = "createdOn")]
+    pub created_on: String,
+    #[serde(rename = "addedOn")]
+    pub added_on: String,
+    pub permission: String, // TODO
+    pub dids: Option<Vec<DidsInfo>>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct WalletSession {
+    pub account_id: Option<String>,
+    pub token: Option<String>,
+    pub token_exp: Option<u64>,
+    pub wallets: Vec<WalletInfo>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct KeyInfo {
+    pub key_id: Option<String>,
+}
