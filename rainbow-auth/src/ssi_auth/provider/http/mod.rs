@@ -259,5 +259,5 @@ where
 #[derive(Deserialize)]
 struct VerifyPayload {
     vp_token: String,
-    presentation_submission: String,
+    // presentation_submission: String,
 }

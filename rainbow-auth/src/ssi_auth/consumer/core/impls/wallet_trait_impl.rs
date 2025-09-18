@@ -16,26 +16,23 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::ssi_auth::consumer::core::Manager;
-use crate::ssi_auth::consumer::core;
 use crate::ssi_auth::consumer::core::traits::consumer_trait::RainbowSSIAuthConsumerManagerTrait;
+use crate::ssi_auth::consumer::core::Manager;
 use crate::ssi_auth::errors::AuthErrors;
 use crate::ssi_auth::types::{AuthJwtClaims, WalletInfoResponse, WalletLoginResponse};
 use anyhow::bail;
 use axum::async_trait;
 use axum::http::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
-use axum::http::{HeaderMap, StatusCode};
+use axum::http::HeaderMap;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
-use rainbow_common::auth::gnap::{GrantRequest, GrantResponse};
 use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
 use rainbow_common::errors::helpers::{BadFormat, MissingAction};
-use rainbow_common::errors::{CommonErrors, ErrorInfo};
+use rainbow_common::errors::CommonErrors;
 use rainbow_common::ssi_wallet::{DidsInfo, RainbowSSIAuthWalletTrait};
-use rainbow_db::auth_consumer::entities::{auth_interaction, auth_request, authority_request, mates};
+use rainbow_db::auth_consumer::entities::mates;
 use rainbow_db::auth_consumer::repo_factory::factory_trait::AuthRepoFactoryTrait;
 use serde_json::Value;
-use std::fs;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tracing::{error, info, warn};
 
@@ -224,7 +221,7 @@ where
         match &wallet_session.token {
             Some(token) => headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?),
             None => {
-                let mut error = CommonErrors::missing_action_new(
+                let error = CommonErrors::missing_action_new(
                     "Login is needed".to_string(),
                     MissingAction::Token,
                     Some("No token available for use into the wallet".to_string()),
@@ -378,7 +375,7 @@ where
         headers.insert(CONTENT_TYPE, "application/json".parse()?);
         headers.insert(ACCEPT, "application/json".parse()?);
 
-        let mut wallet_session = self.wallet_session.lock().await;
+        let wallet_session = self.wallet_session.lock().await;
 
         let wallet = match wallet_session.wallets.first() {
             Some(w) => w,
@@ -422,7 +419,7 @@ where
 
     async fn token_expired(&self) -> anyhow::Result<bool> {
         info!("Checking if token is expired");
-        let mut wallet_session = self.wallet_session.lock().await;
+        let wallet_session = self.wallet_session.lock().await;
 
         match wallet_session.token_exp {
             Some(expiration_time) => {

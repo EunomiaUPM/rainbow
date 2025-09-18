@@ -25,7 +25,6 @@ use crate::types::gnap::{GrantRequest, RefBody};
 use crate::types::manager::VcManager;
 use crate::types::oidc::VerifyPayload;
 use crate::utils::extract_gnap_token;
-use axum::body::Bytes;
 use axum::extract::{Path, State};
 use axum::http::{HeaderMap, Method, StatusCode, Uri};
 use axum::response::IntoResponse;

@@ -60,7 +60,7 @@ impl IntoActiveSet<ActiveModel> for Model {
             participant_id: ActiveValue::Set(self.participant_id),
             token: ActiveValue::Set(self.token),
             saved_at: ActiveValue::Set(self.saved_at),
-            last_interaction: ActiveValue::Set(self.last_interaction),
+            last_interaction: ActiveValue::Set(chrono::Utc::now().naive_utc()),
         }
     }
 }

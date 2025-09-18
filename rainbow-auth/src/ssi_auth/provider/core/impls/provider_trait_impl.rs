@@ -24,16 +24,15 @@ use crate::ssi_auth::provider::utils::{compare_with_margin, create_opaque_token,
 use crate::ssi_auth::types::trim_4_base;
 use anyhow::bail;
 use axum::async_trait;
-use base64::engine::general_purpose::{STANDARD, URL_SAFE_NO_PAD};
+use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
-use chrono::{DateTime, NaiveDateTime, Utc};
+use chrono::{DateTime, Utc};
 use jsonwebtoken::jwk::Jwk;
 use jsonwebtoken::Validation;
 use rainbow_common::auth::gnap::{GrantRequest, GrantResponse};
 use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
 use rainbow_common::errors::helpers::{BadFormat, MissingAction};
-use rainbow_common::errors::{CommonErrors, ErrorInfo};
-use rainbow_common::ssi_wallet::ClientConfig;
+use rainbow_common::errors::CommonErrors;
 use rainbow_db::auth_provider::entities::{
     auth_interaction, auth_request, auth_token_requirements, auth_verification, business_mates, mates,
 };
@@ -44,7 +43,7 @@ use serde_json::{json, Value};
 use std::collections::HashSet;
 use tracing::info;
 use url::Url;
-use urlencoding::{decode, encode};
+use urlencoding::encode;
 
 #[async_trait]
 impl<T> RainbowSSIAuthProviderManagerTrait for Manager<T>
@@ -566,7 +565,7 @@ where
         let alg = header.alg;
 
         let vec = URL_SAFE_NO_PAD.decode(&(kid.replace("did:jwk:", "")))?;
-        let mut jwk: Jwk = serde_json::from_slice(&vec)?;
+        let jwk: Jwk = serde_json::from_slice(&vec)?;
 
         let key = jsonwebtoken::DecodingKey::from_jwk(&jwk)?;
         let mut audience = format!(
@@ -757,7 +756,7 @@ where
         let mut val = Validation::new(alg);
         val.required_spec_claims = HashSet::new();
         val.validate_aud = false;
-        val.validate_exp = false; // TODO de momemnto las VCs no caducan
+        val.validate_exp = false; // TODO by now, the VCs do not expire
         val.validate_nbf = true;
 
         let token = match jsonwebtoken::decode::<Value>(&vc_token, &key, &val) {

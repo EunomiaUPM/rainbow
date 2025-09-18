@@ -71,7 +71,7 @@ impl IntoActiveSet<ActiveModel> for Model {
             base_url: ActiveValue::Set(self.base_url),
             token: ActiveValue::Set(self.token),
             saved_at: ActiveValue::Set(self.saved_at),
-            last_interaction: ActiveValue::Set(self.last_interaction),
+            last_interaction: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             is_me: ActiveValue::Set(self.is_me),
         }
     }

@@ -24,7 +24,6 @@ use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
 use rainbow_common::ssi_wallet::WalletSession;
 use rainbow_db::auth_consumer::repo_factory::factory_trait::AuthRepoFactoryTrait;
 use reqwest::Client;
-use serde_json::Value;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::Mutex;
@@ -39,7 +38,6 @@ where
     pub repo: Arc<T>,
     client: Client,
     config: ApplicationConsumerConfig,
-    didweb: Value,
 }
 
 impl<T> Manager<T>
@@ -60,7 +58,6 @@ where
             repo,
             client,
             config,
-            didweb: Value::Null,
         }
     }
 }

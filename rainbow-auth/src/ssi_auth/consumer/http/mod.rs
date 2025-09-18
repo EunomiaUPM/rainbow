@@ -20,29 +20,20 @@
 use crate::ssi_auth::consumer::core::traits::consumer_trait::RainbowSSIAuthConsumerManagerTrait;
 use crate::ssi_auth::consumer::core::Manager;
 use crate::ssi_auth::errors::CustomToResponse;
-use crate::ssi_auth::types::{trim_4_base, CallbackBody, ReachAuthority, ReachProvider};
-use anyhow::bail;
+use crate::ssi_auth::types::{CallbackBody, ReachAuthority, ReachProvider};
 use axum::extract::{Path, Query, State};
 use axum::http::{Method, Uri};
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::{Json, Router};
-use once_cell::sync::Lazy;
 use rainbow_common::errors::helpers::BadFormat;
 use rainbow_common::errors::CommonErrors;
 use rainbow_common::ssi_wallet::RainbowSSIAuthWalletTrait;
-use rainbow_db::auth_consumer::entities::mates;
 use rainbow_db::auth_consumer::repo_factory::factory_trait::AuthRepoFactoryTrait;
 use reqwest::StatusCode;
-use serde::Deserialize;
-use serde_json::Value;
-use serde_json::{json, Error};
 use std::collections::HashMap;
 use std::sync::Arc;
-use tokio::sync::Mutex;
-use tracing::{debug, error, info};
-use url::Url;
-use urlencoding::decode;
+use tracing::{error, info};
 
 pub struct RainbowAuthConsumerRouter<T>
 where
@@ -276,6 +267,7 @@ where
     async fn fallback(method: Method, uri: Uri) -> (StatusCode, String) {
         let log = format!("{} {}", method, uri);
         info!("{}", log);
+        error!("Unexpected route");
         (StatusCode::NOT_FOUND, format!("No route for {uri}"))
     }
 }

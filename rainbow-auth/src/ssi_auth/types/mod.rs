@@ -20,8 +20,6 @@
 use rainbow_common::ssi_wallet::WalletInfo;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::time::{SystemTime, UNIX_EPOCH};
-use uuid::Uuid;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct WalletLoginResponse {
@@ -112,16 +110,6 @@ pub struct Claims {
     pub scopes: String,
     pub exp: usize, // Required (validate_exp defaults to true in validation). Expiration time (as UTC timestamp)
     pub nbf: usize, // Optional. not before
-}
-
-impl Claims {
-    pub fn new(sub: String, iss: String, aud: String, scopes: String, exp: usize) -> Self {
-        let now = SystemTime::now().duration_since(UNIX_EPOCH).expect("Time went backwards");
-        let nbf: usize = now.as_secs() as usize;
-        let jti = Uuid::new_v4().to_string();
-
-        Self { jti, sub, iss, aud, scopes, exp, nbf }
-    }
 }
 
 pub fn trim_4_base(input: &str) -> String {

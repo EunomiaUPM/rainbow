@@ -22,7 +22,6 @@ use crate::config::ConfigRoles;
 use crate::ssi_wallet::{ClientConfig, SSIWalletConfig};
 use serde::Serialize;
 use serde_json::{json, Value};
-use std::fmt::Display;
 use std::{env, fs};
 
 #[derive(Serialize, Clone, Debug)]
@@ -167,7 +166,7 @@ pub trait ApplicationConsumerConfigTrait {
         let port = self.get_raw_ssi_wallet_config().clone().wallet_portal_port;
         format!("http://{}:{}", url, port)
     }
-    fn get_wallet_data(&self) -> serde_json::Value {
+    fn get_wallet_data(&self) -> Value {
         let _type = self.get_raw_ssi_wallet_config().clone().wallet_type;
         let name = self.get_raw_ssi_wallet_config().clone().wallet_name;
         let email = self.get_raw_ssi_wallet_config().clone().wallet_email;
@@ -226,23 +225,6 @@ impl ApplicationConsumerConfigTrait for ApplicationConsumerConfig {
     }
     fn get_raw_client_config(&self) -> &ClientConfig {
         &self.client_config
-    }
-
-    fn get_pretty_client_config(&self) -> Value {
-        let path = fs::read(self.client_config.cert_path.clone()).unwrap();
-        let cert = String::from_utf8(path).unwrap();
-
-        let clean_cert = cert.lines().filter(|line| !line.starts_with("-----")).collect::<String>();
-
-        let key = json!({
-            "proof": "httpsig",
-            "cert": clean_cert
-        });
-        json!({
-            "key" : key,
-            "class_id" : self.client_config.class_id,
-            "display" : self.client_config.display,
-        })
     }
 
     fn merge_dotenv_configuration(&self, env_file: Option<String>) -> Self {
@@ -371,5 +353,22 @@ impl ApplicationConsumerConfigTrait for ApplicationConsumerConfig {
             role: ConfigRoles::Consumer,
         };
         compound_config
+    }
+
+    fn get_pretty_client_config(&self) -> Value {
+        let path = fs::read(self.client_config.cert_path.clone()).unwrap();
+        let cert = String::from_utf8(path).unwrap();
+
+        let clean_cert = cert.lines().filter(|line| !line.starts_with("-----")).collect::<String>();
+
+        let key = json!({
+            "proof": "httpsig",
+            "cert": clean_cert
+        });
+        json!({
+            "key" : key,
+            "class_id" : self.client_config.class_id,
+            "display" : self.client_config.display,
+        })
     }
 }

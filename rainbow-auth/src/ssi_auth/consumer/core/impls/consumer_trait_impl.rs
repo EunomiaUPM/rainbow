@@ -22,10 +22,8 @@ use crate::ssi_auth::errors::AuthErrors;
 use crate::ssi_auth::types::{trim_4_base, MatchingVCs, RedirectResponse, RefBody, WhatEntity};
 use anyhow::bail;
 use axum::async_trait;
-use axum::http::StatusCode;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
-use rainbow_common::auth::gnap::grant_response::{Continue4GResponse, Interact4GResponse};
 use rainbow_common::auth::gnap::{AccessToken, GrantRequest, GrantResponse};
 use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
 use rainbow_common::errors::helpers::{BadFormat, MissingAction};
@@ -37,8 +35,7 @@ use rainbow_db::auth_consumer::repo_factory::factory_trait::AuthRepoFactoryTrait
 use reqwest::header::{HeaderMap, ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
-use std::future::Future;
-use tracing::{debug, error, info};
+use tracing::{error, info};
 use url::Url;
 use urlencoding::decode;
 
@@ -362,7 +359,7 @@ where
             response_uri,
         };
 
-        let mut verification_model = match self.repo.verification().create(new_verification_model).await {
+        let verification_model = match self.repo.verification().create(new_verification_model).await {
             Ok(model) => {
                 info!("Verification data saved successfully");
                 model
@@ -612,51 +609,6 @@ where
         }
     }
 
-    async fn who_is_it(
-        &self,
-        id: String,
-    ) -> anyhow::Result<(
-        WhatEntity,
-        Option<auth_request::Model>,
-        Option<authority_request::Model>,
-    )> {
-        // TODO WAIT 5 SECONDS
-        info!("Continuing request");
-
-        match self.repo.request().get_by_id(id.as_str()).await {
-            Ok(Some(model)) => {
-                info!("It is a request 4 the provider");
-                return Ok((WhatEntity::Provider, Some(model), None));
-            }
-            Ok(None) => info!("It is not a request 4 the provider"),
-            Err(e) => {
-                let error = CommonErrors::database_new(Some(e.to_string()));
-                error.log();
-                bail!(error);
-            }
-        };
-
-        match self.repo.authority().get_by_id(id.as_str()).await {
-            Ok(Some(model)) => {
-                info!("It is a request 4 an authority");
-                return Ok((WhatEntity::Authority, None, Some(model)));
-            }
-            Ok(None) => info!("It is not a request 4 an authority"),
-            Err(e) => {
-                let error = CommonErrors::database_new(Some(e.to_string()));
-                error.log();
-                bail!(error);
-            }
-        };
-
-        let error = CommonErrors::missing_resource_new(
-            id.clone(),
-            Some(format!("Missing resource with id: {}", &id)),
-        );
-        error.log();
-        bail!(error)
-    }
-
     async fn save_mate(&self, mate: mates::NewModel) -> anyhow::Result<mates::Model> {
         match self.repo.mates().force_create(mate).await {
             Ok(model) => Ok(model),
@@ -808,6 +760,51 @@ where
         };
 
         Ok(())
+    }
+
+    async fn who_is_it(
+        &self,
+        id: String,
+    ) -> anyhow::Result<(
+        WhatEntity,
+        Option<auth_request::Model>,
+        Option<authority_request::Model>,
+    )> {
+        // TODO WAIT 5 SECONDS
+        info!("Continuing request");
+
+        match self.repo.request().get_by_id(id.as_str()).await {
+            Ok(Some(model)) => {
+                info!("It is a request 4 the provider");
+                return Ok((WhatEntity::Provider, Some(model), None));
+            }
+            Ok(None) => info!("It is not a request 4 the provider"),
+            Err(e) => {
+                let error = CommonErrors::database_new(Some(e.to_string()));
+                error.log();
+                bail!(error);
+            }
+        };
+
+        match self.repo.authority().get_by_id(id.as_str()).await {
+            Ok(Some(model)) => {
+                info!("It is a request 4 an authority");
+                return Ok((WhatEntity::Authority, None, Some(model)));
+            }
+            Ok(None) => info!("It is not a request 4 an authority"),
+            Err(e) => {
+                let error = CommonErrors::database_new(Some(e.to_string()));
+                error.log();
+                bail!(error);
+            }
+        };
+
+        let error = CommonErrors::missing_resource_new(
+            id.clone(),
+            Some(format!("Missing resource with id: {}", &id)),
+        );
+        error.log();
+        bail!(error)
     }
 
     // EXTRAS ------------------------------------------------------------------------------------->

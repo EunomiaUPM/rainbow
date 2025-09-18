@@ -21,8 +21,7 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
 use rainbow_common::errors::ErrorInfo;
-use serde::{Deserialize, Serialize};
-use serde_json::json;
+use serde::Serialize;
 use thiserror::Error;
 use tracing::error;
 

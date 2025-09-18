@@ -21,7 +21,7 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
 use rainbow_common::errors::CommonErrors;
-use serde_json::{json, Value};
+use serde_json::json;
 use tracing::error;
 
 pub trait CustomToResponse {

@@ -34,7 +34,7 @@ use axum::async_trait;
 use axum::http::header::{ACCEPT, CONTENT_TYPE};
 use axum::http::HeaderMap;
 use base64::engine::general_purpose::{STANDARD, URL_SAFE_NO_PAD};
-use base64::{DecodeError, Engine};
+use base64::Engine;
 use chrono::{DateTime, Utc};
 use jsonwebtoken::jwk::Jwk;
 use jsonwebtoken::Validation;
@@ -44,7 +44,7 @@ use rsa::RsaPrivateKey;
 use serde_json::{json, Value};
 use std::collections::HashSet;
 use std::fs;
-use tracing::{debug, error, info};
+use tracing::{debug, info};
 use urlencoding::encode;
 use x509_parser::parse_x509_certificate;
 
@@ -1267,30 +1267,21 @@ where
     async fn manage_callback(&self, id: String, payload: Value) -> anyhow::Result<()> {
         info!("Managing callback");
 
-        let mut iss_jwt: Option<String> = None;
-        if let Some(event_type) = payload.get("type").and_then(|t| t.as_str()) {
+        let jwt = if let Some(event_type) = payload.get("type").and_then(|t| t.as_str()) {
             match event_type {
                 "jwt_issue" => {
-                    if let Some(jwt) = payload.get("data").and_then(|d| d.get("jwt")) {
-                        info!("Credential issued successfully");
-                        debug!("Issued JWT: {}", jwt);
-                        let jwt = match jwt.as_str() {
-                            Some(data) => data,
-                            None => {
-                                let error = Errors::format_new(BadFormat::Received, None);
-                                error.log();
-                                bail!(error)
-                            }
-                        };
-                        iss_jwt = Some(jwt.to_string());
-                    } else {
-                        let error = Errors::format_new(
-                            BadFormat::Received,
-                            Some("There was no field jwt".to_string()),
-                        );
-                        error.log();
-                        bail!(error)
-                    }
+                    let jwt =
+                        payload.get("data").and_then(|d| d.get("jwt")).and_then(|j| j.as_str()).ok_or_else(|| {
+                            let error = Errors::format_new(
+                                BadFormat::Received,
+                                Some("There was no field jwt".to_string()),
+                            );
+                            error.log();
+                            error
+                        })?;
+                    info!("Credential issued successfully");
+                    debug!("Issued JWT: {}", jwt);
+                    jwt.to_string()
                 }
                 other => {
                     info!("Received another type of callback: {}", other);
@@ -1304,15 +1295,6 @@ where
             );
             error.log();
             bail!(error)
-        }
-
-        let jwt = match iss_jwt {
-            Some(data) => data,
-            None => {
-                let error = Errors::format_new(BadFormat::Received, None);
-                error.log();
-                bail!(error)
-            }
         };
 
         let mut req_model = match self.repo.request().get_by_id(id.as_str()).await {

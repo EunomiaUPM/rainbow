@@ -20,11 +20,9 @@ use crate::config::database::DbType;
 use crate::config::global_config::{extract_env, format_host_config_to_url_string, DatabaseConfig, HostConfig};
 use crate::config::ConfigRoles;
 use crate::ssi_wallet::{ClientConfig, SSIWalletConfig};
-use clap::builder::TypedValueParser;
 use serde::Serialize;
 use serde_json::{json, Value};
 use std::{env, fs};
-use std::fmt::Display;
 
 #[derive(Serialize, Clone, Debug)]
 pub struct ApplicationProviderConfig {
@@ -191,7 +189,7 @@ pub trait ApplicationProviderConfigTrait {
         let port = self.get_raw_ssi_wallet_config().clone().wallet_portal_port;
         format!("http://{}:{}", url, port)
     }
-    fn get_wallet_data(&self) -> serde_json::Value {
+    fn get_wallet_data(&self) -> Value {
         let _type = self.get_raw_ssi_wallet_config().clone().wallet_type;
         let name = self.get_raw_ssi_wallet_config().clone().wallet_name;
         let email = self.get_raw_ssi_wallet_config().clone().wallet_email;
@@ -267,19 +265,6 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
         &self.client_config
     }
 
-    fn get_pretty_client_config(&self) -> Value {
-        let cert = String::from_utf8(fs::read(self.client_config.cert_path.clone()).unwrap()).unwrap();
-        let key = json!({
-            "proof": "httpsig",
-            "cert": cert
-        });
-        json!({
-            "key" : key,
-            "class_id" : self.client_config.class_id,
-            "display" : self.client_config.display,
-        })
-    }
-
     fn merge_dotenv_configuration(&self, env_file: Option<String>) -> Self {
         if let Some(env_file) = env_file {
             dotenvy::from_filename(env_file).expect("No env file found");
@@ -326,7 +311,7 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
                 url: extract_env("CATALOG_URL", default.catalog_host.clone().unwrap().url),
                 port: extract_env("CATALOG_PORT", default.catalog_host.clone().unwrap().port),
             }),
-            catalog_as_datahub: catalog_as_datahub,
+            catalog_as_datahub,
             datahub_host: match catalog_as_datahub {
                 true => Some(HostConfig {
                     protocol: extract_env(
@@ -413,4 +398,18 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
             role: ConfigRoles::Provider,
         };
         compound_config
-    }}
+    }
+
+    fn get_pretty_client_config(&self) -> Value {
+        let cert = String::from_utf8(fs::read(self.client_config.cert_path.clone()).unwrap()).unwrap();
+        let key = json!({
+            "proof": "httpsig",
+            "cert": cert
+        });
+        json!({
+            "key" : key,
+            "class_id" : self.client_config.class_id,
+            "display" : self.client_config.display,
+        })
+    }
+}
