@@ -25,14 +25,15 @@ use crate::types::gnap::{GrantRequest, RefBody};
 use crate::types::manager::VcManager;
 use crate::types::oidc::VerifyPayload;
 use crate::utils::extract_gnap_token;
+use axum::body::Bytes;
 use axum::extract::{Path, State};
 use axum::http::{HeaderMap, Method, StatusCode, Uri};
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::{Form, Json, Router};
-use std::sync::Arc;
 use serde_json::Value;
-use tracing::info;
+use std::sync::Arc;
+use tracing::{error, info};
 
 pub struct RainbowAuthorityRouter<T>
 where
@@ -153,16 +154,6 @@ where
             Err(e) => return e.to_response(),
         };
 
-        let minion = match authority.retrieve_data(req_model.clone(), int_model).await {
-            Ok(minion) => minion,
-            Err(e) => return e.to_response(),
-        };
-
-        match authority.save_minion(minion).await {
-            Ok(_) => {}
-            Err(e) => return e.to_response(),
-        }
-
         let uri = req_model.vc_uri.unwrap(); // EXPECTED ALWAYS
         uri.into_response()
     }
@@ -263,10 +254,10 @@ where
         }
     }
 
-
     async fn fallback(method: Method, uri: Uri) -> (StatusCode, String) {
         let log = format!("{} {}", method, uri);
         info!("{}", log);
+        error!("Unexpected route");
         (StatusCode::NOT_FOUND, format!("No route for {uri}"))
     }
 }

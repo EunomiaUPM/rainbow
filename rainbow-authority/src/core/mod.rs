@@ -24,7 +24,6 @@ use crate::data::repo_factory::factory_trait::AuthRepoFactoryTrait;
 use crate::setup::AuthorityApplicationConfig;
 use crate::types::wallet::WalletSession;
 use reqwest::Client;
-use serde_json::Value;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::Mutex;
@@ -38,10 +37,10 @@ where
     pub repo: Arc<T>,
     client: Client,
     config: AuthorityApplicationConfig,
-    didweb: Value,
 }
 
-impl<T> Authority<T> where
+impl<T> Authority<T>
+where
     T: AuthRepoFactoryTrait + Send + Sync + Clone + 'static,
 {
     pub fn new(repo: Arc<T>, config: AuthorityApplicationConfig) -> Self {
@@ -58,7 +57,6 @@ impl<T> Authority<T> where
             repo,
             client,
             config,
-            didweb: Value::Null,
         }
     }
 }

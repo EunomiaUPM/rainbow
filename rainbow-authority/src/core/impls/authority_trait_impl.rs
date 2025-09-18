@@ -24,34 +24,29 @@ use crate::data::entities::{auth_interaction, auth_request, auth_verification, m
 use crate::data::repo_factory::factory_trait::AuthRepoFactoryTrait;
 use crate::errors::helpers::BadFormat;
 use crate::errors::Errors;
-use crate::setup::config::client_config::ClientConfig;
 use crate::setup::config::AuthorityFunctions;
 use crate::setup::AuthorityApplicationConfigTrait;
-use crate::types::certificates::ParsedCert;
 use crate::types::gnap::{CallbackBody, GrantRequest, GrantResponse, RejectedCallbackBody};
 use crate::types::manager::VcManager;
 use crate::utils::{compare_with_margin, create_opaque_token, split_did, trim_4_base, trim_path};
 use anyhow::bail;
+use axum::async_trait;
 use axum::http::header::{ACCEPT, CONTENT_TYPE};
-use axum::http::{HeaderMap, StatusCode};
-use axum::response::IntoResponse;
-use axum::{async_trait, Json};
+use axum::http::HeaderMap;
 use base64::engine::general_purpose::{STANDARD, URL_SAFE_NO_PAD};
-use base64::Engine;
-use chrono::{DateTime, Duration, Utc};
+use base64::{DecodeError, Engine};
+use chrono::{DateTime, Utc};
 use jsonwebtoken::jwk::Jwk;
-use jsonwebtoken::{EncodingKey, Validation};
-use reqwest::{Error, Response, Url};
+use jsonwebtoken::Validation;
 use rsa::pkcs8::DecodePrivateKey;
 use rsa::traits::{PrivateKeyParts, PublicKeyParts};
 use rsa::RsaPrivateKey;
 use serde_json::{json, Value};
 use std::collections::HashSet;
 use std::fs;
-use tracing::{debug, info, warn};
-use urlencoding::{decode, encode};
+use tracing::{debug, error, info};
+use urlencoding::encode;
 use x509_parser::parse_x509_certificate;
-use x509_parser::prelude::X509Certificate;
 
 #[async_trait]
 impl<T> AuthorityTrait for Authority<T>
@@ -274,10 +269,8 @@ where
                 let did = self.didweb().await?;
                 let didweb = did["id"].as_str().unwrap();
 
-                println!();
-                println!("{}", name);
-                println!("{}", website);
-                println!();
+                let client = self.config.get_raw_client_config();
+                let issuer = client.class_id.clone();
 
                 let body = json!({
                     "issuerKey": { // TODO
@@ -296,14 +289,14 @@ where
                     ],
                     "issuer": {
                         "id": "did:web:vc.transmute.world", // DISAPPEARS
-                        "name": "did:web:vc.transmute.world", // DISAPPEARS
+                        "name": issuer,
                     },
                     "issuanceDate": "2020-03-10T04:24:12.164Z", // DISAPPEARS
                     "credentialSubject": {
                         "id": "did:example:ebfeb1f712ebc6f1c276e12ec21", // DISAPPEARS
                         "type": "DataspaceParticipant",
                         "dataspaceId": "Rainbow DataSpace",
-                        "legalName": "deltaDAO AG",
+                        "legalName": name,
                         "website": website,
                         }
                     },
@@ -323,7 +316,7 @@ where
 
                 let host_url = self.config.get_host();
                 let docker_host_url = host_url.clone().replace("127.0.0.1", "host.docker.internal"); // TODO FIX 4 MICROSERICES
-                let callback_uri = format!("{}/callback/{}", docker_host_url, callback_id);
+                let callback_uri = format!("{}/api/v1/callback/{}", docker_host_url, callback_id);
                 let mut headers = HeaderMap::new();
                 headers.insert(CONTENT_TYPE, "application/json".parse()?);
                 headers.insert(ACCEPT, "application/json".parse()?);
@@ -503,8 +496,26 @@ where
     async fn retrieve_data(
         &self,
         req_model: auth_request::Model,
-        int_model: auth_interaction::Model,
+        vc_token: String,
     ) -> anyhow::Result<minions::NewModel> {
+        let id = req_model.id.as_str();
+
+        let int_model = match self.repo.interaction().get_by_id(id).await {
+            Ok(Some(data)) => data,
+            Ok(None) => {
+                let error = Errors::missing_resource_new(
+                    id.to_string(),
+                    Some(format!("Missing process with id: {}", id)),
+                );
+                error.log();
+                bail!(error)
+            }
+            Err(e) => {
+                let error = Errors::database_new(Some(e.to_string()));
+                error.log();
+                bail!(error)
+            }
+        };
         let id = int_model.id;
 
         for starts in int_model.start {
@@ -525,13 +536,17 @@ where
                 let cert_bytes = STANDARD.decode(base_cert)?;
                 let (_, cert) = parse_x509_certificate(&cert_bytes)?;
 
+                let holder = self.retrieve_holder(vc_token).await?;
                 let base_url = Some(trim_4_base(int_model.uri.as_str()));
+                let subject = cert.subject.to_string();
+                let subject = subject.strip_prefix("CN=").unwrap_or(subject.as_str());
                 let minion = minions::NewModel {
-                    participant_id: cert.subject.to_string(),
-                    participant_slug: req_model.participant_slug,
+                    participant_id: holder,
+                    participant_slug: subject.to_string(),
                     participant_type: "Minion".to_string(),
                     base_url,
                     vc_uri: req_model.vc_uri,
+                    is_vc_issued: true,
                     is_me: false,
                 };
                 return Ok(minion);
@@ -562,6 +577,7 @@ where
                     participant_type: "Consumer".to_string(),
                     base_url,
                     vc_uri: req_model.vc_uri,
+                    is_vc_issued: true,
                     is_me: false,
                 };
                 return Ok(minion);
@@ -593,29 +609,29 @@ where
         Ok(json!({
             "id": model.id,
             "input_descriptors": [
-              {
+                {
                 "id": "IdentityCredential",
                 "format": {
-                  "jwt_vc_json": {
+                    "jwt_vc_json": {
                     "alg": [
-                      "EdDSA"
+                        "EdDSA"
                     ]
-                  }
+                    }
                 },
                 "constraints": {
-                  "fields": [
+                    "fields": [
                     {
-                      "path": [
+                        "path": [
                         "$.vc.type"
-                      ],
-                      "filter": {
+                        ],
+                        "filter": {
                         "type": "string",
                         "pattern": "IdentityCredential"
-                      }
+                        }
                     }
-                  ]
+                    ]
                 }
-              }
+                }
             ]
         }))
     }
@@ -763,7 +779,7 @@ where
         let alg = header.alg;
 
         let vec = URL_SAFE_NO_PAD.decode(&(kid.replace("did:jwk:", "")))?;
-        let mut jwk: Jwk = serde_json::from_slice(&vec)?;
+        let jwk: Jwk = serde_json::from_slice(&vec)?;
 
         let key = jsonwebtoken::DecodingKey::from_jwk(&jwk)?;
         let mut audience = format!("{}/api/v1/verify/{}", self.config.get_host(), &model.state);
@@ -1231,7 +1247,7 @@ where
 
         match res.status().as_u16() {
             200 => {
-                info!("Callback received successfully");
+                info!("Minion received callback received successfully");
             }
             _ => {
                 let error = Errors::consumer_new(
@@ -1251,7 +1267,135 @@ where
     async fn manage_callback(&self, id: String, payload: Value) -> anyhow::Result<()> {
         info!("Managing callback");
 
-        println!("{:#?}", payload);
+        let mut iss_jwt: Option<String> = None;
+        if let Some(event_type) = payload.get("type").and_then(|t| t.as_str()) {
+            match event_type {
+                "jwt_issue" => {
+                    if let Some(jwt) = payload.get("data").and_then(|d| d.get("jwt")) {
+                        info!("Credential issued successfully");
+                        debug!("Issued JWT: {}", jwt);
+                        let jwt = match jwt.as_str() {
+                            Some(data) => data,
+                            None => {
+                                let error = Errors::format_new(BadFormat::Received, None);
+                                error.log();
+                                bail!(error)
+                            }
+                        };
+                        iss_jwt = Some(jwt.to_string());
+                    } else {
+                        let error = Errors::format_new(
+                            BadFormat::Received,
+                            Some("There was no field jwt".to_string()),
+                        );
+                        error.log();
+                        bail!(error)
+                    }
+                }
+                other => {
+                    info!("Received another type of callback: {}", other);
+                    return Ok(());
+                }
+            }
+        } else {
+            let error = Errors::format_new(
+                BadFormat::Received,
+                Some("There was no field type".to_string()),
+            );
+            error.log();
+            bail!(error)
+        }
+
+        let jwt = match iss_jwt {
+            Some(data) => data,
+            None => {
+                let error = Errors::format_new(BadFormat::Received, None);
+                error.log();
+                bail!(error)
+            }
+        };
+
+        let mut req_model = match self.repo.request().get_by_id(id.as_str()).await {
+            Ok(Some(data)) => data,
+            Ok(None) => {
+                let error = Errors::missing_resource_new(id.clone(), Some(format!("Missing procces with id: {}", id)));
+                error.log();
+                bail!(error)
+            }
+            Err(e) => {
+                let error = Errors::database_new(Some(e.to_string()));
+                error.log();
+                bail!(error)
+            }
+        };
+
+        let minion = self.retrieve_data(req_model.clone(), jwt).await?;
+        let minion = self.save_minion(minion).await?;
+
+        req_model.is_vc_issued = true;
+        req_model.vc_uri = minion.vc_uri;
+
+        let _ = match self.repo.request().update(req_model).await {
+            Ok(data) => data,
+            Err(e) => {
+                let error = Errors::database_new(Some(e.to_string()));
+                error.log();
+                bail!(error)
+            }
+        };
+
         Ok(())
+    }
+
+    async fn retrieve_holder(&self, vc_token: String) -> anyhow::Result<String> {
+        let parts: Vec<&str> = vc_token.split('.').collect();
+        if parts.len() != 3 {
+            let error = Errors::format_new(
+                BadFormat::Received,
+                Some("JWT does not have 3 parts".to_string()),
+            );
+            error.log();
+            bail!(error);
+        }
+
+        let decoded_payload = match URL_SAFE_NO_PAD.decode(parts[1]) {
+            Ok(data) => data,
+            Err(e) => {
+                let error = Errors::format_new(
+                    BadFormat::Received,
+                    Some(format!("Base64 decode error: {}", e)),
+                );
+                error.log();
+                bail!(error)
+            }
+        };
+
+        let json: Value = match serde_json::from_slice(&decoded_payload) {
+            Ok(data) => data,
+            Err(e) => {
+                let error = Errors::format_new(
+                    BadFormat::Received,
+                    Some(format!("JSON parse error: {}", e)),
+                );
+                error.log();
+                bail!(error)
+            }
+        };
+
+        match json["vc"]["credentialSubject"]["id"].as_str() {
+            Some(data) => {
+                let holder = data.to_string();
+                info!("Holder: {}", holder);
+                Ok(holder)
+            }
+            None => {
+                let error = Errors::format_new(
+                    BadFormat::Received,
+                    Some("No credentialSubject id field in the vc".to_string()),
+                );
+                error.log();
+                bail!(error);
+            }
+        }
     }
 }

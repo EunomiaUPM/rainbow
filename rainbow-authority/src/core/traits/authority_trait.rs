@@ -16,13 +16,19 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use std::collections::HashSet;
+use anyhow::bail;
 use crate::data::entities::{auth_interaction, auth_request, auth_verification, minions};
 use crate::types::gnap::{GrantRequest, GrantResponse};
 use crate::types::manager::VcManager;
 use axum::async_trait;
+use base64::engine::general_purpose::URL_SAFE_NO_PAD;
+use jsonwebtoken::jwk::Jwk;
+use jsonwebtoken::Validation;
 use serde_json::Value;
-use std::println;
-use tracing::info;
+use crate::errors::Errors;
+use crate::errors::helpers::BadFormat;
+use crate::utils::split_did;
 
 #[async_trait]
 pub trait AuthorityTrait: Send + Sync {
@@ -43,11 +49,7 @@ pub trait AuthorityTrait: Send + Sync {
         token: String,
     ) -> anyhow::Result<auth_interaction::Model>;
     async fn continue_req(&self, int_model: auth_interaction::Model) -> anyhow::Result<auth_request::Model>;
-    async fn retrieve_data(
-        &self,
-        req_model: auth_request::Model,
-        int_model: auth_interaction::Model,
-    ) -> anyhow::Result<minions::NewModel>;
+    async fn retrieve_data(&self, req_model: auth_request::Model, vc_token: String) -> anyhow::Result<minions::NewModel>;
     async fn generate_vp_def(&self, state: String) -> anyhow::Result<Value>;
     async fn verify_all(&self, state: String, vp_token: String) -> anyhow::Result<String>;
     async fn verify_vp(
@@ -59,4 +61,5 @@ pub trait AuthorityTrait: Send + Sync {
     async fn end_verification(&self, id: String) -> anyhow::Result<Option<String>>;
     async fn manage_vc_request(&self, id: String, payload: VcManager) -> anyhow::Result<()>;
     async fn manage_callback(&self, id: String, payload: Value) -> anyhow::Result<()>;
+    async fn retrieve_holder(&self, vc_token: String) -> anyhow::Result<String>;
 }

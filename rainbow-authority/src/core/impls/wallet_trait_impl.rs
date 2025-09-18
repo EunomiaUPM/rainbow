@@ -23,13 +23,14 @@ use crate::data::entities::minions;
 use crate::data::repo_factory::factory_trait::AuthRepoFactoryTrait;
 use crate::errors::helpers::{BadFormat, MissingAction};
 use crate::errors::Errors;
+use crate::setup::config::AuthorityFunctions;
 use crate::setup::AuthorityApplicationConfigTrait;
 use crate::types::jwt::AuthJwtClaims;
 use crate::types::wallet::{DidsInfo, WalletInfoResponse, WalletLoginResponse};
 use anyhow::bail;
 use axum::async_trait;
 use axum::http::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
-use axum::http::{HeaderMap, StatusCode};
+use axum::http::HeaderMap;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
 use serde_json::Value;
@@ -221,7 +222,7 @@ where
         match &wallet_session.token {
             Some(token) => headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?),
             None => {
-                let mut error = Errors::missing_action_new(
+                let error = Errors::missing_action_new(
                     "Login is needed".to_string(),
                     MissingAction::Token,
                     Some("No token available for use into the wallet".to_string()),
@@ -375,7 +376,7 @@ where
         headers.insert(CONTENT_TYPE, "application/json".parse()?);
         headers.insert(ACCEPT, "application/json".parse()?);
 
-        let mut wallet_session = self.wallet_session.lock().await;
+        let wallet_session = self.wallet_session.lock().await;
 
         let wallet = match wallet_session.wallets.first() {
             Some(w) => w,
@@ -407,8 +408,9 @@ where
             participant_id: did.clone(),
             participant_slug: "Myself".to_string(),
             participant_type: "Provider".to_string(),
-            base_url: Some(self.config.get_wallet_portal_url()),
+            base_url: Some(self.config.get_host()),
             vc_uri: None,
+            is_vc_issued: false,
             is_me: true,
         };
         self.save_minion(model).await?;
@@ -418,7 +420,7 @@ where
 
     async fn token_expired(&self) -> anyhow::Result<bool> {
         info!("Checking if token is expired");
-        let mut wallet_session = self.wallet_session.lock().await;
+        let wallet_session = self.wallet_session.lock().await;
 
         match wallet_session.token_exp {
             Some(expiration_time) => {

@@ -30,9 +30,10 @@ pub struct Model {
     pub id: String, // REQUEST
     pub participant_slug: String, // REQUEST
     pub cert: Option<String>,
-    pub vc_uri: Option<String>,                  // RESPONSE
-    pub vc_issuing: Option<String>,              // RESPONSE
-    pub status: String,                          // DEFAULT
+    pub vc_uri: Option<String>,     // RESPONSE
+    pub vc_issuing: Option<String>, // RESPONSE
+    pub status: String,             // DEFAULT
+    pub is_vc_issued: bool,
     pub created_at: chrono::NaiveDateTime,       // DEFAULT
     pub ended_at: Option<chrono::NaiveDateTime>, // COMPLETION
 }
@@ -53,6 +54,7 @@ impl IntoActiveSet<ActiveModel> for NewModel {
             vc_uri: ActiveValue::Set(None),
             vc_issuing: ActiveValue::Set(None),
             status: ActiveValue::Set("Pending".to_string()),
+            is_vc_issued: ActiveValue::Set(false),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             ended_at: ActiveValue::Set(None),
         }
@@ -68,6 +70,7 @@ impl IntoActiveSet<ActiveModel> for Model {
             vc_uri: ActiveValue::Set(self.vc_uri),
             vc_issuing: ActiveValue::Set(self.vc_issuing),
             status: ActiveValue::Set(self.status),
+            is_vc_issued: ActiveValue::Set(self.is_vc_issued),
             created_at: ActiveValue::Set(self.created_at),
             ended_at: ActiveValue::Set(self.ended_at),
         }

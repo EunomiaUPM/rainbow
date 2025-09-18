@@ -38,6 +38,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Minions::ParticipantType).string().not_null())
                     .col(ColumnDef::new(Minions::BaseUrl).string())
                     .col(ColumnDef::new(Minions::VcUri).string())
+                    .col(ColumnDef::new(Minions::IsVcIssued).boolean())
                     .col(ColumnDef::new(Minions::SavedAt).date_time().not_null())
                     .col(ColumnDef::new(Minions::LastInteraction).date_time().not_null())
                     .col(ColumnDef::new(Minions::IsMe).boolean().not_null())
@@ -59,6 +60,7 @@ pub enum Minions {
     ParticipantType,
     BaseUrl,
     VcUri,
+    IsVcIssued,
     SavedAt,
     LastInteraction,
     IsMe,

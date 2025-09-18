@@ -75,13 +75,13 @@ where
     }
 
     async fn update(&self, model: T::Model) -> anyhow::Result<T::Model> {
-        let mut active_model: T::ActiveModel = model.to_active();
+        let active_model: T::ActiveModel = model.to_active();
         let new_model: T::Model = active_model.update(&self.db_connection).await?;
         Ok(new_model)
     }
 
     async fn delete(&self, id: &str) -> anyhow::Result<()> {
-        let mut active_model: T::ActiveModel = match T::find_by_id(id).one(&self.db_connection).await {
+        let active_model: T::ActiveModel = match T::find_by_id(id).one(&self.db_connection).await {
             Ok(Some(model)) => model.into_active_model(),
             Ok(None) => bail!("No entry found with ID: {}", id),
             Err(e) => bail!("Failed to fetch data: {}", e),

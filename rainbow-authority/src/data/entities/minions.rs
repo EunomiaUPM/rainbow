@@ -31,7 +31,8 @@ pub struct Model {
     pub participant_slug: String,                // REQUEST
     pub participant_type: String,                // REQUEST
     pub base_url: Option<String>,                // REQUEST
-    pub vc_uri: Option<String>,                   // REQUEST
+    pub vc_uri: Option<String>,                  // REQUEST
+    pub is_vc_issued: bool,
     pub saved_at: chrono::NaiveDateTime,         // DEFAULT
     pub last_interaction: chrono::NaiveDateTime, // DEFAULT
     pub is_me: bool,                             // REQUEST
@@ -44,6 +45,7 @@ pub struct NewModel {
     pub participant_type: String,
     pub base_url: Option<String>,
     pub vc_uri: Option<String>,
+    pub is_vc_issued: bool,
     pub is_me: bool,
 }
 
@@ -55,6 +57,7 @@ impl IntoActiveSet<ActiveModel> for NewModel {
             participant_type: ActiveValue::Set(self.participant_type),
             base_url: ActiveValue::Set(self.base_url),
             vc_uri: ActiveValue::Set(self.vc_uri),
+            is_vc_issued: ActiveValue::Set(self.is_vc_issued),
             saved_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             last_interaction: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             is_me: ActiveValue::Set(self.is_me),
@@ -70,8 +73,9 @@ impl IntoActiveSet<ActiveModel> for Model {
             participant_type: ActiveValue::Set(self.participant_type),
             base_url: ActiveValue::Set(self.base_url),
             vc_uri: ActiveValue::Set(self.vc_uri),
+            is_vc_issued: ActiveValue::Set(self.is_vc_issued),
             saved_at: ActiveValue::Set(self.saved_at),
-            last_interaction: ActiveValue::Set(self.last_interaction),
+            last_interaction: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             is_me: ActiveValue::Set(self.is_me),
         }
     }
