@@ -17,4 +17,48 @@
  *
  */
 
-pub(crate) mod vc_request_service;
+pub mod impls;
+pub mod traits;
+
+use crate::data::repo_factory::factory_trait::AuthRepoFactoryTrait;
+use crate::setup::AuthorityApplicationConfig;
+use crate::types::wallet::{KeyDefinition, WalletSession};
+use reqwest::Client;
+use std::sync::Arc;
+use std::time::Duration;
+use tokio::sync::Mutex;
+
+pub struct Authority<T>
+where
+    T: AuthRepoFactoryTrait + Send + Sync + Clone + 'static,
+{
+    pub wallet_session: Mutex<WalletSession>,
+    pub wallet_onboard: bool,
+    pub repo: Arc<T>,
+    key_data: Mutex<Vec<KeyDefinition>>,
+    client: Client,
+    config: AuthorityApplicationConfig,
+}
+
+impl<T> Authority<T>
+where
+    T: AuthRepoFactoryTrait + Send + Sync + Clone + 'static,
+{
+    pub fn new(repo: Arc<T>, config: AuthorityApplicationConfig) -> Self {
+        let client =
+            Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
+        Self {
+            wallet_session: Mutex::new(WalletSession {
+                account_id: None,
+                token: None,
+                token_exp: None,
+                wallets: Vec::new(),
+            }),
+            wallet_onboard: false,
+            repo,
+            key_data: Mutex::new(Vec::new()),
+            client,
+            config,
+        }
+    }
+}

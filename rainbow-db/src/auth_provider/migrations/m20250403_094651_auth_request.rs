@@ -34,7 +34,7 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(AuthRequest::Table)
                     .col(ColumnDef::new(AuthRequest::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(AuthRequest::ConsumerId).string().not_null())
+                    .col(ColumnDef::new(AuthRequest::ConsumerSlug).string().not_null())
                     .col(ColumnDef::new(AuthRequest::Token).string())
                     .col(ColumnDef::new(AuthRequest::Status).string().not_null())
                     .col(ColumnDef::new(AuthRequest::CreatedAt).date_time().not_null())
@@ -53,7 +53,7 @@ impl MigrationTrait for Migration {
 pub enum AuthRequest {
     Table,
     Id,
-    ConsumerId,
+    ConsumerSlug,
     Token,
     Status,
     CreatedAt,

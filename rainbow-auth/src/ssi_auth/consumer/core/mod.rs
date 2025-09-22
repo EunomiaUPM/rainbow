@@ -17,15 +17,13 @@
  *
  */
 
-pub mod consumer_trait;
-mod consumer_trait_impl;
-mod wallet_trait_impl;
+pub mod impls;
+pub mod traits;
 
 use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
-use rainbow_common::ssi_wallet::WalletSession;
+use rainbow_common::ssi_wallet::{KeyDefinition, WalletSession};
 use rainbow_db::auth_consumer::repo_factory::factory_trait::AuthRepoFactoryTrait;
 use reqwest::Client;
-use serde_json::Value;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::Mutex;
@@ -38,9 +36,9 @@ where
     pub wallet_session: Mutex<WalletSession>,
     pub wallet_onboard: bool,
     pub repo: Arc<T>,
+    key_data: Mutex<Vec<KeyDefinition>>,
     client: Client,
     config: ApplicationConsumerConfig,
-    didweb: Value,
 }
 
 impl<T> Manager<T>
@@ -59,9 +57,9 @@ where
             }),
             wallet_onboard: false,
             repo,
+            key_data: Mutex::new(Vec::new()),
             client,
             config,
-            didweb: Value::Null,
         }
     }
 }

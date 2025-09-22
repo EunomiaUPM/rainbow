@@ -17,32 +17,24 @@
  *
  */
 
-use crate::ssi_auth::consumer::core::consumer_trait::RainbowSSIAuthConsumerManagerTrait;
+use crate::ssi_auth::consumer::core::traits::consumer_trait::RainbowSSIAuthConsumerManagerTrait;
 use crate::ssi_auth::consumer::core::Manager;
 use crate::ssi_auth::errors::CustomToResponse;
-use crate::ssi_auth::types::{trim_4_base, ReachProvider};
-use anyhow::bail;
+use crate::ssi_auth::types::entities::{ReachAuthority, ReachProvider};
+use crate::ssi_auth::types::gnap::CallbackBody;
 use axum::extract::{Path, Query, State};
 use axum::http::{Method, Uri};
 use axum::response::IntoResponse;
-use axum::routing::{get, post};
+use axum::routing::{delete, get, post};
 use axum::{Json, Router};
-use once_cell::sync::Lazy;
 use rainbow_common::errors::helpers::BadFormat;
-use rainbow_common::errors::CommonErrors;
-use rainbow_common::ssi_wallet::RainbowSSIAuthWalletTrait;
-use rainbow_db::auth_consumer::entities::mates;
+use rainbow_common::errors::{CommonErrors, ErrorLog};
+use rainbow_common::ssi_wallet::{DidsInfo, KeyDefinition, RainbowSSIAuthWalletTrait};
 use rainbow_db::auth_consumer::repo_factory::factory_trait::AuthRepoFactoryTrait;
 use reqwest::StatusCode;
-use serde::Deserialize;
-use serde_json::json;
-use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
-use tokio::sync::Mutex;
-use tracing::{debug, error, info};
-use url::Url;
-use urlencoding::decode;
+use tracing::{error, info};
 
 pub struct RainbowAuthConsumerRouter<T>
 where
@@ -66,19 +58,26 @@ where
             .route("/api/v1/wallet/login", post(Self::wallet_login))
             .route("/api/v1/wallet/logout", post(Self::wallet_logout))
             .route("/api/v1/wallet/onboard", post(Self::wallet_onboard))
+            .route("/api/v1/wallet/partial-onboard",post(Self::partial_onboard))
+            .route("/api/v1/wallet/key", post(Self::register_key))
+            .route("/api/v1/wallet/did", post(Self::register_did))
+            .route("/api/v1/wallet/key", delete(Self::delete_key))
+            .route("/api/v1/wallet/did", delete(Self::delete_did))
             .route("/api/v1/did.json", get(Self::didweb))
             // PROVIDER
-            .route(
-                "/api/v1/request/onboard/provider",
-                post(Self::request_provider_onboard),
-            )
-            .route("/api/v1/callback/:id", get(Self::callback))
+            .route("/api/v1/request/onboard/provider", post(Self::request_provider_onboard))
+            .route("/api/v1/callback/:id", get(Self::get_callback))
+            .route("/api/v1/callback/:id", post(Self::post_callback))
             // 4 MICROSERVICES
             // .route("/api/v1/retrieve/token/:id", get(Self::manual_callback))
             // AUTHORITY
-            // .route("/api/v1/beg/credential", post(Self::beg4credential))
+            .route("/api/v1/authority/beg", post(Self::beg4credential))
+            .route("/api/v1/authority/beg/oidc", post(Self::beg4credential))
+            .route("/api/v1/authority/request/all", get(Self::get_all_authority))
+            .route("/api/v1/authority/request/:id", get(Self::get_one_authority))
             // .route("/provider/:id/renew", post(todo!()))
             // .route("/provider/:id/finalize", post(todo!()))
+            // TEST
             .with_state(self.manager)
             .fallback(Self::fallback) // 2 routers cannot have 1 fallback each
     }
@@ -114,15 +113,62 @@ where
     async fn wallet_onboard(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
         info!("POST /wallet/onboard");
 
-        match manager.onboard().await {
+        match manager.onboard_wallet().await {
             Ok(()) => StatusCode::CREATED.into_response(),
+            Err(e) => e.to_response(),
+        }
+    }
+    async fn partial_onboard(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
+        info!("POST /wallet/partial-onboard");
+
+        match manager.partial_onboard().await {
+            Ok(()) => StatusCode::CREATED.into_response(),
+            Err(e) => e.to_response(),
+        }
+    }
+
+    async fn register_key(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
+        info!("POST /wallet/key");
+
+        match manager.register_key().await {
+            Ok(_) => StatusCode::CREATED.into_response(),
+            Err(e) => e.to_response(),
+        }
+    }
+
+    async fn register_did(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
+        info!("POST /wallet/did");
+
+        match manager.register_did().await {
+            Ok(_) => StatusCode::CREATED.into_response(),
+            Err(e) => e.to_response(),
+        }
+    }
+
+    async fn delete_key(
+        State(manager): State<Arc<Manager<T>>>,
+        Json(payload): Json<KeyDefinition>,
+    ) -> impl IntoResponse {
+        info!("DELETE /wallet/key");
+
+        match manager.delete_key(payload).await {
+            Ok(_) => StatusCode::CREATED.into_response(),
+            Err(e) => e.to_response(),
+        }
+    }
+
+    async fn delete_did(State(manager): State<Arc<Manager<T>>>, Json(payload): Json<DidsInfo>) -> impl IntoResponse {
+        info!("DELETE /wallet/did");
+
+        match manager.delete_did(payload).await {
+            Ok(_) => StatusCode::CREATED.into_response(),
             Err(e) => e.to_response(),
         }
     }
 
     async fn didweb(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
         info!("GET /did.json");
-        match manager.didweb().await {
+        match manager.get_did_doc().await {
             Ok(did) => Json(did).into_response(),
             Err(e) => e.to_response(),
         }
@@ -144,12 +190,12 @@ where
         uri.into_response()
     }
 
-    async fn callback(
+    async fn get_callback(
         State(manager): State<Arc<Manager<T>>>,
         Path(id): Path<String>,
         Query(params): Query<HashMap<String, String>>,
     ) -> impl IntoResponse {
-        let log = format!("GET /callback/manual/{}", id);
+        let log = format!("POST /callback/manual/{}", id);
         info!(log);
 
         let hash = match params.get("hash") {
@@ -159,7 +205,7 @@ where
                     BadFormat::Received,
                     Some("Unable to retrieve hash from callback".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 return error.into_response();
             }
         };
@@ -171,7 +217,7 @@ where
                     BadFormat::Received,
                     Some("Unable to retrieve interact reference".to_string()),
                 );
-                error.log();
+                error!("{}", error.log());
                 return error.into_response();
             }
         };
@@ -181,42 +227,93 @@ where
             Err(e) => return e.to_response(),
         };
 
-        let request_model = match manager.continue_request(id, interact_ref.to_string()).await {
-            Ok(res) => res,
-            Err(e) => return e.to_response(),
-        };
-
-        let base_url = trim_4_base(request_model.grant_endpoint.as_str());
-        let mate = mates::NewModel {
-            participant_id: request_model.provider_id,
-            participant_slug: request_model.provider_slug,
-            participant_type: "Provider".to_string(),
-            base_url,
-            token: request_model.token,
-            is_me: false,
-        };
-
-        match manager.save_mate(mate.clone()).await {
-            Ok(model) => (StatusCode::CREATED, Json(model)).into_response(),
+        match manager.continue_request(id, interact_ref.to_string()).await {
+            Ok(data) => (StatusCode::OK, Json(data)).into_response(),
             Err(e) => e.to_response(),
         }
     }
 
-    // async fn beg4credential(
-    //     State(manager): State<Arc<Manager<T>>>,
-    //     Json(payload): Json<ReachAuthority>,
-    // ) -> impl IntoResponse {
-    //     info!("POST /beg/credential");
-    //     match manager.beg4credential(payload.url).await {
-    //         Ok(()) => {}
-    //         Err(e) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
-    //     };
-    //     StatusCode::OK.into_response()
-    // }
+    async fn post_callback(
+        State(manager): State<Arc<Manager<T>>>,
+        Path(id): Path<String>,
+        Json(payload): Json<CallbackBody>,
+    ) -> impl IntoResponse {
+        let log = format!("POST /callback/{}", id);
+        info!(log);
+
+        match manager
+            .check_callback(
+                id.clone(),
+                payload.interact_ref.to_string(),
+                payload.hash.to_string(),
+            )
+            .await
+        {
+            Ok(()) => {}
+            Err(e) => return e.to_response(),
+        };
+
+        match manager.continue_request(id, payload.interact_ref.to_string()).await {
+            Ok(data) => (StatusCode::OK, Json(data)).into_response(),
+            Err(e) => e.to_response(),
+        }
+    }
+
+    async fn beg4credential(
+        State(manager): State<Arc<Manager<T>>>,
+        Json(payload): Json<ReachAuthority>,
+    ) -> impl IntoResponse {
+        info!("POST /beg/credential");
+        match manager.beg_credential(payload.id, payload.slug, payload.url).await {
+            Ok(()) => StatusCode::OK.into_response(),
+            Err(e) => e.to_response(),
+        }
+        // TODO RES
+    }
+
+    async fn get_all_authority(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
+        info!("GET /authority/request/all");
+
+        match manager.repo.authority().get_all(None, None).await {
+            Ok(data) => {
+                let res = serde_json::to_value(data).unwrap(); // EXPECTED ALWAYS
+                (StatusCode::OK, Json(res)).into_response()
+            }
+            Err(e) => {
+                let error = CommonErrors::database_new(Some(e.to_string()));
+                error!("{}", error.log());
+                error.into_response()
+            }
+        }
+    }
+
+    async fn get_one_authority(State(authority): State<Arc<Manager<T>>>, Path(id): Path<String>) -> impl IntoResponse {
+        let log = format!("GET /authority/request/{}", &id);
+        info!("{}", log);
+
+        match authority.repo.authority().get_by_id(id.as_str()).await {
+            Ok(Some(data)) => {
+                let res = serde_json::to_value(data).unwrap();
+                (StatusCode::OK, Json(res)).into_response()
+            }
+            Ok(None) => {
+                let error =
+                    CommonErrors::missing_resource_new(id.clone(), Some(format!("Missing request with id: {}", id)));
+                error!("{}", error.log());
+                error.into_response()
+            }
+            Err(e) => {
+                let error = CommonErrors::database_new(Some(e.to_string()));
+                error!("{}", error.log());
+                error.into_response()
+            }
+        }
+    }
 
     async fn fallback(method: Method, uri: Uri) -> (StatusCode, String) {
         let log = format!("{} {}", method, uri);
         info!("{}", log);
+        error!("Unexpected route");
         (StatusCode::NOT_FOUND, format!("No route for {uri}"))
     }
 }

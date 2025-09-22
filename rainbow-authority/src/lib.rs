@@ -17,7 +17,10 @@
  *
  */
 
-pub mod setup;
-pub mod http;
 pub mod core;
 pub mod data;
+pub mod errors;
+pub mod http;
+pub mod setup;
+pub mod types;
+pub mod utils;

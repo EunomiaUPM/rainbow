@@ -34,7 +34,7 @@ pub enum ConfigRoles {
     Contracts,
     Consumer,
     Provider,
-    Auth,
+    Authority,
 }
 
 impl FromStr for ConfigRoles {
@@ -46,7 +46,7 @@ impl FromStr for ConfigRoles {
             "Contracts" => Ok(ConfigRoles::Contracts),
             "Consumer" => Ok(ConfigRoles::Consumer),
             "Provider" => Ok(ConfigRoles::Provider),
-            "Auth" => Ok(ConfigRoles::Auth),
+            "Authority" => Ok(ConfigRoles::Authority),
             _ => bail!("Invalid config role: {}", s),
         }
     }
@@ -59,7 +59,7 @@ impl Display for ConfigRoles {
             ConfigRoles::Contracts => "Contracts".to_string(),
             ConfigRoles::Consumer => "Consumer".to_string(),
             ConfigRoles::Provider => "Provider".to_string(),
-            ConfigRoles::Auth => "Auth".to_string(),
+            ConfigRoles::Authority => "Authority".to_string(),
         };
         write!(f, "{}", str)
     }

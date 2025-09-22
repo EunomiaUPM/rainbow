@@ -105,6 +105,8 @@ pub enum Relation {
     AuthVerification,
     #[sea_orm(has_one = "super::auth_token_requirements::Entity")]
     AuthTokenRequirements,
+    #[sea_orm(has_one = "super::authority_request::Entity")]
+    AuthorityRequest,
 }
 
 impl Related<super::auth_request::Entity> for Entity {
@@ -122,6 +124,11 @@ impl Related<super::auth_verification::Entity> for Entity {
 impl Related<super::auth_token_requirements::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::AuthTokenRequirements.def()
+    }
+}
+impl Related<super::authority_request::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::AuthorityRequest.def()
     }
 }
 impl ActiveModelBehavior for ActiveModel {}

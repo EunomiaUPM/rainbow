@@ -25,14 +25,12 @@ use once_cell::sync::Lazy;
 use serde_json::Value;
 
 pub fn route_openapi() -> Router {
-    Router::new()
-        .route("/api/v1/catalog/openapi.json", get(get_open_api))
+    Router::new().route("/api/v1/catalog/openapi.json", get(get_open_api))
 }
 
 static OPENAPI_JSON: Lazy<Value> = Lazy::new(|| {
-    let openapi_yaml = include_str!("../../../openapi/catalog.json");
-    let openapi = serde_json::from_str::<Value>(&openapi_yaml).unwrap();
-    openapi
+    let openapi_yaml = include_str!("../../../../static/specs/openapi/catalog_provider.json");
+    serde_json::from_str::<Value>(&openapi_yaml).unwrap()
 });
 
 async fn get_open_api() -> impl IntoResponse {

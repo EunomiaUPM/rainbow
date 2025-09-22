@@ -19,7 +19,7 @@
 
 use crate::auth_provider::entities::auth_verification::{Column, Entity, Model, NewModel};
 use crate::auth_provider::repo_factory::traits::AuthVerificationRepoTrait;
-use crate::common::{BasicRepoTrait, GenericRepo};
+use crate::common::{BasicRepoTrait, GenericRepo, IntoActiveSet};
 use axum::async_trait;
 use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter};
 
@@ -65,7 +65,7 @@ impl AuthVerificationRepoTrait for AuthVerificationProviderRepo {
     }
 
     async fn create_extra(&self, model: Model) -> anyhow::Result<Model> {
-        let active_model = model.into_active_model();
+        let active_model = model.to_active();
         let model = active_model.insert(&self.inner.db_connection).await?;
         Ok(model)
     }

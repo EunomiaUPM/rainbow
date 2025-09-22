@@ -17,6 +17,7 @@
  *
  */
 
-pub mod auth;
+pub mod auth_request;
 pub mod auth_interaction;
 pub mod auth_verification;
+pub mod minions;

@@ -332,7 +332,7 @@ where
             Err(_) => {
                 return (
                     StatusCode::NOT_FOUND,
-                    "You need to onboard on the Provider first",
+                    "You need to onboard_wallet on the Provider first",
                 )
                     .into_response()
             }

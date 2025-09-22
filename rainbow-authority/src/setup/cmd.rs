@@ -18,11 +18,10 @@
  */
 
 use crate::setup::application::AuthorityApplication;
-use crate::setup::config::AuthorityApplicationConfig;
-use crate::setup::db_migrations::AuthorityMigration;
+use crate::setup::database::db_migrations::AuthorityMigration;
+use crate::setup::{AuthorityApplicationConfig, AuthorityApplicationConfigTrait};
 use clap::{Parser, Subcommand};
-use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
-use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
+
 use std::cmp::PartialEq;
 use tracing::{debug, info};
 
@@ -51,8 +50,7 @@ impl AuthorityCommands {
         // run scripts
         let config = AuthorityApplicationConfig::default();
         let config = config.merge_dotenv_configuration();
-        let table =
-            json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
+        let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
         info!("Current config:\n{}", table);
         match cli.command {
             AuthorityCliCommands::Start => AuthorityApplication::run(&config).await?,

@@ -27,7 +27,7 @@ use sea_orm::ActiveValue;
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: String, // REQUEST
-    pub consumer_id: String,                     // REQUEST
+    pub consumer_slug: String,                     // REQUEST
     pub token: Option<String>,                   // COMPLETION
     pub status: String,                          // DEFAULT
     pub created_at: chrono::NaiveDateTime,       // DEFAULT
@@ -37,14 +37,14 @@ pub struct Model {
 #[derive(Clone, Debug)]
 pub struct NewModel {
     pub id: String,          // REQUEST
-    pub consumer_id: String, // REQUEST
+    pub consumer_slug: String, // REQUEST
 }
 
 impl IntoActiveSet<ActiveModel> for NewModel {
     fn to_active(self) -> ActiveModel {
         ActiveModel {
             id: ActiveValue::Set(self.id),
-            consumer_id: ActiveValue::Set(self.consumer_id),
+            consumer_slug: ActiveValue::Set(self.consumer_slug),
             token: ActiveValue::Set(None),
             status: ActiveValue::Set("Pending".to_string()),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
@@ -57,7 +57,7 @@ impl IntoActiveSet<ActiveModel> for Model {
     fn to_active(self) -> ActiveModel {
         ActiveModel {
             id: ActiveValue::Set(self.id),
-            consumer_id: ActiveValue::Set(self.consumer_id),
+            consumer_slug: ActiveValue::Set(self.consumer_slug),
             token: ActiveValue::Set(self.token),
             status: ActiveValue::Set(self.status),
             created_at: ActiveValue::Set(self.created_at),

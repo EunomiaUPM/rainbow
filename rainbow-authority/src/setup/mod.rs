@@ -17,7 +17,10 @@
  *
  */
 
-pub mod config;
-pub mod db_migrations;
 pub mod application;
 pub mod cmd;
+pub mod config;
+mod database;
+
+pub use config::config_trait::AuthorityApplicationConfigTrait;
+pub use config::AuthorityApplicationConfig;

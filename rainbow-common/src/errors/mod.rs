@@ -16,9 +16,11 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+mod error_log_trait;
 pub mod helpers;
+pub use error_log_trait::ErrorLog;
 
-use crate::errors::helpers::{BadFormat, MissingAction};
+use helpers::{BadFormat, MissingAction};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
@@ -46,7 +48,7 @@ pub enum CommonErrors {
         method: String,
         cause: String,
     },
-    #[error("Petition Error")]
+    #[error("Provider Error")]
     ProviderError {
         #[serde(flatten)]
         info: ErrorInfo,
@@ -55,8 +57,17 @@ pub enum CommonErrors {
         method: Option<String>,
         cause: Option<String>,
     },
-    #[error("Petition Error")]
+    #[error("Consumer Error")]
     ConsumerError {
+        #[serde(flatten)]
+        info: ErrorInfo,
+        http_code: Option<u16>,
+        url: Option<String>,
+        method: Option<String>,
+        cause: Option<String>,
+    },
+    #[error("Authority Error")]
+    AuthorityError {
         #[serde(flatten)]
         info: ErrorInfo,
         http_code: Option<u16>,
@@ -117,6 +128,7 @@ impl IntoResponse for &CommonErrors {
             CommonErrors::PetitionError { info, .. }
             | CommonErrors::ProviderError { info, .. }
             | CommonErrors::ConsumerError { info, .. }
+            | CommonErrors::AuthorityError { info, .. }
             | CommonErrors::MissingActionError { info, .. }
             | CommonErrors::MissingResourceError { info, .. }
             | CommonErrors::FormatError { info, .. }
@@ -130,8 +142,8 @@ impl IntoResponse for &CommonErrors {
     }
 }
 
-impl CommonErrors {
-    pub fn log(&self) {
+impl ErrorLog for CommonErrors {
+    fn log(&self) -> String {
         match self {
             CommonErrors::PetitionError { info, http_code, url, method, cause } => {
                 let http_code = format!("Http Code: {}", http_code.unwrap_or(0));
@@ -140,10 +152,10 @@ impl CommonErrors {
                     info.details.as_deref().unwrap_or("No details")
                 );
 
-                error!(
-                    "\n{}\n Method: {}\n Url: {}\n {}\n Error Code: {}\n Message: {}\n {}\n Cause: {}",
+                format!(
+                    "\n{}\n Method: {}\n Url: {}\n {}\n Error Code: {}\n Message: {}\n {}\n Cause: {}\n",
                     self, method, url, http_code, info.error_code, info.message, details, cause
-                );
+                )
             }
             CommonErrors::ProviderError { info, http_code, url, method, cause } => {
                 let http_code = format!("Http Code: {}", http_code.unwrap_or(0));
@@ -154,10 +166,10 @@ impl CommonErrors {
                     "Details: {}",
                     info.details.as_deref().unwrap_or("No details")
                 );
-                error!(
-                    "\n{}\n {}\n {}\n Http Code: {}\n Error Code: {}\n Message: {}\n Details: {}\n Cause: {}",
+                format!(
+                    "\n{}\n {}\n {}\n {}\n Error Code: {}\n Message: {}\n {}\n {}\n",
                     self, method, url, http_code, info.error_code, info.message, details, cause
-                );
+                )
             }
             CommonErrors::ConsumerError { info, http_code, url, method, cause } => {
                 let http_code = format!("Http Code: {}", http_code.unwrap_or(0));
@@ -168,10 +180,24 @@ impl CommonErrors {
                     "Details: {}",
                     info.details.as_deref().unwrap_or("No details")
                 );
-                error!(
-                    "\n{}\n {}\n {}\n Http Code: {}\n Error Code: {}\n Message: {}\n Details: {}\n Cause: {}",
+                format!(
+                    "\n{}\n {}\n {}\n {}\n Error Code: {}\n Message: {}\n {}\n {}\n",
                     self, method, url, http_code, info.error_code, info.message, details, cause
+                )
+            }
+            CommonErrors::AuthorityError { info, http_code, url, method, cause } => {
+                let http_code = format!("Http Code: {}", http_code.unwrap_or(0));
+                let cause = format!("Cause: {}", cause.as_deref().unwrap_or("No Cause"));
+                let url = format!("Url: {}", url.as_deref().unwrap_or("No url"));
+                let method = format!("Method: {}", method.as_deref().unwrap_or("No method"));
+                let details = format!(
+                    "Details: {}",
+                    info.details.as_deref().unwrap_or("No details")
                 );
+                format!(
+                    "\n{}\n {}\n {}\n {}\n Error Code: {}\n Message: {}\n {}\n {}\n",
+                    self, method, url, http_code, info.error_code, info.message, details, cause
+                )
             }
             CommonErrors::MissingActionError { info, action, cause } => {
                 let cause = format!("Cause: {}", cause.as_deref().unwrap_or("No Cause"));
@@ -179,10 +205,10 @@ impl CommonErrors {
                     "Details: {}",
                     info.details.as_deref().unwrap_or("No details")
                 );
-                error!(
-                    "\n{}\n Error Code: {}\n Message: {}\n Details: {}\n MissingAction: {}\n Cause: {}",
+                format!(
+                    "\n{}\n Error Code: {}\n Message: {}\n {}\n MissingAction: {}\n {}\n",
                     self, info.error_code, info.message, details, action, cause
-                );
+                )
             }
             CommonErrors::MissingResourceError { info, resource_id, cause } => {
                 let cause = format!("Cause: {}", cause.as_deref().unwrap_or("No Cause"));
@@ -191,10 +217,10 @@ impl CommonErrors {
                     info.details.as_deref().unwrap_or("No details")
                 );
 
-                error!(
-                    "\n{}\n Id: {}\n Error Code: {}\n Message: {}\n {}\n {}",
+                format!(
+                    "\n{}\n Id: {}\n Error Code: {}\n Message: {}\n {}\n {}\n",
                     self, resource_id, info.error_code, info.message, details, cause
-                );
+                )
             }
             CommonErrors::FormatError { info, cause } => {
                 let cause = format!("Cause: {}", cause.as_deref().unwrap_or("No Cause"));
@@ -203,10 +229,10 @@ impl CommonErrors {
                     info.details.as_deref().unwrap_or("No details")
                 );
 
-                error!(
-                    "\n{}\n Error Code: {}\n Message: {}\n {}\n {}",
+                format!(
+                    "\n{}\n Error Code: {}\n Message: {}\n {}\n {}\n",
                     self, info.error_code, info.message, details, cause
-                );
+                )
             }
             CommonErrors::UnauthorizedError { info, cause } => {
                 let cause = format!("Cause: {}", cause.as_deref().unwrap_or("No Cause"));
@@ -215,10 +241,10 @@ impl CommonErrors {
                     info.details.as_deref().unwrap_or("No details")
                 );
 
-                error!(
-                    "\n{}\n Error Code: {}\n Message: {}\n {}\n {}",
+                format!(
+                    "\n{}\n Error Code: {}\n Message: {}\n {}\n {}\n",
                     self, info.error_code, info.message, details, cause
-                );
+                )
             }
             CommonErrors::ForbiddenError { info, cause } => {
                 let cause = format!("Cause: {}", cause.as_deref().unwrap_or("No Cause"));
@@ -227,10 +253,10 @@ impl CommonErrors {
                     info.details.as_deref().unwrap_or("No details")
                 );
 
-                error!(
-                    "\n{}\n Error Code: {}\n Message: {}\n {}\n {}",
+                format!(
+                    "\n{}\n Error Code: {}\n Message: {}\n {}\n {}\n",
                     self, info.error_code, info.message, details, cause
-                );
+                )
             }
             CommonErrors::DatabaseError { info, cause } => {
                 let cause = format!("Cause: {}", cause.as_deref().unwrap_or("No Cause"));
@@ -239,10 +265,10 @@ impl CommonErrors {
                     info.details.as_deref().unwrap_or("No details")
                 );
 
-                error!(
-                    "\n{}\n Error Code: {}\n Message: {}\n {}\n {}",
+                format!(
+                    "\n{}\n Error Code: {}\n Message: {}\n {}\n {}\n",
                     self, info.error_code, info.message, details, cause
-                );
+                )
             }
 
             CommonErrors::FeatureNotImplError { info, feature, cause } => {
@@ -252,14 +278,16 @@ impl CommonErrors {
                     info.details.as_deref().unwrap_or("No details")
                 );
 
-                error!(
-                    "\n{}\n Feature: {}\n Error Code: {}\n Message: {}\n {}\n {}",
+                format!(
+                    "\n{}\n Feature: {}\n Error Code: {}\n Message: {}\n {}\n {}\n",
                     self, feature, info.error_code, info.message, details, cause
-                );
+                )
             }
         }
     }
+}
 
+impl CommonErrors {
     pub fn petition_new(url: String, method: String, http_code: Option<u16>, cause: String) -> CommonErrors {
         CommonErrors::PetitionError {
             info: ErrorInfo {
@@ -312,12 +340,32 @@ impl CommonErrors {
             cause,
         }
     }
+    pub fn authority_new(
+        url: Option<String>,
+        method: Option<String>,
+        http_code: Option<u16>,
+        cause: Option<String>,
+    ) -> CommonErrors {
+        CommonErrors::AuthorityError {
+            info: ErrorInfo {
+                message: "Unexpected response from the Authority".to_string(),
+                error_code: 2400,
+                status_code: StatusCode::BAD_GATEWAY,
+                details: None,
+            },
+            http_code,
+            url,
+            method,
+            cause,
+        }
+    }
     pub fn missing_action_new(action: String, missing: MissingAction, cause: Option<String>) -> CommonErrors {
         let error_code = match missing {
             MissingAction::Token => 3110,
             MissingAction::Wallet => 3120,
             MissingAction::Did => 3130,
             MissingAction::Onboarding => 3140,
+            MissingAction::Key => 3150,
             _ => 3100,
         };
         CommonErrors::MissingActionError {

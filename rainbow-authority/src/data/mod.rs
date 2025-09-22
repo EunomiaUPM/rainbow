@@ -17,6 +17,6 @@
  *
  */
 
-pub mod migrations;
 pub mod entities;
-pub mod repo;
+pub mod migrations;
+pub mod repo_factory;

@@ -21,9 +21,10 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros"] }
 anyhow = { workspace = true }
-base64 = "0.22.1"
+base64 = { workspace = true }
 tracing = { workspace = true }
 axum = { workspace = true }
+thiserror = { workspace = true }
 tower-http = { workspace = true }
 reqwest = { workspace = true }
 once_cell = { workspace = true }
@@ -32,9 +33,8 @@ uuid = { workspace = true }
 log = { workspace = true }
 tower = { workspace = true }
 sea-orm = { workspace = true }
-sea-orm-migration = { workspace = true }
-rand = "0.8.5"
-urlencoding = "2.1.3"
-jsonwebtoken = "9.3.1"
-url = "2.5.4"
-sha2 = "0.10.9"
+rand = { workspace = true }
+urlencoding = { workspace = true }
+jsonwebtoken = { workspace = true }
+sha2 = { workspace = true }
+url = { workspace = true}
