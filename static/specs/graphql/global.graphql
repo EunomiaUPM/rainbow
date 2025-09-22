@@ -1,0 +1,792 @@
+"""
+=======================================================
+GRAPHQL API
+=======================================================
+"""
+schema {
+    query: Query
+    mutation: Mutation
+}
+
+"Basic scalars"
+scalar UUID
+scalar DateTime
+scalar JSON
+
+"""
+=======================================================
+QUERIES
+=======================================================
+"""
+type Query {
+    # ---------------------------
+    # Contract Negotiation (CN)
+    # ---------------------------
+    cnProcesses(limit: Int = 10, offset: Int = 0): [CNProcess!]!
+    cnProcess(id: UUID!): CNProcess
+    cnProcessByProviderPid(providerPid: UUID!): CNProcess
+    cnProcessByConsumerPid(consumerPid: UUID!): CNProcess
+
+    cnMessagesByProcess(processId: UUID!, limit: Int = 50, offset: Int = 0): [CNMessage!]!
+    cnMessage(id: UUID!): CNMessage
+
+    cnOffer(id: UUID!): CNOffer
+    offerByCnMessage(messageId: UUID!): CNOffer
+    lastOfferByCnProcess(processId: UUID!): CNOffer
+
+    agreementByCnMessageId(messageId: UUID!): Agreement
+
+    # ---------------------------
+    # Agreements
+    # ---------------------------
+    agreements(limit: Int = 10, offset: Int = 0): [Agreement!]!
+    agreement(id: UUID!): Agreement
+
+    # ---------------------------
+    # Rainbow Catalog (DCAT)
+    # ---------------------------
+    catalogs(limit: Int = 10, offset: Int = 0): [Catalog!]!
+    catalog(id: UUID!): Catalog
+
+    datasetsByCatalog(catalogId: UUID!, limit: Int = 10, offset: Int = 0): [Dataset!]!
+    dataset(id: UUID!): Dataset
+
+    dataServicesByCatalog(catalogId: UUID!, limit: Int = 10, offset: Int = 0): [DataService!]!
+    dataService(id: UUID!): DataService
+
+    distributionsByDataset(datasetId: UUID!, limit: Int = 10, offset: Int = 0): [Distribution!]!
+    distribution(id: UUID!): Distribution
+
+    # ---------------------------
+    # DataHub
+    # ---------------------------
+    datahubCatalogs(limit: Int = 10, offset: Int = 0): [DatahubDomain!]!
+    datahubCatalog(id: UUID!): DatahubDomain
+
+    datahubDatasetsByCatalog(domainId: UUID!, limit: Int = 10, offset: Int = 0): [DatahubDataset!]!
+    datahubDataset(id: UUID!): DatahubDataset
+
+    # ---------------------------
+    # Policy Templates / Policies
+    # ---------------------------
+    policyTemplates(limit: Int = 10, offset: Int = 0): [PolicyTemplate!]!
+    policyTemplate(id: UUID!): PolicyTemplate
+
+    policiesByDataset(datasetId: UUID!): [OdrlOffer!]!
+    policy(id: UUID!): OdrlOffer
+
+    # ---------------------------
+    # Transfer Process
+    # ---------------------------
+    transferProcesses(limit: Int = 10, offset: Int = 0): [TransferProcess!]!
+    transferProcess(id: UUID!): TransferProcess
+
+    transferMessagesByProcess(processId: UUID!, limit: Int = 50, offset: Int = 0): [TransferMessage!]!
+    transferMessage(id: UUID!): TransferMessage
+
+    dataPlane(id: UUID!): DataplaneSession
+
+    # ---------------------------
+    # Pub/Sub
+    # ---------------------------
+    subscriptions(limit: Int = 10, offset: Int = 0): [Subscription!]!
+    subscription(id: UUID!): Subscription
+
+    notificationsBySubscription(subscriptionId: UUID!, limit: Int = 20, offset: Int = 0): [NotificationSub!]!
+    notification(id: UUID!): NotificationSub
+
+    # ---------------------------
+    # Participants / Users
+    # ---------------------------
+    participants(limit: Int = 10, offset: Int = 0): [Participant!]!
+    participant(id: UUID!): Participant
+    agreementsByParticipantId(id: UUID!): [Agreement!]!
+
+    # ---------------------------
+    # Auth (DID & OIDC)
+    # ---------------------------
+    did(did_url: String!): JSON!
+    oidcToken(url: String!, id: String!, slug: String!, actions: String!): String!
+}
+
+"""
+=======================================================
+MUTATIONS
+=======================================================
+"""
+type Mutation {
+    # ---------------------------
+    # CONSUMER SIDE
+    # ---------------------------
+
+    # ---------------------------
+    # Contract Negotiation (CN)
+    # ---------------------------
+    cnRPCConsumerRequest(body: CNRPCConsumerRequestRequest!): CNRPCConsumerRequestResponse
+    cnRPCConsumerAcceptance(body: CNRPCConsumerAcceptanceRequest!): CNRPCConsumerAcceptanceResponse
+    cnRPCConsumerVerification(body: CNRPCConsumerVerificationRequest!): CNRPCConsumerVerificationResponse
+    cnRPCConsumerTermination(body: CNRPCConsumerTerminationRequest!): CNRPCConsumerTerminationResponse
+    # ---------------------------
+    # Transfer Process
+    # ---------------------------
+    transferRPCConsumerRequest(body: TransferRPCConsumerRequestRequest!): TransferRPCConsumerRequestResponse
+    transferRPCConsumerStart(body: TransferRPCConsumerStartRequest!): TransferRPCConsumerStartResponse
+    transferRPCConsumerSuspension(body: TransferRPCConsumerSuspendRequest!): TransferRPCConsumerSuspendResponse
+    transferRPCConsumerCompletion(body: TransferRPCConsumerCompletionRequest!): TransferRPCConsumerCompletionResponse
+    transferRPCConsumerTermination(body: TransferRPCConsumerTerminationRequest!): TransferRPCConsumerTerminationResponse
+
+    # ---------------------------
+    # PROVIDER SIDE
+    # ---------------------------
+
+    # ---------------------------
+    # Contract Negotiation (CN)
+    # ---------------------------
+    cnRPCProviderOffer(body: CNRPCProviderOfferRequest!): CNRPCProviderOfferResponse
+    cnRPCProviderAgreement(body: CNRPCProviderAgreementRequest!): CNRPCProviderAgreementResponse
+    cnRPCProviderFinalization(body: CNRPCProviderFinalizationRequest!): CNRPCProviderFinalizationResponse
+    cnRPCProviderTermination(body: CNRPCProviderTerminationRequest!): CNRPCProviderTerminationResponse
+    # ---------------------------
+    # Transfer Process
+    # ---------------------------
+    transferRPCProviderStart(body: TransferRPCProviderStartRequest!): TransferRPCProviderStartResponse
+    transferRPCProviderSuspension(body: TransferRPCProviderSuspendRequest!): TransferRPCProviderSuspendResponse
+    transferRPCProviderCompletion(body: TransferRPCProviderCompletionRequest!): TransferRPCProviderCompletionResponse
+    transferRPCProviderTermination(body: TransferRPCProviderTerminationRequest!): TransferRPCProviderTerminationResponse
+    # ---------------------------
+    # Catalog Policies
+    # ---------------------------
+    createPolicyInDataset(datasetId: UUID!, offer: OdrlInfo!): OdrlOffer!
+    deletePolicy(datasetId: UUID!, id: UUID!): Boolean!
+
+    # ---------------------------
+    # BOTH SIDES
+    # ---------------------------
+
+    # ---------------------------
+    # Auth
+    # ---------------------------
+    onboardWallet: String!
+}
+
+
+
+"""
+=======================================================
+=======================================================
+=======================================================
+=======================================================
+=======================================================
+INPUTS
+=======================================================
+=======================================================
+=======================================================
+=======================================================
+=======================================================
+
+I know, it's repetitive, but it's clearer this way.
+DRY can be applied in the resolvers.
+
+=======================================================
+CONTRACT NEGOTIATION RPC
+=======================================================
+"""
+input CNRPCConsumerRequestRequest {
+    providerParticipantId: UUID!
+    offer: OdrlInfo!
+    consumerPid: UUID!
+    providerPid: UUID!
+}
+type CNRPCConsumerRequestResponse {
+    consumerPid: UUID!
+    providerPid: UUID!
+    offer: OdrlOffer!
+    message: JSON!
+}
+input CNRPCConsumerAcceptanceRequest {
+    providerParticipantId: UUID!
+    consumerPid: UUID!
+    providerPid: UUID!
+}
+type CNRPCConsumerAcceptanceResponse {
+    consumerPid: UUID!
+    providerPid: UUID!
+    message: JSON!
+}
+input CNRPCConsumerVerificationRequest {
+    providerParticipantId: UUID!
+    consumerPid: UUID!
+    providerPid: UUID!
+}
+type CNRPCConsumerVerificationResponse {
+    consumerPid: UUID!
+    providerPid: UUID!
+    message: JSON!
+}
+input CNRPCConsumerTerminationRequest {
+    providerParticipantId: UUID!
+    consumerPid: UUID!
+    providerPid: UUID!
+}
+type CNRPCConsumerTerminationResponse {
+    consumerPid: UUID!
+    providerPid: UUID!
+    message: JSON!
+}
+
+input CNRPCProviderOfferRequest {
+    consumerParticipantId: UUID!
+    offer: OdrlInfo!
+    consumerPid: UUID!
+    providerPid: UUID!
+}
+type CNRPCProviderOfferResponse {
+    consumerPid: UUID!
+    providerPid: UUID!
+    offer: OdrlOffer!
+    message: JSON!
+}
+input CNRPCProviderAgreementRequest {
+    consumerParticipantId: UUID!
+    consumerPid: UUID!
+    providerPid: UUID!
+}
+type CNRPCProviderAgreementResponse {
+    consumerPid: UUID!
+    providerPid: UUID!
+    message: JSON!
+}
+input CNRPCProviderFinalizationRequest {
+    consumerParticipantId: UUID!
+    consumerPid: UUID!
+    providerPid: UUID!
+}
+type CNRPCProviderFinalizationResponse {
+    consumerPid: UUID!
+    providerPid: UUID!
+    message: JSON!
+}
+input CNRPCProviderTerminationRequest {
+    consumerParticipantId: UUID!
+    consumerPid: UUID!
+    providerPid: UUID!
+}
+type CNRPCProviderTerminationResponse {
+    consumerPid: UUID!
+    providerPid: UUID!
+    message: JSON!
+}
+
+"""
+=======================================================
+TRANSFER PROCESS RPC
+=======================================================
+"""
+input TransferRPCConsumerRequestRequest {
+    providerParticipantId: UUID!
+    agreementId: UUID!
+    format: String!
+    consumerPid: UUID!
+    providerPid: UUID!
+}
+type TransferRPCConsumerRequestResponse {
+    consumerPid: UUID!
+    providerPid: UUID!
+    agreementId: UUID!
+    format: String!
+    message: JSON!
+}
+input TransferRPCConsumerStartRequest {
+    providerParticipantId: UUID!
+    consumerPid: UUID!
+    providerPid: UUID!
+}
+type TransferRPCConsumerStartResponse {
+    consumerPid: UUID!
+    providerPid: UUID!
+    message: JSON!
+}
+input TransferRPCConsumerSuspendRequest {
+    providerParticipantId: UUID!
+    consumerPid: UUID!
+    providerPid: UUID!
+}
+type TransferRPCConsumerSuspendResponse {
+    consumerPid: UUID!
+    providerPid: UUID!
+    message: JSON!
+}
+input TransferRPCConsumerCompletionRequest {
+    providerParticipantId: UUID!
+    consumerPid: UUID!
+    providerPid: UUID!
+}
+type TransferRPCConsumerCompletionResponse {
+    consumerPid: UUID!
+    providerPid: UUID!
+    message: JSON!
+}
+input TransferRPCConsumerTerminationRequest {
+    providerParticipantId: UUID!
+    consumerPid: UUID!
+    providerPid: UUID!
+}
+type TransferRPCConsumerTerminationResponse {
+    consumerPid: UUID!
+    providerPid: UUID!
+    message: JSON!
+}
+
+input TransferRPCProviderStartRequest {
+    consumerParticipantId: UUID!
+    consumerCallbackAddress: String,
+    consumerPid: UUID!
+    providerPid: UUID!
+}
+type TransferRPCProviderStartResponse {
+    consumerPid: UUID!
+    providerPid: UUID!
+    message: JSON!
+}
+input TransferRPCProviderSuspendRequest {
+    consumerParticipantId: UUID!
+    consumerCallbackAddress: String,
+    consumerPid: UUID!
+    providerPid: UUID!
+}
+type TransferRPCProviderSuspendResponse {
+    consumerPid: UUID!
+    providerPid: UUID!
+    message: JSON!
+}
+input TransferRPCProviderCompletionRequest {
+    consumerParticipantId: UUID!
+    consumerCallbackAddress: String,
+    consumerPid: UUID!
+    providerPid: UUID!
+}
+type TransferRPCProviderCompletionResponse {
+    consumerPid: UUID!
+    providerPid: UUID!
+    message: JSON!
+}
+input TransferRPCProviderTerminationRequest {
+    consumerParticipantId: UUID!
+    consumerCallbackAddress: String,
+    consumerPid: UUID!
+    providerPid: UUID!
+}
+type TransferRPCProviderTerminationResponse {
+    consumerPid: UUID!
+    providerPid: UUID!
+    message: JSON!
+}
+
+"""
+=======================================================
+=======================================================
+=======================================================
+=======================================================
+=======================================================
+TYPES
+=======================================================
+=======================================================
+=======================================================
+=======================================================
+=======================================================
+
+
+=======================================================
+CONTRACT NEGOTIATION TYPES
+=======================================================
+"""
+enum CNProcessState {
+    INITIAL
+    REQUESTED
+    NEGOTIATING
+    OFFERED
+    AGREED
+    REJECTED
+    CANCELLED
+    ERROR
+}
+
+type CNProcess {
+    providerPid: UUID!
+    consumerPid: UUID!
+    state: CNProcessState!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+    associatedProvider: UUID
+    associatedConsumer: UUID
+    isBusiness: Boolean!
+    initiatedBy: String
+
+    # Grafo
+    messages: [CNMessage!]!
+    lastOffer: CNOffer
+}
+
+type CNMessage {
+    id: UUID!
+    process: CNProcess!
+    type: String!
+    from: String!
+    to: String!
+    createdAt: DateTime!
+    content: JSON!
+
+    # Relaciones convenientes
+    offer: CNOffer
+    agreement: Agreement
+}
+
+type CNOffer {
+    id: UUID!
+    message: CNMessage!
+    content: OdrlOffer!
+    createdAt: DateTime!
+}
+
+type OdrlOffer {
+    id: UUID!
+    type: String!
+    obligation: [OdrlPermission!]!
+    permission: [OdrlPermission!]!
+    prohibition: [OdrlPermission!]!
+    target: UUID!
+    profile: String!
+}
+
+input OdrlInfo {
+    obligation: [OdrlInfoPermission!]!
+    permission: [OdrlInfoPermission!]!
+    prohibition: [OdrlInfoPermission!]!
+}
+
+input OdrlInfoPermission {
+    action: String!
+    constraint: JSON!
+}
+
+type OdrlPermission {
+    action: String!
+    constraint: JSON!
+}
+
+
+type CNError {
+    error: CNErrorInfo!
+}
+
+type CNErrorInfo {
+    code: String!
+    message: String!
+    title: String!
+}
+
+"""
+=======================================================
+DCAT CATALOG (graph)
+=======================================================
+"""
+enum Type {
+    Catalog
+    DataService
+    Dataset
+    Distribution
+}
+
+type Catalog {
+    id: UUID!
+    context: [String!]!
+    type: String!
+    homepage: String!
+    theme: String!
+    keyword: String!
+    conformsTo: String
+    creator: String
+    identifier: String!
+    issued: DateTime!
+    modified: DateTime
+    title: String
+    description: [JSON!]!
+    participantId: String!
+    extraFields: JSON
+
+    # Grafo
+    catalogs: [Catalog!]!
+    datasets: [Dataset!]!
+    services: [DataService!]!
+}
+
+type Dataset {
+    id: UUID!
+    context: [String!]!
+    type: Type!
+    theme: String!
+    keyword: String!
+    conformsTo: String
+    creator: String
+    identifier: UUID!
+    issued: DateTime!
+    modified: DateTime
+    title: String
+    description: [JSON!]!
+    hasPolicy: [OdrlOffer!]!
+    extraFields: JSON
+
+    # Graph
+    distributions: [Distribution!]
+}
+
+type DataService {
+    id: UUID!
+    context: [String!]!
+    type: String!
+    theme: String!
+    keyword: String!
+    endpointDescription: String!
+    endpointURL: String!
+    conformsTo: String
+    creator: String
+    identifier: UUID!
+    issued: DateTime!
+    modified: DateTime
+    title: String
+    description: [JSON!]!
+    hasPolicy: [JSON!]!
+    extraFields: JSON
+
+    # Graph
+    distributions: [Distribution!]
+}
+
+type Distribution {
+    id: UUID!
+    context: [String!]!
+    type: String!
+    accessService: DataService!
+    identifier: UUID!
+    issued: DateTime!
+    modified: DateTime
+    title: String!
+    description: [JSON!]!
+    hasPolicy: [OdrlOffer!]!
+    extraFields: JSON
+
+    # inverse Graph
+    dataset: Dataset
+}
+
+"""
+=======================================================
+AGREEMENTS
+=======================================================
+"""
+type Agreement {
+    id: UUID!
+    consumerParticipant: Participant!
+    providerParticipant: Participant!
+    cnMessage: CNMessage!
+    content: OdrlAgreement!
+    createdAt: DateTime!
+    active: Boolean!
+}
+
+type OdrlAgreement {
+    id: UUID!
+    type: String!
+    obligation: [OdrlPermission!]!
+    permission: [OdrlPermission!]!
+    prohibition: [OdrlPermission!]!
+    target: UUID!
+    assignee: UUID!
+    assigner: UUID!
+    timestamp: DateTime!
+}
+
+"""
+=======================================================
+TRANSFER PROCESS
+=======================================================
+"""
+type TransferProcess {
+    id: UUID!
+    providerPid: UUID!
+    consumerPid: UUID!
+    agreement: Agreement!
+    dataPlane: DataplaneSession!
+    state: String!
+    stateAttribute: String!
+    associatedConsumer: UUID!
+    associatedProvider: UUID!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+
+    # Graph
+    messages: [TransferMessage!]!
+    dataplaneSession: DataplaneSession
+}
+
+type TransferMessage {
+    id: UUID!
+    createdAt: DateTime!
+    messageType: String!
+    from: String!
+    to: String!
+    content: JSON
+
+    # Inverse Graph
+    transferProcess: TransferProcess!
+}
+
+type DataplaneSessionAddress {
+    protocol: String!
+    url: String!
+    authType: String
+    authContent: String
+}
+
+type DataplaneSession {
+    id: UUID!
+    processDirection: String!
+    upstreamHop: DataplaneSessionAddress!
+    downstreamHop: DataplaneSessionAddress!
+    processAddress: DataplaneSessionAddress!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+    state: String!
+
+    # Inverse Graph
+    transferProcess: TransferProcess!
+}
+
+"""
+=======================================================
+PARTICIPANTS
+=======================================================
+"""
+type Participant {
+    id: UUID!
+    slug: String!
+    type: String!
+    baseUrl: String!
+    token: JSON
+    tokenActions: JSON
+    savedAt: DateTime!
+    lastInteraction: DateTime!
+    isMe: Boolean!
+
+    # Grafo
+    agreements(limit: Int = 10, offset: Int = 0): [Agreement!]!
+}
+
+"""
+=======================================================
+PUB/SUB
+=======================================================
+"""
+type Subscription {
+    id: UUID!
+    callbackAddress: String!
+    timestamp: DateTime!
+    expirationTime: DateTime!
+    subscriptionEntity: String!
+    active: Boolean!
+
+    # Grafo
+    notifications(limit: Int = 20, offset: Int = 0): [NotificationSub!]!
+}
+
+type NotificationSub {
+    id: UUID!
+    timestamp: DateTime!
+    category: String!
+    subcategory: String!
+    messageType: String!
+    messageOperation: String!
+    messageContent: JSON
+
+    # Grafo
+    subscription: Subscription!
+}
+
+"""
+=======================================================
+DATAHUB
+=======================================================
+"""
+type DatahubDomain {
+    id: UUID!
+    urn: String!
+    properties: DatahubDomainProperties!
+
+    # Grafo
+    datasets(limit: Int = 10, offset: Int = 0): [DatahubDataset!]!
+}
+
+type DatahubDomainProperties {
+    name: String!
+    description: String!
+}
+
+type DatahubDataset {
+    id: UUID!
+    urn: String!
+    name: String!
+    platform: DatahubPlatform!
+    description: String!
+    tagNames: [String!]
+    customProperties: [[String!]!]
+    domain: DatahubDomain!
+    glossaryTerms: [GlossaryTerm!]
+}
+
+type DatahubPlatform {
+    name: String!
+}
+
+type GlossaryTerm {
+    id: UUID!
+    urn: String!
+    glossaryTermInfo: GlossaryTermInfo!
+}
+
+type GlossaryTermInfo {
+    name: String!
+    description: String!
+}
+
+"""
+=======================================================
+POLICY TEMPLATES / POLICIES
+=======================================================
+"""
+type PolicyTemplateLabel {
+    language: String!
+    value: String!
+}
+
+type OperandOption {
+    key: String!
+    dataType: String!
+    defaultValue: String
+    formType: String!
+    label: [PolicyTemplateLabel!]!
+    options: [PolicyTemplateOption!]!
+}
+
+type PolicyTemplateOption {
+    label: [PolicyTemplateLabel!]!
+    value: String!
+}
+
+type PolicyTemplate {
+    id: UUID!
+    title: String!
+    description: String!
+    content: OdrlOffer!
+    createdAt: DateTime!
+    operandOptions: [OperandOption!]!
+}

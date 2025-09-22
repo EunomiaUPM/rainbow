@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
  *  *
  *  * This program is free software: you can redistribute it and/or modify
  *  * it under the terms of the GNU General Public License as published by
@@ -17,10 +17,10 @@
  *
  */
 
-pub mod setup;
-pub mod http;
 pub mod core;
 pub mod data;
-pub mod types;
 pub mod errors;
+pub mod http;
+pub mod setup;
+pub mod types;
 pub mod utils;

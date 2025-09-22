@@ -2,22 +2,22 @@
 [workspace]
 members = [
     "rainbow-core",
-    "rainbow-catalog",
+    #"rainbow-catalog",
     "rainbow-contracts",
     "rainbow-dataplane",
     "rainbow-transfer",
     "rainbow-common",
     "rainbow-auth",
     "rainbow-db",
-    #"rainbow-tests",
+    "rainbow-tests",
     "rainbow-events",
     #"rainbow-proxy-http",
     #"rainbow-proxy-kafka",
     #"rainbow-proxy-nifi",
-    #"rainbow-fe-gateway",
+    "rainbow-fe-gateway",
     "rainbow-datahub-catalog",
-    #"rainbow-business-gateway",
     "rainbow-authority",
+    "rainbow-business-gateway",
 ]
 exclude = [
     "static",
@@ -60,7 +60,6 @@ sea-orm = { version = "1.1.1", features = ["sqlx-postgres", "sqlx-sqlite", "runt
 sea-orm-migration = { version = "1.1.1" }
 json_to_table = "0.10.0"
 mockall = "0.13.1"
-serde_valid = { version = "1.0.5", features = ["default"] }
 url = { version = "2.5.4", features = ["default"] }
 urlencoding = { version = "2.1.3" }
 sha2 = "0.10.9"

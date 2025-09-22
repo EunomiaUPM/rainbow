@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
  *  *
  *  * This program is free software: you can redistribute it and/or modify
  *  * it under the terms of the GNU General Public License as published by
@@ -16,9 +16,9 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use crate::ssi_wallet::{DidsInfo, KeyDefinition, WalletInfo};
 use axum::async_trait;
 use serde_json::Value;
-use crate::ssi_wallet::{DidsInfo, KeyDefinition, WalletInfo};
 
 #[async_trait]
 pub trait RainbowSSIAuthWalletTrait: Send + Sync {
@@ -40,7 +40,7 @@ pub trait RainbowSSIAuthWalletTrait: Send + Sync {
     async fn retrieve_wallet_dids(&self) -> anyhow::Result<()>;
     // REGISTER STUFF IN WALLET
     async fn register_key(&self) -> anyhow::Result<()>;
-    async fn register_did(&self) -> anyhow::Result<()>; 
+    async fn register_did(&self) -> anyhow::Result<()>;
     async fn set_default_did(&self) -> anyhow::Result<()>;
     // DELETE STUFF FROM WALLET
     async fn delete_key(&self, key: KeyDefinition) -> anyhow::Result<()>;

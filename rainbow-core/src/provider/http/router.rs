@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
  *  *
  *  * This program is free software: you can redistribute it and/or modify
  *  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 
 use axum::Router;
 use rainbow_auth::ssi_auth::provider::setup::router::create_ssi_provider_router;
-use rainbow_catalog::provider::setup::application::create_catalog_router;
+// use rainbow_catalog::provider::setup::application::create_catalog_router;
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_contracts::provider::setup::application::create_contract_negotiation_provider_router;
 use rainbow_datahub_catalog::setup::application::create_datahub_catalog_router;
@@ -34,7 +34,8 @@ pub async fn create_core_provider_router(config: &ApplicationProviderConfig) -> 
     let catalog_router: Router = if ApplicationProviderConfig::is_datahub_as_catalog(config) {
         create_datahub_catalog_router(&app_config.clone().into()).await
     } else {
-        create_catalog_router(&app_config.clone().into()).await
+        create_datahub_catalog_router(&app_config.clone().into()).await
+        // create_catalog_router(&app_config.clone().into()).await
     };
 
     Router::new().merge(transfer_router).merge(cn_router).merge(catalog_router).merge(auth_router)

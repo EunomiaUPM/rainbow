@@ -1,20 +1,37 @@
-use anyhow::bail;
+/*
+ *
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 use axum::extract::ws::Message;
 use axum::extract::{Query, State, WebSocketUpgrade};
 use axum::http::header::{AUTHORIZATION, CONTENT_TYPE};
-use axum::http::{Request, Response, StatusCode};
+use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
-use reqwest::{Body, Client};
+use reqwest::Client;
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::time::Duration;
 use tokio::sync::broadcast;
 use tower_http::cors::{AllowHeaders, Any, CorsLayer};
 use tracing::error;
-use url::Url;
 
 pub struct BusinessNotificationsRouter {
     config: ApplicationProviderConfig,
@@ -47,7 +64,7 @@ impl BusinessNotificationsRouter {
             .with_state((self.config, self.client, self.notification_tx))
     }
     async fn subscription_handler(
-        State((config, client, notification_tx)): State<(ApplicationProviderConfig, Client, broadcast::Sender<String>)>,
+        State((config, client, _notification_tx)): State<(ApplicationProviderConfig, Client, broadcast::Sender<String>)>,
         Query(params): Query<Params>,
     ) -> axum::response::Response {
         let callback_address = match params.callback_address {
@@ -75,7 +92,7 @@ impl BusinessNotificationsRouter {
         }
         let status = backend_res.status();
         let version = backend_res.version();
-        let mut headers = backend_res.headers().clone();
+        let headers = backend_res.headers().clone();
 
         let axum_body = axum::body::Body::from_stream(backend_res.bytes_stream());
         let mut response_builder = axum::response::Response::builder().status(status).version(version);
@@ -93,7 +110,7 @@ impl BusinessNotificationsRouter {
         })
     }
     async fn websocket_handler(
-        State((config, client, notification_tx)): State<(ApplicationProviderConfig, Client, broadcast::Sender<String>)>,
+        State((_config, _client, notification_tx)): State<(ApplicationProviderConfig, Client, broadcast::Sender<String>)>,
         ws: WebSocketUpgrade,
     ) -> impl IntoResponse {
         ws.on_upgrade(move |mut socket| async move {
@@ -148,7 +165,7 @@ impl BusinessNotificationsRouter {
         })
     }
     async fn incoming_notification(
-        State((config, client, notification_tx)): State<(ApplicationProviderConfig, Client, broadcast::Sender<String>)>,
+        State((_config, _client, notification_tx)): State<(ApplicationProviderConfig, Client, broadcast::Sender<String>)>,
         Json(input): Json<Value>,
     ) -> impl IntoResponse {
         let value_str = match serde_json::to_string(&input) {

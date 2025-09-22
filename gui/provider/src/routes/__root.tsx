@@ -10,7 +10,7 @@ export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
 }>()({
   component: ({ children }: { children: React.ReactNode }) => {
-    let widthPage = window.innerWidth;
+    const widthPage = window.innerWidth;
     // console.log("Width:", widthPage);
     return (
       <>

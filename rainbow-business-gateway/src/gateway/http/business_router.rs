@@ -1,3 +1,22 @@
+/*
+ *
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 use crate::gateway::core::business::BusinessCatalogTrait;
 use crate::gateway::http::business_router_types::{RainbowBusinessAcceptanceRequest, RainbowBusinessNegotiationRequest, RainbowBusinessTerminationRequest};
 use axum::extract::rejection::JsonRejection;
@@ -12,7 +31,6 @@ use rainbow_common::auth::header::{extract_request_info, RequestInfo};
 use rainbow_common::protocol::contract::contract_odrl::OdrlPolicyInfo;
 use rainbow_common::utils::get_urn_from_string;
 use serde_json::json;
-use std::future::Future;
 use std::sync::Arc;
 use tower_http::cors::{AllowHeaders, Any, CorsLayer};
 use tracing::info;
@@ -129,7 +147,7 @@ where
         let token = &info.token;
         let catalog_id = match get_urn_from_string(&catalog_id) {
             Ok(catalog_id) => catalog_id,
-            Err(err) => {
+            Err(_err) => {
                 return (
                     StatusCode::BAD_REQUEST,
                     Json(json!({"error": "urn not serializable"})),
@@ -156,7 +174,7 @@ where
         let token = &info.token;
         let dataset_id = match get_urn_from_string(&dataset_id) {
             Ok(dataset_id) => dataset_id,
-            Err(err) => {
+            Err(_err) => {
                 return (
                     StatusCode::BAD_REQUEST,
                     Json(json!({"error": "urn not serializable"})),
@@ -218,7 +236,7 @@ where
         let token = &info.token;
         let dataset_id = match get_urn_from_string(&dataset_id) {
             Ok(dataset_id) => dataset_id,
-            Err(err) => {
+            Err(_err) => {
                 return (
                     StatusCode::BAD_REQUEST,
                     Json(json!({"error": "urn not serializable"})),
@@ -249,7 +267,7 @@ where
         let token = &info.token;
         let dataset_id = match get_urn_from_string(&dataset_id) {
             Ok(dataset_id) => dataset_id,
-            Err(err) => {
+            Err(_err) => {
                 return (
                     StatusCode::BAD_REQUEST,
                     Json(json!({"error": "urn not serializable"})),
@@ -288,7 +306,7 @@ where
         let token = &info.token;
         let dataset_id = match get_urn_from_string(&dataset_id) {
             Ok(dataset_id) => dataset_id,
-            Err(err) => {
+            Err(_err) => {
                 return (
                     StatusCode::BAD_REQUEST,
                     Json(json!({"error": "urn not serializable"})),
@@ -298,7 +316,7 @@ where
         };
         let policy_id = match get_urn_from_string(&policy_id) {
             Ok(policy_id) => policy_id,
-            Err(err) => {
+            Err(_err) => {
                 return (
                     StatusCode::BAD_REQUEST,
                     Json(json!({"error": "urn not serializable"})),
@@ -339,7 +357,7 @@ where
         let token = &info.token;
         let request_id = match get_urn_from_string(&request_id) {
             Ok(request_id) => request_id,
-            Err(err) => {
+            Err(_err) => {
                 return (
                     StatusCode::BAD_REQUEST,
                     Json(json!({"error": "urn not serializable"})),
@@ -387,7 +405,7 @@ where
         let token = &info.token;
         let request_id = match get_urn_from_string(&request_id) {
             Ok(request_id) => request_id,
-            Err(err) => {
+            Err(_err) => {
                 return (
                     StatusCode::BAD_REQUEST,
                     Json(json!({"error": "urn not serializable"})),

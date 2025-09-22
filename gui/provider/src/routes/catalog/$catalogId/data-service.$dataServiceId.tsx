@@ -1,20 +1,13 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useGetDataServiceById } from "shared/src/data/catalog-queries.ts";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-} from "shared/src/components/ui/table.tsx";
+import {createFileRoute} from "@tanstack/react-router";
+import {useGetDataServiceById} from "shared/src/data/catalog-queries.ts";
 import dayjs from "dayjs";
 import Heading from "shared/src/components/ui/heading";
-import { Badge } from "shared/src/components/ui/badge";
-import { List, ListItem, ListItemKey, ListItemDate } from "shared/src/components/ui/list";
+import {Badge} from "shared/src/components/ui/badge";
+import {List, ListItem, ListItemDate, ListItemKey} from "shared/src/components/ui/list";
 
 function RouteComponent() {
-  const { dataServiceId } = Route.useParams();
-  const { data: dataService } = useGetDataServiceById(dataServiceId);
+  const {dataServiceId} = Route.useParams();
+  const {data: dataService} = useGetDataServiceById(dataServiceId);
   return (
     <div className="space-y-4 pb-4">
       <Heading level="h3" className="flex gap-2 items-center">

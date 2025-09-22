@@ -1,0 +1,396 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "DataHub Catalog and Policy API - Rainbow",
+    "description": "This API provides a comprehensive interface for managing policies and interacting with a DataHub instance as a federated catalog. It allows for the full lifecycle management of ODRL policies and policy templates, establishment of relationships between policies and data resources, and proxies requests to a backing DataHub service for entity management and discovery.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.rainbow-datahub.com",
+      "description": "Production Server"
+    },
+    {
+      "url": "http://127.0.0.1:8003",
+      "description": "Local Testing Server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "DataHub Proxy",
+      "description": "Endpoints that proxy requests to a DataHub instance."
+    },
+    {
+      "name": "Policy Templates",
+      "description": "Endpoints for managing reusable policy templates."
+    }
+  ],
+  "paths": {
+    "/api/v1/datahub/entities": {
+      "get": {
+        "tags": [
+          "DataHub Proxy"
+        ],
+        "summary": "Get entities from DataHub",
+        "operationId": "getDataHubEntities",
+        "description": "Proxies a request to the DataHub entities endpoint.",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "count",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of DataHub entities."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        }
+      }
+    },
+    "/api/v1/datahub/entities/{urn}": {
+      "get": {
+        "tags": [
+          "DataHub Proxy"
+        ],
+        "summary": "Get an entity by URN",
+        "operationId": "getDataHubEntityByUrn",
+        "description": "Proxies a request to get a specific DataHub entity by its URN.",
+        "parameters": [
+          {
+            "name": "urn",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "DataHub entity details."
+          },
+          "404": {
+            "description": "Not Found: Entity not found in DataHub."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        }
+      }
+    },
+    "/api/v1/policy-templates": {
+      "get": {
+        "tags": [
+          "Policy Templates"
+        ],
+        "summary": "List all policy templates",
+        "operationId": "getAllPolicyTemplates",
+        "description": "Retrieves a list of all available policy templates.",
+        "responses": {
+          "200": {
+            "description": "A list of policy templates.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PolicyTemplate"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Policy Templates"
+        ],
+        "summary": "Create a new policy template",
+        "operationId": "createPolicyTemplate",
+        "description": "Creates a new reusable policy template.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewPolicyTemplateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Policy template created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyTemplate"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request: Malformed JSON or validation error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/policy-templates/{id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/id"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Policy Templates"
+        ],
+        "summary": "Get a policy template by ID",
+        "operationId": "getPolicyTemplateById",
+        "description": "Retrieves a specific policy template by its unique identifier.",
+        "responses": {
+          "200": {
+            "description": "Policy template details.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyTemplate"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request: Invalid ID format.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found: Policy template not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Policy Templates"
+        ],
+        "summary": "Delete a policy template",
+        "operationId": "deletePolicyTemplate",
+        "description": "Deletes a policy template.",
+        "responses": {
+          "202": {
+            "description": "Policy template deleted successfully."
+          },
+          "400": {
+            "description": "Bad Request: Invalid ID format.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found: Policy template not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "id": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "description": "The unique identifier of the resource.",
+        "schema": {
+          "type": "string",
+          "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
+          "example": "urn:uuid:123e4567-e89b-12d3-a456-426614174000"
+        }
+      }
+    },
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "404"
+          },
+          "title": {
+            "type": "string",
+            "example": "NOT_FOUND"
+          },
+          "message": {
+            "type": "string",
+            "example": "The requested resource was not found."
+          }
+        }
+      },
+      "Policy": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uri"
+          },
+          "policy": {
+            "type": "object",
+            "description": "An ODRL policy object."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "NewPolicyRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uri",
+            "description": "Optional unique identifier for the policy."
+          },
+          "policy": {
+            "type": "object",
+            "description": "The ODRL policy definition."
+          }
+        },
+        "required": [
+          "policy"
+        ]
+      },
+      "PolicyTemplate": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uri"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "template": {
+            "type": "object",
+            "description": "The policy template structure."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "NewPolicyTemplateRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "template": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "name",
+          "template"
+        ]
+      }
+    }
+  }
+}

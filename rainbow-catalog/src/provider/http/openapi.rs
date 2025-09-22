@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
  *  *
  *  * This program is free software: you can redistribute it and/or modify
  *  * it under the terms of the GNU General Public License as published by
@@ -25,14 +25,16 @@ use once_cell::sync::Lazy;
 use serde_json::Value;
 
 pub fn route_openapi() -> Router {
-    Router::new()
-        .route("/api/v1/catalog/openapi.json", get(get_open_api))
+    Router::new().route("/api/v1/catalog/openapi.json", get(get_open_api))
 }
 
 static OPENAPI_JSON: Lazy<Value> = Lazy::new(|| {
-    let openapi_yaml = include_str!("../../../openapi/catalog.json");
-    let openapi = serde_json::from_str::<Value>(&openapi_yaml).unwrap();
-    openapi
+    // let openapi_yaml = include_str!("../../../openapi/catalog.json");
+    // let openapi = serde_json::from_str::<Value>(&openapi_yaml).unwrap();
+
+    serde_json::json!({
+        "testeo": "testeo"
+    })
 });
 
 async fn get_open_api() -> impl IntoResponse {

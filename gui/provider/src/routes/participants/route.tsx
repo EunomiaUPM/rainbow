@@ -1,6 +1,5 @@
-import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
+import {createFileRoute, Outlet, useRouterState} from "@tanstack/react-router";
 import Heading from "../../../../shared/src/components/ui/heading.tsx";
-import { useRouterState } from "@tanstack/react-router";
 
 const NotFound = () => {
   return <div>not found</div>;
@@ -22,7 +21,7 @@ const RouteComponent = () => {
           </div>
         </>
       )}
-      <Outlet />
+      <Outlet/>
     </>
   );
 };

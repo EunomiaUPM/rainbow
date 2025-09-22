@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
  *  *
  *  * This program is free software: you can redistribute it and/or modify
  *  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ use crate::errors::{CustomToResponse, ErrorLog, Errors};
 use crate::types::gnap::{GrantRequest, RefBody};
 use crate::types::manager::VcManager;
 use crate::types::oidc::VerifyPayload;
+use crate::types::wallet::{DidsInfo, KeyDefinition};
 use crate::utils::extract_gnap_token;
 use axum::extract::{Path, State};
 use axum::http::{HeaderMap, Method, StatusCode, Uri};
@@ -33,7 +34,6 @@ use axum::{Form, Json, Router};
 use serde_json::Value;
 use std::sync::Arc;
 use tracing::{error, info};
-use crate::types::wallet::{DidsInfo, KeyDefinition};
 
 pub struct RainbowAuthorityRouter<T>
 where
@@ -57,7 +57,10 @@ where
             .route("/api/v1/wallet/login", post(Self::wallet_login))
             .route("/api/v1/wallet/logout", post(Self::wallet_logout))
             .route("/api/v1/wallet/onboard", post(Self::wallet_onboard))
-            .route("/api/v1/wallet/partial-onboard",post(Self::partial_onboard))
+            .route(
+                "/api/v1/wallet/partial-onboard",
+                post(Self::partial_onboard),
+            )
             .route("/api/v1/wallet/key", post(Self::register_key))
             .route("/api/v1/wallet/did", post(Self::register_did))
             .route("/api/v1/wallet/key", delete(Self::delete_key))
@@ -170,7 +173,6 @@ where
             Err(e) => e.to_response(),
         }
     }
-
 
     async fn access_request(
         State(authority): State<Arc<Authority<T>>>,
