@@ -29,12 +29,8 @@ pub fn route_openapi() -> Router {
 }
 
 static OPENAPI_JSON: Lazy<Value> = Lazy::new(|| {
-    // let openapi_yaml = include_str!("../../../openapi/catalog.json");
-    // let openapi = serde_json::from_str::<Value>(&openapi_yaml).unwrap();
-
-    serde_json::json!({
-        "testeo": "testeo"
-    })
+    let openapi_yaml = include_str!("../../../../static/specs/openapi/catalog_provider.json");
+    serde_json::from_str::<Value>(&openapi_yaml).unwrap()
 });
 
 async fn get_open_api() -> impl IntoResponse {

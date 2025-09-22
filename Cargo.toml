@@ -2,7 +2,7 @@
 [workspace]
 members = [
     "rainbow-core",
-    #"rainbow-catalog",
+    "rainbow-catalog",
     "rainbow-contracts",
     "rainbow-dataplane",
     "rainbow-transfer",
