@@ -84,6 +84,104 @@
         }
       }
     },
+    "/api/v1/wallet/partial-onboard": {
+      "post": {
+        "summary": "Partial onboard a wallet",
+        "description": "Performs a partial onboarding process for a wallet in the system.",
+        "operationId": "wallet_onboard",
+        "responses": {
+          "201": {
+            "description": "Wallet successfully initialized."
+          },
+          "502": {
+            "description": "The petition to the wallet went wrong"
+          },
+          "500": {
+            "description": "Unexpected internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/wallet/key": {
+      "post": {
+        "summary": "Register key in wallet",
+        "description": "Register the key from env files in wallet.",
+        "operationId": "register-key",
+        "responses": {
+          "201": {
+            "description": "Key successfully registered."
+          },
+          "412": {
+            "description": "An action should be done before"
+          },
+          "502": {
+            "description": "The petition to create the key went wrong"
+          },
+          "500": {
+            "description": "Unexpected internal server error"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete the key from wallet",
+        "description": "Delete the key from wallet.",
+        "operationId": "delete-key",
+        "responses": {
+          "201": {
+            "description": "Key successfully deleted."
+          },
+          "412": {
+            "description": "An action should be done before"
+          },
+          "502": {
+            "description": "The petition to create the key went wrong"
+          },
+          "500": {
+            "description": "Unexpected internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/wallet/did": {
+      "post": {
+        "summary": "Register Did in wallet",
+        "description": "Register Did based on key in wallet.",
+        "operationId": "register-did",
+        "responses": {
+          "201": {
+            "description": "Did successfully registered."
+          },
+          "412": {
+            "description": "An action should be done before"
+          },
+          "502": {
+            "description": "The petition to the create the Did went wrong"
+          },
+          "500": {
+            "description": "Unexpected internal server error"
+          }
+        }
+      },
+      "deleted": {
+        "summary": "Deleted Did from wallet",
+        "description": "Delete Did from wallet.",
+        "operationId": "delete-did",
+        "responses": {
+          "201": {
+            "description": "Did successfully deleted."
+          },
+          "412": {
+            "description": "An action should be done before"
+          },
+          "502": {
+            "description": "The petition to the create the Did went wrong"
+          },
+          "500": {
+            "description": "Unexpected internal server error"
+          }
+        }
+      }
+    },
     "/api/v1/did.json": {
       "get": {
         "summary": "Retrieve DID document",
@@ -216,9 +314,9 @@
     },
     "/api/v1/callback/{id}": {
       "get": {
-        "summary": "Callback to complete provider onboarding",
+        "summary": "A callback to complete processes",
         "description": "Handles the callback from a provider after onboarding. Saves the request in the system database.",
-        "operationId": "callback",
+        "operationId": "get-callback",
         "parameters": [
           {
             "name": "id",
@@ -313,7 +411,173 @@
             "description": "Database error or unexpected internal server error."
           }
         }
+      },
+      "post": {
+        "summary": "A callback to complete processes",
+        "description": "Handles the callback from an authority after onboarding. Saves the request in the system database.",
+        "operationId": "post-callback",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "interact_ref": {
+                    "type": "string"
+                  },
+                  "hash": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "interact_ref",
+                  "hash"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Request completed successfully, returns URI for authentication.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request was malformed."
+          },
+          "502": {
+            "description": "Request to provider failed or provider responded unexpectedly."
+          },
+          "500": {
+            "description": "Database error or unexpected internal server error."
+          }
+        }
+      }
+    },
+    "/api/v1/authority/beg": {
+      "post": {
+        "summary": "Begin a credential request to authority",
+        "description": "Starts a credential request process with the authority.",
+        "operationId": "beg-credential",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Identifier of the request"
+                  },
+                  "slug": {
+                    "type": "string",
+                    "description": "Slug of the authority"
+                  },
+                  "url": {
+                    "type": "string",
+                    "description": "URL of the authority endpoint"
+                  }
+                },
+                "required": ["id", "slug", "url"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK. Credential request started successfully."
+          },
+          "502": {
+            "description": "Bad Gateway. The request to the authority failed."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        }
+      }
+    },
+    "/api/v1/authority/beg/oidc": {
+      "post": {
+        "summary": "Beg for credential (OIDC) - INCOMPLETE",
+        "description": "Not implemented yet.",
+        "operationId": "beg4credential-oidc",
+        "responses": {
+          "501": {
+            "description": "Not Implemented"
+          }
+        }
+      }
+    },
+    "/api/v1/authority/request/all": {
+      "get": {
+        "summary": "Get all authority requests",
+        "description": "Retrieve all authority requests from the database.",
+        "operationId": "get-all-authority",
+        "responses": {
+          "200": {
+            "description": "List of authority requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuthorityRequest"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/v1/authority/request/{id}": {
+      "get": {
+        "summary": "Get a single authority request",
+        "description": "Retrieve a specific authority request by its ID.",
+        "operationId": "get-one-authority",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID of the authority request"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authority request found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthorityRequest"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Authority request not found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
       }
     }
+
   }
 }
