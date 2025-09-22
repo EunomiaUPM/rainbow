@@ -21,7 +21,7 @@ pub mod impls;
 pub mod traits;
 
 use rainbow_common::config::provider_config::ApplicationProviderConfig;
-use rainbow_common::ssi_wallet::{KeyDefinition, KeyInfo, WalletSession};
+use rainbow_common::ssi_wallet::{KeyDefinition, WalletSession};
 use rainbow_db::auth_provider::repo_factory::factory_trait::AuthRepoFactoryTrait;
 use reqwest::Client;
 use std::sync::Arc;

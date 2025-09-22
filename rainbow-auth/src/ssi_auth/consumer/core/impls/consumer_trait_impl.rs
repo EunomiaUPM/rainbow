@@ -29,7 +29,7 @@ use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
 use rainbow_common::auth::gnap::{AccessToken, GrantRequest, GrantResponse};
 use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
-use rainbow_common::errors::helpers::{BadFormat, MissingAction};
+use rainbow_common::errors::helpers::{BadFormat};
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::ssi_wallet::RainbowSSIAuthWalletTrait;
 use rainbow_db::auth_consumer::entities::{

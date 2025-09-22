@@ -416,9 +416,7 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
 
     fn get_cert(&self) -> String {
         let path = fs::read(self.client_config.cert_path.clone()).unwrap();
-        let cert = String::from_utf8(path).unwrap();
-
-        cert.lines().filter(|line| !line.starts_with("-----")).collect::<String>()
+        String::from_utf8(path).unwrap()
     }
     fn get_priv_key(&self) -> String {
         let bad_path = self.client_config.cert_path.clone();
@@ -428,9 +426,7 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
         };
         let path = format!("{}/private_key.pem", inc_path);
         let file = fs::read(path).unwrap();
-        let cert = String::from_utf8(file).unwrap();
-
-        cert.lines().filter(|line| !line.starts_with("-----")).collect::<String>()
+        String::from_utf8(file).unwrap()
     }
     fn get_pub_key(&self) -> String {
         let bad_path = self.client_config.cert_path.clone();
@@ -440,8 +436,6 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
         };
         let path = format!("{}/public_key.pem", inc_path);
         let file = fs::read(path).unwrap();
-        let cert = String::from_utf8(file).unwrap();
-
-        cert.lines().filter(|line| !line.starts_with("-----")).collect::<String>()
+        String::from_utf8(file).unwrap()
     }
 }

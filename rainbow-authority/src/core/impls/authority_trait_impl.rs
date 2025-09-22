@@ -613,7 +613,7 @@ where
                 "format": {
                     "jwt_vc_json": {
                     "alg": [
-                        "EdDSA"
+                        "RSA"
                     ]
                     }
                 },

@@ -233,6 +233,7 @@ where
 
         self.retrieve_wallet_info().await?;
         self.retrieve_wallet_dids().await?;
+        self.set_default_did().await?;
 
         let wallet = self.get_wallet().await?;
         let did_info = match wallet.dids.first() {
@@ -586,6 +587,8 @@ where
         match res.status().as_u16() {
             201 => {
                 info!("Key registered successfully");
+                let res = res.text().await?;
+                debug!("{}", res);
             }
             _ => {
                 let error = AuthErrors::wallet_new(
@@ -637,7 +640,7 @@ where
         match res.status().as_u16() {
             200 => {
                 info!("Did registered successfully");
-                let res = res.json().await?;
+                let res = res.text().await?;
                 debug!("{:#?}", res);
             }
             409 => {
@@ -649,6 +652,59 @@ where
                     "POST".to_string(),
                     res.status().as_u16(),
                     Some("Petition to register key failed".to_string()),
+                );
+                error!("{}", error.log());
+                bail!(error);
+            }
+        }
+
+        Ok(())
+    }
+
+    async fn set_default_did(&self) -> anyhow::Result<()> {
+        info!("Setting default did in web wallet");
+
+        let wallet = self.get_wallet().await?;
+        let token = self.get_token().await?;
+        let did = self.get_did().await?;
+
+        let url = format!(
+            "{}/wallet-api/wallet/{}/dids/default?did={}",
+            self.config.get_wallet_portal_url(),
+            &wallet.id,
+            did
+        );
+
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "application/json".parse()?);
+        headers.insert(ACCEPT, "application/json".parse()?);
+        headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?);
+
+        let res = match self.client.post(&url).headers(headers).send().await {
+            Ok(data) => data,
+            Err(e) => {
+                let http_code = match e.status() {
+                    Some(status) => Some(status.as_u16()),
+                    None => None,
+                };
+                let error = CommonErrors::petition_new(url, "POST".to_string(), http_code, e.to_string());
+                error!("{}", error.log());
+                bail!(error);
+            }
+        };
+
+        match res.status().as_u16() {
+            202 => {
+                info!("Did has been set as default");
+                let res = res.text().await?;
+                debug!("{:#?}", res);
+            }
+            _ => {
+                let error = AuthErrors::wallet_new(
+                    url,
+                    "POST".to_string(),
+                    res.status().as_u16(),
+                    Some("Petition to set did as default failed".to_string()),
                 );
                 error!("{}", error.log());
                 bail!(error);

@@ -16,15 +16,8 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use std::format;
-use anyhow::bail;
 use axum::async_trait;
-use axum::http::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
-use axum::http::HeaderMap;
 use serde_json::Value;
-use tracing::{error, info};
-use crate::errors::CommonErrors;
-use crate::errors::helpers::MissingAction;
 use crate::ssi_wallet::{DidsInfo, KeyDefinition, WalletInfo};
 
 #[async_trait]
@@ -48,6 +41,7 @@ pub trait RainbowSSIAuthWalletTrait: Send + Sync {
     // REGISTER STUFF IN WALLET
     async fn register_key(&self) -> anyhow::Result<()>;
     async fn register_did(&self) -> anyhow::Result<()>; 
+    async fn set_default_did(&self) -> anyhow::Result<()>;
     // DELETE STUFF FROM WALLET
     async fn delete_key(&self, key: KeyDefinition) -> anyhow::Result<()>;
     async fn delete_did(&self, did_info: DidsInfo) -> anyhow::Result<()>;

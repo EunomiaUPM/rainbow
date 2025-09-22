@@ -65,7 +65,7 @@ where
             .route("/api/v1/wallet/did", delete(Self::delete_did))
             .route("/api/v1/did.json", get(Self::didweb))
             // PROVIDER
-            .route("/api/v1/request/onboard_wallet/provider", post(Self::request_provider_onboard))
+            .route("/api/v1/request/onboard/provider", post(Self::request_provider_onboard))
             .route("/api/v1/callback/:id", get(Self::get_callback))
             .route("/api/v1/callback/:id", post(Self::post_callback))
             // 4 MICROSERVICES
