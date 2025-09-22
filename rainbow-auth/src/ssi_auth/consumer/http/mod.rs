@@ -25,11 +25,11 @@ use crate::ssi_auth::types::gnap::CallbackBody;
 use axum::extract::{Path, Query, State};
 use axum::http::{Method, Uri};
 use axum::response::IntoResponse;
-use axum::routing::{get, post};
+use axum::routing::{delete, get, post};
 use axum::{Json, Router};
 use rainbow_common::errors::helpers::BadFormat;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
-use rainbow_common::ssi_wallet::RainbowSSIAuthWalletTrait;
+use rainbow_common::ssi_wallet::{DidsInfo, KeyDefinition, RainbowSSIAuthWalletTrait};
 use rainbow_db::auth_consumer::repo_factory::factory_trait::AuthRepoFactoryTrait;
 use reqwest::StatusCode;
 use std::collections::HashMap;
@@ -58,13 +58,14 @@ where
             .route("/api/v1/wallet/login", post(Self::wallet_login))
             .route("/api/v1/wallet/logout", post(Self::wallet_logout))
             .route("/api/v1/wallet/onboard", post(Self::wallet_onboard))
-            .route("/api/v1/did.json", get(Self::didweb))
+            .route("/api/v1/wallet/partial-onboard",post(Self::partial_onboard))
             .route("/api/v1/wallet/key", post(Self::register_key))
+            .route("/api/v1/wallet/did", post(Self::register_did))
+            .route("/api/v1/wallet/key", delete(Self::delete_key))
+            .route("/api/v1/wallet/did", delete(Self::delete_did))
+            .route("/api/v1/did.json", get(Self::didweb))
             // PROVIDER
-            .route(
-                "/api/v1/request/onboard/provider",
-                post(Self::request_provider_onboard),
-            )
+            .route("/api/v1/request/onboard_wallet/provider", post(Self::request_provider_onboard))
             .route("/api/v1/callback/:id", get(Self::get_callback))
             .route("/api/v1/callback/:id", post(Self::post_callback))
             // 4 MICROSERVICES
@@ -72,14 +73,8 @@ where
             // AUTHORITY
             .route("/api/v1/authority/beg", post(Self::beg4credential))
             .route("/api/v1/authority/beg/oidc", post(Self::beg4credential))
-            .route(
-                "/api/v1/authority/request/all",
-                get(Self::get_all_authority),
-            )
-            .route(
-                "/api/v1/authority/request/:id",
-                get(Self::get_one_authority),
-            )
+            .route("/api/v1/authority/request/all", get(Self::get_all_authority))
+            .route("/api/v1/authority/request/:id", get(Self::get_one_authority))
             // .route("/provider/:id/renew", post(todo!()))
             // .route("/provider/:id/finalize", post(todo!()))
             // TEST
@@ -118,24 +113,63 @@ where
     async fn wallet_onboard(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
         info!("POST /wallet/onboard");
 
-        match manager.onboard().await {
+        match manager.onboard_wallet().await {
             Ok(()) => StatusCode::CREATED.into_response(),
+            Err(e) => e.to_response(),
+        }
+    }
+    async fn partial_onboard(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
+        info!("POST /wallet/partial-onboard");
+
+        match manager.partial_onboard().await {
+            Ok(()) => StatusCode::CREATED.into_response(),
+            Err(e) => e.to_response(),
+        }
+    }
+
+    async fn register_key(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
+        info!("POST /wallet/key");
+
+        match manager.register_key().await {
+            Ok(_) => StatusCode::CREATED.into_response(),
+            Err(e) => e.to_response(),
+        }
+    }
+
+    async fn register_did(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
+        info!("POST /wallet/did");
+
+        match manager.register_did().await {
+            Ok(_) => StatusCode::CREATED.into_response(),
+            Err(e) => e.to_response(),
+        }
+    }
+
+    async fn delete_key(
+        State(manager): State<Arc<Manager<T>>>,
+        Json(payload): Json<KeyDefinition>,
+    ) -> impl IntoResponse {
+        info!("DELETE /wallet/key");
+
+        match manager.delete_key(payload).await {
+            Ok(_) => StatusCode::CREATED.into_response(),
+            Err(e) => e.to_response(),
+        }
+    }
+
+    async fn delete_did(State(manager): State<Arc<Manager<T>>>, Json(payload): Json<DidsInfo>) -> impl IntoResponse {
+        info!("DELETE /wallet/did");
+
+        match manager.delete_did(payload).await {
+            Ok(_) => StatusCode::CREATED.into_response(),
             Err(e) => e.to_response(),
         }
     }
 
     async fn didweb(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
         info!("GET /did.json");
-        match manager.didweb().await {
+        match manager.get_did_doc().await {
             Ok(did) => Json(did).into_response(),
-            Err(e) => e.to_response(),
-        }
-    }
-    async fn register_key(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
-        info!("POST /wallet/key");
-        manager.register_key().await.unwrap();
-        match manager.register_did().await {
-            Ok(_) => StatusCode::OK.into_response(),
             Err(e) => e.to_response(),
         }
     }

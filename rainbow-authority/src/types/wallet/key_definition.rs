@@ -16,37 +16,22 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
-use super::{DidsInfo, WalletInfo};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct WalletInfoResponse {
-    pub account: String,
-    pub wallets: Vec<ModifiedWalletInfo>,
-}
-
-#[derive(Deserialize, Serialize, PartialEq, Eq, Clone, Debug)]
-pub struct ModifiedWalletInfo {
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+pub struct KeyInfo {
     pub id: String,
-    pub name: String,
-    #[serde(rename = "createdOn")]
-    pub created_on: String,
-    #[serde(rename = "addedOn")]
-    pub added_on: String,
-    pub permission: String, // TODO
-    pub dids: Option<Vec<DidsInfo>>,
 }
-
-impl ModifiedWalletInfo {
-    pub fn to_normal(self) -> WalletInfo {
-        WalletInfo {
-            id: self.id,
-            name: self.name,
-            created_on: self.created_on,
-            added_on: self.added_on,
-            permission: self.permission,
-            dids: Vec::<DidsInfo>::new(),
-        }
-    }
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+pub struct KeyDefinition {
+    pub algorithm: String,
+    #[serde(rename = "cryptoProvider")]
+    pub crypto_provider: String,
+    #[serde(rename = "keyId")]
+    pub key_id: KeyInfo,
+    #[serde(rename = "keyPair")]
+    pub key_pair: Value,
+    #[serde(rename = "keyset_handle")]
+    pub keyset_handle: Option<Value>,
 }

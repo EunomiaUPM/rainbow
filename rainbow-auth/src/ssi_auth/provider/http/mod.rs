@@ -25,13 +25,13 @@ use crate::ssi_auth::utils::token::extract_gnap_token;
 use axum::extract::{Form, Path, State};
 use axum::http::{HeaderMap, Method, Uri};
 use axum::response::IntoResponse;
-use axum::routing::{get, post};
+use axum::routing::{delete, get, post};
 use axum::{Json, Router};
 use rainbow_common::auth::business::RainbowBusinessLoginRequest;
 use rainbow_common::auth::gnap::{AccessToken, GrantRequest};
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::mates::mates::VerifyTokenRequest;
-use rainbow_common::ssi_wallet::RainbowSSIAuthWalletTrait;
+use rainbow_common::ssi_wallet::{DidsInfo, KeyDefinition, RainbowSSIAuthWalletTrait};
 use rainbow_db::auth_provider::repo_factory::factory_trait::AuthRepoFactoryTrait;
 use reqwest::StatusCode;
 use serde::Deserialize;
@@ -59,6 +59,11 @@ where
             .route("/api/v1/wallet/login", post(Self::wallet_login))
             .route("/api/v1/wallet/logout", post(Self::wallet_logout))
             .route("/api/v1/wallet/onboard", post(Self::wallet_onboard))
+            .route("/api/v1/wallet/partial-onboard",post(Self::partial_onboard))
+            .route("/api/v1/wallet/key", post(Self::register_key))
+            .route("/api/v1/wallet/did", post(Self::register_did))
+            .route("/api/v1/wallet/key", delete(Self::delete_key))
+            .route("/api/v1/wallet/did", delete(Self::delete_did))
             .route("/api/v1/did.json", get(Self::didweb))
             // GNAP
             .route("/api/v1/access", post(Self::access_request))
@@ -76,6 +81,8 @@ where
             .with_state(self.manager)
             .fallback(Self::fallback) // 2 routers cannot have 1 fallback each
     }
+
+    // WALLET ------------------------------------------------------------------------------------->
 
     async fn wallet_register(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
         info!("POST /wallet/register");
@@ -106,19 +113,68 @@ where
     async fn wallet_onboard(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
         info!("POST /wallet/onboard");
 
-        match manager.onboard().await {
+        match manager.onboard_wallet().await {
             Ok(()) => StatusCode::CREATED.into_response(),
+            Err(e) => e.to_response(),
+        }
+    }
+    async fn partial_onboard(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
+        info!("POST /wallet/partial-onboard");
+
+        match manager.partial_onboard().await {
+            Ok(()) => StatusCode::CREATED.into_response(),
+            Err(e) => e.to_response(),
+        }
+    }
+
+    async fn register_key(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
+        info!("POST /wallet/key");
+
+        match manager.register_key().await {
+            Ok(_) => StatusCode::CREATED.into_response(),
+            Err(e) => e.to_response(),
+        }
+    }
+
+    async fn register_did(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
+        info!("POST /wallet/did");
+
+        match manager.register_did().await {
+            Ok(_) => StatusCode::CREATED.into_response(),
+            Err(e) => e.to_response(),
+        }
+    }
+
+    async fn delete_key(
+        State(manager): State<Arc<Manager<T>>>,
+        Json(payload): Json<KeyDefinition>,
+    ) -> impl IntoResponse {
+        info!("DELETE /wallet/key");
+
+        match manager.delete_key(payload).await {
+            Ok(_) => StatusCode::CREATED.into_response(),
+            Err(e) => e.to_response(),
+        }
+    }
+
+    async fn delete_did(State(manager): State<Arc<Manager<T>>>, Json(payload): Json<DidsInfo>) -> impl IntoResponse {
+        info!("DELETE /wallet/did");
+
+        match manager.delete_did(payload).await {
+            Ok(_) => StatusCode::CREATED.into_response(),
             Err(e) => e.to_response(),
         }
     }
 
     async fn didweb(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
         info!("GET /did.json");
-        match manager.didweb().await {
+        match manager.get_did_doc().await {
             Ok(did) => Json(did).into_response(),
             Err(e) => e.to_response(),
         }
     }
+
+    //GNAP
 
     async fn access_request(
         State(manager): State<Arc<Manager<T>>>,
@@ -175,6 +231,8 @@ where
         (StatusCode::OK, Json(res)).into_response()
     }
 
+    // OIDC
+    
     async fn pd(State(manager): State<Arc<Manager<T>>>, Path(state): Path<String>) -> impl IntoResponse {
         let log = format!("GET /pd/{}", state);
         info!("{}", log);

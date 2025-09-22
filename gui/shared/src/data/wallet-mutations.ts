@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 /**
- *  POST /wallet/onboard
+ *  POST /wallet/onboard_wallet
  * */
 interface WalletOnboarPayload {
   api_gateway: string;

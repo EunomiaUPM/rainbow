@@ -31,6 +31,7 @@ use rainbow_common::auth::gnap::{AccessToken, GrantRequest, GrantResponse};
 use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
 use rainbow_common::errors::helpers::{BadFormat, MissingAction};
 use rainbow_common::errors::{CommonErrors, ErrorLog};
+use rainbow_common::ssi_wallet::RainbowSSIAuthWalletTrait;
 use rainbow_db::auth_consumer::entities::{
     auth_interaction, auth_request, auth_token_requirements, auth_verification, authority_request, mates,
 };
@@ -813,20 +814,8 @@ where
     // EXTRAS ------------------------------------------------------------------------------------->
 
     async fn join_exchange(&self, exchange_url: String) -> anyhow::Result<String> {
-        let wallet_session = self.wallet_session.lock().await;
-
-        let wallet = match wallet_session.wallets.first() {
-            Some(w) => w,
-            None => {
-                let error = CommonErrors::missing_action_new(
-                    "There is no wallet associated to this session".to_string(),
-                    MissingAction::Wallet,
-                    Some("There is no wallet to retrieve dids from".to_string()),
-                );
-                error!("{}", error.log());
-                bail!(error)
-            }
-        };
+        let wallet = self.get_wallet().await?;
+        let token = self.get_token().await?;
 
         let url = format!(
             "{}/wallet-api/wallet/{}/exchange/resolvePresentationRequest",
@@ -837,17 +826,19 @@ where
         let mut headers = HeaderMap::new();
         headers.insert(CONTENT_TYPE, "text/plain".parse()?);
         headers.insert(ACCEPT, "text/plain".parse()?);
+        headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?);
 
-        match &wallet_session.token {
-            Some(token) => headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?),
-            None => bail!("No token available for authentication"),
-        };
-
-        let res = self.client.post(url).headers(headers).body(exchange_url).send().await;
-
-        let res = match res {
-            Ok(res) => res,
-            Err(e) => bail!("Error sending request: {}", e),
+        let res = match self.client.post(&url).headers(headers).body(exchange_url).send().await {
+            Ok(data) => data,
+            Err(e) => {
+                let http_code = match e.status() {
+                    Some(status) => Some(status.as_u16()),
+                    None => None,
+                };
+                let error = CommonErrors::petition_new(url, "POST".to_string(), http_code, e.to_string());
+                error!("{}", error.log());
+                bail!(error);
+            }
         };
 
         match res.status().as_u16() {
@@ -869,42 +860,53 @@ where
             match serde_json::from_str::<Value>(&vpd_json) {
                 Ok(json) => Ok(json),
                 Err(err) => {
-                    let log = format!("Error parsing the credential -> {}", err.to_string());
-                    error!(log);
-                    bail!("Error parsing the credential")
+                    let error = CommonErrors::format_new(
+                        BadFormat::Received,
+                        Some(format!(
+                            "Error parsing the credential -> {}",
+                            err.to_string()
+                        )),
+                    );
+                    error!("{}", error.log());
+                    bail!(error)
                 }
             }
         } else {
-            error!("Invalid Presentation Definition");
-            bail!("Invalid Presentation Definition")
+            let error = CommonErrors::format_new(
+                BadFormat::Received,
+                Some("Invalid presentation definition".to_string()),
+            );
+            error!("{}", error.log());
+            bail!(error)
         }
     }
 
     async fn match_vc4vp(&self, vp_def: Value) -> anyhow::Result<Vec<MatchingVCs>> {
-        let wallet_session = self.wallet_session.lock().await;
-        if wallet_session.wallets.first().is_none() {
-            bail!("There is not a wallet registered")
-        };
+        let wallet = self.get_wallet().await?;
+        let token = self.get_token().await?;
+
         let url = format!(
             "{}/wallet-api/wallet/{}/exchange/matchCredentialsForPresentationDefinition",
             self.config.get_wallet_portal_url(),
-            wallet_session.wallets.first().unwrap().id
+            wallet.id
         );
 
         let mut headers = HeaderMap::new();
         headers.insert(CONTENT_TYPE, "application/json".parse()?);
         headers.insert(ACCEPT, "application/json".parse()?);
+        headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?);
 
-        match &wallet_session.token {
-            Some(token) => headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?),
-            None => bail!("No token available for authentication"),
-        };
-
-        let res = self.client.post(url).headers(headers).json(&vp_def).send().await;
-
-        let res = match res {
-            Ok(res) => res,
-            Err(e) => bail!("Error sending request: {}", e),
+        let res = match self.client.post(&url).headers(headers).json(&vp_def).send().await {
+            Ok(data) => data,
+            Err(e) => {
+                let http_code = match e.status() {
+                    Some(status) => Some(status.as_u16()),
+                    None => None,
+                };
+                let error = CommonErrors::petition_new(url, "POST".to_string(), http_code, e.to_string());
+                error!("{}", error.log());
+                bail!(error);
+            }
         };
 
         match res.status().as_u16() {
@@ -915,45 +917,53 @@ where
                 Ok(vc_json)
             }
             _ => {
-                error!("Error matching credentials: {}", res.status());
-                bail!("Error matching credentials: {}", res.status())
+                let error = AuthErrors::wallet_new(
+                    url,
+                    "POST".to_string(),
+                    res.status().as_u16(),
+                    Some("Petition to match credentials failed".to_string()),
+                );
+                error!("{}", error.log());
+                bail!(error);
             }
         }
     }
 
     async fn present_vp(&self, preq: String, creds: Vec<String>) -> anyhow::Result<RedirectResponse> {
-        let wallet_session = self.wallet_session.lock().await;
-        if wallet_session.wallets.first().is_none() {
-            bail!("There is not a wallet registered")
-        };
+        let wallet = self.get_wallet().await?;
+        let token = self.get_token().await?;
+        let did = self.get_did().await?;
+
         let url = format!(
             "{}/wallet-api/wallet/{}/exchange/usePresentationRequest",
             self.config.get_wallet_portal_url(),
-            wallet_session.wallets.first().unwrap().id
+            wallet.id
         );
 
         let mut headers = HeaderMap::new();
         headers.insert(CONTENT_TYPE, "application/json".parse()?);
         headers.insert(ACCEPT, "application/json".parse()?);
-
-        match &wallet_session.token {
-            Some(token) => headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?),
-            None => bail!("No token available for authentication"),
-        };
+        headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?);
 
         // TODO Check
         // let did = &wallet_session.wallets.first().unwrap().dids.as_ref().unwrap().first().unwrap().did;
-        let did = wallet_session.wallets.first().unwrap().dids.as_ref().unwrap().first().unwrap().did.clone();
 
         let body = json!({ "did": did, "presentationRequest": preq, "selectedCredentials": creds });
 
-        let res = self.client.post(url).headers(headers).json(&body).send().await;
-
-        let res = match res {
-            Ok(res) => res,
-            Err(e) => bail!("Error sending request: {}", e),
+        let res = match self.client.post(&url).headers(headers).json(&body).send().await {
+            Ok(data) => data,
+            Err(e) => {
+                let http_code = match e.status() {
+                    Some(status) => Some(status.as_u16()),
+                    None => None,
+                };
+                let error = CommonErrors::petition_new(url, "POST".to_string(), http_code, e.to_string());
+                error!("{}", error.log());
+                bail!(error);
+            }
         };
 
+        // TODO
         let body: RedirectResponse = res.json().await?;
 
         Ok(body)

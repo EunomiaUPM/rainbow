@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use std::{format, fs};
 use super::ClientConfig;
 use crate::setup::database::DatabaseConfig;
 use crate::types::wallet::SSIWalletConfig;
@@ -27,5 +28,8 @@ pub trait AuthorityApplicationConfigTrait {
     fn get_wallet_portal_url(&self) -> String;
     fn get_full_db_url(&self) -> String;
     fn get_wallet_data(&self) -> serde_json::Value;
+    fn get_cert(&self) -> String;
+    fn get_priv_key(&self) -> String;
+    fn get_pub_key(&self) -> String;
     fn merge_dotenv_configuration(&self) -> Self;
 }

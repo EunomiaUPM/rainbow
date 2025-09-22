@@ -26,7 +26,7 @@ use crate::errors::{ErrorLog, Errors};
 use crate::setup::config::AuthorityFunctions;
 use crate::setup::AuthorityApplicationConfigTrait;
 use crate::types::jwt::AuthJwtClaims;
-use crate::types::wallet::{DidsInfo, WalletInfoResponse, WalletLoginResponse};
+use crate::types::wallet::{DidsInfo, KeyDefinition, WalletInfo, WalletInfoResponse, WalletLoginResponse};
 use anyhow::bail;
 use axum::async_trait;
 use axum::http::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
@@ -35,15 +35,16 @@ use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
 use serde_json::Value;
 use std::time::{SystemTime, UNIX_EPOCH};
-use tracing::{error, info, warn};
+use tracing::{debug, error, info, warn};
 
 #[async_trait]
 impl<T> RainbowSSIAuthWalletTrait for Authority<T>
 where
     T: AuthRepoFactoryTrait + Send + Sync + Clone + 'static,
 {
+    // BASIC ----------------------------------------------------------------------------------------------->
     async fn register_wallet(&self) -> anyhow::Result<()> {
-        info!("Registering wallet");
+        info!("Registering in web wallet");
         let url = format!(
             "{}/wallet-api/auth/register",
             self.config.get_wallet_portal_url()
@@ -54,10 +55,8 @@ where
         headers.insert(CONTENT_TYPE, "application/json".parse()?);
         headers.insert(ACCEPT, "application/json".parse()?);
 
-        let res = self.client.post(&url).headers(headers).json(&wallet_data).send().await;
-
-        let res = match res {
-            Ok(res) => res,
+        let res = match self.client.post(&url).headers(headers).json(&wallet_data).send().await {
+            Ok(data) => data,
             Err(e) => {
                 let http_code = match e.status() {
                     Some(status) => Some(status.as_u16()),
@@ -91,7 +90,7 @@ where
     }
 
     async fn login_wallet(&self) -> anyhow::Result<()> {
-        info!("Login into wallet");
+        info!("Login into web wallet");
         let url = format!(
             "{}/wallet-api/auth/login",
             self.config.get_wallet_portal_url()
@@ -104,10 +103,8 @@ where
         headers.insert(CONTENT_TYPE, "application/json".parse()?);
         headers.insert(ACCEPT, "application/json".parse()?);
 
-        let res = self.client.post(&url).headers(headers).json(&wallet_data).send().await;
-
-        let res = match res {
-            Ok(res) => res,
+        let res = match self.client.post(&url).headers(headers).json(&wallet_data).send().await {
+            Ok(data) => data,
             Err(e) => {
                 let http_code = match e.status() {
                     Some(status) => Some(status.as_u16()),
@@ -162,7 +159,7 @@ where
     }
 
     async fn logout_wallet(&self) -> anyhow::Result<()> {
-        info!("Login out of wallet");
+        info!("Login out of web wallet");
         let url = format!(
             "{}/wallet-api/auth/logout",
             self.config.get_wallet_portal_url()
@@ -172,10 +169,8 @@ where
         headers.insert(CONTENT_TYPE, "application/json".parse()?);
         headers.insert(ACCEPT, "application/json".parse()?);
 
-        let res = self.client.post(&url).headers(headers).send().await;
-
-        let res = match res {
-            Ok(res) => res,
+        let res = match self.client.post(&url).headers(headers).send().await {
+            Ok(data) => data,
             Err(e) => {
                 let http_code = match e.status() {
                     Some(status) => Some(status.as_u16()),
@@ -208,34 +203,182 @@ where
         Ok(())
     }
 
-    async fn get_wallet_info(&self) -> anyhow::Result<()> {
-        info!("Retrieving wallet info");
+    async fn onboard_wallet(&self) -> anyhow::Result<()> {
+        info!("Onboarding into web wallet");
+        if !self.wallet_onboard {
+            self.register_wallet().await?
+        }
+        self.login_wallet().await?;
+        self.retrieve_wallet_info().await?;
+        self.retrieve_keys().await?;
+        self.retrieve_wallet_dids().await?;
+
+        let wallet = self.get_wallet().await?;
+        let key_data = self.get_key().await?;
+        let did_info = match wallet.dids.first() {
+            Some(data) => data.clone(),
+            None => {
+                bail!("Something unexpected happened");
+            }
+        };
+
+        self.delete_did(did_info).await?;
+        self.delete_key(key_data).await?;
+
+        self.register_key().await?;
+        self.retrieve_keys().await?;
+
+        self.register_did().await?;
+
+        self.retrieve_wallet_info().await?;
+        self.retrieve_wallet_dids().await?;
+
+        let wallet = self.get_wallet().await?;
+        let did_info = match wallet.dids.first() {
+            Some(data) => data.clone(),
+            None => {
+                bail!("Something unexpected happened");
+            }
+        };
+
+        let minion = minions::NewModel {
+            participant_id: did_info.did,
+            participant_slug: "Myself".to_string(),
+            participant_type: "Authority".to_string(),
+            base_url: None,
+            vc_uri: None,
+            is_vc_issued: false,
+            is_me: true,
+        };
+
+        self.save_minion(minion).await?;
+
+        info!("Onboarding completed successfully");
+        Ok(())
+    }
+
+    async fn partial_onboard(&self) -> anyhow::Result<()> {
+        info!("Initializing partial onboarding");
+
+        self.login_wallet().await?;
+        self.retrieve_wallet_info().await?;
+        self.retrieve_keys().await?;
+        self.retrieve_wallet_dids().await?;
+
+        info!("Initialization successful");
+        Ok(())
+    }
+
+    // GET FROM MANAGER ------------------------------------------------------------------------------------>
+    // It gives a cloned Value, not a reference
+    async fn get_wallet(&self) -> anyhow::Result<WalletInfo> {
+        info!("Getting wallet data");
+        let wallet_session = self.wallet_session.lock().await;
+
+        match wallet_session.wallets.first() {
+            Some(data) => Ok(data.clone()),
+            None => {
+                let error = Errors::missing_action_new(
+                    "There is no wallet associated to this session".to_string(),
+                    MissingAction::Wallet,
+                    Some("There is no wallet to retrieve dids from".to_string()),
+                );
+                error!("{}", error.log());
+                bail!(error)
+            }
+        }
+    }
+
+    async fn get_did(&self) -> anyhow::Result<String> {
+        info!("Getting Did");
+        let wallet = self.get_wallet().await?;
+
+        match wallet.dids.first() {
+            Some(did_entry) => Ok(did_entry.did.clone()),
+            None => {
+                let error = Errors::missing_action_new(
+                    "A DID is needed".to_string(),
+                    MissingAction::Did,
+                    Some("No DIDs found in wallet".to_string()),
+                );
+                error!("{}", error.log());
+                bail!(error)
+            }
+        }
+    }
+
+    async fn get_token(&self) -> anyhow::Result<String> {
+        info!("Getting token");
+        let wallet_session = self.wallet_session.lock().await;
+
+        match &wallet_session.token {
+            Some(token) => Ok(token.clone()),
+            None => {
+                let error = Errors::missing_action_new(
+                    "There is no token associated to this session".to_string(),
+                    MissingAction::Token,
+                    Some("There is no token available for use".to_string()),
+                );
+                error!("{}", error.log());
+                bail!(error);
+            }
+        }
+    }
+
+    async fn get_did_doc(&self) -> anyhow::Result<Value> {
+        info!("Getting Did Document");
+
+        let wallet = self.get_wallet().await?;
+
+        let did = match wallet.dids.first() {
+            Some(did_entry) => did_entry.document.clone(),
+            None => {
+                let error = Errors::missing_action_new(
+                    "A DID is needed".to_string(),
+                    MissingAction::Did,
+                    Some("No DIDs found in wallet".to_string()),
+                );
+                error!("{}", error.log());
+                bail!(error)
+            }
+        };
+
+        let json: Value = serde_json::from_str(did.as_str())?;
+        Ok(json)
+    }
+
+    async fn get_key(&self) -> anyhow::Result<KeyDefinition> {
+        info!("Getting key data");
+
+        let key_data = self.key_data.lock().await;
+        match key_data.first() {
+            Some(data) => Ok(data.clone()),
+            None => {
+                let error =
+                    Errors::missing_action_new("Retrieve keys first".to_string(), MissingAction::Key, None);
+                error!("{}", error.log());
+                bail!(error)
+            }
+        }
+    }
+
+    // RETRIEVE FROM WALLET ------------------------------------------------------------------------------->
+    async fn retrieve_wallet_info(&self) -> anyhow::Result<()> {
+        info!("Retrieving wallet info from web wallet");
         let url = format!(
             "{}/wallet-api/wallet/accounts/wallets",
             self.config.get_wallet_portal_url()
         );
 
+        let token = self.get_token().await?;
+
         let mut headers = HeaderMap::new();
         headers.insert(CONTENT_TYPE, "application/json".parse()?);
         headers.insert(ACCEPT, "application/json".parse()?);
-        let mut wallet_session = self.wallet_session.lock().await;
-        match &wallet_session.token {
-            Some(token) => headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?),
-            None => {
-                let error = Errors::missing_action_new(
-                    "Login is needed".to_string(),
-                    MissingAction::Token,
-                    Some("No token available for use into the wallet".to_string()),
-                );
-                error!("{}", error.log());
-                bail!(error);
-            }
-        };
+        headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?);
 
-        let res = self.client.get(&url).headers(headers).send().await;
-
-        let res = match res {
-            Ok(res) => res,
+        let res = match self.client.get(&url).headers(headers).send().await {
+            Ok(data) => data,
             Err(e) => {
                 let http_code = match e.status() {
                     Some(status) => Some(status.as_u16()),
@@ -249,11 +392,17 @@ where
 
         match res.status().as_u16() {
             200 => {
-                let wallets = res.json::<WalletInfoResponse>().await?.wallets;
+                let weird_wallets = res.json::<WalletInfoResponse>().await?.wallets;
+                let mut wallets = Vec::<WalletInfo>::new();
+                for wallet in weird_wallets {
+                    let wallet= wallet.to_normal();
+                    if !wallets.contains(&wallet) {
+                        wallets.push(wallet);
+                    }
+                }
+                let mut wallet_session = self.wallet_session.lock().await;
                 for wallet in wallets {
-                    if wallet_session.wallets.contains(&wallet) {
-                        warn!("Wallet {} already exists", wallet.id);
-                    } else {
+                    if !wallet_session.wallets.contains(&wallet) {
                         wallet_session.wallets.push(wallet);
                     }
                 }
@@ -274,22 +423,68 @@ where
         Ok(())
     }
 
-    async fn get_wallet_dids(&self) -> anyhow::Result<()> {
-        info!("Retrieving dids from Wallet");
-        let mut wallet_session = self.wallet_session.lock().await;
+    async fn retrieve_keys(&self) -> anyhow::Result<()> {
+        info!("Retrieving keys from web wallet");
 
-        let wallet = match wallet_session.wallets.first() {
-            Some(w) => w,
-            None => {
-                let error = Errors::missing_action_new(
-                    "There is no wallet associated to this session".to_string(),
-                    MissingAction::Wallet,
-                    Some("There is no wallet to retrieve dids from".to_string()),
-                );
+        let wallet = self.get_wallet().await?;
+        let token = self.get_token().await?;
+
+        let url = format!(
+            "{}/wallet-api/wallet/{}/keys",
+            self.config.get_wallet_portal_url(),
+            &wallet.id
+        );
+
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "text/plain".parse()?);
+        headers.insert(ACCEPT, "application/json".parse()?);
+        headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?);
+
+        let res = match self.client.get(&url).headers(headers).send().await {
+            Ok(data) => data,
+            Err(e) => {
+                let http_code = match e.status() {
+                    Some(status) => Some(status.as_u16()),
+                    None => None,
+                };
+                let error = Errors::petition_new(url, "GET".to_string(), http_code, e.to_string());
                 error!("{}", error.log());
-                bail!(error)
+                bail!(error);
             }
         };
+
+        match res.status().as_u16() {
+            200 => {
+                info!("Keys retrieved successfully");
+                let res = res.text().await?;
+                let keys: Vec<KeyDefinition> = serde_json::from_str(&res)?;
+                let mut key_data = self.key_data.lock().await;
+                for key in keys {
+                    if !key_data.contains(&key) {
+                        key_data.push(key);
+                    }
+                }
+            }
+            _ => {
+                let error = Errors::wallet_new(
+                    url,
+                    "POST".to_string(),
+                    res.status().as_u16(),
+                    Some("Petition to retrieve keys failed".to_string()),
+                );
+                error!("{}", error.log());
+                bail!(error);
+            }
+        }
+
+        Ok(())
+    }
+
+    async fn retrieve_wallet_dids(&self) -> anyhow::Result<()> {
+        info!("Retrieving dids from web wallet");
+
+        let wallet = self.get_wallet().await?;
+        let token = self.get_token().await?;
 
         let url = format!(
             "{}/wallet-api/wallet/{}/dids",
@@ -300,24 +495,10 @@ where
         let mut headers = HeaderMap::new();
         headers.insert(CONTENT_TYPE, "application/json".parse()?);
         headers.insert(ACCEPT, "application/json".parse()?);
+        headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?);
 
-        match &wallet_session.token {
-            Some(token) => headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?),
-            None => {
-                let error = Errors::missing_action_new(
-                    "There is no token associated to this session".to_string(),
-                    MissingAction::Token,
-                    Some("There is no token available for use".to_string()),
-                );
-                error!("{}", error.log());
-                bail!(error);
-            }
-        };
-
-        let res = self.client.get(&url).headers(headers).send().await;
-
-        let res = match res {
-            Ok(res) => res,
+        let res = match self.client.get(&url).headers(headers).send().await {
+            Ok(data) => data,
             Err(e) => {
                 let http_code = match e.status() {
                     Some(status) => Some(status.as_u16()),
@@ -332,20 +513,27 @@ where
         match res.status().as_u16() {
             200 => {
                 let dids: Vec<DidsInfo> = res.json().await?;
+                let mut wallet_session = self.wallet_session.lock().await;
+
+                let wallet = match wallet_session.wallets.first_mut() {
+                    Some(data) => data,
+                    None => {
+                        let error = Errors::missing_action_new(
+                            "No wallet available".to_string(),
+                            MissingAction::Wallet,
+                            None,
+                        );
+                        error!("{}", error.log());
+                        bail!(error)
+                    }
+                };
 
                 for did in dids {
-                    if let Some(wallet) = wallet_session.wallets.first_mut() {
-                        if let Some(dids) = &mut wallet.dids {
-                            if dids.contains(&did) {
-                                info!("Did {} already exists", did.did);
-                            } else {
-                                dids.push(did);
-                            }
-                        } else {
-                            wallet.dids = Some(vec![did]);
-                        }
+                    if !wallet.dids.contains(&did) {
+                        wallet.dids.push(did)
                     }
                 }
+
                 info!("Wallet Dids data loaded successfully");
             }
             _ => {
@@ -363,61 +551,235 @@ where
         Ok(())
     }
 
-    async fn onboard(&self) -> anyhow::Result<()> {
-        info!("Onboarding into wallet");
-        if !self.wallet_onboard {
-            self.register_wallet().await?
-        }
-        self.login_wallet().await?;
-        self.get_wallet_info().await?;
-        self.get_wallet_dids().await?;
+    // REGISTER STUFF IN WALLET ----------------------------------------------------------------------------->
+    async fn register_key(&self) -> anyhow::Result<()> {
+        info!("Registering key in web wallet");
+
+        let wallet = self.get_wallet().await?;
+        let token = self.get_token().await?;
+        let body = self.config.get_priv_key();
+
+        let url = format!(
+            "{}/wallet-api/wallet/{}/keys/import",
+            self.config.get_wallet_portal_url(),
+            &wallet.id
+        );
 
         let mut headers = HeaderMap::new();
-        headers.insert(CONTENT_TYPE, "application/json".parse()?);
+        headers.insert(CONTENT_TYPE, "text/plain".parse()?);
         headers.insert(ACCEPT, "application/json".parse()?);
+        headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?);
 
-        let wallet_session = self.wallet_session.lock().await;
-
-        let wallet = match wallet_session.wallets.first() {
-            Some(w) => w,
-            None => {
-                let error = Errors::missing_action_new(
-                    "There is no wallet associated to this session".to_string(),
-                    MissingAction::Wallet,
-                    Some("There is no wallet to retrieve dids from".to_string()),
-                );
+        let res = match self.client.post(&url).headers(headers).body(body).send().await {
+            Ok(data) => data,
+            Err(e) => {
+                let http_code = match e.status() {
+                    Some(status) => Some(status.as_u16()),
+                    None => None,
+                };
+                let error = Errors::petition_new(url, "POST".to_string(), http_code, e.to_string());
                 error!("{}", error.log());
-                bail!(error)
+                bail!(error);
             }
         };
 
-        let did = match wallet.dids.as_ref().and_then(|d| d.first()) {
-            Some(did_entry) => did_entry.did.clone(),
-            None => {
-                let error = Errors::missing_action_new(
-                    "A DID is needed".to_string(),
-                    MissingAction::Did,
-                    Some("No DIDs found in wallet".to_string()),
+        match res.status().as_u16() {
+            201 => {
+                info!("Key registered successfully");
+                let res = res.text().await?;
+                debug!("{}", res);
+            }
+            _ => {
+                let error = Errors::wallet_new(
+                    url,
+                    "POST".to_string(),
+                    res.status().as_u16(),
+                    Some("Petition to register key failed".to_string()),
                 );
                 error!("{}", error.log());
-                bail!(error)
+                bail!(error);
             }
-        };
-
-        let model = minions::NewModel {
-            participant_id: did.clone(),
-            participant_slug: "Myself".to_string(),
-            participant_type: "Provider".to_string(),
-            base_url: Some(self.config.get_host()),
-            vc_uri: None,
-            is_vc_issued: false,
-            is_me: true,
-        };
-        self.save_minion(model).await?;
+        }
 
         Ok(())
     }
 
+    async fn register_did(&self) -> anyhow::Result<()> {
+        info!("Registering did in web wallet");
+
+        let wallet = self.get_wallet().await?;
+        let token = self.get_token().await?;
+        let key_data = self.get_key().await?;
+
+        let url = format!(
+            "{}/wallet-api/wallet/{}/dids/create/jwk?keyId={}&alias=privatekey",
+            self.config.get_wallet_portal_url(),
+            &wallet.id,
+            key_data.key_id.id
+        );
+
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "application/json".parse()?);
+        headers.insert(ACCEPT, "application/json".parse()?);
+        headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?);
+
+        let res = match self.client.post(&url).headers(headers).send().await {
+            Ok(data) => data,
+            Err(e) => {
+                let http_code = match e.status() {
+                    Some(status) => Some(status.as_u16()),
+                    None => None,
+                };
+                let error = Errors::petition_new(url, "GET".to_string(), http_code, e.to_string());
+                error!("{}", error.log());
+                bail!(error);
+            }
+        };
+
+        match res.status().as_u16() {
+            200 => {
+                info!("Did registered successfully");
+                let res = res.text().await?;
+                debug!("{:#?}", res);
+            }
+            409 => {
+                warn!("Did already exists");
+            }
+            _ => {
+                let error = Errors::wallet_new(
+                    url,
+                    "POST".to_string(),
+                    res.status().as_u16(),
+                    Some("Petition to register key failed".to_string()),
+                );
+                error!("{}", error.log());
+                bail!(error);
+            }
+        }
+
+        Ok(())
+    }
+
+    // DELETE STUFF FROM WALLET --------------------------------------------------------------------------->
+    async fn delete_key(&self, key_id: KeyDefinition) -> anyhow::Result<()> {
+        info!("Deleting key in web wallet and from internal data");
+
+        let wallet = self.get_wallet().await?;
+        let token = self.get_token().await?;
+
+        let url = format!(
+            "{}/wallet-api/wallet/{}/keys/{}",
+            self.config.get_wallet_portal_url(),
+            &wallet.id,
+            key_id.key_id.id
+        );
+
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "text/plain".parse()?);
+        headers.insert(ACCEPT, "application/json".parse()?);
+        headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?);
+
+        let res = match self.client.delete(&url).headers(headers).send().await {
+            Ok(data) => data,
+            Err(e) => {
+                let http_code = match e.status() {
+                    Some(status) => Some(status.as_u16()),
+                    None => None,
+                };
+                let error = Errors::petition_new(url, "DELETE".to_string(), http_code, e.to_string());
+                error!("{}", error.log());
+                bail!(error);
+            }
+        };
+
+        match res.status().as_u16() {
+            202 => {
+                info!("Key deleted successfully from web wallet");
+                let mut keys_data = self.key_data.lock().await;
+                keys_data.retain(|key| *key != key_id);
+                info!("Key deleted successfully from internal data");
+                Ok(())
+            }
+            _ => {
+                let error = Errors::wallet_new(
+                    url,
+                    "DELETE".to_string(),
+                    res.status().as_u16(),
+                    Some("Petition to delete key failed".to_string()),
+                );
+                error!("{}", error.log());
+                bail!(error);
+            }
+        }
+    }
+
+    async fn delete_did(&self, did_info: DidsInfo) -> anyhow::Result<()> {
+        info!("Deleting did from web wallet and from internal data");
+
+        let wallet = self.get_wallet().await?;
+        let token = self.get_token().await?;
+
+        let url = format!(
+            "{}/wallet-api/wallet/{}/dids/{}",
+            self.config.get_wallet_portal_url(),
+            &wallet.id,
+            did_info.did
+        );
+
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "text/plain".parse()?);
+        headers.insert(ACCEPT, "application/json".parse()?);
+        headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?);
+
+        let res = match self.client.delete(&url).headers(headers).send().await {
+            Ok(data) => data,
+            Err(e) => {
+                let http_code = match e.status() {
+                    Some(status) => Some(status.as_u16()),
+                    None => None,
+                };
+                let error = Errors::petition_new(url, "DELETE".to_string(), http_code, e.to_string());
+                error!("{}", error.log());
+                bail!(error);
+            }
+        };
+
+        match res.status().as_u16() {
+            202 => {
+                info!("Did deleted successfully from web wallet");
+                let mut wallet_session = self.wallet_session.lock().await;
+
+                let wallet = match wallet_session.wallets.first_mut() {
+                    Some(data) => data,
+                    None => {
+                        let error = Errors::missing_action_new(
+                            "No wallet available".to_string(),
+                            MissingAction::Wallet,
+                            None,
+                        );
+                        error!("{}", error.log());
+                        bail!(error)
+                    }
+                };
+
+                wallet.dids.retain(|did| *did != did_info);
+                info!("Did deleted successfully from internal data");
+                Ok(())
+            }
+            _ => {
+                let error = Errors::wallet_new(
+                    url,
+                    "DELETE".to_string(),
+                    res.status().as_u16(),
+                    Some("Petition to delete key failed".to_string()),
+                );
+                error!("{}", error.log());
+                bail!(error);
+            }
+        }
+    }
+
+    // OTHER ----------------------------------------------------------------------------------------->
     async fn token_expired(&self) -> anyhow::Result<bool> {
         info!("Checking if token is expired");
         let wallet_session = self.wallet_session.lock().await;
@@ -453,45 +815,10 @@ where
             }
         }
     }
-
     async fn ok(&self) -> anyhow::Result<()> {
         if self.token_expired().await? {
             self.update_token().await?;
         }
         Ok(())
-    }
-
-    async fn didweb(&self) -> anyhow::Result<Value> {
-        info!("Retrieving did");
-        let wallet_session = self.wallet_session.lock().await;
-
-        let wallet = match wallet_session.wallets.first() {
-            Some(w) => w,
-            None => {
-                let error = Errors::missing_action_new(
-                    "There is no wallet associated to this session".to_string(),
-                    MissingAction::Wallet,
-                    Some("There is no wallet to retrieve dids from".to_string()),
-                );
-                error!("{}", error.log());
-                bail!(error)
-            }
-        };
-
-        let did = match wallet.dids.as_ref().and_then(|d| d.first()) {
-            Some(did_entry) => did_entry.clone().document,
-            None => {
-                let error = Errors::missing_action_new(
-                    "A DID is needed".to_string(),
-                    MissingAction::Did,
-                    Some("No DIDs found in wallet".to_string()),
-                );
-                error!("{}", error.log());
-                bail!(error)
-            }
-        };
-
-        let json: Value = serde_json::from_str(did.as_str())?;
-        Ok(json)
     }
 }

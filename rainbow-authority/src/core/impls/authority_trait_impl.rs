@@ -245,7 +245,7 @@ where
             }
             false => {
                 let url = "http://127.0.0.1:7002/openid4vc/jwt/issue".to_string();
-                // let issuer_id = match self.didweb["id"].as_str() {
+                // let issuer_id = match self.get_did_doc["id"].as_str() {
                 //     Some(data) => data,
                 //     None => {
                 //         bail!("Error parsing the DID identifier")
@@ -266,8 +266,7 @@ where
                     "kid" : "0"
                 });
 
-                let did = self.didweb().await?;
-                let didweb = did["id"].as_str().unwrap();
+                let did = self.get_did().await?;
 
                 let client = self.config.get_raw_client_config();
                 let issuer = client.class_id.clone();
@@ -311,7 +310,7 @@ where
                     "issuanceDate": "<timestamp>",
                     "expirationDate": "<timestamp-in:365d>"
                     },
-                    "issuerDid": didweb,
+                    "issuerDid": did,
                 });
 
                 let host_url = self.config.get_host();

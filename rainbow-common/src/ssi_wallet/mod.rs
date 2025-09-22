@@ -21,6 +21,7 @@ mod wallet_trait;
 pub use wallet_trait::RainbowSSIAuthWalletTrait;
 
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 #[derive(Deserialize, Serialize, PartialEq, Eq, Clone, Debug)]
 pub struct DidsInfo {
@@ -68,7 +69,7 @@ pub struct WalletInfo {
     #[serde(rename = "addedOn")]
     pub added_on: String,
     pub permission: String, // TODO
-    pub dids: Option<Vec<DidsInfo>>,
+    pub dids: Vec<DidsInfo>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -79,7 +80,20 @@ pub struct WalletSession {
     pub wallets: Vec<WalletInfo>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct KeyInfo {
-    pub key_id: Option<String>,
+    pub id: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+pub struct KeyDefinition {
+    pub algorithm: String,
+    #[serde(rename = "cryptoProvider")]
+    pub crypto_provider: String,
+    #[serde(rename = "keyId")]
+    pub key_id: KeyInfo,
+    #[serde(rename = "keyPair")]
+    pub key_pair: Value,
+    #[serde(rename = "keyset_handle")]
+    pub keyset_handle: Option<Value>,
 }

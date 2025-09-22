@@ -22,7 +22,7 @@ pub enum MissingAction {
     Wallet,
     Did,
     Onboarding,
-    ImportKey,
+    Key,
     Unknown,
 }
 

@@ -22,7 +22,7 @@ pub mod traits;
 
 use crate::data::repo_factory::factory_trait::AuthRepoFactoryTrait;
 use crate::setup::AuthorityApplicationConfig;
-use crate::types::wallet::WalletSession;
+use crate::types::wallet::{KeyDefinition, WalletSession};
 use reqwest::Client;
 use std::sync::Arc;
 use std::time::Duration;
@@ -35,6 +35,7 @@ where
     pub wallet_session: Mutex<WalletSession>,
     pub wallet_onboard: bool,
     pub repo: Arc<T>,
+    key_data: Mutex<Vec<KeyDefinition>>,
     client: Client,
     config: AuthorityApplicationConfig,
 }
@@ -55,6 +56,7 @@ where
             }),
             wallet_onboard: false,
             repo,
+            key_data: Mutex::new(Vec::new()),
             client,
             config,
         }

@@ -18,16 +18,34 @@
  */
 use serde_json::Value;
 use axum::async_trait;
+use crate::types::wallet::{DidsInfo, KeyDefinition, WalletInfo};
+
 #[async_trait]
 pub trait RainbowSSIAuthWalletTrait: Send + Sync {
+    // BASIC
     async fn register_wallet(&self) -> anyhow::Result<()>;
     async fn login_wallet(&self) -> anyhow::Result<()>;
     async fn logout_wallet(&self) -> anyhow::Result<()>;
-    async fn get_wallet_info(&self) -> anyhow::Result<()>;
-    async fn get_wallet_dids(&self) -> anyhow::Result<()>;
-    async fn onboard(&self) -> anyhow::Result<()>; //ESTA
+    async fn onboard_wallet(&self) -> anyhow::Result<()>;
+    async fn partial_onboard(&self) -> anyhow::Result<()>;
+    // GET FROM MANAGER (It gives a cloned Value, not a reference)
+    async fn get_wallet(&self) -> anyhow::Result<WalletInfo>;
+    async fn get_did(&self) -> anyhow::Result<String>;
+    async fn get_token(&self) -> anyhow::Result<String>;
+    async fn get_did_doc(&self) -> anyhow::Result<Value>;
+    async fn get_key(&self) -> anyhow::Result<KeyDefinition>;
+    // RETRIEVE FROM WALLET
+    async fn retrieve_wallet_info(&self) -> anyhow::Result<()>;
+    async fn retrieve_keys(&self) -> anyhow::Result<()>;
+    async fn retrieve_wallet_dids(&self) -> anyhow::Result<()>;
+    // REGISTER STUFF IN WALLET
+    async fn register_key(&self) -> anyhow::Result<()>;
+    async fn register_did(&self) -> anyhow::Result<()>; 
+    // DELETE STUFF FROM WALLET
+    async fn delete_key(&self, key: KeyDefinition) -> anyhow::Result<()>;
+    async fn delete_did(&self, did_info: DidsInfo) -> anyhow::Result<()>;
+    // OTHER
     async fn token_expired(&self) -> anyhow::Result<bool>;
     async fn update_token(&self) -> anyhow::Result<()>;
     async fn ok(&self) -> anyhow::Result<()>;
-    async fn didweb(&self) -> anyhow::Result<Value>;
 }

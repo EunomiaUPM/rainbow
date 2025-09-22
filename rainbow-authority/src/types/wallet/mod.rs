@@ -22,6 +22,7 @@ mod wallet_info;
 mod wallet_session;
 mod wallet_login_response;
 mod wallet_info_response;
+mod key_definition;
 
 pub use wallet_config::SSIWalletConfig;
 pub use wallet_session::WalletSession;
@@ -29,3 +30,4 @@ pub use dids_info::DidsInfo;
 pub use wallet_info::WalletInfo;
 pub use wallet_login_response::WalletLoginResponse;
 pub use wallet_info_response::WalletInfoResponse;
+pub use key_definition::*;
