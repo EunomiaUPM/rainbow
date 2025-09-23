@@ -20,7 +20,7 @@
 use crate::ssi_auth::consumer::core::traits::consumer_trait::RainbowSSIAuthConsumerManagerTrait;
 use crate::ssi_auth::consumer::core::Manager;
 use crate::ssi_auth::errors::CustomToResponse;
-use crate::ssi_auth::types::entities::{ReachAuthority, ReachProvider};
+use crate::ssi_auth::types::entities::{ReachAuthority, ReachMethod, ReachProvider};
 use crate::ssi_auth::types::gnap::CallbackBody;
 use axum::extract::{Path, Query, State};
 use axum::http::{Method, Uri};
@@ -58,23 +58,38 @@ where
             .route("/api/v1/wallet/login", post(Self::wallet_login))
             .route("/api/v1/wallet/logout", post(Self::wallet_logout))
             .route("/api/v1/wallet/onboard", post(Self::wallet_onboard))
-            .route("/api/v1/wallet/partial-onboard",post(Self::partial_onboard))
+            .route(
+                "/api/v1/wallet/partial-onboard",
+                post(Self::partial_onboard),
+            )
             .route("/api/v1/wallet/key", post(Self::register_key))
             .route("/api/v1/wallet/did", post(Self::register_did))
             .route("/api/v1/wallet/key", delete(Self::delete_key))
             .route("/api/v1/wallet/did", delete(Self::delete_did))
             .route("/api/v1/did.json", get(Self::didweb))
             // PROVIDER
-            .route("/api/v1/request/onboard/provider", post(Self::request_provider_onboard))
+            .route(
+                "/api/v1/request/onboard/provider",
+                post(Self::request_provider_onboard),
+            )
             .route("/api/v1/callback/:id", get(Self::get_callback))
             .route("/api/v1/callback/:id", post(Self::post_callback))
             // 4 MICROSERVICES
             // .route("/api/v1/retrieve/token/:id", get(Self::manual_callback))
             // AUTHORITY
             .route("/api/v1/authority/beg", post(Self::beg4credential))
-            .route("/api/v1/authority/beg/oidc", post(Self::beg4credential))
-            .route("/api/v1/authority/request/all", get(Self::get_all_authority))
-            .route("/api/v1/authority/request/:id", get(Self::get_one_authority))
+            .route(
+                "/api/v1/authority/beg/oidc",
+                post(Self::beg4credential_oidc),
+            )
+            .route(
+                "/api/v1/authority/request/all",
+                get(Self::get_all_authority),
+            )
+            .route(
+                "/api/v1/authority/request/:id",
+                get(Self::get_one_authority),
+            )
             // .route("/provider/:id/renew", post(todo!()))
             // .route("/provider/:id/finalize", post(todo!()))
             // TEST
@@ -264,8 +279,21 @@ where
         Json(payload): Json<ReachAuthority>,
     ) -> impl IntoResponse {
         info!("POST /beg/credential");
-        match manager.beg_credential(payload.id, payload.slug, payload.url).await {
-            Ok(()) => StatusCode::OK.into_response(),
+        match manager.beg_credential(payload, ReachMethod::CrossUser).await {
+            Ok(_) => StatusCode::OK.into_response(),
+            Err(e) => e.to_response(),
+        }
+        // TODO RES
+    }
+
+    async fn beg4credential_oidc(
+        State(manager): State<Arc<Manager<T>>>,
+        Json(payload): Json<ReachAuthority>,
+    ) -> impl IntoResponse {
+        info!("POST /beg/credential");
+        match manager.beg_credential(payload, ReachMethod::Oidc).await {
+            Ok(Some(data)) => data.into_response(),
+            Ok(None) => StatusCode::OK.into_response(),
             Err(e) => e.to_response(),
         }
         // TODO RES

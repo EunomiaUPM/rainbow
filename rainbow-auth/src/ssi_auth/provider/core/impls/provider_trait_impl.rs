@@ -22,7 +22,6 @@ use crate::ssi_auth::provider::core::traits::provider_trait::RainbowSSIAuthProvi
 use crate::ssi_auth::provider::core::Manager;
 use crate::ssi_auth::utils::format::{split_did, trim_4_base};
 use crate::ssi_auth::utils::token::create_opaque_token;
-use crate::ssi_auth::utils::validations::compare_with_margin;
 use anyhow::bail;
 use axum::async_trait;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;

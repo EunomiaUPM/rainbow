@@ -19,7 +19,7 @@
 use crate::ssi_auth::consumer::core::traits::consumer_trait::RainbowSSIAuthConsumerManagerTrait;
 use crate::ssi_auth::consumer::core::Manager;
 use crate::ssi_auth::errors::AuthErrors;
-use crate::ssi_auth::types::entities::WhatEntity;
+use crate::ssi_auth::types::entities::{ReachAuthority, ReachMethod, WhatEntity};
 use crate::ssi_auth::types::gnap::RefBody;
 use crate::ssi_auth::types::wallet::{MatchingVCs, RedirectResponse};
 use crate::ssi_auth::utils::format::trim_4_base;
@@ -29,7 +29,7 @@ use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
 use rainbow_common::auth::gnap::{AccessToken, GrantRequest, GrantResponse};
 use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
-use rainbow_common::errors::helpers::{BadFormat};
+use rainbow_common::errors::helpers::BadFormat;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::ssi_wallet::RainbowSSIAuthWalletTrait;
 use rainbow_db::auth_consumer::entities::{
@@ -62,7 +62,7 @@ where
             &id
         );
         let client = self.config.get_pretty_client_config();
-        let mut body = GrantRequest::default4oidc(client, "redirect".to_string(), Some(callback_uri));
+        let mut body = GrantRequest::pr_oidc(client, "redirect".to_string(), Some(callback_uri));
 
         let new_request_model =
             auth_request::NewModel { id: id.clone(), provider_id, provider_slug, grant_endpoint: url.clone() };
@@ -227,155 +227,9 @@ where
             }
         };
 
-        let uri = match res_interact.oidc4vp.as_ref() {
-            Some(data) => data,
-            None => {
-                let error = CommonErrors::provider_new(
-                    Some(url),
-                    Some("POST".to_string()),
-                    None,
-                    Some("The expected 'oidc4vp' field was missing".to_string()),
-                );
-                error!("{}", error.log());
-                bail!(error);
-            }
-        };
+        let uri = self.complete_ver_proccess(res_interact.oidc4vp, url, id).await?;
 
-        let fixed_uri = uri.replacen("openid4vp://", "https://", 1);
-        let parsed_uri = Url::parse(&fixed_uri)?;
-
-        let response_type =
-            match parsed_uri.query_pairs().find(|(k, _)| k == "response_type").map(|(_, v)| v.into_owned()) {
-                Some(data) => data,
-                None => {
-                    let error = CommonErrors::provider_new(
-                        Some(url),
-                        Some("POST".to_string()),
-                        None,
-                        Some("The expected 'response_type' field was missing in the oidc4vp uri".to_string()),
-                    );
-                    error!("{}", error.log());
-                    bail!(error);
-                }
-            };
-
-        let client_id = match parsed_uri.query_pairs().find(|(k, _)| k == "client_id").map(|(_, v)| v.into_owned()) {
-            Some(data) => data,
-            None => {
-                let error = CommonErrors::provider_new(
-                    Some(url),
-                    Some("POST".to_string()),
-                    None,
-                    Some("The expected 'client_id' field was missing in the oidc4vp uri".to_string()),
-                );
-                error!("{}", error.log());
-                bail!(error);
-            }
-        };
-
-        let response_mode =
-            match parsed_uri.query_pairs().find(|(k, _)| k == "response_mode").map(|(_, v)| v.into_owned()) {
-                Some(data) => data,
-                None => {
-                    let error = CommonErrors::provider_new(
-                        Some(url),
-                        Some("POST".to_string()),
-                        None,
-                        Some("The expected 'response_mode' field was missing in the oidc4vp uri".to_string()),
-                    );
-                    error!("{}", error.log());
-                    bail!(error);
-                }
-            };
-
-        let pd_uri = match parsed_uri
-            .query_pairs()
-            .find(|(k, _)| k == "presentation_definition_uri")
-            .map(|(_, v)| v.into_owned())
-        {
-            Some(data) => data,
-            None => {
-                let error = CommonErrors::provider_new(
-                    Some(url),
-                    Some("POST".to_string()),
-                    None,
-                    Some("The expected 'presentation_definition_uri' field was missing in the oidc4vp uri".to_string()),
-                );
-                error!("{}", error.log());
-                bail!(error);
-            }
-        };
-
-        let client_id_scheme =
-            match parsed_uri.query_pairs().find(|(k, _)| k == "client_id_scheme").map(|(_, v)| v.into_owned()) {
-                Some(data) => data,
-                None => {
-                    let error = CommonErrors::provider_new(
-                        Some(url),
-                        Some("POST".to_string()),
-                        None,
-                        Some("The expected 'client_id_scheme' field was missing in the oidc4vp uri".to_string()),
-                    );
-                    error!("{}", error.log());
-                    bail!(error);
-                }
-            };
-
-        let nonce = match parsed_uri.query_pairs().find(|(k, _)| k == "nonce").map(|(_, v)| v.into_owned()) {
-            Some(data) => data,
-            None => {
-                let error = CommonErrors::provider_new(
-                    Some(url),
-                    Some("POST".to_string()),
-                    None,
-                    Some("The expected 'nonce' field was missing in the oidc4vp uri".to_string()),
-                );
-                error!("{}", error.log());
-                bail!(error);
-            }
-        };
-
-        let response_uri =
-            match parsed_uri.query_pairs().find(|(k, _)| k == "response_uri").map(|(_, v)| v.into_owned()) {
-                Some(data) => data,
-                None => {
-                    let error = CommonErrors::provider_new(
-                        Some(url),
-                        Some("POST".to_string()),
-                        None,
-                        Some("The expected 'response_uri' field was missing in the oidc4vp uri".to_string()),
-                    );
-                    error!("{}", error.log());
-                    bail!(error);
-                }
-            };
-
-        let new_verification_model = auth_verification::NewModel {
-            id: id.clone(),
-            uri: uri.clone(),
-            scheme: "openid4vp".to_string(),
-            response_type,
-            client_id,
-            response_mode,
-            pd_uri,
-            client_id_scheme,
-            nonce,
-            response_uri,
-        };
-
-        let verification_model = match self.repo.verification().create(new_verification_model).await {
-            Ok(model) => {
-                info!("Verification data saved successfully");
-                model
-            }
-            Err(e) => {
-                let error = CommonErrors::database_new(Some(e.to_string()));
-                error!("{}", error.log());
-                bail!(error);
-            }
-        };
-
-        Ok(verification_model.uri.clone())
+        Ok(uri)
     }
 
     async fn check_callback(&self, id: String, interact_ref: String, hash: String) -> anyhow::Result<()> {
@@ -624,7 +478,166 @@ where
         }
     }
 
-    async fn beg_credential(&self, authority_id: String, authority_slug: String, url: String) -> anyhow::Result<()> {
+    async fn complete_ver_proccess(&self, uri: Option<String>, url: String, id: String) -> anyhow::Result<String> {
+        info!("Completing verification process saving");
+
+        let uri = match uri {
+            Some(data) => data,
+            None => {
+                let error = CommonErrors::provider_new(
+                    Some(url),
+                    Some("POST".to_string()),
+                    None,
+                    Some("The expected 'oidc4vp' field was missing".to_string()),
+                );
+                error!("{}", error.log());
+                bail!(error);
+            }
+        };
+
+        let fixed_uri = uri.replacen("openid4vp://", "https://", 1);
+        let parsed_uri = Url::parse(&fixed_uri)?;
+
+        let response_type =
+            match parsed_uri.query_pairs().find(|(k, _)| k == "response_type").map(|(_, v)| v.into_owned()) {
+                Some(data) => data,
+                None => {
+                    let error = CommonErrors::provider_new(
+                        Some(url),
+                        Some("POST".to_string()),
+                        None,
+                        Some("The expected 'response_type' field was missing in the oidc4vp uri".to_string()),
+                    );
+                    error!("{}", error.log());
+                    bail!(error);
+                }
+            };
+
+        let client_id = match parsed_uri.query_pairs().find(|(k, _)| k == "client_id").map(|(_, v)| v.into_owned()) {
+            Some(data) => data,
+            None => {
+                let error = CommonErrors::provider_new(
+                    Some(url),
+                    Some("POST".to_string()),
+                    None,
+                    Some("The expected 'client_id' field was missing in the oidc4vp uri".to_string()),
+                );
+                error!("{}", error.log());
+                bail!(error);
+            }
+        };
+
+        let response_mode =
+            match parsed_uri.query_pairs().find(|(k, _)| k == "response_mode").map(|(_, v)| v.into_owned()) {
+                Some(data) => data,
+                None => {
+                    let error = CommonErrors::provider_new(
+                        Some(url),
+                        Some("POST".to_string()),
+                        None,
+                        Some("The expected 'response_mode' field was missing in the oidc4vp uri".to_string()),
+                    );
+                    error!("{}", error.log());
+                    bail!(error);
+                }
+            };
+
+        let pd_uri = match parsed_uri
+            .query_pairs()
+            .find(|(k, _)| k == "presentation_definition_uri")
+            .map(|(_, v)| v.into_owned())
+        {
+            Some(data) => data,
+            None => {
+                let error = CommonErrors::provider_new(
+                    Some(url),
+                    Some("POST".to_string()),
+                    None,
+                    Some("The expected 'presentation_definition_uri' field was missing in the oidc4vp uri".to_string()),
+                );
+                error!("{}", error.log());
+                bail!(error);
+            }
+        };
+
+        let client_id_scheme =
+            match parsed_uri.query_pairs().find(|(k, _)| k == "client_id_scheme").map(|(_, v)| v.into_owned()) {
+                Some(data) => data,
+                None => {
+                    let error = CommonErrors::provider_new(
+                        Some(url),
+                        Some("POST".to_string()),
+                        None,
+                        Some("The expected 'client_id_scheme' field was missing in the oidc4vp uri".to_string()),
+                    );
+                    error!("{}", error.log());
+                    bail!(error);
+                }
+            };
+
+        let nonce = match parsed_uri.query_pairs().find(|(k, _)| k == "nonce").map(|(_, v)| v.into_owned()) {
+            Some(data) => data,
+            None => {
+                let error = CommonErrors::provider_new(
+                    Some(url),
+                    Some("POST".to_string()),
+                    None,
+                    Some("The expected 'nonce' field was missing in the oidc4vp uri".to_string()),
+                );
+                error!("{}", error.log());
+                bail!(error);
+            }
+        };
+
+        let response_uri =
+            match parsed_uri.query_pairs().find(|(k, _)| k == "response_uri").map(|(_, v)| v.into_owned()) {
+                Some(data) => data,
+                None => {
+                    let error = CommonErrors::provider_new(
+                        Some(url),
+                        Some("POST".to_string()),
+                        None,
+                        Some("The expected 'response_uri' field was missing in the oidc4vp uri".to_string()),
+                    );
+                    error!("{}", error.log());
+                    bail!(error);
+                }
+            };
+
+        let new_verification_model = auth_verification::NewModel {
+            id,
+            uri,
+            scheme: "openid4vp".to_string(),
+            response_type,
+            client_id,
+            response_mode,
+            pd_uri,
+            client_id_scheme,
+            nonce,
+            response_uri,
+        };
+
+        let verification_model = match self.repo.verification().create(new_verification_model).await {
+            Ok(model) => {
+                info!("Verification data saved successfully");
+                model
+            }
+            Err(e) => {
+                let error = CommonErrors::database_new(Some(e.to_string()));
+                error!("{}", error.log());
+                bail!(error);
+            }
+        };
+
+        Ok(verification_model.uri.clone())
+    }
+
+    async fn beg_credential(&self, payload: ReachAuthority, method: ReachMethod) -> anyhow::Result<Option<String>> {
+        let authority_id = payload.id;
+        let authority_slug = payload.slug;
+        let url = payload.url;
+        let vc_type = payload.vc_type;
+
         info!("Begging for a credential");
         let client = self.config.get_pretty_client_config();
         let id = uuid::Uuid::new_v4().to_string();
@@ -633,10 +646,24 @@ where
             self.config.get_auth_host_url().unwrap(),
             &id
         );
-        let mut grant_request = GrantRequest::default4cross_user(client, Some(callback_uri.clone()));
 
-        let new_authority_request_model =
-            authority_request::NewModel { id: id.clone(), authority_id, authority_slug, grant_endpoint: url.clone() };
+        let mut grant_request = match method {
+            ReachMethod::Oidc => GrantRequest::vc_oidc(
+                client,
+                "redirect".to_string(),
+                Some(callback_uri.clone()),
+                vc_type.clone(),
+            ),
+            ReachMethod::CrossUser => GrantRequest::vc_cross_user(client, Some(callback_uri.clone()), vc_type.clone()),
+        };
+
+        let new_authority_request_model = authority_request::NewModel {
+            id: id.clone(),
+            authority_id,
+            authority_slug,
+            grant_endpoint: url.clone(),
+            vc_type,
+        };
 
         let mut authority_model = match self.repo.authority().create(new_authority_request_model).await {
             Ok(model) => model,
@@ -648,7 +675,7 @@ where
         };
 
         let new_interact_model = auth_interaction::NewModel {
-            id,
+            id: id.clone(),
             start: vec!["await".to_string()],
             method: "push".to_string(),
             uri: callback_uri,
@@ -763,7 +790,13 @@ where
             }
         };
 
-        Ok(())
+        match method {
+            ReachMethod::CrossUser => Ok(None),
+            ReachMethod::Oidc => {
+                let uri = self.complete_ver_proccess(res_interact.oidc4vp, url, id).await?;
+                Ok(Some(uri))
+            }
+        }
     }
 
     async fn who_is_it(

@@ -16,8 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
-use crate::ssi_auth::types::entities::WhatEntity;
+use crate::ssi_auth::types::entities::{ReachAuthority, ReachMethod, WhatEntity};
 use crate::ssi_auth::types::wallet::{MatchingVCs, RedirectResponse};
 use axum::async_trait;
 use rainbow_db::auth_consumer::entities::{auth_request, authority_request, mates};
@@ -34,12 +33,8 @@ pub trait RainbowSSIAuthConsumerManagerTrait: Send + Sync {
     async fn check_callback(&self, id: String, interact_ref: String, hash: String) -> anyhow::Result<()>;
     async fn continue_request(&self, id: String, interact_ref: String) -> anyhow::Result<Value>;
     async fn save_mate(&self, mate: mates::NewModel) -> anyhow::Result<mates::Model>;
-    async fn beg_credential(
-        &self,
-        authority_id: String,
-        authority_slug: String,
-        grant_endpoint: String,
-    ) -> anyhow::Result<()>;
+    async fn complete_ver_proccess(&self, uri: Option<String>, url: String, id: String) -> anyhow::Result<String>;
+    async fn beg_credential(&self, payload: ReachAuthority, method: ReachMethod) -> anyhow::Result<Option<String>>;
     async fn who_is_it(
         &self,
         id: String,

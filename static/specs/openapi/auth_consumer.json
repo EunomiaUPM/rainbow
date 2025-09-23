@@ -465,8 +465,8 @@
     "/api/v1/authority/beg": {
       "post": {
         "summary": "Begin a credential request to authority",
-        "description": "Starts a credential request process with the authority.",
-        "operationId": "beg-credential",
+        "description": "Starts a credential request process with the authority by using a certificate.",
+        "operationId": "beg-credential-cert",
         "requestBody": {
           "required": true,
           "content": {
@@ -485,9 +485,18 @@
                   "url": {
                     "type": "string",
                     "description": "URL of the authority endpoint"
+                  },
+                  "vc_type": {
+                    "type": "string",
+                    "description": "The type of credential you are requesting"
                   }
                 },
-                "required": ["id", "slug", "url"]
+                "required": [
+                  "id",
+                  "slug",
+                  "url",
+                  "vc_type"
+                ]
               }
             }
           }
@@ -507,13 +516,62 @@
     },
     "/api/v1/authority/beg/oidc": {
       "post": {
-        "summary": "Beg for credential (OIDC) - INCOMPLETE",
-        "description": "Not implemented yet.",
-        "operationId": "beg4credential-oidc",
-        "responses": {
-          "501": {
-            "description": "Not Implemented"
+        "summary": "Begin a credential request to authority",
+        "description": "Starts a credential request process with the authority by using a certificate.",
+        "operationId": "beg-credential-cert",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Identifier of the request"
+                  },
+                  "slug": {
+                    "type": "string",
+                    "description": "Slug of the authority"
+                  },
+                  "url": {
+                    "type": "string",
+                    "description": "URL of the authority endpoint"
+                  },
+                  "vc_type": {
+                    "type": "string",
+                    "description": "The type of credential you are requesting"
+                  }
+                },
+                "required": [
+                  "id",
+                  "slug",
+                  "url",
+                  "vc_type"
+                ]
+              }
+            }
           }
+        },
+        "200": {
+          "description": "Request completed successfully, returns URI for authentication.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string",
+                "format": "uri"
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "The request was malformed."
+        },
+        "502": {
+          "description": "Request to provider failed or provider responded unexpectedly."
+        },
+        "500": {
+          "description": "Database error or unexpected internal server error."
         }
       }
     },
@@ -578,6 +636,5 @@
         }
       }
     }
-
   }
 }
