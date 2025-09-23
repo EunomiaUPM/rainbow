@@ -1,0 +1,180 @@
+{
+	"info": {
+		"_postman_id": "1df7fed7-3e35-43ea-9627-279ce2236647",
+		"name": "CONSUMER",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "32787488"
+	},
+	"item": [
+		{
+			"name": "C Onboarding",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{ConsumerUrl}}/api/v1/wallet/onboard",
+					"host": [
+						"{{ConsumerUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"wallet",
+						"onboard"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "C Partial Onboarding",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{ConsumerUrl}}/api/v1/wallet/partial-onboard",
+					"host": [
+						"{{ConsumerUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"wallet",
+						"partial-onboard"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "C Grant Request",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"url\": \"http://127.0.0.1:1200/api/v1/access\",\r\n    \"id\": \"{{ProviderDid}}\",\r\n    \"slug\": \"provider\",\r\n    \"actions\": \"talk\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{ConsumerUrl}}/api/v1/request/onboard/provider",
+					"host": [
+						"{{ConsumerUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"request",
+						"onboard",
+						"provider"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "C Did",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var responseData = pm.response.json();\r",
+							"\r",
+							"// Ensure 'PetitionId' is set correctly\r",
+							"pm.test(\"Set global variable 'ConsumerDid' correctly\", function () {\r",
+							"    pm.globals.set(\"ConsumerDid\", responseData.id);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{ConsumerUrl}}/api/v1/did.json",
+					"host": [
+						"{{ConsumerUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"did.json"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "C Beg 4 Credential",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"url\": \"http://127.0.0.1:1500/api/v1/request/credential\",\r\n    \"id\": \"{{AuthorityDid}}\",\r\n    \"slug\": \"authority\",\r\n    \"vc_type\": \"DataspaceParticipantCredential\"\r\n}"
+				},
+				"url": {
+					"raw": "{{ConsumerUrl}}/api/v1/authority/beg",
+					"host": [
+						"{{ConsumerUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"authority",
+						"beg"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "C All Authorities",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{ConsumerUrl}}/api/v1/authority/request/all",
+					"host": [
+						"{{ConsumerUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"authority",
+						"request",
+						"all"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
