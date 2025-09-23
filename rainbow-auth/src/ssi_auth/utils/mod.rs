@@ -18,5 +18,4 @@
  */
 pub mod token;
 pub mod format;
-pub mod validations;
 

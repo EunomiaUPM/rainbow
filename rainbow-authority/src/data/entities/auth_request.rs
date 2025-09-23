@@ -29,6 +29,7 @@ pub struct Model {
     #[sea_orm(primary_key)]
     pub id: String, // REQUEST
     pub participant_slug: String, // REQUEST
+    pub vc_type: String, // REQUEST
     pub cert: Option<String>,
     pub vc_uri: Option<String>,     // RESPONSE
     pub vc_issuing: Option<String>, // RESPONSE
@@ -42,6 +43,7 @@ pub struct Model {
 pub struct NewModel {
     pub id: String,               // REQUEST
     pub participant_slug: String, // REQUEST
+    pub vc_type: String,
     pub cert: Option<String>,
 }
 
@@ -50,6 +52,7 @@ impl IntoActiveSet<ActiveModel> for NewModel {
         ActiveModel {
             id: ActiveValue::Set(self.id),
             participant_slug: ActiveValue::Set(self.participant_slug),
+            vc_type: ActiveValue::Set(self.vc_type),
             cert: ActiveValue::Set(self.cert),
             vc_uri: ActiveValue::Set(None),
             vc_issuing: ActiveValue::Set(None),
@@ -66,6 +69,7 @@ impl IntoActiveSet<ActiveModel> for Model {
         ActiveModel {
             id: ActiveValue::Set(self.id),
             participant_slug: ActiveValue::Set(self.participant_slug),
+            vc_type: ActiveValue::Set(self.vc_type),
             cert: ActiveValue::Set(self.cert),
             vc_uri: ActiveValue::Set(self.vc_uri),
             vc_issuing: ActiveValue::Set(self.vc_issuing),

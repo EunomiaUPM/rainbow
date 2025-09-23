@@ -86,7 +86,7 @@ pub struct Finish4Interact {
 }
 
 impl GrantRequest {
-    pub fn default4oidc(client: Value, method: String, uri: Option<String>) -> Self {
+    pub fn pr_oidc(client: Value, method: String, uri: Option<String>) -> Self {
         Self {
             access_token: AccessTokenRequirements4GR::key_default(),
             subject: None,
@@ -96,9 +96,19 @@ impl GrantRequest {
         }
     }
 
-    pub fn default4cross_user(client: Value, uri: Option<String>) -> Self {
+    pub fn vc_oidc(client: Value, method: String, uri: Option<String>, vc_type: String) -> Self {
         Self {
-            access_token: AccessTokenRequirements4GR::request_vc(),
+            access_token: AccessTokenRequirements4GR::request_vc(vc_type),
+            subject: None,
+            client,
+            user: None,
+            interact: Some(Interact4GR::default4oidc(method, uri)),
+        }
+    }
+
+    pub fn vc_cross_user(client: Value, uri: Option<String>, vc_type: String) -> Self {
+        Self {
+            access_token: AccessTokenRequirements4GR::request_vc(vc_type),
             subject: None,
             client,
             user: None,
@@ -155,11 +165,11 @@ impl AccessTokenRequirements4GR {
         }
     }
 
-    pub fn request_vc() -> Self {
+    pub fn request_vc(vc_type: String) -> Self {
         Self {
             access: Access4AT {
-                r#type: String::from("vc-exchange"),
-                actions: Some(vec![String::from("talk")]),
+                r#type: vc_type,
+                actions: Some(vec![String::from("vc-exchange")]),
                 locations: None,
                 datatypes: None,
                 identifier: None,

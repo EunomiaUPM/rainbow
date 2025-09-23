@@ -16,9 +16,46 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use crate::errors::helpers::BadFormat;
+use crate::errors::{ErrorLog, Errors};
+use anyhow::bail;
 use serde::Deserialize;
+use tracing::error;
 
 #[derive(Deserialize)]
 pub struct VcManager {
     pub approve: bool,
+}
+
+pub enum VcType {
+    DataSpaceParticipant,
+    Identity,
+}
+
+impl VcType {
+    pub fn to_conf(self) -> String {
+        match self {
+            VcType::DataSpaceParticipant => "DataspaceParticipantCredential_jwt_vc_json".to_string(),
+            VcType::Identity => "IdentityCredential_jwt_vc_json".to_string(),
+        }
+    }
+
+    pub fn from_str(s: &str) -> anyhow::Result<VcType> {
+        match s {
+            "DataspaceParticipantCredential" => Ok(VcType::DataSpaceParticipant),
+            "IdentityCredential" => Ok(VcType::Identity),
+            _ => {
+                let error = Errors::format_new(BadFormat::Received, Some(format!("Unknown format: {}", s)));
+                error!("{}", error.log());
+                bail!(error)
+            }
+        }
+    }
+
+    pub fn to_string(&self) -> String {
+        match self {
+            VcType::DataSpaceParticipant => "DataspaceParticipantCredential".to_string(),
+            VcType::Identity => "IdentityCredential".to_string(),
+        }
+    }
 }

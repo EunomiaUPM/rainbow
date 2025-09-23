@@ -28,9 +28,10 @@ use serde::Serialize;
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: String, // REQUEST
-    pub authority_id: String,        // REQUEST
-    pub authority_slug: String,      // REQUEST
-    pub grant_endpoint: String,      // REQUEST
+    pub authority_id: String,   // REQUEST
+    pub authority_slug: String, // REQUEST
+    pub grant_endpoint: String, // REQUEST
+    pub vc_type: String,
     pub assigned_id: Option<String>, // RESPONSE
     pub vc_uri: Option<String>,
     pub status: String,                          // DEFAULT
@@ -44,6 +45,7 @@ pub struct NewModel {
     pub authority_id: String,   // REQUEST
     pub authority_slug: String, // REQUEST
     pub grant_endpoint: String, // REQUEST
+    pub vc_type: String,
 }
 
 impl IntoActiveSet<ActiveModel> for NewModel {
@@ -53,6 +55,7 @@ impl IntoActiveSet<ActiveModel> for NewModel {
             authority_id: ActiveValue::Set(self.authority_id),
             authority_slug: ActiveValue::Set(self.authority_slug),
             grant_endpoint: ActiveValue::Set(self.grant_endpoint),
+            vc_type: ActiveValue::Set(self.vc_type),
             assigned_id: ActiveValue::Set(None),
             vc_uri: ActiveValue::Set(None),
             status: ActiveValue::Set("Processing".to_string()),
@@ -69,6 +72,7 @@ impl IntoActiveSet<ActiveModel> for Model {
             authority_id: ActiveValue::Set(self.authority_id),
             authority_slug: ActiveValue::Set(self.authority_slug),
             grant_endpoint: ActiveValue::Set(self.grant_endpoint),
+            vc_type: ActiveValue::Set(self.vc_type),
             assigned_id: ActiveValue::Set(self.assigned_id),
             vc_uri: ActiveValue::Set(self.vc_uri),
             status: ActiveValue::Set(self.status),

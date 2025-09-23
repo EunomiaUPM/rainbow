@@ -19,7 +19,7 @@
 
 use crate::data::entities::{auth_interaction, auth_request, auth_verification, minions};
 use crate::types::gnap::{GrantRequest, GrantResponse};
-use crate::types::manager::VcManager;
+use crate::types::manager::{VcManager, VcType};
 use axum::async_trait;
 use serde_json::Value;
 
@@ -33,6 +33,7 @@ pub trait AuthorityTrait: Send + Sync {
         id: String,
         name: String,
         website: String,
+        vc_type: VcType,
         fake: bool,
     ) -> anyhow::Result<String>;
     async fn validate_continue_request(

@@ -27,8 +27,8 @@ use crate::errors::{ErrorLog, Errors};
 use crate::setup::config::AuthorityFunctions;
 use crate::setup::AuthorityApplicationConfigTrait;
 use crate::types::gnap::{CallbackBody, GrantRequest, GrantResponse, RejectedCallbackBody};
-use crate::types::manager::VcManager;
-use crate::utils::{compare_with_margin, create_opaque_token, split_did, trim_4_base, trim_path};
+use crate::types::manager::{VcManager, VcType};
+use crate::utils::{create_opaque_token, split_did, trim_4_base, trim_path};
 use anyhow::bail;
 use axum::async_trait;
 use axum::http::header::{ACCEPT, CONTENT_TYPE};
@@ -104,7 +104,10 @@ where
         };
         // let client: ClientConfig = serde_json::from_value(payload.client)?;
 
-        let new_request_model = auth_request::NewModel { id: id.clone(), participant_slug: class_id, cert };
+        let vc_type = payload.access_token.access.r#type.as_str();
+        let _ = VcType::from_str(vc_type)?;
+        let new_request_model =
+            auth_request::NewModel { id: id.clone(), participant_slug: class_id, cert, vc_type: vc_type.to_string() };
 
         let _ = match self.repo.request().create(new_request_model).await {
             Ok(model) => {
@@ -232,6 +235,7 @@ where
         callback_id: String,
         name: String,
         website: String,
+        vc_type: VcType,
         real: bool,
     ) -> anyhow::Result<String> {
         info!("Generating an issuing uri");
@@ -245,12 +249,7 @@ where
             }
             false => {
                 let url = "http://127.0.0.1:7002/openid4vc/jwt/issue".to_string();
-                // let issuer_id = match self.get_did_doc["id"].as_str() {
-                //     Some(data) => data,
-                //     None => {
-                //         bail!("Error parsing the DID identifier")
-                //     }
-                // };
+
                 let path = trim_path(self.config.get_raw_client_config().cert_path.as_str());
                 let pkey_path = format!("{}/private_key.pem", path);
 
@@ -271,47 +270,93 @@ where
                 let client = self.config.get_raw_client_config();
                 let issuer = client.class_id.clone();
 
-                let body = json!({
-                    "issuerKey": { // TODO
-                        "type": "jwk",
-                        "jwk": jwk
-                    },
-                    "credentialConfigurationId": "DataspaceParticipantCredential_jwt_vc_json",
-                    "credentialData": {
-                        "@context": [
-                            "https://www.w3.org/2018/credentials/v1"
-                        ],
-                    "id": "https://example.gov/credentials/3732", // DISAPPEARS
-                    "type": [
-                        "VerifiableCredential",
-                        "DataspaceParticipantCredential"
-                    ],
-                    "issuer": {
-                        "id": "did:web:vc.transmute.world", // DISAPPEARS
-                        "name": issuer,
-                    },
-                    "issuanceDate": "2020-03-10T04:24:12.164Z", // DISAPPEARS
-                    "credentialSubject": {
-                        "id": "did:example:ebfeb1f712ebc6f1c276e12ec21", // DISAPPEARS
-                        "type": "DataspaceParticipant",
-                        "dataspaceId": "Rainbow DataSpace",
-                        "legalName": name,
-                        "website": website,
-                        }
-                    },
-                    "mapping": {
-                    "id": "<uuid>",
-                    "issuer": {
-                        "id": "<issuerDid>"
-                    },
-                    "credentialSubject": {
-                        "id": "<subjectDid>"
-                    },
-                    "issuanceDate": "<timestamp>",
-                    "expirationDate": "<timestamp-in:365d>"
-                    },
-                    "issuerDid": did,
-                });
+                let body: Value = match vc_type {
+                    VcType::DataSpaceParticipant => {
+                        json!({
+                            "issuerKey": { 
+                                "type": "jwk",
+                                "jwk": jwk
+                            },
+                            "credentialConfigurationId": "DataspaceParticipantCredential_jwt_vc_json",
+                            "credentialData": {
+                                "@context": [
+                                    "https://www.w3.org/2018/credentials/v1"
+                                ],
+                            "id": "https://example.gov/credentials/3732", // DISAPPEARS
+                            "type": [
+                                "VerifiableCredential",
+                                "DataspaceParticipantCredential"
+                            ],
+                            "issuer": {
+                                "id": "did:web:vc.transmute.world", // DISAPPEARS
+                                "name": issuer,
+                            },
+                            "validFrom": "2020-03-10T04:24:12.164Z", // DISAPPEARS
+                            "credentialSubject": {
+                                "id": "did:example:ebfeb1f712ebc6f1c276e12ec21", // DISAPPEARS
+                                "type": "DataspaceParticipant",
+                                "dataspaceId": "Rainbow DataSpace",
+                                "legalName": name,
+                                "website": website,
+                                }
+                            },
+                            "mapping": {
+                            "id": "<uuid>",
+                            "issuer": {
+                                "id": "<issuerDid>"
+                            },
+                            "credentialSubject": {
+                                "id": "<subjectDid>"
+                            },
+                            "validFrom": "<timestamp>",
+                            "validUntil": "<timestamp-in:365d>"
+                            },
+                            "issuerDid": did,
+                        })
+                    }
+                    VcType::Identity => {
+                        json!({
+                            "issuerKey": { 
+                                "type": "jwk",
+                                "jwk": jwk
+                            },
+                            "credentialConfigurationId": "IdentityCredential_jwt_vc_json",
+                            "credentialData": {
+                                "@context": [
+                                    "https://www.w3.org/2018/credentials/v1"
+                                ],
+                            "id": "https://example.gov/credentials/3732", // DISAPPEARS
+                            "type": [
+                                "VerifiableCredential",
+                                "IdentityCredential"
+                            ],
+                            "issuer": {
+                                "id": "did:web:vc.transmute.world", // DISAPPEARS
+                                "name": issuer,
+                            },
+                            "validFrom": "2020-03-10T04:24:12.164Z", // DISAPPEARS
+                            "credentialSubject": {
+                                "id": "did:example:ebfeb1f712ebc6f1c276e12ec21", // DISAPPEARS
+                                "type": "IdentityCredential",
+                                "legalName": name,
+                                "website": website,
+                                }
+                            },
+                            "mapping": {
+                            "id": "<uuid>",
+                            "issuer": {
+                                "id": "<issuerDid>"
+                            },
+                            "credentialSubject": {
+                                "id": "<subjectDid>"
+                            },
+                            "validFrom": "<timestamp>",
+                            "validUntil": "<timestamp-in:365d>"
+                            },
+                            "issuerDid": did,
+                        })
+                    }
+                };
 
                 let host_url = self.config.get_host();
                 let docker_host_url = host_url.clone().replace("127.0.0.1", "host.docker.internal"); // TODO FIX 4 MICROSERICES
@@ -472,7 +517,9 @@ where
             bail!(error)
         }
 
-        let vc_uri = self.generate_issuing_uri(id, name, website, false).await?;
+        let vc_type = VcType::from_str(request_model.vc_type.as_str())?;
+
+        let vc_uri = self.generate_issuing_uri(id, name, website, vc_type, false).await?;
         request_model.status = "Approved".to_string();
         request_model.vc_uri = Some(vc_uri);
 
@@ -977,6 +1024,8 @@ where
             }
         };
 
+        debug!("{:#?}", token);
+
         info!("VCT token signature is correct");
 
         let iss = match token.claims["iss"].as_str() {
@@ -1075,37 +1124,6 @@ where
         }
         info!("VCT jti & VC id match");
 
-        let iat = match token.claims["iat"].as_i64() {
-            Some(data) => data,
-            None => {
-                let error = Errors::format_new(
-                    BadFormat::Received,
-                    Some("No credentialSubject id field in the vc".to_string()),
-                );
-                error!("{}", error.log());
-                bail!(error);
-            }
-        };
-
-        let iss_date = match token.claims["vc"]["issuanceDate"].as_str() {
-            Some(data) => data,
-            None => {
-                let error = Errors::format_new(
-                    BadFormat::Received,
-                    Some("No credentialSubject id field in the vc".to_string()),
-                );
-                error!("{}", error.log());
-                bail!(error);
-            }
-        };
-        let (keep, message) = compare_with_margin(iat, iss_date, 2);
-        if keep {
-            let error = Errors::security_new(Some(message.to_string()));
-            error!("{}", error.log());
-            bail!(error);
-        }
-        info!("VC IssuanceDate and iat field match");
-
         let valid_from = match token.claims["vc"]["validFrom"].as_str() {
             Some(data) => data,
             None => {
@@ -1118,7 +1136,13 @@ where
             }
         };
         match DateTime::parse_from_rfc3339(valid_from) {
-            Ok(parsed_date) => parsed_date <= Utc::now(),
+            Ok(parsed_date) => {
+                if parsed_date > Utc::now() {
+                    let error = Errors::security_new(Some("VC is not valid yet".to_string()));
+                    error!("{}", error.log());
+                    bail!(error)
+                }
+            }
             Err(e) => {
                 let error = Errors::security_new(Some(format!(
                     "VC iat and issuanceDate do not match -> {}",
@@ -1128,7 +1152,35 @@ where
                 bail!(error);
             }
         };
+
         info!("VC validFrom is correct");
+        let valid_until = match token.claims["vc"]["validUntil"].as_str() {
+            Some(data) => data,
+            None => {
+                let error = Errors::format_new(
+                    BadFormat::Received,
+                    Some("No validUntil field in the vc".to_string()),
+                );
+                error!("{}", error.log());
+                bail!(error);
+            }
+        };
+
+        match DateTime::parse_from_rfc3339(valid_until) {
+            Ok(parsed_date) => {
+                if Utc::now() > parsed_date {
+                    let error = Errors::security_new(Some("VC has expired".to_string()));
+                    error!("{}", error.log());
+                    bail!(error)
+                }
+            }
+            Err(e) => {
+                let error = Errors::security_new(Some(format!("VC validUntil has invalid format -> {}", e)));
+                error!("{}", error.log());
+                bail!(error);
+            }
+        }
+        info!("VC validUntil is correct");
         info!("VC Verification successful");
         Ok(())
     }
