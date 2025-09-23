@@ -290,7 +290,7 @@ where
                         "id": "did:web:vc.transmute.world", // DISAPPEARS
                         "name": issuer,
                     },
-                    "issuanceDate": "2020-03-10T04:24:12.164Z", // DISAPPEARS
+                    "validFrom": "2020-03-10T04:24:12.164Z", // DISAPPEARS
                     "credentialSubject": {
                         "id": "did:example:ebfeb1f712ebc6f1c276e12ec21", // DISAPPEARS
                         "type": "DataspaceParticipant",
@@ -307,8 +307,8 @@ where
                     "credentialSubject": {
                         "id": "<subjectDid>"
                     },
-                    "issuanceDate": "<timestamp>",
-                    "expirationDate": "<timestamp-in:365d>"
+                    "validFrom": "<timestamp>",
+                    "validUntil": "<timestamp-in:365d>"
                     },
                     "issuerDid": did,
                 });

@@ -42,7 +42,7 @@ use rand::distributions::Alphanumeric;
 use rand::Rng;
 use serde_json::{json, Value};
 use std::collections::HashSet;
-use tracing::{error, info};
+use tracing::{debug, error, info};
 use urlencoding::encode;
 
 #[async_trait]
@@ -566,6 +566,7 @@ where
             }
         };
 
+        debug!("{:#?}", token);
         info!("VPT token signature is correct");
 
         // let id = match token.claims["jti"].as_str() {
@@ -705,7 +706,6 @@ where
         info!("Verifying VC");
         let header = jsonwebtoken::decode_header(&vc_token)?;
 
-
         let kid_str = match header.kid.as_ref() {
             Some(data) => data,
             None => {
@@ -740,6 +740,8 @@ where
                 bail!(error);
             }
         };
+
+        debug!("{:#?}", token);
 
         info!("VCT token signature is correct");
 
@@ -839,37 +841,6 @@ where
         }
         info!("VCT jti & VC id match");
 
-        let iat = match token.claims["iat"].as_i64() {
-            Some(data) => data,
-            None => {
-                let error = CommonErrors::format_new(
-                    BadFormat::Received,
-                    Some("No credentialSubject id field in the vc".to_string()),
-                );
-                error!("{}", error.log());
-                bail!(error);
-            }
-        };
-
-        let iss_date = match token.claims["vc"]["issuanceDate"].as_str() {
-            Some(data) => data,
-            None => {
-                let error = CommonErrors::format_new(
-                    BadFormat::Received,
-                    Some("No credentialSubject id field in the vc".to_string()),
-                );
-                error!("{}", error.log());
-                bail!(error);
-            }
-        };
-        let (keep, message) = compare_with_margin(iat, iss_date, 2);
-        if keep {
-            let error = AuthErrors::security_new(Some(message.to_string()));
-            error!("{}", error.log());
-            bail!(error);
-        }
-        info!("VC IssuanceDate and iat field match");
-
         let valid_from = match token.claims["vc"]["validFrom"].as_str() {
             Some(data) => data,
             None => {
@@ -882,7 +853,13 @@ where
             }
         };
         match DateTime::parse_from_rfc3339(valid_from) {
-            Ok(parsed_date) => parsed_date <= Utc::now(),
+            Ok(parsed_date) => {
+                if parsed_date > Utc::now() {
+                    let error = AuthErrors::security_new(Some("VC is not valid yet".to_string()));
+                    error!("{}", error.log());
+                    bail!(error)
+                }
+            }
             Err(e) => {
                 let error = AuthErrors::security_new(Some(format!(
                     "VC iat and issuanceDate do not match -> {}",
@@ -892,7 +869,36 @@ where
                 bail!(error);
             }
         };
+
         info!("VC validFrom is correct");
+        let valid_until = match token.claims["vc"]["validUntil"].as_str() {
+            Some(data) => data,
+            None => {
+                let error = CommonErrors::format_new(
+                    BadFormat::Received,
+                    Some("No validUntil field in the vc".to_string()),
+                );
+                error!("{}", error.log());
+                bail!(error);
+            }
+        };
+
+        match DateTime::parse_from_rfc3339(valid_until) {
+            Ok(parsed_date) => {
+                if Utc::now() > parsed_date {
+                    let error = AuthErrors::security_new(Some("VC has expired".to_string()));
+                    error!("{}", error.log());
+                    bail!(error)
+                }
+            }
+            Err(e) => {
+                let error = AuthErrors::security_new(Some(format!("VC validUntil has invalid format -> {}", e)));
+                error!("{}", error.log());
+                bail!(error);
+            }
+        }
+
+        info!("VC validUntil is correct");
         info!("VC Verification successful");
         Ok(())
     }
