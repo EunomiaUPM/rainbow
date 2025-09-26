@@ -20,8 +20,8 @@
 pub mod impls;
 pub mod traits;
 
+use crate::ssi_auth::common::types::ssi::{keys::KeyDefinition, wallet::WalletSession};
 use rainbow_common::config::provider_config::ApplicationProviderConfig;
-use rainbow_common::ssi_wallet::{KeyDefinition, WalletSession};
 use rainbow_db::auth_provider::repo_factory::factory_trait::AuthRepoFactoryTrait;
 use reqwest::Client;
 use std::sync::Arc;

@@ -17,8 +17,8 @@
  *
  */
 
+use crate::ssi_auth::common::types::gnap::{GrantRequest, GrantResponse};
 use axum::async_trait;
-use rainbow_common::auth::gnap::{GrantRequest, GrantResponse};
 use rainbow_db::auth_provider::entities::{auth_interaction, auth_request, auth_verification, mates};
 use serde_json::Value;
 

@@ -16,8 +16,8 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::ssi_auth::types::entities::{ReachAuthority, ReachMethod, WhatEntity};
-use crate::ssi_auth::types::wallet::{MatchingVCs, RedirectResponse};
+use crate::ssi_auth::common::types::entities::{ReachAuthority, ReachMethod, WhatEntity};
+use crate::ssi_auth::common::types::ssi::other::{MatchingVCs, RedirectResponse};
 use axum::async_trait;
 use rainbow_db::auth_consumer::entities::{auth_request, authority_request, mates};
 use serde_json::Value;

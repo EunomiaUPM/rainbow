@@ -20,7 +20,7 @@
 use crate::config::database::DbType;
 use crate::config::global_config::{extract_env, format_host_config_to_url_string, DatabaseConfig, HostConfig};
 use crate::config::ConfigRoles;
-use crate::ssi_wallet::{ClientConfig, SSIWalletConfig};
+use crate::ssi::{ClientConfig, SSIWalletConfig};
 use serde::Serialize;
 use serde_json::{json, Value};
 use std::{env, fs};

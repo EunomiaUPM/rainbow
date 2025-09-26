@@ -16,8 +16,25 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
-pub mod consumer;
-pub mod provider;
-pub mod cmd;
-pub mod common;
+#[derive(Deserialize, Serialize, Debug)]
+pub struct MatchingVCs {
+    #[serde(rename = "addedOn")]
+    pub added_on: String,
+    pub disclosures: String,
+    pub document: String,
+    pub format: String,
+    pub id: String,
+    #[serde(rename = "parsedDocument")]
+    pub parsed_document: Value,
+    pub pending: bool,
+    pub wallet: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct RedirectResponse {
+    #[serde(rename = "redirectUri")]
+    pub redirect_uri: String,
+}

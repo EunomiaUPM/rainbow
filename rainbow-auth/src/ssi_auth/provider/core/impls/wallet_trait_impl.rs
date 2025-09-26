@@ -17,11 +17,13 @@
  *
  */
 
-use crate::ssi_auth::errors::AuthErrors;
+use crate::ssi_auth::common::errors::AuthErrors;
+use crate::ssi_auth::common::traits::RainbowSSIAuthWalletTrait;
+use crate::ssi_auth::common::types::jwt::AuthJwtClaims;
+use crate::ssi_auth::common::types::ssi::wallet::{WalletInfo, WalletInfoResponse, WalletLoginResponse};
+use crate::ssi_auth::common::types::ssi::{dids::DidsInfo, keys::KeyDefinition};
 use crate::ssi_auth::provider::core::traits::provider_trait::RainbowSSIAuthProviderManagerTrait;
 use crate::ssi_auth::provider::core::Manager;
-use crate::ssi_auth::types::jwt::AuthJwtClaims;
-use crate::ssi_auth::types::wallet::{WalletInfoResponse, WalletLoginResponse};
 use anyhow::bail;
 use axum::async_trait;
 use axum::http::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
@@ -31,7 +33,6 @@ use base64::Engine;
 use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
 use rainbow_common::errors::helpers::{BadFormat, MissingAction};
 use rainbow_common::errors::{CommonErrors, ErrorLog};
-use rainbow_common::ssi_wallet::{DidsInfo, KeyDefinition, RainbowSSIAuthWalletTrait, WalletInfo};
 use rainbow_db::auth_provider::entities::mates;
 use rainbow_db::auth_provider::repo_factory::factory_trait::AuthRepoFactoryTrait;
 use serde_json::Value;

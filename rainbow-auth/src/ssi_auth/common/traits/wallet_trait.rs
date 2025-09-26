@@ -16,7 +16,10 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::ssi_wallet::{DidsInfo, KeyDefinition, WalletInfo};
+
+use crate::ssi_auth::common::types::ssi::dids::DidsInfo;
+use crate::ssi_auth::common::types::ssi::keys::KeyDefinition;
+use crate::ssi_auth::common::types::ssi::wallet::WalletInfo;
 use axum::async_trait;
 use serde_json::Value;
 

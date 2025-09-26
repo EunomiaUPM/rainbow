@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
+ *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
  *  *
  *  * This program is free software: you can redistribute it and/or modify
  *  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,16 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use serde::{Deserialize, Serialize};
 
-pub mod consumer;
-pub mod provider;
-pub mod cmd;
-pub mod common;
+#[derive(Deserialize, Serialize, PartialEq, Eq, Clone, Debug)]
+pub struct DidsInfo {
+    pub did: String,
+    pub alias: String,
+    pub document: String,
+    #[serde(rename = "keyId")]
+    pub key_id: String,
+    pub default: bool,
+    #[serde(rename = "createdOn")]
+    pub created_on: String,
+}

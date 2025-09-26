@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
+ *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
  *  *
  *  * This program is free software: you can redistribute it and/or modify
  *  * it under the terms of the GNU General Public License as published by
@@ -17,7 +17,29 @@
  *
  */
 
-pub mod consumer;
-pub mod provider;
-pub mod cmd;
-pub mod common;
+pub use self::access_token::AccessToken;
+pub use self::grant_request::GrantRequest;
+pub use self::grant_response::GrantResponse;
+
+pub mod access_token;
+pub mod grant_request;
+pub mod grant_response;
+
+use serde::{Deserialize, Serialize};
+
+#[derive(Deserialize, Serialize)]
+pub struct CallbackResponse {
+    pub hash: String,
+    pub interact_ref: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RefBody {
+    pub interact_ref: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct CallbackBody {
+    pub interact_ref: String,
+    pub hash: String,
+}

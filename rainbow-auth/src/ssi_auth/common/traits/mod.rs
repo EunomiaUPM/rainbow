@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
+ *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
  *  *
  *  * This program is free software: you can redistribute it and/or modify
  *  * it under the terms of the GNU General Public License as published by
@@ -16,11 +16,5 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
-pub use self::access_token::AccessToken;
-pub use self::grant_request::GrantRequest;
-pub use self::grant_response::GrantResponse;
-
-pub mod access_token;
-pub mod grant_request;
-pub mod grant_response;
+mod wallet_trait;
+pub use wallet_trait::RainbowSSIAuthWalletTrait;

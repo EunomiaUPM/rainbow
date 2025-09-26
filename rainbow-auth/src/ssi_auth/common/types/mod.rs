@@ -16,8 +16,11 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+pub mod ssi;
+pub mod jwt;
+pub mod gnap;
+pub mod entities;
 
-pub mod consumer;
-pub mod provider;
-pub mod cmd;
-pub mod common;
+
+
+

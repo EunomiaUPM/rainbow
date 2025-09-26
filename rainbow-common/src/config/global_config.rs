@@ -21,7 +21,7 @@ use crate::config::consumer_config::ApplicationConsumerConfig;
 use crate::config::database::DbType;
 use crate::config::provider_config::ApplicationProviderConfig;
 use crate::config::ConfigRoles;
-use crate::ssi_wallet::{ClientConfig, SSIWalletConfig};
+use crate::ssi::{ClientConfig, SSIWalletConfig};
 use serde::Serialize;
 use std::env;
 

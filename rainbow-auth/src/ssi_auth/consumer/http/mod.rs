@@ -17,19 +17,19 @@
  *
  */
 
+use crate::ssi_auth::common::errors::CustomToResponse;
+use crate::ssi_auth::common::traits::RainbowSSIAuthWalletTrait;
+use crate::ssi_auth::common::types::entities::{ReachAuthority, ReachMethod, ReachProvider};
+use crate::ssi_auth::common::types::gnap::CallbackBody;
+use crate::ssi_auth::common::types::ssi::{dids::DidsInfo, keys::KeyDefinition};
 use crate::ssi_auth::consumer::core::traits::consumer_trait::RainbowSSIAuthConsumerManagerTrait;
 use crate::ssi_auth::consumer::core::Manager;
-use crate::ssi_auth::errors::CustomToResponse;
-use crate::ssi_auth::types::entities::{ReachAuthority, ReachMethod, ReachProvider};
-use crate::ssi_auth::types::gnap::CallbackBody;
 use axum::extract::{Path, Query, State};
 use axum::http::{Method, Uri};
 use axum::response::IntoResponse;
 use axum::routing::{delete, get, post};
 use axum::{Json, Router};
-use rainbow_common::errors::helpers::BadFormat;
-use rainbow_common::errors::{CommonErrors, ErrorLog};
-use rainbow_common::ssi_wallet::{DidsInfo, KeyDefinition, RainbowSSIAuthWalletTrait};
+use rainbow_common::errors::{helpers::BadFormat, CommonErrors, ErrorLog};
 use rainbow_db::auth_consumer::repo_factory::factory_trait::AuthRepoFactoryTrait;
 use reqwest::StatusCode;
 use std::collections::HashMap;

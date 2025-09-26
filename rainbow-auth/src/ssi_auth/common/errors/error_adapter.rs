@@ -16,7 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::ssi_auth::errors::AuthErrors;
+use crate::ssi_auth::common::errors::AuthErrors;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;

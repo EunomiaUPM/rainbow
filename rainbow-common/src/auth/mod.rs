@@ -17,6 +17,5 @@
  *
  */
 
-pub mod gnap;
 pub mod header;
 pub mod business;

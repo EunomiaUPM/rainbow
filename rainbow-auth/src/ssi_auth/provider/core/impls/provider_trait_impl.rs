@@ -17,11 +17,12 @@
  *
  */
 
-use crate::ssi_auth::errors::AuthErrors;
+use crate::ssi_auth::common::errors::AuthErrors;
+use crate::ssi_auth::common::types::gnap::{GrantRequest, GrantResponse};
+use crate::ssi_auth::common::utils::format::{split_did, trim_4_base};
+use crate::ssi_auth::common::utils::token::create_opaque_token;
 use crate::ssi_auth::provider::core::traits::provider_trait::RainbowSSIAuthProviderManagerTrait;
 use crate::ssi_auth::provider::core::Manager;
-use crate::ssi_auth::utils::format::{split_did, trim_4_base};
-use crate::ssi_auth::utils::token::create_opaque_token;
 use anyhow::bail;
 use axum::async_trait;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
@@ -29,7 +30,6 @@ use base64::Engine;
 use chrono::{DateTime, Utc};
 use jsonwebtoken::jwk::Jwk;
 use jsonwebtoken::Validation;
-use rainbow_common::auth::gnap::{GrantRequest, GrantResponse};
 use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
 use rainbow_common::errors::helpers::{BadFormat, MissingAction};
 use rainbow_common::errors::{CommonErrors, ErrorLog};

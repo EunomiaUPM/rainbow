@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
+ *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
  *  *
  *  * This program is free software: you can redistribute it and/or modify
  *  * it under the terms of the GNU General Public License as published by
@@ -16,11 +16,23 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-pub mod wallet;
-pub mod jwt;
-pub mod gnap;
-pub mod entities;
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+pub struct KeyInfo {
+    pub id: String,
+}
 
-
-
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+pub struct KeyDefinition {
+    pub algorithm: String,
+    #[serde(rename = "cryptoProvider")]
+    pub crypto_provider: String,
+    #[serde(rename = "keyId")]
+    pub key_id: KeyInfo,
+    #[serde(rename = "keyPair")]
+    pub key_pair: Value,
+    #[serde(rename = "keyset_handle")]
+    pub keyset_handle: Option<Value>,
+}

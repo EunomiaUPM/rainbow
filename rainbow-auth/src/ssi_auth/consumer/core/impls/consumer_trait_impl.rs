@@ -16,22 +16,20 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use crate::ssi_auth::common::errors::AuthErrors;
+use crate::ssi_auth::common::traits::RainbowSSIAuthWalletTrait;
+use crate::ssi_auth::common::types::entities::{ReachAuthority, ReachMethod, WhatEntity};
+use crate::ssi_auth::common::types::gnap::{AccessToken, GrantRequest, GrantResponse, RefBody};
+use crate::ssi_auth::common::types::ssi::other::{MatchingVCs, RedirectResponse};
+use crate::ssi_auth::common::utils::format::trim_4_base;
 use crate::ssi_auth::consumer::core::traits::consumer_trait::RainbowSSIAuthConsumerManagerTrait;
 use crate::ssi_auth::consumer::core::Manager;
-use crate::ssi_auth::errors::AuthErrors;
-use crate::ssi_auth::types::entities::{ReachAuthority, ReachMethod, WhatEntity};
-use crate::ssi_auth::types::gnap::RefBody;
-use crate::ssi_auth::types::wallet::{MatchingVCs, RedirectResponse};
-use crate::ssi_auth::utils::format::trim_4_base;
 use anyhow::bail;
 use axum::async_trait;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
-use rainbow_common::auth::gnap::{AccessToken, GrantRequest, GrantResponse};
 use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
-use rainbow_common::errors::helpers::BadFormat;
-use rainbow_common::errors::{CommonErrors, ErrorLog};
-use rainbow_common::ssi_wallet::RainbowSSIAuthWalletTrait;
+use rainbow_common::errors::{helpers::BadFormat, CommonErrors, ErrorLog};
 use rainbow_db::auth_consumer::entities::{
     auth_interaction, auth_request, auth_token_requirements, auth_verification, authority_request, mates,
 };
