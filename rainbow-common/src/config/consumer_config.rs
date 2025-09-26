@@ -231,31 +231,6 @@ impl ApplicationConsumerConfigTrait for ApplicationConsumerConfig {
         &self.client_config
     }
 
-    fn get_cert(&self) -> String {
-        let path = fs::read(self.client_config.cert_path.clone()).unwrap();
-        String::from_utf8(path).unwrap()
-    }
-    fn get_priv_key(&self) -> String {
-        let bad_path = self.client_config.cert_path.clone();
-        let inc_path = match bad_path.rfind('/') {
-            Some(pos) => (&bad_path[..pos]).to_string(),
-            None => bad_path,
-        };
-        let path = format!("{}/private_key.pem", inc_path);
-        let file = fs::read(path).unwrap();
-        String::from_utf8(file).unwrap()
-    }
-    fn get_pub_key(&self) -> String {
-        let bad_path = self.client_config.cert_path.clone();
-        let inc_path = match bad_path.rfind('/') {
-            Some(pos) => (&bad_path[..pos]).to_string(),
-            None => bad_path,
-        };
-        let path = format!("{}/public_key.pem", inc_path);
-        let file = fs::read(path).unwrap();
-        String::from_utf8(file).unwrap()
-    }
-
     fn merge_dotenv_configuration(&self, env_file: Option<String>) -> Self {
         if let Some(env_file) = env_file {
             dotenvy::from_filename(env_file).expect("No env file found");
@@ -383,7 +358,6 @@ impl ApplicationConsumerConfigTrait for ApplicationConsumerConfig {
         };
         compound_config
     }
-
     fn get_pretty_client_config(&self) -> Value {
         let path = fs::read(self.client_config.cert_path.clone()).unwrap();
         let cert = String::from_utf8(path).unwrap();
@@ -399,5 +373,31 @@ impl ApplicationConsumerConfigTrait for ApplicationConsumerConfig {
             "class_id" : self.client_config.class_id,
             "display" : self.client_config.display,
         })
+    }
+    fn get_pub_key(&self) -> String {
+        let bad_path = self.client_config.cert_path.clone();
+        let inc_path = match bad_path.rfind('/') {
+            Some(pos) => (&bad_path[..pos]).to_string(),
+            None => bad_path,
+        };
+        let path = format!("{}/public_key.pem", inc_path);
+        let file = fs::read(path).unwrap();
+        String::from_utf8(file).unwrap()
+    }
+
+    fn get_priv_key(&self) -> String {
+        let bad_path = self.client_config.cert_path.clone();
+        let inc_path = match bad_path.rfind('/') {
+            Some(pos) => (&bad_path[..pos]).to_string(),
+            None => bad_path,
+        };
+        let path = format!("{}/private_key.pem", inc_path);
+        let file = fs::read(path).unwrap();
+        String::from_utf8(file).unwrap()
+    }
+
+    fn get_cert(&self) -> String {
+        let path = fs::read(self.client_config.cert_path.clone()).unwrap();
+        String::from_utf8(path).unwrap()
     }
 }

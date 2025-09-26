@@ -18,7 +18,7 @@
  */
 
 use axum::Router;
-use rainbow_auth::ssi_auth::consumer::setup::router::create_ssi_consumer_router;
+use rainbow_auth::ssi_auth::consumer::setup::app::create_ssi_consumer_router;
 // use rainbow_catalog::consumer::setup::application::create_catalog_bypass_consumer_router;
 use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
 use rainbow_contracts::consumer::setup::application::create_contract_negotiation_consumer_router;

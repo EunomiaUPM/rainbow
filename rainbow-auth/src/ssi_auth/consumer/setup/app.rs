@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
  *  *
  *  * This program is free software: you can redistribute it and/or modify
  *  * it under the terms of the GNU General Public License as published by
@@ -16,15 +16,38 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 use crate::ssi_auth::consumer::core::Manager;
 use crate::ssi_auth::consumer::http::RainbowAuthConsumerRouter;
+use axum::serve;
 use axum::Router;
-use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
-use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
+use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
 use rainbow_db::auth_consumer::repo_factory::factory::AuthConsumerRepoForSql;
 use sea_orm::Database;
 use std::sync::Arc;
+use tokio::net::TcpListener;
+use tracing::info;
+
+pub struct SSIAuthConsumerApplication;
+
+impl SSIAuthConsumerApplication {
+    pub async fn run(config: &ApplicationConsumerConfig) -> anyhow::Result<()> {
+        let router = create_ssi_consumer_router(config.clone()).await;
+        // Init server
+        let server_message = format!(
+            "Starting Auth Consumer server in {}",
+            config.get_transfer_host_url().unwrap()
+        );
+        info!("{}", server_message);
+        let listener = TcpListener::bind(format!(
+            "{}:{}",
+            config.get_raw_auth_host().clone().unwrap().url,
+            config.get_raw_auth_host().clone().unwrap().port
+        ))
+        .await?;
+        serve(listener, router).await?;
+        Ok(())
+    }
+}
 
 pub async fn create_ssi_consumer_router(config: ApplicationConsumerConfig) -> Router {
     let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");

@@ -17,6 +17,34 @@
  *
  */
 
-fn main() {
-    println!("Hello, world!");
+use rainbow_auth::ssi_auth::cmd::AuthCommands;
+use tracing::info;
+use tracing::level_filters::LevelFilter;
+use tracing_subscriber::EnvFilter;
+
+const INFO: &str = r"
+----------
+ ____    __    ____  _  _  ____  _____  _    _
+(  _ \  /__\  (_  _)( \( )(  _ \(  _  )( \/\/ )
+ )   / /(__)\  _)(_  )  (  ) _ < )(_)(  )    (
+(_)\_)(__)(__)(____)(_)\_)(____/(_____)(__/\__)
+
+Starting Rainbow Auth Server 🌈🌈
+UPM Dataspace protocol implementation
+Show some love on https://github.com/ging/rainbow
+----------
+
+";
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    let filter =
+        EnvFilter::builder().with_default_directive(LevelFilter::INFO.into()).parse("debug,sqlx::query=off")?;
+    tracing_subscriber::fmt()
+        .event_format(tracing_subscriber::fmt::format().with_line_number(true))
+        .with_env_filter(filter)
+        .init();
+    info!("{}", INFO);
+    AuthCommands::init_command_line().await?;
+    Ok(())
 }

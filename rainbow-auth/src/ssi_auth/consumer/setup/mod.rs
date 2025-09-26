@@ -17,4 +17,5 @@
  *
  */
 
-pub mod router;
+pub mod app;
+pub mod db_migrations;
