@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Rainbow Authentication Provider API",
-    "description": "Rainbow Authentication Module - Rainbow Provider API",
+    "title": "Rainbow Authentication Authority API",
+    "description": "Rainbow Authentication Module - Rainbow Authority API",
     "version": "1.0.0"
   },
   "servers": [
@@ -155,11 +155,11 @@
         }
       }
     },
-    "/api/v1/access": {
+    "/api/v1/request/credential": {
       "post": {
-        "summary": "Initiate access request",
-        "description": "Sends the initial GNAP access request to the provider.",
-        "operationId": "access_request",
+        "summary": "Initiate request to retrieve credentials",
+        "description": "Sends the initial GNAP access request to the authority.",
+        "operationId": "vc_request",
         "requestBody": {
           "required": true,
           "content": {
@@ -304,37 +304,60 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "access_token": {
+                    "continue": {
                       "type": "object",
                       "properties": {
-                        "access": {
+                        "uri": {
+                          "type": "string"
+                        },
+                        "wait": {
+                          "type": "integer"
+                        },
+                        "access_token": {
                           "type": "object",
                           "properties": {
-                            "type": {
+                            "access": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string"
+                                },
+                                "actions": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                },
+                                "locations": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                },
+                                "datatypes": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                },
+                                "identifier": {
+                                  "type": "string"
+                                },
+                                "privileges": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ]
+                            },
+                            "label": {
                               "type": "string"
                             },
-                            "actions": {
-                              "type": "array",
-                              "items": {
-                                "type": "string"
-                              }
-                            },
-                            "locations": {
-                              "type": "array",
-                              "items": {
-                                "type": "string"
-                              }
-                            },
-                            "datatypes": {
-                              "type": "array",
-                              "items": {
-                                "type": "string"
-                              }
-                            },
-                            "identifier": {
-                              "type": "string"
-                            },
-                            "privileges": {
+                            "flags": {
                               "type": "array",
                               "items": {
                                 "type": "string"
@@ -342,22 +365,10 @@
                             }
                           },
                           "required": [
-                            "type"
+                            "access"
                           ]
-                        },
-                        "label": {
-                          "type": "string"
-                        },
-                        "flags": {
-                          "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
                         }
-                      },
-                      "required": [
-                        "access"
-                      ]
+                      }
                     },
                     "subject": {
                       "type": "object",
@@ -379,7 +390,7 @@
                         }
                       }
                     },
-                    "client": {
+                    "instance_id": {
                       "type": "object"
                     },
                     "user": {
@@ -426,8 +437,8 @@
                     }
                   },
                   "required": [
-                    "access_token",
-                    "client",
+                    "continue",
+                    "instance_id",
                     "interact"
                   ]
                 }

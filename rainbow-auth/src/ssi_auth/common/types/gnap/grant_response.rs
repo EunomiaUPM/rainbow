@@ -83,7 +83,7 @@ impl GrantResponse {
         Self {
             r#continue: Some(Continue4GResponse {
                 uri: continue_uri,
-                wait: None, // TODO Manage wait time
+                wait: None, // TODO Manage wait time it should be at least 5 secs
                 access_token: AccessToken::default(token),
             }),
             access_token: None,
