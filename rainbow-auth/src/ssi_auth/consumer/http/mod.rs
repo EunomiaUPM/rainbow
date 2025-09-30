@@ -92,6 +92,8 @@ where
                 "/api/v1/authority/request/:id",
                 get(Self::get_one_authority),
             )
+            .route("/api/v1/mates", get(Self::get_all_mates))
+            .route("/api/v1/mates/:id", get(Self::get_mate_by_id))
             // OIDC
             .route("/api/v1/process/oidc4vci", post(Self::process_oidc4vci))
             .route("/api/v1/process/oidc4vp", post(Self::process_oidc4vp))
@@ -334,6 +336,40 @@ where
             Ok(None) => {
                 let error =
                     CommonErrors::missing_resource_new(id.clone(), Some(format!("Missing request with id: {}", id)));
+                error!("{}", error.log());
+                error.into_response()
+            }
+            Err(e) => {
+                let error = CommonErrors::database_new(Some(e.to_string()));
+                error!("{}", error.log());
+                error.into_response()
+            }
+        }
+    }
+
+    async fn get_all_mates(
+        State(manager): State<Arc<Manager<T>>>,
+    ) -> impl IntoResponse {
+        info!("GET /mates");
+        match manager.repo.mates().get_all(None, None).await {
+            Ok(mates) => (StatusCode::OK, Json(mates)).into_response(),
+            Err(e) => {
+                let error = CommonErrors::database_new(Some(e.to_string()));
+                error!("{}", error.log());
+                error.into_response()
+            }
+        }
+    }
+
+    async fn get_mate_by_id(
+        Path(id): Path<String>,
+        State(manager): State<Arc<Manager<T>>>,
+    ) -> impl IntoResponse {
+        info!("GET /mates/{}", id);
+        match manager.repo.mates().get_by_id(&id).await {
+            Ok(Some(mates)) => (StatusCode::OK, Json(mates)).into_response(),
+            Ok(None) => {
+                let error = CommonErrors::missing_resource_new(id, Some("Mate id not found".to_string()));
                 error!("{}", error.log());
                 error.into_response()
             }

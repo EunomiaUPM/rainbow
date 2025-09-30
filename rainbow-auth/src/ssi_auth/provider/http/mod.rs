@@ -38,6 +38,7 @@ use reqwest::StatusCode;
 use serde::Deserialize;
 use std::sync::Arc;
 use tracing::{error, info};
+use rainbow_db::auth_provider::entities::mates::Model;
 
 pub struct RainbowAuthProviderRouter<T>
 where
@@ -81,6 +82,9 @@ where
                 "/api/v1/retrieve/business/token",
                 post(Self::retrieve_business_mate_token),
             )
+            .route("/api/v1/mates", get(Self::get_all_mates))
+            .route("/api/v1/mates/:id", get(Self::get_mate_by_id))
+
             .route("/api/v1/business/login", post(Self::fast_login))
             .with_state(self.manager)
             .fallback(Self::fallback); // 2 routers cannot have 1 fallback each
@@ -297,6 +301,40 @@ where
         };
 
         (StatusCode::OK, Json(response)).into_response()
+    }
+    
+    async fn get_all_mates(
+        State(manager): State<Arc<Manager<T>>>,
+    ) -> impl IntoResponse {
+        info!("GET /mates");
+        match manager.repo.mates().get_all(None, None).await {
+            Ok(mates) => (StatusCode::OK, Json(mates)).into_response(),
+            Err(e) => {
+                let error = CommonErrors::database_new(Some(e.to_string()));
+                error!("{}", error.log());
+                error.into_response()
+            }
+        }
+    }
+
+    async fn get_mate_by_id(
+        Path(id): Path<String>,
+        State(manager): State<Arc<Manager<T>>>,
+    ) -> impl IntoResponse {
+        info!("GET /mates/{}", id);
+        match manager.repo.mates().get_by_id(&id).await {
+            Ok(Some(mates)) => (StatusCode::OK, Json(mates)).into_response(),
+            Ok(None) => {
+                let error = CommonErrors::missing_resource_new(id, Some("Mate id not found".to_string()));
+                error!("{}", error.log());
+                error.into_response()
+            },
+            Err(e) => {
+                let error = CommonErrors::database_new(Some(e.to_string()));
+                error!("{}", error.log());
+                error.into_response()
+            }
+        }
     }
 
     async fn fast_login(
