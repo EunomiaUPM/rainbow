@@ -14,7 +14,6 @@ path = "src/main.rs"
 [dependencies]
 rainbow_common = { version = "0.3.1", path = "../rainbow-common", default-features = false }
 
-serde = { workspace = true }
 serde_json = { workspace = true }
 clap = { workspace = true }
 tokio = { workspace = true }
@@ -27,4 +26,4 @@ futures-util = "0.3.31"
 http-body-util = "0.1.2"
 bytes = "1.9.0"
 http-body = "1.0.1"
-tower-http = "0.6.2"
+tower-http = { workspace = true }
