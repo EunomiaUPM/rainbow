@@ -23,10 +23,10 @@ use axum::routing::get;
 use once_cell::sync::Lazy;
 
 pub fn route_openapi() -> Router {
-    let openapi_spec = "/api/v1/auth/openapi.json";
+    let openapi_spec = "/api/v1/authority/openapi.json";
     Router::new()
         .route(openapi_spec, get(get_open_api))
-        .route("/api/v1/auth/openapi", get(|| swagger_ui_html(openapi_spec)),
+        .route("/api/v1/authority/openapi", get(|| swagger_ui_html(openapi_spec)),
         )
 }
 
