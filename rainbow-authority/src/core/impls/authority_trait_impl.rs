@@ -248,7 +248,7 @@ where
                 bail!(error)
             }
             false => {
-                let url = "http://127.0.0.1:7002/openid4vc/jwt/issue".to_string();
+                let url = format!("{}/openid4vc/jwt/issue", self.config.get_issuer_api());
 
                 let path = trim_path(self.config.get_raw_client_config().cert_path.as_str());
                 let pkey_path = format!("{}/private_key.pem", path);

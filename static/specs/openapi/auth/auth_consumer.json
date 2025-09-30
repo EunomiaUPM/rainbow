@@ -11,9 +11,28 @@
       "description": "Testing server"
     }
   ],
+  "tags": [
+    {
+      "name": "Wallet",
+      "description": "Endpoints related to Wallet management"
+    },
+    {
+      "name": "Provider",
+      "description": "Endpoints related to the Provider interaction"
+    },
+    {
+      "name": "Authority",
+      "description": "Endpoints related to the Authority to retrieve credentials"
+    },
+    {
+      "name": "Callbacks",
+      "description": "Endpoints to handle callbacks"
+    }
+  ],
   "paths": {
     "/api/v1/wallet/register": {
       "post": {
+        "tags": ["Wallet"],
         "summary": "Register a new wallet",
         "description": "Creates a new wallet in the system.",
         "operationId": "wallet_register",
@@ -32,6 +51,7 @@
     },
     "/api/v1/wallet/login": {
       "post": {
+        "tags": ["Wallet"],
         "summary": "Login a wallet",
         "description": "Authenticates an existing wallet in the system.",
         "operationId": "wallet_login",
@@ -50,6 +70,7 @@
     },
     "/api/v1/wallet/logout": {
       "post": {
+        "tags": ["Wallet"],
         "summary": "Logout a wallet",
         "description": "Logs out an authenticated wallet from the system.",
         "operationId": "wallet_logout",
@@ -68,6 +89,7 @@
     },
     "/api/v1/wallet/onboard": {
       "post": {
+        "tags": ["Wallet"],
         "summary": "Onboard a wallet",
         "description": "Performs the onboarding process for a wallet in the system.",
         "operationId": "wallet_onboard",
@@ -86,6 +108,7 @@
     },
     "/api/v1/wallet/partial-onboard": {
       "post": {
+        "tags": ["Wallet"],
         "summary": "Partial onboard a wallet",
         "description": "Performs a partial onboarding process for a wallet in the system.",
         "operationId": "wallet_onboard",
@@ -104,6 +127,7 @@
     },
     "/api/v1/wallet/key": {
       "post": {
+        "tags": ["Wallet"],
         "summary": "Register key in wallet",
         "description": "Register the key from env files in wallet.",
         "operationId": "register-key",
@@ -123,6 +147,7 @@
         }
       },
       "delete": {
+        "tags": ["Wallet"],
         "summary": "Delete the key from wallet",
         "description": "Delete the key from wallet.",
         "operationId": "delete-key",
@@ -144,6 +169,7 @@
     },
     "/api/v1/wallet/did": {
       "post": {
+        "tags": ["Wallet"],
         "summary": "Register Did in wallet",
         "description": "Register Did based on key in wallet.",
         "operationId": "register-did",
@@ -162,8 +188,9 @@
           }
         }
       },
-      "deleted": {
-        "summary": "Deleted Did from wallet",
+      "delete": {
+        "tags": ["Wallet"],
+        "summary": "Delete Did from wallet",
         "description": "Delete Did from wallet.",
         "operationId": "delete-did",
         "responses": {
@@ -184,6 +211,7 @@
     },
     "/api/v1/did.json": {
       "get": {
+        "tags": ["Wallet"],
         "summary": "Retrieve DID document",
         "description": "Gets the DID document of the wallet.",
         "operationId": "didweb",
@@ -255,6 +283,7 @@
     },
     "/api/v1/request/onboard/provider": {
       "post": {
+        "tags": ["Provider"],
         "summary": "Request provider onboarding",
         "description": "Sends a request to onboard a new provider into the system.",
         "operationId": "request_provider_onboard",
@@ -314,6 +343,7 @@
     },
     "/api/v1/callback/{id}": {
       "get": {
+        "tags": ["Callbacks"],
         "summary": "A callback to complete processes",
         "description": "Handles the callback from a provider after onboarding. Saves the request in the system database.",
         "operationId": "get-callback",
@@ -413,6 +443,7 @@
         }
       },
       "post": {
+        "tags": ["Callbacks"],
         "summary": "A callback to complete processes",
         "description": "Handles the callback from an authority after onboarding. Saves the request in the system database.",
         "operationId": "post-callback",
@@ -464,6 +495,7 @@
     },
     "/api/v1/authority/beg": {
       "post": {
+        "tags": ["Authority"],
         "summary": "Begin a credential request to authority",
         "description": "Starts a credential request process with the authority by using a certificate.",
         "operationId": "beg-credential-cert",
@@ -516,6 +548,7 @@
     },
     "/api/v1/authority/beg/oidc": {
       "post": {
+        "tags": ["Authority"],
         "summary": "Begin a credential request to authority",
         "description": "Starts a credential request process with the authority by using a certificate.",
         "operationId": "beg-credential-cert",
@@ -577,7 +610,8 @@
     },
     "/api/v1/authority/request/all": {
       "get": {
-        "summary": "Get all authority requests",
+        "tags": ["Authority"],
+        "summary": "Get all requests sent to the Authority",
         "description": "Retrieve all authority requests from the database.",
         "operationId": "get-all-authority",
         "responses": {
@@ -602,7 +636,8 @@
     },
     "/api/v1/authority/request/{id}": {
       "get": {
-        "summary": "Get a single authority request",
+        "tags": ["Authority"],
+        "summary": "Get a single request sent to an Authority",
         "description": "Retrieve a specific authority request by its ID.",
         "operationId": "get-one-authority",
         "parameters": [

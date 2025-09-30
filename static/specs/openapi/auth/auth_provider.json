@@ -11,9 +11,28 @@
       "description": "Testing server"
     }
   ],
+  "tags": [
+    {
+      "name": "Wallet",
+      "description": "Endpoints related to Wallet management"
+    },
+    {
+      "name": "Consumer",
+      "description": "Endpoints related to the Consumer interaction"
+    },
+    {
+      "name": "OIDC4VP",
+      "description": "Endpoints related to the verification of credentials"
+    },
+    {
+      "name": "Mates",
+      "description": "Endpoints related to all the Consumer that have registered successfully"
+    }
+  ],
   "paths": {
     "/api/v1/wallet/register": {
       "post": {
+        "tags": ["Wallet"],
         "summary": "Register a new wallet",
         "description": "Creates a new wallet in the system.",
         "operationId": "wallet_register",
@@ -32,6 +51,7 @@
     },
     "/api/v1/wallet/login": {
       "post": {
+        "tags": ["Wallet"],
         "summary": "Login a wallet",
         "description": "Authenticates an existing wallet in the system.",
         "operationId": "wallet_login",
@@ -50,6 +70,7 @@
     },
     "/api/v1/wallet/logout": {
       "post": {
+        "tags": ["Wallet"],
         "summary": "Logout a wallet",
         "description": "Logs out an authenticated wallet from the system.",
         "operationId": "wallet_logout",
@@ -68,6 +89,7 @@
     },
     "/api/v1/wallet/onboard": {
       "post": {
+        "tags": ["Wallet"],
         "summary": "Onboard a wallet",
         "description": "Performs the onboarding process for a wallet in the system.",
         "operationId": "wallet_onboard",
@@ -84,8 +106,112 @@
         }
       }
     },
+    "/api/v1/wallet/partial-onboard": {
+      "post": {
+        "tags": ["Wallet"],
+        "summary": "Partial onboard a wallet",
+        "description": "Performs a partial onboarding process for a wallet in the system.",
+        "operationId": "wallet_onboard",
+        "responses": {
+          "201": {
+            "description": "Wallet successfully initialized."
+          },
+          "502": {
+            "description": "The petition to the wallet went wrong"
+          },
+          "500": {
+            "description": "Unexpected internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/wallet/key": {
+      "post": {
+        "tags": ["Wallet"],
+        "summary": "Register key in wallet",
+        "description": "Register the key from env files in wallet.",
+        "operationId": "register-key",
+        "responses": {
+          "201": {
+            "description": "Key successfully registered."
+          },
+          "412": {
+            "description": "An action should be done before"
+          },
+          "502": {
+            "description": "The petition to create the key went wrong"
+          },
+          "500": {
+            "description": "Unexpected internal server error"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Wallet"],
+        "summary": "Delete the key from wallet",
+        "description": "Delete the key from wallet.",
+        "operationId": "delete-key",
+        "responses": {
+          "201": {
+            "description": "Key successfully deleted."
+          },
+          "412": {
+            "description": "An action should be done before"
+          },
+          "502": {
+            "description": "The petition to create the key went wrong"
+          },
+          "500": {
+            "description": "Unexpected internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/wallet/did": {
+      "post": {
+        "tags": ["Wallet"],
+        "summary": "Register Did in wallet",
+        "description": "Register Did based on key in wallet.",
+        "operationId": "register-did",
+        "responses": {
+          "201": {
+            "description": "Did successfully registered."
+          },
+          "412": {
+            "description": "An action should be done before"
+          },
+          "502": {
+            "description": "The petition to the create the Did went wrong"
+          },
+          "500": {
+            "description": "Unexpected internal server error"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Wallet"],
+        "summary": "Delete Did from wallet",
+        "description": "Delete Did from wallet.",
+        "operationId": "delete-did",
+        "responses": {
+          "201": {
+            "description": "Did successfully deleted."
+          },
+          "412": {
+            "description": "An action should be done before"
+          },
+          "502": {
+            "description": "The petition to the create the Did went wrong"
+          },
+          "500": {
+            "description": "Unexpected internal server error"
+          }
+        }
+      }
+    },
     "/api/v1/did.json": {
       "get": {
+        "tags": ["Wallet"],
         "summary": "Retrieve DID document",
         "description": "Gets the DID document of the wallet.",
         "operationId": "didweb",
@@ -157,8 +283,9 @@
     },
     "/api/v1/access": {
       "post": {
+        "tags": ["Consumer"],
         "summary": "Initiate access request",
-        "description": "Sends the initial GNAP access request to the provider.",
+        "description": "Sends the initial GNAP access request.",
         "operationId": "access_request",
         "requestBody": {
           "required": true,
@@ -460,6 +587,7 @@
     },
     "/api/v1/continue/{id}": {
       "post": {
+        "tags": ["Consumer"],
         "summary": "Continue GNAP request",
         "description": "Continues a GNAP access request using the interaction reference and Authorization token.",
         "operationId": "continue_request",
@@ -562,6 +690,7 @@
     },
     "/api/v1/pd/{state}": {
       "get": {
+        "tags": ["OIDC4VP"],
         "summary": "Retrieve VP Definition",
         "description": "Generates and retrieves the Verifiable Presentation definition for the given state identifier.",
         "operationId": "pd",
@@ -599,6 +728,7 @@
     },
     "/api/v1/verify/{state}": {
       "post": {
+        "tags": ["OIDC4VP"],
         "summary": "Verify VP Submission",
         "description": "Verifies the submitted Verifiable Presentation for a given state identifier.",
         "operationId": "verify",
@@ -670,6 +800,7 @@
     },
     "/api/v1/verify/mate/token": {
       "post": {
+        "tags": ["Mates"],
         "summary": "Verify mate token",
         "description": "Verifies a mate token and returns the associated mate model if valid.",
         "operationId": "verify_mate_token",
@@ -751,6 +882,7 @@
     },
     "/api/v1/retrieve/business/token": {
       "post": {
+        "tags": ["Mates"],
         "summary": "Retrieve business mate token",
         "description": "Retrieves a business mate token using the auth request identifier.",
         "operationId": "retrieve_business_mate_token",
@@ -850,6 +982,7 @@
     },
     "/api/v1/business/login": {
       "post": {
+        "tags": ["Mates"],
         "summary": "Fast business login",
         "description": "Performs a fast login for a business using the auth request identifier and returns a URI.",
         "operationId": "fast_login",

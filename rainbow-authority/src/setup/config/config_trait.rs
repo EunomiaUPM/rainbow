@@ -27,6 +27,7 @@ pub trait AuthorityApplicationConfigTrait {
     fn get_wallet_portal_url(&self) -> String;
     fn get_full_db_url(&self) -> String;
     fn get_wallet_data(&self) -> serde_json::Value;
+    fn get_issuer_api(&self) -> String;
     fn get_cert(&self) -> String;
     fn get_priv_key(&self) -> String;
     fn get_pub_key(&self) -> String;

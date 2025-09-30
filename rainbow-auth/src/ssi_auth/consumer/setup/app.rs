@@ -31,7 +31,7 @@ pub struct SSIAuthConsumerApplication;
 
 impl SSIAuthConsumerApplication {
     pub async fn run(config: &ApplicationConsumerConfig) -> anyhow::Result<()> {
-        let router = create_ssi_consumer_router(config.clone()).await;
+        let router = Router::new().merge(create_ssi_consumer_router(config.clone()).await);
         // Init server
         let server_message = format!(
             "Starting Auth Consumer server in {}",

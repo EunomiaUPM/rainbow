@@ -23,6 +23,7 @@ use crate::http::datahub_proxy::datahub_proxy::DataHubProxyRouter;
 use crate::http::rainbow_entities::policies::RainbowCatalogPoliciesRouter;
 use crate::http::rainbow_entities::policy_relations_router::PolicyTemplatesRouter;
 use crate::http::rainbow_rpc::rainbow_rpc::RainbowRPCDatahubCatalogRouter;
+use crate::http::openapi::route_openapi;
 use axum::{serve, Router};
 use rainbow_catalog::provider::core::rainbow_entities::policies::RainbowCatalogPoliciesService;
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
@@ -80,6 +81,7 @@ pub async fn create_datahub_catalog_router(config: &ApplicationProviderConfig) -
         .merge(policy_templates_router.router())
         .merge(plain_policies_router.router())
         .merge(rpc_router.router())
+        .merge(route_openapi())
         .nest("/api/v1/datahub", subscription_router)
         .nest("/api/v1/datahub", notification_router);
 

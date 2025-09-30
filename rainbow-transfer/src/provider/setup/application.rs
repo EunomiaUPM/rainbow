@@ -28,6 +28,7 @@ use crate::provider::core::rainbow_entities::rainbow_entities::RainbowTransferPr
 use crate::provider::http::ds_protocol::ds_protocol::DSProtocolTransferProviderRouter;
 use crate::provider::http::ds_protocol_rpc::ds_protocol_rpc::DSRPCTransferProviderProviderRouter;
 use crate::provider::http::rainbow_entities::rainbow_entities::RainbowTransferProviderEntitiesRouter;
+use crate::provider::http::openapi::route_openapi;
 use axum::{serve, Router};
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_common::facades::ssi_auth_facade::ssi_auth_facade::SSIAuthFacadeService;
@@ -151,6 +152,7 @@ pub async fn create_transfer_provider_router(config: &ApplicationProviderConfig)
         .merge(ds_protocol_rpc)
         .merge(dataplane_testing_router)
         .merge(dataplane_info_router)
+        .merge(route_openapi())
         .nest("/api/v1/transfers", subscription_router)
         .nest("/api/v1/transfers", notification_router);
 

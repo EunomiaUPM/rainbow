@@ -17,7 +17,29 @@
  *
  */
 
-pub mod ds_protocol;
-pub mod rainbow_entities;
-pub mod ds_protocol_rpc;
-pub mod openapi;
+use axum::http::StatusCode;
+use axum::response::IntoResponse;
+use axum::routing::get;
+use axum::Router;
+use once_cell::sync::Lazy;
+use rainbow_common::openapi::swagger_ui_html;
+
+pub fn route_openapi() -> Router {
+    let openapi_spec = "/api/v1/auth/openapi.json";
+    Router::new()
+        .route(openapi_spec, get(get_open_api))
+        .route("/api/v1/auth/openapi", get(|| swagger_ui_html(openapi_spec)),
+        )
+}
+
+static OPENAPI_JSON: Lazy<&'static str> =
+    Lazy::new(|| include_str!("./../../../../../static/specs/openapi/auth/auth_provider.json"));
+
+async fn get_open_api() -> impl IntoResponse {
+    (
+        StatusCode::OK,
+        [("Content-Type", "application/json")],
+        OPENAPI_JSON.as_bytes(),
+    )
+        .into_response()
+}

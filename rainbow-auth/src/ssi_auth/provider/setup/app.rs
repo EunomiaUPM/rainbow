@@ -31,7 +31,7 @@ pub struct SSIAuthProviderApplication;
 
 impl SSIAuthProviderApplication {
     pub async fn run(config: &ApplicationProviderConfig) -> anyhow::Result<()> {
-        let router = create_ssi_provider_router(config.clone()).await;
+        let router = Router::new().merge(create_ssi_provider_router(config.clone()).await);
         // Init server
         let server_message = format!(
             "Starting Auth Provider server in {}",
