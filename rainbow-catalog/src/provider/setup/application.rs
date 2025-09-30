@@ -110,6 +110,7 @@ pub async fn create_catalog_router(config: &ApplicationProviderConfig) -> Router
         .merge(rainbow_policies_router.router())
         .merge(rainbow_rpc_router.router())
         .merge(ds_protocol_router.router())
+        .merge(route_openapi())
         .nest("/api/v1/catalog", subscription_router.clone())
         .nest("/api/v1/catalog", notification_router.clone());
     catalog_application_router

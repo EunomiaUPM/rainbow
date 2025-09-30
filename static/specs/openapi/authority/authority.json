@@ -11,9 +11,30 @@
       "description": "Testing server"
     }
   ],
+  "tags": [
+    {
+      "name": "Wallet",
+      "description": "Endpoints related to Wallet management"
+    },
+    {
+      "name": "Provider",
+      "description": "Endpoints related to the Provider interaction"
+    },
+    {
+      "name": "Authority",
+      "description": "Endpoints related to the Authority to retrieve credentials"
+    },
+    {
+      "name": "Callbacks",
+      "description": "Endpoints to handle callbacks"
+    }
+  ],
   "paths": {
     "/api/v1/wallet/register": {
       "post": {
+        "tags": [
+          "Wallet"
+        ],
         "summary": "Register a new wallet",
         "description": "Creates a new wallet in the system.",
         "operationId": "wallet_register",
@@ -32,6 +53,9 @@
     },
     "/api/v1/wallet/login": {
       "post": {
+        "tags": [
+          "Wallet"
+        ],
         "summary": "Login a wallet",
         "description": "Authenticates an existing wallet in the system.",
         "operationId": "wallet_login",
@@ -50,6 +74,9 @@
     },
     "/api/v1/wallet/logout": {
       "post": {
+        "tags": [
+          "Wallet"
+        ],
         "summary": "Logout a wallet",
         "description": "Logs out an authenticated wallet from the system.",
         "operationId": "wallet_logout",
@@ -68,6 +95,9 @@
     },
     "/api/v1/wallet/onboard": {
       "post": {
+        "tags": [
+          "Wallet"
+        ],
         "summary": "Onboard a wallet",
         "description": "Performs the onboarding process for a wallet in the system.",
         "operationId": "wallet_onboard",
@@ -84,8 +114,124 @@
         }
       }
     },
+    "/api/v1/wallet/partial-onboard": {
+      "post": {
+        "tags": [
+          "Wallet"
+        ],
+        "summary": "Partial onboard a wallet",
+        "description": "Performs a partial onboarding process for a wallet in the system.",
+        "operationId": "wallet_onboard",
+        "responses": {
+          "201": {
+            "description": "Wallet successfully initialized."
+          },
+          "502": {
+            "description": "The petition to the wallet went wrong"
+          },
+          "500": {
+            "description": "Unexpected internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/wallet/key": {
+      "post": {
+        "tags": [
+          "Wallet"
+        ],
+        "summary": "Register key in wallet",
+        "description": "Register the key from env files in wallet.",
+        "operationId": "register-key",
+        "responses": {
+          "201": {
+            "description": "Key successfully registered."
+          },
+          "412": {
+            "description": "An action should be done before"
+          },
+          "502": {
+            "description": "The petition to create the key went wrong"
+          },
+          "500": {
+            "description": "Unexpected internal server error"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Wallet"
+        ],
+        "summary": "Delete the key from wallet",
+        "description": "Delete the key from wallet.",
+        "operationId": "delete-key",
+        "responses": {
+          "201": {
+            "description": "Key successfully deleted."
+          },
+          "412": {
+            "description": "An action should be done before"
+          },
+          "502": {
+            "description": "The petition to create the key went wrong"
+          },
+          "500": {
+            "description": "Unexpected internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/wallet/did": {
+      "post": {
+        "tags": [
+          "Wallet"
+        ],
+        "summary": "Register Did in wallet",
+        "description": "Register Did based on key in wallet.",
+        "operationId": "register-did",
+        "responses": {
+          "201": {
+            "description": "Did successfully registered."
+          },
+          "412": {
+            "description": "An action should be done before"
+          },
+          "502": {
+            "description": "The petition to the create the Did went wrong"
+          },
+          "500": {
+            "description": "Unexpected internal server error"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Wallet"
+        ],
+        "summary": "Delete Did from wallet",
+        "description": "Delete Did from wallet.",
+        "operationId": "delete-did",
+        "responses": {
+          "201": {
+            "description": "Did successfully deleted."
+          },
+          "412": {
+            "description": "An action should be done before"
+          },
+          "502": {
+            "description": "The petition to the create the Did went wrong"
+          },
+          "500": {
+            "description": "Unexpected internal server error"
+          }
+        }
+      }
+    },
     "/api/v1/did.json": {
       "get": {
+        "tags": [
+          "Wallet"
+        ],
         "summary": "Retrieve DID document",
         "description": "Gets the DID document of the wallet.",
         "operationId": "didweb",
@@ -157,6 +303,9 @@
     },
     "/api/v1/request/credential": {
       "post": {
+        "tags": [
+          "Minions"
+        ],
         "summary": "Initiate request to retrieve credentials",
         "description": "Sends the initial GNAP access request to the authority.",
         "operationId": "vc_request",
@@ -459,6 +608,9 @@
     },
     "/api/v1/continue/{id}": {
       "post": {
+        "tags": [
+          "Minions"
+        ],
         "summary": "Continue GNAP request",
         "description": "Continues a GNAP access request using the interaction reference and Authorization token.",
         "operationId": "continue_request",
@@ -561,6 +713,9 @@
     },
     "/api/v1/pd/{state}": {
       "get": {
+        "tags": [
+          "OIDC4VP"
+        ],
         "summary": "Retrieve VP Definition",
         "description": "Generates and retrieves the Verifiable Presentation definition for the given state identifier.",
         "operationId": "pd",
@@ -598,6 +753,9 @@
     },
     "/api/v1/verify/{state}": {
       "post": {
+        "tags": [
+          "OIDC4VP"
+        ],
         "summary": "Verify VP Submission",
         "description": "Verifies the submitted Verifiable Presentation for a given state identifier.",
         "operationId": "verify",
@@ -667,226 +825,144 @@
         }
       }
     },
-    "/api/v1/verify/mate/token": {
-      "post": {
-        "summary": "Verify mate token",
-        "description": "Verifies a mate token and returns the associated mate model if valid.",
-        "operationId": "verify_mate_token",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "token": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "token"
-                ]
-              }
-            }
-          }
-        },
+    "/api/v1/request/all": {
+      "get": {
+        "summary": "Get all requests",
+        "description": "Returns a list of all requests.",
         "responses": {
           "200": {
-            "description": "Model successfully verified and retrieved.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "participant_id": {
-                      "type": "string"
-                    },
-                    "participant_slug": {
-                      "type": "string"
-                    },
-                    "participant_type": {
-                      "type": "string"
-                    },
-                    "base_url": {
-                      "type": "string",
-                      "nullable": true
-                    },
-                    "token": {
-                      "type": "string",
-                      "nullable": true
-                    },
-                    "saved_at": {
-                      "type": "string",
-                      "format": "date-time"
-                    },
-                    "last_interaction": {
-                      "type": "string",
-                      "format": "date-time"
-                    },
-                    "is_me": {
-                      "type": "boolean"
-                    }
-                  },
-                  "required": [
-                    "participant_id",
-                    "participant_slug",
-                    "participant_type",
-                    "saved_at",
-                    "last_interaction",
-                    "is_me"
-                  ]
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized: invalid token."
+            "description": "OK"
           },
           "500": {
-            "description": "Unexpected internal server error or database error."
+            "description": "Internal Server Error"
           }
         }
       }
     },
-    "/api/v1/retrieve/business/token": {
-      "post": {
-        "summary": "Retrieve business mate token",
-        "description": "Retrieves a business mate token using the auth request identifier.",
-        "operationId": "retrieve_business_mate_token",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "authRequestId": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "authRequestId"
-                ]
-              }
+    "/api/v1/request/{id}": {
+      "get": {
+        "summary": "Get request by ID",
+        "description": "Returns a specific request given its ID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Request ID",
+            "schema": {
+              "type": "string"
             }
           }
-        },
+        ],
         "responses": {
           "200": {
-            "description": "Token and mate information successfully returned.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "token": {
-                      "type": "string"
-                    },
-                    "mate": {
-                      "type": "object",
-                      "properties": {
-                        "participant_id": {
-                          "type": "string"
-                        },
-                        "participant_slug": {
-                          "type": "string"
-                        },
-                        "participant_type": {
-                          "type": "string"
-                        },
-                        "base_url": {
-                          "type": "string",
-                          "nullable": true
-                        },
-                        "token": {
-                          "type": "string",
-                          "nullable": true
-                        },
-                        "saved_at": {
-                          "type": "string",
-                          "format": "date-time"
-                        },
-                        "last_interaction": {
-                          "type": "string",
-                          "format": "date-time"
-                        },
-                        "is_me": {
-                          "type": "boolean"
-                        }
-                      },
-                      "required": [
-                        "participant_id",
-                        "participant_slug",
-                        "participant_type",
-                        "saved_at",
-                        "last_interaction",
-                        "is_me"
-                      ]
-                    }
-                  },
-                  "required": [
-                    "token",
-                    "mate"
-                  ]
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized: missing or invalid token."
+            "description": "OK"
           },
           "404": {
-            "description": "Auth request with given id not found."
-          },
-          "412": {
-            "description": "Precondition failed: consumer has not completed onboarding."
+            "description": "Not Found"
           },
           "500": {
-            "description": "Unexpected internal server error or database error."
+            "description": "Internal Server Error"
           }
         }
-      }
-    },
-    "/api/v1/business/login": {
+      },
       "post": {
-        "summary": "Fast business login",
-        "description": "Performs a fast login for a business using the auth request identifier and returns a URI.",
-        "operationId": "fast_login",
+        "summary": "Manage a request",
+        "description": "Approves or rejects a specific request given its ID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Request ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
+          "description": "Request payload for managing the request",
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
                 "properties": {
-                  "authRequestId": {
-                    "type": "string"
+                  "approve": {
+                    "type": "boolean",
+                    "description": "Whether to approve the request or not"
                   }
-                },
-                "required": [
-                  "authRequestId"
-                ]
+                }
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Fast login completed successfully, returns URI.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string",
-                  "format": "uri"
-                }
-              }
-            }
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
           },
           "500": {
-            "description": "Unexpected internal server error or database error."
+            "description": "Internal Server Error"
+          },
+          "502": {
+            "description": "Petition to the issuer api failed"
+          }
+        }
+      }
+    },
+    "/api/v1/callback/{id}": {
+      "post": {
+        "summary": "Manage callback",
+        "description": "Processes a callback from the Issuer API for a given request ID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Request ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Payload containing callback event data",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "description": "Type of callback event"
+                  },
+                  "data": {
+                    "type": "object",
+                    "description": "Event-specific data"
+                  }
+                },
+                "required": ["type", "data"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
           }
         }
       }
     }
+
   }
 }

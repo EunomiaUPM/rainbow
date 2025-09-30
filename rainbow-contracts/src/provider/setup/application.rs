@@ -27,6 +27,7 @@ use crate::provider::core::rainbow_entities::rainbow_entities::RainbowEntitiesCo
 use crate::provider::http::ds_protocol::ds_protocol::DSProtocolContractNegotiationProviderRouter;
 use crate::provider::http::ds_protocol_rpc::ds_protocol_rpc::DSRPCContractNegotiationProviderRouter;
 use crate::provider::http::rainbow_entities::rainbow_entities::RainbowEntitesContractNegotiationProviderRouter;
+use crate::provider::http::openapi::route_openapi;
 use axum::{serve, Router};
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_common::facades::ssi_auth_facade::ssi_auth_facade::SSIAuthFacadeService;
@@ -117,6 +118,7 @@ pub async fn create_contract_negotiation_provider_router(config: &ApplicationPro
         .merge(rainbow_entities_router)
         .merge(ds_protocol_router)
         .merge(ds_protocol_rpc)
+        .merge(route_openapi())
         .nest("/api/v1/contract-negotiation", subscription_router)
         .nest("/api/v1/contract-negotiation", notification_router)
 }

@@ -697,8 +697,6 @@ where
         match res.status().as_u16() {
             202 => {
                 info!("Did has been set as default");
-                let res = res.text().await?;
-                debug!("{:#?}", res);
             }
             _ => {
                 let error = AuthErrors::wallet_new(

@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+mod openapi;
 
 use crate::ssi_auth::common::errors::CustomToResponse;
 use crate::ssi_auth::common::traits::RainbowSSIAuthWalletTrait;
@@ -53,7 +54,7 @@ where
         Self { manager }
     }
     pub fn router(self) -> Router {
-        Router::new()
+        let router = Router::new()
             // WALLET
             .route("/api/v1/wallet/register", post(Self::wallet_register))
             .route("/api/v1/wallet/login", post(Self::wallet_login))
@@ -82,7 +83,9 @@ where
             )
             .route("/api/v1/business/login", post(Self::fast_login))
             .with_state(self.manager)
-            .fallback(Self::fallback) // 2 routers cannot have 1 fallback each
+            .fallback(Self::fallback); // 2 routers cannot have 1 fallback each
+
+        router.merge(openapi::route_openapi()) // OPENAPI STUFF
     }
 
     // WALLET ------------------------------------------------------------------------------------->
@@ -312,7 +315,8 @@ where
 
     async fn fallback(method: Method, uri: Uri) -> (StatusCode, String) {
         let log = format!("{} {}", method, uri);
-        info!("{}", log);
+        error!("Unexpected route");
+        error!("{}", log);
         (StatusCode::NOT_FOUND, format!("No route for {uri}"))
     }
 }

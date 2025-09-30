@@ -26,15 +26,15 @@ use once_cell::sync::Lazy;
 use rainbow_common::openapi::swagger_ui_html;
 
 pub fn route_openapi() -> Router {
-    let openapi_spec = "/api/v1/catalog/openapi.json";
+    let openapi_spec = "/api/v1/dh-catalog/openapi.json";
     Router::new()
         .route(openapi_spec, get(get_open_api))
-        .route("/api/v1/catalog/openapi", get(|| swagger_ui_html(openapi_spec)),
+        .route("/api/v1/dh-catalog/openapi", get(|| swagger_ui_html(openapi_spec)),
         )
 }
 
 static OPENAPI_JSON: Lazy<&'static str> =
-    Lazy::new(|| include_str!("./../../../../static/specs/openapi/catalog/catalog_provider.json"));
+    Lazy::new(|| include_str!("../../../static/specs/openapi/catalog/datahub_catalog_provider.json"));
 async fn get_open_api() -> impl IntoResponse {
     (
         StatusCode::OK,

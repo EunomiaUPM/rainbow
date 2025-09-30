@@ -42,6 +42,7 @@ pub struct AuthorityApplicationConfig {
     database_config: DatabaseConfig,
     client_config: ClientConfig,
     ssi_wallet_config: SSIWalletConfig,
+    ssi_issuer_api: String,
 }
 
 impl Default for AuthorityApplicationConfig {
@@ -74,6 +75,7 @@ impl Default for AuthorityApplicationConfig {
                 wallet_password: "rainbow".to_string(),
                 wallet_id: None,
             },
+            ssi_issuer_api: "http://127.0.0.1:7002".to_string(),
         }
     }
 }
@@ -121,6 +123,10 @@ impl AuthorityApplicationConfigTrait for AuthorityApplicationConfig {
             "email": email,
             "password": password,
         })
+    }
+
+    fn get_issuer_api(&self) -> String {
+        self.ssi_issuer_api.clone()
     }
 
     fn get_cert(&self) -> String {
@@ -200,6 +206,7 @@ impl AuthorityApplicationConfigTrait for AuthorityApplicationConfig {
                 ),
                 wallet_id: None,
             },
+            ssi_issuer_api: extract_env("SSI_ISSUER_API", default.ssi_issuer_api),
         };
         compound_config
     }

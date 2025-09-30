@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+mod openapi;
 
 use crate::core::traits::{AuthorityTrait, RainbowSSIAuthWalletTrait};
 use crate::core::Authority;
@@ -67,12 +68,12 @@ where
             .route("/api/v1/wallet/did", delete(Self::delete_did))
             .route("/api/v1/did.json", get(Self::didweb))
             // GNAP
+            .route("/api/v1/request/credential", post(Self::access_request))
             .route("/api/v1/continue/:id", post(Self::continue_request))
             // OIDC4VP
             .route("/api/v1/pd/:state", get(Self::pd))
             .route("/api/v1/verify/:state", post(Self::verify))
             // VC REQUESTS
-            .route("/api/v1/request/credential", post(Self::access_request))
             .route("/api/v1/request/all", get(Self::get_all_requests))
             .route("/api/v1/request/:id", get(Self::get_one))
             .route("/api/v1/request/:id", post(Self::manage_request))
@@ -80,6 +81,7 @@ where
             .route("/api/v1/callback/:id", post(Self::callback))
             .with_state(self.authority)
             .fallback(Self::fallback)
+            .merge(openapi::route_openapi())
     }
 
     // WALLET ------------------------------------------------------------------------------------->
@@ -315,8 +317,8 @@ where
 
     async fn fallback(method: Method, uri: Uri) -> (StatusCode, String) {
         let log = format!("{} {}", method, uri);
-        info!("{}", log);
         error!("Unexpected route");
+        error!("{}", log);
         (StatusCode::NOT_FOUND, format!("No route for {uri}"))
     }
 }

@@ -25,6 +25,7 @@ use crate::consumer::core::rainbow_entities::rainbow_entities::RainbowTransferCo
 use crate::consumer::http::ds_protocol::ds_protocol::DSProtocolTransferConsumerRouter;
 use crate::consumer::http::ds_protocol_rpc::ds_protocol_rpc::DSRPCTransferConsumerRouter;
 use crate::consumer::http::rainbow_entities::rainbow_entities::RainbowTransferConsumerEntitiesRouter;
+use crate::consumer::http::openapi::route_openapi;
 use axum::{serve, Router};
 use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
 use rainbow_common::facades::ssi_auth_facade::ssi_auth_facade::SSIAuthFacadeService;
@@ -135,6 +136,7 @@ pub async fn create_transfer_consumer_router(config: &ApplicationConsumerConfig)
         .merge(ds_protocol_rpc_router)
         .merge(dataplane_testing_router)
         .merge(dataplane_info_router)
+        .merge(route_openapi())
         .nest("/api/v1/transfers", subscription_router)
         .nest("/api/v1/transfers", notification_router);
 
