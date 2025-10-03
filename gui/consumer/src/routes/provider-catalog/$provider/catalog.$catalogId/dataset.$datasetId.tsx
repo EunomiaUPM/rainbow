@@ -31,10 +31,7 @@ function RouteComponent() {
   const {data: dataset} = useGetBypassDatasetById(provider, datasetId);
   const {data: distributions} = useGetBypassDistributionsByDatasetId(provider, datasetId);
   const {data: policies} = useGetBypassPoliciesByDatasetId(provider, datasetId);
-
-  const participant = {
-    participant_type: "Consumer",
-  };
+  
 
   return (
     <div className="space-y-4 pb-4">
