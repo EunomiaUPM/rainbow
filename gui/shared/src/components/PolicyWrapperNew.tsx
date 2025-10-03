@@ -1,12 +1,12 @@
-import React, { useState } from "react";
+import React, {useState} from "react";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "shared/src/components/ui/accordion";
-import { Button } from "shared/src/components/ui/button";
-import { Plus, Trash } from "lucide-react";
+import {Button} from "shared/src/components/ui/button";
+import {Plus, Trash} from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -14,13 +14,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "shared/src/components/ui/select";
-import { Input } from "shared/src/components/ui/input";
-import { leftOperands, odrlActions, operators } from "shared/src/odrl_actions";
+import {Input} from "shared/src/components/ui/input";
+import {leftOperands, odrlActions, operators} from "shared/src/odrl_actions";
 
 type ComponentType = "permission" | "obligation" | "prohibition";
 type OperandType = "leftOperand" | "rightOperand" | "operator";
 
-export const PolicyWrapperNew = ({ onSubmit }) => {
+export const PolicyWrapperNew = ({onSubmit}) => {
   const [newPolicy, setNewPolicy] = useState<OdrlInfo>({
     obligation: [],
     permission: [],
@@ -32,13 +32,13 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
       action: "",
       constraint: [],
     };
-    const _newPolicy = { ...newPolicy };
+    const _newPolicy = {...newPolicy};
     _newPolicy[componentType].push(newComponent);
     setNewPolicy(_newPolicy);
     console.log(newPolicy);
   };
   const removeComponentHandler = (componentType: ComponentType, index: number) => {
-    const _newPolicy = { ...newPolicy };
+    const _newPolicy = {...newPolicy};
     _newPolicy[componentType].splice(index, 1);
     console.log(_newPolicy);
     setNewPolicy(_newPolicy);
@@ -46,11 +46,11 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
   };
 
   const addConstraintHandler = (componentType: ComponentType, componentIndex: number) => {
-    const _newPolicy = { ...newPolicy };
+    const _newPolicy = {...newPolicy};
     _newPolicy[componentType][componentIndex].constraint.push({
-      leftOperand: "aa",
-      operator: "eq",
-      rightOperand: "bbb",
+      leftOperand: "",
+      operator: "",
+      rightOperand: "",
     });
     setNewPolicy(_newPolicy);
     console.log(newPolicy);
@@ -61,7 +61,7 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
     componentIndex: number,
     constraintIndex: number,
   ) => {
-    const _newPolicy = { ...newPolicy };
+    const _newPolicy = {...newPolicy};
     _newPolicy[componentType][componentIndex].constraint.splice(constraintIndex, 1);
     setNewPolicy(_newPolicy);
     console.log(newPolicy);
@@ -72,7 +72,7 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
     componentIndex: number,
     value: string,
   ) => {
-    const _newPolicy = { ...newPolicy };
+    const _newPolicy = {...newPolicy};
     _newPolicy[componentType][componentIndex].action = value;
     setNewPolicy(_newPolicy);
     console.log(newPolicy);
@@ -85,7 +85,7 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
     operand: OperandType,
     value: string,
   ) => {
-    const _newPolicy = { ...newPolicy };
+    const _newPolicy = {...newPolicy};
     _newPolicy[componentType][componentIndex].constraint[constraintIndex][operand] = value;
     setNewPolicy(_newPolicy);
     console.log(newPolicy);
@@ -105,7 +105,8 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
       <div className="flex flex-col gap-3 overflow-y-scroll h-[calc(100vh-180px)]  p-8 ">
         <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="item-1" className="bg-success-500/10 border border-success-600/20">
-            <AccordionTrigger className="text-white/70 flex bg-success-400/25 uppercase overflow-hidden rounded-md data-[state=open]:rounded-b-none">
+            <AccordionTrigger
+              className="text-white/70 flex bg-success-400/25 uppercase overflow-hidden rounded-md data-[state=open]:rounded-b-none">
               <div className="flex items-center w-full">
                 <p className="text-current">permission</p>
               </div>
@@ -118,7 +119,7 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
                 size="xs"
                 onClick={() => addComponentHandler("permission")}
               >
-                <Plus />
+                <Plus/>
                 Add permission
               </Button>
               {newPolicy.permission.map((permission, i) => (
@@ -132,17 +133,18 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
                         className="ml-4 "
                         onClick={() => removeComponentHandler("permission", i)}
                       >
-                        <Trash className="mb-0.5" />
+                        <Trash className="mb-0.5"/>
                         Remove permission
                       </Button>
                     </div>
                     <Select
+                      value={permission.action}
                       onValueChange={(value: string) =>
                         fieldValueChangeHandler("permission", i, value)
                       }
                     >
                       <SelectTrigger className="w-[240px]">
-                        <SelectValue placeholder="Select action" />
+                        <SelectValue placeholder="Select action"/>
                       </SelectTrigger>
                       <SelectContent>
                         {odrlActions.map((odrlAction) => (
@@ -156,6 +158,7 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
                       <div className="flex flex-col gap-2">
                         <div className="constraint-create mb-2 flex gap-3 justify-end items-end">
                           <Select
+                            value={constraint.leftOperand}
                             onValueChange={(value: string) =>
                               operandValueChangeHandler("permission", i, j, "leftOperand", value)
                             }
@@ -163,7 +166,7 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
                             <div className="flex flex-col">
                               <p className="text-xs text-gray-400 mb-1">Left Operand:</p>
                               <SelectTrigger className="w-[180px]">
-                                <SelectValue placeholder="Select item" />
+                                <SelectValue placeholder="Select item"/>
                               </SelectTrigger>
                               <SelectContent>
                                 {leftOperands.map((leftOperand) => (
@@ -173,6 +176,7 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
                             </div>
                           </Select>
                           <Select
+                            value={constraint.operator}
                             onValueChange={(value: string) =>
                               operandValueChangeHandler("permission", i, j, "operator", value)
                             }
@@ -180,7 +184,7 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
                             <div className="flex flex-col">
                               <p className="text-xs text-gray-400 mb-1">Operator:</p>
                               <SelectTrigger className="w-[140px]">
-                                <SelectValue placeholder="Select operator" />
+                                <SelectValue placeholder="Select operator"/>
                               </SelectTrigger>
                               <SelectContent>
                                 {operators.map((operator) => (
@@ -193,6 +197,7 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
                             <p className="text-xs text-gray-400 mb-1">Right Operand:</p>
                             <Input
                               placeholder="Type value"
+                              value={constraint.rightOperand}
                               onChange={(ev) =>
                                 operandValueChangeHandler(
                                   "permission",
@@ -211,7 +216,7 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
                               size="icon"
                               onClick={() => removeConstraintHandler("permission", i, j)}
                             >
-                              <Trash className="mb-0.5 " />
+                              <Trash className="mb-0.5 "/>
                             </Button>
                           </div>
                         </div>
@@ -223,7 +228,7 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
                       className="mt-3"
                       onClick={() => addConstraintHandler("permission", i)}
                     >
-                      <Plus />
+                      <Plus/>
                       Add constraint
                     </Button>
                   </div>
@@ -234,7 +239,8 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
         </Accordion>
         <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="item-1" className="bg-warn-500/10 border border-warn-600/20">
-            <AccordionTrigger className="text-white/70 flex bg-warn-400/25 uppercase overflow-hidden rounded-md data-[state=open]:rounded-b-none">
+            <AccordionTrigger
+              className="text-white/70 flex bg-warn-400/25 uppercase overflow-hidden rounded-md data-[state=open]:rounded-b-none">
               <div className="flex items-center w-full">
                 <p className="text-current">obligation</p>
               </div>
@@ -247,7 +253,7 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
                 size="xs"
                 onClick={() => addComponentHandler("obligation")}
               >
-                <Plus />
+                <Plus/>
                 Add obligation
               </Button>
               {newPolicy.obligation.map((obligation, i) => (
@@ -261,17 +267,18 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
                         className="ml-4"
                         onClick={() => removeComponentHandler("obligation", i)}
                       >
-                        <Trash className="mb-0.5" />
+                        <Trash className="mb-0.5"/>
                         Remove obligation
                       </Button>
                     </div>
                     <Select
+                      value={obligation.action}
                       onValueChange={(value: string) =>
                         fieldValueChangeHandler("obligation", i, value)
                       }
                     >
                       <SelectTrigger className="w-[240px]">
-                        <SelectValue placeholder="Select action" />
+                        <SelectValue placeholder="Select action"/>
                       </SelectTrigger>
                       <SelectContent>
                         {odrlActions.map((odrlAction) => (
@@ -285,6 +292,7 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
                       <div className="flex flex-col gap-2">
                         <div className="constraint-create mb-2 flex gap-3 justify-end items-end">
                           <Select
+                            value={constraint.leftOperand}
                             onValueChange={(value: string) =>
                               operandValueChangeHandler("obligation", i, j, "leftOperand", value)
                             }
@@ -292,7 +300,7 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
                             <div className="flex flex-col">
                               <p className="text-xs text-gray-400 mb-1">Left Operand:</p>
                               <SelectTrigger className="w-[180px]">
-                                <SelectValue placeholder="Select item" />
+                                <SelectValue placeholder="Select item"/>
                               </SelectTrigger>
                               <SelectContent>
                                 {leftOperands.map((leftOperand) => (
@@ -302,6 +310,7 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
                             </div>
                           </Select>
                           <Select
+                            value={constraint.operator}
                             onValueChange={(value: string) =>
                               operandValueChangeHandler("obligation", i, j, "operator", value)
                             }
@@ -309,7 +318,7 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
                             <div className="flex flex-col">
                               <p className="text-xs text-gray-400 mb-1">Operator:</p>
                               <SelectTrigger className="w-[140px]">
-                                <SelectValue placeholder="Select operator" />
+                                <SelectValue placeholder="Select operator"/>
                               </SelectTrigger>
                               <SelectContent>
                                 {operators.map((operator) => (
@@ -322,6 +331,7 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
                             <p className="text-xs text-gray-400 mb-1">Right Operand:</p>
                             <Input
                               placeholder="Type value"
+                              value={constraint.rightOperand}
                               onChange={(ev) =>
                                 operandValueChangeHandler(
                                   "obligation",
@@ -339,7 +349,7 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
                               size="icon"
                               onClick={() => removeConstraintHandler("obligation", i, j)}
                             >
-                              <Trash className="mb-0.5" />
+                              <Trash className="mb-0.5"/>
                             </Button>
                           </div>
                         </div>
@@ -351,7 +361,7 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
                       className="mt-3"
                       onClick={() => addConstraintHandler("obligation", i)}
                     >
-                      <Plus />
+                      <Plus/>
                       Add constraint
                     </Button>
                   </div>
@@ -365,7 +375,8 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
             value="item-1"
             className="bg-danger-500/10 border border-danger-600/20 mb-24"
           >
-            <AccordionTrigger className="text-white/70 flex bg-danger-500/25 uppercase overflow-hidden rounded-md data-[state=open]:rounded-b-none">
+            <AccordionTrigger
+              className="text-white/70 flex bg-danger-500/25 uppercase overflow-hidden rounded-md data-[state=open]:rounded-b-none">
               <div className="flex items-center w-full">
                 <p className="text-current"> prohibition </p>
               </div>
@@ -378,7 +389,7 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
                 size="xs"
                 onClick={() => addComponentHandler("prohibition")}
               >
-                <Plus />
+                <Plus/>
                 Add prohibition
               </Button>
               {newPolicy.prohibition.map((prohibition, i) => (
@@ -392,17 +403,18 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
                         className="ml-4"
                         onClick={() => removeComponentHandler("prohibition", i)}
                       >
-                        <Trash className="mb-0.5" />
+                        <Trash className="mb-0.5"/>
                         Remove prohibition
                       </Button>
                     </div>
                     <Select
+                      value={prohibition.action}
                       onValueChange={(value: string) =>
                         fieldValueChangeHandler("prohibition", i, value)
                       }
                     >
                       <SelectTrigger className="w-[240px]">
-                        <SelectValue placeholder="Select action" />
+                        <SelectValue placeholder="Select action"/>
                       </SelectTrigger>
                       <SelectContent>
                         {odrlActions.map((odrlAction) => (
@@ -416,6 +428,7 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
                       <div className="flex flex-col gap-2">
                         <div className="constraint-create flex gap-3 justify-end items-end mb-2">
                           <Select
+                            value={constraint.leftOperand}
                             onValueChange={(value: string) =>
                               operandValueChangeHandler("prohibition", i, j, "leftOperand", value)
                             }
@@ -423,7 +436,7 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
                             <div className="flex flex-col">
                               <p className="text-xs text-gray-400 mb-1">Left Operand:</p>
                               <SelectTrigger className="w-[180px]">
-                                <SelectValue placeholder="Select item" />
+                                <SelectValue placeholder="Select item"/>
                               </SelectTrigger>
                               <SelectContent>
                                 {leftOperands.map((leftOperand) => (
@@ -433,6 +446,7 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
                             </div>
                           </Select>
                           <Select
+                            value={constraint.operator}
                             onValueChange={(value: string) =>
                               operandValueChangeHandler("prohibition", i, j, "operator", value)
                             }
@@ -440,7 +454,7 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
                             <div className="flex flex-col">
                               <p className="text-xs text-gray-400 mb-1">Operator:</p>
                               <SelectTrigger className="w-[140px]">
-                                <SelectValue placeholder="Select operator" />
+                                <SelectValue placeholder="Select operator"/>
                               </SelectTrigger>
                               <SelectContent>
                                 {operators.map((operator) => (
@@ -452,6 +466,7 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
                           <div className="flex flex-col">
                             <p className="text-xs text-gray-400 mb-1">Right Operand:</p>
                             <Input
+                              value={constraint.rightOperand}
                               placeholder="Type value"
                               onChange={(ev) =>
                                 operandValueChangeHandler(
@@ -470,7 +485,7 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
                               size="icon"
                               onClick={() => removeConstraintHandler("prohibition", i, j)}
                             >
-                              <Trash className="mb-0.5" />
+                              <Trash className="mb-0.5"/>
                             </Button>
                           </div>
                         </div>
@@ -482,7 +497,7 @@ export const PolicyWrapperNew = ({ onSubmit }) => {
                       className="mt-3"
                       onClick={() => addConstraintHandler("prohibition", i)}
                     >
-                      <Plus />
+                      <Plus/>
                       Add constraint
                     </Button>
                   </div>

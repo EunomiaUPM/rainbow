@@ -82,6 +82,7 @@ where
                 post(Self::retrieve_business_mate_token),
             )
             .route("/api/v1/mates", get(Self::get_all_mates))
+            .route("/api/v1/mates/me", get(Self::get_all_mates_me))
             .route("/api/v1/mates/:id", get(Self::get_mate_by_id))
 
             .route("/api/v1/business/login", post(Self::fast_login))
@@ -305,6 +306,20 @@ where
     ) -> impl IntoResponse {
         info!("GET /mates");
         match manager.repo.mates().get_all(None, None).await {
+            Ok(mates) => (StatusCode::OK, Json(mates)).into_response(),
+            Err(e) => {
+                let error = CommonErrors::database_new(Some(e.to_string()));
+                error!("{}", error.log());
+                error.into_response()
+            }
+        }
+    }
+
+    async fn get_all_mates_me(
+        State(manager): State<Arc<Manager<T>>>,
+    ) -> impl IntoResponse {
+        info!("GET /mates/me");
+        match manager.repo.mates().get_me().await {
             Ok(mates) => (StatusCode::OK, Json(mates)).into_response(),
             Err(e) => {
                 let error = CommonErrors::database_new(Some(e.to_string()));

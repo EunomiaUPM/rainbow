@@ -1,13 +1,23 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Table, TableBody, TableHead, TableHeader, TableRow } from "shared/src/components/ui/table";
+import {createFileRoute, Link} from "@tanstack/react-router";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "shared/src/components/ui/table";
 import Heading from "shared/src/components/ui/heading.tsx";
-import { Input } from "@/../../shared/src/components/ui/input.tsx";
-import { useGetBypassCatalogs } from "shared/src/data/catalog-bypass-queries.ts";
-import { Badge } from "shared/src/components/ui/badge";
+import {Input} from "@/../../shared/src/components/ui/input.tsx";
+import {useGetBypassCatalogs} from "shared/src/data/catalog-bypass-queries.ts";
+import {Badge} from "shared/src/components/ui/badge";
+import {ListItemDate} from "shared/src/components/ui/list.tsx";
+import {Button} from "shared/src/components/ui/button.tsx";
+import {ArrowRight} from "lucide-react";
 
 const RouteComponent = () => {
-  const { provider } = Route.useParams();
-  const { data: catalogs } = useGetBypassCatalogs(provider);
+  const {provider} = Route.useParams();
+  const {data: catalogs} = useGetBypassCatalogs(provider);
 
   return (
     <div className="space-y-4 pb-4">
@@ -31,48 +41,38 @@ const RouteComponent = () => {
               <TableHead>Created at</TableHead>
               <TableHead>Catalog ID</TableHead>
               <TableHead>Provider ID</TableHead>
-
               <TableHead>Link</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {/* {catalogs.catalog.map((catalogItem) => (
+            {catalogs?.catalog?.map((catalogItem) => (
               <TableRow key="urn:uuid:c4d4449d-a">
                 <TableCell>
-                  {" "}
                   <p className="text-18">{catalogItem.title}</p>
                 </TableCell>
                 <TableCell>
-                  <p className="text-gray-400"> 23/6/25 16:34</p>
-                </TableCell>
-
-                <TableCell>
-                  <Badge variant="info">
-                    {catalogItem["@id"].slice(9, 29) + "[...]"}
-                  </Badge>
+                  <ListItemDate> 23/6/25 16:34 </ListItemDate>
                 </TableCell>
                 <TableCell>
-                  <Badge variant="info">
-                    {catalogItem.participantId.slice(9, 29) + "[...]"}
-                  </Badge>
+                  {" "}
+                  <Badge variant="info">{catalogItem["@id"].slice(9, 29) + "[...]"} </Badge>
                 </TableCell>
-
                 <TableCell>
-                  <Link
-                    to="/provider-catalog/$provider/catalog/$catalogId"
-                    params={{
-                      provider: provider,
-                      catalogId: catalogItem["@id"],
-                    }}
-                  >
-                    <Button variant="link">
+                  {" "}
+                  <Badge variant="info">{catalogItem.participantId.slice(9, 29) + "[...]"}</Badge>
+                </TableCell>
+                <TableCell>
+                  <Link to="/provider-catalog/$provider/catalog/$catalogId" params={
+                    {provider: provider, catalogId: catalogItem["@id"]}
+                  }>
+                    <Button variant={"link"}>
                       See catalog
-                      <ArrowRight />
+                      <ArrowRight/>
                     </Button>
                   </Link>
                 </TableCell>
               </TableRow>
-            ))} */}
+            ))}
           </TableBody>
         </Table>
       </div>
