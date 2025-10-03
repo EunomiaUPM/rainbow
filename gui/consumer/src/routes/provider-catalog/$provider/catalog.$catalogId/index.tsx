@@ -1,6 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import {createFileRoute, Link} from "@tanstack/react-router";
 import dayjs from "dayjs";
-import { ExternalLink } from "lucide-react";
+import {ArrowRight} from "lucide-react";
 import {
   Table,
   TableBody,
@@ -11,20 +11,26 @@ import {
 } from "shared/src/components/ui/table.tsx";
 import {
   useGetBypassCatalogsById,
-  useGetBypassDataServicesByCatalogId,
   useGetBypassDatasetsByCatalogId,
 } from "shared/src/data/catalog-bypass-queries.ts";
-import { Badge } from "shared/src/components/ui/badge";
+import {Badge} from "shared/src/components/ui/badge";
 import Heading from "shared/src/components/ui/heading";
-import { List, ListItem, ListItemKey, ListItemDate } from "shared/src/components/ui/list";
-import { Button, buttonVariants } from "shared/src/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import {List, ListItem, ListItemDate, ListItemKey} from "shared/src/components/ui/list";
+import {Button} from "shared/src/components/ui/button";
+import {
+  Drawer,
+  DrawerBody,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger
+} from "shared/src/components/ui/drawer.tsx";
+import {RainbowRequestDrawer} from "@/components/RainbowRequestDrawer.tsx";
 
 const RouteComponent = () => {
-  const { provider, catalogId } = Route.useParams();
-  const { data: catalog } = useGetBypassCatalogsById(provider, catalogId);
-  const { data: datasets } = useGetBypassDatasetsByCatalogId(provider, catalogId);
-  const { data: dataservices } = useGetBypassDataServicesByCatalogId(provider, catalogId);
+  const {provider, catalogId} = Route.useParams();
+  const {data: catalog} = useGetBypassCatalogsById(provider, catalogId);
+  const {data: datasets} = useGetBypassDatasetsByCatalogId(provider, catalogId);
 
   return (
     <div className="space-y-4 pb-4">
@@ -86,9 +92,29 @@ const RouteComponent = () => {
                   <ListItemDate>{dayjs(catalog.issued).format("DD/MM/YYYY - HH:mm")}</ListItemDate>
                 </TableCell>
                 <TableCell>
-                  <Button size="sm" variant="outline">
-                    + Request dataset
-                  </Button>
+                  <Drawer direction={"right"}>
+                    <DrawerTrigger>
+                      <Button variant="outline" size="sm">
+                        + Request dataset
+                      </Button>
+                    </DrawerTrigger>
+                    <DrawerContent>
+                      <DrawerHeader>
+                        <DrawerTitle>
+                          <Heading level="h5" className="text-current">
+                            New Contract Negotiation Request
+                          </Heading>
+                        </DrawerTitle>
+                      </DrawerHeader>
+                      <DrawerBody className="items-start">
+                        <RainbowRequestDrawer
+                          catalogId={catalogId}
+                          datasetId={dataset["@id"]}
+                          participantId={provider}
+                        />
+                      </DrawerBody>
+                    </DrawerContent>
+                  </Drawer>
                 </TableCell>
                 <TableCell>
                   <Link
@@ -100,58 +126,7 @@ const RouteComponent = () => {
                   >
                     <Button variant="link">
                       See dataset
-                      <ArrowRight />
-                    </Button>
-                  </Link>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-      <div>
-        <Heading level="h5">Dataservices</Heading>
-        <Table className="text-sm">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Dataservice Id</TableHead>
-              <TableHead>Endpoint</TableHead>
-              <TableHead>Endpoint Description</TableHead>
-              <TableHead>Created at</TableHead>
-              <TableHead>Actions</TableHead>
-              <TableHead>Link</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {dataservices.map((dataservice) => (
-              <TableRow key={dataservice["@id"].slice(9, 29)}>
-                <TableCell>
-                  <Badge variant="info">{dataservice["@id"].slice(9, 29) + "..."}</Badge>
-                </TableCell>
-                <TableCell>{dataservice.endpointURL}</TableCell>
-                <TableCell>{dataservice.endpointDescription}</TableCell>
-                <TableCell>
-                  <ListItemDate>
-                    {" "}
-                    {dayjs(dataservice.issued).format("DD/MM/YYYY - HH:mm")}
-                  </ListItemDate>
-                </TableCell>
-                <TableCell>
-                  <Button size="sm" variant="outline">
-                    + Request dataservice
-                  </Button>
-                </TableCell>
-                <TableCell>
-                  <Link
-                    to="/provider-catalog/$provider/catalog/$catalogId/data-service/$dataserviceId"
-                    params={{
-                      catalogId: catalog["@id"],
-                      dataserviceId: dataservice["@id"],
-                    }}
-                  >
-                    <Button variant="link">
-                      See dataservice
-                      <ArrowRight />
+                      <ArrowRight/>
                     </Button>
                   </Link>
                 </TableCell>
