@@ -30,6 +30,7 @@ use crate::catalog::repo::{
     NewDataServiceModel, NewDatasetModel, NewDistributionModel, NewOdrlOfferModel, OdrlOfferRepo,
 };
 use axum::async_trait;
+use log::debug;
 use rainbow_common::dcat_formats::DctFormats;
 use rainbow_common::utils::get_urn;
 use sea_orm::{
@@ -409,6 +410,9 @@ impl DistributionRepo for CatalogRepoForSql {
     }
 
     async fn get_distribution_by_dataset_id_and_dct_format(&self, dataset_id: Urn, dct_formats: DctFormats) -> anyhow::Result<distribution::Model, CatalogRepoErrors> {
+        debug!("Fetching distribution by dataset id {}", dataset_id);
+        debug!("Fetching dct_formats {}", dct_formats.to_string());
+
         let dataset_id = dataset_id.to_string();
         let dataset = dataset::Entity::find_by_id(dataset_id.clone())
             .one(&self.db_connection).await

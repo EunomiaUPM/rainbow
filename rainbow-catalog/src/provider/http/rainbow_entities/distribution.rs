@@ -113,7 +113,7 @@ where
         State(distribution_service): State<Arc<T>>,
         Path((id, dct_format)): Path<(String, String)>,
     ) -> impl IntoResponse {
-        info!("GET /api/v1/datasets/{}/distributions", id);
+        info!("GET /api/v1/datasets/{}/distributions/dct-formats/{}", id, dct_format);
         let dataset_id = match get_urn_from_string(&id) {
             Ok(id) => id,
             Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),

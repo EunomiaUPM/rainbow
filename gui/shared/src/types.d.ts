@@ -57,7 +57,8 @@ declare global {
     rightOperand: string;
   }
 
-  export interface Content {}
+  export interface Content {
+  }
 
   export interface CNError {
     error: {

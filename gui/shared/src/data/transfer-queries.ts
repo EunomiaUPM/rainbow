@@ -1,6 +1,6 @@
-import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { useContext } from "react";
-import { GlobalInfoContext, GlobalInfoContextType } from "./../context/GlobalInfoContext";
+import {queryOptions, useSuspenseQuery} from "@tanstack/react-query";
+import {useContext} from "react";
+import {GlobalInfoContext, GlobalInfoContextType} from "./../context/GlobalInfoContext";
 
 /**
  *  GET /transfers
@@ -17,11 +17,11 @@ export const getTransferProcessesOptions = (api_gateway: string) =>
   });
 
 export const useGetTransferProcesses = () => {
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  const { data, isLoading, isError, error } = useSuspenseQuery(
+  const {api_gateway} = useContext<GlobalInfoContextType>(GlobalInfoContext);
+  const {data, isLoading, isError, error} = useSuspenseQuery(
     getTransferProcessesOptions(api_gateway),
   );
-  return { data, isLoading, isError, error };
+  return {data, isLoading, isError, error};
 };
 
 /**
@@ -48,11 +48,11 @@ export const getTransferProcessByProviderPidOptions = (
   });
 
 export const useGetTransferProcessByProviderPid = (transferProcessId: UUID) => {
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  const { data, isLoading, isError, error } = useSuspenseQuery(
+  const {api_gateway} = useContext<GlobalInfoContextType>(GlobalInfoContext);
+  const {data, isLoading, isError, error} = useSuspenseQuery(
     getTransferProcessByProviderPidOptions(api_gateway, transferProcessId),
   );
-  return { data, isLoading, isError, error };
+  return {data, isLoading, isError, error};
 };
 
 /**
@@ -79,11 +79,11 @@ export const getTransferMessagesByProviderPidOptions = (
   });
 
 export const useGetTransferMessagesByProviderPid = (transferProcessId: UUID) => {
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  const { data, isLoading, isError, error } = useSuspenseQuery(
+  const {api_gateway} = useContext<GlobalInfoContextType>(GlobalInfoContext);
+  const {data, isLoading, isError, error} = useSuspenseQuery(
     getTransferMessagesByProviderPidOptions(api_gateway, transferProcessId),
   );
-  return { data, isLoading, isError, error };
+  return {data, isLoading, isError, error};
 };
 
 /**
@@ -112,11 +112,11 @@ export const getTransferMessageByIdOptions = (
   });
 
 export const useGetTransferMessageById = (transferProcessId: UUID, messageId: UUID) => {
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  const { data, isLoading, isError, error } = useSuspenseQuery(
+  const {api_gateway} = useContext<GlobalInfoContextType>(GlobalInfoContext);
+  const {data, isLoading, isError, error} = useSuspenseQuery(
     getTransferMessageByIdOptions(api_gateway, transferProcessId, messageId),
   );
-  return { data, isLoading, isError, error };
+  return {data, isLoading, isError, error};
 };
 
 /**
@@ -137,9 +137,9 @@ export const getDataplaneProcessByIdOptions = (api_gateway: string, sessionId: U
   });
 
 export const useGetDataplaneProcessById = (transferProcessId: UUID) => {
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  const { data, isLoading, isError, error } = useSuspenseQuery(
+  const {api_gateway} = useContext<GlobalInfoContextType>(GlobalInfoContext);
+  const {data, isLoading, isError, error} = useSuspenseQuery(
     getDataplaneProcessByIdOptions(api_gateway, transferProcessId),
   );
-  return { data, isLoading, isError, error };
+  return {data, isLoading, isError, error};
 };

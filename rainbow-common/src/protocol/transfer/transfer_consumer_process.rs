@@ -20,7 +20,6 @@
 use serde::Serialize;
 
 #[derive(Serialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
 pub struct TransferConsumerProcess {
     pub id: String,
     pub consumer_pid: String,
