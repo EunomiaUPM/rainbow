@@ -60,7 +60,6 @@ impl CoreProviderMigration {
         let db_connection = Database::connect(db_url).await.expect("Database can't connect");
         // run migration
         Self::refresh(&db_connection).await?;
-        // run seeding
         Ok(())
     }
 }
