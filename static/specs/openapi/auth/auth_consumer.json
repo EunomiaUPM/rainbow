@@ -635,6 +635,218 @@
           }
         }
       }
+    },
+    "/api/v1/mates": {
+      "get": {
+        "summary": "List all mates",
+        "description": "Retrieves a list of all mates associated with the authenticated user.",
+        "operationId": "getAllMates",
+        "responses": {
+          "200": {
+            "description": "List of mates successfully retrieved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "participant_id": {
+                        "type": "string"
+                      },
+                      "participant_slug": {
+                        "type": "string"
+                      },
+                      "participant_type": {
+                        "type": "string"
+                      },
+                      "base_url": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "token": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "saved_at": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "last_interaction": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "is_me": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "participant_id",
+                      "participant_slug",
+                      "participant_type",
+                      "saved_at",
+                      "last_interaction",
+                      "is_me"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request: malformed request."
+          },
+          "404": {
+            "description": "No mates found for the authenticated user."
+          },
+          "500": {
+            "description": "Unexpected internal server error or database error."
+          }
+        }
+      }
+    },
+    "/api/v1/mates/me": {
+      "get": {
+        "summary": "Get current user information",
+        "description": "Retrieves the mate information for the authenticated user.",
+        "operationId": "getMateMe",
+        "responses": {
+          "200": {
+            "description": "Mate information successfully retrieved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "participant_id": {
+                      "type": "string"
+                    },
+                    "participant_slug": {
+                      "type": "string"
+                    },
+                    "participant_type": {
+                      "type": "string"
+                    },
+                    "base_url": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "token": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "saved_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "last_interaction": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "is_me": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "participant_id",
+                    "participant_slug",
+                    "participant_type",
+                    "saved_at",
+                    "last_interaction",
+                    "is_me"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request: malformed request."
+          },
+          "404": {
+            "description": "Mate not found for the authenticated user."
+          },
+          "500": {
+            "description": "Unexpected internal server error or database error."
+          }
+        }
+      }
+    },
+    "/api/v1/mates/:did": {
+      "get": {
+        "summary": "Get mate by DID",
+        "description": "Retrieves the mate information for a specific DID.",
+        "operationId": "getMateByDID",
+        "parameters": [
+          {
+            "name": "did",
+            "in": "path",
+            "required": true,
+            "description": "Decentralized Identifier (DID) of the mate",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mate information successfully retrieved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "participant_id": {
+                      "type": "string"
+                    },
+                    "participant_slug": {
+                      "type": "string"
+                    },
+                    "participant_type": {
+                      "type": "string"
+                    },
+                    "base_url": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "token": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "saved_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "last_interaction": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "is_me": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "participant_id",
+                    "participant_slug",
+                    "participant_type",
+                    "saved_at",
+                    "last_interaction",
+                    "is_me"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request: malformed request."
+          },
+          "404": {
+            "description": "Mate not found for the given DID."
+          },
+          "500": {
+            "description": "Unexpected internal server error or database error."
+          }
+        }
+      }
     }
   }
 }
