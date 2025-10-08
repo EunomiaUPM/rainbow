@@ -17,5 +17,4 @@
  *
  */
 
-pub mod ds_protocol_rpc_errors;
 pub mod ds_protocol_rpc;

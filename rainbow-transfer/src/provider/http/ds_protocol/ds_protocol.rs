@@ -17,8 +17,7 @@
  *
  */
 
-
-use crate::provider::core::ds_protocol::ds_protocol_err::DSProtocolTransferProviderErrors;
+use crate::common::errors::error_adapter::CustomToResponse;
 use crate::provider::core::ds_protocol::DSProtocolTransferProviderTrait;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, State};
@@ -28,9 +27,9 @@ use axum::routing::{get, post};
 use axum::{middleware, Extension, Json, Router};
 use rainbow_common::auth::header::{extract_request_info, RequestInfo};
 use rainbow_common::err::transfer_err::TransferErrorType;
-use rainbow_common::err::transfer_err::TransferErrorType::{
-    NotCheckedError, ProtocolBodyError,
-};
+use rainbow_common::err::transfer_err::TransferErrorType::{NotCheckedError, ProtocolBodyError};
+use rainbow_common::errors::helpers::BadFormat;
+use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::protocol::transfer::transfer_completion::TransferCompletionMessage;
 use rainbow_common::protocol::transfer::transfer_request::TransferRequestMessage;
 use rainbow_common::protocol::transfer::transfer_start::TransferStartMessage;
@@ -38,7 +37,7 @@ use rainbow_common::protocol::transfer::transfer_suspension::TransferSuspensionM
 use rainbow_common::protocol::transfer::transfer_termination::TransferTerminationMessage;
 use rainbow_common::utils::get_urn_from_string;
 use std::sync::Arc;
-use tracing::info;
+use tracing::{error, info};
 
 pub struct DSProtocolTransferProviderRouter<T> {
     transfer_service: Arc<T>,
@@ -84,14 +83,18 @@ where
         info!("GET /transfers/{}", provider_pid.to_string());
         let provider_pid = match get_urn_from_string(&provider_pid) {
             Ok(provider_pid) => provider_pid,
-            Err(err) => return NotCheckedError { inner_error: err }.into_response(),
+            Err(err) => {
+                let e = CommonErrors::format_new(
+                    BadFormat::Received,
+                    format!("Urn malformed. {}", err.to_string()).into(),
+                );
+                error!("{}", e.log());
+                return e.into_response();
+            }
         };
         match transfer_service.get_transfer_requests_by_provider(provider_pid).await {
             Ok(tp) => (StatusCode::OK, Json(tp)).into_response(),
-            Err(e) => match e.downcast::<DSProtocolTransferProviderErrors>() {
-                Ok(transfer_error) => transfer_error.into_response(),
-                Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
-            }
+            Err(err) => err.to_response(),
         }
     }
 
@@ -103,16 +106,17 @@ where
         info!("POST /transfers/request");
         let input = match input {
             Ok(input) => input.0,
-            Err(e) => return ProtocolBodyError { message: e.body_text() }.into_response(),
+            Err(err) => {
+                let e = CommonErrors::format_new(BadFormat::Received, format!("{}", err.body_text()).into());
+                error!("{}", e.log());
+                return e.into_response();
+            }
         };
         let token = info.token.clone();
 
         match transfer_service.transfer_request(input, token).await {
             Ok(tp) => (StatusCode::CREATED, Json(tp)).into_response(),
-            Err(e) => match e.downcast::<DSProtocolTransferProviderErrors>() {
-                Ok(transfer_error) => transfer_error.into_response(),
-                Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
-            },
+            Err(err) => err.to_response(),
         }
     }
 
@@ -126,22 +130,28 @@ where
 
         let provider_pid = match get_urn_from_string(&provider_pid) {
             Ok(provider_pid) => provider_pid,
-            Err(_) => {
-                return TransferErrorType::PidSchemeError.into_response();
+            Err(err) => {
+                let e = CommonErrors::format_new(
+                    BadFormat::Received,
+                    format!("Urn malformed. {}", err.to_string()).into(),
+                );
+                error!("{}", e.log());
+                return e.into_response();
             }
         };
         let input = match input {
             Ok(input) => input.0,
-            Err(e) => return ProtocolBodyError { message: e.body_text() }.into_response(),
+            Err(err) => {
+                let e = CommonErrors::format_new(BadFormat::Received, format!("{}", err.body_text()).into());
+                error!("{}", e.log());
+                return e.into_response();
+            }
         };
         let token = info.token.clone();
 
         match transfer_service.transfer_start(provider_pid, input, token).await {
             Ok(tp) => (StatusCode::OK, Json(tp)).into_response(),
-            Err(e) => match e.downcast::<DSProtocolTransferProviderErrors>() {
-                Ok(transfer_error) => transfer_error.into_response(),
-                Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
-            },
+            Err(err) => err.to_response(),
         }
     }
 
@@ -155,23 +165,28 @@ where
 
         let provider_pid = match get_urn_from_string(&provider_pid) {
             Ok(provider_pid) => provider_pid,
-            Err(_) => {
-                return TransferErrorType::PidSchemeError.into_response();
+            Err(err) => {
+                let e = CommonErrors::format_new(
+                    BadFormat::Received,
+                    format!("Urn malformed. {}", err.to_string()).into(),
+                );
+                error!("{}", e.log());
+                return e.into_response();
             }
         };
         let input = match input {
             Ok(input) => input.0,
-            Err(e) => return ProtocolBodyError { message: e.body_text() }.into_response(),
+            Err(err) => {
+                let e = CommonErrors::format_new(BadFormat::Received, format!("{}", err.body_text()).into());
+                error!("{}", e.log());
+                return e.into_response();
+            }
         };
         let token = info.token.clone();
 
-
         match transfer_service.transfer_suspension(provider_pid, input, token).await {
             Ok(tp) => (StatusCode::OK, Json(tp)).into_response(),
-            Err(e) => match e.downcast::<DSProtocolTransferProviderErrors>() {
-                Ok(transfer_error) => transfer_error.into_response(),
-                Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
-            },
+            Err(err) => err.to_response(),
         }
     }
 
@@ -185,22 +200,28 @@ where
 
         let provider_pid = match get_urn_from_string(&provider_pid) {
             Ok(provider_pid) => provider_pid,
-            Err(_) => {
-                return TransferErrorType::PidSchemeError.into_response();
+            Err(err) => {
+                let e = CommonErrors::format_new(
+                    BadFormat::Received,
+                    format!("Urn malformed. {}", err.to_string()).into(),
+                );
+                error!("{}", e.log());
+                return e.into_response();
             }
         };
         let input = match input {
             Ok(input) => input.0,
-            Err(e) => return ProtocolBodyError { message: e.body_text() }.into_response(),
+            Err(err) => {
+                let e = CommonErrors::format_new(BadFormat::Received, format!("{}", err.body_text()).into());
+                error!("{}", e.log());
+                return e.into_response();
+            }
         };
         let token = info.token.clone();
 
         match transfer_service.transfer_completion(provider_pid, input, token).await {
             Ok(tp) => (StatusCode::OK, Json(tp)).into_response(),
-            Err(e) => match e.downcast::<DSProtocolTransferProviderErrors>() {
-                Ok(transfer_error) => transfer_error.into_response(),
-                Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
-            },
+            Err(err) => err.to_response(),
         }
     }
 
@@ -214,22 +235,28 @@ where
 
         let provider_pid = match get_urn_from_string(&provider_pid) {
             Ok(provider_pid) => provider_pid,
-            Err(_) => {
-                return TransferErrorType::PidSchemeError.into_response();
+            Err(err) => {
+                let e = CommonErrors::format_new(
+                    BadFormat::Received,
+                    format!("Urn malformed. {}", err.to_string()).into(),
+                );
+                error!("{}", e.log());
+                return e.into_response();
             }
         };
         let input = match input {
             Ok(input) => input.0,
-            Err(e) => return ProtocolBodyError { message: e.body_text() }.into_response(),
+            Err(err) => {
+                let e = CommonErrors::format_new(BadFormat::Received, format!("{}", err.body_text()).into());
+                error!("{}", e.log());
+                return e.into_response();
+            }
         };
         let token = info.token.clone();
 
         match transfer_service.transfer_termination(provider_pid, input, token).await {
             Ok(tp) => (StatusCode::OK, Json(tp)).into_response(),
-            Err(e) => match e.downcast::<DSProtocolTransferProviderErrors>() {
-                Ok(transfer_error) => transfer_error.into_response(),
-                Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
-            },
+            Err(err) => err.to_response(),
         }
     }
 }

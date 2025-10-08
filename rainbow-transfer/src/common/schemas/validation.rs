@@ -21,6 +21,8 @@ use crate::common::schemas::{TRANSFER_COMPLETION_SCHEMA, TRANSFER_ERROR_SCHEMA, 
 use anyhow::bail;
 use jsonschema::BasicOutput;
 use log::error;
+use rainbow_common::errors::helpers::BadFormat;
+use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::protocol::transfer::transfer_protocol_trait::DSProtocolTransferMessageTrait;
 use rainbow_common::protocol::transfer::TransferMessageTypes;
 use serde_json::to_value;
@@ -54,7 +56,9 @@ pub fn validate_payload_schema<'a, M: DSProtocolTransferMessageTrait<'a>>(messag
             error!("{}", error.instance_location());
             error!("{}", error.error_description());
         }
-        bail!("Message malformed in JSON Data Validation");
+        let e = CommonErrors::format_new(BadFormat::Received, "Message malformed in JSON Data Validation".to_string().into());
+        tracing::error!("{}", e.log());
+        bail!(e)
     }
     Ok(())
 }

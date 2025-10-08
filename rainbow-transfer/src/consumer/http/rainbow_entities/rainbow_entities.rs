@@ -17,9 +17,7 @@
  *
  */
 
-use crate::consumer::core::ds_protocol::ds_protocol_err::DSProtocolTransferConsumerErrors;
-use crate::consumer::core::ds_protocol_rpc::ds_protocol_rpc_err::DSRPCTransferConsumerErrors;
-use crate::consumer::core::rainbow_entities::rainbow_err::RainbowTransferConsumerErrors;
+use crate::common::errors::error_adapter::CustomToResponse;
 use crate::consumer::core::rainbow_entities::rainbow_types::{EditTransferConsumerRequest, NewTransferConsumerRequest};
 use crate::consumer::core::rainbow_entities::RainbowTransferConsumerServiceTrait;
 use axum::extract::rejection::JsonRejection;
@@ -28,9 +26,11 @@ use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::{delete, get, post, put};
 use axum::{Json, Router};
+use rainbow_common::errors::helpers::BadFormat;
+use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::utils::get_urn_from_string;
 use std::sync::Arc;
-use tracing::info;
+use tracing::{error, info};
 
 pub struct RainbowTransferConsumerEntitiesRouter<T> {
     transfer_service: Arc<T>,
@@ -73,10 +73,7 @@ where
         info!("GET /api/v1/transfers");
         match transfer_service.get_all_transfers().await {
             Ok(transfer_processes) => (StatusCode::OK, Json(transfer_processes)).into_response(),
-            Err(err) => match err.downcast::<RainbowTransferConsumerErrors>() {
-                Ok(e) => e.into_response(),
-                Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
-            },
+            Err(err) => err.to_response(),
         }
     }
 
@@ -87,14 +84,18 @@ where
         info!("GET /api/v1/transfers/{}", id);
         let id = match get_urn_from_string(&id) {
             Ok(process_id) => process_id,
-            Err(err) => return RainbowTransferConsumerErrors::UrnUuidSchema(err.to_string()).into_response(),
+            Err(err) => {
+                let e = CommonErrors::format_new(
+                    BadFormat::Received,
+                    format!("Urn malformed. {}", err.to_string()).into(),
+                );
+                error!("{}", e.log());
+                return e.into_response();
+            }
         };
         match transfer_service.get_transfer_by_id(id).await {
             Ok(transfer_process) => (StatusCode::OK, Json(transfer_process)).into_response(),
-            Err(err) => match err.downcast::<RainbowTransferConsumerErrors>() {
-                Ok(e) => e.into_response(),
-                Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
-            },
+            Err(err) => err.to_response(),
         }
     }
 
@@ -105,19 +106,15 @@ where
         info!("POST /api/v1/transfers");
         let input = match input {
             Ok(input) => input.0,
-            Err(e) => {
-                return DSRPCTransferConsumerErrors::DSProtocolTransferConsumerError(
-                    DSProtocolTransferConsumerErrors::JsonRejection(e.body_text()),
-                )
-                    .into_response()
+            Err(err) => {
+                let e = CommonErrors::format_new(BadFormat::Received, format!("{}", err.body_text()).into());
+                error!("{}", e.log());
+                return e.into_response();
             }
         };
         match transfer_service.create_transfer(input).await {
             Ok(transfer_process) => (StatusCode::CREATED, Json(transfer_process)).into_response(),
-            Err(err) => match err.downcast::<RainbowTransferConsumerErrors>() {
-                Ok(e) => e.into_response(),
-                Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
-            },
+            Err(err) => err.to_response(),
         }
     }
 
@@ -129,23 +126,26 @@ where
         info!("PUT /api/v1/transfers/{}", id);
         let id = match get_urn_from_string(&id) {
             Ok(process_id) => process_id,
-            Err(err) => return RainbowTransferConsumerErrors::UrnUuidSchema(err.to_string()).into_response(),
+            Err(err) => {
+                let e = CommonErrors::format_new(
+                    BadFormat::Received,
+                    format!("Urn malformed. {}", err.to_string()).into(),
+                );
+                error!("{}", e.log());
+                return e.into_response();
+            }
         };
         let input = match input {
             Ok(input) => input.0,
-            Err(e) => {
-                return DSRPCTransferConsumerErrors::DSProtocolTransferConsumerError(
-                    DSProtocolTransferConsumerErrors::JsonRejection(e.body_text()),
-                )
-                    .into_response()
+            Err(err) => {
+                let e = CommonErrors::format_new(BadFormat::Received, format!("{}", err.body_text()).into());
+                error!("{}", e.log());
+                return e.into_response();
             }
         };
         match transfer_service.put_transfer_by_id(id, input).await {
             Ok(transfer_process) => (StatusCode::ACCEPTED, Json(transfer_process)).into_response(),
-            Err(err) => match err.downcast::<RainbowTransferConsumerErrors>() {
-                Ok(e) => e.into_response(),
-                Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
-            },
+            Err(err) => err.to_response(),
         }
     }
 
@@ -156,14 +156,18 @@ where
         info!("DELETE /api/v1/transfers/{}", id);
         let id = match get_urn_from_string(&id) {
             Ok(process_id) => process_id,
-            Err(err) => return RainbowTransferConsumerErrors::UrnUuidSchema(err.to_string()).into_response(),
+            Err(err) => {
+                let e = CommonErrors::format_new(
+                    BadFormat::Received,
+                    format!("Urn malformed. {}", err.to_string()).into(),
+                );
+                error!("{}", e.log());
+                return e.into_response();
+            }
         };
         match transfer_service.delete_transfer(id).await {
             Ok(_) => (StatusCode::NO_CONTENT).into_response(),
-            Err(err) => match err.downcast::<RainbowTransferConsumerErrors>() {
-                Ok(e) => e.into_response(),
-                Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
-            },
+            Err(err) => err.to_response(),
         }
     }
 
@@ -174,14 +178,18 @@ where
         log::info!("GET /api/v1/transfers/{}/messages", id);
         let id = match get_urn_from_string(&id) {
             Ok(process_id) => process_id,
-            Err(err) => return RainbowTransferConsumerErrors::UrnUuidSchema(err.to_string()).into_response(),
+            Err(err) => {
+                let e = CommonErrors::format_new(
+                    BadFormat::Received,
+                    format!("Urn malformed. {}", err.to_string()).into(),
+                );
+                error!("{}", e.log());
+                return e.into_response();
+            }
         };
         match transfer_service.get_messages_by_transfer(id).await {
             Ok(transfer_processes) => (StatusCode::OK, Json(transfer_processes)).into_response(),
-            Err(err) => match err.downcast::<RainbowTransferConsumerErrors>() {
-                Ok(e) => e.into_response(),
-                Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
-            },
+            Err(err) => err.to_response(),
         }
     }
 
@@ -192,19 +200,30 @@ where
         log::info!("GET /api/v1/transfers/{}/messages/{}", id, mid);
         let id = match get_urn_from_string(&id) {
             Ok(process_id) => process_id,
-            Err(err) => return RainbowTransferConsumerErrors::UrnUuidSchema(err.to_string()).into_response(),
+            Err(err) => {
+                let e = CommonErrors::format_new(
+                    BadFormat::Received,
+                    format!("Urn malformed. {}", err.to_string()).into(),
+                );
+                error!("{}", e.log());
+                return e.into_response();
+            }
         };
         let mid = match get_urn_from_string(&mid) {
             Ok(process_id) => process_id,
-            Err(err) => return RainbowTransferConsumerErrors::UrnUuidSchema(err.to_string()).into_response(),
+            Err(err) => {
+                let e = CommonErrors::format_new(
+                    BadFormat::Received,
+                    format!("Urn malformed. {}", err.to_string()).into(),
+                );
+                error!("{}", e.log());
+                return e.into_response();
+            }
         };
 
         match transfer_service.get_messages_by_id(id, mid).await {
             Ok(transfer_processes) => (StatusCode::OK, Json(transfer_processes)).into_response(),
-            Err(err) => match err.downcast::<RainbowTransferConsumerErrors>() {
-                Ok(e) => e.into_response(),
-                Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
-            },
+            Err(err) => err.to_response(),
         }
     }
 }
