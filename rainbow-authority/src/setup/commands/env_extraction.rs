@@ -17,10 +17,13 @@
  *
  */
 
-pub mod application;
-pub mod config;
-pub mod commands;
-mod database;
+use crate::setup::{AuthorityApplicationConfig, AuthorityApplicationConfigTrait};
+use tracing::info;
 
-pub use config::config_trait::AuthorityApplicationConfigTrait;
-pub use config::AuthorityApplicationConfig;
+pub fn extract_env_config(env_file: Option<String>) -> anyhow::Result<AuthorityApplicationConfig> {
+    let config = AuthorityApplicationConfig::default();
+    let config = config.merge_dotenv_configuration(env_file);
+    let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
+    info!("Current Application Authority Config:\n{}", table);
+    Ok(config)
+}

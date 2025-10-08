@@ -128,13 +128,13 @@ Tiene una DB propia (postgress) y una GUI (aun no implementada)
     - <u>_Setup BD_</u>
   ```bash
   cd rainbow-authority
-  cargo run setup  
+  cargo run setup --env-file ../static/envs/.env.authority
   ```
     - <u>_Start_</u>
   ```bash
-  cargo run start 
+  cargo run start --env-file ../static/envs/.env.authority
   # En caso de ser modificados archivos, este recompila en tiempo real 
-  cargo watch -x "run start" 
+  cargo watch -x "run start --env-file ../static/envs/.env.authority" 
   ```
 - **Dependencias**
   ```bash
@@ -161,7 +161,7 @@ manera de interactuar es mediante peticiones http a las rutas definidas en varia
 
 > **Nota:** Como actualmente el modulo **AUTH** y **AUTHORITY** se levantan como monolito, y la wallet mediante
 > docker-compose. Hay ciertas rutas hardcodeadas dentro del proyecto para sustituir "127.0.0.1" por "
-> host.docker.internal", en una arquitectura de microservicios eso tiene que cambiar.
+> host.docker.internal", ahora se elige gracias a la varible de entorno "IS_LOCAL".
 
 - <u>_Inicializacion_</u>
   ```bash
@@ -210,7 +210,7 @@ siempre.
   ```bash 
   cargo run $nombre_entidad $start_o_setup --env-file $ruta_archivo_env 
   # En caso de ser modificados archivos, este recompila en tiempo real
-  # Para la autoridad no son estos 
+  # Para la autoridad no hay que poner el nombre 
   # La opcion --env-file es opcional, se puede omitir junto con la ruta, en ese caso se emplean valores por defecto 
   cargo watch -x "run $nombre_entidad $start_o_setup --env-file $ruta_archivo_env
   ```
@@ -218,7 +218,7 @@ siempre.
 - **Swagger** <br>
     - Consumer API spec: [http://127.0.0.1:1100/api/v1/auth/openapi](http://127.0.0.1:1100/api/v1/auth/openapi)
     - Provider API spec: [http://127.0.0.1:1200/api/v1/auth/openapi](http://127.0.0.1:1200/api/v1/auth/openapi)
-    - Authority API spec: [http://127.0.0.1:1500/api/v1/auth/openapi](http://127.0.0.1:1500/api/v1/auth/openapi)
+    - Authority API spec: [http://127.0.0.1:1500/api/v1/authority/openapi](http://127.0.0.1:1500/api/v1/authority/openapi)
 
 - **Postman** <br>
   Las colleciones se encuentran en:

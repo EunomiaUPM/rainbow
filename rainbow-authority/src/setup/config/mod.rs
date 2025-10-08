@@ -43,6 +43,7 @@ pub struct AuthorityApplicationConfig {
     client_config: ClientConfig,
     ssi_wallet_config: SSIWalletConfig,
     ssi_issuer_api: String,
+    is_local: bool,
 }
 
 impl Default for AuthorityApplicationConfig {
@@ -76,6 +77,7 @@ impl Default for AuthorityApplicationConfig {
                 wallet_id: None,
             },
             ssi_issuer_api: "http://127.0.0.1:7002".to_string(),
+            is_local: true,
         }
     }
 }
@@ -154,7 +156,11 @@ impl AuthorityApplicationConfigTrait for AuthorityApplicationConfig {
         String::from_utf8(file).unwrap()
     }
 
-    fn merge_dotenv_configuration(&self) -> Self {
+    fn merge_dotenv_configuration(&self, env_file: Option<String>) -> Self {
+        if let Some(env_file) = env_file {
+            dotenvy::from_filename(env_file).expect("No env file found");
+        }
+
         dotenvy::dotenv().ok();
         let default = AuthorityApplicationConfig::default();
         let compound_config = Self {
@@ -207,8 +213,13 @@ impl AuthorityApplicationConfigTrait for AuthorityApplicationConfig {
                 wallet_id: None,
             },
             ssi_issuer_api: extract_env("SSI_ISSUER_API", default.ssi_issuer_api),
+            is_local: extract_env("IS_LOCAL", default.is_local.to_string()).parse().unwrap(),
         };
         compound_config
+    }
+
+    fn get_environment_scenario(&self) -> bool {
+        self.is_local
     }
 }
 

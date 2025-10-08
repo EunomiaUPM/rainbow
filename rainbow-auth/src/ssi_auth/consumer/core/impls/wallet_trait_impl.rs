@@ -248,7 +248,7 @@ where
             participant_id: did_info.did,
             participant_slug: "Myself".to_string(),
             participant_type: "Consumer".to_string(),
-            base_url: self.config.get_auth_host_url().unwrap(),
+            base_url: self.config.get_ssi_auth_host_url().unwrap(),
             token: None,
             is_me: true,
         };

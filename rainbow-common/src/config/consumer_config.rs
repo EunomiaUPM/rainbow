@@ -40,6 +40,7 @@ pub struct ApplicationConsumerConfig {
     pub ssi_wallet_config: SSIWalletConfig,
     pub client_config: ClientConfig,
     pub role: ConfigRoles,
+    pub is_local: bool,
 }
 
 impl Default for ApplicationConsumerConfig {
@@ -105,6 +106,7 @@ impl Default for ApplicationConsumerConfig {
                 display: None,
             },
             role: ConfigRoles::Consumer,
+            is_local: true,
         }
     }
 }
@@ -179,6 +181,7 @@ pub trait ApplicationConsumerConfigTrait {
             "password": password,
         })
     }
+    fn get_environment_scenario(&self) -> bool;
 
     // merge dotenv
     fn merge_dotenv_configuration(&self, env_file: Option<String>) -> Self
@@ -229,6 +232,10 @@ impl ApplicationConsumerConfigTrait for ApplicationConsumerConfig {
     }
     fn get_raw_client_config(&self) -> &ClientConfig {
         &self.client_config
+    }
+
+    fn get_environment_scenario(&self) -> bool {
+        self.is_local
     }
 
     fn merge_dotenv_configuration(&self, env_file: Option<String>) -> Self {
@@ -355,6 +362,7 @@ impl ApplicationConsumerConfigTrait for ApplicationConsumerConfig {
                 display: None,
             },
             role: ConfigRoles::Consumer,
+            is_local: extract_env("IS_LOCAL", default.is_local.to_string()).parse().unwrap(),
         };
         compound_config
     }

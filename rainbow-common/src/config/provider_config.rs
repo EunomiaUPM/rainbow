@@ -43,6 +43,7 @@ pub struct ApplicationProviderConfig {
     pub ssi_wallet_config: SSIWalletConfig,
     pub client_config: ClientConfig,
     pub role: ConfigRoles,
+    pub is_local: bool,
 }
 
 impl Default for ApplicationProviderConfig {
@@ -115,6 +116,7 @@ impl Default for ApplicationProviderConfig {
                 display: None,
             },
             role: ConfigRoles::Provider,
+            is_local: true,
         }
     }
 }
@@ -202,6 +204,8 @@ pub trait ApplicationProviderConfigTrait {
             "password": password,
         })
     }
+
+    fn get_environment_scenario(&self) -> bool;
 
     // merge dotenv
     fn merge_dotenv_configuration(&self, env_file: Option<String>) -> Self
@@ -341,9 +345,12 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
                 ),
             }),
             auth_host: Some(HostConfig {
-                protocol: extract_env("AUTH_PROTOCOL", default.auth_host.clone().unwrap().protocol),
-                url: extract_env("AUTH_URL", default.auth_host.clone().unwrap().url),
-                port: extract_env("AUTH_PORT", default.auth_host.clone().unwrap().port),
+                protocol: extract_env(
+                    "AUTH_HOST_PROTOCOL",
+                    default.auth_host.clone().unwrap().protocol,
+                ),
+                url: extract_env("AUTH_HOST_URL", default.auth_host.clone().unwrap().url),
+                port: extract_env("AUTH_HOST_PORT", default.auth_host.clone().unwrap().port),
             }),
             ssi_auth_host: Some(HostConfig {
                 protocol: extract_env(
@@ -398,6 +405,7 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
                 display: None,
             },
             role: ConfigRoles::Provider,
+            is_local: extract_env("IS_LOCAL", default.is_local.to_string()).parse().unwrap(),
         };
         compound_config
     }
@@ -438,5 +446,9 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
         let path = format!("{}/public_key.pem", inc_path);
         let file = fs::read(path).unwrap();
         String::from_utf8(file).unwrap()
+    }
+
+    fn get_environment_scenario(&self) -> bool {
+        self.is_local
     }
 }

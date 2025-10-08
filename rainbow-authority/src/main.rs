@@ -17,7 +17,7 @@
  *
  */
 
-use rainbow_authority::setup::cmd::AuthorityCommands;
+use rainbow_authority::setup::commands::cmd::AuthorityCommands;
 use tracing::info;
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::EnvFilter;
