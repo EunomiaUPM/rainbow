@@ -17,9 +17,11 @@
  *
  */
 
-use crate::consumer::core::ds_protocol::ds_protocol_err::DSProtocolTransferConsumerErrors;
-use crate::consumer::core::ds_protocol_rpc::ds_protocol_rpc_err::DSRPCTransferConsumerErrors;
-use crate::consumer::core::ds_protocol_rpc::ds_protocol_rpc_types::{DSRPCTransferConsumerCompletionRequest, DSRPCTransferConsumerRequestRequest, DSRPCTransferConsumerStartRequest, DSRPCTransferConsumerSuspensionRequest, DSRPCTransferConsumerTerminationRequest};
+use crate::common::errors::error_adapter::CustomToResponse;
+use crate::consumer::core::ds_protocol_rpc::ds_protocol_rpc_types::{
+    DSRPCTransferConsumerCompletionRequest, DSRPCTransferConsumerRequestRequest, DSRPCTransferConsumerStartRequest,
+    DSRPCTransferConsumerSuspensionRequest, DSRPCTransferConsumerTerminationRequest,
+};
 use crate::consumer::core::ds_protocol_rpc::DSRPCTransferConsumerTrait;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::State;
@@ -28,8 +30,11 @@ use axum::routing::post;
 use axum::{Json, Router};
 use log::info;
 use rainbow_common::err::transfer_err::TransferErrorType::NotCheckedError;
+use rainbow_common::errors::helpers::BadFormat;
+use rainbow_common::errors::{CommonErrors, ErrorLog};
 use reqwest::StatusCode;
 use std::sync::Arc;
+use tracing::error;
 
 pub struct DSRPCTransferConsumerRouter<T> {
     transfer_rpc_service: Arc<T>,
@@ -44,11 +49,23 @@ where
     }
     pub fn router(self) -> Router {
         Router::new()
-            .route("/api/v1/transfers/rpc/setup-request", post(Self::setup_request))
+            .route(
+                "/api/v1/transfers/rpc/setup-request",
+                post(Self::setup_request),
+            )
             .route("/api/v1/transfers/rpc/setup-start", post(Self::setup_start))
-            .route("/api/v1/transfers/rpc/setup-suspension", post(Self::setup_suspension))
-            .route("/api/v1/transfers/rpc/setup-completion", post(Self::setup_completion))
-            .route("/api/v1/transfers/rpc/setup-termination", post(Self::setup_termination))
+            .route(
+                "/api/v1/transfers/rpc/setup-suspension",
+                post(Self::setup_suspension),
+            )
+            .route(
+                "/api/v1/transfers/rpc/setup-completion",
+                post(Self::setup_completion),
+            )
+            .route(
+                "/api/v1/transfers/rpc/setup-termination",
+                post(Self::setup_termination),
+            )
             .with_state(self.transfer_rpc_service)
     }
     async fn setup_request(
@@ -58,16 +75,15 @@ where
         info!("POST /api/v1/transfers/rpc/setup-request");
         let input = match input {
             Ok(input) => input.0,
-            Err(e) => return DSProtocolTransferConsumerErrors::JsonRejection(e.to_string()).into_response(),
+            Err(err) => {
+                let e = CommonErrors::format_new(BadFormat::Received, format!("{}", err.body_text()).into());
+                error!("{}", e.log());
+                return e.into_response();
+            }
         };
         match transfer_rpc_service.setup_request(input).await {
             Ok(res) => (StatusCode::OK, Json(res)).into_response(),
-            Err(e) => match e.downcast::<DSRPCTransferConsumerErrors>() {
-                Ok(res_) => res_.into_response(),
-                Err(e__) => (StatusCode::INTERNAL_SERVER_ERROR, NotCheckedError {
-                    inner_error: e__
-                }).into_response()
-            }
+            Err(err) => err.to_response(),
         }
     }
     async fn setup_start(
@@ -77,16 +93,15 @@ where
         info!("POST /api/v1/transfers/rpc/setup-start");
         let input = match input {
             Ok(input) => input.0,
-            Err(e) => return DSProtocolTransferConsumerErrors::JsonRejection(e.to_string()).into_response(),
+            Err(err) => {
+                let e = CommonErrors::format_new(BadFormat::Received, format!("{}", err.body_text()).into());
+                error!("{}", e.log());
+                return e.into_response();
+            }
         };
         match transfer_rpc_service.setup_start(input).await {
             Ok(res) => (StatusCode::OK, Json(res)).into_response(),
-            Err(e) => match e.downcast::<DSRPCTransferConsumerErrors>() {
-                Ok(res_) => res_.into_response(),
-                Err(e__) => (StatusCode::INTERNAL_SERVER_ERROR, NotCheckedError {
-                    inner_error: e__
-                }).into_response()
-            }
+            Err(err) => err.to_response(),
         }
     }
     async fn setup_suspension(
@@ -96,16 +111,15 @@ where
         info!("POST /api/v1/transfers/rpc/setup-suspension");
         let input = match input {
             Ok(input) => input.0,
-            Err(e) => return DSProtocolTransferConsumerErrors::JsonRejection(e.to_string()).into_response(),
+            Err(err) => {
+                let e = CommonErrors::format_new(BadFormat::Received, format!("{}", err.body_text()).into());
+                error!("{}", e.log());
+                return e.into_response();
+            }
         };
         match transfer_rpc_service.setup_suspension(input).await {
             Ok(res) => (StatusCode::OK, Json(res)).into_response(),
-            Err(e) => match e.downcast::<DSRPCTransferConsumerErrors>() {
-                Ok(res_) => res_.into_response(),
-                Err(e__) => (StatusCode::INTERNAL_SERVER_ERROR, NotCheckedError {
-                    inner_error: e__
-                }).into_response()
-            }
+            Err(err) => err.to_response(),
         }
     }
     async fn setup_completion(
@@ -115,16 +129,15 @@ where
         info!("POST /api/v1/transfers/rpc/setup-completion");
         let input = match input {
             Ok(input) => input.0,
-            Err(e) => return DSProtocolTransferConsumerErrors::JsonRejection(e.to_string()).into_response(),
+            Err(err) => {
+                let e = CommonErrors::format_new(BadFormat::Received, format!("{}", err.body_text()).into());
+                error!("{}", e.log());
+                return e.into_response();
+            }
         };
         match transfer_rpc_service.setup_completion(input).await {
             Ok(res) => (StatusCode::OK, Json(res)).into_response(),
-            Err(e) => match e.downcast::<DSRPCTransferConsumerErrors>() {
-                Ok(res_) => res_.into_response(),
-                Err(e__) => (StatusCode::INTERNAL_SERVER_ERROR, NotCheckedError {
-                    inner_error: e__
-                }).into_response()
-            }
+            Err(err) => err.to_response(),
         }
     }
     async fn setup_termination(
@@ -134,16 +147,15 @@ where
         info!("POST /api/v1/transfers/rpc/setup-termination");
         let input = match input {
             Ok(input) => input.0,
-            Err(e) => return DSProtocolTransferConsumerErrors::JsonRejection(e.to_string()).into_response(),
+            Err(err) => {
+                let e = CommonErrors::format_new(BadFormat::Received, format!("{}", err.body_text()).into());
+                error!("{}", e.log());
+                return e.into_response();
+            }
         };
         match transfer_rpc_service.setup_termination(input).await {
             Ok(res) => (StatusCode::OK, Json(res)).into_response(),
-            Err(e) => match e.downcast::<DSRPCTransferConsumerErrors>() {
-                Ok(res_) => res_.into_response(),
-                Err(e__) => (StatusCode::INTERNAL_SERVER_ERROR, NotCheckedError {
-                    inner_error: e__
-                }).into_response()
-            }
+            Err(err) => err.to_response(),
         }
     }
 }

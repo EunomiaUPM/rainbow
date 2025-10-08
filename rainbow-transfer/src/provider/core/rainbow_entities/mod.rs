@@ -22,8 +22,6 @@ use rainbow_db::transfer_provider::entities::{transfer_message, transfer_process
 use urn::Urn;
 
 pub mod rainbow_entities;
-pub mod rainbow_err;
-pub mod rainbow_types;
 
 #[mockall::automock]
 #[async_trait]

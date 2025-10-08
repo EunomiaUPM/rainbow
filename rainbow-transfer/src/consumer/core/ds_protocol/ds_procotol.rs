@@ -19,11 +19,11 @@
 
 use crate::common::schemas::validation::validate_payload_schema;
 use crate::consumer::core::data_plane_facade::DataPlaneConsumerFacadeTrait;
-use crate::consumer::core::ds_protocol::ds_protocol_err::DSProtocolTransferConsumerErrors;
 use crate::consumer::core::ds_protocol::DSProtocolTransferConsumerTrait;
-use crate::consumer::core::rainbow_entities::rainbow_err::RainbowTransferConsumerErrors;
-use anyhow::bail;
+use anyhow::{anyhow, bail};
 use axum::async_trait;
+use rainbow_common::errors::helpers::BadFormat;
+use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::facades::ssi_auth_facade::SSIAuthFacadeTrait;
 use rainbow_common::mates::Mates;
 use rainbow_common::protocol::transfer::transfer_completion::TransferCompletionMessage;
@@ -42,7 +42,7 @@ use rainbow_events::core::notification::notification_types::{
 use rainbow_events::core::notification::RainbowEventsNotificationTrait;
 use serde_json::{json, to_value};
 use std::sync::Arc;
-use tracing::debug;
+use tracing::{debug, error};
 use urn::Urn;
 
 pub struct DSProtocolTransferConsumerService<T, U, V, W>
@@ -76,6 +76,7 @@ where
 
     /// Validate auth token
     async fn validate_auth_token(&self, token: String) -> anyhow::Result<Mates> {
+        debug!("DSProtocol Service: validate_auth_token");
         let mate = self.ssi_auth_facade.verify_token(token).await?;
         Ok(mate)
     }
@@ -96,39 +97,46 @@ where
         message: &M,                 // The incoming message
         provider_participant_mate: &Mates,
     ) -> anyhow::Result<transfer_callback::Model> {
-        debug!("Transfer consumer payload validation");
+        debug!("DSProtocol Service: payload_validation");
+
         let message_consumer_pid = message.get_consumer_pid()?;
         let message_provider_pid = message.get_provider_pid()?;
 
         // 1. Validate consumer_pid in message body matches consumer_pid from URI
         match message_consumer_pid {
             Some(msg_c_pid) if msg_c_pid == consumer_pid_from_uri => {}
-            _ => bail!(DSProtocolTransferConsumerErrors::UriAndBodyIdentifiersDoNotCoincide),
+            _ => {
+                let e = CommonErrors::format_new(BadFormat::Received, "Uri and Body identifiers do not coincide".to_string().into());
+                error!("{}", e.log());
+                bail!(e)
+            }
         }
         // 2. Validate correlation in processes
         let consumer_transfer_process = self
             .transfer_repo
             .get_transfer_callback_by_consumer_id(consumer_pid_from_uri.clone())
             .await
-            .map_err(DSProtocolTransferConsumerErrors::DbErr)?
-            .ok_or(DSProtocolTransferConsumerErrors::TransferProcessNotFound {
-                provider_pid: message_provider_pid.map(|m| m.to_owned()),
-                consumer_pid: Some(consumer_pid_from_uri.to_owned()),
+            .map_err(|e| CommonErrors::format_new(BadFormat::Received, e.to_string().into()))?
+            .ok_or_else(|| {
+                let e = CommonErrors::missing_resource_new(consumer_pid_from_uri.to_string(), "Transfer process doesn't exist".to_string().into());
+                error!("{}", e.log());
+                anyhow!(e)
             })?;
         if let Some(provider_pid) = message_provider_pid.clone() {
             let provider_transfer_process = self
                 .transfer_repo
                 .get_transfer_callback_by_provider_id(provider_pid.to_owned())
                 .await
-                .map_err(DSProtocolTransferConsumerErrors::DbErr)?
-                .ok_or(DSProtocolTransferConsumerErrors::TransferProcessNotFound {
-                    provider_pid: message_provider_pid.map(|m| m.to_owned()),
-                    consumer_pid: Some(consumer_pid_from_uri.to_owned()),
+                .map_err(|e| CommonErrors::format_new(BadFormat::Received, e.to_string().into()))?
+                .ok_or_else(|| {
+                    let e = CommonErrors::missing_resource_new(provider_pid.to_string(), "Transfer process doesn't exist".to_string().into());
+                    error!("{}", e.log());
+                    anyhow!(e)
                 })?;
             if consumer_transfer_process.consumer_pid != provider_transfer_process.consumer_pid {
-                bail!(RainbowTransferConsumerErrors::ValidationError(
-                    "ConsumerPid and ProviderPid don't coincide".to_string()
-                ))
+                let e = CommonErrors::format_new(BadFormat::Received, "ConsumerPid and ProviderPid don't coincide".to_string().into());
+                error!("{}", e.log());
+                bail!(e);
             }
         }
         // 3. Validate provider_pid in message body matches provider_pid in DB
@@ -137,13 +145,17 @@ where
             consumer_transfer_process.provider_pid.as_ref(),
         ) {
             (Some(msg_p_pid), Some(db_p_pid)) if msg_p_pid.to_string() == db_p_pid.to_owned() => {}
-            _ => bail!(DSProtocolTransferConsumerErrors::UriAndBodyIdentifiersDoNotCoincide),
+            _ => {
+                let e = CommonErrors::format_new(BadFormat::Received, "ConsumerPid and ProviderPid don't coincide".to_string().into());
+                error!("{}", e.log());
+                bail!(e);
+            }
         }
         // 4. Consumer transfer process and provider participant mate
         if consumer_transfer_process.associated_provider.clone().unwrap() != provider_participant_mate.participant_id {
-            bail!(RainbowTransferConsumerErrors::ValidationError(
-                "This user is not related with this process".to_string()
-            ))
+            let e = CommonErrors::format_new(BadFormat::Received, "This user is not related with this process".to_string().into());
+            error!("{}", e.log());
+            bail!(e);
         }
 
         Ok(consumer_transfer_process.into())
@@ -173,30 +185,46 @@ where
     W: SSIAuthFacadeTrait + Sync + Send,
 {
     async fn get_transfer_requests_by_callback(&self, callback_id: Urn) -> anyhow::Result<TransferProcessMessage> {
+        debug!("DSProtocol Service: get_transfer_requests_by_callback");
+
         let transfer_process = self
             .transfer_repo
-            .get_transfer_callbacks_by_id(callback_id)
+            .get_transfer_callbacks_by_id(callback_id.clone())
             .await
-            .map_err(DSProtocolTransferConsumerErrors::DbErr)?
-            .ok_or(DSProtocolTransferConsumerErrors::TransferProcessNotFound {
-                provider_pid: None,
-                consumer_pid: None,
+            .map_err(|e| {
+                let e = CommonErrors::database_new(e.to_string().into());
+                error!("{}", e.log());
+                anyhow!(e)
+            })?
+            .ok_or_else(|| {
+                let e = CommonErrors::missing_resource_new(callback_id.to_string(), "Transfer process not found".to_string().into());
+                error!("{}", e.log());
+                anyhow!(e)
             })?;
         Ok(transfer_process.into())
     }
     async fn get_transfer_requests_by_provider(&self, _provider_pid: Urn) -> anyhow::Result<TransferProcessMessage> {
+        debug!("DSProtocol Service: get_transfer_requests_by_provider");
+
         todo!()
     }
 
     async fn get_transfer_requests_by_consumer(&self, consumer_pid: Urn) -> anyhow::Result<TransferProcessMessage> {
+        debug!("DSProtocol Service: get_transfer_requests_by_consumer");
+
         let transfer_process = self
             .transfer_repo
             .get_transfer_callback_by_consumer_id(consumer_pid.clone())
             .await
-            .map_err(DSProtocolTransferConsumerErrors::DbErr)?
-            .ok_or(DSProtocolTransferConsumerErrors::TransferProcessNotFound {
-                provider_pid: None,
-                consumer_pid: Some(consumer_pid),
+            .map_err(|e| {
+                let e = CommonErrors::database_new(e.to_string().into());
+                error!("{}", e.log());
+                anyhow!(e)
+            })?
+            .ok_or_else(|| {
+                let e = CommonErrors::missing_resource_new(consumer_pid.to_string(), "Transfer process not found".to_string().into());
+                error!("{}", e.log());
+                anyhow!(e)
             })?;
         Ok(transfer_process.into())
     }
@@ -208,11 +236,12 @@ where
         input: TransferStartMessage,
         token: String,
     ) -> anyhow::Result<TransferProcessMessage> {
+        debug!("DSProtocol Service: transfer_start");
+
         let TransferStartMessage { provider_pid, data_address, .. } = input.clone();
         // 1. Validate request
         let provider_participant_mate = self.validate_auth_token(token).await?;
-        self.json_schema_validation(&input)
-            .map_err(|e| RainbowTransferConsumerErrors::ValidationError(e.to_string()))?;
+        self.json_schema_validation(&input)?;
         let existing_process = self
             .payload_validation(
                 &callback_id,
@@ -235,7 +264,11 @@ where
                 },
             )
             .await
-            .map_err(DSProtocolTransferConsumerErrors::DbErr)?;
+            .map_err(|e| {
+                let e = CommonErrors::database_new(e.to_string().into());
+                error!("{}", e.log());
+                anyhow!(e)
+            })?;
         let message = self
             .transfer_repo
             .create_transfer_message(
@@ -247,7 +280,12 @@ where
                     content: to_value(&input)?,
                 },
             )
-            .await?;
+            .await
+            .map_err(|e| {
+                let e = CommonErrors::database_new(e.to_string().into());
+                error!("{}", e.log());
+                anyhow!(e)
+            })?;
         // 3. Data plane hook
         if restartable {
             self.data_plane.on_transfer_restart(consumer_pid.clone()).await?;
@@ -280,8 +318,7 @@ where
         let TransferSuspensionMessage { .. } = input.clone();
         // 1. Validate request
         let provider_participant_mate = self.validate_auth_token(token).await?;
-        self.json_schema_validation(&input)
-            .map_err(|e| RainbowTransferConsumerErrors::ValidationError(e.to_string()))?;
+        self.json_schema_validation(&input)?;
         let _existing_process = self
             .payload_validation(
                 &callback_id,
@@ -298,7 +335,11 @@ where
                 EditTransferCallback { ..Default::default() },
             )
             .await
-            .map_err(DSProtocolTransferConsumerErrors::DbErr)?;
+            .map_err(|e| {
+                let e = CommonErrors::database_new(e.to_string().into());
+                error!("{}", e.log());
+                anyhow!(e)
+            })?;
         let message = self
             .transfer_repo
             .create_transfer_message(
@@ -310,7 +351,12 @@ where
                     content: to_value(&input)?,
                 },
             )
-            .await?;
+            .await
+            .map_err(|e| {
+                let e = CommonErrors::database_new(e.to_string().into());
+                error!("{}", e.log());
+                anyhow!(e)
+            })?;
         // 3. Data plane hook
         self.data_plane.on_transfer_suspension(consumer_pid.clone()).await?;
         // 4. Prepare response
@@ -339,8 +385,7 @@ where
         let TransferCompletionMessage { .. } = input.clone();
         // 1. Validate request
         let provider_participant_mate = self.validate_auth_token(token).await?;
-        self.json_schema_validation(&input)
-            .map_err(|e| RainbowTransferConsumerErrors::ValidationError(e.to_string()))?;
+        self.json_schema_validation(&input)?;
         let _existing_process = self
             .payload_validation(
                 &callback_id,
@@ -357,7 +402,11 @@ where
                 EditTransferCallback { ..Default::default() },
             )
             .await
-            .map_err(DSProtocolTransferConsumerErrors::DbErr)?;
+            .map_err(|e| {
+                let e = CommonErrors::database_new(e.to_string().into());
+                error!("{}", e.log());
+                anyhow!(e)
+            })?;
         let message = self
             .transfer_repo
             .create_transfer_message(
@@ -369,7 +418,12 @@ where
                     content: to_value(&input)?,
                 },
             )
-            .await?;
+            .await
+            .map_err(|e| {
+                let e = CommonErrors::database_new(e.to_string().into());
+                error!("{}", e.log());
+                anyhow!(e)
+            })?;
         // 3. Data plane hook
         self.data_plane.on_transfer_completion(consumer_pid.clone()).await?;
         // 4. Prepare response
@@ -399,8 +453,7 @@ where
         let TransferTerminationMessage { .. } = input.clone();
         // 1. Validate request
         let provider_participant_mate = self.validate_auth_token(token).await?;
-        self.json_schema_validation(&input)
-            .map_err(|e| RainbowTransferConsumerErrors::ValidationError(e.to_string()))?;
+        self.json_schema_validation(&input)?;
         let _existing_process = self
             .payload_validation(
                 &callback_id,
@@ -417,7 +470,11 @@ where
                 EditTransferCallback { ..Default::default() },
             )
             .await
-            .map_err(DSProtocolTransferConsumerErrors::DbErr)?;
+            .map_err(|e| {
+                let e = CommonErrors::database_new(e.to_string().into());
+                error!("{}", e.log());
+                anyhow!(e)
+            })?;
         let message = self
             .transfer_repo
             .create_transfer_message(
@@ -430,7 +487,11 @@ where
                 },
             )
             .await
-            .map_err(DSProtocolTransferConsumerErrors::DbErr)?;
+            .map_err(|e| {
+                let e = CommonErrors::database_new(e.to_string().into());
+                error!("{}", e.log());
+                anyhow!(e)
+            })?;
         // 3. Data plane hook
         self.data_plane.on_transfer_termination(consumer_pid.clone()).await?;
 

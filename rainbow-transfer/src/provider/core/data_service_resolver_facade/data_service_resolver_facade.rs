@@ -22,6 +22,8 @@ use anyhow::{anyhow, bail};
 use axum::async_trait;
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_common::dcat_formats::DctFormats;
+use rainbow_common::errors::helpers::BadFormat;
+use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::protocol::catalog::dataservice_definition::DataService;
 use rainbow_common::protocol::catalog::dataset_definition::Dataset;
 use rainbow_common::protocol::catalog::distribution_definition::Distribution;
@@ -31,6 +33,7 @@ use rainbow_db::contracts_provider::entities::agreement;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
+use tracing::error;
 use urn::Urn;
 
 pub struct DataServiceFacadeServiceForDSProtocol {
@@ -55,35 +58,58 @@ struct RainbowRPCCatalogResolveDataServiceRequest {
 
 #[async_trait]
 impl DataServiceFacadeTrait for DataServiceFacadeServiceForDSProtocol {
-    async fn resolve_data_service_by_agreement_id(&self, agreement_id: Urn, formats: Option<DctFormats>) -> anyhow::Result<DataService> {
+    async fn resolve_data_service_by_agreement_id(
+        &self,
+        agreement_id: Urn,
+        formats: Option<DctFormats>,
+    ) -> anyhow::Result<DataService> {
         let contracts_url = self.config.get_contract_negotiation_host_url().unwrap();
         let catalog_url = self.config.get_catalog_host_url().unwrap();
         let agreement_url = format!(
             "{}/api/v1/contract-negotiation/agreements/{}",
             contracts_url, agreement_id
         );
-        let data_service_url = format!(
-            "{}/api/v1/catalog/rpc/resolve-data-service",
-            catalog_url
-        );
+        let data_service_url = format!("{}/api/v1/catalog/rpc/resolve-data-service", catalog_url);
 
         // resolve agreement
-        let response = self.client
-            .get(&agreement_url)
-            .send()
-            .await
-            .map_err(|e| anyhow!(e))?;
+        let response = self.client.get(&agreement_url).send().await.map_err(|_e| {
+            let e = CommonErrors::missing_resource_new(
+                agreement_id.to_string(),
+                "Agreement not resolvable".to_string().into(),
+            );
+            error!("{}", e.log());
+            return e;
+        })?;
         let status = response.status();
         if !status.is_success() {
-            bail!("Agreement not resolvable")
+            let e = CommonErrors::missing_resource_new(
+                agreement_id.to_string(),
+                "Agreement not resolvable".to_string().into(),
+            );
+            error!("{}", e.log());
+            bail!(e);
         }
         let agreement = match response.json::<agreement::Model>().await {
             Ok(agreement) => agreement,
-            Err(_) => bail!("Agreement not deserializable")
+            Err(e_) => {
+                let e = CommonErrors::format_new(
+                    BadFormat::Received,
+                    format!("Agreement not serializable: {}", e_.to_string()).into(),
+                );
+                error!("{}", e.log());
+                bail!(e);
+            }
         };
         let agreement = match OdrlAgreement::try_from(agreement) {
             Ok(agreement) => agreement,
-            Err(e) => bail!(e)
+            Err(e_) => {
+                let e = CommonErrors::format_new(
+                    BadFormat::Received,
+                    format!("ODRL Agreement not compliant: {}", e_.to_string()).into(),
+                );
+                error!("{}", e.log());
+                bail!(e);
+            }
         };
         let agreement_target = agreement.target;
 
@@ -91,20 +117,35 @@ impl DataServiceFacadeTrait for DataServiceFacadeServiceForDSProtocol {
         let datasets_url = format!(
             "{}/api/v1/datasets/{}",
             catalog_url,
-            agreement_target
+            agreement_target.clone()
         );
-        let response = self.client
-            .get(&datasets_url)
-            .send()
-            .await
-            .map_err(|e| anyhow!(e))?;
+        let response = self.client.get(&datasets_url).send().await.map_err(|_e| {
+            let e = CommonErrors::missing_resource_new(
+                agreement_target.to_string(),
+                "Dataset not resolvable".to_string().into(),
+            );
+            error!("{}", e.log());
+            return e;
+        })?;
         let status = response.status();
         if !status.is_success() {
-            bail!("Dataset not resolvable")
+            let e = CommonErrors::missing_resource_new(
+                agreement_target.to_string(),
+                "Dataset not resolvable".to_string().into(),
+            );
+            error!("{}", e.log());
+            bail!(e);
         }
         let dataset = match response.json::<Dataset>().await {
             Ok(dataset) => dataset,
-            Err(_) => bail!("Dataset not deserializable")
+            Err(e_) => {
+                let e = CommonErrors::format_new(
+                    BadFormat::Received,
+                    format!("Dataset not serializable: {}", e_.to_string()).into(),
+                );
+                error!("{}", e.log());
+                bail!(e);
+            }
         };
         let dataset_id = get_urn_from_string(&dataset.id)?;
 
@@ -112,45 +153,85 @@ impl DataServiceFacadeTrait for DataServiceFacadeServiceForDSProtocol {
         let distribution_url = format!(
             "{}/api/v1/datasets/{}/distributions/dct-formats/{}",
             catalog_url,
-            dataset_id,
+            dataset_id.clone(),
             formats.unwrap().to_string()
         );
-        let response = self.client
-            .get(&distribution_url)
-            .send()
-            .await
-            .map_err(|e| anyhow!(e))?;
+        let response = self.client.get(&distribution_url).send().await.map_err(|_e| {
+            let e = CommonErrors::missing_resource_new(
+                dataset_id.to_string(),
+                "Distribution not resolvable".to_string().into(),
+            );
+            error!("{}", e.log());
+            return e;
+        })?;
         let status = response.status();
         if !status.is_success() {
-            bail!("Distribution not resolvable")
+            let e = CommonErrors::missing_resource_new(
+                dataset_id.to_string(),
+                "Distribution not resolvable".to_string().into(),
+            );
+            error!("{}", e.log());
+            bail!(e);
         }
         let distribution = match response.json::<Distribution>().await {
             Ok(distribution) => distribution,
-            Err(_) => bail!("Distribution not deserializable")
+            Err(e_) => {
+                let e = CommonErrors::format_new(
+                    BadFormat::Received,
+                    format!("Distribution not serializable: {}", e_.to_string()).into(),
+                );
+                error!("{}", e.log());
+                bail!(e);
+            }
         };
 
         let access_service = match distribution.dcat.access_service {
             Some(access_service) => access_service,
-            None => bail!("Access service not available in Distribution")
+            None => {
+                let e = CommonErrors::missing_resource_new(
+                    agreement_id.to_string(),
+                    "Access service not defined in distribution".to_string().into(),
+                );
+                error!("{}", e.log());
+                bail!(e);
+            }
         };
         let access_service_id = get_urn_from_string(&access_service.id)?;
 
-        // resolve Dataservice entity
-        let response = self.client
+        // resolve Data service entity
+        let response = self
+            .client
             .post(&data_service_url)
-            .json(&RainbowRPCCatalogResolveDataServiceRequest {
-                data_service_id: access_service_id
-            })
+            .json(&RainbowRPCCatalogResolveDataServiceRequest { data_service_id: access_service_id.clone() })
             .send()
             .await
-            .map_err(|e| anyhow!(e))?;
+            .map_err(|_e| {
+                let e = CommonErrors::missing_resource_new(
+                    access_service_id.to_string(),
+                    "Dataservice not resolvable".to_string().into(),
+                );
+                error!("{}", e.log());
+                return e;
+            })?;
         let status = response.status();
         if !status.is_success() {
-            bail!("Dataservice not resolvable")
+            let e = CommonErrors::missing_resource_new(
+                access_service_id.to_string(),
+                "Dataservice not resolvable".to_string().into(),
+            );
+            error!("{}", e.log());
+            bail!(e);
         }
         let data_service = match response.json::<DataService>().await {
             Ok(distribution) => distribution,
-            Err(_) => bail!("DataService not deserializable")
+            Err(e_) => {
+                let e = CommonErrors::format_new(
+                    BadFormat::Received,
+                    format!("Data service not serializable: {}", e_.to_string()).into(),
+                );
+                error!("{}", e.log());
+                bail!(e);
+            }
         };
 
         Ok(data_service)

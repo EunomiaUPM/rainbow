@@ -19,8 +19,6 @@
 
 use crate::common::core::mates_facade::MatesFacadeTrait;
 use crate::consumer::core::data_plane_facade::DataPlaneConsumerFacadeTrait;
-use crate::consumer::core::ds_protocol::ds_protocol_err::DSProtocolTransferConsumerErrors;
-use crate::consumer::core::ds_protocol_rpc::ds_protocol_rpc_err::DSRPCTransferConsumerErrors;
 use crate::consumer::core::ds_protocol_rpc::ds_protocol_rpc_types::{
     DSRPCTransferConsumerCompletionRequest, DSRPCTransferConsumerCompletionResponse,
     DSRPCTransferConsumerRequestRequest, DSRPCTransferConsumerRequestResponse, DSRPCTransferConsumerStartRequest,
@@ -32,6 +30,8 @@ use crate::consumer::core::ds_protocol_rpc::DSRPCTransferConsumerTrait;
 use anyhow::{anyhow, bail};
 use axum::async_trait;
 use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
+use rainbow_common::errors::helpers::{BadFormat, MissingAction};
+use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::mates::Mates;
 use rainbow_common::protocol::transfer::transfer_completion::TransferCompletionMessage;
 use rainbow_common::protocol::transfer::transfer_process::TransferProcessMessage;
@@ -51,10 +51,10 @@ use rainbow_events::core::notification::notification_types::{
 };
 use rainbow_events::core::notification::RainbowEventsNotificationTrait;
 use reqwest::Client;
-use serde_json::{json, to_value};
+use serde_json::{json, to_value, Value};
 use std::sync::Arc;
 use std::time::Duration;
-use tracing::debug;
+use tracing::{debug, error};
 use urn::Urn;
 
 pub struct DSRPCTransferConsumerService<T, U, V, W>
@@ -93,11 +93,13 @@ where
 
     /// Get provider mate based in id
     async fn get_provider_mate(&self, provider_participant_id: &String) -> anyhow::Result<Mates> {
-        let mate = self
-            .mates_facade
-            .get_mate_by_id(provider_participant_id.clone())
-            .await
-            .map_err(|e| anyhow!("Error parsing mate: {}", e.to_string()))?;
+        debug!("DSProtocolRPC Service: get_provider_mate");
+
+        let mate = self.mates_facade.get_mate_by_id(provider_participant_id.clone()).await.map_err(|e| {
+            let e = CommonErrors::format_new(BadFormat::Received, e.to_string().into());
+            error!("{}", e.log());
+            anyhow!(e)
+        })?;
         Ok(mate)
     }
 
@@ -107,42 +109,49 @@ where
         provider_pid: &Urn,
         consumer_pid: &Urn,
     ) -> anyhow::Result<transfer_callback::Model> {
+        debug!("DSProtocolRPC Service: validate_and_get_transfer_callback_by_consumer_id");
+
         let consumer_process = self
             .transfer_repo
             .get_transfer_callback_by_consumer_id(consumer_pid.clone())
             .await
             .map_err(|e| {
-                DSRPCTransferConsumerErrors::DSProtocolTransferConsumerError(DSProtocolTransferConsumerErrors::DbErr(e))
+                let e = CommonErrors::format_new(BadFormat::Received, e.to_string().into());
+                error!("{}", e.log());
+                anyhow!(e)
             })?
-            .ok_or(
-                DSRPCTransferConsumerErrors::DSProtocolTransferConsumerError(
-                    DSProtocolTransferConsumerErrors::TransferProcessNotFound {
-                        provider_pid: None, // Provider PID not necessarily available or needed here
-                        consumer_pid: Some(consumer_pid.to_owned()),
-                    },
-                ),
-            )?;
+            .ok_or_else(|| {
+                let e = CommonErrors::missing_resource_new(
+                    provider_pid.to_string(),
+                    "Transfer process doesn't exist".to_string().into(),
+                );
+                error!("{}", e.log());
+                anyhow!(e)
+            })?;
         let provider_process = self
             .transfer_repo
             .get_transfer_callback_by_provider_id(provider_pid.clone())
             .await
             .map_err(|e| {
-                DSRPCTransferConsumerErrors::DSProtocolTransferConsumerError(DSProtocolTransferConsumerErrors::DbErr(e))
+                let e = CommonErrors::format_new(BadFormat::Received, e.to_string().into());
+                error!("{}", e.log());
+                anyhow!(e)
             })?
-            .ok_or(
-                DSRPCTransferConsumerErrors::DSProtocolTransferConsumerError(
-                    DSProtocolTransferConsumerErrors::TransferProcessNotFound {
-                        provider_pid: None, // Provider PID not necessarily available or needed here
-                        consumer_pid: Some(consumer_pid.to_owned()),
-                    },
-                ),
-            )?;
+            .ok_or_else(|| {
+                let e = CommonErrors::missing_resource_new(
+                    consumer_pid.to_string(),
+                    "Transfer process doesn't exist".to_string().into(),
+                );
+                error!("{}", e.log());
+                anyhow!(e)
+            })?;
         if consumer_process.consumer_pid != provider_process.consumer_pid {
-            bail!(
-                DSRPCTransferConsumerErrors::DSProtocolTransferConsumerError(
-                    DSProtocolTransferConsumerErrors::UriAndBodyIdentifiersDoNotCoincide
-                )
+            let e = CommonErrors::format_new(
+                BadFormat::Received,
+                "ConsumerPid and ProviderPid don't coincide".to_string().to_string().into(),
             );
+            error!("{}", e.log());
+            bail!(e);
         }
         Ok(consumer_process.into())
     }
@@ -156,45 +165,55 @@ where
         error_context_provider_pid: Option<Urn>,
         error_context_consumer_pid: Option<Urn>,
     ) -> anyhow::Result<TransferProcessMessage> {
-        debug!(
-            "Sending message to provider at URL: {}, Payload: {:?}",
-            target_url, message_payload
-        );
-        let response = self.client
+        debug!("DSProtocolRPC Service: send_protocol_message_to_consumer");
+
+        let response = self
+            .client
             .post(&target_url)
             .header("Authorization", format!("Bearer {}", token))
             .json(message_payload)
-            .send().await.map_err(|_e| {
-            DSRPCTransferConsumerErrors::ProviderNotReachable {
-                provider_pid: error_context_provider_pid.clone(),
-                consumer_pid: error_context_consumer_pid.clone(),
-            }
-        })?;
+            .send()
+            .await
+            .map_err(|_e| {
+                let e = CommonErrors::consumer_new(
+                    target_url.clone().into(),
+                    "POST".to_string().into(),
+                    None,
+                    "Consumer not reachable".to_string().into(),
+                );
+                error!("{}", e.log());
+                anyhow!(e)
+            })?;
 
         let status = response.status();
         if !status.is_success() {
-            let error_body = response
-                .json::<serde_json::Value>()
-                .await
-                .unwrap_or_else(|e| json!({"error": format!("Failed to parse provider error response: {}", e)}));
-            bail!(DSRPCTransferConsumerErrors::ProviderInternalError {
-                provider_pid: error_context_provider_pid.clone(),
-                consumer_pid: error_context_consumer_pid.clone(),
-                error: Some(error_body),
-            });
+            // Attempt to get error details from consumer if available
+            let consumer_error = response.json::<Value>().await.unwrap_or_else(|e| json!({"error": format!("{}", e)}));
+            let e = CommonErrors::provider_new(
+                target_url.clone().into(),
+                "POST".to_string().into(),
+                None,
+                format!("Provider Internal error: {}", consumer_error).into(),
+            );
+            error!("{}", e.log());
+            bail!(e);
         }
 
         let process_message = response.json::<TransferProcessMessage>().await.map_err(|_e| {
-            DSRPCTransferConsumerErrors::ProviderResponseNotSerializable {
-                provider_pid: error_context_provider_pid,
-                consumer_pid: error_context_consumer_pid,
-            }
+            let e = CommonErrors::format_new(
+                BadFormat::Received,
+                "TransferProcessMessage not serializable".to_string().into(),
+            );
+            error!("{}", e.log());
+            anyhow!(e)
         })?;
         Ok(process_message)
     }
 
     /// Broadcasts a notification about a transfer process event.
     async fn notify_subscribers(&self, subcategory: String, message: serde_json::Value) -> anyhow::Result<()> {
+        debug!("DSProtocolRPC Service: notify_subscribers");
+
         self.notification_service
             .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
                 category: RainbowEventsNotificationMessageCategory::TransferProcess, // Specific category for transfers
@@ -220,18 +239,29 @@ where
         &self,
         input: DSRPCTransferConsumerRequestRequest,
     ) -> anyhow::Result<DSRPCTransferConsumerRequestResponse> {
-        let DSRPCTransferConsumerRequestRequest { agreement_id, format, data_address, provider_participant_id, .. } = input.clone();
+        let DSRPCTransferConsumerRequestRequest { agreement_id, format, data_address, provider_participant_id, .. } =
+            input.clone();
         // 0. fetch participant
-        let provider_mate = self
-            .get_provider_mate(&provider_participant_id)
-            .await?;
-        let provider_base_url = provider_mate
-            .base_url
-            .ok_or(anyhow!("No base url"))?;
+        let provider_mate = self.get_provider_mate(&provider_participant_id).await?;
+        let provider_base_url = provider_mate.base_url.ok_or_else(|| {
+            let e = CommonErrors::missing_action_new(
+                "Missing token".to_string(),
+                MissingAction::Unknown,
+                "No base url".to_string().into(),
+            );
+            error!("{}", e.log());
+            anyhow!(e)
+        })?;
         let provider_base_url = provider_base_url.strip_suffix('/').unwrap_or(provider_base_url.as_str());
-        let provider_token = provider_mate
-            .token
-            .ok_or(anyhow!("No token"))?;
+        let provider_token = provider_mate.token.ok_or_else(|| {
+            let e = CommonErrors::missing_action_new(
+                "Missing token".to_string(),
+                MissingAction::Token,
+                "No auth token".to_string().into(),
+            );
+            error!("{}", e.log());
+            anyhow!(e)
+        })?;
         // 1. Generate PIDs and callback address
         let consumer_pid = get_urn(None);
         let callback_urn = get_urn(None);
@@ -272,7 +302,9 @@ where
             })
             .await
             .map_err(|e| {
-                DSRPCTransferConsumerErrors::DSProtocolTransferConsumerError(DSProtocolTransferConsumerErrors::DbErr(e))
+                let e_ = CommonErrors::database_new(e.to_string().into());
+                error!("{}", e_.log());
+                anyhow!(e_)
             })?;
         let message = self
             .transfer_repo
@@ -285,7 +317,12 @@ where
                     content: to_value(&input)?,
                 },
             )
-            .await?;
+            .await
+            .map_err(|e| {
+                let e_ = CommonErrors::database_new(e.to_string().into());
+                error!("{}", e_.log());
+                anyhow!(e_)
+            })?;
         // 5. Data plane facade hook
         self.data_plane_facade.on_transfer_request(consumer_pid.clone(), format.clone()).await?;
         // 6. Create response
@@ -309,7 +346,7 @@ where
                 "message": message,
             }),
         )
-            .await?;
+        .await?;
         // 8. Bye
         Ok(response)
     }
@@ -318,19 +355,30 @@ where
         &self,
         input: DSRPCTransferConsumerStartRequest,
     ) -> anyhow::Result<DSRPCTransferConsumerStartResponse> {
-        let DSRPCTransferConsumerStartRequest { data_address, provider_participant_id, provider_pid, consumer_pid, .. } =
-            input.clone();
+        let DSRPCTransferConsumerStartRequest {
+            data_address, provider_participant_id, provider_pid, consumer_pid, ..
+        } = input.clone();
         // 0. fetch participant
-        let provider_mate = self
-            .get_provider_mate(&provider_participant_id)
-            .await?;
-        let provider_base_url = provider_mate
-            .base_url
-            .ok_or(anyhow!("No base url"))?;
+        let provider_mate = self.get_provider_mate(&provider_participant_id).await?;
+        let provider_base_url = provider_mate.base_url.ok_or_else(|| {
+            let e = CommonErrors::missing_action_new(
+                "Missing token".to_string(),
+                MissingAction::Unknown,
+                "No base url".to_string().into(),
+            );
+            error!("{}", e.log());
+            anyhow!(e)
+        })?;
         let provider_base_url = provider_base_url.strip_suffix('/').unwrap_or(provider_base_url.as_str());
-        let provider_token = provider_mate
-            .token
-            .ok_or(anyhow!("No token"))?;
+        let provider_token = provider_mate.token.ok_or_else(|| {
+            let e = CommonErrors::missing_action_new(
+                "Missing token".to_string(),
+                MissingAction::Token,
+                "No auth token".to_string().into(),
+            );
+            error!("{}", e.log());
+            anyhow!(e)
+        })?;
         // 1. Validate correlation
         let _current_process_record =
             self.validate_and_get_transfer_callback_by_consumer_id(&provider_pid, &consumer_pid).await?;
@@ -371,7 +419,9 @@ where
             )
             .await
             .map_err(|e| {
-                DSRPCTransferConsumerErrors::DSProtocolTransferConsumerError(DSProtocolTransferConsumerErrors::DbErr(e))
+                let e_ = CommonErrors::database_new(e.to_string().into());
+                error!("{}", e_.log());
+                anyhow!(e_)
             })?;
         let message = self
             .transfer_repo
@@ -384,7 +434,12 @@ where
                     content: to_value(&input)?,
                 },
             )
-            .await?;
+            .await
+            .map_err(|e| {
+                let e_ = CommonErrors::database_new(e.to_string().into());
+                error!("{}", e_.log());
+                anyhow!(e_)
+            })?;
         // 5. Data plane facade hook
         if transfer_process.restart_flag {
             self.data_plane_facade.on_transfer_restart(consumer_pid.clone()).await?;
@@ -406,7 +461,7 @@ where
                 "message": message,
             }),
         )
-            .await?;
+        .await?;
         // 8. Bye
         Ok(response)
     }
@@ -415,19 +470,34 @@ where
         &self,
         input: DSRPCTransferConsumerSuspensionRequest,
     ) -> anyhow::Result<DSRPCTransferConsumerSuspensionResponse> {
-        let DSRPCTransferConsumerSuspensionRequest { provider_participant_id, provider_pid, consumer_pid, code, reason } =
-            input.clone();
+        let DSRPCTransferConsumerSuspensionRequest {
+            provider_participant_id,
+            provider_pid,
+            consumer_pid,
+            code,
+            reason,
+        } = input.clone();
         // 0. fetch participant
-        let provider_mate = self
-            .get_provider_mate(&provider_participant_id)
-            .await?;
-        let provider_base_url = provider_mate
-            .base_url
-            .ok_or(anyhow!("No base url"))?;
+        let provider_mate = self.get_provider_mate(&provider_participant_id).await?;
+        let provider_base_url = provider_mate.base_url.ok_or_else(|| {
+            let e = CommonErrors::missing_action_new(
+                "Missing token".to_string(),
+                MissingAction::Unknown,
+                "No base url".to_string().into(),
+            );
+            error!("{}", e.log());
+            anyhow!(e)
+        })?;
         let provider_base_url = provider_base_url.strip_suffix('/').unwrap_or(provider_base_url.as_str());
-        let provider_token = provider_mate
-            .token
-            .ok_or(anyhow!("No token"))?;
+        let provider_token = provider_mate.token.ok_or_else(|| {
+            let e = CommonErrors::missing_action_new(
+                "Missing token".to_string(),
+                MissingAction::Token,
+                "No auth token".to_string().into(),
+            );
+            error!("{}", e.log());
+            anyhow!(e)
+        })?;
         // 1. Validate correlation
         let _current_process_record =
             self.validate_and_get_transfer_callback_by_consumer_id(&provider_pid, &consumer_pid).await?;
@@ -469,7 +539,9 @@ where
             )
             .await
             .map_err(|e| {
-                DSRPCTransferConsumerErrors::DSProtocolTransferConsumerError(DSProtocolTransferConsumerErrors::DbErr(e))
+                let e_ = CommonErrors::database_new(e.to_string().into());
+                error!("{}", e_.log());
+                anyhow!(e_)
             })?;
         let message = self
             .transfer_repo
@@ -482,7 +554,12 @@ where
                     content: to_value(&input)?,
                 },
             )
-            .await?;
+            .await
+            .map_err(|e| {
+                let e_ = CommonErrors::database_new(e.to_string().into());
+                error!("{}", e_.log());
+                anyhow!(e_)
+            })?;
         // 5. Data plane facade hook
         self.data_plane_facade.on_transfer_suspension(consumer_pid.clone()).await?;
         // 6. Create response
@@ -499,7 +576,7 @@ where
                 "message": message,
             }),
         )
-            .await?;
+        .await?;
         // 8. Bye
         Ok(response)
     }
@@ -508,18 +585,29 @@ where
         &self,
         input: DSRPCTransferConsumerCompletionRequest,
     ) -> anyhow::Result<DSRPCTransferConsumerCompletionResponse> {
-        let DSRPCTransferConsumerCompletionRequest { provider_participant_id, provider_pid, consumer_pid, .. } = input.clone();
+        let DSRPCTransferConsumerCompletionRequest { provider_participant_id, provider_pid, consumer_pid, .. } =
+            input.clone();
         // 0. fetch participant
-        let provider_mate = self
-            .get_provider_mate(&provider_participant_id)
-            .await?;
-        let provider_base_url = provider_mate
-            .base_url
-            .ok_or(anyhow!("No base url"))?;
+        let provider_mate = self.get_provider_mate(&provider_participant_id).await?;
+        let provider_base_url = provider_mate.base_url.ok_or_else(|| {
+            let e = CommonErrors::missing_action_new(
+                "Missing token".to_string(),
+                MissingAction::Unknown,
+                "No base url".to_string().into(),
+            );
+            error!("{}", e.log());
+            anyhow!(e)
+        })?;
         let provider_base_url = provider_base_url.strip_suffix('/').unwrap_or(provider_base_url.as_str());
-        let provider_token = provider_mate
-            .token
-            .ok_or(anyhow!("No token"))?;
+        let provider_token = provider_mate.token.ok_or_else(|| {
+            let e = CommonErrors::missing_action_new(
+                "Missing token".to_string(),
+                MissingAction::Token,
+                "No auth token".to_string().into(),
+            );
+            error!("{}", e.log());
+            anyhow!(e)
+        })?;
         // 1. Validate correlation
         let _current_process_record =
             self.validate_and_get_transfer_callback_by_consumer_id(&provider_pid, &consumer_pid).await?;
@@ -559,7 +647,9 @@ where
             )
             .await
             .map_err(|e| {
-                DSRPCTransferConsumerErrors::DSProtocolTransferConsumerError(DSProtocolTransferConsumerErrors::DbErr(e))
+                let e_ = CommonErrors::database_new(e.to_string().into());
+                error!("{}", e_.log());
+                anyhow!(e_)
             })?;
         let message = self
             .transfer_repo
@@ -572,7 +662,12 @@ where
                     content: to_value(&input)?,
                 },
             )
-            .await?;
+            .await
+            .map_err(|e| {
+                let e_ = CommonErrors::database_new(e.to_string().into());
+                error!("{}", e_.log());
+                anyhow!(e_)
+            })?;
         // 5. Data plane facade hook
         self.data_plane_facade.on_transfer_completion(consumer_pid.clone()).await?;
         // 6. Create response
@@ -589,7 +684,7 @@ where
                 "message": message,
             }),
         )
-            .await?;
+        .await?;
         // 8. Bye
         Ok(response)
     }
@@ -598,19 +693,34 @@ where
         &self,
         input: DSRPCTransferConsumerTerminationRequest,
     ) -> anyhow::Result<DSRPCTransferConsumerTerminationResponse> {
-        let DSRPCTransferConsumerTerminationRequest { provider_participant_id, provider_pid, consumer_pid, code, reason } =
-            input.clone();
+        let DSRPCTransferConsumerTerminationRequest {
+            provider_participant_id,
+            provider_pid,
+            consumer_pid,
+            code,
+            reason,
+        } = input.clone();
         // 0. fetch participant
-        let provider_mate = self
-            .get_provider_mate(&provider_participant_id)
-            .await?;
-        let provider_base_url = provider_mate
-            .base_url
-            .ok_or(anyhow!("No base url"))?;
+        let provider_mate = self.get_provider_mate(&provider_participant_id).await?;
+        let provider_base_url = provider_mate.base_url.ok_or_else(|| {
+            let e = CommonErrors::missing_action_new(
+                "Missing token".to_string(),
+                MissingAction::Unknown,
+                "No base url".to_string().into(),
+            );
+            error!("{}", e.log());
+            anyhow!(e)
+        })?;
         let provider_base_url = provider_base_url.strip_suffix('/').unwrap_or(provider_base_url.as_str());
-        let provider_token = provider_mate
-            .token
-            .ok_or(anyhow!("No token"))?;
+        let provider_token = provider_mate.token.ok_or_else(|| {
+            let e = CommonErrors::missing_action_new(
+                "Missing token".to_string(),
+                MissingAction::Token,
+                "No auth token".to_string().into(),
+            );
+            error!("{}", e.log());
+            anyhow!(e)
+        })?;
         // 1. Validate correlation
         let _current_process_record =
             self.validate_and_get_transfer_callback_by_consumer_id(&provider_pid, &consumer_pid).await?;
@@ -652,7 +762,9 @@ where
             )
             .await
             .map_err(|e| {
-                DSRPCTransferConsumerErrors::DSProtocolTransferConsumerError(DSProtocolTransferConsumerErrors::DbErr(e))
+                let e_ = CommonErrors::database_new(e.to_string().into());
+                error!("{}", e_.log());
+                anyhow!(e_)
             })?;
         let message = self
             .transfer_repo
@@ -665,7 +777,12 @@ where
                     content: to_value(&input)?,
                 },
             )
-            .await?;
+            .await
+            .map_err(|e| {
+                let e_ = CommonErrors::database_new(e.to_string().into());
+                error!("{}", e_.log());
+                anyhow!(e_)
+            })?;
         // 5. Data plane facade hook
         self.data_plane_facade.on_transfer_termination(consumer_pid.clone()).await?;
         // 6. Create response
@@ -682,7 +799,7 @@ where
                 "message": message,
             }),
         )
-            .await?;
+        .await?;
         // 8. Bye
         Ok(response)
     }

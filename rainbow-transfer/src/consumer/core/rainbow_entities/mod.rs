@@ -18,7 +18,6 @@
  */
 
 pub mod rainbow_entities;
-pub mod rainbow_err;
 pub mod rainbow_types;
 
 use crate::consumer::core::rainbow_entities::rainbow_types::{EditTransferConsumerRequest, NewTransferConsumerRequest};
