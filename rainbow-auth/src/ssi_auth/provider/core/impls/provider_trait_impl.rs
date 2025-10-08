@@ -52,8 +52,11 @@ where
     async fn generate_uri(&self, ver_model: auth_verification::Model) -> anyhow::Result<String> {
         info!("Generating verification exchange URI");
 
-        let provider_url = self.config.get_ssi_auth_host_url().unwrap(); // ALWAYS EXPECTED TODO fix docker internal
-        let provider_url = provider_url.replace("127.0.0.1", "host.docker.internal");
+        let provider_url = self.config.get_ssi_auth_host_url().unwrap(); // ALWAYS EXPECTED
+        let provider_url = match self.config.get_environment_scenario() {
+            true => provider_url.replace("127.0.0.1", "host.docker.internal"),
+            false => provider_url,
+        };
         let provider_url = format!("{}/api/v1", provider_url);
 
         let base_url = "openid4vp://authorize";
@@ -101,11 +104,14 @@ where
             bail!(error);
         }
 
-        let provider_url = self.config.get_ssi_auth_host_url().unwrap(); //  EXPECTED ALWAYS TODO fix docker internal
+        let provider_url = self.config.get_ssi_auth_host_url().unwrap(); //  EXPECTED ALWAYS
         let provider_url = format!("{}/api/v1", provider_url);
-        let docker_provider_url = provider_url.replace("127.0.0.1", "host.docker.internal");
+        let provider_url = match self.config.get_environment_scenario() {
+            true => provider_url.replace("127.0.0.1", "host.docker.internal"),
+            false => provider_url,
+        };
 
-        let client_id = format!("{}/verify", &docker_provider_url);
+        let client_id = format!("{}/verify", &provider_url);
 
         let grant_endpoint = format!("{}/access", provider_url);
 
@@ -538,12 +544,16 @@ where
         let jwk: Jwk = serde_json::from_slice(&vec)?;
 
         let key = jsonwebtoken::DecodingKey::from_jwk(&jwk)?;
-        let mut audience = format!(
+        let audience = format!(
             "{}/api/v1/verify/{}",
             self.config.get_ssi_auth_host_url().unwrap(), // EXPECTED ALWAYS
             &model.state
         );
-        audience = audience.replace("127.0.0.1", "host.docker.internal"); // TODO fix docker
+
+        let audience = match self.config.get_environment_scenario() {
+            true => audience.replace("127.0.0.1", "host.docker.internal"),
+            false => audience,
+        };
 
         let mut val = Validation::new(alg);
 
@@ -950,9 +960,11 @@ where
     async fn fast_login(&self, state: String) -> anyhow::Result<String> {
         let id = uuid::Uuid::new_v4().to_string();
         let nonce: String = rand::thread_rng().sample_iter(&Alphanumeric).take(12).map(char::from).collect();
-        let provider_url = self.config.get_ssi_auth_host_url().unwrap(); //  EXPECTED ALWAYS TODO fix docker internal
-        let provider_url = provider_url.replace("127.0.0.1", "host.docker.internal");
-        let provider_url = format!("{}/api/v1", provider_url);
+        let provider_url = format!("{}/api/v1", self.config.get_ssi_auth_host_url().unwrap()); //  EXPECTED ALWAYS
+        let provider_url = match self.config.get_environment_scenario() {
+            true => provider_url.replace("127.0.0.1", "host.docker.internal"),
+            false => provider_url,
+        };
 
         let client_id = format!("{}/verify", &provider_url);
         let audience = format!("{}/{}", client_id, &state);

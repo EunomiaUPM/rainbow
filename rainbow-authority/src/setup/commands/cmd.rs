@@ -19,11 +19,11 @@
 
 use crate::setup::application::AuthorityApplication;
 use crate::setup::database::db_migrations::AuthorityMigration;
-use crate::setup::{AuthorityApplicationConfig, AuthorityApplicationConfigTrait};
 use clap::{Parser, Subcommand};
 
+use crate::setup::commands::env_extraction::extract_env_config;
 use std::cmp::PartialEq;
-use tracing::{debug, info};
+use tracing::debug;
 
 #[derive(Parser, Debug)]
 #[command(name = "Rainbow Dataspace Authority Server")]
@@ -33,10 +33,16 @@ struct AuthorityCli {
     command: AuthorityCliCommands,
 }
 
+#[derive(Parser, Debug, PartialEq)]
+pub struct AuthCliArgs {
+    #[arg(short, long)]
+    env_file: Option<String>,
+}
+
 #[derive(Subcommand, Debug, PartialEq)]
 pub enum AuthorityCliCommands {
-    Start,
-    Setup,
+    Start(AuthCliArgs),
+    Setup(AuthCliArgs),
 }
 
 pub struct AuthorityCommands;
@@ -48,13 +54,15 @@ impl AuthorityCommands {
         let cli = AuthorityCli::parse();
 
         // run scripts
-        let config = AuthorityApplicationConfig::default();
-        let config = config.merge_dotenv_configuration();
-        let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
-        info!("Current config:\n{}", table);
         match cli.command {
-            AuthorityCliCommands::Start => AuthorityApplication::run(&config).await?,
-            AuthorityCliCommands::Setup => AuthorityMigration::run(&config).await?,
+            AuthorityCliCommands::Start(args) => {
+                let config = extract_env_config(args.env_file)?;
+                AuthorityApplication::run(&config).await?
+            }
+            AuthorityCliCommands::Setup(args) => {
+                let config = extract_env_config(args.env_file)?;
+                AuthorityMigration::run(&config).await?
+            }
         }
 
         Ok(())

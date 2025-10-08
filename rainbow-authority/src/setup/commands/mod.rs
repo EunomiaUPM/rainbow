@@ -16,11 +16,5 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
-pub mod application;
-pub mod config;
-pub mod commands;
-mod database;
-
-pub use config::config_trait::AuthorityApplicationConfigTrait;
-pub use config::AuthorityApplicationConfig;
+pub mod cmd;
+mod env_extraction;

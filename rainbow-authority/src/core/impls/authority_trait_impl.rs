@@ -78,9 +78,12 @@ where
             bail!(error);
         }
 
-        let host_url = self.config.get_host(); //  EXPECTED ALWAYS TODO fix docker internal
+        let host_url = self.config.get_host(); //  EXPECTED ALWAYS
         let host_url = format!("{}/api/v1", host_url);
-        let docker_host_url = host_url.clone().replace("127.0.0.1", "host.docker.internal");
+        let host_url = match self.config.get_environment_scenario() {
+            true => host_url.replace("127.0.0.1", "host.docker.internal"),
+            false => host_url,
+        };
 
         // TODO OIDC
         let id = uuid::Uuid::new_v4().to_string();
@@ -151,7 +154,7 @@ where
 
         // ----------OIDC4VP---------------------------------------------------------------
         if interaction_model.start.contains(&"oidc4vp".to_string()) {
-            let client_id = format!("{}/verify", &docker_host_url);
+            let client_id = format!("{}/verify", &host_url);
 
             let new_verification_model = auth_verification::NewModel { id: id.clone(), audience: client_id };
 
@@ -206,16 +209,19 @@ where
 
         let host_url = self.config.get_host();
         let host_url = format!("{}/api/v1", host_url);
-        let docker_host_url = host_url.replace("127.0.0.1", "host.docker.internal");
+        let host_url = match self.config.get_environment_scenario() {
+            true => host_url.replace("127.0.0.1", "host.docker.internal"),
+            false => host_url,
+        };
 
         let base_url = "openid4vp://authorize";
 
         let encoded_client_id = encode(&ver_model.audience);
 
-        let presentation_definition_uri = format!("{}/pd/{}", &docker_host_url, ver_model.state);
+        let presentation_definition_uri = format!("{}/pd/{}", &host_url, ver_model.state);
         let encoded_presentation_definition_uri = encode(&presentation_definition_uri);
 
-        let response_uri = format!("{}/verify/{}", &docker_host_url, ver_model.state);
+        let response_uri = format!("{}/verify/{}", &host_url, ver_model.state);
         let encoded_response_uri = encode(&response_uri);
 
         let response_type = "vp_token";
@@ -273,7 +279,7 @@ where
                 let body: Value = match vc_type {
                     VcType::DataSpaceParticipant => {
                         json!({
-                            "issuerKey": { 
+                            "issuerKey": {
                                 "type": "jwk",
                                 "jwk": jwk
                             },
@@ -316,7 +322,7 @@ where
                     }
                     VcType::Identity => {
                         json!({
-                            "issuerKey": { 
+                            "issuerKey": {
                                 "type": "jwk",
                                 "jwk": jwk
                             },
@@ -359,8 +365,11 @@ where
                 };
 
                 let host_url = self.config.get_host();
-                let docker_host_url = host_url.clone().replace("127.0.0.1", "host.docker.internal"); // TODO FIX 4 MICROSERICES
-                let callback_uri = format!("{}/api/v1/callback/{}", docker_host_url, callback_id);
+                let host_url = match self.config.get_environment_scenario() {
+                    true => host_url.replace("127.0.0.1", "host.docker.internal"),
+                    false => host_url,
+                };
+                let callback_uri = format!("{}/api/v1/callback/{}", host_url, callback_id);
                 let mut headers = HeaderMap::new();
                 headers.insert(CONTENT_TYPE, "application/json".parse()?);
                 headers.insert(ACCEPT, "application/json".parse()?);
@@ -828,8 +837,11 @@ where
         let jwk: Jwk = serde_json::from_slice(&vec)?;
 
         let key = jsonwebtoken::DecodingKey::from_jwk(&jwk)?;
-        let mut audience = format!("{}/api/v1/verify/{}", self.config.get_host(), &model.state);
-        audience = audience.replace("127.0.0.1", "host.docker.internal"); // TODO fix docker
+        let audience = format!("{}/api/v1/verify/{}", self.config.get_host(), &model.state);
+        let audience = match self.config.get_environment_scenario() {
+            true => audience.replace("127.0.0.1", "host.docker.internal"),
+            false => audience,
+        };
 
         let mut val = Validation::new(alg);
 

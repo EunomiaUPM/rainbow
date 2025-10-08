@@ -73,6 +73,7 @@ pub struct ApplicationGlobalConfig {
     pub ssh_user: Option<String>,
     pub ssh_private_key_path: Option<String>,
     pub role: ConfigRoles,
+    pub is_local: bool,
 }
 
 impl From<ApplicationGlobalConfig> for ApplicationProviderConfig {
@@ -102,6 +103,7 @@ impl From<ApplicationGlobalConfig> for ApplicationProviderConfig {
             },
             client_config: value.client_config.unwrap(),
             role: value.role,
+            is_local: value.is_local,
         }
     }
 }
@@ -126,6 +128,7 @@ impl Into<ApplicationGlobalConfig> for ApplicationProviderConfig {
             ssh_user: self.ssh_user,
             ssh_private_key_path: self.ssh_private_key_path,
             role: self.role,
+            is_local: self.is_local,
         }
     }
 }
@@ -154,6 +157,7 @@ impl From<ApplicationGlobalConfig> for ApplicationConsumerConfig {
             },
             role: value.role,
             client_config: value.client_config.unwrap(),
+            is_local: value.is_local,
         }
     }
 }
@@ -178,6 +182,7 @@ impl Into<ApplicationGlobalConfig> for ApplicationConsumerConfig {
             ssh_user: self.ssh_user,
             ssh_private_key_path: self.ssh_private_key_path,
             role: self.role,
+            is_local: self.is_local,
         }
     }
 }

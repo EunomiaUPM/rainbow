@@ -31,5 +31,6 @@ pub trait AuthorityApplicationConfigTrait {
     fn get_cert(&self) -> String;
     fn get_priv_key(&self) -> String;
     fn get_pub_key(&self) -> String;
-    fn merge_dotenv_configuration(&self) -> Self;
+    fn merge_dotenv_configuration(&self, env_file: Option<String>) -> Self;
+    fn get_environment_scenario(&self) -> bool;
 }

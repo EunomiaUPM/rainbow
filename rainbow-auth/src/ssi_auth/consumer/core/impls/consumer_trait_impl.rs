@@ -56,7 +56,7 @@ where
         let id = uuid::Uuid::new_v4().to_string();
         let callback_uri = format!(
             "{}/api/v1/callback/{}",
-            self.config.get_auth_host_url().unwrap(),
+            self.config.get_ssi_auth_host_url().unwrap(),
             &id
         );
         let client = self.config.get_pretty_client_config();
@@ -641,7 +641,7 @@ where
         let id = uuid::Uuid::new_v4().to_string();
         let callback_uri = format!(
             "{}/api/v1/callback/{}",
-            self.config.get_auth_host_url().unwrap(),
+            self.config.get_ssi_auth_host_url().unwrap(),
             &id
         );
 

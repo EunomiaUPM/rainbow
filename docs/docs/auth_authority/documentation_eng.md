@@ -125,13 +125,13 @@ It has its own database (Postgres) and a GUI (not yet implemented).
     - _Setup DB_
   ```bash
   cd rainbow-authority
-  cargo run setup
+  cargo run setup --env-file ../static/envs/.env.authority
   ```
     - _Start_
   ```bash
-  cargo run start
+  cargo run start --env-file ../static/envs/.env.authority
   # If files are modified, it recompiles in real time
-  cargo watch -x "run start"
+  cargo watch -x "run start --env-file ../static/envs/.env.authority"
   ```
 - **Dependencies**
   ```bash
@@ -154,7 +154,7 @@ It interacts with the previous three entities — for Consumer and Provider, onl
 There is only **one such service for all entities**, each authenticating with its own username and password.  
 Interaction happens via HTTP requests to routes defined in environment variables.
 
-> **Note:** Since **AUTH** and **AUTHORITY** currently run as a monolith and Wallet runs via docker-compose, some routes are hardcoded to replace "127.0.0.1" with "host.docker.internal". This must change in a microservices architecture.
+> **Note:** Since **AUTH** and **AUTHORITY** currently run as a monolith and Wallet runs via docker-compose, some routes are hardcoded to replace "127.0.0.1" with "host.docker.internal". This now decide by the environment variable "IS_LOCAL".
 
 - _Initialization_
   ```bash
@@ -202,7 +202,7 @@ In the folder containing all Postman files, there is a collection of all tests w
   ```bash
   cargo run $entity_name $start_or_setup --env-file $env_file_path
   # If files are modified, it recompiles in real time
-  # For authority these commands are different
+  # For authority dont place any entity name
   # The --env-file option is optional
   cargo watch -x "run $entity_name $start_or_setup --env-file $env_file_path"
   ```
@@ -210,7 +210,7 @@ In the folder containing all Postman files, there is a collection of all tests w
 - **Swagger**
     - Consumer API spec: [http://127.0.0.1:1100/api/v1/auth/openapi](http://127.0.0.1:1100/api/v1/auth/openapi)
     - Provider API spec: [http://127.0.0.1:1200/api/v1/auth/openapi](http://127.0.0.1:1200/api/v1/auth/openapi)
-    - Authority API spec: [http://127.0.0.1:1500/api/v1/auth/openapi](http://127.0.0.1:1500/api/v1/auth/openapi)
+    - Authority API spec: [http://127.0.0.1:1500/api/v1/authority/openapi](http://127.0.0.1:1500/api/v1/authority/openapi)
 
 - **Postman**  
   Collections located at:
