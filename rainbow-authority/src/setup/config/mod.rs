@@ -95,9 +95,10 @@ impl AuthorityApplicationConfigTrait for AuthorityApplicationConfig {
     }
 
     fn get_wallet_portal_url(&self) -> String {
+        let method = self.get_raw_ssi_wallet_config().clone().wallet_portal_port;
         let url = self.get_raw_ssi_wallet_config().clone().wallet_portal_url;
         let port = self.get_raw_ssi_wallet_config().clone().wallet_portal_port;
-        format!("http://{}:{}", url, port)
+        format!("{}://{}:{}", method, url, port)
     }
     fn get_full_db_url(&self) -> String {
         let db_config = self.get_raw_database_config();
