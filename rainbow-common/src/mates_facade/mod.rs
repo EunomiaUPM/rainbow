@@ -17,8 +17,8 @@
  *
  */
 
+use crate::mates::Mates;
 use axum::async_trait;
-use rainbow_common::mates::Mates;
 
 pub mod mates_facade;
 

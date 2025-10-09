@@ -17,7 +17,6 @@
  *
  */
 
-use crate::common::core::mates_facade::MatesFacadeTrait;
 use crate::consumer::core::data_plane_facade::DataPlaneConsumerFacadeTrait;
 use crate::consumer::core::ds_protocol_rpc::ds_protocol_rpc_types::{
     DSRPCTransferConsumerCompletionRequest, DSRPCTransferConsumerCompletionResponse,
@@ -33,6 +32,7 @@ use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, Applica
 use rainbow_common::errors::helpers::{BadFormat, MissingAction};
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::mates::Mates;
+use rainbow_common::mates_facade::MatesFacadeTrait;
 use rainbow_common::protocol::transfer::transfer_completion::TransferCompletionMessage;
 use rainbow_common::protocol::transfer::transfer_process::TransferProcessMessage;
 use rainbow_common::protocol::transfer::transfer_request::TransferRequestMessage;
@@ -346,7 +346,7 @@ where
                 "message": message,
             }),
         )
-        .await?;
+            .await?;
         // 8. Bye
         Ok(response)
     }
@@ -461,7 +461,7 @@ where
                 "message": message,
             }),
         )
-        .await?;
+            .await?;
         // 8. Bye
         Ok(response)
     }
@@ -576,7 +576,7 @@ where
                 "message": message,
             }),
         )
-        .await?;
+            .await?;
         // 8. Bye
         Ok(response)
     }
@@ -684,7 +684,7 @@ where
                 "message": message,
             }),
         )
-        .await?;
+            .await?;
         // 8. Bye
         Ok(response)
     }
@@ -799,7 +799,7 @@ where
                 "message": message,
             }),
         )
-        .await?;
+            .await?;
         // 8. Bye
         Ok(response)
     }
