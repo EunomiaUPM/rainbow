@@ -68,8 +68,9 @@ impl Default for AuthorityApplicationConfig {
                 display: None,
             },
             ssi_wallet_config: SSIWalletConfig {
-                wallet_portal_url: "127.0.0.1".to_string(),
-                wallet_portal_port: "7001".to_string(),
+                wallet_api_protocol: "http".to_string(),
+                wallet_api_url: "127.0.0.1".to_string(),
+                wallet_api_port: Some("7001".to_string()),
                 wallet_type: "email".to_string(),
                 wallet_name: "RainbowAuthority".to_string(),
                 wallet_email: "RainbowAuthority@rainbow.com".to_string(),
@@ -95,10 +96,16 @@ impl AuthorityApplicationConfigTrait for AuthorityApplicationConfig {
     }
 
     fn get_wallet_portal_url(&self) -> String {
-        let method = self.get_raw_ssi_wallet_config().clone().wallet_portal_port;
-        let url = self.get_raw_ssi_wallet_config().clone().wallet_portal_url;
-        let port = self.get_raw_ssi_wallet_config().clone().wallet_portal_port;
-        format!("{}://{}:{}", method, url, port)
+        let protocol = self.get_raw_ssi_wallet_config().clone().wallet_api_protocol;
+        let url = self.get_raw_ssi_wallet_config().clone().wallet_api_url;
+        match self.get_raw_ssi_wallet_config().clone().wallet_api_port {
+            Some(port) => {
+                format!("{}://{}:{}", protocol, url, port)
+            }
+            None => {
+                format!("{}://{}", protocol, url)
+            }
+        }
     }
     fn get_full_db_url(&self) -> String {
         let db_config = self.get_raw_database_config();
@@ -193,24 +200,16 @@ impl AuthorityApplicationConfigTrait for AuthorityApplicationConfig {
                 display: None,
             },
             ssi_wallet_config: SSIWalletConfig {
-                wallet_portal_url: extract_env(
-                    "WALLET_PORTAL_URL",
-                    default.ssi_wallet_config.wallet_portal_url,
+                wallet_api_protocol: extract_env(
+                    "WALLET_API_PROTOCOL",
+                    default.ssi_wallet_config.wallet_api_protocol,
                 ),
-                wallet_portal_port: extract_env(
-                    "WALLET_PORTAL_PORT",
-                    default.ssi_wallet_config.wallet_portal_port,
-                ),
-                wallet_type: extract_env("WALLET_PORTAL_TYPE", default.ssi_wallet_config.wallet_type),
-                wallet_name: extract_env("WALLET_PORTAL_NAME", default.ssi_wallet_config.wallet_name),
-                wallet_email: extract_env(
-                    "WALLET_PORTAL_EMAIL",
-                    default.ssi_wallet_config.wallet_email,
-                ),
-                wallet_password: extract_env(
-                    "WALLET_PORTAL_PASSWORD",
-                    default.ssi_wallet_config.wallet_password,
-                ),
+                wallet_api_url: extract_env("WALLET_API_URL", default.ssi_wallet_config.wallet_api_url),
+                wallet_api_port: option_extract_env("WALLET_API_PORT"),
+                wallet_type: extract_env("WALLET_TYPE", default.ssi_wallet_config.wallet_type),
+                wallet_name: extract_env("WALLET_NAME", default.ssi_wallet_config.wallet_name),
+                wallet_email: extract_env("WALLET_EMAIL", default.ssi_wallet_config.wallet_email),
+                wallet_password: extract_env("WALLET_PASSWORD", default.ssi_wallet_config.wallet_password),
                 wallet_id: None,
             },
             ssi_issuer_api: extract_env("SSI_ISSUER_API", default.ssi_issuer_api),
@@ -247,4 +246,11 @@ impl AuthorityFunctions for AuthorityApplicationConfig {
 
 pub fn extract_env(env_var_name: &str, default: String) -> String {
     env::var(env_var_name).unwrap_or(default)
+}
+
+pub fn option_extract_env(env_var_name: &str) -> Option<String> {
+    match env::var(env_var_name) {
+        Ok(value) => Some(value),
+        Err(_) => None,
+    }
 }

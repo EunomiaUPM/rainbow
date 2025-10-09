@@ -29,6 +29,13 @@ pub fn extract_env(env_var_name: &str, default: String) -> String {
     env::var(env_var_name).unwrap_or(default)
 }
 
+pub fn option_extract_env(env_var_name: &str) -> Option<String> {
+    match env::var(env_var_name) {
+        Ok(value) => Some(value),
+        Err(_) => None,
+    }
+}
+
 pub fn format_host_config_to_url_string(hc: &HostConfig) -> String {
     if hc.port.is_empty() {
         format!("{}://{}", hc.protocol, hc.url)
@@ -93,12 +100,13 @@ impl From<ApplicationGlobalConfig> for ApplicationProviderConfig {
             ssh_user: value.ssh_user,
             ssh_private_key_path: value.ssh_private_key_path,
             ssi_wallet_config: SSIWalletConfig {
-                wallet_portal_url: value.ssi_wallet_config.clone().unwrap().wallet_portal_url,
-                wallet_portal_port: value.ssi_wallet_config.clone().unwrap().wallet_portal_port,
+                wallet_api_protocol: value.ssi_wallet_config.clone().unwrap().wallet_api_protocol,
+                wallet_api_url: value.ssi_wallet_config.clone().unwrap().wallet_api_url,
+                wallet_api_port: value.ssi_wallet_config.clone().unwrap().wallet_api_port,
                 wallet_type: value.ssi_wallet_config.clone().unwrap().wallet_type,
-                wallet_name: value.ssi_wallet_config.clone().unwrap().wallet_portal_url,
-                wallet_email: value.ssi_wallet_config.clone().unwrap().wallet_portal_url,
-                wallet_password: value.ssi_wallet_config.clone().unwrap().wallet_portal_url,
+                wallet_name: value.ssi_wallet_config.clone().unwrap().wallet_name,
+                wallet_email: value.ssi_wallet_config.clone().unwrap().wallet_email,
+                wallet_password: value.ssi_wallet_config.clone().unwrap().wallet_password,
                 wallet_id: None,
             },
             client_config: value.client_config.unwrap(),
@@ -147,12 +155,13 @@ impl From<ApplicationGlobalConfig> for ApplicationConsumerConfig {
             ssh_user: value.ssh_user,
             ssh_private_key_path: value.ssh_private_key_path,
             ssi_wallet_config: SSIWalletConfig {
-                wallet_portal_url: value.ssi_wallet_config.clone().unwrap().wallet_portal_url,
-                wallet_portal_port: value.ssi_wallet_config.clone().unwrap().wallet_portal_port,
+                wallet_api_protocol: value.ssi_wallet_config.clone().unwrap().wallet_api_protocol,
+                wallet_api_url: value.ssi_wallet_config.clone().unwrap().wallet_api_url,
+                wallet_api_port: value.ssi_wallet_config.clone().unwrap().wallet_api_port,
                 wallet_type: value.ssi_wallet_config.clone().unwrap().wallet_type,
-                wallet_name: value.ssi_wallet_config.clone().unwrap().wallet_portal_url,
-                wallet_email: value.ssi_wallet_config.clone().unwrap().wallet_portal_url,
-                wallet_password: value.ssi_wallet_config.clone().unwrap().wallet_portal_url,
+                wallet_name: value.ssi_wallet_config.clone().unwrap().wallet_name,
+                wallet_email: value.ssi_wallet_config.clone().unwrap().wallet_email,
+                wallet_password: value.ssi_wallet_config.clone().unwrap().wallet_password,
                 wallet_id: None,
             },
             role: value.role,
