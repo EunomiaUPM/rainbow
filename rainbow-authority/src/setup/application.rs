@@ -46,7 +46,12 @@ impl AuthorityApplication {
         // Init server
         let server_message = format!("Starting Authority server in {}", config.get_host());
         info!("{}", server_message);
-        let listener = TcpListener::bind(format!("{}", config.get_host_without_protocol().clone(),)).await?;
+
+        let listener = match config.get_environment_scenario() {
+            true => TcpListener::bind(format!("127.0.0.1:{}", config.get_port())).await?,
+            false => TcpListener::bind(format!("0.0.0.0:{}", config.get_port())).await?,
+        };
+
         serve(listener, router).await?;
         Ok(())
     }

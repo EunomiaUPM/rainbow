@@ -49,11 +49,9 @@ pub struct GatewayCliArgs {
     env_file: Option<String>,
 }
 
-
 pub struct GatewayCommands;
 
 impl EnvExtraction for GatewayCommands {}
-
 
 impl GatewayCommands {
     pub async fn init_command_line() -> anyhow::Result<()> {
@@ -68,20 +66,30 @@ impl GatewayCommands {
                 let gateway_service = Arc::new(BusinessServiceForDatahub::new(config.clone()));
                 let notifications_router = BusinessNotificationsRouter::new(config.clone()).router();
                 let gateway_router = RainbowBusinessRouter::new(gateway_service).router();
-                let global_router = Router::new()
-                    .merge(notifications_router)
-                    .merge(gateway_router);
+                let global_router = Router::new().merge(notifications_router).merge(gateway_router);
                 let server_message = format!(
                     "Starting provider gateway server in {}",
                     config.get_gateway_host_url().unwrap()
                 );
                 info!("{}", server_message);
-                let listener = TcpListener::bind(format!(
-                    "{}:{}",
-                    config.get_raw_gateway_host().clone().unwrap().url,
-                    config.get_raw_gateway_host().clone().unwrap().port
-                ))
-                    .await?;
+
+                let listener = match config.get_environment_scenario() {
+                    true => {
+                        TcpListener::bind(format!(
+                            "127.0.0.1:{}",
+                            config.get_raw_gateway_host().clone().unwrap().port
+                        ))
+                        .await?
+                    }
+                    false => {
+                        TcpListener::bind(format!(
+                            "0.0.0.0:{}",
+                            config.get_raw_gateway_host().clone().unwrap().port
+                        ))
+                        .await?
+                    }
+                };
+
                 serve(listener, global_router).await?;
             }
             GatewayCliCommands::Subscribe(_args) => {

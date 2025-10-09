@@ -68,13 +68,13 @@ pub async fn create_catalog_router(config: &ApplicationProviderConfig) -> Router
         subscription_service,
         Option::from(SubscriptionEntities::Catalog),
     )
-        .router();
+    .router();
     let notification_service = Arc::new(RainbowEventsNotificationsService::new(subscription_repo));
     let notification_router = RainbowEventsNotificationRouter::new(
         notification_service.clone(),
         Option::from(SubscriptionEntities::Catalog),
     )
-        .router();
+    .router();
 
     // DSProtocol Dependency Injection
     let ds_protocol_service = Arc::new(DSProtocolCatalogService::new(catalog_repo.clone()));
@@ -85,10 +85,22 @@ pub async fn create_catalog_router(config: &ApplicationProviderConfig) -> Router
         catalog_repo.clone(),
         notification_service.clone(),
     ));
-    let rainbow_data_service_service = Arc::new(RainbowCatalogDataServiceService::new(catalog_repo.clone(), notification_service.clone()));
-    let rainbow_dataset_service = Arc::new(RainbowCatalogDatasetService::new(catalog_repo.clone(), notification_service.clone()));
-    let rainbow_distribution_service = Arc::new(RainbowCatalogDistributionService::new(catalog_repo.clone(), notification_service.clone()));
-    let rainbow_policies_service = Arc::new(RainbowCatalogPoliciesService::new(catalog_repo.clone(), notification_service.clone()));
+    let rainbow_data_service_service = Arc::new(RainbowCatalogDataServiceService::new(
+        catalog_repo.clone(),
+        notification_service.clone(),
+    ));
+    let rainbow_dataset_service = Arc::new(RainbowCatalogDatasetService::new(
+        catalog_repo.clone(),
+        notification_service.clone(),
+    ));
+    let rainbow_distribution_service = Arc::new(RainbowCatalogDistributionService::new(
+        catalog_repo.clone(),
+        notification_service.clone(),
+    ));
+    let rainbow_policies_service = Arc::new(RainbowCatalogPoliciesService::new(
+        catalog_repo.clone(),
+        notification_service.clone(),
+    ));
 
     let rainbow_catalog_router = RainbowCatalogCatalogRouter::new(rainbow_catalog_service, ds_protocol_service.clone());
     let rainbow_data_service_router = RainbowCatalogDataServiceRouter::new(rainbow_data_service_service.clone());
@@ -121,13 +133,28 @@ impl CatalogApplication {
         // db_connection
         let router = create_catalog_router(config).await;
         // Init server
-        let server_message = format!("Starting catalog server in {}", config.get_catalog_host_url().unwrap());
+        let server_message = format!(
+            "Starting catalog server in {}",
+            config.get_catalog_host_url().unwrap()
+        );
         info!("{}", server_message);
-        let listener = TcpListener::bind(format!(
-            "{}:{}",
-            config.get_raw_catalog_host().clone().unwrap().url,
-            config.get_raw_catalog_host().clone().unwrap().port
-        )).await?;
+        let listener = match config.get_environment_scenario() {
+            true => {
+                TcpListener::bind(format!(
+                    "127.0.0.1:{}",
+                    config.get_raw_catalog_host().clone().unwrap().port
+                ))
+                .await?
+            }
+            false => {
+                TcpListener::bind(format!(
+                    "0.0.0.0:{}",
+                    config.get_raw_catalog_host().clone().unwrap().port
+                ))
+                .await?
+            }
+        };
+
         serve(listener, router).await?;
         Ok(())
     }
