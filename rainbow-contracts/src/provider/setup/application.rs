@@ -26,8 +26,8 @@ use crate::provider::core::ds_protocol_rpc::ds_protocol_rpc::DSRPCContractNegoti
 use crate::provider::core::rainbow_entities::rainbow_entities::RainbowEntitiesContractNegotiationProviderService;
 use crate::provider::http::ds_protocol::ds_protocol::DSProtocolContractNegotiationProviderRouter;
 use crate::provider::http::ds_protocol_rpc::ds_protocol_rpc::DSRPCContractNegotiationProviderRouter;
-use crate::provider::http::rainbow_entities::rainbow_entities::RainbowEntitesContractNegotiationProviderRouter;
 use crate::provider::http::openapi::route_openapi;
+use crate::provider::http::rainbow_entities::rainbow_entities::RainbowEntitesContractNegotiationProviderRouter;
 use axum::{serve, Router};
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_common::facades::ssi_auth_facade::ssi_auth_facade::SSIAuthFacadeService;
@@ -63,13 +63,13 @@ pub async fn create_contract_negotiation_provider_router(config: &ApplicationPro
         subscription_service,
         Some(SubscriptionEntities::ContractNegotiationProcess),
     )
-        .router();
+    .router();
     let notification_service = Arc::new(RainbowEventsNotificationsService::new(subscription_repo));
     let notification_router = RainbowEventsNotificationRouter::new(
         notification_service.clone(),
         Some(SubscriptionEntities::ContractNegotiationProcess),
     )
-        .router();
+    .router();
 
     // Rainbow Entities Dependency injection
     let rainbow_entities_service = Arc::new(RainbowEntitiesContractNegotiationProviderService::new(
@@ -84,10 +84,7 @@ pub async fn create_contract_negotiation_provider_router(config: &ApplicationPro
         application_global_config.clone().into(),
     ));
     let app_config: ApplicationProviderConfig = config.clone().into();
-    let mates_facade = Arc::new(MatesFacadeService::new(
-        app_config.into()
-    ));
-
+    let mates_facade = Arc::new(MatesFacadeService::new(app_config.into()));
 
     let catalog_facade: Arc<dyn CatalogOdrlFacadeTrait + Send + Sync>;
     if config.is_datahub_as_catalog() {
@@ -128,13 +125,27 @@ impl ContractNegotiationProviderApplication {
         // db_connection
         let router = create_contract_negotiation_provider_router(config).await;
         // Init server
-        let server_message = format!("Starting provider server in {}", config.get_contract_negotiation_host_url().unwrap());
+        let server_message = format!(
+            "Starting provider server in {}",
+            config.get_contract_negotiation_host_url().unwrap()
+        );
         info!("{}", server_message);
-        let listener = TcpListener::bind(format!(
-            "{}:{}",
-            config.get_raw_contract_negotiation_host().clone().unwrap().url,
-            config.get_raw_contract_negotiation_host().clone().unwrap().port
-        )).await?;
+        let listener = match config.get_environment_scenario() {
+            true => {
+                TcpListener::bind(format!(
+                    "127.0.0.1:{}",
+                    config.get_raw_contract_negotiation_host().clone().unwrap().port
+                ))
+                .await?
+            }
+            false => {
+                TcpListener::bind(format!(
+                    "0.0.0.0:{}",
+                    config.get_raw_contract_negotiation_host().clone().unwrap().port
+                ))
+                .await?
+            }
+        };
         serve(listener, router).await?;
         Ok(())
     }

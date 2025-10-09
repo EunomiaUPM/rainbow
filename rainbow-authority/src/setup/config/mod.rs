@@ -227,6 +227,7 @@ impl AuthorityApplicationConfigTrait for AuthorityApplicationConfig {
 pub trait AuthorityFunctions {
     fn get_host(&self) -> String;
     fn get_host_without_protocol(&self) -> String;
+    fn get_port(&self) -> String;
 }
 
 impl AuthorityFunctions for AuthorityApplicationConfig {
@@ -237,6 +238,10 @@ impl AuthorityFunctions for AuthorityApplicationConfig {
     fn get_host_without_protocol(&self) -> String {
         let host = self.authority_host.clone().unwrap();
         format!("{}:{}", host.url, host.port)
+    }
+
+    fn get_port(&self) -> String {
+        self.authority_host.clone().unwrap().port
     }
 }
 

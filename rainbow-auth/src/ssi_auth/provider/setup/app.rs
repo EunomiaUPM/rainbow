@@ -38,12 +38,22 @@ impl SSIAuthProviderApplication {
             config.get_transfer_host_url().unwrap()
         );
         info!("{}", server_message);
-        let listener = TcpListener::bind(format!(
-            "{}:{}",
-            config.get_raw_auth_host().clone().unwrap().url,
-            config.get_raw_auth_host().clone().unwrap().port
-        ))
-        .await?;
+        let listener = match config.get_environment_scenario() {
+            true => {
+                TcpListener::bind(format!(
+                    "127.0.0.1:{}",
+                    config.get_raw_ssi_auth_host().clone().unwrap().port
+                ))
+                    .await?
+            }
+            false => {
+                TcpListener::bind(format!(
+                    "0.0.0.0:{}",
+                    config.get_raw_ssi_auth_host().clone().unwrap().port
+                ))
+                    .await?
+            }
+        };
         serve(listener, router).await?;
         Ok(())
     }

@@ -27,8 +27,8 @@ use crate::provider::core::ds_protocol_rpc::ds_protocol_rpc::DSRPCTransferProvid
 use crate::provider::core::rainbow_entities::rainbow_entities::RainbowTransferProviderServiceImpl;
 use crate::provider::http::ds_protocol::ds_protocol::DSProtocolTransferProviderRouter;
 use crate::provider::http::ds_protocol_rpc::ds_protocol_rpc::DSRPCTransferProviderProviderRouter;
-use crate::provider::http::rainbow_entities::rainbow_entities::RainbowTransferProviderEntitiesRouter;
 use crate::provider::http::openapi::route_openapi;
+use crate::provider::http::rainbow_entities::rainbow_entities::RainbowTransferProviderEntitiesRouter;
 use axum::{serve, Router};
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_common::facades::ssi_auth_facade::ssi_auth_facade::SSIAuthFacadeService;
@@ -70,7 +70,7 @@ pub async fn create_transfer_provider_router(config: &ApplicationProviderConfig)
         application_global_config.clone().into(),
         dataplane_process_service.clone(),
     )
-        .router();
+    .router();
 
     // Dataplane Router
     let dataplane_info_service = Arc::new(DataPlaneInfoService::new(
@@ -88,13 +88,13 @@ pub async fn create_transfer_provider_router(config: &ApplicationProviderConfig)
         subscription_service,
         Some(SubscriptionEntities::TransferProcess),
     )
-        .router();
+    .router();
     let notification_service = Arc::new(RainbowEventsNotificationsService::new(subscription_repo));
     let notification_router = RainbowEventsNotificationRouter::new(
         notification_service.clone(),
         Some(SubscriptionEntities::TransferProcess),
     )
-        .router();
+    .router();
 
     // Rainbow Entities Dependency injection
     let provider_repo = Arc::new(TransferProviderRepoForSql::create_repo(
@@ -133,9 +133,7 @@ pub async fn create_transfer_provider_router(config: &ApplicationProviderConfig)
 
     // DSRPCProtocol Dependency injection
     let app_config: ApplicationProviderConfig = config.clone().into();
-    let mates_facade = Arc::new(MatesFacadeService::new(
-        app_config.into()
-    ));
+    let mates_facade = Arc::new(MatesFacadeService::new(app_config.into()));
     let ds_protocol_rpc_service = Arc::new(DSRPCTransferProviderService::new(
         provider_repo.clone(),
         data_service_facade,
@@ -169,12 +167,22 @@ impl TransferProviderApplication {
             config.get_transfer_host_url().unwrap()
         );
         info!("{}", server_message);
-        let listener = TcpListener::bind(format!(
-            "{}:{}",
-            config.get_raw_transfer_process_host().clone().unwrap().url,
-            config.get_raw_transfer_process_host().clone().unwrap().port
-        ))
-            .await?;
+        let listener = match config.get_environment_scenario() {
+            true => {
+                TcpListener::bind(format!(
+                    "127.0.0.1:{}",
+                    config.get_raw_transfer_process_host().clone().unwrap().port
+                ))
+                .await?
+            }
+            false => {
+                TcpListener::bind(format!(
+                    "0.0.0.0:{}",
+                    config.get_raw_transfer_process_host().clone().unwrap().port
+                ))
+                .await?
+            }
+        };
         serve(listener, router).await?;
         Ok(())
     }

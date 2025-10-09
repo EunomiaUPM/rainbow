@@ -48,8 +48,7 @@ pub async fn create_catalog_bypass_consumer_router(config: ApplicationConsumerCo
     let mates_facade = Arc::new(MatesFacadeService::new(global_config.clone().into()));
     let bypass_service = Arc::new(CatalogBypassService::new(mates_facade.clone()));
     let bypass_router = CatalogBypassRouter::new(bypass_service.clone()).router();
-    Router::new()
-        .merge(bypass_router)
+    Router::new().merge(bypass_router)
 }
 
 impl CatalogBypassConsumerApplication {
@@ -62,12 +61,24 @@ impl CatalogBypassConsumerApplication {
             config.get_transfer_host_url().unwrap()
         );
         info!("{}", server_message);
-        let listener = TcpListener::bind(format!(
-            "{}:{}",
-            config.get_raw_transfer_process_host().clone().unwrap().url,
-            config.get_raw_transfer_process_host().clone().unwrap().port
-        ))
-            .await?;
+
+        let listener = match config.get_environment_scenario() {
+            true => {
+                TcpListener::bind(format!(
+                    "127.0.0.1:{}",
+                    config.get_raw_transfer_process_host().clone().unwrap().port
+                ))
+                .await?
+            }
+            false => {
+                TcpListener::bind(format!(
+                    "0.0.0.0:{}",
+                    config.get_raw_transfer_process_host().clone().unwrap().port
+                ))
+                .await?
+            }
+        };
+
         serve(listener, router).await?;
         Ok(())
     }

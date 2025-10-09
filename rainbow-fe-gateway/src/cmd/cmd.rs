@@ -81,12 +81,22 @@ impl GatewayCommands {
                             config.get_gateway_host_url().unwrap()
                         );
                         info!("{}", server_message);
-                        let listener = TcpListener::bind(format!(
-                            "{}:{}",
-                            config.get_raw_gateway_host().clone().unwrap().url,
-                            config.get_raw_gateway_host().clone().unwrap().port
-                        ))
-                            .await?;
+                        let listener = match config.get_environment_scenario() {
+                            true => {
+                                TcpListener::bind(format!(
+                                    "127.0.0.1:{}",
+                                    config.get_raw_gateway_host().clone().unwrap().port
+                                ))
+                                .await?
+                            }
+                            false => {
+                                TcpListener::bind(format!(
+                                    "0.0.0.0:{}",
+                                    config.get_raw_gateway_host().clone().unwrap().port
+                                ))
+                                .await?
+                            }
+                        };
                         serve(listener, gateway_router).await?;
                     }
                     GatewayCliCommands::Subscribe(args) => {
@@ -99,31 +109,41 @@ impl GatewayCommands {
                     }
                 }
             }
-            GatewayCliRoles::Consumer(cmd) => {
-                match cmd {
-                    GatewayCliCommands::Start(args) => {
-                        let config = Self::extract_consumer_config(args.env_file)?;
-                        let gateway_router = RainbowConsumerGateway::new(config.clone()).router();
-                        let server_message = format!(
-                            "Starting consumer gateway server in {}",
-                            config.get_gateway_host_url().unwrap()
-                        );
-                        info!("{}", server_message);
-                        let listener = TcpListener::bind(format!(
-                            "{}:{}",
-                            config.get_raw_gateway_host().clone().unwrap().url,
-                            config.get_raw_gateway_host().clone().unwrap().port
-                        ))
-                            .await?;
-                        serve(listener, gateway_router).await?;
-                    }
-                    GatewayCliCommands::Subscribe(args) => {
-                        let config = Self::extract_consumer_config(args.env_file)?;
-                        let microservices_subs = RainbowConsumerGatewaySubscriptions::new(config.clone());
-                        microservices_subs.subscribe_to_microservice(MicroserviceSubscriptionKey::ContractNegotiation).await?;
-                    }
+            GatewayCliRoles::Consumer(cmd) => match cmd {
+                GatewayCliCommands::Start(args) => {
+                    let config = Self::extract_consumer_config(args.env_file)?;
+                    let gateway_router = RainbowConsumerGateway::new(config.clone()).router();
+                    let server_message = format!(
+                        "Starting consumer gateway server in {}",
+                        config.get_gateway_host_url().unwrap()
+                    );
+                    info!("{}", server_message);
+                    let listener = match config.get_environment_scenario() {
+                        true => {
+                            TcpListener::bind(format!(
+                                "127.0.0.1:{}",
+                                config.get_raw_gateway_host().clone().unwrap().port
+                            ))
+                            .await?
+                        }
+                        false => {
+                            TcpListener::bind(format!(
+                                "0.0.0.0:{}",
+                                config.get_raw_gateway_host().clone().unwrap().port
+                            ))
+                            .await?
+                        }
+                    };
+                    serve(listener, gateway_router).await?;
                 }
-            }
+                GatewayCliCommands::Subscribe(args) => {
+                    let config = Self::extract_consumer_config(args.env_file)?;
+                    let microservices_subs = RainbowConsumerGatewaySubscriptions::new(config.clone());
+                    microservices_subs
+                        .subscribe_to_microservice(MicroserviceSubscriptionKey::ContractNegotiation)
+                        .await?;
+                }
+            },
         };
 
         Ok(())
