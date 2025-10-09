@@ -21,8 +21,9 @@ use serde::Serialize;
 
 #[derive(Serialize, Clone, Debug)]
 pub struct SSIWalletConfig {
-    pub wallet_portal_url: String,
-    pub wallet_portal_port: String,
+    pub wallet_api_protocol: String,
+    pub wallet_api_url: String,
+    pub wallet_api_port: Option<String>,
     pub wallet_type: String,
     pub wallet_name: String,
     pub wallet_email: String,
