@@ -17,7 +17,6 @@
  *
  */
 
-use crate::common::core::mates_facade::MatesFacadeTrait;
 use crate::common::errors::transfer_errors::TransferErrors;
 use crate::provider::core::data_plane_facade::DataPlaneProviderFacadeTrait;
 use crate::provider::core::data_service_resolver_facade::DataServiceFacadeTrait;
@@ -34,6 +33,7 @@ use rainbow_common::err::transfer_err::TransferErrorType;
 use rainbow_common::errors::helpers::{BadFormat, MissingAction};
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::mates::Mates;
+use rainbow_common::mates_facade::MatesFacadeTrait;
 use rainbow_common::protocol::transfer::transfer_completion::TransferCompletionMessage;
 use rainbow_common::protocol::transfer::transfer_process::TransferProcessMessage;
 use rainbow_common::protocol::transfer::transfer_protocol_trait::DSProtocolTransferMessageTrait;

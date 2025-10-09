@@ -17,13 +17,13 @@
  *
  */
 
-use crate::common::core::mates_facade::MatesFacadeTrait;
-use anyhow::{anyhow, bail};
+use crate::config::global_config::{format_host_config_to_url_string, ApplicationGlobalConfig};
+use crate::errors::helpers::BadFormat;
+use crate::errors::{CommonErrors, ErrorLog};
+use crate::mates::Mates;
+use crate::mates_facade::MatesFacadeTrait;
+use anyhow::bail;
 use axum::async_trait;
-use rainbow_common::config::global_config::{format_host_config_to_url_string, ApplicationGlobalConfig};
-use rainbow_common::errors::helpers::BadFormat;
-use rainbow_common::errors::{CommonErrors, ErrorLog};
-use rainbow_common::mates::Mates;
 use reqwest::Client;
 use std::time::Duration;
 use tracing::error;

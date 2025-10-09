@@ -24,6 +24,7 @@ pub mod dcat_formats;
 pub mod err;
 pub mod facades;
 pub mod mates;
+pub mod mates_facade;
 pub mod misc_router;
 pub mod policy_templates;
 pub mod protocol;
