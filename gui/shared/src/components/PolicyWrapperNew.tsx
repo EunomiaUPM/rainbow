@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {FC, useState} from "react";
 import {
   Accordion,
   AccordionContent,
@@ -16,11 +16,14 @@ import {
 } from "shared/src/components/ui/select";
 import {Input} from "shared/src/components/ui/input";
 import {leftOperands, odrlActions, operators} from "shared/src/odrl_actions";
+import {SubmitHandler} from "react-hook-form";
 
 type ComponentType = "permission" | "obligation" | "prohibition";
 type OperandType = "leftOperand" | "rightOperand" | "operator";
 
-export const PolicyWrapperNew = ({onSubmit}) => {
+export const PolicyWrapperNew: FC<{
+  onSubmit: SubmitHandler<any>;
+}> = ({onSubmit}) => {
   const [newPolicy, setNewPolicy] = useState<OdrlInfo>({
     obligation: [],
     permission: [],

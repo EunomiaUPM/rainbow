@@ -1,8 +1,7 @@
 import * as React from "react";
-import { cn } from "./../../lib/utils";
-import { cva, type VariantProps } from "class-variance-authority";
-import { Badge } from "./badge";
-import Heading from "./heading";
+import {FC} from "react";
+import {cn} from "shared/src/lib/utils";
+import {cva, type VariantProps} from "class-variance-authority";
 
 const policyVariants = cva("gap-1.5 border px-2 py-1 rounded-md", {
   variants: {
@@ -14,7 +13,9 @@ const policyVariants = cva("gap-1.5 border px-2 py-1 rounded-md", {
   },
 });
 
-const HeadingColor = ({ variant }) => {
+export type PolicyVariants = VariantProps<typeof policyVariants>["variant"];
+
+const HeadingColor = ({variant}: { variant: PolicyVariants }) => {
   switch (variant) {
     case "permission":
       return "text-success-200";
@@ -34,17 +35,20 @@ export interface PolicyProps
 }
 
 const Policy = React.forwardRef<HTMLDivElement, PolicyProps>(
-  ({ className, variant, children, ...props }, ref) => {
+  ({className, variant, children, ...props}, ref) => {
     return (
-      <div className={cn(policyVariants({ variant, className }))} {...props}>
-        <p className={`uppercase mb-0 font-bold ${HeadingColor({ variant })}`}>{variant}</p>
+      <div className={cn(policyVariants({variant, className}))} {...props}>
+        <p className={`uppercase mb-0 font-bold ${HeadingColor({variant})}`}>{variant}</p>
         {children}
       </div>
     );
   },
 );
 Policy.displayName = "Policy";
-const PolicyItemContainer = ({ children, ...props }) => {
+const PolicyItemContainer: FC<{
+  children: React.ReactNode;
+  props?: React.HTMLAttributes<HTMLDivElement>;
+}> = ({children, ...props}) => {
   return (
     <div
       className={cn(
@@ -56,7 +60,10 @@ const PolicyItemContainer = ({ children, ...props }) => {
     </div>
   );
 };
-const PolicyHeading = ({ children, ...props }) => {
+const PolicyHeading: FC<{
+  children: React.ReactNode;
+  props?: React.HTMLAttributes<HTMLDivElement>;
+}> = ({children, ...props}) => {
   return (
     <div className={cn("flex ")} {...props}>
       {children}
@@ -64,7 +71,10 @@ const PolicyHeading = ({ children, ...props }) => {
   );
 };
 
-const PolicyItem = ({ children, ...props }) => {
+const PolicyItem: FC<{
+  children: React.ReactNode;
+  props?: React.HTMLAttributes<HTMLDivElement>;
+}> = ({children, ...props}) => {
   return (
     <div className={cn("flex ")} {...props}>
       {children}
@@ -72,7 +82,10 @@ const PolicyItem = ({ children, ...props }) => {
   );
 };
 
-const PolicyItemKey = ({ children, ...props }) => {
+const PolicyItemKey: FC<{
+  children: React.ReactNode;
+  props?: React.HTMLAttributes<HTMLDivElement>;
+}> = ({children, ...props}) => {
   return (
     <div className={cn("w-32 font-semibold text-white/60")} {...props}>
       {children}
@@ -80,7 +93,10 @@ const PolicyItemKey = ({ children, ...props }) => {
   );
 };
 
-const PolicyItemValue = ({ children, ...props }) => {
+const PolicyItemValue: FC<{
+  children: React.ReactNode;
+  props?: React.HTMLAttributes<HTMLDivElement>;
+}> = ({children, ...props}) => {
   return (
     <div className={cn("uppercase")} {...props}>
       {children}
@@ -88,11 +104,10 @@ const PolicyItemValue = ({ children, ...props }) => {
   );
 };
 
-const PolicyConstraintsContainer = ({ children, ...props }) => {
-  //  const formatString = (text: string) => {
-  //     let formattedText = text.replace(/[()\[\]{}"]/g, ' ')
-  //     return formattedText
-  // }
+const PolicyConstraintsContainer: FC<{
+  children: React.ReactNode;
+  props?: React.HTMLAttributes<HTMLDivElement>;
+}> = ({children, ...props}) => {
   return (
     <div className={cn("flex gap-1.5 bg-black/30 w-fit p-1 rounded-md")} {...props}>
       {children}
@@ -100,13 +115,16 @@ const PolicyConstraintsContainer = ({ children, ...props }) => {
   );
 };
 
-const PolicyConstraint = ({ type, className, children, ...props }) => {
+const PolicyConstraint: FC<{
+  children: React.ReactNode;
+  type: "leftOperand" | "operator" | "rightOperand";
+  className?: string;
+  props?: React.HTMLAttributes<HTMLDivElement>;
+}> = ({type, className, children, ...props}) => {
   const formatString = (text: string) => {
     let formattedText = text.replace(/[()\[\]{},"]/g, " ");
     return formattedText;
   };
-  // VERIFICAR SI EL TEXTO QUE VIENE ES TIPO STRING
-  // SI NO LO ES, PASARLO A STRING PARA PODER FORMATEARLO
   const childText = typeof children === "string" ? children : String(children);
   return (
     <div className={cn("constraint-policy-container", className)} {...props}>
@@ -117,16 +135,22 @@ const PolicyConstraint = ({ type, className, children, ...props }) => {
         <p className="break-all text-white/80">{formatString(childText)}</p>
         {/* {console.log(childText.length, " childText")} */}
       </span>
-      <div className="constraint-item text-2xs px-1.5 rounded-sm py-0.5 cursor-pointer bg-black/90 opacity-80 mt-1">
+      <div
+        className="constraint-item text-2xs px-1.5 rounded-sm py-0.5 cursor-pointer bg-black/90 opacity-80 mt-1">
         {type}
       </div>
     </div>
   );
 };
 
-const PolicyConstraintsWrapper = ({ children }) => {
+const PolicyConstraintsWrapper: FC<{
+  children: React.ReactNode;
+  props?: React.HTMLAttributes<HTMLDivElement>;
+}> = ({children}) => {
   return <div className="flex flex-col gap-1">{children}</div>;
 };
+
+
 export {
   Policy,
   policyVariants,

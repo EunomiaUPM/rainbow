@@ -1,19 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router";
+import {createFileRoute} from "@tanstack/react-router";
 import dayjs from "dayjs";
 import {
   useGetDataplaneProcessById,
   useGetTransferMessagesByProviderPid,
   useGetTransferProcessByProviderPid,
 } from "shared/src/data/transfer-queries.ts";
-import { List, ListItem, ListItemKey } from "shared/src/components/ui/list.tsx";
+import {List, ListItem, ListItemKey} from "shared/src/components/ui/list.tsx";
 import Heading from "shared/src/components/ui/heading.tsx";
-import { Badge } from "shared/src/components/ui/badge.tsx";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../../../../../shared/src/components/ui/tabs";
+import {Badge, BadgeState} from "shared/src/components/ui/badge.tsx";
+import {Tabs, TabsContent, TabsList, TabsTrigger,} from "shared/src/components/ui/tabs";
 import {
   Drawer,
   DrawerBody,
@@ -23,21 +18,22 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from "@./../../shared/src/components/ui/drawer";
-import { Button } from "shared/src/components/ui/button";
-import { TransferProcessActions } from "shared/src/components/TransferProcessActions";
+} from "shared/src/components/ui/drawer";
+import {Button} from "shared/src/components/ui/button";
+import {TransferProcessActions} from "shared/src/components/TransferProcessActions";
 import TransferProcessMessageComponent from "shared/src/components/TransferProcessMessageComponent";
-import TransferProcessDataPlaneComponent from "shared/src/components/TransferProcessDataPlaneComponent";
+import TransferProcessDataPlaneComponent
+  from "shared/src/components/TransferProcessDataPlaneComponent";
 
 export const Route = createFileRoute("/transfer-process/$transferProcessId/")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const { transferProcessId } = Route.useParams();
-  const { data: transferProcess } = useGetTransferProcessByProviderPid(transferProcessId);
-  const { data: transferMessages } = useGetTransferMessagesByProviderPid(transferProcessId);
-  const { data: dataPlane } = useGetDataplaneProcessById(transferProcessId);
+  const {transferProcessId} = Route.useParams();
+  const {data: transferProcess} = useGetTransferProcessByProviderPid(transferProcessId);
+  const {data: transferMessages} = useGetTransferMessagesByProviderPid(transferProcessId);
+  const {data: dataPlane} = useGetDataplaneProcessById(transferProcessId);
 
   return (
     <div className="space-y-4 pb-4">
@@ -47,16 +43,9 @@ function RouteComponent() {
           <TabsTrigger value="data-plane">Data Plane</TabsTrigger>
         </TabsList>
         <TabsContent value="data-plane" className="gridColsLayout">
-          {/* <div className=" w-full break-all">
-            <pre className="max-w-[500px] p-4 rounded-lg break-all text-[11px] bg-black/70 text-secondary-400 break-all">
-              <code className="whitespace-pre-wrap break-all">
-                {JSON.stringify(dataPlane, null, 2)}
-              </code>
-            </pre>
-          </div> */}
           {dataPlane && (
             <div>
-              <TransferProcessDataPlaneComponent dataPlane={dataPlane} />
+              <TransferProcessDataPlaneComponent dataPlane={dataPlane}/>
             </div>
           )}
         </TabsContent>
@@ -81,7 +70,7 @@ function RouteComponent() {
               </ListItem>
               <ListItem>
                 <ListItemKey>Transfer Process State</ListItemKey>
-                <Badge variant={"status"} state={transferProcess.state}>
+                <Badge variant={"status"} state={transferProcess.state as BadgeState}>
                   {transferProcess.state}
                 </Badge>
               </ListItem>
@@ -111,10 +100,8 @@ function RouteComponent() {
               {/* Messages */}
               <DrawerBody>
                 {transferMessages.map((message) => {
-                  // console.log(message);
                   return (
-                    // <pre key={message.id}>{JSON.stringify(message, null, 2)}</pre>
-                    <TransferProcessMessageComponent key={message.id} message={message} />
+                    <TransferProcessMessageComponent key={message.id} message={message}/>
                   );
                 })}
               </DrawerBody>
@@ -152,7 +139,7 @@ function RouteComponent() {
                         <TableHead>Key</TableHead>
                         <TableHead>Value</TableHead>
                     </TableRow>
-                </TableHeader> 
+                </TableHeader>
           <TableBody> */}
         {/* <TableRow>
                         <TableCell>Transfer Process Provider pid</TableCell>
@@ -233,7 +220,7 @@ function RouteComponent() {
       </div>
 
       {/* ACTIONS */}
-      <TransferProcessActions process={transferProcess} tiny={false} />
+      <TransferProcessActions process={transferProcess} tiny={false}/>
     </div>
   );
 }

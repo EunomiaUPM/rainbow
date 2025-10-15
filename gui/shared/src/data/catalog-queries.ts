@@ -1,6 +1,6 @@
-import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { useContext } from "react";
-import { GlobalInfoContext, GlobalInfoContextType } from "./../context/GlobalInfoContext";
+import {queryOptions, useSuspenseQuery} from "@tanstack/react-query";
+import {useContext} from "react";
+import {GlobalInfoContext, GlobalInfoContextType} from "./../context/GlobalInfoContext";
 
 /**
  *  GET /catalogs
@@ -17,9 +17,9 @@ export const getCatalogsOptions = (api_gateway: string) =>
   });
 
 export const useGetCatalogs = () => {
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  const { data, isLoading, isError, error } = useSuspenseQuery(getCatalogsOptions(api_gateway));
-  return { data, isLoading, isError, error };
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const {data, isLoading, isError, error} = useSuspenseQuery(getCatalogsOptions(api_gateway));
+  return {data, isLoading, isError, error};
 };
 
 /**
@@ -38,11 +38,11 @@ export const getCatalogsByIdOptions = (api_gateway: string, catalogId: UUID) =>
   });
 
 export const useGetCatalogsById = (catalogId: UUID) => {
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  const { data, isLoading, isError, error } = useSuspenseQuery(
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const {data, isLoading, isError, error} = useSuspenseQuery(
     getCatalogsByIdOptions(api_gateway, catalogId),
   );
-  return { data, isLoading, isError, error };
+  return {data, isLoading, isError, error};
 };
 
 /**
@@ -63,11 +63,11 @@ export const getDatasetsByCatalogIdOptions = (api_gateway: string, catalogId: UU
   });
 
 export const useGetDatasetsByCatalogId = (catalogId: UUID) => {
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  const { data, isLoading, isError, error } = useSuspenseQuery(
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const {data, isLoading, isError, error} = useSuspenseQuery(
     getDatasetsByCatalogIdOptions(api_gateway, catalogId),
   );
-  return { data, isLoading, isError, error };
+  return {data, isLoading, isError, error};
 };
 
 /**
@@ -88,11 +88,11 @@ export const getDataServicesByCatalogIdOptions = (api_gateway: string, catalogId
   });
 
 export const useGetDataServicesByCatalogId = (catalogId: UUID) => {
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  const { data, isLoading, isError, error } = useSuspenseQuery(
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const {data, isLoading, isError, error} = useSuspenseQuery(
     getDataServicesByCatalogIdOptions(api_gateway, catalogId),
   );
-  return { data, isLoading, isError, error };
+  return {data, isLoading, isError, error};
 };
 
 /**
@@ -111,11 +111,11 @@ export const getDatasetByIdOptions = (api_gateway: string, datasetId: UUID) =>
   });
 
 export const useGetDatasetById = (datasetId: UUID) => {
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  const { data, isLoading, isError, error } = useSuspenseQuery(
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const {data, isLoading, isError, error} = useSuspenseQuery(
     getDatasetByIdOptions(api_gateway, datasetId),
   );
-  return { data, isLoading, isError, error };
+  return {data, isLoading, isError, error};
 };
 
 /**
@@ -136,11 +136,11 @@ export const getDistributionsByDatasetIdOptions = (api_gateway: string, datasetI
   });
 
 export const useGetDistributionsByDatasetId = (datasetId: UUID) => {
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  const { data, isLoading, isError, error } = useSuspenseQuery(
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const {data, isLoading, isError, error} = useSuspenseQuery(
     getDistributionsByDatasetIdOptions(api_gateway, datasetId),
   );
-  return { data, isLoading, isError, error };
+  return {data, isLoading, isError, error};
 };
 
 /**
@@ -161,9 +161,9 @@ export const getDataServiceByIdOptions = (api_gateway: string, dataServiceId: UU
   });
 
 export const useGetDataServiceById = (dataServiceId: UUID) => {
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  const { data, isLoading, isError, error } = useSuspenseQuery(
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const {data, isLoading, isError, error} = useSuspenseQuery(
     getDataServiceByIdOptions(api_gateway, dataServiceId),
   );
-  return { data, isLoading, isError, error };
+  return {data, isLoading, isError, error};
 };

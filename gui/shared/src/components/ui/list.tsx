@@ -1,11 +1,11 @@
 import * as React from "react";
-import { cn } from "./../../lib/utils";
+import {cn} from "shared/src/lib/utils";
 
 const List = ({
-  className,
-  children,
-  ...props
-}: {
+                className,
+                children,
+                ...props
+              }: {
   className?: string;
   children: React.ReactNode;
   props?: any;
@@ -25,10 +25,10 @@ const List = ({
 };
 
 const ListItem = ({
-  className,
-  children,
-  ...props
-}: {
+                    className,
+                    children,
+                    ...props
+                  }: {
   className?: string;
   children: React.ReactNode;
   props?: any;
@@ -47,10 +47,10 @@ const ListItem = ({
 };
 
 const ListItemKey = ({
-  className,
-  children,
-  ...props
-}: {
+                       className,
+                       children,
+                       ...props
+                     }: {
   className?: string;
   children: React.ReactNode;
   props?: any;
@@ -63,10 +63,10 @@ const ListItemKey = ({
 };
 
 const ListItemDate = ({
-  className,
-  children,
-  ...props
-}: {
+                        className,
+                        children,
+                        ...props
+                      }: {
   className?: string;
   children: React.ReactNode;
   props?: any;
@@ -78,4 +78,4 @@ const ListItemDate = ({
   );
 };
 
-export { List, ListItem, ListItemKey, ListItemDate };
+export {List, ListItem, ListItemKey, ListItemDate};

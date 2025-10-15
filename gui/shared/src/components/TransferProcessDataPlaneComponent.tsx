@@ -1,15 +1,15 @@
 import React from "react";
 import dayjs from "dayjs";
-import { List, ListItemKey, ListItem } from "./ui/list";
-import { Badge } from "shared/src/components/ui/badge";
+import {List, ListItem, ListItemKey} from "./ui/list";
+import {Badge, BadgeState} from "shared/src/components/ui/badge";
 
 type TransferProcessDataPlaneComponentProps = {
   dataPlane: DataplaneSession;
 };
 
 const TransferProcessDataPlaneComponent: React.FC<TransferProcessDataPlaneComponentProps> = ({
-  dataPlane,
-}) => {
+                                                                                               dataPlane,
+                                                                                             }) => {
   const scopedListItemKeyClasses = "basis-[33%]";
 
   return (
@@ -48,7 +48,7 @@ const TransferProcessDataPlaneComponent: React.FC<TransferProcessDataPlaneCompon
       </ListItem>
       <ListItem>
         <ListItemKey className={scopedListItemKeyClasses}>State</ListItemKey>
-        <Badge variant={"status"} state={dataPlane.state}>
+        <Badge variant={"status"} state={dataPlane.state as BadgeState}>
           {dataPlane.state}
         </Badge>
       </ListItem>

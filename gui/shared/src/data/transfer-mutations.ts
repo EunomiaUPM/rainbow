@@ -1,5 +1,5 @@
-import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "@tanstack/react-router";
+import {useMutation} from "@tanstack/react-query";
+import {useRouter} from "@tanstack/react-router";
 
 /**
  *  POST /negotiation/rpc/setup-request
@@ -28,25 +28,27 @@ export const postTransferRPCRequest = async (
   if (rpc_response.error) {
     throw new Error(rpc_response.error);
   }
-  return { providerPid: rpc_response.providerPid };
+  return {providerPid: rpc_response.providerPid};
 };
 
 export const usePostTransferRPCRequest = () => {
   const router = useRouter();
-  const { data, isSuccess, isError, error, mutate, isPending, mutateAsync } = useMutation({
+  const {data, isSuccess, isError, error, mutate, isPending, mutateAsync} = useMutation({
     mutationFn: postTransferRPCRequest,
-    onMutate: async () => {},
+    onMutate: async () => {
+    },
     onError: (error) => {
       console.log("onError");
       console.log(error);
     },
     onSuccess: async ({}, _variables) => {
       console.log("onSuccess");
-      await router.navigate({ to: `/transfer-process` });
+      await router.navigate({to: `/transfer-process`});
     },
-    onSettled: () => {},
+    onSettled: () => {
+    },
   });
-  return { data, isSuccess, isError, error, mutate, mutateAsync, isPending };
+  return {data, isSuccess, isError, error, mutate, mutateAsync, isPending};
 };
 
 /**
@@ -54,6 +56,7 @@ export const usePostTransferRPCRequest = () => {
  * */
 export interface TransferRPCProviderStartBody {
   api_gateway: string;
+  // @ts-ignore
   content: {
     consumerParticipantId: UUID;
     consumerCallbackAddress?: string;
@@ -64,6 +67,7 @@ export interface TransferRPCProviderStartBody {
 
 export interface TransferRPCConsumerStartBody {
   api_gateway: string;
+  // @ts-ignore
   content: {
     providerParticipantId: UUID;
     consumerPid?: UUID;
@@ -79,20 +83,21 @@ export const postTransferRPCStart = async (
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(body.content),
+      body: JSON.stringify((body as any).content),
       method: "POST",
     })
   ).json();
   if (rpc_response.error) {
     throw new Error(rpc_response.error);
   }
-  return { providerPid: rpc_response.providerPid };
+  return {providerPid: rpc_response.providerPid};
 };
 
 export const usePostTransferRPCStart = () => {
-  const { data, isSuccess, isError, error, mutate, isPending, mutateAsync } = useMutation({
+  const {data, isSuccess, isError, error, mutate, isPending, mutateAsync} = useMutation({
     mutationFn: postTransferRPCStart,
-    onMutate: async () => {},
+    onMutate: async () => {
+    },
     onError: (error) => {
       console.log("onError");
       console.log(error);
@@ -100,9 +105,10 @@ export const usePostTransferRPCStart = () => {
     onSuccess: async ({}, _variables) => {
       console.log("onSuccess");
     },
-    onSettled: () => {},
+    onSettled: () => {
+    },
   });
-  return { data, isSuccess, isError, error, mutate, mutateAsync, isPending };
+  return {data, isSuccess, isError, error, mutate, mutateAsync, isPending};
 };
 
 /**
@@ -142,13 +148,14 @@ export const postTransferRPCSuspension = async (
   if (rpc_response.error) {
     throw new Error(rpc_response.error);
   }
-  return { providerPid: rpc_response.providerPid };
+  return {providerPid: rpc_response.providerPid};
 };
 
 export const usePostTransferRPCSuspension = () => {
-  const { data, isSuccess, isError, error, mutate, isPending, mutateAsync } = useMutation({
+  const {data, isSuccess, isError, error, mutate, isPending, mutateAsync} = useMutation({
     mutationFn: postTransferRPCSuspension,
-    onMutate: async () => {},
+    onMutate: async () => {
+    },
     onError: (error) => {
       console.log("onError");
       console.log(error);
@@ -156,9 +163,10 @@ export const usePostTransferRPCSuspension = () => {
     onSuccess: async ({}, _variables) => {
       console.log("onSuccess");
     },
-    onSettled: () => {},
+    onSettled: () => {
+    },
   });
-  return { data, isSuccess, isError, error, mutate, mutateAsync, isPending };
+  return {data, isSuccess, isError, error, mutate, mutateAsync, isPending};
 };
 
 /**
@@ -198,13 +206,14 @@ export const postTransferRPCCompletion = async (
   if (rpc_response.error) {
     throw new Error(rpc_response.error);
   }
-  return { providerPid: rpc_response.providerPid };
+  return {providerPid: rpc_response.providerPid};
 };
 
 export const usePostTransferRPCCompletion = () => {
-  const { data, isSuccess, isError, error, mutate, isPending, mutateAsync } = useMutation({
+  const {data, isSuccess, isError, error, mutate, isPending, mutateAsync} = useMutation({
     mutationFn: postTransferRPCCompletion,
-    onMutate: async () => {},
+    onMutate: async () => {
+    },
     onError: (error) => {
       console.log("onError");
       console.log(error);
@@ -212,9 +221,10 @@ export const usePostTransferRPCCompletion = () => {
     onSuccess: async ({}, _variables) => {
       console.log("onSuccess");
     },
-    onSettled: () => {},
+    onSettled: () => {
+    },
   });
-  return { data, isSuccess, isError, error, mutate, mutateAsync, isPending };
+  return {data, isSuccess, isError, error, mutate, mutateAsync, isPending};
 };
 
 /**
@@ -254,13 +264,14 @@ export const postTransferRPCTermination = async (
   if (rpc_response.error) {
     throw new Error(rpc_response.error);
   }
-  return { providerPid: rpc_response.providerPid };
+  return {providerPid: rpc_response.providerPid};
 };
 
 export const usePostTransferRPCTermination = () => {
-  const { data, isSuccess, isError, error, mutate, isPending, mutateAsync } = useMutation({
+  const {data, isSuccess, isError, error, mutate, isPending, mutateAsync} = useMutation({
     mutationFn: postTransferRPCTermination,
-    onMutate: async () => {},
+    onMutate: async () => {
+    },
     onError: (error) => {
       console.log("onError");
       console.log(error);
@@ -268,7 +279,8 @@ export const usePostTransferRPCTermination = () => {
     onSuccess: async ({}, _variables) => {
       console.log("onSuccess");
     },
-    onSettled: () => {},
+    onSettled: () => {
+    },
   });
-  return { data, isSuccess, isError, error, mutate, mutateAsync, isPending };
+  return {data, isSuccess, isError, error, mutate, mutateAsync, isPending};
 };

@@ -6,26 +6,27 @@ import {
   DialogHeader,
   DialogTitle,
 } from "./ui/dialog";
-import { Button } from "./ui/button";
-import React, { useContext } from "react";
-import { Form } from "./ui/form";
-import { useForm } from "react-hook-form";
-import { usePostContractNegotiationRPCAgreement } from "./../data/contract-mutations";
-import { GlobalInfoContext, GlobalInfoContextType } from "./../context/GlobalInfoContext";
-import { Badge } from "./../components/ui/badge";
-import { List, ListItem, ListItemKey } from "./../components/ui/list";
+import {Button} from "./ui/button";
+import React, {useContext} from "react";
+import {Form} from "./ui/form";
+import {useForm} from "react-hook-form";
+import {usePostContractNegotiationRPCAgreement} from "./../data/contract-mutations";
+import {GlobalInfoContext, GlobalInfoContextType} from "./../context/GlobalInfoContext";
+import {Badge, BadgeState} from "./../components/ui/badge";
+import {List, ListItem, ListItemKey} from "./../components/ui/list";
 import dayjs from "dayjs";
 
-export const ContractNegotiationAgreementDialog = ({ process }: { process: CNProcess }) => {
+export const ContractNegotiationAgreementDialog = ({process}: { process: CNProcess }) => {
   // --- Form Setup ---
   const form = useForm({});
-  const { handleSubmit, control, setValue, getValues } = form;
-  const { mutateAsync: agreeAsync } = usePostContractNegotiationRPCAgreement();
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
+  const {handleSubmit, control, setValue, getValues} = form;
+  const {mutateAsync: agreeAsync} = usePostContractNegotiationRPCAgreement();
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
   const onSubmit = () => {
     agreeAsync({
       api_gateway: api_gateway,
       content: {
+        //@ts-ignore
         consumerParticipantId: process.associated_consumer,
         consumerPid: process.consumer_id,
         providerPid: process.provider_id,
@@ -40,7 +41,7 @@ export const ContractNegotiationAgreementDialog = ({ process }: { process: CNPro
         <DialogDescription>
           <span>
             You are about to agree to the terms of the contract negotiation.
-            <br />
+            <br/>
             Please review the details carefully before proceeding.
           </span>
           {/* <code>{JSON.stringify(process)}</code> */}
@@ -59,11 +60,11 @@ export const ContractNegotiationAgreementDialog = ({ process }: { process: CNPro
         </ListItem>
         <ListItem>
           <ListItemKey className={scopedListItemKeyClasses}>Associated Consumer id:</ListItemKey>
-          <Badge variant={"info"}>{process.associated_consumer.slice(9, 40) + "[...]"}</Badge>
+          <Badge variant={"info"}>{process.associated_consumer?.slice(9, 40) + "[...]"}</Badge>
         </ListItem>
         <ListItem>
           <ListItemKey className={scopedListItemKeyClasses}>Current state:</ListItemKey>
-          <Badge variant={"status"} state={process.state}>
+          <Badge variant={"status"} state={process.state as BadgeState}>
             {process.state}
           </Badge>
         </ListItem>

@@ -6,29 +6,29 @@ import {
   DialogHeader,
   DialogTitle,
 } from "shared/src/components/ui/dialog";
-import { Button } from "shared/src/components/ui/button";
-import React, { useContext } from "react";
-import { Form } from "shared/src/components/ui/form";
-import { List, ListItem, ListItemKey } from "shared/src/components/ui/list";
-import { Badge } from "shared/src/components/ui/badge";
-import { useForm } from "react-hook-form";
-import { GlobalInfoContext, GlobalInfoContextType } from "shared/src/context/GlobalInfoContext";
+import {Button} from "shared/src/components/ui/button";
+import React, {useContext} from "react";
+import {Form} from "shared/src/components/ui/form";
+import {List, ListItem, ListItemKey} from "shared/src/components/ui/list";
+import {Badge, BadgeState} from "shared/src/components/ui/badge";
+import {useForm} from "react-hook-form";
+import {GlobalInfoContext, GlobalInfoContextType} from "shared/src/context/GlobalInfoContext";
 import dayjs from "dayjs";
-import { usePostBusinessTerminationRequest } from "shared/src/data/business-mutations";
-import { AuthContext, AuthContextType } from "shared/src/context/AuthContext";
+import {usePostBusinessTerminationRequest} from "shared/src/data/business-mutations";
+import {AuthContext, AuthContextType} from "shared/src/context/AuthContext";
 
-export const BusinessRequestTerminationDialog = ({ process }: { process: CNProcess }) => {
+export const BusinessRequestTerminationDialog = ({process}: { process: CNProcess }) => {
   // --- Form Setup ---
   const form = useForm({});
-  const { handleSubmit, control, setValue, getValues } = form;
-  const { mutateAsync: terminateAsync } = usePostBusinessTerminationRequest();
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  const { participant } = useContext<AuthContextType | null>(AuthContext)!;
+  const {handleSubmit, control, setValue, getValues} = form;
+  const {mutateAsync: terminateAsync} = usePostBusinessTerminationRequest();
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const {participant} = useContext<AuthContextType | null>(AuthContext)!;
   const onSubmit = () => {
     const associatedConsumer: string =
-      participant?.participant_type == "Provider"
-        ? process.associated_consumer
-        : participant?.participant_id;
+      participant!.participant_type == "Provider"
+        ? process.associated_consumer!
+        : participant!.participant_id;
     terminateAsync({
       api_gateway: api_gateway,
       content: {
@@ -49,7 +49,7 @@ export const BusinessRequestTerminationDialog = ({ process }: { process: CNProce
           <span className="max-w-full flex flex-wrap">
             {" "}
             You are about to terminate to the terms of the contract negotiation.
-            <br />
+            <br/>
             Please review the details carefully before proceeding.
           </span>
           {/* <code>{JSON.stringify(process)}</code> */}
@@ -81,7 +81,7 @@ export const BusinessRequestTerminationDialog = ({ process }: { process: CNProce
         )}
         <ListItem>
           <ListItemKey className={scopedListItemKeyClasses}>State:</ListItemKey>
-          <Badge variant={"status"} state={process.state}>
+          <Badge variant={"status"} state={process.state as BadgeState}>
             {process.state}
           </Badge>
         </ListItem>

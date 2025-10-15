@@ -20,7 +20,7 @@ export const PubSubContextProvider = ({children}: { children: ReactNode }) => {
   const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
   const [lastHighLightedNotification, setLastHighLightedNotification] = useState<UUID | null>(null);
   const {api_gateway, api_gateway_callback_address} =
-    useContext<GlobalInfoContextType>(GlobalInfoContext);
+    useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
   console.log(api_gateway);
   const {data: dataSubscriptions, isError: isDataSubscriptionError} =
     useGetSubscriptionByCallbackAddress(api_gateway_callback_address); // get all subscriptions
@@ -382,7 +382,7 @@ export const PubSubContextProvider = ({children}: { children: ReactNode }) => {
         case "TransferProcess":
           switch (subcategory) {
             case "TransferRequestMessage":
-              queryClient.setQueryData(["TRANSFER_PROCESSES"], (oldData: TransferProcessProvider[]) => {
+              queryClient.setQueryData(["TRANSFER_PROCESSES"], (oldData: TransferProcess[]) => {
                 if (!oldData) return;
 
                 const data = [...oldData];
@@ -390,14 +390,14 @@ export const PubSubContextProvider = ({children}: { children: ReactNode }) => {
                   (d) => d.provider_pid === notification.messageContent.process.provider_pid,
                 );
                 if (index !== -1) {
-                  data[index] = notification.messageContent.process as TransferProcessProvider;
+                  data[index] = notification.messageContent.process as TransferProcess;
                 }
                 return data;
               });
               // for single view
               queryClient.setQueryData(
                 ["TRANSFER_PROCESS_BY_ID", notification.messageContent.process.provider_pid],
-                notification.messageContent.process as TransferProcessProvider,
+                notification.messageContent.process as TransferProcess,
               );
               // for messages list
               // @ts-ignore
@@ -409,21 +409,21 @@ export const PubSubContextProvider = ({children}: { children: ReactNode }) => {
               console.log("TransferRequestMessage Notification:", notification);
               break;
             case "TransferStartMessage":
-              queryClient.setQueryData(["TRANSFER_PROCESSES"], (oldData: TransferProcessProvider[]) => {
+              queryClient.setQueryData(["TRANSFER_PROCESSES"], (oldData: TransferProcess[]) => {
                 if (!oldData) return;
                 const data = [...oldData];
                 const index = data.findIndex(
                   (d) => d.provider_pid === notification.messageContent.process.provider_pid,
                 );
                 if (index !== -1) {
-                  data[index] = notification.messageContent.process as TransferProcessProvider;
+                  data[index] = notification.messageContent.process as TransferProcess;
                 }
                 return data;
               });
               // for single view
               queryClient.setQueryData(
                 ["TRANSFER_PROCESS_BY_ID", notification.messageContent.process.provider_pid],
-                notification.messageContent.process as TransferProcessProvider,
+                notification.messageContent.process as TransferProcess,
               );
               // for messages list
               // @ts-ignore
@@ -435,7 +435,7 @@ export const PubSubContextProvider = ({children}: { children: ReactNode }) => {
               console.log("TransferStartMessage Notification:", notification);
               break;
             case "TransferSuspensionMessage":
-              queryClient.setQueryData(["TRANSFER_PROCESSES"], (oldData: TransferProcessProvider[]) => {
+              queryClient.setQueryData(["TRANSFER_PROCESSES"], (oldData: TransferProcess[]) => {
                 if (!oldData) return;
 
                 const data = [...oldData];
@@ -443,14 +443,14 @@ export const PubSubContextProvider = ({children}: { children: ReactNode }) => {
                   (d) => d.provider_pid === notification.messageContent.process.provider_pid,
                 );
                 if (index !== -1) {
-                  data[index] = notification.messageContent.process as TransferProcessProvider;
+                  data[index] = notification.messageContent.process as TransferProcess;
                 }
                 return data;
               });
               // for single view
               queryClient.setQueryData(
                 ["TRANSFER_PROCESS_BY_ID", notification.messageContent.process.provider_pid],
-                notification.messageContent.process as TransferProcessProvider,
+                notification.messageContent.process as TransferProcess,
               );
               // for messages list
               // @ts-ignore
@@ -462,7 +462,7 @@ export const PubSubContextProvider = ({children}: { children: ReactNode }) => {
               console.log("TransferSuspensionMessage Notification:", notification);
               break;
             case "TransferCompletionMessage":
-              queryClient.setQueryData(["TRANSFER_PROCESSES"], (oldData: TransferProcessProvider[]) => {
+              queryClient.setQueryData(["TRANSFER_PROCESSES"], (oldData: TransferProcess[]) => {
                 if (!oldData) return;
 
                 const data = [...oldData];
@@ -470,14 +470,14 @@ export const PubSubContextProvider = ({children}: { children: ReactNode }) => {
                   (d) => d.provider_pid === notification.messageContent.process.provider_pid,
                 );
                 if (index !== -1) {
-                  data[index] = notification.messageContent.process as TransferProcessProvider;
+                  data[index] = notification.messageContent.process as TransferProcess;
                 }
                 return data;
               });
               // for single view
               queryClient.setQueryData(
                 ["TRANSFER_PROCESS_BY_ID", notification.messageContent.process.provider_pid],
-                notification.messageContent.process as TransferProcessProvider,
+                notification.messageContent.process as TransferProcess,
               );
               // for messages list
               // @ts-ignore
@@ -489,21 +489,21 @@ export const PubSubContextProvider = ({children}: { children: ReactNode }) => {
               console.log("TransferCompletionMessage Notification:", notification);
               break;
             case "TransferTerminationMessage":
-              queryClient.setQueryData(["TRANSFER_PROCESSES"], (oldData: TransferProcessProvider[]) => {
+              queryClient.setQueryData(["TRANSFER_PROCESSES"], (oldData: TransferProcess[]) => {
                 if (!oldData) return;
                 const data = [...oldData];
                 const index = data.findIndex(
                   (d) => d.provider_pid === notification.messageContent.process.provider_pid,
                 );
                 if (index !== -1) {
-                  data[index] = notification.messageContent.process as TransferProcessProvider;
+                  data[index] = notification.messageContent.process as TransferProcess;
                 }
                 return data;
               });
               // for single view
               queryClient.setQueryData(
                 ["TRANSFER_PROCESS_BY_ID", notification.messageContent.process.provider_pid],
-                notification.messageContent.process as TransferProcessProvider,
+                notification.messageContent.process as TransferProcess,
               );
               // for messages list
               // @ts-ignore

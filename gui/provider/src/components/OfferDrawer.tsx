@@ -86,6 +86,7 @@ export const OfferDrawer = ({
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     const policy = policies.find((p) => p["@id"] == data.id)!;
     await sendOfferAsync({
+      // @ts-ignore
       content: {
         consumerParticipantId: data.consumerParticipantId,
         offer: {
@@ -226,6 +227,7 @@ export const OfferDrawer = ({
                       form.setValue("id", policy["@id"]);
                     }}
                   >
+                    {/*// @ts-ignore*/}
                     <PolicyWrapperShow policy={policy}/>
                   </div>
                 ))}

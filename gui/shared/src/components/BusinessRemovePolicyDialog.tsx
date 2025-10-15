@@ -6,28 +6,28 @@ import {
   DialogHeader,
   DialogTitle,
 } from "./ui/dialog";
-import { Button } from "./ui/button";
-import React, { useContext } from "react";
-import { Form } from "./ui/form";
-import { useForm } from "react-hook-form";
-import { GlobalInfoContext, GlobalInfoContextType } from "./../context/GlobalInfoContext";
-import { useDeleteBusinessNewPolicyInDataset } from "shared/src/data/business-mutations";
-import { Badge } from "shared/src/components/ui/badge";
+import {Button} from "./ui/button";
+import React, {useContext} from "react";
+import {Form} from "./ui/form";
+import {useForm} from "react-hook-form";
+import {GlobalInfoContext, GlobalInfoContextType} from "./../context/GlobalInfoContext";
+import {useDeleteBusinessNewPolicyInDataset} from "shared/src/data/business-mutations";
+import {Badge} from "shared/src/components/ui/badge";
 
 export const BusinessRemovePolicyDialog = ({
-  policy,
-  catalogId,
-  datasetId,
-}: {
+                                             policy,
+                                             catalogId,
+                                             datasetId,
+                                           }: {
   policy: OdrlOffer;
   catalogId: UUID;
   datasetId: UUID;
 }) => {
   // --- Form Setup ---
   const form = useForm({});
-  const { handleSubmit, control, setValue, getValues } = form;
-  const { mutateAsync: deleteAsync } = useDeleteBusinessNewPolicyInDataset();
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
+  const {handleSubmit, control, setValue, getValues} = form;
+  const {mutateAsync: deleteAsync} = useDeleteBusinessNewPolicyInDataset();
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
   const onSubmit = () => {
     deleteAsync({
       api_gateway,

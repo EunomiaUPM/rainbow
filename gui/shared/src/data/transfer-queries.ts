@@ -17,7 +17,7 @@ export const getTransferProcessesOptions = (api_gateway: string) =>
   });
 
 export const useGetTransferProcesses = () => {
-  const {api_gateway} = useContext<GlobalInfoContextType>(GlobalInfoContext);
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
   const {data, isLoading, isError, error} = useSuspenseQuery(
     getTransferProcessesOptions(api_gateway),
   );
@@ -48,7 +48,7 @@ export const getTransferProcessByProviderPidOptions = (
   });
 
 export const useGetTransferProcessByProviderPid = (transferProcessId: UUID) => {
-  const {api_gateway} = useContext<GlobalInfoContextType>(GlobalInfoContext);
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
   const {data, isLoading, isError, error} = useSuspenseQuery(
     getTransferProcessByProviderPidOptions(api_gateway, transferProcessId),
   );
@@ -79,7 +79,7 @@ export const getTransferMessagesByProviderPidOptions = (
   });
 
 export const useGetTransferMessagesByProviderPid = (transferProcessId: UUID) => {
-  const {api_gateway} = useContext<GlobalInfoContextType>(GlobalInfoContext);
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
   const {data, isLoading, isError, error} = useSuspenseQuery(
     getTransferMessagesByProviderPidOptions(api_gateway, transferProcessId),
   );
@@ -112,7 +112,7 @@ export const getTransferMessageByIdOptions = (
   });
 
 export const useGetTransferMessageById = (transferProcessId: UUID, messageId: UUID) => {
-  const {api_gateway} = useContext<GlobalInfoContextType>(GlobalInfoContext);
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
   const {data, isLoading, isError, error} = useSuspenseQuery(
     getTransferMessageByIdOptions(api_gateway, transferProcessId, messageId),
   );
@@ -137,7 +137,7 @@ export const getDataplaneProcessByIdOptions = (api_gateway: string, sessionId: U
   });
 
 export const useGetDataplaneProcessById = (transferProcessId: UUID) => {
-  const {api_gateway} = useContext<GlobalInfoContextType>(GlobalInfoContext);
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
   const {data, isLoading, isError, error} = useSuspenseQuery(
     getDataplaneProcessByIdOptions(api_gateway, transferProcessId),
   );
