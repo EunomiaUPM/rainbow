@@ -5,8 +5,8 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import { useContext } from "react";
-import { GlobalInfoContext, GlobalInfoContextType } from "./../context/GlobalInfoContext";
+import {useContext} from "react";
+import {GlobalInfoContext, GlobalInfoContextType} from "./../context/GlobalInfoContext";
 
 /**
  *  POST /gateway/api/login
@@ -18,7 +18,7 @@ interface LoginPayload {
   };
 }
 
-export const postLogin = async ({ api_gateway, content }: LoginPayload) => {
+export const postLogin = async ({api_gateway, content}: LoginPayload) => {
   const login: string = await (
     await fetch(api_gateway + `/login`, {
       method: "POST",
@@ -33,9 +33,10 @@ export const postLogin = async ({ api_gateway, content }: LoginPayload) => {
 
 export const usePostLogin = () => {
   const queryClient = useQueryClient();
-  const { data, isSuccess, isError, error, mutate, mutateAsync, isPending } = useMutation({
+  const {data, isSuccess, isError, error, mutate, mutateAsync, isPending} = useMutation({
     mutationFn: postLogin,
-    onMutate: async () => {},
+    onMutate: async () => {
+    },
     onError: (error) => {
       console.log("onError");
       console.log(error);
@@ -45,15 +46,16 @@ export const usePostLogin = () => {
       // @ts-ignore
       // refetch auth data...
     },
-    onSettled: () => {},
+    onSettled: () => {
+    },
   });
-  return { data, isSuccess, isError, error, mutate, mutateAsync, isPending };
+  return {data, isSuccess, isError, error, mutate, mutateAsync, isPending};
 };
 
 /**
  *  POST /gateway/api/login/poll
  * */
-export const postLoginPoll = async ({ api_gateway, content }: LoginPayload) => {
+export const postLoginPoll = async ({api_gateway, content}: LoginPayload) => {
   const login: string = await (
     await fetch(api_gateway + `/login/poll`, {
       method: "POST",
@@ -67,9 +69,9 @@ export const postLoginPoll = async ({ api_gateway, content }: LoginPayload) => {
 };
 
 export const usePostLoginPoll = ({
-  api_gateway,
-  content,
-}: {
+                                   api_gateway,
+                                   content,
+                                 }: {
   api_gateway: string;
   content: { authRequestId: string };
 }) => {
@@ -105,11 +107,11 @@ export const getBusinessDatahubCatalogsOptions = (api_gateway: string) =>
   });
 
 export const useBusinessGetDatahubCatalogs = () => {
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  const { data, isLoading, isError, error } = useSuspenseQuery(
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const {data, isLoading, isError, error} = useSuspenseQuery(
     getBusinessDatahubCatalogsOptions(api_gateway),
   );
-  return { data, isLoading, isError, error };
+  return {data, isLoading, isError, error};
 };
 
 /**
@@ -129,11 +131,11 @@ export const getBusinessDatahubDatasetsByCatalogIdptions = (api_gateway: string,
   });
 
 export const useGetBusinessDatahubDatasetsByCatalogId = (urn: string) => {
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  const { data, isLoading, isError, error } = useSuspenseQuery(
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const {data, isLoading, isError, error} = useSuspenseQuery(
     getBusinessDatahubDatasetsByCatalogIdptions(api_gateway, urn),
   );
-  return { data, isLoading, isError, error };
+  return {data, isLoading, isError, error};
 };
 
 /**
@@ -153,11 +155,11 @@ export const getBusinessDatahubDatasetOptions = (api_gateway: string, datasetId:
   });
 
 export const useGetBusinessDatahubDataset = (datasetId: string) => {
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  const { data, isLoading, isError, error } = useSuspenseQuery(
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const {data, isLoading, isError, error} = useSuspenseQuery(
     getBusinessDatahubDatasetOptions(api_gateway, datasetId),
   );
-  return { data, isLoading, isError, error };
+  return {data, isLoading, isError, error};
 };
 
 /**
@@ -186,11 +188,11 @@ export const getBusinessPoliciesByDatasetIdOptions = (
   });
 
 export const useBusinessGetPoliciesByDatasetId = (catalogId: UUID, datasetId: UUID) => {
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  const { data, isLoading, isError, error } = useSuspenseQuery(
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const {data, isLoading, isError, error} = useSuspenseQuery(
     getBusinessPoliciesByDatasetIdOptions(api_gateway, catalogId, datasetId),
   );
-  return { data, isLoading, isError, error };
+  return {data, isLoading, isError, error};
 };
 
 /**
@@ -210,11 +212,11 @@ export const getBusinessPolicyTemplatesOptions = (api_gateway: string) =>
   });
 
 export const useGetBusinessPolicyTemplates = () => {
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  const { data, isLoading, isError, error } = useSuspenseQuery(
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const {data, isLoading, isError, error} = useSuspenseQuery(
     getBusinessPolicyTemplatesOptions(api_gateway),
   );
-  return { data, isLoading, isError, error };
+  return {data, isLoading, isError, error};
 };
 
 /**
@@ -232,11 +234,11 @@ export const getBusinessRequestsOptions = (api_gateway: string) =>
     queryFn: () => getBusinessRequests(api_gateway),
   });
 export const useGetBusinessRequests = () => {
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  const { data, isLoading, isError, error } = useSuspenseQuery(
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const {data, isLoading, isError, error} = useSuspenseQuery(
     getBusinessRequestsOptions(api_gateway),
   );
-  return { data, isLoading, isError, error };
+  return {data, isLoading, isError, error};
 };
 
 /**
@@ -254,9 +256,9 @@ export const getConsumerRequestsOptions = (api_gateway: string, participant_id: 
     queryFn: () => getConsumerRequests(api_gateway, participant_id),
   });
 export const useGetConsumerRequests = (participant_id: string) => {
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  const { data, isLoading, isError, error } = useSuspenseQuery(
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const {data, isLoading, isError, error} = useSuspenseQuery(
     getConsumerRequestsOptions(api_gateway, participant_id),
   );
-  return { data, isLoading, isError, error };
+  return {data, isLoading, isError, error};
 };

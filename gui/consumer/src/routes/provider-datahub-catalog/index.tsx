@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useGetParticipants } from "shared/src/data/participant-queries.ts";
+import {createFileRoute, Link} from "@tanstack/react-router";
+import {useGetParticipants} from "shared/src/data/participant-queries.ts";
 import {
   Table,
   TableBody,
@@ -8,21 +8,21 @@ import {
   TableHeader,
   TableRow,
 } from "shared/src/components/ui/table.tsx";
-import { useContext } from "react";
-import { PubSubContext } from "shared/src/context/PubSubContext.tsx";
-import { Button } from "shared/src/components/ui/button.tsx";
-import { Input } from "shared/src/components/ui/input.tsx";
-import { Badge, BadgeRole } from "shared/src/components/ui/badge";
+import {useContext} from "react";
+import {PubSubContext} from "shared/src/context/PubSubContext.tsx";
+import {Button} from "shared/src/components/ui/button.tsx";
+import {Input} from "shared/src/components/ui/input.tsx";
+import {Badge, BadgeRole} from "shared/src/components/ui/badge";
 import Heading from "shared/src/components/ui/heading.tsx";
-import { ArrowRight } from "lucide-react";
+import {ArrowRight} from "lucide-react";
 
 export const Route = createFileRoute("/provider-datahub-catalog/")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const { data: participants } = useGetParticipants();
-  const { lastHighLightedNotification } = useContext(PubSubContext)!;
+  const {data: participants} = useGetParticipants();
+  const {lastHighLightedNotification} = useContext(PubSubContext)!;
   // @ts-ignore
   return (
     <div>
@@ -55,7 +55,7 @@ function RouteComponent() {
                   <Badge variant={"info"}>{participant.participant_id.slice(9, 20) + "..."}</Badge>
                 </TableCell>
                 <TableCell>
-                  <Badge variant={"role"} role={participant.participant_type as BadgeRole}>
+                  <Badge variant={"role"} dsrole={participant.participant_type as BadgeRole}>
                     {participant.participant_type}
                   </Badge>
                 </TableCell>
@@ -65,11 +65,11 @@ function RouteComponent() {
                 <TableCell>
                   <Link
                     to="/provider-datahub-catalog/$provider"
-                    params={{ provider: participant.participant_id }}
+                    params={{provider: participant.participant_id}}
                   >
                     <Button variant="link">
                       See participant
-                      <ArrowRight />
+                      <ArrowRight/>
                     </Button>
                   </Link>
                 </TableCell>

@@ -7,7 +7,7 @@ import {
 import {ContractNegotiationActions} from "shared/src/components/ContractNegotiationActions.tsx";
 import {List, ListItem, ListItemDate, ListItemKey} from "shared/src/components/ui/list.tsx";
 import Heading from "../../../../../shared/src/components/ui/heading.tsx";
-import {Badge} from "shared/src/components/ui/badge.tsx";
+import {Badge, BadgeState} from "shared/src/components/ui/badge.tsx";
 import {
   Drawer,
   DrawerBody,
@@ -50,7 +50,7 @@ const RouteComponent = () => {
           </ListItem>
           <ListItem>
             <ListItemKey>State</ListItemKey>
-            <Badge variant="status" state={process.state}>
+            <Badge variant="status" state={process.state as BadgeState}>
               {process.state}
             </Badge>
           </ListItem>

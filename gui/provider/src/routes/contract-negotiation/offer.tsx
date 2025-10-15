@@ -36,7 +36,7 @@ type Inputs = {
   odrl: string;
 };
 
-export const RouteComponent = ({catalog, dataset}) => {
+export const RouteComponent = ({catalog, dataset}: { catalog: Catalog, dataset: Dataset }) => {
   const {mutateAsync: sendOfferAsync, isPending} = usePostContractNegotiationRPCOffer();
   const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
 
@@ -170,6 +170,7 @@ export const RouteComponent = ({catalog, dataset}) => {
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     await sendOfferAsync(
       {
+        //@ts-ignore
         content: {
           consumerParticipantId: data.consumerParticipantId,
           offer: {

@@ -1,14 +1,14 @@
-import { usePostContractNegotiationRPCRequest } from "shared/src/data/contract-mutations.ts";
-import { useContext, useState } from "react";
-import { GlobalInfoContext, GlobalInfoContextType } from "shared/src/context/GlobalInfoContext.tsx";
-import { Form } from "shared/src/components/ui/form.tsx";
-import { Button } from "shared/src/components/ui/button.tsx";
-import { SubmitHandler, useForm } from "react-hook-form";
-import { getParticipants } from "shared/src/data/participant-queries.ts";
-import { Badge } from "shared/src/components/ui/badge.tsx";
-import { PolicyWrapperShow } from "shared/src/components/PolicyWrapperShow.tsx";
-import { useGetBypassPoliciesByDatasetId } from "shared/src/data/policy-bypass-queries.ts";
-import { useGetDatahubBypassDatasetById } from "shared/src/data/catalog-datahub-bypass-queries.ts";
+import {usePostContractNegotiationRPCRequest} from "shared/src/data/contract-mutations.ts";
+import {useContext, useState} from "react";
+import {GlobalInfoContext, GlobalInfoContextType} from "shared/src/context/GlobalInfoContext.tsx";
+import {Form} from "shared/src/components/ui/form.tsx";
+import {Button} from "shared/src/components/ui/button.tsx";
+import {SubmitHandler, useForm} from "react-hook-form";
+import {getParticipants} from "shared/src/data/participant-queries.ts";
+import {Badge} from "shared/src/components/ui/badge.tsx";
+import {PolicyWrapperShow} from "shared/src/components/PolicyWrapperShow.tsx";
+import {useGetBypassPoliciesByDatasetId} from "shared/src/data/policy-bypass-queries.ts";
+import {useGetDatahubBypassDatasetById} from "shared/src/data/catalog-datahub-bypass-queries.ts";
 
 type Inputs = {
   consumerParticipantId: string;
@@ -19,22 +19,22 @@ type Inputs = {
 };
 
 export const DatahubRequestDrawer = ({
-  catalogId,
-  datasetId,
-  participantId,
-  closeDrawer,
-}: {
+                                       catalogId,
+                                       datasetId,
+                                       participantId,
+                                       closeDrawer,
+                                     }: {
   catalogId: string;
   datasetId: string;
   participantId: string;
   closeDrawer?: () => void;
 }) => {
-  const { mutateAsync: requestAsync, isPending } = usePostContractNegotiationRPCRequest();
-  const { data: policies } = useGetBypassPoliciesByDatasetId(participantId, datasetId);
-  const { data: datasetInfo } = useGetDatahubBypassDatasetById(participantId, datasetId);
+  const {mutateAsync: requestAsync, isPending} = usePostContractNegotiationRPCRequest();
+  const {data: policies} = useGetBypassPoliciesByDatasetId(participantId, datasetId);
+  const {data: datasetInfo} = useGetDatahubBypassDatasetById(participantId, datasetId);
 
   // @ts-ignore
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
 
   // --- State Management ---
   // Consumer Participant
@@ -53,7 +53,7 @@ export const DatahubRequestDrawer = ({
       target: datasetId, // Dataset ID
     },
   });
-  const { handleSubmit, control } = form;
+  const {handleSubmit, control} = form;
 
   // --- Popover Open/Change Handlers ---
   const handleConsumerParticipantOpenChange = async (newOpenState: boolean) => {
@@ -75,6 +75,7 @@ export const DatahubRequestDrawer = ({
       {
         content: {
           providerParticipantId: participantId,
+          // @ts-ignore
           offer: {
             "@id": policy["@id"],
           },
@@ -127,14 +128,14 @@ export const DatahubRequestDrawer = ({
                     datasetId={undefined}
                     catalogId={undefined}
                     participant={undefined}
-                  />
+                    datasetName={""}/>
                 </div>
               ))}
             </div>
           </div>
           <div
             className="flex gap-2 border-t fixed bottom-0  p-6 w-full bg-background border-white/30"
-            style={{ marginLeft: -48 }}
+            style={{marginLeft: -48}}
           >
             <Button type="submit" disabled={isPending} className="w-48">
               Submit Offer {isPending && <span className="ml-2">...</span>}

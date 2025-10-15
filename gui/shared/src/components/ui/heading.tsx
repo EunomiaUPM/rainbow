@@ -1,11 +1,19 @@
 "use client";
 
-import React from "react";
-import { cn } from "../../lib/utils";
+import React, {FC} from "react";
+import {cn} from "shared/src/lib/utils";
+import IntrinsicElements = JSX.IntrinsicElements;
 
-const Heading = ({ level = "h1", children, className = "" }) => {
-  const Component =
-    {
+type HeadingLevel = "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "table" | "title-sm" | "subtitle";
+
+const Heading: FC<{
+  level: HeadingLevel,
+  children: React.ReactNode,
+  className?: string,
+  ref?: React.Ref<HTMLHeadingElement>
+}> = ({level = "h1", children, ref, className = ""}) => {
+  const Component: keyof IntrinsicElements =
+    ({
       h1: "h1",
       h2: "h2",
       h3: "h3",
@@ -15,7 +23,7 @@ const Heading = ({ level = "h1", children, className = "" }) => {
       table: "h6",
       "title-sm": "h6",
       subtitle: "h5",
-    }[level] || "h1";
+    } as const)[level] || "h1";
 
   const baseClasses = "text-foreground-100 text-balance";
   const sizeClasses =
@@ -23,8 +31,7 @@ const Heading = ({ level = "h1", children, className = "" }) => {
       h1: "md:text-36 sm:text-40 mb-6 font-medium font-title",
       h2: "md:text-32 sm:text-36 mb-4 font-medium",
       h3: "md:text-28 sm:text-32 mb-4 font-medium",
-      h4: "md:text-24 sm:text-28 mb-2 font-medium font-display", // lo de poner la clase de la tipo no funciona aqui
-      //por eso lo he metido en el index.css
+      h4: "md:text-24 sm:text-28 mb-2 font-medium font-display",
       h5: "md:text-20 text-white/70 sm:text-24 mb-2 font-medium",
       h6: "text-base font-medium  mb-2",
       table: "text-base font-medium ",
@@ -33,7 +40,7 @@ const Heading = ({ level = "h1", children, className = "" }) => {
     }[level] || "";
 
   return (
-    <Component className={cn(baseClasses + " " + sizeClasses + " " + className)}>
+    <Component className={cn(baseClasses, sizeClasses, className)}>
       {children}
     </Component>
   );

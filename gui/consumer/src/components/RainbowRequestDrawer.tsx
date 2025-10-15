@@ -75,6 +75,7 @@ export const RainbowRequestDrawer = ({
       {
         content: {
           providerParticipantId: participantId,
+          // @ts-ignore
           offer: {
             "@id": policy["@id"],
           },
@@ -97,7 +98,7 @@ export const RainbowRequestDrawer = ({
         <div className="h-3"></div>
         <div>
           <p className="text-sm text-gray-200 mb-1"> Selected dataset</p>
-          <Badge variant="info">{datasetInfo.name}</Badge>
+          <Badge variant="info">{datasetInfo.title}</Badge>
         </div>
         {/* {JSON.stringify(datasetInfo)} */}
       </div>
@@ -127,6 +128,7 @@ export const RainbowRequestDrawer = ({
                     datasetId={undefined}
                     catalogId={undefined}
                     participant={undefined}
+                    datasetName={""}
                   />
                 </div>
               ))}

@@ -33,9 +33,9 @@ declare global {
   export interface OdrlOffer {
     "@id": UUID;
     "@type": string;
-    obligation: any[];
-    permission: OdrlPermission[];
-    prohibition: any[];
+    obligation: OdrlPermission[] | null;
+    permission: OdrlPermission[] | null;
+    prohibition: OdrlPermission[] | null;
     target: UUID;
     profile: string;
   }
