@@ -24,7 +24,7 @@ use axum::extract::{Path, Request, State, WebSocketUpgrade};
 use axum::http::header::{AUTHORIZATION, CONTENT_TYPE};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use axum::routing::{any, get, post};
+use axum::routing::{any, get, get_service, post};
 use axum::{Json, Router};
 use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
 use reqwest::Client;
@@ -32,6 +32,7 @@ use serde_json::Value;
 use std::time::Duration;
 use tokio::sync::broadcast;
 use tower_http::cors::{AllowHeaders, Any, CorsLayer};
+use tower_http::services::{ServeDir, ServeFile};
 
 pub struct RainbowConsumerGateway {
     config: ApplicationConsumerConfig,
@@ -52,7 +53,7 @@ impl RainbowConsumerGateway {
             .allow_origin(Any)
             .allow_headers(AllowHeaders::list([CONTENT_TYPE, AUTHORIZATION]));
 
-        Router::new()
+        let mut router = Router::new()
             .route(
                 "/gateway/api/:service_prefix/*extra",
                 any(Self::proxy_handler_with_extra),
@@ -62,10 +63,18 @@ impl RainbowConsumerGateway {
                 any(Self::proxy_handler_without_extra),
             )
             .route("/gateway/api/ws", get(Self::websocket_handler))
-            .route("/incoming-notification", post(Self::incoming_notification))
-            .layer(cors)
-            .with_state((self.config, self.client, self.notification_tx))
+            .route("/incoming-notification", post(Self::incoming_notification));
+
+        if self.config.is_gateway_in_production {
+            let static_file_service = get_service(
+                ServeDir::new("src/static/consumer").fallback(ServeFile::new("src/static/consumer/index.html")),
+            );
+            router = router.fallback_service(static_file_service);
+        }
+
+        router.layer(cors).with_state((self.config, self.client, self.notification_tx))
     }
+
     async fn proxy_handler_with_extra(
         State((config, client, notification_tx)): State<(ApplicationConsumerConfig, Client, broadcast::Sender<String>)>,
         Path((service_prefix, extra)): Path<(String, String)>,
