@@ -22,12 +22,13 @@ use crate::ssi_auth::common::errors::CustomToResponse;
 use crate::ssi_auth::common::traits::RainbowSSIAuthWalletTrait;
 use crate::ssi_auth::common::types::entities::{ReachAuthority, ReachMethod, ReachProvider};
 use crate::ssi_auth::common::types::gnap::CallbackBody;
+use crate::ssi_auth::common::types::oidc::OidcUri;
 use crate::ssi_auth::common::types::ssi::{dids::DidsInfo, keys::KeyDefinition};
 use crate::ssi_auth::consumer::core::traits::consumer_trait::RainbowSSIAuthConsumerManagerTrait;
 use crate::ssi_auth::consumer::core::Manager;
 use axum::extract::{Path, Query, State};
 use axum::http::{Method, Uri};
-use axum::response::IntoResponse;
+use axum::response::{IntoResponse, Redirect};
 use axum::routing::{delete, get, post};
 use axum::{Json, Router};
 use rainbow_common::errors::{helpers::BadFormat, CommonErrors, ErrorLog};
@@ -91,6 +92,9 @@ where
                 "/api/v1/authority/request/:id",
                 get(Self::get_one_authority),
             )
+            // OIDC
+            .route("/api/v1/process/oidc4vci", post(Self::process_oidc4vci))
+            .route("/api/v1/process/oidc4vp", post(Self::process_oidc4vp))
             // .route("/provider/:id/renew", post(todo!()))
             // .route("/provider/:id/finalize", post(todo!()))
             // TEST
@@ -318,11 +322,11 @@ where
         }
     }
 
-    async fn get_one_authority(State(authority): State<Arc<Manager<T>>>, Path(id): Path<String>) -> impl IntoResponse {
+    async fn get_one_authority(State(manager): State<Arc<Manager<T>>>, Path(id): Path<String>) -> impl IntoResponse {
         let log = format!("GET /authority/request/{}", &id);
         info!("{}", log);
 
-        match authority.repo.authority().get_by_id(id.as_str()).await {
+        match manager.repo.authority().get_by_id(id.as_str()).await {
             Ok(Some(data)) => {
                 let res = serde_json::to_value(data).unwrap();
                 (StatusCode::OK, Json(res)).into_response()
@@ -339,6 +343,65 @@ where
                 error.into_response()
             }
         }
+    }
+
+    async fn process_oidc4vci(
+        State(manager): State<Arc<Manager<T>>>,
+        Json(payload): Json<OidcUri>,
+    ) -> impl IntoResponse {
+        info!("Processing OIDC4VCI uri: {}", payload.uri);
+        let uri = payload.uri;
+        let credential_offer = match manager.resolve_credential_offer(uri.clone()).await {
+            Ok(data) => data,
+            Err(e) => return e.to_response(),
+        };
+
+        match manager.resolve_credential_issuer(credential_offer.credential_issuer).await {
+            Ok(_) => {}
+            Err(e) => return e.to_response(),
+        };
+
+        // ESTO ESTA PARA LOGGEAR AL ISSUER
+        match manager
+            .use_offer_req(
+                uri,
+                credential_offer.grants.pre_authorized_code.pre_authorized_code,
+            )
+            .await
+        {
+            Ok(_) => StatusCode::OK.into_response(),
+            Err(e) => e.to_response(),
+        }
+    }
+
+    async fn process_oidc4vp(
+        State(manager): State<Arc<Manager<T>>>,
+        Json(payload): Json<OidcUri>,
+    ) -> impl IntoResponse {
+        info!("Processing OIDC4VP uri: {}", payload.uri);
+
+        let uri = payload.uri;
+        let data = match manager.join_exchange(uri.clone()).await {
+            Ok(data) => data,
+            Err(e) => return e.to_response(),
+        };
+
+        let vpd = match manager.parse_vpd(data).await {
+            Ok(data) => data,
+            Err(e) => return e.to_response(),
+        };
+
+        let vcs_id = match manager.get_matching_vcs(vpd).await {
+            Ok(data) => data,
+            Err(e) => return e.to_response(),
+        };
+
+        let redirect_uri = match manager.present_vp(uri, vcs_id).await {
+            Ok(data) => data.redirect_uri,
+            Err(e) => return e.to_response(),
+        };
+
+        Redirect::to(redirect_uri.as_str()).into_response()
     }
 
     async fn fallback(method: Method, uri: Uri) -> (StatusCode, String) {

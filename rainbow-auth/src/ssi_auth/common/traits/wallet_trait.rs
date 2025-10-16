@@ -16,9 +16,10 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
+use crate::ssi_auth::common::types::oidc::{CredentialOfferResponse, Vpd};
 use crate::ssi_auth::common::types::ssi::dids::DidsInfo;
 use crate::ssi_auth::common::types::ssi::keys::KeyDefinition;
+use crate::ssi_auth::common::types::ssi::other::{MatchingVCs, RedirectResponse};
 use crate::ssi_auth::common::types::ssi::wallet::WalletInfo;
 use axum::async_trait;
 use serde_json::Value;
@@ -48,6 +49,15 @@ pub trait RainbowSSIAuthWalletTrait: Send + Sync {
     // DELETE STUFF FROM WALLET
     async fn delete_key(&self, key: KeyDefinition) -> anyhow::Result<()>;
     async fn delete_did(&self, did_info: DidsInfo) -> anyhow::Result<()>;
+    // OIDC
+    async fn resolve_credential_offer(&self, uri: String) -> anyhow::Result<CredentialOfferResponse>;
+    async fn resolve_credential_issuer(&self, issuer_uri: String) -> anyhow::Result<()>;
+    async fn use_offer_req(&self, uri: String, pin: String) -> anyhow::Result<()>;
+    async fn join_exchange(&self, exchange_url: String) -> anyhow::Result<String>;
+    async fn parse_vpd(&self, vpd_as_string: String) -> anyhow::Result<Vpd>;
+    async fn get_matching_vcs(&self, vpd: Vpd) -> anyhow::Result<Vec<String>>;
+    async fn match_vc4vp(&self, vp_def: Value) -> anyhow::Result<Vec<MatchingVCs>>;
+    async fn present_vp(&self, preq: String, creds: Vec<String>) -> anyhow::Result<RedirectResponse>;
     // OTHER
     async fn token_expired(&self) -> anyhow::Result<bool>;
     async fn update_token(&self) -> anyhow::Result<()>;

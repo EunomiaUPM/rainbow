@@ -17,7 +17,6 @@
  *
  */
 use crate::ssi_auth::common::types::entities::{ReachAuthority, ReachMethod, WhatEntity};
-use crate::ssi_auth::common::types::ssi::other::{MatchingVCs, RedirectResponse};
 use axum::async_trait;
 use rainbow_db::auth_consumer::entities::{auth_request, authority_request, mates};
 use serde_json::Value;
@@ -43,10 +42,4 @@ pub trait RainbowSSIAuthConsumerManagerTrait: Send + Sync {
         Option<auth_request::Model>,
         Option<authority_request::Model>,
     )>;
-
-    // EXTRAS ------------------------------------------------------------------------------------->
-    async fn join_exchange(&self, exchange_url: String) -> anyhow::Result<String>;
-    async fn parse_vpd(&self, vpd_as_string: String) -> anyhow::Result<Value>;
-    async fn match_vc4vp(&self, vp_def: Value) -> anyhow::Result<Vec<MatchingVCs>>;
-    async fn present_vp(&self, preq: String, creds: Vec<String>) -> anyhow::Result<RedirectResponse>;
 }

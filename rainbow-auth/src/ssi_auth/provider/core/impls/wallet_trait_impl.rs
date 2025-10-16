@@ -20,6 +20,8 @@
 use crate::ssi_auth::common::errors::AuthErrors;
 use crate::ssi_auth::common::traits::RainbowSSIAuthWalletTrait;
 use crate::ssi_auth::common::types::jwt::AuthJwtClaims;
+use crate::ssi_auth::common::types::oidc::{CredentialOfferResponse, Vpd};
+use crate::ssi_auth::common::types::ssi::other::{MatchingVCs, RedirectResponse};
 use crate::ssi_auth::common::types::ssi::wallet::{WalletInfo, WalletInfoResponse, WalletLoginResponse};
 use crate::ssi_auth::common::types::ssi::{dids::DidsInfo, keys::KeyDefinition};
 use crate::ssi_auth::provider::core::traits::provider_trait::RainbowSSIAuthProviderManagerTrait;
@@ -35,9 +37,11 @@ use rainbow_common::errors::helpers::{BadFormat, MissingAction};
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_db::auth_provider::entities::mates;
 use rainbow_db::auth_provider::repo_factory::factory_trait::AuthRepoFactoryTrait;
-use serde_json::Value;
+use serde_json::{json, Value};
 use std::time::{SystemTime, UNIX_EPOCH};
 use tracing::{debug, error, info, warn};
+use url::Url;
+use urlencoding::decode;
 
 #[async_trait]
 impl<T> RainbowSSIAuthWalletTrait for Manager<T>
@@ -830,6 +834,345 @@ where
                 bail!(error);
             }
         }
+    }
+
+    async fn resolve_credential_offer(&self, uri: String) -> anyhow::Result<CredentialOfferResponse> {
+        info!("Resolving credential offer");
+
+        let wallet = self.get_wallet().await?;
+        let token = self.get_token().await?;
+
+        let url = format!(
+            "{}/wallet-api/wallet/{}/exchange/resolveCredentialOffer",
+            self.config.get_wallet_portal_url(),
+            &wallet.id
+        );
+
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "text/plain;charset=UTF-8".parse().unwrap());
+        headers.insert(ACCEPT, "application/json".parse()?);
+        headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?);
+
+        let res = match self.client.post(&url).headers(headers).body(uri).send().await {
+            Ok(data) => data,
+            Err(e) => {
+                let http_code = match e.status() {
+                    Some(status) => Some(status.as_u16()),
+                    None => None,
+                };
+                let error = CommonErrors::petition_new(url, "POST".to_string(), http_code, e.to_string());
+                error!("{}", error.log());
+                bail!(error);
+            }
+        };
+
+        match res.status().as_u16() {
+            200 => {
+                let data: CredentialOfferResponse = res.json().await?;
+                info!("Credential offer resolved successfully");
+                debug!("{:#?}", data);
+                Ok(data)
+            }
+            _ => {
+                let error = AuthErrors::wallet_new(
+                    url,
+                    "POST".to_string(),
+                    res.status().as_u16(),
+                    Some("Petition to resolve credential offer failed".to_string()),
+                );
+                error!("{}", error.log());
+                bail!(error);
+            }
+        }
+    }
+
+    async fn resolve_credential_issuer(&self, issuer_uri: String) -> anyhow::Result<()> {
+        info!("Resolving credential issuer data");
+
+        let wallet = self.get_wallet().await?;
+        let token = self.get_token().await?;
+
+        let url = format!(
+            "{}/wallet-api/wallet/{}/exchange/resolveIssuerOpenIDMetadata?issuer={}",
+            self.config.get_wallet_portal_url(),
+            &wallet.id,
+            issuer_uri
+        );
+
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "application/json".parse().unwrap());
+        headers.insert(ACCEPT, "application/json".parse()?);
+        headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?);
+
+        let res = match self.client.get(&url).headers(headers).send().await {
+            Ok(data) => data,
+            Err(e) => {
+                let http_code = match e.status() {
+                    Some(status) => Some(status.as_u16()),
+                    None => None,
+                };
+                let error = CommonErrors::petition_new(url, "GET".to_string(), http_code, e.to_string());
+                error!("{}", error.log());
+                bail!(error);
+            }
+        };
+
+        match res.status().as_u16() {
+            200 => {
+                let data: Value = res.json().await?;
+                info!("Credential issuer resolved successfully");
+                debug!("{:#?}", data);
+                Ok(())
+            }
+            _ => {
+                let error = AuthErrors::wallet_new(
+                    url,
+                    "GET".to_string(),
+                    res.status().as_u16(),
+                    Some("Petition resolve credential issuer failed".to_string()),
+                );
+                error!("{}", error.log());
+                bail!(error);
+            }
+        }
+    }
+
+    async fn use_offer_req(&self, uri: String, pin: String) -> anyhow::Result<()> {
+        info!("Accepting credential");
+
+        let wallet = self.get_wallet().await?;
+        let token = self.get_token().await?;
+        let did = self.get_did().await?;
+
+        let url = format!(
+            "{}/wallet-api/wallet/{}/exchange/useOfferRequest?did={}&requireUserInput=false&pinOrTxCode={}",
+            self.config.get_wallet_portal_url(),
+            &wallet.id,
+            did,
+            pin
+        );
+
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "application/json".parse().unwrap());
+        headers.insert(ACCEPT, "application/json".parse()?);
+        headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?);
+
+        let res = match self.client.post(&url).headers(headers).body(uri).send().await {
+            Ok(data) => data,
+            Err(e) => {
+                let http_code = match e.status() {
+                    Some(status) => Some(status.as_u16()),
+                    None => None,
+                };
+                let error = CommonErrors::petition_new(url, "POST".to_string(), http_code, e.to_string());
+                error!("{}", error.log());
+                bail!(error);
+            }
+        };
+
+        match res.status().as_u16() {
+            200 => {
+                let data: Value = res.json().await?;
+                info!("Credential accepted successfully");
+                debug!("{:#?}", data);
+                Ok(())
+            }
+            _ => {
+                let error = AuthErrors::wallet_new(
+                    url,
+                    "POST".to_string(),
+                    res.status().as_u16(),
+                    Some("Petition accept credential issuer failed".to_string()),
+                );
+                error!("{}", error.log());
+                bail!(error);
+            }
+        }
+    }
+
+    async fn join_exchange(&self, exchange_url: String) -> anyhow::Result<String> {
+        let wallet = self.get_wallet().await?;
+        let token = self.get_token().await?;
+
+        let url = format!(
+            "{}/wallet-api/wallet/{}/exchange/resolvePresentationRequest",
+            self.config.get_wallet_portal_url(),
+            &wallet.id
+        );
+
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "text/plain".parse()?);
+        headers.insert(ACCEPT, "text/plain".parse()?);
+        headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?);
+
+        let res = match self.client.post(&url).headers(headers).body(exchange_url).send().await {
+            Ok(data) => data,
+            Err(e) => {
+                let http_code = match e.status() {
+                    Some(status) => Some(status.as_u16()),
+                    None => None,
+                };
+                let error = CommonErrors::petition_new(url, "POST".to_string(), http_code, e.to_string());
+                error!("{}", error.log());
+                bail!(error);
+            }
+        };
+
+        match res.status().as_u16() {
+            200 => {
+                info!("Joined the exchange successful");
+                let data = res.text().await?;
+                Ok(data)
+            }
+            _ => {
+                error!("Error joining the exchange: {}", res.status());
+                bail!("Error joining the exchange: {}", res.status())
+            }
+        }
+    }
+
+    async fn parse_vpd(&self, vpd_as_string: String) -> anyhow::Result<Vpd> {
+        info!("Parsing Verifiable Presentation Definition");
+        let url = Url::parse(decode(&vpd_as_string).unwrap().as_ref())?;
+
+        if let Some((_, vpd_json)) = url.query_pairs().find(|(key, _)| key == "presentation_definition") {
+            match serde_json::from_str::<Vpd>(&vpd_json) {
+                Ok(data) => {
+                    debug!("{:#?}", data);
+                    Ok(data)
+                }
+                Err(err) => {
+                    let error = CommonErrors::format_new(
+                        BadFormat::Received,
+                        Some(format!(
+                            "Error parsing the credential -> {}",
+                            err.to_string()
+                        )),
+                    );
+                    error!("{}", error.log());
+                    bail!(error)
+                }
+            }
+        } else {
+            let error = CommonErrors::format_new(
+                BadFormat::Received,
+                Some("Invalid presentation definition".to_string()),
+            );
+            error!("{}", error.log());
+            bail!(error)
+        }
+    }
+
+    async fn get_matching_vcs(&self, vpd: Vpd) -> anyhow::Result<Vec<String>> {
+        info!("Matching Verifiable Credentials for OIDC4VP");
+        let mut vcs_id = Vec::new();
+        for descriptor in vpd.input_descriptors {
+            let n_vpd = Vpd {
+                id: "temporal_id".to_string(),
+                input_descriptors: vec![descriptor],
+            };
+            let vcs = self.match_vc4vp(serde_json::to_value(n_vpd)?).await?;
+            let vc_id = match vcs.first() {
+                Some(vc) => vc.id.clone(),
+                None => {
+                    let error = CommonErrors::forbidden_new(Some(
+                        "There are no VCs that match the specified input descriptor".to_string(),
+                    ));
+                    error!("{}", error.log());
+                    bail!(error)
+                }
+            };
+            vcs_id.push(vc_id);
+        }
+        Ok(vcs_id)
+    }
+
+    async fn match_vc4vp(&self, vp_def: Value) -> anyhow::Result<Vec<MatchingVCs>> {
+        info!("Matching for an specific descriptor");
+        let wallet = self.get_wallet().await?;
+        let token = self.get_token().await?;
+
+        let url = format!(
+            "{}/wallet-api/wallet/{}/exchange/matchCredentialsForPresentationDefinition",
+            self.config.get_wallet_portal_url(),
+            wallet.id
+        );
+
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "application/json".parse()?);
+        headers.insert(ACCEPT, "application/json".parse()?);
+        headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?);
+
+        let res = match self.client.post(&url).headers(headers).json(&vp_def).send().await {
+            Ok(data) => data,
+            Err(e) => {
+                let http_code = match e.status() {
+                    Some(status) => Some(status.as_u16()),
+                    None => None,
+                };
+                let error = CommonErrors::petition_new(url, "POST".to_string(), http_code, e.to_string());
+                error!("{}", error.log());
+                bail!(error);
+            }
+        };
+
+        match res.status().as_u16() {
+            200 => {
+                info!("Credentials matched successfully");
+                let vc_json: Vec<MatchingVCs> = res.json().await?;
+                Ok(vc_json)
+            }
+            _ => {
+                let error = AuthErrors::wallet_new(
+                    url,
+                    "POST".to_string(),
+                    res.status().as_u16(),
+                    Some("Petition to match credentials failed".to_string()),
+                );
+                error!("{}", error.log());
+                bail!(error);
+            }
+        }
+    }
+
+    async fn present_vp(&self, preq: String, creds: Vec<String>) -> anyhow::Result<RedirectResponse> {
+        let wallet = self.get_wallet().await?;
+        let token = self.get_token().await?;
+        let did = self.get_did().await?;
+
+        let url = format!(
+            "{}/wallet-api/wallet/{}/exchange/usePresentationRequest",
+            self.config.get_wallet_portal_url(),
+            wallet.id
+        );
+
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "application/json".parse()?);
+        headers.insert(ACCEPT, "application/json".parse()?);
+        headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?);
+
+        // TODO Check
+        // let did = &wallet_session.wallets.first().unwrap().dids.as_ref().unwrap().first().unwrap().did;
+
+        let body = json!({ "did": did, "presentationRequest": preq, "selectedCredentials": creds });
+
+        let res = match self.client.post(&url).headers(headers).json(&body).send().await {
+            Ok(data) => data,
+            Err(e) => {
+                let http_code = match e.status() {
+                    Some(status) => Some(status.as_u16()),
+                    None => None,
+                };
+                let error = CommonErrors::petition_new(url, "POST".to_string(), http_code, e.to_string());
+                error!("{}", error.log());
+                bail!(error);
+            }
+        };
+
+        // TODO
+        let body: RedirectResponse = res.json().await?;
+
+        Ok(body)
     }
 
     // OTHER ----------------------------------------------------------------------------------------->

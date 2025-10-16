@@ -16,12 +16,23 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-pub mod ssi;
-pub mod jwt;
-pub mod gnap;
-pub mod entities;
-pub mod oidc;
+mod cred_offer_resp;
+mod vpd;
+pub use cred_offer_resp::*;
+pub use vpd::*;
 
+use serde::{Deserialize, Serialize};
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct OidcUri {
+    pub uri: String,
+}
 
-
+#[derive(Serialize, Deserialize, Debug)]
+pub struct MatchVCsRequest {
+    pub did: String,
+    #[serde(rename = "presentationRequest")]
+    pub presentation_request: String,
+    #[serde(rename = "selectedCredentials")]
+    pub selected_credentials: Vec<String>,
+}

@@ -106,12 +106,12 @@ where
 
         let provider_url = self.config.get_ssi_auth_host_url().unwrap(); //  EXPECTED ALWAYS
         let provider_url = format!("{}/api/v1", provider_url);
-        let provider_url = match self.config.get_environment_scenario() {
-            true => provider_url.replace("127.0.0.1", "host.docker.internal"),
-            false => provider_url,
+        let host_url = match self.config.get_environment_scenario() {
+            true => provider_url.clone().replace("127.0.0.1", "host.docker.internal"),
+            false => provider_url.clone(),
         };
 
-        let client_id = format!("{}/verify", &provider_url);
+        let client_id = format!("{}/verify", &host_url);
 
         let grant_endpoint = format!("{}/access", provider_url);
 
