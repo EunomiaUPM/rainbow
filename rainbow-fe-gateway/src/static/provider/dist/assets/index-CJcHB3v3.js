@@ -1,0 +1,1 @@
+import{j as e,L as n}from"./index-omH1oWRl.js";const a=function(){return e.jsxs("div",{children:["alsdaslkdnalskdnalksn",e.jsx(n,{to:"/gui/agreements/hola",children:"Hola"}),e.jsx(n,{to:"/gui/agreements/$agreement_id",params:{agreement_id:"123"},children:"quiero a agreement 123"})]})};export{a as component};

@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-echo "˙✧˖°☕ ༘ ⋆｡˚ Seeding demo GMV data..."
+echo "˙✧˖°☕ ༘ ⋆｡˚ Seeding demo GM4V data..."
