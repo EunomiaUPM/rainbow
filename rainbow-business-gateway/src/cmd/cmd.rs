@@ -16,14 +16,15 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 use crate::gateway::core::business::business::BusinessServiceForDatahub;
 use crate::gateway::http::business_router::RainbowBusinessRouter;
 use crate::gateway::http::notifications_router::BusinessNotificationsRouter;
 use axum::{serve, Router};
 use clap::{Parser, Subcommand};
+use fs_extra::dir::{copy, CopyOptions};
 use rainbow_common::config::env_extraction::EnvExtraction;
 use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
+use std::process::Command;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 use tracing::{debug, info};
@@ -67,19 +68,19 @@ impl GatewayCommands {
                 let config = Self::extract_provider_config(args.env_file)?;
                 let gateway_service = Arc::new(BusinessServiceForDatahub::new(config.clone()));
                 let notifications_router = BusinessNotificationsRouter::new(config.clone()).router();
-                let gateway_router = RainbowBusinessRouter::new(gateway_service).router();
+                let gateway_router = RainbowBusinessRouter::new(config.clone(), gateway_service).router();
                 let global_router = Router::new()
                     .merge(notifications_router)
                     .merge(gateway_router);
                 let server_message = format!(
                     "Starting provider gateway server in {}",
-                    config.get_gateway_host_url().unwrap()
+                    config.get_business_system_host_url().unwrap()
                 );
                 info!("{}", server_message);
                 let listener = TcpListener::bind(format!(
                     "{}:{}",
-                    config.get_raw_gateway_host().clone().unwrap().url,
-                    config.get_raw_gateway_host().clone().unwrap().port
+                    config.get_raw_business_system_host().clone().unwrap().url,
+                    config.get_raw_business_system_host().clone().unwrap().port
                 ))
                     .await?;
                 serve(listener, global_router).await?;
@@ -87,8 +88,27 @@ impl GatewayCommands {
             GatewayCliCommands::Subscribe(_args) => {
                 debug!("Subscribe to provider")
             }
-            GatewayCliCommands::Build(_args) => {
-                debug!("Subscribe to build fe into app")
+            GatewayCliCommands::Build(args) => {
+                let cwd = format!("./../gui/business");
+                let env_file = format!("./../{}", args.env_file.expect("env file is required"));
+                // build react application
+                let mut cmd = Command::new("npm")
+                    .current_dir(&cwd)
+                    .env("ENV_FILE", env_file)
+                    .args(["run", "build", "-w", "business"])
+                    .spawn()
+                    .expect("failed to execute process");
+                cmd.wait()?;
+                debug!("Build command finished successfully");
+                // copy into static
+                let origin = format!("{}/dist", cwd);
+                let destination = "./src/static/business";
+                let mut options = CopyOptions::new();
+                options.overwrite = true;
+                options.copy_inside = true;
+                copy(origin, destination, &options)
+                    .expect("failed to execute copy process");
+                debug!("Copy command finished successfully");
             }
         }
         Ok(())

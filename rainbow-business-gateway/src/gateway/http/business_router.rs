@@ -24,29 +24,32 @@ use axum::extract::{Path, State};
 use axum::http::header::{AUTHORIZATION, CONTENT_TYPE};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use axum::routing::{delete, get, post};
+use axum::routing::{delete, get, get_service, post};
 use axum::{middleware, Extension, Json, Router};
 use rainbow_common::auth::business::RainbowBusinessLoginRequest;
 use rainbow_common::auth::header::{extract_request_info, RequestInfo};
+use rainbow_common::config::provider_config::ApplicationProviderConfig;
 use rainbow_common::protocol::contract::contract_odrl::OdrlPolicyInfo;
 use rainbow_common::utils::get_urn_from_string;
 use serde_json::json;
 use std::sync::Arc;
 use tower_http::cors::{AllowHeaders, Any, CorsLayer};
+use tower_http::services::{ServeDir, ServeFile};
 use tracing::info;
 
 pub struct RainbowBusinessRouter<T>
 where
     T: BusinessCatalogTrait + Sync + Send,
 {
+    config: ApplicationProviderConfig,
     service: Arc<T>,
 }
 impl<T> RainbowBusinessRouter<T>
 where
     T: BusinessCatalogTrait + Sync + Send,
 {
-    pub fn new(service: Arc<T>) -> Self {
-        Self { service }
+    pub fn new(config: ApplicationProviderConfig, service: Arc<T>) -> Self {
+        Self { config, service }
     }
     pub fn router(self) -> Router {
         let cors = CorsLayer::new()
@@ -54,7 +57,7 @@ where
             .allow_origin(Any)
             .allow_headers(AllowHeaders::list([CONTENT_TYPE, AUTHORIZATION]));
 
-        Router::new()
+        let mut router = Router::new()
             // Common
             .route(
                 "/gateway/api/catalogs",
@@ -118,7 +121,16 @@ where
                 post(Self::handle_create_request),
             )
             // Others
-            .layer(middleware::from_fn(extract_request_info))
+            .layer(middleware::from_fn(extract_request_info));
+
+        if self.config.is_gateway_in_production {
+            let static_file_service = get_service(
+                ServeDir::new("src/static/business").fallback(ServeFile::new("src/static/business/index.html")),
+            );
+            router = router.fallback_service(static_file_service);
+        }
+
+        router
             .layer(cors)
             .with_state(self.service)
     }
