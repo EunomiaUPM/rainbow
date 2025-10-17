@@ -19,11 +19,12 @@
 
 use crate::gateway::core::business::BusinessCatalogTrait;
 use crate::gateway::http::business_router_types::{RainbowBusinessAcceptanceRequest, RainbowBusinessNegotiationRequest, RainbowBusinessTerminationRequest};
+use axum::body::Body;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, State};
 use axum::http::header::{AUTHORIZATION, CONTENT_TYPE};
-use axum::http::StatusCode;
-use axum::response::IntoResponse;
+use axum::http::{header, StatusCode, Uri};
+use axum::response::{IntoResponse, Response};
 use axum::routing::{delete, get, get_service, post};
 use axum::{middleware, Extension, Json, Router};
 use rainbow_common::auth::business::RainbowBusinessLoginRequest;
@@ -31,6 +32,7 @@ use rainbow_common::auth::header::{extract_request_info, RequestInfo};
 use rainbow_common::config::provider_config::ApplicationProviderConfig;
 use rainbow_common::protocol::contract::contract_odrl::OdrlPolicyInfo;
 use rainbow_common::utils::get_urn_from_string;
+use rust_embed::Embed;
 use serde_json::json;
 use std::sync::Arc;
 use tower_http::cors::{AllowHeaders, Any, CorsLayer};
@@ -44,6 +46,12 @@ where
     config: ApplicationProviderConfig,
     service: Arc<T>,
 }
+
+#[derive(Embed)]
+#[folder = "src/static/business"]
+pub struct RainbowBusinessReactApp;
+
+
 impl<T> RainbowBusinessRouter<T>
 where
     T: BusinessCatalogTrait + Sync + Send,
@@ -124,16 +132,48 @@ where
             .layer(middleware::from_fn(extract_request_info));
 
         if self.config.is_gateway_in_production {
-            let static_file_service = get_service(
-                ServeDir::new("src/static/business").fallback(ServeFile::new("src/static/business/index.html")),
-            );
-            router = router.fallback_service(static_file_service);
+            router = router.fallback(Self::static_path_handler);
         }
 
         router
             .layer(cors)
             .with_state(self.service)
     }
+
+
+    pub async fn static_path_handler(uri: Uri) -> impl IntoResponse {
+        let mut path = uri.path().trim_start_matches('/').to_string();
+        if path.is_empty() {
+            path = "index.html".to_string();
+        }
+
+        match RainbowBusinessReactApp::get(&path) {
+            Some(content) => {
+                let mime_type = mime_guess::from_path(&path).first_or_octet_stream();
+                Response::builder()
+                    .header(header::CONTENT_TYPE, mime_type.as_ref())
+                    .body(Body::from(content.data))
+                    .unwrap()
+            }
+            None => {
+                match RainbowBusinessReactApp::get("index.html") {
+                    Some(content) => {
+                        let mime_type = mime_guess::from_path("index.html").first_or_octet_stream();
+                        Response::builder()
+                            .header(header::CONTENT_TYPE, mime_type.as_ref())
+                            .body(Body::from(content.data))
+                            .unwrap()
+                    }
+                    None => Response::builder()
+                        .status(StatusCode::NOT_FOUND)
+                        .body(Body::from("<h1>404</h1><p>index.html not found</p>"))
+                        .unwrap(),
+                }
+            }
+        }
+    }
+
+
     async fn handle_business_get_catalogs(
         State(service): State<Arc<T>>,
         Extension(info): Extension<Arc<RequestInfo>>,
