@@ -68,13 +68,13 @@ pub async fn create_catalog_router(config: &ApplicationProviderConfig) -> Router
         subscription_service,
         Option::from(SubscriptionEntities::Catalog),
     )
-    .router();
+        .router();
     let notification_service = Arc::new(RainbowEventsNotificationsService::new(subscription_repo));
     let notification_router = RainbowEventsNotificationRouter::new(
         notification_service.clone(),
         Option::from(SubscriptionEntities::Catalog),
     )
-    .router();
+        .router();
 
     // DSProtocol Dependency Injection
     let ds_protocol_service = Arc::new(DSProtocolCatalogService::new(catalog_repo.clone()));
@@ -114,7 +114,6 @@ pub async fn create_catalog_router(config: &ApplicationProviderConfig) -> Router
 
     // Router
     let catalog_application_router = Router::new()
-        .merge(route_openapi())
         .merge(rainbow_catalog_router.router())
         .merge(rainbow_data_service_router.router())
         .merge(rainbow_dataset_router.router())
@@ -144,14 +143,14 @@ impl CatalogApplication {
                     "127.0.0.1:{}",
                     config.get_raw_catalog_host().clone().unwrap().port
                 ))
-                .await?
+                    .await?
             }
             false => {
                 TcpListener::bind(format!(
                     "0.0.0.0:{}",
                     config.get_raw_catalog_host().clone().unwrap().port
                 ))
-                .await?
+                    .await?
             }
         };
 
