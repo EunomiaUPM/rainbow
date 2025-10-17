@@ -1,27 +1,30 @@
 import ReactDOM from "react-dom/client";
 import "shared/index.css";
-import { createRouter, RouterProvider } from "@tanstack/react-router";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { routeTree } from "./routeTree.gen";
-import { PubSubContextProvider } from "shared/src/context/PubSubContext.tsx";
-import { AuthContextProvider } from "shared/src/context/AuthContext.tsx";
-import { GlobalInfoContextProvider } from "shared/src/context/GlobalInfoContext.tsx";
+import {createRouter, RouterProvider} from "@tanstack/react-router";
+import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
+import {routeTree} from "./routeTree.gen";
+import {PubSubContextProvider} from "shared/src/context/PubSubContext.tsx";
+import {AuthContextProvider} from "shared/src/context/AuthContext.tsx";
+import {GlobalInfoContextProvider} from "shared/src/context/GlobalInfoContext.tsx";
 
 export const queryClient = new QueryClient();
 
 // Create a new router instance
-const router = createRouter({ routeTree, context: { queryClient } });
+const router = createRouter({routeTree, context: {queryClient}});
+const apiGatewayBase = `${import.meta.env.GATEWAY_PROTOCOL}://${import.meta.env.GATEWAY_HOST}:${import.meta.env.GATEWAY_PORT}`;
+const configRole = (import.meta.env.CONFIG_ROLE as string).toLowerCase();
+const catalogType = import.meta.env.CATALOG_AS_DATAHUB === "true" ? "datahub" : "rainbow";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <GlobalInfoContextProvider
-    api_gateway_base="http://127.0.0.1:1206"
-    role="provider"
-    catalog_type="datahub"
+    api_gateway_base={apiGatewayBase}
+    dsrole={configRole}
+    catalog_type={catalogType}
   >
     <QueryClientProvider client={queryClient}>
       <AuthContextProvider>
         <PubSubContextProvider>
-          <RouterProvider router={router} />
+          <RouterProvider router={router}/>
         </PubSubContextProvider>
       </AuthContextProvider>
     </QueryClientProvider>

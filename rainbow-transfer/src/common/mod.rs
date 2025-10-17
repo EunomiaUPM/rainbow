@@ -20,3 +20,4 @@
 pub mod utils;
 pub mod schemas;
 pub mod core;
+pub mod errors;

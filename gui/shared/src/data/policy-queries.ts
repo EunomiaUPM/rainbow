@@ -1,6 +1,6 @@
-import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { useContext } from "react";
-import { GlobalInfoContext, GlobalInfoContextType } from "./../context/GlobalInfoContext";
+import {queryOptions, useMutation, useQueryClient, useSuspenseQuery} from "@tanstack/react-query";
+import {useContext} from "react";
+import {GlobalInfoContext, GlobalInfoContextType} from "./../context/GlobalInfoContext";
 
 /**
  *  GET /datasets/{datasetId}/policies
@@ -20,11 +20,11 @@ export const getPoliciesByDatasetIdOptions = (api_gateway: string, datasetId: UU
   });
 
 export const useGetPoliciesByDatasetId = (datasetId: UUID) => {
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  const { data, isLoading, isError, error } = useSuspenseQuery(
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const {data, isLoading, isError, error} = useSuspenseQuery(
     getPoliciesByDatasetIdOptions(api_gateway, datasetId),
   );
-  return { data, isLoading, isError, error };
+  return {data, isLoading, isError, error};
 };
 
 /**
@@ -37,10 +37,10 @@ interface DeletePolicyPayload {
 }
 
 export const deletePolicyInDataset = async ({
-  api_gateway,
-  datasetId,
-  policyId,
-}: DeletePolicyPayload) => {
+                                              api_gateway,
+                                              datasetId,
+                                              policyId,
+                                            }: DeletePolicyPayload) => {
   await fetch(api_gateway + `/datasets/${datasetId}/policies/${policyId}`, {
     method: "DELETE",
   });
@@ -48,9 +48,10 @@ export const deletePolicyInDataset = async ({
 
 export const useDeletePolicyInDataset = () => {
   const queryClient = useQueryClient();
-  const { data, isSuccess, isError, error, mutate, mutateAsync, isPending } = useMutation({
+  const {data, isSuccess, isError, error, mutate, mutateAsync, isPending} = useMutation({
     mutationFn: deletePolicyInDataset,
-    onMutate: async () => {},
+    onMutate: async () => {
+    },
     onError: (error) => {
       console.log("onError");
       console.log(error);
@@ -60,7 +61,8 @@ export const useDeletePolicyInDataset = () => {
       // @ts-ignore
       await queryClient.refetchQueries(["POLICIES_BY_DATASET_ID"]);
     },
-    onSettled: () => {},
+    onSettled: () => {
+    },
   });
-  return { data, isSuccess, isError, error, mutate, mutateAsync, isPending };
+  return {data, isSuccess, isError, error, mutate, mutateAsync, isPending};
 };

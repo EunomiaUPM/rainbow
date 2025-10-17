@@ -1,7 +1,7 @@
-import { createContext, ReactNode, useContext, useEffect, useState } from "react";
-import { useGetSubscriptionByCallbackAddress } from "../data/pubsub-queries";
-import { useQueryClient } from "@tanstack/react-query";
-import { GlobalInfoContext, GlobalInfoContextType } from "./../context/GlobalInfoContext";
+import {createContext, ReactNode, useContext, useEffect, useState} from "react";
+import {useGetSubscriptionByCallbackAddress} from "../data/pubsub-queries";
+import {useQueryClient} from "@tanstack/react-query";
+import {GlobalInfoContext, GlobalInfoContextType} from "./../context/GlobalInfoContext";
 
 interface PubSubContextType {
   websocket: WebSocket | null;
@@ -12,17 +12,17 @@ interface PubSubContextType {
 }
 
 export const PubSubContext = createContext<PubSubContextType | null>(null);
-export const PubSubContextProvider = ({ children }: { children: ReactNode }) => {
+export const PubSubContextProvider = ({children}: { children: ReactNode }) => {
   const queryClient = useQueryClient();
   const [websocket, setWebsocket] = useState<WebSocket | null>(null);
   const [wsConnected, setWsConnected] = useState(false);
   const [wsConnectionError, setWsConnectionError] = useState(false);
   const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
   const [lastHighLightedNotification, setLastHighLightedNotification] = useState<UUID | null>(null);
-  const { api_gateway, api_gateway_callback_address } =
-    useContext<GlobalInfoContextType>(GlobalInfoContext);
+  const {api_gateway, api_gateway_callback_address} =
+    useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
   console.log(api_gateway);
-  const { data: dataSubscriptions, isError: isDataSubscriptionError } =
+  const {data: dataSubscriptions, isError: isDataSubscriptionError} =
     useGetSubscriptionByCallbackAddress(api_gateway_callback_address); // get all subscriptions
 
   // Check if server is up when websocket is not connected

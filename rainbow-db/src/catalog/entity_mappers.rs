@@ -27,6 +27,7 @@ use rainbow_common::protocol::context_field::ContextField;
 use rainbow_common::protocol::contract::contract_odrl::{OdrlOffer, OdrlPolicyInfo, OdrlTypes};
 use rainbow_common::utils::get_urn_from_string;
 use serde_json::Value;
+use rainbow_common::dcat_formats::{DctFormats, FormatAction, FormatProtocol};
 
 impl TryFrom<catalog::Model> for Catalog {
     type Error = anyhow::Error;
@@ -139,6 +140,10 @@ impl TryFrom<distribution::Model> for Distribution {
                 modified: distribution_model.dct_modified,
                 title: distribution_model.dct_title,
                 description: vec![],
+                formats: distribution_model
+                    .dct_format
+                    .map(|f| f.parse().unwrap())
+                    .unwrap_or(DctFormats { protocol: FormatProtocol::Http, action: FormatAction::Pull }),
             },
             odrl_offer: vec![],
             extra_fields: Value::default(),

@@ -6,26 +6,27 @@ import {
   DialogHeader,
   DialogTitle,
 } from "shared/src/components/ui/dialog";
-import { Button } from "shared/src/components/ui/button";
-import React, { useContext } from "react";
-import { Form } from "shared/src/components/ui/form";
-import { List, ListItem, ListItemKey } from "shared/src/components/ui/list";
-import { Badge } from "shared/src/components/ui/badge";
-import { useForm } from "react-hook-form";
-import { GlobalInfoContext, GlobalInfoContextType } from "shared/src/context/GlobalInfoContext";
+import {Button} from "shared/src/components/ui/button";
+import React, {useContext} from "react";
+import {Form} from "shared/src/components/ui/form";
+import {List, ListItem, ListItemKey} from "shared/src/components/ui/list";
+import {Badge, BadgeState} from "shared/src/components/ui/badge";
+import {useForm} from "react-hook-form";
+import {GlobalInfoContext, GlobalInfoContextType} from "shared/src/context/GlobalInfoContext";
 import dayjs from "dayjs";
-import { usePostBusinessAcceptationRequest } from "shared/src/data/business-mutations";
+import {usePostBusinessAcceptationRequest} from "shared/src/data/business-mutations";
 
-export const BusinessRequestAcceptanceDialog = ({ process }: { process: CNProcess }) => {
+export const BusinessRequestAcceptanceDialog = ({process}: { process: CNProcess }) => {
   // --- Form Setup ---
   const form = useForm({});
-  const { handleSubmit, control, setValue, getValues } = form;
-  const { mutateAsync: acceptAsync } = usePostBusinessAcceptationRequest();
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
+  const {handleSubmit, control, setValue, getValues} = form;
+  const {mutateAsync: acceptAsync} = usePostBusinessAcceptationRequest();
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
   const onSubmit = () => {
     acceptAsync({
       api_gateway: api_gateway,
       content: {
+        //@ts-ignore
         consumerParticipantId: process.associated_consumer,
         consumerPid: process.consumer_id,
         providerPid: process.provider_id,
@@ -43,7 +44,7 @@ export const BusinessRequestAcceptanceDialog = ({ process }: { process: CNProces
           <span className="max-w-full flex flex-wrap">
             {" "}
             You are about to accept a request of contract negotiation.
-            <br />
+            <br/>
             Please review the details carefully before proceeding.
           </span>
         </DialogDescription>
@@ -74,7 +75,7 @@ export const BusinessRequestAcceptanceDialog = ({ process }: { process: CNProces
         )}
         <ListItem>
           <ListItemKey className={scopedListItemKeyClasses}>State:</ListItemKey>
-          <Badge variant={"status"} state={process.state}>
+          <Badge variant={"status"} state={process.state as BadgeState}>
             {process.state}
           </Badge>
         </ListItem>

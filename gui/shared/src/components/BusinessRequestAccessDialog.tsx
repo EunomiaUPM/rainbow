@@ -7,22 +7,22 @@ import {
   DialogHeader,
   DialogTitle,
 } from "./ui/dialog";
-import { Button } from "shared/src/components/ui/button";
-import { Badge } from "shared/src/components/ui/badge";
-import React, { useContext, useRef } from "react";
-import { Form } from "shared/src/components/ui/form";
-import { useForm } from "react-hook-form";
-import { GlobalInfoContext, GlobalInfoContextType } from "shared/src/context/GlobalInfoContext";
-import { usePostNewBusinessRequest } from "shared/src/data/business-mutations";
-import { AuthContext, AuthContextType } from "shared/src/context/AuthContext";
-import { PolicyWrapperShow } from "shared/src/components/PolicyWrapperShow";
+import {Button} from "shared/src/components/ui/button";
+import {Badge} from "shared/src/components/ui/badge";
+import React, {useContext, useRef} from "react";
+import {Form} from "shared/src/components/ui/form";
+import {useForm} from "react-hook-form";
+import {GlobalInfoContext, GlobalInfoContextType} from "shared/src/context/GlobalInfoContext";
+import {usePostNewBusinessRequest} from "shared/src/data/business-mutations";
+import {AuthContext, AuthContextType} from "shared/src/context/AuthContext";
+import {PolicyWrapperShow} from "shared/src/components/PolicyWrapperShow";
 
 export const BusinessRequestAccessDialog = ({
-  policy,
-  catalogId,
-  datasetId,
-  datasetName,
-}: {
+                                              policy,
+                                              catalogId,
+                                              datasetId,
+                                              datasetName,
+                                            }: {
   policy: OdrlOffer;
   catalogId: UUID;
   datasetId: UUID;
@@ -31,15 +31,16 @@ export const BusinessRequestAccessDialog = ({
   // --- Form Setup ---
   const closeDialogRef = useRef<HTMLButtonElement>(null);
   const form = useForm({});
-  const { handleSubmit, control, setValue, getValues } = form;
-  const { mutateAsync: requestAsync } = usePostNewBusinessRequest();
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  const { participant } = useContext<AuthContextType | null>(AuthContext)!;
+  const {handleSubmit, control, setValue, getValues} = form;
+  const {mutateAsync: requestAsync} = usePostNewBusinessRequest();
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const {participant} = useContext<AuthContextType | null>(AuthContext)!;
 
   const onSubmit = async () => {
     await requestAsync({
       api_gateway,
       content: {
+        //@ts-ignore
         consumerParticipantId: participant?.participant_id,
         offer: {
           "@id": policy["@id"],
@@ -75,7 +76,8 @@ export const BusinessRequestAccessDialog = ({
         </DialogDescription>
       </DialogHeader>
       <DialogBody>
-        <PolicyWrapperShow policy={policy} />
+        <PolicyWrapperShow policy={policy} datasetId={undefined} catalogId={undefined}
+                           participant={undefined} datasetName={""}/>
       </DialogBody>
 
       <Form {...form}>

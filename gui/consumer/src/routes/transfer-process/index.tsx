@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useGetTransferProcesses } from "shared/src/data/transfer-queries.ts";
+import {createFileRoute, Link} from "@tanstack/react-router";
+import {useGetTransferProcesses} from "shared/src/data/transfer-queries.ts";
 import {
   Table,
   TableBody,
@@ -9,19 +9,19 @@ import {
   TableRow,
 } from "shared/src/components/ui/table.tsx";
 import dayjs from "dayjs";
-import { Button } from "shared/src/components/ui/button.tsx";
-import { Badge, BadgeState } from "shared/src/components/ui/badge.tsx";
-import { Input } from "shared/src/components/ui/input.tsx";
-import { TransferProcessActions } from "shared/src/components/TransferProcessActions.tsx";
-import { ArrowRight } from "lucide-react";
-import { mergeStateAndAttribute } from "shared/src/lib/utils.ts";
+import {Button} from "shared/src/components/ui/button.tsx";
+import {Badge, BadgeState} from "shared/src/components/ui/badge.tsx";
+import {Input} from "shared/src/components/ui/input.tsx";
+import {TransferProcessActions} from "shared/src/components/TransferProcessActions.tsx";
+import {ArrowRight} from "lucide-react";
+import {mergeStateAndAttribute} from "shared/src/lib/utils.ts";
 
 export const Route = createFileRoute("/transfer-process/")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const { data: transferProcesses } = useGetTransferProcesses();
+  const {data: transferProcesses} = useGetTransferProcesses();
 
   return (
     <div>
@@ -54,16 +54,16 @@ function RouteComponent() {
               <TableCell>{dayjs(transferProcess.created_at).format("DD/MM/YY HH:mm")}</TableCell>
               <TableCell>{dayjs(transferProcess.updated_at).format("DD/MM/YY HH:mm")}</TableCell>
               <TableCell>
-                <TransferProcessActions process={transferProcess} tiny={true} />
+                <TransferProcessActions process={transferProcess} tiny={true}/>
               </TableCell>
               <TableCell>
                 <Link
                   to="/transfer-process/$transferProcessId"
-                  params={{ transferProcessId: transferProcess.id }}
+                  params={{transferProcessId: transferProcess.id}}
                 >
                   <Button variant="link">
                     See details
-                    <ArrowRight />
+                    <ArrowRight/>
                   </Button>
                 </Link>
               </TableCell>

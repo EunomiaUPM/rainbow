@@ -32,10 +32,12 @@ use axum::response::{IntoResponse, Redirect};
 use axum::routing::{delete, get, post};
 use axum::{Json, Router};
 use rainbow_common::errors::{helpers::BadFormat, CommonErrors, ErrorLog};
+use rainbow_common::mates::mates::VerifyTokenRequest;
 use rainbow_db::auth_consumer::repo_factory::factory_trait::AuthRepoFactoryTrait;
 use reqwest::StatusCode;
 use std::collections::HashMap;
 use std::sync::Arc;
+use tower_http::cors::{Any, CorsLayer};
 use tracing::{error, info};
 
 pub struct RainbowAuthConsumerRouter<T>
@@ -54,6 +56,14 @@ where
     }
 
     pub fn router(self) -> Router {
+        // did.json could be accessed from any client
+        let cors = CorsLayer::new()
+            .allow_methods([Method::GET])
+            .allow_origin(Any);
+        let did_router = Router::new()
+            .route("/api/v1/did.json", get(Self::didweb))
+            .layer(cors);
+
         let router = Router::new()
             // WALLET
             .route("/api/v1/wallet/register", post(Self::wallet_register))
@@ -68,7 +78,6 @@ where
             .route("/api/v1/wallet/did", post(Self::register_did))
             .route("/api/v1/wallet/key", delete(Self::delete_key))
             .route("/api/v1/wallet/did", delete(Self::delete_did))
-            .route("/api/v1/did.json", get(Self::didweb))
             // PROVIDER
             .route(
                 "/api/v1/request/onboard/provider",
@@ -92,12 +101,17 @@ where
                 "/api/v1/authority/request/:id",
                 get(Self::get_one_authority),
             )
+            .route("/api/v1/verify/mate/token", post(Self::verify_mate_token))
+            .route("/api/v1/mates", get(Self::get_all_mates))
+            .route("/api/v1/mates/me", get(Self::get_all_mates_me))
+            .route("/api/v1/mates/:id", get(Self::get_mate_by_id))
             // OIDC
             .route("/api/v1/process/oidc4vci", post(Self::process_oidc4vci))
             .route("/api/v1/process/oidc4vp", post(Self::process_oidc4vp))
             // .route("/provider/:id/renew", post(todo!()))
             // .route("/provider/:id/finalize", post(todo!()))
             // TEST
+            .merge(did_router)
             .with_state(self.manager)
             .fallback(Self::fallback); // 2 routers cannot have 1 fallback each
 
@@ -334,6 +348,79 @@ where
             Ok(None) => {
                 let error =
                     CommonErrors::missing_resource_new(id.clone(), Some(format!("Missing request with id: {}", id)));
+                error!("{}", error.log());
+                error.into_response()
+            }
+            Err(e) => {
+                let error = CommonErrors::database_new(Some(e.to_string()));
+                error!("{}", error.log());
+                error.into_response()
+            }
+        }
+    }
+
+    async fn verify_mate_token(
+        State(manager): State<Arc<Manager<T>>>,
+        Json(payload): Json<VerifyTokenRequest>,
+    ) -> impl IntoResponse {
+        info!("POST /verify/mate/token");
+
+        match manager.repo.mates().get_by_token(&payload.token).await {
+            Ok(Some(data)) => {
+                let res = serde_json::to_value(data).unwrap();
+                (StatusCode::OK, Json(res)).into_response()
+            }
+            Ok(None) => {
+                let error =
+                    CommonErrors::missing_resource_new(payload.token.clone(), Some(format!("Missing request with id: {}", payload.token)));
+                error!("{}", error.log());
+                error.into_response()
+            }
+            Err(e) => {
+                let error = CommonErrors::database_new(Some(e.to_string()));
+                error!("{}", error.log());
+                error.into_response()
+            }
+        }
+    }
+
+    async fn get_all_mates(
+        State(manager): State<Arc<Manager<T>>>,
+    ) -> impl IntoResponse {
+        info!("GET /mates");
+        match manager.repo.mates().get_all(None, None).await {
+            Ok(mates) => (StatusCode::OK, Json(mates)).into_response(),
+            Err(e) => {
+                let error = CommonErrors::database_new(Some(e.to_string()));
+                error!("{}", error.log());
+                error.into_response()
+            }
+        }
+    }
+
+    async fn get_all_mates_me(
+        State(manager): State<Arc<Manager<T>>>,
+    ) -> impl IntoResponse {
+        info!("GET /mates/me");
+        match manager.repo.mates().get_me().await {
+            Ok(mates) => (StatusCode::OK, Json(mates)).into_response(),
+            Err(e) => {
+                let error = CommonErrors::database_new(Some(e.to_string()));
+                error!("{}", error.log());
+                error.into_response()
+            }
+        }
+    }
+
+    async fn get_mate_by_id(
+        Path(id): Path<String>,
+        State(manager): State<Arc<Manager<T>>>,
+    ) -> impl IntoResponse {
+        info!("GET /mates/{}", id);
+        match manager.repo.mates().get_by_id(&id).await {
+            Ok(Some(mates)) => (StatusCode::OK, Json(mates)).into_response(),
+            Ok(None) => {
+                let error = CommonErrors::missing_resource_new(id, Some("Mate id not found".to_string()));
                 error!("{}", error.log());
                 error.into_response()
             }

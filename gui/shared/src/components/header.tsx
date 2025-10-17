@@ -1,6 +1,6 @@
 import * as React from "react";
-import { useContext } from "react";
-import { Link, useRouterState } from "@tanstack/react-router";
+import {useContext} from "react";
+import {Link, useRouterState} from "@tanstack/react-router";
 
 import {
   Breadcrumb,
@@ -10,23 +10,21 @@ import {
 } from "shared/src/components/ui/breadcrumb";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import PersonIcon from "@mui/icons-material/Person";
-import { AuthContext, AuthContextType } from "shared/src/context/AuthContext";
-import { Button } from "shared/src/components/ui/button";
-import { LogOut } from "lucide-react";
+import {AuthContext, AuthContextType} from "shared/src/context/AuthContext";
+import {Button} from "shared/src/components/ui/button";
+import {LogOut} from "lucide-react";
 
 const Header = () => {
   const routerState = useRouterState();
-  const { isAuthenticated, unsetAuthentication } = useContext<AuthContextType | null>(AuthContext)!;
+  const {isAuthenticated, unsetAuthentication} = useContext<AuthContextType | null>(AuthContext)!;
 
   let paths = routerState.location.pathname.split("/");
-  let formatPath = (path) => {
+  let formatPath = (path: string) => {
     // si el path es un single, y va por id, quitarle las primeras litras
     if (path.includes("urn")) {
-      let formattedPath = path.slice(13, 24) + "[...]";
-      return formattedPath;
+      return path.slice(13, 24) + "[...]";
     } else {
-      let formattedPath = path.split("-").join(" ");
-      return formattedPath;
+      return path.split("-").join(" ");
     }
   };
   paths.forEach((path, index) => {
@@ -35,7 +33,8 @@ const Header = () => {
   paths.splice(0, 1); // Eliminar el primer elemento vacío
   // console.log(formatPath(paths[0]), " formatted path");
   return (
-    <div className=" bg-background w-full border-b py-1.5 z-50 border-stroke px-4 flex justify-between items-center">
+    <div
+      className=" bg-background w-full border-b py-1.5 z-50 border-stroke px-4 flex justify-between items-center">
       <Breadcrumb>
         <BreadcrumbList>
           {paths.map((path, index) => (
@@ -65,7 +64,7 @@ const Header = () => {
                       {formatPath(path)}
                     </Link>
                   </BreadcrumbItem>
-                  {index < paths.length - 1 ? <BreadcrumbSeparator /> : ""}
+                  {index < paths.length - 1 ? <BreadcrumbSeparator/> : ""}
                 </>
               )}
             </span>
@@ -74,15 +73,15 @@ const Header = () => {
       </Breadcrumb>
       <div className="flex flex-row gap-4">
         <Link to="/subscriptions">
-          <NotificationsIcon className="cursor-pointer" />
+          <NotificationsIcon className="cursor-pointer"/>
         </Link>
         <Link to="">
-          <PersonIcon className="cursor-pointer" />
+          <PersonIcon className="cursor-pointer"/>
         </Link>
         {isAuthenticated && (
           <Button variant="ghost" size="xs" onClick={() => unsetAuthentication()}>
             Logout
-            <LogOut />
+            <LogOut/>
           </Button>
         )}
         {/* <Link to="/user">User</Link> */}
@@ -91,4 +90,4 @@ const Header = () => {
   );
 };
 
-export { Header };
+export {Header};

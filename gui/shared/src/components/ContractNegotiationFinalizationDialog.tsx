@@ -6,26 +6,27 @@ import {
   DialogHeader,
   DialogTitle,
 } from "./ui/dialog";
-import { Button } from "./ui/button";
-import React, { useContext } from "react";
-import { Form } from "./ui/form";
-import { useForm } from "react-hook-form";
-import { usePostContractNegotiationRPCFinalization } from "./../data/contract-mutations";
-import { GlobalInfoContext, GlobalInfoContextType } from "./../context/GlobalInfoContext";
-import { Badge } from "./../components/ui/badge";
-import { List, ListItem, ListItemKey } from "./../components/ui/list";
+import {Button} from "./ui/button";
+import React, {useContext} from "react";
+import {Form} from "./ui/form";
+import {useForm} from "react-hook-form";
+import {usePostContractNegotiationRPCFinalization} from "./../data/contract-mutations";
+import {GlobalInfoContext, GlobalInfoContextType} from "./../context/GlobalInfoContext";
+import {Badge, BadgeState} from "./../components/ui/badge";
+import {List, ListItem, ListItemKey} from "./../components/ui/list";
 import dayjs from "dayjs";
 
-export const ContractNegotiationFinalizationDialog = ({ process }: { process: CNProcess }) => {
+export const ContractNegotiationFinalizationDialog = ({process}: { process: CNProcess }) => {
   // --- Form Setup ---
   const form = useForm({});
-  const { handleSubmit, control, setValue, getValues } = form;
-  const { mutateAsync: finalizeAsync } = usePostContractNegotiationRPCFinalization();
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
+  const {handleSubmit, control, setValue, getValues} = form;
+  const {mutateAsync: finalizeAsync} = usePostContractNegotiationRPCFinalization();
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
   const onSubmit = () => {
     finalizeAsync({
       api_gateway: api_gateway,
       content: {
+        //@ts-ignore
         consumerParticipantId: process.associated_consumer,
         consumerPid: process.consumer_id,
         providerPid: process.provider_id,
@@ -41,7 +42,7 @@ export const ContractNegotiationFinalizationDialog = ({ process }: { process: CN
         <DialogDescription>
           <p>
             {" "}
-            You are about to finalize to the terms of the contract negotiation. <br />
+            You are about to finalize to the terms of the contract negotiation. <br/>
             Please review the details carefully before proceeding.
           </p>
           {/* <p>{JSON.stringify(process)}</p> */}
@@ -72,7 +73,7 @@ export const ContractNegotiationFinalizationDialog = ({ process }: { process: CN
         )}
         <ListItem>
           <ListItemKey className={scopedListItemKeyClasses}>Current state:</ListItemKey>
-          <Badge variant={"status"} state={process.state}>
+          <Badge variant={"status"} state={process.state as BadgeState}>
             {process.state}
           </Badge>
         </ListItem>

@@ -27,7 +27,6 @@ use crate::consumer::core::ds_protocol_rpc::ds_protocol_rpc_types::{
 use axum::async_trait;
 
 pub mod ds_protocol_rpc;
-pub mod ds_protocol_rpc_err;
 pub mod ds_protocol_rpc_types;
 
 #[mockall::automock]

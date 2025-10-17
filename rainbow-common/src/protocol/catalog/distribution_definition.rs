@@ -21,6 +21,7 @@ use crate::protocol::catalog::dataservice_definition::DataService;
 use crate::protocol::context_field::ContextField;
 use crate::protocol::contract::contract_odrl::OdrlOffer;
 use serde::{Deserialize, Serialize};
+use crate::dcat_formats::DctFormats;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Distribution {
@@ -58,6 +59,8 @@ pub struct DistributionDctDeclaration {
     pub title: Option<String>,
     #[serde(rename = "description")]
     pub description: Vec<String>,
+    #[serde(rename = "formats")]
+    pub formats: DctFormats,
 }
 
 

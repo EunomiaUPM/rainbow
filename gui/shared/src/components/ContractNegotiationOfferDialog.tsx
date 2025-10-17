@@ -6,32 +6,32 @@ import {
   DialogHeader,
   DialogTitle,
 } from "./ui/dialog";
-import { Button } from "./ui/button";
-import { Badge } from "./../components/ui/badge";
-import { List, ListItem, ListItemKey } from "./ui/list";
+import {Button} from "./ui/button";
+import {Badge, BadgeState} from "./../components/ui/badge";
+import {List, ListItem, ListItemKey} from "./ui/list";
 
-import React, { useContext, useRef } from "react";
-import { Form } from "./ui/form";
-import { useForm } from "react-hook-form";
-import { usePostContractNegotiationRPCOffer } from "./../data/contract-mutations";
-import { useGetLastContractNegotiationOfferByCNMessageId } from "@/data/contract-queries.ts";
-import { GlobalInfoContext, GlobalInfoContextType } from "./../context/GlobalInfoContext";
+import React, {useContext, useRef} from "react";
+import {Form} from "./ui/form";
+import {useForm} from "react-hook-form";
+import {usePostContractNegotiationRPCOffer} from "./../data/contract-mutations";
+import {useGetLastContractNegotiationOfferByCNMessageId} from "shared/src/data/contract-queries";
+import {GlobalInfoContext, GlobalInfoContextType} from "./../context/GlobalInfoContext";
 import dayjs from "dayjs";
-import { PolicyEditorHandle, PolicyWrapperEdit } from "./PolicyWrapperEdit";
+import {PolicyEditorHandle, PolicyWrapperEdit} from "./PolicyWrapperEdit";
 
-export const ContractNegotiationOfferDialog = ({ process }: { process: CNProcess }) => {
-  const policyWrapperRef = useRef<PolicyEditorHandle>();
+export const ContractNegotiationOfferDialog = ({process}: { process: CNProcess }) => {
+  const policyWrapperRef = useRef<PolicyEditorHandle>(null);
   const form = useForm();
-  const { handleSubmit } = form;
-  const { mutateAsync: dataOfferAsync } = usePostContractNegotiationRPCOffer();
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  const { data: lastOffer } = useGetLastContractNegotiationOfferByCNMessageId(process.provider_id);
+  const {handleSubmit} = form;
+  const {mutateAsync: dataOfferAsync} = usePostContractNegotiationRPCOffer();
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const {data: lastOffer} = useGetLastContractNegotiationOfferByCNMessageId(process.provider_id);
 
   const onSubmit = async () => {
     if (policyWrapperRef.current) {
       const policy = policyWrapperRef.current.getPolicy();
       const outputOffer = {
-        ...lastOffer.offer_content,
+        ...lastOffer?.offer_content,
         prohibition:
           policy.prohibition && policy.prohibition.length > 0 ? policy.prohibition : null,
         permission: policy.permission && policy.permission.length > 0 ? policy.permission : null,
@@ -40,7 +40,9 @@ export const ContractNegotiationOfferDialog = ({ process }: { process: CNProcess
       await dataOfferAsync({
         api_gateway: api_gateway,
         content: {
+          //@ts-ignore
           consumerParticipantId: process.associated_consumer,
+          //@ts-ignore
           offer: outputOffer,
           consumerPid: process.consumer_id,
           providerPid: process.provider_id,
@@ -78,11 +80,12 @@ export const ContractNegotiationOfferDialog = ({ process }: { process: CNProcess
               </ListItem>
               <ListItem>
                 <ListItemKey className={scopedListItemKeyClasses}>Associated Consumer:</ListItemKey>
-                <Badge variant={"info"}>{process.associated_consumer.slice(9, 40) + "[...]"}</Badge>
+                <Badge
+                  variant={"info"}>{process.associated_consumer?.slice(9, 40) + "[...]"}</Badge>
               </ListItem>
               <ListItem>
                 <ListItemKey className={scopedListItemKeyClasses}>State:</ListItemKey>
-                <Badge variant={"status"} state={process.state}>
+                <Badge variant={"status"} state={process.state as BadgeState}>
                   {process.state}
                 </Badge>
               </ListItem>
@@ -110,7 +113,7 @@ export const ContractNegotiationOfferDialog = ({ process }: { process: CNProcess
               <div className="flex w-full ">
                 <div className="w-full">
                   <p className="mb-2">New policy request</p>
-                  <PolicyWrapperEdit policy={lastOffer.offer_content} ref={policyWrapperRef} />
+                  <PolicyWrapperEdit policy={lastOffer.offer_content} ref={policyWrapperRef}/>
                 </div>
               </div>
             )}

@@ -1,4 +1,4 @@
-import React from "react";
+import React, {FC} from "react";
 
 import {
   Policy,
@@ -9,16 +9,20 @@ import {
   PolicyItemContainer,
   PolicyItemKey,
   PolicyItemValue,
+  PolicyVariants,
 } from "shared/src/components/ui/policy";
 
-const PolicyComponent = ({ policyItem, variant }) => {
+const PolicyComponent: FC<{
+  policyItem: OdrlPermission[] | null,
+  variant: PolicyVariants
+}> = ({policyItem, variant}) => {
   return (
     <Policy className="" variant={variant}>
       {policyItem?.length === 0 || policyItem == null ? (
         <p className="text-xs mt-0.5 text-white/70"> No {variant}s </p>
       ) : (
         <div className="flex flex-col">
-          {policyItem?.map((item, i) => (
+          {policyItem?.map((item, i: number) => (
             <PolicyItemContainer key={i}>
               <PolicyItem>
                 <PolicyItemKey>action:</PolicyItemKey>
@@ -31,19 +35,15 @@ const PolicyComponent = ({ policyItem, variant }) => {
                     <p className="text-xs mt-0.5 ">No constraints </p>
                   ) : (
                     <>
-                      {/* {console.log(prohib.constraint, " prohib constr")} */}
-                      {item.constraint.map((constr, j) => (
+                      {item.constraint.map((constr, j: number) => (
                         <PolicyConstraintsContainer key={j}>
-                          <PolicyConstraint type="leftOperand">
+                          <PolicyConstraint type="leftOperand" className="">
                             {JSON.stringify(constr.leftOperand)}
                           </PolicyConstraint>
-                          <PolicyConstraint type="operator">
-                            {" "}
+                          <PolicyConstraint type="operator" className="">
                             {JSON.stringify(constr.operator)}
                           </PolicyConstraint>
-
-                          <PolicyConstraint type="rightOperand">
-                            {/* {console.log(constr, "constrrrr")} */}
+                          <PolicyConstraint type="rightOperand" className="">
                             {JSON.stringify(constr.rightOperand)}
                           </PolicyConstraint>
                         </PolicyConstraintsContainer>

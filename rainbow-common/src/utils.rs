@@ -17,8 +17,10 @@
  *
  */
 
-use crate::err::transfer_err::TransferErrorType;
+use crate::errors::helpers::BadFormat;
+use crate::errors::{CommonErrors, ErrorLog};
 use anyhow::bail;
+use tracing::error;
 use urn::Urn;
 use uuid::Uuid;
 
@@ -37,6 +39,10 @@ pub fn get_urn_from_string(string_in: &String) -> anyhow::Result<Urn> {
     let urn_res = string_in.parse::<Urn>();
     match urn_res {
         Ok(urn_res) => Ok(urn_res),
-        Err(_) => bail!(TransferErrorType::PidSchemeError),
+        Err(e) => {
+            let e_ = CommonErrors::format_new(BadFormat::Received, e.to_string().into());
+            error!("{}", e_.log());
+            bail!(e_);
+        }
     }
 }

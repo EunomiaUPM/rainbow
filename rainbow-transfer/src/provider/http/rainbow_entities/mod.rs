@@ -17,5 +17,4 @@
  *
  */
 
-pub mod rainbow_entities_errors;
 pub mod rainbow_entities;

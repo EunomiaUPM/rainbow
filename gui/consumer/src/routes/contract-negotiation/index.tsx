@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import {createFileRoute, Link} from "@tanstack/react-router";
 import dayjs from "dayjs";
 import {
   Table,
@@ -8,14 +8,14 @@ import {
   TableHeader,
   TableRow,
 } from "shared/src/components/ui/table";
-import { Button } from "shared/src/components/ui/button.tsx";
-import { Badge } from "shared/src/components/ui/badge.tsx";
-import { Input } from "shared/src/components/ui/input.tsx";
-import { useGetContractNegotiationProcesses } from "shared/src/data/contract-queries.ts";
-import { ContractNegotiationActions } from "shared/src/components/ContractNegotiationActions";
-import { useMemo } from "react";
+import {Button} from "shared/src/components/ui/button.tsx";
+import {Badge, BadgeState} from "shared/src/components/ui/badge.tsx";
+import {Input} from "shared/src/components/ui/input.tsx";
+import {useGetContractNegotiationProcesses} from "shared/src/data/contract-queries.ts";
+import {ContractNegotiationActions} from "shared/src/components/ContractNegotiationActions";
+import {useMemo} from "react";
 import Heading from "shared/src/components/ui/heading";
-import { ArrowRight } from "lucide-react";
+import {ArrowRight} from "lucide-react";
 import {
   Drawer,
   DrawerBody,
@@ -26,10 +26,10 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "shared/src/components/ui/drawer";
-import { RouteComponent as RequestForm } from "@/routes/contract-negotiation/request";
+import {RouteComponent as RequestForm} from "@/routes/contract-negotiation/request";
 
 const RouteComponent = () => {
-  const { data: cnProcesses } = useGetContractNegotiationProcesses();
+  const {data: cnProcesses} = useGetContractNegotiationProcesses();
   const cnProcessesSorted = useMemo(() => {
     if (!cnProcesses) return [];
     return [...cnProcesses].sort((a, b) => {
@@ -59,7 +59,7 @@ const RouteComponent = () => {
               </DrawerTitle>
             </DrawerHeader>
             <DrawerBody>
-              <RequestForm />
+              <RequestForm/>
             </DrawerBody>
             <DrawerFooter>
               <DrawerClose className="flex justify-start gap-4">
@@ -89,7 +89,7 @@ const RouteComponent = () => {
                 <Badge variant={"info"}>{cnProcess.provider_id?.slice(9, 20) + "..."}</Badge>
               </TableCell>
               <TableCell>
-                <Badge variant={"status"} state={cnProcess.state}>
+                <Badge variant={"status"} state={cnProcess.state as BadgeState}>
                   {cnProcess.state?.replace("dspace:", "")}
                 </Badge>
               </TableCell>
@@ -98,16 +98,16 @@ const RouteComponent = () => {
               </TableCell>
               <TableCell>{dayjs(cnProcess.created_at).format("DD/MM/YY - HH:mm")}</TableCell>
               <TableCell>
-                <ContractNegotiationActions process={cnProcess} tiny={true} />
+                <ContractNegotiationActions process={cnProcess} tiny={true}/>
               </TableCell>
               <TableCell>
                 <Link
                   to="/contract-negotiation/$cnProcess"
-                  params={{ cnProcess: cnProcess.consumer_id }}
+                  params={{cnProcess: cnProcess.consumer_id}}
                 >
                   <Button variant="link">
                     See details
-                    <ArrowRight />
+                    <ArrowRight/>
                   </Button>
                 </Link>
               </TableCell>

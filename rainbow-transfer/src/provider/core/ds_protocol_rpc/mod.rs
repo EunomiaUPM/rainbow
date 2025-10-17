@@ -22,7 +22,6 @@ use axum::async_trait;
 
 pub mod ds_protocol_rpc_types;
 pub mod ds_protocol_rpc;
-pub mod ds_protocol_rpc_err;
 
 #[mockall::automock]
 #[async_trait]

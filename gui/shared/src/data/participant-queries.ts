@@ -1,6 +1,6 @@
-import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { useContext } from "react";
-import { GlobalInfoContext, GlobalInfoContextType } from "./../context/GlobalInfoContext";
+import {queryOptions, useSuspenseQuery} from "@tanstack/react-query";
+import {useContext} from "react";
+import {GlobalInfoContext, GlobalInfoContextType} from "./../context/GlobalInfoContext";
 
 /**
  *  GET /participants
@@ -17,9 +17,9 @@ export const getParticipantsOptions = (api_gateway: string) =>
   });
 
 export const useGetParticipants = () => {
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  const { data, isLoading, isError, error } = useSuspenseQuery(getParticipantsOptions(api_gateway));
-  return { data, isLoading, isError, error };
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const {data, isLoading, isError, error} = useSuspenseQuery(getParticipantsOptions(api_gateway));
+  return {data, isLoading, isError, error};
 };
 
 /**
@@ -38,11 +38,11 @@ export const getParticipantByIdOptions = (api_gateway: string, participantId: UU
   });
 
 export const useGetParticipantById = (participantId: UUID) => {
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  const { data, isLoading, isError, error } = useSuspenseQuery(
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const {data, isLoading, isError, error} = useSuspenseQuery(
     getParticipantByIdOptions(api_gateway, participantId),
   );
-  return { data, isLoading, isError, error };
+  return {data, isLoading, isError, error};
 };
 
 /**
@@ -63,9 +63,9 @@ export const getAgreementsByParticipantIdOptions = (api_gateway: string, partici
   });
 
 export const useGetAgreementsByParticipantId = (participantId: UUID) => {
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  const { data, isLoading, isError, error } = useSuspenseQuery(
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const {data, isLoading, isError, error} = useSuspenseQuery(
     getAgreementsByParticipantIdOptions(api_gateway, participantId),
   );
-  return { data, isLoading, isError, error };
+  return {data, isLoading, isError, error};
 };

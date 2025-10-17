@@ -17,7 +17,6 @@
  *
  */
 
-use crate::common::core::mates_facade::MatesFacadeTrait;
 use crate::consumer::core::ds_protocol::ds_protocol_errors::IdsaCNError;
 use crate::consumer::core::ds_protocol_rpc::ds_protocol_rpc_errors::DSRPCContractNegotiationConsumerErrors;
 use crate::consumer::core::ds_protocol_rpc::ds_protocol_rpc_types::{
@@ -30,6 +29,7 @@ use anyhow::{anyhow, bail};
 use axum::async_trait;
 use rainbow_common::config::ConfigRoles;
 use rainbow_common::mates::Mates;
+use rainbow_common::mates_facade::MatesFacadeTrait;
 use rainbow_common::protocol::contract::contract_ack::ContractAckMessage;
 use rainbow_common::protocol::contract::contract_agreement_verification::ContractAgreementVerificationMessage;
 use rainbow_common::protocol::contract::contract_negotiation_event::{

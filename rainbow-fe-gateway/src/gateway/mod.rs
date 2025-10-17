@@ -57,6 +57,7 @@ pub async fn execute_proxy(
         "auth" => "api/v1/auth",
         "ssi-auth" => "api/v1/ssi-auth",
         "wallet" => "api/v1/wallet",
+        "request" => "api/v1/request",
         _ => return (StatusCode::NOT_FOUND, "prefix not found in microservice").into_response(),
     };
 
