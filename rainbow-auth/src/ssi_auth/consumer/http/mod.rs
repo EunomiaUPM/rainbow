@@ -35,6 +35,7 @@ use rainbow_db::auth_consumer::repo_factory::factory_trait::AuthRepoFactoryTrait
 use reqwest::StatusCode;
 use std::collections::HashMap;
 use std::sync::Arc;
+use tower_http::cors::{Any, CorsLayer};
 use tracing::{error, info};
 
 pub struct RainbowAuthConsumerRouter<T>
@@ -53,6 +54,14 @@ where
     }
 
     pub fn router(self) -> Router {
+        // did.json could be accessed from any client
+        let cors = CorsLayer::new()
+            .allow_methods([Method::GET])
+            .allow_origin(Any);
+        let did_router = Router::new()
+            .route("/api/v1/did.json", get(Self::didweb))
+            .layer(cors);
+
         Router::new()
             // WALLET
             .route("/api/v1/wallet/register", post(Self::wallet_register))
@@ -67,7 +76,6 @@ where
             .route("/api/v1/wallet/did", post(Self::register_did))
             .route("/api/v1/wallet/key", delete(Self::delete_key))
             .route("/api/v1/wallet/did", delete(Self::delete_did))
-            .route("/api/v1/did.json", get(Self::didweb))
             // PROVIDER
             .route(
                 "/api/v1/request/onboard/provider",
@@ -98,6 +106,7 @@ where
             // .route("/provider/:id/renew", post(todo!()))
             // .route("/provider/:id/finalize", post(todo!()))
             // TEST
+            .merge(did_router)
             .with_state(self.manager)
             .fallback(Self::fallback) // 2 routers cannot have 1 fallback each
     }

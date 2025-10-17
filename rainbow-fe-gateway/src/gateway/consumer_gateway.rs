@@ -21,7 +21,6 @@ use crate::gateway::execute_proxy;
 use axum::body::Body;
 use axum::extract::ws::Message;
 use axum::extract::{Path, Request, State, WebSocketUpgrade};
-use axum::http::header::{AUTHORIZATION, CONTENT_TYPE};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::{any, get, get_service, post};
@@ -31,7 +30,7 @@ use reqwest::Client;
 use serde_json::Value;
 use std::time::Duration;
 use tokio::sync::broadcast;
-use tower_http::cors::{AllowHeaders, Any, CorsLayer};
+use tower_http::cors::{Any, CorsLayer};
 use tower_http::services::{ServeDir, ServeFile};
 
 pub struct RainbowConsumerGateway {
@@ -51,7 +50,7 @@ impl RainbowConsumerGateway {
         let cors = CorsLayer::new()
             .allow_methods(Any)
             .allow_origin(Any)
-            .allow_headers(AllowHeaders::list([CONTENT_TYPE, AUTHORIZATION]));
+            .allow_headers(Any);
 
         let mut router = Router::new()
             .route(
@@ -116,6 +115,7 @@ impl RainbowConsumerGateway {
             "auth" => config.get_transfer_host_url(),
             "wallet" => config.get_transfer_host_url(),
             "ssi-auth" => config.get_ssi_auth_host_url(),
+            "request" => config.get_ssi_auth_host_url(),
             _ => return (StatusCode::NOT_FOUND, "prefix not found").into_response(),
         };
 
