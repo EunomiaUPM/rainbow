@@ -20,7 +20,7 @@
 use crate::ssi_auth::common::errors::AuthErrors;
 use crate::ssi_auth::common::traits::RainbowSSIAuthWalletTrait;
 use crate::ssi_auth::common::types::jwt::AuthJwtClaims;
-use crate::ssi_auth::common::types::oidc::{CredentialOfferResponse, Vpd};
+use crate::ssi_auth::common::types::oidc::{CredentialOfferResponse, MatchVCsRequest, Vpd};
 use crate::ssi_auth::common::types::ssi::other::{MatchingVCs, RedirectResponse};
 use crate::ssi_auth::common::types::ssi::wallet::{WalletInfo, WalletInfoResponse, WalletLoginResponse};
 use crate::ssi_auth::common::types::ssi::{dids::DidsInfo, keys::KeyDefinition};
@@ -37,7 +37,7 @@ use rainbow_common::errors::helpers::{BadFormat, MissingAction};
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_db::auth_provider::entities::mates;
 use rainbow_db::auth_provider::repo_factory::factory_trait::AuthRepoFactoryTrait;
-use serde_json::{json, Value};
+use serde_json::Value;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tracing::{debug, error, info, warn};
 use url::Url;
@@ -991,6 +991,7 @@ where
     }
 
     async fn join_exchange(&self, exchange_url: String) -> anyhow::Result<String> {
+        info!("Joingin exchange");
         let wallet = self.get_wallet().await?;
         let token = self.get_token().await?;
 
@@ -1025,8 +1026,14 @@ where
                 Ok(data)
             }
             _ => {
-                error!("Error joining the exchange: {}", res.status());
-                bail!("Error joining the exchange: {}", res.status())
+                let error = AuthErrors::wallet_new(
+                    url,
+                    "POST".to_string(),
+                    res.status().as_u16(),
+                    Some("Error joining the exchange".to_string()),
+                );
+                error!("{}", error.log());
+                bail!(error);
             }
         }
     }
@@ -1067,10 +1074,7 @@ where
         info!("Matching Verifiable Credentials for OIDC4VP");
         let mut vcs_id = Vec::new();
         for descriptor in vpd.input_descriptors {
-            let n_vpd = Vpd {
-                id: "temporal_id".to_string(),
-                input_descriptors: vec![descriptor],
-            };
+            let n_vpd = Vpd { id: "temporal_id".to_string(), input_descriptors: vec![descriptor] };
             let vcs = self.match_vc4vp(serde_json::to_value(n_vpd)?).await?;
             let vc_id = match vcs.first() {
                 Some(vc) => vc.id.clone(),
@@ -1136,6 +1140,7 @@ where
     }
 
     async fn present_vp(&self, preq: String, creds: Vec<String>) -> anyhow::Result<RedirectResponse> {
+        info!("Presenting Verifiable Presentation");
         let wallet = self.get_wallet().await?;
         let token = self.get_token().await?;
         let did = self.get_did().await?;
@@ -1151,10 +1156,7 @@ where
         headers.insert(ACCEPT, "application/json".parse()?);
         headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?);
 
-        // TODO Check
-        // let did = &wallet_session.wallets.first().unwrap().dids.as_ref().unwrap().first().unwrap().did;
-
-        let body = json!({ "did": did, "presentationRequest": preq, "selectedCredentials": creds });
+        let body = MatchVCsRequest { did, presentation_request: preq, selected_credentials: creds };
 
         let res = match self.client.post(&url).headers(headers).json(&body).send().await {
             Ok(data) => data,
@@ -1169,10 +1171,23 @@ where
             }
         };
 
-        // TODO
-        let body: RedirectResponse = res.json().await?;
-
-        Ok(body)
+        match res.status().as_u16() {
+            200 => {
+                info!("Credentials presented successfully");
+                let data: RedirectResponse = res.json().await?;
+                Ok(data)
+            }
+            _ => {
+                let error = AuthErrors::wallet_new(
+                    url,
+                    "POST".to_string(),
+                    res.status().as_u16(),
+                    Some("Petition to present credentials failed".to_string()),
+                );
+                error!("{}", error.log());
+                bail!(error);
+            }
+        }
     }
 
     // OTHER ----------------------------------------------------------------------------------------->

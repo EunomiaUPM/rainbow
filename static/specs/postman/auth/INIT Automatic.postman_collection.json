@@ -1,0 +1,451 @@
+{
+	"info": {
+		"_postman_id": "08d9d4b6-f19e-4853-932a-cb23e6c9f519",
+		"name": "INIT Automatic",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "32787488"
+	},
+	"item": [
+		{
+			"name": "A Onboarding Copy 2",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{AuthorityUrl}}/api/v1/wallet/onboard",
+					"host": [
+						"{{AuthorityUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"wallet",
+						"onboard"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "C Onboarding Copy 2",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{ConsumerUrl}}/api/v1/wallet/onboard",
+					"host": [
+						"{{ConsumerUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"wallet",
+						"onboard"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "P Onboarding Copy 2",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{ProviderUrl}}/api/v1/wallet/onboard",
+					"host": [
+						"{{ProviderUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"wallet",
+						"onboard"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "A Did Copy",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var responseData = pm.response.json();\r",
+							"\r",
+							"// Ensure 'PetitionId' is set correctly\r",
+							"pm.test(\"Set global variable 'AuthorityDid' correctly\", function () {\r",
+							"    pm.globals.set(\"AuthorityDid\", responseData.id);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{AuthorityUrl}}/api/v1/did.json",
+					"host": [
+						"{{AuthorityUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"did.json"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "C Did Copy",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var responseData = pm.response.json();\r",
+							"\r",
+							"// Ensure 'PetitionId' is set correctly\r",
+							"pm.test(\"Set global variable 'ConsumerDid' correctly\", function () {\r",
+							"    pm.globals.set(\"ConsumerDid\", responseData.id);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{ConsumerUrl}}/api/v1/did.json",
+					"host": [
+						"{{ConsumerUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"did.json"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "P Did Copy",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var responseData = pm.response.json();\r",
+							"\r",
+							"// Ensure 'PetitionId' is set correctly\r",
+							"pm.test(\"Set global variable 'ProviderDid' correctly\", function () {\r",
+							"    pm.globals.set(\"ProviderDid\", responseData.id);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{ProviderUrl}}/api/v1/did.json",
+					"host": [
+						"{{ProviderUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"did.json"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "C Beg 4 Credential Copy",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"url\": \"{{AuthorityUrl}}/api/v1/request/credential\",\r\n    \"id\": \"{{AuthorityDid}}\",\r\n    \"slug\": \"authority\",\r\n    \"vc_type\": \"DataspaceParticipantCredential\"\r\n}"
+				},
+				"url": {
+					"raw": "{{ConsumerUrl}}/api/v1/authority/beg",
+					"host": [
+						"{{ConsumerUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"authority",
+						"beg"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "A All Requests Copy",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var responseData = pm.response.json();\r",
+							"\r",
+							"// Ensure 'PetitionId' is set correctly\r",
+							"pm.test(\"Set global variable 'PetitionId' to the last object's id\", function () {\r",
+							"    pm.globals.set(\"PetitionId\", responseData[responseData.length - 1].id);\r",
+							"});\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{AuthorityUrl}}/api/v1/request/all",
+					"host": [
+						"{{AuthorityUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"request",
+						"all"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "A Accept Request Copy",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"approve\": true\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{AuthorityUrl}}/api/v1/request/{{PetitionId}}",
+					"host": [
+						"{{AuthorityUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"request",
+						"{{PetitionId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "C All Authorities Copy 2",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var responseData = pm.response.json();\r",
+							"\r",
+							"// Ensure 'PetitionId' is set correctly\r",
+							"pm.test(\"Set global variable 'OIDC4VCI_URI' correctly\", function () {\r",
+							"    const lastItem = responseData[responseData.length - 1];\r",
+							"    pm.globals.set(\"OIDC4VCI_URI\", lastItem.vc_uri);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{ConsumerUrl}}/api/v1/authority/request/all",
+					"host": [
+						"{{ConsumerUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"authority",
+						"request",
+						"all"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "C Manage OIDC4VCI Copy",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"uri\" : \"{{OIDC4VCI_URI}}\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{ConsumerUrl}}/api/v1/process/oidc4vci",
+					"host": [
+						"{{ConsumerUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"process",
+						"oidc4vci"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "C Grant Request Copy 2",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var responseData = pm.response.text();\r",
+							"\r",
+							"// Ensure 'PetitionId' is set correctly\r",
+							"pm.test(\"Set global variable 'OIDC4VP_URI' correctly\", function () {\r",
+							"    pm.globals.set(\"OIDC4VP_URI\", responseData);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"url\": \"{{ProviderUrl}}/api/v1/access\",\r\n    \"id\": \"{{ProviderDid}}\",\r\n    \"slug\": \"provider\",\r\n    \"actions\": \"talk\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{ConsumerUrl}}/api/v1/request/onboard/provider",
+					"host": [
+						"{{ConsumerUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"request",
+						"onboard",
+						"provider"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "C Manage OIDC4VP",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"uri\": \"{{OIDC4VP_URI}}\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{ConsumerUrl}}/api/v1/process/oidc4vp",
+					"host": [
+						"{{ConsumerUrl}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"process",
+						"oidc4vp"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

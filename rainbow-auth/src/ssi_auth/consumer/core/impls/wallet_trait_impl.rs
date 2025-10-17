@@ -991,7 +991,7 @@ where
     }
 
     async fn join_exchange(&self, exchange_url: String) -> anyhow::Result<String> {
-        info!("Joingin exchange");
+        info!("Joining exchange");
         let wallet = self.get_wallet().await?;
         let token = self.get_token().await?;
 
