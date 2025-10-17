@@ -33,12 +33,13 @@ use axum::{Json, Router};
 use rainbow_common::auth::business::RainbowBusinessLoginRequest;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::mates::mates::VerifyTokenRequest;
+use rainbow_db::auth_provider::entities::mates::Model;
 use rainbow_db::auth_provider::repo_factory::factory_trait::AuthRepoFactoryTrait;
 use reqwest::StatusCode;
 use serde::Deserialize;
 use std::sync::Arc;
+use tower_http::cors::{Any, CorsLayer};
 use tracing::{error, info};
-use rainbow_db::auth_provider::entities::mates::Model;
 
 pub struct RainbowAuthProviderRouter<T>
 where
@@ -55,6 +56,14 @@ where
         Self { manager }
     }
     pub fn router(self) -> Router {
+        // did.json could be accessed from any client
+        let cors = CorsLayer::new()
+            .allow_methods([Method::GET])
+            .allow_origin(Any);
+        let did_router = Router::new()
+            .route("/api/v1/did.json", get(Self::didweb))
+            .layer(cors);
+
         let router = Router::new()
             // WALLET
             .route("/api/v1/wallet/register", post(Self::wallet_register))
@@ -69,7 +78,6 @@ where
             .route("/api/v1/wallet/did", post(Self::register_did))
             .route("/api/v1/wallet/key", delete(Self::delete_key))
             .route("/api/v1/wallet/did", delete(Self::delete_did))
-            .route("/api/v1/did.json", get(Self::didweb))
             // GNAP
             .route("/api/v1/access", post(Self::access_request))
             .route("/api/v1/continue/:id", post(Self::continue_request))
@@ -87,6 +95,7 @@ where
             .route("/api/v1/mates/:id", get(Self::get_mate_by_id))
 
             .route("/api/v1/business/login", post(Self::fast_login))
+            .merge(did_router)
             .with_state(self.manager)
             .fallback(Self::fallback); // 2 routers cannot have 1 fallback each
 
@@ -303,7 +312,7 @@ where
 
         (StatusCode::OK, Json(response)).into_response()
     }
-    
+
     async fn get_all_mates(
         State(manager): State<Arc<Manager<T>>>,
     ) -> impl IntoResponse {
@@ -343,7 +352,7 @@ where
                 let error = CommonErrors::missing_resource_new(id, Some("Mate id not found".to_string()));
                 error!("{}", error.log());
                 error.into_response()
-            },
+            }
             Err(e) => {
                 let error = CommonErrors::database_new(Some(e.to_string()));
                 error!("{}", error.log());

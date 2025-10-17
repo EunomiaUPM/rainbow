@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {useMutation, useQueryClient} from "@tanstack/react-query";
 
 /**
  *  POST /wallet/onboard_wallet
@@ -7,7 +7,7 @@ interface WalletOnboarPayload {
   api_gateway: string;
 }
 
-export const postWalletOnboard = async ({ api_gateway }: WalletOnboarPayload) => {
+export const postWalletOnboard = async ({api_gateway}: WalletOnboarPayload) => {
   await fetch(api_gateway + `/wallet/onboard`, {
     method: "POST",
   });
@@ -15,9 +15,10 @@ export const postWalletOnboard = async ({ api_gateway }: WalletOnboarPayload) =>
 
 export const useWalletOnboard = () => {
   const queryClient = useQueryClient();
-  const { data, isSuccess, isError, error, mutate, mutateAsync, isPending } = useMutation({
+  const {data, isSuccess, isError, error, mutate, mutateAsync, isPending} = useMutation({
     mutationFn: postWalletOnboard,
-    onMutate: async () => {},
+    onMutate: async () => {
+    },
     onError: (error) => {
       console.log("onError");
       console.log(error);
@@ -27,25 +28,27 @@ export const useWalletOnboard = () => {
       // @ts-ignore
       await queryClient.refetchQueries(["PARTICIPANTS"]);
     },
-    onSettled: () => {},
+    onSettled: () => {
+    },
   });
-  return { data, isSuccess, isError, error, mutate, mutateAsync, isPending };
+  return {data, isSuccess, isError, error, mutate, mutateAsync, isPending};
 };
 
 interface DidPayload {
   did_url: string;
 }
 
-export const getProviderDid = async ({ did_url }: DidPayload) => {
-  const did: any = await (await fetch(did_url + `/api/v1/.well-known/did.json`)).json();
+export const getProviderDid = async ({did_url}: DidPayload) => {
+  const did: any = await (await fetch(did_url + `/api/v1/did.json`)).json();
   return did;
 };
 
 export const useGetProviderDid = () => {
   const queryClient = useQueryClient();
-  const { data, isSuccess, isError, error, mutate, mutateAsync, isPending } = useMutation({
+  const {data, isSuccess, isError, error, mutate, mutateAsync, isPending} = useMutation({
     mutationFn: getProviderDid,
-    onMutate: async () => {},
+    onMutate: async () => {
+    },
     onError: (error) => {
       console.log("onError");
       console.log(error);
@@ -53,9 +56,10 @@ export const useGetProviderDid = () => {
     onSuccess: async (_data, variables) => {
       console.log("onSuccess");
     },
-    onSettled: () => {},
+    onSettled: () => {
+    },
   });
-  return { data, isSuccess, isError, error, mutate, mutateAsync, isPending };
+  return {data, isSuccess, isError, error, mutate, mutateAsync, isPending};
 };
 
 interface OidcPayload {
@@ -68,9 +72,9 @@ interface OidcPayload {
   };
 }
 
-export const getOidc = async ({ api_gateway, content }: OidcPayload) => {
+export const getOidc = async ({api_gateway, content}: OidcPayload) => {
   const oidc: string = await (
-    await fetch(api_gateway + `/auth/manual/ssi`, {
+    await fetch(api_gateway + `/request/onboard/provider`, {
       body: JSON.stringify(content),
       method: "POST",
       headers: {
@@ -83,9 +87,10 @@ export const getOidc = async ({ api_gateway, content }: OidcPayload) => {
 
 export const useGetOidc = () => {
   const queryClient = useQueryClient();
-  const { data, isSuccess, isError, error, mutate, mutateAsync, isPending } = useMutation({
+  const {data, isSuccess, isError, error, mutate, mutateAsync, isPending} = useMutation({
     mutationFn: getOidc,
-    onMutate: async () => {},
+    onMutate: async () => {
+    },
     onError: (error) => {
       console.log("onError");
       console.log(error);
@@ -93,7 +98,8 @@ export const useGetOidc = () => {
     onSuccess: async (_data, variables) => {
       console.log("onSuccess");
     },
-    onSettled: () => {},
+    onSettled: () => {
+    },
   });
-  return { data, isSuccess, isError, error, mutate, mutateAsync, isPending };
+  return {data, isSuccess, isError, error, mutate, mutateAsync, isPending};
 };
