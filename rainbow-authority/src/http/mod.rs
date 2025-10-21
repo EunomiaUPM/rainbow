@@ -88,6 +88,7 @@ where
 
     async fn wallet_register(State(manager): State<Arc<Authority<T>>>) -> impl IntoResponse {
         info!("POST /wallet/register");
+        info!("POST /wallet/register");
 
         match manager.register_wallet().await {
             Ok(()) => StatusCode::CREATED.into_response(),

@@ -18,7 +18,7 @@
  */
 
 use crate::ssi_auth::common::errors::AuthErrors;
-use crate::ssi_auth::common::types::gnap::{GrantRequest, GrantResponse};
+use crate::ssi_auth::common::types::gnap::{CallbackBody, GrantRequest, GrantResponse};
 use crate::ssi_auth::common::utils::format::{split_did, trim_4_base};
 use crate::ssi_auth::common::utils::token::create_opaque_token;
 use crate::ssi_auth::provider::core::traits::provider_trait::RainbowSSIAuthProviderManagerTrait;
@@ -39,6 +39,7 @@ use rainbow_db::auth_provider::entities::{
 use rainbow_db::auth_provider::repo_factory::factory_trait::AuthRepoFactoryTrait;
 use rand::distributions::Alphanumeric;
 use rand::Rng;
+use reqwest::header::{HeaderMap, ACCEPT, CONTENT_TYPE};
 use serde_json::{json, Value};
 use std::collections::HashSet;
 use tracing::{debug, error, info};
@@ -923,12 +924,27 @@ where
                     Ok(Some(redirect_uri))
                 } else if model.method == "push" {
                     // TODO
-                    let error = CommonErrors::not_impl_new(
-                        "push".to_string(),
-                        Some("push methods are not implemented for this petition".to_string()),
-                    );
-                    error!("{}", error.log());
-                    bail!(error)
+                    let url = model.uri;
+
+                    let mut headers = HeaderMap::new();
+                    headers.insert(CONTENT_TYPE, "application/json".parse()?);
+                    headers.insert(ACCEPT, "application/json".parse()?);
+
+                    let body = CallbackBody { interact_ref: model.interact_ref, hash: model.hash };
+
+                    let _ = match self.client.post(&url).headers(headers).json(&body).send().await {
+                        Ok(res) => res,
+                        Err(e) => {
+                            let http_code = match e.status() {
+                                Some(status) => Some(status.as_u16()),
+                                None => None,
+                            };
+                            let error = CommonErrors::petition_new(url, "POST".to_string(), http_code, e.to_string());
+                            error!("{}", error.log());
+                            bail!(error);
+                        }
+                    };
+                    Ok(None)
                 } else {
                     let error = CommonErrors::not_impl_new(
                         "Interact method not supported".to_string(),

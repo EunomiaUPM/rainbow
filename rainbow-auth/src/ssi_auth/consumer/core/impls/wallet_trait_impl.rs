@@ -849,7 +849,7 @@ where
         );
 
         let mut headers = HeaderMap::new();
-        headers.insert(CONTENT_TYPE, "text/plain;charset=UTF-8".parse().unwrap());
+        headers.insert(CONTENT_TYPE, "text/plain;charset=UTF-8".parse()?);
         headers.insert(ACCEPT, "application/json".parse()?);
         headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?);
 
@@ -900,7 +900,7 @@ where
         );
 
         let mut headers = HeaderMap::new();
-        headers.insert(CONTENT_TYPE, "application/json".parse().unwrap());
+        headers.insert(CONTENT_TYPE, "application/json".parse()?);
         headers.insert(ACCEPT, "application/json".parse()?);
         headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?);
 
@@ -919,9 +919,9 @@ where
 
         match res.status().as_u16() {
             200 => {
-                let data: Value = res.json().await?;
+                // let data: Value = res.json().await?;
                 info!("Credential issuer resolved successfully");
-                debug!("{:#?}", data);
+                // debug!("{:#?}", data);
                 Ok(())
             }
             _ => {
@@ -953,7 +953,7 @@ where
         );
 
         let mut headers = HeaderMap::new();
-        headers.insert(CONTENT_TYPE, "application/json".parse().unwrap());
+        headers.insert(CONTENT_TYPE, "application/json".parse()?);
         headers.insert(ACCEPT, "application/json".parse()?);
         headers.insert(AUTHORIZATION, format!("Bearer {}", token).parse()?);
 

@@ -1,7 +1,11 @@
-# auto-start.ps1
 param(
-    [string]$Module = "core"
+    [Parameter(Position = 0)]
+    [string]$Module = "core",
+
+    [Parameter(Position = 1)]
+    [switch]$Watch
 )
+
 
 # ----------------------------
 # Find the rainbow base directory
@@ -52,41 +56,50 @@ function Start-ServiceWindow {
     )
 
     Write-Host "Starting $Title..."
-    Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd `"$WorkingDir`"; $Command" -WindowStyle Normal
+
+    $psCommand = "cd '$WorkingDir'; $Command"
+
+    Start-Process powershell -ArgumentList "-NoExit", "-Command", $psCommand -WindowStyle Normal
 }
+
+# ----------------------------
+# Helper to choose cargo command
+# ----------------------------
+function Get-CargoCommand {
+    param([string]$RunArgs)
+    if ($Watch) {
+        return "cargo watch -x 'run $RunArgs'"
+    } else {
+        return "cargo run $RunArgs"
+    }
+}
+
+
 
 # ----------------------------
 # Authority
 # ----------------------------
+$authorityCmd = Get-CargoCommand "--manifest-path Cargo.toml start --env-file ../static/envs/.env.authority"
 Start-ServiceWindow -Title "Authority" `
     -WorkingDir (Join-Path $BaseDir "rainbow-authority") `
-    -Command "cargo run --manifest-path Cargo.toml start --env-file ../static/envs/.env.authority"
+    -Command $authorityCmd
 
 # ----------------------------
 # Consumer
 # ----------------------------
 if ($Module -eq "core") {
-    Start-ServiceWindow -Title "Consumer" `
-        -WorkingDir (Join-Path $BaseDir "rainbow-core") `
-        -Command "cargo run --manifest-path Cargo.toml consumer start --env-file ../static/envs/.env.consumer.core"
+    $consumerPath = Join-Path $BaseDir "rainbow-core"
 } else {
-    Start-ServiceWindow -Title "Consumer" `
-        -WorkingDir (Join-Path $BaseDir "rainbow-$Module") `
-        -Command "cargo run --manifest-path Cargo.toml consumer start --env-file ../static/envs/.env.consumer.core"
+    $consumerPath = Join-Path $BaseDir "rainbow-$Module"
 }
+$consumerCmd = Get-CargoCommand "--manifest-path Cargo.toml consumer start --env-file ../static/envs/.env.consumer.core"
+Start-ServiceWindow -Title "Consumer" -WorkingDir $consumerPath -Command $consumerCmd
 
 # ----------------------------
 # Provider
 # ----------------------------
-if ($Module -eq "core") {
-    Start-ServiceWindow -Title "Provider" `
-        -WorkingDir (Join-Path $BaseDir "rainbow-core") `
-        -Command "cargo run --manifest-path Cargo.toml provider start --env-file ../static/envs/.env.provider.core"
-} else {
-    Start-ServiceWindow -Title "Provider" `
-        -WorkingDir (Join-Path $BaseDir "rainbow-$Module") `
-        -Command "cargo run --manifest-path Cargo.toml provider start --env-file ../static/envs/.env.provider.core"
-}
+$providerCmd = Get-CargoCommand "--manifest-path Cargo.toml provider start --env-file ../static/envs/.env.provider.core"
+Start-ServiceWindow -Title "Provider" -WorkingDir $consumerPath -Command $providerCmd
 
 Write-Host ""
-Write-Host "===> Rainbow services started successfully for module '$Module'"
+Write-Host "===> Rainbow services started successfully for module '$Module' (watch mode: $Watch)"
