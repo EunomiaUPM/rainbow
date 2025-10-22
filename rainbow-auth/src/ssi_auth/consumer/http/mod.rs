@@ -399,7 +399,6 @@ where
         }
     }
 
-    async fn get_all_mates_me(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
     async fn get_batch_mates(
         State(manager): State<Arc<Manager<T>>>,
         input: Result<Json<BatchRequests>, JsonRejection>,
@@ -424,9 +423,7 @@ where
         }
     }
 
-    async fn get_all_mates_me(
-        State(manager): State<Arc<Manager<T>>>,
-    ) -> impl IntoResponse {
+    async fn get_all_mates_me(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
         info!("GET /mates/me");
         match manager.repo.mates().get_me().await {
             Ok(mates) => (StatusCode::OK, Json(mates)).into_response(),
