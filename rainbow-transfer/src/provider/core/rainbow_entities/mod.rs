@@ -27,6 +27,7 @@ pub mod rainbow_entities;
 #[async_trait]
 pub trait RainbowTransferProviderServiceTrait: Send + Sync {
     async fn get_all_transfers(&self) -> anyhow::Result<Vec<transfer_process::Model>>;
+    async fn get_batch_transfers(&self, transfer_ids: &Vec<Urn>) -> anyhow::Result<Vec<transfer_process::Model>>;
     async fn get_transfer_by_id(
         &self,
         provider_pid: Urn,

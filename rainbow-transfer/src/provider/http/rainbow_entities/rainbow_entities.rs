@@ -19,12 +19,14 @@
 
 use crate::common::errors::error_adapter::CustomToResponse;
 use crate::provider::core::rainbow_entities::RainbowTransferProviderServiceTrait;
+use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use axum::routing::get;
+use axum::routing::{get, post};
 use axum::{Json, Router};
 use log::info;
+use rainbow_common::batch_requests::BatchRequests;
 use rainbow_common::errors::helpers::BadFormat;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::utils::get_urn_from_string;
@@ -45,6 +47,7 @@ where
     pub fn router(self) -> Router {
         Router::new()
             .route("/api/v1/transfers", get(Self::handle_get_all_transfers))
+            .route("/api/v1/transfers/batch", post(Self::handle_get_batch_transfers))
             .route(
                 "/api/v1/transfers/:id",
                 get(Self::handle_get_transfer_by_id),
@@ -64,6 +67,27 @@ where
         info!("GET /api/v1/transfers");
 
         match transfer_service.get_all_transfers().await {
+            Ok(transfer_processes) => (StatusCode::OK, Json(transfer_processes)).into_response(),
+            Err(err) => err.to_response(),
+        }
+    }
+
+    async fn handle_get_batch_transfers(
+        State(transfer_service): State<Arc<T>>,
+        input: Result<Json<BatchRequests>, JsonRejection>,
+    ) -> impl IntoResponse {
+        info!("POST /api/v1/transfers/batch");
+
+        let input = match input {
+            Ok(input) => input.0,
+            Err(err) => {
+                let e = CommonErrors::format_new(BadFormat::Received, format!("{}", err.body_text()).into());
+                error!("{}", e.log());
+                return e.into_response();
+            }
+        };
+
+        match transfer_service.get_batch_transfers(&input.ids).await {
             Ok(transfer_processes) => (StatusCode::OK, Json(transfer_processes)).into_response(),
             Err(err) => err.to_response(),
         }

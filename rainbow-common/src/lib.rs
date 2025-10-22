@@ -33,3 +33,4 @@ pub mod utils;
 pub mod errors;
 mod ssi;
 pub mod openapi;
+pub mod batch_requests;
