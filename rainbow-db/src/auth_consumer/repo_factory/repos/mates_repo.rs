@@ -23,6 +23,7 @@ use crate::common::{BasicRepoTrait, GenericRepo, IntoActiveSet};
 use axum::async_trait;
 use sea_orm::sea_query::OnConflict;
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
+use urn::Urn;
 
 #[derive(Clone)]
 pub struct MatesConsumerRepo {
@@ -80,5 +81,11 @@ impl MatesRepoTrait for MatesConsumerRepo {
             .exec_with_returning(&self.inner.db_connection)
             .await?;
         Ok(mate)
+    }
+
+    async fn get_batch(&self, ids: &Vec<Urn>) -> anyhow::Result<Vec<Model>> {
+        let ids = ids.iter().map(|i| i.to_string()).collect::<Vec<String>>();
+        let mates = Entity::find().filter(crate::auth_provider::entities::mates::Column::ParticipantId.is_in(ids)).all(&self.inner.db_connection).await?;
+        Ok(mates)
     }
 }

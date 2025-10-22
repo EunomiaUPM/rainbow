@@ -90,18 +90,21 @@
           }
         },
         "responses": {
-          "201": {
-            "description": "The contract negotiation process was created successfully.",
+          "200": {
+            "description": "A list of contract negotiation processes.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RainbowCNProcess"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RainbowCNProcess"
+                  }
                 }
               }
             }
           },
-          "400": {
-            "description": "Bad Request: The request body is malformed or invalid.",
+          "500": {
+            "description": "Internal Server Error.",
             "content": {
               "application/json": {
                 "schema": {
@@ -109,9 +112,46 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/v1/contract-negotiation/batch": {
+      "post": {
+        "tags": [
+          "Negotiation Processes"
+        ],
+        "security": [],
+        "summary": "List all contract negotiation processes",
+        "operationId": "getBatchNegotiationProcesses",
+        "description": "Retrieves a list of all contract negotiation processes handled by the provider.",
+        "requestBody": {
+          "description": "Batch request parameters.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchRequests"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A list of contract negotiation process objects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RainbowCNProcess"
+                  }
+                }
+              }
+            }
           },
           "500": {
-            "description": "Internal Server Error.",
+            "description": "Internal Server Error: An error occurred on the server while retrieving contract negotiation processes.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2288,6 +2328,27 @@
           "code",
           "title",
           "message"
+        ]
+      },
+      "BatchRequests": {
+        "type": "object",
+        "description": "Container for batch requests.",
+        "properties": {
+          "ids": {
+            "type": "array",
+            "description": "List of individual requests to be processed in batch.",
+            "items": {
+              "type": "string",
+              "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
+              "examples": [
+                "urn:uuid:123e4567-e89b-12d3-a456-426614174000",
+                "urn:uuid:765e4321-e89b-12d3-a456-426614174001"
+              ]
+            }
+          }
+        },
+        "required": [
+          "requests"
         ]
       }
     }
