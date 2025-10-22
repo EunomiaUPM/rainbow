@@ -70,6 +70,53 @@
         }
       }
     },
+    "/api/v1/transfers/batch": {
+      "post": {
+        "tags": [
+          "Transfer Processes"
+        ],
+        "summary": "List all transfer processes in batch",
+        "operationId": "getBatchAllTransfers",
+        "security": [],
+        "description": "Retrieves a list of all transfer processes managed by this provider. It can be used to monitor the status of ongoing and completed data transfers.",
+        "requestBody": {
+          "description": "Batch request parameters.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchRequests"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A list of transfer process objects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RainbowTransferProcess"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error: An error occurred on the server while retrieving transfer processes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RainbowTransferError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/transfers/{transfer_id}": {
       "parameters": [
         {
@@ -1917,6 +1964,27 @@
           "code",
           "title",
           "message"
+        ]
+      },
+      "BatchRequests": {
+        "type": "object",
+        "description": "Container for batch requests.",
+        "properties": {
+          "ids": {
+            "type": "array",
+            "description": "List of individual requests to be processed in batch.",
+            "items": {
+              "type": "string",
+              "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
+              "examples": [
+                "urn:uuid:123e4567-e89b-12d3-a456-426614174000",
+                "urn:uuid:765e4321-e89b-12d3-a456-426614174001"
+              ]
+            }
+          }
+        },
+        "required": [
+          "requests"
         ]
       }
     }

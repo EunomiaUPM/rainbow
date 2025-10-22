@@ -30,6 +30,7 @@ use urn::Urn;
 #[async_trait]
 pub trait RainbowTransferConsumerServiceTrait: Send + Sync {
     async fn get_all_transfers(&self) -> anyhow::Result<Vec<TransferConsumerProcess>>;
+    async fn get_batch_transfers(&self, transfer_ids: &Vec<Urn>) -> anyhow::Result<Vec<TransferConsumerProcess>>;
     async fn get_transfer_by_id(&self, process_id: Urn) -> anyhow::Result<TransferConsumerProcess>;
     async fn get_transfer_by_consumer_id(&self, consumer_pid: Urn) -> anyhow::Result<TransferConsumerProcess>;
     async fn get_transfer_by_provider_id(&self, provider_pid: Urn) -> anyhow::Result<TransferConsumerProcess>;

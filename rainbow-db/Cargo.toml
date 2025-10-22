@@ -30,3 +30,4 @@ url = "2.5.4"
 sha2 = "0.10.9"
 base64 = "0.22.1"
 log = "0.4.27"
+mockall = { workspace = true }

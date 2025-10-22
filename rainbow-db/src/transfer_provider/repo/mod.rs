@@ -28,6 +28,7 @@ use urn::Urn;
 
 pub mod sql;
 
+#[async_trait]
 pub trait TransferProviderRepoFactory: TransferProcessRepo + TransferMessagesRepo + Send + Sync + 'static {
     fn create_repo(db_connection: DatabaseConnection) -> Self
     where
@@ -58,6 +59,7 @@ pub trait TransferProcessRepo {
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<transfer_process::Model>, TransferProviderRepoErrors>;
+    async fn get_batch_transfer_processes(&self, transfer_ids: &Vec<Urn>) -> Result<Vec<transfer_process::Model>, TransferProviderRepoErrors>;
     async fn get_transfer_process_by_provider(
         &self,
         pid: Urn,

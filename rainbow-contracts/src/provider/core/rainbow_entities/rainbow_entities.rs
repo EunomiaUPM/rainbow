@@ -88,6 +88,11 @@ where
         Ok(processes)
     }
 
+    async fn get_batch_processes(&self, cn_ids: &Vec<Urn>) -> anyhow::Result<Vec<Model>> {
+        let processes = self.repo.get_batch_cn_processes(cn_ids).await.map_err(CnErrorProvider::DbErr)?;
+        Ok(processes)
+    }
+
     async fn get_cn_process_by_id(&self, process_id: Urn) -> anyhow::Result<Model> {
         let process = self
             .repo

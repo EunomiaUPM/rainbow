@@ -32,7 +32,9 @@
   "paths": {
     "/api/v1/wallet/register": {
       "post": {
-        "tags": ["Wallet"],
+        "tags": [
+          "Wallet"
+        ],
         "summary": "Register a new wallet",
         "description": "Creates a new wallet in the system.",
         "operationId": "wallet_register",
@@ -51,7 +53,9 @@
     },
     "/api/v1/wallet/login": {
       "post": {
-        "tags": ["Wallet"],
+        "tags": [
+          "Wallet"
+        ],
         "summary": "Login a wallet",
         "description": "Authenticates an existing wallet in the system.",
         "operationId": "wallet_login",
@@ -70,7 +74,9 @@
     },
     "/api/v1/wallet/logout": {
       "post": {
-        "tags": ["Wallet"],
+        "tags": [
+          "Wallet"
+        ],
         "summary": "Logout a wallet",
         "description": "Logs out an authenticated wallet from the system.",
         "operationId": "wallet_logout",
@@ -89,7 +95,9 @@
     },
     "/api/v1/wallet/onboard": {
       "post": {
-        "tags": ["Wallet"],
+        "tags": [
+          "Wallet"
+        ],
         "summary": "Onboard a wallet",
         "description": "Performs the onboarding process for a wallet in the system.",
         "operationId": "wallet_onboard",
@@ -108,7 +116,9 @@
     },
     "/api/v1/wallet/partial-onboard": {
       "post": {
-        "tags": ["Wallet"],
+        "tags": [
+          "Wallet"
+        ],
         "summary": "Partial onboard a wallet",
         "description": "Performs a partial onboarding process for a wallet in the system.",
         "operationId": "wallet_onboard",
@@ -127,7 +137,9 @@
     },
     "/api/v1/wallet/key": {
       "post": {
-        "tags": ["Wallet"],
+        "tags": [
+          "Wallet"
+        ],
         "summary": "Register key in wallet",
         "description": "Register the key from env files in wallet.",
         "operationId": "register-key",
@@ -147,7 +159,9 @@
         }
       },
       "delete": {
-        "tags": ["Wallet"],
+        "tags": [
+          "Wallet"
+        ],
         "summary": "Delete the key from wallet",
         "description": "Delete the key from wallet.",
         "operationId": "delete-key",
@@ -169,7 +183,9 @@
     },
     "/api/v1/wallet/did": {
       "post": {
-        "tags": ["Wallet"],
+        "tags": [
+          "Wallet"
+        ],
         "summary": "Register Did in wallet",
         "description": "Register Did based on key in wallet.",
         "operationId": "register-did",
@@ -189,7 +205,9 @@
         }
       },
       "delete": {
-        "tags": ["Wallet"],
+        "tags": [
+          "Wallet"
+        ],
         "summary": "Delete Did from wallet",
         "description": "Delete Did from wallet.",
         "operationId": "delete-did",
@@ -211,7 +229,9 @@
     },
     "/api/v1/did.json": {
       "get": {
-        "tags": ["Wallet"],
+        "tags": [
+          "Wallet"
+        ],
         "summary": "Retrieve DID document",
         "description": "Gets the DID document of the wallet.",
         "operationId": "didweb",
@@ -283,7 +303,9 @@
     },
     "/api/v1/access": {
       "post": {
-        "tags": ["Consumer"],
+        "tags": [
+          "Consumer"
+        ],
         "summary": "Initiate access request",
         "description": "Sends the initial GNAP access request.",
         "operationId": "access_request",
@@ -587,7 +609,9 @@
     },
     "/api/v1/continue/{id}": {
       "post": {
-        "tags": ["Consumer"],
+        "tags": [
+          "Consumer"
+        ],
         "summary": "Continue GNAP request",
         "description": "Continues a GNAP access request using the interaction reference and Authorization token.",
         "operationId": "continue_request",
@@ -690,7 +714,9 @@
     },
     "/api/v1/pd/{state}": {
       "get": {
-        "tags": ["OIDC4VP"],
+        "tags": [
+          "OIDC4VP"
+        ],
         "summary": "Retrieve VP Definition",
         "description": "Generates and retrieves the Verifiable Presentation definition for the given state identifier.",
         "operationId": "pd",
@@ -728,7 +754,9 @@
     },
     "/api/v1/verify/{state}": {
       "post": {
-        "tags": ["OIDC4VP"],
+        "tags": [
+          "OIDC4VP"
+        ],
         "summary": "Verify VP Submission",
         "description": "Verifies the submitted Verifiable Presentation for a given state identifier.",
         "operationId": "verify",
@@ -800,7 +828,9 @@
     },
     "/api/v1/verify/mate/token": {
       "post": {
-        "tags": ["Mates"],
+        "tags": [
+          "Mates"
+        ],
         "summary": "Verify mate token",
         "description": "Verifies a mate token and returns the associated mate model if valid.",
         "operationId": "verify_mate_token",
@@ -882,7 +912,9 @@
     },
     "/api/v1/retrieve/business/token": {
       "post": {
-        "tags": ["Mates"],
+        "tags": [
+          "Mates"
+        ],
         "summary": "Retrieve business mate token",
         "description": "Retrieves a business mate token using the auth request identifier.",
         "operationId": "retrieve_business_mate_token",
@@ -982,7 +1014,9 @@
     },
     "/api/v1/business/login": {
       "post": {
-        "tags": ["Mates"],
+        "tags": [
+          "Mates"
+        ],
         "summary": "Fast business login",
         "description": "Performs a fast login for a business using the auth request identifier and returns a URI.",
         "operationId": "fast_login",
@@ -1027,6 +1061,86 @@
         "summary": "List all mates",
         "description": "Retrieves a list of all mates associated with the authenticated user.",
         "operationId": "getAllMates",
+        "responses": {
+          "200": {
+            "description": "List of mates successfully retrieved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "participant_id": {
+                        "type": "string"
+                      },
+                      "participant_slug": {
+                        "type": "string"
+                      },
+                      "participant_type": {
+                        "type": "string"
+                      },
+                      "base_url": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "token": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "saved_at": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "last_interaction": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "is_me": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "participant_id",
+                      "participant_slug",
+                      "participant_type",
+                      "saved_at",
+                      "last_interaction",
+                      "is_me"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request: malformed request."
+          },
+          "404": {
+            "description": "No mates found for the authenticated user."
+          },
+          "500": {
+            "description": "Unexpected internal server error or database error."
+          }
+        }
+      }
+    },
+    "/api/v1/mates/batch": {
+      "post": {
+        "summary": "List all mates in batch",
+        "description": "Retrieves a batch list of all mates associated with the authenticated user.",
+        "operationId": "getBatchMates",
+        "requestBody": {
+          "description": "Batch request parameters.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchRequests"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "List of mates successfully retrieved.",
@@ -1232,6 +1346,31 @@
             "description": "Unexpected internal server error or database error."
           }
         }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BatchRequests": {
+        "type": "object",
+        "description": "Container for batch requests.",
+        "properties": {
+          "ids": {
+            "type": "array",
+            "description": "List of individual requests to be processed in batch.",
+            "items": {
+              "type": "string",
+              "pattern": "^urn:uuid:[0-9a-fA-F-]{36}$",
+              "examples": [
+                "urn:uuid:123e4567-e89b-12d3-a456-426614174000",
+                "urn:uuid:765e4321-e89b-12d3-a456-426614174001"
+              ]
+            }
+          }
+        },
+        "required": [
+          "requests"
+        ]
       }
     }
   }

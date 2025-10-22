@@ -18,7 +18,11 @@
  */
 
 use crate::consumer::core::rainbow_entities::rainbow_entities_errors::CnErrorConsumer;
-use crate::consumer::core::rainbow_entities::rainbow_entities_types::{EditAgreementRequest, EditContractNegotiationMessageRequest, EditContractNegotiationOfferRequest, EditContractNegotiationRequest, NewAgreementRequest, NewContractNegotiationMessageRequest, NewContractNegotiationOfferRequest, NewContractNegotiationRequest};
+use crate::consumer::core::rainbow_entities::rainbow_entities_types::{
+    EditAgreementRequest, EditContractNegotiationMessageRequest, EditContractNegotiationOfferRequest,
+    EditContractNegotiationRequest, NewAgreementRequest, NewContractNegotiationMessageRequest,
+    NewContractNegotiationOfferRequest, NewContractNegotiationRequest,
+};
 use crate::consumer::core::rainbow_entities::RainbowEntitiesContractNegotiationConsumerTrait;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, State};
@@ -27,8 +31,12 @@ use axum::response::IntoResponse;
 use axum::routing::{delete, get, post, put};
 use axum::{Json, Router};
 use log::info;
+use rainbow_common::batch_requests::BatchRequests;
+use rainbow_common::errors::helpers::BadFormat;
+use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::utils::get_urn_from_string;
 use std::sync::Arc;
+use tracing::error;
 
 pub struct RainbowEntitiesContractNegotiationConsumerRouter<T>
 where
@@ -51,6 +59,10 @@ where
             .route(
                 "/api/v1/contract-negotiation/processes",
                 get(Self::handle_get_cn_processes),
+            )
+            .route(
+                "/api/v1/contract-negotiation/processes/batch",
+                post(Self::handle_get_batch_cn_processes),
             )
             .route(
                 "/api/v1/contract-negotiation/processes/:process_id",
@@ -175,6 +187,30 @@ where
         info!("GET /api/v1/contract-negotiation/processes");
 
         match service.get_cn_processes().await {
+            Ok(processes) => (StatusCode::OK, Json(processes)).into_response(),
+            Err(err) => match err.downcast::<CnErrorConsumer>() {
+                Ok(e) => e.into_response(),
+                Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+            },
+        }
+    }
+
+    async fn handle_get_batch_cn_processes(
+        State(service): State<Arc<T>>,
+        input: Result<Json<BatchRequests>, JsonRejection>,
+    ) -> impl IntoResponse {
+        info!("POST /api/v1/contract-negotiation/processes/batch");
+
+        let input = match input {
+            Ok(input) => input.0,
+            Err(err) => {
+                let e = CommonErrors::format_new(BadFormat::Received, format!("{}", err.body_text()).into());
+                error!("{}", e.log());
+                return e.into_response();
+            }
+        };
+
+        match service.get_batch_processes(&input.ids).await {
             Ok(processes) => (StatusCode::OK, Json(processes)).into_response(),
             Err(err) => match err.downcast::<CnErrorConsumer>() {
                 Ok(e) => e.into_response(),

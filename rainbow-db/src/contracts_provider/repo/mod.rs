@@ -67,6 +67,7 @@ pub trait ContractNegotiationProcessRepo {
         page: Option<u64>,
         client_type: Option<String>,
     ) -> anyhow::Result<Vec<cn_process::Model>, CnErrors>;
+    async fn get_batch_cn_processes(&self, cn_ids: &Vec<Urn>) -> anyhow::Result<Vec<cn_process::Model>, CnErrors>;
     async fn get_cn_processes_by_provider_id(
         &self,
         provider_id: &Urn,

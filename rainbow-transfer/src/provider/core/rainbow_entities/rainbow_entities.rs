@@ -21,6 +21,7 @@ use crate::provider::core::rainbow_entities::RainbowTransferProviderServiceTrait
 use axum::async_trait;
 use log::error;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
+use rainbow_db::transfer_provider::entities::transfer_process::Model;
 use rainbow_db::transfer_provider::entities::{transfer_message, transfer_process};
 use rainbow_db::transfer_provider::repo::{TransferProviderRepoErrors, TransferProviderRepoFactory};
 use rainbow_events::core::notification::RainbowEventsNotificationTrait;
@@ -54,6 +55,15 @@ where
 {
     async fn get_all_transfers(&self) -> anyhow::Result<Vec<transfer_process::Model>> {
         let transfer_processes = self.repo.get_all_transfer_processes(None, None).await.map_err(|e| {
+            let e = CommonErrors::database_new(Some(e.to_string()));
+            error!("{}", e.log());
+            e
+        })?;
+        Ok(transfer_processes)
+    }
+
+    async fn get_batch_transfers(&self, transfer_ids: &Vec<Urn>) -> anyhow::Result<Vec<Model>> {
+        let transfer_processes = self.repo.get_batch_transfer_processes(transfer_ids).await.map_err(|e| {
             let e = CommonErrors::database_new(Some(e.to_string()));
             error!("{}", e.log());
             e

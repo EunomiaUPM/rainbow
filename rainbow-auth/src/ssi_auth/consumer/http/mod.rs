@@ -26,11 +26,13 @@ use crate::ssi_auth::common::types::oidc::OidcUri;
 use crate::ssi_auth::common::types::ssi::{dids::DidsInfo, keys::KeyDefinition};
 use crate::ssi_auth::consumer::core::traits::consumer_trait::RainbowSSIAuthConsumerManagerTrait;
 use crate::ssi_auth::consumer::core::Manager;
+use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, Query, State};
 use axum::http::{Method, Uri};
 use axum::response::{IntoResponse, Redirect};
 use axum::routing::{delete, get, post};
 use axum::{Json, Router};
+use rainbow_common::batch_requests::BatchRequests;
 use rainbow_common::errors::{helpers::BadFormat, CommonErrors, ErrorLog};
 use rainbow_common::mates::mates::VerifyTokenRequest;
 use rainbow_db::auth_consumer::repo_factory::factory_trait::AuthRepoFactoryTrait;
@@ -99,6 +101,7 @@ where
             )
             // MATES
             .route("/api/v1/mates", get(Self::get_all_mates))
+            .route("/api/v1/mates/batch", post(Self::get_batch_mates))
             .route("/api/v1/mates/me", get(Self::get_all_mates_me))
             .route("/api/v1/mates/:id", get(Self::get_mate_by_id))
             .route("/api/v1/verify/mate/token", post(Self::verify_mate_token))
@@ -397,6 +400,33 @@ where
     }
 
     async fn get_all_mates_me(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
+    async fn get_batch_mates(
+        State(manager): State<Arc<Manager<T>>>,
+        input: Result<Json<BatchRequests>, JsonRejection>,
+    ) -> impl IntoResponse {
+        info!("POST /api/v1/mates/batch");
+        let input = match input {
+            Ok(input) => input.0,
+            Err(err) => {
+                let e = CommonErrors::format_new(BadFormat::Received, format!("{}", err.body_text()).into());
+                error!("{}", e.log());
+                return e.into_response();
+            }
+        };
+
+        match manager.repo.mates().get_batch(&input.ids).await {
+            Ok(mates) => (StatusCode::OK, Json(mates)).into_response(),
+            Err(e) => {
+                let error = CommonErrors::database_new(Some(e.to_string()));
+                error!("{}", error.log());
+                error.into_response()
+            }
+        }
+    }
+
+    async fn get_all_mates_me(
+        State(manager): State<Arc<Manager<T>>>,
+    ) -> impl IntoResponse {
         info!("GET /mates/me");
         match manager.repo.mates().get_me().await {
             Ok(mates) => (StatusCode::OK, Json(mates)).into_response(),
