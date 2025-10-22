@@ -57,7 +57,7 @@ where
             &id
         );
         let client = self.config.get_pretty_client_config();
-        let mut body = GrantRequest::pr_oidc(client, "redirect".to_string(), Some(callback_uri));
+        let mut body = GrantRequest::pr_oidc(client, "push".to_string(), Some(callback_uri));
 
         let new_request_model =
             auth_request::NewModel { id: id.clone(), provider_id, provider_slug, grant_endpoint: url.clone() };

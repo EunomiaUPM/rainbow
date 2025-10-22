@@ -59,12 +59,8 @@ where
 
     pub fn router(self) -> Router {
         // did.json could be accessed from any client
-        let cors = CorsLayer::new()
-            .allow_methods([Method::GET])
-            .allow_origin(Any);
-        let did_router = Router::new()
-            .route("/api/v1/did.json", get(Self::didweb))
-            .layer(cors);
+        let cors = CorsLayer::new().allow_methods([Method::GET]).allow_origin(Any);
+        let did_router = Router::new().route("/api/v1/did.json", get(Self::didweb)).layer(cors);
 
         let router = Router::new()
             // WALLET
@@ -103,11 +99,12 @@ where
                 "/api/v1/authority/request/:id",
                 get(Self::get_one_authority),
             )
-            .route("/api/v1/verify/mate/token", post(Self::verify_mate_token))
+            // MATES
             .route("/api/v1/mates", get(Self::get_all_mates))
             .route("/api/v1/mates/batch", post(Self::get_batch_mates))
             .route("/api/v1/mates/me", get(Self::get_all_mates_me))
             .route("/api/v1/mates/:id", get(Self::get_mate_by_id))
+            .route("/api/v1/verify/mate/token", post(Self::verify_mate_token))
             // OIDC
             .route("/api/v1/process/oidc4vci", post(Self::process_oidc4vci))
             .route("/api/v1/process/oidc4vp", post(Self::process_oidc4vp))
@@ -278,7 +275,7 @@ where
         Json(payload): Json<CallbackBody>,
     ) -> impl IntoResponse {
         let log = format!("POST /callback/{}", id);
-        info!(log);
+        info!("{}", log);
 
         match manager
             .check_callback(
@@ -293,7 +290,8 @@ where
         };
 
         match manager.continue_request(id, payload.interact_ref.to_string()).await {
-            Ok(data) => (StatusCode::OK, Json(data)).into_response(),
+            // Ok(data) => (StatusCode::OK, Json(data)).into_response(),
+            Ok(_) => StatusCode::OK.into_response(),
             Err(e) => e.to_response(),
         }
     }
@@ -374,8 +372,10 @@ where
                 (StatusCode::OK, Json(res)).into_response()
             }
             Ok(None) => {
-                let error =
-                    CommonErrors::missing_resource_new(payload.token.clone(), Some(format!("Missing request with id: {}", payload.token)));
+                let error = CommonErrors::missing_resource_new(
+                    payload.token.clone(),
+                    Some(format!("Missing request with id: {}", payload.token)),
+                );
                 error!("{}", error.log());
                 error.into_response()
             }
@@ -387,9 +387,7 @@ where
         }
     }
 
-    async fn get_all_mates(
-        State(manager): State<Arc<Manager<T>>>,
-    ) -> impl IntoResponse {
+    async fn get_all_mates(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
         info!("GET /mates");
         match manager.repo.mates().get_all(None, None).await {
             Ok(mates) => (StatusCode::OK, Json(mates)).into_response(),
@@ -401,6 +399,7 @@ where
         }
     }
 
+    async fn get_all_mates_me(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
     async fn get_batch_mates(
         State(manager): State<Arc<Manager<T>>>,
         input: Result<Json<BatchRequests>, JsonRejection>,
@@ -439,10 +438,7 @@ where
         }
     }
 
-    async fn get_mate_by_id(
-        Path(id): Path<String>,
-        State(manager): State<Arc<Manager<T>>>,
-    ) -> impl IntoResponse {
+    async fn get_mate_by_id(Path(id): Path<String>, State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
         info!("GET /mates/{}", id);
         match manager.repo.mates().get_by_id(&id).await {
             Ok(Some(mates)) => (StatusCode::OK, Json(mates)).into_response(),
@@ -514,7 +510,6 @@ where
             Ok(data) => data.redirect_uri,
             Err(e) => return e.to_response(),
         };
-        println!("{:?}", redirect_uri);
 
         Redirect::to(redirect_uri.as_str()).into_response()
     }

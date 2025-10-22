@@ -36,7 +36,6 @@ use rainbow_common::batch_requests::BatchRequests;
 use rainbow_common::errors::helpers::BadFormat;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::mates::mates::VerifyTokenRequest;
-use rainbow_db::auth_provider::entities::mates::Model;
 use rainbow_db::auth_provider::repo_factory::factory_trait::AuthRepoFactoryTrait;
 use reqwest::StatusCode;
 use serde::Deserialize;
