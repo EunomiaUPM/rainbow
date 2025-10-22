@@ -48,6 +48,7 @@ impl TransferConsumerRepoFactory for TransferConsumerRepoForSql {
 
 #[async_trait]
 impl TransferCallbackRepo for TransferConsumerRepoForSql {
+
     // async fn get_all_transfer_callbacks(
     //     &self,
     //     limit: Option<u64>,
@@ -103,6 +104,44 @@ impl TransferCallbackRepo for TransferConsumerRepoForSql {
         Ok(transfer_processes)
     }
 
+    async fn get_batch_transfer_processes(&self, transfer_ids: &Vec<Urn>) -> Result<Vec<TransferConsumerProcessFromSQL>, TransferConsumerRepoErrors> {
+        let transfer_ids = transfer_ids.iter().map(|t| t.to_string()).collect::<Vec<_>>();
+        let sql = r#"
+            WITH RankedMessages AS (
+                SELECT
+                    m.transfer_process_id,
+                    m.message_type,
+                    m.from,
+                    m.created_at,
+                    ROW_NUMBER() OVER(PARTITION BY m.transfer_process_id ORDER BY m.created_at DESC) as rn
+                FROM
+                    transfer_messages m
+            )
+            SELECT
+                p.*,
+                rm.message_type,
+                rm.from,
+                rm.created_at AS "message_at"
+            FROM
+                transfer_callbacks p
+                    LEFT JOIN
+                RankedMessages rm ON p.id = rm.transfer_process_id
+            WHERE
+                rm.rn = 1
+                AND
+                p.id = ANY($1)
+            ORDER BY
+                p.created_at DESC;
+        "#;
+        let stmt = Statement::from_sql_and_values(DbBackend::Postgres, sql.to_owned(), [transfer_ids.into()]);
+        let transfer_processes = TransferConsumerProcessFromSQL::find_by_statement(stmt)
+            .all(&self.db_connection)
+            .await
+            .map_err(|err| TransferConsumerRepoErrors::ErrorFetchingConsumerTransferProcess(err.into()))?;
+
+        Ok(transfer_processes)
+    }
+
     // async fn get_transfer_callbacks_by_id(
     //     &self,
     //     callback_id: Urn,
@@ -140,7 +179,8 @@ impl TransferCallbackRepo for TransferConsumerRepoForSql {
                     LEFT JOIN
                 RankedMessages rm ON p.id = rm.transfer_process_id
             WHERE
-                p.id = $1 AND
+                p.id = $1
+                AND
                 rm.rn = 1
             ORDER BY
                 p.created_at DESC;

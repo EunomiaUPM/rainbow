@@ -58,6 +58,9 @@ pub trait ContractNegotiationConsumerProcessRepo {
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<CnConsumerProcessFromSQL>, CnErrors>;
+
+    async fn get_batch_cn_processes(&self, cn_ids: &Vec<Urn>) -> anyhow::Result<Vec<CnConsumerProcessFromSQL>, CnErrors>;
+
     async fn get_cn_process_by_provider_id(
         &self,
         provider_id: Urn,

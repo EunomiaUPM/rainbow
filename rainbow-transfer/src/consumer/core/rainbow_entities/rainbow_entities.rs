@@ -62,6 +62,17 @@ where
         Ok(transfer_processes)
     }
 
+    async fn get_batch_transfers(&self, transfer_ids: &Vec<Urn>) -> anyhow::Result<Vec<TransferConsumerProcess>> {
+        let transfer_processes = self.repo.get_batch_transfer_processes(transfer_ids).await.map_err(|e| {
+            let e = CommonErrors::database_new(Some(e.to_string()));
+            error!("{}", e.log());
+            anyhow!(e)
+        })?;
+        let transfer_processes =
+            transfer_processes.iter().map(|t| TransferConsumerProcess::from(t.to_owned())).collect();
+        Ok(transfer_processes)
+    }
+
     async fn get_transfer_by_id(&self, process_id: Urn) -> anyhow::Result<TransferConsumerProcess> {
         let transfer_process = self
             .repo

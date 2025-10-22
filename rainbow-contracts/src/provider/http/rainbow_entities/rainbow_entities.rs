@@ -26,10 +26,12 @@ use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::{delete, get, post, put};
 use axum::{Json, Router};
+use rainbow_common::batch_requests::BatchRequests;
+use rainbow_common::errors::helpers::BadFormat;
+use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::utils::get_urn_from_string;
 use std::sync::Arc;
-use tracing::info;
-
+use tracing::{error, info};
 
 pub struct RainbowEntitesContractNegotiationProviderRouter<T>
 where
@@ -51,6 +53,10 @@ where
             .route(
                 "/api/v1/contract-negotiation/processes",
                 get(Self::handle_get_cn_processes),
+            )
+            .route(
+                "/api/v1/contract-negotiation/processes/batch",
+                post(Self::handle_get_batch_cn_processes),
             )
             .route(
                 "/api/v1/contract-negotiation/processes/:process_id",
@@ -189,6 +195,33 @@ where
         info!("GET /api/v1/contract-negotiation/processes");
         let client_type = query.0.client_type;
         match service.get_cn_processes(client_type).await {
+            Ok(processes) => (StatusCode::OK, Json(processes)).into_response(),
+            Err(err) => match err.downcast::<CnErrorProvider>() {
+                Ok(e) => e.into_response(),
+                Err(err) => match err.downcast::<CnErrorProvider>() {
+                    Ok(e) => e.into_response(),
+                    Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+                },
+            },
+        }
+    }
+
+    async fn handle_get_batch_cn_processes(
+        State(service): State<Arc<T>>,
+        input: Result<Json<BatchRequests>, JsonRejection>,
+    ) -> impl IntoResponse {
+        log::info!("POST /api/v1/transfers/batch");
+
+        let input = match input {
+            Ok(input) => input.0,
+            Err(err) => {
+                let e = CommonErrors::format_new(BadFormat::Received, format!("{}", err.body_text()).into());
+                error!("{}", e.log());
+                return e.into_response();
+            }
+        };
+
+        match service.get_batch_processes(&input.ids).await {
             Ok(processes) => (StatusCode::OK, Json(processes)).into_response(),
             Err(err) => match err.downcast::<CnErrorProvider>() {
                 Ok(e) => e.into_response(),

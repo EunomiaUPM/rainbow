@@ -62,6 +62,7 @@ impl TransferProcessRepo for TransferProviderRepoForSql {
     }
 
     async fn get_batch_transfer_processes(&self, transfer_ids: &Vec<Urn>) -> Result<Vec<Model>, TransferProviderRepoErrors> {
+        let transfer_ids = transfer_ids.iter().map(|t| t.to_string()).collect::<Vec<_>>();
         let transfer_process = transfer_process::Entity::find()
             .filter(transfer_process::Column::ProviderPid.is_in(transfer_ids))
             .all(&self.db_connection)

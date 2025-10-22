@@ -59,6 +59,9 @@ pub trait TransferCallbackRepo {
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<TransferConsumerProcessFromSQL>, TransferConsumerRepoErrors>;
+
+    async fn get_batch_transfer_processes(&self, transfer_ids: &Vec<Urn>) -> Result<Vec<TransferConsumerProcessFromSQL>, TransferConsumerRepoErrors>;
+
     async fn get_transfer_callbacks_by_id(
         &self,
         callback_id: Urn,

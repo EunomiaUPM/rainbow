@@ -78,6 +78,16 @@ impl ContractNegotiationProcessRepo for ContractNegotiationProviderRepoForSql {
         Ok(cn_processes)
     }
 
+    async fn get_batch_cn_processes(&self, cn_ids: &Vec<Urn>) -> anyhow::Result<Vec<Model>, CnErrors> {
+        let cn_ids = cn_ids.iter().map(|i| i.to_string()).collect::<Vec<String>>();
+        let cn_processes = cn_process::Entity::find()
+            .filter(cn_process::Column::ProviderId.is_in(cn_ids))
+            .all(&self.db_connection)
+            .await
+            .map_err(|err| CnErrors::ErrorFetchingCNProcess(err.into()))?;
+        Ok(cn_processes)
+    }
+
     async fn get_cn_processes_by_provider_id(
         &self,
         provider_id: &Urn,
@@ -102,7 +112,11 @@ impl ContractNegotiationProcessRepo for ContractNegotiationProviderRepoForSql {
         Ok(cn_processes)
     }
 
-    async fn get_cn_processes_by_participant_id(&self, participant_id: String, client_type: Option<String>) -> anyhow::Result<Vec<Model>, CnErrors> {
+    async fn get_cn_processes_by_participant_id(
+        &self,
+        participant_id: String,
+        client_type: Option<String>,
+    ) -> anyhow::Result<Vec<Model>, CnErrors> {
         let mut query = cn_process::Entity::find();
         if let Some(ct) = client_type {
             if ct == "business" {

@@ -80,6 +80,12 @@ where
         Ok(processes)
     }
 
+    async fn get_batch_processes(&self, cn_ids: &Vec<Urn>) -> anyhow::Result<Vec<CnConsumerProcess>> {
+        let processes = self.repo.get_batch_cn_processes(cn_ids).await.map_err(CnErrorConsumer::DbErr)?;
+        let processes = processes.iter().map(|p| CnConsumerProcess::from(p.to_owned())).collect();
+        Ok(processes)
+    }
+
     async fn get_cn_process_by_id(&self, process_id: Urn) -> anyhow::Result<cn_process::Model> {
         let process = self
             .repo
