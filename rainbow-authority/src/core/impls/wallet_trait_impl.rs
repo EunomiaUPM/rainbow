@@ -16,7 +16,6 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 use crate::core::traits::{AuthorityTrait, RainbowSSIAuthWalletTrait};
 use crate::core::Authority;
 use crate::data::entities::minions;
@@ -26,13 +25,18 @@ use crate::errors::{ErrorLog, Errors};
 use crate::setup::AuthorityApplicationConfigTrait;
 use crate::types::jwt::AuthJwtClaims;
 use crate::types::wallet::{DidsInfo, KeyDefinition, WalletInfo, WalletInfoResponse, WalletLoginResponse};
+use crate::utils::trim_path;
 use anyhow::bail;
 use axum::async_trait;
 use axum::http::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 use axum::http::HeaderMap;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
-use serde_json::Value;
+use rsa::pkcs8::DecodePrivateKey;
+use rsa::traits::{PrivateKeyParts, PublicKeyParts};
+use rsa::RsaPrivateKey;
+use serde_json::{json, Value};
+use std::fs;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tracing::{debug, error, info, warn};
 
@@ -354,8 +358,7 @@ where
         match key_data.first() {
             Some(data) => Ok(data.clone()),
             None => {
-                let error =
-                    Errors::missing_action_new("Retrieve keys first".to_string(), MissingAction::Key, None);
+                let error = Errors::missing_action_new("Retrieve keys first".to_string(), MissingAction::Key, None);
                 error!("{}", error.log());
                 bail!(error)
             }
@@ -395,7 +398,7 @@ where
                 let weird_wallets = res.json::<WalletInfoResponse>().await?.wallets;
                 let mut wallets = Vec::<WalletInfo>::new();
                 for wallet in weird_wallets {
-                    let wallet= wallet.to_normal();
+                    let wallet = wallet.to_normal();
                     if !wallets.contains(&wallet) {
                         wallets.push(wallet);
                     }
@@ -709,6 +712,27 @@ where
         }
 
         Ok(())
+    }
+
+    async fn get_parsed_keys(&self) -> anyhow::Result<Value> {
+        info!("Getting parsed keys");
+
+        let path = trim_path(self.config.get_raw_client_config().cert_path.as_str());
+        let pkey_path = format!("{}/private_key.pem", path);
+
+        let pkey = fs::read_to_string(pkey_path)?;
+
+        let key = RsaPrivateKey::from_pkcs8_pem(pkey.as_str())?;
+
+        let jwk = json!({
+            "kty" : "RSA",
+            "n" : URL_SAFE_NO_PAD.encode(key.n().to_bytes_be()),
+            "e" : URL_SAFE_NO_PAD.encode(key.e().to_bytes_be()),
+            "d" : URL_SAFE_NO_PAD.encode(key.d().to_bytes_be()),
+            "kid" : "0"
+        });
+
+        Ok(jwk)
     }
 
     // DELETE STUFF FROM WALLET --------------------------------------------------------------------------->

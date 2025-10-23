@@ -21,18 +21,20 @@ mod openapi;
 use crate::core::traits::{AuthorityTrait, RainbowSSIAuthWalletTrait};
 use crate::core::Authority;
 use crate::data::repo_factory::factory_trait::AuthRepoFactoryTrait;
+use crate::errors::helpers::BadFormat;
 use crate::errors::{CustomToResponse, ErrorLog, Errors};
 use crate::types::gnap::{GrantRequest, RefBody};
 use crate::types::manager::VcManager;
 use crate::types::oidc::VerifyPayload;
 use crate::types::wallet::{DidsInfo, KeyDefinition};
 use crate::utils::extract_gnap_token;
-use axum::extract::{Path, State};
+use axum::extract::{Path, Query, State};
 use axum::http::{HeaderMap, Method, StatusCode, Uri};
 use axum::response::IntoResponse;
 use axum::routing::{delete, get, post};
 use axum::{Form, Json, Router};
 use serde_json::Value;
+use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::{error, info};
 
@@ -70,6 +72,11 @@ where
             // GNAP
             .route("/api/v1/request/credential", post(Self::access_request))
             .route("/api/v1/continue/:id", post(Self::continue_request))
+            // OIDC4VCI
+            .route("/api/v1/credentialOffer", get(Self::cred_offer))
+            // ISSUER DATA
+            .route("/api/v1/authority", get(Self::issuer))
+            .route("/api/v1/authority/jwks", get(Self::issuer_jwks))
             // OIDC4VP
             .route("/api/v1/pd/:state", get(Self::pd))
             .route("/api/v1/verify/:state", post(Self::verify))
@@ -219,6 +226,49 @@ where
         let uri = req_model.vc_uri.unwrap(); // EXPECTED ALWAYS
         uri.into_response()
     }
+    async fn cred_offer(
+        State(authority): State<Arc<Authority<T>>>,
+        Query(params): Query<HashMap<String, String>>,
+    ) -> impl IntoResponse {
+        let id = match params.get("id") {
+            Some(hash) => hash.clone(),
+            None => {
+                info!("GET /credentialOffer");
+                let error = Errors::format_new(
+                    BadFormat::Received,
+                    Some("Unable to retrieve hash from callback".to_string()),
+                );
+                error!("{}", error.log());
+                return error.into_response();
+            }
+        };
+        let log = format!("GET /credentialOffer/{}", id);
+        info!("{}", log);
+
+        match authority.get_cred_offer_data(id).await {
+            Ok(data) => (StatusCode::OK, Json(data)).into_response(),
+            Err(e) => e.to_response(),
+        }
+    }
+
+    async fn issuer(State(authority): State<Arc<Authority<T>>>) -> impl IntoResponse {
+        info!("GET /issuer");
+
+        match authority.get_issuer().await {
+            Ok(data) => (StatusCode::OK, Json(data)).into_response(),
+            Err(e) => e.to_response(),
+        }
+    }
+
+    async fn issuer_jwks(State(authority): State<Arc<Authority<T>>>) -> impl IntoResponse {
+        info!("GET /issuer_jwks");
+
+        match authority.get_parsed_keys().await {
+            Ok(data) => (StatusCode::OK, Json(data)).into_response(),
+            Err(e) => e.to_response(),
+        }
+    }
+
     async fn pd(State(authority): State<Arc<Authority<T>>>, Path(state): Path<String>) -> impl IntoResponse {
         let log = format!("GET /pd/{}", state);
         info!("{}", log);

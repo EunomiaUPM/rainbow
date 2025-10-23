@@ -42,6 +42,8 @@ pub trait RainbowSSIAuthWalletTrait: Send + Sync {
     async fn register_key(&self) -> anyhow::Result<()>;
     async fn register_did(&self) -> anyhow::Result<()>;
     async fn set_default_did(&self) -> anyhow::Result<()>;
+    // PARSE KEYS 
+    async fn get_parsed_keys(&self) -> anyhow::Result<Value>;
     // DELETE STUFF FROM WALLET
     async fn delete_key(&self, key: KeyDefinition) -> anyhow::Result<()>;
     async fn delete_did(&self, did_info: DidsInfo) -> anyhow::Result<()>;

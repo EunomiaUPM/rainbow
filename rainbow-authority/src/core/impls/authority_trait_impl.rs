@@ -238,7 +238,7 @@ where
 
     async fn generate_issuing_uri(
         &self,
-        callback_id: String,
+        id: String,
         name: String,
         website: String,
         vc_type: VcType,
@@ -248,28 +248,28 @@ where
 
         match real {
             true => {
-                // TODO THE MODULE SHOULD BE ABLE TO DO IT ITSELF
-                let error = Errors::not_impl_new("REAL URI".to_string(), None);
-                error!("{}", error.log());
-                bail!(error)
+                let semi_host = format!("{}/api/v1", self.config.get_host_without_protocol());
+                let host = format!("{}/api/v1", self.config.get_host());
+                let (semi_host, host) = match self.config.get_environment_scenario() {
+                    true => {
+                        let a = semi_host.replace("127.0.0.1", "host.docker.internal");
+                        let b = host.replace("127.0.0.1", "host.docker.internal");
+                        (a, b)
+                    }
+                    false => (semi_host, host),
+                };
+                let h_host = format!("{}/credentialOffer?id={}", host, id);
+                let encoded_host = encode(h_host.as_str());
+                let oidc4vci_uri = format!(
+                    "openid-credential-offer://{}/authority/?credential_offer_uri={}",
+                    semi_host, encoded_host
+                );
+                Ok(oidc4vci_uri)
             }
             false => {
                 let url = format!("{}/openid4vc/jwt/issue", self.config.get_issuer_api());
 
-                let path = trim_path(self.config.get_raw_client_config().cert_path.as_str());
-                let pkey_path = format!("{}/private_key.pem", path);
-
-                let pkey = fs::read_to_string(pkey_path)?;
-
-                let key = RsaPrivateKey::from_pkcs8_pem(pkey.as_str())?;
-
-                let jwk = json!({
-                    "kty" : "RSA",
-                    "n" : URL_SAFE_NO_PAD.encode(key.n().to_bytes_be()),
-                    "e" : URL_SAFE_NO_PAD.encode(key.e().to_bytes_be()),
-                    "d" : URL_SAFE_NO_PAD.encode(key.d().to_bytes_be()),
-                    "kid" : "0"
-                });
+                let jwk = self.get_parsed_keys().await?;
 
                 let did = self.get_did().await?;
 
@@ -369,7 +369,7 @@ where
                     true => host_url.replace("127.0.0.1", "host.docker.internal"),
                     false => host_url,
                 };
-                let callback_uri = format!("{}/api/v1/callback/{}", host_url, callback_id);
+                let callback_uri = format!("{}/api/v1/callback/{}", host_url, id);
                 let mut headers = HeaderMap::new();
                 headers.insert(CONTENT_TYPE, "application/json".parse()?);
                 headers.insert(ACCEPT, "application/json".parse()?);
@@ -528,7 +528,7 @@ where
 
         let vc_type = VcType::from_str(request_model.vc_type.as_str())?;
 
-        let vc_uri = self.generate_issuing_uri(id, name, website, vc_type, false).await?;
+        let vc_uri = self.generate_issuing_uri(id, name, website, vc_type, true).await?;
         request_model.status = "Approved".to_string();
         request_model.vc_uri = Some(vc_uri);
 
@@ -641,6 +641,107 @@ where
         let error = Errors::format_new(BadFormat::Received, None);
         error!("{}", error.log());
         bail!(error)
+    }
+
+    async fn get_cred_offer_data(&self, id: String) -> anyhow::Result<Value> {
+        info!("Retrieving credential offer data");
+        let id = id.as_str();
+        let model = match self.repo.request().get_by_id(id).await {
+            Ok(Some(model)) => model,
+            Ok(None) => {
+                let error = Errors::missing_resource_new(
+                    id.to_string(),
+                    Some(format!("There is no process with id: {}", &id)),
+                );
+                error!("{}", error.log());
+                bail!(error);
+            }
+            Err(e) => {
+                let error = Errors::database_new(Some(e.to_string()));
+                error!("{}", error.log());
+                bail!(error);
+            }
+        };
+
+        let issuer = format!("{}/api/v1/authority", self.config.get_host());
+        let token = create_opaque_token();
+        let vc_type = VcType::from_str(model.vc_type.as_str())?;
+        let data = match vc_type {
+            VcType::DataSpaceParticipant => {
+                json!({
+                    "credential_issuer": issuer,
+                    "grants": {
+                        "urn:ietf:params:oauth:grant-type:pre-authorized_code": {
+                            "pre-authorized_code": token
+                        }
+                    },
+                    "credential_configuration_ids": [
+                        "DataspaceParticipantCredential_jwt_vc_json"
+                    ]
+                })
+            }
+            VcType::Identity => {
+                json!({
+                    "credential_issuer": issuer,
+                    "grants": {
+                        "urn:ietf:params:oauth:grant-type:pre-authorized_code": {
+                            "pre-authorized_code": token
+                        }
+                    },
+                    "credential_configuration_ids": [
+                        "IdentityCredential_jwt_vc_json"
+                    ]
+                })
+            }
+        };
+        Ok(data)
+    }
+    async fn get_issuer(&self) -> anyhow::Result<Value> {
+        info!("Retrieving issuer data");
+
+        let host = format!("{}/api/v1/authority", self.config.get_host());
+        Ok(json!({
+            "issuer": host,
+            "credential_issuer": host,
+            "credential_endpoint": "http://localhost:7002/draft13/credential",
+            "jwks_uri": format!("{}/jwks", host),
+            "credential_configurations_supported": {
+                "DataspaceParticipantCredential_jwt_vc_json": {
+                    "format": "jwt_vc_json",
+                    "cryptographic_binding_methods_supported": [
+                        "did"
+                    ],
+                    "credential_signing_alg_values_supported": [
+                        "RSA"
+                    ],
+                    "credential_definition": {
+                        "type": [
+                            "VerifiableCredential",
+                        "DataspaceParticipantCredential"
+                        ]
+                    }
+                },
+                "IdentityCredential_jwt_vc_json": {
+                    "format": "jwt_vc_json",
+                    "cryptographic_binding_methods_supported": [
+                        "did"
+                    ],
+                    "credential_signing_alg_values_supported": [
+                        "RSA"
+                    ],
+                    "credential_definition": {
+                        "type": [
+                            "VerifiableCredential",
+                            "IdentityCredential"
+                        ]
+                    }
+                }
+            },
+            "authorization_servers": [
+                "http://localhost:7002/draft13"
+            ]
+        }
+        ))
     }
 
     async fn generate_vp_def(&self, state: String) -> anyhow::Result<Value> {
@@ -876,6 +977,7 @@ where
         //         bail!(error);
         //     }
         // };
+
         let nonce = match token.claims["nonce"].as_str() {
             Some(data) => data,
             None => {
