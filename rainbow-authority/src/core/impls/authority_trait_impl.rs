@@ -663,7 +663,11 @@ where
             }
         };
 
-        let issuer = format!("{}/api/v1/authority", self.config.get_host());
+        let issuer = format!("{}/api/v1", self.config.get_host());
+        let issuer = match self.config.get_environment_scenario() {
+            true => issuer.replace("127.0.0.1", "host.docker.internal"),
+            false => issuer,
+        };
         let token = create_opaque_token();
         let vc_type = VcType::from_str(model.vc_type.as_str())?;
         let data = match vc_type {
@@ -698,12 +702,15 @@ where
     }
     async fn get_issuer(&self) -> anyhow::Result<Value> {
         info!("Retrieving issuer data");
-
-        let host = format!("{}/api/v1/authority", self.config.get_host());
+        let host = format!("{}/api/v1", self.config.get_host());
+        let host = match self.config.get_environment_scenario() {
+            true => host.replace("127.0.0.1", "host.docker.internal"),
+            false => host,
+        };
         Ok(json!({
             "issuer": host,
             "credential_issuer": host,
-            "credential_endpoint": "http://localhost:7002/draft13/credential",
+            "credential_endpoint": format!("{}/credential", host),
             "jwks_uri": format!("{}/jwks", host),
             "credential_configurations_supported": {
                 "DataspaceParticipantCredential_jwt_vc_json": {
@@ -737,12 +744,60 @@ where
                     }
                 }
             },
-            "authorization_servers": [
-                "http://localhost:7002/draft13"
-            ]
-        }
-        ))
+            "authorization_servers": [host]
+        }))
     }
+
+    async fn get_auth_server(&self) -> anyhow::Result<Value> {
+        info!("Retrieving authorization server data");
+        let host = format!("{}/api/v1", self.config.get_host());
+        let host = match self.config.get_environment_scenario() {
+            true => host.replace("127.0.0.1", "host.docker.internal"),
+            false => host,
+        };
+        Ok(json!({
+            "issuer": host,
+            "credential_issuer": host,
+            "credential_endpoint": format!("{}/credential", host),
+            "authorization_endpoint": format!("{}/authorize", host),
+            "pushed_authorization_request_endpoint": format!("{}/par", host),
+            "token_endpoint": format!("{}/token", host),
+            "jwks_uri": format!("{}/jwks", host),
+            "batch_credential_endpoint": format!("{}/batch_credential", host),
+            "deferred_credential_endpoint": format!("{}/credential_deferred", host),
+            "scopes_supported": ["openid"],
+            "response_types_supported": ["code", "vp_token", "id_token"],
+            "response_modes_supported": ["query", "fragment"],
+            "grant_types_supported": ["authorization_code", "urn:ietf:params:oauth:grant-type:pre-authorized_code"],
+            "subject_types_supported": ["public"],
+            "id_token_signing_alg_values_supported": ["RSA"],
+            "code_challenge_methods_supported": ["S256"],
+            "credential_configurations_supported": {
+                "DataspaceParticipantCredential_jwt_vc_json": {
+                    "format": "jwt_vc_json",
+                    "cryptographic_binding_methods_supported": ["did"],
+                    "credential_signing_alg_values_supported": ["RSA"],
+                    "credential_definition": {
+                        "type": ["VerifiableCredential", "DataspaceParticipantCredential"]
+                    }
+                },
+                "IdentityCredential_jwt_vc_json": {
+                    "format": "jwt_vc_json",
+                    "cryptographic_binding_methods_supported": ["did"],
+                    "credential_signing_alg_values_supported": ["RSA"],
+                    "credential_definition": {
+                        "type": ["VerifiableCredential", "VerifiableAttestation", "IdentityCredential"]
+                    }
+                }
+            },
+            "authorization_servers": [host]
+        }))
+    }
+
+    // async fn validate_preauth_code(&self, token: String) -> anyhow::Result<()> {
+    //     // TODO
+    //     Ok(())
+    // }
 
     async fn generate_vp_def(&self, state: String) -> anyhow::Result<Value> {
         let model = match self.repo.verification().get_by_state(state.as_str()).await {

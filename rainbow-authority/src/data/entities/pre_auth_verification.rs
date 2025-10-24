@@ -17,8 +17,17 @@
  *
  */
 
-pub mod auth_request;
-pub mod auth_interaction;
-pub mod auth_verification;
-pub mod minions;
-// mod pre_auth_verification;
+use sea_orm::entity::prelude::*;
+use sea_orm::ActiveValue;
+
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
+#[sea_orm(table_name = "pre_auth_verification")]
+pub struct Model {
+    #[sea_orm(primary_key)]
+    pub id: String,
+}
+
+#[derive(Clone, Debug)]
+pub struct NewModel {
+    pub id: String,
+}

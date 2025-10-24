@@ -1,0 +1,40 @@
+{
+  "issuerKey": {
+    "type": "jwk",
+    "jwk": "{{JWK}}"
+  },
+  "credentialConfigurationId": "IdentityCredential_jwt_vc_json",
+  "credentialData": {
+    "@context": [
+      "https://www.w3.org/2018/credentials/v1"
+    ],
+    "id": "{{IRRELEVANT}}",
+    "type": [
+      "VerifiableCredential",
+      "IdentityCredential"
+    ],
+    "issuer": {
+      "id": "{{IRRELEVANT}}",
+      "name": "{{ISSUER}}"
+    },
+    "validFrom": "{{IRRELEVANT}}",
+    "credentialSubject": {
+      "id": "{{IRRELEVANT}}",
+      "type": "IdentityCredential",
+      "legalName": "{{NAME}}",
+      "website": "{{WEBSITE}}"
+    }
+  },
+  "mapping": {
+    "id": "<uuid>",
+    "issuer": {
+      "id": "<issuerDid>"
+    },
+    "credentialSubject": {
+      "id": "<subjectDid>"
+    },
+    "validFrom": "<timestamp>",
+    "validUntil": "<timestamp-in:365d>"
+  },
+  "issuerDid": "{{DID}}"
+}

@@ -28,6 +28,7 @@ use crate::types::manager::VcManager;
 use crate::types::oidc::VerifyPayload;
 use crate::types::wallet::{DidsInfo, KeyDefinition};
 use crate::utils::extract_gnap_token;
+use axum::body::Bytes;
 use axum::extract::{Path, Query, State};
 use axum::http::{HeaderMap, Method, StatusCode, Uri};
 use axum::response::IntoResponse;
@@ -75,8 +76,17 @@ where
             // OIDC4VCI
             .route("/api/v1/credentialOffer", get(Self::cred_offer))
             // ISSUER DATA
-            .route("/api/v1/authority", get(Self::issuer))
-            .route("/api/v1/authority/jwks", get(Self::issuer_jwks))
+            .route(
+                "/api/v1/.well-known/openid-credential-issuer",
+                get(Self::issuer),
+            )
+            .route(
+                "/api/v1/.well-known/oauth-authorization-server",
+                get(Self::issuer_auth_server),
+            )
+            .route("/api/v1/jwks", get(Self::issuer_jwks))
+            .route("/api/v1/token", post(Self::issuer_token))
+            .route("/api/v1/credential", post(Self::issuer_credential))
             // OIDC4VP
             .route("/api/v1/pd/:state", get(Self::pd))
             .route("/api/v1/verify/:state", post(Self::verify))
@@ -260,6 +270,15 @@ where
         }
     }
 
+    async fn issuer_auth_server(State(authority): State<Arc<Authority<T>>>) -> impl IntoResponse {
+        info!("GET /auth-server");
+
+        match authority.get_auth_server().await {
+            Ok(data) => (StatusCode::OK, Json(data)).into_response(),
+            Err(e) => e.to_response(),
+        }
+    }
+
     async fn issuer_jwks(State(authority): State<Arc<Authority<T>>>) -> impl IntoResponse {
         info!("GET /issuer_jwks");
 
@@ -267,6 +286,59 @@ where
             Ok(data) => (StatusCode::OK, Json(data)).into_response(),
             Err(e) => e.to_response(),
         }
+    }
+
+    async fn issuer_token(State(authority): State<Arc<Authority<T>>>, body: Bytes) -> impl IntoResponse {
+        info!("POST /token");
+        // Body recibido (UTF-8): grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Apre-authorized_code&pre-authorized_code=TFWik9CMkjtCNeHjlAUeJ5RMdhmqSzQeljQqFThbGEY
+        let body_str = String::from_utf8_lossy(&body);
+        println!("Body recibido: {}", body_str); // Para ver qué llega
+
+        // Generar respuesta aleatoria
+        let resp = serde_json::json!({
+            "access_token": "MOCK_TOKEN_123",
+            "token_type": "Bearer",
+            "expires_in": 3600
+        }
+        );
+
+        (StatusCode::OK, Json(resp)).into_response()
+    }
+
+    async fn issuer_credential(
+        State(authority): State<Arc<Authority<T>>>,
+        headers: HeaderMap,
+        body: Bytes,
+    ) -> impl IntoResponse {
+        info!("POST /credential");
+        // Body recibido: grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Apre-authorized_code&pre-authorized_code=6Z37cZDpio6pAgAdkjbeiuBDfy_j4mEPmixmXXmYGzg
+        // 2025-10-23T14:45:42.729208Z  INFO rainbow_authority::http: 303: POST /credential
+        // Body recibido (UTF-8): {"format":"jwt_vc_json","proof":{"proof_type":"jwt","jwt":"eyJraWQiOiJkaWQ6andrOmV5SnJkSGtpT2lKU1UwRWlMQ0psSWpvaVFWRkJRaUlzSW00aU9pSjRUMEYzV2xwa1EzQXdRMGRDUVY5dE1WVkhSMVZYY0VNNVRISmxjbUpqYkRNeGJsSm9aVGh6TnpkNlIyMDRhWEEzWVVndFVXNU5OVU5MYkVvMVlYbHZVRGhLVFY5ckxXaFZRMFYyUTA5cU5XdzVWbU5oTjBSZk5UZFJNalJKVUV0SE4wZFFTR2RuWXpaNWJHeHdaRmxuU2tWbFkyeFVjWEpHY2pkR1VGQnhjVGhEUXpZMVdWcGZTMWhHWTNCeU9ISkdSVkZFVUd0a2MzZ3piVTFxVGtZelFVcE5OekJwYUVJdGRHdE9PV3h4Y0haTGIwaDZNekpSYUhSeWJWaEZZMnQxWDFOdFZGbEZUVTlHVlUweGQwSTFURTR4Tm1ONFp6SXhaWFl3TW5aR2RsVkNZbWRXWkVOVE5IWm9jak5ITmxOTU0yZFBaWFZ6ZDNCWmFUWnRUVFo2Y2xsb1kzbGthREphUmpaQ1VFWlZNUzFOTms5dGNFTkdSbmQ2U0ZWV05UZHFNSEpNTFVSME9VMUphMUZVV214WGFtNWtjVlZPWkcxRWNubHlkMEUxT1U4elMxbFdZV1k1Y21Vd2RXOVFTM1pHVW1SbVkzY2lmUSMwIiwidHlwIjoib3BlbmlkNHZjaS1wcm9vZitqd3QiLCJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJkaWQ6andrOmV5SnJkSGtpT2lKU1UwRWlMQ0psSWpvaVFWRkJRaUlzSW00aU9pSjRUMEYzV2xwa1EzQXdRMGRDUVY5dE1WVkhSMVZYY0VNNVRISmxjbUpqYkRNeGJsSm9aVGh6TnpkNlIyMDRhWEEzWVVndFVXNU5OVU5MYkVvMVlYbHZVRGhLVFY5ckxXaFZRMFYyUTA5cU5XdzVWbU5oTjBSZk5UZFJNalJKVUV0SE4wZFFTR2RuWXpaNWJHeHdaRmxuU2tWbFkyeFVjWEpHY2pkR1VGQnhjVGhEUXpZMVdWcGZTMWhHWTNCeU9ISkdSVkZFVUd0a2MzZ3piVTFxVGtZelFVcE5OekJwYUVJdGRHdE9PV3h4Y0haTGIwaDZNekpSYUhSeWJWaEZZMnQxWDFOdFZGbEZUVTlHVlUweGQwSTFURTR4Tm1ONFp6SXhaWFl3TW5aR2RsVkNZbWRXWkVOVE5IWm9jak5ITmxOTU0yZFBaWFZ6ZDNCWmFUWnRUVFo2Y2xsb1kzbGthREphUmpaQ1VFWlZNUzFOTms5dGNFTkdSbmQ2U0ZWV05UZHFNSEpNTFVSME9VMUphMUZVV214WGFtNWtjVlZPWkcxRWNubHlkMEUxT1U4elMxbFdZV1k1Y21Vd2RXOVFTM1pHVW1SbVkzY2lmUSIsInN1YiI6ImRpZDpqd2s6ZXlKcmRIa2lPaUpTVTBFaUxDSmxJam9pUVZGQlFpSXNJbTRpT2lKNFQwRjNXbHBrUTNBd1EwZENRVjl0TVZWSFIxVlhjRU01VEhKbGNtSmpiRE14YmxKb1pUaHpOemQ2UjIwNGFYQTNZVWd0VVc1Tk5VTkxiRW8xWVhsdlVEaEtUVjlyTFdoVlEwVjJRMDlxTld3NVZtTmhOMFJmTlRkUk1qUkpVRXRITjBkUVNHZG5Zelo1Ykd4d1pGbG5Ta1ZsWTJ4VWNYSkdjamRHVUZCeGNUaERRelkxV1ZwZlMxaEdZM0J5T0hKR1JWRkVVR3RrYzNnemJVMXFUa1l6UVVwTk56QnBhRUl0ZEd0T09XeHhjSFpMYjBoNk16SlJhSFJ5YlZoRlkydDFYMU50VkZsRlRVOUdWVTB4ZDBJMVRFNHhObU40WnpJeFpYWXdNblpHZGxWQ1ltZFdaRU5UTkhab2NqTkhObE5NTTJkUFpYVnpkM0JaYVRadFRUWjZjbGxvWTNsa2FESmFSalpDVUVaVk1TMU5Oazl0Y0VOR1JuZDZTRlZXTlRkcU1ISk1MVVIwT1UxSmExRlVXbXhYYW01a2NWVk9aRzFFY25seWQwRTFPVTh6UzFsV1lXWTVjbVV3ZFc5UVMzWkdVbVJtWTNjaWZRIiwianRpIjoiNzcyZWIyNzAtZTM0NS00N2UyLTljNjMtMjEwNTViYjAyN2IyIiwiYXVkIjoiaHR0cDovL2hvc3QuZG9ja2VyLmludGVybmFsOjE1MDAvYXBpL3YxIiwiaWF0IjoxNzYxMjMwNzQyLCJleHAiOjE3NjEyMzEwNDJ9.IzO729kQK0nV1JbDLcge6hYaan60bBqtooYLz5XPThEvRe4eGPWTJZ3_gzGvOCHgQTCPGJz6qu6IBzxu-IProflKcMArrfumP078GYDSRWbluIdfdrYyRFXGN6doXR4oo6Rb0SDN1S7M7bYxCNkwsNfRQnWIn9Rq2tZS4G8qKCHrI5aThgwGa9nGR7y-xAm6LKTpAiRzGDs90BoJFcpFi_J5CIi4FqtOC6FZPTIIc0Yp_-7hmEo_JuHUv_CRhUDPy3dQBClexxFCbPYUpCBhdF5ziGE1q99Yh7AIG_OZtocZ7iE8OOBR8-Ph9eDYGp1jpMmbqgB-b8D7CL2GHF1V0w"},"credential_definition":{"type":["VerifiableCredential","IdentityCredential"]}}
+        // Headers recibidos:
+        //     authorization: "Bearer MOCK_TOKEN_123"
+        // accept: "application/json"
+        // accept-charset: "UTF-8"
+        // user-agent: "ktor-client"
+        // content-type: "application/json"
+        // content-length: "2777"
+        // host: "host.docker.internal:1500"
+        // connection: "Keep-Alive"
+        // accept-encoding: "gzip"
+
+        let body_str = String::from_utf8_lossy(&body);
+        println!("Body recibido (UTF-8): {}", body_str);
+        println!("Headers recibidos:");
+        for (name, value) in headers.iter() {
+            println!("{}: {:?}", name, value);
+        }
+
+        let vc_jwt = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjcwMDIvZHJhZnQxMyIsInN1YiI6ImRpZDpleGFtcGxlOmFiY2RlZjEyMzQ1NiIsInZjIjp7IkBjb250ZXh0IjpbImh0dHBzOi8vd3d3LnczLm9yZy8yMDE4L2NyZWRlbnRpYWxzL3YxIl0sImlkIjoidXJuOnV1aWQ6MTIzNDU2NzgtMTIzNC0xMjM0LTEyMzQtMTIzNDU2Nzg5YWJjIiwidHlwZSI6WyJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsIklkZW50aXR5Q3JlZGVudGlhbCJdLCJpc3VlciI6Imh0dHA6Ly9sb2NhbGhvc3Q6NzAwMi9kcmFmdDEzIiwiaXNzdWFuY2VEYXRlIjoiMjAyNS0xMC0yM1QxNDowMDowMFoiLCJjcmVkZW50aWFsU3ViamVjdCI6eyJpZCI6ImRpZDpleGFtcGxlOmFiY2RlZjEyMzQ1NiIsIm5hbWUiOiJKb2huIERvZSJ9fX0.MOCK_SIGNATURE";
+        let response = serde_json::json!({
+        "format": "jwt_vc_json",
+        "credential": vc_jwt,
+    });
+
+        (StatusCode::OK, Json(response)).into_response()
     }
 
     async fn pd(State(authority): State<Arc<Authority<T>>>, Path(state): Path<String>) -> impl IntoResponse {

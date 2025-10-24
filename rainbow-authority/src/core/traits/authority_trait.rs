@@ -16,7 +16,6 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 use crate::data::entities::{auth_interaction, auth_request, auth_verification, minions};
 use crate::types::gnap::{GrantRequest, GrantResponse};
 use crate::types::manager::{VcManager, VcType};
@@ -50,6 +49,7 @@ pub trait AuthorityTrait: Send + Sync {
     ) -> anyhow::Result<minions::NewModel>;
     async fn get_cred_offer_data(&self, id: String) -> anyhow::Result<Value>;
     async fn get_issuer(&self) -> anyhow::Result<Value>;
+    async fn get_auth_server(&self) -> anyhow::Result<Value>;
     async fn generate_vp_def(&self, state: String) -> anyhow::Result<Value>;
     async fn verify_all(&self, state: String, vp_token: String) -> anyhow::Result<String>;
     async fn verify_vp(
