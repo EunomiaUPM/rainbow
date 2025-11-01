@@ -22,6 +22,7 @@ use axum::async_trait;
 use rainbow_db::auth_consumer::entities::{auth_request, authority_request, mates};
 use serde_json::Value;
 
+#[mockall::automock]
 #[async_trait]
 pub trait RainbowSSIAuthConsumerManagerTrait: Send + Sync {
     async fn request_onboard_provider(

@@ -23,6 +23,7 @@ use crate::auth_consumer::repo_factory::traits::{
 };
 use std::sync::Arc;
 
+#[mockall::automock]
 pub trait AuthRepoFactoryTrait: Send + Sync + Clone + 'static {
     fn request(&self) -> Arc<dyn AuthRequestRepoTrait>;
     fn interaction(&self) -> Arc<dyn AuthInteractionRepoTrait>;
@@ -30,4 +31,10 @@ pub trait AuthRepoFactoryTrait: Send + Sync + Clone + 'static {
     fn token_requirements(&self) -> Arc<dyn AuthTokenRequirementsRepoTrait>;
     fn mates(&self) -> Arc<dyn MatesRepoTrait>;
     fn authority(&self) -> Arc<dyn AuthorityRequestRepoTrait>;
+}
+
+impl Clone for MockAuthRepoFactoryTrait {
+    fn clone(&self) -> Self {
+        Self::new()
+    }
 }

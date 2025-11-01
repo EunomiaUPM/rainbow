@@ -20,4 +20,4 @@
 pub mod factory;
 pub mod factory_trait;
 mod repos;
-mod traits;
+pub mod traits;

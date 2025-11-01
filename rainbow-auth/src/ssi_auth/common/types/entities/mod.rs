@@ -17,6 +17,8 @@
  *
  */
 
+use core::fmt;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize)]
@@ -24,7 +26,7 @@ pub struct Url2RequestVC {
     pub url: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct ReachAuthority {
     pub id: String,
     pub slug: String,
@@ -45,7 +47,35 @@ pub enum WhatEntity {
     Authority,
 }
 
+impl PartialEq for WhatEntity {
+    fn eq(&self, other: &Self) -> bool {
+        matches!((self, other), (WhatEntity::Provider, WhatEntity::Provider) | (WhatEntity::Authority, WhatEntity::Authority))
+    }
+}
+
+impl fmt::Debug for WhatEntity {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+#[derive(Clone)]
 pub enum ReachMethod {
     Oidc,
     CrossUser,
+}
+
+impl fmt::Debug for ReachMethod {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ReachMethod::Oidc => write!(f, "Oidc"),
+            ReachMethod::CrossUser => write!(f, "CrossUser"),
+        }
+    }
+}
+
+impl PartialEq for ReachMethod {
+    fn eq(&self, other: &Self) -> bool {
+        matches!((self, other), (ReachMethod::Oidc, ReachMethod::Oidc) | (ReachMethod::CrossUser, ReachMethod::CrossUser))
+    }
 }

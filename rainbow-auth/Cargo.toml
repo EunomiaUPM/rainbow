@@ -19,7 +19,7 @@ rainbow_db = { version = "0.3.1", path = "../rainbow-db", default-features = tru
 
 serde = { workspace = true }
 serde_json = { workspace = true }
-tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros"] }
+tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros", "full"] }
 anyhow = { workspace = true }
 base64 = { workspace = true }
 tracing = { workspace = true }
@@ -38,3 +38,13 @@ clap = { workspace = true }
 sea-orm-migration = { workspace = true }
 tracing-subscriber = { workspace = true }
 once_cell = { workspace = true }
+mockall = "0.13.1"
+wiremock = "0.6"
+mockito = "1.7.0"
+httpmock = "0.8.2"
+axum-test = { version = "18.0.0-rc3" }
+actix-web = "4"
+utoipa = "5.4.0"
+utoipa-swagger-ui = { version = "9", features = ["actix-web"] }
+hyper = { version = "0.14", features = ["full"] }
+tower = { version = "0.5.2", features = ["full"] }

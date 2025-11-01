@@ -16,7 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-mod openapi;
+pub mod openapi;
 
 use crate::ssi_auth::common::errors::CustomToResponse;
 use crate::ssi_auth::common::traits::RainbowSSIAuthWalletTrait;
@@ -302,7 +302,7 @@ where
         // TODO RES
     }
 
-    async fn get_all_authority(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
+    pub async fn get_all_authority(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
         info!("GET /authority/request/all");
 
         match manager.repo.authority().get_all(None, None).await {
@@ -341,7 +341,7 @@ where
         }
     }
 
-    async fn fallback(method: Method, uri: Uri) -> (StatusCode, String) {
+    pub async fn fallback(method: Method, uri: Uri) -> (StatusCode, String) {
         let log = format!("{} {}", method, uri);
         error!("Unexpected route");
         error!("{}", log);
