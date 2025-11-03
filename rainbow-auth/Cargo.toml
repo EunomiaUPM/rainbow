@@ -37,6 +37,7 @@ url = { workspace = true }
 clap = { workspace = true }
 sea-orm-migration = { workspace = true }
 tracing-subscriber = { workspace = true }
+tower-http = { workspace = true }
 once_cell = { workspace = true }
 mockall = "0.13.1"
 wiremock = "0.6"

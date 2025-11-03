@@ -1,6 +1,6 @@
-import { Archive, ArrowLeftRight, Feather, Handshake, Users } from "lucide-react";
-import React, { useContext } from "react";
-import { Link, useRouterState } from "@tanstack/react-router";
+import {Archive, ArrowLeftRight, Feather, Handshake, Users} from "lucide-react";
+import React, {useContext} from "react";
+import {Link, useRouterState} from "@tanstack/react-router";
 import {
   Sidebar,
   SidebarContent,
@@ -10,8 +10,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "./ui/sidebar";
+// @ts-ignore
 import logoImg from "./../img/eunomia_logo_lg_light.svg";
-import { GlobalInfoContext, GlobalInfoContextType } from "@/context/GlobalInfoContext.tsx";
+import {GlobalInfoContext, GlobalInfoContextType} from "shared/src/context/GlobalInfoContext";
 
 // Menu items.
 const items = [
@@ -50,7 +51,7 @@ const items = [
 
 export function AppSidebarConsumer() {
   const routerState = useRouterState();
-  const { catalog_type } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const {catalog_type} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
   const filteredItems = items.filter((item) => {
     if (catalog_type == "rainbow") {
       if (item.url == "/provider-datahub-catalog") {
@@ -85,7 +86,7 @@ export function AppSidebarConsumer() {
                         routerState.location.pathname === item.url ? "bg-white/10 text-white" : ""
                       }
                     >
-                      <item.icon />
+                      <item.icon/>
                       <span>{item.title}</span>
                     </Link>
                   </SidebarMenuButton>

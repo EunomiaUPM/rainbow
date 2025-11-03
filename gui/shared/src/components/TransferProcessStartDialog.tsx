@@ -1,5 +1,5 @@
-import { GlobalInfoContext, GlobalInfoContextType } from "./../context/GlobalInfoContext";
-import { usePostTransferRPCStart } from "shared/src/data/transfer-mutations";
+import {GlobalInfoContext, GlobalInfoContextType} from "./../context/GlobalInfoContext";
+import {usePostTransferRPCStart} from "shared/src/data/transfer-mutations";
 import dayjs from "dayjs";
 import {
   DialogClose,
@@ -9,24 +9,25 @@ import {
   DialogHeader,
   DialogTitle,
 } from "./ui/dialog";
-import { Button } from "./ui/button";
-import React, { useContext } from "react";
-import { Form } from "./ui/form";
-import { useForm } from "react-hook-form";
-import { Badge } from "shared/src/components/ui/badge";
-import { List, ListItem, ListItemKey } from "./ui/list";
+import {Button} from "./ui/button";
+import React, {useContext} from "react";
+import {Form} from "./ui/form";
+import {useForm} from "react-hook-form";
+import {Badge, BadgeState} from "shared/src/components/ui/badge";
+import {List, ListItem, ListItemKey} from "./ui/list";
 
-export const TransferProcessStartDialog = ({ process }: { process: TransferProcess }) => {
+export const TransferProcessStartDialog = ({process}: { process: TransferProcess }) => {
   // --- Form Setup ---
   const form = useForm({});
-  const { handleSubmit, control, setValue, getValues } = form;
-  const { mutateAsync: startAsync } = usePostTransferRPCStart();
-  const { api_gateway, role } = useContext<GlobalInfoContextType>(GlobalInfoContext);
+  const {handleSubmit, control, setValue, getValues} = form;
+  const {mutateAsync: startAsync} = usePostTransferRPCStart();
+  const {api_gateway, dsrole} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
   const onSubmit = () => {
-    if (role == "provider") {
+    if (dsrole == "provider") {
       return startAsync({
         api_gateway: api_gateway,
         content: {
+          //@ts-ignore
           consumerParticipantId: process.associated_consumer,
           consumerCallbackAddress: process.data_plane_id,
           consumerPid: process.consumer_pid,
@@ -34,7 +35,7 @@ export const TransferProcessStartDialog = ({ process }: { process: TransferProce
         },
       });
     }
-    if (role == "consumer") {
+    if (dsrole == "consumer") {
       return startAsync({
         api_gateway: api_gateway,
         content: {
@@ -68,13 +69,13 @@ export const TransferProcessStartDialog = ({ process }: { process: TransferProce
           <Badge variant={"info"}>{process.consumer_pid.slice(9, -1)}</Badge>
         </ListItem>
         <ListItem>
-          {role == "provider" && (
+          {dsrole == "provider" && (
             <>
               <ListItemKey className={scopedListItemKeyClasses}>Associated consumer:</ListItemKey>
               <Badge variant={"info"}>{process.associated_consumer?.slice(9, 40) + "[...]"}</Badge>
             </>
           )}
-          {role == "consumer" && (
+          {dsrole == "consumer" && (
             <>
               <ListItemKey className={scopedListItemKeyClasses}>Associated provider:</ListItemKey>
               <Badge variant={"info"}>{process.associated_provider?.slice(9, 40) + "[...]"}</Badge>
@@ -83,14 +84,14 @@ export const TransferProcessStartDialog = ({ process }: { process: TransferProce
         </ListItem>
         <ListItem>
           <ListItemKey className={scopedListItemKeyClasses}>Current state:</ListItemKey>
-          <Badge variant={"status"} state={process.state}>
+          <Badge variant={"status"} state={process.state as BadgeState}>
             {process.state}
           </Badge>
         </ListItem>
         {process.state_attribute && (
           <ListItem>
             <ListItemKey className={scopedListItemKeyClasses}>State attribute:</ListItemKey>
-            <Badge variant={"status"} state={process.state_attribute}>
+            <Badge variant={"status"} state={process.state_attribute as BadgeState}>
               {process.state_attribute}
             </Badge>
           </ListItem>

@@ -39,6 +39,7 @@ pub struct ApplicationProviderConfig {
     pub auth_host: Option<HostConfig>,
     pub ssi_auth_host: Option<HostConfig>,
     pub gateway_host: Option<HostConfig>,
+    pub is_gateway_in_production: bool,
     pub database_config: DatabaseConfig,
     pub ssh_user: Option<String>,
     pub ssh_private_key_path: Option<String>,
@@ -93,6 +94,7 @@ impl Default for ApplicationProviderConfig {
                 url: "127.0.0.1".to_string(),
                 port: "1205".to_string(),
             }),
+            is_gateway_in_production: false,
             database_config: DatabaseConfig {
                 db_type: DbType::Postgres,
                 url: "127.0.0.1".to_string(),
@@ -290,6 +292,8 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
         let default = ApplicationProviderConfig::default();
         let catalog_as_datahub: bool =
             extract_env("CATALOG_AS_DATAHUB", default.catalog_as_datahub.to_string()).parse().unwrap();
+        let gateway_production: bool =
+            extract_env("GATEWAY_PRODUCTION", default.is_gateway_in_production.to_string()).parse().unwrap();
         let compound_config = Self {
             transfer_process_host: Some(HostConfig {
                 protocol: extract_env(
@@ -378,6 +382,7 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
                 url: extract_env("GATEWAY_HOST", default.gateway_host.clone().unwrap().url),
                 port: extract_env("GATEWAY_PORT", default.gateway_host.clone().unwrap().port),
             }),
+            is_gateway_in_production: gateway_production,
             database_config: DatabaseConfig {
                 db_type: extract_env("DB_TYPE", default.database_config.db_type.to_string()).parse().unwrap(),
                 url: extract_env("DB_URL", default.database_config.url),

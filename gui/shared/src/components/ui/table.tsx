@@ -1,10 +1,10 @@
 import * as React from "react";
 
-import { cn } from "./../../lib/utils";
+import {cn} from "shared/src/lib/utils";
 
 const tableWidthClasses =
   "w-full min-w-[900px] xl:min-w-[980px]  2xl:min-w-[1260px] 3xl:min-w-[1420px] 4xl:min-w-[1560px] max-w-[1080px]";
-/* He metido las clases del ancho en esta variable y las he quitado del div, 
+/* He metido las clases del ancho en esta variable y las he quitado del div,
 he testeado más o menos todo y en principio siguen siendo todas iguales gracias al w-full.
 De esta forma ahora si metemos in w-fit al usar el componente sí se ajusta el contenedor,
 lo dejo así que parece que funciona guay y da menos quebraderos de cabeza creo. En cualquier caso
@@ -12,7 +12,7 @@ se pueden volver a meter las clases añadiendo la variable a las clases del div 
 */
 
 const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
-  ({ className, ...props }, ref) => (
+  ({className, ...props}, ref) => (
     <div
       className={
         "relative w-full  overflow-auto bg-white/5 border border-foreground/25 rounded-md "
@@ -29,7 +29,7 @@ Table.displayName = "Table";
 const TableHeader = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
->(({ className, ...props }, ref) => (
+>(({className, ...props}, ref) => (
   <thead ref={ref} className={cn("[&_tr]:border-b text-foreground", className)} {...props} />
 ));
 TableHeader.displayName = "TableHeader";
@@ -37,7 +37,7 @@ TableHeader.displayName = "TableHeader";
 const TableBody = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
->(({ className, ...props }, ref) => (
+>(({className, ...props}, ref) => (
   <tbody ref={ref} className={cn("[&_tr:last-child]:border-0", className)} {...props} />
 ));
 TableBody.displayName = "TableBody";
@@ -45,7 +45,7 @@ TableBody.displayName = "TableBody";
 const TableFooter = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
->(({ className, ...props }, ref) => (
+>(({className, ...props}, ref) => (
   <tfoot
     ref={ref}
     className={cn("border-t bg-muted/50 font-medium [&>tr]:last:border-b-0", className)}
@@ -55,7 +55,7 @@ const TableFooter = React.forwardRef<
 TableFooter.displayName = "TableFooter";
 
 const TableRow = React.forwardRef<HTMLTableRowElement, React.HTMLAttributes<HTMLTableRowElement>>(
-  ({ className, ...props }, ref) => (
+  ({className, ...props}, ref) => (
     <tr
       ref={ref}
       className={cn(
@@ -71,7 +71,7 @@ TableRow.displayName = "TableRow";
 const TableHead = React.forwardRef<
   HTMLTableCellElement,
   React.ThHTMLAttributes<HTMLTableCellElement>
->(({ className, ...props }, ref) => (
+>(({className, ...props}, ref) => (
   <th
     ref={ref}
     className={cn(
@@ -86,7 +86,7 @@ TableHead.displayName = "TableHead";
 const TableCell = React.forwardRef<
   HTMLTableCellElement,
   React.TdHTMLAttributes<HTMLTableCellElement>
->(({ className, ...props }, ref) => (
+>(({className, ...props}, ref) => (
   <td
     ref={ref}
     className={cn(
@@ -101,9 +101,9 @@ TableCell.displayName = "TableCell";
 const TableCaption = React.forwardRef<
   HTMLTableCaptionElement,
   React.HTMLAttributes<HTMLTableCaptionElement>
->(({ className, ...props }, ref) => (
+>(({className, ...props}, ref) => (
   <caption ref={ref} className={cn("mt-4 text-sm text-muted-foreground", className)} {...props} />
 ));
 TableCaption.displayName = "TableCaption";
 
-export { Table, TableHeader, TableBody, TableFooter, TableHead, TableRow, TableCell, TableCaption };
+export {Table, TableHeader, TableBody, TableFooter, TableHead, TableRow, TableCell, TableCaption};

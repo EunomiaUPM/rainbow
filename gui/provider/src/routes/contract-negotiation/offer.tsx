@@ -23,7 +23,6 @@ import {ChevronsUpDown} from "lucide-react";
 import {useContext, useEffect, useState} from "react"; // Import useEffect
 import {getParticipants} from "shared/src/data/participant-queries.ts";
 import {getPoliciesByDatasetId} from "shared/src/data/policy-queries.ts";
-import {Textarea} from "shared/src/components/ui/textarea.tsx";
 import {usePostContractNegotiationRPCOffer} from "shared/src/data/contract-mutations.ts";
 import {GlobalInfoContext, GlobalInfoContextType} from "shared/src/context/GlobalInfoContext.tsx";
 import {Badge} from "shared/src/components/ui/badge";
@@ -37,7 +36,7 @@ type Inputs = {
   odrl: string;
 };
 
-export const RouteComponent = ({catalog, dataset}) => {
+export const RouteComponent = ({catalog, dataset}: { catalog: Catalog, dataset: Dataset }) => {
   const {mutateAsync: sendOfferAsync, isPending} = usePostContractNegotiationRPCOffer();
   const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
 
@@ -169,9 +168,9 @@ export const RouteComponent = ({catalog, dataset}) => {
 
   // --- Form Submission Handler ---
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
-    console.log("Form data submitted:", data);
     await sendOfferAsync(
       {
+        //@ts-ignore
         content: {
           consumerParticipantId: data.consumerParticipantId,
           offer: {
@@ -310,7 +309,6 @@ export const RouteComponent = ({catalog, dataset}) => {
           {/* Dataset Field (mapped to 'id' in Inputs) */}
 
           <div>
-            {" "}
             Chosen dataset: {dataset.title} {dataset["@id"]}
           </div>
 
@@ -443,7 +441,6 @@ export const RouteComponent = ({catalog, dataset}) => {
             )}
           />
           <div> POLICIES</div>
-          {console.log(policies, "policiessss")}
           {policies &&
             policies.map((policy) => (
               <div
@@ -460,7 +457,6 @@ export const RouteComponent = ({catalog, dataset}) => {
                 <PolicyComponent policyItem={policy.prohibition} variant={"prohibition"}/>
               </div>
             ))}
-          {console.log(selectedPolicy, "selectedPolicy")}
           {/* Policy Target Field (mapped to 'target' in Inputs) */}
           {/* <FormField
             control={control}
@@ -537,21 +533,21 @@ export const RouteComponent = ({catalog, dataset}) => {
             )}
           /> */}
 
-          <FormField
-            control={form.control}
-            name="odrl"
-            disabled={!selectedPolicy}
-            render={({field}) => (
-              <FormItem>
-                <FormLabel>Odrl</FormLabel>
-                <FormControl>
-                  <Textarea {...field} />
-                </FormControl>
-                <FormDescription>Provide the ODRL policy content</FormDescription>
-                <FormMessage/>
-              </FormItem>
-            )}
-          />
+          {/*<FormField*/}
+          {/*  control={form.control}*/}
+          {/*  name="odrl"*/}
+          {/*  disabled={!selectedPolicy}*/}
+          {/*  render={({field}) => (*/}
+          {/*    <FormItem>*/}
+          {/*      <FormLabel>Odrl</FormLabel>*/}
+          {/*      <FormControl>*/}
+          {/*        <Textarea {...field} />*/}
+          {/*      </FormControl>*/}
+          {/*      <FormDescription>Provide the ODRL policy content</FormDescription>*/}
+          {/*      <FormMessage/>*/}
+          {/*    </FormItem>*/}
+          {/*  )}*/}
+          {/*/>*/}
 
           <Button type="submit" disabled={isPending} className="w-full">
             Submit Offer {isPending && <span className="ml-2">...</span>}

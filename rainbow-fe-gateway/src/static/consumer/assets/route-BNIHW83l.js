@@ -1,0 +1,1 @@
+import{u as n,j as t,H as a,O as s}from"./index-BAHtZRt5.js";const r=()=>{const e=n();return t.jsxs(t.Fragment,{children:[e.location.pathname!=="/contract-negotiation"?null:t.jsx(t.Fragment,{children:t.jsx("div",{className:"mb-6",children:t.jsx(a,{level:"h3",className:"flex gap-2 items-center",children:"Contract Negotiations"})})}),t.jsx(s,{})]})};export{r as component};

@@ -24,6 +24,7 @@ use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, Applica
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use std::cmp::PartialEq;
 use tracing::{debug, info};
+use crate::provider::setup::db_seeding::CatalogSeeding;
 
 #[derive(Parser, Debug)]
 #[command(name = "Rainbow Dataspace Connector Catalog Server")]
@@ -62,7 +63,8 @@ impl CatalogCommands {
             }
             CatalogCliCommands::Setup(args) => {
                 let config = Self::extract_provider_config(args.env_file)?;
-                CatalogMigration::run(&config).await?
+                CatalogMigration::run(&config).await?;
+                CatalogSeeding::run(&config).await?
             }
         }
 

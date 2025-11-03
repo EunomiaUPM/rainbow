@@ -131,11 +131,29 @@ push-business-gateway:
 #
 #
 #
+# Rainbow Authority
+#
+#
+build-authority:
+	docker build \
+		--progress plain \
+		-t $(DOCKER_USERNAME)/rainbow_authority:$(VERSION) \
+		--build-arg APP_NAME=rainbow_authority \
+		-f deployment/Dockerfile \
+		.
+
+push-authority:
+	docker push $(DOCKER_USERNAME)/rainbow_authority:$(VERSION)
+
+
+#
+#
+#
 # General
 #
 #
-build-containers: build-core build-catalog build-contracts build-transfer build-auth build-fe-gateway build-business-gateway
+build-containers: build-core build-catalog build-contracts build-transfer build-auth build-fe-gateway build-business-gateway build-authority
 
-push-containers: push-core push-catalog push-contracts push-transfer push-auth push-fe-gateway push-business-gateway
+push-containers: push-core push-catalog push-contracts push-transfer push-auth push-fe-gateway push-business-gateway push-authority
 
-.PHONY: build-transfer push-transfer build-contracts push-contracts build-catalog push-catalog build-auth push-auth build-core push-core build-containers push-containers
+.PHONY: build-containers push-containers

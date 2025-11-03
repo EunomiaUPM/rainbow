@@ -22,13 +22,12 @@ use rainbow_db::transfer_provider::entities::{transfer_message, transfer_process
 use urn::Urn;
 
 pub mod rainbow_entities;
-pub mod rainbow_err;
-pub mod rainbow_types;
 
 #[mockall::automock]
 #[async_trait]
 pub trait RainbowTransferProviderServiceTrait: Send + Sync {
     async fn get_all_transfers(&self) -> anyhow::Result<Vec<transfer_process::Model>>;
+    async fn get_batch_transfers(&self, transfer_ids: &Vec<Urn>) -> anyhow::Result<Vec<transfer_process::Model>>;
     async fn get_transfer_by_id(
         &self,
         provider_pid: Urn,

@@ -17,7 +17,6 @@
  *
  */
 
-use crate::common::core::mates_facade::mates_facade::MatesFacadeService;
 use crate::provider::core::catalog_odrl_facade::catalog_odrl_facade::CatalogOdrlFacadeService;
 use crate::provider::core::catalog_odrl_facade::datahub_odrl_facade::DatahubOdrlFacadeService;
 use crate::provider::core::catalog_odrl_facade::CatalogOdrlFacadeTrait;
@@ -31,6 +30,7 @@ use crate::provider::http::rainbow_entities::rainbow_entities::RainbowEntitesCon
 use axum::{serve, Router};
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_common::facades::ssi_auth_facade::ssi_auth_facade::SSIAuthFacadeService;
+use rainbow_common::mates_facade::mates_facade::MatesFacadeService;
 use rainbow_db::contracts_provider::repo::sql::ContractNegotiationProviderRepoForSql;
 use rainbow_db::contracts_provider::repo::ContractNegotiationProviderRepoFactory;
 use rainbow_db::events::repo::sql::EventsRepoForSql;

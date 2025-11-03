@@ -20,6 +20,7 @@ pub mod ssi;
 pub mod jwt;
 pub mod gnap;
 pub mod entities;
+pub mod oidc;
 
 
 

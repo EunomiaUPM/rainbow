@@ -6,37 +6,39 @@ import {
   DialogHeader,
   DialogTitle,
 } from "./ui/dialog";
-import { Button } from "./ui/button";
-import React, { useContext } from "react";
-import { Form } from "./ui/form";
-import { List, ListItem, ListItemKey } from "./ui/list";
-import { Badge } from "./../components/ui/badge";
-import { useForm } from "react-hook-form";
-import { usePostContractNegotiationRPCTermination } from "./../data/contract-mutations";
-import { GlobalInfoContext, GlobalInfoContextType } from "./../context/GlobalInfoContext";
+import {Button} from "./ui/button";
+import React, {useContext} from "react";
+import {Form} from "./ui/form";
+import {List, ListItem, ListItemKey} from "./ui/list";
+import {Badge, BadgeState} from "./../components/ui/badge";
+import {useForm} from "react-hook-form";
+import {usePostContractNegotiationRPCTermination} from "./../data/contract-mutations";
+import {GlobalInfoContext, GlobalInfoContextType} from "./../context/GlobalInfoContext";
 import dayjs from "dayjs";
 
-export const ContractNegotiationTerminationDialog = ({ process }: { process: CNProcess }) => {
+export const ContractNegotiationTerminationDialog = ({process}: { process: CNProcess }) => {
   // --- Form Setup ---
   const form = useForm({});
-  const { handleSubmit, control, setValue, getValues } = form;
-  const { mutateAsync: terminateAsync } = usePostContractNegotiationRPCTermination();
-  const { api_gateway, role } = useContext<GlobalInfoContextType>(GlobalInfoContext);
+  const {handleSubmit, control, setValue, getValues} = form;
+  const {mutateAsync: terminateAsync} = usePostContractNegotiationRPCTermination();
+  const {api_gateway, dsrole} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
   const onSubmit = () => {
-    if (role === "consumer") {
+    if (dsrole === "consumer") {
       terminateAsync({
         api_gateway: api_gateway,
         content: {
+          //@ts-ignore
           providerParticipantId: process.associated_provider,
           consumerPid: process.consumer_id,
           providerPid: process.provider_id,
         },
       });
     }
-    if (role === "provider") {
+    if (dsrole === "provider") {
       terminateAsync({
         api_gateway: api_gateway,
         content: {
+          //@ts-ignore
           consumerParticipantId: process.associated_consumer,
           consumerPid: process.consumer_id,
           providerPid: process.provider_id,
@@ -54,7 +56,7 @@ export const ContractNegotiationTerminationDialog = ({ process }: { process: CNP
         <DialogDescription className="max-w-full flex flex-wrap">
           <span className="max-w-full flex flex-wrap">
             You are about to terminate to the terms of the contract negotiation.
-            <br />
+            <br/>
             Please review the details carefully before proceeding.
           </span>
         </DialogDescription>
@@ -85,7 +87,7 @@ export const ContractNegotiationTerminationDialog = ({ process }: { process: CNP
         )}
         <ListItem>
           <ListItemKey className={scopedListItemKeyClasses}>State:</ListItemKey>
-          <Badge variant={"status"} state={process.state}>
+          <Badge variant={"status"} state={process.state as BadgeState}>
             {process.state}
           </Badge>
         </ListItem>

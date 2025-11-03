@@ -22,91 +22,91 @@ type Query {
     # ---------------------------
     # Contract Negotiation (CN)
     # ---------------------------
-    cnProcesses(limit: Int = 10, offset: Int = 0): [CNProcess!]!
-    cnProcess(id: UUID!): CNProcess
-    cnProcessByProviderPid(providerPid: UUID!): CNProcess
-    cnProcessByConsumerPid(consumerPid: UUID!): CNProcess
+    cnProcesses(limit: Int = 10, offset: Int = 0): [CNProcess!]!                                # both
+    cnProcess(id: UUID!): CNProcess                                                             # both
+    cnProcessByProviderPid(providerPid: UUID!): CNProcess                                       # both
+    cnProcessByConsumerPid(consumerPid: UUID!): CNProcess                                       # both
 
-    cnMessagesByProcess(processId: UUID!, limit: Int = 50, offset: Int = 0): [CNMessage!]!
-    cnMessage(id: UUID!): CNMessage
+    cnMessagesByProcess(processId: UUID!, limit: Int = 50, offset: Int = 0): [CNMessage!]!      # both
+    cnMessage(id: UUID!): CNMessage                                                             # both
 
-    cnOffer(id: UUID!): CNOffer
-    offerByCnMessage(messageId: UUID!): CNOffer
-    lastOfferByCnProcess(processId: UUID!): CNOffer
+    cnOffer(id: UUID!): CNOffer                                                                 # both
+    offerByCnMessage(messageId: UUID!): CNOffer                                                 # both
+    lastOfferByCnProcess(processId: UUID!): CNOffer                                             # both
 
-    agreementByCnMessageId(messageId: UUID!): Agreement
+    agreementByCnMessageId(messageId: UUID!): Agreement                                         # both
 
     # ---------------------------
     # Agreements
     # ---------------------------
-    agreements(limit: Int = 10, offset: Int = 0): [Agreement!]!
-    agreement(id: UUID!): Agreement
+    agreements(limit: Int = 10, offset: Int = 0): [Agreement!]!                                 # both
+    agreement(id: UUID!): Agreement                                                             # both
 
     # ---------------------------
     # Rainbow Catalog (DCAT)
     # ---------------------------
-    catalogs(limit: Int = 10, offset: Int = 0): [Catalog!]!
-    catalog(id: UUID!): Catalog
+    catalogs(limit: Int = 10, offset: Int = 0): [Catalog!]!                                     # provider
+    catalog(id: UUID!): Catalog                                                                 # provider
 
-    datasetsByCatalog(catalogId: UUID!, limit: Int = 10, offset: Int = 0): [Dataset!]!
-    dataset(id: UUID!): Dataset
+    datasetsByCatalog(catalogId: UUID!, limit: Int = 10, offset: Int = 0): [Dataset!]!          # provider
+    dataset(id: UUID!): Dataset                                                                 # provider
 
-    dataServicesByCatalog(catalogId: UUID!, limit: Int = 10, offset: Int = 0): [DataService!]!
-    dataService(id: UUID!): DataService
+    dataServicesByCatalog(catalogId: UUID!, limit: Int = 10, offset: Int = 0): [DataService!]!  # provider
+    dataService(id: UUID!): DataService                                                         # provider
 
-    distributionsByDataset(datasetId: UUID!, limit: Int = 10, offset: Int = 0): [Distribution!]!
-    distribution(id: UUID!): Distribution
+    distributionsByDataset(datasetId: UUID!, limit: Int = 10, offset: Int = 0): [Distribution!]! # provider
+    distribution(id: UUID!): Distribution                                                       # provider
 
     # ---------------------------
     # DataHub
     # ---------------------------
-    datahubCatalogs(limit: Int = 10, offset: Int = 0): [DatahubDomain!]!
-    datahubCatalog(id: UUID!): DatahubDomain
+    datahubCatalogs(limit: Int = 10, offset: Int = 0): [DatahubDomain!]!                        # provider
+    datahubCatalog(id: UUID!): DatahubDomain                                                    # provider
 
-    datahubDatasetsByCatalog(domainId: UUID!, limit: Int = 10, offset: Int = 0): [DatahubDataset!]!
-    datahubDataset(id: UUID!): DatahubDataset
+    datahubDatasetsByCatalog(domainId: UUID!, limit: Int = 10, offset: Int = 0): [DatahubDataset!]! # provider
+    datahubDataset(id: UUID!): DatahubDataset                                                       # provider
 
     # ---------------------------
     # Policy Templates / Policies
     # ---------------------------
-    policyTemplates(limit: Int = 10, offset: Int = 0): [PolicyTemplate!]!
-    policyTemplate(id: UUID!): PolicyTemplate
+    policyTemplates(limit: Int = 10, offset: Int = 0): [PolicyTemplate!]!                      # provider
+    policyTemplate(id: UUID!): PolicyTemplate                                                  # provider
 
-    policiesByDataset(datasetId: UUID!): [OdrlOffer!]!
-    policy(id: UUID!): OdrlOffer
+    policiesByDataset(datasetId: UUID!): [OdrlOffer!]!                                         # provider
+    policy(id: UUID!): OdrlOffer                                                               # provider
 
     # ---------------------------
     # Transfer Process
     # ---------------------------
-    transferProcesses(limit: Int = 10, offset: Int = 0): [TransferProcess!]!
-    transferProcess(id: UUID!): TransferProcess
+    transferProcesses(limit: Int = 10, offset: Int = 0): [TransferProcess!]!                    # both
+    transferProcess(id: UUID!): TransferProcess                                                 # both
 
-    transferMessagesByProcess(processId: UUID!, limit: Int = 50, offset: Int = 0): [TransferMessage!]!
-    transferMessage(id: UUID!): TransferMessage
+    transferMessagesByProcess(processId: UUID!, limit: Int = 50, offset: Int = 0): [TransferMessage!]! # both
+    transferMessage(id: UUID!): TransferMessage                                                 # both
 
     dataPlane(id: UUID!): DataplaneSession
 
     # ---------------------------
     # Pub/Sub
     # ---------------------------
-    subscriptions(limit: Int = 10, offset: Int = 0): [Subscription!]!
-    subscription(id: UUID!): Subscription
+    subscriptions(limit: Int = 10, offset: Int = 0): [Subscription!]!                           # both
+    subscription(id: UUID!): Subscription                                                       # both
 
-    notificationsBySubscription(subscriptionId: UUID!, limit: Int = 20, offset: Int = 0): [NotificationSub!]!
-    notification(id: UUID!): NotificationSub
+    notificationsBySubscription(subscriptionId: UUID!, limit: Int = 20, offset: Int = 0): [NotificationSub!]! # both
+    notification(id: UUID!): NotificationSub                                                    # both
 
     # ---------------------------
     # Participants / Users
     # ---------------------------
-    participants(limit: Int = 10, offset: Int = 0): [Participant!]!
-    participant(id: UUID!): Participant
-    agreementsByParticipantId(id: UUID!): [Agreement!]!
+    participants(limit: Int = 10, offset: Int = 0): [Participant!]!                             # both
+    participant(id: UUID!): Participant                                                         # both
+    agreementsByParticipantId(id: UUID!): [Agreement!]!                                         # both
 
     # ---------------------------
     # Auth (DID & OIDC)
     # ---------------------------
-    did(did_url: String!): JSON!
-    oidcToken(url: String!, id: String!, slug: String!, actions: String!): String!
+    did(did_url: String!): JSON!                                                                # both
+    oidcToken(url: String!, id: String!, slug: String!, actions: String!): String!              # both
 }
 
 """

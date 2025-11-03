@@ -17,7 +17,6 @@
  *
  */
 
-use crate::common::core::mates_facade::MatesFacadeTrait;
 use crate::common::schemas::validation::validate_payload_schema;
 use crate::provider::core::catalog_odrl_facade::CatalogOdrlFacadeTrait;
 use crate::provider::core::ds_protocol::ds_protocol_errors::IdsaCNError;
@@ -27,6 +26,7 @@ use axum::async_trait;
 use rainbow_common::config::ConfigRoles;
 use rainbow_common::facades::ssi_auth_facade::SSIAuthFacadeTrait;
 use rainbow_common::mates::Mates;
+use rainbow_common::mates_facade::MatesFacadeTrait;
 use rainbow_common::protocol::contract::contract_ack::ContractAckMessage;
 use rainbow_common::protocol::contract::contract_agreement_verification::ContractAgreementVerificationMessage;
 use rainbow_common::protocol::contract::contract_negotiation_event::{

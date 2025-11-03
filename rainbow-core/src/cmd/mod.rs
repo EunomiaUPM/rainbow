@@ -25,6 +25,7 @@ use clap::{Parser, Subcommand};
 use rainbow_common::config::env_extraction::EnvExtraction;
 use std::cmp::PartialEq;
 use tracing::debug;
+use crate::provider::setup::db_seeding::CoreProviderSeeding;
 
 #[derive(Parser, Debug)]
 #[command(name = "Rainbow Dataspace Connector Core Server")]
@@ -75,7 +76,10 @@ impl CoreCommands {
                     }
                     CoreCliCommands::Setup(args) => {
                         let config = Self::extract_provider_config(args.env_file)?;
-                        CoreProviderMigration::run(&config).await?
+                        CoreProviderMigration::run(&config).await?;
+                        if config.catalog_as_datahub == false {
+                            CoreProviderSeeding::run(&config).await?;
+                        }
                     }
                 }
             }

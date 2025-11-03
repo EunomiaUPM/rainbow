@@ -22,7 +22,7 @@ import {
 } from "shared/src/components/ui/table.tsx";
 import Heading from "../../../../../shared/src/components/ui/heading.tsx";
 import {Button} from "shared/src/components/ui/button.tsx";
-import {Badge} from "shared/src/components/ui/badge.tsx";
+import {Badge, BadgeRole} from "shared/src/components/ui/badge.tsx";
 import {List, ListItem, ListItemKey} from "shared/src/components/ui/list.tsx";
 // Icons
 import {ArrowRight} from "lucide-react";
@@ -66,7 +66,7 @@ function RouteComponent() {
               </ListItem>
               <ListItem>
                 <ListItemKey className={scopedListItemKeyClasses}>Participant Type</ListItemKey>
-                <Badge variant={"role"} role={participant.participant_type}>
+                <Badge variant={"role"} dsrole={participant.participant_type as BadgeRole}>
                   {participant.participant_type}
                 </Badge>
               </ListItem>

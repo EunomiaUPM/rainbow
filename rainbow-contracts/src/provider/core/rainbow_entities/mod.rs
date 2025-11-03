@@ -35,6 +35,7 @@ pub mod rainbow_entities_types;
 #[async_trait]
 pub trait RainbowEntitiesContractNegotiationProviderTrait: Send + Sync {
     async fn get_cn_processes(&self, client_type: Option<String>) -> anyhow::Result<Vec<cn_process::Model>>;
+    async fn get_batch_processes(&self, cn_ids: &Vec<Urn>) -> anyhow::Result<Vec<cn_process::Model>>;
     async fn get_cn_process_by_id(&self, process_id: Urn) -> anyhow::Result<cn_process::Model>;
     async fn get_cn_process_by_provider(&self, provider_id: Urn) -> anyhow::Result<cn_process::Model>;
     async fn get_cn_process_by_consumer(&self, consumer_id: Urn) -> anyhow::Result<cn_process::Model>;

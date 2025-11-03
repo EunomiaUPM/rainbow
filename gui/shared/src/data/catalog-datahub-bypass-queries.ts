@@ -1,6 +1,6 @@
-import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { useContext } from "react";
-import { GlobalInfoContext, GlobalInfoContextType } from "./../context/GlobalInfoContext";
+import {queryOptions, useSuspenseQuery} from "@tanstack/react-query";
+import {useContext} from "react";
+import {GlobalInfoContext, GlobalInfoContextType} from "./../context/GlobalInfoContext";
 
 /**
  *  GET /catalog-bypass/{providerId}/datahub/domains
@@ -19,12 +19,11 @@ export const getDatahubBypassCatalogsOptions = (api_gateway: string, provider_id
   });
 
 export const useGetDatahubBypassCatalogs = (provider_id: UUID) => {
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  console.log("api_gateway:", api_gateway);
-  const { data, isLoading, isError, error } = useSuspenseQuery(
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const {data, isLoading, isError, error} = useSuspenseQuery(
     getDatahubBypassCatalogsOptions(api_gateway, provider_id),
   );
-  return { data, isLoading, isError, error };
+  return {data, isLoading, isError, error};
 };
 
 /**
@@ -55,11 +54,11 @@ export const getDatahubBypassDatasetsByCatalogIdOptions = (
   });
 
 export const useGetDatahubBypassDatasetsByCatalogId = (provider_id: UUID, catalogId: UUID) => {
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  const { data, isLoading, isError, error } = useSuspenseQuery(
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const {data, isLoading, isError, error} = useSuspenseQuery(
     getDatahubBypassDatasetsByCatalogIdOptions(api_gateway, provider_id, catalogId),
   );
-  return { data, isLoading, isError, error };
+  return {data, isLoading, isError, error};
 };
 
 /**
@@ -90,9 +89,9 @@ export const getDatahubBypassDatasetByIdOptions = (
   });
 
 export const useGetDatahubBypassDatasetById = (provider_id: UUID, datasetId: UUID) => {
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  const { data, isLoading, isError, error } = useSuspenseQuery(
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const {data, isLoading, isError, error} = useSuspenseQuery(
     getDatahubBypassDatasetByIdOptions(api_gateway, provider_id, datasetId),
   );
-  return { data, isLoading, isError, error };
+  return {data, isLoading, isError, error};
 };

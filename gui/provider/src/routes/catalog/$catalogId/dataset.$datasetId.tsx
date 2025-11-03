@@ -12,47 +12,25 @@ import {
   TableRow,
 } from "shared/src/components/ui/table.tsx";
 import dayjs from "dayjs";
-import {ArrowRight, Plus, Trash} from "lucide-react";
+import {ArrowRight, Plus} from "lucide-react";
 import {useGetPoliciesByDatasetId} from "shared/src/data/policy-queries.ts";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "shared/src/components/ui/form";
-import {SubmitHandler, useForm} from "react-hook-form";
+import {SubmitHandler} from "react-hook-form";
 import {Button} from "shared/src/components/ui/button.tsx";
-import {Textarea} from "shared/src/components/ui/textarea.tsx";
 import {usePostNewPolicyInDataset} from "shared/src/data/catalog-mutations.ts";
 import Heading from "shared/src/components/ui/heading";
 import {List, ListItem, ListItemDate, ListItemKey} from "shared/src/components/ui/list";
 import {Badge} from "shared/src/components/ui/badge";
-import PolicyComponent from "shared/src/components/PolicyComponent.tsx";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "shared/src/components/ui/accordion";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "shared/src/components/ui/select.tsx";
-import {Input} from "shared/src/components/ui/input";
 import {
   Drawer,
-  DrawerClose,
   DrawerContent,
-  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
 } from "shared/src/components/ui/drawer";
+import {PolicyWrapperNew} from "shared/src/components/PolicyWrapperNew.tsx";
+import {PolicyWrapperShow} from "shared/src/components/PolicyWrapperShow.tsx";
+import {useContext, useState} from "react";
+import {GlobalInfoContext, GlobalInfoContextType} from "shared/src/context/GlobalInfoContext.tsx";
 
 type Inputs = {
   odrl: string;
@@ -63,15 +41,21 @@ function RouteComponent() {
   const {data: dataset} = useGetDatasetById(datasetId);
   const {data: distributions} = useGetDistributionsByDatasetId(datasetId);
   const {data: policies} = useGetPoliciesByDatasetId(datasetId);
-  const {mutate: postNewPolicy, isPending} = usePostNewPolicyInDataset();
-  const form = useForm<Inputs>({
-    defaultValues: {
-      odrl: '{"permission":[{"action":"use","constraint":[{"rightOperand":"user","leftOperand":"did:web:hola.es","operator":"eq"}]}],"obligation":[],"prohibition":[]}',
-    },
-  });
-  const onSubmit: SubmitHandler<Inputs> = (data) => {
-    postNewPolicy({datasetId, body: data.odrl});
-    form.reset();
+  const [open, setOpen] = useState(false);
+  const {mutateAsync: createPolicyAsync} = usePostNewPolicyInDataset();
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const participant = {
+    participant_type: "Provider",
+  };
+  const onSubmit: SubmitHandler<Inputs> = async (data) => {
+    await createPolicyAsync({
+      api_gateway,
+      datasetId,
+      content: {
+        offer: JSON.stringify(data),
+      },
+    });
+    setOpen(false);
   };
 
   return (
@@ -139,371 +123,52 @@ function RouteComponent() {
         </Table>
       </div>
 
-      <div>
-        <div className=" flex flex-row mb-2 items-center">
-          <Heading level="h5" className="mb-0">
-            {" "}
-            ODRL Policies{" "}
-          </Heading>
-          <Drawer direction={"right"}>
-            <DrawerTrigger>
-              <Button variant="default" size="sm" className="mb-1 ml-3">
-                Add ODRL policy
-                <Plus className=""/>
-              </Button>
-            </DrawerTrigger>
-            <DrawerContent>
-              <DrawerHeader className="px-8">
-                <DrawerTitle>
-                  <Heading level="h4" className="text-curren mb-0 ">
-                    New ODRL Policy
-                  </Heading>
-                  <p className="font-normal text-brand-sky">
-                    {" "}
-                    for Dataset
-                    <Badge variant="info" size="sm" className="ml-2">
-                      {" "}
-                      {dataset["@id"].slice(9, 29) + "[...]"}
-                    </Badge>
-                  </p>
-                </DrawerTitle>
-              </DrawerHeader>
-              <div className="px-8 overflow-y-auto ">
-                <p className="mb-5">
-                  Add permissions, obligations and prohibitions to apply to the dataset. Select the
-                  action and constraints for each permission, obligation or prohibition.
-                </p>
-                <div className="flex flex-col gap-4">
-                  <Accordion type="single" collapsible className="w-full">
-                    <AccordionItem
-                      value="item-1"
-                      className="bg-success-500/10 border border-success-600/20"
-                    >
-                      <AccordionTrigger
-                        className="text-white/70 flex bg-success-400/25 uppercase overflow-hidden rounded-md data-[state=open]:rounded-b-none">
-                        <div className="flex items-center w-full">
-                          <p className="text-current">permission</p>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="relative">
-                        <Button
-                          className="border-b border-white/15"
-                          policy="permission"
-                          variant="outline"
-                          size="xs"
-                        >
-                          <Plus/>
-                          Add permission
-                        </Button>
-                        <div>
-                          <div className="policy-item-create">
-                            <div className="flex justify-between">
-                              <p className="mb-2"> Action: </p>
-                              <Button variant="icon_destructive" size="xs" className="ml-4 border">
-                                <Trash className="mb-0.5"/>
-                                Remove permission
-                              </Button>
-                            </div>
-                            <Select>
-                              <SelectTrigger className="w-[240px]">
-                                <SelectValue placeholder="Select action"/>
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="light">Read</SelectItem>
-                                <SelectItem value="dark">Analyze</SelectItem>
-                                <SelectItem value="system">Share</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <div className="h-6"></div>
-                            <p className="mb-2"> Constraints: </p>
-                            <div className="flex flex-col gap-2">
-                              <div className="constraint-create flex gap-3">
-                                <Select>
-                                  <div className="flex flex-col">
-                                    <p className="text-xs text-gray-400 mb-1"> Left Operand: </p>
-                                    <SelectTrigger className="w-[180px]">
-                                      <SelectValue placeholder="Select item"/>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="light">Date</SelectItem>
-                                      <SelectItem value="dark">User</SelectItem>
-                                      <SelectItem value="system">Location</SelectItem>
-                                    </SelectContent>
-                                  </div>
-                                </Select>
-                                <Select>
-                                  <div className="flex flex-col">
-                                    <p className="text-xs text-gray-400 mb-1"> Operator: </p>
-                                    <SelectTrigger className="w-[140px]">
-                                      <SelectValue placeholder="Select operator"/>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="light">eq</SelectItem>
-                                      <SelectItem value="dark">neq</SelectItem>
-                                      <SelectItem value="system">gteq</SelectItem>
-                                    </SelectContent>
-                                  </div>
-                                </Select>
-                                <Select>
-                                  <div className="flex flex-col">
-                                    <p className="text-xs text-gray-400 mb-1"> Right Operand: </p>
-                                    <Input placeholder="Type value"/>
-                                  </div>
-                                </Select>
-                                <div className="flex flex-col">
-                                  <p className="text-xs text-gray-400 mb-1">Unity</p>
-                                  <p className="mt-2">Unity</p>
-                                </div>
-                                <Button
-                                  variant="icon_destructive"
-                                  size="icon_sm"
-                                  className="ml-2 self-end mb-1"
-                                >
-                                  <Trash className="mb-0.5"/>
-                                </Button>
-                              </div>
-                            </div>
-                            <Button size="xs" variant="outline" className="mt-3">
-                              <Plus/>
-                              Add constraint
-                            </Button>
-                          </div>
-                          <div className="policy-item-create">
-                            <div className="flex justify-between">
-                              <p className="mb-2"> Action: </p>
-                              <Button variant="icon_destructive" size="xs" className="ml-4">
-                                <Trash className="mb-0.5"/>
-                                Remove permission
-                              </Button>
-                            </div>
-                            <Select>
-                              <SelectTrigger className="w-[180px]">
-                                <SelectValue placeholder="Select action"/>
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="light">Read</SelectItem>
-                                <SelectItem value="dark">Analyze</SelectItem>
-                                <SelectItem value="system">Share</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <div className="h-6"></div>
-                            <p className="mb-2"> Constraints: </p>
-                            <div className="flex flex-col gap-2">
-                              <div className="constraint-create flex gap-3">
-                                <Select>
-                                  <div className="flex flex-col">
-                                    <p className="text-xs text-gray-400 mb-1"> Left Operand: </p>
-                                    <SelectTrigger className="w-[180px]">
-                                      <SelectValue placeholder="Select an item"/>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="light">Date</SelectItem>
-                                      <SelectItem value="dark">User</SelectItem>
-                                      <SelectItem value="system">Location</SelectItem>
-                                    </SelectContent>
-                                  </div>
-                                </Select>
-                                <Select>
-                                  <div className="flex flex-col">
-                                    <p className="text-xs text-gray-400 mb-1"> Operator: </p>
-                                    <SelectTrigger className="w-[140px]">
-                                      <SelectValue placeholder="Select an operator"/>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="light">Date</SelectItem>
-                                      <SelectItem value="dark">User</SelectItem>
-                                      <SelectItem value="system">Location</SelectItem>
-                                    </SelectContent>
-                                  </div>
-                                </Select>
-                                <Select>
-                                  <div className="flex flex-col">
-                                    <p className="text-xs text-gray-400 mb-1"> Right Operand: </p>
-                                    <Input placeholder="Type value"/>
-                                  </div>
-                                </Select>
-                                <div className="flex flex-col">
-                                  <p className="text-xs text-gray-400 mb-1">Unity</p>
-                                  <p className="mt-2">Unity</p>
-                                </div>
-                                <Button
-                                  variant="icon_destructive"
-                                  size="icon_sm"
-                                  className="ml-2 self-end mb-1"
-                                >
-                                  <Trash className="mb-0.5"/>
-                                </Button>
-                              </div>
-                              <div className="constraint-create flex gap-3">
-                                <Select>
-                                  <div className="flex flex-col">
-                                    <p className="text-xs text-gray-400 mb-1"> Left Operand: </p>
-                                    <SelectTrigger className="w-[180px]">
-                                      <SelectValue placeholder="Select an item"/>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="light">Date</SelectItem>
-                                      <SelectItem value="dark">User</SelectItem>
-                                      <SelectItem value="system">Location</SelectItem>
-                                    </SelectContent>
-                                  </div>
-                                </Select>
-                                <Select>
-                                  <div className="flex flex-col">
-                                    <p className="text-xs text-gray-400 mb-1"> Operator: </p>
-                                    <SelectTrigger className="w-[140px]">
-                                      <SelectValue placeholder="Select an operator"/>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="light">Date</SelectItem>
-                                      <SelectItem value="dark">User</SelectItem>
-                                      <SelectItem value="system">Location</SelectItem>
-                                    </SelectContent>
-                                  </div>
-                                </Select>
-                                <Select>
-                                  <div className="flex flex-col">
-                                    <p className="text-xs text-gray-400 mb-1"> Right Operand: </p>
-                                    <Input placeholder="Type value"/>
-                                  </div>
-                                </Select>
-                                <div className="flex flex-col">
-                                  <p className="text-xs text-gray-400 mb-1">Unity</p>
-                                  <p className="mt-2">Unity</p>
-                                </div>
-                                <Button
-                                  variant="icon_destructive"
-                                  size="icon_sm"
-                                  className="ml-2 self-end mb-1"
-                                >
-                                  <Trash className="mb-0.5"/>
-                                </Button>
-                              </div>
-                            </div>
-                            <Button size="xs" variant="outline" className="mt-3">
-                              <Plus/>
-                              Add constraint
-                            </Button>
-                          </div>
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-                  <Accordion type="single" collapsible className="w-full">
-                    <AccordionItem
-                      value="item-1"
-                      className="bg-warn-500/10 border border-warn-600/20"
-                    >
-                      <AccordionTrigger
-                        className="text-white/70 flex bg-warn-400/25 uppercase overflow-hidden rounded-md data-[state=open]:rounded-b-none">
-                        <div className="flex items-center w-full">
-                          <p className="text-current">obligation</p>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="relative">content obligation</AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-                  <Accordion type="single" collapsible className="w-full">
-                    <AccordionItem
-                      value="item-1"
-                      className="bg-danger-500/10 border border-danger-600/20"
-                    >
-                      <AccordionTrigger
-                        className="text-white/70 flex bg-danger-500/25 uppercase overflow-hidden rounded-md data-[state=open]:rounded-b-none">
-                        <div className="flex items-center w-full">
-                          <p className="text-current">prohibition</p>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="relative">content prohibition</AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-                </div>
-                <div className="h-6"></div>
-                <p className="mb-5">
-                  ...or paste the ODRL policy content directly in the textarea below.
-                </p>
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)}>
-                    <FormField
-                      disabled={isPending}
-                      control={form.control}
-                      name="odrl"
-                      render={({field}) => (
-                        <FormItem>
-                          {/* <FormLabel>Odrl</FormLabel> */}
-                          <FormControl>
-                            <Textarea className="h-24" {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            <i>Type or paste the ODRL policy content here.</i>
-                          </FormDescription>
-                          <FormMessage/>
-                        </FormItem>
-                      )}
-                    />
-                    {/* <Button type="submit">
-                      Enviar {isPending && <span>- loading...</span>}
-                    </Button> */}
-                  </form>
-                </Form>
-                <div className="h-6"></div>
-              </div>
-              <DrawerFooter>
-                <DrawerClose className="flex justify-start gap-4">
-                  <Button variant="ghost" className="w-40">
-                    Cancel
-                  </Button>
-                  <Button variant="default" className="w-40">
-                    Save policy
-                  </Button>
-                  {/* <Button className="w-40">Add Participant</Button> */}
-                </DrawerClose>
-              </DrawerFooter>
-            </DrawerContent>
-          </Drawer>
-        </div>
-        <div className="gridColsLayout">
-          {policies &&
-            policies.map((policy) => (
-              <List
-                className=" border border-white/30 bg-white/10 px-4 py-2 rounded-md justify-start">
-                <div className="flex">
-                  <Heading level="h5" className="flex gap-3">
-                    <div>Policy with ID</div>
-                    <Badge variant="info" className="h-6">
-                      {policy["@id"].slice(9, 29) + "[...]"}
-                    </Badge>
-                  </Heading>
-                </div>
-                <ListItem>
-                  <ListItemKey>Policy Target</ListItemKey>
-                  <p>{policy["@type"]}</p>
-                </ListItem>
 
-                <ListItem>
-                  <ListItemKey> Profile</ListItemKey>
-                  <p className="whitespace-normal"> {JSON.stringify(policy.profile)}</p>
-                </ListItem>
-                <ListItem>
-                  <ListItemKey> Target</ListItemKey>
-                  <p> {policy.target.slice(9)}</p>
-                </ListItem>
-                <div className="h-5"></div>
-                <Heading level="h6"> ODRL CONTENT</Heading>
-
-                <div className="flex flex-col gap-2 mb-2">
-                  <PolicyComponent policyItem={policy.permission} variant={"permission"}/>
-                  <PolicyComponent policyItem={policy.obligation} variant={"obligation"}/>
-
-                  <PolicyComponent policyItem={policy.prohibition} variant={"prohibition"}/>
+      <div className=" flex flex-row mb-2 items-center">
+        <Heading level="h5" className="mb-0">
+          {" "}
+          ODRL Policies{" "}
+        </Heading>
+        <Drawer direction={"right"} open={open} onOpenChange={(open) => setOpen(open)}>
+          <DrawerTrigger>
+            <Button variant="default" size="sm" className="mb-1 ml-3">
+              Add ODRL policy
+              <Plus className=""/>
+            </Button>
+          </DrawerTrigger>
+          <DrawerContent>
+            <DrawerHeader className="px-8">
+              <DrawerTitle>
+                <Heading level="h4" className="text-curren mb-0 ">
+                  New ODRL Policy
+                </Heading>
+                <div className="font-normal text-brand-sky">
+                  for Dataset
+                  <Badge variant="info" size="sm" className="ml-2">
+                    {dataset["@id"].slice(9, 29) + "[...]"}
+                  </Badge>
                 </div>
-              </List>
-            ))}
-        </div>
+              </DrawerTitle>
+            </DrawerHeader>
+            <PolicyWrapperNew onSubmit={onSubmit}/>
+          </DrawerContent>
+        </Drawer>
       </div>
-      <div>
-        <div className="h-6"></div>
+
+      <div className="grid grid-cols-2 gap-4">
+        {policies &&
+          policies.map((policy) => (
+            <PolicyWrapperShow
+              key={policy["@id"]}
+              policy={policy}
+              participant={participant}
+              datasetId={datasetId}
+              catalogId={undefined}
+              datasetName={""}
+            />
+          ))}
       </div>
+
     </div>
   );
 }

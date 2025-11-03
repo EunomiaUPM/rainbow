@@ -1,11 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { getCatalogsOptions } from "shared/src/data/catalog-queries.ts";
+import {createFileRoute} from "@tanstack/react-router";
 import {
   useGetNotificationsBySubscriptionId,
   useGetSubscriptionById,
 } from "shared/src/data/pubsub-queries.ts";
-import { PubSubContext } from "shared/src/context/PubSubContext.tsx";
-import { useContext } from "react";
+import {PubSubContext} from "shared/src/context/PubSubContext.tsx";
+import {useContext} from "react";
 import {
   Table,
   TableBody,
@@ -17,9 +16,9 @@ import {
 import dayjs from "dayjs";
 
 const RouteComponent = () => {
-  const { subscriptionId } = useContext(PubSubContext)!;
-  const { data: subscription } = useGetSubscriptionById(subscriptionId!);
-  const { data: notifications } = useGetNotificationsBySubscriptionId(subscriptionId!);
+  const {subscriptionId} = useContext(PubSubContext)!;
+  const {data: subscription} = useGetSubscriptionById(subscriptionId!);
+  const {data: notifications} = useGetNotificationsBySubscriptionId(subscriptionId!);
   return (
     <div className="space-y-4 pb-4">
       <h1 className="text-xl font-bold">Subscription</h1>
@@ -96,7 +95,4 @@ const RouteComponent = () => {
 export const Route = createFileRoute("/subscriptions/")({
   component: RouteComponent,
   pendingComponent: () => <div>Loading...</div>,
-  loader: async ({ context: { queryClient } }) => {
-    return await queryClient.ensureQueryData(getCatalogsOptions());
-  },
 });

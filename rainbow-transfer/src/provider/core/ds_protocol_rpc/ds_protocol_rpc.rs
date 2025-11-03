@@ -17,11 +17,9 @@
  *
  */
 
-use crate::common::core::mates_facade::MatesFacadeTrait;
+use crate::common::errors::transfer_errors::TransferErrors;
 use crate::provider::core::data_plane_facade::DataPlaneProviderFacadeTrait;
 use crate::provider::core::data_service_resolver_facade::DataServiceFacadeTrait;
-use crate::provider::core::ds_protocol::ds_protocol_err::DSProtocolTransferProviderErrors;
-use crate::provider::core::ds_protocol_rpc::ds_protocol_rpc_err::DSRPCTransferProviderErrors;
 use crate::provider::core::ds_protocol_rpc::ds_protocol_rpc_types::{
     DSRPCTransferProviderCompletionRequest, DSRPCTransferProviderCompletionResponse, DSRPCTransferProviderStartRequest,
     DSRPCTransferProviderStartResponse, DSRPCTransferProviderSuspensionRequest,
@@ -32,7 +30,10 @@ use crate::provider::core::ds_protocol_rpc::DSRPCTransferProviderTrait;
 use anyhow::{anyhow, bail};
 use axum::async_trait;
 use rainbow_common::err::transfer_err::TransferErrorType;
+use rainbow_common::errors::helpers::{BadFormat, MissingAction};
+use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::mates::Mates;
+use rainbow_common::mates_facade::MatesFacadeTrait;
 use rainbow_common::protocol::transfer::transfer_completion::TransferCompletionMessage;
 use rainbow_common::protocol::transfer::transfer_process::TransferProcessMessage;
 use rainbow_common::protocol::transfer::transfer_protocol_trait::DSProtocolTransferMessageTrait;
@@ -53,39 +54,37 @@ use reqwest::Client;
 use serde_json::{json, Value};
 use std::sync::Arc;
 use std::time::Duration;
-use tracing::debug;
+use tracing::{debug, error};
 use urn::Urn;
 
-pub struct DSRPCTransferProviderService<T, V, W, X>
+pub struct DSRPCTransferProviderService<T, U, V, W>
 where
     T: TransferProviderRepoFactory + Send + Sync,
-// U: DataServiceFacadeTrait + Send + Sync,
-    V: DataPlaneProviderFacadeTrait + Send + Sync,
-    W: RainbowEventsNotificationTrait + Sync + Send,
-    X: MatesFacadeTrait + Send + Sync,
+    U: DataPlaneProviderFacadeTrait + Send + Sync,
+    V: RainbowEventsNotificationTrait + Sync + Send,
+    W: MatesFacadeTrait + Send + Sync,
 {
     transfer_repo: Arc<T>,
     _data_service_facade: Arc<dyn DataServiceFacadeTrait + Send + Sync>,
-    data_plane_facade: Arc<V>,
-    notification_service: Arc<W>,
+    data_plane_facade: Arc<U>,
+    notification_service: Arc<V>,
     client: Client,
-    mates_facade: Arc<X>,
+    mates_facade: Arc<W>,
 }
 
-impl<T, V, W, X> DSRPCTransferProviderService<T, V, W, X>
+impl<T, U, V, W> DSRPCTransferProviderService<T, U, V, W>
 where
     T: TransferProviderRepoFactory + Send + Sync,
-// U: DataServiceFacadeTrait + Send + Sync,
-    V: DataPlaneProviderFacadeTrait + Send + Sync,
-    W: RainbowEventsNotificationTrait + Sync + Send,
-    X: MatesFacadeTrait + Send + Sync,
+    U: DataPlaneProviderFacadeTrait + Send + Sync,
+    V: RainbowEventsNotificationTrait + Sync + Send,
+    W: MatesFacadeTrait + Send + Sync,
 {
     pub fn new(
         transfer_repo: Arc<T>,
         _data_service_facade: Arc<dyn DataServiceFacadeTrait + Send + Sync>,
-        data_plane_facade: Arc<V>,
-        notification_service: Arc<W>,
-        mates_facade: Arc<X>,
+        data_plane_facade: Arc<U>,
+        notification_service: Arc<V>,
+        mates_facade: Arc<W>,
     ) -> Self {
         let client =
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
@@ -94,11 +93,17 @@ where
 
     /// Get consumer mate based in id
     async fn get_consumer_mate(&self, consumer_participant_id: &String) -> anyhow::Result<Mates> {
+        debug!("DSProtocolRPC Service: get_consumer_mate");
+
         let mate = self
             .mates_facade
             .get_mate_by_id(consumer_participant_id.clone())
             .await
-            .map_err(|e| anyhow!("Error parsing mate: {}", e.to_string()))?;
+            .map_err(|e| {
+                let e = CommonErrors::format_new(BadFormat::Received, e.to_string().into());
+                error!("{}", e.log());
+                anyhow!(e)
+            })?;
         Ok(mate)
     }
 
@@ -108,47 +113,42 @@ where
         consumer_pid: &Urn,
         provider_pid: &Urn,
     ) -> anyhow::Result<transfer_process::Model> {
+        debug!("DSProtocolRPC Service: validate_and_get_correlated_transfer_process");
+
         let provider_process = self
             .transfer_repo
             .get_transfer_process_by_provider(provider_pid.clone())
             .await
             .map_err(|e| {
-                DSRPCTransferProviderErrors::DSProtocolTransferProviderError(DSProtocolTransferProviderErrors::DbErr(e))
+                let e = CommonErrors::format_new(BadFormat::Received, e.to_string().into());
+                error!("{}", e.log());
+                anyhow!(e)
             })?
-            .ok_or(
-                DSRPCTransferProviderErrors::DSProtocolTransferProviderError(
-                    DSProtocolTransferProviderErrors::TransferProcessNotFound {
-                        provider_pid: Some(provider_pid.clone()),
-                        consumer_pid: Some(consumer_pid.clone()),
-                    },
-                ),
-            )?;
+            .ok_or_else(|| {
+                let e = CommonErrors::missing_resource_new(provider_pid.to_string(), "Transfer process doesn't exist".to_string().into());
+                error!("{}", e.log());
+                anyhow!(e)
+            })?;
 
         let consumer_process = self
             .transfer_repo
             .get_transfer_process_by_consumer(consumer_pid.clone())
             .await
             .map_err(|e| {
-                DSRPCTransferProviderErrors::DSProtocolTransferProviderError(DSProtocolTransferProviderErrors::DbErr(e))
+                let e = CommonErrors::format_new(BadFormat::Received, e.to_string().into());
+                error!("{}", e.log());
+                anyhow!(e)
             })?
-            .ok_or(
-                DSRPCTransferProviderErrors::DSProtocolTransferProviderError(
-                    DSProtocolTransferProviderErrors::TransferProcessNotFound {
-                        provider_pid: Some(provider_pid.clone()),
-                        consumer_pid: Some(consumer_pid.clone()),
-                    },
-                ),
-            )?;
+            .ok_or_else(|| {
+                let e = CommonErrors::missing_resource_new(consumer_pid.to_string(), "Transfer process doesn't exist".to_string().into());
+                error!("{}", e.log());
+                anyhow!(e)
+            })?;
 
         if provider_process.provider_pid != consumer_process.provider_pid {
-            bail!(
-                DSRPCTransferProviderErrors::DSProtocolTransferProviderError(
-                    DSProtocolTransferProviderErrors::TransferProcessNotFound {
-                        provider_pid: Some(provider_pid.clone()),
-                        consumer_pid: Some(consumer_pid.clone()),
-                    }
-                )
-            );
+            let e = CommonErrors::format_new(BadFormat::Received, "ConsumerPid and ProviderPid don't coincide".to_string().to_string().into());
+            error!("{}", e.log());
+            bail!(e);
         }
         Ok(provider_process)
     }
@@ -157,6 +157,8 @@ where
         &self,
         message: &M,
     ) -> anyhow::Result<()> {
+        debug!("DSProtocolRPC Service: transition_validation");
+
         // Negotiation state
         // For RPC consumer_pid and provider_pid are always some
         let _consumer_pid = message.get_consumer_pid()?.unwrap().to_owned();
@@ -172,79 +174,72 @@ where
             TransferMessageTypes::TransferStartMessage => match transfer_state {
                 TransferState::REQUESTED => {}
                 TransferState::STARTED => {
-                    bail!(TransferErrorType::ProtocolError {
-                        state: TransferState::STARTED,
-                        message_type: "Start message is not allowed in STARTED state".to_string(),
-                    })
+                    let e = TransferErrors::protocol_new("Start message is not allowed in STARTED state".to_string().into());
+                    error!("{}", e.log());
+                    bail!(e);
                 }
                 TransferState::SUSPENDED => {
                     // Transfer state attribute check.
                     match transfer_state_attribute {
                         // If suspended by consumer, not able to start from provider
-                        TransferStateAttribute::ByConsumer => bail!(TransferErrorType::ProtocolError {
-                            state: TransferState::SUSPENDED,
-                            message_type:
-                                "State SUSPENDED was established by Consumer, Provider is not allowed to change it"
-                                    .to_string(),
-                        }),
+                        TransferStateAttribute::ByConsumer => {
+                            let e = TransferErrors::protocol_new("State SUSPENDED was established by Consumer, Provider is not allowed to change it".to_string().into());
+                            error!("{}", e.log());
+                            bail!(e);
+                        }
                         TransferStateAttribute::OnRequest => {}
                         TransferStateAttribute::ByProvider => {}
                     }
                 }
                 TransferState::COMPLETED => {
-                    bail!(TransferErrorType::ProtocolError {
-                        state: TransferState::COMPLETED,
-                        message_type: "Start message is not allowed in COMPLETED state".to_string(),
-                    })
+                    let e = TransferErrors::protocol_new("Start message is not allowed in COMPLETED state".to_string().into());
+                    error!("{}", e.log());
+                    bail!(e);
                 }
                 TransferState::TERMINATED => {
-                    bail!(TransferErrorType::ProtocolError {
-                        state: TransferState::TERMINATED,
-                        message_type: "Start message is not allowed in TERMINATED state".to_string(),
-                    })
+                    let e = TransferErrors::protocol_new("Start message is not allowed in TERMINATED state".to_string().into());
+                    error!("{}", e.log());
+                    bail!(e);
                 }
             },
             // 4. Transfer suspension transition check
             TransferMessageTypes::TransferSuspensionMessage => match transfer_state {
                 TransferState::REQUESTED => {
-                    bail!(TransferErrorType::ProtocolError {
-                        state: TransferState::REQUESTED,
-                        message_type: "Suspension message is not allowed in REQUESTED state".to_string(),
-                    })
+                    let e = TransferErrors::protocol_new("Suspension message is not allowed in REQUESTED state".to_string().into());
+                    error!("{}", e.log());
+                    bail!(e);
                 }
                 TransferState::STARTED => {}
                 TransferState::SUSPENDED => {
-                    bail!(TransferErrorType::TransferProcessAlreadySuspendedError)
+                    let e = TransferErrors::protocol_new("Transfer already suspended".to_string().into());
+                    error!("{}", e.log());
+                    bail!(e);
                 }
                 TransferState::COMPLETED => {
-                    bail!(TransferErrorType::ProtocolError {
-                        state: TransferState::COMPLETED,
-                        message_type: "Suspension message is not allowed in COMPLETED state".to_string(),
-                    })
+                    let e = TransferErrors::protocol_new("Suspension message is not allowed in COMPLETED state".to_string().into());
+                    error!("{}", e.log());
+                    bail!(e);
                 }
                 TransferState::TERMINATED => {
-                    bail!(TransferErrorType::ProtocolError {
-                        state: TransferState::TERMINATED,
-                        message_type: "Suspension message is not allowed in TERMINATED state".to_string(),
-                    })
+                    let e = TransferErrors::protocol_new("Suspension message is not allowed in TERMINATED state".to_string().into());
+                    error!("{}", e.log());
+                    bail!(e);
                 }
             },
             // 4. Transfer completion transition check
             TransferMessageTypes::TransferCompletionMessage => match transfer_state {
                 TransferState::REQUESTED => {
-                    bail!(TransferErrorType::ProtocolError {
-                        state: TransferState::REQUESTED,
-                        message_type: "Completion message is not allowed in REQUESTED state".to_string(),
-                    })
+                    let e = TransferErrors::protocol_new("Completion message is not allowed in REQUESTED state".to_string().into());
+                    error!("{}", e.log());
+                    bail!(e);
                 }
                 TransferState::STARTED => {}
                 TransferState::SUSPENDED => {}
                 TransferState::COMPLETED => {}
                 TransferState::TERMINATED => {
-                    bail!(TransferErrorType::ProtocolError {
-                        state: TransferState::TERMINATED,
-                        message_type: "Completion message is not allowed in TERMINATED state".to_string(),
-                    })
+                    let e = TransferErrors::protocol_new("Completion message is not allowed in TERMINATED state".to_string().into());
+                    error!("{}", e.log());
+                    bail!(e);
                 }
             },
             // 4. Transfer termination transition check
@@ -253,15 +248,18 @@ where
                 TransferState::STARTED => {}
                 TransferState::SUSPENDED => {}
                 TransferState::COMPLETED => {
-                    bail!(TransferErrorType::ProtocolError {
-                        state: TransferState::COMPLETED,
-                        message_type: "Termination message is not allowed in COMPLETED state".to_string(),
-                    })
+                    let e = TransferErrors::protocol_new("Completion message is not allowed in COMPLETED state".to_string().into());
+                    error!("{}", e.log());
+                    bail!(e);
                 }
                 TransferState::TERMINATED => {}
             },
             // 4. Rest of messages not allowed
-            _ => bail!(TransferErrorType::MessageTypeNotAcceptedError),
+            _ => {
+                let e = TransferErrors::protocol_new("This message type is not allowed".to_string().into());
+                error!("{}", e.log());
+                bail!(e);
+            }
         }
         Ok(())
     }
@@ -275,10 +273,8 @@ where
         error_context_provider_pid: Option<Urn>,
         error_context_consumer_pid: Option<Urn>,
     ) -> anyhow::Result<TransferProcessMessage> {
-        debug!(
-            "Sending message to consumer at URL: {}, Payload: {:?}",
-            target_url, message_payload
-        );
+        debug!("DSProtocolRPC Service: send_protocol_message_to_consumer");
+
         let response = self
             .client
             .post(&target_url)
@@ -286,33 +282,43 @@ where
             .json(message_payload)
             .send()
             .await
-            .map_err(|_e| DSRPCTransferProviderErrors::ConsumerNotReachable {
-                provider_pid: error_context_provider_pid.clone(),
-                consumer_pid: error_context_consumer_pid.clone(),
+            .map_err(|_e| {
+                let e = CommonErrors::consumer_new(
+                    target_url.clone().into(),
+                    "POST".to_string().into(),
+                    None,
+                    "Consumer not reachable".to_string().into(),
+                );
+                error!("{}", e.log());
+                anyhow!(e)
             })?;
 
         let status = response.status();
         if !status.is_success() {
             // Attempt to get error details from consumer if available
             let consumer_error = response.json::<Value>().await.unwrap_or_else(|e| json!({"error": format!("{}", e)}));
-            bail!(DSRPCTransferProviderErrors::ConsumerInternalError {
-                provider_pid: error_context_provider_pid.clone(),
-                consumer_pid: error_context_consumer_pid.clone(),
-                error: Some(consumer_error),
-            });
+            let e = CommonErrors::consumer_new(
+                target_url.clone().into(),
+                "POST".to_string().into(),
+                None,
+                format!("Consumer Internal error: {}", consumer_error).into(),
+            );
+            error!("{}", e.log());
+            bail!(e);
         }
 
         let transfer_process_msg = response.json::<TransferProcessMessage>().await.map_err(|_e| {
-            DSRPCTransferProviderErrors::ConsumerResponseNotSerializable {
-                provider_pid: error_context_provider_pid.clone(),
-                consumer_pid: error_context_consumer_pid.clone(),
-            }
+            let e = CommonErrors::format_new(BadFormat::Received, "TransferProcessMessage not serializable".to_string().into());
+            error!("{}", e.log());
+            anyhow!(e)
         })?;
         Ok(transfer_process_msg)
     }
 
     /// Broadcasts a notification about a transfer process event.
     async fn notify_subscribers(&self, subcategory: String, message: Value) -> anyhow::Result<()> {
+        debug!("DSProtocolRPC Service: notify_subscribers");
+
         self.notification_service
             .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
                 category: RainbowEventsNotificationMessageCategory::TransferProcess,
@@ -327,18 +333,19 @@ where
 }
 
 #[async_trait]
-impl<T, V, W, X> DSRPCTransferProviderTrait for DSRPCTransferProviderService<T, V, W, X>
+impl<T, U, V, W> DSRPCTransferProviderTrait for DSRPCTransferProviderService<T, U, V, W>
 where
     T: TransferProviderRepoFactory + Send + Sync,
-// U: DataServiceFacadeTrait + Send + Sync,
-    V: DataPlaneProviderFacadeTrait + Send + Sync,
-    W: RainbowEventsNotificationTrait + Sync + Send,
-    X: MatesFacadeTrait + Send + Sync,
+    U: DataPlaneProviderFacadeTrait + Send + Sync,
+    V: RainbowEventsNotificationTrait + Sync + Send,
+    W: MatesFacadeTrait + Send + Sync,
 {
     async fn setup_start(
         &self,
         input: DSRPCTransferProviderStartRequest,
     ) -> anyhow::Result<DSRPCTransferProviderStartResponse> {
+        debug!("DSProtocolRPC Service: setup_start");
+
         let DSRPCTransferProviderStartRequest {
             consumer_participant_id,
             consumer_callback,
@@ -349,7 +356,11 @@ where
         // 0. fetch participant
         let consumer_mate = self.get_consumer_mate(&consumer_participant_id).await?;
         let consumer_callback = consumer_callback.unwrap_or(consumer_mate.base_url.unwrap());
-        let consumer_token = consumer_mate.token.ok_or(anyhow!("No token"))?;
+        let consumer_token = consumer_mate.token.ok_or_else(|| {
+            let e = CommonErrors::missing_action_new("Missing token".to_string(), MissingAction::Token, "No auth token".to_string().into());
+            error!("{}", e.log());
+            anyhow!(e)
+        })?;
         // 1. Validate fields and correlation
         let tp = self.validate_and_get_correlated_transfer_process(&consumer_pid, &provider_pid).await?;
         self.transition_validation(&input).await?;
@@ -363,7 +374,6 @@ where
         };
         // 3. Send message to consumer
         let consumer_callback = consumer_callback.strip_suffix('/').unwrap_or(consumer_callback.as_str());
-        debug!("{}", consumer_callback);
         let consumer_url = format!(
             "{}/transfers/{}/start",
             consumer_callback,
@@ -396,7 +406,9 @@ where
             )
             .await
             .map_err(|e| {
-                DSRPCTransferProviderErrors::DSProtocolTransferProviderError(DSProtocolTransferProviderErrors::DbErr(e))
+                let e_ = CommonErrors::database_new(e.to_string().into());
+                error!("{}", e_.log());
+                anyhow!(e_)
             })?;
         // persist message
         let message = self
@@ -412,7 +424,9 @@ where
             )
             .await
             .map_err(|e| {
-                DSRPCTransferProviderErrors::DSProtocolTransferProviderError(DSProtocolTransferProviderErrors::DbErr(e))
+                let e_ = CommonErrors::database_new(e.to_string().into());
+                error!("{}", e_.log());
+                anyhow!(e_)
             })?;
         // 5. Data plane facade hook
         self.data_plane_facade.on_transfer_start(provider_pid.clone()).await?;
@@ -452,7 +466,11 @@ where
         // 0. fetch participant
         let consumer_mate = self.get_consumer_mate(&consumer_participant_id).await?;
         let consumer_callback = consumer_callback.unwrap_or(consumer_mate.base_url.unwrap());
-        let consumer_token = consumer_mate.token.ok_or(anyhow!("No token"))?;
+        let consumer_token = consumer_mate.token.ok_or_else(|| {
+            let e = CommonErrors::missing_action_new("Missing token".to_string(), MissingAction::Token, "No auth token".to_string().into());
+            error!("{}", e.log());
+            anyhow!(e)
+        })?;
         // 1. Validate fields and correlation
         let _current_process_model =
             self.validate_and_get_correlated_transfer_process(&consumer_pid, &provider_pid).await?;
@@ -494,7 +512,9 @@ where
             )
             .await
             .map_err(|e| {
-                DSRPCTransferProviderErrors::DSProtocolTransferProviderError(DSProtocolTransferProviderErrors::DbErr(e))
+                let e_ = CommonErrors::database_new(e.to_string().into());
+                error!("{}", e_.log());
+                anyhow!(e_)
             })?;
         // persist message
         let message = self
@@ -510,7 +530,9 @@ where
             )
             .await
             .map_err(|e| {
-                DSRPCTransferProviderErrors::DSProtocolTransferProviderError(DSProtocolTransferProviderErrors::DbErr(e))
+                let e_ = CommonErrors::database_new(e.to_string().into());
+                error!("{}", e_.log());
+                anyhow!(e_)
             })?;
         // 5. Data plane facade hook
         self.data_plane_facade.on_transfer_suspension(provider_pid.clone()).await?;
@@ -543,7 +565,11 @@ where
         // 0. fetch participant
         let consumer_mate = self.get_consumer_mate(&consumer_participant_id).await?;
         let consumer_callback = consumer_callback.unwrap_or(consumer_mate.base_url.unwrap());
-        let consumer_token = consumer_mate.token.ok_or(anyhow!("No token"))?;
+        let consumer_token = consumer_mate.token.ok_or_else(|| {
+            let e = CommonErrors::missing_action_new("Missing token".to_string(), MissingAction::Token, "No auth token".to_string().into());
+            error!("{}", e.log());
+            anyhow!(e)
+        })?;
         // 1. Validate fields and correlation
         let _current_process_model =
             self.validate_and_get_correlated_transfer_process(&consumer_pid, &provider_pid).await?;
@@ -583,7 +609,9 @@ where
             )
             .await
             .map_err(|e| {
-                DSRPCTransferProviderErrors::DSProtocolTransferProviderError(DSProtocolTransferProviderErrors::DbErr(e))
+                let e_ = CommonErrors::database_new(e.to_string().into());
+                error!("{}", e_.log());
+                anyhow!(e_)
             })?;
         // persist message
         let message = self
@@ -599,7 +627,9 @@ where
             )
             .await
             .map_err(|e| {
-                DSRPCTransferProviderErrors::DSProtocolTransferProviderError(DSProtocolTransferProviderErrors::DbErr(e))
+                let e_ = CommonErrors::database_new(e.to_string().into());
+                error!("{}", e_.log());
+                anyhow!(e_)
             })?;
         // 6. Data plane facade hook
         self.data_plane_facade.on_transfer_completion(provider_pid.clone()).await?;
@@ -634,7 +664,11 @@ where
         // 0. fetch participant
         let consumer_mate = self.get_consumer_mate(&consumer_participant_id).await?;
         let consumer_callback = consumer_callback.unwrap_or(consumer_mate.base_url.unwrap());
-        let consumer_token = consumer_mate.token.ok_or(anyhow!("No token"))?;
+        let consumer_token = consumer_mate.token.ok_or_else(|| {
+            let e = CommonErrors::missing_action_new("Missing token".to_string(), MissingAction::Token, "No auth token".to_string().into());
+            error!("{}", e.log());
+            anyhow!(e)
+        })?;
         // 1. Validate fields and correlation
         let _current_process_model =
             self.validate_and_get_correlated_transfer_process(&consumer_pid, &provider_pid).await?;
@@ -676,7 +710,9 @@ where
             )
             .await
             .map_err(|e| {
-                DSRPCTransferProviderErrors::DSProtocolTransferProviderError(DSProtocolTransferProviderErrors::DbErr(e))
+                let e_ = CommonErrors::database_new(e.to_string().into());
+                error!("{}", e_.log());
+                anyhow!(e_)
             })?;
         // persist message
         let message = self
@@ -692,7 +728,9 @@ where
             )
             .await
             .map_err(|e| {
-                DSRPCTransferProviderErrors::DSProtocolTransferProviderError(DSProtocolTransferProviderErrors::DbErr(e))
+                let e_ = CommonErrors::database_new(e.to_string().into());
+                error!("{}", e_.log());
+                anyhow!(e_)
             })?;
         // 5. Data plane facade hook
         self.data_plane_facade.on_transfer_termination(provider_pid.clone()).await?;

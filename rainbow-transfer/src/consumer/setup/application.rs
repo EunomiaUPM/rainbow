@@ -17,7 +17,6 @@
  *
  */
 
-use crate::common::core::mates_facade::mates_facade::MatesFacadeService;
 use crate::consumer::core::data_plane_facade::data_plane_facade::DataPlaneConsumerFacadeForDSProtocol;
 use crate::consumer::core::ds_protocol::ds_procotol::DSProtocolTransferConsumerService;
 use crate::consumer::core::ds_protocol_rpc::ds_protocol_rpc::DSRPCTransferConsumerService;
@@ -29,6 +28,7 @@ use crate::consumer::http::openapi::route_openapi;
 use axum::{serve, Router};
 use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
 use rainbow_common::facades::ssi_auth_facade::ssi_auth_facade::SSIAuthFacadeService;
+use rainbow_common::mates_facade::mates_facade::MatesFacadeService;
 use rainbow_dataplane::coordinator::controller::controller_service::DataPlaneControllerService;
 use rainbow_dataplane::coordinator::dataplane_process::dataplane_process_service::DataPlaneProcessService;
 use rainbow_dataplane::data_plane_info::data_plane_info::DataPlaneInfoService;

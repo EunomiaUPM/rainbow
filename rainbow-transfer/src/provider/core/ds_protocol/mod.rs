@@ -27,7 +27,6 @@ use rainbow_common::protocol::transfer::transfer_termination::TransferTerminatio
 use urn::Urn;
 
 pub mod ds_protocol;
-pub mod ds_protocol_err;
 
 #[mockall::automock]
 #[async_trait]

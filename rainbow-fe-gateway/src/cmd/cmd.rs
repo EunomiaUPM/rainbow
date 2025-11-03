@@ -24,10 +24,13 @@ use crate::subscriptions::provider_subscriptions::RainbowProviderGatewaySubscrip
 use crate::subscriptions::MicroserviceSubscriptionKey;
 use axum::serve;
 use clap::{Parser, Subcommand};
+use fs_extra::dir::{copy, CopyOptions};
 use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
 use rainbow_common::config::env_extraction::EnvExtraction;
 use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
+use rainbow_common::config::ConfigRoles;
 use std::cmp::PartialEq;
+use std::process::Command;
 use tokio::net::TcpListener;
 use tracing::{debug, info};
 
@@ -51,6 +54,7 @@ pub enum GatewayCliRoles {
 pub enum GatewayCliCommands {
     Start(GatewayCliArgs),
     Subscribe(GatewayCliArgs),
+    Build(GatewayCliArgs),
 }
 
 #[derive(Parser, Debug, PartialEq)]
@@ -107,6 +111,9 @@ impl GatewayCommands {
                         // microservices_subs.subscribe_to_microservice(MicroserviceSubscriptionKey::ContractNegotiation).await?;
                         // microservices_subs.subscribe_to_microservice(MicroserviceSubscriptionKey::TransferControlPlane).await?;
                     }
+                    GatewayCliCommands::Build(args) => {
+                        Self::build_frontend(ConfigRoles::Provider, args.env_file)?;
+                    }
                 }
             }
             GatewayCliRoles::Consumer(cmd) => match cmd {
@@ -124,14 +131,14 @@ impl GatewayCommands {
                                 "127.0.0.1:{}",
                                 config.get_raw_gateway_host().clone().unwrap().port
                             ))
-                            .await?
+                                .await?
                         }
                         false => {
                             TcpListener::bind(format!(
                                 "0.0.0.0:{}",
                                 config.get_raw_gateway_host().clone().unwrap().port
                             ))
-                            .await?
+                                .await?
                         }
                     };
                     serve(listener, gateway_router).await?;
@@ -143,8 +150,37 @@ impl GatewayCommands {
                         .subscribe_to_microservice(MicroserviceSubscriptionKey::ContractNegotiation)
                         .await?;
                 }
+                GatewayCliCommands::Build(args) => {
+                    Self::build_frontend(ConfigRoles::Consumer, args.env_file)?;
+                }
             },
         };
+
+        Ok(())
+    }
+
+    fn build_frontend(role: ConfigRoles, env_file: Option<String>) -> anyhow::Result<()> {
+        let role = role.to_string().to_lowercase();
+        let cwd = format!("./../gui/{}", role);
+        let env_file = format!("./../{}", env_file.expect("env file is required"));
+        // build react application
+        let mut cmd = Command::new("npm")
+            .current_dir(&cwd)
+            .env("ENV_FILE", env_file)
+            .args(["run", "build", "-w", role.as_str()])
+            .spawn()
+            .expect("failed to execute process");
+        cmd.wait()?;
+        debug!("Build command finished successfully");
+        // copy into static
+        let origin = format!("{}/dist", cwd);
+        let destination = format!("./src/static/{}", role);
+        let mut options = CopyOptions::new();
+        options.overwrite = true;
+        options.copy_inside = true;
+        copy(origin, destination, &options)
+            .expect("failed to execute copy process");
+        debug!("Copy command finished successfully");
 
         Ok(())
     }

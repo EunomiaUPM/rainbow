@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useGetParticipants } from "shared/src/data/participant-queries.ts";
+import {createFileRoute, Link} from "@tanstack/react-router";
+import {useGetParticipants} from "shared/src/data/participant-queries.ts";
 import {
   Table,
   TableBody,
@@ -18,21 +18,21 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "shared/src/components/ui/drawer";
-import { useContext, useEffect, useMemo, useState } from "react";
-import { PubSubContext } from "shared/src/context/PubSubContext.tsx";
-import { Button } from "shared/src/components/ui/button.tsx";
-import { Input } from "shared/src/components/ui/input.tsx";
-import { Badge } from "shared/src/components/ui/badge";
+import {useContext, useEffect, useMemo, useState} from "react";
+import {PubSubContext} from "shared/src/context/PubSubContext.tsx";
+import {Button} from "shared/src/components/ui/button.tsx";
+import {Input} from "shared/src/components/ui/input.tsx";
+import {Badge} from "shared/src/components/ui/badge";
 import Heading from "shared/src/components/ui/heading";
 
 // Icons
-import { ArrowRight, Plus } from "lucide-react";
+import {ArrowRight, Plus} from "lucide-react";
 import {
   useGetOidc,
   useGetProviderDid,
   useWalletOnboard,
 } from "../../../../shared/src/data/wallet-mutations.ts";
-import { GlobalInfoContext, GlobalInfoContextType } from "shared/src/context/GlobalInfoContext.tsx";
+import {GlobalInfoContext, GlobalInfoContextType} from "shared/src/context/GlobalInfoContext.tsx";
 import {
   Form,
   FormControl,
@@ -42,7 +42,7 @@ import {
   FormLabel,
   FormMessage,
 } from "shared/src/components/ui/form.tsx";
-import { SubmitHandler, useForm } from "react-hook-form";
+import {SubmitHandler, useForm} from "react-hook-form";
 import QRCode from "react-qr-code";
 
 type Inputs = {
@@ -54,21 +54,21 @@ export const Route = createFileRoute("/participants/")({
 });
 
 function RouteComponent() {
-  const { data: participants } = useGetParticipants();
-  const { lastHighLightedNotification } = useContext(PubSubContext)!;
-  const { mutateAsync: onboardAsync } = useWalletOnboard();
-  const { api_gateway } = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
-  const { mutateAsync: didGetterAsync } = useGetProviderDid();
+  const {data: participants} = useGetParticipants();
+  const {lastHighLightedNotification} = useContext(PubSubContext)!;
+  const {mutateAsync: onboardAsync} = useWalletOnboard();
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const {mutateAsync: didGetterAsync} = useGetProviderDid();
   const form = useForm<Inputs>({
     defaultValues: {
       providerBaseUrl: "",
     },
   });
-  const { handleSubmit, control } = form;
+  const {handleSubmit, control} = form;
   const [did, setDid] = useState<string | null>(null);
   const [providerBaseUrl, setProviderBaseUrl] = useState<string | null>(null);
   const [oidc, setOidc] = useState<string | null>(null);
-  const { mutateAsync: oidcGetterAsync } = useGetOidc();
+  const {mutateAsync: oidcGetterAsync} = useGetOidc();
   const [copyStatus, setCopyStatus] = useState("");
 
   const onSubmitDidGetter: SubmitHandler<Inputs> = async (data) => {
@@ -135,10 +135,11 @@ function RouteComponent() {
     <div>
       {/* NO WALLET */}
       {!hasConsumer && (
-        <div className="p-8 py-6 mx-auto w-fit max-w-[70ch] bg-brand-sky/5 border border-stroke rounded-md">
+        <div
+          className="p-8 py-6 mx-auto w-fit max-w-[70ch] bg-brand-sky/5 border border-stroke rounded-md">
           <Heading level="h3">Missing wallet...</Heading>
           <Heading level="h5">
-            Your wallet is not yet connected as Consumer. <br /> Please complete the onboarding
+            Your wallet is not yet connected as Consumer. <br/> Please complete the onboarding
             process to get started.
           </Heading>
           <Button size={"lg"} className="w-full mt-4" onClick={() => onboardHandler()}>
@@ -164,7 +165,7 @@ function RouteComponent() {
               <DrawerTrigger>
                 <Button>
                   Authenticate in provider
-                  <Plus className="mb-1" />
+                  <Plus className="mb-1"/>
                 </Button>
               </DrawerTrigger>
               <DrawerContent>
@@ -187,7 +188,7 @@ function RouteComponent() {
                           control={control}
                           name="providerBaseUrl"
                           render={(
-                            { field }, // <--
+                            {field}, // <--
                           ) => (
                             <FormItem>
                               <FormLabel>Provider base URL:</FormLabel>
@@ -198,7 +199,7 @@ function RouteComponent() {
                                 <FormDescription className="text-sm text-foreground/70 mt-1">
                                   Provide base URL
                                 </FormDescription>
-                                <FormMessage />
+                                <FormMessage/>
                               </div>
                             </FormItem>
                           )}
@@ -215,9 +216,10 @@ function RouteComponent() {
                   {/**/}
                   {/**/}
                   {did && oidc && (
-                    <div className="m-auto max-w-[90%] p-6 flex flex-col gap-4 text-center bg-brand-sky/[3%] rounded-md">
+                    <div
+                      className="m-auto max-w-[90%] p-6 flex flex-col gap-4 text-center bg-brand-sky/[3%] rounded-md">
                       <Heading level="h4" className="text-center text-brand-sky">
-                        Claim your credential!
+                        Present your credential on wallet!
                       </Heading>
                       <p>Scan the QR code...</p>
                       <div className="w-[350px] mx-auto">
@@ -233,7 +235,8 @@ function RouteComponent() {
                       </div>
                       <p>... or copy your URI bellow</p>
                       <div>
-                        <div className="max-w-full break-all p-2 bg-background-200/40 border border-stroke rounded-md">
+                        <div
+                          className="max-w-full break-all p-2 bg-background-200/40 border border-stroke rounded-md">
                           <code className="text-xs text-foreground-200">{oidc}</code>
                         </div>
                         <div className="mt-4 [&>button]:w-32 flex gap-4 justify-center">
@@ -304,11 +307,11 @@ function RouteComponent() {
                   <TableCell>
                     <Link
                       to="/participants/$participantId"
-                      params={{ participantId: participant.participant_id }}
+                      params={{participantId: participant.participant_id}}
                     >
                       <Button variant="link">
                         See details
-                        <ArrowRight />
+                        <ArrowRight/>
                       </Button>
                     </Link>
                   </TableCell>

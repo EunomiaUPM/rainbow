@@ -1,12 +1,11 @@
 import * as React from "react";
-import { useRouterState } from "@tanstack/react-router";
+import {useRouterState} from "@tanstack/react-router";
 import SearchIcon from "@mui/icons-material/Search";
-// @ts-ignore
-import { cn } from "@/lib/utils";
-// @ts-ignore
+import {cn} from "shared/src/lib/utils";
+
 
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
-  ({ className, type, ...props }, ref) => {
+  ({className, type, ...props}, ref) => {
     // console.log(type, "type")
     const routerState = useRouterState();
     let pathsArray = routerState.location.pathname.split("/");
@@ -46,7 +45,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
           className,
         )}
       >
-        {type === "search" && <SearchIcon />}
+        {type === "search" && <SearchIcon/>}
         <input
           {...props}
           type="search"
@@ -60,4 +59,4 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
 );
 Input.displayName = "Input";
 
-export { Input };
+export {Input};

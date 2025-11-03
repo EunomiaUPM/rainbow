@@ -1,7 +1,7 @@
-import { queryOptions, useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { NotFoundError } from "./index";
-import { useContext } from "react";
-import { GlobalInfoContext, GlobalInfoContextType } from "./../context/GlobalInfoContext";
+import {queryOptions, useQuery, useSuspenseQuery} from "@tanstack/react-query";
+import {NotFoundError} from "./index";
+import {useContext} from "react";
+import {GlobalInfoContext, GlobalInfoContextType} from "./../context/GlobalInfoContext";
 
 /**
  * GET /contract-negotiation/processes
@@ -20,11 +20,11 @@ export const getContractNegotiationProcessesOptions = (api_gateway: string) =>
   });
 
 export const useGetContractNegotiationProcesses = () => {
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  const { data, isLoading, isError, error } = useSuspenseQuery(
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const {data, isLoading, isError, error} = useSuspenseQuery(
     getContractNegotiationProcessesOptions(api_gateway),
   );
-  return { data, isLoading, isError, error };
+  return {data, isLoading, isError, error};
 };
 
 /**
@@ -51,11 +51,11 @@ export const getContractNegotiationProcessesByCNIDOptions = (
   });
 
 export const useGetContractNegotiationProcessesByCNID = (contractNegotiationProcess: UUID) => {
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  const { data, isLoading, isError, error } = useSuspenseQuery(
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const {data, isLoading, isError, error} = useSuspenseQuery(
     getContractNegotiationProcessesByCNIDOptions(api_gateway, contractNegotiationProcess),
   );
-  return { data, isLoading, isError, error };
+  return {data, isLoading, isError, error};
 };
 
 /**
@@ -84,11 +84,11 @@ export const getContractNegotiationMessagesByCNIDOptions = (
   });
 
 export const useGetContractNegotiationMessagesByCNID = (contractNegotiationProcess: UUID) => {
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  const { data, isLoading, isError, error } = useSuspenseQuery(
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const {data, isLoading, isError, error} = useSuspenseQuery(
     getContractNegotiationMessagesByCNIDOptions(api_gateway, contractNegotiationProcess),
   );
-  return { data, isLoading, isError, error };
+  return {data, isLoading, isError, error};
 };
 
 /**
@@ -114,11 +114,11 @@ export const getContractNegotiationMessageByIdOptions = (
   });
 
 export const useGetContractNegotiationMessageById = (contractNegotiationMessage: UUID) => {
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  const { data, isLoading, isError, error } = useSuspenseQuery(
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const {data, isLoading, isError, error} = useSuspenseQuery(
     getContractNegotiationMessageByIdOptions(api_gateway, contractNegotiationMessage),
   );
-  return { data, isLoading, isError, error };
+  return {data, isLoading, isError, error};
 };
 
 /**
@@ -156,11 +156,11 @@ export const getContractNegotiationOfferByCNMessageIdOptions = (
   });
 
 export const useGetContractNegotiationOfferByCNMessageId = (contractNegotiationMessage: UUID) => {
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  const { data, isLoading, isError, error } = useQuery(
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const {data, isLoading, isError, error} = useQuery(
     getContractNegotiationOfferByCNMessageIdOptions(api_gateway, contractNegotiationMessage),
   );
-  return { data, isLoading, isError, error };
+  return {data, isLoading, isError, error};
 };
 
 /**
@@ -197,11 +197,11 @@ export const getLastContractNegotiationOfferByCNMessageIdOptions = (
   });
 
 export const useGetLastContractNegotiationOfferByCNMessageId = (contractProcess: UUID) => {
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  const { data, isLoading, isError, error } = useQuery(
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const {data, isLoading, isError, error} = useQuery(
     getLastContractNegotiationOfferByCNMessageIdOptions(api_gateway, contractProcess),
   );
-  return { data, isLoading, isError, error };
+  return {data, isLoading, isError, error};
 };
 
 /**
@@ -238,9 +238,9 @@ export const getAgreementByCNMessageIdOptions = (
   });
 
 export const useGetAgreementByCNMessageId = (contractNegotiationMessage: UUID) => {
-  const { api_gateway } = useContext<GlobalInfoContextType>(GlobalInfoContext);
-  const { data, isLoading, isError, error } = useQuery(
+  const {api_gateway} = useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
+  const {data, isLoading, isError, error} = useQuery(
     getAgreementByCNMessageIdOptions(api_gateway, contractNegotiationMessage),
   );
-  return { data, isLoading, isError, error };
+  return {data, isLoading, isError, error};
 };

@@ -21,23 +21,27 @@ use crate::gateway::execute_proxy;
 use axum::body::Body;
 use axum::extract::ws::{Message, WebSocketUpgrade};
 use axum::extract::{Path, Request, State};
-use axum::http::header::{AUTHORIZATION, CONTENT_TYPE};
-use axum::http::StatusCode;
-use axum::response::IntoResponse;
+use axum::http::{header, StatusCode, Uri};
+use axum::response::{IntoResponse, Response};
 use axum::routing::{any, get, post};
 use axum::{Json, Router};
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use reqwest::Client;
+use rust_embed::Embed;
 use serde_json::Value;
 use std::time::Duration;
 use tokio::sync::broadcast;
-use tower_http::cors::{AllowHeaders, Any, CorsLayer};
+use tower_http::cors::{Any, CorsLayer};
 
 pub struct RainbowProviderGateway {
     config: ApplicationProviderConfig,
     client: Client,
     notification_tx: broadcast::Sender<String>,
 }
+
+#[derive(Embed)]
+#[folder = "src/static/provider"]
+pub struct RainbowProviderReactApp;
 
 impl RainbowProviderGateway {
     pub fn new(config: ApplicationProviderConfig) -> Self {
@@ -50,9 +54,9 @@ impl RainbowProviderGateway {
         let cors = CorsLayer::new()
             .allow_methods(Any)
             .allow_origin(Any)
-            .allow_headers(AllowHeaders::list([CONTENT_TYPE, AUTHORIZATION]));
+            .allow_headers(Any);
 
-        Router::new()
+        let mut router = Router::new()
             .route(
                 "/gateway/api/:service_prefix/*extra",
                 any(Self::proxy_handler_with_extra),
@@ -62,10 +66,47 @@ impl RainbowProviderGateway {
                 any(Self::proxy_handler_without_extra),
             )
             .route("/gateway/api/ws", get(Self::websocket_handler))
-            .route("/incoming-notification", post(Self::incoming_notification))
-            .layer(cors)
-            .with_state((self.config, self.client, self.notification_tx))
+            .route("/incoming-notification", post(Self::incoming_notification));
+
+        if self.config.is_gateway_in_production {
+            router = router.fallback(Self::static_path_handler);
+        }
+
+        router.layer(cors).with_state((self.config, self.client, self.notification_tx))
     }
+
+    pub async fn static_path_handler(uri: Uri) -> impl IntoResponse {
+        let mut path = uri.path().trim_start_matches('/').to_string();
+        if path.is_empty() {
+            path = "index.html".to_string();
+        }
+
+        match RainbowProviderReactApp::get(&path) {
+            Some(content) => {
+                let mime_type = mime_guess::from_path(&path).first_or_octet_stream();
+                Response::builder()
+                    .header(header::CONTENT_TYPE, mime_type.as_ref())
+                    .body(Body::from(content.data))
+                    .unwrap()
+            }
+            None => {
+                match RainbowProviderReactApp::get("index.html") {
+                    Some(content) => {
+                        let mime_type = mime_guess::from_path("index.html").first_or_octet_stream();
+                        Response::builder()
+                            .header(header::CONTENT_TYPE, mime_type.as_ref())
+                            .body(Body::from(content.data))
+                            .unwrap()
+                    }
+                    None => Response::builder()
+                        .status(StatusCode::NOT_FOUND)
+                        .body(Body::from("<h1>404</h1><p>index.html not found</p>"))
+                        .unwrap(),
+                }
+            }
+        }
+    }
+
     async fn proxy_handler_with_extra(
         State((config, client, notification_tx)): State<(ApplicationProviderConfig, Client, broadcast::Sender<String>)>,
         Path((service_prefix, extra)): Path<(String, String)>,
@@ -126,7 +167,11 @@ impl RainbowProviderGateway {
             .await
     }
     async fn websocket_handler(
-        State((_config, _client, notification_tx)): State<(ApplicationProviderConfig, Client, broadcast::Sender<String>)>,
+        State((_config, _client, notification_tx)): State<(
+            ApplicationProviderConfig,
+            Client,
+            broadcast::Sender<String>,
+        )>,
         ws: WebSocketUpgrade,
     ) -> impl IntoResponse {
         ws.on_upgrade(move |mut socket| async move {
@@ -181,7 +226,11 @@ impl RainbowProviderGateway {
         })
     }
     async fn incoming_notification(
-        State((_config, _client, notification_tx)): State<(ApplicationProviderConfig, Client, broadcast::Sender<String>)>,
+        State((_config, _client, notification_tx)): State<(
+            ApplicationProviderConfig,
+            Client,
+            broadcast::Sender<String>,
+        )>,
         Json(input): Json<Value>,
     ) -> impl IntoResponse {
         let value_str = match serde_json::to_string(&input) {

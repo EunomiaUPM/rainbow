@@ -96,6 +96,49 @@ impl ContractNegotiationConsumerProcessRepo for ContractNegotiationConsumerRepoF
         Ok(cn_processes)
     }
 
+    async fn get_batch_cn_processes(&self, cn_ids: &Vec<Urn>) -> anyhow::Result<Vec<CnConsumerProcessFromSQL>, CnErrors> {
+        let cn_ids = cn_ids.iter().map(|a| a.to_string()).collect::<Vec<String>>();
+        let sql = r#"
+            WITH RankedMessages AS (
+                SELECT
+                    m.cn_process_id,
+                    m.type,
+                    m.subtype,
+                    m.created_at,
+                    ROW_NUMBER() OVER(PARTITION BY m.cn_process_id ORDER BY m.created_at DESC) as rn
+                FROM
+                    cn_messages m
+            )
+            SELECT
+                p.consumer_id,
+                p.provider_id,
+                p.associated_provider,
+                p.is_business,
+                p.created_at,
+                p.updated_at,
+                rm.type AS "message_type",
+                rm.subtype AS "message_subtype",
+                rm.created_at AS "message_at"
+            FROM
+                cn_processes p
+                    LEFT JOIN
+                RankedMessages rm ON p.consumer_id = rm.cn_process_id
+            WHERE
+                rm.rn = 1
+                AND
+                p.provider_id = ANY($1)
+            ORDER BY
+                p.created_at DESC;
+        "#;
+        let stmt = Statement::from_sql_and_values(DbBackend::Postgres, sql.to_owned(), [cn_ids.into()]);
+        let cn_processes = CnConsumerProcessFromSQL::find_by_statement(stmt)
+            .all(&self.db_connection)
+            .await
+            .map_err(|err| CnErrors::ErrorFetchingCNProcess(err.into()))?;
+
+        Ok(cn_processes)
+    }
+
     async fn get_cn_process_by_provider_id(
         &self,
         provider_id: Urn,

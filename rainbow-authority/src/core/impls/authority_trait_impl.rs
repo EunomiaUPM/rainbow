@@ -80,10 +80,6 @@ where
 
         let host_url = self.config.get_host(); //  EXPECTED ALWAYS
         let host_url = format!("{}/api/v1", host_url);
-        let host_url = match self.config.get_environment_scenario() {
-            true => host_url.replace("127.0.0.1", "host.docker.internal"),
-            false => host_url,
-        };
 
         // TODO OIDC
         let id = uuid::Uuid::new_v4().to_string();
@@ -154,6 +150,10 @@ where
 
         // ----------OIDC4VP---------------------------------------------------------------
         if interaction_model.start.contains(&"oidc4vp".to_string()) {
+            let host_url = match self.config.get_environment_scenario() {
+                true => host_url.replace("127.0.0.1", "host.docker.internal"),
+                false => host_url,
+            };
             let client_id = format!("{}/verify", &host_url);
 
             let new_verification_model = auth_verification::NewModel { id: id.clone(), audience: client_id };
