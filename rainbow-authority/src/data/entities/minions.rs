@@ -28,10 +28,10 @@ use serde::{Deserialize, Serialize};
 pub struct Model {
     #[sea_orm(primary_key)]
     pub participant_id: String, // REQUEST
-    pub participant_slug: String,                // REQUEST
-    pub participant_type: String,                // REQUEST
-    pub base_url: Option<String>,                // REQUEST
-    pub vc_uri: Option<String>,                  // REQUEST
+    pub participant_slug: String, // REQUEST
+    pub participant_type: String, // REQUEST
+    pub base_url: Option<String>, // REQUEST
+    pub vc_uri: Option<String>,   // REQUEST
     pub is_vc_issued: bool,
     pub saved_at: chrono::NaiveDateTime,         // DEFAULT
     pub last_interaction: chrono::NaiveDateTime, // DEFAULT

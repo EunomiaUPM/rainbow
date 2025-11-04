@@ -17,7 +17,9 @@
  *
  */
 
-use crate::provider::core::rainbow_rpc::rainbow_rpc_types::{RainbowRPCCatalogResolveDataServiceRequest, RainbowRPCCatalogResolveOfferByIdRequest};
+use crate::provider::core::rainbow_rpc::rainbow_rpc_types::{
+    RainbowRPCCatalogResolveDataServiceRequest, RainbowRPCCatalogResolveOfferByIdRequest,
+};
 use axum::async_trait;
 use rainbow_common::protocol::catalog::dataservice_definition::DataService;
 use rainbow_common::protocol::contract::contract_odrl::OdrlOffer;
@@ -28,6 +30,9 @@ pub mod rainbow_rpc_types;
 #[mockall::automock]
 #[async_trait]
 pub trait RainbowRPCCatalogTrait: Send + Sync {
-    async fn resolve_data_service(&self, input: RainbowRPCCatalogResolveDataServiceRequest) -> anyhow::Result<DataService>;
+    async fn resolve_data_service(
+        &self,
+        input: RainbowRPCCatalogResolveDataServiceRequest,
+    ) -> anyhow::Result<DataService>;
     async fn resolve_offer(&self, input: RainbowRPCCatalogResolveOfferByIdRequest) -> anyhow::Result<OdrlOffer>;
 }

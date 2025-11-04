@@ -53,7 +53,6 @@ pub struct ContractNegotiationCliArgs {
     env_file: Option<String>,
 }
 
-
 pub struct ContractNegotiationCommands;
 
 impl EnvExtraction for ContractNegotiationCommands {}
@@ -66,30 +65,26 @@ impl ContractNegotiationCommands {
 
         // run scripts
         match cli.role {
-            ContractNegotiationCliRoles::Provider(cmd) => {
-                match cmd {
-                    ContractNegotiationCliCommands::Start(args) => {
-                        let config = Self::extract_provider_config(args.env_file)?;
-                        ContractNegotiationProviderApplication::run(&config).await?
-                    }
-                    ContractNegotiationCliCommands::Setup(args) => {
-                        let config = Self::extract_provider_config(args.env_file)?;
-                        ContractNegotiationProviderMigration::run(&config).await?
-                    }
+            ContractNegotiationCliRoles::Provider(cmd) => match cmd {
+                ContractNegotiationCliCommands::Start(args) => {
+                    let config = Self::extract_provider_config(args.env_file)?;
+                    ContractNegotiationProviderApplication::run(&config).await?
                 }
-            }
-            ContractNegotiationCliRoles::Consumer(cmd) => {
-                match cmd {
-                    ContractNegotiationCliCommands::Start(args) => {
-                        let config = Self::extract_consumer_config(args.env_file)?;
-                        ContractNegotiationConsumerApplication::run(&config).await?
-                    }
-                    ContractNegotiationCliCommands::Setup(args) => {
-                        let config = Self::extract_consumer_config(args.env_file)?;
-                        ContractNegotiationConsumerMigration::run(&config).await?
-                    }
+                ContractNegotiationCliCommands::Setup(args) => {
+                    let config = Self::extract_provider_config(args.env_file)?;
+                    ContractNegotiationProviderMigration::run(&config).await?
                 }
-            }
+            },
+            ContractNegotiationCliRoles::Consumer(cmd) => match cmd {
+                ContractNegotiationCliCommands::Start(args) => {
+                    let config = Self::extract_consumer_config(args.env_file)?;
+                    ContractNegotiationConsumerApplication::run(&config).await?
+                }
+                ContractNegotiationCliCommands::Setup(args) => {
+                    let config = Self::extract_consumer_config(args.env_file)?;
+                    ContractNegotiationConsumerMigration::run(&config).await?
+                }
+            },
         };
 
         Ok(())

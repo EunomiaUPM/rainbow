@@ -53,7 +53,6 @@ pub fn split_did(did: &str) -> (&str, Option<&str>) {
     }
 }
 
-
 pub fn trim_path(path: &str) -> String {
     if let Some(pos) = path.rfind('/') {
         let trimmed = &path[..pos];

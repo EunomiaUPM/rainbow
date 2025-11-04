@@ -17,11 +17,9 @@
  *
  */
 
-use crate::common::BasicRepoTrait;
 use crate::auth_consumer::entities::auth_verification::{Model, NewModel};
+use crate::common::BasicRepoTrait;
 use axum::async_trait;
 
 #[async_trait]
-pub trait AuthVerificationRepoTrait: BasicRepoTrait<Model, NewModel> + Send + Sync {
-
-}
+pub trait AuthVerificationRepoTrait: BasicRepoTrait<Model, NewModel> + Send + Sync {}

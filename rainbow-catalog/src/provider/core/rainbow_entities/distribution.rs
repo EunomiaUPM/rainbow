@@ -27,7 +27,10 @@ use rainbow_common::protocol::catalog::distribution_definition::Distribution;
 use rainbow_common::protocol::catalog::EntityTypes;
 use rainbow_common::utils::get_urn_from_string;
 use rainbow_db::catalog::repo::{CatalogRepo, DataServiceRepo, DatasetRepo, DistributionRepo, OdrlOfferRepo};
-use rainbow_events::core::notification::notification_types::{RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory, RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes};
+use rainbow_events::core::notification::notification_types::{
+    RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory,
+    RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes,
+};
 use rainbow_events::core::notification::RainbowEventsNotificationTrait;
 use serde_json::{json, to_value};
 use std::sync::Arc;
@@ -41,7 +44,6 @@ where
     repo: Arc<T>,
     notification_service: Arc<U>,
 }
-
 
 impl<T, U> RainbowCatalogDistributionService<T, U>
 where
@@ -63,7 +65,6 @@ impl<T, U> RainbowDistributionTrait for RainbowCatalogDistributionService<T, U>
 where
     T: CatalogRepo + DatasetRepo + DistributionRepo + DataServiceRepo + OdrlOfferRepo + Send + Sync + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
-
 {
     async fn get_distribution_by_id(&self, distribution_id: Urn) -> anyhow::Result<Distribution> {
         let distribution = self
@@ -80,21 +81,25 @@ where
 
     async fn get_distributions_by_dataset_id(&self, dataset_id: Urn) -> anyhow::Result<Vec<Distribution>> {
         let mut distributions_out: Vec<Distribution> = vec![];
-        let distributions = self.repo
-            .get_distributions_by_dataset_id(dataset_id.clone())
-            .await
-            .map_err(CatalogError::DbErr)?;
+        let distributions =
+            self.repo.get_distributions_by_dataset_id(dataset_id.clone()).await.map_err(CatalogError::DbErr)?;
         for distribution in distributions {
             let data_service_id = get_urn_from_string(&distribution.dcat_access_service)?;
-            let mut distribution = Distribution::try_from(distribution.clone()).map_err(CatalogError::ConversionError)?;
+            let mut distribution =
+                Distribution::try_from(distribution.clone()).map_err(CatalogError::ConversionError)?;
             distribution.dcat.access_service = self.data_services_request_by_id(data_service_id).await?;
             distributions_out.push(distribution);
         }
         Ok(distributions_out)
     }
 
-    async fn get_distributions_by_dataset_id_and_dct_formats(&self, dataset_id: Urn, dct_formats: DctFormats) -> anyhow::Result<Distribution> {
-        let distribution_db = self.repo
+    async fn get_distributions_by_dataset_id_and_dct_formats(
+        &self,
+        dataset_id: Urn,
+        dct_formats: DctFormats,
+    ) -> anyhow::Result<Distribution> {
+        let distribution_db = self
+            .repo
             .get_distribution_by_dataset_id_and_dct_format(dataset_id.clone(), dct_formats)
             .await
             .map_err(CatalogError::DbErr)?;
@@ -119,21 +124,24 @@ where
                     rainbow_db::catalog::repo::CatalogRepoErrors::DatasetNotFound => {
                         CatalogError::NotFound { id: dataset_id, entity: EntityTypes::Dataset.to_string() }
                     }
-                    rainbow_db::catalog::repo::CatalogRepoErrors::DataServiceNotFound => {
-                        CatalogError::NotFound { id: input.dcat_access_service.clone(), entity: EntityTypes::DataService.to_string() }
-                    }
+                    rainbow_db::catalog::repo::CatalogRepoErrors::DataServiceNotFound => CatalogError::NotFound {
+                        id: input.dcat_access_service.clone(),
+                        entity: EntityTypes::DataService.to_string(),
+                    },
                     _ => CatalogError::DbErr(err),
                 },
             )?;
         let mut distribution = Distribution::try_from(distribution_entity).map_err(CatalogError::ConversionError)?;
         distribution.dcat.access_service = self.data_services_request_by_id(input.dcat_access_service).await?;
-        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
-            category: RainbowEventsNotificationMessageCategory::Catalog,
-            subcategory: "Distribution".to_string(),
-            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
-            message_content: to_value(&distribution)?,
-            message_operation: RainbowEventsNotificationMessageOperation::Creation,
-        }).await?;
+        self.notification_service
+            .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+                category: RainbowEventsNotificationMessageCategory::Catalog,
+                subcategory: "Distribution".to_string(),
+                message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+                message_content: to_value(&distribution)?,
+                message_operation: RainbowEventsNotificationMessageOperation::Creation,
+            })
+            .await?;
         Ok(distribution)
     }
 
@@ -160,9 +168,10 @@ where
                 rainbow_db::catalog::repo::CatalogRepoErrors::DatasetNotFound => {
                     CatalogError::NotFound { id: dataset_id, entity: EntityTypes::Dataset.to_string() }
                 }
-                rainbow_db::catalog::repo::CatalogRepoErrors::DataServiceNotFound => {
-                    CatalogError::NotFound { id: input.dcat_access_service.clone().unwrap(), entity: EntityTypes::DataService.to_string() }
-                }
+                rainbow_db::catalog::repo::CatalogRepoErrors::DataServiceNotFound => CatalogError::NotFound {
+                    id: input.dcat_access_service.clone().unwrap(),
+                    entity: EntityTypes::DataService.to_string(),
+                },
                 rainbow_db::catalog::repo::CatalogRepoErrors::DistributionNotFound => {
                     CatalogError::NotFound { id: distribution_id, entity: EntityTypes::Distribution.to_string() }
                 }
@@ -172,13 +181,15 @@ where
         let mut distribution =
             Distribution::try_from(distribution_entity.clone()).map_err(CatalogError::ConversionError)?;
         distribution.dcat.access_service = self.data_services_request_by_id(data_service_id).await?;
-        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
-            category: RainbowEventsNotificationMessageCategory::Catalog,
-            subcategory: "Distribution".to_string(),
-            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
-            message_content: to_value(&distribution)?,
-            message_operation: RainbowEventsNotificationMessageOperation::Update,
-        }).await?;
+        self.notification_service
+            .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+                category: RainbowEventsNotificationMessageCategory::Catalog,
+                subcategory: "Distribution".to_string(),
+                message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+                message_content: to_value(&distribution)?,
+                message_operation: RainbowEventsNotificationMessageOperation::Update,
+            })
+            .await?;
         Ok(distribution)
     }
 
@@ -203,21 +214,24 @@ where
                 rainbow_db::catalog::repo::CatalogRepoErrors::DatasetNotFound => {
                     CatalogError::NotFound { id: data_service_id, entity: EntityTypes::Dataset.to_string() }
                 }
-                rainbow_db::catalog::repo::CatalogRepoErrors::DistributionNotFound => {
-                    CatalogError::NotFound { id: distribution_id.clone(), entity: EntityTypes::Distribution.to_string() }
-                }
+                rainbow_db::catalog::repo::CatalogRepoErrors::DistributionNotFound => CatalogError::NotFound {
+                    id: distribution_id.clone(),
+                    entity: EntityTypes::Distribution.to_string(),
+                },
                 _ => CatalogError::DbErr(err),
             })?;
-        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
-            category: RainbowEventsNotificationMessageCategory::Catalog,
-            subcategory: "Distribution".to_string(),
-            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
-            message_content: json!({
-                "@type": "dcat:Distribution",
-                "@id": distribution_id.to_string()
-            }),
-            message_operation: RainbowEventsNotificationMessageOperation::Deletion,
-        }).await?;
+        self.notification_service
+            .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+                category: RainbowEventsNotificationMessageCategory::Catalog,
+                subcategory: "Distribution".to_string(),
+                message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+                message_content: json!({
+                    "@type": "dcat:Distribution",
+                    "@id": distribution_id.to_string()
+                }),
+                message_operation: RainbowEventsNotificationMessageOperation::Deletion,
+            })
+            .await?;
         Ok(())
     }
 }

@@ -58,18 +58,31 @@ impl BusinessNotificationsRouter {
             .allow_headers(AllowHeaders::list([CONTENT_TYPE, AUTHORIZATION]));
         Router::new()
             .route("/gateway/api/ws", get(Self::websocket_handler))
-            .route("/gateway/api/subscriptions", get(Self::subscription_handler))
+            .route(
+                "/gateway/api/subscriptions",
+                get(Self::subscription_handler),
+            )
             .route("/incoming-notification", post(Self::incoming_notification))
             .layer(cors)
             .with_state((self.config, self.client, self.notification_tx))
     }
     async fn subscription_handler(
-        State((config, client, _notification_tx)): State<(ApplicationProviderConfig, Client, broadcast::Sender<String>)>,
+        State((config, client, _notification_tx)): State<(
+            ApplicationProviderConfig,
+            Client,
+            broadcast::Sender<String>,
+        )>,
         Query(params): Query<Params>,
     ) -> axum::response::Response {
         let callback_address = match params.callback_address {
             Some(cb) => cb,
-            None => return (StatusCode::BAD_REQUEST, "Callback address not found as parameter").into_response()
+            None => {
+                return (
+                    StatusCode::BAD_REQUEST,
+                    "Callback address not found as parameter",
+                )
+                    .into_response()
+            }
         };
         let base_url = config.get_contract_negotiation_host_url().expect("no cn host");
         let subscription_url = format!("{}/api/v1/contract-negotiation/subscriptions", base_url);
@@ -84,11 +97,19 @@ impl BusinessNotificationsRouter {
             Ok(request) => request,
             Err(e) => {
                 error!("Error on subscribing. Microservice not available{}", e);
-                return (StatusCode::BAD_REQUEST, format!("Error on subscribing. Microservice not available {}", e)).into_response();
+                return (
+                    StatusCode::BAD_REQUEST,
+                    format!("Error on subscribing. Microservice not available {}", e),
+                )
+                    .into_response();
             }
         };
         if !backend_res.status().is_success() {
-            return (StatusCode::BAD_REQUEST, format!("Error on subscribing. Status {}", backend_res.status())).into_response();
+            return (
+                StatusCode::BAD_REQUEST,
+                format!("Error on subscribing. Status {}", backend_res.status()),
+            )
+                .into_response();
         }
         let status = backend_res.status();
         let version = backend_res.version();
@@ -110,7 +131,11 @@ impl BusinessNotificationsRouter {
         })
     }
     async fn websocket_handler(
-        State((_config, _client, notification_tx)): State<(ApplicationProviderConfig, Client, broadcast::Sender<String>)>,
+        State((_config, _client, notification_tx)): State<(
+            ApplicationProviderConfig,
+            Client,
+            broadcast::Sender<String>,
+        )>,
         ws: WebSocketUpgrade,
     ) -> impl IntoResponse {
         ws.on_upgrade(move |mut socket| async move {
@@ -165,7 +190,11 @@ impl BusinessNotificationsRouter {
         })
     }
     async fn incoming_notification(
-        State((_config, _client, notification_tx)): State<(ApplicationProviderConfig, Client, broadcast::Sender<String>)>,
+        State((_config, _client, notification_tx)): State<(
+            ApplicationProviderConfig,
+            Client,
+            broadcast::Sender<String>,
+        )>,
         Json(input): Json<Value>,
     ) -> impl IntoResponse {
         let value_str = match serde_json::to_string(&input) {

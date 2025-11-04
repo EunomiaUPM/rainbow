@@ -32,10 +32,7 @@ pub mod ds_procotol;
 pub trait DSProtocolTransferConsumerTrait: Send + Sync {
     async fn get_transfer_requests_by_callback(&self, callback_id: Urn) -> anyhow::Result<TransferProcessMessage>;
     async fn get_transfer_requests_by_provider(&self, provider_pid: Urn) -> anyhow::Result<TransferProcessMessage>;
-    async fn get_transfer_requests_by_consumer(
-        &self,
-        consumer_pid: Urn,
-    ) -> anyhow::Result<TransferProcessMessage>;
+    async fn get_transfer_requests_by_consumer(&self, consumer_pid: Urn) -> anyhow::Result<TransferProcessMessage>;
     async fn transfer_start(
         &self,
         callback_id: Option<Urn>,

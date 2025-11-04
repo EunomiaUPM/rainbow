@@ -28,8 +28,8 @@ use axum::http::{Request, StatusCode};
 use axum::{http, serve};
 use rainbow_common::dcat_formats::{DctFormats, FormatAction, FormatProtocol};
 use rainbow_common::protocol::transfer::{
-    DataAddress, TransferCompletionMessage, TransferMessageTypes, TransferProcessMessage,
-    TransferRequestMessage, TransferStartMessage, TransferSuspensionMessage,
+    DataAddress, TransferCompletionMessage, TransferMessageTypes, TransferProcessMessage, TransferRequestMessage,
+    TransferStartMessage, TransferSuspensionMessage,
 };
 use rainbow_common::utils::{get_urn, get_urn_from_string};
 use rainbow_db::transfer_consumer::entities::transfer_callback;
@@ -81,7 +81,7 @@ pub async fn transfer_push_full_case() -> anyhow::Result<()> {
           },
         }),
     )
-        .await?;
+    .await?;
 
     // 1. Kickoff from client with DataAddress
     // 2. I create a TransferRequest
@@ -112,7 +112,6 @@ pub async fn transfer_push_full_case() -> anyhow::Result<()> {
         serde_json::to_string_pretty(&res_body)?
     );
     let provider_pid = get_urn_from_string(&res_body.transfer_process.unwrap().provider_pid)?;
-
 
     // 4. Transfer start is happening under the hood. check logs
 

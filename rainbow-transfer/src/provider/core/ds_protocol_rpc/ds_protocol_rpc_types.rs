@@ -17,7 +17,6 @@
  *
  */
 
-
 use rainbow_common::protocol::transfer::transfer_data_address::DataAddress;
 use rainbow_common::protocol::transfer::transfer_error::TransferError;
 use rainbow_common::protocol::transfer::transfer_process::TransferProcessMessage;
@@ -55,7 +54,6 @@ impl DSProtocolTransferMessageTrait<'_> for DSRPCTransferProviderStartRequest {
         Ok(Some(&self.provider_pid))
     }
 }
-
 
 #[derive(Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]

@@ -17,7 +17,6 @@
  *
  */
 
-
 use crate::transfer_consumer::entities::transfer_callback;
 use crate::transfer_consumer::entities::transfer_callback::Model;
 use rainbow_common::protocol::context_field::ContextField;
@@ -53,11 +52,11 @@ impl From<TransferConsumerProcessFromSQL> for TransferConsumerProcess {
                 TransferMessageTypes::TransferCompletionMessage => TransferState::COMPLETED.to_string(),
                 TransferMessageTypes::TransferTerminationMessage => TransferState::TERMINATED.to_string(),
                 _ => "".to_string(),
-            }
+            },
         };
         let state_attribute = match value.from.as_str() {
             "Consumer" => "BY_CONSUMER".to_string(),
-            _ => "BY_PROVIDER".to_string()
+            _ => "BY_PROVIDER".to_string(),
         };
         Self {
             id: value.id,
@@ -86,7 +85,7 @@ impl From<TransferConsumerProcessFromSQL> for TransferProcessMessage {
                 TransferMessageTypes::TransferCompletionMessage => TransferState::COMPLETED,
                 TransferMessageTypes::TransferTerminationMessage => TransferState::TERMINATED,
                 _ => TransferState::TERMINATED,
-            }
+            },
         };
         Self {
             context: ContextField::default(),

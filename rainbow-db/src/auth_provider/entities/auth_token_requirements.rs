@@ -17,10 +17,10 @@
  *
  */
 
-use chrono;
-use sea_orm::ActiveValue;
-use sea_orm::entity::prelude::*;
 use crate::common::IntoActiveSet;
+use chrono;
+use sea_orm::entity::prelude::*;
+use sea_orm::ActiveValue;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
 #[sea_orm(table_name = "auth_token_requirements")]

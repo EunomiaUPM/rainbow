@@ -30,7 +30,6 @@ pub mod rainbow_entities;
 pub mod rainbow_entities_errors;
 pub mod rainbow_entities_types;
 
-
 #[mockall::automock]
 #[async_trait]
 pub trait RainbowEntitiesContractNegotiationProviderTrait: Send + Sync {
@@ -40,7 +39,11 @@ pub trait RainbowEntitiesContractNegotiationProviderTrait: Send + Sync {
     async fn get_cn_process_by_provider(&self, provider_id: Urn) -> anyhow::Result<cn_process::Model>;
     async fn get_cn_process_by_consumer(&self, consumer_id: Urn) -> anyhow::Result<cn_process::Model>;
 
-    async fn get_cn_processes_by_participant(&self, participant_id: String, client_type: Option<String>) -> anyhow::Result<Vec<cn_process::Model>>;
+    async fn get_cn_processes_by_participant(
+        &self,
+        participant_id: String,
+        client_type: Option<String>,
+    ) -> anyhow::Result<Vec<cn_process::Model>>;
     async fn post_cn_process(&self, input: NewContractNegotiationRequest) -> anyhow::Result<cn_process::Model>;
     async fn put_cn_process(
         &self,

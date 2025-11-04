@@ -354,8 +354,7 @@ where
         match key_data.first() {
             Some(data) => Ok(data.clone()),
             None => {
-                let error =
-                    Errors::missing_action_new("Retrieve keys first".to_string(), MissingAction::Key, None);
+                let error = Errors::missing_action_new("Retrieve keys first".to_string(), MissingAction::Key, None);
                 error!("{}", error.log());
                 bail!(error)
             }
@@ -395,7 +394,7 @@ where
                 let weird_wallets = res.json::<WalletInfoResponse>().await?.wallets;
                 let mut wallets = Vec::<WalletInfo>::new();
                 for wallet in weird_wallets {
-                    let wallet= wallet.to_normal();
+                    let wallet = wallet.to_normal();
                     if !wallets.contains(&wallet) {
                         wallets.push(wallet);
                     }

@@ -46,5 +46,4 @@ impl Related<super::policy_relations::Entity> for Entity {
     }
 }
 
-
 impl ActiveModelBehavior for ActiveModel {}

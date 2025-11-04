@@ -221,7 +221,6 @@ pub async fn transfer_pull_full_case() -> anyhow::Result<()> {
     // END DATA TRANSFER!!!
     //============================================//
 
-
     utils::cleanup_test_env(provider_server, consumer_server).await?;
     Ok(())
 }

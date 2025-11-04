@@ -17,7 +17,9 @@
  *
  */
 
-use crate::core::rainbow_rpc::rainbow_rpc_types::{RainbowRPCDatahubCatalogResolveDataServiceRequest, RainbowRPCDatahubCatalogResolveOfferByIdRequest};
+use crate::core::rainbow_rpc::rainbow_rpc_types::{
+    RainbowRPCDatahubCatalogResolveDataServiceRequest, RainbowRPCDatahubCatalogResolveOfferByIdRequest,
+};
 use crate::core::rainbow_rpc::RainbowRPCDatahubCatalogTrait;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::State;

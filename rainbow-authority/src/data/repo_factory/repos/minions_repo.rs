@@ -64,7 +64,6 @@ impl MinionsRepoTrait for MinionsRepo {
         let me = Entity::find().filter(Column::IsMe.eq(true)).one(&self.inner.db_connection).await?;
         Ok(me)
     }
-    
 
     async fn force_create(&self, minion: NewModel) -> anyhow::Result<Model> {
         let active_mate = minion.to_active();

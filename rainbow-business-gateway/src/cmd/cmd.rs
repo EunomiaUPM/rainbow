@@ -114,8 +114,7 @@ impl GatewayCommands {
                 let mut options = CopyOptions::new();
                 options.overwrite = true;
                 options.copy_inside = true;
-                copy(origin, destination, &options)
-                    .expect("failed to execute copy process");
+                copy(origin, destination, &options).expect("failed to execute copy process");
                 debug!("Copy command finished successfully");
             }
         }

@@ -32,8 +32,15 @@ pub mod ds_protocol;
 #[async_trait]
 pub trait DSProtocolTransferProviderTrait: Send + Sync {
     async fn get_transfer_requests_by_provider(&self, provider_pid: Urn) -> anyhow::Result<TransferProcessMessage>;
-    async fn get_transfer_requests_by_consumer(&self, consumer_pid: Urn) -> anyhow::Result<Option<TransferProcessMessage>>;
-    async fn transfer_request(&self, input: TransferRequestMessage, token: String) -> anyhow::Result<TransferProcessMessage>;
+    async fn get_transfer_requests_by_consumer(
+        &self,
+        consumer_pid: Urn,
+    ) -> anyhow::Result<Option<TransferProcessMessage>>;
+    async fn transfer_request(
+        &self,
+        input: TransferRequestMessage,
+        token: String,
+    ) -> anyhow::Result<TransferProcessMessage>;
     async fn transfer_start(
         &self,
         provider_pid: Urn,

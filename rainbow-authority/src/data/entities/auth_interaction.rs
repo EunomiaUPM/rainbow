@@ -138,5 +138,4 @@ impl Related<super::auth_verification::Entity> for Entity {
     }
 }
 
-
 impl ActiveModelBehavior for ActiveModel {}

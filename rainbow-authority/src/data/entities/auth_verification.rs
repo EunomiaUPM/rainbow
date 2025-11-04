@@ -37,7 +37,7 @@ pub struct Model {
     pub status: String,                    // DEFAULT
     pub created_at: chrono::NaiveDateTime, // DEFAULT
     pub ended_at: Option<chrono::NaiveDateTime>, // RESPONSE
-    // pub requirements: Value, TODO
+                                           // pub requirements: Value, TODO
 }
 
 #[derive(Clone, Debug)]

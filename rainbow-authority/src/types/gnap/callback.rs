@@ -27,5 +27,3 @@ pub struct CallbackBody {
 pub struct RejectedCallbackBody {
     pub rejected: String,
 }
-
-

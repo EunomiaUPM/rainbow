@@ -29,10 +29,7 @@ pub struct RequestInfo {
     pub token: String,
 }
 
-pub async fn extract_request_info(
-    mut request: Request,
-    next: Next,
-) -> Result<Response, StatusCode> {
+pub async fn extract_request_info(mut request: Request, next: Next) -> Result<Response, StatusCode> {
     debug!("Request info headers middleware");
     // 1. Extract headers
     let headers = request.headers();

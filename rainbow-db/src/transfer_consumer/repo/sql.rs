@@ -27,7 +27,10 @@ use crate::transfer_consumer::repo::{EditTransferMessageModel, NewTransferMessag
 use crate::transfer_consumer::transfer_process_projection::TransferConsumerProcessFromSQL;
 use axum::async_trait;
 use rainbow_common::utils::get_urn;
-use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, DbBackend, EntityTrait, FromQueryResult, QueryFilter, QuerySelect, Statement};
+use sea_orm::{
+    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, DbBackend, EntityTrait, FromQueryResult,
+    QueryFilter, QuerySelect, Statement,
+};
 use urn::Urn;
 
 pub struct TransferConsumerRepoForSql {
@@ -48,7 +51,6 @@ impl TransferConsumerRepoFactory for TransferConsumerRepoForSql {
 
 #[async_trait]
 impl TransferCallbackRepo for TransferConsumerRepoForSql {
-
     // async fn get_all_transfer_callbacks(
     //     &self,
     //     limit: Option<u64>,
@@ -104,7 +106,10 @@ impl TransferCallbackRepo for TransferConsumerRepoForSql {
         Ok(transfer_processes)
     }
 
-    async fn get_batch_transfer_processes(&self, transfer_ids: &Vec<Urn>) -> Result<Vec<TransferConsumerProcessFromSQL>, TransferConsumerRepoErrors> {
+    async fn get_batch_transfer_processes(
+        &self,
+        transfer_ids: &Vec<Urn>,
+    ) -> Result<Vec<TransferConsumerProcessFromSQL>, TransferConsumerRepoErrors> {
         let transfer_ids = transfer_ids.iter().map(|t| t.to_string()).collect::<Vec<_>>();
         let sql = r#"
             WITH RankedMessages AS (
@@ -185,7 +190,11 @@ impl TransferCallbackRepo for TransferConsumerRepoForSql {
             ORDER BY
                 p.created_at DESC;
         "#;
-        let stmt = Statement::from_sql_and_values(DbBackend::Postgres, sql.to_owned(), [callback_id.to_string().into()]);
+        let stmt = Statement::from_sql_and_values(
+            DbBackend::Postgres,
+            sql.to_owned(),
+            [callback_id.to_string().into()],
+        );
         let transfer_processes = TransferConsumerProcessFromSQL::find_by_statement(stmt)
             .one(&self.db_connection)
             .await
@@ -239,7 +248,11 @@ impl TransferCallbackRepo for TransferConsumerRepoForSql {
             ORDER BY
                 p.created_at DESC;
         "#;
-        let stmt = Statement::from_sql_and_values(DbBackend::Postgres, sql.to_owned(), [consumer_pid.to_string().into()]);
+        let stmt = Statement::from_sql_and_values(
+            DbBackend::Postgres,
+            sql.to_owned(),
+            [consumer_pid.to_string().into()],
+        );
         let transfer_processes = TransferConsumerProcessFromSQL::find_by_statement(stmt)
             .one(&self.db_connection)
             .await
@@ -293,7 +306,11 @@ impl TransferCallbackRepo for TransferConsumerRepoForSql {
             ORDER BY
                 p.created_at DESC;
         "#;
-        let stmt = Statement::from_sql_and_values(DbBackend::Postgres, sql.to_owned(), [provider_id.to_string().into()]);
+        let stmt = Statement::from_sql_and_values(
+            DbBackend::Postgres,
+            sql.to_owned(),
+            [provider_id.to_string().into()],
+        );
         let transfer_processes = TransferConsumerProcessFromSQL::find_by_statement(stmt)
             .one(&self.db_connection)
             .await

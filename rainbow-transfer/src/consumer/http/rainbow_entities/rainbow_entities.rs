@@ -47,7 +47,10 @@ where
     pub fn router(self) -> Router {
         Router::new()
             .route("/api/v1/transfers", get(Self::handle_get_all_transfers))
-            .route("/api/v1/transfers/batch", post(Self::handle_get_batch_transfers))
+            .route(
+                "/api/v1/transfers/batch",
+                post(Self::handle_get_batch_transfers),
+            )
             .route(
                 "/api/v1/transfers/:id",
                 get(Self::handle_get_transfer_by_id),

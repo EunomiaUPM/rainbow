@@ -32,21 +32,13 @@ impl From<cn_process::Model> for ContractAckMessage {
     }
 }
 
-
 impl From<CnErrors> for ContractErrorMessage {
     fn from(error: CnErrors) -> Self {
         match error {
-            e @ CnErrors::CNProcessNotFound => Self {
-                code: Some("NOT_FOUND".to_string()),
-                reason: Some(vec![e.to_string()]),
-                ..Default::default()
-            },
-            e => Self {
-                code: Some("DB_ERROR".to_string()),
-                reason: Some(vec![e.to_string()]),
-                ..Default::default()
+            e @ CnErrors::CNProcessNotFound => {
+                Self { code: Some("NOT_FOUND".to_string()), reason: Some(vec![e.to_string()]), ..Default::default() }
             }
+            e => Self { code: Some("DB_ERROR".to_string()), reason: Some(vec![e.to_string()]), ..Default::default() },
         }
     }
 }
-

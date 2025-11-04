@@ -17,8 +17,8 @@
  *
  */
 
-use axum::async_trait;
 use crate::facades::inner_auth_facade::InnerAuthFacadeTrait;
+use axum::async_trait;
 
 pub struct InnerAuthFacadeService {}
 impl InnerAuthFacadeService {

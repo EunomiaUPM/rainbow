@@ -33,13 +33,13 @@ use urn::Urn;
 pub mod sql;
 
 pub trait ContractNegotiationProviderRepoFactory:
-ContractNegotiationProcessRepo
-+ ContractNegotiationMessageRepo
-+ ContractNegotiationOfferRepo
-+ AgreementRepo
-+ Send
-+ Sync
-+ 'static
+    ContractNegotiationProcessRepo
+    + ContractNegotiationMessageRepo
+    + ContractNegotiationOfferRepo
+    + AgreementRepo
+    + Send
+    + Sync
+    + 'static
 {
     fn create_repo(db_connection: DatabaseConnection) -> Self
     where
@@ -160,7 +160,7 @@ pub trait ContractNegotiationOfferRepo {
         page: Option<u64>,
     ) -> anyhow::Result<Vec<cn_offer::Model>, CnErrors>;
     async fn get_all_cn_offers_by_message_id(&self, offer_id: Urn)
-                                             -> anyhow::Result<Option<cn_offer::Model>, CnErrors>;
+        -> anyhow::Result<Option<cn_offer::Model>, CnErrors>;
     async fn get_all_cn_offers_by_provider(&self, provider_id: Urn) -> anyhow::Result<Vec<cn_offer::Model>, CnErrors>;
     async fn get_all_cn_offers_by_cn_process(&self, process_id: Urn) -> anyhow::Result<Vec<cn_offer::Model>, CnErrors>;
     async fn get_all_cn_offers_by_consumer(&self, consumer_id: Urn) -> anyhow::Result<Vec<cn_offer::Model>, CnErrors>;

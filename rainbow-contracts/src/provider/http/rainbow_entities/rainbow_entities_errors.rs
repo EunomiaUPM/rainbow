@@ -141,6 +141,6 @@ impl IntoResponse for CnErrorProvider {
                 )),
             ),
         }
-            .into_response()
+        .into_response()
     }
 }

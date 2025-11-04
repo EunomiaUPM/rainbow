@@ -17,8 +17,8 @@
  *
  */
 
+use crate::auth_provider::entities::auth_token_requirements::Model;
 use crate::common::BasicRepoTrait;
-use crate::auth_provider::entities::auth_token_requirements::{Model};
 use axum::async_trait;
 
 #[async_trait]

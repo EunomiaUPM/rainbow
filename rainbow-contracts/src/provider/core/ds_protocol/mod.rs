@@ -25,17 +25,20 @@ use rainbow_common::protocol::contract::contract_negotiation_request::ContractRe
 use rainbow_common::protocol::contract::contract_negotiation_termination::ContractTerminationMessage;
 use urn::Urn;
 
+pub mod ds_protocol;
 pub mod ds_protocol_errors;
 pub mod ds_protocol_types;
-pub mod ds_protocol;
 
 #[mockall::automock]
 #[async_trait]
 pub trait DSProtocolContractNegotiationProviderTrait: Send + Sync {
-    async fn get_negotiation(
-        &self, provider_pid: Urn) -> anyhow::Result<ContractAckMessage>;
+    async fn get_negotiation(&self, provider_pid: Urn) -> anyhow::Result<ContractAckMessage>;
     async fn post_request(
-        &self, input: ContractRequestMessage, token: String, client_type: String) -> anyhow::Result<ContractAckMessage>;
+        &self,
+        input: ContractRequestMessage,
+        token: String,
+        client_type: String,
+    ) -> anyhow::Result<ContractAckMessage>;
     async fn post_provider_request(
         &self,
         provider_pid: Urn,

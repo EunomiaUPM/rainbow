@@ -19,9 +19,7 @@
 
 use crate::protocol::context_field::ContextField;
 use crate::protocol::transfer::transfer_error::TransferError;
-use crate::protocol::transfer::{
-    TransferMessageTypes, TransferState,
-};
+use crate::protocol::transfer::{TransferMessageTypes, TransferState};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
@@ -56,8 +54,7 @@ pub enum TransferErrorType {
     TransferProcessAlreadySuspendedError,
     #[error("Protocol Error. Transfer process not found")]
     TransferProcessNotFound,
-    #[error("Protocol Error. {message_type} is not allowed here. Current state is {state}"
-    )]
+    #[error("Protocol Error. {message_type} is not allowed here. Current state is {state}")]
     ProtocolError { state: TransferState, message_type: String },
     #[error("Protocol Error. This message type is not allowed")]
     MessageTypeNotAcceptedError,
@@ -251,11 +248,7 @@ impl IntoResponse for TransferErrorType {
                     provider_pid: None,
                     consumer_pid: None,
                     code: TransferErrorCodes::TransferErrorCode.to_string(),
-                    reason: vec![
-                        "Internal server error".to_string(),
-                        e.to_string(),
-                        inner_error.to_string(),
-                    ],
+                    reason: vec!["Internal server error".to_string(), e.to_string(), inner_error.to_string()],
                 }),
             ),
             e @ TransferErrorType::ConsumerNotReachableError => (
@@ -303,7 +296,7 @@ impl IntoResponse for TransferErrorType {
                 }),
             ),
         }
-            .into_response()
+        .into_response()
     }
 }
 

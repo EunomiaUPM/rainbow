@@ -57,12 +57,12 @@ use urn::Urn;
 pub struct DSProtocolContractNegotiationProviderService<T, U, W, X>
 where
     T: ContractNegotiationProcessRepo
-    + ContractNegotiationMessageRepo
-    + ContractNegotiationOfferRepo
-    + AgreementRepo
-    + Send
-    + Sync
-    + 'static,
+        + ContractNegotiationMessageRepo
+        + ContractNegotiationOfferRepo
+        + AgreementRepo
+        + Send
+        + Sync
+        + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
     W: MatesFacadeTrait + Send + Sync,
     X: SSIAuthFacadeTrait + Sync + Send,
@@ -77,12 +77,12 @@ where
 impl<T, U, W, X> DSProtocolContractNegotiationProviderService<T, U, W, X>
 where
     T: ContractNegotiationProcessRepo
-    + ContractNegotiationMessageRepo
-    + ContractNegotiationOfferRepo
-    + AgreementRepo
-    + Send
-    + Sync
-    + 'static,
+        + ContractNegotiationMessageRepo
+        + ContractNegotiationOfferRepo
+        + AgreementRepo
+        + Send
+        + Sync
+        + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
     W: MatesFacadeTrait + Send + Sync,
     X: SSIAuthFacadeTrait + Sync + Send,
@@ -289,14 +289,14 @@ where
 impl<T, U, W, X> DSProtocolContractNegotiationProviderTrait for DSProtocolContractNegotiationProviderService<T, U, W, X>
 where
     T: ContractNegotiationProcessRepo
-    + ContractNegotiationMessageRepo
-    + ContractNegotiationOfferRepo
-    + AgreementRepo
-    + Send
-    + Sync
-    + 'static,
+        + ContractNegotiationMessageRepo
+        + ContractNegotiationOfferRepo
+        + AgreementRepo
+        + Send
+        + Sync
+        + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
-// V: CatalogOdrlFacadeTrait + Send + Sync,
+    // V: CatalogOdrlFacadeTrait + Send + Sync,
     W: MatesFacadeTrait + Send + Sync,
     X: SSIAuthFacadeTrait + Sync + Send,
 {
@@ -407,7 +407,7 @@ where
                 "offer": cn_offer
             }),
         )
-            .await?;
+        .await?;
 
         debug!("\n\n9. {:?}\n", cn_process);
 
@@ -503,7 +503,7 @@ where
                 "offer": offer
             }),
         )
-            .await?;
+        .await?;
 
         Ok(cn_process.into())
     }
@@ -557,7 +557,7 @@ where
                 "message": message
             }),
         )
-            .await?;
+        .await?;
         Ok(cn_process.into())
     }
 
@@ -611,7 +611,7 @@ where
                 "message": message
             }),
         )
-            .await?;
+        .await?;
         Ok(cn_process.into())
     }
 
@@ -665,7 +665,7 @@ where
                 "message": message
             }),
         )
-            .await?;
+        .await?;
         Ok(cn_process.into())
     }
 }

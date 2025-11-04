@@ -30,7 +30,10 @@ use axum::async_trait;
 use cn_message::Model;
 use json_value_merge::Merge;
 use rainbow_common::utils::{get_urn, get_urn_from_string};
-use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, DbBackend, EntityTrait, FromQueryResult, JoinType, ModelTrait, QueryFilter, QueryOrder, QuerySelect, RelationTrait, Statement};
+use sea_orm::{
+    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, DbBackend, EntityTrait, FromQueryResult, JoinType,
+    ModelTrait, QueryFilter, QueryOrder, QuerySelect, RelationTrait, Statement,
+};
 use serde_json::to_value;
 use urn::Urn;
 
@@ -96,7 +99,10 @@ impl ContractNegotiationConsumerProcessRepo for ContractNegotiationConsumerRepoF
         Ok(cn_processes)
     }
 
-    async fn get_batch_cn_processes(&self, cn_ids: &Vec<Urn>) -> anyhow::Result<Vec<CnConsumerProcessFromSQL>, CnErrors> {
+    async fn get_batch_cn_processes(
+        &self,
+        cn_ids: &Vec<Urn>,
+    ) -> anyhow::Result<Vec<CnConsumerProcessFromSQL>, CnErrors> {
         let cn_ids = cn_ids.iter().map(|a| a.to_string()).collect::<Vec<String>>();
         let sql = r#"
             WITH RankedMessages AS (
@@ -174,7 +180,11 @@ impl ContractNegotiationConsumerProcessRepo for ContractNegotiationConsumerRepoF
             ORDER BY
                 p.created_at DESC;
         "#;
-        let stmt = Statement::from_sql_and_values(DbBackend::Postgres, sql.to_owned(), [provider_id.to_string().into()]);
+        let stmt = Statement::from_sql_and_values(
+            DbBackend::Postgres,
+            sql.to_owned(),
+            [provider_id.to_string().into()],
+        );
         let cn_processes = CnConsumerProcessFromSQL::find_by_statement(stmt)
             .one(&self.db_connection)
             .await
@@ -218,7 +228,11 @@ impl ContractNegotiationConsumerProcessRepo for ContractNegotiationConsumerRepoF
             ORDER BY
                 p.created_at DESC;
         "#;
-        let stmt = Statement::from_sql_and_values(DbBackend::Postgres, sql.to_owned(), [consumer_id.to_string().into()]);
+        let stmt = Statement::from_sql_and_values(
+            DbBackend::Postgres,
+            sql.to_owned(),
+            [consumer_id.to_string().into()],
+        );
         let cn_processes = CnConsumerProcessFromSQL::find_by_statement(stmt)
             .one(&self.db_connection)
             .await
@@ -227,10 +241,7 @@ impl ContractNegotiationConsumerProcessRepo for ContractNegotiationConsumerRepoF
         Ok(cn_processes)
     }
 
-    async fn get_cn_process_by_cn_id(
-        &self,
-        cn_process_id: Urn,
-    ) -> anyhow::Result<Option<cn_process::Model>, CnErrors> {
+    async fn get_cn_process_by_cn_id(&self, cn_process_id: Urn) -> anyhow::Result<Option<cn_process::Model>, CnErrors> {
         let response = cn_process::Entity::find_by_id(cn_process_id.to_string())
             .one(&self.db_connection)
             .await
@@ -257,10 +268,9 @@ impl ContractNegotiationConsumerProcessRepo for ContractNegotiationConsumerRepoF
             .await
             .map_err(|err| CnErrors::ErrorUpdatingCNProcess(err.into()))?;
 
-        let urn = get_urn_from_string(&model.consumer_id)
-            .map_err(|err| CnErrors::ErrorFetchingCNProcess(err.into()))?;
-        let model_out = self.get_cn_process_by_consumer_id(urn).await?
-            .ok_or(CnErrors::CNProcessNotFound)?;
+        let urn =
+            get_urn_from_string(&model.consumer_id).map_err(|err| CnErrors::ErrorFetchingCNProcess(err.into()))?;
+        let model_out = self.get_cn_process_by_consumer_id(urn).await?.ok_or(CnErrors::CNProcessNotFound)?;
 
         Ok(model_out)
     }

@@ -19,12 +19,12 @@
 
 use crate::provider::setup::application::CatalogApplication;
 use crate::provider::setup::db_migrations::CatalogMigration;
+use crate::provider::setup::db_seeding::CatalogSeeding;
 use clap::{Parser, Subcommand};
 use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use std::cmp::PartialEq;
 use tracing::{debug, info};
-use crate::provider::setup::db_seeding::CatalogSeeding;
 
 #[derive(Parser, Debug)]
 #[command(name = "Rainbow Dataspace Connector Catalog Server")]
@@ -45,7 +45,6 @@ pub struct CatalogCliArgs {
     #[arg(short, long)]
     env_file: Option<String>,
 }
-
 
 pub struct CatalogCommands;
 
@@ -75,16 +74,14 @@ impl CatalogCommands {
         let config = config.merge_dotenv_configuration(env_file);
         let mut config_table = config.clone();
         config_table.datahub_token = format!("{}...", config_table.datahub_token[0..20].to_string());
-        let table =
-            json_to_table::json_to_table(&serde_json::to_value(&config_table)?).collapse().to_string();
+        let table = json_to_table::json_to_table(&serde_json::to_value(&config_table)?).collapse().to_string();
         info!("Current Application Provider Config:\n{}", table);
         Ok(config)
     }
     fn extract_consumer_config(env_file: Option<String>) -> anyhow::Result<ApplicationConsumerConfig> {
         let config = ApplicationConsumerConfig::default();
         let config = config.merge_dotenv_configuration(env_file);
-        let table =
-            json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
+        let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
         info!("Current Application Consumer Config:\n{}", table);
         Ok(config)
     }

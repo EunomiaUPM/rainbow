@@ -39,13 +39,14 @@ where
     T: DataPlaneInfoTrait + Send + Sync + 'static,
 {
     pub fn new(data_plane_info_service: Arc<T>) -> Self {
-        Self {
-            data_plane_info_service
-        }
+        Self { data_plane_info_service }
     }
     pub fn router(self) -> Router {
         Router::new()
-            .route("/api/v1/dataplane/:data_plane_id", get(Self::handle_get_data_plane_by_id))
+            .route(
+                "/api/v1/dataplane/:data_plane_id",
+                get(Self::handle_get_data_plane_by_id),
+            )
             .with_state(self.data_plane_info_service)
     }
     async fn handle_get_data_plane_by_id(

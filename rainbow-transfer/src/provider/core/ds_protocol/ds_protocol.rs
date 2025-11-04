@@ -116,7 +116,10 @@ where
         match message_provider_pid {
             Some(msg_p_pid) if msg_p_pid == provider_pid_from_uri => {}
             _ => {
-                let e = CommonErrors::format_new(BadFormat::Received, "Uri and Body identifiers do not coincide".to_string().into());
+                let e = CommonErrors::format_new(
+                    BadFormat::Received,
+                    "Uri and Body identifiers do not coincide".to_string().into(),
+                );
                 error!("{}", e.log());
                 bail!(e)
             }
@@ -128,7 +131,10 @@ where
             .await
             .map_err(|e| CommonErrors::format_new(BadFormat::Received, e.to_string().into()))?
             .ok_or_else(|| {
-                let e = CommonErrors::missing_resource_new(provider_pid_from_uri.to_string(), "Transfer process doesn't exist".to_string().into());
+                let e = CommonErrors::missing_resource_new(
+                    provider_pid_from_uri.to_string(),
+                    "Transfer process doesn't exist".to_string().into(),
+                );
                 error!("{}", e.log());
                 anyhow!(e)
             })?;
@@ -140,12 +146,18 @@ where
                 .await
                 .map_err(|e| CommonErrors::format_new(BadFormat::Received, e.to_string().into()))?
                 .ok_or_else(|| {
-                    let e = CommonErrors::missing_resource_new(msg_c_pid.to_string(), "Transfer process doesn't exist".to_string().into());
+                    let e = CommonErrors::missing_resource_new(
+                        msg_c_pid.to_string(),
+                        "Transfer process doesn't exist".to_string().into(),
+                    );
                     error!("{}", e.log());
                     anyhow!(e)
                 })?;
             if consumer_transfer_process.provider_pid != provider_transfer_process.provider_pid {
-                let e = CommonErrors::format_new(BadFormat::Received, "ConsumerPid and ProviderPid don't coincide".to_string().to_string().into());
+                let e = CommonErrors::format_new(
+                    BadFormat::Received,
+                    "ConsumerPid and ProviderPid don't coincide".to_string().to_string().into(),
+                );
                 error!("{}", e.log());
                 bail!(e);
             }
@@ -153,7 +165,10 @@ where
             if provider_transfer_process.associated_consumer.clone().unwrap()
                 != consumer_participant_mate.participant_id
             {
-                let e = CommonErrors::format_new(BadFormat::Received, "This user is not related with this process".to_string().to_string().into());
+                let e = CommonErrors::format_new(
+                    BadFormat::Received,
+                    "This user is not related with this process".to_string().to_string().into(),
+                );
                 error!("{}", e.log());
                 bail!(e);
             }
@@ -210,7 +225,9 @@ where
                     TransferMessageTypes::TransferStartMessage => match transfer_state {
                         TransferState::REQUESTED => {}
                         TransferState::STARTED => {
-                            let e = TransferErrors::protocol_new("Start message is not allowed in STARTED state".to_string().into());
+                            let e = TransferErrors::protocol_new(
+                                "Start message is not allowed in STARTED state".to_string().into(),
+                            );
                             error!("{}", e.log());
                             bail!(e);
                         }
@@ -229,12 +246,16 @@ where
                             }
                         }
                         TransferState::COMPLETED => {
-                            let e = TransferErrors::protocol_new("Start message is not allowed in COMPLETED state".to_string().into());
+                            let e = TransferErrors::protocol_new(
+                                "Start message is not allowed in COMPLETED state".to_string().into(),
+                            );
                             error!("{}", e.log());
                             bail!(e);
                         }
                         TransferState::TERMINATED => {
-                            let e = TransferErrors::protocol_new("Start message is not allowed in TERMINATED state".to_string().into());
+                            let e = TransferErrors::protocol_new(
+                                "Start message is not allowed in TERMINATED state".to_string().into(),
+                            );
                             error!("{}", e.log());
                             bail!(e);
                         }
@@ -242,7 +263,9 @@ where
                     // 4. Transfer suspension transition check
                     TransferMessageTypes::TransferSuspensionMessage => match transfer_state {
                         TransferState::REQUESTED => {
-                            let e = TransferErrors::protocol_new("Suspension message is not allowed in REQUESTED state".to_string().into());
+                            let e = TransferErrors::protocol_new(
+                                "Suspension message is not allowed in REQUESTED state".to_string().into(),
+                            );
                             error!("{}", e.log());
                             bail!(e);
                         }
@@ -253,12 +276,16 @@ where
                             bail!(e);
                         }
                         TransferState::COMPLETED => {
-                            let e = TransferErrors::protocol_new("Suspension message is not allowed in COMPLETED state".to_string().into());
+                            let e = TransferErrors::protocol_new(
+                                "Suspension message is not allowed in COMPLETED state".to_string().into(),
+                            );
                             error!("{}", e.log());
                             bail!(e);
                         }
                         TransferState::TERMINATED => {
-                            let e = TransferErrors::protocol_new("Suspension message is not allowed in TERMINATED state".to_string().into());
+                            let e = TransferErrors::protocol_new(
+                                "Suspension message is not allowed in TERMINATED state".to_string().into(),
+                            );
                             error!("{}", e.log());
                             bail!(e);
                         }
@@ -266,7 +293,9 @@ where
                     // 4. Transfer completion transition check
                     TransferMessageTypes::TransferCompletionMessage => match transfer_state {
                         TransferState::REQUESTED => {
-                            let e = TransferErrors::protocol_new("Completion message is not allowed in REQUESTED state".to_string().into());
+                            let e = TransferErrors::protocol_new(
+                                "Completion message is not allowed in REQUESTED state".to_string().into(),
+                            );
                             error!("{}", e.log());
                             bail!(e);
                         }
@@ -274,7 +303,9 @@ where
                         TransferState::SUSPENDED => {}
                         TransferState::COMPLETED => {}
                         TransferState::TERMINATED => {
-                            let e = TransferErrors::protocol_new("Completion message is not allowed in TERMINATED state".to_string().into());
+                            let e = TransferErrors::protocol_new(
+                                "Completion message is not allowed in TERMINATED state".to_string().into(),
+                            );
                             error!("{}", e.log());
                             bail!(e);
                         }
@@ -285,7 +316,9 @@ where
                         TransferState::STARTED => {}
                         TransferState::SUSPENDED => {}
                         TransferState::COMPLETED => {
-                            let e = TransferErrors::protocol_new("Completion message is not allowed in COMPLETED state".to_string().into());
+                            let e = TransferErrors::protocol_new(
+                                "Completion message is not allowed in COMPLETED state".to_string().into(),
+                            );
                             error!("{}", e.log());
                             bail!(e);
                         }
@@ -342,7 +375,10 @@ where
                 anyhow!(e)
             })?
             .ok_or_else(|| {
-                let e = CommonErrors::missing_resource_new(provider_pid.to_string(), "Transfer process not found".to_string().into());
+                let e = CommonErrors::missing_resource_new(
+                    provider_pid.to_string(),
+                    "Transfer process not found".to_string().into(),
+                );
                 error!("{}", e.log());
                 anyhow!(e)
             })?;
@@ -364,7 +400,10 @@ where
                 anyhow!(e)
             })?
             .ok_or_else(|| {
-                let e = CommonErrors::missing_resource_new(consumer_pid.to_string(), "Transfer process not found".to_string().into());
+                let e = CommonErrors::missing_resource_new(
+                    consumer_pid.to_string(),
+                    "Transfer process not found".to_string().into(),
+                );
                 error!("{}", e.log());
                 anyhow!(e)
             })?;
@@ -392,7 +431,10 @@ where
         self.json_schema_validation(&input)?;
         self.transition_validation(&input).await?;
         if !has_data_address_in_push(&input.data_address, &input.format)? {
-            let e = CommonErrors::format_new(BadFormat::Received, "Data address cannot be null on push direction".to_string().into());
+            let e = CommonErrors::format_new(
+                BadFormat::Received,
+                "Data address cannot be null on push direction".to_string().into(),
+            );
             error!("{}", e.log());
             bail!(e);
         }
@@ -445,7 +487,7 @@ where
                 "message": transfer_message
             }),
         )
-            .await?;
+        .await?;
         // 6. Bye
         Ok(transfer_process.into())
     }
@@ -478,7 +520,10 @@ where
             .await
             .map_err(|e| match e {
                 TransferProviderRepoErrors::ProviderTransferProcessNotFound => {
-                    let e = CommonErrors::missing_resource_new(provider_pid.to_string(), "Transfer process doesn't exist".to_string().into());
+                    let e = CommonErrors::missing_resource_new(
+                        provider_pid.to_string(),
+                        "Transfer process doesn't exist".to_string().into(),
+                    );
                     error!("{}", e.log());
                     anyhow!(e)
                 }
@@ -517,7 +562,7 @@ where
                 "message": transfer_message
             }),
         )
-            .await?;
+        .await?;
         // 5. Bye
         Ok(transfer_process.into())
     }
@@ -550,7 +595,10 @@ where
             .await
             .map_err(|e| match e {
                 TransferProviderRepoErrors::ProviderTransferProcessNotFound => {
-                    let e = CommonErrors::missing_resource_new(provider_pid.to_string(), "Transfer process doesn't exist".to_string().into());
+                    let e = CommonErrors::missing_resource_new(
+                        provider_pid.to_string(),
+                        "Transfer process doesn't exist".to_string().into(),
+                    );
                     error!("{}", e.log());
                     anyhow!(e)
                 }
@@ -588,7 +636,7 @@ where
                 "message": transfer_message
             }),
         )
-            .await?;
+        .await?;
         // 5. Bye
         Ok(transfer_process.into())
     }
@@ -621,7 +669,10 @@ where
             .await
             .map_err(|e| match e {
                 TransferProviderRepoErrors::ProviderTransferProcessNotFound => {
-                    let e = CommonErrors::missing_resource_new(provider_pid.to_string(), "Transfer process doesn't exist".to_string().into());
+                    let e = CommonErrors::missing_resource_new(
+                        provider_pid.to_string(),
+                        "Transfer process doesn't exist".to_string().into(),
+                    );
                     error!("{}", e.log());
                     anyhow!(e)
                 }
@@ -659,7 +710,7 @@ where
                 "message": transfer_message
             }),
         )
-            .await?;
+        .await?;
         // 5. Bye
         Ok(transfer_process.into())
     }
@@ -693,7 +744,10 @@ where
             .await
             .map_err(|e| match e {
                 TransferProviderRepoErrors::ProviderTransferProcessNotFound => {
-                    let e = CommonErrors::missing_resource_new(provider_pid.to_string(), "Transfer process doesn't exist".to_string().into());
+                    let e = CommonErrors::missing_resource_new(
+                        provider_pid.to_string(),
+                        "Transfer process doesn't exist".to_string().into(),
+                    );
                     error!("{}", e.log());
                     anyhow!(e)
                 }
@@ -731,7 +785,7 @@ where
                 "message": transfer_message
             }),
         )
-            .await?;
+        .await?;
         // 5. Bye
         Ok(transfer_process.into())
     }

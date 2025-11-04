@@ -36,7 +36,6 @@ use std::sync::Arc;
 use tracing::error;
 use tracing::info;
 
-
 pub struct PolicyTemplatesRouter<T, U>
 where
     T: PolicyTemplatesRepo + Send + Sync + 'static,
@@ -109,7 +108,8 @@ where
                         message_content: to_value(&template).unwrap(),
                         message_operation: RainbowEventsNotificationMessageOperation::Creation,
                     })
-                    .await.unwrap();
+                    .await
+                    .unwrap();
                 (
                     StatusCode::CREATED,
                     Json(serde_json::to_value(template).unwrap()),
@@ -142,7 +142,8 @@ where
                         }),
                         message_operation: RainbowEventsNotificationMessageOperation::Deletion,
                     })
-                    .await.unwrap();
+                    .await
+                    .unwrap();
                 (
                     StatusCode::NO_CONTENT,
                     Json(json!({ "message": "Policy template deleted successfully" })),
@@ -174,7 +175,8 @@ where
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
                     Json(json!({ "error": e.to_string() })),
-                ).into_response()
+                )
+                    .into_response()
             }
         }
     }
@@ -195,14 +197,16 @@ where
                 (
                     StatusCode::NOT_FOUND,
                     Json(json!({ "error": "Policy template not found" })),
-                ).into_response()
+                )
+                    .into_response()
             }
             Err(e) => {
                 error!("Error al obtener policy template: {}", e);
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
                     Json(json!({ "error": e.to_string() })),
-                ).into_response()
+                )
+                    .into_response()
             }
         }
     }

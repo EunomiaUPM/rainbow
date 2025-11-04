@@ -19,7 +19,10 @@
 // use crate::utils::load_env_file;
 use rainbow_contracts::provider::core::rainbow_entities::rainbow_entities_types::NewParticipantRequest;
 
-use rainbow_common::protocol::contract::contract_odrl::{ContractRequestMessageOfferTypes, OdrlAgreement, OdrlAtomicConstraint, OdrlConstraint, OdrlMessageOffer, OdrlOffer, OdrlPermission, OdrlPolicyInfo, OdrlRightOperand, OdrlTypes, Operator};
+use rainbow_common::protocol::contract::contract_odrl::{
+    ContractRequestMessageOfferTypes, OdrlAgreement, OdrlAtomicConstraint, OdrlConstraint, OdrlMessageOffer, OdrlOffer,
+    OdrlPermission, OdrlPolicyInfo, OdrlRightOperand, OdrlTypes, Operator,
+};
 use rainbow_common::utils::{get_urn, get_urn_from_string};
 
 use rainbow_catalog::core::rainbow_entities::rainbow_catalog_types::{NewCatalogRequest, NewDatasetRequest};
