@@ -27,7 +27,7 @@ use sea_orm::ActiveValue;
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: String, // REQUEST
-    pub consumer_slug: String,                     // REQUEST
+    pub consumer_slug: String,                   // REQUEST
     pub token: Option<String>,                   // COMPLETION
     pub status: String,                          // DEFAULT
     pub created_at: chrono::NaiveDateTime,       // DEFAULT
@@ -36,7 +36,7 @@ pub struct Model {
 
 #[derive(Clone, Debug)]
 pub struct NewModel {
-    pub id: String,          // REQUEST
+    pub id: String,            // REQUEST
     pub consumer_slug: String, // REQUEST
 }
 

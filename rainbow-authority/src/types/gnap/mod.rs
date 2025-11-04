@@ -18,14 +18,14 @@
  */
 
 mod access_token;
+mod callback;
 mod grant_request;
 mod grant_response;
 mod interact_ref;
-mod callback;
 
 pub use access_token::AccessToken;
+pub use callback::CallbackBody;
+pub use callback::RejectedCallbackBody;
 pub use grant_request::GrantRequest;
 pub use grant_response::GrantResponse;
 pub use interact_ref::RefBody;
-pub use callback::CallbackBody;
-pub use callback::RejectedCallbackBody;

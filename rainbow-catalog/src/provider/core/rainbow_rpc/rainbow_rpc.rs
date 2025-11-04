@@ -18,7 +18,9 @@
  */
 
 use crate::provider::core::rainbow_entities::rainbow_catalog_err::CatalogError;
-use crate::provider::core::rainbow_rpc::rainbow_rpc_types::{RainbowRPCCatalogResolveDataServiceRequest, RainbowRPCCatalogResolveOfferByIdRequest};
+use crate::provider::core::rainbow_rpc::rainbow_rpc_types::{
+    RainbowRPCCatalogResolveDataServiceRequest, RainbowRPCCatalogResolveOfferByIdRequest,
+};
 use crate::provider::core::rainbow_rpc::RainbowRPCCatalogTrait;
 use axum::async_trait;
 use rainbow_common::protocol::catalog::dataservice_definition::DataService;
@@ -66,14 +68,12 @@ where
     }
 
     async fn resolve_offer(&self, input: RainbowRPCCatalogResolveOfferByIdRequest) -> anyhow::Result<OdrlOffer> {
-        let offer = self.repo
+        let offer = self
+            .repo
             .get_odrl_offer_by_id(input.offer_id.clone())
             .await
             .map_err(|e| CatalogError::DbErr(e.into()))?
-            .ok_or(CatalogError::NotFound {
-                id: input.offer_id,
-                entity: EntityTypes::DataService.to_string(),
-            })?;
+            .ok_or(CatalogError::NotFound { id: input.offer_id, entity: EntityTypes::DataService.to_string() })?;
         let offer = OdrlOffer::try_from(offer)?;
         Ok(offer)
     }

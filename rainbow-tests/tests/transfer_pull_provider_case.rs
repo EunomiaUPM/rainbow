@@ -30,15 +30,15 @@ use axum::http::{Request, StatusCode};
 use axum::{http, serve};
 use rainbow_common::dcat_formats::{DctFormats, FormatAction, FormatProtocol};
 use rainbow_common::protocol::transfer::{
-    DataAddress, TransferCompletionMessage, TransferMessageTypes, TransferProcessMessage,
-    TransferRequestMessage, TransferStartMessage, TransferSuspensionMessage,
+    DataAddress, TransferCompletionMessage, TransferMessageTypes, TransferProcessMessage, TransferRequestMessage,
+    TransferStartMessage, TransferSuspensionMessage,
 };
 use rainbow_common::utils::{get_urn, get_urn_from_string};
 use rainbow_db::transfer_consumer::entities::transfer_callback;
 use rainbow_db::transfer_provider::entities::transfer_process;
 use rainbow_transfer::consumer::lib::api::{
-    CompleteTransferRequest, RequestTransferRequest, RequestTransferResponse,
-    RestartTransferRequest, SuspendTransferRequest,
+    CompleteTransferRequest, RequestTransferRequest, RequestTransferResponse, RestartTransferRequest,
+    SuspendTransferRequest,
 };
 use serde_json::{json, Value};
 use std::io::BufRead;
@@ -66,7 +66,6 @@ pub async fn transfer_pull_full_case() -> anyhow::Result<()> {
         consumer_callback_address,
         callback_id,
     ) = utils::setup_test_env(pull_url).await?;
-
 
     //============================================//
     // TRANSFER REQUEST STAGE
@@ -158,7 +157,10 @@ pub async fn transfer_pull_full_case() -> anyhow::Result<()> {
         reason: vec!["bla".to_string()], // TODO DEFINE REASONS
     };
     let res = client
-        .post(format!("http://localhost:1234/transfers/{}/suspension", provider_pid_.clone()))
+        .post(format!(
+            "http://localhost:1234/transfers/{}/suspension",
+            provider_pid_.clone()
+        ))
         .header("content-type", "application/json")
         .json(&suspension_data)
         .send()
@@ -166,7 +168,6 @@ pub async fn transfer_pull_full_case() -> anyhow::Result<()> {
 
     println!("{:?}", &res.status());
     // ASSERT
-
 
     //============================================//
     // BEGIN DATA TRANSFER!!! should fail
@@ -179,7 +180,6 @@ pub async fn transfer_pull_full_case() -> anyhow::Result<()> {
     //============================================//
     // END DATA TRANSFER!!!
     //============================================//
-
 
     //============================================//
     // TRANSFER RESTART STAGE
@@ -195,7 +195,10 @@ pub async fn transfer_pull_full_case() -> anyhow::Result<()> {
         data_address: None,
     };
     let res = client
-        .post(format!("http://localhost:1234/transfers/{}/start", provider_pid_.clone()))
+        .post(format!(
+            "http://localhost:1234/transfers/{}/start",
+            provider_pid_.clone()
+        ))
         .header("content-type", "application/json")
         .json(&restart_data)
         .send()
@@ -215,7 +218,6 @@ pub async fn transfer_pull_full_case() -> anyhow::Result<()> {
     // END DATA TRANSFER!!!
     //============================================//
 
-
     //============================================//
     // TRANSFER COMPLETION STAGE
     //============================================//
@@ -227,7 +229,10 @@ pub async fn transfer_pull_full_case() -> anyhow::Result<()> {
         consumer_pid: consumer_pid.to_string(),
     };
     let res = client
-        .post(format!("http://localhost:1234/transfers/{}/completion", provider_pid_.clone()))
+        .post(format!(
+            "http://localhost:1234/transfers/{}/completion",
+            provider_pid_.clone()
+        ))
         .header("content-type", "application/json")
         .json(&complete_data)
         .send()

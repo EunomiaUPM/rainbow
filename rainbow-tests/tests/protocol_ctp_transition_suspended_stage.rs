@@ -26,9 +26,8 @@ use crate::utils::cleanup_test_env;
 use once_cell::sync::Lazy;
 use rainbow_common::dcat_formats::{DctFormats, FormatAction, FormatProtocol};
 use rainbow_common::protocol::transfer::{
-    TransferCompletionMessage, TransferMessageTypes, TransferProcessMessage,
-    TransferRequestMessage, TransferStartMessage, TransferSuspensionMessage,
-    TransferTerminationMessage,
+    TransferCompletionMessage, TransferMessageTypes, TransferProcessMessage, TransferRequestMessage,
+    TransferStartMessage, TransferSuspensionMessage, TransferTerminationMessage,
 };
 use rainbow_common::protocol::ContextField;
 use rainbow_common::utils::get_urn;

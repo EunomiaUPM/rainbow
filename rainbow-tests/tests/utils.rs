@@ -113,7 +113,6 @@ pub async fn setup_test_env(
     let agreement_id = get_urn_from_string(&res_body.agreement_id)?;
     println!("\nAgreement Id: {:#?}\n\n", agreement_id.to_string());
 
-
     // ====================================
     //  CREATE CALLBACK IN CONSUMER
     // ====================================
@@ -226,7 +225,6 @@ pub async fn setup_test_env_push(
     let agreement_id = get_urn_from_string(&res_body.agreement_id)?;
     println!("\nAgreement Id: {:#?}\n\n", agreement_id.to_string());
 
-
     // ====================================
     //  CREATE CALLBACK IN CONSUMER
     // ====================================
@@ -255,10 +253,7 @@ pub async fn setup_test_env_push(
     ))
 }
 
-pub async fn cleanup_test_env(
-    mut provider_server: Child,
-    mut consumer_server: Child,
-) -> anyhow::Result<()> {
+pub async fn cleanup_test_env(mut provider_server: Child, mut consumer_server: Child) -> anyhow::Result<()> {
     tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
     provider_server.kill().expect("Failed to kill provider server");
     consumer_server.kill().expect("Failed to kill consumer server");

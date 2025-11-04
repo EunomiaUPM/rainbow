@@ -21,10 +21,13 @@ use rainbow_common::config::ConfigRoles;
 use rainbow_common::protocol::contract::contract_odrl::OdrlAgreement;
 use rainbow_common::protocol::contract::ContractNegotiationState;
 use rainbow_common::utils::get_urn_from_string;
-use rainbow_db::contracts_provider::repo::{EditAgreement, EditContractNegotiationMessage, EditContractNegotiationOffer, EditContractNegotiationProcess, EditParticipant, NewAgreement, NewContractNegotiationMessage, NewContractNegotiationOffer, NewContractNegotiationProcess, NewParticipant};
+use rainbow_db::contracts_provider::repo::{
+    EditAgreement, EditContractNegotiationMessage, EditContractNegotiationOffer, EditContractNegotiationProcess,
+    EditParticipant, NewAgreement, NewContractNegotiationMessage, NewContractNegotiationOffer,
+    NewContractNegotiationProcess, NewParticipant,
+};
 use serde::{Deserialize, Serialize};
 use urn::Urn;
-
 
 #[derive(Deserialize)]
 pub struct ProcessesQuery {
@@ -148,10 +151,7 @@ pub struct NewContractNegotiationOfferRequest {
 
 impl Into<NewContractNegotiationOffer> for NewContractNegotiationOfferRequest {
     fn into(self) -> NewContractNegotiationOffer {
-        NewContractNegotiationOffer {
-            offer_id: Option::from(self.offer_id),
-            offer_content: self.offer_content,
-        }
+        NewContractNegotiationOffer { offer_id: Option::from(self.offer_id), offer_content: self.offer_content }
     }
 }
 
@@ -198,9 +198,7 @@ pub struct EditAgreementRequest {
 
 impl Into<EditAgreement> for EditAgreementRequest {
     fn into(self) -> EditAgreement {
-        EditAgreement {
-            active: self.active
-        }
+        EditAgreement { active: self.active }
     }
 }
 
@@ -242,11 +240,6 @@ pub struct EditParticipantRequest {
 
 impl Into<EditParticipant> for EditParticipantRequest {
     fn into(self) -> EditParticipant {
-        EditParticipant {
-            identity_token: None,
-            base_url: self.base_url,
-            extra_fields: self.extra_fields,
-        }
+        EditParticipant { identity_token: None, base_url: self.base_url, extra_fields: self.extra_fields }
     }
 }
-

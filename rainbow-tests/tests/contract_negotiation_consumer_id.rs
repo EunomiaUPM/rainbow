@@ -19,7 +19,10 @@
 // use crate::utils::load_env_file;
 use rainbow_contracts::provider::core::rainbow_entities::rainbow_entities_types::NewParticipantRequest;
 
-use rainbow_common::protocol::contract::contract_odrl::{ContractRequestMessageOfferOfferId, ContractRequestMessageOfferTypes, OdrlAgreement, OdrlAtomicConstraint, OdrlConstraint, OdrlMessageOffer, OdrlOffer, OdrlPermission, OdrlPolicyInfo, OdrlRightOperand, OdrlTypes, Operator};
+use rainbow_common::protocol::contract::contract_odrl::{
+    ContractRequestMessageOfferOfferId, ContractRequestMessageOfferTypes, OdrlAgreement, OdrlAtomicConstraint,
+    OdrlConstraint, OdrlMessageOffer, OdrlOffer, OdrlPermission, OdrlPolicyInfo, OdrlRightOperand, OdrlTypes, Operator,
+};
 use rainbow_common::utils::{get_urn, get_urn_from_string};
 
 use rainbow_catalog::core::rainbow_entities::rainbow_catalog_types::{NewCatalogRequest, NewDatasetRequest};
@@ -121,7 +124,10 @@ pub async fn contract_negotiation_consumer() -> anyhow::Result<()> {
     let catalog_id = res.id;
 
     let req = provider_client
-        .post(format!("http://localhost:1234/api/v1/catalogs/{}/datasets", catalog_id))
+        .post(format!(
+            "http://localhost:1234/api/v1/catalogs/{}/datasets",
+            catalog_id
+        ))
         .json(&NewDatasetRequest { id: None, dct_conforms_to: None, dct_creator: None, dct_title: None })
         .send()
         .await?;
@@ -130,7 +136,10 @@ pub async fn contract_negotiation_consumer() -> anyhow::Result<()> {
     let dataset_id = get_urn_from_string(&res.id)?;
 
     let req = provider_client
-        .post(format!("http://localhost:1234/api/v1/datasets/{}/policies", dataset_id))
+        .post(format!(
+            "http://localhost:1234/api/v1/datasets/{}/policies",
+            dataset_id
+        ))
         .json(&OdrlPolicyInfo {
             profile: None,
             permission: Some(vec![OdrlPermission {
@@ -162,7 +171,7 @@ pub async fn contract_negotiation_consumer() -> anyhow::Result<()> {
             consumer_pid: None,
             provider_pid: None,
             odrl_offer: ContractRequestMessageOfferTypes::OfferId(ContractRequestMessageOfferOfferId {
-                id: policy_id.clone()
+                id: policy_id.clone(),
             }),
         })
         .send()
@@ -171,7 +180,6 @@ pub async fn contract_negotiation_consumer() -> anyhow::Result<()> {
     let consumer_pid = res.consumer_pid.clone().unwrap();
     let provider_pid = res.provider_pid.clone().unwrap();
     println!("SetupRequestResponse: {:#?}", res);
-
 
     // -------------------------------
     // Provider agrees with AGREED and sketches agreement

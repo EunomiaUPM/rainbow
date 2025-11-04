@@ -17,7 +17,6 @@
  *
  */
 
-
 use crate::core::datahub_proxy::datahub_proxy_types::DatasetsQueryOptions;
 use crate::core::datahub_proxy::datahub_proxy_types::{DomainsQueryOptions, TagsQueryOptions};
 use crate::core::datahub_proxy::DatahubProxyTrait;
@@ -36,23 +35,29 @@ where
     datahub_service: Arc<T>,
 }
 
-
 impl<T> DataHubProxyRouter<T>
 where
     T: DatahubProxyTrait + Send + Sync + 'static,
 {
     pub fn new(datahub_service: Arc<T>) -> Self {
-        Self {
-            datahub_service
-        }
+        Self { datahub_service }
     }
     pub fn router(self) -> Router {
         Router::new()
-            .route("/api/v1/datahub/domains", get(Self::handle_get_datahub_domains))
+            .route(
+                "/api/v1/datahub/domains",
+                get(Self::handle_get_datahub_domains),
+            )
             .route("/api/v1/datahub/tags", get(Self::handle_get_datahub_tags))
             // .route("/api/v1/datahub/domains/:domain_id", get(Self::handle_get_datahub_domain_by_id))
-            .route("/api/v1/datahub/domains/:domain_id/datasets", get(Self::handle_get_datasets_by_domain_id))
-            .route("/api/v1/datahub/domains/datasets/:dataset_id", get(Self::handle_get_datasets_by_id))
+            .route(
+                "/api/v1/datahub/domains/:domain_id/datasets",
+                get(Self::handle_get_datasets_by_domain_id),
+            )
+            .route(
+                "/api/v1/datahub/domains/datasets/:dataset_id",
+                get(Self::handle_get_datasets_by_id),
+            )
             .with_state(self.datahub_service)
     }
     async fn handle_get_datahub_domains(

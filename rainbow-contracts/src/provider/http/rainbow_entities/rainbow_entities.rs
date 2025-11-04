@@ -18,7 +18,11 @@
  */
 
 use crate::provider::core::rainbow_entities::rainbow_entities_errors::CnErrorProvider;
-use crate::provider::core::rainbow_entities::rainbow_entities_types::{EditAgreementRequest, EditContractNegotiationMessageRequest, EditContractNegotiationOfferRequest, EditContractNegotiationRequest, NewAgreementRequest, NewContractNegotiationMessageRequest, NewContractNegotiationOfferRequest, NewContractNegotiationRequest, ProcessesQuery};
+use crate::provider::core::rainbow_entities::rainbow_entities_types::{
+    EditAgreementRequest, EditContractNegotiationMessageRequest, EditContractNegotiationOfferRequest,
+    EditContractNegotiationRequest, NewAgreementRequest, NewContractNegotiationMessageRequest,
+    NewContractNegotiationOfferRequest, NewContractNegotiationRequest, ProcessesQuery,
+};
 use crate::provider::core::rainbow_entities::RainbowEntitiesContractNegotiationProviderTrait;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, Query, State};
@@ -188,10 +192,7 @@ where
     ///
     /// CNProcess Rainbow API
     ///
-    async fn handle_get_cn_processes(
-        State(service): State<Arc<T>>,
-        query: Query<ProcessesQuery>,
-    ) -> impl IntoResponse {
+    async fn handle_get_cn_processes(State(service): State<Arc<T>>, query: Query<ProcessesQuery>) -> impl IntoResponse {
         info!("GET /api/v1/contract-negotiation/processes");
         let client_type = query.0.client_type;
         match service.get_cn_processes(client_type).await {

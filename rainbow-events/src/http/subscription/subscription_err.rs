@@ -32,7 +32,8 @@ impl IntoResponse for SubscriptionErrors {
                     title: "INTERNAL_ERROR".to_string(),
                     message: e.to_string(),
                 }),
-            ).into_response(),
+            )
+                .into_response(),
             e @ SubscriptionErrors::NotFound { .. } => (
                 StatusCode::NOT_FOUND,
                 Json(SubscriptionErrorMessage {
@@ -40,7 +41,8 @@ impl IntoResponse for SubscriptionErrors {
                     title: "NOT_FOUND".to_string(),
                     message: e.to_string(),
                 }),
-            ).into_response(),
+            )
+                .into_response(),
             e @ SubscriptionErrors::JsonRejection { .. } => (
                 StatusCode::BAD_REQUEST,
                 Json(SubscriptionErrorMessage {
@@ -48,7 +50,8 @@ impl IntoResponse for SubscriptionErrors {
                     title: "JSON_MALFORMED".to_string(),
                     message: e.to_string(),
                 }),
-            ).into_response(),
+            )
+                .into_response(),
             e @ SubscriptionErrors::UrnUuidSchema { .. } => (
                 StatusCode::BAD_REQUEST,
                 Json(SubscriptionErrorMessage {
@@ -56,7 +59,8 @@ impl IntoResponse for SubscriptionErrors {
                     title: "UUID_SCHEMA".to_string(),
                     message: e.to_string(),
                 }),
-            ).into_response(),
+            )
+                .into_response(),
             e @ SubscriptionErrors::SubscriptionCallbackAddressExists { .. } => (
                 StatusCode::BAD_REQUEST,
                 Json(SubscriptionErrorMessage {
@@ -64,7 +68,8 @@ impl IntoResponse for SubscriptionErrors {
                     title: "SUBSCRIPTION_CALLBACK_EXISTS".to_string(),
                     message: e.to_string(),
                 }),
-            ).into_response(),
+            )
+                .into_response(),
         }
     }
 }

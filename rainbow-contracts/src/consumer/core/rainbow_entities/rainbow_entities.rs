@@ -19,13 +19,23 @@
 
 use crate::common::CNControllerTypes;
 use crate::consumer::core::rainbow_entities::rainbow_entities_errors::CnErrorConsumer;
-use crate::consumer::core::rainbow_entities::rainbow_entities_types::{EditAgreementRequest, EditContractNegotiationMessageRequest, EditContractNegotiationOfferRequest, EditContractNegotiationRequest, NewAgreementRequest, NewContractNegotiationMessageRequest, NewContractNegotiationOfferRequest, NewContractNegotiationRequest};
+use crate::consumer::core::rainbow_entities::rainbow_entities_types::{
+    EditAgreementRequest, EditContractNegotiationMessageRequest, EditContractNegotiationOfferRequest,
+    EditContractNegotiationRequest, NewAgreementRequest, NewContractNegotiationMessageRequest,
+    NewContractNegotiationOfferRequest, NewContractNegotiationRequest,
+};
 use crate::consumer::core::rainbow_entities::RainbowEntitiesContractNegotiationConsumerTrait;
 use axum::async_trait;
 use rainbow_common::protocol::contract::cn_consumer_process::CnConsumerProcess;
 use rainbow_db::contracts_consumer::entities::{agreement, cn_message, cn_offer, cn_process};
-use rainbow_db::contracts_consumer::repo::{AgreementConsumerRepo, CnErrors, ContractNegotiationConsumerMessageRepo, ContractNegotiationConsumerOfferRepo, ContractNegotiationConsumerProcessRepo};
-use rainbow_events::core::notification::notification_types::{RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory, RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes};
+use rainbow_db::contracts_consumer::repo::{
+    AgreementConsumerRepo, CnErrors, ContractNegotiationConsumerMessageRepo, ContractNegotiationConsumerOfferRepo,
+    ContractNegotiationConsumerProcessRepo,
+};
+use rainbow_events::core::notification::notification_types::{
+    RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory,
+    RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes,
+};
 use rainbow_events::core::notification::RainbowEventsNotificationTrait;
 use serde_json::{json, to_value};
 use std::sync::Arc;
@@ -34,12 +44,12 @@ use urn::Urn;
 pub struct RainbowEntitiesContractNegotiationConsumerService<T, U>
 where
     T: ContractNegotiationConsumerProcessRepo
-    + ContractNegotiationConsumerMessageRepo
-    + ContractNegotiationConsumerOfferRepo
-    + AgreementConsumerRepo
-    + Send
-    + Sync
-    + 'static,
+        + ContractNegotiationConsumerMessageRepo
+        + ContractNegotiationConsumerOfferRepo
+        + AgreementConsumerRepo
+        + Send
+        + Sync
+        + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
 {
     repo: Arc<T>,
@@ -49,12 +59,12 @@ where
 impl<T, U> RainbowEntitiesContractNegotiationConsumerService<T, U>
 where
     T: ContractNegotiationConsumerProcessRepo
-    + ContractNegotiationConsumerMessageRepo
-    + ContractNegotiationConsumerOfferRepo
-    + AgreementConsumerRepo
-    + Send
-    + Sync
-    + 'static,
+        + ContractNegotiationConsumerMessageRepo
+        + ContractNegotiationConsumerOfferRepo
+        + AgreementConsumerRepo
+        + Send
+        + Sync
+        + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
 {
     pub fn new(repo: Arc<T>, notification_service: Arc<U>) -> Self {
@@ -66,12 +76,12 @@ where
 impl<T, U> RainbowEntitiesContractNegotiationConsumerTrait for RainbowEntitiesContractNegotiationConsumerService<T, U>
 where
     T: ContractNegotiationConsumerProcessRepo
-    + ContractNegotiationConsumerMessageRepo
-    + ContractNegotiationConsumerOfferRepo
-    + AgreementConsumerRepo
-    + Send
-    + Sync
-    + 'static,
+        + ContractNegotiationConsumerMessageRepo
+        + ContractNegotiationConsumerOfferRepo
+        + AgreementConsumerRepo
+        + Send
+        + Sync
+        + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
 {
     async fn get_cn_processes(&self) -> anyhow::Result<Vec<CnConsumerProcess>> {
@@ -119,7 +129,11 @@ where
         Ok(process)
     }
 
-    async fn put_cn_process(&self, process_id: Urn, input: EditContractNegotiationRequest) -> anyhow::Result<CnConsumerProcess> {
+    async fn put_cn_process(
+        &self,
+        process_id: Urn,
+        input: EditContractNegotiationRequest,
+    ) -> anyhow::Result<CnConsumerProcess> {
         let process = self.repo.put_cn_process(process_id.clone(), input.into()).await.map_err(|err| match err {
             CnErrors::CNProcessNotFound => {
                 CnErrorConsumer::NotFound { id: process_id, entity: CNControllerTypes::Process.to_string() }
@@ -140,17 +154,12 @@ where
         Ok(())
     }
 
-    async fn get_cn_messages(
-        &self,
-    ) -> anyhow::Result<Vec<cn_message::Model>> {
+    async fn get_cn_messages(&self) -> anyhow::Result<Vec<cn_message::Model>> {
         let cn_messages = self.repo.get_all_cn_messages(None, None).await.map_err(CnErrorConsumer::DbErr)?;
         Ok(cn_messages)
     }
 
-    async fn get_cn_messages_by_cn_process(
-        &self,
-        process_id: Urn,
-    ) -> anyhow::Result<Vec<cn_message::Model>> {
+    async fn get_cn_messages_by_cn_process(&self, process_id: Urn) -> anyhow::Result<Vec<cn_message::Model>> {
         let cn_messages =
             self.repo.get_cn_messages_by_cn_process_id(process_id.clone()).await.map_err(|err| match err {
                 CnErrors::CNProcessNotFound => {
@@ -161,10 +170,7 @@ where
         Ok(cn_messages)
     }
 
-    async fn get_cn_messages_by_cn_message_id(
-        &self,
-        message_id: Urn,
-    ) -> anyhow::Result<cn_message::Model> {
+    async fn get_cn_messages_by_cn_message_id(&self, message_id: Urn) -> anyhow::Result<cn_message::Model> {
         let cn_message = self
             .repo
             .get_cn_messages_by_cn_message_id(message_id.clone())
@@ -174,10 +180,7 @@ where
         Ok(cn_message)
     }
 
-    async fn get_cn_messages_by_cn_provider_id(
-        &self,
-        provider_id: Urn,
-    ) -> anyhow::Result<Vec<cn_message::Model>> {
+    async fn get_cn_messages_by_cn_provider_id(&self, provider_id: Urn) -> anyhow::Result<Vec<cn_message::Model>> {
         let cn_messages =
             self.repo.get_cn_messages_by_provider_id(provider_id.clone()).await.map_err(|err| match err {
                 CnErrors::CNProcessNotFound => {
@@ -188,10 +191,7 @@ where
         Ok(cn_messages)
     }
 
-    async fn get_cn_messages_by_cn_consumer_id(
-        &self,
-        consumer_id: Urn,
-    ) -> anyhow::Result<Vec<cn_message::Model>> {
+    async fn get_cn_messages_by_cn_consumer_id(&self, consumer_id: Urn) -> anyhow::Result<Vec<cn_message::Model>> {
         let cn_messages =
             self.repo.get_cn_messages_by_consumer_id(consumer_id.clone()).await.map_err(|err| match err {
                 CnErrors::CNProcessNotFound => {
@@ -281,10 +281,7 @@ where
         Ok(())
     }
 
-    async fn get_cn_offers_by_cn_process_id(
-        &self,
-        process_id: Urn,
-    ) -> anyhow::Result<Vec<cn_offer::Model>> {
+    async fn get_cn_offers_by_cn_process_id(&self, process_id: Urn) -> anyhow::Result<Vec<cn_offer::Model>> {
         let offers = self.repo.get_all_cn_offers_by_cn_process(process_id.clone()).await.map_err(|err| match err {
             CnErrors::CNProcessNotFound => {
                 CnErrorConsumer::ProcessNotFound { process_id, entity: CNControllerTypes::Offer.to_string() }
@@ -294,10 +291,7 @@ where
         Ok(offers)
     }
 
-    async fn get_last_cn_offers_by_cn_process_id(
-        &self,
-        process_id: Urn,
-    ) -> anyhow::Result<cn_offer::Model> {
+    async fn get_last_cn_offers_by_cn_process_id(&self, process_id: Urn) -> anyhow::Result<cn_offer::Model> {
         let offer = self
             .repo
             .get_last_cn_offers_by_cn_process(process_id.clone())
@@ -313,10 +307,7 @@ where
         Ok(offer)
     }
 
-    async fn get_cn_offer_by_cn_message_id(
-        &self,
-        message_id: Urn,
-    ) -> anyhow::Result<cn_offer::Model> {
+    async fn get_cn_offer_by_cn_message_id(&self, message_id: Urn) -> anyhow::Result<cn_offer::Model> {
         let offer = self
             .repo
             .get_all_cn_offers_by_message_id(message_id.clone())
@@ -334,10 +325,7 @@ where
         Ok(offer)
     }
 
-    async fn get_cn_offer_by_offer_id(
-        &self,
-        offer_id: Urn,
-    ) -> anyhow::Result<cn_offer::Model> {
+    async fn get_cn_offer_by_offer_id(&self, offer_id: Urn) -> anyhow::Result<cn_offer::Model> {
         let offer = self
             .repo
             .get_cn_offer_by_id(offer_id.clone())
@@ -452,10 +440,7 @@ where
         Ok(())
     }
 
-    async fn get_agreement_by_cn_process_id(
-        &self,
-        process_id: Urn,
-    ) -> anyhow::Result<agreement::Model> {
+    async fn get_agreement_by_cn_process_id(&self, process_id: Urn) -> anyhow::Result<agreement::Model> {
         let agreement = self
             .repo
             .get_agreement_by_process_id(process_id.clone())
@@ -470,10 +455,7 @@ where
         Ok(agreement)
     }
 
-    async fn get_agreement_by_cn_message_id(
-        &self,
-        message_id: Urn,
-    ) -> anyhow::Result<agreement::Model> {
+    async fn get_agreement_by_cn_message_id(&self, message_id: Urn) -> anyhow::Result<agreement::Model> {
         let agreement = self
             .repo
             .get_agreement_by_message_id(message_id.clone())
@@ -493,10 +475,7 @@ where
         Ok(agreements)
     }
 
-    async fn get_agreement_by_agreement_id(
-        &self,
-        agreement_id: Urn,
-    ) -> anyhow::Result<agreement::Model> {
+    async fn get_agreement_by_agreement_id(&self, agreement_id: Urn) -> anyhow::Result<agreement::Model> {
         let agreement =
             self.repo.get_agreement_by_ag_id(agreement_id.clone()).await.map_err(CnErrorConsumer::DbErr)?.ok_or(
                 CnErrorConsumer::NotFound { id: agreement_id, entity: CNControllerTypes::Agreement.to_string() },

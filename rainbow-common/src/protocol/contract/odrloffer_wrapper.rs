@@ -38,9 +38,7 @@ impl ValueType for OdrlOfferWrapper {
     fn try_from(v: Value) -> Result<Self, ValueTypeErr> {
         match v {
             Value::Json(Some(json)) => {
-                serde_json::from_value::<OdrlOffer>(*json)
-                    .map(OdrlOfferWrapper)
-                    .map_err(|_| ValueTypeErr)
+                serde_json::from_value::<OdrlOffer>(*json).map(OdrlOfferWrapper).map_err(|_| ValueTypeErr)
             }
             Value::Json(None) => Ok(OdrlOfferWrapper(OdrlOffer::default())),
             _ => Err(ValueTypeErr),
@@ -68,7 +66,6 @@ impl TryGetable for OdrlOfferWrapper {
             .map_err(|e| sea_orm::TryGetError::DbErr(sea_orm::DbErr::Custom(e.to_string())))
     }
 }
-
 
 impl From<OdrlOffer> for OdrlOfferWrapper {
     fn from(offer: OdrlOffer) -> Self {

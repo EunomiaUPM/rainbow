@@ -19,8 +19,15 @@
 
 use rainbow_common::dcat_formats::{DctFormats, FormatAction, FormatProtocol};
 use rainbow_common::utils::get_urn;
-use rainbow_transfer::consumer::core::ds_protocol_rpc::ds_protocol_rpc_types::{DSRPCTransferConsumerRequestRequest, DSRPCTransferConsumerRequestResponse, DSRPCTransferConsumerStartRequest, DSRPCTransferConsumerStartResponse, DSRPCTransferConsumerSuspensionRequest, DSRPCTransferConsumerSuspensionResponse};
-use rainbow_transfer::provider::core::ds_protocol_rpc::ds_protocol_rpc_types::{DSRPCTransferProviderCompletionRequest, DSRPCTransferProviderCompletionResponse, DSRPCTransferProviderStartRequest, DSRPCTransferProviderStartResponse};
+use rainbow_transfer::consumer::core::ds_protocol_rpc::ds_protocol_rpc_types::{
+    DSRPCTransferConsumerRequestRequest, DSRPCTransferConsumerRequestResponse, DSRPCTransferConsumerStartRequest,
+    DSRPCTransferConsumerStartResponse, DSRPCTransferConsumerSuspensionRequest,
+    DSRPCTransferConsumerSuspensionResponse,
+};
+use rainbow_transfer::provider::core::ds_protocol_rpc::ds_protocol_rpc_types::{
+    DSRPCTransferProviderCompletionRequest, DSRPCTransferProviderCompletionResponse, DSRPCTransferProviderStartRequest,
+    DSRPCTransferProviderStartResponse,
+};
 use serde_json::Value;
 use std::process::Command;
 use tracing_test::traced_test;
@@ -59,20 +66,22 @@ pub async fn transfer_rpc_pull() -> anyhow::Result<()> {
         data_address: None,
     };
     let url = "http://localhost:1235/api/v1/transfers/rpc/setup-request";
-    println!("\n\n1. Requesting from consumer:\n{}\n{}", url, serde_json::to_string_pretty(&message)?);
-    let request = client
-        .post(url)
-        .json(&message)
-        .send()
-        .await?;
+    println!(
+        "\n\n1. Requesting from consumer:\n{}\n{}",
+        url,
+        serde_json::to_string_pretty(&message)?
+    );
+    let request = client.post(url).json(&message).send().await?;
     let response = request.json::<DSRPCTransferConsumerRequestResponse>().await?;
-    println!("1. Ack from provider\n{}\n\n", serde_json::to_string_pretty(&response)?);
+    println!(
+        "1. Ack from provider\n{}\n\n",
+        serde_json::to_string_pretty(&response)?
+    );
 
     // At this point correlation IDs are created
     let provider_pid = response.provider_pid.clone();
     let consumer_pid = response.consumer_pid.clone();
     let consumer_callback_address = response.callback_address.clone();
-
 
     // -------------------------------
     // Providers RPC TransferStart
@@ -85,15 +94,17 @@ pub async fn transfer_rpc_pull() -> anyhow::Result<()> {
         data_address: None,
     };
     let url = "http://localhost:1234/api/v1/transfers/rpc/setup-start";
-    println!("\n\n2. Sending Start message from provider:\n{}\n{}", url, serde_json::to_string_pretty(&message)?);
-    let request = client
-        .post(url)
-        .json(&message)
-        .send()
-        .await?;
+    println!(
+        "\n\n2. Sending Start message from provider:\n{}\n{}",
+        url,
+        serde_json::to_string_pretty(&message)?
+    );
+    let request = client.post(url).json(&message).send().await?;
     let response = request.json::<DSRPCTransferProviderStartResponse>().await?;
-    println!("2. Ack from consumer\n{}\n\n", serde_json::to_string_pretty(&response)?);
-
+    println!(
+        "2. Ack from consumer\n{}\n\n",
+        serde_json::to_string_pretty(&response)?
+    );
 
     // -------------------------------
     // Consumer RPCs TransferSuspension
@@ -107,15 +118,17 @@ pub async fn transfer_rpc_pull() -> anyhow::Result<()> {
         reason: Some(vec!["TEST".to_string()]),
     };
     let url = "http://localhost:1235/api/v1/transfers/rpc/setup-suspension";
-    println!("\n\n3. Sending Suspension message from consumer:\n{}\n{}", url, serde_json::to_string_pretty(&message)?);
-    let request = client
-        .post(url)
-        .json(&message)
-        .send()
-        .await?;
+    println!(
+        "\n\n3. Sending Suspension message from consumer:\n{}\n{}",
+        url,
+        serde_json::to_string_pretty(&message)?
+    );
+    let request = client.post(url).json(&message).send().await?;
     let response = request.json::<DSRPCTransferConsumerSuspensionResponse>().await?;
-    println!("3. Ack from provider\n{}\n\n", serde_json::to_string_pretty(&response)?);
-
+    println!(
+        "3. Ack from provider\n{}\n\n",
+        serde_json::to_string_pretty(&response)?
+    );
 
     // -------------------------------
     // Consumer RPCs TransferRestart
@@ -128,15 +141,17 @@ pub async fn transfer_rpc_pull() -> anyhow::Result<()> {
         data_address: None,
     };
     let url = "http://localhost:1235/api/v1/transfers/rpc/setup-start";
-    println!("\n\n4. Sending Restart message from consumer:\n{}\n{}", url, serde_json::to_string_pretty(&message)?);
-    let request = client
-        .post(url)
-        .json(&message)
-        .send()
-        .await?;
+    println!(
+        "\n\n4. Sending Restart message from consumer:\n{}\n{}",
+        url,
+        serde_json::to_string_pretty(&message)?
+    );
+    let request = client.post(url).json(&message).send().await?;
     let response = request.json::<DSRPCTransferConsumerStartResponse>().await?;
-    println!("4. Ack from provider\n{}\n\n", serde_json::to_string_pretty(&response)?);
-
+    println!(
+        "4. Ack from provider\n{}\n\n",
+        serde_json::to_string_pretty(&response)?
+    );
 
     // -------------------------------
     // Provider RPCs TransferCompletion
@@ -148,15 +163,17 @@ pub async fn transfer_rpc_pull() -> anyhow::Result<()> {
         consumer_pid: consumer_pid.clone(),
     };
     let url = "http://localhost:1234/api/v1/transfers/rpc/setup-completion";
-    println!("\n\n5. Sending Completion message from provider:\n{}\n{}", url, serde_json::to_string_pretty(&message)?);
-    let request = client
-        .post(url)
-        .json(&message)
-        .send()
-        .await?;
+    println!(
+        "\n\n5. Sending Completion message from provider:\n{}\n{}",
+        url,
+        serde_json::to_string_pretty(&message)?
+    );
+    let request = client.post(url).json(&message).send().await?;
     let response = request.json::<DSRPCTransferProviderCompletionResponse>().await?;
-    println!("5. Ack from consumer\n{}\n\n", serde_json::to_string_pretty(&response)?);
-
+    println!(
+        "5. Ack from consumer\n{}\n\n",
+        serde_json::to_string_pretty(&response)?
+    );
 
     //
     // Tear down servers

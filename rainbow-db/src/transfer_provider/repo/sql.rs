@@ -20,7 +20,10 @@
 use crate::transfer_provider::entities::transfer_message;
 use crate::transfer_provider::entities::transfer_process;
 use crate::transfer_provider::entities::transfer_process::Model;
-use crate::transfer_provider::repo::{EditTransferMessageModel, EditTransferProcessModel, NewTransferMessageModel, NewTransferProcessModel, TransferMessagesRepo, TransferProcessRepo, TransferProviderRepoErrors, TransferProviderRepoFactory};
+use crate::transfer_provider::repo::{
+    EditTransferMessageModel, EditTransferProcessModel, NewTransferMessageModel, NewTransferProcessModel,
+    TransferMessagesRepo, TransferProcessRepo, TransferProviderRepoErrors, TransferProviderRepoFactory,
+};
 use axum::async_trait;
 use rainbow_common::protocol::transfer::TransferState;
 use rainbow_common::utils::get_urn;
@@ -61,7 +64,10 @@ impl TransferProcessRepo for TransferProviderRepoForSql {
         }
     }
 
-    async fn get_batch_transfer_processes(&self, transfer_ids: &Vec<Urn>) -> Result<Vec<Model>, TransferProviderRepoErrors> {
+    async fn get_batch_transfer_processes(
+        &self,
+        transfer_ids: &Vec<Urn>,
+    ) -> Result<Vec<Model>, TransferProviderRepoErrors> {
         let transfer_ids = transfer_ids.iter().map(|t| t.to_string()).collect::<Vec<_>>();
         let transfer_process = transfer_process::Entity::find()
             .filter(transfer_process::Column::ProviderPid.is_in(transfer_ids))
@@ -217,7 +223,9 @@ impl TransferMessagesRepo for TransferProviderRepoForSql {
         &self,
         pid: Urn,
     ) -> anyhow::Result<Vec<transfer_message::Model>, TransferProviderRepoErrors> {
-        let transfer_process = self.get_transfer_process_by_provider(pid.clone()).await
+        let transfer_process = self
+            .get_transfer_process_by_provider(pid.clone())
+            .await
             .map_err(|e| TransferProviderRepoErrors::ErrorFetchingProviderTransferProcess(e.into()))?
             .ok_or(TransferProviderRepoErrors::ProviderTransferProcessNotFound)?;
 
@@ -236,7 +244,9 @@ impl TransferMessagesRepo for TransferProviderRepoForSql {
         pid: Urn,
         mid: Urn,
     ) -> anyhow::Result<Option<transfer_message::Model>, TransferProviderRepoErrors> {
-        let transfer_process = self.get_transfer_process_by_provider(pid.clone()).await
+        let transfer_process = self
+            .get_transfer_process_by_provider(pid.clone())
+            .await
             .map_err(|e| TransferProviderRepoErrors::ErrorFetchingProviderTransferProcess(e.into()))?
             .ok_or(TransferProviderRepoErrors::ProviderTransferProcessNotFound)?;
 

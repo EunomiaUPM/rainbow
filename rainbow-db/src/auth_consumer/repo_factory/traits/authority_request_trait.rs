@@ -17,11 +17,9 @@
  *
  */
 
-use crate::common::BasicRepoTrait;
 use crate::auth_consumer::entities::authority_request::{Model, NewModel};
+use crate::common::BasicRepoTrait;
 use axum::async_trait;
 
 #[async_trait]
-pub trait AuthorityRequestRepoTrait: BasicRepoTrait<Model, NewModel> + Send + Sync {
-
-}
+pub trait AuthorityRequestRepoTrait: BasicRepoTrait<Model, NewModel> + Send + Sync {}

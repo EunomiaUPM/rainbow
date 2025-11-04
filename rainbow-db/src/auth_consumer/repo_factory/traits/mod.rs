@@ -21,12 +21,12 @@ mod auth_interaction_trait;
 mod auth_request_trait;
 mod auth_token_requirements_trait;
 mod auth_verification_trait;
-mod mates_trait;
 mod authority_request_trait;
+mod mates_trait;
 
 pub use auth_interaction_trait::AuthInteractionRepoTrait;
 pub use auth_request_trait::AuthRequestRepoTrait;
 pub use auth_token_requirements_trait::AuthTokenRequirementsRepoTrait;
 pub use auth_verification_trait::AuthVerificationRepoTrait;
-pub use mates_trait::MatesRepoTrait;
 pub use authority_request_trait::AuthorityRequestRepoTrait;
+pub use mates_trait::MatesRepoTrait;

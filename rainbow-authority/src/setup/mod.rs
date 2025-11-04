@@ -18,8 +18,8 @@
  */
 
 pub mod application;
-pub mod config;
 pub mod commands;
+pub mod config;
 mod database;
 
 pub use config::config_trait::AuthorityApplicationConfigTrait;

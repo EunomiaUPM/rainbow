@@ -23,8 +23,8 @@ use crate::consumer::core::ds_protocol_rpc::ds_protocol_rpc::DSRPCTransferConsum
 use crate::consumer::core::rainbow_entities::rainbow_entities::RainbowTransferConsumerServiceImpl;
 use crate::consumer::http::ds_protocol::ds_protocol::DSProtocolTransferConsumerRouter;
 use crate::consumer::http::ds_protocol_rpc::ds_protocol_rpc::DSRPCTransferConsumerRouter;
-use crate::consumer::http::rainbow_entities::rainbow_entities::RainbowTransferConsumerEntitiesRouter;
 use crate::consumer::http::openapi::route_openapi;
+use crate::consumer::http::rainbow_entities::rainbow_entities::RainbowTransferConsumerEntitiesRouter;
 use axum::{serve, Router};
 use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
 use rainbow_common::facades::ssi_auth_facade::ssi_auth_facade::SSIAuthFacadeService;
@@ -64,13 +64,13 @@ pub async fn create_transfer_consumer_router(config: &ApplicationConsumerConfig)
         subscription_service,
         Some(SubscriptionEntities::TransferProcess),
     )
-        .router();
+    .router();
     let notification_service = Arc::new(RainbowEventsNotificationsService::new(subscription_repo));
     let notification_router = RainbowEventsNotificationRouter::new(
         notification_service.clone(),
         Some(SubscriptionEntities::TransferProcess),
     )
-        .router();
+    .router();
 
     // Dataplane services
     let application_global_config: ApplicationConsumerConfig = config.clone().into();
@@ -84,7 +84,7 @@ pub async fn create_transfer_consumer_router(config: &ApplicationConsumerConfig)
         application_global_config.clone().into(),
         dataplane_process_service.clone(),
     )
-        .router();
+    .router();
 
     // Dataplane Router
     let dataplane_info_service = Arc::new(DataPlaneInfoService::new(
@@ -117,9 +117,7 @@ pub async fn create_transfer_consumer_router(config: &ApplicationConsumerConfig)
 
     // DSRPCProtocol Dependency injection
     let app_config: ApplicationConsumerConfig = config.clone().into();
-    let mates_facade = Arc::new(MatesFacadeService::new(
-        app_config.into()
-    ));
+    let mates_facade = Arc::new(MatesFacadeService::new(app_config.into()));
     let ds_protocol_rpc_service = Arc::new(DSRPCTransferConsumerService::new(
         consumer_repo.clone(),
         data_plane_facade.clone(),
@@ -158,7 +156,7 @@ impl TransferConsumerApplication {
             config.get_raw_transfer_process_host().clone().unwrap().url,
             config.get_raw_transfer_process_host().clone().unwrap().port
         ))
-            .await?;
+        .await?;
         serve(listener, router).await?;
         Ok(())
     }

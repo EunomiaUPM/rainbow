@@ -20,14 +20,10 @@
 use rainbow_common::dcat_formats::{DctFormats, FormatAction};
 use rainbow_common::protocol::transfer::transfer_data_address::DataAddress;
 
-pub fn has_data_address_in_push(
-    data_address: &Option<DataAddress>,
-    format: &DctFormats,
-) -> anyhow::Result<bool> {
+pub fn has_data_address_in_push(data_address: &Option<DataAddress>, format: &DctFormats) -> anyhow::Result<bool> {
     let format_action = &format.action;
     match format_action {
         FormatAction::Push => Ok(data_address.is_some()),
         FormatAction::Pull => Ok(data_address.is_none()),
     }
 }
-

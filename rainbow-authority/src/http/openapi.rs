@@ -18,16 +18,16 @@
  */
 use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse};
-use axum::Router;
 use axum::routing::get;
+use axum::Router;
 use once_cell::sync::Lazy;
 
 pub fn route_openapi() -> Router {
     let openapi_spec = "/api/v1/authority/openapi.json";
-    Router::new()
-        .route(openapi_spec, get(get_open_api))
-        .route("/api/v1/authority/openapi", get(|| swagger_ui_html(openapi_spec)),
-        )
+    Router::new().route(openapi_spec, get(get_open_api)).route(
+        "/api/v1/authority/openapi",
+        get(|| swagger_ui_html(openapi_spec)),
+    )
 }
 
 static OPENAPI_JSON: Lazy<&'static str> =
@@ -41,8 +41,6 @@ async fn get_open_api() -> impl IntoResponse {
     )
         .into_response()
 }
-
-
 
 async fn swagger_ui_html(route: &str) -> impl IntoResponse {
     let html = format!(

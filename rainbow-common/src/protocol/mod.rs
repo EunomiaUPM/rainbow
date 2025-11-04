@@ -17,12 +17,11 @@
  *
  */
 
-
-pub mod contract;
-pub mod transfer;
-pub mod context_field;
 pub mod catalog;
+pub mod context_field;
+pub mod contract;
 pub mod datahub_proxy;
+pub mod transfer;
 
 pub trait ProtocolValidate {
     fn validate(&self) -> anyhow::Result<()>;

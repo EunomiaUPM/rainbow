@@ -36,13 +36,16 @@ impl RainbowProviderGatewaySubscriptions {
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
         Self { config, client }
     }
-    pub async fn subscribe_to_microservice(&self, microservice_key_name: MicroserviceSubscriptionKey) -> anyhow::Result<()> {
+    pub async fn subscribe_to_microservice(
+        &self,
+        microservice_key_name: MicroserviceSubscriptionKey,
+    ) -> anyhow::Result<()> {
         let is_datahub = self.config.is_datahub_as_catalog();
         let microservice_url = match microservice_key_name {
             MicroserviceSubscriptionKey::Catalog => match is_datahub {
                 true => self.config.get_contract_negotiation_host_url().unwrap(),
                 false => self.config.get_catalog_host_url().unwrap(),
-            }
+            },
             MicroserviceSubscriptionKey::ContractNegotiation => {
                 self.config.get_contract_negotiation_host_url().unwrap()
             }

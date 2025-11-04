@@ -67,5 +67,3 @@ pub struct DatasetDctDeclaration {
     #[serde(rename = "description")]
     pub description: Vec<String>,
 }
-
-

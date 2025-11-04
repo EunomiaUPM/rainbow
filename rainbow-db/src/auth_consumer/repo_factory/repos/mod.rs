@@ -21,12 +21,12 @@ mod auth_interaction_repo;
 mod auth_request_repo;
 mod auth_token_requirements_repo;
 mod auth_verification_repo;
-mod mates_repo;
 mod authority_request_repo;
+mod mates_repo;
 
 pub use auth_interaction_repo::AuthInteractionConsumerRepo;
 pub use auth_request_repo::AuthRequestConsumerRepo;
 pub use auth_token_requirements_repo::AuthTokenRequirementsConsumerRepo;
 pub use auth_verification_repo::AuthVerificationConsumerRepo;
-pub use mates_repo::MatesConsumerRepo;
 pub use authority_request_repo::AuthorityRequestConsumerRepo;
+pub use mates_repo::MatesConsumerRepo;

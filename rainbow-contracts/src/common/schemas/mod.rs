@@ -55,20 +55,28 @@ pub static CONTRACT_REQUEST_MESSAGE_SCHEMA: Lazy<Validator> = Lazy::new(|| -> Va
     definitions.insert("Permission".to_string(), permission_prop.clone());
     definitions.insert("Action".to_string(), action_prop.clone());
     definitions.insert("Constraint".to_string(), constraint_prop.clone());
-    definitions.insert("LogicalConstraint".to_string(), logical_constraint_prop.clone());
-    definitions.insert("AtomicConstraint".to_string(), atomic_constraint_prop.clone());
+    definitions.insert(
+        "LogicalConstraint".to_string(),
+        logical_constraint_prop.clone(),
+    );
+    definitions.insert(
+        "AtomicConstraint".to_string(),
+        atomic_constraint_prop.clone(),
+    );
     definitions.insert("LeftOperand".to_string(), left_operand_prop.clone());
     definitions.insert("Operator".to_string(), operand_prop.clone());
     definitions.insert("RightOperand".to_string(), right_operand_prop.clone());
 
     let definitions = serde_json::to_string(&contract_request_schema).expect("Could not serialize schema");
-    let definitions = definitions.replace(
-        "https://w3id.org/dspace/2025/1/negotiation/contract-schema.json#/definitions/MessageOffer",
-        "#/definitions/MessageOffer",
-    ).replace(
-        "https://w3id.org/dspace/2025/1/common/context-schema.json",
-        "#/definitions/ContextSchema",
-    );
+    let definitions = definitions
+        .replace(
+            "https://w3id.org/dspace/2025/1/negotiation/contract-schema.json#/definitions/MessageOffer",
+            "#/definitions/MessageOffer",
+        )
+        .replace(
+            "https://w3id.org/dspace/2025/1/common/context-schema.json",
+            "#/definitions/ContextSchema",
+        );
     let updated_schema: Value = serde_json::from_str(&definitions).expect("Invalid updated JSON");
     let validator = jsonschema::validator_for(&updated_schema).unwrap();
     validator
@@ -105,19 +113,27 @@ pub static CONTRACT_OFFER_MESSAGE_SCHEMA: Lazy<Validator> = Lazy::new(|| -> Vali
     definitions.insert("Permission".to_string(), permission_prop.clone());
     definitions.insert("Action".to_string(), action_prop.clone());
     definitions.insert("Constraint".to_string(), constraint_prop.clone());
-    definitions.insert("LogicalConstraint".to_string(), logical_constraint_prop.clone());
-    definitions.insert("AtomicConstraint".to_string(), atomic_constraint_prop.clone());
+    definitions.insert(
+        "LogicalConstraint".to_string(),
+        logical_constraint_prop.clone(),
+    );
+    definitions.insert(
+        "AtomicConstraint".to_string(),
+        atomic_constraint_prop.clone(),
+    );
     definitions.insert("LeftOperand".to_string(), left_operand_prop.clone());
     definitions.insert("Operator".to_string(), operand_prop.clone());
     definitions.insert("RightOperand".to_string(), right_operand_prop.clone());
     let definitions = serde_json::to_string(&contract_offer_schema).expect("Could not serialize schema");
-    let definitions = definitions.replace(
-        "https://w3id.org/dspace/2025/1/negotiation/contract-schema.json#/definitions/MessageOffer",
-        "#/definitions/MessageOffer",
-    ).replace(
-        "https://w3id.org/dspace/2025/1/common/context-schema.json",
-        "#/definitions/ContextSchema",
-    );
+    let definitions = definitions
+        .replace(
+            "https://w3id.org/dspace/2025/1/negotiation/contract-schema.json#/definitions/MessageOffer",
+            "#/definitions/MessageOffer",
+        )
+        .replace(
+            "https://w3id.org/dspace/2025/1/common/context-schema.json",
+            "#/definitions/ContextSchema",
+        );
     let updated_schema: Value = serde_json::from_str(&definitions).expect("Invalid updated JSON");
     let validator = jsonschema::validator_for(&updated_schema).unwrap();
     validator
@@ -134,13 +150,15 @@ pub static CONTRACT_NEGOTIATION_EVENT_MESSAGE_SCHEMA: Lazy<Validator> = Lazy::ne
     let definitions = contract_negotiation_schema.get_mut("definitions").and_then(|v| v.as_object_mut()).unwrap();
     definitions.insert("ContextSchema".to_string(), context_prop.clone());
     let definitions = serde_json::to_string(&contract_negotiation_schema).expect("Could not serialize schema");
-    let definitions = definitions.replace(
-        "https://w3id.org/dspace/2025/1/negotiation/contract-schema.json#/definitions/MessageOffer",
-        "#/definitions/MessageOffer",
-    ).replace(
-        "https://w3id.org/dspace/2025/1/common/context-schema.json",
-        "#/definitions/ContextSchema",
-    );
+    let definitions = definitions
+        .replace(
+            "https://w3id.org/dspace/2025/1/negotiation/contract-schema.json#/definitions/MessageOffer",
+            "#/definitions/MessageOffer",
+        )
+        .replace(
+            "https://w3id.org/dspace/2025/1/common/context-schema.json",
+            "#/definitions/ContextSchema",
+        );
     let updated_schema: Value = serde_json::from_str(&definitions).expect("Invalid updated JSON");
     let validator = jsonschema::validator_for(&updated_schema).unwrap();
     validator
@@ -164,7 +182,6 @@ pub static CONTRACT_AGREEMENT_MESSAGE_SCHEMA: Lazy<Validator> = Lazy::new(|| -> 
     // definitions.insert("PolicyClass".to_string(), policy_class_prop.clone());
     // definitions.insert("Agreement".to_string(), agreement_prop.clone());
 
-
     let context_prop = &context_schema["definitions"]["ContextSchema"];
     let message_offer_prop = &contract_schema["definitions"]["Agreement"];
     let policy_class_prop = &contract_schema["definitions"]["PolicyClass"];
@@ -186,20 +203,28 @@ pub static CONTRACT_AGREEMENT_MESSAGE_SCHEMA: Lazy<Validator> = Lazy::new(|| -> 
     definitions.insert("Permission".to_string(), permission_prop.clone());
     definitions.insert("Action".to_string(), action_prop.clone());
     definitions.insert("Constraint".to_string(), constraint_prop.clone());
-    definitions.insert("LogicalConstraint".to_string(), logical_constraint_prop.clone());
-    definitions.insert("AtomicConstraint".to_string(), atomic_constraint_prop.clone());
+    definitions.insert(
+        "LogicalConstraint".to_string(),
+        logical_constraint_prop.clone(),
+    );
+    definitions.insert(
+        "AtomicConstraint".to_string(),
+        atomic_constraint_prop.clone(),
+    );
     definitions.insert("LeftOperand".to_string(), left_operand_prop.clone());
     definitions.insert("Operator".to_string(), operand_prop.clone());
     definitions.insert("RightOperand".to_string(), right_operand_prop.clone());
 
     let definitions = serde_json::to_string(&contract_agreement_schema).expect("Could not serialize schema");
-    let definitions = definitions.replace(
-        "https://w3id.org/dspace/2025/1/negotiation/contract-schema.json#/definitions/Agreement",
-        "#/definitions/Agreement",
-    ).replace(
-        "https://w3id.org/dspace/2025/1/common/context-schema.json",
-        "#/definitions/ContextSchema",
-    );
+    let definitions = definitions
+        .replace(
+            "https://w3id.org/dspace/2025/1/negotiation/contract-schema.json#/definitions/Agreement",
+            "#/definitions/Agreement",
+        )
+        .replace(
+            "https://w3id.org/dspace/2025/1/common/context-schema.json",
+            "#/definitions/ContextSchema",
+        );
     let updated_schema: Value = serde_json::from_str(&definitions).expect("Invalid updated JSON");
     let validator = jsonschema::validator_for(&updated_schema).unwrap();
     validator
@@ -216,13 +241,15 @@ pub static CONTRACT_AGREEMENT_VERIFICATION_MESSAGE_SCHEMA: Lazy<Validator> = Laz
     let definitions = contract_negotiation_schema.get_mut("definitions").and_then(|v| v.as_object_mut()).unwrap();
     definitions.insert("ContextSchema".to_string(), context_prop.clone());
     let definitions = serde_json::to_string(&contract_negotiation_schema).expect("Could not serialize schema");
-    let definitions = definitions.replace(
-        "https://w3id.org/dspace/2025/1/negotiation/contract-schema.json#/definitions/MessageOffer",
-        "#/definitions/MessageOffer",
-    ).replace(
-        "https://w3id.org/dspace/2025/1/common/context-schema.json",
-        "#/definitions/ContextSchema",
-    );
+    let definitions = definitions
+        .replace(
+            "https://w3id.org/dspace/2025/1/negotiation/contract-schema.json#/definitions/MessageOffer",
+            "#/definitions/MessageOffer",
+        )
+        .replace(
+            "https://w3id.org/dspace/2025/1/common/context-schema.json",
+            "#/definitions/ContextSchema",
+        );
     let updated_schema: Value = serde_json::from_str(&definitions).expect("Invalid updated JSON");
     let validator = jsonschema::validator_for(&updated_schema).unwrap();
     validator
@@ -239,13 +266,15 @@ pub static CONTRACT_TERMINATION_MESSAGE_SCHEMA: Lazy<Validator> = Lazy::new(|| -
     let definitions = contract_negotiation_schema.get_mut("definitions").and_then(|v| v.as_object_mut()).unwrap();
     definitions.insert("ContextSchema".to_string(), context_prop.clone());
     let definitions = serde_json::to_string(&contract_negotiation_schema).expect("Could not serialize schema");
-    let definitions = definitions.replace(
-        "https://w3id.org/dspace/2025/1/negotiation/contract-schema.json#/definitions/MessageOffer",
-        "#/definitions/MessageOffer",
-    ).replace(
-        "https://w3id.org/dspace/2025/1/common/context-schema.json",
-        "#/definitions/ContextSchema",
-    );
+    let definitions = definitions
+        .replace(
+            "https://w3id.org/dspace/2025/1/negotiation/contract-schema.json#/definitions/MessageOffer",
+            "#/definitions/MessageOffer",
+        )
+        .replace(
+            "https://w3id.org/dspace/2025/1/common/context-schema.json",
+            "#/definitions/ContextSchema",
+        );
     let updated_schema: Value = serde_json::from_str(&definitions).expect("Invalid updated JSON");
     let validator = jsonschema::validator_for(&updated_schema).unwrap();
     validator

@@ -48,9 +48,7 @@ where
     T: DataPlaneProcessTrait + Send + Sync,
 {
     async fn get_data_plane_info_by_session_id(&self, session_id: Urn) -> anyhow::Result<DataPlaneProcess> {
-        let mut dataplane = self.dataplane_process
-            .get_dataplane_process_by_id(session_id)
-            .await?;
+        let mut dataplane = self.dataplane_process.get_dataplane_process_by_id(session_id).await?;
         if self.config.role == ConfigRoles::Consumer {
             dataplane.downstream_hop = DataPlaneProcessAddress::default();
             dataplane.upstream_hop = DataPlaneProcessAddress::default();

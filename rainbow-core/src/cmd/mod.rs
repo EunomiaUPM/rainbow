@@ -21,11 +21,11 @@ use crate::consumer::setup::application::CoreConsumerApplication;
 use crate::consumer::setup::db_migrations::CoreConsumerMigration;
 use crate::provider::setup::application::CoreProviderApplication;
 use crate::provider::setup::db_migrations::CoreProviderMigration;
+use crate::provider::setup::db_seeding::CoreProviderSeeding;
 use clap::{Parser, Subcommand};
 use rainbow_common::config::env_extraction::EnvExtraction;
 use std::cmp::PartialEq;
 use tracing::debug;
-use crate::provider::setup::db_seeding::CoreProviderSeeding;
 
 #[derive(Parser, Debug)]
 #[command(name = "Rainbow Dataspace Connector Core Server")]
@@ -55,7 +55,6 @@ pub struct CoreCliArgs {
     env_file: Option<String>,
 }
 
-
 pub struct CoreCommands;
 
 impl EnvExtraction for CoreCommands {}
@@ -68,33 +67,29 @@ impl CoreCommands {
 
         // run scripts
         match cli.role {
-            CoreCliRoles::Provider(cmd) => {
-                match cmd {
-                    CoreCliCommands::Start(args) => {
-                        let config = Self::extract_provider_config(args.env_file)?;
-                        CoreProviderApplication::run(&config).await?
-                    }
-                    CoreCliCommands::Setup(args) => {
-                        let config = Self::extract_provider_config(args.env_file)?;
-                        CoreProviderMigration::run(&config).await?;
-                        if config.catalog_as_datahub == false {
-                            CoreProviderSeeding::run(&config).await?;
-                        }
+            CoreCliRoles::Provider(cmd) => match cmd {
+                CoreCliCommands::Start(args) => {
+                    let config = Self::extract_provider_config(args.env_file)?;
+                    CoreProviderApplication::run(&config).await?
+                }
+                CoreCliCommands::Setup(args) => {
+                    let config = Self::extract_provider_config(args.env_file)?;
+                    CoreProviderMigration::run(&config).await?;
+                    if config.catalog_as_datahub == false {
+                        CoreProviderSeeding::run(&config).await?;
                     }
                 }
-            }
-            CoreCliRoles::Consumer(cmd) => {
-                match cmd {
-                    CoreCliCommands::Start(args) => {
-                        let config = Self::extract_consumer_config(args.env_file)?;
-                        CoreConsumerApplication::run(&config).await?
-                    }
-                    CoreCliCommands::Setup(args) => {
-                        let config = Self::extract_consumer_config(args.env_file)?;
-                        CoreConsumerMigration::run(&config).await?
-                    }
+            },
+            CoreCliRoles::Consumer(cmd) => match cmd {
+                CoreCliCommands::Start(args) => {
+                    let config = Self::extract_consumer_config(args.env_file)?;
+                    CoreConsumerApplication::run(&config).await?
                 }
-            }
+                CoreCliCommands::Setup(args) => {
+                    let config = Self::extract_consumer_config(args.env_file)?;
+                    CoreConsumerMigration::run(&config).await?
+                }
+            },
         };
 
         Ok(())

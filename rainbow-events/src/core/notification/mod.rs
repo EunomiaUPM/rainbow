@@ -17,13 +17,16 @@
  *
  */
 
-use crate::core::notification::notification_types::{RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationCreationRequest, RainbowEventsNotificationResponse};
+use crate::core::notification::notification_types::{
+    RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationCreationRequest,
+    RainbowEventsNotificationResponse,
+};
 use axum::async_trait;
 use urn::Urn;
 
+pub mod notification;
 pub mod notification_err;
 pub mod notification_types;
-pub mod notification;
 
 #[mockall::automock]
 #[async_trait]
@@ -54,8 +57,5 @@ pub trait RainbowEventsNotificationTrait: Send + Sync {
         input: RainbowEventsNotificationCreationRequest,
     ) -> anyhow::Result<RainbowEventsNotificationResponse>;
 
-    async fn broadcast_notification(
-        &self,
-        input: RainbowEventsNotificationBroadcastRequest,
-    ) -> anyhow::Result<()>;
+    async fn broadcast_notification(&self, input: RainbowEventsNotificationBroadcastRequest) -> anyhow::Result<()>;
 }

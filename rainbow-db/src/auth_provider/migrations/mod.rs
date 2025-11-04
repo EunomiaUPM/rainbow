@@ -20,10 +20,10 @@
 use sea_orm_migration::prelude::*;
 mod m20250403_094651_auth_interaction;
 mod m20250403_094651_auth_request;
-mod m20250403_094651_auth_verification;
 mod m20250403_094651_auth_token_requirements;
-mod m20250403_094651_mates;
+mod m20250403_094651_auth_verification;
 mod m20250403_094651_business_mates;
+mod m20250403_094651_mates;
 
 pub fn get_auth_provider_migrations() -> Vec<Box<dyn MigrationTrait>> {
     vec![

@@ -29,7 +29,7 @@ pub struct Model {
     #[sea_orm(primary_key)]
     pub id: String, // REQUEST
     pub participant_slug: String, // REQUEST
-    pub vc_type: String, // REQUEST
+    pub vc_type: String,          // REQUEST
     pub cert: Option<String>,
     pub vc_uri: Option<String>,     // RESPONSE
     pub vc_issuing: Option<String>, // RESPONSE

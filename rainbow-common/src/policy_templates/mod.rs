@@ -75,7 +75,7 @@ pub struct TemplateOperand {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CreatePolicyTemplateRequest {
-    pub title: String, // TODO localized string
+    pub title: String,       // TODO localized string
     pub description: String, // TODO localized string
     pub content: OdrlPolicyInfo,
     pub template_operands: HashMap<String, TemplateOperand>,

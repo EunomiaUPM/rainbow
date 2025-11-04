@@ -16,12 +16,8 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-pub mod ssi;
-pub mod jwt;
-pub mod gnap;
 pub mod entities;
+pub mod gnap;
+pub mod jwt;
 pub mod oidc;
-
-
-
-
+pub mod ssi;

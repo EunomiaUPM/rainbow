@@ -18,7 +18,9 @@
  */
 
 use crate::provider::core::rainbow_entities::rainbow_catalog_err::CatalogError;
-use crate::provider::core::rainbow_entities::rainbow_catalog_types::{EditDataServiceRequest, NewCatalogRequest, NewDataServiceRequest};
+use crate::provider::core::rainbow_entities::rainbow_catalog_types::{
+    EditDataServiceRequest, NewCatalogRequest, NewDataServiceRequest,
+};
 use crate::provider::core::rainbow_entities::RainbowDataServiceTrait;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, State};

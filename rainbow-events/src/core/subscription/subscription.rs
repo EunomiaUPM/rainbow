@@ -67,8 +67,12 @@ where
         Ok(subscription)
     }
 
-    async fn get_subscription_by_callback_url(&self, callback_url: String) -> anyhow::Result<RainbowEventsSubscriptionCreationResponse> {
-        let subscription = self.repo
+    async fn get_subscription_by_callback_url(
+        &self,
+        callback_url: String,
+    ) -> anyhow::Result<RainbowEventsSubscriptionCreationResponse> {
+        let subscription = self
+            .repo
             .get_subscription_by_callback_string(callback_url)
             .await
             .map_err(|e| SubscriptionErrors::DbErr(e.into()))?
@@ -105,10 +109,13 @@ where
     ) -> anyhow::Result<RainbowEventsSubscriptionCreationResponse> {
         let subscription = self
             .repo
-            .get_subscription_by_callback_string(input.callback_address.clone()).await
+            .get_subscription_by_callback_string(input.callback_address.clone())
+            .await
             .map_err(|e| SubscriptionErrors::DbErr(e.into()))?;
         if subscription.is_some() {
-            bail!(SubscriptionErrors::SubscriptionCallbackAddressExists(subscription.unwrap().callback_address))
+            bail!(SubscriptionErrors::SubscriptionCallbackAddressExists(
+                subscription.unwrap().callback_address
+            ))
         }
 
         let subscription = self

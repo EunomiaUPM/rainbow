@@ -17,8 +17,7 @@
  *
  */
 
-use crate::core::datahub_proxy::datahub_proxy_types::{
-    DatahubDataset, DomainProperties, GlossaryTerm, TagProperties};
+use crate::core::datahub_proxy::datahub_proxy_types::{DatahubDataset, DomainProperties, GlossaryTerm, TagProperties};
 use crate::core::datahub_proxy::datahub_proxy_types::{DatahubDomain, GraphQLResponse, Platform, Tag};
 use crate::core::datahub_proxy::DatahubProxyTrait;
 use axum::async_trait;
@@ -113,8 +112,8 @@ impl DatahubProxyTrait for DatahubProxyService {
 "#;
 
         let request_body = serde_json::json!({
-        "query": query
-    });
+            "query": query
+        });
 
         let response = self
             .client
@@ -125,7 +124,6 @@ impl DatahubProxyTrait for DatahubProxyService {
             .send()
             .await?;
 
-
         // Mapear a tu estructura Tag
         let graphql_response: GraphQLResponse<TagProperties> = response.json().await?;
 
@@ -134,10 +132,7 @@ impl DatahubProxyTrait for DatahubProxyService {
             .search
             .searchResults
             .into_iter()
-            .map(|result| Tag {
-                urn: result.entity.urn,
-                properties: result.entity.properties,
-            })
+            .map(|result| Tag { urn: result.entity.urn, properties: result.entity.properties })
             .collect();
 
         Ok(tags)
@@ -239,7 +234,8 @@ impl DatahubProxyTrait for DatahubProxyService {
                 if let Some(entity) = result.get("entity") {
                     let urn = entity.get("urn").and_then(|v| v.as_str()).unwrap_or_default().to_string();
                     let name = entity.get("name").and_then(|v| v.as_str()).unwrap_or_default().to_string();
-                    let platform = entity.get("platform")
+                    let platform = entity
+                        .get("platform")
                         .cloned()
                         .and_then(|p| serde_json::from_value(p).ok())
                         .unwrap_or_else(|| Platform { name: "".to_string() });
@@ -251,7 +247,12 @@ impl DatahubProxyTrait for DatahubProxyService {
                         .and_then(|tags| tags.as_array())
                         .map(|tags| {
                             tags.iter()
-                                .filter_map(|tw| tw.get("tag").and_then(|tag| tag.get("name")).and_then(|n| n.as_str()).map(|s| s.to_string()))
+                                .filter_map(|tw| {
+                                    tw.get("tag")
+                                        .and_then(|tag| tag.get("name"))
+                                        .and_then(|n| n.as_str())
+                                        .map(|s| s.to_string())
+                                })
                                 .collect::<Vec<String>>()
                         })
                         .unwrap_or_default();
@@ -277,16 +278,18 @@ impl DatahubProxyTrait for DatahubProxyService {
                         .map(|d| DatahubDomain {
                             urn: d.get("urn").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
                             properties: DomainProperties {
-                                name: d.get("properties").and_then(|p| p.get("name")).and_then(|n| n.as_str()).unwrap_or_default().to_string(),
+                                name: d
+                                    .get("properties")
+                                    .and_then(|p| p.get("name"))
+                                    .and_then(|n| n.as_str())
+                                    .unwrap_or_default()
+                                    .to_string(),
                                 description: None,
                             },
                         })
                         .unwrap_or(DatahubDomain {
                             urn: "".to_string(),
-                            properties: DomainProperties {
-                                name: "".to_string(),
-                                description: None,
-                            },
+                            properties: DomainProperties { name: "".to_string(), description: None },
                         });
 
                     let glossary_terms = entity
@@ -399,13 +402,13 @@ impl DatahubProxyTrait for DatahubProxyService {
             .json::<serde_json::Value>()
             .await?;
 
-        let entity = res["data"]["entity"]
-            .as_object()
-            .ok_or_else(|| anyhow::anyhow!("Dataset with URN '{}' not found", urn))?;
+        let entity =
+            res["data"]["entity"].as_object().ok_or_else(|| anyhow::anyhow!("Dataset with URN '{}' not found", urn))?;
 
         let urn = entity.get("urn").and_then(|v| v.as_str()).unwrap_or_default().to_string();
         let name = entity.get("name").and_then(|v| v.as_str()).unwrap_or_default().to_string();
-        let platform = entity.get("platform")
+        let platform = entity
+            .get("platform")
             .cloned()
             .and_then(|p| serde_json::from_value(p).ok())
             .unwrap_or_else(|| Platform { name: "".to_string() });
@@ -417,7 +420,9 @@ impl DatahubProxyTrait for DatahubProxyService {
             .and_then(|tags| tags.as_array())
             .map(|tags| {
                 tags.iter()
-                    .filter_map(|tw| tw.get("tag").and_then(|tag| tag.get("name")).and_then(|n| n.as_str()).map(|s| s.to_string()))
+                    .filter_map(|tw| {
+                        tw.get("tag").and_then(|tag| tag.get("name")).and_then(|n| n.as_str()).map(|s| s.to_string())
+                    })
                     .collect::<Vec<String>>()
             })
             .unwrap_or_default();
@@ -443,29 +448,30 @@ impl DatahubProxyTrait for DatahubProxyService {
             .map(|d| DatahubDomain {
                 urn: d.get("urn").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
                 properties: DomainProperties {
-                    name: d.get("properties").and_then(|p| p.get("name")).and_then(|n| n.as_str()).unwrap_or_default().to_string(),
+                    name: d
+                        .get("properties")
+                        .and_then(|p| p.get("name"))
+                        .and_then(|n| n.as_str())
+                        .unwrap_or_default()
+                        .to_string(),
                     description: None,
                 },
             })
             .unwrap_or(DatahubDomain {
                 urn: "".to_string(),
-                properties: DomainProperties {
-                    name: "".to_string(),
-                    description: None,
-                },
+                properties: DomainProperties { name: "".to_string(), description: None },
             });
 
-        let glossary_terms = entity
-            .get("glossaryTerms")
-            .and_then(|gt| gt.get("terms"))
-            .and_then(|terms| terms.as_array())
-            .map(|terms| {
-                terms
-                    .iter()
-                    .filter_map(|t| t.get("term"))
-                    .filter_map(|term| serde_json::from_value::<GlossaryTerm>(term.clone()).ok())
-                    .collect::<Vec<GlossaryTerm>>()
-            });
+        let glossary_terms =
+            entity.get("glossaryTerms").and_then(|gt| gt.get("terms")).and_then(|terms| terms.as_array()).map(
+                |terms| {
+                    terms
+                        .iter()
+                        .filter_map(|t| t.get("term"))
+                        .filter_map(|term| serde_json::from_value::<GlossaryTerm>(term.clone()).ok())
+                        .collect::<Vec<GlossaryTerm>>()
+                },
+            );
 
         let dataset = DatahubDataset {
             urn,

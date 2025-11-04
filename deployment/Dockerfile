@@ -77,4 +77,4 @@ RUN chmod +x /usr/local/bin/${APP_NAME}
 USER appuser
 
 # entrypoint
-ENTRYPOINT /usr/local/bin/${APP_NAME}
+ENTRYPOINT ["/usr/local/bin/${APP_NAME}"]

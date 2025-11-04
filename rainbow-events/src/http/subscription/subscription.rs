@@ -40,7 +40,6 @@ where
     entity_type: Option<SubscriptionEntities>,
 }
 
-
 #[derive(Debug, Deserialize)]
 struct SubscriptionQueryParams {
     callback_address: Option<String>,
@@ -88,7 +87,11 @@ where
     ) -> impl IntoResponse {
         let cb = query.callback_address.clone();
         if cb.is_some() {
-            info!("GET {}/subscriptions?callback_address={}", Self::serialize_entity_type(&entity), cb.clone().unwrap());
+            info!(
+                "GET {}/subscriptions?callback_address={}",
+                Self::serialize_entity_type(&entity),
+                cb.clone().unwrap()
+            );
             match service.get_subscription_by_callback_url(cb.unwrap()).await {
                 Ok(subscriptions) => (StatusCode::OK, Json(subscriptions)).into_response(),
                 Err(e) => match e.downcast::<SubscriptionErrors>() {

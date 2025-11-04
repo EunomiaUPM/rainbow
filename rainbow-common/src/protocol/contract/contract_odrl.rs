@@ -47,7 +47,6 @@ pub struct ContractRequestMessageOfferOfferId {
     pub id: Urn,
 }
 
-
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct OdrlMessageOffer {
@@ -160,7 +159,6 @@ impl ProtocolValidate for OdrlOffer {
         Ok(())
     }
 }
-
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(deny_unknown_fields)]
@@ -290,7 +288,10 @@ impl OdrlLogicalConstraint {
             + self.or.is_some() as usize
             + self.xone.is_some() as usize;
         if count != 1 {
-            bail!("Exactly one of 'and', 'andSequence', 'or' or 'xone' must be present, found {}", count)
+            bail!(
+                "Exactly one of 'and', 'andSequence', 'or' or 'xone' must be present, found {}",
+                count
+            )
         } else {
             Ok(())
         }

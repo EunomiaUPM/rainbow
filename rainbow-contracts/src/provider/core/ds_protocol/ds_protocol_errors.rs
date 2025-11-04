@@ -27,30 +27,15 @@ pub enum IdsaCNError {
     #[error("Error from database: {0}")]
     DbErr(CnErrors),
     #[error("Negotiation process not found")]
-    ProcessNotFound {
-        provider_pid: Option<Urn>,
-        consumer_pid: Option<Urn>,
-    },
+    ProcessNotFound { provider_pid: Option<Urn>, consumer_pid: Option<Urn> },
     #[error("Error by parsing. {error}")]
-    UUIDParseError {
-        provider_pid: Option<String>,
-        consumer_pid: Option<String>,
-        error: String,
-    },
+    UUIDParseError { provider_pid: Option<String>, consumer_pid: Option<String>, error: String },
     #[error("Not Checked Error. {error}")]
-    NotCheckedError {
-        provider_pid: Option<String>,
-        consumer_pid: Option<String>,
-        error: String,
-    },
+    NotCheckedError { provider_pid: Option<String>, consumer_pid: Option<String>, error: String },
     #[error("Error from deserializing JSON: {0}")]
     JsonRejection(JsonRejection),
     #[error("Error from deserializing JSON: {0}")]
     ValidationError(String),
     #[error("Operation not allowed: {error}")]
-    NotAllowed {
-        provider_pid: Option<Urn>,
-        consumer_pid: Option<Urn>,
-        error: String,
-    },
+    NotAllowed { provider_pid: Option<Urn>, consumer_pid: Option<Urn>, error: String },
 }

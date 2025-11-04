@@ -24,15 +24,15 @@
 #![allow(unused_imports)]
 #![allow(unused_must_use)]
 
+pub mod auth_consumer;
+pub mod auth_provider;
 pub mod catalog;
-pub mod contracts_provider;
+mod common;
 pub mod contracts_consumer;
+pub mod contracts_provider;
+pub mod datahub;
 pub mod dataplane;
+pub mod events;
 pub mod transfer_consumer;
 pub mod transfer_provider;
-pub mod auth_provider;
-pub mod auth_consumer;
-pub mod events;
-pub mod datahub;
-mod common;
 // pub mod mates;

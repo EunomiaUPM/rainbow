@@ -18,7 +18,9 @@
  */
 
 use axum::async_trait;
-use rainbow_common::adv_protocol::interplane::data_plane_provision::{DataPlaneProvisionRequest, DataPlaneProvisionResponse};
+use rainbow_common::adv_protocol::interplane::data_plane_provision::{
+    DataPlaneProvisionRequest, DataPlaneProvisionResponse,
+};
 use rainbow_common::adv_protocol::interplane::data_plane_start::{DataPlaneStart, DataPlaneStartAck};
 use rainbow_common::adv_protocol::interplane::data_plane_status::{DataPlaneStatusRequest, DataPlaneStatusResponse};
 use rainbow_common::adv_protocol::interplane::data_plane_stop::{DataPlaneStop, DataPlaneStopAck};
@@ -28,9 +30,11 @@ pub mod controller_service;
 
 #[async_trait]
 pub trait DataPlaneControllerTrait {
-    async fn data_plane_provision_request(&self, input: DataPlaneProvisionRequest) -> anyhow::Result<DataPlaneProvisionResponse>;
+    async fn data_plane_provision_request(
+        &self,
+        input: DataPlaneProvisionRequest,
+    ) -> anyhow::Result<DataPlaneProvisionResponse>;
     async fn data_plane_start(&self, input: DataPlaneStart) -> anyhow::Result<DataPlaneStartAck>;
     async fn data_plane_stop(&self, input: DataPlaneStop) -> anyhow::Result<DataPlaneStopAck>;
     async fn data_plane_get_status(&self, input: DataPlaneStatusRequest) -> anyhow::Result<DataPlaneStatusResponse>;
 }
-

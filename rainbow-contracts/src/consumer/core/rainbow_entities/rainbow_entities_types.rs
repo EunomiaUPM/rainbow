@@ -20,7 +20,10 @@
 use rainbow_common::protocol::contract::contract_odrl::OdrlAgreement;
 use rainbow_common::utils::get_urn_from_string;
 use rainbow_db::contracts_consumer::repo::NewContractNegotiationProcess;
-use rainbow_db::contracts_consumer::repo::{EditAgreement, EditContractNegotiationMessage, EditContractNegotiationOffer, EditContractNegotiationProcess, NewAgreement, NewContractNegotiationMessage, NewContractNegotiationOffer};
+use rainbow_db::contracts_consumer::repo::{
+    EditAgreement, EditContractNegotiationMessage, EditContractNegotiationOffer, EditContractNegotiationProcess,
+    NewAgreement, NewContractNegotiationMessage, NewContractNegotiationOffer,
+};
 use serde::{Deserialize, Serialize};
 use urn::Urn;
 
@@ -119,10 +122,7 @@ pub struct NewContractNegotiationOfferRequest {
 
 impl Into<NewContractNegotiationOffer> for NewContractNegotiationOfferRequest {
     fn into(self) -> NewContractNegotiationOffer {
-        NewContractNegotiationOffer {
-            offer_id: Option::from(self.offer_id),
-            offer_content: self.offer_content,
-        }
+        NewContractNegotiationOffer { offer_id: Option::from(self.offer_id), offer_content: self.offer_content }
     }
 }
 
@@ -169,8 +169,6 @@ pub struct EditAgreementRequest {
 
 impl Into<EditAgreement> for EditAgreementRequest {
     fn into(self) -> EditAgreement {
-        EditAgreement {
-            active: self.active
-        }
+        EditAgreement { active: self.active }
     }
 }

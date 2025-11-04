@@ -38,11 +38,7 @@ pub struct Model {
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(
-        belongs_to = "super::catalog::Entity",
-        from = "Column::CatalogId",
-        to = "super::catalog::Column::Id"
-    )]
+    #[sea_orm(belongs_to = "super::catalog::Entity", from = "Column::CatalogId", to = "super::catalog::Column::Id")]
     Catalog,
     #[sea_orm(has_many = "super::odrl_offer::Entity")]
     OdrlOffer,

@@ -25,5 +25,5 @@ mod minions_repo;
 pub use auth_interaction_repo::AuthInteractionRepo;
 pub use auth_request_repo::AuthRequestRepo;
 pub use auth_verification_repo::AuthVerificationRepo;
-pub use minions_repo::MinionsRepo;
 pub use generic_repo::GenericRepo;
+pub use minions_repo::MinionsRepo;

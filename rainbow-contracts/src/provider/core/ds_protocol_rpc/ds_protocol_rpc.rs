@@ -64,14 +64,14 @@ use urn::Urn;
 pub struct DSRPCContractNegotiationProviderService<T, U, W>
 where
     T: ContractNegotiationProcessRepo
-    + ContractNegotiationMessageRepo
-    + ContractNegotiationOfferRepo
-    + AgreementRepo
-    + Send
-    + Sync
-    + 'static,
+        + ContractNegotiationMessageRepo
+        + ContractNegotiationOfferRepo
+        + AgreementRepo
+        + Send
+        + Sync
+        + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
-// V: CatalogOdrlFacadeTrait + Send + Sync,
+    // V: CatalogOdrlFacadeTrait + Send + Sync,
     W: MatesFacadeTrait + Send + Sync,
 {
     repo: Arc<T>,
@@ -84,14 +84,14 @@ where
 impl<T, U, W> DSRPCContractNegotiationProviderService<T, U, W>
 where
     T: ContractNegotiationProcessRepo
-    + ContractNegotiationMessageRepo
-    + ContractNegotiationOfferRepo
-    + AgreementRepo
-    + Send
-    + Sync
-    + 'static,
+        + ContractNegotiationMessageRepo
+        + ContractNegotiationOfferRepo
+        + AgreementRepo
+        + Send
+        + Sync
+        + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
-// V: CatalogOdrlFacadeTrait + Send + Sync,
+    // V: CatalogOdrlFacadeTrait + Send + Sync,
     W: MatesFacadeTrait + Send + Sync,
 {
     pub fn new(
@@ -218,14 +218,14 @@ where
 impl<T, U, W> DSRPCContractNegotiationProviderTrait for DSRPCContractNegotiationProviderService<T, U, W>
 where
     T: ContractNegotiationProcessRepo
-    + ContractNegotiationMessageRepo
-    + ContractNegotiationOfferRepo
-    + AgreementRepo
-    + Send
-    + Sync
-    + 'static,
+        + ContractNegotiationMessageRepo
+        + ContractNegotiationOfferRepo
+        + AgreementRepo
+        + Send
+        + Sync
+        + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
-// V: CatalogOdrlFacadeTrait + Send + Sync,
+    // V: CatalogOdrlFacadeTrait + Send + Sync,
     W: MatesFacadeTrait + Send + Sync,
 {
     async fn setup_offer(&self, input: SetupOfferRequest) -> anyhow::Result<SetupOfferResponse> {
@@ -338,7 +338,7 @@ where
                 "offer": offer
             }),
         )
-            .await?;
+        .await?;
 
         // 8. bye
         Ok(response)
@@ -457,7 +457,7 @@ where
                 "offer": offer
             }),
         )
-            .await?;
+        .await?;
 
         // 8. bye
         Ok(response)
@@ -604,7 +604,7 @@ where
                         "agreement": final_agreement
             }),
         )
-            .await?;
+        .await?;
 
         Ok(response)
     }
@@ -685,7 +685,7 @@ where
                     "message": message
             }),
         )
-            .await?;
+        .await?;
 
         Ok(response)
     }
@@ -762,7 +762,7 @@ where
                     "message": message
             }),
         )
-            .await?;
+        .await?;
 
         Ok(response)
     }

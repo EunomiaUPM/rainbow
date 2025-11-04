@@ -47,4 +47,3 @@ pub struct RainbowBusinessAcceptanceRequest {
     #[serde(rename = "providerPid")]
     pub provider_pid: Urn,
 }
-

@@ -346,7 +346,7 @@ where
                 "message": message,
             }),
         )
-            .await?;
+        .await?;
         // 8. Bye
         Ok(response)
     }
@@ -461,7 +461,7 @@ where
                 "message": message,
             }),
         )
-            .await?;
+        .await?;
         // 8. Bye
         Ok(response)
     }
@@ -576,7 +576,7 @@ where
                 "message": message,
             }),
         )
-            .await?;
+        .await?;
         // 8. Bye
         Ok(response)
     }
@@ -684,7 +684,7 @@ where
                 "message": message,
             }),
         )
-            .await?;
+        .await?;
         // 8. Bye
         Ok(response)
     }
@@ -799,7 +799,7 @@ where
                 "message": message,
             }),
         )
-            .await?;
+        .await?;
         // 8. Bye
         Ok(response)
     }

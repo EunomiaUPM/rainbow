@@ -17,17 +17,34 @@
  *
  */
 
-use crate::provider::core::ds_protocol_rpc::ds_protocol_rpc_types::{DSRPCTransferProviderCompletionRequest, DSRPCTransferProviderCompletionResponse, DSRPCTransferProviderStartRequest, DSRPCTransferProviderStartResponse, DSRPCTransferProviderSuspensionRequest, DSRPCTransferProviderSuspensionResponse, DSRPCTransferProviderTerminationRequest, DSRPCTransferProviderTerminationResponse};
+use crate::provider::core::ds_protocol_rpc::ds_protocol_rpc_types::{
+    DSRPCTransferProviderCompletionRequest, DSRPCTransferProviderCompletionResponse, DSRPCTransferProviderStartRequest,
+    DSRPCTransferProviderStartResponse, DSRPCTransferProviderSuspensionRequest,
+    DSRPCTransferProviderSuspensionResponse, DSRPCTransferProviderTerminationRequest,
+    DSRPCTransferProviderTerminationResponse,
+};
 use axum::async_trait;
 
-pub mod ds_protocol_rpc_types;
 pub mod ds_protocol_rpc;
+pub mod ds_protocol_rpc_types;
 
 #[mockall::automock]
 #[async_trait]
 pub trait DSRPCTransferProviderTrait: Send + Sync {
-    async fn setup_start(&self, input: DSRPCTransferProviderStartRequest) -> anyhow::Result<DSRPCTransferProviderStartResponse>;
-    async fn setup_suspension(&self, input: DSRPCTransferProviderSuspensionRequest) -> anyhow::Result<DSRPCTransferProviderSuspensionResponse>;
-    async fn setup_completion(&self, input: DSRPCTransferProviderCompletionRequest) -> anyhow::Result<DSRPCTransferProviderCompletionResponse>;
-    async fn setup_termination(&self, input: DSRPCTransferProviderTerminationRequest) -> anyhow::Result<DSRPCTransferProviderTerminationResponse>;
+    async fn setup_start(
+        &self,
+        input: DSRPCTransferProviderStartRequest,
+    ) -> anyhow::Result<DSRPCTransferProviderStartResponse>;
+    async fn setup_suspension(
+        &self,
+        input: DSRPCTransferProviderSuspensionRequest,
+    ) -> anyhow::Result<DSRPCTransferProviderSuspensionResponse>;
+    async fn setup_completion(
+        &self,
+        input: DSRPCTransferProviderCompletionRequest,
+    ) -> anyhow::Result<DSRPCTransferProviderCompletionResponse>;
+    async fn setup_termination(
+        &self,
+        input: DSRPCTransferProviderTerminationRequest,
+    ) -> anyhow::Result<DSRPCTransferProviderTerminationResponse>;
 }

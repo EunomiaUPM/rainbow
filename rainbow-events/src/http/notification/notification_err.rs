@@ -33,7 +33,8 @@ impl IntoResponse for NotificationErrors {
                     title: "INTERNAL_ERROR".to_string(),
                     message: e.to_string(),
                 }),
-            ).into_response(),
+            )
+                .into_response(),
             e @ NotificationErrors::NotFound { .. } => (
                 StatusCode::NOT_FOUND,
                 Json(SubscriptionErrorMessage {
@@ -41,7 +42,8 @@ impl IntoResponse for NotificationErrors {
                     title: "NOT_FOUND".to_string(),
                     message: e.to_string(),
                 }),
-            ).into_response(),
+            )
+                .into_response(),
             e @ NotificationErrors::JsonRejection { .. } => (
                 StatusCode::BAD_REQUEST,
                 Json(SubscriptionErrorMessage {
@@ -49,7 +51,8 @@ impl IntoResponse for NotificationErrors {
                     title: "JSON_MALFORMED".to_string(),
                     message: e.to_string(),
                 }),
-            ).into_response(),
+            )
+                .into_response(),
             e @ NotificationErrors::UrnUuidSchema { .. } => (
                 StatusCode::BAD_REQUEST,
                 Json(SubscriptionErrorMessage {
@@ -57,7 +60,8 @@ impl IntoResponse for NotificationErrors {
                     title: "UUID_SCHEMA".to_string(),
                     message: e.to_string(),
                 }),
-            ).into_response()
+            )
+                .into_response(),
         }
     }
 }

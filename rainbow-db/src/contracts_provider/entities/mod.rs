@@ -17,7 +17,7 @@
  *
  */
 
-pub mod cn_process;
+pub mod agreement;
 pub mod cn_message;
 pub mod cn_offer;
-pub mod agreement;
+pub mod cn_process;

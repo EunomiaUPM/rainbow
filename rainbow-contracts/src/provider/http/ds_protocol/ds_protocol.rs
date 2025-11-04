@@ -90,7 +90,7 @@ where
                     consumer_pid: None,
                     error: err.to_string(),
                 }
-                    .into_response()
+                .into_response()
             }
         };
         match service.get_negotiation(provider_pid.clone()).await {
@@ -102,7 +102,7 @@ where
                     consumer_pid: None,
                     error: err_.to_string(),
                 }
-                    .into_response(),
+                .into_response(),
             },
         }
     }
@@ -119,16 +119,15 @@ where
             Err(e) => return IdsaCNError::JsonRejection(e).into_response(),
         };
         let client_type = match headers.get("rainbow-client-type") {
-            Some(header_value) => {
-                match header_value.to_str() {
-                    Ok(s) => s,
-                    Err(e) => {
-                        return NotCheckedError { inner_error: e.into() }.into_response();
-                    }
+            Some(header_value) => match header_value.to_str() {
+                Ok(s) => s,
+                Err(e) => {
+                    return NotCheckedError { inner_error: e.into() }.into_response();
                 }
-            }
+            },
             None => "standard",
-        }.to_string();
+        }
+        .to_string();
         let token = info.token.clone();
         match service.post_request(input, token, client_type).await {
             Ok(negotiation) => negotiation.into_response(),
@@ -157,7 +156,7 @@ where
                     consumer_pid: None,
                     error: err.to_string(),
                 }
-                    .into_response()
+                .into_response()
             }
         };
         let input = match input {
@@ -192,7 +191,7 @@ where
                     consumer_pid: None,
                     error: err.to_string(),
                 }
-                    .into_response()
+                .into_response()
             }
         };
         let input = match input {

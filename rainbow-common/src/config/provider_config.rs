@@ -292,8 +292,12 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
         let default = ApplicationProviderConfig::default();
         let catalog_as_datahub: bool =
             extract_env("CATALOG_AS_DATAHUB", default.catalog_as_datahub.to_string()).parse().unwrap();
-        let gateway_production: bool =
-            extract_env("GATEWAY_PRODUCTION", default.is_gateway_in_production.to_string()).parse().unwrap();
+        let gateway_production: bool = extract_env(
+            "GATEWAY_PRODUCTION",
+            default.is_gateway_in_production.to_string(),
+        )
+        .parse()
+        .unwrap();
         let compound_config = Self {
             transfer_process_host: Some(HostConfig {
                 protocol: extract_env(

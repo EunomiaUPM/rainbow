@@ -27,7 +27,10 @@ use rainbow_common::protocol::catalog::EntityTypes;
 use rainbow_common::protocol::contract::contract_odrl::OdrlOffer;
 use rainbow_common::utils::get_urn_from_string;
 use rainbow_db::catalog::repo::{CatalogRepo, DataServiceRepo, DatasetRepo, DistributionRepo, OdrlOfferRepo};
-use rainbow_events::core::notification::notification_types::{RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory, RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes};
+use rainbow_events::core::notification::notification_types::{
+    RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory,
+    RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes,
+};
 use rainbow_events::core::notification::RainbowEventsNotificationTrait;
 use serde_json::{json, to_value};
 use std::sync::Arc;
@@ -57,7 +60,6 @@ impl<T, U> RainbowCatalogTrait for RainbowCatalogCatalogService<T, U>
 where
     T: CatalogRepo + DatasetRepo + DistributionRepo + DataServiceRepo + OdrlOfferRepo + Send + Sync + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
-
 {
     async fn get_catalog_by_id(&self, id: Urn) -> anyhow::Result<Catalog> {
         let catalog = self.repo.get_catalog_by_id(id.clone()).await.map_err(CatalogError::DbErr)?;
@@ -84,13 +86,15 @@ where
             false => self.repo.create_catalog(input.into()).await.map_err(CatalogError::DbErr)?,
         };
         let catalog = Catalog::try_from(catalog_entity).map_err(CatalogError::ConversionError)?;
-        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
-            category: RainbowEventsNotificationMessageCategory::Catalog,
-            subcategory: "Catalog".to_string(),
-            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
-            message_content: to_value(&catalog)?,
-            message_operation: RainbowEventsNotificationMessageOperation::Creation,
-        }).await?;
+        self.notification_service
+            .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+                category: RainbowEventsNotificationMessageCategory::Catalog,
+                subcategory: "Catalog".to_string(),
+                message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+                message_content: to_value(&catalog)?,
+                message_operation: RainbowEventsNotificationMessageOperation::Creation,
+            })
+            .await?;
         Ok(catalog)
     }
 
@@ -102,13 +106,15 @@ where
             _ => CatalogError::DbErr(err),
         })?;
         let catalog = Catalog::try_from(catalog_entity).map_err(CatalogError::ConversionError)?;
-        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
-            category: RainbowEventsNotificationMessageCategory::Catalog,
-            subcategory: "Catalog".to_string(),
-            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
-            message_content: to_value(&catalog)?,
-            message_operation: RainbowEventsNotificationMessageOperation::Update,
-        }).await?;
+        self.notification_service
+            .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+                category: RainbowEventsNotificationMessageCategory::Catalog,
+                subcategory: "Catalog".to_string(),
+                message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+                message_content: to_value(&catalog)?,
+                message_operation: RainbowEventsNotificationMessageOperation::Update,
+            })
+            .await?;
         Ok(catalog)
     }
 
@@ -119,16 +125,18 @@ where
             }
             _ => CatalogError::DbErr(err),
         })?;
-        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
-            category: RainbowEventsNotificationMessageCategory::Catalog,
-            subcategory: "Catalog".to_string(),
-            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
-            message_content: json!({
-                "@type": "dcat:Catalog",
-                "@id": id.to_string()
-            }),
-            message_operation: RainbowEventsNotificationMessageOperation::Deletion,
-        }).await?;
+        self.notification_service
+            .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+                category: RainbowEventsNotificationMessageCategory::Catalog,
+                subcategory: "Catalog".to_string(),
+                message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+                message_content: json!({
+                    "@type": "dcat:Catalog",
+                    "@id": id.to_string()
+                }),
+                message_operation: RainbowEventsNotificationMessageOperation::Deletion,
+            })
+            .await?;
         Ok(())
     }
 }

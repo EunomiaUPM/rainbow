@@ -20,10 +20,10 @@
 use crate::core::datahub_proxy::datahub_proxy::DatahubProxyService;
 use crate::core::rainbow_rpc::rainbow_rpc::RainbowRPCDatahubCatalogService;
 use crate::http::datahub_proxy::datahub_proxy::DataHubProxyRouter;
+use crate::http::openapi::route_openapi;
 use crate::http::rainbow_entities::policies::RainbowCatalogPoliciesRouter;
 use crate::http::rainbow_entities::policy_relations_router::PolicyTemplatesRouter;
 use crate::http::rainbow_rpc::rainbow_rpc::RainbowRPCDatahubCatalogRouter;
-use crate::http::openapi::route_openapi;
 use axum::{serve, Router};
 use rainbow_catalog::provider::core::rainbow_entities::policies::RainbowCatalogPoliciesService;
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
@@ -58,7 +58,7 @@ pub async fn create_datahub_catalog_router(config: &ApplicationProviderConfig) -
         notification_service.clone(),
         Some(SubscriptionEntities::Catalog),
     )
-        .router();
+    .router();
 
     // Datahub services
     let repo = Arc::new(DatahubConnectorRepoForSql::new(db_connection.clone()));
@@ -68,11 +68,16 @@ pub async fn create_datahub_catalog_router(config: &ApplicationProviderConfig) -
 
     // Plain Catalog Policies Router
     let plain_policies_repo = Arc::new(CatalogRepoForSql::new(db_connection));
-    let plain_policies_service = Arc::new(RainbowCatalogPoliciesService::new(plain_policies_repo.clone(), notification_service.clone()));
+    let plain_policies_service = Arc::new(RainbowCatalogPoliciesService::new(
+        plain_policies_repo.clone(),
+        notification_service.clone(),
+    ));
     let plain_policies_router = RainbowCatalogPoliciesRouter::new(plain_policies_service.clone());
 
     // RPC policies resolver
-    let rpc_service = Arc::new(RainbowRPCDatahubCatalogService::new(plain_policies_repo.clone()));
+    let rpc_service = Arc::new(RainbowRPCDatahubCatalogService::new(
+        plain_policies_repo.clone(),
+    ));
     let rpc_router = RainbowRPCDatahubCatalogRouter::new(rpc_service.clone());
 
     // Merge routers
@@ -103,7 +108,7 @@ impl DatahubCatalogApplication {
             config.get_raw_catalog_host().clone().unwrap().url,
             config.get_raw_catalog_host().clone().unwrap().port
         ))
-            .await?;
+        .await?;
         serve(listener, router).await?;
         Ok(())
     }

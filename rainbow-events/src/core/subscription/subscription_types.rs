@@ -24,7 +24,6 @@ use rainbow_db::events::repo::NewSubscription;
 use serde::{Deserialize, Serialize};
 use urn::Urn;
 
-
 #[derive(PartialEq)]
 pub enum RainbowEventsSubscriptionCreationTypes {
     TransferProcess(RainbowEventsSubscriptionCreationRequestForTransferProcess),
@@ -32,7 +31,6 @@ pub enum RainbowEventsSubscriptionCreationTypes {
     ContractNegotiation(RainbowEventsSubscriptionCreationRequestForContractNegotiation),
     DataPlane(RainbowEventsSubscriptionCreationRequestForDataPlane),
 }
-
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(deny_unknown_fields)]

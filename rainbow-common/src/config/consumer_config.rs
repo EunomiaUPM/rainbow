@@ -256,8 +256,12 @@ impl ApplicationConsumerConfigTrait for ApplicationConsumerConfig {
         }
         dotenvy::dotenv().ok();
         let default = ApplicationConsumerConfig::default();
-        let gateway_production: bool =
-            extract_env("GATEWAY_PRODUCTION", default.is_gateway_in_production.to_string()).parse().unwrap();
+        let gateway_production: bool = extract_env(
+            "GATEWAY_PRODUCTION",
+            default.is_gateway_in_production.to_string(),
+        )
+        .parse()
+        .unwrap();
         let compound_config = Self {
             transfer_process_host: Some(HostConfig {
                 protocol: extract_env(

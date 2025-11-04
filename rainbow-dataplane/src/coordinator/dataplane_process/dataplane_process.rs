@@ -17,7 +17,10 @@
  *
  */
 
-use crate::coordinator::dataplane_process::{DataPlaneDefaultBehaviour, DataPlaneProcessAddress, DataPlaneProcessDirection, DataPlaneProcessRequest, DataPlaneProcessState};
+use crate::coordinator::dataplane_process::{
+    DataPlaneDefaultBehaviour, DataPlaneProcessAddress, DataPlaneProcessDirection, DataPlaneProcessRequest,
+    DataPlaneProcessState,
+};
 use crate::coordinator::transfer_event::TransferEvent;
 use axum::async_trait;
 use rainbow_common::utils::get_urn;
@@ -96,7 +99,6 @@ impl DataPlaneDefaultBehaviour for DataPlaneProcess {
         todo!()
     }
 
-
     async fn on_pull_data(&self, _dataplane_id: Urn, _event: TransferEvent) -> anyhow::Result<()> {
         todo!()
     }
@@ -117,4 +119,3 @@ impl DataPlaneDefaultBehaviour for DataPlaneProcess {
         todo!()
     }
 }
-

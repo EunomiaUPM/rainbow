@@ -163,10 +163,14 @@ impl FromStr for ContractNegotiationMessages {
             "ContractRequestMessage" => Ok(ContractNegotiationMessages::ContractRequestMessage),
             "ContractOfferMessage" => Ok(ContractNegotiationMessages::ContractOfferMessage),
             "ContractAgreementMessage" => Ok(ContractNegotiationMessages::ContractAgreementMessage),
-            "ContractAgreementVerificationMessage" => Ok(ContractNegotiationMessages::ContractAgreementVerificationMessage),
+            "ContractAgreementVerificationMessage" => {
+                Ok(ContractNegotiationMessages::ContractAgreementVerificationMessage)
+            }
             "ContractNegotiationEventMessage" => Ok(ContractNegotiationMessages::ContractNegotiationEventMessage),
-            "ContractNegotiationTerminationMessage" => Ok(ContractNegotiationMessages::ContractNegotiationTerminationMessage),
-            _ => bail!("Contract negotiation message not recognized")
+            "ContractNegotiationTerminationMessage" => {
+                Ok(ContractNegotiationMessages::ContractNegotiationTerminationMessage)
+            }
+            _ => bail!("Contract negotiation message not recognized"),
         }
     }
 }

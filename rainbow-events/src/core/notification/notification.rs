@@ -18,7 +18,10 @@
  */
 
 use crate::core::notification::notification_err::NotificationErrors;
-use crate::core::notification::notification_types::{RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationCreationRequest, RainbowEventsNotificationResponse};
+use crate::core::notification::notification_types::{
+    RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationCreationRequest,
+    RainbowEventsNotificationResponse,
+};
 use crate::core::notification::RainbowEventsNotificationTrait;
 use crate::core::subscription::subscription_err::SubscriptionErrors;
 use axum::async_trait;
@@ -90,7 +93,10 @@ where
         Ok(notifications)
     }
 
-    async fn ack_pending_notifications_by_subscription_id(&self, subscription_id: Urn) -> anyhow::Result<Vec<RainbowEventsNotificationResponse>> {
+    async fn ack_pending_notifications_by_subscription_id(
+        &self,
+        subscription_id: Urn,
+    ) -> anyhow::Result<Vec<RainbowEventsNotificationResponse>> {
         let notifications = self
             .repo
             .ack_pending_notifications_by_subscription_id(subscription_id)
@@ -143,10 +149,7 @@ where
         Ok(notifications)
     }
 
-    async fn broadcast_notification(
-        &self,
-        input: RainbowEventsNotificationBroadcastRequest,
-    ) -> anyhow::Result<()> {
+    async fn broadcast_notification(&self, input: RainbowEventsNotificationBroadcastRequest) -> anyhow::Result<()> {
         let subscriptions = self.repo.get_all_subscriptions().await.map_err(|e| NotificationErrors::DbErr(e.into()))?;
         for subscription in subscriptions {
             let callback = subscription.callback_address;
@@ -163,27 +166,37 @@ where
             let res = self.client.post(callback).json(&message).send().await;
             match res {
                 Ok(res) => {
-                    self.repo.create_notification(get_urn_from_string(&subscription.id)?, NewNotification {
-                        category: message.category.to_string(),
-                        subcategory: message.subcategory,
-                        message_type: message.message_type.to_string(),
-                        message_operation: message.message_operation,
-                        message_content: message.message_content,
-                        status: match res.status().is_success() {
-                            true => "Ok".to_string(),
-                            false => "Pending".to_string()
-                        },
-                    }).await?;
+                    self.repo
+                        .create_notification(
+                            get_urn_from_string(&subscription.id)?,
+                            NewNotification {
+                                category: message.category.to_string(),
+                                subcategory: message.subcategory,
+                                message_type: message.message_type.to_string(),
+                                message_operation: message.message_operation,
+                                message_content: message.message_content,
+                                status: match res.status().is_success() {
+                                    true => "Ok".to_string(),
+                                    false => "Pending".to_string(),
+                                },
+                            },
+                        )
+                        .await?;
                 }
                 Err(_) => {
-                    self.repo.create_notification(get_urn_from_string(&subscription.id)?, NewNotification {
-                        category: message.category.to_string(),
-                        subcategory: message.subcategory,
-                        message_type: message.message_type.to_string(),
-                        message_operation: message.message_operation,
-                        message_content: message.message_content,
-                        status: "Pending".to_string(),
-                    }).await?;
+                    self.repo
+                        .create_notification(
+                            get_urn_from_string(&subscription.id)?,
+                            NewNotification {
+                                category: message.category.to_string(),
+                                subcategory: message.subcategory,
+                                message_type: message.message_type.to_string(),
+                                message_operation: message.message_operation,
+                                message_content: message.message_content,
+                                status: "Pending".to_string(),
+                            },
+                        )
+                        .await?;
                 }
             }
         }
