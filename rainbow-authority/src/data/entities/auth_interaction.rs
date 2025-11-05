@@ -16,7 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::data::repo_factory::traits::IntoActiveSet;
+use crate::services::repo::traits::IntoActiveSet;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
 use rand::distributions::Alphanumeric;

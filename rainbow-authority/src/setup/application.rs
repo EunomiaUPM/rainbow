@@ -18,10 +18,13 @@
  */
 
 use crate::core::Authority;
-use crate::data::repo_factory::factory::AuthRepoForSql;
-use crate::http::RainbowAuthorityRouter;
+use crate::http::router::RainbowAuthorityRouter;
+use crate::services::access_manager::AccessManagerService;
+use crate::services::client::ClientService;
+use crate::services::oidc::OidcService;
+use crate::services::repo::RepoForSql;
+use crate::services::wallet::WalletService;
 use crate::setup::config::AuthorityApplicationConfig;
-use crate::setup::config::AuthorityFunctions;
 use crate::setup::AuthorityApplicationConfigTrait;
 use axum::{serve, Router};
 use sea_orm::Database;
@@ -32,11 +35,26 @@ use tracing::info;
 pub struct AuthorityApplication;
 
 pub async fn create_authority_router(config: &AuthorityApplicationConfig) -> Router {
+    // CONFIGS
     let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
-    let authority_repo = Arc::new(AuthRepoForSql::create_repo(db_connection.clone()));
-    let authority = Arc::new(Authority::new(authority_repo.clone(), config.clone()));
-    let authority_router = RainbowAuthorityRouter::new(authority.clone()).router();
-    Router::new().merge(authority_router)
+    let wallet_config = config.parse_to_wallet();
+    let access_config = config.parse_to_access();
+    let oidc_config = config.parse_to_oidc();
+
+    // SERVICES
+    let repo = Arc::new(RepoForSql::new(db_connection));
+    let client = Arc::new(ClientService::new());
+    let wallet = Arc::new(WalletService::new(wallet_config, client.clone()));
+    let access = Arc::new(AccessManagerService::new(access_config, client.clone()));
+    let oidc = Arc::new(OidcService::new(oidc_config));
+
+    // CORE
+    let authority = Authority::new(repo, client, wallet, access, oidc, config.clone());
+
+    // ROUTER
+    let router = RainbowAuthorityRouter::new(Arc::new(authority)).router();
+
+    Router::new().merge(router)
 }
 
 impl AuthorityApplication {
@@ -47,9 +65,9 @@ impl AuthorityApplication {
         let server_message = format!("Starting Authority server in {}", config.get_host());
         info!("{}", server_message);
 
-        let listener = match config.get_environment_scenario() {
-            true => TcpListener::bind(format!("127.0.0.1:{}", config.get_port())).await?,
-            false => TcpListener::bind(format!("0.0.0.0:{}", config.get_port())).await?,
+        let listener = match config.is_local() {
+            true => TcpListener::bind(format!("127.0.0.1{}", config.get_weird_port())).await?,
+            false => TcpListener::bind(format!("0.0.0.0{}", config.get_weird_port())).await?,
         };
 
         serve(listener, router).await?;

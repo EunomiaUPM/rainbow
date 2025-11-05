@@ -18,6 +18,7 @@
  */
 
 use sea_orm_migration::prelude::*;
+use crate::data::migrations::m20250403_094651_auth_request::AuthRequest;
 
 pub struct Migration;
 
@@ -37,6 +38,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(AuthVerification::Id).string().not_null().primary_key())
                     .col(ColumnDef::new(AuthVerification::State).string().not_null())
                     .col(ColumnDef::new(AuthVerification::Nonce).string().not_null())
+                    .col(ColumnDef::new(AuthVerification::VcType).string().not_null())
                     .col(ColumnDef::new(AuthVerification::Audience).string().not_null())
                     .col(ColumnDef::new(AuthVerification::Holder).string())
                     .col(ColumnDef::new(AuthVerification::Vpt).string())
@@ -60,6 +62,7 @@ pub enum AuthVerification {
     Id,
     State,
     Nonce,
+    VcType,
     Audience,
     Holder,
     Vpt,

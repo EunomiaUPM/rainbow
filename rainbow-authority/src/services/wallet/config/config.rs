@@ -1,0 +1,88 @@
+/*
+ *
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+use crate::errors::Errors;
+use crate::services::wallet::WalletServiceConfigTrait;
+use crate::types::wallet::SSIWalletConfig;
+use anyhow::bail;
+use serde_json::{json, Value};
+use std::fs;
+use tracing::error;
+
+pub struct WalletServiceConfig {
+    pub ssi_wallet_config: SSIWalletConfig,
+    pub keys_path: String,
+}
+
+impl WalletServiceConfigTrait for WalletServiceConfig {
+    fn get_raw_wallet_config(&self) -> SSIWalletConfig {
+        self.ssi_wallet_config.clone()
+    }
+    fn get_wallet_api_url(&self) -> String {
+        let data = self.get_raw_wallet_config();
+        match data.api_port {
+            Some(port) => {
+                format!("{}://{}:{}", data.api_protocol, data.api_url, port)
+            }
+            None => {
+                format!("{}://{}", data.api_protocol, data.api_url)
+            }
+        }
+    }
+    fn get_wallet_register_data(&self) -> Value {
+        let data = self.get_raw_wallet_config();
+        json!({
+            "type": data.r#type,
+            "name": data.name,
+            "email": data.email,
+            "password": data.password,
+        })
+    }
+    fn get_wallet_login_data(&self) -> Value {
+        let data = self.get_raw_wallet_config();
+        json!({
+            "type": data.r#type,
+            "email": data.email,
+            "password": data.password,
+        })
+    }
+
+    fn get_cert(&self) -> anyhow::Result<String> {
+        let path = format!("{}/cert.pem", self.keys_path);
+        read(&path)
+    }
+    fn get_priv_key(&self) -> anyhow::Result<String> {
+        let path = format!("{}/private_key.pem", self.keys_path);
+        read(&path)
+    }
+    fn get_pub_key(&self) -> anyhow::Result<String> {
+        let path = format!("{}/public_key.pem", self.keys_path);
+        read(&path)
+    }
+}
+
+fn read(path: &str) -> anyhow::Result<String> {
+    match fs::read_to_string(&path) {
+        Ok(data) => Ok(data),
+        Err(e) => {
+            let error = Errors::read_new(path.to_string(), e.to_string());
+            error!("{}", error);
+            bail!(error)
+        }
+    }
+}
