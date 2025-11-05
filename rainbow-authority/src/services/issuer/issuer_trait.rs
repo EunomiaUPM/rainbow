@@ -16,17 +16,16 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use crate::data::entities::{issuing, request};
+use crate::types::issuing::{AuthServerMetadata, IssuerMetadata, IssuingToken, VCCredOffer};
+use serde_json::Value;
 
-use serde::{Deserialize, Serialize};
-use super::dids_info::DidsInfo;
-#[derive(Deserialize, Serialize, PartialEq, Eq, Clone, Debug)]
-pub struct WalletInfo {
-    pub id: String,
-    pub name: String,
-    #[serde(rename = "createdOn")]
-    pub created_on: String,
-    #[serde(rename = "addedOn")]
-    pub added_on: String,
-    pub permission: String, // TODO
-    pub dids: Vec<DidsInfo>,
+pub trait IssuerServiceTrait: Send + Sync + 'static {
+    fn start_vci(&self, req_model: &request::Model) -> issuing::NewModel;
+    fn generate_issuing_uri(&self, id: &str) -> String;
+    fn get_cred_offer_data(&self, model: &issuing::Model) -> anyhow::Result<VCCredOffer>;
+    fn get_issuer_data(&self) -> IssuerMetadata;
+    fn get_oauth_server_data(&self) -> AuthServerMetadata;
+    fn get_token(&self) -> IssuingToken;
+    fn issue_cred(&self) -> anyhow::Result<Value>;
 }
