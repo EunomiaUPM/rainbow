@@ -17,9 +17,7 @@
  *
  */
 
-pub use factory_trait::RepoFactoryTrait;
-pub use sql_factory::RepoForSql;
-mod factory_trait;
-pub mod repos;
-mod sql_factory;
-pub mod traits;
+pub use repo_trait::RepoServiceTrait;
+mod repo_trait;
+pub mod sql;
+mod subtraits;

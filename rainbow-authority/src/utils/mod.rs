@@ -16,9 +16,14 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use anyhow::bail;
 use axum::http::HeaderMap;
 use base64::{engine::general_purpose, Engine as _};
 use rand::Rng;
+use serde_json::Value;
+use tracing::error;
+use crate::errors::{ErrorLogTrait, Errors};
+use crate::types::enums::errors::BadFormat;
 
 pub fn create_opaque_token() -> String {
     let mut bytes = [0u8; 32]; // 256 bits
@@ -60,4 +65,31 @@ pub fn trim_path(path: &str) -> String {
     } else {
         path.to_string()
     }
+}
+
+pub fn get_claim(claims: &Value, path: Vec<&str>) -> anyhow::Result<String> {
+    let mut node = claims;
+    let field = path.last().unwrap_or(&"unknown");
+    for key in path.iter() {
+        node = match node.get(key) {
+            Some(data) => data,
+            None => {
+                let error = Errors::format_new(BadFormat::Received, format!("Missing field '{}'", key));
+                error!("{}", error.log());
+                bail!(error)
+            }
+        };
+    }
+    let data = match node.as_str() {
+        Some(data) => data.to_string(),
+        None => {
+            let error = Errors::format_new(
+                BadFormat::Received,
+                format!("Field '{}' not a string", field),
+            );
+            error!("{}", error.log());
+            bail!(error)
+        }
+    };
+    Ok(data)
 }

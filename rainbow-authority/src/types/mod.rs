@@ -18,9 +18,11 @@
  */
 
 pub mod gnap;
-pub mod oidc;
+mod oidc;
 pub mod wallet;
 pub mod jwt;
 pub mod enums;
 pub mod host;
 pub mod vcs;
+pub mod issuing;
+pub mod verifying;

@@ -19,11 +19,12 @@
 
 use crate::core::Authority;
 use crate::http::router::RainbowAuthorityRouter;
-use crate::services::access_manager::AccessManagerService;
-use crate::services::client::ClientService;
-use crate::services::oidc::OidcService;
-use crate::services::repo::RepoForSql;
-use crate::services::wallet::WalletService;
+use crate::services::access_manager::gnap::{config::GnapConfig, GnapService};
+use crate::services::client::basic::BasicClientService;
+use crate::services::issuer::basic::{config::BasicIssuerConfig, BasicIssuerService};
+use crate::services::repo::sql::RepoForSql;
+use crate::services::verifier::basic::{config::BasicVerifierConfig, BasicVerifierService};
+use crate::services::wallet::waltid::{config::WaltIdConfig, WaltIdService};
 use crate::setup::config::AuthorityApplicationConfig;
 use crate::setup::AuthorityApplicationConfigTrait;
 use axum::{serve, Router};
@@ -37,19 +38,21 @@ pub struct AuthorityApplication;
 pub async fn create_authority_router(config: &AuthorityApplicationConfig) -> Router {
     // CONFIGS
     let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
-    let wallet_config = config.parse_to_wallet();
-    let access_config = config.parse_to_access();
-    let oidc_config = config.parse_to_oidc();
+    let waltid_config = WaltIdConfig::from(config.clone());
+    let gnap_config = GnapConfig::from(config.clone());
+    let issuer_config = BasicIssuerConfig::from(config.clone());
+    let verifier_config = BasicVerifierConfig::from(config.clone());
 
     // SERVICES
     let repo = Arc::new(RepoForSql::new(db_connection));
-    let client = Arc::new(ClientService::new());
-    let wallet = Arc::new(WalletService::new(wallet_config, client.clone()));
-    let access = Arc::new(AccessManagerService::new(access_config, client.clone()));
-    let oidc = Arc::new(OidcService::new(oidc_config));
+    let client = Arc::new(BasicClientService::new());
+    let wallet = Arc::new(WaltIdService::new(waltid_config, client.clone()));
+    let access = Arc::new(GnapService::new(gnap_config, client.clone()));
+    let issuer = Arc::new(BasicIssuerService::new(issuer_config));
+    let verifier = Arc::new(BasicVerifierService::new(verifier_config));
 
     // CORE
-    let authority = Authority::new(repo, client, wallet, access, oidc, config.clone());
+    let authority = Authority::new(wallet, access, issuer, verifier, repo, client, config.clone());
 
     // ROUTER
     let router = RainbowAuthorityRouter::new(Arc::new(authority)).router();

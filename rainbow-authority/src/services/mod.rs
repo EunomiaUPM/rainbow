@@ -20,4 +20,6 @@ pub mod wallet;
 pub mod client;
 pub mod repo;
 pub mod access_manager;
-pub mod oidc;
+// pub mod oidc;
+pub mod issuer;
+pub mod verifier;

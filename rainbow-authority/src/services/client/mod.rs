@@ -16,7 +16,6 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-pub use service::ClientService;
-pub use service_trait::ClientServiceTrait;
-mod service;
-mod service_trait;
+pub use client_trait::ClientServiceTrait;
+pub mod basic;
+mod client_trait;

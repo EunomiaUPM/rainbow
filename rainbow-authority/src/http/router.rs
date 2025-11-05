@@ -19,13 +19,14 @@
 use crate::core::{Authority, AuthorityTrait};
 use crate::errors::{CustomToResponse, ErrorLogTrait, Errors};
 use crate::http::openapi;
-use crate::services::repo::RepoFactoryTrait;
+use crate::services::repo::RepoServiceTrait;
 use crate::types::enums::errors::BadFormat;
 use crate::types::gnap::{GrantRequest, RefBody};
-use crate::types::oidc::VerifyPayload;
 use crate::types::vcs::VcDecisionApproval;
+use crate::types::verifying::VerifyPayload;
 use crate::types::wallet::{DidsInfo, KeyDefinition};
 use crate::utils::extract_gnap_token;
+use axum::body::Bytes;
 use axum::extract::{rejection::JsonRejection, Path, Query, State};
 use axum::http::{HeaderMap, Method, StatusCode, Uri};
 use axum::response::IntoResponse;
@@ -35,18 +36,12 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::{error, info};
 
-pub struct RainbowAuthorityRouter<T>
-where
-    T: RepoFactoryTrait + Send + Sync + 'static,
-{
-    pub authority: Arc<Authority<T>>,
+pub struct RainbowAuthorityRouter {
+    pub authority: Arc<Authority>,
 }
 
-impl<T> RainbowAuthorityRouter<T>
-where
-    T: RepoFactoryTrait + Send + Sync + 'static,
-{
-    pub fn new(authority: Arc<Authority<T>>) -> Self {
+impl RainbowAuthorityRouter {
+    pub fn new(authority: Arc<Authority>) -> Self {
         Self { authority }
     }
 
@@ -101,7 +96,7 @@ where
     }
 
     // WALLET ------------------------------------------------------------------------------------->
-    async fn wallet_register(State(authority): State<Arc<Authority<T>>>) -> impl IntoResponse {
+    async fn wallet_register(State(authority): State<Arc<Authority>>) -> impl IntoResponse {
         info!("POST /wallet/register");
 
         match authority.wallet_register().await {
@@ -110,7 +105,7 @@ where
         }
     }
 
-    async fn wallet_login(State(authority): State<Arc<Authority<T>>>) -> impl IntoResponse {
+    async fn wallet_login(State(authority): State<Arc<Authority>>) -> impl IntoResponse {
         info!("POST /wallet/login");
 
         match authority.wallet_login().await {
@@ -119,7 +114,7 @@ where
         }
     }
 
-    async fn wallet_logout(State(authority): State<Arc<Authority<T>>>) -> impl IntoResponse {
+    async fn wallet_logout(State(authority): State<Arc<Authority>>) -> impl IntoResponse {
         info!("POST /wallet/logout");
 
         match authority.wallet_logout().await {
@@ -128,7 +123,7 @@ where
         }
     }
 
-    async fn wallet_onboard(State(authority): State<Arc<Authority<T>>>) -> impl IntoResponse {
+    async fn wallet_onboard(State(authority): State<Arc<Authority>>) -> impl IntoResponse {
         info!("POST /wallet/onboard");
 
         match authority.wallet_onboard().await {
@@ -137,7 +132,7 @@ where
         }
     }
 
-    async fn wallet_partial_onboard(State(authority): State<Arc<Authority<T>>>) -> impl IntoResponse {
+    async fn wallet_partial_onboard(State(authority): State<Arc<Authority>>) -> impl IntoResponse {
         info!("POST /wallet/partial-onboard");
 
         match authority.wallet_partial_onboard().await {
@@ -146,7 +141,7 @@ where
         }
     }
 
-    async fn register_key(State(authority): State<Arc<Authority<T>>>) -> impl IntoResponse {
+    async fn register_key(State(authority): State<Arc<Authority>>) -> impl IntoResponse {
         info!("POST /wallet/key");
 
         match authority.register_key().await {
@@ -155,7 +150,7 @@ where
         }
     }
 
-    async fn register_did(State(authority): State<Arc<Authority<T>>>) -> impl IntoResponse {
+    async fn register_did(State(authority): State<Arc<Authority>>) -> impl IntoResponse {
         info!("POST /wallet/did");
 
         match authority.register_did().await {
@@ -165,7 +160,7 @@ where
     }
 
     async fn delete_key(
-        State(authority): State<Arc<Authority<T>>>,
+        State(authority): State<Arc<Authority>>,
         payload: Result<Json<KeyDefinition>, JsonRejection>,
     ) -> impl IntoResponse {
         info!("DELETE /wallet/key");
@@ -182,7 +177,7 @@ where
     }
 
     async fn delete_did(
-        State(authority): State<Arc<Authority<T>>>,
+        State(authority): State<Arc<Authority>>,
         payload: Result<Json<DidsInfo>, JsonRejection>,
     ) -> impl IntoResponse {
         info!("DELETE /wallet/did");
@@ -198,7 +193,7 @@ where
         }
     }
 
-    async fn did_json(State(authority): State<Arc<Authority<T>>>) -> impl IntoResponse {
+    async fn did_json(State(authority): State<Arc<Authority>>) -> impl IntoResponse {
         info!("POST /did.json");
 
         match authority.did_json().await {
@@ -208,7 +203,7 @@ where
     }
 
     async fn vc_access_request(
-        State(authority): State<Arc<Authority<T>>>,
+        State(authority): State<Arc<Authority>>,
         payload: Result<Json<GrantRequest>, JsonRejection>,
     ) -> impl IntoResponse {
         info!("POST /request/credential");
@@ -225,7 +220,7 @@ where
     }
 
     async fn vc_continue_request(
-        State(authority): State<Arc<Authority<T>>>,
+        State(authority): State<Arc<Authority>>,
         headers: HeaderMap,
         Path(id): Path<String>,
         payload: Result<Json<RefBody>, JsonRejection>,
@@ -252,7 +247,7 @@ where
         }
     }
 
-    async fn vp_definition(State(authority): State<Arc<Authority<T>>>, Path(state): Path<String>) -> impl IntoResponse {
+    async fn vp_definition(State(authority): State<Arc<Authority>>, Path(state): Path<String>) -> impl IntoResponse {
         let log = format!("GET /pd/{}", state);
         info!("{}", log);
 
@@ -263,7 +258,7 @@ where
     }
 
     async fn verify(
-        State(authority): State<Arc<Authority<T>>>,
+        State(authority): State<Arc<Authority>>,
         Path(state): Path<String>,
         Form(payload): Form<VerifyPayload>,
     ) -> impl IntoResponse {
@@ -278,7 +273,7 @@ where
     }
 
     async fn cred_offer(
-        State(authority): State<Arc<Authority<T>>>,
+        State(authority): State<Arc<Authority>>,
         Query(params): Query<HashMap<String, String>>,
     ) -> impl IntoResponse {
         let id = match params.get("id") {
@@ -302,19 +297,19 @@ where
         }
     }
 
-    async fn get_issuer(State(authority): State<Arc<Authority<T>>>) -> impl IntoResponse {
+    async fn get_issuer(State(authority): State<Arc<Authority>>) -> impl IntoResponse {
         info!("GET /issuer");
 
         (StatusCode::OK, Json(authority.issuer())).into_response()
     }
 
-    async fn get_oauth_server(State(authority): State<Arc<Authority<T>>>) -> impl IntoResponse {
+    async fn get_oauth_server(State(authority): State<Arc<Authority>>) -> impl IntoResponse {
         info!("GET /oauth_server");
 
         (StatusCode::OK, Json(authority.oauth_server())).into_response()
     }
 
-    async fn get_jwks(State(authority): State<Arc<Authority<T>>>) -> impl IntoResponse {
+    async fn get_jwks(State(authority): State<Arc<Authority>>) -> impl IntoResponse {
         info!("GET /jwks_data");
 
         match authority.jwks() {
@@ -323,19 +318,20 @@ where
         }
     }
 
-    async fn get_token(State(authority): State<Arc<Authority<T>>>) -> impl IntoResponse {
+    async fn get_token(State(authority): State<Arc<Authority>>, headers: HeaderMap, body: Bytes) -> impl IntoResponse {
         info!("GET /token");
+        info!("Headers: {:?}", headers);
+        info!("Body: {:?}", String::from_utf8_lossy(&body));
 
         (StatusCode::OK, Json(authority.token())).into_response()
     }
-
-    async fn post_credential(State(authority): State<Arc<Authority<T>>>) -> impl IntoResponse {
+    async fn post_credential(State(authority): State<Arc<Authority>>) -> impl IntoResponse {
         info!("POST /credential");
 
         (StatusCode::OK, Json(authority.credential())).into_response()
     }
 
-    async fn get_all_requests(State(authority): State<Arc<Authority<T>>>) -> impl IntoResponse {
+    async fn get_all_requests(State(authority): State<Arc<Authority>>) -> impl IntoResponse {
         info!("GET /request/all");
 
         match authority.get_all_req().await {
@@ -344,7 +340,7 @@ where
         }
     }
 
-    async fn get_one_request(State(authority): State<Arc<Authority<T>>>, Path(id): Path<String>) -> impl IntoResponse {
+    async fn get_one_request(State(authority): State<Arc<Authority>>, Path(id): Path<String>) -> impl IntoResponse {
         let log = format!("GET /request/{}", &id);
         info!("{}", log);
 
@@ -355,7 +351,7 @@ where
     }
 
     async fn manage_request(
-        State(authority): State<Arc<Authority<T>>>,
+        State(authority): State<Arc<Authority>>,
         Path(id): Path<String>,
         payload: Result<Json<VcDecisionApproval>, JsonRejection>,
     ) -> impl IntoResponse {

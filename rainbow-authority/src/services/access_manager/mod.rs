@@ -16,8 +16,6 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-pub use service::AccessManagerService;
-pub use service_trait::AccessManagerServiceTrait;
-mod service;
-mod service_trait;
-pub mod config;
+pub use access_manager_trait::AccessManagerServiceTrait;
+pub mod gnap;
+pub mod access_manager_trait;

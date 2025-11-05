@@ -16,10 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::services::access_manager::config::AccessManagerServiceConfig;
-use crate::services::oidc::config::OidcServiceConfig;
-use crate::services::wallet::WalletServiceConfig;
-use crate::setup::config::AuthorityApplicationConfigTrait;
+use super::AuthorityApplicationConfigTrait;
 use crate::setup::database::{DatabaseConfig, DbType};
 use crate::types::host::HostConfig;
 use crate::types::wallet::SSIWalletConfig;
@@ -28,11 +25,11 @@ use std::env;
 
 #[derive(Serialize, Clone, Debug)]
 pub struct AuthorityApplicationConfig {
-    authority_host: HostConfig,
-    is_local: bool,
-    database_config: DatabaseConfig,
-    ssi_wallet_config: SSIWalletConfig,
-    keys_path: String,
+    pub authority_host: HostConfig,
+    pub is_local: bool,
+    pub database_config: DatabaseConfig,
+    pub ssi_wallet_config: SSIWalletConfig,
+    pub keys_path: String,
     // client_config: ClientConfig,
     // ssi_issuer_api: String,
 }
@@ -143,17 +140,6 @@ impl AuthorityApplicationConfigTrait for AuthorityApplicationConfig {
         compound_config
     }
 
-    fn parse_to_wallet(&self) -> WalletServiceConfig {
-        WalletServiceConfig { ssi_wallet_config: self.ssi_wallet_config.clone(), keys_path: self.keys_path.clone() }
-    }
-
-    fn parse_to_access(&self) -> AccessManagerServiceConfig {
-        AccessManagerServiceConfig { host: self.authority_host.clone() }
-    }
-
-    fn parse_to_oidc(&self) -> OidcServiceConfig {
-        OidcServiceConfig { host: self.authority_host.clone(), local: self.is_local }
-    }
 
     fn get_host(&self) -> String {
         let host = self.authority_host.clone();

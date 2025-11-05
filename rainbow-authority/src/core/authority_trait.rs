@@ -20,9 +20,10 @@ use crate::types::gnap::{GrantRequest, GrantResponse, RefBody};
 use crate::types::wallet::{DidsInfo, KeyDefinition};
 use axum::async_trait;
 use serde_json::Value;
-use crate::data::entities::auth_request;
-use crate::types::oidc::{AuthServerMetadata, IssuerMetadata, VCCredOffer, WellKnownJwks};
+use crate::data::entities::request;
+use crate::types::issuing::{AuthServerMetadata, IssuerMetadata, IssuingToken, VCCredOffer, WellKnownJwks};
 use crate::types::vcs::{VPDef, VcDecisionApproval};
+use crate::utils::create_opaque_token;
 
 #[async_trait]
 pub trait AuthorityTrait {
@@ -44,9 +45,9 @@ pub trait AuthorityTrait {
     fn issuer(&self) -> IssuerMetadata;
     fn oauth_server(&self) -> AuthServerMetadata;
     fn jwks(&self) -> anyhow::Result<WellKnownJwks>;
-    fn token(&self) -> Value;
+    fn token(&self) -> IssuingToken;
     fn credential(&self) -> Value;
-    async fn get_all_req(&self) -> anyhow::Result<Vec<auth_request::Model>>;
-    async fn get_one_req(&self, id: String) -> anyhow::Result<auth_request::Model>;
+    async fn get_all_req(&self) -> anyhow::Result<Vec<request::Model>>;
+    async fn get_one_req(&self, id: String) -> anyhow::Result<request::Model>;
     async fn manage_req(&self, id: String, payload: VcDecisionApproval) -> anyhow::Result<()>;
 }

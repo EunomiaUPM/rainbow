@@ -16,19 +16,12 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use std::format;
-use crate::services::access_manager::config::AccessManagerServiceConfig;
-use crate::services::oidc::config::OidcServiceConfig;
-use crate::services::wallet::WalletServiceConfig;
 use crate::setup::database::DatabaseConfig;
 
 pub trait AuthorityApplicationConfigTrait {
     fn get_full_db_url(&self) -> String;
     fn merge_dotenv_configuration(&self, env_file: Option<String>) -> Self;
     fn get_raw_database_config(&self) -> &DatabaseConfig;
-    fn parse_to_wallet(&self) -> WalletServiceConfig;
-    fn parse_to_access(&self) -> AccessManagerServiceConfig;
-    fn parse_to_oidc(&self) -> OidcServiceConfig;
     fn get_host(&self) -> String;
     fn is_local(&self) -> bool;
     fn get_weird_port(&self) -> String;

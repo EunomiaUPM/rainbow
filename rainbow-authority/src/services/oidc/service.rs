@@ -18,8 +18,8 @@
  */
 use super::config::{OidcServiceConfig, OidcServiceConfigTrait};
 use super::OidcServiceTrait;
-use crate::data::entities::auth_request;
-use crate::data::entities::auth_verification;
+use crate::data::entities::request;
+use crate::data::entities::verification;
 use crate::errors::{ErrorLogTrait, Errors};
 use crate::types::enums::errors::BadFormat;
 use crate::types::enums::vc_type::VcType;
@@ -48,7 +48,7 @@ impl OidcService {
 }
 
 impl OidcServiceTrait for OidcService {
-    fn start_vp(&self, id: &str, vc_type: VcType) -> anyhow::Result<auth_verification::NewModel> {
+    fn start_vp(&self, id: &str, vc_type: VcType) -> anyhow::Result<verification::NewModel> {
         info!("Managing OIDC4VP");
         let host_url = self.config.get_host();
         let host_url = match self.config.is_local() {
@@ -58,12 +58,12 @@ impl OidcServiceTrait for OidcService {
 
         let client_id = format!("{}/verify", &host_url);
         let new_verification_model =
-            auth_verification::NewModel { id: id.to_string(), audience: client_id, vc_type: vc_type.to_string() };
+            verification::NewModel { id: id.to_string(), audience: client_id, vc_type: vc_type.to_string() };
 
         Ok(new_verification_model)
     }
 
-    fn generate_verification_uri(&self, model: auth_verification::Model) -> String {
+    fn generate_verification_uri(&self, model: verification::Model) -> String {
         info!("Generating verification exchange URI");
 
         let host_url = self.config.get_host();
@@ -119,12 +119,12 @@ impl OidcServiceTrait for OidcService {
         Ok(oidc4vci_uri)
     }
 
-    fn generate_vpd(&self, ver_model: auth_verification::Model) -> VPDef {
+    fn generate_vpd(&self, ver_model: verification::Model) -> VPDef {
         info!("Generating an vp definition");
         VPDef::new(ver_model.id, ver_model.vc_type)
     }
 
-    fn verify_all(&self, ver_model: &mut auth_verification::Model, vp_token: String) -> anyhow::Result<()> {
+    fn verify_all(&self, ver_model: &mut verification::Model, vp_token: String) -> anyhow::Result<()> {
         info!("Verifying all");
 
         let (vcs, holder) = self.verify_vp(ver_model, &vp_token)?;
@@ -136,7 +136,7 @@ impl OidcServiceTrait for OidcService {
         Ok(())
     }
 
-    fn verify_vp(&self, model: &mut auth_verification::Model, vp_token: &str) -> anyhow::Result<(Vec<String>, String)> {
+    fn verify_vp(&self, model: &mut verification::Model, vp_token: &str) -> anyhow::Result<(Vec<String>, String)> {
         info!("Verifying vp");
 
         model.vpt = Some(vp_token.to_string());
@@ -243,7 +243,7 @@ impl OidcServiceTrait for OidcService {
         Ok((token, kid.to_string()))
     }
 
-    fn validate_nonce(&self, model: &auth_verification::Model, token: &TokenData<Value>) -> anyhow::Result<()> {
+    fn validate_nonce(&self, model: &verification::Model, token: &TokenData<Value>) -> anyhow::Result<()> {
         info!("Validating nonce");
 
         let nonce = self.get_claim(&token.claims, vec!["nonce"])?;
@@ -259,7 +259,7 @@ impl OidcServiceTrait for OidcService {
 
     fn validate_sub(
         &self,
-        model: &mut auth_verification::Model,
+        model: &mut verification::Model,
         token: &TokenData<Value>,
         kid: &str,
     ) -> anyhow::Result<()> {
@@ -295,7 +295,7 @@ impl OidcServiceTrait for OidcService {
         Ok(())
     }
 
-    fn validate_vp_id(&self, model: &auth_verification::Model, token: &TokenData<Value>) -> anyhow::Result<()> {
+    fn validate_vp_id(&self, model: &verification::Model, token: &TokenData<Value>) -> anyhow::Result<()> {
         info!("Validating vp id");
 
         let vp_id = self.get_claim(&token.claims, vec!["vp", "id"])?;
@@ -310,7 +310,7 @@ impl OidcServiceTrait for OidcService {
         Ok(())
     }
 
-    fn validate_holder(&self, model: &auth_verification::Model, token: &TokenData<Value>) -> anyhow::Result<()> {
+    fn validate_holder(&self, model: &verification::Model, token: &TokenData<Value>) -> anyhow::Result<()> {
         info!("Validating holder");
 
         let vp_holder = self.get_claim(&token.claims, vec!["vp", "holder"])?;
@@ -421,7 +421,7 @@ impl OidcServiceTrait for OidcService {
         Ok(vcs)
     }
 
-    fn get_cred_offer_data(&self, model: auth_request::Model) -> anyhow::Result<VCCredOffer> {
+    fn get_cred_offer_data(&self, model: request::Model) -> anyhow::Result<VCCredOffer> {
         info!("Retrieving credential offer data");
 
         let issuer = format!("{}/api/v1", self.config.get_host());

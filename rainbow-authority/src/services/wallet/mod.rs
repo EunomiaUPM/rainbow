@@ -17,9 +17,6 @@
  *
  */
 
-pub use service::WalletService;
-pub use service_trait::WalletServiceTrait;
-pub use config::*;
-mod service;
-mod service_trait;
-mod config;
+pub use wallet_trait::WalletServiceTrait;
+mod wallet_trait;
+pub mod waltid;
