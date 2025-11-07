@@ -18,15 +18,23 @@
  */
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Serialize, Debug)]
-pub struct IssuingToken {
-    pub access_token: String,
-    pub token_type: String,
-    pub expires_in: u16,
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CredentialSubject4DataSpace {
+    pub id: String,
+    pub r#type: String,
+    #[serde(rename = "DataspaceId")]
+    pub dataspace_id: String,
+    #[serde(rename = "LegalName")]
+    pub legal_name: String,
 }
 
-impl IssuingToken {
-    pub fn new(token: String) -> IssuingToken {
-        IssuingToken { access_token: token, token_type: "Bearer".to_string(), expires_in: 600 }
+impl CredentialSubject4DataSpace {
+    pub fn new(id: String, legal_name: String) -> Self {
+        CredentialSubject4DataSpace {
+            id,
+            r#type: "DataspaceParticipant".to_string(),
+            dataspace_id: "RainbowDataSpace".to_string(),
+            legal_name,
+        }
     }
 }

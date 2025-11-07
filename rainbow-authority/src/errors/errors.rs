@@ -159,7 +159,7 @@ impl Errors {
             cause,
         }
     }
-    pub fn provider_new(url: String, method: String, http_code: Option<u16>, cause: String) -> Errors {
+    pub fn provider_new(url: String, method: String, http_code: Option<u16>, cause: &str) -> Errors {
         Errors::ProviderError {
             info: ErrorInfo {
                 message: "Unexpected response from the Provider".to_string(),
@@ -170,10 +170,10 @@ impl Errors {
             http_code,
             url,
             method,
-            cause,
+            cause: cause.to_string(),
         }
     }
-    pub fn consumer_new(url: String, method: String, http_code: Option<u16>, cause: String) -> Errors {
+    pub fn consumer_new(url: String, method: String, http_code: Option<u16>, cause: &str) -> Errors {
         Errors::ConsumerError {
             info: ErrorInfo {
                 message: "Unexpected response from the Consumer".to_string(),
@@ -184,10 +184,10 @@ impl Errors {
             http_code,
             url,
             method,
-            cause,
+            cause: cause.to_string(),
         }
     }
-    pub fn missing_action_new(action: MissingAction, cause: String) -> Errors {
+    pub fn missing_action_new(action: MissingAction, cause: &str) -> Errors {
         let error_code = match action {
             MissingAction::Token => 3110,
             MissingAction::Wallet => 3120,
@@ -207,7 +207,7 @@ impl Errors {
                 details: None,
             },
             action,
-            cause,
+            cause: cause.to_string(),
         }
     }
     pub fn missing_resource_new(resource_id: String, cause: String) -> Errors {
@@ -222,7 +222,7 @@ impl Errors {
             cause,
         }
     }
-    pub fn format_new(option: BadFormat, cause: String) -> Errors {
+    pub fn format_new(option: BadFormat, cause: &str) -> Errors {
         let (error_code, status_code) = match option {
             BadFormat::Sent => (3110, StatusCode::BAD_GATEWAY),
             BadFormat::Received => (3120, StatusCode::BAD_REQUEST),
@@ -230,10 +230,10 @@ impl Errors {
         };
         Errors::FormatError {
             info: ErrorInfo { message: "Invalid Format".to_string(), error_code, status_code, details: None },
-            cause,
+            cause: cause.to_string(),
         }
     }
-    pub fn unauthorized_new(cause: String) -> Errors {
+    pub fn unauthorized_new(cause: &str) -> Errors {
         Errors::UnauthorizedError {
             info: ErrorInfo {
                 message: "Unauthorized".to_string(),
@@ -241,10 +241,10 @@ impl Errors {
                 status_code: StatusCode::UNAUTHORIZED,
                 details: None,
             },
-            cause,
+            cause: cause.to_string(),
         }
     }
-    pub fn forbidden_new(cause: String) -> Errors {
+    pub fn forbidden_new(cause: &str) -> Errors {
         Errors::ForbiddenError {
             info: ErrorInfo {
                 message: "Forbidden".to_string(),
@@ -252,7 +252,7 @@ impl Errors {
                 status_code: StatusCode::FORBIDDEN,
                 details: None,
             },
-            cause,
+            cause: cause.to_string(),
         }
     }
     pub fn database_new(cause: String) -> Errors {
@@ -266,7 +266,7 @@ impl Errors {
             cause,
         }
     }
-    pub fn not_impl_new(feature: String, cause: String) -> Errors {
+    pub fn not_impl_new(feature: String, cause: &str) -> Errors {
         Errors::FeatureNotImplError {
             info: ErrorInfo {
                 message: "Feature not implemented yet".to_string(),
@@ -275,10 +275,10 @@ impl Errors {
                 details: None,
             },
             feature,
-            cause,
+            cause: cause.to_string(),
         }
     }
-    pub fn wallet_new(url: String, method: String, http_code: u16, cause: String) -> Errors {
+    pub fn wallet_new(url: String, method: String, http_code: u16, cause: &str) -> Errors {
         Errors::WalletError {
             info: ErrorInfo {
                 message: "Unexpected response from the Wallet".to_string(),
@@ -289,10 +289,10 @@ impl Errors {
             http_code,
             url,
             method,
-            cause,
+            cause: cause.to_string(),
         }
     }
-    pub fn security_new(cause: String) -> Errors {
+    pub fn security_new(cause: &str) -> Errors {
         Errors::SecurityError {
             info: ErrorInfo {
                 message: "Invalid petition".to_string(),
@@ -300,7 +300,7 @@ impl Errors {
                 status_code: StatusCode::UNPROCESSABLE_ENTITY,
                 details: None,
             },
-            cause,
+            cause: cause.to_string(),
         }
     }
     pub fn read_new(path: String, cause: String) -> Self {
@@ -316,7 +316,7 @@ impl Errors {
         }
     }
 
-    pub fn write_new(path: String, cause: String) -> Self {
+    pub fn write_new(path: String, cause: &str) -> Self {
         Self::WriteError {
             info: ErrorInfo {
                 message: format!("Failed to write file {}", path),
@@ -325,11 +325,11 @@ impl Errors {
                 details: None,
             },
             path,
-            cause,
+            cause: cause.to_string(),
         }
     }
 
-    pub fn parse_new(cause: String) -> Self {
+    pub fn parse_new(cause: &str) -> Self {
         Self::ParseError {
             info: ErrorInfo {
                 message: "Failed to parse file".to_string(),
@@ -337,7 +337,7 @@ impl Errors {
                 status_code: StatusCode::BAD_REQUEST,
                 details: None,
             },
-            cause,
+            cause: cause.to_string(),
         }
     }
 }

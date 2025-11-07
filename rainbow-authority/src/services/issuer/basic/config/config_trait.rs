@@ -21,4 +21,7 @@ pub trait BasicIssuerConfigTrait {
     fn get_host_without_protocol(&self) -> String;
     fn get_host(&self) -> String;
     fn is_local(&self) -> bool;
+    fn get_cert(&self) -> anyhow::Result<String>;
+    fn get_priv_key(&self) -> anyhow::Result<String>;
+    fn get_pub_key(&self) -> anyhow::Result<String>;
 }

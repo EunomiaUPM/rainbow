@@ -173,7 +173,7 @@ impl VerifierServiceTrait for BasicVerifierService {
             None => {
                 let error = Errors::format_new(
                     BadFormat::Received,
-                    "Jwt does not contain a token".to_string(),
+                    "Jwt does not contain a token",
                 );
                 error!("{}", error.log());
                 bail!(error);
@@ -212,7 +212,7 @@ impl VerifierServiceTrait for BasicVerifierService {
         let token = match jsonwebtoken::decode::<Value>(&vp_token, &key, &val) {
             Ok(token) => token,
             Err(e) => {
-                let error = Errors::security_new(format!("VPT signature is incorrect -> {}", e.to_string()));
+                let error = Errors::security_new(&format!("VPT signature is incorrect -> {}", e.to_string()));
                 error!("{}", error.log());
                 bail!(error);
             }
@@ -228,7 +228,7 @@ impl VerifierServiceTrait for BasicVerifierService {
         let nonce = get_claim(&token.claims, vec!["nonce"])?;
 
         if model.nonce != nonce {
-            let error = Errors::security_new("Invalid nonce, it does not match".to_string());
+            let error = Errors::security_new("Invalid nonce, it does not match");
             error!("{}", error.log());
             bail!(error);
         }
@@ -244,7 +244,7 @@ impl VerifierServiceTrait for BasicVerifierService {
 
         if sub != iss || iss != kid {
             // VALIDATE HOLDER 1
-            let error = Errors::security_new("VPT token issuer, subject & kid does not match".to_string());
+            let error = Errors::security_new("VPT token issuer, subject & kid does not match");
             error!("{}", error.log());
             bail!(error);
         }
@@ -261,7 +261,7 @@ impl VerifierServiceTrait for BasicVerifierService {
         let cred_sub_id = get_claim(&token.claims, vec!["vc", "credentialSubject", "id"])?;
 
         if sub != holder || holder != cred_sub_id {
-            let error = Errors::security_new("VCT token sub, credential subject & VP Holder do not match".to_string());
+            let error = Errors::security_new("VCT token sub, credential subject & VP Holder do not match");
             error!("{}", error.log());
             bail!(error);
         }
@@ -276,7 +276,7 @@ impl VerifierServiceTrait for BasicVerifierService {
 
         if model.id != vp_id {
             // VALIDATE ID MATCHES JTI
-            let error = Errors::security_new("Invalid id, it does not match".to_string());
+            let error = Errors::security_new("Invalid id, it does not match");
             error!("{}", error.log());
             bail!(error);
         }
@@ -291,7 +291,7 @@ impl VerifierServiceTrait for BasicVerifierService {
 
         if model.holder.clone().unwrap() != vp_holder {
             // EXPECTED ALWAYS
-            let error = Errors::security_new("Invalid holder, it does not match".to_string());
+            let error = Errors::security_new("Invalid holder, it does not match");
             error!("{}", error.log());
             bail!(error);
         }
@@ -307,7 +307,7 @@ impl VerifierServiceTrait for BasicVerifierService {
 
         if iss != kid || kid != vc_iss_id {
             // VALIDATE IF ISSUER IS THE SAME AS KID
-            let error = Errors::security_new("VCT token issuer & kid does not match".to_string());
+            let error = Errors::security_new("VCT token issuer & kid does not match");
             error!("{}", error.log());
             bail!(error);
         }
@@ -322,7 +322,7 @@ impl VerifierServiceTrait for BasicVerifierService {
         let vc_id = get_claim(&token.claims, vec!["vc", "id"])?;
 
         if jti != vc_id {
-            let error = Errors::security_new("VCT jti & VC id do not match".to_string());
+            let error = Errors::security_new("VCT jti & VC id do not match");
             error!("{}", error.log());
             bail!(error);
         }
@@ -338,13 +338,13 @@ impl VerifierServiceTrait for BasicVerifierService {
         match DateTime::parse_from_rfc3339(&valid_from) {
             Ok(parsed_date) => {
                 if parsed_date > Utc::now() {
-                    let error = Errors::security_new("VC is not valid yet".to_string());
+                    let error = Errors::security_new("VC is not valid yet");
                     error!("{}", error.log());
                     bail!(error)
                 }
             }
             Err(e) => {
-                let error = Errors::security_new(format!("VC iat and issuanceDate do not match -> {}", e));
+                let error = Errors::security_new(&format!("VC iat and issuanceDate do not match -> {}", e));
                 error!("{}", error.log());
                 bail!(error);
             }
@@ -362,13 +362,13 @@ impl VerifierServiceTrait for BasicVerifierService {
         match DateTime::parse_from_rfc3339(&valid_until) {
             Ok(parsed_date) => {
                 if Utc::now() > parsed_date {
-                    let error = Errors::security_new("VC has expired".to_string());
+                    let error = Errors::security_new("VC has expired");
                     error!("{}", error.log());
                     bail!(error)
                 }
             }
             Err(e) => {
-                let error = Errors::security_new(format!("VC validUntil has invalid format -> {}", e));
+                let error = Errors::security_new(&format!("VC validUntil has invalid format -> {}", e));
                 error!("{}", error.log());
                 bail!(error);
             }
@@ -383,7 +383,7 @@ impl VerifierServiceTrait for BasicVerifierService {
             Err(e) => {
                 let error = Errors::format_new(
                     BadFormat::Received,
-                    format!(
+                    &format!(
                         "VPT does not contain the 'verifiableCredential' field -> {}",
                         e.to_string()
                     ),

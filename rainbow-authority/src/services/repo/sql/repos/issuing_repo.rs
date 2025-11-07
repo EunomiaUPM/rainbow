@@ -60,4 +60,44 @@ impl BasicRepoTrait<Model, NewModel> for IssuingRepo {
 }
 
 #[async_trait]
-impl IssuingRepoTrait for IssuingRepo {}
+impl IssuingRepoTrait for IssuingRepo {
+    async fn get_by_tx_code(&self, code: &str) -> anyhow::Result<Model> {
+        let model = match Entity::find().filter(Column::TxCode.eq(code)).one(&self.inner.db_connection).await {
+            Ok(Some(data)) => data,
+            Ok(None) => {
+                let error = Errors::missing_resource_new(
+                    code.to_string(),
+                    format!("Missing resource with code: {}", code),
+                );
+                error!("{}", error.log());
+                bail!(error)
+            }
+            Err(e) => {
+                let error = Errors::database_new(e.to_string());
+                error!("{}", error.log());
+                bail!(error)
+            }
+        };
+        Ok(model)
+    }
+
+    async fn get_by_token(&self, token: &str) -> anyhow::Result<Model> {
+        let model = match Entity::find().filter(Column::Token.eq(token)).one(&self.inner.db_connection).await {
+            Ok(Some(data)) => data,
+            Ok(None) => {
+                let error = Errors::missing_resource_new(
+                    token.to_string(),
+                    format!("Missing resource with token: {}", token),
+                );
+                error!("{}", error.log());
+                bail!(error)
+            }
+            Err(e) => {
+                let error = Errors::database_new(e.to_string());
+                error!("{}", error.log());
+                bail!(error)
+            }
+        };
+        Ok(model)
+    }
+}

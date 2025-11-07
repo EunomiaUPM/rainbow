@@ -29,15 +29,14 @@ use crate::setup::AuthorityApplicationConfig;
 use crate::types::enums::errors::BadFormat;
 use crate::types::enums::vc_type::VcType;
 use crate::types::gnap::{GrantRequest, GrantResponse, RefBody};
-use crate::types::issuing::{AuthServerMetadata, IssuerMetadata, IssuingToken, VCCredOffer, WellKnownJwks};
+use crate::types::issuing::{AuthServerMetadata, CredentialRequest, GiveVC, IssuerMetadata, IssuingToken, TokenRequest, VCCredOffer, WellKnownJwks};
 use crate::types::vcs::{VPDef, VcDecisionApproval};
 use crate::types::wallet::{DidsInfo, KeyDefinition};
-use crate::utils::create_opaque_token;
 use anyhow::bail;
 use axum::async_trait;
 use serde_json::Value;
 use std::sync::Arc;
-use tracing::error;
+use tracing::{error, info};
 
 pub struct Authority {
     wallet: Arc<dyn WalletServiceTrait>,
@@ -110,7 +109,7 @@ impl AuthorityTrait for Authority {
     async fn vc_access_request(&self, payload: GrantRequest) -> anyhow::Result<GrantResponse> {
         let (n_req_mod, n_int_model) = self.access.manage_acc_req(payload)?;
 
-        let req_model = self.repo.request().create(n_req_mod).await?;
+        let _req_model = self.repo.request().create(n_req_mod).await?;
         let int_model = self.repo.interaction().create(n_int_model).await?;
 
         if int_model.start.contains(&"oidc4vp".to_string()) {
@@ -137,10 +136,7 @@ impl AuthorityTrait for Authority {
             );
             return Ok(response);
         }
-        let error = Errors::format_new(
-            BadFormat::Received,
-            "Interact method not supported".to_string(),
-        );
+        let error = Errors::format_new(BadFormat::Received, "Interact method not supported");
         error!("{}", error);
         bail!(error)
     }
@@ -148,23 +144,17 @@ impl AuthorityTrait for Authority {
     async fn vc_continue_request(&self, cont_id: String, payload: RefBody, token: String) -> anyhow::Result<String> {
         let int_model = self.repo.interaction().get_by_cont_id(&cont_id).await?;
         self.access.validate_cont_req(&int_model, payload.interact_ref, token)?;
-        let mut req_model = self.repo.request().get_by_id(&int_model.id).await?;
-        let iss_model = self.issuer.start_vci(&req_model);
-        self.repo.issuing().create(iss_model).await?;
-        // for starts in int_model.start {
-        //     if starts.contains("await") {
-        //         let vci_data = self.access.manage_cont_req(&req_model)?;
-        //     }
-        //     if starts.contains("oidc4vp") {
-        //         let ver_model = self.repo.verification().get_by_id(&int_model.id).await?;
-        //     }
-        // }
 
+        let mut req_model = self.repo.request().get_by_id(&int_model.id).await?;
         let vc_uri = self.issuer.generate_issuing_uri(&int_model.id);
+
         req_model.status = "Approved".to_string();
         req_model.vc_uri = Some(vc_uri.clone());
-        self.repo.request().update(req_model).await?;
+        let req_model = self.repo.request().update(req_model).await?;
 
+        let iss_model = self.issuer.start_vci(&req_model);
+        self.repo.issuing().create(iss_model).await?;
+        info!(vc_uri);
         Ok(vc_uri)
     }
 
@@ -184,8 +174,15 @@ impl AuthorityTrait for Authority {
     }
 
     async fn get_cred_offer_data(&self, id: String) -> anyhow::Result<VCCredOffer> {
-        let model = self.repo.request().get_by_id(&id).await?;
+        let mut model = self.repo.issuing().get_by_id(&id).await?;
         let data = self.issuer.get_cred_offer_data(&model)?;
+        match model.step {
+            true => {
+                model.step = false;
+                self.repo.issuing().update(model).await?;
+            }
+            false => {}
+        };
         Ok(data)
     }
 
@@ -201,12 +198,21 @@ impl AuthorityTrait for Authority {
         self.wallet.get_jwks_data()
     }
 
-    fn token(&self) -> IssuingToken {
-        self.issuer.get_token()
+    async fn get_token(&self, payload: TokenRequest) -> anyhow::Result<IssuingToken> {
+        let model = self.repo.issuing().get_by_tx_code(&payload.tx_code).await?;
+        self.issuer.validate_token_req(&model, &payload.tx_code, &payload.pre_authorized_code)?;
+        let response = self.issuer.get_token(&model);
+        Ok(response)
     }
 
-    fn credential(&self) -> Value {
-        self.issuer.issue_cred().unwrap()
+    async fn get_credential(&self, payload: CredentialRequest, token: String) -> anyhow::Result<GiveVC> {
+        let mut model = self.repo.issuing().get_by_token(&token).await?;
+        self.issuer.validate_cred_req(&mut model, &payload, &token)?;
+        let did = self.wallet.get_did().await?;
+        let data = self.issuer.issue_cred(&mut model, &did)?;
+        self.repo.issuing().update(model).await?;
+
+        Ok(data)
     }
 
     async fn get_all_req(&self) -> anyhow::Result<Vec<request::Model>> {

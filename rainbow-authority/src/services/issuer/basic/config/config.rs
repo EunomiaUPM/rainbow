@@ -19,15 +19,17 @@
 use crate::services::issuer::basic::config::config_trait::BasicIssuerConfigTrait;
 use crate::setup::AuthorityApplicationConfig;
 use crate::types::host::HostConfig;
+use crate::utils::read;
 
 pub struct BasicIssuerConfig {
     host: HostConfig,
     is_local: bool,
+    keys_path: String,
 }
 
 impl From<AuthorityApplicationConfig> for BasicIssuerConfig {
     fn from(config: AuthorityApplicationConfig) -> BasicIssuerConfig {
-        BasicIssuerConfig { host: config.authority_host, is_local: config.is_local }
+        BasicIssuerConfig { host: config.authority_host, is_local: config.is_local, keys_path: config.keys_path }
     }
 }
 
@@ -58,5 +60,18 @@ impl BasicIssuerConfigTrait for BasicIssuerConfig {
 
     fn is_local(&self) -> bool {
         self.is_local
+    }
+
+    fn get_cert(&self) -> anyhow::Result<String> {
+        let path = format!("{}/cert.pem", self.keys_path);
+        read(&path)
+    }
+    fn get_priv_key(&self) -> anyhow::Result<String> {
+        let path = format!("{}/private_key.pem", self.keys_path);
+        read(&path)
+    }
+    fn get_pub_key(&self) -> anyhow::Result<String> {
+        let path = format!("{}/public_key.pem", self.keys_path);
+        read(&path)
     }
 }

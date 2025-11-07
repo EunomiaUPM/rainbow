@@ -23,7 +23,7 @@ use anyhow::bail;
 use axum::async_trait;
 use axum::http::HeaderMap;
 use reqwest::{Client, RequestBuilder, Response};
-use serde_json::Value;
+use serde_json::{to_string, Value};
 use std::time::Duration;
 use tracing::error;
 

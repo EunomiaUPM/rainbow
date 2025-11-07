@@ -16,10 +16,12 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 use super::BasicRepoTrait;
 use crate::data::entities::issuing::{Model, NewModel};
 use axum::async_trait;
 
 #[async_trait]
-pub trait IssuingRepoTrait: BasicRepoTrait<Model, NewModel> + Send + Sync {}
+pub trait IssuingRepoTrait: BasicRepoTrait<Model, NewModel> + Send + Sync {
+    async fn get_by_tx_code(&self, code: &str) -> anyhow::Result<Model>;
+    async fn get_by_token(&self, token: &str) -> anyhow::Result<Model>;
+}

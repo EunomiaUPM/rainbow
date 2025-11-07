@@ -18,15 +18,12 @@
  */
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Serialize, Debug)]
-pub struct IssuingToken {
-    pub access_token: String,
-    pub token_type: String,
-    pub expires_in: u16,
-}
-
-impl IssuingToken {
-    pub fn new(token: String) -> IssuingToken {
-        IssuingToken { access_token: token, token_type: "Bearer".to_string(), expires_in: 600 }
-    }
+#[derive(Serialize, Debug, Deserialize)]
+pub struct DidPossession {
+    pub iss: String,
+    pub sub: String,
+    pub aud: String,
+    pub jti: String,
+    pub iat: u64,
+    pub exp: u64,
 }

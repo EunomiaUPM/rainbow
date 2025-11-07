@@ -17,13 +17,10 @@
  *
  */
 use super::WaltIdConfigTrait;
-use crate::errors::Errors;
 use crate::setup::AuthorityApplicationConfig;
 use crate::types::wallet::SSIWalletConfig;
-use anyhow::bail;
 use serde_json::{json, Value};
-use std::fs;
-use tracing::error;
+use crate::utils::read;
 
 pub struct WaltIdConfig {
     ssi_wallet_config: SSIWalletConfig,
@@ -83,13 +80,4 @@ impl WaltIdConfigTrait for WaltIdConfig {
     }
 }
 
-fn read(path: &str) -> anyhow::Result<String> {
-    match fs::read_to_string(&path) {
-        Ok(data) => Ok(data),
-        Err(e) => {
-            let error = Errors::read_new(path.to_string(), e.to_string());
-            error!("{}", error);
-            bail!(error)
-        }
-    }
-}
+

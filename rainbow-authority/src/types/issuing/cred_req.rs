@@ -16,17 +16,23 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Serialize, Debug)]
-pub struct IssuingToken {
-    pub access_token: String,
-    pub token_type: String,
-    pub expires_in: u16,
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CredentialRequest {
+    pub format: String,
+    pub proof: Proof,
+    pub credential_definition: CredentialDefinition,
 }
 
-impl IssuingToken {
-    pub fn new(token: String) -> IssuingToken {
-        IssuingToken { access_token: token, token_type: "Bearer".to_string(), expires_in: 600 }
-    }
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Proof {
+    pub proof_type: String,
+    pub jwt: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CredentialDefinition {
+    pub r#type: Vec<String>,
 }

@@ -41,7 +41,7 @@ impl VcType {
             "DataspaceParticipantCredential" => Ok(VcType::DataSpaceParticipant),
             "IdentityCredential" => Ok(VcType::Identity),
             _ => {
-                let error = Errors::format_new(BadFormat::Received, format!("Unknown format: {}", s));
+                let error = Errors::format_new(BadFormat::Received, &format!("Unknown format: {}", s));
                 error!("{}", error.log());
                 bail!(error)
             }

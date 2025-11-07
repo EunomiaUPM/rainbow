@@ -16,14 +16,13 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use crate::data::entities::request;
 use crate::types::gnap::{GrantRequest, GrantResponse, RefBody};
+use crate::types::issuing::{AuthServerMetadata, CredentialRequest, GiveVC, IssuerMetadata, IssuingToken, TokenRequest, VCCredOffer, WellKnownJwks};
+use crate::types::vcs::{VPDef, VcDecisionApproval};
 use crate::types::wallet::{DidsInfo, KeyDefinition};
 use axum::async_trait;
 use serde_json::Value;
-use crate::data::entities::request;
-use crate::types::issuing::{AuthServerMetadata, IssuerMetadata, IssuingToken, VCCredOffer, WellKnownJwks};
-use crate::types::vcs::{VPDef, VcDecisionApproval};
-use crate::utils::create_opaque_token;
 
 #[async_trait]
 pub trait AuthorityTrait {
@@ -45,8 +44,8 @@ pub trait AuthorityTrait {
     fn issuer(&self) -> IssuerMetadata;
     fn oauth_server(&self) -> AuthServerMetadata;
     fn jwks(&self) -> anyhow::Result<WellKnownJwks>;
-    fn token(&self) -> IssuingToken;
-    fn credential(&self) -> Value;
+    async fn get_token(&self, payload: TokenRequest) -> anyhow::Result<IssuingToken>;
+    async fn get_credential(&self, payload: CredentialRequest, token: String) -> anyhow::Result<GiveVC>;
     async fn get_all_req(&self) -> anyhow::Result<Vec<request::Model>>;
     async fn get_one_req(&self, id: String) -> anyhow::Result<request::Model>;
     async fn manage_req(&self, id: String, payload: VcDecisionApproval) -> anyhow::Result<()>;

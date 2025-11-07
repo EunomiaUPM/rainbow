@@ -23,6 +23,10 @@ pub use iss_token::*;
 pub use issuer_metadata::*;
 pub use oauth_server::*;
 pub use well_known_jwk::*;
+pub use token_req::*;
+pub use did_possession::*;
+pub use cred_req::*;
+pub use vc_issuing::*;
 
 mod cred_config;
 mod cred_offer;
@@ -30,3 +34,7 @@ mod iss_token;
 mod issuer_metadata;
 mod oauth_server;
 mod well_known_jwk;
+mod token_req;
+mod did_possession;
+mod cred_req;
+mod vc_issuing;

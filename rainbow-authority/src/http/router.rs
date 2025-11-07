@@ -22,17 +22,20 @@ use crate::http::openapi;
 use crate::services::repo::RepoServiceTrait;
 use crate::types::enums::errors::BadFormat;
 use crate::types::gnap::{GrantRequest, RefBody};
+use crate::types::issuing::{CredentialRequest, TokenRequest};
 use crate::types::vcs::VcDecisionApproval;
 use crate::types::verifying::VerifyPayload;
 use crate::types::wallet::{DidsInfo, KeyDefinition};
-use crate::utils::extract_gnap_token;
+use crate::utils::{extract_bearer_token, extract_gnap_token};
 use axum::body::Bytes;
+use axum::extract::rejection::FormRejection;
 use axum::extract::{rejection::JsonRejection, Path, Query, State};
 use axum::http::{HeaderMap, Method, StatusCode, Uri};
 use axum::response::IntoResponse;
 use axum::routing::{delete, get, post};
 use axum::{Form, Json, Router};
 use std::collections::HashMap;
+use std::future::Future;
 use std::sync::Arc;
 use tracing::{error, info};
 
@@ -230,7 +233,7 @@ impl RainbowAuthorityRouter {
         let token = match extract_gnap_token(headers) {
             Some(token) => token,
             None => {
-                let error = Errors::unauthorized_new("Missing token".to_string());
+                let error = Errors::unauthorized_new("Missing token");
                 error!("{}", error.log());
                 return error.into_response();
             }
@@ -260,10 +263,15 @@ impl RainbowAuthorityRouter {
     async fn verify(
         State(authority): State<Arc<Authority>>,
         Path(state): Path<String>,
-        Form(payload): Form<VerifyPayload>,
+        payload: Result<Form<VerifyPayload>, FormRejection>,
     ) -> impl IntoResponse {
         let log = format!("POST /verify/{}", state);
         info!("{}", log);
+
+        let payload = match payload {
+            Ok(Form(data)) => data,
+            Err(e) => return e.into_response(),
+        };
 
         match authority.verify(state, payload.vp_token).await {
             Ok(Some(uri)) => (StatusCode::OK, uri).into_response(),
@@ -280,10 +288,7 @@ impl RainbowAuthorityRouter {
             Some(hash) => hash.clone(),
             None => {
                 info!("GET /credentialOffer");
-                let error = Errors::format_new(
-                    BadFormat::Received,
-                    "Unable to retrieve hash from callback".to_string(),
-                );
+                let error = Errors::format_new(BadFormat::Received, "Unable to retrieve hash from callback");
                 error!("{}", error.log());
                 return error.into_response();
             }
@@ -318,17 +323,48 @@ impl RainbowAuthorityRouter {
         }
     }
 
-    async fn get_token(State(authority): State<Arc<Authority>>, headers: HeaderMap, body: Bytes) -> impl IntoResponse {
+    async fn get_token(
+        State(authority): State<Arc<Authority>>,
+        payload: Result<Form<TokenRequest>, FormRejection>,
+    ) -> impl IntoResponse {
         info!("GET /token");
-        info!("Headers: {:?}", headers);
-        info!("Body: {:?}", String::from_utf8_lossy(&body));
 
-        (StatusCode::OK, Json(authority.token())).into_response()
+        let payload = match payload {
+            Ok(Form(data)) => data,
+            Err(e) => return e.into_response(),
+        };
+
+        match authority.get_token(payload).await {
+            Ok(data) => (StatusCode::OK, Json(data)).into_response(),
+            Err(e) => e.to_response(),
+        }
     }
-    async fn post_credential(State(authority): State<Arc<Authority>>) -> impl IntoResponse {
+
+    async fn post_credential(
+        State(authority): State<Arc<Authority>>,
+        headers: HeaderMap,
+        payload: Result<Json<CredentialRequest>, JsonRejection>,
+    ) -> impl IntoResponse {
         info!("POST /credential");
 
-        (StatusCode::OK, Json(authority.credential())).into_response()
+        let payload = match payload {
+            Ok(Json(data)) => data,
+            Err(e) => return e.into_response(),
+        };
+
+        let token = match extract_bearer_token(headers) {
+            Some(token) => token,
+            None => {
+                let error = Errors::unauthorized_new("Missing token");
+                error!("{}", error.log());
+                return error.into_response();
+            }
+        };
+
+        match authority.get_credential(payload, token).await {
+            Ok(data) => (StatusCode::OK, Json(data)).into_response(),
+            Err(e) => e.to_response(),
+        }
     }
 
     async fn get_all_requests(State(authority): State<Arc<Authority>>) -> impl IntoResponse {

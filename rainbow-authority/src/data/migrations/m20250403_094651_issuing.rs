@@ -34,7 +34,17 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(Issuing::Table)
                     .col(ColumnDef::new(Issuing::Id).string().not_null().primary_key())
+                    .col(ColumnDef::new(Issuing::Name).string().not_null())
+                    .col(ColumnDef::new(Issuing::PreAuthCode).string().not_null())
+                    .col(ColumnDef::new(Issuing::TxCode).string().not_null())
+                    .col(ColumnDef::new(Issuing::Step).boolean().not_null())
+                    .col(ColumnDef::new(Issuing::VcType).string().not_null())
+                    .col(ColumnDef::new(Issuing::Uri).string().not_null())
                     .col(ColumnDef::new(Issuing::Token).string().not_null())
+                    .col(ColumnDef::new(Issuing::Aud).string().not_null())
+                    .col(ColumnDef::new(Issuing::Did).string())
+                    .col(ColumnDef::new(Issuing::CredentialId).string().not_null())
+                    .col(ColumnDef::new(Issuing::Credential).string())
                     .to_owned(),
             )
             .await
@@ -49,5 +59,15 @@ impl MigrationTrait for Migration {
 pub enum Issuing {
     Table,
     Id,
+    Name,
+    PreAuthCode,
+    TxCode,
+    Step,
+    VcType,
+    Uri,
     Token,
+    Aud,
+    Did,
+    CredentialId,
+    Credential,
 }

@@ -26,28 +26,47 @@ use sea_orm::ActiveValue;
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: String,
+    pub name: String,
     pub pre_auth_code: String,
     pub tx_code: String,
-    pub step: i16,
+    pub step: bool,
     pub vc_type: String,
+    pub uri: String,
+    pub token: String,
+    pub aud: String,
+    pub did: Option<String>,
+    pub credential_id: String,
+    pub credential: Option<String>
 }
 
 #[derive(Clone, Debug)]
 pub struct NewModel {
     pub id: String,
+    pub name: String,
     pub vc_type: String,
+    pub uri: String,
+    pub aud: String,
 }
 
 impl IntoActiveSet<ActiveModel> for NewModel {
     fn to_active(self) -> ActiveModel {
         let code = create_opaque_token();
         let tx_code = create_opaque_token();
+        let token = create_opaque_token();
+        let credential_id = uuid::Uuid::new_v4().to_string();
         ActiveModel {
             id: ActiveValue::Set(self.id),
+            name: ActiveValue::Set(self.name),
             pre_auth_code: ActiveValue::Set(code),
             tx_code: ActiveValue::Set(tx_code),
-            step: ActiveValue::Set(0),
+            step: ActiveValue::Set(true),
             vc_type: ActiveValue::Set(self.vc_type),
+            uri: ActiveValue::Set(self.uri),
+            token: ActiveValue::Set(token),
+            aud: ActiveValue::Set(self.aud),
+            did: ActiveValue::Set(None),
+            credential_id: ActiveValue::Set(credential_id),
+            credential: ActiveValue::Set(None),
         }
     }
 }
@@ -56,10 +75,17 @@ impl IntoActiveSet<ActiveModel> for Model {
     fn to_active(self) -> ActiveModel {
         ActiveModel {
             id: ActiveValue::Set(self.id),
+            name: ActiveValue::Set(self.name),
             pre_auth_code: ActiveValue::Set(self.pre_auth_code),
             tx_code: ActiveValue::Set(self.tx_code),
             step: ActiveValue::Set(self.step),
             vc_type: ActiveValue::Set(self.vc_type),
+            uri: ActiveValue::Set(self.uri),
+            token: ActiveValue::Set(self.token),
+            aud: ActiveValue::Set(self.aud),
+            did: ActiveValue::Set(self.did),
+            credential_id: ActiveValue::Set(self.credential_id),
+            credential: ActiveValue::Set(self.credential),
         }
     }
 }

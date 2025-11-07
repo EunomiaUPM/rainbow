@@ -98,7 +98,7 @@ impl AccessManagerServiceTrait for GnapService {
             Some(model) => model,
             None => {
                 let cause = "Only petitions with an 'interact field' are supported right now";
-                let error = Errors::not_impl_new(cause.to_string(), cause.to_string());
+                let error = Errors::not_impl_new(cause.to_string(), cause);
                 error!("{}", error.log());
                 bail!(error);
             }
@@ -107,7 +107,7 @@ impl AccessManagerServiceTrait for GnapService {
         let start = interact.start.clone();
         if !&start.contains(&"cross-user".to_string()) && !&start.contains(&"oidc4vp".to_string()) {
             let cause = "Interact method not supported yet";
-            let error = Errors::not_impl_new(cause.to_string(), cause.to_string());
+            let error = Errors::not_impl_new(cause.to_string(), cause);
             error!("{}", error.log());
             bail!(error);
         }
@@ -117,7 +117,7 @@ impl AccessManagerServiceTrait for GnapService {
             None => {
                 let error = Errors::format_new(
                     BadFormat::Received,
-                    "Interact method does not have an uri".to_string(),
+                    "Interact method does not have an uri",
                 );
                 error!("{}", error.log());
                 bail!(error)
@@ -135,7 +135,7 @@ impl AccessManagerServiceTrait for GnapService {
             None => {
                 let error = Errors::format_new(
                     BadFormat::Received,
-                    "There was no cert in the Grant Request".to_string(),
+                    "There was no cert in the Grant Request",
                 );
                 error!("{}", error.log());
                 bail!(error)
@@ -161,7 +161,7 @@ impl AccessManagerServiceTrait for GnapService {
         info!("Validating continue request");
 
         if int_ref != int_model.interact_ref {
-            let error = Errors::security_new(format!(
+            let error = Errors::security_new(&format!(
                 "Interact reference '{}' does not match '{}'",
                 int_ref, int_model.interact_ref
             ));
@@ -170,7 +170,7 @@ impl AccessManagerServiceTrait for GnapService {
         }
 
         if token != int_model.continue_token {
-            let error = Errors::security_new(format!(
+            let error = Errors::security_new(&format!(
                 "Token '{}' does not match '{}'",
                 token, int_model.continue_token
             ));
@@ -203,7 +203,7 @@ impl AccessManagerServiceTrait for GnapService {
         } else {
             let error = Errors::not_impl_new(
                 "Interact method not supported".to_string(),
-                format!("Interact method {} not supported", model.method),
+                &format!("Interact method {} not supported", model.method),
             );
             error!("{}", error.log());
             bail!(error);
@@ -241,7 +241,7 @@ impl AccessManagerServiceTrait for GnapService {
                     int_model.uri,
                     "POST".to_string(),
                     Some(res.status().as_u16()),
-                    "Minion did not receive callback successfully".to_string(),
+                    "Minion did not receive callback successfully",
                 );
                 req_model.status = "Minion_failure".to_string();
                 error!("{}", error.log());
