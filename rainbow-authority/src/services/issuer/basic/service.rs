@@ -204,6 +204,7 @@ impl IssuerServiceTrait for BasicIssuerService {
             }
         };
 
+        model.credential = Some(vc_jwt.clone());
         Ok(GiveVC {
             format: "jwt_vc_json".to_string(),
             credential: vc_jwt,
