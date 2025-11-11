@@ -1430,6 +1430,128 @@
         }
       }
     },
+    "/api/v1/policies/:id": {
+      "get": {
+        "tags": [
+          "Policies"
+        ],
+        "summary": "Get a single policy",
+        "operationId": "getPolicy",
+        "description": "Retrieves policy associated with a specific id.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A policy.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OdrlPolicyInfo"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request: Invalid ID format.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RainbowCatalogError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found: Policy not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RainbowCatalogError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RainbowCatalogError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Policies"
+        ],
+        "summary": "Add a policy to a catalog",
+        "operationId": "addCatalogPolicy",
+        "description": "Adds a new ODRL policy to a specific catalog.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OdrlPolicyInfo"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Policy added successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OdrlPolicyInfo"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request: Invalid ID format.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RainbowCatalogError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found: Catalog not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RainbowCatalogError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RainbowCatalogError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/catalogs/{id}/policies": {
       "get": {
         "tags": [

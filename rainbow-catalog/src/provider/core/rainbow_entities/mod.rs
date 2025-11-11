@@ -100,7 +100,9 @@ pub trait RainbowDistributionTrait: Send + Sync {
 
 #[mockall::automock]
 #[async_trait]
-pub trait RainbowPoliciesTrait: Send + Sync {
+pub
+trait RainbowPoliciesTrait: Send + Sync {
+    async fn get_any_policy(&self, policy_id: Urn) -> anyhow::Result<OdrlOffer>;
     async fn get_catalog_policies(&self, catalog_id: Urn) -> anyhow::Result<Vec<OdrlOffer>>;
     async fn post_catalog_policies(&self, catalog_id: Urn, policy: OdrlPolicyInfo) -> anyhow::Result<OdrlOffer>;
     async fn delete_catalog_policies(&self, catalog_id: Urn, policy_id: Urn) -> anyhow::Result<()>;
