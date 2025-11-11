@@ -619,7 +619,6 @@ type TransferProcess {
     providerPid: UUID!
     consumerPid: UUID!
     agreement: Agreement!
-    dataPlane: DataplaneSession!
     state: String!
     stateAttribute: String!
     associatedConsumer: Participant
@@ -629,7 +628,7 @@ type TransferProcess {
 
     # Graph
     messages: [TransferMessage!]!
-    dataplaneSession: DataplaneSession
+    dataplaneSession: DataplaneSession # dataplane id is providerPid in provider and consumerPid in consumer
 }
 
 type TransferMessage {
@@ -662,7 +661,7 @@ type DataplaneSession {
     state: String!
 
     # Inverse Graph
-    transferProcess: TransferProcess!
+    transferProcess: TransferProcess! # id == tpByProvider in provider id == tpByConsumer in consumer
 }
 
 """
