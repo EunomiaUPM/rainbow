@@ -675,9 +675,8 @@ type Participant {
     id: DID!
     slug: String!
     type: String!
-    baseUrl: String!
-    token: JSON
-    tokenActions: JSON
+    baseUrl: String
+    token: String
     savedAt: DateTime!
     lastInteraction: DateTime!
     isMe: Boolean!
