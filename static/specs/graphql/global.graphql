@@ -86,7 +86,7 @@ type Query {
     transferProcess(id: UUID!): TransferProcess                                                 # both
 
     transferMessagesByProcess(processId: UUID!, limit: Int = 50, offset: Int = 0): [TransferMessage!]! # both
-    transferMessage(id: UUID!): TransferMessage                                                 # both
+    transferMessage(transferId: UUID!, messageId: UUID!): TransferMessage                                                 # both
 
     dataPlane(id: UUID!): DataplaneSession
 
@@ -97,7 +97,7 @@ type Query {
     subscription(id: UUID!): Subscription                                                       # both
 
     notificationsBySubscription(subscriptionId: UUID!, limit: Int = 20, offset: Int = 0): [NotificationSub!]! # both
-    notification(id: UUID!): NotificationSub                                                    # both
+    notification(subscriptionId: UUID!, notificationId: UUID!): NotificationSub                                                    # both
 
     # ---------------------------
     # Participants / Users
