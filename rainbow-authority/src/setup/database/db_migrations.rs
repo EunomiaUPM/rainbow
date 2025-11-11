@@ -18,8 +18,7 @@
  */
 
 use crate::data::migrations::get_authority_migrations;
-use crate::setup::config::config_trait::AuthorityApplicationConfigTrait;
-use crate::setup::config::AuthorityApplicationConfig;
+use crate::setup::config::{AuthorityApplicationConfig, AuthorityApplicationConfigTrait};
 use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
 

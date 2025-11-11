@@ -17,6 +17,6 @@
  *
  */
 
-pub trait ErrorLog {
+pub trait ErrorLogTrait {
     fn log(&self) -> String;
 }

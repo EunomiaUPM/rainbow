@@ -16,21 +16,13 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use super::ClientConfig;
 use crate::setup::database::DatabaseConfig;
-use crate::types::wallet::SSIWalletConfig;
 
 pub trait AuthorityApplicationConfigTrait {
-    fn get_raw_database_config(&self) -> &DatabaseConfig;
-    fn get_raw_client_config(&self) -> &ClientConfig;
-    fn get_raw_ssi_wallet_config(&self) -> &SSIWalletConfig;
-    fn get_wallet_portal_url(&self) -> String;
     fn get_full_db_url(&self) -> String;
-    fn get_wallet_data(&self) -> serde_json::Value;
-    fn get_issuer_api(&self) -> String;
-    fn get_cert(&self) -> String;
-    fn get_priv_key(&self) -> String;
-    fn get_pub_key(&self) -> String;
     fn merge_dotenv_configuration(&self, env_file: Option<String>) -> Self;
-    fn get_environment_scenario(&self) -> bool;
+    fn get_raw_database_config(&self) -> &DatabaseConfig;
+    fn get_host(&self) -> String;
+    fn is_local(&self) -> bool;
+    fn get_weird_port(&self) -> String;
 }

@@ -17,7 +17,7 @@
  *
  */
 
-use crate::data::repo_factory::traits::IntoActiveSet;
+use super::super::IntoActiveSet;
 use chrono;
 use sea_orm::entity::prelude::*;
 use sea_orm::{ActiveValue, DeriveEntityModel};

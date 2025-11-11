@@ -17,5 +17,16 @@
  *
  */
 
+mod cred_config;
+mod cred_offer;
 mod verify_payload;
+mod well_known_oauth_server;
+mod well_known_issuer;
+mod well_known_jwk;
+
+pub use cred_config::*;
+pub use cred_offer::*;
 pub use verify_payload::VerifyPayload;
+pub use well_known_oauth_server::*;
+pub use well_known_issuer::*;
+pub use well_known_jwk::*;
