@@ -428,7 +428,6 @@ type CNProcess {
 
     # Grafo
     messages: [CNMessage!]!
-    lastOffer: CNOffer
 }
 
 type CNMessage {
@@ -440,7 +439,7 @@ type CNMessage {
     createdAt: DateTime!
     content: JSON!
 
-    # Relaciones convenientes
+    # Grafo
     offer: CNOffer
     agreement: Agreement
 }
