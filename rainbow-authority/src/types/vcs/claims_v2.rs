@@ -19,9 +19,10 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use crate::types::vcs::VCIssuer;
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct VCClaims {
+pub struct VCClaimsV2 {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub exp: Option<usize>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -36,16 +37,10 @@ pub struct VCClaims {
     pub id: String,
     #[serde(rename = "CredentialSubject")]
     pub credential_subject: Value,
-    pub issuer: Issuer,
+    pub issuer: VCIssuer,
     #[serde(rename = "ValidFrom", skip_serializing_if = "Option::is_none")]
     pub valid_from: Option<DateTime<Utc>>,
     #[serde()]
     #[serde(rename = "ValidUntil", skip_serializing_if = "Option::is_none")]
     pub valid_until: Option<DateTime<Utc>>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Issuer {
-    pub id: String,
-    pub name: String,
 }

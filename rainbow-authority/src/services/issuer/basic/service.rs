@@ -24,7 +24,7 @@ use crate::types::enums::errors::BadFormat;
 use crate::types::enums::vc_type::VcType;
 use crate::types::issuing::{AuthServerMetadata, CredentialRequest, DidPossession, GiveVC, IssuerMetadata, IssuingToken, VCCredOffer};
 use crate::types::vcs::cred_subject::{CredentialSubject4DataSpace, CredentialSubject4Identity};
-use crate::types::vcs::{Issuer, VCClaims};
+use crate::types::vcs::{VCClaimsV1, VCClaimsV2, VCFromClaimsV1, VCIssuer};
 use crate::utils::{create_opaque_token, get_from_opt, has_expired, is_active, validate_token};
 use anyhow::bail;
 use chrono::{Duration, Utc};
@@ -161,22 +161,40 @@ impl IssuerServiceTrait for BasicIssuerService {
         };
 
         let now = Utc::now();
-        let claims = VCClaims {
+        let claims = VCClaimsV1 {
             exp: None,
             iat: None,
             iss: None,
             sub: None,
-            context: vec!["https://www.w3.org/ns/credentials/v2".to_string()],
-            r#type: vec!["VerifiableCredential".to_string(), model.vc_type.clone()],
-            id: model.credential_id.clone(),
-            credential_subject,
-            issuer: Issuer {
-                id: did.to_string(),
-                name: "RainbowAuthority".to_string(),
+            vc: VCFromClaimsV1 {
+                context: vec!["https://www.w3.org/ns/credentials/v2".to_string()],
+                r#type: vec!["VerifiableCredential".to_string(), model.vc_type.clone()],
+                id: model.credential_id.clone(),
+                credential_subject,
+                issuer: VCIssuer {
+                    id: did.to_string(),
+                    name: "RainbowAuthority".to_string(),
+                },
+                valid_from: Some(now),
+                valid_until: Some(now + Duration::days(365)),
             },
-            valid_from: Some(now),
-            valid_until: Some(now + Duration::days(365)),
         };
+        // let claims = VCClaimsV2 {
+        //     exp: None,
+        //     iat: None,
+        //     iss: None,
+        //     sub: None,
+        //     context: vec!["https://www.w3.org/ns/credentials/v2".to_string()],
+        //     r#type: vec!["VerifiableCredential".to_string(), model.vc_type.clone()],
+        //     id: model.credential_id.clone(),
+        //     credential_subject,
+        //     issuer: VCIssuer {
+        //         id: did.to_string(),
+        //         name: "RainbowAuthority".to_string(),
+        //     },
+        //     valid_from: Some(now),
+        //     valid_until: Some(now + Duration::days(365)),
+        // };
 
         let mut header = Header::new(Algorithm::RS256);
         header.kid = Some(did.to_string());

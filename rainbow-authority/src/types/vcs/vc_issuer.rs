@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
  *  *
  *  * This program is free software: you can redistribute it and/or modify
  *  * it under the terms of the GNU General Public License as published by
@@ -16,18 +16,10 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-pub use vci_data::VCIData;
-pub use vpd::VPDef;
-pub use input_descriptor::*;
-pub use vc_decision_approval::*;
-pub use claims_v2::*;
-pub use claims_v1::*;
-pub use vc_issuer::*;
-mod vci_data;
-mod vpd;
-mod input_descriptor;
-mod vc_decision_approval;
-mod claims_v2;
-pub mod cred_subject;
-mod claims_v1;
-mod vc_issuer;
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct VCIssuer {
+    pub id: String,
+    pub name: String,
+}
