@@ -38,9 +38,9 @@ pub struct VCClaimsV2 {
     #[serde(rename = "CredentialSubject")]
     pub credential_subject: Value,
     pub issuer: VCIssuer,
-    #[serde(rename = "ValidFrom", skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "validFrom", skip_serializing_if = "Option::is_none")]
     pub valid_from: Option<DateTime<Utc>>,
     #[serde()]
-    #[serde(rename = "ValidUntil", skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "validUntil", skip_serializing_if = "Option::is_none")]
     pub valid_until: Option<DateTime<Utc>>,
 }
