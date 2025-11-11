@@ -32,7 +32,7 @@ use axum::response::IntoResponse;
 use axum::routing::{delete, get, post};
 use axum::{Json, Router};
 use rainbow_common::auth::business::RainbowBusinessLoginRequest;
-use rainbow_common::batch_requests::BatchRequests;
+use rainbow_common::batch_requests::BatchRequestsAsString;
 use rainbow_common::errors::helpers::BadFormat;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::mates::mates::VerifyTokenRequest;
@@ -59,12 +59,8 @@ where
     }
     pub fn router(self) -> Router {
         // did.json could be accessed from any client
-        let cors = CorsLayer::new()
-            .allow_methods([Method::GET])
-            .allow_origin(Any);
-        let did_router = Router::new()
-            .route("/api/v1/did.json", get(Self::didweb))
-            .layer(cors);
+        let cors = CorsLayer::new().allow_methods([Method::GET]).allow_origin(Any);
+        let did_router = Router::new().route("/api/v1/did.json", get(Self::didweb)).layer(cors);
 
         let router = Router::new()
             // WALLET
@@ -96,7 +92,6 @@ where
             .route("/api/v1/mates/batch", post(Self::get_batch_mates))
             .route("/api/v1/mates/me", get(Self::get_all_mates_me))
             .route("/api/v1/mates/:id", get(Self::get_mate_by_id))
-
             .route("/api/v1/business/login", post(Self::fast_login))
             .merge(did_router)
             .with_state(self.manager)
@@ -316,9 +311,7 @@ where
         (StatusCode::OK, Json(response)).into_response()
     }
 
-    async fn get_all_mates(
-        State(manager): State<Arc<Manager<T>>>,
-    ) -> impl IntoResponse {
+    async fn get_all_mates(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
         info!("GET /mates");
         match manager.repo.mates().get_all(None, None).await {
             Ok(mates) => (StatusCode::OK, Json(mates)).into_response(),
@@ -332,7 +325,7 @@ where
 
     async fn get_batch_mates(
         State(manager): State<Arc<Manager<T>>>,
-        input: Result<Json<BatchRequests>, JsonRejection>,
+        input: Result<Json<BatchRequestsAsString>, JsonRejection>,
     ) -> impl IntoResponse {
         info!("POST /api/v1/mates/batch");
         let input = match input {
@@ -354,9 +347,7 @@ where
         }
     }
 
-    async fn get_all_mates_me(
-        State(manager): State<Arc<Manager<T>>>,
-    ) -> impl IntoResponse {
+    async fn get_all_mates_me(State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
         info!("GET /mates/me");
         match manager.repo.mates().get_me().await {
             Ok(mates) => (StatusCode::OK, Json(mates)).into_response(),
@@ -368,10 +359,7 @@ where
         }
     }
 
-    async fn get_mate_by_id(
-        Path(id): Path<String>,
-        State(manager): State<Arc<Manager<T>>>,
-    ) -> impl IntoResponse {
+    async fn get_mate_by_id(Path(id): Path<String>, State(manager): State<Arc<Manager<T>>>) -> impl IntoResponse {
         info!("GET /mates/{}", id);
         match manager.repo.mates().get_by_id(&id).await {
             Ok(Some(mates)) => (StatusCode::OK, Json(mates)).into_response(),

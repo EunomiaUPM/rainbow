@@ -84,8 +84,7 @@ impl MatesRepoTrait for MatesProviderRepo {
         Ok(mate)
     }
 
-    async fn get_batch(&self, ids: &Vec<Urn>) -> anyhow::Result<Vec<Model>> {
-        let ids = ids.iter().map(|i| i.to_string()).collect::<Vec<String>>();
+    async fn get_batch(&self, ids: &Vec<String>) -> anyhow::Result<Vec<Model>> {
         let mates = Entity::find().filter(Column::ParticipantId.is_in(ids)).all(&self.inner.db_connection).await?;
         Ok(mates)
     }

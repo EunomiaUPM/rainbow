@@ -55,6 +55,17 @@ where
     T: OdrlOfferRepo + Send + Sync,
     U: RainbowEventsNotificationTrait + Send + Sync,
 {
+    async fn get_any_policy(&self, policy_id: Urn) -> anyhow::Result<OdrlOffer> {
+        let policy = self
+            .repo
+            .get_odrl_offer_by_id(policy_id.clone())
+            .await
+            .map_err(CatalogError::DbErr)?
+            .ok_or(CatalogError::NotFound { id: policy_id, entity: "Policy".to_string() })?;
+        let policy = OdrlOffer::try_from(policy)?;
+        Ok(policy)
+    }
+
     async fn get_catalog_policies(&self, catalog_id: Urn) -> anyhow::Result<Vec<OdrlOffer>> {
         let policies = self.repo.get_all_odrl_offers_by_entity(catalog_id).await.map_err(CatalogError::DbErr)?;
         let policies: Vec<OdrlOffer> = policies.iter().map(|p| OdrlOffer::try_from(p.to_owned()).unwrap()).collect();
