@@ -10,6 +10,7 @@ schema {
 
 "Basic scalars"
 scalar UUID
+scalar DID
 scalar DateTime
 scalar JSON
 
@@ -67,11 +68,14 @@ type Query {
     datahubDataset(id: UUID!): DatahubDataset                                                       # provider
 
     # ---------------------------
-    # Policy Templates / Policies
+    # Policy Templates
     # ---------------------------
     policyTemplates(limit: Int = 10, offset: Int = 0): [PolicyTemplate!]!                      # provider
     policyTemplate(id: UUID!): PolicyTemplate                                                  # provider
 
+    # ---------------------------
+    # Policies
+    # ---------------------------
     policiesByDataset(datasetId: UUID!): [OdrlOffer!]!                                         # provider
     policy(id: UUID!): OdrlOffer                                                               # provider
 
@@ -99,8 +103,8 @@ type Query {
     # Participants / Users
     # ---------------------------
     participants(limit: Int = 10, offset: Int = 0): [Participant!]!                             # both
-    participant(id: UUID!): Participant                                                         # both
-    agreementsByParticipantId(id: UUID!): [Agreement!]!                                         # both
+    participant(id: DID!): Participant                                                          # both
+    agreementsByParticipantId(id: DID!): [Agreement!]!                                          # both
 
     # ---------------------------
     # Auth (DID & OIDC)
@@ -192,7 +196,7 @@ CONTRACT NEGOTIATION RPC
 =======================================================
 """
 input CNRPCConsumerRequestRequest {
-    providerParticipantId: UUID!
+    providerParticipantId: DID!
     offer: OdrlInfo!
     consumerPid: UUID!
     providerPid: UUID!
@@ -204,7 +208,7 @@ type CNRPCConsumerRequestResponse {
     message: JSON!
 }
 input CNRPCConsumerAcceptanceRequest {
-    providerParticipantId: UUID!
+    providerParticipantId: DID!
     consumerPid: UUID!
     providerPid: UUID!
 }
@@ -214,7 +218,7 @@ type CNRPCConsumerAcceptanceResponse {
     message: JSON!
 }
 input CNRPCConsumerVerificationRequest {
-    providerParticipantId: UUID!
+    providerParticipantId: DID!
     consumerPid: UUID!
     providerPid: UUID!
 }
@@ -224,7 +228,7 @@ type CNRPCConsumerVerificationResponse {
     message: JSON!
 }
 input CNRPCConsumerTerminationRequest {
-    providerParticipantId: UUID!
+    providerParticipantId: DID!
     consumerPid: UUID!
     providerPid: UUID!
 }
@@ -235,7 +239,7 @@ type CNRPCConsumerTerminationResponse {
 }
 
 input CNRPCProviderOfferRequest {
-    consumerParticipantId: UUID!
+    consumerParticipantId: DID!
     offer: OdrlInfo!
     consumerPid: UUID!
     providerPid: UUID!
@@ -247,7 +251,7 @@ type CNRPCProviderOfferResponse {
     message: JSON!
 }
 input CNRPCProviderAgreementRequest {
-    consumerParticipantId: UUID!
+    consumerParticipantId: DID!
     consumerPid: UUID!
     providerPid: UUID!
 }
@@ -257,7 +261,7 @@ type CNRPCProviderAgreementResponse {
     message: JSON!
 }
 input CNRPCProviderFinalizationRequest {
-    consumerParticipantId: UUID!
+    consumerParticipantId: DID!
     consumerPid: UUID!
     providerPid: UUID!
 }
@@ -267,7 +271,7 @@ type CNRPCProviderFinalizationResponse {
     message: JSON!
 }
 input CNRPCProviderTerminationRequest {
-    consumerParticipantId: UUID!
+    consumerParticipantId: DID!
     consumerPid: UUID!
     providerPid: UUID!
 }
@@ -283,7 +287,7 @@ TRANSFER PROCESS RPC
 =======================================================
 """
 input TransferRPCConsumerRequestRequest {
-    providerParticipantId: UUID!
+    providerParticipantId: DID!
     agreementId: UUID!
     format: String!
     consumerPid: UUID!
@@ -297,7 +301,7 @@ type TransferRPCConsumerRequestResponse {
     message: JSON!
 }
 input TransferRPCConsumerStartRequest {
-    providerParticipantId: UUID!
+    providerParticipantId: DID!
     consumerPid: UUID!
     providerPid: UUID!
 }
@@ -307,7 +311,7 @@ type TransferRPCConsumerStartResponse {
     message: JSON!
 }
 input TransferRPCConsumerSuspendRequest {
-    providerParticipantId: UUID!
+    providerParticipantId: DID!
     consumerPid: UUID!
     providerPid: UUID!
 }
@@ -317,7 +321,7 @@ type TransferRPCConsumerSuspendResponse {
     message: JSON!
 }
 input TransferRPCConsumerCompletionRequest {
-    providerParticipantId: UUID!
+    providerParticipantId: DID!
     consumerPid: UUID!
     providerPid: UUID!
 }
@@ -327,7 +331,7 @@ type TransferRPCConsumerCompletionResponse {
     message: JSON!
 }
 input TransferRPCConsumerTerminationRequest {
-    providerParticipantId: UUID!
+    providerParticipantId: DID!
     consumerPid: UUID!
     providerPid: UUID!
 }
@@ -338,7 +342,7 @@ type TransferRPCConsumerTerminationResponse {
 }
 
 input TransferRPCProviderStartRequest {
-    consumerParticipantId: UUID!
+    consumerParticipantId: DID!
     consumerCallbackAddress: String,
     consumerPid: UUID!
     providerPid: UUID!
@@ -349,7 +353,7 @@ type TransferRPCProviderStartResponse {
     message: JSON!
 }
 input TransferRPCProviderSuspendRequest {
-    consumerParticipantId: UUID!
+    consumerParticipantId: DID!
     consumerCallbackAddress: String,
     consumerPid: UUID!
     providerPid: UUID!
@@ -360,7 +364,7 @@ type TransferRPCProviderSuspendResponse {
     message: JSON!
 }
 input TransferRPCProviderCompletionRequest {
-    consumerParticipantId: UUID!
+    consumerParticipantId: DID!
     consumerCallbackAddress: String,
     consumerPid: UUID!
     providerPid: UUID!
@@ -371,7 +375,7 @@ type TransferRPCProviderCompletionResponse {
     message: JSON!
 }
 input TransferRPCProviderTerminationRequest {
-    consumerParticipantId: UUID!
+    consumerParticipantId: DID!
     consumerCallbackAddress: String,
     consumerPid: UUID!
     providerPid: UUID!
@@ -417,8 +421,8 @@ type CNProcess {
     state: CNProcessState!
     createdAt: DateTime!
     updatedAt: DateTime!
-    associatedProvider: UUID
-    associatedConsumer: UUID
+    associatedProvider: Participant
+    associatedConsumer: Participant
     isBusiness: Boolean!
     initiatedBy: String
 
@@ -619,8 +623,8 @@ type TransferProcess {
     dataPlane: DataplaneSession!
     state: String!
     stateAttribute: String!
-    associatedConsumer: UUID!
-    associatedProvider: UUID!
+    associatedConsumer: Participant
+    associatedProvider: Participant
     createdAt: DateTime!
     updatedAt: DateTime!
 
@@ -668,7 +672,7 @@ PARTICIPANTS
 =======================================================
 """
 type Participant {
-    id: UUID!
+    id: DID!
     slug: String!
     type: String!
     baseUrl: String!
