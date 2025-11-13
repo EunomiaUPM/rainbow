@@ -19,4 +19,5 @@
 mod wallet_trait;
 mod vc_requester;
 
-pub use wallet_trait::*;
+pub use wallet_trait::CoreWalletTrait;
+pub use vc_requester::CoreVcRequesterTrait;

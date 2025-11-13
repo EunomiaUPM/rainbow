@@ -86,33 +86,33 @@ pub struct Finish4Interact {
 }
 
 impl GrantRequest {
-    pub fn pr_oidc(client: Value, method: String, uri: Option<String>) -> Self {
+    pub fn pr_oidc(client: Value, method: String, uri: Option<String>, nonce: Option<String>) -> Self {
         Self {
             access_token: AccessTokenRequirements4GR::key_default(),
             subject: None,
             client,
             user: None,
-            interact: Some(Interact4GR::default4oidc(method, uri)),
+            interact: Some(Interact4GR::default4oidc(method, uri, nonce)),
         }
     }
 
-    pub fn vc_oidc(client: Value, method: String, uri: Option<String>, vc_type: String) -> Self {
+    pub fn vc_oidc(client: Value, method: String, uri: Option<String>, vc_type: String, nonce: Option<String>) -> Self {
         Self {
             access_token: AccessTokenRequirements4GR::request_vc(vc_type),
             subject: None,
             client,
             user: None,
-            interact: Some(Interact4GR::default4oidc(method, uri)),
+            interact: Some(Interact4GR::default4oidc(method, uri, nonce)),
         }
     }
 
-    pub fn vc_cross_user(client: Value, uri: Option<String>, vc_type: String) -> Self {
+    pub fn vc_cross_user(client: Value, uri: Option<String>, vc_type: String, nonce: Option<String>) -> Self {
         Self {
             access_token: AccessTokenRequirements4GR::request_vc(vc_type),
             subject: None,
             client,
             user: None,
-            interact: Some(Interact4GR::default4cross_user(uri)),
+            interact: Some(Interact4GR::default4cross_user(uri, nonce)),
         }
     }
 
@@ -182,8 +182,8 @@ impl AccessTokenRequirements4GR {
 }
 
 impl Interact4GR {
-    pub fn default4oidc(method: String, uri: Option<String>) -> Self {
-        let nonce: String = rand::thread_rng().sample_iter(&Alphanumeric).take(36).map(char::from).collect();
+    pub fn default4oidc(method: String, uri: Option<String>, nonce: Option<String>) -> Self {
+        let nonce = nonce.unwrap_or(rand::thread_rng().sample_iter(&Alphanumeric).take(36).map(char::from).collect());
 
         Self {
             start: vec![String::from("oidc4vp")],
@@ -192,8 +192,8 @@ impl Interact4GR {
         }
     }
 
-    pub fn default4cross_user(uri: Option<String>) -> Self {
-        let nonce: String = rand::thread_rng().sample_iter(&Alphanumeric).take(36).map(char::from).collect();
+    pub fn default4cross_user(uri: Option<String>, nonce: Option<String>) -> Self {
+        let nonce = nonce.unwrap_or(rand::thread_rng().sample_iter(&Alphanumeric).take(36).map(char::from).collect());
         Self {
             start: vec![String::from("cross-user")],
             finish: Finish4Interact {

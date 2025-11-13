@@ -16,8 +16,10 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use serde::Serialize;
 
+#[derive(Clone, Debug, Serialize)]
 pub struct SelfClient {
-    pub name: String,
-    pub display: String,
+    pub class_id: String,
+    pub display: Option<String>,
 }

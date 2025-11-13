@@ -16,32 +16,36 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::ssi::common::core::CoreWalletTrait;
+use crate::ssi::common::core::{CoreVcRequesterTrait, CoreWalletTrait};
 use crate::ssi::common::services::client::ClientServiceTrait;
+use crate::ssi::common::services::vc_request::VcRequesterTrait;
 use crate::ssi::common::services::wallet::WalletServiceTrait;
-use crate::ssi::consumer::config::AuthConsumerConfigTrait;
+use crate::ssi::consumer::config::AuthConsumerConfig;
 use crate::ssi::consumer::core::traits::CoreConsumerTrait;
-use rainbow_db::auth::common::traits::MatesRepoTrait;
+use rainbow_db::auth::common::traits::{MatesTrait, ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait};
 use rainbow_db::auth::consumer::factory::AuthConsumerRepoTrait;
 use std::sync::Arc;
 
 pub struct AuthConsumer {
     wallet: Arc<dyn WalletServiceTrait>,
+    vc_requester: Arc<dyn VcRequesterTrait>,
     repo: Arc<dyn AuthConsumerRepoTrait>,
     client: Arc<dyn ClientServiceTrait>,
-    config: Arc<dyn AuthConsumerConfigTrait>,
+    config: AuthConsumerConfig,
 }
 
 impl AuthConsumer {
     pub fn new(
         wallet: Arc<dyn WalletServiceTrait>,
+        vc_requester: Arc<dyn VcRequesterTrait>,
         repo: Arc<dyn AuthConsumerRepoTrait>,
         client: Arc<dyn ClientServiceTrait>,
-        config: Arc<dyn AuthConsumerConfigTrait>,
+        config: AuthConsumerConfig,
     ) -> AuthConsumer {
-        AuthConsumer { wallet, repo, client, config }
+        AuthConsumer { wallet, vc_requester, repo, client, config }
     }
 }
+
 impl CoreConsumerTrait for AuthConsumer {}
 
 impl CoreWalletTrait for AuthConsumer {
@@ -49,7 +53,25 @@ impl CoreWalletTrait for AuthConsumer {
         self.wallet.clone()
     }
 
-    fn mates(&self) -> Arc<dyn MatesRepoTrait> {
+    fn mates(&self) -> Arc<dyn MatesTrait> {
         self.repo.mates().clone()
+    }
+}
+
+impl CoreVcRequesterTrait for AuthConsumer {
+    fn vc_req(&self) -> Arc<dyn VcRequesterTrait> {
+        self.vc_requester.clone()
+    }
+
+    fn vc_req_repo(&self) -> Arc<dyn ReqVcTrait> {
+        self.repo.vc_req().clone()
+    }
+
+    fn verification_req_repo(&self) -> Arc<dyn ReqVerificationTrait> {
+        self.repo.verification_req()
+    }
+
+    fn interaction_req_repo(&self) -> Arc<dyn ReqInteractionTrait> {
+        self.repo.interaction_req()
     }
 }

@@ -18,6 +18,11 @@
  *
  */
 mod mates_repo;
-mod authority_request_repo;
-pub use authority_request_repo::AuthorityRequestRepo;
+mod req_vc_repo;
+mod req_interaction_repo;
+pub mod req_verification_repo;
+
+pub use req_vc_repo::VcRequestRepo;
 pub use mates_repo::MatesRepo;
+pub use req_interaction_repo::ReqInteractionRepo;
+pub use req_verification_repo::ReqVerificationRepo;

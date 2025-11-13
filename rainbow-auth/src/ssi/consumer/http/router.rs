@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use crate::ssi::common::http::VcRequesterRouter;
 use crate::ssi::common::http::WalletRouter;
 use crate::ssi::consumer::core::AuthConsumer;
 use axum::extract::Request;
@@ -40,11 +41,13 @@ impl AuthConsumerRouter {
 
     pub fn router(self) -> Router {
         let wallet_router = WalletRouter::new(self.consumer.clone()).router();
+        let vc_requester_router = VcRequesterRouter::new(self.consumer.clone()).router();
 
         Router::new()
-            .with_state(self.consumer)
             .route("/api/v1/status", get(server_status))
+            .with_state(self.consumer)
             .nest("/api/v1/wallet", wallet_router)
+            .nest("/api/v1/vc-request", vc_requester_router)
             .layer(
                 TraceLayer::new_for_http()
                     .make_span_with(|_req: &Request<_>| tracing::info_span!("request", id = %Uuid::new_v4()))

@@ -16,5 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-pub mod m20250403_094651_authority_request;
+pub mod m20250403_094651_req_vc;
 pub mod m20250403_094651_mates;
+pub mod m20250403_094651_req_interaction;
+pub mod m20250403_094651_req_verification;

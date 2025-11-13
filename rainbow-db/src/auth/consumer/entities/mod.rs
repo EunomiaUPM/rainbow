@@ -16,7 +16,5 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-pub mod auth_interaction;
-pub mod auth_request;
-pub mod auth_verification;
-pub mod auth_token_requirements;
+pub mod req_request;
+pub mod req_token_requirements;

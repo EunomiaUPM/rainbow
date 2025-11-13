@@ -16,6 +16,6 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::ssi::common::core::CoreWalletTrait;
+use crate::ssi::common::core::{CoreVcRequesterTrait, CoreWalletTrait};
 
-pub trait CoreConsumerTrait: CoreWalletTrait + Send + Sync + 'static {}
+pub trait CoreConsumerTrait: CoreWalletTrait + CoreVcRequesterTrait + Send + Sync + 'static {}

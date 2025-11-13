@@ -26,7 +26,6 @@ use axum::response::IntoResponse;
 use axum::routing::{delete, get, post};
 use axum::{Json, Router};
 use std::sync::Arc;
-use tracing::info;
 
 pub struct WalletRouter {
     holder: Arc<dyn CoreWalletTrait>,
@@ -54,8 +53,6 @@ impl WalletRouter {
 
     // WALLET ------------------------------------------------------------------------------------->
     async fn register(State(holder): State<Arc<dyn CoreWalletTrait>>) -> impl IntoResponse {
-        info!("POST /wallet/register");
-
         match holder.register().await {
             Ok(_) => StatusCode::CREATED.into_response(),
             Err(e) => e.to_response(),
@@ -63,8 +60,6 @@ impl WalletRouter {
     }
 
     async fn login(State(holder): State<Arc<dyn CoreWalletTrait>>) -> impl IntoResponse {
-        info!("POST /wallet/login");
-
         match holder.login().await {
             Ok(_) => StatusCode::OK.into_response(),
             Err(e) => e.to_response(),
@@ -72,8 +67,6 @@ impl WalletRouter {
     }
 
     async fn logout(State(holder): State<Arc<dyn CoreWalletTrait>>) -> impl IntoResponse {
-        info!("POST /wallet/logout");
-
         match holder.logout().await {
             Ok(_) => StatusCode::OK.into_response(),
             Err(e) => e.to_response(),
@@ -81,8 +74,6 @@ impl WalletRouter {
     }
 
     async fn onboard(State(holder): State<Arc<dyn CoreWalletTrait>>) -> impl IntoResponse {
-        info!("POST /wallet/onboard");
-
         match holder.onboard().await {
             Ok(_) => StatusCode::CREATED.into_response(),
             Err(e) => e.to_response(),
@@ -90,8 +81,6 @@ impl WalletRouter {
     }
 
     async fn partial_onboard(State(holder): State<Arc<dyn CoreWalletTrait>>) -> impl IntoResponse {
-        info!("POST /wallet/partial-onboard");
-
         match holder.partial_onboard().await {
             Ok(_) => StatusCode::CREATED.into_response(),
             Err(e) => e.to_response(),
@@ -99,8 +88,6 @@ impl WalletRouter {
     }
 
     async fn register_key(State(holder): State<Arc<dyn CoreWalletTrait>>) -> impl IntoResponse {
-        info!("POST /wallet/key");
-
         match holder.register_key().await {
             Ok(_) => StatusCode::CREATED.into_response(),
             Err(e) => e.to_response(),
@@ -108,8 +95,6 @@ impl WalletRouter {
     }
 
     async fn register_did(State(holder): State<Arc<dyn CoreWalletTrait>>) -> impl IntoResponse {
-        info!("POST /wallet/did");
-
         match holder.register_did().await {
             Ok(_) => StatusCode::CREATED.into_response(),
             Err(e) => e.to_response(),
@@ -120,8 +105,6 @@ impl WalletRouter {
         State(holder): State<Arc<dyn CoreWalletTrait>>,
         payload: Result<Json<KeyDefinition>, JsonRejection>,
     ) -> impl IntoResponse {
-        info!("DELETE /wallet/key");
-
         let payload = match payload {
             Ok(Json(data)) => data,
             Err(e) => return e.into_response(),
@@ -137,8 +120,6 @@ impl WalletRouter {
         State(holder): State<Arc<dyn CoreWalletTrait>>,
         payload: Result<Json<DidsInfo>, JsonRejection>,
     ) -> impl IntoResponse {
-        info!("DELETE /wallet/did");
-
         let payload = match payload {
             Ok(Json(data)) => data,
             Err(e) => return e.into_response(),
@@ -151,8 +132,6 @@ impl WalletRouter {
     }
 
     async fn did_json(State(holder): State<Arc<dyn CoreWalletTrait>>) -> impl IntoResponse {
-        info!("POST /did.json");
-
         match holder.get_did_doc().await {
             Ok(data) => (StatusCode::OK, Json(data)).into_response(),
             Err(e) => e.to_response(),

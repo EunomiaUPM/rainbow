@@ -22,12 +22,12 @@ use rainbow_db::auth::common::entities::mates;
 use serde_json::Value;
 use std::sync::Arc;
 use axum::async_trait;
-use rainbow_db::auth::common::traits::MatesRepoTrait;
+use rainbow_db::auth::common::traits::MatesTrait;
 
 #[async_trait]
 pub trait CoreWalletTrait: Send + Sync + 'static {
     fn wallet(&self) -> Arc<dyn WalletServiceTrait>;
-    fn mates(&self) -> Arc<dyn MatesRepoTrait>;
+    fn mates(&self) -> Arc<dyn MatesTrait>;
     async fn register(&self) -> anyhow::Result<()> {
         self.wallet().register().await
     }

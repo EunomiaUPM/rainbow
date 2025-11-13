@@ -21,34 +21,58 @@ use crate::ssi::common::services::wallet::WalletServiceTrait;
 use crate::ssi::provider::config::AuthProviderConfig;
 use rainbow_db::auth::provider::factory::factory_trait::AuthProviderRepoTrait;
 use std::sync::Arc;
+use rainbow_db::auth::common::traits::{MatesTrait, ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait};
+use crate::ssi::common::core::{CoreVcRequesterTrait, CoreWalletTrait};
+use crate::ssi::common::services::vc_request::VcRequesterTrait;
+use crate::ssi::provider::core::traits::CoreProviderTrait;
 
 pub struct AuthProvider {
     wallet: Arc<dyn WalletServiceTrait>,
+    vc_requester: Arc<dyn VcRequesterTrait>,
     repo: Arc<dyn AuthProviderRepoTrait>,
     client: Arc<dyn ClientServiceTrait>,
-    config: Arc<AuthProviderConfig>,
+    config: AuthProviderConfig,
 }
 
 impl AuthProvider {
     pub fn new(
         wallet: Arc<dyn WalletServiceTrait>,
+        vc_requester: Arc<dyn VcRequesterTrait>,
         repo: Arc<dyn AuthProviderRepoTrait>,
         client: Arc<dyn ClientServiceTrait>,
-        config: Arc<AuthProviderConfig>,
+        config: AuthProviderConfig,
     ) -> AuthProvider {
-        AuthProvider { wallet, repo, client, config }
-    }
-
-    pub fn wallet(&self) -> Arc<dyn WalletServiceTrait> {
-        self.wallet.clone()
-    }
-    pub fn repo(&self) -> Arc<dyn AuthProviderRepoTrait> {
-        self.repo.clone()
-    }
-    pub fn client(&self) -> Arc<dyn ClientServiceTrait> {
-        self.client.clone()
-    }
-    pub fn config(&self) -> Arc<AuthProviderConfig> {
-        self.config.clone()
+        AuthProvider { wallet, vc_requester, repo, client, config }
     }
 }
+
+impl CoreProviderTrait for AuthProvider {}
+
+impl CoreWalletTrait for AuthProvider {
+    fn wallet(&self) -> Arc<dyn WalletServiceTrait> {
+        self.wallet.clone()
+    }
+
+    fn mates(&self) -> Arc<dyn MatesTrait> {
+        self.repo.mates()
+    }
+}
+
+impl CoreVcRequesterTrait for AuthProvider {
+    fn vc_req(&self) -> Arc<dyn VcRequesterTrait> {
+        self.vc_requester.clone()
+    }
+
+    fn vc_req_repo(&self) -> Arc<dyn ReqVcTrait> {
+        self.repo.vc_req().clone()
+    }
+
+    fn verification_req_repo(&self) -> Arc<dyn ReqVerificationTrait> {
+        self.repo.verification_req().clone()
+    }
+
+    fn interaction_req_repo(&self) -> Arc<dyn ReqInteractionTrait> {
+        self.repo.interaction_req().clone()
+    }
+}
+

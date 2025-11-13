@@ -17,4 +17,6 @@
  *
  */
 pub mod mates;
-pub mod authority_request;
+pub mod req_vc;
+pub mod req_interaction;
+pub mod req_verification;

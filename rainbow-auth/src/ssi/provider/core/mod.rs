@@ -17,6 +17,5 @@
  *
  */
 pub use provider::AuthProvider;
-pub use provider_trait::AuthProviderTrait;
 mod provider;
-mod provider_trait;
+pub mod traits;

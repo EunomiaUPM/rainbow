@@ -21,11 +21,33 @@ use crate::ssi::common::types::entities::SelfClient;
 use crate::ssi::utils::read;
 use serde_json::{json, Value};
 use rainbow_common::config::global_config::HostConfig;
+use crate::ssi::consumer::config::AuthConsumerConfig;
+use crate::ssi::provider::config::AuthProviderConfig;
 
 pub struct VCRequesterConfig {
     host: HostConfig,
     client: SelfClient,
     keys_path: String,
+}
+
+impl From<AuthConsumerConfig> for VCRequesterConfig {
+    fn from(value: AuthConsumerConfig) -> Self {
+        VCRequesterConfig {
+            host: value.common_config.host,
+            client: value.common_config.client,
+            keys_path: value.common_config.keys_path,
+        }
+    }
+}
+
+impl From<AuthProviderConfig> for VCRequesterConfig {
+    fn from(value: AuthProviderConfig) -> Self {
+        VCRequesterConfig {
+            host: value.common_config.host,
+            client: value.common_config.client,
+            keys_path: value.common_config.keys_path,
+        }
+    }
 }
 
 impl VCRequesterConfigTrait for VCRequesterConfig {
@@ -41,7 +63,7 @@ impl VCRequesterConfigTrait for VCRequesterConfig {
         });
         Ok(json!({
             "key" : key,
-            "class_id" : self.client.name,
+            "class_id" : self.client.class_id,
             "display" : self.client.display,
         }))
     }

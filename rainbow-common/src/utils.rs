@@ -20,8 +20,12 @@
 use crate::errors::helpers::BadFormat;
 use crate::errors::{CommonErrors, ErrorLog};
 use anyhow::bail;
+use axum::extract::rejection::JsonRejection;
 use axum::http::StatusCode;
+use axum::Json;
 use axum::response::IntoResponse;
+use serde::de::DeserializeOwned;
+use serde::Serialize;
 use tracing::{error, info};
 use urn::Urn;
 use uuid::Uuid;
@@ -52,4 +56,21 @@ pub fn get_urn_from_string(string_in: &String) -> anyhow::Result<Urn> {
 pub async fn server_status() -> impl IntoResponse {
     info!("Someone checked server status");
     (StatusCode::OK, "Server is Okay!").into_response()
+}
+
+pub fn get_from_opt<T>(value: &Option<T>, field_name: &str) -> anyhow::Result<T>
+where
+    T: Clone + Serialize + DeserializeOwned,
+{
+    match value {
+        Some(v) => Ok(v.clone()),
+        None => {
+            let error = CommonErrors::format_new(
+                BadFormat::Received,
+                &format!("Missing field: {}", field_name),
+            );
+            error!("{}", error.log());
+            bail!(error);
+        }
+    }
 }

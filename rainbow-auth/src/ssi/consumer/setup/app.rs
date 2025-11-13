@@ -17,6 +17,8 @@
  *
  */
 use crate::ssi::common::services::client::basic::BasicClientService;
+use crate::ssi::common::services::vc_request::basic::config::VCRequesterConfig;
+use crate::ssi::common::services::vc_request::basic::VCReqService;
 use crate::ssi::common::services::wallet::waltid::config::WaltIdConfig;
 use crate::ssi::common::services::wallet::waltid::WaltIdService;
 use crate::ssi::consumer::config::{AuthConsumerConfig, AuthConsumerConfigTrait};
@@ -37,20 +39,22 @@ impl AuthConsumerApplication {
     pub async fn run(config: &AuthConsumerConfig) -> anyhow::Result<()> {
         // CONFIGS
         let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
-        let core_config = Arc::new(config.clone());
         let waltid_config = WaltIdConfig::from(config.clone());
+        let vc_req_config = VCRequesterConfig::from(config.clone());
 
         // SERVICES
         let client_service = Arc::new(BasicClientService::new());
         let wallet_service = Arc::new(WaltIdService::new(client_service.clone(), waltid_config));
+        let vc_req_service = Arc::new(VCReqService::new(client_service.clone(), vc_req_config));
         let repo_service = Arc::new(AuthConsumerRepoForSql::create_repo(db_connection));
 
         // CORE
         let consumer = Arc::new(AuthConsumer::new(
             wallet_service,
+            vc_req_service,
             repo_service,
             client_service,
-            core_config,
+            config.clone(),
         ));
 
         // ROUTER

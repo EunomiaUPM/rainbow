@@ -16,22 +16,25 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use super::super::super::common::migrations::{m20250403_094651_authority_request, m20250403_094651_mates};
+use super::super::super::common::migrations::{
+    m20250403_094651_mates, m20250403_094651_req_interaction, m20250403_094651_req_vc,
+};
 use super::{
-    m20250403_094651_auth_interaction, m20250403_094651_auth_request, m20250403_094651_auth_token_requirements,
-    m20250403_094651_auth_verification, m20250403_094651_business_mates
+    m20250403_094651_business_mates, m20250403_094651_recv_interaction, m20250403_094651_recv_request,
+    m20250403_094651_recv_token_requirements, m20250403_094651_recv_verification,
 };
 use sea_orm::prelude::async_trait;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
 
 pub fn get_auth_provider_migrations() -> Vec<Box<dyn MigrationTrait>> {
     vec![
-        Box::new(m20250403_094651_auth_request::Migration),
-        Box::new(m20250403_094651_auth_interaction::Migration),
-        Box::new(m20250403_094651_auth_token_requirements::Migration),
-        Box::new(m20250403_094651_auth_verification::Migration),
+        Box::new(m20250403_094651_recv_request::Migration),
+        Box::new(m20250403_094651_recv_interaction::Migration),
+        Box::new(m20250403_094651_recv_token_requirements::Migration),
+        Box::new(m20250403_094651_recv_verification::Migration),
         Box::new(m20250403_094651_business_mates::Migration),
-        Box::new(m20250403_094651_authority_request::Migration),
+        Box::new(m20250403_094651_req_vc::Migration),
+        Box::new(m20250403_094651_req_interaction::Migration),
         Box::new(m20250403_094651_mates::Migration),
     ]
 }

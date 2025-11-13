@@ -17,4 +17,7 @@
  *
  */
 mod wallet_router;
+mod vc_requester_router;
+
 pub use wallet_router::WalletRouter;
+pub use vc_requester_router::VcRequesterRouter;

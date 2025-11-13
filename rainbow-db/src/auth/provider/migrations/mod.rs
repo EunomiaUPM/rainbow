@@ -16,10 +16,10 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-mod m20250403_094651_auth_interaction;
-mod m20250403_094651_auth_request;
-mod m20250403_094651_auth_token_requirements;
-mod m20250403_094651_auth_verification;
+mod m20250403_094651_recv_interaction;
+mod m20250403_094651_recv_request;
+mod m20250403_094651_recv_token_requirements;
+mod m20250403_094651_recv_verification;
 mod m20250403_094651_business_mates;
 mod migrator;
 pub use migrator::*;

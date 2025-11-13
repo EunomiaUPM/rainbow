@@ -24,18 +24,20 @@ use rainbow_common::config::database::DbType;
 use rainbow_common::config::global_config::{extract_env, option_extract_env, DatabaseConfig, HostConfig};
 use serde::Serialize;
 use serde_json::{json, Value};
+use crate::ssi::common::types::entities::SelfClient;
 
 #[derive(Clone, Serialize, Debug)]
 pub struct CommonAuthConfig {
     pub host: HostConfig,
     pub database_config: DatabaseConfig,
     pub ssi_wallet_config: WalletConfig,
+    pub client: SelfClient,
     pub keys_path: String,
     pub is_local: bool,
 }
 
-impl Default for CommonAuthConfig {
-    fn default() -> Self {
+impl CommonAuthConfig {
+    pub fn default_4_consumer() -> Self {
         CommonAuthConfig {
             host: HostConfig { protocol: "http".to_string(), url: "127.0.0.1".to_string(), port: "1100".to_string() },
             database_config: DatabaseConfig {
@@ -55,6 +57,10 @@ impl Default for CommonAuthConfig {
                 email: "RainbowConsumer@rainbow.com".to_string(),
                 password: "rainbow".to_string(),
                 id: None,
+            },
+            client: SelfClient {
+                class_id: "rainbow_consumer".to_string(),
+                display: None,
             },
             keys_path: "./../../static/certificates/consumer/".to_string(),
             is_local: true,
@@ -153,13 +159,12 @@ impl CommonConfigTrait for CommonAuthConfig {
 }
 
 impl CommonAuthConfig {
-    pub(crate) fn merge_dotenv_configuration(env_file: Option<String>) -> Self {
+    pub(crate) fn merge_dotenv_configuration(env_file: Option<String>, default: CommonAuthConfig) -> Self {
         if let Some(env_file) = env_file {
             dotenvy::from_filename(env_file).expect("No env file found");
         }
 
         // dotenvy::dotenv().ok();
-        let default = CommonAuthConfig::default();
         let config = Self {
             host: HostConfig {
                 protocol: extract_env("AUTH_HOST_PROTOCOL", default.host.clone().protocol),
@@ -186,6 +191,10 @@ impl CommonAuthConfig {
                 email: extract_env("WALLET_EMAIL", default.ssi_wallet_config.email),
                 password: extract_env("WALLET_PASSWORD", default.ssi_wallet_config.password),
                 id: None,
+            },
+            client: SelfClient {
+                class_id: extract_env("WALLET_API_URL", default.client.class_id),
+                display: None,
             },
             keys_path: extract_env("KEYS_PATH", default.keys_path),
             is_local: extract_env("IS_LOCAL", default.is_local.to_string()).parse().unwrap(),

@@ -28,26 +28,31 @@ use sea_orm::Database;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 use tracing::info;
+use crate::ssi::common::services::vc_request::basic::config::VCRequesterConfig;
+use crate::ssi::common::services::vc_request::basic::VCReqService;
+
 pub struct AuthProviderApplication;
 
 impl AuthProviderApplication {
     pub async fn run(config: &AuthProviderConfig) -> anyhow::Result<()> {
         // CONFIGS
         let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
-        let core_config = Arc::new(config.clone());
         let waltid_config = WaltIdConfig::from(config.clone());
+        let vc_req_config = VCRequesterConfig::from(config.clone());
 
         // SERVICES
         let client_service = Arc::new(BasicClientService::new());
         let wallet_service = Arc::new(WaltIdService::new(client_service.clone(), waltid_config));
+        let vc_req_service = Arc::new(VCReqService::new(client_service.clone(), vc_req_config));
         let repo_service = Arc::new(AuthProviderRepoForSql::create_repo(db_connection));
 
         // CORE
         let provider = Arc::new(AuthProvider::new(
             wallet_service,
+            vc_req_service,
             repo_service,
             client_service,
-            core_config,
+            config.clone(),
         ));
 
         // ROUTER

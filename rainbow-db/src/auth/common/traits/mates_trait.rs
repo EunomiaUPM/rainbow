@@ -23,9 +23,9 @@ use axum::async_trait;
 use urn::Urn;
 
 #[async_trait]
-pub trait MatesRepoTrait: BasicRepoTrait<Model, NewModel> + Send + Sync {
-    async fn get_me(&self) -> anyhow::Result<Option<Model>>;
-    async fn get_by_token(&self, token: &str) -> anyhow::Result<Option<Model>>;
+pub trait MatesTrait: BasicRepoTrait<Model, NewModel> + Send + Sync {
+    async fn get_me(&self) -> anyhow::Result<Model>;
+    async fn get_by_token(&self, token: &str) -> anyhow::Result<Model>;
     async fn force_create(&self, mate: NewModel) -> anyhow::Result<Model>;
     async fn get_batch(&self, ids: &Vec<Urn>) -> anyhow::Result<Vec<Model>>;
 }

@@ -18,18 +18,19 @@
  */
 
 use super::traits::{
-    AuthInteractionRepoTrait, AuthRequestRepoTrait, AuthTokenRequirementsRepoTrait, AuthVerificationRepoTrait,
-    BusinessMatesRepoTrait
+    BusinessMatesRepoTrait, RecvInteractionTrait, RecvRequestTrait, RecvTokenRequirementsTrait, RecvVerificationTrait,
 };
-use crate::auth::common::traits::{MatesRepoTrait, AuthorityRequestRepoTrait};
+use crate::auth::common::traits::{MatesTrait, ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait};
 use std::sync::Arc;
 
-pub trait AuthProviderRepoTrait: Send + Sync  + 'static {
-    fn request(&self) -> Arc<dyn AuthRequestRepoTrait>;
-    fn interaction(&self) -> Arc<dyn AuthInteractionRepoTrait>;
-    fn verification(&self) -> Arc<dyn AuthVerificationRepoTrait>;
-    fn token_requirements(&self) -> Arc<dyn AuthTokenRequirementsRepoTrait>;
-    fn authority(&self) -> Arc<dyn AuthorityRequestRepoTrait>;
-    fn mates(&self) -> Arc<dyn MatesRepoTrait>;
+pub trait AuthProviderRepoTrait: Send + Sync + 'static {
+    fn request_rcv(&self) -> Arc<dyn RecvRequestTrait>;
+    fn interaction_rcv(&self) -> Arc<dyn RecvInteractionTrait>;
+    fn interaction_req(&self) -> Arc<dyn ReqInteractionTrait>;
+    fn verification_rcv(&self) -> Arc<dyn RecvVerificationTrait>;
+    fn verification_req(&self) -> Arc<dyn ReqVerificationTrait>;
+    fn token_requirements_rcv(&self) -> Arc<dyn RecvTokenRequirementsTrait>;
+    fn vc_req(&self) -> Arc<dyn ReqVcTrait>;
+    fn mates(&self) -> Arc<dyn MatesTrait>;
     fn business_mates(&self) -> Arc<dyn BusinessMatesRepoTrait>;
 }

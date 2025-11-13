@@ -32,8 +32,8 @@ pub struct WaltIdConfig {
 impl From<AuthProviderConfig> for WaltIdConfig {
     fn from(value: AuthProviderConfig) -> Self {
         WaltIdConfig {
-            ssi_wallet_config: value.ssi_wallet_config,
-            keys_path: value.keys_path,
+            ssi_wallet_config: value.common_config.ssi_wallet_config,
+            keys_path: value.common_config.keys_path,
         }
     }
 }

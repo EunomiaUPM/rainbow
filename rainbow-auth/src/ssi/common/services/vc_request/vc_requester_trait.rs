@@ -17,7 +17,17 @@
  *
  */
 use crate::ssi::common::types::entities::{ReachAuthority, ReachMethod};
+use axum::async_trait;
+use rainbow_db::auth::common::entities::{req_interaction, req_vc, req_verification};
 
-pub trait VCRequesterTrait: Send + Sync + 'static {
-    fn beg_vc(&self, payload: ReachAuthority, method: ReachMethod) -> anyhow::Result<()>;
+#[async_trait]
+pub trait VcRequesterTrait: Send + Sync + 'static {
+    fn start(&self, payload: ReachAuthority) -> (req_vc::NewModel, req_interaction::NewModel);
+    async fn send_req(
+        &self,
+        vc_model: &mut req_vc::Model,
+        int_model: &mut req_interaction::Model,
+        method: ReachMethod,
+    ) -> anyhow::Result<Option<String>>;
+    fn save_ver_data(&self, uri: &str, id: &str) -> anyhow::Result<req_verification::NewModel>;
 }

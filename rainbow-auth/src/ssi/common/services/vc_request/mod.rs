@@ -17,5 +17,5 @@
  *
  */
 mod vc_requester_trait;
-mod basic;
-pub use vc_requester_trait::VCRequesterTrait;
+pub(crate) mod basic;
+pub use vc_requester_trait::VcRequesterTrait;

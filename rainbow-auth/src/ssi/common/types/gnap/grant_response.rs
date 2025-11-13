@@ -21,7 +21,7 @@ use super::access_token::AccessToken;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GrantResponse {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub r#continue: Option<Continue4GResponse>, // REQUIRED for continuation calls are allowed for this client instance on this grant request
@@ -37,7 +37,7 @@ pub struct GrantResponse {
     pub error: Option<String>, // TODO
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Continue4GResponse {
     pub uri: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -45,7 +45,7 @@ pub struct Continue4GResponse {
     pub access_token: AccessToken,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Interact4GResponse {
     pub oidc4vp: Option<String>,
     pub redirect: Option<String>, // REQUIRED 4 if redirection
@@ -56,13 +56,13 @@ pub struct Interact4GResponse {
     pub expires_in: Option<u64>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct UserCodeUri4Int {
     pub code: String,
     pub uri: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Subject4GResponse {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sub_ids: Option<Vec<Value>>, // REQUIRED if returning Subject Identifiers

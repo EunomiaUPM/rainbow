@@ -17,14 +17,14 @@
  *
  */
 
-mod auth_interaction_trait;
-mod auth_request_trait;
-mod auth_token_requirements_trait;
-mod auth_verification_trait;
+mod recv_interaction_trait;
+mod recv_request_trait;
+mod recv_token_requirements_trait;
+mod recv_verification_trait;
 mod business_mates_trait;
 
-pub use auth_interaction_trait::AuthInteractionRepoTrait;
-pub use auth_request_trait::AuthRequestRepoTrait;
-pub use auth_token_requirements_trait::AuthTokenRequirementsRepoTrait;
-pub use auth_verification_trait::AuthVerificationRepoTrait;
+pub use recv_interaction_trait::RecvInteractionTrait;
+pub use recv_request_trait::RecvRequestTrait;
+pub use recv_token_requirements_trait::RecvTokenRequirementsTrait;
+pub use recv_verification_trait::RecvVerificationTrait;
 pub use business_mates_trait::BusinessMatesRepoTrait;

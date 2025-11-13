@@ -31,20 +31,21 @@ pub struct AuthConsumerConfig {
 
 
 
-impl Default for AuthConsumerConfig {
-    fn default() -> Self {
-        let common_config = CommonAuthConfig::default();
+impl AuthConsumerConfig {
+    pub fn new(common_config: CommonAuthConfig) -> Self {
         AuthConsumerConfig { common_config, field_extra: true }
     }
 }
 
 impl AuthConsumerConfigTrait for AuthConsumerConfig {
     fn merge_dotenv_configuration(env_file: Option<String>) -> Self {
-        let default = AuthConsumerConfig::default();
-        let common_config = CommonAuthConfig::merge_dotenv_configuration(env_file);
+        let common_default = CommonAuthConfig::default_4_consumer();
+        let common_config = CommonAuthConfig::merge_dotenv_configuration(env_file, common_default);
+
+        let config = AuthConsumerConfig::new(common_config);
         AuthConsumerConfig {
-            common_config,
-            field_extra: extract_env("EXTRA", default.field_extra.to_string()).parse().unwrap(),
+            common_config: config.common_config,
+            field_extra: extract_env("EXTRA", config.field_extra.to_string()).parse().unwrap(),
         }
     }
 

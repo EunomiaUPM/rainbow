@@ -17,14 +17,14 @@
  *
  */
 
-mod auth_interaction_repo;
-mod auth_request_repo;
-mod auth_token_requirements_repo;
-mod auth_verification_repo;
+mod recv_interaction_repo;
+mod recv_request_repo;
+mod recv_token_requirements_repo;
+mod recv_verification_repo;
 mod business_mates_repo;
 
-pub use auth_interaction_repo::AuthInteractionProviderRepo;
-pub use auth_request_repo::AuthRequestProviderRepo;
-pub use auth_token_requirements_repo::AuthTokenRequirementsProviderRepo;
-pub use auth_verification_repo::AuthVerificationProviderRepo;
+pub use recv_interaction_repo::RecvInteractionRepo;
+pub use recv_request_repo::RecvRequestRepo;
+pub use recv_token_requirements_repo::RecvTokenRequirementsRepo;
+pub use recv_verification_repo::RecvVerificationRepo;
 pub use business_mates_repo::BusinessMatesProviderRepo;

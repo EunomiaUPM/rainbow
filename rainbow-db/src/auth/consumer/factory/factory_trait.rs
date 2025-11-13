@@ -17,17 +17,15 @@
  *
  */
 
-use super::traits::{
-    AuthInteractionRepoTrait, AuthRequestRepoTrait, AuthTokenRequirementsRepoTrait, AuthVerificationRepoTrait,
-};
-use crate::auth::common::traits::{AuthorityRequestRepoTrait, MatesRepoTrait};
+use super::traits::{ReqRequestTrait, ReqTokenRequirementsTrait};
+use crate::auth::common::traits::{MatesTrait, ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait};
 use std::sync::Arc;
 
 pub trait AuthConsumerRepoTrait: Send + Sync + 'static {
-    fn request(&self) -> Arc<dyn AuthRequestRepoTrait>;
-    fn interaction(&self) -> Arc<dyn AuthInteractionRepoTrait>;
-    fn verification(&self) -> Arc<dyn AuthVerificationRepoTrait>;
-    fn token_requirements(&self) -> Arc<dyn AuthTokenRequirementsRepoTrait>;
-    fn mates(&self) -> Arc<dyn MatesRepoTrait>;
-    fn authority(&self) -> Arc<dyn AuthorityRequestRepoTrait>;
+    fn request_req(&self) -> Arc<dyn ReqRequestTrait>;
+    fn interaction_req(&self) -> Arc<dyn ReqInteractionTrait>;
+    fn verification_req(&self) -> Arc<dyn ReqVerificationTrait>;
+    fn token_requirements_req(&self) -> Arc<dyn ReqTokenRequirementsTrait>;
+    fn mates(&self) -> Arc<dyn MatesTrait>;
+    fn vc_req(&self) -> Arc<dyn ReqVcTrait>;
 }

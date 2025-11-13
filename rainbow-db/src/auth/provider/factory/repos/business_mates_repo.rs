@@ -16,11 +16,13 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
-use crate::auth::provider::entities::business_mates::{Column, Entity, Model, NewModel};
 use super::super::traits::BusinessMatesRepoTrait;
+use crate::auth::provider::entities::business_mates::{Column, Entity, Model, NewModel};
 use crate::common::{BasicRepoTrait, GenericRepo, IntoActiveSet};
+use anyhow::bail;
 use axum::async_trait;
+use log::error;
+use rainbow_common::errors::{CommonErrors, ErrorLog};
 use sea_orm::sea_query::OnConflict;
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 
@@ -41,7 +43,7 @@ impl BasicRepoTrait<Model, NewModel> for BusinessMatesProviderRepo {
         self.inner.get_all(limit, offset).await
     }
 
-    async fn get_by_id(&self, id: &str) -> anyhow::Result<Option<Model>> {
+    async fn get_by_id(&self, id: &str) -> anyhow::Result<Model> {
         self.inner.get_by_id(id).await
     }
 
@@ -60,21 +62,39 @@ impl BasicRepoTrait<Model, NewModel> for BusinessMatesProviderRepo {
 
 #[async_trait]
 impl BusinessMatesRepoTrait for BusinessMatesProviderRepo {
-    async fn get_by_token(&self, token: &str) -> anyhow::Result<Option<Model>> {
-        let mate = Entity::find().filter(Column::Token.eq(token)).one(&self.inner.db_connection).await?;
-        Ok(mate)
+    async fn get_by_token(&self, token: &str) -> anyhow::Result<Model> {
+        match Entity::find().filter(Column::Token.eq(token)).one(&self.inner.db_connection).await {
+            Ok(Some(data)) => Ok(data),
+            Ok(None) => {
+                let error = CommonErrors::missing_resource_new(token, &format!("missing token: {}", token));
+                error!("{}", error.log());
+                bail!(error)
+            }
+            Err(e) => {
+                let error = CommonErrors::database_new(&e.to_string());
+                error!("{}", error.log());
+                bail!(error)
+            }
+        }
     }
 
     async fn force_create(&self, mate: NewModel) -> anyhow::Result<Model> {
         let active_mate = mate.to_active();
-        let mate = Entity::insert(active_mate)
+        match Entity::insert(active_mate)
             .on_conflict(
                 OnConflict::column(Column::ParticipantId)
                     .update_columns([Column::Token, Column::LastInteraction])
                     .to_owned(),
             )
             .exec_with_returning(&self.inner.db_connection)
-            .await?;
-        Ok(mate)
+            .await
+        {
+            Ok(data) => Ok(data),
+            Err(e) => {
+                let error = CommonErrors::database_new(&e.to_string());
+                error!("{}", error.log());
+                bail!(error)
+            }
+        }
     }
 }

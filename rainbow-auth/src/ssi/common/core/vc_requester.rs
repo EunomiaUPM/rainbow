@@ -16,22 +16,41 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use std::sync::Arc;
-use anyhow::bail;
-use axum::async_trait;
-use tracing::info;
-use crate::ssi::common::config::{CommonAuthConfig, CommonConfigTrait};
+use crate::ssi::common::services::vc_request::VcRequesterTrait;
+use rainbow_db::auth::common::entities::req_vc::Model;
 use crate::ssi::common::types::entities::{ReachAuthority, ReachMethod};
+use axum::async_trait;
+use rainbow_db::auth::common::traits::{ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait};
+use std::sync::Arc;
 
 #[async_trait]
 pub trait CoreVcRequesterTrait: Send + Sync + 'static {
-    fn config(&self) -> Arc<dyn CommonConfigTrait>;
+    fn vc_req(&self) -> Arc<dyn VcRequesterTrait>;
+    fn vc_req_repo(&self) -> Arc<dyn ReqVcTrait>;
+    fn verification_req_repo(&self) -> Arc<dyn ReqVerificationTrait>;
+    fn interaction_req_repo(&self) -> Arc<dyn ReqInteractionTrait>;
     async fn beg_vc(&self, payload: ReachAuthority, method: ReachMethod) -> anyhow::Result<Option<String>> {
-        info!("Begging 4 a credential");
-        let client = self.config()
-
-
-
-        bail!("kk")
+        let (vc_model, int_model) = self.vc_req().start(payload);
+        let mut vc_model = self.vc_req_repo().create(vc_model).await?;
+        let mut int_model = self.interaction_req_repo().create(int_model).await?;
+        let uri = self.vc_req().send_req(&mut vc_model, &mut int_model, method).await?;
+        let _vc_model = self.vc_req_repo().update(vc_model).await?;
+        let int_model = self.interaction_req_repo().update(int_model).await?;
+        match uri {
+            Some(uri) => {
+                let ver_model = self.vc_req().save_ver_data(&uri, &int_model.id)?;
+                let _ver_model = self.verification_req_repo().create(ver_model).await?;
+                Ok(Some(uri))
+            }
+            None => Ok(None),
+        }
+    }
+    
+    async fn get_all(&self) -> anyhow::Result<Vec<Model>> {
+        self.vc_req_repo().get_all(None, None).await
+    }
+    
+    async fn get_by_id(&self, id: String) -> anyhow::Result<Model> {
+        self.vc_req_repo().get_by_id(&id).await
     }
 }

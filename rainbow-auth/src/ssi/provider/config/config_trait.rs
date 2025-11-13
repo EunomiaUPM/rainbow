@@ -16,18 +16,11 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use std::format;
-use serde_json::{json, Value};
-use rainbow_common::config::database::DbType;
-use rainbow_common::config::global_config::DatabaseConfig;
-use crate::ssi::common::types::wallet::WalletConfig;
-use crate::ssi::utils::read;
+use serde_json::Value;
 
 pub trait AuthProviderConfigTrait {
     fn merge_dotenv_configuration(env_file: Option<String>) -> Self;
-    fn get_raw_database_config(&self) -> &DatabaseConfig;
     fn get_full_db_url(&self) -> String;
-    fn get_raw_wallet_config(&self) -> WalletConfig;
     fn get_wallet_api_url(&self) -> String;
     fn get_wallet_register_data(&self) -> Value;
     fn get_wallet_login_data(&self) -> Value;
