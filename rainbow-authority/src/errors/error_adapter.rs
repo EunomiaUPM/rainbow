@@ -33,7 +33,7 @@ impl CustomToResponse for anyhow::Error {
             return e.into_response();
         }
 
-        error!("Unhandled internal error: {:?}", self);
+        error!("Unhandled internal error: {:?}\nBacktrace:\n{:?}", self, self.backtrace());
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(json!({

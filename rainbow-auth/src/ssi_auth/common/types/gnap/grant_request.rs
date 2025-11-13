@@ -195,7 +195,7 @@ impl Interact4GR {
     pub fn default4cross_user(uri: Option<String>) -> Self {
         let nonce: String = rand::thread_rng().sample_iter(&Alphanumeric).take(36).map(char::from).collect();
         Self {
-            start: vec![String::from("await")],
+            start: vec![String::from("cross-user")],
             finish: Finish4Interact {
                 method: "push".to_string(),
                 uri,

@@ -18,16 +18,18 @@
  */
 
 use sea_orm_migration::prelude::*;
-pub mod m20250403_094651_auth_interaction;
-pub mod m20250403_094651_auth_request;
-pub mod m20250403_094651_auth_verification;
+pub mod m20250403_094651_interaction;
+pub mod m20250403_094651_request;
+pub mod m20250403_094651_verification;
 pub mod m20250403_094651_minions;
+pub mod m20250403_094651_issuing;
 
 pub fn get_authority_migrations() -> Vec<Box<dyn MigrationTrait>> {
     vec![
-        Box::new(m20250403_094651_auth_request::Migration),
-        Box::new(m20250403_094651_auth_interaction::Migration),
-        Box::new(m20250403_094651_auth_verification::Migration),
+        Box::new(m20250403_094651_request::Migration),
+        Box::new(m20250403_094651_interaction::Migration),
+        Box::new(m20250403_094651_verification::Migration),
+        Box::new(m20250403_094651_issuing::Migration),
         Box::new(m20250403_094651_minions::Migration),
     ]
 }

@@ -48,6 +48,10 @@ where
     pub fn router(self) -> Router {
         Router::new()
             .route(
+                "/api/v1/policies/:id",
+                get(Self::handle_get_any_policy_by_id),
+            )
+            .route(
                 "/api/v1/catalogs/:id/policies",
                 get(Self::handle_get_catalog_policies),
             )
@@ -100,6 +104,22 @@ where
             )
             .with_state(self.policies_service)
     }
+
+    async fn handle_get_any_policy_by_id(
+        State(policies_service): State<Arc<T>>,
+        Path(id): Path<String>,
+    ) -> impl IntoResponse {
+        info!("GET /api/v1/policies/{}", id);
+        let id = match get_urn_from_string(&id) {
+            Ok(id) => id,
+            Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
+        };
+        match policies_service.get_catalog_policies(id).await {
+            Ok(d) => (StatusCode::OK, Json(d)).into_response(),
+            Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
+        }
+    }
+
 
     async fn handle_get_catalog_policies(
         State(policies_service): State<Arc<T>>,
