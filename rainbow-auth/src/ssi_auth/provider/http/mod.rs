@@ -402,7 +402,7 @@ where
         uri.into_response()
     }
 
-    async fn fallback(method: Method, uri: Uri) -> (StatusCode, String) {
+    pub async fn fallback(method: Method, uri: Uri) -> (StatusCode, String) {
         let log = format!("{} {}", method, uri);
         error!("Unexpected route");
         error!("{}", log);

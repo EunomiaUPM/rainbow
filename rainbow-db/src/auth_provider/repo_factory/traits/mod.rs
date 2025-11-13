@@ -17,12 +17,12 @@
  *
  */
 
-mod auth_interaction_trait;
-mod auth_request_trait;
-mod auth_token_requirements_trait;
-mod auth_verification_trait;
-mod business_mates_trait;
-mod mates_trait;
+pub mod auth_interaction_trait;
+pub mod auth_request_trait;
+pub mod auth_token_requirements_trait;
+pub mod auth_verification_trait;
+pub mod business_mates_trait;
+pub mod mates_trait;
 
 pub use auth_interaction_trait::AuthInteractionRepoTrait;
 pub use auth_request_trait::AuthRequestRepoTrait;
