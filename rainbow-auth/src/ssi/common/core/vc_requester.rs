@@ -1,0 +1,37 @@
+/*
+ *
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+use std::sync::Arc;
+use anyhow::bail;
+use axum::async_trait;
+use tracing::info;
+use crate::ssi::common::config::{CommonAuthConfig, CommonConfigTrait};
+use crate::ssi::common::types::entities::{ReachAuthority, ReachMethod};
+
+#[async_trait]
+pub trait CoreVcRequesterTrait: Send + Sync + 'static {
+    fn config(&self) -> Arc<dyn CommonConfigTrait>;
+    async fn beg_vc(&self, payload: ReachAuthority, method: ReachMethod) -> anyhow::Result<Option<String>> {
+        info!("Begging 4 a credential");
+        let client = self.config()
+
+
+
+        bail!("kk")
+    }
+}

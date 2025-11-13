@@ -92,7 +92,7 @@ where
     /// Ensures correlation between URIs and message body PIDs.
     async fn payload_validation<'a, M: DSProtocolTransferMessageTrait<'a>>(
         &self,
-        _callback_id: &Option<Urn>,   // Optional callback_id from URL
+        _callback_id: &Option<Urn>,  // Optional callback_id from URL
         consumer_pid_from_uri: &Urn, // Consumer PID from URL path
         message: &M,                 // The incoming message
         provider_participant_mate: &Mates,
@@ -106,7 +106,10 @@ where
         match message_consumer_pid {
             Some(msg_c_pid) if msg_c_pid == consumer_pid_from_uri => {}
             _ => {
-                let e = CommonErrors::format_new(BadFormat::Received, "Uri and Body identifiers do not coincide".to_string().into());
+                let e = CommonErrors::format_new(
+                    BadFormat::Received,
+                    "Uri and Body identifiers do not coincide",
+                );
                 error!("{}", e.log());
                 bail!(e)
             }
@@ -116,9 +119,12 @@ where
             .transfer_repo
             .get_transfer_callback_by_consumer_id(consumer_pid_from_uri.clone())
             .await
-            .map_err(|e| CommonErrors::format_new(BadFormat::Received, e.to_string().into()))?
+            .map_err(|e| CommonErrors::format_new(BadFormat::Received, &e.to_string()))?
             .ok_or_else(|| {
-                let e = CommonErrors::missing_resource_new(consumer_pid_from_uri.to_string(), "Transfer process doesn't exist".to_string().into());
+                let e = CommonErrors::missing_resource_new(
+                    &consumer_pid_from_uri.to_string(),
+                    "Transfer process doesn't exist",
+                );
                 error!("{}", e.log());
                 anyhow!(e)
             })?;
@@ -127,14 +133,18 @@ where
                 .transfer_repo
                 .get_transfer_callback_by_provider_id(provider_pid.to_owned())
                 .await
-                .map_err(|e| CommonErrors::format_new(BadFormat::Received, e.to_string().into()))?
+                .map_err(|e| CommonErrors::format_new(BadFormat::Received, &e.to_string()))?
                 .ok_or_else(|| {
-                    let e = CommonErrors::missing_resource_new(provider_pid.to_string(), "Transfer process doesn't exist".to_string().into());
+                    let e =
+                        CommonErrors::missing_resource_new(&provider_pid.to_string(), "Transfer process doesn't exist");
                     error!("{}", e.log());
                     anyhow!(e)
                 })?;
             if consumer_transfer_process.consumer_pid != provider_transfer_process.consumer_pid {
-                let e = CommonErrors::format_new(BadFormat::Received, "ConsumerPid and ProviderPid don't coincide".to_string().into());
+                let e = CommonErrors::format_new(
+                    BadFormat::Received,
+                    "ConsumerPid and ProviderPid don't coincide",
+                );
                 error!("{}", e.log());
                 bail!(e);
             }
@@ -146,14 +156,20 @@ where
         ) {
             (Some(msg_p_pid), Some(db_p_pid)) if msg_p_pid.to_string() == db_p_pid.to_owned() => {}
             _ => {
-                let e = CommonErrors::format_new(BadFormat::Received, "ConsumerPid and ProviderPid don't coincide".to_string().into());
+                let e = CommonErrors::format_new(
+                    BadFormat::Received,
+                    "ConsumerPid and ProviderPid don't coincide",
+                );
                 error!("{}", e.log());
                 bail!(e);
             }
         }
         // 4. Consumer transfer process and provider participant mate
         if consumer_transfer_process.associated_provider.clone().unwrap() != provider_participant_mate.participant_id {
-            let e = CommonErrors::format_new(BadFormat::Received, "This user is not related with this process".to_string().into());
+            let e = CommonErrors::format_new(
+                BadFormat::Received,
+                "This user is not related with this process",
+            );
             error!("{}", e.log());
             bail!(e);
         }
@@ -192,12 +208,12 @@ where
             .get_transfer_callbacks_by_id(callback_id.clone())
             .await
             .map_err(|e| {
-                let e = CommonErrors::database_new(e.to_string().into());
+                let e = CommonErrors::database_new(&e.to_string());
                 error!("{}", e.log());
                 anyhow!(e)
             })?
             .ok_or_else(|| {
-                let e = CommonErrors::missing_resource_new(callback_id.to_string(), "Transfer process not found".to_string().into());
+                let e = CommonErrors::missing_resource_new(&callback_id.to_string(), "Transfer process not found");
                 error!("{}", e.log());
                 anyhow!(e)
             })?;
@@ -217,12 +233,12 @@ where
             .get_transfer_callback_by_consumer_id(consumer_pid.clone())
             .await
             .map_err(|e| {
-                let e = CommonErrors::database_new(e.to_string().into());
+                let e = CommonErrors::database_new(&e.to_string());
                 error!("{}", e.log());
                 anyhow!(e)
             })?
             .ok_or_else(|| {
-                let e = CommonErrors::missing_resource_new(consumer_pid.to_string(), "Transfer process not found".to_string().into());
+                let e = CommonErrors::missing_resource_new(&consumer_pid.to_string(), "Transfer process not found");
                 error!("{}", e.log());
                 anyhow!(e)
             })?;
@@ -265,7 +281,7 @@ where
             )
             .await
             .map_err(|e| {
-                let e = CommonErrors::database_new(e.to_string().into());
+                let e = CommonErrors::database_new(&e.to_string());
                 error!("{}", e.log());
                 anyhow!(e)
             })?;
@@ -282,7 +298,7 @@ where
             )
             .await
             .map_err(|e| {
-                let e = CommonErrors::database_new(e.to_string().into());
+                let e = CommonErrors::database_new(&e.to_string());
                 error!("{}", e.log());
                 anyhow!(e)
             })?;
@@ -303,7 +319,7 @@ where
                 "message": message,
             }),
         )
-            .await?;
+        .await?;
         // 6. Bye
         Ok(transfer_process)
     }
@@ -336,7 +352,7 @@ where
             )
             .await
             .map_err(|e| {
-                let e = CommonErrors::database_new(e.to_string().into());
+                let e = CommonErrors::database_new(&e.to_string());
                 error!("{}", e.log());
                 anyhow!(e)
             })?;
@@ -353,7 +369,7 @@ where
             )
             .await
             .map_err(|e| {
-                let e = CommonErrors::database_new(e.to_string().into());
+                let e = CommonErrors::database_new(&e.to_string());
                 error!("{}", e.log());
                 anyhow!(e)
             })?;
@@ -370,7 +386,7 @@ where
                 "message": message,
             }),
         )
-            .await?;
+        .await?;
         // 6. Bye
         Ok(transfer_process)
     }
@@ -403,7 +419,7 @@ where
             )
             .await
             .map_err(|e| {
-                let e = CommonErrors::database_new(e.to_string().into());
+                let e = CommonErrors::database_new(&e.to_string());
                 error!("{}", e.log());
                 anyhow!(e)
             })?;
@@ -420,7 +436,7 @@ where
             )
             .await
             .map_err(|e| {
-                let e = CommonErrors::database_new(e.to_string().into());
+                let e = CommonErrors::database_new(&e.to_string());
                 error!("{}", e.log());
                 anyhow!(e)
             })?;
@@ -438,7 +454,7 @@ where
 
             }),
         )
-            .await?;
+        .await?;
         // 6. Bye
         Ok(transfer_process)
     }
@@ -471,7 +487,7 @@ where
             )
             .await
             .map_err(|e| {
-                let e = CommonErrors::database_new(e.to_string().into());
+                let e = CommonErrors::database_new(&e.to_string());
                 error!("{}", e.log());
                 anyhow!(e)
             })?;
@@ -488,7 +504,7 @@ where
             )
             .await
             .map_err(|e| {
-                let e = CommonErrors::database_new(e.to_string().into());
+                let e = CommonErrors::database_new(&e.to_string());
                 error!("{}", e.log());
                 anyhow!(e)
             })?;
@@ -506,7 +522,7 @@ where
                 "message": message,
             }),
         )
-            .await?;
+        .await?;
         // 6. Bye
         Ok(transfer_process)
     }

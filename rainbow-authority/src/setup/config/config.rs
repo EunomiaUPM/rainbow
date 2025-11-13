@@ -19,7 +19,7 @@
 use super::AuthorityApplicationConfigTrait;
 use crate::setup::database::{DatabaseConfig, DbType};
 use crate::types::host::HostConfig;
-use crate::types::wallet::SSIWalletConfig;
+use crate::types::wallet::WalletConfig;
 use serde::Serialize;
 use std::env;
 
@@ -28,10 +28,8 @@ pub struct AuthorityApplicationConfig {
     pub authority_host: HostConfig,
     pub is_local: bool,
     pub database_config: DatabaseConfig,
-    pub ssi_wallet_config: SSIWalletConfig,
+    pub ssi_wallet_config: WalletConfig,
     pub keys_path: String,
-    // client_config: ClientConfig,
-    // ssi_issuer_api: String,
 }
 
 impl Default for AuthorityApplicationConfig {
@@ -50,7 +48,7 @@ impl Default for AuthorityApplicationConfig {
                 password: "ds_authority".to_string(),
                 name: "ds_authority".to_string(),
             },
-            ssi_wallet_config: SSIWalletConfig {
+            ssi_wallet_config: WalletConfig {
                 api_protocol: "http".to_string(),
                 api_url: "127.0.0.1".to_string(),
                 api_port: Some("7001".to_string()),
@@ -115,7 +113,7 @@ impl AuthorityApplicationConfigTrait for AuthorityApplicationConfig {
                 password: extract_env("DB_PASSWORD", default.database_config.password),
                 name: extract_env("DB_DATABASE", default.database_config.name),
             },
-            ssi_wallet_config: SSIWalletConfig {
+            ssi_wallet_config: WalletConfig {
                 api_protocol: extract_env(
                     "WALLET_API_PROTOCOL",
                     default.ssi_wallet_config.api_protocol,

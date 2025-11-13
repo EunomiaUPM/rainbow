@@ -29,7 +29,10 @@ use crate::setup::AuthorityApplicationConfig;
 use crate::types::enums::errors::BadFormat;
 use crate::types::enums::vc_type::VcType;
 use crate::types::gnap::{GrantRequest, GrantResponse, RefBody};
-use crate::types::issuing::{AuthServerMetadata, CredentialRequest, GiveVC, IssuerMetadata, IssuingToken, TokenRequest, VCCredOffer, WellKnownJwks};
+use crate::types::issuing::{
+    AuthServerMetadata, CredentialRequest, GiveVC, IssuerMetadata, IssuingToken, TokenRequest, VCCredOffer,
+    WellKnownJwks,
+};
 use crate::types::vcs::{VPDef, VcDecisionApproval};
 use crate::types::wallet::{DidsInfo, KeyDefinition};
 use anyhow::bail;

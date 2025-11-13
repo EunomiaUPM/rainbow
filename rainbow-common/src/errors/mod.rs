@@ -18,12 +18,14 @@
  */
 mod error_log_trait;
 pub mod helpers;
+
 pub use error_log_trait::ErrorLog;
 
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
 use helpers::{BadFormat, MissingAction};
+use sea_orm::Iden;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use tracing::error;
@@ -53,72 +55,92 @@ pub enum CommonErrors {
         #[serde(flatten)]
         info: ErrorInfo,
         http_code: Option<u16>,
-        url: Option<String>,
-        method: Option<String>,
-        cause: Option<String>,
+        url: String,
+        method: String,
+        cause: String,
     },
     #[error("Consumer Error")]
     ConsumerError {
         #[serde(flatten)]
         info: ErrorInfo,
         http_code: Option<u16>,
-        url: Option<String>,
-        method: Option<String>,
-        cause: Option<String>,
+        url: String,
+        method: String,
+        cause: String,
     },
     #[error("Authority Error")]
     AuthorityError {
         #[serde(flatten)]
         info: ErrorInfo,
         http_code: Option<u16>,
-        url: Option<String>,
-        method: Option<String>,
-        cause: Option<String>,
+        url: String,
+        method: String,
+        cause: String,
     },
     #[error("Missing Action Error")]
     MissingActionError {
         #[serde(flatten)]
         info: ErrorInfo,
-        action: String,
-        cause: Option<String>,
+        action: MissingAction,
+        cause: String,
     },
     #[error("Missing Resource Error")]
     MissingResourceError {
         #[serde(flatten)]
         info: ErrorInfo,
         resource_id: String,
-        cause: Option<String>,
+        cause: String,
     },
     #[error("Format Error")]
     FormatError {
         #[serde(flatten)]
         info: ErrorInfo,
-        cause: Option<String>,
+        cause: String,
     },
     #[error("Unauthorized")]
     UnauthorizedError {
         #[serde(flatten)]
         info: ErrorInfo,
-        cause: Option<String>,
+        cause: String,
     },
     #[error("Forbidden")]
     ForbiddenError {
         #[serde(flatten)]
         info: ErrorInfo,
-        cause: Option<String>,
+        cause: String,
     },
     #[error("Database Error")]
     DatabaseError {
         #[serde(flatten)]
         info: ErrorInfo,
-        cause: Option<String>,
+        cause: String,
     },
     #[error("Feature Not Implemented Error")]
     FeatureNotImplError {
         #[serde(flatten)]
         info: ErrorInfo,
         feature: String,
-        cause: Option<String>,
+        cause: String,
+    },
+    #[error("File Read Error")]
+    ReadError {
+        #[serde(flatten)]
+        info: ErrorInfo,
+        path: String,
+        cause: String,
+    },
+    #[error("File Write Error")]
+    WriteError {
+        #[serde(flatten)]
+        info: ErrorInfo,
+        path: String,
+        cause: String,
+    },
+    #[error("Parse Error")]
+    ParseError {
+        #[serde(flatten)]
+        info: ErrorInfo,
+        cause: String,
     },
 }
 
@@ -135,6 +157,9 @@ impl IntoResponse for &CommonErrors {
             | CommonErrors::UnauthorizedError { info, .. }
             | CommonErrors::ForbiddenError { info, .. }
             | CommonErrors::DatabaseError { info, .. }
+            | CommonErrors::ReadError { info, .. }
+            | CommonErrors::WriteError { info, .. }
+            | CommonErrors::ParseError { info, .. }
             | CommonErrors::FeatureNotImplError { info, .. } => info,
         };
 
@@ -144,151 +169,56 @@ impl IntoResponse for &CommonErrors {
 
 impl ErrorLog for CommonErrors {
     fn log(&self) -> String {
-        match self {
-            CommonErrors::PetitionError { info, http_code, url, method, cause } => {
-                let http_code = format!("Http Code: {}", http_code.unwrap_or(0));
-                let details = format!(
-                    "Details: {}",
-                    info.details.as_deref().unwrap_or("No details")
-                );
+        fn format_info(info: &ErrorInfo, cause: &str) -> String {
+            let details = info.details.as_deref().unwrap_or("No details");
+            format!(
+                "Error Code: {}\nMessage: {}\nDetails: {}\nCause: {}",
+                info.error_code, info.message, details, cause
+            )
+        }
 
-                format!(
-                    "\n{}\n Method: {}\n Url: {}\n {}\n Error Code: {}\n Message: {}\n {}\n Cause: {}\n",
-                    self, method, url, http_code, info.error_code, info.message, details, cause
-                )
-            }
-            CommonErrors::ProviderError { info, http_code, url, method, cause } => {
-                let http_code = format!("Http Code: {}", http_code.unwrap_or(0));
-                let cause = format!("Cause: {}", cause.as_deref().unwrap_or("No Cause"));
-                let url = format!("Url: {}", url.as_deref().unwrap_or("No url"));
-                let method = format!("Method: {}", method.as_deref().unwrap_or("No method"));
-                let details = format!(
-                    "Details: {}",
-                    info.details.as_deref().unwrap_or("No details")
-                );
-                format!(
-                    "\n{}\n {}\n {}\n {}\n Error Code: {}\n Message: {}\n {}\n {}\n",
-                    self, method, url, http_code, info.error_code, info.message, details, cause
-                )
-            }
-            CommonErrors::ConsumerError { info, http_code, url, method, cause } => {
-                let http_code = format!("Http Code: {}", http_code.unwrap_or(0));
-                let cause = format!("Cause: {}", cause.as_deref().unwrap_or("No Cause"));
-                let url = format!("Url: {}", url.as_deref().unwrap_or("No url"));
-                let method = format!("Method: {}", method.as_deref().unwrap_or("No method"));
-                let details = format!(
-                    "Details: {}",
-                    info.details.as_deref().unwrap_or("No details")
-                );
-                format!(
-                    "\n{}\n {}\n {}\n {}\n Error Code: {}\n Message: {}\n {}\n {}\n",
-                    self, method, url, http_code, info.error_code, info.message, details, cause
-                )
-            }
-            CommonErrors::AuthorityError { info, http_code, url, method, cause } => {
-                let http_code = format!("Http Code: {}", http_code.unwrap_or(0));
-                let cause = format!("Cause: {}", cause.as_deref().unwrap_or("No Cause"));
-                let url = format!("Url: {}", url.as_deref().unwrap_or("No url"));
-                let method = format!("Method: {}", method.as_deref().unwrap_or("No method"));
-                let details = format!(
-                    "Details: {}",
-                    info.details.as_deref().unwrap_or("No details")
-                );
-                format!(
-                    "\n{}\n {}\n {}\n {}\n Error Code: {}\n Message: {}\n {}\n {}\n",
-                    self, method, url, http_code, info.error_code, info.message, details, cause
-                )
+        fn format_http_error(info: &ErrorInfo, url: &str, method: &str, http_code: Option<u16>, cause: &str) -> String {
+            let base = format_info(info, cause);
+            let code = http_code.unwrap_or(0);
+            format!(
+                "{}\nMethod: {}\nUrl: {}\nHttp Code: {}",
+                base, method, url, code
+            )
+        }
+
+        match self {
+            CommonErrors::PetitionError { info, http_code, url, method, cause }
+            | CommonErrors::ProviderError { info, http_code, url, method, cause }
+            | CommonErrors::AuthorityError { info, http_code, url, method, cause }
+            | CommonErrors::ConsumerError { info, http_code, url, method, cause } => {
+                format_http_error(info, url, method, *http_code, cause)
             }
             CommonErrors::MissingActionError { info, action, cause } => {
-                let cause = format!("Cause: {}", cause.as_deref().unwrap_or("No Cause"));
-                let details = format!(
-                    "Details: {}",
-                    info.details.as_deref().unwrap_or("No details")
-                );
-                format!(
-                    "\n{}\n Error Code: {}\n Message: {}\n {}\n MissingAction: {}\n {}\n",
-                    self, info.error_code, info.message, details, action, cause
-                )
+                format!("{}\nMissingAction: {}", format_info(info, cause), action)
+            }
+            CommonErrors::FeatureNotImplError { info, feature, cause } => {
+                format!("{}\nFeature: {}", format_info(info, cause), feature)
             }
             CommonErrors::MissingResourceError { info, resource_id, cause } => {
-                let cause = format!("Cause: {}", cause.as_deref().unwrap_or("No Cause"));
-                let details = format!(
-                    "Details: {}",
-                    info.details.as_deref().unwrap_or("No details")
-                );
-
-                format!(
-                    "\n{}\n Id: {}\n Error Code: {}\n Message: {}\n {}\n {}\n",
-                    self, resource_id, info.error_code, info.message, details, cause
-                )
+                format!("{}\nResource Id: {}", format_info(info, cause), resource_id)
             }
-            CommonErrors::FormatError { info, cause } => {
-                let cause = format!("Cause: {}", cause.as_deref().unwrap_or("No Cause"));
-                let details = format!(
-                    "Details: {}",
-                    info.details.as_deref().unwrap_or("No details")
-                );
-
-                format!(
-                    "\n{}\n Error Code: {}\n Message: {}\n {}\n {}\n",
-                    self, info.error_code, info.message, details, cause
-                )
+            CommonErrors::ReadError { info, path, cause } => {
+                format!("{}\nPath: {}", format_info(info, cause), path)
             }
-            CommonErrors::UnauthorizedError { info, cause } => {
-                let cause = format!("Cause: {}", cause.as_deref().unwrap_or("No Cause"));
-                let details = format!(
-                    "Details: {}",
-                    info.details.as_deref().unwrap_or("No details")
-                );
-
-                format!(
-                    "\n{}\n Error Code: {}\n Message: {}\n {}\n {}\n",
-                    self, info.error_code, info.message, details, cause
-                )
+            CommonErrors::WriteError { info, path, cause } => {
+                format!("{}\nPath: {}", format_info(info, cause), path)
             }
-            CommonErrors::ForbiddenError { info, cause } => {
-                let cause = format!("Cause: {}", cause.as_deref().unwrap_or("No Cause"));
-                let details = format!(
-                    "Details: {}",
-                    info.details.as_deref().unwrap_or("No details")
-                );
-
-                format!(
-                    "\n{}\n Error Code: {}\n Message: {}\n {}\n {}\n",
-                    self, info.error_code, info.message, details, cause
-                )
-            }
-            CommonErrors::DatabaseError { info, cause } => {
-                let cause = format!("Cause: {}", cause.as_deref().unwrap_or("No Cause"));
-                let details = format!(
-                    "Details: {}",
-                    info.details.as_deref().unwrap_or("No details")
-                );
-
-                format!(
-                    "\n{}\n Error Code: {}\n Message: {}\n {}\n {}\n",
-                    self, info.error_code, info.message, details, cause
-                )
-            }
-
-            CommonErrors::FeatureNotImplError { info, feature, cause } => {
-                let cause = format!("Cause: {}", cause.as_deref().unwrap_or("No Cause"));
-                let details = format!(
-                    "Details: {}",
-                    info.details.as_deref().unwrap_or("No details")
-                );
-
-                format!(
-                    "\n{}\n Feature: {}\n Error Code: {}\n Message: {}\n {}\n {}\n",
-                    self, feature, info.error_code, info.message, details, cause
-                )
-            }
+            CommonErrors::FormatError { info, cause }
+            | CommonErrors::UnauthorizedError { info, cause }
+            | CommonErrors::ForbiddenError { info, cause }
+            | CommonErrors::DatabaseError { info, cause }
+            | CommonErrors::ParseError { info, cause } => format_info(info, cause),
         }
     }
 }
 
 impl CommonErrors {
-    pub fn petition_new(url: String, method: String, http_code: Option<u16>, cause: String) -> CommonErrors {
+    pub fn petition_new(url: &str, method: &str, http_code: Option<u16>, cause: &str) -> CommonErrors {
         CommonErrors::PetitionError {
             info: ErrorInfo {
                 message: "A petition went wrong".to_string(),
@@ -297,17 +227,12 @@ impl CommonErrors {
                 details: None,
             },
             http_code,
-            url,
-            method,
-            cause,
+            url: url.to_string(),
+            method: method.to_string(),
+            cause: cause.to_string(),
         }
     }
-    pub fn provider_new(
-        url: Option<String>,
-        method: Option<String>,
-        http_code: Option<u16>,
-        cause: Option<String>,
-    ) -> CommonErrors {
+    pub fn provider_new(url: &str, method: &str, http_code: Option<u16>, cause: &str) -> CommonErrors {
         CommonErrors::ProviderError {
             info: ErrorInfo {
                 message: "Unexpected response from the Provider".to_string(),
@@ -316,17 +241,12 @@ impl CommonErrors {
                 details: None,
             },
             http_code,
-            url,
-            method,
-            cause,
+            url: url.to_string(),
+            method: method.to_string(),
+            cause: cause.to_string(),
         }
     }
-    pub fn consumer_new(
-        url: Option<String>,
-        method: Option<String>,
-        http_code: Option<u16>,
-        cause: Option<String>,
-    ) -> CommonErrors {
+    pub fn consumer_new(url: &str, method: &str, http_code: Option<u16>, cause: &str) -> CommonErrors {
         CommonErrors::ConsumerError {
             info: ErrorInfo {
                 message: "Unexpected response from the Consumer".to_string(),
@@ -335,17 +255,12 @@ impl CommonErrors {
                 details: None,
             },
             http_code,
-            url,
-            method,
-            cause,
+            url: url.to_string(),
+            method: method.to_string(),
+            cause: cause.to_string(),
         }
     }
-    pub fn authority_new(
-        url: Option<String>,
-        method: Option<String>,
-        http_code: Option<u16>,
-        cause: Option<String>,
-    ) -> CommonErrors {
+    pub fn authority_new(url: &str, method: &str, http_code: Option<u16>, cause: &str) -> CommonErrors {
         CommonErrors::AuthorityError {
             info: ErrorInfo {
                 message: "Unexpected response from the Authority".to_string(),
@@ -354,32 +269,35 @@ impl CommonErrors {
                 details: None,
             },
             http_code,
-            url,
-            method,
-            cause,
+            url: url.to_string(),
+            method: method.to_string(),
+            cause: cause.to_string(),
         }
     }
-    pub fn missing_action_new(action: String, missing: MissingAction, cause: Option<String>) -> CommonErrors {
-        let error_code = match missing {
+    pub fn missing_action_new(action: MissingAction, cause: &str) -> CommonErrors {
+        let error_code = match action {
             MissingAction::Token => 3110,
             MissingAction::Wallet => 3120,
-            MissingAction::Did => 3130,
-            MissingAction::Onboarding => 3140,
-            MissingAction::Key => 3150,
+            MissingAction::Key => 3130,
+            MissingAction::Did => 3140,
+            MissingAction::Onboarding => 3150,
             _ => 3100,
         };
         CommonErrors::MissingActionError {
             info: ErrorInfo {
-                message: "An action is required to proceed with this step".to_string(),
+                message: format!(
+                    "The action {} is required to proceed with this step",
+                    action
+                ),
                 error_code,
                 status_code: StatusCode::PRECONDITION_FAILED,
-                details: Some(action.clone()),
+                details: None,
             },
             action,
-            cause,
+            cause: cause.to_string(),
         }
     }
-    pub fn missing_resource_new(resource_id: String, cause: Option<String>) -> CommonErrors {
+    pub fn missing_resource_new(resource_id: &str, cause: &str) -> CommonErrors {
         CommonErrors::MissingResourceError {
             info: ErrorInfo {
                 message: "A key resource is messing in order to complete the required action ".to_string(),
@@ -387,22 +305,27 @@ impl CommonErrors {
                 status_code: StatusCode::NOT_FOUND,
                 details: None,
             },
-            resource_id,
-            cause,
+            resource_id: resource_id.to_string(),
+            cause: cause.to_string(),
         }
     }
-    pub fn format_new(option: BadFormat, cause: Option<String>) -> CommonErrors {
+    pub fn format_new(option: BadFormat, cause: &str) -> CommonErrors {
         let (error_code, status_code) = match option {
             BadFormat::Sent => (3110, StatusCode::BAD_GATEWAY),
             BadFormat::Received => (3120, StatusCode::BAD_REQUEST),
             _ => (3100, StatusCode::BAD_REQUEST),
         };
         CommonErrors::FormatError {
-            info: ErrorInfo { message: "Invalid Format".to_string(), error_code, status_code, details: cause.clone() },
-            cause,
+            info: ErrorInfo {
+                message: "Invalid Format".to_string(),
+                error_code,
+                status_code,
+                details: Some(cause.to_string()),
+            },
+            cause: cause.to_string(),
         }
     }
-    pub fn unauthorized_new(cause: Option<String>) -> CommonErrors {
+    pub fn unauthorized_new(cause: &str) -> CommonErrors {
         CommonErrors::UnauthorizedError {
             info: ErrorInfo {
                 message: "Unauthorized".to_string(),
@@ -410,10 +333,10 @@ impl CommonErrors {
                 status_code: StatusCode::UNAUTHORIZED,
                 details: None,
             },
-            cause,
+            cause: cause.to_string(),
         }
     }
-    pub fn forbidden_new(cause: Option<String>) -> CommonErrors {
+    pub fn forbidden_new(cause: &str) -> CommonErrors {
         CommonErrors::ForbiddenError {
             info: ErrorInfo {
                 message: "Forbidden".to_string(),
@@ -421,10 +344,10 @@ impl CommonErrors {
                 status_code: StatusCode::FORBIDDEN,
                 details: None,
             },
-            cause,
+            cause: cause.to_string(),
         }
     }
-    pub fn database_new(cause: Option<String>) -> CommonErrors {
+    pub fn database_new(cause: &str) -> CommonErrors {
         CommonErrors::DatabaseError {
             info: ErrorInfo {
                 message: "Error related to the database".to_string(),
@@ -432,10 +355,10 @@ impl CommonErrors {
                 status_code: StatusCode::INTERNAL_SERVER_ERROR,
                 details: None,
             },
-            cause,
+            cause: cause.to_string(),
         }
     }
-    pub fn not_impl_new(feature: String, cause: Option<String>) -> CommonErrors {
+    pub fn not_impl_new(feature: &str, cause: &str) -> CommonErrors {
         CommonErrors::FeatureNotImplError {
             info: ErrorInfo {
                 message: "Feature not implemented yet".to_string(),
@@ -443,8 +366,45 @@ impl CommonErrors {
                 status_code: StatusCode::NOT_IMPLEMENTED,
                 details: None,
             },
-            feature,
-            cause,
+            feature: feature.to_string(),
+            cause: cause.to_string(),
+        }
+    }
+    pub fn read_new(path: &str, cause: &str) -> Self {
+        Self::ReadError {
+            info: ErrorInfo {
+                message: format!("Failed to read file {}", path),
+                error_code: 6010,
+                status_code: StatusCode::INTERNAL_SERVER_ERROR,
+                details: None,
+            },
+            path: path.to_string(),
+            cause: cause.to_string(),
+        }
+    }
+
+    pub fn write_new(path: &str, cause: &str) -> Self {
+        Self::WriteError {
+            info: ErrorInfo {
+                message: format!("Failed to write file {}", path),
+                error_code: 6020,
+                status_code: StatusCode::INTERNAL_SERVER_ERROR,
+                details: None,
+            },
+            path: path.to_string(),
+            cause: cause.to_string(),
+        }
+    }
+
+    pub fn parse_new(cause: &str) -> Self {
+        Self::ParseError {
+            info: ErrorInfo {
+                message: "Failed to parse file".to_string(),
+                error_code: 6030,
+                status_code: StatusCode::BAD_REQUEST,
+                details: None,
+            },
+            cause: cause.to_string(),
         }
     }
 }

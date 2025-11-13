@@ -17,10 +17,10 @@
  *
  */
 use serde_json::Value;
-use crate::types::wallet::SSIWalletConfig;
+use crate::types::wallet::WalletConfig;
 
 pub trait WaltIdConfigTrait {
-    fn get_raw_wallet_config(&self) -> SSIWalletConfig;
+    fn get_raw_wallet_config(&self) -> WalletConfig;
     fn get_wallet_api_url(&self) -> String;
     fn get_wallet_register_data(&self) -> Value;
     fn get_wallet_login_data(&self) -> Value;

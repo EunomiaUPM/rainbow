@@ -20,7 +20,9 @@
 use crate::errors::helpers::BadFormat;
 use crate::errors::{CommonErrors, ErrorLog};
 use anyhow::bail;
-use tracing::error;
+use axum::http::StatusCode;
+use axum::response::IntoResponse;
+use tracing::{error, info};
 use urn::Urn;
 use uuid::Uuid;
 
@@ -40,9 +42,14 @@ pub fn get_urn_from_string(string_in: &String) -> anyhow::Result<Urn> {
     match urn_res {
         Ok(urn_res) => Ok(urn_res),
         Err(e) => {
-            let e_ = CommonErrors::format_new(BadFormat::Received, e.to_string().into());
+            let e_ = CommonErrors::format_new(BadFormat::Received, &e.to_string());
             error!("{}", e_.log());
             bail!(e_);
         }
     }
+}
+
+pub async fn server_status() -> impl IntoResponse {
+    info!("Someone checked server status");
+    (StatusCode::OK, "Server is Okay!").into_response()
 }

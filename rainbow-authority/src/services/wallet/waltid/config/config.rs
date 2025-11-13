@@ -18,12 +18,12 @@
  */
 use super::WaltIdConfigTrait;
 use crate::setup::AuthorityApplicationConfig;
-use crate::types::wallet::SSIWalletConfig;
+use crate::types::wallet::WalletConfig;
 use serde_json::{json, Value};
 use crate::utils::read;
 
 pub struct WaltIdConfig {
-    ssi_wallet_config: SSIWalletConfig,
+    ssi_wallet_config: WalletConfig,
     keys_path: String,
 }
 
@@ -34,7 +34,7 @@ impl From<AuthorityApplicationConfig> for WaltIdConfig {
 }
 
 impl WaltIdConfigTrait for WaltIdConfig {
-    fn get_raw_wallet_config(&self) -> SSIWalletConfig {
+    fn get_raw_wallet_config(&self) -> WalletConfig {
         self.ssi_wallet_config.clone()
     }
     fn get_wallet_api_url(&self) -> String {

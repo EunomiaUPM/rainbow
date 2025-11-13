@@ -17,4 +17,5 @@
  *
  */
 
-pub mod ssi_auth;
+// pub mod ssi_auth;
+pub mod ssi;

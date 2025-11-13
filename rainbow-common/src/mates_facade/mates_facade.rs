@@ -49,8 +49,8 @@ impl MatesFacadeTrait for MatesFacadeService {
         let mates_url = format!("{}/api/v1/mates/{}", ssi_auth_url, mate_id);
         let response = self.client.get(mates_url).send().await.map_err(|_e| {
             let e = CommonErrors::missing_resource_new(
-                mate_id.to_string(),
-                "Not able to connect with ssi-auth server".to_string().into(),
+                &mate_id,
+                "Not able to connect with ssi-auth server",
             );
             error!("{}", e.log());
             return e;
@@ -58,8 +58,8 @@ impl MatesFacadeTrait for MatesFacadeService {
 
         if response.status().is_success() == false {
             let e = CommonErrors::missing_resource_new(
-                mate_id.to_string(),
-                "Mate not resolvable".to_string().into(),
+                &mate_id,
+                "Mate not resolvable",
             );
             error!("{}", e.log());
             bail!(e);
@@ -69,7 +69,7 @@ impl MatesFacadeTrait for MatesFacadeService {
             Err(e_) => {
                 let e = CommonErrors::format_new(
                     BadFormat::Received,
-                    format!("Mate not serializable: {}", e_.to_string()).into(),
+                    &format!("Mate not serializable: {}", e_.to_string()),
                 );
                 error!("{}", e.log());
                 bail!(e);
@@ -84,16 +84,16 @@ impl MatesFacadeTrait for MatesFacadeService {
         let mates_url = format!("{}/api/v1/mates/slug/{}", ssi_auth_url, mate_slug);
         let response = self.client.get(mates_url).send().await.map_err(|_e| {
             let e = CommonErrors::missing_resource_new(
-                mate_slug.to_string(),
-                "Not able to connect with ssi-auth server".to_string().into(),
+                &mate_slug,
+                "Not able to connect with ssi-auth server",
             );
             error!("{}", e.log());
             return e;
         })?;
         if response.status().is_success() == false {
             let e = CommonErrors::missing_resource_new(
-                mate_slug.to_string(),
-                "Mate not resolvable".to_string().into(),
+                &mate_slug,
+                "Mate not resolvable",
             );
             error!("{}", e.log());
             bail!(e);
@@ -103,7 +103,7 @@ impl MatesFacadeTrait for MatesFacadeService {
             Err(e_) => {
                 let e = CommonErrors::format_new(
                     BadFormat::Received,
-                    format!("Mate not serializable: {}", e_.to_string()).into(),
+                    &format!("Mate not serializable: {}", e_.to_string()),
                 );
                 error!("{}", e.log());
                 bail!(e);
@@ -118,14 +118,14 @@ impl MatesFacadeTrait for MatesFacadeService {
         let mates_url = format!("{}/api/v1/mates/me", ssi_auth_url);
         let response = self.client.get(mates_url).send().await.map_err(|_e| {
             let e = CommonErrors::missing_resource_new(
-                "Me".to_string(),
-                "Not able to connect with ssi-auth server".to_string().into(),
+                "Me",
+                "Not able to connect with ssi-auth server",
             );
             error!("{}", e.log());
             return e;
         })?;
         if response.status().is_success() == false {
-            let e = CommonErrors::missing_resource_new("Me".to_string(), "Mate not resolvable".to_string().into());
+            let e = CommonErrors::missing_resource_new("Me", "Mate not resolvable");
             error!("{}", e.log());
             bail!(e);
         }
@@ -134,7 +134,7 @@ impl MatesFacadeTrait for MatesFacadeService {
             Err(e_) => {
                 let e = CommonErrors::format_new(
                     BadFormat::Received,
-                    format!("Mate not serializable: {}", e_.to_string()).into(),
+                    &format!("Mate not serializable: {}", e_.to_string()),
                 );
                 error!("{}", e.log());
                 bail!(e);

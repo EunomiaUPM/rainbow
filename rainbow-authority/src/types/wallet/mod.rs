@@ -24,7 +24,7 @@ mod wallet_login_response;
 mod wallet_info_response;
 mod key_definition;
 
-pub use wallet_config::SSIWalletConfig;
+pub use wallet_config::WalletConfig;
 pub use wallet_session::WalletSession;
 pub use dids_info::DidsInfo;
 pub use wallet_info::WalletInfo;

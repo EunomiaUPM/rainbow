@@ -74,8 +74,8 @@ impl DataServiceFacadeTrait for DataServiceFacadeServiceForDSProtocol {
         // resolve agreement
         let response = self.client.get(&agreement_url).send().await.map_err(|_e| {
             let e = CommonErrors::missing_resource_new(
-                agreement_id.to_string(),
-                "Agreement not resolvable".to_string().into(),
+                &agreement_id.to_string(),
+                "Agreement not resolvable",
             );
             error!("{}", e.log());
             return e;
@@ -83,8 +83,8 @@ impl DataServiceFacadeTrait for DataServiceFacadeServiceForDSProtocol {
         let status = response.status();
         if !status.is_success() {
             let e = CommonErrors::missing_resource_new(
-                agreement_id.to_string(),
-                "Agreement not resolvable".to_string().into(),
+                &agreement_id.to_string(),
+                "Agreement not resolvable",
             );
             error!("{}", e.log());
             bail!(e);
@@ -94,7 +94,7 @@ impl DataServiceFacadeTrait for DataServiceFacadeServiceForDSProtocol {
             Err(e_) => {
                 let e = CommonErrors::format_new(
                     BadFormat::Received,
-                    format!("Agreement not serializable: {}", e_.to_string()).into(),
+                    &format!("Agreement not serializable: {}", e_.to_string()),
                 );
                 error!("{}", e.log());
                 bail!(e);
@@ -105,7 +105,7 @@ impl DataServiceFacadeTrait for DataServiceFacadeServiceForDSProtocol {
             Err(e_) => {
                 let e = CommonErrors::format_new(
                     BadFormat::Received,
-                    format!("ODRL Agreement not compliant: {}", e_.to_string()).into(),
+                    &format!("ODRL Agreement not compliant: {}",  e_.to_string()),
                 );
                 error!("{}", e.log());
                 bail!(e);
@@ -121,8 +121,8 @@ impl DataServiceFacadeTrait for DataServiceFacadeServiceForDSProtocol {
         );
         let response = self.client.get(&datasets_url).send().await.map_err(|_e| {
             let e = CommonErrors::missing_resource_new(
-                agreement_target.to_string(),
-                "Dataset not resolvable".to_string().into(),
+                &agreement_target.to_string(),
+                "Dataset not resolvable",
             );
             error!("{}", e.log());
             return e;
@@ -130,8 +130,8 @@ impl DataServiceFacadeTrait for DataServiceFacadeServiceForDSProtocol {
         let status = response.status();
         if !status.is_success() {
             let e = CommonErrors::missing_resource_new(
-                agreement_target.to_string(),
-                "Dataset not resolvable".to_string().into(),
+                &agreement_target.to_string(),
+                "Dataset not resolvable",
             );
             error!("{}", e.log());
             bail!(e);
@@ -141,7 +141,7 @@ impl DataServiceFacadeTrait for DataServiceFacadeServiceForDSProtocol {
             Err(e_) => {
                 let e = CommonErrors::format_new(
                     BadFormat::Received,
-                    format!("Dataset not serializable: {}", e_.to_string()).into(),
+                    &format!("Dataset not serializable: {}",  e_.to_string())
                 );
                 error!("{}", e.log());
                 bail!(e);
@@ -158,8 +158,8 @@ impl DataServiceFacadeTrait for DataServiceFacadeServiceForDSProtocol {
         );
         let response = self.client.get(&distribution_url).send().await.map_err(|_e| {
             let e = CommonErrors::missing_resource_new(
-                dataset_id.to_string(),
-                "Distribution not resolvable".to_string().into(),
+                &dataset_id.to_string(),
+                "Distribution not resolvable",
             );
             error!("{}", e.log());
             return e;
@@ -167,8 +167,8 @@ impl DataServiceFacadeTrait for DataServiceFacadeServiceForDSProtocol {
         let status = response.status();
         if !status.is_success() {
             let e = CommonErrors::missing_resource_new(
-                dataset_id.to_string(),
-                "Distribution not resolvable".to_string().into(),
+                &dataset_id.to_string(),
+                "Distribution not resolvable",
             );
             error!("{}", e.log());
             bail!(e);
@@ -178,7 +178,7 @@ impl DataServiceFacadeTrait for DataServiceFacadeServiceForDSProtocol {
             Err(e_) => {
                 let e = CommonErrors::format_new(
                     BadFormat::Received,
-                    format!("Distribution not serializable: {}", e_.to_string()).into(),
+                    &format!("Distribution not serializable: {}",  e_.to_string())
                 );
                 error!("{}", e.log());
                 bail!(e);
@@ -189,8 +189,8 @@ impl DataServiceFacadeTrait for DataServiceFacadeServiceForDSProtocol {
             Some(access_service) => access_service,
             None => {
                 let e = CommonErrors::missing_resource_new(
-                    agreement_id.to_string(),
-                    "Access service not defined in distribution".to_string().into(),
+                    &agreement_id.to_string(),
+                    "Access service not defined in distribution",
                 );
                 error!("{}", e.log());
                 bail!(e);
@@ -207,8 +207,8 @@ impl DataServiceFacadeTrait for DataServiceFacadeServiceForDSProtocol {
             .await
             .map_err(|_e| {
                 let e = CommonErrors::missing_resource_new(
-                    access_service_id.to_string(),
-                    "Dataservice not resolvable".to_string().into(),
+                    &access_service_id.to_string(),
+                    "Dataservice not resolvable",
                 );
                 error!("{}", e.log());
                 return e;
@@ -216,8 +216,8 @@ impl DataServiceFacadeTrait for DataServiceFacadeServiceForDSProtocol {
         let status = response.status();
         if !status.is_success() {
             let e = CommonErrors::missing_resource_new(
-                access_service_id.to_string(),
-                "Dataservice not resolvable".to_string().into(),
+                &access_service_id.to_string(),
+                "Dataservice not resolvable",
             );
             error!("{}", e.log());
             bail!(e);
@@ -227,7 +227,7 @@ impl DataServiceFacadeTrait for DataServiceFacadeServiceForDSProtocol {
             Err(e_) => {
                 let e = CommonErrors::format_new(
                     BadFormat::Received,
-                    format!("Data service not serializable: {}", e_.to_string()).into(),
+                    &format!("Data service not serializable: {}",  e_.to_string())
                 );
                 error!("{}", e.log());
                 bail!(e);

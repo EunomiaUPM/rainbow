@@ -100,7 +100,7 @@ where
             .get_mate_by_id(consumer_participant_id.clone())
             .await
             .map_err(|e| {
-                let e = CommonErrors::format_new(BadFormat::Received, e.to_string().into());
+                let e = CommonErrors::format_new(BadFormat::Received, &e.to_string());
                 error!("{}", e.log());
                 anyhow!(e)
             })?;
@@ -120,12 +120,12 @@ where
             .get_transfer_process_by_provider(provider_pid.clone())
             .await
             .map_err(|e| {
-                let e = CommonErrors::format_new(BadFormat::Received, e.to_string().into());
+                let e = CommonErrors::format_new(BadFormat::Received, &e.to_string());
                 error!("{}", e.log());
                 anyhow!(e)
             })?
             .ok_or_else(|| {
-                let e = CommonErrors::missing_resource_new(provider_pid.to_string(), "Transfer process doesn't exist".to_string().into());
+                let e = CommonErrors::missing_resource_new(&provider_pid.to_string(), "Transfer process doesn't exist");
                 error!("{}", e.log());
                 anyhow!(e)
             })?;
@@ -135,18 +135,18 @@ where
             .get_transfer_process_by_consumer(consumer_pid.clone())
             .await
             .map_err(|e| {
-                let e = CommonErrors::format_new(BadFormat::Received, e.to_string().into());
+                let e = CommonErrors::format_new(BadFormat::Received, &e.to_string());
                 error!("{}", e.log());
                 anyhow!(e)
             })?
             .ok_or_else(|| {
-                let e = CommonErrors::missing_resource_new(consumer_pid.to_string(), "Transfer process doesn't exist".to_string().into());
+                let e = CommonErrors::missing_resource_new(&consumer_pid.to_string(), "Transfer process doesn't exist");
                 error!("{}", e.log());
                 anyhow!(e)
             })?;
 
         if provider_process.provider_pid != consumer_process.provider_pid {
-            let e = CommonErrors::format_new(BadFormat::Received, "ConsumerPid and ProviderPid don't coincide".to_string().to_string().into());
+            let e = CommonErrors::format_new(BadFormat::Received, "ConsumerPid and ProviderPid don't coincide");
             error!("{}", e.log());
             bail!(e);
         }
@@ -284,10 +284,10 @@ where
             .await
             .map_err(|_e| {
                 let e = CommonErrors::consumer_new(
-                    target_url.clone().into(),
-                    "POST".to_string().into(),
+                    &target_url,
+                    "POST",
                     None,
-                    "Consumer not reachable".to_string().into(),
+                    "Consumer not reachable",
                 );
                 error!("{}", e.log());
                 anyhow!(e)
@@ -298,17 +298,17 @@ where
             // Attempt to get error details from consumer if available
             let consumer_error = response.json::<Value>().await.unwrap_or_else(|e| json!({"error": format!("{}", e)}));
             let e = CommonErrors::consumer_new(
-                target_url.clone().into(),
-                "POST".to_string().into(),
+                &target_url,
+                "POST",
                 None,
-                format!("Consumer Internal error: {}", consumer_error).into(),
+                &format!("Consumer Internal error: {}", consumer_error),
             );
             error!("{}", e.log());
             bail!(e);
         }
 
         let transfer_process_msg = response.json::<TransferProcessMessage>().await.map_err(|_e| {
-            let e = CommonErrors::format_new(BadFormat::Received, "TransferProcessMessage not serializable".to_string().into());
+            let e = CommonErrors::format_new(BadFormat::Received, "TransferProcessMessage not serializable");
             error!("{}", e.log());
             anyhow!(e)
         })?;
@@ -357,7 +357,7 @@ where
         let consumer_mate = self.get_consumer_mate(&consumer_participant_id).await?;
         let consumer_callback = consumer_callback.unwrap_or(consumer_mate.base_url.unwrap());
         let consumer_token = consumer_mate.token.ok_or_else(|| {
-            let e = CommonErrors::missing_action_new("Missing token".to_string(), MissingAction::Token, "No auth token".to_string().into());
+            let e = CommonErrors::missing_action_new(MissingAction::Token, &"No auth token");
             error!("{}", e.log());
             anyhow!(e)
         })?;
@@ -406,7 +406,7 @@ where
             )
             .await
             .map_err(|e| {
-                let e_ = CommonErrors::database_new(e.to_string().into());
+                let e_ = CommonErrors::database_new(&e.to_string());
                 error!("{}", e_.log());
                 anyhow!(e_)
             })?;
@@ -424,7 +424,7 @@ where
             )
             .await
             .map_err(|e| {
-                let e_ = CommonErrors::database_new(e.to_string().into());
+                let e_ = CommonErrors::database_new(&e.to_string());
                 error!("{}", e_.log());
                 anyhow!(e_)
             })?;
@@ -467,7 +467,7 @@ where
         let consumer_mate = self.get_consumer_mate(&consumer_participant_id).await?;
         let consumer_callback = consumer_callback.unwrap_or(consumer_mate.base_url.unwrap());
         let consumer_token = consumer_mate.token.ok_or_else(|| {
-            let e = CommonErrors::missing_action_new("Missing token".to_string(), MissingAction::Token, "No auth token".to_string().into());
+            let e = CommonErrors::missing_action_new(MissingAction::Token, "No auth token");
             error!("{}", e.log());
             anyhow!(e)
         })?;
@@ -512,7 +512,7 @@ where
             )
             .await
             .map_err(|e| {
-                let e_ = CommonErrors::database_new(e.to_string().into());
+                let e_ = CommonErrors::database_new(&e.to_string());
                 error!("{}", e_.log());
                 anyhow!(e_)
             })?;
@@ -530,7 +530,7 @@ where
             )
             .await
             .map_err(|e| {
-                let e_ = CommonErrors::database_new(e.to_string().into());
+                let e_ = CommonErrors::database_new(&e.to_string());
                 error!("{}", e_.log());
                 anyhow!(e_)
             })?;
@@ -566,7 +566,7 @@ where
         let consumer_mate = self.get_consumer_mate(&consumer_participant_id).await?;
         let consumer_callback = consumer_callback.unwrap_or(consumer_mate.base_url.unwrap());
         let consumer_token = consumer_mate.token.ok_or_else(|| {
-            let e = CommonErrors::missing_action_new("Missing token".to_string(), MissingAction::Token, "No auth token".to_string().into());
+            let e = CommonErrors::missing_action_new(MissingAction::Token, "No auth token");
             error!("{}", e.log());
             anyhow!(e)
         })?;
@@ -609,7 +609,7 @@ where
             )
             .await
             .map_err(|e| {
-                let e_ = CommonErrors::database_new(e.to_string().into());
+                let e_ = CommonErrors::database_new(&e.to_string());
                 error!("{}", e_.log());
                 anyhow!(e_)
             })?;
@@ -627,7 +627,7 @@ where
             )
             .await
             .map_err(|e| {
-                let e_ = CommonErrors::database_new(e.to_string().into());
+                let e_ = CommonErrors::database_new(&e.to_string());
                 error!("{}", e_.log());
                 anyhow!(e_)
             })?;
@@ -665,7 +665,7 @@ where
         let consumer_mate = self.get_consumer_mate(&consumer_participant_id).await?;
         let consumer_callback = consumer_callback.unwrap_or(consumer_mate.base_url.unwrap());
         let consumer_token = consumer_mate.token.ok_or_else(|| {
-            let e = CommonErrors::missing_action_new("Missing token".to_string(), MissingAction::Token, "No auth token".to_string().into());
+            let e = CommonErrors::missing_action_new(MissingAction::Token, "No auth token");
             error!("{}", e.log());
             anyhow!(e)
         })?;
@@ -710,7 +710,7 @@ where
             )
             .await
             .map_err(|e| {
-                let e_ = CommonErrors::database_new(e.to_string().into());
+                let e_ = CommonErrors::database_new(&e.to_string());
                 error!("{}", e_.log());
                 anyhow!(e_)
             })?;
@@ -728,7 +728,7 @@ where
             )
             .await
             .map_err(|e| {
-                let e_ = CommonErrors::database_new(e.to_string().into());
+                let e_ = CommonErrors::database_new(&e.to_string());
                 error!("{}", e_.log());
                 anyhow!(e_)
             })?;
