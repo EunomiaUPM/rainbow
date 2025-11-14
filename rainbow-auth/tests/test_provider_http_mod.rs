@@ -60,7 +60,7 @@ mod tests {
 
     #[async_trait]
     impl MatesRepoTrait for MockMatesRepo {
-        async fn get_batch(&self, _ids: &Vec<Urn>) -> Result<Vec<Model>> {
+        async fn get_batch(&self, _ids: &Vec<String>) -> Result<Vec<Model>> {
             if self.should_fail {
                 Err(anyhow::anyhow!("simulated database error"))
             } else {

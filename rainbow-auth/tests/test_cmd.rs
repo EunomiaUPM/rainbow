@@ -1,97 +1,104 @@
 // Tests corresponding to 'rainbow-auth\src\ssi_auth\cmd\mod.rs'
 
-use tokio;
-use rainbow_auth::ssi_auth::cmd::AuthCliCommands;
-use rainbow_auth::ssi_auth::cmd::AuthCliRoles;
-use rainbow_auth::ssi_auth::cmd::AuthCli;
 
 #[cfg(test)]
 mod tests {
-    use clap::Parser;
-
-    use super::*;
+    use std::fs;
+    use assert_cmd::cargo::cargo_bin_cmd;
     
-    #[tokio::test]
-    async fn test_provider_start_command() {
-        use std::env;
-        env::set_var("RUST_BACKTRACE", "1");
+    #[test]
+    fn test_init_command_line_provider_start_success() {
+        let env_path = "test_provider_start.env";
+        fs::write(env_path, "DUMMY_KEY=DUMMY_VALUE").unwrap();
 
-        let args = vec![
-            "binary_name",
-         "provider",
-         "start",
-         "--env-file",
-         "provider.env"
-         ];
+        let mut cmd = cargo_bin_cmd!("rainbow_auth");
+        cmd.env("TEST_MODE", "true") 
+           .arg("provider")
+           .arg("start")
+           .arg("--env-file")
+           .arg(env_path)
+           .assert()
+           .success();
 
-        let cli = AuthCli::try_parse_from(args).expect("Failed to parse CLI arguments");
+        fs::remove_file(env_path).unwrap();
+    }
+    
+    #[test]
+    fn test_init_command_line_provider_setup_success() {
+        let env_path = "test_provider_setup.env";
+        fs::write(env_path, "DUMMY_KEY=DUMMY_VALUE").unwrap();
 
-        match cli.role {
-            AuthCliRoles::Provider(AuthCliCommands::Start(args)) => {
-                assert_eq!(args.env_file, Some("provider.env".to_string()));
-            }  ,
-            _ => panic!("Unexpected CLI structure"),
-        }
+        let mut cmd = cargo_bin_cmd!("rainbow_auth");
+        cmd.env("TEST_MODE", "true")
+           .arg("provider")
+           .arg("setup")
+           .arg("--env-file")
+           .arg(env_path)
+           .assert()
+           .success();
+
+        fs::remove_file(env_path).unwrap();
+    }
+    
+    #[test]
+    fn test_init_command_line_consumer_start_success() {
+        let env_path = "test_consumer_start.env";
+        fs::write(env_path, "DUMMY_KEY=DUMMY_VALUE").unwrap();
+
+        let mut cmd = cargo_bin_cmd!("rainbow_auth");
+        cmd.env("TEST_MODE", "true")
+           .arg("consumer")
+           .arg("start")
+           .arg("--env-file")
+           .arg(&env_path)
+           .assert()
+           .success();
+
+        fs::remove_file(env_path).unwrap();
     }
 
+    #[test]
+    fn test_init_command_line_consumer_setup_success() {
+        let env_path = "test_consumer_setup.env";
+        fs::write(env_path, "DUMMY_KEY=DUMMY_VALUE").unwrap();
 
-    #[tokio::test]
-    async fn test_provider_setup_command() {
-        let args = vec![
-            "binary_name",
-            "provider",
-            "setup",
-            "--env-file",
-            "provider.env"
-        ];
+        let mut cmd = cargo_bin_cmd!("rainbow_auth");
+        cmd.env("TEST_MODE", "true")
+           .arg("consumer")
+           .arg("setup")
+           .arg("--env-file")
+           .arg(env_path)
+           .assert()
+           .success();
 
-        let cli = AuthCli::try_parse_from(args).expect("Failed to parse CLI arguments");
-
-        match cli.role {
-            AuthCliRoles::Provider(AuthCliCommands::Setup(args)) => {
-                assert_eq!(args.env_file, Some("provider.env".to_string()));
-            },
-            _ => panic!("Unexpected CLI structure"),
-        }
+        fs::remove_file(env_path).unwrap();
+    }
+    
+    #[test]
+    fn test_invalid_subcommand_should_fail() {
+        let mut cmd = cargo_bin_cmd!("rainbow_auth");
+        cmd.env("TEST_MODE", "true")
+        .arg("provider")
+        .arg("Foo") 
+        .assert()
+        .failure();
     }
 
-    #[tokio::test]
-    async fn test_consumer_start_command() {
-        let args = vec![
-            "binary_name",
-            "consumer",
-            "start",
-            "--env-file",
-            "consumer.env"
-        ];
-
-        let cli = AuthCli::try_parse_from(args).expect("Failed to parse CLI arguments");
-
-        match cli.role {
-            AuthCliRoles::Consumer(AuthCliCommands::Start(args)) => {
-                assert_eq!(args.env_file, Some("consumer.env".to_string()));
-            },
-            _ => panic!("Unexpected CLI structure"),
-        }
+    #[test]
+    fn test_incomplete_command_should_fail() {
+        let mut cmd = cargo_bin_cmd!("rainbow_auth");
+        cmd.env("TEST_MODE", "true")
+        .arg("consumer") 
+        .assert()
+        .failure();
     }
 
-    #[tokio::test]
-    async fn test_consumer_setup_command() {
-        let args = vec![
-            "binary_name",
-            "consumer",
-            "setup",
-            "--env-file",
-            "consumer.env"
-        ];
-
-        let cli = AuthCli::try_parse_from(args).expect("Failed to parse CLI arguments");
-
-        match cli.role {
-            AuthCliRoles::Consumer(AuthCliCommands::Setup(args)) => {
-                assert_eq!(args.env_file, Some("consumer.env".to_string()));
-            },
-            _ => panic!("Unexpected CLI structure"),
-        }
+    #[test]
+    fn test_invalid_role_should_fail() {
+        let mut cmd = cargo_bin_cmd!("rainbow_auth");
+        cmd.env("TEST_MODE", "true")
+        .arg("InvalidRole") 
+        .assert()
+        .failure();
     }
 }

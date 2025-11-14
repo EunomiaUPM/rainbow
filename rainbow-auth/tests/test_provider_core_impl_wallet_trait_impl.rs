@@ -19,7 +19,6 @@ mod tests {
     use rainbow_db::auth_provider::entities::business_mates::{Model, NewModel};
     use rainbow_db::common::BasicRepoTrait;
     use rainbow_db::auth_provider::entities::mates::{Model as MatesModel, NewModel as MatesNewModel};
-    use urn::Urn;
 
     // Mocks
     pub struct MockMatesRepo;
@@ -70,7 +69,7 @@ mod tests {
             self.create(mate).await
         }
 
-        async fn get_batch(&self, _ids: &Vec<Urn>) -> anyhow::Result<Vec<MatesModel>> {
+        async fn get_batch(&self, _ids: &Vec<String>) -> anyhow::Result<Vec<MatesModel>> {
             Ok(vec![])
         }
     }

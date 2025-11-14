@@ -23,7 +23,6 @@ mod tests {
     };
     use rainbow_db::auth_provider::entities::auth_token_requirements::Model as TokenRequirementsModel;
     use anyhow::Result;
-    use urn::Urn;
     use rainbow_db::auth_provider::entities::mates::{Model as MateModel, NewModel as NewMateModel};
     use rainbow_db::auth_provider::entities::{
         auth_request::Model as RequestModel,
@@ -320,7 +319,7 @@ mod tests {
             }
         }
 
-        async fn get_batch(&self, _ids: &Vec<Urn>) -> anyhow::Result<Vec<MateModel>> {
+        async fn get_batch(&self, _ids: &Vec<String>) -> anyhow::Result<Vec<MateModel>> {
             unimplemented!()
         }
     }
@@ -1161,7 +1160,7 @@ mod tests {
                 unimplemented!()
             }
 
-            async fn get_batch(&self, _ids: &Vec<Urn>) -> anyhow::Result<Vec<MateModel>> {
+            async fn get_batch(&self, _ids: &Vec<String>) -> anyhow::Result<Vec<MateModel>> {
                 unimplemented!()
             }
         }
