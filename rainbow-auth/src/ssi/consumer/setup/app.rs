@@ -32,6 +32,8 @@ use sea_orm::Database;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 use tracing::info;
+use crate::ssi::consumer::services::onboarder::gnap::config::ConsumerGnapConfig;
+use crate::ssi::consumer::services::onboarder::gnap::ConsumerGnapService;
 
 pub struct AuthConsumerApplication;
 
@@ -41,17 +43,20 @@ impl AuthConsumerApplication {
         let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
         let waltid_config = WaltIdConfig::from(config.clone());
         let vc_req_config = VCRequesterConfig::from(config.clone());
+        let onboarder_config = ConsumerGnapConfig::from(config.clone());
 
         // SERVICES
         let client_service = Arc::new(BasicClientService::new());
         let wallet_service = Arc::new(WaltIdService::new(client_service.clone(), waltid_config));
         let vc_req_service = Arc::new(VCReqService::new(client_service.clone(), vc_req_config));
+        let onboarder_service = Arc::new(ConsumerGnapService::new(client_service.clone(), onboarder_config));
         let repo_service = Arc::new(AuthConsumerRepoForSql::create_repo(db_connection));
 
         // CORE
         let consumer = Arc::new(AuthConsumer::new(
             wallet_service,
             vc_req_service,
+            onboarder_service,
             repo_service,
             client_service,
             config.clone(),

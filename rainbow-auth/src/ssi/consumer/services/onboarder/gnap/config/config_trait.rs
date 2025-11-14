@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
  *  *
  *  * This program is free software: you can redistribute it and/or modify
  *  * it under the terms of the GNU General Public License as published by
@@ -16,10 +16,11 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use std::format;
+use serde_json::{json, Value};
+use crate::ssi::common::utils::read;
 
-use crate::common::BasicRepoTrait;
-use crate::auth::consumer::entities::req_token_requirements::{Model};
-use axum::async_trait;
-
-#[async_trait]
-pub trait ReqTokenRequirementsTrait: BasicRepoTrait<Model, Model> + Send + Sync {}
+pub trait GnapConfigTrait {
+    fn get_pretty_client_config(&self) -> anyhow::Result<Value>;
+    fn get_host(&self) -> String;
+}

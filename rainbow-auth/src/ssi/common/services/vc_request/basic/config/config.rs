@@ -18,7 +18,7 @@
  */
 use super::VCRequesterConfigTrait;
 use crate::ssi::common::types::entities::SelfClient;
-use crate::ssi::utils::read;
+use crate::ssi::common::utils::read;
 use serde_json::{json, Value};
 use rainbow_common::config::global_config::HostConfig;
 use crate::ssi::consumer::config::AuthConsumerConfig;

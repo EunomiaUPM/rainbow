@@ -16,10 +16,22 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use std::{format, vec};
+use anyhow::bail;
 use rainbow_db::auth::common::entities::mates;
-use crate::ssi::common::types::wallet::{DidsInfo, KeyDefinition, WalletInfo, WalletSession};
+use crate::ssi::common::types::wallet::{CredentialOfferResponse, DidsInfo, KeyDefinition, MatchVCsRequest, MatchingVCs, OidcUri, RedirectResponse, Vpd, WalletInfo, WalletSession};
 use axum::async_trait;
+use axum::http::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
+use axum::http::HeaderMap;
 use serde_json::Value;
+use tracing::{debug, error, info};
+use url::Url;
+use urlencoding::decode;
+use rainbow_common::errors::CommonErrors;
+use rainbow_common::errors::helpers::BadFormat;
+use crate::ssi::common::errors::AuthErrors;
+use crate::ssi::common::types::enums::request::Body;
+use crate::ssi::common::utils::get_query_param;
 
 #[async_trait]
 pub trait WalletServiceTrait: Send + Sync + 'static {
@@ -45,6 +57,14 @@ pub trait WalletServiceTrait: Send + Sync + 'static {
     async fn register_did(&self) -> anyhow::Result<()>;
     async fn set_default_did(&self) -> anyhow::Result<()>;
     // DELETE STUFF FROM WALLET
-    async fn delete_key(&self, key: KeyDefinition) -> anyhow::Result<()>;
-    async fn delete_did(&self, did_info: DidsInfo) -> anyhow::Result<()>;
+    async fn delete_key(&self, key: &KeyDefinition) -> anyhow::Result<()>;
+    async fn delete_did(&self, did_info: &DidsInfo) -> anyhow::Result<()>;
+    async fn resolve_credential_offer(&self, payload: &OidcUri) -> anyhow::Result<CredentialOfferResponse>;
+    async fn resolve_credential_issuer(&self, cred_offer: &CredentialOfferResponse) -> anyhow::Result<Value>;
+    async fn use_offer_req(&self, payload: &OidcUri, cred_offer: &CredentialOfferResponse) -> anyhow::Result<()>;
+    async fn get_vpd(&self, payload: &OidcUri) -> anyhow::Result<Vpd>;
+    fn parse_vpd(&self, vpd_as_string: &str) -> anyhow::Result<Vpd>;
+    async fn get_matching_vcs(&self, vpd: &Vpd) -> anyhow::Result<Vec<String>>;
+    async fn match_vc4vp(&self, vp_def: Value) -> anyhow::Result<Vec<MatchingVCs>>;
+    async fn present_vp(&self, payload: &OidcUri, vcs_id: Vec<String>) -> anyhow::Result<Option<String>>;
 }

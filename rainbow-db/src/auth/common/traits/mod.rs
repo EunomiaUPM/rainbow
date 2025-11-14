@@ -21,8 +21,10 @@ mod mates_trait;
 mod req_vc_trait;
 mod req_interaction_trait;
 pub mod req_verification_trait;
+pub mod token_requirements_trait;
 
 pub use mates_trait::MatesTrait;
 pub use req_vc_trait::ReqVcTrait;
 pub use req_interaction_trait::ReqInteractionTrait;
 pub use req_verification_trait::ReqVerificationTrait;
+pub use token_requirements_trait::TokenRequirementsTrait;

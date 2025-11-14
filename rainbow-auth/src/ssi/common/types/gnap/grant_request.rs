@@ -21,6 +21,7 @@ use rand::distributions::Alphanumeric;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use rainbow_db::auth::common::entities::req_interaction;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GrantRequest {
@@ -86,6 +87,16 @@ pub struct Finish4Interact {
 }
 
 impl GrantRequest {
+
+    pub fn prov_oidc(client: Value, int_model: &req_interaction::Model) -> Self {
+        Self {
+            access_token: AccessTokenRequirements4GR::key_default(),
+            subject: None,
+            client,
+            user: None,
+            interact: Some(Interact4GR::default_oidc(int_model)),
+        }
+    }
     pub fn pr_oidc(client: Value, method: String, uri: Option<String>, nonce: Option<String>) -> Self {
         Self {
             access_token: AccessTokenRequirements4GR::key_default(),
@@ -182,6 +193,20 @@ impl AccessTokenRequirements4GR {
 }
 
 impl Interact4GR {
+
+    pub fn default_oidc(int_model: &req_interaction::Model) -> Self {
+        Self {
+            start: int_model.start.clone(),
+            finish: Finish4Interact {
+                method: int_model.method.clone(),
+                uri: Some(int_model.uri.clone()),
+                nonce: int_model.client_nonce.clone(),
+                hash_method: int_model.hash.clone(),
+            },
+            hints: None,
+        }
+    }
+
     pub fn default4oidc(method: String, uri: Option<String>, nonce: Option<String>) -> Self {
         let nonce = nonce.unwrap_or(rand::thread_rng().sample_iter(&Alphanumeric).take(36).map(char::from).collect());
 

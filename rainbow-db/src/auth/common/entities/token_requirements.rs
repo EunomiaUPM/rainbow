@@ -23,7 +23,7 @@ use sea_orm::entity::prelude::*;
 use sea_orm::ActiveValue;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
-#[sea_orm(table_name = "req_token_requirements")]
+#[sea_orm(table_name = "token_requirements")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: String, // REQUEST

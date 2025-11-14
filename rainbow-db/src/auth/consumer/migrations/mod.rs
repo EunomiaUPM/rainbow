@@ -17,6 +17,5 @@
  *
  */
 mod m20250403_094651_req_request;
-mod m20250403_094651_req_token_requirements;
 mod migrator;
 pub use migrator::*;

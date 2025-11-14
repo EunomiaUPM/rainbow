@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
  *  *
  *  * This program is free software: you can redistribute it and/or modify
  *  * it under the terms of the GNU General Public License as published by
@@ -16,10 +16,4 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
-use crate::common::BasicRepoTrait;
-use crate::auth::provider::entities::recv_token_requirements::{Model};
-use axum::async_trait;
-
-#[async_trait]
-pub trait RecvTokenRequirementsTrait: BasicRepoTrait<Model, Model> + Send + Sync {}
+pub mod onboarder;

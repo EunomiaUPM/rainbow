@@ -18,10 +18,11 @@
  */
 use super::super::super::common::migrations::{
     m20250403_094651_mates, m20250403_094651_req_interaction, m20250403_094651_req_vc,
+    m20250403_094651_token_requirements,
 };
 use super::{
     m20250403_094651_business_mates, m20250403_094651_recv_interaction, m20250403_094651_recv_request,
-    m20250403_094651_recv_token_requirements, m20250403_094651_recv_verification,
+    m20250403_094651_recv_verification,
 };
 use sea_orm::prelude::async_trait;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
@@ -30,7 +31,7 @@ pub fn get_auth_provider_migrations() -> Vec<Box<dyn MigrationTrait>> {
     vec![
         Box::new(m20250403_094651_recv_request::Migration),
         Box::new(m20250403_094651_recv_interaction::Migration),
-        Box::new(m20250403_094651_recv_token_requirements::Migration),
+        Box::new(m20250403_094651_token_requirements::Migration),
         Box::new(m20250403_094651_recv_verification::Migration),
         Box::new(m20250403_094651_business_mates::Migration),
         Box::new(m20250403_094651_req_vc::Migration),

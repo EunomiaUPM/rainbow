@@ -22,7 +22,7 @@ use sea_orm_migration::prelude::*;
 pub struct Migration;
 impl MigrationName for Migration {
     fn name(&self) -> &str {
-        "m20250403_094651_recv_token_requirements"
+        "m20250403_094651_token_requirements"
     }
 }
 

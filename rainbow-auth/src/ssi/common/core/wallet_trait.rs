@@ -17,17 +17,17 @@
  *
  */
 use crate::ssi::common::services::wallet::WalletServiceTrait;
-use crate::ssi::common::types::wallet::{DidsInfo, KeyDefinition};
+use crate::ssi::common::types::wallet::{DidsInfo, KeyDefinition, OidcUri};
+use axum::async_trait;
 use rainbow_db::auth::common::entities::mates;
+use rainbow_db::auth::common::traits::MatesTrait;
 use serde_json::Value;
 use std::sync::Arc;
-use axum::async_trait;
-use rainbow_db::auth::common::traits::MatesTrait;
 
 #[async_trait]
 pub trait CoreWalletTrait: Send + Sync + 'static {
     fn wallet(&self) -> Arc<dyn WalletServiceTrait>;
-    fn mates(&self) -> Arc<dyn MatesTrait>;
+    fn mate_repo(&self) -> Arc<dyn MatesTrait>;
     async fn register(&self) -> anyhow::Result<()> {
         self.wallet().register().await
     }
@@ -39,7 +39,7 @@ pub trait CoreWalletTrait: Send + Sync + 'static {
     }
     async fn onboard(&self) -> anyhow::Result<mates::Model> {
         let mate = self.wallet().onboard().await?;
-        self.mates().force_create(mate).await
+        self.mate_repo().force_create(mate).await
     }
     async fn partial_onboard(&self) -> anyhow::Result<()> {
         self.wallet().partial_onboard().await
@@ -54,9 +54,19 @@ pub trait CoreWalletTrait: Send + Sync + 'static {
         self.wallet().register_did().await
     }
     async fn delete_key(&self, key: KeyDefinition) -> anyhow::Result<()> {
-        self.wallet().delete_key(key).await
+        self.wallet().delete_key(&key).await
     }
     async fn delete_did(&self, did_info: DidsInfo) -> anyhow::Result<()> {
-        self.wallet().delete_did(did_info).await
+        self.wallet().delete_did(&did_info).await
+    }
+    async fn process_oidc4vci(&self, payload: OidcUri) -> anyhow::Result<()> {
+        let cred_offer = self.wallet().resolve_credential_offer(&payload).await?;
+        let _issuer_metadata = self.wallet().resolve_credential_issuer(&cred_offer).await?;
+        self.wallet().use_offer_req(&payload, &cred_offer).await
+    }
+    async fn process_oidc4vp(&self, payload: OidcUri) -> anyhow::Result<Option<String>> {
+        let vpd = self.wallet().get_vpd(&payload).await?;
+        let vcs_id = self.wallet().get_matching_vcs(&vpd).await?;
+        self.wallet().present_vp(&payload, vcs_id).await
     }
 }

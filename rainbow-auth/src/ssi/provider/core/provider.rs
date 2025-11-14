@@ -22,7 +22,7 @@ use crate::ssi::provider::config::AuthProviderConfig;
 use rainbow_db::auth::provider::factory::factory_trait::AuthProviderRepoTrait;
 use std::sync::Arc;
 use rainbow_db::auth::common::traits::{MatesTrait, ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait};
-use crate::ssi::common::core::{CoreVcRequesterTrait, CoreWalletTrait};
+use crate::ssi::common::core::{CoreMateTrait, CoreVcRequesterTrait, CoreWalletTrait};
 use crate::ssi::common::services::vc_request::VcRequesterTrait;
 use crate::ssi::provider::core::traits::CoreProviderTrait;
 
@@ -46,6 +46,8 @@ impl AuthProvider {
     }
 }
 
+
+
 impl CoreProviderTrait for AuthProvider {}
 
 impl CoreWalletTrait for AuthProvider {
@@ -53,7 +55,7 @@ impl CoreWalletTrait for AuthProvider {
         self.wallet.clone()
     }
 
-    fn mates(&self) -> Arc<dyn MatesTrait> {
+    fn mate_repo(&self) -> Arc<dyn MatesTrait> {
         self.repo.mates()
     }
 }
@@ -76,3 +78,8 @@ impl CoreVcRequesterTrait for AuthProvider {
     }
 }
 
+impl CoreMateTrait for AuthProvider {
+    fn mate_repo(&self) -> Arc<dyn MatesTrait> {
+        self.repo.mates().clone()
+    }
+}

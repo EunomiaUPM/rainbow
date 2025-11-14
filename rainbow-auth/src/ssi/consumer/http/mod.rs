@@ -17,5 +17,7 @@
  *
  */
 mod router;
+mod onboarder_router;
 
 pub use router::AuthConsumerRouter;
+pub use onboarder_router::OnboarderConsumerRouter;

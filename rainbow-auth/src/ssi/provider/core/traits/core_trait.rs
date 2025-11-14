@@ -17,6 +17,6 @@
  *
  */
 
-use crate::ssi::common::core::{CoreVcRequesterTrait, CoreWalletTrait};
+use crate::ssi::common::core::{CoreMateTrait, CoreVcRequesterTrait, CoreWalletTrait};
 
-pub trait CoreProviderTrait: CoreWalletTrait + CoreVcRequesterTrait + Send + Sync + 'static {}
+pub trait CoreProviderTrait: CoreWalletTrait + CoreVcRequesterTrait + CoreMateTrait + Send + Sync + 'static {}

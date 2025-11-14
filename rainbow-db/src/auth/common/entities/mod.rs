@@ -20,3 +20,4 @@ pub mod mates;
 pub mod req_vc;
 pub mod req_interaction;
 pub mod req_verification;
+pub mod token_requirements;

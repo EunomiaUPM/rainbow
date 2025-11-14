@@ -21,7 +21,7 @@ use crate::ssi::common::services::wallet::waltid::config::config_trait::WaltIdCo
 use crate::ssi::common::types::wallet::WalletConfig;
 use crate::ssi::consumer::config::AuthConsumerConfig;
 use crate::ssi::provider::config::AuthProviderConfig;
-use crate::ssi::utils::read;
+use crate::ssi::common::utils::read;
 
 #[derive(Clone)]
 pub struct WaltIdConfig {

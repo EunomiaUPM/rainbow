@@ -16,12 +16,13 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::ssi::common::core::{CoreVcRequesterTrait, CoreWalletTrait};
+use crate::ssi::common::core::{CoreMateTrait, CoreVcRequesterTrait, CoreWalletTrait};
 use crate::ssi::common::services::client::ClientServiceTrait;
 use crate::ssi::common::services::vc_request::VcRequesterTrait;
 use crate::ssi::common::services::wallet::WalletServiceTrait;
 use crate::ssi::consumer::config::AuthConsumerConfig;
-use crate::ssi::consumer::core::traits::CoreConsumerTrait;
+use crate::ssi::consumer::core::traits::{CoreConsumerOnboarderTrait, CoreConsumerTrait};
+use crate::ssi::consumer::services::onboarder::ConsumerOnboarderTrait;
 use rainbow_db::auth::common::traits::{MatesTrait, ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait};
 use rainbow_db::auth::consumer::factory::AuthConsumerRepoTrait;
 use std::sync::Arc;
@@ -29,6 +30,7 @@ use std::sync::Arc;
 pub struct AuthConsumer {
     wallet: Arc<dyn WalletServiceTrait>,
     vc_requester: Arc<dyn VcRequesterTrait>,
+    onboarder: Arc<dyn ConsumerOnboarderTrait>,
     repo: Arc<dyn AuthConsumerRepoTrait>,
     client: Arc<dyn ClientServiceTrait>,
     config: AuthConsumerConfig,
@@ -38,11 +40,12 @@ impl AuthConsumer {
     pub fn new(
         wallet: Arc<dyn WalletServiceTrait>,
         vc_requester: Arc<dyn VcRequesterTrait>,
+        onboarder: Arc<dyn ConsumerOnboarderTrait>,
         repo: Arc<dyn AuthConsumerRepoTrait>,
         client: Arc<dyn ClientServiceTrait>,
         config: AuthConsumerConfig,
     ) -> AuthConsumer {
-        AuthConsumer { wallet, vc_requester, repo, client, config }
+        AuthConsumer { wallet, vc_requester, onboarder, repo, client, config }
     }
 }
 
@@ -53,7 +56,7 @@ impl CoreWalletTrait for AuthConsumer {
         self.wallet.clone()
     }
 
-    fn mates(&self) -> Arc<dyn MatesTrait> {
+    fn mate_repo(&self) -> Arc<dyn MatesTrait> {
         self.repo.mates().clone()
     }
 }
@@ -73,5 +76,21 @@ impl CoreVcRequesterTrait for AuthConsumer {
 
     fn interaction_req_repo(&self) -> Arc<dyn ReqInteractionTrait> {
         self.repo.interaction_req()
+    }
+}
+
+impl CoreMateTrait for AuthConsumer {
+    fn mate_repo(&self) -> Arc<dyn MatesTrait> {
+        self.repo.mates().clone()
+    }
+}
+
+impl CoreConsumerOnboarderTrait for AuthConsumer {
+    fn onboarder(&self) -> Arc<dyn ConsumerOnboarderTrait> {
+        self.onboarder.clone()
+    }
+
+    fn repo(&self) -> Arc<dyn AuthConsumerRepoTrait> {
+        self.repo.clone()
     }
 }

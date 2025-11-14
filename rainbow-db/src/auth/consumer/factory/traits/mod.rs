@@ -18,7 +18,5 @@
  */
 
 mod req_request_trait;
-mod req_token_requirements_trait;
 
 pub use req_request_trait::ReqRequestTrait;
-pub use req_token_requirements_trait::ReqTokenRequirementsTrait;

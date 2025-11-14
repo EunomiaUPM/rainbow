@@ -18,9 +18,9 @@
  */
 
 use super::traits::{
-    BusinessMatesRepoTrait, RecvInteractionTrait, RecvRequestTrait, RecvTokenRequirementsTrait, RecvVerificationTrait,
+    BusinessMatesRepoTrait, RecvInteractionTrait, RecvRequestTrait,  RecvVerificationTrait,
 };
-use crate::auth::common::traits::{MatesTrait, ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait};
+use crate::auth::common::traits::{MatesTrait, ReqInteractionTrait, TokenRequirementsTrait, ReqVcTrait, ReqVerificationTrait};
 use std::sync::Arc;
 
 pub trait AuthProviderRepoTrait: Send + Sync + 'static {
@@ -29,7 +29,7 @@ pub trait AuthProviderRepoTrait: Send + Sync + 'static {
     fn interaction_req(&self) -> Arc<dyn ReqInteractionTrait>;
     fn verification_rcv(&self) -> Arc<dyn RecvVerificationTrait>;
     fn verification_req(&self) -> Arc<dyn ReqVerificationTrait>;
-    fn token_requirements_rcv(&self) -> Arc<dyn RecvTokenRequirementsTrait>;
+    fn token_requirements(&self) -> Arc<dyn TokenRequirementsTrait>;
     fn vc_req(&self) -> Arc<dyn ReqVcTrait>;
     fn mates(&self) -> Arc<dyn MatesTrait>;
     fn business_mates(&self) -> Arc<dyn BusinessMatesRepoTrait>;

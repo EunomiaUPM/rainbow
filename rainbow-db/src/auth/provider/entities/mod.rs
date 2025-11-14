@@ -20,4 +20,3 @@ pub mod recv_interaction;
 pub mod recv_request;
 pub mod recv_verification;
 pub mod business_mates;
-pub mod recv_token_requirements;

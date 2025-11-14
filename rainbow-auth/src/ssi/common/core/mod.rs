@@ -18,6 +18,8 @@
  */
 mod wallet_trait;
 mod vc_requester;
+mod mate_trait;
 
 pub use wallet_trait::CoreWalletTrait;
 pub use vc_requester::CoreVcRequesterTrait;
+pub use mate_trait::CoreMateTrait;

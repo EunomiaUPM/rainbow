@@ -19,7 +19,7 @@
 
 use crate::ssi::common::config::CommonConfigTrait;
 use crate::ssi::common::types::wallet::WalletConfig;
-use crate::ssi::utils::read;
+use crate::ssi::common::utils::read;
 use rainbow_common::config::database::DbType;
 use rainbow_common::config::global_config::{extract_env, option_extract_env, DatabaseConfig, HostConfig};
 use serde::Serialize;

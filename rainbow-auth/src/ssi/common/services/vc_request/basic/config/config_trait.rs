@@ -18,7 +18,7 @@
  */
 use std::format;
 use serde_json::{json, Value};
-use crate::ssi::utils::read;
+use crate::ssi::common::utils::read;
 
 pub trait VCRequesterConfigTrait {
     fn get_pretty_client_config(&self) -> anyhow::Result<Value>;

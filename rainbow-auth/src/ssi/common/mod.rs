@@ -23,3 +23,4 @@ pub mod errors;
 pub mod http;
 pub mod core;
 pub(crate) mod config;
+pub(crate) mod utils;

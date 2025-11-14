@@ -32,7 +32,7 @@ use axum::async_trait;
 use tracing::{error, info};
 use url::Url;
 use rainbow_common::utils::get_from_opt;
-use crate::ssi::utils::get_query_param;
+use crate::ssi::common::utils::get_query_param;
 
 pub struct VCReqService {
     client: Arc<dyn ClientServiceTrait>,

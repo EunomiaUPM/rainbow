@@ -20,9 +20,11 @@
 mod mates_repo;
 mod req_vc_repo;
 mod req_interaction_repo;
-pub mod req_verification_repo;
+mod req_verification_repo;
+mod token_requirements_repo;
 
 pub use req_vc_repo::VcRequestRepo;
 pub use mates_repo::MatesRepo;
 pub use req_interaction_repo::ReqInteractionRepo;
 pub use req_verification_repo::ReqVerificationRepo;
+pub use token_requirements_repo::TokenRequirementsRepo;

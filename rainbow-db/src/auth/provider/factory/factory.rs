@@ -18,14 +18,14 @@
  */
 
 use super::factory_trait::AuthProviderRepoTrait;
-use super::repos::{
-    BusinessMatesProviderRepo, RecvInteractionRepo, RecvRequestRepo, RecvTokenRequirementsRepo, RecvVerificationRepo,
+use super::repos::{BusinessMatesProviderRepo, RecvInteractionRepo, RecvRequestRepo, RecvVerificationRepo};
+use super::traits::{BusinessMatesRepoTrait, RecvInteractionTrait, RecvRequestTrait, RecvVerificationTrait};
+use crate::auth::common::repos::{
+    MatesRepo, ReqInteractionRepo, ReqVerificationRepo, TokenRequirementsRepo, VcRequestRepo,
 };
-use super::traits::{
-    BusinessMatesRepoTrait, RecvInteractionTrait, RecvRequestTrait, RecvTokenRequirementsTrait, RecvVerificationTrait,
+use crate::auth::common::traits::{
+    MatesTrait, ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait, TokenRequirementsTrait,
 };
-use crate::auth::common::repos::{MatesRepo, ReqInteractionRepo, ReqVerificationRepo, VcRequestRepo};
-use crate::auth::common::traits::{MatesTrait, ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait};
 use sea_orm::DatabaseConnection;
 use std::sync::Arc;
 
@@ -36,7 +36,7 @@ pub struct AuthProviderRepoForSql {
     interaction_req_repo: Arc<dyn ReqInteractionTrait>,
     verification_rcvr_repo: Arc<dyn RecvVerificationTrait>,
     verification_req_repo: Arc<dyn ReqVerificationTrait>,
-    token_req_repo: Arc<dyn RecvTokenRequirementsTrait>,
+    token_req_repo: Arc<dyn TokenRequirementsTrait>,
     authority_repo: Arc<dyn ReqVcTrait>,
     mates_repo: Arc<dyn MatesTrait>,
     business_mates_repo: Arc<dyn BusinessMatesRepoTrait>,
@@ -50,7 +50,7 @@ impl AuthProviderRepoForSql {
             interaction_req_repo: Arc::new(ReqInteractionRepo::new(db_connection.clone())),
             verification_rcvr_repo: Arc::new(RecvVerificationRepo::new(db_connection.clone())),
             verification_req_repo: Arc::new(ReqVerificationRepo::new(db_connection.clone())),
-            token_req_repo: Arc::new(RecvTokenRequirementsRepo::new(db_connection.clone())),
+            token_req_repo: Arc::new(TokenRequirementsRepo::new(db_connection.clone())),
             authority_repo: Arc::new(VcRequestRepo::new(db_connection.clone())),
             mates_repo: Arc::new(MatesRepo::new(db_connection.clone())),
             business_mates_repo: Arc::new(BusinessMatesProviderRepo::new(db_connection)),
@@ -77,7 +77,7 @@ impl AuthProviderRepoTrait for AuthProviderRepoForSql {
         self.verification_req_repo.clone()
     }
 
-    fn token_requirements_rcv(&self) -> Arc<dyn RecvTokenRequirementsTrait> {
+    fn token_requirements(&self) -> Arc<dyn TokenRequirementsTrait> {
         self.token_req_repo.clone()
     }
 

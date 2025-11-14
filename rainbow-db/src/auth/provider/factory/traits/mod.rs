@@ -19,12 +19,10 @@
 
 mod recv_interaction_trait;
 mod recv_request_trait;
-mod recv_token_requirements_trait;
 mod recv_verification_trait;
 mod business_mates_trait;
 
 pub use recv_interaction_trait::RecvInteractionTrait;
 pub use recv_request_trait::RecvRequestTrait;
-pub use recv_token_requirements_trait::RecvTokenRequirementsTrait;
 pub use recv_verification_trait::RecvVerificationTrait;
 pub use business_mates_trait::BusinessMatesRepoTrait;

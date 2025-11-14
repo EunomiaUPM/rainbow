@@ -18,7 +18,6 @@
  */
 mod m20250403_094651_recv_interaction;
 mod m20250403_094651_recv_request;
-mod m20250403_094651_recv_token_requirements;
 mod m20250403_094651_recv_verification;
 mod m20250403_094651_business_mates;
 mod migrator;

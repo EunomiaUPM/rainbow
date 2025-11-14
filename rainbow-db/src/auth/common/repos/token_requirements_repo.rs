@@ -17,25 +17,25 @@
  *
  */
 
-use crate::auth::consumer::entities::req_token_requirements::{Entity, Model};
-use super::super::traits::ReqTokenRequirementsTrait;
+use crate::auth::common::entities::token_requirements::{Entity, Model};
+use crate::auth::common::traits::token_requirements_trait::TokenRequirementsTrait;
 use crate::common::{BasicRepoTrait, GenericRepo};
 use axum::async_trait;
 use sea_orm::DatabaseConnection;
 
 #[derive(Clone)]
-pub struct ReqTokenRequirementsRepo {
+pub struct TokenRequirementsRepo {
     inner: GenericRepo<Entity, Model>,
 }
 
-impl ReqTokenRequirementsRepo {
+impl TokenRequirementsRepo {
     pub fn new(db_connection: DatabaseConnection) -> Self {
         Self { inner: GenericRepo::new(db_connection) }
     }
 }
 
 #[async_trait]
-impl BasicRepoTrait<Model, Model> for ReqTokenRequirementsRepo {
+impl BasicRepoTrait<Model, Model> for TokenRequirementsRepo {
     async fn get_all(&self, limit: Option<u64>, offset: Option<u64>) -> anyhow::Result<Vec<Model>> {
         self.inner.get_all(limit, offset).await
     }
@@ -58,4 +58,4 @@ impl BasicRepoTrait<Model, Model> for ReqTokenRequirementsRepo {
 }
 
 #[async_trait]
-impl ReqTokenRequirementsTrait for ReqTokenRequirementsRepo {}
+impl TokenRequirementsTrait for TokenRequirementsRepo {}

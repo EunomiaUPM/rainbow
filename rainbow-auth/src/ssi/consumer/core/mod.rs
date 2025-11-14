@@ -18,5 +18,5 @@
  */
 
 mod consumer;
-mod traits;
+pub(crate) mod traits;
 pub use consumer::AuthConsumer;

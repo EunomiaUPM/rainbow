@@ -18,11 +18,11 @@
  */
 use crate::ssi::common::core::CoreWalletTrait;
 use crate::ssi::common::errors::CustomToResponse;
-use crate::ssi::common::types::wallet::{DidsInfo, KeyDefinition};
+use crate::ssi::common::types::wallet::{DidsInfo, KeyDefinition, OidcUri};
 use axum::extract::rejection::JsonRejection;
 use axum::extract::State;
 use axum::http::StatusCode;
-use axum::response::IntoResponse;
+use axum::response::{IntoResponse, Redirect};
 use axum::routing::{delete, get, post};
 use axum::{Json, Router};
 use std::sync::Arc;
@@ -48,6 +48,8 @@ impl WalletRouter {
             .route("/key", delete(Self::delete_key))
             .route("/did", delete(Self::delete_did))
             .route("/did.json", get(Self::did_json))
+            .route("/oidc4vci", post(Self::process_oidc4vci))
+            .route("/oidc4vp", post(Self::process_oidc4vp))
             .with_state(self.holder)
     }
 
@@ -134,6 +136,37 @@ impl WalletRouter {
     async fn did_json(State(holder): State<Arc<dyn CoreWalletTrait>>) -> impl IntoResponse {
         match holder.get_did_doc().await {
             Ok(data) => (StatusCode::OK, Json(data)).into_response(),
+            Err(e) => e.to_response(),
+        }
+    }
+
+    async fn process_oidc4vci(
+        State(holder): State<Arc<dyn CoreWalletTrait>>,
+        payload: Result<Json<OidcUri>, JsonRejection>,
+    ) -> impl IntoResponse {
+        let payload = match payload {
+            Ok(Json(data)) => data,
+            Err(e) => return e.into_response(),
+        };
+
+        match holder.process_oidc4vci(payload).await {
+            Ok(_) => StatusCode::OK.into_response(),
+            Err(e) => e.to_response(),
+        }
+    }
+
+    async fn process_oidc4vp(
+        State(holder): State<Arc<dyn CoreWalletTrait>>,
+        payload: Result<Json<OidcUri>, JsonRejection>,
+    ) -> impl IntoResponse {
+        let payload = match payload {
+            Ok(Json(data)) => data,
+            Err(e) => return e.into_response(),
+        };
+
+        match holder.process_oidc4vp(payload).await {
+            Ok(Some(data)) => Redirect::to(&data).into_response(),
+            Ok(None) => StatusCode::OK.into_response(),
             Err(e) => e.to_response(),
         }
     }

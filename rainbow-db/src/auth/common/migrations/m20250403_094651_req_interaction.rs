@@ -45,6 +45,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(AuthInteraction::ContinueToken).string())
                     .col(ColumnDef::new(AuthInteraction::ContinueWait).string())
                     .col(ColumnDef::new(AuthInteraction::ASNonce).string())
+                    .col(ColumnDef::new(AuthInteraction::OidcVpUri).string())
                     .col(ColumnDef::new(AuthInteraction::InteractRef).string())
                     .col(ColumnDef::new(AuthInteraction::Hash).string())
                     .to_owned(),
@@ -72,6 +73,7 @@ pub enum AuthInteraction {
     ContinueToken,
     ContinueWait,
     Hash,
+    OidcVpUri,
     HashMethod,
     Hints,
 }

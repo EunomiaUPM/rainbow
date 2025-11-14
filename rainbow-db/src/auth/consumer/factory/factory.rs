@@ -17,10 +17,14 @@
  *
  */
 use super::factory_trait::AuthConsumerRepoTrait;
-use super::repos::{ReqRequestRepo, ReqTokenRequirementsRepo};
-use super::traits::{ReqRequestTrait, ReqTokenRequirementsTrait};
-use crate::auth::common::repos::{MatesRepo, ReqInteractionRepo, ReqVerificationRepo, VcRequestRepo};
-use crate::auth::common::traits::{MatesTrait, ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait};
+use super::repos::ReqRequestRepo;
+use super::traits::ReqRequestTrait;
+use crate::auth::common::repos::{
+    MatesRepo, ReqInteractionRepo, ReqVerificationRepo, TokenRequirementsRepo, VcRequestRepo,
+};
+use crate::auth::common::traits::{
+    MatesTrait, ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait, TokenRequirementsTrait,
+};
 use sea_orm::DatabaseConnection;
 use std::sync::Arc;
 
@@ -29,7 +33,7 @@ pub struct AuthConsumerRepoForSql {
     request_repo: Arc<dyn ReqRequestTrait>,
     interaction_repo: Arc<dyn ReqInteractionTrait>,
     verification_repo: Arc<dyn ReqVerificationTrait>,
-    token_req_repo: Arc<dyn ReqTokenRequirementsTrait>,
+    token_req_repo: Arc<dyn TokenRequirementsTrait>,
     mates_repo: Arc<dyn MatesTrait>,
     authority_repo: Arc<dyn ReqVcTrait>,
 }
@@ -40,7 +44,7 @@ impl AuthConsumerRepoForSql {
             request_repo: Arc::new(ReqRequestRepo::new(db_connection.clone())),
             interaction_repo: Arc::new(ReqInteractionRepo::new(db_connection.clone())),
             verification_repo: Arc::new(ReqVerificationRepo::new(db_connection.clone())),
-            token_req_repo: Arc::new(ReqTokenRequirementsRepo::new(db_connection.clone())),
+            token_req_repo: Arc::new(TokenRequirementsRepo::new(db_connection.clone())),
             mates_repo: Arc::new(MatesRepo::new(db_connection.clone())),
             authority_repo: Arc::new(VcRequestRepo::new(db_connection.clone())),
         }
@@ -60,7 +64,7 @@ impl AuthConsumerRepoTrait for AuthConsumerRepoForSql {
         self.verification_repo.clone()
     }
 
-    fn token_requirements_req(&self) -> Arc<dyn ReqTokenRequirementsTrait> {
+    fn token_requirements(&self) -> Arc<dyn TokenRequirementsTrait> {
         self.token_req_repo.clone()
     }
 

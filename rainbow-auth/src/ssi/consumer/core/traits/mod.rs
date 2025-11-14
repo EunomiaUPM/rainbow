@@ -18,4 +18,7 @@
  */
 
 mod core_trait;
+mod onboarder_trait;
+
 pub use core_trait::CoreConsumerTrait;
+pub use onboarder_trait::CoreConsumerOnboarderTrait;

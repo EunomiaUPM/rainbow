@@ -16,18 +16,18 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use super::super::super::common::migrations::{m20250403_094651_mates, m20250403_094651_req_interaction, m20250403_094651_req_vc};
-use super::{
-    m20250403_094651_req_request, m20250403_094651_req_token_requirements,
+use super::m20250403_094651_req_request;
+use crate::auth::common::migrations::{
+    m20250403_094651_mates, m20250403_094651_req_interaction, m20250403_094651_req_vc,
+    m20250403_094651_req_verification, m20250403_094651_token_requirements,
 };
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
-use crate::auth::common::migrations::m20250403_094651_req_verification;
 
 pub fn get_auth_consumer_migrations() -> Vec<Box<dyn MigrationTrait>> {
     vec![
         Box::new(m20250403_094651_req_request::Migration),
         Box::new(m20250403_094651_req_interaction::Migration),
-        Box::new(m20250403_094651_req_token_requirements::Migration),
+        Box::new(m20250403_094651_token_requirements::Migration),
         Box::new(m20250403_094651_req_verification::Migration),
         Box::new(m20250403_094651_req_vc::Migration),
         Box::new(m20250403_094651_mates::Migration),

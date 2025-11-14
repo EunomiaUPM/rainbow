@@ -80,7 +80,7 @@ impl ErrorLog for AuthErrors {
 }
 
 impl AuthErrors {
-    pub fn wallet_new(url: String, method: String, http_code: u16, cause: &str) -> AuthErrors {
+    pub fn wallet_new(url: &str, method: &str, http_code: u16, cause: &str) -> AuthErrors {
         AuthErrors::WalletError {
             info: ErrorInfo {
                 message: "Unexpected response from the Wallet".to_string(),
@@ -89,8 +89,8 @@ impl AuthErrors {
                 details: None,
             },
             http_code,
-            url,
-            method,
+            url: url.to_string(),
+            method: method.to_string(),
             cause: cause.to_string(),
         }
     }

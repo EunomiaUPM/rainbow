@@ -18,6 +18,8 @@
  */
 mod wallet_router;
 mod vc_requester_router;
+mod mate_router;
 
 pub use wallet_router::WalletRouter;
 pub use vc_requester_router::VcRequesterRouter;
+pub use mate_router::MateRouter;
