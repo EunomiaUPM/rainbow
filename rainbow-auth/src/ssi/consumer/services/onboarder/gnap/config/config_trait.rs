@@ -16,9 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use std::format;
-use serde_json::{json, Value};
-use crate::ssi::common::utils::read;
+use serde_json::Value;
 
 pub trait GnapConfigTrait {
     fn get_pretty_client_config(&self) -> anyhow::Result<Value>;
