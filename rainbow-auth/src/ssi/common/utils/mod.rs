@@ -28,7 +28,7 @@ pub fn read(path: &str) -> anyhow::Result<String> {
         Ok(data) => Ok(data),
         Err(e) => {
             let error = CommonErrors::read_new(path, &e.to_string());
-            error!("{}", error);
+            error!("{}", error.log());
             bail!(error)
         }
     }

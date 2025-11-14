@@ -16,7 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-mod app;
+pub mod app;
 pub(crate) mod migrations;
 
 pub use app::AuthConsumerApplication;

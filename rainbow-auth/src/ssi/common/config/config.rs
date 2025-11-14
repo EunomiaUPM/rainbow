@@ -18,20 +18,19 @@
  */
 
 use crate::ssi::common::config::CommonConfigTrait;
-use crate::ssi::common::types::wallet::WalletConfig;
+use rainbow_common::ssi::{ClientConfig, WalletConfig};
 use crate::ssi::common::utils::read;
 use rainbow_common::config::database::DbType;
 use rainbow_common::config::global_config::{extract_env, option_extract_env, DatabaseConfig, HostConfig};
 use serde::Serialize;
 use serde_json::{json, Value};
-use crate::ssi::common::types::entities::SelfClient;
 
 #[derive(Clone, Serialize, Debug)]
 pub struct CommonAuthConfig {
     pub host: HostConfig,
     pub database_config: DatabaseConfig,
     pub ssi_wallet_config: WalletConfig,
-    pub client: SelfClient,
+    pub client: ClientConfig,
     pub keys_path: String,
     pub is_local: bool,
 }
@@ -58,11 +57,41 @@ impl CommonAuthConfig {
                 password: "rainbow".to_string(),
                 id: None,
             },
-            client: SelfClient {
+            client: ClientConfig {
                 class_id: "rainbow_consumer".to_string(),
                 display: None,
             },
-            keys_path: "./../../static/certificates/consumer/".to_string(),
+            keys_path: "./../static/certificates/consumer/".to_string(),
+            is_local: true,
+        }
+    }
+
+    pub fn default_4_provider() -> Self {
+        CommonAuthConfig {
+            host: HostConfig { protocol: "http".to_string(), url: "127.0.0.1".to_string(), port: "1100".to_string() },
+            database_config: DatabaseConfig {
+                db_type: DbType::Postgres,
+                url: "127.0.0.1".to_string(),
+                port: "1301".to_string(),
+                user: "ds_consumer".to_string(),
+                password: "ds_consumer".to_string(),
+                name: "ds_consumer".to_string(),
+            },
+            ssi_wallet_config: WalletConfig {
+                api_protocol: "http".to_string(),
+                api_url: "127.0.0.1".to_string(),
+                api_port: Some("7001".to_string()),
+                r#type: "email".to_string(),
+                name: "RainbowProvider".to_string(),
+                email: "RainbowProvider@rainbow.com".to_string(),
+                password: "rainbow".to_string(),
+                id: None,
+            },
+            client: ClientConfig {
+                class_id: "rainbow_provider".to_string(),
+                display: None,
+            },
+            keys_path: "./../static/certificates/provider/".to_string(),
             is_local: true,
         }
     }
@@ -192,7 +221,7 @@ impl CommonAuthConfig {
                 password: extract_env("WALLET_PASSWORD", default.ssi_wallet_config.password),
                 id: None,
             },
-            client: SelfClient {
+            client: ClientConfig {
                 class_id: extract_env("WALLET_API_URL", default.client.class_id),
                 display: None,
             },

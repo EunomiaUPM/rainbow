@@ -196,6 +196,7 @@ impl WalletServiceTrait for WaltIdService {
         self.retrieve_keys().await?;
         self.retrieve_wallet_dids().await?;
 
+        info!("---FIRST STEPS DONE---");
         let wallet = self.get_wallet().await?;
         let key_data = self.get_key().await?;
         let did_info = match wallet.dids.first() {
@@ -205,18 +206,23 @@ impl WalletServiceTrait for WaltIdService {
             }
         };
 
+        info!("---SECOND STEPS DONE---");
         self.delete_did(&did_info).await?;
         self.delete_key(&key_data).await?;
 
+        info!("---THIRD STEPS DONE---");
         self.register_key().await?;
         self.retrieve_keys().await?;
 
+        info!("---FOURTH STEPS DONE---");
         self.register_did().await?;
 
+        info!("---FIFTH STEPS DONE---");
         self.retrieve_wallet_info().await?;
         self.retrieve_wallet_dids().await?;
         self.set_default_did().await?;
 
+        info!("---SIX STEPS DONE---");
         let wallet = self.get_wallet().await?;
         let did_info = match wallet.dids.first() {
             Some(data) => data.clone(),
@@ -412,7 +418,9 @@ impl WalletServiceTrait for WaltIdService {
             200 => {
                 info!("Keys retrieved successfully");
                 let res = res.text().await?;
+                println!("{}",res);
                 let keys: Vec<KeyDefinition> = serde_json::from_str(&res)?;
+                println!("{:#?}", keys);
                 let mut key_data = self.key_data.lock().await;
                 for key in keys {
                     if !key_data.contains(&key) {

@@ -32,34 +32,34 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(AuthInteraction::Table)
-                    .col(ColumnDef::new(AuthInteraction::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(AuthInteraction::Start).array(ColumnType::Text).not_null())
-                    .col(ColumnDef::new(AuthInteraction::Method).string().not_null())
-                    .col(ColumnDef::new(AuthInteraction::Uri).string().not_null())
-                    .col(ColumnDef::new(AuthInteraction::ClientNonce).string().not_null())
-                    .col(ColumnDef::new(AuthInteraction::HashMethod).string().not_null())
-                    .col(ColumnDef::new(AuthInteraction::Hints).string())
-                    .col(ColumnDef::new(AuthInteraction::GrantEndpoint).string().not_null())
-                    .col(ColumnDef::new(AuthInteraction::ContinueEndpoint).string())
-                    .col(ColumnDef::new(AuthInteraction::ContinueToken).string())
-                    .col(ColumnDef::new(AuthInteraction::ContinueWait).string())
-                    .col(ColumnDef::new(AuthInteraction::ASNonce).string())
-                    .col(ColumnDef::new(AuthInteraction::OidcVpUri).string())
-                    .col(ColumnDef::new(AuthInteraction::InteractRef).string())
-                    .col(ColumnDef::new(AuthInteraction::Hash).string())
+                    .table(ReqInteraction::Table)
+                    .col(ColumnDef::new(ReqInteraction::Id).string().not_null().primary_key())
+                    .col(ColumnDef::new(ReqInteraction::Start).array(ColumnType::Text).not_null())
+                    .col(ColumnDef::new(ReqInteraction::Method).string().not_null())
+                    .col(ColumnDef::new(ReqInteraction::Uri).string().not_null())
+                    .col(ColumnDef::new(ReqInteraction::ClientNonce).string().not_null())
+                    .col(ColumnDef::new(ReqInteraction::HashMethod).string().not_null())
+                    .col(ColumnDef::new(ReqInteraction::Hints).string())
+                    .col(ColumnDef::new(ReqInteraction::GrantEndpoint).string().not_null())
+                    .col(ColumnDef::new(ReqInteraction::ContinueEndpoint).string())
+                    .col(ColumnDef::new(ReqInteraction::ContinueToken).string())
+                    .col(ColumnDef::new(ReqInteraction::ContinueWait).string())
+                    .col(ColumnDef::new(ReqInteraction::ASNonce).string())
+                    .col(ColumnDef::new(ReqInteraction::OidcVpUri).string())
+                    .col(ColumnDef::new(ReqInteraction::InteractRef).string())
+                    .col(ColumnDef::new(ReqInteraction::Hash).string())
                     .to_owned(),
             )
             .await
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(AuthInteraction::Table).to_owned()).await
+        manager.drop_table(Table::drop().table(ReqInteraction::Table).to_owned()).await
     }
 }
 
 #[derive(Iden)]
-pub enum AuthInteraction {
+pub enum ReqInteraction {
     Table,
     Id,
     Start,

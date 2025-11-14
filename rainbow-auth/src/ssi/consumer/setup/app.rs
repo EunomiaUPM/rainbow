@@ -24,21 +24,22 @@ use crate::ssi::common::services::wallet::waltid::WaltIdService;
 use crate::ssi::consumer::config::{AuthConsumerConfig, AuthConsumerConfigTrait};
 use crate::ssi::consumer::core::AuthConsumer;
 use crate::ssi::consumer::http::AuthConsumerRouter;
+use crate::ssi::consumer::services::onboarder::gnap::config::ConsumerGnapConfig;
+use crate::ssi::consumer::services::onboarder::gnap::ConsumerGnapService;
 use crate::ssi::provider::core::AuthProvider;
 use crate::ssi::provider::http::AuthProviderRouter;
-use axum::serve;
+use axum::{serve, Router};
+use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
 use rainbow_db::auth::consumer::factory::factory::AuthConsumerRepoForSql;
 use sea_orm::Database;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 use tracing::info;
-use crate::ssi::consumer::services::onboarder::gnap::config::ConsumerGnapConfig;
-use crate::ssi::consumer::services::onboarder::gnap::ConsumerGnapService;
 
 pub struct AuthConsumerApplication;
 
 impl AuthConsumerApplication {
-    pub async fn run(config: &AuthConsumerConfig) -> anyhow::Result<()> {
+    pub async fn create_router(config: &AuthConsumerConfig) -> Router {
         // CONFIGS
         let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
         let waltid_config = WaltIdConfig::from(config.clone());
@@ -49,7 +50,10 @@ impl AuthConsumerApplication {
         let client_service = Arc::new(BasicClientService::new());
         let wallet_service = Arc::new(WaltIdService::new(client_service.clone(), waltid_config));
         let vc_req_service = Arc::new(VCReqService::new(client_service.clone(), vc_req_config));
-        let onboarder_service = Arc::new(ConsumerGnapService::new(client_service.clone(), onboarder_config));
+        let onboarder_service = Arc::new(ConsumerGnapService::new(
+            client_service.clone(),
+            onboarder_config,
+        ));
         let repo_service = Arc::new(AuthConsumerRepoForSql::create_repo(db_connection));
 
         // CORE
@@ -63,7 +67,10 @@ impl AuthConsumerApplication {
         ));
 
         // ROUTER
-        let router = AuthConsumerRouter::new(consumer).router();
+        AuthConsumerRouter::new(consumer).router()
+    }
+    pub async fn run(config: &AuthConsumerConfig) -> anyhow::Result<()> {
+        let router = AuthConsumerApplication::create_router(config).await;
 
         // Init server
         let server_message = format!("Starting Auth Consumer server in {}", config.get_host());
@@ -77,5 +84,9 @@ impl AuthConsumerApplication {
         serve(listener, router).await?;
 
         Ok(())
+    }
+    pub async fn create_router_4_core(config: ApplicationConsumerConfig) -> Router {
+        let config = AuthConsumerConfig::from(config);
+        AuthConsumerApplication::create_router(&config).await
     }
 }

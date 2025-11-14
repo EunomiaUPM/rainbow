@@ -32,29 +32,29 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(AuthorityRequest::Table)
-                    .col(ColumnDef::new(AuthorityRequest::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(AuthorityRequest::AuthorityId).string().not_null())
-                    .col(ColumnDef::new(AuthorityRequest::AuthoritySlug).string().not_null())
-                    .col(ColumnDef::new(AuthorityRequest::GrantEndpoint).string().not_null())
-                    .col(ColumnDef::new(AuthorityRequest::VcType).string().not_null())
-                    .col(ColumnDef::new(AuthorityRequest::AssignedId).string())
-                    .col(ColumnDef::new(AuthorityRequest::VcUri).string())
-                    .col(ColumnDef::new(AuthorityRequest::Status).string().not_null())
-                    .col(ColumnDef::new(AuthorityRequest::CreatedAt).date_time().not_null())
-                    .col(ColumnDef::new(AuthorityRequest::EndedAt).date_time())
+                    .table(ReqVc::Table)
+                    .col(ColumnDef::new(ReqVc::Id).string().not_null().primary_key())
+                    .col(ColumnDef::new(ReqVc::AuthorityId).string().not_null())
+                    .col(ColumnDef::new(ReqVc::AuthoritySlug).string().not_null())
+                    .col(ColumnDef::new(ReqVc::GrantEndpoint).string().not_null())
+                    .col(ColumnDef::new(ReqVc::VcType).string().not_null())
+                    .col(ColumnDef::new(ReqVc::AssignedId).string())
+                    .col(ColumnDef::new(ReqVc::VcUri).string())
+                    .col(ColumnDef::new(ReqVc::Status).string().not_null())
+                    .col(ColumnDef::new(ReqVc::CreatedAt).date_time().not_null())
+                    .col(ColumnDef::new(ReqVc::EndedAt).date_time())
                     .to_owned(),
             )
             .await
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(AuthorityRequest::Table).to_owned()).await
+        manager.drop_table(Table::drop().table(ReqVc::Table).to_owned()).await
     }
 }
 
 #[derive(Iden)]
-pub enum AuthorityRequest {
+pub enum ReqVc {
     Table,
     Id,
     AuthorityId,

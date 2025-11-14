@@ -16,7 +16,6 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-mod wallet_config;
 mod dids_info;
 mod key_definition;
 mod wallet_info;
@@ -29,7 +28,6 @@ mod vpd;
 mod matching_vcs;
 mod other;
 
-pub use wallet_config::WalletConfig;
 pub use dids_info::DidsInfo;
 pub use key_definition::KeyDefinition;
 pub use wallet_info::WalletInfo;

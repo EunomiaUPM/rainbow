@@ -21,6 +21,8 @@ use crate::ssi::common::config::{CommonAuthConfig, CommonConfigTrait};
 use rainbow_common::config::global_config::extract_env;
 use serde::Serialize;
 use serde_json::Value;
+use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
+use rainbow_common::ssi::ClientConfig;
 
 #[derive(Clone, Serialize, Debug)]
 pub struct AuthConsumerConfig {
@@ -29,11 +31,28 @@ pub struct AuthConsumerConfig {
     pub field_extra: bool,
 }
 
-
-
 impl AuthConsumerConfig {
     pub fn new(common_config: CommonAuthConfig) -> Self {
         AuthConsumerConfig { common_config, field_extra: true }
+    }
+}
+
+impl From<ApplicationConsumerConfig> for AuthConsumerConfig {
+    fn from(config: ApplicationConsumerConfig) -> Self {
+        Self {
+            common_config: CommonAuthConfig {
+                host: config.auth_host.unwrap(),
+                database_config: config.database_config,
+                ssi_wallet_config: config.ssi_wallet_config,
+                client: ClientConfig {
+                    class_id: config.client_config.class_id,
+                    display: config.client_config.display,
+                },
+                keys_path: config.keys_path,
+                is_local: config.is_local,
+            },
+            field_extra: false,
+        }
     }
 }
 

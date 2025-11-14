@@ -17,16 +17,16 @@
  *
  */
 use super::VCRequesterConfigTrait;
-use crate::ssi::common::types::entities::SelfClient;
 use crate::ssi::common::utils::read;
-use serde_json::{json, Value};
-use rainbow_common::config::global_config::HostConfig;
 use crate::ssi::consumer::config::AuthConsumerConfig;
 use crate::ssi::provider::config::AuthProviderConfig;
+use rainbow_common::config::global_config::HostConfig;
+use rainbow_common::ssi::ClientConfig;
+use serde_json::{json, Value};
 
 pub struct VCRequesterConfig {
     host: HostConfig,
-    client: SelfClient,
+    client: ClientConfig,
     keys_path: String,
 }
 

@@ -33,32 +33,32 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(AuthVerification::Table)
-                    .col(ColumnDef::new(AuthVerification::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(AuthVerification::Uri).string().not_null())
-                    .col(ColumnDef::new(AuthVerification::Scheme).string().not_null())
-                    .col(ColumnDef::new(AuthVerification::ResponseType).string().not_null())
-                    .col(ColumnDef::new(AuthVerification::ClientId).string().not_null())
-                    .col(ColumnDef::new(AuthVerification::ResponseMode).string().not_null())
-                    .col(ColumnDef::new(AuthVerification::PDUri).string().not_null())
-                    .col(ColumnDef::new(AuthVerification::ClientIdScheme).string().not_null())
-                    .col(ColumnDef::new(AuthVerification::Nonce).string().not_null())
-                    .col(ColumnDef::new(AuthVerification::ResponseUri).string().not_null())
-                    .col(ColumnDef::new(AuthVerification::Status).string().not_null())
-                    .col(ColumnDef::new(AuthVerification::CreatedAt).date_time().not_null())
-                    .col(ColumnDef::new(AuthVerification::EndedAt).date_time())
+                    .table(ReqVerification::Table)
+                    .col(ColumnDef::new(ReqVerification::Id).string().not_null().primary_key())
+                    .col(ColumnDef::new(ReqVerification::Uri).string().not_null())
+                    .col(ColumnDef::new(ReqVerification::Scheme).string().not_null())
+                    .col(ColumnDef::new(ReqVerification::ResponseType).string().not_null())
+                    .col(ColumnDef::new(ReqVerification::ClientId).string().not_null())
+                    .col(ColumnDef::new(ReqVerification::ResponseMode).string().not_null())
+                    .col(ColumnDef::new(ReqVerification::PDUri).string().not_null())
+                    .col(ColumnDef::new(ReqVerification::ClientIdScheme).string().not_null())
+                    .col(ColumnDef::new(ReqVerification::Nonce).string().not_null())
+                    .col(ColumnDef::new(ReqVerification::ResponseUri).string().not_null())
+                    .col(ColumnDef::new(ReqVerification::Status).string().not_null())
+                    .col(ColumnDef::new(ReqVerification::CreatedAt).date_time().not_null())
+                    .col(ColumnDef::new(ReqVerification::EndedAt).date_time())
                     .to_owned(),
             )
             .await
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(AuthVerification::Table).to_owned()).await
+        manager.drop_table(Table::drop().table(ReqVerification::Table).to_owned()).await
     }
 }
 
 #[derive(Iden)]
-pub enum AuthVerification {
+pub enum ReqVerification {
     Table,
     Id,
     Scheme,

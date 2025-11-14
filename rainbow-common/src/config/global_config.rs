@@ -21,7 +21,7 @@ use crate::config::consumer_config::ApplicationConsumerConfig;
 use crate::config::database::DbType;
 use crate::config::provider_config::ApplicationProviderConfig;
 use crate::config::ConfigRoles;
-use crate::ssi::{ClientConfig, SSIWalletConfig};
+use crate::ssi::{ClientConfig, WalletConfig};
 use serde::Serialize;
 use std::env;
 
@@ -73,7 +73,7 @@ pub struct ApplicationGlobalConfig {
     pub contract_negotiation_host: Option<HostConfig>,
     pub auth_host: Option<HostConfig>,
     pub ssi_auth_host: Option<HostConfig>,
-    pub ssi_wallet_config: Option<SSIWalletConfig>,
+    pub ssi_wallet_config: Option<WalletConfig>,
     pub client_config: Option<ClientConfig>,
     pub gateway_host: Option<HostConfig>,
     pub is_gateway_in_production: bool,
@@ -81,6 +81,7 @@ pub struct ApplicationGlobalConfig {
     pub ssh_user: Option<String>,
     pub ssh_private_key_path: Option<String>,
     pub role: ConfigRoles,
+    pub keys_path: String,
     pub is_local: bool,
 }
 
@@ -101,18 +102,10 @@ impl From<ApplicationGlobalConfig> for ApplicationProviderConfig {
             database_config: value.database_config,
             ssh_user: value.ssh_user,
             ssh_private_key_path: value.ssh_private_key_path,
-            ssi_wallet_config: SSIWalletConfig {
-                wallet_api_protocol: value.ssi_wallet_config.clone().unwrap().wallet_api_protocol,
-                wallet_api_url: value.ssi_wallet_config.clone().unwrap().wallet_api_url,
-                wallet_api_port: value.ssi_wallet_config.clone().unwrap().wallet_api_port,
-                wallet_type: value.ssi_wallet_config.clone().unwrap().wallet_type,
-                wallet_name: value.ssi_wallet_config.clone().unwrap().wallet_name,
-                wallet_email: value.ssi_wallet_config.clone().unwrap().wallet_email,
-                wallet_password: value.ssi_wallet_config.clone().unwrap().wallet_password,
-                wallet_id: None,
-            },
+            ssi_wallet_config: value.ssi_wallet_config.unwrap(),
             client_config: value.client_config.unwrap(),
             role: value.role,
+            keys_path: value.keys_path,
             is_local: value.is_local,
         }
     }
@@ -139,6 +132,7 @@ impl Into<ApplicationGlobalConfig> for ApplicationProviderConfig {
             ssh_user: self.ssh_user,
             ssh_private_key_path: self.ssh_private_key_path,
             role: self.role,
+            keys_path: self.keys_path,
             is_local: self.is_local,
         }
     }
@@ -158,19 +152,20 @@ impl From<ApplicationGlobalConfig> for ApplicationConsumerConfig {
             database_config: value.database_config,
             ssh_user: value.ssh_user,
             ssh_private_key_path: value.ssh_private_key_path,
-            ssi_wallet_config: SSIWalletConfig {
-                wallet_api_protocol: value.ssi_wallet_config.clone().unwrap().wallet_api_protocol,
-                wallet_api_url: value.ssi_wallet_config.clone().unwrap().wallet_api_url,
-                wallet_api_port: value.ssi_wallet_config.clone().unwrap().wallet_api_port,
-                wallet_type: value.ssi_wallet_config.clone().unwrap().wallet_type,
-                wallet_name: value.ssi_wallet_config.clone().unwrap().wallet_name,
-                wallet_email: value.ssi_wallet_config.clone().unwrap().wallet_email,
-                wallet_password: value.ssi_wallet_config.clone().unwrap().wallet_password,
-                wallet_id: None,
+            ssi_wallet_config: WalletConfig {
+                api_protocol: value.ssi_wallet_config.clone().unwrap().api_protocol,
+                api_url: value.ssi_wallet_config.clone().unwrap().api_url,
+                api_port: value.ssi_wallet_config.clone().unwrap().api_port,
+                r#type: value.ssi_wallet_config.clone().unwrap().r#type,
+                name: value.ssi_wallet_config.clone().unwrap().name,
+                email: value.ssi_wallet_config.clone().unwrap().email,
+                password: value.ssi_wallet_config.clone().unwrap().password,
+                id: None,
             },
             role: value.role,
             client_config: value.client_config.unwrap(),
             is_local: value.is_local,
+            keys_path: value.keys_path,
         }
     }
 }
@@ -196,6 +191,7 @@ impl Into<ApplicationGlobalConfig> for ApplicationConsumerConfig {
             ssh_user: self.ssh_user,
             ssh_private_key_path: self.ssh_private_key_path,
             role: self.role,
+            keys_path: self.keys_path,
             is_local: self.is_local,
         }
     }

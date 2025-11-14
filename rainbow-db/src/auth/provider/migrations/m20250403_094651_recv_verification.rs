@@ -33,29 +33,29 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(AuthVerification::Table)
-                    .col(ColumnDef::new(AuthVerification::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(AuthVerification::State).string().not_null())
-                    .col(ColumnDef::new(AuthVerification::Nonce).string().not_null())
-                    .col(ColumnDef::new(AuthVerification::Audience).string().not_null())
-                    .col(ColumnDef::new(AuthVerification::Holder).string())
-                    .col(ColumnDef::new(AuthVerification::Vpt).string())
-                    .col(ColumnDef::new(AuthVerification::Success).boolean())
-                    .col(ColumnDef::new(AuthVerification::Status).string().not_null())
-                    .col(ColumnDef::new(AuthVerification::CreatedAt).date_time().not_null())
-                    .col(ColumnDef::new(AuthVerification::EndedAt).date_time())
+                    .table(RecvVerification::Table)
+                    .col(ColumnDef::new(RecvVerification::Id).string().not_null().primary_key())
+                    .col(ColumnDef::new(RecvVerification::State).string().not_null())
+                    .col(ColumnDef::new(RecvVerification::Nonce).string().not_null())
+                    .col(ColumnDef::new(RecvVerification::Audience).string().not_null())
+                    .col(ColumnDef::new(RecvVerification::Holder).string())
+                    .col(ColumnDef::new(RecvVerification::Vpt).string())
+                    .col(ColumnDef::new(RecvVerification::Success).boolean())
+                    .col(ColumnDef::new(RecvVerification::Status).string().not_null())
+                    .col(ColumnDef::new(RecvVerification::CreatedAt).date_time().not_null())
+                    .col(ColumnDef::new(RecvVerification::EndedAt).date_time())
                     .to_owned(),
             )
             .await
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(AuthVerification::Table).to_owned()).await
+        manager.drop_table(Table::drop().table(RecvVerification::Table).to_owned()).await
     }
 }
 
 #[derive(Iden)]
-pub enum AuthVerification {
+pub enum RecvVerification {
     Table,
     Id,
     State,

@@ -22,6 +22,8 @@ use crate::ssi::provider::config::AuthProviderConfigTrait;
 use rainbow_common::config::global_config::extract_env;
 use serde::Serialize;
 use serde_json::Value;
+use rainbow_common::config::provider_config::ApplicationProviderConfig;
+use rainbow_common::ssi::ClientConfig;
 
 #[derive(Clone, Serialize, Debug)]
 pub struct AuthProviderConfig {
@@ -36,9 +38,28 @@ impl AuthProviderConfig {
     }
 }
 
+impl From<ApplicationProviderConfig> for AuthProviderConfig {
+    fn from(config: ApplicationProviderConfig) -> Self {
+        Self {
+            common_config: CommonAuthConfig {
+                host: config.auth_host.unwrap(),
+                database_config: config.database_config,
+                ssi_wallet_config: config.ssi_wallet_config,
+                client: ClientConfig {
+                    class_id: config.client_config.class_id,
+                    display: config.client_config.display,
+                },
+                keys_path: config.keys_path,
+                is_local: config.is_local,
+            },
+            field_extra: false,
+        }
+    }
+}
+
 impl AuthProviderConfigTrait for AuthProviderConfig {
     fn merge_dotenv_configuration(env_file: Option<String>) -> Self {
-        let common_default = CommonAuthConfig::default_4_consumer();
+        let common_default = CommonAuthConfig::default_4_provider();
         let common_config = CommonAuthConfig::merge_dotenv_configuration(env_file, common_default);
 
         let config = AuthProviderConfig::new(common_config);

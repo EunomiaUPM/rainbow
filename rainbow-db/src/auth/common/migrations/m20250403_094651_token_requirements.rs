@@ -32,28 +32,28 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(AuthTokenRequirements::Table)
-                    .col(ColumnDef::new(AuthTokenRequirements::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(AuthTokenRequirements::Type).string().not_null())
-                    .col(ColumnDef::new(AuthTokenRequirements::Actions).array(ColumnType::Text))
-                    .col(ColumnDef::new(AuthTokenRequirements::Locations).array(ColumnType::Text))
-                    .col(ColumnDef::new(AuthTokenRequirements::Datatypes).array(ColumnType::Text))
-                    .col(ColumnDef::new(AuthTokenRequirements::Identifier).string())
-                    .col(ColumnDef::new(AuthTokenRequirements::Privileges).array(ColumnType::Text))
-                    .col(ColumnDef::new(AuthTokenRequirements::Label).string())
-                    .col(ColumnDef::new(AuthTokenRequirements::Flags).array(ColumnType::Text))
+                    .table(TokenRequirements::Table)
+                    .col(ColumnDef::new(TokenRequirements::Id).string().not_null().primary_key())
+                    .col(ColumnDef::new(TokenRequirements::Type).string().not_null())
+                    .col(ColumnDef::new(TokenRequirements::Actions).array(ColumnType::Text))
+                    .col(ColumnDef::new(TokenRequirements::Locations).array(ColumnType::Text))
+                    .col(ColumnDef::new(TokenRequirements::Datatypes).array(ColumnType::Text))
+                    .col(ColumnDef::new(TokenRequirements::Identifier).string())
+                    .col(ColumnDef::new(TokenRequirements::Privileges).array(ColumnType::Text))
+                    .col(ColumnDef::new(TokenRequirements::Label).string())
+                    .col(ColumnDef::new(TokenRequirements::Flags).array(ColumnType::Text))
                     .to_owned(),
             )
             .await
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(AuthTokenRequirements::Table).to_owned()).await
+        manager.drop_table(Table::drop().table(TokenRequirements::Table).to_owned()).await
     }
 }
 
 #[derive(Iden)]
-pub enum AuthTokenRequirements {
+pub enum TokenRequirements {
     Table,
     Id,
     Type,

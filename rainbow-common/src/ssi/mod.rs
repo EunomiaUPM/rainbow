@@ -22,7 +22,6 @@ use serde::{Deserialize, Serialize};
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct ClientConfig {
     pub class_id: String, // como se denomina una entidad a si misma
-    pub cert_path: String,
     pub display: Option<DisplayInfo>,
 }
 
@@ -34,13 +33,13 @@ pub struct DisplayInfo {
 }
 
 #[derive(Serialize, Clone, Debug)]
-pub struct SSIWalletConfig {
-    pub wallet_api_protocol: String,
-    pub wallet_api_url: String,
-    pub wallet_api_port: Option<String>,
-    pub wallet_type: String,
-    pub wallet_name: String,
-    pub wallet_email: String,
-    pub wallet_password: String,
-    pub wallet_id: Option<String>,
+pub struct WalletConfig {
+    pub api_protocol: String,
+    pub api_url: String,
+    pub api_port: Option<String>,
+    pub r#type: String,
+    pub name: String,
+    pub email: String,
+    pub password: String,
+    pub id: Option<String>,
 }

@@ -18,7 +18,7 @@
  */
 use serde_json::{json, Value};
 use crate::ssi::common::services::wallet::waltid::config::config_trait::WaltIdConfigTrait;
-use crate::ssi::common::types::wallet::WalletConfig;
+use rainbow_common::ssi::WalletConfig;
 use crate::ssi::consumer::config::AuthConsumerConfig;
 use crate::ssi::provider::config::AuthProviderConfig;
 use crate::ssi::common::utils::read;

@@ -16,7 +16,5 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-mod self_client;
 mod reacher;
-pub use self_client::SelfClient;
 pub use reacher::*;

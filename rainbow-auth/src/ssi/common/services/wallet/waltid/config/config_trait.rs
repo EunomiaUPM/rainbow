@@ -17,7 +17,7 @@
  *
  */
 use serde_json::Value;
-use crate::ssi::common::types::wallet::WalletConfig;
+use rainbow_common::ssi::WalletConfig;
 
 pub trait WaltIdConfigTrait {
     fn get_raw_wallet_config(&self) -> WalletConfig;

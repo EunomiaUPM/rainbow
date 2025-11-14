@@ -16,7 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::ssi::common::types::entities::SelfClient;
+use rainbow_common::ssi::ClientConfig;
 use crate::ssi::common::utils::read;
 use crate::ssi::consumer::config::AuthConsumerConfig;
 use crate::ssi::consumer::services::onboarder::gnap::config::GnapConfigTrait;
@@ -25,7 +25,7 @@ use serde_json::{json, Value};
 
 pub struct ConsumerGnapConfig {
     host: HostConfig,
-    client: SelfClient,
+    client: ClientConfig,
     keys_path: String,
 }
 

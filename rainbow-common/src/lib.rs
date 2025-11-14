@@ -31,6 +31,6 @@ pub mod protocol;
 pub mod schemas;
 pub mod utils;
 pub mod errors;
-mod ssi;
+pub mod ssi;
 pub mod openapi;
 pub mod batch_requests;

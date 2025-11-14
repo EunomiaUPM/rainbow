@@ -32,33 +32,33 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(AuthInteraction::Table)
-                    .col(ColumnDef::new(AuthInteraction::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(AuthInteraction::Start).array(ColumnType::Text).not_null())
-                    .col(ColumnDef::new(AuthInteraction::Method).string().not_null())
-                    .col(ColumnDef::new(AuthInteraction::Uri).string().not_null())
-                    .col(ColumnDef::new(AuthInteraction::ClientNonce).string().not_null())
-                    .col(ColumnDef::new(AuthInteraction::HashMethod).string().not_null())
-                    .col(ColumnDef::new(AuthInteraction::Hints).string())
-                    .col(ColumnDef::new(AuthInteraction::GrantEndpoint).string().not_null())
-                    .col(ColumnDef::new(AuthInteraction::ContinueEndpoint).string().not_null())
-                    .col(ColumnDef::new(AuthInteraction::ContinueId).string().not_null())
-                    .col(ColumnDef::new(AuthInteraction::ContinueToken).string().not_null())
-                    .col(ColumnDef::new(AuthInteraction::ASNonce).string())
-                    .col(ColumnDef::new(AuthInteraction::InteractRef).string())
-                    .col(ColumnDef::new(AuthInteraction::Hash).string())
+                    .table(RecvInteraction::Table)
+                    .col(ColumnDef::new(RecvInteraction::Id).string().not_null().primary_key())
+                    .col(ColumnDef::new(RecvInteraction::Start).array(ColumnType::Text).not_null())
+                    .col(ColumnDef::new(RecvInteraction::Method).string().not_null())
+                    .col(ColumnDef::new(RecvInteraction::Uri).string().not_null())
+                    .col(ColumnDef::new(RecvInteraction::ClientNonce).string().not_null())
+                    .col(ColumnDef::new(RecvInteraction::HashMethod).string().not_null())
+                    .col(ColumnDef::new(RecvInteraction::Hints).string())
+                    .col(ColumnDef::new(RecvInteraction::GrantEndpoint).string().not_null())
+                    .col(ColumnDef::new(RecvInteraction::ContinueEndpoint).string().not_null())
+                    .col(ColumnDef::new(RecvInteraction::ContinueId).string().not_null())
+                    .col(ColumnDef::new(RecvInteraction::ContinueToken).string().not_null())
+                    .col(ColumnDef::new(RecvInteraction::ASNonce).string())
+                    .col(ColumnDef::new(RecvInteraction::InteractRef).string())
+                    .col(ColumnDef::new(RecvInteraction::Hash).string())
                     .to_owned(),
             )
             .await
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.drop_table(Table::drop().table(AuthInteraction::Table).to_owned()).await
+        manager.drop_table(Table::drop().table(RecvInteraction::Table).to_owned()).await
     }
 }
 
 #[derive(Iden)]
-pub enum AuthInteraction {
+pub enum RecvInteraction {
     Table,
     Id,
     Start,

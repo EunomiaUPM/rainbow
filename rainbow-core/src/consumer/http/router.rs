@@ -18,7 +18,7 @@
  */
 
 use axum::Router;
-use rainbow_auth::ssi_auth::consumer::setup::app::create_ssi_consumer_router;
+use rainbow_auth::ssi::consumer::setup::app::AuthConsumerApplication;
 use rainbow_catalog::consumer::setup::application::create_catalog_bypass_consumer_router;
 // use rainbow_catalog::consumer::setup::application::create_catalog_bypass_consumer_router;
 use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
@@ -27,7 +27,7 @@ use rainbow_transfer::consumer::setup::application::create_transfer_consumer_rou
 
 pub async fn create_core_consumer_router(config: &ApplicationConsumerConfig) -> Router {
     let app_config: ApplicationConsumerConfig = config.clone().into();
-    let auth_router = create_ssi_consumer_router(app_config.clone().into()).await;
+    let auth_router = AuthConsumerApplication::create_router_4_core(app_config.clone().into()).await;
     let transfer_router = create_transfer_consumer_router(&app_config.clone().into()).await;
     let cn_router = create_contract_negotiation_consumer_router(&app_config.clone().into()).await;
     let catalog_bypass_router = create_catalog_bypass_consumer_router(app_config.clone().into()).await;
