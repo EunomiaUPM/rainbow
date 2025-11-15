@@ -16,7 +16,6 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use std::format;
 
 pub trait VerifierConfigTrait {
     fn get_host(&self) -> String;
