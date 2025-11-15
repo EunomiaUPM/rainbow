@@ -37,6 +37,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(RecvVerification::Id).string().not_null().primary_key())
                     .col(ColumnDef::new(RecvVerification::State).string().not_null())
                     .col(ColumnDef::new(RecvVerification::Nonce).string().not_null())
+                    .col(ColumnDef::new(RecvVerification::VcType).string().not_null())
                     .col(ColumnDef::new(RecvVerification::Audience).string().not_null())
                     .col(ColumnDef::new(RecvVerification::Holder).string())
                     .col(ColumnDef::new(RecvVerification::Vpt).string())
@@ -60,6 +61,7 @@ pub enum RecvVerification {
     Id,
     State,
     Nonce,
+    VcType,
     Audience,
     Holder,
     Vpt,

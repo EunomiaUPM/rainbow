@@ -18,11 +18,11 @@
  */
 use crate::ssi::common::core::{CoreMateTrait, CoreVcRequesterTrait, CoreWalletTrait};
 use crate::ssi::common::services::client::ClientServiceTrait;
-use crate::ssi::common::services::vc_request::VcRequesterTrait;
+use crate::ssi::common::services::vc_requester::VcRequesterTrait;
 use crate::ssi::common::services::wallet::WalletServiceTrait;
 use crate::ssi::consumer::config::AuthConsumerConfig;
-use crate::ssi::consumer::core::traits::{CoreConsumerOnboarderTrait, CoreConsumerTrait};
-use crate::ssi::consumer::services::onboarder::ConsumerOnboarderTrait;
+use crate::ssi::consumer::core::traits::{CoreOnboarderTrait, CoreConsumerTrait};
+use crate::ssi::consumer::services::onboarder::OnboarderTrait;
 use rainbow_db::auth::common::traits::{MatesTrait, ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait};
 use rainbow_db::auth::consumer::factory::AuthConsumerRepoTrait;
 use std::sync::Arc;
@@ -30,7 +30,7 @@ use std::sync::Arc;
 pub struct AuthConsumer {
     wallet: Arc<dyn WalletServiceTrait>,
     vc_requester: Arc<dyn VcRequesterTrait>,
-    onboarder: Arc<dyn ConsumerOnboarderTrait>,
+    onboarder: Arc<dyn OnboarderTrait>,
     repo: Arc<dyn AuthConsumerRepoTrait>,
     client: Arc<dyn ClientServiceTrait>,
     config: AuthConsumerConfig,
@@ -40,7 +40,7 @@ impl AuthConsumer {
     pub fn new(
         wallet: Arc<dyn WalletServiceTrait>,
         vc_requester: Arc<dyn VcRequesterTrait>,
-        onboarder: Arc<dyn ConsumerOnboarderTrait>,
+        onboarder: Arc<dyn OnboarderTrait>,
         repo: Arc<dyn AuthConsumerRepoTrait>,
         client: Arc<dyn ClientServiceTrait>,
         config: AuthConsumerConfig,
@@ -85,8 +85,8 @@ impl CoreMateTrait for AuthConsumer {
     }
 }
 
-impl CoreConsumerOnboarderTrait for AuthConsumer {
-    fn onboarder(&self) -> Arc<dyn ConsumerOnboarderTrait> {
+impl CoreOnboarderTrait for AuthConsumer {
+    fn onboarder(&self) -> Arc<dyn OnboarderTrait> {
         self.onboarder.clone()
     }
 

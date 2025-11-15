@@ -18,6 +18,7 @@
  */
 
 use super::access_token::AccessToken;
+use rainbow_db::auth::provider::entities::recv_interaction;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -73,6 +74,28 @@ pub struct Subject4GResponse {
 }
 
 impl GrantResponse {
+    pub fn default_4_oidc(int_model: &recv_interaction::Model, uri: String) -> Self {
+        Self {
+            r#continue: Some(Continue4GResponse {
+                uri: int_model.continue_endpoint.clone(),
+                wait: None, // TODO Manage wait time it should be at least 5 secs
+                access_token: AccessToken::default(int_model.continue_token.clone()),
+            }),
+            access_token: None,
+            interact: Some(Interact4GResponse {
+                oidc4vp: Some(uri),
+                redirect: None,
+                app: None,
+                user_code: None,
+                user_code_uri: None,
+                finish: None,
+                expires_in: None,
+            }),
+            subject: None,
+            instance_id: Some(int_model.id.clone()),
+            error: None,
+        }
+    }
     pub fn default4oidc4vp(
         id: String,
         continue_uri: String,

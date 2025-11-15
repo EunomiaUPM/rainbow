@@ -16,46 +16,25 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use rainbow_common::ssi::ClientConfig;
-use crate::ssi::common::utils::read;
-use crate::ssi::consumer::config::AuthConsumerConfig;
-use crate::ssi::consumer::services::onboarder::gnap::config::GnapOnboarderConfigTrait;
 use rainbow_common::config::global_config::HostConfig;
-use serde_json::{json, Value};
+use crate::ssi::provider::config::AuthProviderConfig;
+use crate::ssi::provider::services::gatekeeper::gnap::config::GnapGateKeeperConfigTrait;
 
-pub struct GnapOnboarderConfig {
+pub struct GnapGateKeeperConfig {
     host: HostConfig,
-    client: ClientConfig,
-    keys_path: String,
+    is_local: bool,
 }
 
-impl From<AuthConsumerConfig> for GnapOnboarderConfig {
-    fn from(value: AuthConsumerConfig) -> Self {
-        GnapOnboarderConfig {
+impl From<AuthProviderConfig> for GnapGateKeeperConfig {
+    fn from(value: AuthProviderConfig) -> Self {
+        Self {
             host: value.common_config.host,
-            client: value.common_config.client,
-            keys_path: value.common_config.keys_path,
+            is_local: value.common_config.is_local
         }
     }
 }
 
-impl GnapOnboarderConfigTrait for GnapOnboarderConfig {
-    fn get_pretty_client_config(&self) -> anyhow::Result<Value> {
-        let path = format!("{}/cert.pem", self.keys_path);
-        let cert = read(&path)?;
-
-        let clean_cert = cert.lines().filter(|line| !line.starts_with("-----")).collect::<String>();
-
-        let key = json!({
-            "proof": "httpsig",
-            "cert": clean_cert
-        });
-        Ok(json!({
-            "key" : key,
-            "class_id" : self.client.class_id,
-            "display" : self.client.display,
-        }))
-    }
+impl GnapGateKeeperConfigTrait for GnapGateKeeperConfig {
     fn get_host(&self) -> String {
         let host = self.host.clone();
         match host.port.is_empty() {
@@ -66,5 +45,8 @@ impl GnapOnboarderConfigTrait for GnapOnboarderConfig {
                 format!("{}://{}:{}", host.protocol, host.url, host.port)
             }
         }
+    }
+    fn is_local(&self) -> bool {
+        self.is_local
     }
 }

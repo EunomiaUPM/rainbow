@@ -17,8 +17,8 @@
  *
  */
 use crate::ssi::common::services::client::basic::BasicClientService;
-use crate::ssi::common::services::vc_request::basic::config::VCRequesterConfig;
-use crate::ssi::common::services::vc_request::basic::VCReqService;
+use crate::ssi::common::services::vc_requester::basic::config::VCRequesterConfig;
+use crate::ssi::common::services::vc_requester::basic::VCReqService;
 use crate::ssi::common::services::wallet::waltid::config::WaltIdConfig;
 use crate::ssi::common::services::wallet::waltid::WaltIdService;
 use crate::ssi::consumer::config::AuthConsumerConfig;
@@ -26,6 +26,10 @@ use crate::ssi::consumer::setup::AuthConsumerApplication;
 use crate::ssi::provider::config::{AuthProviderConfig, AuthProviderConfigTrait};
 use crate::ssi::provider::core::AuthProvider;
 use crate::ssi::provider::http::AuthProviderRouter;
+use crate::ssi::provider::services::gatekeeper::gnap::config::GnapGateKeeperConfig;
+use crate::ssi::provider::services::gatekeeper::gnap::GnapGateKeeperService;
+use crate::ssi::provider::services::verifier::basic_v1::config::VerifierConfig;
+use crate::ssi::provider::services::verifier::basic_v1::VerifierService;
 use axum::{serve, Router};
 use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
 use rainbow_common::config::provider_config::ApplicationProviderConfig;
@@ -43,17 +47,26 @@ impl AuthProviderApplication {
         let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
         let waltid_config = WaltIdConfig::from(config.clone());
         let vc_req_config = VCRequesterConfig::from(config.clone());
+        let gatekeeper_config = GnapGateKeeperConfig::from(config.clone());
+        let verifier_config = VerifierConfig::from(config.clone());
 
         // SERVICES
         let client_service = Arc::new(BasicClientService::new());
         let wallet_service = Arc::new(WaltIdService::new(client_service.clone(), waltid_config));
         let vc_req_service = Arc::new(VCReqService::new(client_service.clone(), vc_req_config));
+        let gatekeeper_service = Arc::new(GnapGateKeeperService::new(gatekeeper_config));
+        let verifier_service = Arc::new(VerifierService::new(
+            client_service.clone(),
+            verifier_config,
+        ));
         let repo_service = Arc::new(AuthProviderRepoForSql::create_repo(db_connection));
 
         // CORE
         let provider = Arc::new(AuthProvider::new(
             wallet_service,
             vc_req_service,
+            gatekeeper_service,
+            verifier_service,
             repo_service,
             client_service,
             config.clone(),

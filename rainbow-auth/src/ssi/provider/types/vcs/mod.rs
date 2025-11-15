@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
+ *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
  *  *
  *  * This program is free software: you can redistribute it and/or modify
  *  * it under the terms of the GNU General Public License as published by
@@ -16,12 +16,10 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+mod input_descriptor;
+mod vpd;
+mod verify_payload;
 
-use crate::ssi::common::core::{CoreMateTrait, CoreVcRequesterTrait, CoreWalletTrait};
-use crate::ssi::provider::core::traits::core_verifier::CoreVerifierTrait;
-use crate::ssi::provider::core::traits::CoreGateKeeperTrait;
-
-pub trait CoreProviderTrait:
-    CoreVerifierTrait + CoreGateKeeperTrait + CoreWalletTrait + CoreVcRequesterTrait + CoreMateTrait + Send + Sync + 'static
-{
-}
+pub use input_descriptor::InputDescriptor;
+pub use vpd::VPDef;
+pub use verify_payload::VerifyPayload;

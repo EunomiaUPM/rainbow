@@ -18,7 +18,7 @@
  */
 use crate::ssi::common::errors::CustomToResponse;
 use crate::ssi::common::types::gnap::CallbackBody;
-use crate::ssi::consumer::core::traits::CoreConsumerOnboarderTrait;
+use crate::ssi::consumer::core::traits::CoreOnboarderTrait;
 use crate::ssi::consumer::types::ReachProvider;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, Query, State};
@@ -34,11 +34,11 @@ use std::sync::Arc;
 use tracing::error;
 
 pub struct OnboarderConsumerRouter {
-    onboarder: Arc<dyn CoreConsumerOnboarderTrait>,
+    onboarder: Arc<dyn CoreOnboarderTrait>,
 }
 
 impl OnboarderConsumerRouter {
-    pub fn new(onboarder: Arc<dyn CoreConsumerOnboarderTrait>) -> Self {
+    pub fn new(onboarder: Arc<dyn CoreOnboarderTrait>) -> Self {
         Self { onboarder }
     }
 
@@ -51,7 +51,7 @@ impl OnboarderConsumerRouter {
     }
 
     async fn onboard(
-        State(onboarder): State<Arc<dyn CoreConsumerOnboarderTrait>>,
+        State(onboarder): State<Arc<dyn CoreOnboarderTrait>>,
         Json(payload): Json<ReachProvider>,
     ) -> impl IntoResponse {
         match onboarder.onboard_req(payload).await {
@@ -61,7 +61,7 @@ impl OnboarderConsumerRouter {
     }
 
     async fn get_callback(
-        State(onboarder): State<Arc<dyn CoreConsumerOnboarderTrait>>,
+        State(onboarder): State<Arc<dyn CoreOnboarderTrait>>,
         Path(id): Path<String>,
         Query(params): Query<HashMap<String, String>>,
     ) -> impl IntoResponse {
@@ -94,7 +94,7 @@ impl OnboarderConsumerRouter {
     }
 
     async fn post_callback(
-        State(onboarder): State<Arc<dyn CoreConsumerOnboarderTrait>>,
+        State(onboarder): State<Arc<dyn CoreOnboarderTrait>>,
         Path(id): Path<String>,
         payload: Result<Json<CallbackBody>, JsonRejection>,
     ) -> impl IntoResponse {

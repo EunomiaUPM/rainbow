@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
+ *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
  *  *
  *  * This program is free software: you can redistribute it and/or modify
  *  * it under the terms of the GNU General Public License as published by
@@ -16,15 +16,10 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use serde::Deserialize;
 
-pub fn trim_4_base(input: &str) -> String {
-    let slashes: Vec<usize> = input.match_indices('/').map(|(i, _)| i).collect();
-
-    if slashes.len() < 3 {
-        return input.to_string();
-    }
-
-    let cut_index = slashes[2];
-
-    input[..cut_index].to_string()
+#[derive(Deserialize)]
+pub struct VerifyPayload {
+    pub vp_token: String,
+    pub presentation_submission: String,
 }

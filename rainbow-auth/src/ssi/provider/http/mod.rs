@@ -17,5 +17,9 @@
  *
  */
 mod router;
+mod gatekeeper_router;
+mod verifier_router;
 
 pub use router::AuthProviderRouter;
+pub use gatekeeper_router::GateKeeperRouter;
+pub use verifier_router::VerifierRouter;

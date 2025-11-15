@@ -18,7 +18,7 @@
  */
 use crate::ssi::common::core::{CoreVcRequesterTrait, CoreWalletTrait};
 use crate::ssi::common::errors::CustomToResponse;
-use crate::ssi::common::services::vc_request::VcRequesterTrait;
+use crate::ssi::common::services::vc_requester::VcRequesterTrait;
 use crate::ssi::common::types::entities::{ReachAuthority, ReachMethod};
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, State};

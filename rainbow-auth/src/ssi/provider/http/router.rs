@@ -28,6 +28,7 @@ use std::sync::Arc;
 use tower_http::trace::{DefaultMakeSpan, DefaultOnResponse, TraceLayer};
 use tracing::{info, Level};
 use uuid::Uuid;
+use crate::ssi::provider::http::{GateKeeperRouter, VerifierRouter};
 
 pub struct AuthProviderRouter {
     pub provider: Arc<AuthProvider>,
@@ -41,12 +42,16 @@ impl AuthProviderRouter {
     pub fn router(self) -> Router {
         let wallet_router = WalletRouter::new(self.provider.clone()).router();
         let vc_requester_router = VcRequesterRouter::new(self.provider.clone()).router();
+        let gatekeeper_router = GateKeeperRouter::new(self.provider.clone()).router();
+        let verifier_router = VerifierRouter::new(self.provider.clone()).router();
 
         Router::new()
             .route("/api/v1/status", get(server_status))
             .with_state(self.provider)
             .nest("/api/v1/wallet", wallet_router)
             .nest("/api/v1/vc-request", vc_requester_router)
+            .nest("/api/v1/gate", gatekeeper_router)
+            .nest("/api/v1/verifier", verifier_router)
             .layer(
                 TraceLayer::new_for_http()
                     .make_span_with(|_req: &Request<_>| tracing::info_span!("request", id = %Uuid::new_v4()))

@@ -16,12 +16,9 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use std::format;
 
-use crate::ssi::common::core::{CoreMateTrait, CoreVcRequesterTrait, CoreWalletTrait};
-use crate::ssi::provider::core::traits::core_verifier::CoreVerifierTrait;
-use crate::ssi::provider::core::traits::CoreGateKeeperTrait;
-
-pub trait CoreProviderTrait:
-    CoreVerifierTrait + CoreGateKeeperTrait + CoreWalletTrait + CoreVcRequesterTrait + CoreMateTrait + Send + Sync + 'static
-{
+pub trait VerifierConfigTrait {
+    fn get_host(&self) -> String;
+    fn is_local(&self) -> bool;
 }

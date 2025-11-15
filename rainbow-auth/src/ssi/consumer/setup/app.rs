@@ -17,15 +17,15 @@
  *
  */
 use crate::ssi::common::services::client::basic::BasicClientService;
-use crate::ssi::common::services::vc_request::basic::config::VCRequesterConfig;
-use crate::ssi::common::services::vc_request::basic::VCReqService;
+use crate::ssi::common::services::vc_requester::basic::config::VCRequesterConfig;
+use crate::ssi::common::services::vc_requester::basic::VCReqService;
 use crate::ssi::common::services::wallet::waltid::config::WaltIdConfig;
 use crate::ssi::common::services::wallet::waltid::WaltIdService;
 use crate::ssi::consumer::config::{AuthConsumerConfig, AuthConsumerConfigTrait};
 use crate::ssi::consumer::core::AuthConsumer;
 use crate::ssi::consumer::http::AuthConsumerRouter;
-use crate::ssi::consumer::services::onboarder::gnap::config::ConsumerGnapConfig;
-use crate::ssi::consumer::services::onboarder::gnap::ConsumerGnapService;
+use crate::ssi::consumer::services::onboarder::gnap::config::GnapOnboarderConfig;
+use crate::ssi::consumer::services::onboarder::gnap::GnapOnboarderService;
 use crate::ssi::provider::core::AuthProvider;
 use crate::ssi::provider::http::AuthProviderRouter;
 use axum::{serve, Router};
@@ -44,13 +44,13 @@ impl AuthConsumerApplication {
         let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
         let waltid_config = WaltIdConfig::from(config.clone());
         let vc_req_config = VCRequesterConfig::from(config.clone());
-        let onboarder_config = ConsumerGnapConfig::from(config.clone());
+        let onboarder_config = GnapOnboarderConfig::from(config.clone());
 
         // SERVICES
         let client_service = Arc::new(BasicClientService::new());
         let wallet_service = Arc::new(WaltIdService::new(client_service.clone(), waltid_config));
         let vc_req_service = Arc::new(VCReqService::new(client_service.clone(), vc_req_config));
-        let onboarder_service = Arc::new(ConsumerGnapService::new(
+        let onboarder_service = Arc::new(GnapOnboarderService::new(
             client_service.clone(),
             onboarder_config,
         ));

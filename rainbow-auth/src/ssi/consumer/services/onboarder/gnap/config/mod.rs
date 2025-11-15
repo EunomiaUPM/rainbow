@@ -19,5 +19,5 @@
 mod config;
 mod config_trait;
 
-pub use config::ConsumerGnapConfig;
-pub use config_trait::GnapConfigTrait;
+pub use config::GnapOnboarderConfig;
+pub use config_trait::GnapOnboarderConfigTrait;

@@ -18,7 +18,7 @@
  */
 use serde_json::Value;
 
-pub trait GnapConfigTrait {
+pub trait GnapOnboarderConfigTrait {
     fn get_pretty_client_config(&self) -> anyhow::Result<Value>;
     fn get_host(&self) -> String;
 }

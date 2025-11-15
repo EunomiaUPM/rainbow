@@ -19,4 +19,4 @@
 mod onboarder_trait;
 pub mod gnap;
 
-pub use onboarder_trait::ConsumerOnboarderTrait;
+pub use onboarder_trait::OnboarderTrait;

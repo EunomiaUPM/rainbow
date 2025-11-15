@@ -17,9 +17,9 @@
  *
  */
 use crate::ssi::common::core::{CoreMateTrait, CoreVcRequesterTrait, CoreWalletTrait};
-use crate::ssi::consumer::core::traits::CoreConsumerOnboarderTrait;
+use crate::ssi::consumer::core::traits::CoreOnboarderTrait;
 
 pub trait CoreConsumerTrait:
-    CoreConsumerOnboarderTrait + CoreWalletTrait + CoreVcRequesterTrait + CoreMateTrait + Send + Sync + 'static
+CoreOnboarderTrait + CoreWalletTrait + CoreVcRequesterTrait + CoreMateTrait + Send + Sync + 'static
 {
 }

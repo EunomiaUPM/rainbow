@@ -19,4 +19,4 @@
 mod service;
 pub mod config;
 
-pub use service::ConsumerGnapService;
+pub use service::GnapOnboarderService;

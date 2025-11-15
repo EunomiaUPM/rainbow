@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
+ *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
  *  *
  *  * This program is free software: you can redistribute it and/or modify
  *  * it under the terms of the GNU General Public License as published by
@@ -16,12 +16,17 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use super::InputDescriptor;
+use serde::{Deserialize, Serialize};
 
-use crate::ssi::common::core::{CoreMateTrait, CoreVcRequesterTrait, CoreWalletTrait};
-use crate::ssi::provider::core::traits::core_verifier::CoreVerifierTrait;
-use crate::ssi::provider::core::traits::CoreGateKeeperTrait;
+#[derive(Debug, Serialize, Deserialize)]
+pub struct VPDef {
+    pub id: String,
+    pub input_descriptors: Vec<InputDescriptor>,
+}
 
-pub trait CoreProviderTrait:
-    CoreVerifierTrait + CoreGateKeeperTrait + CoreWalletTrait + CoreVcRequesterTrait + CoreMateTrait + Send + Sync + 'static
-{
+impl VPDef {
+    pub fn new(id: String, vc_type: String) -> Self {
+        VPDef { id, input_descriptors: vec![InputDescriptor::new(vc_type)] }
+    }
 }

@@ -30,6 +30,7 @@ pub struct Model {
     pub id: String, // REQUEST
     pub state: String,                     // RANDOM
     pub nonce: String,                     // RANDOM
+    pub vc_type: String,                   // REQUEST
     pub audience: String,                  // SEMI-RANDOM
     pub holder: Option<String>,            // RESPONSE
     pub vpt: Option<String>,               // RESPONSE
@@ -44,6 +45,7 @@ pub struct Model {
 pub struct NewModel {
     pub id: String,       // REQUEST
     pub audience: String, // SEMI-RANDOM
+    pub vc_type: String,                   // REQUEST
 }
 
 impl IntoActiveSet<ActiveModel> for NewModel {
@@ -55,6 +57,7 @@ impl IntoActiveSet<ActiveModel> for NewModel {
             id: ActiveValue::Set(self.id),
             state: ActiveValue::Set(state),
             nonce: ActiveValue::Set(nonce),
+            vc_type: ActiveValue::Set(self.vc_type),
             audience: ActiveValue::Set(audience),
             holder: ActiveValue::Set(None),
             vpt: ActiveValue::Set(None),
@@ -72,6 +75,7 @@ impl IntoActiveSet<ActiveModel> for Model {
             id: ActiveValue::Set(self.id),
             state: ActiveValue::Set(self.state),
             nonce: ActiveValue::Set(self.nonce),
+            vc_type: ActiveValue::Set(self.vc_type),
             audience: ActiveValue::Set(self.audience),
             holder: ActiveValue::Set(self.holder),
             vpt: ActiveValue::Set(self.vpt),

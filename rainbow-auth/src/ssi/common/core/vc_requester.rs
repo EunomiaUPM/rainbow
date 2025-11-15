@@ -16,7 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::ssi::common::services::vc_request::VcRequesterTrait;
+use crate::ssi::common::services::vc_requester::VcRequesterTrait;
 use rainbow_db::auth::common::entities::req_vc::Model;
 use crate::ssi::common::types::entities::{ReachAuthority, ReachMethod};
 use axum::async_trait;

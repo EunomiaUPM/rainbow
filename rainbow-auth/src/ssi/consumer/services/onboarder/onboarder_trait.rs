@@ -23,7 +23,7 @@ use rainbow_db::auth::common::entities::{mates, req_interaction, req_verificatio
 use rainbow_db::auth::consumer::entities::req_request;
 
 #[async_trait]
-pub trait ConsumerOnboarderTrait: Send + Sync + 'static {
+pub trait OnboarderTrait: Send + Sync + 'static {
     fn start(
         &self,
         payload: &ReachProvider,

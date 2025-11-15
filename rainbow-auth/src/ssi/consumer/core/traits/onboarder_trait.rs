@@ -21,12 +21,12 @@ use axum::async_trait;
 use rainbow_db::auth::common::entities::mates;
 use rainbow_db::auth::consumer::factory::AuthConsumerRepoTrait;
 use crate::ssi::common::types::gnap::CallbackBody;
-use crate::ssi::consumer::services::onboarder::ConsumerOnboarderTrait;
+use crate::ssi::consumer::services::onboarder::OnboarderTrait;
 use crate::ssi::consumer::types::ReachProvider;
 
 #[async_trait]
-pub trait CoreConsumerOnboarderTrait: Send + Sync + 'static {
-    fn onboarder(&self) -> Arc<dyn ConsumerOnboarderTrait>;
+pub trait CoreOnboarderTrait: Send + Sync + 'static {
+    fn onboarder(&self) -> Arc<dyn OnboarderTrait>;
     fn repo(&self) -> Arc<dyn AuthConsumerRepoTrait>;
 
     async fn onboard_req(&self, payload: ReachProvider) -> anyhow::Result<String> {

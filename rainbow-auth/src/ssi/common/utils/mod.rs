@@ -49,3 +49,15 @@ pub fn get_query_param(parsed_uri: &Url, param_name: &str) -> anyhow::Result<Str
         bail!(error);
     }
 }
+
+pub fn trim_4_base(input: &str) -> String {
+    let slashes: Vec<usize> = input.match_indices('/').map(|(i, _)| i).collect();
+
+    if slashes.len() < 3 {
+        return input.to_string();
+    }
+
+    let cut_index = slashes[2];
+
+    input[..cut_index].to_string()
+}

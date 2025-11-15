@@ -20,4 +20,6 @@ pub mod config;
 pub mod setup;
 pub mod core;
 pub mod http;
-mod services;
+pub mod services;
+pub mod utils;
+pub mod types;

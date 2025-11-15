@@ -16,19 +16,23 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use crate::ssi::common::core::{CoreMateTrait, CoreVcRequesterTrait, CoreWalletTrait};
 use crate::ssi::common::services::client::ClientServiceTrait;
+use crate::ssi::common::services::vc_requester::VcRequesterTrait;
 use crate::ssi::common::services::wallet::WalletServiceTrait;
 use crate::ssi::provider::config::AuthProviderConfig;
+use crate::ssi::provider::core::traits::{CoreGateKeeperTrait, CoreProviderTrait, CoreVerifierTrait};
+use crate::ssi::provider::services::gatekeeper::GateKeeperTrait;
+use crate::ssi::provider::services::verifier::VerifierTrait;
+use rainbow_db::auth::common::traits::{MatesTrait, ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait};
 use rainbow_db::auth::provider::factory::factory_trait::AuthProviderRepoTrait;
 use std::sync::Arc;
-use rainbow_db::auth::common::traits::{MatesTrait, ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait};
-use crate::ssi::common::core::{CoreMateTrait, CoreVcRequesterTrait, CoreWalletTrait};
-use crate::ssi::common::services::vc_request::VcRequesterTrait;
-use crate::ssi::provider::core::traits::CoreProviderTrait;
 
 pub struct AuthProvider {
     wallet: Arc<dyn WalletServiceTrait>,
     vc_requester: Arc<dyn VcRequesterTrait>,
+    gatekeeper: Arc<dyn GateKeeperTrait>,
+    verifier: Arc<dyn VerifierTrait>,
     repo: Arc<dyn AuthProviderRepoTrait>,
     client: Arc<dyn ClientServiceTrait>,
     config: AuthProviderConfig,
@@ -38,11 +42,13 @@ impl AuthProvider {
     pub fn new(
         wallet: Arc<dyn WalletServiceTrait>,
         vc_requester: Arc<dyn VcRequesterTrait>,
+        gatekeeper: Arc<dyn GateKeeperTrait>,
+        verifier: Arc<dyn VerifierTrait>,
         repo: Arc<dyn AuthProviderRepoTrait>,
         client: Arc<dyn ClientServiceTrait>,
         config: AuthProviderConfig,
     ) -> AuthProvider {
-        AuthProvider { wallet, vc_requester, repo, client, config }
+        AuthProvider { wallet, vc_requester, gatekeeper, verifier, repo, client, config }
     }
 }
 
@@ -81,5 +87,29 @@ impl CoreVcRequesterTrait for AuthProvider {
 impl CoreMateTrait for AuthProvider {
     fn mate_repo(&self) -> Arc<dyn MatesTrait> {
         self.repo.mates().clone()
+    }
+}
+
+impl CoreGateKeeperTrait for AuthProvider {
+    fn gatekeeper(&self) -> Arc<dyn GateKeeperTrait> {
+        self.gatekeeper.clone()
+    }
+
+    fn verifier(&self) -> Arc<dyn VerifierTrait> {
+        self.verifier.clone()
+    }
+
+    fn repo(&self) -> Arc<dyn AuthProviderRepoTrait> {
+        self.repo.clone()
+    }
+}
+
+impl CoreVerifierTrait for AuthProvider {
+    fn verifier(&self) -> Arc<dyn VerifierTrait> {
+        self.verifier.clone()
+    }
+
+    fn repo(&self) -> Arc<dyn AuthProviderRepoTrait> {
+        self.repo.clone()
     }
 }

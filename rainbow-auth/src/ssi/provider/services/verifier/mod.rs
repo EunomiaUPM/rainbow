@@ -16,12 +16,6 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
-use crate::ssi::common::core::{CoreMateTrait, CoreVcRequesterTrait, CoreWalletTrait};
-use crate::ssi::provider::core::traits::core_verifier::CoreVerifierTrait;
-use crate::ssi::provider::core::traits::CoreGateKeeperTrait;
-
-pub trait CoreProviderTrait:
-    CoreVerifierTrait + CoreGateKeeperTrait + CoreWalletTrait + CoreVcRequesterTrait + CoreMateTrait + Send + Sync + 'static
-{
-}
+mod verifier_trait;
+pub mod basic_v1;
+pub use verifier_trait::VerifierTrait;
