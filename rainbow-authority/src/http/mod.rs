@@ -16,7 +16,12 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-mod openapi;
+pub mod openapi;
 pub mod router;
+pub mod wallet_router;
+pub mod gatekeeper_router;
+pub mod vcs_router;
+pub mod verifier_router;
+pub mod issuer_router;
 
 pub use openapi::*;

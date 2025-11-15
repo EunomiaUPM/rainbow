@@ -17,7 +17,7 @@
  *
  */
 
-pub use repo_trait::RepoServiceTrait;
+pub use repo_trait::RepoTrait;
 mod repo_trait;
 pub mod sql;
 mod subtraits;

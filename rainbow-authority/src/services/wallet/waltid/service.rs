@@ -17,7 +17,7 @@
  *
  */
 
-use super::super::WalletServiceTrait;
+use super::super::WalletTrait;
 use super::config::{WaltIdConfig, WaltIdConfigTrait};
 use crate::data::entities::minions;
 use crate::errors::{ErrorLogTrait, Errors};
@@ -67,7 +67,7 @@ impl WaltIdService {
 }
 
 #[async_trait]
-impl WalletServiceTrait for WaltIdService {
+impl WalletTrait for WaltIdService {
     // BASIC ----------------------------------------------------------------------------------------------->
     async fn register(&self) -> anyhow::Result<()> {
         info!("Registering in web wallet");

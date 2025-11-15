@@ -16,12 +16,12 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::services::access_manager::gnap::config::{GnapConfig, GnapConfigTrait};
-use crate::services::access_manager::AccessManagerServiceTrait;
+use crate::services::gatekeeper::gnap::config::{GnapConfig, GnapConfigTrait};
+use crate::services::gatekeeper::GateKeeperTrait;
 use crate::data::entities::{interaction, request};
 use crate::errors::{ErrorLogTrait, Errors};
 use crate::services::client::ClientServiceTrait;
-use crate::services::repo::RepoServiceTrait;
+use crate::services::repo::RepoTrait;
 use crate::types::enums::errors::BadFormat;
 use crate::types::enums::request::Body;
 use crate::types::enums::vc_type::VcType;
@@ -51,7 +51,7 @@ impl GnapService {
 }
 
 #[async_trait]
-impl AccessManagerServiceTrait for GnapService {
+impl GateKeeperTrait for GnapService {
     fn manage_acc_req(
         &self,
         payload: GrantRequest,

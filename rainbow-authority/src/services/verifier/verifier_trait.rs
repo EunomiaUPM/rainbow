@@ -22,7 +22,7 @@ use crate::data::entities::verification;
 use crate::types::enums::vc_type::VcType;
 use crate::types::vcs::VPDef;
 
-pub trait VerifierServiceTrait: Send + Sync + 'static {
+pub trait VerifierTrait: Send + Sync + 'static {
     fn start_vp(&self, id: &str, vc_type: VcType) -> anyhow::Result<verification::NewModel>;
     fn generate_verification_uri(&self, model: verification::Model) -> String;
     fn generate_vpd(&self, ver_model: verification::Model) -> VPDef;

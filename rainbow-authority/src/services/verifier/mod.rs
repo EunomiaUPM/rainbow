@@ -17,6 +17,6 @@
  *
  */
 
-pub use verifier_trait::VerifierServiceTrait;
+pub use verifier_trait::VerifierTrait;
 mod verifier_trait;
 pub(crate) mod basic;

@@ -16,7 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use super::super::IssuerServiceTrait;
+use super::super::IssuerTrait;
 use super::config::{BasicIssuerConfig, BasicIssuerConfigTrait};
 use crate::data::entities::{issuing, request};
 use crate::errors::{ErrorLogTrait, Errors};
@@ -44,7 +44,7 @@ impl BasicIssuerService {
     }
 }
 
-impl IssuerServiceTrait for BasicIssuerService {
+impl IssuerTrait for BasicIssuerService {
     fn start_vci(&self, model: &request::Model) -> issuing::NewModel {
         info!("Starting OIDC4VCI");
         let uri = model.vc_uri.clone().unwrap(); // EXPECTED ALWAYS

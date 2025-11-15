@@ -29,7 +29,7 @@ use crate::types::gnap::{CallbackBody, GrantRequest, Interact4GR, RejectedCallba
 use crate::types::vcs::VCIData;
 
 #[async_trait]
-pub trait AccessManagerServiceTrait: Send + Sync + 'static {
+pub trait GateKeeperTrait: Send + Sync + 'static {
     fn manage_acc_req(
         &self,
         grant_request: GrantRequest,

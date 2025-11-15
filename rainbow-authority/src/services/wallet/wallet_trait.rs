@@ -23,7 +23,7 @@ use axum::async_trait;
 use serde_json::Value;
 
 #[async_trait]
-pub trait WalletServiceTrait: Send + Sync + 'static {
+pub trait WalletTrait: Send + Sync + 'static {
     // BASIC
     async fn register(&self) -> anyhow::Result<()>;
     async fn login(&self) -> anyhow::Result<()>;

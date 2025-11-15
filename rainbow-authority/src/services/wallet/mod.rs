@@ -20,4 +20,4 @@
 mod wallet_trait;
 pub mod waltid;
 
-pub use wallet_trait::WalletServiceTrait;
+pub use wallet_trait::WalletTrait;

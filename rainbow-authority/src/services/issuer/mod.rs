@@ -17,6 +17,6 @@
  *
  */
 
-pub use issuer_trait::IssuerServiceTrait;
+pub use issuer_trait::IssuerTrait;
 mod issuer_trait;
 pub mod basic;

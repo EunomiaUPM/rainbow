@@ -20,7 +20,7 @@ use crate::data::entities::{issuing, request};
 use crate::types::issuing::{AuthServerMetadata, CredentialRequest, DidPossession, GiveVC, IssuerMetadata, IssuingToken, VCCredOffer};
 use jsonwebtoken::TokenData;
 
-pub trait IssuerServiceTrait: Send + Sync + 'static {
+pub trait IssuerTrait: Send + Sync + 'static {
     fn start_vci(&self, req_model: &request::Model) -> issuing::NewModel;
     fn generate_issuing_uri(&self, id: &str) -> String;
     fn get_cred_offer_data(&self, model: &issuing::Model) -> anyhow::Result<VCCredOffer>;

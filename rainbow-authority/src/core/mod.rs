@@ -16,7 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-pub use authority::Authority;
-pub use authority_trait::AuthorityTrait;
+pub mod traits;
 mod authority;
-mod authority_trait;
+
+pub use authority::Authority;

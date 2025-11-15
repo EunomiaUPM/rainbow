@@ -19,7 +19,7 @@
 use crate::data::entities::verification;
 use crate::errors::{ErrorLogTrait, Errors};
 use crate::services::verifier::basic::config::{BasicVerifierConfig, BasicVerifierConfigTrait};
-use crate::services::verifier::VerifierServiceTrait;
+use crate::services::verifier::VerifierTrait;
 use crate::types::enums::errors::BadFormat;
 use crate::types::enums::vc_type::VcType;
 use crate::types::vcs::VPDef;
@@ -46,7 +46,7 @@ impl BasicVerifierService {
     }
 }
 
-impl VerifierServiceTrait for BasicVerifierService {
+impl VerifierTrait for BasicVerifierService {
     fn start_vp(&self, id: &str, vc_type: VcType) -> anyhow::Result<verification::NewModel> {
         info!("Managing OIDC4VP");
         let host_url = self.config.get_host();

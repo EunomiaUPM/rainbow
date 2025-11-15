@@ -20,7 +20,7 @@
 use super::super::subtraits::{
     InteractionRepoTrait, IssuingRepoTrait, MinionsRepoTrait, RequestRepoTrait, VerificationRepoTrait,
 };
-use super::super::RepoServiceTrait;
+use super::super::RepoTrait;
 use super::repos::{AuthRequestRepo, AuthVerificationRepo, InteractionRepo, IssuingRepo, MinionsRepo};
 use sea_orm::DatabaseConnection;
 use std::sync::Arc;
@@ -46,7 +46,7 @@ impl RepoForSql {
     }
 }
 
-impl RepoServiceTrait for RepoForSql {
+impl RepoTrait for RepoForSql {
     fn request(&self) -> Arc<dyn RequestRepoTrait> {
         self.request_repo.clone()
     }

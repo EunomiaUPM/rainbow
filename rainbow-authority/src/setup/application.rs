@@ -19,7 +19,7 @@
 
 use crate::core::Authority;
 use crate::http::router::RainbowAuthorityRouter;
-use crate::services::access_manager::gnap::{config::GnapConfig, GnapService};
+use crate::services::gatekeeper::gnap::{config::GnapConfig, GnapService};
 use crate::services::client::basic::BasicClientService;
 use crate::services::issuer::basic::{config::BasicIssuerConfig, BasicIssuerService};
 use crate::services::repo::sql::RepoForSql;

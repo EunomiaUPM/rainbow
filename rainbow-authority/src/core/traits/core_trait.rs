@@ -16,6 +16,12 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-pub use access_manager_trait::AccessManagerServiceTrait;
-pub mod gnap;
-pub mod access_manager_trait;
+use axum::async_trait;
+use crate::core::traits::core_gatekeeper::CoreGatekeeperTrait;
+use crate::core::traits::{CoreIssuerTrait, CoreVcsTrait, CoreVerifierTrait, CoreWalletTrait};
+
+#[async_trait]
+pub trait CoreTrait:
+    CoreVerifierTrait + CoreIssuerTrait + CoreVcsTrait + CoreGatekeeperTrait + CoreWalletTrait + Send + Sync + 'static
+{
+}
