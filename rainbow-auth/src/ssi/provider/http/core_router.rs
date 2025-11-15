@@ -58,6 +58,7 @@ impl AuthProviderRouter {
             .nest("/api/v1/gate", gatekeeper_router)
             .nest("/api/v1/verifier", verifier_router)
             .nest("/api/v1/docs", openapi_route)
+            .fallback(Self::fallback)
             .layer(
                 TraceLayer::new_for_http()
                     .make_span_with(|_req: &Request<_>| tracing::info_span!("request", id = %Uuid::new_v4()))
@@ -65,7 +66,7 @@ impl AuthProviderRouter {
                         info!("{} {}", req.method(), req.uri().path());
                     })
                     .on_response(DefaultOnResponse::new().level(Level::TRACE)),
-            ).fallback(Self::fallback)
+            )
     }
 
     async fn fallback() -> impl IntoResponse {

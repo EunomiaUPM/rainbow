@@ -59,29 +59,29 @@ Invoke-CurlJson -Method "POST" -Url "$ProviderUrl/api/v1/wallet/onboard" -ParseJ
 # ----------------------------
 # Getting DIDs
 # ----------------------------
-$AUTH_DID     = (Invoke-CurlJson -Url "$AuthorityUrl/api/v1/did.json").id
+$AUTH_DID     = (Invoke-CurlJson -Url "$AuthorityUrl/api/v1/wallet/did.json").id
 Write-Host "Authority DID: $AUTH_DID"
-$CONSUMER_DID = (Invoke-CurlJson -Url "$ConsumerUrl/api/v1/did.json").id
+$CONSUMER_DID = (Invoke-CurlJson -Url "$ConsumerUrl/api/v1/wallet/did.json").id
 Write-Host "Consumer DID: $CONSUMER_DID"
-$PROVIDER_DID = (Invoke-CurlJson -Url "$ProviderUrl/api/v1/did.json").id
+$PROVIDER_DID = (Invoke-CurlJson -Url "$ProviderUrl/api/v1/wallet/did.json").id
 Write-Host "Provider DID: $PROVIDER_DID"
 
 # ----------------------------
 # Consumer begins request for credential
 # ----------------------------
 $C_BEG_BODY = @{
-    url = "$AuthorityUrl/api/v1/request/credential"
+    url = "$AuthorityUrl/api/v1/gate/access"
     id  = $AUTH_DID
     slug = "authority"
     vc_type = "DataspaceParticipantCredential"
 }
-$C_BEG_RESPONSE = Invoke-CurlJson -Method "POST" -Url "$ConsumerUrl/api/v1/authority/beg" -Body $C_BEG_BODY -ParseJson:$false
+$C_BEG_RESPONSE = Invoke-CurlJson -Method "POST" -Url "$ConsumerUrl/api/v1/vc-request/beg/cross-user" -Body $C_BEG_BODY -ParseJson:$false
 Write-Host "Consumer request completed."
 
 # ----------------------------
 # Get all requests from Authority
 # ----------------------------
-$ALL_REQUESTS = Invoke-CurlJson -Url "$AuthorityUrl/api/v1/request/all"
+$ALL_REQUESTS = Invoke-CurlJson -Url "$AuthorityUrl/api/v1/vc-request/all"
 $PETITION_ID = $ALL_REQUESTS[-1].id
 Write-Host "Petition ID: $PETITION_ID"
 
@@ -89,39 +89,39 @@ Write-Host "Petition ID: $PETITION_ID"
 # Authority approves request
 # ----------------------------
 $APPROVE_BODY = @{ approve = $true }
-Invoke-CurlJson -Method "POST" -Url "$AuthorityUrl/api/v1/request/$PETITION_ID" -Body $APPROVE_BODY -ParseJson:$false
+Invoke-CurlJson -Method "POST" -Url "$AuthorityUrl/api/v1/vc-request/$PETITION_ID" -Body $APPROVE_BODY -ParseJson:$false
 Write-Host "Request approved."
 
 # ----------------------------
 # Get all authority requests for Consumer
 # ----------------------------
-$ALL_AUTHORITY = Invoke-CurlJson -Url "$ConsumerUrl/api/v1/authority/request/all"
+$ALL_AUTHORITY = Invoke-CurlJson -Url "$ConsumerUrl/api/v1/vc-request/all"
 $OIDC4VCI_URI = $ALL_AUTHORITY[-1].vc_uri
 Write-Host "OIDC4VCI_URI: $OIDC4VCI_URI"
 
 # ----------------------------
 # Consumer processes OIDC4VCI
 # ----------------------------
-Invoke-CurlJson -Method "POST" -Url "$ConsumerUrl/api/v1/process/oidc4vci" -Body @{ uri = $OIDC4VCI_URI } -ParseJson:$false
+Invoke-CurlJson -Method "POST" -Url "$ConsumerUrl/api/v1/wallet/oidc4vci" -Body @{ uri = $OIDC4VCI_URI } -ParseJson:$false
 Write-Host "OIDC4VCI processed."
 
 # ----------------------------
 # Consumer requests grant from Provider
 # ----------------------------
 $OIDC4VP_BODY = @{
-    url = "$ProviderUrl/api/v1/access"
+    url = "$ProviderUrl/api/v1/gate/access"
     id  = $PROVIDER_DID
     slug = "provider"
     actions = "talk"
 }
-$OIDC4VP_URI = Invoke-CurlJson -Method "POST" -Url "$ConsumerUrl/api/v1/request/onboard/provider" -Body $OIDC4VP_BODY -ParseJson:$false
+$OIDC4VP_URI = Invoke-CurlJson -Method "POST" -Url "$ConsumerUrl/api/v1/onboard/request" -Body $OIDC4VP_BODY -ParseJson:$false
 Write-Host "OIDC4VP_URI: $OIDC4VP_URI"
 
 # ----------------------------
 # Consumer processes OIDC4VP
 # ----------------------------
 Write-Host "Consumer processes OIDC4VP..."
-Invoke-CurlJson -Method "POST" -Url "$ConsumerUrl/api/v1/process/oidc4vp" -Body @{ uri = $OIDC4VP_URI } -ReturnJson:$false
+Invoke-CurlJson -Method "POST" -Url "$ConsumerUrl/api/v1/wallet/oidc4vp" -Body @{ uri = $OIDC4VP_URI } -ReturnJson:$false
 Write-Host "OIDC4VP processed." -ForegroundColor Green
 
 Write-Host "Onboarding script finished successfully!" -ForegroundColor Green

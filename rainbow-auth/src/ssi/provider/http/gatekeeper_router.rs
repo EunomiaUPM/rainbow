@@ -41,8 +41,8 @@ impl GateKeeperRouter {
 
     pub fn router(self) -> Router {
         Router::new()
-            .route("/gate/access", post(Self::manage_req))
-            .route("/gate/continue/:id", post(Self::continue_req))
+            .route("/access", post(Self::manage_req))
+            .route("/continue/:id", post(Self::continue_req))
             .with_state(self.gatekeeper)
     }
 

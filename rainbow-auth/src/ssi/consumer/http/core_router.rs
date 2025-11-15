@@ -60,6 +60,7 @@ impl AuthConsumerRouter {
             .nest("/api/v1/mates", mate_router)
             .nest("/api/v1/onboard", onboarder_router)
             .nest("/api/v1/docs", openapi_route)
+            .fallback(Self::fallback)
             .layer(
                 TraceLayer::new_for_http()
                     .make_span_with(|_req: &Request<_>| tracing::info_span!("request", id = %Uuid::new_v4()))
@@ -68,7 +69,6 @@ impl AuthConsumerRouter {
                     })
                     .on_response(DefaultOnResponse::new().level(Level::TRACE)),
             )
-            .fallback(Self::fallback)
     }
 
     async fn fallback() -> impl IntoResponse {
