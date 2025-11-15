@@ -26,6 +26,7 @@ use crate::ssi::{ClientConfig, WalletConfig};
 use serde::Serialize;
 use serde_json::{json, Value};
 use std::env;
+use crate::utils::read;
 
 #[derive(Serialize, Clone, Debug)]
 pub struct ApplicationProviderConfig {
@@ -48,6 +49,7 @@ pub struct ApplicationProviderConfig {
     pub role: ConfigRoles,
     pub keys_path: String,
     pub is_local: bool,
+    pub openapi_path: String,
 }
 
 impl Default for ApplicationProviderConfig {
@@ -117,9 +119,10 @@ impl Default for ApplicationProviderConfig {
                 id: None,
             },
             client_config: ClientConfig { class_id: "rainbow_provider".to_string(), display: None },
-            keys_path: "./../static/certificates/consumer/".to_string(),
+            keys_path: "./../static/certificates/provider/".to_string(),
             role: ConfigRoles::Provider,
             is_local: true,
+            openapi_path: "./../static/specs/openapi/auth/auth_provider.json".to_string(),
         }
     }
 }
@@ -221,6 +224,7 @@ pub trait ApplicationProviderConfigTrait {
     fn merge_dotenv_configuration(&self, env_file: Option<String>) -> Self
     where
         Self: Sized;
+    fn get_openapi_json(&self) -> anyhow::Result<String>;
 }
 
 impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
@@ -411,11 +415,15 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
             role: ConfigRoles::Provider,
             keys_path: extract_env("KEYS_PATH", default.keys_path),
             is_local: extract_env("IS_LOCAL", default.is_local.to_string()).parse().unwrap(),
+            openapi_path: extract_env("OPENAPI_PATH", default.openapi_path),
         };
         compound_config
     }
 
     fn get_environment_scenario(&self) -> bool {
         self.is_local
+    }
+    fn get_openapi_json(&self) -> anyhow::Result<String> {
+        read(&self.openapi_path)
     }
 }

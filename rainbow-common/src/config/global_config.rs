@@ -83,6 +83,7 @@ pub struct ApplicationGlobalConfig {
     pub role: ConfigRoles,
     pub keys_path: String,
     pub is_local: bool,
+    pub openapi_path: String,
 }
 
 impl From<ApplicationGlobalConfig> for ApplicationProviderConfig {
@@ -107,6 +108,7 @@ impl From<ApplicationGlobalConfig> for ApplicationProviderConfig {
             role: value.role,
             keys_path: value.keys_path,
             is_local: value.is_local,
+            openapi_path: value.openapi_path,
         }
     }
 }
@@ -134,6 +136,7 @@ impl Into<ApplicationGlobalConfig> for ApplicationProviderConfig {
             role: self.role,
             keys_path: self.keys_path,
             is_local: self.is_local,
+            openapi_path: self.openapi_path,
         }
     }
 }
@@ -166,6 +169,7 @@ impl From<ApplicationGlobalConfig> for ApplicationConsumerConfig {
             client_config: value.client_config.unwrap(),
             is_local: value.is_local,
             keys_path: value.keys_path,
+            openapi_path: value.openapi_path,
         }
     }
 }
@@ -193,6 +197,7 @@ impl Into<ApplicationGlobalConfig> for ApplicationConsumerConfig {
             role: self.role,
             keys_path: self.keys_path,
             is_local: self.is_local,
+            openapi_path: self.openapi_path,
         }
     }
 }

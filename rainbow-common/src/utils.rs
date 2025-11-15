@@ -16,16 +16,16 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 use crate::errors::helpers::BadFormat;
 use crate::errors::{CommonErrors, ErrorLog};
 use anyhow::bail;
 use axum::extract::rejection::JsonRejection;
 use axum::http::StatusCode;
-use axum::Json;
 use axum::response::IntoResponse;
+use axum::Json;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
+use std::fs;
 use tracing::{error, info};
 use urn::Urn;
 use uuid::Uuid;
@@ -71,6 +71,17 @@ where
             );
             error!("{}", error.log());
             bail!(error);
+        }
+    }
+}
+
+pub fn read(path: &str) -> anyhow::Result<String> {
+    match fs::read_to_string(&path) {
+        Ok(data) => Ok(data),
+        Err(e) => {
+            let error = CommonErrors::read_new(path, &e.to_string());
+            error!("{}", error.log());
+            bail!(error)
         }
     }
 }

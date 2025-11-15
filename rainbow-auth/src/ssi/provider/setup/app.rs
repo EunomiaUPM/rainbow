@@ -49,6 +49,7 @@ impl AuthProviderApplication {
         let vc_req_config = VCRequesterConfig::from(config.clone());
         let gatekeeper_config = GnapGateKeeperConfig::from(config.clone());
         let verifier_config = VerifierConfig::from(config.clone());
+        let core_config= Arc::new(config.clone());
 
         // SERVICES
         let client_service = Arc::new(BasicClientService::new());
@@ -69,7 +70,7 @@ impl AuthProviderApplication {
             verifier_service,
             repo_service,
             client_service,
-            config.clone(),
+            core_config,
         ));
 
         // ROUTER

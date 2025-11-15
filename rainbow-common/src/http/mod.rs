@@ -16,18 +16,6 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use serde_json::Value;
 
-pub trait AuthProviderConfigTrait: Send + Sync + 'static {
-    fn get_full_db_url(&self) -> String;
-    fn get_wallet_api_url(&self) -> String;
-    fn get_wallet_register_data(&self) -> Value;
-    fn get_wallet_login_data(&self) -> Value;
-    fn get_cert(&self) -> anyhow::Result<String>;
-    fn get_priv_key(&self) -> anyhow::Result<String>;
-    fn get_pub_key(&self) -> anyhow::Result<String>;
-    fn get_host(&self) -> String;
-    fn is_local(&self) -> bool;
-    fn get_weird_port(&self) -> String;
-    fn get_openapi_json(&self) -> anyhow::Result<String>;
-}
+mod openapi_router;
+pub use openapi_router::OpenapiRouter;

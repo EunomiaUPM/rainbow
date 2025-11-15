@@ -16,8 +16,8 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-mod router;
+mod core_router;
 mod onboarder_router;
 
-pub use router::AuthConsumerRouter;
+pub use core_router::AuthConsumerRouter;
 pub use onboarder_router::OnboarderConsumerRouter;

@@ -17,13 +17,12 @@
  *
  */
 use crate::ssi::common::config::{CommonAuthConfig, CommonConfigTrait};
-use crate::ssi::consumer::config::AuthConsumerConfigTrait;
 use crate::ssi::provider::config::AuthProviderConfigTrait;
 use rainbow_common::config::global_config::extract_env;
-use serde::Serialize;
-use serde_json::Value;
 use rainbow_common::config::provider_config::ApplicationProviderConfig;
 use rainbow_common::ssi::ClientConfig;
+use serde::Serialize;
+use serde_json::Value;
 
 #[derive(Clone, Serialize, Debug)]
 pub struct AuthProviderConfig {
@@ -45,20 +44,18 @@ impl From<ApplicationProviderConfig> for AuthProviderConfig {
                 host: config.auth_host.unwrap(),
                 database_config: config.database_config,
                 ssi_wallet_config: config.ssi_wallet_config,
-                client: ClientConfig {
-                    class_id: config.client_config.class_id,
-                    display: config.client_config.display,
-                },
+                client: ClientConfig { class_id: config.client_config.class_id, display: config.client_config.display },
                 keys_path: config.keys_path,
                 is_local: config.is_local,
+                openapi_path: config.openapi_path,
             },
             field_extra: false,
         }
     }
 }
 
-impl AuthProviderConfigTrait for AuthProviderConfig {
-    fn merge_dotenv_configuration(env_file: Option<String>) -> Self {
+impl AuthProviderConfig {
+    pub fn merge_dotenv_configuration(env_file: Option<String>) -> Self {
         let common_default = CommonAuthConfig::default_4_provider();
         let common_config = CommonAuthConfig::merge_dotenv_configuration(env_file, common_default);
 
@@ -68,7 +65,9 @@ impl AuthProviderConfigTrait for AuthProviderConfig {
             field_extra: extract_env("EXTRA", config.field_extra.to_string()).parse().unwrap(),
         }
     }
+}
 
+impl AuthProviderConfigTrait for AuthProviderConfig {
     fn get_full_db_url(&self) -> String {
         self.common_config.get_full_db_url()
     }
@@ -101,5 +100,8 @@ impl AuthProviderConfigTrait for AuthProviderConfig {
 
     fn get_weird_port(&self) -> String {
         self.common_config.get_weird_port()
+    }
+    fn get_openapi_json(&self) -> anyhow::Result<String> {
+        self.common_config.get_openapi_json()
     }
 }

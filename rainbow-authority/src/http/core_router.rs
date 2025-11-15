@@ -31,7 +31,7 @@ use axum::routing::get;
 use axum::Router;
 use std::sync::Arc;
 use tower_http::trace::{DefaultOnResponse, TraceLayer};
-use tracing::{info, Level};
+use tracing::{error, info, Level};
 use uuid::Uuid;
 
 pub struct RainbowAuthorityRouter {
@@ -69,10 +69,15 @@ impl RainbowAuthorityRouter {
                     })
                     .on_response(DefaultOnResponse::new().level(Level::TRACE)),
             )
+            .fallback(Self::fallback)
     }
 
     async fn server_status() -> impl IntoResponse {
         info!("Someone checked server status");
         (StatusCode::OK, "Server is Okay!").into_response()
+    }
+    async fn fallback() -> impl IntoResponse {
+        error!("Wrong route");
+        StatusCode::NOT_FOUND.into_response()
     }
 }

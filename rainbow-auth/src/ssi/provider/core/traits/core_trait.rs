@@ -16,12 +16,14 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 use crate::ssi::common::core::{CoreMateTrait, CoreVcRequesterTrait, CoreWalletTrait};
+use crate::ssi::provider::config::AuthProviderConfigTrait;
 use crate::ssi::provider::core::traits::core_verifier::CoreVerifierTrait;
 use crate::ssi::provider::core::traits::CoreGateKeeperTrait;
+use std::sync::Arc;
 
 pub trait CoreProviderTrait:
     CoreVerifierTrait + CoreGateKeeperTrait + CoreWalletTrait + CoreVcRequesterTrait + CoreMateTrait + Send + Sync + 'static
 {
+    fn config(&self) -> Arc<dyn AuthProviderConfigTrait>;
 }

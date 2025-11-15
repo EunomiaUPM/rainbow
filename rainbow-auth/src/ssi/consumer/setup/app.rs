@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::ssi::common::services::client::basic::BasicClientService;
 use crate::ssi::common::services::vc_requester::basic::config::VCRequesterConfig;
 use crate::ssi::common::services::vc_requester::basic::VCReqService;
@@ -26,10 +27,8 @@ use crate::ssi::consumer::core::AuthConsumer;
 use crate::ssi::consumer::http::AuthConsumerRouter;
 use crate::ssi::consumer::services::onboarder::gnap::config::GnapOnboarderConfig;
 use crate::ssi::consumer::services::onboarder::gnap::GnapOnboarderService;
-use crate::ssi::provider::core::AuthProvider;
-use crate::ssi::provider::http::AuthProviderRouter;
 use axum::{serve, Router};
-use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
+use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
 use rainbow_db::auth::consumer::factory::factory::AuthConsumerRepoForSql;
 use sea_orm::Database;
 use std::sync::Arc;
@@ -45,6 +44,7 @@ impl AuthConsumerApplication {
         let waltid_config = WaltIdConfig::from(config.clone());
         let vc_req_config = VCRequesterConfig::from(config.clone());
         let onboarder_config = GnapOnboarderConfig::from(config.clone());
+        let core_config = Arc::new(config.clone());
 
         // SERVICES
         let client_service = Arc::new(BasicClientService::new());
@@ -63,7 +63,7 @@ impl AuthConsumerApplication {
             onboarder_service,
             repo_service,
             client_service,
-            config.clone(),
+            core_config,
         ));
 
         // ROUTER

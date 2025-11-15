@@ -23,6 +23,7 @@ use serde::Serialize;
 use serde_json::Value;
 use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
 use rainbow_common::ssi::ClientConfig;
+use crate::ssi::common::utils::read;
 
 #[derive(Clone, Serialize, Debug)]
 pub struct AuthConsumerConfig {
@@ -50,14 +51,15 @@ impl From<ApplicationConsumerConfig> for AuthConsumerConfig {
                 },
                 keys_path: config.keys_path,
                 is_local: config.is_local,
+                openapi_path: config.openapi_path,
             },
             field_extra: false,
         }
     }
 }
 
-impl AuthConsumerConfigTrait for AuthConsumerConfig {
-    fn merge_dotenv_configuration(env_file: Option<String>) -> Self {
+impl AuthConsumerConfig {
+    pub fn merge_dotenv_configuration(env_file: Option<String>) -> Self {
         let common_default = CommonAuthConfig::default_4_consumer();
         let common_config = CommonAuthConfig::merge_dotenv_configuration(env_file, common_default);
 
@@ -67,6 +69,10 @@ impl AuthConsumerConfigTrait for AuthConsumerConfig {
             field_extra: extract_env("EXTRA", config.field_extra.to_string()).parse().unwrap(),
         }
     }
+}
+
+impl AuthConsumerConfigTrait for AuthConsumerConfig {
+
 
     fn get_full_db_url(&self) -> String {
         self.common_config.get_full_db_url()
@@ -100,5 +106,9 @@ impl AuthConsumerConfigTrait for AuthConsumerConfig {
 
     fn get_weird_port(&self) -> String {
         self.common_config.get_weird_port()
+    }
+
+    fn get_openapi_json(&self) -> anyhow::Result<String> {
+        self.common_config.get_openapi_json()
     }
 }

@@ -26,17 +26,21 @@ use axum::Router;
 use rainbow_common::utils::server_status;
 use std::sync::Arc;
 use tower_http::trace::{DefaultMakeSpan, DefaultOnResponse, TraceLayer};
-use tracing::{info, Level};
+use tracing::{error, info, Level};
 use uuid::Uuid;
+use rainbow_common::http::OpenapiRouter;
+use crate::ssi::provider::core::traits::CoreProviderTrait;
 use crate::ssi::provider::http::{GateKeeperRouter, VerifierRouter};
 
 pub struct AuthProviderRouter {
-    pub provider: Arc<AuthProvider>,
+    provider: Arc<AuthProvider>,
+    openapi: String,
 }
 
 impl AuthProviderRouter {
     pub fn new(provider: Arc<AuthProvider>) -> Self {
-        AuthProviderRouter { provider }
+        let openapi = provider.config().get_openapi_json().expect("Invalid openapi path");
+        AuthProviderRouter { provider, openapi }
     }
 
     pub fn router(self) -> Router {
@@ -44,6 +48,7 @@ impl AuthProviderRouter {
         let vc_requester_router = VcRequesterRouter::new(self.provider.clone()).router();
         let gatekeeper_router = GateKeeperRouter::new(self.provider.clone()).router();
         let verifier_router = VerifierRouter::new(self.provider.clone()).router();
+        let openapi_route = OpenapiRouter::new(self.openapi.clone()).router();
 
         Router::new()
             .route("/api/v1/status", get(server_status))
@@ -52,6 +57,7 @@ impl AuthProviderRouter {
             .nest("/api/v1/vc-request", vc_requester_router)
             .nest("/api/v1/gate", gatekeeper_router)
             .nest("/api/v1/verifier", verifier_router)
+            .nest("/api/v1/docs", openapi_route)
             .layer(
                 TraceLayer::new_for_http()
                     .make_span_with(|_req: &Request<_>| tracing::info_span!("request", id = %Uuid::new_v4()))
@@ -59,7 +65,12 @@ impl AuthProviderRouter {
                         info!("{} {}", req.method(), req.uri().path());
                     })
                     .on_response(DefaultOnResponse::new().level(Level::TRACE)),
-            )
+            ).fallback(Self::fallback)
+    }
+
+    async fn fallback() -> impl IntoResponse {
+        error!("Wrong route");
+        StatusCode::NOT_FOUND.into_response()
     }
 }
 

@@ -16,10 +16,10 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-mod router;
+mod core_router;
 mod gatekeeper_router;
 mod verifier_router;
 
-pub use router::AuthProviderRouter;
+pub use core_router::AuthProviderRouter;
 pub use gatekeeper_router::GateKeeperRouter;
 pub use verifier_router::VerifierRouter;

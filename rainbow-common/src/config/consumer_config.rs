@@ -23,6 +23,7 @@ use crate::config::global_config::{
 };
 use crate::config::ConfigRoles;
 use crate::ssi::{ClientConfig, WalletConfig};
+use crate::utils::read;
 use serde::Serialize;
 use serde_json::{json, Value};
 use std::env;
@@ -45,6 +46,7 @@ pub struct ApplicationConsumerConfig {
     pub role: ConfigRoles,
     pub keys_path: String,
     pub is_local: bool,
+    pub openapi_path: String,
 }
 
 impl Default for ApplicationConsumerConfig {
@@ -109,6 +111,7 @@ impl Default for ApplicationConsumerConfig {
             role: ConfigRoles::Consumer,
             is_local: true,
             keys_path: "./../static/certificates/consumer/".to_string(),
+            openapi_path: "./../static/specs/openapi/auth/auth_consumer.json".to_string(),
             is_gateway_in_production: false,
         }
     }
@@ -197,6 +200,7 @@ pub trait ApplicationConsumerConfigTrait {
     fn merge_dotenv_configuration(&self, env_file: Option<String>) -> Self
     where
         Self: Sized;
+    fn get_openapi_json(&self) -> anyhow::Result<String>;
 }
 
 impl ApplicationConsumerConfigTrait for ApplicationConsumerConfig {
@@ -368,7 +372,11 @@ impl ApplicationConsumerConfigTrait for ApplicationConsumerConfig {
             role: ConfigRoles::Consumer,
             keys_path: extract_env("KEYS_PATH", default.keys_path),
             is_local: extract_env("IS_LOCAL", default.is_local.to_string()).parse().unwrap(),
+            openapi_path: extract_env("OPENAPI_PATH", default.openapi_path),
         };
         compound_config
+    }
+    fn get_openapi_json(&self) -> anyhow::Result<String> {
+        read(&self.openapi_path)
     }
 }

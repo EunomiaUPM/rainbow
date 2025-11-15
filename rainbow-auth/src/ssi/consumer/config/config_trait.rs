@@ -16,11 +16,9 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use serde_json::{Value};
-use crate::ssi::consumer::config::AuthConsumerConfig;
+use serde_json::Value;
 
 pub trait AuthConsumerConfigTrait: Send + Sync + 'static {
-    fn merge_dotenv_configuration(env_file: Option<String>) -> AuthConsumerConfig;
     fn get_full_db_url(&self) -> String;
     fn get_wallet_api_url(&self) -> String;
     fn get_wallet_register_data(&self) -> Value;
@@ -31,4 +29,5 @@ pub trait AuthConsumerConfigTrait: Send + Sync + 'static {
     fn get_host(&self) -> String;
     fn is_local(&self) -> bool;
     fn get_weird_port(&self) -> String;
+    fn get_openapi_json(&self) -> anyhow::Result<String>;
 }

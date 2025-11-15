@@ -20,7 +20,7 @@ use crate::ssi::common::core::{CoreMateTrait, CoreVcRequesterTrait, CoreWalletTr
 use crate::ssi::common::services::client::ClientServiceTrait;
 use crate::ssi::common::services::vc_requester::VcRequesterTrait;
 use crate::ssi::common::services::wallet::WalletServiceTrait;
-use crate::ssi::provider::config::AuthProviderConfig;
+use crate::ssi::provider::config::AuthProviderConfigTrait;
 use crate::ssi::provider::core::traits::{CoreGateKeeperTrait, CoreProviderTrait, CoreVerifierTrait};
 use crate::ssi::provider::services::gatekeeper::GateKeeperTrait;
 use crate::ssi::provider::services::verifier::VerifierTrait;
@@ -35,7 +35,7 @@ pub struct AuthProvider {
     verifier: Arc<dyn VerifierTrait>,
     repo: Arc<dyn AuthProviderRepoTrait>,
     client: Arc<dyn ClientServiceTrait>,
-    config: AuthProviderConfig,
+    config: Arc<dyn AuthProviderConfigTrait>,
 }
 
 impl AuthProvider {
@@ -46,15 +46,17 @@ impl AuthProvider {
         verifier: Arc<dyn VerifierTrait>,
         repo: Arc<dyn AuthProviderRepoTrait>,
         client: Arc<dyn ClientServiceTrait>,
-        config: AuthProviderConfig,
+        config: Arc<dyn AuthProviderConfigTrait>,
     ) -> AuthProvider {
         AuthProvider { wallet, vc_requester, gatekeeper, verifier, repo, client, config }
     }
 }
 
-
-
-impl CoreProviderTrait for AuthProvider {}
+impl CoreProviderTrait for AuthProvider {
+    fn config(&self) -> Arc<dyn AuthProviderConfigTrait> {
+        self.config.clone()
+    }
+}
 
 impl CoreWalletTrait for AuthProvider {
     fn wallet(&self) -> Arc<dyn WalletServiceTrait> {

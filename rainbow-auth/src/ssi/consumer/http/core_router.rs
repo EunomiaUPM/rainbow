@@ -16,11 +16,13 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use super::OnboarderConsumerRouter;
+use crate::ssi::common::http::MateRouter;
 use crate::ssi::common::http::VcRequesterRouter;
 use crate::ssi::common::http::WalletRouter;
-use crate::ssi::common::http::MateRouter;
 use crate::ssi::consumer::core::AuthConsumer;
-use super::OnboarderConsumerRouter;
+use crate::ssi::consumer::core::traits::CoreConsumerTrait;
+use rainbow_common::http::OpenapiRouter;
 use axum::extract::Request;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
@@ -29,16 +31,18 @@ use axum::Router;
 use rainbow_common::utils::server_status;
 use std::sync::Arc;
 use tower_http::trace::{DefaultMakeSpan, DefaultOnResponse, TraceLayer};
-use tracing::{info, Level};
+use tracing::{error, info, Level};
 use uuid::Uuid;
 
 pub struct AuthConsumerRouter {
-    pub consumer: Arc<AuthConsumer>,
+    consumer: Arc<dyn CoreConsumerTrait>,
+    openapi: String,
 }
 
 impl AuthConsumerRouter {
-    pub fn new(consumer: Arc<AuthConsumer>) -> Self {
-        AuthConsumerRouter { consumer }
+    pub fn new(consumer: Arc<dyn CoreConsumerTrait>) -> Self {
+        let openapi = consumer.config().get_openapi_json().expect("Invalid openapi path");
+        AuthConsumerRouter { consumer, openapi }
     }
 
     pub fn router(self) -> Router {
@@ -47,14 +51,15 @@ impl AuthConsumerRouter {
         let vc_requester_router = VcRequesterRouter::new(self.consumer.clone()).router();
         let mate_router = MateRouter::new(self.consumer.clone()).router();
         let onboarder_router = OnboarderConsumerRouter::new(self.consumer.clone()).router();
+        let openapi_route = OpenapiRouter::new(self.openapi.clone()).router();
 
         Router::new()
             .route("/api/v1/status", get(server_status))
-            .with_state(self.consumer)
             .nest("/api/v1/wallet", wallet_router)
             .nest("/api/v1/vc-request", vc_requester_router)
             .nest("/api/v1/mates", mate_router)
             .nest("/api/v1/onboard", onboarder_router)
+            .nest("/api/v1/docs", openapi_route)
             .layer(
                 TraceLayer::new_for_http()
                     .make_span_with(|_req: &Request<_>| tracing::info_span!("request", id = %Uuid::new_v4()))
@@ -63,5 +68,11 @@ impl AuthConsumerRouter {
                     })
                     .on_response(DefaultOnResponse::new().level(Level::TRACE)),
             )
+            .fallback(Self::fallback)
+    }
+
+    async fn fallback() -> impl IntoResponse {
+        error!("Wrong route");
+        StatusCode::NOT_FOUND.into_response()
     }
 }

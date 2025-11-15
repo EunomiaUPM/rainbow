@@ -20,8 +20,8 @@ use crate::ssi::common::core::{CoreMateTrait, CoreVcRequesterTrait, CoreWalletTr
 use crate::ssi::common::services::client::ClientServiceTrait;
 use crate::ssi::common::services::vc_requester::VcRequesterTrait;
 use crate::ssi::common::services::wallet::WalletServiceTrait;
-use crate::ssi::consumer::config::AuthConsumerConfig;
-use crate::ssi::consumer::core::traits::{CoreOnboarderTrait, CoreConsumerTrait};
+use crate::ssi::consumer::config::AuthConsumerConfigTrait;
+use crate::ssi::consumer::core::traits::{CoreConsumerTrait, CoreOnboarderTrait};
 use crate::ssi::consumer::services::onboarder::OnboarderTrait;
 use rainbow_db::auth::common::traits::{MatesTrait, ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait};
 use rainbow_db::auth::consumer::factory::AuthConsumerRepoTrait;
@@ -32,8 +32,9 @@ pub struct AuthConsumer {
     vc_requester: Arc<dyn VcRequesterTrait>,
     onboarder: Arc<dyn OnboarderTrait>,
     repo: Arc<dyn AuthConsumerRepoTrait>,
+    #[allow(dead_code)] // as an orchestrator, it should have access even though it's not used
     client: Arc<dyn ClientServiceTrait>,
-    config: AuthConsumerConfig,
+    config: Arc<dyn AuthConsumerConfigTrait>,
 }
 
 impl AuthConsumer {
@@ -43,13 +44,17 @@ impl AuthConsumer {
         onboarder: Arc<dyn OnboarderTrait>,
         repo: Arc<dyn AuthConsumerRepoTrait>,
         client: Arc<dyn ClientServiceTrait>,
-        config: AuthConsumerConfig,
+        config: Arc<dyn AuthConsumerConfigTrait>,
     ) -> AuthConsumer {
         AuthConsumer { wallet, vc_requester, onboarder, repo, client, config }
     }
 }
 
-impl CoreConsumerTrait for AuthConsumer {}
+impl CoreConsumerTrait for AuthConsumer {
+    fn config(&self) -> Arc<dyn AuthConsumerConfigTrait> {
+        self.config.clone()
+    }
+}
 
 impl CoreWalletTrait for AuthConsumer {
     fn wallet(&self) -> Arc<dyn WalletServiceTrait> {
