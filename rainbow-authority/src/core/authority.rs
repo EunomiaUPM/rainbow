@@ -16,6 +16,8 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
+use crate::config::CoreApplicationConfigTrait;
 use crate::core::traits::{
     CoreGatekeeperTrait, CoreIssuerTrait, CoreTrait, CoreVcsTrait, CoreVerifierTrait, CoreWalletTrait,
 };
@@ -25,7 +27,6 @@ use crate::services::issuer::IssuerTrait;
 use crate::services::repo::RepoTrait;
 use crate::services::verifier::VerifierTrait;
 use crate::services::wallet::WalletTrait;
-use crate::setup::AuthorityApplicationConfig;
 use std::sync::Arc;
 
 pub struct Authority {
@@ -34,8 +35,9 @@ pub struct Authority {
     issuer: Arc<dyn IssuerTrait>,
     verifier: Arc<dyn VerifierTrait>,
     repo: Arc<dyn RepoTrait>,
+    #[allow(dead_code)] // as an orchestrator, it should have access even though it's not used
     client: Arc<dyn ClientServiceTrait>,
-    config: AuthorityApplicationConfig,
+    config: Arc<dyn CoreApplicationConfigTrait>,
 }
 
 impl Authority {
@@ -46,13 +48,17 @@ impl Authority {
         verifier: Arc<dyn VerifierTrait>,
         repo: Arc<dyn RepoTrait>,
         client: Arc<dyn ClientServiceTrait>,
-        config: AuthorityApplicationConfig,
+        config: Arc<dyn CoreApplicationConfigTrait>,
     ) -> Self {
         Self { wallet, gatekeeper, issuer, verifier, repo, client, config }
     }
 }
 
-impl CoreTrait for Authority {}
+impl CoreTrait for Authority {
+    fn config(&self) -> Arc<dyn CoreApplicationConfigTrait> {
+        self.config.clone()
+    }
+}
 impl CoreVerifierTrait for Authority {
     fn gatekeeper(&self) -> Arc<dyn GateKeeperTrait> {
         self.gatekeeper.clone()

@@ -16,7 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-pub use config::BasicIssuerConfig;
-pub use config_trait::BasicIssuerConfigTrait;
-mod config;
-mod config_trait;
+
+pub mod config;
+mod service;
+pub use service::BasicIssuerService;

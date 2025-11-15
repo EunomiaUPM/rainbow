@@ -17,16 +17,15 @@
  *
  */
 
+use crate::config::{CoreApplicationConfig, CoreApplicationConfigTrait};
 use crate::core::Authority;
-use crate::http::router::RainbowAuthorityRouter;
-use crate::services::gatekeeper::gnap::{config::GnapConfig, GnapService};
+use crate::http::RainbowAuthorityRouter;
 use crate::services::client::basic::BasicClientService;
-use crate::services::issuer::basic::{config::BasicIssuerConfig, BasicIssuerService};
+use crate::services::gatekeeper::gnap::{config::GnapConfig, GnapService};
+use crate::services::issuer::basic_v1::{config::BasicIssuerConfig, BasicIssuerService};
 use crate::services::repo::sql::RepoForSql;
-use crate::services::verifier::basic::{config::BasicVerifierConfig, BasicVerifierService};
+use crate::services::verifier::basic_v1::{config::BasicVerifierConfig, BasicVerifierService};
 use crate::services::wallet::waltid::{config::WaltIdConfig, WaltIdService};
-use crate::setup::config::AuthorityApplicationConfig;
-use crate::setup::AuthorityApplicationConfigTrait;
 use axum::{serve, Router};
 use sea_orm::Database;
 use std::sync::Arc;
@@ -35,13 +34,14 @@ use tracing::info;
 
 pub struct AuthorityApplication;
 
-pub async fn create_authority_router(config: &AuthorityApplicationConfig) -> Router {
+pub async fn create_authority_router(config: &CoreApplicationConfig) -> Router {
     // CONFIGS
     let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
     let waltid_config = WaltIdConfig::from(config.clone());
     let gnap_config = GnapConfig::from(config.clone());
     let issuer_config = BasicIssuerConfig::from(config.clone());
     let verifier_config = BasicVerifierConfig::from(config.clone());
+    let core_config = Arc::new(config.clone());
 
     // SERVICES
     let repo = Arc::new(RepoForSql::new(db_connection));
@@ -52,18 +52,16 @@ pub async fn create_authority_router(config: &AuthorityApplicationConfig) -> Rou
     let verifier = Arc::new(BasicVerifierService::new(verifier_config));
 
     // CORE
-    let authority = Authority::new(wallet, access, issuer, verifier, repo, client, config.clone());
+    let authority = Authority::new(wallet, access, issuer, verifier, repo, client, core_config);
 
     // ROUTER
-    let router = RainbowAuthorityRouter::new(Arc::new(authority)).router();
-
-    Router::new().merge(router)
+    RainbowAuthorityRouter::new(Arc::new(authority)).router()
 }
 
 impl AuthorityApplication {
-    pub async fn run(config: &AuthorityApplicationConfig) -> anyhow::Result<()> {
+    pub async fn run(config: CoreApplicationConfig) -> anyhow::Result<()> {
         // db_connection
-        let router = create_authority_router(config).await;
+        let router = create_authority_router(&config).await;
         // Init server
         let server_message = format!("Starting Authority server in {}", config.get_host());
         info!("{}", server_message);

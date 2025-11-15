@@ -16,8 +16,9 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-pub use service::OidcService;
-pub use service_trait::OidcServiceTrait;
-mod service;
-mod service_trait;
-pub mod config;
+
+mod config;
+mod config_trait;
+
+pub use config::*;
+pub use config_trait::*;

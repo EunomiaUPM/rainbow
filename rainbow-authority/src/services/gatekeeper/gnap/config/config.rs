@@ -16,17 +16,18 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use super::GnapConfigTrait;
-use crate::setup::AuthorityApplicationConfig;
+use crate::config::CoreApplicationConfig;
 use crate::types::host::HostConfig;
 
 pub struct GnapConfig {
     host: HostConfig,
 }
 
-impl From<AuthorityApplicationConfig> for GnapConfig {
-    fn from(config: AuthorityApplicationConfig) -> GnapConfig {
-        GnapConfig { host: config.authority_host }
+impl From<CoreApplicationConfig> for GnapConfig {
+    fn from(config: CoreApplicationConfig) -> GnapConfig {
+        GnapConfig { host: config.host }
     }
 }
 

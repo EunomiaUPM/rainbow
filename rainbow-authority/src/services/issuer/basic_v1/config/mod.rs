@@ -16,12 +16,8 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use axum::async_trait;
-use crate::core::traits::core_gatekeeper::CoreGatekeeperTrait;
-use crate::core::traits::{CoreIssuerTrait, CoreVcsTrait, CoreVerifierTrait, CoreWalletTrait};
 
-#[async_trait]
-pub trait CoreTrait:
-    CoreVerifierTrait + CoreIssuerTrait + CoreVcsTrait + CoreGatekeeperTrait + CoreWalletTrait + Send + Sync + 'static
-{
-}
+mod config;
+mod config_trait;
+pub use config::BasicIssuerConfig;
+pub use config_trait::BasicIssuerConfigTrait;

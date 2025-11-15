@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-pub use gatekeeper_trait::GateKeeperTrait;
-pub mod gnap;
+
 pub mod gatekeeper_trait;
+pub mod gnap;
+pub use gatekeeper_trait::GateKeeperTrait;

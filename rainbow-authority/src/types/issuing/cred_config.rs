@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -55,10 +56,7 @@ impl CredentialConfiguration {
                 cryptographic_binding_methods_supported: vec!["did".to_string()],
                 credential_signing_alg_values_supported: vec!["RSA".to_string()],
                 credential_definition: CredentialDefinition {
-                    r#type: vec![
-                        "VerifiableCredential".to_string(),
-                        "IdentityCredential".to_string(),
-                    ],
+                    r#type: vec!["VerifiableCredential".to_string(), "IdentityCredential".to_string()],
                 },
             },
         );

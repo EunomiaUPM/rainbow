@@ -17,6 +17,6 @@
  *
  */
 
-pub use service::RepoForSql;
 pub mod repos;
 mod service;
+pub use service::RepoForSql;

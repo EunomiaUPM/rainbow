@@ -16,7 +16,12 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-pub use service::BasicIssuerService;
-mod service;
-pub mod config;
 
+pub trait BasicIssuerConfigTrait {
+    fn get_host_without_protocol(&self) -> String;
+    fn get_host(&self) -> String;
+    fn is_local(&self) -> bool;
+    fn get_cert(&self) -> anyhow::Result<String>;
+    fn get_priv_key(&self) -> anyhow::Result<String>;
+    fn get_pub_key(&self) -> anyhow::Result<String>;
+}

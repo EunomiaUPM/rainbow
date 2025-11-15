@@ -16,16 +16,17 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::core::traits::CoreVcsTrait;
-use axum::{Json, Router};
-use std::sync::Arc;
-use axum::extract::{Path, State};
+use crate::errors::CustomToResponse;
+use crate::types::vcs::VcDecisionApproval;
 use axum::extract::rejection::JsonRejection;
+use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
-use crate::errors::CustomToResponse;
-use crate::types::vcs::VcDecisionApproval;
+use axum::{Json, Router};
+use std::sync::Arc;
 
 pub struct VcsRouter {
     approver: Arc<dyn CoreVcsTrait>,
@@ -44,15 +45,16 @@ impl VcsRouter {
     }
 
     async fn get_all_requests(State(approver): State<Arc<dyn CoreVcsTrait>>) -> impl IntoResponse {
-
         match approver.get_all().await {
             Ok(data) => (StatusCode::OK, Json(data)).into_response(),
             Err(e) => e.to_response(),
         }
     }
 
-    async fn get_one_request(State(approver): State<Arc<dyn CoreVcsTrait>>, Path(id): Path<String>) -> impl IntoResponse {
-
+    async fn get_one_request(
+        State(approver): State<Arc<dyn CoreVcsTrait>>,
+        Path(id): Path<String>,
+    ) -> impl IntoResponse {
         match approver.get_by_id(id).await {
             Ok(data) => (StatusCode::OK, Json(data)).into_response(),
             Err(e) => e.to_response(),
@@ -64,7 +66,6 @@ impl VcsRouter {
         Path(id): Path<String>,
         payload: Result<Json<VcDecisionApproval>, JsonRejection>,
     ) -> impl IntoResponse {
-
         let payload = match payload {
             Ok(Json(data)) => data,
             Err(e) => return e.into_response(),
@@ -75,5 +76,4 @@ impl VcsRouter {
             Err(e) => e.to_response(),
         }
     }
-
 }

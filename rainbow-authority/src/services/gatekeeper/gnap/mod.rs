@@ -17,6 +17,6 @@
  *
  */
 
-pub use service::GnapService;
-mod service;
 pub mod config;
+mod service;
+pub use service::GnapService;

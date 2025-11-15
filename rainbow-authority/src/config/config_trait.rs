@@ -17,16 +17,13 @@
  *
  */
 
-mod cred_config;
-mod cred_offer;
-mod verify_payload;
-mod well_known_oauth_server;
-mod well_known_issuer;
-mod well_known_jwk;
+use crate::setup::database::DatabaseConfig;
 
-pub use cred_config::*;
-pub use cred_offer::*;
-pub use verify_payload::VerifyPayload;
-pub use well_known_oauth_server::*;
-pub use well_known_issuer::*;
-pub use well_known_jwk::*;
+pub trait CoreApplicationConfigTrait: Send + Sync + 'static {
+    fn get_full_db_url(&self) -> String;
+    fn get_raw_database_config(&self) -> &DatabaseConfig;
+    fn get_host(&self) -> String;
+    fn is_local(&self) -> bool;
+    fn get_weird_port(&self) -> String;
+    fn get_openapi_json(&self) -> anyhow::Result<String>;
+}

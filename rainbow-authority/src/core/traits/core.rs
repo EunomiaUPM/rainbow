@@ -16,10 +16,15 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use std::format;
 
-pub trait BasicVerifierConfigTrait {
-    fn get_host_without_protocol(&self) -> String;
-    fn get_host(&self) -> String;
-    fn is_local(&self) -> bool;
+use super::{CoreGatekeeperTrait, CoreIssuerTrait, CoreVcsTrait, CoreVerifierTrait, CoreWalletTrait};
+use crate::config::CoreApplicationConfigTrait;
+use axum::async_trait;
+use std::sync::Arc;
+
+#[async_trait]
+pub trait CoreTrait:
+    CoreVerifierTrait + CoreIssuerTrait + CoreVcsTrait + CoreGatekeeperTrait + CoreWalletTrait + Send + Sync + 'static
+{
+    fn config(&self) -> Arc<dyn CoreApplicationConfigTrait>;
 }

@@ -32,7 +32,7 @@ pub struct Model {
     pub participant_type: String,                // REQUEST
     pub base_url: Option<String>,                // REQUEST
     pub vc_uri: Option<String>,                  // REQUEST
-    pub is_vc_issued: bool,
+    pub is_vc_issued: bool,                      // REQUEST
     pub saved_at: chrono::NaiveDateTime,         // DEFAULT
     pub last_interaction: chrono::NaiveDateTime, // DEFAULT
     pub is_me: bool,                             // REQUEST

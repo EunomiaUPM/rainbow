@@ -16,17 +16,17 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::core::traits::CoreIssuerTrait;
 use crate::errors::{CustomToResponse, ErrorLogTrait, Errors};
 use crate::types::enums::errors::BadFormat;
-use crate::types::gnap::{GrantRequest, RefBody};
 use crate::types::issuing::{CredentialRequest, TokenRequest};
-use crate::utils::{extract_bearer_token, extract_gnap_token};
+use crate::utils::extract_bearer_token;
 use axum::extract::rejection::{FormRejection, JsonRejection};
 use axum::extract::{Query, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::IntoResponse;
-use axum::routing::{delete, get, post};
+use axum::routing::{get, post};
 use axum::{Form, Json, Router};
 use std::collections::HashMap;
 use std::sync::Arc;

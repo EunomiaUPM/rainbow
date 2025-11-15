@@ -17,6 +17,6 @@
  *
  */
 
-pub use service::WaltIdService;
-pub mod service;
 pub mod config;
+pub mod service;
+pub use service::WaltIdService;

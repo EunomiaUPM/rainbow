@@ -16,7 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-pub use host::HostConfig;
-pub use client_config::*;
-mod host;
 mod client_config;
+mod host;
+pub use client_config::*;
+pub use host::HostConfig;

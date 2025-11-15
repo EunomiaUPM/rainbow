@@ -16,10 +16,11 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
+use crate::types::vcs::VCIssuer;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use crate::types::vcs::VCIssuer;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct VCClaimsV1 {
@@ -31,9 +32,8 @@ pub struct VCClaimsV1 {
     pub iss: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sub: Option<String>,
-    pub vc: VCFromClaimsV1
+    pub vc: VCFromClaimsV1,
 }
-
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct VCFromClaimsV1 {

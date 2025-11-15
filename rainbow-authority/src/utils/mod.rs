@@ -16,12 +16,14 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::errors::{ErrorLogTrait, Errors};
 use crate::types::enums::errors::BadFormat;
 use anyhow::bail;
 use axum::http::HeaderMap;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::{engine::general_purpose, Engine as _};
+use chrono::Utc;
 use jsonwebtoken::jwk::Jwk;
 use jsonwebtoken::{TokenData, Validation};
 use rand::Rng;
@@ -30,7 +32,6 @@ use serde::Serialize;
 use serde_json::Value;
 use std::collections::HashSet;
 use std::fs;
-use chrono::Utc;
 use tracing::{error, info};
 
 pub fn create_opaque_token() -> String {

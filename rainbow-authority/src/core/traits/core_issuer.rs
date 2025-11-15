@@ -16,12 +16,16 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use std::sync::Arc;
-use axum::async_trait;
+
 use crate::services::issuer::IssuerTrait;
 use crate::services::repo::RepoTrait;
 use crate::services::wallet::WalletTrait;
-use crate::types::issuing::{AuthServerMetadata, CredentialRequest, GiveVC, IssuerMetadata, IssuingToken, TokenRequest, VCCredOffer, WellKnownJwks};
+use crate::types::issuing::{
+    AuthServerMetadata, CredentialRequest, GiveVC, IssuerMetadata, IssuingToken, TokenRequest, VCCredOffer,
+    WellKnownJwks,
+};
+use axum::async_trait;
+use std::sync::Arc;
 
 #[async_trait]
 pub trait CoreIssuerTrait: Send + Sync + 'static {
@@ -65,7 +69,6 @@ pub trait CoreIssuerTrait: Send + Sync + 'static {
         let did = self.wallet().get_did().await?;
         let data = self.issuer().issue_cred(&mut model, &did)?;
         self.repo().issuing().update(model).await?;
-
         Ok(data)
     }
 }

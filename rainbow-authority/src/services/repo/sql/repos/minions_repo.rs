@@ -16,11 +16,12 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::data::entities::minions::{Column, Entity, Model, NewModel};
-use crate::errors::{ErrorLogTrait, Errors};
-use super::GenericRepo;
+
 use super::super::super::subtraits::{BasicRepoTrait, MinionsRepoTrait};
+use super::GenericRepo;
+use crate::data::entities::minions::{Column, Entity, Model, NewModel};
 use crate::data::IntoActiveSet;
+use crate::errors::{ErrorLogTrait, Errors};
 use anyhow::bail;
 use axum::async_trait;
 use sea_orm::sea_query::OnConflict;

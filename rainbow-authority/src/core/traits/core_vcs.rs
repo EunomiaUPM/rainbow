@@ -16,12 +16,13 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::data::entities::request;
 use crate::services::gatekeeper::GateKeeperTrait;
 use crate::services::repo::RepoTrait;
 use crate::types::vcs::VcDecisionApproval;
-use std::sync::Arc;
 use axum::async_trait;
+use std::sync::Arc;
 
 #[async_trait]
 pub trait CoreVcsTrait: Send + Sync + 'static {

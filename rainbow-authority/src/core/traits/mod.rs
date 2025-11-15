@@ -16,16 +16,17 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-mod core_wallet;
-mod core_trait;
+
+mod core;
 mod core_gatekeeper;
-mod core_verifier;
 mod core_issuer;
 mod core_vcs;
+mod core_verifier;
+mod core_wallet;
 
-pub use core_wallet::CoreWalletTrait;
-pub use core_trait::CoreTrait;
+pub use core::CoreTrait;
 pub use core_gatekeeper::CoreGatekeeperTrait;
-pub use core_verifier::CoreVerifierTrait;
 pub use core_issuer::CoreIssuerTrait;
 pub use core_vcs::CoreVcsTrait;
+pub use core_verifier::CoreVerifierTrait;
+pub use core_wallet::CoreWalletTrait;

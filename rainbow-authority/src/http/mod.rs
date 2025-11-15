@@ -16,12 +16,17 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-pub mod openapi;
-pub mod router;
-pub mod wallet_router;
-pub mod gatekeeper_router;
-pub mod vcs_router;
-pub mod verifier_router;
-pub mod issuer_router;
+mod core_router;
+mod gatekeeper_router;
+mod issuer_router;
+mod openapi_router;
+mod vcs_router;
+mod verifier_router;
+mod wallet_router;
 
-pub use openapi::*;
+pub use core_router::RainbowAuthorityRouter;
+pub use gatekeeper_router::GateKeeperRouter;
+pub use openapi_router::OpenapiRouter;
+pub use vcs_router::VcsRouter;
+pub use verifier_router::VerifierRouter;
+pub use wallet_router::WalletRouter;

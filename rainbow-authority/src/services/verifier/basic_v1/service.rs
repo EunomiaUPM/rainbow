@@ -16,10 +16,11 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
+use super::super::VerifierTrait;
+use super::config::{BasicVerifierConfig, BasicVerifierConfigTrait};
 use crate::data::entities::verification;
 use crate::errors::{ErrorLogTrait, Errors};
-use crate::services::verifier::basic::config::{BasicVerifierConfig, BasicVerifierConfigTrait};
-use crate::services::verifier::VerifierTrait;
 use crate::types::enums::errors::BadFormat;
 use crate::types::enums::vc_type::VcType;
 use crate::types::vcs::VPDef;
@@ -34,7 +35,6 @@ use serde_json::Value;
 use std::collections::HashSet;
 use tracing::{error, info};
 use urlencoding::encode;
-use crate::setup::AuthorityApplicationConfig;
 
 pub struct BasicVerifierService {
     config: BasicVerifierConfig,
@@ -171,10 +171,7 @@ impl VerifierTrait for BasicVerifierService {
         let kid_str = match header.kid.as_ref() {
             Some(data) => data,
             None => {
-                let error = Errors::format_new(
-                    BadFormat::Received,
-                    "Jwt does not contain a token",
-                );
+                let error = Errors::format_new(BadFormat::Received, "Jwt does not contain a token");
                 error!("{}", error.log());
                 bail!(error);
             }

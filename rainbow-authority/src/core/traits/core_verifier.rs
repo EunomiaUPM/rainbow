@@ -16,12 +16,13 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use std::sync::Arc;
-use axum::async_trait;
+
 use crate::services::gatekeeper::GateKeeperTrait;
 use crate::services::repo::RepoTrait;
 use crate::services::verifier::VerifierTrait;
 use crate::types::vcs::VPDef;
+use axum::async_trait;
+use std::sync::Arc;
 
 #[async_trait]
 pub trait CoreVerifierTrait: Send + Sync + 'static {

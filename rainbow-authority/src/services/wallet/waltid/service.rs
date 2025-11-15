@@ -22,7 +22,6 @@ use super::config::{WaltIdConfig, WaltIdConfigTrait};
 use crate::data::entities::minions;
 use crate::errors::{ErrorLogTrait, Errors};
 use crate::services::client::ClientServiceTrait;
-use crate::setup::AuthorityApplicationConfig;
 use crate::types::enums::errors::{BadFormat, MissingAction};
 use crate::types::enums::request::Body;
 use crate::types::issuing::WellKnownJwks;

@@ -16,8 +16,9 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use serde_json::Value;
+
 use crate::types::wallet::WalletConfig;
+use serde_json::Value;
 
 pub trait WaltIdConfigTrait {
     fn get_raw_wallet_config(&self) -> WalletConfig;

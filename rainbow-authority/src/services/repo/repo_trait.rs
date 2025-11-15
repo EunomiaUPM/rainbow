@@ -17,7 +17,9 @@
  *
  */
 
-use super::subtraits::{RequestRepoTrait, InteractionRepoTrait, VerificationRepoTrait, IssuingRepoTrait, MinionsRepoTrait};
+use super::subtraits::{
+    InteractionRepoTrait, IssuingRepoTrait, MinionsRepoTrait, RequestRepoTrait, VerificationRepoTrait,
+};
 use std::sync::Arc;
 
 pub trait RepoTrait: Send + Sync + 'static {

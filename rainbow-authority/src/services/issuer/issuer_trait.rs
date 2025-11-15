@@ -16,8 +16,11 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::data::entities::{issuing, request};
-use crate::types::issuing::{AuthServerMetadata, CredentialRequest, DidPossession, GiveVC, IssuerMetadata, IssuingToken, VCCredOffer};
+use crate::types::issuing::{
+    AuthServerMetadata, CredentialRequest, DidPossession, GiveVC, IssuerMetadata, IssuingToken, VCCredOffer,
+};
 use jsonwebtoken::TokenData;
 
 pub trait IssuerTrait: Send + Sync + 'static {
@@ -29,6 +32,11 @@ pub trait IssuerTrait: Send + Sync + 'static {
     fn get_token(&self, model: &issuing::Model) -> IssuingToken;
     fn validate_token_req(&self, model: &issuing::Model, tx_code: &str, pre_auth_code: &str) -> anyhow::Result<()>;
     fn issue_cred(&self, model: &mut issuing::Model, did: &str) -> anyhow::Result<GiveVC>;
-    fn validate_cred_req(&self, model: &mut issuing::Model, cred_req: &CredentialRequest, token: &str) -> anyhow::Result<()>;
+    fn validate_cred_req(
+        &self,
+        model: &mut issuing::Model,
+        cred_req: &CredentialRequest,
+        token: &str,
+    ) -> anyhow::Result<()>;
     fn validate_did_possession(&self, token: &TokenData<DidPossession>, kid: &str) -> anyhow::Result<()>;
 }

@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::core::traits::CoreVerifierTrait;
 use crate::errors::CustomToResponse;
 use crate::types::verifying::VerifyPayload;

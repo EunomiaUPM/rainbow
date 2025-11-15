@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
  *  *
  *  * This program is free software: you can redistribute it and/or modify
  *  * it under the terms of the GNU General Public License as published by
@@ -16,13 +16,6 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::setup::database::DatabaseConfig;
-
-pub trait AuthorityApplicationConfigTrait {
-    fn get_full_db_url(&self) -> String;
-    fn merge_dotenv_configuration(&self, env_file: Option<String>) -> Self;
-    fn get_raw_database_config(&self) -> &DatabaseConfig;
-    fn get_host(&self) -> String;
-    fn is_local(&self) -> bool;
-    fn get_weird_port(&self) -> String;
-}
+pub mod config;
+mod service;
+pub use service::BasicVerifierService;

@@ -16,9 +16,8 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
+use crate::config::{CoreApplicationConfig, CoreApplicationConfigTrait};
 use crate::data::migrations::get_authority_migrations;
-use crate::setup::config::{AuthorityApplicationConfig, AuthorityApplicationConfigTrait};
 use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
 
@@ -35,7 +34,7 @@ impl MigratorTrait for AuthorityMigration {
 }
 
 impl AuthorityMigration {
-    pub async fn run(config: &AuthorityApplicationConfig) -> anyhow::Result<()> {
+    pub async fn run(config: CoreApplicationConfig) -> anyhow::Result<()> {
         // db_connection
         let db_url = config.get_full_db_url();
         let db_connection = Database::connect(db_url).await.expect("Database can't connect");

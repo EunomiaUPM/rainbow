@@ -16,19 +16,19 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::core::traits::{CoreGatekeeperTrait, CoreWalletTrait};
+
+use crate::core::traits::CoreGatekeeperTrait;
 use crate::errors::{CustomToResponse, ErrorLogTrait, Errors};
-use crate::types::wallet::{DidsInfo, KeyDefinition};
+use crate::types::gnap::{GrantRequest, RefBody};
+use crate::utils::extract_gnap_token;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, State};
 use axum::http::{HeaderMap, StatusCode};
-use axum::response::{IntoResponse, Redirect};
-use axum::routing::{delete, get, post};
+use axum::response::IntoResponse;
+use axum::routing::{get, post};
 use axum::{Json, Router};
 use std::sync::Arc;
 use tracing::{error, info};
-use crate::types::gnap::{GrantRequest, RefBody};
-use crate::utils::extract_gnap_token;
 
 pub struct GateKeeperRouter {
     gatekeeper: Arc<dyn CoreGatekeeperTrait>,

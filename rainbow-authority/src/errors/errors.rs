@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::errors::error_log_trait::ErrorLogTrait;
 use crate::types::enums::errors::{BadFormat, MissingAction};
 use axum::http::StatusCode;

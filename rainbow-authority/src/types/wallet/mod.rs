@@ -16,18 +16,19 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-mod wallet_config;
-mod dids_info;
-mod wallet_info;
-mod wallet_session;
-mod wallet_login_response;
-mod wallet_info_response;
-mod key_definition;
 
-pub use wallet_config::WalletConfig;
-pub use wallet_session::WalletSession;
+mod dids_info;
+mod key_definition;
+mod wallet_config;
+mod wallet_info;
+mod wallet_info_response;
+mod wallet_login_response;
+mod wallet_session;
+
 pub use dids_info::DidsInfo;
-pub use wallet_info::WalletInfo;
-pub use wallet_login_response::WalletLoginResponse;
-pub use wallet_info_response::WalletInfoResponse;
 pub use key_definition::*;
+pub use wallet_config::WalletConfig;
+pub use wallet_info::WalletInfo;
+pub use wallet_info_response::WalletInfoResponse;
+pub use wallet_login_response::WalletLoginResponse;
+pub use wallet_session::WalletSession;

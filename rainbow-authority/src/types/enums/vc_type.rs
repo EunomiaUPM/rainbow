@@ -20,7 +20,6 @@
 use crate::errors::{ErrorLogTrait, Errors};
 use crate::types::enums::errors::BadFormat;
 use anyhow::bail;
-use serde::Serialize;
 use tracing::error;
 
 pub enum VcType {

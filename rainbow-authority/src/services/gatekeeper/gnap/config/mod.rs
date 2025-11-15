@@ -17,7 +17,7 @@
  *
  */
 
-pub use config::GnapConfig;
-pub use config_trait::GnapConfigTrait;
 mod config;
 mod config_trait;
+pub use config::GnapConfig;
+pub use config_trait::GnapConfigTrait;

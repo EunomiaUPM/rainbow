@@ -16,12 +16,12 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::services::gatekeeper::gnap::config::{GnapConfig, GnapConfigTrait};
-use crate::services::gatekeeper::GateKeeperTrait;
+
 use crate::data::entities::{interaction, request};
 use crate::errors::{ErrorLogTrait, Errors};
 use crate::services::client::ClientServiceTrait;
-use crate::services::repo::RepoTrait;
+use crate::services::gatekeeper::gnap::config::{GnapConfig, GnapConfigTrait};
+use crate::services::gatekeeper::GateKeeperTrait;
 use crate::types::enums::errors::BadFormat;
 use crate::types::enums::request::Body;
 use crate::types::enums::vc_type::VcType;
@@ -32,12 +32,11 @@ use anyhow::bail;
 use axum::async_trait;
 use axum::http::header::{ACCEPT, CONTENT_TYPE};
 use axum::http::HeaderMap;
-use base64::engine::general_purpose::{STANDARD, URL_SAFE_NO_PAD};
+use base64::engine::general_purpose::STANDARD;
 use base64::Engine;
 use std::sync::Arc;
 use tracing::{error, info};
 use x509_parser::parse_x509_certificate;
-use crate::setup::AuthorityApplicationConfig;
 
 pub struct GnapService {
     config: GnapConfig,
@@ -52,10 +51,7 @@ impl GnapService {
 
 #[async_trait]
 impl GateKeeperTrait for GnapService {
-    fn manage_acc_req(
-        &self,
-        payload: GrantRequest,
-    ) -> anyhow::Result<(request::NewModel, interaction::NewModel)> {
+    fn manage_acc_req(&self, payload: GrantRequest) -> anyhow::Result<(request::NewModel, interaction::NewModel)> {
         info!("Managing vc request");
 
         let interact = self.validate_acc_req(&payload)?;
@@ -115,10 +111,7 @@ impl GateKeeperTrait for GnapService {
         match interact.finish.uri {
             Some(_) => {}
             None => {
-                let error = Errors::format_new(
-                    BadFormat::Received,
-                    "Interact method does not have an uri",
-                );
+                let error = Errors::format_new(BadFormat::Received, "Interact method does not have an uri");
                 error!("{}", error.log());
                 bail!(error)
             }
@@ -152,12 +145,7 @@ impl GateKeeperTrait for GnapService {
         Ok(VCIData { name, website, vc_type })
     }
 
-    fn validate_cont_req(
-        &self,
-        int_model: &interaction::Model,
-        int_ref: String,
-        token: String,
-    ) -> anyhow::Result<()> {
+    fn validate_cont_req(&self, int_model: &interaction::Model, int_ref: String, token: String) -> anyhow::Result<()> {
         info!("Validating continue request");
 
         if int_ref != int_model.interact_ref {
@@ -179,7 +167,7 @@ impl GateKeeperTrait for GnapService {
         }
         Ok(())
     }
-    async fn end_verification(&self, model: interaction::Model) -> anyhow::Result<(Option<String>)> {
+    async fn end_verification(&self, model: interaction::Model) -> anyhow::Result<Option<String>> {
         info!("Ending verification");
 
         if model.method == "redirect" {
@@ -210,7 +198,12 @@ impl GateKeeperTrait for GnapService {
         }
     }
 
-    async fn apprv_dny_req(&self, approve: bool, req_model: &mut request::Model, int_model: interaction::Model) -> anyhow::Result<()> {
+    async fn apprv_dny_req(
+        &self,
+        approve: bool,
+        req_model: &mut request::Model,
+        int_model: interaction::Model,
+    ) -> anyhow::Result<()> {
         let body = match approve {
             true => {
                 info!("Approving petition to obtain a VC");

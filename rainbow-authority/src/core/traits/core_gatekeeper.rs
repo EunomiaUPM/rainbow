@@ -16,10 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use std::sync::Arc;
-use anyhow::bail;
-use axum::async_trait;
-use tracing::{error, info};
+
 use crate::errors::Errors;
 use crate::services::gatekeeper::GateKeeperTrait;
 use crate::services::issuer::IssuerTrait;
@@ -28,12 +25,16 @@ use crate::services::verifier::VerifierTrait;
 use crate::types::enums::errors::BadFormat;
 use crate::types::enums::vc_type::VcType;
 use crate::types::gnap::{GrantRequest, GrantResponse, RefBody};
+use anyhow::bail;
+use axum::async_trait;
+use std::sync::Arc;
+use tracing::{error, info};
 
 #[async_trait]
 pub trait CoreGatekeeperTrait: Send + Sync + 'static {
     fn gatekeeper(&self) -> Arc<dyn GateKeeperTrait>;
     fn verifier(&self) -> Arc<dyn VerifierTrait>;
-    fn issuer(&self) -> Arc<dyn IssuerTrait>;   
+    fn issuer(&self) -> Arc<dyn IssuerTrait>;
     fn repo(&self) -> Arc<dyn RepoTrait>;
     async fn manage_req(&self, payload: GrantRequest) -> anyhow::Result<GrantResponse> {
         let (n_req_mod, n_int_model) = self.gatekeeper().manage_acc_req(payload)?;

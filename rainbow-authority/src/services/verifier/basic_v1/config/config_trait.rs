@@ -16,6 +16,9 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-mod service;
-pub mod config;
-pub use service::BasicVerifierService;
+
+pub trait BasicVerifierConfigTrait {
+    fn get_host_without_protocol(&self) -> String;
+    fn get_host(&self) -> String;
+    fn is_local(&self) -> bool;
+}

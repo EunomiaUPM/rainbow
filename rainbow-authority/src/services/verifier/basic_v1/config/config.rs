@@ -16,16 +16,33 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use super::OidcServiceConfigTrait;
+
+use super::BasicVerifierConfigTrait;
+use crate::config::CoreApplicationConfig;
 use crate::types::host::HostConfig;
-pub struct OidcServiceConfig {
-    pub host: HostConfig,
-    pub local: bool,
+
+pub struct BasicVerifierConfig {
+    host: HostConfig,
+    is_local: bool,
 }
 
-impl OidcServiceConfigTrait for OidcServiceConfig {
-    fn is_local(&self) -> bool {
-        self.local
+impl From<CoreApplicationConfig> for BasicVerifierConfig {
+    fn from(config: CoreApplicationConfig) -> BasicVerifierConfig {
+        BasicVerifierConfig { host: config.host, is_local: config.is_local }
+    }
+}
+
+impl BasicVerifierConfigTrait for BasicVerifierConfig {
+    fn get_host_without_protocol(&self) -> String {
+        let host = self.host.clone();
+        match host.port {
+            Some(port) => {
+                format!("{}:{}", host.url, port)
+            }
+            None => {
+                format!("{}", host.url,)
+            }
+        }
     }
 
     fn get_host(&self) -> String {
@@ -40,15 +57,7 @@ impl OidcServiceConfigTrait for OidcServiceConfig {
         }
     }
 
-    fn get_host_without_protocol(&self) -> String {
-        let host = self.host.clone();
-        match host.port {
-            Some(port) => {
-                format!("{}:{}", host.url, port)
-            }
-            None => {
-                format!("{}", host.url,)
-            }
-        }
+    fn is_local(&self) -> bool {
+        self.is_local
     }
 }

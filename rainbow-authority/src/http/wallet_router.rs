@@ -16,13 +16,14 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::core::traits::CoreWalletTrait;
 use crate::errors::CustomToResponse;
 use crate::types::wallet::{DidsInfo, KeyDefinition};
 use axum::extract::rejection::JsonRejection;
 use axum::extract::State;
 use axum::http::StatusCode;
-use axum::response::{IntoResponse, Redirect};
+use axum::response::IntoResponse;
 use axum::routing::{delete, get, post};
 use axum::{Json, Router};
 use std::sync::Arc;

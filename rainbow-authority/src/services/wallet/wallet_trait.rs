@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::data::entities::minions::NewModel;
 use crate::types::issuing::WellKnownJwks;
 use crate::types::wallet::{DidsInfo, KeyDefinition, WalletInfo, WalletSession};

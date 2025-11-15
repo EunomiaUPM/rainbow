@@ -16,21 +16,22 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use super::super::IssuerTrait;
 use super::config::{BasicIssuerConfig, BasicIssuerConfigTrait};
 use crate::data::entities::{issuing, request};
 use crate::errors::{ErrorLogTrait, Errors};
 use crate::types::enums::errors::BadFormat;
 use crate::types::enums::vc_type::VcType;
-use crate::types::issuing::{AuthServerMetadata, CredentialRequest, DidPossession, GiveVC, IssuerMetadata, IssuingToken, VCCredOffer};
+use crate::types::issuing::{
+    AuthServerMetadata, CredentialRequest, DidPossession, GiveVC, IssuerMetadata, IssuingToken, VCCredOffer,
+};
 use crate::types::vcs::cred_subject::{CredentialSubject4DataSpace, CredentialSubject4Identity};
-use crate::types::vcs::{VCClaimsV1, VCClaimsV2, VCFromClaimsV1, VCIssuer};
-use crate::utils::{create_opaque_token, get_from_opt, has_expired, is_active, validate_token};
+use crate::types::vcs::{VCClaimsV1, VCFromClaimsV1, VCIssuer};
+use crate::utils::{get_from_opt, has_expired, is_active, validate_token};
 use anyhow::bail;
 use chrono::{Duration, Utc};
-use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, TokenData, Validation};
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use jsonwebtoken::{encode, Algorithm, EncodingKey, Header, TokenData};
 use tracing::{error, info};
 use urlencoding;
 
@@ -171,10 +172,7 @@ impl IssuerTrait for BasicIssuerService {
                 r#type: vec!["VerifiableCredential".to_string(), model.vc_type.clone()],
                 id: model.credential_id.clone(),
                 credential_subject,
-                issuer: VCIssuer {
-                    id: did.to_string(),
-                    name: "RainbowAuthority".to_string(),
-                },
+                issuer: VCIssuer { id: did.to_string(), name: "RainbowAuthority".to_string() },
                 valid_from: Some(now),
                 valid_until: Some(now + Duration::days(365)),
             },
@@ -223,12 +221,7 @@ impl IssuerTrait for BasicIssuerService {
         };
 
         model.credential = Some(vc_jwt.clone());
-        Ok(GiveVC {
-            format: "jwt_vc_json".to_string(),
-            credential: vc_jwt,
-        })
-
-
+        Ok(GiveVC { format: "jwt_vc_json".to_string(), credential: vc_jwt })
     }
 
     fn validate_cred_req(

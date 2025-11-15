@@ -16,20 +16,21 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use super::WaltIdConfigTrait;
-use crate::setup::AuthorityApplicationConfig;
+use crate::config::CoreApplicationConfig;
 use crate::types::wallet::WalletConfig;
-use serde_json::{json, Value};
 use crate::utils::read;
+use serde_json::{json, Value};
 
 pub struct WaltIdConfig {
     ssi_wallet_config: WalletConfig,
     keys_path: String,
 }
 
-impl From<AuthorityApplicationConfig> for WaltIdConfig {
-    fn from(config: AuthorityApplicationConfig) -> Self {
-        WaltIdConfig { ssi_wallet_config: config.ssi_wallet_config, keys_path: config.keys_path }
+impl From<CoreApplicationConfig> for WaltIdConfig {
+    fn from(config: CoreApplicationConfig) -> Self {
+        WaltIdConfig { ssi_wallet_config: config.ssi_wallet_config.clone(), keys_path: config.keys_path.clone() }
     }
 }
 
@@ -79,5 +80,3 @@ impl WaltIdConfigTrait for WaltIdConfig {
         read(&path)
     }
 }
-
-

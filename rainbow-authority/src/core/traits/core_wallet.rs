@@ -16,13 +16,14 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use std::sync::Arc;
-use axum::async_trait;
-use serde_json::Value;
+
 use crate::data::entities::minions;
 use crate::services::repo::RepoTrait;
 use crate::services::wallet::WalletTrait;
 use crate::types::wallet::{DidsInfo, KeyDefinition};
+use axum::async_trait;
+use serde_json::Value;
+use std::sync::Arc;
 
 #[async_trait]
 pub trait CoreWalletTrait: Send + Sync + 'static {

@@ -16,8 +16,9 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::services::issuer::basic::config::config_trait::BasicIssuerConfigTrait;
-use crate::setup::AuthorityApplicationConfig;
+
+use crate::config::CoreApplicationConfig;
+use crate::services::issuer::basic_v1::config::config_trait::BasicIssuerConfigTrait;
 use crate::types::host::HostConfig;
 use crate::utils::read;
 
@@ -27,9 +28,9 @@ pub struct BasicIssuerConfig {
     keys_path: String,
 }
 
-impl From<AuthorityApplicationConfig> for BasicIssuerConfig {
-    fn from(config: AuthorityApplicationConfig) -> BasicIssuerConfig {
-        BasicIssuerConfig { host: config.authority_host, is_local: config.is_local, keys_path: config.keys_path }
+impl From<CoreApplicationConfig> for BasicIssuerConfig {
+    fn from(config: CoreApplicationConfig) -> BasicIssuerConfig {
+        BasicIssuerConfig { host: config.host, is_local: config.is_local, keys_path: config.keys_path }
     }
 }
 

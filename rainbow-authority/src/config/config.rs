@@ -16,26 +16,29 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use super::AuthorityApplicationConfigTrait;
+
+use super::CoreApplicationConfigTrait;
 use crate::setup::database::{DatabaseConfig, DbType};
 use crate::types::host::HostConfig;
 use crate::types::wallet::WalletConfig;
+use crate::utils::read;
 use serde::Serialize;
 use std::env;
 
 #[derive(Serialize, Clone, Debug)]
-pub struct AuthorityApplicationConfig {
-    pub authority_host: HostConfig,
+pub struct CoreApplicationConfig {
+    pub host: HostConfig,
     pub is_local: bool,
     pub database_config: DatabaseConfig,
     pub ssi_wallet_config: WalletConfig,
     pub keys_path: String,
+    pub openapi_path: String,
 }
 
-impl Default for AuthorityApplicationConfig {
+impl Default for CoreApplicationConfig {
     fn default() -> Self {
         Self {
-            authority_host: HostConfig {
+            host: HostConfig {
                 protocol: "http".to_string(),
                 url: "127.0.0.1".to_string(),
                 port: Some("1500".to_string()),
@@ -60,50 +63,24 @@ impl Default for AuthorityApplicationConfig {
             },
             is_local: true,
             keys_path: "./../static/certificates/authority/".to_string(),
-            // ssi_issuer_api: "http://127.0.0.1:7002".to_string(),
-            // client_config: ClientConfig {
-            //     class_id: "RainbowAuthorityEntity".to_string(),
-            //     cert_path: "./../static/certificates/authority/cert.pem".to_string(),
-            //     display: None,
-            // },
+            openapi_path: "./../static/specs/openapi/authority/authority.json".to_string(),
         }
     }
 }
 
-impl AuthorityApplicationConfigTrait for AuthorityApplicationConfig {
-    fn get_raw_database_config(&self) -> &DatabaseConfig {
-        &self.database_config
-    }
-    fn get_full_db_url(&self) -> String {
-        let db_config = self.get_raw_database_config();
-        match db_config.db_type {
-            DbType::Memory => ":memory:".to_string(),
-            _ => format!(
-                "{}://{}:{}@{}:{}/{}",
-                db_config.db_type, // Asumiendo que DbType implementa Display
-                db_config.user,
-                db_config.password,
-                db_config.url,
-                db_config.port,
-                db_config.name
-            ),
-        }
-    }
-    fn merge_dotenv_configuration(&self, env_file: Option<String>) -> Self {
+impl CoreApplicationConfig {
+    pub fn merge_dotenv_configuration(&self, env_file: Option<String>) -> Self {
         if let Some(env_file) = env_file {
             dotenvy::from_filename(env_file).expect("No env file found");
         }
 
         dotenvy::dotenv().ok();
-        let default = AuthorityApplicationConfig::default();
+        let default = CoreApplicationConfig::default();
         let compound_config = Self {
-            authority_host: HostConfig {
-                protocol: extract_env(
-                    "AUTHORITY_HOST_PROTOCOL",
-                    default.authority_host.clone().protocol,
-                ),
-                url: extract_env("AUTHORITY_HOST_URL", default.authority_host.clone().url),
-                port: option_extract_env("AUTHORITY_HOST_PORT"),
+            host: HostConfig {
+                protocol: extract_env("HOST_PROTOCOL", default.host.clone().protocol),
+                url: extract_env("HOST_URL", default.host.clone().url),
+                port: option_extract_env("HOST_PORT"),
             },
             database_config: DatabaseConfig {
                 db_type: extract_env("DB_TYPE", default.database_config.db_type.to_string()).parse().unwrap(),
@@ -128,19 +105,35 @@ impl AuthorityApplicationConfigTrait for AuthorityApplicationConfig {
             },
             keys_path: extract_env("KEYS_PATH", default.keys_path),
             is_local: extract_env("IS_LOCAL", default.is_local.to_string()).parse().unwrap(),
-            // client_config: ClientConfig {
-            //     class_id: extract_env("CLASS_ID", default.client_config.class_id),
-            //     cert_path: extract_env("CERT_PATH", default.client_config.cert_path),
-            //     display: None,
-            // },
-            // ssi_issuer_api: extract_env("SSI_ISSUER_API", default.ssi_issuer_api),
+            openapi_path: extract_env("OPENAPI_PATH", default.openapi_path),
         };
         compound_config
     }
+}
 
+impl CoreApplicationConfigTrait for CoreApplicationConfig {
+    fn get_full_db_url(&self) -> String {
+        let db_config = self.get_raw_database_config();
+        match db_config.db_type {
+            DbType::Memory => ":memory:".to_string(),
+            _ => format!(
+                "{}://{}:{}@{}:{}/{}",
+                db_config.db_type, // Asumiendo que DbType implementa Display
+                db_config.user,
+                db_config.password,
+                db_config.url,
+                db_config.port,
+                db_config.name
+            ),
+        }
+    }
+
+    fn get_raw_database_config(&self) -> &DatabaseConfig {
+        &self.database_config
+    }
 
     fn get_host(&self) -> String {
-        let host = self.authority_host.clone();
+        let host = self.host.clone();
         match host.port {
             Some(port) => {
                 format!("{}://{}:{}", host.protocol, host.url, port)
@@ -156,13 +149,16 @@ impl AuthorityApplicationConfigTrait for AuthorityApplicationConfig {
     }
 
     fn get_weird_port(&self) -> String {
-        let host = self.authority_host.clone();
+        let host = self.host.clone();
         match host.port {
             Some(data) => {
                 format!(":{}", data)
             }
             None => "".to_string(),
         }
+    }
+    fn get_openapi_json(&self) -> anyhow::Result<String> {
+        read(&self.openapi_path)
     }
 }
 
