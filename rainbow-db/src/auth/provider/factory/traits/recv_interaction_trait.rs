@@ -16,13 +16,16 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
+use anyhow::bail;
 use crate::common::BasicRepoTrait;
-use crate::auth::provider::entities::recv_interaction::{Model, NewModel};
+use crate::auth::provider::entities::recv_interaction::{Entity, Model, NewModel};
 use axum::async_trait;
+use log::error;
+use rainbow_common::errors::CommonErrors;
 
 #[async_trait]
 pub trait RecvInteractionTrait: BasicRepoTrait<Model, NewModel> + Send + Sync {
     async fn get_by_reference(&self, reference: &str) -> anyhow::Result<Model>;
     async fn get_by_cont_id(&self, cont_id: &str) -> anyhow::Result<Model>;
+    async fn get_by_some_id(&self, some_id: &str) -> anyhow::Result<Option<Model>>;
 }

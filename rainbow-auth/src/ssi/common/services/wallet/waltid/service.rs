@@ -231,11 +231,12 @@ impl WalletServiceTrait for WaltIdService {
             }
         };
 
+        let base_url = self.config.get_host();
         let minion = mates::NewModel {
             participant_id: did_info.did,
             participant_slug: "Myself".to_string(),
             participant_type: "Authority".to_string(),
-            base_url: "Host".to_string(),
+            base_url,
             is_me: true,
             token: None,
         };
@@ -418,9 +419,7 @@ impl WalletServiceTrait for WaltIdService {
             200 => {
                 info!("Keys retrieved successfully");
                 let res = res.text().await?;
-                println!("{}",res);
                 let keys: Vec<KeyDefinition> = serde_json::from_str(&res)?;
-                println!("{:#?}", keys);
                 let mut key_data = self.key_data.lock().await;
                 for key in keys {
                     if !key_data.contains(&key) {

@@ -36,6 +36,7 @@ use rainbow_common::utils::get_from_opt;
 use rainbow_db::auth::common::entities::{mates, req_interaction, req_verification, token_requirements};
 use rainbow_db::auth::consumer::entities::req_request;
 use reqwest::header::{HeaderMap, ACCEPT, AUTHORIZATION, CONTENT_TYPE};
+use reqwest::Response;
 use sha2::{Digest, Sha256};
 use std::sync::Arc;
 use tracing::{error, info};
@@ -184,82 +185,40 @@ impl OnboarderTrait for GnapOnboarderService {
         })
     }
 
-    fn check_callback(&self, int_model: &mut req_interaction::Model, payload: &CallbackBody) -> anyhow::Result<()> {
-        info!("Checking callback");
-
-        int_model.interact_ref = Some(payload.interact_ref.clone());
-        int_model.hash = Some(payload.hash.clone());
-        let nonce = get_from_opt(&int_model.as_nonce, "as_nonce")?;
-        let interact_ref = get_from_opt(&int_model.interact_ref, "interact_ref")?;
-        let hash_input = format!(
-            "{}\n{}\n{}\n{}",
-            int_model.client_nonce, nonce, interact_ref, int_model.grant_endpoint
-        );
-
-        let mut hasher = Sha256::new(); // TODO
-        hasher.update(hash_input.as_bytes());
-        let result = hasher.finalize();
-
-        let calculated_hash = URL_SAFE_NO_PAD.encode(result);
-
-        let hash = get_from_opt(&int_model.hash, "hash")?;
-        if calculated_hash != hash {
-            let error = AuthErrors::security_new("Hash does not match the calculated one");
-            error!("{}", error.log());
-            bail!(error);
-        }
-
-        info!("Hash matches the calculated one");
-        Ok(())
-    }
-
-    async fn continue_req(&self, int_model: &req_interaction::Model) -> anyhow::Result<AccessToken> {
-        info!("Continuing request");
-
-        let url = get_from_opt(&int_model.continue_endpoint, "continue-endpoint")?;
-        let base_token = get_from_opt(&int_model.continue_token, "continue token")?;
-        let token = format!("GNAP {}", base_token);
-
-        let mut headers = HeaderMap::new();
-        headers.insert(CONTENT_TYPE, "application/json".parse()?);
-        headers.insert(ACCEPT, "application/json".parse()?);
-        headers.insert(AUTHORIZATION, token.parse()?);
-
-        let interact_ref = get_from_opt(&int_model.interact_ref, "interact_ref")?;
-        let body = RefBody { interact_ref };
-
-        let res = self.client.post(&url, Some(headers), Body::Json(serde_json::to_value(body)?)).await?;
-
-        match res.status().as_u16() {
+    async fn manage_res(&self, req_model: &mut req_request::Model, res: Response) -> anyhow::Result<mates::NewModel> {
+        info!("Managing response");
+        let token = match res.status().as_u16() {
             200 => {
                 info!("Success retrieving the token");
                 let token: AccessToken = res.json().await?;
-                Ok(token)
+                token
             }
             _ => {
                 let http_code = Some(res.status().as_u16());
                 let error_res: GrantResponse = res.json().await?;
-                let error = CommonErrors::provider_new(&url, "POST", http_code, &error_res.error.unwrap());
+                let error = CommonErrors::provider_new(
+                    "provider/continue",
+                    "POST",
+                    http_code,
+                    &error_res.error.unwrap_or("Error with authority continue request".to_string()),
+                );
                 error!("{}", error.log());
                 bail!(error);
             }
-        }
-    }
-
-    fn end_req(&self, req_model: &mut req_request::Model, token: &AccessToken) -> mates::NewModel {
-        info!("Ending request");
+        };
 
         req_model.status = "Approved".to_string();
         req_model.token = Some(token.value.clone());
 
         let base_url = trim_4_base(&req_model.grant_endpoint);
-        mates::NewModel {
+        let mates = mates::NewModel {
             participant_id: req_model.provider_id.clone(),
             participant_slug: req_model.provider_slug.clone(),
             participant_type: "Provider".to_string(),
             base_url,
             token: req_model.token.clone(),
             is_me: false,
-        }
+        };
+        Ok(mates)
     }
 }

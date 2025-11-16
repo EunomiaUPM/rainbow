@@ -65,14 +65,11 @@ impl IssuerRouter {
         let id = match params.get("id") {
             Some(hash) => hash.clone(),
             None => {
-                info!("GET /credentialOffer");
                 let error = Errors::format_new(BadFormat::Received, "Unable to retrieve hash from callback");
                 error!("{}", error.log());
                 return error.into_response();
             }
         };
-        let log = format!("GET /credentialOffer/{}", id);
-        info!("{}", log);
 
         match issuer.get_cred_offer_data(id).await {
             Ok(data) => (StatusCode::OK, Json(data)).into_response(),
@@ -81,20 +78,14 @@ impl IssuerRouter {
     }
 
     async fn get_issuer(State(issuer): State<Arc<dyn CoreIssuerTrait>>) -> impl IntoResponse {
-        info!("GET /issuer");
-
         (StatusCode::OK, Json(issuer.issuer_metadata())).into_response()
     }
 
     async fn get_oauth_server(State(issuer): State<Arc<dyn CoreIssuerTrait>>) -> impl IntoResponse {
-        info!("GET /oauth_server");
-
         (StatusCode::OK, Json(issuer.oauth_server_metadata())).into_response()
     }
 
     async fn get_jwks(State(issuer): State<Arc<dyn CoreIssuerTrait>>) -> impl IntoResponse {
-        info!("GET /jwks_data");
-
         match issuer.jwks() {
             Ok(jwk) => (StatusCode::OK, Json(jwk)).into_response(),
             Err(e) => e.to_response(),
@@ -105,8 +96,6 @@ impl IssuerRouter {
         State(issuer): State<Arc<dyn CoreIssuerTrait>>,
         payload: Result<Form<TokenRequest>, FormRejection>,
     ) -> impl IntoResponse {
-        info!("GET /token");
-
         let payload = match payload {
             Ok(Form(data)) => data,
             Err(e) => return e.into_response(),

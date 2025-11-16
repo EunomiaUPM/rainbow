@@ -16,11 +16,12 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::ssi::common::types::gnap::{AccessToken, CallbackBody};
+
 use crate::ssi::consumer::types::ReachProvider;
 use axum::async_trait;
 use rainbow_db::auth::common::entities::{mates, req_interaction, req_verification, token_requirements};
 use rainbow_db::auth::consumer::entities::req_request;
+use reqwest::Response;
 
 #[async_trait]
 pub trait OnboarderTrait: Send + Sync + 'static {
@@ -38,7 +39,5 @@ pub trait OnboarderTrait: Send + Sync + 'static {
         int_model: &mut req_interaction::Model,
     ) -> anyhow::Result<()>;
     fn save_verification(&self, int_model: &req_interaction::Model) -> anyhow::Result<req_verification::NewModel>;
-    fn check_callback(&self, int_model: &mut req_interaction::Model, payload: &CallbackBody) -> anyhow::Result<()>;
-    async fn continue_req(&self, int_model: &req_interaction::Model) -> anyhow::Result<AccessToken>;
-    fn end_req(&self, req_model: &mut req_request::Model, token: &AccessToken) -> mates::NewModel;
+    async fn manage_res(&self, req_model: &mut req_request::Model, res: Response) -> anyhow::Result<mates::NewModel>;
 }

@@ -16,20 +16,14 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::ssi::common::types::entities::{ReachAuthority, ReachMethod};
 use axum::async_trait;
-use rainbow_db::auth::common::entities::{mates, req_interaction, req_vc, req_verification};
 use reqwest::Response;
+use rainbow_db::auth::common::entities::req_interaction;
+use crate::ssi::common::types::gnap::{CallbackBody, RefBody};
 
 #[async_trait]
-pub trait VcRequesterTrait: Send + Sync + 'static {
-    fn start(&self, payload: ReachAuthority) -> (req_vc::NewModel, req_interaction::NewModel);
-    async fn send_req(
-        &self,
-        vc_model: &mut req_vc::Model,
-        int_model: &mut req_interaction::Model,
-        method: ReachMethod,
-    ) -> anyhow::Result<Option<String>>;
-    fn save_ver_data(&self, uri: &str, id: &str) -> anyhow::Result<req_verification::NewModel>;
-    async fn manage_res(&self, vc_req_model: &mut req_vc::Model, res: Response) -> anyhow::Result<mates::NewModel>;
+pub trait CallbackTrait: Send + Sync + 'static {
+    fn check_callback(&self, int_model: &mut req_interaction::Model, payload: &CallbackBody) -> anyhow::Result<()>;
+    async fn continue_req(&self, int_model: &req_interaction::Model) -> anyhow::Result<Response>;
+    
 }

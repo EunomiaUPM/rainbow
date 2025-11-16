@@ -77,7 +77,7 @@ impl RecvVerificationTrait for RecvVerificationRepo {
         }
     }
 
-    async fn create_extra(&self, model: Model) -> anyhow::Result<Model> {
+    async fn create_from_basic(&self, model: Model) -> anyhow::Result<Model> {
         let active_model = model.to_active();
         match active_model.insert(&self.inner.db_connection).await {
             Ok(data) => Ok(data),

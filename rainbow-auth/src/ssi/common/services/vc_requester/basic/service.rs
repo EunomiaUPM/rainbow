@@ -16,23 +16,26 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use super::super::VcRequesterTrait;
 use super::config::{VCRequesterConfig, VCRequesterConfigTrait};
 use crate::ssi::common::services::client::ClientServiceTrait;
 use crate::ssi::common::types::entities::{ReachAuthority, ReachMethod};
 use crate::ssi::common::types::enums::request::Body;
 use crate::ssi::common::types::gnap::{GrantRequest, GrantResponse};
+use crate::ssi::common::utils::{get_query_param, trim_4_base};
 use anyhow::bail;
+use axum::async_trait;
 use rainbow_common::errors::helpers::BadFormat;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
-use rainbow_db::auth::common::entities::{req_interaction, req_vc, req_verification};
+use rainbow_common::utils::get_from_opt;
+use rainbow_db::auth::common::entities::{mates, req_interaction, req_vc, req_verification};
+use rainbow_db::auth::consumer::entities::req_request;
 use reqwest::header::{HeaderMap, ACCEPT, AUTHORIZATION, CONTENT_TYPE};
+use reqwest::Response;
 use std::sync::Arc;
-use axum::async_trait;
 use tracing::{error, info};
 use url::Url;
-use rainbow_common::utils::get_from_opt;
-use crate::ssi::common::utils::get_query_param;
 
 pub struct VCReqService {
     client: Arc<dyn ClientServiceTrait>,
@@ -51,7 +54,11 @@ impl VcRequesterTrait for VCReqService {
         info!("Begging for a credential");
 
         let id = uuid::Uuid::new_v4().to_string();
-        let callback_uri = format!("{}/api/v1/callback/{}", self.config.get_host(), &id);
+        let callback_uri = format!(
+            "{}/api/v1/vc-request/callback/{}",
+            self.config.get_host(),
+            &id
+        );
 
         let vc_model = req_vc::NewModel {
             id: id.clone(),
@@ -172,5 +179,42 @@ impl VcRequesterTrait for VCReqService {
             nonce,
             response_uri,
         })
+    }
+
+    async fn manage_res(&self, vc_req_model: &mut req_vc::Model, res: Response) -> anyhow::Result<mates::NewModel> {
+        info!("Managing response");
+        let res = match res.status().as_u16() {
+            200 => {
+                info!("Success retrieving the vc_uri");
+                res.text().await?
+            }
+            _ => {
+                let http_code = Some(res.status().as_u16());
+                let error_res: GrantResponse = res.json().await?;
+                let error = CommonErrors::authority_new(
+                    "authority/continue",
+                    "POST",
+                    http_code,
+                    &error_res.error.unwrap_or("Error with provider continue request".to_string()),
+                );
+                error!("{}", error.log());
+                bail!(error);
+            }
+        };
+
+        vc_req_model.vc_uri = Some(res);
+        vc_req_model.status = "Approved".to_string();
+
+        let base_url = trim_4_base(&vc_req_model.grant_endpoint);
+        let mate = mates::NewModel {
+            participant_id: vc_req_model.authority_id.clone(),
+            participant_slug: vc_req_model.authority_slug.clone(),
+            participant_type: "Authority".to_string(),
+            base_url,
+            token: None,
+            is_me: false,
+        };
+
+        Ok(mate)
     }
 }

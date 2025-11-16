@@ -223,11 +223,12 @@ impl WalletTrait for WaltIdService {
             }
         };
 
+        let base_url = self.config.get_host();
         let minion = minions::NewModel {
             participant_id: did_info.did,
             participant_slug: "Myself".to_string(),
             participant_type: "Authority".to_string(),
-            base_url: None,
+            base_url: Some(base_url),
             vc_uri: None,
             is_vc_issued: false,
             is_me: true,

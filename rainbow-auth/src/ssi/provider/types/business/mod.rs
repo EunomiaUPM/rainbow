@@ -16,17 +16,11 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use std::format;
-use crate::types::wallet::WalletConfig;
-use serde_json::Value;
+use rainbow_db::auth::common::entities::mates::Model;
+use serde::{Deserialize, Serialize};
 
-pub trait WaltIdConfigTrait {
-    fn get_raw_wallet_config(&self) -> WalletConfig;
-    fn get_wallet_api_url(&self) -> String;
-    fn get_wallet_register_data(&self) -> Value;
-    fn get_wallet_login_data(&self) -> Value;
-    fn get_cert(&self) -> anyhow::Result<String>;
-    fn get_priv_key(&self) -> anyhow::Result<String>;
-    fn get_pub_key(&self) -> anyhow::Result<String>;
-    fn get_host(&self) -> String;
+#[derive(Deserialize, Serialize, Debug)]
+pub struct BusinessResponse {
+    pub token: String,
+    pub mate: Model,
 }

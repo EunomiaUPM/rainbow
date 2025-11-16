@@ -20,6 +20,7 @@ use std::sync::Arc;
 use axum::async_trait;
 use rainbow_db::auth::common::entities::mates;
 use rainbow_db::auth::consumer::factory::AuthConsumerRepoTrait;
+use crate::ssi::common::services::callback::CallbackTrait;
 use crate::ssi::common::types::gnap::CallbackBody;
 use crate::ssi::consumer::services::onboarder::OnboarderTrait;
 use crate::ssi::consumer::types::ReachProvider;
@@ -28,6 +29,7 @@ use crate::ssi::consumer::types::ReachProvider;
 pub trait CoreOnboarderTrait: Send + Sync + 'static {
     fn onboarder(&self) -> Arc<dyn OnboarderTrait>;
     fn repo(&self) -> Arc<dyn AuthConsumerRepoTrait>;
+    fn callback(&self) -> Arc<dyn CallbackTrait>;
 
     async fn onboard_req(&self, payload: ReachProvider) -> anyhow::Result<String> {
         let (req_model, int_model, token_model) = self.onboarder().start(&payload);
@@ -44,12 +46,12 @@ pub trait CoreOnboarderTrait: Send + Sync + 'static {
 
     async fn continue_req(&self, id: &str, payload: CallbackBody) -> anyhow::Result<mates::Model> {
         let mut int_model = self.repo().interaction_req().get_by_id(id).await?;
-
-        self.onboarder().check_callback(&mut int_model, &payload)?;
+        let result = self.callback().check_callback(&mut int_model, &payload);
         let int_model = self.repo().interaction_req().update(int_model).await?;
-        let token = self.onboarder().continue_req(&int_model).await?;
+        result?;
+        let response = self.callback().continue_req(&int_model).await?;
         let mut req_model = self.repo().request_req().get_by_id(id).await?;
-        let mate = self.onboarder().end_req(&mut req_model, &token);
+        let mate = self.onboarder().manage_res(&mut req_model, response).await?;
         self.repo().request_req().update(req_model).await?;
         let mate = self.repo().mates().create(mate).await?;
         Ok(mate)

@@ -25,10 +25,10 @@ use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::IntoResponse;
-use axum::routing::{get, post};
+use axum::routing::post;
 use axum::{Json, Router};
 use std::sync::Arc;
-use tracing::{error, info};
+use tracing::error;
 
 pub struct GateKeeperRouter {
     gatekeeper: Arc<dyn CoreGatekeeperTrait>,
@@ -42,7 +42,7 @@ impl GateKeeperRouter {
     pub fn router(self) -> Router {
         Router::new()
             .route("/access", post(Self::access_req))
-            .route("/continue/:id", get(Self::continue_req))
+            .route("/continue/:id", post(Self::continue_req))
             .with_state(self.gatekeeper)
     }
 
@@ -50,8 +50,6 @@ impl GateKeeperRouter {
         State(gatekeeper): State<Arc<dyn CoreGatekeeperTrait>>,
         payload: Result<Json<GrantRequest>, JsonRejection>,
     ) -> impl IntoResponse {
-        info!("POST /request/credential");
-
         let payload = match payload {
             Ok(Json(data)) => data,
             Err(e) => return e.into_response(),
@@ -69,8 +67,6 @@ impl GateKeeperRouter {
         Path(id): Path<String>,
         payload: Result<Json<RefBody>, JsonRejection>,
     ) -> impl IntoResponse {
-        info!("POST /request/continue");
-
         let token = match extract_gnap_token(headers) {
             Some(token) => token,
             None => {

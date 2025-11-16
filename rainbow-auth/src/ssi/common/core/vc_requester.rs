@@ -20,15 +20,20 @@ use crate::ssi::common::services::vc_requester::VcRequesterTrait;
 use rainbow_db::auth::common::entities::req_vc::Model;
 use crate::ssi::common::types::entities::{ReachAuthority, ReachMethod};
 use axum::async_trait;
-use rainbow_db::auth::common::traits::{ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait};
+use rainbow_db::auth::common::traits::{MatesTrait, ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait};
 use std::sync::Arc;
+use rainbow_db::auth::common::entities::mates;
+use crate::ssi::common::services::callback::CallbackTrait;
+use crate::ssi::common::types::gnap::CallbackBody;
 
 #[async_trait]
 pub trait CoreVcRequesterTrait: Send + Sync + 'static {
     fn vc_req(&self) -> Arc<dyn VcRequesterTrait>;
     fn vc_req_repo(&self) -> Arc<dyn ReqVcTrait>;
+    fn mates_repo(&self) -> Arc<dyn MatesTrait>;
     fn verification_req_repo(&self) -> Arc<dyn ReqVerificationTrait>;
     fn interaction_req_repo(&self) -> Arc<dyn ReqInteractionTrait>;
+    fn callback(&self) -> Arc<dyn CallbackTrait>;
     async fn beg_vc(&self, payload: ReachAuthority, method: ReachMethod) -> anyhow::Result<Option<String>> {
         let (vc_model, int_model) = self.vc_req().start(payload);
         let mut vc_model = self.vc_req_repo().create(vc_model).await?;
@@ -52,5 +57,17 @@ pub trait CoreVcRequesterTrait: Send + Sync + 'static {
     
     async fn get_by_id(&self, id: String) -> anyhow::Result<Model> {
         self.vc_req_repo().get_by_id(&id).await
+    }
+    async fn continue_req(&self, id: String, payload: CallbackBody) -> anyhow::Result<mates::Model> {
+        let mut int_model = self.interaction_req_repo().get_by_id(&id).await?;
+        let result = self.callback().check_callback(&mut int_model, &payload);
+        let int_model = self.interaction_req_repo().update(int_model).await?;
+        result?;
+        let response = self.callback().continue_req(&int_model).await?;
+        let mut vc_req_model = self.vc_req_repo().get_by_id(&id).await?;
+        let mate = self.vc_req().manage_res(&mut vc_req_model, response).await?;
+        self.vc_req_repo().update(vc_req_model).await?;
+        let mate = self.mates_repo().force_create(mate).await?;
+        Ok(mate)
     }
 }

@@ -34,6 +34,7 @@ use sea_orm::Database;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 use tracing::info;
+use crate::ssi::common::services::callback::basic::BasicCallbackService;
 
 pub struct AuthConsumerApplication;
 
@@ -54,6 +55,7 @@ impl AuthConsumerApplication {
             client_service.clone(),
             onboarder_config,
         ));
+        let callback_service = Arc::new(BasicCallbackService::new(client_service.clone()));
         let repo_service = Arc::new(AuthConsumerRepoForSql::create_repo(db_connection));
 
         // CORE
@@ -61,6 +63,7 @@ impl AuthConsumerApplication {
             wallet_service,
             vc_req_service,
             onboarder_service,
+            callback_service,
             repo_service,
             client_service,
             core_config,

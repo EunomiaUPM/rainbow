@@ -37,7 +37,7 @@ pub trait CoreGatekeeperTrait: Send + Sync + 'static {
     fn issuer(&self) -> Arc<dyn IssuerTrait>;
     fn repo(&self) -> Arc<dyn RepoTrait>;
     async fn manage_req(&self, payload: GrantRequest) -> anyhow::Result<GrantResponse> {
-        let (n_req_mod, n_int_model) = self.gatekeeper().manage_acc_req(payload)?;
+        let (n_req_mod, n_int_model) = self.gatekeeper().start(payload)?;
         let _req_model = self.repo().request().create(n_req_mod).await?;
         let int_model = self.repo().interaction().create(n_int_model).await?;
 

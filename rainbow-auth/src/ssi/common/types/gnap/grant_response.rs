@@ -88,7 +88,7 @@ impl GrantResponse {
                 app: None,
                 user_code: None,
                 user_code_uri: None,
-                finish: None,
+                finish: Some(int_model.as_nonce.clone()),
                 expires_in: None,
             }),
             subject: None,

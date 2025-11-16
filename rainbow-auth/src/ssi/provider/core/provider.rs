@@ -17,11 +17,15 @@
  *
  */
 use crate::ssi::common::core::{CoreMateTrait, CoreVcRequesterTrait, CoreWalletTrait};
+use crate::ssi::common::services::callback::CallbackTrait;
 use crate::ssi::common::services::client::ClientServiceTrait;
 use crate::ssi::common::services::vc_requester::VcRequesterTrait;
 use crate::ssi::common::services::wallet::WalletServiceTrait;
 use crate::ssi::provider::config::AuthProviderConfigTrait;
-use crate::ssi::provider::core::traits::{CoreGateKeeperTrait, CoreProviderTrait, CoreVerifierTrait};
+use crate::ssi::provider::core::traits::{
+    CoreBusinessTrait, CoreGateKeeperTrait, CoreProviderTrait, CoreVerifierTrait,
+};
+use crate::ssi::provider::services::business::BusinessTrait;
 use crate::ssi::provider::services::gatekeeper::GateKeeperTrait;
 use crate::ssi::provider::services::verifier::VerifierTrait;
 use rainbow_db::auth::common::traits::{MatesTrait, ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait};
@@ -33,6 +37,8 @@ pub struct AuthProvider {
     vc_requester: Arc<dyn VcRequesterTrait>,
     gatekeeper: Arc<dyn GateKeeperTrait>,
     verifier: Arc<dyn VerifierTrait>,
+    callback: Arc<dyn CallbackTrait>,
+    business: Arc<dyn BusinessTrait>,
     repo: Arc<dyn AuthProviderRepoTrait>,
     client: Arc<dyn ClientServiceTrait>,
     config: Arc<dyn AuthProviderConfigTrait>,
@@ -44,11 +50,13 @@ impl AuthProvider {
         vc_requester: Arc<dyn VcRequesterTrait>,
         gatekeeper: Arc<dyn GateKeeperTrait>,
         verifier: Arc<dyn VerifierTrait>,
+        callback: Arc<dyn CallbackTrait>,
+        business: Arc<dyn BusinessTrait>,
         repo: Arc<dyn AuthProviderRepoTrait>,
         client: Arc<dyn ClientServiceTrait>,
         config: Arc<dyn AuthProviderConfigTrait>,
     ) -> AuthProvider {
-        AuthProvider { wallet, vc_requester, gatekeeper, verifier, repo, client, config }
+        AuthProvider { wallet, vc_requester, gatekeeper, verifier, callback, business, repo, client, config }
     }
 }
 
@@ -77,12 +85,20 @@ impl CoreVcRequesterTrait for AuthProvider {
         self.repo.vc_req().clone()
     }
 
+    fn mates_repo(&self) -> Arc<dyn MatesTrait> {
+        self.repo.mates().clone()
+    }
+
     fn verification_req_repo(&self) -> Arc<dyn ReqVerificationTrait> {
         self.repo.verification_req().clone()
     }
 
     fn interaction_req_repo(&self) -> Arc<dyn ReqInteractionTrait> {
         self.repo.interaction_req().clone()
+    }
+
+    fn callback(&self) -> Arc<dyn CallbackTrait> {
+        self.callback.clone()
     }
 }
 
@@ -113,5 +129,23 @@ impl CoreVerifierTrait for AuthProvider {
 
     fn repo(&self) -> Arc<dyn AuthProviderRepoTrait> {
         self.repo.clone()
+    }
+
+    fn business(&self) -> Arc<dyn BusinessTrait> {
+        self.business.clone()
+    }
+}
+
+impl CoreBusinessTrait for AuthProvider {
+    fn business(&self) -> Arc<dyn BusinessTrait> {
+        self.business.clone()
+    }
+
+    fn repo(&self) -> Arc<dyn AuthProviderRepoTrait> {
+        self.repo.clone()
+    }
+
+    fn verifier(&self) -> Arc<dyn VerifierTrait> {
+        self.verifier.clone()
     }
 }

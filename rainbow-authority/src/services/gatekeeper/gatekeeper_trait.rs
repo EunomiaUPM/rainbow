@@ -24,8 +24,8 @@ use axum::async_trait;
 
 #[async_trait]
 pub trait GateKeeperTrait: Send + Sync + 'static {
-    fn manage_acc_req(&self, grant_request: GrantRequest)
-        -> anyhow::Result<(request::NewModel, interaction::NewModel)>;
+    fn start(&self, grant_request: GrantRequest)
+             -> anyhow::Result<(request::NewModel, interaction::NewModel)>;
     fn validate_acc_req(&self, payload: &GrantRequest) -> anyhow::Result<Interact4GR>;
     fn manage_cont_req(&self, req_model: &request::Model) -> anyhow::Result<VCIData>;
     fn validate_cont_req(&self, int_model: &interaction::Model, int_ref: String, token: String) -> anyhow::Result<()>;

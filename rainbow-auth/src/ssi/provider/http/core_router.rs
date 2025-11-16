@@ -31,6 +31,7 @@ use uuid::Uuid;
 use rainbow_common::http::OpenapiRouter;
 use crate::ssi::provider::core::traits::CoreProviderTrait;
 use crate::ssi::provider::http::{GateKeeperRouter, VerifierRouter};
+use crate::ssi::provider::http::business_router::BusinessRouter;
 
 pub struct AuthProviderRouter {
     provider: Arc<AuthProvider>,
@@ -48,8 +49,9 @@ impl AuthProviderRouter {
         let vc_requester_router = VcRequesterRouter::new(self.provider.clone()).router();
         let gatekeeper_router = GateKeeperRouter::new(self.provider.clone()).router();
         let verifier_router = VerifierRouter::new(self.provider.clone()).router();
-        let openapi_route = OpenapiRouter::new(self.openapi.clone()).router();
-
+        let openapi_router = OpenapiRouter::new(self.openapi.clone()).router();
+        let business_router = BusinessRouter::new(self.provider.clone()).router();
+        
         Router::new()
             .route("/api/v1/status", get(server_status))
             .with_state(self.provider)
@@ -57,7 +59,8 @@ impl AuthProviderRouter {
             .nest("/api/v1/vc-request", vc_requester_router)
             .nest("/api/v1/gate", gatekeeper_router)
             .nest("/api/v1/verifier", verifier_router)
-            .nest("/api/v1/docs", openapi_route)
+            .nest("/api/v1/business", business_router)
+            .nest("/api/v1/docs", openapi_router)
             .fallback(Self::fallback)
             .layer(
                 TraceLayer::new_for_http()

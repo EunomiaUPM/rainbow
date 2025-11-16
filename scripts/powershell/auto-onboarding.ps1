@@ -114,7 +114,7 @@ $OIDC4VP_BODY = @{
     slug = "provider"
     actions = "talk"
 }
-$OIDC4VP_URI = Invoke-CurlJson -Method "POST" -Url "$ConsumerUrl/api/v1/onboard/request" -Body $OIDC4VP_BODY -ParseJson:$false
+$OIDC4VP_URI = Invoke-CurlJson -Method "POST" -Url "$ConsumerUrl/api/v1/onboard/provider" -Body $OIDC4VP_BODY -ParseJson:$false
 Write-Host "OIDC4VP_URI: $OIDC4VP_URI"
 
 # ----------------------------

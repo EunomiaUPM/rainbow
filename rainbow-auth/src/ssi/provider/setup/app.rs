@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use crate::ssi::common::services::callback::basic::BasicCallbackService;
 use crate::ssi::common::services::client::basic::BasicClientService;
 use crate::ssi::common::services::vc_requester::basic::config::VCRequesterConfig;
 use crate::ssi::common::services::vc_requester::basic::VCReqService;
@@ -38,6 +39,8 @@ use sea_orm::Database;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 use tracing::info;
+use crate::ssi::provider::services::business::basic::BasicBusinessService;
+use crate::ssi::provider::services::business::basic::config::BusinessConfig;
 
 pub struct AuthProviderApplication;
 
@@ -49,7 +52,8 @@ impl AuthProviderApplication {
         let vc_req_config = VCRequesterConfig::from(config.clone());
         let gatekeeper_config = GnapGateKeeperConfig::from(config.clone());
         let verifier_config = VerifierConfig::from(config.clone());
-        let core_config= Arc::new(config.clone());
+        let business_config = BusinessConfig::from(config.clone());
+        let core_config = Arc::new(config.clone());
 
         // SERVICES
         let client_service = Arc::new(BasicClientService::new());
@@ -60,6 +64,8 @@ impl AuthProviderApplication {
             client_service.clone(),
             verifier_config,
         ));
+        let callback_service = Arc::new(BasicCallbackService::new(client_service.clone()));
+        let business_service = Arc::new(BasicBusinessService::new(business_config));
         let repo_service = Arc::new(AuthProviderRepoForSql::create_repo(db_connection));
 
         // CORE
@@ -68,6 +74,8 @@ impl AuthProviderApplication {
             vc_req_service,
             gatekeeper_service,
             verifier_service,
+            callback_service,
+            business_service,
             repo_service,
             client_service,
             core_config,

@@ -49,7 +49,7 @@ impl IssuerTrait for BasicIssuerService {
     fn start_vci(&self, model: &request::Model) -> issuing::NewModel {
         info!("Starting OIDC4VCI");
         let uri = model.vc_uri.clone().unwrap(); // EXPECTED ALWAYS
-        let host = format!("{}/api/v1", self.config.get_host());
+        let host = format!("{}/api/v1/issuer", self.config.get_host());
         let aud = match self.config.is_local() {
             true => host.replace("127.0.0.1", "host.docker.internal"),
             false => host,
@@ -65,8 +65,8 @@ impl IssuerTrait for BasicIssuerService {
     }
 
     fn generate_issuing_uri(&self, id: &str) -> String {
-        let semi_host = format!("{}/api/v1", self.config.get_host_without_protocol());
-        let host = format!("{}/api/v1", self.config.get_host());
+        let semi_host = format!("{}/api/v1/issuer", self.config.get_host_without_protocol());
+        let host = format!("{}/api/v1/issuer", self.config.get_host());
         let (semi_host, host) = match self.config.is_local() {
             true => {
                 let a = semi_host.replace("127.0.0.1", "host.docker.internal");
@@ -78,7 +78,7 @@ impl IssuerTrait for BasicIssuerService {
         let h_host = format!("{}/credentialOffer?id={}", host, &id);
         let encoded_host = urlencoding::encode(h_host.as_str());
         let uri = format!(
-            "openid-credential-offer://{}/authority/?credential_offer_uri={}",
+            "openid-credential-offer://{}/?credential_offer_uri={}",
             semi_host, encoded_host
         );
         info!("Issuing uri: {}", uri);
@@ -88,7 +88,7 @@ impl IssuerTrait for BasicIssuerService {
     fn get_cred_offer_data(&self, model: &issuing::Model) -> anyhow::Result<VCCredOffer> {
         info!("Retrieving credential offer data");
 
-        let issuer = format!("{}/api/v1", self.config.get_host());
+        let issuer = format!("{}/api/v1/issuer", self.config.get_host());
         let issuer = match self.config.is_local() {
             true => issuer.replace("127.0.0.1", "host.docker.internal"),
             false => issuer,
@@ -106,7 +106,7 @@ impl IssuerTrait for BasicIssuerService {
 
     fn get_issuer_data(&self) -> IssuerMetadata {
         info!("Retrieving issuer data");
-        let host = format!("{}/api/v1", self.config.get_host());
+        let host = format!("{}/api/v1/issuer", self.config.get_host());
         let host = match self.config.is_local() {
             true => host.replace("127.0.0.1", "host.docker.internal"),
             false => host,
@@ -117,7 +117,7 @@ impl IssuerTrait for BasicIssuerService {
     fn get_oauth_server_data(&self) -> AuthServerMetadata {
         info!("Retrieving oauth server data");
 
-        let host = format!("{}/api/v1", self.config.get_host());
+        let host = format!("{}/api/v1/issuer", self.config.get_host());
         let host = match self.config.is_local() {
             true => host.replace("127.0.0.1", "host.docker.internal"),
             false => host,

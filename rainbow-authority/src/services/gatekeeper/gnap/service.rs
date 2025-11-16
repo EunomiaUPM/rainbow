@@ -51,7 +51,7 @@ impl GnapService {
 
 #[async_trait]
 impl GateKeeperTrait for GnapService {
-    fn manage_acc_req(&self, payload: GrantRequest) -> anyhow::Result<(request::NewModel, interaction::NewModel)> {
+    fn start(&self, payload: GrantRequest) -> anyhow::Result<(request::NewModel, interaction::NewModel)> {
         info!("Managing vc request");
 
         let interact = self.validate_acc_req(&payload)?;
@@ -67,8 +67,8 @@ impl GateKeeperTrait for GnapService {
 
         let host_url = self.config.get_host();
         let host_url = format!("{}/api/v1", host_url);
-        let continue_endpoint = format!("{}/request/continue", &host_url);
-        let grant_endpoint = format!("{}/request/credential", &host_url);
+        let continue_endpoint = format!("{}/gate/continue", &host_url);
+        let grant_endpoint = format!("{}/gate/access", &host_url);
         let continue_token = create_opaque_token();
 
         let new_interaction_model = interaction::NewModel {

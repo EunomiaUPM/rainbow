@@ -20,3 +20,4 @@
 pub mod wallet;
 pub mod client;
 pub mod vc_requester;
+pub mod callback;

@@ -32,7 +32,7 @@ pub trait VerifierTrait: Send + Sync + 'static {
     fn verify_vc(&self, vc_token: &str, holder: &str) -> anyhow::Result<()>;
     fn validate_token(&self, vp_token: &str, audience: Option<&str>) -> anyhow::Result<(TokenData<Value>, String)>;
     fn validate_nonce(&self, model: &recv_verification::Model, token: &TokenData<Value>) -> anyhow::Result<()>;
-    fn validate_sub(
+    fn validate_vp_subject(
         &self,
         model: &mut recv_verification::Model,
         token: &TokenData<Value>,

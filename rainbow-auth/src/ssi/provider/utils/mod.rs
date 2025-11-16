@@ -73,3 +73,28 @@ pub fn get_claim(claims: &Value, path: Vec<&str>) -> anyhow::Result<String> {
     };
     Ok(data)
 }
+
+pub fn get_opt_claim(claims: &Value, path: Vec<&str>) -> anyhow::Result<Option<String>> {
+    let mut node = claims;
+    let field = path.last().unwrap_or(&"unknown");
+    for key in path.iter() {
+        node = match node.get(key) {
+            Some(data) => data,
+            None => {
+                return Ok(None)
+            }
+        };
+    }
+    let data = match node.as_str() {
+        Some(data) => data.to_string(),
+        None => {
+            let error = CommonErrors::format_new(
+                BadFormat::Received,
+                &format!("Field '{}' not a string", field),
+            );
+            error!("{}", error.log());
+            bail!(error)
+        }
+    };
+    Ok(Some(data))
+}

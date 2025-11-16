@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use std::format;
 use serde_json::Value;
 use rainbow_common::ssi::WalletConfig;
 
@@ -27,4 +28,5 @@ pub trait WaltIdConfigTrait {
     fn get_cert(&self) -> anyhow::Result<String>;
     fn get_priv_key(&self) -> anyhow::Result<String>;
     fn get_pub_key(&self) -> anyhow::Result<String>;
+    fn get_host(&self) -> String;
 }

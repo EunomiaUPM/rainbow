@@ -17,6 +17,7 @@
  *
  */
 use serde_json::{json, Value};
+use rainbow_common::config::global_config::HostConfig;
 use crate::ssi::common::services::wallet::waltid::config::config_trait::WaltIdConfigTrait;
 use rainbow_common::ssi::WalletConfig;
 use crate::ssi::consumer::config::AuthConsumerConfig;
@@ -25,6 +26,7 @@ use crate::ssi::common::utils::read;
 
 #[derive(Clone)]
 pub struct WaltIdConfig {
+    host: HostConfig,
     ssi_wallet_config: WalletConfig,
     keys_path: String,
 }
@@ -32,6 +34,7 @@ pub struct WaltIdConfig {
 impl From<AuthProviderConfig> for WaltIdConfig {
     fn from(value: AuthProviderConfig) -> Self {
         WaltIdConfig {
+            host: value.common_config.host,
             ssi_wallet_config: value.common_config.ssi_wallet_config,
             keys_path: value.common_config.keys_path,
         }
@@ -41,6 +44,7 @@ impl From<AuthProviderConfig> for WaltIdConfig {
 impl From<AuthConsumerConfig> for WaltIdConfig {
     fn from(value: AuthConsumerConfig) -> Self {
         WaltIdConfig {
+            host: value.common_config.host,
             ssi_wallet_config: value.common_config.ssi_wallet_config,
             keys_path: value.common_config.keys_path,
         }
@@ -91,6 +95,17 @@ impl WaltIdConfigTrait for WaltIdConfig {
     fn get_pub_key(&self) -> anyhow::Result<String> {
         let path = format!("{}/public_key.pem", self.keys_path);
         read(&path)
+    }
+    fn get_host(&self) -> String {
+        let host = self.host.clone();
+        match host.port.is_empty() {
+            true => {
+                format!("{}://{}", host.protocol, host.url)
+            }
+            false => {
+                format!("{}://{}:{}", host.protocol, host.url, host.port)
+            }
+        }
     }
 }
 

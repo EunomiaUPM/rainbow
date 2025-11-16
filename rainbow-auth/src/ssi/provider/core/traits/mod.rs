@@ -19,7 +19,9 @@
 mod core_trait;
 mod core_gatekeeper;
 mod core_verifier;
+mod core_business;
 
 pub use core_trait::CoreProviderTrait;
 pub use core_gatekeeper::CoreGateKeeperTrait;
 pub use core_verifier::CoreVerifierTrait;
+pub use core_business::CoreBusinessTrait;

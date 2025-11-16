@@ -81,14 +81,10 @@ impl GateKeeperTrait for GnapGateKeeperService {
 
         let req_model = recv_request::NewModel { id: id.clone(), consumer_slug: class_id };
 
-        let host = format!("{}/api/v1", self.config.get_host());
-        let host_url = match self.config.is_local() {
-            true => host.clone().replace("127.0.0.1", "host.docker.internal"),
-            false => host.clone(),
-        };
+        let host = format!("{}/api/v1/gate", self.config.get_host());
 
-        let grant_endpoint = format!("{}/gate/access", &host_url);
-        let continue_endpoint = format!("{}/gate/continue", &host_url);
+        let grant_endpoint = format!("{}/access", &host);
+        let continue_endpoint = format!("{}/continue", &host);
         let continue_token = create_opaque_token();
 
         let int_model = recv_interaction::NewModel {

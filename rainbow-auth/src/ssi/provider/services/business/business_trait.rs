@@ -16,17 +16,14 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use std::format;
-use crate::types::wallet::WalletConfig;
-use serde_json::Value;
+use rainbow_common::auth::business::RainbowBusinessLoginRequest;
+use rainbow_common::utils::get_from_opt;
+use rainbow_db::auth::common::entities::mates;
+use rainbow_db::auth::provider::entities::{business_mates, recv_request, recv_verification};
+use crate::ssi::provider::types::business::BusinessResponse;
 
-pub trait WaltIdConfigTrait {
-    fn get_raw_wallet_config(&self) -> WalletConfig;
-    fn get_wallet_api_url(&self) -> String;
-    fn get_wallet_register_data(&self) -> Value;
-    fn get_wallet_login_data(&self) -> Value;
-    fn get_cert(&self) -> anyhow::Result<String>;
-    fn get_priv_key(&self) -> anyhow::Result<String>;
-    fn get_pub_key(&self) -> anyhow::Result<String>;
-    fn get_host(&self) -> String;
+pub trait BusinessTrait: Send + Sync + 'static {
+    fn start(&self, payload: &RainbowBusinessLoginRequest) -> (recv_request::NewModel, recv_verification::Model);
+    fn get_token(&self, mate: &mates::Model, bus_model: &business_mates::Model) -> anyhow::Result<BusinessResponse>;
+    fn end(&self, ver_model: &recv_verification::Model ) -> anyhow::Result<business_mates::NewModel>;
 }

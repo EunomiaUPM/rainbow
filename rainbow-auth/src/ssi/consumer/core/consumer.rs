@@ -17,6 +17,7 @@
  *
  */
 use crate::ssi::common::core::{CoreMateTrait, CoreVcRequesterTrait, CoreWalletTrait};
+use crate::ssi::common::services::callback::CallbackTrait;
 use crate::ssi::common::services::client::ClientServiceTrait;
 use crate::ssi::common::services::vc_requester::VcRequesterTrait;
 use crate::ssi::common::services::wallet::WalletServiceTrait;
@@ -31,6 +32,7 @@ pub struct AuthConsumer {
     wallet: Arc<dyn WalletServiceTrait>,
     vc_requester: Arc<dyn VcRequesterTrait>,
     onboarder: Arc<dyn OnboarderTrait>,
+    callback: Arc<dyn CallbackTrait>,
     repo: Arc<dyn AuthConsumerRepoTrait>,
     #[allow(dead_code)] // as an orchestrator, it should have access even though it's not used
     client: Arc<dyn ClientServiceTrait>,
@@ -42,11 +44,12 @@ impl AuthConsumer {
         wallet: Arc<dyn WalletServiceTrait>,
         vc_requester: Arc<dyn VcRequesterTrait>,
         onboarder: Arc<dyn OnboarderTrait>,
+        callback: Arc<dyn CallbackTrait>,
         repo: Arc<dyn AuthConsumerRepoTrait>,
         client: Arc<dyn ClientServiceTrait>,
         config: Arc<dyn AuthConsumerConfigTrait>,
     ) -> AuthConsumer {
-        AuthConsumer { wallet, vc_requester, onboarder, repo, client, config }
+        AuthConsumer { wallet, vc_requester, onboarder, callback, repo, client, config }
     }
 }
 
@@ -75,12 +78,20 @@ impl CoreVcRequesterTrait for AuthConsumer {
         self.repo.vc_req().clone()
     }
 
+    fn mates_repo(&self) -> Arc<dyn MatesTrait> {
+        self.repo.mates().clone()
+    }
+
     fn verification_req_repo(&self) -> Arc<dyn ReqVerificationTrait> {
         self.repo.verification_req()
     }
 
     fn interaction_req_repo(&self) -> Arc<dyn ReqInteractionTrait> {
         self.repo.interaction_req()
+    }
+
+    fn callback(&self) -> Arc<dyn CallbackTrait> {
+        self.callback.clone()
     }
 }
 
@@ -97,5 +108,9 @@ impl CoreOnboarderTrait for AuthConsumer {
 
     fn repo(&self) -> Arc<dyn AuthConsumerRepoTrait> {
         self.repo.clone()
+    }
+
+    fn callback(&self) -> Arc<dyn CallbackTrait> {
+        self.callback.clone()
     }
 }

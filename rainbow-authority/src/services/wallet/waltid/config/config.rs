@@ -22,8 +22,10 @@ use crate::config::CoreApplicationConfig;
 use crate::types::wallet::WalletConfig;
 use crate::utils::read;
 use serde_json::{json, Value};
+use crate::types::host::HostConfig;
 
 pub struct WaltIdConfig {
+    host: HostConfig,
     ssi_wallet_config: WalletConfig,
     keys_path: String,
 }
@@ -78,5 +80,16 @@ impl WaltIdConfigTrait for WaltIdConfig {
     fn get_pub_key(&self) -> anyhow::Result<String> {
         let path = format!("{}/public_key.pem", self.keys_path);
         read(&path)
+    }
+    fn get_host(&self) -> String {
+        let host = self.host.clone();
+        match host.port {
+            None => {
+                format!("{}://{}", host.protocol, host.url)
+            }
+            Some(port) => {
+                format!("{}://{}:{}", host.protocol, host.url, port)
+            }
+        }
     }
 }

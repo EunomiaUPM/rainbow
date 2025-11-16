@@ -92,4 +92,15 @@ impl RecvInteractionTrait for RecvInteractionRepo {
             }
         }
     }
+
+    async fn get_by_some_id(&self, some_id: &str) -> anyhow::Result<Option<Model>> {
+        match Entity::find_by_id(some_id).one(&self.inner.db_connection).await {
+            Ok(data) => Ok(data),
+            Err(e) => {
+                let error = CommonErrors::database_new(&e.to_string());
+                error!("{}", error.log());
+                bail!(error)
+            }
+        }
+    }
 }

@@ -23,7 +23,7 @@ use axum::extract::rejection::FormRejection;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use axum::routing::post;
+use axum::routing::{get, post};
 use axum::{Form, Json, Router};
 use std::sync::Arc;
 
@@ -38,7 +38,7 @@ impl VerifierRouter {
 
     pub fn router(self) -> Router {
         Router::new()
-            .route("/pd/:state", post(Self::vp_definition))
+            .route("/pd/:state", get(Self::vp_definition))
             .route("/verify/:state", post(Self::verify))
             .with_state(self.verifier)
     }
