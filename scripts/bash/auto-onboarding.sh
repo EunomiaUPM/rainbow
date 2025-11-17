@@ -82,9 +82,9 @@ invoke_curl_robust "POST" "$ProviderUrl/api/v1/wallet/onboard" "" "3. Onboarding
 # 2.4 Get DIDs
 echo "" >&2
 echo "--- 4. Getting DIDs of participants ---" >&2
-AuthorityDid=$(invoke_curl_robust "GET" "$AuthorityUrl/api/v1/did.json" "" "4.1 Get A Did" | jq -r '.id')
-ConsumerDid=$(invoke_curl_robust "GET" "$ConsumerUrl/api/v1/did.json" "" "4.2 Get C Did" | jq -r '.id')
-ProviderDid=$(invoke_curl_robust "GET" "$ProviderUrl/api/v1/did.json" "" "4.3 Get P Did" | jq -r '.id')
+AuthorityDid=$(invoke_curl_robust "GET" "$AuthorityUrl/api/v1/wallet/did.json" "" "4.1 Get A Did" | jq -r '.id')
+ConsumerDid=$(invoke_curl_robust "GET" "$ConsumerUrl/api/v1/wallet/did.json" "" "4.2 Get C Did" | jq -r '.id')
+ProviderDid=$(invoke_curl_robust "GET" "$ProviderUrl/api/v1/wallet/did.json" "" "4.3 Get P Did" | jq -r '.id')
 
 echo "AuthorityDid: $AuthorityDid" >&2
 echo "ConsumerDid: $ConsumerDid" >&2
@@ -93,15 +93,15 @@ echo "-----------------------------------------------" >&2
 
 
 # 2.5 C Beg 4 Credential (Consumer Requests Credential from Authority)
-C_BEG_BODY=$(jq -n --arg url "$AuthorityUrl/api/v1/request/credential" \
+C_BEG_BODY=$(jq -n --arg url "$AuthorityUrl/api/v1/gate/access" \
     --arg id "$AuthorityDid" \
     '{"url": $url, "id": $id, "slug": "authority", "vc_type": "DataspaceParticipantCredential"}')
 
-invoke_curl_robust "POST" "$ConsumerUrl/api/v1/authority/beg" "$C_BEG_BODY" "5. C Requests Credential (Beg 4 Credential)"
+invoke_curl_robust "POST" "$ConsumerUrl/api/v1/vc-request/beg/cross-user" "$C_BEG_BODY" "5. C Requests Credential (Beg 4 Credential)"
 
 
 # 2.6 A All Requests & Get PetitionId
-ALL_REQUESTS_JSON=$(invoke_curl_robust "GET" "$AuthorityUrl/api/v1/request/all" "" "6. A Retrieves all Requests")
+ALL_REQUESTS_JSON=$(invoke_curl_robust "GET" "$AuthorityUrl/api/v1/vc-request/all" "" "6. A Retrieves all Requests")
 
 PetitionId=$(echo "$ALL_REQUESTS_JSON" | jq -r '.[-1].id')
 if [[ -z "$PetitionId" ]]; then
@@ -113,11 +113,11 @@ echo "PetitionId retrieved: $PetitionId" >&2
 
 # 2.7 A Accept Request (Authority Approves)
 APPROVE_BODY='{"approve": true}'
-invoke_curl_robust "POST" "$AuthorityUrl/api/v1/request/$PetitionId" "$APPROVE_BODY" "7. A Accepts the Request"
+invoke_curl_robust "POST" "$AuthorityUrl/api/v1/vc-request/$PetitionId" "$APPROVE_BODY" "7. A Accepts the Request"
 
 
 # 2.8 C All Authorities & Get OIDC4VCI_URI
-ALL_AUTHORITY_JSON=$(invoke_curl_robust "GET" "$ConsumerUrl/api/v1/authority/request/all" "" "8. C Retrieves Authorities (Get OIDC4VCI URI)")
+ALL_AUTHORITY_JSON=$(invoke_curl_robust "GET" "$ConsumerUrl/api/v1/vc-request/all" "" "8. C Retrieves Authorities (Get OIDC4VCI URI)")
 
 OIDC4VCI_URI=$(echo "$ALL_AUTHORITY_JSON" | jq -r '.[-1].vc_uri')
 if [[ -z "$OIDC4VCI_URI" ]]; then
@@ -129,16 +129,16 @@ echo "OIDC4VCI_URI retrieved: $OIDC4VCI_URI" >&2
 
 # 2.9 C Manage OIDC4VCI (Process Credential Issuance)
 OIDC4VCI_PROCESS_BODY=$(jq -n --arg uri "$OIDC4VCI_URI" '{"uri": $uri}')
-invoke_curl_robust "POST" "$ConsumerUrl/api/v1/process/oidc4vci" "$OIDC4VCI_PROCESS_BODY" "9. C Processes OIDC4VCI (Get VC)"
+invoke_curl_robust "POST" "$ConsumerUrl/api/v1/wallet/oidc4vci" "$OIDC4VCI_PROCESS_BODY" "9. C Processes OIDC4VCI (Get VC)"
 
 
 # 2.10 C Grant Request & Get OIDC4VP_URI
-OIDC4VP_BODY=$(jq -n --arg url "$ProviderUrl/api/v1/access" \
+OIDC4VP_BODY=$(jq -n --arg url "$ProviderUrl/api/v1/gate/access" \
     --arg id "$ProviderDid" \
     '{"url": $url, "id": $id, "slug": "provider", "actions": "talk"}')
 
 # The response is the OIDC4VP URI in plain text
-OIDC4VP_URI_RAW=$(invoke_curl_robust "POST" "$ConsumerUrl/api/v1/request/onboard/provider" "$OIDC4VP_BODY" "10. C Requests Access from Provider (Get OIDC4VP URI)")
+OIDC4VP_URI_RAW=$(invoke_curl_robust "POST" "$ConsumerUrl/api/v1/onboard/provider" "$OIDC4VP_BODY" "10. C Requests Access from Provider (Get OIDC4VP URI)")
 
 # Clean up whitespace or carriage returns to get only the URI
 OIDC4VP_URI=$(echo "$OIDC4VP_URI_RAW" | tr -d '[:space:]')
@@ -151,7 +151,7 @@ echo "OIDC4VP_URI retrieved: $OIDC4VP_URI" >&2
 
 # 2.11 C Manage OIDC4VP (Process Credential Presentation)
 OIDC4VP_PROCESS_BODY=$(jq -n --arg uri "$OIDC4VP_URI" '{"uri": $uri}')
-invoke_curl_robust "POST" "$ConsumerUrl/api/v1/process/oidc4vp" "$OIDC4VP_PROCESS_BODY" "11. C Processes OIDC4VP (Present VC)"
+invoke_curl_robust "POST" "$ConsumerUrl/api/v1/wallet/oidc4vp" "$OIDC4VP_PROCESS_BODY" "11. C Processes OIDC4VP (Present VC)"
 
 echo "" >&2
 echo "================================================================" >&2

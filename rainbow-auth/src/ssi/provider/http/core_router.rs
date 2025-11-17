@@ -16,7 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::ssi::common::http::{VcRequesterRouter, WalletRouter};
+use crate::ssi::common::http::{MateRouter, VcRequesterRouter, WalletRouter};
 use crate::ssi::provider::core::traits::CoreProviderTrait;
 use crate::ssi::provider::core::AuthProvider;
 use crate::ssi::provider::http::business_router::BusinessRouter;
@@ -48,6 +48,7 @@ impl AuthProviderRouter {
         let wallet_router = WalletRouter::new(self.provider.clone()).router();
         let vc_requester_router = VcRequesterRouter::new(self.provider.clone()).router();
         let gatekeeper_router = GateKeeperRouter::new(self.provider.clone()).router();
+        let mate_router = MateRouter::new(self.provider.clone()).router();
         let verifier_router = VerifierRouter::new(self.provider.clone()).router();
         let openapi_router = OpenapiRouter::new(self.openapi.clone()).router();
         let business_router = BusinessRouter::new(self.provider.clone()).router();
@@ -60,6 +61,10 @@ impl AuthProviderRouter {
             .nest(
                 &format!("{}/wallet", self.provider.config().get_api_path()),
                 wallet_router,
+            )
+            .nest(
+                &format!("{}/mates", self.provider.config().get_api_path()),
+                mate_router,
             )
             .nest(
                 &format!("{}/vc-request", self.provider.config().get_api_path()),
