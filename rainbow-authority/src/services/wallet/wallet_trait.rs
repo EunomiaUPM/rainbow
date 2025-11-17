@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::data::entities::minions::NewModel;
 use crate::types::issuing::WellKnownJwks;
 use crate::types::wallet::{DidsInfo, KeyDefinition, WalletInfo, WalletSession};
@@ -23,7 +24,7 @@ use axum::async_trait;
 use serde_json::Value;
 
 #[async_trait]
-pub trait WalletServiceTrait: Send + Sync + 'static {
+pub trait WalletTrait: Send + Sync + 'static {
     // BASIC
     async fn register(&self) -> anyhow::Result<()>;
     async fn login(&self) -> anyhow::Result<()>;

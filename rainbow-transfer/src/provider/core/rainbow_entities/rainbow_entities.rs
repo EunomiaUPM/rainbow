@@ -55,7 +55,7 @@ where
 {
     async fn get_all_transfers(&self) -> anyhow::Result<Vec<transfer_process::Model>> {
         let transfer_processes = self.repo.get_all_transfer_processes(None, None).await.map_err(|e| {
-            let e = CommonErrors::database_new(Some(e.to_string()));
+            let e = CommonErrors::database_new(&e.to_string());
             error!("{}", e.log());
             e
         })?;
@@ -64,7 +64,7 @@ where
 
     async fn get_batch_transfers(&self, transfer_ids: &Vec<Urn>) -> anyhow::Result<Vec<Model>> {
         let transfer_processes = self.repo.get_batch_transfer_processes(transfer_ids).await.map_err(|e| {
-            let e = CommonErrors::database_new(Some(e.to_string()));
+            let e = CommonErrors::database_new(&e.to_string());
             error!("{}", e.log());
             e
         })?;
@@ -77,15 +77,12 @@ where
             .get_transfer_process_by_provider(provider_pid.clone())
             .await
             .map_err(|e| {
-                let e = CommonErrors::database_new(Some(e.to_string()));
+                let e = CommonErrors::database_new(&e.to_string());
                 error!("{}", e.log());
                 e
             })?
             .ok_or_else(|| {
-                let e = CommonErrors::missing_resource_new(
-                    provider_pid.to_string(),
-                    Some("Transfer process not found".to_string()),
-                );
+                let e = CommonErrors::missing_resource_new(&provider_pid.to_string(), "Transfer process not found");
                 error!("{}", e.log());
                 e
             })?;
@@ -99,15 +96,12 @@ where
             .get_transfer_process_by_consumer(consumer_id.clone())
             .await
             .map_err(|e| {
-                let e = CommonErrors::database_new(Some(e.to_string()));
+                let e = CommonErrors::database_new(&e.to_string());
                 error!("{}", e.log());
                 e
             })?
             .ok_or_else(|| {
-                let e = CommonErrors::missing_resource_new(
-                    consumer_id.to_string(),
-                    Some("Transfer process not found".to_string()),
-                );
+                let e = CommonErrors::missing_resource_new(&consumer_id.to_string(), "Transfer process not found");
                 error!("{}", e.log());
                 e
             })?;
@@ -119,15 +113,12 @@ where
         let messages =
             self.repo.get_all_transfer_messages_by_provider(transfer_id.clone()).await.map_err(|e| match e {
                 TransferProviderRepoErrors::ProviderTransferProcessNotFound => {
-                    let e_ = CommonErrors::missing_resource_new(
-                        transfer_id.to_string(),
-                        Some("Transfer process not found".to_string()),
-                    );
+                    let e_ = CommonErrors::missing_resource_new(&transfer_id.to_string(), "Transfer process not found");
                     error!("{}", e_.log());
                     e_
                 }
                 _ => {
-                    let e_ = CommonErrors::database_new(Some(e.to_string()));
+                    let e_ = CommonErrors::database_new(&e.to_string());
                     error!("{}", e_.log());
                     e_
                 }
@@ -142,24 +133,18 @@ where
             .await
             .map_err(|e| match e {
                 TransferProviderRepoErrors::ProviderTransferProcessNotFound => {
-                    let e_ = CommonErrors::missing_resource_new(
-                        transfer_id.to_string(),
-                        Some("Transfer process not found".to_string()),
-                    );
+                    let e_ = CommonErrors::missing_resource_new(&transfer_id.to_string(), "Transfer process not found");
                     error!("{}", e_.log());
                     e_
                 }
                 _ => {
-                    let e_ = CommonErrors::database_new(Some(e.to_string()));
+                    let e_ = CommonErrors::database_new(&e.to_string());
                     error!("{}", e_.log());
                     e_
                 }
             })?
             .ok_or_else(|| {
-                let e_ = CommonErrors::missing_resource_new(
-                    message_id.to_string(),
-                    Some("Transfer message not found".to_string()),
-                );
+                let e_ = CommonErrors::missing_resource_new(&message_id.to_string(), "Transfer message not found");
                 error!("{}", e_.log());
                 e_
             })?;

@@ -16,12 +16,14 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::errors::{ErrorLogTrait, Errors};
 use crate::types::enums::errors::BadFormat;
 use anyhow::bail;
 use axum::http::HeaderMap;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::{engine::general_purpose, Engine as _};
+use chrono::Utc;
 use jsonwebtoken::jwk::Jwk;
 use jsonwebtoken::{TokenData, Validation};
 use rand::Rng;
@@ -30,7 +32,6 @@ use serde::Serialize;
 use serde_json::Value;
 use std::collections::HashSet;
 use std::fs;
-use chrono::Utc;
 use tracing::{error, info};
 
 pub fn create_opaque_token() -> String {
@@ -96,8 +97,25 @@ pub fn get_claim(claims: &Value, path: Vec<&str>) -> anyhow::Result<String> {
             }
         };
     }
-    let data = match node.as_str() {
-        Some(data) => data.to_string(),
+    validate_data(node, field)
+}
+
+pub fn get_opt_claim(claims: &Value, path: Vec<&str>) -> anyhow::Result<Option<String>> {
+    let mut node = claims;
+    let field = path.last().unwrap_or(&"unknown");
+    for key in path.iter() {
+        node = match node.get(key) {
+            Some(data) => data,
+            None => return Ok(None),
+        };
+    }
+    let data = validate_data(node, field)?;
+    Ok(Some(data))
+}
+
+fn validate_data(node: &Value, field: &str) -> anyhow::Result<String> {
+    match node.as_str() {
+        Some(data) => Ok(data.to_string()),
         None => {
             let error = Errors::format_new(
                 BadFormat::Received,
@@ -106,8 +124,7 @@ pub fn get_claim(claims: &Value, path: Vec<&str>) -> anyhow::Result<String> {
             error!("{}", error.log());
             bail!(error)
         }
-    };
-    Ok(data)
+    }
 }
 
 pub fn validate_token<T>(token: &str, audience: Option<&str>) -> anyhow::Result<(TokenData<T>, String)>

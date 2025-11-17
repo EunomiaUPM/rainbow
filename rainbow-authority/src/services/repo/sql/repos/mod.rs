@@ -16,16 +16,17 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
+mod generic_repo;
 mod interaction_repo;
+mod issuing_repo;
+mod minions_repo;
 mod request_repo;
 mod verification_repo;
-mod generic_repo;
-mod minions_repo;
-mod issuing_repo;
 
+pub use generic_repo::GenericRepo;
 pub use interaction_repo::InteractionRepo;
+pub use issuing_repo::IssuingRepo;
+pub use minions_repo::MinionsRepo;
 pub use request_repo::AuthRequestRepo;
 pub use verification_repo::AuthVerificationRepo;
-pub use minions_repo::MinionsRepo;
-pub use issuing_repo::IssuingRepo;
-pub use generic_repo::GenericRepo;

@@ -16,7 +16,10 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use std::fmt;
+use serde::{Deserialize, Serialize};
 
+#[derive(Debug, Serialize, Deserialize)]
 pub enum MissingAction {
     Token,
     Wallet,
@@ -26,8 +29,22 @@ pub enum MissingAction {
     Unknown,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
 pub enum BadFormat {
     Sent,
     Received,
     Unknown,
+}
+impl fmt::Display for MissingAction {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            MissingAction::Token => "Token",
+            MissingAction::Wallet => "Wallet",
+            MissingAction::Did => "DID",
+            MissingAction::Key => "Key",
+            MissingAction::Onboarding => "Onboarding",
+            _ => "Unknown",
+        };
+        write!(f, "{}", s)
+    }
 }

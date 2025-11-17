@@ -24,5 +24,5 @@ pub struct TokenRequest {
     pub grant_type: String,
     #[serde(rename = "pre-authorized_code")]
     pub pre_authorized_code: String,
-    pub tx_code: String, 
+    pub tx_code: String,
 }

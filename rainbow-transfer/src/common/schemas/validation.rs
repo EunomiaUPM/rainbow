@@ -56,7 +56,7 @@ pub fn validate_payload_schema<'a, M: DSProtocolTransferMessageTrait<'a>>(messag
             error!("{}", error.instance_location());
             error!("{}", error.error_description());
         }
-        let e = CommonErrors::format_new(BadFormat::Received, "Message malformed in JSON Data Validation".to_string().into());
+        let e = CommonErrors::format_new(BadFormat::Received, "Message malformed in JSON Data Validation");
         tracing::error!("{}", e.log());
         bail!(e)
     }

@@ -16,13 +16,14 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
+use super::super::super::subtraits::{BasicRepoTrait, VerificationRepoTrait};
+use super::GenericRepo;
 use crate::data::entities::verification::{Column, Entity, Model, NewModel};
 use crate::errors::{ErrorLogTrait, Errors};
-use super::GenericRepo;
-use super::super::super::subtraits::{BasicRepoTrait, VerificationRepoTrait};
 use anyhow::bail;
 use axum::async_trait;
-use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, DbErr, EntityTrait, QueryFilter};
+use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 use tracing::error;
 
 #[derive(Clone)]

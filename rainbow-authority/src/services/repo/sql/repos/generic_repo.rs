@@ -17,12 +17,12 @@
  *
  */
 
-use super::super::super::subtraits::{BasicRepoTrait};
+use super::super::super::subtraits::BasicRepoTrait;
 use crate::data::IntoActiveSet;
 use crate::errors::{ErrorLogTrait, Errors};
 use anyhow::bail;
 use axum::async_trait;
-use sea_orm::{ActiveModelTrait, DatabaseConnection, DbErr, DeleteResult, EntityTrait, IntoActiveModel, QuerySelect};
+use sea_orm::{ActiveModelTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QuerySelect};
 use tracing::error;
 
 #[derive(Clone)]

@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use super::BasicRepoTrait;
 use crate::data::entities::issuing::{Model, NewModel};
 use axum::async_trait;

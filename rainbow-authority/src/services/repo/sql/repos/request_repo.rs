@@ -17,9 +17,9 @@
  *
  */
 
-use crate::data::entities::request::{Entity, Model, NewModel};
+use super::super::super::subtraits::{BasicRepoTrait, RequestRepoTrait};
 use super::GenericRepo;
-use super::super::super::subtraits::{RequestRepoTrait, BasicRepoTrait};
+use crate::data::entities::request::{Entity, Model, NewModel};
 use axum::async_trait;
 use sea_orm::DatabaseConnection;
 

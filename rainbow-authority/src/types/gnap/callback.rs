@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use serde::Serialize;
 
 #[derive(Serialize)]
@@ -27,5 +28,3 @@ pub struct CallbackBody {
 pub struct RejectedCallbackBody {
     pub rejected: String,
 }
-
-

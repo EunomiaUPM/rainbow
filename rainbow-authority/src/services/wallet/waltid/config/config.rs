@@ -16,25 +16,32 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use super::WaltIdConfigTrait;
-use crate::setup::AuthorityApplicationConfig;
-use crate::types::wallet::SSIWalletConfig;
-use serde_json::{json, Value};
+use crate::config::CoreApplicationConfig;
+use crate::types::host::HostConfig;
+use crate::types::wallet::WalletConfig;
 use crate::utils::read;
+use serde_json::{json, Value};
 
 pub struct WaltIdConfig {
-    ssi_wallet_config: SSIWalletConfig,
+    host: HostConfig,
+    ssi_wallet_config: WalletConfig,
     keys_path: String,
 }
 
-impl From<AuthorityApplicationConfig> for WaltIdConfig {
-    fn from(config: AuthorityApplicationConfig) -> Self {
-        WaltIdConfig { ssi_wallet_config: config.ssi_wallet_config, keys_path: config.keys_path }
+impl From<CoreApplicationConfig> for WaltIdConfig {
+    fn from(config: CoreApplicationConfig) -> Self {
+        WaltIdConfig {
+            host: config.host,
+            ssi_wallet_config: config.ssi_wallet_config.clone(),
+            keys_path: config.keys_path.clone(),
+        }
     }
 }
 
 impl WaltIdConfigTrait for WaltIdConfig {
-    fn get_raw_wallet_config(&self) -> SSIWalletConfig {
+    fn get_raw_wallet_config(&self) -> WalletConfig {
         self.ssi_wallet_config.clone()
     }
     fn get_wallet_api_url(&self) -> String {
@@ -78,6 +85,15 @@ impl WaltIdConfigTrait for WaltIdConfig {
         let path = format!("{}/public_key.pem", self.keys_path);
         read(&path)
     }
+    fn get_host(&self) -> String {
+        let host = self.host.clone();
+        match host.port {
+            None => {
+                format!("{}://{}", host.protocol, host.url)
+            }
+            Some(port) => {
+                format!("{}://{}:{}", host.protocol, host.url, port)
+            }
+        }
+    }
 }
-
-

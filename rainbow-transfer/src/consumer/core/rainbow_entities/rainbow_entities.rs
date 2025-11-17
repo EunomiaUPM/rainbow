@@ -53,7 +53,7 @@ where
 {
     async fn get_all_transfers(&self) -> anyhow::Result<Vec<TransferConsumerProcess>> {
         let transfer_processes = self.repo.get_all_transfer_callbacks(None, None).await.map_err(|e| {
-            let e = CommonErrors::database_new(Some(e.to_string()));
+            let e = CommonErrors::database_new(&e.to_string());
             error!("{}", e.log());
             anyhow!(e)
         })?;
@@ -64,7 +64,7 @@ where
 
     async fn get_batch_transfers(&self, transfer_ids: &Vec<Urn>) -> anyhow::Result<Vec<TransferConsumerProcess>> {
         let transfer_processes = self.repo.get_batch_transfer_processes(transfer_ids).await.map_err(|e| {
-            let e = CommonErrors::database_new(Some(e.to_string()));
+            let e = CommonErrors::database_new(&e.to_string());
             error!("{}", e.log());
             anyhow!(e)
         })?;
@@ -79,15 +79,13 @@ where
             .get_transfer_callbacks_by_id(process_id.clone())
             .await
             .map_err(|e| {
-                let e = CommonErrors::database_new(Some(e.to_string()));
+                let e = CommonErrors::database_new(&e.to_string());
                 error!("{}", e.log());
                 anyhow!(e)
             })?
             .ok_or_else(|| {
-                let e = CommonErrors::missing_resource_new(
-                    process_id.clone().to_string(),
-                    Some("Transfer process not found".to_string()),
-                );
+                let e =
+                    CommonErrors::missing_resource_new(&process_id.clone().to_string(), "Transfer process not found");
                 error!("{}", e.log());
                 anyhow!(e)
             })?;
@@ -101,14 +99,14 @@ where
             .get_transfer_callback_by_consumer_id(consumer_pid.clone())
             .await
             .map_err(|e| {
-                let e = CommonErrors::database_new(Some(e.to_string()));
+                let e = CommonErrors::database_new(&e.to_string());
                 error!("{}", e.log());
                 anyhow!(e)
             })?
             .ok_or_else(|| {
                 let e = CommonErrors::missing_resource_new(
-                    consumer_pid.clone().to_string(),
-                    Some("Transfer process not found".to_string()),
+                    &consumer_pid.clone().to_string(),
+                    "Transfer process not found",
                 );
                 error!("{}", e.log());
                 anyhow!(e)
@@ -123,14 +121,14 @@ where
             .get_transfer_callbacks_by_id(provider_pid.clone())
             .await
             .map_err(|e| {
-                let e = CommonErrors::database_new(Some(e.to_string()));
+                let e = CommonErrors::database_new(&e.to_string());
                 error!("{}", e.log());
                 anyhow!(e)
             })?
             .ok_or_else(|| {
                 let e = CommonErrors::missing_resource_new(
-                    provider_pid.clone().to_string(),
-                    Some("Transfer process not found".to_string()),
+                    &provider_pid.clone().to_string(),
+                    "Transfer process not found",
                 );
                 error!("{}", e.log());
                 anyhow!(e)
@@ -148,14 +146,14 @@ where
             self.repo.put_transfer_callback(process_id.clone(), edit_transfer.into()).await.map_err(|e| match e {
                 TransferConsumerRepoErrors::ConsumerTransferProcessNotFound => {
                     let e = CommonErrors::missing_resource_new(
-                        process_id.clone().to_string(),
-                        Some("Transfer process not found".to_string()),
+                        &process_id.clone().to_string(),
+                        "Transfer process not found",
                     );
                     error!("{}", e.log());
                     anyhow!(e)
                 }
                 e => {
-                    let e = CommonErrors::database_new(Some(e.to_string()));
+                    let e = CommonErrors::database_new(&e.to_string());
                     error!("{}", e.log());
                     anyhow!(e)
                 }
@@ -168,7 +166,7 @@ where
         new_transfer: NewTransferConsumerRequest,
     ) -> anyhow::Result<transfer_callback::Model> {
         let transfer_process = self.repo.create_transfer_callback(new_transfer.into()).await.map_err(|e| {
-            let e = CommonErrors::database_new(Some(e.to_string()));
+            let e = CommonErrors::database_new(&e.to_string());
             error!("{}", e.log());
             anyhow!(e)
         })?;
@@ -178,15 +176,13 @@ where
     async fn delete_transfer(&self, process_id: Urn) -> anyhow::Result<()> {
         let _ = self.repo.delete_transfer_callback(process_id.clone()).await.map_err(|e| match e {
             TransferConsumerRepoErrors::ConsumerTransferProcessNotFound => {
-                let e_ = CommonErrors::missing_resource_new(
-                    process_id.clone().to_string(),
-                    Some("Transfer process not found".to_string()),
-                );
+                let e_ =
+                    CommonErrors::missing_resource_new(&process_id.clone().to_string(), "Transfer process not found");
                 error!("{}", e_.log());
                 anyhow!(e_)
             }
             _ => {
-                let e_ = CommonErrors::database_new(Some(e.to_string()));
+                let e_ = CommonErrors::database_new(&e.to_string());
                 error!("{}", e_.log());
                 anyhow!(e_)
             }
@@ -195,7 +191,7 @@ where
     }
     async fn get_messages_by_transfer(&self, transfer_id: Urn) -> anyhow::Result<Vec<transfer_message::Model>> {
         let messages = self.repo.get_all_transfer_messages_by_consumer(transfer_id.clone()).await.map_err(|e| {
-            let e = CommonErrors::database_new(Some(e.to_string()));
+            let e = CommonErrors::database_new(&e.to_string());
             error!("{}", e.log());
             anyhow!(e)
         })?;
@@ -210,23 +206,21 @@ where
             .map_err(|e| match e {
                 TransferConsumerRepoErrors::ConsumerTransferProcessNotFound => {
                     let e = CommonErrors::missing_resource_new(
-                        transfer_id.clone().to_string(),
-                        Some("Transfer process not found".to_string()),
+                        &transfer_id.clone().to_string(),
+                        "Transfer process not found",
                     );
                     error!("{}", e.log());
                     anyhow!(e)
                 }
                 e => {
-                    let e = CommonErrors::database_new(Some(e.to_string()));
+                    let e = CommonErrors::database_new(&e.to_string());
                     error!("{}", e.log());
                     anyhow!(e)
                 }
             })?
             .ok_or_else(|| {
-                let e = CommonErrors::missing_resource_new(
-                    message_id.clone().to_string(),
-                    Some("Transfer message not found".to_string()),
-                );
+                let e =
+                    CommonErrors::missing_resource_new(&message_id.clone().to_string(), "Transfer message not found");
                 error!("{}", e.log());
                 anyhow!(e)
             })?;
