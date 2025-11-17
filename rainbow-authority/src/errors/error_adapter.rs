@@ -16,10 +16,10 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use super::Errors;
-use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use axum::Json;
+use axum::{http::StatusCode, Json};
 use serde_json::json;
 use tracing::error;
 
@@ -33,7 +33,11 @@ impl CustomToResponse for anyhow::Error {
             return e.into_response();
         }
 
-        error!("Unhandled internal error: {:?}", self);
+        error!(
+            "Unhandled internal error: {:?}\nBacktrace:\n{:?}",
+            self,
+            self.backtrace()
+        );
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(json!({

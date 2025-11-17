@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 mod dids_info;
 mod key_definition;
 mod wallet_config;
@@ -26,7 +27,7 @@ mod wallet_session;
 
 pub use dids_info::DidsInfo;
 pub use key_definition::*;
-pub use wallet_config::SSIWalletConfig;
+pub use wallet_config::WalletConfig;
 pub use wallet_info::WalletInfo;
 pub use wallet_info_response::WalletInfoResponse;
 pub use wallet_login_response::WalletLoginResponse;

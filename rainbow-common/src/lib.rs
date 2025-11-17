@@ -19,18 +19,19 @@
 
 pub mod adv_protocol;
 pub mod auth;
-pub mod batch_requests;
 pub mod config;
 pub mod dcat_formats;
 pub mod err;
-pub mod errors;
 pub mod facades;
 pub mod mates;
 pub mod mates_facade;
 pub mod misc_router;
-pub mod openapi;
 pub mod policy_templates;
 pub mod protocol;
 pub mod schemas;
-mod ssi;
 pub mod utils;
+pub mod errors;
+pub mod ssi;
+pub mod openapi;
+pub mod batch_requests;
+pub mod http;

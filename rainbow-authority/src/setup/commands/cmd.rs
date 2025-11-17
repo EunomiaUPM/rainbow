@@ -17,11 +17,10 @@
  *
  */
 
+use super::env_extraction::extract_env_config;
 use crate::setup::application::AuthorityApplication;
 use crate::setup::database::db_migrations::AuthorityMigration;
 use clap::{Parser, Subcommand};
-
-use crate::setup::commands::env_extraction::extract_env_config;
 use std::cmp::PartialEq;
 use tracing::debug;
 
@@ -57,11 +56,11 @@ impl AuthorityCommands {
         match cli.command {
             AuthorityCliCommands::Start(args) => {
                 let config = extract_env_config(args.env_file)?;
-                AuthorityApplication::run(&config).await?
+                AuthorityApplication::run(config).await?
             }
             AuthorityCliCommands::Setup(args) => {
                 let config = extract_env_config(args.env_file)?;
-                AuthorityMigration::run(&config).await?
+                AuthorityMigration::run(config).await?
             }
         }
 

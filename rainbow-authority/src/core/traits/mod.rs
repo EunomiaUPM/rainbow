@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
  *  *
  *  * This program is free software: you can redistribute it and/or modify
  *  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,17 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-mod authority_trait;
-mod wallet_trait;
 
-pub use authority_trait::AuthorityTrait;
-pub use wallet_trait::RainbowSSIAuthWalletTrait;
+mod core;
+mod core_gatekeeper;
+mod core_issuer;
+mod core_vcs;
+mod core_verifier;
+mod core_wallet;
+
+pub use core::CoreTrait;
+pub use core_gatekeeper::CoreGatekeeperTrait;
+pub use core_issuer::CoreIssuerTrait;
+pub use core_vcs::CoreVcsTrait;
+pub use core_verifier::CoreVerifierTrait;
+pub use core_wallet::CoreWalletTrait;

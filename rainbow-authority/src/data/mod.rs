@@ -18,5 +18,6 @@
  */
 
 pub mod entities;
+mod into_active_trait;
 pub mod migrations;
-pub mod repo_factory;
+pub use into_active_trait::IntoActiveSet;

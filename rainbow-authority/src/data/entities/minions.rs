@@ -17,7 +17,7 @@
  *
  */
 
-use crate::data::repo_factory::traits::IntoActiveSet;
+use super::super::IntoActiveSet;
 use chrono;
 use sea_orm::entity::prelude::*;
 use sea_orm::{ActiveValue, DeriveEntityModel};
@@ -28,11 +28,11 @@ use serde::{Deserialize, Serialize};
 pub struct Model {
     #[sea_orm(primary_key)]
     pub participant_id: String, // REQUEST
-    pub participant_slug: String, // REQUEST
-    pub participant_type: String, // REQUEST
-    pub base_url: Option<String>, // REQUEST
-    pub vc_uri: Option<String>,   // REQUEST
-    pub is_vc_issued: bool,
+    pub participant_slug: String,                // REQUEST
+    pub participant_type: String,                // REQUEST
+    pub base_url: Option<String>,                // REQUEST
+    pub vc_uri: Option<String>,                  // REQUEST
+    pub is_vc_issued: bool,                      // REQUEST
     pub saved_at: chrono::NaiveDateTime,         // DEFAULT
     pub last_interaction: chrono::NaiveDateTime, // DEFAULT
     pub is_me: bool,                             // REQUEST

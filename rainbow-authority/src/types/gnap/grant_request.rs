@@ -20,17 +20,35 @@
 use rand::distributions::Alphanumeric;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::Value;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GrantRequest {
     pub access_token: AccessTokenRequirements4GR,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub subject: Option<Subject4GR>, // REQUIRED if requesting subject information
-    pub client: Value,
+    pub client: Client4GR,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub user: Option<String>,
     pub interact: Option<Interact4GR>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Client4GR {
+    pub key: Key4GR,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub class_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub display: Option<Value>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Key4GR {
+    pub proof: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub jwk: Option<Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cert: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -86,7 +104,7 @@ pub struct Finish4Interact {
 }
 
 impl GrantRequest {
-    pub fn default4oidc(client: Value, method: String, uri: Option<String>) -> Self {
+    pub fn default4oidc(client: Client4GR, method: String, uri: Option<String>) -> Self {
         Self {
             access_token: AccessTokenRequirements4GR::key_default(),
             subject: None,
@@ -96,17 +114,11 @@ impl GrantRequest {
         }
     }
 
-    pub fn default4await(cert: String, uri: Option<String>) -> Self {
+    pub fn default4await(client: Client4GR, uri: Option<String>) -> Self {
         Self {
             access_token: AccessTokenRequirements4GR::request_vc(),
             subject: None,
-            client: json!({
-                "key" : {
-                    "proof": "mtls",
-                    "cert#S256": cert
-                }
-
-            }),
+            client,
             user: None,
             interact: Some(Interact4GR::default4await(uri)),
         }

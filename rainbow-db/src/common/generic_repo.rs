@@ -20,6 +20,8 @@
 use super::{BasicRepoTrait, IntoActiveSet};
 use anyhow::bail;
 use axum::async_trait;
+use log::error;
+use rainbow_common::errors::{CommonErrors, ErrorLog};
 use sea_orm::{ActiveModelTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QuerySelect};
 
 #[derive(Clone)]
@@ -53,41 +55,82 @@ where
         let models =
             T::find().limit(limit.unwrap_or(100000)).offset(offset.unwrap_or(0)).all(&self.db_connection).await;
         match models {
-            Ok(auths) => Ok(auths),
-            Err(e) => bail!("Failed to fetch data: {}", e),
+            Ok(data) => Ok(data),
+            Err(e) => {
+                let error = CommonErrors::database_new(&e.to_string());
+                error!("{}", error.log());
+                bail!(error)
+            }
         }
     }
 
-    async fn get_by_id(&self, id: &str) -> anyhow::Result<Option<T::Model>> {
+    async fn get_by_id(&self, id: &str) -> anyhow::Result<T::Model> {
         let model = T::find_by_id(id).one(&self.db_connection).await;
 
         match model {
-            Ok(Some(model)) => Ok(Some(model)),
-            Ok(None) => Ok(None),
-            Err(e) => bail!("Failed to fetch data: {}", e),
+            Ok(Some(model)) => Ok(model),
+            Ok(None) => {
+                let error = CommonErrors::missing_resource_new(id, &format!("Missing resource with id: {}", id));
+                error!("{}", error.log());
+                bail!(error)
+            }
+            Err(e) => {
+                let error = CommonErrors::database_new(&e.to_string());
+                error!("{}", error.log());
+                bail!(error)
+            }
         }
     }
 
     async fn create(&self, model: U) -> anyhow::Result<T::Model> {
         let active_model: T::ActiveModel = model.to_active();
-        let model: T::Model = active_model.insert(&self.db_connection).await?;
+        let model: T::Model = match active_model.insert(&self.db_connection).await {
+            Ok(model) => model,
+            Err(e) => {
+                let error = CommonErrors::database_new(&e.to_string());
+                error!("{}", error.log());
+                bail!(error)
+            }
+        };
         Ok(model)
     }
 
     async fn update(&self, model: T::Model) -> anyhow::Result<T::Model> {
-        let mut active_model: T::ActiveModel = model.to_active();
-        let new_model: T::Model = active_model.update(&self.db_connection).await?;
+        let active_model: T::ActiveModel = model.to_active();
+        let new_model: T::Model = match active_model.update(&self.db_connection).await {
+            Ok(model) => model,
+            Err(e) => {
+                let error = CommonErrors::database_new(&e.to_string());
+                error!("{}", error.log());
+                bail!(error)
+            }
+        };
         Ok(new_model)
     }
 
     async fn delete(&self, id: &str) -> anyhow::Result<()> {
-        let mut active_model: T::ActiveModel = match T::find_by_id(id).one(&self.db_connection).await {
-            Ok(Some(model)) => model.into_active_model(),
-            Ok(None) => bail!("No entry found with ID: {}", id),
-            Err(e) => bail!("Failed to fetch data: {}", e),
+        let active_model: T::ActiveModel = match T::find_by_id(id).one(&self.db_connection).await {
+            Ok(Some(model)) => model.to_active(),
+            Ok(None) => {
+                let error = CommonErrors::missing_resource_new(id, &format!("Missing resource with id: {}", id));
+                error!("{}", error.log());
+                bail!(error)
+            }
+            Err(e) => {
+                let error = CommonErrors::database_new(&e.to_string());
+                error!("{}", error.log());
+                bail!(error)
+            }
         };
 
-        active_model.delete(&self.db_connection).await?;
+        match active_model.delete(&self.db_connection).await {
+            Ok(_) => {}
+            Err(e) => {
+                let error = CommonErrors::database_new(&e.to_string());
+                error!("{}", error.log());
+                bail!(error)
+            }
+        };
 
         Ok(())
     }

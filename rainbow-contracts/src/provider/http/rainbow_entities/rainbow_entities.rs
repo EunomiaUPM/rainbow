@@ -216,7 +216,7 @@ where
         let input = match input {
             Ok(input) => input.0,
             Err(err) => {
-                let e = CommonErrors::format_new(BadFormat::Received, format!("{}", err.body_text()).into());
+                let e = CommonErrors::format_new(BadFormat::Received, &format!("{}", err.body_text()));
                 error!("{}", e.log());
                 return e.into_response();
             }

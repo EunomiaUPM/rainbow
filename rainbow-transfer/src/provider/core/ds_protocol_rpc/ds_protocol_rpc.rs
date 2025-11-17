@@ -95,11 +95,15 @@ where
     async fn get_consumer_mate(&self, consumer_participant_id: &String) -> anyhow::Result<Mates> {
         debug!("DSProtocolRPC Service: get_consumer_mate");
 
-        let mate = self.mates_facade.get_mate_by_id(consumer_participant_id.clone()).await.map_err(|e| {
-            let e = CommonErrors::format_new(BadFormat::Received, e.to_string().into());
-            error!("{}", e.log());
-            anyhow!(e)
-        })?;
+        let mate = self
+            .mates_facade
+            .get_mate_by_id(consumer_participant_id.clone())
+            .await
+            .map_err(|e| {
+                let e = CommonErrors::format_new(BadFormat::Received, &e.to_string());
+                error!("{}", e.log());
+                anyhow!(e)
+            })?;
         Ok(mate)
     }
 
@@ -116,15 +120,12 @@ where
             .get_transfer_process_by_provider(provider_pid.clone())
             .await
             .map_err(|e| {
-                let e = CommonErrors::format_new(BadFormat::Received, e.to_string().into());
+                let e = CommonErrors::format_new(BadFormat::Received, &e.to_string());
                 error!("{}", e.log());
                 anyhow!(e)
             })?
             .ok_or_else(|| {
-                let e = CommonErrors::missing_resource_new(
-                    provider_pid.to_string(),
-                    "Transfer process doesn't exist".to_string().into(),
-                );
+                let e = CommonErrors::missing_resource_new(&provider_pid.to_string(), "Transfer process doesn't exist");
                 error!("{}", e.log());
                 anyhow!(e)
             })?;
@@ -134,24 +135,18 @@ where
             .get_transfer_process_by_consumer(consumer_pid.clone())
             .await
             .map_err(|e| {
-                let e = CommonErrors::format_new(BadFormat::Received, e.to_string().into());
+                let e = CommonErrors::format_new(BadFormat::Received, &e.to_string());
                 error!("{}", e.log());
                 anyhow!(e)
             })?
             .ok_or_else(|| {
-                let e = CommonErrors::missing_resource_new(
-                    consumer_pid.to_string(),
-                    "Transfer process doesn't exist".to_string().into(),
-                );
+                let e = CommonErrors::missing_resource_new(&consumer_pid.to_string(), "Transfer process doesn't exist");
                 error!("{}", e.log());
                 anyhow!(e)
             })?;
 
         if provider_process.provider_pid != consumer_process.provider_pid {
-            let e = CommonErrors::format_new(
-                BadFormat::Received,
-                "ConsumerPid and ProviderPid don't coincide".to_string().to_string().into(),
-            );
+            let e = CommonErrors::format_new(BadFormat::Received, "ConsumerPid and ProviderPid don't coincide");
             error!("{}", e.log());
             bail!(e);
         }
@@ -179,9 +174,7 @@ where
             TransferMessageTypes::TransferStartMessage => match transfer_state {
                 TransferState::REQUESTED => {}
                 TransferState::STARTED => {
-                    let e = TransferErrors::protocol_new(
-                        "Start message is not allowed in STARTED state".to_string().into(),
-                    );
+                    let e = TransferErrors::protocol_new("Start message is not allowed in STARTED state".to_string().into());
                     error!("{}", e.log());
                     bail!(e);
                 }
@@ -190,11 +183,7 @@ where
                     match transfer_state_attribute {
                         // If suspended by consumer, not able to start from provider
                         TransferStateAttribute::ByConsumer => {
-                            let e = TransferErrors::protocol_new(
-                                "State SUSPENDED was established by Consumer, Provider is not allowed to change it"
-                                    .to_string()
-                                    .into(),
-                            );
+                            let e = TransferErrors::protocol_new("State SUSPENDED was established by Consumer, Provider is not allowed to change it".to_string().into());
                             error!("{}", e.log());
                             bail!(e);
                         }
@@ -203,16 +192,12 @@ where
                     }
                 }
                 TransferState::COMPLETED => {
-                    let e = TransferErrors::protocol_new(
-                        "Start message is not allowed in COMPLETED state".to_string().into(),
-                    );
+                    let e = TransferErrors::protocol_new("Start message is not allowed in COMPLETED state".to_string().into());
                     error!("{}", e.log());
                     bail!(e);
                 }
                 TransferState::TERMINATED => {
-                    let e = TransferErrors::protocol_new(
-                        "Start message is not allowed in TERMINATED state".to_string().into(),
-                    );
+                    let e = TransferErrors::protocol_new("Start message is not allowed in TERMINATED state".to_string().into());
                     error!("{}", e.log());
                     bail!(e);
                 }
@@ -220,9 +205,7 @@ where
             // 4. Transfer suspension transition check
             TransferMessageTypes::TransferSuspensionMessage => match transfer_state {
                 TransferState::REQUESTED => {
-                    let e = TransferErrors::protocol_new(
-                        "Suspension message is not allowed in REQUESTED state".to_string().into(),
-                    );
+                    let e = TransferErrors::protocol_new("Suspension message is not allowed in REQUESTED state".to_string().into());
                     error!("{}", e.log());
                     bail!(e);
                 }
@@ -233,16 +216,12 @@ where
                     bail!(e);
                 }
                 TransferState::COMPLETED => {
-                    let e = TransferErrors::protocol_new(
-                        "Suspension message is not allowed in COMPLETED state".to_string().into(),
-                    );
+                    let e = TransferErrors::protocol_new("Suspension message is not allowed in COMPLETED state".to_string().into());
                     error!("{}", e.log());
                     bail!(e);
                 }
                 TransferState::TERMINATED => {
-                    let e = TransferErrors::protocol_new(
-                        "Suspension message is not allowed in TERMINATED state".to_string().into(),
-                    );
+                    let e = TransferErrors::protocol_new("Suspension message is not allowed in TERMINATED state".to_string().into());
                     error!("{}", e.log());
                     bail!(e);
                 }
@@ -250,9 +229,7 @@ where
             // 4. Transfer completion transition check
             TransferMessageTypes::TransferCompletionMessage => match transfer_state {
                 TransferState::REQUESTED => {
-                    let e = TransferErrors::protocol_new(
-                        "Completion message is not allowed in REQUESTED state".to_string().into(),
-                    );
+                    let e = TransferErrors::protocol_new("Completion message is not allowed in REQUESTED state".to_string().into());
                     error!("{}", e.log());
                     bail!(e);
                 }
@@ -260,9 +237,7 @@ where
                 TransferState::SUSPENDED => {}
                 TransferState::COMPLETED => {}
                 TransferState::TERMINATED => {
-                    let e = TransferErrors::protocol_new(
-                        "Completion message is not allowed in TERMINATED state".to_string().into(),
-                    );
+                    let e = TransferErrors::protocol_new("Completion message is not allowed in TERMINATED state".to_string().into());
                     error!("{}", e.log());
                     bail!(e);
                 }
@@ -273,9 +248,7 @@ where
                 TransferState::STARTED => {}
                 TransferState::SUSPENDED => {}
                 TransferState::COMPLETED => {
-                    let e = TransferErrors::protocol_new(
-                        "Completion message is not allowed in COMPLETED state".to_string().into(),
-                    );
+                    let e = TransferErrors::protocol_new("Completion message is not allowed in COMPLETED state".to_string().into());
                     error!("{}", e.log());
                     bail!(e);
                 }
@@ -311,10 +284,10 @@ where
             .await
             .map_err(|_e| {
                 let e = CommonErrors::consumer_new(
-                    target_url.clone().into(),
-                    "POST".to_string().into(),
+                    &target_url,
+                    "POST",
                     None,
-                    "Consumer not reachable".to_string().into(),
+                    "Consumer not reachable",
                 );
                 error!("{}", e.log());
                 anyhow!(e)
@@ -325,20 +298,17 @@ where
             // Attempt to get error details from consumer if available
             let consumer_error = response.json::<Value>().await.unwrap_or_else(|e| json!({"error": format!("{}", e)}));
             let e = CommonErrors::consumer_new(
-                target_url.clone().into(),
-                "POST".to_string().into(),
+                &target_url,
+                "POST",
                 None,
-                format!("Consumer Internal error: {}", consumer_error).into(),
+                &format!("Consumer Internal error: {}", consumer_error),
             );
             error!("{}", e.log());
             bail!(e);
         }
 
         let transfer_process_msg = response.json::<TransferProcessMessage>().await.map_err(|_e| {
-            let e = CommonErrors::format_new(
-                BadFormat::Received,
-                "TransferProcessMessage not serializable".to_string().into(),
-            );
+            let e = CommonErrors::format_new(BadFormat::Received, "TransferProcessMessage not serializable");
             error!("{}", e.log());
             anyhow!(e)
         })?;
@@ -387,11 +357,7 @@ where
         let consumer_mate = self.get_consumer_mate(&consumer_participant_id).await?;
         let consumer_callback = consumer_callback.unwrap_or(consumer_mate.base_url.unwrap());
         let consumer_token = consumer_mate.token.ok_or_else(|| {
-            let e = CommonErrors::missing_action_new(
-                "Missing token".to_string(),
-                MissingAction::Token,
-                "No auth token".to_string().into(),
-            );
+            let e = CommonErrors::missing_action_new(MissingAction::Token, &"No auth token");
             error!("{}", e.log());
             anyhow!(e)
         })?;
@@ -440,7 +406,7 @@ where
             )
             .await
             .map_err(|e| {
-                let e_ = CommonErrors::database_new(e.to_string().into());
+                let e_ = CommonErrors::database_new(&e.to_string());
                 error!("{}", e_.log());
                 anyhow!(e_)
             })?;
@@ -458,7 +424,7 @@ where
             )
             .await
             .map_err(|e| {
-                let e_ = CommonErrors::database_new(e.to_string().into());
+                let e_ = CommonErrors::database_new(&e.to_string());
                 error!("{}", e_.log());
                 anyhow!(e_)
             })?;
@@ -479,7 +445,7 @@ where
                 "message": message
             }),
         )
-        .await?;
+            .await?;
         // 8. Bye
         Ok(response)
     }
@@ -501,11 +467,7 @@ where
         let consumer_mate = self.get_consumer_mate(&consumer_participant_id).await?;
         let consumer_callback = consumer_callback.unwrap_or(consumer_mate.base_url.unwrap());
         let consumer_token = consumer_mate.token.ok_or_else(|| {
-            let e = CommonErrors::missing_action_new(
-                "Missing token".to_string(),
-                MissingAction::Token,
-                "No auth token".to_string().into(),
-            );
+            let e = CommonErrors::missing_action_new(MissingAction::Token, "No auth token");
             error!("{}", e.log());
             anyhow!(e)
         })?;
@@ -550,7 +512,7 @@ where
             )
             .await
             .map_err(|e| {
-                let e_ = CommonErrors::database_new(e.to_string().into());
+                let e_ = CommonErrors::database_new(&e.to_string());
                 error!("{}", e_.log());
                 anyhow!(e_)
             })?;
@@ -568,7 +530,7 @@ where
             )
             .await
             .map_err(|e| {
-                let e_ = CommonErrors::database_new(e.to_string().into());
+                let e_ = CommonErrors::database_new(&e.to_string());
                 error!("{}", e_.log());
                 anyhow!(e_)
             })?;
@@ -584,7 +546,7 @@ where
                 "message": message
             }),
         )
-        .await?;
+            .await?;
         // 8. Bye
         Ok(response)
     }
@@ -604,11 +566,7 @@ where
         let consumer_mate = self.get_consumer_mate(&consumer_participant_id).await?;
         let consumer_callback = consumer_callback.unwrap_or(consumer_mate.base_url.unwrap());
         let consumer_token = consumer_mate.token.ok_or_else(|| {
-            let e = CommonErrors::missing_action_new(
-                "Missing token".to_string(),
-                MissingAction::Token,
-                "No auth token".to_string().into(),
-            );
+            let e = CommonErrors::missing_action_new(MissingAction::Token, "No auth token");
             error!("{}", e.log());
             anyhow!(e)
         })?;
@@ -651,7 +609,7 @@ where
             )
             .await
             .map_err(|e| {
-                let e_ = CommonErrors::database_new(e.to_string().into());
+                let e_ = CommonErrors::database_new(&e.to_string());
                 error!("{}", e_.log());
                 anyhow!(e_)
             })?;
@@ -669,7 +627,7 @@ where
             )
             .await
             .map_err(|e| {
-                let e_ = CommonErrors::database_new(e.to_string().into());
+                let e_ = CommonErrors::database_new(&e.to_string());
                 error!("{}", e_.log());
                 anyhow!(e_)
             })?;
@@ -685,7 +643,7 @@ where
                 "message": message
             }),
         )
-        .await?;
+            .await?;
         // 9. Bye
         Ok(response)
     }
@@ -707,11 +665,7 @@ where
         let consumer_mate = self.get_consumer_mate(&consumer_participant_id).await?;
         let consumer_callback = consumer_callback.unwrap_or(consumer_mate.base_url.unwrap());
         let consumer_token = consumer_mate.token.ok_or_else(|| {
-            let e = CommonErrors::missing_action_new(
-                "Missing token".to_string(),
-                MissingAction::Token,
-                "No auth token".to_string().into(),
-            );
+            let e = CommonErrors::missing_action_new(MissingAction::Token, "No auth token");
             error!("{}", e.log());
             anyhow!(e)
         })?;
@@ -756,7 +710,7 @@ where
             )
             .await
             .map_err(|e| {
-                let e_ = CommonErrors::database_new(e.to_string().into());
+                let e_ = CommonErrors::database_new(&e.to_string());
                 error!("{}", e_.log());
                 anyhow!(e_)
             })?;
@@ -774,7 +728,7 @@ where
             )
             .await
             .map_err(|e| {
-                let e_ = CommonErrors::database_new(e.to_string().into());
+                let e_ = CommonErrors::database_new(&e.to_string());
                 error!("{}", e_.log());
                 anyhow!(e_)
             })?;
@@ -791,7 +745,7 @@ where
                 "message": message
             }),
         )
-        .await?;
+            .await?;
         // 8. Bye
         Ok(response)
     }
