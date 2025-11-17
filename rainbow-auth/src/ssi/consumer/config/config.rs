@@ -42,6 +42,7 @@ impl From<ApplicationConsumerConfig> for AuthConsumerConfig {
         Self {
             common_config: CommonAuthConfig {
                 host: config.auth_host.unwrap(),
+                role: config.role.to_string(),
                 database_config: config.database_config,
                 ssi_wallet_config: config.ssi_wallet_config,
                 client: ClientConfig {
