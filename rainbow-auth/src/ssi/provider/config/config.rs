@@ -42,6 +42,7 @@ impl From<ApplicationProviderConfig> for AuthProviderConfig {
         Self {
             common_config: CommonAuthConfig {
                 host: config.auth_host.unwrap(),
+                role: config.role.to_string(),
                 database_config: config.database_config,
                 ssi_wallet_config: config.ssi_wallet_config,
                 client: ClientConfig { class_id: config.client_config.class_id, display: config.client_config.display },

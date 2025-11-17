@@ -29,4 +29,5 @@ pub trait WaltIdConfigTrait {
     fn get_priv_key(&self) -> anyhow::Result<String>;
     fn get_pub_key(&self) -> anyhow::Result<String>;
     fn get_host(&self) -> String;
+    fn get_role(&self) -> String;
 }
