@@ -53,14 +53,34 @@ impl AuthProviderRouter {
         let business_router = BusinessRouter::new(self.provider.clone()).router();
 
         Router::new()
-            .route("/api/v1/status", get(server_status))
-            .with_state(self.provider)
-            .nest("/api/v1/wallet", wallet_router)
-            .nest("/api/v1/vc-request", vc_requester_router)
-            .nest("/api/v1/gate", gatekeeper_router)
-            .nest("/api/v1/verifier", verifier_router)
-            .nest("/api/v1/business", business_router)
-            .nest("/api/v1/docs", openapi_router)
+            .route(
+                &format!("{}/status", self.provider.config().get_api_path()),
+                get(server_status),
+            )
+            .nest(
+                &format!("{}/wallet", self.provider.config().get_api_path()),
+                wallet_router,
+            )
+            .nest(
+                &format!("{}/vc-request", self.provider.config().get_api_path()),
+                vc_requester_router,
+            )
+            .nest(
+                &format!("{}/gate", self.provider.config().get_api_path()),
+                gatekeeper_router,
+            )
+            .nest(
+                &format!("{}/verifier", self.provider.config().get_api_path()),
+                verifier_router,
+            )
+            .nest(
+                &format!("{}/business", self.provider.config().get_api_path()),
+                business_router,
+            )
+            .nest(
+                &format!("{}/docs", self.provider.config().get_api_path()),
+                openapi_router,
+            )
             .fallback(Self::fallback)
             .layer(
                 TraceLayer::new_for_http()

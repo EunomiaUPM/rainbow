@@ -50,6 +50,7 @@ pub struct ApplicationProviderConfig {
     pub keys_path: String,
     pub is_local: bool,
     pub openapi_path: String,
+    pub api_version: String
 }
 
 impl Default for ApplicationProviderConfig {
@@ -123,6 +124,7 @@ impl Default for ApplicationProviderConfig {
             role: ConfigRoles::Provider,
             is_local: true,
             openapi_path: "./../static/specs/openapi/auth/auth_provider.json".to_string(),
+            api_version: "v1".to_string(),
         }
     }
 }
@@ -225,6 +227,7 @@ pub trait ApplicationProviderConfigTrait {
     where
         Self: Sized;
     fn get_openapi_json(&self) -> anyhow::Result<String>;
+    fn get_api_path(&self) -> String;
 }
 
 impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
@@ -279,6 +282,9 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
 
     fn get_raw_client_config(&self) -> &ClientConfig {
         &self.client_config
+    }
+    fn get_api_path(&self) -> String {
+        format!("/api/{}", self.api_version)
     }
 
     fn merge_dotenv_configuration(&self, env_file: Option<String>) -> Self {
@@ -416,6 +422,7 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
             keys_path: extract_env("KEYS_PATH", default.keys_path),
             is_local: extract_env("IS_LOCAL", default.is_local.to_string()).parse().unwrap(),
             openapi_path: extract_env("OPENAPI_PATH", default.openapi_path),
+            api_version: extract_env("API_VERSION", default.api_version),
         };
         compound_config
     }

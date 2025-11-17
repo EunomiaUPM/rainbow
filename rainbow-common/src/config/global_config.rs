@@ -84,6 +84,7 @@ pub struct ApplicationGlobalConfig {
     pub keys_path: String,
     pub is_local: bool,
     pub openapi_path: String,
+    pub api_version: String
 }
 
 impl From<ApplicationGlobalConfig> for ApplicationProviderConfig {
@@ -109,6 +110,7 @@ impl From<ApplicationGlobalConfig> for ApplicationProviderConfig {
             keys_path: value.keys_path,
             is_local: value.is_local,
             openapi_path: value.openapi_path,
+            api_version: value.api_version,
         }
     }
 }
@@ -137,6 +139,7 @@ impl Into<ApplicationGlobalConfig> for ApplicationProviderConfig {
             keys_path: self.keys_path,
             is_local: self.is_local,
             openapi_path: self.openapi_path,
+            api_version: self.api_version,
         }
     }
 }
@@ -170,6 +173,7 @@ impl From<ApplicationGlobalConfig> for ApplicationConsumerConfig {
             is_local: value.is_local,
             keys_path: value.keys_path,
             openapi_path: value.openapi_path,
+            api_version: value.api_version,
         }
     }
 }
@@ -198,6 +202,7 @@ impl Into<ApplicationGlobalConfig> for ApplicationConsumerConfig {
             keys_path: self.keys_path,
             is_local: self.is_local,
             openapi_path: self.openapi_path,
+            api_version: self.api_version,
         }
     }
 }

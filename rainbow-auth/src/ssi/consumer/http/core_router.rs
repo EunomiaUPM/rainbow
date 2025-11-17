@@ -53,12 +53,30 @@ impl AuthConsumerRouter {
         let openapi_route = OpenapiRouter::new(self.openapi.clone()).router();
 
         Router::new()
-            .route("/api/v1/status", get(server_status))
-            .nest("/api/v1/wallet", wallet_router)
-            .nest("/api/v1/vc-request", vc_requester_router)
-            .nest("/api/v1/mates", mate_router)
-            .nest("/api/v1/onboard", onboarder_router)
-            .nest("/api/v1/docs", openapi_route)
+            .route(
+                &format!("{}/status", self.consumer.config().get_api_path()),
+                get(server_status),
+            )
+            .nest(
+                &format!("{}/wallet", self.consumer.config().get_api_path()),
+                wallet_router,
+            )
+            .nest(
+                &format!("{}/vc-request", self.consumer.config().get_api_path()),
+                vc_requester_router,
+            )
+            .nest(
+                &format!("{}/mates", self.consumer.config().get_api_path()),
+                mate_router,
+            )
+            .nest(
+                &format!("{}/onboard", self.consumer.config().get_api_path()),
+                onboarder_router,
+            )
+            .nest(
+                &format!("{}/docs", self.consumer.config().get_api_path()),
+                openapi_route,
+            )
             .fallback(Self::fallback)
             .layer(
                 TraceLayer::new_for_http()

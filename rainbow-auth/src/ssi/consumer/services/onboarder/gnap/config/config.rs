@@ -16,25 +16,28 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use rainbow_common::ssi::ClientConfig;
 use crate::ssi::common::utils::read;
-use crate::ssi::consumer::config::AuthConsumerConfig;
+use crate::ssi::consumer::config::{AuthConsumerConfig, AuthConsumerConfigTrait};
 use crate::ssi::consumer::services::onboarder::gnap::config::GnapOnboarderConfigTrait;
 use rainbow_common::config::global_config::HostConfig;
+use rainbow_common::ssi::ClientConfig;
 use serde_json::{json, Value};
 
 pub struct GnapOnboarderConfig {
     host: HostConfig,
     client: ClientConfig,
     keys_path: String,
+    api_path: String,
 }
 
 impl From<AuthConsumerConfig> for GnapOnboarderConfig {
     fn from(value: AuthConsumerConfig) -> Self {
+        let api_path = value.get_api_path().clone();
         GnapOnboarderConfig {
             host: value.common_config.host,
             client: value.common_config.client,
             keys_path: value.common_config.keys_path,
+            api_path,
         }
     }
 }
@@ -66,5 +69,8 @@ impl GnapOnboarderConfigTrait for GnapOnboarderConfig {
                 format!("{}://{}:{}", host.protocol, host.url, host.port)
             }
         }
+    }
+    fn get_api_path(&self) -> String {
+        self.api_path.clone()
     }
 }

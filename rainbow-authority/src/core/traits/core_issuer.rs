@@ -64,11 +64,15 @@ pub trait CoreIssuerTrait: Send + Sync + 'static {
     }
 
     async fn get_credential(&self, payload: CredentialRequest, token: String) -> anyhow::Result<GiveVC> {
-        let mut model = self.repo().issuing().get_by_token(&token).await?;
-        self.issuer().validate_cred_req(&mut model, &payload, &token)?;
+        let mut iss_model = self.repo().issuing().get_by_token(&token).await?;
+        self.issuer().validate_cred_req(&mut iss_model, &payload, &token)?;
         let did = self.wallet().get_did().await?;
-        let data = self.issuer().issue_cred(&mut model, &did)?;
-        self.repo().issuing().update(model).await?;
+        let data = self.issuer().issue_cred(&mut iss_model, &did)?;
+        let req_model = self.repo().request().get_by_id(&iss_model.id).await?;
+        let int_model = self.repo().interaction().get_by_id(&iss_model.id).await?;
+        let iss_model = self.repo().issuing().update(iss_model).await?;
+        let minion = self.issuer().end(&req_model, &int_model, &iss_model)?;
+        self.repo().minions().force_create(minion).await?;
         Ok(data)
     }
 }

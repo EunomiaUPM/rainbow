@@ -33,6 +33,7 @@ pub struct CoreApplicationConfig {
     pub ssi_wallet_config: WalletConfig,
     pub keys_path: String,
     pub openapi_path: String,
+    pub api_version: String
 }
 
 impl Default for CoreApplicationConfig {
@@ -64,6 +65,7 @@ impl Default for CoreApplicationConfig {
             is_local: true,
             keys_path: "./../static/certificates/authority/".to_string(),
             openapi_path: "./../static/specs/openapi/authority/authority.json".to_string(),
+            api_version: "v1".to_string(),
         }
     }
 }
@@ -106,6 +108,7 @@ impl CoreApplicationConfig {
             keys_path: extract_env("KEYS_PATH", default.keys_path),
             is_local: extract_env("IS_LOCAL", default.is_local.to_string()).parse().unwrap(),
             openapi_path: extract_env("OPENAPI_PATH", default.openapi_path),
+            api_version: extract_env("API_VERSION", default.api_version),
         };
         compound_config
     }
@@ -159,6 +162,9 @@ impl CoreApplicationConfigTrait for CoreApplicationConfig {
     }
     fn get_openapi_json(&self) -> anyhow::Result<String> {
         read(&self.openapi_path)
+    }
+    fn get_api_path(&self) -> String {
+        format!("/api/{}", self.api_version)
     }
 }
 

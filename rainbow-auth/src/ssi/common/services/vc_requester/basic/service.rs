@@ -53,8 +53,9 @@ impl VcRequesterTrait for VCReqService {
 
         let id = uuid::Uuid::new_v4().to_string();
         let callback_uri = format!(
-            "{}/api/v1/vc-request/callback/{}",
+            "{}{}/vc-request/callback/{}",
             self.config.get_host(),
+            self.config.get_api_path(),
             &id
         );
 
@@ -193,7 +194,7 @@ impl VcRequesterTrait for VCReqService {
                     "authority/continue",
                     "POST",
                     http_code,
-                    &error_res.error.unwrap_or("Error with provider continue request".to_string()),
+                    &error_res.error.unwrap_or("Error with authority continue request".to_string()),
                 );
                 error!("{}", error.log());
                 bail!(error);

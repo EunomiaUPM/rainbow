@@ -19,7 +19,7 @@
 
 use super::super::IssuerTrait;
 use super::config::{BasicIssuerConfig, BasicIssuerConfigTrait};
-use crate::data::entities::{issuing, request};
+use crate::data::entities::{interaction, issuing, minions, request};
 use crate::errors::{ErrorLogTrait, Errors};
 use crate::types::enums::errors::BadFormat;
 use crate::types::enums::vc_type::VcType;
@@ -28,7 +28,7 @@ use crate::types::issuing::{
 };
 use crate::types::vcs::cred_subject::{CredentialSubject4DataSpace, CredentialSubject4Identity};
 use crate::types::vcs::{VCClaimsV1, VCFromClaimsV1, VCIssuer};
-use crate::utils::{get_from_opt, has_expired, is_active, validate_token};
+use crate::utils::{get_from_opt, has_expired, is_active, trim_4_base, validate_token};
 use anyhow::bail;
 use chrono::{Duration, Utc};
 use jsonwebtoken::{encode, Algorithm, EncodingKey, Header, TokenData};
@@ -49,7 +49,11 @@ impl IssuerTrait for BasicIssuerService {
     fn start_vci(&self, model: &request::Model) -> issuing::NewModel {
         info!("Starting OIDC4VCI");
         let uri = model.vc_uri.clone().unwrap(); // EXPECTED ALWAYS
-        let host = format!("{}/api/v1/issuer", self.config.get_host());
+        let host = format!(
+            "{}{}/issuer",
+            self.config.get_host(),
+            self.config.get_api_path()
+        );
         let aud = match self.config.is_local() {
             true => host.replace("127.0.0.1", "host.docker.internal"),
             false => host,
@@ -65,8 +69,16 @@ impl IssuerTrait for BasicIssuerService {
     }
 
     fn generate_issuing_uri(&self, id: &str) -> String {
-        let semi_host = format!("{}/api/v1/issuer", self.config.get_host_without_protocol());
-        let host = format!("{}/api/v1/issuer", self.config.get_host());
+        let semi_host = format!(
+            "{}{}/issuer",
+            self.config.get_host_without_protocol(),
+            self.config.get_api_path()
+        );
+        let host = format!(
+            "{}{}/issuer",
+            self.config.get_host(),
+            self.config.get_api_path()
+        );
         let (semi_host, host) = match self.config.is_local() {
             true => {
                 let a = semi_host.replace("127.0.0.1", "host.docker.internal");
@@ -88,7 +100,11 @@ impl IssuerTrait for BasicIssuerService {
     fn get_cred_offer_data(&self, model: &issuing::Model) -> anyhow::Result<VCCredOffer> {
         info!("Retrieving credential offer data");
 
-        let issuer = format!("{}/api/v1/issuer", self.config.get_host());
+        let issuer = format!(
+            "{}{}/issuer",
+            self.config.get_host(),
+            self.config.get_api_path()
+        );
         let issuer = match self.config.is_local() {
             true => issuer.replace("127.0.0.1", "host.docker.internal"),
             false => issuer,
@@ -106,7 +122,11 @@ impl IssuerTrait for BasicIssuerService {
 
     fn get_issuer_data(&self) -> IssuerMetadata {
         info!("Retrieving issuer data");
-        let host = format!("{}/api/v1/issuer", self.config.get_host());
+        let host = format!(
+            "{}{}/issuer",
+            self.config.get_host(),
+            self.config.get_api_path()
+        );
         let host = match self.config.is_local() {
             true => host.replace("127.0.0.1", "host.docker.internal"),
             false => host,
@@ -117,7 +137,11 @@ impl IssuerTrait for BasicIssuerService {
     fn get_oauth_server_data(&self) -> AuthServerMetadata {
         info!("Retrieving oauth server data");
 
-        let host = format!("{}/api/v1/issuer", self.config.get_host());
+        let host = format!(
+            "{}{}/issuer",
+            self.config.get_host(),
+            self.config.get_api_path()
+        );
         let host = match self.config.is_local() {
             true => host.replace("127.0.0.1", "host.docker.internal"),
             false => host,
@@ -275,5 +299,23 @@ impl IssuerTrait for BasicIssuerService {
             bail!(error)
         }
         Ok(())
+    }
+    fn end(
+        &self,
+        req_model: &request::Model,
+        int_model: &interaction::Model,
+        iss_model: &issuing::Model,
+    ) -> anyhow::Result<minions::NewModel> {
+        let did = get_from_opt(&iss_model.did, "did")?;
+        let base_url = trim_4_base(&int_model.uri);
+        Ok(minions::NewModel {
+            participant_id: did,
+            participant_slug: req_model.participant_slug.clone(),
+            participant_type: "Minion".to_string(),
+            base_url: Some(base_url),
+            vc_uri: req_model.vc_uri.clone(),
+            is_vc_issued: false,
+            is_me: false,
+        })
     }
 }

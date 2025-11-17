@@ -34,6 +34,7 @@ pub struct CommonAuthConfig {
     pub keys_path: String,
     pub is_local: bool,
     pub openapi_path: String,
+    pub api_version: String
 }
 
 impl CommonAuthConfig {
@@ -65,6 +66,7 @@ impl CommonAuthConfig {
             keys_path: "./../static/certificates/consumer/".to_string(),
             is_local: true,
             openapi_path: "./../static/specs/openapi/auth/auth_consumer.json".to_string(),
+            api_version: "v1".to_string(),
         }
     }
 
@@ -96,6 +98,7 @@ impl CommonAuthConfig {
             keys_path: "./../static/certificates/provider/".to_string(),
             is_local: true,
             openapi_path: "./../static/specs/openapi/auth/auth_provider.json".to_string(),
+            api_version: "v1".to_string(),
         }
     }
 }
@@ -191,6 +194,9 @@ impl CommonConfigTrait for CommonAuthConfig {
     fn get_openapi_json(&self) -> anyhow::Result<String> {
         read(&self.openapi_path)
     }
+    fn get_api_path(&self) -> String {
+        format!("/api/{}", self.api_version)
+    }
 }
 
 impl CommonAuthConfig {
@@ -234,6 +240,7 @@ impl CommonAuthConfig {
             keys_path: extract_env("KEYS_PATH", default.keys_path),
             is_local: extract_env("IS_LOCAL", default.is_local.to_string()).parse().unwrap(),
             openapi_path: extract_env("OPENAPI_PATH", default.openapi_path),
+            api_version: extract_env("API_VERSION", default.api_version),
         };
         config
     }

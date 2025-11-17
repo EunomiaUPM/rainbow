@@ -65,10 +65,9 @@ impl GateKeeperTrait for GnapService {
         let new_request_model =
             request::NewModel { id: id.clone(), participant_slug, cert, vc_type: vc_type.to_string() };
 
-        let host_url = self.config.get_host();
-        let host_url = format!("{}/api/v1", host_url);
-        let continue_endpoint = format!("{}/gate/continue", &host_url);
-        let grant_endpoint = format!("{}/gate/access", &host_url);
+        let host_url = format!("{}{}/gate", self.config.get_host(), self.config.get_api_path());
+        let continue_endpoint = format!("{}/continue", &host_url);
+        let grant_endpoint = format!("{}/access", &host_url);
         let continue_token = create_opaque_token();
 
         let new_interaction_model = interaction::NewModel {

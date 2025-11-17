@@ -44,7 +44,7 @@ impl BusinessTrait for BasicBusinessService {
     fn start(&self, payload: &RainbowBusinessLoginRequest) -> (recv_request::NewModel, recv_verification::Model) {
         let id = Uuid::new_v4().to_string();
         let nonce: String = rand::thread_rng().sample_iter(&Alphanumeric).take(12).map(char::from).collect();
-        let provider_url = format!("{}/api/v1", self.config.get_host());
+        let provider_url = format!("{}{}", self.config.get_host(), self.config.get_api_path());
         let provider_url = match self.config.is_local() {
             true => provider_url.replace("127.0.0.1", "host.docker.internal"),
             false => provider_url,

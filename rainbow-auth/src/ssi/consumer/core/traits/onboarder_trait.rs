@@ -53,7 +53,7 @@ pub trait CoreOnboarderTrait: Send + Sync + 'static {
         let mut req_model = self.repo().request_req().get_by_id(id).await?;
         let mate = self.onboarder().manage_res(&mut req_model, response).await?;
         self.repo().request_req().update(req_model).await?;
-        let mate = self.repo().mates().create(mate).await?;
+        let mate = self.repo().mates().force_create(mate).await?;
         Ok(mate)
     }
 }

@@ -46,7 +46,7 @@ pub trait CoreGateKeeperTrait: Send + Sync + 'static {
         let ver_model = self.repo().verification_rcv().get_by_id(&int_model.id).await?;
         self.gatekeeper().validate_cont_req(&int_model, &payload, &token)?;
         let (mate, token_response) = self.gatekeeper().continue_req(&mut req_model, &int_model, &ver_model);
-        let _mate = self.repo().mates().create(mate).await?;
+        let _mate = self.repo().mates().force_create(mate).await?;
         Ok(token_response)
     }
 }

@@ -66,7 +66,7 @@ impl VerifierTrait for BasicVerifierService {
         info!("Generating verification exchange URI");
 
         let host_url = self.config.get_host();
-        let host_url = format!("{}/api/v1", host_url);
+        let host_url = format!("{}{}/verifier", host_url, self.config.get_api_path());
         let host_url = match self.config.is_local() {
             true => host_url.replace("127.0.0.1", "host.docker.internal"),
             false => host_url,
@@ -193,7 +193,12 @@ impl VerifierTrait for BasicVerifierService {
 
         match audience {
             Some(data) => {
-                let audience = format!("{}/api/v1/verify/{}", self.config.get_host(), data);
+                let audience = format!(
+                    "{}{}/verifier/verify/{}",
+                    self.config.get_host(),
+                    self.config.get_api_path(),
+                    data
+                );
                 let audience = match self.config.is_local() {
                     true => audience.replace("127.0.0.1", "host.docker.internal"),
                     false => audience,

@@ -58,7 +58,11 @@ impl VerifierTrait for VerifierService {
     fn start(&self, id: &str) -> recv_verification::NewModel {
         info!("Starting verification");
 
-        let host = format!("{}/api/v1/verifier", self.config.get_host());
+        let host = format!(
+            "{}{}/verifier",
+            self.config.get_host(),
+            self.config.get_api_path()
+        );
         let host_url = match self.config.is_local() {
             true => host.replace("127.0.0.1", "host.docker.internal"),
             false => host,
@@ -72,7 +76,11 @@ impl VerifierTrait for VerifierService {
     fn generate_uri(&self, ver_model: &recv_verification::Model) -> String {
         info!("Generating verification exchange URI");
 
-        let host = format!("{}/api/v1/verifier", self.config.get_host());
+        let host = format!(
+            "{}{}/verifier",
+            self.config.get_host(),
+            self.config.get_api_path()
+        );
         let host = match self.config.is_local() {
             true => host.replace("127.0.0.1", "host.docker.internal"),
             false => host,

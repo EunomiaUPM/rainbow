@@ -17,17 +17,19 @@
  *
  */
 use super::VerifierConfigTrait;
-use crate::ssi::provider::config::AuthProviderConfig;
+use crate::ssi::provider::config::{AuthProviderConfig, AuthProviderConfigTrait};
 use rainbow_common::config::global_config::HostConfig;
 
 pub struct VerifierConfig {
     host: HostConfig,
     is_local: bool,
+    api_path: String,
 }
 
 impl From<AuthProviderConfig> for VerifierConfig {
     fn from(value: AuthProviderConfig) -> Self {
-        Self { host: value.common_config.host, is_local: value.common_config.is_local }
+        let api_path = value.get_api_path();
+        Self { host: value.common_config.host, is_local: value.common_config.is_local, api_path }
     }
 }
 
@@ -45,5 +47,8 @@ impl VerifierConfigTrait for VerifierConfig {
     }
     fn is_local(&self) -> bool {
         self.is_local
+    }
+    fn get_api_path(&self) -> String {
+        self.api_path.clone()
     }
 }

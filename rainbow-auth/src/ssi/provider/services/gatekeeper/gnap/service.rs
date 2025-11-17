@@ -81,7 +81,7 @@ impl GateKeeperTrait for GnapGateKeeperService {
 
         let req_model = recv_request::NewModel { id: id.clone(), consumer_slug: class_id };
 
-        let host = format!("{}/api/v1/gate", self.config.get_host());
+        let host = format!("{}{}/gate", self.config.get_host(), self.config.get_api_path());
 
         let grant_endpoint = format!("{}/access", &host);
         let continue_endpoint = format!("{}/continue", &host);

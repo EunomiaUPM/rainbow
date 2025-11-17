@@ -30,4 +30,5 @@ pub trait AuthConsumerConfigTrait: Send + Sync + 'static {
     fn is_local(&self) -> bool;
     fn get_weird_port(&self) -> String;
     fn get_openapi_json(&self) -> anyhow::Result<String>;
+    fn get_api_path(&self) -> String;
 }

@@ -18,17 +18,19 @@
  */
 
 use super::BasicVerifierConfigTrait;
-use crate::config::CoreApplicationConfig;
+use crate::config::{CoreApplicationConfig, CoreApplicationConfigTrait};
 use crate::types::host::HostConfig;
 
 pub struct BasicVerifierConfig {
     host: HostConfig,
     is_local: bool,
+    api_path: String,
 }
 
 impl From<CoreApplicationConfig> for BasicVerifierConfig {
     fn from(config: CoreApplicationConfig) -> BasicVerifierConfig {
-        BasicVerifierConfig { host: config.host, is_local: config.is_local }
+        let api_path = config.get_api_path();
+        BasicVerifierConfig { host: config.host, is_local: config.is_local, api_path }
     }
 }
 
@@ -59,5 +61,8 @@ impl BasicVerifierConfigTrait for BasicVerifierConfig {
 
     fn is_local(&self) -> bool {
         self.is_local
+    }
+    fn get_api_path(&self) -> String {
+        self.api_path.clone()
     }
 }

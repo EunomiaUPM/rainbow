@@ -17,7 +17,7 @@
  *
  */
 
-use crate::config::CoreApplicationConfig;
+use crate::config::{CoreApplicationConfig, CoreApplicationConfigTrait};
 use crate::services::issuer::basic_v1::config::config_trait::BasicIssuerConfigTrait;
 use crate::types::host::HostConfig;
 use crate::utils::read;
@@ -26,11 +26,13 @@ pub struct BasicIssuerConfig {
     host: HostConfig,
     is_local: bool,
     keys_path: String,
+    api_path: String,
 }
 
 impl From<CoreApplicationConfig> for BasicIssuerConfig {
     fn from(config: CoreApplicationConfig) -> BasicIssuerConfig {
-        BasicIssuerConfig { host: config.host, is_local: config.is_local, keys_path: config.keys_path }
+        let api_path = config.get_api_path();
+        BasicIssuerConfig { host: config.host, is_local: config.is_local, keys_path: config.keys_path, api_path }
     }
 }
 
@@ -74,5 +76,8 @@ impl BasicIssuerConfigTrait for BasicIssuerConfig {
     fn get_pub_key(&self) -> anyhow::Result<String> {
         let path = format!("{}/public_key.pem", self.keys_path);
         read(&path)
+    }
+    fn get_api_path(&self) -> String {
+        self.api_path.clone()
     }
 }

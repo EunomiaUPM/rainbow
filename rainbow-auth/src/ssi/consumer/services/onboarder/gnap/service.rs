@@ -61,7 +61,7 @@ impl OnboarderTrait for GnapOnboarderService {
         info!("Starting process to request consumer onboarding");
 
         let id = uuid::Uuid::new_v4().to_string();
-        let callback_uri = format!("{}/api/v1/onboard/callback/{}", self.config.get_host(), &id);
+        let callback_uri = format!("{}{}/onboard/callback/{}", self.config.get_host(), self.config.get_api_path(),&id);
 
         let req_model = req_request::NewModel {
             id: id.clone(),

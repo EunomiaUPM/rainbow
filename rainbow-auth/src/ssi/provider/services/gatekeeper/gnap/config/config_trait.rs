@@ -20,4 +20,5 @@
 pub trait GnapGateKeeperConfigTrait {
     fn get_host(&self) -> String;
     fn is_local(&self) -> bool;
+    fn get_api_path(&self) -> String;
 }

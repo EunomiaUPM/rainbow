@@ -21,4 +21,5 @@ pub trait BasicVerifierConfigTrait {
     fn get_host_without_protocol(&self) -> String;
     fn get_host(&self) -> String;
     fn is_local(&self) -> bool;
+    fn get_api_path(&self) -> String;
 }

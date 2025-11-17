@@ -17,7 +17,7 @@
  *
  */
 
-use crate::data::entities::{issuing, request};
+use crate::data::entities::{interaction, issuing, minions, request};
 use crate::types::issuing::{
     AuthServerMetadata, CredentialRequest, DidPossession, GiveVC, IssuerMetadata, IssuingToken, VCCredOffer,
 };
@@ -39,4 +39,10 @@ pub trait IssuerTrait: Send + Sync + 'static {
         token: &str,
     ) -> anyhow::Result<()>;
     fn validate_did_possession(&self, token: &TokenData<DidPossession>, kid: &str) -> anyhow::Result<()>;
+    fn end(
+        &self,
+        req_model: &request::Model,
+        int_model: &interaction::Model,
+        iss_model: &issuing::Model,
+    ) -> anyhow::Result<minions::NewModel>;
 }

@@ -51,6 +51,7 @@ impl From<ApplicationConsumerConfig> for AuthConsumerConfig {
                 keys_path: config.keys_path,
                 is_local: config.is_local,
                 openapi_path: config.openapi_path,
+                api_version: config.api_version,
             },
             field_extra: false,
         }
@@ -109,5 +110,8 @@ impl AuthConsumerConfigTrait for AuthConsumerConfig {
 
     fn get_openapi_json(&self) -> anyhow::Result<String> {
         self.common_config.get_openapi_json()
+    }
+    fn get_api_path(&self) -> String {
+        self.common_config.get_api_path()
     }
 }

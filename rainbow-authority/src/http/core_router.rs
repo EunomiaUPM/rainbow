@@ -49,13 +49,34 @@ impl RainbowAuthorityRouter {
         let openapi_router = OpenapiRouter::new(self.openapi.clone()).router();
 
         Router::new()
-            .route("/api/v1/status", get(Self::server_status))
-            .nest("/api/v1/wallet", wallet_router)
-            .nest("/api/v1/vc-request", vcs_router)
-            .nest("/api/v1/gate", gatekeeper_router)
-            .nest("/api/v1/issuer", issuer_router)
-            .nest("/api/v1/verifier", verifier_router)
-            .nest("/api/v1/docs", openapi_router)
+            .route(
+                &format!("{}/status", self.authority.config().get_api_path()),
+                get(Self::server_status),
+            )
+            .nest(
+                &format!("{}/wallet", self.authority.config().get_api_path()),
+                wallet_router,
+            )
+            .nest(
+                &format!("{}/vc-request", self.authority.config().get_api_path()),
+                vcs_router,
+            )
+            .nest(
+                &format!("{}/gate", self.authority.config().get_api_path()),
+                gatekeeper_router,
+            )
+            .nest(
+                &format!("{}/issuer", self.authority.config().get_api_path()),
+                issuer_router,
+            )
+            .nest(
+                &format!("{}/verifier", self.authority.config().get_api_path()),
+                verifier_router,
+            )
+            .nest(
+                &format!("{}/docs", self.authority.config().get_api_path()),
+                openapi_router,
+            )
             .fallback(Self::fallback)
             .layer(
                 TraceLayer::new_for_http()
