@@ -24,7 +24,7 @@ use crate::errors::{ErrorLogTrait, Errors};
 use crate::types::enums::errors::BadFormat;
 use crate::types::enums::vc_type::VcType;
 use crate::types::vcs::VPDef;
-use crate::utils::{get_claim, split_did};
+use crate::utils::{get_claim, get_opt_claim, split_did};
 use anyhow::bail;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
@@ -121,7 +121,7 @@ impl VerifierTrait for BasicVerifierService {
         model.vpt = Some(vp_token.to_string());
         let (token, kid) = self.validate_token(vp_token, Some(&model.state))?;
         self.validate_nonce(model, &token)?;
-        self.validate_sub(model, &token, &kid)?;
+        self.validate_vp_subject(model, &token, &kid)?;
         self.validate_vp_id(model, &token)?;
         self.validate_holder(model, &token)?;
         // let id = match token.claims["jti"].as_str() {
@@ -233,36 +233,68 @@ impl VerifierTrait for BasicVerifierService {
         Ok(())
     }
 
-    fn validate_sub(&self, model: &mut verification::Model, token: &TokenData<Value>, kid: &str) -> anyhow::Result<()> {
-        info!("Validating sub");
+    fn validate_vp_subject(
+        &self,
+        model: &mut verification::Model,
+        token: &TokenData<Value>,
+        kid: &str,
+    ) -> anyhow::Result<()> {
+        info!("Validating subject");
 
-        let sub = get_claim(&token.claims, vec!["sub"])?;
-        let iss = get_claim(&token.claims, vec!["iss"])?;
+        let sub = get_opt_claim(&token.claims, vec!["sub"])?;
+        let iss = get_opt_claim(&token.claims, vec!["iss"])?;
 
-        if sub != iss || iss != kid {
-            // VALIDATE HOLDER 1
-            let error = Errors::security_new("VPT token issuer, subject & kid does not match");
-            error!("{}", error.log());
-            bail!(error);
+        match sub {
+            Some(sub) => {
+                if sub != kid {
+                    let error = Errors::security_new("VPT token subject & kid does not match");
+                    error!("{}", error.log());
+                    bail!(error);
+                }
+                info!("VPT subject & kid matches");
+            }
+            None => {}
         }
-        info!("VPT issuer, subject & kid matches");
+        match iss {
+            Some(iss) => {
+                if iss != kid {
+                    let error = Errors::security_new("VPT token issuer & kid does not match");
+                    error!("{}", error.log());
+                    bail!(error);
+                }
+                info!("VPT issuer & kid matches");
+            }
+            None => {}
+        }
 
-        model.holder = Some(sub.to_string());
+        model.holder = Some(kid.to_string());
         Ok(())
     }
 
     fn validate_vc_sub(&self, token: &TokenData<Value>, holder: &str) -> anyhow::Result<()> {
         info!("Validating VC subject");
 
-        let sub = get_claim(&token.claims, vec!["sub"])?;
-        let cred_sub_id = get_claim(&token.claims, vec!["vc", "credentialSubject", "id"])?;
+        let sub = get_opt_claim(&token.claims, vec!["sub"])?;
+        let cred_sub_id = get_claim(&token.claims, vec!["vc", "CredentialSubject", "id"])?;
 
-        if sub != holder || holder != cred_sub_id {
+        match sub {
+            Some(sub) => {
+                if sub != holder {
+                    let error = Errors::security_new("VCT token sub, credential subject & VP Holder do not match");
+                    error!("{}", error.log());
+                    bail!(error);
+                }
+                info!("Sub & Holder match");
+            }
+            None => {}
+        }
+
+        if holder != cred_sub_id {
             let error = Errors::security_new("VCT token sub, credential subject & VP Holder do not match");
             error!("{}", error.log());
             bail!(error);
         }
-        info!("VC Holder Data is Correct");
+        info!("Vc Holder & Holder match");
         Ok(())
     }
 
@@ -299,77 +331,110 @@ impl VerifierTrait for BasicVerifierService {
     fn validate_issuer(&self, token: &TokenData<Value>, kid: &str) -> anyhow::Result<()> {
         info!("Validating issuer");
 
-        let iss = get_claim(&token.claims, vec!["iss"])?;
+        let iss = get_opt_claim(&token.claims, vec!["iss"])?;
         let vc_iss_id = get_claim(&token.claims, vec!["vc", "issuer", "id"])?;
 
-        if iss != kid || kid != vc_iss_id {
+        match iss {
+            Some(iss) => {
+                if iss != kid {
+                    // VALIDATE IF ISSUER IS THE SAME AS KID
+                    let error = Errors::security_new("VCT token issuer & kid does not match");
+                    error!("{}", error.log());
+                    bail!(error);
+                }
+                info!("VC iss and kid matches")
+            }
+            None => {}
+        }
+
+        if vc_iss_id != kid {
             // VALIDATE IF ISSUER IS THE SAME AS KID
             let error = Errors::security_new("VCT token issuer & kid does not match");
             error!("{}", error.log());
             bail!(error);
         }
-        info!("VCT issuer & kid matches");
+        info!("VC issuer & kid matches");
         Ok(())
     }
 
     fn validate_vc_id(&self, token: &TokenData<Value>) -> anyhow::Result<()> {
         info!("Validating VC id & JTI");
 
-        let jti = get_claim(&token.claims, vec!["jti"])?;
         let vc_id = get_claim(&token.claims, vec!["vc", "id"])?;
+        let jti = get_opt_claim(&token.claims, vec!["jti"])?;
 
-        if jti != vc_id {
-            let error = Errors::security_new("VCT jti & VC id do not match");
-            error!("{}", error.log());
-            bail!(error);
+        match jti {
+            Some(jti) => {
+                if jti != vc_id {
+                    // VALIDATE ID MATCHES JTI
+                    let error = Errors::security_new("Invalid id, it does not match");
+                    error!("{}", error.log());
+                    bail!(error);
+                }
+                info!("VCT jti & VC id match");
+            }
+            None => {}
         }
-        info!("VCT jti & VC id match");
+
         Ok(())
     }
 
     fn validate_valid_from(&self, token: &TokenData<Value>) -> anyhow::Result<()> {
         info!("Validating issuance date");
 
-        let valid_from = get_claim(&token.claims, vec!["vc", "validFrom"])?;
+        let valid_from = get_opt_claim(&token.claims, vec!["vc", "validFrom"])?;
 
-        match DateTime::parse_from_rfc3339(&valid_from) {
-            Ok(parsed_date) => {
-                if parsed_date > Utc::now() {
-                    let error = Errors::security_new("VC is not valid yet");
-                    error!("{}", error.log());
-                    bail!(error)
-                }
+        match valid_from {
+            Some(valid_from) => {
+                match DateTime::parse_from_rfc3339(&valid_from) {
+                    Ok(parsed_date) => {
+                        if parsed_date > Utc::now() {
+                            let error = Errors::security_new("VC is not valid yet");
+                            error!("{}", error.log());
+                            bail!(error)
+                        }
+                    }
+                    Err(e) => {
+                        let error = Errors::security_new(&format!("VC iat and issuanceDate do not match -> {}", e));
+                        error!("{}", error.log());
+                        bail!(error);
+                    }
+                };
+                info!("VC has started its validity period correct");
             }
-            Err(e) => {
-                let error = Errors::security_new(&format!("VC iat and issuanceDate do not match -> {}", e));
-                error!("{}", error.log());
-                bail!(error);
-            }
-        };
+            None => {}
+        }
 
-        info!("VC validFrom is correct");
         Ok(())
     }
 
     fn validate_valid_until(&self, token: &TokenData<Value>) -> anyhow::Result<()> {
         info!("Validating expiration date");
 
-        let valid_until = get_claim(&token.claims, vec!["vc", "validUntil"])?;
+        let valid_until = get_opt_claim(&token.claims, vec!["vc", "validUntil"])?;
+        // let valid_until = get_claim(&token.claims, vec!["vc", "validUntil"])?;
 
-        match DateTime::parse_from_rfc3339(&valid_until) {
-            Ok(parsed_date) => {
-                if Utc::now() > parsed_date {
-                    let error = Errors::security_new("VC has expired");
-                    error!("{}", error.log());
-                    bail!(error)
+        match valid_until {
+            Some(valid_until) => {
+                match DateTime::parse_from_rfc3339(&valid_until) {
+                    Ok(parsed_date) => {
+                        if Utc::now() > parsed_date {
+                            let error = Errors::security_new("VC has expired");
+                            error!("{}", error.log());
+                            bail!(error)
+                        }
+                    }
+                    Err(e) => {
+                        let error = Errors::security_new(&format!("VC validUntil has invalid format -> {}", e));
+                        error!("{}", error.log());
+                        bail!(error);
+                    }
                 }
+                info!("VC has not expired yet");
             }
-            Err(e) => {
-                let error = Errors::security_new(&format!("VC validUntil has invalid format -> {}", e));
-                error!("{}", error.log());
-                bail!(error);
-            }
+            None => {}
         }
+
         Ok(())
     }
 

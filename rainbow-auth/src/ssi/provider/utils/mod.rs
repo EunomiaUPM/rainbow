@@ -60,18 +60,7 @@ pub fn get_claim(claims: &Value, path: Vec<&str>) -> anyhow::Result<String> {
             }
         };
     }
-    let data = match node.as_str() {
-        Some(data) => data.to_string(),
-        None => {
-            let error = CommonErrors::format_new(
-                BadFormat::Received,
-                &format!("Field '{}' not a string", field),
-            );
-            error!("{}", error.log());
-            bail!(error)
-        }
-    };
-    Ok(data)
+    validate_data(node, field)
 }
 
 pub fn get_opt_claim(claims: &Value, path: Vec<&str>) -> anyhow::Result<Option<String>> {
@@ -80,13 +69,16 @@ pub fn get_opt_claim(claims: &Value, path: Vec<&str>) -> anyhow::Result<Option<S
     for key in path.iter() {
         node = match node.get(key) {
             Some(data) => data,
-            None => {
-                return Ok(None)
-            }
+            None => return Ok(None),
         };
     }
-    let data = match node.as_str() {
-        Some(data) => data.to_string(),
+    let data = validate_data(node, field)?;
+    Ok(Some(data))
+}
+
+fn validate_data(node: &Value, field: &str) -> anyhow::Result<String> {
+    match node.as_str() {
+        Some(data) => Ok(data.to_string()),
         None => {
             let error = CommonErrors::format_new(
                 BadFormat::Received,
@@ -95,6 +87,5 @@ pub fn get_opt_claim(claims: &Value, path: Vec<&str>) -> anyhow::Result<Option<S
             error!("{}", error.log());
             bail!(error)
         }
-    };
-    Ok(Some(data))
+    }
 }

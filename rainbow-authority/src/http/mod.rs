@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 mod core_router;
 mod gatekeeper_router;
 mod issuer_router;
@@ -26,6 +27,7 @@ mod wallet_router;
 
 pub use core_router::RainbowAuthorityRouter;
 pub use gatekeeper_router::GateKeeperRouter;
+pub use issuer_router::IssuerRouter;
 pub use openapi_router::OpenapiRouter;
 pub use vcs_router::VcsRouter;
 pub use verifier_router::VerifierRouter;

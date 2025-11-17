@@ -17,8 +17,8 @@
  *
  */
 
+use super::super::ClientServiceTrait;
 use crate::errors::{ErrorLogTrait, Errors};
-use crate::services::client::ClientServiceTrait;
 use crate::types::enums::request::Body;
 use anyhow::bail;
 use axum::async_trait;

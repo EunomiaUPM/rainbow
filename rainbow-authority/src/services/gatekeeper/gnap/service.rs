@@ -17,10 +17,10 @@
  *
  */
 
+use super::config::{GnapConfig, GnapConfigTrait};
 use crate::data::entities::{interaction, request};
 use crate::errors::{ErrorLogTrait, Errors};
 use crate::services::client::ClientServiceTrait;
-use crate::services::gatekeeper::gnap::config::{GnapConfig, GnapConfigTrait};
 use crate::services::gatekeeper::GateKeeperTrait;
 use crate::types::enums::errors::BadFormat;
 use crate::types::enums::request::Body;

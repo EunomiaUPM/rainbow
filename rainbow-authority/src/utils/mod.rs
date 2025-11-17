@@ -97,8 +97,25 @@ pub fn get_claim(claims: &Value, path: Vec<&str>) -> anyhow::Result<String> {
             }
         };
     }
-    let data = match node.as_str() {
-        Some(data) => data.to_string(),
+    validate_data(node, field)
+}
+
+pub fn get_opt_claim(claims: &Value, path: Vec<&str>) -> anyhow::Result<Option<String>> {
+    let mut node = claims;
+    let field = path.last().unwrap_or(&"unknown");
+    for key in path.iter() {
+        node = match node.get(key) {
+            Some(data) => data,
+            None => return Ok(None),
+        };
+    }
+    let data = validate_data(node, field)?;
+    Ok(Some(data))
+}
+
+fn validate_data(node: &Value, field: &str) -> anyhow::Result<String> {
+    match node.as_str() {
+        Some(data) => Ok(data.to_string()),
         None => {
             let error = Errors::format_new(
                 BadFormat::Received,
@@ -107,8 +124,7 @@ pub fn get_claim(claims: &Value, path: Vec<&str>) -> anyhow::Result<String> {
             error!("{}", error.log());
             bail!(error)
         }
-    };
-    Ok(data)
+    }
 }
 
 pub fn validate_token<T>(token: &str, audience: Option<&str>) -> anyhow::Result<(TokenData<T>, String)>

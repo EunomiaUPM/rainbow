@@ -18,12 +18,7 @@
  */
 
 use crate::core::traits::CoreTrait;
-use crate::http::gatekeeper_router::GateKeeperRouter;
-use crate::http::issuer_router::IssuerRouter;
-use crate::http::vcs_router::VcsRouter;
-use crate::http::verifier_router::VerifierRouter;
-use crate::http::wallet_router::WalletRouter;
-use crate::http::OpenapiRouter;
+use crate::http::{GateKeeperRouter, IssuerRouter, OpenapiRouter, VcsRouter, VerifierRouter, WalletRouter};
 use axum::extract::Request;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
