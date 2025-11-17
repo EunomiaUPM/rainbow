@@ -28,17 +28,16 @@ use sea_orm::ActiveValue;
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: String, // REQUEST
-    pub state: String,                     // RANDOM
-    pub nonce: String,                     // RANDOM
-    pub vc_type: String,                   // REQUEST
-    pub audience: String,                  // SEMI-RANDOM
-    pub holder: Option<String>,            // RESPONSE
-    pub vpt: Option<String>,               // RESPONSE
-    pub success: Option<bool>,             // RESPONSE
-    pub status: String,                    // DEFAULT
-    pub created_at: chrono::NaiveDateTime, // DEFAULT
+    pub state: String,                           // RANDOM
+    pub nonce: String,                           // RANDOM
+    pub vc_type: String,                         // REQUEST
+    pub audience: String,                        // SEMI-RANDOM
+    pub holder: Option<String>,                  // RESPONSE
+    pub vpt: Option<String>,                     // RESPONSE
+    pub success: Option<bool>,                   // RESPONSE
+    pub status: String,                          // DEFAULT
+    pub created_at: chrono::NaiveDateTime,       // DEFAULT
     pub ended_at: Option<chrono::NaiveDateTime>, // RESPONSE
-                                           // pub requirements: Value, TODO
 }
 
 #[derive(Clone, Debug)]

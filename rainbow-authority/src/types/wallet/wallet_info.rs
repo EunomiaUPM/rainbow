@@ -17,8 +17,8 @@
  *
  */
 
-use serde::{Deserialize, Serialize};
 use super::dids_info::DidsInfo;
+use serde::{Deserialize, Serialize};
 #[derive(Deserialize, Serialize, PartialEq, Eq, Clone, Debug)]
 pub struct WalletInfo {
     pub id: String,

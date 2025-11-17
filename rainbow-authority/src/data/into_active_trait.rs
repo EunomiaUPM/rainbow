@@ -17,7 +17,6 @@
  *
  */
 
-
 pub trait IntoActiveSet<T> {
     fn to_active(self) -> T;
 }

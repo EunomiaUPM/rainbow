@@ -16,18 +16,19 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-pub use vci_data::VCIData;
-pub use vpd::VPDef;
-pub use input_descriptor::*;
-pub use vc_decision_approval::*;
-pub use claims_v2::*;
-pub use claims_v1::*;
-pub use vc_issuer::*;
-mod vci_data;
-mod vpd;
-mod input_descriptor;
-mod vc_decision_approval;
+mod claims_v1;
 mod claims_v2;
 pub mod cred_subject;
-mod claims_v1;
+mod input_descriptor;
+mod vc_decision_approval;
 mod vc_issuer;
+mod vci_data;
+mod vpd;
+
+pub use claims_v1::*;
+pub use claims_v2::*;
+pub use input_descriptor::*;
+pub use vc_decision_approval::*;
+pub use vc_issuer::*;
+pub use vci_data::VCIData;
+pub use vpd::VPDef;

@@ -16,10 +16,11 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
+use crate::types::enums::request::Body;
 use axum::async_trait;
 use axum::http::HeaderMap;
 use reqwest::Response;
-use crate::types::enums::request::Body;
 
 #[async_trait]
 pub trait ClientServiceTrait: Send + Sync {

@@ -22,6 +22,4 @@ use crate::data::entities::request::{Model, NewModel};
 use axum::async_trait;
 
 #[async_trait]
-pub trait RequestRepoTrait: BasicRepoTrait<Model, NewModel> + Send + Sync {
-
-}
+pub trait RequestRepoTrait: BasicRepoTrait<Model, NewModel> + Send + Sync {}

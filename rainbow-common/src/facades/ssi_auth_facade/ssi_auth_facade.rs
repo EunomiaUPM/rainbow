@@ -29,7 +29,6 @@ use reqwest::Client;
 use std::time::Duration;
 use tracing::error;
 
-
 const SSI_AUTH_FACADE_VERIFICATION_URL: &str = "/api/v1/verify/mate/token";
 
 pub struct SSIAuthFacadeService {
@@ -54,21 +53,13 @@ impl SSIAuthFacadeTrait for SSIAuthFacadeService {
         let response = match response {
             Ok(response) => response,
             Err(_e) => {
-                let e = CommonErrors::missing_action_new(
-                    "Not able to verify token".to_string(),
-                    MissingAction::Token,
-                    "Request not accepted".to_string().into(),
-                );
+                let e = CommonErrors::missing_action_new(MissingAction::Token, "Not able to verify token");
                 error!("{}", e.log());
                 bail!(e);
             }
         };
         if response.status().is_success() == false {
-            let e = CommonErrors::missing_action_new(
-                "Not able to verify token".to_string(),
-                MissingAction::Token,
-                "Request not accepted".to_string().into(),
-            );
+            let e = CommonErrors::missing_action_new(MissingAction::Token, "Not able to verify token");
             error!("{}", e.log());
             bail!(e);
         }
@@ -77,7 +68,7 @@ impl SSIAuthFacadeTrait for SSIAuthFacadeService {
             Err(e) => {
                 let e_ = CommonErrors::format_new(
                     BadFormat::Received,
-                    format!("Not able to deserialize entity: {}", e.to_string()).into(),
+                    &format!("Not able to deserialize entity: {}", e.to_string()),
                 );
                 error!("{}", e_.log());
                 bail!(e_);
