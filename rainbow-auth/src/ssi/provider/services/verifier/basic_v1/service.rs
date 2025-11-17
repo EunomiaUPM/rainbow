@@ -35,7 +35,6 @@ use jsonwebtoken::jwk::Jwk;
 use jsonwebtoken::{TokenData, Validation};
 use rainbow_common::errors::helpers::BadFormat;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
-use rainbow_common::utils::get_from_opt;
 use rainbow_db::auth::provider::entities::{recv_interaction, recv_verification};
 use serde_json::Value;
 use std::collections::HashSet;

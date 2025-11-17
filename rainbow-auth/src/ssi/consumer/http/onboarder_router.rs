@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::ssi::common::errors::CustomToResponse;
 use crate::ssi::common::types::gnap::CallbackBody;
 use crate::ssi::consumer::core::traits::CoreOnboarderTrait;
@@ -28,7 +29,6 @@ use axum::routing::{get, post};
 use axum::{Json, Router};
 use rainbow_common::errors::helpers::BadFormat;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
-use rainbow_common::utils::get_from_opt;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::error;
@@ -83,10 +83,7 @@ impl OnboarderConsumerRouter {
             }
         };
 
-        let payload = CallbackBody {
-            interact_ref,
-            hash,
-        };
+        let payload = CallbackBody { interact_ref, hash };
         match onboarder.continue_req(&id, payload).await {
             Ok(data) => (StatusCode::OK, Json(data)).into_response(),
             Err(e) => e.to_response(),

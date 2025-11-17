@@ -16,8 +16,8 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use rainbow_common::auth::business::RainbowBusinessLoginRequest;
-use rainbow_common::utils::get_from_opt;
 use rainbow_db::auth::common::entities::mates;
 use rainbow_db::auth::provider::entities::{business_mates, recv_request, recv_verification};
 use crate::ssi::provider::types::business::BusinessResponse;

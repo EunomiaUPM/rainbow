@@ -16,14 +16,14 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
+use crate::ssi::common::types::gnap::CallbackBody;
 use axum::async_trait;
-use reqwest::Response;
 use rainbow_db::auth::common::entities::req_interaction;
-use crate::ssi::common::types::gnap::{CallbackBody, RefBody};
+use reqwest::Response;
 
 #[async_trait]
 pub trait CallbackTrait: Send + Sync + 'static {
     fn check_callback(&self, int_model: &mut req_interaction::Model, payload: &CallbackBody) -> anyhow::Result<()>;
     async fn continue_req(&self, int_model: &req_interaction::Model) -> anyhow::Result<Response>;
-    
 }

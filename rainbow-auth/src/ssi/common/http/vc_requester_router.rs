@@ -16,23 +16,21 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::ssi::common::core::{CoreVcRequesterTrait, CoreWalletTrait};
+use crate::ssi::common::core::CoreVcRequesterTrait;
 use crate::ssi::common::errors::CustomToResponse;
-use crate::ssi::common::services::vc_requester::VcRequesterTrait;
 use crate::ssi::common::types::entities::{ReachAuthority, ReachMethod};
 use crate::ssi::common::types::gnap::CallbackBody;
-use crate::ssi::consumer::core::traits::CoreOnboarderTrait;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use axum::routing::{delete, get, post};
+use axum::routing::{get, post};
 use axum::{Json, Router};
 use rainbow_common::errors::helpers::BadFormat;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use std::collections::HashMap;
 use std::sync::Arc;
-use tracing::{error, info};
+use tracing::error;
 
 pub struct VcRequesterRouter {
     requester: Arc<dyn CoreVcRequesterTrait>,

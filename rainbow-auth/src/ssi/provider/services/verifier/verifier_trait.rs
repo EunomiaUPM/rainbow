@@ -17,10 +17,10 @@
  *
  */
 use crate::ssi::provider::types::vcs::{VPDef, VerifyPayload};
+use axum::async_trait;
 use jsonwebtoken::TokenData;
 use rainbow_db::auth::provider::entities::{recv_interaction, recv_verification};
 use serde_json::Value;
-use axum::async_trait;
 
 #[async_trait]
 pub trait VerifierTrait: Send + Sync + 'static {
@@ -46,5 +46,5 @@ pub trait VerifierTrait: Send + Sync + 'static {
     fn validate_valid_from(&self, token: &TokenData<Value>) -> anyhow::Result<()>;
     fn validate_valid_until(&self, token: &TokenData<Value>) -> anyhow::Result<()>;
     fn retrieve_vcs(&self, token: TokenData<Value>) -> anyhow::Result<Vec<String>>;
-    async fn end_verification(&self, model: &recv_interaction::Model) -> anyhow::Result<(Option<String>)>;
+    async fn end_verification(&self, model: &recv_interaction::Model) -> anyhow::Result<Option<String>>;
 }

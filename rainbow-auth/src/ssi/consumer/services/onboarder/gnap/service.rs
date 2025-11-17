@@ -16,28 +16,23 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use super::super::OnboarderTrait;
-use crate::ssi::common::errors::AuthErrors;
 use crate::ssi::common::services::client::ClientServiceTrait;
 use crate::ssi::common::types::enums::request::Body;
-use crate::ssi::common::types::gnap::grant_request::{AccessTokenRequirements4GR, Finish4Interact, Interact4GR};
-use crate::ssi::common::types::gnap::{AccessToken, CallbackBody, GrantRequest, GrantResponse, RefBody};
+use crate::ssi::common::types::gnap::{AccessToken, GrantRequest, GrantResponse};
 use crate::ssi::common::utils::get_query_param;
 use crate::ssi::common::utils::trim_4_base;
 use crate::ssi::consumer::services::onboarder::gnap::config::{GnapOnboarderConfig, GnapOnboarderConfigTrait};
 use crate::ssi::consumer::types::ReachProvider;
 use anyhow::bail;
 use axum::async_trait;
-use base64::engine::general_purpose::URL_SAFE_NO_PAD;
-use base64::Engine;
-use jsonwebtoken::TokenData;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::utils::get_from_opt;
 use rainbow_db::auth::common::entities::{mates, req_interaction, req_verification, token_requirements};
 use rainbow_db::auth::consumer::entities::req_request;
-use reqwest::header::{HeaderMap, ACCEPT, AUTHORIZATION, CONTENT_TYPE};
+use reqwest::header::{HeaderMap, ACCEPT, CONTENT_TYPE};
 use reqwest::Response;
-use sha2::{Digest, Sha256};
 use std::sync::Arc;
 use tracing::{error, info};
 use url::Url;

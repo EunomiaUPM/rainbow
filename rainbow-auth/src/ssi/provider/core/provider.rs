@@ -40,6 +40,7 @@ pub struct AuthProvider {
     callback: Arc<dyn CallbackTrait>,
     business: Arc<dyn BusinessTrait>,
     repo: Arc<dyn AuthProviderRepoTrait>,
+    #[allow(dead_code)] // as an orchestrator, it should have access even though it's not used
     client: Arc<dyn ClientServiceTrait>,
     config: Arc<dyn AuthProviderConfigTrait>,
 }

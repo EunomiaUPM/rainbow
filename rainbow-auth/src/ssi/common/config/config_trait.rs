@@ -20,7 +20,6 @@
 use rainbow_common::config::global_config::DatabaseConfig;
 use rainbow_common::ssi::WalletConfig;
 use serde_json::Value;
-use crate::ssi::common::utils::read;
 
 pub trait CommonConfigTrait: Send + Sync + 'static {
     fn get_raw_database_config(&self) -> &DatabaseConfig;

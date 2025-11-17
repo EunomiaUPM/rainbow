@@ -78,7 +78,7 @@ impl AuthProviderConfigTrait for AuthProviderConfig {
         self.common_config.get_wallet_register_data()
     }
     fn get_wallet_login_data(&self) -> Value {
-        self.get_wallet_login_data()
+        self.common_config.get_wallet_login_data()
     }
 
     fn get_cert(&self) -> anyhow::Result<String> {

@@ -23,7 +23,6 @@ use axum::async_trait;
 use axum::http::HeaderMap;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use reqwest::{Client, RequestBuilder, Response};
-use serde_json::{to_string, Value};
 use std::time::Duration;
 use tracing::error;
 
@@ -42,12 +41,7 @@ impl BasicClientService {
             Ok(resp) => Ok(resp),
             Err(e) => {
                 let http_code = e.status().map(|s| s.as_u16());
-                let error = CommonErrors::petition_new(
-                    url,
-                    method,
-                    http_code,
-                    &e.to_string(),
-                );
+                let error = CommonErrors::petition_new(url, method, http_code, &e.to_string());
                 error!("{}", error.log());
                 bail!(error.log());
             }

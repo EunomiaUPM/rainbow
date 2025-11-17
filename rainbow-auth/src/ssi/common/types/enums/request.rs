@@ -24,14 +24,3 @@ pub enum Body {
     Raw(String),
     None,
 }
-
-use serde::Serialize;
-
-pub enum Body2<T>
-where
-    T: Serialize,
-{
-    Json(T),
-    Raw(String),
-    None,
-}

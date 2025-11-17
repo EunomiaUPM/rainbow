@@ -19,10 +19,10 @@
 
 use super::WaltIdConfigTrait;
 use crate::config::CoreApplicationConfig;
+use crate::types::host::HostConfig;
 use crate::types::wallet::WalletConfig;
 use crate::utils::read;
 use serde_json::{json, Value};
-use crate::types::host::HostConfig;
 
 pub struct WaltIdConfig {
     host: HostConfig,
@@ -32,7 +32,11 @@ pub struct WaltIdConfig {
 
 impl From<CoreApplicationConfig> for WaltIdConfig {
     fn from(config: CoreApplicationConfig) -> Self {
-        WaltIdConfig { ssi_wallet_config: config.ssi_wallet_config.clone(), keys_path: config.keys_path.clone() }
+        WaltIdConfig {
+            host: config.host,
+            ssi_wallet_config: config.ssi_wallet_config.clone(),
+            keys_path: config.keys_path.clone(),
+        }
     }
 }
 

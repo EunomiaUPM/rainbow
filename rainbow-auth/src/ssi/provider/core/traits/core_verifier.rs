@@ -16,11 +16,11 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::ssi::provider::services::business::BusinessTrait;
 use crate::ssi::provider::services::verifier::VerifierTrait;
 use crate::ssi::provider::types::vcs::{VPDef, VerifyPayload};
 use axum::async_trait;
-use rainbow_db::auth::provider::entities::recv_interaction::Model;
 use rainbow_db::auth::provider::factory::factory_trait::AuthProviderRepoTrait;
 use std::sync::Arc;
 

@@ -16,14 +16,13 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::ssi::consumer::config::{AuthConsumerConfig, AuthConsumerConfigTrait};
+use crate::ssi::consumer::config::AuthConsumerConfig;
 use crate::ssi::consumer::setup::migrations::ConsumerMigration;
 use crate::ssi::consumer::setup::AuthConsumerApplication;
-use crate::ssi::provider::config::{AuthProviderConfig, AuthProviderConfigTrait};
+use crate::ssi::provider::config::AuthProviderConfig;
 use crate::ssi::provider::setup::migrations::ProviderMigrations;
 use crate::ssi::provider::setup::AuthProviderApplication;
 use clap::{Parser, Subcommand};
-use sea_orm_migration::MigratorTrait;
 use std::cmp::PartialEq;
 use tracing::{debug, info};
 

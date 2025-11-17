@@ -23,7 +23,6 @@ use serde::Serialize;
 use serde_json::Value;
 use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
 use rainbow_common::ssi::ClientConfig;
-use crate::ssi::common::utils::read;
 
 #[derive(Clone, Serialize, Debug)]
 pub struct AuthConsumerConfig {
@@ -84,7 +83,7 @@ impl AuthConsumerConfigTrait for AuthConsumerConfig {
         self.common_config.get_wallet_register_data()
     }
     fn get_wallet_login_data(&self) -> Value {
-        self.get_wallet_login_data()
+        self.common_config.get_wallet_login_data()
     }
 
     fn get_cert(&self) -> anyhow::Result<String> {

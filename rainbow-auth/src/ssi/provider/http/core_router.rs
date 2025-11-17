@@ -17,21 +17,21 @@
  *
  */
 use crate::ssi::common::http::{VcRequesterRouter, WalletRouter};
+use crate::ssi::provider::core::traits::CoreProviderTrait;
 use crate::ssi::provider::core::AuthProvider;
+use crate::ssi::provider::http::business_router::BusinessRouter;
+use crate::ssi::provider::http::{GateKeeperRouter, VerifierRouter};
 use axum::extract::Request;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::get;
 use axum::Router;
+use rainbow_common::http::OpenapiRouter;
 use rainbow_common::utils::server_status;
 use std::sync::Arc;
-use tower_http::trace::{DefaultMakeSpan, DefaultOnResponse, TraceLayer};
+use tower_http::trace::{DefaultOnResponse, TraceLayer};
 use tracing::{error, info, Level};
 use uuid::Uuid;
-use rainbow_common::http::OpenapiRouter;
-use crate::ssi::provider::core::traits::CoreProviderTrait;
-use crate::ssi::provider::http::{GateKeeperRouter, VerifierRouter};
-use crate::ssi::provider::http::business_router::BusinessRouter;
 
 pub struct AuthProviderRouter {
     provider: Arc<AuthProvider>,
@@ -51,7 +51,7 @@ impl AuthProviderRouter {
         let verifier_router = VerifierRouter::new(self.provider.clone()).router();
         let openapi_router = OpenapiRouter::new(self.openapi.clone()).router();
         let business_router = BusinessRouter::new(self.provider.clone()).router();
-        
+
         Router::new()
             .route("/api/v1/status", get(server_status))
             .with_state(self.provider)
@@ -77,4 +77,3 @@ impl AuthProviderRouter {
         StatusCode::NOT_FOUND.into_response()
     }
 }
-
