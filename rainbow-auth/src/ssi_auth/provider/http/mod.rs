@@ -16,7 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-mod openapi;
+pub mod openapi;
 
 use crate::ssi_auth::common::errors::CustomToResponse;
 use crate::ssi_auth::common::traits::RainbowSSIAuthWalletTrait;

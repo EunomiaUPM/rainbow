@@ -9,6 +9,29 @@ mod tests {
     use axum::{
         response::IntoResponse,
     };
+
+    #[tokio::test]
+    async fn test_swagger_ui_html_route() {
+        use axum::{body::to_bytes, http::Request};
+        use tower::ServiceExt;
+
+        let app = route_openapi();
+        let request = Request::builder()
+            .uri("/api/v1/auth/openapi")
+            .method("GET")
+            .body(axum::body::Body::empty())
+            .unwrap();
+
+        let response = app.oneshot(request).await.unwrap();
+        assert_eq!(response.status(), axum::http::StatusCode::OK);
+
+        let content_type = response.headers().get("Content-Type").unwrap();
+        assert!(content_type.to_str().unwrap().contains("text/html"));
+
+        let body_bytes = to_bytes(response.into_body(), 100000).await.unwrap();
+        let body_str = String::from_utf8(body_bytes.to_vec()).unwrap();
+        assert!(body_str.contains("Swagger UI"));
+    }
     
     #[tokio::test]
     async fn test_openapi_json_route() {
@@ -37,7 +60,6 @@ mod tests {
         let body_bytes = to_bytes(response.into_body(), 100000000).await.unwrap();
         assert_eq!(body_bytes.as_ref(), OPENAPI_JSON.as_bytes());
     }
-
 
     #[tokio::test]
     async fn test_openapi_not_found() {

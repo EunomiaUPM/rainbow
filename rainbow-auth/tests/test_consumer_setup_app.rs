@@ -2,9 +2,15 @@
 
 #[cfg(test)]
 mod tests {
+    use std::{env, panic::AssertUnwindSafe};
+    use futures::FutureExt;
+    use rainbow_auth::ssi_auth::consumer::setup::{app::{SSIAuthConsumerApplication, create_ssi_consumer_router}, db_migrations::SSIAuthConsumerMigrations};
+    use rainbow_common::config::{consumer_config::ApplicationConsumerConfig, database::DbType, global_config::DatabaseConfig};
     use sea_orm_migration::{MigrationTrait, MigratorTrait, SchemaManager, async_trait};
     use sea_orm::{DbErr};
     use sea_orm_migration::sea_query::{Table, ColumnDef, Alias};
+
+    // Mock 
 
     struct DummyMigration;
 
@@ -48,6 +54,22 @@ mod tests {
         }
     }
 
+    fn valid_config() -> ApplicationConsumerConfig {
+        let mut config = ApplicationConsumerConfig::default();
+        config.database_config = DatabaseConfig {
+            db_type: DbType::Sqlite,
+            url: "/tmp/test.db".to_string(),
+            port: "".to_string(),
+            user: "".to_string(),
+            password: "".to_string(),
+            name: "".to_string(),
+        };
+        config.is_local = true;
+        config
+    }
+
+    // Test
+
     #[tokio::test]
     async fn test_refresh_success() {
         use sea_orm::Database;
@@ -76,10 +98,68 @@ mod tests {
             "Expected connection to fail with invalid URL"
         );
 
-        // Opcional: si quieres probar que refresh no se ejecuta
         if let Ok(db) = result {
             let refresh_result = MockedMigrations::refresh(&db).await;
             assert!(refresh_result.is_err(), "Expected refresh to fail");
         }
+    }
+
+    #[test]
+    fn test_migrations_success() {
+        let migrations = SSIAuthConsumerMigrations::migrations();
+
+        assert!(!migrations.is_empty(), "Expected at least one migration");
+    }
+
+    #[tokio::test]
+    async fn test_run_environment_scenario_false_with_test_mode() {
+        env::set_var("TEST_MODE", "1");
+        let mut config = valid_config();
+        config.is_local = false;
+        let result = SSIAuthConsumerApplication::run(&config).await;
+        env::remove_var("TEST_MODE");
+        assert!(result.is_ok(), "Expected Ok(()) when TEST_MODE is active");
+    }
+
+    #[tokio::test]
+    async fn test_run_success_simulated() {
+        use sea_orm::Database;
+        use sea_orm::DbConn;
+
+        // Use the valid URL for in-memory SQLite.
+        let db_url = "sqlite::memory:";
+
+        // Connect to database
+        let db: DbConn = Database::connect(db_url)
+            .await
+            .expect("Database can't connect");
+
+        // Run the simulated migrations
+        let result = MockedMigrations::refresh(&db).await;
+
+        // We verify that they have been successful
+        assert!(result.is_ok(), "Expected refresh() to succeed");
+    }
+
+    #[tokio::test]
+    async fn test_create_ssi_provider_router_should_panic_on_invalid_db() {
+        let mut config = ApplicationConsumerConfig::default();
+        config.database_config = DatabaseConfig {
+            db_type: DbType::Postgres,
+            url: "invalid_host".to_string(),
+            port: "5432".to_string(),
+            user: "user".to_string(),
+            password: "pass".to_string(),
+            name: "db".to_string(),
+        };
+
+        let result = AssertUnwindSafe(create_ssi_consumer_router(config))
+            .catch_unwind()
+            .await;
+
+        assert!(
+            result.is_err(),
+            "Expected panic due to DB connection failure, but function completed successfully"
+        );
     }
 }

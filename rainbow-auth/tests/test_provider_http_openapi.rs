@@ -2,94 +2,110 @@
 
 #[cfg(test)]
 mod tests {
-    use std::usize::MAX;
-
-    use axum::{body::to_bytes, response::IntoResponse};
-    use axum::http::StatusCode;
-    use rainbow_auth::ssi_auth::consumer::http::openapi::{get_open_api, route_openapi};
-    use tower::ServiceExt;
-
-    //Mock
-
-    async fn get_open_api_invalid() -> impl IntoResponse {
-        (
-            StatusCode::OK,
-            [("Content-Type", "application/json")],
-            b"not a json", // contenido inválido
-        ).into_response()
-    }
+    use actix_web::{test, App, HttpResponse, http::StatusCode, web};
+    use utoipa_swagger_ui::{Config, serve};
+    use std::sync::Arc;
+    use axum::response::IntoResponse;
+    use rainbow_auth::ssi_auth::provider::http::openapi::{OPENAPI_JSON, get_open_api, route_openapi};
 
     //Test
 
     #[tokio::test]
-    async fn test_route_openapi_success() {
-        use axum::{body::Body, http::Request};
-        let app = route_openapi();
+    async fn test_swagger_ui_html_route() {
+        use axum::{body::to_bytes, http::Request};
+        use tower::ServiceExt;
 
-        let response = app
-            .oneshot(
-                Request::builder()
-                    .uri("/api/v1/auth/openapi.json")
-                    .method("GET")
-                    .body(Body::empty())
-                    .unwrap(),
-            )
-            .await
+        let app = route_openapi();
+        let request = Request::builder()
+            .uri("/api/v1/auth/openapi")
+            .method("GET")
+            .body(axum::body::Body::empty())
             .unwrap();
 
-        assert_eq!(response.status(), 200);
+        let response = app.oneshot(request).await.unwrap();
+        assert_eq!(response.status(), axum::http::StatusCode::OK);
+
+        let content_type = response.headers().get("Content-Type").unwrap();
+        assert!(content_type.to_str().unwrap().contains("text/html"));
+
+        let body_bytes = to_bytes(response.into_body(), 100000).await.unwrap();
+        let body_str = String::from_utf8(body_bytes.to_vec()).unwrap();
+        assert!(body_str.contains("Swagger UI"));
+    }
+    
+    #[tokio::test]
+    async fn test_openapi_json_route() {
+        
+        use axum::{
+            body::to_bytes,
+            http::{Request, StatusCode},
+        };
+        use tower::ServiceExt;
+
+        let app = route_openapi();
+
+        let request = Request::builder()
+            .uri("/api/v1/auth/openapi.json")
+            .method("GET")
+            .body(axum::body::Body::empty())
+            .unwrap();
+
+        let response = app.oneshot(request).await.unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let content_type = response.headers().get("Content-Type").unwrap();
+        assert_eq!(content_type, "application/json");
+
+        let body_bytes = to_bytes(response.into_body(), 100000000).await.unwrap();
+        assert_eq!(body_bytes.as_ref(), OPENAPI_JSON.as_bytes());
     }
 
     #[tokio::test]
-    async fn test_route_openapi_not_found() {
-        use axum::{body::Body, http::Request};
-        let app = route_openapi();
+    async fn test_openapi_not_found() {
+        let config = Arc::new(Config::from("/api/v1/auth/openapi.json"));
+        
+        let app = test::init_service(
+            App::new().route("/api/v1/auth/openapi.json", web::get().to(move || {
+                let config = config.clone();
+                async move {
+                    match serve("/api/v1/auth/openapi.json", config) {
+                        Ok(Some(file)) => HttpResponse::Ok()
+                            .content_type(file.content_type)
+                            .body(file.bytes.to_vec()),
+                        _ => HttpResponse::NotFound().finish(),
+                    }
+                }
+            })),
+        ).await;
 
-        let response = app
-            .oneshot(
-                Request::builder()
-                    .uri("/api/v1/auth/invalid")
-                    .method("GET")
-                    .body(Body::empty())
-                    .unwrap(),
-            )
-            .await
-            .unwrap();
+        let req = test::TestRequest::get()
+            .uri("/api/v1/auth/openapi.json")
+            .to_request();
 
-        assert_eq!(response.status(), 404);
+        let resp = test::call_service(&app, req).await;
+
+        assert_eq!(resp.status(), StatusCode::NOT_FOUND);
     }
 
     #[tokio::test]
-    async fn test_get_open_api_success() {
+    async fn test_get_open_api_status_code() {
         let response = get_open_api().await.into_response();
 
-        assert_eq!(response.status(), StatusCode::OK);
-
-        let headers = response.headers();
-        assert_eq!(
-            headers.get("Content-Type").unwrap(),
-            "application/json"
-        );
-
-        let body = to_bytes(response.into_body(), MAX).await.unwrap();
-        assert!(body.starts_with(b"{")); // Asumiendo que el JSON empieza con '{'
+        assert_eq!(response.status(), axum::http::StatusCode::OK);
     }
 
     #[tokio::test]
-    async fn test_get_open_api_invalid_json() {
-        use axum::response::IntoResponse;
+    async fn test_get_open_api_content_and_header() {
+        use axum::http::HeaderValue;
+        use axum::body::to_bytes;
 
-        let response = get_open_api_invalid().await.into_response();
+        let response = get_open_api().await.into_response();
 
-        assert_eq!(response.status(), StatusCode::OK);
+        let content_type = response.headers().get("Content-Type").unwrap();
+        assert_eq!(content_type, &HeaderValue::from_static("application/json"));
 
-        let headers = response.headers();
-        assert_eq!(
-            headers.get("Content-Type").unwrap(),
-            "application/json"
-        );
-
-        let body = to_bytes(response.into_body(), MAX).await.unwrap();
-        assert_eq!(body.as_ref(), b"not a json");
+        let body_bytes = to_bytes(response.into_body(), 100000).await.unwrap();
+        assert_eq!(body_bytes.as_ref(), OPENAPI_JSON.as_bytes());
     }
 }

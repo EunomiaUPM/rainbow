@@ -2,6 +2,14 @@
 
 #[cfg(test)]
 mod tests {
+    use std::env;
+    use std::panic::AssertUnwindSafe;
+
+    use futures::FutureExt;
+    use rainbow_auth::ssi_auth::consumer::setup::db_migrations::SSIAuthConsumerMigrations;
+    use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
+    use rainbow_common::config::database::DbType;
+    use rainbow_common::config::global_config::DatabaseConfig;
     use sea_orm::{Database, DbErr, sea_query};
     use sea_orm_migration::{MigratorTrait, SchemaManager, async_trait};
     use sea_orm::{DbConn};
@@ -145,5 +153,114 @@ mod tests {
             result.is_err(),
             "Expected connection to fail with invalid URL"
         );
+    }
+
+    fn sqlite_config() -> ApplicationConsumerConfig {
+        let mut config = ApplicationConsumerConfig::default();
+        config.database_config = DatabaseConfig {
+            db_type: DbType::Sqlite,
+            url: "/tmp/test_migrations.db".to_string(),
+            port: "".to_string(),
+            user: "".to_string(),
+            password: "".to_string(),
+            name: "".to_string(),
+        };
+        config
+    }
+
+    // Test
+
+    #[test]
+    fn test_migrations_success() {
+        let migrations = SSIAuthConsumerMigrations::migrations();
+
+        assert!(!migrations.is_empty(), "Expected at least one migration");
+    }
+
+    #[tokio::test]
+    async fn test_migration_run_fails_with_invalid_db() {
+        let mut config = ApplicationConsumerConfig::default();
+        config.database_config = DatabaseConfig {
+            db_type: DbType::Postgres,
+            url: "invalid_host".to_string(),
+            port: "5432".to_string(),
+            user: "user".to_string(),
+            password: "pass".to_string(),
+            name: "db".to_string(),
+        };
+
+        let result = AssertUnwindSafe(SSIAuthConsumerMigrations::run(&config))
+            .catch_unwind()
+            .await;
+
+        assert!(
+            result.is_err(),
+            "Expected panic due to DB connection failure, but function completed successfully"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_run_with_test_mode_should_skip_db() {
+        env::set_var("TEST_MODE", "1");
+        let config = sqlite_config();
+        let result = SSIAuthConsumerMigrations::run(&config).await;
+        env::remove_var("TEST_MODE");
+        assert!(result.is_ok(), "Expected Ok(()) when TEST_MODE is active");
+    }
+
+    #[tokio::test]
+    async fn test_run_with_mysql_should_fail() {
+        let mut config = ApplicationConsumerConfig::default();
+        config.database_config = DatabaseConfig {
+            db_type: DbType::Mysql,
+            url: "invalid_mysql".to_string(),
+            port: "3306".to_string(),
+            user: "user".to_string(),
+            password: "pass".to_string(),
+            name: "db".to_string(),
+        };
+        let result = std::panic::AssertUnwindSafe(SSIAuthConsumerMigrations::run(&config))
+            .catch_unwind()
+            .await;
+        assert!(result.is_err(), "Expected panic for invalid MySQL config");
+    }
+
+    #[tokio::test]
+    async fn test_run_with_postgres_should_fail() {
+        let mut config = ApplicationConsumerConfig::default();
+        config.database_config = DatabaseConfig {
+            db_type: DbType::Postgres,
+            url: "invalid_pg".to_string(),
+            port: "5432".to_string(),
+            user: "user".to_string(),
+            password: "pass".to_string(),
+            name: "db".to_string(),
+        };
+        let result = std::panic::AssertUnwindSafe(SSIAuthConsumerMigrations::run(&config))
+            .catch_unwind()
+            .await;
+        assert!(result.is_err(), "Expected panic for invalid Postgres config");
+    }
+
+    #[tokio::test]
+    async fn test_up_and_down_should_succeed() {
+        let db = Database::connect("sqlite::memory:")
+            .await
+            .expect("Failed to connect to in-memory SQLite");
+        let manager = SchemaManager::new(&db);
+        let migration = TestMigration;
+        assert!(migration.up(&manager).await.is_ok(), "Expected up() to succeed");
+        assert!(migration.down(&manager).await.is_ok(), "Expected down() to succeed");
+    }
+
+    #[test]
+    fn test_empty_migrations_vector() {
+        struct EmptyMigrator;
+        impl MigratorTrait for EmptyMigrator {
+            fn migrations() -> Vec<Box<dyn sea_orm_migration::MigrationTrait>> {
+                vec![]
+            }
+        }
+        assert!(EmptyMigrator::migrations().is_empty(), "Expected empty migrations");
     }
 }

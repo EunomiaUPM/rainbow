@@ -55,7 +55,12 @@ impl PartialEq for WhatEntity {
 
 impl fmt::Debug for WhatEntity {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self)
+        
+        match self {
+            WhatEntity::Provider => write!(f, "Provider"),
+            WhatEntity::Authority => write!(f, "Authority"),
+        }
+
     }
 }
 
