@@ -14,6 +14,8 @@ use tower_http::trace::{DefaultOnResponse, TraceLayer};
 use tracing::{info, Level, Span};
 use uuid::Uuid;
 use rainbow_common::errors::CommonErrors;
+use crate::entities::transfer_messages::transfer_messages::TransferAgentMessagesService;
+use crate::http::transfer_messages::TransferAgentMessagesRouter;
 
 pub struct TransferHttpWorker {}
 impl TransferHttpWorker {
@@ -48,11 +50,16 @@ impl TransferHttpWorker {
         let config = Arc::new(config.clone());
         let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
         let transfer_repo = Arc::new(TransferAgentRepoForSql::create_repo(db_connection.clone()));
+
+        let messages_controller_service = Arc::new(TransferAgentMessagesService::new(transfer_repo.clone()));
+        let messages_router = TransferAgentMessagesRouter::new(messages_controller_service, config.clone());
         let entities_controller_service = Arc::new(TransferAgentProcessesService::new(transfer_repo.clone()));
         let entities_router = TransferAgentProcessesRouter::new(entities_controller_service, config.clone());
 
         let router_str = format!("/api/{}/transfer-agent", config.api_version);
-        let router = Router::new().nest(router_str.as_str(), entities_router.router())
+        let router = Router::new()
+            .nest(format!("{}/transfer-messages", router_str.as_str()).as_str(), messages_router.router())
+            .nest(format!("{}/transfer-processes", router_str.as_str()).as_str(), entities_router.router())
             .fallback(Self::handler_404)
             .layer(
                 TraceLayer::new_for_http()

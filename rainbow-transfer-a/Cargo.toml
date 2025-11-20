@@ -39,4 +39,12 @@ url = { workspace = true }
 async-trait = "0.1.89"
 tokio-util = "0.7.17"
 uuid = "1.18.1"
-tower-http = { version = "0.5", features = ["trace"] }
+tower-http = { version = "0.6.6", features = ["trace"] }
+tonic = "0.14.2"
+prost = "0.14.1"
+tonic-prost = "0.14.2"
+prost-types = "0.14.1"
+tonic-reflection = "0.14.2"
+
+[build-dependencies]
+tonic-prost-build = "0.14.2"

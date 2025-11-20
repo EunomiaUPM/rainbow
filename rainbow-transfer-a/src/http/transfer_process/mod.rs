@@ -1,23 +1,17 @@
-use std::str::FromStr;
 use crate::entities::transfer_process::{EditTransferProcessDto, NewTransferProcessDto, TransferAgentProcessesTrait};
 use crate::errors::error_adapter::CustomToResponse;
+use crate::http::common::{extract_payload, parse_urn};
 use axum::extract::rejection::JsonRejection;
-use axum::extract::{FromRef, Path, Query, Request, State};
+use axum::extract::{FromRef, Path, Query, State};
 use axum::http::StatusCode;
-use axum::response::{IntoResponse, Response};
-use axum::routing::{delete, get, post, put};
+use axum::response::IntoResponse;
+use axum::routing::{get, post};
 use axum::{Json, Router};
 use rainbow_common::batch_requests::BatchRequests;
 use rainbow_common::config::provider_config::ApplicationProviderConfig;
-use rainbow_common::errors::helpers::BadFormat;
-use rainbow_common::errors::{CommonErrors, ErrorLog};
-use rainbow_common::utils::get_urn_from_string;
 use serde::Deserialize;
+use std::str::FromStr;
 use std::sync::Arc;
-use tower_http::trace::{DefaultOnResponse, TraceLayer};
-use tracing::{error, info, Level, Span};
-use urn::Urn;
-use uuid::Uuid;
 
 #[derive(Clone)]
 pub struct TransferAgentProcessesRouter {
@@ -51,43 +45,21 @@ impl TransferAgentProcessesRouter {
     pub fn router(self) -> Router {
         Router::new()
             .route(
-                "/transfer-processes",
+                "/",
                 get(Self::handle_get_all_processes).post(Self::handle_create_process),
             )
-            .route("/transfer-processes/batch", post(Self::handle_get_batch_processes))
+            .route("/batch", post(Self::handle_get_batch_processes))
             .route(
-                "/transfer-processes/:id",
+                "/:id",
                 get(Self::handle_get_process_by_id)
                     .put(Self::handle_put_process)
                     .delete(Self::handle_delete_process),
             )
             .route(
-                "/transfer-processes/:id/key/:key_id",
+                "/:id/key/:key_id",
                 get(Self::handle_get_process_by_key_id),
             )
             .with_state(self)
-    }
-
-    fn parse_urn(id: &str) -> Result<Urn, Response> {
-        Urn::from_str(id).map_err(|err| {
-            let e = CommonErrors::format_new(
-                BadFormat::Received,
-                &format!("Urn malformed: {}. Error: {}", id, err)
-            );
-            error!("{}", e.log());
-            e.into_response()
-        })
-    }
-
-    fn extract_payload<T>(input: Result<Json<T>, JsonRejection>) -> Result<T, Response> {
-        match input {
-            Ok(Json(data)) => Ok(data),
-            Err(err) => {
-                let e = CommonErrors::format_new(BadFormat::Received, &format!("{}", err.body_text()));
-                error!("{}", e.log());
-                Err(e.into_response())
-            }
-        }
     }
 
     async fn handle_get_all_processes(
@@ -104,7 +76,7 @@ impl TransferAgentProcessesRouter {
         State(state): State<TransferAgentProcessesRouter>,
         input: Result<Json<NewTransferProcessDto>, JsonRejection>,
     ) -> impl IntoResponse {
-        let input = match Self::extract_payload(input) {
+        let input = match extract_payload(input) {
             Ok(v) => v,
             Err(e) => return e,
         };
@@ -118,7 +90,7 @@ impl TransferAgentProcessesRouter {
         State(state): State<TransferAgentProcessesRouter>,
         input: Result<Json<BatchRequests>, JsonRejection>,
     ) -> impl IntoResponse {
-        let input = match Self::extract_payload(input) {
+        let input = match extract_payload(input) {
             Ok(v) => v,
             Err(e) => return e,
         };
@@ -132,7 +104,7 @@ impl TransferAgentProcessesRouter {
         State(state): State<TransferAgentProcessesRouter>,
         Path(id): Path<String>,
     ) -> impl IntoResponse {
-        let id_urn = match Self::parse_urn(&id) {
+        let id_urn = match parse_urn(&id) {
             Ok(urn) => urn,
             Err(resp) => return resp,
         };
@@ -147,11 +119,11 @@ impl TransferAgentProcessesRouter {
         Path(id): Path<String>,
         input: Result<Json<EditTransferProcessDto>, JsonRejection>,
     ) -> impl IntoResponse {
-        let id_urn = match Self::parse_urn(&id) {
+        let id_urn = match parse_urn(&id) {
             Ok(urn) => urn,
             Err(resp) => return resp,
         };
-        let input = match Self::extract_payload(input) {
+        let input = match extract_payload(input) {
             Ok(v) => v,
             Err(e) => return e,
         };
@@ -165,7 +137,7 @@ impl TransferAgentProcessesRouter {
         State(state): State<TransferAgentProcessesRouter>,
         Path(id): Path<String>,
     ) -> impl IntoResponse {
-        let id_urn = match Self::parse_urn(&id) {
+        let id_urn = match parse_urn(&id) {
             Ok(urn) => urn,
             Err(resp) => return resp,
         };
@@ -179,7 +151,7 @@ impl TransferAgentProcessesRouter {
         State(state): State<TransferAgentProcessesRouter>,
         Path((id, key_id)): Path<(String, String)>,
     ) -> impl IntoResponse {
-        let id_urn = match Self::parse_urn(&id) {
+        let id_urn = match parse_urn(&id) {
             Ok(urn) => urn,
             Err(resp) => return resp,
         };
