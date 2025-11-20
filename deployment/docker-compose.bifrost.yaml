@@ -1,0 +1,14 @@
+version: "3.5"
+services:
+
+  ds_bifrost_transfer:
+    # platform: linux/amd64
+    container_name: "ds_bifrost_transfer"
+    image: "postgres"
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: ds_bifrost_transfer
+      POSTGRES_USER: ds_bifrost_transfer
+      POSTGRES_DB: ds_bifrost_transfer
+    ports:
+      - "1600:5432"

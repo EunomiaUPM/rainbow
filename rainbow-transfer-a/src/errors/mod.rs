@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
+ *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
  *  *
  *  * This program is free software: you can redistribute it and/or modify
  *  * it under the terms of the GNU General Public License as published by
@@ -17,20 +17,5 @@
  *
  */
 
-#![allow(unused_imports)]
-#![allow(dead_code)]
-#![allow(unused_variables)]
-#![allow(unused_mut)]
-#![allow(unused_imports)]
-#![allow(unused_must_use)]
-
-pub mod catalog;
-pub mod contracts_provider;
-pub mod contracts_consumer;
-pub mod dataplane;
-pub mod transfer_consumer;
-pub mod transfer_provider;
-pub mod events;
-pub mod datahub;
-pub mod common;
-pub mod auth;
+pub mod error_adapter;
+pub mod transfer_errors;
