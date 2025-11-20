@@ -18,16 +18,16 @@
  */
 use super::super::GateKeeperTrait;
 use super::config::{GnapGateKeeperConfig, GnapGateKeeperConfigTrait};
+use crate::ssi::common::data::entities::{mates, token_requirements};
 use crate::ssi::common::errors::AuthErrors;
 use crate::ssi::common::types::gnap::{AccessToken, GrantRequest, GrantResponse, RefBody};
 use crate::ssi::common::utils::trim_4_base;
+use crate::ssi::provider::data::entities::{recv_interaction, recv_request, recv_verification};
 use crate::ssi::provider::utils::create_opaque_token;
 use anyhow::bail;
 use rainbow_common::errors::helpers::BadFormat;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::utils::get_from_opt;
-use rainbow_db::auth::common::entities::{mates, token_requirements};
-use rainbow_db::auth::provider::entities::{recv_interaction, recv_request, recv_verification};
 use tracing::{error, info};
 
 pub struct GnapGateKeeperService {
@@ -81,7 +81,11 @@ impl GateKeeperTrait for GnapGateKeeperService {
 
         let req_model = recv_request::NewModel { id: id.clone(), consumer_slug: class_id };
 
-        let host = format!("{}{}/gate", self.config.get_host(), self.config.get_api_path());
+        let host = format!(
+            "{}{}/gate",
+            self.config.get_host(),
+            self.config.get_api_path()
+        );
 
         let grant_endpoint = format!("{}/access", &host);
         let continue_endpoint = format!("{}/continue", &host);

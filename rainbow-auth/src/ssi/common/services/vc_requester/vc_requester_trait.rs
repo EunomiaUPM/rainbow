@@ -18,7 +18,7 @@
  */
 use crate::ssi::common::types::entities::{ReachAuthority, ReachMethod};
 use axum::async_trait;
-use rainbow_db::auth::common::entities::{mates, req_interaction, req_vc, req_verification};
+use crate::ssi::common::data::entities::{mates, req_interaction, req_vc, req_verification};
 use reqwest::Response;
 
 #[async_trait]

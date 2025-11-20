@@ -23,16 +23,16 @@ use crate::ssi::common::services::client::ClientServiceTrait;
 use crate::ssi::common::types::enums::request::Body;
 use crate::ssi::common::types::gnap::{CallbackBody, RefBody};
 use anyhow::bail;
+use axum::async_trait;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
 use rainbow_common::errors::ErrorLog;
 use rainbow_common::utils::get_from_opt;
-use rainbow_db::auth::common::entities::req_interaction;
+use crate::ssi::common::data::entities::req_interaction;
 use reqwest::header::{HeaderMap, ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 use reqwest::Response;
 use sha2::{Digest, Sha256};
 use std::sync::Arc;
-use axum::async_trait;
 use tracing::{error, info};
 
 pub struct BasicCallbackService {
@@ -93,5 +93,4 @@ impl CallbackTrait for BasicCallbackService {
 
         self.client.post(&url, Some(headers), Body::Json(serde_json::to_value(body)?)).await
     }
-
 }

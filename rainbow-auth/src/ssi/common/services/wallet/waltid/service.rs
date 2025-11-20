@@ -35,7 +35,7 @@ use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
 use rainbow_common::errors::helpers::{BadFormat, MissingAction};
 use rainbow_common::errors::{CommonErrors, ErrorLog};
-use rainbow_db::auth::common::entities::mates;
+use crate::ssi::common::data::entities::mates;
 use serde_json::Value;
 use std::sync::Arc;
 use tokio::sync::Mutex;

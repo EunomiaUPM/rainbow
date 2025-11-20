@@ -17,10 +17,10 @@
  *
  */
 
+use crate::ssi::common::data::entities::{mates, req_interaction, req_verification, token_requirements};
+use crate::ssi::consumer::data::entities::req_request;
 use crate::ssi::consumer::types::ReachProvider;
 use axum::async_trait;
-use rainbow_db::auth::common::entities::{mates, req_interaction, req_verification, token_requirements};
-use rainbow_db::auth::consumer::entities::req_request;
 use reqwest::Response;
 
 #[async_trait]

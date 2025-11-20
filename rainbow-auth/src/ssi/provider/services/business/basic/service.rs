@@ -19,13 +19,13 @@
 
 use super::super::BusinessTrait;
 use super::config::{BusinessConfig, BusinessConfigTrait};
+use crate::ssi::common::data::entities::mates;
+use crate::ssi::provider::data::entities::{business_mates, recv_request, recv_verification};
 use crate::ssi::provider::types::business::BusinessResponse;
 use crate::ssi::provider::utils::create_opaque_token;
 use chrono::Utc;
 use rainbow_common::auth::business::RainbowBusinessLoginRequest;
 use rainbow_common::utils::get_from_opt;
-use rainbow_db::auth::common::entities::mates;
-use rainbow_db::auth::provider::entities::{business_mates, recv_request, recv_verification};
 use rand::distributions::Alphanumeric;
 use rand::Rng;
 use uuid::Uuid;

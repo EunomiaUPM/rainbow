@@ -18,8 +18,8 @@
  */
 use std::sync::Arc;
 use axum::async_trait;
-use rainbow_db::auth::common::entities::mates;
-use rainbow_db::auth::consumer::factory::AuthConsumerRepoTrait;
+use crate::ssi::common::data::entities::mates;
+use crate::ssi::consumer::services::repo::AuthConsumerRepoTrait;
 use crate::ssi::common::services::callback::CallbackTrait;
 use crate::ssi::common::types::gnap::CallbackBody;
 use crate::ssi::consumer::services::onboarder::OnboarderTrait;

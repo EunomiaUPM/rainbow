@@ -18,7 +18,7 @@
  */
 
 use crate::ssi::consumer::config::{AuthConsumerConfig, AuthConsumerConfigTrait};
-use rainbow_db::auth::consumer::migrations::get_auth_consumer_migrations;
+use crate::ssi::consumer::data::migrations::get_auth_consumer_migrations;
 use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
 
