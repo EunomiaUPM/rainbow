@@ -29,11 +29,11 @@ use crate::ssi::provider::services::business::basic::config::BusinessConfig;
 use crate::ssi::provider::services::business::basic::BasicBusinessService;
 use crate::ssi::provider::services::gatekeeper::gnap::config::GnapGateKeeperConfig;
 use crate::ssi::provider::services::gatekeeper::gnap::GnapGateKeeperService;
+use crate::ssi::provider::services::repo::postgres::AuthProviderRepoForSql;
 use crate::ssi::provider::services::verifier::basic_v1::config::VerifierConfig;
 use crate::ssi::provider::services::verifier::basic_v1::VerifierService;
 use axum::{serve, Router};
 use rainbow_common::config::provider_config::ApplicationProviderConfig;
-use rainbow_db::auth::provider::factory::factory::AuthProviderRepoForSql;
 use sea_orm::Database;
 use std::sync::Arc;
 use tokio::net::TcpListener;
@@ -97,7 +97,7 @@ impl AuthProviderApplication {
 
         Ok(())
     }
-    pub async fn create_router_4_core(config: ApplicationProviderConfig) -> Router {
+    pub async fn create_router_4_monolith(config: ApplicationProviderConfig) -> Router {
         let config = AuthProviderConfig::from(config);
         AuthProviderApplication::create_router(&config).await
     }

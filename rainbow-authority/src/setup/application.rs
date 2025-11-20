@@ -23,7 +23,7 @@ use crate::http::RainbowAuthorityRouter;
 use crate::services::client::basic::BasicClientService;
 use crate::services::gatekeeper::gnap::{config::GnapConfig, GnapService};
 use crate::services::issuer::basic_v1::{config::BasicIssuerConfig, BasicIssuerService};
-use crate::services::repo::sql::RepoForSql;
+use crate::services::repo::postgress::RepoForSql;
 use crate::services::verifier::basic_v1::{config::BasicVerifierConfig, BasicVerifierService};
 use crate::services::wallet::waltid::{config::WaltIdConfig, WaltIdService};
 use axum::{serve, Router};

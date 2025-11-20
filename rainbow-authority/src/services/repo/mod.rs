@@ -18,6 +18,6 @@
  */
 
 mod repo_trait;
-pub mod sql;
+pub mod postgress;
 mod subtraits;
 pub use repo_trait::RepoTrait;

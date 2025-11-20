@@ -16,13 +16,25 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use rainbow_db::auth::common::entities::{mates, token_requirements};
-use rainbow_db::auth::provider::entities::{recv_interaction, recv_request, recv_verification};
+use crate::ssi::common::data::entities::{mates, token_requirements};
 use crate::ssi::common::types::gnap::{AccessToken, GrantRequest, GrantResponse, RefBody};
+use crate::ssi::provider::data::entities::{recv_interaction, recv_request, recv_verification};
 
 pub trait GateKeeperTrait: Send + Sync + 'static {
-    fn start(&self, payload: &GrantRequest) -> anyhow::Result<(recv_request::NewModel, recv_interaction::NewModel, token_requirements::Model)>;
+    fn start(
+        &self,
+        payload: &GrantRequest,
+    ) -> anyhow::Result<(
+        recv_request::NewModel,
+        recv_interaction::NewModel,
+        token_requirements::Model,
+    )>;
     fn respond_req(&self, int_model: &recv_interaction::Model, uri: &str) -> GrantResponse;
     fn validate_cont_req(&self, model: &recv_interaction::Model, payload: &RefBody, token: &str) -> anyhow::Result<()>;
-    fn continue_req(&self, req_model: &mut recv_request::Model, int_model: &recv_interaction::Model, ver_model: &recv_verification::Model) -> (mates::NewModel, AccessToken);
+    fn continue_req(
+        &self,
+        req_model: &mut recv_request::Model,
+        int_model: &recv_interaction::Model,
+        ver_model: &recv_verification::Model,
+    ) -> (mates::NewModel, AccessToken);
 }

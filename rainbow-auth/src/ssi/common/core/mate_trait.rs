@@ -20,8 +20,8 @@ use std::sync::Arc;
 use axum::async_trait;
 use rainbow_common::batch_requests::BatchRequests;
 use rainbow_common::mates::mates::VerifyTokenRequest;
-use rainbow_db::auth::common::traits::MatesTrait;
-use rainbow_db::auth::common::entities::mates::Model;
+use crate::ssi::common::services::repo::subtraits::MatesTrait;
+use crate::ssi::common::data::entities::mates::Model;
 
 #[async_trait]
 pub trait CoreMateTrait: Send + Sync + 'static {

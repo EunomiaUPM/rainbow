@@ -21,7 +21,7 @@ use rand::distributions::Alphanumeric;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use rainbow_db::auth::common::entities::req_interaction;
+use crate::ssi::common::data::entities::req_interaction;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GrantRequest {

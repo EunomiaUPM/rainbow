@@ -16,15 +16,14 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::ssi::common::services::vc_requester::VcRequesterTrait;
-use rainbow_db::auth::common::entities::req_vc::Model;
-use crate::ssi::common::types::entities::{ReachAuthority, ReachMethod};
-use axum::async_trait;
-use rainbow_db::auth::common::traits::{MatesTrait, ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait};
-use std::sync::Arc;
-use rainbow_db::auth::common::entities::mates;
 use crate::ssi::common::services::callback::CallbackTrait;
+use crate::ssi::common::services::vc_requester::VcRequesterTrait;
+use crate::ssi::common::types::entities::{ReachAuthority, ReachMethod};
 use crate::ssi::common::types::gnap::CallbackBody;
+use axum::async_trait;
+use crate::ssi::common::data::entities::{mates, req_vc};
+use crate::ssi::common::services::repo::subtraits::{MatesTrait, ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait};
+use std::sync::Arc;
 
 #[async_trait]
 pub trait CoreVcRequesterTrait: Send + Sync + 'static {
@@ -50,12 +49,12 @@ pub trait CoreVcRequesterTrait: Send + Sync + 'static {
             None => Ok(None),
         }
     }
-    
-    async fn get_all(&self) -> anyhow::Result<Vec<Model>> {
+
+    async fn get_all(&self) -> anyhow::Result<Vec<req_vc::Model>> {
         self.vc_req_repo().get_all(None, None).await
     }
-    
-    async fn get_by_id(&self, id: String) -> anyhow::Result<Model> {
+
+    async fn get_by_id(&self, id: String) -> anyhow::Result<req_vc::Model> {
         self.vc_req_repo().get_by_id(&id).await
     }
     async fn continue_req(&self, id: String, payload: CallbackBody) -> anyhow::Result<mates::Model> {

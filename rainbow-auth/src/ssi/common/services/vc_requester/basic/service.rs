@@ -28,7 +28,7 @@ use anyhow::bail;
 use axum::async_trait;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::utils::get_from_opt;
-use rainbow_db::auth::common::entities::{mates, req_interaction, req_vc, req_verification};
+use crate::ssi::common::data::entities::{mates, req_interaction, req_vc, req_verification};
 use reqwest::header::{HeaderMap, ACCEPT, CONTENT_TYPE};
 use reqwest::Response;
 use std::sync::Arc;

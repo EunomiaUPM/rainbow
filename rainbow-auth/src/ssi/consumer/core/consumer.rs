@@ -19,13 +19,15 @@
 use crate::ssi::common::core::{CoreMateTrait, CoreVcRequesterTrait, CoreWalletTrait};
 use crate::ssi::common::services::callback::CallbackTrait;
 use crate::ssi::common::services::client::ClientServiceTrait;
+use crate::ssi::common::services::repo::subtraits::{
+    MatesTrait, ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait,
+};
 use crate::ssi::common::services::vc_requester::VcRequesterTrait;
 use crate::ssi::common::services::wallet::WalletServiceTrait;
 use crate::ssi::consumer::config::AuthConsumerConfigTrait;
 use crate::ssi::consumer::core::traits::{CoreConsumerTrait, CoreOnboarderTrait};
 use crate::ssi::consumer::services::onboarder::OnboarderTrait;
-use rainbow_db::auth::common::traits::{MatesTrait, ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait};
-use rainbow_db::auth::consumer::factory::AuthConsumerRepoTrait;
+use crate::ssi::consumer::services::repo::AuthConsumerRepoTrait;
 use std::sync::Arc;
 
 pub struct AuthConsumer {

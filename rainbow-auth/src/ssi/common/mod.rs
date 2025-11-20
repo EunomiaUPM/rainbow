@@ -22,5 +22,6 @@ pub mod types;
 pub mod errors;
 pub mod http;
 pub mod core;
-pub(crate) mod config;
-pub(crate) mod utils;
+pub mod config;
+pub mod utils;
+pub mod data;

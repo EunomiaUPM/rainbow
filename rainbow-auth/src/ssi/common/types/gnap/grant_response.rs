@@ -18,7 +18,7 @@
  */
 
 use super::access_token::AccessToken;
-use rainbow_db::auth::provider::entities::recv_interaction;
+use crate::ssi::provider::data::entities::recv_interaction;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 

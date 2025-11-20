@@ -19,6 +19,9 @@
 use crate::ssi::common::core::{CoreMateTrait, CoreVcRequesterTrait, CoreWalletTrait};
 use crate::ssi::common::services::callback::CallbackTrait;
 use crate::ssi::common::services::client::ClientServiceTrait;
+use crate::ssi::common::services::repo::subtraits::{
+    MatesTrait, ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait,
+};
 use crate::ssi::common::services::vc_requester::VcRequesterTrait;
 use crate::ssi::common::services::wallet::WalletServiceTrait;
 use crate::ssi::provider::config::AuthProviderConfigTrait;
@@ -27,9 +30,8 @@ use crate::ssi::provider::core::traits::{
 };
 use crate::ssi::provider::services::business::BusinessTrait;
 use crate::ssi::provider::services::gatekeeper::GateKeeperTrait;
+use crate::ssi::provider::services::repo::AuthProviderRepoTrait;
 use crate::ssi::provider::services::verifier::VerifierTrait;
-use rainbow_db::auth::common::traits::{MatesTrait, ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait};
-use rainbow_db::auth::provider::factory::factory_trait::AuthProviderRepoTrait;
 use std::sync::Arc;
 
 pub struct AuthProvider {

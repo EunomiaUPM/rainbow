@@ -18,7 +18,7 @@
  */
 
 use crate::ssi::provider::config::{AuthProviderConfig, AuthProviderConfigTrait};
-use rainbow_db::auth::provider::migrations::get_auth_provider_migrations;
+use crate::ssi::provider::data::migrations::get_auth_provider_migrations;
 use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
 

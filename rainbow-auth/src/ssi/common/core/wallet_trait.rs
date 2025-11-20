@@ -16,11 +16,11 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use crate::ssi::common::data::entities::mates;
+use crate::ssi::common::services::repo::subtraits::MatesTrait;
 use crate::ssi::common::services::wallet::WalletServiceTrait;
 use crate::ssi::common::types::wallet::{DidsInfo, KeyDefinition, OidcUri};
 use axum::async_trait;
-use rainbow_db::auth::common::entities::mates;
-use rainbow_db::auth::common::traits::MatesTrait;
 use serde_json::Value;
 use std::sync::Arc;
 

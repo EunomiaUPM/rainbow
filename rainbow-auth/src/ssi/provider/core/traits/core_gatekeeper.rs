@@ -16,12 +16,13 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::ssi::common::types::gnap::{AccessToken, GrantRequest, GrantResponse, RefBody};
 use crate::ssi::provider::services::gatekeeper::GateKeeperTrait;
+use crate::ssi::provider::services::repo::AuthProviderRepoTrait;
 use crate::ssi::provider::services::verifier::VerifierTrait;
-use rainbow_db::auth::provider::factory::factory_trait::AuthProviderRepoTrait;
-use std::sync::Arc;
 use axum::async_trait;
+use std::sync::Arc;
 
 #[async_trait]
 pub trait CoreGateKeeperTrait: Send + Sync + 'static {

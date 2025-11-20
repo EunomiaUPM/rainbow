@@ -17,6 +17,7 @@
  *
  */
 
+use crate::ssi::common::services::callback::basic::BasicCallbackService;
 use crate::ssi::common::services::client::basic::BasicClientService;
 use crate::ssi::common::services::vc_requester::basic::config::VCRequesterConfig;
 use crate::ssi::common::services::vc_requester::basic::VCReqService;
@@ -27,14 +28,13 @@ use crate::ssi::consumer::core::AuthConsumer;
 use crate::ssi::consumer::http::AuthConsumerRouter;
 use crate::ssi::consumer::services::onboarder::gnap::config::GnapOnboarderConfig;
 use crate::ssi::consumer::services::onboarder::gnap::GnapOnboarderService;
+use crate::ssi::consumer::services::repo::postgres::AuthConsumerRepoForSql;
 use axum::{serve, Router};
 use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
-use rainbow_db::auth::consumer::factory::factory::AuthConsumerRepoForSql;
 use sea_orm::Database;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 use tracing::info;
-use crate::ssi::common::services::callback::basic::BasicCallbackService;
 
 pub struct AuthConsumerApplication;
 
@@ -88,7 +88,7 @@ impl AuthConsumerApplication {
 
         Ok(())
     }
-    pub async fn create_router_4_core(config: ApplicationConsumerConfig) -> Router {
+    pub async fn create_router_4_monolith(config: ApplicationConsumerConfig) -> Router {
         let config = AuthConsumerConfig::from(config);
         AuthConsumerApplication::create_router(&config).await
     }
