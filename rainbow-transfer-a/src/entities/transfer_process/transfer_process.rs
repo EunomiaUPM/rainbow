@@ -140,7 +140,6 @@ impl TransferAgentProcessesTrait for TransferAgentProcessesService {
                 err
             })?
             .ok_or_else(|| {
-                // AQUÍ SE GENERA EL 404
                 let err = CommonErrors::missing_resource_new(
                     &format!("Key: {} / ID: {}", key_id, id),
                     "Transfer Process not found by key identifier",

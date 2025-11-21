@@ -1,3 +1,3 @@
 mod bifrost;
-mod dsp;
-mod protocol;
+pub(crate) mod dsp;
+pub(crate) mod protocol;

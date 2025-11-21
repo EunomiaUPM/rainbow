@@ -1,6 +1,6 @@
 mod mappers;
 
-use crate::entities::transfer_process::TransferAgentProcessesTrait;
+use crate::entities::transfer_process::{NewTransferProcessDto, TransferAgentProcessesTrait};
 use crate::grpc::api::transfer_processes::transfer_agent_processes_server::TransferAgentProcesses;
 use crate::grpc::api::transfer_processes::{
     BatchProcessRequest, CreateProcessRequest, GetByKeyRequest, PaginationRequestProcesses, ResourceIdRequestProcesses,
@@ -50,7 +50,17 @@ impl TransferAgentProcesses for TransferAgentProcessesGrpc {
         &self,
         request: Request<CreateProcessRequest>,
     ) -> Result<Response<TransferProcessResponse>, Status> {
-        todo!()
+        let proto_req = request.into_inner();
+        let request: CreateProcessRequest = proto_req.into();
+        let new_transfer_process =
+            NewTransferProcessDto::try_from(request).map_err(|e| Status::internal(e.to_string()))?;
+        let process = self
+            .service
+            .create_transfer_process(&new_transfer_process)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
+        let proto_process: TransferProcessResponse = process.into();
+        Ok(Response::new(proto_process))
     }
 
     async fn get_batch_processes(

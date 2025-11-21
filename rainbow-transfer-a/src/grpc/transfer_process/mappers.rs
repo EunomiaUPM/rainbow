@@ -1,17 +1,14 @@
-use chrono::DateTime;
-use rainbow_common::batch_requests::BatchRequests;
-use serde_json::Value as JsonValue;
-use std::collections::HashMap;
-use std::str::FromStr;
-use tonic::Status;
-use urn::Urn;
-// Dominio
 use crate::entities::transfer_process::{EditTransferProcessDto, NewTransferProcessDto, TransferProcessDto};
 use crate::grpc::api::transfer_messages::TransferMessageResponse;
 use crate::grpc::api::transfer_processes::{
-    BatchProcessRequest, CreateProcessRequest, PaginationRequestProcesses, TransferProcessResponse,
-    UpdateProcessRequest,
+    BatchProcessRequest, CreateProcessRequest, TransferProcessResponse, UpdateProcessRequest,
 };
+use chrono::DateTime;
+use rainbow_common::batch_requests::BatchRequests;
+use serde_json::Value as JsonValue;
+use std::str::FromStr;
+use tonic::Status;
+use urn::Urn;
 
 // -----------------------------------------------------------------------------
 // PROTO -> DOMAIN (TryFrom)
@@ -42,7 +39,6 @@ impl TryFrom<CreateProcessRequest> for NewTransferProcessDto {
         };
 
         // 3. Identifiers (Map<String, String> -> HashMap<String, String>)
-        // Proto genera HashMap automáticamente, pero si es vacío queremos None?
         let identifiers = if proto.identifiers.is_empty() {
             None
         } else {
@@ -67,7 +63,7 @@ impl TryFrom<UpdateProcessRequest> for EditTransferProcessDto {
     type Error = Status;
 
     fn try_from(proto: UpdateProcessRequest) -> Result<Self, Self::Error> {
-        // Parsing JSONs opcionales
+        // Parsing optional json
         let properties = parse_optional_json(proto.properties_json)?;
         let error_details = parse_optional_json(proto.error_details_json)?;
 
@@ -100,24 +96,15 @@ impl From<TransferProcessDto> for TransferProcessResponse {
         let properties_json = serde_json::to_string(&model.properties).unwrap_or_default();
         let error_details_json = model.error_details.map(|j| serde_json::to_string(&j).unwrap_or_default());
 
-        // 2. Fechas
+        // 2. dates
         let created_at = to_prost_timestamp(DateTime::from(model.created_at));
         let updated_at = model.updated_at.map(|d| to_prost_timestamp(DateTime::from(model.created_at)));
 
-        // 3. Mensajes Anidados
-        // Aquí asumimos que ya implementaste From<TransferMessageDto> for TransferMessageResponse
-        // en el paso anterior. Necesitamos convertir el modelo DB a DTO intermedio o mapear directo.
-        // Para simplificar, mapearemos el modelo DB de mensaje al Proto Response de mensaje.
-        // NOTA: Esto requiere que tengas un From<transfer_message_model::Model> for TransferMessageResponse
-        // Si no, iteramos y construimos manualmente o usamos el DTO intermedio.
-
-        // Asumiremos que existe el mapeo desde el DTO de mensaje:
+        // 3. nested
         let messages_proto: Vec<TransferMessageResponse> = dto
             .messages
             .into_iter()
             .map(|msg_model| {
-                // Hack rápido: convertir model a DTO para reusar el mapper existente
-                // O crear un mapper directo Model -> Proto
                 let msg_dto = crate::entities::transfer_messages::TransferMessageDto { inner: msg_model };
                 msg_dto.into()
             })
@@ -138,7 +125,7 @@ impl From<TransferProcessDto> for TransferProcessResponse {
             created_at: created_at.into(),
             updated_at,
 
-            identifiers: dto.identifiers, // HashMap directo
+            identifiers: dto.identifiers,
             messages: messages_proto,
         }
     }

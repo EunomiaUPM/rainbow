@@ -32,7 +32,7 @@ impl TryFrom<CreateMessageRequest> for NewTransferMessageDto {
 
         Ok(NewTransferMessageDto {
             id: id_urn,
-            transfer_agent_process_id: process_urn, // Asumiendo que tu DTO usa TransferUrn
+            transfer_agent_process_id: process_urn,
             direction: proto.direction,
             protocol: proto.protocol,
             message_type: proto.message_type,
@@ -51,7 +51,7 @@ impl From<PaginationRequestMessages> for PaginationParams {
 
 impl From<TransferMessageDto> for TransferMessageResponse {
     fn from(dto: TransferMessageDto) -> Self {
-        let model = dto.inner; // Accedemos al modelo de SeaORM interno
+        let model = dto.inner;
         let payload_json = model.payload.map(|json| serde_json::to_string(&json).unwrap_or_default());
         let created_at = to_prost_timestamp(DateTime::from(model.created_at));
 

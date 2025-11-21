@@ -1,3 +1,7 @@
+use crate::core::dsp::http::DspRouter;
+use crate::core::dsp::orchestrator::protocol::protocol::ProtocolOrchestratorService;
+use crate::core::dsp::TransferDSP;
+use crate::core::protocol::ProtocolPluginTrait;
 use crate::db::factory_sql::TransferAgentRepoForSql;
 use crate::entities::transfer_messages::transfer_messages::TransferAgentMessagesService;
 use crate::entities::transfer_process::transfer_process::TransferAgentProcessesService;
@@ -51,10 +55,19 @@ impl TransferHttpWorker {
         let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
         let transfer_repo = Arc::new(TransferAgentRepoForSql::create_repo(db_connection.clone()));
 
+        // entities
         let messages_controller_service = Arc::new(TransferAgentMessagesService::new(transfer_repo.clone()));
-        let messages_router = TransferAgentMessagesRouter::new(messages_controller_service, config.clone());
+        let messages_router = TransferAgentMessagesRouter::new(messages_controller_service.clone(), config.clone());
         let entities_controller_service = Arc::new(TransferAgentProcessesService::new(transfer_repo.clone()));
-        let entities_router = TransferAgentProcessesRouter::new(entities_controller_service, config.clone());
+        let entities_router = TransferAgentProcessesRouter::new(entities_controller_service.clone(), config.clone());
+
+        // dsp
+        let dsp_router = TransferDSP::new(
+            messages_controller_service.clone(),
+            entities_controller_service.clone(),
+            config.clone(),
+        )
+        .build_router()?;
 
         let router_str = format!("/api/{}/transfer-agent", config.api_version);
         let router = Router::new()
@@ -65,6 +78,10 @@ impl TransferHttpWorker {
             .nest(
                 format!("{}/transfer-processes", router_str.as_str()).as_str(),
                 entities_router.router(),
+            )
+            .nest(
+                format!("{}/dsp/current/transfer", router_str.as_str()).as_str(),
+                dsp_router,
             )
             .fallback(Self::handler_404)
             .layer(
