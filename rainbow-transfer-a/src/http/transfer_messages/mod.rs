@@ -39,10 +39,7 @@ impl FromRef<TransferAgentMessagesRouter> for Arc<ApplicationProviderConfig> {
 }
 
 impl TransferAgentMessagesRouter {
-    pub fn new(
-        service: Arc<dyn TransferAgentMessagesTrait>,
-        config: Arc<ApplicationProviderConfig>
-    ) -> Self {
+    pub fn new(service: Arc<dyn TransferAgentMessagesTrait>, config: Arc<ApplicationProviderConfig>) -> Self {
         Self { service, config }
     }
 
@@ -54,8 +51,7 @@ impl TransferAgentMessagesRouter {
             )
             .route(
                 "/:id",
-                get(Self::handle_get_message_by_id)
-                    .delete(Self::handle_delete_message),
+                get(Self::handle_get_message_by_id).delete(Self::handle_delete_message),
             )
             .route(
                 "/process/:process_id",

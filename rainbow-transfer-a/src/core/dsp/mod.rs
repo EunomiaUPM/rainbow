@@ -1,4 +1,6 @@
+mod http;
 mod orchestrator;
+mod protocol;
 
 use crate::core::protocol::ProtocolPluginTrait;
 use axum::Router;

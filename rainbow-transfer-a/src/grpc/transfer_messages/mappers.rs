@@ -1,11 +1,11 @@
-use std::str::FromStr;
-use chrono::DateTime;
-use tonic::Status;
-use serde_json::Value as JsonValue;
-use urn::Urn;
 use crate::entities::transfer_messages::{NewTransferMessageDto, TransferMessageDto};
-use crate::grpc::api::transfer_messages::{CreateMessageRequest, TransferMessageResponse, PaginationRequestMessages};
-use crate::http::transfer_messages::PaginationParams; // Tu struct de params
+use crate::grpc::api::transfer_messages::{CreateMessageRequest, PaginationRequestMessages, TransferMessageResponse};
+use crate::http::transfer_messages::PaginationParams;
+use chrono::DateTime;
+use serde_json::Value as JsonValue;
+use std::str::FromStr;
+use tonic::Status;
+use urn::Urn; // Tu struct de params
 impl TryFrom<CreateMessageRequest> for NewTransferMessageDto {
     type Error = Status;
 
@@ -13,8 +13,7 @@ impl TryFrom<CreateMessageRequest> for NewTransferMessageDto {
         let process_urn = Urn::from_str(&proto.transfer_agent_process_id)
             .map_err(|e| Status::invalid_argument(format!("Invalid Process URN: {}", e)))?;
         let id_urn = if let Some(id_str) = proto.id {
-            Some(Urn::from_str(&id_str)
-                .map_err(|e| Status::invalid_argument(format!("Invalid Message URN: {}", e)))?)
+            Some(Urn::from_str(&id_str).map_err(|e| Status::invalid_argument(format!("Invalid Message URN: {}", e)))?)
         } else {
             None
         };
@@ -22,9 +21,10 @@ impl TryFrom<CreateMessageRequest> for NewTransferMessageDto {
             if json_str.trim().is_empty() {
                 None
             } else {
-                Some(serde_json::from_str(&json_str).map_err(|e| {
-                    Status::invalid_argument(format!("Invalid JSON payload: {}", e))
-                })?)
+                Some(
+                    serde_json::from_str(&json_str)
+                        .map_err(|e| Status::invalid_argument(format!("Invalid JSON payload: {}", e)))?,
+                )
             }
         } else {
             None
@@ -45,19 +45,14 @@ impl TryFrom<CreateMessageRequest> for NewTransferMessageDto {
 
 impl From<PaginationRequestMessages> for PaginationParams {
     fn from(proto: PaginationRequestMessages) -> Self {
-        Self {
-            limit: proto.limit,
-            page: proto.page,
-        }
+        Self { limit: proto.limit, page: proto.page }
     }
 }
-
 
 impl From<TransferMessageDto> for TransferMessageResponse {
     fn from(dto: TransferMessageDto) -> Self {
         let model = dto.inner; // Accedemos al modelo de SeaORM interno
-        let payload_json = model.payload
-            .map(|json| serde_json::to_string(&json).unwrap_or_default());
+        let payload_json = model.payload.map(|json| serde_json::to_string(&json).unwrap_or_default());
         let created_at = to_prost_timestamp(DateTime::from(model.created_at));
 
         Self {
@@ -76,8 +71,5 @@ impl From<TransferMessageDto> for TransferMessageResponse {
 }
 
 fn to_prost_timestamp(dt: chrono::DateTime<chrono::Utc>) -> prost_types::Timestamp {
-    prost_types::Timestamp {
-        seconds: dt.timestamp(),
-        nanos: dt.timestamp_subsec_nanos() as i32,
-    }
+    prost_types::Timestamp { seconds: dt.timestamp(), nanos: dt.timestamp_subsec_nanos() as i32 }
 }

@@ -1,5 +1,5 @@
-use std::sync::Arc;
 use crate::TransferDummyTrait;
+use std::sync::Arc;
 
 pub struct TransferSharedServices {
     // Repo

@@ -9,7 +9,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .file_descriptor_set_path(descriptor_path)
         .compile_protos(
             &["proto/transfer_messages.proto", "proto/transfer_process.proto"],
-            &["proto"]
+            &["proto"],
         )?;
 
     Ok(())

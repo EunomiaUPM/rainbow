@@ -1,3 +1,3 @@
-mod dsp;
 mod bifrost;
+mod dsp;
 mod protocol;

@@ -1,5 +1,5 @@
-pub mod cmd;
 mod application;
-mod http_worker;
-mod grpc_worker;
+pub mod cmd;
 mod db_migrations;
+mod grpc_worker;
+mod http_worker;

@@ -1,15 +1,15 @@
-use clap::{Parser, Subcommand};
-use tracing::debug;
-use rainbow_common::config::env_extraction::EnvExtraction;
 use crate::setup::application::TransferApplication;
 use crate::setup::db_migrations::TransferAgentMigration;
+use clap::{Parser, Subcommand};
+use rainbow_common::config::env_extraction::EnvExtraction;
+use tracing::debug;
 
 #[derive(Parser, Debug)]
 #[command(name = "Rainbow Dataspace Connector Transfer Agent")]
 #[command(version = "0.2")]
 struct TransferCli {
     #[clap(subcommand)]
-    command: TransferCliCommands
+    command: TransferCliCommands,
 }
 
 #[derive(Subcommand, Debug, PartialEq)]

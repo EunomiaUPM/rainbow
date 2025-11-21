@@ -1,21 +1,21 @@
 use crate::db::factory_sql::TransferAgentRepoForSql;
+use crate::entities::transfer_messages::transfer_messages::TransferAgentMessagesService;
 use crate::entities::transfer_process::transfer_process::TransferAgentProcessesService;
+use crate::http::transfer_messages::TransferAgentMessagesRouter;
 use crate::http::transfer_process::TransferAgentProcessesRouter;
-use axum::{serve, Router};
-use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
-use sea_orm::{Database, DatabaseConnection};
-use std::sync::Arc;
 use axum::extract::Request;
 use axum::response::IntoResponse;
+use axum::{serve, Router};
+use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_common::errors::CommonErrors;
+use sea_orm::{Database, DatabaseConnection};
+use std::sync::Arc;
 use tokio::net::TcpListener;
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 use tower_http::trace::{DefaultOnResponse, TraceLayer};
 use tracing::{info, Level, Span};
 use uuid::Uuid;
-use rainbow_common::errors::CommonErrors;
-use crate::entities::transfer_messages::transfer_messages::TransferAgentMessagesService;
-use crate::http::transfer_messages::TransferAgentMessagesRouter;
 
 pub struct TransferHttpWorker {}
 impl TransferHttpWorker {
@@ -58,8 +58,14 @@ impl TransferHttpWorker {
 
         let router_str = format!("/api/{}/transfer-agent", config.api_version);
         let router = Router::new()
-            .nest(format!("{}/transfer-messages", router_str.as_str()).as_str(), messages_router.router())
-            .nest(format!("{}/transfer-processes", router_str.as_str()).as_str(), entities_router.router())
+            .nest(
+                format!("{}/transfer-messages", router_str.as_str()).as_str(),
+                messages_router.router(),
+            )
+            .nest(
+                format!("{}/transfer-processes", router_str.as_str()).as_str(),
+                entities_router.router(),
+            )
             .fallback(Self::handler_404)
             .layer(
                 TraceLayer::new_for_http()
@@ -72,10 +78,7 @@ impl TransferHttpWorker {
         Ok(router)
     }
     async fn handler_404(uri: axum::http::Uri) -> impl IntoResponse {
-        let err = CommonErrors::missing_resource_new(
-            &uri.to_string(),
-            "Route not found or Method not allowed"
-        );
+        let err = CommonErrors::missing_resource_new(&uri.to_string(), "Route not found or Method not allowed");
         info!("404 Not Found: {}", uri);
         err.into_response()
     }
