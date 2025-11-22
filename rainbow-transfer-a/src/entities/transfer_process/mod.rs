@@ -26,6 +26,8 @@ pub struct NewTransferProcessDto {
     pub protocol: String,
     pub transfer_direction: String,
     pub agreement_id: Urn,
+    pub callback_address: Option<String>,
+    pub role: String,
     pub state_attribute: Option<String>,
     pub properties: Option<serde_json::Value>,
     pub identifiers: Option<HashMap<String, String>>,
@@ -52,6 +54,8 @@ impl From<NewTransferProcessDto> for NewTransferProcessModel {
             protocol: dto.protocol,
             transfer_direction: dto.transfer_direction,
             agreement_id: dto.agreement_id,
+            callback_address: dto.callback_address,
+            role: dto.role,
             properties: dto.properties.unwrap_or(serde_json::json!({})),
             error_details: None,
         }
@@ -79,6 +83,8 @@ pub trait TransferAgentProcessesTrait: Send + Sync + 'static {
     async fn get_batch_transfer_processes(&self, ids: &Vec<Urn>) -> anyhow::Result<Vec<TransferProcessDto>>;
     async fn get_transfer_process_by_id(&self, id: &Urn) -> anyhow::Result<TransferProcessDto>;
     async fn get_transfer_process_by_key_id(&self, key_id: &str, id: &Urn) -> anyhow::Result<TransferProcessDto>;
+    async fn get_transfer_process_by_key_value(&self, id: &Urn) -> anyhow::Result<TransferProcessDto>;
+
     async fn create_transfer_process(&self, new_model: &NewTransferProcessDto) -> anyhow::Result<TransferProcessDto>;
     async fn put_transfer_process(
         &self,

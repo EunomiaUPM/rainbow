@@ -20,10 +20,6 @@ use tower_http::trace::TraceLayer;
 
 pub struct TransferGrpcWorker {}
 
-struct TransferAgentMessagesController(Arc<TransferAgentMessagesService>);
-
-struct TransferAgentProcessesController(Arc<TransferAgentProcessesService>);
-
 impl TransferGrpcWorker {
     pub async fn spawn(
         config: &ApplicationProviderConfig,
@@ -31,8 +27,9 @@ impl TransferGrpcWorker {
     ) -> anyhow::Result<JoinHandle<()>> {
         let router = Self::create_root_grpc_router(&config).await?;
         let host = if config.get_environment_scenario() { "127.0.0.1" } else { "0.0.0.0" };
-        // let port = config.get_raw_transfer_process_host().clone().expect("no host").port;
-        let addr = "127.0.0.1:1201";
+        let port = config.get_raw_transfer_process_host().clone().expect("no host").port;
+        let grpc_port = format!("{}{}", port, "1");
+        let addr = format!("{}:{}", host, grpc_port);
 
         let listener = TcpListener::bind(&addr).await?;
         let incoming = TcpListenerStream::new(listener);

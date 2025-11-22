@@ -33,7 +33,7 @@ impl StateMachineTrait for StateMachineForDspService {
         let role = self.config.get_role();
         let message_type = payload.get_message();
         let consumer_pid = payload.get_consumer_pid().unwrap(); // consumerPid always exists
-                                                                // only use consumerPid because all have consumerPid defined
+        // only use consumerPid because all have consumerPid defined
         let current_state_process = self
             .transfer_agent_process_entities
             .get_transfer_process_by_key_id("consumerPid", &consumer_pid)
@@ -44,7 +44,6 @@ impl StateMachineTrait for StateMachineForDspService {
                 e => Err(e),
             })?;
         let current_state = current_state_process.as_ref().map(|c| c.inner.state.clone());
-
         // match role to message type
         match (&role, &message_type) {
             (ConfigRoles::Provider, TransferProcessMessageType::TransferStartMessage) => {

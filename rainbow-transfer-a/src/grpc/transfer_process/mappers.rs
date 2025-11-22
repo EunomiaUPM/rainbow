@@ -52,6 +52,8 @@ impl TryFrom<CreateProcessRequest> for NewTransferProcessDto {
             protocol: proto.protocol,
             transfer_direction: proto.transfer_direction,
             agreement_id: agreement_urn,
+            callback_address: None,
+            role: "".to_string(),
             state_attribute: proto.state_attribute,
             properties,
             identifiers,
@@ -118,6 +120,8 @@ impl From<TransferProcessDto> for TransferProcessResponse {
             protocol: model.protocol,
             transfer_direction: model.transfer_direction,
             agreement_id: model.agreement_id,
+            callback_address: model.callback_address,
+            role: model.role,
 
             properties_json,
             error_details_json,

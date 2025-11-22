@@ -4,6 +4,7 @@ pub(crate) mod orchestrator;
 pub(crate) mod protocol_types;
 mod state_machine;
 mod validator;
+mod persistence;
 
 use crate::core::dsp::http::DspRouter;
 use crate::core::dsp::orchestrator::orchestrator::OrchestratorService;
@@ -16,6 +17,7 @@ use crate::entities::transfer_process::TransferAgentProcessesTrait;
 use axum::Router;
 use rainbow_common::config::provider_config::ApplicationProviderConfig;
 use std::sync::Arc;
+use crate::core::dsp::persistence::persistence::TransferPersistenceService;
 
 pub struct TransferDSP {
     transfer_agent_process_entities: Arc<dyn TransferAgentProcessesTrait>,
@@ -52,12 +54,16 @@ impl ProtocolPluginTrait for TransferDSP {
             self.config.clone(),
         ));
         let validator_service = Arc::new(DspValidatorService::new());
+        let persistence_service = Arc::new(TransferPersistenceService::new(
+            self.transfer_agent_message_service.clone(),
+            self.transfer_agent_process_entities.clone(),
+            self.config.clone(),
+        ));
 
         let http_orchestator = Arc::new(ProtocolOrchestratorService::new(
             state_machine_service.clone(),
             validator_service.clone(),
-            self.transfer_agent_message_service.clone(),
-            self.transfer_agent_process_entities.clone(),
+            persistence_service,
             self.config.clone(),
         ));
         let orchestrator_service = Arc::new(OrchestratorService::new(http_orchestator.clone()));

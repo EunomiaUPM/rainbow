@@ -18,10 +18,6 @@ impl TransferAgentProcessesGrpc {
     pub fn new(service: Arc<dyn TransferAgentProcessesTrait>) -> Self {
         Self { service }
     }
-
-    fn map_error(e: anyhow::Error) -> Status {
-        Status::internal(e.to_string())
-    }
 }
 
 #[tonic::async_trait]

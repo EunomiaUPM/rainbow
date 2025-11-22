@@ -1,7 +1,6 @@
 use crate::core::dsp::protocol_types::{
     TransferProcessAckDto, TransferProcessMessageType, TransferProcessMessageWrapper, TransferProcessState,
 };
-use crate::db::entities::transfer_process::Model;
 use crate::entities::transfer_process::TransferProcessDto;
 use anyhow::bail;
 use rainbow_common::errors::{CommonErrors, ErrorLog};

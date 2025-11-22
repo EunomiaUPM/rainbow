@@ -80,7 +80,7 @@ impl TransferHttpWorker {
                 entities_router.router(),
             )
             .nest(
-                format!("{}/dsp/current/transfer", router_str.as_str()).as_str(),
+                format!("{}/dsp/current/transfers", router_str.as_str()).as_str(),
                 dsp_router,
             )
             .fallback(Self::handler_404)

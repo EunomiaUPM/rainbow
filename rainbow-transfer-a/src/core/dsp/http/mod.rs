@@ -14,7 +14,6 @@ use super::protocol_types::{
 use crate::core::dsp::orchestrator::OrchestratorTrait;
 use crate::http::common::extract_payload;
 use rainbow_common::config::provider_config::ApplicationProviderConfig;
-use rainbow_common::protocol::transfer::transfer_request::TransferRequestMessage;
 
 #[derive(Clone)]
 pub struct DspRouter {

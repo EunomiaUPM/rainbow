@@ -151,6 +151,29 @@ impl TransferAgentProcessesTrait for TransferAgentProcessesService {
         self.enrich_process(process).await
     }
 
+    async fn get_transfer_process_by_key_value(&self, id: &Urn) -> anyhow::Result<TransferProcessDto> {
+        let process = self
+            .transfer_repo
+            .get_transfer_process_repo()
+            .get_transfer_process_by_key_value(id)
+            .await
+            .map_err(|e| {
+                let err = CommonErrors::database_new(&e.to_string());
+                error!("{}", err.log());
+                err
+            })?
+            .ok_or_else(|| {
+                let err = CommonErrors::missing_resource_new(
+                    &format!("ID: {}", id),
+                    "Transfer Process not found by key identifier",
+                );
+                error!("{}", err.log());
+                err
+            })?;
+
+        self.enrich_process(process).await
+    }
+
     async fn create_transfer_process(
         &self,
         new_model_dto: &NewTransferProcessDto,

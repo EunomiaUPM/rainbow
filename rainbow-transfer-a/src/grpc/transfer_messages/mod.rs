@@ -12,12 +12,12 @@ mod mappers;
 
 pub struct TransferAgentMessagesGrpc {
     service: Arc<dyn TransferAgentMessagesTrait>,
-    config: Arc<ApplicationProviderConfig>,
+    _config: Arc<ApplicationProviderConfig>,
 }
 
 impl TransferAgentMessagesGrpc {
     pub fn new(service: Arc<dyn TransferAgentMessagesTrait>, config: Arc<ApplicationProviderConfig>) -> Self {
-        Self { service, config }
+        Self { service, _config: config }
     }
 }
 

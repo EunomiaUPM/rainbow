@@ -426,3 +426,32 @@ pub enum TransferProcessMessageType {
     TransferProcess,
     TransferError,
 }
+
+impl Display for TransferProcessMessageType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let str = match self {
+            TransferProcessMessageType::TransferRequestMessage => "TransferRequestMessage".to_string(),
+            TransferProcessMessageType::TransferStartMessage => "TransferStartMessage".to_string(),
+            TransferProcessMessageType::TransferCompletionMessage => "TransferCompletionMessage".to_string(),
+            TransferProcessMessageType::TransferSuspensionMessage => "TransferSuspensionMessage".to_string(),
+            TransferProcessMessageType::TransferTerminationMessage => "TransferTerminationMessage".to_string(),
+            TransferProcessMessageType::TransferProcess => "TransferProcess".to_string(),
+            TransferProcessMessageType::TransferError => "TransferError".to_string(),
+        };
+        write!(f, "{}", str)
+    }
+}
+
+impl From<TransferProcessMessageType> for TransferProcessState {
+    fn from(value: TransferProcessMessageType) -> Self {
+        match value {
+            TransferProcessMessageType::TransferRequestMessage => TransferProcessState::Requested,
+            TransferProcessMessageType::TransferStartMessage => TransferProcessState::Started,
+            TransferProcessMessageType::TransferCompletionMessage => TransferProcessState::Completed,
+            TransferProcessMessageType::TransferSuspensionMessage => TransferProcessState::Suspended,
+            TransferProcessMessageType::TransferTerminationMessage => TransferProcessState::Terminated,
+            TransferProcessMessageType::TransferProcess => TransferProcessState::Terminated,
+            TransferProcessMessageType::TransferError => TransferProcessState::Terminated,
+        }
+    }
+}

@@ -2,7 +2,6 @@ use crate::core::dsp::protocol_types::{
     TransferCompletionMessageDto, TransferErrorDto, TransferProcessAckDto, TransferProcessMessageWrapper,
     TransferRequestMessageDto, TransferStartMessageDto, TransferSuspensionMessageDto, TransferTerminationMessageDto,
 };
-use rainbow_common::protocol::transfer::transfer_error::TransferError;
 pub(crate) mod protocol;
 
 #[async_trait::async_trait]
