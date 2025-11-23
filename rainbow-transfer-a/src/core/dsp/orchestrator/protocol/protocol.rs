@@ -1,30 +1,13 @@
 use crate::core::dsp::orchestrator::protocol::ProtocolOrchestratorTrait;
 use crate::core::dsp::persistence::TransferPersistenceTrait;
 use crate::core::dsp::protocol_types::{
-    TransferCompletionMessageDto, TransferErrorDto, TransferProcessAckDto, TransferProcessMessageType,
-    TransferProcessMessageWrapper, TransferRequestMessageDto, TransferStartMessageDto, TransferSuspensionMessageDto,
-    TransferTerminationMessageDto,
+    TransferCompletionMessageDto, TransferErrorDto, TransferProcessAckDto, TransferProcessMessageWrapper,
+    TransferRequestMessageDto, TransferStartMessageDto, TransferSuspensionMessageDto, TransferTerminationMessageDto,
 };
 use crate::core::dsp::state_machine::StateMachineTrait;
 use crate::core::dsp::validator::ValidatorTrait;
-use crate::db::entities::transfer_message::Model;
-use crate::entities::transfer_messages::{NewTransferMessageDto, TransferAgentMessagesTrait, TransferMessageDto};
-use crate::entities::transfer_process::{
-    EditTransferProcessDto, NewTransferProcessDto, TransferAgentProcessesTrait, TransferProcessDto,
-};
-use crate::http::common::parse_urn;
-use log::error;
 use rainbow_common::config::provider_config::ApplicationProviderConfig;
-use rainbow_common::config::ConfigRoles;
-use rainbow_common::errors::{CommonErrors, ErrorLog};
-use rainbow_common::protocol::context_field::ContextField;
-use rainbow_common::protocol::transfer::TransferState;
-use std::collections::HashMap;
-use std::str::FromStr;
 use std::sync::Arc;
-use std::task::Context;
-use tracing::debug;
-use urn::Urn;
 
 pub struct ProtocolOrchestratorService {
     pub state_machine_service: Arc<dyn StateMachineTrait>,
@@ -77,7 +60,14 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
             .expect("Failed to validate validation");
         let transfer_process = self
             .persistence_service
-            .create_process(Arc::new(input.dto.clone()), serde_json::to_value(input).unwrap())
+            .create_process(
+                "DSP",
+                "INBOUND",
+                None,
+                None,
+                Arc::new(input.dto.clone()),
+                serde_json::to_value(input).unwrap(),
+            )
             .await
             .expect("Failed to validate validation");
         let transfer_process_dto = TransferProcessMessageWrapper::try_from(transfer_process).unwrap();
@@ -102,8 +92,15 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
             .await
             .expect("Failed to validate validation");
 
-        let transfer_process =
-            self.persistence_service.update_process(id, Arc::new(input.dto.clone()), serde_json::to_value(input).unwrap()).await.expect("Failed to validate validation");
+        let transfer_process = self
+            .persistence_service
+            .update_process(
+                id,
+                Arc::new(input.dto.clone()),
+                serde_json::to_value(input).unwrap(),
+            )
+            .await
+            .expect("Failed to validate validation");
         let transfer_process_dto = TransferProcessMessageWrapper::try_from(transfer_process).unwrap();
         Ok(transfer_process_dto)
     }
@@ -126,8 +123,15 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
             .await
             .expect("Failed to validate validation");
 
-        let transfer_process =
-            self.persistence_service.update_process(id, Arc::new(input.dto.clone()), serde_json::to_value(input).unwrap()).await.expect("Failed to validate validation");
+        let transfer_process = self
+            .persistence_service
+            .update_process(
+                id,
+                Arc::new(input.dto.clone()),
+                serde_json::to_value(input).unwrap(),
+            )
+            .await
+            .expect("Failed to validate validation");
         let transfer_process_dto = TransferProcessMessageWrapper::try_from(transfer_process).unwrap();
         Ok(transfer_process_dto)
     }
@@ -150,8 +154,15 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
             .await
             .expect("Failed to validate validation");
 
-        let transfer_process =
-            self.persistence_service.update_process(id, Arc::new(input.dto.clone()), serde_json::to_value(input).unwrap()).await.expect("Failed to validate validation");
+        let transfer_process = self
+            .persistence_service
+            .update_process(
+                id,
+                Arc::new(input.dto.clone()),
+                serde_json::to_value(input).unwrap(),
+            )
+            .await
+            .expect("Failed to validate validation");
         let transfer_process_dto = TransferProcessMessageWrapper::try_from(transfer_process).unwrap();
         Ok(transfer_process_dto)
     }
@@ -174,8 +185,15 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
             .await
             .expect("Failed to validate validation");
 
-        let transfer_process =
-            self.persistence_service.update_process(id, Arc::new(input.dto.clone()), serde_json::to_value(input).unwrap()).await.expect("Failed to validate validation");
+        let transfer_process = self
+            .persistence_service
+            .update_process(
+                id,
+                Arc::new(input.dto.clone()),
+                serde_json::to_value(input).unwrap(),
+            )
+            .await
+            .expect("Failed to validate validation");
         let transfer_process_dto = TransferProcessMessageWrapper::try_from(transfer_process).unwrap();
         Ok(transfer_process_dto)
     }

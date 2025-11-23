@@ -7,7 +7,7 @@ use urn::Urn;
 
 pub(crate) mod transfer_process;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct TransferProcessDto {
     #[serde(flatten)]

@@ -5,11 +5,15 @@ use std::sync::Arc;
 
 pub struct OrchestratorService {
     protocol_service: Arc<dyn ProtocolOrchestratorTrait>,
+    rpc_service: Arc<dyn RPCOrchestratorTrait>,
 }
 
 impl OrchestratorService {
-    pub fn new(protocol_service: Arc<dyn ProtocolOrchestratorTrait>) -> OrchestratorService {
-        Self { protocol_service }
+    pub fn new(
+        protocol_service: Arc<dyn ProtocolOrchestratorTrait>,
+        rpc_service: Arc<dyn RPCOrchestratorTrait>,
+    ) -> OrchestratorService {
+        Self { protocol_service, rpc_service }
     }
 }
 
@@ -19,6 +23,6 @@ impl OrchestratorTrait for OrchestratorService {
     }
 
     fn get_rpc_service(&self) -> Arc<dyn RPCOrchestratorTrait> {
-        todo!()
+        self.rpc_service.clone()
     }
 }

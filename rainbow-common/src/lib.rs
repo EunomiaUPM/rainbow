@@ -35,3 +35,4 @@ pub mod ssi;
 pub mod openapi;
 pub mod batch_requests;
 pub mod http;
+pub mod http_client;

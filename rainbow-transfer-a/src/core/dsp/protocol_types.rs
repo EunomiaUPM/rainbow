@@ -1,3 +1,4 @@
+use crate::entities::transfer_process::TransferProcessDto;
 use rainbow_common::protocol::context_field::ContextField;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Debug, Display};

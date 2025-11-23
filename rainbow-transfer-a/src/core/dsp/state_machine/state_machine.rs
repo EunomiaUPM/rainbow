@@ -30,10 +30,9 @@ impl StateMachineTrait for StateMachineForDspService {
         id: Option<&String>,
         payload: Arc<dyn TransferProcessMessageTrait>,
     ) -> anyhow::Result<()> {
-        let role = self.config.get_role();
         let message_type = payload.get_message();
         let consumer_pid = payload.get_consumer_pid().unwrap(); // consumerPid always exists
-        // only use consumerPid because all have consumerPid defined
+                                                                // only use consumerPid because all have consumerPid defined
         let current_state_process = self
             .transfer_agent_process_entities
             .get_transfer_process_by_key_id("consumerPid", &consumer_pid)
@@ -43,32 +42,35 @@ impl StateMachineTrait for StateMachineForDspService {
                 CommonErrors::MissingResourceError { .. } => Ok(None),
                 e => Err(e),
             })?;
+        let role = current_state_process.as_ref().map(|t| t.inner.role.as_str());
         let current_state = current_state_process.as_ref().map(|c| c.inner.state.clone());
         // match role to message type
-        match (&role, &message_type) {
-            (ConfigRoles::Provider, TransferProcessMessageType::TransferStartMessage) => {
+        match (role, &message_type) {
+            (Some("Provider"), TransferProcessMessageType::TransferStartMessage) => {
                 let err = CommonErrors::parse_new(
                     "Only Consumer roles are allowed to receive TransferProcessMessageType TransferStartMessage",
                 );
                 error!("{}", err.log());
                 bail!(err)
             }
-            (ConfigRoles::Provider, _) => {}
-            (ConfigRoles::Consumer, TransferProcessMessageType::TransferRequestMessage) => {
+            (Some("Provider"), _) => {}
+            (None, TransferProcessMessageType::TransferRequestMessage) => {}
+            (Some("Consumer"), TransferProcessMessageType::TransferRequestMessage) => {
                 let err = CommonErrors::parse_new(
                     "Only Provider roles are allowed to receive TransferProcessMessageType TransferRequestMessage",
                 );
                 error!("{}", err.log());
                 bail!(err)
             }
-            (ConfigRoles::Consumer, _) => {}
-            (_, _) => {
+            (Some("Consumer"), _) => {}
+            (Some(_), _) => {
                 let err = CommonErrors::parse_new(
                     "Only Provider or Consumer roles are allowed to participate in transfer process",
                 );
                 error!("{}", err.log());
                 bail!(err)
             }
+            _ => {}
         }
 
         // match Message type to current state
@@ -232,14 +234,14 @@ impl StateMachineTrait for StateMachineForDspService {
                     TransferState::STARTED => {}
                     TransferState::TERMINATED => {
                         let err = CommonErrors::parse_new(
-                            "TransferProcessMessageType TransferSuspensionMessage is not allowed here. Current state is already TERMINATED",
+                            "TransferProcessMessageType TransferTerminationMessage is not allowed here. Current state is already TERMINATED",
                         );
                         error!("{}", err.log());
                         bail!(err)
                     }
                     TransferState::COMPLETED => {
                         let err = CommonErrors::parse_new(
-                            "TransferProcessMessageType TransferSuspensionMessage is not allowed here. Current state is COMPLETED",
+                            "TransferProcessMessageType TransferTerminationMessage is not allowed here. Current state is COMPLETED",
                         );
                         error!("{}", err.log());
                         bail!(err)
@@ -259,6 +261,14 @@ impl StateMachineTrait for StateMachineForDspService {
             }
         }
 
+        Ok(())
+    }
+
+    async fn validate_rpc_transition(
+        &self,
+        id: Option<&String>,
+        payload: Arc<dyn TransferProcessMessageTrait>,
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 }

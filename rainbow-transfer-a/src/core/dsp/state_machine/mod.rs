@@ -10,4 +10,9 @@ pub trait StateMachineTrait: Send + Sync + 'static {
         id: Option<&String>,
         payload: Arc<dyn TransferProcessMessageTrait>,
     ) -> anyhow::Result<()>;
+    async fn validate_rpc_transition(
+        &self,
+        id: Option<&String>,
+        payload: Arc<dyn TransferProcessMessageTrait>,
+    ) -> anyhow::Result<()>;
 }
