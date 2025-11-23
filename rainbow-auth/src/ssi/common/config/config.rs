@@ -231,7 +231,7 @@ impl CommonAuthConfig {
                 password: extract_env("WALLET_PASSWORD", default.ssi_wallet_config.password),
                 id: None,
             },
-            client: ClientConfig { class_id: extract_env("WALLET_API_URL", default.client.class_id), display: None },
+            client: ClientConfig { class_id: extract_env("CLIENT_CONFIG", default.client.class_id), display: None },
             keys_path: extract_env("KEYS_PATH", default.keys_path),
             is_local: extract_env("IS_LOCAL", default.is_local.to_string()).parse().unwrap(),
             openapi_path: extract_env("OPENAPI_PATH", default.openapi_path),
