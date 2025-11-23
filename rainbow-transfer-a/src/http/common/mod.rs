@@ -18,6 +18,17 @@ pub(crate) fn extract_payload<T>(input: Result<Json<T>, JsonRejection>) -> Resul
     }
 }
 
+pub(crate) fn extract_payload_error<T>(input: Result<Json<T>, JsonRejection>) -> anyhow::Result<T, CommonErrors> {
+    match input {
+        Ok(Json(data)) => Ok(data),
+        Err(err) => {
+            let e = CommonErrors::format_new(BadFormat::Received, &format!("{}", err.body_text()));
+            error!("{}", e.log());
+            Err(e)
+        }
+    }
+}
+
 pub(crate) fn parse_urn(id: &str) -> Result<Urn, Response> {
     Urn::from_str(id).map_err(|err| {
         let e = CommonErrors::format_new(

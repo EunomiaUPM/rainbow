@@ -76,8 +76,7 @@ impl TransferPersistenceTrait for TransferPersistenceService {
             identifiers.insert("providerPid".to_string(), provider_pid.unwrap().to_string());
         }
         identifiers.insert("consumerPid".to_string(), consumer_pid.to_string());
-        let transfer_process_id = Urn::from_str(format!("urn:transfer-process:{}", uuid::Uuid::new_v4()).as_str())
-            .expect("Failed to parse transfer-process id");
+        let transfer_process_id = Urn::from_str(format!("urn:transfer-process:{}", uuid::Uuid::new_v4()).as_str())?;
         let mut transfer_process = self
             .transfer_process_service
             .create_transfer_process(&NewTransferProcessDto {
@@ -93,8 +92,7 @@ impl TransferPersistenceTrait for TransferPersistenceService {
                 properties: None,
                 identifiers: Some(identifiers),
             })
-            .await
-            .expect("Failed to create transfer process");
+            .await?;
         let mut transfer_message = self
             .transfer_message_service
             .create_transfer_message(&NewTransferMessageDto {
@@ -107,8 +105,7 @@ impl TransferPersistenceTrait for TransferPersistenceService {
                 state_transition_to: TransferState::REQUESTED.to_string(),
                 payload: Some(payload_value),
             })
-            .await
-            .expect("Failed to create transfer process");
+            .await?;
         transfer_process.messages.push(transfer_message.inner);
         Ok(transfer_process)
     }
@@ -123,11 +120,7 @@ impl TransferPersistenceTrait for TransferPersistenceService {
         let new_state: TransferProcessState = TransferProcessState::from(message_type.clone());
 
         let urn_id = Urn::from_str(id).expect("Failed to parse urnID");
-        let mut transfer_process = self
-            .transfer_process_service
-            .get_transfer_process_by_key_value(&urn_id)
-            .await
-            .expect("Failed to fetch transfer process"); // here!! update
+        let mut transfer_process = self.transfer_process_service.get_transfer_process_by_key_value(&urn_id).await?;
 
         let transfer_process_urn = Urn::from_str(transfer_process.inner.id.as_str()).expect("Failed to parse urnID");
         let mut new_transfer_process = self
@@ -142,8 +135,7 @@ impl TransferPersistenceTrait for TransferPersistenceService {
                     identifiers: None,
                 },
             )
-            .await
-            .expect("Failed to create transfer process");
+            .await?;
         let mut message = self
             .transfer_message_service
             .create_transfer_message(&NewTransferMessageDto {
@@ -156,9 +148,8 @@ impl TransferPersistenceTrait for TransferPersistenceService {
                 state_transition_to: new_state.to_string(),
                 payload: Some(payload_value.clone()),
             })
-            .await
-            .expect("Failed to create transfer process");
-        transfer_process.messages.push(message.inner);
+            .await?;
+        new_transfer_process.messages.push(message.inner);
         Ok(new_transfer_process)
     }
 
@@ -172,13 +163,9 @@ impl TransferPersistenceTrait for TransferPersistenceService {
         let new_state: TransferProcessState = TransferProcessState::from(message_type.clone());
 
         let urn_id = Urn::from_str(id).expect("Failed to parse urnID");
-        let mut transfer_process = self
-            .transfer_process_service
-            .get_transfer_process_by_id(&urn_id)
-            .await
-            .expect("Failed to fetch transfer process"); // here!! update
+        let mut transfer_process = self.transfer_process_service.get_transfer_process_by_id(&urn_id).await?;
 
-        let transfer_process_urn = Urn::from_str(transfer_process.inner.id.as_str()).expect("Failed to parse urnID");
+        let transfer_process_urn = Urn::from_str(transfer_process.inner.id.as_str())?;
         let mut new_transfer_process = self
             .transfer_process_service
             .put_transfer_process(
@@ -191,8 +178,7 @@ impl TransferPersistenceTrait for TransferPersistenceService {
                     identifiers: None,
                 },
             )
-            .await
-            .expect("Failed to create transfer process");
+            .await?;
         let mut message = self
             .transfer_message_service
             .create_transfer_message(&NewTransferMessageDto {
@@ -205,9 +191,8 @@ impl TransferPersistenceTrait for TransferPersistenceService {
                 state_transition_to: new_state.to_string(),
                 payload: Some(payload_value),
             })
-            .await
-            .expect("Failed to create transfer process");
-        transfer_process.messages.push(message.inner);
+            .await?;
+        new_transfer_process.messages.push(message.inner);
         Ok(new_transfer_process)
     }
 }

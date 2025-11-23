@@ -1,8 +1,11 @@
 use crate::core::dsp::protocol_types::{
-    TransferProcessAckDto, TransferProcessMessageType, TransferProcessMessageWrapper, TransferProcessState,
+    TransferErrorDto, TransferProcessAckDto, TransferProcessMessageType, TransferProcessMessageWrapper,
+    TransferProcessState,
 };
 use crate::entities::transfer_process::TransferProcessDto;
+use crate::errors::error_adapter::CustomToResponse;
 use anyhow::bail;
+use axum::response::Response;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::protocol::context_field::ContextField;
 use std::str::FromStr;
@@ -75,4 +78,33 @@ impl TryFrom<TransferProcessDto> for TransferProcessMessageWrapper<TransferProce
     }
 }
 
-// TODO mapper for CommonErrors for TransferProcessErrorDto
+impl From<CommonErrors> for TransferProcessMessageWrapper<TransferErrorDto> {
+    fn from(value: CommonErrors) -> Self {
+        let err_info = match value {
+            CommonErrors::PetitionError { info, .. } => info,
+            CommonErrors::ProviderError { info, .. } => info,
+            CommonErrors::ConsumerError { info, .. } => info,
+            CommonErrors::AuthorityError { info, .. } => info,
+            CommonErrors::MissingActionError { info, .. } => info,
+            CommonErrors::MissingResourceError { info, .. } => info,
+            CommonErrors::FormatError { info, .. } => info,
+            CommonErrors::UnauthorizedError { info, .. } => info,
+            CommonErrors::ForbiddenError { info, .. } => info,
+            CommonErrors::DatabaseError { info, .. } => info,
+            CommonErrors::FeatureNotImplError { info, .. } => info,
+            CommonErrors::ReadError { info, .. } => info,
+            CommonErrors::WriteError { info, .. } => info,
+            CommonErrors::ParseError { info, .. } => info,
+        };
+        TransferProcessMessageWrapper {
+            context: ContextField::default(),
+            _type: TransferProcessMessageType::TransferError,
+            dto: TransferErrorDto {
+                consumer_pid: None,
+                provider_pid: None,
+                code: Option::from(err_info.error_code.to_string()),
+                reason: Option::from(vec![err_info.details.unwrap_or("".to_string())]),
+            },
+        }
+    }
+}

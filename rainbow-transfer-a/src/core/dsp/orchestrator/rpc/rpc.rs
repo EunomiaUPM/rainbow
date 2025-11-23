@@ -1,6 +1,6 @@
 use crate::core::dsp::orchestrator::rpc::types::{
-    RpcTransferCompletionMessageDto, RpcTransferErrorDto, RpcTransferMessageDto, RpcTransferRequestMessageDto,
-    RpcTransferStartMessageDto, RpcTransferSuspensionMessageDto, RpcTransferTerminationMessageDto,
+    RpcTransferCompletionMessageDto, RpcTransferMessageDto, RpcTransferRequestMessageDto, RpcTransferStartMessageDto,
+    RpcTransferSuspensionMessageDto, RpcTransferTerminationMessageDto,
 };
 use crate::core::dsp::orchestrator::rpc::RPCOrchestratorTrait;
 use crate::core::dsp::persistence::TransferPersistenceTrait;
@@ -42,20 +42,14 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
     async fn setup_transfer_request(
         &self,
         input: &RpcTransferRequestMessageDto,
-    ) -> anyhow::Result<
-        RpcTransferMessageDto<RpcTransferRequestMessageDto>,
-        RpcTransferErrorDto<RpcTransferRequestMessageDto>,
-    > {
+    ) -> anyhow::Result<RpcTransferMessageDto<RpcTransferRequestMessageDto>> {
         let request_body: TransferProcessMessageWrapper<TransferRequestMessageDto> = input.clone().into();
         let provider_address = input.provider_address.clone();
-        //self.state_machine_service.validate_rpc_transition(None, Arc::new(request_body.dto.clone())).await.expect("Failed to validate request");
-        self.validator_service
-            .validate(None, Arc::new(request_body.dto.clone()))
-            .await
-            .expect("Failed to validate request");
+        self.state_machine_service.validate_rpc_transition(None, Arc::new(request_body.dto.clone())).await?;
+        self.validator_service.validate(None, Arc::new(request_body.dto.clone())).await?;
         let peer_url = format!("{}/transfers/request", provider_address);
         let response: TransferProcessMessageWrapper<TransferProcessAckDto> =
-            self.http_client.post_json(peer_url.as_str(), &request_body).await.expect("Failed to post json request");
+            self.http_client.post_json(peer_url.as_str(), &request_body).await?;
         let transfer_process = self
             .persistence_service
             .create_process(
@@ -66,8 +60,7 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
                 Arc::new(request_body.clone().dto),
                 serde_json::to_value(request_body.clone()).unwrap(),
             )
-            .await
-            .expect("Failed to create process");
+            .await?;
         let response =
             RpcTransferMessageDto { request: input.clone(), response, transfer_agent_model: transfer_process };
         Ok(response)
@@ -76,18 +69,11 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
     async fn setup_transfer_start(
         &self,
         input: &RpcTransferStartMessageDto,
-    ) -> anyhow::Result<
-        RpcTransferMessageDto<RpcTransferStartMessageDto>,
-        RpcTransferErrorDto<RpcTransferStartMessageDto>,
-    > {
+    ) -> anyhow::Result<RpcTransferMessageDto<RpcTransferStartMessageDto>> {
         let input_data_address = input.data_address.clone();
         // current state
         let input_transfer_id = input.consumer_pid.clone();
-        let transfer_process = self
-            .persistence_service
-            .fetch_process(input_transfer_id.to_string().as_str())
-            .await
-            .expect("Failed to fetch process");
+        let transfer_process = self.persistence_service.fetch_process(input_transfer_id.to_string().as_str()).await?;
         // can be sent?
         let provider_pid = transfer_process.identifiers.get("providerPid").unwrap();
         let consumer_pid = transfer_process.identifiers.get("consumerPid").unwrap();
@@ -96,14 +82,8 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
             consumer_pid: Urn::from_str(consumer_pid.as_str()).unwrap(),
             data_address: input_data_address,
         };
-        self.state_machine_service
-            .validate_rpc_transition(None, Arc::new(transfer_process_into_trait.clone()))
-            .await
-            .expect("Failed to validate request");
-        self.validator_service
-            .validate(None, Arc::new(transfer_process_into_trait.clone()))
-            .await
-            .expect("Failed to validate request");
+        self.state_machine_service.validate_rpc_transition(None, Arc::new(transfer_process_into_trait.clone())).await?;
+        self.validator_service.validate(None, Arc::new(transfer_process_into_trait.clone())).await?;
         // where to be sent
         let peer_url_id = transfer_process.identifiers.get("consumerPid").unwrap();
         let callback_url = transfer_process.inner.callback_address.clone().unwrap_or("".to_string());
@@ -120,7 +100,7 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         };
         // send
         let response: TransferProcessMessageWrapper<TransferProcessAckDto> =
-            self.http_client.post_json(peer_url.as_str(), &message).await.expect("Failed to post json request");
+            self.http_client.post_json(peer_url.as_str(), &message).await?;
         // persist response
         let transfer_process = self
             .persistence_service
@@ -129,8 +109,7 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
                 Arc::new(transfer_process_into_trait.clone()),
                 serde_json::to_value(message.clone()).unwrap(),
             )
-            .await
-            .expect("Failed to create process");
+            .await?;
         // bye
         let response =
             RpcTransferMessageDto { request: input.clone(), response, transfer_agent_model: transfer_process };
@@ -140,36 +119,23 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
     async fn setup_transfer_suspension(
         &self,
         input: &RpcTransferSuspensionMessageDto,
-    ) -> anyhow::Result<
-        RpcTransferMessageDto<RpcTransferSuspensionMessageDto>,
-        RpcTransferErrorDto<RpcTransferSuspensionMessageDto>,
-    > {
+    ) -> anyhow::Result<RpcTransferMessageDto<RpcTransferSuspensionMessageDto>> {
         // current state
         let input_transfer_id = input.consumer_pid.clone();
         let input_code = input.code.clone();
         let input_reason = input.reason.clone();
-        let transfer_process = self
-            .persistence_service
-            .fetch_process(input_transfer_id.to_string().as_str())
-            .await
-            .expect("Failed to fetch process");
+        let transfer_process = self.persistence_service.fetch_process(input_transfer_id.to_string().as_str()).await?;
         // can be sent?
         let provider_pid = transfer_process.identifiers.get("providerPid").unwrap();
         let consumer_pid = transfer_process.identifiers.get("consumerPid").unwrap();
         let transfer_process_into_trait = TransferSuspensionMessageDto {
-            provider_pid: Urn::from_str(provider_pid.as_str()).unwrap(),
-            consumer_pid: Urn::from_str(consumer_pid.as_str()).unwrap(),
+            provider_pid: Urn::from_str(provider_pid.as_str())?,
+            consumer_pid: Urn::from_str(consumer_pid.as_str())?,
             code: input_code,
             reason: input_reason,
         };
-        self.state_machine_service
-            .validate_rpc_transition(None, Arc::new(transfer_process_into_trait.clone()))
-            .await
-            .expect("Failed to validate request");
-        self.validator_service
-            .validate(None, Arc::new(transfer_process_into_trait.clone()))
-            .await
-            .expect("Failed to validate request");
+        self.state_machine_service.validate_rpc_transition(None, Arc::new(transfer_process_into_trait.clone())).await?;
+        self.validator_service.validate(None, Arc::new(transfer_process_into_trait.clone())).await?;
 
         // where to be sent (depend o being provider or consumer
         let identifier_key = match transfer_process.inner.role.as_str() {
@@ -190,10 +156,9 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
             _type: TransferProcessMessageType::TransferSuspensionMessage,
             dto: transfer_process_into_trait.clone(),
         };
-        dbg!(&message);
         // send
         let response: TransferProcessMessageWrapper<TransferProcessAckDto> =
-            self.http_client.post_json(peer_url.as_str(), &message).await.expect("Failed to post json request");
+            self.http_client.post_json(peer_url.as_str(), &message).await?;
         // persist response
         let transfer_process = self
             .persistence_service
@@ -202,8 +167,7 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
                 Arc::new(transfer_process_into_trait.clone()),
                 serde_json::to_value(message.clone()).unwrap(),
             )
-            .await
-            .expect("Failed to create process");
+            .await?;
         // bye
         let response =
             RpcTransferMessageDto { request: input.clone(), response, transfer_agent_model: transfer_process };
@@ -213,32 +177,19 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
     async fn setup_transfer_completion(
         &self,
         input: &RpcTransferCompletionMessageDto,
-    ) -> anyhow::Result<
-        RpcTransferMessageDto<RpcTransferCompletionMessageDto>,
-        RpcTransferErrorDto<RpcTransferCompletionMessageDto>,
-    > {
+    ) -> anyhow::Result<RpcTransferMessageDto<RpcTransferCompletionMessageDto>> {
         // current state
         let input_transfer_id = input.consumer_pid.clone();
-        let transfer_process = self
-            .persistence_service
-            .fetch_process(input_transfer_id.to_string().as_str())
-            .await
-            .expect("Failed to fetch process");
+        let transfer_process = self.persistence_service.fetch_process(input_transfer_id.to_string().as_str()).await?;
         // can be sent?
         let provider_pid = transfer_process.identifiers.get("providerPid").unwrap();
         let consumer_pid = transfer_process.identifiers.get("consumerPid").unwrap();
         let transfer_process_into_trait = TransferCompletionMessageDto {
-            provider_pid: Urn::from_str(provider_pid.as_str()).unwrap(),
-            consumer_pid: Urn::from_str(consumer_pid.as_str()).unwrap(),
+            provider_pid: Urn::from_str(provider_pid.as_str())?,
+            consumer_pid: Urn::from_str(consumer_pid.as_str())?,
         };
-        self.state_machine_service
-            .validate_rpc_transition(None, Arc::new(transfer_process_into_trait.clone()))
-            .await
-            .expect("Failed to validate request");
-        self.validator_service
-            .validate(None, Arc::new(transfer_process_into_trait.clone()))
-            .await
-            .expect("Failed to validate request");
+        self.state_machine_service.validate_rpc_transition(None, Arc::new(transfer_process_into_trait.clone())).await?;
+        self.validator_service.validate(None, Arc::new(transfer_process_into_trait.clone())).await?;
         // where to be sent
         let peer_url_id = transfer_process.identifiers.get("providerPid").unwrap();
         let callback_url = transfer_process.inner.callback_address.clone().unwrap_or("".to_string());
@@ -254,7 +205,7 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         };
         // send
         let response: TransferProcessMessageWrapper<TransferProcessAckDto> =
-            self.http_client.post_json(peer_url.as_str(), &message).await.expect("Failed to post json request");
+            self.http_client.post_json(peer_url.as_str(), &message).await?;
         // persist response
         let transfer_process = self
             .persistence_service
@@ -263,8 +214,7 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
                 Arc::new(transfer_process_into_trait.clone()),
                 serde_json::to_value(message.clone()).unwrap(),
             )
-            .await
-            .expect("Failed to create process");
+            .await?;
         // bye
         let response =
             RpcTransferMessageDto { request: input.clone(), response, transfer_agent_model: transfer_process };
@@ -274,19 +224,12 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
     async fn setup_transfer_termination(
         &self,
         input: &RpcTransferTerminationMessageDto,
-    ) -> anyhow::Result<
-        RpcTransferMessageDto<RpcTransferTerminationMessageDto>,
-        RpcTransferErrorDto<RpcTransferTerminationMessageDto>,
-    > {
+    ) -> anyhow::Result<RpcTransferMessageDto<RpcTransferTerminationMessageDto>> {
         // current state
         let input_transfer_id = input.consumer_pid.clone();
         let input_code = input.code.clone();
         let input_reason = input.reason.clone();
-        let transfer_process = self
-            .persistence_service
-            .fetch_process(input_transfer_id.to_string().as_str())
-            .await
-            .expect("Failed to fetch process");
+        let transfer_process = self.persistence_service.fetch_process(input_transfer_id.to_string().as_str()).await?;
         // can be sent?
         let provider_pid = transfer_process.identifiers.get("providerPid").unwrap();
         let consumer_pid = transfer_process.identifiers.get("consumerPid").unwrap();
@@ -296,14 +239,8 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
             code: input_code,
             reason: input_reason,
         };
-        self.state_machine_service
-            .validate_rpc_transition(None, Arc::new(transfer_process_into_trait.clone()))
-            .await
-            .expect("Failed to validate request");
-        self.validator_service
-            .validate(None, Arc::new(transfer_process_into_trait.clone()))
-            .await
-            .expect("Failed to validate request");
+        self.state_machine_service.validate_rpc_transition(None, Arc::new(transfer_process_into_trait.clone())).await?;
+        self.validator_service.validate(None, Arc::new(transfer_process_into_trait.clone())).await?;
 
         // where to be sent
         let peer_url_id = transfer_process.identifiers.get("providerPid").unwrap();
@@ -320,7 +257,7 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         };
         // send
         let response: TransferProcessMessageWrapper<TransferProcessAckDto> =
-            self.http_client.post_json(peer_url.as_str(), &message).await.expect("Failed to post json request");
+            self.http_client.post_json(peer_url.as_str(), &message).await?;
         // persist response
         let transfer_process = self
             .persistence_service
@@ -329,8 +266,7 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
                 Arc::new(transfer_process_into_trait.clone()),
                 serde_json::to_value(message.clone()).unwrap(),
             )
-            .await
-            .expect("Failed to create process");
+            .await?;
         // bye
         let response =
             RpcTransferMessageDto { request: input.clone(), response, transfer_agent_model: transfer_process };

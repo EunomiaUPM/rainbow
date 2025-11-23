@@ -5,19 +5,24 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
+use reqwest::Response;
+use serde::Serialize;
+use std::future::Future;
 use std::sync::Arc;
 
 use super::protocol_types::{
-    TransferCompletionMessageDto, TransferProcessMessageWrapper, TransferRequestMessageDto, TransferStartMessageDto,
-    TransferSuspensionMessageDto, TransferTerminationMessageDto,
+    TransferCompletionMessageDto, TransferErrorDto, TransferProcessMessageWrapper, TransferRequestMessageDto,
+    TransferStartMessageDto, TransferSuspensionMessageDto, TransferTerminationMessageDto,
 };
 use crate::core::dsp::orchestrator::rpc::types::{
     RpcTransferCompletionMessageDto, RpcTransferRequestMessageDto, RpcTransferStartMessageDto,
     RpcTransferSuspensionMessageDto, RpcTransferTerminationMessageDto,
 };
 use crate::core::dsp::orchestrator::OrchestratorTrait;
-use crate::http::common::extract_payload;
+use crate::errors::error_adapter::CustomToResponse;
+use crate::http::common::extract_payload_error;
 use rainbow_common::config::provider_config::ApplicationProviderConfig;
+use rainbow_common::errors::CommonErrors;
 
 #[derive(Clone)]
 pub struct DspRouter {
@@ -44,30 +49,24 @@ impl DspRouter {
 
     pub fn router(self) -> Router {
         Router::new()
-            // 10.2.2 Transfer Request Endpoint
             .route("/request", post(Self::handle_transfer_request))
             .route(
                 "/rpc/setup-request",
                 post(Self::handle_transfer_request_rpc),
             )
-            // 10.2.1 Transfer Process Endpoint
             .route("/:id", get(Self::handle_get_transfer_process))
-            // 10.2.3 Transfer Start Endpoint
             .route("/:id/start", post(Self::handle_transfer_start))
             .route("/rpc/setup-start", post(Self::handle_transfer_start_rpc))
-            // 10.2.4 Transfer Completion Endpoint
             .route("/:id/completion", post(Self::handle_transfer_completion))
             .route(
                 "/rpc/setup-completion",
                 post(Self::handle_transfer_completion_rpc),
             )
-            // 10.2.5 Transfer Termination Endpoint
             .route("/:id/termination", post(Self::handle_transfer_termination))
             .route(
                 "/rpc/setup-termination",
                 post(Self::handle_transfer_termination_rpc),
             )
-            // 10.2.6 Transfer Suspension Endpoint
             .route("/:id/suspension", post(Self::handle_transfer_suspension))
             .route(
                 "/rpc/setup-suspension",
@@ -76,158 +75,151 @@ impl DspRouter {
             .with_state(self)
     }
 
-    /// 10.2.1 Transfer Process Endpoint - GET /transfers/:providerPid
-    async fn handle_get_transfer_process(State(state): State<DspRouter>, Path(id): Path<String>) -> impl IntoResponse {
-        match state.orchestrator.get_protocol_service().on_get_transfer_process(&id).await {
-            Ok(process) => (StatusCode::OK, Json(process)).into_response(),
-            Err(err) => (StatusCode::BAD_REQUEST, Json(err)).into_response(),
+    async fn process_request<T, R, F, Fut>(
+        input: Result<Json<T>, JsonRejection>,
+        success_code: StatusCode,
+        action: F,
+    ) -> impl IntoResponse
+    where
+        T: Send,
+        R: Serialize,
+        F: FnOnce(T) -> Fut,
+        Fut: Future<Output = anyhow::Result<R>> + Send,
+    {
+        let payload = match extract_payload_error(input) {
+            Ok(v) => v,
+            Err(e) => {
+                let error_dto: TransferProcessMessageWrapper<TransferErrorDto> = e.into();
+                return (StatusCode::BAD_REQUEST, Json(error_dto)).into_response();
+            }
+        };
+        Self::map_service_result(action(payload).await, success_code).into_response()
+    }
+
+    fn map_service_result<R>(result: anyhow::Result<R>, success_code: StatusCode) -> impl IntoResponse
+    where
+        R: Serialize,
+    {
+        match result {
+            Ok(data) => (success_code, Json(data)).into_response(),
+            Err(err) => match err.downcast::<CommonErrors>() {
+                Ok(common_errors) => {
+                    let error_dto: TransferProcessMessageWrapper<TransferErrorDto> = common_errors.into();
+                    (StatusCode::BAD_REQUEST, Json(error_dto)).into_response()
+                }
+                Err(original_err) => original_err.to_response(),
+            },
         }
     }
 
-    /// 10.2.2 Transfer Request Endpoint - POST /transfers/request
+    async fn handle_get_transfer_process(State(state): State<DspRouter>, Path(id): Path<String>) -> impl IntoResponse {
+        Self::map_service_result(
+            state.orchestrator.get_protocol_service().on_get_transfer_process(&id).await,
+            StatusCode::OK,
+        )
+    }
+
     async fn handle_transfer_request(
         State(state): State<DspRouter>,
         input: Result<Json<TransferProcessMessageWrapper<TransferRequestMessageDto>>, JsonRejection>,
     ) -> impl IntoResponse {
-        let input = match extract_payload(input) {
-            Ok(v) => v,
-            Err(e) => return e,
-        };
-        match state.orchestrator.get_protocol_service().on_transfer_request(&input).await {
-            Ok(process) => (StatusCode::CREATED, Json(process)).into_response(),
-            Err(err) => (StatusCode::BAD_REQUEST, Json(err)).into_response(),
-        }
+        Self::process_request(input, StatusCode::CREATED, |data| async move {
+            state.orchestrator.get_protocol_service().on_transfer_request(&data).await
+        })
+        .await
     }
+
     async fn handle_transfer_request_rpc(
         State(state): State<DspRouter>,
         input: Result<Json<RpcTransferRequestMessageDto>, JsonRejection>,
     ) -> impl IntoResponse {
-        let input = match extract_payload(input) {
-            Ok(v) => v,
-            Err(e) => return e,
-        };
-        match state.orchestrator.get_rpc_service().setup_transfer_request(&input).await {
-            Ok(process) => (StatusCode::CREATED, Json(process)).into_response(),
-            Err(err) => (StatusCode::BAD_REQUEST, Json(err)).into_response(),
-        }
+        Self::process_request(input, StatusCode::CREATED, |data| async move {
+            state.orchestrator.get_rpc_service().setup_transfer_request(&data).await
+        })
+        .await
     }
 
-    /// 10.2.3 Transfer Start Endpoint - POST /transfers/:providerPid/start
     async fn handle_transfer_start(
         State(state): State<DspRouter>,
         Path(id): Path<String>,
         input: Result<Json<TransferProcessMessageWrapper<TransferStartMessageDto>>, JsonRejection>,
     ) -> impl IntoResponse {
-        let input = match extract_payload(input) {
-            Ok(v) => v,
-            Err(e) => return e,
-        };
-        match state.orchestrator.get_protocol_service().on_transfer_start(&id, &input).await {
-            Ok(process) => (StatusCode::ACCEPTED, Json(process)).into_response(),
-            Err(err) => (StatusCode::BAD_REQUEST, Json(err)).into_response(),
-        }
+        Self::process_request(input, StatusCode::ACCEPTED, |data| async move {
+            state.orchestrator.get_protocol_service().on_transfer_start(&id, &data).await
+        })
+        .await
     }
+
     async fn handle_transfer_start_rpc(
         State(state): State<DspRouter>,
         input: Result<Json<RpcTransferStartMessageDto>, JsonRejection>,
     ) -> impl IntoResponse {
-        let input = match extract_payload(input) {
-            Ok(v) => v,
-            Err(e) => return e,
-        };
-        match state.orchestrator.get_rpc_service().setup_transfer_start(&input).await {
-            Ok(process) => (StatusCode::ACCEPTED, Json(process)).into_response(),
-            Err(err) => (StatusCode::BAD_REQUEST, Json(err)).into_response(),
-        }
+        Self::process_request(input, StatusCode::ACCEPTED, |data| async move {
+            state.orchestrator.get_rpc_service().setup_transfer_start(&data).await
+        })
+        .await
     }
 
-    /// 10.2.4 Transfer Completion Endpoint - POST /transfers/:providerPid/completion
     async fn handle_transfer_completion(
         State(state): State<DspRouter>,
         Path(id): Path<String>,
         input: Result<Json<TransferProcessMessageWrapper<TransferCompletionMessageDto>>, JsonRejection>,
     ) -> impl IntoResponse {
-        let input = match extract_payload(input) {
-            Ok(v) => v,
-            Err(e) => return e,
-        };
-        match state.orchestrator.get_protocol_service().on_transfer_completion(&id, &input).await {
-            Ok(process) => (StatusCode::ACCEPTED, Json(process)).into_response(),
-            Err(err) => (StatusCode::BAD_REQUEST, Json(err)).into_response(),
-        }
+        Self::process_request(input, StatusCode::ACCEPTED, |data| async move {
+            state.orchestrator.get_protocol_service().on_transfer_completion(&id, &data).await
+        })
+        .await
     }
 
     async fn handle_transfer_completion_rpc(
         State(state): State<DspRouter>,
         input: Result<Json<RpcTransferCompletionMessageDto>, JsonRejection>,
     ) -> impl IntoResponse {
-        let input = match extract_payload(input) {
-            Ok(v) => v,
-            Err(e) => return e,
-        };
-        match state.orchestrator.get_rpc_service().setup_transfer_completion(&input).await {
-            Ok(process) => (StatusCode::ACCEPTED, Json(process)).into_response(),
-            Err(err) => (StatusCode::BAD_REQUEST, Json(err)).into_response(),
-        }
+        Self::process_request(input, StatusCode::ACCEPTED, |data| async move {
+            state.orchestrator.get_rpc_service().setup_transfer_completion(&data).await
+        })
+        .await
     }
 
-    /// 10.2.5 Transfer Termination Endpoint - POST /transfers/:providerPid/termination
     async fn handle_transfer_termination(
         State(state): State<DspRouter>,
         Path(id): Path<String>,
         input: Result<Json<TransferProcessMessageWrapper<TransferTerminationMessageDto>>, JsonRejection>,
     ) -> impl IntoResponse {
-        let input = match extract_payload(input) {
-            Ok(v) => v,
-            Err(e) => return e,
-        };
-        match state.orchestrator.get_protocol_service().on_transfer_termination(&id, &input).await {
-            Ok(process) => (StatusCode::ACCEPTED, Json(process)).into_response(),
-            Err(err) => (StatusCode::BAD_REQUEST, Json(err)).into_response(),
-        }
+        Self::process_request(input, StatusCode::ACCEPTED, |data| async move {
+            state.orchestrator.get_protocol_service().on_transfer_termination(&id, &data).await
+        })
+        .await
     }
 
     async fn handle_transfer_termination_rpc(
         State(state): State<DspRouter>,
         input: Result<Json<RpcTransferTerminationMessageDto>, JsonRejection>,
     ) -> impl IntoResponse {
-        let input = match extract_payload(input) {
-            Ok(v) => v,
-            Err(e) => return e,
-        };
-        match state.orchestrator.get_rpc_service().setup_transfer_termination(&input).await {
-            Ok(process) => (StatusCode::ACCEPTED, Json(process)).into_response(),
-            Err(err) => (StatusCode::BAD_REQUEST, Json(err)).into_response(),
-        }
+        Self::process_request(input, StatusCode::ACCEPTED, |data| async move {
+            state.orchestrator.get_rpc_service().setup_transfer_termination(&data).await
+        })
+        .await
     }
 
-    /// 10.2.6 Transfer Suspension Endpoint - POST /transfers/:providerPid/suspension
     async fn handle_transfer_suspension(
         State(state): State<DspRouter>,
         Path(id): Path<String>,
         input: Result<Json<TransferProcessMessageWrapper<TransferSuspensionMessageDto>>, JsonRejection>,
     ) -> impl IntoResponse {
-        let input = match extract_payload(input) {
-            Ok(v) => v,
-            Err(e) => return e,
-        };
-        match state.orchestrator.get_protocol_service().on_transfer_suspension(&id, &input).await {
-            Ok(process) => (StatusCode::OK, Json(process)).into_response(),
-            Err(err) => (StatusCode::BAD_REQUEST, Json(err)).into_response(),
-        }
+        Self::process_request(input, StatusCode::OK, |data| async move {
+            state.orchestrator.get_protocol_service().on_transfer_suspension(&id, &data).await
+        })
+        .await
     }
 
     async fn handle_transfer_suspension_rpc(
         State(state): State<DspRouter>,
         input: Result<Json<RpcTransferSuspensionMessageDto>, JsonRejection>,
     ) -> impl IntoResponse {
-        let input = match extract_payload(input) {
-            Ok(v) => v,
-            Err(e) => return e,
-        };
-        match state.orchestrator.get_rpc_service().setup_transfer_suspension(&input).await {
-            Ok(process) => (StatusCode::ACCEPTED, Json(process)).into_response(),
-            Err(err) => (StatusCode::BAD_REQUEST, Json(err)).into_response(),
-        }
+        Self::process_request(input, StatusCode::ACCEPTED, |data| async move {
+            state.orchestrator.get_rpc_service().setup_transfer_suspension(&data).await
+        })
+        .await
     }
 }
