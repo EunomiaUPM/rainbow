@@ -26,7 +26,7 @@ use urn::Urn;
 pub mod data_plane_facade;
 
 #[mockall::automock]
-#[async_trait]
+#[async_trait::async_trait]
 pub trait DataPlaneProviderFacadeTrait: Send + Sync {
     async fn get_dataplane_address(&self, session_id: Urn) -> anyhow::Result<DataAddress>;
     async fn on_transfer_request(

@@ -57,7 +57,7 @@ struct RainbowRPCCatalogResolveDataServiceRequest {
     pub data_service_id: Urn,
 }
 
-#[async_trait]
+#[async_trait::async_trait]
 impl DataServiceFacadeTrait for DataServiceFacadeServiceForDatahub {
     async fn resolve_data_service_by_agreement_id(
         &self,

@@ -19,7 +19,6 @@
 
 use crate::services::data_service_resolver_facade::DataServiceFacadeTrait;
 use anyhow::{anyhow, bail};
-use axum::async_trait;
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_common::dcat_formats::DctFormats;
 use rainbow_common::errors::helpers::BadFormat;
@@ -56,7 +55,7 @@ struct RainbowRPCCatalogResolveDataServiceRequest {
     pub data_service_id: Urn,
 }
 
-#[async_trait]
+#[async_trait::async_trait]
 impl DataServiceFacadeTrait for DataServiceFacadeServiceForDSProtocol {
     async fn resolve_data_service_by_agreement_id(
         &self,

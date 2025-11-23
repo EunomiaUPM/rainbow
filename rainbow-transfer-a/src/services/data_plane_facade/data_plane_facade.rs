@@ -18,7 +18,6 @@
  */
 
 use crate::services::data_plane_facade::DataPlaneProviderFacadeTrait;
-use axum::async_trait;
 use rainbow_common::adv_protocol::interplane::data_plane_provision::DataPlaneProvisionRequest;
 use rainbow_common::adv_protocol::interplane::data_plane_start::DataPlaneStart;
 use rainbow_common::adv_protocol::interplane::data_plane_status::DataPlaneStatusRequest;
@@ -54,7 +53,7 @@ where
     }
 }
 
-#[async_trait]
+#[async_trait::async_trait]
 impl<T> DataPlaneProviderFacadeTrait for DataPlaneProviderFacadeForDSProtocol<T>
 where
     T: DataPlaneControllerTrait + Sync + Send,
