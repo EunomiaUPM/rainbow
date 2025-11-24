@@ -1,9 +1,7 @@
 use crate::entities::transfer_process::{TransferAgentProcessesTrait, TransferProcessDto};
 use crate::protocols::dsp::protocol_types::{TransferProcessMessageTrait, TransferProcessMessageType};
 use crate::protocols::dsp::validator::{helpers, ValidatorTrait};
-use anyhow::anyhow;
 use log::error;
-use rainbow_common::errors::helpers::BadFormat;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use std::str::FromStr;
 use std::sync::Arc;
@@ -27,8 +25,6 @@ impl ValidatorProtocolService {
         let role = &dto.inner.role;
         let role_key = helpers::validate_role(role)?;
         let pid = helpers::get_pid_from_identifiers(dto, role_key)?;
-        dbg!(&pid);
-        dbg!(&id);
         helpers::validate_pid_match(&pid, id)?;
         Ok(())
     }
@@ -71,10 +67,10 @@ impl ValidatorTrait for ValidatorProtocolService {
             TransferProcessMessageType::TransferError => {}   // caught in state transition
             _ => {
                 // id must be urn
-                let id_as_urn = id.map(|id| Urn::from_str(&id).unwrap()).ok_or_else(|| {
-                    let err = CommonErrors::format_new(BadFormat::Received, "Invalid transfer process message ID");
-                    error!("{}", err.log());
-                    anyhow!(err)
+                let id_as_urn = Urn::from_str(id.unwrap().as_str()).map_err(|_e| {
+                    let err = CommonErrors::parse_new("Invalid URN identifier");
+                    error!("{}", err);
+                    err
                 })?;
                 // there must be process
                 let current_process = self
@@ -88,9 +84,11 @@ impl ValidatorTrait for ValidatorProtocolService {
                             format!("Process not found {}", &id_as_urn).as_str(),
                         );
                         error!("{}", err.log());
-                        anyhow!(err)
+                        err
                     })?;
+                // uri and pid must coincide
                 self.validate_uri_and_pid(&id_as_urn, &current_process).await?;
+                // consumer_pid and provider_pid in request must coincide with transfer_process_dto_identifiers
                 self.validate_consumer_provider_pids_correlation(payload.clone(), &current_process)?;
             }
         };

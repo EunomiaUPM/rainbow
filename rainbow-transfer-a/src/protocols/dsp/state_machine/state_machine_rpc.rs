@@ -25,11 +25,7 @@ impl StateMachineForRpcService {
 
 #[async_trait::async_trait]
 impl StateMachineTrait for StateMachineForRpcService {
-    async fn validate_transition(
-        &self,
-        _id: Option<&String>,
-        payload: Arc<dyn TransferProcessMessageTrait>,
-    ) -> anyhow::Result<()> {
+    async fn validate_transition(&self, payload: Arc<dyn TransferProcessMessageTrait>) -> anyhow::Result<()> {
         debug!("DSProtocolRPC Service: transition_validation");
 
         // Negotiation state

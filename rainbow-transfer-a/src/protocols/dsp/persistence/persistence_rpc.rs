@@ -3,10 +3,12 @@ use crate::entities::transfer_process::TransferProcessDto;
 use crate::entities::transfer_process::{EditTransferProcessDto, NewTransferProcessDto, TransferAgentProcessesTrait};
 use crate::http::common::parse_urn;
 use crate::protocols::dsp::persistence::TransferPersistenceTrait;
-use crate::protocols::dsp::protocol_types::{TransferProcessMessageTrait, TransferProcessState};
+use crate::protocols::dsp::protocol_types::{
+    TransferProcessMessageTrait, TransferProcessMessageType, TransferProcessState, TransferStateAttribute,
+};
 use rainbow_common::errors::CommonErrors;
 use rainbow_common::errors::ErrorLog;
-use rainbow_common::protocol::transfer::TransferState;
+use rainbow_common::protocol::transfer::{TransferRoles, TransferState};
 use std::collections::HashMap;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -81,7 +83,7 @@ impl TransferPersistenceTrait for TransferPersistenceForRpcService {
                 agreement_id,
                 callback_address: Some(callback_address),
                 role: role.to_string(),
-                state_attribute: Some("REQUESTED".to_string()),
+                state_attribute: Some(TransferStateAttribute::OnRequest.to_string()),
                 properties: None,
                 identifiers: Some(identifiers),
             })
@@ -115,6 +117,29 @@ impl TransferPersistenceTrait for TransferPersistenceForRpcService {
         let new_state: TransferProcessState = TransferProcessState::from(message_type.clone());
         // current state
         let transfer_process = self.transfer_process_service.get_transfer_process_by_id(&urn_id).await?;
+        // role
+        let role = transfer_process.inner.role.parse::<TransferRoles>()?;
+        let state_attribute = transfer_process
+            .inner
+            .state_attribute
+            .unwrap_or(TransferStateAttribute::OnRequest.to_string())
+            .parse::<TransferStateAttribute>()?;
+        // new state attribute
+        // logical semaphore for avoiding consumer to start provider's suspension and viceversa
+        let new_state_attribute = match &message_type {
+            TransferProcessMessageType::TransferStartMessage => match &state_attribute {
+                TransferStateAttribute::OnRequest => TransferStateAttribute::OnRequest,
+                _ => match &role {
+                    TransferRoles::Provider => TransferStateAttribute::ByProvider,
+                    TransferRoles::Consumer => TransferStateAttribute::ByConsumer,
+                },
+            },
+            _ => match &role {
+                TransferRoles::Provider => TransferStateAttribute::ByProvider,
+                TransferRoles::Consumer => TransferStateAttribute::ByConsumer,
+            },
+        };
+
         // update
         let transfer_process_urn = Urn::from_str(transfer_process.inner.id.as_str())?;
         let mut new_transfer_process = self
@@ -123,7 +148,7 @@ impl TransferPersistenceTrait for TransferPersistenceForRpcService {
                 &transfer_process_urn,
                 &EditTransferProcessDto {
                     state: Some(new_state.to_string()),
-                    state_attribute: Some("BY_PROVIDER".to_string()),
+                    state_attribute: Some(new_state_attribute.to_string()),
                     properties: None,
                     error_details: None,
                     identifiers: None,

@@ -1,22 +1,22 @@
 use crate::entities::transfer_process::TransferProcessDto;
-use anyhow::anyhow;
+use anyhow::{anyhow, bail};
 use log::error;
 use rainbow_common::errors::helpers::BadFormat;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
+use rainbow_common::protocol::transfer::TransferRoles;
 use std::str::FromStr;
 use urn::Urn;
 
 pub fn validate_role(role: &str) -> anyhow::Result<&str> {
-    match role {
-        "Provider" => Ok("providerPid"),
-        "Consumer" => Ok("consumerPid"),
-        role => {
-            let err = CommonErrors::format_new(
-                BadFormat::Received,
-                format!("No role expected: {}", role).as_str(),
-            );
+    match &role.parse::<TransferRoles>() {
+        Ok(role_) => match role_ {
+            TransferRoles::Provider => Ok("providerPid"),
+            TransferRoles::Consumer => Ok("consumerPid"),
+        },
+        Err(_e) => {
+            let err = CommonErrors::parse_new(format!("No role expected: {}", role).as_str());
             error!("{}", err.log());
-            Err(anyhow!(err))
+            bail!(err)
         }
     }
 }
@@ -32,12 +32,9 @@ pub fn get_pid_from_identifiers(dto: &TransferProcessDto, key: &str) -> anyhow::
 pub fn validate_pid_match(pid: &str, id: &Urn) -> anyhow::Result<()> {
     let pid_as_urn = Urn::from_str(pid)?;
     if pid_as_urn.to_string() != id.to_string() {
-        let err = CommonErrors::format_new(
-            BadFormat::Received,
-            "Body and Uri identifiers do not coincide",
-        );
+        let err = CommonErrors::parse_new("Body and Uri identifiers do not coincide");
         error!("{}", err.log());
-        return Err(anyhow!(err));
+        bail!(err);
     }
     Ok(())
 }

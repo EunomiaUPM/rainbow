@@ -16,7 +16,6 @@ use tokio::net::TcpListener;
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 use tower_http::trace::{DefaultOnResponse, TraceLayer};
-use tracing::{info, Level, Span};
 use uuid::Uuid;
 
 pub struct TransferHttpWorker {}
@@ -85,16 +84,16 @@ impl TransferHttpWorker {
             .layer(
                 TraceLayer::new_for_http()
                     .make_span_with(|_req: &Request<_>| tracing::info_span!("request", id = %Uuid::new_v4()))
-                    .on_request(|request: &Request<_>, _span: &Span| {
-                        info!("{} {}", request.method(), request.uri());
+                    .on_request(|request: &Request<_>, _span: &tracing::Span| {
+                        tracing::info!("{} {}", request.method(), request.uri());
                     })
-                    .on_response(DefaultOnResponse::new().level(Level::TRACE)),
+                    .on_response(DefaultOnResponse::new().level(tracing::Level::TRACE)),
             );
         Ok(router)
     }
     async fn handler_404(uri: axum::http::Uri) -> impl IntoResponse {
         let err = CommonErrors::missing_resource_new(&uri.to_string(), "Route not found or Method not allowed");
-        info!("404 Not Found: {}", uri);
+        tracing::info!("404 Not Found: {}", uri);
         err.into_response()
     }
 }

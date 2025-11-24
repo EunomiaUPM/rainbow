@@ -1,12 +1,13 @@
 use crate::entities::transfer_messages::{NewTransferMessageDto, TransferAgentMessagesTrait};
 use crate::entities::transfer_process::TransferProcessDto;
 use crate::entities::transfer_process::{EditTransferProcessDto, NewTransferProcessDto, TransferAgentProcessesTrait};
-use crate::http::common::parse_urn;
 use crate::protocols::dsp::persistence::TransferPersistenceTrait;
-use crate::protocols::dsp::protocol_types::{TransferProcessMessageTrait, TransferProcessState};
+use crate::protocols::dsp::protocol_types::{
+    TransferProcessMessageTrait, TransferProcessMessageType, TransferProcessState, TransferStateAttribute,
+};
 use rainbow_common::errors::CommonErrors;
 use rainbow_common::errors::ErrorLog;
-use rainbow_common::protocol::transfer::TransferState;
+use rainbow_common::protocol::transfer::{TransferRoles, TransferState};
 use std::collections::HashMap;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -30,7 +31,7 @@ impl TransferPersistenceForProtocolService {
 #[async_trait::async_trait]
 impl TransferPersistenceTrait for TransferPersistenceForProtocolService {
     async fn fetch_process(&self, id: &str) -> anyhow::Result<TransferProcessDto> {
-        let urn = parse_urn(id).unwrap();
+        let urn = Urn::from_str(id)?;
         // get by value in identifiers table (since dsp uses this identifiers)
         let transfer_process =
             self.transfer_process_service.get_transfer_process_by_key_value(&urn).await.map_err(|_e| {
@@ -81,7 +82,7 @@ impl TransferPersistenceTrait for TransferPersistenceForProtocolService {
                 agreement_id,
                 callback_address: Some(callback_address),
                 role: role.to_string(),
-                state_attribute: Some("REQUESTED".to_string()),
+                state_attribute: Some(TransferStateAttribute::OnRequest.to_string()),
                 properties: None,
                 identifiers: Some(identifiers),
             })
@@ -117,13 +118,36 @@ impl TransferPersistenceTrait for TransferPersistenceForProtocolService {
         let transfer_process = self.transfer_process_service.get_transfer_process_by_key_value(&urn_id).await?;
         // update
         let transfer_process_urn = Urn::from_str(transfer_process.inner.id.as_str())?;
+        // role
+        let role = transfer_process.inner.role.parse::<TransferRoles>()?;
+        let state_attribute = transfer_process
+            .inner
+            .state_attribute
+            .unwrap_or(TransferStateAttribute::OnRequest.to_string())
+            .parse::<TransferStateAttribute>()?;
+        // new state attribute
+        // logical semaphore for avoiding consumer to start provider's suspension and viceversa
+        let new_state_attribute = match &message_type {
+            TransferProcessMessageType::TransferStartMessage => match &state_attribute {
+                TransferStateAttribute::OnRequest => TransferStateAttribute::OnRequest,
+                _ => match &role {
+                    TransferRoles::Provider => TransferStateAttribute::ByConsumer,
+                    TransferRoles::Consumer => TransferStateAttribute::ByProvider,
+                },
+            },
+            _ => match &role {
+                TransferRoles::Provider => TransferStateAttribute::ByConsumer,
+                TransferRoles::Consumer => TransferStateAttribute::ByProvider,
+            },
+        };
+
         let mut new_transfer_process = self
             .transfer_process_service
             .put_transfer_process(
                 &transfer_process_urn,
                 &EditTransferProcessDto {
                     state: Some(new_state.to_string()),
-                    state_attribute: Some("BY_PROVIDER".to_string()),
+                    state_attribute: Some(new_state_attribute.to_string()),
                     properties: None,
                     error_details: None,
                     identifiers: None,

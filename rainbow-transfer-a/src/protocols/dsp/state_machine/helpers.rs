@@ -1,190 +1,98 @@
-use crate::protocols::dsp::protocol_types::TransferProcessMessageType;
-use anyhow::{bail, Result};
+use crate::protocols::dsp::protocol_types::{TransferProcessMessageType, TransferProcessState, TransferStateAttribute};
+use anyhow::bail;
 use log::error;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
-use rainbow_common::protocol::transfer::TransferState;
+use rainbow_common::protocol::transfer::TransferRoles;
 
-pub fn validate_role_for_message(role: Option<&str>, message_type: &TransferProcessMessageType) -> Result<()> {
+pub fn validate_role_for_message(
+    role: &TransferRoles,
+    message_type: &TransferProcessMessageType,
+) -> anyhow::Result<()> {
     match (role, message_type) {
-        (Some("Provider"), TransferProcessMessageType::TransferStartMessage) => {
-            let err = CommonErrors::parse_new(
-                "Only Consumer roles are allowed to receive TransferProcessMessageType TransferStartMessage",
-            );
-            error!("{}", err.log());
-            bail!(err)
-        }
-        (Some("Provider"), _) => {}
-        (None, TransferProcessMessageType::TransferRequestMessage) => {}
-        (Some("Consumer"), TransferProcessMessageType::TransferRequestMessage) => {
+        // provider can receive all messages
+        (TransferRoles::Provider, _) => {}
+        // consumer cannot receive TransferRequestMessage
+        (TransferRoles::Consumer, TransferProcessMessageType::TransferRequestMessage) => {
             let err = CommonErrors::parse_new(
                 "Only Provider roles are allowed to receive TransferProcessMessageType TransferRequestMessage",
             );
             error!("{}", err.log());
             bail!(err)
         }
-        (Some("Consumer"), _) => {}
-        (Some(_), _) => {
-            let err = CommonErrors::parse_new(
-                "Only Provider or Consumer roles are allowed to participate in transfer process",
-            );
-            error!("{}", err.log());
-            bail!(err)
-        }
-        _ => {}
+        // consumer can receive all messages but TransferRequestMessage
+        (TransferRoles::Consumer, _) => {} // each other role should not be allowed
     }
     Ok(())
 }
 
 pub fn validate_state_transition(
-    current_state: Option<TransferState>,
+    current_state: &TransferProcessState,
     message_type: &TransferProcessMessageType,
-) -> Result<()> {
+) -> anyhow::Result<()> {
     match message_type {
         TransferProcessMessageType::TransferRequestMessage => {
-            if current_state.is_some() {
-                // This case needs context about the process ID, so we might handle it in the caller
-                // or pass the ID here. But for generic state transition, if state exists, Request is invalid?
-                // The original code checked if process exists. Here we check if state exists.
-                // If state exists, it means process exists.
-                let err = CommonErrors::parse_new(
-                    "TransferProcessMessageType TransferRequestMessage is not allowed here. Process already exists",
-                );
-                error!("{}", err.log());
-                bail!(err)
-            }
+            // is not validated since there's no transition
         }
         TransferProcessMessageType::TransferStartMessage => {
-            if current_state.is_none() {
-                let err = CommonErrors::parse_new("Something is wrong. Seems this process has no state");
-                error!("{}", err.log());
-                bail!(err)
-            }
-            match current_state.unwrap() {
-                TransferState::REQUESTED => {}
-                TransferState::STARTED => {
-                    let err = CommonErrors::parse_new(
-                        "TransferProcessMessageType TransferStartMessage is not allowed here. Current state is already STARTED",
-                    );
-                    error!("{}", err.log());
-                    bail!(err)
+            match current_state {
+                TransferProcessState::Requested => {}
+                TransferProcessState::Started => {
+                    validate_state_transition_error_helper(&current_state, message_type)?;
                 }
-                TransferState::TERMINATED => {
-                    let err = CommonErrors::parse_new(
-                        "TransferProcessMessageType TransferStartMessage is not allowed here. Current state is TERMINATED",
-                    );
-                    error!("{}", err.log());
-                    bail!(err)
+                TransferProcessState::Terminated => {
+                    validate_state_transition_error_helper(&current_state, message_type)?;
                 }
-                TransferState::COMPLETED => {
-                    let err = CommonErrors::parse_new(
-                        "TransferProcessMessageType TransferStartMessage is not allowed here. Current state is COMPLETED",
-                    );
-                    error!("{}", err.log());
-                    bail!(err)
+                TransferProcessState::Completed => {
+                    validate_state_transition_error_helper(&current_state, message_type)?;
                 }
-                TransferState::SUSPENDED => {
+                TransferProcessState::Suspended => {
                     // TODO check if startable if was suspended by same role
                 }
             }
         }
-        TransferProcessMessageType::TransferCompletionMessage => {
-            if current_state.is_none() {
-                let err = CommonErrors::parse_new("Something is wrong. Seems this process has no state");
-                error!("{}", err.log());
-                bail!(err)
+        TransferProcessMessageType::TransferCompletionMessage => match current_state {
+            TransferProcessState::Requested => {
+                validate_state_transition_error_helper(&current_state, message_type)?;
             }
-            match current_state.unwrap() {
-                TransferState::REQUESTED => {
-                    let err = CommonErrors::parse_new(
-                        "TransferProcessMessageType TransferCompletionMessage is not allowed here. Current state is REQUESTED. Please terminate instead.",
-                    );
-                    error!("{}", err.log());
-                    bail!(err)
-                }
-                TransferState::STARTED => {}
-                TransferState::TERMINATED => {
-                    let err = CommonErrors::parse_new(
-                        "TransferProcessMessageType TransferCompletionMessage is not allowed here. Current state is TERMINATED",
-                    );
-                    error!("{}", err.log());
-                    bail!(err)
-                }
-                TransferState::COMPLETED => {
-                    let err = CommonErrors::parse_new(
-                        "TransferProcessMessageType TransferCompletionMessage is not allowed here. Current state is already COMPLETED",
-                    );
-                    error!("{}", err.log());
-                    bail!(err)
-                }
-                TransferState::SUSPENDED => {}
+            TransferProcessState::Started => {}
+            TransferProcessState::Terminated => {
+                validate_state_transition_error_helper(&current_state, message_type)?;
             }
-        }
+            TransferProcessState::Completed => {
+                validate_state_transition_error_helper(&current_state, message_type)?;
+            }
+            TransferProcessState::Suspended => {}
+        },
         TransferProcessMessageType::TransferSuspensionMessage => {
-            if current_state.is_none() {
-                let err = CommonErrors::parse_new("Something is wrong. Seems this process has no state");
-                error!("{}", err.log());
-                bail!(err)
-            }
-            match current_state.unwrap() {
-                TransferState::REQUESTED => {
-                    let err = CommonErrors::parse_new(
-                        "TransferProcessMessageType TransferSuspensionMessage is not allowed here. Current state is REQUESTED",
-                    );
-                    error!("{}", err.log());
-                    bail!(err)
+            match current_state {
+                TransferProcessState::Requested => {
+                    validate_state_transition_error_helper(&current_state, message_type)?;
                 }
-                TransferState::STARTED => {
+                TransferProcessState::Started => {
                     // TODO check if suspendable if was started by same role
                 }
-                TransferState::TERMINATED => {
-                    let err = CommonErrors::parse_new(
-                        "TransferProcessMessageType TransferSuspensionMessage is not allowed here. Current state is TERMINATED",
-                    );
-                    error!("{}", err.log());
-                    bail!(err)
+                TransferProcessState::Terminated => {
+                    validate_state_transition_error_helper(&current_state, message_type)?;
                 }
-                TransferState::COMPLETED => {
-                    let err = CommonErrors::parse_new(
-                        "TransferProcessMessageType TransferSuspensionMessage is not allowed here. Current state is COMPLETED",
-                    );
-                    error!("{}", err.log());
-                    bail!(err)
+                TransferProcessState::Completed => {
+                    validate_state_transition_error_helper(&current_state, message_type)?;
                 }
-                TransferState::SUSPENDED => {
-                    let err = CommonErrors::parse_new(
-                        "TransferProcessMessageType TransferSuspensionMessage is not allowed here. Current state is already SUSPENDED",
-                    );
-                    error!("{}", err.log());
-                    bail!(err)
+                TransferProcessState::Suspended => {
+                    validate_state_transition_error_helper(&current_state, message_type)?;
                 }
             }
         }
-        TransferProcessMessageType::TransferTerminationMessage => {
-            if current_state.is_none() {
-                let err = CommonErrors::parse_new("Something is wrong. Seems this process has no state");
-                error!("{}", err.log());
-                bail!(err)
+        TransferProcessMessageType::TransferTerminationMessage => match current_state {
+            TransferProcessState::Requested => {}
+            TransferProcessState::Started => {}
+            TransferProcessState::Terminated => {
+                validate_state_transition_error_helper(&current_state, message_type)?;
             }
-            match current_state.unwrap() {
-                TransferState::REQUESTED => {}
-                TransferState::STARTED => {}
-                TransferState::TERMINATED => {
-                    let err = CommonErrors::parse_new(
-                        "TransferProcessMessageType TransferTerminationMessage is not allowed here. Current state is already TERMINATED",
-                    );
-                    error!("{}", err.log());
-                    bail!(err)
-                }
-                TransferState::COMPLETED => {
-                    let err = CommonErrors::parse_new(
-                        "TransferProcessMessageType TransferTerminationMessage is not allowed here. Current state is COMPLETED",
-                    );
-                    error!("{}", err.log());
-                    bail!(err)
-                }
-                TransferState::SUSPENDED => {}
+            TransferProcessState::Completed => {
+                validate_state_transition_error_helper(&current_state, message_type)?;
             }
-        }
+            TransferProcessState::Suspended => {}
+        },
         TransferProcessMessageType::TransferProcess => {
             let err = CommonErrors::parse_new("TransferProcessMessageType TransferProcess is not allowed here");
             error!("{}", err.log());
@@ -197,4 +105,57 @@ pub fn validate_state_transition(
         }
     }
     Ok(())
+}
+
+pub fn validate_state_attribute_transition(
+    current_state: &TransferProcessState,
+    current_state_attribute: &TransferStateAttribute,
+    message_type: &TransferProcessMessageType,
+    role: &TransferRoles,
+) -> anyhow::Result<()> {
+    // if message is TransferStartMessage
+    // if on request, ok
+    // if byConsumer or byProvider, only could be changed by same role.
+    // to avoid start processes suspended by peer
+    match message_type {
+        TransferProcessMessageType::TransferStartMessage => match current_state_attribute {
+            TransferStateAttribute::OnRequest => {}
+            t => match (t, role) {
+                (TransferStateAttribute::ByConsumer, TransferRoles::Consumer)
+                | (TransferStateAttribute::ByProvider, TransferRoles::Provider) => {
+                    let err = CommonErrors::parse_new(
+                        format!(
+                            "TransferProcessMessageType {} is not allowed here. Current state is {} {}",
+                            message_type.to_string(),
+                            current_state.to_string(),
+                            current_state_attribute.to_string()
+                        )
+                        .as_str(),
+                    );
+                    error!("{}", err.log());
+                    bail!(err);
+                }
+                _ => {}
+            },
+        },
+        _ => {}
+    };
+    // sorry by the arrow matching...
+    Ok(())
+}
+
+fn validate_state_transition_error_helper(
+    current_state: &TransferProcessState,
+    message_type: &TransferProcessMessageType,
+) -> anyhow::Result<()> {
+    let err = CommonErrors::parse_new(
+        format!(
+            "TransferProcessMessageType {} is not allowed here. Current state is {}",
+            message_type.to_string(),
+            current_state.to_string()
+        )
+        .as_str(),
+    );
+    error!("{}", err.log());
+    bail!(err)
 }

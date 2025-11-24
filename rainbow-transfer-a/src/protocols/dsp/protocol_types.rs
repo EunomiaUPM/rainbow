@@ -479,14 +479,21 @@ impl Display for TransferStateAttribute {
 }
 
 impl FromStr for TransferStateAttribute {
-    type Err = ();
+    type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "OnRequest" => Ok(TransferStateAttribute::OnRequest),
             "ByConsumer" => Ok(TransferStateAttribute::ByConsumer),
             "ByProvider" => Ok(TransferStateAttribute::ByProvider),
-            _ => Err(()),
+            v => {
+                let err = CommonErrors::parse_new(&format!(
+                    "Critical: Invalid or unknown TransferStateAttribute '{}'",
+                    v
+                ));
+                error!("{}", err.log());
+                bail!(err);
+            }
         }
     }
 }

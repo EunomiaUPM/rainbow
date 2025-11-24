@@ -40,7 +40,10 @@ Show some love on https://github.com/ging/rainbow
 async fn main() -> anyhow::Result<()> {
     let filter =
         EnvFilter::builder().with_default_directive(LevelFilter::INFO.into()).parse("debug,sqlx::query=off")?;
-    tracing_subscriber::fmt().with_env_filter(filter).init();
+    tracing_subscriber::fmt()
+        .event_format(tracing_subscriber::fmt::format().with_line_number(true))
+        .with_env_filter(filter)
+        .init();
     info!("{}", INFO);
     TransferCommands::init_command_line().await?;
     Ok(())
