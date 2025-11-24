@@ -100,7 +100,7 @@ impl From<TransferProcessDto> for TransferProcessResponse {
 
         // 2. dates
         let created_at = to_prost_timestamp(DateTime::from(model.created_at));
-        let updated_at = model.updated_at.map(|d| to_prost_timestamp(DateTime::from(model.created_at)));
+        let updated_at = model.updated_at.map(|d| to_prost_timestamp(DateTime::from(d)));
 
         // 3. nested
         let messages_proto: Vec<TransferMessageResponse> = dto

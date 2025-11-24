@@ -18,7 +18,7 @@
  */
 
 use crate::services::data_service_resolver_facade::DataServiceFacadeTrait;
-use anyhow::{anyhow, bail};
+use anyhow::bail;
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_common::dcat_formats::DctFormats;
 use rainbow_common::errors::helpers::BadFormat;
@@ -41,7 +41,7 @@ pub struct DataServiceFacadeServiceForDSProtocol {
 }
 
 impl DataServiceFacadeServiceForDSProtocol {
-    pub fn new(config: ApplicationProviderConfig) -> Self {
+    pub fn _new(config: ApplicationProviderConfig) -> Self {
         let client =
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
         Self { config, client }

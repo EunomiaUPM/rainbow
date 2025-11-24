@@ -9,6 +9,7 @@ use std::fmt::Debug;
 use std::str::FromStr;
 use urn::Urn;
 
+#[allow(unused)]
 pub trait RpcTransferProcessMessageTrait: Debug + Send + Sync {
     fn get_consumer_pid(&self) -> Option<Urn>;
     fn get_provider_pid(&self) -> Option<Urn>;

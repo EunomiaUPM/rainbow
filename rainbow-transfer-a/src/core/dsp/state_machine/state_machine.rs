@@ -3,15 +3,14 @@ use crate::core::dsp::state_machine::StateMachineTrait;
 use crate::entities::transfer_process::TransferAgentProcessesTrait;
 use anyhow::bail;
 use log::error;
-use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
-use rainbow_common::config::ConfigRoles;
+use rainbow_common::config::provider_config::ApplicationProviderConfig;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::protocol::transfer::TransferState;
 use std::sync::Arc;
 
 pub struct StateMachineForDspService {
     transfer_agent_process_entities: Arc<dyn TransferAgentProcessesTrait>,
-    config: Arc<ApplicationProviderConfig>,
+    _config: Arc<ApplicationProviderConfig>,
 }
 
 impl StateMachineForDspService {
@@ -19,7 +18,7 @@ impl StateMachineForDspService {
         transfer_agent_process_entities: Arc<dyn TransferAgentProcessesTrait>,
         config: Arc<ApplicationProviderConfig>,
     ) -> Self {
-        Self { transfer_agent_process_entities, config }
+        Self { transfer_agent_process_entities, _config: config }
     }
 }
 
@@ -27,7 +26,7 @@ impl StateMachineForDspService {
 impl StateMachineTrait for StateMachineForDspService {
     async fn validate_transition(
         &self,
-        id: Option<&String>,
+        _id: Option<&String>,
         payload: Arc<dyn TransferProcessMessageTrait>,
     ) -> anyhow::Result<()> {
         let message_type = payload.get_message();
@@ -95,7 +94,7 @@ impl StateMachineTrait for StateMachineForDspService {
                     error!("{}", err.log());
                     bail!(err)
                 }
-                let current_state = current_state.unwrap().parse::<TransferState>().map_err(|e| {
+                let current_state = current_state.unwrap().parse::<TransferState>().map_err(|_e| {
                     let err = CommonErrors::parse_new(
                         "Something is wrong. Seems this process' state is not protocol compliant",
                     );
@@ -136,7 +135,7 @@ impl StateMachineTrait for StateMachineForDspService {
                     error!("{}", err.log());
                     bail!(err)
                 }
-                let current_state = current_state.unwrap().parse::<TransferState>().map_err(|e| {
+                let current_state = current_state.unwrap().parse::<TransferState>().map_err(|_e| {
                     let err = CommonErrors::parse_new(
                         "Something is wrong. Seems this process' state is not protocol compliant",
                     );
@@ -175,7 +174,7 @@ impl StateMachineTrait for StateMachineForDspService {
                     error!("{}", err.log());
                     bail!(err)
                 }
-                let current_state = current_state.unwrap().parse::<TransferState>().map_err(|e| {
+                let current_state = current_state.unwrap().parse::<TransferState>().map_err(|_e| {
                     let err = CommonErrors::parse_new(
                         "Something is wrong. Seems this process' state is not protocol compliant",
                     );
@@ -222,7 +221,7 @@ impl StateMachineTrait for StateMachineForDspService {
                     error!("{}", err.log());
                     bail!(err)
                 }
-                let current_state = current_state.unwrap().parse::<TransferState>().map_err(|e| {
+                let current_state = current_state.unwrap().parse::<TransferState>().map_err(|_e| {
                     let err = CommonErrors::parse_new(
                         "Something is wrong. Seems this process' state is not protocol compliant",
                     );
@@ -266,8 +265,8 @@ impl StateMachineTrait for StateMachineForDspService {
 
     async fn validate_rpc_transition(
         &self,
-        id: Option<&String>,
-        payload: Arc<dyn TransferProcessMessageTrait>,
+        _id: Option<&String>,
+        _payload: Arc<dyn TransferProcessMessageTrait>,
     ) -> anyhow::Result<()> {
         Ok(())
     }

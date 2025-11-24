@@ -1,6 +1,7 @@
 use crate::TransferDummyTrait;
 use std::sync::Arc;
 
+#[allow(unused)]
 pub struct TransferSharedServices {
     // Repo
     pub transfer_process_repo: Arc<dyn TransferDummyTrait>,
@@ -15,6 +16,7 @@ pub struct TransferSharedServices {
 }
 
 #[async_trait::async_trait]
+#[allow(unused)]
 pub trait ProtocolPluginTrait {
     fn name(&self) -> &'static str;
     fn version(&self) -> &'static str;

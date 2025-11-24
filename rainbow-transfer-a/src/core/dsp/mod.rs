@@ -1,3 +1,4 @@
+mod errors;
 pub(crate) mod http;
 mod mapper;
 pub(crate) mod orchestrator;

@@ -48,7 +48,7 @@ where
     T: DataPlaneControllerTrait + Sync + Send,
     'a: 'static,
 {
-    pub fn new(dataplane_controller: Arc<T>, config: ApplicationProviderConfig) -> Self {
+    pub fn _new(dataplane_controller: Arc<T>, config: ApplicationProviderConfig) -> Self {
         Self { dataplane_controller, _config: config }
     }
 }

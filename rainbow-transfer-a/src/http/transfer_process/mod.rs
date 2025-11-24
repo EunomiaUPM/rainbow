@@ -10,7 +10,6 @@ use axum::{Json, Router};
 use rainbow_common::batch_requests::BatchRequests;
 use rainbow_common::config::provider_config::ApplicationProviderConfig;
 use serde::Deserialize;
-use std::str::FromStr;
 use std::sync::Arc;
 
 #[derive(Clone)]

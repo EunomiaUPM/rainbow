@@ -45,25 +45,25 @@ impl TransferAgentMessages for TransferAgentMessagesGrpc {
 
     async fn create_message(
         &self,
-        request: Request<CreateMessageRequest>,
+        _request: Request<CreateMessageRequest>,
     ) -> Result<Response<TransferMessageResponse>, Status> {
         todo!()
     }
 
     async fn get_message_by_id(
         &self,
-        request: Request<ResourceIdRequestMessages>,
+        _request: Request<ResourceIdRequestMessages>,
     ) -> Result<Response<TransferMessageResponse>, Status> {
         todo!()
     }
 
-    async fn delete_message(&self, request: Request<ResourceIdRequestMessages>) -> Result<Response<()>, Status> {
+    async fn delete_message(&self, _request: Request<ResourceIdRequestMessages>) -> Result<Response<()>, Status> {
         todo!()
     }
 
     async fn get_messages_by_process_id(
         &self,
-        request: Request<ResourceIdRequestMessages>,
+        _request: Request<ResourceIdRequestMessages>,
     ) -> Result<Response<TransferMessageListResponse>, Status> {
         todo!()
     }

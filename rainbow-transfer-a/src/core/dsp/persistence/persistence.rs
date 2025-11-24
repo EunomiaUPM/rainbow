@@ -34,7 +34,7 @@ impl TransferPersistenceService {
 impl TransferPersistenceTrait for TransferPersistenceService {
     async fn fetch_process_by_process_id(&self, id: &str) -> anyhow::Result<TransferProcessDto> {
         let urn = parse_urn(id).unwrap();
-        let transfer_process = self.transfer_process_service.get_transfer_process_by_id(&urn).await.map_err(|e| {
+        let transfer_process = self.transfer_process_service.get_transfer_process_by_id(&urn).await.map_err(|_e| {
             let err = CommonErrors::missing_resource_new(urn.to_string().as_str(), "Process service not found");
             error!("{}", err.log());
             err
@@ -44,7 +44,7 @@ impl TransferPersistenceTrait for TransferPersistenceService {
     async fn fetch_process(&self, id: &str) -> anyhow::Result<TransferProcessDto> {
         let urn = parse_urn(id).unwrap();
         let transfer_process =
-            self.transfer_process_service.get_transfer_process_by_key_value(&urn).await.map_err(|e| {
+            self.transfer_process_service.get_transfer_process_by_key_value(&urn).await.map_err(|_e| {
                 let err = CommonErrors::missing_resource_new(urn.to_string().as_str(), "Process service not found");
                 error!("{}", err.log());
                 err
@@ -93,7 +93,7 @@ impl TransferPersistenceTrait for TransferPersistenceService {
                 identifiers: Some(identifiers),
             })
             .await?;
-        let mut transfer_message = self
+        let transfer_message = self
             .transfer_message_service
             .create_transfer_message(&NewTransferMessageDto {
                 id: None,
@@ -120,7 +120,7 @@ impl TransferPersistenceTrait for TransferPersistenceService {
         let new_state: TransferProcessState = TransferProcessState::from(message_type.clone());
 
         let urn_id = Urn::from_str(id).expect("Failed to parse urnID");
-        let mut transfer_process = self.transfer_process_service.get_transfer_process_by_key_value(&urn_id).await?;
+        let transfer_process = self.transfer_process_service.get_transfer_process_by_key_value(&urn_id).await?;
 
         let transfer_process_urn = Urn::from_str(transfer_process.inner.id.as_str()).expect("Failed to parse urnID");
         let mut new_transfer_process = self
@@ -136,7 +136,7 @@ impl TransferPersistenceTrait for TransferPersistenceService {
                 },
             )
             .await?;
-        let mut message = self
+        let message = self
             .transfer_message_service
             .create_transfer_message(&NewTransferMessageDto {
                 id: None,
@@ -163,7 +163,7 @@ impl TransferPersistenceTrait for TransferPersistenceService {
         let new_state: TransferProcessState = TransferProcessState::from(message_type.clone());
 
         let urn_id = Urn::from_str(id).expect("Failed to parse urnID");
-        let mut transfer_process = self.transfer_process_service.get_transfer_process_by_id(&urn_id).await?;
+        let transfer_process = self.transfer_process_service.get_transfer_process_by_id(&urn_id).await?;
 
         let transfer_process_urn = Urn::from_str(transfer_process.inner.id.as_str())?;
         let mut new_transfer_process = self
@@ -179,7 +179,7 @@ impl TransferPersistenceTrait for TransferPersistenceService {
                 },
             )
             .await?;
-        let mut message = self
+        let message = self
             .transfer_message_service
             .create_transfer_message(&NewTransferMessageDto {
                 id: None,

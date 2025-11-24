@@ -6,7 +6,6 @@ use axum::{
     Json, Router,
 };
 use serde::Deserialize;
-use std::str::FromStr;
 use std::sync::Arc;
 
 use crate::entities::transfer_messages::{NewTransferMessageDto, TransferAgentMessagesTrait};

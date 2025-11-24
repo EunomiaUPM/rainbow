@@ -12,7 +12,11 @@ impl DspValidatorService {
 
 #[async_trait::async_trait]
 impl ValidatorTrait for DspValidatorService {
-    async fn validate(&self, id: Option<&String>, payload: Arc<dyn TransferProcessMessageTrait>) -> anyhow::Result<()> {
+    async fn validate(
+        &self,
+        _id: Option<&String>,
+        _payload: Arc<dyn TransferProcessMessageTrait>,
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 }

@@ -5,24 +5,23 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
-use reqwest::Response;
 use serde::Serialize;
 use std::future::Future;
 use std::sync::Arc;
 
 use super::protocol_types::{
-    TransferCompletionMessageDto, TransferErrorDto, TransferProcessMessageWrapper, TransferRequestMessageDto,
-    TransferStartMessageDto, TransferSuspensionMessageDto, TransferTerminationMessageDto,
+    TransferCompletionMessageDto, TransferErrorDto, TransferProcessMessageType, TransferProcessMessageWrapper,
+    TransferRequestMessageDto, TransferStartMessageDto, TransferSuspensionMessageDto, TransferTerminationMessageDto,
 };
+use crate::core::dsp::errors::extract_payload_error;
 use crate::core::dsp::orchestrator::rpc::types::{
     RpcTransferCompletionMessageDto, RpcTransferRequestMessageDto, RpcTransferStartMessageDto,
     RpcTransferSuspensionMessageDto, RpcTransferTerminationMessageDto,
 };
 use crate::core::dsp::orchestrator::OrchestratorTrait;
-use crate::errors::error_adapter::CustomToResponse;
-use crate::http::common::extract_payload_error;
 use rainbow_common::config::provider_config::ApplicationProviderConfig;
 use rainbow_common::errors::CommonErrors;
+use rainbow_common::protocol::context_field::ContextField;
 
 #[derive(Clone)]
 pub struct DspRouter {
@@ -107,7 +106,19 @@ impl DspRouter {
                     let error_dto: TransferProcessMessageWrapper<TransferErrorDto> = common_errors.into();
                     (StatusCode::BAD_REQUEST, Json(error_dto)).into_response()
                 }
-                Err(original_err) => original_err.to_response(),
+                Err(original_err) => {
+                    let error_dto: TransferProcessMessageWrapper<TransferErrorDto> = TransferProcessMessageWrapper {
+                        context: ContextField::default(),
+                        _type: TransferProcessMessageType::TransferError,
+                        dto: TransferErrorDto {
+                            consumer_pid: None,
+                            provider_pid: None,
+                            code: Some("5000".to_string()),
+                            reason: Some(vec![original_err.to_string()]),
+                        },
+                    };
+                    (StatusCode::BAD_REQUEST, Json(error_dto)).into_response()
+                }
             },
         }
     }

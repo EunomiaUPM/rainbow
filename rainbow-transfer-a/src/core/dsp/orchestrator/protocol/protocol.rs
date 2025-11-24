@@ -1,22 +1,19 @@
 use crate::core::dsp::orchestrator::protocol::ProtocolOrchestratorTrait;
 use crate::core::dsp::persistence::TransferPersistenceTrait;
 use crate::core::dsp::protocol_types::{
-    TransferCompletionMessageDto, TransferErrorDto, TransferProcessAckDto, TransferProcessMessageType,
-    TransferProcessMessageWrapper, TransferRequestMessageDto, TransferStartMessageDto, TransferSuspensionMessageDto,
-    TransferTerminationMessageDto,
+    TransferCompletionMessageDto, TransferProcessAckDto, TransferProcessMessageWrapper, TransferRequestMessageDto,
+    TransferStartMessageDto, TransferSuspensionMessageDto, TransferTerminationMessageDto,
 };
 use crate::core::dsp::state_machine::StateMachineTrait;
 use crate::core::dsp::validator::ValidatorTrait;
 use rainbow_common::config::provider_config::ApplicationProviderConfig;
-use rainbow_common::errors::CommonErrors;
-use rainbow_common::protocol::context_field::ContextField;
 use std::sync::Arc;
 
 pub struct ProtocolOrchestratorService {
     pub state_machine_service: Arc<dyn StateMachineTrait>,
     pub validator_service: Arc<dyn ValidatorTrait>,
     pub persistence_service: Arc<dyn TransferPersistenceTrait>,
-    pub config: Arc<ApplicationProviderConfig>,
+    pub _config: Arc<ApplicationProviderConfig>,
 }
 
 impl ProtocolOrchestratorService {
@@ -24,9 +21,9 @@ impl ProtocolOrchestratorService {
         state_machine_service: Arc<dyn StateMachineTrait>,
         validator_service: Arc<dyn ValidatorTrait>,
         persistence_service: Arc<dyn TransferPersistenceTrait>,
-        config: Arc<ApplicationProviderConfig>,
+        _config: Arc<ApplicationProviderConfig>,
     ) -> ProtocolOrchestratorService {
-        ProtocolOrchestratorService { state_machine_service, validator_service, persistence_service, config }
+        ProtocolOrchestratorService { state_machine_service, validator_service, persistence_service, _config }
     }
 }
 

@@ -40,7 +40,7 @@ pub struct ErrorInfo {
     pub cause: String,
 }
 
-#[derive(Error, Debug, Serialize, Deserialize)]
+#[derive(Error, Debug, Serialize, Deserialize, Clone)]
 pub enum CommonErrors {
     #[error("Petition Error")]
     PetitionError {

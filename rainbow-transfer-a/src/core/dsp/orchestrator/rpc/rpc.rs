@@ -21,7 +21,7 @@ pub struct RPCOrchestratorService {
     pub state_machine_service: Arc<dyn StateMachineTrait>,
     pub validator_service: Arc<dyn ValidatorTrait>,
     pub persistence_service: Arc<dyn TransferPersistenceTrait>,
-    pub config: Arc<ApplicationProviderConfig>,
+    pub _config: Arc<ApplicationProviderConfig>,
     pub http_client: Arc<HttpClient>,
 }
 
@@ -30,10 +30,10 @@ impl RPCOrchestratorService {
         state_machine_service: Arc<dyn StateMachineTrait>,
         validator_service: Arc<dyn ValidatorTrait>,
         persistence_service: Arc<dyn TransferPersistenceTrait>,
-        config: Arc<ApplicationProviderConfig>,
+        _config: Arc<ApplicationProviderConfig>,
         http_client: Arc<HttpClient>,
     ) -> RPCOrchestratorService {
-        RPCOrchestratorService { state_machine_service, validator_service, persistence_service, config, http_client }
+        RPCOrchestratorService { state_machine_service, validator_service, persistence_service, _config, http_client }
     }
 }
 

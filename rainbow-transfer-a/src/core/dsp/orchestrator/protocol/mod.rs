@@ -1,6 +1,6 @@
 use crate::core::dsp::protocol_types::{
-    TransferCompletionMessageDto, TransferErrorDto, TransferProcessAckDto, TransferProcessMessageWrapper,
-    TransferRequestMessageDto, TransferStartMessageDto, TransferSuspensionMessageDto, TransferTerminationMessageDto,
+    TransferCompletionMessageDto, TransferProcessAckDto, TransferProcessMessageWrapper, TransferRequestMessageDto,
+    TransferStartMessageDto, TransferSuspensionMessageDto, TransferTerminationMessageDto,
 };
 pub(crate) mod protocol;
 

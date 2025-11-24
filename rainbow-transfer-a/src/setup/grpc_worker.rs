@@ -1,13 +1,11 @@
 use crate::db::factory_sql::TransferAgentRepoForSql;
 use crate::entities::transfer_messages::transfer_messages::TransferAgentMessagesService;
 use crate::entities::transfer_process::transfer_process::TransferAgentProcessesService;
-use crate::grpc::api;
 use crate::grpc::api::transfer_messages::transfer_agent_messages_server::TransferAgentMessagesServer;
 use crate::grpc::api::transfer_processes::transfer_agent_processes_server::TransferAgentProcessesServer;
 use crate::grpc::api::FILE_DESCRIPTOR_SET;
 use crate::grpc::transfer_messages::TransferAgentMessagesGrpc;
 use crate::grpc::transfer_process::TransferAgentProcessesGrpc;
-use axum::{serve, Router};
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use sea_orm::Database;
 use std::sync::Arc;
@@ -16,7 +14,6 @@ use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 use tonic::codegen::tokio_stream::wrappers::TcpListenerStream;
 use tonic::transport::Server;
-use tower_http::trace::TraceLayer;
 
 pub struct TransferGrpcWorker {}
 

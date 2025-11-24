@@ -3,9 +3,7 @@ use crate::core::dsp::protocol_types::{
     TransferProcessState,
 };
 use crate::entities::transfer_process::TransferProcessDto;
-use crate::errors::error_adapter::CustomToResponse;
 use anyhow::bail;
-use axum::response::Response;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::protocol::context_field::ContextField;
 use std::str::FromStr;
@@ -103,7 +101,7 @@ impl From<CommonErrors> for TransferProcessMessageWrapper<TransferErrorDto> {
                 consumer_pid: None,
                 provider_pid: None,
                 code: Option::from(err_info.error_code.to_string()),
-                reason: Option::from(vec![err_info.details.unwrap_or("".to_string())]),
+                reason: Option::from(vec![err_info.cause, err_info.message]),
             },
         }
     }

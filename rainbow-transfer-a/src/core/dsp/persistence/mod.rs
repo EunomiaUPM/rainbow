@@ -1,11 +1,12 @@
 pub(crate) mod persistence;
 
-use crate::core::dsp::protocol_types::{TransferProcessMessageTrait, TransferProcessMessageWrapper};
+use crate::core::dsp::protocol_types::TransferProcessMessageTrait;
 use crate::entities::transfer_process::TransferProcessDto;
 use std::sync::Arc;
 use urn::Urn;
 
 #[async_trait::async_trait]
+#[allow(unused)]
 pub trait TransferPersistenceTrait: Send + Sync {
     async fn fetch_process_by_process_id(&self, id: &str) -> anyhow::Result<TransferProcessDto>;
     async fn fetch_process(&self, id: &str) -> anyhow::Result<TransferProcessDto>;

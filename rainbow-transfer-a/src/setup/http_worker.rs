@@ -1,5 +1,3 @@
-use crate::core::dsp::http::DspRouter;
-use crate::core::dsp::orchestrator::protocol::protocol::ProtocolOrchestratorService;
 use crate::core::dsp::TransferDSP;
 use crate::core::protocol::ProtocolPluginTrait;
 use crate::db::factory_sql::TransferAgentRepoForSql;
@@ -12,7 +10,7 @@ use axum::response::IntoResponse;
 use axum::{serve, Router};
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_common::errors::CommonErrors;
-use sea_orm::{Database, DatabaseConnection};
+use sea_orm::Database;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 use tokio::task::JoinHandle;

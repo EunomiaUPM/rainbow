@@ -6,7 +6,6 @@ use crate::grpc::api::transfer_processes::{
     BatchProcessRequest, CreateProcessRequest, GetByKeyRequest, PaginationRequestProcesses, ResourceIdRequestProcesses,
     TransferProcessListResponse, TransferProcessResponse, UpdateProcessRequest,
 };
-use std::str::FromStr;
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
 
@@ -61,32 +60,32 @@ impl TransferAgentProcesses for TransferAgentProcessesGrpc {
 
     async fn get_batch_processes(
         &self,
-        request: Request<BatchProcessRequest>,
+        _request: Request<BatchProcessRequest>,
     ) -> Result<Response<TransferProcessListResponse>, Status> {
         todo!()
     }
 
     async fn get_process_by_id(
         &self,
-        request: Request<ResourceIdRequestProcesses>,
+        _request: Request<ResourceIdRequestProcesses>,
     ) -> Result<Response<TransferProcessResponse>, Status> {
         todo!()
     }
 
     async fn update_process(
         &self,
-        request: Request<UpdateProcessRequest>,
+        _request: Request<UpdateProcessRequest>,
     ) -> Result<Response<TransferProcessResponse>, Status> {
         todo!()
     }
 
-    async fn delete_process(&self, request: Request<ResourceIdRequestProcesses>) -> Result<Response<()>, Status> {
+    async fn delete_process(&self, _request: Request<ResourceIdRequestProcesses>) -> Result<Response<()>, Status> {
         todo!()
     }
 
     async fn get_process_by_key_id(
         &self,
-        request: Request<GetByKeyRequest>,
+        _request: Request<GetByKeyRequest>,
     ) -> Result<Response<TransferProcessResponse>, Status> {
         todo!()
     }
