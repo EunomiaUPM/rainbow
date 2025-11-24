@@ -1,10 +1,10 @@
-use crate::core::dsp::TransferDSP;
-use crate::core::protocol::ProtocolPluginTrait;
 use crate::db::factory_sql::TransferAgentRepoForSql;
 use crate::entities::transfer_messages::transfer_messages::TransferAgentMessagesService;
 use crate::entities::transfer_process::transfer_process::TransferAgentProcessesService;
 use crate::http::transfer_messages::TransferAgentMessagesRouter;
 use crate::http::transfer_process::TransferAgentProcessesRouter;
+use crate::protocols::dsp::TransferDSP;
+use crate::protocols::protocol::ProtocolPluginTrait;
 use axum::extract::Request;
 use axum::response::IntoResponse;
 use axum::{serve, Router};

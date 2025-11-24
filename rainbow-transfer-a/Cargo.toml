@@ -48,3 +48,7 @@ tonic-reflection = "0.14.2"
 
 [build-dependencies]
 tonic-prost-build = "0.14.2"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+anyhow = "1.0"
