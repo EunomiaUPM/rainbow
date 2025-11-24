@@ -8,22 +8,21 @@ use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::protocol::transfer::TransferState;
 use std::sync::Arc;
 
-pub struct StateMachineForDspService {
+pub struct StateMachineForProtocolService {
     transfer_agent_process_entities: Arc<dyn TransferAgentProcessesTrait>,
-    _config: Arc<ApplicationProviderConfig>,
 }
 
-impl StateMachineForDspService {
+impl StateMachineForProtocolService {
     pub fn new(
         transfer_agent_process_entities: Arc<dyn TransferAgentProcessesTrait>,
         config: Arc<ApplicationProviderConfig>,
     ) -> Self {
-        Self { transfer_agent_process_entities, _config: config }
+        Self { transfer_agent_process_entities }
     }
 }
 
 #[async_trait::async_trait]
-impl StateMachineTrait for StateMachineForDspService {
+impl StateMachineTrait for StateMachineForProtocolService {
     async fn validate_transition(
         &self,
         _id: Option<&String>,
@@ -31,7 +30,6 @@ impl StateMachineTrait for StateMachineForDspService {
     ) -> anyhow::Result<()> {
         let message_type = payload.get_message();
         let consumer_pid = payload.get_consumer_pid().unwrap(); // consumerPid always exists
-                                                                // only use consumerPid because all have consumerPid defined
         let current_state_process = self
             .transfer_agent_process_entities
             .get_transfer_process_by_key_id("consumerPid", &consumer_pid)
@@ -260,14 +258,6 @@ impl StateMachineTrait for StateMachineForDspService {
             }
         }
 
-        Ok(())
-    }
-
-    async fn validate_rpc_transition(
-        &self,
-        _id: Option<&String>,
-        _payload: Arc<dyn TransferProcessMessageTrait>,
-    ) -> anyhow::Result<()> {
         Ok(())
     }
 }

@@ -17,17 +17,18 @@
  *
  */
 
-use crate::services::data_service_resolver_facade::DataServiceFacadeTrait;
-use anyhow::bail;
+use crate::core::dsp::services::data_service_resolver_facade::DataServiceFacadeTrait;
+use anyhow::{anyhow, bail};
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_common::dcat_formats::DctFormats;
 use rainbow_common::errors::helpers::BadFormat;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
-use rainbow_common::protocol::catalog::dataservice_definition::DataService;
-use rainbow_common::protocol::catalog::dataset_definition::Dataset;
-use rainbow_common::protocol::catalog::distribution_definition::Distribution;
+use rainbow_common::protocol::catalog::dataservice_definition::{
+    DataService, DataServiceDcatDeclaration, DataServiceDctDeclaration,
+};
+use rainbow_common::protocol::context_field::ContextField;
 use rainbow_common::protocol::contract::contract_odrl::OdrlAgreement;
-use rainbow_common::utils::get_urn_from_string;
+use rainbow_common::protocol::datahub_proxy::datahub_proxy_types::DatahubDataset;
 use rainbow_db::contracts_provider::entities::agreement;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
@@ -35,12 +36,12 @@ use std::time::Duration;
 use tracing::error;
 use urn::Urn;
 
-pub struct DataServiceFacadeServiceForDSProtocol {
+pub struct DataServiceFacadeServiceForDatahub {
     config: ApplicationProviderConfig,
     client: Client,
 }
 
-impl DataServiceFacadeServiceForDSProtocol {
+impl DataServiceFacadeServiceForDatahub {
     pub fn _new(config: ApplicationProviderConfig) -> Self {
         let client =
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
@@ -56,11 +57,11 @@ struct RainbowRPCCatalogResolveDataServiceRequest {
 }
 
 #[async_trait::async_trait]
-impl DataServiceFacadeTrait for DataServiceFacadeServiceForDSProtocol {
+impl DataServiceFacadeTrait for DataServiceFacadeServiceForDatahub {
     async fn resolve_data_service_by_agreement_id(
         &self,
         agreement_id: Urn,
-        formats: Option<DctFormats>,
+        _formats: Option<DctFormats>,
     ) -> anyhow::Result<DataService> {
         let contracts_url = self.config.get_contract_negotiation_host_url().unwrap();
         let catalog_url = self.config.get_catalog_host_url().unwrap();
@@ -68,7 +69,6 @@ impl DataServiceFacadeTrait for DataServiceFacadeServiceForDSProtocol {
             "{}/api/v1/contract-negotiation/agreements/{}",
             contracts_url, agreement_id
         );
-        let data_service_url = format!("{}/api/v1/catalog/rpc/resolve-data-service", catalog_url);
 
         // resolve agreement
         let response = self.client.get(&agreement_url).send().await.map_err(|_e| {
@@ -108,9 +108,8 @@ impl DataServiceFacadeTrait for DataServiceFacadeServiceForDSProtocol {
 
         // resolve dataset entity
         let datasets_url = format!(
-            "{}/api/v1/datasets/{}",
-            catalog_url,
-            agreement_target.clone()
+            "{}/api/v1/datahub/domains/datasets/{}",
+            catalog_url, agreement_target
         );
         let response = self.client.get(&datasets_url).send().await.map_err(|_e| {
             let e = CommonErrors::missing_resource_new(&agreement_target.to_string(), "Dataset not resolvable");
@@ -123,7 +122,7 @@ impl DataServiceFacadeTrait for DataServiceFacadeServiceForDSProtocol {
             error!("{}", e.log());
             bail!(e);
         }
-        let dataset = match response.json::<Dataset>().await {
+        let dataset = match response.json::<DatahubDataset>().await {
             Ok(dataset) => dataset,
             Err(e_) => {
                 let e = CommonErrors::format_new(
@@ -134,80 +133,43 @@ impl DataServiceFacadeTrait for DataServiceFacadeServiceForDSProtocol {
                 bail!(e);
             }
         };
-        let dataset_id = get_urn_from_string(&dataset.id)?;
-
-        // resolve distribution entity
-        let distribution_url = format!(
-            "{}/api/v1/datasets/{}/distributions/dct-formats/{}",
-            catalog_url,
-            dataset_id.clone(),
-            formats.unwrap().to_string()
-        );
-        let response = self.client.get(&distribution_url).send().await.map_err(|_e| {
-            let e = CommonErrors::missing_resource_new(&dataset_id.to_string(), "Distribution not resolvable");
-            error!("{}", e.log());
-            return e;
-        })?;
-        let status = response.status();
-        if !status.is_success() {
-            let e = CommonErrors::missing_resource_new(&dataset_id.to_string(), "Distribution not resolvable");
-            error!("{}", e.log());
-            bail!(e);
-        }
-        let distribution = match response.json::<Distribution>().await {
-            Ok(distribution) => distribution,
-            Err(e_) => {
+        let endpoint_url = dataset
+            .custom_properties
+            .iter()
+            .find(|c| c.to_owned().0 == "access_url")
+            .ok_or_else(|| {
                 let e = CommonErrors::format_new(
                     BadFormat::Received,
-                    &format!("Distribution not serializable: {}", e_.to_string()),
+                    "No access point defined for this dataset",
                 );
                 error!("{}", e.log());
-                bail!(e);
-            }
-        };
+                anyhow!(e)
+            })?
+            .clone()
+            .1;
 
-        let access_service = match distribution.dcat.access_service {
-            Some(access_service) => access_service,
-            None => {
-                let e = CommonErrors::missing_resource_new(
-                    &agreement_id.to_string(),
-                    "Access service not defined in distribution",
-                );
-                error!("{}", e.log());
-                bail!(e);
-            }
-        };
-        let access_service_id = get_urn_from_string(&access_service.id)?;
-
-        // resolve Data service entity
-        let response = self
-            .client
-            .post(&data_service_url)
-            .json(&RainbowRPCCatalogResolveDataServiceRequest { data_service_id: access_service_id.clone() })
-            .send()
-            .await
-            .map_err(|_e| {
-                let e =
-                    CommonErrors::missing_resource_new(&access_service_id.to_string(), "Dataservice not resolvable");
-                error!("{}", e.log());
-                return e;
-            })?;
-        let status = response.status();
-        if !status.is_success() {
-            let e = CommonErrors::missing_resource_new(&access_service_id.to_string(), "Dataservice not resolvable");
-            error!("{}", e.log());
-            bail!(e);
-        }
-        let data_service = match response.json::<DataService>().await {
-            Ok(distribution) => distribution,
-            Err(e_) => {
-                let e = CommonErrors::format_new(
-                    BadFormat::Received,
-                    &format!("Data service not serializable: {}", e_.to_string()),
-                );
-                error!("{}", e.log());
-                bail!(e);
-            }
+        // TODO define rest of fields for datahub
+        let data_service = DataService {
+            context: ContextField::default(),
+            _type: "DataService".to_string(),
+            id: dataset.urn,
+            dcat: DataServiceDcatDeclaration {
+                theme: "".to_string(),
+                keyword: "".to_string(),
+                endpoint_description: "".to_string(),
+                endpoint_url,
+            },
+            dct: DataServiceDctDeclaration {
+                conforms_to: None,
+                creator: None,
+                identifier: "".to_string(),
+                issued: Default::default(),
+                modified: None,
+                title: None,
+                description: vec![],
+            },
+            odrl_offer: vec![],
+            extra_fields: Default::default(),
         };
 
         Ok(data_service)

@@ -45,7 +45,7 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
     ) -> anyhow::Result<RpcTransferMessageDto<RpcTransferRequestMessageDto>> {
         let request_body: TransferProcessMessageWrapper<TransferRequestMessageDto> = input.clone().into();
         let provider_address = input.provider_address.clone();
-        self.state_machine_service.validate_rpc_transition(None, Arc::new(request_body.dto.clone())).await?;
+        self.state_machine_service.validate_transition(None, Arc::new(request_body.dto.clone())).await?;
         self.validator_service.validate(None, Arc::new(request_body.dto.clone())).await?;
         let peer_url = format!("{}/transfers/request", provider_address);
         let response: TransferProcessMessageWrapper<TransferProcessAckDto> =
@@ -82,7 +82,7 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
             consumer_pid: Urn::from_str(consumer_pid.as_str()).unwrap(),
             data_address: input_data_address,
         };
-        self.state_machine_service.validate_rpc_transition(None, Arc::new(transfer_process_into_trait.clone())).await?;
+        self.state_machine_service.validate_transition(None, Arc::new(transfer_process_into_trait.clone())).await?;
         self.validator_service.validate(None, Arc::new(transfer_process_into_trait.clone())).await?;
         // where to be sent
         let peer_url_id = transfer_process.identifiers.get("consumerPid").unwrap();
@@ -104,7 +104,7 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         // persist response
         let transfer_process = self
             .persistence_service
-            .update_process_by_process_id(
+            .update_process(
                 transfer_process.inner.id.as_str(),
                 Arc::new(transfer_process_into_trait.clone()),
                 serde_json::to_value(message.clone()).unwrap(),
@@ -134,7 +134,7 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
             code: input_code,
             reason: input_reason,
         };
-        self.state_machine_service.validate_rpc_transition(None, Arc::new(transfer_process_into_trait.clone())).await?;
+        self.state_machine_service.validate_transition(None, Arc::new(transfer_process_into_trait.clone())).await?;
         self.validator_service.validate(None, Arc::new(transfer_process_into_trait.clone())).await?;
 
         // where to be sent (depend o being provider or consumer
@@ -162,7 +162,7 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         // persist response
         let transfer_process = self
             .persistence_service
-            .update_process_by_process_id(
+            .update_process(
                 transfer_process.inner.id.as_str(),
                 Arc::new(transfer_process_into_trait.clone()),
                 serde_json::to_value(message.clone()).unwrap(),
@@ -188,7 +188,7 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
             provider_pid: Urn::from_str(provider_pid.as_str())?,
             consumer_pid: Urn::from_str(consumer_pid.as_str())?,
         };
-        self.state_machine_service.validate_rpc_transition(None, Arc::new(transfer_process_into_trait.clone())).await?;
+        self.state_machine_service.validate_transition(None, Arc::new(transfer_process_into_trait.clone())).await?;
         self.validator_service.validate(None, Arc::new(transfer_process_into_trait.clone())).await?;
         // where to be sent
         let peer_url_id = transfer_process.identifiers.get("providerPid").unwrap();
@@ -209,7 +209,7 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         // persist response
         let transfer_process = self
             .persistence_service
-            .update_process_by_process_id(
+            .update_process(
                 transfer_process.inner.id.as_str(),
                 Arc::new(transfer_process_into_trait.clone()),
                 serde_json::to_value(message.clone()).unwrap(),
@@ -239,7 +239,7 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
             code: input_code,
             reason: input_reason,
         };
-        self.state_machine_service.validate_rpc_transition(None, Arc::new(transfer_process_into_trait.clone())).await?;
+        self.state_machine_service.validate_transition(None, Arc::new(transfer_process_into_trait.clone())).await?;
         self.validator_service.validate(None, Arc::new(transfer_process_into_trait.clone())).await?;
 
         // where to be sent
@@ -261,7 +261,7 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         // persist response
         let transfer_process = self
             .persistence_service
-            .update_process_by_process_id(
+            .update_process(
                 transfer_process.inner.id.as_str(),
                 Arc::new(transfer_process_into_trait.clone()),
                 serde_json::to_value(message.clone()).unwrap(),

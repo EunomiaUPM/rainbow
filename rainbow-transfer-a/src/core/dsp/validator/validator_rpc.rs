@@ -2,16 +2,16 @@ use crate::core::dsp::protocol_types::TransferProcessMessageTrait;
 use crate::core::dsp::validator::ValidatorTrait;
 use std::sync::Arc;
 
-pub struct DspValidatorService {}
+pub struct ValidatorRpcService {}
 
-impl DspValidatorService {
+impl ValidatorRpcService {
     pub fn new() -> Self {
         Self {}
     }
 }
 
 #[async_trait::async_trait]
-impl ValidatorTrait for DspValidatorService {
+impl ValidatorTrait for ValidatorRpcService {
     async fn validate(
         &self,
         _id: Option<&String>,

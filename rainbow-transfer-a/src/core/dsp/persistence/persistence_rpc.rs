@@ -1,54 +1,45 @@
-use crate::core::dsp::persistence::TransferPersistenceTrait;
-use crate::core::dsp::protocol_types::{TransferProcessMessageTrait, TransferProcessState};
-use crate::entities::transfer_messages::{NewTransferMessageDto, TransferAgentMessagesTrait};
-use crate::entities::transfer_process::{
-    EditTransferProcessDto, NewTransferProcessDto, TransferAgentProcessesTrait, TransferProcessDto,
-};
-use crate::http::common::parse_urn;
-use log::error;
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
-use rainbow_common::errors::{CommonErrors, ErrorLog};
-use rainbow_common::protocol::transfer::TransferState;
 use std::collections::HashMap;
 use std::str::FromStr;
 use std::sync::Arc;
+use crate::core::dsp::persistence::TransferPersistenceTrait;
+use crate::entities::transfer_messages::{NewTransferMessageDto, TransferAgentMessagesTrait};
+use crate::entities::transfer_process::{EditTransferProcessDto, NewTransferProcessDto, TransferAgentProcessesTrait};
+use crate::entities::transfer_process::TransferProcessDto;
+use crate::core::dsp::protocol_types::{TransferProcessMessageTrait, TransferProcessState};
+use crate::http::common::parse_urn;
+use rainbow_common::errors::CommonErrors;
+use rainbow_common::errors::ErrorLog;
+use tracing::error;
 use urn::Urn;
+use rainbow_common::protocol::transfer::TransferState;
 
-pub struct TransferPersistenceService {
+pub struct TransferPersistenceForRpcService {
     pub transfer_message_service: Arc<dyn TransferAgentMessagesTrait>,
     pub transfer_process_service: Arc<dyn TransferAgentProcessesTrait>,
-    pub _config: Arc<ApplicationProviderConfig>,
 }
 
-impl TransferPersistenceService {
+impl TransferPersistenceForRpcService {
     pub fn new(
         transfer_message_service: Arc<dyn TransferAgentMessagesTrait>,
         transfer_process_service: Arc<dyn TransferAgentProcessesTrait>,
-        config: Arc<ApplicationProviderConfig>,
     ) -> Self {
-        Self { transfer_message_service, transfer_process_service, _config: config }
+        Self {
+            transfer_message_service,
+            transfer_process_service,
+        }
     }
 }
 
 #[async_trait::async_trait]
-impl TransferPersistenceTrait for TransferPersistenceService {
-    async fn fetch_process_by_process_id(&self, id: &str) -> anyhow::Result<TransferProcessDto> {
+impl TransferPersistenceTrait for TransferPersistenceForRpcService {
+    async fn fetch_process(&self, id: &str) -> anyhow::Result<TransferProcessDto> {
         let urn = parse_urn(id).unwrap();
-        let transfer_process = self.transfer_process_service.get_transfer_process_by_id(&urn).await.map_err(|_e| {
+        // get by any transfer id (or provider o consumer)
+        let transfer_process = self.transfer_process_service.get_transfer_process_by_key_value(&urn).await.map_err(|_e| {
             let err = CommonErrors::missing_resource_new(urn.to_string().as_str(), "Process service not found");
             error!("{}", err.log());
             err
         })?;
-        Ok(transfer_process)
-    }
-    async fn fetch_process(&self, id: &str) -> anyhow::Result<TransferProcessDto> {
-        let urn = parse_urn(id).unwrap();
-        let transfer_process =
-            self.transfer_process_service.get_transfer_process_by_key_value(&urn).await.map_err(|_e| {
-                let err = CommonErrors::missing_resource_new(urn.to_string().as_str(), "Process service not found");
-                error!("{}", err.log());
-                err
-            })?;
         Ok(transfer_process)
     }
 
@@ -61,14 +52,14 @@ impl TransferPersistenceTrait for TransferPersistenceService {
         payload_dto: Arc<dyn TransferProcessMessageTrait>,
         payload_value: serde_json::Value,
     ) -> anyhow::Result<TransferProcessDto> {
+        // get from payload
         let consumer_pid = payload_dto.get_consumer_pid().unwrap(); // always
         let format = payload_dto.get_format().unwrap();
         let agreement_id = payload_dto.get_agreement_id().unwrap();
         let message_type = payload_dto.get_message();
+        // create dsp compliant identifiers
         let mut identifiers = HashMap::new();
         let role = if direction == "INBOUND" { "Provider" } else { "Consumer" };
-        let callback_address = provider_address.unwrap_or(payload_dto.get_callback_address().unwrap());
-
         if direction == "INBOUND" {
             let provider_pid = format!("urn:provider-pid:{}", uuid::Uuid::new_v4());
             identifiers.insert("providerPid".to_string(), provider_pid);
@@ -76,7 +67,11 @@ impl TransferPersistenceTrait for TransferPersistenceService {
             identifiers.insert("providerPid".to_string(), provider_pid.unwrap().to_string());
         }
         identifiers.insert("consumerPid".to_string(), consumer_pid.to_string());
+        // create callback address
+        let callback_address = provider_address.unwrap_or(payload_dto.get_callback_address().unwrap());
+        // create id
         let transfer_process_id = Urn::from_str(format!("urn:transfer-process:{}", uuid::Uuid::new_v4()).as_str())?;
+        // create entities
         let mut transfer_process = self
             .transfer_process_service
             .create_transfer_process(&NewTransferProcessDto {
@@ -116,55 +111,13 @@ impl TransferPersistenceTrait for TransferPersistenceService {
         payload_dto: Arc<dyn TransferProcessMessageTrait>,
         payload_value: serde_json::Value,
     ) -> anyhow::Result<TransferProcessDto> {
+        // get from payload
         let message_type = payload_dto.get_message();
-        let new_state: TransferProcessState = TransferProcessState::from(message_type.clone());
-
         let urn_id = Urn::from_str(id).expect("Failed to parse urnID");
-        let transfer_process = self.transfer_process_service.get_transfer_process_by_key_value(&urn_id).await?;
-
-        let transfer_process_urn = Urn::from_str(transfer_process.inner.id.as_str()).expect("Failed to parse urnID");
-        let mut new_transfer_process = self
-            .transfer_process_service
-            .put_transfer_process(
-                &transfer_process_urn,
-                &EditTransferProcessDto {
-                    state: Some(new_state.to_string()),
-                    state_attribute: Some("BY_PROVIDER".to_string()),
-                    properties: None,
-                    error_details: None,
-                    identifiers: None,
-                },
-            )
-            .await?;
-        let message = self
-            .transfer_message_service
-            .create_transfer_message(&NewTransferMessageDto {
-                id: None,
-                transfer_agent_process_id: transfer_process_urn.clone(),
-                direction: "INBOUND".to_string(),
-                protocol: "DSP".to_string(),
-                message_type: message_type.to_string(),
-                state_transition_from: transfer_process.inner.state.to_string(),
-                state_transition_to: new_state.to_string(),
-                payload: Some(payload_value.clone()),
-            })
-            .await?;
-        new_transfer_process.messages.push(message.inner);
-        Ok(new_transfer_process)
-    }
-
-    async fn update_process_by_process_id(
-        &self,
-        id: &str,
-        payload_dto: Arc<dyn TransferProcessMessageTrait>,
-        payload_value: serde_json::Value,
-    ) -> anyhow::Result<TransferProcessDto> {
-        let message_type = payload_dto.get_message();
         let new_state: TransferProcessState = TransferProcessState::from(message_type.clone());
-
-        let urn_id = Urn::from_str(id).expect("Failed to parse urnID");
+        // current state
         let transfer_process = self.transfer_process_service.get_transfer_process_by_id(&urn_id).await?;
-
+        // update
         let transfer_process_urn = Urn::from_str(transfer_process.inner.id.as_str())?;
         let mut new_transfer_process = self
             .transfer_process_service

@@ -17,7 +17,7 @@
  *
  */
 
-use crate::services::data_plane_facade::DataPlaneProviderFacadeTrait;
+use crate::core::dsp::services::data_plane_facade::DataPlaneProviderFacadeTrait;
 use rainbow_common::adv_protocol::interplane::data_plane_provision::DataPlaneProvisionRequest;
 use rainbow_common::adv_protocol::interplane::data_plane_start::DataPlaneStart;
 use rainbow_common::adv_protocol::interplane::data_plane_status::DataPlaneStatusRequest;

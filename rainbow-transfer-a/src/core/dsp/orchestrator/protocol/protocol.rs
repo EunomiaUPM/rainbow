@@ -67,7 +67,7 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
     ) -> anyhow::Result<TransferProcessMessageWrapper<TransferProcessAckDto>> {
         let input = Arc::new(input.clone());
         self.state_machine_service.validate_transition(None, Arc::new(input.dto.clone())).await?;
-        self.validator_service.validate(None, Arc::new(input.dto.clone())).await?;
+        self.validator_service.validate(Some(id), Arc::new(input.dto.clone())).await?;
 
         let transfer_process = self
             .persistence_service
@@ -88,7 +88,7 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
     ) -> anyhow::Result<TransferProcessMessageWrapper<TransferProcessAckDto>> {
         let input = Arc::new(input.clone());
         self.state_machine_service.validate_transition(None, Arc::new(input.dto.clone())).await?;
-        self.validator_service.validate(None, Arc::new(input.dto.clone())).await?;
+        self.validator_service.validate(Some(id), Arc::new(input.dto.clone())).await?;
 
         let transfer_process = self
             .persistence_service
@@ -109,7 +109,7 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
     ) -> anyhow::Result<TransferProcessMessageWrapper<TransferProcessAckDto>> {
         let input = Arc::new(input.clone());
         self.state_machine_service.validate_transition(None, Arc::new(input.dto.clone())).await?;
-        self.validator_service.validate(None, Arc::new(input.dto.clone())).await?;
+        self.validator_service.validate(Some(id), Arc::new(input.dto.clone())).await?;
 
         let transfer_process = self
             .persistence_service
@@ -130,7 +130,7 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
     ) -> anyhow::Result<TransferProcessMessageWrapper<TransferProcessAckDto>> {
         let input = Arc::new(input.clone());
         self.state_machine_service.validate_transition(None, Arc::new(input.dto.clone())).await?;
-        self.validator_service.validate(None, Arc::new(input.dto.clone())).await?;
+        self.validator_service.validate(Some(id), Arc::new(input.dto.clone())).await?;
 
         let transfer_process = self
             .persistence_service
