@@ -8,7 +8,8 @@ mod validator;
 
 use crate::entities::transfer_messages::TransferAgentMessagesTrait;
 use crate::entities::transfer_process::TransferAgentProcessesTrait;
-use crate::protocols::dsp::http::DspRouter;
+use crate::protocols::dsp::http::protocol::DspRouter;
+use crate::protocols::dsp::http::rpc::RpcRouter;
 use crate::protocols::dsp::orchestrator::orchestrator::OrchestratorService;
 use crate::protocols::dsp::orchestrator::protocol::protocol::ProtocolOrchestratorService;
 use crate::protocols::dsp::orchestrator::rpc::rpc::RPCOrchestratorService;
@@ -93,7 +94,9 @@ impl ProtocolPluginTrait for TransferDSP {
             rpc_orchestator.clone(),
         ));
         let dsp_router = DspRouter::new(orchestrator_service.clone(), self.config.clone());
-        Ok(dsp_router.router())
+        let rcp_router = RpcRouter::new(orchestrator_service.clone(), self.config.clone());
+
+        Ok(Router::new().merge(dsp_router.router()).merge(rcp_router.router()))
     }
 
     fn build_grpc_router(&self) -> anyhow::Result<Option<Router>> {

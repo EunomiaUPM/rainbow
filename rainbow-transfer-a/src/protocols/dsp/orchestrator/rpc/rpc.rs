@@ -86,8 +86,8 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         let consumer_pid = transfer_process.identifiers.get("consumerPid").unwrap();
         // create message
         let transfer_process_into_trait = TransferStartMessageDto {
-            provider_pid: Urn::from_str(provider_pid.as_str()).unwrap(),
-            consumer_pid: Urn::from_str(consumer_pid.as_str()).unwrap(),
+            provider_pid: Urn::from_str(provider_pid.as_str())?,
+            consumer_pid: Urn::from_str(consumer_pid.as_str())?,
             data_address: input_data_address,
         };
         // get uri
