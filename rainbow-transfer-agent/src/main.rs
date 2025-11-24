@@ -17,7 +17,7 @@
  *
  */
 
-use rainbow_transfer_a::setup::cmd::TransferCommands;
+use rainbow_transfer_agent::setup::cmd::TransferCommands;
 use tracing::info;
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::EnvFilter;

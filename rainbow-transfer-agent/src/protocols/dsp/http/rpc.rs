@@ -1,8 +1,8 @@
 use axum::{
-    extract::{rejection::JsonRejection, FromRef, Path, State},
+    extract::{rejection::JsonRejection, FromRef, State},
     http::StatusCode,
     response::IntoResponse,
-    routing::{get, post},
+    routing::post,
     Json, Router,
 };
 use serde::Serialize;
@@ -16,8 +16,8 @@ use crate::protocols::dsp::orchestrator::rpc::types::{
 };
 use crate::protocols::dsp::orchestrator::OrchestratorTrait;
 use crate::protocols::dsp::protocol_types::{
-    TransferCompletionMessageDto, TransferErrorDto, TransferProcessMessageType, TransferProcessMessageWrapper,
-    TransferRequestMessageDto, TransferStartMessageDto, TransferSuspensionMessageDto, TransferTerminationMessageDto,
+    TransferErrorDto, TransferProcessMessageType, TransferProcessMessageWrapper
+    ,
 };
 use rainbow_common::config::provider_config::ApplicationProviderConfig;
 use rainbow_common::errors::CommonErrors;
