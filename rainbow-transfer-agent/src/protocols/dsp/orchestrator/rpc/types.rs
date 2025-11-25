@@ -1,7 +1,8 @@
 use crate::entities::transfer_process::TransferProcessDto;
 use crate::protocols::dsp::protocol_types::{
-    DataAddressDto, TransferErrorDto, TransferProcessAckDto, TransferProcessMessageType, TransferProcessMessageWrapper,
-    TransferRequestMessageDto,
+    DataAddressDto, TransferCompletionMessageDto, TransferErrorDto, TransferProcessAckDto, TransferProcessMessageType,
+    TransferProcessMessageWrapper, TransferRequestMessageDto, TransferStartMessageDto, TransferSuspensionMessageDto,
+    TransferTerminationMessageDto,
 };
 use rainbow_common::protocol::context_field::ContextField;
 use serde::{Deserialize, Serialize};
@@ -110,6 +111,18 @@ pub struct RpcTransferStartMessageDto {
     pub data_address: Option<DataAddressDto>,
 }
 
+impl Into<TransferProcessMessageWrapper<TransferStartMessageDto>> for RpcTransferStartMessageDto {
+    fn into(self) -> TransferProcessMessageWrapper<TransferStartMessageDto> {
+        let consumer_pid = self.get_consumer_pid().unwrap();
+        let provider_pid = self.get_provider_pid().unwrap();
+        TransferProcessMessageWrapper {
+            context: ContextField::default(),
+            _type: TransferProcessMessageType::TransferRequestMessage,
+            dto: TransferStartMessageDto { data_address: self.data_address, provider_pid, consumer_pid },
+        }
+    }
+}
+
 impl RpcTransferProcessMessageTrait for RpcTransferStartMessageDto {
     fn get_consumer_pid(&self) -> Option<Urn> {
         Some(self.consumer_pid.clone())
@@ -166,6 +179,23 @@ pub struct RpcTransferSuspensionMessageDto {
     pub reason: Option<Vec<String>>,
 }
 
+impl Into<TransferProcessMessageWrapper<TransferSuspensionMessageDto>> for RpcTransferSuspensionMessageDto {
+    fn into(self) -> TransferProcessMessageWrapper<TransferSuspensionMessageDto> {
+        let consumer_pid = self.get_consumer_pid().unwrap();
+        let provider_pid = self.get_provider_pid().unwrap();
+        TransferProcessMessageWrapper {
+            context: ContextField::default(),
+            _type: TransferProcessMessageType::TransferRequestMessage,
+            dto: TransferSuspensionMessageDto {
+                provider_pid,
+                consumer_pid,
+                code: self.get_error_code(),
+                reason: self.get_error_reason(),
+            },
+        }
+    }
+}
+
 impl RpcTransferProcessMessageTrait for RpcTransferSuspensionMessageDto {
     fn get_consumer_pid(&self) -> Option<Urn> {
         Some(self.consumer_pid.clone())
@@ -218,6 +248,18 @@ impl RpcTransferProcessMessageTrait for RpcTransferSuspensionMessageDto {
 pub struct RpcTransferCompletionMessageDto {
     pub consumer_pid: Urn,
     pub provider_pid: Urn,
+}
+
+impl Into<TransferProcessMessageWrapper<TransferCompletionMessageDto>> for RpcTransferCompletionMessageDto {
+    fn into(self) -> TransferProcessMessageWrapper<TransferCompletionMessageDto> {
+        let consumer_pid = self.get_consumer_pid().unwrap();
+        let provider_pid = self.get_provider_pid().unwrap();
+        TransferProcessMessageWrapper {
+            context: ContextField::default(),
+            _type: TransferProcessMessageType::TransferRequestMessage,
+            dto: TransferCompletionMessageDto { provider_pid, consumer_pid },
+        }
+    }
 }
 
 impl RpcTransferProcessMessageTrait for RpcTransferCompletionMessageDto {
@@ -274,6 +316,23 @@ pub struct RpcTransferTerminationMessageDto {
     pub provider_pid: Urn,
     pub code: Option<String>,
     pub reason: Option<Vec<String>>,
+}
+
+impl Into<TransferProcessMessageWrapper<TransferTerminationMessageDto>> for RpcTransferTerminationMessageDto {
+    fn into(self) -> TransferProcessMessageWrapper<TransferTerminationMessageDto> {
+        let consumer_pid = self.get_consumer_pid().unwrap();
+        let provider_pid = self.get_provider_pid().unwrap();
+        TransferProcessMessageWrapper {
+            context: ContextField::default(),
+            _type: TransferProcessMessageType::TransferRequestMessage,
+            dto: TransferTerminationMessageDto {
+                provider_pid,
+                consumer_pid,
+                code: self.get_error_code(),
+                reason: self.get_error_reason(),
+            },
+        }
+    }
 }
 
 impl RpcTransferProcessMessageTrait for RpcTransferTerminationMessageDto {

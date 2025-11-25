@@ -42,6 +42,7 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         &self,
         input: &RpcTransferRequestMessageDto,
     ) -> anyhow::Result<RpcTransferMessageDto<RpcTransferRequestMessageDto>> {
+        self.validator.transfer_request_rpc(input).await?;
         // get from input
         let request_body: TransferProcessMessageWrapper<TransferRequestMessageDto> = input.clone().into();
         let provider_address = input.provider_address.clone();
@@ -74,6 +75,7 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         &self,
         input: &RpcTransferStartMessageDto,
     ) -> anyhow::Result<RpcTransferMessageDto<RpcTransferStartMessageDto>> {
+        self.validator.transfer_start_rpc(input).await?;
         // get from input
         let input_data_address = input.data_address.clone();
         let input_transfer_id = input.consumer_pid.clone();
@@ -113,6 +115,7 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         &self,
         input: &RpcTransferSuspensionMessageDto,
     ) -> anyhow::Result<RpcTransferMessageDto<RpcTransferSuspensionMessageDto>> {
+        self.validator.transfer_suspension_rpc(input).await?;
         // get from input
         let input_transfer_id = input.consumer_pid.clone();
         let input_code = input.code.clone();
@@ -154,6 +157,7 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         &self,
         input: &RpcTransferCompletionMessageDto,
     ) -> anyhow::Result<RpcTransferMessageDto<RpcTransferCompletionMessageDto>> {
+        self.validator.transfer_completion_rpc(input).await?;
         // get from input
         let input_transfer_id = input.consumer_pid.clone();
         // fetch current process
@@ -191,6 +195,7 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         &self,
         input: &RpcTransferTerminationMessageDto,
     ) -> anyhow::Result<RpcTransferMessageDto<RpcTransferTerminationMessageDto>> {
+        self.validator.transfer_termination_rpc(input).await?;
         // get from input
         let input_transfer_id = input.consumer_pid.clone();
         let input_code = input.code.clone();
