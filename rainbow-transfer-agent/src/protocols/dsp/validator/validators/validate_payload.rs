@@ -91,7 +91,7 @@ impl ValidatePayload for ValidatePayloadService {
     }
 
     async fn validate_format_data_address(&self, payload: &dyn TransferProcessMessageTrait) -> anyhow::Result<()> {
-        let is_data_address_in_payload = payload.get_callback_address().is_some();
+        let is_data_address_in_payload = payload.get_data_address().is_some();
         let format = payload.get_format().unwrap(); // in this call there is always format
         let format = format.parse::<DctFormats>().map_err(|_e| {
             let err = CommonErrors::parse_new("Bad format action: Must be push or pull");
@@ -101,6 +101,7 @@ impl ValidatePayload for ValidatePayloadService {
         let format_direction = format.action;
         match (is_data_address_in_payload, format_direction) {
             (is_data_address_in_payload, FormatAction::Push) if is_data_address_in_payload == true => Ok(()),
+            (is_data_address_in_payload, FormatAction::Pull) if is_data_address_in_payload == false => Ok(()),
             _ => {
                 let err = CommonErrors::parse_new("Data address should be defined if format action is push");
                 error!("{}", err.log());
@@ -117,18 +118,20 @@ impl ValidatePayload for ValidatePayloadService {
         let role = dto.inner.role.parse::<TransferRoles>()?;
         let state_attribute =
             dto.inner.state_attribute.clone().unwrap_or("".to_string()).parse::<TransferStateAttribute>()?;
-        let is_data_address_in_payload = payload.get_callback_address().is_some();
-        if is_data_address_in_payload
-            && role == TransferRoles::Provider
-            && state_attribute == TransferStateAttribute::OnRequest
-        {
-            Ok(())
-        } else {
-            let err = CommonErrors::parse_new(
-                "Data address should be defined only in the first TransferStart message from provider",
-            );
-            error!("{}", err.log());
-            bail!(err);
+        let is_data_address_in_payload = payload.get_data_address().is_some();
+
+        if is_data_address_in_payload == true {
+            if role == TransferRoles::Consumer {
+                if state_attribute != TransferStateAttribute::OnRequest {
+                    let err = CommonErrors::parse_new(
+                        "Data address should be defined only in the first TransferStart message from provider",
+                    );
+                    error!("{}", err.log());
+                    bail!(err);
+                }
+            }
         }
+
+        Ok(())
     }
 }
