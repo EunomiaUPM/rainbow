@@ -16,8 +16,7 @@ use crate::protocols::dsp::orchestrator::rpc::types::{
 };
 use crate::protocols::dsp::orchestrator::OrchestratorTrait;
 use crate::protocols::dsp::protocol_types::{
-    TransferErrorDto, TransferProcessMessageType, TransferProcessMessageWrapper
-    ,
+    TransferErrorDto, TransferProcessMessageType, TransferProcessMessageWrapper,
 };
 use rainbow_common::config::provider_config::ApplicationProviderConfig;
 use rainbow_common::errors::CommonErrors;

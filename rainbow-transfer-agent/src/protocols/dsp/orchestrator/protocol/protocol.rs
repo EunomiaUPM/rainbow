@@ -1,30 +1,27 @@
 use crate::protocols::dsp::orchestrator::protocol::ProtocolOrchestratorTrait;
 use crate::protocols::dsp::persistence::TransferPersistenceTrait;
-use crate::protocols::dsp::protocol_types::TransferProcessMessageTrait;
 use crate::protocols::dsp::protocol_types::{
     TransferCompletionMessageDto, TransferProcessAckDto, TransferProcessMessageWrapper, TransferRequestMessageDto,
     TransferStartMessageDto, TransferSuspensionMessageDto, TransferTerminationMessageDto,
 };
-use crate::protocols::dsp::state_machine::StateMachineTrait;
-use crate::protocols::dsp::validator::ValidatorTrait;
+
+use crate::protocols::dsp::validator::traits::validation_dsp_steps::ValidationDspSteps;
 use rainbow_common::config::provider_config::ApplicationProviderConfig;
 use std::sync::Arc;
 
 pub struct ProtocolOrchestratorService {
-    pub state_machine_service: Arc<dyn StateMachineTrait>,
-    pub validator_service: Arc<dyn ValidatorTrait>,
+    validator: Arc<dyn ValidationDspSteps>,
     pub persistence_service: Arc<dyn TransferPersistenceTrait>,
     pub _config: Arc<ApplicationProviderConfig>,
 }
 
 impl ProtocolOrchestratorService {
     pub fn new(
-        state_machine_service: Arc<dyn StateMachineTrait>,
-        validator_service: Arc<dyn ValidatorTrait>,
+        validator: Arc<dyn ValidationDspSteps>,
         persistence_service: Arc<dyn TransferPersistenceTrait>,
         _config: Arc<ApplicationProviderConfig>,
     ) -> ProtocolOrchestratorService {
-        ProtocolOrchestratorService { state_machine_service, validator_service, persistence_service, _config }
+        ProtocolOrchestratorService { validator, persistence_service, _config }
     }
 }
 
@@ -44,9 +41,8 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
         input: &TransferProcessMessageWrapper<TransferRequestMessageDto>,
     ) -> anyhow::Result<TransferProcessMessageWrapper<TransferProcessAckDto>> {
         let input = Arc::new(input.clone());
+        self.validator.on_transfer_request(&input).await?;
 
-        // there is no validation here...
-        // nothing to check out more than input
         let transfer_process = self
             .persistence_service
             .create_process(
@@ -67,10 +63,8 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
         id: &String,
         input: &TransferProcessMessageWrapper<TransferStartMessageDto>,
     ) -> anyhow::Result<TransferProcessMessageWrapper<TransferProcessAckDto>> {
-        let input = Arc::new(input.clone());
-        let input_dto = input.dto.clone();
+        self.validator.on_transfer_start(id, input).await?;
 
-        self.validate_step(Some(id), Arc::new(input_dto)).await?;
         let transfer_process = self
             .persistence_service
             .update_process(
@@ -88,10 +82,8 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
         id: &String,
         input: &TransferProcessMessageWrapper<TransferSuspensionMessageDto>,
     ) -> anyhow::Result<TransferProcessMessageWrapper<TransferProcessAckDto>> {
-        let input = Arc::new(input.clone());
-        let input_dto = input.dto.clone();
+        self.validator.on_transfer_suspension(id, input).await?;
 
-        self.validate_step(Some(id), Arc::new(input_dto)).await?;
         let transfer_process = self
             .persistence_service
             .update_process(
@@ -109,10 +101,8 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
         id: &String,
         input: &TransferProcessMessageWrapper<TransferCompletionMessageDto>,
     ) -> anyhow::Result<TransferProcessMessageWrapper<TransferProcessAckDto>> {
-        let input = Arc::new(input.clone());
-        let input_dto = input.dto.clone();
+        self.validator.on_transfer_completion(id, input).await?;
 
-        self.validate_step(Some(id), Arc::new(input_dto)).await?;
         let transfer_process = self
             .persistence_service
             .update_process(
@@ -130,10 +120,8 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
         id: &String,
         input: &TransferProcessMessageWrapper<TransferTerminationMessageDto>,
     ) -> anyhow::Result<TransferProcessMessageWrapper<TransferProcessAckDto>> {
-        let input = Arc::new(input.clone());
-        let input_dto = input.dto.clone();
+        self.validator.on_transfer_termination(id, input).await?;
 
-        self.validate_step(Some(id), Arc::new(input_dto)).await?;
         let transfer_process = self
             .persistence_service
             .update_process(
@@ -144,17 +132,5 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
             .await?;
         let transfer_process_dto = TransferProcessMessageWrapper::try_from(transfer_process)?;
         Ok(transfer_process_dto)
-    }
-}
-
-impl ProtocolOrchestratorService {
-    async fn validate_step(
-        &self,
-        id: Option<&String>,
-        payload: Arc<dyn TransferProcessMessageTrait>,
-    ) -> anyhow::Result<()> {
-        self.state_machine_service.validate_transition(payload.clone()).await?;
-        self.validator_service.validate(id, payload).await?;
-        Ok(())
     }
 }

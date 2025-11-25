@@ -107,6 +107,7 @@ impl fmt::Display for TransferStateAttribute {
     }
 }
 
+#[derive(PartialEq, Clone)]
 pub enum TransferRoles {
     Provider,
     Consumer,

@@ -7,5 +7,6 @@ mod http;
 mod protocols;
 mod services;
 pub mod setup;
+mod tests;
 
 pub trait TransferDummyTrait {}

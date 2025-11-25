@@ -3,8 +3,7 @@ pub(crate) mod http;
 pub(crate) mod orchestrator;
 mod persistence;
 pub(crate) mod protocol_types;
-mod state_machine;
-mod validator;
+pub(crate) mod validator;
 
 use crate::entities::transfer_messages::TransferAgentMessagesTrait;
 use crate::entities::transfer_process::TransferAgentProcessesTrait;
@@ -15,10 +14,11 @@ use crate::protocols::dsp::orchestrator::protocol::protocol::ProtocolOrchestrato
 use crate::protocols::dsp::orchestrator::rpc::rpc::RPCOrchestratorService;
 use crate::protocols::dsp::persistence::persistence_protocol::TransferPersistenceForProtocolService;
 use crate::protocols::dsp::persistence::persistence_rpc::TransferPersistenceForRpcService;
-use crate::protocols::dsp::state_machine::state_machine_protocol::StateMachineForProtocolService;
-use crate::protocols::dsp::state_machine::state_machine_rpc::StateMachineForRpcService;
-use crate::protocols::dsp::validator::validator_protocol::ValidatorProtocolService;
-use crate::protocols::dsp::validator::validator_rpc::ValidatorRpcService;
+use crate::protocols::dsp::validator::validators::validate_payload::ValidatePayloadService;
+use crate::protocols::dsp::validator::validators::validate_state_transition::ValidatedStateTransitionService;
+use crate::protocols::dsp::validator::validators::validation_dsp_steps::ValidationDspStepsService;
+use crate::protocols::dsp::validator::validators::validation_helpers::ValidationHelperService;
+use crate::protocols::dsp::validator::validators::validation_rpc_steps::ValidationRpcStepsService;
 use crate::protocols::protocol::ProtocolPluginTrait;
 use axum::Router;
 use rainbow_common::config::provider_config::ApplicationProviderConfig;
@@ -56,18 +56,25 @@ impl ProtocolPluginTrait for TransferDSP {
 
     fn build_router(&self) -> anyhow::Result<Router> {
         let http_client = Arc::new(HttpClient::new(10, 10));
-        let state_machine_protocol_service = Arc::new(StateMachineForProtocolService::new(
-            self.transfer_agent_process_entities.clone(),
-            self.config.clone(),
-        ));
-        let state_machine_rpc_service = Arc::new(StateMachineForRpcService::new(
-            self.transfer_agent_process_entities.clone(),
-            self.config.clone(),
-        ));
-        let validator_protocol_service = Arc::new(ValidatorProtocolService::new(
+
+        let validator_helper = Arc::new(ValidationHelperService::new(
             self.transfer_agent_process_entities.clone(),
         ));
-        let validator_rpc_service = Arc::new(ValidatorRpcService::new());
+        let validator_payload = Arc::new(ValidatePayloadService::new(validator_helper.clone()));
+        let validator_state_machine = Arc::new(ValidatedStateTransitionService::new(
+            validator_helper.clone(),
+        ));
+        let dsp_validator = Arc::new(ValidationDspStepsService::new(
+            validator_payload.clone(),
+            validator_state_machine.clone(),
+            validator_helper.clone(),
+        ));
+        let rcp_validator = Arc::new(ValidationRpcStepsService::new(
+            validator_payload.clone(),
+            validator_state_machine.clone(),
+            validator_helper.clone(),
+        ));
+
         let persistence_protocol_service = Arc::new(TransferPersistenceForProtocolService::new(
             self.transfer_agent_message_service.clone(),
             self.transfer_agent_process_entities.clone(),
@@ -77,14 +84,12 @@ impl ProtocolPluginTrait for TransferDSP {
             self.transfer_agent_process_entities.clone(),
         ));
         let http_orchestator = Arc::new(ProtocolOrchestratorService::new(
-            state_machine_protocol_service.clone(),
-            validator_protocol_service.clone(),
+            dsp_validator.clone(),
             persistence_protocol_service.clone(),
             self.config.clone(),
         ));
         let rpc_orchestator = Arc::new(RPCOrchestratorService::new(
-            state_machine_rpc_service.clone(),
-            validator_rpc_service.clone(),
+            rcp_validator.clone(),
             persistence_rpc_service,
             self.config.clone(),
             http_client.clone(),

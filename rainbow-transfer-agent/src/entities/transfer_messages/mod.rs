@@ -44,6 +44,7 @@ impl From<NewTransferMessageDto> for NewTransferMessageModel {
     }
 }
 
+#[mockall::automock]
 #[async_trait::async_trait]
 pub trait TransferAgentMessagesTrait: Send + Sync + 'static {
     async fn get_all_transfer_messages(

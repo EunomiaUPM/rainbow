@@ -73,6 +73,7 @@ impl From<EditTransferProcessDto> for EditTransferProcessModel {
     }
 }
 
+#[mockall::automock]
 #[async_trait::async_trait]
 pub trait TransferAgentProcessesTrait: Send + Sync + 'static {
     async fn get_all_transfer_processes(
