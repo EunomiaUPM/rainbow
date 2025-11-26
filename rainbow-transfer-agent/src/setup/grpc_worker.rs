@@ -1,4 +1,4 @@
-use crate::db::factory_sql::TransferAgentRepoForSql;
+use crate::data::factory_sql::TransferAgentRepoForSql;
 use crate::entities::transfer_messages::transfer_messages::TransferAgentMessagesService;
 use crate::entities::transfer_process::transfer_process::TransferAgentProcessesService;
 use crate::grpc::api::transfer_messages::transfer_agent_messages_server::TransferAgentMessagesServer;

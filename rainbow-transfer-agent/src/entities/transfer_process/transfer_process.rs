@@ -1,9 +1,9 @@
-use crate::db::entities::transfer_process::{
+use crate::data::entities::transfer_process::{
     self as transfer_process_model, EditTransferProcessModel, NewTransferProcessModel,
 };
-use crate::db::entities::transfer_process_identifier::{EditTransferIdentifierModel, NewTransferIdentifierModel};
-use crate::db::factory_trait::TransferAgentRepoTrait;
-use crate::db::repo_traits::transfer_process_repo::TransferProcessRepoErrors;
+use crate::data::entities::transfer_process_identifier::{EditTransferIdentifierModel, NewTransferIdentifierModel};
+use crate::data::factory_trait::TransferAgentRepoTrait;
+use crate::data::repo_traits::transfer_process_repo::TransferProcessRepoErrors;
 use crate::entities::transfer_process::{
     EditTransferProcessDto, NewTransferProcessDto, TransferAgentProcessesTrait, TransferProcessDto,
 };

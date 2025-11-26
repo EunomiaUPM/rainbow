@@ -17,7 +17,7 @@
  *
  */
 
-use crate::db::migrations::get_transfer_agent_migrations;
+use crate::data::migrations::get_transfer_agent_migrations;
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};

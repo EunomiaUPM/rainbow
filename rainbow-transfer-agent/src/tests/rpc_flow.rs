@@ -1,8 +1,8 @@
 #![allow(unused)]
 
-use crate::db::entities::transfer_message;
-use crate::db::factory_trait::MockTransferAgentRepoTrait;
-use crate::db::repo_traits::transfer_message_repo::MockTransferMessageRepoTrait;
+use crate::data::entities::transfer_message;
+use crate::data::factory_trait::MockTransferAgentRepoTrait;
+use crate::data::repo_traits::transfer_message_repo::MockTransferMessageRepoTrait;
 use crate::entities::transfer_messages::transfer_messages::TransferAgentMessagesService;
 use crate::entities::transfer_messages::MockTransferAgentMessagesTrait;
 use crate::entities::transfer_process::{MockTransferAgentProcessesTrait, TransferAgentProcessesTrait};
