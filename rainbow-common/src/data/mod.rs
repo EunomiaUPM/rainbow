@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright (C) 2024 - Universidad Politécnica de Madrid - UPM
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
  *  *
  *  * This program is free software: you can redistribute it and/or modify
  *  * it under the terms of the GNU General Public License as published by
@@ -17,9 +17,8 @@
  *
  */
 
-use crate::ssi::common::data::entities::req_vc::{Entity, NewModel};
-use axum::async_trait;
-use rainbow_common::data::BasicRepoTrait;
+mod basic_repo_trait;
+mod into_active_trait;
 
-#[async_trait]
-pub trait ReqVcTrait: BasicRepoTrait<Entity, NewModel> + Send + Sync {}
+pub use basic_repo_trait::BasicRepoTrait;
+pub use into_active_trait::IntoActiveSet;

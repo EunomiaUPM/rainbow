@@ -19,7 +19,7 @@
 
 use crate::ssi::common::data::entities::mates::{Entity, Model, NewModel};
 use axum::async_trait;
-use rainbow_common::db::BasicRepoTrait;
+use rainbow_common::data::BasicRepoTrait;
 use urn::Urn;
 
 #[async_trait]

@@ -19,7 +19,7 @@
 
 use crate::ssi::provider::data::entities::business_mates::{Entity, Model, NewModel};
 use axum::async_trait;
-use rainbow_common::db::BasicRepoTrait;
+use rainbow_common::data::BasicRepoTrait;
 
 #[async_trait]
 pub trait BusinessMatesRepoTrait: BasicRepoTrait<Entity, NewModel> + Send + Sync {

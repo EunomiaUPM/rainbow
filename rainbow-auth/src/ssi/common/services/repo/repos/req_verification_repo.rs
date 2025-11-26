@@ -19,7 +19,7 @@
 
 use super::super::subtraits::ReqVerificationTrait;
 use sea_orm::DatabaseConnection;
-use rainbow_common::db::BasicRepoTrait;
+use rainbow_common::data::BasicRepoTrait;
 use crate::ssi::common::data::entities::req_verification::{Entity, NewModel};
 
 pub struct ReqVerificationRepo {

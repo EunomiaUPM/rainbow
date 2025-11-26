@@ -18,7 +18,7 @@
  */
 use axum::async_trait;
 use sea_orm::DatabaseConnection;
-use rainbow_common::db::BasicRepoTrait;
+use rainbow_common::data::BasicRepoTrait;
 use crate::ssi::common::data::entities::req_interaction::{Entity, NewModel};
 use super::super::subtraits::ReqInteractionTrait;
 

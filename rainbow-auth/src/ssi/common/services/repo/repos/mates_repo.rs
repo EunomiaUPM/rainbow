@@ -21,7 +21,7 @@ use super::super::subtraits::MatesTrait;
 use crate::ssi::common::data::entities::mates::{Column, Entity, Model, NewModel};
 use anyhow::bail;
 use axum::async_trait;
-use rainbow_common::db::{BasicRepoTrait, IntoActiveSet};
+use rainbow_common::data::{BasicRepoTrait, IntoActiveSet};
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use sea_orm::sea_query::OnConflict;
 use sea_orm::QueryFilter;

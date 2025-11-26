@@ -19,7 +19,7 @@
 
 use crate::ssi::provider::data::entities::recv_verification::{Entity, Model, NewModel};
 use axum::async_trait;
-use rainbow_common::db::BasicRepoTrait;
+use rainbow_common::data::BasicRepoTrait;
 
 #[async_trait]
 pub trait RecvVerificationTrait: BasicRepoTrait<Entity, NewModel> + Send + Sync {

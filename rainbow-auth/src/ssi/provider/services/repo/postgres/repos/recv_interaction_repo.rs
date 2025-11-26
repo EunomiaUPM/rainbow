@@ -21,7 +21,7 @@ use crate::ssi::provider::data::entities::recv_interaction::{Column, Entity, Mod
 use crate::ssi::provider::services::repo::subtraits::RecvInteractionTrait;
 use anyhow::bail;
 use axum::async_trait;
-use rainbow_common::db::BasicRepoTrait;
+use rainbow_common::data::BasicRepoTrait;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 use tracing::error;

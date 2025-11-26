@@ -21,7 +21,7 @@ use crate::ssi::provider::data::entities::business_mates::{Column, Entity, Model
 use crate::ssi::provider::services::repo::subtraits::BusinessMatesRepoTrait;
 use anyhow::bail;
 use axum::async_trait;
-use rainbow_common::db::{BasicRepoTrait, IntoActiveSet};
+use rainbow_common::data::{BasicRepoTrait, IntoActiveSet};
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use sea_orm::sea_query::OnConflict;
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
