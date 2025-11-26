@@ -10,6 +10,7 @@ use axum::response::IntoResponse;
 use axum::{serve, Router};
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_common::errors::CommonErrors;
+use rainbow_common::well_known::WellKnownRoot;
 use sea_orm::Database;
 use std::sync::Arc;
 use tokio::net::TcpListener;
@@ -47,6 +48,9 @@ impl TransferHttpWorker {
         Ok(handle)
     }
     pub async fn create_root_http_router(config: &ApplicationProviderConfig) -> anyhow::Result<Router> {
+        // well known router
+        let well_known_router = WellKnownRoot::get_router()?;
+
         // ROOT Dependency Injection
         let config = Arc::new(config.clone());
         let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
@@ -68,6 +72,7 @@ impl TransferHttpWorker {
 
         let router_str = format!("/api/{}/transfer-agent", config.api_version);
         let router = Router::new()
+            .merge(well_known_router)
             .nest(
                 format!("{}/transfer-messages", router_str.as_str()).as_str(),
                 messages_router.router(),
