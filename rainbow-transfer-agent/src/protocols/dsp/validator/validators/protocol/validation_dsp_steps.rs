@@ -22,6 +22,7 @@ impl ValidationDspStepsService {
         Self { payload_validator, step_transition_validator, helpers }
     }
 }
+
 #[async_trait::async_trait]
 impl ValidationDspSteps for ValidationDspStepsService {
     async fn on_transfer_request(

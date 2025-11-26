@@ -31,6 +31,12 @@ impl TransferPersistenceForRpcService {
 
 #[async_trait::async_trait]
 impl TransferPersistenceTrait for TransferPersistenceForRpcService {
+    async fn get_transfer_process_service(&self) -> anyhow::Result<Arc<dyn TransferAgentProcessesTrait>> {
+        Ok(self.transfer_process_service.clone())
+    }
+    async fn get_transfer_message_service(&self) -> anyhow::Result<Arc<dyn TransferAgentMessagesTrait>> {
+        Ok(self.transfer_message_service.clone())
+    }
     async fn fetch_process(&self, id: &str) -> anyhow::Result<TransferProcessDto> {
         let urn = parse_urn(id).unwrap();
         // get by any transfer id (or provider o consumer)

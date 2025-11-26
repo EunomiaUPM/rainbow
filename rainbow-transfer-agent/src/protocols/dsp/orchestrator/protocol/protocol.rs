@@ -1,8 +1,8 @@
 use crate::protocols::dsp::orchestrator::protocol::ProtocolOrchestratorTrait;
 use crate::protocols::dsp::persistence::TransferPersistenceTrait;
 use crate::protocols::dsp::protocol_types::{
-    TransferCompletionMessageDto, TransferProcessAckDto, TransferProcessMessageWrapper, TransferRequestMessageDto,
-    TransferStartMessageDto, TransferSuspensionMessageDto, TransferTerminationMessageDto,
+    TransferCompletionMessageDto, TransferProcessAckDto, TransferProcessMessageTrait, TransferProcessMessageWrapper,
+    TransferRequestMessageDto, TransferStartMessageDto, TransferSuspensionMessageDto, TransferTerminationMessageDto,
 };
 
 use crate::protocols::dsp::validator::traits::validation_dsp_steps::ValidationDspSteps;
@@ -39,10 +39,28 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
     async fn on_transfer_request(
         &self,
         input: &TransferProcessMessageWrapper<TransferRequestMessageDto>,
-    ) -> anyhow::Result<TransferProcessMessageWrapper<TransferProcessAckDto>> {
+    ) -> anyhow::Result<(TransferProcessMessageWrapper<TransferProcessAckDto>, bool)> {
+        // transform and validate
         let input = Arc::new(input.clone());
         self.validator.on_transfer_request(&input).await?;
 
+        // check idempotency
+        let consumer_pid = input.dto.get_consumer_pid().unwrap();
+        let process_result = self
+            .persistence_service
+            .get_transfer_process_service()
+            .await?
+            .get_transfer_process_by_key_id("consumerPid", &consumer_pid)
+            .await;
+        match process_result {
+            Ok(transfer_process) => {
+                let transfer_process_dto = TransferProcessMessageWrapper::try_from(transfer_process)?;
+                return Ok((transfer_process_dto, true));
+            }
+            _ => {}
+        }
+
+        // persist and send
         let transfer_process = self
             .persistence_service
             .create_process(
@@ -55,7 +73,7 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
             )
             .await?;
         let transfer_process_dto = TransferProcessMessageWrapper::try_from(transfer_process)?;
-        Ok(transfer_process_dto)
+        Ok((transfer_process_dto, false))
     }
 
     async fn on_transfer_start(

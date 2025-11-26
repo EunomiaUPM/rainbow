@@ -13,7 +13,7 @@ pub trait ProtocolOrchestratorTrait: Send + Sync + 'static {
     async fn on_transfer_request(
         &self,
         input: &TransferProcessMessageWrapper<TransferRequestMessageDto>,
-    ) -> anyhow::Result<TransferProcessMessageWrapper<TransferProcessAckDto>>;
+    ) -> anyhow::Result<(TransferProcessMessageWrapper<TransferProcessAckDto>, bool)>;
     async fn on_transfer_start(
         &self,
         id: &String,
