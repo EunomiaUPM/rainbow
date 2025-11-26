@@ -87,6 +87,7 @@ impl AuthErrors {
                 error_code: 2100,
                 status_code: StatusCode::BAD_GATEWAY,
                 details: None,
+                cause: "".to_string(),
             },
             http_code,
             url: url.to_string(),
@@ -101,6 +102,7 @@ impl AuthErrors {
                 error_code: 4400,
                 status_code: StatusCode::UNPROCESSABLE_ENTITY,
                 details: None,
+                cause: "".to_string(),
             },
             cause: cause.to_string(),
         }

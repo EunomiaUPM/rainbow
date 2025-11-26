@@ -24,7 +24,7 @@ use rainbow_catalog::consumer::setup::application::create_catalog_bypass_consume
 use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
 use rainbow_contracts::consumer::setup::application::create_contract_negotiation_consumer_router;
 use rainbow_transfer::consumer::setup::application::create_transfer_consumer_router;
-use rainbow_transfer_agent::setup::create_root_http_router;
+// use rainbow_transfer_agent::setup::create_root_http_router;
 
 pub async fn create_core_consumer_router(config: &ApplicationConsumerConfig) -> Router {
     let app_config: ApplicationConsumerConfig = config.clone().into();
@@ -32,12 +32,9 @@ pub async fn create_core_consumer_router(config: &ApplicationConsumerConfig) -> 
     let transfer_router = create_transfer_consumer_router(&app_config.clone().into()).await;
     let cn_router = create_contract_negotiation_consumer_router(&app_config.clone().into()).await;
     let catalog_bypass_router = create_catalog_bypass_consumer_router(app_config.clone().into()).await;
-    let transfer_agent_router =
-        create_root_http_router(&app_config.clone().into()).await.expect("Failed to create transfer agent router");
-    Router::new()
-        .merge(transfer_router)
-        .merge(cn_router)
-        .merge(auth_router)
-        .merge(catalog_bypass_router)
-        .merge(transfer_agent_router)
+    // TODO transfer_agent_router with ApplicationConsumerConfig
+    //let transfer_agent_router =
+    //    create_root_http_router(&app_config.clone().into()).await.expect("Failed to create transfer agent router");
+    Router::new().merge(transfer_router).merge(cn_router).merge(auth_router).merge(catalog_bypass_router)
+    // .merge(transfer_agent_router)
 }

@@ -25,9 +25,9 @@ use rainbow_db::contracts_consumer::migrations::get_contracts_migrations;
 use rainbow_db::dataplane::migrations::get_dataplane_migrations;
 use rainbow_db::events::migrations::get_events_migrations;
 use rainbow_db::transfer_consumer::migrations::get_transfer_consumer_migrations;
+use rainbow_transfer_agent::get_transfer_agent_migrations;
 use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
-use rainbow_transfer_agent::get_transfer_agent_migrations;
 
 pub struct CoreConsumerMigration;
 

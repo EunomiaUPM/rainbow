@@ -25,8 +25,8 @@ use urn::Urn;
 pub mod data_service_resolver_datahub_facade;
 pub mod data_service_resolver_facade;
 
-#[mockall::automock]
 #[async_trait]
+#[mockall::automock]
 pub trait DataServiceFacadeTrait: Send + Sync {
     async fn resolve_data_service_by_agreement_id(
         &self,

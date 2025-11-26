@@ -26,9 +26,9 @@ use rainbow_db::datahub::migrations::get_datahub_migrations;
 use rainbow_db::dataplane::migrations::get_dataplane_migrations;
 use rainbow_db::events::migrations::get_events_migrations;
 use rainbow_db::transfer_provider::migrations::get_transfer_provider_migrations;
+use rainbow_transfer_agent::get_transfer_agent_migrations;
 use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
-use rainbow_transfer_agent::get_transfer_agent_migrations;
 
 pub struct CoreProviderMigration;
 

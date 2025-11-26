@@ -26,7 +26,6 @@ use axum::response::IntoResponse;
 use axum::routing::post;
 use axum::{middleware, Extension, Json, Router};
 use rainbow_common::auth::header::{extract_request_info, RequestInfo};
-use rainbow_common::err::transfer_err::TransferErrorType::{NotCheckedError, ProtocolBodyError};
 use rainbow_common::errors::helpers::BadFormat;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::protocol::transfer::transfer_completion::TransferCompletionMessage;
