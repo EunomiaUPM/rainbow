@@ -16,8 +16,10 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use rainbow_db::auth::common::entities::mates;
-use crate::ssi::common::types::wallet::{CredentialOfferResponse, DidsInfo, KeyDefinition, MatchingVCs, OidcUri, Vpd, WalletInfo, WalletSession};
+use crate::ssi::common::data::entities::mates;
+use crate::ssi::common::types::wallet::{
+    CredentialOfferResponse, DidsInfo, KeyDefinition, MatchingVCs, OidcUri, Vpd, WalletInfo, WalletSession,
+};
 use axum::async_trait;
 use serde_json::Value;
 

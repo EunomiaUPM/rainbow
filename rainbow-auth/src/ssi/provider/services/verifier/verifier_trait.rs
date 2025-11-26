@@ -16,10 +16,10 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use crate::ssi::provider::data::entities::{recv_interaction, recv_verification};
 use crate::ssi::provider::types::vcs::{VPDef, VerifyPayload};
 use axum::async_trait;
 use jsonwebtoken::TokenData;
-use rainbow_db::auth::provider::entities::{recv_interaction, recv_verification};
 use serde_json::Value;
 
 #[async_trait]

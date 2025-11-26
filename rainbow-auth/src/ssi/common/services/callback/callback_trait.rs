@@ -19,7 +19,7 @@
 
 use crate::ssi::common::types::gnap::CallbackBody;
 use axum::async_trait;
-use rainbow_db::auth::common::entities::req_interaction;
+use crate::ssi::common::data::entities::req_interaction;
 use reqwest::Response;
 
 #[async_trait]

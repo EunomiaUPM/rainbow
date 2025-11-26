@@ -18,19 +18,19 @@
  */
 
 use super::super::OnboarderTrait;
+use crate::ssi::common::data::entities::{mates, req_interaction, req_verification, token_requirements};
 use crate::ssi::common::services::client::ClientServiceTrait;
 use crate::ssi::common::types::enums::request::Body;
 use crate::ssi::common::types::gnap::{AccessToken, GrantRequest, GrantResponse};
 use crate::ssi::common::utils::get_query_param;
 use crate::ssi::common::utils::trim_4_base;
+use crate::ssi::consumer::data::entities::req_request;
 use crate::ssi::consumer::services::onboarder::gnap::config::{GnapOnboarderConfig, GnapOnboarderConfigTrait};
 use crate::ssi::consumer::types::ReachProvider;
 use anyhow::bail;
 use axum::async_trait;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::utils::get_from_opt;
-use rainbow_db::auth::common::entities::{mates, req_interaction, req_verification, token_requirements};
-use rainbow_db::auth::consumer::entities::req_request;
 use reqwest::header::{HeaderMap, ACCEPT, CONTENT_TYPE};
 use reqwest::Response;
 use std::sync::Arc;
@@ -61,7 +61,12 @@ impl OnboarderTrait for GnapOnboarderService {
         info!("Starting process to request consumer onboarding");
 
         let id = uuid::Uuid::new_v4().to_string();
-        let callback_uri = format!("{}{}/onboard/callback/{}", self.config.get_host(), self.config.get_api_path(),&id);
+        let callback_uri = format!(
+            "{}{}/onboard/callback/{}",
+            self.config.get_host(),
+            self.config.get_api_path(),
+            &id
+        );
 
         let req_model = req_request::NewModel {
             id: id.clone(),

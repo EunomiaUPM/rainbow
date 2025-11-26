@@ -28,7 +28,7 @@ use rainbow_transfer_agent::setup::create_root_http_router;
 
 pub async fn create_core_provider_router(config: &ApplicationProviderConfig) -> Router {
     let app_config: ApplicationProviderConfig = config.clone().into();
-    let auth_router = AuthProviderApplication::create_router_4_core(app_config.clone().into()).await;
+    let auth_router = AuthProviderApplication::create_router_4_monolith(app_config.clone().into()).await;
     let transfer_router = create_transfer_provider_router(&app_config.clone().into()).await;
     let cn_router = create_contract_negotiation_provider_router(&app_config.clone().into()).await;
     let transfer_agent_router =

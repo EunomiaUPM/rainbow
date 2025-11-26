@@ -17,13 +17,13 @@
  *
  */
 
-use rainbow_common::auth::business::RainbowBusinessLoginRequest;
-use rainbow_db::auth::common::entities::mates;
-use rainbow_db::auth::provider::entities::{business_mates, recv_request, recv_verification};
+use crate::ssi::common::data::entities::mates;
+use crate::ssi::provider::data::entities::{business_mates, recv_request, recv_verification};
 use crate::ssi::provider::types::business::BusinessResponse;
+use rainbow_common::auth::business::RainbowBusinessLoginRequest;
 
 pub trait BusinessTrait: Send + Sync + 'static {
     fn start(&self, payload: &RainbowBusinessLoginRequest) -> (recv_request::NewModel, recv_verification::Model);
     fn get_token(&self, mate: &mates::Model, bus_model: &business_mates::Model) -> anyhow::Result<BusinessResponse>;
-    fn end(&self, ver_model: &recv_verification::Model ) -> anyhow::Result<business_mates::NewModel>;
+    fn end(&self, ver_model: &recv_verification::Model) -> anyhow::Result<business_mates::NewModel>;
 }

@@ -22,7 +22,6 @@ use rainbow_common::config::global_config::extract_env;
 use serde::Serialize;
 use serde_json::Value;
 use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
-use rainbow_common::ssi::ClientConfig;
 
 #[derive(Clone, Serialize, Debug)]
 pub struct AuthConsumerConfig {
@@ -42,12 +41,10 @@ impl From<ApplicationConsumerConfig> for AuthConsumerConfig {
         Self {
             common_config: CommonAuthConfig {
                 host: config.auth_host.unwrap(),
+                role: config.role.to_string(),
                 database_config: config.database_config,
                 ssi_wallet_config: config.ssi_wallet_config,
-                client: ClientConfig {
-                    class_id: config.client_config.class_id,
-                    display: config.client_config.display,
-                },
+                client: config.client_config,
                 keys_path: config.keys_path,
                 is_local: config.is_local,
                 openapi_path: config.openapi_path,

@@ -29,6 +29,7 @@ pub struct WaltIdConfig {
     host: HostConfig,
     ssi_wallet_config: WalletConfig,
     keys_path: String,
+    role: String,
 }
 
 impl From<AuthProviderConfig> for WaltIdConfig {
@@ -37,6 +38,7 @@ impl From<AuthProviderConfig> for WaltIdConfig {
             host: value.common_config.host,
             ssi_wallet_config: value.common_config.ssi_wallet_config,
             keys_path: value.common_config.keys_path,
+            role: value.common_config.role,
         }
     }
 }
@@ -47,6 +49,7 @@ impl From<AuthConsumerConfig> for WaltIdConfig {
             host: value.common_config.host,
             ssi_wallet_config: value.common_config.ssi_wallet_config,
             keys_path: value.common_config.keys_path,
+            role: value.common_config.role,
         }
     }
 }
@@ -106,6 +109,9 @@ impl WaltIdConfigTrait for WaltIdConfig {
                 format!("{}://{}:{}", host.protocol, host.url, host.port)
             }
         }
+    }
+    fn get_role(&self) -> String {
+        self.role.clone()
     }
 }
 
