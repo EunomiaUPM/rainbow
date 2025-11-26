@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use super::super::IntoActiveSet;
 use crate::utils::create_opaque_token;
 use sea_orm::entity::prelude::*;
@@ -36,7 +37,7 @@ pub struct Model {
     pub aud: String,
     pub did: Option<String>,
     pub credential_id: String,
-    pub credential: Option<String>
+    pub credential: Option<String>,
 }
 
 #[derive(Clone, Debug)]

@@ -16,31 +16,23 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use jsonwebtoken::TokenData;
-use serde_json::Value;
+
 use crate::data::entities::verification;
 use crate::types::enums::vc_type::VcType;
 use crate::types::vcs::VPDef;
+use jsonwebtoken::TokenData;
+use serde_json::Value;
 
-pub trait VerifierServiceTrait: Send + Sync + 'static {
+pub trait VerifierTrait: Send + Sync + 'static {
     fn start_vp(&self, id: &str, vc_type: VcType) -> anyhow::Result<verification::NewModel>;
     fn generate_verification_uri(&self, model: verification::Model) -> String;
     fn generate_vpd(&self, ver_model: verification::Model) -> VPDef;
     fn verify_all(&self, ver_model: &mut verification::Model, vp_token: String) -> anyhow::Result<()>;
     fn verify_vp(&self, model: &mut verification::Model, vp_token: &str) -> anyhow::Result<(Vec<String>, String)>;
     fn verify_vc(&self, vc_token: &str, holder: &str) -> anyhow::Result<()>;
-    fn validate_token(
-        &self,
-        vp_token: &str,
-        audience: Option<&str>,
-    ) -> anyhow::Result<(TokenData<Value>, String)>;
+    fn validate_token(&self, vp_token: &str, audience: Option<&str>) -> anyhow::Result<(TokenData<Value>, String)>;
     fn validate_nonce(&self, model: &verification::Model, token: &TokenData<Value>) -> anyhow::Result<()>;
-    fn validate_sub(
-        &self,
-        model: &mut verification::Model,
-        token: &TokenData<Value>,
-        kid: &str,
-    ) -> anyhow::Result<()>;
+    fn validate_vp_subject(&self, model: &mut verification::Model, token: &TokenData<Value>, kid: &str) -> anyhow::Result<()>;
     fn validate_vc_sub(&self, token: &TokenData<Value>, holder: &str) -> anyhow::Result<()>;
     fn validate_vp_id(&self, model: &verification::Model, token: &TokenData<Value>) -> anyhow::Result<()>;
     fn validate_holder(&self, model: &verification::Model, token: &TokenData<Value>) -> anyhow::Result<()>;

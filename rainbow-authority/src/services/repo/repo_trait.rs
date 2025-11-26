@@ -17,10 +17,12 @@
  *
  */
 
-use super::subtraits::{RequestRepoTrait, InteractionRepoTrait, VerificationRepoTrait, IssuingRepoTrait, MinionsRepoTrait};
+use super::subtraits::{
+    InteractionRepoTrait, IssuingRepoTrait, MinionsRepoTrait, RequestRepoTrait, VerificationRepoTrait,
+};
 use std::sync::Arc;
 
-pub trait RepoServiceTrait: Send + Sync + 'static {
+pub trait RepoTrait: Send + Sync + 'static {
     fn request(&self) -> Arc<dyn RequestRepoTrait>;
     fn interaction(&self) -> Arc<dyn InteractionRepoTrait>;
     fn verification(&self) -> Arc<dyn VerificationRepoTrait>;

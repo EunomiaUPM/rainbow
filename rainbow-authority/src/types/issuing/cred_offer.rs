@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::types::enums::vc_type::VcType;
 use serde::{Deserialize, Serialize};
 

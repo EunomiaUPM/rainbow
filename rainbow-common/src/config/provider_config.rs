@@ -22,10 +22,11 @@ use crate::config::global_config::{
     extract_env, format_host_config_to_url_string, option_extract_env, DatabaseConfig, HostConfig,
 };
 use crate::config::ConfigRoles;
-use crate::ssi::{ClientConfig, SSIWalletConfig};
+use crate::ssi::{ClientConfig, WalletConfig};
 use serde::Serialize;
 use serde_json::{json, Value};
-use std::{env, fs};
+use std::env;
+use crate::utils::read;
 
 #[derive(Serialize, Clone, Debug)]
 pub struct ApplicationProviderConfig {
@@ -43,10 +44,13 @@ pub struct ApplicationProviderConfig {
     pub database_config: DatabaseConfig,
     pub ssh_user: Option<String>,
     pub ssh_private_key_path: Option<String>,
-    pub ssi_wallet_config: SSIWalletConfig,
+    pub ssi_wallet_config: WalletConfig,
     pub client_config: ClientConfig,
     pub role: ConfigRoles,
+    pub keys_path: String,
     pub is_local: bool,
+    pub openapi_path: String,
+    pub api_version: String
 }
 
 impl Default for ApplicationProviderConfig {
@@ -105,23 +109,22 @@ impl Default for ApplicationProviderConfig {
             },
             ssh_user: None,
             ssh_private_key_path: None,
-            ssi_wallet_config: SSIWalletConfig {
-                wallet_api_protocol: "http".to_string(),
-                wallet_api_url: "127.0.0.1".to_string(),
-                wallet_api_port: Some("7001".to_string()),
-                wallet_type: "email".to_string(),
-                wallet_name: "RainbowProvider".to_string(),
-                wallet_email: "RainbowProvider@rainbow.com".to_string(),
-                wallet_password: "rainbow".to_string(),
-                wallet_id: None,
+            ssi_wallet_config: WalletConfig {
+                api_protocol: "http".to_string(),
+                api_url: "127.0.0.1".to_string(),
+                api_port: Some("7001".to_string()),
+                r#type: "email".to_string(),
+                name: "RainbowProvider".to_string(),
+                email: "RainbowProvider@rainbow.com".to_string(),
+                password: "rainbow".to_string(),
+                id: None,
             },
-            client_config: ClientConfig {
-                class_id: "rainbow_provider".to_string(),
-                cert_path: "./../static/certificates/provider/cert.pem".to_string(),
-                display: None,
-            },
+            client_config: ClientConfig { class_id: "rainbow_provider".to_string(), display: None },
+            keys_path: "./../static/certificates/provider/".to_string(),
             role: ConfigRoles::Provider,
             is_local: true,
+            openapi_path: "./../static/specs/openapi/auth/auth_provider.json".to_string(),
+            api_version: "v1".to_string(),
         }
     }
 }
@@ -137,7 +140,7 @@ pub trait ApplicationProviderConfigTrait {
     fn get_raw_catalog_host(&self) -> &Option<HostConfig>;
     fn get_raw_datahub_host(&self) -> &Option<HostConfig>;
     fn get_raw_datahub_token(&self) -> &String;
-    fn get_raw_ssi_wallet_config(&self) -> &SSIWalletConfig;
+    fn get_raw_ssi_wallet_config(&self) -> &WalletConfig;
     fn get_raw_contract_negotiation_host(&self) -> &Option<HostConfig>;
     fn get_raw_auth_host(&self) -> &Option<HostConfig>;
     fn get_raw_gateway_host(&self) -> &Option<HostConfig>;
@@ -193,9 +196,9 @@ pub trait ApplicationProviderConfigTrait {
         }
     }
     fn get_wallet_portal_url(&self) -> String {
-        let protocol = self.get_raw_ssi_wallet_config().clone().wallet_api_protocol;
-        let url = self.get_raw_ssi_wallet_config().clone().wallet_api_url;
-        match self.get_raw_ssi_wallet_config().clone().wallet_api_port {
+        let protocol = self.get_raw_ssi_wallet_config().clone().api_protocol;
+        let url = self.get_raw_ssi_wallet_config().clone().api_url;
+        match self.get_raw_ssi_wallet_config().clone().api_port {
             Some(port) => {
                 format!("{}://{}:{}", protocol, url, port)
             }
@@ -205,10 +208,10 @@ pub trait ApplicationProviderConfigTrait {
         }
     }
     fn get_wallet_data(&self) -> Value {
-        let _type = self.get_raw_ssi_wallet_config().clone().wallet_type;
-        let name = self.get_raw_ssi_wallet_config().clone().wallet_name;
-        let email = self.get_raw_ssi_wallet_config().clone().wallet_email;
-        let password = self.get_raw_ssi_wallet_config().clone().wallet_password;
+        let _type = self.get_raw_ssi_wallet_config().clone().r#type;
+        let name = self.get_raw_ssi_wallet_config().clone().name;
+        let email = self.get_raw_ssi_wallet_config().clone().email;
+        let password = self.get_raw_ssi_wallet_config().clone().password;
         json!({
             "type": _type,
             "name": name,
@@ -223,10 +226,8 @@ pub trait ApplicationProviderConfigTrait {
     fn merge_dotenv_configuration(&self, env_file: Option<String>) -> Self
     where
         Self: Sized;
-    fn get_pretty_client_config(&self) -> Value;
-    fn get_pub_key(&self) -> String;
-    fn get_priv_key(&self) -> String;
-    fn get_cert(&self) -> String;
+    fn get_openapi_json(&self) -> anyhow::Result<String>;
+    fn get_api_path(&self) -> String;
 }
 
 impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
@@ -258,7 +259,7 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
         &self.datahub_token
     }
 
-    fn get_raw_ssi_wallet_config(&self) -> &SSIWalletConfig {
+    fn get_raw_ssi_wallet_config(&self) -> &WalletConfig {
         &self.ssi_wallet_config
     }
 
@@ -282,6 +283,9 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
     fn get_raw_client_config(&self) -> &ClientConfig {
         &self.client_config
     }
+    fn get_api_path(&self) -> String {
+        format!("/api/{}", self.api_version)
+    }
 
     fn merge_dotenv_configuration(&self, env_file: Option<String>) -> Self {
         if let Some(env_file) = env_file {
@@ -292,8 +296,12 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
         let default = ApplicationProviderConfig::default();
         let catalog_as_datahub: bool =
             extract_env("CATALOG_AS_DATAHUB", default.catalog_as_datahub.to_string()).parse().unwrap();
-        let gateway_production: bool =
-            extract_env("GATEWAY_PRODUCTION", default.is_gateway_in_production.to_string()).parse().unwrap();
+        let gateway_production: bool = extract_env(
+            "GATEWAY_PRODUCTION",
+            default.is_gateway_in_production.to_string(),
+        )
+        .parse()
+        .unwrap();
         let compound_config = Self {
             transfer_process_host: Some(HostConfig {
                 protocol: extract_env(
@@ -393,69 +401,36 @@ impl ApplicationProviderConfigTrait for ApplicationProviderConfig {
             },
             ssh_user: env::var("SSH_USER").ok(),
             ssh_private_key_path: env::var("SSH_PKEY_PATH").ok(),
-            ssi_wallet_config: SSIWalletConfig {
-                wallet_api_protocol: extract_env(
+            ssi_wallet_config: WalletConfig {
+                api_protocol: extract_env(
                     "WALLET_API_PROTOCOL",
-                    default.ssi_wallet_config.wallet_api_protocol,
+                    default.ssi_wallet_config.api_protocol,
                 ),
-                wallet_api_url: extract_env("WALLET_API_URL", default.ssi_wallet_config.wallet_api_url),
-                wallet_api_port: option_extract_env("WALLET_API_PORT"),
-                wallet_type: extract_env("WALLET_TYPE", default.ssi_wallet_config.wallet_type),
-                wallet_name: extract_env("WALLET_NAME", default.ssi_wallet_config.wallet_name),
-                wallet_email: extract_env("WALLET_EMAIL", default.ssi_wallet_config.wallet_email),
-                wallet_password: extract_env("WALLET_PASSWORD", default.ssi_wallet_config.wallet_password),
-                wallet_id: None,
+                api_url: extract_env("WALLET_API_URL", default.ssi_wallet_config.api_url),
+                api_port: option_extract_env("WALLET_API_PORT"),
+                r#type: extract_env("WALLET_TYPE", default.ssi_wallet_config.r#type),
+                name: extract_env("WALLET_NAME", default.ssi_wallet_config.name),
+                email: extract_env("WALLET_EMAIL", default.ssi_wallet_config.email),
+                password: extract_env("WALLET_PASSWORD", default.ssi_wallet_config.password),
+                id: None,
             },
             client_config: ClientConfig {
                 class_id: extract_env("CLIENT_DEF", default.client_config.class_id),
-                cert_path: extract_env("CERT_PATH", default.client_config.cert_path),
                 display: None,
             },
             role: ConfigRoles::Provider,
+            keys_path: extract_env("KEYS_PATH", default.keys_path),
             is_local: extract_env("IS_LOCAL", default.is_local.to_string()).parse().unwrap(),
+            openapi_path: extract_env("OPENAPI_PATH", default.openapi_path),
+            api_version: extract_env("API_VERSION", default.api_version),
         };
         compound_config
     }
 
-    fn get_pretty_client_config(&self) -> Value {
-        let cert = String::from_utf8(fs::read(self.client_config.cert_path.clone()).unwrap()).unwrap();
-        let key = json!({
-            "proof": "httpsig",
-            "cert": cert
-        });
-        json!({
-            "key" : key,
-            "class_id" : self.client_config.class_id,
-            "display" : self.client_config.display,
-        })
-    }
-
-    fn get_cert(&self) -> String {
-        let path = fs::read(self.client_config.cert_path.clone()).unwrap();
-        String::from_utf8(path).unwrap()
-    }
-    fn get_priv_key(&self) -> String {
-        let bad_path = self.client_config.cert_path.clone();
-        let inc_path = match bad_path.rfind('/') {
-            Some(pos) => (&bad_path[..pos]).to_string(),
-            None => bad_path,
-        };
-        let path = format!("{}/private_key.pem", inc_path);
-        let file = fs::read(path).unwrap();
-        String::from_utf8(file).unwrap()
-    }
-    fn get_pub_key(&self) -> String {
-        let bad_path = self.client_config.cert_path.clone();
-        let inc_path = match bad_path.rfind('/') {
-            Some(pos) => (&bad_path[..pos]).to_string(),
-            None => bad_path,
-        };
-        let path = format!("{}/public_key.pem", inc_path);
-        let file = fs::read(path).unwrap();
-        String::from_utf8(file).unwrap()
-    }
-
     fn get_environment_scenario(&self) -> bool {
         self.is_local
+    }
+    fn get_openapi_json(&self) -> anyhow::Result<String> {
+        read(&self.openapi_path)
     }
 }

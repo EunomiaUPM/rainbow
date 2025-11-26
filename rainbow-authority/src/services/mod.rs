@@ -16,10 +16,10 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-pub mod wallet;
+
 pub mod client;
-pub mod repo;
-pub mod access_manager;
-// pub mod oidc;
+pub mod gatekeeper;
 pub mod issuer;
+pub mod repo;
 pub mod verifier;
+pub mod wallet;

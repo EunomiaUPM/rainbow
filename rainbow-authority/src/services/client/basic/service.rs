@@ -16,17 +16,16 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::services::client::ClientServiceTrait;
+
+use super::super::ClientServiceTrait;
 use crate::errors::{ErrorLogTrait, Errors};
 use crate::types::enums::request::Body;
 use anyhow::bail;
 use axum::async_trait;
 use axum::http::HeaderMap;
 use reqwest::{Client, RequestBuilder, Response};
-use serde_json::{to_string, Value};
 use std::time::Duration;
 use tracing::error;
-
 
 pub struct BasicClientService {
     client: Client,

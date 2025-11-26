@@ -1,0 +1,46 @@
+/*
+ *
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
+use crate::ssi::consumer::config::{AuthConsumerConfig, AuthConsumerConfigTrait};
+use crate::ssi::consumer::data::migrations::get_auth_consumer_migrations;
+use sea_orm::Database;
+use sea_orm_migration::{MigrationTrait, MigratorTrait};
+
+pub struct ConsumerMigration;
+
+impl MigratorTrait for ConsumerMigration {
+    fn migrations() -> Vec<Box<dyn MigrationTrait>> {
+        let mut migrations: Vec<Box<dyn MigrationTrait>> = vec![];
+        let mut c_migrations = get_auth_consumer_migrations();
+
+        migrations.append(&mut c_migrations);
+        migrations
+    }
+}
+
+impl ConsumerMigration {
+    pub async fn run(config: &AuthConsumerConfig) -> anyhow::Result<()> {
+        // db_connection
+        let db_url = config.get_full_db_url();
+        let db_connection = Database::connect(db_url).await.expect("Database can't connect");
+        // run migration
+        Self::refresh(&db_connection).await?;
+        Ok(())
+    }
+}

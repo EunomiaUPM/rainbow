@@ -18,7 +18,7 @@
  */
 
 use axum::Router;
-use rainbow_auth::ssi_auth::provider::setup::app::create_ssi_provider_router;
+use rainbow_auth::ssi::provider::setup::app::AuthProviderApplication;
 use rainbow_catalog::provider::setup::application::create_catalog_router;
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_contracts::provider::setup::application::create_contract_negotiation_provider_router;
@@ -27,7 +27,7 @@ use rainbow_transfer::provider::setup::application::create_transfer_provider_rou
 
 pub async fn create_core_provider_router(config: &ApplicationProviderConfig) -> Router {
     let app_config: ApplicationProviderConfig = config.clone().into();
-    let auth_router = create_ssi_provider_router(app_config.clone().into()).await;
+    let auth_router = AuthProviderApplication::create_router_4_monolith(app_config.clone().into()).await;
     let transfer_router = create_transfer_provider_router(&app_config.clone().into()).await;
     let cn_router = create_contract_negotiation_provider_router(&app_config.clone().into()).await;
 

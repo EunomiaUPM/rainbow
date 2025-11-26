@@ -1,6 +1,6 @@
 # Define variables
-DOCKER_USERNAME ?= caparicioesd
-VERSION ?= latest
+DOCKER_USERNAME ?= quay.io/eunomia_upm
+VERSION ?= 0.3.4
 
 #
 #

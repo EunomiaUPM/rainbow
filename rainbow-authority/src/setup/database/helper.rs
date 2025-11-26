@@ -22,7 +22,6 @@ use serde::Serialize;
 use std::fmt::Display;
 use std::str::FromStr;
 
-
 #[derive(Serialize, Clone, Debug)]
 pub enum DbType {
     Postgres,
@@ -53,7 +52,7 @@ impl FromStr for DbType {
             "sqlite" => Ok(DbType::Postgres),
             "mongodb" => Ok(DbType::Postgres),
             "memory" => Ok(DbType::Postgres),
-            _ => Err(anyhow!("error"))
+            _ => Err(anyhow!("error")),
         }
     }
 }
@@ -67,7 +66,7 @@ impl FromStr for &DbType {
             "sqlite" => Ok(&DbType::Postgres),
             "mongodb" => Ok(&DbType::Postgres),
             "memory" => Ok(&DbType::Postgres),
-            e => Err(anyhow!("error: {}", e))
+            e => Err(anyhow!("error: {}", e)),
         }
     }
 }

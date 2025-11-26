@@ -17,7 +17,7 @@
  *
  */
 
-use super::super::WalletServiceTrait;
+use super::super::WalletTrait;
 use super::config::{WaltIdConfig, WaltIdConfigTrait};
 use crate::data::entities::minions;
 use crate::errors::{ErrorLogTrait, Errors};
@@ -41,7 +41,6 @@ use serde_json::Value;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tracing::{debug, error, info, warn};
-use crate::setup::AuthorityApplicationConfig;
 
 pub struct WaltIdService {
     wallet_session: Arc<Mutex<WalletSession>>,
@@ -64,11 +63,10 @@ impl WaltIdService {
             client,
         }
     }
-    
 }
 
 #[async_trait]
-impl WalletServiceTrait for WaltIdService {
+impl WalletTrait for WaltIdService {
     // BASIC ----------------------------------------------------------------------------------------------->
     async fn register(&self) -> anyhow::Result<()> {
         info!("Registering in web wallet");
@@ -129,10 +127,7 @@ impl WalletServiceTrait for WaltIdService {
 
                 let jwt_parts: Vec<&str> = json_res.token.split('.').collect();
                 if jwt_parts.len() != 3 {
-                    let error = Errors::format_new(
-                        BadFormat::Sent,
-                        "The jwt does not have the correct format",
-                    );
+                    let error = Errors::format_new(BadFormat::Sent, "The jwt does not have the correct format");
                     error!("{}", error.log());
                     bail!(error);
                 }
@@ -228,11 +223,12 @@ impl WalletServiceTrait for WaltIdService {
             }
         };
 
+        let base_url = self.config.get_host();
         let minion = minions::NewModel {
             participant_id: did_info.did,
             participant_slug: "Myself".to_string(),
             participant_type: "Authority".to_string(),
-            base_url: None,
+            base_url: Some(base_url),
             vc_uri: None,
             is_vc_issued: false,
             is_me: true,
@@ -305,10 +301,7 @@ impl WalletServiceTrait for WaltIdService {
         match &wallet_session.token {
             Some(token) => Ok(token.clone()),
             None => {
-                let error = Errors::missing_action_new(
-                    MissingAction::Token,
-                    "There is no token available for use",
-                );
+                let error = Errors::missing_action_new(MissingAction::Token, "There is no token available for use");
                 error!("{}", error.log());
                 bail!(error);
             }
@@ -339,10 +332,7 @@ impl WalletServiceTrait for WaltIdService {
         match key_data.first() {
             Some(data) => Ok(data.clone()),
             None => {
-                let error = Errors::missing_action_new(
-                    MissingAction::Key,
-                    "Retrieve keys from wallet first",
-                );
+                let error = Errors::missing_action_new(MissingAction::Key, "Retrieve keys from wallet first");
                 error!("{}", error.log());
                 bail!(error)
             }

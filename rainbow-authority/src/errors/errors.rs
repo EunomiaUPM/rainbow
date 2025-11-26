@@ -16,11 +16,11 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::errors::error_log_trait::ErrorLogTrait;
 use crate::types::enums::errors::{BadFormat, MissingAction};
-use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use axum::Json;
+use axum::{http::StatusCode, Json};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 

@@ -19,8 +19,4 @@
 
 pub mod application;
 pub mod commands;
-pub mod config;
-mod database;
-
-pub use config::AuthorityApplicationConfig;
-pub use config::AuthorityApplicationConfigTrait;
+pub mod database;

@@ -16,7 +16,9 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 mod dataspace_vc;
 mod identity_vc;
-pub use identity_vc::*;
+
 pub use dataspace_vc::*;
+pub use identity_vc::*;

@@ -16,10 +16,11 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use serde::{Deserialize, Serialize};
 
-#[derive( Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct GiveVC {
     pub format: String,
-    pub credential: String
+    pub credential: String,
 }

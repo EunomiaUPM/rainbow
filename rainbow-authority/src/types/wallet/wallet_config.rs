@@ -20,7 +20,7 @@
 use serde::Serialize;
 
 #[derive(Serialize, Clone, Debug)]
-pub struct SSIWalletConfig {
+pub struct WalletConfig {
     pub api_protocol: String,
     pub api_url: String,
     pub api_port: Option<String>,
