@@ -18,7 +18,7 @@
  */
 use crate::ssi::provider::data::entities::recv_interaction::{Entity, Model, NewModel};
 use axum::async_trait;
-use rainbow_common::db::BasicRepoTrait;
+use rainbow_common::data::BasicRepoTrait;
 
 #[async_trait]
 pub trait RecvInteractionTrait: BasicRepoTrait<Entity, NewModel> + Send + Sync {

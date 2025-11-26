@@ -20,7 +20,7 @@
 use crate::ssi::consumer::data::entities::req_request::{Entity, NewModel};
 use crate::ssi::consumer::services::repo::subtraits::ReqRequestTrait;
 use axum::async_trait;
-use rainbow_common::db::BasicRepoTrait;
+use rainbow_common::data::BasicRepoTrait;
 use sea_orm::DatabaseConnection;
 
 pub struct ReqRequestRepo {

@@ -17,7 +17,7 @@
  *
  */
 use sea_orm::DatabaseConnection;
-use rainbow_common::db::BasicRepoTrait;
+use rainbow_common::data::BasicRepoTrait;
 use crate::ssi::common::data::entities::token_requirements::{Entity, Model};
 use super::super::subtraits::TokenRequirementsTrait;
 
