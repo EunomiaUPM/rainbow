@@ -95,6 +95,7 @@ impl TransferErrors {
                     id.unwrap_or("".to_string())
                 )
                 .into(),
+                cause: cause.clone().unwrap_or("".to_string()),
             },
             http_code: 400,
             cause,
@@ -107,6 +108,7 @@ impl TransferErrors {
                 error_code: 2100,
                 status_code: StatusCode::BAD_REQUEST,
                 details: None,
+                cause: cause.clone().unwrap_or("".to_string()),
             },
             http_code: 400,
             cause,
