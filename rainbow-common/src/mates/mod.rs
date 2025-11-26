@@ -17,7 +17,7 @@
  *
  */
 
-pub use self::mates::Mates;
 pub use self::busmates::BusMates;
-pub mod mates;
+pub use self::mates::Mates;
 pub mod busmates;
+pub mod mates;

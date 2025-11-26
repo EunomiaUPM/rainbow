@@ -26,10 +26,10 @@ use rainbow_common::openapi::swagger_ui_html;
 
 pub fn route_openapi() -> Router {
     let openapi_spec = "/api/v1/auth/openapi.json";
-    Router::new()
-        .route(openapi_spec, get(get_open_api))
-        .route("/api/v1/auth/openapi", get(|| swagger_ui_html(openapi_spec)),
-        )
+    Router::new().route(openapi_spec, get(get_open_api)).route(
+        "/api/v1/auth/openapi",
+        get(|| swagger_ui_html(openapi_spec)),
+    )
 }
 
 pub static OPENAPI_JSON: Lazy<&'static str> =

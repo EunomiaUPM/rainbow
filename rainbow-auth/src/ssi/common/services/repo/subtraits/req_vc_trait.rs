@@ -19,7 +19,7 @@
 
 use crate::ssi::common::data::entities::req_vc::{Entity, NewModel};
 use axum::async_trait;
-use rainbow_common::db::BasicRepoTrait;
+use rainbow_common::data::BasicRepoTrait;
 
 #[async_trait]
 pub trait ReqVcTrait: BasicRepoTrait<Entity, NewModel> + Send + Sync {}

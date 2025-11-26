@@ -24,8 +24,13 @@ use anyhow::bail;
 use axum::async_trait;
 use rainbow_common::protocol::catalog::dataset_definition::Dataset;
 use rainbow_common::protocol::catalog::EntityTypes;
-use rainbow_db::catalog::repo::{CatalogRepo, CatalogRepoErrors, DataServiceRepo, DatasetRepo, DistributionRepo, OdrlOfferRepo};
-use rainbow_events::core::notification::notification_types::{RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory, RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes};
+use rainbow_db::catalog::repo::{
+    CatalogRepo, CatalogRepoErrors, DataServiceRepo, DatasetRepo, DistributionRepo, OdrlOfferRepo,
+};
+use rainbow_events::core::notification::notification_types::{
+    RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory,
+    RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes,
+};
 use rainbow_events::core::notification::RainbowEventsNotificationTrait;
 use serde_json::{json, to_value};
 use std::sync::Arc;
@@ -39,7 +44,6 @@ where
     repo: Arc<T>,
     notification_service: Arc<U>,
 }
-
 
 impl<T, U> RainbowCatalogDatasetService<T, U>
 where
@@ -69,18 +73,13 @@ where
     }
 
     async fn get_datasets_by_catalog_id(&self, catalog_id: Urn) -> anyhow::Result<Vec<Dataset>> {
-        let datasets = self.repo.get_datasets_by_catalog_id(catalog_id.clone())
-            .await
-            .map_err(|e| match e {
-                CatalogRepoErrors::CatalogNotFound => CatalogError::NotFound {
-                    id: catalog_id,
-                    entity: EntityTypes::Catalog.to_string(),
-                },
-                err => CatalogError::DbErr(err),
-            })?;
-        let datasets = datasets.iter()
-            .map(|d| Dataset::try_from(d.to_owned()).unwrap())
-            .collect();
+        let datasets = self.repo.get_datasets_by_catalog_id(catalog_id.clone()).await.map_err(|e| match e {
+            CatalogRepoErrors::CatalogNotFound => {
+                CatalogError::NotFound { id: catalog_id, entity: EntityTypes::Catalog.to_string() }
+            }
+            err => CatalogError::DbErr(err),
+        })?;
+        let datasets = datasets.iter().map(|d| Dataset::try_from(d.to_owned()).unwrap()).collect();
         Ok(datasets)
     }
 
@@ -93,13 +92,15 @@ where
                 _ => CatalogError::DbErr(err),
             })?;
         let dataset = Dataset::try_from(dataset_entity).map_err(CatalogError::ConversionError)?;
-        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
-            category: RainbowEventsNotificationMessageCategory::Catalog,
-            subcategory: "Dataset".to_string(),
-            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
-            message_content: to_value(&dataset)?,
-            message_operation: RainbowEventsNotificationMessageOperation::Creation,
-        }).await?;
+        self.notification_service
+            .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+                category: RainbowEventsNotificationMessageCategory::Catalog,
+                subcategory: "Dataset".to_string(),
+                message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+                message_content: to_value(&dataset)?,
+                message_operation: RainbowEventsNotificationMessageOperation::Creation,
+            })
+            .await?;
         Ok(dataset)
     }
 
@@ -117,13 +118,15 @@ where
                 },
             )?;
         let dataset = Dataset::try_from(dataset_entity).map_err(CatalogError::ConversionError)?;
-        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
-            category: RainbowEventsNotificationMessageCategory::Catalog,
-            subcategory: "Dataset".to_string(),
-            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
-            message_content: to_value(&dataset)?,
-            message_operation: RainbowEventsNotificationMessageOperation::Update,
-        }).await?;
+        self.notification_service
+            .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+                category: RainbowEventsNotificationMessageCategory::Catalog,
+                subcategory: "Dataset".to_string(),
+                message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+                message_content: to_value(&dataset)?,
+                message_operation: RainbowEventsNotificationMessageOperation::Update,
+            })
+            .await?;
         Ok(dataset)
     }
 
@@ -138,16 +141,18 @@ where
                 }
                 _ => CatalogError::DbErr(err),
             })?;
-        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
-            category: RainbowEventsNotificationMessageCategory::Catalog,
-            subcategory: "Dataset".to_string(),
-            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
-            message_content: json!({
-                "@type": "dcat:Dataset",
-                "@id": dataset_id.to_string()
-            }),
-            message_operation: RainbowEventsNotificationMessageOperation::Deletion,
-        }).await?;
+        self.notification_service
+            .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+                category: RainbowEventsNotificationMessageCategory::Catalog,
+                subcategory: "Dataset".to_string(),
+                message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+                message_content: json!({
+                    "@type": "dcat:Dataset",
+                    "@id": dataset_id.to_string()
+                }),
+                message_operation: RainbowEventsNotificationMessageOperation::Deletion,
+            })
+            .await?;
         Ok(())
     }
 }

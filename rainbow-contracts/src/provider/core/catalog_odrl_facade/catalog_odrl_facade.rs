@@ -56,7 +56,8 @@ pub struct RainbowRPCCatalogResolveEntityTargetRequest {
 impl CatalogOdrlFacadeTrait for CatalogOdrlFacadeService {
     async fn resolve_odrl_offers(&self, offer_id: Urn) -> anyhow::Result<OdrlOffer> {
         // TODO !important this couldn't be hardcoded...
-        let res = self.client
+        let res = self
+            .client
             .post("http://127.0.0.1:1200/api/v1/catalog/rpc/resolve-offer")
             .json(&RainbowRPCCatalogResolveOfferByIdRequest { offer_id })
             .send()
@@ -70,7 +71,8 @@ impl CatalogOdrlFacadeTrait for CatalogOdrlFacadeService {
     }
 
     async fn resolve_catalog_target(&self, target: Urn, entity_type: String) -> anyhow::Result<()> {
-        let res = self.client
+        let res = self
+            .client
             .post("http://127.0.0.1:1200/api/v1/catalog/rpc/resolve-entity-target")
             .json(&RainbowRPCCatalogResolveEntityTargetRequest { target, entity_type })
             .send()

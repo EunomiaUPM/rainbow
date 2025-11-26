@@ -17,9 +17,9 @@
  *
  */
 
-use sea_orm::entity::prelude::*;
 use rainbow_common::protocol::contract::contract_odrl::OdrlOffer;
 use rainbow_common::protocol::contract::odrloffer_wrapper::OdrlOfferWrapper;
+use sea_orm::entity::prelude::*;
 use sea_orm::Value;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, serde::Serialize)]
@@ -32,7 +32,6 @@ pub struct Model {
     pub odrl_offer: OdrlOfferWrapper,
     pub created_at: chrono::NaiveDateTime,
 }
-
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {

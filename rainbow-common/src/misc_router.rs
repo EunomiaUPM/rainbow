@@ -25,9 +25,7 @@ use serde::{Deserialize, Serialize};
 use tracing::info;
 
 pub fn router() -> Router {
-    Router::new()
-        .route("/version", get(get_version))
-        .route("/.well-known/version", get(get_version))
+    Router::new().route("/version", get(get_version)).route("/.well-known/version", get(get_version))
 }
 
 #[derive(Debug, Serialize, Deserialize)]

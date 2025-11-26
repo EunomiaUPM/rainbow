@@ -141,6 +141,6 @@ impl IntoResponse for CnErrorConsumer {
                 )),
             ),
         }
-            .into_response()
+        .into_response()
     }
 }

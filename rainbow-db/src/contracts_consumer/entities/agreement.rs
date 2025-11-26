@@ -33,7 +33,6 @@ pub struct Model {
     pub active: bool,
 }
 
-
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
     #[sea_orm(

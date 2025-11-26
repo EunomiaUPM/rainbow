@@ -35,10 +35,12 @@ pub struct ErrorInfo {
     pub error_code: u16,
     #[serde(skip)]
     pub status_code: StatusCode,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub details: Option<String>,
+    pub cause: String,
 }
 
-#[derive(Error, Debug, Serialize, Deserialize)]
+#[derive(Error, Debug, Serialize, Deserialize, Clone)]
 pub enum CommonErrors {
     #[error("Petition Error")]
     PetitionError {
@@ -224,6 +226,7 @@ impl CommonErrors {
                 error_code: 1000,
                 status_code: StatusCode::BAD_GATEWAY,
                 details: None,
+                cause: cause.to_string(),
             },
             http_code,
             url: url.to_string(),
@@ -238,6 +241,7 @@ impl CommonErrors {
                 error_code: 2200,
                 status_code: StatusCode::BAD_GATEWAY,
                 details: None,
+                cause: cause.to_string(),
             },
             http_code,
             url: url.to_string(),
@@ -252,6 +256,7 @@ impl CommonErrors {
                 error_code: 2300,
                 status_code: StatusCode::BAD_GATEWAY,
                 details: None,
+                cause: cause.to_string(),
             },
             http_code,
             url: url.to_string(),
@@ -266,6 +271,7 @@ impl CommonErrors {
                 error_code: 2400,
                 status_code: StatusCode::BAD_GATEWAY,
                 details: None,
+                cause: cause.to_string(),
             },
             http_code,
             url: url.to_string(),
@@ -291,6 +297,7 @@ impl CommonErrors {
                 error_code,
                 status_code: StatusCode::PRECONDITION_FAILED,
                 details: None,
+                cause: cause.to_string(),
             },
             action,
             cause: cause.to_string(),
@@ -299,10 +306,11 @@ impl CommonErrors {
     pub fn missing_resource_new(resource_id: &str, cause: &str) -> CommonErrors {
         CommonErrors::MissingResourceError {
             info: ErrorInfo {
-                message: "A key resource is messing in order to complete the required action ".to_string(),
+                message: "A key resource is missing in order to complete the required action ".to_string(),
                 error_code: 3200,
                 status_code: StatusCode::NOT_FOUND,
                 details: None,
+                cause: cause.to_string(),
             },
             resource_id: resource_id.to_string(),
             cause: cause.to_string(),
@@ -320,6 +328,7 @@ impl CommonErrors {
                 error_code,
                 status_code,
                 details: Some(cause.to_string()),
+                cause: cause.to_string(),
             },
             cause: cause.to_string(),
         }
@@ -331,6 +340,7 @@ impl CommonErrors {
                 error_code: 4200,
                 status_code: StatusCode::UNAUTHORIZED,
                 details: None,
+                cause: cause.to_string(),
             },
             cause: cause.to_string(),
         }
@@ -342,6 +352,7 @@ impl CommonErrors {
                 error_code: 4300,
                 status_code: StatusCode::FORBIDDEN,
                 details: None,
+                cause: cause.to_string(),
             },
             cause: cause.to_string(),
         }
@@ -353,6 +364,7 @@ impl CommonErrors {
                 error_code: 5100,
                 status_code: StatusCode::INTERNAL_SERVER_ERROR,
                 details: None,
+                cause: cause.to_string(),
             },
             cause: cause.to_string(),
         }
@@ -364,6 +376,7 @@ impl CommonErrors {
                 error_code: 5200,
                 status_code: StatusCode::NOT_IMPLEMENTED,
                 details: None,
+                cause: cause.to_string(),
             },
             feature: feature.to_string(),
             cause: cause.to_string(),
@@ -376,6 +389,7 @@ impl CommonErrors {
                 error_code: 6010,
                 status_code: StatusCode::INTERNAL_SERVER_ERROR,
                 details: None,
+                cause: cause.to_string(),
             },
             path: path.to_string(),
             cause: cause.to_string(),
@@ -389,6 +403,7 @@ impl CommonErrors {
                 error_code: 6020,
                 status_code: StatusCode::INTERNAL_SERVER_ERROR,
                 details: None,
+                cause: cause.to_string(),
             },
             path: path.to_string(),
             cause: cause.to_string(),
@@ -402,6 +417,7 @@ impl CommonErrors {
                 error_code: 6030,
                 status_code: StatusCode::BAD_REQUEST,
                 details: None,
+                cause: cause.to_string(),
             },
             cause: cause.to_string(),
         }

@@ -19,7 +19,7 @@
 
 use crate::ssi::common::data::entities::token_requirements::{Entity, Model};
 use axum::async_trait;
-use rainbow_common::db::BasicRepoTrait;
+use rainbow_common::data::BasicRepoTrait;
 
 #[async_trait]
 pub trait TokenRequirementsTrait: BasicRepoTrait<Entity, Model> + Send + Sync {}

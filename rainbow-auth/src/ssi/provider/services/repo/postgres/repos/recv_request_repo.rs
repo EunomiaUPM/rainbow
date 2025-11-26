@@ -20,7 +20,7 @@
 use crate::ssi::provider::data::entities::recv_request::{Entity, NewModel};
 use crate::ssi::provider::services::repo::subtraits::RecvRequestTrait;
 use axum::async_trait;
-use rainbow_common::db::BasicRepoTrait;
+use rainbow_common::data::BasicRepoTrait;
 use sea_orm::DatabaseConnection;
 
 #[derive(Clone)]

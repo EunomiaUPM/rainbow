@@ -43,12 +43,12 @@ use urn::Urn;
 pub struct RainbowEntitiesContractNegotiationProviderService<T, U>
 where
     T: ContractNegotiationProcessRepo
-    + ContractNegotiationMessageRepo
-    + ContractNegotiationOfferRepo
-    + AgreementRepo
-    + Send
-    + Sync
-    + 'static,
+        + ContractNegotiationMessageRepo
+        + ContractNegotiationOfferRepo
+        + AgreementRepo
+        + Send
+        + Sync
+        + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
 {
     repo: Arc<T>,
@@ -58,12 +58,12 @@ where
 impl<T, U> RainbowEntitiesContractNegotiationProviderService<T, U>
 where
     T: ContractNegotiationProcessRepo
-    + ContractNegotiationMessageRepo
-    + ContractNegotiationOfferRepo
-    + AgreementRepo
-    + Send
-    + Sync
-    + 'static,
+        + ContractNegotiationMessageRepo
+        + ContractNegotiationOfferRepo
+        + AgreementRepo
+        + Send
+        + Sync
+        + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
 {
     pub fn new(repo: Arc<T>, notification_service: Arc<U>) -> Self {
@@ -75,16 +75,17 @@ where
 impl<T, U> RainbowEntitiesContractNegotiationProviderTrait for RainbowEntitiesContractNegotiationProviderService<T, U>
 where
     T: ContractNegotiationProcessRepo
-    + ContractNegotiationMessageRepo
-    + ContractNegotiationOfferRepo
-    + AgreementRepo
-    + Send
-    + Sync
-    + 'static,
+        + ContractNegotiationMessageRepo
+        + ContractNegotiationOfferRepo
+        + AgreementRepo
+        + Send
+        + Sync
+        + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
 {
     async fn get_cn_processes(&self, client_type: Option<String>) -> anyhow::Result<Vec<Model>> {
-        let processes = self.repo.get_all_cn_processes(None, None, client_type).await.map_err(CnErrorProvider::DbErr)?;
+        let processes =
+            self.repo.get_all_cn_processes(None, None, client_type).await.map_err(CnErrorProvider::DbErr)?;
         Ok(processes)
     }
 
@@ -121,7 +122,11 @@ where
         Ok(process)
     }
 
-    async fn get_cn_processes_by_participant(&self, participant_id: String, client_type: Option<String>) -> anyhow::Result<Vec<Model>> {
+    async fn get_cn_processes_by_participant(
+        &self,
+        participant_id: String,
+        client_type: Option<String>,
+    ) -> anyhow::Result<Vec<Model>> {
         let processes = self
             .repo
             .get_cn_processes_by_participant_id(participant_id, client_type)
@@ -549,12 +554,12 @@ where
         Ok(agreement)
     }
 
-    async fn get_agreements_by_participant_id(&self, participant_id: Urn) -> anyhow::Result<Vec<rainbow_db::contracts_provider::entities::agreement::Model>> {
-        let agreements = self
-            .repo
-            .get_agreements_by_participant_id(participant_id.clone())
-            .await
-            .map_err(CnErrorProvider::DbErr)?;
+    async fn get_agreements_by_participant_id(
+        &self,
+        participant_id: Urn,
+    ) -> anyhow::Result<Vec<rainbow_db::contracts_provider::entities::agreement::Model>> {
+        let agreements =
+            self.repo.get_agreements_by_participant_id(participant_id.clone()).await.map_err(CnErrorProvider::DbErr)?;
         Ok(agreements)
     }
 

@@ -82,6 +82,6 @@ impl IntoResponse for CatalogError {
                 )),
             ),
         }
-            .into_response()
+        .into_response()
     }
 }

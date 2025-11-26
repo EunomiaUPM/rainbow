@@ -18,7 +18,9 @@
  */
 
 use crate::gateway::core::business::BusinessCatalogTrait;
-use crate::gateway::http::business_router_types::{RainbowBusinessAcceptanceRequest, RainbowBusinessNegotiationRequest, RainbowBusinessTerminationRequest};
+use crate::gateway::http::business_router_types::{
+    RainbowBusinessAcceptanceRequest, RainbowBusinessNegotiationRequest, RainbowBusinessTerminationRequest,
+};
 use anyhow::{anyhow, bail};
 use axum::async_trait;
 use rainbow_common::auth::business::RainbowBusinessLoginRequest;
@@ -152,7 +154,10 @@ impl BusinessCatalogTrait for BusinessServiceForDatahub {
 
     async fn delete_policy_offer(&self, dataset_id: Urn, policy_id: Urn, _token: String) -> anyhow::Result<()> {
         let base_url = self.config.get_catalog_host_url().unwrap();
-        let url = format!("{}/api/v1/datasets/{}/policies/{}", base_url, dataset_id, policy_id);
+        let url = format!(
+            "{}/api/v1/datasets/{}/policies/{}",
+            base_url, dataset_id, policy_id
+        );
         let req = self.client.delete(url).send().await.map_err(|e| anyhow!("lol {}", e.to_string()))?;
         if req.status().is_success() == false {
             bail!("not able to delete policy");
@@ -162,15 +167,15 @@ impl BusinessCatalogTrait for BusinessServiceForDatahub {
 
     async fn get_business_negotiation_requests(&self, _token: String) -> anyhow::Result<Value> {
         let base_url = self.config.get_contract_negotiation_host_url().unwrap();
-        let url = format!("{}/api/v1/contract-negotiation/processes?client_type=business", base_url);
+        let url = format!(
+            "{}/api/v1/contract-negotiation/processes?client_type=business",
+            base_url
+        );
         let req = self.client.get(url).send().await.map_err(|e| anyhow!("lol {}", e.to_string()))?;
         if req.status().is_success() == false {
             bail!("not able to fetch contract negotiation processes");
         }
-        let res = req
-            .json()
-            .await
-            .map_err(|e| anyhow!("not deserializable, {}", e.to_string()))?;
+        let res = req.json().await.map_err(|e| anyhow!("not deserializable, {}", e.to_string()))?;
         Ok(res)
     }
 
@@ -195,15 +200,15 @@ impl BusinessCatalogTrait for BusinessServiceForDatahub {
 
     async fn get_consumer_negotiation_requests(&self, participant_id: String, _token: String) -> anyhow::Result<Value> {
         let base_url = self.config.get_contract_negotiation_host_url().unwrap();
-        let url = format!("{}/api/v1/contract-negotiation/processes/participant/{}?client_type=business", base_url, participant_id);
+        let url = format!(
+            "{}/api/v1/contract-negotiation/processes/participant/{}?client_type=business",
+            base_url, participant_id
+        );
         let req = self.client.get(url).send().await.map_err(|e| anyhow!("lol {}", e.to_string()))?;
         if req.status().is_success() == false {
             bail!("not able to fetch contract negotiation processes");
         }
-        let res = req
-            .json()
-            .await
-            .map_err(|e| anyhow!("not deserializable, {}", e.to_string()))?;
+        let res = req.json().await.map_err(|e| anyhow!("not deserializable, {}", e.to_string()))?;
         Ok(res)
     }
 
@@ -267,7 +272,11 @@ impl BusinessCatalogTrait for BusinessServiceForDatahub {
         Ok(res)
     }
 
-    async fn terminate_request(&self, input: RainbowBusinessTerminationRequest, _token: String) -> anyhow::Result<Value> {
+    async fn terminate_request(
+        &self,
+        input: RainbowBusinessTerminationRequest,
+        _token: String,
+    ) -> anyhow::Result<Value> {
         // fetch base url for provider
         let base_url = self.config.get_contract_negotiation_host_url().unwrap();
         let url = format!("{}/api/v1/negotiations/rpc/setup-termination", base_url);
@@ -334,9 +343,7 @@ impl BusinessCatalogTrait for BusinessServiceForDatahub {
                 "Authorization",
                 format!("Bearer {}", consumer_participant.token.unwrap_or_default()),
             )
-            .header(
-                "Rainbow-Client-Type", "business",
-            )
+            .header("Rainbow-Client-Type", "business")
             .send()
             .await
             .map_err(|e| anyhow!("lol {}", e.to_string()))?;

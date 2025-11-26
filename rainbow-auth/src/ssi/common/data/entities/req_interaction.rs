@@ -17,7 +17,7 @@
  *
  */
 
-use rainbow_common::db::IntoActiveSet;
+use rainbow_common::data::IntoActiveSet;
 use rand::distributions::Alphanumeric;
 use rand::Rng;
 use sea_orm::entity::prelude::*;

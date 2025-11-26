@@ -25,6 +25,7 @@ RUN --mount=type=bind,source=./../Cargo.toml,target=/app/Cargo.toml \
     --mount=type=bind,source=./../rainbow-contracts,target=/app/rainbow-contracts \
     --mount=type=bind,source=./../rainbow-dataplane,target=/app/rainbow-dataplane \
     --mount=type=bind,source=./../rainbow-transfer,target=/app/rainbow-transfer \
+    --mount=type=bind,source=./../rainbow-transfer-agent,target=/app/rainbow-transfer-agent \
     --mount=type=bind,source=./../rainbow-common,target=/app/rainbow-common \
     --mount=type=bind,source=./../rainbow-auth,target=/app/rainbow-auth \
     --mount=type=bind,source=./../rainbow-db,target=/app/rainbow-db \
@@ -77,4 +78,4 @@ RUN chmod +x /usr/local/bin/${APP_NAME}
 USER appuser
 
 # entrypoint
-ENTRYPOINT /usr/local/bin/${APP_NAME}
+ENTRYPOINT ["/usr/local/bin/${APP_NAME}"]

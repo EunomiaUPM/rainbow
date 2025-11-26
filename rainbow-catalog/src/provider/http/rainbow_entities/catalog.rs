@@ -52,7 +52,10 @@ where
             .route("/api/v1/catalogs", get(Self::handle_get_catalogs))
             .route("/api/v1/catalogs/:id", get(Self::handle_get_catalogs_by_id))
             .route("/api/v1/catalogs", post(Self::handle_post_catalog))
-            .route("/api/v1/catalogs/main", post(Self::handle_post_catalog_main))
+            .route(
+                "/api/v1/catalogs/main",
+                post(Self::handle_post_catalog_main),
+            )
             .route("/api/v1/catalogs/:id", put(Self::handle_put_catalog))
             .route("/api/v1/catalogs/:id", delete(Self::handle_delete_catalog))
             .with_state((self.catalog_service, self.ds_service))
@@ -152,7 +155,6 @@ where
             },
         }
     }
-
 
     async fn handle_delete_catalog(
         State((catalog_service, ds_service)): State<(Arc<T>, Arc<U>)>,

@@ -24,7 +24,10 @@ use rainbow_common::protocol::catalog::EntityTypes;
 use rainbow_common::protocol::contract::contract_odrl::{OdrlOffer, OdrlPolicyInfo};
 use rainbow_common::utils::get_urn;
 use rainbow_db::catalog::repo::{NewOdrlOfferModel, OdrlOfferRepo};
-use rainbow_events::core::notification::notification_types::{RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory, RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes};
+use rainbow_events::core::notification::notification_types::{
+    RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory,
+    RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes,
+};
 use rainbow_events::core::notification::RainbowEventsNotificationTrait;
 use serde_json::{json, to_value};
 use std::sync::Arc;
@@ -87,29 +90,33 @@ where
             )
             .await
             .map_err(CatalogError::DbErr)?;
-        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
-            category: RainbowEventsNotificationMessageCategory::Catalog,
-            subcategory: "CatalogPolicies".to_string(),
-            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
-            message_content: to_value(&new_policy)?,
-            message_operation: RainbowEventsNotificationMessageOperation::Creation,
-        }).await?;
+        self.notification_service
+            .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+                category: RainbowEventsNotificationMessageCategory::Catalog,
+                subcategory: "CatalogPolicies".to_string(),
+                message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+                message_content: to_value(&new_policy)?,
+                message_operation: RainbowEventsNotificationMessageOperation::Creation,
+            })
+            .await?;
         let new_policy = OdrlOffer::try_from(new_policy)?;
         Ok(new_policy)
     }
 
     async fn delete_catalog_policies(&self, catalog_id: Urn, policy_id: Urn) -> anyhow::Result<()> {
         let _ = self.repo.delete_odrl_offer_by_id(policy_id.clone()).await.map_err(CatalogError::DbErr)?;
-        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
-            category: RainbowEventsNotificationMessageCategory::Catalog,
-            subcategory: "CatalogPolicies".to_string(),
-            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
-            message_content: json!({
-                "@type": "OdrlPolicy",
-                "@id": policy_id.to_string()
-            }),
-            message_operation: RainbowEventsNotificationMessageOperation::Deletion,
-        }).await?;
+        self.notification_service
+            .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+                category: RainbowEventsNotificationMessageCategory::Catalog,
+                subcategory: "CatalogPolicies".to_string(),
+                message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+                message_content: json!({
+                    "@type": "OdrlPolicy",
+                    "@id": policy_id.to_string()
+                }),
+                message_operation: RainbowEventsNotificationMessageOperation::Deletion,
+            })
+            .await?;
         Ok(())
     }
 
@@ -134,29 +141,33 @@ where
             )
             .await
             .map_err(CatalogError::DbErr)?;
-        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
-            category: RainbowEventsNotificationMessageCategory::Catalog,
-            subcategory: "DatasetPolicies".to_string(),
-            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
-            message_content: to_value(&new_policy)?,
-            message_operation: RainbowEventsNotificationMessageOperation::Creation,
-        }).await?;
+        self.notification_service
+            .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+                category: RainbowEventsNotificationMessageCategory::Catalog,
+                subcategory: "DatasetPolicies".to_string(),
+                message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+                message_content: to_value(&new_policy)?,
+                message_operation: RainbowEventsNotificationMessageOperation::Creation,
+            })
+            .await?;
         let new_policy = OdrlOffer::try_from(new_policy)?;
         Ok(new_policy)
     }
 
     async fn delete_dataset_policies(&self, dataset_id: Urn, policy_id: Urn) -> anyhow::Result<()> {
         let _ = self.repo.delete_odrl_offer_by_id(policy_id.clone()).await.map_err(CatalogError::DbErr)?;
-        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
-            category: RainbowEventsNotificationMessageCategory::Catalog,
-            subcategory: "DatasetPolicies".to_string(),
-            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
-            message_content: json!({
-                "@type": "OdrlPolicy",
-                "@id": policy_id.to_string()
-            }),
-            message_operation: RainbowEventsNotificationMessageOperation::Deletion,
-        }).await?;
+        self.notification_service
+            .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+                category: RainbowEventsNotificationMessageCategory::Catalog,
+                subcategory: "DatasetPolicies".to_string(),
+                message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+                message_content: json!({
+                    "@type": "OdrlPolicy",
+                    "@id": policy_id.to_string()
+                }),
+                message_operation: RainbowEventsNotificationMessageOperation::Deletion,
+            })
+            .await?;
         Ok(())
     }
 
@@ -166,7 +177,11 @@ where
         Ok(policies)
     }
 
-    async fn post_data_service_policies(&self, data_service_id: Urn, policy: OdrlPolicyInfo) -> anyhow::Result<OdrlOffer> {
+    async fn post_data_service_policies(
+        &self,
+        data_service_id: Urn,
+        policy: OdrlPolicyInfo,
+    ) -> anyhow::Result<OdrlOffer> {
         let new_policy = self
             .repo
             .create_odrl_offer(
@@ -181,29 +196,33 @@ where
             )
             .await
             .map_err(CatalogError::DbErr)?;
-        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
-            category: RainbowEventsNotificationMessageCategory::Catalog,
-            subcategory: "DataServicePolicies".to_string(),
-            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
-            message_content: to_value(&new_policy)?,
-            message_operation: RainbowEventsNotificationMessageOperation::Creation,
-        }).await?;
+        self.notification_service
+            .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+                category: RainbowEventsNotificationMessageCategory::Catalog,
+                subcategory: "DataServicePolicies".to_string(),
+                message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+                message_content: to_value(&new_policy)?,
+                message_operation: RainbowEventsNotificationMessageOperation::Creation,
+            })
+            .await?;
         let new_policy = OdrlOffer::try_from(new_policy)?;
         Ok(new_policy)
     }
 
     async fn delete_data_service_policies(&self, data_service_id: Urn, policy_id: Urn) -> anyhow::Result<()> {
         let _ = self.repo.delete_odrl_offer_by_id(policy_id.clone()).await.map_err(CatalogError::DbErr)?;
-        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
-            category: RainbowEventsNotificationMessageCategory::Catalog,
-            subcategory: "DataServicePolicies".to_string(),
-            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
-            message_content: json!({
-                "@type": "OdrlPolicy",
-                "@id": policy_id.to_string()
-            }),
-            message_operation: RainbowEventsNotificationMessageOperation::Deletion,
-        }).await?;
+        self.notification_service
+            .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+                category: RainbowEventsNotificationMessageCategory::Catalog,
+                subcategory: "DataServicePolicies".to_string(),
+                message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+                message_content: json!({
+                    "@type": "OdrlPolicy",
+                    "@id": policy_id.to_string()
+                }),
+                message_operation: RainbowEventsNotificationMessageOperation::Deletion,
+            })
+            .await?;
         Ok(())
     }
 
@@ -213,7 +232,11 @@ where
         Ok(policies)
     }
 
-    async fn post_distribution_policies(&self, distribution_id: Urn, policy: OdrlPolicyInfo) -> anyhow::Result<OdrlOffer> {
+    async fn post_distribution_policies(
+        &self,
+        distribution_id: Urn,
+        policy: OdrlPolicyInfo,
+    ) -> anyhow::Result<OdrlOffer> {
         let new_policy = self
             .repo
             .create_odrl_offer(
@@ -228,29 +251,33 @@ where
             )
             .await
             .map_err(CatalogError::DbErr)?;
-        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
-            category: RainbowEventsNotificationMessageCategory::Catalog,
-            subcategory: "DistributionPolicies".to_string(),
-            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
-            message_content: to_value(&new_policy)?,
-            message_operation: RainbowEventsNotificationMessageOperation::Creation,
-        }).await?;
+        self.notification_service
+            .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+                category: RainbowEventsNotificationMessageCategory::Catalog,
+                subcategory: "DistributionPolicies".to_string(),
+                message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+                message_content: to_value(&new_policy)?,
+                message_operation: RainbowEventsNotificationMessageOperation::Creation,
+            })
+            .await?;
         let new_policy = OdrlOffer::try_from(new_policy)?;
         Ok(new_policy)
     }
 
     async fn delete_distribution_policies(&self, distribution_id: Urn, policy_id: Urn) -> anyhow::Result<()> {
         let _ = self.repo.delete_odrl_offer_by_id(policy_id.clone()).await.map_err(CatalogError::DbErr)?;
-        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
-            category: RainbowEventsNotificationMessageCategory::Catalog,
-            subcategory: "DistributionPolicies".to_string(),
-            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
-            message_content: json!({
-                "@type": "OdrlPolicy",
-                "@id": policy_id.to_string()
-            }),
-            message_operation: RainbowEventsNotificationMessageOperation::Deletion,
-        }).await?;
+        self.notification_service
+            .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+                category: RainbowEventsNotificationMessageCategory::Catalog,
+                subcategory: "DistributionPolicies".to_string(),
+                message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+                message_content: json!({
+                    "@type": "OdrlPolicy",
+                    "@id": policy_id.to_string()
+                }),
+                message_operation: RainbowEventsNotificationMessageOperation::Deletion,
+            })
+            .await?;
         Ok(())
     }
 }

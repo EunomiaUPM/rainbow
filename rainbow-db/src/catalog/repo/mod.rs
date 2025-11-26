@@ -33,7 +33,7 @@ use urn::Urn;
 pub mod sql;
 
 pub trait CatalogRepoFactory:
-CatalogRepo + DatasetRepo + DistributionRepo + DataServiceRepo + OdrlOfferRepo + Send + Sync + 'static
+    CatalogRepo + DatasetRepo + DistributionRepo + DataServiceRepo + OdrlOfferRepo + Send + Sync + 'static
 {
     fn create_repo(db_connection: DatabaseConnection) -> Self
     where
@@ -106,7 +106,10 @@ pub trait DatasetRepo {
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<dataset::Model>, CatalogRepoErrors>;
-    async fn get_datasets_by_catalog_id(&self, catalog_id: Urn) -> anyhow::Result<Vec<dataset::Model>, CatalogRepoErrors>;
+    async fn get_datasets_by_catalog_id(
+        &self,
+        catalog_id: Urn,
+    ) -> anyhow::Result<Vec<dataset::Model>, CatalogRepoErrors>;
     async fn get_datasets_by_id(&self, dataset_id: Urn) -> anyhow::Result<Option<dataset::Model>, CatalogRepoErrors>;
     async fn put_datasets_by_id(
         &self,

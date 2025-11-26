@@ -59,7 +59,10 @@ pub trait TransferProcessRepo {
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<transfer_process::Model>, TransferProviderRepoErrors>;
-    async fn get_batch_transfer_processes(&self, transfer_ids: &Vec<Urn>) -> Result<Vec<transfer_process::Model>, TransferProviderRepoErrors>;
+    async fn get_batch_transfer_processes(
+        &self,
+        transfer_ids: &Vec<Urn>,
+    ) -> Result<Vec<transfer_process::Model>, TransferProviderRepoErrors>;
     async fn get_transfer_process_by_provider(
         &self,
         pid: Urn,

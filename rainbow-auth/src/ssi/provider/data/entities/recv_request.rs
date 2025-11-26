@@ -17,7 +17,7 @@
  *
  */
 
-use rainbow_common::db::IntoActiveSet;
+use rainbow_common::data::IntoActiveSet;
 use chrono;
 use sea_orm::entity::prelude::*;
 use sea_orm::ActiveValue;

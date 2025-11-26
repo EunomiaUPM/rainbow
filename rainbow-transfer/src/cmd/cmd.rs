@@ -66,30 +66,26 @@ impl TransferCommands {
 
         // run scripts
         match cli.role {
-            TransferCliRoles::Provider(cmd) => {
-                match cmd {
-                    TransferCliCommands::Start(args) => {
-                        let config = Self::extract_provider_config(args.env_file)?;
-                        TransferProviderApplication::run(&config).await?
-                    }
-                    TransferCliCommands::Setup(args) => {
-                        let config = Self::extract_provider_config(args.env_file)?;
-                        TransferProviderMigration::run(&config).await?
-                    }
+            TransferCliRoles::Provider(cmd) => match cmd {
+                TransferCliCommands::Start(args) => {
+                    let config = Self::extract_provider_config(args.env_file)?;
+                    TransferProviderApplication::run(&config).await?
                 }
-            }
-            TransferCliRoles::Consumer(cmd) => {
-                match cmd {
-                    TransferCliCommands::Start(args) => {
-                        let config = Self::extract_consumer_config(args.env_file)?;
-                        TransferConsumerApplication::run(&config).await?
-                    }
-                    TransferCliCommands::Setup(args) => {
-                        let config = Self::extract_consumer_config(args.env_file)?;
-                        TransferConsumerMigration::run(&config).await?
-                    }
+                TransferCliCommands::Setup(args) => {
+                    let config = Self::extract_provider_config(args.env_file)?;
+                    TransferProviderMigration::run(&config).await?
                 }
-            }
+            },
+            TransferCliRoles::Consumer(cmd) => match cmd {
+                TransferCliCommands::Start(args) => {
+                    let config = Self::extract_consumer_config(args.env_file)?;
+                    TransferConsumerApplication::run(&config).await?
+                }
+                TransferCliCommands::Setup(args) => {
+                    let config = Self::extract_consumer_config(args.env_file)?;
+                    TransferConsumerMigration::run(&config).await?
+                }
+            },
         };
 
         Ok(())

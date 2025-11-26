@@ -34,7 +34,10 @@ impl MigrationTrait for Migration {
             .create_foreign_key(
                 ForeignKey::create()
                     .name("fk-data_hub_policy_relations-policy_template_id")
-                    .from(DataHubPolicyRelations::Table, DataHubPolicyRelations::PolicyTemplateId)
+                    .from(
+                        DataHubPolicyRelations::Table,
+                        DataHubPolicyRelations::PolicyTemplateId,
+                    )
                     .to(PolicyTemplates::Table, PolicyTemplates::Id)
                     .on_delete(ForeignKeyAction::Cascade) // Cascade deletion if a policy template is removed
                     .on_update(ForeignKeyAction::Cascade) // Cascade updates if a policy template ID changes

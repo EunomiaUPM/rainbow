@@ -51,7 +51,10 @@ where
     pub fn router(self) -> Router {
         Router::new()
             .route("/catalog/request", post(Self::handle_post_catalog_request))
-            .route("/catalog/datasets/:dataset_id", get(Self::handle_get_dataset_by_id))
+            .route(
+                "/catalog/datasets/:dataset_id",
+                get(Self::handle_get_dataset_by_id),
+            )
             .with_state(self.service)
     }
 
@@ -68,8 +71,8 @@ where
             Ok(catalogs) => (StatusCode::OK, Json(catalogs)).into_response(),
             Err(e) => match e.downcast::<DSProtocolCatalogErrors>() {
                 Ok(e_) => e_.into_response(),
-                Err(e_) => NotCheckedError { inner_error: e_ }.into_response()
-            }
+                Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
+            },
         }
     }
 
@@ -86,8 +89,8 @@ where
             Ok(dataset) => (StatusCode::OK, Json(dataset)).into_response(),
             Err(e) => match e.downcast::<DSProtocolCatalogErrors>() {
                 Ok(e_) => e_.into_response(),
-                Err(e_) => NotCheckedError { inner_error: e_ }.into_response()
-            }
+                Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
+            },
         }
     }
 }

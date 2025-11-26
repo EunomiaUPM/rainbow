@@ -51,10 +51,7 @@ impl RainbowConsumerGateway {
         Self { config, client, notification_tx }
     }
     pub fn router(self) -> Router {
-        let cors = CorsLayer::new()
-            .allow_methods(Any)
-            .allow_origin(Any)
-            .allow_headers(Any);
+        let cors = CorsLayer::new().allow_methods(Any).allow_origin(Any).allow_headers(Any);
 
         let mut router = Router::new()
             .route(
@@ -89,24 +86,21 @@ impl RainbowConsumerGateway {
                     .body(Body::from(content.data))
                     .unwrap()
             }
-            None => {
-                match RainbowConsumerReactApp::get("index.html") {
-                    Some(content) => {
-                        let mime_type = mime_guess::from_path("index.html").first_or_octet_stream();
-                        Response::builder()
-                            .header(header::CONTENT_TYPE, mime_type.as_ref())
-                            .body(Body::from(content.data))
-                            .unwrap()
-                    }
-                    None => Response::builder()
-                        .status(StatusCode::NOT_FOUND)
-                        .body(Body::from("<h1>404</h1><p>index.html not found</p>"))
-                        .unwrap(),
+            None => match RainbowConsumerReactApp::get("index.html") {
+                Some(content) => {
+                    let mime_type = mime_guess::from_path("index.html").first_or_octet_stream();
+                    Response::builder()
+                        .header(header::CONTENT_TYPE, mime_type.as_ref())
+                        .body(Body::from(content.data))
+                        .unwrap()
                 }
-            }
+                None => Response::builder()
+                    .status(StatusCode::NOT_FOUND)
+                    .body(Body::from("<h1>404</h1><p>index.html not found</p>"))
+                    .unwrap(),
+            },
         }
     }
-
 
     async fn proxy_handler_with_extra(
         State((config, client, notification_tx)): State<(ApplicationConsumerConfig, Client, broadcast::Sender<String>)>,
@@ -119,7 +113,7 @@ impl RainbowConsumerGateway {
             Some(extra),
             req,
         )
-            .await
+        .await
     }
     async fn proxy_handler_without_extra(
         State((config, client, notification_tx)): State<(ApplicationConsumerConfig, Client, broadcast::Sender<String>)>,
@@ -165,10 +159,14 @@ impl RainbowConsumerGateway {
             extra_opt,
             req,
         )
-            .await
+        .await
     }
     async fn websocket_handler(
-        State((_config, _client, notification_tx)): State<(ApplicationConsumerConfig, Client, broadcast::Sender<String>)>,
+        State((_config, _client, notification_tx)): State<(
+            ApplicationConsumerConfig,
+            Client,
+            broadcast::Sender<String>,
+        )>,
         ws: WebSocketUpgrade,
     ) -> impl IntoResponse {
         ws.on_upgrade(move |mut socket| async move {
@@ -223,7 +221,11 @@ impl RainbowConsumerGateway {
         })
     }
     async fn incoming_notification(
-        State((_config, _client, notification_tx)): State<(ApplicationConsumerConfig, Client, broadcast::Sender<String>)>,
+        State((_config, _client, notification_tx)): State<(
+            ApplicationConsumerConfig,
+            Client,
+            broadcast::Sender<String>,
+        )>,
         Json(input): Json<Value>,
     ) -> impl IntoResponse {
         let value_str = match serde_json::to_string(&input) {

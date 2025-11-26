@@ -17,7 +17,11 @@
  *
  */
 
-use crate::common::schemas::{CONTRACT_AGREEMENT_MESSAGE_SCHEMA, CONTRACT_AGREEMENT_VERIFICATION_MESSAGE_SCHEMA, CONTRACT_NEGOTIATION_EVENT_MESSAGE_SCHEMA, CONTRACT_OFFER_MESSAGE_SCHEMA, CONTRACT_REQUEST_MESSAGE_SCHEMA, CONTRACT_TERMINATION_MESSAGE_SCHEMA};
+use crate::common::schemas::{
+    CONTRACT_AGREEMENT_MESSAGE_SCHEMA, CONTRACT_AGREEMENT_VERIFICATION_MESSAGE_SCHEMA,
+    CONTRACT_NEGOTIATION_EVENT_MESSAGE_SCHEMA, CONTRACT_OFFER_MESSAGE_SCHEMA, CONTRACT_REQUEST_MESSAGE_SCHEMA,
+    CONTRACT_TERMINATION_MESSAGE_SCHEMA,
+};
 use anyhow::bail;
 use jsonschema::BasicOutput;
 use log::error;
@@ -25,7 +29,9 @@ use rainbow_common::protocol::contract::contract_protocol_trait::DSProtocolContr
 use rainbow_common::protocol::contract::ContractNegotiationMessages;
 use serde_json::to_value;
 
-pub fn validate_payload_schema<'a, M: DSProtocolContractNegotiationMessageTrait<'a>>(message: &M) -> anyhow::Result<()> {
+pub fn validate_payload_schema<'a, M: DSProtocolContractNegotiationMessageTrait<'a>>(
+    message: &M,
+) -> anyhow::Result<()> {
     let validation = match message.get_message_type()? {
         ContractNegotiationMessages::ContractRequestMessage => {
             CONTRACT_REQUEST_MESSAGE_SCHEMA.apply(&to_value(message)?).basic()

@@ -1,0 +1,93 @@
+syntax = "proto3";
+
+package transfer_processes;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "transfer_messages.proto";
+
+// -----------------------------------------------------------------
+// SERVICE DEFINITION
+// -----------------------------------------------------------------
+
+service TransferAgentProcesses {
+  rpc GetAllProcesses (PaginationRequestProcesses) returns (TransferProcessListResponse);
+  rpc CreateProcess (CreateProcessRequest) returns (TransferProcessResponse);
+  rpc GetBatchProcesses (BatchProcessRequest) returns (TransferProcessListResponse);
+  rpc GetProcessById (ResourceIdRequestProcesses) returns (TransferProcessResponse);
+  rpc UpdateProcess (UpdateProcessRequest) returns (TransferProcessResponse);
+  rpc DeleteProcess (ResourceIdRequestProcesses) returns (google.protobuf.Empty);
+  rpc GetProcessByKeyId (GetByKeyRequest) returns (TransferProcessResponse);
+}
+
+// -----------------------------------------------------------------
+// REQUEST MESSAGES
+// -----------------------------------------------------------------
+
+message PaginationRequestProcesses {
+  optional uint64 limit = 1;
+  optional uint64 page = 2;
+}
+
+message ResourceIdRequestProcesses {
+  string id = 1;
+}
+
+message GetByKeyRequest {
+  string id = 1; // Parent Process ID
+  string key_id = 2; // Secondary Key
+}
+
+message BatchProcessRequest {
+  repeated string ids = 1;
+}
+
+message CreateProcessRequest {
+  optional string id = 1;
+  string state = 2;
+  string associated_agent_peer = 3;
+  string protocol = 4;
+  string transfer_direction = 5;
+  string agreement_id = 6;
+  optional string state_attribute = 7;
+  optional string properties_json = 8;
+  map<string, string> identifiers = 9;
+  optional string callback_address = 10;
+  string role = 11;
+}
+
+message UpdateProcessRequest {
+  string id = 1;
+
+  optional string state = 2;
+  optional string state_attribute = 3;
+  optional string properties_json = 4;
+  optional string error_details_json = 5;
+  map<string, string> identifiers = 6;
+}
+
+// -----------------------------------------------------------------
+// RESPONSE MESSAGES
+// -----------------------------------------------------------------
+
+message TransferProcessResponse {
+  string id = 1;
+  string state = 2;
+  optional string state_attribute = 3;
+  string associated_agent_peer = 4;
+  string protocol = 5;
+  string transfer_direction = 6;
+  string agreement_id = 7;
+  string properties_json = 8;
+  optional string error_details_json = 9;
+  google.protobuf.Timestamp created_at = 10;
+  optional google.protobuf.Timestamp updated_at = 11;
+  map<string, string> identifiers = 12;
+  repeated transfer_messages.TransferMessageResponse messages = 13;
+  optional string callback_address = 14;
+  string role = 15;
+}
+
+message TransferProcessListResponse {
+  repeated TransferProcessResponse processes = 1;
+}

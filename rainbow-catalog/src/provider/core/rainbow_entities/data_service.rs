@@ -24,8 +24,13 @@ use anyhow::bail;
 use axum::async_trait;
 use rainbow_common::protocol::catalog::dataservice_definition::DataService;
 use rainbow_common::protocol::catalog::EntityTypes;
-use rainbow_db::catalog::repo::{CatalogRepo, CatalogRepoErrors, DataServiceRepo, DatasetRepo, DistributionRepo, OdrlOfferRepo};
-use rainbow_events::core::notification::notification_types::{RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory, RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes};
+use rainbow_db::catalog::repo::{
+    CatalogRepo, CatalogRepoErrors, DataServiceRepo, DatasetRepo, DistributionRepo, OdrlOfferRepo,
+};
+use rainbow_events::core::notification::notification_types::{
+    RainbowEventsNotificationBroadcastRequest, RainbowEventsNotificationMessageCategory,
+    RainbowEventsNotificationMessageOperation, RainbowEventsNotificationMessageTypes,
+};
 use rainbow_events::core::notification::RainbowEventsNotificationTrait;
 use serde_json::{json, to_value};
 use std::sync::Arc;
@@ -69,18 +74,14 @@ where
     }
 
     async fn get_data_services_by_catalog_id(&self, catalog_id: Urn) -> anyhow::Result<Vec<DataService>> {
-        let data_services = self.repo.get_data_services_by_catalog_id(catalog_id.clone())
-            .await
-            .map_err(|e| match e {
-                CatalogRepoErrors::CatalogNotFound => CatalogError::NotFound {
-                    id: catalog_id,
-                    entity: EntityTypes::Catalog.to_string(),
-                },
+        let data_services =
+            self.repo.get_data_services_by_catalog_id(catalog_id.clone()).await.map_err(|e| match e {
+                CatalogRepoErrors::CatalogNotFound => {
+                    CatalogError::NotFound { id: catalog_id, entity: EntityTypes::Catalog.to_string() }
+                }
                 err => CatalogError::DbErr(err),
             })?;
-        let data_services = data_services.iter()
-            .map(|d| DataService::try_from(d.to_owned()).unwrap())
-            .collect();
+        let data_services = data_services.iter().map(|d| DataService::try_from(d.to_owned()).unwrap()).collect();
         Ok(data_services)
     }
 
@@ -93,13 +94,15 @@ where
                 _ => CatalogError::DbErr(err),
             })?;
         let dataservice = DataService::try_from(data_service_entity).map_err(CatalogError::ConversionError)?;
-        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
-            category: RainbowEventsNotificationMessageCategory::Catalog,
-            subcategory: "DataService".to_string(),
-            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
-            message_content: to_value(&dataservice)?,
-            message_operation: RainbowEventsNotificationMessageOperation::Creation,
-        }).await?;
+        self.notification_service
+            .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+                category: RainbowEventsNotificationMessageCategory::Catalog,
+                subcategory: "DataService".to_string(),
+                message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+                message_content: to_value(&dataservice)?,
+                message_operation: RainbowEventsNotificationMessageOperation::Creation,
+            })
+            .await?;
         Ok(dataservice)
     }
 
@@ -119,33 +122,40 @@ where
                 },
             )?;
         let dataservice = DataService::try_from(data_service_entity).map_err(CatalogError::ConversionError)?;
-        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
-            category: RainbowEventsNotificationMessageCategory::Catalog,
-            subcategory: "DataService".to_string(),
-            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
-            message_content: to_value(&dataservice)?,
-            message_operation: RainbowEventsNotificationMessageOperation::Update,
-        }).await?;
+        self.notification_service
+            .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+                category: RainbowEventsNotificationMessageCategory::Catalog,
+                subcategory: "DataService".to_string(),
+                message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+                message_content: to_value(&dataservice)?,
+                message_operation: RainbowEventsNotificationMessageOperation::Update,
+            })
+            .await?;
         Ok(dataservice)
     }
 
     async fn delete_data_service(&self, catalog_id: Urn, dataset_id: Urn) -> anyhow::Result<()> {
-        let _ = self.repo.delete_data_service_by_id(catalog_id.clone(), dataset_id.clone()).await.map_err(|err| match err {
-            rainbow_db::catalog::repo::CatalogRepoErrors::DataServiceNotFound => {
-                CatalogError::NotFound { id: catalog_id, entity: EntityTypes::DataService.to_string() }
-            }
-            _ => CatalogError::DbErr(err),
-        })?;
-        self.notification_service.broadcast_notification(RainbowEventsNotificationBroadcastRequest {
-            category: RainbowEventsNotificationMessageCategory::Catalog,
-            subcategory: "DataService".to_string(),
-            message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
-            message_content: json!({
-                "@type": "dcat:DataService",
-                "@id": dataset_id.to_string()
-            }),
-            message_operation: RainbowEventsNotificationMessageOperation::Deletion,
-        }).await?;
+        let _ =
+            self.repo.delete_data_service_by_id(catalog_id.clone(), dataset_id.clone()).await.map_err(
+                |err| match err {
+                    rainbow_db::catalog::repo::CatalogRepoErrors::DataServiceNotFound => {
+                        CatalogError::NotFound { id: catalog_id, entity: EntityTypes::DataService.to_string() }
+                    }
+                    _ => CatalogError::DbErr(err),
+                },
+            )?;
+        self.notification_service
+            .broadcast_notification(RainbowEventsNotificationBroadcastRequest {
+                category: RainbowEventsNotificationMessageCategory::Catalog,
+                subcategory: "DataService".to_string(),
+                message_type: RainbowEventsNotificationMessageTypes::RainbowEntitiesMessage,
+                message_content: json!({
+                    "@type": "dcat:DataService",
+                    "@id": dataset_id.to_string()
+                }),
+                message_operation: RainbowEventsNotificationMessageOperation::Deletion,
+            })
+            .await?;
         Ok(())
     }
 }

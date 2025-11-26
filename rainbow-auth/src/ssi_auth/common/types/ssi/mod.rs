@@ -16,8 +16,8 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+pub mod client;
 pub mod dids;
 pub mod keys;
-pub mod client;
-pub mod wallet;
 pub mod other;
+pub mod wallet;

@@ -49,14 +49,14 @@ impl SSIAuthProviderApplication {
                     "127.0.0.1:{}",
                     config.get_raw_ssi_auth_host().clone().unwrap().port
                 ))
-                    .await?
+                .await?
             }
             false => {
                 TcpListener::bind(format!(
                     "0.0.0.0:{}",
                     config.get_raw_ssi_auth_host().clone().unwrap().port
                 ))
-                    .await?
+                .await?
             }
         };
         serve(listener, router).await?;

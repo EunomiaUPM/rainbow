@@ -30,28 +30,19 @@ impl IntoResponse for IdsaCNError {
                 reason: Option::from(vec![e.to_string()]),
                 ..Default::default()
             },
-            ref e @ IdsaCNError::ProcessNotFound { ref provider_pid, .. } => {
-                ContractErrorMessage {
-                    provider_pid: provider_pid.as_ref().map(|pid| pid.to_string()),
-                    code: Option::from("PROCESS_NOT_FOUND_BY_PROVIDER_OR_CONSUMER".to_string()),
-                    reason: Option::from(vec![e.to_string()]),
-                    ..Default::default()
-                }
-            }
-            ref
-            e @ IdsaCNError::UUIDParseError { ref provider_pid, ref error, .. } => {
-                ContractErrorMessage {
-                    provider_pid: provider_pid.as_ref().map(|pid| pid.to_string()),
-                    code: Option::from("URN_PARSE_ERROR".to_string()),
-                    reason: Option::from(vec![error.to_string(), e.to_string()]),
-                    ..Default::default()
-                }
-            }
-            ref e @ IdsaCNError::NotCheckedError {
-                ref provider_pid,
-                ref error,
-                ..
-            } => ContractErrorMessage {
+            ref e @ IdsaCNError::ProcessNotFound { ref provider_pid, .. } => ContractErrorMessage {
+                provider_pid: provider_pid.as_ref().map(|pid| pid.to_string()),
+                code: Option::from("PROCESS_NOT_FOUND_BY_PROVIDER_OR_CONSUMER".to_string()),
+                reason: Option::from(vec![e.to_string()]),
+                ..Default::default()
+            },
+            ref e @ IdsaCNError::UUIDParseError { ref provider_pid, ref error, .. } => ContractErrorMessage {
+                provider_pid: provider_pid.as_ref().map(|pid| pid.to_string()),
+                code: Option::from("URN_PARSE_ERROR".to_string()),
+                reason: Option::from(vec![error.to_string(), e.to_string()]),
+                ..Default::default()
+            },
+            ref e @ IdsaCNError::NotCheckedError { ref provider_pid, ref error, .. } => ContractErrorMessage {
                 provider_pid: provider_pid.as_ref().map(|pid| pid.to_string()),
                 code: Option::from("NOT_CHECKED_ERROR".to_string()),
                 reason: Option::from(vec![
@@ -93,11 +84,7 @@ impl IntoResponse for IdsaCNError {
                 reason: Option::from(vec![e.to_string()]),
                 ..Default::default()
             },
-            ref e @ IdsaCNError::NotAllowed {
-                ref provider_pid,
-                ref consumer_pid,
-                ..
-            } => ContractErrorMessage {
+            ref e @ IdsaCNError::NotAllowed { ref provider_pid, ref consumer_pid, .. } => ContractErrorMessage {
                 provider_pid: provider_pid.as_ref().map(|pid| pid.to_string()),
                 consumer_pid: consumer_pid.as_ref().map(|pid| pid.to_string()),
                 code: Option::from("OPERATION_NOT_ALLOWED".to_string()),
@@ -105,6 +92,6 @@ impl IntoResponse for IdsaCNError {
                 ..Default::default()
             },
         }
-            .into_response()
+        .into_response()
     }
 }

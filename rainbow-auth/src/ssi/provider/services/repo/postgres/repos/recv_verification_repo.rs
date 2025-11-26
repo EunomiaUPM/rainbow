@@ -21,7 +21,7 @@ use crate::ssi::provider::data::entities::recv_verification::{Column, Entity, Mo
 use crate::ssi::provider::services::repo::subtraits::RecvVerificationTrait;
 use anyhow::bail;
 use axum::async_trait;
-use rainbow_common::db::{BasicRepoTrait, IntoActiveSet};
+use rainbow_common::data::{BasicRepoTrait, IntoActiveSet};
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 use tracing::error;

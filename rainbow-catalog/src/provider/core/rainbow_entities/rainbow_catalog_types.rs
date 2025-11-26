@@ -20,8 +20,8 @@
 use rainbow_common::dcat_formats::DctFormats;
 use rainbow_common::utils::get_urn_from_string;
 use rainbow_db::catalog::repo::{
-    EditCatalogModel, EditDataServiceModel, EditDatasetModel, EditDistributionModel,
-    NewCatalogModel, NewDataServiceModel, NewDatasetModel, NewDistributionModel,
+    EditCatalogModel, EditDataServiceModel, EditDatasetModel, EditDistributionModel, NewCatalogModel,
+    NewDataServiceModel, NewDatasetModel, NewDistributionModel,
 };
 use serde::{Deserialize, Serialize};
 use urn::Urn;

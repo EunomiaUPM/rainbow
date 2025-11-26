@@ -17,5 +17,5 @@
  *
  */
 
-pub mod subscription;
 pub mod notification;
+pub mod subscription;

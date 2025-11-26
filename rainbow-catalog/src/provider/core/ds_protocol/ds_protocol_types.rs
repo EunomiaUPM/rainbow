@@ -17,7 +17,6 @@
  *
  */
 
-
 use rainbow_common::dcat_formats::DctFormats;
 use rainbow_common::protocol::catalog::EntityTypes;
 use rainbow_common::protocol::context_field::ContextField;
@@ -35,7 +34,6 @@ pub struct CatalogRequest {
     pub _type: String,
     pub filter: Vec<String>,
 }
-
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CatalogResponse {
@@ -117,11 +115,6 @@ pub struct CatalogError {
 
 impl Default for CatalogError {
     fn default() -> Self {
-        Self {
-            context: ContextField::default(),
-            _type: "CatalogError".to_string(),
-            code: None,
-            reason: None,
-        }
+        Self { context: ContextField::default(), _type: "CatalogError".to_string(), code: None, reason: None }
     }
 }

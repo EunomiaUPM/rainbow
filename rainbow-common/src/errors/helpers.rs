@@ -19,7 +19,7 @@
 use std::fmt;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum MissingAction {
     Token,
     Wallet,

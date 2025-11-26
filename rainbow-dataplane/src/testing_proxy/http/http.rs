@@ -77,18 +77,17 @@ where
         // validations
         let data_plane_id = match get_urn_from_string(&data_plane_id) {
             Ok(data_plane_id) => data_plane_id,
-            Err(_) => return (StatusCode::BAD_REQUEST, "data_plane_id not urn").into_response()
+            Err(_) => return (StatusCode::BAD_REQUEST, "data_plane_id not urn").into_response(),
         };
 
         // PDP
-        let dataplane = match dataplane_service.
-            get_dataplane_process_by_id(data_plane_id).await {
+        let dataplane = match dataplane_service.get_dataplane_process_by_id(data_plane_id).await {
             Ok(dataplane) => dataplane,
-            Err(_) => return (StatusCode::BAD_REQUEST, "dataplane id not found").into_response()
+            Err(_) => return (StatusCode::BAD_REQUEST, "dataplane id not found").into_response(),
         };
         match dataplane.process_direction {
             DataPlaneProcessDirection::PULL => {}
-            _ => return (StatusCode::BAD_REQUEST, "wrong direction").into_response()
+            _ => return (StatusCode::BAD_REQUEST, "wrong direction").into_response(),
         }
         match dataplane.state {
             DataPlaneProcessState::STARTED => {}
@@ -101,25 +100,20 @@ where
         // if you are Provider
         // ODRL Evaluator facade
 
-
         // forward request downstream
         let next_hop = dataplane.downstream_hop.url;
         let body = std::mem::take(req.body_mut());
         let body_bytes = match to_bytes(body, 2024) // MAX_BUFFER
-            .await {
+            .await
+        {
             Ok(body_bytes) => body_bytes,
-            Err(_) => return (StatusCode::BAD_REQUEST, "body too big").into_response()
+            Err(_) => return (StatusCode::BAD_REQUEST, "body too big").into_response(),
         };
         let method = match Method::try_from(req.method()) {
             Ok(method) => method,
-            Err(_) => return (StatusCode::BAD_REQUEST, "method not allowed").into_response()
+            Err(_) => return (StatusCode::BAD_REQUEST, "method not allowed").into_response(),
         };
-        let res = client
-            .request(method, next_hop)
-            .body(body_bytes)
-            .send()
-            .await;
-
+        let res = client.request(method, next_hop).body(body_bytes).send().await;
 
         // Notify && transfer event
         // Notification
@@ -128,7 +122,7 @@ where
         // forward request upstream
         match res {
             Ok(res) => forward_response(res),
-            Err(_) => return (StatusCode::BAD_REQUEST, "peer connection problem").into_response()
+            Err(_) => return (StatusCode::BAD_REQUEST, "peer connection problem").into_response(),
         }
     }
 }

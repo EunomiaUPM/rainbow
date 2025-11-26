@@ -17,7 +17,10 @@
  *
  */
 
-use crate::provider::core::rainbow_entities::rainbow_catalog_types::{EditDataServiceRequest, EditDistributionRequest, NewCatalogRequest, NewDataServiceRequest, NewDatasetRequest, NewDistributionRequest};
+use crate::provider::core::rainbow_entities::rainbow_catalog_types::{
+    EditDataServiceRequest, EditDistributionRequest, NewCatalogRequest, NewDataServiceRequest, NewDatasetRequest,
+    NewDistributionRequest,
+};
 use axum::async_trait;
 use rainbow_common::dcat_formats::DctFormats;
 use rainbow_common::protocol::catalog::catalog_definition::Catalog;
@@ -75,7 +78,11 @@ pub trait RainbowDataServiceTrait: Send + Sync {
 pub trait RainbowDistributionTrait: Send + Sync {
     async fn get_distribution_by_id(&self, distribution_id: Urn) -> anyhow::Result<Distribution>;
     async fn get_distributions_by_dataset_id(&self, dataset_id: Urn) -> anyhow::Result<Vec<Distribution>>;
-    async fn get_distributions_by_dataset_id_and_dct_formats(&self, dataset_id: Urn, dct_formats: DctFormats) -> anyhow::Result<Distribution>;
+    async fn get_distributions_by_dataset_id_and_dct_formats(
+        &self,
+        dataset_id: Urn,
+        dct_formats: DctFormats,
+    ) -> anyhow::Result<Distribution>;
     async fn post_distribution(
         &self,
         catalog_id: Urn,

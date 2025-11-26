@@ -18,7 +18,9 @@
  */
 
 use crate::provider::core::rainbow_entities::rainbow_catalog_err::CatalogError;
-use crate::provider::core::rainbow_rpc::rainbow_rpc_types::{RainbowRPCCatalogResolveDataServiceRequest, RainbowRPCCatalogResolveOfferByIdRequest};
+use crate::provider::core::rainbow_rpc::rainbow_rpc_types::{
+    RainbowRPCCatalogResolveDataServiceRequest, RainbowRPCCatalogResolveOfferByIdRequest,
+};
 use crate::provider::core::rainbow_rpc::RainbowRPCCatalogTrait;
 use anyhow::Error;
 use axum::extract::rejection::JsonRejection;
@@ -66,8 +68,12 @@ where
             Ok(d) => (StatusCode::OK, Json(d)).into_response(),
             Err(e) => match e.downcast::<CatalogError>() {
                 Ok(e_) => e_.into_response(),
-                Err(e_) => (StatusCode::INTERNAL_SERVER_ERROR, NotCheckedError { inner_error: e_ }).into_response()
-            }
+                Err(e_) => (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    NotCheckedError { inner_error: e_ },
+                )
+                    .into_response(),
+            },
         }
     }
     pub async fn handle_resolve_offer(
@@ -79,8 +85,12 @@ where
             Ok(d) => (StatusCode::OK, Json(d)).into_response(),
             Err(e) => match e.downcast::<CatalogError>() {
                 Ok(e_) => e_.into_response(),
-                Err(e_) => (StatusCode::INTERNAL_SERVER_ERROR, NotCheckedError { inner_error: e_ }).into_response()
-            }
+                Err(e_) => (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    NotCheckedError { inner_error: e_ },
+                )
+                    .into_response(),
+            },
         }
     }
 }

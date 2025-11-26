@@ -44,13 +44,15 @@ pub static TRANSFER_REQUEST_SCHEMA: Lazy<Validator> = Lazy::new(|| -> Validator 
     definitions.insert("EndpointProperty".to_string(), endpoint_prop.clone());
     definitions.insert("ContextSchema".to_string(), context_prop.clone());
     let definitions = serde_json::to_string(&request_schema).expect("Could not serialize schema");
-    let definitions = definitions.replace(
-        "https://w3id.org/dspace/2025/1/transfer/data-address-schema.json",
-        "#/definitions/DataAddress",
-    ).replace(
-        "https://w3id.org/dspace/2025/1/common/context-schema.json",
-        "#/definitions/ContextSchema",
-    );
+    let definitions = definitions
+        .replace(
+            "https://w3id.org/dspace/2025/1/transfer/data-address-schema.json",
+            "#/definitions/DataAddress",
+        )
+        .replace(
+            "https://w3id.org/dspace/2025/1/common/context-schema.json",
+            "#/definitions/ContextSchema",
+        );
     let updated_schema: Value = serde_json::from_str(&definitions).expect("Invalid updated JSON");
     let validator = jsonschema::validator_for(&updated_schema).unwrap();
     validator
@@ -74,13 +76,15 @@ pub static TRANSFER_START_SCHEMA: Lazy<Validator> = Lazy::new(|| -> Validator {
     definitions.insert("EndpointProperty".to_string(), endpoint_prop.clone());
     definitions.insert("ContextSchema".to_string(), context_prop.clone());
     let definitions = serde_json::to_string(&start_schema).expect("Could not serialize schema");
-    let definitions = definitions.replace(
-        "https://w3id.org/dspace/2025/1/transfer/data-address-schema.json",
-        "#/definitions/DataAddress",
-    ).replace(
-        "https://w3id.org/dspace/2025/1/common/context-schema.json",
-        "#/definitions/ContextSchema",
-    );
+    let definitions = definitions
+        .replace(
+            "https://w3id.org/dspace/2025/1/transfer/data-address-schema.json",
+            "#/definitions/DataAddress",
+        )
+        .replace(
+            "https://w3id.org/dspace/2025/1/common/context-schema.json",
+            "#/definitions/ContextSchema",
+        );
     let updated_schema: Value = serde_json::from_str(&definitions).expect("Invalid updated JSON");
     let validator = jsonschema::validator_for(&updated_schema).unwrap();
     validator
@@ -99,16 +103,21 @@ pub static TRANSFER_SUSPENSION_SCHEMA: Lazy<Validator> = Lazy::new(|| -> Validat
     let abstract_prop = &abstract_messages["definitions"]["AbstractTransferCodeMessage"];
     let context_prop = &context_schema["definitions"]["ContextSchema"];
     let definitions = suspension_schema.get_mut("definitions").and_then(|v| v.as_object_mut()).unwrap();
-    definitions.insert("AbstractTransferCodeMessage".to_string(), abstract_prop.clone());
+    definitions.insert(
+        "AbstractTransferCodeMessage".to_string(),
+        abstract_prop.clone(),
+    );
     definitions.insert("ContextSchema".to_string(), context_prop.clone());
     let definitions = serde_json::to_string(&suspension_schema).expect("Could not serialize schema");
-    let definitions = definitions.replace(
-        "https://w3id.org/dspace/2025/1/transfer/transfer-schema.json#",
-        "#/",
-    ).replace(
-        "https://w3id.org/dspace/2025/1/common/context-schema.json",
-        "#/definitions/ContextSchema",
-    );
+    let definitions = definitions
+        .replace(
+            "https://w3id.org/dspace/2025/1/transfer/transfer-schema.json#",
+            "#/",
+        )
+        .replace(
+            "https://w3id.org/dspace/2025/1/common/context-schema.json",
+            "#/definitions/ContextSchema",
+        );
     let updated_schema: Value = serde_json::from_str(&definitions).expect("Invalid updated JSON");
     let validator = jsonschema::validator_for(&updated_schema);
     validator.unwrap()
@@ -127,16 +136,21 @@ pub static TRANSFER_TERMINATION_SCHEMA: Lazy<Validator> = Lazy::new(|| -> Valida
     let abstract_prop = &abstract_messages["definitions"]["AbstractTransferCodeMessage"];
     let context_prop = &context_schema["definitions"]["ContextSchema"];
     let definitions = termination_schema.get_mut("definitions").and_then(|v| v.as_object_mut()).unwrap();
-    definitions.insert("AbstractTransferCodeMessage".to_string(), abstract_prop.clone());
+    definitions.insert(
+        "AbstractTransferCodeMessage".to_string(),
+        abstract_prop.clone(),
+    );
     definitions.insert("ContextSchema".to_string(), context_prop.clone());
     let definitions = serde_json::to_string(&termination_schema).expect("Could not serialize schema");
-    let definitions = definitions.replace(
-        "https://w3id.org/dspace/2025/1/transfer/transfer-schema.json#",
-        "#/",
-    ).replace(
-        "https://w3id.org/dspace/2025/1/common/context-schema.json",
-        "#/definitions/ContextSchema",
-    );
+    let definitions = definitions
+        .replace(
+            "https://w3id.org/dspace/2025/1/transfer/transfer-schema.json#",
+            "#/",
+        )
+        .replace(
+            "https://w3id.org/dspace/2025/1/common/context-schema.json",
+            "#/definitions/ContextSchema",
+        );
     let updated_schema: Value = serde_json::from_str(&definitions).expect("Invalid updated JSON");
     let validator = jsonschema::validator_for(&updated_schema).unwrap();
     validator
@@ -175,16 +189,21 @@ pub static TRANSFER_ERROR_SCHEMA: Lazy<Validator> = Lazy::new(|| -> Validator {
     let abstract_prop = &abstract_messages["definitions"]["AbstractTransferCodeMessage"];
     let context_prop = &context_schema["definitions"]["ContextSchema"];
     let definitions = error_schema.get_mut("definitions").and_then(|v| v.as_object_mut()).unwrap();
-    definitions.insert("AbstractTransferCodeMessage".to_string(), abstract_prop.clone());
+    definitions.insert(
+        "AbstractTransferCodeMessage".to_string(),
+        abstract_prop.clone(),
+    );
     definitions.insert("ContextSchema".to_string(), context_prop.clone());
     let definitions = serde_json::to_string(&error_schema).expect("Could not serialize schema");
-    let definitions = definitions.replace(
-        "https://w3id.org/dspace/2025/1/transfer/transfer-schema.json#",
-        "#/",
-    ).replace(
-        "https://w3id.org/dspace/2025/1/common/context-schema.json",
-        "#/definitions/ContextSchema",
-    );
+    let definitions = definitions
+        .replace(
+            "https://w3id.org/dspace/2025/1/transfer/transfer-schema.json#",
+            "#/",
+        )
+        .replace(
+            "https://w3id.org/dspace/2025/1/common/context-schema.json",
+            "#/definitions/ContextSchema",
+        );
     let updated_schema: Value = serde_json::from_str(&definitions).expect("Invalid updated JSON");
     let validator = jsonschema::validator_for(&updated_schema).unwrap();
     validator
@@ -203,16 +222,21 @@ pub static TRANSFER_COMPLETION_SCHEMA: Lazy<Validator> = Lazy::new(|| -> Validat
     let abstract_prop = &abstract_messages["definitions"]["AbstractTransferCodeMessage"];
     let context_prop = &context_schema["definitions"]["ContextSchema"];
     let definitions = completion_schema.get_mut("definitions").and_then(|v| v.as_object_mut()).unwrap();
-    definitions.insert("AbstractTransferCodeMessage".to_string(), abstract_prop.clone());
+    definitions.insert(
+        "AbstractTransferCodeMessage".to_string(),
+        abstract_prop.clone(),
+    );
     definitions.insert("ContextSchema".to_string(), context_prop.clone());
     let definitions = serde_json::to_string(&completion_schema).expect("Could not serialize schema");
-    let definitions = definitions.replace(
-        "https://w3id.org/dspace/2025/1/transfer/transfer-schema.json#",
-        "#/",
-    ).replace(
-        "https://w3id.org/dspace/2025/1/common/context-schema.json",
-        "#/definitions/ContextSchema",
-    );
+    let definitions = definitions
+        .replace(
+            "https://w3id.org/dspace/2025/1/transfer/transfer-schema.json#",
+            "#/",
+        )
+        .replace(
+            "https://w3id.org/dspace/2025/1/common/context-schema.json",
+            "#/definitions/ContextSchema",
+        );
     let updated_schema: Value = serde_json::from_str(&definitions).expect("Invalid updated JSON");
     let validator = jsonschema::validator_for(&updated_schema).unwrap();
     validator

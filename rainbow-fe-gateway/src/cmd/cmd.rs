@@ -131,14 +131,14 @@ impl GatewayCommands {
                                 "127.0.0.1:{}",
                                 config.get_raw_gateway_host().clone().unwrap().port
                             ))
-                                .await?
+                            .await?
                         }
                         false => {
                             TcpListener::bind(format!(
                                 "0.0.0.0:{}",
                                 config.get_raw_gateway_host().clone().unwrap().port
                             ))
-                                .await?
+                            .await?
                         }
                     };
                     serve(listener, gateway_router).await?;
@@ -178,8 +178,7 @@ impl GatewayCommands {
         let mut options = CopyOptions::new();
         options.overwrite = true;
         options.copy_inside = true;
-        copy(origin, destination, &options)
-            .expect("failed to execute copy process");
+        copy(origin, destination, &options).expect("failed to execute copy process");
         debug!("Copy command finished successfully");
 
         Ok(())

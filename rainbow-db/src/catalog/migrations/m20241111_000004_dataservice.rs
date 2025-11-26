@@ -77,4 +77,3 @@ pub enum CatalogDataServices {
     DctDescription,
     CatalogId,
 }
-

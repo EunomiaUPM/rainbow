@@ -90,7 +90,12 @@ impl TransferErrors {
                 message: "Consumer has been already declared".to_string(),
                 error_code: 2100,
                 status_code: StatusCode::BAD_REQUEST,
-                details: format!("Consumer {} has been declared", id.unwrap_or("".to_string())).into(),
+                details: format!(
+                    "Consumer {} has been declared",
+                    id.unwrap_or("".to_string())
+                )
+                .into(),
+                cause: cause.clone().unwrap_or("".to_string()),
             },
             http_code: 400,
             cause,
@@ -103,6 +108,7 @@ impl TransferErrors {
                 error_code: 2100,
                 status_code: StatusCode::BAD_REQUEST,
                 details: None,
+                cause: cause.clone().unwrap_or("".to_string()),
             },
             http_code: 400,
             cause,

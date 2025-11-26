@@ -39,7 +39,6 @@ pub struct DomainsQueryOptions {
     pub query: Option<String>,
 }
 
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SearchResponse<T> {
     pub search: SearchResults<T>,
@@ -48,7 +47,7 @@ pub struct SearchResponse<T> {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GraphQLResponse<T> {
     pub data: SearchResponse<T>,
-    pub extensions: serde_json::Value,  // Para el campo "extensions" que está vacío
+    pub extensions: serde_json::Value, // Para el campo "extensions" que está vacío
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -78,7 +77,6 @@ pub struct Entity<T> {
 pub type DomainEntity = Entity<DomainProperties>;
 pub type TagEntity = Entity<TagProperties>;
 
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DatahubDataset {
     pub urn: String,
@@ -90,7 +88,6 @@ pub struct DatahubDataset {
     pub domain: DatahubDomain,
     pub glossary_terms: Option<Vec<GlossaryTerm>>,
 }
-
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DatasetGraphQLResponse {
@@ -114,7 +111,6 @@ pub struct DatasetSearchResult {
     pub entity: DatasetBasicInfo,
 }
 
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DatasetsQueryOptions {
     pub start: Option<i32>,
@@ -125,7 +121,6 @@ pub struct DatasetsQueryOptions {
 
 /*use serde::Deserialize;*/
 
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Properties {
     pub name: String,
@@ -134,12 +129,10 @@ pub struct Properties {
     pub custom_properties: Option<Vec<CustomProperty>>,
 }
 
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct OwnerWrapper {
     pub owner: Owner,
 }
-
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DatasetEntityDetailed {
@@ -155,19 +148,16 @@ pub struct DatasetEntityDetailed {
     pub glossaryTerms: Option<GlossaryTerms>,
 }
 
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GlossaryTermWrapper {
     pub term: GlossaryTerm,
 }
-
 
 // #[derive(Debug, Deserialize)]
 // pub struct AddPolicyRequest {
 //     pub property_name: String,
 //     pub property_value: String,
 // }
-
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DatasetGraphQLResponseDetailed {
@@ -271,7 +261,6 @@ pub struct Domain {
 //     pub properties: DomainProperties,
 // }
 
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GlossaryTerms {
     pub terms: Vec<TermWrapper>,
@@ -307,11 +296,10 @@ pub struct TagProperties {
     pub description: Option<String>,
 }
 
-
 // Estructura para las opciones de query
 #[derive(Debug, Deserialize)]
 pub struct TagsQueryOptions {
-    pub query: Option<String>,  // Para filtrar por nombre
-    pub start: Option<u32>,     // Para paginación
-    pub count: Option<u32>,     // Para limitar resultados
+    pub query: Option<String>, // Para filtrar por nombre
+    pub start: Option<u32>,    // Para paginación
+    pub count: Option<u32>,    // Para limitar resultados
 }

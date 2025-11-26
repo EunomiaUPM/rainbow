@@ -25,13 +25,13 @@ use std::str::FromStr;
 
 pub mod data_plane_provision;
 pub mod data_plane_start;
-pub mod data_plane_stop;
 pub mod data_plane_status;
+pub mod data_plane_stop;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum DataPlaneControllerVersion {
     #[serde(rename = "1.0")]
-    Version10
+    Version10,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -113,7 +113,7 @@ impl FromStr for DataPlaneProcessDirection {
             "PUSH" => Ok(DataPlaneProcessDirection::PUSH),
             "PULL" => Ok(DataPlaneProcessDirection::PULL),
             "BIDI" => Ok(DataPlaneProcessDirection::BIDI),
-            _ => bail!("no direction allowed")
+            _ => bail!("no direction allowed"),
         }
     }
 }
@@ -154,7 +154,7 @@ impl FromStr for DataPlaneProcessState {
             "STARTED" => Ok(DataPlaneProcessState::STARTED),
             "STOPPED" => Ok(DataPlaneProcessState::STOPPED),
             "TERMINATED" => Ok(DataPlaneProcessState::TERMINATED),
-            _ => bail!("no state allowed")
+            _ => bail!("no state allowed"),
         }
     }
 }
@@ -169,5 +169,3 @@ impl Display for DataPlaneProcessState {
         }
     }
 }
-
-
