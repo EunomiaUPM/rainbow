@@ -27,7 +27,9 @@ use rainbow_common::protocol::catalog::dataset_definition::Dataset;
 use rainbow_common::protocol::catalog::distribution_definition::Distribution;
 use rainbow_common::protocol::contract::contract_odrl::OdrlOffer;
 use rainbow_common::utils::get_urn_from_string;
-use rainbow_db::catalog::repo::{CatalogRepo, CatalogRepoErrors, DataServiceRepo, DatasetRepo, DistributionRepo, OdrlOfferRepo};
+use rainbow_db::catalog::repo::{
+    CatalogRepo, CatalogRepoErrors, DataServiceRepo, DatasetRepo, DistributionRepo, OdrlOfferRepo,
+};
 use std::sync::Arc;
 use urn::Urn;
 
@@ -53,19 +55,18 @@ where
     T: CatalogRepo + DatasetRepo + DistributionRepo + DataServiceRepo + OdrlOfferRepo + Send + Sync + 'static,
 {
     async fn dataset_request(&self, dataset_id: Urn) -> anyhow::Result<Dataset> {
-        let dataset = self.repo
-            .get_datasets_by_id(dataset_id.clone())
-            .await
-            .map_err(DSProtocolCatalogErrors::DbErr)?
-            .ok_or(DSProtocolCatalogErrors::NotFound {
-                id: dataset_id.clone(),
-                entity: "Dataset".to_string(),
-            })?;
+        let dataset =
+            self.repo
+                .get_datasets_by_id(dataset_id.clone())
+                .await
+                .map_err(DSProtocolCatalogErrors::DbErr)?
+                .ok_or(DSProtocolCatalogErrors::NotFound { id: dataset_id.clone(), entity: "Dataset".to_string() })?;
 
         let mut dataset = Dataset::try_from(dataset)?;
 
         // policies
-        let odrl_offer = self.repo
+        let odrl_offer = self
+            .repo
             .get_all_odrl_offers_by_entity(dataset_id.clone())
             .await
             .map_err(DSProtocolCatalogErrors::DbErr)?;
@@ -73,7 +74,8 @@ where
         dataset.odrl_offer = odrl_offer;
 
         // distributions
-        let distributions = self.repo
+        let distributions = self
+            .repo
             .get_distributions_by_dataset_id(dataset_id.clone())
             .await
             .map_err(DSProtocolCatalogErrors::DbErr)?
@@ -87,22 +89,19 @@ where
     async fn dataset_request_by_catalog(&self, catalog_id: Urn) -> anyhow::Result<Vec<Dataset>> {
         let mut datasets_out: Vec<Dataset> = vec![];
 
-        let datasets = self.repo
-            .get_datasets_by_catalog_id(catalog_id.clone())
-            .await
-            .map_err(|e| match e {
-                CatalogRepoErrors::CatalogNotFound => DSProtocolCatalogErrors::NotFound {
-                    id: catalog_id.clone(),
-                    entity: "Catalog".to_string(),
-                },
-                e => DSProtocolCatalogErrors::DbErr(e)
-            })?;
+        let datasets = self.repo.get_datasets_by_catalog_id(catalog_id.clone()).await.map_err(|e| match e {
+            CatalogRepoErrors::CatalogNotFound => {
+                DSProtocolCatalogErrors::NotFound { id: catalog_id.clone(), entity: "Catalog".to_string() }
+            }
+            e => DSProtocolCatalogErrors::DbErr(e),
+        })?;
 
         for dataset in datasets {
             let dataset_id = get_urn_from_string(&dataset.id)?;
             let mut dataset = Dataset::try_from(dataset.clone())?;
             // policies
-            let odrl_offer = self.repo
+            let odrl_offer = self
+                .repo
                 .get_all_odrl_offers_by_entity(get_urn_from_string(&dataset.id)?)
                 .await
                 .map_err(DSProtocolCatalogErrors::DbErr)?;
@@ -119,21 +118,19 @@ where
     async fn data_services_request_by_catalog(&self, catalog_id: Urn) -> anyhow::Result<Vec<DataService>> {
         let mut data_services_out: Vec<DataService> = vec![];
 
-        let data_services = self.repo
-            .get_data_services_by_catalog_id(catalog_id.clone())
-            .await
-            .map_err(|e| match e {
-                CatalogRepoErrors::CatalogNotFound => DSProtocolCatalogErrors::NotFound {
-                    id: catalog_id.clone(),
-                    entity: "Catalog".to_string(),
-                },
-                e => DSProtocolCatalogErrors::DbErr(e)
+        let data_services =
+            self.repo.get_data_services_by_catalog_id(catalog_id.clone()).await.map_err(|e| match e {
+                CatalogRepoErrors::CatalogNotFound => {
+                    DSProtocolCatalogErrors::NotFound { id: catalog_id.clone(), entity: "Catalog".to_string() }
+                }
+                e => DSProtocolCatalogErrors::DbErr(e),
             })?;
 
         for data_service in data_services {
             let mut data_service = DataService::try_from(data_service.clone())?;
             // policies
-            let odrl_offer = self.repo
+            let odrl_offer = self
+                .repo
                 .get_all_odrl_offers_by_entity(get_urn_from_string(&data_service.id)?)
                 .await
                 .map_err(DSProtocolCatalogErrors::DbErr)?;
@@ -146,10 +143,8 @@ where
     }
 
     async fn data_services_request_by_id(&self, data_service_id: Urn) -> anyhow::Result<Option<DataService>> {
-        let data_service = self.repo
-            .get_data_service_by_id(data_service_id.clone())
-            .await
-            .map_err(DSProtocolCatalogErrors::DbErr)?;
+        let data_service =
+            self.repo.get_data_service_by_id(data_service_id.clone()).await.map_err(DSProtocolCatalogErrors::DbErr)?;
         let data_service = data_service.map(|d| DataService::try_from(d).unwrap());
         Ok(data_service)
     }
@@ -160,7 +155,8 @@ where
         catalog_id: Urn,
     ) -> anyhow::Result<Vec<Distribution>> {
         let mut distributions_out: Vec<Distribution> = vec![];
-        let distributions = self.repo
+        let distributions = self
+            .repo
             .get_distributions_by_dataset_id(dataset_id.clone())
             .await
             .map_err(DSProtocolCatalogErrors::DbErr)?;
@@ -169,7 +165,8 @@ where
             let data_service_id = get_urn_from_string(&distribution.dcat_access_service)?;
             let mut distribution = Distribution::try_from(distribution.clone())?;
             // odrl
-            let odrl_offer = self.repo
+            let odrl_offer = self
+                .repo
                 .get_all_odrl_offers_by_entity(get_urn_from_string(&distribution.id)?)
                 .await
                 .map_err(DSProtocolCatalogErrors::DbErr)?;
@@ -183,16 +180,16 @@ where
     }
 
     async fn catalog_request(&self) -> anyhow::Result<Catalog> {
-        let main_catalog = self.repo
-            .get_main_catalog().await.map_err(DSProtocolCatalogErrors::DbErr)?
+        let main_catalog = self
+            .repo
+            .get_main_catalog()
+            .await
+            .map_err(DSProtocolCatalogErrors::DbErr)?
             .ok_or(DSProtocolCatalogErrors::NoMainCatalog)?;
         let mut main_catalog = Catalog::try_from(main_catalog).map_err(|e| ConversionError(e))?;
 
         let mut catalogs_out: Vec<Catalog> = vec![];
-        let catalogs = self.repo
-            .get_all_catalogs(None, None, true)
-            .await
-            .map_err(DSProtocolCatalogErrors::DbErr)?;
+        let catalogs = self.repo.get_all_catalogs(None, None, true).await.map_err(DSProtocolCatalogErrors::DbErr)?;
 
         for catalog in catalogs {
             let mut catalog = Catalog::try_from(catalog)?;
@@ -212,22 +209,18 @@ where
 
     async fn catalog_request_by_id(&self, catalog_id: Urn) -> anyhow::Result<Catalog> {
         let mut catalogs_out: Catalog;
-        let catalog = self.repo
+        let catalog = self
+            .repo
             .get_catalog_by_id(catalog_id.clone())
             .await
             .map_err(DSProtocolCatalogErrors::DbErr)?
-            .ok_or(DSProtocolCatalogErrors::NotFound {
-                id: catalog_id,
-                entity: "Catalog".to_string(),
-            })?;
+            .ok_or(DSProtocolCatalogErrors::NotFound { id: catalog_id, entity: "Catalog".to_string() })?;
 
         catalogs_out = Catalog::try_from(catalog.clone())?;
         let id = get_urn_from_string(&catalog.id)?;
         // odrl
-        let odrl_offer = self.repo
-            .get_all_odrl_offers_by_entity(id.clone())
-            .await
-            .map_err(DSProtocolCatalogErrors::DbErr)?;
+        let odrl_offer =
+            self.repo.get_all_odrl_offers_by_entity(id.clone()).await.map_err(DSProtocolCatalogErrors::DbErr)?;
         let odrl_offer = Some(odrl_offer.iter().map(|o| OdrlOffer::try_from(o.to_owned()).unwrap()).collect());
         catalogs_out.odrl_offer = odrl_offer;
         catalogs_out.datasets = self.dataset_request_by_catalog(id.clone()).await?;

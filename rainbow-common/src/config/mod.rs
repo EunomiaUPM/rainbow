@@ -22,11 +22,11 @@ use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 use std::str::FromStr;
 
-pub mod provider_config;
-pub mod database;
 pub mod consumer_config;
-pub mod global_config;
+pub mod database;
 pub mod env_extraction;
+pub mod global_config;
+pub mod provider_config;
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Copy)]
 pub enum ConfigRoles {

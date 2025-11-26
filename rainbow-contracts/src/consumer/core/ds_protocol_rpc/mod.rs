@@ -30,7 +30,11 @@ pub mod ds_protocol_rpc_types;
 #[mockall::automock]
 #[async_trait]
 pub trait DSRPCContractNegotiationConsumerTrait: Send + Sync {
-    async fn setup_request(&self, input: SetupRequestRequest, client_type: String) -> anyhow::Result<SetupRequestResponse>;
+    async fn setup_request(
+        &self,
+        input: SetupRequestRequest,
+        client_type: String,
+    ) -> anyhow::Result<SetupRequestResponse>;
     async fn setup_rerequest(&self, input: SetupRequestRequest) -> anyhow::Result<SetupRequestResponse>;
     async fn setup_acceptance(&self, input: SetupAcceptanceRequest) -> anyhow::Result<SetupAcceptanceResponse>;
     async fn setup_verification(&self, input: SetupVerificationRequest) -> anyhow::Result<SetupVerificationResponse>;

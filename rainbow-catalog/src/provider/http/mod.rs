@@ -17,8 +17,8 @@
  *
  */
 
+pub mod ds_protocol;
+pub mod middleware;
 pub mod openapi;
 pub mod rainbow_entities;
-pub mod ds_protocol;
 pub mod rainbow_rpc;
-pub mod middleware;

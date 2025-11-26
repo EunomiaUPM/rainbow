@@ -36,21 +36,9 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(TransferMessages::Id).string().not_null().primary_key())
                     .col(ColumnDef::new(TransferMessages::TransferProcessId).string().not_null())
                     .col(ColumnDef::new(TransferMessages::CreatedAt).date_time().not_null())
-                    .col(
-                        ColumnDef::new(TransferMessages::MessageType)
-                            .string()
-                            .not_null(),
-                    )
-                    .col(
-                        ColumnDef::new(TransferMessages::From)
-                            .string()
-                            .not_null(),
-                    )
-                    .col(
-                        ColumnDef::new(TransferMessages::To)
-                            .string()
-                            .not_null(),
-                    )
+                    .col(ColumnDef::new(TransferMessages::MessageType).string().not_null())
+                    .col(ColumnDef::new(TransferMessages::From).string().not_null())
+                    .col(ColumnDef::new(TransferMessages::To).string().not_null())
                     .col(ColumnDef::new(TransferMessages::Content).json().not_null())
                     .to_owned(),
             )

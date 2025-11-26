@@ -90,7 +90,11 @@ impl TransferErrors {
                 message: "Consumer has been already declared".to_string(),
                 error_code: 2100,
                 status_code: StatusCode::BAD_REQUEST,
-                details: format!("Consumer {} has been declared", id.unwrap_or("".to_string())).into(),
+                details: format!(
+                    "Consumer {} has been declared",
+                    id.unwrap_or("".to_string())
+                )
+                .into(),
             },
             http_code: 400,
             cause,

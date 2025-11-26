@@ -36,7 +36,7 @@ pub struct Model {
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
     #[sea_orm(has_many = "super::cn_message::Entity")]
-    CnMessages
+    CnMessages,
 }
 
 impl Related<super::cn_message::Entity> for cn_process::Entity {

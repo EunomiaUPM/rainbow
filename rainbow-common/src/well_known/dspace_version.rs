@@ -1,0 +1,53 @@
+use serde_json::json;
+
+#[derive(Clone)]
+pub struct WellKnownDSpaceVersionService {}
+
+impl WellKnownDSpaceVersionService {
+    pub fn new() -> WellKnownDSpaceVersionService {
+        WellKnownDSpaceVersionService {}
+    }
+    pub fn get_dspace_version(&self) -> anyhow::Result<serde_json::Value> {
+        let value = json!({
+          "protocolVersions": [
+            {
+              "version": "2025-1",
+              "path": "/some/path/2025-1",
+              "binding": "HTTPS",
+              "serviceId": "service-asdf",
+              "identifierType": "did:web"
+            },
+            {
+              "version": "2024-1",
+              "path": "/some/path/2024-1",
+              "binding": "HTTPS",
+              "auth": {
+                "protocol": "OAuth",
+                "version": "2",
+                "profile": [
+                  "authorization_code",
+                  "refresh_token"
+                ]
+              },
+              "serviceId": "service-asdf",
+              "identifierType": "D-U-N-S"
+
+            },
+            {
+              "version": "2025-1",
+              "path": "/different/path/2025-1",
+              "binding": "HTTPS",
+              "auth": {
+                "protocol": "DCP",
+                "version": "1.0",
+                "profile": [
+                  "vc11-sl2021/jwt"
+                ]
+              },
+              "serviceId": "service-qwerty"
+            }
+          ]
+        });
+        Ok(value)
+    }
+}

@@ -56,18 +56,15 @@ where
         let mate = self.mates_facade.get_mate_by_id(participant_id).await;
         let mate = match mate {
             Ok(mate) => mate,
-            Err(e) => bail!("Mate not found: {}", e.to_string())
+            Err(e) => bail!("Mate not found: {}", e.to_string()),
         };
         let base_url = mate.base_url.expect("Base url not found");
         let request_url = format!("{}/api/v1/{}", base_url, path);
         debug!("{}", request_url);
-        let request = self.client
-            .get(&request_url)
-            .send()
-            .await;
+        let request = self.client.get(&request_url).send().await;
         let request = match request {
             Ok(request) => request,
-            Err(e) => bail!("Not able to connect: {}", e.to_string())
+            Err(e) => bail!("Not able to connect: {}", e.to_string()),
         };
         if request.status().is_success() == false {
             bail!("Bypass failed: {}", request.text().await?);

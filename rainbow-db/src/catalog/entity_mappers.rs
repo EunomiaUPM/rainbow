@@ -18,16 +18,22 @@
  */
 
 use crate::catalog::entities::{catalog, dataservice, dataset, distribution, odrl_offer};
-use rainbow_common::protocol::catalog::catalog_definition::{Catalog, CatalogDSpaceDeclaration, CatalogDcatDeclaration, CatalogDctDeclaration, CatalogFoafDeclaration};
-use rainbow_common::protocol::catalog::dataservice_definition::{DataService, DataServiceDcatDeclaration, DataServiceDctDeclaration};
+use rainbow_common::dcat_formats::{DctFormats, FormatAction, FormatProtocol};
+use rainbow_common::protocol::catalog::catalog_definition::{
+    Catalog, CatalogDSpaceDeclaration, CatalogDcatDeclaration, CatalogDctDeclaration, CatalogFoafDeclaration,
+};
+use rainbow_common::protocol::catalog::dataservice_definition::{
+    DataService, DataServiceDcatDeclaration, DataServiceDctDeclaration,
+};
 use rainbow_common::protocol::catalog::dataset_definition::{Dataset, DatasetDcatDeclaration, DatasetDctDeclaration};
-use rainbow_common::protocol::catalog::distribution_definition::{Distribution, DistributionDcatDeclaration, DistributionDctDeclaration};
+use rainbow_common::protocol::catalog::distribution_definition::{
+    Distribution, DistributionDcatDeclaration, DistributionDctDeclaration,
+};
 use rainbow_common::protocol::catalog::EntityTypes;
 use rainbow_common::protocol::context_field::ContextField;
 use rainbow_common::protocol::contract::contract_odrl::{OdrlOffer, OdrlPolicyInfo, OdrlTypes};
 use rainbow_common::utils::get_urn_from_string;
 use serde_json::Value;
-use rainbow_common::dcat_formats::{DctFormats, FormatAction, FormatProtocol};
 
 impl TryFrom<catalog::Model> for Catalog {
     type Error = anyhow::Error;
@@ -38,10 +44,7 @@ impl TryFrom<catalog::Model> for Catalog {
             _type: EntityTypes::Catalog.to_string(),
             id: get_urn_from_string(&catalog_model.id)?,
             foaf: CatalogFoafDeclaration { homepage: catalog_model.foaf_home_page },
-            dcat: CatalogDcatDeclaration {
-                theme: "".to_string(),
-                keyword: "".to_string(),
-            },
+            dcat: CatalogDcatDeclaration { theme: "".to_string(), keyword: "".to_string() },
             dct: CatalogDctDeclaration {
                 conforms_to: catalog_model.dct_conforms_to,
                 creator: catalog_model.dct_creator,
@@ -51,9 +54,7 @@ impl TryFrom<catalog::Model> for Catalog {
                 title: catalog_model.dct_title,
                 description: vec![],
             },
-            dspace: CatalogDSpaceDeclaration {
-                participant_id: catalog_model.dspace_participant_id,
-            },
+            dspace: CatalogDSpaceDeclaration { participant_id: catalog_model.dspace_participant_id },
             odrl_offer: Some(vec![]),
             extra_fields: Value::default(),
             catalogs: vec![],
@@ -76,17 +77,13 @@ impl TryFrom<dataservice::Model> for DataService {
             dcat: DataServiceDcatDeclaration {
                 theme: "".to_string(),
                 keyword: "".to_string(),
-                endpoint_description: dataservice_model
-                    .dcat_endpoint_description
-                    .unwrap_or("".to_string()),
+                endpoint_description: dataservice_model.dcat_endpoint_description.unwrap_or("".to_string()),
                 endpoint_url: dataservice_model.dcat_endpoint_url,
             },
             dct: DataServiceDctDeclaration {
                 conforms_to: dataservice_model.dct_conforms_to,
                 creator: dataservice_model.dct_creator,
-                identifier: dataservice_model
-                    .dct_identifier
-                    .unwrap_or_else(|| dataservice_model.id.to_string()),
+                identifier: dataservice_model.dct_identifier.unwrap_or_else(|| dataservice_model.id.to_string()),
                 issued: dataservice_model.dct_issued,
                 modified: dataservice_model.dct_modified,
                 title: dataservice_model.dct_title,
@@ -110,9 +107,7 @@ impl TryFrom<dataset::Model> for Dataset {
             dct: DatasetDctDeclaration {
                 conforms_to: dataset_model.dct_conforms_to,
                 creator: dataset_model.dct_creator,
-                identifier: dataset_model
-                    .dct_identifier
-                    .unwrap_or_else(|| dataset_model.id.to_string()),
+                identifier: dataset_model.dct_identifier.unwrap_or_else(|| dataset_model.id.to_string()),
                 issued: dataset_model.dct_issued,
                 modified: dataset_model.dct_modified,
                 title: dataset_model.dct_title,

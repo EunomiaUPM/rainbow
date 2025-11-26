@@ -60,12 +60,12 @@ use urn::Urn;
 pub struct DSRPCContractNegotiationConsumerService<T, U, V>
 where
     T: ContractNegotiationConsumerProcessRepo
-    + ContractNegotiationConsumerMessageRepo
-    + ContractNegotiationConsumerOfferRepo
-    + AgreementConsumerRepo
-    + Send
-    + Sync
-    + 'static,
+        + ContractNegotiationConsumerMessageRepo
+        + ContractNegotiationConsumerOfferRepo
+        + AgreementConsumerRepo
+        + Send
+        + Sync
+        + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
     V: MatesFacadeTrait + Send + Sync,
 {
@@ -78,12 +78,12 @@ where
 impl<T, U, V> DSRPCContractNegotiationConsumerService<T, U, V>
 where
     T: ContractNegotiationConsumerProcessRepo
-    + ContractNegotiationConsumerMessageRepo
-    + ContractNegotiationConsumerOfferRepo
-    + AgreementConsumerRepo
-    + Send
-    + Sync
-    + 'static,
+        + ContractNegotiationConsumerMessageRepo
+        + ContractNegotiationConsumerOfferRepo
+        + AgreementConsumerRepo
+        + Send
+        + Sync
+        + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
     V: MatesFacadeTrait + Send + Sync,
 {
@@ -155,23 +155,16 @@ where
         error_context_consumer_pid: Option<Urn>,
         client_type: Option<String>,
     ) -> anyhow::Result<ContractAckMessage> {
-        let mut request_builder = self
-            .client
-            .post(&target_url)
-            .header("Authorization", format!("Bearer {}", token));
+        let mut request_builder = self.client.post(&target_url).header("Authorization", format!("Bearer {}", token));
         if let Some(value) = &client_type {
             request_builder = request_builder.header("Rainbow-Client-Type", value);
         }
-        let response = request_builder
-            .json(message_payload)
-            .send()
-            .await
-            .map_err(
-                |_| DSRPCContractNegotiationConsumerErrors::ProviderNotReachable {
-                    provider_pid: error_context_provider_pid.clone(),
-                    consumer_pid: error_context_consumer_pid.clone(),
-                },
-            )?;
+        let response = request_builder.json(message_payload).send().await.map_err(|_| {
+            DSRPCContractNegotiationConsumerErrors::ProviderNotReachable {
+                provider_pid: error_context_provider_pid.clone(),
+                consumer_pid: error_context_consumer_pid.clone(),
+            }
+        })?;
 
         let status = response.status();
         if !status.is_success() {
@@ -213,16 +206,20 @@ where
 impl<T, U, V> DSRPCContractNegotiationConsumerTrait for DSRPCContractNegotiationConsumerService<T, U, V>
 where
     T: ContractNegotiationConsumerProcessRepo
-    + ContractNegotiationConsumerMessageRepo
-    + ContractNegotiationConsumerOfferRepo
-    + AgreementConsumerRepo
-    + Send
-    + Sync
-    + 'static,
+        + ContractNegotiationConsumerMessageRepo
+        + ContractNegotiationConsumerOfferRepo
+        + AgreementConsumerRepo
+        + Send
+        + Sync
+        + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
     V: MatesFacadeTrait + Send + Sync,
 {
-    async fn setup_request(&self, input: SetupRequestRequest, client_type: String) -> anyhow::Result<SetupRequestResponse> {
+    async fn setup_request(
+        &self,
+        input: SetupRequestRequest,
+        client_type: String,
+    ) -> anyhow::Result<SetupRequestResponse> {
         let SetupRequestRequest { provider_pid, odrl_offer, provider_participant_id, .. } = input;
         // 1. fetch participant
         let provider_mate = self.get_provider_mate(&provider_participant_id).await?;
@@ -255,11 +252,10 @@ where
 
         debug!("\n\n10. {:?}\n", response);
 
-
         // 5. persist process, message and offer
         let is_business = match client_type.as_str() {
             "business" => true,
-            _ => false
+            _ => false,
         };
         let cn_process = self
             .repo
@@ -298,7 +294,6 @@ where
             .await
             .map_err(CnErrorConsumer::DbErr)?;
 
-
         // 6. create response
         let cn_ack: ContractAckMessage = cn_process.clone().into();
         let response = SetupRequestResponse {
@@ -316,7 +311,7 @@ where
                 "offer": offer
             }),
         )
-            .await?;
+        .await?;
         // 8. bye
         Ok(response)
     }
@@ -408,7 +403,7 @@ where
                 "offer": offer
             }),
         )
-            .await?;
+        .await?;
         // 8. bye
         Ok(response)
     }
@@ -481,7 +476,7 @@ where
                 "message": cn_message,
             }),
         )
-            .await?;
+        .await?;
         // 8. bye
         Ok(response)
     }
@@ -552,7 +547,7 @@ where
                 "message": cn_message,
             }),
         )
-            .await?;
+        .await?;
         // 8. bye
         Ok(response)
     }
@@ -624,7 +619,7 @@ where
                 "message": cn_message,
             }),
         )
-            .await?;
+        .await?;
         // 8. bye
         Ok(response)
     }

@@ -19,8 +19,8 @@
 
 use std::fmt::{Display, Formatter};
 
-pub mod schemas;
 pub mod core;
+pub mod schemas;
 
 pub enum CNControllerTypes {
     Process,

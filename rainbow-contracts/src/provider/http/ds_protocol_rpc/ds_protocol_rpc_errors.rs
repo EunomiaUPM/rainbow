@@ -42,17 +42,14 @@ impl IntoResponse for DSRPCContractNegotiationProviderErrors {
             ref e @ DSRPCContractNegotiationProviderErrors::ConsumerInternalError {
                 ref provider_pid,
                 ref consumer_pid,
-                ref consumer_error
+                ref consumer_error,
             } => (
                 StatusCode::SERVICE_UNAVAILABLE,
                 Json(ContractErrorMessage {
                     provider_pid: provider_pid.clone().map(|pid| pid.to_string()),
                     consumer_pid: consumer_pid.clone().map(|cid| cid.to_string()),
                     code: Some("CONSUMER_INTERNAL_ERROR".to_string()),
-                    reason: Some(vec![
-                        e.to_string(),
-                        consumer_error.clone().to_string()
-                    ]),
+                    reason: Some(vec![e.to_string(), consumer_error.clone().to_string()]),
                     ..Default::default()
                 }),
             ),
@@ -104,6 +101,6 @@ impl IntoResponse for DSRPCContractNegotiationProviderErrors {
                 }),
             ),
         }
-            .into_response()
+        .into_response()
     }
 }

@@ -17,6 +17,6 @@
  *
  */
 
-pub mod ds_protocol_rpc;
 pub mod ds_protocol;
+pub mod ds_protocol_rpc;
 pub mod rainbow_entities;

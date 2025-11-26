@@ -54,12 +54,12 @@ use urn::Urn;
 pub struct DSProtocolContractNegotiationConsumerService<T, U, W>
 where
     T: ContractNegotiationConsumerProcessRepo
-    + ContractNegotiationConsumerMessageRepo
-    + ContractNegotiationConsumerOfferRepo
-    + AgreementConsumerRepo
-    + Send
-    + Sync
-    + 'static,
+        + ContractNegotiationConsumerMessageRepo
+        + ContractNegotiationConsumerOfferRepo
+        + AgreementConsumerRepo
+        + Send
+        + Sync
+        + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
     W: SSIAuthFacadeTrait + Sync + Send,
 {
@@ -71,12 +71,12 @@ where
 impl<T, U, W> DSProtocolContractNegotiationConsumerService<T, U, W>
 where
     T: ContractNegotiationConsumerProcessRepo
-    + ContractNegotiationConsumerMessageRepo
-    + ContractNegotiationConsumerOfferRepo
-    + AgreementConsumerRepo
-    + Send
-    + Sync
-    + 'static,
+        + ContractNegotiationConsumerMessageRepo
+        + ContractNegotiationConsumerOfferRepo
+        + AgreementConsumerRepo
+        + Send
+        + Sync
+        + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
     W: SSIAuthFacadeTrait + Sync + Send,
 {
@@ -86,9 +86,7 @@ where
 
     /// Validate auth token
     async fn validate_auth_token(&self, token: String) -> anyhow::Result<Mates> {
-        let mate = self.ssi_auth_facade
-            .verify_token(token)
-            .await?;
+        let mate = self.ssi_auth_facade.verify_token(token).await?;
         Ok(mate)
     }
 
@@ -172,7 +170,8 @@ where
                 }
 
                 // 4. Validate process is correlated with mate
-                if cn_process_consumer.associated_provider.clone().unwrap() != provider_participant_mate.participant_id {
+                if cn_process_consumer.associated_provider.clone().unwrap() != provider_participant_mate.participant_id
+                {
                     bail!(IdsaCNError::ValidationError(
                         "This user is not related with this process".to_string()
                     ))
@@ -202,12 +201,12 @@ where
 impl<T, U, W> DSProtocolContractNegotiationConsumerTrait for DSProtocolContractNegotiationConsumerService<T, U, W>
 where
     T: ContractNegotiationConsumerProcessRepo
-    + ContractNegotiationConsumerMessageRepo
-    + ContractNegotiationConsumerOfferRepo
-    + AgreementConsumerRepo
-    + Send
-    + Sync
-    + 'static,
+        + ContractNegotiationConsumerMessageRepo
+        + ContractNegotiationConsumerOfferRepo
+        + AgreementConsumerRepo
+        + Send
+        + Sync
+        + 'static,
     U: RainbowEventsNotificationTrait + Send + Sync,
     W: SSIAuthFacadeTrait + Sync + Send,
 {
@@ -215,7 +214,10 @@ where
         // 1. validate request
         let provider_participant_mate = self.validate_auth_token(token).await?;
         self.json_schema_validation(&input).map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
-        let _ = self.payload_validation(None, &input, &provider_participant_mate).await.map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
+        let _ = self
+            .payload_validation(None, &input, &provider_participant_mate)
+            .await
+            .map_err(|e| IdsaCNError::ValidationError(e.to_string()))?;
 
         // 2. persist
         let cn_process = self
@@ -264,7 +266,7 @@ where
                 "offer": cn_offer
             }),
         )
-            .await?;
+        .await?;
 
         Ok(cn_ack)
     }
@@ -322,7 +324,7 @@ where
                 "offer": cn_offer
             }),
         )
-            .await?;
+        .await?;
 
         Ok(cn_ack)
     }
@@ -386,7 +388,7 @@ where
                 "agreement": agreement
             }),
         )
-            .await?;
+        .await?;
 
         Ok(cn_ack)
     }
@@ -421,10 +423,13 @@ where
                 consumer_pid.clone(),
                 NewContractNegotiationMessage {
                     _type: input._type.to_string(),
-                    subtype: Some(match input.event_type {
-                        NegotiationEventType::Accepted => "accepted",
-                        NegotiationEventType::Finalized => "finalized"
-                    }.to_string()),
+                    subtype: Some(
+                        match input.event_type {
+                            NegotiationEventType::Accepted => "accepted",
+                            NegotiationEventType::Finalized => "finalized",
+                        }
+                        .to_string(),
+                    ),
                     from: "Consumer".to_string(),
                     to: "Provider".to_string(),
                     content: serde_json::to_value(&input).unwrap(),
@@ -445,7 +450,7 @@ where
                 "message": cn_message,
             }),
         )
-            .await?;
+        .await?;
 
         Ok(cn_ack)
     }
@@ -493,7 +498,7 @@ where
                 "message": cn_message,
             }),
         )
-            .await?;
+        .await?;
 
         Ok(cn_ack)
     }

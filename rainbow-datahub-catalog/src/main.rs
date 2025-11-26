@@ -17,7 +17,6 @@
  *
  */
 
-
 use rainbow_datahub_catalog::setup::cmd::CatalogCommands;
 use tokio;
 use tracing::info;

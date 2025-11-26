@@ -37,7 +37,7 @@ pub enum Relation {
         from = "Column::CnMessageId",
         to = "super::cn_message::Column::CnMessageId"
     )]
-    CnMessage
+    CnMessage,
 }
 
 impl Related<super::cn_message::Entity> for Entity {

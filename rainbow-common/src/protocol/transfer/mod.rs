@@ -22,16 +22,16 @@ use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::str::FromStr;
 
+pub mod transfer_completion;
+pub mod transfer_consumer_process;
+pub mod transfer_data_address;
+pub mod transfer_error;
+pub mod transfer_process;
+pub mod transfer_protocol_trait;
 pub mod transfer_request;
 pub mod transfer_start;
 pub mod transfer_suspension;
-pub mod transfer_completion;
 pub mod transfer_termination;
-pub mod transfer_process;
-pub mod transfer_error;
-pub mod transfer_data_address;
-pub mod transfer_protocol_trait;
-pub mod transfer_consumer_process;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum TransferState {
@@ -74,7 +74,6 @@ impl fmt::Display for TransferState {
     }
 }
 
-
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum TransferStateAttribute {
     #[serde(rename = "ON_REQUEST")]
@@ -108,7 +107,7 @@ impl fmt::Display for TransferStateAttribute {
     }
 }
 
-
+#[derive(PartialEq, Clone)]
 pub enum TransferRoles {
     Provider,
     Consumer,
@@ -176,4 +175,3 @@ impl FromStr for TransferMessageTypes {
         }
     }
 }
-

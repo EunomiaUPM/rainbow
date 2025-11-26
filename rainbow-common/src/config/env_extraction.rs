@@ -29,16 +29,14 @@ pub trait EnvExtraction {
         let len = config_table.datahub_token.len();
         let max_len = if len > 20 { 20 } else { len };
         config_table.datahub_token = format!("{}...", config_table.datahub_token[0..max_len].to_string());
-        let table =
-            json_to_table::json_to_table(&serde_json::to_value(&config_table)?).collapse().to_string();
+        let table = json_to_table::json_to_table(&serde_json::to_value(&config_table)?).collapse().to_string();
         info!("Current Application Provider Config:\n{}", table);
         Ok(config)
     }
     fn extract_consumer_config(env_file: Option<String>) -> anyhow::Result<ApplicationConsumerConfig> {
         let config = ApplicationConsumerConfig::default();
         let config = config.merge_dotenv_configuration(env_file);
-        let table =
-            json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
+        let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
         info!("Current Application Consumer Config:\n{}", table);
         Ok(config)
     }

@@ -17,7 +17,9 @@
  *
  */
 
-use crate::gateway::http::business_router_types::{RainbowBusinessAcceptanceRequest, RainbowBusinessNegotiationRequest, RainbowBusinessTerminationRequest};
+use crate::gateway::http::business_router_types::{
+    RainbowBusinessAcceptanceRequest, RainbowBusinessNegotiationRequest, RainbowBusinessTerminationRequest,
+};
 use axum::async_trait;
 use rainbow_common::auth::business::RainbowBusinessLoginRequest;
 use rainbow_common::protocol::contract::contract_ack::ContractAckMessage;
@@ -62,7 +64,8 @@ pub trait BusinessCatalogTrait: Send + Sync + 'static {
         token: String,
     ) -> anyhow::Result<ContractAckMessage>;
     async fn accept_request(&self, input: RainbowBusinessAcceptanceRequest, token: String) -> anyhow::Result<Value>;
-    async fn terminate_request(&self, input: RainbowBusinessTerminationRequest, token: String) -> anyhow::Result<Value>;
+    async fn terminate_request(&self, input: RainbowBusinessTerminationRequest, token: String)
+        -> anyhow::Result<Value>;
     async fn create_request(&self, input: RainbowBusinessNegotiationRequest, token: String) -> anyhow::Result<Value>;
     async fn login(&self, input: RainbowBusinessLoginRequest) -> anyhow::Result<String>;
     async fn login_poll(&self, input: RainbowBusinessLoginRequest) -> anyhow::Result<Value>;

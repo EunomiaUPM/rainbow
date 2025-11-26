@@ -23,6 +23,24 @@ push-transfer:
 #
 #
 #
+# Transfer Agent Microservice
+#
+#
+build-transfer-agent:
+	docker build \
+		--progress plain \
+		-t $(DOCKER_USERNAME)/rainbow-transfer-agent:$(VERSION) \
+		--build-arg APP_NAME=rainbow_transfer \
+		-f deployment/Dockerfile \
+		.
+
+push-transfer-agent:
+	docker push $(DOCKER_USERNAME)/rainbow-transfer-agent:$(VERSION)
+
+
+#
+#
+#
 # Contract negotiation Microservice
 #
 #
@@ -152,8 +170,8 @@ push-authority:
 # General
 #
 #
-build-containers: build-core build-catalog build-contracts build-transfer build-auth build-fe-gateway build-business-gateway build-authority
+build-containers: build-core build-catalog build-contracts build-transfer build-transfer-agent build-auth build-fe-gateway build-business-gateway build-authority
 
-push-containers: push-core push-catalog push-contracts push-transfer push-auth push-fe-gateway push-business-gateway push-authority
+push-containers: push-core push-catalog push-contracts push-transfer push-transfer-agent push-auth push-fe-gateway push-business-gateway push-authority
 
 .PHONY: build-containers push-containers

@@ -409,23 +409,25 @@ impl DistributionRepo for CatalogRepoForSql {
         }
     }
 
-    async fn get_distribution_by_dataset_id_and_dct_format(&self, dataset_id: Urn, dct_formats: DctFormats) -> anyhow::Result<distribution::Model, CatalogRepoErrors> {
+    async fn get_distribution_by_dataset_id_and_dct_format(
+        &self,
+        dataset_id: Urn,
+        dct_formats: DctFormats,
+    ) -> anyhow::Result<distribution::Model, CatalogRepoErrors> {
         debug!("Fetching distribution by dataset id {}", dataset_id);
         debug!("Fetching dct_formats {}", dct_formats.to_string());
 
         let dataset_id = dataset_id.to_string();
         let dataset = dataset::Entity::find_by_id(dataset_id.clone())
-            .one(&self.db_connection).await
+            .one(&self.db_connection)
+            .await
             .map_err(|err| CatalogRepoErrors::ErrorFetchingDataset(err.into()))?
             .ok_or(CatalogRepoErrors::DatasetNotFound)?;
         let distribution = distribution::Entity::find()
-            .filter(
-                distribution::Column::DatasetId.eq(dataset_id.clone())
-            )
-            .filter(
-                distribution::Column::DctFormat.eq(dct_formats.to_string())
-            )
-            .one(&self.db_connection).await
+            .filter(distribution::Column::DatasetId.eq(dataset_id.clone()))
+            .filter(distribution::Column::DctFormat.eq(dct_formats.to_string()))
+            .one(&self.db_connection)
+            .await
             .map_err(|err| CatalogRepoErrors::ErrorFetchingDistribution(err.into()))?
             .ok_or(CatalogRepoErrors::DistributionNotFound)?;
         Ok(distribution)

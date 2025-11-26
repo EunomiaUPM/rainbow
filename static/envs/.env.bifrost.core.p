@@ -1,0 +1,76 @@
+# Transfer Process Service Configuration
+TRANSFER_PROTOCOL=http
+TRANSFER_URL=127.0.0.1
+TRANSFER_PORT=1200
+# when deployed as monolith, same host and port
+
+# Catalog Configuration
+CATALOG_PROTOCOL=http
+CATALOG_URL=127.0.0.1
+CATALOG_PORT=1200
+CATALOG_AS_DATAHUB=false
+
+# DataHub Configuration (only if CATALOG_AS_DATAHUB is true)
+DATAHUB_PROTOCOL=http
+DATAHUB_URL=138.4.7.113
+DATAHUB_PORT=8084
+DATAHUB_TOKEN=eyJhbGciOiJIUzI1NiJ9.eyJhY3RvclR5cGUiOiJVU0VSIiwiYWN0b3JJZCI6ImRhdGFodWIiLCJ0eXBlIjoiUEVSU09OQUwiLCJ2ZXJzaW9uIjoiMiIsImp0aSI6IjkyMzBmNzlkLWJmYWQtNDczMy04NThkLTk2ZGZlZmMxY2IxZSIsInN1YiI6ImRhdGFodWIiLCJpc3MiOiJkYXRhaHViLW1ldGFkYXRhLXNlcnZpY2UifQ.ocMyOQBMjllCKkabg6HPaAFBosO3XAneWqG74kCoBLQ
+
+# Contract Negotiation Service Configuration
+CONTRACT_NEGOTIATION_PROTOCOL=http
+CONTRACT_NEGOTIATION_URL=127.0.0.1
+CONTRACT_NEGOTIATION_PORT=1200
+
+# Authentication Service Configuration - Keycloak
+AUTH_HOST_PROTOCOL=http
+AUTH_HOST_URL=127.0.0.1
+AUTH_HOST_PORT=1200
+
+# SSI Authentication Service Configuration - Auth, participants, clients
+SSI_AUTH_PROTOCOL=http
+SSI_AUTH_URL=127.0.0.1
+SSI_AUTH_PORT=1200
+
+# Business System Configuration
+BUSINESS_SYSTEM_PROTOCOL=http
+BUSINESS_SYSTEM_URL=127.0.0.1
+BUSINESS_SYSTEM_PORT=1205
+
+# BBF Fe Gateway
+GATEWAY_PROTOCOL=http
+GATEWAY_HOST=127.0.0.1
+GATEWAY_PORT=1206
+GATEWAY_PRODUCTION=true
+
+# Database Configuration
+DB_TYPE=Postgres
+DB_URL=127.0.0.1
+DB_PORT=1600
+DB_USER=ds_bifrost_transfer
+DB_PASSWORD=ds_bifrost_transfer
+DB_DATABASE=ds_bifrost_transfer
+
+# SSH Configuration (optional)
+SSH_USER=your_ssh_user
+SSH_PKEY_PATH=/path/to/your/ssh/private/key
+# CERT_PATH=CERT_PATH
+SELF_CLIENT=rainbow_provider
+
+# Role Configuration
+CONFIG_ROLE=Provider
+
+# Wallet config
+WALLET_API_PROTOCOL=http
+WALLET_API_URL=127.0.0.1
+WALLET_API_PORT=7001
+WALLET_TYPE=email
+WALLET_NAME=RainbowProvider
+WALLET_EMAIL=RainbowProvider@rainbow.com
+WALLET_PASSWORD=rainbow
+
+# Environment
+IS_LOCAL=true
+
+# API
+OPENAPI_PATH=./../static/specs/openapi/auth/auth_provider.json
+API_VERSION=v1

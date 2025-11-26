@@ -17,7 +17,6 @@
  *
  */
 
-
 use crate::subscriptions::MicroserviceSubscriptionKey;
 use anyhow::bail;
 use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
@@ -37,7 +36,10 @@ impl RainbowConsumerGatewaySubscriptions {
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
         Self { config, client }
     }
-    pub async fn subscribe_to_microservice(&self, microservice_key_name: MicroserviceSubscriptionKey) -> anyhow::Result<()> {
+    pub async fn subscribe_to_microservice(
+        &self,
+        microservice_key_name: MicroserviceSubscriptionKey,
+    ) -> anyhow::Result<()> {
         let microservice_url = match microservice_key_name {
             MicroserviceSubscriptionKey::ContractNegotiation => {
                 self.config.get_contract_negotiation_host_url().unwrap()

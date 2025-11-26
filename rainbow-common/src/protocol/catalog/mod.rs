@@ -26,7 +26,6 @@ pub mod dataservice_definition;
 pub mod dataset_definition;
 pub mod distribution_definition;
 
-
 pub enum EntityTypes {
     Catalog,
     Dataset,
@@ -65,4 +64,3 @@ impl From<EntityTypes> for Value {
         Self::String(Some(Box::new(value.to_string())))
     }
 }
-

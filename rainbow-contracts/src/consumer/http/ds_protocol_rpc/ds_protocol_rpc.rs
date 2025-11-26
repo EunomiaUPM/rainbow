@@ -79,16 +79,15 @@ where
         };
 
         let client_type = match headers.get("rainbow-client-type") {
-            Some(header_value) => {
-                match header_value.to_str() {
-                    Ok(s) => s,
-                    Err(e) => {
-                        return NotCheckedError { inner_error: e.into() }.into_response();
-                    }
+            Some(header_value) => match header_value.to_str() {
+                Ok(s) => s,
+                Err(e) => {
+                    return NotCheckedError { inner_error: e.into() }.into_response();
                 }
-            }
+            },
             None => "standard",
-        }.to_string();
+        }
+        .to_string();
 
         let is_rerequest = input.provider_pid.clone().is_some() && input.consumer_pid.clone().is_some();
         match is_rerequest {
@@ -101,7 +100,7 @@ where
                         Err(e__) => NotCheckedError { inner_error: e__ }.into_response(),
                     },
                 },
-            }
+            },
             true => match service.setup_rerequest(input).await {
                 Ok(res) => (StatusCode::CREATED, Json(res)).into_response(),
                 Err(err) => match err.downcast::<CnErrorConsumer>() {
@@ -111,7 +110,7 @@ where
                         Err(e__) => NotCheckedError { inner_error: e__ }.into_response(),
                     },
                 },
-            }
+            },
         }
     }
     async fn handle_setup_acceptance(

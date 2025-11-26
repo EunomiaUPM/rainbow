@@ -44,12 +44,7 @@ pub struct DataPlaneProcessAddress {
 
 impl Default for DataPlaneProcessAddress {
     fn default() -> Self {
-        Self {
-            protocol: "".to_string(),
-            url: "".to_string(),
-            auth_type: "".to_string(),
-            auth_content: "".to_string(),
-        }
+        Self { protocol: "".to_string(), url: "".to_string(), auth_type: "".to_string(), auth_content: "".to_string() }
     }
 }
 

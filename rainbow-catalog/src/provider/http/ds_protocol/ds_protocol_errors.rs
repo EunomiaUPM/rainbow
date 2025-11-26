@@ -67,6 +67,6 @@ impl IntoResponse for DSProtocolCatalogErrors {
                 )),
             ),
         }
-            .into_response()
+        .into_response()
     }
 }

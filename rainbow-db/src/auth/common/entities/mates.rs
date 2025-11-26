@@ -17,11 +17,11 @@
  *
  */
 
+use crate::common::IntoActiveSet;
 use chrono;
 use sea_orm::entity::prelude::*;
 use sea_orm::{ActiveValue, DeriveEntityModel};
 use serde::{Deserialize, Serialize};
-use crate::common::IntoActiveSet;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
 #[sea_orm(table_name = "mates")]

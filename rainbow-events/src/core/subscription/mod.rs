@@ -17,7 +17,9 @@
  *
  */
 
-use crate::core::subscription::subscription_types::{RainbowEventsSubscriptionCreationRequest, RainbowEventsSubscriptionCreationResponse, SubscriptionEntities};
+use crate::core::subscription::subscription_types::{
+    RainbowEventsSubscriptionCreationRequest, RainbowEventsSubscriptionCreationResponse, SubscriptionEntities,
+};
 use axum::async_trait;
 use urn::Urn;
 

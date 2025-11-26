@@ -26,7 +26,6 @@ use sea_orm::DatabaseConnection;
 use serde_json::to_value;
 use thiserror::Error;
 
-
 pub mod sql;
 
 pub trait DatahubConnectorRepoFactory: PolicyTemplatesRepo + Send + Sync + 'static {
@@ -55,9 +54,19 @@ impl From<CreatePolicyTemplateRequest> for NewPolicyTemplateModel {
 
 #[async_trait]
 pub trait PolicyTemplatesRepo {
-    async fn get_all_policy_templates(&self, limit: Option<u64>, page: Option<u64>) -> anyhow::Result<Vec<policy_templates::Model>, PolicyTemplatesRepoErrors>;
-    async fn get_policy_template_by_id(&self, template_id: String) -> anyhow::Result<Option<policy_templates::Model>, PolicyTemplatesRepoErrors>;
-    async fn create_policy_template(&self, new_policy_template: NewPolicyTemplateModel) -> anyhow::Result<policy_templates::Model, PolicyTemplatesRepoErrors>;
+    async fn get_all_policy_templates(
+        &self,
+        limit: Option<u64>,
+        page: Option<u64>,
+    ) -> anyhow::Result<Vec<policy_templates::Model>, PolicyTemplatesRepoErrors>;
+    async fn get_policy_template_by_id(
+        &self,
+        template_id: String,
+    ) -> anyhow::Result<Option<policy_templates::Model>, PolicyTemplatesRepoErrors>;
+    async fn create_policy_template(
+        &self,
+        new_policy_template: NewPolicyTemplateModel,
+    ) -> anyhow::Result<policy_templates::Model, PolicyTemplatesRepoErrors>;
     async fn delete_policy_template_by_id(&self, template_id: String) -> anyhow::Result<(), PolicyTemplatesRepoErrors>;
 }
 

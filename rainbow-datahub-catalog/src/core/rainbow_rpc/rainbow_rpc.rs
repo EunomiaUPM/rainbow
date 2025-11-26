@@ -81,11 +81,9 @@ where
 
         debug!("\n\n6. {:?}\n", offer);
 
-
         let offer = OdrlOffer::try_from(offer)?;
 
         debug!("\n\n7. {:?}\n", offer);
-
 
         Ok(offer)
     }

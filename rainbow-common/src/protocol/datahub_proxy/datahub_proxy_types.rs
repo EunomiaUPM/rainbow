@@ -40,7 +40,6 @@ pub struct DomainsQueryOptions {
     pub query: Option<String>,
 }
 
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SearchResponse {
     pub search: SearchResults,
@@ -49,7 +48,7 @@ pub struct SearchResponse {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GraphQLResponse {
     pub data: SearchResponse,
-    pub extensions: serde_json::Value,  // Para el campo "extensions" que está vacío
+    pub extensions: serde_json::Value, // Para el campo "extensions" que está vacío
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -80,7 +79,6 @@ pub struct DatahubDataset {
     pub glossary_terms: Option<Vec<GlossaryTerm>>,
 }
 
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DatasetGraphQLResponse {
     pub data: DatasetSearchResponse,
@@ -101,7 +99,6 @@ pub struct DatasetSearchResult {
     pub entity: DatasetBasicInfo,
 }
 
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DatasetsQueryOptions {
     pub start: Option<i32>,
@@ -112,7 +109,6 @@ pub struct DatasetsQueryOptions {
 
 /*use serde::Deserialize;*/
 
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Properties {
     pub name: String,
@@ -121,12 +117,10 @@ pub struct Properties {
     pub custom_properties: Option<Vec<CustomProperty>>,
 }
 
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct OwnerWrapper {
     pub owner: Owner,
 }
-
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DatasetEntityDetailed {
@@ -141,19 +135,16 @@ pub struct DatasetEntityDetailed {
     pub glossary_terms: Option<GlossaryTerms>,
 }
 
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GlossaryTermWrapper {
     pub term: GlossaryTerm,
 }
-
 
 // #[derive(Debug, Deserialize)]
 // pub struct AddPolicyRequest {
 //     pub property_name: String,
 //     pub property_value: String,
 // }
-
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DatasetGraphQLResponseDetailed {
@@ -249,7 +240,6 @@ pub struct DomainEntity {
     pub urn: String,
     pub properties: DomainProperties,
 }
-
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GlossaryTerms {
