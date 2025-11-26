@@ -38,13 +38,19 @@ impl ValidationRpcSteps for ValidationRpcStepsService {
     }
 
     async fn transfer_start_rpc(&self, input: &RpcTransferStartMessageDto) -> anyhow::Result<()> {
-        let request_body: TransferProcessMessageWrapper<TransferStartMessageDto> = input.clone().into();
-        let dto = self.helpers.get_current_dto_from_payload(&request_body.dto).await?;
+        // review well this...
+        let input: TransferProcessMessageWrapper<TransferStartMessageDto> = input.clone().into();
+        dbg!(&input);
+        let dto = self.helpers.get_current_dto_from_payload(&input.dto).await?;
         let role = self.helpers.get_role_from_dto(&dto).await?;
-        let message_type = request_body._type.clone();
+        let message_type = input._type.clone();
         let current_state = self.helpers.get_state_from_dto(&dto).await?;
         let current_state_attribute = self.helpers.get_state_attribute_from_dto(&dto).await?;
-        self.payload_validator.validate_data_address_in_start(&request_body.dto, &dto).await?;
+        self.payload_validator.validate_with_json_schema(&input.dto).await?;
+        self.payload_validator.validate_identifiers_as_urn(&input.dto).await?;
+        self.payload_validator.validate_correlation(&input.dto, &dto).await?;
+        self.payload_validator.validate_auth(&input.dto).await?;
+        self.payload_validator.validate_data_address_in_start(&input.dto, &dto).await?;
         self.step_transition_validator.validate_role_for_message(&role, &message_type).await?;
         self.step_transition_validator.validate_state_transition(&current_state, &message_type).await?;
         self.step_transition_validator
@@ -59,12 +65,18 @@ impl ValidationRpcSteps for ValidationRpcStepsService {
     }
 
     async fn transfer_completion_rpc(&self, input: &RpcTransferCompletionMessageDto) -> anyhow::Result<()> {
-        let request_body: TransferProcessMessageWrapper<TransferCompletionMessageDto> = input.clone().into();
-        let dto = self.helpers.get_current_dto_from_payload(&request_body.dto).await?;
+        let input: TransferProcessMessageWrapper<TransferCompletionMessageDto> = input.clone().into();
+        let dto = self.helpers.get_current_dto_from_payload(&input.dto).await?;
         let role = self.helpers.get_role_from_dto(&dto).await?;
-        let message_type = request_body._type.clone();
+
+        let message_type = input._type.clone();
+
         let current_state = self.helpers.get_state_from_dto(&dto).await?;
         let current_state_attribute = self.helpers.get_state_attribute_from_dto(&dto).await?;
+        self.payload_validator.validate_with_json_schema(&input.dto).await?;
+        self.payload_validator.validate_identifiers_as_urn(&input.dto).await?;
+        self.payload_validator.validate_correlation(&input.dto, &dto).await?;
+        self.payload_validator.validate_auth(&input.dto).await?;
         self.step_transition_validator.validate_role_for_message(&role, &message_type).await?;
         self.step_transition_validator.validate_state_transition(&current_state, &message_type).await?;
         self.step_transition_validator
@@ -79,12 +91,16 @@ impl ValidationRpcSteps for ValidationRpcStepsService {
     }
 
     async fn transfer_suspension_rpc(&self, input: &RpcTransferSuspensionMessageDto) -> anyhow::Result<()> {
-        let request_body: TransferProcessMessageWrapper<TransferSuspensionMessageDto> = input.clone().into();
-        let dto = self.helpers.get_current_dto_from_payload(&request_body.dto).await?;
+        let input: TransferProcessMessageWrapper<TransferSuspensionMessageDto> = input.clone().into();
+        let dto = self.helpers.get_current_dto_from_payload(&input.dto).await?;
         let role = self.helpers.get_role_from_dto(&dto).await?;
-        let message_type = request_body._type.clone();
+        let message_type = input._type.clone();
         let current_state = self.helpers.get_state_from_dto(&dto).await?;
         let current_state_attribute = self.helpers.get_state_attribute_from_dto(&dto).await?;
+        self.payload_validator.validate_with_json_schema(&input.dto).await?;
+        self.payload_validator.validate_identifiers_as_urn(&input.dto).await?;
+        self.payload_validator.validate_correlation(&input.dto, &dto).await?;
+        self.payload_validator.validate_auth(&input.dto).await?;
         self.step_transition_validator.validate_role_for_message(&role, &message_type).await?;
         self.step_transition_validator.validate_state_transition(&current_state, &message_type).await?;
         self.step_transition_validator
@@ -99,12 +115,16 @@ impl ValidationRpcSteps for ValidationRpcStepsService {
     }
 
     async fn transfer_termination_rpc(&self, input: &RpcTransferTerminationMessageDto) -> anyhow::Result<()> {
-        let request_body: TransferProcessMessageWrapper<TransferTerminationMessageDto> = input.clone().into();
-        let dto = self.helpers.get_current_dto_from_payload(&request_body.dto).await?;
+        let input: TransferProcessMessageWrapper<TransferTerminationMessageDto> = input.clone().into();
+        let dto = self.helpers.get_current_dto_from_payload(&input.dto).await?;
         let role = self.helpers.get_role_from_dto(&dto).await?;
-        let message_type = request_body._type.clone();
+        let message_type = input._type.clone();
         let current_state = self.helpers.get_state_from_dto(&dto).await?;
         let current_state_attribute = self.helpers.get_state_attribute_from_dto(&dto).await?;
+        self.payload_validator.validate_with_json_schema(&input.dto).await?;
+        self.payload_validator.validate_identifiers_as_urn(&input.dto).await?;
+        self.payload_validator.validate_correlation(&input.dto, &dto).await?;
+        self.payload_validator.validate_auth(&input.dto).await?;
         self.step_transition_validator.validate_role_for_message(&role, &message_type).await?;
         self.step_transition_validator.validate_state_transition(&current_state, &message_type).await?;
         self.step_transition_validator

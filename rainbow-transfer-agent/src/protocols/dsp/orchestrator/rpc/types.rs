@@ -117,7 +117,7 @@ impl Into<TransferProcessMessageWrapper<TransferStartMessageDto>> for RpcTransfe
         let provider_pid = self.get_provider_pid().unwrap();
         TransferProcessMessageWrapper {
             context: ContextField::default(),
-            _type: TransferProcessMessageType::TransferRequestMessage,
+            _type: TransferProcessMessageType::TransferStartMessage,
             dto: TransferStartMessageDto { data_address: self.data_address, provider_pid, consumer_pid },
         }
     }
@@ -185,7 +185,7 @@ impl Into<TransferProcessMessageWrapper<TransferSuspensionMessageDto>> for RpcTr
         let provider_pid = self.get_provider_pid().unwrap();
         TransferProcessMessageWrapper {
             context: ContextField::default(),
-            _type: TransferProcessMessageType::TransferRequestMessage,
+            _type: TransferProcessMessageType::TransferSuspensionMessage,
             dto: TransferSuspensionMessageDto {
                 provider_pid,
                 consumer_pid,
@@ -256,7 +256,7 @@ impl Into<TransferProcessMessageWrapper<TransferCompletionMessageDto>> for RpcTr
         let provider_pid = self.get_provider_pid().unwrap();
         TransferProcessMessageWrapper {
             context: ContextField::default(),
-            _type: TransferProcessMessageType::TransferRequestMessage,
+            _type: TransferProcessMessageType::TransferCompletionMessage,
             dto: TransferCompletionMessageDto { provider_pid, consumer_pid },
         }
     }
@@ -324,7 +324,7 @@ impl Into<TransferProcessMessageWrapper<TransferTerminationMessageDto>> for RpcT
         let provider_pid = self.get_provider_pid().unwrap();
         TransferProcessMessageWrapper {
             context: ContextField::default(),
-            _type: TransferProcessMessageType::TransferRequestMessage,
+            _type: TransferProcessMessageType::TransferTerminationMessage,
             dto: TransferTerminationMessageDto {
                 provider_pid,
                 consumer_pid,

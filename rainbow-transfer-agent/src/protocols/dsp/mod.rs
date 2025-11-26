@@ -14,16 +14,17 @@ use crate::protocols::dsp::orchestrator::protocol::protocol::ProtocolOrchestrato
 use crate::protocols::dsp::orchestrator::rpc::rpc::RPCOrchestratorService;
 use crate::protocols::dsp::persistence::persistence_protocol::TransferPersistenceForProtocolService;
 use crate::protocols::dsp::persistence::persistence_rpc::TransferPersistenceForRpcService;
+use crate::protocols::dsp::validator::validators::protocol::validation_dsp_steps::ValidationDspStepsService;
+use crate::protocols::dsp::validator::validators::rpc::validate_state_transition::ValidatedStateTransitionServiceForRcp;
 use crate::protocols::dsp::validator::validators::validate_payload::ValidatePayloadService;
-use crate::protocols::dsp::validator::validators::validate_state_transition::ValidatedStateTransitionService;
-use crate::protocols::dsp::validator::validators::validation_dsp_steps::ValidationDspStepsService;
 use crate::protocols::dsp::validator::validators::validation_helpers::ValidationHelperService;
-use crate::protocols::dsp::validator::validators::validation_rpc_steps::ValidationRpcStepsService;
 use crate::protocols::protocol::ProtocolPluginTrait;
 use axum::Router;
 use rainbow_common::config::provider_config::ApplicationProviderConfig;
 use rainbow_common::http_client::HttpClient;
 use std::sync::Arc;
+use validator::validators::protocol::validate_state_transition::ValidatedStateTransitionServiceForDsp;
+use validator::validators::rpc::validation_rpc_steps::ValidationRpcStepsService;
 
 pub struct TransferDSP {
     transfer_agent_process_entities: Arc<dyn TransferAgentProcessesTrait>,
@@ -61,17 +62,20 @@ impl ProtocolPluginTrait for TransferDSP {
             self.transfer_agent_process_entities.clone(),
         ));
         let validator_payload = Arc::new(ValidatePayloadService::new(validator_helper.clone()));
-        let validator_state_machine = Arc::new(ValidatedStateTransitionService::new(
+        let validator_state_machine_dsp = Arc::new(ValidatedStateTransitionServiceForDsp::new(
             validator_helper.clone(),
         ));
         let dsp_validator = Arc::new(ValidationDspStepsService::new(
             validator_payload.clone(),
-            validator_state_machine.clone(),
+            validator_state_machine_dsp.clone(),
+            validator_helper.clone(),
+        ));
+        let validator_state_machine_rcp = Arc::new(ValidatedStateTransitionServiceForRcp::new(
             validator_helper.clone(),
         ));
         let rcp_validator = Arc::new(ValidationRpcStepsService::new(
             validator_payload.clone(),
-            validator_state_machine.clone(),
+            validator_state_machine_rcp.clone(),
             validator_helper.clone(),
         ));
 

@@ -7,16 +7,16 @@ use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::protocol::transfer::TransferRoles;
 use std::sync::Arc;
 
-pub struct ValidatedStateTransitionService {
+pub struct ValidatedStateTransitionServiceForDsp {
     _helpers: Arc<dyn ValidationHelpers>,
 }
-impl ValidatedStateTransitionService {
+impl ValidatedStateTransitionServiceForDsp {
     pub fn new(helpers: Arc<dyn ValidationHelpers>) -> Self {
         Self { _helpers: helpers }
     }
 }
 #[async_trait::async_trait]
-impl ValidateStateTransition for ValidatedStateTransitionService {
+impl ValidateStateTransition for ValidatedStateTransitionServiceForDsp {
     async fn validate_role_for_message(
         &self,
         role: &TransferRoles,

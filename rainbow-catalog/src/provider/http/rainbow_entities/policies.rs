@@ -114,7 +114,7 @@ where
             Ok(id) => id,
             Err(err) => return CatalogError::UrnUuidSchema(err.to_string()).into_response(),
         };
-        match policies_service.get_catalog_policies(id).await {
+        match policies_service.get_any_policy(id).await {
             Ok(d) => (StatusCode::OK, Json(d)).into_response(),
             Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
         }
