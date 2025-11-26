@@ -1,4 +1,4 @@
-use crate::db::entities::transfer_message::{self as transfer_message_model, NewTransferMessageModel};
+use crate::data::entities::transfer_message::{self as transfer_message_model, NewTransferMessageModel};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as Json;
 use urn::Urn;

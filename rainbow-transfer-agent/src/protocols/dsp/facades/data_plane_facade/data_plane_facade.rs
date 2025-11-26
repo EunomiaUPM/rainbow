@@ -17,7 +17,8 @@
  *
  */
 
-use crate::services::data_plane_facade::DataPlaneProviderFacadeTrait;
+use crate::protocols::dsp::facades::data_plane_facade::DataPlaneProviderFacadeTrait;
+use crate::protocols::dsp::protocol_types::{DataAddressDto, EndpointPropertyDto};
 use rainbow_common::adv_protocol::interplane::data_plane_provision::DataPlaneProvisionRequest;
 use rainbow_common::adv_protocol::interplane::data_plane_start::DataPlaneStart;
 use rainbow_common::adv_protocol::interplane::data_plane_status::DataPlaneStatusRequest;
@@ -26,7 +27,6 @@ use rainbow_common::adv_protocol::interplane::{
     DataPlaneControllerMessages, DataPlaneControllerVersion, DataPlaneSDPConfigField, DataPlaneSDPConfigTypes,
     DataPlaneSDPFieldTypes, DataPlaneSDPRequestField,
 };
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
 use rainbow_common::dcat_formats::{DctFormats, FormatAction};
 use rainbow_common::protocol::catalog::dataservice_definition::{DataService, DataServiceDcatDeclaration};
 use rainbow_common::protocol::transfer::transfer_data_address::{DataAddress, EndpointProperty};
@@ -35,30 +35,19 @@ use std::sync::Arc;
 use url::Url;
 use urn::Urn;
 
-pub struct DataPlaneProviderFacadeForDSProtocol<T>
-where
-    T: DataPlaneControllerTrait + Sync + Send,
-{
-    dataplane_controller: Arc<T>,
-    _config: ApplicationProviderConfig,
+pub struct DataPlaneProviderFacade {
+    dataplane_controller: Arc<dyn DataPlaneControllerTrait + Send + Sync + 'static>,
 }
 
-impl<'a, T> DataPlaneProviderFacadeForDSProtocol<T>
-where
-    T: DataPlaneControllerTrait + Sync + Send,
-    'a: 'static,
-{
-    pub fn _new(dataplane_controller: Arc<T>, config: ApplicationProviderConfig) -> Self {
-        Self { dataplane_controller, _config: config }
+impl DataPlaneProviderFacade {
+    pub fn _new(dataplane_controller: Arc<dyn DataPlaneControllerTrait + Send + Sync + 'static>) -> Self {
+        Self { dataplane_controller }
     }
 }
 
 #[async_trait::async_trait]
-impl<T> DataPlaneProviderFacadeTrait for DataPlaneProviderFacadeForDSProtocol<T>
-where
-    T: DataPlaneControllerTrait + Sync + Send,
-{
-    async fn get_dataplane_address(&self, session_id: Urn) -> anyhow::Result<DataAddress> {
+impl DataPlaneProviderFacadeTrait for DataPlaneProviderFacade {
+    async fn get_dataplane_address(&self, session_id: Urn) -> anyhow::Result<DataAddressDto> {
         let status = self
             .dataplane_controller
             .data_plane_get_status(DataPlaneStatusRequest {
@@ -96,22 +85,13 @@ where
             .content
             .clone();
 
-        let data_address = DataAddress {
-            _type: "DataAddress".to_string(),
+        let data_address = DataAddressDto {
             endpoint_type: scheme,
-            endpoint: address,
-            endpoint_properties: vec![
-                EndpointProperty {
-                    _type: "EndpointProperty".to_string(),
-                    name: "authType".to_string(),
-                    value: auth_type,
-                },
-                EndpointProperty {
-                    _type: "EndpointProperty".to_string(),
-                    name: "authorization".to_string(),
-                    value: auth_content,
-                },
-            ],
+            endpoint: Option::from(address),
+            endpoint_properties: Option::from(vec![
+                EndpointPropertyDto { name: "authType".to_string(), value: auth_type },
+                EndpointPropertyDto { name: "authorization".to_string(), value: auth_content },
+            ]),
         };
         Ok(data_address)
     }

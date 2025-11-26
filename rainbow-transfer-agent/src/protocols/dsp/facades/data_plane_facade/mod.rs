@@ -17,18 +17,18 @@
  *
  */
 
+use crate::protocols::dsp::protocol_types::DataAddressDto;
 use rainbow_common::dcat_formats::DctFormats;
 use rainbow_common::protocol::catalog::dataservice_definition::DataService;
-use rainbow_common::protocol::transfer::transfer_data_address::DataAddress;
 use urn::Urn;
 
 pub mod data_plane_facade;
 
+#[allow(unused)]
 #[mockall::automock]
 #[async_trait::async_trait]
-#[allow(unused)]
-pub trait DataPlaneProviderFacadeTrait: Send + Sync {
-    async fn get_dataplane_address(&self, session_id: Urn) -> anyhow::Result<DataAddress>;
+pub trait DataPlaneProviderFacadeTrait: Send + Sync + 'static {
+    async fn get_dataplane_address(&self, session_id: Urn) -> anyhow::Result<DataAddressDto>;
     async fn on_transfer_request(
         &self,
         session_id: Urn,

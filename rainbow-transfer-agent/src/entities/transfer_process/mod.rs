@@ -1,6 +1,6 @@
-use crate::db::entities::transfer_message as transfer_message_model;
-use crate::db::entities::transfer_process as transfer_process_model;
-use crate::db::entities::transfer_process::{EditTransferProcessModel, NewTransferProcessModel};
+use crate::data::entities::transfer_message as transfer_message_model;
+use crate::data::entities::transfer_process as transfer_process_model;
+use crate::data::entities::transfer_process::{EditTransferProcessModel, NewTransferProcessModel};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use urn::Urn;
