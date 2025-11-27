@@ -38,3 +38,4 @@ pub mod http;
 pub mod http_client;
 pub mod well_known;
 pub mod data;
+pub mod health;

@@ -10,6 +10,7 @@ use axum::response::IntoResponse;
 use axum::{serve, Router};
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_common::errors::CommonErrors;
+use rainbow_common::health::HealthRouter;
 use rainbow_common::well_known::WellKnownRoot;
 use sea_orm::Database;
 use std::sync::Arc;
@@ -27,8 +28,9 @@ impl TransferHttpWorker {
     ) -> anyhow::Result<JoinHandle<()>> {
         // well known router
         let well_known_router = WellKnownRoot::get_router()?;
+        let health_router = HealthRouter::new().router();
         // module transfer router
-        let router = Self::create_root_http_router(&config).await?.merge(well_known_router);
+        let router = Self::create_root_http_router(&config).await?.merge(well_known_router).merge(health_router);
         let host = if config.get_environment_scenario() { "127.0.0.1" } else { "0.0.0.0" };
         let port = config.get_raw_transfer_process_host().clone().expect("no host").port;
         let addr = format!("{}:{}", host, port);
