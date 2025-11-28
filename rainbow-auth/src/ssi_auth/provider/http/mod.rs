@@ -16,7 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-mod openapi;
+pub mod openapi;
 
 use crate::ssi_auth::common::errors::CustomToResponse;
 use crate::ssi_auth::common::traits::RainbowSSIAuthWalletTrait;
@@ -390,7 +390,7 @@ where
         uri.into_response()
     }
 
-    async fn fallback(method: Method, uri: Uri) -> (StatusCode, String) {
+    pub async fn fallback(method: Method, uri: Uri) -> (StatusCode, String) {
         let log = format!("{} {}", method, uri);
         error!("Unexpected route");
         error!("{}", log);

@@ -118,7 +118,7 @@ impl GrantResponse {
 }
 
 impl Interact4GResponse {
-    fn default4oidc4vp(oidc4vp_uri: String, nonce: String) -> Self {
+    pub fn default4oidc4vp(oidc4vp_uri: String, nonce: String) -> Self {
         Self {
             oidc4vp: Some(oidc4vp_uri),
             redirect: None,
@@ -129,7 +129,7 @@ impl Interact4GResponse {
             expires_in: None,
         }
     }
-    fn default4cross_user(nonce: String) -> Self {
+    pub fn default4cross_user(nonce: String) -> Self {
         Self {
             oidc4vp: None,
             redirect: None,

@@ -20,6 +20,6 @@
 pub use basic_repo_trait::BasicRepoTrait;
 pub use generic_repo::GenericRepo;
 pub use into_active_trait::IntoActiveSet;
-mod basic_repo_trait;
+pub mod basic_repo_trait;
 mod generic_repo;
 mod into_active_trait;

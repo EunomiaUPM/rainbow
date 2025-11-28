@@ -36,6 +36,10 @@ impl MigratorTrait for SSIAuthConsumerMigrations {
 
 impl SSIAuthConsumerMigrations {
     pub async fn run(config: &ApplicationConsumerConfig) -> anyhow::Result<()> {
+        if std::env::var("TEST_MODE").is_ok() {
+            tracing::info!("TEST_MODE activo: saltando conexión a DB");
+            return Ok(());
+        }
         // db_connection
         let db_url = config.get_full_db_url();
         let db_connection = Database::connect(db_url).await.expect("Database can't connect");

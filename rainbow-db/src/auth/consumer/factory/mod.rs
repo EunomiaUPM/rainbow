@@ -20,6 +20,6 @@
 pub mod factory;
 mod factory_trait;
 mod repos;
-mod traits;
+pub mod traits;
 
 pub use factory_trait::AuthConsumerRepoTrait;

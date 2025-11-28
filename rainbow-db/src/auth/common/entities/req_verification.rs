@@ -54,6 +54,21 @@ pub struct NewModel {
     pub response_uri: String,     // REQUEST
 }
 
+impl PartialEq for NewModel {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+            && self.uri == other.uri
+            && self.scheme == other.scheme
+            && self.response_type == other.response_type
+            && self.client_id == other.client_id
+            && self.response_mode == other.response_mode
+            && self.pd_uri == other.pd_uri
+            && self.client_id_scheme == other.client_id_scheme
+            && self.nonce == other.nonce
+            && self.response_uri == other.response_uri
+    }
+}
+
 impl IntoActiveSet<ActiveModel> for NewModel {
     fn to_active(self) -> ActiveModel {
         ActiveModel {

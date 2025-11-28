@@ -29,9 +29,9 @@ use tracing::debug;
 #[derive(Parser, Debug)]
 #[command(name = "Rainbow Dataspace Connector Auth Provider Server")]
 #[command(version = "0.2")]
-struct AuthCli {
+pub struct AuthCli {
     #[command(subcommand)]
-    role: AuthCliRoles,
+    pub role: AuthCliRoles,
 }
 
 #[derive(Subcommand, Debug, PartialEq)]
@@ -51,7 +51,7 @@ pub enum AuthCliCommands {
 #[derive(Parser, Debug, PartialEq)]
 pub struct AuthCliArgs {
     #[arg(short, long)]
-    env_file: Option<String>,
+    pub env_file: Option<String>,
 }
 
 pub struct AuthCommands;
