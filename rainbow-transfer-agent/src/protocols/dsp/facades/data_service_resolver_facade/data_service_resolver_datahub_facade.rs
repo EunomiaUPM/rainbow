@@ -60,8 +60,8 @@ struct RainbowRPCCatalogResolveDataServiceRequest {
 impl DataServiceFacadeTrait for DataServiceFacadeServiceForDatahub {
     async fn resolve_data_service_by_agreement_id(
         &self,
-        agreement_id: Urn,
-        _formats: Option<DctFormats>,
+        agreement_id: &Urn,
+        _formats: Option<&DctFormats>,
     ) -> anyhow::Result<DataService> {
         let contracts_url = self.config.get_contract_negotiation_host_url().unwrap();
         let catalog_url = self.config.get_catalog_host_url().unwrap();

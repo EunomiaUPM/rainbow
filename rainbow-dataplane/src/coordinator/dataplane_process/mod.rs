@@ -18,8 +18,7 @@
  */
 
 use crate::coordinator::dataplane_process::dataplane_process::DataPlaneProcess;
-use crate::coordinator::transfer_event::TransferEvent;
-use axum::async_trait;
+use crate::entities::transfer_events::TransferEventDto;
 use rainbow_common::adv_protocol::interplane::{DataPlaneProcessDirection, DataPlaneProcessState};
 use serde::Serialize;
 use urn::Urn;
@@ -48,25 +47,25 @@ impl Default for DataPlaneProcessAddress {
     }
 }
 
-#[async_trait]
+#[async_trait::async_trait]
 pub trait DataPlaneDefaultBehaviour: Send + Sync {
     async fn create_dataplane_process(input: DataPlaneProcessRequest) -> anyhow::Result<DataPlaneProcess>;
     async fn get_dataplane_by_id(&self, dataplane_id: Urn) -> anyhow::Result<DataPlaneProcess>;
-    async fn on_pull_data(&self, dataplane_id: Urn, event: TransferEvent) -> anyhow::Result<()>;
-    async fn on_push_data(&self, dataplane_id: Urn, event: TransferEvent) -> anyhow::Result<()>;
+    async fn on_pull_data(&self, dataplane_id: Urn, event: TransferEventDto) -> anyhow::Result<()>;
+    async fn on_push_data(&self, dataplane_id: Urn, event: TransferEventDto) -> anyhow::Result<()>;
     async fn tear_down_data_plane(&self, dataplane_id: Urn) -> anyhow::Result<()>;
     async fn connect_to_streaming_service(&self, dataplane_id: Urn) -> anyhow::Result<()>;
     async fn disconnect_from_streaming_service(&self, dataplane_id: Urn) -> anyhow::Result<()>;
 }
 
-#[async_trait]
+#[async_trait::async_trait]
 pub trait DataPlaneProcessTrait: Send + Sync {
-    async fn create_dataplane_process(&self, input: DataPlaneProcess) -> anyhow::Result<DataPlaneProcess>;
+    async fn create_dataplane_process(&self, input: &DataPlaneProcess) -> anyhow::Result<DataPlaneProcess>;
     async fn get_dataplane_processes(&self) -> anyhow::Result<Vec<DataPlaneProcess>>;
-    async fn get_dataplane_process_by_id(&self, id: Urn) -> anyhow::Result<DataPlaneProcess>;
+    async fn get_dataplane_process_by_id(&self, id: &Urn) -> anyhow::Result<DataPlaneProcess>;
     async fn set_dataplane_process_status(
         &self,
-        id: Urn,
-        new_state: DataPlaneProcessState,
+        id: &Urn,
+        new_state: &DataPlaneProcessState,
     ) -> anyhow::Result<DataPlaneProcess>;
 }

@@ -18,6 +18,10 @@
  */
 
 pub mod coordinator;
-pub mod data_plane_info;
-pub mod http;
-pub mod testing_proxy;
+pub(crate) mod data;
+pub(crate) mod entities;
+pub(crate) mod errors;
+pub(crate) mod facades;
+pub(crate) mod http;
+pub mod setup;
+pub(crate) mod testing_proxy;

@@ -29,30 +29,30 @@ use rainbow_common::adv_protocol::interplane::{
 };
 use rainbow_common::dcat_formats::{DctFormats, FormatAction};
 use rainbow_common::protocol::catalog::dataservice_definition::{DataService, DataServiceDcatDeclaration};
-use rainbow_dataplane::coordinator::controller::DataPlaneControllerTrait;
+use rainbow_dataplane::coordinator::dataplane_access_controller::DataPlaneAccessControllerTrait;
 use std::sync::Arc;
 use url::Url;
 use urn::Urn;
 
 pub struct DataPlaneProviderFacade {
-    dataplane_controller: Arc<dyn DataPlaneControllerTrait + Send + Sync + 'static>,
+    dataplane_controller: Arc<dyn DataPlaneAccessControllerTrait>,
 }
 
 impl DataPlaneProviderFacade {
-    pub fn _new(dataplane_controller: Arc<dyn DataPlaneControllerTrait + Send + Sync + 'static>) -> Self {
+    pub fn new(dataplane_controller: Arc<dyn DataPlaneAccessControllerTrait>) -> Self {
         Self { dataplane_controller }
     }
 }
 
 #[async_trait::async_trait]
 impl DataPlaneProviderFacadeTrait for DataPlaneProviderFacade {
-    async fn get_dataplane_address(&self, session_id: Urn) -> anyhow::Result<DataAddressDto> {
+    async fn get_dataplane_address(&self, session_id: &Urn) -> anyhow::Result<DataAddressDto> {
         let status = self
             .dataplane_controller
-            .data_plane_get_status(DataPlaneStatusRequest {
+            .data_plane_get_status(&DataPlaneStatusRequest {
                 _type: DataPlaneControllerMessages::DataPlaneStatusRequest,
                 version: DataPlaneControllerVersion::Version10,
-                session_id,
+                session_id: session_id.clone(),
             })
             .await?;
         let scheme = status
@@ -97,9 +97,9 @@ impl DataPlaneProviderFacadeTrait for DataPlaneProviderFacade {
 
     async fn on_transfer_request(
         &self,
-        session_id: Urn,
-        data_service: DataService,
-        format: DctFormats,
+        session_id: &Urn,
+        data_service: &DataService,
+        format: &DctFormats,
     ) -> anyhow::Result<()> {
         let DataService { dcat, .. } = data_service;
         let DataServiceDcatDeclaration { endpoint_url, .. } = dcat;
@@ -114,10 +114,10 @@ impl DataPlaneProviderFacadeTrait for DataPlaneProviderFacade {
             }
             FormatAction::Pull => {
                 self.dataplane_controller
-                    .data_plane_provision_request(DataPlaneProvisionRequest {
+                    .data_plane_provision_request(&DataPlaneProvisionRequest {
                         _type: DataPlaneControllerMessages::DataPlaneProvisionRequest,
                         version: DataPlaneControllerVersion::Version10,
-                        session_id,
+                        session_id: session_id.clone(),
                         sdp_request: vec![
                             DataPlaneSDPRequestField {
                                 _type: DataPlaneSDPFieldTypes::DataPlaneAddressScheme,
@@ -164,10 +164,10 @@ impl DataPlaneProviderFacadeTrait for DataPlaneProviderFacade {
         Ok(())
     }
 
-    async fn on_transfer_start(&self, session_id: Urn) -> anyhow::Result<()> {
+    async fn on_transfer_start(&self, session_id: &Urn) -> anyhow::Result<()> {
         let _ = self
             .dataplane_controller
-            .data_plane_start(DataPlaneStart {
+            .data_plane_start(&DataPlaneStart {
                 _type: DataPlaneControllerMessages::DataPlaneStart,
                 version: DataPlaneControllerVersion::Version10,
                 session_id: session_id.clone(),
@@ -176,10 +176,10 @@ impl DataPlaneProviderFacadeTrait for DataPlaneProviderFacade {
         Ok(())
     }
 
-    async fn on_transfer_suspension(&self, session_id: Urn) -> anyhow::Result<()> {
+    async fn on_transfer_suspension(&self, session_id: &Urn) -> anyhow::Result<()> {
         let _ = self
             .dataplane_controller
-            .data_plane_stop(DataPlaneStop {
+            .data_plane_stop(&DataPlaneStop {
                 _type: DataPlaneControllerMessages::DataPlaneStop,
                 version: DataPlaneControllerVersion::Version10,
                 session_id: session_id.clone(),
@@ -188,10 +188,10 @@ impl DataPlaneProviderFacadeTrait for DataPlaneProviderFacade {
         Ok(())
     }
 
-    async fn on_transfer_completion(&self, session_id: Urn) -> anyhow::Result<()> {
+    async fn on_transfer_completion(&self, session_id: &Urn) -> anyhow::Result<()> {
         let _ = self
             .dataplane_controller
-            .data_plane_stop(DataPlaneStop {
+            .data_plane_stop(&DataPlaneStop {
                 _type: DataPlaneControllerMessages::DataPlaneStop,
                 version: DataPlaneControllerVersion::Version10,
                 session_id: session_id.clone(),
@@ -200,10 +200,10 @@ impl DataPlaneProviderFacadeTrait for DataPlaneProviderFacade {
         Ok(())
     }
 
-    async fn on_transfer_termination(&self, session_id: Urn) -> anyhow::Result<()> {
+    async fn on_transfer_termination(&self, session_id: &Urn) -> anyhow::Result<()> {
         let _ = self
             .dataplane_controller
-            .data_plane_stop(DataPlaneStop {
+            .data_plane_stop(&DataPlaneStop {
                 _type: DataPlaneControllerMessages::DataPlaneStop,
                 version: DataPlaneControllerVersion::Version10,
                 session_id: session_id.clone(),

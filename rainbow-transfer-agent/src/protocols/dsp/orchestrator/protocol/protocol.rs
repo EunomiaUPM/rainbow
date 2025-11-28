@@ -4,12 +4,18 @@ use crate::protocols::dsp::protocol_types::{
     TransferCompletionMessageDto, TransferProcessAckDto, TransferProcessMessageTrait, TransferProcessMessageWrapper,
     TransferRequestMessageDto, TransferStartMessageDto, TransferSuspensionMessageDto, TransferTerminationMessageDto,
 };
+use std::str::FromStr;
 
+use crate::protocols::dsp::facades::FacadeTrait;
 use crate::protocols::dsp::validator::traits::validation_dsp_steps::ValidationDspSteps;
+use anyhow::anyhow;
 use rainbow_common::config::provider_config::ApplicationProviderConfig;
+use rainbow_common::dcat_formats::DctFormats;
 use std::sync::Arc;
+use urn::Urn;
 
 pub struct ProtocolOrchestratorService {
+    facades: Arc<dyn FacadeTrait>,
     validator: Arc<dyn ValidationDspSteps>,
     pub persistence_service: Arc<dyn TransferPersistenceTrait>,
     pub _config: Arc<ApplicationProviderConfig>,
@@ -19,9 +25,10 @@ impl ProtocolOrchestratorService {
     pub fn new(
         validator: Arc<dyn ValidationDspSteps>,
         persistence_service: Arc<dyn TransferPersistenceTrait>,
+        facades: Arc<dyn FacadeTrait>,
         _config: Arc<ApplicationProviderConfig>,
     ) -> ProtocolOrchestratorService {
-        ProtocolOrchestratorService { validator, persistence_service, _config }
+        ProtocolOrchestratorService { validator, persistence_service, _config, facades }
     }
 }
 
@@ -44,8 +51,18 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
         let input = Arc::new(input.clone());
         self.validator.on_transfer_request(&input).await?;
 
+        // resolve data service
+        let agreement_id = input.dto.get_agreement_id().ok_or(anyhow!("no agreement id"))?;
+        let dct_formats = input.dto.format.parse::<DctFormats>()?;
+        let data_service = self
+            .facades
+            .get_data_service_facade()
+            .await
+            .resolve_data_service_by_agreement_id(&agreement_id, Option::from(&dct_formats))
+            .await?;
+
         // check idempotency
-        let consumer_pid = input.dto.get_consumer_pid().unwrap();
+        let consumer_pid = input.dto.get_consumer_pid().ok_or(anyhow!("no consumer id"))?;
         let process_result = self
             .persistence_service
             .get_transfer_process_service()
@@ -72,6 +89,13 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
                 serde_json::to_value(input).unwrap(),
             )
             .await?;
+
+        // data plane hook
+        let id = Urn::from_str(transfer_process.inner.id.as_str())?;
+        self.facades.get_data_plane_facade().await.on_transfer_request(&id, &data_service, &dct_formats).await?;
+
+        // notify
+
         let transfer_process_dto = TransferProcessMessageWrapper::try_from(transfer_process)?;
         Ok((transfer_process_dto, false))
     }
@@ -83,6 +107,7 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
     ) -> anyhow::Result<TransferProcessMessageWrapper<TransferProcessAckDto>> {
         self.validator.on_transfer_start(id, input).await?;
 
+        // persist and send
         let transfer_process = self
             .persistence_service
             .update_process(
@@ -91,6 +116,13 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
                 serde_json::to_value(input).unwrap(),
             )
             .await?;
+
+        // data plane hook
+        let id = Urn::from_str(transfer_process.inner.id.as_str())?;
+        self.facades.get_data_plane_facade().await.on_transfer_start(&id).await?;
+
+        // notify
+
         let transfer_process_dto = TransferProcessMessageWrapper::try_from(transfer_process)?;
         Ok(transfer_process_dto)
     }
@@ -102,6 +134,7 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
     ) -> anyhow::Result<TransferProcessMessageWrapper<TransferProcessAckDto>> {
         self.validator.on_transfer_suspension(id, input).await?;
 
+        // persist and send
         let transfer_process = self
             .persistence_service
             .update_process(
@@ -110,6 +143,13 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
                 serde_json::to_value(input).unwrap(),
             )
             .await?;
+
+        // data plane hook
+        let id = Urn::from_str(transfer_process.inner.id.as_str())?;
+        self.facades.get_data_plane_facade().await.on_transfer_suspension(&id).await?;
+
+        // notify
+
         let transfer_process_dto = TransferProcessMessageWrapper::try_from(transfer_process)?;
         Ok(transfer_process_dto)
     }
@@ -121,6 +161,7 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
     ) -> anyhow::Result<TransferProcessMessageWrapper<TransferProcessAckDto>> {
         self.validator.on_transfer_completion(id, input).await?;
 
+        // persist and send
         let transfer_process = self
             .persistence_service
             .update_process(
@@ -129,6 +170,13 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
                 serde_json::to_value(input).unwrap(),
             )
             .await?;
+
+        // data plane hook
+        let id = Urn::from_str(transfer_process.inner.id.as_str())?;
+        self.facades.get_data_plane_facade().await.on_transfer_completion(&id).await?;
+
+        // notify
+
         let transfer_process_dto = TransferProcessMessageWrapper::try_from(transfer_process)?;
         Ok(transfer_process_dto)
     }
@@ -140,6 +188,7 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
     ) -> anyhow::Result<TransferProcessMessageWrapper<TransferProcessAckDto>> {
         self.validator.on_transfer_termination(id, input).await?;
 
+        // persist and send
         let transfer_process = self
             .persistence_service
             .update_process(
@@ -148,6 +197,13 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
                 serde_json::to_value(input).unwrap(),
             )
             .await?;
+
+        // data plane hook
+        let id = Urn::from_str(transfer_process.inner.id.as_str())?;
+        self.facades.get_data_plane_facade().await.on_transfer_termination(&id).await?;
+
+        // notify
+
         let transfer_process_dto = TransferProcessMessageWrapper::try_from(transfer_process)?;
         Ok(transfer_process_dto)
     }

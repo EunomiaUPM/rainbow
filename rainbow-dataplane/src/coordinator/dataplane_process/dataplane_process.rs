@@ -16,15 +16,16 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 use crate::coordinator::dataplane_process::{
     DataPlaneDefaultBehaviour, DataPlaneProcessAddress, DataPlaneProcessDirection, DataPlaneProcessRequest,
     DataPlaneProcessState,
 };
-use crate::coordinator::transfer_event::TransferEvent;
+use crate::entities::data_plane_process::DataPlaneProcessDto;
+use crate::entities::transfer_events::TransferEventDto;
 use axum::async_trait;
 use rainbow_common::utils::get_urn;
 use serde::Serialize;
+use std::str::FromStr;
 use urn::Urn;
 
 #[derive(Debug, Serialize)]
@@ -37,6 +38,102 @@ pub struct DataPlaneProcess {
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: Option<chrono::NaiveDateTime>,
     pub state: DataPlaneProcessState,
+}
+
+impl TryFrom<DataPlaneProcessDto> for DataPlaneProcess {
+    type Error = anyhow::Error;
+
+    fn try_from(dataplane_process_dto: DataPlaneProcessDto) -> Result<Self, Self::Error> {
+        let urn = Urn::from_str(dataplane_process_dto.inner.id.as_str())?;
+        let process_direction = dataplane_process_dto.inner.direction.parse::<DataPlaneProcessDirection>()?;
+        let upstream_hop_protocol = dataplane_process_dto
+            .data_plane_fields
+            .get("UpstreamHopProtocol")
+            .ok_or(anyhow::anyhow!("UpstreamHopUrl not found"))?
+            .clone();
+        let upstream_hop_url = dataplane_process_dto
+            .data_plane_fields
+            .get("UpstreamHopUrl")
+            .ok_or(anyhow::anyhow!("UpstreamHopUrl not found"))?
+            .clone();
+        let upstream_hop_auth = dataplane_process_dto
+            .data_plane_fields
+            .get("UpstreamHopAuth")
+            .ok_or(anyhow::anyhow!("UpstreamHopUrl not found"))?
+            .clone();
+        let upstream_hop_auth_content = dataplane_process_dto
+            .data_plane_fields
+            .get("UpstreamHopAuthContent")
+            .ok_or(anyhow::anyhow!("UpstreamHopUrl not found"))?
+            .clone();
+        let downstream_hop_protocol = dataplane_process_dto
+            .data_plane_fields
+            .get("DownstreamHopProtocol")
+            .ok_or(anyhow::anyhow!("UpstreamHopUrl not found"))?
+            .clone();
+        let downstream_hop_url = dataplane_process_dto
+            .data_plane_fields
+            .get("DownstreamHopUrl")
+            .ok_or(anyhow::anyhow!("UpstreamHopUrl not found"))?
+            .clone();
+        let downstream_hop_auth = dataplane_process_dto
+            .data_plane_fields
+            .get("DownstreamHopAuth")
+            .ok_or(anyhow::anyhow!("UpstreamHopUrl not found"))?
+            .clone();
+        let downstream_hop_auth_content = dataplane_process_dto
+            .data_plane_fields
+            .get("DownstreamHopAuthContent")
+            .ok_or(anyhow::anyhow!("UpstreamHopUrl not found"))?
+            .clone();
+        let process_address_protocol = dataplane_process_dto
+            .data_plane_fields
+            .get("ProcessAddressProtocol")
+            .ok_or(anyhow::anyhow!("UpstreamHopUrl not found"))?
+            .clone();
+        let process_address_url = dataplane_process_dto
+            .data_plane_fields
+            .get("ProcessAddressUrl")
+            .ok_or(anyhow::anyhow!("UpstreamHopUrl not found"))?
+            .clone();
+        let process_address_auth = dataplane_process_dto
+            .data_plane_fields
+            .get("ProcessAddressAuth")
+            .ok_or(anyhow::anyhow!("UpstreamHopUrl not found"))?
+            .clone();
+        let process_address_auth_content = dataplane_process_dto
+            .data_plane_fields
+            .get("ProcessAddressAuthContent")
+            .ok_or(anyhow::anyhow!("UpstreamHopUrl not found"))?
+            .clone();
+        let state = dataplane_process_dto.inner.state.parse::<DataPlaneProcessState>()?;
+        let dataplane_process = Self {
+            id: urn,
+            process_direction,
+            upstream_hop: DataPlaneProcessAddress {
+                protocol: upstream_hop_protocol,
+                url: upstream_hop_url,
+                auth_type: upstream_hop_auth,
+                auth_content: upstream_hop_auth_content,
+            },
+            downstream_hop: DataPlaneProcessAddress {
+                protocol: downstream_hop_protocol,
+                url: downstream_hop_url,
+                auth_type: downstream_hop_auth,
+                auth_content: downstream_hop_auth_content,
+            },
+            process_address: DataPlaneProcessAddress {
+                protocol: process_address_protocol,
+                url: process_address_url,
+                auth_type: process_address_auth,
+                auth_content: process_address_auth_content,
+            },
+            created_at: Default::default(),
+            updated_at: None,
+            state,
+        };
+        Ok(dataplane_process)
+    }
 }
 
 impl Default for DataPlaneProcess {
@@ -99,11 +196,11 @@ impl DataPlaneDefaultBehaviour for DataPlaneProcess {
         todo!()
     }
 
-    async fn on_pull_data(&self, _dataplane_id: Urn, _event: TransferEvent) -> anyhow::Result<()> {
+    async fn on_pull_data(&self, _dataplane_id: Urn, _event: TransferEventDto) -> anyhow::Result<()> {
         todo!()
     }
 
-    async fn on_push_data(&self, _dataplane_id: Urn, _event: TransferEvent) -> anyhow::Result<()> {
+    async fn on_push_data(&self, _dataplane_id: Urn, _event: TransferEventDto) -> anyhow::Result<()> {
         todo!()
     }
 

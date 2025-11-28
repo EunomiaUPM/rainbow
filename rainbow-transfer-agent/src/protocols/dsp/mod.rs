@@ -8,6 +8,9 @@ pub(crate) mod validator;
 
 use crate::entities::transfer_messages::TransferAgentMessagesTrait;
 use crate::entities::transfer_process::TransferAgentProcessesTrait;
+use crate::protocols::dsp::facades::data_plane_facade::data_plane_facade::DataPlaneProviderFacade;
+use crate::protocols::dsp::facades::data_service_resolver_facade::data_service_resolver_facade::DataServiceFacadeServiceForDSProtocol;
+use crate::protocols::dsp::facades::FacadeService;
 use crate::protocols::dsp::http::protocol::DspRouter;
 use crate::protocols::dsp::http::rpc::RpcRouter;
 use crate::protocols::dsp::orchestrator::orchestrator::OrchestratorService;
@@ -23,6 +26,7 @@ use crate::protocols::protocol::ProtocolPluginTrait;
 use axum::Router;
 use rainbow_common::config::provider_config::ApplicationProviderConfig;
 use rainbow_common::http_client::HttpClient;
+use rainbow_dataplane::setup::DataplaneSetup;
 use std::sync::Arc;
 use validator::validators::protocol::validate_state_transition::ValidatedStateTransitionServiceForDsp;
 use validator::validators::rpc::validation_rpc_steps::ValidationRpcStepsService;
@@ -43,6 +47,7 @@ impl TransferDSP {
     }
 }
 
+#[async_trait::async_trait]
 impl ProtocolPluginTrait for TransferDSP {
     fn name(&self) -> &'static str {
         "Dataspace Protocol"
@@ -56,9 +61,10 @@ impl ProtocolPluginTrait for TransferDSP {
         "DSP"
     }
 
-    fn build_router(&self) -> anyhow::Result<Router> {
+    async fn build_router(&self) -> anyhow::Result<Router> {
         let http_client = Arc::new(HttpClient::new(10, 10));
 
+        // Validator
         let validator_helper = Arc::new(ValidationHelperService::new(
             self.transfer_agent_process_entities.clone(),
         ));
@@ -80,6 +86,7 @@ impl ProtocolPluginTrait for TransferDSP {
             validator_helper.clone(),
         ));
 
+        // http service
         let persistence_protocol_service = Arc::new(TransferPersistenceForProtocolService::new(
             self.transfer_agent_message_service.clone(),
             self.transfer_agent_process_entities.clone(),
@@ -88,9 +95,29 @@ impl ProtocolPluginTrait for TransferDSP {
             self.transfer_agent_message_service.clone(),
             self.transfer_agent_process_entities.clone(),
         ));
+
+        // dataplane
+        let dataplane = DataplaneSetup::new();
+        let dataplane_controller = dataplane.get_data_plane_controller(self.config.clone()).await;
+        let data_plane_facade = Arc::new(DataPlaneProviderFacade::new(dataplane_controller.clone()));
+
+        // data service resolver
+        let data_service_resolver = Arc::new(DataServiceFacadeServiceForDSProtocol::new(
+            self.config.clone(),
+            http_client.clone(),
+        ));
+
+        // facades
+        let facades = Arc::new(FacadeService::new(
+            data_service_resolver.clone(),
+            data_plane_facade.clone(),
+        ));
+
+        // orchestrators
         let http_orchestator = Arc::new(ProtocolOrchestratorService::new(
             dsp_validator.clone(),
             persistence_protocol_service.clone(),
+            facades.clone(),
             self.config.clone(),
         ));
         let rpc_orchestator = Arc::new(RPCOrchestratorService::new(
@@ -103,6 +130,8 @@ impl ProtocolPluginTrait for TransferDSP {
             http_orchestator.clone(),
             rpc_orchestator.clone(),
         ));
+
+        // router
         let dsp_router = DspRouter::new(orchestrator_service.clone(), self.config.clone());
         let rcp_router = RpcRouter::new(orchestrator_service.clone(), self.config.clone());
 

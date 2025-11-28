@@ -31,7 +31,7 @@ use rainbow_common::config::provider_config::ApplicationProviderConfig;
 use rainbow_common::dcat_formats::{DctFormats, FormatAction};
 use rainbow_common::protocol::catalog::dataservice_definition::{DataService, DataServiceDcatDeclaration};
 use rainbow_common::protocol::transfer::transfer_data_address::{DataAddress, EndpointProperty};
-use rainbow_dataplane::coordinator::controller::DataPlaneControllerTrait;
+use rainbow_dataplane::coordinator::dataplane_access_controller::DataPlaneControllerTrait;
 use std::sync::Arc;
 use url::Url;
 use urn::Urn;

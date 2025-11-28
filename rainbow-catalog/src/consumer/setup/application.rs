@@ -25,8 +25,6 @@ use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, Applica
 use rainbow_common::config::global_config::ApplicationGlobalConfig;
 use rainbow_common::config::provider_config::ApplicationProviderConfig;
 use rainbow_common::facades::ssi_auth_facade::ssi_auth_facade::SSIAuthFacadeService;
-use rainbow_db::dataplane::repo::sql::DataPlaneRepoForSql;
-use rainbow_db::dataplane::repo::DataPlaneRepoFactory;
 use rainbow_db::events::repo::sql::EventsRepoForSql;
 use rainbow_db::events::repo::EventsRepoFactory;
 use rainbow_db::transfer_consumer::repo::sql::TransferConsumerRepoForSql;
