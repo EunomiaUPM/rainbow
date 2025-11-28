@@ -84,7 +84,8 @@ pub async fn create_root_http_router(config: &TransferConfig) -> anyhow::Result<
         entities_controller_service.clone(),
         config.clone(),
     )
-    .build_router()?;
+    .build_router()
+    .await?;
 
     let router_str = format!("{}/transfer-agent", config.get_api_version());
     let router = Router::new()

@@ -25,8 +25,6 @@ use rainbow_common::config::traits::{HostConfigTrait, IsLocalTrait};
 use rainbow_common::config::types::HostType;
 use rainbow_common::facades::ssi_auth_facade::mates_facade::MatesFacadeService;
 use rainbow_common::facades::ssi_auth_facade::ssi_auth_facade::SSIAuthFacadeService;
-use rainbow_db::dataplane::repo::sql::DataPlaneRepoForSql;
-use rainbow_db::dataplane::repo::DataPlaneRepoFactory;
 use rainbow_db::events::repo::sql::EventsRepoForSql;
 use rainbow_db::events::repo::EventsRepoFactory;
 use rainbow_db::transfer_consumer::repo::sql::TransferConsumerRepoForSql;

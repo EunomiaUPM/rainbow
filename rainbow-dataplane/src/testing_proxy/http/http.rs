@@ -17,6 +17,7 @@
  *
  */
 
+#![allow(unused)]
 use crate::coordinator::dataplane_process::DataPlaneProcessTrait;
 use axum::body::{to_bytes, Body};
 use axum::extract::{Path, Request, State};
@@ -81,7 +82,7 @@ where
         };
 
         // PDP
-        let dataplane = match dataplane_service.get_dataplane_process_by_id(data_plane_id).await {
+        let dataplane = match dataplane_service.get_dataplane_process_by_id(&data_plane_id).await {
             Ok(dataplane) => dataplane,
             Err(_) => return (StatusCode::BAD_REQUEST, "dataplane id not found").into_response(),
         };

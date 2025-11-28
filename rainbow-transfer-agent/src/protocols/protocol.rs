@@ -21,6 +21,6 @@ pub trait ProtocolPluginTrait {
     fn name(&self) -> &'static str;
     fn version(&self) -> &'static str;
     fn short_name(&self) -> &'static str;
-    fn build_router(&self) -> anyhow::Result<axum::Router>;
+    async fn build_router(&self) -> anyhow::Result<axum::Router>;
     fn build_grpc_router(&self) -> anyhow::Result<Option<axum::Router>>;
 }

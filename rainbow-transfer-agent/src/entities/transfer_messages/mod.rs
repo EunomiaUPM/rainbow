@@ -5,7 +5,6 @@ use urn::Urn;
 
 pub(crate) mod transfer_messages;
 
-// Wrapper de respuesta
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TransferMessageDto {
@@ -13,7 +12,6 @@ pub struct TransferMessageDto {
     pub inner: transfer_message_model::Model,
 }
 
-// DTO de entrada para creación
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
@@ -28,7 +26,6 @@ pub struct NewTransferMessageDto {
     pub payload: Option<Json>,
 }
 
-// Conversión de DTO a Modelo de Dominio (para pasar al Repo)
 impl From<NewTransferMessageDto> for NewTransferMessageModel {
     fn from(dto: NewTransferMessageDto) -> Self {
         Self {

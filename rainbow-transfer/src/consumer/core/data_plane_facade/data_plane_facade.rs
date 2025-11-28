@@ -30,7 +30,7 @@ use rainbow_common::adv_protocol::interplane::{
 use rainbow_common::config::services::TransferConfig;
 use rainbow_common::dcat_formats::{DctFormats, FormatAction};
 use rainbow_common::protocol::transfer::transfer_data_address::{DataAddress, EndpointProperty};
-use rainbow_dataplane::coordinator::controller::DataPlaneControllerTrait;
+use rainbow_dataplane::coordinator::dataplane_access_controller::DataPlaneControllerTrait;
 use std::sync::Arc;
 use urn::Urn;
 

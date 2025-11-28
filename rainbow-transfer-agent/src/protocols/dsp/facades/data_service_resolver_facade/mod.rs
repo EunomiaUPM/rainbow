@@ -24,13 +24,12 @@ use urn::Urn;
 pub mod data_service_resolver_datahub_facade;
 pub mod data_service_resolver_facade;
 
-#[mockall::automock]
 #[async_trait::async_trait]
 #[allow(unused)]
 pub trait DataServiceFacadeTrait: Send + Sync {
     async fn resolve_data_service_by_agreement_id(
         &self,
-        agreement_id: Urn,
-        formats: Option<DctFormats>,
+        agreement_id: &Urn,
+        formats: Option<&DctFormats>,
     ) -> anyhow::Result<DataService>;
 }
