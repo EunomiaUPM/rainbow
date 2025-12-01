@@ -22,6 +22,8 @@ use rainbow_common::config::traits::DatabaseConfigTrait;
 use rainbow_db::transfer_consumer::migrations::get_transfer_consumer_migrations;
 use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
+use rainbow_dataplane::get_dataplane_migrations;
+use rainbow_db::events::migrations::get_events_migrations;
 
 pub struct TransferConsumerMigration;
 
@@ -29,8 +31,12 @@ impl MigratorTrait for TransferConsumerMigration {
     fn migrations() -> Vec<Box<dyn MigrationTrait>> {
         let mut migrations: Vec<Box<dyn MigrationTrait>> = vec![];
         let mut consumer_migrations = get_transfer_consumer_migrations();
+        let mut data_plane_migrations = get_dataplane_migrations();
+        let mut pub_sub_migrations = get_events_migrations();
 
         migrations.append(&mut consumer_migrations);
+        migrations.append(&mut data_plane_migrations);
+        migrations.append(&mut pub_sub_migrations);
         migrations
     }
 }

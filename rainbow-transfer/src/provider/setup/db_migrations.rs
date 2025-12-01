@@ -23,6 +23,7 @@ use rainbow_db::events::migrations::get_events_migrations;
 use rainbow_db::transfer_provider::migrations::get_transfer_provider_migrations;
 use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
+use rainbow_dataplane::get_dataplane_migrations;
 
 pub struct TransferProviderMigration;
 
@@ -30,11 +31,11 @@ impl MigratorTrait for TransferProviderMigration {
     fn migrations() -> Vec<Box<dyn MigrationTrait>> {
         let mut migrations: Vec<Box<dyn MigrationTrait>> = vec![];
         let mut provider_migrations = get_transfer_provider_migrations();
-        // let mut data_plane_migrations = get_dataplane_migrations();
+        let mut data_plane_migrations = get_dataplane_migrations();
         let mut pub_sub_migrations = get_events_migrations();
 
         migrations.append(&mut provider_migrations);
-        // migrations.append(&mut data_plane_migrations);
+        migrations.append(&mut data_plane_migrations);
         migrations.append(&mut pub_sub_migrations);
         migrations
     }

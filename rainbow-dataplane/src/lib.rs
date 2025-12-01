@@ -25,3 +25,5 @@ pub(crate) mod facades;
 pub mod http;
 pub mod setup;
 pub mod testing_proxy;
+
+pub use data::migrations::get_dataplane_migrations;

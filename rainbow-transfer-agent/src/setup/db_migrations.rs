@@ -22,6 +22,7 @@ use rainbow_common::config::services::TransferConfig;
 use rainbow_common::config::traits::DatabaseConfigTrait;
 use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
+use rainbow_dataplane::get_dataplane_migrations;
 
 pub struct TransferAgentMigration;
 
@@ -29,10 +30,10 @@ impl MigratorTrait for TransferAgentMigration {
     fn migrations() -> Vec<Box<dyn MigrationTrait>> {
         let mut migrations: Vec<Box<dyn MigrationTrait>> = vec![];
         let mut transfer_agent_migrations = get_transfer_agent_migrations();
-        // let mut data_plane_migrations = get_dataplane_migrations();
+        let mut data_plane_migrations = get_dataplane_migrations();
 
         migrations.append(&mut transfer_agent_migrations);
-        // migrations.append(&mut data_plane_migrations);
+        migrations.append(&mut data_plane_migrations);
         migrations
     }
 }

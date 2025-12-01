@@ -32,10 +32,3 @@ pub fn get_dataplane_migrations() -> Vec<Box<dyn MigrationTrait>> {
     ]
 }
 
-pub struct Migrator;
-#[async_trait::async_trait]
-impl MigratorTrait for Migrator {
-    fn migrations() -> Vec<Box<dyn MigrationTrait>> {
-        get_dataplane_migrations()
-    }
-}

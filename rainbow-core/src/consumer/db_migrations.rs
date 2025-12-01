@@ -27,6 +27,7 @@ use rainbow_db::transfer_consumer::migrations::get_transfer_consumer_migrations;
 use rainbow_transfer_agent::get_transfer_agent_migrations;
 use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
+use rainbow_dataplane::get_dataplane_migrations;
 
 pub struct CoreConsumerMigration;
 
@@ -38,7 +39,7 @@ impl MigratorTrait for CoreConsumerMigration {
         let mut contract_negotiation_provider_migrations = get_contracts_migrations();
         let mut pub_sub_migrations = get_events_migrations();
         let mut auth_migrations = get_auth_consumer_migrations();
-        //let mut dataplane_migrations = get_dataplane_migrations();
+        let mut dataplane_migrations = get_dataplane_migrations();
         let mut transfer_agent_migrations = get_transfer_agent_migrations();
 
         migrations.append(&mut transfer_provider_migrations);
@@ -46,7 +47,7 @@ impl MigratorTrait for CoreConsumerMigration {
         migrations.append(&mut contract_negotiation_provider_migrations);
         migrations.append(&mut pub_sub_migrations);
         migrations.append(&mut auth_migrations);
-        //migrations.append(&mut dataplane_migrations);
+        migrations.append(&mut dataplane_migrations);
         migrations.append(&mut transfer_agent_migrations);
         migrations
     }
