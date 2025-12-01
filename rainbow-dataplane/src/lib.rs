@@ -22,6 +22,6 @@ pub(crate) mod data;
 pub(crate) mod entities;
 pub(crate) mod errors;
 pub(crate) mod facades;
-pub(crate) mod http;
+pub mod http;
 pub mod setup;
-pub(crate) mod testing_proxy;
+pub mod testing_proxy;

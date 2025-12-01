@@ -61,6 +61,23 @@ pub struct DatabaseConfig {
     pub name: String,
 }
 
+impl DatabaseConfig {
+    pub fn as_db_url(&self) -> String {
+        match self.db_type {
+            DbType::Memory => ":memory:".to_string(),
+            _ => format!(
+                "{}://{}:{}@{}:{}/{}",
+                self.db_type, // Asumiendo que DbType implementa Display
+                self.user,
+                self.password,
+                self.url,
+                self.port,
+                self.name
+            ),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct ApplicationGlobalConfig {
     pub transfer_process_host: Option<HostConfig>,
@@ -84,7 +101,7 @@ pub struct ApplicationGlobalConfig {
     pub keys_path: String,
     pub is_local: bool,
     pub openapi_path: String,
-    pub api_version: String
+    pub api_version: String,
 }
 
 impl From<ApplicationGlobalConfig> for ApplicationProviderConfig {

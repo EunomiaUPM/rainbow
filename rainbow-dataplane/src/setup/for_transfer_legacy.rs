@@ -1,5 +1,3 @@
-pub mod for_transfer_legacy;
-
 use crate::coordinator::dataplane_access_controller::dataplane_access_controller::DataPlaneAccessControllerService;
 use crate::coordinator::dataplane_access_controller::DataPlaneAccessControllerTrait;
 use crate::coordinator::dataplane_process::dataplane_process_service::DataPlaneProcessService;
@@ -11,28 +9,25 @@ use crate::http::dataplane_info::DataPlaneRouter;
 use crate::http::transfer_events::TransferEventsRouter;
 use axum::Router;
 use rainbow_common::config::global_config::ApplicationGlobalConfig;
-use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use sea_orm::Database;
 use std::sync::Arc;
 
-pub struct DataplaneSetup {}
-impl DataplaneSetup {
+pub struct DataplaneSetupLegacy {}
+impl DataplaneSetupLegacy {
     pub fn new() -> Self {
-        DataplaneSetup {}
+        DataplaneSetupLegacy {}
     }
-    pub async fn get_data_plane_repo(&self, config: &ApplicationProviderConfig) -> Arc<dyn DataPlaneRepoTrait> {
-        let application_global_config: ApplicationProviderConfig = config.clone().into();
-        let db_url = application_global_config.get_full_db_url();
-        let db_connection = Database::connect(db_url).await.expect("Database can't connect");
+    pub async fn get_data_plane_repo(&self, config: &ApplicationGlobalConfig) -> Arc<dyn DataPlaneRepoTrait> {
+        let db_url = config.database_config.as_db_url();
+        let db_connection = Database::connect(&db_url).await.expect("Database can't connect");
         let dataplane_repo = Arc::new(DataPlaneRepoForSql::create_repo(db_connection.clone()));
         dataplane_repo
     }
     pub async fn get_data_plane_controller(
         &self,
-        config: Arc<ApplicationProviderConfig>,
+        config: Arc<ApplicationGlobalConfig>,
     ) -> Arc<dyn DataPlaneAccessControllerTrait> {
         let dataplane_repo = self.get_data_plane_repo(config.as_ref()).await;
-        let config: Arc<ApplicationGlobalConfig> = Arc::new(config.as_ref().clone().into());
         let dataplane_process_entity = Arc::new(DataPlaneProcessEntityService::new(dataplane_repo.clone()));
         let dataplane_process_service = Arc::new(DataPlaneProcessService::new(
             dataplane_process_entity.clone(),
@@ -43,7 +38,7 @@ impl DataplaneSetup {
         ));
         controller
     }
-    pub async fn build_control_router(&self, config: &ApplicationProviderConfig) -> Router {
+    pub async fn build_control_router(&self, config: &ApplicationGlobalConfig) -> Router {
         let dataplane_repo = self.get_data_plane_repo(config).await;
         let dataplane_process_entity = Arc::new(DataPlaneProcessEntityService::new(dataplane_repo.clone()));
         let transfer_event_entity = Arc::new(TransferEventEntityService::new(dataplane_repo.clone()));
@@ -57,7 +52,7 @@ impl DataplaneSetup {
             transfer_event_entity.clone(),
         )
         .router();
-        Router::new().merge(dataplane_router).merge(transfer_event_router)
+        Router::new().nest("/info", dataplane_router).nest("/transfer-events", transfer_event_router)
     }
     pub fn build_testing_proxy(&self) -> Router {
         Router::new()

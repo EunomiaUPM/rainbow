@@ -47,7 +47,7 @@ pub struct ApplicationConsumerConfig {
     pub keys_path: String,
     pub is_local: bool,
     pub openapi_path: String,
-    pub api_version: String
+    pub api_version: String,
 }
 
 impl Default for ApplicationConsumerConfig {

@@ -96,15 +96,11 @@ where
     async fn get_consumer_mate(&self, consumer_participant_id: &String) -> anyhow::Result<Mates> {
         debug!("DSProtocolRPC Service: get_consumer_mate");
 
-        let mate = self
-            .mates_facade
-            .get_mate_by_id(consumer_participant_id.clone())
-            .await
-            .map_err(|e| {
-                let e = CommonErrors::format_new(BadFormat::Received, &e.to_string());
-                error!("{}", e.log());
-                anyhow!(e)
-            })?;
+        let mate = self.mates_facade.get_mate_by_id(consumer_participant_id.clone()).await.map_err(|e| {
+            let e = CommonErrors::format_new(BadFormat::Received, &e.to_string());
+            error!("{}", e.log());
+            anyhow!(e)
+        })?;
         Ok(mate)
     }
 
@@ -147,7 +143,10 @@ where
             })?;
 
         if provider_process.provider_pid != consumer_process.provider_pid {
-            let e = CommonErrors::format_new(BadFormat::Received, "ConsumerPid and ProviderPid don't coincide");
+            let e = CommonErrors::format_new(
+                BadFormat::Received,
+                "ConsumerPid and ProviderPid don't coincide",
+            );
             error!("{}", e.log());
             bail!(e);
         }
@@ -175,7 +174,9 @@ where
             TransferMessageTypes::TransferStartMessage => match transfer_state {
                 TransferState::REQUESTED => {}
                 TransferState::STARTED => {
-                    let e = TransferErrors::protocol_new("Start message is not allowed in STARTED state".to_string().into());
+                    let e = TransferErrors::protocol_new(
+                        "Start message is not allowed in STARTED state".to_string().into(),
+                    );
                     error!("{}", e.log());
                     bail!(e);
                 }
@@ -184,7 +185,11 @@ where
                     match transfer_state_attribute {
                         // If suspended by consumer, not able to start from provider
                         TransferStateAttribute::ByConsumer => {
-                            let e = TransferErrors::protocol_new("State SUSPENDED was established by Consumer, Provider is not allowed to change it".to_string().into());
+                            let e = TransferErrors::protocol_new(
+                                "State SUSPENDED was established by Consumer, Provider is not allowed to change it"
+                                    .to_string()
+                                    .into(),
+                            );
                             error!("{}", e.log());
                             bail!(e);
                         }
@@ -193,12 +198,16 @@ where
                     }
                 }
                 TransferState::COMPLETED => {
-                    let e = TransferErrors::protocol_new("Start message is not allowed in COMPLETED state".to_string().into());
+                    let e = TransferErrors::protocol_new(
+                        "Start message is not allowed in COMPLETED state".to_string().into(),
+                    );
                     error!("{}", e.log());
                     bail!(e);
                 }
                 TransferState::TERMINATED => {
-                    let e = TransferErrors::protocol_new("Start message is not allowed in TERMINATED state".to_string().into());
+                    let e = TransferErrors::protocol_new(
+                        "Start message is not allowed in TERMINATED state".to_string().into(),
+                    );
                     error!("{}", e.log());
                     bail!(e);
                 }
@@ -206,7 +215,9 @@ where
             // 4. Transfer suspension transition check
             TransferMessageTypes::TransferSuspensionMessage => match transfer_state {
                 TransferState::REQUESTED => {
-                    let e = TransferErrors::protocol_new("Suspension message is not allowed in REQUESTED state".to_string().into());
+                    let e = TransferErrors::protocol_new(
+                        "Suspension message is not allowed in REQUESTED state".to_string().into(),
+                    );
                     error!("{}", e.log());
                     bail!(e);
                 }
@@ -217,12 +228,16 @@ where
                     bail!(e);
                 }
                 TransferState::COMPLETED => {
-                    let e = TransferErrors::protocol_new("Suspension message is not allowed in COMPLETED state".to_string().into());
+                    let e = TransferErrors::protocol_new(
+                        "Suspension message is not allowed in COMPLETED state".to_string().into(),
+                    );
                     error!("{}", e.log());
                     bail!(e);
                 }
                 TransferState::TERMINATED => {
-                    let e = TransferErrors::protocol_new("Suspension message is not allowed in TERMINATED state".to_string().into());
+                    let e = TransferErrors::protocol_new(
+                        "Suspension message is not allowed in TERMINATED state".to_string().into(),
+                    );
                     error!("{}", e.log());
                     bail!(e);
                 }
@@ -230,7 +245,9 @@ where
             // 4. Transfer completion transition check
             TransferMessageTypes::TransferCompletionMessage => match transfer_state {
                 TransferState::REQUESTED => {
-                    let e = TransferErrors::protocol_new("Completion message is not allowed in REQUESTED state".to_string().into());
+                    let e = TransferErrors::protocol_new(
+                        "Completion message is not allowed in REQUESTED state".to_string().into(),
+                    );
                     error!("{}", e.log());
                     bail!(e);
                 }
@@ -238,7 +255,9 @@ where
                 TransferState::SUSPENDED => {}
                 TransferState::COMPLETED => {}
                 TransferState::TERMINATED => {
-                    let e = TransferErrors::protocol_new("Completion message is not allowed in TERMINATED state".to_string().into());
+                    let e = TransferErrors::protocol_new(
+                        "Completion message is not allowed in TERMINATED state".to_string().into(),
+                    );
                     error!("{}", e.log());
                     bail!(e);
                 }
@@ -249,7 +268,9 @@ where
                 TransferState::STARTED => {}
                 TransferState::SUSPENDED => {}
                 TransferState::COMPLETED => {
-                    let e = TransferErrors::protocol_new("Completion message is not allowed in COMPLETED state".to_string().into());
+                    let e = TransferErrors::protocol_new(
+                        "Completion message is not allowed in COMPLETED state".to_string().into(),
+                    );
                     error!("{}", e.log());
                     bail!(e);
                 }
@@ -284,12 +305,7 @@ where
             .send()
             .await
             .map_err(|_e| {
-                let e = CommonErrors::consumer_new(
-                    &target_url,
-                    "POST",
-                    None,
-                    "Consumer not reachable",
-                );
+                let e = CommonErrors::consumer_new(&target_url, "POST", None, "Consumer not reachable");
                 error!("{}", e.log());
                 anyhow!(e)
             })?;
@@ -309,7 +325,10 @@ where
         }
 
         let transfer_process_msg = response.json::<TransferProcessMessage>().await.map_err(|_e| {
-            let e = CommonErrors::format_new(BadFormat::Received, "TransferProcessMessage not serializable");
+            let e = CommonErrors::format_new(
+                BadFormat::Received,
+                "TransferProcessMessage not serializable",
+            );
             error!("{}", e.log());
             anyhow!(e)
         })?;
@@ -446,7 +465,7 @@ where
                 "message": message
             }),
         )
-            .await?;
+        .await?;
         // 8. Bye
         Ok(response)
     }
@@ -547,7 +566,7 @@ where
                 "message": message
             }),
         )
-            .await?;
+        .await?;
         // 8. Bye
         Ok(response)
     }
@@ -644,7 +663,7 @@ where
                 "message": message
             }),
         )
-            .await?;
+        .await?;
         // 9. Bye
         Ok(response)
     }
@@ -746,7 +765,7 @@ where
                 "message": message
             }),
         )
-            .await?;
+        .await?;
         // 8. Bye
         Ok(response)
     }

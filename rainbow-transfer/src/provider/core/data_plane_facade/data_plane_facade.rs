@@ -27,42 +27,30 @@ use rainbow_common::adv_protocol::interplane::{
     DataPlaneControllerMessages, DataPlaneControllerVersion, DataPlaneSDPConfigField, DataPlaneSDPConfigTypes,
     DataPlaneSDPFieldTypes, DataPlaneSDPRequestField,
 };
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
 use rainbow_common::dcat_formats::{DctFormats, FormatAction};
 use rainbow_common::protocol::catalog::dataservice_definition::{DataService, DataServiceDcatDeclaration};
 use rainbow_common::protocol::transfer::transfer_data_address::{DataAddress, EndpointProperty};
-use rainbow_dataplane::coordinator::dataplane_access_controller::DataPlaneControllerTrait;
+use rainbow_dataplane::coordinator::dataplane_access_controller::DataPlaneAccessControllerTrait;
 use std::sync::Arc;
 use url::Url;
 use urn::Urn;
 
-pub struct DataPlaneProviderFacadeForDSProtocol<T>
-where
-    T: DataPlaneControllerTrait + Sync + Send,
-{
-    dataplane_controller: Arc<T>,
-    _config: ApplicationProviderConfig,
+pub struct DataPlaneProviderFacadeForDSProtocol {
+    dataplane_controller: Arc<dyn DataPlaneAccessControllerTrait>,
 }
 
-impl<'a, T> DataPlaneProviderFacadeForDSProtocol<T>
-where
-    T: DataPlaneControllerTrait + Sync + Send,
-    'a: 'static,
-{
-    pub fn new(dataplane_controller: Arc<T>, config: ApplicationProviderConfig) -> Self {
-        Self { dataplane_controller, _config: config }
+impl DataPlaneProviderFacadeForDSProtocol {
+    pub fn new(dataplane_controller: Arc<dyn DataPlaneAccessControllerTrait>) -> Self {
+        Self { dataplane_controller }
     }
 }
 
 #[async_trait]
-impl<T> DataPlaneProviderFacadeTrait for DataPlaneProviderFacadeForDSProtocol<T>
-where
-    T: DataPlaneControllerTrait + Sync + Send,
-{
+impl DataPlaneProviderFacadeTrait for DataPlaneProviderFacadeForDSProtocol {
     async fn get_dataplane_address(&self, session_id: Urn) -> anyhow::Result<DataAddress> {
         let status = self
             .dataplane_controller
-            .data_plane_get_status(DataPlaneStatusRequest {
+            .data_plane_get_status(&DataPlaneStatusRequest {
                 _type: DataPlaneControllerMessages::DataPlaneStatusRequest,
                 version: DataPlaneControllerVersion::Version10,
                 session_id,
@@ -136,7 +124,7 @@ where
             }
             FormatAction::Pull => {
                 self.dataplane_controller
-                    .data_plane_provision_request(DataPlaneProvisionRequest {
+                    .data_plane_provision_request(&DataPlaneProvisionRequest {
                         _type: DataPlaneControllerMessages::DataPlaneProvisionRequest,
                         version: DataPlaneControllerVersion::Version10,
                         session_id,
@@ -189,7 +177,7 @@ where
     async fn on_transfer_start(&self, session_id: Urn) -> anyhow::Result<()> {
         let _ = self
             .dataplane_controller
-            .data_plane_start(DataPlaneStart {
+            .data_plane_start(&DataPlaneStart {
                 _type: DataPlaneControllerMessages::DataPlaneStart,
                 version: DataPlaneControllerVersion::Version10,
                 session_id: session_id.clone(),
@@ -201,7 +189,7 @@ where
     async fn on_transfer_suspension(&self, session_id: Urn) -> anyhow::Result<()> {
         let _ = self
             .dataplane_controller
-            .data_plane_stop(DataPlaneStop {
+            .data_plane_stop(&DataPlaneStop {
                 _type: DataPlaneControllerMessages::DataPlaneStop,
                 version: DataPlaneControllerVersion::Version10,
                 session_id: session_id.clone(),
@@ -213,7 +201,7 @@ where
     async fn on_transfer_completion(&self, session_id: Urn) -> anyhow::Result<()> {
         let _ = self
             .dataplane_controller
-            .data_plane_stop(DataPlaneStop {
+            .data_plane_stop(&DataPlaneStop {
                 _type: DataPlaneControllerMessages::DataPlaneStop,
                 version: DataPlaneControllerVersion::Version10,
                 session_id: session_id.clone(),
@@ -225,7 +213,7 @@ where
     async fn on_transfer_termination(&self, session_id: Urn) -> anyhow::Result<()> {
         let _ = self
             .dataplane_controller
-            .data_plane_stop(DataPlaneStop {
+            .data_plane_stop(&DataPlaneStop {
                 _type: DataPlaneControllerMessages::DataPlaneStop,
                 version: DataPlaneControllerVersion::Version10,
                 session_id: session_id.clone(),

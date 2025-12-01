@@ -23,10 +23,10 @@ use crate::config::global_config::{
 };
 use crate::config::ConfigRoles;
 use crate::ssi::{ClientConfig, WalletConfig};
+use crate::utils::read;
 use serde::Serialize;
 use serde_json::{json, Value};
 use std::env;
-use crate::utils::read;
 
 #[derive(Serialize, Clone, Debug)]
 pub struct ApplicationProviderConfig {
@@ -50,7 +50,7 @@ pub struct ApplicationProviderConfig {
     pub keys_path: String,
     pub is_local: bool,
     pub openapi_path: String,
-    pub api_version: String
+    pub api_version: String,
 }
 
 impl Default for ApplicationProviderConfig {

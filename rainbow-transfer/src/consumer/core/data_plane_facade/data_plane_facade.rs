@@ -27,40 +27,28 @@ use rainbow_common::adv_protocol::interplane::{
     DataPlaneControllerMessages, DataPlaneControllerVersion, DataPlaneSDPConfigField, DataPlaneSDPConfigTypes,
     DataPlaneSDPFieldTypes, DataPlaneSDPRequestField,
 };
-use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
 use rainbow_common::dcat_formats::{DctFormats, FormatAction};
 use rainbow_common::protocol::transfer::transfer_data_address::{DataAddress, EndpointProperty};
-use rainbow_dataplane::coordinator::dataplane_access_controller::DataPlaneControllerTrait;
+use rainbow_dataplane::coordinator::dataplane_access_controller::DataPlaneAccessControllerTrait;
 use std::sync::Arc;
 use urn::Urn;
 
-pub struct DataPlaneConsumerFacadeForDSProtocol<T>
-where
-    T: DataPlaneControllerTrait + Sync + Send,
-{
-    dataplane_controller: Arc<T>,
-    _config: ApplicationConsumerConfig,
+pub struct DataPlaneConsumerFacadeForDSProtocol {
+    dataplane_controller: Arc<dyn DataPlaneAccessControllerTrait>,
 }
 
-impl<'a, T> DataPlaneConsumerFacadeForDSProtocol<T>
-where
-    T: DataPlaneControllerTrait + Sync + Send,
-    'a: 'static,
-{
-    pub fn new(dataplane_controller: Arc<T>, config: ApplicationConsumerConfig) -> Self {
-        Self { dataplane_controller, _config: config }
+impl DataPlaneConsumerFacadeForDSProtocol {
+    pub fn new(dataplane_controller: Arc<dyn DataPlaneAccessControllerTrait>) -> Self {
+        Self { dataplane_controller }
     }
 }
 
 #[async_trait]
-impl<T> DataPlaneConsumerFacadeTrait for DataPlaneConsumerFacadeForDSProtocol<T>
-where
-    T: DataPlaneControllerTrait + Sync + Send,
-{
+impl DataPlaneConsumerFacadeTrait for DataPlaneConsumerFacadeForDSProtocol {
     async fn get_dataplane_address(&self, session_id: Urn) -> anyhow::Result<DataAddress> {
         let status = self
             .dataplane_controller
-            .data_plane_get_status(DataPlaneStatusRequest {
+            .data_plane_get_status(&DataPlaneStatusRequest {
                 _type: DataPlaneControllerMessages::DataPlaneStatusRequest,
                 version: DataPlaneControllerVersion::Version10,
                 session_id,
@@ -129,7 +117,7 @@ where
 
     async fn on_transfer_start(&self, session_id: Urn, data_address: Option<DataAddress>) -> anyhow::Result<()> {
         self.dataplane_controller
-            .data_plane_provision_request(DataPlaneProvisionRequest {
+            .data_plane_provision_request(&DataPlaneProvisionRequest {
                 _type: DataPlaneControllerMessages::DataPlaneProvisionRequest,
                 version: DataPlaneControllerVersion::Version10,
                 session_id: session_id.clone(),
@@ -176,7 +164,7 @@ where
 
         let _ack = self
             .dataplane_controller
-            .data_plane_start(DataPlaneStart {
+            .data_plane_start(&DataPlaneStart {
                 _type: DataPlaneControllerMessages::DataPlaneStart,
                 version: DataPlaneControllerVersion::Version10,
                 session_id: session_id.clone(),
@@ -188,7 +176,7 @@ where
     async fn on_transfer_restart(&self, session_id: Urn) -> anyhow::Result<()> {
         let _ack = self
             .dataplane_controller
-            .data_plane_start(DataPlaneStart {
+            .data_plane_start(&DataPlaneStart {
                 _type: DataPlaneControllerMessages::DataPlaneStart,
                 version: DataPlaneControllerVersion::Version10,
                 session_id: session_id.clone(),
@@ -200,7 +188,7 @@ where
     async fn on_transfer_suspension(&self, session_id: Urn) -> anyhow::Result<()> {
         let _ack = self
             .dataplane_controller
-            .data_plane_stop(DataPlaneStop {
+            .data_plane_stop(&DataPlaneStop {
                 _type: DataPlaneControllerMessages::DataPlaneStop,
                 version: DataPlaneControllerVersion::Version10,
                 session_id: session_id.clone(),
@@ -212,7 +200,7 @@ where
     async fn on_transfer_completion(&self, session_id: Urn) -> anyhow::Result<()> {
         let _ack = self
             .dataplane_controller
-            .data_plane_stop(DataPlaneStop {
+            .data_plane_stop(&DataPlaneStop {
                 _type: DataPlaneControllerMessages::DataPlaneStop,
                 version: DataPlaneControllerVersion::Version10,
                 session_id: session_id.clone(),
@@ -224,7 +212,7 @@ where
     async fn on_transfer_termination(&self, session_id: Urn) -> anyhow::Result<()> {
         let _ack = self
             .dataplane_controller
-            .data_plane_stop(DataPlaneStop {
+            .data_plane_stop(&DataPlaneStop {
                 _type: DataPlaneControllerMessages::DataPlaneStop,
                 version: DataPlaneControllerVersion::Version10,
                 session_id: session_id.clone(),
