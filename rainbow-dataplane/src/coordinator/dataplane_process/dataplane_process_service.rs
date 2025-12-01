@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::coordinator::dataplane_process::dataplane_process::DataPlaneProcess;
 use crate::coordinator::dataplane_process::DataPlaneProcessTrait;
 use crate::entities::data_plane_process::{
@@ -25,7 +26,7 @@ use axum::async_trait;
 use rainbow_common::adv_protocol::interplane::DataPlaneProcessState;
 use std::collections::HashMap;
 use std::sync::Arc;
-use urn::{Urn, UrnBuilder};
+use urn::Urn;
 
 pub struct DataPlaneProcessService {
     dataplane_process_entities: Arc<dyn DataPlaneProcessEntitiesTrait>,
@@ -73,16 +74,10 @@ impl DataPlaneProcessTrait for DataPlaneProcessService {
         );
         let fields: HashMap<String, String> = fields.iter().map(|f| (f.0.to_string(), f.1.clone())).collect();
 
-        let urn = UrnBuilder::new(
-            "dataplane-process",
-            uuid::Uuid::new_v4().to_string().as_str(),
-        )
-        .build()?;
-
         let dto = self
             .dataplane_process_entities
             .create_data_plane_process(&NewDataPlaneProcessDto {
-                id: urn,
+                id: input.id.clone(),
                 direction: input.process_direction.to_string(),
                 state: DataPlaneProcessState::REQUESTED.to_string(),
                 fields: Some(fields),

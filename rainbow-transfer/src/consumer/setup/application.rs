@@ -61,7 +61,7 @@ pub async fn create_transfer_consumer_router(config: &ApplicationConsumerConfig)
     let dataplane_controller =
         dataplane_setup.get_data_plane_controller(Arc::new(application_global_config.clone())).await;
     let dataplane_info_router = dataplane_setup.build_control_router(&application_global_config).await;
-    let dataplane_testing_proxy_router = dataplane_setup.build_testing_proxy();
+    let dataplane_testing_proxy_router = dataplane_setup.build_testing_proxy(&application_global_config).await;
 
     // Events router
     let subscription_repo = Arc::new(EventsRepoForSql::create_repo(db_connection.clone()));
@@ -118,7 +118,7 @@ pub async fn create_transfer_consumer_router(config: &ApplicationConsumerConfig)
         .merge(rainbow_entities_router)
         .merge(ds_protocol_router)
         .merge(ds_protocol_rpc_router)
-        .nest("/dataplane", dataplane_info_router)
+        .nest("/api/v1/dataplane", dataplane_info_router)
         .nest("/data", dataplane_testing_proxy_router)
         .merge(route_openapi())
         .nest("/api/v1/transfers", subscription_router)

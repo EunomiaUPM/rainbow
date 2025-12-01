@@ -7,6 +7,7 @@ use crate::entities::data_plane_process::data_plane_process_entity::DataPlanePro
 use crate::entities::transfer_events::transfer_event_entity::TransferEventEntityService;
 use crate::http::dataplane_info::DataPlaneRouter;
 use crate::http::transfer_events::TransferEventsRouter;
+use crate::testing_proxy::http::http::TestingHTTPProxy;
 use axum::Router;
 use rainbow_common::config::global_config::ApplicationGlobalConfig;
 use sea_orm::Database;
@@ -54,7 +55,12 @@ impl DataplaneSetupLegacy {
         .router();
         Router::new().nest("/info", dataplane_router).nest("/transfer-events", transfer_event_router)
     }
-    pub fn build_testing_proxy(&self) -> Router {
-        Router::new()
+    pub async fn build_testing_proxy(&self, config: &ApplicationGlobalConfig) -> Router {
+        let dataplane_repo = self.get_data_plane_repo(config).await;
+        let dataplane_process_entity = Arc::new(DataPlaneProcessEntityService::new(dataplane_repo.clone()));
+        let dataplane_process_service = Arc::new(DataPlaneProcessService::new(
+            dataplane_process_entity.clone(),
+        ));
+        TestingHTTPProxy::new(dataplane_process_service.clone()).router()
     }
 }
