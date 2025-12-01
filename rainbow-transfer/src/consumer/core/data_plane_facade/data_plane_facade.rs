@@ -106,6 +106,7 @@ impl DataPlaneConsumerFacadeTrait for DataPlaneConsumerFacadeForDSProtocol {
     async fn on_transfer_request(&self, _session_id: Urn, format: DctFormats) -> anyhow::Result<()> {
         let _dataplane_response = match format.action {
             FormatAction::Push => {
+                // AND HERE!!! redo draw and figure out where to get stuff from
                 // TODO push case next_hop should point to consumer dataplane
                 todo!()
             }
