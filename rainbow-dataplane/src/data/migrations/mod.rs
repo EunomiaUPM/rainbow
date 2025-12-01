@@ -31,4 +31,3 @@ pub fn get_dataplane_migrations() -> Vec<Box<dyn MigrationTrait>> {
         Box::new(m20251128_0000003_transfer_events::Migration),
     ]
 }
-

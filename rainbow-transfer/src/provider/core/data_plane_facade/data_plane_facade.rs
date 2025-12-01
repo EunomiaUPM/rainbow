@@ -85,6 +85,8 @@ impl DataPlaneProviderFacadeTrait for DataPlaneProviderFacadeForDSProtocol {
             .content
             .clone();
 
+        dbg!("b");
+
         let data_address = DataAddress {
             _type: "DataAddress".to_string(),
             endpoint_type: scheme,

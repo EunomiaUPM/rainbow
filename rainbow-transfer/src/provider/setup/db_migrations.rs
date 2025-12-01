@@ -18,11 +18,11 @@
  */
 
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_dataplane::get_dataplane_migrations;
 use rainbow_db::events::migrations::get_events_migrations;
 use rainbow_db::transfer_provider::migrations::get_transfer_provider_migrations;
 use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
-use rainbow_dataplane::get_dataplane_migrations;
 
 pub struct TransferProviderMigration;
 

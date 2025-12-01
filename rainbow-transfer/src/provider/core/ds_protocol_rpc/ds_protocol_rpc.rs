@@ -384,6 +384,7 @@ where
         // 1. Validate fields and correlation
         let tp = self.validate_and_get_correlated_transfer_process(&consumer_pid, &provider_pid).await?;
         self.transition_validation(&input).await?;
+
         // 2. Create message
         let data_address = self.data_plane_facade.get_dataplane_address(provider_pid.clone()).await?;
         let start_message = TransferStartMessage {
