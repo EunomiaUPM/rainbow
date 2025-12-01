@@ -1,9 +1,9 @@
+use crate::well_known::dspace_version::WellKnownDSpaceVersionService;
+use axum::extract::{FromRef, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use axum::{Json, Router};
-use axum::extract::{FromRef, State};
 use axum::routing::get;
-use crate::well_known::dspace_version::WellKnownDSpaceVersionService;
+use axum::{Json, Router};
 
 #[derive(Clone)]
 pub struct WellKnownRouter {
@@ -17,24 +17,19 @@ impl FromRef<WellKnownRouter> for WellKnownDSpaceVersionService {
 }
 
 impl WellKnownRouter {
-    pub fn new(
-        dspace_version_service: WellKnownDSpaceVersionService
-    ) -> WellKnownRouter {
-        WellKnownRouter {
-            dspace_version_service
-        }
+    pub fn new(dspace_version_service: WellKnownDSpaceVersionService) -> WellKnownRouter {
+        WellKnownRouter { dspace_version_service }
     }
     pub fn router(self) -> Router {
-        Router::new().route(
-            "/.well-known/dspace-version",
-            get(Self::handle_get_well_known_version),
-        )
+        Router::new()
+            .route(
+                "/.well-known/dspace-version",
+                get(Self::handle_get_well_known_version),
+            )
             .with_state(self)
     }
 
-    async fn handle_get_well_known_version(
-        State(state): State<WellKnownRouter>
-    ) -> impl IntoResponse {
+    async fn handle_get_well_known_version(State(state): State<WellKnownRouter>) -> impl IntoResponse {
         let response = state.dspace_version_service.get_dspace_version().unwrap();
         (StatusCode::OK, Json(response)).into_response()
     }

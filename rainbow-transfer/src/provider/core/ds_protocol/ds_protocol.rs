@@ -147,7 +147,8 @@ where
                 .await
                 .map_err(|e| CommonErrors::format_new(BadFormat::Received, &e.to_string()))?
                 .ok_or_else(|| {
-                    let e = CommonErrors::missing_resource_new(&msg_c_pid.to_string(), "Transfer process doesn't exist");
+                    let e =
+                        CommonErrors::missing_resource_new(&msg_c_pid.to_string(), "Transfer process doesn't exist");
                     error!("{}", e.log());
                     anyhow!(e)
                 })?;
@@ -223,7 +224,9 @@ where
                     TransferMessageTypes::TransferStartMessage => match transfer_state {
                         TransferState::REQUESTED => {}
                         TransferState::STARTED => {
-                            let e = TransferErrors::protocol_new(Some("Start message is not allowed in STARTED state".to_string()));
+                            let e = TransferErrors::protocol_new(Some(
+                                "Start message is not allowed in STARTED state".to_string(),
+                            ));
                             error!("{}", e.log());
                             bail!(e);
                         }
@@ -242,12 +245,16 @@ where
                             }
                         }
                         TransferState::COMPLETED => {
-                            let e = TransferErrors::protocol_new(Some("Start message is not allowed in COMPLETED state".to_string()));
+                            let e = TransferErrors::protocol_new(Some(
+                                "Start message is not allowed in COMPLETED state".to_string(),
+                            ));
                             error!("{}", e.log());
                             bail!(e);
                         }
                         TransferState::TERMINATED => {
-                            let e = TransferErrors::protocol_new(Some("Start message is not allowed in TERMINATED state".to_string()));
+                            let e = TransferErrors::protocol_new(Some(
+                                "Start message is not allowed in TERMINATED state".to_string(),
+                            ));
                             error!("{}", e.log());
                             bail!(e);
                         }
@@ -255,8 +262,9 @@ where
                     // 4. Transfer suspension transition check
                     TransferMessageTypes::TransferSuspensionMessage => match transfer_state {
                         TransferState::REQUESTED => {
-                            let e =
-                                TransferErrors::protocol_new(Some("Suspension message is not allowed in REQUESTED state".to_string()));
+                            let e = TransferErrors::protocol_new(Some(
+                                "Suspension message is not allowed in REQUESTED state".to_string(),
+                            ));
                             error!("{}", e.log());
                             bail!(e);
                         }
@@ -267,14 +275,16 @@ where
                             bail!(e);
                         }
                         TransferState::COMPLETED => {
-                            let e =
-                                TransferErrors::protocol_new(Some("Suspension message is not allowed in COMPLETED state".to_string()));
+                            let e = TransferErrors::protocol_new(Some(
+                                "Suspension message is not allowed in COMPLETED state".to_string(),
+                            ));
                             error!("{}", e.log());
                             bail!(e);
                         }
                         TransferState::TERMINATED => {
-                            let e =
-                                TransferErrors::protocol_new(Some("Suspension message is not allowed in TERMINATED state".to_string()));
+                            let e = TransferErrors::protocol_new(Some(
+                                "Suspension message is not allowed in TERMINATED state".to_string(),
+                            ));
                             error!("{}", e.log());
                             bail!(e);
                         }
@@ -282,8 +292,9 @@ where
                     // 4. Transfer completion transition check
                     TransferMessageTypes::TransferCompletionMessage => match transfer_state {
                         TransferState::REQUESTED => {
-                            let e =
-                                TransferErrors::protocol_new(Some("Completion message is not allowed in REQUESTED state".to_string()));
+                            let e = TransferErrors::protocol_new(Some(
+                                "Completion message is not allowed in REQUESTED state".to_string(),
+                            ));
                             error!("{}", e.log());
                             bail!(e);
                         }
@@ -291,8 +302,9 @@ where
                         TransferState::SUSPENDED => {}
                         TransferState::COMPLETED => {}
                         TransferState::TERMINATED => {
-                            let e =
-                                TransferErrors::protocol_new(Some("Completion message is not allowed in TERMINATED state".to_string()));
+                            let e = TransferErrors::protocol_new(Some(
+                                "Completion message is not allowed in TERMINATED state".to_string(),
+                            ));
                             error!("{}", e.log());
                             bail!(e);
                         }
@@ -303,8 +315,9 @@ where
                         TransferState::STARTED => {}
                         TransferState::SUSPENDED => {}
                         TransferState::COMPLETED => {
-                            let e =
-                                TransferErrors::protocol_new(Some("Completion message is not allowed in COMPLETED state".to_string()));
+                            let e = TransferErrors::protocol_new(Some(
+                                "Completion message is not allowed in COMPLETED state".to_string(),
+                            ));
                             error!("{}", e.log());
                             bail!(e);
                         }

@@ -8,19 +8,12 @@ use axum::response::IntoResponse;
 use axum::routing::get;
 use axum::{Json, Router};
 use rainbow_common::errors::{CommonErrors, ErrorLog};
-use serde::Deserialize;
 use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct TransferEventsRouter {
     data_plane_process_entity: Arc<dyn DataPlaneProcessEntitiesTrait>,
     transfer_event_entity: Arc<dyn TransferEventEntitiesTrait>,
-}
-
-#[derive(Deserialize)]
-pub struct PaginationParams {
-    pub limit: Option<u64>,
-    pub page: Option<u64>,
 }
 
 impl FromRef<TransferEventsRouter> for Arc<dyn DataPlaneProcessEntitiesTrait> {

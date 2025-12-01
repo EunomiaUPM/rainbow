@@ -84,8 +84,10 @@ where
                 anyhow!(e)
             })?
             .ok_or_else(|| {
-                let e =
-                    CommonErrors::missing_resource_new(&process_id.clone().to_string(), "Transfer process not found");
+                let e = CommonErrors::missing_resource_new(
+                    &process_id.clone().to_string(),
+                    "Transfer process not found",
+                );
                 error!("{}", e.log());
                 anyhow!(e)
             })?;
@@ -176,8 +178,10 @@ where
     async fn delete_transfer(&self, process_id: Urn) -> anyhow::Result<()> {
         let _ = self.repo.delete_transfer_callback(process_id.clone()).await.map_err(|e| match e {
             TransferConsumerRepoErrors::ConsumerTransferProcessNotFound => {
-                let e_ =
-                    CommonErrors::missing_resource_new(&process_id.clone().to_string(), "Transfer process not found");
+                let e_ = CommonErrors::missing_resource_new(
+                    &process_id.clone().to_string(),
+                    "Transfer process not found",
+                );
                 error!("{}", e_.log());
                 anyhow!(e_)
             }
@@ -219,8 +223,10 @@ where
                 }
             })?
             .ok_or_else(|| {
-                let e =
-                    CommonErrors::missing_resource_new(&message_id.clone().to_string(), "Transfer message not found");
+                let e = CommonErrors::missing_resource_new(
+                    &message_id.clone().to_string(),
+                    "Transfer message not found",
+                );
                 error!("{}", e.log());
                 anyhow!(e)
             })?;

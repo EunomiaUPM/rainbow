@@ -1,3 +1,4 @@
+#![allow(unused)]
 use axum::extract::rejection::JsonRejection;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
