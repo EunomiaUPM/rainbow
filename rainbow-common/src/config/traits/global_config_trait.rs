@@ -17,6 +17,6 @@
  *
  */
 
-pub mod application;
-pub mod db_migrations;
-pub mod db_seeding;
+pub trait GlobalConfigTrait {
+    fn load(env_file: Option<String>) -> Self;
+}

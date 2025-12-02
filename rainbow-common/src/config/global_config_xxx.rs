@@ -17,12 +17,11 @@
  *
  */
 
-use super::types::HostConfig;
-use crate::config::consumer_config::ApplicationConsumerConfig;
-use crate::config::provider_config::ApplicationProviderConfig;
-use crate::config::types::database::DatabaseConfig;
-use crate::config::types::roles::ConfigRoles;
-use crate::ssi::{ClientConfig, WalletConfig};
+use super::consumer_config::ApplicationConsumerConfig;
+use super::provider_config::ApplicationProviderConfig;
+use super::types::database::DatabaseConfig;
+use super::types::roles::ConfigRoles;
+use super::types::{ClientConfig, HostConfig, WalletConfig};
 use std::env;
 
 pub fn extract_env(env_var_name: &str, default: String) -> String {
@@ -37,13 +36,11 @@ pub fn option_extract_env(env_var_name: &str) -> Option<String> {
 }
 
 pub fn format_host_config_to_url_string(hc: &HostConfig) -> String {
-    if hc.port.is_empty() {
-        format!("{}://{}", hc.protocol, hc.url)
-    } else {
-        format!("{}://{}:{}", hc.protocol, hc.url, hc.port)
+    match hc.port.as_ref() {
+        None => format!("{}://{}", hc.protocol, hc.url),
+        Some(port) => format!("{}://{}:{}", hc.protocol, hc.url, port),
     }
 }
-
 
 #[derive(Debug, Clone)]
 pub struct ApplicationGlobalConfig {

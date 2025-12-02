@@ -20,7 +20,7 @@
 use axum::Router;
 use rainbow_auth::ssi::provider::setup::app::AuthProviderApplication;
 use rainbow_catalog::provider::setup::application::create_catalog_router;
-use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_common::config::provider::config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_contracts::provider::setup::application::create_contract_negotiation_provider_router;
 use rainbow_datahub_catalog::setup::application::create_datahub_catalog_router;
 use rainbow_transfer::provider::setup::application::create_transfer_provider_router;

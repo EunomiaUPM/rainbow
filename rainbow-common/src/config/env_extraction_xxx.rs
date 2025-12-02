@@ -17,8 +17,8 @@
  *
  */
 
-use crate::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
-use crate::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use crate::config::consumer::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
+use crate::config::provider::config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use tracing::info;
 
 pub trait EnvExtraction {

@@ -17,29 +17,6 @@
  *
  */
 
-use serde::{Deserialize, Serialize};
-
-#[derive(Deserialize, Serialize, Clone, Debug)]
-pub struct ClientConfig {
-    pub class_id: String, // como se denomina una entidad a si misma
-    pub display: Option<DisplayInfo>,
-}
-
-#[derive(Deserialize, Serialize, Clone, Debug)]
-pub struct DisplayInfo {
-    pub name: String,
-    pub uri: Option<String>,
-    pub logo_uri: Option<String>,
-}
-
-#[derive(Serialize, Clone, Debug)]
-pub struct WalletConfig {
-    pub api_protocol: String,
-    pub api_url: String,
-    pub api_port: Option<String>,
-    pub r#type: String,
-    pub name: String,
-    pub email: String,
-    pub password: String,
-    pub id: Option<String>,
+pub trait IsLocalTrait {
+    fn is_local(&self) -> bool;
 }

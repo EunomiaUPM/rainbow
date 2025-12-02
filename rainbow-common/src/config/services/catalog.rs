@@ -17,4 +17,28 @@
  *
  */
 
-pub mod router;
+use crate::config::traits::HostConfigTrait;
+use crate::config::types::HostConfig;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct CatalogConfig {
+    host: HostConfig,
+    is_datahub: Option<bool>,
+    datahub_host: Option<HostConfig>,
+    datahub_token: Option<String>,
+}
+
+impl HostConfigTrait for CatalogConfig {
+    fn http(&self) -> &HostConfig {
+        &self.host
+    }
+
+    fn graphql(&self) -> Option<&HostConfig> {
+        None
+    }
+
+    fn grpc(&self) -> Option<&HostConfig> {
+        None
+    }
+}
