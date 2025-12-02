@@ -79,7 +79,7 @@ impl AgreementRepoTrait for AgreementRepoForSql {
     ) -> anyhow::Result<Option<Model>, AgreementRepoErrors> {
         let pid = id.to_string();
         let agreement = agreement::Entity::find()
-            .filter(agreement::Column::NegotiationProcessId.eq(pid))
+            .filter(agreement::Column::NegotiationAgentProcessId.eq(pid))
             .one(&self.db_connection)
             .await;
 
@@ -95,7 +95,7 @@ impl AgreementRepoTrait for AgreementRepoForSql {
     ) -> anyhow::Result<Option<Model>, AgreementRepoErrors> {
         let mid = id.to_string();
         let agreement = agreement::Entity::find()
-            .filter(agreement::Column::NegotiationProcessId.eq(mid))
+            .filter(agreement::Column::NegotiationAgentProcessId.eq(mid))
             .one(&self.db_connection)
             .await;
 

@@ -66,7 +66,7 @@ impl OfferRepoTrait for OfferRepoForSql {
     async fn get_offers_by_negotiation_process(&self, id: &Urn) -> anyhow::Result<Vec<Model>, OfferRepoErrors> {
         let pid = id.to_string();
         let offers = offer::Entity::find()
-            .filter(offer::Column::NegotiationProcessId.eq(pid))
+            .filter(offer::Column::NegotiationAgentProcessId.eq(pid))
             .order_by_asc(offer::Column::CreatedAt)
             .all(&self.db_connection)
             .await;
@@ -89,8 +89,10 @@ impl OfferRepoTrait for OfferRepoForSql {
 
     async fn get_offer_by_negotiation_message(&self, id: &Urn) -> anyhow::Result<Option<Model>, OfferRepoErrors> {
         let mid = id.to_string();
-        let offer =
-            offer::Entity::find().filter(offer::Column::NegotiationMessageId.eq(mid)).one(&self.db_connection).await;
+        let offer = offer::Entity::find()
+            .filter(offer::Column::NegotiationAgentMessageId.eq(mid))
+            .one(&self.db_connection)
+            .await;
 
         match offer {
             Ok(offer) => Ok(offer),

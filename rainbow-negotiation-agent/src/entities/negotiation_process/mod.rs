@@ -36,7 +36,7 @@ pub struct NegotiationProcessDto {
     pub identifiers: HashMap<String, String>,
     pub messages: Vec<negotiation_message_model::Model>,
     pub offers: Vec<offer_model::Model>,
-    pub agreements: Option<agreement_model::Model>,
+    pub agreement: Option<agreement_model::Model>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
