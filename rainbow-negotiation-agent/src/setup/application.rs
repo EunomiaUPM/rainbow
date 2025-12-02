@@ -17,7 +17,6 @@
  *
  */
 
-use crate::setup::grpc_worker::NegotiationGrpcWorker;
 use crate::setup::http_worker::NegotiationHttpWorker;
 use rainbow_common::config::provider_config::ApplicationProviderConfig;
 use tokio::signal;
