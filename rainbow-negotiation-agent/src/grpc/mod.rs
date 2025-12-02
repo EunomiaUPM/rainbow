@@ -17,7 +17,16 @@
  *
  */
 
+pub mod api {
+    pub mod negotiation_agent {
+        tonic::include_proto!("negotiation_agent.v1");
+    }
+
+    pub const FILE_DESCRIPTOR_SET: &[u8] = tonic::include_file_descriptor_set!("negotiation_descriptor");
+}
+
 pub(crate) mod agreement;
+mod mappers;
 pub(crate) mod negotiation_message;
 pub(crate) mod negotiation_process;
 pub(crate) mod offer;

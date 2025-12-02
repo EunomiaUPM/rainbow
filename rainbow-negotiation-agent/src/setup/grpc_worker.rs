@@ -18,6 +18,20 @@
  *
  */
 
+use crate::data::factory_sql::NegotiationAgentRepoForSql;
+use crate::entities::agreement::agreement::NegotiationAgentAgreementsService;
+use crate::entities::negotiation_message::negotiation_message::NegotiationAgentMessagesService;
+use crate::entities::negotiation_process::negotiation_process::NegotiationAgentProcessesService;
+use crate::entities::offer::offer::NegotiationAgentOffersService;
+use crate::grpc::agreement::NegotiationAgentAgreementGrpc;
+use crate::grpc::api::FILE_DESCRIPTOR_SET;
+use crate::grpc::api::negotiation_agent::negotiation_agent_agreements_service_server::NegotiationAgentAgreementsServiceServer;
+use crate::grpc::api::negotiation_agent::negotiation_agent_messages_service_server::NegotiationAgentMessagesServiceServer;
+use crate::grpc::api::negotiation_agent::negotiation_agent_offers_service_server::NegotiationAgentOffersServiceServer;
+use crate::grpc::api::negotiation_agent::negotiation_agent_processes_service_server::NegotiationAgentProcessesServiceServer;
+use crate::grpc::negotiation_message::NegotiationAgentMessagesGrpc;
+use crate::grpc::negotiation_process::NegotiationAgentProcessesGrpc;
+use crate::grpc::offer::NegotiationAgentOfferGrpc;
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use sea_orm::Database;
 use std::sync::Arc;
@@ -34,7 +48,7 @@ impl NegotiationGrpcWorker {
         config: &ApplicationProviderConfig,
         token: &CancellationToken,
     ) -> anyhow::Result<JoinHandle<()>> {
-        // let router = Self::create_root_grpc_router(&config).await?;
+        let router = Self::create_root_grpc_router(&config).await?;
         let host = if config.get_environment_scenario() { "127.0.0.1" } else { "0.0.0.0" };
         let port = config.get_raw_contract_negotiation_host().clone().expect("no host").port;
         let grpc_port = format!("{}{}", port, "1");
@@ -46,26 +60,59 @@ impl NegotiationGrpcWorker {
 
         let token = token.clone();
         let handle = tokio::spawn(async move {
-            // let server = router.serve_with_incoming_shutdown(incoming, async move {
-            //     token.cancelled().await;
-            //     tracing::info!("GRPC Service received shutdown signal, draining connections...");
-            // });
-            // match server.await {
-            //     Ok(_) => tracing::info!("GRPC Service stopped successfully"),
-            //     Err(e) => tracing::error!("GRPC Service crashed: {}", e),
-            // }
+            let server = router.serve_with_incoming_shutdown(incoming, async move {
+                token.cancelled().await;
+                tracing::info!("GRPC Service received shutdown signal, draining connections...");
+            });
+            match server.await {
+                Ok(_) => tracing::info!("GRPC Service stopped successfully"),
+                Err(e) => tracing::error!("GRPC Service crashed: {}", e),
+            }
         });
 
         Ok(handle)
     }
-    // pub async fn create_root_grpc_router(
-    //     config: &ApplicationProviderConfig,
-    // ) -> anyhow::Result<tonic::transport::server::Router> {
-    //     let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
-    //     let config = Arc::new(config.clone());
-    //
-    //     let router = Server::default().add_service();
-    //
-    //     Ok(router)
-    // }
+    pub async fn create_root_grpc_router(
+        config: &ApplicationProviderConfig,
+    ) -> anyhow::Result<tonic::transport::server::Router> {
+        let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
+        let config = Arc::new(config.clone());
+        let negotiation_repo = Arc::new(NegotiationAgentRepoForSql::create_repo(
+            db_connection.clone(),
+        ));
+
+        let messages_controller_service = Arc::new(NegotiationAgentMessagesService::new(
+            negotiation_repo.clone(),
+        ));
+        let message_controller = NegotiationAgentMessagesGrpc::new(messages_controller_service.clone());
+        let processes_controller_service = Arc::new(NegotiationAgentProcessesService::new(
+            negotiation_repo.clone(),
+        ));
+        let processes_controller = NegotiationAgentProcessesGrpc::new(processes_controller_service.clone());
+        let offer_controller_service = Arc::new(NegotiationAgentOffersService::new(negotiation_repo.clone()));
+        let offer_controller = NegotiationAgentOfferGrpc::new(offer_controller_service.clone());
+        let agreement_controller_service = Arc::new(NegotiationAgentAgreementsService::new(
+            negotiation_repo.clone(),
+        ));
+        let agreement_controller = NegotiationAgentAgreementGrpc::new(agreement_controller_service.clone());
+
+        let reflection_service = tonic_reflection::server::Builder::configure()
+            .register_encoded_file_descriptor_set(FILE_DESCRIPTOR_SET)
+            .build_v1()?;
+
+        let router = Server::builder()
+            .add_service(reflection_service)
+            .add_service(NegotiationAgentProcessesServiceServer::new(
+                processes_controller,
+            ))
+            .add_service(NegotiationAgentMessagesServiceServer::new(
+                message_controller,
+            ))
+            .add_service(NegotiationAgentOffersServiceServer::new(offer_controller))
+            .add_service(NegotiationAgentAgreementsServiceServer::new(
+                agreement_controller,
+            ));
+
+        Ok(router)
+    }
 }

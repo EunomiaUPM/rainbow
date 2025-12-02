@@ -17,6 +17,7 @@
  *
  */
 
+use crate::setup::grpc_worker::NegotiationGrpcWorker;
 use crate::setup::http_worker::NegotiationHttpWorker;
 use rainbow_common::config::provider_config::ApplicationProviderConfig;
 use tokio::signal;
@@ -34,7 +35,7 @@ impl NegotiationAgentApplication {
         // worker grpc
         tracing::info!("Spawning gRPC subsystem...");
         // TODO GRPC configuration in ApplicationProviderConfig with own port and host config
-        // let grpc_handle = NegotiationGrpcWorker::spawn(config, &cancel_token).await?;
+        let grpc_handle = NegotiationGrpcWorker::spawn(config, &cancel_token).await?;
         // shutdown loop
         let shutdown_signal = Self::shutdown_signal();
         tokio::select! {
@@ -45,9 +46,9 @@ impl NegotiationAgentApplication {
                 // TODO errors well done...
                 tracing::error!("HTTP subsystem failed or stopped unexpectedly!");
             }
-            // _ = async { grpc_handle.await } => {
-            //     tracing::error!("GRPC subsystem failed or stopped unexpectedly!");
-            // }
+            _ = async { grpc_handle.await } => {
+                tracing::error!("GRPC subsystem failed or stopped unexpectedly!");
+            }
         }
         // teardown
         tracing::info!("Initiating graceful shutdown sequence...");

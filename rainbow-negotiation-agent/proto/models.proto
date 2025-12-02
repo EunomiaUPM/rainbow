@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package negotiation_agent.v1;
+
+import "google/protobuf/struct.proto";
+
+// ---------------------------------------------------------
+// Shared Data Models
+// ---------------------------------------------------------
+
+message Offer {
+  string id = 1;
+  string negotiation_process_id = 2;
+  string negotiation_message_id = 3;
+  string offer_id = 4;
+  google.protobuf.Struct offer_content = 5;
+  string created_at = 6;
+}
+
+message Agreement {
+  string id = 1;
+  string negotiation_agent_process_id = 2;
+  string negotiation_agent_message_id = 3;
+  string consumer_participant_id = 4;
+  string provider_participant_id = 5;
+  google.protobuf.Struct agreement_content = 6;
+  string target = 7;
+  string state = 8;
+  string created_at = 9;
+  optional string updated_at = 10;
+}
+
+message NegotiationMessage {
+  string id = 1;
+  string negotiation_agent_process_id = 2;
+  string direction = 3;
+  string protocol = 4;
+  string message_type = 5;
+  string state_transition_from = 6;
+  string state_transition_to = 7;
+  google.protobuf.Struct payload = 8;
+  string created_at = 9;
+
+  // Enriched fields
+  Offer offer = 10;
+  Agreement agreement = 11;
+}
+
+message NegotiationProcess {
+  string id = 1; // URN
+  string state = 2;
+  optional string state_attribute = 3;
+  string associated_agent_peer = 4;
+  string protocol = 5;
+  optional string callback_address = 6;
+  string role = 7;
+
+  google.protobuf.Struct properties = 8;
+  optional google.protobuf.Struct error_details = 9;
+  string created_at = 10;
+  optional string updated_at = 11;
+
+  // Enriched fields
+  map<string, string> identifiers = 12;
+  repeated NegotiationMessage messages = 13;
+  repeated Offer offers = 14;
+  repeated Agreement agreements = 15;
+}
