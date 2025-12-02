@@ -1,0 +1,43 @@
+use crate::data::entities::negotiation_message;
+use crate::data::entities::negotiation_message::NewNegotiationMessageModel;
+use anyhow::Error;
+use thiserror::Error;
+use urn::Urn;
+
+#[async_trait::async_trait]
+pub trait NegotiationMessageRepoTrait: Send + Sync {
+    async fn get_all_negotiation_messages(
+        &self,
+        limit: Option<u64>,
+        page: Option<u64>,
+    ) -> anyhow::Result<Vec<negotiation_message::Model>, NegotiationMessageRepoErrors>;
+
+    async fn get_messages_by_process_id(
+        &self,
+        process_id: &Urn,
+    ) -> anyhow::Result<Vec<negotiation_message::Model>, NegotiationMessageRepoErrors>;
+
+    async fn get_negotiation_message_by_id(
+        &self,
+        id: &Urn,
+    ) -> anyhow::Result<Option<negotiation_message::Model>, NegotiationMessageRepoErrors>;
+
+    async fn create_negotiation_message(
+        &self,
+        new_model: &NewNegotiationMessageModel,
+    ) -> anyhow::Result<negotiation_message::Model, NegotiationMessageRepoErrors>;
+
+    async fn delete_negotiation_message(&self, id: &Urn) -> anyhow::Result<(), NegotiationMessageRepoErrors>;
+}
+
+#[derive(Debug, Error)]
+pub enum NegotiationMessageRepoErrors {
+    #[error("Negotiation Message not found")]
+    NegotiationMessageNotFound,
+    #[error("Error fetching negotiation message. {0}")]
+    ErrorFetchingNegotiationMessage(Error),
+    #[error("Error creating negotiation message. {0}")]
+    ErrorCreatingNegotiationMessage(Error),
+    #[error("Error deleting negotiation message. {0}")]
+    ErrorDeletingNegotiationMessage(Error),
+}

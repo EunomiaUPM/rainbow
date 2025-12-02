@@ -15,6 +15,7 @@ members = [
     "rainbow-authority",
     "rainbow-business-gateway",
     "rainbow-transfer-agent",
+    "rainbow-negotiation-agent",
 ]
 exclude = [
     "static",
