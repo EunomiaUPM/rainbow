@@ -86,11 +86,6 @@ impl NegotiationAgentProcessesService {
                 err
             })?;
 
-        let agreements = match agreement_opt {
-            Some(a) => vec![a],
-            None => vec![],
-        };
-
         let identifiers_models = self
             .negotiation_repo
             .get_negotiation_process_identifiers_repo()
@@ -110,7 +105,7 @@ impl NegotiationAgentProcessesService {
             })
             .collect();
 
-        Ok(NegotiationProcessDto { inner: process, identifiers: ids_map, messages, offers, agreements })
+        Ok(NegotiationProcessDto { inner: process, identifiers: ids_map, messages, offers, agreements: agreement_opt })
     }
 }
 
