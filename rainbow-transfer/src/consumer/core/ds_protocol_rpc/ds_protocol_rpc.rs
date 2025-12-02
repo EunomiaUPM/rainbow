@@ -29,7 +29,7 @@ use crate::consumer::core::ds_protocol_rpc::ds_protocol_rpc_types::{
 use crate::consumer::core::ds_protocol_rpc::DSRPCTransferConsumerTrait;
 use anyhow::{anyhow, bail};
 use axum::async_trait;
-use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
+use rainbow_common::config::consumer::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
 use rainbow_common::errors::helpers::{BadFormat, MissingAction};
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::mates::Mates;

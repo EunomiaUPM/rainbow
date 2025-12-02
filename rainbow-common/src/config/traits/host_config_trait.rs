@@ -1,0 +1,72 @@
+/*
+ *
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+use crate::config::types::HostConfig;
+use crate::errors::{CommonErrors, ErrorLog};
+use anyhow::bail;
+use tracing::error;
+
+pub trait HostConfigTrait {
+    
+    fn http(&self) -> &HostConfig;
+    fn graphql(&self) -> Option<&HostConfig> {
+        None
+    }
+    fn grpc(&self) -> Option<&HostConfig> {
+        None
+    }
+    fn get_host(&self) -> String {
+        match self.http().port.as_ref() {
+            Some(port) => {
+                format!("{}://{}:{}", self.http().protocol, self.http().url, port)
+            }
+            None => {
+                format!("{}://{}", self.http().protocol, self.http().url)
+            }
+        }
+    }
+    fn get_graphql_host(&self) -> anyhow::Result<String> {
+        match self.graphql() {
+            Some(host) => match host.port.as_ref() {
+                Some(port) => Ok(format!("{}://{}:{}", host.protocol, host.url, port)),
+                None => Ok(format!("{}://{}", host.protocol, host.url)),
+            },
+            None => {
+                let error = CommonErrors::module_new("grpc");
+                error!("{}", error.log());
+                bail!(error)
+            }
+        }
+    }
+    fn get_grpc_host(&self) -> anyhow::Result<String> {
+        match self.grpc() {
+            Some(host) => match host.port.as_ref() {
+                Some(port) => Ok(format!("{}://{}:{}", host.protocol, host.url, port)),
+                None => Ok(format!("{}://{}", host.protocol, host.url)),
+            },
+            None => {
+                let error = CommonErrors::module_new("grpc");
+                error!("{}", error.log());
+                bail!(error)
+            }
+        }
+    }
+    fn get_port(&self) -> Option<String> {
+        self.http().port.clone()
+    }
+}

@@ -33,7 +33,7 @@ use rainbow_common::adv_protocol::interplane::{
     DataPlaneControllerMessages, DataPlaneControllerVersion, DataPlaneProcessDirection, DataPlaneProcessState,
     DataPlaneSDPConfigTypes, DataPlaneSDPFieldTypes, DataPlaneSDPResponseField,
 };
-use rainbow_common::config::global_config::ApplicationGlobalConfig;
+use rainbow_common::config::global::global_config::ApplicationGlobalConfig;
 use rainbow_common::dcat_formats::FormatAction;
 use std::sync::Arc;
 use tracing::debug;

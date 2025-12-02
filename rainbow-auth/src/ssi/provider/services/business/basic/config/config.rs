@@ -17,7 +17,7 @@
  *
  */
 
-use rainbow_common::config::global_config::HostConfig;
+use rainbow_common::config::global::global_config::HostConfig;
 use crate::ssi::provider::config::{AuthProviderConfig, AuthProviderConfigTrait};
 use super::BusinessConfigTrait;
 

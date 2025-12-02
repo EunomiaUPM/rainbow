@@ -20,7 +20,7 @@
 use crate::consumer::core::mates_facade::MatesFacadeTrait;
 use anyhow::{anyhow, bail};
 use axum::async_trait;
-use rainbow_common::config::global_config::{format_host_config_to_url_string, ApplicationGlobalConfig};
+use rainbow_common::config::global::global_config::{format_host_config_to_url_string, ApplicationGlobalConfig};
 use rainbow_common::mates::Mates;
 use reqwest::Client;
 use std::time::Duration;

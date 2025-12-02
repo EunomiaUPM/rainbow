@@ -18,11 +18,11 @@
  */
 
 use anyhow::anyhow;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 use std::str::FromStr;
 
-#[derive(Serialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct DatabaseConfig {
     pub db_type: DbType,
     pub url: String,
@@ -32,7 +32,7 @@ pub struct DatabaseConfig {
     pub name: String,
 }
 
-#[derive(Serialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum DbType {
     Postgres,
     Mysql,

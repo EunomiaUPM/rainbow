@@ -33,7 +33,7 @@ use crate::ssi::provider::services::repo::postgres::AuthProviderRepoForSql;
 use crate::ssi::provider::services::verifier::basic_v1::config::VerifierConfig;
 use crate::ssi::provider::services::verifier::basic_v1::VerifierService;
 use axum::{serve, Router};
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
+use rainbow_common::config::provider::config::ApplicationProviderConfig;
 use sea_orm::Database;
 use std::sync::Arc;
 use tokio::net::TcpListener;

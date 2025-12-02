@@ -17,7 +17,7 @@
  *
  */
 
-use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_common::config::provider::config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_db::catalog::repo::sql::CatalogRepoForSql;
 use rainbow_db::catalog::repo::{CatalogRepo, NewCatalogModel};
 use sea_orm::Database;

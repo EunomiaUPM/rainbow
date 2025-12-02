@@ -26,7 +26,7 @@ use crate::http::rainbow_entities::policy_relations_router::PolicyTemplatesRoute
 use crate::http::rainbow_rpc::rainbow_rpc::RainbowRPCDatahubCatalogRouter;
 use axum::{serve, Router};
 use rainbow_catalog::provider::core::rainbow_entities::policies::RainbowCatalogPoliciesService;
-use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_common::config::provider::config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_db::catalog::repo::sql::CatalogRepoForSql;
 use rainbow_db::datahub::repo::sql::DatahubConnectorRepoForSql;
 use rainbow_db::events::repo::sql::EventsRepoForSql;

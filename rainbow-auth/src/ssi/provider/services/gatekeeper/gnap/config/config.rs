@@ -18,7 +18,7 @@
  */
 use crate::ssi::provider::config::{AuthProviderConfig, AuthProviderConfigTrait};
 use crate::ssi::provider::services::gatekeeper::gnap::config::GnapGateKeeperConfigTrait;
-use rainbow_common::config::global_config::HostConfig;
+use rainbow_common::config::global::global_config::HostConfig;
 
 pub struct GnapGateKeeperConfig {
     host: HostConfig,

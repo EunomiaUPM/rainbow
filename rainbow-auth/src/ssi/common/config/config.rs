@@ -20,7 +20,7 @@
 use crate::ssi::common::config::CommonConfigTrait;
 use crate::ssi::common::utils::read;
 use rainbow_common::config::database::DbType;
-use rainbow_common::config::global_config::{extract_env, option_extract_env, DatabaseConfig, HostConfig};
+use rainbow_common::config::global::global_config::{extract_env, option_extract_env, DatabaseConfig, HostConfig};
 use rainbow_common::ssi::{ClientConfig, WalletConfig};
 use serde::Serialize;
 use serde_json::{json, Value};

@@ -24,7 +24,7 @@ use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::{Json, Router};
-use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_common::config::provider::config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use reqwest::Client;
 use serde::Deserialize;
 use serde_json::{json, Value};

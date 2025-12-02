@@ -8,7 +8,7 @@ use crate::entities::transfer_messages::MockTransferAgentMessagesTrait;
 use crate::entities::transfer_process::{MockTransferAgentProcessesTrait, TransferAgentProcessesTrait};
 use crate::grpc::api::transfer_messages::transfer_agent_messages_server::TransferAgentMessages;
 use crate::http::transfer_messages::TransferAgentMessagesRouter;
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
+use rainbow_common::config::provider::config::ApplicationProviderConfig;
 use std::sync::Arc;
 
 // Modificación para devolver el mock junto con el router

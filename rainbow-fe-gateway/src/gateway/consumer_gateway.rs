@@ -25,7 +25,7 @@ use axum::http::{header, StatusCode, Uri};
 use axum::response::{IntoResponse, Response};
 use axum::routing::{any, get, post};
 use axum::{Json, Router};
-use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
+use rainbow_common::config::consumer::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
 use reqwest::Client;
 use rust_embed::Embed;
 use serde_json::Value;

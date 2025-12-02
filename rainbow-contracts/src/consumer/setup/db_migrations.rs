@@ -17,7 +17,7 @@
  *
  */
 
-use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
+use rainbow_common::config::consumer::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
 use rainbow_db::contracts_consumer::migrations::get_contracts_migrations;
 use rainbow_db::events::migrations::get_events_migrations;
 use sea_orm::Database;

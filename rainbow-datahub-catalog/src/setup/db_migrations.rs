@@ -17,7 +17,7 @@
  *
  */
 
-use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_common::config::provider::config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_db::catalog::migrations::get_datahub_catalog_migrations;
 use rainbow_db::datahub::migrations::get_datahub_migrations;
 

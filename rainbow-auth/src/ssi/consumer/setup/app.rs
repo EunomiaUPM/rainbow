@@ -30,7 +30,7 @@ use crate::ssi::consumer::services::onboarder::gnap::config::GnapOnboarderConfig
 use crate::ssi::consumer::services::onboarder::gnap::GnapOnboarderService;
 use crate::ssi::consumer::services::repo::postgres::AuthConsumerRepoForSql;
 use axum::{serve, Router};
-use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
+use rainbow_common::config::consumer::consumer_config::ApplicationConsumerConfig;
 use sea_orm::Database;
 use std::sync::Arc;
 use tokio::net::TcpListener;

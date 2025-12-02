@@ -17,7 +17,8 @@
  *
  */
 
-use crate::config::global_config::{format_host_config_to_url_string, ApplicationGlobalConfig};
+use crate::config::services::SsiAuthConfig;
+use crate::config::traits::HostConfigTrait;
 use crate::errors::helpers::BadFormat;
 use crate::errors::{CommonErrors, ErrorLog};
 use crate::mates::Mates;
@@ -29,12 +30,12 @@ use std::time::Duration;
 use tracing::error;
 
 pub struct MatesFacadeService {
-    config: ApplicationGlobalConfig,
+    config: SsiAuthConfig,
     client: Client,
 }
 
 impl MatesFacadeService {
-    pub fn new(config: ApplicationGlobalConfig) -> Self {
+    pub fn new(config: SsiAuthConfig) -> Self {
         let client =
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
         Self { config, client }
@@ -44,23 +45,16 @@ impl MatesFacadeService {
 #[async_trait]
 impl MatesFacadeTrait for MatesFacadeService {
     async fn get_mate_by_id(&self, mate_id: String) -> anyhow::Result<Mates> {
-        let ssi_auth_url =
-            format_host_config_to_url_string(&self.config.ssi_auth_host.clone().expect("Auth host not configured"));
+        let ssi_auth_url = self.config.get_host();
         let mates_url = format!("{}/api/v1/mates/{}", ssi_auth_url, mate_id);
         let response = self.client.get(mates_url).send().await.map_err(|_e| {
-            let e = CommonErrors::missing_resource_new(
-                &mate_id,
-                "Not able to connect with ssi-auth server",
-            );
+            let e = CommonErrors::missing_resource_new(&mate_id, "Not able to connect with ssi-auth server");
             error!("{}", e.log());
             return e;
         })?;
 
         if response.status().is_success() == false {
-            let e = CommonErrors::missing_resource_new(
-                &mate_id,
-                "Mate not resolvable",
-            );
+            let e = CommonErrors::missing_resource_new(&mate_id, "Mate not resolvable");
             error!("{}", e.log());
             bail!(e);
         }
@@ -79,22 +73,15 @@ impl MatesFacadeTrait for MatesFacadeService {
     }
 
     async fn get_mate_by_slug(&self, mate_slug: String) -> anyhow::Result<Mates> {
-        let ssi_auth_url =
-            format_host_config_to_url_string(&self.config.ssi_auth_host.clone().expect("Auth host not configured"));
+        let ssi_auth_url = self.config.get_host();
         let mates_url = format!("{}/api/v1/mates/slug/{}", ssi_auth_url, mate_slug);
         let response = self.client.get(mates_url).send().await.map_err(|_e| {
-            let e = CommonErrors::missing_resource_new(
-                &mate_slug,
-                "Not able to connect with ssi-auth server",
-            );
+            let e = CommonErrors::missing_resource_new(&mate_slug, "Not able to connect with ssi-auth server");
             error!("{}", e.log());
             return e;
         })?;
         if response.status().is_success() == false {
-            let e = CommonErrors::missing_resource_new(
-                &mate_slug,
-                "Mate not resolvable",
-            );
+            let e = CommonErrors::missing_resource_new(&mate_slug, "Mate not resolvable");
             error!("{}", e.log());
             bail!(e);
         }
@@ -113,14 +100,10 @@ impl MatesFacadeTrait for MatesFacadeService {
     }
 
     async fn get_me_mate(&self) -> anyhow::Result<Mates> {
-        let ssi_auth_url =
-            format_host_config_to_url_string(&self.config.ssi_auth_host.clone().expect("Auth host not configured"));
+        let ssi_auth_url = self.config.get_host();
         let mates_url = format!("{}/api/v1/mates/me", ssi_auth_url);
         let response = self.client.get(mates_url).send().await.map_err(|_e| {
-            let e = CommonErrors::missing_resource_new(
-                "Me",
-                "Not able to connect with ssi-auth server",
-            );
+            let e = CommonErrors::missing_resource_new("Me", "Not able to connect with ssi-auth server");
             error!("{}", e.log());
             return e;
         })?;

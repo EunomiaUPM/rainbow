@@ -19,6 +19,12 @@
 
 mod global_config_trait;
 mod host_config_trait;
+mod database_trait;
+mod extra_traits;
+mod common_traits;
 
 pub use global_config_trait::GlobalConfigTrait;
 pub use host_config_trait::HostConfigTrait;
+pub use database_trait::DatabaseConfigTrait;
+pub use extra_traits::*;
+pub use common_traits::CommonConfigTraits;

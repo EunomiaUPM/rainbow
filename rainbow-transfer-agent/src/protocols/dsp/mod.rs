@@ -21,7 +21,7 @@ use crate::protocols::dsp::validator::validators::validate_payload::ValidatePayl
 use crate::protocols::dsp::validator::validators::validation_helpers::ValidationHelperService;
 use crate::protocols::protocol::ProtocolPluginTrait;
 use axum::Router;
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
+use rainbow_common::config::provider::config::ApplicationProviderConfig;
 use rainbow_common::http_client::HttpClient;
 use std::sync::Arc;
 use validator::validators::protocol::validate_state_transition::ValidatedStateTransitionServiceForDsp;

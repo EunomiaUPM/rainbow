@@ -17,11 +17,18 @@
  *
  */
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct HostConfig {
     pub protocol: String,
     pub url: String,
-    pub port: String,
+    pub port: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct CommonHostsConfig {
+    pub http: HostConfig,
+    pub grpc: Option<HostConfig>,
+    pub graphql: Option<HostConfig>,
 }

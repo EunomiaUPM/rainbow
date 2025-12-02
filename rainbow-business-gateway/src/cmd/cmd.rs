@@ -24,7 +24,7 @@ use axum::{serve, Router};
 use clap::{Parser, Subcommand};
 use fs_extra::dir::{copy, CopyOptions};
 use rainbow_common::config::env_extraction::EnvExtraction;
-use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
+use rainbow_common::config::provider::config::ApplicationProviderConfigTrait;
 use std::process::Command;
 use std::sync::Arc;
 use tokio::net::TcpListener;

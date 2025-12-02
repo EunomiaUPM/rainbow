@@ -44,25 +44,32 @@ pub fn format_host_config_to_url_string(hc: &HostConfig) -> String {
 
 #[derive(Debug, Clone)]
 pub struct ApplicationGlobalConfig {
+    // TRANSFER
     pub transfer_process_host: Option<HostConfig>,
+    // BUSINESS
     pub business_system_host: Option<HostConfig>,
+    // CATALOG
     pub catalog_host: Option<HostConfig>,
     pub catalog_as_datahub: bool,
     pub catalog_bypass_host: Option<HostConfig>,
     pub datahub_host: Option<HostConfig>,
     pub datahub_token: String,
+    // CONTRACT
     pub contract_negotiation_host: Option<HostConfig>,
-    pub auth_host: Option<HostConfig>,
+    //
+    // pub auth_host: Option<HostConfig>,
     pub ssi_auth_host: Option<HostConfig>,
     pub ssi_wallet_config: Option<WalletConfig>,
     pub client_config: Option<ClientConfig>,
+    pub keys_path: String,
+    // GATEWAY
     pub gateway_host: Option<HostConfig>,
     pub is_gateway_in_production: bool,
+    // COMMON
     pub database_config: DatabaseConfig,
-    pub ssh_user: Option<String>,
-    pub ssh_private_key_path: Option<String>,
+    // pub ssh_user: Option<String>,
+    // pub ssh_private_key_path: Option<String>,
     pub role: ConfigRoles,
-    pub keys_path: String,
     pub is_local: bool,
     pub openapi_path: String,
     pub api_version: String,

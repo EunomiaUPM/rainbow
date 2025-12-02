@@ -28,7 +28,7 @@ use crate::provider::http::ds_protocol_rpc::ds_protocol_rpc::DSRPCContractNegoti
 use crate::provider::http::openapi::route_openapi;
 use crate::provider::http::rainbow_entities::rainbow_entities::RainbowEntitesContractNegotiationProviderRouter;
 use axum::{serve, Router};
-use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_common::config::provider::config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_common::facades::ssi_auth_facade::ssi_auth_facade::SSIAuthFacadeService;
 use rainbow_common::mates_facade::mates_facade::MatesFacadeService;
 use rainbow_db::contracts_provider::repo::sql::ContractNegotiationProviderRepoForSql;

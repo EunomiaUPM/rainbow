@@ -17,8 +17,8 @@
  *
  */
 
-use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
-use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
+use rainbow_common::config::consumer::consumer_config::ApplicationConsumerConfig;
+use rainbow_common::config::consumer::consumer_config::ApplicationConsumerConfigTrait;
 use rainbow_db::auth::consumer::migrations::get_auth_consumer_migrations;
 use rainbow_db::catalog::migrations::get_catalog_migrations;
 use rainbow_db::contracts_consumer::migrations::get_contracts_migrations;

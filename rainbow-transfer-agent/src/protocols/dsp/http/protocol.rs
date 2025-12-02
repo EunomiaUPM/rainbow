@@ -15,7 +15,7 @@ use crate::protocols::dsp::protocol_types::{
     TransferCompletionMessageDto, TransferErrorDto, TransferProcessMessageType, TransferProcessMessageWrapper,
     TransferRequestMessageDto, TransferStartMessageDto, TransferSuspensionMessageDto, TransferTerminationMessageDto,
 };
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
+use rainbow_common::config::provider::config::ApplicationProviderConfig;
 use rainbow_common::errors::CommonErrors;
 use rainbow_common::protocol::context_field::ContextField;
 

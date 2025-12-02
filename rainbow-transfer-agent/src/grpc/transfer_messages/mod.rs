@@ -5,7 +5,7 @@ use crate::grpc::api::transfer_messages::{
     TransferMessageResponse,
 };
 use crate::http::transfer_messages::PaginationParams;
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
+use rainbow_common::config::provider::config::ApplicationProviderConfig;
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
 mod mappers;

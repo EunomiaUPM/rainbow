@@ -8,7 +8,7 @@ use crate::protocols::protocol::ProtocolPluginTrait;
 use axum::extract::Request;
 use axum::response::IntoResponse;
 use axum::{serve, Router};
-use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_common::config::provider::config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_common::errors::CommonErrors;
 use rainbow_common::well_known::WellKnownRoot;
 use sea_orm::Database;

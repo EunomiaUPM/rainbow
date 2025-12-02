@@ -23,37 +23,28 @@ use std::fmt::Display;
 use std::str::FromStr;
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Copy)]
-pub enum ConfigRoles {
-    Catalog,
-    Contracts,
+pub enum RoleConfig {
     Consumer,
     Provider,
-    Authority,
 }
 
-impl FromStr for ConfigRoles {
+impl FromStr for RoleConfig {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "Catalog" => Ok(ConfigRoles::Catalog),
-            "Contracts" => Ok(ConfigRoles::Contracts),
-            "Consumer" => Ok(ConfigRoles::Consumer),
-            "Provider" => Ok(ConfigRoles::Provider),
-            "Authority" => Ok(ConfigRoles::Authority),
+            "Consumer" => Ok(RoleConfig::Consumer),
+            "Provider" => Ok(RoleConfig::Provider),
             _ => bail!("Invalid config role: {}", s),
         }
     }
 }
 
-impl Display for ConfigRoles {
+impl Display for RoleConfig {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let str = match self {
-            ConfigRoles::Catalog => "Catalog".to_string(),
-            ConfigRoles::Contracts => "Contracts".to_string(),
-            ConfigRoles::Consumer => "Consumer".to_string(),
-            ConfigRoles::Provider => "Provider".to_string(),
-            ConfigRoles::Authority => "Authority".to_string(),
+            RoleConfig::Consumer => "Consumer".to_string(),
+            RoleConfig::Provider => "Provider".to_string(),
         };
         write!(f, "{}", str)
     }

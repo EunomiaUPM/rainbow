@@ -18,8 +18,8 @@
  */
 use crate::ssi::common::config::{CommonAuthConfig, CommonConfigTrait};
 use crate::ssi::provider::config::AuthProviderConfigTrait;
-use rainbow_common::config::global_config::extract_env;
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
+use rainbow_common::config::global::global_config::extract_env;
+use rainbow_common::config::provider::config::ApplicationProviderConfig;
 use serde::Serialize;
 use serde_json::Value;
 

@@ -24,7 +24,7 @@ use crate::gateway::http::business_router_types::{
 use anyhow::{anyhow, bail};
 use axum::async_trait;
 use rainbow_common::auth::business::RainbowBusinessLoginRequest;
-use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_common::config::provider::config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_common::mates::Mates;
 use rainbow_common::protocol::contract::contract_ack::ContractAckMessage;
 use rainbow_common::protocol::contract::contract_odrl::{OdrlOffer, OdrlPolicyInfo};

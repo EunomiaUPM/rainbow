@@ -22,9 +22,9 @@ use crate::consumer::setup::db_migrations::CatalogBypassConsumerMigration;
 use crate::provider::setup::application::CatalogApplication;
 use crate::provider::setup::db_migrations::CatalogMigration;
 use clap::{Parser, Subcommand};
-use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
+use rainbow_common::config::consumer::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
 use rainbow_common::config::env_extraction::EnvExtraction;
-use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_common::config::provider::config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use std::cmp::PartialEq;
 use tracing::{debug, info};
 

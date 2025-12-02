@@ -20,8 +20,8 @@
 use crate::consumer::setup::application::CoreConsumerApplication;
 use crate::consumer::setup::db_migrations::CoreConsumerMigration;
 use crate::provider::setup::application::CoreProviderApplication;
-use crate::provider::setup::db_migrations::CoreProviderMigration;
-use crate::provider::setup::db_seeding::CoreProviderSeeding;
+use crate::provider::db_migrations::CoreProviderMigration;
+use crate::provider::db_seeding::CoreProviderSeeding;
 use clap::{Parser, Subcommand};
 use rainbow_common::config::env_extraction::EnvExtraction;
 use std::cmp::PartialEq;

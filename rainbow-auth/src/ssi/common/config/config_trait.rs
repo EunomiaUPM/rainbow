@@ -17,7 +17,7 @@
  *
  */
 
-use rainbow_common::config::global_config::DatabaseConfig;
+use rainbow_common::config::global::global_config::DatabaseConfig;
 use rainbow_common::ssi::WalletConfig;
 use serde_json::Value;
 

@@ -17,6 +17,16 @@
  *
  */
 
+use crate::config::types::roles::RoleConfig;
+
 pub trait IsLocalTrait {
     fn is_local(&self) -> bool;
+}
+
+pub trait KeysPathTrait {
+    fn keys_path(&self) -> &str;
+}
+
+pub trait RoleTrait {
+    fn role(&self) -> &RoleConfig;
 }

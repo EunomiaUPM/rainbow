@@ -21,7 +21,7 @@ use axum::Router;
 use rainbow_auth::ssi::consumer::setup::app::AuthConsumerApplication;
 use rainbow_catalog::consumer::setup::application::create_catalog_bypass_consumer_router;
 // use rainbow_catalog::consumer::setup::application::create_catalog_bypass_consumer_router;
-use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
+use rainbow_common::config::consumer::consumer_config::ApplicationConsumerConfig;
 use rainbow_contracts::consumer::setup::application::create_contract_negotiation_consumer_router;
 use rainbow_transfer::consumer::setup::application::create_transfer_consumer_router;
 // use rainbow_transfer_agent::setup::create_root_http_router;

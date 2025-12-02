@@ -10,7 +10,7 @@ use crate::protocols::dsp::protocol_types::{
     TransferRequestMessageDto, TransferStartMessageDto, TransferSuspensionMessageDto, TransferTerminationMessageDto,
 };
 use crate::protocols::dsp::validator::traits::validation_rpc_steps::ValidationRpcSteps;
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
+use rainbow_common::config::provider::config::ApplicationProviderConfig;
 use rainbow_common::http_client::HttpClient;
 use rainbow_common::protocol::context_field::ContextField;
 use std::str::FromStr;

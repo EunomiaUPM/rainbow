@@ -6,7 +6,7 @@ use crate::protocols::dsp::protocol_types::{
 };
 
 use crate::protocols::dsp::validator::traits::validation_dsp_steps::ValidationDspSteps;
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
+use rainbow_common::config::provider::config::ApplicationProviderConfig;
 use std::sync::Arc;
 
 pub struct ProtocolOrchestratorService {

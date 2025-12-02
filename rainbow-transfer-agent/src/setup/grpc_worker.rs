@@ -6,7 +6,7 @@ use crate::grpc::api::transfer_processes::transfer_agent_processes_server::Trans
 use crate::grpc::api::FILE_DESCRIPTOR_SET;
 use crate::grpc::transfer_messages::TransferAgentMessagesGrpc;
 use crate::grpc::transfer_process::TransferAgentProcessesGrpc;
-use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_common::config::provider::config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use sea_orm::Database;
 use std::sync::Arc;
 use tokio::net::TcpListener;

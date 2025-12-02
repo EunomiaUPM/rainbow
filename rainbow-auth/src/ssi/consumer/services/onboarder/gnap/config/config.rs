@@ -19,7 +19,7 @@
 use crate::ssi::common::utils::read;
 use crate::ssi::consumer::config::{AuthConsumerConfig, AuthConsumerConfigTrait};
 use crate::ssi::consumer::services::onboarder::gnap::config::GnapOnboarderConfigTrait;
-use rainbow_common::config::global_config::HostConfig;
+use rainbow_common::config::global::global_config::HostConfig;
 use rainbow_common::ssi::ClientConfig;
 use serde_json::{json, Value};
 

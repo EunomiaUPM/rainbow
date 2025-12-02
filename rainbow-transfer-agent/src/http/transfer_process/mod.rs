@@ -8,7 +8,7 @@ use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use rainbow_common::batch_requests::BatchRequests;
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
+use rainbow_common::config::provider::config::ApplicationProviderConfig;
 use serde::Deserialize;
 use std::sync::Arc;
 

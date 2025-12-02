@@ -143,6 +143,12 @@ pub enum CommonErrors {
         info: ErrorInfo,
         cause: String,
     },
+    #[error("Module not active Error")]
+    ModuleNotActiveError {
+        #[serde(flatten)]
+        info: ErrorInfo,
+        cause: String,
+    },
 }
 
 impl IntoResponse for &CommonErrors {
@@ -161,6 +167,7 @@ impl IntoResponse for &CommonErrors {
             | CommonErrors::ReadError { info, .. }
             | CommonErrors::WriteError { info, .. }
             | CommonErrors::ParseError { info, .. }
+            | CommonErrors::ModuleNotActiveError { info, .. }
             | CommonErrors::FeatureNotImplError { info, .. } => info,
         };
 
@@ -211,6 +218,7 @@ impl ErrorLog for CommonErrors {
             }
             CommonErrors::FormatError { info, cause }
             | CommonErrors::UnauthorizedError { info, cause }
+            | CommonErrors::ModuleNotActiveError { info, cause }
             | CommonErrors::ForbiddenError { info, cause }
             | CommonErrors::DatabaseError { info, cause }
             | CommonErrors::ParseError { info, cause } => format_info(info, cause),
@@ -420,6 +428,18 @@ impl CommonErrors {
                 cause: cause.to_string(),
             },
             cause: cause.to_string(),
+        }
+    }
+    pub fn module_new(module: &str) -> Self {
+        Self::ModuleNotActiveError {
+            info: ErrorInfo {
+                message: "You are trying to use a module which is not active".to_string(),
+                error_code: 5500,
+                status_code: StatusCode::INTERNAL_SERVER_ERROR,
+                details: None,
+                cause: module.to_string(),
+            },
+            cause: format!("module {} is not active", module),
         }
     }
 }

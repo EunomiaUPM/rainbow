@@ -11,7 +11,7 @@ use std::sync::Arc;
 use crate::entities::transfer_messages::{NewTransferMessageDto, TransferAgentMessagesTrait};
 use crate::errors::error_adapter::CustomToResponse;
 use crate::http::common::{extract_payload, parse_urn};
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
+use rainbow_common::config::provider::config::ApplicationProviderConfig;
 
 #[derive(Clone)]
 pub struct TransferAgentMessagesRouter {

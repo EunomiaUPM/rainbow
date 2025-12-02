@@ -31,7 +31,7 @@ use axum::routing::{delete, get, get_service, post};
 use axum::{middleware, Extension, Json, Router};
 use rainbow_common::auth::business::RainbowBusinessLoginRequest;
 use rainbow_common::auth::header::{extract_request_info, RequestInfo};
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
+use rainbow_common::config::provider::config::ApplicationProviderConfig;
 use rainbow_common::protocol::contract::contract_odrl::OdrlPolicyInfo;
 use rainbow_common::utils::get_urn_from_string;
 use rust_embed::Embed;

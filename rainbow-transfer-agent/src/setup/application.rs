@@ -1,6 +1,6 @@
 use crate::setup::grpc_worker::TransferGrpcWorker;
 use crate::setup::http_worker::TransferHttpWorker;
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
+use rainbow_common::config::provider::config::ApplicationProviderConfig;
 use tokio::signal;
 use tokio_util::sync::CancellationToken;
 

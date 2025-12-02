@@ -17,8 +17,8 @@
  *
  */
 
-pub mod consumer_config;
-pub mod env_extraction;
-pub mod global_config;
-pub mod provider_config;
 pub mod types;
+pub mod services;
+pub mod traits;
+mod config;
+pub use config::ApplicationConfig;

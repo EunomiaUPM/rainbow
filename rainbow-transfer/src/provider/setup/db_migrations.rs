@@ -17,7 +17,7 @@
  *
  */
 
-use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_common::config::provider::config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_db::events::migrations::get_events_migrations;
 use rainbow_db::transfer_provider::migrations::get_transfer_provider_migrations;
 use sea_orm::Database;

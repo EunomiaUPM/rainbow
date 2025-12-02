@@ -17,7 +17,7 @@
  *
  */
 use serde_json::{json, Value};
-use rainbow_common::config::global_config::HostConfig;
+use rainbow_common::config::global::global_config::HostConfig;
 use crate::ssi::common::services::wallet::waltid::config::config_trait::WaltIdConfigTrait;
 use rainbow_common::ssi::WalletConfig;
 use crate::ssi::consumer::config::AuthConsumerConfig;

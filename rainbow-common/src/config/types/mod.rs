@@ -17,8 +17,14 @@
  *
  */
 
-mod host;
+mod api;
+mod client;
 pub mod database;
+mod host;
 pub mod roles;
+mod wallet;
 
-pub use host::HostConfig;
+pub use api::ApiConfig;
+pub use client::*;
+pub use host::*;
+pub use wallet::WalletConfig;

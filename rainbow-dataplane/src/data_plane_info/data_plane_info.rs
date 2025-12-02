@@ -21,7 +21,7 @@ use crate::coordinator::dataplane_process::dataplane_process::DataPlaneProcess;
 use crate::coordinator::dataplane_process::{DataPlaneProcessAddress, DataPlaneProcessTrait};
 use crate::data_plane_info::DataPlaneInfoTrait;
 use axum::async_trait;
-use rainbow_common::config::global_config::ApplicationGlobalConfig;
+use rainbow_common::config::global::global_config::ApplicationGlobalConfig;
 use rainbow_common::config::ConfigRoles;
 use std::sync::Arc;
 use urn::Urn;

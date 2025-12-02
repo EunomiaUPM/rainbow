@@ -34,7 +34,7 @@ use crate::provider::http::rainbow_entities::policies::RainbowCatalogPoliciesRou
 use crate::provider::http::rainbow_rpc::rainbow_rpc::RainbowRPCCatalogRouter;
 use axum::routing::get;
 use axum::{serve, Router};
-use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_common::config::provider::config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_db::catalog::repo::sql::CatalogRepoForSql;
 use rainbow_db::catalog::repo::CatalogRepoFactory;
 use rainbow_db::events::repo::sql::EventsRepoForSql;

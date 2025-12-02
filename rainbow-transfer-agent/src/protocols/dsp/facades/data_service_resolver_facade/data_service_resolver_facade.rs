@@ -19,7 +19,7 @@
 
 use crate::protocols::dsp::facades::data_service_resolver_facade::DataServiceFacadeTrait;
 use anyhow::bail;
-use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_common::config::provider::config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_common::dcat_formats::DctFormats;
 use rainbow_common::errors::helpers::BadFormat;
 use rainbow_common::errors::{CommonErrors, ErrorLog};

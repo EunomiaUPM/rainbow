@@ -18,10 +18,10 @@
  */
 use super::AuthConsumerConfigTrait;
 use crate::ssi::common::config::{CommonAuthConfig, CommonConfigTrait};
-use rainbow_common::config::global_config::extract_env;
+use rainbow_common::config::global::global_config::extract_env;
 use serde::Serialize;
 use serde_json::Value;
-use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
+use rainbow_common::config::consumer::consumer_config::ApplicationConsumerConfig;
 
 #[derive(Clone, Serialize, Debug)]
 pub struct AuthConsumerConfig {

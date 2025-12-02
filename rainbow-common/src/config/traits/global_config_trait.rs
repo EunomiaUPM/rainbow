@@ -16,7 +16,12 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use crate::config::types::roles::RoleConfig;
 
 pub trait GlobalConfigTrait {
-    fn load(env_file: Option<String>) -> Self;
+    fn load(role: RoleConfig, env_file: Option<String>) -> Self;
+    fn is_catalog_datahub(&self) -> bool;
+    fn get_mono_host(&self) -> String;
+    fn get_mono_port(&self) -> String;
+    fn is_local(&self) -> bool;
 }

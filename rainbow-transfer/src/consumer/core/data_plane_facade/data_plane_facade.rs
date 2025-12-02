@@ -27,7 +27,7 @@ use rainbow_common::adv_protocol::interplane::{
     DataPlaneControllerMessages, DataPlaneControllerVersion, DataPlaneSDPConfigField, DataPlaneSDPConfigTypes,
     DataPlaneSDPFieldTypes, DataPlaneSDPRequestField,
 };
-use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
+use rainbow_common::config::consumer::consumer_config::ApplicationConsumerConfig;
 use rainbow_common::dcat_formats::{DctFormats, FormatAction};
 use rainbow_common::protocol::transfer::transfer_data_address::{DataAddress, EndpointProperty};
 use rainbow_dataplane::coordinator::controller::DataPlaneControllerTrait;
