@@ -27,7 +27,7 @@ use serde::{Deserialize, Serialize};
 use urn::Urn;
 
 #[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Serialize, Deserialize)]
-#[sea_orm(table_name = "negotiation_agent_process")]
+#[sea_orm(table_name = "negotiation_agent_messages")]
 #[serde(rename_all = "camelCase")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
