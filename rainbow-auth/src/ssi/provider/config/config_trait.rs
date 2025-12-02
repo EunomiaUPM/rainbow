@@ -31,4 +31,5 @@ pub trait AuthProviderConfigTrait: Send + Sync + 'static {
     fn get_weird_port(&self) -> String;
     fn get_openapi_json(&self) -> anyhow::Result<String>;
     fn get_api_path(&self) -> String;
+    fn gaia(&self) -> bool;
 }

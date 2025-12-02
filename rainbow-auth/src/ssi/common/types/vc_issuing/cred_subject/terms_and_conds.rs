@@ -16,12 +16,27 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-mod wallet_trait;
-mod vc_requester;
-mod mate_trait;
-mod gaia_self_issuer_trait;
 
-pub use wallet_trait::CoreWalletTrait;
-pub use vc_requester::CoreVcRequesterTrait;
-pub use mate_trait::CoreMateTrait;
-pub use gaia_self_issuer_trait::CoreGaiaSelfIssuerTrait;
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TermsAndConditionsCredSub {
+    #[serde(rename = "id")]
+    pub id: Option<String>,
+    pub r#type: String,
+    #[serde(rename = "gx:url")]
+    pub url: String,
+    #[serde(rename = "gx:hash")]
+    pub hash: String,
+}
+
+impl TermsAndConditionsCredSub {
+    pub fn new4gaia(kid: &str) -> TermsAndConditionsCredSub {
+        Self {
+            id: Some(kid.to_string()),
+            r#type: "gx:TermsAndConditions".to_string(),
+            url: "test_url".to_string(),
+            hash: "test_hash".to_string(),
+        }
+    }
+}

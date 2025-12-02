@@ -18,6 +18,7 @@
  */
 
 use crate::ssi::common::config::CommonConfigTrait;
+use crate::ssi::common::types::enums::VcDataModelVersion;
 use crate::ssi::common::utils::read;
 use rainbow_common::config::database::DbType;
 use rainbow_common::config::global_config::{extract_env, option_extract_env, DatabaseConfig, HostConfig};
@@ -36,6 +37,7 @@ pub struct CommonAuthConfig {
     pub is_local: bool,
     pub openapi_path: String,
     pub api_version: String,
+    pub self_issuer: VcDataModelVersion,
 }
 
 impl CommonAuthConfig {
@@ -66,6 +68,7 @@ impl CommonAuthConfig {
             is_local: true,
             openapi_path: "./../static/specs/openapi/auth/auth_consumer.json".to_string(),
             api_version: "v1".to_string(),
+            self_issuer: VcDataModelVersion::V1,
         }
     }
 
@@ -96,6 +99,7 @@ impl CommonAuthConfig {
             is_local: true,
             openapi_path: "./../static/specs/openapi/auth/auth_provider.json".to_string(),
             api_version: "v1".to_string(),
+            self_issuer: VcDataModelVersion::V1,
         }
     }
 }
@@ -236,6 +240,7 @@ impl CommonAuthConfig {
             is_local: extract_env("IS_LOCAL", default.is_local.to_string()).parse().unwrap(),
             openapi_path: extract_env("OPENAPI_PATH", default.openapi_path),
             api_version: extract_env("API_VERSION", default.api_version),
+            self_issuer: VcDataModelVersion::V1,
         };
         config
     }

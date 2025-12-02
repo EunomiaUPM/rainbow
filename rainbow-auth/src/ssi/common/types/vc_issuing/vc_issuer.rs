@@ -16,12 +16,12 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-mod wallet_trait;
-mod vc_requester;
-mod mate_trait;
-mod gaia_self_issuer_trait;
 
-pub use wallet_trait::CoreWalletTrait;
-pub use vc_requester::CoreVcRequesterTrait;
-pub use mate_trait::CoreMateTrait;
-pub use gaia_self_issuer_trait::CoreGaiaSelfIssuerTrait;
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct VCIssuer {
+    pub id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+}

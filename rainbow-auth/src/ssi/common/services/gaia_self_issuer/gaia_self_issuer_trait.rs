@@ -16,12 +16,15 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-mod wallet_trait;
-mod vc_requester;
-mod mate_trait;
-mod gaia_self_issuer_trait;
 
-pub use wallet_trait::CoreWalletTrait;
-pub use vc_requester::CoreVcRequesterTrait;
-pub use mate_trait::CoreMateTrait;
-pub use gaia_self_issuer_trait::CoreGaiaSelfIssuerTrait;
+use crate::ssi::common::types::vc_issuing::{AuthServerMetadata, IssuerMetadata, IssuingToken, VCCredOffer};
+use serde_json::Value;
+
+pub trait GaiaSelfIssuerTrait: Send + Sync + 'static {
+    fn get_cred_offer_data(&self) -> VCCredOffer;
+    fn get_issuer_data(&self) -> IssuerMetadata;
+    fn get_oauth_server_data(&self) -> AuthServerMetadata;
+    fn get_token(&self) -> IssuingToken;
+    fn generate_issuing_uri(&self, id: &str) -> String;
+    fn issue_cred(&self, did: &str) -> anyhow::Result<Value>;
+}

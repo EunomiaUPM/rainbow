@@ -17,6 +17,7 @@
  *
  */
 use crate::ssi::common::config::{CommonAuthConfig, CommonConfigTrait};
+use crate::ssi::common::types::enums::VcDataModelVersion;
 use crate::ssi::provider::config::AuthProviderConfigTrait;
 use rainbow_common::config::global_config::extract_env;
 use rainbow_common::config::provider_config::ApplicationProviderConfig;
@@ -49,6 +50,7 @@ impl From<ApplicationProviderConfig> for AuthProviderConfig {
                 is_local: config.is_local,
                 openapi_path: config.openapi_path,
                 api_version: config.api_version,
+                self_issuer: VcDataModelVersion::V1,
             },
             field_extra: false,
         }
@@ -107,5 +109,9 @@ impl AuthProviderConfigTrait for AuthProviderConfig {
     }
     fn get_api_path(&self) -> String {
         self.common_config.get_api_path()
+    }
+    fn gaia(&self) -> bool {
+        // TODO
+        true
     }
 }

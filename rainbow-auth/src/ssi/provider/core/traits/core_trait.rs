@@ -16,7 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::ssi::common::core::{CoreMateTrait, CoreVcRequesterTrait, CoreWalletTrait};
+use crate::ssi::common::core::{CoreGaiaSelfIssuerTrait, CoreMateTrait, CoreVcRequesterTrait, CoreWalletTrait};
 use crate::ssi::provider::config::AuthProviderConfigTrait;
 use crate::ssi::provider::core::traits::{CoreBusinessTrait, CoreGateKeeperTrait, CoreVerifierTrait};
 use std::sync::Arc;
@@ -28,9 +28,11 @@ pub trait CoreProviderTrait:
     + CoreWalletTrait
     + CoreVcRequesterTrait
     + CoreMateTrait
+    + CoreGaiaSelfIssuerTrait
     + Send
     + Sync
     + 'static
 {
     fn config(&self) -> Arc<dyn AuthProviderConfigTrait>;
+    fn gaia_active(&self) -> bool;
 }

@@ -16,7 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::ssi::common::http::{MateRouter, VcRequesterRouter, WalletRouter};
+use crate::ssi::common::http::{GaiaSelfIssuerRouter, MateRouter, VcRequesterRouter, WalletRouter};
 use crate::ssi::provider::core::traits::CoreProviderTrait;
 use crate::ssi::provider::core::AuthProvider;
 use crate::ssi::provider::http::business_router::BusinessRouter;
@@ -53,7 +53,7 @@ impl AuthProviderRouter {
         let openapi_router = OpenapiRouter::new(self.openapi.clone()).router();
         let business_router = BusinessRouter::new(self.provider.clone()).router();
 
-        Router::new()
+        let router = Router::new()
             .route(
                 &format!("{}/status", self.provider.config().get_api_path()),
                 get(server_status),
@@ -85,16 +85,27 @@ impl AuthProviderRouter {
             .nest(
                 &format!("{}/docs", self.provider.config().get_api_path()),
                 openapi_router,
-            )
-            .fallback(Self::fallback)
-            .layer(
-                TraceLayer::new_for_http()
-                    .make_span_with(|_req: &Request<_>| tracing::info_span!("request", id = %Uuid::new_v4()))
-                    .on_request(|req: &Request<_>, _span: &tracing::Span| {
-                        info!("{} {}", req.method(), req.uri().path());
-                    })
-                    .on_response(DefaultOnResponse::new().level(Level::TRACE)),
-            )
+            );
+
+        let router = match self.provider.gaia_active() {
+            true => {
+                let gaia_router = GaiaSelfIssuerRouter::new(self.provider.clone()).router();
+                router.nest(
+                    &format!("{}/gaia", self.provider.config().get_api_path()),
+                    gaia_router,
+                )
+            }
+            false => router,
+        };
+
+        router.fallback(Self::fallback).layer(
+            TraceLayer::new_for_http()
+                .make_span_with(|_req: &Request<_>| tracing::info_span!("request", id = %Uuid::new_v4()))
+                .on_request(|req: &Request<_>, _span: &tracing::Span| {
+                    info!("{} {}", req.method(), req.uri().path());
+                })
+                .on_response(DefaultOnResponse::new().level(Level::TRACE)),
+        )
     }
 
     async fn fallback() -> impl IntoResponse {

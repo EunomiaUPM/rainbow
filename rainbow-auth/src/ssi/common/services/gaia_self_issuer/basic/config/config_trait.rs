@@ -16,12 +16,16 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-mod wallet_trait;
-mod vc_requester;
-mod mate_trait;
-mod gaia_self_issuer_trait;
 
-pub use wallet_trait::CoreWalletTrait;
-pub use vc_requester::CoreVcRequesterTrait;
-pub use mate_trait::CoreMateTrait;
-pub use gaia_self_issuer_trait::CoreGaiaSelfIssuerTrait;
+use crate::ssi::common::types::enums::VcDataModelVersion;
+
+pub trait GaiaGaiaSelfIssuerConfigTrait {
+    fn get_host(&self) -> String;
+    fn get_host_without_protocol(&self) -> String;
+    fn is_local(&self) -> bool;
+    fn get_cert(&self) -> anyhow::Result<String>;
+    fn get_priv_key(&self) -> anyhow::Result<String>;
+    fn get_pub_key(&self) -> anyhow::Result<String>;
+    fn get_api_path(&self) -> String;
+    fn get_data_model_version(&self) -> VcDataModelVersion;
+}

@@ -16,9 +16,10 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::ssi::common::core::{CoreMateTrait, CoreVcRequesterTrait, CoreWalletTrait};
+use crate::ssi::common::core::{CoreGaiaSelfIssuerTrait, CoreMateTrait, CoreVcRequesterTrait, CoreWalletTrait};
 use crate::ssi::common::services::callback::CallbackTrait;
 use crate::ssi::common::services::client::ClientServiceTrait;
+use crate::ssi::common::services::gaia_self_issuer::GaiaSelfIssuerTrait;
 use crate::ssi::common::services::repo::subtraits::{
     MatesTrait, ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait,
 };
@@ -45,6 +46,8 @@ pub struct AuthProvider {
     #[allow(dead_code)] // as an orchestrator, it should have access even though it's not used
     client: Arc<dyn ClientServiceTrait>,
     config: Arc<dyn AuthProviderConfigTrait>,
+    // EXTRA MODULES
+    self_issuer: Option<Arc<dyn GaiaSelfIssuerTrait>>,
 }
 
 impl AuthProvider {
@@ -58,14 +61,32 @@ impl AuthProvider {
         repo: Arc<dyn AuthProviderRepoTrait>,
         client: Arc<dyn ClientServiceTrait>,
         config: Arc<dyn AuthProviderConfigTrait>,
+        self_issuer: Option<Arc<dyn GaiaSelfIssuerTrait>>,
     ) -> AuthProvider {
-        AuthProvider { wallet, vc_requester, gatekeeper, verifier, callback, business, repo, client, config }
+        AuthProvider {
+            wallet,
+            vc_requester,
+            gatekeeper,
+            verifier,
+            callback,
+            business,
+            repo,
+            client,
+            config,
+            self_issuer,
+        }
     }
 }
 
 impl CoreProviderTrait for AuthProvider {
     fn config(&self) -> Arc<dyn AuthProviderConfigTrait> {
         self.config.clone()
+    }
+    fn gaia_active(&self) -> bool {
+        match self.self_issuer {
+            Some(_) => true,
+            None => false,
+        }
     }
 }
 
@@ -150,5 +171,15 @@ impl CoreBusinessTrait for AuthProvider {
 
     fn verifier(&self) -> Arc<dyn VerifierTrait> {
         self.verifier.clone()
+    }
+}
+
+impl CoreGaiaSelfIssuerTrait for AuthProvider {
+    fn self_issuer(&self) -> Arc<dyn GaiaSelfIssuerTrait> {
+        self.self_issuer.clone().unwrap().clone()
+    }
+
+    fn wallet(&self) -> Arc<dyn WalletServiceTrait> {
+        self.wallet.clone()
     }
 }

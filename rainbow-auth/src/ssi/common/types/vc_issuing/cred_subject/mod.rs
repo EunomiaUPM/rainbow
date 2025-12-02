@@ -16,12 +16,9 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-mod wallet_trait;
-mod vc_requester;
-mod mate_trait;
-mod gaia_self_issuer_trait;
 
-pub use wallet_trait::CoreWalletTrait;
-pub use vc_requester::CoreVcRequesterTrait;
-pub use mate_trait::CoreMateTrait;
-pub use gaia_self_issuer_trait::CoreGaiaSelfIssuerTrait;
+mod legal_person;
+mod terms_and_conds;
+
+pub use legal_person::*;
+pub use terms_and_conds::*;

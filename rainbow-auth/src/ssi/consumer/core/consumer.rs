@@ -16,9 +16,10 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::ssi::common::core::{CoreMateTrait, CoreVcRequesterTrait, CoreWalletTrait};
+use crate::ssi::common::core::{CoreGaiaSelfIssuerTrait, CoreMateTrait, CoreVcRequesterTrait, CoreWalletTrait};
 use crate::ssi::common::services::callback::CallbackTrait;
 use crate::ssi::common::services::client::ClientServiceTrait;
+use crate::ssi::common::services::gaia_self_issuer::GaiaSelfIssuerTrait;
 use crate::ssi::common::services::repo::subtraits::{
     MatesTrait, ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait,
 };
@@ -39,6 +40,8 @@ pub struct AuthConsumer {
     #[allow(dead_code)] // as an orchestrator, it should have access even though it's not used
     client: Arc<dyn ClientServiceTrait>,
     config: Arc<dyn AuthConsumerConfigTrait>,
+    // EXTRA MODULES
+    self_issuer: Option<Arc<dyn GaiaSelfIssuerTrait>>,
 }
 
 impl AuthConsumer {
@@ -50,14 +53,21 @@ impl AuthConsumer {
         repo: Arc<dyn AuthConsumerRepoTrait>,
         client: Arc<dyn ClientServiceTrait>,
         config: Arc<dyn AuthConsumerConfigTrait>,
+        self_issuer: Option<Arc<dyn GaiaSelfIssuerTrait>>,
     ) -> AuthConsumer {
-        AuthConsumer { wallet, vc_requester, onboarder, callback, repo, client, config }
+        AuthConsumer { wallet, vc_requester, onboarder, callback, repo, client, config, self_issuer }
     }
 }
 
 impl CoreConsumerTrait for AuthConsumer {
     fn config(&self) -> Arc<dyn AuthConsumerConfigTrait> {
         self.config.clone()
+    }
+    fn gaia_active(&self) -> bool {
+        match self.self_issuer {
+            Some(_) => true,
+            None => {false}
+        }
     }
 }
 
@@ -114,5 +124,15 @@ impl CoreOnboarderTrait for AuthConsumer {
 
     fn callback(&self) -> Arc<dyn CallbackTrait> {
         self.callback.clone()
+    }
+}
+
+impl CoreGaiaSelfIssuerTrait for AuthConsumer {
+    fn self_issuer(&self) -> Arc<dyn GaiaSelfIssuerTrait> {
+        self.self_issuer.clone().unwrap().clone()
+    }
+
+    fn wallet(&self) -> Arc<dyn WalletServiceTrait> {
+        self.wallet.clone()
     }
 }

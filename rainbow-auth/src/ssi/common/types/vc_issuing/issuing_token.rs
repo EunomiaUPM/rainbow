@@ -16,12 +16,23 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-mod wallet_trait;
-mod vc_requester;
-mod mate_trait;
-mod gaia_self_issuer_trait;
 
-pub use wallet_trait::CoreWalletTrait;
-pub use vc_requester::CoreVcRequesterTrait;
-pub use mate_trait::CoreMateTrait;
-pub use gaia_self_issuer_trait::CoreGaiaSelfIssuerTrait;
+use crate::ssi::provider::utils::create_opaque_token;
+use serde::{Deserialize, Serialize};
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct IssuingToken {
+    pub access_token: String,
+    pub token_type: String,
+    pub expires_in: u16,
+}
+
+impl IssuingToken {
+    pub fn new(token: &str) -> IssuingToken {
+        IssuingToken { access_token: token.to_string(), token_type: "Bearer".to_string(), expires_in: 600 }
+    }
+    pub fn new4gai() -> IssuingToken {
+        let token = create_opaque_token();
+        IssuingToken::new(&token)
+    }
+}

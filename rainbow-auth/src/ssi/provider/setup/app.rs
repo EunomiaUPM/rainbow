@@ -18,6 +18,9 @@
  */
 use crate::ssi::common::services::callback::basic::BasicCallbackService;
 use crate::ssi::common::services::client::basic::BasicClientService;
+use crate::ssi::common::services::gaia_self_issuer::basic::config::GaiaSelfIssuerConfig;
+use crate::ssi::common::services::gaia_self_issuer::basic::BasicGaiaSelfIssuer;
+use crate::ssi::common::services::gaia_self_issuer::GaiaSelfIssuerTrait;
 use crate::ssi::common::services::vc_requester::basic::config::VCRequesterConfig;
 use crate::ssi::common::services::vc_requester::basic::VCReqService;
 use crate::ssi::common::services::wallet::waltid::config::WaltIdConfig;
@@ -65,6 +68,14 @@ impl AuthProviderApplication {
         let business_service = Arc::new(BasicBusinessService::new(business_config));
         let repo_service = Arc::new(AuthProviderRepoForSql::create_repo(db_connection));
 
+        let gaia_service: Option<Arc<dyn GaiaSelfIssuerTrait>> = match config.gaia() {
+            true => {
+                let gaia_config = GaiaSelfIssuerConfig::from(config.clone());
+                Some(Arc::new(BasicGaiaSelfIssuer::new(gaia_config)))
+            }
+            false => None,
+        };
+
         // CORE
         let provider = Arc::new(AuthProvider::new(
             wallet_service,
@@ -76,6 +87,7 @@ impl AuthProviderApplication {
             repo_service,
             client_service,
             core_config,
+            gaia_service,
         ));
 
         // ROUTER

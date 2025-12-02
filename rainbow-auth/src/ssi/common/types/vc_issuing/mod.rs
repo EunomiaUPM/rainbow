@@ -16,12 +16,24 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-mod wallet_trait;
-mod vc_requester;
-mod mate_trait;
-mod gaia_self_issuer_trait;
 
-pub use wallet_trait::CoreWalletTrait;
-pub use vc_requester::CoreVcRequesterTrait;
-pub use mate_trait::CoreMateTrait;
-pub use gaia_self_issuer_trait::CoreGaiaSelfIssuerTrait;
+mod cred_offer;
+mod vc_type;
+mod issuer_metadata;
+mod oauth_server;
+mod credential_config;
+mod issuing_token;
+mod give_vc;
+
+pub mod claims;
+mod vc_issuer;
+pub mod cred_subject;
+
+pub use cred_offer::*;
+pub use vc_type::*;
+pub use issuer_metadata::*;
+pub use oauth_server::*;
+pub use credential_config::*;
+pub use issuing_token::*;
+pub use give_vc::*;
+pub use vc_issuer::*;
