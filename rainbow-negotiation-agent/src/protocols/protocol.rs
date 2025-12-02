@@ -17,6 +17,15 @@
  *
  */
 
-pub(crate) mod deasy;
-pub(crate) mod dsp;
-pub(crate) mod protocol;
+#[allow(unused)]
+pub struct NegotiationSharedServices {}
+
+#[async_trait::async_trait]
+#[allow(unused)]
+pub trait ProtocolPluginTrait {
+    fn name(&self) -> &'static str;
+    fn version(&self) -> &'static str;
+    fn short_name(&self) -> &'static str;
+    async fn build_router(&self) -> anyhow::Result<axum::Router>;
+    fn build_grpc_router(&self) -> anyhow::Result<Option<axum::Router>>;
+}

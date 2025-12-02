@@ -17,7 +17,6 @@
  *
  */
 
-use rainbow_common::utils::get_urn;
 use sea_orm::prelude::{DateTimeWithTimeZone, Json};
 use sea_orm::{
     ActiveModelBehavior, ActiveValue, DeriveEntityModel, DerivePrimaryKey, DeriveRelation, EntityTrait, EnumIter,

@@ -1,0 +1,81 @@
+#![allow(unused)]
+/*
+ *
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
+use crate::protocols::dsp::protocol_types::{NegotiationProcessMessageType, NegotiationProcessState};
+use crate::protocols::dsp::validator::traits::validate_state_transition::ValidateStateTransition;
+use crate::protocols::dsp::validator::traits::validation_helpers::ValidationHelpers;
+use anyhow::bail;
+use log::error;
+use rainbow_common::errors::{CommonErrors, ErrorLog};
+use rainbow_common::protocol::transfer::TransferRoles;
+use std::sync::Arc;
+
+pub struct ValidatedStateTransitionServiceForDsp {
+    _helpers: Arc<dyn ValidationHelpers>,
+}
+impl ValidatedStateTransitionServiceForDsp {
+    pub fn new(helpers: Arc<dyn ValidationHelpers>) -> Self {
+        Self { _helpers: helpers }
+    }
+}
+#[async_trait::async_trait]
+impl ValidateStateTransition for ValidatedStateTransitionServiceForDsp {
+    async fn validate_role_for_message(
+        &self,
+        role: &TransferRoles,
+        message_type: &NegotiationProcessMessageType,
+    ) -> anyhow::Result<()> {
+        todo!()
+    }
+
+    async fn validate_state_transition(
+        &self,
+        current_state: &NegotiationProcessState,
+        message_type: &NegotiationProcessMessageType,
+    ) -> anyhow::Result<()> {
+        todo!()
+    }
+
+    async fn validate_state_attribute_transition(
+        &self,
+        current_state: &NegotiationProcessState,
+        current_state_attribute: &String,
+        message_type: &NegotiationProcessMessageType,
+        role: &TransferRoles,
+    ) -> anyhow::Result<()> {
+        todo!()
+    }
+}
+
+fn validate_state_transition_error_helper(
+    current_state: &NegotiationProcessState,
+    message_type: &NegotiationProcessMessageType,
+) -> anyhow::Result<()> {
+    let err = CommonErrors::parse_new(
+        format!(
+            "NegotiationProcessMessageType {} is not allowed here. Current state is {}",
+            message_type.to_string(),
+            current_state.to_string()
+        )
+        .as_str(),
+    );
+    error!("{}", err.log());
+    bail!(err)
+}

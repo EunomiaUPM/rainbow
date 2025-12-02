@@ -17,7 +17,6 @@
  *
  */
 
-use rainbow_common::utils::get_urn;
 use sea_orm::ActiveValue;
 use sea_orm::{
     ActiveModelBehavior, DeriveEntityModel, DerivePrimaryKey, DeriveRelation, EntityTrait, EnumIter, PrimaryKeyTrait,

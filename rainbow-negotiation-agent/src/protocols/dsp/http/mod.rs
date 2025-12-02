@@ -17,6 +17,5 @@
  *
  */
 
-pub(crate) mod deasy;
-pub(crate) mod dsp;
 pub(crate) mod protocol;
+pub(crate) mod rpc;

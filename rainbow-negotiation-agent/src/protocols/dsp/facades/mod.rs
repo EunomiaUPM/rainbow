@@ -17,6 +17,16 @@
  *
  */
 
-pub(crate) mod deasy;
-pub(crate) mod dsp;
-pub(crate) mod protocol;
+#[async_trait::async_trait]
+pub trait FacadeTrait: Send + Sync {}
+
+pub struct FacadeService {}
+
+impl FacadeService {
+    pub fn new() -> FacadeService {
+        Self {}
+    }
+}
+
+#[async_trait::async_trait]
+impl FacadeTrait for FacadeService {}
