@@ -17,8 +17,11 @@
  *
  */
 
-pub mod consumer_config;
-pub mod env_extraction;
-pub mod global_config;
-pub mod provider_config;
-pub mod types;
+use serde::Serialize;
+
+#[derive(Serialize, Clone, Debug)]
+pub struct HostConfig {
+    pub protocol: String,
+    pub url: String,
+    pub port: String,
+}

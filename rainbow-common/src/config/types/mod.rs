@@ -17,8 +17,8 @@
  *
  */
 
-pub mod consumer_config;
-pub mod env_extraction;
-pub mod global_config;
-pub mod provider_config;
-pub mod types;
+mod host;
+pub mod database;
+pub mod roles;
+
+pub use host::HostConfig;

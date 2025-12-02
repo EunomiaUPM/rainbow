@@ -17,12 +17,12 @@
  *
  */
 
+use super::types::HostConfig;
 use crate::config::consumer_config::ApplicationConsumerConfig;
-use crate::config::database::DbType;
 use crate::config::provider_config::ApplicationProviderConfig;
-use crate::config::ConfigRoles;
+use crate::config::types::database::DatabaseConfig;
+use crate::config::types::roles::ConfigRoles;
 use crate::ssi::{ClientConfig, WalletConfig};
-use serde::Serialize;
 use std::env;
 
 pub fn extract_env(env_var_name: &str, default: String) -> String {
@@ -44,22 +44,6 @@ pub fn format_host_config_to_url_string(hc: &HostConfig) -> String {
     }
 }
 
-#[derive(Serialize, Clone, Debug)]
-pub struct HostConfig {
-    pub protocol: String,
-    pub url: String,
-    pub port: String,
-}
-
-#[derive(Serialize, Clone, Debug)]
-pub struct DatabaseConfig {
-    pub db_type: DbType,
-    pub url: String,
-    pub port: String,
-    pub user: String,
-    pub password: String,
-    pub name: String,
-}
 
 #[derive(Debug, Clone)]
 pub struct ApplicationGlobalConfig {
@@ -84,7 +68,7 @@ pub struct ApplicationGlobalConfig {
     pub keys_path: String,
     pub is_local: bool,
     pub openapi_path: String,
-    pub api_version: String
+    pub api_version: String,
 }
 
 impl From<ApplicationGlobalConfig> for ApplicationProviderConfig {

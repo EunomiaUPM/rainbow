@@ -23,6 +23,16 @@ use std::fmt::Display;
 use std::str::FromStr;
 
 #[derive(Serialize, Clone, Debug)]
+pub struct DatabaseConfig {
+    pub db_type: DbType,
+    pub url: String,
+    pub port: String,
+    pub user: String,
+    pub password: String,
+    pub name: String,
+}
+
+#[derive(Serialize, Clone, Debug)]
 pub enum DbType {
     Postgres,
     Mysql,
