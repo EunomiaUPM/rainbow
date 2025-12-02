@@ -36,8 +36,8 @@ pub struct OfferDto {
 #[serde(deny_unknown_fields)]
 pub struct NewOfferDto {
     pub id: Option<Urn>,
-    pub negotiation_process_id: Urn,
-    pub negotiation_message_id: Urn,
+    pub negotiation_agent_process_id: Urn,
+    pub negotiation_agent_message_id: Urn,
     pub offer_id: String,
     pub offer_content: serde_json::Value,
 }
@@ -46,8 +46,8 @@ impl From<NewOfferDto> for NewOfferModel {
     fn from(dto: NewOfferDto) -> Self {
         Self {
             id: dto.id,
-            negotiation_process_id: dto.negotiation_process_id,
-            negotiation_message_id: dto.negotiation_message_id,
+            negotiation_agent_process_id: dto.negotiation_agent_process_id,
+            negotiation_agent_message_id: dto.negotiation_agent_message_id,
             offer_id: dto.offer_id,
             offer_content: dto.offer_content,
         }

@@ -34,8 +34,8 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(NegotiationAgentOffers::Table)
                     .col(ColumnDef::new(NegotiationAgentOffers::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(NegotiationAgentOffers::NegotiationProcessId).string().not_null())
-                    .col(ColumnDef::new(NegotiationAgentOffers::NegotiationMessageId).string().not_null())
+                    .col(ColumnDef::new(NegotiationAgentOffers::NegotiationAgentProcessId).string().not_null())
+                    .col(ColumnDef::new(NegotiationAgentOffers::NegotiationAgentMessageId).string().not_null())
                     .col(ColumnDef::new(NegotiationAgentOffers::OfferId).string().not_null())
                     .col(ColumnDef::new(NegotiationAgentOffers::OfferContent).json_binary().not_null())
                     .col(ColumnDef::new(NegotiationAgentOffers::CreatedAt).timestamp_with_time_zone().not_null())
@@ -44,7 +44,7 @@ impl MigrationTrait for Migration {
                             .name("fk-negotiation_offer-process_id")
                             .from(
                                 NegotiationAgentOffers::Table,
-                                NegotiationAgentOffers::NegotiationProcessId,
+                                NegotiationAgentOffers::NegotiationAgentProcessId,
                             )
                             .to(NegotiationAgentProcess::Table, NegotiationAgentProcess::Id)
                             .on_delete(ForeignKeyAction::Cascade),
@@ -54,7 +54,7 @@ impl MigrationTrait for Migration {
                             .name("fk-negotiation_offer-message_id")
                             .from(
                                 NegotiationAgentOffers::Table,
-                                NegotiationAgentOffers::NegotiationMessageId,
+                                NegotiationAgentOffers::NegotiationAgentMessageId,
                             )
                             .to(
                                 NegotiationAgentMessages::Table,
@@ -76,8 +76,8 @@ impl MigrationTrait for Migration {
 pub enum NegotiationAgentOffers {
     Table,
     Id,
-    NegotiationProcessId,
-    NegotiationMessageId,
+    NegotiationAgentProcessId,
+    NegotiationAgentMessageId,
     OfferId,
     OfferContent,
     CreatedAt,

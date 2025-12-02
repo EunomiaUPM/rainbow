@@ -24,7 +24,7 @@ use sea_orm::{
     Related, RelationDef, RelationTrait,
 };
 use serde::{Deserialize, Serialize};
-use urn::Urn;
+use urn::{Urn, UrnBuilder};
 
 #[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Serialize, Deserialize)]
 #[sea_orm(table_name = "negotiation_agent_identifiers")]
@@ -66,8 +66,14 @@ pub struct NewNegotiationIdentifierModel {
 
 impl From<NewNegotiationIdentifierModel> for ActiveModel {
     fn from(dto: NewNegotiationIdentifierModel) -> Self {
+        let new_urn = UrnBuilder::new(
+            "negotiation-process-identifier",
+            uuid::Uuid::new_v4().to_string().as_str(),
+        )
+        .build()
+        .expect("UrnBuilder failed");
         Self {
-            id: ActiveValue::Set(dto.id.unwrap_or(get_urn(None)).to_string()),
+            id: ActiveValue::Set(dto.id.unwrap_or(new_urn).to_string()),
             negotiation_agent_process_id: ActiveValue::Set(dto.negotiation_agent_process_id.to_string()),
             id_key: ActiveValue::Set(dto.id_key),
             id_value: ActiveValue::Set(dto.id_value),

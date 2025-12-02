@@ -24,7 +24,7 @@ use sea_orm::{
     PrimaryKeyTrait, Related, RelationDef, RelationTrait,
 };
 use serde::{Deserialize, Serialize};
-use urn::Urn;
+use urn::{Urn, UrnBuilder};
 
 #[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Serialize, Deserialize)]
 #[sea_orm(table_name = "negotiation_agent_agreements")]
@@ -32,8 +32,8 @@ use urn::Urn;
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: String,
-    pub negotiation_process_id: String,
-    pub negotiation_message_id: String,
+    pub negotiation_agent_process_id: String,
+    pub negotiation_agent_message_id: String,
     pub consumer_participant_id: String,
     pub provider_participant_id: String,
     pub agreement_content: Json,
@@ -47,14 +47,14 @@ pub struct Model {
 pub enum Relation {
     #[sea_orm(
         belongs_to = "super::negotiation_process::Entity",
-        from = "Column::NegotiationProcessId",
+        from = "Column::NegotiationAgentProcessId",
         to = "super::negotiation_process::Column::Id",
         on_delete = "Cascade"
     )]
     Process,
     #[sea_orm(
         belongs_to = "super::negotiation_message::Entity",
-        from = "Column::NegotiationMessageId",
+        from = "Column::NegotiationAgentMessageId",
         to = "super::negotiation_message::Column::Id",
         on_delete = "Cascade"
     )]
@@ -88,10 +88,16 @@ pub struct NewAgreementModel {
 
 impl From<NewAgreementModel> for ActiveModel {
     fn from(value: NewAgreementModel) -> Self {
+        let new_urn = UrnBuilder::new(
+            "negotiation-agreement",
+            uuid::Uuid::new_v4().to_string().as_str(),
+        )
+        .build()
+        .expect("UrnBuilder failed");
         Self {
-            id: ActiveValue::Set(value.id.unwrap_or(get_urn(None)).to_string()),
-            negotiation_process_id: ActiveValue::Set(value.negotiation_agent_process_id.to_string()),
-            negotiation_message_id: ActiveValue::Set(value.negotiation_agent_message_id.to_string()),
+            id: ActiveValue::Set(value.id.unwrap_or(new_urn).to_string()),
+            negotiation_agent_process_id: ActiveValue::Set(value.negotiation_agent_process_id.to_string()),
+            negotiation_agent_message_id: ActiveValue::Set(value.negotiation_agent_message_id.to_string()),
             consumer_participant_id: ActiveValue::Set(value.consumer_participant_id),
             provider_participant_id: ActiveValue::Set(value.provider_participant_id),
             agreement_content: ActiveValue::Set(value.agreement_content),

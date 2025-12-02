@@ -105,7 +105,7 @@ impl NegotiationAgentProcessesService {
             })
             .collect();
 
-        Ok(NegotiationProcessDto { inner: process, identifiers: ids_map, messages, offers, agreements: agreement_opt })
+        Ok(NegotiationProcessDto { inner: process, identifiers: ids_map, messages, offers, agreement: agreement_opt })
     }
 }
 

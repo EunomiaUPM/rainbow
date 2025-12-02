@@ -24,7 +24,7 @@ use sea_orm::{
     PrimaryKeyTrait, Related, RelationDef, RelationTrait,
 };
 use serde::{Deserialize, Serialize};
-use urn::Urn;
+use urn::{Urn, UrnBuilder};
 
 #[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Serialize, Deserialize)]
 #[sea_orm(table_name = "negotiation_agent_offers")]
@@ -32,8 +32,8 @@ use urn::Urn;
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: String,
-    pub negotiation_process_id: String,
-    pub negotiation_message_id: String,
+    pub negotiation_agent_process_id: String,
+    pub negotiation_agent_message_id: String,
     pub offer_id: String,
     pub offer_content: Json,
     pub created_at: DateTimeWithTimeZone,
@@ -43,14 +43,14 @@ pub struct Model {
 pub enum Relation {
     #[sea_orm(
         belongs_to = "super::negotiation_process::Entity",
-        from = "Column::NegotiationProcessId",
+        from = "Column::NegotiationAgentProcessId",
         to = "super::negotiation_process::Column::Id",
         on_delete = "Cascade"
     )]
     Process,
     #[sea_orm(
         belongs_to = "super::negotiation_message::Entity",
-        from = "Column::NegotiationMessageId",
+        from = "Column::NegotiationAgentMessageId",
         to = "super::negotiation_message::Column::Id",
         on_delete = "Cascade"
     )]
@@ -74,18 +74,24 @@ impl ActiveModelBehavior for ActiveModel {}
 #[derive(Clone)]
 pub struct NewOfferModel {
     pub id: Option<Urn>,
-    pub negotiation_process_id: Urn,
-    pub negotiation_message_id: Urn,
+    pub negotiation_agent_process_id: Urn,
+    pub negotiation_agent_message_id: Urn,
     pub offer_id: String,
     pub offer_content: Json,
 }
 
 impl From<NewOfferModel> for ActiveModel {
     fn from(value: NewOfferModel) -> Self {
+        let new_urn = UrnBuilder::new(
+            "negotiation-offer",
+            uuid::Uuid::new_v4().to_string().as_str(),
+        )
+        .build()
+        .expect("UrnBuilder failed");
         Self {
-            id: ActiveValue::Set(value.id.unwrap_or(get_urn(None)).to_string()),
-            negotiation_process_id: ActiveValue::Set(value.negotiation_process_id.to_string()),
-            negotiation_message_id: ActiveValue::Set(value.negotiation_message_id.to_string()),
+            id: ActiveValue::Set(value.id.unwrap_or(new_urn).to_string()),
+            negotiation_agent_process_id: ActiveValue::Set(value.negotiation_agent_process_id.to_string()),
+            negotiation_agent_message_id: ActiveValue::Set(value.negotiation_agent_message_id.to_string()),
             offer_id: ActiveValue::Set(value.offer_id),
             offer_content: ActiveValue::Set(value.offer_content),
             created_at: ActiveValue::Set(chrono::Utc::now().into()),
