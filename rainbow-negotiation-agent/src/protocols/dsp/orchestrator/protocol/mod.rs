@@ -17,6 +17,7 @@
  *
  */
 
-pub(crate) mod deasy;
-pub(crate) mod dsp;
 pub(crate) mod protocol;
+
+#[async_trait::async_trait]
+pub trait ProtocolOrchestratorTrait: Send + Sync + 'static {}
