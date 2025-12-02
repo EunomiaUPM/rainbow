@@ -17,6 +17,15 @@
  *
  */
 
+use crate::data::factory_sql::NegotiationAgentRepoForSql;
+use crate::entities::agreement::agreement::NegotiationAgentAgreementsService;
+use crate::entities::negotiation_message::negotiation_message::NegotiationAgentMessagesService;
+use crate::entities::negotiation_process::negotiation_process::NegotiationAgentProcessesService;
+use crate::entities::offer::offer::NegotiationAgentOffersService;
+use crate::http::agreement::NegotiationAgentAgreementsRouter;
+use crate::http::negotiation_message::NegotiationAgentMessagesRouter;
+use crate::http::negotiation_process::NegotiationAgentProcessesRouter;
+use crate::http::offer::NegotiationAgentOffersRouter;
 use axum::extract::Request;
 use axum::response::IntoResponse;
 use axum::{Router, serve};
@@ -86,9 +95,45 @@ pub async fn create_root_http_router(config: &ApplicationProviderConfig) -> anyh
     // ROOT Dependency Injection
     let config = Arc::new(config.clone());
     let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
+    let negotiation_repo = Arc::new(NegotiationAgentRepoForSql::create_repo(
+        db_connection.clone(),
+    ));
 
-    let router_str = format!("/api/{}/transfer-agent", config.api_version);
-    let router = Router::new();
+    // entities
+    let messages_controller_service = Arc::new(NegotiationAgentMessagesService::new(
+        negotiation_repo.clone(),
+    ));
+    let messages_router = NegotiationAgentMessagesRouter::new(messages_controller_service.clone(), config.clone());
+    let entities_controller_service = Arc::new(NegotiationAgentProcessesService::new(
+        negotiation_repo.clone(),
+    ));
+    let entities_router = NegotiationAgentProcessesRouter::new(entities_controller_service.clone(), config.clone());
+    let offer_controller_service = Arc::new(NegotiationAgentOffersService::new(negotiation_repo.clone()));
+    let offer_router = NegotiationAgentOffersRouter::new(offer_controller_service.clone(), config.clone());
+    let agreement_controller_service = Arc::new(NegotiationAgentAgreementsService::new(
+        negotiation_repo.clone(),
+    ));
+    let agreement_router = NegotiationAgentAgreementsRouter::new(agreement_controller_service.clone(), config.clone());
+
+    // router
+    let router_str = format!("/api/{}/negotiation-agent", config.api_version);
+    let router = Router::new()
+        .nest(
+            format!("{}/negotiation-messages", router_str.as_str()).as_str(),
+            messages_router.router(),
+        )
+        .nest(
+            format!("{}/negotiation-processes", router_str.as_str()).as_str(),
+            entities_router.router(),
+        )
+        .nest(
+            format!("{}/offers", router_str.as_str()).as_str(),
+            offer_router.router(),
+        )
+        .nest(
+            format!("{}/agreements", router_str.as_str()).as_str(),
+            agreement_router.router(),
+        );
 
     Ok(router)
 }
