@@ -19,6 +19,7 @@
 use crate::ssi::common::services::gaia_self_issuer::GaiaSelfIssuerTrait;
 use crate::ssi::common::services::wallet::WalletServiceTrait;
 use crate::ssi::common::types::vc_issuing::{AuthServerMetadata, IssuerMetadata, IssuingToken, VCCredOffer};
+use crate::ssi::common::types::wallet::OidcUri;
 use axum::async_trait;
 use serde_json::Value;
 use std::sync::Arc;
@@ -27,9 +28,13 @@ use std::sync::Arc;
 pub trait CoreGaiaSelfIssuerTrait: Send + Sync + 'static {
     fn self_issuer(&self) -> Arc<dyn GaiaSelfIssuerTrait>;
     fn wallet(&self) -> Arc<dyn WalletServiceTrait>;
-    fn generate_issuing_uri(&self) -> String {
+    async fn generate_gaia_vcs(&self) -> anyhow::Result<()> {
         let id = uuid::Uuid::new_v4().to_string();
-        self.self_issuer().generate_issuing_uri(&id)
+        let uri = self.self_issuer().generate_issuing_uri(&id);
+        let payload = OidcUri { uri };
+        let cred_offer = self.wallet().resolve_credential_offer(&payload).await?;
+        let _issuer_metadata = self.wallet().resolve_credential_issuer(&cred_offer).await?;
+        self.wallet().use_offer_req(&payload, &cred_offer).await
     }
     fn get_cred_offer_data(&self) -> VCCredOffer {
         self.self_issuer().get_cred_offer_data()

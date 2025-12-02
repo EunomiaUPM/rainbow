@@ -52,7 +52,10 @@ impl GaiaSelfIssuerRouter {
     }
 
     async fn credential(State(self_issuer): State<Arc<dyn CoreGaiaSelfIssuerTrait>>) -> impl IntoResponse {
-        self_issuer.generate_issuing_uri().into_response()
+        match self_issuer.generate_gaia_vcs().await {
+            Ok(_) => StatusCode::OK.into_response(),
+            Err(e) => e.to_response(),
+        }
     }
 
     async fn cred_offer(State(self_issuer): State<Arc<dyn CoreGaiaSelfIssuerTrait>>) -> impl IntoResponse {
