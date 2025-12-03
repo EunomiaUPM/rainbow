@@ -69,8 +69,35 @@ rainbow-auth/
 
 ## Realization
 
-Para la realización de los test se han mockeado los elementos necesarios, para que dichas pruebas completen su función y se ha hecho una llamada a la función a probar.
-En el caso de funciones asincronas nos ayudaremos de TOKIO. 
+Para garantizar una cobertura completa y confiable, la implementación de los tests se ha realizado siguiendo buenas prácticas de desarrollo y pruebas en Rust:
+
+### Diseño de pruebas unitarias e integración
+
+Cada prueba se centra en validar una única funcionalidad o comportamiento específico, asegurando independencia entre casos.
+Se han creado pruebas tanto unitarias como de integración para cubrir módulos críticos (núcleo, capa HTTP, migraciones, etc.).
+
+### Uso de mocks y stubs
+
+Se han mockeado dependencias externas y componentes complejos (por ejemplo, acceso a base de datos, servicios HTTP) para aislar la lógica interna.
+Esto permite simular escenarios controlados y reproducibles, reduciendo la dependencia de entornos externos.
+
+### Pruebas de funciones asíncronas
+
+Para funciones basadas en async/await, se utiliza el runtime Tokio, que proporciona:
+
+- Un event loop eficiente para ejecutar tareas concurrentes.
+- Soporte para operaciones I/O no bloqueantes.
+
+Las pruebas asíncronas se ejecutan mediante el atributo #[tokio::test], garantizando que cada test disponga de su propio contexto de ejecución.
+
+### Estrategia de cobertura
+
+Se han identificado puntos críticos del código (traits, módulos principales, lógica de negocio) y se han diseñado pruebas específicas para cada uno.
+Se priorizó la cobertura de:
+
+- Flujos principales (registro, autenticación, migraciones).
+- Manejo de errores y validaciones.
+- Integración con OpenAPI y capa HTTP.
 
 ## Tools
 
