@@ -16,8 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-mod ssi_auth_trait;
+mod catalog_trait;
 mod mono_trait;
 
-pub use ssi_auth_trait::SsiAuthConfigTrait;
 pub use mono_trait::MonoConfigTrait;

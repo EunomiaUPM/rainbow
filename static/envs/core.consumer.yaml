@@ -1,0 +1,67 @@
+# ==========================
+# COMMON ANCHORS
+# ==========================
+mono_config: &mono_config
+  hosts:
+    http:
+      protocol: "http"
+      url: "127.0.0.1"
+      port: "1100"
+    grpc: null
+    graphql: null
+  db:
+    db_type: Postgres
+    url: "127.0.0.1"
+    port: "1300"
+    user: "ds_consumer"
+    password: "ds_consumer"
+    name: "ds_consumer"
+  role: Consumer
+  api:
+    version: "V1"
+    openapi_path: "static/specs/openapi/auth/auth_consumer.json"
+  keys_path: "static/certificates/consumer/"
+  is_local: true
+
+catalog_hosts: &catalog_hosts
+  http:
+    protocol: "http"
+    url: "127.0.0.1"
+    port: "1100"
+  grpc: null
+  graphql: null
+
+# ==========================
+# MONOLITH
+# ==========================
+monolith: *mono_config
+
+# ==========================
+# TRANSFER
+# ==========================
+transfer:
+
+# ==========================
+# BUSINESS
+# ==========================
+business:
+
+# ==========================
+# CONTRACTS
+# ==========================
+contracts:
+
+# ==========================
+# CATALOG
+# ==========================
+catalog:
+
+# ==========================
+# SSI AUTH
+# ==========================
+ssi_auth:
+
+# ==========================
+# GATEWAY
+# ==========================
+gateway:

@@ -16,7 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::ssi::common::utils::{get_host_url, get_pretty_client_config_helper};
+use crate::ssi::common::utils::get_pretty_client_config_helper;
 use crate::ssi::consumer::services::onboarder::gnap::config::GnapOnboarderConfigTrait;
 use rainbow_common::config::services::SsiAuthConfig;
 use rainbow_common::config::traits::{ApiConfigTrait, CommonConfigTrait};
@@ -46,8 +46,8 @@ impl GnapOnboarderConfigTrait for GnapOnboarderConfig {
         let path = format!("{}/cert.pem", self.keys_path);
         get_pretty_client_config_helper(&self.client, &path)
     }
-    fn get_host(&self) -> String {
-        get_host_url(&self.host.http)
+    fn hosts(&self) -> &CommonHostsConfig {
+        &self.host
     }
     fn get_api_path(&self) -> String {
         self.api_path.clone()

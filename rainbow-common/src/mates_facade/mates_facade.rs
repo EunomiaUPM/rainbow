@@ -18,7 +18,8 @@
  */
 
 use crate::config::services::SsiAuthConfig;
-use crate::config::traits::HostConfigTrait;
+use crate::config::traits::{ApiConfigTrait, HostConfigTrait};
+use crate::config::types::HostType;
 use crate::errors::helpers::BadFormat;
 use crate::errors::{CommonErrors, ErrorLog};
 use crate::mates::Mates;
@@ -45,8 +46,13 @@ impl MatesFacadeService {
 #[async_trait]
 impl MatesFacadeTrait for MatesFacadeService {
     async fn get_mate_by_id(&self, mate_id: String) -> anyhow::Result<Mates> {
-        let ssi_auth_url = self.config.get_host();
-        let mates_url = format!("{}/api/v1/mates/{}", ssi_auth_url, mate_id);
+        let ssi_auth_url = self.config.get_host(HostType::Http);
+        let mates_url = format!(
+            "{}{}/mates/{}",
+            ssi_auth_url,
+            self.config.get_api_path(),
+            mate_id
+        );
         let response = self.client.get(mates_url).send().await.map_err(|_e| {
             let e = CommonErrors::missing_resource_new(&mate_id, "Not able to connect with ssi-auth server");
             error!("{}", e.log());
@@ -73,8 +79,13 @@ impl MatesFacadeTrait for MatesFacadeService {
     }
 
     async fn get_mate_by_slug(&self, mate_slug: String) -> anyhow::Result<Mates> {
-        let ssi_auth_url = self.config.get_host();
-        let mates_url = format!("{}/api/v1/mates/slug/{}", ssi_auth_url, mate_slug);
+        let ssi_auth_url = self.config.get_host(HostType::Http);
+        let mates_url = format!(
+            "{}{}/mates/slug/{}",
+            ssi_auth_url,
+            self.config.get_api_path(),
+            mate_slug
+        );
         let response = self.client.get(mates_url).send().await.map_err(|_e| {
             let e = CommonErrors::missing_resource_new(&mate_slug, "Not able to connect with ssi-auth server");
             error!("{}", e.log());
@@ -100,8 +111,8 @@ impl MatesFacadeTrait for MatesFacadeService {
     }
 
     async fn get_me_mate(&self) -> anyhow::Result<Mates> {
-        let ssi_auth_url = self.config.get_host();
-        let mates_url = format!("{}/api/v1/mates/me", ssi_auth_url);
+        let ssi_auth_url = self.config.get_host(HostType::Http);
+        let mates_url = format!("{}{}/mates/me", ssi_auth_url, self.config.get_api_path());
         let response = self.client.get(mates_url).send().await.map_err(|_e| {
             let e = CommonErrors::missing_resource_new("Me", "Not able to connect with ssi-auth server");
             error!("{}", e.log());

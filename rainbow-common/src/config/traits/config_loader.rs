@@ -49,7 +49,7 @@ pub trait ConfigLoader: Sized + DeserializeOwned {
                 password: "ds_provider".to_string(),
                 name: "ds_provider".to_string(),
             };
-            let keys_path = "static/certificates/consumer".to_string();
+            let keys_path = "static/certificates/".to_string();
             let api = ApiConfig { version: "v1".to_string(), openapi_path: "/static/specs/openapi/auth".to_string() };
             let config = CommonConfig { hosts, db, role, api, keys_path, is_local: true };
             Self::default_with_config(config)

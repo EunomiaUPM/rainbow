@@ -17,7 +17,6 @@
  *
  */
 use crate::ssi::common::services::wallet::waltid::config::config_trait::WaltIdConfigTrait;
-use crate::ssi::common::utils::get_host_url;
 use rainbow_common::config::services::SsiAuthConfig;
 use rainbow_common::config::traits::{CommonConfigTrait, RoleTrait};
 use rainbow_common::config::types::roles::RoleConfig;
@@ -49,8 +48,11 @@ impl WaltIdConfigTrait for WaltIdConfig {
         self.wallet.clone()
     }
     fn get_wallet_api_url(&self) -> String {
-        let data = self.get_raw_wallet_config();
-        get_host_url(&data.api)
+        let data = self.get_raw_wallet_config().api;
+        match data.port.as_ref() {
+            Some(port) => format!("{}://{}:{}", data.protocol, data.url, port),
+            None => format!("{}://{}", data.protocol, data.url),
+        }
     }
     fn get_wallet_register_data(&self) -> Value {
         let data = self.get_raw_wallet_config();
@@ -82,8 +84,8 @@ impl WaltIdConfigTrait for WaltIdConfig {
         let path = format!("{}/public_key.pem", self.keys_path);
         read(&path)
     }
-    fn get_host(&self) -> String {
-        get_host_url(&self.hosts.http)
+    fn hosts(&self) -> &CommonHostsConfig {
+        &self.hosts
     }
     fn get_role(&self) -> RoleConfig {
         self.role

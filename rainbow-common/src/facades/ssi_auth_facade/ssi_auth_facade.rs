@@ -18,7 +18,8 @@
  */
 
 use crate::config::services::SsiAuthConfig;
-use crate::config::traits::HostConfigTrait;
+use crate::config::traits::{ApiConfigTrait, HostConfigTrait};
+use crate::config::types::HostType;
 use crate::errors::helpers::{BadFormat, MissingAction};
 use crate::errors::{CommonErrors, ErrorLog};
 use crate::facades::ssi_auth_facade::SSIAuthFacadeTrait;
@@ -29,8 +30,6 @@ use axum::async_trait;
 use reqwest::Client;
 use std::time::Duration;
 use tracing::error;
-
-const SSI_AUTH_FACADE_VERIFICATION_URL: &str = "/api/v1/verify/mate/token";
 
 pub struct SSIAuthFacadeService {
     config: SsiAuthConfig,
@@ -48,8 +47,8 @@ impl SSIAuthFacadeService {
 #[async_trait]
 impl SSIAuthFacadeTrait for SSIAuthFacadeService {
     async fn verify_token(&self, token: String) -> anyhow::Result<Mates> {
-        let base_url = self.config.get_host();
-        let url = format!("{}{}", base_url, SSI_AUTH_FACADE_VERIFICATION_URL);
+        let base_url = self.config.get_host(HostType::Http);
+        let url = format!("{}{}/mates/token", base_url, self.config.get_api_path());
         let response = self.client.post(&url).json(&VerifyTokenRequest { token }).send().await;
         let response = match response {
             Ok(response) => response,

@@ -16,7 +16,6 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::ssi::common::utils::get_host_url;
 use crate::ssi::provider::services::gatekeeper::gnap::config::GnapGateKeeperConfigTrait;
 use rainbow_common::config::services::SsiAuthConfig;
 use rainbow_common::config::traits::{ApiConfigTrait, CommonConfigTrait};
@@ -35,8 +34,8 @@ impl From<SsiAuthConfig> for GnapGateKeeperConfig {
 }
 
 impl GnapGateKeeperConfigTrait for GnapGateKeeperConfig {
-    fn get_host(&self) -> String {
-        get_host_url(&self.hosts.http)
+    fn hosts(&self) -> &CommonHostsConfig {
+        &self.hosts
     }
     fn is_local(&self) -> bool {
         self.is_local

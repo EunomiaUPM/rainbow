@@ -23,6 +23,7 @@ mod config_loader;
 mod database_trait;
 mod extra_traits;
 mod host_config_trait;
+mod extra_hosts_trait;
 
 pub use api_trait::ApiConfigTrait;
 pub use common_trait::CommonConfigTrait;
@@ -30,3 +31,4 @@ pub use config_loader::ConfigLoader;
 pub use database_trait::DatabaseConfigTrait;
 pub use extra_traits::*;
 pub use host_config_trait::HostConfigTrait;
+pub use extra_hosts_trait::ExtraHostsTrait;

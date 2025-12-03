@@ -25,6 +25,8 @@ use crate::ssi::common::utils::trim_4_base;
 use crate::ssi::provider::data::entities::{recv_interaction, recv_request, recv_verification};
 use crate::ssi::provider::utils::create_opaque_token;
 use anyhow::bail;
+use rainbow_common::config::traits::ExtraHostsTrait;
+use rainbow_common::config::types::HostType;
 use rainbow_common::errors::helpers::BadFormat;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::utils::get_from_opt;
@@ -83,7 +85,7 @@ impl GateKeeperTrait for GnapGateKeeperService {
 
         let host = format!(
             "{}{}/gate",
-            self.config.get_host(),
+            self.config.hosts().get_host(HostType::Http),
             self.config.get_api_path()
         );
 

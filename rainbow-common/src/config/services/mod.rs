@@ -16,21 +16,17 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-mod business;
 mod catalog;
-mod contracts;
-mod gateway;
-mod ssi_auth;
-mod transfer;
-mod monolith;
 mod common;
+mod contracts;
+mod monolith;
+mod ssi_auth;
 pub mod traits;
+mod transfer;
 
-pub use business::BusinessConfig;
 pub use catalog::CatalogConfig;
+pub use common::CommonConfig;
 pub use contracts::ContractsConfig;
-pub use gateway::GatewayConfig;
+pub use monolith::MonolithConfig;
 pub use ssi_auth::SsiAuthConfig;
 pub use transfer::TransferConfig;
-pub use monolith::MonolithConfig;
-pub use common::CommonConfig;

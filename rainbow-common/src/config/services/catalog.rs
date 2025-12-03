@@ -18,7 +18,7 @@
  */
 
 use crate::config::services::CommonConfig;
-use crate::config::traits::{ApiConfigTrait, CommonConfigTrait, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait, KeysPathTrait, RoleTrait};
+use crate::config::traits::{ApiConfigTrait, CommonConfigTrait, ConfigLoader, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait, KeysPathTrait, RoleTrait};
 use crate::config::types::HostConfig;
 use serde::{Deserialize, Serialize};
 
@@ -29,6 +29,17 @@ pub struct CatalogConfig {
     is_datahub: bool,
     datahub_host: Option<HostConfig>,
     datahub_token: Option<String>,
+}
+
+impl ConfigLoader for CatalogConfig {
+    fn default_with_config(common_config: CommonConfig) -> Self {
+        Self {
+            common: common_config,
+            is_datahub: false,
+            datahub_host: None,
+            datahub_token: None,
+        }
+    }
 }
 
 impl CommonConfigTrait for CatalogConfig {

@@ -19,21 +19,19 @@
 
 use crate::config::services::traits::MonoConfigTrait;
 use crate::config::services::{
-    BusinessConfig, CatalogConfig, CommonConfig, ContractsConfig, GatewayConfig, MonolithConfig, SsiAuthConfig,
-    TransferConfig,
+    CatalogConfig, CommonConfig, ContractsConfig, MonolithConfig, SsiAuthConfig, TransferConfig,
 };
 use crate::config::traits::{ConfigLoader, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait};
+use crate::config::types::HostType;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ApplicationConfig {
     monolith: Option<MonolithConfig>,
     transfer: Option<TransferConfig>,
-    business: Option<BusinessConfig>,
-    contract: Option<ContractsConfig>,
+    contracts: Option<ContractsConfig>,
     catalog: Option<CatalogConfig>,
     ssi_auth: Option<SsiAuthConfig>,
-    gateway: Option<GatewayConfig>,
 }
 
 impl ApplicationConfig {
@@ -41,11 +39,9 @@ impl ApplicationConfig {
         Self {
             monolith: Some(MonolithConfig::new(common_config)),
             transfer: None,
-            business: None,
-            contract: None,
+            contracts: None,
             catalog: None,
             ssi_auth: None,
-            gateway: None,
         }
     }
 }
@@ -53,7 +49,7 @@ impl ApplicationConfig {
 impl MonoConfigTrait for ApplicationConfig {
     fn get_mono_host(&self) -> String {
         let mono = self.monolith.as_ref().expect("Trying to access core mode without it being defined");
-        mono.get_host()
+        mono.get_host(HostType::Http)
     }
     fn get_weird_mono_port(&self) -> String {
         let mono = self.monolith.as_ref().expect("Trying to access core mode without it being defined");

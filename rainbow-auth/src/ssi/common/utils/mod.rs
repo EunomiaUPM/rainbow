@@ -53,7 +53,6 @@ pub fn trim_4_base(input: &str) -> String {
 
     input[..cut_index].to_string()
 }
-
 pub fn get_host_url(host_config: &HostConfig) -> String {
     match host_config.port.as_ref() {
         Some(port) => format!("{}://{}:{}", host_config.protocol, host_config.url, port),

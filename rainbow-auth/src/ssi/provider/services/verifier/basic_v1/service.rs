@@ -34,6 +34,8 @@ use base64::Engine;
 use chrono::{DateTime, Utc};
 use jsonwebtoken::jwk::Jwk;
 use jsonwebtoken::{TokenData, Validation};
+use rainbow_common::config::traits::ExtraHostsTrait;
+use rainbow_common::config::types::HostType;
 use rainbow_common::errors::helpers::BadFormat;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use serde_json::Value;
@@ -60,7 +62,7 @@ impl VerifierTrait for VerifierService {
 
         let host = format!(
             "{}{}/verifier",
-            self.config.get_host(),
+            self.config.hosts().get_host(HostType::Http),
             self.config.get_api_path()
         );
         let host_url = match self.config.is_local() {
@@ -78,7 +80,7 @@ impl VerifierTrait for VerifierService {
 
         let host = format!(
             "{}{}/verifier",
-            self.config.get_host(),
+            self.config.hosts().get_host(HostType::Http),
             self.config.get_api_path()
         );
         let host = match self.config.is_local() {

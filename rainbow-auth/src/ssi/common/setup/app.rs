@@ -24,12 +24,13 @@ use rainbow_common::config::traits::{HostConfigTrait, IsLocalTrait};
 use rainbow_common::config::types::roles::RoleConfig;
 use tokio::net::TcpListener;
 use tracing::info;
+use rainbow_common::config::types::HostType;
 
 pub struct Application {}
 
 impl Application {
     pub async fn run(role: RoleConfig, config: SsiAuthConfig) -> anyhow::Result<()> {
-        let server_message = format!("Starting Auth Consumer server in {}", config.get_host());
+        let server_message = format!("Starting Auth Consumer server in {}", config.get_host(HostType::Http));
         info!("{}", server_message);
 
         let router = match role {

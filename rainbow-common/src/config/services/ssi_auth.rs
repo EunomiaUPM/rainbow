@@ -17,9 +17,11 @@
  *
  */
 
-use super::traits::SsiAuthConfigTrait;
 use crate::config::services::CommonConfig;
-use crate::config::traits::{ApiConfigTrait, CommonConfigTrait, ConfigLoader, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait, KeysPathTrait, RoleTrait};
+use crate::config::traits::{
+    ApiConfigTrait, CommonConfigTrait, ConfigLoader, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait, KeysPathTrait,
+    RoleTrait,
+};
 use crate::config::types::roles::RoleConfig;
 use crate::config::types::{ClientConfig, HostConfig, WalletConfig};
 use serde::{Deserialize, Serialize};
@@ -40,7 +42,6 @@ impl SsiAuthConfig {
         self.client.clone()
     }
 }
-impl SsiAuthConfigTrait for SsiAuthConfig {}
 
 impl ConfigLoader for SsiAuthConfig {
     fn default_with_config(common_config: CommonConfig) -> Self {

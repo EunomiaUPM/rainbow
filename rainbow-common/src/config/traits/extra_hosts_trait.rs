@@ -16,29 +16,23 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::config::traits::CommonConfigTrait;
 use crate::config::types::{HostConfig, HostType};
 use crate::errors::{CommonErrors, ErrorLog};
 use anyhow::bail;
 use tracing::error;
 
-pub trait HostConfigTrait: CommonConfigTrait {
+pub trait ExtraHostsTrait {
+    fn http(&self) -> &HostConfig;
+    fn grpc(&self) -> Option<&HostConfig>;
+    fn graphql(&self) -> Option<&HostConfig>;
     fn get_host(&self, host_type: HostType) -> String {
         let host = match host_type {
-            HostType::Http => Self::get_host_helper(Some(&self.common().hosts().http), "http"),
-            HostType::Grpc => Self::get_host_helper(self.common().hosts().graphql.as_ref(), "graphql"),
-            HostType::Graphql => Self::get_host_helper(self.common().hosts().grpc.as_ref(), "grpc"),
+            HostType::Http => Self::get_host_helper(Some(self.http()), &host_type.to_string()),
+            HostType::Grpc => Self::get_host_helper(self.grpc(), &host_type.to_string()),
+            HostType::Graphql => Self::get_host_helper(self.graphql(), &host_type.to_string()),
         };
         host.expect("Failed to get host")
     }
-
-    fn get_weird_port(&self) -> String {
-        match self.common().hosts.http.port.as_ref() {
-            Some(port) => format!(":{}", port),
-            None => "".to_string(),
-        }
-    }
-
     fn get_host_helper(host: Option<&HostConfig>, module: &str) -> anyhow::Result<String> {
         match host {
             Some(host) => match host.port.as_ref() {

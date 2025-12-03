@@ -18,6 +18,7 @@
  */
 use super::super::WalletServiceTrait;
 use super::config::{WaltIdConfig, WaltIdConfigTrait};
+use crate::ssi::common::data::entities::mates;
 use crate::ssi::common::errors::AuthErrors;
 use crate::ssi::common::services::client::ClientServiceTrait;
 use crate::ssi::common::types::enums::request::Body;
@@ -33,9 +34,10 @@ use axum::http::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 use axum::http::HeaderMap;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
+use rainbow_common::config::traits::ExtraHostsTrait;
+use rainbow_common::config::types::HostType;
 use rainbow_common::errors::helpers::{BadFormat, MissingAction};
 use rainbow_common::errors::{CommonErrors, ErrorLog};
-use crate::ssi::common::data::entities::mates;
 use serde_json::Value;
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -232,7 +234,7 @@ impl WalletServiceTrait for WaltIdService {
         };
 
         let participant_type = self.config.get_role().to_string();
-        let base_url = self.config.get_host();
+        let base_url = self.config.hosts().get_host(HostType::Http);
         let minion = mates::NewModel {
             participant_id: did_info.did,
             participant_slug: "Myself".to_string(),

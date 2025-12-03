@@ -18,6 +18,8 @@
  */
 
 use serde::{Deserialize, Serialize};
+use std::fmt::Display;
+use crate::config::traits::ExtraHostsTrait;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct HostConfig {
@@ -31,4 +33,36 @@ pub struct CommonHostsConfig {
     pub http: HostConfig,
     pub grpc: Option<HostConfig>,
     pub graphql: Option<HostConfig>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub enum HostType {
+    Http,
+    Grpc,
+    Graphql,
+}
+
+impl Display for HostType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let str = match self {
+            HostType::Http => "http".to_string(),
+            HostType::Grpc => "grpc".to_string(),
+            HostType::Graphql => "graphql".to_string(),
+        };
+        write!(f, "{}", str)
+    }
+}
+
+impl ExtraHostsTrait for CommonHostsConfig {
+    fn http(&self) -> &HostConfig {
+        &self.http
+    }
+
+    fn grpc(&self) -> Option<&HostConfig> {
+        self.grpc.as_ref()
+    }
+
+    fn graphql(&self) -> Option<&HostConfig> {
+        self.graphql.as_ref()
+    }
 }

@@ -17,7 +17,6 @@
  *
  */
 use super::BusinessConfigTrait;
-use crate::ssi::common::utils::get_host_url;
 use rainbow_common::config::services::SsiAuthConfig;
 use rainbow_common::config::traits::{ApiConfigTrait, CommonConfigTrait};
 use rainbow_common::config::types::CommonHostsConfig;
@@ -39,8 +38,8 @@ impl From<SsiAuthConfig> for BusinessConfig {
 }
 
 impl BusinessConfigTrait for BusinessConfig {
-    fn get_host(&self) -> String {
-        get_host_url(&self.hosts.http)
+    fn hosts(&self) -> &CommonHostsConfig {
+        &self.hosts
     }
     fn is_local(&self) -> bool {
         self.is_local

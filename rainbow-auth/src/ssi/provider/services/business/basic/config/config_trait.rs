@@ -16,9 +16,10 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use rainbow_common::config::types::CommonHostsConfig;
 
 pub trait BusinessConfigTrait {
-    fn get_host(&self) -> String;
+    fn hosts(&self) -> &CommonHostsConfig;
     fn is_local(&self) -> bool;
     fn get_api_path(&self) -> String;
 }

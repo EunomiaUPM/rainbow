@@ -16,10 +16,11 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use rainbow_common::config::types::CommonHostsConfig;
 use serde_json::Value;
 
 pub trait VCRequesterConfigTrait {
     fn get_pretty_client_config(&self) -> anyhow::Result<Value>;
-    fn get_host(&self) -> String;
+    fn hosts(&self) -> &CommonHostsConfig;
     fn get_api_path(&self) -> String;
 }

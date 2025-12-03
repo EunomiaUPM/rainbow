@@ -17,7 +17,7 @@
  *
  */
 use super::VCRequesterConfigTrait;
-use crate::ssi::common::utils::{get_host_url, get_pretty_client_config_helper};
+use crate::ssi::common::utils::get_pretty_client_config_helper;
 use rainbow_common::config::services::SsiAuthConfig;
 use rainbow_common::config::traits::{ApiConfigTrait, CommonConfigTrait};
 use rainbow_common::config::types::{ClientConfig, CommonHostsConfig};
@@ -46,8 +46,8 @@ impl VCRequesterConfigTrait for VCRequesterConfig {
         let path = format!("{}/cert.pem", self.keys_path);
         get_pretty_client_config_helper(&self.client, &path)
     }
-    fn get_host(&self) -> String {
-        get_host_url(&self.hosts.http)
+    fn hosts(&self) -> &CommonHostsConfig {
+        &self.hosts
     }
     fn get_api_path(&self) -> String {
         self.api_path.clone()
