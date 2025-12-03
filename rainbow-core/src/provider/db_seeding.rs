@@ -16,11 +16,12 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use rainbow_common::config::traits::GlobalConfigTrait;
+
 use rainbow_common::config::ApplicationConfig;
 use rainbow_db::catalog::repo::sql::CatalogRepoForSql;
 use rainbow_db::catalog::repo::{CatalogRepo, NewCatalogModel};
 use sea_orm::Database;
+use rainbow_common::config::services::traits::MonoConfigTrait;
 
 pub struct CoreProviderSeeding;
 

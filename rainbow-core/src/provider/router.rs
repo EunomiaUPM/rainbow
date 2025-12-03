@@ -20,16 +20,15 @@
 use axum::Router;
 use rainbow_auth::ssi::provider::setup::app::AuthProviderApplication;
 use rainbow_catalog::provider::setup::application::create_catalog_router;
-use rainbow_common::config::traits::GlobalConfigTrait;
-use rainbow_common::config::ApplicationConfig;
 use rainbow_common::config::services::traits::MonoConfigTrait;
+use rainbow_common::config::ApplicationConfig;
 use rainbow_contracts::provider::setup::application::create_contract_negotiation_provider_router;
 use rainbow_datahub_catalog::setup::application::create_datahub_catalog_router;
 use rainbow_transfer::provider::setup::application::create_transfer_provider_router;
 use rainbow_transfer_agent::setup::create_root_http_router;
 
 pub async fn create_core_provider_router(config: &ApplicationConfig) -> Router {
-    let auth_router = AuthProviderApplication::create_router(config.ssi_auth_config()).await;
+    let auth_router = AuthProviderApplication::create_router(&config.ssi_auth_config()).await;
 
     // TODO
     let transfer_router = create_transfer_provider_router(&config.clone()).await;

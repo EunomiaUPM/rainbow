@@ -17,9 +17,9 @@
  *
  */
 
-use rainbow_common::config::traits::GlobalConfigTrait;
+use rainbow_auth::ssi::provider::data::migrations::get_auth_provider_migrations;
+use rainbow_common::config::services::traits::MonoConfigTrait;
 use rainbow_common::config::ApplicationConfig;
-use rainbow_db::auth::provider::migrations::get_auth_provider_migrations;
 use rainbow_db::catalog::migrations::get_catalog_migrations;
 use rainbow_db::contracts_provider::migrations::get_contracts_migrations;
 use rainbow_db::datahub::migrations::get_datahub_migrations;
