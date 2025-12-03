@@ -16,48 +16,39 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::config::traits::{
-    CommonConfigTraits, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait, KeysPathTrait, RoleTrait,
-};
+
 use crate::config::types::database::DatabaseConfig;
 use crate::config::types::roles::RoleConfig;
-use crate::config::types::{ApiConfig, CommonHostsConfig, HostConfig};
+use crate::config::types::{ApiConfig, CommonHostsConfig};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CommonConfig {
-    hosts: CommonHostsConfig,
-    database: DatabaseConfig,
-    role: RoleConfig,
-    api: ApiConfig,
-    keys_path: String,
-    is_local: bool,
+    pub hosts: CommonHostsConfig,
+    pub db: DatabaseConfig,
+    pub role: RoleConfig,
+    pub api: ApiConfig,
+    pub keys_path: String,
+    pub is_local: bool,
 }
 
-impl HostConfigTrait for CommonConfig {
-    fn http(&self) -> &HostConfig {
-        &self.hosts.http
+impl CommonConfig {
+    pub fn hosts(&self) -> &CommonHostsConfig {
+        &self.hosts
     }
-}
-
-impl DatabaseConfigTrait for CommonConfig {}
-
-impl IsLocalTrait for CommonConfig {
-    fn is_local(&self) -> bool {
+    pub fn db(&self) -> &DatabaseConfig {
+        &self.db
+    }
+    pub fn role(&self) -> &RoleConfig {
+        &self.role
+    }
+    pub fn api(&self) -> &ApiConfig {
+        &self.api
+    }
+    pub fn keys_path(&self) -> &str {
+        &self.keys_path
+    }
+    pub fn is_local(&self) -> bool {
         self.is_local
     }
 }
-
-impl RoleTrait for CommonConfig {
-    fn role(&self) -> &RoleConfig {
-        &self.role
-    }
-}
-
-impl KeysPathTrait for CommonConfig {
-    fn keys_path(&self) -> &str {
-        &self.keys_path
-    }
-}
-
-impl CommonConfigTraits for CommonConfig {}

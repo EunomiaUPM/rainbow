@@ -17,8 +17,9 @@
  *
  */
 
-use crate::ssi::provider::config::{AuthProviderConfig, AuthProviderConfigTrait};
 use crate::ssi::provider::data::migrations::get_auth_provider_migrations;
+use rainbow_common::config::services::SsiAuthConfig;
+use rainbow_common::config::traits::DatabaseConfigTrait;
 use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
 
@@ -35,7 +36,7 @@ impl MigratorTrait for ProviderMigrations {
 }
 
 impl ProviderMigrations {
-    pub async fn run(config: &AuthProviderConfig) -> anyhow::Result<()> {
+    pub async fn run(config: SsiAuthConfig) -> anyhow::Result<()> {
         // db_connection
         let db_url = config.get_full_db_url();
         let db_connection = Database::connect(db_url).await.expect("Database can't connect");

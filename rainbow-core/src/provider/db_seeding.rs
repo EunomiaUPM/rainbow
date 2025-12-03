@@ -16,7 +16,8 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use rainbow_common::config::provider::config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_common::config::traits::GlobalConfigTrait;
+use rainbow_common::config::ApplicationConfig;
 use rainbow_db::catalog::repo::sql::CatalogRepoForSql;
 use rainbow_db::catalog::repo::{CatalogRepo, NewCatalogModel};
 use sea_orm::Database;
@@ -24,10 +25,10 @@ use sea_orm::Database;
 pub struct CoreProviderSeeding;
 
 impl CoreProviderSeeding {
-    pub async fn run(config: &ApplicationProviderConfig) -> ::anyhow::Result<()> {
-        let db_url = config.get_full_db_url();
+    pub async fn run(config: &ApplicationConfig) -> ::anyhow::Result<()> {
+        let db_url = config.get_mono_db();
         let db_connection = Database::connect(db_url).await.expect("Database can't connect");
-        // run seeding
+
         let catalog_repo = CatalogRepoForSql::new(db_connection);
         let _ = catalog_repo
             .create_main_catalog(NewCatalogModel {

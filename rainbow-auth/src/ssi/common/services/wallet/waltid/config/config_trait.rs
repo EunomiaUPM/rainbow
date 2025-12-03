@@ -17,8 +17,9 @@
  *
  */
 
+use rainbow_common::config::types::roles::RoleConfig;
+use rainbow_common::config::types::WalletConfig;
 use serde_json::Value;
-use rainbow_common::ssi::WalletConfig;
 
 pub trait WaltIdConfigTrait {
     fn get_raw_wallet_config(&self) -> WalletConfig;
@@ -29,5 +30,5 @@ pub trait WaltIdConfigTrait {
     fn get_priv_key(&self) -> anyhow::Result<String>;
     fn get_pub_key(&self) -> anyhow::Result<String>;
     fn get_host(&self) -> String;
-    fn get_role(&self) -> String;
+    fn get_role(&self) -> RoleConfig;
 }

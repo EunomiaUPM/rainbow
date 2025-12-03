@@ -16,38 +16,34 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
-use crate::consumer::router::create_core_consumer_router;
-use crate::provider::router::create_core_provider_router;
+use crate::ssi::consumer::setup::AuthConsumerApplication;
+use crate::ssi::provider::setup::AuthProviderApplication;
 use axum::serve;
-use rainbow_common::config::services::traits::MonoConfigTrait;
+use rainbow_common::config::services::SsiAuthConfig;
+use rainbow_common::config::traits::{HostConfigTrait, IsLocalTrait};
 use rainbow_common::config::types::roles::RoleConfig;
-use rainbow_common::config::ApplicationConfig;
 use tokio::net::TcpListener;
 use tracing::info;
 
-pub struct CoreApplication;
+pub struct Application {}
 
-impl CoreApplication {
-    pub async fn run(role: RoleConfig, config: &ApplicationConfig) -> anyhow::Result<()> {
-        let port = config.get_weird_mono_port();
-        let router = match role {
-            RoleConfig::Consumer => create_core_consumer_router(config).await,
-            RoleConfig::Provider => create_core_provider_router(config).await,
-        };
-
-        let server_message = format!(
-            "Starting core {} server in {}",
-            role.to_string(),
-            config.get_mono_host(),
-        );
+impl Application {
+    pub async fn run(role: RoleConfig, config: SsiAuthConfig) -> anyhow::Result<()> {
+        let server_message = format!("Starting Auth Consumer server in {}", config.get_host());
         info!("{}", server_message);
 
-        let listener = match config.is_local() {
-            true => TcpListener::bind(format!("127.0.0.1{}", port)).await?,
-            false => TcpListener::bind(format!("0.0.0.0{}", port)).await?,
+        let router = match role {
+            RoleConfig::Consumer => AuthConsumerApplication::create_router(&config).await,
+            RoleConfig::Provider => AuthProviderApplication::create_router(&config).await,
         };
+
+        let listener = match config.is_local() {
+            true => TcpListener::bind(format!("127.0.0.1{}", config.get_weird_port())).await?,
+            false => TcpListener::bind(format!("0.0.0.0{}", config.get_weird_port())).await?,
+        };
+
         serve(listener, router).await?;
+
         Ok(())
     }
 }

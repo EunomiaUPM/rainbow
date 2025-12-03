@@ -17,8 +17,8 @@
  *
  */
 
-use rainbow_common::config::consumer::consumer_config::ApplicationConsumerConfig;
-use rainbow_common::config::consumer::consumer_config::ApplicationConsumerConfigTrait;
+use rainbow_common::config::traits::GlobalConfigTrait;
+use rainbow_common::config::ApplicationConfig;
 use rainbow_db::auth::consumer::migrations::get_auth_consumer_migrations;
 use rainbow_db::catalog::migrations::get_catalog_migrations;
 use rainbow_db::contracts_consumer::migrations::get_contracts_migrations;
@@ -54,13 +54,11 @@ impl MigratorTrait for CoreConsumerMigration {
 }
 
 impl CoreConsumerMigration {
-    pub async fn run(config: &ApplicationConsumerConfig) -> anyhow::Result<()> {
-        // db_connection
-        let db_url = config.get_full_db_url();
+    pub async fn run(config: &ApplicationConfig) -> anyhow::Result<()> {
+        let db_url = config.get_mono_db();
         let db_connection = Database::connect(db_url).await.expect("Database can't connect");
-        // run migration
+
         Self::refresh(&db_connection).await?;
-        // run seeders
         Ok(())
     }
 }

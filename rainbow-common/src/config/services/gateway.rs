@@ -17,19 +17,31 @@
  *
  */
 
-use crate::config::traits::HostConfigTrait;
-use crate::config::types::{CommonHostsConfig, HostConfig};
+use crate::config::services::CommonConfig;
+use crate::config::traits::{ApiConfigTrait, CommonConfigTrait, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait, KeysPathTrait, RoleTrait};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct GatewayConfig {
-    hosts: CommonHostsConfig,
+    #[serde(flatten)]
+    common: CommonConfig,
     is_production: bool,
-    keys_path: String,
 }
 
-impl HostConfigTrait for GatewayConfig {
-    fn http(&self) -> &HostConfig {
-        &self.hosts.http
+impl CommonConfigTrait for GatewayConfig {
+    fn common(&self) -> &CommonConfig {
+        &self.common
     }
 }
+
+impl HostConfigTrait for GatewayConfig {}
+
+impl DatabaseConfigTrait for GatewayConfig {}
+
+impl IsLocalTrait for GatewayConfig {}
+
+impl KeysPathTrait for GatewayConfig {}
+
+impl RoleTrait for GatewayConfig {}
+
+impl ApiConfigTrait for GatewayConfig {}

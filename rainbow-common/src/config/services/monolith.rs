@@ -36,35 +36,36 @@
  *
  */
 
-use crate::config::traits::HostConfigTrait;
-use crate::config::types::database::DatabaseConfig;
-use crate::config::types::roles::RoleConfig;
-use crate::config::types::{CommonHostsConfig, HostConfig};
+use crate::config::services::CommonConfig;
+use crate::config::traits::{ApiConfigTrait, CommonConfigTrait, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait, KeysPathTrait, RoleTrait};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct MonolithConfig {
-    hosts: CommonHostsConfig,
-    database: DatabaseConfig,
-    role: RoleConfig,
-    is_local: bool,
-    keys_path: String,
+    #[serde(flatten)]
+    common: CommonConfig,
 }
 
 impl MonolithConfig {
-    pub fn new(
-        hosts: CommonHostsConfig,
-        database: DatabaseConfig,
-        role: RoleConfig,
-        is_local: bool,
-        keys_path: String,
-    ) -> Self {
-        Self { hosts, database, role, is_local, keys_path }
+    pub fn new(common_config: CommonConfig) -> Self {
+        Self { common: common_config }
     }
 }
 
-impl HostConfigTrait for MonolithConfig {
-    fn http(&self) -> &HostConfig {
-        &self.hosts.http
+impl CommonConfigTrait for MonolithConfig {
+    fn common(&self) -> &CommonConfig {
+        &self.common
     }
 }
+
+impl HostConfigTrait for MonolithConfig {}
+
+impl DatabaseConfigTrait for MonolithConfig {}
+
+impl IsLocalTrait for MonolithConfig {}
+
+impl KeysPathTrait for MonolithConfig {}
+
+impl RoleTrait for MonolithConfig {}
+
+impl ApiConfigTrait for MonolithConfig {}

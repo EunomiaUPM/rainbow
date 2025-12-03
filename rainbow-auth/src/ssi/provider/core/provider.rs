@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use crate::ssi::common::core::{CoreMateTrait, CoreVcRequesterTrait, CoreWalletTrait};
 use crate::ssi::common::services::callback::CallbackTrait;
 use crate::ssi::common::services::client::ClientServiceTrait;
@@ -24,7 +25,6 @@ use crate::ssi::common::services::repo::subtraits::{
 };
 use crate::ssi::common::services::vc_requester::VcRequesterTrait;
 use crate::ssi::common::services::wallet::WalletServiceTrait;
-use crate::ssi::provider::config::AuthProviderConfigTrait;
 use crate::ssi::provider::core::traits::{
     CoreBusinessTrait, CoreGateKeeperTrait, CoreProviderTrait, CoreVerifierTrait,
 };
@@ -32,6 +32,7 @@ use crate::ssi::provider::services::business::BusinessTrait;
 use crate::ssi::provider::services::gatekeeper::GateKeeperTrait;
 use crate::ssi::provider::services::repo::AuthProviderRepoTrait;
 use crate::ssi::provider::services::verifier::VerifierTrait;
+use rainbow_common::config::services::SsiAuthConfig;
 use std::sync::Arc;
 
 pub struct AuthProvider {
@@ -44,7 +45,7 @@ pub struct AuthProvider {
     repo: Arc<dyn AuthProviderRepoTrait>,
     #[allow(dead_code)] // as an orchestrator, it should have access even though it's not used
     client: Arc<dyn ClientServiceTrait>,
-    config: Arc<dyn AuthProviderConfigTrait>,
+    config: Arc<SsiAuthConfig>,
 }
 
 impl AuthProvider {
@@ -57,14 +58,14 @@ impl AuthProvider {
         business: Arc<dyn BusinessTrait>,
         repo: Arc<dyn AuthProviderRepoTrait>,
         client: Arc<dyn ClientServiceTrait>,
-        config: Arc<dyn AuthProviderConfigTrait>,
+        config: Arc<SsiAuthConfig>,
     ) -> AuthProvider {
         AuthProvider { wallet, vc_requester, gatekeeper, verifier, callback, business, repo, client, config }
     }
 }
 
 impl CoreProviderTrait for AuthProvider {
-    fn config(&self) -> Arc<dyn AuthProviderConfigTrait> {
+    fn config(&self) -> Arc<SsiAuthConfig> {
         self.config.clone()
     }
 }

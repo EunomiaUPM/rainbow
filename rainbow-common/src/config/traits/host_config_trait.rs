@@ -16,45 +16,34 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use crate::config::traits::CommonConfigTrait;
 use crate::config::types::HostConfig;
 use crate::errors::{CommonErrors, ErrorLog};
 use anyhow::bail;
 use tracing::error;
 
-pub trait HostConfigTrait {
-    
-    fn http(&self) -> &HostConfig;
-    fn graphql(&self) -> Option<&HostConfig> {
-        None
-    }
-    fn grpc(&self) -> Option<&HostConfig> {
-        None
-    }
+pub trait HostConfigTrait: CommonConfigTrait {
     fn get_host(&self) -> String {
-        match self.http().port.as_ref() {
-            Some(port) => {
-                format!("{}://{}:{}", self.http().protocol, self.http().url, port)
-            }
-            None => {
-                format!("{}://{}", self.http().protocol, self.http().url)
-            }
-        }
+        Self::get_host_helper(Some(&self.common().hosts().http)).expect("Http host is invalid")
     }
     fn get_graphql_host(&self) -> anyhow::Result<String> {
-        match self.graphql() {
-            Some(host) => match host.port.as_ref() {
-                Some(port) => Ok(format!("{}://{}:{}", host.protocol, host.url, port)),
-                None => Ok(format!("{}://{}", host.protocol, host.url)),
-            },
-            None => {
-                let error = CommonErrors::module_new("grpc");
-                error!("{}", error.log());
-                bail!(error)
-            }
-        }
+        Self::get_host_helper(self.common().hosts().graphql.as_ref())
     }
     fn get_grpc_host(&self) -> anyhow::Result<String> {
-        match self.grpc() {
+        Self::get_host_helper(self.common().hosts().grpc.as_ref())
+    }
+
+    fn get_weird_port(&self) -> String {
+        match self.common().hosts.http.port.as_ref() {
+            Some(port) => format!(":{}", port),
+            None => "".to_string(),
+        }
+    }
+
+    // HELPERS
+
+    fn get_host_helper(host: Option<&HostConfig>) -> anyhow::Result<String> {
+        match host {
             Some(host) => match host.port.as_ref() {
                 Some(port) => Ok(format!("{}://{}:{}", host.protocol, host.url, port)),
                 None => Ok(format!("{}://{}", host.protocol, host.url)),
@@ -65,8 +54,5 @@ pub trait HostConfigTrait {
                 bail!(error)
             }
         }
-    }
-    fn get_port(&self) -> Option<String> {
-        self.http().port.clone()
     }
 }

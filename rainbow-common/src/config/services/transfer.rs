@@ -17,30 +17,32 @@
  *
  */
 
-use crate::config::traits::HostConfigTrait;
-use crate::config::types::database::DatabaseConfig;
-use crate::config::types::roles::RoleConfig;
-use crate::config::types::{ApiConfig, CommonHostsConfig, HostConfig};
+use crate::config::services::CommonConfig;
+use crate::config::traits::{
+    ApiConfigTrait, CommonConfigTrait, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait, KeysPathTrait, RoleTrait,
+};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TransferConfig {
-    hosts: CommonHostsConfig,
-    database: DatabaseConfig,
-    keys_path: String,
-    api: ApiConfig,
-    role: RoleConfig,
-    is_local: bool,
+    #[serde(flatten)]
+    common: CommonConfig,
 }
 
-impl HostConfigTrait for TransferConfig {
-    fn http(&self) -> &HostConfig {
-        &self.hosts.http
-    }
-    fn graphql(&self) -> Option<&HostConfig> {
-        self.hosts.graphql.as_ref()
-    }
-    fn grpc(&self) -> Option<&HostConfig> {
-        self.hosts.grpc.as_ref()
+impl CommonConfigTrait for TransferConfig {
+    fn common(&self) -> &CommonConfig {
+        &self.common
     }
 }
+
+impl HostConfigTrait for TransferConfig {}
+
+impl DatabaseConfigTrait for TransferConfig {}
+
+impl IsLocalTrait for TransferConfig {}
+
+impl KeysPathTrait for TransferConfig {}
+
+impl RoleTrait for TransferConfig {}
+
+impl ApiConfigTrait for TransferConfig {}

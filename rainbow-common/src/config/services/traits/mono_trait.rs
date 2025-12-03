@@ -16,19 +16,11 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use serde_json::Value;
 
-pub trait AuthConsumerConfigTrait: Send + Sync + 'static {
-    fn get_full_db_url(&self) -> String;
-    fn get_wallet_api_url(&self) -> String;
-    fn get_wallet_register_data(&self) -> Value;
-    fn get_wallet_login_data(&self) -> Value;
-    fn get_cert(&self) -> anyhow::Result<String>;
-    fn get_priv_key(&self) -> anyhow::Result<String>;
-    fn get_pub_key(&self) -> anyhow::Result<String>;
-    fn get_host(&self) -> String;
-    fn is_local(&self) -> bool;
-    fn get_weird_port(&self) -> String;
-    fn get_openapi_json(&self) -> anyhow::Result<String>;
-    fn get_api_path(&self) -> String;
+pub trait MonoConfigTrait {
+    fn get_mono_host(&self) -> String;
+    fn get_weird_mono_port(&self) -> String;
+    fn get_mono_db(&self) -> String;
+    fn is_mono_local(&self) -> bool;
+    fn is_mono_catalog_datahub(&self) -> bool;
 }

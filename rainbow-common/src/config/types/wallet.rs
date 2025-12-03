@@ -17,13 +17,12 @@
  *
  */
 
+use crate::config::types::HostConfig;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct WalletConfig {
-    pub api_protocol: String,
-    pub api_url: String,
-    pub api_port: Option<String>,
+    pub api: HostConfig,
     pub r#type: String,
     pub name: String,
     pub email: String,

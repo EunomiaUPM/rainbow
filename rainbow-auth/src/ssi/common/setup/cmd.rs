@@ -16,13 +16,14 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::ssi::consumer::config::AuthConsumerConfig;
+
+use super::app::Application;
 use crate::ssi::consumer::setup::migrations::ConsumerMigration;
-use crate::ssi::consumer::setup::AuthConsumerApplication;
-use crate::ssi::provider::config::AuthProviderConfig;
 use crate::ssi::provider::setup::migrations::ProviderMigrations;
-use crate::ssi::provider::setup::AuthProviderApplication;
 use clap::{Parser, Subcommand};
+use rainbow_common::config::services::SsiAuthConfig;
+use rainbow_common::config::traits::ConfigLoader;
+use rainbow_common::config::types::roles::RoleConfig;
 use std::cmp::PartialEq;
 use tracing::{debug, info};
 
@@ -66,30 +67,30 @@ impl AuthCommands {
         match cli.role {
             AuthCliRoles::Provider(cmd) => match cmd {
                 AuthCliCommands::Start(args) => {
-                    let config = AuthProviderConfig::merge_dotenv_configuration(args.env_file);
+                    let config = SsiAuthConfig::load(RoleConfig::Provider, args.env_file);
                     let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
                     info!("Current Auth Provider Config:\n{}", table);
-                    AuthProviderApplication::run(&config).await?;
+                    Application::run(RoleConfig::Provider, config).await?;
                 }
                 AuthCliCommands::Setup(args) => {
-                    let config = AuthProviderConfig::merge_dotenv_configuration(args.env_file);
+                    let config = SsiAuthConfig::load(RoleConfig::Provider, args.env_file);
                     let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
                     info!("Current Auth Provider Config:\n{}", table);
-                    ProviderMigrations::run(&config).await?;
+                    ProviderMigrations::run(config).await?;
                 }
             },
             AuthCliRoles::Consumer(cmd) => match cmd {
                 AuthCliCommands::Start(args) => {
-                    let config = AuthConsumerConfig::merge_dotenv_configuration(args.env_file);
+                    let config = SsiAuthConfig::load(RoleConfig::Consumer, args.env_file);
                     let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
                     info!("Current Auth Consumer Config:\n{}", table);
-                    AuthConsumerApplication::run(&config).await?;
+                    Application::run(RoleConfig::Consumer, config).await?;
                 }
                 AuthCliCommands::Setup(args) => {
-                    let config = AuthConsumerConfig::merge_dotenv_configuration(args.env_file);
+                    let config = SsiAuthConfig::load(RoleConfig::Consumer, args.env_file);
                     let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
                     info!("Current Auth Consumer Config:\n{}", table);
-                    ConsumerMigration::run(&config).await?;
+                    ConsumerMigration::run(config).await?;
                 }
             },
         };

@@ -16,39 +16,31 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
-use rainbow_common::config::global::global_config::HostConfig;
-use crate::ssi::provider::config::{AuthProviderConfig, AuthProviderConfigTrait};
 use super::BusinessConfigTrait;
+use crate::ssi::common::utils::get_host_url;
+use rainbow_common::config::services::SsiAuthConfig;
+use rainbow_common::config::traits::{ApiConfigTrait, CommonConfigTrait};
+use rainbow_common::config::types::CommonHostsConfig;
 
 pub struct BusinessConfig {
-    host: HostConfig,
+    hosts: CommonHostsConfig,
     is_local: bool,
     api_path: String,
 }
 
-impl From<AuthProviderConfig> for BusinessConfig {
-    fn from(config: AuthProviderConfig) -> Self {
-        let api_path = config.get_api_path();
+impl From<SsiAuthConfig> for BusinessConfig {
+    fn from(config: SsiAuthConfig) -> Self {
         Self {
-            host: config.common_config.host,
-            is_local: config.common_config.is_local,
-            api_path,
+            hosts: config.common().hosts.clone(),
+            is_local: config.common().is_local,
+            api_path: config.get_api_path(),
         }
     }
 }
 
 impl BusinessConfigTrait for BusinessConfig {
     fn get_host(&self) -> String {
-        let host = self.host.clone();
-        match host.port.is_empty() {
-            true => {
-                format!("{}://{}", host.protocol, host.url)
-            }
-            false => {
-                format!("{}://{}:{}", host.protocol, host.url, host.port)
-            }
-        }
+        get_host_url(&self.hosts.http)
     }
     fn is_local(&self) -> bool {
         self.is_local

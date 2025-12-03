@@ -16,58 +16,41 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use serde_json::{json, Value};
-use rainbow_common::config::global::global_config::HostConfig;
 use crate::ssi::common::services::wallet::waltid::config::config_trait::WaltIdConfigTrait;
-use rainbow_common::ssi::WalletConfig;
-use crate::ssi::consumer::config::AuthConsumerConfig;
-use crate::ssi::provider::config::AuthProviderConfig;
-use crate::ssi::common::utils::read;
+use crate::ssi::common::utils::get_host_url;
+use rainbow_common::config::services::SsiAuthConfig;
+use rainbow_common::config::traits::{CommonConfigTrait, RoleTrait};
+use rainbow_common::config::types::roles::RoleConfig;
+use rainbow_common::config::types::{CommonHostsConfig, WalletConfig};
+use rainbow_common::utils::read;
+use serde_json::{json, Value};
 
 #[derive(Clone)]
 pub struct WaltIdConfig {
-    host: HostConfig,
-    ssi_wallet_config: WalletConfig,
+    hosts: CommonHostsConfig,
+    wallet: WalletConfig,
     keys_path: String,
-    role: String,
+    role: RoleConfig,
 }
 
-impl From<AuthProviderConfig> for WaltIdConfig {
-    fn from(value: AuthProviderConfig) -> Self {
+impl From<SsiAuthConfig> for WaltIdConfig {
+    fn from(value: SsiAuthConfig) -> Self {
         WaltIdConfig {
-            host: value.common_config.host,
-            ssi_wallet_config: value.common_config.ssi_wallet_config,
-            keys_path: value.common_config.keys_path,
-            role: value.common_config.role,
-        }
-    }
-}
-
-impl From<AuthConsumerConfig> for WaltIdConfig {
-    fn from(value: AuthConsumerConfig) -> Self {
-        WaltIdConfig {
-            host: value.common_config.host,
-            ssi_wallet_config: value.common_config.ssi_wallet_config,
-            keys_path: value.common_config.keys_path,
-            role: value.common_config.role,
+            hosts: value.common().hosts.clone(),
+            wallet: value.wallet(),
+            keys_path: value.common().keys_path.to_string(),
+            role: value.role().clone(),
         }
     }
 }
 
 impl WaltIdConfigTrait for WaltIdConfig {
     fn get_raw_wallet_config(&self) -> WalletConfig {
-        self.ssi_wallet_config.clone()
+        self.wallet.clone()
     }
     fn get_wallet_api_url(&self) -> String {
         let data = self.get_raw_wallet_config();
-        match data.api_port {
-            Some(port) => {
-                format!("{}://{}:{}", data.api_protocol, data.api_url, port)
-            }
-            None => {
-                format!("{}://{}", data.api_protocol, data.api_url)
-            }
-        }
+        get_host_url(&data.api)
     }
     fn get_wallet_register_data(&self) -> Value {
         let data = self.get_raw_wallet_config();
@@ -100,19 +83,9 @@ impl WaltIdConfigTrait for WaltIdConfig {
         read(&path)
     }
     fn get_host(&self) -> String {
-        let host = self.host.clone();
-        match host.port.is_empty() {
-            true => {
-                format!("{}://{}", host.protocol, host.url)
-            }
-            false => {
-                format!("{}://{}:{}", host.protocol, host.url, host.port)
-            }
-        }
+        get_host_url(&self.hosts.http)
     }
-    fn get_role(&self) -> String {
-        self.role.clone()
+    fn get_role(&self) -> RoleConfig {
+        self.role
     }
 }
-
-

@@ -17,44 +17,30 @@
  *
  */
 
-use super::super::traits::CommonConfigTraits;
+use super::super::traits::CommonConfigTrait;
 use crate::config::services::CommonConfig;
-use crate::config::traits::{DatabaseConfigTrait, HostConfigTrait, IsLocalTrait, KeysPathTrait, RoleTrait};
-use crate::config::types::roles::RoleConfig;
-use crate::config::types::HostConfig;
+use crate::config::traits::{ApiConfigTrait, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait, KeysPathTrait, RoleTrait};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct BusinessConfig {
     #[serde(flatten)]
     common: CommonConfig,
-    extra_field: bool,
 }
 
-impl HostConfigTrait for BusinessConfig {
-    fn http(&self) -> &HostConfig {
-        self.common.http()
+impl CommonConfigTrait for BusinessConfig {
+    fn common(&self) -> &CommonConfig {
+        &self.common
     }
 }
+
+impl HostConfigTrait for BusinessConfig {}
 
 impl DatabaseConfigTrait for BusinessConfig {}
 
-impl IsLocalTrait for BusinessConfig {
-    fn is_local(&self) -> bool {
-        self.common.is_local()
-    }
-}
+impl IsLocalTrait for BusinessConfig {}
 
-impl RoleTrait for BusinessConfig {
-    fn role(&self) -> &RoleConfig {
-        self.common.role()
-    }
-}
+impl KeysPathTrait for BusinessConfig {}
 
-impl KeysPathTrait for BusinessConfig {
-    fn keys_path(&self) -> &str {
-        self.common.keys_path()
-    }
-}
-
-impl CommonConfigTraits for BusinessConfig {}
+impl RoleTrait for BusinessConfig {}
+impl ApiConfigTrait for BusinessConfig {}

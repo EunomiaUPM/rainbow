@@ -17,10 +17,11 @@
  *
  */
 
-use crate::ssi::consumer::config::{AuthConsumerConfig, AuthConsumerConfigTrait};
 use crate::ssi::consumer::data::migrations::get_auth_consumer_migrations;
 use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
+use rainbow_common::config::services::SsiAuthConfig;
+use rainbow_common::config::traits::DatabaseConfigTrait;
 
 pub struct ConsumerMigration;
 
@@ -35,7 +36,7 @@ impl MigratorTrait for ConsumerMigration {
 }
 
 impl ConsumerMigration {
-    pub async fn run(config: &AuthConsumerConfig) -> anyhow::Result<()> {
+    pub async fn run(config: SsiAuthConfig) -> anyhow::Result<()> {
         // db_connection
         let db_url = config.get_full_db_url();
         let db_connection = Database::connect(db_url).await.expect("Database can't connect");

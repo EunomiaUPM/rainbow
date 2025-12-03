@@ -17,24 +17,30 @@
  *
  */
 
-use crate::config::traits::{CommonConfigTraits, HostConfigTrait};
-use crate::config::types::database::DatabaseConfig;
-use crate::config::types::roles::RoleConfig;
-use crate::config::types::{ApiConfig, CommonHostsConfig, HostConfig};
+use crate::config::services::CommonConfig;
+use crate::config::traits::{ApiConfigTrait, CommonConfigTrait, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait, KeysPathTrait, RoleTrait};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ContractsConfig {
-    hosts: CommonHostsConfig,
-    database: DatabaseConfig,
-    api: ApiConfig,
-    role: RoleConfig,
-    is_local: bool,
-    keys_path: String,
+    #[serde(flatten)]
+    common: CommonConfig,
 }
 
-impl CommonConfigTraits for ContractsConfig {
-    fn http(&self) -> &HostConfig {
-        &self.hosts.http
+impl CommonConfigTrait for ContractsConfig {
+    fn common(&self) -> &CommonConfig {
+        &self.common
     }
 }
+
+impl HostConfigTrait for ContractsConfig {}
+
+impl DatabaseConfigTrait for ContractsConfig {}
+
+impl IsLocalTrait for ContractsConfig {}
+
+impl KeysPathTrait for ContractsConfig {}
+
+impl RoleTrait for ContractsConfig {}
+
+impl ApiConfigTrait for ContractsConfig {}

@@ -24,10 +24,10 @@ use crate::ssi::common::services::repo::subtraits::{
 };
 use crate::ssi::common::services::vc_requester::VcRequesterTrait;
 use crate::ssi::common::services::wallet::WalletServiceTrait;
-use crate::ssi::consumer::config::AuthConsumerConfigTrait;
 use crate::ssi::consumer::core::traits::{CoreConsumerTrait, CoreOnboarderTrait};
 use crate::ssi::consumer::services::onboarder::OnboarderTrait;
 use crate::ssi::consumer::services::repo::AuthConsumerRepoTrait;
+use rainbow_common::config::services::SsiAuthConfig;
 use std::sync::Arc;
 
 pub struct AuthConsumer {
@@ -38,7 +38,7 @@ pub struct AuthConsumer {
     repo: Arc<dyn AuthConsumerRepoTrait>,
     #[allow(dead_code)] // as an orchestrator, it should have access even though it's not used
     client: Arc<dyn ClientServiceTrait>,
-    config: Arc<dyn AuthConsumerConfigTrait>,
+    config: Arc<SsiAuthConfig>,
 }
 
 impl AuthConsumer {
@@ -49,14 +49,14 @@ impl AuthConsumer {
         callback: Arc<dyn CallbackTrait>,
         repo: Arc<dyn AuthConsumerRepoTrait>,
         client: Arc<dyn ClientServiceTrait>,
-        config: Arc<dyn AuthConsumerConfigTrait>,
+        config: Arc<SsiAuthConfig>,
     ) -> AuthConsumer {
         AuthConsumer { wallet, vc_requester, onboarder, callback, repo, client, config }
     }
 }
 
 impl CoreConsumerTrait for AuthConsumer {
-    fn config(&self) -> Arc<dyn AuthConsumerConfigTrait> {
+    fn config(&self) -> Arc<SsiAuthConfig> {
         self.config.clone()
     }
 }

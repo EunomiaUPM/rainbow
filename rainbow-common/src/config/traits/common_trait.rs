@@ -17,5 +17,8 @@
  *
  */
 
-pub mod application;
-pub mod db_migrations;
+use crate::config::services::CommonConfig;
+
+pub trait CommonConfigTrait {
+    fn common(&self) -> &CommonConfig;
+}

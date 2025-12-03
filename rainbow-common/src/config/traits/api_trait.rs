@@ -16,8 +16,14 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-mod config;
-mod config_trait;
-pub use config_trait::AuthProviderConfigTrait;
+use crate::config::traits::CommonConfigTrait;
+use crate::utils::read;
 
-pub use config::AuthProviderConfig;
+pub trait ApiConfigTrait: CommonConfigTrait {
+    fn get_openapi(&self) -> anyhow::Result<String> {
+        read(&self.common().api.openapi_path)
+    }
+    fn get_api_path(&self) -> String {
+        format!("/api/{}", self.common().api.version)
+    }
+}

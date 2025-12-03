@@ -17,40 +17,26 @@
  *
  */
 use super::VCRequesterConfigTrait;
-use crate::ssi::common::utils::read;
-use crate::ssi::consumer::config::{AuthConsumerConfig, AuthConsumerConfigTrait};
-use crate::ssi::provider::config::{AuthProviderConfig, AuthProviderConfigTrait};
-use rainbow_common::config::global::global_config::HostConfig;
-use rainbow_common::ssi::ClientConfig;
-use serde_json::{json, Value};
+use crate::ssi::common::utils::{get_host_url, get_pretty_client_config_helper};
+use rainbow_common::config::services::SsiAuthConfig;
+use rainbow_common::config::traits::{ApiConfigTrait, CommonConfigTrait};
+use rainbow_common::config::types::{ClientConfig, CommonHostsConfig};
+use serde_json::Value;
 
 pub struct VCRequesterConfig {
-    host: HostConfig,
+    hosts: CommonHostsConfig,
     client: ClientConfig,
     keys_path: String,
     api_path: String,
 }
 
-impl From<AuthConsumerConfig> for VCRequesterConfig {
-    fn from(value: AuthConsumerConfig) -> Self {
-        let api_path = value.get_api_path();
+impl From<SsiAuthConfig> for VCRequesterConfig {
+    fn from(value: SsiAuthConfig) -> Self {
         VCRequesterConfig {
-            host: value.common_config.host,
-            client: value.common_config.client,
-            keys_path: value.common_config.keys_path,
-            api_path,
-        }
-    }
-}
-
-impl From<AuthProviderConfig> for VCRequesterConfig {
-    fn from(value: AuthProviderConfig) -> Self {
-        let api_path = value.get_api_path();
-        VCRequesterConfig {
-            host: value.common_config.host,
-            client: value.common_config.client,
-            keys_path: value.common_config.keys_path,
-            api_path,
+            hosts: value.common().hosts.clone(),
+            client: value.client(),
+            keys_path: value.common().keys_path.clone(),
+            api_path: value.get_api_path(),
         }
     }
 }
@@ -58,30 +44,10 @@ impl From<AuthProviderConfig> for VCRequesterConfig {
 impl VCRequesterConfigTrait for VCRequesterConfig {
     fn get_pretty_client_config(&self) -> anyhow::Result<Value> {
         let path = format!("{}/cert.pem", self.keys_path);
-        let cert = read(&path)?;
-
-        let clean_cert = cert.lines().filter(|line| !line.starts_with("-----")).collect::<String>();
-
-        let key = json!({
-            "proof": "httpsig",
-            "cert": clean_cert
-        });
-        Ok(json!({
-            "key" : key,
-            "class_id" : self.client.class_id,
-            "display" : self.client.display,
-        }))
+        get_pretty_client_config_helper(&self.client, &path)
     }
     fn get_host(&self) -> String {
-        let host = self.host.clone();
-        match host.port.is_empty() {
-            true => {
-                format!("{}://{}", host.protocol, host.url)
-            }
-            false => {
-                format!("{}://{}:{}", host.protocol, host.url, host.port)
-            }
-        }
+        get_host_url(&self.hosts.http)
     }
     fn get_api_path(&self) -> String {
         self.api_path.clone()

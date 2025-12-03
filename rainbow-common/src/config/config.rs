@@ -17,17 +17,13 @@
  *
  */
 
+use crate::config::services::traits::MonoConfigTrait;
 use crate::config::services::{
-    BusinessConfig, CatalogConfig, ContractsConfig, GatewayConfig, MonolithConfig, SsiAuthConfig, TransferConfig,
+    BusinessConfig, CatalogConfig, CommonConfig, ContractsConfig, GatewayConfig, MonolithConfig, SsiAuthConfig,
+    TransferConfig,
 };
-use crate::config::traits::{GlobalConfigTrait, HostConfigTrait};
-use crate::config::types::database::{DatabaseConfig, DbType};
-use crate::config::types::roles::RoleConfig;
-use crate::config::types::{ApiConfig, CommonHostsConfig, HostConfig};
+use crate::config::traits::{ConfigLoader, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait};
 use serde::{Deserialize, Serialize};
-use std::fs;
-use std::path::PathBuf;
-use tracing::debug;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ApplicationConfig {
@@ -41,93 +37,52 @@ pub struct ApplicationConfig {
 }
 
 impl ApplicationConfig {
-    fn new(role: RoleConfig) -> Self {
-        match role {
-            RoleConfig::Consumer => {
-                let host = HostConfig {
-                    protocol: "http".to_string(),
-                    url: "127.0.0.1".to_string(),
-                    port: Some("1100".to_string()),
-                };
-                let hosts = CommonHostsConfig { http: host, grpc: None, graphql: None };
-                let db = DatabaseConfig {
-                    db_type: DbType::Postgres,
-                    url: "127.0.0.1".to_string(),
-                    port: "1300".to_string(),
-                    user: "ds_consumer".to_string(),
-                    password: "ds_consumer".to_string(),
-                    name: "ds_consumer".to_string(),
-                };
-                let keys_path = "static/certificates/consumer".to_string();
-                Self {
-                    monolith: Some(MonolithConfig::new(hosts, db, role, true, keys_path)),
-                    transfer: None,
-                    business: None,
-                    contract: None,
-                    catalog: None,
-                    ssi_auth: None,
-                    gateway: None,
-                }
-            }
-            RoleConfig::Provider => {
-                let host = HostConfig {
-                    protocol: "http".to_string(),
-                    url: "127.0.0.1".to_string(),
-                    port: Some("1200".to_string()),
-                };
-                let hosts = CommonHostsConfig { http: host, grpc: None, graphql: None };
-                let db = DatabaseConfig {
-                    db_type: DbType::Postgres,
-                    url: "127.0.0.1".to_string(),
-                    port: "1400".to_string(),
-                    user: "ds_provider".to_string(),
-                    password: "ds_provider".to_string(),
-                    name: "ds_provider".to_string(),
-                };
-                let keys_path = "static/certificates/consumer".to_string();
-                Self {
-                    monolith: Some(MonolithConfig::new(hosts, db, role, true, keys_path)),
-                    transfer: None,
-                    business: None,
-                    contract: None,
-                    catalog: None,
-                    ssi_auth: None,
-                    gateway: None,
-                }
-            }
+    fn new(common_config: CommonConfig) -> Self {
+        Self {
+            monolith: Some(MonolithConfig::new(common_config)),
+            transfer: None,
+            business: None,
+            contract: None,
+            catalog: None,
+            ssi_auth: None,
+            gateway: None,
         }
     }
 }
 
-impl GlobalConfigTrait for ApplicationConfig {
-    fn load(role: RoleConfig, env_file: Option<String>) -> Self {
-        if let Some(env_file) = env_file {
-            let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(env_file);
-            debug!("Config file path: {}", path.display());
-
-            let data = fs::read_to_string(&path).expect("Unable to read config file");
-            serde_norway::from_str(&data).expect("Unable to parse config file")
-        } else {
-            ApplicationConfig::new(role)
-        }
-    }
-
-    // MONOLITH FUNCTIONS
+impl MonoConfigTrait for ApplicationConfig {
     fn get_mono_host(&self) -> String {
         let mono = self.monolith.as_ref().expect("Trying to access core mode without it being defined");
         mono.get_host()
     }
-    fn get_mono_port(&self) -> String {
+    fn get_weird_mono_port(&self) -> String {
         let mono = self.monolith.as_ref().expect("Trying to access core mode without it being defined");
-        mono.get_port().unwrap_or("".to_string())
+        mono.get_weird_port()
+    }
+    fn get_mono_db(&self) -> String {
+        let mono = self.monolith.as_ref().expect("Trying to access core mode without it being defined");
+        mono.get_full_db_url()
     }
     fn is_mono_local(&self) -> bool {
-        self.monolith
+        let mono = self.monolith.as_ref().expect("Trying to access core mode without it being defined");
+        mono.is_local()
     }
-    fn is_catalog_datahub(&self) -> bool {
+
+    fn is_mono_catalog_datahub(&self) -> bool {
         match &self.catalog {
             Some(catalog) => catalog.is_datahub(),
             None => false,
         }
+    }
+}
+impl ConfigLoader for ApplicationConfig {
+    fn default_with_config(config: CommonConfig) -> Self {
+        ApplicationConfig::new(config)
+    }
+}
+
+impl ApplicationConfig {
+    pub fn ssi_auth_config(&self) -> SsiAuthConfig {
+        self.ssi_auth.clone().expect("Trying to access core mode without it being defined")
     }
 }

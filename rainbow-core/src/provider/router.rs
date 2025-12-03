@@ -20,24 +20,27 @@
 use axum::Router;
 use rainbow_auth::ssi::provider::setup::app::AuthProviderApplication;
 use rainbow_catalog::provider::setup::application::create_catalog_router;
-use rainbow_common::config::provider::config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_common::config::traits::GlobalConfigTrait;
+use rainbow_common::config::ApplicationConfig;
+use rainbow_common::config::services::traits::MonoConfigTrait;
 use rainbow_contracts::provider::setup::application::create_contract_negotiation_provider_router;
 use rainbow_datahub_catalog::setup::application::create_datahub_catalog_router;
 use rainbow_transfer::provider::setup::application::create_transfer_provider_router;
 use rainbow_transfer_agent::setup::create_root_http_router;
 
-pub async fn create_core_provider_router(config: &ApplicationProviderConfig) -> Router {
-    let app_config: ApplicationProviderConfig = config.clone().into();
-    let auth_router = AuthProviderApplication::create_router_4_monolith(app_config.clone().into()).await;
-    let transfer_router = create_transfer_provider_router(&app_config.clone().into()).await;
-    let cn_router = create_contract_negotiation_provider_router(&app_config.clone().into()).await;
-    let transfer_agent_router =
-        create_root_http_router(&app_config.clone().into()).await.expect("Failed to create transfer agent router");
+pub async fn create_core_provider_router(config: &ApplicationConfig) -> Router {
+    let auth_router = AuthProviderApplication::create_router(config.ssi_auth_config()).await;
 
-    let catalog_router: Router = if ApplicationProviderConfig::is_datahub_as_catalog(config) {
-        create_datahub_catalog_router(&app_config.clone().into()).await
+    // TODO
+    let transfer_router = create_transfer_provider_router(&config.clone()).await;
+    let cn_router = create_contract_negotiation_provider_router(&config.clone()).await;
+    let transfer_agent_router =
+        create_root_http_router(&config.clone()).await.expect("Failed to create transfer agent router");
+
+    let catalog_router: Router = if config.is_mono_catalog_datahub() {
+        create_datahub_catalog_router(&config.clone()).await
     } else {
-        create_catalog_router(&app_config.clone().into()).await
+        create_catalog_router(&config.clone()).await
     };
 
     Router::new()

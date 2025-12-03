@@ -17,14 +17,16 @@
  *
  */
 
-mod global_config_trait;
-mod host_config_trait;
+mod api_trait;
+mod common_trait;
+mod config_loader;
 mod database_trait;
 mod extra_traits;
-mod common_traits;
+mod host_config_trait;
 
-pub use global_config_trait::GlobalConfigTrait;
-pub use host_config_trait::HostConfigTrait;
+pub use api_trait::ApiConfigTrait;
+pub use common_trait::CommonConfigTrait;
+pub use config_loader::ConfigLoader;
 pub use database_trait::DatabaseConfigTrait;
 pub use extra_traits::*;
-pub use common_traits::CommonConfigTraits;
+pub use host_config_trait::HostConfigTrait;

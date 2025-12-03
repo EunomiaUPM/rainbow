@@ -16,7 +16,18 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use crate::config::traits::CommonConfigTrait;
+use crate::config::types::database::DbType;
 
-pub trait DatabaseConfigTrait {
-    
+pub trait DatabaseConfigTrait: CommonConfigTrait {
+    fn get_full_db_url(&self) -> String {
+        let db_config = self.common().db();
+        match db_config.db_type {
+            DbType::Memory => ":memory:".to_string(),
+            _ => format!(
+                "{}://{}:{}@{}:{}/{}",
+                db_config.db_type, db_config.user, db_config.password, db_config.url, db_config.port, db_config.name
+            ),
+        }
+    }
 }

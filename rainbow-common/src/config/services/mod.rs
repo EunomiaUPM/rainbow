@@ -24,6 +24,7 @@ mod ssi_auth;
 mod transfer;
 mod monolith;
 mod common;
+pub mod traits;
 
 pub use business::BusinessConfig;
 pub use catalog::CatalogConfig;

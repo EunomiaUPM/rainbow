@@ -17,54 +17,36 @@
  *
  */
 
-use crate::config::traits::{
-    CommonConfigTraits, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait, KeysPathTrait, RoleTrait,
-};
-use crate::config::types::database::DatabaseConfig;
-use crate::config::types::roles::RoleConfig;
-use crate::config::types::{ApiConfig, CommonHostsConfig, HostConfig};
+use crate::config::services::CommonConfig;
+use crate::config::traits::{ApiConfigTrait, CommonConfigTrait, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait, KeysPathTrait, RoleTrait};
+use crate::config::types::HostConfig;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CatalogConfig {
-    hosts: CommonHostsConfig,
+    #[serde(flatten)]
+    common: CommonConfig,
     is_datahub: bool,
     datahub_host: Option<HostConfig>,
     datahub_token: Option<String>,
-    database: DatabaseConfig,
-    api: ApiConfig,
-    role: RoleConfig,
-    is_local: bool,
-    keys_path: String,
 }
 
-impl HostConfigTrait for CatalogConfig {
-    fn http(&self) -> &HostConfig {
-        &self.hosts.http
+impl CommonConfigTrait for CatalogConfig {
+    fn common(&self) -> &CommonConfig {
+        &self.common
     }
 }
+
+impl HostConfigTrait for CatalogConfig {}
 
 impl DatabaseConfigTrait for CatalogConfig {}
 
-impl IsLocalTrait for CatalogConfig {
-    fn is_local(&self) -> bool {
-        self.is_local
-    }
-}
+impl IsLocalTrait for CatalogConfig {}
 
-impl RoleTrait for CatalogConfig {
-    fn role(&self) -> RoleConfig {
-        self.role.clone()
-    }
-}
+impl KeysPathTrait for CatalogConfig {}
 
-impl KeysPathTrait for CatalogConfig {
-    fn keys_path(&self) -> String {
-        self.keys_path.clone()
-    }
-}
-
-impl CommonConfigTraits for CatalogConfig {}
+impl RoleTrait for CatalogConfig {}
+impl ApiConfigTrait for CatalogConfig {}
 
 impl CatalogConfig {
     pub fn is_datahub(&self) -> bool {

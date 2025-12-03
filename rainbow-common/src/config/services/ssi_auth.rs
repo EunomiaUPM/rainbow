@@ -17,26 +17,84 @@
  *
  */
 
-use crate::config::traits::HostConfigTrait;
-use crate::config::types::database::DatabaseConfig;
+use super::traits::SsiAuthConfigTrait;
+use crate::config::services::CommonConfig;
+use crate::config::traits::{ApiConfigTrait, CommonConfigTrait, ConfigLoader, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait, KeysPathTrait, RoleTrait};
 use crate::config::types::roles::RoleConfig;
-use crate::config::types::{ApiConfig, ClientConfig, CommonHostsConfig, HostConfig, WalletConfig};
+use crate::config::types::{ClientConfig, HostConfig, WalletConfig};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct SsiAuthConfig {
-    hosts: CommonHostsConfig,
+    #[serde(flatten)]
+    common: CommonConfig,
     wallet: WalletConfig,
     client: ClientConfig,
-    database: DatabaseConfig,
-    api: ApiConfig,
-    keys_path: String,
-    role: RoleConfig,
-    is_local: bool,
 }
 
-impl HostConfigTrait for SsiAuthConfig {
-    fn http(&self) -> &HostConfig {
-        &self.hosts.http
+impl SsiAuthConfig {
+    pub fn wallet(&self) -> WalletConfig {
+        self.wallet.clone()
+    }
+    pub fn client(&self) -> ClientConfig {
+        self.client.clone()
     }
 }
+impl SsiAuthConfigTrait for SsiAuthConfig {}
+
+impl ConfigLoader for SsiAuthConfig {
+    fn default_with_config(common_config: CommonConfig) -> Self {
+        match common_config.role {
+            RoleConfig::Consumer => Self {
+                common: common_config,
+                wallet: WalletConfig {
+                    api: HostConfig {
+                        protocol: "http".to_string(),
+                        url: "127.0.0.1".to_string(),
+                        port: Some("7001".to_string()),
+                    },
+                    r#type: "email".to_string(),
+                    name: "RainbowConsumer".to_string(),
+                    email: "RainbowConsumer@rainbow.com".to_string(),
+                    password: "rainbow".to_string(),
+                    id: None,
+                },
+                client: ClientConfig { class_id: "rainbow_consumer".to_string(), display: None },
+            },
+            RoleConfig::Provider => Self {
+                common: common_config,
+                wallet: WalletConfig {
+                    api: HostConfig {
+                        protocol: "http".to_string(),
+                        url: "127.0.0.1".to_string(),
+                        port: Some("7001".to_string()),
+                    },
+                    r#type: "email".to_string(),
+                    name: "RainbowProvider".to_string(),
+                    email: "RainbowProvider@rainbow.com".to_string(),
+                    password: "rainbow".to_string(),
+                    id: None,
+                },
+                client: ClientConfig { class_id: "rainbow_provider".to_string(), display: None },
+            },
+        }
+    }
+}
+
+impl CommonConfigTrait for SsiAuthConfig {
+    fn common(&self) -> &CommonConfig {
+        &self.common
+    }
+}
+
+impl HostConfigTrait for SsiAuthConfig {}
+
+impl DatabaseConfigTrait for SsiAuthConfig {}
+
+impl IsLocalTrait for SsiAuthConfig {}
+
+impl KeysPathTrait for SsiAuthConfig {}
+
+impl RoleTrait for SsiAuthConfig {}
+
+impl ApiConfigTrait for SsiAuthConfig {}

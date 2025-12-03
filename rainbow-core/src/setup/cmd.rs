@@ -17,13 +17,13 @@
  *
  */
 
-use crate::consumer::setup::application::CoreConsumerApplication;
-use crate::consumer::setup::db_migrations::CoreConsumerMigration;
-use crate::provider::setup::application::CoreProviderApplication;
+use crate::consumer::db_migrations::CoreConsumerMigration;
 use crate::provider::db_migrations::CoreProviderMigration;
 use crate::provider::db_seeding::CoreProviderSeeding;
+use crate::setup::CoreApplication;
 use clap::{Parser, Subcommand};
-use rainbow_common::config::traits::GlobalConfigTrait;
+use rainbow_common::config::services::traits::MonoConfigTrait;
+use rainbow_common::config::traits::ConfigLoader;
 use rainbow_common::config::types::roles::RoleConfig;
 use rainbow_common::config::ApplicationConfig;
 use std::cmp::PartialEq;
@@ -70,12 +70,12 @@ impl CoreCommands {
             CoreCliRoles::Provider(cmd) => match cmd {
                 CoreCliCommands::Start(args) => {
                     let config = ApplicationConfig::load(RoleConfig::Provider, args.env_file);
-                    CoreProviderApplication::run(&config).await?
+                    CoreApplication::run(RoleConfig::Provider, &config).await?
                 }
                 CoreCliCommands::Setup(args) => {
                     let config = ApplicationConfig::load(RoleConfig::Provider, args.env_file);
                     CoreProviderMigration::run(&config).await?;
-                    match config.is_catalog_datahub() {
+                    match config.is_mono_catalog_datahub() {
                         true => {}
                         false => {
                             CoreProviderSeeding::run(&config).await?;
@@ -86,7 +86,7 @@ impl CoreCommands {
             CoreCliRoles::Consumer(cmd) => match cmd {
                 CoreCliCommands::Start(args) => {
                     let config = ApplicationConfig::load(RoleConfig::Consumer, args.env_file);
-                    CoreConsumerApplication::run(&config).await?
+                    CoreApplication::run(RoleConfig::Consumer, &config).await?
                 }
                 CoreCliCommands::Setup(args) => {
                     let config = ApplicationConfig::load(RoleConfig::Consumer, args.env_file);
