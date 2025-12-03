@@ -54,7 +54,7 @@ impl AuthProviderRouter {
         let openapi_router = OpenapiRouter::new(self.openapi.clone()).router();
         let business_router = BusinessRouter::new(self.provider.clone()).router();
 
-        let api_path = self.provider.config().get_api_path();
+        let api_path = self.provider.config().get_api_version();
 
         Router::new()
             .route(&format!("{}/status", api_path), get(server_status))

@@ -32,7 +32,7 @@ impl From<SsiAuthConfig> for BusinessConfig {
         Self {
             hosts: config.common().hosts.clone(),
             is_local: config.common().is_local,
-            api_path: config.get_api_path(),
+            api_path: config.get_api_version(),
         }
     }
 }

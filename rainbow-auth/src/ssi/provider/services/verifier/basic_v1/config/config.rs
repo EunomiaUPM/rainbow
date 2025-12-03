@@ -29,7 +29,7 @@ pub struct VerifierConfig {
 
 impl From<SsiAuthConfig> for VerifierConfig {
     fn from(value: SsiAuthConfig) -> Self {
-        Self { hosts: value.common().hosts.clone(), is_local: value.common().is_local, api_path: value.get_api_path() }
+        Self { hosts: value.common().hosts.clone(), is_local: value.common().is_local, api_path: value.get_api_version() }
     }
 }
 

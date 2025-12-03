@@ -48,7 +48,7 @@ impl SSIAuthFacadeService {
 impl SSIAuthFacadeTrait for SSIAuthFacadeService {
     async fn verify_token(&self, token: String) -> anyhow::Result<Mates> {
         let base_url = self.config.get_host(HostType::Http);
-        let url = format!("{}{}/mates/token", base_url, self.config.get_api_path());
+        let url = format!("{}{}/mates/token", base_url, self.config.get_api_version());
         let response = self.client.post(&url).json(&VerifyTokenRequest { token }).send().await;
         let response = match response {
             Ok(response) => response,

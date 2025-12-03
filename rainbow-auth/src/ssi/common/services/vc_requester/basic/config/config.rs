@@ -36,7 +36,7 @@ impl From<SsiAuthConfig> for VCRequesterConfig {
             hosts: value.common().hosts.clone(),
             client: value.client(),
             keys_path: value.common().keys_path.clone(),
-            api_path: value.get_api_path(),
+            api_path: value.get_api_version(),
         }
     }
 }

@@ -52,7 +52,7 @@ impl AuthConsumerRouter {
         let onboarder_router = OnboarderConsumerRouter::new(self.consumer.clone()).router();
         let openapi_route = OpenapiRouter::new(self.openapi.clone()).router();
 
-        let api_path = self.consumer.config().get_api_path();
+        let api_path = self.consumer.config().get_api_version();
 
         Router::new()
             .route(&format!("{}/status", api_path), get(server_status))

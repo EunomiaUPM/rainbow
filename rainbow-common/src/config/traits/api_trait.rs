@@ -23,7 +23,7 @@ pub trait ApiConfigTrait: CommonConfigTrait {
     fn get_openapi(&self) -> anyhow::Result<String> {
         read(&self.common().api.openapi_path)
     }
-    fn get_api_path(&self) -> String {
+    fn get_api_version(&self) -> String {
         format!("/api/{}", self.common().api.version)
     }
 }
