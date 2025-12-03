@@ -17,14 +17,39 @@
  *
  */
 
+use crate::config::min_know_services::MinKnownConfig;
 use crate::config::services::CommonConfig;
-use crate::config::traits::{ApiConfigTrait, CommonConfigTrait, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait, KeysPathTrait, RoleTrait};
+use crate::config::traits::{
+    ApiConfigTrait, CommonConfigTrait, ConfigLoader, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait, KeysPathTrait,
+    RoleTrait,
+};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ContractsConfig {
     #[serde(flatten)]
     common: CommonConfig,
+    ssi_auth: MinKnownConfig,
+    is_catalog_datahub: bool,
+}
+
+impl ContractsConfig {
+    pub fn ssi_auth(&self) -> MinKnownConfig {
+        self.ssi_auth.clone()
+    }
+    pub fn is_catalog_datahub(&self) -> bool {
+        self.is_catalog_datahub
+    }
+}
+
+impl ConfigLoader for ContractsConfig {
+    fn default_with_config(common_config: CommonConfig) -> Self {
+        Self {
+            common: common_config.clone(),
+            ssi_auth: MinKnownConfig { hosts: common_config.hosts, api_version: common_config.api.openapi_path },
+            is_catalog_datahub: false,
+        }
+    }
 }
 
 impl CommonConfigTrait for ContractsConfig {

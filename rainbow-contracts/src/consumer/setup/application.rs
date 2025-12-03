@@ -25,9 +25,11 @@ use crate::consumer::http::ds_protocol_rpc::ds_protocol_rpc::DSRPCContractNegoti
 use crate::consumer::http::openapi::route_openapi;
 use crate::consumer::http::rainbow_entities::rainbow_entities::RainbowEntitiesContractNegotiationConsumerRouter;
 use axum::{serve, Router};
-use rainbow_common::config::consumer::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
+use rainbow_common::config::services::ContractsConfig;
+use rainbow_common::config::traits::{DatabaseConfigTrait, HostConfigTrait, IsLocalTrait};
+use rainbow_common::config::types::HostType;
+use rainbow_common::facades::ssi_auth_facade::mates_facade::MatesFacadeService;
 use rainbow_common::facades::ssi_auth_facade::ssi_auth_facade::SSIAuthFacadeService;
-use rainbow_common::mates_facade::mates_facade::MatesFacadeService;
 use rainbow_db::contracts_consumer::repo::sql::ContractNegotiationConsumerRepoForSql;
 use rainbow_db::contracts_consumer::repo::ContractNegotiationConsumerRepoFactory;
 use rainbow_db::events::repo::sql::EventsRepoForSql;
@@ -44,7 +46,7 @@ use tracing::info;
 
 pub struct ContractNegotiationConsumerApplication;
 
-pub async fn create_contract_negotiation_consumer_router(config: &ApplicationConsumerConfig) -> Router {
+pub async fn create_contract_negotiation_consumer_router(config: &ContractsConfig) -> Router {
     let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
     let consumer_repo = Arc::new(ContractNegotiationConsumerRepoForSql::create_repo(
         db_connection.clone(),
@@ -76,8 +78,10 @@ pub async fn create_contract_negotiation_consumer_router(config: &ApplicationCon
         RainbowEntitiesContractNegotiationConsumerRouter::new(rainbow_entities_service.clone()).router();
 
     // DSRPCProtocol Dependency injection
-    let app_config: ApplicationConsumerConfig = config.clone().into();
-    let mates_facade = Arc::new(MatesFacadeService::new(app_config.clone().into()));
+    let ssi_facades_config = config.ssi_auth();
+    let ssi_auth_facade = Arc::new(SSIAuthFacadeService::new(ssi_facades_config.clone()));
+    let mates_facade = Arc::new(MatesFacadeService::new(ssi_facades_config));
+
     let ds_rpc_protocol_service = Arc::new(DSRPCContractNegotiationConsumerService::new(
         consumer_repo.clone(),
         notification_service.clone(),
@@ -86,7 +90,6 @@ pub async fn create_contract_negotiation_consumer_router(config: &ApplicationCon
     let ds_rpc_protocol_router = DSRPCContractNegotiationConsumerRouter::new(ds_rpc_protocol_service.clone()).router();
 
     // DSProtocol Dependency injection
-    let ssi_auth_facade = Arc::new(SSIAuthFacadeService::new(app_config.clone().into()));
     let ds_protocol_service = Arc::new(DSProtocolContractNegotiationConsumerService::new(
         consumer_repo.clone(),
         notification_service.clone(),
@@ -105,30 +108,18 @@ pub async fn create_contract_negotiation_consumer_router(config: &ApplicationCon
 }
 
 impl ContractNegotiationConsumerApplication {
-    pub async fn run(config: &ApplicationConsumerConfig) -> anyhow::Result<()> {
+    pub async fn run(config: &ContractsConfig) -> anyhow::Result<()> {
         // db_connection
         let router = create_contract_negotiation_consumer_router(config).await;
         // Init server
         let server_message = format!(
             "Starting provider server in {}",
-            config.get_contract_negotiation_host_url().unwrap()
+            config.get_host(HostType::Http)
         );
         info!("{}", server_message);
-        let listener = match config.get_environment_scenario() {
-            true => {
-                TcpListener::bind(format!(
-                    "127.0.0.1:{}",
-                    config.get_raw_contract_negotiation_host().clone().unwrap().port
-                ))
-                .await?
-            }
-            false => {
-                TcpListener::bind(format!(
-                    "0.0.0.0:{}",
-                    config.get_raw_contract_negotiation_host().clone().unwrap().port
-                ))
-                .await?
-            }
+        let listener = match config.is_local() {
+            true => TcpListener::bind(format!("127.0.0.1{}", config.get_weird_port())).await?,
+            false => TcpListener::bind(format!("0.0.0.0{}", config.get_weird_port())).await?,
         };
         serve(listener, router).await?;
         Ok(())

@@ -12,6 +12,7 @@ hosts_default: &hosts_default
   graphql: null
 
 api_version: &api_version "V1"
+is_catalog_datahub: &is_catalog_datahub false
 
 mono_config: &mono_config
   hosts: *hosts_default
@@ -39,7 +40,7 @@ monolith: *mono_config
 # ==========================
 catalog:
   common: *mono_config
-  is_datahub: false
+  is_datahub: *is_catalog_datahub
   datahub_host: null
   datahub_token: null
   ssi_auth:
@@ -65,6 +66,15 @@ ssi_auth:
     class_id: "rainbow_consumer"
     display: null
 
+# ==========================
+# CONTRACTS
+# ==========================
+contracts:
+  common: *mono_config
+  ssi_auth:
+    hosts: *hosts_default
+    api_version: *api_version
+  is_catalog_datahub: *is_catalog_datahub
 
 # ==========================
 # TRANSFER
@@ -76,10 +86,7 @@ transfer:
 # ==========================
 business:
 
-# ==========================
-# CONTRACTS
-# ==========================
-contracts:
+
 
 
 

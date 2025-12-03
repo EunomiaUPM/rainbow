@@ -27,9 +27,9 @@ use crate::consumer::core::ds_protocol_rpc::DSRPCContractNegotiationConsumerTrai
 use crate::consumer::core::rainbow_entities::rainbow_entities_errors::CnErrorConsumer;
 use anyhow::{anyhow, bail};
 use axum::async_trait;
-use rainbow_common::config::ConfigRoles;
+use rainbow_common::config::types::roles::RoleConfig;
+use rainbow_common::facades::ssi_auth_facade::MatesFacadeTrait;
 use rainbow_common::mates::Mates;
-use rainbow_common::mates_facade::MatesFacadeTrait;
 use rainbow_common::protocol::contract::contract_ack::ContractAckMessage;
 use rainbow_common::protocol::contract::contract_agreement_verification::ContractAgreementVerificationMessage;
 use rainbow_common::protocol::contract::contract_negotiation_event::{
@@ -274,8 +274,8 @@ where
                 NewContractNegotiationMessage {
                     _type: ContractNegotiationMessages::ContractRequestMessage.to_string(),
                     subtype: None,
-                    from: ConfigRoles::Consumer.to_string(),
-                    to: ConfigRoles::Provider.to_string(),
+                    from: RoleConfig::Consumer.to_string(),
+                    to: RoleConfig::Provider.to_string(),
                     content: serde_json::to_value(contract_request_message).unwrap(),
                 },
             )
@@ -367,8 +367,8 @@ where
                 NewContractNegotiationMessage {
                     _type: ContractNegotiationMessages::ContractRequestMessage.to_string(),
                     subtype: None,
-                    from: ConfigRoles::Provider.to_string(),
-                    to: ConfigRoles::Consumer.to_string(),
+                    from: RoleConfig::Provider.to_string(),
+                    to: RoleConfig::Consumer.to_string(),
                     content: serde_json::to_value(contract_offer_message).unwrap(),
                 },
             )
@@ -455,8 +455,8 @@ where
                 NewContractNegotiationMessage {
                     _type: ContractNegotiationMessages::ContractNegotiationEventMessage.to_string(),
                     subtype: Some("accepted".to_string()),
-                    from: ConfigRoles::Provider.to_string(),
-                    to: ConfigRoles::Consumer.to_string(),
+                    from: RoleConfig::Provider.to_string(),
+                    to: RoleConfig::Consumer.to_string(),
                     content: serde_json::to_value(contract_acceptance_message).unwrap(),
                 },
             )
@@ -526,8 +526,8 @@ where
                 NewContractNegotiationMessage {
                     _type: ContractNegotiationMessages::ContractAgreementVerificationMessage.to_string(),
                     subtype: None,
-                    from: ConfigRoles::Provider.to_string(),
-                    to: ConfigRoles::Consumer.to_string(),
+                    from: RoleConfig::Provider.to_string(),
+                    to: RoleConfig::Consumer.to_string(),
                     content: serde_json::to_value(contract_verification_message).unwrap(),
                 },
             )
@@ -599,8 +599,8 @@ where
                 NewContractNegotiationMessage {
                     _type: ContractNegotiationMessages::ContractNegotiationTerminationMessage.to_string(),
                     subtype: None,
-                    from: ConfigRoles::Provider.to_string(),
-                    to: ConfigRoles::Consumer.to_string(),
+                    from: RoleConfig::Provider.to_string(),
+                    to: RoleConfig::Consumer.to_string(),
                     content: serde_json::to_value(contract_termination_message).unwrap(),
                 },
             )

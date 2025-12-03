@@ -28,7 +28,7 @@ use crate::consumer::http::rainbow_entities::rainbow_entities::RainbowTransferCo
 use axum::{serve, Router};
 use rainbow_common::config::consumer::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
 use rainbow_common::facades::ssi_auth_facade::ssi_auth_facade::SSIAuthFacadeService;
-use rainbow_common::mates_facade::mates_facade::MatesFacadeService;
+use rainbow_common::facades::ssi_auth_facade::mates_facade::MatesFacadeService;
 use rainbow_dataplane::coordinator::controller::controller_service::DataPlaneControllerService;
 use rainbow_dataplane::coordinator::dataplane_process::dataplane_process_service::DataPlaneProcessService;
 use rainbow_dataplane::data_plane_info::data_plane_info::DataPlaneInfoService;
