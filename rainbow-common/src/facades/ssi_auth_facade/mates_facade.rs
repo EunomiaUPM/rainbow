@@ -17,13 +17,12 @@
  *
  */
 
-use crate::config::services::SsiAuthConfig;
-use crate::config::traits::{ApiConfigTrait, HostConfigTrait};
+use super::MatesFacadeTrait;
+use crate::config::min_know_services::MinKnownConfig;
 use crate::config::types::HostType;
 use crate::errors::helpers::BadFormat;
 use crate::errors::{CommonErrors, ErrorLog};
 use crate::mates::Mates;
-use crate::mates_facade::MatesFacadeTrait;
 use anyhow::bail;
 use axum::async_trait;
 use reqwest::Client;
@@ -31,12 +30,12 @@ use std::time::Duration;
 use tracing::error;
 
 pub struct MatesFacadeService {
-    config: SsiAuthConfig,
+    config: MinKnownConfig,
     client: Client,
 }
 
 impl MatesFacadeService {
-    pub fn new(config: SsiAuthConfig) -> Self {
+    pub fn new(config: MinKnownConfig) -> Self {
         let client =
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
         Self { config, client }

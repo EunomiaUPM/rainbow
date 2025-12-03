@@ -21,4 +21,6 @@ pub mod types;
 pub mod services;
 pub mod traits;
 mod config;
+pub mod min_know_services;
+
 pub use config::ApplicationConfig;

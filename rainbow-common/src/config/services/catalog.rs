@@ -17,8 +17,12 @@
  *
  */
 
+use crate::config::min_know_services::MinKnownConfig;
 use crate::config::services::CommonConfig;
-use crate::config::traits::{ApiConfigTrait, CommonConfigTrait, ConfigLoader, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait, KeysPathTrait, RoleTrait};
+use crate::config::traits::{
+    ApiConfigTrait, CommonConfigTrait, ConfigLoader, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait, KeysPathTrait,
+    RoleTrait,
+};
 use crate::config::types::HostConfig;
 use serde::{Deserialize, Serialize};
 
@@ -29,15 +33,22 @@ pub struct CatalogConfig {
     is_datahub: bool,
     datahub_host: Option<HostConfig>,
     datahub_token: Option<String>,
+    ssi_auth: MinKnownConfig,
 }
 
+impl CatalogConfig {
+    pub fn ssi_auth(&self) -> MinKnownConfig {
+        self.ssi_auth.clone()
+    }
+}
 impl ConfigLoader for CatalogConfig {
     fn default_with_config(common_config: CommonConfig) -> Self {
         Self {
-            common: common_config,
+            common: common_config.clone(),
             is_datahub: false,
             datahub_host: None,
             datahub_token: None,
+            ssi_auth: MinKnownConfig { hosts: common_config.hosts, api_version: common_config.api.openapi_path },
         }
     }
 }

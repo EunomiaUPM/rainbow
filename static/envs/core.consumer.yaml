@@ -1,14 +1,20 @@
 # ==========================
 # COMMON ANCHORS
 # ==========================
+http_host: &http_host
+  protocol: "http"
+  url: "127.0.0.1"
+  port: "1100"
+
+hosts_default: &hosts_default
+  http: *http_host
+  grpc: null
+  graphql: null
+
+api_version: &api_version "V1"
+
 mono_config: &mono_config
-  hosts:
-    http:
-      protocol: "http"
-      url: "127.0.0.1"
-      port: "1100"
-    grpc: null
-    graphql: null
+  hosts: *hosts_default
   db:
     db_type: Postgres
     url: "127.0.0.1"
@@ -18,23 +24,47 @@ mono_config: &mono_config
     name: "ds_consumer"
   role: Consumer
   api:
-    version: "V1"
+    version: *api_version
     openapi_path: "static/specs/openapi/auth/auth_consumer.json"
   keys_path: "static/certificates/consumer/"
   is_local: true
-
-catalog_hosts: &catalog_hosts
-  http:
-    protocol: "http"
-    url: "127.0.0.1"
-    port: "1100"
-  grpc: null
-  graphql: null
 
 # ==========================
 # MONOLITH
 # ==========================
 monolith: *mono_config
+
+# ==========================
+# CATALOG
+# ==========================
+catalog:
+  common: *mono_config
+  is_datahub: false
+  datahub_host: null
+  datahub_token: null
+  ssi_auth:
+    hosts: *hosts_default
+    api_version: *api_version
+
+# ==========================
+# SSI AUTH
+# ==========================
+ssi_auth:
+  common: *mono_config
+  wallet:
+    api:
+      protocol: "http"
+      url: "127.0.0.1"
+      port: "7001"
+    type: "email"
+    name: "RainbowConsumer"
+    email: "RainbowConsumer@rainbow.com"
+    password: "rainbow"
+    id: null
+  client:
+    class_id: "rainbow_consumer"
+    display: null
+
 
 # ==========================
 # TRANSFER
@@ -51,15 +81,7 @@ business:
 # ==========================
 contracts:
 
-# ==========================
-# CATALOG
-# ==========================
-catalog:
 
-# ==========================
-# SSI AUTH
-# ==========================
-ssi_auth:
 
 # ==========================
 # GATEWAY

@@ -22,7 +22,7 @@ use super::entities::cn_message;
 use super::entities::cn_offer;
 use super::entities::cn_process;
 use anyhow::Error;
-use rainbow_common::config::ConfigRoles;
+use rainbow_common::config::types::roles::RoleConfig;
 use rainbow_common::protocol::contract::contract_odrl::OdrlAgreement;
 use rainbow_common::protocol::contract::ContractNegotiationState;
 use sea_orm::DatabaseConnection;
@@ -51,7 +51,7 @@ pub struct NewContractNegotiationProcess {
     pub consumer_id: Option<Urn>,
     pub associated_consumer: Option<String>,
     pub state: ContractNegotiationState,
-    pub initiated_by: ConfigRoles,
+    pub initiated_by: RoleConfig,
     pub is_business: bool,
 }
 pub struct EditContractNegotiationProcess {
