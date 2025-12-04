@@ -38,7 +38,7 @@ impl From<SsiAuthConfig> for WaltIdConfig {
             hosts: value.common().hosts.clone(),
             wallet: value.wallet(),
             keys_path: value.common().keys_path.to_string(),
-            role: value.role().clone(),
+            role: value.get_role().clone(),
         }
     }
 }

@@ -17,9 +17,11 @@
  *
  */
 
+use crate::config::min_know_services::MinKnownConfig;
 use crate::config::services::CommonConfig;
 use crate::config::traits::{
-    ApiConfigTrait, CommonConfigTrait, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait, KeysPathTrait, RoleTrait,
+    ApiConfigTrait, CommonConfigTrait, ConfigLoader, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait, KeysPathTrait,
+    RoleTrait,
 };
 use serde::{Deserialize, Serialize};
 
@@ -27,6 +29,38 @@ use serde::{Deserialize, Serialize};
 pub struct TransferConfig {
     #[serde(flatten)]
     common: CommonConfig,
+    contracts: MinKnownConfig,
+    catalog: MinKnownConfig,
+    is_catalog_datahub: bool,
+    ssi_auth: MinKnownConfig,
+}
+
+impl TransferConfig {
+    pub fn contracts(&self) -> &MinKnownConfig {
+        &self.contracts
+    }
+    pub fn catalog(&self) -> &MinKnownConfig {
+        &self.catalog
+    }
+    pub fn ssi_auth(&self) -> &MinKnownConfig {
+        &self.ssi_auth
+    }
+    pub fn is_catalog_datahub(&self) -> bool {
+        self.is_catalog_datahub
+    }
+}
+impl ConfigLoader for TransferConfig {
+    fn default_with_config(common_config: CommonConfig) -> Self {
+        let min_known_config =
+            MinKnownConfig { hosts: common_config.hosts.clone(), api_version: common_config.api.version.clone() };
+        Self {
+            common: common_config,
+            contracts: min_known_config.clone(),
+            catalog: min_known_config.clone(),
+            is_catalog_datahub: false,
+            ssi_auth: min_known_config,
+        }
+    }
 }
 
 impl CommonConfigTrait for TransferConfig {

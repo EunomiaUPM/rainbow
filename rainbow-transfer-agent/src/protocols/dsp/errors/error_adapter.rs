@@ -46,6 +46,7 @@ impl From<CommonErrors> for TransferProcessMessageWrapper<TransferErrorDto> {
             CommonErrors::ReadError { info, .. } => info,
             CommonErrors::WriteError { info, .. } => info,
             CommonErrors::ParseError { info, .. } => info,
+            CommonErrors::ModuleNotActiveError { info, .. } => info,
         };
         TransferProcessMessageWrapper {
             context: ContextField::default(),
@@ -78,6 +79,7 @@ impl From<DspTransferError> for TransferProcessMessageWrapper<TransferErrorDto> 
             CommonErrors::ReadError { info, .. } => info,
             CommonErrors::WriteError { info, .. } => info,
             CommonErrors::ParseError { info, .. } => info,
+            CommonErrors::ModuleNotActiveError { info, .. } => info,
         };
         TransferProcessMessageWrapper {
             context: ContextField::default(),

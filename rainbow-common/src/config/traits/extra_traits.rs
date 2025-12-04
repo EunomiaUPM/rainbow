@@ -26,13 +26,13 @@ pub trait IsLocalTrait: CommonConfigTrait {
 }
 
 pub trait KeysPathTrait: CommonConfigTrait {
-    fn keys_path(&self) -> &str {
+    fn get_keys_path(&self) -> &str {
         self.common().keys_path()
     }
 }
 
 pub trait RoleTrait: CommonConfigTrait {
-    fn role(&self) -> &RoleConfig {
+    fn get_role(&self) -> &RoleConfig {
         self.common().role()
     }
 }

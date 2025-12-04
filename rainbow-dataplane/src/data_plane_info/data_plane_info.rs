@@ -21,23 +21,24 @@ use crate::coordinator::dataplane_process::dataplane_process::DataPlaneProcess;
 use crate::coordinator::dataplane_process::{DataPlaneProcessAddress, DataPlaneProcessTrait};
 use crate::data_plane_info::DataPlaneInfoTrait;
 use axum::async_trait;
-use rainbow_common::config::global::global_config::ApplicationGlobalConfig;
-use rainbow_common::config::ConfigRoles;
 use std::sync::Arc;
 use urn::Urn;
+use rainbow_common::config::services::TransferConfig;
+use rainbow_common::config::traits::RoleTrait;
+use rainbow_common::config::types::roles::RoleConfig;
 
 pub struct DataPlaneInfoService<T>
 where
     T: DataPlaneProcessTrait + Send + Sync,
 {
     dataplane_process: Arc<T>,
-    config: ApplicationGlobalConfig,
+    config: TransferConfig,
 }
 impl<T> DataPlaneInfoService<T>
 where
     T: DataPlaneProcessTrait + Send + Sync,
 {
-    pub fn new(dataplane_process: Arc<T>, config: ApplicationGlobalConfig) -> Self {
+    pub fn new(dataplane_process: Arc<T>, config: TransferConfig) -> Self {
         Self { dataplane_process, config }
     }
 }
@@ -49,7 +50,7 @@ where
 {
     async fn get_data_plane_info_by_session_id(&self, session_id: Urn) -> anyhow::Result<DataPlaneProcess> {
         let mut dataplane = self.dataplane_process.get_dataplane_process_by_id(session_id).await?;
-        if self.config.role == ConfigRoles::Consumer {
+        if *self.config.get_role() == RoleConfig::Consumer {
             dataplane.downstream_hop = DataPlaneProcessAddress::default();
             dataplane.upstream_hop = DataPlaneProcessAddress::default();
         }

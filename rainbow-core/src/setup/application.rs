@@ -20,7 +20,7 @@
 use crate::consumer::router::create_core_consumer_router;
 use crate::provider::router::create_core_provider_router;
 use axum::serve;
-use rainbow_common::config::services::traits::MonoConfigTrait;
+use rainbow_common::config::traits::MonoConfigTrait;
 use rainbow_common::config::types::roles::RoleConfig;
 use rainbow_common::config::ApplicationConfig;
 use tokio::net::TcpListener;
@@ -43,7 +43,7 @@ impl CoreApplication {
         );
         info!("{}", server_message);
 
-        let listener = match config.is_local() {
+        let listener = match config.is_mono_local() {
             true => TcpListener::bind(format!("127.0.0.1{}", port)).await?,
             false => TcpListener::bind(format!("0.0.0.0{}", port)).await?,
         };

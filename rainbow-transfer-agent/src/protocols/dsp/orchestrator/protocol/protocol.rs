@@ -6,20 +6,20 @@ use crate::protocols::dsp::protocol_types::{
 };
 
 use crate::protocols::dsp::validator::traits::validation_dsp_steps::ValidationDspSteps;
-use rainbow_common::config::provider::config::ApplicationProviderConfig;
+use rainbow_common::config::services::TransferConfig;
 use std::sync::Arc;
 
 pub struct ProtocolOrchestratorService {
     validator: Arc<dyn ValidationDspSteps>,
     pub persistence_service: Arc<dyn TransferPersistenceTrait>,
-    pub _config: Arc<ApplicationProviderConfig>,
+    pub _config: Arc<TransferConfig>,
 }
 
 impl ProtocolOrchestratorService {
     pub fn new(
         validator: Arc<dyn ValidationDspSteps>,
         persistence_service: Arc<dyn TransferPersistenceTrait>,
-        _config: Arc<ApplicationProviderConfig>,
+        _config: Arc<TransferConfig>,
     ) -> ProtocolOrchestratorService {
         ProtocolOrchestratorService { validator, persistence_service, _config }
     }

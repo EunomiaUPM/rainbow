@@ -17,10 +17,10 @@
  *
  */
 
-use rainbow_common::config::provider::config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_common::config::services::CatalogConfig;
+use rainbow_common::config::traits::DatabaseConfigTrait;
 use rainbow_db::catalog::migrations::get_datahub_catalog_migrations;
 use rainbow_db::datahub::migrations::get_datahub_migrations;
-
 use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
 
@@ -38,7 +38,7 @@ impl MigratorTrait for DatahubCatalogRelationsMigration {
 }
 
 impl DatahubCatalogRelationsMigration {
-    pub async fn run(config: &ApplicationProviderConfig) -> anyhow::Result<()> {
+    pub async fn run(config: &CatalogConfig) -> anyhow::Result<()> {
         // db_connection
         let db_url = config.get_full_db_url();
         let db_connection = Database::connect(db_url).await.expect("Database can't connect");

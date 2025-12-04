@@ -16,7 +16,6 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 use crate::config::min_know_services::MinKnownConfig;
 use crate::config::services::CommonConfig;
 use crate::config::traits::{
@@ -24,7 +23,10 @@ use crate::config::traits::{
     RoleTrait,
 };
 use crate::config::types::HostConfig;
+use crate::errors::{CommonErrors, ErrorLog};
+use crate::utils::get_host_helper;
 use serde::{Deserialize, Serialize};
+use tracing::error;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CatalogConfig {
@@ -39,6 +41,21 @@ pub struct CatalogConfig {
 impl CatalogConfig {
     pub fn ssi_auth(&self) -> MinKnownConfig {
         self.ssi_auth.clone()
+    }
+    pub fn get_datahub_host(&self) -> String {
+        let host = get_host_helper(self.datahub_host.as_ref(), "datahub");
+        host.expect("datahub_host not found")
+    }
+    pub fn get_datahub_token(&self) -> String {
+        let token = match self.datahub_token.clone() {
+            Some(datahub_token) => Some(datahub_token),
+            None => {
+                let error = CommonErrors::module_new("datahub token");
+                error!("{}", error.log());
+                None
+            }
+        };
+        token.expect("datahub_token not found")
     }
 }
 impl ConfigLoader for CatalogConfig {

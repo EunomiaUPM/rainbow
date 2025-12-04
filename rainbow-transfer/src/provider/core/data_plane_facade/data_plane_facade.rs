@@ -27,7 +27,6 @@ use rainbow_common::adv_protocol::interplane::{
     DataPlaneControllerMessages, DataPlaneControllerVersion, DataPlaneSDPConfigField, DataPlaneSDPConfigTypes,
     DataPlaneSDPFieldTypes, DataPlaneSDPRequestField,
 };
-use rainbow_common::config::provider::config::ApplicationProviderConfig;
 use rainbow_common::dcat_formats::{DctFormats, FormatAction};
 use rainbow_common::protocol::catalog::dataservice_definition::{DataService, DataServiceDcatDeclaration};
 use rainbow_common::protocol::transfer::transfer_data_address::{DataAddress, EndpointProperty};
@@ -35,13 +34,14 @@ use rainbow_dataplane::coordinator::controller::DataPlaneControllerTrait;
 use std::sync::Arc;
 use url::Url;
 use urn::Urn;
+use rainbow_common::config::services::TransferConfig;
 
 pub struct DataPlaneProviderFacadeForDSProtocol<T>
 where
     T: DataPlaneControllerTrait + Sync + Send,
 {
     dataplane_controller: Arc<T>,
-    _config: ApplicationProviderConfig,
+    _config: TransferConfig,
 }
 
 impl<'a, T> DataPlaneProviderFacadeForDSProtocol<T>
@@ -49,7 +49,7 @@ where
     T: DataPlaneControllerTrait + Sync + Send,
     'a: 'static,
 {
-    pub fn new(dataplane_controller: Arc<T>, config: ApplicationProviderConfig) -> Self {
+    pub fn new(dataplane_controller: Arc<T>, config: TransferConfig) -> Self {
         Self { dataplane_controller, _config: config }
     }
 }

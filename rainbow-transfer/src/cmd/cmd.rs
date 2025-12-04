@@ -22,7 +22,9 @@ use crate::consumer::setup::db_migrations::TransferConsumerMigration;
 use crate::provider::setup::application::TransferProviderApplication;
 use crate::provider::setup::db_migrations::TransferProviderMigration;
 use clap::{Parser, Subcommand};
-use rainbow_common::config::env_extraction::EnvExtraction;
+use rainbow_common::config::services::TransferConfig;
+use rainbow_common::config::traits::ConfigLoader;
+use rainbow_common::config::types::roles::RoleConfig;
 use std::cmp::PartialEq;
 use tracing::debug;
 
@@ -56,8 +58,6 @@ pub struct TransferCliArgs {
 
 pub struct TransferCommands;
 
-impl EnvExtraction for TransferCommands {}
-
 impl TransferCommands {
     pub async fn init_command_line() -> anyhow::Result<()> {
         // parse command line
@@ -68,21 +68,21 @@ impl TransferCommands {
         match cli.role {
             TransferCliRoles::Provider(cmd) => match cmd {
                 TransferCliCommands::Start(args) => {
-                    let config = Self::extract_provider_config(args.env_file)?;
+                    let config = TransferConfig::load(RoleConfig::Provider, args.env_file);
                     TransferProviderApplication::run(&config).await?
                 }
                 TransferCliCommands::Setup(args) => {
-                    let config = Self::extract_provider_config(args.env_file)?;
+                    let config = TransferConfig::load(RoleConfig::Provider, args.env_file);
                     TransferProviderMigration::run(&config).await?
                 }
             },
             TransferCliRoles::Consumer(cmd) => match cmd {
                 TransferCliCommands::Start(args) => {
-                    let config = Self::extract_consumer_config(args.env_file)?;
+                    let config = TransferConfig::load(RoleConfig::Consumer, args.env_file);
                     TransferConsumerApplication::run(&config).await?
                 }
                 TransferCliCommands::Setup(args) => {
-                    let config = Self::extract_consumer_config(args.env_file)?;
+                    let config = TransferConfig::load(RoleConfig::Consumer, args.env_file);
                     TransferConsumerMigration::run(&config).await?
                 }
             },

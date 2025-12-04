@@ -27,7 +27,7 @@ use rainbow_common::adv_protocol::interplane::{
     DataPlaneControllerMessages, DataPlaneControllerVersion, DataPlaneSDPConfigField, DataPlaneSDPConfigTypes,
     DataPlaneSDPFieldTypes, DataPlaneSDPRequestField,
 };
-use rainbow_common::config::consumer::consumer_config::ApplicationConsumerConfig;
+use rainbow_common::config::services::TransferConfig;
 use rainbow_common::dcat_formats::{DctFormats, FormatAction};
 use rainbow_common::protocol::transfer::transfer_data_address::{DataAddress, EndpointProperty};
 use rainbow_dataplane::coordinator::controller::DataPlaneControllerTrait;
@@ -39,7 +39,7 @@ where
     T: DataPlaneControllerTrait + Sync + Send,
 {
     dataplane_controller: Arc<T>,
-    _config: ApplicationConsumerConfig,
+    _config: TransferConfig,
 }
 
 impl<'a, T> DataPlaneConsumerFacadeForDSProtocol<T>
@@ -47,7 +47,7 @@ where
     T: DataPlaneControllerTrait + Sync + Send,
     'a: 'static,
 {
-    pub fn new(dataplane_controller: Arc<T>, config: ApplicationConsumerConfig) -> Self {
+    pub fn new(dataplane_controller: Arc<T>, config: TransferConfig) -> Self {
         Self { dataplane_controller, _config: config }
     }
 }

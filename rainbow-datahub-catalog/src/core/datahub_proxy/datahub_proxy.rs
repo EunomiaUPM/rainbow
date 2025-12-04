@@ -21,18 +21,18 @@ use crate::core::datahub_proxy::datahub_proxy_types::{DatahubDataset, DomainProp
 use crate::core::datahub_proxy::datahub_proxy_types::{DatahubDomain, GraphQLResponse, Platform, Tag};
 use crate::core::datahub_proxy::DatahubProxyTrait;
 use axum::async_trait;
-use rainbow_common::config::provider::config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_common::config::services::CatalogConfig;
 use reqwest::Client;
 use std::time::Duration;
 use tracing::debug;
 
 pub struct DatahubProxyService {
-    config: ApplicationProviderConfig,
+    config: CatalogConfig,
     client: Client,
 }
 
 impl DatahubProxyService {
-    pub fn new(config: ApplicationProviderConfig) -> Self {
+    pub fn new(config: CatalogConfig) -> Self {
         let client =
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
         Self { config, client }
@@ -42,8 +42,8 @@ impl DatahubProxyService {
 #[async_trait]
 impl DatahubProxyTrait for DatahubProxyService {
     async fn get_datahub_domains(&self) -> anyhow::Result<Vec<DatahubDomain>> {
-        let datahub_host = self.config.get_datahub_host_url().expect("Datahub host not created");
-        let datahub_token = self.config.get_datahub_token().expect("Datahub Token not created");
+        let datahub_host = self.config.get_datahub_host();
+        let datahub_token = self.config.get_datahub_token();
         debug!("{}", datahub_host);
         debug!("{}", datahub_token);
         let graphql_url = format!("{}/api/graphql", datahub_host);
@@ -88,8 +88,8 @@ impl DatahubProxyTrait for DatahubProxyService {
     }
 
     async fn get_datahub_tags(&self) -> anyhow::Result<Vec<Tag>> {
-        let datahub_host = self.config.get_datahub_host_url().expect("Datahub host not created");
-        let datahub_token = self.config.get_datahub_token().expect("Datahub Token not created");
+        let datahub_host = self.config.get_datahub_host();
+        let datahub_token = self.config.get_datahub_token();
         debug!("{}", datahub_host);
         debug!("{}", datahub_token);
         let graphql_url = format!("{}/api/graphql", datahub_host);
@@ -139,8 +139,8 @@ impl DatahubProxyTrait for DatahubProxyService {
     }
 
     async fn get_datahub_datasets_by_domain_id(&self, id: String) -> anyhow::Result<Vec<DatahubDataset>> {
-        let datahub_host = self.config.get_datahub_host_url().expect("Datahub host not created");
-        let datahub_token = self.config.get_datahub_token().expect("Datahub Token not created");
+        let datahub_host = self.config.get_datahub_host();
+        let datahub_token = self.config.get_datahub_token();
         let graphql_url = format!("{}/api/graphql", datahub_host);
         let query = format!(
             r#"{{
@@ -324,8 +324,8 @@ impl DatahubProxyTrait for DatahubProxyService {
     }
 
     async fn get_datahub_dataset_by_id(&self, urn: String) -> anyhow::Result<DatahubDataset> {
-        let datahub_host = self.config.get_datahub_host_url().expect("Datahub host not created");
-        let datahub_token = self.config.get_datahub_token().expect("Datahub Token not created");
+        let datahub_host = self.config.get_datahub_host();
+        let datahub_token = self.config.get_datahub_token();
         let graphql_url = format!("{}/api/graphql", datahub_host);
 
         let query = format!(

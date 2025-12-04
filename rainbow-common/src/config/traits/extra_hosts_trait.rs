@@ -17,9 +17,7 @@
  *
  */
 use crate::config::types::{HostConfig, HostType};
-use crate::errors::{CommonErrors, ErrorLog};
-use anyhow::bail;
-use tracing::error;
+use crate::utils::get_host_helper;
 
 pub trait ExtraHostsTrait {
     fn http(&self) -> &HostConfig;
@@ -34,16 +32,6 @@ pub trait ExtraHostsTrait {
         host.expect("Failed to get host")
     }
     fn get_host_helper(host: Option<&HostConfig>, module: &str) -> anyhow::Result<String> {
-        match host {
-            Some(host) => match host.port.as_ref() {
-                Some(port) => Ok(format!("{}://{}:{}", host.protocol, host.url, port)),
-                None => Ok(format!("{}://{}", host.protocol, host.url)),
-            },
-            None => {
-                let error = CommonErrors::module_new(module);
-                error!("{}", error.log());
-                bail!(error)
-            }
-        }
+        get_host_helper(host, module)
     }
 }

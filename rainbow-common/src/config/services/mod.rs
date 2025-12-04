@@ -19,9 +19,9 @@
 mod catalog;
 mod common;
 mod contracts;
+pub mod min_known_config;
 mod monolith;
 mod ssi_auth;
-pub mod traits;
 mod transfer;
 
 pub use catalog::CatalogConfig;

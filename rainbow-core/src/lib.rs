@@ -17,7 +17,6 @@
  *
  */
 
-pub mod cmd;
 pub mod consumer;
 pub mod provider;
 pub mod setup;

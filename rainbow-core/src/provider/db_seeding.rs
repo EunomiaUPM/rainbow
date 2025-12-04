@@ -17,7 +17,7 @@
  *
  */
 
-use rainbow_common::config::services::traits::MonoConfigTrait;
+use rainbow_common::config::traits::MonoConfigTrait;
 use rainbow_common::config::ApplicationConfig;
 use rainbow_db::catalog::repo::sql::CatalogRepoForSql;
 use rainbow_db::catalog::repo::{CatalogRepo, NewCatalogModel};

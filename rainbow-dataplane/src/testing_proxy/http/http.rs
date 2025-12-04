@@ -25,7 +25,7 @@ use axum::routing::any;
 use axum::Router;
 use hyper::Method;
 use rainbow_common::adv_protocol::interplane::{DataPlaneProcessDirection, DataPlaneProcessState};
-use rainbow_common::config::global::global_config::ApplicationGlobalConfig;
+use rainbow_common::config::services::TransferConfig;
 use rainbow_common::utils::get_urn_from_string;
 use reqwest::Response as ReqwestResponse;
 use reqwest::{Client, StatusCode};
@@ -37,7 +37,7 @@ where
     T: DataPlaneProcessTrait + Send + Sync + 'static,
 {
     client: Client,
-    config: ApplicationGlobalConfig,
+    config: TransferConfig,
     dataplane_service: Arc<T>,
 }
 
@@ -48,7 +48,7 @@ where
     T: DataPlaneProcessTrait + Send + Sync + 'static,
 {
     client: Client,
-    config: ApplicationGlobalConfig,
+    config: TransferConfig,
     dataplane_service: Arc<T>,
 }
 
@@ -56,7 +56,7 @@ impl<T> TestingHTTPProxy<T>
 where
     T: DataPlaneProcessTrait + Send + Sync + 'static,
 {
-    pub fn new(config: ApplicationGlobalConfig, dataplane_service: Arc<T>) -> Self {
+    pub fn new(config: TransferConfig, dataplane_service: Arc<T>) -> Self {
         let client = reqwest::Client::new();
         Self { client, config, dataplane_service }
     }
@@ -69,7 +69,7 @@ where
     }
 
     async fn forward_request(
-        State((client, _config, dataplane_service)): State<(Client, ApplicationGlobalConfig, Arc<T>)>,
+        State((client, _config, dataplane_service)): State<(Client, TransferConfig, Arc<T>)>,
         Path(data_plane_id): Path<String>,
         mut req: Request,
     ) -> impl IntoResponse {

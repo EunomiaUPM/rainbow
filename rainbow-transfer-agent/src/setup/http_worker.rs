@@ -8,7 +8,8 @@ use crate::protocols::protocol::ProtocolPluginTrait;
 use axum::extract::Request;
 use axum::response::IntoResponse;
 use axum::{serve, Router};
-use rainbow_common::config::provider::config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_common::config::services::TransferConfig;
+use rainbow_common::config::traits::{ApiConfigTrait, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait};
 use rainbow_common::errors::CommonErrors;
 use rainbow_common::well_known::WellKnownRoot;
 use sea_orm::Database;
@@ -21,16 +22,13 @@ use uuid::Uuid;
 
 pub struct TransferHttpWorker {}
 impl TransferHttpWorker {
-    pub async fn spawn(
-        config: &ApplicationProviderConfig,
-        token: &CancellationToken,
-    ) -> anyhow::Result<JoinHandle<()>> {
+    pub async fn spawn(config: &TransferConfig, token: &CancellationToken) -> anyhow::Result<JoinHandle<()>> {
         // well known router
         let well_known_router = WellKnownRoot::get_router()?;
         // module transfer router
         let router = Self::create_root_http_router(&config).await?.merge(well_known_router);
-        let host = if config.get_environment_scenario() { "127.0.0.1" } else { "0.0.0.0" };
-        let port = config.get_raw_transfer_process_host().clone().expect("no host").port;
+        let host = if config.is_local() { "127.0.0.1" } else { "0.0.0.0" };
+        let port = config.get_weird_port();
         let addr = format!("{}:{}", host, port);
 
         let listener = TcpListener::bind(&addr).await?;
@@ -50,7 +48,7 @@ impl TransferHttpWorker {
 
         Ok(handle)
     }
-    pub async fn create_root_http_router(config: &ApplicationProviderConfig) -> anyhow::Result<Router> {
+    pub async fn create_root_http_router(config: &TransferConfig) -> anyhow::Result<Router> {
         let router = create_root_http_router(config).await?.fallback(Self::handler_404).layer(
             TraceLayer::new_for_http()
                 .make_span_with(|_req: &Request<_>| tracing::info_span!("request", id = %Uuid::new_v4()))
@@ -68,7 +66,7 @@ impl TransferHttpWorker {
     }
 }
 
-pub async fn create_root_http_router(config: &ApplicationProviderConfig) -> anyhow::Result<Router> {
+pub async fn create_root_http_router(config: &TransferConfig) -> anyhow::Result<Router> {
     // ROOT Dependency Injection
     let config = Arc::new(config.clone());
     let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
@@ -88,7 +86,7 @@ pub async fn create_root_http_router(config: &ApplicationProviderConfig) -> anyh
     )
     .build_router()?;
 
-    let router_str = format!("/api/{}/transfer-agent", config.api_version);
+    let router_str = format!("{}/transfer-agent", config.get_api_version());
     let router = Router::new()
         .nest(
             format!("{}/transfer-messages", router_str.as_str()).as_str(),

@@ -20,7 +20,9 @@
 use clap::{Parser, Subcommand};
 use rainbow_catalog::provider::setup::application::CatalogApplication;
 use rainbow_catalog::provider::setup::db_migrations::CatalogMigration;
-use rainbow_common::config::env_extraction::EnvExtraction;
+use rainbow_common::config::services::CatalogConfig;
+use rainbow_common::config::traits::ConfigLoader;
+use rainbow_common::config::types::roles::RoleConfig;
 use std::cmp::PartialEq;
 use tracing::debug;
 
@@ -46,8 +48,6 @@ pub struct CatalogCliArgs {
 
 pub struct CatalogCommands;
 
-impl EnvExtraction for CatalogCommands {}
-
 impl CatalogCommands {
     pub async fn init_command_line() -> anyhow::Result<()> {
         // parse command line
@@ -57,11 +57,11 @@ impl CatalogCommands {
         // run scripts
         match cli.command {
             CatalogCliCommands::Start(args) => {
-                let config = Self::extract_provider_config(args.env_file)?;
+                let config = CatalogConfig::load(RoleConfig::Provider, args.env_file);
                 CatalogApplication::run(&config).await?
             }
             CatalogCliCommands::Setup(args) => {
-                let config = Self::extract_provider_config(args.env_file)?;
+                let config = CatalogConfig::load(RoleConfig::Provider, args.env_file);
                 CatalogMigration::run(&config).await?
             }
         }

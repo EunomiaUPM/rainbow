@@ -17,8 +17,6 @@
  *
  */
 
-pub mod http;
-pub mod setup;
-pub mod router;
 pub mod db_migrations;
 pub mod db_seeding;
+pub mod router;

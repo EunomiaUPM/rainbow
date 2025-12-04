@@ -16,6 +16,5 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-mod min_known_config;
 
-pub use min_known_config::MinKnownConfig;
+pub use crate::config::services::min_known_config::MinKnownConfig;

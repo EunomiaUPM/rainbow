@@ -80,17 +80,16 @@ contracts:
 # TRANSFER
 # ==========================
 transfer:
+  common: *mono_config
+  contracts:
+    hosts: *hosts_default
+    api_version: *api_version
+  catalog:
+    hosts: *hosts_default
+    api_version: *api_version
+  ssi_auth:
+    hosts: *hosts_default
+    api_version: *api_version
+  is_catalog_datahub: *is_catalog_datahub
 
-# ==========================
-# BUSINESS
-# ==========================
-business:
 
-
-
-
-
-# ==========================
-# GATEWAY
-# ==========================
-gateway:

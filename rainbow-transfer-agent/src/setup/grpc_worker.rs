@@ -6,7 +6,8 @@ use crate::grpc::api::transfer_processes::transfer_agent_processes_server::Trans
 use crate::grpc::api::FILE_DESCRIPTOR_SET;
 use crate::grpc::transfer_messages::TransferAgentMessagesGrpc;
 use crate::grpc::transfer_process::TransferAgentProcessesGrpc;
-use rainbow_common::config::provider::config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_common::config::services::TransferConfig;
+use rainbow_common::config::traits::{DatabaseConfigTrait, HostConfigTrait, IsLocalTrait};
 use sea_orm::Database;
 use std::sync::Arc;
 use tokio::net::TcpListener;
@@ -18,15 +19,11 @@ use tonic::transport::Server;
 pub struct TransferGrpcWorker {}
 
 impl TransferGrpcWorker {
-    pub async fn spawn(
-        config: &ApplicationProviderConfig,
-        token: &CancellationToken,
-    ) -> anyhow::Result<JoinHandle<()>> {
+    pub async fn spawn(config: &TransferConfig, token: &CancellationToken) -> anyhow::Result<JoinHandle<()>> {
         let router = Self::create_root_grpc_router(&config).await?;
-        let host = if config.get_environment_scenario() { "127.0.0.1" } else { "0.0.0.0" };
-        let port = config.get_raw_transfer_process_host().clone().expect("no host").port;
-        let grpc_port = format!("{}{}", port, "1");
-        let addr = format!("{}:{}", host, grpc_port);
+        let host = if config.is_local() { "127.0.0.1" } else { "0.0.0.0" };
+        let port = config.get_really_weird_port();
+        let addr = format!("{}{}", host, port);
 
         let listener = TcpListener::bind(&addr).await?;
         let incoming = TcpListenerStream::new(listener);
@@ -46,9 +43,7 @@ impl TransferGrpcWorker {
 
         Ok(handle)
     }
-    pub async fn create_root_grpc_router(
-        config: &ApplicationProviderConfig,
-    ) -> anyhow::Result<tonic::transport::server::Router> {
+    pub async fn create_root_grpc_router(config: &TransferConfig) -> anyhow::Result<tonic::transport::server::Router> {
         let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
         let config = Arc::new(config.clone());
         let transfer_repo = Arc::new(TransferAgentRepoForSql::create_repo(db_connection.clone()));

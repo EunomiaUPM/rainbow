@@ -39,6 +39,13 @@ pub trait HostConfigTrait: CommonConfigTrait {
         }
     }
 
+    fn get_really_weird_port(&self) -> String {
+        match self.common().hosts.http.port.as_ref() {
+            Some(port) => format!(":{}1", port),
+            None => ":1".to_string(),
+        }
+    }
+
     fn get_host_helper(host: Option<&HostConfig>, module: &str) -> anyhow::Result<String> {
         match host {
             Some(host) => match host.port.as_ref() {

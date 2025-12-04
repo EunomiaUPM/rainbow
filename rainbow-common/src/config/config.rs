@@ -17,13 +17,14 @@
  *
  */
 
-use crate::config::services::traits::MonoConfigTrait;
 use crate::config::services::{
     CatalogConfig, CommonConfig, ContractsConfig, MonolithConfig, SsiAuthConfig, TransferConfig,
 };
-use crate::config::traits::{ConfigLoader, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait};
+use crate::config::traits::{ConfigLoader, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait, MonoConfigTrait};
 use crate::config::types::HostType;
+use crate::errors::{CommonErrors, ErrorLog};
 use serde::{Deserialize, Serialize};
+use tracing::error;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ApplicationConfig {
@@ -79,6 +80,47 @@ impl ConfigLoader for ApplicationConfig {
 
 impl ApplicationConfig {
     pub fn ssi_auth_config(&self) -> SsiAuthConfig {
-        self.ssi_auth.clone().expect("Trying to access core mode without it being defined")
+        let module = match self.ssi_auth.as_ref() {
+            None => {
+                let error = CommonErrors::module_new("ssi_auth");
+                error!("{}", error.log());
+                None
+            }
+            Some(data) => Some(data.clone()),
+        };
+        module.expect("Trying to access core mode without it being defined")
+    }
+    pub fn transfer(&self) -> TransferConfig {
+        let module = match self.transfer.as_ref() {
+            None => {
+                let error = CommonErrors::module_new("transfer");
+                error!("{}", error.log());
+                None
+            }
+            Some(data) => Some(data.clone()),
+        };
+        module.expect("Trying to access core mode without it being defined")
+    }
+    pub fn contracts(&self) -> ContractsConfig {
+        let module = match self.contracts.as_ref() {
+            None => {
+                let error = CommonErrors::module_new("contracts");
+                error!("{}", error.log());
+                None
+            }
+            Some(data) => Some(data.clone()),
+        };
+        module.expect("Trying to access core mode without it being defined")
+    }
+    pub fn catalog(&self) -> CatalogConfig {
+        let module = match self.catalog.as_ref() {
+            None => {
+                let error = CommonErrors::module_new("catalog");
+                error!("{}", error.log());
+                None
+            }
+            Some(data) => Some(data.clone()),
+        };
+        module.expect("Trying to access core mode without it being defined")
     }
 }
