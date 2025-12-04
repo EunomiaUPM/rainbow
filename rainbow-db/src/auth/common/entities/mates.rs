@@ -77,6 +77,17 @@ impl IntoActiveSet<ActiveModel> for Model {
     }
 }
 
+impl PartialEq for NewModel {
+    fn eq(&self, other: &Self) -> bool {
+        self.participant_id == other.participant_id
+            && self.participant_slug == other.participant_slug
+            && self.participant_type == other.participant_type
+            && self.base_url == other.base_url
+            && self.token == other.token
+            && self.is_me == other.is_me
+    }
+}
+
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {}
 

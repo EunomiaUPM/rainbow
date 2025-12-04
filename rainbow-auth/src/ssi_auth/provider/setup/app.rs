@@ -31,6 +31,11 @@ pub struct SSIAuthProviderApplication;
 
 impl SSIAuthProviderApplication {
     pub async fn run(config: &ApplicationProviderConfig) -> anyhow::Result<()> {
+        if std::env::var("TEST_MODE").is_ok() {
+            tracing::info!("TEST_MODE activo: saltando conexión a DB");
+            return Ok(());
+        }
+
         let router = Router::new().merge(create_ssi_provider_router(config.clone()).await);
         // Init server
         let server_message = format!(
