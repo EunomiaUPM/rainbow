@@ -16,43 +16,34 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 use crate::config::services::CommonConfig;
-use crate::config::types::database::{DatabaseConfig, DbType};
 use crate::config::types::roles::RoleConfig;
-use crate::config::types::{ApiConfig, CommonHostsConfig, HostConfig};
+use crate::config::ApplicationConfig;
+use crate::errors::{CommonErrors, ErrorLog};
 use serde::de::DeserializeOwned;
-use std::{fs, path::PathBuf};
-use tracing::debug;
+use std::fs;
+use std::path::PathBuf;
+use tracing::error;
 
 pub trait ConfigLoader: Sized + DeserializeOwned {
-    fn default_with_config(common_config: CommonConfig) -> Self;
-    fn load(role: RoleConfig, env_file: Option<String>) -> Self {
-        if let Some(env_file) = env_file {
-            let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(env_file);
-            debug!("Config file path: {}", path.display());
+    fn default(common_config: CommonConfig) -> Self;
+    fn load(role: RoleConfig, env_file: Option<String>) -> Self;
+    fn global_load(role: RoleConfig, env_file: Option<String>) -> anyhow::Result<ApplicationConfig> {
+        ApplicationConfig::load(role, env_file)
+    }
 
-            let data = fs::read_to_string(&path).expect("Unable to read config file");
-            serde_norway::from_str(&data).expect("Unable to parse config file")
+    fn local_load(role: RoleConfig, env_file: Option<String>) -> anyhow::Result<Self> {
+        if let Some(file) = env_file {
+            let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(file);
+            let data = fs::read_to_string(&path).expect("Cannot read local config");
+            let config: Self = serde_norway::from_str(&data).map_err(|e| {
+                let error = CommonErrors::parse_new(&format!("Unable to load local config: {}", e));
+                error!("{}", error.log());
+                error
+            })?;
+            Ok(config)
         } else {
-            let host = HostConfig {
-                protocol: "http".to_string(),
-                url: "127.0.0.1".to_string(),
-                port: Some("1200".to_string()),
-            };
-            let hosts = CommonHostsConfig { http: host, grpc: None, graphql: None };
-            let db = DatabaseConfig {
-                db_type: DbType::Postgres,
-                url: "127.0.0.1".to_string(),
-                port: "1400".to_string(),
-                user: "ds_provider".to_string(),
-                password: "ds_provider".to_string(),
-                name: "ds_provider".to_string(),
-            };
-            let keys_path = "static/certificates/".to_string();
-            let api = ApiConfig { version: "v1".to_string(), openapi_path: "/static/specs/openapi/auth".to_string() };
-            let config = CommonConfig { hosts, db, role, api, keys_path, is_local: true };
-            Self::default_with_config(config)
+            Ok(Self::default(ApplicationConfig::common(role)))
         }
     }
 }

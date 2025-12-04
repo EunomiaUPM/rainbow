@@ -23,8 +23,10 @@ use crate::gateway::http::notifications_router::BusinessNotificationsRouter;
 use axum::{serve, Router};
 use clap::{Parser, Subcommand};
 use fs_extra::dir::{copy, CopyOptions};
-use rainbow_common::config::env_extraction::EnvExtraction;
-use rainbow_common::config::provider::config::ApplicationProviderConfigTrait;
+use rainbow_common::config::services::GatewayConfig;
+use rainbow_common::config::traits::{ConfigLoader, HostConfigTrait, IsLocalTrait};
+use rainbow_common::config::types::roles::RoleConfig;
+use rainbow_common::config::types::HostType;
 use std::process::Command;
 use std::sync::Arc;
 use tokio::net::TcpListener;
@@ -53,8 +55,6 @@ pub struct GatewayCliArgs {
 
 pub struct GatewayCommands;
 
-impl EnvExtraction for GatewayCommands {}
-
 impl GatewayCommands {
     pub async fn init_command_line() -> anyhow::Result<()> {
         // parse command line
@@ -64,32 +64,20 @@ impl GatewayCommands {
         // run scripts
         match cli.command {
             GatewayCliCommands::Start(args) => {
-                let config = Self::extract_provider_config(args.env_file)?;
+                let config = GatewayConfig::load(RoleConfig::Provider, args.env_file);
                 let gateway_service = Arc::new(BusinessServiceForDatahub::new(config.clone()));
                 let notifications_router = BusinessNotificationsRouter::new(config.clone()).router();
                 let gateway_router = RainbowBusinessRouter::new(config.clone(), gateway_service).router();
                 let global_router = Router::new().merge(notifications_router).merge(gateway_router);
                 let server_message = format!(
                     "Starting provider gateway server in {}",
-                    config.get_business_system_host_url().unwrap()
+                    config.get_host(HostType::Http)
                 );
                 info!("{}", server_message);
 
-                let listener = match config.get_environment_scenario() {
-                    true => {
-                        TcpListener::bind(format!(
-                            "127.0.0.1:{}",
-                            config.get_raw_business_system_host().clone().unwrap().port
-                        ))
-                        .await?
-                    }
-                    false => {
-                        TcpListener::bind(format!(
-                            "0.0.0.0:{}",
-                            config.get_raw_business_system_host().clone().unwrap().port
-                        ))
-                        .await?
-                    }
+                let listener = match config.is_local() {
+                    true => TcpListener::bind(format!("127.0.0.1{}", config.get_weird_port())).await?,
+                    false => TcpListener::bind(format!("0.0.0.0{}", config.get_weird_port())).await?,
                 };
                 serve(listener, global_router).await?;
             }

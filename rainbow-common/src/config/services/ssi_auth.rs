@@ -28,7 +28,6 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct SsiAuthConfig {
-    #[serde(flatten)]
     common: CommonConfig,
     wallet: WalletConfig,
     client: ClientConfig,
@@ -44,7 +43,7 @@ impl SsiAuthConfig {
 }
 
 impl ConfigLoader for SsiAuthConfig {
-    fn default_with_config(common_config: CommonConfig) -> Self {
+    fn default(common_config: CommonConfig) -> Self {
         match common_config.role {
             RoleConfig::Consumer => Self {
                 common: common_config,
@@ -78,6 +77,13 @@ impl ConfigLoader for SsiAuthConfig {
                 },
                 client: ClientConfig { class_id: "rainbow_provider".to_string(), display: None },
             },
+        }
+    }
+
+    fn load(role: RoleConfig, env_file: Option<String>) -> Self {
+        match Self::global_load(role, env_file.clone()) {
+            Ok(data) => data.ssi_auth(),
+            Err(_) => Self::local_load(role, env_file).expect("Unable to load catalog config"),
         }
     }
 }

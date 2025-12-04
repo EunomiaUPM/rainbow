@@ -25,10 +25,10 @@ use crate::subscriptions::MicroserviceSubscriptionKey;
 use axum::serve;
 use clap::{Parser, Subcommand};
 use fs_extra::dir::{copy, CopyOptions};
-use rainbow_common::config::consumer::consumer_config::ApplicationConsumerConfigTrait;
-use rainbow_common::config::env_extraction::EnvExtraction;
-use rainbow_common::config::provider::config::ApplicationProviderConfigTrait;
-use rainbow_common::config::ConfigRoles;
+use rainbow_common::config::services::GatewayConfig;
+use rainbow_common::config::traits::{ConfigLoader, HostConfigTrait, IsLocalTrait};
+use rainbow_common::config::types::roles::RoleConfig;
+use rainbow_common::config::types::HostType;
 use std::cmp::PartialEq;
 use std::process::Command;
 use tokio::net::TcpListener;
@@ -65,8 +65,6 @@ pub struct GatewayCliArgs {
 
 pub struct GatewayCommands;
 
-impl EnvExtraction for GatewayCommands {}
-
 impl GatewayCommands {
     pub async fn init_command_line() -> anyhow::Result<()> {
         // parse command line
@@ -78,33 +76,21 @@ impl GatewayCommands {
             GatewayCliRoles::Provider(cmd) => {
                 match cmd {
                     GatewayCliCommands::Start(args) => {
-                        let config = Self::extract_provider_config(args.env_file)?;
+                        let config = GatewayConfig::load(RoleConfig::Provider, args.env_file);
                         let gateway_router = RainbowProviderGateway::new(config.clone()).router();
                         let server_message = format!(
                             "Starting provider gateway server in {}",
-                            config.get_gateway_host_url().unwrap()
+                            config.get_host(HostType::Http)
                         );
                         info!("{}", server_message);
-                        let listener = match config.get_environment_scenario() {
-                            true => {
-                                TcpListener::bind(format!(
-                                    "127.0.0.1:{}",
-                                    config.get_raw_gateway_host().clone().unwrap().port
-                                ))
-                                .await?
-                            }
-                            false => {
-                                TcpListener::bind(format!(
-                                    "0.0.0.0:{}",
-                                    config.get_raw_gateway_host().clone().unwrap().port
-                                ))
-                                .await?
-                            }
+                        let listener = match config.is_local() {
+                            true => TcpListener::bind(format!("127.0.0.1{}", config.get_weird_port())).await?,
+                            false => TcpListener::bind(format!("0.0.0.0{}", config.get_weird_port())).await?,
                         };
                         serve(listener, gateway_router).await?;
                     }
                     GatewayCliCommands::Subscribe(args) => {
-                        let config = Self::extract_provider_config(args.env_file)?;
+                        let config = GatewayConfig::load(RoleConfig::Provider, args.env_file);
                         let microservices_subs = RainbowProviderGatewaySubscriptions::new(config.clone());
                         microservices_subs.subscribe_to_microservice(MicroserviceSubscriptionKey::Catalog).await?;
                         // TODO when pubsub refactor
@@ -112,46 +98,34 @@ impl GatewayCommands {
                         // microservices_subs.subscribe_to_microservice(MicroserviceSubscriptionKey::TransferControlPlane).await?;
                     }
                     GatewayCliCommands::Build(args) => {
-                        Self::build_frontend(ConfigRoles::Provider, args.env_file)?;
+                        Self::build_frontend(RoleConfig::Provider, args.env_file)?;
                     }
                 }
             }
             GatewayCliRoles::Consumer(cmd) => match cmd {
                 GatewayCliCommands::Start(args) => {
-                    let config = Self::extract_consumer_config(args.env_file)?;
+                    let config = GatewayConfig::load(RoleConfig::Consumer, args.env_file);
                     let gateway_router = RainbowConsumerGateway::new(config.clone()).router();
                     let server_message = format!(
                         "Starting consumer gateway server in {}",
-                        config.get_gateway_host_url().unwrap()
+                        config.get_host(HostType::Http)
                     );
                     info!("{}", server_message);
-                    let listener = match config.get_environment_scenario() {
-                        true => {
-                            TcpListener::bind(format!(
-                                "127.0.0.1:{}",
-                                config.get_raw_gateway_host().clone().unwrap().port
-                            ))
-                            .await?
-                        }
-                        false => {
-                            TcpListener::bind(format!(
-                                "0.0.0.0:{}",
-                                config.get_raw_gateway_host().clone().unwrap().port
-                            ))
-                            .await?
-                        }
+                    let listener = match config.is_local() {
+                        true => TcpListener::bind(format!("127.0.0.1{}", config.get_weird_port())).await?,
+                        false => TcpListener::bind(format!("0.0.0.0{}", config.get_weird_port())).await?,
                     };
                     serve(listener, gateway_router).await?;
                 }
                 GatewayCliCommands::Subscribe(args) => {
-                    let config = Self::extract_consumer_config(args.env_file)?;
+                    let config = GatewayConfig::load(RoleConfig::Consumer, args.env_file);
                     let microservices_subs = RainbowConsumerGatewaySubscriptions::new(config.clone());
                     microservices_subs
                         .subscribe_to_microservice(MicroserviceSubscriptionKey::ContractNegotiation)
                         .await?;
                 }
                 GatewayCliCommands::Build(args) => {
-                    Self::build_frontend(ConfigRoles::Consumer, args.env_file)?;
+                    Self::build_frontend(RoleConfig::Consumer, args.env_file)?;
                 }
             },
         };
@@ -159,7 +133,7 @@ impl GatewayCommands {
         Ok(())
     }
 
-    fn build_frontend(role: ConfigRoles, env_file: Option<String>) -> anyhow::Result<()> {
+    fn build_frontend(role: RoleConfig, env_file: Option<String>) -> anyhow::Result<()> {
         let role = role.to_string().to_lowercase();
         let cwd = format!("./../gui/{}", role);
         let env_file = format!("./../{}", env_file.expect("env file is required"));

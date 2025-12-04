@@ -22,38 +22,49 @@ use crate::config::traits::{
     ApiConfigTrait, CommonConfigTrait, ConfigLoader, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait, KeysPathTrait,
     RoleTrait,
 };
-use crate::config::types::roles::RoleConfig;
 use serde::{Deserialize, Serialize};
+use crate::config::types::roles::RoleConfig;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct TransferConfig {
+pub struct GatewayConfig {
     common: CommonConfig,
+    is_production: bool,
+    transfer: MinKnownConfig,
     contracts: MinKnownConfig,
     catalog: MinKnownConfig,
     is_catalog_datahub: bool,
     ssi_auth: MinKnownConfig,
 }
 
-impl TransferConfig {
-    pub fn contracts(&self) -> &MinKnownConfig {
-        &self.contracts
+impl GatewayConfig {
+    pub fn ssi_auth(&self) -> MinKnownConfig {
+        self.ssi_auth.clone()
     }
-    pub fn catalog(&self) -> &MinKnownConfig {
-        &self.catalog
+    pub fn transfer(&self) -> MinKnownConfig {
+        self.transfer.clone()
     }
-    pub fn ssi_auth(&self) -> &MinKnownConfig {
-        &self.ssi_auth
+    pub fn contracts(&self) -> MinKnownConfig {
+        self.contracts.clone()
+    }
+    pub fn catalog(&self) -> MinKnownConfig {
+        self.catalog.clone()
+    }
+    pub fn is_production(&self) -> bool {
+        self.is_production
     }
     pub fn is_catalog_datahub(&self) -> bool {
         self.is_catalog_datahub
     }
 }
-impl ConfigLoader for TransferConfig {
+impl ConfigLoader for GatewayConfig {
     fn default(common_config: CommonConfig) -> Self {
         let min_known_config =
-            MinKnownConfig { hosts: common_config.hosts.clone(), api_version: common_config.api.version.clone() };
+            MinKnownConfig { hosts: common_config.hosts.clone(), api_version: common_config.api.openapi_path.clone() };
+
         Self {
-            common: common_config,
+            common: common_config.clone(),
+            is_production: false,
+            transfer: min_known_config.clone(),
             contracts: min_known_config.clone(),
             catalog: min_known_config.clone(),
             is_catalog_datahub: false,
@@ -63,26 +74,25 @@ impl ConfigLoader for TransferConfig {
 
     fn load(role: RoleConfig, env_file: Option<String>) -> Self {
         match Self::global_load(role, env_file.clone()) {
-            Ok(data) => data.transfer(),
+            Ok(data) => data.gateway(),
             Err(_) => Self::local_load(role, env_file).expect("Unable to load catalog config"),
         }
     }
 }
 
-impl CommonConfigTrait for TransferConfig {
+impl CommonConfigTrait for GatewayConfig {
     fn common(&self) -> &CommonConfig {
         &self.common
     }
 }
 
-impl HostConfigTrait for TransferConfig {}
+impl HostConfigTrait for GatewayConfig {}
 
-impl DatabaseConfigTrait for TransferConfig {}
+impl DatabaseConfigTrait for GatewayConfig {}
 
-impl IsLocalTrait for TransferConfig {}
+impl IsLocalTrait for GatewayConfig {}
 
-impl KeysPathTrait for TransferConfig {}
+impl KeysPathTrait for GatewayConfig {}
 
-impl RoleTrait for TransferConfig {}
-
-impl ApiConfigTrait for TransferConfig {}
+impl RoleTrait for GatewayConfig {}
+impl ApiConfigTrait for GatewayConfig {}

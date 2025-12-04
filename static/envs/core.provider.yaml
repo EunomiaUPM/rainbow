@@ -4,7 +4,7 @@
 http_host: &http_host
   protocol: "http"
   url: "127.0.0.1"
-  port: "1100"
+  port: "1200"
 
 hosts_default: &hosts_default
   http: *http_host
@@ -19,33 +19,32 @@ min_known_config: &min_known_config
 
 is_catalog_datahub: &is_catalog_datahub false
 
-common_config: &common_config
+mono_config: &mono_config
   hosts: *hosts_default
   db:
     db_type: Postgres
     url: "127.0.0.1"
-    port: "1301"
-    user: "ds_consumer"
-    password: "ds_consumer"
-    name: "ds_consumer"
+    port: "1300"
+    user: "ds_provider"
+    password: "ds_provider"
+    name: "ds_provider"
   role: Consumer
   api:
     version: *api_version
-    openapi_path: "static/specs/openapi/auth/auth_consumer.json"
-  keys_path: "static/certificates/consumer/"
+    openapi_path: "static/specs/openapi/auth/auth_provider.json"
+  keys_path: "static/certificates/provider/"
   is_local: true
 
 # ==========================
 # MONOLITH
 # ==========================
-monolith:
-  common: *common_config
+monolith: *mono_config
 
 # ==========================
 # CATALOG
 # ==========================
 catalog:
-  common: *common_config
+  common: *mono_config
   is_datahub: *is_catalog_datahub
   datahub_host: null
   datahub_token: null
@@ -55,26 +54,26 @@ catalog:
 # SSI AUTH
 # ==========================
 ssi_auth:
-  common: *common_config
+  common: *mono_config
   wallet:
     api:
       protocol: "http"
       url: "127.0.0.1"
       port: "7001"
     type: "email"
-    name: "RainbowConsumer"
-    email: "RainbowConsumer@rainbow.com"
+    name: "RainbowProvider"
+    email: "RainbowProvider@rainbow.com"
     password: "rainbow"
     id: null
   client:
-    class_id: "rainbow_consumer"
+    class_id: "rainbow_provider"
     display: null
 
 # ==========================
 # CONTRACTS
 # ==========================
 contracts:
-  common: *common_config
+  common: *mono_config
   ssi_auth: *min_known_config
   is_catalog_datahub: *is_catalog_datahub
 
@@ -82,7 +81,7 @@ contracts:
 # TRANSFER
 # ==========================
 transfer:
-  common: *common_config
+  common: *mono_config
   contracts: *min_known_config
   catalog: *min_known_config
   ssi_auth: *min_known_config
@@ -92,8 +91,8 @@ transfer:
 # GATEWAY
 # ==========================
 gateway:
-  common: *common_config
-  is_production: false
+  common: *mono_config
+  is_production: false,
   transfer: *min_known_config
   contracts: *min_known_config
   catalog: *min_known_config

@@ -24,10 +24,10 @@ use crate::config::traits::{
     RoleTrait,
 };
 use serde::{Deserialize, Serialize};
+use crate::config::types::roles::RoleConfig;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ContractsConfig {
-    #[serde(flatten)]
     common: CommonConfig,
     ssi_auth: MinKnownConfig,
     is_catalog_datahub: bool,
@@ -43,11 +43,18 @@ impl ContractsConfig {
 }
 
 impl ConfigLoader for ContractsConfig {
-    fn default_with_config(common_config: CommonConfig) -> Self {
+    fn default(common_config: CommonConfig) -> Self {
         Self {
             common: common_config.clone(),
             ssi_auth: MinKnownConfig { hosts: common_config.hosts, api_version: common_config.api.openapi_path },
             is_catalog_datahub: false,
+        }
+    }
+
+    fn load(role: RoleConfig, env_file: Option<String>) -> Self {
+        match Self::global_load(role, env_file.clone()) {
+            Ok(data) => data.contracts(),
+            Err(_) => Self::local_load(role, env_file).expect("Unable to load catalog config"),
         }
     }
 }

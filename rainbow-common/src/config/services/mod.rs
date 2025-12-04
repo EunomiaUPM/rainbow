@@ -23,6 +23,7 @@ pub mod min_known_config;
 mod monolith;
 mod ssi_auth;
 mod transfer;
+mod gateway;
 
 pub use catalog::CatalogConfig;
 pub use common::CommonConfig;
@@ -30,3 +31,4 @@ pub use contracts::ContractsConfig;
 pub use monolith::MonolithConfig;
 pub use ssi_auth::SsiAuthConfig;
 pub use transfer::TransferConfig;
+pub use gateway::GatewayConfig;

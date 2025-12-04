@@ -24,7 +24,8 @@ use crate::gateway::http::business_router_types::{
 use anyhow::{anyhow, bail};
 use axum::async_trait;
 use rainbow_common::auth::business::RainbowBusinessLoginRequest;
-use rainbow_common::config::provider::config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_common::config::services::GatewayConfig;
+use rainbow_common::config::types::HostType;
 use rainbow_common::mates::Mates;
 use rainbow_common::protocol::contract::contract_ack::ContractAckMessage;
 use rainbow_common::protocol::contract::contract_odrl::{OdrlOffer, OdrlPolicyInfo};
@@ -37,11 +38,11 @@ use urn::Urn;
 
 pub struct BusinessServiceForDatahub {
     client: Client,
-    config: ApplicationProviderConfig,
+    config: GatewayConfig,
 }
 
 impl BusinessServiceForDatahub {
-    pub fn new(config: ApplicationProviderConfig) -> Self {
+    pub fn new(config: GatewayConfig) -> Self {
         let client =
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
         Self { client, config }
@@ -50,7 +51,7 @@ impl BusinessServiceForDatahub {
 #[async_trait]
 impl BusinessCatalogTrait for BusinessServiceForDatahub {
     async fn get_catalogs(&self, _token: String) -> anyhow::Result<Vec<DatahubDomain>> {
-        let base_url = self.config.get_catalog_host_url().unwrap();
+        let base_url = self.config.catalog().get_host(HostType::Http);
         let url = format!("{}/api/v1/datahub/domains", base_url);
         let req = self.client.get(url).send().await.map_err(|e| anyhow!("lol {}", e.to_string()))?;
         if req.status().is_success() == false {
@@ -62,7 +63,7 @@ impl BusinessCatalogTrait for BusinessServiceForDatahub {
     }
 
     async fn get_datasets_by_catalog(&self, catalog_id: Urn, _token: String) -> anyhow::Result<Vec<DatahubDataset>> {
-        let base_url = self.config.get_catalog_host_url().unwrap();
+        let base_url = self.config.catalog().get_host(HostType::Http);
         let url = format!(
             "{}/api/v1/datahub/domains/{}/datasets",
             base_url, catalog_id
@@ -77,7 +78,7 @@ impl BusinessCatalogTrait for BusinessServiceForDatahub {
     }
 
     async fn get_dataset(&self, dataset_id: Urn, _token: String) -> anyhow::Result<DatahubDataset> {
-        let base_url = self.config.get_catalog_host_url().unwrap();
+        let base_url = self.config.catalog().get_host(HostType::Http);
         let url = format!(
             "{}/api/v1/datahub/domains/datasets/{}",
             base_url, dataset_id
@@ -91,7 +92,7 @@ impl BusinessCatalogTrait for BusinessServiceForDatahub {
     }
 
     async fn get_policy_templates(&self, _token: String) -> anyhow::Result<Vec<policy_templates::Model>> {
-        let base_url = self.config.get_catalog_host_url().unwrap();
+        let base_url = self.config.catalog().get_host(HostType::Http);
         let url = format!("{}/api/v1/datahub/policy-templates", base_url);
         let req = self.client.get(url).send().await.map_err(|e| anyhow!("lol {}", e.to_string()))?;
         if req.status().is_success() == false {
@@ -109,7 +110,7 @@ impl BusinessCatalogTrait for BusinessServiceForDatahub {
         template_id: String,
         _token: String,
     ) -> anyhow::Result<policy_templates::Model> {
-        let base_url = self.config.get_catalog_host_url().unwrap();
+        let base_url = self.config.catalog().get_host(HostType::Http);
         let url = format!(
             "{}/api/v1/datahub/policy-templates/{}",
             base_url, template_id
@@ -126,7 +127,7 @@ impl BusinessCatalogTrait for BusinessServiceForDatahub {
     }
 
     async fn get_policy_offers_by_dataset(&self, dataset_id: Urn, _token: String) -> anyhow::Result<Vec<OdrlOffer>> {
-        let base_url = self.config.get_catalog_host_url().unwrap();
+        let base_url = self.config.catalog().get_host(HostType::Http);
         let url = format!("{}/api/v1/datasets/{}/policies", base_url, dataset_id);
         let req = self.client.get(url).send().await.map_err(|e| anyhow!("lol {}", e.to_string()))?;
         if req.status().is_success() == false {
@@ -142,7 +143,7 @@ impl BusinessCatalogTrait for BusinessServiceForDatahub {
         odrl_offer: OdrlPolicyInfo,
         _token: String,
     ) -> anyhow::Result<OdrlOffer> {
-        let base_url = self.config.get_catalog_host_url().unwrap();
+        let base_url = self.config.catalog().get_host(HostType::Http);
         let url = format!("{}/api/v1/datasets/{}/policies", base_url, dataset_id);
         let req = self.client.post(url).json(&odrl_offer).send().await.map_err(|e| anyhow!("lol {}", e.to_string()))?;
         if req.status().is_success() == false {
@@ -153,7 +154,7 @@ impl BusinessCatalogTrait for BusinessServiceForDatahub {
     }
 
     async fn delete_policy_offer(&self, dataset_id: Urn, policy_id: Urn, _token: String) -> anyhow::Result<()> {
-        let base_url = self.config.get_catalog_host_url().unwrap();
+        let base_url = self.config.catalog().get_host(HostType::Http);
         let url = format!(
             "{}/api/v1/datasets/{}/policies/{}",
             base_url, dataset_id, policy_id
@@ -166,7 +167,7 @@ impl BusinessCatalogTrait for BusinessServiceForDatahub {
     }
 
     async fn get_business_negotiation_requests(&self, _token: String) -> anyhow::Result<Value> {
-        let base_url = self.config.get_contract_negotiation_host_url().unwrap();
+        let base_url = self.config.contracts().get_host(HostType::Http);
         let url = format!(
             "{}/api/v1/contract-negotiation/processes?client_type=business",
             base_url
@@ -184,7 +185,7 @@ impl BusinessCatalogTrait for BusinessServiceForDatahub {
         request_id: Urn,
         _token: String,
     ) -> anyhow::Result<ContractAckMessage> {
-        let base_url = self.config.get_contract_negotiation_host_url().unwrap();
+        let base_url = self.config.contracts().get_host(HostType::Http);
         let url = format!(
             "{}/api/v1/contract-negotiation/processes/{}",
             base_url, request_id
@@ -199,7 +200,7 @@ impl BusinessCatalogTrait for BusinessServiceForDatahub {
     }
 
     async fn get_consumer_negotiation_requests(&self, participant_id: String, _token: String) -> anyhow::Result<Value> {
-        let base_url = self.config.get_contract_negotiation_host_url().unwrap();
+        let base_url = self.config.contracts().get_host(HostType::Http);
         let url = format!(
             "{}/api/v1/contract-negotiation/processes/participant/{}?client_type=business",
             base_url, participant_id
@@ -218,7 +219,7 @@ impl BusinessCatalogTrait for BusinessServiceForDatahub {
         request_id: Urn,
         _token: String,
     ) -> anyhow::Result<ContractAckMessage> {
-        let base_url = self.config.get_contract_negotiation_host_url().unwrap();
+        let base_url = self.config.contracts().get_host(HostType::Http);
         let url = format!(
             "{}/api/v1/contract-negotiation/processes/{}",
             base_url, request_id
@@ -233,7 +234,7 @@ impl BusinessCatalogTrait for BusinessServiceForDatahub {
     }
 
     async fn accept_request(&self, input: RainbowBusinessAcceptanceRequest, _token: String) -> anyhow::Result<Value> {
-        let base_url = self.config.get_contract_negotiation_host_url().unwrap();
+        let base_url = self.config.contracts().get_host(HostType::Http);
         let setup_message = json!({
             "consumerParticipantId": input.consumer_participant_id,
             "consumerPid": input.consumer_pid,
@@ -278,7 +279,7 @@ impl BusinessCatalogTrait for BusinessServiceForDatahub {
         _token: String,
     ) -> anyhow::Result<Value> {
         // fetch base url for provider
-        let base_url = self.config.get_contract_negotiation_host_url().unwrap();
+        let base_url = self.config.contracts().get_host(HostType::Http);
         let url = format!("{}/api/v1/negotiations/rpc/setup-termination", base_url);
 
         let setup_termination_message = json!({
@@ -303,7 +304,7 @@ impl BusinessCatalogTrait for BusinessServiceForDatahub {
 
     async fn create_request(&self, input: RainbowBusinessNegotiationRequest, _token: String) -> anyhow::Result<Value> {
         // fetch base url for consumer and its token
-        let base_url = self.config.get_contract_negotiation_host_url().unwrap();
+        let base_url = self.config.ssi_auth().get_host(HostType::Http);
         let url = format!(
             "{}/api/v1/mates/{}",
             base_url, input.consumer_participant_id
@@ -317,7 +318,7 @@ impl BusinessCatalogTrait for BusinessServiceForDatahub {
             req.json::<Mates>().await.map_err(|e| anyhow!("not deserializable, {}", e.to_string()))?;
 
         // fetch base url for provider
-        let base_url = self.config.get_contract_negotiation_host_url().unwrap();
+        let base_url = self.config.ssi_auth().get_host(HostType::Http);
         let url = format!("{}/api/v1/mates/me", base_url);
         let req = self.client.get(url).send().await.map_err(|e| anyhow!("lol {}", e.to_string()))?;
         if req.status().is_success() == false {
@@ -357,7 +358,7 @@ impl BusinessCatalogTrait for BusinessServiceForDatahub {
     }
 
     async fn login(&self, input: RainbowBusinessLoginRequest) -> anyhow::Result<String> {
-        let base_url = self.config.get_contract_negotiation_host_url().unwrap();
+        let base_url = self.config.ssi_auth().get_host(HostType::Http);
         let url = format!("{}/api/v1/generate/uri", base_url);
         let req = self.client.post(url).json(&input).send().await.map_err(|e| anyhow!("lol {}", e.to_string()))?;
         if req.status().is_success() == false {
@@ -368,7 +369,7 @@ impl BusinessCatalogTrait for BusinessServiceForDatahub {
     }
 
     async fn login_poll(&self, input: RainbowBusinessLoginRequest) -> anyhow::Result<Value> {
-        let base_url = self.config.get_contract_negotiation_host_url().unwrap();
+        let base_url = self.config.ssi_auth().get_host(HostType::Http);
         let url = format!("{}/api/v1/busmates/token", base_url);
         let req = self.client.post(url).json(&input).send().await.map_err(|e| anyhow!("lol {}", e.to_string()))?;
 

@@ -22,7 +22,7 @@ use crate::provider::db_migrations::CoreProviderMigration;
 use crate::provider::db_seeding::CoreProviderSeeding;
 use crate::setup::CoreApplication;
 use clap::{Parser, Subcommand};
-use rainbow_common::config::traits::{ConfigLoader, MonoConfigTrait};
+use rainbow_common::config::traits::MonoConfigTrait;
 use rainbow_common::config::types::roles::RoleConfig;
 use rainbow_common::config::ApplicationConfig;
 use std::cmp::PartialEq;
@@ -68,11 +68,11 @@ impl CoreCommands {
         match cli.role {
             CoreCliRoles::Provider(cmd) => match cmd {
                 CoreCliCommands::Start(args) => {
-                    let config = ApplicationConfig::load(RoleConfig::Provider, args.env_file);
+                    let config = ApplicationConfig::load(RoleConfig::Provider, args.env_file)?;
                     CoreApplication::run(RoleConfig::Provider, &config).await?
                 }
                 CoreCliCommands::Setup(args) => {
-                    let config = ApplicationConfig::load(RoleConfig::Provider, args.env_file);
+                    let config = ApplicationConfig::load(RoleConfig::Provider, args.env_file)?;
                     CoreProviderMigration::run(&config).await?;
                     match config.is_mono_catalog_datahub() {
                         true => {}
@@ -84,11 +84,11 @@ impl CoreCommands {
             },
             CoreCliRoles::Consumer(cmd) => match cmd {
                 CoreCliCommands::Start(args) => {
-                    let config = ApplicationConfig::load(RoleConfig::Consumer, args.env_file);
+                    let config = ApplicationConfig::load(RoleConfig::Consumer, args.env_file)?;
                     CoreApplication::run(RoleConfig::Consumer, &config).await?
                 }
                 CoreCliCommands::Setup(args) => {
-                    let config = ApplicationConfig::load(RoleConfig::Consumer, args.env_file);
+                    let config = ApplicationConfig::load(RoleConfig::Consumer, args.env_file)?;
                     CoreConsumerMigration::run(&config).await?
                 }
             },

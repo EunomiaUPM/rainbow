@@ -25,7 +25,8 @@ use axum::http::{header, StatusCode, Uri};
 use axum::response::{IntoResponse, Response};
 use axum::routing::{any, get, post};
 use axum::{Json, Router};
-use rainbow_common::config::provider::config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_common::config::services::GatewayConfig;
+use rainbow_common::config::types::HostType;
 use reqwest::Client;
 use rust_embed::Embed;
 use serde_json::Value;
@@ -34,7 +35,7 @@ use tokio::sync::broadcast;
 use tower_http::cors::{Any, CorsLayer};
 
 pub struct RainbowProviderGateway {
-    config: ApplicationProviderConfig,
+    config: GatewayConfig,
     client: Client,
     notification_tx: broadcast::Sender<String>,
 }
@@ -44,7 +45,7 @@ pub struct RainbowProviderGateway {
 pub struct RainbowProviderReactApp;
 
 impl RainbowProviderGateway {
-    pub fn new(config: ApplicationProviderConfig) -> Self {
+    pub fn new(config: GatewayConfig) -> Self {
         let client =
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
         let (notification_tx, _) = broadcast::channel(100);
@@ -65,7 +66,7 @@ impl RainbowProviderGateway {
             .route("/gateway/api/ws", get(Self::websocket_handler))
             .route("/incoming-notification", post(Self::incoming_notification));
 
-        if self.config.is_gateway_in_production {
+        if self.config.is_production() {
             router = router.fallback(Self::static_path_handler);
         }
 
@@ -103,7 +104,7 @@ impl RainbowProviderGateway {
     }
 
     async fn proxy_handler_with_extra(
-        State((config, client, notification_tx)): State<(ApplicationProviderConfig, Client, broadcast::Sender<String>)>,
+        State((config, client, notification_tx)): State<(GatewayConfig, Client, broadcast::Sender<String>)>,
         Path((service_prefix, extra)): Path<(String, String)>,
         req: Request<Body>,
     ) -> impl IntoResponse {
@@ -116,40 +117,37 @@ impl RainbowProviderGateway {
         .await
     }
     async fn proxy_handler_without_extra(
-        State((config, client, notification_tx)): State<(ApplicationProviderConfig, Client, broadcast::Sender<String>)>,
+        State((config, client, notification_tx)): State<(GatewayConfig, Client, broadcast::Sender<String>)>,
         Path(service_prefix): Path<String>,
         req: Request<Body>,
     ) -> impl IntoResponse {
         Self::execute_proxy((config, client, notification_tx), service_prefix, None, req).await
     }
     async fn execute_proxy(
-        (config, client, _notification_tx): (ApplicationProviderConfig, Client, broadcast::Sender<String>),
+        (config, client, _notification_tx): (GatewayConfig, Client, broadcast::Sender<String>),
         service_prefix: String,
         extra_opt: Option<String>,
         req: Request<Body>,
     ) -> impl IntoResponse {
         let microservice_base_url = match service_prefix.as_str() {
-            "dataplane" => config.get_transfer_host_url(),
-            "subscriptions" => config.get_catalog_host_url(),
-            "notifications" => config.get_catalog_host_url(),
-            "catalogs" => config.get_catalog_host_url(),
-            "datasets" => config.get_catalog_host_url(),
-            "data-services" => config.get_catalog_host_url(),
-            "distributions" => config.get_catalog_host_url(),
-            "datahub" => config.get_catalog_host_url(), // TODO config datahub_host_url
-            "contract-negotiation" => config.get_contract_negotiation_host_url(),
-            "mates" => config.get_contract_negotiation_host_url(),
-            "negotiations" => config.get_contract_negotiation_host_url(),
-            "transfers" => config.get_transfer_host_url(),
-            "auth" => config.get_auth_host_url(),
-            "wallet" => config.get_transfer_host_url(),
-            "ssi-auth" => config.get_ssi_auth_host_url(),
-            _ => return (StatusCode::NOT_FOUND, "prefix not found").into_response(),
-        };
+            "dataplane" => config.transfer().get_host(HostType::Http),
+            "catalogs" => config.catalog().get_host(HostType::Http),
+            "datasets" => config.catalog().get_host(HostType::Http),
+            // TODO Carlos
+            "subscriptions" => config.transfer().get_host(HostType::Http),
+            "notifications" => config.transfer().get_host(HostType::Http),
+            "data-services" => config.transfer().get_host(HostType::Http),
+            "distributions" => config.transfer().get_host(HostType::Http),
 
-        let microservice_base_url = match microservice_base_url {
-            Some(microservice_url) => microservice_url,
-            None => return (StatusCode::INTERNAL_SERVER_ERROR, "prefix not configured").into_response(),
+            "datahub" => config.catalog().get_host(HostType::Http),
+            "contract-negotiation" => config.contracts().get_host(HostType::Http),
+            "mates" => config.ssi_auth().get_host(HostType::Http),
+            "negotiations" => config.catalog().get_host(HostType::Http),
+            "transfers" => config.transfer().get_host(HostType::Http),
+            "auth" => config.ssi_auth().get_host(HostType::Http),
+            "wallet" => config.ssi_auth().get_host(HostType::Http),
+            "ssi-auth" => config.ssi_auth().get_host(HostType::Http),
+            _ => return (StatusCode::NOT_FOUND, "prefix not found").into_response(),
         };
 
         execute_proxy(
@@ -162,11 +160,7 @@ impl RainbowProviderGateway {
         .await
     }
     async fn websocket_handler(
-        State((_config, _client, notification_tx)): State<(
-            ApplicationProviderConfig,
-            Client,
-            broadcast::Sender<String>,
-        )>,
+        State((_config, _client, notification_tx)): State<(GatewayConfig, Client, broadcast::Sender<String>)>,
         ws: WebSocketUpgrade,
     ) -> impl IntoResponse {
         ws.on_upgrade(move |mut socket| async move {
@@ -221,11 +215,7 @@ impl RainbowProviderGateway {
         })
     }
     async fn incoming_notification(
-        State((_config, _client, notification_tx)): State<(
-            ApplicationProviderConfig,
-            Client,
-            broadcast::Sender<String>,
-        )>,
+        State((_config, _client, notification_tx)): State<(GatewayConfig, Client, broadcast::Sender<String>)>,
         Json(input): Json<Value>,
     ) -> impl IntoResponse {
         let value_str = match serde_json::to_string(&input) {

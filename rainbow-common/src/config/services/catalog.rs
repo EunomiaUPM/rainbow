@@ -22,6 +22,7 @@ use crate::config::traits::{
     ApiConfigTrait, CommonConfigTrait, ConfigLoader, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait, KeysPathTrait,
     RoleTrait,
 };
+use crate::config::types::roles::RoleConfig;
 use crate::config::types::HostConfig;
 use crate::errors::{CommonErrors, ErrorLog};
 use crate::utils::get_host_helper;
@@ -30,7 +31,6 @@ use tracing::error;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CatalogConfig {
-    #[serde(flatten)]
     common: CommonConfig,
     is_datahub: bool,
     datahub_host: Option<HostConfig>,
@@ -58,14 +58,22 @@ impl CatalogConfig {
         token.expect("datahub_token not found")
     }
 }
+
 impl ConfigLoader for CatalogConfig {
-    fn default_with_config(common_config: CommonConfig) -> Self {
+    fn default(common_config: CommonConfig) -> Self {
         Self {
             common: common_config.clone(),
             is_datahub: false,
             datahub_host: None,
             datahub_token: None,
             ssi_auth: MinKnownConfig { hosts: common_config.hosts, api_version: common_config.api.openapi_path },
+        }
+    }
+
+    fn load(role: RoleConfig, env_file: Option<String>) -> Self {
+        match Self::global_load(role, env_file.clone()) {
+            Ok(data) => data.catalog(),
+            Err(_) => Self::local_load(role, env_file).expect("Unable to load catalog config"),
         }
     }
 }

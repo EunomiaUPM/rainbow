@@ -17,18 +17,28 @@
  *
  */
 
+use crate::config::services::SsiAuthConfig;
+use crate::config::traits::{ApiConfigTrait, CommonConfigTrait, ExtraHostsTrait};
+use crate::config::types::{CommonHostsConfig, HostType};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct CredentialSubject4Identity {
-    pub id: String,
-    pub r#type: String,
-    #[serde(rename = "LegalName")]
-    pub legal_name: String,
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct MinKnownConfig {
+    pub hosts: CommonHostsConfig,
+    pub api_version: String,
 }
 
-impl CredentialSubject4Identity {
-    pub fn new(id: String, legal_name: String) -> Self {
-        CredentialSubject4Identity { id, r#type: "IdentityCredential".to_string(), legal_name }
+impl MinKnownConfig {
+    pub fn get_host(&self, host_type: HostType) -> String {
+        self.hosts.get_host(host_type)
+    }
+    pub fn get_api_version(&self) -> String {
+        format!("/api/{}", self.api_version)
+    }
+}
+
+impl From<SsiAuthConfig> for MinKnownConfig {
+    fn from(value: SsiAuthConfig) -> Self {
+        Self { hosts: value.common().hosts.clone(), api_version: value.get_api_version() }
     }
 }

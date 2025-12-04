@@ -27,7 +27,7 @@ use rainbow_transfer::consumer::setup::application::create_transfer_consumer_rou
 // use rainbow_transfer_agent::setup::create_root_http_router;
 
 pub async fn create_core_consumer_router(config: &ApplicationConfig) -> Router {
-    let auth_router = AuthConsumerApplication::create_router(&config.ssi_auth_config()).await;
+    let auth_router = AuthConsumerApplication::create_router(&config.ssi_auth()).await;
     let transfer_router = create_transfer_consumer_router(&config.transfer()).await;
     let cn_router = create_contract_negotiation_consumer_router(&config.contracts()).await;
     let catalog_bypass_router = create_catalog_bypass_consumer_router(config.catalog()).await;
