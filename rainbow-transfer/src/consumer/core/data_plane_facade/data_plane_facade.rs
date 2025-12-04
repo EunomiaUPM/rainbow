@@ -110,7 +110,9 @@ impl DataPlaneConsumerFacadeTrait for DataPlaneConsumerFacadeForDSProtocol {
                 // TODO push case next_hop should point to consumer dataplane
                 todo!()
             }
-            FormatAction::Pull => {}
+            FormatAction::Pull => {
+                // We do nothing here
+            }
         };
 
         Ok(())
