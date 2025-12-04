@@ -436,7 +436,12 @@ where
         let data_service =
             self.data_service_facade.resolve_data_service_by_agreement_id(agreement_id.clone(), Some(formats)).await?;
         // 3. Data plane hook
-        self.data_plane.on_transfer_request(provider_pid.clone(), data_service, input.format.clone()).await?;
+        self.data_plane.on_transfer_request(
+            provider_pid.clone(),
+            data_service,
+            input.format.clone(),
+            input.data_address.clone()
+        ).await?;
 
         // 4. Persist model
         let transfer_process = self

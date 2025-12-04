@@ -34,6 +34,7 @@ pub trait DataPlaneProviderFacadeTrait: Send + Sync {
         session_id: Urn,
         data_service: DataService,
         format: DctFormats,
+        data_address: Option<DataAddress>
     ) -> anyhow::Result<()>;
     async fn on_transfer_start(&self, session_id: Urn) -> anyhow::Result<()>;
     async fn on_transfer_suspension(&self, session_id: Urn) -> anyhow::Result<()>;

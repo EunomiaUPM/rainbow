@@ -162,10 +162,11 @@ impl DataPlaneDefaultBehaviour for DataPlaneProcess {
         let downstream_hop_url = input.downstream_hop.url;
         let downstream_hop_auth_type = input.downstream_hop.auth_type;
         let downstream_hop_auth_content = input.downstream_hop.auth_content;
+        let direction = input.process_direction;
 
         let data_plane_process = DataPlaneProcess {
             id: input.session_id,
-            process_direction: DataPlaneProcessDirection::PULL,
+            process_direction: direction,
             upstream_hop: DataPlaneProcessAddress {
                 protocol: "".to_string(),
                 url: "".to_string(),

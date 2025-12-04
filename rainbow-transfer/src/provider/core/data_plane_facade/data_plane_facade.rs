@@ -85,8 +85,6 @@ impl DataPlaneProviderFacadeTrait for DataPlaneProviderFacadeForDSProtocol {
             .content
             .clone();
 
-        dbg!("b");
-
         let data_address = DataAddress {
             _type: "DataAddress".to_string(),
             endpoint_type: scheme,
@@ -112,18 +110,20 @@ impl DataPlaneProviderFacadeTrait for DataPlaneProviderFacadeForDSProtocol {
         session_id: Urn,
         data_service: DataService,
         format: DctFormats,
+        data_address: Option<DataAddress> // in push case
     ) -> anyhow::Result<()> {
         let DataService { dcat, .. } = data_service;
-        let DataServiceDcatDeclaration { endpoint_url, .. } = dcat;
+        let DataServiceDcatDeclaration { endpoint_url, endpoint_description, .. } = dcat;
         let endpoint_url = Url::parse(endpoint_url.as_str())?;
         let endpoint_scheme = endpoint_url.scheme().to_string();
         let endpoint_address = endpoint_url.to_string();
+        let endpoint_description = endpoint_description.to_string();
+
 
         let _dataplane_response = match format.action {
             FormatAction::Push => {
-                // HERE!!! redo draw and figure out where to get stuff from
-                // TODO push case next_hop should point to consumer dataplane
-                // todo!()
+                dbg!(&format);
+                let data_address = data_address.unwrap(); // is mandatory to be here defined
                 self.dataplane_controller
                     .data_plane_provision_request(&DataPlaneProvisionRequest {
                         _type: DataPlaneControllerMessages::DataPlaneProvisionRequest,
@@ -148,6 +148,7 @@ impl DataPlaneProviderFacadeTrait for DataPlaneProviderFacadeForDSProtocol {
                                 format: "jwt".to_string(),
                             },
                         ],
+                        // TODO ADD NextHopAddressAuth and NextHopAddressAuthType
                         sdp_config: Some(vec![
                             DataPlaneSDPConfigField {
                                 _type: DataPlaneSDPConfigTypes::NextHopAddressScheme,
@@ -159,7 +160,7 @@ impl DataPlaneProviderFacadeTrait for DataPlaneProviderFacadeForDSProtocol {
                             DataPlaneSDPConfigField {
                                 _type: DataPlaneSDPConfigTypes::NextHopAddress,
                                 format: Some("uri".to_string()),
-                                content: endpoint_address, // this points to somewhere else...
+                                content: data_address.endpoint, // this points to somewhere else...
                             },
                             DataPlaneSDPConfigField {
                                 _type: DataPlaneSDPConfigTypes::Direction,
