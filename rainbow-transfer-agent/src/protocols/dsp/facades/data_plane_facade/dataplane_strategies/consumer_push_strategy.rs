@@ -5,12 +5,13 @@ use crate::protocols::dsp::protocol_types::DataAddressDto;
 use rainbow_common::adv_protocol::interplane::data_plane_provision::DataPlaneProvisionRequest;
 use rainbow_common::adv_protocol::interplane::data_plane_start::DataPlaneStart;
 use rainbow_common::adv_protocol::interplane::data_plane_stop::DataPlaneStop;
-use rainbow_common::adv_protocol::interplane::{DataPlaneControllerMessages, DataPlaneControllerVersion};
-use rainbow_common::dcat_formats::DctFormats;
-use rainbow_common::protocol::catalog::dataservice_definition::DataService;
+use rainbow_common::adv_protocol::interplane::{DataPlaneControllerMessages, DataPlaneControllerVersion, DataPlaneSDPConfigField, DataPlaneSDPConfigTypes, DataPlaneSDPFieldTypes, DataPlaneSDPRequestField};
+use rainbow_common::dcat_formats::{DctFormats, FormatAction};
+use rainbow_common::protocol::catalog::dataservice_definition::{DataService, DataServiceDcatDeclaration};
 use rainbow_common::protocol::transfer::transfer_data_address::DataAddress;
 use rainbow_dataplane::coordinator::dataplane_access_controller::DataPlaneAccessControllerTrait;
 use std::sync::Arc;
+use url::Url;
 use urn::Urn;
 
 pub struct ConsumerPushDataplaneStrategy {
@@ -49,14 +50,55 @@ impl DataPlaneFacadeTrait for ConsumerPushDataplaneStrategy {
         data_service: &Option<DataService>,
         data_address: &Option<DataAddressDto>,
     ) -> anyhow::Result<()> {
+        let DataAddressDto { endpoint,endpoint_type, endpoint_properties } = data_address.as_ref().unwrap();
+        let endpoint = endpoint.as_ref().unwrap();
+        let endpoint_url = Url::parse(endpoint.as_str())?;
+        let endpoint_scheme = endpoint_url.scheme().to_string();
+        let endpoint_address = endpoint_url.to_string();
         let provision_request = self
             .dataplane_controller_access
             .data_plane_provision_request(&DataPlaneProvisionRequest {
                 _type: DataPlaneControllerMessages::DataPlaneProvisionRequest,
                 version: DataPlaneControllerVersion::Version10,
                 session_id: session_id.clone(),
-                sdp_request: vec![],
-                sdp_config: None,
+                sdp_request: vec![
+                    DataPlaneSDPRequestField {
+                        _type: DataPlaneSDPFieldTypes::DataPlaneAddressScheme,
+                        format: "https://www.iana.org/assignments/uri-schemes/uri-schemes.xhtml".to_string(),
+                    },
+                    DataPlaneSDPRequestField {
+                        _type: DataPlaneSDPFieldTypes::DataPlaneAddress,
+                        format: "uri".to_string(),
+                    },
+                    DataPlaneSDPRequestField {
+                        _type: DataPlaneSDPFieldTypes::DataPlaneAddressAuthType,
+                        format: "https://www.iana.org/assignments/http-authschemes/http-authschemes.xhtml"
+                            .to_string(),
+                    },
+                    DataPlaneSDPRequestField {
+                        _type: DataPlaneSDPFieldTypes::DataPlaneAddressAuthToken,
+                        format: "jwt".to_string(),
+                    },
+                ],
+                sdp_config: Some(vec![
+                    DataPlaneSDPConfigField {
+                        _type: DataPlaneSDPConfigTypes::NextHopAddressScheme,
+                        format: Some(
+                            "https://www.iana.org/assignments/uri-schemes/uri-schemes.xhtml".to_string(),
+                        ),
+                        content: endpoint_scheme,
+                    },
+                    DataPlaneSDPConfigField {
+                        _type: DataPlaneSDPConfigTypes::NextHopAddress,
+                        format: Some("uri".to_string()),
+                        content: endpoint_address,
+                    },
+                    DataPlaneSDPConfigField {
+                        _type: DataPlaneSDPConfigTypes::Direction,
+                        format: Some("dcterms:transferDirection".to_string()),
+                        content: FormatAction::Push.to_string(),
+                    },
+                ]),
             })
             .await?;
         Ok(())
