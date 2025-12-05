@@ -21,8 +21,8 @@ use crate::setup::application::TransferApplication;
 use crate::setup::db_migrations::TransferAgentMigration;
 use clap::{Parser, Subcommand};
 use rainbow_common::config::env_extraction::EnvExtraction;
-use tracing::debug;
 use rainbow_common::config::global_config::ApplicationGlobalConfig;
+use tracing::debug;
 
 #[derive(Parser, Debug)]
 #[command(name = "Rainbow Dataspace Connector Transfer Agent")]

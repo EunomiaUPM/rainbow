@@ -25,7 +25,6 @@ use crate::protocols::dsp::orchestrator::rpc::types::{
     RpcTransferSuspensionMessageDto, RpcTransferTerminationMessageDto,
 };
 
-
 #[async_trait::async_trait]
 pub trait RPCOrchestratorTrait: Send + Sync + 'static {
     async fn setup_transfer_request(

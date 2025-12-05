@@ -27,6 +27,7 @@ use crate::protocols::protocol::ProtocolPluginTrait;
 use axum::extract::Request;
 use axum::response::IntoResponse;
 use axum::{serve, Router};
+use rainbow_common::config::global_config::ApplicationGlobalConfig;
 use rainbow_common::errors::CommonErrors;
 use rainbow_common::health::HealthRouter;
 use rainbow_common::well_known::WellKnownRoot;
@@ -37,14 +38,10 @@ use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 use tower_http::trace::{DefaultOnResponse, TraceLayer};
 use uuid::Uuid;
-use rainbow_common::config::global_config::ApplicationGlobalConfig;
 
 pub struct TransferHttpWorker {}
 impl TransferHttpWorker {
-    pub async fn spawn(
-        config: &ApplicationGlobalConfig,
-        token: &CancellationToken,
-    ) -> anyhow::Result<JoinHandle<()>> {
+    pub async fn spawn(config: &ApplicationGlobalConfig, token: &CancellationToken) -> anyhow::Result<JoinHandle<()>> {
         // well known router
         let well_known_router = WellKnownRoot::get_router()?;
         let health_router = HealthRouter::new().router();
@@ -105,7 +102,7 @@ pub async fn create_root_http_router(config: &ApplicationGlobalConfig) -> anyhow
     let dsp_router = TransferDSP::new(
         messages_controller_service.clone(),
         entities_controller_service.clone(),
-        config.clone()
+        config.clone(),
     )
     .build_router()
     .await?;

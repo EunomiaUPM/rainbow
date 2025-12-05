@@ -19,6 +19,7 @@
 
 use crate::protocols::dsp::facades::data_service_resolver_facade::DataServiceFacadeTrait;
 use anyhow::bail;
+use rainbow_common::config::global_config::ApplicationGlobalConfig;
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_common::dcat_formats::DctFormats;
 use rainbow_common::errors::helpers::BadFormat;
@@ -35,7 +36,6 @@ use std::str::FromStr;
 use std::sync::Arc;
 use tracing::error;
 use urn::Urn;
-use rainbow_common::config::global_config::ApplicationGlobalConfig;
 
 pub struct DataServiceFacadeServiceForDSProtocol {
     config: Arc<ApplicationGlobalConfig>,

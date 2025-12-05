@@ -1,4 +1,4 @@
-
+use crate::coordinator::data_source_connector::data_source_connector::DataSourceConnector;
 use crate::coordinator::dataplane_access_controller::dataplane_access_controller::DataPlaneAccessControllerService;
 use crate::coordinator::dataplane_access_controller::DataPlaneAccessControllerTrait;
 use crate::data::factory_sql::DataPlaneRepoForSql;
@@ -7,13 +7,12 @@ use crate::entities::data_plane_process::data_plane_process_entity::DataPlanePro
 use crate::entities::transfer_events::transfer_event_entity::TransferEventEntityService;
 use crate::http::dataplane_info::DataPlaneRouter;
 use crate::http::transfer_events::TransferEventsRouter;
+use crate::testing_proxy::http::http::TestingHTTPProxy;
 use axum::Router;
 use rainbow_common::config::global_config::ApplicationGlobalConfig;
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use sea_orm::Database;
 use std::sync::Arc;
-use crate::coordinator::data_source_connector::data_source_connector::DataSourceConnector;
-use crate::testing_proxy::http::http::TestingHTTPProxy;
 
 pub struct DataplaneSetup {}
 impl DataplaneSetup {
@@ -37,7 +36,7 @@ impl DataplaneSetup {
         let controller = Arc::new(DataPlaneAccessControllerService::new(
             dataplane_source_connector.clone(),
             dataplane_process_entity.clone(),
-            config.clone()
+            config.clone(),
         ));
         controller
     }

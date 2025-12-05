@@ -17,5 +17,5 @@
  *
  */
 
-pub mod dataplane_access_controller;
 pub mod data_source_connector;
+pub mod dataplane_access_controller;

@@ -18,7 +18,7 @@
  *
  */
 
-use crate::protocols::dsp::facades::data_plane_facade::{DataPlaneFacadeTrait};
+use crate::protocols::dsp::facades::data_plane_facade::DataPlaneFacadeTrait;
 use crate::protocols::dsp::facades::data_service_resolver_facade::DataServiceFacadeTrait;
 use std::sync::Arc;
 

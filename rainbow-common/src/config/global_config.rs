@@ -54,7 +54,11 @@ pub struct HostConfig {
 
 impl Display for HostConfig {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", format!("{}://{}:{}", self.protocol, self.url, self.port))
+        write!(
+            f,
+            "{}",
+            format!("{}://{}:{}", self.protocol, self.url, self.port)
+        )
     }
 }
 

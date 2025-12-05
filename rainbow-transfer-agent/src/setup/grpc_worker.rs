@@ -25,6 +25,7 @@ use crate::grpc::api::transfer_processes::transfer_agent_processes_server::Trans
 use crate::grpc::api::FILE_DESCRIPTOR_SET;
 use crate::grpc::transfer_messages::TransferAgentMessagesGrpc;
 use crate::grpc::transfer_process::TransferAgentProcessesGrpc;
+use rainbow_common::config::global_config::ApplicationGlobalConfig;
 use sea_orm::Database;
 use std::sync::Arc;
 use tokio::net::TcpListener;
@@ -32,15 +33,11 @@ use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 use tonic::codegen::tokio_stream::wrappers::TcpListenerStream;
 use tonic::transport::Server;
-use rainbow_common::config::global_config::ApplicationGlobalConfig;
 
 pub struct TransferGrpcWorker {}
 
 impl TransferGrpcWorker {
-    pub async fn spawn(
-        config: &ApplicationGlobalConfig,
-        token: &CancellationToken,
-    ) -> anyhow::Result<JoinHandle<()>> {
+    pub async fn spawn(config: &ApplicationGlobalConfig, token: &CancellationToken) -> anyhow::Result<JoinHandle<()>> {
         let router = Self::create_root_grpc_router(&config).await?;
         let host = if config.is_local { "127.0.0.1" } else { "0.0.0.0" };
         let port = config.transfer_process_host.clone().expect("no host").port;
@@ -68,7 +65,8 @@ impl TransferGrpcWorker {
     pub async fn create_root_grpc_router(
         config: &ApplicationGlobalConfig,
     ) -> anyhow::Result<tonic::transport::server::Router> {
-        let db_connection = Database::connect(config.database_config.as_db_url()).await.expect("Database can't connect");
+        let db_connection =
+            Database::connect(config.database_config.as_db_url()).await.expect("Database can't connect");
         let transfer_repo = Arc::new(TransferAgentRepoForSql::create_repo(db_connection.clone()));
 
         let messages_service = Arc::new(TransferAgentMessagesService::new(transfer_repo.clone()));

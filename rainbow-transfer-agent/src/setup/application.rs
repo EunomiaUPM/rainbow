@@ -19,9 +19,9 @@
 
 use crate::setup::grpc_worker::TransferGrpcWorker;
 use crate::setup::http_worker::TransferHttpWorker;
+use rainbow_common::config::global_config::ApplicationGlobalConfig;
 use tokio::signal;
 use tokio_util::sync::CancellationToken;
-use rainbow_common::config::global_config::ApplicationGlobalConfig;
 
 pub struct TransferApplication;
 impl TransferApplication {
