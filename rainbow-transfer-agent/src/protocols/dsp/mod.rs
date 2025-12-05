@@ -28,8 +28,6 @@ pub(crate) mod validator;
 
 use crate::entities::transfer_messages::TransferAgentMessagesTrait;
 use crate::entities::transfer_process::TransferAgentProcessesTrait;
-use crate::protocols::dsp::facades::data_plane_facade::data_plane_facade::DataPlaneProviderFacade;
-use crate::protocols::dsp::facades::data_service_resolver_facade::data_service_resolver_facade::DataServiceFacadeServiceForDSProtocol;
 use crate::protocols::dsp::facades::FacadeService;
 use crate::protocols::dsp::http::protocol::DspRouter;
 use crate::protocols::dsp::http::rpc::RpcRouter;
@@ -44,24 +42,27 @@ use crate::protocols::dsp::validator::validators::validate_payload::ValidatePayl
 use crate::protocols::dsp::validator::validators::validation_helpers::ValidationHelperService;
 use crate::protocols::protocol::ProtocolPluginTrait;
 use axum::Router;
-use rainbow_common::config::services::TransferConfig;
+use rainbow_common::config::global_config::ApplicationGlobalConfig;
 use rainbow_common::http_client::HttpClient;
 use rainbow_dataplane::setup::DataplaneSetup;
 use std::sync::Arc;
 use validator::validators::protocol::validate_state_transition::ValidatedStateTransitionServiceForDsp;
 use validator::validators::rpc::validation_rpc_steps::ValidationRpcStepsService;
+use crate::protocols::dsp::facades::data_plane_facade::data_plane_facade::DataPlaneProviderFacadeForDSProtocol;
+use crate::protocols::dsp::facades::data_plane_facade::dataplane_strategy_factory::DataPlaneStrategyFactory;
+use crate::protocols::dsp::facades::data_service_resolver_facade::data_service_resolver_facade::DataServiceFacadeServiceForDSProtocol;
 
 pub struct TransferDSP {
     transfer_agent_process_entities: Arc<dyn TransferAgentProcessesTrait>,
     transfer_agent_message_service: Arc<dyn TransferAgentMessagesTrait>,
-    config: Arc<TransferConfig>,
+    config: Arc<ApplicationGlobalConfig>,
 }
 
 impl TransferDSP {
     pub fn new(
         transfer_agent_message_service: Arc<dyn TransferAgentMessagesTrait>,
         transfer_agent_process_entities: Arc<dyn TransferAgentProcessesTrait>,
-        config: Arc<TransferConfig>,
+        config: Arc<ApplicationGlobalConfig>,
     ) -> Self {
         Self { transfer_agent_message_service, transfer_agent_process_entities, config }
     }
@@ -119,7 +120,11 @@ impl ProtocolPluginTrait for TransferDSP {
         // dataplane
         let dataplane = DataplaneSetup::new();
         let dataplane_controller = dataplane.get_data_plane_controller(self.config.clone()).await;
-        let data_plane_facade = Arc::new(DataPlaneProviderFacade::new(dataplane_controller.clone()));
+        let dataplane_strategy_factory = Arc::new(DataPlaneStrategyFactory::new(dataplane_controller.clone()));
+        let dataplane_facade = Arc::new(DataPlaneProviderFacadeForDSProtocol::new(
+            dataplane_strategy_factory.clone(),
+            self.transfer_agent_process_entities.clone()
+        ));
 
         // data service resolver
         let data_service_resolver = Arc::new(DataServiceFacadeServiceForDSProtocol::new(
@@ -130,7 +135,7 @@ impl ProtocolPluginTrait for TransferDSP {
         // facades
         let facades = Arc::new(FacadeService::new(
             data_service_resolver.clone(),
-            data_plane_facade.clone(),
+            dataplane_facade.clone(),
         ));
 
         // orchestrators
@@ -138,13 +143,12 @@ impl ProtocolPluginTrait for TransferDSP {
             dsp_validator.clone(),
             persistence_protocol_service.clone(),
             facades.clone(),
-            self.config.clone(),
         ));
         let rpc_orchestator = Arc::new(RPCOrchestratorService::new(
             rcp_validator.clone(),
             persistence_rpc_service,
-            self.config.clone(),
             http_client.clone(),
+            facades.clone(),
         ));
         let orchestrator_service = Arc::new(OrchestratorService::new(
             http_orchestator.clone(),
@@ -152,8 +156,8 @@ impl ProtocolPluginTrait for TransferDSP {
         ));
 
         // router
-        let dsp_router = DspRouter::new(orchestrator_service.clone(), self.config.clone());
-        let rcp_router = RpcRouter::new(orchestrator_service.clone(), self.config.clone());
+        let dsp_router = DspRouter::new(orchestrator_service.clone());
+        let rcp_router = RpcRouter::new(orchestrator_service.clone());
 
         Ok(Router::new().merge(dsp_router.router()).merge(rcp_router.router()))
     }

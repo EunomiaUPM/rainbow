@@ -1,3 +1,4 @@
+#![allow(unused)]
 /*
  *
  *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
@@ -17,7 +18,7 @@
  *
  */
 
-use crate::protocols::dsp::facades::data_plane_facade::DataPlaneProviderFacadeTrait;
+use crate::protocols::dsp::facades::data_plane_facade::{DataPlaneFacadeTrait};
 use crate::protocols::dsp::facades::data_service_resolver_facade::DataServiceFacadeTrait;
 use std::sync::Arc;
 
@@ -27,18 +28,18 @@ pub mod data_service_resolver_facade;
 #[async_trait::async_trait]
 pub trait FacadeTrait: Send + Sync {
     async fn get_data_service_facade(&self) -> Arc<dyn DataServiceFacadeTrait>;
-    async fn get_data_plane_facade(&self) -> Arc<dyn DataPlaneProviderFacadeTrait>;
+    async fn get_data_plane_facade(&self) -> Arc<dyn DataPlaneFacadeTrait>;
 }
 
 pub struct FacadeService {
     data_service_resolver_facade: Arc<dyn DataServiceFacadeTrait>,
-    data_plane_facade: Arc<dyn DataPlaneProviderFacadeTrait>,
+    data_plane_facade: Arc<dyn DataPlaneFacadeTrait>,
 }
 
 impl FacadeService {
     pub fn new(
         data_service_resolver_facade: Arc<dyn DataServiceFacadeTrait>,
-        data_plane_facade: Arc<dyn DataPlaneProviderFacadeTrait>,
+        data_plane_facade: Arc<dyn DataPlaneFacadeTrait>,
     ) -> FacadeService {
         Self { data_service_resolver_facade, data_plane_facade }
     }
@@ -50,7 +51,7 @@ impl FacadeTrait for FacadeService {
         self.data_service_resolver_facade.clone()
     }
 
-    async fn get_data_plane_facade(&self) -> Arc<dyn DataPlaneProviderFacadeTrait> {
+    async fn get_data_plane_facade(&self) -> Arc<dyn DataPlaneFacadeTrait> {
         self.data_plane_facade.clone()
     }
 }

@@ -65,6 +65,8 @@ pub struct TransferRequestMessageDto {
     pub consumer_pid: Urn,
 }
 
+
+
 impl TransferProcessMessageTrait for TransferRequestMessageDto {
     fn get_consumer_pid(&self) -> Option<Urn> {
         Some(self.consumer_pid.clone())

@@ -21,7 +21,7 @@
 use crate::common::errors::transfer_errors::TransferErrors;
 use crate::common::schemas::validation::validate_payload_schema;
 use crate::common::utils::has_data_address_in_push;
-use crate::provider::core::data_plane_facade::DataPlaneProviderFacadeTrait;
+use crate::common::core::data_plane_facade::DataPlaneProviderFacadeTrait;
 use crate::provider::core::data_service_resolver_facade::DataServiceFacadeTrait;
 use crate::provider::core::ds_protocol::DSProtocolTransferProviderTrait;
 use anyhow::{anyhow, bail};

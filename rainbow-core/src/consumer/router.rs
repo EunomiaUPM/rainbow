@@ -16,24 +16,38 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
+use axum::extract::Request;
 use axum::Router;
+use tower_http::trace::{DefaultOnResponse, TraceLayer};
+use uuid::Uuid;
 use rainbow_auth::ssi::consumer::setup::app::AuthConsumerApplication;
 use rainbow_catalog::consumer::setup::application::create_catalog_bypass_consumer_router;
-use rainbow_common::config::ApplicationConfig;
 // use rainbow_catalog::consumer::setup::application::create_catalog_bypass_consumer_router;
+use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
 use rainbow_contracts::consumer::setup::application::create_contract_negotiation_consumer_router;
-use rainbow_transfer::consumer::setup::application::create_transfer_consumer_router;
+use rainbow_transfer_agent::setup::create_root_http_router;
 // use rainbow_transfer_agent::setup::create_root_http_router;
 
-pub async fn create_core_consumer_router(config: &ApplicationConfig) -> Router {
-    let auth_router = AuthConsumerApplication::create_router(&config.ssi_auth()).await;
-    let transfer_router = create_transfer_consumer_router(&config.transfer()).await;
-    let cn_router = create_contract_negotiation_consumer_router(&config.contracts()).await;
-    let catalog_bypass_router = create_catalog_bypass_consumer_router(config.catalog()).await;
-    // TODO transfer_agent_router with ApplicationConsumerConfig
-    //let transfer_agent_router =
-    //    create_root_http_router(&app_config.clone()).await.expect("Failed to create transfer agent router");
-    Router::new().merge(transfer_router).merge(cn_router).merge(auth_router).merge(catalog_bypass_router)
-    // .merge(transfer_agent_router)
+pub async fn create_core_consumer_router(config: &ApplicationConsumerConfig) -> Router {
+    let app_config: ApplicationConsumerConfig = config.clone().into();
+    let auth_router = AuthConsumerApplication::create_router_4_monolith(app_config.clone().into()).await;
+    //let transfer_router = create_transfer_consumer_router(&app_config.clone().into()).await;
+    let cn_router = create_contract_negotiation_consumer_router(&app_config.clone().into()).await;
+    let catalog_bypass_router = create_catalog_bypass_consumer_router(app_config.clone().into()).await;
+    let transfer_agent_router =
+        create_root_http_router(&app_config.clone().into()).await.expect("Failed to create transfer agent router");
+    Router::new()
+        //.merge(transfer_router)
+        .merge(transfer_agent_router)
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(|_req: &Request<_>| tracing::info_span!("request", id = %Uuid::new_v4()))
+                .on_request(|request: &Request<_>, _span: &tracing::Span| {
+                    tracing::info!("{} {}", request.method(), request.uri());
+                })
+                .on_response(DefaultOnResponse::new().level(tracing::Level::TRACE)),
+        )
+        .merge(cn_router)
+        .merge(auth_router)
+        .merge(catalog_bypass_router)
 }

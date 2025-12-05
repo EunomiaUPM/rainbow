@@ -176,6 +176,7 @@ impl TransferProcessRepo for TransferProviderRepoForSql {
             associated_consumer: ActiveValue::Set(new_transfer_process.associated_consumer),
             state: ActiveValue::Set(TransferState::REQUESTED.to_string()),
             state_attribute: ActiveValue::Set(None),
+            format: ActiveValue::Set(new_transfer_process.format.to_string()),
             created_at: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             updated_at: ActiveValue::Set(None),
         };

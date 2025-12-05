@@ -60,7 +60,6 @@ impl ValidationRpcSteps for ValidationRpcStepsService {
     async fn transfer_start_rpc(&self, input: &RpcTransferStartMessageDto) -> anyhow::Result<()> {
         // review well this...
         let input: TransferProcessMessageWrapper<TransferStartMessageDto> = input.clone().into();
-        dbg!(&input);
         let dto = self.helpers.get_current_dto_from_payload(&input.dto).await?;
         let role = self.helpers.get_role_from_dto(&dto).await?;
         let message_type = input._type.clone();

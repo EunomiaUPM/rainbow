@@ -5,7 +5,7 @@ members = [
     "rainbow-catalog",
     "rainbow-contracts",
     "rainbow-dataplane",
-    "rainbow-transfer",
+    #"rainbow-transfer",
     "rainbow-common",
     "rainbow-auth",
     "rainbow-db",

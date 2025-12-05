@@ -25,6 +25,7 @@ use sea_orm::DatabaseConnection;
 use sea_orm_migration::async_trait::async_trait;
 use thiserror::Error;
 use urn::Urn;
+use rainbow_common::dcat_formats::DctFormats;
 
 pub mod sql;
 
@@ -41,6 +42,7 @@ pub struct NewTransferProcessModel {
     pub agreement_id: Urn,
     pub callback_address: String,
     pub associated_consumer: Option<String>,
+    pub format: DctFormats,
 }
 
 pub struct EditTransferProcessModel {

@@ -26,18 +26,16 @@ use crate::grpc::api::transfer_messages::{
     TransferMessageResponse,
 };
 use crate::http::transfer_messages::PaginationParams;
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
 
 pub struct TransferAgentMessagesGrpc {
     service: Arc<dyn TransferAgentMessagesTrait>,
-    _config: Arc<ApplicationProviderConfig>,
 }
 
 impl TransferAgentMessagesGrpc {
-    pub fn new(service: Arc<dyn TransferAgentMessagesTrait>, config: Arc<ApplicationProviderConfig>) -> Self {
-        Self { service, _config: config }
+    pub fn new(service: Arc<dyn TransferAgentMessagesTrait>) -> Self {
+        Self { service }
     }
 }
 

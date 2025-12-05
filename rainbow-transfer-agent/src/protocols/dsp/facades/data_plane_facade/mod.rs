@@ -17,25 +17,40 @@
  *
  */
 
-use crate::protocols::dsp::protocol_types::DataAddressDto;
 use rainbow_common::dcat_formats::DctFormats;
 use rainbow_common::protocol::catalog::dataservice_definition::DataService;
+use rainbow_common::protocol::transfer::transfer_data_address::DataAddress;
 use urn::Urn;
+use crate::protocols::dsp::protocol_types::DataAddressDto;
 
 pub mod data_plane_facade;
+pub(crate) mod dataplane_strategy_factory;
+mod dataplane_strategies;
 
-#[allow(unused)]
+#[mockall::automock]
 #[async_trait::async_trait]
-pub trait DataPlaneProviderFacadeTrait: Send + Sync + 'static {
-    async fn get_dataplane_address(&self, session_id: &Urn) -> anyhow::Result<DataAddressDto>;
-    async fn on_transfer_request(
+pub trait DataPlaneFacadeTrait: Send + Sync {
+    async fn get_dataplane_address(&self, session_id: &Urn) -> anyhow::Result<DataAddress>;
+    async fn on_transfer_request_pre(
         &self,
         session_id: &Urn,
-        data_service: &DataService,
         format: &DctFormats,
+        data_service: &Option<DataService>,
+        data_address:  &Option<DataAddressDto>,
     ) -> anyhow::Result<()>;
-    async fn on_transfer_start(&self, session_id: &Urn) -> anyhow::Result<()>;
-    async fn on_transfer_suspension(&self, session_id: &Urn) -> anyhow::Result<()>;
-    async fn on_transfer_completion(&self, session_id: &Urn) -> anyhow::Result<()>;
-    async fn on_transfer_termination(&self, session_id: &Urn) -> anyhow::Result<()>;
+    async fn on_transfer_request_post(
+        &self,
+        session_id: &Urn,
+        format: &DctFormats,
+        data_service: &Option<DataService>,
+        data_address: &Option<DataAddressDto>,
+    ) -> anyhow::Result<()>;
+    async fn on_transfer_start_pre(&self, session_id: &Urn) -> anyhow::Result<()>;
+    async fn on_transfer_start_post(&self, session_id: &Urn) -> anyhow::Result<()>;
+    async fn on_transfer_suspension_pre(&self, session_id: &Urn) -> anyhow::Result<()>;
+    async fn on_transfer_suspension_post(&self, session_id: &Urn) -> anyhow::Result<()>;
+    async fn on_transfer_completion_pre(&self, session_id: &Urn) -> anyhow::Result<()>;
+    async fn on_transfer_completion_post(&self, session_id: &Urn) -> anyhow::Result<()>;
+    async fn on_transfer_termination_pre(&self, session_id: &Urn) -> anyhow::Result<()>;
+    async fn on_transfer_termination_post(&self, session_id: &Urn) -> anyhow::Result<()>;
 }

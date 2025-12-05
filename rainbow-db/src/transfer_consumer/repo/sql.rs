@@ -418,6 +418,7 @@ impl TransferCallbackRepo for TransferConsumerRepoForSql {
             updated_at: ActiveValue::Set(None),
             data_plane_id: ActiveValue::Set(None),
             data_address: ActiveValue::Set(new_transfer_callback.data_address),
+            format: ActiveValue::Set(new_transfer_callback.format.to_string()),
             restart_flag: ActiveValue::Set(false),
         };
         let transfer_callback = transfer_callback::Entity::insert(model).exec_with_returning(&self.db_connection).await;

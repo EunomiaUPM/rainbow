@@ -1,195 +1,81 @@
-/*
- *
- *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
- *  *
- *  * This program is free software: you can redistribute it and/or modify
- *  * it under the terms of the GNU General Public License as published by
- *  * the Free Software Foundation, either version 3 of the License, or
- *  * (at your option) any later version.
- *  *
- *  * This program is distributed in the hope that it will be useful,
- *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  * GNU General Public License for more details.
- *  *
- *  * You should have received a copy of the GNU General Public License
- *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- *
- */
-
-use crate::coordinator::dataplane_access_controller::DataPlaneAccessControllerTrait;
-use crate::coordinator::dataplane_process::dataplane_process::DataPlaneProcess;
-use crate::coordinator::dataplane_process::{
-    DataPlaneDefaultBehaviour, DataPlaneProcessAddress, DataPlaneProcessRequest, DataPlaneProcessTrait,
-};
-use axum::async_trait;
-use rainbow_common::adv_protocol::interplane::data_plane_provision::{
-    DataPlaneProvisionRequest, DataPlaneProvisionResponse,
-};
+use crate::coordinator::data_source_connector::DataSourceConnectorTrait;
+use std::sync::Arc;
+use rainbow_common::adv_protocol::interplane::data_plane_provision::{DataPlaneProvisionRequest, DataPlaneProvisionResponse};
 use rainbow_common::adv_protocol::interplane::data_plane_start::{DataPlaneStart, DataPlaneStartAck};
 use rainbow_common::adv_protocol::interplane::data_plane_status::{DataPlaneStatusRequest, DataPlaneStatusResponse};
 use rainbow_common::adv_protocol::interplane::data_plane_stop::{DataPlaneStop, DataPlaneStopAck};
-use rainbow_common::adv_protocol::interplane::{
-    DataPlaneControllerMessages, DataPlaneControllerVersion, DataPlaneProcessDirection, DataPlaneProcessState,
-    DataPlaneSDPConfigTypes, DataPlaneSDPFieldTypes, DataPlaneSDPResponseField,
-};
+use rainbow_common::adv_protocol::interplane::{DataPlaneControllerMessages, DataPlaneControllerVersion, DataPlaneProcessDirection, DataPlaneProcessState};
 use rainbow_common::config::global_config::ApplicationGlobalConfig;
-use rainbow_common::dcat_formats::FormatAction;
-use std::sync::Arc;
+use crate::coordinator::dataplane_access_controller::DataPlaneAccessControllerTrait;
+use crate::entities::data_plane_process::{DataPlaneProcessEntitiesTrait, EditDataPlaneProcessDto, NewDataPlaneProcessDto};
 
 pub struct DataPlaneAccessControllerService {
-    config: Arc<ApplicationGlobalConfig>,
-    dataplane_process_service: Arc<dyn DataPlaneProcessTrait>,
+    data_source_connector_service: Arc<dyn DataSourceConnectorTrait>,
+    dataplane_process_entity: Arc<dyn DataPlaneProcessEntitiesTrait>,
+    config: Arc<ApplicationGlobalConfig>
 }
 
 impl DataPlaneAccessControllerService {
     pub fn new(
-        config: Arc<ApplicationGlobalConfig>,
-        dataplane_process_service: Arc<dyn DataPlaneProcessTrait>,
+        data_source_connector_service: Arc<dyn DataSourceConnectorTrait>,
+        dataplane_process_entity: Arc<dyn DataPlaneProcessEntitiesTrait>,
+        config: Arc<ApplicationGlobalConfig>
     ) -> Self {
-        Self { config, dataplane_process_service }
+        Self { data_source_connector_service, dataplane_process_entity, config }
     }
 }
 
-#[async_trait]
+#[async_trait::async_trait]
 impl DataPlaneAccessControllerTrait for DataPlaneAccessControllerService {
-    async fn data_plane_provision_request(
-        &self,
-        input: &DataPlaneProvisionRequest,
-    ) -> anyhow::Result<DataPlaneProvisionResponse> {
-        let process_address = self.config.transfer_process_host.clone().unwrap();
-        let sdp_config = (input.sdp_config).as_ref().unwrap();
-        let next_hop_protocol = sdp_config
-            .iter()
-            .find(|s| s._type == DataPlaneSDPConfigTypes::NextHopAddressScheme)
-            .expect("DataPlaneSDPConfigTypes::NextHopAddressScheme must be defined");
-        let next_hop_address = sdp_config
-            .iter()
-            .find(|s| s._type == DataPlaneSDPConfigTypes::NextHopAddress)
-            .expect("DataPlaneSDPConfigTypes::NextHopAddress must be defined");
-        let next_hop_direction = sdp_config
-            .iter()
-            .find(|s| s._type == DataPlaneSDPConfigTypes::Direction)
-            .expect("DataPlaneSDPConfigTypes::Direction must be defined");
-        let next_hop_direction_as = next_hop_direction.content.parse::<FormatAction>()?;
-
-        // TODO dataplane transfer base configurable
-        let data_plane_url = format!(
-            "{}://{}:{}/data/{}",
-            process_address.protocol,
-            process_address.url,
-            process_address.port,
-            input.session_id.clone()
-        );
-        let data_plane_process = DataPlaneProcess::create_dataplane_process(DataPlaneProcessRequest {
-            session_id: input.session_id.clone(),
-            process_address: DataPlaneProcessAddress {
-                protocol: process_address.protocol.clone(),
-                url: data_plane_url,
-                auth_type: "".to_string(),
-                auth_content: "".to_string(),
-            },
-            downstream_hop: DataPlaneProcessAddress {
-                protocol: next_hop_protocol.content.clone(),
-                url: next_hop_address.content.clone(),
-                auth_type: "".to_string(),
-                auth_content: "".to_string(),
-            },
-            process_direction: DataPlaneProcessDirection::from(next_hop_direction_as),
-        })
-        .await?;
-
-        let data_plane_process = self.dataplane_process_service.create_dataplane_process(&data_plane_process).await?;
-
+    async fn data_plane_provision_request(&self, input: &DataPlaneProvisionRequest) -> anyhow::Result<DataPlaneProvisionResponse> {
+        let dp_process = self.dataplane_process_entity.create_data_plane_process(&NewDataPlaneProcessDto {
+            id: input.session_id.clone(),
+            direction: DataPlaneProcessDirection::PULL.to_string(),
+            state: DataPlaneProcessState::REQUESTED.to_string(),
+            fields: None,
+        }).await?;
         Ok(DataPlaneProvisionResponse {
             _type: DataPlaneControllerMessages::DataPlaneProvisionResponse,
             version: DataPlaneControllerVersion::Version10,
             session_id: input.session_id.clone(),
-            sdp_response: vec![
-                DataPlaneSDPResponseField {
-                    _type: DataPlaneSDPFieldTypes::DataPlaneAddressScheme,
-                    format: "https://www.iana.org/assignments/uri-schemes/uri-schemes.xhtml".to_string(),
-                    content: data_plane_process.process_address.protocol,
-                },
-                DataPlaneSDPResponseField {
-                    _type: DataPlaneSDPFieldTypes::DataPlaneAddress,
-                    format: "uri".to_string(),
-                    content: data_plane_process.process_address.url,
-                },
-                DataPlaneSDPResponseField {
-                    _type: DataPlaneSDPFieldTypes::DataPlaneAddressAuthType,
-                    format: "https://www.iana.org/assignments/http-authschemes/http-authschemes.xhtml".to_string(),
-                    content: data_plane_process.process_address.auth_type,
-                },
-                DataPlaneSDPResponseField {
-                    _type: DataPlaneSDPFieldTypes::DataPlaneAddressAuthToken,
-                    format: "jwt".to_string(),
-                    content: data_plane_process.process_address.auth_content,
-                },
-            ],
+            sdp_response: vec![],
             sdp_request: None,
             sdp_config: None,
         })
     }
 
     async fn data_plane_start(&self, input: &DataPlaneStart) -> anyhow::Result<DataPlaneStartAck> {
-        self.dataplane_process_service
-            .set_dataplane_process_status(&input.session_id.clone(), &DataPlaneProcessState::STARTED)
-            .await?;
-        let ack = DataPlaneStartAck {
+        let dp_process = self.dataplane_process_entity
+            .put_data_plane_process(&input.session_id, &EditDataPlaneProcessDto {
+                state: Some(DataPlaneProcessState::STARTED.to_string()),
+                fields: None
+            }).await?;
+        Ok(DataPlaneStartAck {
             _type: DataPlaneControllerMessages::DataPlaneStartAck,
             version: DataPlaneControllerVersion::Version10,
             session_id: input.session_id.clone(),
-        };
-        Ok(ack)
+        })
     }
 
     async fn data_plane_stop(&self, input: &DataPlaneStop) -> anyhow::Result<DataPlaneStopAck> {
-        // Ignore error
-        match self
-            .dataplane_process_service
-            .set_dataplane_process_status(&input.session_id.clone(), &DataPlaneProcessState::STOPPED)
-            .await
-        {
-            Ok(_) => {}
-            Err(_) => {}
-        };
-        let ack = DataPlaneStopAck {
+        let dp_process = self.dataplane_process_entity
+            .put_data_plane_process(&input.session_id, &EditDataPlaneProcessDto {
+                state: Some(DataPlaneProcessState::STOPPED.to_string()),
+                fields: None
+            }).await?;
+        Ok(DataPlaneStopAck {
             _type: DataPlaneControllerMessages::DataPlaneStopAck,
             version: DataPlaneControllerVersion::Version10,
             session_id: input.session_id.clone(),
-        };
-        Ok(ack)
+        })
     }
 
     async fn data_plane_get_status(&self, input: &DataPlaneStatusRequest) -> anyhow::Result<DataPlaneStatusResponse> {
-        let data_plane_process = self.dataplane_process_service.get_dataplane_process_by_id(&input.session_id).await?;
         Ok(DataPlaneStatusResponse {
             _type: DataPlaneControllerMessages::DataPlaneStatusResponse,
             version: DataPlaneControllerVersion::Version10,
-            session_id: data_plane_process.id,
-            sdp_response: vec![
-                DataPlaneSDPResponseField {
-                    _type: DataPlaneSDPFieldTypes::DataPlaneAddressScheme,
-                    format: "https://www.iana.org/assignments/uri-schemes/uri-schemes.xhtml".to_string(),
-                    content: data_plane_process.process_address.protocol,
-                },
-                DataPlaneSDPResponseField {
-                    _type: DataPlaneSDPFieldTypes::DataPlaneAddress,
-                    format: "uri".to_string(),
-                    content: data_plane_process.process_address.url,
-                },
-                DataPlaneSDPResponseField {
-                    _type: DataPlaneSDPFieldTypes::DataPlaneAddressAuthType,
-                    format: "https://www.iana.org/assignments/http-authschemes/http-authschemes.xhtml".to_string(),
-                    content: data_plane_process.process_address.auth_type,
-                },
-                DataPlaneSDPResponseField {
-                    _type: DataPlaneSDPFieldTypes::DataPlaneAddressAuthToken,
-                    format: "jwt".to_string(),
-                    content: data_plane_process.process_address.auth_content,
-                },
-            ],
+            session_id: input.session_id.clone(),
+            sdp_response: vec![],
         })
     }
 }

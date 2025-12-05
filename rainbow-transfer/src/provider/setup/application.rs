@@ -18,7 +18,7 @@
  *
  */
 
-use crate::provider::core::data_plane_facade::data_plane_facade::DataPlaneProviderFacadeForDSProtocol;
+use crate::common::core::data_plane_facade::data_plane_facade::DataPlaneProviderFacadeForDSProtocol;
 use crate::provider::core::data_service_resolver_facade::data_service_resolver_datahub_facade::DataServiceFacadeServiceForDatahub;
 use crate::provider::core::data_service_resolver_facade::data_service_resolver_facade::DataServiceFacadeServiceForDSProtocol;
 use crate::provider::core::data_service_resolver_facade::DataServiceFacadeTrait;
@@ -53,6 +53,7 @@ use sea_orm::Database;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 use tracing::info;
+use crate::common::core::data_plane_facade::dataplane_strategy_factory::DataPlaneStrategyFactory;
 
 pub struct TransferProviderApplication;
 
@@ -94,13 +95,17 @@ pub async fn create_transfer_provider_router(config: &ApplicationProviderConfig)
         RainbowTransferProviderEntitiesRouter::new(Arc::new(rainbow_entities_service)).router();
 
     // DSProtocol Dependency injection
-
     let ssi_auth_facade = Arc::new(SSIAuthFacadeService::new(
         application_global_config.clone().into(),
     ));
+
+    let data_plane_strategy_factory = Arc::new(DataPlaneStrategyFactory);
     let data_plane_facade = Arc::new(DataPlaneProviderFacadeForDSProtocol::new(
-        dataplane_controller.clone(),
+        data_plane_strategy_factory.clone(),
+        rainbow_entities_service.c
+
     ));
+
     let data_service_facade = Arc::new(DataServiceFacadeServiceForDSProtocol::new(config.clone()));
     let data_service_facade: Arc<dyn DataServiceFacadeTrait + Send + Sync>;
     if config.is_datahub_as_catalog() {
