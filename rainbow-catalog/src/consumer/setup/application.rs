@@ -27,8 +27,6 @@ use rainbow_common::config::provider_config::ApplicationProviderConfig;
 use rainbow_common::facades::ssi_auth_facade::ssi_auth_facade::SSIAuthFacadeService;
 use rainbow_db::events::repo::sql::EventsRepoForSql;
 use rainbow_db::events::repo::EventsRepoFactory;
-use rainbow_db::transfer_consumer::repo::sql::TransferConsumerRepoForSql;
-use rainbow_db::transfer_consumer::repo::TransferConsumerRepoFactory;
 use rainbow_events::core::notification::notification::RainbowEventsNotificationsService;
 use rainbow_events::core::subscription::subscription::RainbowEventsSubscriptionService;
 use rainbow_events::core::subscription::subscription_types::SubscriptionEntities;

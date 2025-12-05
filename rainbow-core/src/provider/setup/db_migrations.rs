@@ -24,7 +24,6 @@ use rainbow_db::catalog::migrations::get_catalog_migrations;
 use rainbow_db::contracts_provider::migrations::get_contracts_migrations;
 use rainbow_db::datahub::migrations::get_datahub_migrations;
 use rainbow_db::events::migrations::get_events_migrations;
-use rainbow_db::transfer_provider::migrations::get_transfer_provider_migrations;
 use rainbow_transfer_agent::get_transfer_agent_migrations;
 use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
@@ -35,7 +34,7 @@ pub struct CoreProviderMigration;
 impl MigratorTrait for CoreProviderMigration {
     fn migrations() -> Vec<Box<dyn MigrationTrait>> {
         let mut migrations: Vec<Box<dyn MigrationTrait>> = vec![];
-        let mut transfer_provider_migrations = get_transfer_provider_migrations();
+        //let mut transfer_provider_migrations = get_transfer_provider_migrations();
         let mut catalog_migrations = get_catalog_migrations();
         let mut contract_negotiation_provider_migrations = get_contracts_migrations();
         let mut pub_sub_migrations = get_events_migrations();
@@ -44,7 +43,7 @@ impl MigratorTrait for CoreProviderMigration {
         let mut datahub_migrations = get_datahub_migrations();
         let mut transfer_agent_migrations = get_transfer_agent_migrations();
 
-        migrations.append(&mut transfer_provider_migrations);
+        //migrations.append(&mut transfer_provider_migrations);
         migrations.append(&mut catalog_migrations);
         migrations.append(&mut contract_negotiation_provider_migrations);
         migrations.append(&mut pub_sub_migrations);

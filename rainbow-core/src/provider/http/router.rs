@@ -16,20 +16,21 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
+use axum::extract::Request;
 use axum::Router;
+use tower_http::trace::{DefaultOnResponse, TraceLayer};
+use uuid::Uuid;
 use rainbow_auth::ssi::provider::setup::app::AuthProviderApplication;
 use rainbow_catalog::provider::setup::application::create_catalog_router;
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_contracts::provider::setup::application::create_contract_negotiation_provider_router;
 use rainbow_datahub_catalog::setup::application::create_datahub_catalog_router;
-use rainbow_transfer::provider::setup::application::create_transfer_provider_router;
 use rainbow_transfer_agent::setup::create_root_http_router;
 
 pub async fn create_core_provider_router(config: &ApplicationProviderConfig) -> Router {
     let app_config: ApplicationProviderConfig = config.clone().into();
     let auth_router = AuthProviderApplication::create_router_4_monolith(app_config.clone().into()).await;
-    let transfer_router = create_transfer_provider_router(&app_config.clone().into()).await;
+    // let transfer_router = create_transfer_provider_router(&app_config.clone().into()).await;
     let cn_router = create_contract_negotiation_provider_router(&app_config.clone().into()).await;
     let transfer_agent_router =
         create_root_http_router(&app_config.clone().into()).await.expect("Failed to create transfer agent router");
@@ -41,9 +42,17 @@ pub async fn create_core_provider_router(config: &ApplicationProviderConfig) -> 
     };
 
     Router::new()
-        .merge(transfer_router)
+        //.merge(transfer_router)
         .merge(cn_router)
         .merge(catalog_router)
         .merge(auth_router)
         .merge(transfer_agent_router)
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(|_req: &Request<_>| tracing::info_span!("request", id = %Uuid::new_v4()))
+                .on_request(|request: &Request<_>, _span: &tracing::Span| {
+                    tracing::info!("{} {}", request.method(), request.uri());
+                })
+                .on_response(DefaultOnResponse::new().level(tracing::Level::TRACE)),
+        )
 }

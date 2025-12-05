@@ -35,14 +35,15 @@ use std::str::FromStr;
 use std::sync::Arc;
 use tracing::error;
 use urn::Urn;
+use rainbow_common::config::global_config::ApplicationGlobalConfig;
 
 pub struct DataServiceFacadeServiceForDSProtocol {
-    config: Arc<ApplicationProviderConfig>,
+    config: Arc<ApplicationGlobalConfig>,
     client: Arc<HttpClient>,
 }
 
 impl DataServiceFacadeServiceForDSProtocol {
-    pub fn new(config: Arc<ApplicationProviderConfig>, client: Arc<HttpClient>) -> Self {
+    pub fn new(config: Arc<ApplicationGlobalConfig>, client: Arc<HttpClient>) -> Self {
         Self { config, client }
     }
 }
@@ -61,8 +62,8 @@ impl DataServiceFacadeTrait for DataServiceFacadeServiceForDSProtocol {
         agreement_id: &Urn,
         formats: Option<&DctFormats>,
     ) -> anyhow::Result<DataService> {
-        let contracts_url = self.config.get_contract_negotiation_host_url().unwrap();
-        let catalog_url = self.config.get_catalog_host_url().unwrap();
+        let contracts_url = self.config.contract_negotiation_host.clone().unwrap().to_string();
+        let catalog_url = self.config.catalog_host.clone().unwrap().to_string();
         let agreement_url = format!(
             "{}/api/v1/contract-negotiation/agreements/{}",
             contracts_url, agreement_id

@@ -19,7 +19,7 @@
  */
 
 use crate::common::errors::transfer_errors::TransferErrors;
-use crate::provider::core::data_plane_facade::DataPlaneProviderFacadeTrait;
+use crate::common::core::data_plane_facade::DataPlaneProviderFacadeTrait;
 use crate::provider::core::data_service_resolver_facade::DataServiceFacadeTrait;
 use crate::provider::core::ds_protocol_rpc::ds_protocol_rpc_types::{
     DSRPCTransferProviderCompletionRequest, DSRPCTransferProviderCompletionResponse, DSRPCTransferProviderStartRequest,

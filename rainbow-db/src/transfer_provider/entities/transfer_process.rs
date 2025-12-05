@@ -33,6 +33,7 @@ pub struct Model {
     pub associated_consumer: Option<String>,
     pub state: String,
     pub state_attribute: Option<String>,
+    pub format: String,
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: Option<chrono::NaiveDateTime>,
 }

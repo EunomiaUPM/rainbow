@@ -37,14 +37,12 @@ use crate::protocols::dsp::orchestrator::OrchestratorTrait;
 use crate::protocols::dsp::protocol_types::{
     TransferErrorDto, TransferProcessMessageType, TransferProcessMessageWrapper,
 };
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
 use rainbow_common::errors::CommonErrors;
 use rainbow_common::protocol::context_field::ContextField;
 
 #[derive(Clone)]
 pub struct RpcRouter {
     orchestrator: Arc<dyn OrchestratorTrait>,
-    config: Arc<ApplicationProviderConfig>,
 }
 
 impl FromRef<RpcRouter> for Arc<dyn OrchestratorTrait> {
@@ -53,15 +51,9 @@ impl FromRef<RpcRouter> for Arc<dyn OrchestratorTrait> {
     }
 }
 
-impl FromRef<RpcRouter> for Arc<ApplicationProviderConfig> {
-    fn from_ref(state: &RpcRouter) -> Self {
-        state.config.clone()
-    }
-}
-
 impl RpcRouter {
-    pub fn new(service: Arc<dyn OrchestratorTrait>, config: Arc<ApplicationProviderConfig>) -> Self {
-        Self { orchestrator: service, config }
+    pub fn new(service: Arc<dyn OrchestratorTrait>) -> Self {
+        Self { orchestrator: service }
     }
 
     pub fn router(self) -> Router {

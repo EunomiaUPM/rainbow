@@ -39,8 +39,6 @@ use rainbow_db::catalog::repo::sql::CatalogRepoForSql;
 use rainbow_db::catalog::repo::CatalogRepoFactory;
 use rainbow_db::events::repo::sql::EventsRepoForSql;
 use rainbow_db::events::repo::EventsRepoFactory;
-use rainbow_db::transfer_consumer::repo::sql::TransferConsumerRepoForSql;
-use rainbow_db::transfer_consumer::repo::TransferConsumerRepoFactory;
 use rainbow_events::core::notification::notification::RainbowEventsNotificationsService;
 use rainbow_events::core::subscription::subscription::RainbowEventsSubscriptionService;
 use rainbow_events::core::subscription::subscription_types::SubscriptionEntities;

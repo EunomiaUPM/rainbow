@@ -18,4 +18,4 @@
  */
 
 pub mod dataplane_access_controller;
-pub mod dataplane_process;
+pub mod data_source_connector;

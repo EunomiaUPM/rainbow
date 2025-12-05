@@ -25,6 +25,7 @@ use rainbow_common::protocol::transfer::TransferRoles;
 use sea_orm::DatabaseConnection;
 use thiserror::Error;
 use urn::Urn;
+use rainbow_common::dcat_formats::DctFormats;
 
 pub mod sql;
 
@@ -42,6 +43,7 @@ pub struct NewTransferCallback {
     pub provider_pid: Option<Urn>,
     pub data_address: Option<serde_json::Value>,
     pub associated_provider: Option<String>,
+    pub format: DctFormats,
 }
 pub struct EditTransferCallback {
     pub consumer_pid: Option<Urn>,

@@ -24,6 +24,7 @@ use crate::config::ConfigRoles;
 use crate::ssi::{ClientConfig, WalletConfig};
 use serde::Serialize;
 use std::env;
+use std::fmt::Display;
 
 pub fn extract_env(env_var_name: &str, default: String) -> String {
     env::var(env_var_name).unwrap_or(default)
@@ -49,6 +50,12 @@ pub struct HostConfig {
     pub protocol: String,
     pub url: String,
     pub port: String,
+}
+
+impl Display for HostConfig {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", format!("{}://{}:{}", self.protocol, self.url, self.port))
+    }
 }
 
 #[derive(Serialize, Clone, Debug)]

@@ -17,6 +17,9 @@
  *
  */
 
+use crate::entities::transfer_messages::{NewTransferMessageDto, TransferAgentMessagesTrait};
+use crate::errors::error_adapter::CustomToResponse;
+use crate::http::common::{extract_payload, parse_urn};
 use axum::{
     extract::{rejection::JsonRejection, FromRef, Path, Query, State},
     http::StatusCode,
@@ -24,18 +27,14 @@ use axum::{
     routing::get,
     Json, Router,
 };
+use rainbow_common::config::global_config::ApplicationGlobalConfig;
 use serde::Deserialize;
 use std::sync::Arc;
-
-use crate::entities::transfer_messages::{NewTransferMessageDto, TransferAgentMessagesTrait};
-use crate::errors::error_adapter::CustomToResponse;
-use crate::http::common::{extract_payload, parse_urn};
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
 
 #[derive(Clone)]
 pub struct TransferAgentMessagesRouter {
     service: Arc<dyn TransferAgentMessagesTrait>,
-    config: Arc<ApplicationProviderConfig>,
+    config: Arc<ApplicationGlobalConfig>,
 }
 
 #[derive(Deserialize)]
@@ -50,14 +49,14 @@ impl FromRef<TransferAgentMessagesRouter> for Arc<dyn TransferAgentMessagesTrait
     }
 }
 
-impl FromRef<TransferAgentMessagesRouter> for Arc<ApplicationProviderConfig> {
+impl FromRef<TransferAgentMessagesRouter> for Arc<ApplicationGlobalConfig> {
     fn from_ref(state: &TransferAgentMessagesRouter) -> Self {
         state.config.clone()
     }
 }
 
 impl TransferAgentMessagesRouter {
-    pub fn new(service: Arc<dyn TransferAgentMessagesTrait>, config: Arc<ApplicationProviderConfig>) -> Self {
+    pub fn new(service: Arc<dyn TransferAgentMessagesTrait>, config: Arc<ApplicationGlobalConfig>) -> Self {
         Self { service, config }
     }
 

@@ -27,7 +27,6 @@ use crate::protocols::protocol::ProtocolPluginTrait;
 use axum::extract::Request;
 use axum::response::IntoResponse;
 use axum::{serve, Router};
-use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_common::errors::CommonErrors;
 use rainbow_common::health::HealthRouter;
 use rainbow_common::well_known::WellKnownRoot;
@@ -38,11 +37,12 @@ use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 use tower_http::trace::{DefaultOnResponse, TraceLayer};
 use uuid::Uuid;
+use rainbow_common::config::global_config::ApplicationGlobalConfig;
 
 pub struct TransferHttpWorker {}
 impl TransferHttpWorker {
     pub async fn spawn(
-        config: &ApplicationProviderConfig,
+        config: &ApplicationGlobalConfig,
         token: &CancellationToken,
     ) -> anyhow::Result<JoinHandle<()>> {
         // well known router
@@ -50,8 +50,8 @@ impl TransferHttpWorker {
         let health_router = HealthRouter::new().router();
         // module transfer router
         let router = Self::create_root_http_router(&config).await?.merge(well_known_router).merge(health_router);
-        let host = if config.get_environment_scenario() { "127.0.0.1" } else { "0.0.0.0" };
-        let port = config.get_raw_transfer_process_host().clone().expect("no host").port;
+        let host = if config.is_local { "127.0.0.1" } else { "0.0.0.0" };
+        let port = config.transfer_process_host.clone().expect("no host").port;
         let addr = format!("{}:{}", host, port);
 
         let listener = TcpListener::bind(&addr).await?;
@@ -71,7 +71,7 @@ impl TransferHttpWorker {
 
         Ok(handle)
     }
-    pub async fn create_root_http_router(config: &ApplicationProviderConfig) -> anyhow::Result<Router> {
+    pub async fn create_root_http_router(config: &ApplicationGlobalConfig) -> anyhow::Result<Router> {
         let router = create_root_http_router(config).await?.fallback(Self::handler_404).layer(
             TraceLayer::new_for_http()
                 .make_span_with(|_req: &Request<_>| tracing::info_span!("request", id = %Uuid::new_v4()))
@@ -89,10 +89,10 @@ impl TransferHttpWorker {
     }
 }
 
-pub async fn create_root_http_router(config: &ApplicationProviderConfig) -> anyhow::Result<Router> {
+pub async fn create_root_http_router(config: &ApplicationGlobalConfig) -> anyhow::Result<Router> {
     // ROOT Dependency Injection
     let config = Arc::new(config.clone());
-    let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
+    let db_connection = Database::connect(config.database_config.as_db_url()).await.expect("Database can't connect");
     let transfer_repo = Arc::new(TransferAgentRepoForSql::create_repo(db_connection.clone()));
 
     // entities
@@ -105,7 +105,7 @@ pub async fn create_root_http_router(config: &ApplicationProviderConfig) -> anyh
     let dsp_router = TransferDSP::new(
         messages_controller_service.clone(),
         entities_controller_service.clone(),
-        config.clone(),
+        config.clone()
     )
     .build_router()
     .await?;

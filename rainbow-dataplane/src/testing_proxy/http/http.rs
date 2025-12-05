@@ -18,7 +18,6 @@
  */
 
 #![allow(unused)]
-use crate::coordinator::dataplane_process::DataPlaneProcessTrait;
 use axum::body::{to_bytes, Body};
 use axum::extract::{FromRef, Path, Request, State};
 use axum::response::{IntoResponse, Response};
@@ -32,11 +31,12 @@ use reqwest::Response as ReqwestResponse;
 use reqwest::{Client, StatusCode};
 use std::sync::Arc;
 use tracing::info;
+use crate::entities::data_plane_process::{DataPlaneProcessDto, DataPlaneProcessEntitiesTrait};
 
 #[derive(Clone)]
 pub struct TestingHTTPProxy {
     client: Client,
-    dataplane_service: Arc<dyn DataPlaneProcessTrait>,
+    dataplane_service: Arc<dyn DataPlaneProcessEntitiesTrait>,
 }
 
 impl FromRef<TestingHTTPProxy> for Client {
@@ -45,14 +45,14 @@ impl FromRef<TestingHTTPProxy> for Client {
     }
 }
 
-impl FromRef<TestingHTTPProxy> for Arc<dyn DataPlaneProcessTrait> {
+impl FromRef<TestingHTTPProxy> for Arc<dyn DataPlaneProcessEntitiesTrait> {
     fn from_ref(input: &TestingHTTPProxy) -> Self {
         input.dataplane_service.clone()
     }
 }
 
 impl TestingHTTPProxy {
-    pub fn new(dataplane_service: Arc<dyn DataPlaneProcessTrait>) -> Self {
+    pub fn new(dataplane_service: Arc<dyn DataPlaneProcessEntitiesTrait>) -> Self {
         let client = reqwest::Client::new();
         Self { client, dataplane_service }
     }
@@ -73,15 +73,18 @@ impl TestingHTTPProxy {
         };
 
         // PDP
-        let dataplane = match state.dataplane_service.get_dataplane_process_by_id(&data_plane_id).await {
-            Ok(dataplane) => dataplane,
+        let dataplane = match state.dataplane_service.get_data_plane_process_by_id(&data_plane_id).await {
+            Ok(dataplane) => match dataplane {
+                Some(dataplane) => dataplane,
+                None => return (StatusCode::BAD_REQUEST, "dataplane id not found").into_response(),
+            },
             Err(_) => return (StatusCode::BAD_REQUEST, "dataplane id not found").into_response(),
         };
-        match dataplane.process_direction {
+        match dataplane.inner.direction.parse::<DataPlaneProcessDirection>().unwrap() {
             DataPlaneProcessDirection::PULL => {}
             _ => return (StatusCode::BAD_REQUEST, "wrong direction").into_response(),
         }
-        match dataplane.state {
+        match dataplane.inner.state.parse::<DataPlaneProcessState>().unwrap() {
             DataPlaneProcessState::STARTED => {}
             DataPlaneProcessState::REQUESTED => return (StatusCode::FORBIDDEN, "state requested").into_response(),
             DataPlaneProcessState::STOPPED => return (StatusCode::FORBIDDEN, "state stopped").into_response(),
@@ -93,7 +96,7 @@ impl TestingHTTPProxy {
         // ODRL Evaluator facade
 
         // forward request downstream
-        let next_hop = dataplane.downstream_hop.url;
+        let next_hop = dataplane.data_plane_fields.get("DownstreamHopUrl").unwrap().clone();
         let body = std::mem::take(req.body_mut());
         let body_bytes = match to_bytes(body, 2024) // MAX_BUFFER
             .await

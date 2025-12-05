@@ -38,6 +38,7 @@ pub struct TransferConsumerProcessFromSQL {
     pub data_address: Option<serde_json::Value>,
     pub restart_flag: bool,
     pub message_type: Option<String>,
+    pub format: String,
     pub from: String,
 }
 
@@ -108,6 +109,7 @@ impl Into<transfer_callback::Model> for TransferConsumerProcessFromSQL {
             updated_at: self.updated_at,
             data_plane_id: self.data_plane_id,
             data_address: self.data_address,
+            format: self.format,
             restart_flag: self.restart_flag,
         }
     }

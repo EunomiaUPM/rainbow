@@ -32,6 +32,7 @@ pub struct Model {
     pub updated_at: Option<chrono::NaiveDateTime>,
     pub data_plane_id: Option<String>,
     pub data_address: Option<serde_json::Value>,
+    pub format: String,
     pub restart_flag: bool,
 }
 

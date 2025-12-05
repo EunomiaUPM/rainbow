@@ -64,7 +64,7 @@ impl FromStr for FormatProtocol {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum FormatAction {
     Push,
     Pull,

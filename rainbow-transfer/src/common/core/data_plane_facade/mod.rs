@@ -24,20 +24,33 @@ use rainbow_common::protocol::transfer::transfer_data_address::DataAddress;
 use urn::Urn;
 
 pub mod data_plane_facade;
+pub(crate) mod dataplane_strategy_factory;
+mod dataplane_strategies;
 
 #[mockall::automock]
 #[async_trait]
-pub trait DataPlaneProviderFacadeTrait: Send + Sync {
+pub trait DataPlaneFacadeTrait: Send + Sync {
     async fn get_dataplane_address(&self, session_id: Urn) -> anyhow::Result<DataAddress>;
-    async fn on_transfer_request(
+    async fn on_transfer_request_pre(
         &self,
         session_id: Urn,
-        data_service: DataService,
         format: DctFormats,
-        data_address: Option<DataAddress>
+        data_service: DataService,
+        data_address: Option<DataAddress>,
     ) -> anyhow::Result<()>;
-    async fn on_transfer_start(&self, session_id: Urn) -> anyhow::Result<()>;
-    async fn on_transfer_suspension(&self, session_id: Urn) -> anyhow::Result<()>;
-    async fn on_transfer_completion(&self, session_id: Urn) -> anyhow::Result<()>;
-    async fn on_transfer_termination(&self, session_id: Urn) -> anyhow::Result<()>;
+    async fn on_transfer_request_post(
+        &self,
+        session_id: Urn,
+        format: DctFormats,
+        data_service: DataService,
+        data_address: Option<DataAddress>,
+    ) -> anyhow::Result<()>;
+    async fn on_transfer_start_pre(&self, session_id: Urn) -> anyhow::Result<()>;
+    async fn on_transfer_start_post(&self, session_id: Urn) -> anyhow::Result<()>;
+    async fn on_transfer_suspension_pre(&self, session_id: Urn) -> anyhow::Result<()>;
+    async fn on_transfer_suspension_post(&self, session_id: Urn) -> anyhow::Result<()>;
+    async fn on_transfer_completion_pre(&self, session_id: Urn) -> anyhow::Result<()>;
+    async fn on_transfer_completion_post(&self, session_id: Urn) -> anyhow::Result<()>;
+    async fn on_transfer_termination_pre(&self, session_id: Urn) -> anyhow::Result<()>;
+    async fn on_transfer_termination_post(&self, session_id: Urn) -> anyhow::Result<()>;
 }

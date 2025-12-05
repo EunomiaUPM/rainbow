@@ -18,10 +18,10 @@
  */
 
 use crate::data::migrations::get_transfer_agent_migrations;
-use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_common::config::global_config::ApplicationGlobalConfig;
+use rainbow_dataplane::get_dataplane_migrations;
 use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
-use rainbow_dataplane::get_dataplane_migrations;
 
 pub struct TransferAgentMigration;
 
@@ -38,9 +38,9 @@ impl MigratorTrait for TransferAgentMigration {
 }
 
 impl TransferAgentMigration {
-    pub async fn run(config: &ApplicationProviderConfig) -> anyhow::Result<()> {
+    pub async fn run(config: &ApplicationGlobalConfig) -> anyhow::Result<()> {
         // db_connection
-        let db_url = config.get_full_db_url();
+        let db_url = config.database_config.as_db_url();
         let db_connection = Database::connect(db_url).await.expect("Database can't connect");
         // run migration
         Self::refresh(&db_connection).await?;

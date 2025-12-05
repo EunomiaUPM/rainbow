@@ -22,6 +22,7 @@ use crate::setup::db_migrations::TransferAgentMigration;
 use clap::{Parser, Subcommand};
 use rainbow_common::config::env_extraction::EnvExtraction;
 use tracing::debug;
+use rainbow_common::config::global_config::ApplicationGlobalConfig;
 
 #[derive(Parser, Debug)]
 #[command(name = "Rainbow Dataspace Connector Transfer Agent")]
@@ -53,11 +54,13 @@ impl TransferCommands {
         match cli.command {
             TransferCliCommands::Start(args) => {
                 let config = Self::extract_provider_config(args.env_file)?;
-                TransferApplication::run(&config).await?;
+                let global_config: ApplicationGlobalConfig = config.into();
+                TransferApplication::run(&global_config).await?;
             }
             TransferCliCommands::Setup(args) => {
                 let config = Self::extract_provider_config(args.env_file)?;
-                TransferAgentMigration::run(&config).await?;
+                let global_config: ApplicationGlobalConfig = config.into();
+                TransferAgentMigration::run(&global_config).await?;
             }
         }
         Ok(())

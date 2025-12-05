@@ -17,7 +17,6 @@
  *
  */
 
-pub mod data_plane_facade;
 pub mod data_service_resolver_facade;
 pub mod ds_protocol;
 pub mod ds_protocol_rpc;
