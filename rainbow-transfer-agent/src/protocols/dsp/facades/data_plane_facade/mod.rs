@@ -17,15 +17,15 @@
  *
  */
 
+use crate::protocols::dsp::protocol_types::DataAddressDto;
 use rainbow_common::dcat_formats::DctFormats;
 use rainbow_common::protocol::catalog::dataservice_definition::DataService;
 use rainbow_common::protocol::transfer::transfer_data_address::DataAddress;
 use urn::Urn;
-use crate::protocols::dsp::protocol_types::DataAddressDto;
 
 pub mod data_plane_facade;
-pub(crate) mod dataplane_strategy_factory;
 mod dataplane_strategies;
+pub(crate) mod dataplane_strategy_factory;
 
 #[mockall::automock]
 #[async_trait::async_trait]
@@ -36,7 +36,7 @@ pub trait DataPlaneFacadeTrait: Send + Sync {
         session_id: &Urn,
         format: &DctFormats,
         data_service: &Option<DataService>,
-        data_address:  &Option<DataAddressDto>,
+        data_address: &Option<DataAddressDto>,
     ) -> anyhow::Result<()>;
     async fn on_transfer_request_post(
         &self,

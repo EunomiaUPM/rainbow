@@ -63,11 +63,13 @@ impl DataPlaneFacadeTrait for ConsumerPullDataplaneStrategy {
     }
 
     async fn on_transfer_start_pre(&self, session_id: &Urn) -> anyhow::Result<()> {
-        self.dataplane_controller_access.data_plane_start(&DataPlaneStart {
-            _type: DataPlaneControllerMessages::DataPlaneStart,
-            version: DataPlaneControllerVersion::Version10,
-            session_id: session_id.clone(),
-        }).await?;
+        self.dataplane_controller_access
+            .data_plane_start(&DataPlaneStart {
+                _type: DataPlaneControllerMessages::DataPlaneStart,
+                version: DataPlaneControllerVersion::Version10,
+                session_id: session_id.clone(),
+            })
+            .await?;
         Ok(())
     }
 
@@ -77,11 +79,13 @@ impl DataPlaneFacadeTrait for ConsumerPullDataplaneStrategy {
     }
 
     async fn on_transfer_suspension_pre(&self, session_id: &Urn) -> anyhow::Result<()> {
-        self.dataplane_controller_access.data_plane_stop(&DataPlaneStop {
-            _type: DataPlaneControllerMessages::DataPlaneStop,
-            version: DataPlaneControllerVersion::Version10,
-            session_id: session_id.clone(),
-        }).await?;
+        self.dataplane_controller_access
+            .data_plane_stop(&DataPlaneStop {
+                _type: DataPlaneControllerMessages::DataPlaneStop,
+                version: DataPlaneControllerVersion::Version10,
+                session_id: session_id.clone(),
+            })
+            .await?;
         Ok(())
     }
 
@@ -90,11 +94,13 @@ impl DataPlaneFacadeTrait for ConsumerPullDataplaneStrategy {
     }
 
     async fn on_transfer_completion_pre(&self, session_id: &Urn) -> anyhow::Result<()> {
-        self.dataplane_controller_access.data_plane_stop(&DataPlaneStop {
-            _type: DataPlaneControllerMessages::DataPlaneStop,
-            version: DataPlaneControllerVersion::Version10,
-            session_id: session_id.clone(),
-        }).await?;
+        self.dataplane_controller_access
+            .data_plane_stop(&DataPlaneStop {
+                _type: DataPlaneControllerMessages::DataPlaneStop,
+                version: DataPlaneControllerVersion::Version10,
+                session_id: session_id.clone(),
+            })
+            .await?;
         Ok(())
     }
 
@@ -103,11 +109,13 @@ impl DataPlaneFacadeTrait for ConsumerPullDataplaneStrategy {
     }
 
     async fn on_transfer_termination_pre(&self, session_id: &Urn) -> anyhow::Result<()> {
-        self.dataplane_controller_access.data_plane_stop(&DataPlaneStop {
-            _type: DataPlaneControllerMessages::DataPlaneStop,
-            version: DataPlaneControllerVersion::Version10,
-            session_id: session_id.clone(),
-        }).await?;
+        self.dataplane_controller_access
+            .data_plane_stop(&DataPlaneStop {
+                _type: DataPlaneControllerMessages::DataPlaneStop,
+                version: DataPlaneControllerVersion::Version10,
+                session_id: session_id.clone(),
+            })
+            .await?;
         Ok(())
     }
 

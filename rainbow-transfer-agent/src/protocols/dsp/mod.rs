@@ -17,7 +17,6 @@
  *
  */
 
-
 mod errors;
 pub(crate) mod facades;
 pub(crate) mod http;
@@ -28,6 +27,9 @@ pub(crate) mod validator;
 
 use crate::entities::transfer_messages::TransferAgentMessagesTrait;
 use crate::entities::transfer_process::TransferAgentProcessesTrait;
+use crate::protocols::dsp::facades::data_plane_facade::data_plane_facade::DataPlaneProviderFacadeForDSProtocol;
+use crate::protocols::dsp::facades::data_plane_facade::dataplane_strategy_factory::DataPlaneStrategyFactory;
+use crate::protocols::dsp::facades::data_service_resolver_facade::data_service_resolver_facade::DataServiceFacadeServiceForDSProtocol;
 use crate::protocols::dsp::facades::FacadeService;
 use crate::protocols::dsp::http::protocol::DspRouter;
 use crate::protocols::dsp::http::rpc::RpcRouter;
@@ -48,9 +50,6 @@ use rainbow_dataplane::setup::DataplaneSetup;
 use std::sync::Arc;
 use validator::validators::protocol::validate_state_transition::ValidatedStateTransitionServiceForDsp;
 use validator::validators::rpc::validation_rpc_steps::ValidationRpcStepsService;
-use crate::protocols::dsp::facades::data_plane_facade::data_plane_facade::DataPlaneProviderFacadeForDSProtocol;
-use crate::protocols::dsp::facades::data_plane_facade::dataplane_strategy_factory::DataPlaneStrategyFactory;
-use crate::protocols::dsp::facades::data_service_resolver_facade::data_service_resolver_facade::DataServiceFacadeServiceForDSProtocol;
 
 pub struct TransferDSP {
     transfer_agent_process_entities: Arc<dyn TransferAgentProcessesTrait>,
@@ -123,7 +122,7 @@ impl ProtocolPluginTrait for TransferDSP {
         let dataplane_strategy_factory = Arc::new(DataPlaneStrategyFactory::new(dataplane_controller.clone()));
         let dataplane_facade = Arc::new(DataPlaneProviderFacadeForDSProtocol::new(
             dataplane_strategy_factory.clone(),
-            self.transfer_agent_process_entities.clone()
+            self.transfer_agent_process_entities.clone(),
         ));
 
         // data service resolver
