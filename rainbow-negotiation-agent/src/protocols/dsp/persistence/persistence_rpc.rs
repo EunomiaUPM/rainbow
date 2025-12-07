@@ -55,6 +55,14 @@ impl NegotiationPersistenceTrait for NegotiationPersistenceForRpcService {
         todo!()
     }
 
+    async fn get_negotiation_offer_service(&self) -> anyhow::Result<Arc<dyn NegotiationAgentOffersTrait>> {
+        todo!()
+    }
+
+    async fn get_negotiation_agreement_service(&self) -> anyhow::Result<Arc<dyn NegotiationAgentAgreementsTrait>> {
+        todo!()
+    }
+
     async fn fetch_process(&self, id: &str) -> anyhow::Result<NegotiationProcessDto> {
         todo!()
     }
@@ -63,8 +71,7 @@ impl NegotiationPersistenceTrait for NegotiationPersistenceForRpcService {
         &self,
         protocol: &str,
         direction: &str,
-        provider_pid: Option<Urn>,
-        provider_address: Option<String>,
+        peer_address: Option<String>,
         payload_dto: Arc<dyn NegotiationProcessMessageTrait>,
         payload_value: Value,
     ) -> anyhow::Result<NegotiationProcessDto> {

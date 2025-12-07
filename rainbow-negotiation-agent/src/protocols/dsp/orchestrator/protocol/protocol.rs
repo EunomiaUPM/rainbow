@@ -55,7 +55,9 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
         &self,
         id: &String,
     ) -> anyhow::Result<NegotiationProcessMessageWrapper<NegotiationAckMessageDto>> {
-        todo!()
+        let process = self.persistence_service.fetch_process(id.as_str()).await?;
+        let negotiation_process_dto = NegotiationProcessMessageWrapper::try_from(process)?;
+        Ok(negotiation_process_dto)
     }
 
     async fn on_initial_contract_request(
@@ -65,7 +67,25 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
         NegotiationProcessMessageWrapper<NegotiationAckMessageDto>,
         bool,
     )> {
-        todo!()
+        let input = Arc::new(input.clone());
+        self.validator.on_contract_request_init(&input).await?;
+
+        // persist
+        let negotiation = self
+            .persistence_service
+            .create_process(
+                "DSP",
+                "INBOUND",
+                Some(input.dto.clone().consumer_pid.to_string()),
+                Arc::new(input.dto.clone()),
+                serde_json::to_value(&input).unwrap(),
+            )
+            .await?;
+
+        // notify
+
+        let negotiation_process_dto = NegotiationProcessMessageWrapper::try_from(negotiation)?;
+        Ok((negotiation_process_dto, false))
     }
 
     async fn on_consumer_request(
@@ -73,7 +93,23 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
         id: &String,
         input: &NegotiationProcessMessageWrapper<NegotiationRequestMessageDto>,
     ) -> anyhow::Result<NegotiationProcessMessageWrapper<NegotiationAckMessageDto>> {
-        todo!()
+        let input = Arc::new(input.clone());
+        self.validator.on_contract_request(id, &input).await?;
+
+        // persist
+        let negotiation = self
+            .persistence_service
+            .update_process(
+                id.as_str(),
+                Arc::new(input.dto.clone()),
+                serde_json::to_value(&input).unwrap(),
+            )
+            .await?;
+
+        // notify
+
+        let negotiation_process_dto = NegotiationProcessMessageWrapper::try_from(negotiation)?;
+        Ok(negotiation_process_dto)
     }
 
     async fn on_agreement_verification(
@@ -81,7 +117,23 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
         id: &String,
         input: &NegotiationProcessMessageWrapper<NegotiationVerificationMessageDto>,
     ) -> anyhow::Result<NegotiationProcessMessageWrapper<NegotiationAckMessageDto>> {
-        todo!()
+        let input = Arc::new(input.clone());
+        self.validator.on_contract_agreement_verification(&id, &input).await?;
+
+        // persist
+        let negotiation = self
+            .persistence_service
+            .update_process(
+                id.as_str(),
+                Arc::new(input.dto.clone()),
+                serde_json::to_value(&input).unwrap(),
+            )
+            .await?;
+
+        // notify
+
+        let negotiation_process_dto = NegotiationProcessMessageWrapper::try_from(negotiation)?;
+        Ok(negotiation_process_dto)
     }
 
     async fn on_initial_provider_offer(
@@ -99,7 +151,23 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
         id: &String,
         input: &NegotiationProcessMessageWrapper<NegotiationOfferMessageDto>,
     ) -> anyhow::Result<NegotiationProcessMessageWrapper<NegotiationAckMessageDto>> {
-        todo!()
+        let input = Arc::new(input.clone());
+        self.validator.on_contract_offer(id, &input).await?;
+
+        // persist
+        let negotiation = self
+            .persistence_service
+            .update_process(
+                id.as_str(),
+                Arc::new(input.dto.clone()),
+                serde_json::to_value(&input).unwrap(),
+            )
+            .await?;
+
+        // notify
+
+        let negotiation_process_dto = NegotiationProcessMessageWrapper::try_from(negotiation)?;
+        Ok(negotiation_process_dto)
     }
 
     async fn on_agreement_reception(
@@ -107,7 +175,23 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
         id: &String,
         input: &NegotiationProcessMessageWrapper<NegotiationAgreementMessageDto>,
     ) -> anyhow::Result<NegotiationProcessMessageWrapper<NegotiationAckMessageDto>> {
-        todo!()
+        let input = Arc::new(input.clone());
+        self.validator.on_contract_agreement(id, &input).await?;
+
+        // persist
+        let negotiation = self
+            .persistence_service
+            .update_process(
+                id.as_str(),
+                Arc::new(input.dto.clone()),
+                serde_json::to_value(&input).unwrap(),
+            )
+            .await?;
+
+        // notify
+
+        let negotiation_process_dto = NegotiationProcessMessageWrapper::try_from(negotiation)?;
+        Ok(negotiation_process_dto)
     }
 
     async fn on_negotiation_event(
@@ -115,7 +199,23 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
         id: &String,
         input: &NegotiationProcessMessageWrapper<NegotiationEventMessageDto>,
     ) -> anyhow::Result<NegotiationProcessMessageWrapper<NegotiationAckMessageDto>> {
-        todo!()
+        let input = Arc::new(input.clone());
+        self.validator.on_contract_event(id, &input).await?;
+
+        // persist
+        let negotiation = self
+            .persistence_service
+            .update_process(
+                id.as_str(),
+                Arc::new(input.dto.clone()),
+                serde_json::to_value(&input).unwrap(),
+            )
+            .await?;
+
+        // notify
+
+        let negotiation_process_dto = NegotiationProcessMessageWrapper::try_from(negotiation)?;
+        Ok(negotiation_process_dto)
     }
 
     async fn on_negotiation_termination(
@@ -123,6 +223,22 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
         id: &String,
         input: &NegotiationProcessMessageWrapper<NegotiationTerminationMessageDto>,
     ) -> anyhow::Result<NegotiationProcessMessageWrapper<NegotiationAckMessageDto>> {
-        todo!()
+        let input = Arc::new(input.clone());
+        self.validator.on_contract_termination(id, &input).await?;
+
+        // persist
+        let negotiation = self
+            .persistence_service
+            .update_process(
+                id.as_str(),
+                Arc::new(input.dto.clone()),
+                serde_json::to_value(&input).unwrap(),
+            )
+            .await?;
+
+        // notify
+
+        let negotiation_process_dto = NegotiationProcessMessageWrapper::try_from(negotiation)?;
+        Ok(negotiation_process_dto)
     }
 }

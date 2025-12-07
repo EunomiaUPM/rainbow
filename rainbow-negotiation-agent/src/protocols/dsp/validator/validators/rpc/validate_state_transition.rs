@@ -51,16 +51,6 @@ impl ValidateStateTransition for ValidatedStateTransitionServiceForRcp {
     ) -> anyhow::Result<()> {
         Ok(())
     }
-
-    async fn validate_state_attribute_transition(
-        &self,
-        _current_state: &NegotiationProcessState,
-        _current_state_attribute: &String,
-        message_type: &NegotiationProcessMessageType,
-        role: &TransferRoles,
-    ) -> anyhow::Result<()> {
-        Ok(())
-    }
 }
 
 fn validate_state_transition_error_helper(

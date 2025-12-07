@@ -615,8 +615,8 @@ impl Into<NegotiationProcessMessageWrapper<NegotiationTerminationMessageDto>> fo
             dto: NegotiationTerminationMessageDto {
                 consumer_pid: self.consumer_pid,
                 provider_pid: self.provider_pid,
-                code: None,
-                reason: None,
+                code: self.code,
+                reason: self.reason,
             },
         }
     }
