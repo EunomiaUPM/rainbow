@@ -20,6 +20,7 @@
 use anyhow::{anyhow, bail};
 use serde::{Deserialize, Serialize};
 use std::fmt;
+use std::fmt::Display;
 use std::str::FromStr;
 
 pub mod transfer_completion;
@@ -125,12 +126,13 @@ impl FromStr for TransferRoles {
     }
 }
 
-impl ToString for TransferRoles {
-    fn to_string(&self) -> String {
-        match self {
+impl Display for TransferRoles {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let str = match self {
             TransferRoles::Provider => "Provider".to_string(),
             TransferRoles::Consumer => "Consumer".to_string(),
-        }
+        };
+        write!(f, "{}", str)
     }
 }
 

@@ -18,9 +18,9 @@
  */
 
 use crate::protocols::dsp::protocol_types::{
-    NegotiationAgreementMessageDto, NegotiationEventMessageDto, NegotiationOfferMessageDto,
-    NegotiationProcessMessageWrapper, NegotiationRequestMessageDto, NegotiationTerminationMessageDto,
-    NegotiationVerificationMessageDto,
+    NegotiationAgreementMessageDto, NegotiationEventMessageDto, NegotiationOfferInitMessageDto,
+    NegotiationOfferMessageDto, NegotiationProcessMessageWrapper, NegotiationRequestInitMessageDto,
+    NegotiationRequestMessageDto, NegotiationTerminationMessageDto, NegotiationVerificationMessageDto,
 };
 use crate::protocols::dsp::validator::traits::validate_payload::ValidatePayload;
 use crate::protocols::dsp::validator::traits::validate_state_transition::ValidateStateTransition;
@@ -45,51 +45,149 @@ impl ValidationDspStepsService {
 
 #[async_trait::async_trait]
 impl ValidationDspSteps for ValidationDspStepsService {
+    async fn on_contract_request_init(
+        &self,
+        input: &NegotiationProcessMessageWrapper<NegotiationRequestInitMessageDto>,
+    ) -> anyhow::Result<()> {
+        self.payload_validator.validate_with_json_schema(&input.dto).await?;
+        self.payload_validator.validate_identifiers_as_urn(&input.dto).await?;
+        self.payload_validator.validate_auth(&input.dto).await?;
+        Ok(())
+    }
+
     async fn on_contract_request(
         &self,
-        _uri_id: Option<&String>,
-        _input: &NegotiationProcessMessageWrapper<NegotiationRequestMessageDto>,
+        uri_id: &String,
+        input: &NegotiationProcessMessageWrapper<NegotiationRequestMessageDto>,
     ) -> anyhow::Result<()> {
+        let dto = self.helpers.get_current_dto_from_payload(&input.dto).await?;
+        let role = self.helpers.get_role_from_dto(&dto).await?;
+        let message_type = input._type.clone();
+        let current_state = self.helpers.get_state_from_dto(&dto).await?;
+        let current_state_attribute = self.helpers.get_state_attribute_from_dto(&dto).await?;
+        self.payload_validator.validate_with_json_schema(&input.dto).await?;
+        self.payload_validator.validate_uri_id_as_urn(uri_id).await?;
+        self.payload_validator.validate_identifiers_as_urn(&input.dto).await?;
+        self.payload_validator.validate_uri_and_pid(uri_id, &input.dto, &role).await?;
+        self.payload_validator.validate_correlation(&input.dto, &dto).await?;
+        self.payload_validator.validate_auth(&input.dto).await?;
+        self.step_transition_validator.validate_role_for_message(&role, &message_type).await?;
+        self.step_transition_validator.validate_state_transition(&current_state, &message_type).await?;
+        Ok(())
+    }
+
+    async fn on_contract_offer_init(
+        &self,
+        input: &NegotiationProcessMessageWrapper<NegotiationOfferInitMessageDto>,
+    ) -> anyhow::Result<()> {
+        self.payload_validator.validate_with_json_schema(&input.dto).await?;
+        self.payload_validator.validate_identifiers_as_urn(&input.dto).await?;
+        self.payload_validator.validate_auth(&input.dto).await?;
         Ok(())
     }
 
     async fn on_contract_offer(
         &self,
-        _uri_id: Option<&String>,
-        _input: &NegotiationProcessMessageWrapper<NegotiationOfferMessageDto>,
+        uri_id: &String,
+        input: &NegotiationProcessMessageWrapper<NegotiationOfferMessageDto>,
     ) -> anyhow::Result<()> {
+        let dto = self.helpers.get_current_dto_from_payload(&input.dto).await?;
+        let role = self.helpers.get_role_from_dto(&dto).await?;
+        let message_type = input._type.clone();
+        let current_state = self.helpers.get_state_from_dto(&dto).await?;
+        let current_state_attribute = self.helpers.get_state_attribute_from_dto(&dto).await?;
+        self.payload_validator.validate_with_json_schema(&input.dto).await?;
+        self.payload_validator.validate_uri_id_as_urn(uri_id).await?;
+        self.payload_validator.validate_identifiers_as_urn(&input.dto).await?;
+        self.payload_validator.validate_uri_and_pid(uri_id, &input.dto, &role).await?;
+        self.payload_validator.validate_correlation(&input.dto, &dto).await?;
+        self.payload_validator.validate_auth(&input.dto).await?;
+        self.step_transition_validator.validate_role_for_message(&role, &message_type).await?;
+        self.step_transition_validator.validate_state_transition(&current_state, &message_type).await?;
         Ok(())
     }
 
     async fn on_contract_agreement(
         &self,
-        _uri_id: &String,
-        _input: &NegotiationProcessMessageWrapper<NegotiationAgreementMessageDto>,
+        uri_id: &String,
+        input: &NegotiationProcessMessageWrapper<NegotiationAgreementMessageDto>,
     ) -> anyhow::Result<()> {
+        let dto = self.helpers.get_current_dto_from_payload(&input.dto).await?;
+        let role = self.helpers.get_role_from_dto(&dto).await?;
+        let message_type = input._type.clone();
+        let current_state = self.helpers.get_state_from_dto(&dto).await?;
+        let current_state_attribute = self.helpers.get_state_attribute_from_dto(&dto).await?;
+        self.payload_validator.validate_with_json_schema(&input.dto).await?;
+        self.payload_validator.validate_uri_id_as_urn(uri_id).await?;
+        self.payload_validator.validate_identifiers_as_urn(&input.dto).await?;
+        self.payload_validator.validate_uri_and_pid(uri_id, &input.dto, &role).await?;
+        self.payload_validator.validate_correlation(&input.dto, &dto).await?;
+        self.payload_validator.validate_auth(&input.dto).await?;
+        self.step_transition_validator.validate_role_for_message(&role, &message_type).await?;
+        self.step_transition_validator.validate_state_transition(&current_state, &message_type).await?;
         Ok(())
     }
 
     async fn on_contract_agreement_verification(
         &self,
-        _uri_id: &String,
-        _input: &NegotiationProcessMessageWrapper<NegotiationVerificationMessageDto>,
+        uri_id: &String,
+        input: &NegotiationProcessMessageWrapper<NegotiationVerificationMessageDto>,
     ) -> anyhow::Result<()> {
+        let dto = self.helpers.get_current_dto_from_payload(&input.dto).await?;
+        let role = self.helpers.get_role_from_dto(&dto).await?;
+        let message_type = input._type.clone();
+        let current_state = self.helpers.get_state_from_dto(&dto).await?;
+        let current_state_attribute = self.helpers.get_state_attribute_from_dto(&dto).await?;
+        self.payload_validator.validate_with_json_schema(&input.dto).await?;
+        self.payload_validator.validate_uri_id_as_urn(uri_id).await?;
+        self.payload_validator.validate_identifiers_as_urn(&input.dto).await?;
+        self.payload_validator.validate_uri_and_pid(uri_id, &input.dto, &role).await?;
+        self.payload_validator.validate_correlation(&input.dto, &dto).await?;
+        self.payload_validator.validate_auth(&input.dto).await?;
+        self.step_transition_validator.validate_role_for_message(&role, &message_type).await?;
+        self.step_transition_validator.validate_state_transition(&current_state, &message_type).await?;
         Ok(())
     }
 
     async fn on_contract_event(
         &self,
-        _uri_id: &String,
-        _input: &NegotiationProcessMessageWrapper<NegotiationEventMessageDto>,
+        uri_id: &String,
+        input: &NegotiationProcessMessageWrapper<NegotiationEventMessageDto>,
     ) -> anyhow::Result<()> {
+        let dto = self.helpers.get_current_dto_from_payload(&input.dto).await?;
+        let role = self.helpers.get_role_from_dto(&dto).await?;
+        let message_type = input._type.clone();
+        let current_state = self.helpers.get_state_from_dto(&dto).await?;
+        let current_state_attribute = self.helpers.get_state_attribute_from_dto(&dto).await?;
+        self.payload_validator.validate_with_json_schema(&input.dto).await?;
+        self.payload_validator.validate_uri_id_as_urn(uri_id).await?;
+        self.payload_validator.validate_identifiers_as_urn(&input.dto).await?;
+        self.payload_validator.validate_uri_and_pid(uri_id, &input.dto, &role).await?;
+        self.payload_validator.validate_correlation(&input.dto, &dto).await?;
+        self.payload_validator.validate_auth(&input.dto).await?;
+        self.step_transition_validator.validate_role_for_message(&role, &message_type).await?;
+        self.step_transition_validator.validate_state_transition(&current_state, &message_type).await?;
         Ok(())
     }
 
     async fn on_contract_termination(
         &self,
-        _uri_id: &String,
-        _input: &NegotiationProcessMessageWrapper<NegotiationTerminationMessageDto>,
+        uri_id: &String,
+        input: &NegotiationProcessMessageWrapper<NegotiationTerminationMessageDto>,
     ) -> anyhow::Result<()> {
+        let dto = self.helpers.get_current_dto_from_payload(&input.dto).await?;
+        let role = self.helpers.get_role_from_dto(&dto).await?;
+        let message_type = input._type.clone();
+        let current_state = self.helpers.get_state_from_dto(&dto).await?;
+        let current_state_attribute = self.helpers.get_state_attribute_from_dto(&dto).await?;
+        self.payload_validator.validate_with_json_schema(&input.dto).await?;
+        self.payload_validator.validate_uri_id_as_urn(uri_id).await?;
+        self.payload_validator.validate_identifiers_as_urn(&input.dto).await?;
+        self.payload_validator.validate_uri_and_pid(uri_id, &input.dto, &role).await?;
+        self.payload_validator.validate_correlation(&input.dto, &dto).await?;
+        self.payload_validator.validate_auth(&input.dto).await?;
+        self.step_transition_validator.validate_role_for_message(&role, &message_type).await?;
+        self.step_transition_validator.validate_state_transition(&current_state, &message_type).await?;
         Ok(())
     }
 }

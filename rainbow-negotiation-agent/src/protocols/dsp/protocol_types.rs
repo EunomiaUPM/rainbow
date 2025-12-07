@@ -275,7 +275,7 @@ pub struct NegotiationAgreementMessageDto {
 
 impl NegotiationProcessMessageTrait for NegotiationAgreementMessageDto {
     fn get_consumer_pid(&self) -> Option<Urn> {
-        Some(self.provider_pid.clone())
+        Some(self.consumer_pid.clone())
     }
 
     fn get_provider_pid(&self) -> Option<Urn> {
@@ -325,7 +325,7 @@ pub struct NegotiationVerificationMessageDto {
 
 impl NegotiationProcessMessageTrait for NegotiationVerificationMessageDto {
     fn get_consumer_pid(&self) -> Option<Urn> {
-        Some(self.provider_pid.clone())
+        Some(self.consumer_pid.clone())
     }
 
     fn get_provider_pid(&self) -> Option<Urn> {
@@ -376,7 +376,7 @@ pub struct NegotiationEventMessageDto {
 
 impl NegotiationProcessMessageTrait for NegotiationEventMessageDto {
     fn get_consumer_pid(&self) -> Option<Urn> {
-        Some(self.provider_pid.clone())
+        Some(self.consumer_pid.clone())
     }
 
     fn get_provider_pid(&self) -> Option<Urn> {
@@ -428,7 +428,7 @@ pub struct NegotiationTerminationMessageDto {
 
 impl NegotiationProcessMessageTrait for NegotiationTerminationMessageDto {
     fn get_consumer_pid(&self) -> Option<Urn> {
-        Some(self.provider_pid.clone())
+        Some(self.consumer_pid.clone())
     }
 
     fn get_provider_pid(&self) -> Option<Urn> {
@@ -479,7 +479,7 @@ pub struct NegotiationAckMessageDto {
 
 impl NegotiationProcessMessageTrait for NegotiationAckMessageDto {
     fn get_consumer_pid(&self) -> Option<Urn> {
-        Some(self.provider_pid.clone())
+        Some(self.consumer_pid.clone())
     }
 
     fn get_provider_pid(&self) -> Option<Urn> {
@@ -531,7 +531,7 @@ pub struct NegotiationErrorMessageDto {
 
 impl NegotiationProcessMessageTrait for NegotiationErrorMessageDto {
     fn get_consumer_pid(&self) -> Option<Urn> {
-        self.provider_pid.clone()
+        self.consumer_pid.clone()
     }
 
     fn get_provider_pid(&self) -> Option<Urn> {
@@ -622,13 +622,21 @@ pub enum NegotiationEventType {
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub enum NegotiationProcessMessageType {
+    #[serde(rename = "ContractRequestMessage")]
     NegotiationRequestMessage,
+    #[serde(rename = "ContractOfferMessage")]
     NegotiationOfferMessage,
+    #[serde(rename = "ContractNegotiationEventMessage")]
     NegotiationEventMessage(NegotiationEventType),
+    #[serde(rename = "ContractAgreementMessage")]
     NegotiationAgreementMessage,
+    #[serde(rename = "ContractAgreementVerificationMessage")]
     NegotiationAgreementVerificationMessage,
+    #[serde(rename = "ContractNegotiationTerminationMessage")]
     NegotiationTerminationMessage,
+    #[serde(rename = "ContractNegotiation")]
     NegotiationProcess,
+    #[serde(rename = "ContractNegotiationError")]
     NegotiationError,
 }
 
@@ -649,6 +657,46 @@ impl Display for NegotiationProcessMessageType {
             NegotiationProcessMessageType::NegotiationError => "ContractNegotiationError".to_string(),
         };
         write!(f, "{}", str)
+    }
+}
+
+impl FromStr for NegotiationProcessMessageType {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "ContractRequestMessage" => Ok(NegotiationProcessMessageType::NegotiationRequestMessage),
+            "ContractOfferMessage" => Ok(NegotiationProcessMessageType::NegotiationOfferMessage),
+            "ContractNegotiationEventMessage" => Ok(NegotiationProcessMessageType::NegotiationEventMessage(
+                NegotiationEventType::ACCEPTED,
+            )),
+            "ContractAgreementMessage" => Ok(NegotiationProcessMessageType::NegotiationAgreementMessage),
+            "ContractAgreementVerificationMessage" => {
+                Ok(NegotiationProcessMessageType::NegotiationAgreementVerificationMessage)
+            }
+            "ContractNegotiationTerminationMessage" => Ok(NegotiationProcessMessageType::NegotiationTerminationMessage),
+            "ContractNegotiation" => Ok(NegotiationProcessMessageType::NegotiationProcess),
+            "ContractNegotiationError" => Ok(NegotiationProcessMessageType::NegotiationError),
+            _ => Err(anyhow::Error::msg("Invalid negotiation message")),
+        }
+    }
+}
+
+impl From<NegotiationProcessMessageType> for NegotiationProcessState {
+    fn from(value: NegotiationProcessMessageType) -> Self {
+        match value {
+            NegotiationProcessMessageType::NegotiationRequestMessage => NegotiationProcessState::Requested,
+            NegotiationProcessMessageType::NegotiationOfferMessage => NegotiationProcessState::Offered,
+            NegotiationProcessMessageType::NegotiationEventMessage(ev) => match ev {
+                NegotiationEventType::ACCEPTED => NegotiationProcessState::Accepted,
+                NegotiationEventType::FINALIZED => NegotiationProcessState::Finalized,
+            },
+            NegotiationProcessMessageType::NegotiationAgreementMessage => NegotiationProcessState::Agreed,
+            NegotiationProcessMessageType::NegotiationAgreementVerificationMessage => NegotiationProcessState::Verified,
+            NegotiationProcessMessageType::NegotiationTerminationMessage => NegotiationProcessState::Terminated,
+            NegotiationProcessMessageType::NegotiationProcess => NegotiationProcessState::Terminated,
+            NegotiationProcessMessageType::NegotiationError => NegotiationProcessState::Terminated,
+        }
     }
 }
 

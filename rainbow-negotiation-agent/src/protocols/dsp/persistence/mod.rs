@@ -20,8 +20,10 @@
 pub(crate) mod persistence_protocol;
 pub(crate) mod persistence_rpc;
 
+use crate::entities::agreement::NegotiationAgentAgreementsTrait;
 use crate::entities::negotiation_message::NegotiationAgentMessagesTrait;
 use crate::entities::negotiation_process::{NegotiationAgentProcessesTrait, NegotiationProcessDto};
+use crate::entities::offer::NegotiationAgentOffersTrait;
 use crate::protocols::dsp::protocol_types::NegotiationProcessMessageTrait;
 use std::sync::Arc;
 use urn::Urn;
@@ -31,13 +33,14 @@ use urn::Urn;
 pub trait NegotiationPersistenceTrait: Send + Sync {
     async fn get_negotiation_process_service(&self) -> anyhow::Result<Arc<dyn NegotiationAgentProcessesTrait>>;
     async fn get_negotiation_message_service(&self) -> anyhow::Result<Arc<dyn NegotiationAgentMessagesTrait>>;
+    async fn get_negotiation_offer_service(&self) -> anyhow::Result<Arc<dyn NegotiationAgentOffersTrait>>;
+    async fn get_negotiation_agreement_service(&self) -> anyhow::Result<Arc<dyn NegotiationAgentAgreementsTrait>>;
     async fn fetch_process(&self, id: &str) -> anyhow::Result<NegotiationProcessDto>;
     async fn create_process(
         &self,
         protocol: &str,
         direction: &str,
-        provider_pid: Option<Urn>,
-        provider_address: Option<String>,
+        peer_address: Option<String>,
         payload_dto: Arc<dyn NegotiationProcessMessageTrait>,
         payload_value: serde_json::Value,
     ) -> anyhow::Result<NegotiationProcessDto>;

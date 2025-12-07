@@ -17,21 +17,29 @@
  *
  */
 use crate::protocols::dsp::protocol_types::{
-    NegotiationAgreementMessageDto, NegotiationEventMessageDto, NegotiationOfferMessageDto,
-    NegotiationProcessMessageWrapper, NegotiationRequestMessageDto, NegotiationTerminationMessageDto,
-    NegotiationVerificationMessageDto,
+    NegotiationAgreementMessageDto, NegotiationEventMessageDto, NegotiationOfferInitMessageDto,
+    NegotiationOfferMessageDto, NegotiationProcessMessageWrapper, NegotiationRequestInitMessageDto,
+    NegotiationRequestMessageDto, NegotiationTerminationMessageDto, NegotiationVerificationMessageDto,
 };
 
 #[async_trait::async_trait]
 pub trait ValidationDspSteps: Send + Sync + 'static {
+    async fn on_contract_request_init(
+        &self,
+        input: &NegotiationProcessMessageWrapper<NegotiationRequestInitMessageDto>,
+    ) -> anyhow::Result<()>;
     async fn on_contract_request(
         &self,
-        uri_id: Option<&String>,
+        uri_id: &String,
         input: &NegotiationProcessMessageWrapper<NegotiationRequestMessageDto>,
+    ) -> anyhow::Result<()>;
+    async fn on_contract_offer_init(
+        &self,
+        input: &NegotiationProcessMessageWrapper<NegotiationOfferInitMessageDto>,
     ) -> anyhow::Result<()>;
     async fn on_contract_offer(
         &self,
-        uri_id: Option<&String>,
+        uri_id: &String,
         input: &NegotiationProcessMessageWrapper<NegotiationOfferMessageDto>,
     ) -> anyhow::Result<()>;
     async fn on_contract_agreement(
