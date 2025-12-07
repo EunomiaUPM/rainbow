@@ -32,6 +32,7 @@ use crate::grpc::api::negotiation_agent::negotiation_agent_processes_service_ser
 use crate::grpc::negotiation_message::NegotiationAgentMessagesGrpc;
 use crate::grpc::negotiation_process::NegotiationAgentProcessesGrpc;
 use crate::grpc::offer::NegotiationAgentOfferGrpc;
+use rainbow_common::config::global_config::ApplicationGlobalConfig;
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use sea_orm::Database;
 use std::sync::Arc;
@@ -44,13 +45,10 @@ use tonic::transport::Server;
 pub struct NegotiationGrpcWorker {}
 
 impl NegotiationGrpcWorker {
-    pub async fn spawn(
-        config: &ApplicationProviderConfig,
-        token: &CancellationToken,
-    ) -> anyhow::Result<JoinHandle<()>> {
+    pub async fn spawn(config: &ApplicationGlobalConfig, token: &CancellationToken) -> anyhow::Result<JoinHandle<()>> {
         let router = Self::create_root_grpc_router(&config).await?;
-        let host = if config.get_environment_scenario() { "127.0.0.1" } else { "0.0.0.0" };
-        let port = config.get_raw_contract_negotiation_host().clone().expect("no host").port;
+        let host = if config.is_local { "127.0.0.1" } else { "0.0.0.0" };
+        let port = config.contract_negotiation_host.clone().expect("no host").port;
         let grpc_port = format!("{}{}", port, "1");
         let addr = format!("{}:{}", host, grpc_port);
 
@@ -73,9 +71,10 @@ impl NegotiationGrpcWorker {
         Ok(handle)
     }
     pub async fn create_root_grpc_router(
-        config: &ApplicationProviderConfig,
+        config: &ApplicationGlobalConfig,
     ) -> anyhow::Result<tonic::transport::server::Router> {
-        let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
+        let db_connection =
+            Database::connect(config.database_config.as_db_url()).await.expect("Database can't connect");
         let config = Arc::new(config.clone());
         let negotiation_repo = Arc::new(NegotiationAgentRepoForSql::create_repo(
             db_connection.clone(),

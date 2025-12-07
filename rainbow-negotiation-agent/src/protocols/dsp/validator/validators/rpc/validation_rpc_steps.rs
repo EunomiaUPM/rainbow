@@ -20,7 +20,8 @@
 #![allow(unused)]
 
 use crate::protocols::dsp::orchestrator::rpc::types::{
-    RpcNegotiationAgreementMessageDto, RpcNegotiationEventMessageDto, RpcNegotiationOfferMessageDto,
+    RpcNegotiationAgreementMessageDto, RpcNegotiationEventAcceptedMessageDto, RpcNegotiationEventFinalizedMessageDto,
+    RpcNegotiationOfferInitMessageDto, RpcNegotiationOfferMessageDto, RpcNegotiationRequestInitMessageDto,
     RpcNegotiationRequestMessageDto, RpcNegotiationTerminationMessageDto, RpcNegotiationVerificationMessageDto,
 };
 use crate::protocols::dsp::validator::traits::validate_payload::ValidatePayload;
@@ -47,30 +48,48 @@ impl ValidationRpcStepsService {
 
 #[async_trait::async_trait]
 impl ValidationRpcSteps for ValidationRpcStepsService {
-    async fn negotiation_request_rpc(&self, _input: &RpcNegotiationRequestMessageDto) -> anyhow::Result<()> {
-        Ok(())
+    async fn negotiation_request_init_rpc(&self, input: &RpcNegotiationRequestInitMessageDto) -> anyhow::Result<()> {
+        todo!()
     }
 
-    async fn negotiation_offer_rpc(&self, _input: &RpcNegotiationOfferMessageDto) -> anyhow::Result<()> {
-        Ok(())
+    async fn negotiation_request_rpc(&self, input: &RpcNegotiationRequestMessageDto) -> anyhow::Result<()> {
+        todo!()
     }
 
-    async fn negotiation_agreement_rpc(&self, _input: &RpcNegotiationAgreementMessageDto) -> anyhow::Result<()> {
-        Ok(())
+    async fn negotiation_offer_init_rpc(&self, input: &RpcNegotiationOfferInitMessageDto) -> anyhow::Result<()> {
+        todo!()
+    }
+
+    async fn negotiation_offer_rpc(&self, input: &RpcNegotiationOfferMessageDto) -> anyhow::Result<()> {
+        todo!()
+    }
+
+    async fn negotiation_agreement_rpc(&self, input: &RpcNegotiationAgreementMessageDto) -> anyhow::Result<()> {
+        todo!()
     }
 
     async fn negotiation_agreement_verification_rpc(
         &self,
-        _input: &RpcNegotiationVerificationMessageDto,
+        input: &RpcNegotiationVerificationMessageDto,
     ) -> anyhow::Result<()> {
-        Ok(())
+        todo!()
     }
 
-    async fn negotiation_event_rpc(&self, _input: &RpcNegotiationEventMessageDto) -> anyhow::Result<()> {
-        Ok(())
+    async fn negotiation_event_accepted_rpc(
+        &self,
+        input: &RpcNegotiationEventAcceptedMessageDto,
+    ) -> anyhow::Result<()> {
+        todo!()
     }
 
-    async fn negotiation_termination_rpc(&self, _input: &RpcNegotiationTerminationMessageDto) -> anyhow::Result<()> {
-        Ok(())
+    async fn negotiation_event_finalized_rpc(
+        &self,
+        input: &RpcNegotiationEventFinalizedMessageDto,
+    ) -> anyhow::Result<()> {
+        todo!()
+    }
+
+    async fn negotiation_termination_rpc(&self, input: &RpcNegotiationTerminationMessageDto) -> anyhow::Result<()> {
+        todo!()
     }
 }

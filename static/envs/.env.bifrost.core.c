@@ -7,7 +7,7 @@ TRANSFER_PORT=1300
 # Catalog Configuration
 CATALOG_PROTOCOL=http
 CATALOG_URL=127.0.0.1
-CATALOG_PORT=1200
+CATALOG_PORT=1300
 CATALOG_AS_DATAHUB=false
 
 # DataHub Configuration (only if CATALOG_AS_DATAHUB is true)
@@ -19,7 +19,7 @@ DATAHUB_TOKEN=eyJhbGciOiJIUzI1NiJ9.eyJhY3RvclR5cGUiOiJVU0VSIiwiYWN0b3JJZCI6ImRhd
 # Contract Negotiation Service Configuration
 CONTRACT_NEGOTIATION_PROTOCOL=http
 CONTRACT_NEGOTIATION_URL=127.0.0.1
-CONTRACT_NEGOTIATION_PORT=1200
+CONTRACT_NEGOTIATION_PORT=1300
 
 # Authentication Service Configuration - Keycloak
 AUTH_HOST_PROTOCOL=http
@@ -29,7 +29,7 @@ AUTH_HOST_PORT=1200
 # SSI Authentication Service Configuration - Auth, participants, clients
 SSI_AUTH_PROTOCOL=http
 SSI_AUTH_URL=127.0.0.1
-SSI_AUTH_PORT=1200
+SSI_AUTH_PORT=1300
 
 # Business System Configuration
 BUSINESS_SYSTEM_PROTOCOL=http

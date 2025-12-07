@@ -21,7 +21,9 @@ use crate::entities::negotiation_process::NegotiationProcessDto;
 use anyhow::bail;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::protocol::context_field::ContextField;
-use rainbow_common::protocol::contract::contract_odrl::{OdrlAgreement, OdrlMessageOffer};
+use rainbow_common::protocol::contract::contract_odrl::{
+    ContractRequestMessageOfferTypes, OdrlAgreement, OdrlMessageOffer,
+};
 use serde::{Deserialize, Serialize};
 use std::fmt::{Debug, Display};
 use std::str::FromStr;
@@ -46,7 +48,7 @@ where
 pub trait NegotiationProcessMessageTrait: Debug + Send + Sync {
     fn get_consumer_pid(&self) -> Option<Urn>;
     fn get_provider_pid(&self) -> Option<Urn>;
-    fn get_offer(&self) -> Option<OdrlMessageOffer>;
+    fn get_offer(&self) -> Option<ContractRequestMessageOfferTypes>;
     fn get_agreement(&self) -> Option<OdrlAgreement>;
     fn get_event_type(&self) -> Option<NegotiationEventType>;
     fn get_callback_address(&self) -> Option<String>;
@@ -59,23 +61,22 @@ pub trait NegotiationProcessMessageTrait: Debug + Send + Sync {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
-pub struct NegotiationRequestMessageDto {
+pub struct NegotiationRequestInitMessageDto {
     pub consumer_pid: Urn,
-    pub provider_pid: Option<Urn>,
-    pub offer: OdrlMessageOffer,
+    pub offer: ContractRequestMessageOfferTypes,
     pub callback_address: Option<String>,
 }
 
-impl NegotiationProcessMessageTrait for NegotiationRequestMessageDto {
+impl NegotiationProcessMessageTrait for NegotiationRequestInitMessageDto {
     fn get_consumer_pid(&self) -> Option<Urn> {
         Some(self.consumer_pid.clone())
     }
 
     fn get_provider_pid(&self) -> Option<Urn> {
-        self.provider_pid.clone()
+        None
     }
 
-    fn get_offer(&self) -> Option<OdrlMessageOffer> {
+    fn get_offer(&self) -> Option<ContractRequestMessageOfferTypes> {
         Some(self.offer.clone())
     }
 
@@ -111,23 +112,126 @@ impl NegotiationProcessMessageTrait for NegotiationRequestMessageDto {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
-pub struct NegotiationOfferMessageDto {
-    pub consumer_pid: Option<Urn>,
+pub struct NegotiationRequestMessageDto {
+    pub consumer_pid: Urn,
     pub provider_pid: Urn,
-    pub offer: OdrlMessageOffer,
+    pub offer: ContractRequestMessageOfferTypes,
     pub callback_address: Option<String>,
 }
 
-impl NegotiationProcessMessageTrait for NegotiationOfferMessageDto {
+impl NegotiationProcessMessageTrait for NegotiationRequestMessageDto {
     fn get_consumer_pid(&self) -> Option<Urn> {
-        self.consumer_pid.clone()
+        Some(self.consumer_pid.clone())
     }
 
     fn get_provider_pid(&self) -> Option<Urn> {
         Some(self.provider_pid.clone())
     }
 
-    fn get_offer(&self) -> Option<OdrlMessageOffer> {
+    fn get_offer(&self) -> Option<ContractRequestMessageOfferTypes> {
+        Some(self.offer.clone())
+    }
+
+    fn get_agreement(&self) -> Option<OdrlAgreement> {
+        None
+    }
+
+    fn get_event_type(&self) -> Option<NegotiationEventType> {
+        None
+    }
+
+    fn get_callback_address(&self) -> Option<String> {
+        self.callback_address.clone()
+    }
+
+    fn get_error_code(&self) -> Option<String> {
+        None
+    }
+
+    fn get_error_reason(&self) -> Option<Vec<String>> {
+        None
+    }
+
+    fn get_state(&self) -> Option<NegotiationProcessState> {
+        None
+    }
+
+    fn get_message(&self) -> NegotiationProcessMessageType {
+        NegotiationProcessMessageType::NegotiationRequestMessage
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+pub struct NegotiationOfferInitMessageDto {
+    pub provider_pid: Urn,
+    pub offer: ContractRequestMessageOfferTypes,
+    pub callback_address: Option<String>,
+}
+
+impl NegotiationProcessMessageTrait for NegotiationOfferInitMessageDto {
+    fn get_consumer_pid(&self) -> Option<Urn> {
+        None
+    }
+
+    fn get_provider_pid(&self) -> Option<Urn> {
+        Some(self.provider_pid.clone())
+    }
+
+    fn get_offer(&self) -> Option<ContractRequestMessageOfferTypes> {
+        Some(self.offer.clone())
+    }
+
+    fn get_agreement(&self) -> Option<OdrlAgreement> {
+        None
+    }
+
+    fn get_event_type(&self) -> Option<NegotiationEventType> {
+        None
+    }
+
+    fn get_callback_address(&self) -> Option<String> {
+        self.callback_address.clone()
+    }
+
+    fn get_error_code(&self) -> Option<String> {
+        None
+    }
+
+    fn get_error_reason(&self) -> Option<Vec<String>> {
+        None
+    }
+
+    fn get_state(&self) -> Option<NegotiationProcessState> {
+        None
+    }
+
+    fn get_message(&self) -> NegotiationProcessMessageType {
+        NegotiationProcessMessageType::NegotiationOfferMessage
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+pub struct NegotiationOfferMessageDto {
+    pub consumer_pid: Urn,
+    pub provider_pid: Urn,
+    pub offer: ContractRequestMessageOfferTypes,
+    pub callback_address: Option<String>,
+}
+
+impl NegotiationProcessMessageTrait for NegotiationOfferMessageDto {
+    fn get_consumer_pid(&self) -> Option<Urn> {
+        Some(self.consumer_pid.clone())
+    }
+
+    fn get_provider_pid(&self) -> Option<Urn> {
+        Some(self.provider_pid.clone())
+    }
+
+    fn get_offer(&self) -> Option<ContractRequestMessageOfferTypes> {
         Some(self.offer.clone())
     }
 
@@ -178,7 +282,7 @@ impl NegotiationProcessMessageTrait for NegotiationAgreementMessageDto {
         Some(self.provider_pid.clone())
     }
 
-    fn get_offer(&self) -> Option<OdrlMessageOffer> {
+    fn get_offer(&self) -> Option<ContractRequestMessageOfferTypes> {
         None
     }
 
@@ -228,7 +332,7 @@ impl NegotiationProcessMessageTrait for NegotiationVerificationMessageDto {
         Some(self.provider_pid.clone())
     }
 
-    fn get_offer(&self) -> Option<OdrlMessageOffer> {
+    fn get_offer(&self) -> Option<ContractRequestMessageOfferTypes> {
         None
     }
 
@@ -279,7 +383,7 @@ impl NegotiationProcessMessageTrait for NegotiationEventMessageDto {
         Some(self.provider_pid.clone())
     }
 
-    fn get_offer(&self) -> Option<OdrlMessageOffer> {
+    fn get_offer(&self) -> Option<ContractRequestMessageOfferTypes> {
         None
     }
 
@@ -331,7 +435,7 @@ impl NegotiationProcessMessageTrait for NegotiationTerminationMessageDto {
         Some(self.provider_pid.clone())
     }
 
-    fn get_offer(&self) -> Option<OdrlMessageOffer> {
+    fn get_offer(&self) -> Option<ContractRequestMessageOfferTypes> {
         None
     }
 
@@ -382,7 +486,7 @@ impl NegotiationProcessMessageTrait for NegotiationAckMessageDto {
         Some(self.provider_pid.clone())
     }
 
-    fn get_offer(&self) -> Option<OdrlMessageOffer> {
+    fn get_offer(&self) -> Option<ContractRequestMessageOfferTypes> {
         None
     }
 
@@ -434,7 +538,7 @@ impl NegotiationProcessMessageTrait for NegotiationErrorMessageDto {
         self.provider_pid.clone()
     }
 
-    fn get_offer(&self) -> Option<OdrlMessageOffer> {
+    fn get_offer(&self) -> Option<ContractRequestMessageOfferTypes> {
         None
     }
 

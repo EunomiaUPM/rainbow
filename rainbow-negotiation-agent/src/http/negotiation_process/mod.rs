@@ -29,14 +29,14 @@ use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use rainbow_common::batch_requests::BatchRequests;
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
+use rainbow_common::config::global_config::ApplicationGlobalConfig;
 use serde::Deserialize;
 use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct NegotiationAgentProcessesRouter {
     service: Arc<dyn NegotiationAgentProcessesTrait>,
-    config: Arc<ApplicationProviderConfig>,
+    config: Arc<ApplicationGlobalConfig>,
 }
 
 #[derive(Deserialize)]
@@ -51,14 +51,14 @@ impl FromRef<NegotiationAgentProcessesRouter> for Arc<dyn NegotiationAgentProces
     }
 }
 
-impl FromRef<NegotiationAgentProcessesRouter> for Arc<ApplicationProviderConfig> {
+impl FromRef<NegotiationAgentProcessesRouter> for Arc<ApplicationGlobalConfig> {
     fn from_ref(state: &NegotiationAgentProcessesRouter) -> Self {
         state.config.clone()
     }
 }
 
 impl NegotiationAgentProcessesRouter {
-    pub fn new(service: Arc<dyn NegotiationAgentProcessesTrait>, config: Arc<ApplicationProviderConfig>) -> Self {
+    pub fn new(service: Arc<dyn NegotiationAgentProcessesTrait>, config: Arc<ApplicationGlobalConfig>) -> Self {
         Self { service, config }
     }
 

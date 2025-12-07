@@ -49,7 +49,7 @@ pub trait ValidationDspSteps: Send + Sync + 'static {
         uri_id: &String,
         input: &NegotiationProcessMessageWrapper<NegotiationEventMessageDto>,
     ) -> anyhow::Result<()>;
-    async fn on_transfer_termination(
+    async fn on_contract_termination(
         &self,
         uri_id: &String,
         input: &NegotiationProcessMessageWrapper<NegotiationTerminationMessageDto>,

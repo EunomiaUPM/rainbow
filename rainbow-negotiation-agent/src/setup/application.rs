@@ -19,13 +19,13 @@
 
 use crate::setup::grpc_worker::NegotiationGrpcWorker;
 use crate::setup::http_worker::NegotiationHttpWorker;
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
+use rainbow_common::config::global_config::ApplicationGlobalConfig;
 use tokio::signal;
 use tokio_util::sync::CancellationToken;
 
 pub struct NegotiationAgentApplication;
 impl NegotiationAgentApplication {
-    pub async fn run(config: &ApplicationProviderConfig) -> anyhow::Result<()> {
+    pub async fn run(config: &ApplicationGlobalConfig) -> anyhow::Result<()> {
         // TODO ApplicationProviderConfig for TransferModule (rodrigo's way)
         let cancel_token = CancellationToken::new();
 
