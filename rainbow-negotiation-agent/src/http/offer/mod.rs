@@ -17,6 +17,9 @@
  *
  */
 
+use crate::entities::offer::{NegotiationAgentOffersTrait, NewOfferDto};
+use crate::errors::error_adapter::CustomToResponse;
+use crate::http::common::{extract_payload, parse_urn};
 use axum::{
     Json, Router,
     extract::{FromRef, Path, Query, State, rejection::JsonRejection},
@@ -25,18 +28,14 @@ use axum::{
     routing::{get, post},
 };
 use rainbow_common::batch_requests::BatchRequests;
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
+use rainbow_common::config::global_config::ApplicationGlobalConfig;
 use serde::Deserialize;
 use std::sync::Arc;
-
-use crate::entities::offer::{NegotiationAgentOffersTrait, NewOfferDto};
-use crate::errors::error_adapter::CustomToResponse;
-use crate::http::common::{extract_payload, parse_urn};
 
 #[derive(Clone)]
 pub struct NegotiationAgentOffersRouter {
     service: Arc<dyn NegotiationAgentOffersTrait>,
-    config: Arc<ApplicationProviderConfig>,
+    config: Arc<ApplicationGlobalConfig>,
 }
 
 #[derive(Deserialize)]
@@ -51,14 +50,14 @@ impl FromRef<NegotiationAgentOffersRouter> for Arc<dyn NegotiationAgentOffersTra
     }
 }
 
-impl FromRef<NegotiationAgentOffersRouter> for Arc<ApplicationProviderConfig> {
+impl FromRef<NegotiationAgentOffersRouter> for Arc<ApplicationGlobalConfig> {
     fn from_ref(state: &NegotiationAgentOffersRouter) -> Self {
         state.config.clone()
     }
 }
 
 impl NegotiationAgentOffersRouter {
-    pub fn new(service: Arc<dyn NegotiationAgentOffersTrait>, config: Arc<ApplicationProviderConfig>) -> Self {
+    pub fn new(service: Arc<dyn NegotiationAgentOffersTrait>, config: Arc<ApplicationGlobalConfig>) -> Self {
         Self { service, config }
     }
 

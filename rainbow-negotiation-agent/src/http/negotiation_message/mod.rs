@@ -17,6 +17,9 @@
  *
  */
 
+use crate::entities::negotiation_message::{NegotiationAgentMessagesTrait, NewNegotiationMessageDto};
+use crate::errors::error_adapter::CustomToResponse;
+use crate::http::common::{extract_payload, parse_urn};
 use axum::{
     Json, Router,
     extract::{FromRef, Path, Query, State, rejection::JsonRejection},
@@ -24,18 +27,14 @@ use axum::{
     response::IntoResponse,
     routing::get,
 };
+use rainbow_common::config::global_config::ApplicationGlobalConfig;
 use serde::Deserialize;
 use std::sync::Arc;
-
-use crate::entities::negotiation_message::{NegotiationAgentMessagesTrait, NewNegotiationMessageDto};
-use crate::errors::error_adapter::CustomToResponse;
-use crate::http::common::{extract_payload, parse_urn};
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
 
 #[derive(Clone)]
 pub struct NegotiationAgentMessagesRouter {
     service: Arc<dyn NegotiationAgentMessagesTrait>,
-    config: Arc<ApplicationProviderConfig>,
+    config: Arc<ApplicationGlobalConfig>,
 }
 
 #[derive(Deserialize)]
@@ -50,14 +49,14 @@ impl FromRef<NegotiationAgentMessagesRouter> for Arc<dyn NegotiationAgentMessage
     }
 }
 
-impl FromRef<NegotiationAgentMessagesRouter> for Arc<ApplicationProviderConfig> {
+impl FromRef<NegotiationAgentMessagesRouter> for Arc<ApplicationGlobalConfig> {
     fn from_ref(state: &NegotiationAgentMessagesRouter) -> Self {
         state.config.clone()
     }
 }
 
 impl NegotiationAgentMessagesRouter {
-    pub fn new(service: Arc<dyn NegotiationAgentMessagesTrait>, config: Arc<ApplicationProviderConfig>) -> Self {
+    pub fn new(service: Arc<dyn NegotiationAgentMessagesTrait>, config: Arc<ApplicationGlobalConfig>) -> Self {
         Self { service, config }
     }
 

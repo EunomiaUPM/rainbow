@@ -30,9 +30,23 @@ use crate::entities::agreement::NegotiationAgentAgreementsTrait;
 use crate::entities::negotiation_message::NegotiationAgentMessagesTrait;
 use crate::entities::negotiation_process::NegotiationAgentProcessesTrait;
 use crate::entities::offer::NegotiationAgentOffersTrait;
+use crate::protocols::dsp::facades::FacadeService;
+use crate::protocols::dsp::http::protocol::DspRouter;
+use crate::protocols::dsp::http::rpc::RpcRouter;
+use crate::protocols::dsp::orchestrator::orchestrator::OrchestratorService;
+use crate::protocols::dsp::orchestrator::protocol::protocol::ProtocolOrchestratorService;
+use crate::protocols::dsp::orchestrator::rpc::rpc::RPCOrchestratorService;
+use crate::protocols::dsp::persistence::persistence_protocol::NegotiationPersistenceForProtocolService;
+use crate::protocols::dsp::persistence::persistence_rpc::NegotiationPersistenceForRpcService;
+use crate::protocols::dsp::validator::validators::protocol::validate_state_transition::ValidatedStateTransitionServiceForDsp;
+use crate::protocols::dsp::validator::validators::protocol::validation_dsp_steps::ValidationDspStepsService;
+use crate::protocols::dsp::validator::validators::rpc::validate_state_transition::ValidatedStateTransitionServiceForRcp;
+use crate::protocols::dsp::validator::validators::rpc::validation_rpc_steps::ValidationRpcStepsService;
+use crate::protocols::dsp::validator::validators::validate_payload::ValidatePayloadService;
+use crate::protocols::dsp::validator::validators::validation_helpers::ValidationHelperService;
 use crate::protocols::protocol::ProtocolPluginTrait;
 use axum::Router;
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
+use rainbow_common::config::global_config::ApplicationGlobalConfig;
 use rainbow_common::http_client::HttpClient;
 use std::sync::Arc;
 
@@ -41,7 +55,7 @@ pub struct NegotiationDSP {
     negotiation_agent_message_service: Arc<dyn NegotiationAgentMessagesTrait>,
     negotiation_offer_service: Arc<dyn NegotiationAgentOffersTrait>,
     negotiation_agreement_service: Arc<dyn NegotiationAgentAgreementsTrait>,
-    config: Arc<ApplicationProviderConfig>,
+    config: Arc<ApplicationGlobalConfig>,
 }
 
 impl NegotiationDSP {
@@ -50,7 +64,7 @@ impl NegotiationDSP {
         negotiation_agent_message_service: Arc<dyn NegotiationAgentMessagesTrait>,
         negotiation_offer_service: Arc<dyn NegotiationAgentOffersTrait>,
         negotiation_agreement_service: Arc<dyn NegotiationAgentAgreementsTrait>,
-        config: Arc<ApplicationProviderConfig>,
+        config: Arc<ApplicationGlobalConfig>,
     ) -> Self {
         Self {
             negotiation_agent_message_service,
@@ -80,78 +94,67 @@ impl ProtocolPluginTrait for NegotiationDSP {
         let http_client = Arc::new(HttpClient::new(10, 10));
 
         // Validator
-        // let validator_helper = Arc::new(ValidationHelperService::new(
-        //     self.transfer_agent_process_entities.clone(),
-        // ));
-        // let validator_payload = Arc::new(ValidatePayloadService::new(validator_helper.clone()));
-        // let validator_state_machine_dsp = Arc::new(ValidatedStateTransitionServiceForDsp::new(
-        //     validator_helper.clone(),
-        // ));
-        // let dsp_validator = Arc::new(ValidationDspStepsService::new(
-        //     validator_payload.clone(),
-        //     validator_state_machine_dsp.clone(),
-        //     validator_helper.clone(),
-        // ));
-        // let validator_state_machine_rcp = Arc::new(ValidatedStateTransitionServiceForRcp::new(
-        //     validator_helper.clone(),
-        // ));
-        // let rcp_validator = Arc::new(ValidationRpcStepsService::new(
-        //     validator_payload.clone(),
-        //     validator_state_machine_rcp.clone(),
-        //     validator_helper.clone(),
-        // ));
+        let validator_helper = Arc::new(ValidationHelperService::new(
+            self.negotiation_agent_process_entities.clone(),
+        ));
+        let validator_payload = Arc::new(ValidatePayloadService::new(validator_helper.clone()));
+        let validator_state_machine_dsp = Arc::new(ValidatedStateTransitionServiceForDsp::new(
+            validator_helper.clone(),
+        ));
+        let dsp_validator = Arc::new(ValidationDspStepsService::new(
+            validator_payload.clone(),
+            validator_state_machine_dsp.clone(),
+            validator_helper.clone(),
+        ));
+        let validator_state_machine_rcp = Arc::new(ValidatedStateTransitionServiceForRcp::new(
+            validator_helper.clone(),
+        ));
+        let rcp_validator = Arc::new(ValidationRpcStepsService::new(
+            validator_payload.clone(),
+            validator_state_machine_rcp.clone(),
+            validator_helper.clone(),
+        ));
 
         // http service
-        // let persistence_protocol_service = Arc::new(TransferPersistenceForProtocolService::new(
-        //     self.transfer_agent_message_service.clone(),
-        //     self.transfer_agent_process_entities.clone(),
-        // ));
-        // let persistence_rpc_service = Arc::new(TransferPersistenceForRpcService::new(
-        //     self.transfer_agent_message_service.clone(),
-        //     self.transfer_agent_process_entities.clone(),
-        // ));
-
-        // dataplane
-        // let dataplane = DataplaneSetup::new();
-        // let dataplane_controller = dataplane.get_data_plane_controller(self.config.clone()).await;
-        // let data_plane_facade = Arc::new(DataPlaneProviderFacade::new(dataplane_controller.clone()));
-
-        // data service resolver
-        // let data_service_resolver = Arc::new(DataServiceFacadeServiceForDSProtocol::new(
-        //     self.config.clone(),
-        //     http_client.clone(),
-        // ));
+        let persistence_protocol_service = Arc::new(NegotiationPersistenceForProtocolService::new(
+            self.negotiation_agent_process_entities.clone(),
+            self.negotiation_agent_message_service.clone(),
+            self.negotiation_offer_service.clone(),
+            self.negotiation_agreement_service.clone(),
+        ));
+        let persistence_rpc_service = Arc::new(NegotiationPersistenceForRpcService::new(
+            self.negotiation_agent_process_entities.clone(),
+            self.negotiation_agent_message_service.clone(),
+            self.negotiation_offer_service.clone(),
+            self.negotiation_agreement_service.clone(),
+        ));
 
         // facades
-        // let facades = Arc::new(FacadeService::new(
-        //     data_service_resolver.clone(),
-        //     data_plane_facade.clone(),
-        // ));
+        let facades = Arc::new(FacadeService::new());
 
         // orchestrators
-        // let http_orchestator = Arc::new(ProtocolOrchestratorService::new(
-        //     dsp_validator.clone(),
-        //     persistence_protocol_service.clone(),
-        //     facades.clone(),
-        //     self.config.clone(),
-        // ));
-        // let rpc_orchestator = Arc::new(RPCOrchestratorService::new(
-        //     rcp_validator.clone(),
-        //     persistence_rpc_service,
-        //     self.config.clone(),
-        //     http_client.clone(),
-        // ));
-        // let orchestrator_service = Arc::new(OrchestratorService::new(
-        //     http_orchestator.clone(),
-        //     rpc_orchestator.clone(),
-        // ));
+        let http_orchestator = Arc::new(ProtocolOrchestratorService::new(
+            dsp_validator.clone(),
+            persistence_protocol_service.clone(),
+            facades.clone(),
+            self.config.clone(),
+        ));
+        let rpc_orchestator = Arc::new(RPCOrchestratorService::new(
+            rcp_validator.clone(),
+            persistence_rpc_service,
+            self.config.clone(),
+            http_client.clone(),
+        ));
+        let orchestrator_service = Arc::new(OrchestratorService::new(
+            http_orchestator.clone(),
+            rpc_orchestator.clone(),
+        ));
 
         // router
-        // let dsp_router = DspRouter::new(orchestrator_service.clone(), self.config.clone());
-        // let rcp_router = RpcRouter::new(orchestrator_service.clone(), self.config.clone());
+        let dsp_router = DspRouter::new(orchestrator_service.clone(), self.config.clone());
+        let rcp_router = RpcRouter::new(orchestrator_service.clone(), self.config.clone());
 
-        // Ok(Router::new().merge(dsp_router.router()).merge(rcp_router.router()))
-        Ok(Router::new())
+        Ok(Router::new().merge(dsp_router.router()).merge(rcp_router.router()))
     }
 
     fn build_grpc_router(&self) -> anyhow::Result<Option<Router>> {

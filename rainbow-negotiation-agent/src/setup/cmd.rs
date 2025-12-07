@@ -21,6 +21,7 @@ use crate::setup::application::NegotiationAgentApplication;
 use crate::setup::db_migrations::NegotiationAgentMigration;
 use clap::{Parser, Subcommand};
 use rainbow_common::config::env_extraction::EnvExtraction;
+use rainbow_common::config::global_config::ApplicationGlobalConfig;
 use tracing::debug;
 
 #[derive(Parser, Debug)]
@@ -53,11 +54,13 @@ impl NegotiationCommands {
         match cli.command {
             NegotiationCliCommands::Start(args) => {
                 let config = Self::extract_provider_config(args.env_file)?;
-                NegotiationAgentApplication::run(&config).await?;
+                let config_as_global: ApplicationGlobalConfig = config.into();
+                NegotiationAgentApplication::run(&config_as_global).await?;
             }
             NegotiationCliCommands::Setup(args) => {
                 let config = Self::extract_provider_config(args.env_file)?;
-                NegotiationAgentMigration::run(&config).await?;
+                let config_as_global: ApplicationGlobalConfig = config.into();
+                NegotiationAgentMigration::run(&config_as_global).await?;
             }
         }
         Ok(())

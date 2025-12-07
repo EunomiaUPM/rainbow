@@ -17,6 +17,9 @@
  *
  */
 
+use crate::entities::agreement::{EditAgreementDto, NegotiationAgentAgreementsTrait, NewAgreementDto};
+use crate::errors::error_adapter::CustomToResponse;
+use crate::http::common::{extract_payload, parse_urn};
 use axum::{
     Json, Router,
     extract::{FromRef, Path, Query, State, rejection::JsonRejection},
@@ -25,18 +28,14 @@ use axum::{
     routing::{get, post},
 };
 use rainbow_common::batch_requests::BatchRequests;
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
+use rainbow_common::config::global_config::ApplicationGlobalConfig;
 use serde::Deserialize;
 use std::sync::Arc;
-
-use crate::entities::agreement::{EditAgreementDto, NegotiationAgentAgreementsTrait, NewAgreementDto};
-use crate::errors::error_adapter::CustomToResponse;
-use crate::http::common::{extract_payload, parse_urn};
 
 #[derive(Clone)]
 pub struct NegotiationAgentAgreementsRouter {
     service: Arc<dyn NegotiationAgentAgreementsTrait>,
-    config: Arc<ApplicationProviderConfig>,
+    config: Arc<ApplicationGlobalConfig>,
 }
 
 #[derive(Deserialize)]
@@ -51,14 +50,14 @@ impl FromRef<NegotiationAgentAgreementsRouter> for Arc<dyn NegotiationAgentAgree
     }
 }
 
-impl FromRef<NegotiationAgentAgreementsRouter> for Arc<ApplicationProviderConfig> {
+impl FromRef<NegotiationAgentAgreementsRouter> for Arc<ApplicationGlobalConfig> {
     fn from_ref(state: &NegotiationAgentAgreementsRouter) -> Self {
         state.config.clone()
     }
 }
 
 impl NegotiationAgentAgreementsRouter {
-    pub fn new(service: Arc<dyn NegotiationAgentAgreementsTrait>, config: Arc<ApplicationProviderConfig>) -> Self {
+    pub fn new(service: Arc<dyn NegotiationAgentAgreementsTrait>, config: Arc<ApplicationGlobalConfig>) -> Self {
         Self { service, config }
     }
 

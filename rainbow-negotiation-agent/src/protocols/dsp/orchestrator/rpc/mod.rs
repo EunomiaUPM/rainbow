@@ -16,9 +16,31 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use crate::protocols::dsp::orchestrator::rpc::types::{
+    RpcNegotiationAgreementMessageDto, RpcNegotiationEventAcceptedMessageDto, RpcNegotiationEventFinalizedMessageDto,
+    RpcNegotiationOfferInitMessageDto, RpcNegotiationOfferMessageDto, RpcNegotiationRequestInitMessageDto,
+    RpcNegotiationRequestMessageDto, RpcNegotiationTerminationMessageDto, RpcNegotiationVerificationMessageDto,
+};
 
 pub(crate) mod rpc;
 pub(crate) mod types;
 
 #[async_trait::async_trait]
-pub trait RPCOrchestratorTrait: Send + Sync + 'static {}
+pub trait RPCOrchestratorTrait: Send + Sync + 'static {
+    async fn negotiation_request_init_rpc(&self, input: &RpcNegotiationRequestInitMessageDto) -> anyhow::Result<()>;
+    async fn negotiation_request_rpc(&self, input: &RpcNegotiationRequestMessageDto) -> anyhow::Result<()>;
+    async fn negotiation_offer_init_rpc(&self, input: &RpcNegotiationOfferInitMessageDto) -> anyhow::Result<()>;
+    async fn negotiation_offer_rpc(&self, input: &RpcNegotiationOfferMessageDto) -> anyhow::Result<()>;
+    async fn negotiation_agreement_rpc(&self, input: &RpcNegotiationAgreementMessageDto) -> anyhow::Result<()>;
+    async fn negotiation_agreement_verification_rpc(
+        &self,
+        input: &RpcNegotiationVerificationMessageDto,
+    ) -> anyhow::Result<()>;
+    async fn negotiation_event_accepted_rpc(&self, input: &RpcNegotiationEventAcceptedMessageDto)
+    -> anyhow::Result<()>;
+    async fn negotiation_event_finalized_rpc(
+        &self,
+        input: &RpcNegotiationEventFinalizedMessageDto,
+    ) -> anyhow::Result<()>;
+    async fn negotiation_termination_rpc(&self, input: &RpcNegotiationTerminationMessageDto) -> anyhow::Result<()>;
+}

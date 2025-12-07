@@ -20,10 +20,14 @@
 use crate::entities::negotiation_process::NegotiationProcessDto;
 use crate::protocols::dsp::protocol_types::{
     NegotiationAckMessageDto, NegotiationAgreementMessageDto, NegotiationErrorMessageDto, NegotiationEventMessageDto,
-    NegotiationEventType, NegotiationOfferMessageDto, NegotiationProcessMessageType, NegotiationProcessMessageWrapper,
-    NegotiationRequestMessageDto, NegotiationTerminationMessageDto, NegotiationVerificationMessageDto,
+    NegotiationEventType, NegotiationOfferInitMessageDto, NegotiationOfferMessageDto, NegotiationProcessMessageType,
+    NegotiationProcessMessageWrapper, NegotiationRequestInitMessageDto, NegotiationRequestMessageDto,
+    NegotiationTerminationMessageDto, NegotiationVerificationMessageDto,
 };
 use rainbow_common::protocol::context_field::ContextField;
+use rainbow_common::protocol::contract::contract_odrl::{
+    ContractRequestMessageOfferTypes, OdrlAgreement, OdrlMessageOffer,
+};
 use rainbow_common::utils::get_urn;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
@@ -35,10 +39,11 @@ pub trait RpcNegotiationProcessMessageTrait: Debug + Send + Sync {
     fn get_consumer_pid(&self) -> Option<Urn>;
     fn get_provider_pid(&self) -> Option<Urn>;
     fn get_associated_agent_peer(&self) -> Option<String>;
-    fn get_agreement_id(&self) -> Option<Urn>;
-    fn get_format(&self) -> Option<String>;
+    fn get_offer(&self) -> Option<ContractRequestMessageOfferTypes>;
+    fn get_agreement(&self) -> Option<OdrlAgreement>;
     fn get_provider_address(&self) -> Option<String>;
     fn get_callback_address(&self) -> Option<String>;
+    fn get_event_type(&self) -> Option<NegotiationEventType>;
     fn get_error_code(&self) -> Option<String>;
     fn get_error_reason(&self) -> Option<Vec<String>>;
     fn get_message(&self) -> NegotiationProcessMessageType;
@@ -47,26 +52,30 @@ pub trait RpcNegotiationProcessMessageTrait: Debug + Send + Sync {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
-pub struct RpcNegotiationRequestMessageDto {}
+pub struct RpcNegotiationRequestInitMessageDto {
+    associated_agent_peer: String,
+    provider_address: String,
+    callback_address: String,
+    offer: ContractRequestMessageOfferTypes,
+}
 
-impl Into<NegotiationProcessMessageWrapper<NegotiationRequestMessageDto>> for RpcNegotiationRequestMessageDto {
-    fn into(self) -> NegotiationProcessMessageWrapper<NegotiationRequestMessageDto> {
+impl Into<NegotiationProcessMessageWrapper<NegotiationRequestInitMessageDto>> for RpcNegotiationRequestInitMessageDto {
+    fn into(self) -> NegotiationProcessMessageWrapper<NegotiationRequestInitMessageDto> {
         let consumer_pid = format!("urn:consumer-pid:{}", uuid::Uuid::new_v4());
         let consumer_pid_urn = Urn::from_str(consumer_pid.as_str()).unwrap();
         NegotiationProcessMessageWrapper {
             context: ContextField::default(),
             _type: NegotiationProcessMessageType::NegotiationRequestMessage,
-            dto: NegotiationRequestMessageDto {
-                callback_address: None,
+            dto: NegotiationRequestInitMessageDto {
+                callback_address: Some(self.callback_address),
                 consumer_pid: consumer_pid_urn,
-                provider_pid: None,
-                offer: Default::default(),
+                offer: self.offer,
             },
         }
     }
 }
 
-impl RpcNegotiationProcessMessageTrait for RpcNegotiationRequestMessageDto {
+impl RpcNegotiationProcessMessageTrait for RpcNegotiationRequestInitMessageDto {
     fn get_consumer_pid(&self) -> Option<Urn> {
         None
     }
@@ -76,14 +85,75 @@ impl RpcNegotiationProcessMessageTrait for RpcNegotiationRequestMessageDto {
     }
 
     fn get_associated_agent_peer(&self) -> Option<String> {
+        Some(self.associated_agent_peer.clone())
+    }
+
+    fn get_provider_address(&self) -> Option<String> {
+        Some(self.provider_address.clone())
+    }
+
+    fn get_callback_address(&self) -> Option<String> {
+        Some(self.callback_address.clone())
+    }
+
+    fn get_error_code(&self) -> Option<String> {
         None
     }
 
-    fn get_agreement_id(&self) -> Option<Urn> {
+    fn get_error_reason(&self) -> Option<Vec<String>> {
         None
     }
 
-    fn get_format(&self) -> Option<String> {
+    fn get_message(&self) -> NegotiationProcessMessageType {
+        NegotiationProcessMessageType::NegotiationRequestMessage
+    }
+    fn get_offer(&self) -> Option<ContractRequestMessageOfferTypes> {
+        Some(self.offer.clone())
+    }
+
+    fn get_agreement(&self) -> Option<OdrlAgreement> {
+        None
+    }
+
+    fn get_event_type(&self) -> Option<NegotiationEventType> {
+        None
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+pub struct RpcNegotiationRequestMessageDto {
+    offer: ContractRequestMessageOfferTypes,
+    provider_pid: Urn,
+    consumer_pid: Urn,
+}
+
+impl Into<NegotiationProcessMessageWrapper<NegotiationRequestMessageDto>> for RpcNegotiationRequestMessageDto {
+    fn into(self) -> NegotiationProcessMessageWrapper<NegotiationRequestMessageDto> {
+        NegotiationProcessMessageWrapper {
+            context: ContextField::default(),
+            _type: NegotiationProcessMessageType::NegotiationRequestMessage,
+            dto: NegotiationRequestMessageDto {
+                callback_address: None,
+                consumer_pid: self.consumer_pid,
+                provider_pid: self.provider_pid,
+                offer: self.offer,
+            },
+        }
+    }
+}
+
+impl RpcNegotiationProcessMessageTrait for RpcNegotiationRequestMessageDto {
+    fn get_consumer_pid(&self) -> Option<Urn> {
+        Some(self.consumer_pid.clone())
+    }
+
+    fn get_provider_pid(&self) -> Option<Urn> {
+        Some(self.provider_pid.clone())
+    }
+
+    fn get_associated_agent_peer(&self) -> Option<String> {
         None
     }
 
@@ -106,29 +176,46 @@ impl RpcNegotiationProcessMessageTrait for RpcNegotiationRequestMessageDto {
     fn get_message(&self) -> NegotiationProcessMessageType {
         NegotiationProcessMessageType::NegotiationRequestMessage
     }
+    fn get_offer(&self) -> Option<ContractRequestMessageOfferTypes> {
+        Some(self.offer.clone())
+    }
+
+    fn get_agreement(&self) -> Option<OdrlAgreement> {
+        None
+    }
+
+    fn get_event_type(&self) -> Option<NegotiationEventType> {
+        None
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
-pub struct RpcNegotiationOfferMessageDto {}
+pub struct RpcNegotiationOfferInitMessageDto {
+    associated_agent_peer: String,
+    provider_address: String,
+    callback_address: String,
+    offer: ContractRequestMessageOfferTypes,
+}
 
-impl Into<NegotiationProcessMessageWrapper<NegotiationOfferMessageDto>> for RpcNegotiationOfferMessageDto {
-    fn into(self) -> NegotiationProcessMessageWrapper<NegotiationOfferMessageDto> {
+impl Into<NegotiationProcessMessageWrapper<NegotiationOfferInitMessageDto>> for RpcNegotiationOfferInitMessageDto {
+    fn into(self) -> NegotiationProcessMessageWrapper<NegotiationOfferInitMessageDto> {
+        let provider_pid = format!("urn:provider-pid:{}", uuid::Uuid::new_v4());
+        let provider_pid_urn = Urn::from_str(provider_pid.as_str()).unwrap();
         NegotiationProcessMessageWrapper {
             context: ContextField::default(),
             _type: NegotiationProcessMessageType::NegotiationOfferMessage,
-            dto: NegotiationOfferMessageDto {
-                provider_pid: get_urn(None),
-                offer: Default::default(),
-                consumer_pid: None,
-                callback_address: None,
+            dto: NegotiationOfferInitMessageDto {
+                provider_pid: provider_pid_urn,
+                offer: self.offer,
+                callback_address: Some(self.callback_address),
             },
         }
     }
 }
 
-impl RpcNegotiationProcessMessageTrait for RpcNegotiationOfferMessageDto {
+impl RpcNegotiationProcessMessageTrait for RpcNegotiationOfferInitMessageDto {
     fn get_consumer_pid(&self) -> Option<Urn> {
         None
     }
@@ -138,14 +225,75 @@ impl RpcNegotiationProcessMessageTrait for RpcNegotiationOfferMessageDto {
     }
 
     fn get_associated_agent_peer(&self) -> Option<String> {
+        Some(self.associated_agent_peer.clone())
+    }
+
+    fn get_provider_address(&self) -> Option<String> {
+        Some(self.provider_address.clone())
+    }
+
+    fn get_callback_address(&self) -> Option<String> {
+        Some(self.callback_address.clone())
+    }
+
+    fn get_error_code(&self) -> Option<String> {
         None
     }
 
-    fn get_agreement_id(&self) -> Option<Urn> {
+    fn get_error_reason(&self) -> Option<Vec<String>> {
         None
     }
 
-    fn get_format(&self) -> Option<String> {
+    fn get_message(&self) -> NegotiationProcessMessageType {
+        NegotiationProcessMessageType::NegotiationOfferMessage
+    }
+    fn get_offer(&self) -> Option<ContractRequestMessageOfferTypes> {
+        Some(self.offer.clone())
+    }
+
+    fn get_agreement(&self) -> Option<OdrlAgreement> {
+        None
+    }
+
+    fn get_event_type(&self) -> Option<NegotiationEventType> {
+        None
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+pub struct RpcNegotiationOfferMessageDto {
+    offer: ContractRequestMessageOfferTypes,
+    provider_pid: Urn,
+    consumer_pid: Urn,
+}
+
+impl Into<NegotiationProcessMessageWrapper<NegotiationOfferMessageDto>> for RpcNegotiationOfferMessageDto {
+    fn into(self) -> NegotiationProcessMessageWrapper<NegotiationOfferMessageDto> {
+        NegotiationProcessMessageWrapper {
+            context: ContextField::default(),
+            _type: NegotiationProcessMessageType::NegotiationOfferMessage,
+            dto: NegotiationOfferMessageDto {
+                provider_pid: self.provider_pid,
+                offer: self.offer,
+                consumer_pid: self.consumer_pid,
+                callback_address: None,
+            },
+        }
+    }
+}
+
+impl RpcNegotiationProcessMessageTrait for RpcNegotiationOfferMessageDto {
+    fn get_consumer_pid(&self) -> Option<Urn> {
+        Some(self.consumer_pid.clone())
+    }
+
+    fn get_provider_pid(&self) -> Option<Urn> {
+        Some(self.provider_pid.clone())
+    }
+
+    fn get_associated_agent_peer(&self) -> Option<String> {
         None
     }
 
@@ -168,12 +316,28 @@ impl RpcNegotiationProcessMessageTrait for RpcNegotiationOfferMessageDto {
     fn get_message(&self) -> NegotiationProcessMessageType {
         NegotiationProcessMessageType::NegotiationOfferMessage
     }
+
+    fn get_offer(&self) -> Option<ContractRequestMessageOfferTypes> {
+        Some(self.offer.clone())
+    }
+
+    fn get_agreement(&self) -> Option<OdrlAgreement> {
+        None
+    }
+
+    fn get_event_type(&self) -> Option<NegotiationEventType> {
+        None
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
-pub struct RpcNegotiationAgreementMessageDto {}
+pub struct RpcNegotiationAgreementMessageDto {
+    agreement: OdrlAgreement,
+    provider_pid: Urn,
+    consumer_pid: Urn,
+}
 
 impl Into<NegotiationProcessMessageWrapper<NegotiationAgreementMessageDto>> for RpcNegotiationAgreementMessageDto {
     fn into(self) -> NegotiationProcessMessageWrapper<NegotiationAgreementMessageDto> {
@@ -181,9 +345,9 @@ impl Into<NegotiationProcessMessageWrapper<NegotiationAgreementMessageDto>> for 
             context: ContextField::default(),
             _type: NegotiationProcessMessageType::NegotiationAgreementMessage,
             dto: NegotiationAgreementMessageDto {
-                provider_pid: get_urn(None),
-                consumer_pid: get_urn(None),
-                agreement: Default::default(),
+                consumer_pid: self.consumer_pid,
+                provider_pid: self.provider_pid,
+                agreement: self.agreement,
             },
         }
     }
@@ -191,22 +355,14 @@ impl Into<NegotiationProcessMessageWrapper<NegotiationAgreementMessageDto>> for 
 
 impl RpcNegotiationProcessMessageTrait for RpcNegotiationAgreementMessageDto {
     fn get_consumer_pid(&self) -> Option<Urn> {
-        None
+        Some(self.consumer_pid.clone())
     }
 
     fn get_provider_pid(&self) -> Option<Urn> {
-        None
+        Some(self.provider_pid.clone())
     }
 
     fn get_associated_agent_peer(&self) -> Option<String> {
-        None
-    }
-
-    fn get_agreement_id(&self) -> Option<Urn> {
-        None
-    }
-
-    fn get_format(&self) -> Option<String> {
         None
     }
 
@@ -229,12 +385,27 @@ impl RpcNegotiationProcessMessageTrait for RpcNegotiationAgreementMessageDto {
     fn get_message(&self) -> NegotiationProcessMessageType {
         NegotiationProcessMessageType::NegotiationAgreementMessage
     }
+
+    fn get_offer(&self) -> Option<ContractRequestMessageOfferTypes> {
+        None
+    }
+
+    fn get_agreement(&self) -> Option<OdrlAgreement> {
+        Some(self.agreement.clone())
+    }
+
+    fn get_event_type(&self) -> Option<NegotiationEventType> {
+        None
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
-pub struct RpcNegotiationVerificationMessageDto {}
+pub struct RpcNegotiationVerificationMessageDto {
+    provider_pid: Urn,
+    consumer_pid: Urn,
+}
 
 impl Into<NegotiationProcessMessageWrapper<NegotiationVerificationMessageDto>>
     for RpcNegotiationVerificationMessageDto
@@ -243,29 +414,21 @@ impl Into<NegotiationProcessMessageWrapper<NegotiationVerificationMessageDto>>
         NegotiationProcessMessageWrapper {
             context: ContextField::default(),
             _type: NegotiationProcessMessageType::NegotiationAgreementVerificationMessage,
-            dto: NegotiationVerificationMessageDto { consumer_pid: get_urn(None), provider_pid: get_urn(None) },
+            dto: NegotiationVerificationMessageDto { consumer_pid: self.consumer_pid, provider_pid: self.provider_pid },
         }
     }
 }
 
 impl RpcNegotiationProcessMessageTrait for RpcNegotiationVerificationMessageDto {
     fn get_consumer_pid(&self) -> Option<Urn> {
-        None
+        Some(self.consumer_pid.clone())
     }
 
     fn get_provider_pid(&self) -> Option<Urn> {
-        None
+        Some(self.provider_pid.clone())
     }
 
     fn get_associated_agent_peer(&self) -> Option<String> {
-        None
-    }
-
-    fn get_agreement_id(&self) -> Option<Urn> {
-        None
-    }
-
-    fn get_format(&self) -> Option<String> {
         None
     }
 
@@ -288,45 +451,52 @@ impl RpcNegotiationProcessMessageTrait for RpcNegotiationVerificationMessageDto 
     fn get_message(&self) -> NegotiationProcessMessageType {
         NegotiationProcessMessageType::NegotiationAgreementVerificationMessage
     }
+
+    fn get_offer(&self) -> Option<ContractRequestMessageOfferTypes> {
+        None
+    }
+
+    fn get_agreement(&self) -> Option<OdrlAgreement> {
+        None
+    }
+
+    fn get_event_type(&self) -> Option<NegotiationEventType> {
+        None
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
-pub struct RpcNegotiationEventMessageDto {}
+pub struct RpcNegotiationEventAcceptedMessageDto {
+    provider_pid: Urn,
+    consumer_pid: Urn,
+}
 
-impl Into<NegotiationProcessMessageWrapper<NegotiationEventMessageDto>> for RpcNegotiationEventMessageDto {
+impl Into<NegotiationProcessMessageWrapper<NegotiationEventMessageDto>> for RpcNegotiationEventAcceptedMessageDto {
     fn into(self) -> NegotiationProcessMessageWrapper<NegotiationEventMessageDto> {
         NegotiationProcessMessageWrapper {
             context: ContextField::default(),
             _type: NegotiationProcessMessageType::NegotiationEventMessage(NegotiationEventType::ACCEPTED),
             dto: NegotiationEventMessageDto {
-                consumer_pid: get_urn(None),
-                provider_pid: get_urn(None),
+                consumer_pid: self.consumer_pid,
+                provider_pid: self.provider_pid,
                 event_type: NegotiationEventType::ACCEPTED,
             },
         }
     }
 }
 
-impl RpcNegotiationProcessMessageTrait for RpcNegotiationEventMessageDto {
+impl RpcNegotiationProcessMessageTrait for RpcNegotiationEventAcceptedMessageDto {
     fn get_consumer_pid(&self) -> Option<Urn> {
-        None
+        Some(self.consumer_pid.clone())
     }
 
     fn get_provider_pid(&self) -> Option<Urn> {
-        None
+        Some(self.provider_pid.clone())
     }
 
     fn get_associated_agent_peer(&self) -> Option<String> {
-        None
-    }
-
-    fn get_agreement_id(&self) -> Option<Urn> {
-        None
-    }
-
-    fn get_format(&self) -> Option<String> {
         None
     }
 
@@ -349,51 +519,50 @@ impl RpcNegotiationProcessMessageTrait for RpcNegotiationEventMessageDto {
     fn get_message(&self) -> NegotiationProcessMessageType {
         NegotiationProcessMessageType::NegotiationEventMessage(NegotiationEventType::ACCEPTED)
     }
+    fn get_offer(&self) -> Option<ContractRequestMessageOfferTypes> {
+        None
+    }
+    fn get_agreement(&self) -> Option<OdrlAgreement> {
+        None
+    }
+
+    fn get_event_type(&self) -> Option<NegotiationEventType> {
+        Some(NegotiationEventType::ACCEPTED)
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
-pub struct RpcNegotiationTerminationMessageDto {
-    pub consumer_pid: Urn,
-    pub provider_pid: Urn,
-    pub code: Option<String>,
-    pub reason: Option<Vec<String>>,
+pub struct RpcNegotiationEventFinalizedMessageDto {
+    provider_pid: Urn,
+    consumer_pid: Urn,
 }
 
-impl Into<NegotiationProcessMessageWrapper<NegotiationTerminationMessageDto>> for RpcNegotiationTerminationMessageDto {
-    fn into(self) -> NegotiationProcessMessageWrapper<NegotiationTerminationMessageDto> {
+impl Into<NegotiationProcessMessageWrapper<NegotiationEventMessageDto>> for RpcNegotiationEventFinalizedMessageDto {
+    fn into(self) -> NegotiationProcessMessageWrapper<NegotiationEventMessageDto> {
         NegotiationProcessMessageWrapper {
             context: ContextField::default(),
-            _type: NegotiationProcessMessageType::NegotiationTerminationMessage,
-            dto: NegotiationTerminationMessageDto {
-                consumer_pid: get_urn(None),
-                provider_pid: get_urn(None),
-                code: None,
-                reason: None,
+            _type: NegotiationProcessMessageType::NegotiationEventMessage(NegotiationEventType::ACCEPTED),
+            dto: NegotiationEventMessageDto {
+                consumer_pid: self.consumer_pid,
+                provider_pid: self.provider_pid,
+                event_type: NegotiationEventType::FINALIZED,
             },
         }
     }
 }
 
-impl RpcNegotiationProcessMessageTrait for RpcNegotiationTerminationMessageDto {
+impl RpcNegotiationProcessMessageTrait for RpcNegotiationEventFinalizedMessageDto {
     fn get_consumer_pid(&self) -> Option<Urn> {
-        None
+        Some(self.consumer_pid.clone())
     }
 
     fn get_provider_pid(&self) -> Option<Urn> {
-        None
+        Some(self.provider_pid.clone())
     }
 
     fn get_associated_agent_peer(&self) -> Option<String> {
-        None
-    }
-
-    fn get_agreement_id(&self) -> Option<Urn> {
-        None
-    }
-
-    fn get_format(&self) -> Option<String> {
         None
     }
 
@@ -414,14 +583,95 @@ impl RpcNegotiationProcessMessageTrait for RpcNegotiationTerminationMessageDto {
     }
 
     fn get_message(&self) -> NegotiationProcessMessageType {
-        NegotiationProcessMessageType::NegotiationTerminationMessage
+        NegotiationProcessMessageType::NegotiationEventMessage(NegotiationEventType::ACCEPTED)
+    }
+    fn get_offer(&self) -> Option<ContractRequestMessageOfferTypes> {
+        None
+    }
+    fn get_agreement(&self) -> Option<OdrlAgreement> {
+        None
+    }
+
+    fn get_event_type(&self) -> Option<NegotiationEventType> {
+        Some(NegotiationEventType::FINALIZED)
     }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
-pub struct RpcTransferMessageDto<T> {
+pub struct RpcNegotiationTerminationMessageDto {
+    pub consumer_pid: Urn,
+    pub provider_pid: Urn,
+    pub code: Option<String>,
+    pub reason: Option<Vec<String>>,
+}
+
+impl Into<NegotiationProcessMessageWrapper<NegotiationTerminationMessageDto>> for RpcNegotiationTerminationMessageDto {
+    fn into(self) -> NegotiationProcessMessageWrapper<NegotiationTerminationMessageDto> {
+        NegotiationProcessMessageWrapper {
+            context: ContextField::default(),
+            _type: NegotiationProcessMessageType::NegotiationTerminationMessage,
+            dto: NegotiationTerminationMessageDto {
+                consumer_pid: self.consumer_pid,
+                provider_pid: self.provider_pid,
+                code: None,
+                reason: None,
+            },
+        }
+    }
+}
+
+impl RpcNegotiationProcessMessageTrait for RpcNegotiationTerminationMessageDto {
+    fn get_consumer_pid(&self) -> Option<Urn> {
+        Some(self.consumer_pid.clone())
+    }
+
+    fn get_provider_pid(&self) -> Option<Urn> {
+        Some(self.provider_pid.clone())
+    }
+
+    fn get_associated_agent_peer(&self) -> Option<String> {
+        None
+    }
+
+    fn get_provider_address(&self) -> Option<String> {
+        None
+    }
+
+    fn get_callback_address(&self) -> Option<String> {
+        None
+    }
+
+    fn get_error_code(&self) -> Option<String> {
+        self.code.clone()
+    }
+
+    fn get_error_reason(&self) -> Option<Vec<String>> {
+        self.reason.clone()
+    }
+
+    fn get_message(&self) -> NegotiationProcessMessageType {
+        NegotiationProcessMessageType::NegotiationTerminationMessage
+    }
+
+    fn get_offer(&self) -> Option<ContractRequestMessageOfferTypes> {
+        None
+    }
+
+    fn get_agreement(&self) -> Option<OdrlAgreement> {
+        None
+    }
+
+    fn get_event_type(&self) -> Option<NegotiationEventType> {
+        None
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+pub struct RpcNegotiationMessageDto<T> {
     pub request: T,
     pub response: NegotiationProcessMessageWrapper<NegotiationAckMessageDto>,
     pub transfer_agent_model: NegotiationProcessDto,
@@ -430,7 +680,7 @@ pub struct RpcTransferMessageDto<T> {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
-pub struct RpcTransferErrorDto<T> {
+pub struct RpcNegotiationErrorDto<T> {
     pub request: T,
     pub error: NegotiationProcessMessageWrapper<NegotiationErrorMessageDto>,
 }

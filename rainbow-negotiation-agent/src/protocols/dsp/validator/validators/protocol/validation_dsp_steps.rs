@@ -85,7 +85,7 @@ impl ValidationDspSteps for ValidationDspStepsService {
         Ok(())
     }
 
-    async fn on_transfer_termination(
+    async fn on_contract_termination(
         &self,
         _uri_id: &String,
         _input: &NegotiationProcessMessageWrapper<NegotiationTerminationMessageDto>,
