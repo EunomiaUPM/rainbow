@@ -31,14 +31,17 @@ use crate::protocols::dsp::orchestrator::traits::orchestration_helpers::Orchestr
 use crate::protocols::dsp::persistence::NegotiationPersistenceTrait;
 use crate::protocols::dsp::protocol_types::{
     NegotiationAckMessageDto, NegotiationAgreementMessageDto, NegotiationEventMessageDto, NegotiationEventType,
-    NegotiationOfferMessageDto, NegotiationProcessMessageTrait, NegotiationProcessMessageWrapper,
-    NegotiationRequestInitMessageDto, NegotiationRequestMessageDto, NegotiationTerminationMessageDto,
-    NegotiationVerificationMessageDto,
+    NegotiationOfferInitMessageDto, NegotiationOfferMessageDto, NegotiationProcessMessageTrait,
+    NegotiationProcessMessageWrapper, NegotiationRequestInitMessageDto, NegotiationRequestMessageDto,
+    NegotiationTerminationMessageDto, NegotiationVerificationMessageDto,
 };
 use crate::protocols::dsp::validator::traits::validation_rpc_steps::ValidationRpcSteps;
 use rainbow_common::config::global_config::ApplicationGlobalConfig;
 use rainbow_common::http_client::HttpClient;
 use rainbow_common::protocol::context_field::ContextField;
+use rainbow_common::protocol::contract::contract_odrl::{OdrlAgreement, OdrlMessageOffer, OdrlTypes};
+use rainbow_common::protocol::contract::contract_offer::ContractOfferMessage;
+use rainbow_common::protocol::transfer::TransferRoles;
 use std::str::FromStr;
 use std::sync::Arc;
 use urn::Urn;
@@ -76,387 +79,272 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         let provider_address = self.get_rpc_provider_address_safely(input)?;
         let peer_url = format!("{}/negotiations/request", provider_address);
         let request_body: NegotiationProcessMessageWrapper<NegotiationRequestInitMessageDto> = input.clone().into();
-        dbg!(&request_body);
+        self.http_client.set_auth_token("blabla".to_string()).await;
         let response: NegotiationProcessMessageWrapper<NegotiationAckMessageDto> =
             self.http_client.post_json(peer_url.as_str(), &request_body).await?;
 
         // persist
-        let negotiation_process = self.persistence_service.create_new(input, &response.dto).await?;
+        let negotiation_process = self.persistence_service.create_new(input, &request_body.dto, &response.dto).await?;
 
         let response =
             RpcNegotiationMessageDto { request: input.clone(), response, negotiation_agent_model: negotiation_process };
         Ok(response)
-
-        // // get from input
-        // let request_body: NegotiationProcessMessageWrapper<NegotiationRequestInitMessageDto> = input.clone().into();
-        // let provider_address =
-        //     input.get_provider_address().ok_or_else(|| anyhow::anyhow!("No provider address found"))?;
-        // // create url
-        // let peer_url = format!("{}/negotiations/request", provider_address);
-        // let response: NegotiationProcessMessageWrapper<NegotiationAckMessageDto> =
-        //     self.http_client.post_json(peer_url.as_str(), &request_body).await?;
-        // // persist
-        // let negotiation_process = self
-        //     .persistence_service
-        //     .create_new(input)
-        //     .await?;
-        //
-        // let response =
-        //     RpcNegotiationMessageDto { request: input.clone(), response, negotiation_agent_model: negotiation_process };
-        // Ok(response)
     }
 
     async fn setup_negotiation_request_rpc(
         &self,
         input: &RpcNegotiationRequestMessageDto,
     ) -> anyhow::Result<RpcNegotiationMessageDto<RpcNegotiationRequestMessageDto>> {
-        // self.validator.negotiation_request_rpc(input).await?;
-        // // get from input
-        // let input_negotiation_id = input.get_consumer_pid().unwrap();
-        // // fetch current process
-        // let negotiation_process =
-        //     self.persistence_service.fetch_process(input_negotiation_id.to_string().as_str()).await?;
-        // let provider_pid = negotiation_process.identifiers.get("providerPid").unwrap();
-        // let consumer_pid = negotiation_process.identifiers.get("consumerPid").unwrap();
-        // // create message
-        // let offer = input.get_offer().unwrap();
-        // let negotiation_process_into_trait = NegotiationRequestMessageDto {
-        //     provider_pid: Urn::from_str(provider_pid.as_str())?,
-        //     consumer_pid: Urn::from_str(consumer_pid.as_str())?,
-        //     offer,
-        // };
-        // // get uri
-        // let identifier_key = match negotiation_process.inner.role.as_str() {
-        //     "Provider" => "consumerPid",
-        //     "Consumer" => "providerPid",
-        //     _ => "providerPid",
-        // };
-        // let peer_url_id = negotiation_process.identifiers.get(identifier_key).unwrap();
-        // // facades
-        // // validate, send and persist
-        // let (response, negotiation_process) = self
-        //     .validate_and_send(
-        //         &negotiation_process,
-        //         Arc::new(negotiation_process_into_trait.clone()),
-        //         peer_url_id,
-        //         "request",
-        //     )
-        //     .await?;
-        // // bye!
-        // let response =
-        //     RpcNegotiationMessageDto { request: input.clone(), response, negotiation_agent_model: negotiation_process };
-        // Ok(response)
-        todo!()
+        self.validator.negotiation_request_rpc(input).await?;
+
+        // extract fields
+        let id = self.get_rpc_consumer_pid_safely(input)?.to_string();
+        let current_process = self.persistence_service.fetch_process(id.as_str()).await?;
+        let role = !current_process.inner.role.parse::<TransferRoles>()?;
+        let role_identifier = self.parse_role_into_identifier(&role)?.to_string();
+        let identifier = current_process.identifiers.get(&role_identifier).unwrap();
+        let peer_address = current_process.inner.callback_address.unwrap();
+
+        // send to peer
+        let peer_url = format!("{}/negotiations/{}/request", peer_address, identifier);
+        let request_body: NegotiationProcessMessageWrapper<NegotiationRequestMessageDto> = input.clone().into();
+        self.http_client.set_auth_token("blabla".to_string()).await;
+        let response: NegotiationProcessMessageWrapper<NegotiationAckMessageDto> =
+            self.http_client.post_json(peer_url.as_str(), &request_body).await?;
+
+        // persist
+        let negotiation_process =
+            self.persistence_service.update_with_offer(id.as_str(), input, &request_body.dto, &response.dto).await?;
+
+        let response =
+            RpcNegotiationMessageDto { request: input.clone(), response, negotiation_agent_model: negotiation_process };
+        Ok(response)
     }
 
     async fn setup_negotiation_offer_init_rpc(
         &self,
         input: &RpcNegotiationOfferInitMessageDto,
     ) -> anyhow::Result<RpcNegotiationMessageDto<RpcNegotiationOfferInitMessageDto>> {
-        todo!()
+        self.validator.negotiation_offer_init_rpc(input).await?;
+
+        // send to peer
+        let provider_address = self.get_rpc_provider_address_safely(input)?;
+        let peer_url = format!("{}/negotiations/offers", provider_address);
+        let request_body: NegotiationProcessMessageWrapper<NegotiationOfferInitMessageDto> = input.clone().into();
+        self.http_client.set_auth_token("blabla".to_string()).await;
+        let response: NegotiationProcessMessageWrapper<NegotiationAckMessageDto> =
+            self.http_client.post_json(peer_url.as_str(), &request_body).await?;
+
+        // persist
+        let negotiation_process = self.persistence_service.create_new(input, &request_body.dto, &response.dto).await?;
+
+        let response =
+            RpcNegotiationMessageDto { request: input.clone(), response, negotiation_agent_model: negotiation_process };
+        Ok(response)
     }
 
     async fn setup_negotiation_offer_rpc(
         &self,
         input: &RpcNegotiationOfferMessageDto,
     ) -> anyhow::Result<RpcNegotiationMessageDto<RpcNegotiationOfferMessageDto>> {
-        // self.validator.negotiation_offer_rpc(input).await?;
-        // // get from input
-        // let input_negotiation_id = input.get_consumer_pid().unwrap();
-        // // fetch current process
-        // let negotiation_process =
-        //     self.persistence_service.fetch_process(input_negotiation_id.to_string().as_str()).await?;
-        // let provider_pid = negotiation_process.identifiers.get("providerPid").unwrap();
-        // let consumer_pid = negotiation_process.identifiers.get("consumerPid").unwrap();
-        // // create message
-        // let offer = input.get_offer().unwrap();
-        // let negotiation_process_into_trait = NegotiationOfferMessageDto {
-        //     provider_pid: Urn::from_str(provider_pid.as_str())?,
-        //     consumer_pid: Urn::from_str(consumer_pid.as_str())?,
-        //     offer,
-        //     callback_address: None,
-        // };
-        // // get uri
-        // let identifier_key = match negotiation_process.inner.role.as_str() {
-        //     "Provider" => "consumerPid",
-        //     "Consumer" => "providerPid",
-        //     _ => "providerPid",
-        // };
-        // let peer_url_id = negotiation_process.identifiers.get(identifier_key).unwrap();
-        // // facades
-        // // validate, send and persist
-        // let (response, negotiation_process) = self
-        //     .validate_and_send(
-        //         &negotiation_process,
-        //         Arc::new(negotiation_process_into_trait.clone()),
-        //         peer_url_id,
-        //         "offers",
-        //     )
-        //     .await?;
-        // // bye!
-        // let response =
-        //     RpcNegotiationMessageDto { request: input.clone(), response, negotiation_agent_model: negotiation_process };
-        // Ok(response)
-        todo!()
+        self.validator.negotiation_offer_rpc(input).await?;
+
+        // extract fields
+        let id = self.get_rpc_consumer_pid_safely(input)?.to_string();
+        let current_process = self.persistence_service.fetch_process(id.as_str()).await?;
+        let role = !current_process.inner.role.parse::<TransferRoles>()?;
+        let role_identifier = self.parse_role_into_identifier(&role)?.to_string();
+        let identifier = current_process.identifiers.get(&role_identifier).unwrap();
+        let peer_address = current_process.inner.callback_address.unwrap();
+
+        // send to peer
+        let peer_url = format!("{}/negotiations/{}/offers", peer_address, identifier);
+        let request_body: NegotiationProcessMessageWrapper<NegotiationOfferMessageDto> = input.clone().into();
+        self.http_client.set_auth_token("blabla".to_string()).await;
+        let response: NegotiationProcessMessageWrapper<NegotiationAckMessageDto> =
+            self.http_client.post_json(peer_url.as_str(), &request_body).await?;
+
+        // persist
+        let negotiation_process =
+            self.persistence_service.update_with_offer(id.as_str(), input, &request_body.dto, &response.dto).await?;
+
+        let response =
+            RpcNegotiationMessageDto { request: input.clone(), response, negotiation_agent_model: negotiation_process };
+        Ok(response)
     }
 
     async fn setup_negotiation_agreement_rpc(
         &self,
         input: &RpcNegotiationAgreementMessageDto,
     ) -> anyhow::Result<RpcNegotiationMessageDto<RpcNegotiationAgreementMessageDto>> {
-        // self.validator.negotiation_agreement_rpc(input).await?;
-        // // get from input
-        // let input_negotiation_id = input.get_consumer_pid().unwrap();
-        // // fetch current process
-        // let negotiation_process =
-        //     self.persistence_service.fetch_process(input_negotiation_id.to_string().as_str()).await?;
-        // let provider_pid = negotiation_process.identifiers.get("providerPid").unwrap();
-        // let consumer_pid = negotiation_process.identifiers.get("consumerPid").unwrap();
-        // // create message
-        // let agreement = input.get_agreement().unwrap();
-        // let negotiation_process_into_trait = NegotiationAgreementMessageDto {
-        //     provider_pid: Urn::from_str(provider_pid.as_str())?,
-        //     consumer_pid: Urn::from_str(consumer_pid.as_str())?,
-        //     agreement,
-        // };
-        // // get uri
-        // let identifier_key = match negotiation_process.inner.role.as_str() {
-        //     "Provider" => "consumerPid",
-        //     "Consumer" => "providerPid",
-        //     _ => "providerPid",
-        // };
-        // let peer_url_id = negotiation_process.identifiers.get(identifier_key).unwrap();
-        // // facades
-        // // validate, send and persist
-        // let (response, negotiation_process) = self
-        //     .validate_and_send(
-        //         &negotiation_process,
-        //         Arc::new(negotiation_process_into_trait.clone()),
-        //         peer_url_id,
-        //         "agreement",
-        //     )
-        //     .await?;
-        // // bye!
-        // let response =
-        //     RpcNegotiationMessageDto { request: input.clone(), response, negotiation_agent_model: negotiation_process };
-        // Ok(response)
-        todo!()
+        self.validator.negotiation_agreement_rpc(input).await?;
+        // extract fields
+        let id = self.get_rpc_consumer_pid_safely(input)?.to_string();
+        let current_process = self.persistence_service.fetch_process(id.as_str()).await?;
+        let role = !current_process.inner.role.parse::<TransferRoles>()?;
+        let role_identifier = self.parse_role_into_identifier(&role)?.to_string();
+        let identifier = current_process.identifiers.get(&role_identifier).unwrap();
+        let peer_address = current_process.inner.callback_address.unwrap();
+
+        // get last offer
+        let last_offer =
+            self.persistence_service.fetch_last_offer_by_process(current_process.inner.id.as_str()).await?;
+        let offer = serde_json::from_value::<OdrlMessageOffer>(last_offer.inner.offer_content)?;
+
+        // send to peer
+        let peer_url = format!("{}/negotiations/{}/agreement", peer_address, identifier);
+        let mut request_body: NegotiationProcessMessageWrapper<NegotiationAgreementMessageDto> = input.clone().into();
+        request_body.dto.agreement = OdrlAgreement {
+            id: self.create_entity_urn("agreement")?,
+            profile: offer.profile,
+            permission: offer.permission,
+            obligation: offer.obligation,
+            _type: OdrlTypes::Agreement,
+            target: offer.target,
+            assigner: "".to_string(),
+            assignee: "".to_string(),
+            timestamp: Some(chrono::Utc::now().timestamp().to_string()),
+            prohibition: offer.prohibition,
+        };
+        self.http_client.set_auth_token("blabla".to_string()).await;
+        let response: NegotiationProcessMessageWrapper<NegotiationAckMessageDto> =
+            self.http_client.post_json(peer_url.as_str(), &request_body).await?;
+
+        // persist
+        let negotiation_process = self
+            .persistence_service
+            .update_with_new_agreement(id.as_str(), input, &request_body.dto, &response.dto)
+            .await?;
+
+        let response =
+            RpcNegotiationMessageDto { request: input.clone(), response, negotiation_agent_model: negotiation_process };
+        Ok(response)
     }
 
     async fn setup_negotiation_agreement_verification_rpc(
         &self,
         input: &RpcNegotiationVerificationMessageDto,
     ) -> anyhow::Result<RpcNegotiationMessageDto<RpcNegotiationVerificationMessageDto>> {
-        // self.validator.negotiation_agreement_verification_rpc(input).await?;
-        // // get from input
-        // let input_negotiation_id = input.get_consumer_pid().unwrap();
-        // // fetch current process
-        // let negotiation_process =
-        //     self.persistence_service.fetch_process(input_negotiation_id.to_string().as_str()).await?;
-        // let provider_pid = negotiation_process.identifiers.get("providerPid").unwrap();
-        // let consumer_pid = negotiation_process.identifiers.get("consumerPid").unwrap();
-        // // create message
-        // let agreement = input.get_agreement().unwrap();
-        // let negotiation_process_into_trait = NegotiationVerificationMessageDto {
-        //     provider_pid: Urn::from_str(provider_pid.as_str())?,
-        //     consumer_pid: Urn::from_str(consumer_pid.as_str())?,
-        // };
-        // // get uri
-        // let identifier_key = match negotiation_process.inner.role.as_str() {
-        //     "Provider" => "consumerPid",
-        //     "Consumer" => "providerPid",
-        //     _ => "providerPid",
-        // };
-        // let peer_url_id = negotiation_process.identifiers.get(identifier_key).unwrap();
-        // // facades
-        // // validate, send and persist
-        // let (response, negotiation_process) = self
-        //     .validate_and_send(
-        //         &negotiation_process,
-        //         Arc::new(negotiation_process_into_trait.clone()),
-        //         peer_url_id,
-        //         "agreement/verification",
-        //     )
-        //     .await?;
-        // // bye!
-        // let response =
-        //     RpcNegotiationMessageDto { request: input.clone(), response, negotiation_agent_model: negotiation_process };
-        // Ok(response)
-        todo!()
+        self.validator.negotiation_agreement_verification_rpc(input).await?;
+
+        // extract fields
+        let id = self.get_rpc_consumer_pid_safely(input)?.to_string();
+        let current_process = self.persistence_service.fetch_process(id.as_str()).await?;
+        let role = !current_process.inner.role.parse::<TransferRoles>()?;
+        let role_identifier = self.parse_role_into_identifier(&role)?.to_string();
+        let identifier = current_process.identifiers.get(&role_identifier).unwrap();
+        let peer_address = current_process.inner.callback_address.unwrap();
+
+        // send to peer
+        let peer_url = format!(
+            "{}/negotiations/{}/agreement/verification",
+            peer_address, identifier
+        );
+        let request_body: NegotiationProcessMessageWrapper<NegotiationVerificationMessageDto> = input.clone().into();
+        self.http_client.set_auth_token("blabla".to_string()).await;
+        let response: NegotiationProcessMessageWrapper<NegotiationAckMessageDto> =
+            self.http_client.post_json(peer_url.as_str(), &request_body).await?;
+
+        // persist
+        let negotiation_process = self
+            .persistence_service
+            .update_with_agreement(id.as_str(), input, &request_body.dto, &response.dto)
+            .await?;
+
+        let response =
+            RpcNegotiationMessageDto { request: input.clone(), response, negotiation_agent_model: negotiation_process };
+        Ok(response)
     }
 
     async fn setup_negotiation_event_accepted_rpc(
         &self,
         input: &RpcNegotiationEventAcceptedMessageDto,
     ) -> anyhow::Result<RpcNegotiationMessageDto<RpcNegotiationEventAcceptedMessageDto>> {
-        // self.validator.negotiation_event_accepted_rpc(input).await?;
-        // // get from input
-        // let input_negotiation_id = input.get_consumer_pid().unwrap();
-        // // fetch current process
-        // let negotiation_process =
-        //     self.persistence_service.fetch_process(input_negotiation_id.to_string().as_str()).await?;
-        // let provider_pid = negotiation_process.identifiers.get("providerPid").unwrap();
-        // let consumer_pid = negotiation_process.identifiers.get("consumerPid").unwrap();
-        // // create message
-        // let agreement = input.get_agreement().unwrap();
-        // let negotiation_process_into_trait = NegotiationEventMessageDto {
-        //     provider_pid: Urn::from_str(provider_pid.as_str())?,
-        //     consumer_pid: Urn::from_str(consumer_pid.as_str())?,
-        //     event_type: NegotiationEventType::ACCEPTED,
-        // };
-        // // get uri
-        // let identifier_key = match negotiation_process.inner.role.as_str() {
-        //     "Provider" => "consumerPid",
-        //     "Consumer" => "providerPid",
-        //     _ => "providerPid",
-        // };
-        // let peer_url_id = negotiation_process.identifiers.get(identifier_key).unwrap();
-        // // facades
-        // // validate, send and persist
-        // let (response, negotiation_process) = self
-        //     .validate_and_send(
-        //         &negotiation_process,
-        //         Arc::new(negotiation_process_into_trait.clone()),
-        //         peer_url_id,
-        //         "events",
-        //     )
-        //     .await?;
-        // // bye!
-        // let response =
-        //     RpcNegotiationMessageDto { request: input.clone(), response, negotiation_agent_model: negotiation_process };
-        // Ok(response)
-        todo!()
+        self.validator.negotiation_event_accepted_rpc(input).await?;
+
+        // extract fields
+        let id = self.get_rpc_consumer_pid_safely(input)?.to_string();
+        let current_process = self.persistence_service.fetch_process(id.as_str()).await?;
+        let role = !current_process.inner.role.parse::<TransferRoles>()?;
+        let role_identifier = self.parse_role_into_identifier(&role)?.to_string();
+        let identifier = current_process.identifiers.get(&role_identifier).unwrap();
+        let peer_address = current_process.inner.callback_address.unwrap();
+
+        // send to peer
+        let peer_url = format!("{}/negotiations/{}/events", peer_address, identifier);
+        let request_body: NegotiationProcessMessageWrapper<NegotiationEventMessageDto> = input.clone().into();
+        self.http_client.set_auth_token("blabla".to_string()).await;
+        let response: NegotiationProcessMessageWrapper<NegotiationAckMessageDto> =
+            self.http_client.post_json(peer_url.as_str(), &request_body).await?;
+
+        // persist
+        let negotiation_process =
+            self.persistence_service.update(id.as_str(), input, &request_body.dto, &response.dto).await?;
+
+        let response =
+            RpcNegotiationMessageDto { request: input.clone(), response, negotiation_agent_model: negotiation_process };
+        Ok(response)
     }
 
     async fn setup_negotiation_event_finalized_rpc(
         &self,
         input: &RpcNegotiationEventFinalizedMessageDto,
     ) -> anyhow::Result<RpcNegotiationMessageDto<RpcNegotiationEventFinalizedMessageDto>> {
-        // self.validator.negotiation_event_finalized_rpc(input).await?;
-        // // get from input
-        // let input_negotiation_id = input.get_consumer_pid().unwrap();
-        // // fetch current process
-        // let negotiation_process =
-        //     self.persistence_service.fetch_process(input_negotiation_id.to_string().as_str()).await?;
-        // let provider_pid = negotiation_process.identifiers.get("providerPid").unwrap();
-        // let consumer_pid = negotiation_process.identifiers.get("consumerPid").unwrap();
-        // // create message
-        // let agreement = input.get_agreement().unwrap();
-        // let negotiation_process_into_trait = NegotiationEventMessageDto {
-        //     provider_pid: Urn::from_str(provider_pid.as_str())?,
-        //     consumer_pid: Urn::from_str(consumer_pid.as_str())?,
-        //     event_type: NegotiationEventType::FINALIZED,
-        // };
-        // // get uri
-        // let identifier_key = match negotiation_process.inner.role.as_str() {
-        //     "Provider" => "consumerPid",
-        //     "Consumer" => "providerPid",
-        //     _ => "providerPid",
-        // };
-        // let peer_url_id = negotiation_process.identifiers.get(identifier_key).unwrap();
-        // // facades
-        // // validate, send and persist
-        // let (response, negotiation_process) = self
-        //     .validate_and_send(
-        //         &negotiation_process,
-        //         Arc::new(negotiation_process_into_trait.clone()),
-        //         peer_url_id,
-        //         "events",
-        //     )
-        //     .await?;
-        // // bye!
-        // let response =
-        //     RpcNegotiationMessageDto { request: input.clone(), response, negotiation_agent_model: negotiation_process };
-        // Ok(response)
-        todo!()
+        self.validator.negotiation_event_finalized_rpc(input).await?;
+
+        // extract fields
+        let id = self.get_rpc_consumer_pid_safely(input)?.to_string();
+        let current_process = self.persistence_service.fetch_process(id.as_str()).await?;
+        let role = !current_process.inner.role.parse::<TransferRoles>()?;
+        let role_identifier = self.parse_role_into_identifier(&role)?.to_string();
+        let identifier = current_process.identifiers.get(&role_identifier).unwrap();
+        let peer_address = current_process.inner.callback_address.unwrap();
+
+        // send to peer
+        let peer_url = format!("{}/negotiations/{}/events", peer_address, identifier);
+        let request_body: NegotiationProcessMessageWrapper<NegotiationEventMessageDto> = input.clone().into();
+        self.http_client.set_auth_token("blabla".to_string()).await;
+        let response: NegotiationProcessMessageWrapper<NegotiationAckMessageDto> =
+            self.http_client.post_json(peer_url.as_str(), &request_body).await?;
+
+        // persist
+        let negotiation_process = self
+            .persistence_service
+            .update_with_agreement(id.as_str(), input, &request_body.dto, &response.dto)
+            .await?;
+
+        let response =
+            RpcNegotiationMessageDto { request: input.clone(), response, negotiation_agent_model: negotiation_process };
+        Ok(response)
     }
 
     async fn setup_negotiation_termination_rpc(
         &self,
         input: &RpcNegotiationTerminationMessageDto,
     ) -> anyhow::Result<RpcNegotiationMessageDto<RpcNegotiationTerminationMessageDto>> {
-        // self.validator.negotiation_termination_rpc(input).await?;
-        // // get from input
-        // let input_negotiation_id = input.get_consumer_pid().unwrap();
-        // // fetch current process
-        // let negotiation_process =
-        //     self.persistence_service.fetch_process(input_negotiation_id.to_string().as_str()).await?;
-        // let provider_pid = negotiation_process.identifiers.get("providerPid").unwrap();
-        // let consumer_pid = negotiation_process.identifiers.get("consumerPid").unwrap();
-        // // create message
-        // let code = input.get_error_code();
-        // let reason = input.get_error_reason();
-        // let negotiation_process_into_trait = NegotiationTerminationMessageDto {
-        //     provider_pid: Urn::from_str(provider_pid.as_str())?,
-        //     consumer_pid: Urn::from_str(consumer_pid.as_str())?,
-        //     code,
-        //     reason,
-        // };
-        // // get uri
-        // let identifier_key = match negotiation_process.inner.role.as_str() {
-        //     "Provider" => "consumerPid",
-        //     "Consumer" => "providerPid",
-        //     _ => "providerPid",
-        // };
-        // let peer_url_id = negotiation_process.identifiers.get(identifier_key).unwrap();
-        // // facades
-        // // validate, send and persist
-        // let (response, negotiation_process) = self
-        //     .validate_and_send(
-        //         &negotiation_process,
-        //         Arc::new(negotiation_process_into_trait.clone()),
-        //         peer_url_id,
-        //         "events",
-        //     )
-        //     .await?;
-        // // bye!
-        // let response =
-        //     RpcNegotiationMessageDto { request: input.clone(), response, negotiation_agent_model: negotiation_process };
-        // Ok(response)
-        todo!()
-    }
-}
+        self.validator.negotiation_termination_rpc(input).await?;
 
-impl RPCOrchestratorService {
-    // async fn validate_and_send<T>(
-    //     &self,
-    //     negotiation_process: &NegotiationProcessDto,
-    //     payload: Arc<T>,
-    //     peer_url_id: &str,
-    //     url_suffix: &str,
-    // ) -> anyhow::Result<(
-    //     NegotiationProcessMessageWrapper<NegotiationAckMessageDto>,
-    //     NegotiationProcessDto,
-    // )>
-    // where
-    //     T: NegotiationProcessMessageTrait + 'static,
-    // {
-    //     // self.state_machine_service.validate_transition(None, payload.clone()).await?;
-    //     // self.validator_service.validate(None, payload.clone()).await?;
-    //     // where to send
-    //     let callback_url = negotiation_process.inner.callback_address.clone().unwrap_or("".to_string());
-    //     let peer_url = format!(
-    //         "{}/negotiations/{}/{}",
-    //         callback_url, peer_url_id, url_suffix
-    //     );
-    //     // create final message
-    //     let message = NegotiationProcessMessageWrapper {
-    //         context: ContextField::default(),
-    //         _type: payload.get_message(),
-    //         dto: payload.as_ref().clone(),
-    //     };
-    //     // send message to peer url
-    //     let response: NegotiationProcessMessageWrapper<NegotiationAckMessageDto> =
-    //         self.http_client.post_json(peer_url.as_str(), &message).await?;
-    //     // persist
-    //     let negotiation_process = self
-    //         .persistence_service
-    //         .update(
-    //             &negotiation_process.inner.id,
-    //             &payload.as_ref().clone(),
-    //         )
-    //         .await?;
-    //     // bye!
-    //     Ok((response, negotiation_process))
-    // }
+        // extract fields
+        let id = self.get_rpc_consumer_pid_safely(input)?.to_string();
+        let current_process = self.persistence_service.fetch_process(id.as_str()).await?;
+        let role = !current_process.inner.role.parse::<TransferRoles>()?;
+        let role_identifier = self.parse_role_into_identifier(&role)?.to_string();
+        let identifier = current_process.identifiers.get(&role_identifier).unwrap();
+        let peer_address = current_process.inner.callback_address.unwrap();
+
+        // send to peer
+        let peer_url = format!("{}/negotiations/{}/termination", peer_address, identifier);
+        let request_body: NegotiationProcessMessageWrapper<NegotiationTerminationMessageDto> = input.clone().into();
+        self.http_client.set_auth_token("blabla".to_string()).await;
+        let response: NegotiationProcessMessageWrapper<NegotiationAckMessageDto> =
+            self.http_client.post_json(peer_url.as_str(), &request_body).await?;
+
+        // persist
+        let negotiation_process =
+            self.persistence_service.update(id.as_str(), input, &request_body.dto, &response.dto).await?;
+
+        let response =
+            RpcNegotiationMessageDto { request: input.clone(), response, negotiation_agent_model: negotiation_process };
+        Ok(response)
+    }
 }

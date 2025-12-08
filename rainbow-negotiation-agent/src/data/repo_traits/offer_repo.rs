@@ -32,6 +32,10 @@ pub trait OfferRepoTrait: Send + Sync {
     ) -> anyhow::Result<Vec<offer::Model>, OfferRepoErrors>;
     async fn get_batch_offers(&self, ids: &Vec<Urn>) -> anyhow::Result<Vec<offer::Model>, OfferRepoErrors>;
     async fn get_offers_by_negotiation_process(&self, id: &Urn) -> anyhow::Result<Vec<offer::Model>, OfferRepoErrors>;
+    async fn get_last_offer_by_negotiation_process(
+        &self,
+        id: &Urn,
+    ) -> anyhow::Result<Option<offer::Model>, OfferRepoErrors>;
     async fn get_offer_by_id(&self, id: &Urn) -> anyhow::Result<Option<offer::Model>, OfferRepoErrors>;
     async fn get_offer_by_negotiation_message(&self, id: &Urn)
     -> anyhow::Result<Option<offer::Model>, OfferRepoErrors>;

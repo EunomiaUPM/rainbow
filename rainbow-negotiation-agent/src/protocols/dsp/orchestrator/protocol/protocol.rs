@@ -68,7 +68,6 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
         NegotiationProcessMessageWrapper<NegotiationAckMessageDto>,
         bool,
     )> {
-        dbg!(&input);
         self.validator.on_contract_request_init(&input).await?;
 
         // persist

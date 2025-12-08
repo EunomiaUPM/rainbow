@@ -35,7 +35,7 @@ clap = { version = "4.4.9", features = [
 ] }
 base64 = "0.22.1"
 tokio = { version = "1.35.0", features = ["full"] }
-anyhow = "1.0.80"
+anyhow = { version = "1.0.80", features = ["backtrace"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 axum = { version = "0.7.5", features = ["ws"] }

@@ -346,7 +346,6 @@ impl RpcNegotiationProcessMessageTrait for RpcNegotiationOfferMessageDto {
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct RpcNegotiationAgreementMessageDto {
-    agreement: OdrlAgreement,
     provider_pid: Urn,
     consumer_pid: Urn,
 }
@@ -359,7 +358,7 @@ impl Into<NegotiationProcessMessageWrapper<NegotiationAgreementMessageDto>> for 
             dto: NegotiationAgreementMessageDto {
                 consumer_pid: self.consumer_pid,
                 provider_pid: self.provider_pid,
-                agreement: self.agreement,
+                agreement: OdrlAgreement::default(),
             },
         }
     }
@@ -403,7 +402,7 @@ impl RpcNegotiationProcessMessageTrait for RpcNegotiationAgreementMessageDto {
     }
 
     fn get_agreement(&self) -> Option<OdrlAgreement> {
-        Some(self.agreement.clone())
+        None
     }
 
     fn get_event_type(&self) -> Option<NegotiationEventType> {
@@ -565,7 +564,7 @@ impl Into<NegotiationProcessMessageWrapper<NegotiationEventMessageDto>> for RpcN
     fn into(self) -> NegotiationProcessMessageWrapper<NegotiationEventMessageDto> {
         NegotiationProcessMessageWrapper {
             context: ContextField::default(),
-            _type: NegotiationProcessMessageType::NegotiationEventMessage(NegotiationEventType::ACCEPTED),
+            _type: NegotiationProcessMessageType::NegotiationEventMessage(NegotiationEventType::FINALIZED),
             dto: NegotiationEventMessageDto {
                 consumer_pid: self.consumer_pid,
                 provider_pid: self.provider_pid,
@@ -605,7 +604,7 @@ impl RpcNegotiationProcessMessageTrait for RpcNegotiationEventFinalizedMessageDt
     }
 
     fn get_message(&self) -> NegotiationProcessMessageType {
-        NegotiationProcessMessageType::NegotiationEventMessage(NegotiationEventType::ACCEPTED)
+        NegotiationProcessMessageType::NegotiationEventMessage(NegotiationEventType::FINALIZED)
     }
     fn get_offer(&self) -> Option<ContractRequestMessageOfferTypes> {
         None
