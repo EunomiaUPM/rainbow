@@ -25,6 +25,7 @@ use rainbow_common::protocol::contract::contract_odrl::{
     ContractRequestMessageOfferTypes, OdrlAgreement, OdrlMessageOffer,
 };
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::fmt::{Debug, Display};
 use std::str::FromStr;
 use tracing::error;
@@ -56,6 +57,7 @@ pub trait NegotiationProcessMessageTrait: Debug + Send + Sync {
     fn get_error_reason(&self) -> Option<Vec<String>>;
     fn get_state(&self) -> Option<NegotiationProcessState>;
     fn get_message(&self) -> NegotiationProcessMessageType;
+    fn as_json(&self) -> Value;
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -107,6 +109,10 @@ impl NegotiationProcessMessageTrait for NegotiationRequestInitMessageDto {
     fn get_message(&self) -> NegotiationProcessMessageType {
         NegotiationProcessMessageType::NegotiationRequestMessage
     }
+
+    fn as_json(&self) -> Value {
+        serde_json::to_value(self).unwrap()
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -116,7 +122,6 @@ pub struct NegotiationRequestMessageDto {
     pub consumer_pid: Urn,
     pub provider_pid: Urn,
     pub offer: ContractRequestMessageOfferTypes,
-    pub callback_address: Option<String>,
 }
 
 impl NegotiationProcessMessageTrait for NegotiationRequestMessageDto {
@@ -141,7 +146,7 @@ impl NegotiationProcessMessageTrait for NegotiationRequestMessageDto {
     }
 
     fn get_callback_address(&self) -> Option<String> {
-        self.callback_address.clone()
+        None
     }
 
     fn get_error_code(&self) -> Option<String> {
@@ -158,6 +163,9 @@ impl NegotiationProcessMessageTrait for NegotiationRequestMessageDto {
 
     fn get_message(&self) -> NegotiationProcessMessageType {
         NegotiationProcessMessageType::NegotiationRequestMessage
+    }
+    fn as_json(&self) -> Value {
+        serde_json::to_value(self).unwrap()
     }
 }
 
@@ -209,6 +217,9 @@ impl NegotiationProcessMessageTrait for NegotiationOfferInitMessageDto {
 
     fn get_message(&self) -> NegotiationProcessMessageType {
         NegotiationProcessMessageType::NegotiationOfferMessage
+    }
+    fn as_json(&self) -> Value {
+        serde_json::to_value(self).unwrap()
     }
 }
 
@@ -262,6 +273,9 @@ impl NegotiationProcessMessageTrait for NegotiationOfferMessageDto {
     fn get_message(&self) -> NegotiationProcessMessageType {
         NegotiationProcessMessageType::NegotiationOfferMessage
     }
+    fn as_json(&self) -> Value {
+        serde_json::to_value(self).unwrap()
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -313,6 +327,9 @@ impl NegotiationProcessMessageTrait for NegotiationAgreementMessageDto {
     fn get_message(&self) -> NegotiationProcessMessageType {
         NegotiationProcessMessageType::NegotiationAgreementMessage
     }
+    fn as_json(&self) -> Value {
+        serde_json::to_value(self).unwrap()
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -362,6 +379,9 @@ impl NegotiationProcessMessageTrait for NegotiationVerificationMessageDto {
 
     fn get_message(&self) -> NegotiationProcessMessageType {
         NegotiationProcessMessageType::NegotiationAgreementVerificationMessage
+    }
+    fn as_json(&self) -> Value {
+        serde_json::to_value(self).unwrap()
     }
 }
 
@@ -413,6 +433,9 @@ impl NegotiationProcessMessageTrait for NegotiationEventMessageDto {
 
     fn get_message(&self) -> NegotiationProcessMessageType {
         NegotiationProcessMessageType::NegotiationEventMessage(self.event_type.clone())
+    }
+    fn as_json(&self) -> Value {
+        serde_json::to_value(self).unwrap()
     }
 }
 
@@ -466,6 +489,9 @@ impl NegotiationProcessMessageTrait for NegotiationTerminationMessageDto {
     fn get_message(&self) -> NegotiationProcessMessageType {
         NegotiationProcessMessageType::NegotiationTerminationMessage
     }
+    fn as_json(&self) -> Value {
+        serde_json::to_value(self).unwrap()
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -516,6 +542,9 @@ impl NegotiationProcessMessageTrait for NegotiationAckMessageDto {
 
     fn get_message(&self) -> NegotiationProcessMessageType {
         NegotiationProcessMessageType::NegotiationProcess
+    }
+    fn as_json(&self) -> Value {
+        serde_json::to_value(self).unwrap()
     }
 }
 
@@ -568,6 +597,9 @@ impl NegotiationProcessMessageTrait for NegotiationErrorMessageDto {
 
     fn get_message(&self) -> NegotiationProcessMessageType {
         NegotiationProcessMessageType::NegotiationError
+    }
+    fn as_json(&self) -> Value {
+        serde_json::to_value(self).unwrap()
     }
 }
 

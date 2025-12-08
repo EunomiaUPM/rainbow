@@ -41,6 +41,8 @@ pub trait NegotiationPersistenceTrait: Send + Sync {
         protocol: &str,
         direction: &str,
         peer_address: Option<String>,
+        provider_address: Option<String>,
+        ack_message_dto: Arc<dyn NegotiationProcessMessageTrait>,
         payload_dto: Arc<dyn NegotiationProcessMessageTrait>,
         payload_value: serde_json::Value,
     ) -> anyhow::Result<NegotiationProcessDto>;

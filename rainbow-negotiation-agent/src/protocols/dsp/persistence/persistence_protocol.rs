@@ -94,6 +94,8 @@ impl NegotiationPersistenceTrait for NegotiationPersistenceForProtocolService {
         protocol: &str,
         direction: &str,
         peer_address: Option<String>,
+        provider_address: Option<String>,
+        ack_message_dto: Arc<dyn NegotiationProcessMessageTrait>,
         payload_dto: Arc<dyn NegotiationProcessMessageTrait>,
         payload_value: Value,
     ) -> anyhow::Result<NegotiationProcessDto> {
@@ -118,12 +120,16 @@ impl NegotiationPersistenceTrait for NegotiationPersistenceForProtocolService {
             NegotiationProcessMessageType::NegotiationRequestMessage => {
                 format!("urn:provider-pid:{}", uuid::Uuid::new_v4())
             }
-            NegotiationProcessMessageType::NegotiationOfferMessage => peer_address.clone().unwrap(),
+            NegotiationProcessMessageType::NegotiationOfferMessage => {
+                payload_dto.get_provider_pid().unwrap().to_string()
+            }
             _ => "".to_string(),
         };
         identifiers.insert("providerPid".to_string(), provider_pid);
         let consumer_pid = match dto_message_type {
-            NegotiationProcessMessageType::NegotiationRequestMessage => peer_address.clone().unwrap(),
+            NegotiationProcessMessageType::NegotiationRequestMessage => {
+                payload_dto.get_consumer_pid().unwrap().to_string()
+            }
             NegotiationProcessMessageType::NegotiationOfferMessage => {
                 format!("urn:consumer-pid:{}", uuid::Uuid::new_v4())
             }
@@ -141,7 +147,7 @@ impl NegotiationPersistenceTrait for NegotiationPersistenceForProtocolService {
                 state_attribute: None,
                 associated_agent_peer: "".to_string(),
                 protocol: protocol.to_string(),
-                callback_address: peer_address,
+                callback_address: payload_dto.get_callback_address().clone(),
                 role: role_from_message_type.to_string(),
                 properties: None,
                 identifiers: Some(identifiers),

@@ -30,11 +30,11 @@ use rainbow_common::protocol::contract::contract_odrl::{
 };
 use rainbow_common::utils::get_urn;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::fmt::Debug;
 use std::str::FromStr;
 use urn::Urn;
 
-#[allow(unused)]
 pub trait RpcNegotiationProcessMessageTrait: Debug + Send + Sync {
     fn get_consumer_pid(&self) -> Option<Urn>;
     fn get_provider_pid(&self) -> Option<Urn>;
@@ -47,6 +47,7 @@ pub trait RpcNegotiationProcessMessageTrait: Debug + Send + Sync {
     fn get_error_code(&self) -> Option<String>;
     fn get_error_reason(&self) -> Option<Vec<String>>;
     fn get_message(&self) -> NegotiationProcessMessageType;
+    fn as_json(&self) -> Value;
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -118,6 +119,9 @@ impl RpcNegotiationProcessMessageTrait for RpcNegotiationRequestInitMessageDto {
     fn get_event_type(&self) -> Option<NegotiationEventType> {
         None
     }
+    fn as_json(&self) -> Value {
+        serde_json::to_value(self).unwrap()
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -135,7 +139,6 @@ impl Into<NegotiationProcessMessageWrapper<NegotiationRequestMessageDto>> for Rp
             context: ContextField::default(),
             _type: NegotiationProcessMessageType::NegotiationRequestMessage,
             dto: NegotiationRequestMessageDto {
-                callback_address: None,
                 consumer_pid: self.consumer_pid,
                 provider_pid: self.provider_pid,
                 offer: self.offer,
@@ -186,6 +189,9 @@ impl RpcNegotiationProcessMessageTrait for RpcNegotiationRequestMessageDto {
 
     fn get_event_type(&self) -> Option<NegotiationEventType> {
         None
+    }
+    fn as_json(&self) -> Value {
+        serde_json::to_value(self).unwrap()
     }
 }
 
@@ -258,6 +264,9 @@ impl RpcNegotiationProcessMessageTrait for RpcNegotiationOfferInitMessageDto {
     fn get_event_type(&self) -> Option<NegotiationEventType> {
         None
     }
+    fn as_json(&self) -> Value {
+        serde_json::to_value(self).unwrap()
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -328,6 +337,9 @@ impl RpcNegotiationProcessMessageTrait for RpcNegotiationOfferMessageDto {
     fn get_event_type(&self) -> Option<NegotiationEventType> {
         None
     }
+    fn as_json(&self) -> Value {
+        serde_json::to_value(self).unwrap()
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -397,6 +409,9 @@ impl RpcNegotiationProcessMessageTrait for RpcNegotiationAgreementMessageDto {
     fn get_event_type(&self) -> Option<NegotiationEventType> {
         None
     }
+    fn as_json(&self) -> Value {
+        serde_json::to_value(self).unwrap()
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -462,6 +477,9 @@ impl RpcNegotiationProcessMessageTrait for RpcNegotiationVerificationMessageDto 
 
     fn get_event_type(&self) -> Option<NegotiationEventType> {
         None
+    }
+    fn as_json(&self) -> Value {
+        serde_json::to_value(self).unwrap()
     }
 }
 
@@ -529,6 +547,10 @@ impl RpcNegotiationProcessMessageTrait for RpcNegotiationEventAcceptedMessageDto
     fn get_event_type(&self) -> Option<NegotiationEventType> {
         Some(NegotiationEventType::ACCEPTED)
     }
+
+    fn as_json(&self) -> Value {
+        serde_json::to_value(self).unwrap()
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -594,6 +616,9 @@ impl RpcNegotiationProcessMessageTrait for RpcNegotiationEventFinalizedMessageDt
 
     fn get_event_type(&self) -> Option<NegotiationEventType> {
         Some(NegotiationEventType::FINALIZED)
+    }
+    fn as_json(&self) -> Value {
+        serde_json::to_value(self).unwrap()
     }
 }
 
@@ -666,6 +691,9 @@ impl RpcNegotiationProcessMessageTrait for RpcNegotiationTerminationMessageDto {
     fn get_event_type(&self) -> Option<NegotiationEventType> {
         None
     }
+    fn as_json(&self) -> Value {
+        serde_json::to_value(self).unwrap()
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -674,7 +702,7 @@ impl RpcNegotiationProcessMessageTrait for RpcNegotiationTerminationMessageDto {
 pub struct RpcNegotiationMessageDto<T> {
     pub request: T,
     pub response: NegotiationProcessMessageWrapper<NegotiationAckMessageDto>,
-    pub transfer_agent_model: NegotiationProcessDto,
+    pub negotiation_agent_model: NegotiationProcessDto,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
