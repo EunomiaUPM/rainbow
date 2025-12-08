@@ -77,6 +77,20 @@ impl OfferRepoTrait for OfferRepoForSql {
         }
     }
 
+    async fn get_last_offer_by_negotiation_process(&self, id: &Urn) -> anyhow::Result<Option<Model>, OfferRepoErrors> {
+        let pid = id.to_string();
+        let offers = offer::Entity::find()
+            .filter(offer::Column::NegotiationAgentProcessId.eq(pid))
+            .order_by_desc(offer::Column::CreatedAt)
+            .one(&self.db_connection)
+            .await;
+
+        match offers {
+            Ok(offers) => Ok(offers),
+            Err(e) => Err(OfferRepoErrors::ErrorFetchingOffer(e.into())),
+        }
+    }
+
     async fn get_offer_by_id(&self, id: &Urn) -> anyhow::Result<Option<Model>, OfferRepoErrors> {
         let oid = id.to_string();
         let offer = offer::Entity::find_by_id(oid).one(&self.db_connection).await;

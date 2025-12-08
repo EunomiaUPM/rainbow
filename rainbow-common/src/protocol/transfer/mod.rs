@@ -21,6 +21,7 @@ use anyhow::{anyhow, bail};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::fmt::Display;
+use std::ops::Not;
 use std::str::FromStr;
 
 pub mod transfer_completion;
@@ -112,6 +113,17 @@ impl fmt::Display for TransferStateAttribute {
 pub enum TransferRoles {
     Provider,
     Consumer,
+}
+
+impl Not for TransferRoles {
+    type Output = Self;
+
+    fn not(self) -> Self::Output {
+        match self {
+            TransferRoles::Provider => TransferRoles::Consumer,
+            TransferRoles::Consumer => TransferRoles::Provider
+        }
+    }
 }
 
 impl FromStr for TransferRoles {

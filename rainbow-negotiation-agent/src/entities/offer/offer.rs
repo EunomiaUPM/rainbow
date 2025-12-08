@@ -69,6 +69,17 @@ impl NegotiationAgentOffersTrait for NegotiationAgentOffersService {
         Ok(offers.into_iter().map(|m| OfferDto { inner: m }).collect())
     }
 
+    async fn get_last_offer_by_negotiation_process(&self, id: &Urn) -> anyhow::Result<Option<OfferDto>> {
+        let offers =
+            self.negotiation_repo.get_offer_repo().get_last_offer_by_negotiation_process(id).await.map_err(|e| {
+                let err = CommonErrors::database_new(&e.to_string());
+                error!("{}", err.log());
+                err
+            })?;
+
+        Ok(offers.map(|m| OfferDto { inner: m }))
+    }
+
     async fn get_offer_by_id(&self, id: &Urn) -> anyhow::Result<Option<OfferDto>> {
         let offer = self.negotiation_repo.get_offer_repo().get_offer_by_id(id).await.map_err(|e| {
             let err = CommonErrors::database_new(&e.to_string());
