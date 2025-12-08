@@ -160,7 +160,7 @@ impl RpcRouter {
         input: Result<Json<RpcNegotiationRequestInitMessageDto>, JsonRejection>,
     ) -> impl IntoResponse {
         Self::process_request(input, StatusCode::CREATED, |data| async move {
-            state.orchestrator.get_rpc_service().negotiation_request_init_rpc(&data).await
+            state.orchestrator.get_rpc_service().setup_negotiation_request_init_rpc(&data).await
         })
         .await
     }
@@ -169,7 +169,7 @@ impl RpcRouter {
         input: Result<Json<RpcNegotiationRequestMessageDto>, JsonRejection>,
     ) -> impl IntoResponse {
         Self::process_request(input, StatusCode::CREATED, |data| async move {
-            state.orchestrator.get_rpc_service().negotiation_request_rpc(&data).await
+            state.orchestrator.get_rpc_service().setup_negotiation_request_rpc(&data).await
         })
         .await
     }
@@ -178,7 +178,7 @@ impl RpcRouter {
         input: Result<Json<RpcNegotiationOfferInitMessageDto>, JsonRejection>,
     ) -> impl IntoResponse {
         Self::process_request(input, StatusCode::CREATED, |data| async move {
-            state.orchestrator.get_rpc_service().negotiation_offer_init_rpc(&data).await
+            state.orchestrator.get_rpc_service().setup_negotiation_offer_init_rpc(&data).await
         })
         .await
     }
@@ -187,7 +187,7 @@ impl RpcRouter {
         input: Result<Json<RpcNegotiationOfferMessageDto>, JsonRejection>,
     ) -> impl IntoResponse {
         Self::process_request(input, StatusCode::CREATED, |data| async move {
-            state.orchestrator.get_rpc_service().negotiation_offer_rpc(&data).await
+            state.orchestrator.get_rpc_service().setup_negotiation_offer_rpc(&data).await
         })
         .await
     }
@@ -196,7 +196,7 @@ impl RpcRouter {
         input: Result<Json<RpcNegotiationEventAcceptedMessageDto>, JsonRejection>,
     ) -> impl IntoResponse {
         Self::process_request(input, StatusCode::CREATED, |data| async move {
-            state.orchestrator.get_rpc_service().negotiation_event_accepted_rpc(&data).await
+            state.orchestrator.get_rpc_service().setup_negotiation_event_accepted_rpc(&data).await
         })
         .await
     }
@@ -205,7 +205,7 @@ impl RpcRouter {
         input: Result<Json<RpcNegotiationAgreementMessageDto>, JsonRejection>,
     ) -> impl IntoResponse {
         Self::process_request(input, StatusCode::CREATED, |data| async move {
-            state.orchestrator.get_rpc_service().negotiation_agreement_rpc(&data).await
+            state.orchestrator.get_rpc_service().setup_negotiation_agreement_rpc(&data).await
         })
         .await
     }
@@ -214,7 +214,7 @@ impl RpcRouter {
         input: Result<Json<RpcNegotiationVerificationMessageDto>, JsonRejection>,
     ) -> impl IntoResponse {
         Self::process_request(input, StatusCode::CREATED, |data| async move {
-            state.orchestrator.get_rpc_service().negotiation_agreement_verification_rpc(&data).await
+            state.orchestrator.get_rpc_service().setup_negotiation_agreement_verification_rpc(&data).await
         })
         .await
     }
@@ -223,7 +223,7 @@ impl RpcRouter {
         input: Result<Json<RpcNegotiationEventFinalizedMessageDto>, JsonRejection>,
     ) -> impl IntoResponse {
         Self::process_request(input, StatusCode::CREATED, |data| async move {
-            state.orchestrator.get_rpc_service().negotiation_event_finalized_rpc(&data).await
+            state.orchestrator.get_rpc_service().setup_negotiation_event_finalized_rpc(&data).await
         })
         .await
     }
@@ -232,7 +232,7 @@ impl RpcRouter {
         input: Result<Json<RpcNegotiationTerminationMessageDto>, JsonRejection>,
     ) -> impl IntoResponse {
         Self::process_request(input, StatusCode::CREATED, |data| async move {
-            state.orchestrator.get_rpc_service().negotiation_termination_rpc(&data).await
+            state.orchestrator.get_rpc_service().setup_negotiation_termination_rpc(&data).await
         })
         .await
     }

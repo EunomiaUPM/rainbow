@@ -20,6 +20,7 @@
 pub(crate) mod orchestrator;
 pub(crate) mod protocol;
 pub(crate) mod rpc;
+pub(crate) mod traits;
 
 use crate::protocols::dsp::orchestrator::protocol::ProtocolOrchestratorTrait;
 use crate::protocols::dsp::orchestrator::rpc::RPCOrchestratorTrait;
