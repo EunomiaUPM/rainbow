@@ -115,7 +115,7 @@ impl MatesFacadeTrait for MatesFacadeService {
     async fn get_me_mate(&self) -> anyhow::Result<Mates> {
         let ssi_auth_url =
             format_host_config_to_url_string(&self.config.ssi_auth_host.clone().expect("Auth host not configured"));
-        let mates_url = format!("{}/api/v1/mates/me", ssi_auth_url);
+        let mates_url = format!("{}/api/v1/mates/myself", ssi_auth_url);
         let response = self.client.get(mates_url).send().await.map_err(|_e| {
             let e = CommonErrors::missing_resource_new(
                 "Me",

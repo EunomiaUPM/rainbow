@@ -29,7 +29,7 @@ use reqwest::Client;
 use std::time::Duration;
 use tracing::error;
 
-const SSI_AUTH_FACADE_VERIFICATION_URL: &str = "/api/v1/verify/mate/token";
+const SSI_AUTH_FACADE_VERIFICATION_URL: &str = "/api/v1/mates/token";
 
 pub struct SSIAuthFacadeService {
     config: ApplicationGlobalConfig,
