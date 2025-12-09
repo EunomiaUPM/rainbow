@@ -1,6 +1,6 @@
 [package]
 name = "rainbow_fe_gateway"
-version = "0.3.1"
+version = "0.3.8"
 edition = "2021"
 
 [lib]
@@ -12,7 +12,7 @@ name = "rainbow_fe_gateway"
 path = "src/main.rs"
 
 [dependencies]
-rainbow_common = { version = "0.3.1", path = "../rainbow-common", default-features = false }
+rainbow_common = { version = "0.3.8", path = "../rainbow-common", default-features = false }
 
 serde_json = { workspace = true }
 clap = { workspace = true }
