@@ -33,8 +33,8 @@ pub trait AuthConsumerRepoTrait: Send + Sync + 'static {
     fn vc_req(&self) -> Arc<dyn ReqVcTrait>;
 }
 
-impl Clone for MockAuthRepoFactoryTrait {
-    fn clone(&self) -> Self {
-        Self::new()
-    }
-}
+// impl Clone for MockAuthRepoFactoryTrait {
+//     fn clone(&self) -> Self {
+//         Self::new()
+//     }
+// }
