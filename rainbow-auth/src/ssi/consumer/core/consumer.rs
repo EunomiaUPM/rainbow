@@ -39,9 +39,9 @@ pub struct AuthConsumer {
     repo: Arc<dyn AuthConsumerRepoTrait>,
     #[allow(dead_code)] // as an orchestrator, it should have access even though it's not used
     client: Arc<dyn ClientServiceTrait>,
+    config: Arc<SsiAuthConfig>,
     // EXTRA MODULES
     self_issuer: Option<Arc<dyn GaiaSelfIssuerTrait>>,
-    config: Arc<SsiAuthConfig>,
 }
 
 impl AuthConsumer {
@@ -52,22 +52,22 @@ impl AuthConsumer {
         callback: Arc<dyn CallbackTrait>,
         repo: Arc<dyn AuthConsumerRepoTrait>,
         client: Arc<dyn ClientServiceTrait>,
-        self_issuer: Option<Arc<dyn GaiaSelfIssuerTrait>>,
         config: Arc<SsiAuthConfig>,
+        self_issuer: Option<Arc<dyn GaiaSelfIssuerTrait>>,
     ) -> AuthConsumer {
-        AuthConsumer { wallet, vc_requester, onboarder, callback, repo, client, config, self_issuer }
+        AuthConsumer { wallet, vc_requester, onboarder, callback, repo, client, self_issuer, config }
     }
 }
 
 impl CoreConsumerTrait for AuthConsumer {
-    fn config(&self) -> Arc<SsiAuthConfig> {
-        self.config.clone()
-    }
     fn gaia_active(&self) -> bool {
         match self.self_issuer {
             Some(_) => true,
             None => false,
         }
+    }
+    fn config(&self) -> Arc<SsiAuthConfig> {
+        self.config.clone()
     }
 }
 

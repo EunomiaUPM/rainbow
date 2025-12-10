@@ -59,7 +59,7 @@ impl AuthConsumerApplication {
         let callback_service = Arc::new(BasicCallbackService::new(client_service.clone()));
         let repo_service = Arc::new(AuthConsumerRepoForSql::create_repo(db_connection));
 
-        let gaia_service: Option<Arc<dyn GaiaSelfIssuerTrait>> = match config.gaia() {
+        let gaia_service: Option<Arc<dyn GaiaSelfIssuerTrait>> = match config.is_gaia_active() {
             true => {
                 let gaia_config = GaiaSelfIssuerConfig::from(config.clone());
                 Some(Arc::new(BasicGaiaSelfIssuer::new(gaia_config)))

@@ -31,6 +31,19 @@ pub trait ExtraHostsTrait {
         };
         host.expect("Failed to get host")
     }
+    fn get_host_without_protocol(&self, host_type: &HostType) -> String {
+        let host = match host_type {
+            HostType::Http => self.http(),
+            HostType::Grpc => self.grpc().expect("Failed to get grpc host"),
+            HostType::Graphql => self.graphql().expect("Failed to get graphql host"),
+        };
+        match host.port.as_ref() {
+            Some(port) => {
+                format!("{}:{}", host.url, port)
+            }
+            None => host.url.clone(),
+        }
+    }
     fn get_host_helper(host: Option<&HostConfig>, module: &str) -> anyhow::Result<String> {
         get_host_helper(host, module)
     }

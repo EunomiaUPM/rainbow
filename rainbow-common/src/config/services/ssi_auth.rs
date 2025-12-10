@@ -31,6 +31,7 @@ pub struct SsiAuthConfig {
     common: CommonConfig,
     wallet: WalletConfig,
     client: ClientConfig,
+    gaia_active: bool,
 }
 
 impl SsiAuthConfig {
@@ -39,6 +40,9 @@ impl SsiAuthConfig {
     }
     pub fn client(&self) -> ClientConfig {
         self.client.clone()
+    }
+    pub fn is_gaia_active(&self) -> bool {
+        self.gaia_active
     }
 }
 
@@ -60,6 +64,7 @@ impl ConfigLoader for SsiAuthConfig {
                     id: None,
                 },
                 client: ClientConfig { class_id: "rainbow_consumer".to_string(), display: None },
+                gaia_active: false,
             },
             RoleConfig::Provider => Self {
                 common: common_config,
@@ -76,6 +81,7 @@ impl ConfigLoader for SsiAuthConfig {
                     id: None,
                 },
                 client: ClientConfig { class_id: "rainbow_provider".to_string(), display: None },
+                gaia_active: false,
             },
         }
     }

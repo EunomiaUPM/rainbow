@@ -66,7 +66,7 @@ impl AuthProviderApplication {
         let business_service = Arc::new(BasicBusinessService::new(business_config));
         let repo_service = Arc::new(AuthProviderRepoForSql::create_repo(db_connection));
 
-        let gaia_service: Option<Arc<dyn GaiaSelfIssuerTrait>> = match config.gaia() {
+        let gaia_service: Option<Arc<dyn GaiaSelfIssuerTrait>> = match config.is_gaia_active() {
             true => {
                 let gaia_config = GaiaSelfIssuerConfig::from(config.clone());
                 Some(Arc::new(BasicGaiaSelfIssuer::new(gaia_config)))

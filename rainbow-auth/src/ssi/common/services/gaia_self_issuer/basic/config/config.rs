@@ -16,42 +16,28 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 use super::GaiaGaiaSelfIssuerConfigTrait;
 use crate::ssi::common::types::enums::VcDataModelVersion;
-use crate::ssi::consumer::config::{AuthConsumerConfig, AuthConsumerConfigTrait};
-use crate::ssi::provider::config::{AuthProviderConfig, AuthProviderConfigTrait};
-use rainbow_common::config::global_config::HostConfig;
+use rainbow_common::config::services::SsiAuthConfig;
+use rainbow_common::config::traits::{ApiConfigTrait, CommonConfigTrait, IsLocalTrait};
+use rainbow_common::config::types::CommonHostsConfig;
 use rainbow_common::utils::read;
 
 pub struct GaiaSelfIssuerConfig {
-    host: HostConfig,
+    hosts: CommonHostsConfig,
     is_local: bool,
     keys_path: String,
     api_path: String,
     vc_data_model: VcDataModelVersion,
 }
 
-impl From<AuthConsumerConfig> for GaiaSelfIssuerConfig {
-    fn from(value: AuthConsumerConfig) -> Self {
-        let api_path = value.get_api_path();
+impl From<SsiAuthConfig> for GaiaSelfIssuerConfig {
+    fn from(value: SsiAuthConfig) -> Self {
+        let api_path = value.get_api_version();
         Self {
-            host: value.common_config.host,
-            is_local: value.common_config.is_local,
-            keys_path: value.common_config.keys_path,
-            api_path,
-            vc_data_model: VcDataModelVersion::V1,
-        }
-    }
-}
-
-impl From<AuthProviderConfig> for GaiaSelfIssuerConfig {
-    fn from(value: AuthProviderConfig) -> Self {
-        let api_path = value.get_api_path();
-        Self {
-            host: value.common_config.host,
-            is_local: value.common_config.is_local,
-            keys_path: value.common_config.keys_path,
+            hosts: value.common().hosts.clone(),
+            is_local: value.is_local(),
+            keys_path: value.common().keys_path.clone(),
             api_path,
             vc_data_model: VcDataModelVersion::V1,
         }
@@ -59,45 +45,24 @@ impl From<AuthProviderConfig> for GaiaSelfIssuerConfig {
 }
 
 impl GaiaGaiaSelfIssuerConfigTrait for GaiaSelfIssuerConfig {
-    fn get_host(&self) -> String {
-        let host = self.host.clone();
-        match host.port.is_empty() {
-            true => {
-                format!("{}://{}", host.protocol, host.url)
-            }
-            false => {
-                format!("{}://{}:{}", host.protocol, host.url, host.port)
-            }
-        }
+    fn hosts(&self) -> &CommonHostsConfig {
+        &self.hosts
     }
-
-    fn get_host_without_protocol(&self) -> String {
-        let host = self.host.clone();
-        match host.port.is_empty() {
-            true => {
-                format!("{}:{}", host.url, host.port)
-            }
-            false => {
-                format!("{}", host.url,)
-            }
-        }
-    }
-
     fn is_local(&self) -> bool {
         self.is_local
     }
-    fn get_cert(&self) -> anyhow::Result<String> {
-        let path = format!("{}/cert.pem", self.keys_path);
-        read(&path)
-    }
+    // fn get_cert(&self) -> anyhow::Result<String> {
+    //     let path = format!("{}/cert.pem", self.keys_path);
+    //     read(&path)
+    // }
     fn get_priv_key(&self) -> anyhow::Result<String> {
         let path = format!("{}/private_key.pem", self.keys_path);
         read(&path)
     }
-    fn get_pub_key(&self) -> anyhow::Result<String> {
-        let path = format!("{}/public_key.pem", self.keys_path);
-        read(&path)
-    }
+    // fn get_pub_key(&self) -> anyhow::Result<String> {
+    //     let path = format!("{}/public_key.pem", self.keys_path);
+    //     read(&path)
+    // }
     fn get_api_path(&self) -> String {
         self.api_path.clone()
     }

@@ -75,7 +75,7 @@ impl AuthConsumerRouter {
             true => {
                 let gaia_router = GaiaSelfIssuerRouter::new(self.consumer.clone()).router();
                 router.nest(
-                    &format!("{}/gaia", self.consumer.config().get_api_path()),
+                    &format!("{}/gaia", api_path),
                     gaia_router,
                 )
             }

@@ -17,7 +17,6 @@
  *
  */
 use crate::ssi::common::core::{CoreGaiaSelfIssuerTrait, CoreMateTrait, CoreVcRequesterTrait, CoreWalletTrait};
-use crate::ssi::provider::config::AuthProviderConfigTrait;
 use crate::ssi::provider::core::traits::{CoreBusinessTrait, CoreGateKeeperTrait, CoreVerifierTrait};
 use rainbow_common::config::services::SsiAuthConfig;
 use std::sync::Arc;

@@ -18,8 +18,7 @@
  */
 
 use super::super::GaiaSelfIssuerTrait;
-use super::config::{GaiaSelfIssuerConfig, GaiaGaiaSelfIssuerConfigTrait};
-use crate::ssi::common::errors::AuthErrors;
+use super::config::{GaiaGaiaSelfIssuerConfigTrait, GaiaSelfIssuerConfig};
 use crate::ssi::common::types::enums::VcDataModelVersion;
 use crate::ssi::common::types::vc_issuing::claims::{VCClaimsV1, VCClaimsV2, VCFromClaimsV1};
 use crate::ssi::common::types::vc_issuing::cred_subject::{LegalPersonCredentialSubject, TermsAndConditionsCredSub};
@@ -29,10 +28,11 @@ use crate::ssi::common::types::vc_issuing::{
 use anyhow::bail;
 use chrono::{Duration, Utc};
 use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
+use rainbow_common::config::traits::ExtraHostsTrait;
+use rainbow_common::config::types::HostType;
 use rainbow_common::errors::helpers::BadFormat;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use serde_json::{json, Value};
-use std::str::FromStr;
 use tracing::{error, info};
 
 pub struct BasicGaiaSelfIssuer {
@@ -46,15 +46,63 @@ impl BasicGaiaSelfIssuer {
 }
 
 impl GaiaSelfIssuerTrait for BasicGaiaSelfIssuer {
+    fn get_cred_offer_data(&self) -> VCCredOffer {
+        info!("Retrieving credential offer data");
+
+        let issuer = format!(
+            "{}{}/gaia",
+            self.config.hosts().get_host(HostType::Http),
+            self.config.get_api_path()
+        );
+        let issuer = match self.config.is_local() {
+            true => issuer.replace("127.0.0.1", "host.docker.internal"),
+            false => issuer,
+        };
+
+        VCCredOffer::new4gaia(&issuer)
+    }
+    fn get_issuer_data(&self) -> IssuerMetadata {
+        info!("Retrieving issuer data");
+        let host = format!(
+            "{}{}/gaia",
+            self.config.hosts().get_host(HostType::Http),
+            self.config.get_api_path()
+        );
+        let host = match self.config.is_local() {
+            true => host.replace("127.0.0.1", "host.docker.internal"),
+            false => host,
+        };
+        IssuerMetadata::new(&host)
+    }
+    fn get_oauth_server_data(&self) -> AuthServerMetadata {
+        info!("Retrieving oauth server data");
+
+        let host = format!(
+            "{}{}/gaia",
+            self.config.hosts().get_host(HostType::Http),
+            self.config.get_api_path()
+        );
+        let host = match self.config.is_local() {
+            true => host.replace("127.0.0.1", "host.docker.internal"),
+            false => host,
+        };
+
+        AuthServerMetadata::new(&host)
+    }
+
+    fn get_token(&self) -> IssuingToken {
+        info!("Giving token");
+        IssuingToken::new4gai()
+    }
     fn generate_issuing_uri(&self, id: &str) -> String {
         let semi_host = format!(
             "{}{}/gaia",
-            self.config.get_host(),
+            self.config.hosts().get_host(HostType::Http),
             self.config.get_api_path()
         );
         let host = format!(
             "{}{}/gaia",
-            self.config.get_host(),
+            self.config.hosts().get_host(HostType::Http),
             self.config.get_api_path()
         );
         let (semi_host, host) = match self.config.is_local() {
@@ -73,54 +121,6 @@ impl GaiaSelfIssuerTrait for BasicGaiaSelfIssuer {
         );
         info!("Issuing uri: {}", uri);
         uri
-    }
-    fn get_cred_offer_data(&self) -> VCCredOffer {
-        info!("Retrieving credential offer data");
-
-        let issuer = format!(
-            "{}{}/gaia",
-            self.config.get_host(),
-            self.config.get_api_path()
-        );
-        let issuer = match self.config.is_local() {
-            true => issuer.replace("127.0.0.1", "host.docker.internal"),
-            false => issuer,
-        };
-
-        VCCredOffer::new4gaia(&issuer)
-    }
-    fn get_issuer_data(&self) -> IssuerMetadata {
-        info!("Retrieving issuer data");
-        let host = format!(
-            "{}{}/gaia",
-            self.config.get_host(),
-            self.config.get_api_path()
-        );
-        let host = match self.config.is_local() {
-            true => host.replace("127.0.0.1", "host.docker.internal"),
-            false => host,
-        };
-        IssuerMetadata::new(&host)
-    }
-
-    fn get_oauth_server_data(&self) -> AuthServerMetadata {
-        info!("Retrieving oauth server data");
-
-        let host = format!(
-            "{}{}/gaia",
-            self.config.get_host(),
-            self.config.get_api_path()
-        );
-        let host = match self.config.is_local() {
-            true => host.replace("127.0.0.1", "host.docker.internal"),
-            false => host,
-        };
-
-        AuthServerMetadata::new(&host)
-    }
-    fn get_token(&self) -> IssuingToken {
-        info!("Giving token");
-        IssuingToken::new4gai()
     }
 
     fn issue_cred(&self, did: &str) -> anyhow::Result<Value> {

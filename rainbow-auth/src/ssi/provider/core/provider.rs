@@ -45,9 +45,9 @@ pub struct AuthProvider {
     repo: Arc<dyn AuthProviderRepoTrait>,
     #[allow(dead_code)] // as an orchestrator, it should have access even though it's not used
     client: Arc<dyn ClientServiceTrait>,
+    config: Arc<SsiAuthConfig>,
     // EXTRA MODULES
     self_issuer: Option<Arc<dyn GaiaSelfIssuerTrait>>,
-    config: Arc<SsiAuthConfig>,
 }
 
 impl AuthProvider {
@@ -60,8 +60,8 @@ impl AuthProvider {
         business: Arc<dyn BusinessTrait>,
         repo: Arc<dyn AuthProviderRepoTrait>,
         client: Arc<dyn ClientServiceTrait>,
-        self_issuer: Option<Arc<dyn GaiaSelfIssuerTrait>>,
         config: Arc<SsiAuthConfig>,
+        self_issuer: Option<Arc<dyn GaiaSelfIssuerTrait>>,
     ) -> AuthProvider {
         AuthProvider {
             wallet,
