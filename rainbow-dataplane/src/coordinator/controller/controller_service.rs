@@ -33,7 +33,8 @@ use rainbow_common::adv_protocol::interplane::{
     DataPlaneControllerMessages, DataPlaneControllerVersion, DataPlaneProcessDirection, DataPlaneProcessState,
     DataPlaneSDPConfigTypes, DataPlaneSDPFieldTypes, DataPlaneSDPResponseField,
 };
-use rainbow_common::config::global_config::ApplicationGlobalConfig;
+use rainbow_common::config::services::TransferConfig;
+use rainbow_common::config::traits::CommonConfigTrait;
 use rainbow_common::dcat_formats::FormatAction;
 use std::sync::Arc;
 use tracing::debug;
@@ -42,7 +43,7 @@ pub struct DataPlaneControllerService<T>
 where
     T: DataPlaneProcessTrait + Send + Sync,
 {
-    config: Arc<ApplicationGlobalConfig>,
+    config: Arc<TransferConfig>,
     dataplane_process_service: Arc<T>,
 }
 
@@ -50,7 +51,7 @@ impl<T> DataPlaneControllerService<T>
 where
     T: DataPlaneProcessTrait + Send + Sync,
 {
-    pub fn new(config: Arc<ApplicationGlobalConfig>, dataplane_process_service: Arc<T>) -> Self {
+    pub fn new(config: Arc<TransferConfig>, dataplane_process_service: Arc<T>) -> Self {
         Self { config, dataplane_process_service }
     }
 }
@@ -65,7 +66,7 @@ where
         input: DataPlaneProvisionRequest,
     ) -> anyhow::Result<DataPlaneProvisionResponse> {
         debug!("DataPlaneControllerService -> data_plane_provision_request");
-        let process_address = self.config.transfer_process_host.clone().unwrap();
+        let process_address = &self.config.common().hosts.http;
         let sdp_config = input.sdp_config.unwrap();
         let next_hop_protocol = sdp_config
             .iter()
@@ -85,7 +86,7 @@ where
             "{}://{}:{}/data/{}",
             process_address.protocol,
             process_address.url,
-            process_address.port,
+            process_address.port.clone().unwrap_or("".to_string()),
             input.session_id.clone()
         );
         let data_plane_process = DataPlaneProcess::create_dataplane_process(DataPlaneProcessRequest {

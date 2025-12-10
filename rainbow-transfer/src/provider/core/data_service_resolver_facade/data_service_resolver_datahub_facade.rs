@@ -20,7 +20,7 @@
 use crate::provider::core::data_service_resolver_facade::DataServiceFacadeTrait;
 use anyhow::{anyhow, bail};
 use axum::async_trait;
-use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_common::config::services::TransferConfig;
 use rainbow_common::dcat_formats::DctFormats;
 use rainbow_common::errors::helpers::BadFormat;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
@@ -36,14 +36,15 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use tracing::error;
 use urn::Urn;
+use rainbow_common::config::types::HostType;
 
 pub struct DataServiceFacadeServiceForDatahub {
-    config: ApplicationProviderConfig,
+    config: TransferConfig,
     client: Client,
 }
 
 impl DataServiceFacadeServiceForDatahub {
-    pub fn new(config: ApplicationProviderConfig) -> Self {
+    pub fn new(config: TransferConfig) -> Self {
         let client =
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
         Self { config, client }
@@ -64,8 +65,8 @@ impl DataServiceFacadeTrait for DataServiceFacadeServiceForDatahub {
         agreement_id: Urn,
         _formats: Option<DctFormats>,
     ) -> anyhow::Result<DataService> {
-        let contracts_url = self.config.get_contract_negotiation_host_url().unwrap();
-        let catalog_url = self.config.get_catalog_host_url().unwrap();
+        let contracts_url = self.config.contracts().get_host(HostType::Http);
+        let catalog_url = self.config.catalog().get_host(HostType::Http);
         let agreement_url = format!(
             "{}/api/v1/contract-negotiation/agreements/{}",
             contracts_url, agreement_id

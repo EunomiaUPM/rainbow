@@ -27,25 +27,24 @@ use axum::extract::{Path, State};
 use axum::http::header::{AUTHORIZATION, CONTENT_TYPE};
 use axum::http::{header, StatusCode, Uri};
 use axum::response::{IntoResponse, Response};
-use axum::routing::{delete, get, get_service, post};
+use axum::routing::{delete, get, post};
 use axum::{middleware, Extension, Json, Router};
 use rainbow_common::auth::business::RainbowBusinessLoginRequest;
 use rainbow_common::auth::header::{extract_request_info, RequestInfo};
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
+use rainbow_common::config::services::GatewayConfig;
 use rainbow_common::protocol::contract::contract_odrl::OdrlPolicyInfo;
 use rainbow_common::utils::get_urn_from_string;
 use rust_embed::Embed;
 use serde_json::json;
 use std::sync::Arc;
 use tower_http::cors::{AllowHeaders, Any, CorsLayer};
-use tower_http::services::{ServeDir, ServeFile};
 use tracing::info;
 
 pub struct RainbowBusinessRouter<T>
 where
     T: BusinessCatalogTrait + Sync + Send,
 {
-    config: ApplicationProviderConfig,
+    config: GatewayConfig,
     service: Arc<T>,
 }
 
@@ -57,7 +56,7 @@ impl<T> RainbowBusinessRouter<T>
 where
     T: BusinessCatalogTrait + Sync + Send,
 {
-    pub fn new(config: ApplicationProviderConfig, service: Arc<T>) -> Self {
+    pub fn new(config: GatewayConfig, service: Arc<T>) -> Self {
         Self { config, service }
     }
     pub fn router(self) -> Router {
@@ -135,7 +134,7 @@ where
             // Others
             .layer(middleware::from_fn(extract_request_info));
 
-        if self.config.is_gateway_in_production {
+        if self.config.is_production() {
             router = router.fallback(Self::static_path_handler);
         }
 

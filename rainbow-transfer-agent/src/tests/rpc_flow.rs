@@ -8,9 +8,10 @@ use crate::entities::transfer_messages::MockTransferAgentMessagesTrait;
 use crate::entities::transfer_process::{MockTransferAgentProcessesTrait, TransferAgentProcessesTrait};
 use crate::grpc::api::transfer_messages::transfer_agent_messages_server::TransferAgentMessages;
 use crate::http::transfer_messages::TransferAgentMessagesRouter;
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
+use rainbow_common::config::services::TransferConfig;
+use rainbow_common::config::traits::ConfigLoader;
+use rainbow_common::config::types::roles::RoleConfig;
 use std::sync::Arc;
-
 // Modificación para devolver el mock junto con el router
 
 fn create_stub_messages() -> Vec<transfer_message::Model> {
@@ -41,7 +42,7 @@ fn create_stub_messages() -> Vec<transfer_message::Model> {
 }
 
 async fn create_mock_router() -> (axum::Router, Arc<MockTransferAgentRepoTrait>) {
-    let config = Arc::new(ApplicationProviderConfig::default());
+    let config = Arc::new(TransferConfig::load(RoleConfig::Provider, None));
     let transfer_repo = Arc::new(MockTransferAgentRepoTrait::new());
     let messages_controller_service = Arc::new(TransferAgentMessagesService::new(transfer_repo.clone()));
     let messages_router = TransferAgentMessagesRouter::new(messages_controller_service.clone(), config.clone());

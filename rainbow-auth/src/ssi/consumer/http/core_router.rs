@@ -16,16 +16,16 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use super::OnboarderConsumerRouter;
-use crate::ssi::common::http::VcRequesterRouter;
-use crate::ssi::common::http::WalletRouter;
-use crate::ssi::common::http::{GaiaSelfIssuerRouter, MateRouter};
+use crate::ssi::common::http::{GaiaSelfIssuerRouter, MateRouter, VcRequesterRouter, WalletRouter};
 use crate::ssi::consumer::core::traits::CoreConsumerTrait;
 use axum::extract::Request;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::get;
 use axum::Router;
+use rainbow_common::config::traits::ApiConfigTrait;
 use rainbow_common::http::OpenapiRouter;
 use rainbow_common::utils::server_status;
 use std::sync::Arc;
@@ -40,7 +40,7 @@ pub struct AuthConsumerRouter {
 
 impl AuthConsumerRouter {
     pub fn new(consumer: Arc<dyn CoreConsumerTrait>) -> Self {
-        let openapi = consumer.config().get_openapi_json().expect("Invalid openapi path");
+        let openapi = consumer.config().get_openapi().expect("Invalid openapi path");
         AuthConsumerRouter { consumer, openapi }
     }
 
@@ -52,30 +52,23 @@ impl AuthConsumerRouter {
         let onboarder_router = OnboarderConsumerRouter::new(self.consumer.clone()).router();
         let openapi_route = OpenapiRouter::new(self.openapi.clone()).router();
 
+        let api_path = self.consumer.config().get_api_version();
+
         let router = Router::new()
-            .route(
-                &format!("{}/status", self.consumer.config().get_api_path()),
-                get(server_status),
-            )
-            .nest(
-                &format!("{}/wallet", self.consumer.config().get_api_path()),
-                wallet_router,
-            )
-            .nest(
-                &format!("{}/vc-request", self.consumer.config().get_api_path()),
-                vc_requester_router,
-            )
-            .nest(
-                &format!("{}/mates", self.consumer.config().get_api_path()),
-                mate_router,
-            )
-            .nest(
-                &format!("{}/onboard", self.consumer.config().get_api_path()),
-                onboarder_router,
-            )
-            .nest(
-                &format!("{}/docs", self.consumer.config().get_api_path()),
-                openapi_route,
+            .route(&format!("{}/status", api_path), get(server_status))
+            .nest(&format!("{}/wallet", api_path), wallet_router)
+            .nest(&format!("{}/vc-request", api_path), vc_requester_router)
+            .nest(&format!("{}/mates", api_path), mate_router)
+            .nest(&format!("{}/onboard", api_path), onboarder_router)
+            .nest(&format!("{}/docs", api_path), openapi_route)
+            .fallback(Self::fallback)
+            .layer(
+                TraceLayer::new_for_http()
+                    .make_span_with(|_req: &Request<_>| tracing::info_span!("C-Auth-request", id = %Uuid::new_v4()))
+                    .on_request(|req: &Request<_>, _span: &tracing::Span| {
+                        info!("{} {}", req.method(), req.uri().path());
+                    })
+                    .on_response(DefaultOnResponse::new().level(Level::TRACE)),
             );
 
         let router = match self.consumer.gaia_active() {
@@ -89,14 +82,7 @@ impl AuthConsumerRouter {
             false => router,
         };
 
-        router.fallback(Self::fallback).layer(
-            TraceLayer::new_for_http()
-                .make_span_with(|_req: &Request<_>| tracing::info_span!("request", id = %Uuid::new_v4()))
-                .on_request(|req: &Request<_>, _span: &tracing::Span| {
-                    info!("{} {}", req.method(), req.uri().path());
-                })
-                .on_response(DefaultOnResponse::new().level(Level::TRACE)),
-        )
+        router
     }
 
     async fn fallback() -> impl IntoResponse {

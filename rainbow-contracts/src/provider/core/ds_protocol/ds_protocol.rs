@@ -23,10 +23,8 @@ use crate::provider::core::ds_protocol::ds_protocol_errors::IdsaCNError;
 use crate::provider::core::ds_protocol::DSProtocolContractNegotiationProviderTrait;
 use anyhow::bail;
 use axum::async_trait;
-use rainbow_common::config::ConfigRoles;
-use rainbow_common::facades::ssi_auth_facade::SSIAuthFacadeTrait;
+use rainbow_common::facades::ssi_auth_facade::{MatesFacadeTrait, SSIAuthFacadeTrait};
 use rainbow_common::mates::Mates;
-use rainbow_common::mates_facade::MatesFacadeTrait;
 use rainbow_common::protocol::contract::contract_ack::ContractAckMessage;
 use rainbow_common::protocol::contract::contract_agreement_verification::ContractAgreementVerificationMessage;
 use rainbow_common::protocol::contract::contract_negotiation_event::{
@@ -53,6 +51,7 @@ use serde_json::{json, Value};
 use std::sync::Arc;
 use tracing::debug;
 use urn::Urn;
+use rainbow_common::config::types::roles::RoleConfig;
 
 pub struct DSProtocolContractNegotiationProviderService<T, U, W, X>
 where
@@ -365,7 +364,7 @@ where
                 consumer_id: Option::from(input.consumer_pid.clone()),
                 associated_consumer: Some(consumer_participant_mate.participant_id.clone()),
                 state: ContractNegotiationState::Requested,
-                initiated_by: ConfigRoles::Consumer,
+                initiated_by: RoleConfig::Consumer,
                 is_business,
             })
             .await

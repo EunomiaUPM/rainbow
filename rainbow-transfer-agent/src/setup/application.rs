@@ -1,12 +1,12 @@
 use crate::setup::grpc_worker::TransferGrpcWorker;
 use crate::setup::http_worker::TransferHttpWorker;
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
+use rainbow_common::config::services::TransferConfig;
 use tokio::signal;
 use tokio_util::sync::CancellationToken;
 
 pub struct TransferApplication;
 impl TransferApplication {
-    pub async fn run(config: &ApplicationProviderConfig) -> anyhow::Result<()> {
+    pub async fn run(config: &TransferConfig) -> anyhow::Result<()> {
         // TODO ApplicationProviderConfig for TransferModule (rodrigo's way)
         let cancel_token = CancellationToken::new();
 

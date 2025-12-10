@@ -19,19 +19,21 @@
 
 use crate::subscriptions::MicroserviceSubscriptionKey;
 use anyhow::bail;
-use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_common::config::services::GatewayConfig;
+use rainbow_common::config::types::HostType;
 use reqwest::Client;
 use serde_json::json;
 use std::time::Duration;
 use tracing::{debug, error};
+use rainbow_common::config::traits::HostConfigTrait;
 
 pub struct RainbowProviderGatewaySubscriptions {
-    config: ApplicationProviderConfig,
+    config: GatewayConfig,
     client: Client,
 }
 
 impl RainbowProviderGatewaySubscriptions {
-    pub fn new(config: ApplicationProviderConfig) -> Self {
+    pub fn new(config: GatewayConfig) -> Self {
         let client =
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
         Self { config, client }
@@ -40,16 +42,14 @@ impl RainbowProviderGatewaySubscriptions {
         &self,
         microservice_key_name: MicroserviceSubscriptionKey,
     ) -> anyhow::Result<()> {
-        let is_datahub = self.config.is_datahub_as_catalog();
+        let is_datahub = self.config.is_catalog_datahub();
         let microservice_url = match microservice_key_name {
             MicroserviceSubscriptionKey::Catalog => match is_datahub {
-                true => self.config.get_contract_negotiation_host_url().unwrap(),
-                false => self.config.get_catalog_host_url().unwrap(),
+                true => self.config.contracts().get_host(HostType::Http),
+                false => self.config.catalog().get_host(HostType::Http),
             },
-            MicroserviceSubscriptionKey::ContractNegotiation => {
-                self.config.get_contract_negotiation_host_url().unwrap()
-            }
-            MicroserviceSubscriptionKey::TransferControlPlane => self.config.get_transfer_host_url().unwrap(),
+            MicroserviceSubscriptionKey::ContractNegotiation => self.config.contracts().get_host(HostType::Http),
+            MicroserviceSubscriptionKey::TransferControlPlane => self.config.transfer().get_host(HostType::Http),
             _ => todo!(),
         };
         let microservice_url = microservice_url.trim_end_matches("/");
@@ -69,7 +69,7 @@ impl RainbowProviderGatewaySubscriptions {
         let notification_gateway_endpoint = "/incoming-notification";
         let notification_gateway_url = format!(
             "{}{}",
-            self.config.get_gateway_host_url().unwrap(),
+            self.config.get_host(HostType::Http),
             notification_gateway_endpoint
         );
 

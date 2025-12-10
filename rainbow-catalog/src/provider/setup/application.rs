@@ -34,7 +34,9 @@ use crate::provider::http::rainbow_entities::policies::RainbowCatalogPoliciesRou
 use crate::provider::http::rainbow_rpc::rainbow_rpc::RainbowRPCCatalogRouter;
 use axum::routing::get;
 use axum::{serve, Router};
-use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_common::config::services::CatalogConfig;
+use rainbow_common::config::traits::{DatabaseConfigTrait, HostConfigTrait, IsLocalTrait};
+use rainbow_common::config::types::HostType;
 use rainbow_db::catalog::repo::sql::CatalogRepoForSql;
 use rainbow_db::catalog::repo::CatalogRepoFactory;
 use rainbow_db::events::repo::sql::EventsRepoForSql;
@@ -53,7 +55,7 @@ use tracing::info;
 
 pub struct CatalogApplication;
 
-pub async fn create_catalog_router(config: &ApplicationProviderConfig) -> Router {
+pub async fn create_catalog_router(config: &CatalogConfig) -> Router {
     let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
 
     // Repos
@@ -128,30 +130,18 @@ pub async fn create_catalog_router(config: &ApplicationProviderConfig) -> Router
 }
 
 impl CatalogApplication {
-    pub async fn run(config: &ApplicationProviderConfig) -> anyhow::Result<()> {
+    pub async fn run(config: &CatalogConfig) -> anyhow::Result<()> {
         // db_connection
         let router = create_catalog_router(config).await;
         // Init server
         let server_message = format!(
             "Starting catalog server in {}",
-            config.get_catalog_host_url().unwrap()
+            config.get_host(HostType::Http)
         );
         info!("{}", server_message);
-        let listener = match config.get_environment_scenario() {
-            true => {
-                TcpListener::bind(format!(
-                    "127.0.0.1:{}",
-                    config.get_raw_catalog_host().clone().unwrap().port
-                ))
-                .await?
-            }
-            false => {
-                TcpListener::bind(format!(
-                    "0.0.0.0:{}",
-                    config.get_raw_catalog_host().clone().unwrap().port
-                ))
-                .await?
-            }
+        let listener = match config.is_local() {
+            true => TcpListener::bind(format!("127.0.0.1{}", config.get_weird_port())).await?,
+            false => TcpListener::bind(format!("0.0.0.0{}", config.get_weird_port())).await?,
         };
 
         serve(listener, router).await?;

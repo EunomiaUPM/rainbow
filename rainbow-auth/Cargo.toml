@@ -35,7 +35,6 @@ sha2 = { workspace = true }
 json_to_table = { workspace = true }
 url = { workspace = true }
 clap = { workspace = true }
-dotenvy = { workspace = true }
 sea-orm-migration = { workspace = true }
 tracing-subscriber = { workspace = true }
 tower-http = { workspace = true }

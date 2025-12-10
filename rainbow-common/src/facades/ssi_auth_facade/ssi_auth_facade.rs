@@ -17,7 +17,8 @@
  *
  */
 
-use crate::config::global_config::{format_host_config_to_url_string, ApplicationGlobalConfig};
+use crate::config::min_know_services::MinKnownConfig;
+use crate::config::types::HostType;
 use crate::errors::helpers::{BadFormat, MissingAction};
 use crate::errors::{CommonErrors, ErrorLog};
 use crate::facades::ssi_auth_facade::SSIAuthFacadeTrait;
@@ -29,15 +30,13 @@ use reqwest::Client;
 use std::time::Duration;
 use tracing::error;
 
-const SSI_AUTH_FACADE_VERIFICATION_URL: &str = "/api/v1/verify/mate/token";
-
 pub struct SSIAuthFacadeService {
-    config: ApplicationGlobalConfig,
+    config: MinKnownConfig,
     client: Client,
 }
 
 impl SSIAuthFacadeService {
-    pub fn new(config: ApplicationGlobalConfig) -> Self {
+    pub fn new(config: MinKnownConfig) -> Self {
         let client =
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
         Self { config, client }
@@ -47,8 +46,8 @@ impl SSIAuthFacadeService {
 #[async_trait]
 impl SSIAuthFacadeTrait for SSIAuthFacadeService {
     async fn verify_token(&self, token: String) -> anyhow::Result<Mates> {
-        let base_url = format_host_config_to_url_string(&self.config.ssi_auth_host.clone().unwrap());
-        let url = format!("{}{}", base_url, SSI_AUTH_FACADE_VERIFICATION_URL);
+        let base_url = self.config.get_host(HostType::Http);
+        let url = format!("{}{}/mates/token", base_url, self.config.get_api_version());
         let response = self.client.post(&url).json(&VerifyTokenRequest { token }).send().await;
         let response = match response {
             Ok(response) => response,

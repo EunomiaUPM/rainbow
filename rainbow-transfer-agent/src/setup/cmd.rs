@@ -1,7 +1,9 @@
 use crate::setup::application::TransferApplication;
 use crate::setup::db_migrations::TransferAgentMigration;
 use clap::{Parser, Subcommand};
-use rainbow_common::config::env_extraction::EnvExtraction;
+use rainbow_common::config::services::TransferConfig;
+use rainbow_common::config::traits::ConfigLoader;
+use rainbow_common::config::types::roles::RoleConfig;
 use tracing::debug;
 
 #[derive(Parser, Debug)]
@@ -25,7 +27,6 @@ pub struct TransferCliArgs {
 }
 
 pub struct TransferCommands {}
-impl EnvExtraction for TransferCommands {}
 
 impl TransferCommands {
     pub async fn init_command_line() -> anyhow::Result<()> {
@@ -33,11 +34,11 @@ impl TransferCommands {
         let cli = TransferCli::parse();
         match cli.command {
             TransferCliCommands::Start(args) => {
-                let config = Self::extract_provider_config(args.env_file)?;
+                let config = TransferConfig::load(RoleConfig::Consumer, args.env_file);
                 TransferApplication::run(&config).await?;
             }
             TransferCliCommands::Setup(args) => {
-                let config = Self::extract_provider_config(args.env_file)?;
+                let config = TransferConfig::load(RoleConfig::Consumer, args.env_file);
                 TransferAgentMigration::run(&config).await?;
             }
         }

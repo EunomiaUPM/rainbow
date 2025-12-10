@@ -1,0 +1,88 @@
+/*
+ *
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+use crate::config::min_know_services::MinKnownConfig;
+use crate::config::services::CommonConfig;
+use crate::config::traits::{
+    ApiConfigTrait, CommonConfigTrait, ConfigLoader, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait, KeysPathTrait,
+    RoleTrait,
+};
+use crate::config::types::roles::RoleConfig;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct TransferConfig {
+    common: CommonConfig,
+    contracts: MinKnownConfig,
+    catalog: MinKnownConfig,
+    is_catalog_datahub: bool,
+    ssi_auth: MinKnownConfig,
+}
+
+impl TransferConfig {
+    pub fn contracts(&self) -> &MinKnownConfig {
+        &self.contracts
+    }
+    pub fn catalog(&self) -> &MinKnownConfig {
+        &self.catalog
+    }
+    pub fn ssi_auth(&self) -> &MinKnownConfig {
+        &self.ssi_auth
+    }
+    pub fn is_catalog_datahub(&self) -> bool {
+        self.is_catalog_datahub
+    }
+}
+impl ConfigLoader for TransferConfig {
+    fn default(common_config: CommonConfig) -> Self {
+        let min_known_config =
+            MinKnownConfig { hosts: common_config.hosts.clone(), api_version: common_config.api.version.clone() };
+        Self {
+            common: common_config,
+            contracts: min_known_config.clone(),
+            catalog: min_known_config.clone(),
+            is_catalog_datahub: false,
+            ssi_auth: min_known_config,
+        }
+    }
+
+    fn load(role: RoleConfig, env_file: Option<String>) -> Self {
+        match Self::global_load(role, env_file.clone()) {
+            Ok(data) => data.transfer(),
+            Err(_) => Self::local_load(role, env_file).expect("Unable to load catalog config"),
+        }
+    }
+}
+
+impl CommonConfigTrait for TransferConfig {
+    fn common(&self) -> &CommonConfig {
+        &self.common
+    }
+}
+
+impl HostConfigTrait for TransferConfig {}
+
+impl DatabaseConfigTrait for TransferConfig {}
+
+impl IsLocalTrait for TransferConfig {}
+
+impl KeysPathTrait for TransferConfig {}
+
+impl RoleTrait for TransferConfig {}
+
+impl ApiConfigTrait for TransferConfig {}

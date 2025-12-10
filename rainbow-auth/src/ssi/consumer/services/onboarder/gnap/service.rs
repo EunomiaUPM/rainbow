@@ -29,6 +29,8 @@ use crate::ssi::consumer::services::onboarder::gnap::config::{GnapOnboarderConfi
 use crate::ssi::consumer::types::ReachProvider;
 use anyhow::bail;
 use axum::async_trait;
+use rainbow_common::config::traits::ExtraHostsTrait;
+use rainbow_common::config::types::HostType;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::utils::get_from_opt;
 use reqwest::header::{HeaderMap, ACCEPT, CONTENT_TYPE};
@@ -63,7 +65,7 @@ impl OnboarderTrait for GnapOnboarderService {
         let id = uuid::Uuid::new_v4().to_string();
         let callback_uri = format!(
             "{}{}/onboard/callback/{}",
-            self.config.get_host(),
+            self.config.hosts().get_host(HostType::Http),
             self.config.get_api_path(),
             &id
         );

@@ -21,8 +21,9 @@ use crate::provider::setup::application::CatalogApplication;
 use crate::provider::setup::db_migrations::CatalogMigration;
 use crate::provider::setup::db_seeding::CatalogSeeding;
 use clap::{Parser, Subcommand};
-use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
-use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_common::config::services::CatalogConfig;
+use rainbow_common::config::traits::ConfigLoader;
+use rainbow_common::config::types::roles::RoleConfig;
 use std::cmp::PartialEq;
 use tracing::{debug, info};
 
@@ -69,18 +70,17 @@ impl CatalogCommands {
 
         Ok(())
     }
-    fn extract_provider_config(env_file: Option<String>) -> anyhow::Result<ApplicationProviderConfig> {
-        let config = ApplicationProviderConfig::default();
-        let config = config.merge_dotenv_configuration(env_file);
-        let mut config_table = config.clone();
-        config_table.datahub_token = format!("{}...", config_table.datahub_token[0..20].to_string());
-        let table = json_to_table::json_to_table(&serde_json::to_value(&config_table)?).collapse().to_string();
+    fn extract_provider_config(env_file: Option<String>) -> anyhow::Result<CatalogConfig> {
+        let config = CatalogConfig::load(RoleConfig::Provider, env_file);
+
+        // let mut config_table = config.clone();
+        // config_table.datahub_token = format!("{}...", config_table.datahub_token[0..20].to_string());
+        let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
         info!("Current Application Provider Config:\n{}", table);
         Ok(config)
     }
-    fn extract_consumer_config(env_file: Option<String>) -> anyhow::Result<ApplicationConsumerConfig> {
-        let config = ApplicationConsumerConfig::default();
-        let config = config.merge_dotenv_configuration(env_file);
+    fn extract_consumer_config(env_file: Option<String>) -> anyhow::Result<CatalogConfig> {
+        let config = CatalogConfig::load(RoleConfig::Consumer, env_file);
         let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
         info!("Current Application Consumer Config:\n{}", table);
         Ok(config)

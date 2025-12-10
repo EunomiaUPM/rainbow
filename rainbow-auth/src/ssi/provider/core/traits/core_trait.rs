@@ -19,6 +19,7 @@
 use crate::ssi::common::core::{CoreGaiaSelfIssuerTrait, CoreMateTrait, CoreVcRequesterTrait, CoreWalletTrait};
 use crate::ssi::provider::config::AuthProviderConfigTrait;
 use crate::ssi::provider::core::traits::{CoreBusinessTrait, CoreGateKeeperTrait, CoreVerifierTrait};
+use rainbow_common::config::services::SsiAuthConfig;
 use std::sync::Arc;
 
 pub trait CoreProviderTrait:
@@ -33,6 +34,6 @@ pub trait CoreProviderTrait:
     + Sync
     + 'static
 {
-    fn config(&self) -> Arc<dyn AuthProviderConfigTrait>;
     fn gaia_active(&self) -> bool;
+    fn config(&self) -> Arc<SsiAuthConfig>;
 }

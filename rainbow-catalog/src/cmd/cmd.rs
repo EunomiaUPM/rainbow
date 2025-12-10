@@ -22,9 +22,9 @@ use crate::consumer::setup::db_migrations::CatalogBypassConsumerMigration;
 use crate::provider::setup::application::CatalogApplication;
 use crate::provider::setup::db_migrations::CatalogMigration;
 use clap::{Parser, Subcommand};
-use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
-use rainbow_common::config::env_extraction::EnvExtraction;
-use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_common::config::services::CatalogConfig;
+use rainbow_common::config::traits::ConfigLoader;
+use rainbow_common::config::types::roles::RoleConfig;
 use std::cmp::PartialEq;
 use tracing::{debug, info};
 
@@ -58,8 +58,6 @@ pub struct CatalogCliArgs {
 
 pub struct CatalogCommands;
 
-impl EnvExtraction for CatalogCommands {}
-
 impl CatalogCommands {
     pub async fn init_command_line() -> anyhow::Result<()> {
         // parse command line
@@ -70,21 +68,21 @@ impl CatalogCommands {
         match cli.role {
             CatalogCliRoles::Provider(cmd) => match cmd {
                 CatalogCliCommands::Start(args) => {
-                    let config = Self::extract_provider_config(args.env_file)?;
+                    let config = CatalogConfig::load(RoleConfig::Provider, args.env_file);
                     CatalogApplication::run(&config).await?
                 }
                 CatalogCliCommands::Setup(args) => {
-                    let config = Self::extract_provider_config(args.env_file)?;
+                    let config = CatalogConfig::load(RoleConfig::Provider, args.env_file);
                     CatalogMigration::run(&config).await?
                 }
             },
             CatalogCliRoles::Consumer(cmd) => match cmd {
                 CatalogCliCommands::Start(args) => {
-                    let config = Self::extract_consumer_config(args.env_file)?;
+                    let config = CatalogConfig::load(RoleConfig::Consumer, args.env_file);
                     CatalogBypassConsumerApplication::run(&config).await?
                 }
                 CatalogCliCommands::Setup(args) => {
-                    let config = Self::extract_consumer_config(args.env_file)?;
+                    let config = CatalogConfig::load(RoleConfig::Consumer, args.env_file);
                     CatalogBypassConsumerMigration::run(&config).await?
                 }
             },

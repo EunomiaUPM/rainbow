@@ -26,6 +26,7 @@ rand = "0.8.5"
 mockall = { workspace = true }
 json_to_table = { workspace = true }
 async-trait = "0.1.89"
-tokio = {workspace = true}
+tokio = { workspace = true }
 bytes = "1.10.1"
 serde_urlencoded = "0.7.1"
+serde_norway = { workspace = true }

@@ -18,10 +18,10 @@
  */
 
 use crate::consumer::core::bypass_service::ByPassTrait;
-use crate::consumer::core::mates_facade::MatesFacadeTrait;
 use anyhow::bail;
 use axum::async_trait;
 use log::debug;
+use rainbow_common::facades::ssi_auth_facade::MatesFacadeTrait;
 use reqwest::Client;
 use serde_json::Value;
 use std::sync::Arc;

@@ -11,12 +11,12 @@ use std::sync::Arc;
 use crate::entities::transfer_messages::{NewTransferMessageDto, TransferAgentMessagesTrait};
 use crate::errors::error_adapter::CustomToResponse;
 use crate::http::common::{extract_payload, parse_urn};
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
+use rainbow_common::config::services::TransferConfig;
 
 #[derive(Clone)]
 pub struct TransferAgentMessagesRouter {
     service: Arc<dyn TransferAgentMessagesTrait>,
-    config: Arc<ApplicationProviderConfig>,
+    config: Arc<TransferConfig>,
 }
 
 #[derive(Deserialize)]
@@ -31,14 +31,14 @@ impl FromRef<TransferAgentMessagesRouter> for Arc<dyn TransferAgentMessagesTrait
     }
 }
 
-impl FromRef<TransferAgentMessagesRouter> for Arc<ApplicationProviderConfig> {
+impl FromRef<TransferAgentMessagesRouter> for Arc<TransferConfig> {
     fn from_ref(state: &TransferAgentMessagesRouter) -> Self {
         state.config.clone()
     }
 }
 
 impl TransferAgentMessagesRouter {
-    pub fn new(service: Arc<dyn TransferAgentMessagesTrait>, config: Arc<ApplicationProviderConfig>) -> Self {
+    pub fn new(service: Arc<dyn TransferAgentMessagesTrait>, config: Arc<TransferConfig>) -> Self {
         Self { service, config }
     }
 

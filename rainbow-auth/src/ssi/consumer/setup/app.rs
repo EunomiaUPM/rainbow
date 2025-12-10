@@ -26,23 +26,21 @@ use crate::ssi::common::services::vc_requester::basic::config::VCRequesterConfig
 use crate::ssi::common::services::vc_requester::basic::VCReqService;
 use crate::ssi::common::services::wallet::waltid::config::WaltIdConfig;
 use crate::ssi::common::services::wallet::waltid::WaltIdService;
-use crate::ssi::consumer::config::{AuthConsumerConfig, AuthConsumerConfigTrait};
 use crate::ssi::consumer::core::AuthConsumer;
 use crate::ssi::consumer::http::AuthConsumerRouter;
 use crate::ssi::consumer::services::onboarder::gnap::config::GnapOnboarderConfig;
 use crate::ssi::consumer::services::onboarder::gnap::GnapOnboarderService;
 use crate::ssi::consumer::services::repo::postgres::AuthConsumerRepoForSql;
-use axum::{serve, Router};
-use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
+use axum::Router;
+use rainbow_common::config::services::SsiAuthConfig;
+use rainbow_common::config::traits::DatabaseConfigTrait;
 use sea_orm::Database;
 use std::sync::Arc;
-use tokio::net::TcpListener;
-use tracing::info;
 
 pub struct AuthConsumerApplication;
 
 impl AuthConsumerApplication {
-    pub async fn create_router(config: &AuthConsumerConfig) -> Router {
+    pub async fn create_router(config: &SsiAuthConfig) -> Router {
         // CONFIGS
         let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
         let waltid_config = WaltIdConfig::from(config.clone());
@@ -83,25 +81,5 @@ impl AuthConsumerApplication {
 
         // ROUTER
         AuthConsumerRouter::new(consumer).router()
-    }
-    pub async fn run(config: &AuthConsumerConfig) -> anyhow::Result<()> {
-        let router = AuthConsumerApplication::create_router(config).await;
-
-        // Init server
-        let server_message = format!("Starting Auth Consumer server in {}", config.get_host());
-        info!("{}", server_message);
-
-        let listener = match config.is_local() {
-            true => TcpListener::bind(format!("127.0.0.1{}", config.get_weird_port())).await?,
-            false => TcpListener::bind(format!("0.0.0.0{}", config.get_weird_port())).await?,
-        };
-
-        serve(listener, router).await?;
-
-        Ok(())
-    }
-    pub async fn create_router_4_monolith(config: ApplicationConsumerConfig) -> Router {
-        let config = AuthConsumerConfig::from(config);
-        AuthConsumerApplication::create_router(&config).await
     }
 }

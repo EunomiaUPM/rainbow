@@ -17,7 +17,7 @@
  *
  */
 
-use rainbow_auth::ssi::common::setup::commands::cmd::AuthCommands;
+use rainbow_auth::ssi::common::setup::cmd::AuthCommands;
 use tracing::info;
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::EnvFilter;
