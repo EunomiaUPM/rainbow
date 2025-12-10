@@ -12,7 +12,6 @@ members = [
     "rainbow-events",
     "rainbow-fe-gateway",
     "rainbow-datahub-catalog",
-    "rainbow-authority",
     "rainbow-business-gateway",
     "rainbow-transfer-agent",
 ]
@@ -51,7 +50,6 @@ urn = { version = "0.7.0", features = ["serde"] }
 log = "0.4.21"
 tower = "0.5.2"
 http-body-util = "0.1.2"
-tracing-test = "0.2.5"
 sea-orm = { version = "1.1.1", features = ["sqlx-postgres", "sqlx-sqlite", "runtime-tokio", "macros", "with-json", "serde_json"] }
 sea-orm-migration = { version = "1.1.1" }
 json_to_table = "0.10.0"
