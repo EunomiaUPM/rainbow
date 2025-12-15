@@ -1,10 +1,8 @@
 use crate::data::entities::distribution::{EditDistributionModel, NewDistributionModel};
-use crate::data::entities::{catalog, dataservice, dataset, distribution};
+use crate::data::entities::{dataservice, dataset, distribution};
 use crate::data::repo_traits::distribution_repo::{DistributionRepoErrors, DistributionRepositoryTrait};
 use rainbow_common::dcat_formats::DctFormats;
-use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, ModelTrait, QueryFilter, QuerySelect,
-};
+use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect};
 use urn::Urn;
 
 pub struct DistributionRepositoryForSql {
@@ -17,6 +15,7 @@ impl DistributionRepositoryForSql {
     }
 }
 
+#[async_trait::async_trait]
 impl DistributionRepositoryTrait for DistributionRepositoryForSql {
     async fn get_all_distributions(
         &self,
@@ -144,14 +143,14 @@ impl DistributionRepositoryTrait for DistributionRepositoryForSql {
             }
         };
         let mut old_active_model: distribution::ActiveModel = old_model.into();
-        if let Some(dct_title) = edit_distribution_model.dct_title {
-            old_active_model.dct_title = ActiveValue::Set(Some(dct_title));
+        if let Some(dct_title) = &edit_distribution_model.dct_title {
+            old_active_model.dct_title = ActiveValue::Set(Some(dct_title.clone()));
         }
-        if let Some(dct_description) = edit_distribution_model.dct_description {
-            old_active_model.dct_description = ActiveValue::Set(Some(dct_description));
+        if let Some(dct_description) = &edit_distribution_model.dct_description {
+            old_active_model.dct_description = ActiveValue::Set(Some(dct_description.clone()));
         }
-        if let Some(dcat_access_service) = edit_distribution_model.dcat_access_service {
-            old_active_model.dcat_access_service = ActiveValue::Set(dcat_access_service);
+        if let Some(dcat_access_service) = &edit_distribution_model.dcat_access_service {
+            old_active_model.dcat_access_service = ActiveValue::Set(dcat_access_service.clone());
         }
         old_active_model.dct_modified = ActiveValue::Set(Some(chrono::Utc::now().into()));
         let model = old_active_model.update(&self.db_connection).await;
@@ -165,29 +164,8 @@ impl DistributionRepositoryTrait for DistributionRepositoryForSql {
 
     async fn create_distribution(
         &self,
-        catalog_id: &Urn,
-        dataset_id: &Urn,
         new_distribution_model: &NewDistributionModel,
     ) -> anyhow::Result<distribution::Model, DistributionRepoErrors> {
-        let catalog_id = catalog_id.to_string();
-        let dataset_id = dataset_id.to_string();
-
-        let catalog = catalog::Entity::find_by_id(catalog_id.clone())
-            .one(&self.db_connection)
-            .await
-            .map_err(|e| DistributionRepoErrors::ErrorFetchingDistribution(e.into()))?;
-        if catalog.is_none() {
-            return Err(DistributionRepoErrors::DistributionNotFound);
-        }
-
-        let dataset = dataset::Entity::find_by_id(dataset_id.clone())
-            .one(&self.db_connection)
-            .await
-            .map_err(|e| DistributionRepoErrors::ErrorFetchingDistribution(e.into()))?;
-        if dataset.is_none() {
-            return Err(DistributionRepoErrors::DistributionNotFound);
-        }
-
         let data_service = dataservice::Entity::find_by_id(new_distribution_model.dcat_access_service.clone())
             .one(&self.db_connection)
             .await
@@ -196,9 +174,7 @@ impl DistributionRepositoryTrait for DistributionRepositoryForSql {
             return Err(DistributionRepoErrors::DistributionNotFound);
         }
 
-        let mut model: distribution::ActiveModel = new_distribution_model.into();
-        model.dataset_id = ActiveValue::Set(dataset_id.to_string());
-
+        let model: distribution::ActiveModel = new_distribution_model.into();
         let distribution = distribution::Entity::insert(model).exec_with_returning(&self.db_connection).await;
         match distribution {
             Ok(distribution) => Ok(distribution),

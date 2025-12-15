@@ -1,9 +1,7 @@
 use crate::data::entities::odrl_offer;
 use crate::data::entities::odrl_offer::NewOdrlOfferModel;
 use crate::data::repo_traits::odrl_offer_repo::{OdrlOfferRepoErrors, OdrlOfferRepositoryTrait};
-use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, ModelTrait, QueryFilter, QuerySelect,
-};
+use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect};
 use urn::Urn;
 
 pub struct OdrlOfferRepositoryForSql {
@@ -16,6 +14,7 @@ impl OdrlOfferRepositoryForSql {
     }
 }
 
+#[async_trait::async_trait]
 impl OdrlOfferRepositoryTrait for OdrlOfferRepositoryForSql {
     async fn get_all_odrl_offers(
         &self,
@@ -112,7 +111,7 @@ impl OdrlOfferRepositoryTrait for OdrlOfferRepositoryForSql {
 
     async fn get_upstream_offers(
         &self,
-        entity_id: &Urn,
+        _entity_id: &Urn,
     ) -> anyhow::Result<Vec<odrl_offer::Model>, OdrlOfferRepoErrors> {
         todo!()
     }

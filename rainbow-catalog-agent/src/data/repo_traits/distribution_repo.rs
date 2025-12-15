@@ -37,8 +37,6 @@ pub trait DistributionRepositoryTrait: Send + Sync {
     ) -> anyhow::Result<distribution::Model, DistributionRepoErrors>;
     async fn create_distribution(
         &self,
-        catalog_id: &Urn,
-        dataset_id: &Urn,
         new_distribution_model: &NewDistributionModel,
     ) -> anyhow::Result<distribution::Model, DistributionRepoErrors>;
     async fn delete_distribution_by_id(&self, distribution_id: &Urn) -> anyhow::Result<(), DistributionRepoErrors>;

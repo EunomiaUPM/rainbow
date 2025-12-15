@@ -1,9 +1,7 @@
 use crate::data::entities::catalog;
 use crate::data::entities::catalog::{EditCatalogModel, NewCatalogModel};
 use crate::data::repo_traits::catalog_repo::{CatalogRepoErrors, CatalogRepositoryTrait};
-use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, ModelTrait, QueryFilter, QuerySelect,
-};
+use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect};
 use urn::Urn;
 
 pub struct CatalogRepositoryForSql {
@@ -16,6 +14,7 @@ impl CatalogRepositoryForSql {
     }
 }
 
+#[async_trait::async_trait]
 impl CatalogRepositoryTrait for CatalogRepositoryForSql {
     async fn get_all_catalogs(
         &self,
@@ -91,17 +90,17 @@ impl CatalogRepositoryTrait for CatalogRepositoryForSql {
         };
 
         let mut old_active_model: catalog::ActiveModel = old_model.into();
-        if let Some(foaf_home_page) = edit_catalog_model.foaf_home_page {
-            old_active_model.foaf_home_page = ActiveValue::Set(Some(foaf_home_page));
+        if let Some(foaf_home_page) = &edit_catalog_model.foaf_home_page {
+            old_active_model.foaf_home_page = ActiveValue::Set(Some(foaf_home_page.clone()));
         }
-        if let Some(dct_conforms_to) = edit_catalog_model.dct_conforms_to {
-            old_active_model.dct_conforms_to = ActiveValue::Set(Some(dct_conforms_to));
+        if let Some(dct_conforms_to) = &edit_catalog_model.dct_conforms_to {
+            old_active_model.dct_conforms_to = ActiveValue::Set(Some(dct_conforms_to.clone()));
         }
-        if let Some(dct_creator) = edit_catalog_model.dct_creator {
-            old_active_model.dct_creator = ActiveValue::Set(Some(dct_creator));
+        if let Some(dct_creator) = &edit_catalog_model.dct_creator {
+            old_active_model.dct_creator = ActiveValue::Set(Some(dct_creator.clone()));
         }
-        if let Some(dct_title) = edit_catalog_model.dct_title {
-            old_active_model.dct_title = ActiveValue::Set(Some(dct_title));
+        if let Some(dct_title) = &edit_catalog_model.dct_title {
+            old_active_model.dct_title = ActiveValue::Set(Some(dct_title.clone()));
         }
         old_active_model.dct_modified = ActiveValue::Set(Some(chrono::Utc::now().into()));
 
@@ -116,7 +115,7 @@ impl CatalogRepositoryTrait for CatalogRepositoryForSql {
         &self,
         new_catalog_model: &NewCatalogModel,
     ) -> anyhow::Result<catalog::Model, CatalogRepoErrors> {
-        let model: catalog::ActiveModel = new_catalog_model.clone().into();
+        let model: catalog::ActiveModel = new_catalog_model.into();
         let catalog = catalog::Entity::insert(model).exec_with_returning(&self.db_connection).await;
         match catalog {
             Ok(catalog) => Ok(catalog),
@@ -128,7 +127,7 @@ impl CatalogRepositoryTrait for CatalogRepositoryForSql {
         &self,
         new_catalog_model: &NewCatalogModel,
     ) -> anyhow::Result<catalog::Model, CatalogRepoErrors> {
-        let mut model: catalog::ActiveModel = new_catalog_model.clone().into();
+        let mut model: catalog::ActiveModel = new_catalog_model.into();
         model.dspace_main_catalog = ActiveValue::Set(true);
         let catalog = catalog::Entity::insert(model).exec_with_returning(&self.db_connection).await;
         match catalog {

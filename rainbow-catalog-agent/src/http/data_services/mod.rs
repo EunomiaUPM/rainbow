@@ -1,4 +1,3 @@
-use crate::data::entities::dataservice::{EditDataServiceModel, NewDataServiceModel};
 use crate::entities::data_services::{DataServiceEntityTrait, EditDataServiceDto, NewDataServiceDto};
 use crate::errors::error_adapter::CustomToResponse;
 use crate::http::common::{extract_payload, parse_urn};

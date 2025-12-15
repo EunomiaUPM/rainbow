@@ -1,4 +1,3 @@
-use crate::data::repo_traits::odrl_offer_repo::OdrlOfferRepositoryTrait;
 use crate::entities::odrl_policies::{NewOdrlPolicyDto, OdrlPolicyEntityTrait};
 use crate::errors::error_adapter::CustomToResponse;
 use crate::http::common::{extract_payload, parse_urn};
@@ -6,7 +5,7 @@ use axum::extract::rejection::JsonRejection;
 use axum::extract::{FromRef, Path, Query, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use axum::routing::{delete, get, post, put};
+use axum::routing::{delete, get, post};
 use axum::{Json, Router};
 use rainbow_common::batch_requests::BatchRequests;
 use rainbow_common::config::global_config::ApplicationGlobalConfig;

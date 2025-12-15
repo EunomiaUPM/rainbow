@@ -1,7 +1,7 @@
 pub(crate) mod data_services;
 
 use crate::data::entities::dataservice;
-use crate::data::entities::dataservice::{EditDataServiceModel, NewDataServiceModel};
+use crate::data::entities::dataservice::{EditDataServiceModel, Model, NewDataServiceModel};
 use serde::{Deserialize, Serialize};
 use urn::Urn;
 
@@ -23,6 +23,7 @@ pub struct NewDataServiceDto {
     pub dct_creator: Option<String>,
     pub dct_title: Option<String>,
     pub dct_description: Option<String>,
+    pub catalog_id: Urn,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -47,6 +48,7 @@ impl From<NewDataServiceDto> for NewDataServiceModel {
             dct_creator: dto.dct_creator,
             dct_title: dto.dct_title,
             dct_description: dto.dct_description,
+            catalog_id: dto.catalog_id,
         }
     }
 }
@@ -64,9 +66,15 @@ impl From<EditDataServiceDto> for EditDataServiceModel {
     }
 }
 
+impl From<dataservice::Model> for DataServiceDto {
+    fn from(value: Model) -> Self {
+        Self { inner: value }
+    }
+}
+
 #[mockall::automock]
 #[async_trait::async_trait]
-pub trait DataServiceEntityTrait {
+pub trait DataServiceEntityTrait: Send + Sync {
     async fn get_all_data_services(&self, limit: Option<u64>, page: Option<u64>)
         -> anyhow::Result<Vec<DataServiceDto>>;
     async fn get_batch_data_services(&self, ids: &Vec<Urn>) -> anyhow::Result<Vec<DataServiceDto>>;

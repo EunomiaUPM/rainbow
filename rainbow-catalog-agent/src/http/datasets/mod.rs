@@ -1,5 +1,5 @@
 use crate::entities::datasets::DatasetEntityTrait;
-use crate::entities::datasets::{DatasetEntityTrait, EditDatasetDto, NewDatasetDto};
+use crate::entities::datasets::{EditDatasetDto, NewDatasetDto};
 use crate::errors::error_adapter::CustomToResponse;
 use crate::http::common::{extract_payload, parse_urn};
 use axum::extract::rejection::JsonRejection;

@@ -1,10 +1,7 @@
 use crate::data::entities::policy_template;
 use crate::data::entities::policy_template::NewPolicyTemplateModel;
 use crate::data::repo_traits::policy_template_repo::{PolicyTemplatesRepoErrors, PolicyTemplatesRepositoryTrait};
-use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, ModelTrait, QueryFilter, QueryOrder,
-    QuerySelect,
-};
+use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder, QuerySelect};
 use urn::Urn;
 
 pub struct PolicyTemplatesRepositoryForSql {
@@ -17,6 +14,7 @@ impl PolicyTemplatesRepositoryForSql {
     }
 }
 
+#[async_trait::async_trait]
 impl PolicyTemplatesRepositoryTrait for PolicyTemplatesRepositoryForSql {
     async fn get_all_policy_templates(
         &self,
@@ -63,6 +61,7 @@ impl PolicyTemplatesRepositoryTrait for PolicyTemplatesRepositoryForSql {
         &self,
         template_id: &Urn,
     ) -> anyhow::Result<Option<policy_template::Model>, PolicyTemplatesRepoErrors> {
+        let template_id = template_id.to_string();
         match policy_template::Entity::find_by_id(template_id).one(&self.db_connection).await {
             Ok(template) => Ok(template),
             Err(err) => Err(PolicyTemplatesRepoErrors::ErrorFetchingPolicyTemplate(
@@ -75,12 +74,7 @@ impl PolicyTemplatesRepositoryTrait for PolicyTemplatesRepositoryForSql {
         &self,
         new_policy_template: &NewPolicyTemplateModel,
     ) -> anyhow::Result<policy_template::Model, PolicyTemplatesRepoErrors> {
-        let id = format!("template_{}", chrono::Utc::now().timestamp());
-
-        // Crear el ActiveModel
         let model: policy_template::ActiveModel = new_policy_template.into();
-
-        // Insertar en la base de datos y devolver el resultado
         match policy_template::Entity::insert(model).exec_with_returning(&self.db_connection).await {
             Ok(template) => Ok(template),
             Err(err) => Err(PolicyTemplatesRepoErrors::ErrorCreatingPolicyTemplate(
@@ -90,6 +84,7 @@ impl PolicyTemplatesRepositoryTrait for PolicyTemplatesRepositoryForSql {
     }
 
     async fn delete_policy_template_by_id(&self, template_id: &Urn) -> anyhow::Result<(), PolicyTemplatesRepoErrors> {
+        let template_id = template_id.to_string();
         match policy_template::Entity::delete_by_id(template_id).exec(&self.db_connection).await {
             Ok(_) => Ok(()),
             Err(err) => Err(PolicyTemplatesRepoErrors::ErrorDeletingPolicyTemplate(

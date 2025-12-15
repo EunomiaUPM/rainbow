@@ -1,7 +1,6 @@
 use crate::data::entities::odrl_offer;
 use crate::data::entities::odrl_offer::NewOdrlOfferModel;
 use anyhow::Error;
-use axum::response::IntoResponse;
 use thiserror::Error;
 use urn::Urn;
 
@@ -48,10 +47,4 @@ pub enum OdrlOfferRepoErrors {
     ErrorUpdatingOdrlOffer(Error),
     #[error("Error fetching offer ids. {missing_ids:?}")]
     SomeOdrlOffersNotFound { missing_ids: String },
-}
-
-impl OdrlOfferRepoErrors {
-    pub(crate) fn to_response(&self) -> impl IntoResponse {
-        todo!()
-    }
 }

@@ -1,9 +1,7 @@
 use crate::data::entities::dataservice::{EditDataServiceModel, NewDataServiceModel};
 use crate::data::entities::{catalog, dataservice};
 use crate::data::repo_traits::dataservice_repo::{DataServiceRepoErrors, DataServiceRepositoryTrait};
-use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, ModelTrait, QueryFilter, QuerySelect,
-};
+use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect};
 use urn::Urn;
 
 pub struct DataServiceRepositoryForSql {
@@ -16,6 +14,7 @@ impl DataServiceRepositoryForSql {
     }
 }
 
+#[async_trait::async_trait]
 impl DataServiceRepositoryTrait for DataServiceRepositoryForSql {
     async fn get_all_data_services(
         &self,
@@ -99,23 +98,23 @@ impl DataServiceRepositoryTrait for DataServiceRepositoryForSql {
             Err(err) => return Err(DataServiceRepoErrors::ErrorFetchingDataService(err.into())),
         };
         let mut old_active_model: dataservice::ActiveModel = old_model.into();
-        if let Some(dcat_endpoint_description) = edit_data_service_model.dcat_endpoint_description {
-            old_active_model.dcat_endpoint_description = ActiveValue::Set(Some(dcat_endpoint_description));
+        if let Some(dcat_endpoint_description) = &edit_data_service_model.dcat_endpoint_description {
+            old_active_model.dcat_endpoint_description = ActiveValue::Set(Some(dcat_endpoint_description.clone()));
         }
-        if let Some(dcat_endpoint_url) = edit_data_service_model.dcat_endpoint_url {
-            old_active_model.dcat_endpoint_url = ActiveValue::Set(dcat_endpoint_url);
+        if let Some(dcat_endpoint_url) = &edit_data_service_model.dcat_endpoint_url {
+            old_active_model.dcat_endpoint_url = ActiveValue::Set(dcat_endpoint_url.clone());
         }
-        if let Some(dct_conforms_to) = edit_data_service_model.dct_conforms_to {
-            old_active_model.dct_conforms_to = ActiveValue::Set(Some(dct_conforms_to));
+        if let Some(dct_conforms_to) = &edit_data_service_model.dct_conforms_to {
+            old_active_model.dct_conforms_to = ActiveValue::Set(Some(dct_conforms_to.clone()));
         }
-        if let Some(dct_creator) = edit_data_service_model.dct_creator {
-            old_active_model.dct_creator = ActiveValue::Set(Some(dct_creator));
+        if let Some(dct_creator) = &edit_data_service_model.dct_creator {
+            old_active_model.dct_creator = ActiveValue::Set(Some(dct_creator.clone()));
         }
-        if let Some(dct_title) = edit_data_service_model.dct_title {
-            old_active_model.dct_title = ActiveValue::Set(Some(dct_title));
+        if let Some(dct_title) = &edit_data_service_model.dct_title {
+            old_active_model.dct_title = ActiveValue::Set(Some(dct_title.clone()));
         }
-        if let Some(dct_description) = edit_data_service_model.dct_description {
-            old_active_model.dct_description = ActiveValue::Set(Some(dct_description));
+        if let Some(dct_description) = &edit_data_service_model.dct_description {
+            old_active_model.dct_description = ActiveValue::Set(Some(dct_description.clone()));
         }
 
         old_active_model.dct_modified = ActiveValue::Set(Some(chrono::Utc::now().into()));

@@ -24,13 +24,19 @@ pub struct NewOdrlPolicyDto {
 
 impl From<NewOdrlPolicyDto> for NewOdrlOfferModel {
     fn from(dto: NewOdrlPolicyDto) -> Self {
-        Self { id: dto.id, odrl_offers: dto.odrl_offers }
+        Self { id: dto.id, odrl_offers: dto.odrl_offers, entity_id: dto.entity_id, entity_type: dto.entity_type }
+    }
+}
+
+impl From<odrl_offer::Model> for OdrlPolicyDto {
+    fn from(value: odrl_offer::Model) -> Self {
+        Self { inner: value }
     }
 }
 
 #[mockall::automock]
 #[async_trait::async_trait]
-pub trait OdrlPolicyEntityTrait {
+pub trait OdrlPolicyEntityTrait: Sync + Send {
     async fn get_all_odrl_offers(&self, limit: Option<u64>, page: Option<u64>) -> anyhow::Result<Vec<OdrlPolicyDto>>;
     async fn get_batch_odrl_offers(&self, ids: &Vec<Urn>) -> anyhow::Result<Vec<OdrlPolicyDto>>;
     async fn get_all_odrl_offers_by_entity(&self, entity: &Urn) -> anyhow::Result<Vec<OdrlPolicyDto>>;

@@ -1,7 +1,7 @@
 pub(crate) mod datasets;
 
 use crate::data::entities::dataset;
-use crate::data::entities::dataset::{EditDatasetModel, NewDatasetModel};
+use crate::data::entities::dataset::{EditDatasetModel, Model, NewDatasetModel};
 use serde::{Deserialize, Serialize};
 use urn::Urn;
 
@@ -9,7 +9,7 @@ use urn::Urn;
 #[serde(rename_all = "camelCase")]
 pub struct DatasetDto {
     #[serde(flatten)]
-    pub inner: DatasetDto,
+    pub inner: dataset::Model,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -21,6 +21,7 @@ pub struct NewDatasetDto {
     pub dct_creator: Option<String>,
     pub dct_title: Option<String>,
     pub dct_description: Option<String>,
+    pub catalog_id: Urn,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -41,6 +42,7 @@ impl From<NewDatasetDto> for NewDatasetModel {
             dct_creator: dto.dct_creator,
             dct_title: dto.dct_title,
             dct_description: dto.dct_description,
+            catalog_id: dto.catalog_id,
         }
     }
 }
@@ -56,9 +58,15 @@ impl From<EditDatasetDto> for EditDatasetModel {
     }
 }
 
+impl From<dataset::Model> for DatasetDto {
+    fn from(value: Model) -> Self {
+        Self { inner: value }
+    }
+}
+
 #[mockall::automock]
 #[async_trait::async_trait]
-pub trait DatasetEntityTrait {
+pub trait DatasetEntityTrait: Send + Sync {
     async fn get_all_datasets(&self, limit: Option<u64>, page: Option<u64>) -> anyhow::Result<Vec<DatasetDto>>;
     async fn get_batch_datasets(&self, ids: &Vec<Urn>) -> anyhow::Result<Vec<DatasetDto>>;
     async fn get_datasets_by_catalog_id(&self, catalog_id: &Urn) -> anyhow::Result<Vec<DatasetDto>>;

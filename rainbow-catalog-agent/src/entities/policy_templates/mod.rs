@@ -1,8 +1,7 @@
 pub(crate) mod policy_templates;
 
-use crate::data::entities::odrl_offer::NewOdrlOfferModel;
+use crate::data::entities::policy_template;
 use crate::data::entities::policy_template::NewPolicyTemplateModel;
-use crate::data::entities::{odrl_offer, policy_template};
 use serde::{Deserialize, Serialize};
 use urn::Urn;
 
@@ -10,7 +9,7 @@ use urn::Urn;
 #[serde(rename_all = "camelCase")]
 pub struct PolicyTemplateDto {
     #[serde(flatten)]
-    pub inner: PolicyTemplateDto,
+    pub inner: policy_template::Model,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -36,9 +35,15 @@ impl From<NewPolicyTemplateDto> for NewPolicyTemplateModel {
     }
 }
 
+impl From<policy_template::Model> for PolicyTemplateDto {
+    fn from(value: policy_template::Model) -> Self {
+        Self { inner: value }
+    }
+}
+
 #[mockall::automock]
 #[async_trait::async_trait]
-pub trait PolicyTemplateEntityTrait {
+pub trait PolicyTemplateEntityTrait: Sync + Send {
     async fn get_all_policy_templates(
         &self,
         limit: Option<u64>,

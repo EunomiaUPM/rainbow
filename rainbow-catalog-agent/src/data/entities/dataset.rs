@@ -93,6 +93,12 @@ impl From<NewDatasetModel> for ActiveModel {
     }
 }
 
+impl From<&NewDatasetModel> for ActiveModel {
+    fn from(dto: &NewDatasetModel) -> Self {
+        dto.clone().into()
+    }
+}
+
 pub struct EditDatasetModel {
     pub dct_conforms_to: Option<String>,
     pub dct_creator: Option<String>,

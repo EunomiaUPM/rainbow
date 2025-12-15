@@ -1,4 +1,3 @@
-use crate::data::repo_traits::odrl_offer_repo::PolicyTemplateRepositoryTrait;
 use crate::entities::policy_templates::{NewPolicyTemplateDto, PolicyTemplateEntityTrait};
 use crate::errors::error_adapter::CustomToResponse;
 use crate::http::common::{extract_payload, parse_urn};
@@ -110,7 +109,7 @@ impl PolicyTemplateEntityRouter {
             Err(resp) => return resp,
         };
         match state.service.delete_policy_template_by_id(&id_urn).await {
-            Ok(dataset) => StatusCode::OK.into_response(),
+            Ok(_) => StatusCode::OK.into_response(),
             Err(err) => err.to_response(),
         }
     }
