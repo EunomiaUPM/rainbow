@@ -1,6 +1,7 @@
 use crate::entities::datasets::DatasetEntityTrait;
 use crate::entities::datasets::{EditDatasetDto, NewDatasetDto};
 use crate::errors::error_adapter::CustomToResponse;
+use crate::http::common::to_camel_case::ToCamelCase;
 use crate::http::common::{extract_payload, parse_urn};
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{FromRef, Path, Query, State};
@@ -59,7 +60,7 @@ impl DatasetEntityRouter {
         Query(params): Query<PaginationParams>,
     ) -> impl IntoResponse {
         match state.service.get_all_datasets(params.limit, params.page).await {
-            Ok(datasets) => (StatusCode::OK, Json(datasets)).into_response(),
+            Ok(datasets) => (StatusCode::OK, Json(ToCamelCase(datasets))).into_response(),
             Err(err) => err.to_response(),
         }
     }
@@ -72,7 +73,7 @@ impl DatasetEntityRouter {
             Err(e) => return e,
         };
         match state.service.get_batch_datasets(&input.ids).await {
-            Ok(datasets) => (StatusCode::OK, Json(datasets)).into_response(),
+            Ok(datasets) => (StatusCode::OK, Json(ToCamelCase(datasets))).into_response(),
             Err(err) => err.to_response(),
         }
     }
@@ -85,7 +86,7 @@ impl DatasetEntityRouter {
             Err(resp) => return resp,
         };
         match state.service.get_datasets_by_catalog_id(&id_urn).await {
-            Ok(dataset) => (StatusCode::OK, Json(dataset)).into_response(),
+            Ok(dataset) => (StatusCode::OK, Json(ToCamelCase(dataset))).into_response(),
             Err(err) => err.to_response(),
         }
     }
@@ -98,7 +99,7 @@ impl DatasetEntityRouter {
             Err(resp) => return resp,
         };
         match state.service.get_dataset_by_id(&id_urn).await {
-            Ok(Some(dataset)) => (StatusCode::OK, Json(dataset)).into_response(),
+            Ok(Some(dataset)) => (StatusCode::OK, Json(ToCamelCase(dataset))).into_response(),
             Ok(None) => (StatusCode::NOT_FOUND).into_response(),
             Err(err) => err.to_response(),
         }
@@ -117,7 +118,7 @@ impl DatasetEntityRouter {
             Err(e) => return e,
         };
         match state.service.put_dataset_by_id(&id_urn, &input).await {
-            Ok(dataset) => (StatusCode::OK, Json(dataset)).into_response(),
+            Ok(dataset) => (StatusCode::OK, Json(ToCamelCase(dataset))).into_response(),
             Err(err) => err.to_response(),
         }
     }
@@ -130,7 +131,7 @@ impl DatasetEntityRouter {
             Err(e) => return e,
         };
         match state.service.create_dataset(&input).await {
-            Ok(dataset) => (StatusCode::OK, Json(dataset)).into_response(),
+            Ok(dataset) => (StatusCode::OK, Json(ToCamelCase(dataset))).into_response(),
             Err(err) => err.to_response(),
         }
     }
@@ -143,7 +144,7 @@ impl DatasetEntityRouter {
             Err(resp) => return resp,
         };
         match state.service.delete_dataset_by_id(&id_urn).await {
-            Ok(dataset) => (StatusCode::OK, Json(dataset)).into_response(),
+            Ok(dataset) => (StatusCode::OK, Json(ToCamelCase(dataset))).into_response(),
             Err(err) => err.to_response(),
         }
     }

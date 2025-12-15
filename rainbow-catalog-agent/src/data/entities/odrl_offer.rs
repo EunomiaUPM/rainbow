@@ -74,6 +74,7 @@ impl Related<super::distribution::Entity> for Entity {
 
 impl ActiveModelBehavior for ActiveModel {}
 
+#[derive(Clone)]
 pub struct NewOdrlOfferModel {
     pub id: Option<Urn>,
     pub odrl_offers: Option<serde_json::Value>,

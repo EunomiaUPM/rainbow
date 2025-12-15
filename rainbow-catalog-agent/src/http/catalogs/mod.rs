@@ -1,5 +1,6 @@
 use crate::entities::catalogs::{CatalogEntityTrait, EditCatalogDto, NewCatalogDto};
 use crate::errors::error_adapter::CustomToResponse;
+use crate::http::common::to_camel_case::ToCamelCase;
 use crate::http::common::{extract_payload, parse_urn};
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{FromRef, Path, Query, State};
@@ -61,7 +62,7 @@ impl CatalogEntityRouter {
     ) -> impl IntoResponse {
         let with_main_catalog = params.with_main_catalog.unwrap_or(false);
         match state.service.get_all_catalogs(params.limit, params.page, with_main_catalog).await {
-            Ok(catalogs) => (StatusCode::OK, Json(catalogs)).into_response(),
+            Ok(catalogs) => (StatusCode::OK, Json(ToCamelCase(catalogs))).into_response(),
             Err(err) => err.to_response(),
         }
     }
@@ -74,7 +75,7 @@ impl CatalogEntityRouter {
             Err(e) => return e,
         };
         match state.service.get_batch_catalogs(&input.ids).await {
-            Ok(catalogs) => (StatusCode::OK, Json(catalogs)).into_response(),
+            Ok(catalogs) => (StatusCode::OK, Json(ToCamelCase(catalogs))).into_response(),
             Err(err) => err.to_response(),
         }
     }
@@ -87,14 +88,14 @@ impl CatalogEntityRouter {
             Err(resp) => return resp,
         };
         match state.service.get_catalog_by_id(&id_urn).await {
-            Ok(Some(catalog)) => (StatusCode::OK, Json(catalog)).into_response(),
+            Ok(Some(catalog)) => (StatusCode::OK, Json(ToCamelCase(catalog))).into_response(),
             Ok(None) => (StatusCode::NOT_FOUND).into_response(),
             Err(err) => err.to_response(),
         }
     }
     async fn handle_get_main_catalog(State(state): State<CatalogEntityRouter>) -> impl IntoResponse {
         match state.service.get_main_catalog().await {
-            Ok(Some(catalog)) => (StatusCode::OK, Json(catalog)).into_response(),
+            Ok(Some(catalog)) => (StatusCode::OK, Json(ToCamelCase(catalog))).into_response(),
             Ok(None) => (StatusCode::NOT_FOUND).into_response(),
             Err(err) => err.to_response(),
         }
@@ -113,7 +114,7 @@ impl CatalogEntityRouter {
             Err(e) => return e,
         };
         match state.service.put_catalog_by_id(&id_urn, &input).await {
-            Ok(catalog) => (StatusCode::ACCEPTED, Json(catalog)).into_response(),
+            Ok(catalog) => (StatusCode::ACCEPTED, Json(ToCamelCase(catalog))).into_response(),
             Err(err) => err.to_response(),
         }
     }
@@ -126,7 +127,7 @@ impl CatalogEntityRouter {
             Err(e) => return e,
         };
         match state.service.create_catalog(&input).await {
-            Ok(catalog) => (StatusCode::CREATED, Json(catalog)).into_response(),
+            Ok(catalog) => (StatusCode::CREATED, Json(ToCamelCase(catalog))).into_response(),
             Err(err) => err.to_response(),
         }
     }
@@ -139,7 +140,7 @@ impl CatalogEntityRouter {
             Err(e) => return e,
         };
         match state.service.create_main_catalog(&input).await {
-            Ok(catalog) => (StatusCode::CREATED, Json(catalog)).into_response(),
+            Ok(catalog) => (StatusCode::CREATED, Json(ToCamelCase(catalog))).into_response(),
             Err(err) => err.to_response(),
         }
     }

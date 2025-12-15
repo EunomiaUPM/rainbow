@@ -60,6 +60,7 @@ impl Related<super::odrl_offer::Entity> for Entity {
 
 impl ActiveModelBehavior for ActiveModel {}
 
+#[derive(Clone)]
 pub struct NewDataServiceModel {
     pub id: Option<Urn>,
     pub dcat_endpoint_description: Option<String>,

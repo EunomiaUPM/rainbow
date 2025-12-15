@@ -94,6 +94,7 @@ impl CatalogEntityTrait for CatalogEntities {
             error!("{}", err.log());
             err
         })?;
+
         let dto = catalog.into();
         Ok(dto)
     }

@@ -67,6 +67,7 @@ impl Related<super::odrl_offer::Entity> for Entity {
 
 impl ActiveModelBehavior for ActiveModel {}
 
+#[derive(Clone)]
 pub struct NewCatalogModel {
     pub id: Option<Urn>,
     pub foaf_home_page: Option<String>,

@@ -70,7 +70,7 @@ impl Related<super::odrl_offer::Entity> for Entity {
 
 impl ActiveModelBehavior for ActiveModel {}
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct NewDistributionModel {
     pub id: Option<Urn>,
     pub dct_title: Option<String>,

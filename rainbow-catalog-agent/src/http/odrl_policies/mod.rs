@@ -1,5 +1,6 @@
 use crate::entities::odrl_policies::{NewOdrlPolicyDto, OdrlPolicyEntityTrait};
 use crate::errors::error_adapter::CustomToResponse;
+use crate::http::common::to_camel_case::ToCamelCase;
 use crate::http::common::{extract_payload, parse_urn};
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{FromRef, Path, Query, State};
@@ -64,7 +65,7 @@ impl OdrlOfferEntityRouter {
         Query(params): Query<PaginationParams>,
     ) -> impl IntoResponse {
         match state.service.get_all_odrl_offers(params.limit, params.page).await {
-            Ok(offers) => (StatusCode::OK, Json(offers)).into_response(),
+            Ok(offers) => (StatusCode::OK, Json(ToCamelCase(offers))).into_response(),
             Err(err) => err.to_response(),
         }
     }
@@ -77,7 +78,7 @@ impl OdrlOfferEntityRouter {
             Err(e) => return e,
         };
         match state.service.get_batch_odrl_offers(&input.ids).await {
-            Ok(offers) => (StatusCode::OK, Json(offers)).into_response(),
+            Ok(offers) => (StatusCode::OK, Json(ToCamelCase(offers))).into_response(),
             Err(err) => err.to_response(),
         }
     }
@@ -90,7 +91,7 @@ impl OdrlOfferEntityRouter {
             Err(resp) => return resp,
         };
         match state.service.get_all_odrl_offers_by_entity(&entity_id).await {
-            Ok(offers) => (StatusCode::OK, Json(offers)).into_response(),
+            Ok(offers) => (StatusCode::OK, Json(ToCamelCase(offers))).into_response(),
             Err(err) => err.to_response(),
         }
     }
@@ -103,7 +104,7 @@ impl OdrlOfferEntityRouter {
             Err(resp) => return resp,
         };
         match state.service.get_odrl_offer_by_id(&id_urn).await {
-            Ok(Some(offer)) => (StatusCode::OK, Json(offer)).into_response(),
+            Ok(Some(offer)) => (StatusCode::OK, Json(ToCamelCase(offer))).into_response(),
             Ok(None) => (StatusCode::NOT_FOUND).into_response(),
             Err(err) => err.to_response(),
         }
@@ -117,7 +118,7 @@ impl OdrlOfferEntityRouter {
             Err(e) => return e,
         };
         match state.service.create_odrl_offer(&input).await {
-            Ok(offer) => (StatusCode::OK, Json(offer)).into_response(),
+            Ok(offer) => (StatusCode::OK, Json(ToCamelCase(offer))).into_response(),
             Err(err) => err.to_response(),
         }
     }
@@ -130,7 +131,7 @@ impl OdrlOfferEntityRouter {
             Err(resp) => return resp,
         };
         match state.service.delete_odrl_offer_by_id(&id_urn).await {
-            Ok(dataset) => (StatusCode::OK, Json(dataset)).into_response(),
+            Ok(dataset) => (StatusCode::OK, Json(ToCamelCase(dataset))).into_response(),
             Err(err) => err.to_response(),
         }
     }
@@ -143,7 +144,7 @@ impl OdrlOfferEntityRouter {
             Err(resp) => return resp,
         };
         match state.service.delete_odrl_offers_by_entity(&id_urn).await {
-            Ok(dataset) => (StatusCode::OK, Json(dataset)).into_response(),
+            Ok(dataset) => (StatusCode::OK, Json(ToCamelCase(dataset))).into_response(),
             Err(err) => err.to_response(),
         }
     }
