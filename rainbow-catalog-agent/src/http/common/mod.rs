@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+pub(crate) mod to_camel_case;
 
 use axum::extract::rejection::JsonRejection;
 use axum::response::{IntoResponse, Response};

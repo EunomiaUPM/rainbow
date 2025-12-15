@@ -115,7 +115,7 @@ impl CatalogRepositoryTrait for CatalogRepositoryForSql {
         &self,
         new_catalog_model: &NewCatalogModel,
     ) -> anyhow::Result<catalog::Model, CatalogRepoErrors> {
-        let model: catalog::ActiveModel = new_catalog_model.into();
+        let model: catalog::ActiveModel = new_catalog_model.clone().into();
         let catalog = catalog::Entity::insert(model).exec_with_returning(&self.db_connection).await;
         match catalog {
             Ok(catalog) => Ok(catalog),
@@ -127,6 +127,13 @@ impl CatalogRepositoryTrait for CatalogRepositoryForSql {
         &self,
         new_catalog_model: &NewCatalogModel,
     ) -> anyhow::Result<catalog::Model, CatalogRepoErrors> {
+        let main_catalog = self.get_main_catalog().await?;
+        if main_catalog.is_some() {
+            return Err(CatalogRepoErrors::ErrorCreatingCatalog(anyhow::anyhow!(
+                "Main Catalog already exists"
+            )));
+        }
+
         let mut model: catalog::ActiveModel = new_catalog_model.into();
         model.dspace_main_catalog = ActiveValue::Set(true);
         let catalog = catalog::Entity::insert(model).exec_with_returning(&self.db_connection).await;

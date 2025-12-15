@@ -1,11 +1,12 @@
 use crate::entities::distributions::{DistributionEntityTrait, EditDistributionDto, NewDistributionDto};
 use crate::errors::error_adapter::CustomToResponse;
+use crate::http::common::to_camel_case::ToCamelCase;
 use crate::http::common::{extract_payload, parse_urn};
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{FromRef, Path, Query, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use axum::routing::{get, post, put};
+use axum::routing::{delete, get, post, put};
 use axum::{Json, Router};
 use rainbow_common::batch_requests::BatchRequests;
 use rainbow_common::config::global_config::ApplicationGlobalConfig;
@@ -58,7 +59,7 @@ impl DistributionEntityRouter {
             .route("/batch", post(Self::handle_get_batch_distributions))
             .route("/:id", get(Self::handle_get_distribution_by_id))
             .route("/:id", put(Self::handle_put_distribution_by_id))
-            .route("/:id", put(Self::handle_delete_distribution_by_id))
+            .route("/:id", delete(Self::handle_delete_distribution_by_id))
             .with_state(self)
     }
 
@@ -67,7 +68,7 @@ impl DistributionEntityRouter {
         Query(params): Query<PaginationParams>,
     ) -> impl IntoResponse {
         match state.service.get_all_distributions(params.limit, params.page).await {
-            Ok(distributions) => (StatusCode::OK, Json(distributions)).into_response(),
+            Ok(distributions) => (StatusCode::OK, Json(ToCamelCase(distributions))).into_response(),
             Err(err) => err.to_response(),
         }
     }
@@ -80,7 +81,7 @@ impl DistributionEntityRouter {
             Err(e) => return e,
         };
         match state.service.get_batch_distributions(&input.ids).await {
-            Ok(distributions) => (StatusCode::OK, Json(distributions)).into_response(),
+            Ok(distributions) => (StatusCode::OK, Json(ToCamelCase(distributions))).into_response(),
             Err(err) => err.to_response(),
         }
     }
@@ -93,7 +94,7 @@ impl DistributionEntityRouter {
             Err(resp) => return resp,
         };
         match state.service.get_distributions_by_dataset_id(&id_urn).await {
-            Ok(distributions) => (StatusCode::OK, Json(distributions)).into_response(),
+            Ok(distributions) => (StatusCode::OK, Json(ToCamelCase(distributions))).into_response(),
             Err(err) => err.to_response(),
         }
     }
@@ -110,7 +111,7 @@ impl DistributionEntityRouter {
             Err(e) => return e.to_response(),
         };
         match state.service.get_distribution_by_dataset_id_and_dct_format(&id_urn, &dct).await {
-            Ok(distribution) => (StatusCode::OK, Json(distribution)).into_response(),
+            Ok(distribution) => (StatusCode::OK, Json(ToCamelCase(distribution))).into_response(),
             Err(err) => err.to_response(),
         }
     }
@@ -123,7 +124,7 @@ impl DistributionEntityRouter {
             Err(resp) => return resp,
         };
         match state.service.get_distribution_by_id(&id_urn).await {
-            Ok(Some(distribution)) => (StatusCode::OK, Json(distribution)).into_response(),
+            Ok(Some(distribution)) => (StatusCode::OK, Json(ToCamelCase(distribution))).into_response(),
             Ok(None) => (StatusCode::NOT_FOUND).into_response(),
             Err(err) => err.to_response(),
         }
@@ -142,7 +143,7 @@ impl DistributionEntityRouter {
             Err(e) => return e,
         };
         match state.service.put_distribution_by_id(&id_urn, &input).await {
-            Ok(distribution) => (StatusCode::OK, Json(distribution)).into_response(),
+            Ok(distribution) => (StatusCode::OK, Json(ToCamelCase(distribution))).into_response(),
             Err(err) => err.to_response(),
         }
     }
@@ -155,7 +156,7 @@ impl DistributionEntityRouter {
             Err(e) => return e,
         };
         match state.service.create_distribution(&input).await {
-            Ok(distribution) => (StatusCode::OK, Json(distribution)).into_response(),
+            Ok(distribution) => (StatusCode::OK, Json(ToCamelCase(distribution))).into_response(),
             Err(err) => err.to_response(),
         }
     }
@@ -168,7 +169,7 @@ impl DistributionEntityRouter {
             Err(resp) => return resp,
         };
         match state.service.delete_distribution_by_id(&id_urn).await {
-            Ok(dataset) => (StatusCode::OK, Json(dataset)).into_response(),
+            Ok(dataset) => (StatusCode::OK, Json(ToCamelCase(dataset))).into_response(),
             Err(err) => err.to_response(),
         }
     }

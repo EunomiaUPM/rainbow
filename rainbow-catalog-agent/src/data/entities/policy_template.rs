@@ -22,7 +22,7 @@ use serde::{Deserialize, Serialize};
 use urn::UrnBuilder;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
-#[sea_orm(table_name = "catalog_policy_templates")]
+#[sea_orm(table_name = "policy_templates")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: String,
@@ -38,6 +38,7 @@ pub enum Relation {}
 
 impl ActiveModelBehavior for ActiveModel {}
 
+#[derive(Clone)]
 pub struct NewPolicyTemplateModel {
     pub id: Option<String>,
     pub title: Option<String>,
@@ -48,9 +49,12 @@ pub struct NewPolicyTemplateModel {
 
 impl From<NewPolicyTemplateModel> for ActiveModel {
     fn from(dto: NewPolicyTemplateModel) -> Self {
-        let new_urn = UrnBuilder::new("policy-template", uuid::Uuid::new_v4().to_string().as_str())
-            .build()
-            .expect("UrnBuilder failed");
+        let new_urn = UrnBuilder::new(
+            "policy-templates",
+            uuid::Uuid::new_v4().to_string().as_str(),
+        )
+        .build()
+        .expect("UrnBuilder failed");
         Self {
             id: ActiveValue::Set(dto.id.clone().unwrap_or(new_urn.clone().to_string()).to_string()),
             title: ActiveValue::Set(dto.title),

@@ -32,7 +32,7 @@ impl CatalogApplication {
         let http_handle = CatalogHttpWorker::spawn(config, &cancel_token).await?;
         // worker grpc
         tracing::info!("Spawning gRPC subsystem...");
-        let grpc_handle = CatalogGrpcWorker::spawn(config, &cancel_token).await?;
+        //let grpc_handle = CatalogGrpcWorker::spawn(config, &cancel_token).await?;
         // shutdown loop
         let shutdown_signal = Self::shutdown_signal();
         tokio::select! {
@@ -40,12 +40,11 @@ impl CatalogApplication {
                 tracing::warn!("Shutdown signal received from OS.");
             }
             _ = async { http_handle.await } => {
-                // TODO errors well done...
                 tracing::error!("HTTP subsystem failed or stopped unexpectedly!");
             }
-            _ = async { grpc_handle.await } => {
-                tracing::error!("GRPC subsystem failed or stopped unexpectedly!");
-            }
+            // _ = async { grpc_handle.await } => {
+            //     tracing::error!("GRPC subsystem failed or stopped unexpectedly!");
+            // }
         }
         // teardown
         tracing::info!("Initiating graceful shutdown sequence...");

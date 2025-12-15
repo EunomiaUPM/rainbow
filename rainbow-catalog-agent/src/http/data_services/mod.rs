@@ -1,5 +1,6 @@
 use crate::entities::data_services::{DataServiceEntityTrait, EditDataServiceDto, NewDataServiceDto};
 use crate::errors::error_adapter::CustomToResponse;
+use crate::http::common::to_camel_case::ToCamelCase;
 use crate::http::common::{extract_payload, parse_urn};
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{FromRef, Path, Query, State};
@@ -61,7 +62,7 @@ impl DataServiceEntityRouter {
         Query(params): Query<PaginationParams>,
     ) -> impl IntoResponse {
         match state.service.get_all_data_services(params.limit, params.page).await {
-            Ok(data_services) => (StatusCode::OK, Json(data_services)).into_response(),
+            Ok(data_services) => (StatusCode::OK, Json(ToCamelCase(data_services))).into_response(),
             Err(err) => err.to_response(),
         }
     }
@@ -74,7 +75,7 @@ impl DataServiceEntityRouter {
             Err(e) => return e,
         };
         match state.service.get_batch_data_services(&input.ids).await {
-            Ok(data_services) => (StatusCode::OK, Json(data_services)).into_response(),
+            Ok(data_services) => (StatusCode::OK, Json(ToCamelCase(data_services))).into_response(),
             Err(err) => err.to_response(),
         }
     }
@@ -87,7 +88,7 @@ impl DataServiceEntityRouter {
             Err(resp) => return resp,
         };
         match state.service.get_data_services_by_catalog_id(&id_urn).await {
-            Ok(data_services) => (StatusCode::OK, Json(data_services)).into_response(),
+            Ok(data_services) => (StatusCode::OK, Json(ToCamelCase(data_services))).into_response(),
             Err(err) => err.to_response(),
         }
     }
@@ -100,7 +101,7 @@ impl DataServiceEntityRouter {
             Err(resp) => return resp,
         };
         match state.service.get_data_service_by_id(&id_urn).await {
-            Ok(Some(data_service)) => (StatusCode::OK, Json(data_service)).into_response(),
+            Ok(Some(data_service)) => (StatusCode::OK, Json(ToCamelCase(data_service))).into_response(),
             Ok(None) => (StatusCode::NOT_FOUND).into_response(),
             Err(err) => err.to_response(),
         }
@@ -119,7 +120,7 @@ impl DataServiceEntityRouter {
             Err(e) => return e,
         };
         match state.service.put_data_service_by_id(&id_urn, &input).await {
-            Ok(data_service) => (StatusCode::OK, Json(data_service)).into_response(),
+            Ok(data_service) => (StatusCode::OK, Json(ToCamelCase(data_service))).into_response(),
             Err(err) => err.to_response(),
         }
     }
@@ -132,7 +133,7 @@ impl DataServiceEntityRouter {
             Err(e) => return e,
         };
         match state.service.create_data_service(&input).await {
-            Ok(data_service) => (StatusCode::OK, Json(data_service)).into_response(),
+            Ok(data_service) => (StatusCode::OK, Json(ToCamelCase(data_service))).into_response(),
             Err(err) => err.to_response(),
         }
     }
@@ -145,7 +146,7 @@ impl DataServiceEntityRouter {
             Err(resp) => return resp,
         };
         match state.service.delete_data_service_by_id(&id_urn).await {
-            Ok(data_service) => (StatusCode::OK, Json(data_service)).into_response(),
+            Ok(data_service) => (StatusCode::OK, Json(ToCamelCase(data_service))).into_response(),
             Err(err) => err.to_response(),
         }
     }

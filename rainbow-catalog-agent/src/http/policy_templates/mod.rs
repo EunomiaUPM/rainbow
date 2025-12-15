@@ -1,5 +1,6 @@
 use crate::entities::policy_templates::{NewPolicyTemplateDto, PolicyTemplateEntityTrait};
 use crate::errors::error_adapter::CustomToResponse;
+use crate::http::common::to_camel_case::ToCamelCase;
 use crate::http::common::{extract_payload, parse_urn};
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{FromRef, Path, Query, State};
@@ -56,7 +57,7 @@ impl PolicyTemplateEntityRouter {
         Query(params): Query<PaginationParams>,
     ) -> impl IntoResponse {
         match state.service.get_all_policy_templates(params.limit, params.page).await {
-            Ok(templates) => (StatusCode::OK, Json(templates)).into_response(),
+            Ok(templates) => (StatusCode::OK, Json(ToCamelCase(templates))).into_response(),
             Err(err) => err.to_response(),
         }
     }
@@ -69,7 +70,7 @@ impl PolicyTemplateEntityRouter {
             Err(e) => return e,
         };
         match state.service.get_batch_policy_templates(&input.ids).await {
-            Ok(templates) => (StatusCode::OK, Json(templates)).into_response(),
+            Ok(templates) => (StatusCode::OK, Json(ToCamelCase(templates))).into_response(),
             Err(err) => err.to_response(),
         }
     }
@@ -82,7 +83,7 @@ impl PolicyTemplateEntityRouter {
             Err(resp) => return resp,
         };
         match state.service.get_policy_template_by_id(&id_urn).await {
-            Ok(Some(template)) => (StatusCode::OK, Json(template)).into_response(),
+            Ok(Some(template)) => (StatusCode::OK, Json(ToCamelCase(template))).into_response(),
             Ok(None) => (StatusCode::NOT_FOUND).into_response(),
             Err(err) => err.to_response(),
         }
@@ -96,7 +97,7 @@ impl PolicyTemplateEntityRouter {
             Err(e) => return e,
         };
         match state.service.create_policy_template(&input).await {
-            Ok(template) => (StatusCode::OK, Json(template)).into_response(),
+            Ok(template) => (StatusCode::OK, Json(ToCamelCase(template))).into_response(),
             Err(err) => err.to_response(),
         }
     }

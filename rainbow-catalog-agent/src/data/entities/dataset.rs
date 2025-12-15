@@ -66,6 +66,7 @@ impl Related<super::odrl_offer::Entity> for Entity {
 
 impl ActiveModelBehavior for ActiveModel {}
 
+#[derive(Clone)]
 pub struct NewDatasetModel {
     pub id: Option<Urn>,
     pub dct_conforms_to: Option<String>,
