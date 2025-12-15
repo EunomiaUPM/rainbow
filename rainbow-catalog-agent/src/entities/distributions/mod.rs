@@ -1,6 +1,7 @@
 pub(crate) mod distributions;
 
-use crate::data::entities::distribution::{EditDistributionModel, NewDistributionModel};
+use crate::data::entities::distribution;
+use crate::data::entities::distribution::{EditDistributionModel, Model, NewDistributionModel};
 use rainbow_common::dcat_formats::DctFormats;
 use serde::{Deserialize, Serialize};
 use urn::Urn;
@@ -9,7 +10,7 @@ use urn::Urn;
 #[serde(rename_all = "camelCase")]
 pub struct DistributionDto {
     #[serde(flatten)]
-    pub inner: DistributionDto,
+    pub inner: distribution::Model,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -56,9 +57,15 @@ impl From<EditDistributionDto> for EditDistributionModel {
     }
 }
 
+impl From<distribution::Model> for DistributionDto {
+    fn from(value: Model) -> Self {
+        Self { inner: value }
+    }
+}
+
 #[mockall::automock]
 #[async_trait::async_trait]
-pub trait DistributionEntityTrait {
+pub trait DistributionEntityTrait: Send + Sync {
     async fn get_all_distributions(
         &self,
         limit: Option<u64>,

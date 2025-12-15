@@ -18,9 +18,10 @@
  */
 use sea_orm::entity::prelude::*;
 use sea_orm::ActiveValue;
+use serde::{Deserialize, Serialize};
 use urn::{Urn, UrnBuilder};
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Deserialize, Serialize)]
 #[sea_orm(table_name = "catalog_catalogs")]
 pub struct Model {
     #[sea_orm(primary_key)]
@@ -90,6 +91,12 @@ impl From<NewCatalogModel> for ActiveModel {
             dspace_participant_id: ActiveValue::Set(None),
             dspace_main_catalog: ActiveValue::Set(false),
         }
+    }
+}
+
+impl From<&NewCatalogModel> for ActiveModel {
+    fn from(dto: &NewCatalogModel) -> Self {
+        dto.clone().into()
     }
 }
 

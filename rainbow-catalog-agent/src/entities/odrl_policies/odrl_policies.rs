@@ -1,5 +1,4 @@
 use crate::data::factory_trait::CatalogAgentRepoTrait;
-use crate::entities::data_services::DataServiceDto;
 use crate::entities::odrl_policies::{NewOdrlPolicyDto, OdrlPolicyDto, OdrlPolicyEntityTrait};
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use std::sync::Arc;
@@ -67,12 +66,12 @@ impl OdrlPolicyEntityTrait for OdrlPolicyEntities {
             error!("{}", err.log());
             err
         })?;
-        let dto: OdrlPolicyDto = odrl_policy.into();
+        let dto = odrl_policy.map(|o| o.into());
         Ok(dto)
     }
 
     async fn create_odrl_offer(&self, new_odrl_offer_model: &NewOdrlPolicyDto) -> anyhow::Result<OdrlPolicyDto> {
-        let new_model = new_odrl_offer_model.into();
+        let new_model = new_odrl_offer_model.clone().into();
         let odrl_policy = self.repo.get_odrl_offer_repo().create_odrl_offer(&new_model).await.map_err(|e| {
             let err = CommonErrors::database_new(&e.to_string());
             error!("{}", err.log());

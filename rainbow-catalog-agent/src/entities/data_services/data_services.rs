@@ -1,5 +1,4 @@
 use crate::data::factory_trait::CatalogAgentRepoTrait;
-use crate::entities::catalogs::CatalogDto;
 use crate::entities::data_services::{DataServiceDto, DataServiceEntityTrait, EditDataServiceDto, NewDataServiceDto};
 use log::error;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
@@ -72,7 +71,7 @@ impl DataServiceEntityTrait for DataServiceEntities {
                 error!("{}", err.log());
                 err
             })?;
-        let dto = data_service.into();
+        let dto = data_service.map(|dto| dto.into());
         Ok(dto)
     }
 
@@ -81,7 +80,7 @@ impl DataServiceEntityTrait for DataServiceEntities {
         data_service_id: &Urn,
         edit_data_service_model: &EditDataServiceDto,
     ) -> anyhow::Result<DataServiceDto> {
-        let edit_model = edit_data_service_model.into();
+        let edit_model = edit_data_service_model.clone().into();
         let data_service =
             self.repo.get_dataservice_repo().put_data_service_by_id(data_service_id, &edit_model).await.map_err(
                 |e| {
@@ -95,7 +94,7 @@ impl DataServiceEntityTrait for DataServiceEntities {
     }
 
     async fn create_data_service(&self, new_data_service_model: &NewDataServiceDto) -> anyhow::Result<DataServiceDto> {
-        let new_model = new_data_service_model.into();
+        let new_model = new_data_service_model.clone().into();
         let data_service = self.repo.get_dataservice_repo().create_data_service(&new_model).await.map_err(|e| {
             let err = CommonErrors::database_new(&e.to_string());
             error!("{}", err.log());

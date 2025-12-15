@@ -1,5 +1,4 @@
 use crate::data::factory_trait::CatalogAgentRepoTrait;
-use crate::entities::data_services::DataServiceDto;
 use crate::entities::datasets::{DatasetDto, DatasetEntityTrait, EditDatasetDto, NewDatasetDto};
 use log::error;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
@@ -66,7 +65,7 @@ impl DatasetEntityTrait for DatasetEntities {
             error!("{}", err.log());
             err
         })?;
-        let dto = dataset.into();
+        let dto = dataset.map(|dto| dto.into());
         Ok(dto)
     }
 
@@ -75,7 +74,7 @@ impl DatasetEntityTrait for DatasetEntities {
         dataset_id: &Urn,
         edit_dataset_model: &EditDatasetDto,
     ) -> anyhow::Result<DatasetDto> {
-        let edit_model = edit_dataset_model.into();
+        let edit_model = edit_dataset_model.clone().into();
         let dataset = self.repo.get_dataset_repo().put_dataset_by_id(dataset_id, &edit_model).await.map_err(|e| {
             let err = CommonErrors::database_new(&e.to_string());
             error!("{}", err.log());
@@ -86,7 +85,7 @@ impl DatasetEntityTrait for DatasetEntities {
     }
 
     async fn create_dataset(&self, new_dataset_model: &NewDatasetDto) -> anyhow::Result<DatasetDto> {
-        let new_model = new_dataset_model.into();
+        let new_model = new_dataset_model.clone().into();
         let dataset = self.repo.get_dataset_repo().create_dataset(&new_model).await.map_err(|e| {
             let err = CommonErrors::database_new(&e.to_string());
             error!("{}", err.log());

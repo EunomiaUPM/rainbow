@@ -1,5 +1,5 @@
 use crate::data::entities::catalog;
-use crate::data::entities::catalog::{EditCatalogModel, NewCatalogModel};
+use crate::data::entities::catalog::{EditCatalogModel, Model, NewCatalogModel};
 use serde::{Deserialize, Serialize};
 use urn::Urn;
 
@@ -56,9 +56,15 @@ impl From<EditCatalogDto> for EditCatalogModel {
     }
 }
 
+impl From<catalog::Model> for CatalogDto {
+    fn from(value: Model) -> Self {
+        Self { inner: value }
+    }
+}
+
 #[mockall::automock]
 #[async_trait::async_trait]
-pub trait CatalogEntityTrait {
+pub trait CatalogEntityTrait: Send + Sync {
     async fn get_all_catalogs(
         &self,
         limit: Option<u64>,

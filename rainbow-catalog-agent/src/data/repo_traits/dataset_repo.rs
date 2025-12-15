@@ -1,4 +1,3 @@
-use crate::data::entities::catalog::{EditCatalogModel, NewCatalogModel};
 use crate::data::entities::dataset;
 use crate::data::entities::dataset::{EditDatasetModel, NewDatasetModel};
 use anyhow::Error;

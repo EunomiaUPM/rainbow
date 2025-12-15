@@ -98,6 +98,12 @@ impl From<NewDistributionModel> for ActiveModel {
     }
 }
 
+impl From<&NewDistributionModel> for ActiveModel {
+    fn from(dto: &NewDistributionModel) -> Self {
+        dto.clone().into()
+    }
+}
+
 pub struct EditDistributionModel {
     pub dct_title: Option<String>,
     pub dct_description: Option<String>,

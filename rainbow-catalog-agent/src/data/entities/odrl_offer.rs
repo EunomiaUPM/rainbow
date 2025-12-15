@@ -95,3 +95,9 @@ impl From<NewOdrlOfferModel> for ActiveModel {
         }
     }
 }
+
+impl From<&NewOdrlOfferModel> for ActiveModel {
+    fn from(dto: &NewOdrlOfferModel) -> Self {
+        dto.clone().into()
+    }
+}

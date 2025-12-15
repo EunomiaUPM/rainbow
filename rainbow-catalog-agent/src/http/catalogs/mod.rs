@@ -152,7 +152,7 @@ impl CatalogEntityRouter {
             Err(resp) => return resp,
         };
         match state.service.delete_catalog_by_id(&id_urn).await {
-            Ok(catalog) => StatusCode::ACCEPTED.into_response(),
+            Ok(_) => StatusCode::ACCEPTED.into_response(),
             Err(err) => err.to_response(),
         }
     }

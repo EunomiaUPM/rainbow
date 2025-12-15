@@ -1,5 +1,4 @@
 use crate::data::factory_trait::CatalogAgentRepoTrait;
-use crate::entities::data_services::DataServiceDto;
 use crate::entities::distributions::{
     DistributionDto, DistributionEntityTrait, EditDistributionDto, NewDistributionDto,
 };
@@ -95,7 +94,7 @@ impl DistributionEntityTrait for DistributionEntities {
                 error!("{}", err.log());
                 err
             })?;
-        let dto = distribution.into();
+        let dto = distribution.map(|d| d.into());
         Ok(dto)
     }
 
@@ -104,7 +103,7 @@ impl DistributionEntityTrait for DistributionEntities {
         distribution_id: &Urn,
         edit_distribution_model: &EditDistributionDto,
     ) -> anyhow::Result<DistributionDto> {
-        let edit_model = edit_distribution_model.into();
+        let edit_model = edit_distribution_model.clone().into();
         let distribution =
             self.repo.get_distribution_repo().put_distribution_by_id(distribution_id, &edit_model).await.map_err(
                 |e| {
@@ -121,7 +120,7 @@ impl DistributionEntityTrait for DistributionEntities {
         &self,
         new_distribution_model: &NewDistributionDto,
     ) -> anyhow::Result<DistributionDto> {
-        let new_model = new_distribution_model.into();
+        let new_model = new_distribution_model.clone().into();
         let distribution = self.repo.get_distribution_repo().create_distribution(&new_model).await.map_err(|e| {
             let err = CommonErrors::database_new(&e.to_string());
             error!("{}", err.log());

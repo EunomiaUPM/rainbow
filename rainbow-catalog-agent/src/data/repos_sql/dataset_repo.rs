@@ -1,10 +1,7 @@
-use crate::data::entities::catalog::NewCatalogModel;
 use crate::data::entities::dataset::{EditDatasetModel, NewDatasetModel};
 use crate::data::entities::{catalog, dataset};
 use crate::data::repo_traits::dataset_repo::{DatasetRepoErrors, DatasetRepositoryTrait};
-use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, ModelTrait, QueryFilter, QuerySelect,
-};
+use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect};
 use urn::Urn;
 
 pub struct DatasetRepositoryForSql {
@@ -17,6 +14,7 @@ impl DatasetRepositoryForSql {
     }
 }
 
+#[async_trait::async_trait]
 impl DatasetRepositoryTrait for DatasetRepositoryForSql {
     async fn get_all_datasets(
         &self,
@@ -92,17 +90,17 @@ impl DatasetRepositoryTrait for DatasetRepositoryForSql {
         };
 
         let mut old_active_model: dataset::ActiveModel = old_model.into();
-        if let Some(dct_conforms_to) = edit_dataset_model.dct_conforms_to {
-            old_active_model.dct_conforms_to = ActiveValue::Set(Some(dct_conforms_to));
+        if let Some(dct_conforms_to) = &edit_dataset_model.dct_conforms_to {
+            old_active_model.dct_conforms_to = ActiveValue::Set(Some(dct_conforms_to.clone()));
         }
-        if let Some(dct_creator) = edit_dataset_model.dct_creator {
-            old_active_model.dct_creator = ActiveValue::Set(Some(dct_creator));
+        if let Some(dct_creator) = &edit_dataset_model.dct_creator {
+            old_active_model.dct_creator = ActiveValue::Set(Some(dct_creator.clone()));
         }
-        if let Some(dct_title) = edit_dataset_model.dct_title {
-            old_active_model.dct_title = ActiveValue::Set(Some(dct_title));
+        if let Some(dct_title) = &edit_dataset_model.dct_title {
+            old_active_model.dct_title = ActiveValue::Set(Some(dct_title.clone()));
         }
-        if let Some(dct_description) = edit_dataset_model.dct_description {
-            old_active_model.dct_description = ActiveValue::Set(Some(dct_description));
+        if let Some(dct_description) = &edit_dataset_model.dct_description {
+            old_active_model.dct_description = ActiveValue::Set(Some(dct_description.clone()));
         }
         old_active_model.dct_modified = ActiveValue::Set(Some(chrono::Utc::now().into()));
 
