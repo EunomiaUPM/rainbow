@@ -73,7 +73,7 @@ $C_BEG_BODY = @{
     url = "$AuthorityUrl/api/v1/gate/access"
     id  = $AUTH_DID
     slug = "authority"
-    vc_type = "DataspaceParticipantCredential"
+    vc_type = "DataspaceParticipant"
 }
 $C_BEG_RESPONSE = Invoke-CurlJson -Method "POST" -Url "$ConsumerUrl/api/v1/vc-request/beg/cross-user" -Body $C_BEG_BODY -ParseJson:$false
 Write-Host "Consumer request completed."
@@ -81,7 +81,7 @@ Write-Host "Consumer request completed."
 # ----------------------------
 # Get all requests from Authority
 # ----------------------------
-$ALL_REQUESTS = Invoke-CurlJson -Url "$AuthorityUrl/api/v1/vc-request/all"
+$ALL_REQUESTS = Invoke-CurlJson -Url "$AuthorityUrl/api/v1/approver/all"
 $PETITION_ID = $ALL_REQUESTS[-1].id
 Write-Host "Petition ID: $PETITION_ID"
 
@@ -89,7 +89,7 @@ Write-Host "Petition ID: $PETITION_ID"
 # Authority approves request
 # ----------------------------
 $APPROVE_BODY = @{ approve = $true }
-Invoke-CurlJson -Method "POST" -Url "$AuthorityUrl/api/v1/vc-request/$PETITION_ID" -Body $APPROVE_BODY -ParseJson:$false
+Invoke-CurlJson -Method "POST" -Url "$AuthorityUrl/api/v1/approver/$PETITION_ID" -Body $APPROVE_BODY -ParseJson:$false
 Write-Host "Request approved."
 
 # ----------------------------

@@ -72,7 +72,7 @@ impl VerifierTrait for VerifierService {
         recv_verification::NewModel {
             id: id.to_string(),
             audience: host_url,
-            vc_type: "DataspaceParticipantCredential".to_string(),
+            vc_type: "DataspaceParticipant".to_string(),
         }
     }
     fn generate_uri(&self, ver_model: &recv_verification::Model) -> String {

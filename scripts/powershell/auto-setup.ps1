@@ -45,9 +45,9 @@ Start-Sleep -Seconds 5
 # ----------------------------
 # Authority setup
 # ----------------------------
-Write-Host "Running setup for Authority..."
-cargo run --manifest-path (Join-Path $BaseDir "rainbow-authority\Cargo.toml") setup `
-    --env-file (Join-Path $BaseDir "static\envs\.env.authority")
+#Write-Host "Running setup for Authority..."
+#cargo run --manifest-path (Join-Path $BaseDir "rainbow-authority\Cargo.toml") setup `
+#    --env-file (Join-Path $BaseDir "static\envs\.env.authority")
 
 # ----------------------------
 # Consumer setup
@@ -55,11 +55,11 @@ cargo run --manifest-path (Join-Path $BaseDir "rainbow-authority\Cargo.toml") se
 if ($Module -eq "core") {
     Write-Host "Running setup for Consumer (all modules)..."
     cargo run --manifest-path (Join-Path $BaseDir "rainbow-core\Cargo.toml") consumer setup `
-        --env-file (Join-Path $BaseDir "static\envs\.env.consumer.core")
+        --env-file (Join-Path $BaseDir "static\envs\core.consumer.yaml")
 } else {
     Write-Host "Running setup for Consumer module: $Module..."
     cargo run --manifest-path (Join-Path $BaseDir "rainbow-$Module\Cargo.toml") consumer setup `
-        --env-file (Join-Path $BaseDir "static\envs\.env.consumer.core")
+        --env-file (Join-Path $BaseDir "static\envs\core.consumer.yaml")
 }
 
 # ----------------------------
@@ -68,11 +68,11 @@ if ($Module -eq "core") {
 if ($Module -eq "core") {
     Write-Host "Running setup for Provider (all modules)..."
     cargo run --manifest-path (Join-Path $BaseDir "rainbow-core\Cargo.toml") provider setup `
-        --env-file (Join-Path $BaseDir "static\envs\.env.provider.core")
+        --env-file (Join-Path $BaseDir "static\envs\core.provider.yaml")
 } else {
     Write-Host "Running setup for Provider module: $Module..."
     cargo run --manifest-path (Join-Path $BaseDir "rainbow-$Module\Cargo.toml") provider setup `
-        --env-file (Join-Path $BaseDir "static\envs\.env.provider.core")
+        --env-file (Join-Path $BaseDir "static\envs\core.provider.yaml")
 }
 
 Write-Host ""

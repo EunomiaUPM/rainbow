@@ -11,7 +11,7 @@ hosts_default: &hosts_default
   grpc: null
   graphql: null
 
-api_version: &api_version "V1"
+api_version: &api_version "v1"
 
 min_known_config: &min_known_config
   hosts: *hosts_default
@@ -24,15 +24,15 @@ common_config: &common_config
   db:
     db_type: Postgres
     url: "127.0.0.1"
-    port: "1301"
+    port: "1300"
     user: "ds_consumer"
     password: "ds_consumer"
     name: "ds_consumer"
   role: Consumer
   api:
     version: *api_version
-    openapi_path: "static/specs/openapi/auth/auth_consumer.json"
-  keys_path: "static/certificates/consumer/"
+    openapi_path: "../static/specs/openapi/auth/auth_consumer.json"
+  keys_path: "../static/certificates/consumer/"
   is_local: true
 
 # ==========================
@@ -69,6 +69,7 @@ ssi_auth:
   client:
     class_id: "rainbow_consumer"
     display: null
+  gaia_active: false
 
 # ==========================
 # CONTRACTS

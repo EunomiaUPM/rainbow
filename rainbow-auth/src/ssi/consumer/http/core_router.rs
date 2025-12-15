@@ -50,7 +50,7 @@ impl AuthConsumerRouter {
         let vc_requester_router = VcRequesterRouter::new(self.consumer.clone()).router();
         let mate_router = MateRouter::new(self.consumer.clone()).router();
         let onboarder_router = OnboarderConsumerRouter::new(self.consumer.clone()).router();
-        let openapi_route = OpenapiRouter::new(self.openapi.clone()).router();
+        let openapi_router = OpenapiRouter::new(self.openapi.clone()).router();
 
         let api_path = self.consumer.config().get_api_version();
 
@@ -60,7 +60,7 @@ impl AuthConsumerRouter {
             .nest(&format!("{}/vc-request", api_path), vc_requester_router)
             .nest(&format!("{}/mates", api_path), mate_router)
             .nest(&format!("{}/onboard", api_path), onboarder_router)
-            .nest(&format!("{}/docs", api_path), openapi_route)
+            .nest(&format!("{}/docs", api_path), openapi_router)
             .fallback(Self::fallback)
             .layer(
                 TraceLayer::new_for_http()

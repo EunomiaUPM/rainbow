@@ -4,14 +4,14 @@
 http_host: &http_host
   protocol: "http"
   url: "127.0.0.1"
-  port: "1100"
+  port: "1200"
 
 hosts_default: &hosts_default
   http: *http_host
   grpc: null
   graphql: null
 
-api_version: &api_version "V1"
+api_version: &api_version "v1"
 
 min_known_config: &min_known_config
   hosts: *hosts_default
@@ -24,15 +24,15 @@ common_config: &common_config
   db:
     db_type: Postgres
     url: "127.0.0.1"
-    port: "1301"
-    user: "ds_consumer"
-    password: "ds_consumer"
-    name: "ds_consumer"
-  role: Consumer
+    port: "1400"
+    user: "ds_provider"
+    password: "ds_provider"
+    name: "ds_provider"
+  role: Provider
   api:
     version: *api_version
-    openapi_path: "static/specs/openapi/auth/auth_consumer.json"
-  keys_path: "static/certificates/consumer/"
+    openapi_path: "../static/specs/openapi/auth/auth_provider.json"
+  keys_path: "../static/certificates/provider/"
   is_local: true
 
 # ==========================
@@ -62,13 +62,14 @@ ssi_auth:
       url: "127.0.0.1"
       port: "7001"
     type: "email"
-    name: "RainbowConsumer"
-    email: "RainbowConsumer@rainbow.com"
+    name: "RainbowProvider"
+    email: "RainbowProvider@rainbow.com"
     password: "rainbow"
     id: null
   client:
-    class_id: "rainbow_consumer"
+    class_id: "rainbow_provider"
     display: null
+  gaia_active: false
 
 # ==========================
 # CONTRACTS
