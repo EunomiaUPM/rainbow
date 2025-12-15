@@ -24,19 +24,29 @@ use crate::config::traits::{
 };
 use crate::config::types::roles::RoleConfig;
 use crate::config::types::{ClientConfig, HostConfig, WalletConfig};
+use crate::errors::{CommonErrors, ErrorLog};
 use serde::{Deserialize, Serialize};
+use tracing::error;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct SsiAuthConfig {
     common: CommonConfig,
-    wallet: WalletConfig,
+    wallet: Option<WalletConfig>,
     client: ClientConfig,
     gaia_active: bool,
 }
 
 impl SsiAuthConfig {
     pub fn wallet(&self) -> WalletConfig {
-        self.wallet.clone()
+        let wallet = match self.wallet.as_ref() {
+            Some(wallet) => Some(wallet.clone()),
+            None => {
+                let error = CommonErrors::module_new("wallet");
+                error!("{}", error.log());
+                None
+            }
+        };
+        wallet.expect("Wallet not active")
     }
     pub fn client(&self) -> ClientConfig {
         self.client.clone()
@@ -51,7 +61,7 @@ impl ConfigLoader for SsiAuthConfig {
         match common_config.role {
             RoleConfig::Consumer => Self {
                 common: common_config,
-                wallet: WalletConfig {
+                wallet: Some(WalletConfig {
                     api: HostConfig {
                         protocol: "http".to_string(),
                         url: "127.0.0.1".to_string(),
@@ -62,13 +72,13 @@ impl ConfigLoader for SsiAuthConfig {
                     email: "RainbowConsumer@rainbow.com".to_string(),
                     password: "rainbow".to_string(),
                     id: None,
-                },
+                }),
                 client: ClientConfig { class_id: "rainbow_consumer".to_string(), display: None },
                 gaia_active: false,
             },
             RoleConfig::Provider => Self {
                 common: common_config,
-                wallet: WalletConfig {
+                wallet: Some(WalletConfig {
                     api: HostConfig {
                         protocol: "http".to_string(),
                         url: "127.0.0.1".to_string(),
@@ -79,7 +89,7 @@ impl ConfigLoader for SsiAuthConfig {
                     email: "RainbowProvider@rainbow.com".to_string(),
                     password: "rainbow".to_string(),
                     id: None,
-                },
+                }),
                 client: ClientConfig { class_id: "rainbow_provider".to_string(), display: None },
                 gaia_active: false,
             },
