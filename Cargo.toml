@@ -14,7 +14,7 @@ members = [
     "rainbow-datahub-catalog",
     "rainbow-business-gateway",
     "rainbow-transfer-agent",
-    "rainbow-negotiation-agent",
+    "rainbow-negotiation-agent", "rainbow-catalog-agent",
 ]
 exclude = [
     "static",
