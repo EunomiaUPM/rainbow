@@ -111,7 +111,11 @@ impl MatesFacadeTrait for MatesFacadeService {
 
     async fn get_me_mate(&self) -> anyhow::Result<Mates> {
         let ssi_auth_url = self.config.get_host(HostType::Http);
-        let mates_url = format!("{}{}/mates/me", ssi_auth_url, self.config.get_api_version());
+        let mates_url = format!(
+            "{}{}/mates/myself",
+            ssi_auth_url,
+            self.config.get_api_version()
+        );
         let response = self.client.get(mates_url).send().await.map_err(|_e| {
             let e = CommonErrors::missing_resource_new("Me", "Not able to connect with ssi-auth server");
             error!("{}", e.log());

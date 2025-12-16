@@ -36,7 +36,7 @@ where
     pub wallet_session: Mutex<WalletSession>,
     pub wallet_onboard: bool,
     pub repo: Arc<T>,
-    key_data: Mutex<Vec<KeyDefinition>>,
+    pub key_data: Mutex<Vec<KeyDefinition>>,
     client: Client,
     config: ApplicationProviderConfig,
 }

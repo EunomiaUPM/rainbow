@@ -1,6 +1,6 @@
 # Define variables
 DOCKER_USERNAME ?= quay.io/eunomia_upm
-VERSION ?= 0.3.4
+VERSION ?= 0.3.8
 
 #
 #

@@ -17,7 +17,7 @@
  *
  */
 
-use crate::datahub::migrations::m20250528_000001_policy_relations::DataHubPolicyRelations;
+use super::m20250528_000001_policy_relations::DataHubPolicyRelations;
 use sea_orm_migration::prelude::*;
 
 pub struct Migration;

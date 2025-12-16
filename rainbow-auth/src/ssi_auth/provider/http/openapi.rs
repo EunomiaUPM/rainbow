@@ -32,10 +32,10 @@ pub fn route_openapi() -> Router {
     )
 }
 
-static OPENAPI_JSON: Lazy<&'static str> =
+pub static OPENAPI_JSON: Lazy<&'static str> =
     Lazy::new(|| include_str!("./../../../../../static/specs/openapi/auth/auth_provider.json"));
 
-async fn get_open_api() -> impl IntoResponse {
+pub async fn get_open_api() -> impl IntoResponse {
     (
         StatusCode::OK,
         [("Content-Type", "application/json")],

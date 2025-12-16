@@ -1,119 +1,207 @@
-# Rainbow 🌈🌈<br>Dataspace Protocol Implementation
+# Rainbow 🌈🌈<br>Dataspace Protocol Agent
 
 ![Rainbow front](./docs/static/img/rainbow.png)
 
-## What is Rainbow 
+## What is Rainbow
 
-Rainbow or also known as Dataspace Rainbow is an implementation
-of [Dataspace Protocol 2024-1](https://docs.internationaldataspaces.org/ids-knowledgebase/dataspace-protocol) promoted
-by IDSA (International Data Spaces Association).
+Rainbow is a **Dataspace Agent** implementation. 
 
-This implementation has been made by the GING (Next Generation Internet Group) research group. GING is part of the DIT (
-Department of Telematics Engineering) of the Universidad Politécnica de Madrid.
+This implementation has been made by the **GING** (Next Generation Internet Group) research group, part of the DIT (Department of Telematics Engineering) at the Universidad Politécnica de Madrid.
 
-### What are dataspaces?
+### Key Concepts
 
-Dataspaces are services that allow the sharing of data, or the subscription to data services between entities in an
-interoperable way and with a decentralized identity. Data spaces need different building blocks for their development,
-ranging from self-sovereign identity systems, through transfer negotiation protocols, contracts, catalogs, through
-policy enforcement systems. All this in order to generate the digital trust and security necessary for data sharing and
-to generate value and a real data economy.
+Rainbow is designed with a **multi-protocol orientation** and a **dynamic stack architecture**, enabling flexible integration across different dataspace ecosystems. It provides a complete end-to-end solution covering:
 
-For more information, we recommend reading
-the [Technical Convergence of Dataspaces](https://data-spaces-business-alliance.eu/wp-content/uploads/dlm_uploads/Data-Spaces-Business-Alliance-Technical-Convergence-V2.pdf).
+- 🔐 **SSI Authentication** — Self-Sovereign Identity based authentication using verifiable credentials and decentralized identifiers
+- 📚 **Catalog Management** — DCAT3-compatible catalog system for dataset and data service discovery
+- 🔗 **Datahub Proxy** — Integration layer for external data hubs and repositories
+- 📝 **Contract Negotiation** — Full implementation of the Dataspace Protocol's contract negotiation flow
+- 🚀 **Data Transfer** — Control plane and data plane for secure, policy-compliant data transfers
 
-The Dataspace protocol is an initiative to specify the negotiation of transfer, catalog and contracts between consumers
-and data providers in a decentralized ecosystem in an interoperable manner.
+### What are Dataspaces?
 
-For more information we recommend reading
-the [Dataspace Protocol abstract](https://docs.internationaldataspaces.org/ids-knowledgebase/dataspace-protocol).
+Dataspaces are services that allow the sharing of data, or the subscription to data services between entities in an interoperable way and with a decentralized identity. Data spaces need different building blocks for their development, ranging from self-sovereign identity systems, through transfer negotiation protocols, contracts, catalogs, through policy enforcement systems. All this in order to generate the digital trust and security necessary for data sharing and to generate value and a real data economy.
 
-Rainbow intends to cover the implementation of that specification in its entirety, with some modifications and
-enhancements, as well as an in-house implementation of the transfer data plane system for high efficiency scenarios such
-as big data or machine learning.
+For more information, we recommend reading the [Technical Convergence of Dataspaces](https://data-spaces-business-alliance.eu/wp-content/uploads/dlm_uploads/Data-Spaces-Business-Alliance-Technical-Convergence-V2.pdf).
 
-### **Feature highlights**
+### Feature Highlights
 
-- Written in Rust from scratch. Asynchronously based on Tokio runtime.
-- HTTP APIs with Axum, SeaORM, Postgres. Future integration with gRPC.
-- OpenApi integration with Utoipa-axum.
-- Serde-based serialization, elegant error handling with thiserror and anyhow.
-- Really low memory footprint and blazingly fast.
+- **Rust Native** — Written in Rust from scratch, asynchronously based on Tokio runtime
+- **HTTP APIs** — Built with Axum, SeaORM, and PostgreSQL
+- **gRPC Support** — Protocol buffer definitions for inter-service communication
+- **OpenAPI Integration** — Automatic API documentation with Utoipa-axum
+- **Elegant Error Handling** — Using thiserror and anyhow for robust error management
+- **Low Footprint** — Blazingly fast with minimal memory consumption
 
-### Organization in crates
+---
 
-- Rainbow-catalog: Catalog system compatible with DCAT3, and based on the Catalog Protocol of the Dataspace Protocol.
-- Rainbow-transfer: Complete implementation of the transfer system and control plane of the Transfer Process Protocol of
-  the Dataspace Protocol. Specification and implementation of the data plane.
-- Rainbow-data-plane: Own implementation for big-data and multi-implementation environments based on
-  massive transfer tools. Currently supported is Fiware's NGSI-LD and plain HTTP. Future integration with Databricks'
-  Deltasharing protocol, and with Apache Arrow's Flight.
-- Rainbow-contracts: (Work in progress). Implementation of the Contract Protocol of the Dataspace Protocol.
-- Rainbow-common: lib crate for common functionality in the project.
-- Rainbow-core: Binary to run the whole project.
-- Deployment: Material needed to deploy Docker containers, and (Work in progress) recipes for Kubernetes deployment.
+## Crate Organization
 
-## Getting started
+Rainbow is organized as a Rust workspace with multiple specialized crates:
 
-### Plain old docker
+### Core Crates
 
-To get started simply, we recommend that you work with the docker container.
+| Crate | Description |
+|-------|-------------|
+| **rainbow-core** | Main binary that orchestrates and runs the entire agent |
+| **rainbow-common** | Shared library with common functionality, types, and utilities |
+| **rainbow-db** | Database layer with SeaORM entities, migrations, and repositories |
+| **rainbow-events** | Event system for inter-module communication |
+
+### Protocol Crates
+
+| Crate | Description |
+|-------|-------------|
+| **rainbow-catalog** | DCAT3-compatible catalog system implementing the Catalog Protocol |
+| **rainbow-contracts** | Contract negotiation protocol implementation (ODRL policies) |
+| **rainbow-transfer** | Transfer Process Protocol implementation for control plane |
+| **rainbow-transfer-agent** | Agent layer for transfer orchestration with gRPC support |
+| **rainbow-dataplane** | Data plane implementations (HTTP, NGSI-LD, future: DeltaSharing, Arrow Flight) |
+
+### Gateway & Integration Crates
+
+| Crate | Description |
+|-------|-------------|
+| **rainbow-auth** | SSI-based authentication layer with wallet and credential management |
+| **rainbow-authority** | Authority services for trust and credential verification |
+| **rainbow-fe-gateway** | Frontend gateway for UI integration |
+| **rainbow-business-gateway** | Business logic gateway for external integrations |
+| **rainbow-datahub-catalog** | Proxy layer for external datahub catalog synchronization |
+
+---
+
+## Getting Started
+
+### Requirements
+
+- **Docker** and **docker-compose** (or Docker Desktop)
+- Permissions to execute scripts (`chmod +x`)
+
+### External Dependencies
+
+This project depends on [walt.id](https://walt.id) for the SSI authentication layer. You must download and deploy the walt.id identity services:
 
 ```bash
+# Clone the walt.id identity repository
+git clone https://github.com/walt-id/waltid-identity.git && cd waltid-identity
+
+# Deploy all services with docker compose
+cd docker-compose && docker compose up
+```
+
+### Quick Start
+
+1. **Grant execution permissions** to the scripts (if needed):
+   ```bash
+   chmod +x scripts/bash/*.sh
+   ```
+
+2. **Prepare the environment** (executes initial configurations):
+   ```bash
+   ./scripts/bash/auto-setup.sh
+   ```
+
+3. **Start the services**:
+   ```bash
+   ./scripts/bash/auto-start.sh
+   ```
+
+4. **Run automatic onboarding** to authenticate actors:
+   ```bash
+   ./scripts/bash/auto-onboarding.sh
+   ```
+
+5. **Stop the services** when done:
+   ```bash
+   ./scripts/bash/auto-stop.sh
+   ```
+
+### Docker (Standalone)
+
+You can also run Rainbow directly with Docker:
+
+```bash
+# Pull the image
 docker pull caparicioesd/rainbow
-```
 
-And then you can initialize it with:
-
-```bash
+# Start a provider instance
 docker run caparicioesd/rainbow:latest provider start
+
+# View available options
+docker run caparicioesd/rainbow:latest provider -h
 ```
 
-If you want to see the different rainbow options:
+### Docker Compose
+
+For more automated deployments, see `/deployment/docker-compose.testing.yaml` for a complete example with databases and migrations.
+
+---
+
+## Testing the Complete Flow
+
+A Jupyter notebook is available to test the complete dataspace workflow interactively.
+
+### Setup
 
 ```bash
-docker run caparicioesd/rainbow:latest provider -h  
+# Create and activate virtual environment
+python -m venv .venv
+source ./.venv/bin/activate
 
-# Options:
-  # --host-url <HOST_URL>                  
-  # --host-port <HOST_PORT>                
-  # --db-type <DB_TYPE>                    
-  # --db-url <DB_URL>                      
-  # --db-port <DB_PORT>                    
-  # --db-user <DB_USER>                    
-  # --db-password <DB_PASSWORD>  
+# Install dependencies
+pip install -r requirements.txt
 ```
 
-The database that Rainbow works with is Postgres. To initialize the database migrations:
+### Workflow Overview
 
-```bash
-docker run caparicioesd/rainbow:latest provider \
-  --db-port <DB_PORT> \
-  --db-user <DB_USER> \                    
-  --db-password <DB_PASSWORD> \           
-  --db-database <DB_DATABASE> \
-  setup
-```
+The notebook covers the following flow:
 
-### Docker compose
+1. **Wallet Setup** — Initialize SSI wallets for participants
+2. **Participant Onboarding** — Register provider and consumer identities
+3. **Catalog Management** — Create catalogs, datasets, data-services, and distributions
+4. **Policy Definition** — Define access policies for datasets
+5. **Contract Negotiation** — Complete negotiation flow:
+   - Request → Offer → Request → Offer → Acceptance → Agreement → Verification → Finalization
+6. **Transfer Negotiation** — Data transfer flow:
+   - Request → Start → Data access via dataplane
+   - Suspension/Resumption → Completion
 
-In case you want to integrate Rainbow in a more automated way, with docker-compose, you can start server instances,
-databases, migrations. In `/deployments/docker-compose.testing.yaml` you have a good example of this.
+### API Endpoints Overview
 
-### Architecture
+| Category | Endpoints |
+|----------|-----------|
+| **Mates** | `/api/v1/mates/myself`, `/api/v1/mates/all` |
+| **Catalogs** | `/api/v1/catalogs`, `/api/v1/catalogs/{id}/datasets`, `/api/v1/catalogs/{id}/data-services` |
+| **Policies** | `/api/v1/datasets/{id}/policies` |
+| **Negotiations** | `/api/v1/negotiations/rpc/setup-*` (request, offer, acceptance, agreement, verification, finalization) |
+| **Transfers** | `/api/v1/transfers/rpc/setup-*` (request, start, suspension, completion) |
+| **Dataplane** | `/api/v1/dataplane/{transfer_id}` |
+
+---
+
+## Architecture
 
 ![arquitectura.png](./docs/static/img/arquitectura.png)
 
-- Client: It is any client, machine or human that wants to connect to a consumer, in order to access the data space. The
-  client connects to the consumer to initiate transactions, suspend them, complete them, by means of a high level API of
-  the Consumer. We call this API the HL Consumer API.
-- The communication between the Consumer Provider is done with the LL API (Low level API), which is an improved
-  implementation of the Transfer Process of the Dataspace Protocol.
-- Final System is the environment where the data behind the provider is exposed.
+- **Client** — Any client (machine or human) connecting to a consumer to access the dataspace via the high-level Consumer API
+- **Consumer ↔ Provider** — Communication via the low-level API, an improved implementation of the Dataspace Protocol
+- **Final System** — The backend environment where the provider's data is exposed
 
-### Tutorial
+---
 
-To become familiar with the whole system, we recommend to deploy the following repository, and follow the tutorials in
-jupyter notebook.
+## Development and Contribution
 
-https://github.com/ging/ds-deployment
+1. Create a branch for your change:
+   ```bash
+   git checkout -b feature/my-change
+   ```
+
+2. Make clear and descriptive commits
+
+3. Open a pull request against `main`
+
+---
+
+## License
+
+See [LICENSE.md](./LICENSE.md) for details.

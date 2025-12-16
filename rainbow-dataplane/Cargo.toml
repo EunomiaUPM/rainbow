@@ -1,6 +1,6 @@
 [package]
 name = "rainbow_dataplane"
-version = "0.3.1"
+version = "0.3.8"
 edition = "2021"
 
 [lib]
@@ -12,8 +12,8 @@ name = "rainbow_dataplane"
 path = "src/main.rs"
 
 [dependencies]
-rainbow_common = { version = "0.3.1", path = "../rainbow-common", default-features = true }
-rainbow_db = { version = "0.3.1", path = "../rainbow-db", default-features = true }
+rainbow_common = { version = "0.3.8", path = "../rainbow-common", default-features = true }
+rainbow_db = { version = "0.3.8", path = "../rainbow-db", default-features = true }
 
 serde = { workspace = true }
 anyhow = { workspace = true }

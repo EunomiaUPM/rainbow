@@ -43,6 +43,7 @@ use tracing::{debug, error, info, warn};
 use url::Url;
 use urlencoding::decode;
 
+#[mockall::automock]
 #[async_trait]
 impl<T> RainbowSSIAuthWalletTrait for Manager<T>
 where
@@ -474,7 +475,7 @@ where
             _ => {
                 let error = AuthErrors::wallet_new(
                     url,
-                    "POST".to_string(),
+                    "GET".to_string(),
                     res.status().as_u16(),
                     Some("Petition to retrieve keys failed".to_string()),
                 );

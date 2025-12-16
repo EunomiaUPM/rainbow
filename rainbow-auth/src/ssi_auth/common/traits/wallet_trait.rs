@@ -24,6 +24,7 @@ use crate::ssi_auth::common::types::ssi::wallet::WalletInfo;
 use axum::async_trait;
 use serde_json::Value;
 
+#[mockall::automock]
 #[async_trait]
 pub trait RainbowSSIAuthWalletTrait: Send + Sync {
     // BASIC
