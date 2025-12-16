@@ -96,7 +96,20 @@ impl DistributionEntityRouter {
         };
         match state.service.get_distributions_by_dataset_id(&id_urn).await {
             Ok(distributions) => (StatusCode::OK, Json(ToCamelCase(distributions))).into_response(),
-            Err(err) => err.to_response(),
+            Err(err) => match err.downcast::<CommonErrors>() {
+                Ok(ce) => match ce {
+                    CommonErrors::DatabaseError { ref cause, .. } => {
+                        if cause.contains("not found") {
+                            let err = CommonErrors::missing_resource_new("", cause.as_str());
+                            return err.into_response();
+                        } else {
+                            ce.into_response()
+                        }
+                    }
+                    e => return e.into_response(),
+                },
+                Err(e) => e.to_response(),
+            },
         }
     }
     async fn handle_get_distribution_by_dataset_id_and_dct_format(
@@ -113,7 +126,20 @@ impl DistributionEntityRouter {
         };
         match state.service.get_distribution_by_dataset_id_and_dct_format(&id_urn, &dct).await {
             Ok(distribution) => (StatusCode::OK, Json(ToCamelCase(distribution))).into_response(),
-            Err(err) => err.to_response(),
+            Err(err) => match err.downcast::<CommonErrors>() {
+                Ok(ce) => match ce {
+                    CommonErrors::DatabaseError { ref cause, .. } => {
+                        if cause.contains("not found") {
+                            let err = CommonErrors::missing_resource_new("", cause.as_str());
+                            return err.into_response();
+                        } else {
+                            ce.into_response()
+                        }
+                    }
+                    e => return e.into_response(),
+                },
+                Err(e) => e.to_response(),
+            },
         }
     }
     async fn handle_get_distribution_by_id(
@@ -148,7 +174,20 @@ impl DistributionEntityRouter {
         };
         match state.service.put_distribution_by_id(&id_urn, &input).await {
             Ok(distribution) => (StatusCode::OK, Json(ToCamelCase(distribution))).into_response(),
-            Err(err) => err.to_response(),
+            Err(err) => match err.downcast::<CommonErrors>() {
+                Ok(ce) => match ce {
+                    CommonErrors::DatabaseError { ref cause, .. } => {
+                        if cause.contains("not found") {
+                            let err = CommonErrors::missing_resource_new("", cause.as_str());
+                            return err.into_response();
+                        } else {
+                            ce.into_response()
+                        }
+                    }
+                    e => return e.into_response(),
+                },
+                Err(e) => e.to_response(),
+            },
         }
     }
     async fn handle_create_distribution(
@@ -161,7 +200,20 @@ impl DistributionEntityRouter {
         };
         match state.service.create_distribution(&input).await {
             Ok(distribution) => (StatusCode::OK, Json(ToCamelCase(distribution))).into_response(),
-            Err(err) => err.to_response(),
+            Err(err) => match err.downcast::<CommonErrors>() {
+                Ok(ce) => match ce {
+                    CommonErrors::DatabaseError { ref cause, .. } => {
+                        if cause.contains("not found") {
+                            let err = CommonErrors::missing_resource_new("", cause.as_str());
+                            return err.into_response();
+                        } else {
+                            ce.into_response()
+                        }
+                    }
+                    e => return e.into_response(),
+                },
+                Err(e) => e.to_response(),
+            },
         }
     }
     async fn handle_delete_distribution_by_id(
@@ -174,7 +226,20 @@ impl DistributionEntityRouter {
         };
         match state.service.delete_distribution_by_id(&id_urn).await {
             Ok(_) => StatusCode::ACCEPTED.into_response(),
-            Err(err) => err.to_response(),
+            Err(err) => match err.downcast::<CommonErrors>() {
+                Ok(ce) => match ce {
+                    CommonErrors::DatabaseError { ref cause, .. } => {
+                        if cause.contains("not found") {
+                            let err = CommonErrors::missing_resource_new("", cause.as_str());
+                            return err.into_response();
+                        } else {
+                            ce.into_response()
+                        }
+                    }
+                    e => return e.into_response(),
+                },
+                Err(e) => e.to_response(),
+            },
         }
     }
 }

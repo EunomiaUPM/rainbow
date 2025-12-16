@@ -1,6 +1,8 @@
 use crate::data::entities::distribution::{EditDistributionModel, NewDistributionModel};
 use crate::data::entities::{dataservice, dataset, distribution};
-use crate::data::repo_traits::catalog_db_errors::{CatalogAgentRepoErrors, DistributionRepoErrors};
+use crate::data::repo_traits::catalog_db_errors::{
+    CatalogAgentRepoErrors, DataServiceRepoErrors, DatasetRepoErrors, DistributionRepoErrors,
+};
 use crate::data::repo_traits::distribution_repo::DistributionRepositoryTrait;
 use rainbow_common::dcat_formats::DctFormats;
 use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect};
@@ -73,8 +75,8 @@ impl DistributionRepositoryTrait for DistributionRepositoryForSql {
                         )),
                     }
                 }
-                None => Err(CatalogAgentRepoErrors::DistributionRepoErrors(
-                    DistributionRepoErrors::DistributionNotFound,
+                None => Err(CatalogAgentRepoErrors::DatasetRepoErrors(
+                    DatasetRepoErrors::DatasetNotFound,
                 )),
             },
             Err(err) => Err(CatalogAgentRepoErrors::DistributionRepoErrors(
@@ -97,8 +99,8 @@ impl DistributionRepositoryTrait for DistributionRepositoryForSql {
                     err.into(),
                 ))
             })?
-            .ok_or(CatalogAgentRepoErrors::DistributionRepoErrors(
-                DistributionRepoErrors::DistributionNotFound,
+            .ok_or(CatalogAgentRepoErrors::DatasetRepoErrors(
+                DatasetRepoErrors::DatasetNotFound,
             ))?;
         let distribution = distribution::Entity::find()
             .filter(distribution::Column::DatasetId.eq(dataset_id.clone()))
@@ -190,6 +192,20 @@ impl DistributionRepositoryTrait for DistributionRepositoryForSql {
         &self,
         new_distribution_model: &NewDistributionModel,
     ) -> anyhow::Result<distribution::Model, CatalogAgentRepoErrors> {
+        let dataset = dataset::Entity::find_by_id(new_distribution_model.dataset_id.clone().to_string())
+            .one(&self.db_connection)
+            .await
+            .map_err(|err| {
+                CatalogAgentRepoErrors::DistributionRepoErrors(DistributionRepoErrors::ErrorFetchingDistribution(
+                    err.into(),
+                ))
+            })?;
+        if dataset.is_none() {
+            return Err(CatalogAgentRepoErrors::DatasetRepoErrors(
+                DatasetRepoErrors::DatasetNotFound,
+            ));
+        }
+
         let data_service = dataservice::Entity::find_by_id(new_distribution_model.dcat_access_service.clone())
             .one(&self.db_connection)
             .await
@@ -199,8 +215,8 @@ impl DistributionRepositoryTrait for DistributionRepositoryForSql {
                 ))
             })?;
         if data_service.is_none() {
-            return Err(CatalogAgentRepoErrors::DistributionRepoErrors(
-                DistributionRepoErrors::DistributionNotFound,
+            return Err(CatalogAgentRepoErrors::DataServiceRepoErrors(
+                DataServiceRepoErrors::DataServiceNotFound,
             ));
         }
 

@@ -27,7 +27,7 @@ pub enum CatalogEntityTypes {
 #[serde(deny_unknown_fields)]
 pub struct NewOdrlPolicyDto {
     pub id: Option<Urn>,
-    pub odrl_offers: OdrlPolicyInfo,
+    pub odrl_offer: OdrlPolicyInfo,
     pub entity_id: Urn,
     pub entity_type: CatalogEntityTypes,
 }
@@ -47,7 +47,7 @@ impl Display for CatalogEntityTypes {
 
 impl From<NewOdrlPolicyDto> for NewOdrlOfferModel {
     fn from(dto: NewOdrlPolicyDto) -> Self {
-        Self { id: dto.id, odrl_offers: dto.odrl_offers, entity_id: dto.entity_id, entity_type: dto.entity_type }
+        Self { id: dto.id, odrl_offer: dto.odrl_offer, entity_id: dto.entity_id, entity_type: dto.entity_type }
     }
 }
 

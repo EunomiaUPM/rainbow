@@ -1,6 +1,8 @@
 use crate::data::entities::dataservice::{EditDataServiceModel, NewDataServiceModel};
 use crate::data::entities::{catalog, dataservice};
-use crate::data::repo_traits::catalog_db_errors::{CatalogAgentRepoErrors, DataServiceRepoErrors};
+use crate::data::repo_traits::catalog_db_errors::{
+    CatalogAgentRepoErrors, CatalogRepoErrors, DataServiceRepoErrors, DistributionRepoErrors,
+};
 use crate::data::repo_traits::dataservice_repo::DataServiceRepositoryTrait;
 use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect};
 use urn::Urn;
@@ -65,8 +67,8 @@ impl DataServiceRepositoryTrait for DataServiceRepositoryForSql {
                 ))
             })?;
         if catalog.is_none() {
-            return Err(CatalogAgentRepoErrors::DataServiceRepoErrors(
-                DataServiceRepoErrors::DataServiceNotFound,
+            return Err(CatalogAgentRepoErrors::CatalogRepoErrors(
+                CatalogRepoErrors::CatalogNotFound,
             ));
         }
 
@@ -152,6 +154,19 @@ impl DataServiceRepositoryTrait for DataServiceRepositoryForSql {
         &self,
         new_data_service_model: &NewDataServiceModel,
     ) -> anyhow::Result<dataservice::Model, CatalogAgentRepoErrors> {
+        let catalog = catalog::Entity::find_by_id(new_data_service_model.catalog_id.clone().to_string())
+            .one(&self.db_connection)
+            .await
+            .map_err(|err| {
+                CatalogAgentRepoErrors::DistributionRepoErrors(DistributionRepoErrors::ErrorFetchingDistribution(
+                    err.into(),
+                ))
+            })?;
+        if catalog.is_none() {
+            return Err(CatalogAgentRepoErrors::CatalogRepoErrors(
+                CatalogRepoErrors::CatalogNotFound,
+            ));
+        }
         let model: dataservice::ActiveModel = new_data_service_model.into();
         let data_service = dataservice::Entity::insert(model).exec_with_returning(&self.db_connection).await;
         match data_service {

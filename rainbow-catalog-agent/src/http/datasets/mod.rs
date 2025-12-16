@@ -88,7 +88,20 @@ impl DatasetEntityRouter {
         };
         match state.service.get_datasets_by_catalog_id(&id_urn).await {
             Ok(dataset) => (StatusCode::OK, Json(ToCamelCase(dataset))).into_response(),
-            Err(err) => err.to_response(),
+            Err(err) => match err.downcast::<CommonErrors>() {
+                Ok(ce) => match ce {
+                    CommonErrors::DatabaseError { ref cause, .. } => {
+                        if cause.contains("not found") {
+                            let err = CommonErrors::missing_resource_new("", cause.as_str());
+                            return err.into_response();
+                        } else {
+                            ce.into_response()
+                        }
+                    }
+                    e => return e.into_response(),
+                },
+                Err(e) => e.to_response(),
+            },
         }
     }
     async fn handle_get_dataset_by_id(
@@ -123,7 +136,20 @@ impl DatasetEntityRouter {
         };
         match state.service.put_dataset_by_id(&id_urn, &input).await {
             Ok(dataset) => (StatusCode::OK, Json(ToCamelCase(dataset))).into_response(),
-            Err(err) => err.to_response(),
+            Err(err) => match err.downcast::<CommonErrors>() {
+                Ok(ce) => match ce {
+                    CommonErrors::DatabaseError { ref cause, .. } => {
+                        if cause.contains("not found") {
+                            let err = CommonErrors::missing_resource_new("", cause.as_str());
+                            return err.into_response();
+                        } else {
+                            ce.into_response()
+                        }
+                    }
+                    e => return e.into_response(),
+                },
+                Err(e) => e.to_response(),
+            },
         }
     }
     async fn handle_create_dataset(
@@ -136,7 +162,20 @@ impl DatasetEntityRouter {
         };
         match state.service.create_dataset(&input).await {
             Ok(dataset) => (StatusCode::OK, Json(ToCamelCase(dataset))).into_response(),
-            Err(err) => err.to_response(),
+            Err(err) => match err.downcast::<CommonErrors>() {
+                Ok(ce) => match ce {
+                    CommonErrors::DatabaseError { ref cause, .. } => {
+                        if cause.contains("not found") {
+                            let err = CommonErrors::missing_resource_new("", cause.as_str());
+                            return err.into_response();
+                        } else {
+                            ce.into_response()
+                        }
+                    }
+                    e => return e.into_response(),
+                },
+                Err(e) => e.to_response(),
+            },
         }
     }
     async fn handle_delete_dataset_by_id(
@@ -149,7 +188,20 @@ impl DatasetEntityRouter {
         };
         match state.service.delete_dataset_by_id(&id_urn).await {
             Ok(_) => StatusCode::ACCEPTED.into_response(),
-            Err(err) => err.to_response(),
+            Err(err) => match err.downcast::<CommonErrors>() {
+                Ok(ce) => match ce {
+                    CommonErrors::DatabaseError { ref cause, .. } => {
+                        if cause.contains("not found") {
+                            let err = CommonErrors::missing_resource_new("", cause.as_str());
+                            return err.into_response();
+                        } else {
+                            ce.into_response()
+                        }
+                    }
+                    e => return e.into_response(),
+                },
+                Err(e) => e.to_response(),
+            },
         }
     }
 }

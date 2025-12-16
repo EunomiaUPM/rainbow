@@ -79,7 +79,7 @@ impl ActiveModelBehavior for ActiveModel {}
 #[derive(Clone)]
 pub struct NewOdrlOfferModel {
     pub id: Option<Urn>,
-    pub odrl_offers: OdrlPolicyInfo,
+    pub odrl_offer: OdrlPolicyInfo,
     pub entity_id: Urn,
     pub entity_type: CatalogEntityTypes,
 }
@@ -91,7 +91,7 @@ impl From<NewOdrlOfferModel> for ActiveModel {
             .expect("UrnBuilder failed");
         Self {
             id: ActiveValue::Set(dto.id.clone().unwrap_or(new_urn.clone()).to_string()),
-            odrl_offer: ActiveValue::Set(serde_json::to_value(dto.odrl_offers).ok()),
+            odrl_offer: ActiveValue::Set(serde_json::to_value(dto.odrl_offer).ok()),
             entity: ActiveValue::Set(dto.entity_id.to_string()),
             entity_type: ActiveValue::Set(dto.entity_type.to_string()),
             created_at: ActiveValue::Set(chrono::Utc::now().into()),
