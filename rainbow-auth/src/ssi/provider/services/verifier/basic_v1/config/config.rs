@@ -17,33 +17,25 @@
  *
  */
 use super::VerifierConfigTrait;
-use crate::ssi::provider::config::{AuthProviderConfig, AuthProviderConfigTrait};
-use rainbow_common::config::global_config::HostConfig;
+use rainbow_common::config::services::SsiAuthConfig;
+use rainbow_common::config::traits::{ApiConfigTrait, CommonConfigTrait};
+use rainbow_common::config::types::CommonHostsConfig;
 
 pub struct VerifierConfig {
-    host: HostConfig,
+    hosts: CommonHostsConfig,
     is_local: bool,
     api_path: String,
 }
 
-impl From<AuthProviderConfig> for VerifierConfig {
-    fn from(value: AuthProviderConfig) -> Self {
-        let api_path = value.get_api_path();
-        Self { host: value.common_config.host, is_local: value.common_config.is_local, api_path }
+impl From<SsiAuthConfig> for VerifierConfig {
+    fn from(value: SsiAuthConfig) -> Self {
+        Self { hosts: value.common().hosts.clone(), is_local: value.common().is_local, api_path: value.get_api_version() }
     }
 }
 
 impl VerifierConfigTrait for VerifierConfig {
-    fn get_host(&self) -> String {
-        let host = self.host.clone();
-        match host.port.is_empty() {
-            true => {
-                format!("{}://{}", host.protocol, host.url)
-            }
-            false => {
-                format!("{}://{}:{}", host.protocol, host.url, host.port)
-            }
-        }
+    fn hosts(&self) -> &CommonHostsConfig {
+        &self.hosts
     }
     fn is_local(&self) -> bool {
         self.is_local

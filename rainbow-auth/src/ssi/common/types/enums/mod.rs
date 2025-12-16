@@ -16,4 +16,6 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-pub(crate) mod request;
+pub mod request;
+mod data_model_version;
+pub use data_model_version::*;

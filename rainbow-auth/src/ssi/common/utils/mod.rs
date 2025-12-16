@@ -16,23 +16,15 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 use anyhow::bail;
+use rainbow_common::config::types::{ClientConfig, HostConfig};
 use rainbow_common::errors::helpers::BadFormat;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
-use std::fs;
+use rainbow_common::utils::read;
+use serde_json::{json, Value};
 use tracing::error;
 use url::Url;
-
-pub fn read(path: &str) -> anyhow::Result<String> {
-    match fs::read_to_string(&path) {
-        Ok(data) => Ok(data),
-        Err(e) => {
-            let error = CommonErrors::read_new(path, &e.to_string());
-            error!("{}", error.log());
-            bail!(error)
-        }
-    }
-}
 
 pub fn get_query_param(parsed_uri: &Url, param_name: &str) -> anyhow::Result<String> {
     if let Some(value) = parsed_uri.query_pairs().find(|(k, _)| k == param_name).map(|(_, v)| v.into_owned()) {
@@ -60,4 +52,25 @@ pub fn trim_4_base(input: &str) -> String {
     let cut_index = slashes[2];
 
     input[..cut_index].to_string()
+}
+pub fn get_host_url(host_config: &HostConfig) -> String {
+    match host_config.port.as_ref() {
+        Some(port) => format!("{}://{}:{}", host_config.protocol, host_config.url, port),
+        None => format!("{}://{}", host_config.protocol, host_config.url),
+    }
+}
+
+pub fn get_pretty_client_config_helper(client_config: &ClientConfig, path: &str) -> anyhow::Result<Value> {
+    let cert = read(&path)?;
+    let clean_cert = cert.lines().filter(|line| !line.starts_with("-----")).collect::<String>();
+
+    let key = json!({
+        "proof": "httpsig",
+        "cert": clean_cert
+    });
+    Ok(json!({
+        "key" : key,
+        "class_id" : client_config.class_id.clone(),
+        "display" : client_config.display.clone(),
+    }))
 }

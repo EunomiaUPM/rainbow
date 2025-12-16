@@ -17,11 +17,10 @@
  *
  */
 pub mod services;
-pub mod setup;
 pub mod types;
 pub mod errors;
 pub mod http;
 pub mod core;
-pub mod config;
 pub mod utils;
 pub mod data;
+pub mod setup;

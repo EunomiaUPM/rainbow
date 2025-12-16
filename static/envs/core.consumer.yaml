@@ -1,0 +1,103 @@
+# ==========================
+# COMMON ANCHORS
+# ==========================
+http_host: &http_host
+  protocol: "http"
+  url: "127.0.0.1"
+  port: "1100"
+
+hosts_default: &hosts_default
+  http: *http_host
+  grpc: null
+  graphql: null
+
+api_version: &api_version "v1"
+
+min_known_config: &min_known_config
+  hosts: *hosts_default
+  api_version: *api_version
+
+is_catalog_datahub: &is_catalog_datahub false
+
+common_config: &common_config
+  hosts: *hosts_default
+  db:
+    db_type: Postgres
+    url: "127.0.0.1"
+    port: "1300"
+    user: "ds_consumer"
+    password: "ds_consumer"
+    name: "ds_consumer"
+  role: Consumer
+  api:
+    version: *api_version
+    openapi_path: "../static/specs/openapi/auth/auth_consumer.json"
+  keys_path: "../static/certificates/consumer/"
+  is_local: true
+
+# ==========================
+# MONOLITH
+# ==========================
+monolith:
+  common: *common_config
+
+# ==========================
+# CATALOG
+# ==========================
+catalog:
+  common: *common_config
+  is_datahub: *is_catalog_datahub
+  datahub_host: null
+  datahub_token: null
+  ssi_auth: *min_known_config
+
+# ==========================
+# SSI AUTH
+# ==========================
+ssi_auth:
+  common: *common_config
+  wallet:
+    api:
+      protocol: "http"
+      url: "127.0.0.1"
+      port: "7001"
+    type: "email"
+    name: "RainbowConsumer"
+    email: "RainbowConsumer@rainbow.com"
+    password: "rainbow"
+    id: null
+  client:
+    class_id: "rainbow_consumer"
+    display: null
+  gaia_active: false
+
+# ==========================
+# CONTRACTS
+# ==========================
+contracts:
+  common: *common_config
+  ssi_auth: *min_known_config
+  is_catalog_datahub: *is_catalog_datahub
+
+# ==========================
+# TRANSFER
+# ==========================
+transfer:
+  common: *common_config
+  contracts: *min_known_config
+  catalog: *min_known_config
+  ssi_auth: *min_known_config
+  is_catalog_datahub: *is_catalog_datahub
+
+# ==========================
+# GATEWAY
+# ==========================
+gateway:
+  common: *common_config
+  is_production: false
+  transfer: *min_known_config
+  contracts: *min_known_config
+  catalog: *min_known_config
+  ssi_auth: *min_known_config
+  is_catalog_datahub: *is_catalog_datahub
+

@@ -21,3 +21,4 @@ pub mod enums;
 pub mod jwt;
 pub mod entities;
 pub mod gnap;
+pub mod vc_issuing;

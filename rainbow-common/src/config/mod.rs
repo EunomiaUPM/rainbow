@@ -17,50 +17,10 @@
  *
  */
 
-use anyhow::bail;
-use serde::{Deserialize, Serialize};
-use std::fmt::Display;
-use std::str::FromStr;
+pub mod types;
+pub mod services;
+pub mod traits;
+mod config;
+pub mod min_know_services;
 
-pub mod consumer_config;
-pub mod database;
-pub mod env_extraction;
-pub mod global_config;
-pub mod provider_config;
-
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Copy)]
-pub enum ConfigRoles {
-    Catalog,
-    Contracts,
-    Consumer,
-    Provider,
-    Authority,
-}
-
-impl FromStr for ConfigRoles {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "Catalog" => Ok(ConfigRoles::Catalog),
-            "Contracts" => Ok(ConfigRoles::Contracts),
-            "Consumer" => Ok(ConfigRoles::Consumer),
-            "Provider" => Ok(ConfigRoles::Provider),
-            "Authority" => Ok(ConfigRoles::Authority),
-            _ => bail!("Invalid config role: {}", s),
-        }
-    }
-}
-
-impl Display for ConfigRoles {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let str = match self {
-            ConfigRoles::Catalog => "Catalog".to_string(),
-            ConfigRoles::Contracts => "Contracts".to_string(),
-            ConfigRoles::Consumer => "Consumer".to_string(),
-            ConfigRoles::Provider => "Provider".to_string(),
-            ConfigRoles::Authority => "Authority".to_string(),
-        };
-        write!(f, "{}", str)
-    }
-}
+pub use config::ApplicationConfig;

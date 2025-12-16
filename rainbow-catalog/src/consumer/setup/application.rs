@@ -18,12 +18,12 @@
  */
 
 use crate::consumer::core::bypass_service::bypass_service::CatalogBypassService;
-use crate::consumer::core::mates_facade::mates_facade::MatesFacadeService;
 use crate::consumer::http::bypass_catalog::CatalogBypassRouter;
 use axum::{serve, Router};
-use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
-use rainbow_common::config::global_config::ApplicationGlobalConfig;
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
+use rainbow_common::config::services::CatalogConfig;
+use rainbow_common::config::traits::{HostConfigTrait, IsLocalTrait};
+use rainbow_common::config::types::HostType;
+use rainbow_common::facades::ssi_auth_facade::mates_facade::MatesFacadeService;
 use rainbow_common::facades::ssi_auth_facade::ssi_auth_facade::SSIAuthFacadeService;
 use rainbow_db::dataplane::repo::sql::DataPlaneRepoForSql;
 use rainbow_db::dataplane::repo::DataPlaneRepoFactory;
@@ -43,40 +43,27 @@ use tracing::info;
 
 pub struct CatalogBypassConsumerApplication;
 
-pub async fn create_catalog_bypass_consumer_router(config: ApplicationConsumerConfig) -> Router {
-    let global_config: ApplicationConsumerConfig = config.clone().into();
-    let mates_facade = Arc::new(MatesFacadeService::new(global_config.clone().into()));
+pub async fn create_catalog_bypass_consumer_router(config: CatalogConfig) -> Router {
+    let mates_facade = Arc::new(MatesFacadeService::new(config.ssi_auth()));
     let bypass_service = Arc::new(CatalogBypassService::new(mates_facade.clone()));
     let bypass_router = CatalogBypassRouter::new(bypass_service.clone()).router();
     Router::new().merge(bypass_router)
 }
 
 impl CatalogBypassConsumerApplication {
-    pub async fn run(config: &ApplicationConsumerConfig) -> anyhow::Result<()> {
+    pub async fn run(config: &CatalogConfig) -> anyhow::Result<()> {
         // db_connection
         let router = create_catalog_bypass_consumer_router(config.clone()).await;
         // Init server
         let server_message = format!(
             "Starting consumer bypass server in {}",
-            config.get_transfer_host_url().unwrap()
+            config.get_host(HostType::Http)
         );
         info!("{}", server_message);
 
-        let listener = match config.get_environment_scenario() {
-            true => {
-                TcpListener::bind(format!(
-                    "127.0.0.1:{}",
-                    config.get_raw_transfer_process_host().clone().unwrap().port
-                ))
-                .await?
-            }
-            false => {
-                TcpListener::bind(format!(
-                    "0.0.0.0:{}",
-                    config.get_raw_transfer_process_host().clone().unwrap().port
-                ))
-                .await?
-            }
+        let listener = match config.is_local() {
+            true => TcpListener::bind(format!("127.0.0.1{}", config.get_weird_port())).await?,
+            false => TcpListener::bind(format!("0.0.0.0{}", config.get_weird_port())).await?,
         };
 
         serve(listener, router).await?;

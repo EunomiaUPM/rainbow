@@ -10,7 +10,7 @@ use crate::protocols::dsp::protocol_types::{
     TransferRequestMessageDto, TransferStartMessageDto, TransferSuspensionMessageDto, TransferTerminationMessageDto,
 };
 use crate::protocols::dsp::validator::traits::validation_rpc_steps::ValidationRpcSteps;
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
+use rainbow_common::config::services::TransferConfig;
 use rainbow_common::http_client::HttpClient;
 use rainbow_common::protocol::context_field::ContextField;
 use std::str::FromStr;
@@ -21,7 +21,7 @@ use urn::Urn;
 pub struct RPCOrchestratorService {
     validator: Arc<dyn ValidationRpcSteps>,
     pub persistence_service: Arc<dyn TransferPersistenceTrait>,
-    pub _config: Arc<ApplicationProviderConfig>,
+    pub _config: Arc<TransferConfig>,
     pub http_client: Arc<HttpClient>,
 }
 
@@ -29,7 +29,7 @@ impl RPCOrchestratorService {
     pub fn new(
         validator: Arc<dyn ValidationRpcSteps>,
         persistence_service: Arc<dyn TransferPersistenceTrait>,
-        _config: Arc<ApplicationProviderConfig>,
+        _config: Arc<TransferConfig>,
         http_client: Arc<HttpClient>,
     ) -> RPCOrchestratorService {
         RPCOrchestratorService { validator, persistence_service, _config, http_client }

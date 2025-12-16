@@ -17,7 +17,7 @@
  *
  */
 
-use rainbow_common::config::ConfigRoles;
+use rainbow_common::config::types::roles::RoleConfig;
 use rainbow_common::protocol::contract::contract_odrl::OdrlAgreement;
 use rainbow_common::protocol::contract::ContractNegotiationState;
 use rainbow_common::utils::get_urn_from_string;
@@ -56,7 +56,7 @@ impl Into<NewContractNegotiationProcess> for NewContractNegotiationRequest {
             consumer_id: self.consumer_id.map(|id| get_urn_from_string(&id).unwrap()),
             associated_consumer: None,
             state: self.state,
-            initiated_by: ConfigRoles::Provider,
+            initiated_by: RoleConfig::Provider,
             is_business: false,
         }
     }

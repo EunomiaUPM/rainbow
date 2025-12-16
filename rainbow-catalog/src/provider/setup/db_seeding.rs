@@ -17,7 +17,8 @@
  *
  */
 
-use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_common::config::services::CatalogConfig;
+use rainbow_common::config::traits::DatabaseConfigTrait;
 use rainbow_db::catalog::repo::sql::CatalogRepoForSql;
 use rainbow_db::catalog::repo::{CatalogRepo, NewCatalogModel};
 use sea_orm::Database;
@@ -25,7 +26,7 @@ use sea_orm::Database;
 pub struct CatalogSeeding;
 
 impl CatalogSeeding {
-    pub async fn run(config: &ApplicationProviderConfig) -> anyhow::Result<()> {
+    pub async fn run(config: &CatalogConfig) -> anyhow::Result<()> {
         let db_url = config.get_full_db_url();
         let db_connection = Database::connect(db_url).await.expect("Database connection failed");
         // run seeding

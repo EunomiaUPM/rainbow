@@ -20,10 +20,19 @@
 use crate::mates::Mates;
 use axum::async_trait;
 
+pub mod mates_facade;
 pub mod ssi_auth_facade;
 
 #[mockall::automock]
 #[async_trait]
 pub trait SSIAuthFacadeTrait: Send + Sync {
     async fn verify_token(&self, token: String) -> anyhow::Result<Mates>;
+}
+
+#[mockall::automock]
+#[async_trait]
+pub trait MatesFacadeTrait: Send + Sync {
+    async fn get_mate_by_id(&self, mate_id: String) -> anyhow::Result<Mates>;
+    async fn get_mate_by_slug(&self, mate_slug: String) -> anyhow::Result<Mates>;
+    async fn get_me_mate(&self) -> anyhow::Result<Mates>;
 }

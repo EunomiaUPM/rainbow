@@ -16,7 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::ssi::common::http::{MateRouter, VcRequesterRouter, WalletRouter};
+use crate::ssi::common::http::{GaiaSelfIssuerRouter, MateRouter, VcRequesterRouter, WalletRouter};
 use crate::ssi::provider::core::traits::CoreProviderTrait;
 use crate::ssi::provider::core::AuthProvider;
 use crate::ssi::provider::http::business_router::BusinessRouter;
@@ -26,6 +26,7 @@ use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::get;
 use axum::Router;
+use rainbow_common::config::traits::ApiConfigTrait;
 use rainbow_common::http::OpenapiRouter;
 use rainbow_common::utils::server_status;
 use std::sync::Arc;
@@ -40,7 +41,7 @@ pub struct AuthProviderRouter {
 
 impl AuthProviderRouter {
     pub fn new(provider: Arc<AuthProvider>) -> Self {
-        let openapi = provider.config().get_openapi_json().expect("Invalid openapi path");
+        let openapi = provider.config().get_openapi().expect("Invalid openapi path");
         AuthProviderRouter { provider, openapi }
     }
 
@@ -53,48 +54,35 @@ impl AuthProviderRouter {
         let openapi_router = OpenapiRouter::new(self.openapi.clone()).router();
         let business_router = BusinessRouter::new(self.provider.clone()).router();
 
-        Router::new()
-            .route(
-                &format!("{}/status", self.provider.config().get_api_path()),
-                get(server_status),
-            )
-            .nest(
-                &format!("{}/wallet", self.provider.config().get_api_path()),
-                wallet_router,
-            )
-            .nest(
-                &format!("{}/mates", self.provider.config().get_api_path()),
-                mate_router,
-            )
-            .nest(
-                &format!("{}/vc-request", self.provider.config().get_api_path()),
-                vc_requester_router,
-            )
-            .nest(
-                &format!("{}/gate", self.provider.config().get_api_path()),
-                gatekeeper_router,
-            )
-            .nest(
-                &format!("{}/verifier", self.provider.config().get_api_path()),
-                verifier_router,
-            )
-            .nest(
-                &format!("{}/business", self.provider.config().get_api_path()),
-                business_router,
-            )
-            .nest(
-                &format!("{}/docs", self.provider.config().get_api_path()),
-                openapi_router,
-            )
+        let api_path = self.provider.config().get_api_version();
+
+        let router = Router::new()
+            .route(&format!("{}/status", api_path), get(server_status))
+            .nest(&format!("{}/wallet", api_path), wallet_router)
+            .nest(&format!("{}/mates", api_path), mate_router)
+            .nest(&format!("{}/vc-request", api_path), vc_requester_router)
+            .nest(&format!("{}/gate", api_path), gatekeeper_router)
+            .nest(&format!("{}/verifier", api_path), verifier_router)
+            .nest(&format!("{}/business", api_path), business_router)
+            .nest(&format!("{}/docs", api_path), openapi_router)
             .fallback(Self::fallback)
             .layer(
                 TraceLayer::new_for_http()
-                    .make_span_with(|_req: &Request<_>| tracing::info_span!("request", id = %Uuid::new_v4()))
+                    .make_span_with(|_req: &Request<_>| tracing::info_span!("P-Auth-request", id = %Uuid::new_v4()))
                     .on_request(|req: &Request<_>, _span: &tracing::Span| {
                         info!("{} {}", req.method(), req.uri().path());
                     })
                     .on_response(DefaultOnResponse::new().level(Level::TRACE)),
-            )
+            );
+
+        let router = match self.provider.gaia_active() {
+            true => {
+                let gaia_router = GaiaSelfIssuerRouter::new(self.provider.clone()).router();
+                router.nest(&format!("{}/gaia", api_path), gaia_router)
+            }
+            false => router,
+        };
+        router
     }
 
     async fn fallback() -> impl IntoResponse {

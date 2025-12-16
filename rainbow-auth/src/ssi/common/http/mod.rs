@@ -19,7 +19,9 @@
 mod wallet_router;
 mod vc_requester_router;
 mod mate_router;
+mod gaia_self_issuer_router;
 
 pub use wallet_router::WalletRouter;
 pub use vc_requester_router::VcRequesterRouter;
 pub use mate_router::MateRouter;
+pub use gaia_self_issuer_router::GaiaSelfIssuerRouter;

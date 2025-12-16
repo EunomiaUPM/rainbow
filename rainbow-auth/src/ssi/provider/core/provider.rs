@@ -16,15 +16,15 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::ssi::common::core::{CoreMateTrait, CoreVcRequesterTrait, CoreWalletTrait};
+use crate::ssi::common::core::{CoreGaiaSelfIssuerTrait, CoreMateTrait, CoreVcRequesterTrait, CoreWalletTrait};
 use crate::ssi::common::services::callback::CallbackTrait;
 use crate::ssi::common::services::client::ClientServiceTrait;
+use crate::ssi::common::services::gaia_self_issuer::GaiaSelfIssuerTrait;
 use crate::ssi::common::services::repo::subtraits::{
     MatesTrait, ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait,
 };
 use crate::ssi::common::services::vc_requester::VcRequesterTrait;
 use crate::ssi::common::services::wallet::WalletServiceTrait;
-use crate::ssi::provider::config::AuthProviderConfigTrait;
 use crate::ssi::provider::core::traits::{
     CoreBusinessTrait, CoreGateKeeperTrait, CoreProviderTrait, CoreVerifierTrait,
 };
@@ -32,6 +32,7 @@ use crate::ssi::provider::services::business::BusinessTrait;
 use crate::ssi::provider::services::gatekeeper::GateKeeperTrait;
 use crate::ssi::provider::services::repo::AuthProviderRepoTrait;
 use crate::ssi::provider::services::verifier::VerifierTrait;
+use rainbow_common::config::services::SsiAuthConfig;
 use std::sync::Arc;
 
 pub struct AuthProvider {
@@ -44,7 +45,9 @@ pub struct AuthProvider {
     repo: Arc<dyn AuthProviderRepoTrait>,
     #[allow(dead_code)] // as an orchestrator, it should have access even though it's not used
     client: Arc<dyn ClientServiceTrait>,
-    config: Arc<dyn AuthProviderConfigTrait>,
+    config: Arc<SsiAuthConfig>,
+    // EXTRA MODULES
+    self_issuer: Option<Arc<dyn GaiaSelfIssuerTrait>>,
 }
 
 impl AuthProvider {
@@ -57,15 +60,33 @@ impl AuthProvider {
         business: Arc<dyn BusinessTrait>,
         repo: Arc<dyn AuthProviderRepoTrait>,
         client: Arc<dyn ClientServiceTrait>,
-        config: Arc<dyn AuthProviderConfigTrait>,
+        config: Arc<SsiAuthConfig>,
+        self_issuer: Option<Arc<dyn GaiaSelfIssuerTrait>>,
     ) -> AuthProvider {
-        AuthProvider { wallet, vc_requester, gatekeeper, verifier, callback, business, repo, client, config }
+        AuthProvider {
+            wallet,
+            vc_requester,
+            gatekeeper,
+            verifier,
+            callback,
+            business,
+            repo,
+            client,
+            config,
+            self_issuer,
+        }
     }
 }
 
 impl CoreProviderTrait for AuthProvider {
-    fn config(&self) -> Arc<dyn AuthProviderConfigTrait> {
+    fn config(&self) -> Arc<SsiAuthConfig> {
         self.config.clone()
+    }
+    fn gaia_active(&self) -> bool {
+        match self.self_issuer {
+            Some(_) => true,
+            None => false,
+        }
     }
 }
 
@@ -150,5 +171,15 @@ impl CoreBusinessTrait for AuthProvider {
 
     fn verifier(&self) -> Arc<dyn VerifierTrait> {
         self.verifier.clone()
+    }
+}
+
+impl CoreGaiaSelfIssuerTrait for AuthProvider {
+    fn self_issuer(&self) -> Arc<dyn GaiaSelfIssuerTrait> {
+        self.self_issuer.clone().unwrap().clone()
+    }
+
+    fn wallet(&self) -> Arc<dyn WalletServiceTrait> {
+        self.wallet.clone()
     }
 }

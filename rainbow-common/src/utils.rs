@@ -16,6 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use crate::config::types::HostConfig;
 use crate::errors::helpers::BadFormat;
 use crate::errors::{CommonErrors, ErrorLog};
 use anyhow::bail;
@@ -78,6 +79,20 @@ pub fn read(path: &str) -> anyhow::Result<String> {
         Ok(data) => Ok(data),
         Err(e) => {
             let error = CommonErrors::read_new(path, &e.to_string());
+            error!("{}", error.log());
+            bail!(error)
+        }
+    }
+}
+
+pub fn get_host_helper(host: Option<&HostConfig>, module: &str) -> anyhow::Result<String> {
+    match host {
+        Some(host) => match host.port.as_ref() {
+            Some(port) => Ok(format!("{}://{}:{}", host.protocol, host.url, port)),
+            None => Ok(format!("{}://{}", host.protocol, host.url)),
+        },
+        None => {
+            let error = CommonErrors::module_new(module);
             error!("{}", error.log());
             bail!(error)
         }

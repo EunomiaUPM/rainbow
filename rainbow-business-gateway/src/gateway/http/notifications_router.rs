@@ -24,7 +24,6 @@ use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::{Json, Router};
-use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use reqwest::Client;
 use serde::Deserialize;
 use serde_json::{json, Value};
@@ -32,9 +31,11 @@ use std::time::Duration;
 use tokio::sync::broadcast;
 use tower_http::cors::{AllowHeaders, Any, CorsLayer};
 use tracing::error;
+use rainbow_common::config::services::GatewayConfig;
+use rainbow_common::config::types::HostType;
 
 pub struct BusinessNotificationsRouter {
-    config: ApplicationProviderConfig,
+    config: GatewayConfig,
     client: Client,
     notification_tx: broadcast::Sender<String>,
 }
@@ -45,7 +46,7 @@ struct Params {
 }
 
 impl BusinessNotificationsRouter {
-    pub fn new(config: ApplicationProviderConfig) -> Self {
+    pub fn new(config: GatewayConfig) -> Self {
         let client =
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
         let (notification_tx, _) = broadcast::channel(100);
@@ -68,7 +69,7 @@ impl BusinessNotificationsRouter {
     }
     async fn subscription_handler(
         State((config, client, _notification_tx)): State<(
-            ApplicationProviderConfig,
+            GatewayConfig,
             Client,
             broadcast::Sender<String>,
         )>,
@@ -84,7 +85,7 @@ impl BusinessNotificationsRouter {
                     .into_response()
             }
         };
-        let base_url = config.get_contract_negotiation_host_url().expect("no cn host");
+        let base_url = config.contracts().get_host(HostType::Http);
         let subscription_url = format!("{}/api/v1/contract-negotiation/subscriptions", base_url);
         let request = client
             .post(&subscription_url)
@@ -132,7 +133,7 @@ impl BusinessNotificationsRouter {
     }
     async fn websocket_handler(
         State((_config, _client, notification_tx)): State<(
-            ApplicationProviderConfig,
+            GatewayConfig,
             Client,
             broadcast::Sender<String>,
         )>,
@@ -191,7 +192,7 @@ impl BusinessNotificationsRouter {
     }
     async fn incoming_notification(
         State((_config, _client, notification_tx)): State<(
-            ApplicationProviderConfig,
+            GatewayConfig,
             Client,
             broadcast::Sender<String>,
         )>,

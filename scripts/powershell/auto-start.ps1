@@ -79,10 +79,10 @@ function Get-CargoCommand {
 # ----------------------------
 # Authority
 # ----------------------------
-$authorityCmd = Get-CargoCommand "--manifest-path Cargo.toml start --env-file ../static/envs/.env.authority"
-Start-ServiceWindow -Title "Authority" `
-    -WorkingDir (Join-Path $BaseDir "rainbow-authority") `
-    -Command $authorityCmd
+#$authorityCmd = Get-CargoCommand "--manifest-path Cargo.toml start --env-file ../static/envs/.env.authority"
+#Start-ServiceWindow -Title "Authority" `
+#    -WorkingDir (Join-Path $BaseDir "rainbow-authority") `
+#    -Command $authorityCmd
 
 # ----------------------------
 # Consumer
@@ -92,13 +92,13 @@ if ($Module -eq "core") {
 } else {
     $consumerPath = Join-Path $BaseDir "rainbow-$Module"
 }
-$consumerCmd = Get-CargoCommand "--manifest-path Cargo.toml consumer start --env-file ../static/envs/.env.consumer.core"
+$consumerCmd = Get-CargoCommand "--manifest-path Cargo.toml consumer start --env-file ../static/envs/core.consumer.yaml"
 Start-ServiceWindow -Title "Consumer" -WorkingDir $consumerPath -Command $consumerCmd
 
 # ----------------------------
 # Provider
 # ----------------------------
-$providerCmd = Get-CargoCommand "--manifest-path Cargo.toml provider start --env-file ../static/envs/.env.provider.core"
+$providerCmd = Get-CargoCommand "--manifest-path Cargo.toml provider start --env-file ../static/envs/core.provider.yaml"
 Start-ServiceWindow -Title "Provider" -WorkingDir $consumerPath -Command $providerCmd
 
 Write-Host ""

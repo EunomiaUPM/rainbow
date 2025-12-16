@@ -29,11 +29,9 @@ use crate::consumer::core::ds_protocol_rpc::ds_protocol_rpc_types::{
 use crate::consumer::core::ds_protocol_rpc::DSRPCTransferConsumerTrait;
 use anyhow::{anyhow, bail};
 use axum::async_trait;
-use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
 use rainbow_common::errors::helpers::{BadFormat, MissingAction};
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::mates::Mates;
-use rainbow_common::mates_facade::MatesFacadeTrait;
 use rainbow_common::protocol::transfer::transfer_completion::TransferCompletionMessage;
 use rainbow_common::protocol::transfer::transfer_process::TransferProcessMessage;
 use rainbow_common::protocol::transfer::transfer_request::TransferRequestMessage;
@@ -57,6 +55,10 @@ use std::sync::Arc;
 use std::time::Duration;
 use tracing::{debug, error};
 use urn::Urn;
+use rainbow_common::config::services::TransferConfig;
+use rainbow_common::config::traits::HostConfigTrait;
+use rainbow_common::config::types::HostType;
+use rainbow_common::facades::ssi_auth_facade::MatesFacadeTrait;
 
 pub struct DSRPCTransferConsumerService<T, U, V, W>
 where
@@ -67,7 +69,7 @@ where
 {
     transfer_repo: Arc<T>,
     data_plane_facade: Arc<U>,
-    config: ApplicationConsumerConfig,
+    config: TransferConfig,
     notification_service: Arc<V>,
     client: Client,
     mates_facade: Arc<W>,
@@ -83,7 +85,7 @@ where
     pub fn new(
         transfer_repo: Arc<T>,
         data_plane_facade: Arc<U>,
-        config: ApplicationConsumerConfig,
+        config: TransferConfig,
         notification_service: Arc<V>,
         mates_facade: Arc<W>,
     ) -> Self {
@@ -249,7 +251,7 @@ where
         let callback_urn = get_urn(None);
         let callback_address = format!(
             "{}/{}",
-            self.config.get_transfer_host_url().unwrap(),
+            self.config.get_host(HostType::Http),
             callback_urn
         );
         // 2. Create message

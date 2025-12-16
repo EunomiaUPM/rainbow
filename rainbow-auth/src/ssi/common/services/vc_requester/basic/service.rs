@@ -34,6 +34,8 @@ use reqwest::Response;
 use std::sync::Arc;
 use tracing::{error, info};
 use url::Url;
+use rainbow_common::config::traits::ExtraHostsTrait;
+use rainbow_common::config::types::HostType;
 
 pub struct VCReqService {
     client: Arc<dyn ClientServiceTrait>,
@@ -54,7 +56,7 @@ impl VcRequesterTrait for VCReqService {
         let id = uuid::Uuid::new_v4().to_string();
         let callback_uri = format!(
             "{}{}/vc-request/callback/{}",
-            self.config.get_host(),
+            self.config.hosts().get_host(HostType::Http),
             self.config.get_api_path(),
             &id
         );

@@ -19,7 +19,8 @@
 
 use crate::protocols::dsp::facades::data_service_resolver_facade::DataServiceFacadeTrait;
 use anyhow::bail;
-use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_common::config::services::TransferConfig;
+use rainbow_common::config::types::HostType;
 use rainbow_common::dcat_formats::DctFormats;
 use rainbow_common::errors::helpers::BadFormat;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
@@ -36,12 +37,12 @@ use tracing::error;
 use urn::Urn;
 
 pub struct DataServiceFacadeServiceForDSProtocol {
-    config: ApplicationProviderConfig,
+    config: TransferConfig,
     client: Client,
 }
 
 impl DataServiceFacadeServiceForDSProtocol {
-    pub fn _new(config: ApplicationProviderConfig) -> Self {
+    pub fn _new(config: TransferConfig) -> Self {
         let client =
             Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
         Self { config, client }
@@ -62,8 +63,8 @@ impl DataServiceFacadeTrait for DataServiceFacadeServiceForDSProtocol {
         agreement_id: Urn,
         formats: Option<DctFormats>,
     ) -> anyhow::Result<DataService> {
-        let contracts_url = self.config.get_contract_negotiation_host_url().unwrap();
-        let catalog_url = self.config.get_catalog_host_url().unwrap();
+        let contracts_url = self.config.contracts().get_host(HostType::Http);
+        let catalog_url = self.config.catalog().get_host(HostType::Http);
         let agreement_url = format!(
             "{}/api/v1/contract-negotiation/agreements/{}",
             contracts_url, agreement_id

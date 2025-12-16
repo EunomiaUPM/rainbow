@@ -16,13 +16,21 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::ssi::common::core::{CoreMateTrait, CoreVcRequesterTrait, CoreWalletTrait};
-use crate::ssi::consumer::config::AuthConsumerConfigTrait;
+use crate::ssi::common::core::{CoreGaiaSelfIssuerTrait, CoreMateTrait, CoreVcRequesterTrait, CoreWalletTrait};
 use crate::ssi::consumer::core::traits::CoreOnboarderTrait;
+use rainbow_common::config::services::SsiAuthConfig;
 use std::sync::Arc;
 
 pub trait CoreConsumerTrait:
-    CoreOnboarderTrait + CoreWalletTrait + CoreVcRequesterTrait + CoreMateTrait + Send + Sync + 'static
+    CoreOnboarderTrait
+    + CoreWalletTrait
+    + CoreVcRequesterTrait
+    + CoreMateTrait
+    + CoreGaiaSelfIssuerTrait
+    + Send
+    + Sync
+    + 'static
 {
-    fn config(&self) -> Arc<dyn AuthConsumerConfigTrait>;
+    fn gaia_active(&self) -> bool;
+    fn config(&self) -> Arc<SsiAuthConfig>;
 }

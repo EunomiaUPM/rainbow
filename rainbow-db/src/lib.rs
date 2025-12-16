@@ -25,13 +25,10 @@
 #![allow(unused_must_use)]
 
 pub mod catalog;
-pub mod contracts_provider;
 pub mod contracts_consumer;
+pub mod contracts_provider;
+pub mod datahub;
 pub mod dataplane;
+pub mod events;
 pub mod transfer_consumer;
 pub mod transfer_provider;
-pub mod events;
-pub mod datahub;
-pub mod common;
-// pub mod mates;
-pub mod auth;
