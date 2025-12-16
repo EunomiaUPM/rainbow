@@ -2,6 +2,7 @@ use crate::entities::odrl_policies::{NewOdrlPolicyDto, OdrlPolicyEntityTrait};
 use crate::errors::error_adapter::CustomToResponse;
 use crate::http::common::to_camel_case::ToCamelCase;
 use crate::http::common::{extract_payload, parse_urn};
+use anyhow::Error;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{FromRef, Path, Query, State};
 use axum::http::StatusCode;
@@ -10,6 +11,7 @@ use axum::routing::{delete, get, post};
 use axum::{Json, Router};
 use rainbow_common::batch_requests::BatchRequests;
 use rainbow_common::config::global_config::ApplicationGlobalConfig;
+use rainbow_common::errors::CommonErrors;
 use serde::Deserialize;
 use std::sync::Arc;
 
@@ -105,7 +107,10 @@ impl OdrlOfferEntityRouter {
         };
         match state.service.get_odrl_offer_by_id(&id_urn).await {
             Ok(Some(offer)) => (StatusCode::OK, Json(ToCamelCase(offer))).into_response(),
-            Ok(None) => (StatusCode::NOT_FOUND).into_response(),
+            Ok(None) => {
+                let err = CommonErrors::missing_resource_new(id.as_str(), "Odrl policy not found");
+                err.into_response()
+            }
             Err(err) => err.to_response(),
         }
     }
@@ -119,7 +124,20 @@ impl OdrlOfferEntityRouter {
         };
         match state.service.create_odrl_offer(&input).await {
             Ok(offer) => (StatusCode::OK, Json(ToCamelCase(offer))).into_response(),
-            Err(err) => err.to_response(),
+            Err(err) => match err.downcast::<CommonErrors>() {
+                Ok(ce) => match ce {
+                    CommonErrors::DatabaseError { ref cause, .. } => {
+                        if cause.contains("not found") {
+                            let err = CommonErrors::missing_resource_new("", cause.as_str());
+                            return err.into_response();
+                        } else {
+                            ce.into_response()
+                        }
+                    }
+                    e => return e.into_response(),
+                },
+                Err(e) => e.to_response(),
+            },
         }
     }
     async fn handle_delete_odrl_offer_by_id(
@@ -131,7 +149,7 @@ impl OdrlOfferEntityRouter {
             Err(resp) => return resp,
         };
         match state.service.delete_odrl_offer_by_id(&id_urn).await {
-            Ok(dataset) => (StatusCode::OK, Json(ToCamelCase(dataset))).into_response(),
+            Ok(_) => StatusCode::ACCEPTED.into_response(),
             Err(err) => err.to_response(),
         }
     }
@@ -144,7 +162,7 @@ impl OdrlOfferEntityRouter {
             Err(resp) => return resp,
         };
         match state.service.delete_odrl_offers_by_entity(&id_urn).await {
-            Ok(dataset) => (StatusCode::OK, Json(ToCamelCase(dataset))).into_response(),
+            Ok(_) => StatusCode::ACCEPTED.into_response(),
             Err(err) => err.to_response(),
         }
     }

@@ -1,5 +1,4 @@
 use convert_case::{Case, Casing};
-use serde::ser::SerializeMap;
 use serde::{Serialize, Serializer};
 use serde_json::Value;
 

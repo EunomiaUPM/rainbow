@@ -2,7 +2,9 @@ pub(crate) mod odrl_policies;
 
 use crate::data::entities::odrl_offer;
 use crate::data::entities::odrl_offer::NewOdrlOfferModel;
+use rainbow_common::protocol::contract::contract_odrl::{OdrlOffer, OdrlPolicyInfo};
 use serde::{Deserialize, Serialize};
+use std::fmt::Display;
 use urn::Urn;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -13,13 +15,34 @@ pub struct OdrlPolicyDto {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum CatalogEntityTypes {
+    Distribution,
+    DataService,
+    Catalog,
+    Dataset,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct NewOdrlPolicyDto {
     pub id: Option<Urn>,
-    pub odrl_offers: Option<serde_json::Value>,
+    pub odrl_offers: OdrlPolicyInfo,
     pub entity_id: Urn,
-    pub entity_type: String,
+    pub entity_type: CatalogEntityTypes,
+}
+
+impl Display for CatalogEntityTypes {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let str = match self {
+            CatalogEntityTypes::Distribution => "Distribution",
+            CatalogEntityTypes::DataService => "DataService",
+            CatalogEntityTypes::Catalog => "Catalog",
+            CatalogEntityTypes::Dataset => "Dataset",
+        }
+        .to_string();
+        write!(f, "{}", str)
+    }
 }
 
 impl From<NewOdrlPolicyDto> for NewOdrlOfferModel {

@@ -16,6 +16,8 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use crate::entities::odrl_policies::CatalogEntityTypes;
+use rainbow_common::protocol::contract::contract_odrl::{OdrlOffer, OdrlPolicyInfo};
 use sea_orm::entity::prelude::*;
 use sea_orm::ActiveValue;
 use serde::{Deserialize, Serialize};
@@ -77,9 +79,9 @@ impl ActiveModelBehavior for ActiveModel {}
 #[derive(Clone)]
 pub struct NewOdrlOfferModel {
     pub id: Option<Urn>,
-    pub odrl_offers: Option<serde_json::Value>,
+    pub odrl_offers: OdrlPolicyInfo,
     pub entity_id: Urn,
-    pub entity_type: String,
+    pub entity_type: CatalogEntityTypes,
 }
 
 impl From<NewOdrlOfferModel> for ActiveModel {
@@ -89,9 +91,9 @@ impl From<NewOdrlOfferModel> for ActiveModel {
             .expect("UrnBuilder failed");
         Self {
             id: ActiveValue::Set(dto.id.clone().unwrap_or(new_urn.clone()).to_string()),
-            odrl_offer: ActiveValue::Set(dto.odrl_offers),
+            odrl_offer: ActiveValue::Set(serde_json::to_value(dto.odrl_offers).ok()),
             entity: ActiveValue::Set(dto.entity_id.to_string()),
-            entity_type: ActiveValue::Set(dto.entity_type),
+            entity_type: ActiveValue::Set(dto.entity_type.to_string()),
             created_at: ActiveValue::Set(chrono::Utc::now().into()),
         }
     }

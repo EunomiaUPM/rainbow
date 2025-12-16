@@ -11,6 +11,7 @@ use axum::{Json, Router};
 use rainbow_common::batch_requests::BatchRequests;
 use rainbow_common::config::global_config::ApplicationGlobalConfig;
 use rainbow_common::dcat_formats::DctFormats;
+use rainbow_common::errors::CommonErrors;
 use serde::Deserialize;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -125,7 +126,10 @@ impl DistributionEntityRouter {
         };
         match state.service.get_distribution_by_id(&id_urn).await {
             Ok(Some(distribution)) => (StatusCode::OK, Json(ToCamelCase(distribution))).into_response(),
-            Ok(None) => (StatusCode::NOT_FOUND).into_response(),
+            Ok(None) => {
+                let err = CommonErrors::missing_resource_new(id.as_str(), "Distribution not found");
+                err.into_response()
+            }
             Err(err) => err.to_response(),
         }
     }
@@ -169,7 +173,7 @@ impl DistributionEntityRouter {
             Err(resp) => return resp,
         };
         match state.service.delete_distribution_by_id(&id_urn).await {
-            Ok(dataset) => (StatusCode::OK, Json(ToCamelCase(dataset))).into_response(),
+            Ok(_) => StatusCode::ACCEPTED.into_response(),
             Err(err) => err.to_response(),
         }
     }

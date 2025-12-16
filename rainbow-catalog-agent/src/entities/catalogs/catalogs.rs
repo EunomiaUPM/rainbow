@@ -22,10 +22,10 @@ impl CatalogEntityTrait for CatalogEntities {
         &self,
         limit: Option<u64>,
         page: Option<u64>,
-        no_main_catalog: bool,
+        with_main_catalog: bool,
     ) -> anyhow::Result<Vec<CatalogDto>> {
         let catalogs =
-            self.repo.get_catalog_repo().get_all_catalogs(limit, page, no_main_catalog).await.map_err(|e| {
+            self.repo.get_catalog_repo().get_all_catalogs(limit, page, with_main_catalog).await.map_err(|e| {
                 let err = CommonErrors::database_new(&e.to_string());
                 error!("{}", err.log());
                 err

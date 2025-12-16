@@ -11,6 +11,7 @@ use axum::routing::{delete, get, post, put};
 use axum::{Json, Router};
 use rainbow_common::batch_requests::BatchRequests;
 use rainbow_common::config::global_config::ApplicationGlobalConfig;
+use rainbow_common::errors::CommonErrors;
 use serde::Deserialize;
 use std::sync::Arc;
 
@@ -100,7 +101,10 @@ impl DatasetEntityRouter {
         };
         match state.service.get_dataset_by_id(&id_urn).await {
             Ok(Some(dataset)) => (StatusCode::OK, Json(ToCamelCase(dataset))).into_response(),
-            Ok(None) => (StatusCode::NOT_FOUND).into_response(),
+            Ok(None) => {
+                let err = CommonErrors::missing_resource_new(id.as_str(), "Dataset not found");
+                err.into_response()
+            }
             Err(err) => err.to_response(),
         }
     }
@@ -144,7 +148,7 @@ impl DatasetEntityRouter {
             Err(resp) => return resp,
         };
         match state.service.delete_dataset_by_id(&id_urn).await {
-            Ok(dataset) => (StatusCode::OK, Json(ToCamelCase(dataset))).into_response(),
+            Ok(_) => StatusCode::ACCEPTED.into_response(),
             Err(err) => err.to_response(),
         }
     }
