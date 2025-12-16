@@ -62,7 +62,12 @@ impl OdrlOfferRepositoryTrait for OdrlOfferRepositoryForSql {
         let odrl_offers =
             odrl_offer::Entity::find().filter(odrl_offer::Column::Entity.eq(entity)).all(&self.db_connection).await;
         match odrl_offers {
-            Ok(odrl_offers) => Ok(odrl_offers),
+            Ok(odrl_offers) => match odrl_offers.is_empty() {
+                false => Ok(odrl_offers),
+                true => Err(CatalogAgentRepoErrors::OdrlOfferRepoErrors(
+                    OdrlOfferRepoErrors::OdrlOfferNotFound,
+                )),
+            },
             Err(err) => Err(CatalogAgentRepoErrors::OdrlOfferRepoErrors(
                 OdrlOfferRepoErrors::ErrorFetchingOdrlOffer(err.into()),
             )),

@@ -94,7 +94,20 @@ impl OdrlOfferEntityRouter {
         };
         match state.service.get_all_odrl_offers_by_entity(&entity_id).await {
             Ok(offers) => (StatusCode::OK, Json(ToCamelCase(offers))).into_response(),
-            Err(err) => err.to_response(),
+            Err(err) => match err.downcast::<CommonErrors>() {
+                Ok(ce) => match ce {
+                    CommonErrors::DatabaseError { ref cause, .. } => {
+                        if cause.contains("not found") {
+                            let err = CommonErrors::missing_resource_new("", cause.as_str());
+                            return err.into_response();
+                        } else {
+                            ce.into_response()
+                        }
+                    }
+                    e => return e.into_response(),
+                },
+                Err(e) => e.to_response(),
+            },
         }
     }
     async fn handle_get_odrl_offer_by_id(
@@ -140,6 +153,7 @@ impl OdrlOfferEntityRouter {
             },
         }
     }
+
     async fn handle_delete_odrl_offer_by_id(
         State(state): State<OdrlOfferEntityRouter>,
         Path(id): Path<String>,
@@ -150,7 +164,20 @@ impl OdrlOfferEntityRouter {
         };
         match state.service.delete_odrl_offer_by_id(&id_urn).await {
             Ok(_) => StatusCode::ACCEPTED.into_response(),
-            Err(err) => err.to_response(),
+            Err(err) => match err.downcast::<CommonErrors>() {
+                Ok(ce) => match ce {
+                    CommonErrors::DatabaseError { ref cause, .. } => {
+                        if cause.contains("not found") {
+                            let err = CommonErrors::missing_resource_new("", cause.as_str());
+                            return err.into_response();
+                        } else {
+                            ce.into_response()
+                        }
+                    }
+                    e => return e.into_response(),
+                },
+                Err(e) => e.to_response(),
+            },
         }
     }
     async fn handle_delete_odrl_offers_by_entity(
@@ -163,7 +190,20 @@ impl OdrlOfferEntityRouter {
         };
         match state.service.delete_odrl_offers_by_entity(&id_urn).await {
             Ok(_) => StatusCode::ACCEPTED.into_response(),
-            Err(err) => err.to_response(),
+            Err(err) => match err.downcast::<CommonErrors>() {
+                Ok(ce) => match ce {
+                    CommonErrors::DatabaseError { ref cause, .. } => {
+                        if cause.contains("not found") {
+                            let err = CommonErrors::missing_resource_new("", cause.as_str());
+                            return err.into_response();
+                        } else {
+                            ce.into_response()
+                        }
+                    }
+                    e => return e.into_response(),
+                },
+                Err(e) => e.to_response(),
+            },
         }
     }
 }

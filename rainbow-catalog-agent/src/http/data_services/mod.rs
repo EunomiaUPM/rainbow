@@ -90,7 +90,20 @@ impl DataServiceEntityRouter {
         };
         match state.service.get_data_services_by_catalog_id(&id_urn).await {
             Ok(data_services) => (StatusCode::OK, Json(ToCamelCase(data_services))).into_response(),
-            Err(err) => err.to_response(),
+            Err(err) => match err.downcast::<CommonErrors>() {
+                Ok(ce) => match ce {
+                    CommonErrors::DatabaseError { ref cause, .. } => {
+                        if cause.contains("not found") {
+                            let err = CommonErrors::missing_resource_new("", cause.as_str());
+                            return err.into_response();
+                        } else {
+                            ce.into_response()
+                        }
+                    }
+                    e => return e.into_response(),
+                },
+                Err(e) => e.to_response(),
+            },
         }
     }
     async fn handle_get_data_service_by_id(
@@ -125,7 +138,20 @@ impl DataServiceEntityRouter {
         };
         match state.service.put_data_service_by_id(&id_urn, &input).await {
             Ok(data_service) => (StatusCode::OK, Json(ToCamelCase(data_service))).into_response(),
-            Err(err) => err.to_response(),
+            Err(err) => match err.downcast::<CommonErrors>() {
+                Ok(ce) => match ce {
+                    CommonErrors::DatabaseError { ref cause, .. } => {
+                        if cause.contains("not found") {
+                            let err = CommonErrors::missing_resource_new("", cause.as_str());
+                            return err.into_response();
+                        } else {
+                            ce.into_response()
+                        }
+                    }
+                    e => return e.into_response(),
+                },
+                Err(e) => e.to_response(),
+            },
         }
     }
     async fn handle_create_data_service(
@@ -138,7 +164,20 @@ impl DataServiceEntityRouter {
         };
         match state.service.create_data_service(&input).await {
             Ok(data_service) => (StatusCode::OK, Json(ToCamelCase(data_service))).into_response(),
-            Err(err) => err.to_response(),
+            Err(err) => match err.downcast::<CommonErrors>() {
+                Ok(ce) => match ce {
+                    CommonErrors::DatabaseError { ref cause, .. } => {
+                        if cause.contains("not found") {
+                            let err = CommonErrors::missing_resource_new("", cause.as_str());
+                            return err.into_response();
+                        } else {
+                            ce.into_response()
+                        }
+                    }
+                    e => return e.into_response(),
+                },
+                Err(e) => e.to_response(),
+            },
         }
     }
     async fn handle_delete_data_service_by_id(
@@ -151,7 +190,20 @@ impl DataServiceEntityRouter {
         };
         match state.service.delete_data_service_by_id(&id_urn).await {
             Ok(_) => StatusCode::ACCEPTED.into_response(),
-            Err(err) => err.to_response(),
+            Err(err) => match err.downcast::<CommonErrors>() {
+                Ok(ce) => match ce {
+                    CommonErrors::DatabaseError { ref cause, .. } => {
+                        if cause.contains("not found") {
+                            let err = CommonErrors::missing_resource_new("", cause.as_str());
+                            return err.into_response();
+                        } else {
+                            ce.into_response()
+                        }
+                    }
+                    e => return e.into_response(),
+                },
+                Err(e) => e.to_response(),
+            },
         }
     }
 }

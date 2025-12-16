@@ -1,6 +1,8 @@
 use crate::data::entities::dataset::{EditDatasetModel, NewDatasetModel};
 use crate::data::entities::{catalog, dataset};
-use crate::data::repo_traits::catalog_db_errors::{CatalogAgentRepoErrors, DatasetRepoErrors};
+use crate::data::repo_traits::catalog_db_errors::{
+    CatalogAgentRepoErrors, CatalogRepoErrors, DatasetRepoErrors, DistributionRepoErrors,
+};
 use crate::data::repo_traits::dataset_repo::DatasetRepositoryTrait;
 use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect};
 use urn::Urn;
@@ -58,8 +60,8 @@ impl DatasetRepositoryTrait for DatasetRepositoryForSql {
                 CatalogAgentRepoErrors::DatasetRepoErrors(DatasetRepoErrors::ErrorFetchingDataset(err.into()))
             })?;
         if catalog.is_none() {
-            return Err(CatalogAgentRepoErrors::DatasetRepoErrors(
-                DatasetRepoErrors::DatasetNotFound,
+            return Err(CatalogAgentRepoErrors::CatalogRepoErrors(
+                CatalogRepoErrors::CatalogNotFound,
             ));
         }
 
@@ -139,6 +141,20 @@ impl DatasetRepositoryTrait for DatasetRepositoryForSql {
         &self,
         new_dataset_model: &NewDatasetModel,
     ) -> anyhow::Result<dataset::Model, CatalogAgentRepoErrors> {
+        let catalog = catalog::Entity::find_by_id(new_dataset_model.catalog_id.clone().to_string())
+            .one(&self.db_connection)
+            .await
+            .map_err(|err| {
+                CatalogAgentRepoErrors::DistributionRepoErrors(DistributionRepoErrors::ErrorFetchingDistribution(
+                    err.into(),
+                ))
+            })?;
+        if catalog.is_none() {
+            return Err(CatalogAgentRepoErrors::CatalogRepoErrors(
+                CatalogRepoErrors::CatalogNotFound,
+            ));
+        }
+
         let model: dataset::ActiveModel = new_dataset_model.into();
         let dataset = dataset::Entity::insert(model).exec_with_returning(&self.db_connection).await;
         match dataset {
