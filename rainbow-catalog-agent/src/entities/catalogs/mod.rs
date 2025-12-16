@@ -69,7 +69,7 @@ pub trait CatalogEntityTrait: Send + Sync {
         &self,
         limit: Option<u64>,
         page: Option<u64>,
-        no_main_catalog: bool,
+        with_main_catalog: bool,
     ) -> anyhow::Result<Vec<CatalogDto>>;
     async fn get_batch_catalogs(&self, ids: &Vec<Urn>) -> anyhow::Result<Vec<CatalogDto>>;
     async fn get_catalog_by_id(&self, catalog_id: &Urn) -> anyhow::Result<Option<CatalogDto>>;

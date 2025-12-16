@@ -17,6 +17,7 @@
  *
  */
 
+pub(crate) mod catalog_db_errors;
 pub(crate) mod catalog_repo;
 pub(crate) mod dataservice_repo;
 pub(crate) mod dataset_repo;

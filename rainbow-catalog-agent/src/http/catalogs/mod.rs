@@ -9,6 +9,7 @@ use axum::routing::{delete, get, post, put};
 use axum::{Json, Router};
 use rainbow_common::batch_requests::BatchRequests;
 use rainbow_common::config::global_config::ApplicationGlobalConfig;
+use rainbow_common::errors::CommonErrors;
 use reqwest::StatusCode;
 use serde::Deserialize;
 use std::sync::Arc;
@@ -60,7 +61,7 @@ impl CatalogEntityRouter {
         State(state): State<CatalogEntityRouter>,
         Query(params): Query<PaginationParams>,
     ) -> impl IntoResponse {
-        let with_main_catalog = params.with_main_catalog.unwrap_or(false);
+        let with_main_catalog = params.with_main_catalog.unwrap_or(true);
         match state.service.get_all_catalogs(params.limit, params.page, with_main_catalog).await {
             Ok(catalogs) => (StatusCode::OK, Json(ToCamelCase(catalogs))).into_response(),
             Err(err) => err.to_response(),
@@ -89,14 +90,20 @@ impl CatalogEntityRouter {
         };
         match state.service.get_catalog_by_id(&id_urn).await {
             Ok(Some(catalog)) => (StatusCode::OK, Json(ToCamelCase(catalog))).into_response(),
-            Ok(None) => (StatusCode::NOT_FOUND).into_response(),
+            Ok(None) => {
+                let err = CommonErrors::missing_resource_new(id.as_str(), "Catalog not found");
+                err.into_response()
+            }
             Err(err) => err.to_response(),
         }
     }
     async fn handle_get_main_catalog(State(state): State<CatalogEntityRouter>) -> impl IntoResponse {
         match state.service.get_main_catalog().await {
             Ok(Some(catalog)) => (StatusCode::OK, Json(ToCamelCase(catalog))).into_response(),
-            Ok(None) => (StatusCode::NOT_FOUND).into_response(),
+            Ok(None) => {
+                let err = CommonErrors::missing_resource_new("main", "Main Catalog not found");
+                err.into_response()
+            }
             Err(err) => err.to_response(),
         }
     }

@@ -10,6 +10,7 @@ use axum::routing::{delete, get, post};
 use axum::{Json, Router};
 use rainbow_common::batch_requests::BatchRequests;
 use rainbow_common::config::global_config::ApplicationGlobalConfig;
+use rainbow_common::errors::CommonErrors;
 use serde::Deserialize;
 use std::sync::Arc;
 
@@ -84,7 +85,10 @@ impl PolicyTemplateEntityRouter {
         };
         match state.service.get_policy_template_by_id(&id_urn).await {
             Ok(Some(template)) => (StatusCode::OK, Json(ToCamelCase(template))).into_response(),
-            Ok(None) => (StatusCode::NOT_FOUND).into_response(),
+            Ok(None) => {
+                let err = CommonErrors::missing_resource_new(id.as_str(), "Policy template not found");
+                err.into_response()
+            }
             Err(err) => err.to_response(),
         }
     }
@@ -110,7 +114,7 @@ impl PolicyTemplateEntityRouter {
             Err(resp) => return resp,
         };
         match state.service.delete_policy_template_by_id(&id_urn).await {
-            Ok(_) => StatusCode::OK.into_response(),
+            Ok(_) => StatusCode::ACCEPTED.into_response(),
             Err(err) => err.to_response(),
         }
     }
