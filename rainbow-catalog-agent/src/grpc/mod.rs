@@ -2,6 +2,7 @@ pub(crate) mod catalogs;
 pub(crate) mod data_services;
 pub(crate) mod datasets;
 pub(crate) mod distributions;
+pub(super) mod mappers;
 pub(crate) mod odrl_policies;
 pub(crate) mod policy_templates;
 

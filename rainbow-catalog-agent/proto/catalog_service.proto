@@ -221,14 +221,14 @@ message DistributionResponse {
 
 message GetDistributionByFormatRequest {
   string dataset_id = 1;
-  google.protobuf.Struct dct_formats = 2;
+  string dct_formats = 2;
 }
 
 message CreateDistributionRequest {
   optional string id = 1;
   optional string dct_title = 2;
   optional string dct_description = 3;
-  google.protobuf.Struct dct_formats = 4;
+  string dct_formats = 4;
   string dcat_access_service = 5;
   string dataset_id = 6;
 }
