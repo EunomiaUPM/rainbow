@@ -19,6 +19,7 @@
 
 use crate::consumer::setup::application::CoreConsumerApplication;
 use crate::consumer::setup::db_migrations::CoreConsumerMigration;
+use crate::consumer::setup::db_seeding::CoreConsumerSeeding;
 use crate::provider::setup::application::CoreProviderApplication;
 use crate::provider::setup::db_migrations::CoreProviderMigration;
 use crate::provider::setup::db_seeding::CoreProviderSeeding;
@@ -75,9 +76,7 @@ impl CoreCommands {
                 CoreCliCommands::Setup(args) => {
                     let config = Self::extract_provider_config(args.env_file)?;
                     CoreProviderMigration::run(&config).await?;
-                    if config.catalog_as_datahub == false {
-                        CoreProviderSeeding::run(&config).await?;
-                    }
+                    CoreProviderSeeding::run(&config).await?;
                 }
             },
             CoreCliRoles::Consumer(cmd) => match cmd {
@@ -87,7 +86,8 @@ impl CoreCommands {
                 }
                 CoreCliCommands::Setup(args) => {
                     let config = Self::extract_consumer_config(args.env_file)?;
-                    CoreConsumerMigration::run(&config).await?
+                    CoreConsumerMigration::run(&config).await?;
+                    CoreConsumerSeeding::run(&config).await?;
                 }
             },
         };

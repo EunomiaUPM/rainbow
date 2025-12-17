@@ -17,13 +17,13 @@
  *
  */
 use rainbow_catalog_agent::{CatalogRepositoryForSql, NewCatalogModel};
-use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
 use sea_orm::Database;
 
-pub struct CoreProviderSeeding;
+pub struct CoreConsumerSeeding;
 
-impl CoreProviderSeeding {
-    pub async fn run(config: &ApplicationProviderConfig) -> ::anyhow::Result<()> {
+impl CoreConsumerSeeding {
+    pub async fn run(config: &ApplicationConsumerConfig) -> ::anyhow::Result<()> {
         let db_url = config.get_full_db_url();
         let db_connection = Database::connect(db_url).await.expect("Database can't connect");
         // run seeding

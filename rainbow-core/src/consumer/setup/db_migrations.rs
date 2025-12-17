@@ -17,16 +17,16 @@
  *
  */
 
+use rainbow_catalog_agent::get_catalog_migrations;
 use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
 use rainbow_common::config::consumer_config::ApplicationConsumerConfigTrait;
+use rainbow_dataplane::get_dataplane_migrations;
 use rainbow_db::auth::consumer::migrations::get_auth_consumer_migrations;
-use rainbow_db::catalog::migrations::get_catalog_migrations;
 use rainbow_db::contracts_consumer::migrations::get_contracts_migrations;
 use rainbow_db::events::migrations::get_events_migrations;
 use rainbow_transfer_agent::get_transfer_agent_migrations;
 use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
-use rainbow_dataplane::get_dataplane_migrations;
 
 pub struct CoreConsumerMigration;
 

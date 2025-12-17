@@ -17,17 +17,17 @@
  *
  */
 
+use rainbow_catalog_agent::get_catalog_migrations;
 use rainbow_common::config::provider_config::ApplicationProviderConfig;
 use rainbow_common::config::provider_config::ApplicationProviderConfigTrait;
+use rainbow_dataplane::get_dataplane_migrations;
 use rainbow_db::auth::provider::migrations::get_auth_provider_migrations;
-use rainbow_db::catalog::migrations::get_catalog_migrations;
 use rainbow_db::contracts_provider::migrations::get_contracts_migrations;
 use rainbow_db::datahub::migrations::get_datahub_migrations;
 use rainbow_db::events::migrations::get_events_migrations;
 use rainbow_transfer_agent::get_transfer_agent_migrations;
 use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
-use rainbow_dataplane::get_dataplane_migrations;
 
 pub struct CoreProviderMigration;
 
