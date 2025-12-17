@@ -19,7 +19,6 @@
 use axum::extract::Request;
 use axum::Router;
 use rainbow_auth::ssi::consumer::setup::app::AuthConsumerApplication;
-use rainbow_catalog::consumer::setup::application::create_catalog_bypass_consumer_router;
 use tower_http::trace::{DefaultOnResponse, TraceLayer};
 use uuid::Uuid;
 // use rainbow_catalog::consumer::setup::application::create_catalog_bypass_consumer_router;
@@ -34,7 +33,6 @@ pub async fn create_core_consumer_router(config: &ApplicationConsumerConfig) -> 
     let auth_router = AuthConsumerApplication::create_router_4_monolith(app_config.clone().into()).await;
     //let transfer_router = create_transfer_consumer_router(&app_config.clone().into()).await;
     let cn_router = create_contract_negotiation_consumer_router(&app_config.clone().into()).await;
-    let catalog_bypass_router = create_catalog_bypass_consumer_router(app_config.clone().into()).await;
     let transfer_agent_router =
         create_root_http_router(&app_config.clone().into()).await.expect("Failed to create transfer agent router");
     let catalog_router = catalog_router(&app_config.clone().into()).await.expect("Failed to create catalog router");

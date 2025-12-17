@@ -16,7 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use rainbow_catalog_agent::{CatalogRepositoryForSql, NewCatalogModel};
+use rainbow_catalog_agent::{CatalogRepositoryForSql, CatalogRepositoryTrait, NewCatalogModel};
 use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
 use sea_orm::Database;
 

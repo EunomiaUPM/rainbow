@@ -1,23 +1,23 @@
+use crate::entities::catalogs::catalogs::CatalogEntities;
+use crate::entities::catalogs::CatalogEntityTrait;
+use crate::entities::data_services::DataServiceEntityTrait;
+use crate::entities::datasets::DatasetEntityTrait;
+use crate::entities::distributions::DistributionEntityTrait;
+use crate::entities::odrl_policies::OdrlPolicyEntityTrait;
 use crate::protocols::dsp::facades::FacadeService;
 use crate::protocols::dsp::http::protocol::DspRouter;
 use crate::protocols::dsp::orchestrator::orchestrator::OrchestratorService;
+use crate::protocols::dsp::orchestrator::protocol::persistence::OrchestrationPersistenceForProtocol;
 use crate::protocols::dsp::orchestrator::protocol::protocol::ProtocolOrchestratorService;
 use crate::protocols::dsp::validator::validators::protocol::validation_dsp_steps::ValidationDspStepsService;
 use crate::protocols::dsp::validator::validators::validate_payload::ValidatePayloadService;
 use crate::protocols::dsp::validator::validators::validation_helpers::ValidationHelperService;
 use crate::protocols::protocol::ProtocolPluginTrait;
+use crate::CatalogRepositoryForSql;
 use axum::Router;
 use rainbow_common::config::global_config::ApplicationGlobalConfig;
 use rainbow_common::http_client::HttpClient;
 use std::sync::Arc;
-use crate::CatalogRepositoryForSql;
-use crate::entities::catalogs::CatalogEntityTrait;
-use crate::entities::catalogs::catalogs::CatalogEntities;
-use crate::entities::data_services::DataServiceEntityTrait;
-use crate::entities::datasets::DatasetEntityTrait;
-use crate::entities::distributions::DistributionEntityTrait;
-use crate::entities::odrl_policies::OdrlPolicyEntityTrait;
-use crate::protocols::dsp::orchestrator::protocol::persistence::OrchestrationPersistenceForProtocol;
 
 mod errors;
 pub(crate) mod facades;
@@ -42,7 +42,7 @@ impl CatalogDSP {
         dataset_entities_service: Arc<dyn DatasetEntityTrait>,
         odrl_policies_service: Arc<dyn OdrlPolicyEntityTrait>,
         distributions_entity_service: Arc<dyn DistributionEntityTrait>,
-        config: Arc<ApplicationGlobalConfig>
+        config: Arc<ApplicationGlobalConfig>,
     ) -> Self {
         Self {
             catalog_entities_service,
@@ -50,7 +50,7 @@ impl CatalogDSP {
             dataset_entities_service,
             odrl_policies_service,
             distributions_entity_service,
-            config
+            config,
         }
     }
 }

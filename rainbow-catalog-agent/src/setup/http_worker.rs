@@ -123,8 +123,10 @@ pub async fn create_root_http_router(config: &ApplicationGlobalConfig) -> anyhow
         datasets_controller_service.clone(),
         odrl_offer_controller_service.clone(),
         distributions_controller_service.clone(),
-        config.clone()
-    ).build_router().await?;
+        config.clone(),
+    )
+    .build_router()
+    .await?;
 
     let router_str = format!("/api/{}/catalog-agent", config.api_version);
     let router = Router::new()
