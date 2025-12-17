@@ -30,6 +30,8 @@ use crate::http::datasets::DatasetEntityRouter;
 use crate::http::distributions::DistributionEntityRouter;
 use crate::http::odrl_policies::OdrlOfferEntityRouter;
 use crate::http::policy_templates::PolicyTemplateEntityRouter;
+use crate::protocols::dsp::CatalogDSP;
+use crate::protocols::protocol::ProtocolPluginTrait;
 use axum::extract::Request;
 use axum::response::IntoResponse;
 use axum::{serve, Router};
@@ -114,14 +116,8 @@ pub async fn create_root_http_router(config: &ApplicationGlobalConfig) -> anyhow
     let policy_templates_router =
         PolicyTemplateEntityRouter::new(policy_templates_controller_service.clone(), config.clone());
 
-    // // dsp
-    // let dsp_router = TransferDSP::new(
-    //     messages_controller_service.clone(),
-    //     entities_controller_service.clone(),
-    //     config.clone(),
-    // )
-    // .build_router()
-    // .await?;
+    // dsp
+    let dsp_router = CatalogDSP::new(config.clone()).build_router().await?;
 
     let router_str = format!("/api/{}/catalog-agent", config.api_version);
     let router = Router::new()
@@ -148,6 +144,10 @@ pub async fn create_root_http_router(config: &ApplicationGlobalConfig) -> anyhow
         .nest(
             format!("{}/policy-templates", router_str.as_str()).as_str(),
             policy_templates_router.router(),
+        )
+        .nest(
+            format!("{}/dsp/current/catalog", router_str.as_str()).as_str(),
+            dsp_router,
         );
 
     Ok(router)
