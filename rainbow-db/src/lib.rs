@@ -24,7 +24,7 @@
 #![allow(unused_imports)]
 #![allow(unused_must_use)]
 
-pub mod catalog;
+//pub mod catalog;
 pub mod contracts_provider;
 pub mod contracts_consumer;
 //pub mod transfer_consumer;
