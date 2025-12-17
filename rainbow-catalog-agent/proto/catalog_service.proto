@@ -1,0 +1,268 @@
+syntax = "proto3";
+
+package catalog.v1;
+
+import "google/protobuf/struct.proto";
+import "google/protobuf/empty.proto";
+import "catalog_models.proto";
+
+// ---------------------------------------------------------
+// Catalog Service
+// ---------------------------------------------------------
+
+service CatalogEntityService {
+  rpc GetAllCatalogs (GetAllCatalogsRequest) returns (CatalogListResponse);
+  rpc GetBatchCatalogs (GetBatchRequest) returns (CatalogListResponse);
+  rpc GetCatalogById (GetByIdRequest) returns (CatalogResponse);
+  rpc GetMainCatalog (google.protobuf.Empty) returns (CatalogResponse);
+
+  rpc CreateCatalog (CreateCatalogRequest) returns (CatalogResponse);
+  rpc CreateMainCatalog (CreateCatalogRequest) returns (CatalogResponse);
+
+  rpc PutCatalogById (PutCatalogRequest) returns (CatalogResponse);
+  rpc DeleteCatalogById (DeleteByIdRequest) returns (google.protobuf.Empty);
+}
+
+// ---------------------------------------------------------
+// Data Service Service
+// ---------------------------------------------------------
+
+service DataServiceEntityService {
+  rpc GetAllDataServices (GetAllRequest) returns (DataServiceListResponse);
+  rpc GetBatchDataServices (GetBatchRequest) returns (DataServiceListResponse);
+  rpc GetDataServicesByCatalogId (GetByParentIdRequest) returns (DataServiceListResponse);
+  rpc GetDataServiceById (GetByIdRequest) returns (DataServiceResponse);
+
+  rpc CreateDataService (CreateDataServiceRequest) returns (DataServiceResponse);
+  rpc PutDataServiceById (PutDataServiceRequest) returns (DataServiceResponse);
+  rpc DeleteDataServiceById (DeleteByIdRequest) returns (google.protobuf.Empty);
+}
+
+// ---------------------------------------------------------
+// Dataset Service
+// ---------------------------------------------------------
+
+service DatasetEntityService {
+  rpc GetAllDatasets (GetAllRequest) returns (DatasetListResponse);
+  rpc GetBatchDatasets (GetBatchRequest) returns (DatasetListResponse);
+  rpc GetDatasetsByCatalogId (GetByParentIdRequest) returns (DatasetListResponse);
+  rpc GetDatasetById (GetByIdRequest) returns (DatasetResponse);
+
+  rpc CreateDataset (CreateDatasetRequest) returns (DatasetResponse);
+  rpc PutDatasetById (PutDatasetRequest) returns (DatasetResponse);
+  rpc DeleteDatasetById (DeleteByIdRequest) returns (google.protobuf.Empty);
+}
+
+// ---------------------------------------------------------
+// Distribution Service
+// ---------------------------------------------------------
+
+service DistributionEntityService {
+  rpc GetAllDistributions (GetAllRequest) returns (DistributionListResponse);
+  rpc GetBatchDistributions (GetBatchRequest) returns (DistributionListResponse);
+  rpc GetDistributionsByDatasetId (GetByParentIdRequest) returns (DistributionListResponse);
+
+  rpc GetDistributionByDatasetAndFormat (GetDistributionByFormatRequest) returns (DistributionResponse);
+
+  rpc GetDistributionById (GetByIdRequest) returns (DistributionResponse);
+  rpc CreateDistribution (CreateDistributionRequest) returns (DistributionResponse);
+  rpc PutDistributionById (PutDistributionRequest) returns (DistributionResponse);
+  rpc DeleteDistributionById (DeleteByIdRequest) returns (google.protobuf.Empty);
+}
+
+// ---------------------------------------------------------
+// Policy Template Service
+// ---------------------------------------------------------
+
+service PolicyTemplateEntityService {
+  rpc GetAllPolicyTemplates (GetAllRequest) returns (PolicyTemplateListResponse);
+  rpc GetBatchPolicyTemplates (GetBatchRequest) returns (PolicyTemplateListResponse);
+  rpc GetPolicyTemplateById (GetByIdRequest) returns (PolicyTemplateResponse);
+
+  rpc CreatePolicyTemplate (CreatePolicyTemplateRequest) returns (PolicyTemplateResponse);
+  rpc DeletePolicyTemplateById (DeleteByIdRequest) returns (google.protobuf.Empty);
+}
+
+// ---------------------------------------------------------
+// ODRL Policy Service
+// ---------------------------------------------------------
+
+service OdrlPolicyEntityService {
+  rpc GetAllOdrlOffers (GetAllRequest) returns (OdrlPolicyListResponse);
+  rpc GetBatchOdrlOffers (GetBatchRequest) returns (OdrlPolicyListResponse);
+  rpc GetAllOdrlOffersByEntity (GetByEntityIdRequest) returns (OdrlPolicyListResponse);
+  rpc GetOdrlOfferById (GetByIdRequest) returns (OdrlPolicyResponse);
+
+  rpc CreateOdrlOffer (CreateOdrlPolicyRequest) returns (OdrlPolicyResponse);
+  rpc DeleteOdrlOfferById (DeleteByIdRequest) returns (google.protobuf.Empty);
+  rpc DeleteOdrlOffersByEntity (DeleteByEntityIdRequest) returns (google.protobuf.Empty);
+}
+
+// ---------------------------------------------------------
+// Common Requests
+// ---------------------------------------------------------
+
+message GetAllRequest {
+  optional uint64 limit = 1;
+  optional uint64 page = 2;
+}
+
+message GetBatchRequest {
+  repeated string ids = 1;
+}
+
+message GetByIdRequest {
+  string id = 1;
+}
+
+message DeleteByIdRequest {
+  string id = 1;
+}
+
+message GetByParentIdRequest {
+  string parent_id = 1; //
+}
+
+message GetByEntityIdRequest {
+  string entity_id = 1;
+}
+
+message DeleteByEntityIdRequest {
+  string entity_id = 1;
+}
+
+// ---------------------------------------------------------
+// Specific Request/Response Objects
+// ---------------------------------------------------------
+
+// --- Catalog ---
+
+message GetAllCatalogsRequest {
+  optional uint64 limit = 1;
+  optional uint64 page = 2;
+  bool with_main_catalog = 3;
+}
+
+message CatalogResponse {
+  optional Catalog catalog = 1;
+}
+
+message CreateCatalogRequest {
+  optional string id = 1;
+  optional string foaf_home_page = 2;
+  optional string dct_conforms_to = 3;
+  optional string dct_creator = 4;
+  optional string dct_title = 5;
+}
+
+message PutCatalogRequest {
+  string id = 1;
+  optional string foaf_home_page = 2;
+  optional string dct_conforms_to = 3;
+  optional string dct_creator = 4;
+  optional string dct_title = 5;
+}
+
+// --- DataService ---
+
+message DataServiceResponse {
+  optional DataService data_service = 1;
+}
+
+message CreateDataServiceRequest {
+  optional string id = 1;
+  optional string dcat_endpoint_description = 2;
+  string dcat_endpoint_url = 3;
+  optional string dct_conforms_to = 4;
+  optional string dct_creator = 5;
+  optional string dct_title = 6;
+  optional string dct_description = 7;
+  string catalog_id = 8;
+}
+
+message PutDataServiceRequest {
+  string id = 1;
+  optional string dcat_endpoint_description = 2;
+  optional string dcat_endpoint_url = 3;
+  optional string dct_conforms_to = 4;
+  optional string dct_creator = 5;
+  optional string dct_title = 6;
+  optional string dct_description = 7;
+}
+
+// --- Dataset ---
+
+message DatasetResponse {
+  optional Dataset dataset = 1;
+}
+
+message CreateDatasetRequest {
+  optional string id = 1;
+  optional string dct_conforms_to = 2;
+  optional string dct_creator = 3;
+  optional string dct_title = 4;
+  optional string dct_description = 5;
+  string catalog_id = 6;
+}
+
+message PutDatasetRequest {
+  string id = 1;
+  optional string dct_conforms_to = 2;
+  optional string dct_creator = 3;
+  optional string dct_title = 4;
+  optional string dct_description = 5;
+}
+
+// --- Distribution ---
+
+message DistributionResponse {
+  optional Distribution distribution = 1;
+}
+
+message GetDistributionByFormatRequest {
+  string dataset_id = 1;
+  google.protobuf.Struct dct_formats = 2;
+}
+
+message CreateDistributionRequest {
+  optional string id = 1;
+  optional string dct_title = 2;
+  optional string dct_description = 3;
+  google.protobuf.Struct dct_formats = 4;
+  string dcat_access_service = 5;
+  string dataset_id = 6;
+}
+
+message PutDistributionRequest {
+  string id = 1;
+  optional string dct_title = 2;
+  optional string dct_description = 3;
+  optional string dcat_access_service = 4;
+}
+
+// --- PolicyTemplate ---
+
+message PolicyTemplateResponse {
+  optional PolicyTemplate policy_template = 1;
+}
+
+message CreatePolicyTemplateRequest {
+  optional string id = 1;
+  optional string title = 2;
+  optional string description = 3;
+  google.protobuf.Struct content = 4;
+  optional google.protobuf.Struct operand_options = 5;
+}
+
+// --- OdrlPolicy ---
+
+message OdrlPolicyResponse {
+  optional OdrlPolicy policy = 1;
+}
+
+message CreateOdrlPolicyRequest {
+  optional string id = 1;
+  google.protobuf.Struct odrl_offer = 2;
+  string entity_id = 3;
+  CatalogEntityType entity_type = 4;
+}
