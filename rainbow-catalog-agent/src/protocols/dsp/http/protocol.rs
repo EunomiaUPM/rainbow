@@ -27,6 +27,7 @@ use axum::{
     Json, Router,
 };
 use std::sync::Arc;
+use reqwest::StatusCode;
 
 #[derive(Clone)]
 pub struct DspRouter {
@@ -55,7 +56,14 @@ impl DspRouter {
         State(state): State<DspRouter>,
         input: Result<Json<CatalogMessageWrapper<CatalogRequestMessageDto>>, JsonRejection>,
     ) -> impl IntoResponse {
-        "ok"
+        let input = match input {
+            Ok(input) => input.0,
+            Err(e) => return (StatusCode::BAD_REQUEST, e.body_text()).into_response(),
+        };
+        match state.orchestrator.get_protocol_service().on_catalog_request(&input).await {
+            Ok(catalog) => (StatusCode::OK, Json(catalog)).into_response(),
+            Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
+        }
     }
 
     async fn handle_dataset_request(
@@ -63,6 +71,13 @@ impl DspRouter {
         Path(id): Path<String>,
         input: Result<Json<CatalogMessageWrapper<DatasetRequestMessage>>, JsonRejection>,
     ) -> impl IntoResponse {
-        "ok"
+        let input = match input {
+            Ok(input) => input.0,
+            Err(e) => return (StatusCode::BAD_REQUEST, e.body_text()).into_response(),
+        };
+        match state.orchestrator.get_protocol_service().on_dataset_request(&input).await {
+            Ok(dataset) => (StatusCode::OK, Json(dataset)).into_response(),
+            Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
+        }
     }
 }

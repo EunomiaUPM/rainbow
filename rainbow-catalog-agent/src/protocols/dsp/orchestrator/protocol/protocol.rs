@@ -18,21 +18,29 @@
  */
 
 use crate::protocols::dsp::facades::FacadeTrait;
+use crate::protocols::dsp::orchestrator::protocol::persistence::OrchestrationPersistenceForProtocol;
 use crate::protocols::dsp::orchestrator::protocol::ProtocolOrchestratorTrait;
 use crate::protocols::dsp::protocol_types::{
     CatalogMessageDto, CatalogMessageWrapper, CatalogRequestMessageDto, DatasetMessageDto, DatasetRequestMessage,
 };
 use crate::protocols::dsp::validator::traits::validation_dsp_steps::ValidationDspSteps;
 use std::sync::Arc;
+use rainbow_common::protocol::catalog::catalog_definition::Catalog;
+use rainbow_common::protocol::catalog::dataset_definition::Dataset;
 
 pub struct ProtocolOrchestratorService {
     facades: Arc<dyn FacadeTrait>,
     validator: Arc<dyn ValidationDspSteps>,
+    persistence: Arc<OrchestrationPersistenceForProtocol>,
 }
 
 impl ProtocolOrchestratorService {
-    pub fn new(validator: Arc<dyn ValidationDspSteps>, facades: Arc<dyn FacadeTrait>) -> ProtocolOrchestratorService {
-        ProtocolOrchestratorService { validator, facades }
+    pub fn new(
+        validator: Arc<dyn ValidationDspSteps>,
+        facades: Arc<dyn FacadeTrait>,
+        persistence: Arc<OrchestrationPersistenceForProtocol>,
+    ) -> ProtocolOrchestratorService {
+        ProtocolOrchestratorService { validator, facades, persistence }
     }
 }
 
@@ -41,14 +49,16 @@ impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
     async fn on_catalog_request(
         &self,
         input: &CatalogMessageWrapper<CatalogRequestMessageDto>,
-    ) -> anyhow::Result<CatalogMessageWrapper<CatalogMessageDto>> {
-        todo!()
+    ) -> anyhow::Result<Catalog> {
+        let catalog = self.persistence.get_catalog().await?;
+        Ok(catalog)
     }
 
     async fn on_dataset_request(
         &self,
         input: &CatalogMessageWrapper<DatasetRequestMessage>,
-    ) -> anyhow::Result<CatalogMessageWrapper<DatasetMessageDto>> {
-        todo!()
+    ) -> anyhow::Result<Dataset> {
+        let dataset = self.persistence.get_dataset(&input.dto.dataset).await?;
+        Ok(dataset)
     }
 }

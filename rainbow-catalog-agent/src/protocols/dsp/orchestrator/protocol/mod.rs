@@ -18,19 +18,22 @@
  */
 
 pub(crate) mod protocol;
+pub(crate) mod persistence;
 
 use crate::protocols::dsp::protocol_types::{
-    CatalogMessageDto, CatalogMessageWrapper, CatalogRequestMessageDto, DatasetMessageDto, DatasetRequestMessage,
+    CatalogMessageWrapper, CatalogRequestMessageDto, DatasetRequestMessage,
 };
+use rainbow_common::protocol::catalog::catalog_definition::Catalog;
+use rainbow_common::protocol::catalog::dataset_definition::Dataset;
 
 #[async_trait::async_trait]
 pub trait ProtocolOrchestratorTrait: Send + Sync + 'static {
     async fn on_catalog_request(
         &self,
         input: &CatalogMessageWrapper<CatalogRequestMessageDto>,
-    ) -> anyhow::Result<CatalogMessageWrapper<CatalogMessageDto>>;
+    ) -> anyhow::Result<Catalog>;
     async fn on_dataset_request(
         &self,
         input: &CatalogMessageWrapper<DatasetRequestMessage>,
-    ) -> anyhow::Result<CatalogMessageWrapper<DatasetMessageDto>>;
+    ) -> anyhow::Result<Dataset>;
 }

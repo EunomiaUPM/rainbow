@@ -117,7 +117,14 @@ pub async fn create_root_http_router(config: &ApplicationGlobalConfig) -> anyhow
         PolicyTemplateEntityRouter::new(policy_templates_controller_service.clone(), config.clone());
 
     // dsp
-    let dsp_router = CatalogDSP::new(config.clone()).build_router().await?;
+    let dsp_router = CatalogDSP::new(
+        catalog_controller_service.clone(),
+        data_services_controller_service.clone(),
+        datasets_controller_service.clone(),
+        odrl_offer_controller_service.clone(),
+        distributions_controller_service.clone(),
+        config.clone()
+    ).build_router().await?;
 
     let router_str = format!("/api/{}/catalog-agent", config.api_version);
     let router = Router::new()
