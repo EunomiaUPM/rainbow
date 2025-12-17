@@ -18,14 +18,14 @@
  */
 use axum::extract::Request;
 use axum::Router;
-use tower_http::trace::{DefaultOnResponse, TraceLayer};
-use uuid::Uuid;
 use rainbow_auth::ssi::provider::setup::app::AuthProviderApplication;
-use rainbow_catalog::provider::setup::application::create_catalog_router;
+use rainbow_catalog_agent::setup::create_root_http_router as catalog_router;
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_contracts::provider::setup::application::create_contract_negotiation_provider_router;
 use rainbow_datahub_catalog::setup::application::create_datahub_catalog_router;
 use rainbow_transfer_agent::setup::create_root_http_router;
+use tower_http::trace::{DefaultOnResponse, TraceLayer};
+use uuid::Uuid;
 
 pub async fn create_core_provider_router(config: &ApplicationProviderConfig) -> Router {
     let app_config: ApplicationProviderConfig = config.clone().into();
@@ -34,12 +34,13 @@ pub async fn create_core_provider_router(config: &ApplicationProviderConfig) -> 
     let cn_router = create_contract_negotiation_provider_router(&app_config.clone().into()).await;
     let transfer_agent_router =
         create_root_http_router(&app_config.clone().into()).await.expect("Failed to create transfer agent router");
+    let catalog_router = catalog_router(&app_config.clone().into()).await.expect("Failed to create catalog router");
 
-    let catalog_router: Router = if ApplicationProviderConfig::is_datahub_as_catalog(config) {
-        create_datahub_catalog_router(&app_config.clone().into()).await
-    } else {
-        create_catalog_router(&app_config.clone().into()).await
-    };
+    // let catalog_router: Router = if ApplicationProviderConfig::is_datahub_as_catalog(config) {
+    //     create_datahub_catalog_router(&app_config.clone().into()).await
+    // } else {
+    //     create_catalog_router(&app_config.clone().into()).await
+    // };
 
     Router::new()
         //.merge(transfer_router)

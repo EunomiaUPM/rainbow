@@ -18,15 +18,16 @@
  */
 use axum::extract::Request;
 use axum::Router;
-use tower_http::trace::{DefaultOnResponse, TraceLayer};
-use uuid::Uuid;
 use rainbow_auth::ssi::consumer::setup::app::AuthConsumerApplication;
 use rainbow_catalog::consumer::setup::application::create_catalog_bypass_consumer_router;
+use tower_http::trace::{DefaultOnResponse, TraceLayer};
+use uuid::Uuid;
 // use rainbow_catalog::consumer::setup::application::create_catalog_bypass_consumer_router;
 use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
 use rainbow_contracts::consumer::setup::application::create_contract_negotiation_consumer_router;
 use rainbow_transfer_agent::setup::create_root_http_router;
 // use rainbow_transfer_agent::setup::create_root_http_router;
+use rainbow_catalog_agent::setup::create_root_http_router as catalog_router;
 
 pub async fn create_core_consumer_router(config: &ApplicationConsumerConfig) -> Router {
     let app_config: ApplicationConsumerConfig = config.clone().into();
@@ -36,6 +37,8 @@ pub async fn create_core_consumer_router(config: &ApplicationConsumerConfig) -> 
     let catalog_bypass_router = create_catalog_bypass_consumer_router(app_config.clone().into()).await;
     let transfer_agent_router =
         create_root_http_router(&app_config.clone().into()).await.expect("Failed to create transfer agent router");
+    let catalog_router = catalog_router(&app_config.clone().into()).await.expect("Failed to create catalog router");
+
     Router::new()
         //.merge(transfer_router)
         .merge(transfer_agent_router)
@@ -49,5 +52,5 @@ pub async fn create_core_consumer_router(config: &ApplicationConsumerConfig) -> 
         )
         .merge(cn_router)
         .merge(auth_router)
-        .merge(catalog_bypass_router)
+        .merge(catalog_router)
 }
