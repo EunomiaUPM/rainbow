@@ -1,0 +1,54 @@
+/*
+ *
+ *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM
+ *  *
+ *  * This program is free software: you can redistribute it and/or modify
+ *  * it under the terms of the GNU General Public License as published by
+ *  * the Free Software Foundation, either version 3 of the License, or
+ *  * (at your option) any later version.
+ *  *
+ *  * This program is distributed in the hope that it will be useful,
+ *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  * GNU General Public License for more details.
+ *  *
+ *  * You should have received a copy of the GNU General Public License
+ *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
+use crate::protocols::dsp::facades::FacadeTrait;
+use crate::protocols::dsp::orchestrator::protocol::ProtocolOrchestratorTrait;
+use crate::protocols::dsp::protocol_types::{
+    CatalogMessageDto, CatalogMessageWrapper, CatalogRequestMessageDto, DatasetMessageDto, DatasetRequestMessage,
+};
+use crate::protocols::dsp::validator::traits::validation_dsp_steps::ValidationDspSteps;
+use std::sync::Arc;
+
+pub struct ProtocolOrchestratorService {
+    facades: Arc<dyn FacadeTrait>,
+    validator: Arc<dyn ValidationDspSteps>,
+}
+
+impl ProtocolOrchestratorService {
+    pub fn new(validator: Arc<dyn ValidationDspSteps>, facades: Arc<dyn FacadeTrait>) -> ProtocolOrchestratorService {
+        ProtocolOrchestratorService { validator, facades }
+    }
+}
+
+#[async_trait::async_trait]
+impl ProtocolOrchestratorTrait for ProtocolOrchestratorService {
+    async fn on_catalog_request(
+        &self,
+        input: &CatalogMessageWrapper<CatalogRequestMessageDto>,
+    ) -> anyhow::Result<CatalogMessageWrapper<CatalogMessageDto>> {
+        todo!()
+    }
+
+    async fn on_dataset_request(
+        &self,
+        input: &CatalogMessageWrapper<DatasetRequestMessage>,
+    ) -> anyhow::Result<CatalogMessageWrapper<DatasetMessageDto>> {
+        todo!()
+    }
+}
