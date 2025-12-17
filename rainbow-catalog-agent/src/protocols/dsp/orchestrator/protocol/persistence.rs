@@ -1,22 +1,28 @@
+use crate::entities::catalogs::{CatalogDto, CatalogEntityTrait};
+use crate::entities::data_services::{DataServiceDto, DataServiceEntityTrait};
+use crate::entities::datasets::{DatasetDto, DatasetEntityTrait};
+use crate::entities::distributions::{DistributionDto, DistributionEntityTrait};
+use crate::entities::odrl_policies::{OdrlPolicyDto, OdrlPolicyEntityTrait};
+use anyhow::bail;
+use rainbow_common::dcat_formats::{DctFormats, FormatAction, FormatProtocol};
+use rainbow_common::errors::{CommonErrors, ErrorLog};
+use rainbow_common::protocol::catalog::catalog_definition::{
+    Catalog, CatalogDSpaceDeclaration, CatalogDcatDeclaration, CatalogDctDeclaration, CatalogFoafDeclaration,
+};
+use rainbow_common::protocol::catalog::dataservice_definition::{
+    DataService, DataServiceDcatDeclaration, DataServiceDctDeclaration,
+};
+use rainbow_common::protocol::catalog::dataset_definition::{Dataset, DatasetDcatDeclaration, DatasetDctDeclaration};
+use rainbow_common::protocol::catalog::distribution_definition::{
+    Distribution, DistributionDcatDeclaration, DistributionDctDeclaration,
+};
+use rainbow_common::protocol::context_field::ContextField;
+use rainbow_common::protocol::contract::contract_odrl::{OdrlOffer, OdrlPolicyInfo, OdrlTypes};
 use std::collections::HashMap;
 use std::str::FromStr;
 use std::sync::Arc;
-use anyhow::bail;
 use tracing::error;
 use urn::Urn;
-use rainbow_common::dcat_formats::{DctFormats, FormatAction, FormatProtocol};
-use rainbow_common::errors::{CommonErrors, ErrorLog};
-use rainbow_common::protocol::catalog::catalog_definition::{Catalog, CatalogDSpaceDeclaration, CatalogDcatDeclaration, CatalogDctDeclaration, CatalogFoafDeclaration};
-use rainbow_common::protocol::catalog::dataservice_definition::{DataService, DataServiceDcatDeclaration, DataServiceDctDeclaration};
-use rainbow_common::protocol::catalog::dataset_definition::{Dataset, DatasetDcatDeclaration, DatasetDctDeclaration};
-use rainbow_common::protocol::catalog::distribution_definition::{Distribution, DistributionDcatDeclaration, DistributionDctDeclaration};
-use rainbow_common::protocol::context_field::ContextField;
-use rainbow_common::protocol::contract::contract_odrl::{OdrlOffer, OdrlPolicyInfo, OdrlTypes};
-use crate::entities::catalogs::{CatalogEntityTrait, CatalogDto};
-use crate::entities::data_services::{DataServiceDto, DataServiceEntityTrait};
-use crate::entities::datasets::{DatasetEntityTrait, DatasetDto};
-use crate::entities::distributions::{DistributionEntityTrait, DistributionDto};
-use crate::entities::odrl_policies::{OdrlPolicyEntityTrait, OdrlPolicyDto};
 
 pub struct OrchestrationPersistenceForProtocol {
     pub catalog_entities_service: Arc<dyn CatalogEntityTrait>,
@@ -114,15 +120,10 @@ impl OrchestrationPersistenceForProtocol {
 
     /// Recupera y mapea las políticas ODRL
     async fn build_odrl_policies(&self, entity_id: &Urn) -> anyhow::Result<Vec<OdrlOffer>> {
-        let policies_dtos = self.odrl_policies_service
-            .get_all_odrl_offers_by_entity(entity_id)
-            .await
-            .unwrap_or_default();
+        let policies_dtos =
+            self.odrl_policies_service.get_all_odrl_offers_by_entity(entity_id).await.unwrap_or_default();
 
-        let offers = policies_dtos
-            .into_iter()
-            .map(|dto| self.map_odrl_policy(dto))
-            .collect::<Result<Vec<_>, _>>()?;
+        let offers = policies_dtos.into_iter().map(|dto| self.map_odrl_policy(dto)).collect::<Result<Vec<_>, _>>()?;
 
         Ok(offers)
     }
@@ -132,7 +133,8 @@ impl OrchestrationPersistenceForProtocol {
         let distributions_dtos = self.distributions_entity_service.get_distributions_by_dataset_id(dataset_id).await?;
 
         // batch dataservices
-        let access_services_ids: Vec<Urn> = distributions_dtos.iter()
+        let access_services_ids: Vec<Urn> = distributions_dtos
+            .iter()
             .map(|d| d.inner.dcat_access_service.clone())
             .map(|id_str| Urn::from_str(&id_str))
             .collect::<Result<Vec<_>, _>>()
@@ -141,10 +143,8 @@ impl OrchestrationPersistenceForProtocol {
         let services_batch = self.data_service_entities_service.get_batch_data_services(&access_services_ids).await?;
 
         // index indices
-        let services_map: HashMap<String, DataService> = services_batch
-            .into_iter()
-            .map(|dto| (dto.inner.id.clone(), self.map_data_service(dto)))
-            .collect();
+        let services_map: HashMap<String, DataService> =
+            services_batch.into_iter().map(|dto| (dto.inner.id.clone(), self.map_data_service(dto))).collect();
 
         // map distributions
         let mut distributions = Vec::with_capacity(distributions_dtos.len());
@@ -226,7 +226,7 @@ impl OrchestrationPersistenceForProtocol {
                 issued: dto.inner.dct_issued.naive_utc(),
                 modified: dto.inner.dct_modified.map(|d| d.naive_utc()),
                 title: dto.inner.dct_title,
-                description: vec![]
+                description: vec![],
             },
             odrl_offer: policies,
             extra_fields: Default::default(),
@@ -238,19 +238,14 @@ impl OrchestrationPersistenceForProtocol {
         let format = if let Some(f) = dto.inner.dct_format {
             f.parse::<DctFormats>().unwrap_or(DctFormats { protocol: FormatProtocol::Http, action: FormatAction::Pull })
         } else {
-            DctFormats {
-                protocol: FormatProtocol::Http,
-                action: FormatAction::Pull,
-            }
+            DctFormats { protocol: FormatProtocol::Http, action: FormatAction::Pull }
         };
 
         Ok(Distribution {
             context: ContextField::default(),
             _type: "Distribution".to_string(),
             id: dto.inner.id.clone(),
-            dcat: DistributionDcatDeclaration {
-                access_service: service,
-            },
+            dcat: DistributionDcatDeclaration { access_service: service },
             dct: DistributionDctDeclaration {
                 identifier: dto.inner.id.clone(),
                 issued: dto.inner.dct_issued.naive_utc(),
@@ -291,8 +286,9 @@ impl OrchestrationPersistenceForProtocol {
 
     fn map_odrl_policy(&self, dto: OdrlPolicyDto) -> anyhow::Result<OdrlOffer> {
         let odrl_info = serde_json::from_value::<OdrlPolicyInfo>(
-            dto.inner.odrl_offer.ok_or_else(|| anyhow::anyhow!("Missing policy content"))?
-        ).map_err(|e| anyhow::anyhow!("Invalid Policy JSON: {}", e))?;
+            dto.inner.odrl_offer.ok_or_else(|| anyhow::anyhow!("Missing policy content"))?,
+        )
+        .map_err(|e| anyhow::anyhow!("Invalid Policy JSON: {}", e))?;
 
         Ok(OdrlOffer {
             id: Urn::from_str(&dto.inner.id)?,

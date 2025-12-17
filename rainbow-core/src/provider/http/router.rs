@@ -22,7 +22,6 @@ use rainbow_auth::ssi::provider::setup::app::AuthProviderApplication;
 use rainbow_catalog_agent::setup::create_root_http_router as catalog_router;
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_contracts::provider::setup::application::create_contract_negotiation_provider_router;
-use rainbow_datahub_catalog::setup::application::create_datahub_catalog_router;
 use rainbow_transfer_agent::setup::create_root_http_router;
 use tower_http::trace::{DefaultOnResponse, TraceLayer};
 use uuid::Uuid;

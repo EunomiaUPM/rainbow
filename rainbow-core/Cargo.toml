@@ -14,13 +14,12 @@ path = "src/main.rs"
 [dependencies]
 #rainbow_transfer = { version = "0.3.1", path = "../rainbow-transfer", default-features = false }
 rainbow_common = { version = "0.3.1", path = "../rainbow-common", default-features = false }
-rainbow_catalog = { version = "0.3.1", path = "../rainbow-catalog", default-features = false }
 rainbow_contracts = { version = "0.3.1", path = "../rainbow-contracts", default-features = false }
 rainbow_dataplane = { version = "0.3.1", path = "../rainbow-dataplane", default-features = false }
 rainbow_db = { version = "0.3.1", path = "../rainbow-db", default-features = false }
 rainbow_auth = { version = "0.3.1", path = "../rainbow-auth", default-features = false }
 rainbow_events = { version = "0.3.1", path = "../rainbow-events", default-features = false }
-rainbow_datahub_catalog = { version = "0.3.1", path = "../rainbow-datahub-catalog", default-features = false }
+#ainbow_datahub_catalog = { version = "0.3.1", path = "../rainbow-datahub-catalog", default-features = false }
 rainbow_transfer_agent = { version = "0.3.1", path = "../rainbow-transfer-agent", default-features = false }
 rainbow_catalog_agent = { version = "0.3.1", path = "../rainbow-catalog-agent", default-features = false }
 

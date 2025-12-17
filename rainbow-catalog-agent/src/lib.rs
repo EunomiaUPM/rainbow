@@ -8,4 +8,5 @@ pub(crate) mod protocols;
 pub mod setup;
 pub use data::entities::catalog::NewCatalogModel;
 pub use data::migrations::get_catalog_migrations;
+pub use data::repo_traits::catalog_repo::CatalogRepositoryTrait;
 pub use data::repos_sql::catalog_repo::CatalogRepositoryForSql;

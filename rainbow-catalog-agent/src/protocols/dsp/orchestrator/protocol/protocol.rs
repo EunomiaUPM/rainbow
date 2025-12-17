@@ -24,9 +24,9 @@ use crate::protocols::dsp::protocol_types::{
     CatalogMessageDto, CatalogMessageWrapper, CatalogRequestMessageDto, DatasetMessageDto, DatasetRequestMessage,
 };
 use crate::protocols::dsp::validator::traits::validation_dsp_steps::ValidationDspSteps;
-use std::sync::Arc;
 use rainbow_common::protocol::catalog::catalog_definition::Catalog;
 use rainbow_common::protocol::catalog::dataset_definition::Dataset;
+use std::sync::Arc;
 
 pub struct ProtocolOrchestratorService {
     facades: Arc<dyn FacadeTrait>,

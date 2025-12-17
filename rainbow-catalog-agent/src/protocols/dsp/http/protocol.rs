@@ -26,8 +26,8 @@ use axum::{
     routing::post,
     Json, Router,
 };
-use std::sync::Arc;
 use reqwest::StatusCode;
+use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct DspRouter {
