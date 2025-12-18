@@ -1,4 +1,5 @@
-import {createContext, ReactNode} from "react";
+import { createContext, ReactNode, useEffect, useMemo, useState } from "react";
+import React from "react";
 
 export interface GlobalInfoContextType {
   catalog_type: "rainbow" | "datahub" | "both";
@@ -8,20 +9,79 @@ export interface GlobalInfoContextType {
   api_gateway_callback_address: string;
 }
 
+type ConfigInfo = {
+  config_role: string;
+}
+
 export const GlobalInfoContext = createContext<GlobalInfoContextType | null>(null);
-export const GlobalInfoContextProvider = ({children, api_gateway_base, dsrole, catalog_type,}: {
-  children: ReactNode;
-  api_gateway_base: string;
-  dsrole: string;
-  catalog_type: "rainbow" | "datahub" | "both";
-}) => {
-  const value: GlobalInfoContextType = {
-    catalog_type,
-    dsrole: dsrole,
-    api_gateway_base: api_gateway_base,
-    api_gateway: api_gateway_base + "/gateway/api",
-    api_gateway_callback_address: api_gateway_base + "/incoming-notification",
+
+export const GlobalInfoContextProvider = ({ children }: { children: ReactNode }) => {
+  const [apiGatewayBase, setApiGatewayBase] = useState<string>("/");
+  const [configRole, setConfigRole] = useState<string>("");
+  const [catalogType] = useState<"rainbow" | "datahub" | "both">("rainbow");
+  const [isConfigLoaded, setIsConfigLoaded] = useState(false);
+
+  // PLEASE CHANGE THIS FOR PRODUCTION OR DEV
+  const isProduction = true;
+  const localConfig = {
+    config_role: "Provider",
+    gateway_host: "http://127.0.0.1",
+    gateway_port: "1207"
   };
-  // @ts-ignore
-  return <GlobalInfoContext.Provider value={value}>{children}</GlobalInfoContext.Provider>;
+  useEffect(() => {
+    const initConfig = async () => {
+      try {
+        if (isProduction) {
+          setApiGatewayBase("/");
+          const res = await fetch("/fe-config");
+          if (res.ok) {
+            const data = await res.json();
+            setConfigRole(data.config_role);
+            console.log("Prod Config Loaded. Role:", data.config_role, "Base: (Relative)");
+          } else {
+            console.error("Error cargando config en prod:", res.status);
+          }
+        } else {
+          const localBase = `${localConfig.gateway_host}:${localConfig.gateway_port}`;
+          setApiGatewayBase(localBase);
+          setConfigRole(localConfig.config_role);
+          console.log("Dev Config Loaded. Base:", localBase);
+        }
+      } catch (e) {
+        console.error("Critical Error initConfig:", e);
+      } finally {
+        setIsConfigLoaded(true);
+      }
+    };
+
+    initConfig();
+    console.log(
+        apiGatewayBase,
+      configRole,
+      catalogType,
+      isConfigLoaded,
+      isProduction,
+    )
+  }, []);
+
+  const contextValue = useMemo<GlobalInfoContextType>(() => {
+    const prefix = apiGatewayBase === "/" ? "" : apiGatewayBase;
+    return {
+      catalog_type: catalogType,
+      dsrole: configRole,
+      api_gateway_base: prefix,
+      api_gateway: `${prefix}/gateway/api`,
+      api_gateway_callback_address: `${prefix}/incoming-notification`,
+    };
+  }, [catalogType, configRole, apiGatewayBase]);
+
+  if (!isConfigLoaded) {
+    return <div>Cargando...</div>;
+  }
+
+  return (
+      <GlobalInfoContext.Provider value={contextValue}>
+        {children}
+      </GlobalInfoContext.Provider>
+  );
 };

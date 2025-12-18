@@ -29,10 +29,11 @@ use rainbow_common::config::services::GatewayConfig;
 use rainbow_common::config::types::HostType;
 use reqwest::Client;
 use rust_embed::Embed;
-use serde_json::Value;
+use serde_json::{json, Value};
 use std::time::Duration;
 use tokio::sync::broadcast;
 use tower_http::cors::{Any, CorsLayer};
+use rainbow_common::config::traits::CommonConfigTrait;
 
 pub struct RainbowConsumerGateway {
     config: GatewayConfig,
@@ -41,7 +42,7 @@ pub struct RainbowConsumerGateway {
 }
 
 #[derive(Embed)]
-#[folder = "src/static/consumer"]
+#[folder = "src/static/consumer/dist"]
 pub struct RainbowConsumerReactApp;
 
 impl RainbowConsumerGateway {
@@ -67,7 +68,9 @@ impl RainbowConsumerGateway {
             .route("/incoming-notification", post(Self::incoming_notification));
 
         if self.config.is_production() {
-            router = router.fallback(Self::static_path_handler);
+            router = router
+                .route("/fe-config", get(Self::config_handler))
+                .fallback(Self::static_path_handler);
         }
 
         router.layer(cors).with_state((self.config, self.client, self.notification_tx))
@@ -102,6 +105,21 @@ impl RainbowConsumerGateway {
             },
         }
     }
+
+    async fn config_handler(
+        State((config, _client, _notification_tx)): State<(GatewayConfig, Client, broadcast::Sender<String>)>,
+    ) -> impl IntoResponse {
+        let gateway_host = config.common().hosts.http.url.clone();
+        let gateway_port = config.common().hosts.http.port.clone().unwrap_or("80".to_string());
+        let config_role = config.common().role.to_string();
+        let json = json!({
+            "gateway_host": gateway_host,
+            "gateway_port": gateway_port,
+            "config_role": config_role,
+        });
+        (StatusCode::OK, Json(json).into_response())
+    }
+
 
     async fn proxy_handler_with_extra(
         State((config, client, notification_tx)): State<(GatewayConfig, Client, broadcast::Sender<String>)>,
