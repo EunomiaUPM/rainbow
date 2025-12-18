@@ -19,13 +19,34 @@ export const PubSubContextProvider = ({children}: { children: ReactNode }) => {
   const [wsConnectionError, setWsConnectionError] = useState(false);
   const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
   const [lastHighLightedNotification, setLastHighLightedNotification] = useState<UUID | null>(null);
-  const {api_gateway, api_gateway_callback_address} =
+  const globalInfo =
     useContext<GlobalInfoContextType | null>(GlobalInfoContext)!;
-  console.log(api_gateway);
+  const api_gateway = globalInfo?.api_gateway;
+  const api_gateway_callback_address = globalInfo?.api_gateway_callback_address;
   const {data: dataSubscriptions, isError: isDataSubscriptionError} =
-    useGetSubscriptionByCallbackAddress(api_gateway_callback_address); // get all subscriptions
+    useGetSubscriptionByCallbackAddress(api_gateway_callback_address);
 
-  // Check if server is up when websocket is not connected
+
+  useEffect(() => {
+    if (!api_gateway) return;
+    console.log("Init WebSocket in:", api_gateway + "/ws");
+    const connectWs = () => {
+      const ws = new WebSocket(api_gateway + "/ws");
+      setWebsocket(ws);
+
+      ws.onopen = () => {
+        console.log("WebSocket connected");
+        setWsConnected(true);
+      };
+    };
+
+    connectWs();
+    return () => {
+      if(websocket) websocket.close();
+    }
+
+  }, [api_gateway]);
+
   const reconnectOnClose = () => {
     const _timer = setInterval(() => {
       if (!websocket || websocket.readyState === WebSocket.CLOSED) {
