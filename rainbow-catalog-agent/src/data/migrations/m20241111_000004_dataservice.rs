@@ -44,6 +44,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(CatalogDataServices::DctTitle).string())
                     .col(ColumnDef::new(CatalogDataServices::DctDescription).string())
                     .col(ColumnDef::new(CatalogDataServices::CatalogId).string().not_null())
+                    .col(ColumnDef::new(CatalogDataServices::DspaceMainDataService).boolean().not_null())
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk_dataservice_catalog")
@@ -75,6 +76,7 @@ pub enum CatalogDataServices {
     DctTitle,
     DctDescription,
     CatalogId,
+    DspaceMainDataService,
 }
 
 #[derive(Iden)]

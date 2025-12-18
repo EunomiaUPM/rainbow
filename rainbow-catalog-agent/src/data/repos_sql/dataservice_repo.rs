@@ -84,6 +84,17 @@ impl DataServiceRepositoryTrait for DataServiceRepositoryForSql {
         }
     }
 
+    async fn get_main_data_service(&self) -> anyhow::Result<Option<dataservice::Model>, CatalogAgentRepoErrors> {
+        let data_service = dataservice::Entity::find()
+            .filter(dataservice::Column::DspaceMainDataService.eq(true))
+            .one(&self.db_connection)
+            .await
+            .map_err(|err| {
+                CatalogAgentRepoErrors::DataServiceRepoErrors(DataServiceRepoErrors::ErrorFetchingDataService(err.into()))
+            })?;
+        Ok(data_service)
+    }
+
     async fn get_data_service_by_id(
         &self,
         data_service_id: &Urn,
@@ -168,6 +179,40 @@ impl DataServiceRepositoryTrait for DataServiceRepositoryForSql {
             ));
         }
         let model: dataservice::ActiveModel = new_data_service_model.into();
+        let data_service = dataservice::Entity::insert(model).exec_with_returning(&self.db_connection).await;
+        match data_service {
+            Ok(data_service) => Ok(data_service),
+            Err(err) => Err(CatalogAgentRepoErrors::DataServiceRepoErrors(
+                DataServiceRepoErrors::ErrorCreatingDataService(err.into()),
+            )),
+        }
+    }
+
+    async fn create_main_data_service(
+        &self,
+        new_data_service_model: &NewDataServiceModel,
+    ) -> anyhow::Result<dataservice::Model, CatalogAgentRepoErrors> {
+        let catalog = catalog::Entity::find_by_id(new_data_service_model.catalog_id.clone().to_string())
+            .one(&self.db_connection)
+            .await
+            .map_err(|err| {
+                CatalogAgentRepoErrors::DistributionRepoErrors(DistributionRepoErrors::ErrorFetchingDistribution(
+                    err.into(),
+                ))
+            })?;
+        if catalog.is_none() {
+            return Err(CatalogAgentRepoErrors::CatalogRepoErrors(
+                CatalogRepoErrors::CatalogNotFound,
+            ));
+        }
+
+        let main_dataservice = self.get_main_data_service().await?;
+        if main_dataservice.is_some() {
+            return Ok(main_dataservice.unwrap());
+        }
+
+        let mut model: dataservice::ActiveModel = new_data_service_model.into();
+        model.dspace_main_data_service = ActiveValue::Set(true);
         let data_service = dataservice::Entity::insert(model).exec_with_returning(&self.db_connection).await;
         match data_service {
             Ok(data_service) => Ok(data_service),

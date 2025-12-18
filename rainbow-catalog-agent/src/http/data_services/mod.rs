@@ -52,6 +52,8 @@ impl DataServiceEntityRouter {
             )
             .route("/", post(Self::handle_create_data_service))
             .route("/batch", post(Self::handle_get_batch_data_services))
+            .route("/main", get(Self::handle_get_main_data_service))
+            .route("/main", post(Self::handle_create_main_data_service))
             .route("/:id", get(Self::handle_get_data_service_by_id))
             .route("/:id", put(Self::handle_put_data_service_by_id))
             .route("/:id", delete(Self::handle_delete_data_service_by_id))
@@ -123,6 +125,21 @@ impl DataServiceEntityRouter {
             Err(err) => err.to_response(),
         }
     }
+
+    async fn handle_get_main_data_service(
+        State(state): State<DataServiceEntityRouter>,
+        Path(id): Path<String>,
+    ) -> impl IntoResponse {
+        match state.service.get_main_data_service().await {
+            Ok(Some(data_service)) => (StatusCode::OK, Json(ToCamelCase(data_service))).into_response(),
+            Ok(None) => {
+                let err = CommonErrors::missing_resource_new(id.as_str(), "Data service not found");
+                err.into_response()
+            }
+            Err(err) => err.to_response(),
+        }
+    }
+
     async fn handle_put_data_service_by_id(
         State(state): State<DataServiceEntityRouter>,
         Path(id): Path<String>,
@@ -180,6 +197,34 @@ impl DataServiceEntityRouter {
             },
         }
     }
+
+    async fn handle_create_main_data_service(
+        State(state): State<DataServiceEntityRouter>,
+        input: Result<Json<NewDataServiceDto>, JsonRejection>,
+    ) -> impl IntoResponse {
+        let input = match extract_payload(input) {
+            Ok(v) => v,
+            Err(e) => return e,
+        };
+        match state.service.create_main_data_service(&input).await {
+            Ok(data_service) => (StatusCode::OK, Json(ToCamelCase(data_service))).into_response(),
+            Err(err) => match err.downcast::<CommonErrors>() {
+                Ok(ce) => match ce {
+                    CommonErrors::DatabaseError { ref cause, .. } => {
+                        if cause.contains("not found") {
+                            let err = CommonErrors::missing_resource_new("", cause.as_str());
+                            return err.into_response();
+                        } else {
+                            ce.into_response()
+                        }
+                    }
+                    e => return e.into_response(),
+                },
+                Err(e) => e.to_response(),
+            },
+        }
+    }
+
     async fn handle_delete_data_service_by_id(
         State(state): State<DataServiceEntityRouter>,
         Path(id): Path<String>,

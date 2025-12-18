@@ -100,6 +100,20 @@ impl DataServiceEntityService for DataServiceEntityGrpc {
         }
     }
 
+    async fn get_main_data_service(&self, request: Request<()>) -> Result<Response<DataServiceResponse>, Status> {
+        let req = request.into_inner();
+
+        let data_service_opt =
+            self.service.get_main_data_service().await.map_err(|e| Status::internal(e.to_string()))?;
+
+        match data_service_opt {
+            Some(dto) => Ok(Response::new(DataServiceResponse {
+                data_service: Some(dto.into()),
+            })),
+            None => Err(Status::not_found("DataService not found")),
+        }
+    }
+
     async fn create_data_service(
         &self,
         request: Request<CreateDataServiceRequest>,
@@ -110,6 +124,21 @@ impl DataServiceEntityService for DataServiceEntityGrpc {
         let created_dto = self
             .service
             .create_data_service(&new_data_service_dto)
+            .await
+            .map_err(|e| Status::internal(format!("Failed to create data service: {}", e)))?;
+
+        Ok(Response::new(DataServiceResponse {
+            data_service: Some(created_dto.into()),
+        }))
+    }
+
+    async fn create_main_main_catalog(&self, request: Request<CreateDataServiceRequest>) -> Result<Response<DataServiceResponse>, Status> {
+        let req = request.into_inner();
+        let new_data_service_dto: NewDataServiceDto = req.try_into()?;
+
+        let created_dto = self
+            .service
+            .create_main_data_service(&new_data_service_dto)
             .await
             .map_err(|e| Status::internal(format!("Failed to create data service: {}", e)))?;
 
