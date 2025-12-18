@@ -33,7 +33,6 @@ RUN --mount=type=bind,source=./../Cargo.toml,target=/app/Cargo.toml \
     --mount=type=bind,source=./../rainbow-datahub-catalog,target=/app/rainbow-datahub-catalog \
     --mount=type=bind,source=./../rainbow-fe-gateway,target=/app/rainbow-fe-gateway \
     --mount=type=bind,source=./../rainbow-business-gateway,target=/app/rainbow-business-gateway \
-    --mount=type=bind,source=./../rainbow-authority,target=/app/rainbow-authority \
     --mount=type=bind,source=./../static,target=/app/static \
     --mount=type=cache,target=/app/target/ \
     --mount=type=cache,target=/usr/local/cargo/registry/ \

@@ -1,6 +1,6 @@
 # Define variables
 DOCKER_USERNAME ?= quay.io/eunomia_upm
-VERSION ?= 0.3.8
+VERSION ?= 0.3.9
 
 #
 #
@@ -149,29 +149,11 @@ push-business-gateway:
 #
 #
 #
-# Rainbow Authority
-#
-#
-build-authority:
-	docker build \
-		--progress plain \
-		-t $(DOCKER_USERNAME)/rainbow_authority:$(VERSION) \
-		--build-arg APP_NAME=rainbow_authority \
-		-f deployment/Dockerfile \
-		.
-
-push-authority:
-	docker push $(DOCKER_USERNAME)/rainbow_authority:$(VERSION)
-
-
-#
-#
-#
 # General
 #
 #
-build-containers: build-core build-catalog build-contracts build-transfer build-transfer-agent build-auth build-fe-gateway build-business-gateway build-authority
+build-containers: build-core build-catalog build-contracts build-transfer build-transfer-agent build-auth build-fe-gateway build-business-gateway
 
-push-containers: push-core push-catalog push-contracts push-transfer push-transfer-agent push-auth push-fe-gateway push-business-gateway push-authority
+push-containers: push-core push-catalog push-contracts push-transfer push-transfer-agent push-auth push-fe-gateway push-business-gateway
 
 .PHONY: build-containers push-containers
