@@ -2,16 +2,14 @@
 [workspace]
 members = [
     "rainbow-core",
-    #"rainbow-catalog",
     "rainbow-contracts",
     "rainbow-dataplane",
-    #"rainbow-transfer",
     "rainbow-common",
     "rainbow-auth",
     "rainbow-db",
     "rainbow-events",
     "rainbow-fe-gateway",
-    "rainbow-datahub-catalog",
+    #"rainbow-datahub-catalog",
     "rainbow-authority",
     "rainbow-business-gateway",
     "rainbow-transfer-agent",
