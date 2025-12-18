@@ -49,6 +49,7 @@ impl From<NewDataServiceDto> for NewDataServiceModel {
             dct_title: dto.dct_title,
             dct_description: dto.dct_description,
             catalog_id: dto.catalog_id,
+            dspace_main_data_service: false,
         }
     }
 }
@@ -81,6 +82,7 @@ pub trait DataServiceEntityTrait: Send + Sync {
 
     async fn get_data_services_by_catalog_id(&self, catalog_id: &Urn) -> anyhow::Result<Vec<DataServiceDto>>;
 
+    async fn get_main_data_service(&self) -> anyhow::Result<Option<DataServiceDto>>;
     async fn get_data_service_by_id(&self, data_service_id: &Urn) -> anyhow::Result<Option<DataServiceDto>>;
     async fn put_data_service_by_id(
         &self,
@@ -88,5 +90,6 @@ pub trait DataServiceEntityTrait: Send + Sync {
         edit_data_service_model: &EditDataServiceDto,
     ) -> anyhow::Result<DataServiceDto>;
     async fn create_data_service(&self, new_data_service_model: &NewDataServiceDto) -> anyhow::Result<DataServiceDto>;
+    async fn create_main_data_service(&self, new_data_service_model: &NewDataServiceDto) -> anyhow::Result<DataServiceDto>;
     async fn delete_data_service_by_id(&self, data_service_id: &Urn) -> anyhow::Result<()>;
 }

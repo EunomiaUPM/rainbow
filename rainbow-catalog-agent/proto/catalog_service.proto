@@ -32,8 +32,11 @@ service DataServiceEntityService {
   rpc GetBatchDataServices (GetBatchRequest) returns (DataServiceListResponse);
   rpc GetDataServicesByCatalogId (GetByParentIdRequest) returns (DataServiceListResponse);
   rpc GetDataServiceById (GetByIdRequest) returns (DataServiceResponse);
+  rpc GetMainDataService(google.protobuf.Empty) returns (DataServiceResponse);
 
   rpc CreateDataService (CreateDataServiceRequest) returns (DataServiceResponse);
+  rpc CreateMainMainCatalog (CreateDataServiceRequest) returns (DataServiceResponse);
+
   rpc PutDataServiceById (PutDataServiceRequest) returns (DataServiceResponse);
   rpc DeleteDataServiceById (DeleteByIdRequest) returns (google.protobuf.Empty);
 }

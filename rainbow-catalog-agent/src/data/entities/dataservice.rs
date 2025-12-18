@@ -36,6 +36,7 @@ pub struct Model {
     pub dct_title: Option<String>,
     pub dct_description: Option<String>,
     pub catalog_id: String,
+    pub dspace_main_data_service: bool,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
@@ -70,6 +71,8 @@ pub struct NewDataServiceModel {
     pub dct_title: Option<String>,
     pub dct_description: Option<String>,
     pub catalog_id: Urn,
+    pub dspace_main_data_service: bool,
+
 }
 
 impl From<NewDataServiceModel> for ActiveModel {
@@ -89,6 +92,7 @@ impl From<NewDataServiceModel> for ActiveModel {
             dct_title: ActiveValue::Set(dto.dct_title),
             dct_description: ActiveValue::Set(dto.dct_description),
             catalog_id: ActiveValue::Set(dto.catalog_id.to_string()),
+            dspace_main_data_service: ActiveValue::Set(dto.dspace_main_data_service),
         }
     }
 }
