@@ -101,7 +101,7 @@ invoke_curl_robust "POST" "$ConsumerUrl/api/v1/vc-request/beg/cross-user" "$C_BE
 
 
 # 2.6 A All Requests & Get PetitionId
-ALL_REQUESTS_JSON=$(invoke_curl_robust "GET" "$AuthorityUrl/api/v1/vc-request/all" "" "6. A Retrieves all Requests")
+ALL_REQUESTS_JSON=$(invoke_curl_robust "GET" "$AuthorityUrl/api/v1/approver/all" "" "6. A Retrieves all Requests")
 
 PetitionId=$(echo "$ALL_REQUESTS_JSON" | jq -r '.[-1].id')
 if [[ -z "$PetitionId" ]]; then
@@ -113,7 +113,7 @@ echo "PetitionId retrieved: $PetitionId" >&2
 
 # 2.7 A Accept Request (Authority Approves)
 APPROVE_BODY='{"approve": true}'
-invoke_curl_robust "POST" "$AuthorityUrl/api/v1/vc-request/$PetitionId" "$APPROVE_BODY" "7. A Accepts the Request"
+invoke_curl_robust "POST" "$AuthorityUrl/api/v1/approver/$PetitionId" "$APPROVE_BODY" "7. A Accepts the Request"
 
 
 # 2.8 C All Authorities & Get OIDC4VCI_URI
