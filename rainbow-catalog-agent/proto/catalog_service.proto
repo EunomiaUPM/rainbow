@@ -156,6 +156,7 @@ message CreateCatalogRequest {
   optional string dct_conforms_to = 3;
   optional string dct_creator = 4;
   optional string dct_title = 5;
+  optional string dspace_participant_id = 6;
 }
 
 message PutCatalogRequest {

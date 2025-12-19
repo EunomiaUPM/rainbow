@@ -18,6 +18,8 @@ use axum::Router;
 use rainbow_common::config::global_config::ApplicationGlobalConfig;
 use rainbow_common::http_client::HttpClient;
 use std::sync::Arc;
+use rainbow_common::mates_facade::mates_facade::MatesFacadeService;
+use rainbow_common::mates_facade::MatesFacadeTrait;
 
 mod errors;
 pub(crate) mod facades;
@@ -32,6 +34,7 @@ pub struct CatalogDSP {
     pub dataset_entities_service: Arc<dyn DatasetEntityTrait>,
     pub odrl_policies_service: Arc<dyn OdrlPolicyEntityTrait>,
     pub distributions_entity_service: Arc<dyn DistributionEntityTrait>,
+    pub mates_facade: Arc<dyn MatesFacadeTrait>,
     config: Arc<ApplicationGlobalConfig>,
 }
 
@@ -42,6 +45,7 @@ impl CatalogDSP {
         dataset_entities_service: Arc<dyn DatasetEntityTrait>,
         odrl_policies_service: Arc<dyn OdrlPolicyEntityTrait>,
         distributions_entity_service: Arc<dyn DistributionEntityTrait>,
+        mates_facade: Arc<dyn MatesFacadeTrait>,
         config: Arc<ApplicationGlobalConfig>,
     ) -> Self {
         Self {
@@ -50,6 +54,7 @@ impl CatalogDSP {
             dataset_entities_service,
             odrl_policies_service,
             distributions_entity_service,
+            mates_facade,
             config,
         }
     }
@@ -70,14 +75,17 @@ impl ProtocolPluginTrait for CatalogDSP {
     }
 
     async fn build_router(&self) -> anyhow::Result<Router> {
-        let http_client = Arc::new(HttpClient::new(10, 10));
-
         // Validator
         let validator_helper = Arc::new(ValidationHelperService::new());
         let validator_payload = Arc::new(ValidatePayloadService::new(validator_helper.clone()));
         let dsp_validator = Arc::new(ValidationDspStepsService::new(
             validator_payload.clone(),
             validator_helper.clone(),
+        ));
+
+        // facades
+        let facades = Arc::new(FacadeService::new(
+
         ));
 
         // persistence
@@ -87,9 +95,9 @@ impl ProtocolPluginTrait for CatalogDSP {
             self.dataset_entities_service.clone(),
             self.odrl_policies_service.clone(),
             self.distributions_entity_service.clone(),
+            self.mates_facade.clone(),
         ));
-        // facades
-        let facades = Arc::new(FacadeService::new());
+
 
         // orchestrators
         let http_orchestator = Arc::new(ProtocolOrchestratorService::new(

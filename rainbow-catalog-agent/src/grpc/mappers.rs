@@ -107,6 +107,7 @@ impl TryFrom<CreateCatalogRequest> for NewCatalogDto {
             dct_conforms_to: req.dct_conforms_to,
             dct_creator: req.dct_creator,
             dct_title: req.dct_title,
+            dspace_participant_id: req.dspace_participant_id,
         })
     }
 }

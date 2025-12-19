@@ -74,6 +74,7 @@ pub struct NewCatalogModel {
     pub dct_conforms_to: Option<String>,
     pub dct_creator: Option<String>,
     pub dct_title: Option<String>,
+    pub dspace_participant_id: Option<String>,
 }
 
 impl From<NewCatalogModel> for ActiveModel {
@@ -89,7 +90,7 @@ impl From<NewCatalogModel> for ActiveModel {
             dct_issued: ActiveValue::Set(chrono::Utc::now().into()),
             dct_modified: ActiveValue::Set(None),
             dct_title: ActiveValue::Set(dto.dct_title),
-            dspace_participant_id: ActiveValue::Set(None),
+            dspace_participant_id: ActiveValue::Set(dto.dspace_participant_id),
             dspace_main_catalog: ActiveValue::Set(false),
         }
     }

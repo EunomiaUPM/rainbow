@@ -46,6 +46,8 @@ use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 use tower_http::trace::{DefaultOnResponse, TraceLayer};
 use uuid::Uuid;
+use rainbow_common::http_client::HttpClient;
+use rainbow_common::mates_facade::mates_facade::MatesFacadeService;
 
 pub struct CatalogHttpWorker {}
 impl CatalogHttpWorker {
@@ -98,8 +100,13 @@ pub async fn create_root_http_router(config: &ApplicationGlobalConfig) -> anyhow
     // ROOT Dependency Injection
     let config = Arc::new(config.clone());
     let db_connection = Database::connect(config.database_config.as_db_url()).await.expect("Database can't connect");
+    let http_client = Arc::new(HttpClient::new(20, 3));
 
+    // repo
     let catalog_agent_repo = Arc::new(CatalogAgentRepoForSql::create_repo(db_connection.clone()));
+
+    // facades
+    let mates_facade = Arc::new(MatesFacadeService::new(config.as_ref().clone(), http_client.clone()));
 
     // entities
     let catalog_controller_service = Arc::new(CatalogEntities::new(catalog_agent_repo.clone()));
@@ -123,6 +130,7 @@ pub async fn create_root_http_router(config: &ApplicationGlobalConfig) -> anyhow
         datasets_controller_service.clone(),
         odrl_offer_controller_service.clone(),
         distributions_controller_service.clone(),
+        mates_facade.clone(),
         config.clone(),
     )
     .build_router()
