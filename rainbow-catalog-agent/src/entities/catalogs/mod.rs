@@ -21,6 +21,7 @@ pub struct NewCatalogDto {
     pub dct_conforms_to: Option<String>,
     pub dct_creator: Option<String>,
     pub dct_title: Option<String>,
+    pub dspace_participant_id: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -41,6 +42,7 @@ impl From<NewCatalogDto> for NewCatalogModel {
             dct_conforms_to: dto.dct_conforms_to,
             dct_creator: dto.dct_creator,
             dct_title: dto.dct_title,
+            dspace_participant_id: dto.dspace_participant_id,
         }
     }
 }

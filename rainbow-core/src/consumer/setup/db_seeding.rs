@@ -35,6 +35,7 @@ impl CoreConsumerSeeding {
                 dct_conforms_to: None,
                 dct_creator: None,
                 dct_title: Some("Main Catalog".to_string()),
+                dspace_participant_id: None,
             })
             .await
             .expect("CatalogRepoForSql creation failed");

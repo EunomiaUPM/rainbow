@@ -23,6 +23,7 @@ use std::str::FromStr;
 use std::sync::Arc;
 use tracing::error;
 use urn::Urn;
+use rainbow_common::mates_facade::MatesFacadeTrait;
 
 pub struct OrchestrationPersistenceForProtocol {
     pub catalog_entities_service: Arc<dyn CatalogEntityTrait>,
@@ -30,6 +31,7 @@ pub struct OrchestrationPersistenceForProtocol {
     pub dataset_entities_service: Arc<dyn DatasetEntityTrait>,
     pub odrl_policies_service: Arc<dyn OdrlPolicyEntityTrait>,
     pub distributions_entity_service: Arc<dyn DistributionEntityTrait>,
+    pub mates_facade: Arc<dyn MatesFacadeTrait>,
 }
 
 impl OrchestrationPersistenceForProtocol {
@@ -39,6 +41,7 @@ impl OrchestrationPersistenceForProtocol {
         dataset_entities_service: Arc<dyn DatasetEntityTrait>,
         odrl_policies_service: Arc<dyn OdrlPolicyEntityTrait>,
         distributions_entity_service: Arc<dyn DistributionEntityTrait>,
+        mates_facade: Arc<dyn MatesFacadeTrait>,
     ) -> Self {
         Self {
             catalog_entities_service,
@@ -46,6 +49,7 @@ impl OrchestrationPersistenceForProtocol {
             dataset_entities_service,
             odrl_policies_service,
             distributions_entity_service,
+            mates_facade
         }
     }
 
@@ -58,14 +62,21 @@ impl OrchestrationPersistenceForProtocol {
         let main_catalog_dto = self.fetch_main_catalog_dto().await?;
         let main_catalog_urn = Urn::from_str(&main_catalog_dto.inner.id)?;
 
+        // 1b. Main service
+        let main_dataservice_dto = self.fetch_main_dataservice_dto().await?;
+
         // 2. Sub catalogs
         let sub_catalogs = self.build_sub_catalogs().await?;
 
         // 3. Datasets in main catalog
         let datasets = self.build_datasets_for_catalog(&main_catalog_urn).await?;
 
+        // 3b. Dataservice in main catalog
+        let main_dataservice = self.map_data_service(main_dataservice_dto);
+
+
         // 4. Assembly
-        let catalog = self.map_catalog(main_catalog_dto, sub_catalogs, datasets);
+        let catalog = self.map_catalog(main_catalog_dto, vec![main_dataservice], sub_catalogs, datasets);
 
         Ok(catalog)
     }
@@ -98,7 +109,8 @@ impl OrchestrationPersistenceForProtocol {
         for catalog_dto in catalogs_dtos {
             let catalog_urn = Urn::from_str(&catalog_dto.inner.id)?;
             let sub_datasets = self.build_datasets_for_catalog(&catalog_urn).await?;
-            dcat_catalogs.push(self.map_catalog(catalog_dto, vec![], sub_datasets));
+            let sub_dataservice = self.build_dataservices_for_catalog(&catalog_urn).await?;
+            dcat_catalogs.push(self.map_catalog(catalog_dto, sub_dataservice, vec![], sub_datasets));
         }
 
         Ok(dcat_catalogs)
@@ -116,6 +128,19 @@ impl OrchestrationPersistenceForProtocol {
         }
 
         Ok(dcat_datasets)
+    }
+
+    // Create dataservice
+    async fn build_dataservices_for_catalog(&self, catalog_id: &Urn) -> anyhow::Result<Vec<DataService>> {
+        let dataservices_dtos = self.data_service_entities_service.get_data_services_by_catalog_id(catalog_id).await?;
+        let mut dcat_dataservices = Vec::with_capacity(dataservices_dtos.len());
+
+        for dataservices_dto in dataservices_dtos {
+            let dcat_dataservice = self.map_data_service(dataservices_dto);
+            dcat_dataservices.push(dcat_dataservice);
+        }
+
+        Ok(dcat_dataservices)
     }
 
     /// Recupera y mapea las políticas ODRL
@@ -173,6 +198,17 @@ impl OrchestrationPersistenceForProtocol {
         }
     }
 
+    async fn fetch_main_dataservice_dto(&self) -> anyhow::Result<DataServiceDto> {
+        match self.data_service_entities_service.get_main_data_service().await? {
+            Some(c) => Ok(c),
+            None => {
+                let err = CommonErrors::missing_resource_new("", "Main dataservice not found");
+                error!("{}", err.log());
+                bail!(err)
+            }
+        }
+    }
+
     async fn fetch_dataset_dto(&self, dataset_id: &Urn) -> anyhow::Result<DatasetDto> {
         match self.dataset_entities_service.get_dataset_by_id(dataset_id).await? {
             Some(d) => Ok(d),
@@ -188,7 +224,7 @@ impl OrchestrationPersistenceForProtocol {
     // MAPPERS from DTOs to DCAT representations
     // =========================================================================
 
-    fn map_catalog(&self, dto: CatalogDto, catalogs: Vec<Catalog>, datasets: Vec<Dataset>) -> Catalog {
+    fn map_catalog(&self, dto: CatalogDto, main_dataservice_dto: Vec<DataService>,catalogs: Vec<Catalog>, datasets: Vec<Dataset>) -> Catalog {
         Catalog {
             context: ContextField::default(),
             _type: "Catalog".to_string(),
@@ -209,7 +245,7 @@ impl OrchestrationPersistenceForProtocol {
             extra_fields: Default::default(),
             catalogs,
             datasets,
-            data_services: vec![],
+            data_services: main_dataservice_dto,
         }
     }
 
