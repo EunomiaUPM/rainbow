@@ -30,6 +30,7 @@ use crate::provider::http::rainbow_entities::rainbow_entities::RainbowEntitesCon
 use axum::{serve, Router};
 use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
 use rainbow_common::facades::ssi_auth_facade::ssi_auth_facade::SSIAuthFacadeService;
+use rainbow_common::http_client::HttpClient;
 use rainbow_common::mates_facade::mates_facade::MatesFacadeService;
 use rainbow_db::contracts_provider::repo::sql::ContractNegotiationProviderRepoForSql;
 use rainbow_db::contracts_provider::repo::ContractNegotiationProviderRepoFactory;
@@ -49,6 +50,7 @@ pub struct ContractNegotiationProviderApplication;
 
 pub async fn create_contract_negotiation_provider_router(config: &ApplicationProviderConfig) -> Router {
     let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
+    let http_client = Arc::new(HttpClient::new(10, 3));
     let application_global_config: ApplicationProviderConfig = config.clone().into();
     let provider_repo = Arc::new(ContractNegotiationProviderRepoForSql::create_repo(
         db_connection.clone(),
@@ -82,9 +84,13 @@ pub async fn create_contract_negotiation_provider_router(config: &ApplicationPro
     // DSProtocol Dependency injection
     let ssi_auth_facade = Arc::new(SSIAuthFacadeService::new(
         application_global_config.clone().into(),
+        http_client.clone(),
     ));
     let app_config: ApplicationProviderConfig = config.clone().into();
-    let mates_facade = Arc::new(MatesFacadeService::new(app_config.into()));
+    let mates_facade = Arc::new(MatesFacadeService::new(
+        app_config.into(),
+        http_client.clone(),
+    ));
 
     let catalog_facade: Arc<dyn CatalogOdrlFacadeTrait + Send + Sync>;
     if config.is_datahub_as_catalog() {

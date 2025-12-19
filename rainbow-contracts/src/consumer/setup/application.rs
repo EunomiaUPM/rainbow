@@ -41,11 +41,14 @@ use sea_orm::Database;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 use tracing::info;
+use rainbow_common::http_client::HttpClient;
 
 pub struct ContractNegotiationConsumerApplication;
 
 pub async fn create_contract_negotiation_consumer_router(config: &ApplicationConsumerConfig) -> Router {
     let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
+    let http_client = Arc::new(HttpClient::new(10, 3));
+
     let consumer_repo = Arc::new(ContractNegotiationConsumerRepoForSql::create_repo(
         db_connection.clone(),
     ));
@@ -77,7 +80,7 @@ pub async fn create_contract_negotiation_consumer_router(config: &ApplicationCon
 
     // DSRPCProtocol Dependency injection
     let app_config: ApplicationConsumerConfig = config.clone().into();
-    let mates_facade = Arc::new(MatesFacadeService::new(app_config.clone().into()));
+    let mates_facade = Arc::new(MatesFacadeService::new(app_config.clone().into(), http_client.clone()));
     let ds_rpc_protocol_service = Arc::new(DSRPCContractNegotiationConsumerService::new(
         consumer_repo.clone(),
         notification_service.clone(),
@@ -86,7 +89,7 @@ pub async fn create_contract_negotiation_consumer_router(config: &ApplicationCon
     let ds_rpc_protocol_router = DSRPCContractNegotiationConsumerRouter::new(ds_rpc_protocol_service.clone()).router();
 
     // DSProtocol Dependency injection
-    let ssi_auth_facade = Arc::new(SSIAuthFacadeService::new(app_config.clone().into()));
+    let ssi_auth_facade = Arc::new(SSIAuthFacadeService::new(app_config.clone().into(), http_client.clone()));
     let ds_protocol_service = Arc::new(DSProtocolContractNegotiationConsumerService::new(
         consumer_repo.clone(),
         notification_service.clone(),

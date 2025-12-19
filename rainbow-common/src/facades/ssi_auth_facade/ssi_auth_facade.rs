@@ -16,30 +16,23 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
+use std::sync::Arc;
 use crate::config::global_config::{format_host_config_to_url_string, ApplicationGlobalConfig};
-use crate::errors::helpers::{BadFormat, MissingAction};
-use crate::errors::{CommonErrors, ErrorLog};
 use crate::facades::ssi_auth_facade::SSIAuthFacadeTrait;
+use crate::http_client::HttpClient;
 use crate::mates::mates::VerifyTokenRequest;
 use crate::mates::Mates;
-use anyhow::bail;
 use axum::async_trait;
-use reqwest::Client;
-use std::time::Duration;
-use tracing::error;
 
 const SSI_AUTH_FACADE_VERIFICATION_URL: &str = "/api/v1/mates/token";
 
 pub struct SSIAuthFacadeService {
     config: ApplicationGlobalConfig,
-    client: Client,
+    client: Arc<HttpClient>,
 }
 
 impl SSIAuthFacadeService {
-    pub fn new(config: ApplicationGlobalConfig) -> Self {
-        let client =
-            Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
+    pub fn new(config: ApplicationGlobalConfig, client: Arc<HttpClient>) -> Self {
         Self { config, client }
     }
 }
@@ -49,31 +42,7 @@ impl SSIAuthFacadeTrait for SSIAuthFacadeService {
     async fn verify_token(&self, token: String) -> anyhow::Result<Mates> {
         let base_url = format_host_config_to_url_string(&self.config.ssi_auth_host.clone().unwrap());
         let url = format!("{}{}", base_url, SSI_AUTH_FACADE_VERIFICATION_URL);
-        let response = self.client.post(&url).json(&VerifyTokenRequest { token }).send().await;
-        let response = match response {
-            Ok(response) => response,
-            Err(_e) => {
-                let e = CommonErrors::missing_action_new(MissingAction::Token, "Not able to verify token");
-                error!("{}", e.log());
-                bail!(e);
-            }
-        };
-        if response.status().is_success() == false {
-            let e = CommonErrors::missing_action_new(MissingAction::Token, "Not able to verify token");
-            error!("{}", e.log());
-            bail!(e);
-        }
-        let mate = match response.json::<Mates>().await {
-            Ok(mate) => mate,
-            Err(e) => {
-                let e_ = CommonErrors::format_new(
-                    BadFormat::Received,
-                    &format!("Not able to deserialize entity: {}", e.to_string()),
-                );
-                error!("{}", e_.log());
-                bail!(e_);
-            }
-        };
+        let mate = self.client.post_json::<VerifyTokenRequest, Mates>(&url, &VerifyTokenRequest { token }).await?;
         Ok(mate)
     }
 }

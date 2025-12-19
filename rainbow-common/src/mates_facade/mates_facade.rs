@@ -16,27 +16,20 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
+use std::sync::Arc;
 use crate::config::global_config::{format_host_config_to_url_string, ApplicationGlobalConfig};
-use crate::errors::helpers::BadFormat;
-use crate::errors::{CommonErrors, ErrorLog};
+use crate::http_client::HttpClient;
 use crate::mates::Mates;
 use crate::mates_facade::MatesFacadeTrait;
-use anyhow::bail;
 use axum::async_trait;
-use reqwest::Client;
-use std::time::Duration;
-use tracing::error;
 
 pub struct MatesFacadeService {
     config: ApplicationGlobalConfig,
-    client: Client,
+    client: Arc<HttpClient>,
 }
 
 impl MatesFacadeService {
-    pub fn new(config: ApplicationGlobalConfig) -> Self {
-        let client =
-            Client::builder().timeout(Duration::from_secs(10)).build().expect("Failed to build reqwest client");
+    pub fn new(config: ApplicationGlobalConfig, client: Arc<HttpClient>) -> Self {
         Self { config, client }
     }
 }
@@ -47,28 +40,7 @@ impl MatesFacadeTrait for MatesFacadeService {
         let ssi_auth_url =
             format_host_config_to_url_string(&self.config.ssi_auth_host.clone().expect("Auth host not configured"));
         let mates_url = format!("{}/api/v1/mates/{}", ssi_auth_url, mate_id);
-        let response = self.client.get(mates_url).send().await.map_err(|_e| {
-            let e = CommonErrors::missing_resource_new(&mate_id, "Not able to connect with ssi-auth server");
-            error!("{}", e.log());
-            return e;
-        })?;
-
-        if response.status().is_success() == false {
-            let e = CommonErrors::missing_resource_new(&mate_id, "Mate not resolvable");
-            error!("{}", e.log());
-            bail!(e);
-        }
-        let mates = match response.json::<Mates>().await {
-            Ok(mates) => mates,
-            Err(e_) => {
-                let e = CommonErrors::format_new(
-                    BadFormat::Received,
-                    &format!("Mate not serializable: {}", e_.to_string()),
-                );
-                error!("{}", e.log());
-                bail!(e);
-            }
-        };
+        let mates = self.client.get_json::<Mates>(mates_url.as_str()).await?;
         Ok(mates)
     }
 
@@ -76,27 +48,7 @@ impl MatesFacadeTrait for MatesFacadeService {
         let ssi_auth_url =
             format_host_config_to_url_string(&self.config.ssi_auth_host.clone().expect("Auth host not configured"));
         let mates_url = format!("{}/api/v1/mates/slug/{}", ssi_auth_url, mate_slug);
-        let response = self.client.get(mates_url).send().await.map_err(|_e| {
-            let e = CommonErrors::missing_resource_new(&mate_slug, "Not able to connect with ssi-auth server");
-            error!("{}", e.log());
-            return e;
-        })?;
-        if response.status().is_success() == false {
-            let e = CommonErrors::missing_resource_new(&mate_slug, "Mate not resolvable");
-            error!("{}", e.log());
-            bail!(e);
-        }
-        let mates = match response.json::<Mates>().await {
-            Ok(mates) => mates,
-            Err(e_) => {
-                let e = CommonErrors::format_new(
-                    BadFormat::Received,
-                    &format!("Mate not serializable: {}", e_.to_string()),
-                );
-                error!("{}", e.log());
-                bail!(e);
-            }
-        };
+        let mates = self.client.get_json::<Mates>(mates_url.as_str()).await?;
         Ok(mates)
     }
 
@@ -104,27 +56,7 @@ impl MatesFacadeTrait for MatesFacadeService {
         let ssi_auth_url =
             format_host_config_to_url_string(&self.config.ssi_auth_host.clone().expect("Auth host not configured"));
         let mates_url = format!("{}/api/v1/mates/myself", ssi_auth_url);
-        let response = self.client.get(mates_url).send().await.map_err(|_e| {
-            let e = CommonErrors::missing_resource_new("Me", "Not able to connect with ssi-auth server");
-            error!("{}", e.log());
-            return e;
-        })?;
-        if response.status().is_success() == false {
-            let e = CommonErrors::missing_resource_new("Me", "Mate not resolvable");
-            error!("{}", e.log());
-            bail!(e);
-        }
-        let mates = match response.json::<Mates>().await {
-            Ok(mates) => mates,
-            Err(e_) => {
-                let e = CommonErrors::format_new(
-                    BadFormat::Received,
-                    &format!("Mate not serializable: {}", e_.to_string()),
-                );
-                error!("{}", e.log());
-                bail!(e);
-            }
-        };
+        let mates = self.client.get_json::<Mates>(mates_url.as_str()).await?;
         Ok(mates)
     }
 }
