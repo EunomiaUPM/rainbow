@@ -31,7 +31,7 @@ pub struct CatalogDSP {
     pub odrl_policies_service: Arc<dyn OdrlPolicyEntityTrait>,
     pub distributions_entity_service: Arc<dyn DistributionEntityTrait>,
     pub mates_facade: Arc<dyn MatesFacadeTrait>,
-    config: Arc<CatalogConfig>,
+    _config: Arc<CatalogConfig>,
 }
 
 impl CatalogDSP {
@@ -51,7 +51,7 @@ impl CatalogDSP {
             odrl_policies_service,
             distributions_entity_service,
             mates_facade,
-            config,
+            _config: config,
         }
     }
 }

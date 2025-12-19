@@ -20,7 +20,6 @@
 use rainbow_common::protocol::context_field::ContextField;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Debug, Display};
-use std::str::FromStr;
 use urn::Urn;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

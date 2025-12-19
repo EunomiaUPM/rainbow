@@ -2,7 +2,7 @@ pub(crate) mod odrl_policies;
 
 use crate::data::entities::odrl_offer;
 use crate::data::entities::odrl_offer::NewOdrlOfferModel;
-use rainbow_common::protocol::contract::contract_odrl::{OdrlOffer, OdrlPolicyInfo};
+use rainbow_common::protocol::contract::contract_odrl::OdrlPolicyInfo;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 use urn::Urn;

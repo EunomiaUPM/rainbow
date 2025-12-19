@@ -101,7 +101,7 @@ impl DataServiceEntityService for DataServiceEntityGrpc {
     }
 
     async fn get_main_data_service(&self, request: Request<()>) -> Result<Response<DataServiceResponse>, Status> {
-        let req = request.into_inner();
+        let _req = request.into_inner();
 
         let data_service_opt =
             self.service.get_main_data_service().await.map_err(|e| Status::internal(e.to_string()))?;

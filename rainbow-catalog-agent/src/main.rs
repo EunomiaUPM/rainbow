@@ -1,3 +1,5 @@
+#![allow(unused_variables)]
+
 /*
  *
  *  * Copyright (C) 2025 - Universidad Politécnica de Madrid - UPM

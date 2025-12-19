@@ -1,3 +1,4 @@
+#![allow(unused)]
 pub(crate) mod config;
 pub(crate) mod data;
 pub(crate) mod entities;

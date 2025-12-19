@@ -195,11 +195,4 @@ impl OdrlOfferRepositoryTrait for OdrlOfferRepositoryForSql {
             )),
         }
     }
-
-    async fn get_upstream_offers(
-        &self,
-        _entity_id: &Urn,
-    ) -> anyhow::Result<Vec<odrl_offer::Model>, CatalogAgentRepoErrors> {
-        todo!()
-    }
 }

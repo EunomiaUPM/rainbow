@@ -2,7 +2,6 @@ use crate::entities::odrl_policies::{NewOdrlPolicyDto, OdrlPolicyEntityTrait};
 use crate::errors::error_adapter::CustomToResponse;
 use crate::http::common::to_camel_case::ToCamelCase;
 use crate::http::common::{extract_payload, parse_urn};
-use anyhow::Error;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{FromRef, Path, Query, State};
 use axum::http::StatusCode;

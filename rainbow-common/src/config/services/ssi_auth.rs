@@ -24,7 +24,6 @@ use crate::config::traits::{
 use crate::config::types::roles::RoleConfig;
 use crate::config::types::{ClientConfig, HostConfig, WalletConfig};
 use crate::errors::{CommonErrors, ErrorLog};
-use anyhow::bail;
 use serde::{Deserialize, Serialize};
 use tracing::error;
 
