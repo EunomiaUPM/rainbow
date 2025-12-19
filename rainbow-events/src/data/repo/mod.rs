@@ -17,12 +17,12 @@
  *
  */
 
+use crate::data::entities::{notification, subscription};
 use anyhow::Error;
 use axum::async_trait;
 use sea_orm::DatabaseConnection;
 use thiserror::Error;
 use urn::Urn;
-use crate::data::entities::{notification, subscription};
 
 pub mod sql;
 

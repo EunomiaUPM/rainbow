@@ -24,9 +24,9 @@ use crate::core::notification::notification_types::{
 };
 use crate::core::notification::RainbowEventsNotificationTrait;
 use crate::core::subscription::subscription_err::SubscriptionErrors;
+use crate::data::repo::{EventsRepoFactory, NewNotification};
 use axum::async_trait;
 use rainbow_common::utils::{get_urn, get_urn_from_string};
-use crate::data::repo::{EventsRepoFactory, NewNotification};
 use reqwest::Client;
 use std::sync::Arc;
 use std::time::Duration;

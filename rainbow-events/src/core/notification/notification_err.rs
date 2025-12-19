@@ -17,8 +17,8 @@
  *
  */
 
-use axum::extract::rejection::JsonRejection;
 use crate::data::repo::EventRepoErrors;
+use axum::extract::rejection::JsonRejection;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use urn::Urn;

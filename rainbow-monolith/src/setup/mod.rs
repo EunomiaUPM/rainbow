@@ -21,4 +21,3 @@ mod application;
 pub mod cmd;
 
 pub use application::CoreApplication;
-
