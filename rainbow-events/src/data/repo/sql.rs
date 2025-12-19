@@ -17,11 +17,11 @@
  *
  */
 
-use crate::events::entities::notification;
-use crate::events::entities::subscription;
+use crate::data::entities::notification;
+use crate::data::entities::subscription;
 
-use crate::events::entities::notification::Model;
-use crate::events::repo::{
+use crate::data::entities::notification::Model;
+use crate::data::repo::{
     EditSubscription, EventRepoErrors, EventsRepoFactory, NewNotification, NewSubscription, NotificationRepo,
     SubscriptionRepo,
 };

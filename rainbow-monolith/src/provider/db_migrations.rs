@@ -22,7 +22,7 @@ use rainbow_catalog_agent::get_catalog_migrations;
 use rainbow_common::config::traits::MonoConfigTrait;
 use rainbow_common::config::ApplicationConfig;
 use rainbow_dataplane::get_dataplane_migrations;
-use rainbow_db::events::migrations::get_events_migrations;
+use rainbow_events::data::migrations::get_events_migrations;
 use rainbow_transfer_agent::get_transfer_agent_migrations;
 use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};

@@ -1,17 +1,16 @@
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [workspace]
 members = [
-    "rainbow-core",
+    "rainbow-monolith",
     "rainbow-dataplane",
     "rainbow-common",
     "rainbow-auth",
-    "rainbow-db",
     "rainbow-events",
     "rainbow-fe-gateway",
     "rainbow-business-gateway",
-    "rainbow-transfer-agent",
-    "rainbow-negotiation-agent",
     "rainbow-catalog-agent",
+    "rainbow-negotiation-agent",
+    "rainbow-transfer-agent",
 ]
 exclude = [
     "static",

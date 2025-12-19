@@ -19,8 +19,8 @@
 
 use anyhow::bail;
 use rainbow_common::utils::get_urn_from_string;
-use rainbow_db::events::entities::subscription;
-use rainbow_db::events::repo::NewSubscription;
+use crate::data::entities::subscription;
+use crate::data::repo::NewSubscription;
 use serde::{Deserialize, Serialize};
 use urn::Urn;
 

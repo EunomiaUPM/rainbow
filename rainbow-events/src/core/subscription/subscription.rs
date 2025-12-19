@@ -25,7 +25,7 @@ use crate::core::subscription::RainbowEventsSubscriptionTrait;
 use anyhow::bail;
 use axum::async_trait;
 use rainbow_common::utils::get_urn;
-use rainbow_db::events::repo::{EditSubscription, EventsRepoFactory, NewSubscription};
+use crate::data::repo::{EditSubscription, EventsRepoFactory, NewSubscription};
 use std::sync::Arc;
 use urn::Urn;
 
