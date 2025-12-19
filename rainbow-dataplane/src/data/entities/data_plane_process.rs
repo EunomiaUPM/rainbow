@@ -21,8 +21,8 @@ use sea_orm::ActiveValue;
 use serde::{Deserialize, Serialize};
 use urn::Urn;
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
-#[sea_orm(table_name = "data_plane_process")]
+#[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Serialize, Deserialize)]
+#[sea_orm(table_name = "transfer_events")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: String,
@@ -40,7 +40,7 @@ pub enum Relation {
     TransferEvents,
 }
 
-impl Related<super::data_plane_field::Entity> for Entity {
+impl Related<super::data_plane_process::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::DataPlaneFields.def()
     }

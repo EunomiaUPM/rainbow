@@ -28,8 +28,9 @@ pub struct NegotiationAgentMigration;
 impl MigratorTrait for NegotiationAgentMigration {
     fn migrations() -> Vec<Box<dyn MigrationTrait>> {
         let mut migrations: Vec<Box<dyn MigrationTrait>> = vec![];
-        let mut transfer_agent_migrations = get_negotiation_agent_migrations();
-        migrations.append(&mut transfer_agent_migrations);
+        let mut negotiation_agent_migrations = get_negotiation_agent_migrations();
+
+        migrations.append(&mut negotiation_agent_migrations);
         migrations
     }
 }

@@ -16,7 +16,9 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+
 mod application;
 pub mod cmd;
 
 pub use application::CoreApplication;
+
