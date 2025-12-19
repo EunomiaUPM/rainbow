@@ -28,15 +28,14 @@ use crate::protocols::dsp::protocol_types::{
     NegotiationVerificationMessageDto,
 };
 use crate::protocols::dsp::validator::traits::validation_dsp_steps::ValidationDspSteps;
-use rainbow_common::config::global_config::ApplicationGlobalConfig;
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
+use rainbow_common::config::services::ContractsConfig;
 use std::sync::Arc;
 
 pub struct ProtocolOrchestratorService {
     facades: Arc<dyn FacadeTrait>,
     validator: Arc<dyn ValidationDspSteps>,
     persistence_service: Arc<OrchestrationPersistenceForProtocol>,
-    _config: Arc<ApplicationGlobalConfig>,
+    _config: Arc<ContractsConfig>,
 }
 
 impl ProtocolOrchestratorService {
@@ -44,7 +43,7 @@ impl ProtocolOrchestratorService {
         validator: Arc<dyn ValidationDspSteps>,
         persistence_service: Arc<OrchestrationPersistenceForProtocol>,
         facades: Arc<dyn FacadeTrait>,
-        _config: Arc<ApplicationGlobalConfig>,
+        _config: Arc<ContractsConfig>,
     ) -> ProtocolOrchestratorService {
         ProtocolOrchestratorService { validator, persistence_service, _config, facades }
     }

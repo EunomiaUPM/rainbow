@@ -16,8 +16,8 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use serde_json::Value;
 use rainbow_common::config::types::CommonHostsConfig;
+use serde_json::Value;
 
 pub trait GnapOnboarderConfigTrait {
     fn get_pretty_client_config(&self) -> anyhow::Result<Value>;

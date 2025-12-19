@@ -16,13 +16,15 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use crate::ssi::common::data::entities::{mates, req_vc};
 use crate::ssi::common::services::callback::CallbackTrait;
+use crate::ssi::common::services::repo::subtraits::{
+    MatesTrait, ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait,
+};
 use crate::ssi::common::services::vc_requester::VcRequesterTrait;
 use crate::ssi::common::types::entities::{ReachAuthority, ReachMethod};
 use crate::ssi::common::types::gnap::CallbackBody;
 use axum::async_trait;
-use crate::ssi::common::data::entities::{mates, req_vc};
-use crate::ssi::common::services::repo::subtraits::{MatesTrait, ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait};
 use std::sync::Arc;
 
 #[async_trait]

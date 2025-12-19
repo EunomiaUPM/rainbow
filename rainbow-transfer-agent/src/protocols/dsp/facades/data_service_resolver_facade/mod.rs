@@ -17,11 +17,10 @@
  *
  */
 
+use rainbow_catalog_agent::DataServiceDto;
 use rainbow_common::dcat_formats::DctFormats;
-use rainbow_common::protocol::catalog::dataservice_definition::DataService;
 use urn::Urn;
 
-pub mod data_service_resolver_datahub_facade;
 pub mod data_service_resolver_facade;
 
 #[async_trait::async_trait]
@@ -31,5 +30,5 @@ pub trait DataServiceFacadeTrait: Send + Sync {
         &self,
         agreement_id: &Urn,
         formats: Option<&DctFormats>,
-    ) -> anyhow::Result<DataService>;
+    ) -> anyhow::Result<DataServiceDto>;
 }

@@ -18,22 +18,22 @@
  */
 
 mod cred_offer;
-mod vc_type;
-mod issuer_metadata;
-mod oauth_server;
 mod credential_config;
-mod issuing_token;
 mod give_vc;
+mod issuer_metadata;
+mod issuing_token;
+mod oauth_server;
+mod vc_type;
 
 pub mod claims;
-mod vc_issuer;
 pub mod cred_subject;
+mod vc_issuer;
 
 pub use cred_offer::*;
-pub use vc_type::*;
-pub use issuer_metadata::*;
-pub use oauth_server::*;
 pub use credential_config::*;
-pub use issuing_token::*;
 pub use give_vc::*;
+pub use issuer_metadata::*;
+pub use issuing_token::*;
+pub use oauth_server::*;
 pub use vc_issuer::*;
+pub use vc_type::*;

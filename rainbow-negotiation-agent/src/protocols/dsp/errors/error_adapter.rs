@@ -20,7 +20,7 @@
 use crate::protocols::dsp::protocol_types::{
     NegotiationErrorMessageDto, NegotiationProcessMessageType, NegotiationProcessMessageWrapper,
 };
-use rainbow_common::errors::CommonErrors;
+use rainbow_common::errors::{CommonErrors, ErrorInfo};
 use rainbow_common::protocol::context_field::ContextField;
 use urn::Urn;
 
@@ -65,6 +65,7 @@ impl From<CommonErrors> for NegotiationProcessMessageWrapper<NegotiationErrorMes
             CommonErrors::ReadError { info, .. } => info,
             CommonErrors::WriteError { info, .. } => info,
             CommonErrors::ParseError { info, .. } => info,
+            CommonErrors::ModuleNotActiveError { info, .. } => info,
         };
         NegotiationProcessMessageWrapper {
             context: ContextField::default(),
@@ -97,6 +98,7 @@ impl From<DspNegotiationError> for NegotiationProcessMessageWrapper<NegotiationE
             CommonErrors::ReadError { info, .. } => info,
             CommonErrors::WriteError { info, .. } => info,
             CommonErrors::ParseError { info, .. } => info,
+            CommonErrors::ModuleNotActiveError { info, .. } => info,
         };
         NegotiationProcessMessageWrapper {
             context: ContextField::default(),

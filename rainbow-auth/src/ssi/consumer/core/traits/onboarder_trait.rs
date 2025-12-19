@@ -16,14 +16,14 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use std::sync::Arc;
-use axum::async_trait;
 use crate::ssi::common::data::entities::mates;
-use crate::ssi::consumer::services::repo::AuthConsumerRepoTrait;
 use crate::ssi::common::services::callback::CallbackTrait;
 use crate::ssi::common::types::gnap::CallbackBody;
 use crate::ssi::consumer::services::onboarder::OnboarderTrait;
+use crate::ssi::consumer::services::repo::AuthConsumerRepoTrait;
 use crate::ssi::consumer::types::ReachProvider;
+use axum::async_trait;
+use std::sync::Arc;
 
 #[async_trait]
 pub trait CoreOnboarderTrait: Send + Sync + 'static {

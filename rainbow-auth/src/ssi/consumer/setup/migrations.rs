@@ -18,10 +18,10 @@
  */
 
 use crate::ssi::consumer::data::migrations::get_auth_consumer_migrations;
-use sea_orm::Database;
-use sea_orm_migration::{MigrationTrait, MigratorTrait};
 use rainbow_common::config::services::SsiAuthConfig;
 use rainbow_common::config::traits::DatabaseConfigTrait;
+use sea_orm::Database;
+use sea_orm_migration::{MigrationTrait, MigratorTrait};
 
 pub struct ConsumerMigration;
 

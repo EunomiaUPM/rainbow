@@ -45,7 +45,7 @@ pub struct Model {
 pub struct NewModel {
     pub id: String,       // REQUEST
     pub audience: String, // SEMI-RANDOM
-    pub vc_type: String,                   // REQUEST
+    pub vc_type: String,  // REQUEST
 }
 
 impl IntoActiveSet<ActiveModel> for NewModel {

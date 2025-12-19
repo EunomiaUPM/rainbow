@@ -22,20 +22,26 @@ use axum::serve;
 use rainbow_common::config::services::SsiAuthConfig;
 use rainbow_common::config::traits::{HostConfigTrait, IsLocalTrait};
 use rainbow_common::config::types::roles::RoleConfig;
+use rainbow_common::config::types::HostType;
 use tokio::net::TcpListener;
 use tracing::info;
-use rainbow_common::config::types::HostType;
 
 pub struct Application {}
 
 impl Application {
     pub async fn run(role: RoleConfig, config: SsiAuthConfig) -> anyhow::Result<()> {
-        let server_message = format!("Starting Auth Consumer server in {}", config.get_host(HostType::Http));
+        let server_message = format!(
+            "Starting Auth Consumer server in {}",
+            config.get_host(HostType::Http)
+        );
         info!("{}", server_message);
 
         let router = match role {
             RoleConfig::Consumer => AuthConsumerApplication::create_router(&config).await,
             RoleConfig::Provider => AuthProviderApplication::create_router(&config).await,
+            _ => {
+                panic!("Unsupported role");
+            }
         };
 
         let listener = match config.is_local() {

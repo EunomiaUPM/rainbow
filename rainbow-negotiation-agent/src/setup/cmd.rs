@@ -20,9 +20,10 @@
 use crate::setup::application::NegotiationAgentApplication;
 use crate::setup::db_migrations::NegotiationAgentMigration;
 use clap::{Parser, Subcommand};
-use rainbow_common::config::env_extraction::EnvExtraction;
-use rainbow_common::config::global_config::ApplicationGlobalConfig;
-use tracing::debug;
+use rainbow_common::config::services::ContractsConfig;
+use rainbow_common::config::traits::ConfigLoader;
+use rainbow_common::config::types::roles::RoleConfig;
+use tracing::{debug, info};
 
 #[derive(Parser, Debug)]
 #[command(name = "Rainbow Dataspace Connector Negotiation Agent")]
@@ -45,7 +46,6 @@ pub struct NegotiationCliArgs {
 }
 
 pub struct NegotiationCommands {}
-impl EnvExtraction for NegotiationCommands {}
 
 impl NegotiationCommands {
     pub async fn init_command_line() -> anyhow::Result<()> {
@@ -53,14 +53,16 @@ impl NegotiationCommands {
         let cli = NegotiationCli::parse();
         match cli.command {
             NegotiationCliCommands::Start(args) => {
-                let config = Self::extract_provider_config(args.env_file)?;
-                let config_as_global: ApplicationGlobalConfig = config.into();
-                NegotiationAgentApplication::run(&config_as_global).await?;
+                let config = ContractsConfig::load(RoleConfig::NotDefined, args.env_file);
+                let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
+                info!("Current Negotiations Agent Config:\n{}", table);
+                NegotiationAgentApplication::run(&config).await?;
             }
             NegotiationCliCommands::Setup(args) => {
-                let config = Self::extract_provider_config(args.env_file)?;
-                let config_as_global: ApplicationGlobalConfig = config.into();
-                NegotiationAgentMigration::run(&config_as_global).await?;
+                let config = ContractsConfig::load(RoleConfig::NotDefined, args.env_file);
+                let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
+                info!("Current Negotiations Agent Config:\n{}", table);
+                NegotiationAgentMigration::run(&config).await?;
             }
         }
         Ok(())

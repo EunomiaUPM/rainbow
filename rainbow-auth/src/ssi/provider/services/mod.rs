@@ -16,7 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-pub mod gatekeeper;
-pub mod verifier;
 pub mod business;
+pub mod gatekeeper;
 pub(crate) mod repo;
+pub mod verifier;

@@ -18,8 +18,8 @@
  */
 
 use crate::protocols::dsp::protocol_types::DataAddressDto;
+use rainbow_catalog_agent::DataServiceDto;
 use rainbow_common::dcat_formats::DctFormats;
-use rainbow_common::protocol::catalog::dataservice_definition::DataService;
 use rainbow_common::protocol::transfer::transfer_data_address::DataAddress;
 use urn::Urn;
 
@@ -35,14 +35,14 @@ pub trait DataPlaneFacadeTrait: Send + Sync {
         &self,
         session_id: &Urn,
         format: &DctFormats,
-        data_service: &Option<DataService>,
+        data_service: &Option<DataServiceDto>,
         data_address: &Option<DataAddressDto>,
     ) -> anyhow::Result<()>;
     async fn on_transfer_request_post(
         &self,
         session_id: &Urn,
         format: &DctFormats,
-        data_service: &Option<DataService>,
+        data_service: &Option<DataServiceDto>,
         data_address: &Option<DataAddressDto>,
     ) -> anyhow::Result<()>;
     async fn on_transfer_start_pre(&self, session_id: &Urn) -> anyhow::Result<()>;

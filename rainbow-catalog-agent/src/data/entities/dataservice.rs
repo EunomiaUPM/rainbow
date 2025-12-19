@@ -72,7 +72,6 @@ pub struct NewDataServiceModel {
     pub dct_description: Option<String>,
     pub catalog_id: Urn,
     pub dspace_main_data_service: bool,
-
 }
 
 impl From<NewDataServiceModel> for ActiveModel {

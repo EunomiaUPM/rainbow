@@ -16,10 +16,10 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use rainbow_common::errors::{ErrorInfo, ErrorLog};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
+use rainbow_common::errors::{ErrorInfo, ErrorLog};
 use serde::Serialize;
 use thiserror::Error;
 

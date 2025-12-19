@@ -1,4 +1,3 @@
-use crate::entities::catalogs::catalogs::CatalogEntities;
 use crate::entities::catalogs::CatalogEntityTrait;
 use crate::entities::data_services::DataServiceEntityTrait;
 use crate::entities::datasets::DatasetEntityTrait;
@@ -13,13 +12,10 @@ use crate::protocols::dsp::validator::validators::protocol::validation_dsp_steps
 use crate::protocols::dsp::validator::validators::validate_payload::ValidatePayloadService;
 use crate::protocols::dsp::validator::validators::validation_helpers::ValidationHelperService;
 use crate::protocols::protocol::ProtocolPluginTrait;
-use crate::CatalogRepositoryForSql;
 use axum::Router;
-use rainbow_common::config::global_config::ApplicationGlobalConfig;
-use rainbow_common::http_client::HttpClient;
+use rainbow_common::config::services::CatalogConfig;
+use rainbow_common::facades::ssi_auth_facade::MatesFacadeTrait;
 use std::sync::Arc;
-use rainbow_common::mates_facade::mates_facade::MatesFacadeService;
-use rainbow_common::mates_facade::MatesFacadeTrait;
 
 mod errors;
 pub(crate) mod facades;
@@ -35,7 +31,7 @@ pub struct CatalogDSP {
     pub odrl_policies_service: Arc<dyn OdrlPolicyEntityTrait>,
     pub distributions_entity_service: Arc<dyn DistributionEntityTrait>,
     pub mates_facade: Arc<dyn MatesFacadeTrait>,
-    config: Arc<ApplicationGlobalConfig>,
+    config: Arc<CatalogConfig>,
 }
 
 impl CatalogDSP {
@@ -46,7 +42,7 @@ impl CatalogDSP {
         odrl_policies_service: Arc<dyn OdrlPolicyEntityTrait>,
         distributions_entity_service: Arc<dyn DistributionEntityTrait>,
         mates_facade: Arc<dyn MatesFacadeTrait>,
-        config: Arc<ApplicationGlobalConfig>,
+        config: Arc<CatalogConfig>,
     ) -> Self {
         Self {
             catalog_entities_service,
@@ -84,9 +80,7 @@ impl ProtocolPluginTrait for CatalogDSP {
         ));
 
         // facades
-        let facades = Arc::new(FacadeService::new(
-
-        ));
+        let facades = Arc::new(FacadeService::new());
 
         // persistence
         let persistence = Arc::new(OrchestrationPersistenceForProtocol::new(
@@ -97,7 +91,6 @@ impl ProtocolPluginTrait for CatalogDSP {
             self.distributions_entity_service.clone(),
             self.mates_facade.clone(),
         ));
-
 
         // orchestrators
         let http_orchestator = Arc::new(ProtocolOrchestratorService::new(

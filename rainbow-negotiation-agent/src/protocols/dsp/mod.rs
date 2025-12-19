@@ -49,7 +49,7 @@ use crate::protocols::dsp::validator::validators::validate_payload::ValidatePayl
 use crate::protocols::dsp::validator::validators::validation_helpers::ValidationHelperService;
 use crate::protocols::protocol::ProtocolPluginTrait;
 use axum::Router;
-use rainbow_common::config::global_config::ApplicationGlobalConfig;
+use rainbow_common::config::services::ContractsConfig;
 use rainbow_common::http_client::HttpClient;
 use std::sync::Arc;
 
@@ -58,7 +58,7 @@ pub struct NegotiationDSP {
     negotiation_agent_message_service: Arc<dyn NegotiationAgentMessagesTrait>,
     negotiation_offer_service: Arc<dyn NegotiationAgentOffersTrait>,
     negotiation_agreement_service: Arc<dyn NegotiationAgentAgreementsTrait>,
-    config: Arc<ApplicationGlobalConfig>,
+    config: Arc<ContractsConfig>,
 }
 
 impl NegotiationDSP {
@@ -67,7 +67,7 @@ impl NegotiationDSP {
         negotiation_agent_message_service: Arc<dyn NegotiationAgentMessagesTrait>,
         negotiation_offer_service: Arc<dyn NegotiationAgentOffersTrait>,
         negotiation_agreement_service: Arc<dyn NegotiationAgentAgreementsTrait>,
-        config: Arc<ApplicationGlobalConfig>,
+        config: Arc<ContractsConfig>,
     ) -> Self {
         Self {
             negotiation_agent_message_service,

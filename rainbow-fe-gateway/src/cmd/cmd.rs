@@ -22,6 +22,7 @@ use crate::gateway::provider_gateway::RainbowProviderGateway;
 use crate::subscriptions::consumer_subscriptions::RainbowConsumerGatewaySubscriptions;
 use crate::subscriptions::provider_subscriptions::RainbowProviderGatewaySubscriptions;
 use crate::subscriptions::MicroserviceSubscriptionKey;
+use anyhow::Context;
 use axum::serve;
 use clap::{Parser, Subcommand};
 use fs_extra::dir::{copy, CopyOptions};
@@ -33,7 +34,6 @@ use std::cmp::PartialEq;
 use std::fs;
 use std::path::Path;
 use std::process::Command;
-use anyhow::Context;
 use tokio::net::TcpListener;
 use tracing::{debug, info};
 
@@ -175,8 +175,7 @@ impl GatewayCommands {
         let mut options = CopyOptions::new();
         options.overwrite = true;
         options.copy_inside = true;
-        let _ = copy(&origin, &destination, &options)
-            .context("Failed to execute copy process")?;
+        let _ = copy(&origin, &destination, &options).context("Failed to execute copy process")?;
 
         debug!("Copy command finished successfully");
 

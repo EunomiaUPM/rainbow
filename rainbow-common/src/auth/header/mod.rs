@@ -30,8 +30,6 @@ pub struct RequestInfo {
 }
 
 pub async fn extract_request_info(mut request: Request, next: Next) -> Result<Response, StatusCode> {
-    debug!("Request info headers middleware");
-    // 1. Extract headers
     let headers = request.headers();
     let token = headers
         .get("Authorization")
@@ -39,10 +37,7 @@ pub async fn extract_request_info(mut request: Request, next: Next) -> Result<Re
         .map(String::from)
         .unwrap_or_else(|| "".to_string())
         .replace("Bearer ", "");
-    // 2. Setup struct
     let request_info = RequestInfo { token };
-    // 3. Insert into extensions
     request.extensions_mut().insert(Arc::new(request_info));
-    // 4. Bye
     Ok(next.run(request).await)
 }

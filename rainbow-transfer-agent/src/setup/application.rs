@@ -26,15 +26,12 @@ use tokio_util::sync::CancellationToken;
 pub struct TransferApplication;
 impl TransferApplication {
     pub async fn run(config: &TransferConfig) -> anyhow::Result<()> {
-        // TODO ApplicationProviderConfig for TransferModule (rodrigo's way)
         let cancel_token = CancellationToken::new();
-
         // worker http
         tracing::info!("Spawning HTTP subsystem...");
         let http_handle = TransferHttpWorker::spawn(config, &cancel_token).await?;
         // worker grpc
         tracing::info!("Spawning gRPC subsystem...");
-        // TODO GRPC configuration in ApplicationProviderConfig with own port and host config
         let grpc_handle = TransferGrpcWorker::spawn(config, &cancel_token).await?;
         // shutdown loop
         let shutdown_signal = Self::shutdown_signal();
@@ -43,7 +40,6 @@ impl TransferApplication {
                 tracing::warn!("Shutdown signal received from OS.");
             }
             _ = async { http_handle.await } => {
-                // TODO errors well done...
                 tracing::error!("HTTP subsystem failed or stopped unexpectedly!");
             }
             _ = async { grpc_handle.await } => {

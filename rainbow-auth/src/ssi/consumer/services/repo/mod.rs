@@ -16,7 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+pub mod postgres;
 mod repo_trait;
 pub mod subtraits;
-pub mod postgres;
 pub use repo_trait::AuthConsumerRepoTrait;

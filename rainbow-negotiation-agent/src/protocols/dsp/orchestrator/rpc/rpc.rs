@@ -36,7 +36,7 @@ use crate::protocols::dsp::protocol_types::{
     NegotiationTerminationMessageDto, NegotiationVerificationMessageDto,
 };
 use crate::protocols::dsp::validator::traits::validation_rpc_steps::ValidationRpcSteps;
-use rainbow_common::config::global_config::ApplicationGlobalConfig;
+use rainbow_common::config::services::ContractsConfig;
 use rainbow_common::http_client::HttpClient;
 use rainbow_common::protocol::context_field::ContextField;
 use rainbow_common::protocol::contract::contract_odrl::{OdrlAgreement, OdrlMessageOffer, OdrlTypes};
@@ -50,7 +50,7 @@ use urn::Urn;
 pub struct RPCOrchestratorService {
     validator: Arc<dyn ValidationRpcSteps>,
     persistence_service: Arc<OrchestrationPersistenceForRpc>,
-    _config: Arc<ApplicationGlobalConfig>,
+    _config: Arc<ContractsConfig>,
     http_client: Arc<HttpClient>,
 }
 
@@ -58,7 +58,7 @@ impl RPCOrchestratorService {
     pub fn new(
         validator: Arc<dyn ValidationRpcSteps>,
         persistence_service: Arc<OrchestrationPersistenceForRpc>,
-        _config: Arc<ApplicationGlobalConfig>,
+        _config: Arc<ContractsConfig>,
         http_client: Arc<HttpClient>,
     ) -> RPCOrchestratorService {
         RPCOrchestratorService { validator, persistence_service, _config, http_client }

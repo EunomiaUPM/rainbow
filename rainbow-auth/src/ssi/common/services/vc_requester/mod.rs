@@ -16,6 +16,6 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-mod vc_requester_trait;
 pub(crate) mod basic;
+mod vc_requester_trait;
 pub use vc_requester_trait::VcRequesterTrait;

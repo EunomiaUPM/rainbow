@@ -16,7 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-mod onboarder_trait;
 pub mod gnap;
+mod onboarder_trait;
 
 pub use onboarder_trait::OnboarderTrait;

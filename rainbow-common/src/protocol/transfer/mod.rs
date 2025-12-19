@@ -121,7 +121,7 @@ impl Not for TransferRoles {
     fn not(self) -> Self::Output {
         match self {
             TransferRoles::Provider => TransferRoles::Consumer,
-            TransferRoles::Consumer => TransferRoles::Provider
+            TransferRoles::Consumer => TransferRoles::Provider,
         }
     }
 }

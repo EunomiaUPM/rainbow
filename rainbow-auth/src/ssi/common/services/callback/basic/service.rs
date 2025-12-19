@@ -18,6 +18,7 @@
  */
 
 use super::super::CallbackTrait;
+use crate::ssi::common::data::entities::req_interaction;
 use crate::ssi::common::errors::AuthErrors;
 use crate::ssi::common::services::client::ClientServiceTrait;
 use crate::ssi::common::types::enums::request::Body;
@@ -28,7 +29,6 @@ use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
 use rainbow_common::errors::ErrorLog;
 use rainbow_common::utils::get_from_opt;
-use crate::ssi::common::data::entities::req_interaction;
 use reqwest::header::{HeaderMap, ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 use reqwest::Response;
 use sha2::{Digest, Sha256};

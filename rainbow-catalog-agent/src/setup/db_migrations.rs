@@ -18,7 +18,8 @@
  */
 
 use crate::data::migrations::get_catalog_migrations;
-use rainbow_common::config::global_config::ApplicationGlobalConfig;
+use rainbow_common::config::services::CatalogConfig;
+use rainbow_common::config::traits::DatabaseConfigTrait;
 use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
 
@@ -34,9 +35,9 @@ impl MigratorTrait for CatalogAgentMigration {
 }
 
 impl CatalogAgentMigration {
-    pub async fn run(config: &ApplicationGlobalConfig) -> anyhow::Result<()> {
+    pub async fn run(config: &CatalogConfig) -> anyhow::Result<()> {
         // db_connection
-        let db_url = config.database_config.as_db_url();
+        let db_url = config.get_full_db_url();
         let db_connection = Database::connect(db_url).await.expect("Database can't connect");
         // run migration
         Self::refresh(&db_connection).await?;

@@ -26,4 +26,6 @@ pub(crate) mod http;
 pub(crate) mod protocols;
 pub(crate) mod setup;
 
+pub use entities::agreement::AgreementDto;
+pub use entities::offer::OfferDto;
 pub use setup::cmd::NegotiationCommands;

@@ -6,6 +6,7 @@ use crate::entities::odrl_policies::{OdrlPolicyDto, OdrlPolicyEntityTrait};
 use anyhow::bail;
 use rainbow_common::dcat_formats::{DctFormats, FormatAction, FormatProtocol};
 use rainbow_common::errors::{CommonErrors, ErrorLog};
+use rainbow_common::facades::ssi_auth_facade::MatesFacadeTrait;
 use rainbow_common::protocol::catalog::catalog_definition::{
     Catalog, CatalogDSpaceDeclaration, CatalogDcatDeclaration, CatalogDctDeclaration, CatalogFoafDeclaration,
 };
@@ -23,7 +24,6 @@ use std::str::FromStr;
 use std::sync::Arc;
 use tracing::error;
 use urn::Urn;
-use rainbow_common::mates_facade::MatesFacadeTrait;
 
 pub struct OrchestrationPersistenceForProtocol {
     pub catalog_entities_service: Arc<dyn CatalogEntityTrait>,
@@ -49,7 +49,7 @@ impl OrchestrationPersistenceForProtocol {
             dataset_entities_service,
             odrl_policies_service,
             distributions_entity_service,
-            mates_facade
+            mates_facade,
         }
     }
 
@@ -74,9 +74,13 @@ impl OrchestrationPersistenceForProtocol {
         // 3b. Dataservice in main catalog
         let main_dataservice = self.map_data_service(main_dataservice_dto);
 
-
         // 4. Assembly
-        let catalog = self.map_catalog(main_catalog_dto, vec![main_dataservice], sub_catalogs, datasets);
+        let catalog = self.map_catalog(
+            main_catalog_dto,
+            vec![main_dataservice],
+            sub_catalogs,
+            datasets,
+        );
 
         Ok(catalog)
     }
@@ -224,7 +228,13 @@ impl OrchestrationPersistenceForProtocol {
     // MAPPERS from DTOs to DCAT representations
     // =========================================================================
 
-    fn map_catalog(&self, dto: CatalogDto, main_dataservice_dto: Vec<DataService>,catalogs: Vec<Catalog>, datasets: Vec<Dataset>) -> Catalog {
+    fn map_catalog(
+        &self,
+        dto: CatalogDto,
+        main_dataservice_dto: Vec<DataService>,
+        catalogs: Vec<Catalog>,
+        datasets: Vec<Dataset>,
+    ) -> Catalog {
         Catalog {
             context: ContextField::default(),
             _type: "Catalog".to_string(),

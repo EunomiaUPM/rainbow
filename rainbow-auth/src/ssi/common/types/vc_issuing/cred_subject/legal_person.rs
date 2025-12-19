@@ -17,8 +17,8 @@
  *
  */
 
-use serde::{Deserialize, Serialize};
 use crate::ssi::common::types::vc_issuing::VcType;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RegistrationNumber {

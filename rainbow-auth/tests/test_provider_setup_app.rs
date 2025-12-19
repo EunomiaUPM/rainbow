@@ -3,19 +3,20 @@
 #[cfg(test)]
 mod tests {
     use futures::FutureExt;
-    use rainbow_auth::ssi_auth::provider::setup::app::{SSIAuthProviderApplication, create_ssi_provider_router};
+    use rainbow_auth::ssi_auth::provider::setup::app::{create_ssi_provider_router, SSIAuthProviderApplication};
     use rainbow_auth::ssi_auth::provider::setup::db_migrations::SSIAuthProviderMigrations;
-    use rainbow_common::config::{database::DbType, global_config::DatabaseConfig, provider_config::ApplicationProviderConfig};
+    use rainbow_common::config::{
+        database::DbType, global_config::DatabaseConfig, provider_config::ApplicationProviderConfig,
+    };
+    use sea_orm::{sea_query, DbErr};
+    use sea_orm_migration::MigrationName;
+    use sea_orm_migration::{async_trait, SchemaManager};
     use sea_orm_migration::{MigrationTrait, MigratorTrait};
-    use std::panic::AssertUnwindSafe;
-    use sea_orm::{DbErr, sea_query};
-    use sea_orm_migration::{SchemaManager, async_trait};
-    use sea_orm_migration::{MigrationName};
     use std::env;
+    use std::panic::AssertUnwindSafe;
 
-    
     // Test
-     
+
     struct TestMigration;
 
     #[async_trait::async_trait]
@@ -26,12 +27,7 @@ mod tests {
                     sea_query::Table::create()
                         .table(sea_query::Alias::new("dummy"))
                         .if_not_exists()
-                        .col(
-                            sea_query::ColumnDef::new(sea_query::Alias::new("id"))
-                                .integer()
-                                .not_null()
-                                .primary_key(),
-                        )
+                        .col(sea_query::ColumnDef::new(sea_query::Alias::new("id")).integer().not_null().primary_key())
                         .to_owned(),
                 )
                 .await
@@ -39,12 +35,7 @@ mod tests {
 
         async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
             manager
-                .drop_table(
-                    sea_query::Table::drop()
-                        .table(sea_query::Alias::new("dummy"))
-                        .if_exists()
-                        .to_owned(),
-                )
+                .drop_table(sea_query::Table::drop().table(sea_query::Alias::new("dummy")).if_exists().to_owned())
                 .await
         }
     }
@@ -122,9 +113,7 @@ mod tests {
         let db_url = "sqlite::memory:";
 
         // Connect to database
-        let db: DbConn = Database::connect(db_url)
-            .await
-            .expect("Database can't connect");
+        let db: DbConn = Database::connect(db_url).await.expect("Database can't connect");
 
         // Run the simulated migrations
         let result = MockedMigrations::refresh(&db).await;
@@ -169,9 +158,7 @@ mod tests {
             name: "db".to_string(),
         };
 
-        let result = AssertUnwindSafe(create_ssi_provider_router(config))
-            .catch_unwind()
-            .await;
+        let result = AssertUnwindSafe(create_ssi_provider_router(config)).catch_unwind().await;
 
         assert!(
             result.is_err(),

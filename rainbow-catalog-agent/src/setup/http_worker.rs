@@ -35,9 +35,13 @@ use crate::protocols::protocol::ProtocolPluginTrait;
 use axum::extract::Request;
 use axum::response::IntoResponse;
 use axum::{serve, Router};
-use rainbow_common::config::global_config::ApplicationGlobalConfig;
+use rainbow_common::config::services::{CatalogConfig, CommonConfig};
+use rainbow_common::config::traits::{ApiConfigTrait, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait};
+use rainbow_common::config::types::HostType;
 use rainbow_common::errors::CommonErrors;
+use rainbow_common::facades::ssi_auth_facade::mates_facade::MatesFacadeService;
 use rainbow_common::health::HealthRouter;
+use rainbow_common::http_client::HttpClient;
 use rainbow_common::well_known::WellKnownRoot;
 use sea_orm::Database;
 use std::sync::Arc;
@@ -46,19 +50,17 @@ use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 use tower_http::trace::{DefaultOnResponse, TraceLayer};
 use uuid::Uuid;
-use rainbow_common::http_client::HttpClient;
-use rainbow_common::mates_facade::mates_facade::MatesFacadeService;
 
 pub struct CatalogHttpWorker {}
 impl CatalogHttpWorker {
-    pub async fn spawn(config: &ApplicationGlobalConfig, token: &CancellationToken) -> anyhow::Result<JoinHandle<()>> {
+    pub async fn spawn(config: &CatalogConfig, token: &CancellationToken) -> anyhow::Result<JoinHandle<()>> {
         // well known router
         let well_known_router = WellKnownRoot::get_router()?;
         let health_router = HealthRouter::new().router();
         // module catalog router
         let router = Self::create_root_http_router(&config).await?.merge(well_known_router).merge(health_router);
-        let host = if config.is_local { "127.0.0.1" } else { "0.0.0.0" };
-        let port = config.catalog_host.clone().expect("no host").port;
+        let host = if config.is_local() { "127.0.0.1" } else { "0.0.0.0" };
+        let port = config.get_weird_port();
         let addr = format!("{}:{}", host, port);
 
         let listener = TcpListener::bind(&addr).await?;
@@ -78,7 +80,7 @@ impl CatalogHttpWorker {
 
         Ok(handle)
     }
-    pub async fn create_root_http_router(config: &ApplicationGlobalConfig) -> anyhow::Result<Router> {
+    pub async fn create_root_http_router(config: &CatalogConfig) -> anyhow::Result<Router> {
         let router = create_root_http_router(config).await?.fallback(Self::handler_404).layer(
             TraceLayer::new_for_http()
                 .make_span_with(|_req: &Request<_>| tracing::info_span!("request", id = %Uuid::new_v4()))
@@ -96,17 +98,22 @@ impl CatalogHttpWorker {
     }
 }
 
-pub async fn create_root_http_router(config: &ApplicationGlobalConfig) -> anyhow::Result<Router> {
+pub async fn create_root_http_router(config: &CatalogConfig) -> anyhow::Result<Router> {
     // ROOT Dependency Injection
     let config = Arc::new(config.clone());
-    let db_connection = Database::connect(config.database_config.as_db_url()).await.expect("Database can't connect");
+    let db_connection_url = config.get_full_db_url();
+    let db_connection = Database::connect(db_connection_url).await.expect("Database can't connect");
     let http_client = Arc::new(HttpClient::new(20, 3));
 
     // repo
     let catalog_agent_repo = Arc::new(CatalogAgentRepoForSql::create_repo(db_connection.clone()));
 
     // facades
-    let mates_facade = Arc::new(MatesFacadeService::new(config.as_ref().clone(), http_client.clone()));
+    let ssi_auth_config = Arc::new(config.ssi_auth());
+    let mates_facade = Arc::new(MatesFacadeService::new(
+        ssi_auth_config.clone(),
+        http_client.clone(),
+    ));
 
     // entities
     let catalog_controller_service = Arc::new(CatalogEntities::new(catalog_agent_repo.clone()));
@@ -136,7 +143,7 @@ pub async fn create_root_http_router(config: &ApplicationGlobalConfig) -> anyhow
     .build_router()
     .await?;
 
-    let router_str = format!("/api/{}/catalog-agent", config.api_version);
+    let router_str = format!("{}/catalog-agent", config.get_api_version());
     let router = Router::new()
         .nest(
             format!("{}/catalogs", router_str.as_str()).as_str(),

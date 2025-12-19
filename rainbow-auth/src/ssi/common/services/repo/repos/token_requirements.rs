@@ -16,10 +16,10 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use sea_orm::DatabaseConnection;
-use rainbow_common::data::BasicRepoTrait;
-use crate::ssi::common::data::entities::token_requirements::{Entity, Model};
 use super::super::subtraits::TokenRequirementsTrait;
+use crate::ssi::common::data::entities::token_requirements::{Entity, Model};
+use rainbow_common::data::BasicRepoTrait;
+use sea_orm::DatabaseConnection;
 
 pub struct TokenRequirementsRepo {
     db_connection: DatabaseConnection,
@@ -37,6 +37,4 @@ impl BasicRepoTrait<Entity, Model> for TokenRequirementsRepo {
     }
 }
 
-impl TokenRequirementsTrait for TokenRequirementsRepo {
-
-}
+impl TokenRequirementsTrait for TokenRequirementsRepo {}

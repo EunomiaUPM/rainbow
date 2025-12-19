@@ -2,6 +2,7 @@ use crate::entities::transfer_process::TransferAgentProcessesTrait;
 use crate::protocols::dsp::facades::data_plane_facade::dataplane_strategy_factory::DataPlaneStrategyFactory;
 use crate::protocols::dsp::facades::data_plane_facade::DataPlaneFacadeTrait;
 use crate::protocols::dsp::protocol_types::DataAddressDto;
+use rainbow_catalog_agent::DataServiceDto;
 use rainbow_common::dcat_formats::DctFormats;
 use rainbow_common::protocol::catalog::dataservice_definition::DataService;
 use rainbow_common::protocol::transfer::transfer_data_address::DataAddress;
@@ -33,7 +34,7 @@ impl DataPlaneFacadeTrait for DataPlaneProviderFacadeForDSProtocol {
         &self,
         session_id: &Urn,
         format: &DctFormats,
-        data_service: &Option<DataService>,
+        data_service: &Option<DataServiceDto>,
         data_address: &Option<DataAddressDto>,
     ) -> anyhow::Result<()> {
         let strategy = self.dataplane_strategy_factory.get_strategy(&TransferRoles::Provider, &format);
@@ -45,7 +46,7 @@ impl DataPlaneFacadeTrait for DataPlaneProviderFacadeForDSProtocol {
         &self,
         session_id: &Urn,
         format: &DctFormats,
-        data_service: &Option<DataService>,
+        data_service: &Option<DataServiceDto>,
         data_address: &Option<DataAddressDto>,
     ) -> anyhow::Result<()> {
         let process = self

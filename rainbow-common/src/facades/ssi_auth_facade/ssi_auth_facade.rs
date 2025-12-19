@@ -16,26 +16,26 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use std::sync::Arc;
-use crate::config::global_config::{format_host_config_to_url_string, ApplicationGlobalConfig};
 
-use crate::config::min_know_services::MinKnownConfig;
+use crate::config::services::SsiAuthConfig;
+use crate::config::traits::{CommonConfigTrait, ExtraHostsTrait};
 use crate::config::types::HostType;
-use crate::errors::helpers::{BadFormat, MissingAction};
-use crate::errors::{CommonErrors, ErrorLog};
 use crate::facades::ssi_auth_facade::SSIAuthFacadeTrait;
 use crate::http_client::HttpClient;
 use crate::mates::mates::VerifyTokenRequest;
 use crate::mates::Mates;
 use axum::async_trait;
+use std::sync::Arc;
+
+const SSI_AUTH_FACADE_VERIFICATION_URL: &str = "/api/v1/mates/token";
 
 pub struct SSIAuthFacadeService {
-    config: MinKnownConfig,
+    config: SsiAuthConfig,
     client: Arc<HttpClient>,
 }
 
 impl SSIAuthFacadeService {
-    pub fn new(config: MinKnownConfig, client: Arc<HttpClient>) -> Self {
+    pub fn new(config: SsiAuthConfig, client: Arc<HttpClient>) -> Self {
         Self { config, client }
     }
 }
@@ -43,7 +43,7 @@ impl SSIAuthFacadeService {
 #[async_trait]
 impl SSIAuthFacadeTrait for SSIAuthFacadeService {
     async fn verify_token(&self, token: String) -> anyhow::Result<Mates> {
-        let base_url = format_host_config_to_url_string(&self.config.ssi_auth_host.clone().unwrap());
+        let base_url = self.config.common().hosts.get_host(HostType::Http);
         let url = format!("{}{}", base_url, SSI_AUTH_FACADE_VERIFICATION_URL);
         let mate = self.client.post_json::<VerifyTokenRequest, Mates>(&url, &VerifyTokenRequest { token }).await?;
         Ok(mate)

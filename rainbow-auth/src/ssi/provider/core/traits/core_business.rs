@@ -17,11 +17,11 @@
  *
  */
 use crate::ssi::provider::services::business::BusinessTrait;
+use crate::ssi::provider::services::repo::AuthProviderRepoTrait;
 use crate::ssi::provider::services::verifier::VerifierTrait;
 use crate::ssi::provider::types::business::BusinessResponse;
 use axum::async_trait;
 use rainbow_common::auth::business::RainbowBusinessLoginRequest;
-use crate::ssi::provider::services::repo::AuthProviderRepoTrait;
 use std::sync::Arc;
 
 #[async_trait]

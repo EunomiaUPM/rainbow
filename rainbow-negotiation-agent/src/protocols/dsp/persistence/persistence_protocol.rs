@@ -30,7 +30,6 @@ use crate::protocols::dsp::protocol_types::{
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::protocol::contract::contract_odrl::ContractRequestMessageOfferTypes;
 use rainbow_common::protocol::transfer::TransferRoles;
-use rainbow_db::contracts_consumer::repo::EditAgreement;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::str::FromStr;

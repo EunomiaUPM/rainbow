@@ -23,7 +23,7 @@ use clap::{Parser, Subcommand};
 use rainbow_common::config::services::TransferConfig;
 use rainbow_common::config::traits::ConfigLoader;
 use rainbow_common::config::types::roles::RoleConfig;
-use tracing::debug;
+use tracing::{debug, info};
 
 #[derive(Parser, Debug)]
 #[command(name = "Rainbow Dataspace Connector Transfer Agent")]
@@ -53,11 +53,15 @@ impl TransferCommands {
         let cli = TransferCli::parse();
         match cli.command {
             TransferCliCommands::Start(args) => {
-                let config = TransferConfig::load(RoleConfig::Consumer, args.env_file);
+                let config = TransferConfig::load(RoleConfig::NotDefined, args.env_file);
+                let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
+                info!("Current Transfer Agent Config:\n{}", table);
                 TransferApplication::run(&config).await?;
             }
             TransferCliCommands::Setup(args) => {
-                let config = TransferConfig::load(RoleConfig::Consumer, args.env_file);
+                let config = TransferConfig::load(RoleConfig::NotDefined, args.env_file);
+                let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
+                info!("Current Transfer Agent Config:\n{}", table);
                 TransferAgentMigration::run(&config).await?;
             }
         }

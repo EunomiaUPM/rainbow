@@ -90,7 +90,9 @@ impl DataServiceRepositoryTrait for DataServiceRepositoryForSql {
             .one(&self.db_connection)
             .await
             .map_err(|err| {
-                CatalogAgentRepoErrors::DataServiceRepoErrors(DataServiceRepoErrors::ErrorFetchingDataService(err.into()))
+                CatalogAgentRepoErrors::DataServiceRepoErrors(DataServiceRepoErrors::ErrorFetchingDataService(
+                    err.into(),
+                ))
             })?;
         Ok(data_service)
     }

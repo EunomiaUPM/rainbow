@@ -17,11 +17,11 @@
  *
  */
 use axum::http::StatusCode;
-use axum::Json;
 use axum::response::{IntoResponse, Response};
+use axum::Json;
+use rainbow_common::errors::CommonErrors;
 use serde_json::json;
 use tracing::log::error;
-use rainbow_common::errors::CommonErrors;
 
 pub trait CustomToResponse {
     fn to_response(&self) -> Response;

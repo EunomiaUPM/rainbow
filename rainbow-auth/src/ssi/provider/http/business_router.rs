@@ -38,10 +38,7 @@ impl BusinessRouter {
     }
 
     pub fn router(self) -> Router {
-        Router::new()
-            .route("/login", post(Self::login))
-            .route("/token", post(Self::token))
-            .with_state(self.business)
+        Router::new().route("/login", post(Self::login)).route("/token", post(Self::token)).with_state(self.business)
     }
 
     async fn login(

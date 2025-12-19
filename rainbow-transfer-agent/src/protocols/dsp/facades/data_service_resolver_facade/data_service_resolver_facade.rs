@@ -19,8 +19,9 @@
 
 use crate::protocols::dsp::facades::data_service_resolver_facade::DataServiceFacadeTrait;
 use anyhow::bail;
-use rainbow_common::config::global_config::ApplicationGlobalConfig;
-use rainbow_common::config::provider_config::{ApplicationProviderConfig, ApplicationProviderConfigTrait};
+use rainbow_catalog_agent::{DataServiceDto, DatasetDto, DistributionDto};
+use rainbow_common::config::services::TransferConfig;
+use rainbow_common::config::types::HostType;
 use rainbow_common::dcat_formats::DctFormats;
 use rainbow_common::errors::helpers::BadFormat;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
@@ -30,7 +31,7 @@ use rainbow_common::protocol::catalog::dataset_definition::Dataset;
 use rainbow_common::protocol::catalog::distribution_definition::Distribution;
 use rainbow_common::protocol::contract::contract_odrl::OdrlAgreement;
 use rainbow_common::utils::get_urn_from_string;
-use rainbow_db::contracts_provider::entities::agreement;
+use rainbow_negotiation_agent::AgreementDto;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use std::sync::Arc;
@@ -38,21 +39,14 @@ use tracing::error;
 use urn::Urn;
 
 pub struct DataServiceFacadeServiceForDSProtocol {
-    config: Arc<ApplicationGlobalConfig>,
+    config: Arc<TransferConfig>,
     client: Arc<HttpClient>,
 }
 
 impl DataServiceFacadeServiceForDSProtocol {
-    pub fn new(config: Arc<ApplicationGlobalConfig>, client: Arc<HttpClient>) -> Self {
+    pub fn new(config: Arc<TransferConfig>, client: Arc<HttpClient>) -> Self {
         Self { config, client }
     }
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(deny_unknown_fields)]
-struct RainbowRPCCatalogResolveDataServiceRequest {
-    #[serde(rename = "dataServiceId")]
-    pub data_service_id: Urn,
 }
 
 #[async_trait::async_trait]
@@ -61,68 +55,40 @@ impl DataServiceFacadeTrait for DataServiceFacadeServiceForDSProtocol {
         &self,
         agreement_id: &Urn,
         formats: Option<&DctFormats>,
-    ) -> anyhow::Result<DataService> {
-        let contracts_url = self.config.contract_negotiation_host.clone().unwrap().to_string();
-        let catalog_url = self.config.catalog_host.clone().unwrap().to_string();
+    ) -> anyhow::Result<DataServiceDto> {
+        let contracts_url = self.config.contracts().get_host(HostType::Http);
+        let catalog_url = self.config.catalog().get_host(HostType::Http);
         let agreement_url = format!(
-            "{}/api/v1/contract-negotiation/agreements/{}",
+            "{}/api/v1/negotiation-agent/agreements/{}",
             contracts_url, agreement_id
         );
-        let data_service_url = format!("{}/api/v1/catalog/rpc/resolve-data-service", catalog_url);
+        let data_service_url = format!("{}/api/v1/catalog-agent/data-services", catalog_url);
 
         // resolve agreement
-        let response = self.client.get_json::<agreement::Model>(agreement_url.as_str()).await?;
-        let agreement = match OdrlAgreement::try_from(response) {
-            Ok(agreement) => agreement,
-            Err(e_) => {
-                let e = CommonErrors::format_new(
-                    BadFormat::Received,
-                    &format!("ODRL Agreement not compliant: {}", e_.to_string()),
-                );
-                error!("{}", e.log());
-                bail!(e);
-            }
-        };
-        let agreement_target = agreement.target;
+        let agreement = self.client.get_json::<AgreementDto>(agreement_url.as_str()).await?;
+        let agreement_target = get_urn_from_string(&agreement.inner.target)?;
 
         // resolve dataset entity
         let datasets_url = format!(
-            "{}/api/v1/datasets/{}",
+            "{}/api/v1/catalog-agent/datasets/{}",
             catalog_url,
             agreement_target.clone()
         );
-        let response = self.client.get_json::<Dataset>(datasets_url.as_str()).await?;
-        let dataset_id = get_urn_from_string(&response.id)?;
+        let dataset = self.client.get_json::<DatasetDto>(datasets_url.as_str()).await?;
+        let dataset_id = get_urn_from_string(&dataset.inner.id)?;
 
         // resolve distribution entity
         let distribution_url = format!(
-            "{}/api/v1/datasets/{}/distributions/dct-formats/{}",
+            "{}/api/v1/catalog-agent/distributions/dataset/{}/format/{}",
             catalog_url,
             dataset_id.clone(),
             formats.unwrap().to_string()
         );
-        let response = self.client.get_json::<Distribution>(distribution_url.as_str()).await?;
-        let access_service = match response.dcat.access_service {
-            Some(access_service) => access_service,
-            None => {
-                let e = CommonErrors::missing_resource_new(
-                    &agreement_id.to_string(),
-                    "Access service not defined in distribution",
-                );
-                error!("{}", e.log());
-                bail!(e);
-            }
-        };
-        let access_service_id = Urn::from_str(access_service.id.as_str())?;
+        let distribution = self.client.get_json::<DistributionDto>(distribution_url.as_str()).await?;
+        let access_service_id = Urn::from_str(distribution.inner.id.as_str())?;
 
         // resolve Data service entity
-        let data_service = self
-            .client
-            .post_json::<_, DataService>(
-                data_service_url.as_str(),
-                &RainbowRPCCatalogResolveDataServiceRequest { data_service_id: access_service_id.clone() },
-            )
-            .await?;
+        let data_service = self.client.get_json::<DataServiceDto>(data_service_url.as_str()).await?;
 
         Ok(data_service)
     }

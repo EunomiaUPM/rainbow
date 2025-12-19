@@ -20,9 +20,9 @@
 use crate::data::migrations::get_transfer_agent_migrations;
 use rainbow_common::config::services::TransferConfig;
 use rainbow_common::config::traits::DatabaseConfigTrait;
+use rainbow_dataplane::get_dataplane_migrations;
 use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
-use rainbow_dataplane::get_dataplane_migrations;
 
 pub struct TransferAgentMigration;
 

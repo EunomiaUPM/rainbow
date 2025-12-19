@@ -24,6 +24,7 @@ use std::str::FromStr;
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Copy)]
 pub enum RoleConfig {
+    NotDefined,
     Consumer,
     Provider,
 }
@@ -35,6 +36,7 @@ impl FromStr for RoleConfig {
         match s {
             "Consumer" => Ok(RoleConfig::Consumer),
             "Provider" => Ok(RoleConfig::Provider),
+            "" => Ok(RoleConfig::NotDefined),
             _ => bail!("Invalid config role: {}", s),
         }
     }
@@ -45,6 +47,7 @@ impl Display for RoleConfig {
         let str = match self {
             RoleConfig::Consumer => "Consumer".to_string(),
             RoleConfig::Provider => "Provider".to_string(),
+            RoleConfig::NotDefined => "Not defined".to_string(),
         };
         write!(f, "{}", str)
     }

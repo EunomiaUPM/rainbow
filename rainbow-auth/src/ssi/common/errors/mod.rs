@@ -19,5 +19,5 @@
 mod error_adapter;
 mod errors;
 
-pub use errors::AuthErrors;
 pub use error_adapter::CustomToResponse;
+pub use errors::AuthErrors;

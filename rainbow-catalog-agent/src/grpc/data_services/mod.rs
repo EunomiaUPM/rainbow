@@ -132,7 +132,10 @@ impl DataServiceEntityService for DataServiceEntityGrpc {
         }))
     }
 
-    async fn create_main_main_catalog(&self, request: Request<CreateDataServiceRequest>) -> Result<Response<DataServiceResponse>, Status> {
+    async fn create_main_main_catalog(
+        &self,
+        request: Request<CreateDataServiceRequest>,
+    ) -> Result<Response<DataServiceResponse>, Status> {
         let req = request.into_inner();
         let new_data_service_dto: NewDataServiceDto = req.try_into()?;
 

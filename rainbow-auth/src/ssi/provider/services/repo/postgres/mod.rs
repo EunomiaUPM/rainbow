@@ -17,7 +17,7 @@
  *
  */
 
-mod service;
 pub mod repos;
+mod service;
 
 pub use service::AuthProviderRepoForSql;

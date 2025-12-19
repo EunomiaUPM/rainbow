@@ -17,9 +17,9 @@
  *
  */
 mod input_descriptor;
-mod vpd;
 mod verify_payload;
+mod vpd;
 
 pub use input_descriptor::InputDescriptor;
-pub use vpd::VPDef;
 pub use verify_payload::VerifyPayload;
+pub use vpd::VPDef;

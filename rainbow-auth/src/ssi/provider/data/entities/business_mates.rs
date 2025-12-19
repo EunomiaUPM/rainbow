@@ -17,8 +17,8 @@
  *
  */
 
-use rainbow_common::data::IntoActiveSet;
 use chrono;
+use rainbow_common::data::IntoActiveSet;
 use sea_orm::entity::prelude::*;
 use sea_orm::{ActiveValue, DeriveEntityModel};
 use serde::{Deserialize, Serialize};

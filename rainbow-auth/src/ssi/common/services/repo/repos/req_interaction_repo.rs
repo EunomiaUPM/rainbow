@@ -16,11 +16,11 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use axum::async_trait;
-use sea_orm::DatabaseConnection;
-use rainbow_common::data::BasicRepoTrait;
-use crate::ssi::common::data::entities::req_interaction::{Entity, NewModel};
 use super::super::subtraits::ReqInteractionTrait;
+use crate::ssi::common::data::entities::req_interaction::{Entity, NewModel};
+use axum::async_trait;
+use rainbow_common::data::BasicRepoTrait;
+use sea_orm::DatabaseConnection;
 
 pub struct ReqInteractionRepo {
     db_connection: DatabaseConnection,
@@ -39,6 +39,4 @@ impl BasicRepoTrait<Entity, NewModel> for ReqInteractionRepo {
 }
 
 #[async_trait]
-impl ReqInteractionTrait for ReqInteractionRepo {
-
-}
+impl ReqInteractionTrait for ReqInteractionRepo {}

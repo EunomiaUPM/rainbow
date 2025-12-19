@@ -24,11 +24,11 @@ use rainbow_common::protocol::transfer::TransferRoles;
 use std::sync::Arc;
 
 pub struct ValidatePayloadService {
-    helpers: Arc<dyn ValidationHelpers>,
+    _helpers: Arc<dyn ValidationHelpers>,
 }
 impl ValidatePayloadService {
-    pub fn new(helpers: Arc<dyn ValidationHelpers>) -> Self {
-        Self { helpers }
+    pub fn new(_helpers: Arc<dyn ValidationHelpers>) -> Self {
+        Self { _helpers }
     }
 }
 #[async_trait::async_trait]

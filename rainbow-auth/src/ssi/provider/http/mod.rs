@@ -16,10 +16,10 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+mod business_router;
 mod core_router;
 mod gatekeeper_router;
 mod verifier_router;
-mod business_router;
 
 pub use core_router::AuthProviderRouter;
 pub use gatekeeper_router::GateKeeperRouter;

@@ -1,14 +1,12 @@
-// Tests corresponding to 'rainbow-auth\src\ssi_auth\consumer\http\openapi.rs' 
+// Tests corresponding to 'rainbow-auth\src\ssi_auth\consumer\http\openapi.rs'
 
 #[cfg(test)]
 mod tests {
-    use actix_web::{test, App, HttpResponse, http::StatusCode, web};
-    use utoipa_swagger_ui::{Config, serve};
+    use actix_web::{http::StatusCode, test, web, App, HttpResponse};
+    use axum::response::IntoResponse;
+    use rainbow_auth::ssi_auth::consumer::http::openapi::{get_open_api, route_openapi, OPENAPI_JSON};
     use std::sync::Arc;
-    use rainbow_auth::ssi_auth::consumer::http::openapi::{OPENAPI_JSON, get_open_api, route_openapi};
-    use axum::{
-        response::IntoResponse,
-    };
+    use utoipa_swagger_ui::{serve, Config};
 
     #[tokio::test]
     async fn test_swagger_ui_html_route() {
@@ -16,11 +14,8 @@ mod tests {
         use tower::ServiceExt;
 
         let app = route_openapi();
-        let request = Request::builder()
-            .uri("/api/v1/auth/openapi")
-            .method("GET")
-            .body(axum::body::Body::empty())
-            .unwrap();
+        let request =
+            Request::builder().uri("/api/v1/auth/openapi").method("GET").body(axum::body::Body::empty()).unwrap();
 
         let response = app.oneshot(request).await.unwrap();
         assert_eq!(response.status(), axum::http::StatusCode::OK);
@@ -32,10 +27,9 @@ mod tests {
         let body_str = String::from_utf8(body_bytes.to_vec()).unwrap();
         assert!(body_str.contains("Swagger UI"));
     }
-    
+
     #[tokio::test]
     async fn test_openapi_json_route() {
-        
         use axum::{
             body::to_bytes,
             http::{Request, StatusCode},
@@ -44,11 +38,8 @@ mod tests {
 
         let app = route_openapi();
 
-        let request = Request::builder()
-            .uri("/api/v1/auth/openapi.json")
-            .method("GET")
-            .body(axum::body::Body::empty())
-            .unwrap();
+        let request =
+            Request::builder().uri("/api/v1/auth/openapi.json").method("GET").body(axum::body::Body::empty()).unwrap();
 
         let response = app.oneshot(request).await.unwrap();
 
@@ -64,24 +55,22 @@ mod tests {
     #[tokio::test]
     async fn test_openapi_not_found() {
         let config = Arc::new(Config::from("/api/v1/auth/openapi.json"));
-        
-        let app = test::init_service(
-            App::new().route("/api/v1/auth/openapi.json", web::get().to(move || {
+
+        let app = test::init_service(App::new().route(
+            "/api/v1/auth/openapi.json",
+            web::get().to(move || {
                 let config = config.clone();
                 async move {
                     match serve("/api/v1/auth/openapi.json", config) {
-                        Ok(Some(file)) => HttpResponse::Ok()
-                            .content_type(file.content_type)
-                            .body(file.bytes.to_vec()),
+                        Ok(Some(file)) => HttpResponse::Ok().content_type(file.content_type).body(file.bytes.to_vec()),
                         _ => HttpResponse::NotFound().finish(),
                     }
                 }
-            })),
-        ).await;
+            }),
+        ))
+        .await;
 
-        let req = test::TestRequest::get()
-            .uri("/api/v1/auth/openapi.json")
-            .to_request();
+        let req = test::TestRequest::get().uri("/api/v1/auth/openapi.json").to_request();
 
         let resp = test::call_service(&app, req).await;
 
@@ -97,8 +86,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_open_api_content_and_header() {
-        use axum::http::HeaderValue;
         use axum::body::to_bytes;
+        use axum::http::HeaderValue;
 
         let response = get_open_api().await.into_response();
 
@@ -107,5 +96,5 @@ mod tests {
 
         let body_bytes = to_bytes(response.into_body(), 100000).await.unwrap();
         assert_eq!(body_bytes.as_ref(), OPENAPI_JSON.as_bytes());
-    }    
+    }
 }

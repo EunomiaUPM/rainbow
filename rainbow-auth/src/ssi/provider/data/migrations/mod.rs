@@ -16,9 +16,9 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+mod m20250403_094651_business_mates;
 mod m20250403_094651_recv_interaction;
 mod m20250403_094651_recv_request;
 mod m20250403_094651_recv_verification;
-mod m20250403_094651_business_mates;
 mod migrator;
 pub use migrator::*;

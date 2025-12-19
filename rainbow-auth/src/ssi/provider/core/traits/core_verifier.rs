@@ -18,10 +18,10 @@
  */
 
 use crate::ssi::provider::services::business::BusinessTrait;
+use crate::ssi::provider::services::repo::AuthProviderRepoTrait;
 use crate::ssi::provider::services::verifier::VerifierTrait;
 use crate::ssi::provider::types::vcs::{VPDef, VerifyPayload};
 use axum::async_trait;
-use crate::ssi::provider::services::repo::AuthProviderRepoTrait;
 use std::sync::Arc;
 
 #[async_trait]

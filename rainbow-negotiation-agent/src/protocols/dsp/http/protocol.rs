@@ -26,7 +26,7 @@ use axum::{
     response::IntoResponse,
     routing::{get, post},
 };
-use rainbow_common::config::global_config::ApplicationGlobalConfig;
+use rainbow_common::config::services::ContractsConfig;
 use serde::Serialize;
 use std::future::Future;
 use std::sync::Arc;
@@ -43,7 +43,7 @@ use rainbow_common::protocol::context_field::ContextField;
 #[derive(Clone)]
 pub struct DspRouter {
     orchestrator: Arc<dyn OrchestratorTrait>,
-    config: Arc<ApplicationGlobalConfig>,
+    config: Arc<ContractsConfig>,
 }
 
 impl FromRef<DspRouter> for Arc<dyn OrchestratorTrait> {
@@ -52,14 +52,14 @@ impl FromRef<DspRouter> for Arc<dyn OrchestratorTrait> {
     }
 }
 
-impl FromRef<DspRouter> for Arc<ApplicationGlobalConfig> {
+impl FromRef<DspRouter> for Arc<ContractsConfig> {
     fn from_ref(state: &DspRouter) -> Self {
         state.config.clone()
     }
 }
 
 impl DspRouter {
-    pub fn new(service: Arc<dyn OrchestratorTrait>, config: Arc<ApplicationGlobalConfig>) -> Self {
+    pub fn new(service: Arc<dyn OrchestratorTrait>, config: Arc<ContractsConfig>) -> Self {
         Self { orchestrator: service, config }
     }
 

@@ -17,8 +17,7 @@
  *
  */
 
-
-mod repo_trait;
 pub mod postgres;
+mod repo_trait;
 pub mod subtraits;
 pub use repo_trait::AuthProviderRepoTrait;

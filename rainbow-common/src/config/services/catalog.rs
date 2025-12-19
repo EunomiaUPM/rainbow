@@ -24,6 +24,7 @@ use crate::config::traits::{
 };
 use crate::config::types::roles::RoleConfig;
 use crate::config::types::HostConfig;
+use crate::config::ApplicationConfig;
 use crate::errors::{CommonErrors, ErrorLog};
 use crate::utils::get_host_helper;
 use serde::{Deserialize, Serialize};

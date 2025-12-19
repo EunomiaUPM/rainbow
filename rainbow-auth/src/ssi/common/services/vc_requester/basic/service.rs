@@ -19,6 +19,7 @@
 
 use super::super::VcRequesterTrait;
 use super::config::{VCRequesterConfig, VCRequesterConfigTrait};
+use crate::ssi::common::data::entities::{mates, req_interaction, req_vc, req_verification};
 use crate::ssi::common::services::client::ClientServiceTrait;
 use crate::ssi::common::types::entities::{ReachAuthority, ReachMethod};
 use crate::ssi::common::types::enums::request::Body;
@@ -26,16 +27,15 @@ use crate::ssi::common::types::gnap::{GrantRequest, GrantResponse};
 use crate::ssi::common::utils::{get_query_param, trim_4_base};
 use anyhow::bail;
 use axum::async_trait;
+use rainbow_common::config::traits::ExtraHostsTrait;
+use rainbow_common::config::types::HostType;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::utils::get_from_opt;
-use crate::ssi::common::data::entities::{mates, req_interaction, req_vc, req_verification};
 use reqwest::header::{HeaderMap, ACCEPT, CONTENT_TYPE};
 use reqwest::Response;
 use std::sync::Arc;
 use tracing::{error, info};
 use url::Url;
-use rainbow_common::config::traits::ExtraHostsTrait;
-use rainbow_common::config::types::HostType;
 
 pub struct VCReqService {
     client: Arc<dyn ClientServiceTrait>,

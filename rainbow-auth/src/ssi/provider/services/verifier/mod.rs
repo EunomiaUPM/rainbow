@@ -16,6 +16,6 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-mod verifier_trait;
 pub mod basic_v1;
+mod verifier_trait;
 pub use verifier_trait::VerifierTrait;

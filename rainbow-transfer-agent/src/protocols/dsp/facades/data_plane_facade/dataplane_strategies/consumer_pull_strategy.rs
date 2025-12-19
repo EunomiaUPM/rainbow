@@ -1,6 +1,7 @@
 use crate::protocols::dsp::facades::data_plane_facade::dataplane_strategies::DataPlaneStrategyTrait;
 use crate::protocols::dsp::facades::data_plane_facade::DataPlaneFacadeTrait;
 use crate::protocols::dsp::protocol_types::DataAddressDto;
+use rainbow_catalog_agent::DataServiceDto;
 use rainbow_common::adv_protocol::interplane::data_plane_provision::DataPlaneProvisionRequest;
 use rainbow_common::adv_protocol::interplane::data_plane_start::DataPlaneStart;
 use rainbow_common::adv_protocol::interplane::data_plane_stop::DataPlaneStop;
@@ -36,7 +37,7 @@ impl DataPlaneFacadeTrait for ConsumerPullDataplaneStrategy {
         &self,
         session_id: &Urn,
         format: &DctFormats,
-        data_service: &Option<DataService>,
+        data_service: &Option<DataServiceDto>,
         data_address: &Option<DataAddressDto>,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -46,7 +47,7 @@ impl DataPlaneFacadeTrait for ConsumerPullDataplaneStrategy {
         &self,
         session_id: &Urn,
         format: &DctFormats,
-        data_service: &Option<DataService>,
+        data_service: &Option<DataServiceDto>,
         data_address: &Option<DataAddressDto>,
     ) -> anyhow::Result<()> {
         let provision_request = self

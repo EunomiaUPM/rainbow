@@ -20,12 +20,12 @@
 use crate::subscriptions::MicroserviceSubscriptionKey;
 use anyhow::bail;
 use rainbow_common::config::services::GatewayConfig;
+use rainbow_common::config::traits::HostConfigTrait;
 use rainbow_common::config::types::HostType;
 use reqwest::Client;
 use serde_json::json;
 use std::time::Duration;
 use tracing::{debug, error};
-use rainbow_common::config::traits::HostConfigTrait;
 
 pub struct RainbowProviderGatewaySubscriptions {
     config: GatewayConfig,

@@ -16,7 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-mod service;
 pub(crate) mod config;
+mod service;
 
 pub use service::BasicGaiaSelfIssuer;

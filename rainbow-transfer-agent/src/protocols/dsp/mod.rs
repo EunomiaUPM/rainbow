@@ -44,7 +44,7 @@ use crate::protocols::dsp::validator::validators::validate_payload::ValidatePayl
 use crate::protocols::dsp::validator::validators::validation_helpers::ValidationHelperService;
 use crate::protocols::protocol::ProtocolPluginTrait;
 use axum::Router;
-use rainbow_common::config::global_config::ApplicationGlobalConfig;
+use rainbow_common::config::services::TransferConfig;
 use rainbow_common::http_client::HttpClient;
 use rainbow_dataplane::setup::DataplaneSetup;
 use std::sync::Arc;
@@ -54,14 +54,14 @@ use validator::validators::rpc::validation_rpc_steps::ValidationRpcStepsService;
 pub struct TransferDSP {
     transfer_agent_process_entities: Arc<dyn TransferAgentProcessesTrait>,
     transfer_agent_message_service: Arc<dyn TransferAgentMessagesTrait>,
-    config: Arc<ApplicationGlobalConfig>,
+    config: Arc<TransferConfig>,
 }
 
 impl TransferDSP {
     pub fn new(
         transfer_agent_message_service: Arc<dyn TransferAgentMessagesTrait>,
         transfer_agent_process_entities: Arc<dyn TransferAgentProcessesTrait>,
-        config: Arc<ApplicationGlobalConfig>,
+        config: Arc<TransferConfig>,
     ) -> Self {
         Self { transfer_agent_message_service, transfer_agent_process_entities, config }
     }

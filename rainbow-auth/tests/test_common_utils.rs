@@ -57,7 +57,6 @@ mod tests {
         assert_eq!(result, "https://example.com");
     }
 
-
     // Tests corresponding to 'rainbow-auth\src\ssi_auth\common\utils\token'
 
     use axum::http::HeaderMap;

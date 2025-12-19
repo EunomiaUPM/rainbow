@@ -2,15 +2,20 @@
 
 #[cfg(test)]
 mod tests {
-    use std::{env, panic::AssertUnwindSafe};
     use futures::FutureExt;
-    use rainbow_auth::ssi_auth::consumer::setup::{app::{SSIAuthConsumerApplication, create_ssi_consumer_router}, db_migrations::SSIAuthConsumerMigrations};
-    use rainbow_common::config::{consumer_config::ApplicationConsumerConfig, database::DbType, global_config::DatabaseConfig};
-    use sea_orm_migration::{MigrationTrait, MigratorTrait, SchemaManager, async_trait};
-    use sea_orm::{DbErr};
-    use sea_orm_migration::sea_query::{Table, ColumnDef, Alias};
+    use rainbow_auth::ssi_auth::consumer::setup::{
+        app::{create_ssi_consumer_router, SSIAuthConsumerApplication},
+        db_migrations::SSIAuthConsumerMigrations,
+    };
+    use rainbow_common::config::{
+        consumer_config::ApplicationConsumerConfig, database::DbType, global_config::DatabaseConfig,
+    };
+    use sea_orm::DbErr;
+    use sea_orm_migration::sea_query::{Alias, ColumnDef, Table};
+    use sea_orm_migration::{async_trait, MigrationTrait, MigratorTrait, SchemaManager};
+    use std::{env, panic::AssertUnwindSafe};
 
-    // Mock 
+    // Mock
 
     struct DummyMigration;
 
@@ -29,14 +34,7 @@ mod tests {
         }
 
         async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-            manager
-                .drop_table(
-                    Table::drop()
-                        .table(Alias::new("dummy"))
-                        .if_exists()
-                        .to_owned(),
-                )
-                .await
+            manager.drop_table(Table::drop().table(Alias::new("dummy")).if_exists().to_owned()).await
         }
     }
 
@@ -76,9 +74,7 @@ mod tests {
         use sea_orm::DbConn;
 
         let db_url = "sqlite::memory:";
-        let db: DbConn = Database::connect(db_url)
-            .await
-            .expect("Database can't connect");
+        let db: DbConn = Database::connect(db_url).await.expect("Database can't connect");
 
         let result = MockedMigrations::refresh(&db).await;
         assert!(result.is_ok(), "Expected refresh() to succeed");
@@ -86,8 +82,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_refresh_failure_invalid_url() {
-        use sea_orm::Database;
         use crate::tests::MockedMigrations;
+        use sea_orm::Database;
 
         let db_url = "invalid::url";
 
@@ -130,9 +126,7 @@ mod tests {
         let db_url = "sqlite::memory:";
 
         // Connect to database
-        let db: DbConn = Database::connect(db_url)
-            .await
-            .expect("Database can't connect");
+        let db: DbConn = Database::connect(db_url).await.expect("Database can't connect");
 
         // Run the simulated migrations
         let result = MockedMigrations::refresh(&db).await;
@@ -153,9 +147,7 @@ mod tests {
             name: "db".to_string(),
         };
 
-        let result = AssertUnwindSafe(create_ssi_consumer_router(config))
-            .catch_unwind()
-            .await;
+        let result = AssertUnwindSafe(create_ssi_consumer_router(config)).catch_unwind().await;
 
         assert!(
             result.is_err(),

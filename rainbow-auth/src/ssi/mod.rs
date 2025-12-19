@@ -16,6 +16,6 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+pub mod common;
 pub mod consumer;
 pub mod provider;
-pub mod common;

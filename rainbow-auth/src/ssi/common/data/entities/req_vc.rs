@@ -17,8 +17,8 @@
  *
  */
 
-use rainbow_common::data::IntoActiveSet;
 use chrono;
+use rainbow_common::data::IntoActiveSet;
 use sea_orm::entity::prelude::*;
 use sea_orm::ActiveValue;
 use serde::Serialize;
@@ -83,7 +83,5 @@ impl IntoActiveSet<ActiveModel> for Model {
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {
-
-}
+pub enum Relation {}
 impl ActiveModelBehavior for ActiveModel {}

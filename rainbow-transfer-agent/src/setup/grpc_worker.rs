@@ -64,11 +64,10 @@ impl TransferGrpcWorker {
     }
     pub async fn create_root_grpc_router(config: &TransferConfig) -> anyhow::Result<tonic::transport::server::Router> {
         let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
-        let config = Arc::new(config.clone());
         let transfer_repo = Arc::new(TransferAgentRepoForSql::create_repo(db_connection.clone()));
 
         let messages_service = Arc::new(TransferAgentMessagesService::new(transfer_repo.clone()));
-        let messages_controller = TransferAgentMessagesGrpc::new(messages_service, config.clone());
+        let messages_controller = TransferAgentMessagesGrpc::new(messages_service);
         let processes_service = Arc::new(TransferAgentProcessesService::new(transfer_repo.clone()));
         let processes_controller = TransferAgentProcessesGrpc::new(processes_service);
 

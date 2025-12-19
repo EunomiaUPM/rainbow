@@ -17,11 +17,11 @@
  *
  */
 
+use crate::ssi::common::data::entities::req_interaction;
 use rand::distributions::Alphanumeric;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use crate::ssi::common::data::entities::req_interaction;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GrantRequest {
@@ -87,7 +87,6 @@ pub struct Finish4Interact {
 }
 
 impl GrantRequest {
-
     pub fn prov_oidc(client: Value, int_model: &req_interaction::Model) -> Self {
         Self {
             access_token: AccessTokenRequirements4GR::key_default(),
@@ -193,7 +192,6 @@ impl AccessTokenRequirements4GR {
 }
 
 impl Interact4GR {
-
     pub fn default_oidc(int_model: &req_interaction::Model) -> Self {
         Self {
             start: int_model.start.clone(),

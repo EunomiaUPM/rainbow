@@ -18,9 +18,9 @@
  */
 
 use super::super::subtraits::ReqVerificationTrait;
-use sea_orm::DatabaseConnection;
-use rainbow_common::data::BasicRepoTrait;
 use crate::ssi::common::data::entities::req_verification::{Entity, NewModel};
+use rainbow_common::data::BasicRepoTrait;
+use sea_orm::DatabaseConnection;
 
 pub struct ReqVerificationRepo {
     db_connection: DatabaseConnection,
@@ -38,6 +38,4 @@ impl BasicRepoTrait<Entity, NewModel> for ReqVerificationRepo {
     }
 }
 
-impl ReqVerificationTrait for ReqVerificationRepo {
-    
-}
+impl ReqVerificationTrait for ReqVerificationRepo {}

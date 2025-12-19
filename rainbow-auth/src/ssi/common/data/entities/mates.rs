@@ -18,10 +18,10 @@
  */
 
 use chrono;
+use rainbow_common::data::IntoActiveSet;
 use sea_orm::entity::prelude::*;
 use sea_orm::{ActiveValue, DeriveEntityModel};
 use serde::{Deserialize, Serialize};
-use rainbow_common::data::IntoActiveSet;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
 #[sea_orm(table_name = "mates")]

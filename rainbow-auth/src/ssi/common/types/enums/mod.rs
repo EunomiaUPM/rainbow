@@ -16,6 +16,6 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-pub mod request;
 mod data_model_version;
+pub mod request;
 pub use data_model_version::*;

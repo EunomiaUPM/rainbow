@@ -20,9 +20,10 @@
 use crate::setup::application::CatalogApplication;
 use crate::setup::db_migrations::CatalogAgentMigration;
 use clap::{Parser, Subcommand};
-use rainbow_common::config::env_extraction::EnvExtraction;
-use rainbow_common::config::global_config::ApplicationGlobalConfig;
-use tracing::debug;
+use rainbow_common::config::services::CatalogConfig;
+use rainbow_common::config::traits::ConfigLoader;
+use rainbow_common::config::types::roles::RoleConfig;
+use tracing::{debug, info};
 
 #[derive(Parser, Debug)]
 #[command(name = "Rainbow Dataspace Connector Catalog Agent")]
@@ -45,7 +46,6 @@ pub struct CatalogCliArgs {
 }
 
 pub struct CatalogCommands {}
-impl EnvExtraction for CatalogCommands {}
 
 impl CatalogCommands {
     pub async fn init_command_line() -> anyhow::Result<()> {
@@ -53,14 +53,16 @@ impl CatalogCommands {
         let cli = CatalogCli::parse();
         match cli.command {
             CatalogCliCommands::Start(args) => {
-                let config = Self::extract_provider_config(args.env_file)?;
-                let global_config: ApplicationGlobalConfig = config.into();
-                CatalogApplication::run(&global_config).await?;
+                let config = CatalogConfig::load(RoleConfig::NotDefined, args.env_file);
+                let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
+                info!("Current Catalog Agent Config:\n{}", table);
+                CatalogApplication::run(&config).await?;
             }
             CatalogCliCommands::Setup(args) => {
-                let config = Self::extract_provider_config(args.env_file)?;
-                let global_config: ApplicationGlobalConfig = config.into();
-                CatalogAgentMigration::run(&global_config).await?;
+                let config = CatalogConfig::load(RoleConfig::NotDefined, args.env_file);
+                let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
+                info!("Current Catalog Agent Config:\n{}", table);
+                CatalogAgentMigration::run(&config).await?;
             }
         }
         Ok(())

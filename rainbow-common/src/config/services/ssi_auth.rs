@@ -16,7 +16,6 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 use crate::config::services::CommonConfig;
 use crate::config::traits::{
     ApiConfigTrait, CommonConfigTrait, ConfigLoader, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait, KeysPathTrait,
@@ -25,6 +24,7 @@ use crate::config::traits::{
 use crate::config::types::roles::RoleConfig;
 use crate::config::types::{ClientConfig, HostConfig, WalletConfig};
 use crate::errors::{CommonErrors, ErrorLog};
+use anyhow::bail;
 use serde::{Deserialize, Serialize};
 use tracing::error;
 
@@ -93,6 +93,11 @@ impl ConfigLoader for SsiAuthConfig {
                 client: ClientConfig { class_id: "rainbow_provider".to_string(), display: None },
                 gaia_active: false,
             },
+            _ => {
+                let err = CommonErrors::missing_resource_new("", "For SsiAuthConfig RoleConfig must be provided");
+                error!("{}", err.log());
+                panic!("{}", err)
+            }
         }
     }
 

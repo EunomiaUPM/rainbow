@@ -31,4 +31,3 @@ pub struct DisplayInfo {
     pub uri: Option<String>,
     pub logo_uri: Option<String>,
 }
-

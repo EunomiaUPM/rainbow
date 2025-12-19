@@ -1,37 +1,39 @@
-// Tests corresponding to 'rainbow-auth\src\ssi_auth\consumer\core\impls\wallet_trait_impl.rs' 
+// Tests corresponding to 'rainbow-auth\src\ssi_auth\consumer\core\impls\wallet_trait_impl.rs'
 
 #[cfg(test)]
 mod tests {
+    use anyhow::Result;
+    use axum::async_trait;
     use base64::Engine;
-    use mockall::mock;
-    use rainbow_auth::ssi_auth::consumer::core::Manager;
-    use rainbow_common::config::ConfigRoles;
-    use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
-    use rainbow_db::auth_consumer::repo_factory::factory_trait::AuthRepoFactoryTrait;
-    use reqwest::Client;
-    use serde_json::{json, Value};
-    use rainbow_auth::ssi_auth::common::{traits::RainbowSSIAuthWalletTrait, types::ssi::dids::DidsInfo};
-    use rainbow_auth::ssi_auth::common::types::ssi::keys::KeyDefinition;
-    use rainbow_auth::ssi_auth::common::types::ssi::wallet::{WalletInfo, WalletSession};
-    use axum::{async_trait};
-    use anyhow::{Result};
-    use rainbow_auth::ssi_auth::common::types::ssi::keys::KeyInfo;
-    use std::sync::Arc;
-    use tokio::sync::Mutex;
-    use rainbow_auth::ssi_auth::common::types::oidc::CredentialOfferResponse;
-    use rainbow_auth::ssi_auth::common::types::oidc::Vpd;
-    use rainbow_auth::ssi_auth::common::types::ssi::other::MatchingVCs;
-    use rainbow_auth::ssi_auth::common::types::ssi::other::RedirectResponse;
     use httpmock::Method::POST;
     use httpmock::MockServer;
-    use rainbow_common::config::global_config::DatabaseConfig;
+    use mockall::mock;
+    use rainbow_auth::ssi_auth::common::types::oidc::CredentialOfferResponse;
+    use rainbow_auth::ssi_auth::common::types::oidc::Vpd;
+    use rainbow_auth::ssi_auth::common::types::ssi::keys::KeyDefinition;
+    use rainbow_auth::ssi_auth::common::types::ssi::keys::KeyInfo;
+    use rainbow_auth::ssi_auth::common::types::ssi::other::MatchingVCs;
+    use rainbow_auth::ssi_auth::common::types::ssi::other::RedirectResponse;
+    use rainbow_auth::ssi_auth::common::types::ssi::wallet::{WalletInfo, WalletSession};
+    use rainbow_auth::ssi_auth::common::{traits::RainbowSSIAuthWalletTrait, types::ssi::dids::DidsInfo};
+    use rainbow_auth::ssi_auth::consumer::core::Manager;
+    use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
     use rainbow_common::config::database::DbType;
-    use rainbow_common::ssi::SSIWalletConfig;
+    use rainbow_common::config::global_config::DatabaseConfig;
+    use rainbow_common::config::ConfigRoles;
     use rainbow_common::ssi::ClientConfig;
-    use rainbow_db::{auth_consumer::repo_factory::{traits::{AuthInteractionRepoTrait, AuthRequestRepoTrait, AuthTokenRequirementsRepoTrait}}};
+    use rainbow_common::ssi::SSIWalletConfig;
+    use rainbow_db::auth_consumer::repo_factory::factory_trait::AuthRepoFactoryTrait;
     use rainbow_db::auth_consumer::repo_factory::traits::AuthVerificationRepoTrait;
-    use rainbow_db::auth_consumer::repo_factory::traits::MatesRepoTrait;
     use rainbow_db::auth_consumer::repo_factory::traits::AuthorityRequestRepoTrait;
+    use rainbow_db::auth_consumer::repo_factory::traits::MatesRepoTrait;
+    use rainbow_db::auth_consumer::repo_factory::traits::{
+        AuthInteractionRepoTrait, AuthRequestRepoTrait, AuthTokenRequirementsRepoTrait,
+    };
+    use reqwest::Client;
+    use serde_json::{json, Value};
+    use std::sync::Arc;
+    use tokio::sync::Mutex;
 
     mock! {
         pub Manager {}
@@ -70,7 +72,6 @@ mod tests {
         }
     }
 
-
     mock! {
         #[async_trait]
         pub RainbowSSIAuthWalletTrait {}
@@ -78,7 +79,7 @@ mod tests {
         #[async_trait]
         impl RainbowSSIAuthWalletTrait for RainbowSSIAuthWalletTrait {
             // BASIC
-            
+
             async fn register_wallet(&self) -> Result<()>;
             async fn login_wallet(&self) -> Result<()>;
             async fn logout_wallet(&self) -> Result<()>;
@@ -123,7 +124,7 @@ mod tests {
             async fn delete_did(&self, did_info: DidsInfo) -> Result<()>;
             async fn token_expired(&self) -> Result<bool>;
             async fn update_token(&self) -> Result<()>;
-            async fn ok(&self) -> Result<()>;            
+            async fn ok(&self) -> Result<()>;
             async fn resolve_credential_offer(&self, _input: String) -> Result<CredentialOfferResponse, anyhow::Error> {
                     todo!()
                 }
@@ -151,9 +152,7 @@ mod tests {
         }
     }
 
-    pub async fn testable_partial_onboard<T: RainbowSSIAuthWalletTrait + Sync>(
-        service: &T,
-    ) -> anyhow::Result<()> {
+    pub async fn testable_partial_onboard<T: RainbowSSIAuthWalletTrait + Sync>(service: &T) -> anyhow::Result<()> {
         service.login_wallet().await?;
         service.retrieve_wallet_info().await?;
         service.retrieve_keys().await?;
@@ -165,27 +164,28 @@ mod tests {
     struct MockRepo;
 
     impl AuthRepoFactoryTrait for MockRepo {
-        
         fn request(&self) -> Arc<dyn rainbow_db::auth_consumer::repo_factory::traits::AuthRequestRepoTrait> {
             todo!()
         }
-        
+
         fn interaction(&self) -> Arc<dyn rainbow_db::auth_consumer::repo_factory::traits::AuthInteractionRepoTrait> {
             todo!()
         }
-        
+
         fn verification(&self) -> Arc<dyn rainbow_db::auth_consumer::repo_factory::traits::AuthVerificationRepoTrait> {
             todo!()
         }
-        
-        fn token_requirements(&self) -> Arc<dyn rainbow_db::auth_consumer::repo_factory::traits::AuthTokenRequirementsRepoTrait> {
+
+        fn token_requirements(
+            &self,
+        ) -> Arc<dyn rainbow_db::auth_consumer::repo_factory::traits::AuthTokenRequirementsRepoTrait> {
             todo!()
         }
-        
+
         fn mates(&self) -> Arc<dyn rainbow_db::auth_consumer::repo_factory::traits::MatesRepoTrait> {
             todo!()
         }
-        
+
         fn authority(&self) -> Arc<dyn rainbow_db::auth_consumer::repo_factory::traits::AuthorityRequestRepoTrait> {
             todo!()
         }
@@ -201,7 +201,7 @@ mod tests {
             fn token_requirements(&self) -> Arc<dyn AuthTokenRequirementsRepoTrait>;
             fn mates(&self) -> Arc<dyn MatesRepoTrait>;
             fn authority(&self) -> Arc<dyn AuthorityRequestRepoTrait>;
-        }    
+        }
     }
 
     impl Clone for MockRepoFactory {
@@ -287,10 +287,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_register_wallet_success() {
-        use wiremock::{MockServer, Mock, ResponseTemplate};
-        use wiremock::matchers::{method, path};
-        use std::sync::Arc;
         use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
+        use std::sync::Arc;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         // Start the mock server
         let mock_server = MockServer::start().await;
@@ -321,10 +321,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_register_wallet_error_response() {
-        use wiremock::{MockServer, Mock, ResponseTemplate};
-        use wiremock::matchers::{method, path};
-        use std::sync::Arc;
         use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
+        use std::sync::Arc;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         // Start the mock server
         let mock_server = MockServer::start().await;
@@ -355,13 +355,13 @@ mod tests {
         }
     }
 
-   #[tokio::test]
+    #[tokio::test]
     async fn test_login_wallet_success() {
-        use wiremock::{MockServer, Mock, ResponseTemplate};
-        use wiremock::matchers::{method, path};
-        use std::sync::Arc;
-        use serde_json::json;
         use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
+        use serde_json::json;
+        use std::sync::Arc;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         // Simulated JWT with all required claims
         let claims = json!({
@@ -383,7 +383,7 @@ mod tests {
             .respond_with(ResponseTemplate::new(200).set_body_json(json!({
                 "id": "test_account_id",
                 "token": fake_jwt,
-                "username": "test_user" 
+                "username": "test_user"
             })))
             .mount(&mock_server)
             .await;
@@ -404,9 +404,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_login_wallet_invalid_jwt_format() {
-        use wiremock::{MockServer, Mock, ResponseTemplate};
-        use wiremock::matchers::{method, path};
         use std::sync::Arc;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
@@ -433,11 +433,11 @@ mod tests {
         }
     }
 
-   #[tokio::test]
+    #[tokio::test]
     async fn test_logout_wallet_success() {
-        use wiremock::{MockServer, Mock, ResponseTemplate};
-        use wiremock::matchers::{method, path};
         use std::sync::Arc;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
@@ -472,9 +472,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_logout_wallet_error_response() {
-        use wiremock::{MockServer, Mock, ResponseTemplate};
-        use wiremock::matchers::{method, path};
         use std::sync::Arc;
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
 
         let mock_server = MockServer::start().await;
 
@@ -503,21 +503,15 @@ mod tests {
 
     #[tokio::test]
     async fn test_onboard_wallet_success() {
-
         let mut mock = MockRainbowSSIAuthWalletTrait::new();
 
-        mock.expect_register_wallet()
-            .returning(|| Ok(()));
-        mock.expect_login_wallet()
-            .returning(|| Ok(()));
-        mock.expect_retrieve_wallet_info()
-            .returning(|| Ok(()));
-        mock.expect_retrieve_keys()
-            .returning(|| Ok(()));
-        mock.expect_retrieve_wallet_dids()
-            .returning(|| Ok(()));
-        mock.expect_get_wallet()
-            .returning(|| Ok(WalletInfo {
+        mock.expect_register_wallet().returning(|| Ok(()));
+        mock.expect_login_wallet().returning(|| Ok(()));
+        mock.expect_retrieve_wallet_info().returning(|| Ok(()));
+        mock.expect_retrieve_keys().returning(|| Ok(()));
+        mock.expect_retrieve_wallet_dids().returning(|| Ok(()));
+        mock.expect_get_wallet().returning(|| {
+            Ok(WalletInfo {
                 id: "wallet123".to_string(),
                 name: "Test Wallet".to_string(),
                 created_on: "Test created_on".to_string(),
@@ -531,27 +525,23 @@ mod tests {
                     default: true,
                     created_on: "did:example:123".to_string(),
                 }],
-            }));
-        mock.expect_get_key()
-            .returning(|| Ok(KeyDefinition {
+            })
+        });
+        mock.expect_get_key().returning(|| {
+            Ok(KeyDefinition {
                 key_id: KeyInfo { id: "key123".to_string() },
                 algorithm: "Test algorithm".to_string(),
                 crypto_provider: "Test crypto_provider".to_string(),
                 key_pair: serde_json::Value::String("Test key_pair".to_string()),
                 keyset_handle: None,
-            }));
-        mock.expect_delete_did()
-            .returning(|_| Ok(()));
-        mock.expect_delete_key()
-            .returning(|_| Ok(()));
-        mock.expect_register_key()
-            .returning(|| Ok(()));
-        mock.expect_register_did()
-            .returning(|| Ok(()));
-        mock.expect_set_default_did()
-            .returning(|| Ok(()));
-        mock.expect_onboard_wallet()
-            .returning(|| Ok(()));
+            })
+        });
+        mock.expect_delete_did().returning(|_| Ok(()));
+        mock.expect_delete_key().returning(|_| Ok(()));
+        mock.expect_register_key().returning(|| Ok(()));
+        mock.expect_register_did().returning(|| Ok(()));
+        mock.expect_set_default_did().returning(|| Ok(()));
+        mock.expect_onboard_wallet().returning(|| Ok(()));
 
         let result = mock.onboard_wallet().await;
         assert!(result.is_ok());
@@ -559,10 +549,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_onboard_wallet_missing_did_error() {
-        use std::sync::Arc;
-        use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
-        use rainbow_auth::ssi_auth::consumer::core::Manager;
         use rainbow_auth::ssi_auth::common::types::ssi::wallet::WalletInfo;
+        use rainbow_auth::ssi_auth::consumer::core::Manager;
+        use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
+        use std::sync::Arc;
 
         let config = ApplicationConsumerConfig::default();
         let repo = Arc::new(MockRepo);
@@ -598,14 +588,10 @@ mod tests {
     async fn test_partial_onboard_success() {
         let mut mock = MockRainbowSSIAuthWalletTrait::new();
 
-        mock.expect_login_wallet()
-            .returning(|| Ok(()));
-        mock.expect_retrieve_wallet_info()
-            .returning(|| Ok(()));
-        mock.expect_retrieve_keys()
-            .returning(|| Ok(()));
-        mock.expect_retrieve_wallet_dids()
-            .returning(|| Ok(()));
+        mock.expect_login_wallet().returning(|| Ok(()));
+        mock.expect_retrieve_wallet_info().returning(|| Ok(()));
+        mock.expect_retrieve_keys().returning(|| Ok(()));
+        mock.expect_retrieve_wallet_dids().returning(|| Ok(()));
 
         let result = testable_partial_onboard(&mock).await;
         assert!(result.is_ok());
@@ -615,14 +601,10 @@ mod tests {
     async fn test_partial_onboard_failure_on_retrieve_keys() {
         let mut mock = MockRainbowSSIAuthWalletTrait::new();
 
-        mock.expect_login_wallet()
-            .returning(|| Ok(()));
-        mock.expect_retrieve_wallet_info()
-            .returning(|| Ok(()));
-        mock.expect_retrieve_keys()
-            .returning(|| Err(anyhow::anyhow!("Failed to retrieve keys")));
-        mock.expect_retrieve_wallet_dids()
-            .returning(|| Ok(()));
+        mock.expect_login_wallet().returning(|| Ok(()));
+        mock.expect_retrieve_wallet_info().returning(|| Ok(()));
+        mock.expect_retrieve_keys().returning(|| Err(anyhow::anyhow!("Failed to retrieve keys")));
+        mock.expect_retrieve_wallet_dids().returning(|| Ok(()));
 
         let result = testable_partial_onboard(&mock).await;
         assert!(result.is_err());
@@ -694,7 +676,7 @@ mod tests {
             error_msg
         );
     }
-    
+
     #[tokio::test]
     async fn test_get_did_success() {
         let _did_info = DidsInfo {
@@ -913,9 +895,7 @@ mod tests {
         let key = KeyDefinition {
             algorithm: "Ed25519".to_string(),
             crypto_provider: "provider1".to_string(),
-            key_id: KeyInfo {
-                id: "key1".to_string()
-            },
+            key_id: KeyInfo { id: "key1".to_string() },
             key_pair: serde_json::json!({
                 "publicKey": "ABC123",
                 "privateKey": "XYZ789"
@@ -973,8 +953,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_retrieve_wallet_info_success() {
-        use httpmock::MockServer;
         use httpmock::Method::GET;
+        use httpmock::MockServer;
 
         let server = MockServer::start();
 
@@ -993,11 +973,8 @@ mod tests {
         });
 
         let mock = server.mock(|when, then| {
-            when.method(GET)
-                .path("/wallet-api/wallet/accounts/wallets");
-            then.status(200)
-                .header("content-type", "application/json")
-                .json_body(mock_response);
+            when.method(GET).path("/wallet-api/wallet/accounts/wallets");
+            then.status(200).header("content-type", "application/json").json_body(mock_response);
         });
 
         let mut config = ApplicationConsumerConfig::default();
@@ -1030,17 +1007,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_retrieve_wallet_info_failure_http_error() {
-        use httpmock::MockServer;
         use httpmock::Method::GET;
+        use httpmock::MockServer;
 
         let server = MockServer::start();
 
         let mock = server.mock(|when, then| {
-            when.method(GET)
-                .path("/wallet-api/wallet/accounts/wallets");
-            then.status(500)
-                .header("content-type", "application/json")
-                .body("Internal Server Error");
+            when.method(GET).path("/wallet-api/wallet/accounts/wallets");
+            then.status(500).header("content-type", "application/json").body("Internal Server Error");
         });
 
         let mut config = ApplicationConsumerConfig::default();
@@ -1078,8 +1052,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_retrieve_keys_success() {
-        use httpmock::MockServer;
         use httpmock::Method::GET;
+        use httpmock::MockServer;
 
         let server = MockServer::start();
 
@@ -1101,11 +1075,8 @@ mod tests {
         ]);
 
         let mock = server.mock(|when, then| {
-            when.method(GET)
-                .path(format!("/wallet-api/wallet/{}/keys", wallet_id));
-            then.status(200)
-                .header("content-type", "application/json")
-                .body(mock_keys.to_string());
+            when.method(GET).path(format!("/wallet-api/wallet/{}/keys", wallet_id));
+            then.status(200).header("content-type", "application/json").body(mock_keys.to_string());
         });
 
         let mut config = ApplicationConsumerConfig::default();
@@ -1147,18 +1118,15 @@ mod tests {
 
     #[tokio::test]
     async fn test_retrieve_keys_failure_http_error() {
-        use httpmock::MockServer;
         use httpmock::Method::GET;
+        use httpmock::MockServer;
 
         let server = MockServer::start();
         let wallet_id = "wallet123";
 
         let mock = server.mock(|when, then| {
-            when.method(GET)
-                .path(format!("/wallet-api/wallet/{}/keys", wallet_id));
-            then.status(500)
-                .header("content-type", "application/json")
-                .body("Internal Server Error");
+            when.method(GET).path(format!("/wallet-api/wallet/{}/keys", wallet_id));
+            then.status(500).header("content-type", "application/json").body("Internal Server Error");
         });
 
         let mut config = ApplicationConsumerConfig::default();
@@ -1203,10 +1171,10 @@ mod tests {
         mock.assert();
     }
 
-   #[tokio::test]
+    #[tokio::test]
     async fn test_retrieve_wallet_dids_success() {
-        use httpmock::MockServer;
         use httpmock::Method::GET;
+        use httpmock::MockServer;
 
         let server = MockServer::start();
         let wallet_id = "wallet123";
@@ -1225,11 +1193,8 @@ mod tests {
         "#;
 
         let mock = server.mock(|when, then| {
-            when.method(GET)
-                .path(format!("/wallet-api/wallet/{}/dids", wallet_id));
-            then.status(200)
-                .header("content-type", "application/json")
-                .body(raw_body);
+            when.method(GET).path(format!("/wallet-api/wallet/{}/dids", wallet_id));
+            then.status(200).header("content-type", "application/json").body(raw_body);
         });
 
         let mut config = ApplicationConsumerConfig::default();
@@ -1268,21 +1233,18 @@ mod tests {
 
         mock.assert();
     }
-    
+
     #[tokio::test]
     async fn test_retrieve_wallet_dids_failure_http_error() {
-        use httpmock::MockServer;
         use httpmock::Method::GET;
+        use httpmock::MockServer;
 
         let server = MockServer::start();
         let wallet_id = "wallet123";
 
         let mock = server.mock(|when, then| {
-            when.method(GET)
-                .path(format!("/wallet-api/wallet/{}/dids", wallet_id));
-            then.status(500)
-                .header("content-type", "application/json")
-                .body("Internal Server Error");
+            when.method(GET).path(format!("/wallet-api/wallet/{}/dids", wallet_id));
+            then.status(500).header("content-type", "application/json").body("Internal Server Error");
         });
 
         let mut config = ApplicationConsumerConfig::default();
@@ -1299,7 +1261,7 @@ mod tests {
         };
 
         let manager = Manager {
-                wallet_session: Mutex::new(WalletSession {
+            wallet_session: Mutex::new(WalletSession {
                 account_id: Some("account1".to_string()),
                 token: Some("token123".to_string()),
                 token_exp: Some(9999999999),
@@ -1379,8 +1341,8 @@ mod tests {
     #[tokio::test]
     async fn test_register_key_http_error() {
         use mockito::Server;
-        use std::sync::Arc;
         use rainbow_auth::ssi_auth::common::types::ssi::wallet::WalletInfo;
+        use std::sync::Arc;
 
         let mut server = Server::new_async().await;
         let wallet_id = "wallet123";
@@ -1430,10 +1392,10 @@ mod tests {
     #[tokio::test]
     async fn test_register_did_success() {
         use mockito::Server;
-        use std::sync::Arc;
-        use rainbow_auth::ssi_auth::common::types::ssi::wallet::WalletInfo;
         use rainbow_auth::ssi_auth::common::types::ssi::keys::{KeyDefinition, KeyInfo};
+        use rainbow_auth::ssi_auth::common::types::ssi::wallet::WalletInfo;
         use serde_json::json;
+        use std::sync::Arc;
 
         let mut server = Server::new_async().await;
         let wallet_id = "wallet123";
@@ -1500,10 +1462,10 @@ mod tests {
     #[tokio::test]
     async fn test_register_did_conflict() {
         use mockito::Server;
-        use std::sync::Arc;
-        use rainbow_auth::ssi_auth::common::types::ssi::wallet::WalletInfo;
         use rainbow_auth::ssi_auth::common::types::ssi::keys::{KeyDefinition, KeyInfo};
+        use rainbow_auth::ssi_auth::common::types::ssi::wallet::WalletInfo;
         use serde_json::json;
+        use std::sync::Arc;
 
         let mut server = Server::new_async().await;
         let wallet_id = "wallet123";
@@ -1568,18 +1530,15 @@ mod tests {
     #[tokio::test]
     async fn test_set_default_did_success() {
         use mockito::Server;
-        use std::sync::Arc;
         use rainbow_auth::ssi_auth::common::types::ssi::wallet::WalletInfo;
+        use std::sync::Arc;
 
         let mut server = Server::new_async().await;
         let wallet_id = "wallet123";
         let token = "mock_token";
         let did = "did123";
 
-        let url_path = format!(
-            "/wallet-api/wallet/{}/dids/default?did={}",
-            wallet_id, did
-        );
+        let url_path = format!("/wallet-api/wallet/{}/dids/default?did={}", wallet_id, did);
 
         let mock = server
             .mock("POST", url_path.as_str())
@@ -1634,18 +1593,15 @@ mod tests {
     #[tokio::test]
     async fn test_set_default_did_error() {
         use mockito::Server;
-        use std::sync::Arc;
         use rainbow_auth::ssi_auth::common::types::ssi::wallet::WalletInfo;
+        use std::sync::Arc;
 
         let mut server = Server::new_async().await;
         let wallet_id = "wallet123";
         let token = "mock_token";
         let did = "did:example:123";
 
-        let url_path = format!(
-            "/wallet-api/wallet/{}/dids/default?did={}",
-            wallet_id, did
-        );
+        let url_path = format!("/wallet-api/wallet/{}/dids/default?did={}", wallet_id, did);
 
         let mock = server
             .mock("POST", url_path.as_str())
@@ -1698,9 +1654,9 @@ mod tests {
     #[tokio::test]
     async fn test_delete_key_success() {
         use mockito::Server;
-        use std::sync::Arc;
         use rainbow_auth::ssi_auth::common::types::ssi::keys::{KeyDefinition, KeyInfo};
         use serde_json::json;
+        use std::sync::Arc;
 
         let mut server = Server::new_async().await;
         let wallet_id = "wallet123";
@@ -1769,10 +1725,10 @@ mod tests {
     #[tokio::test]
     async fn test_delete_key_error() {
         use mockito::Server;
-        use std::sync::Arc;
-        use rainbow_auth::ssi_auth::common::types::ssi::wallet::WalletInfo;
         use rainbow_auth::ssi_auth::common::types::ssi::keys::{KeyDefinition, KeyInfo};
+        use rainbow_auth::ssi_auth::common::types::ssi::wallet::WalletInfo;
         use serde_json::json;
+        use std::sync::Arc;
 
         let mut server = Server::new_async().await;
         let wallet_id = "wallet123";
@@ -1963,24 +1919,23 @@ mod tests {
         let server_host = server_address.ip().to_string();
         let server_port = server_address.port().to_string();
 
-
         // Configuramos el mock del endpoint esperado
-        let mock = server.mock_async(|when, then| {
-            when.method(POST)
-                .path("/wallet-api/wallet/mocked_wallet_id/exchange/resolvePresentationRequest")
-                .header("content-type", "text/plain")
-                .header("accept", "text/plain")
-                .header("authorization", "Bearer mocked_token");
-            then.status(200)
-                .header("content-type", "text/plain")
-                .body("Exchange joined successfully");
-        }).await;
+        let mock = server
+            .mock_async(|when, then| {
+                when.method(POST)
+                    .path("/wallet-api/wallet/mocked_wallet_id/exchange/resolvePresentationRequest")
+                    .header("content-type", "text/plain")
+                    .header("accept", "text/plain")
+                    .header("authorization", "Bearer mocked_token");
+                then.status(200).header("content-type", "text/plain").body("Exchange joined successfully");
+            })
+            .await;
 
         // Create repo factory mock
         let mock_repo_factory = Arc::new(MockRepoFactory::new());
 
         // Dummy configuration with mock server URL
-        
+
         let config = ApplicationConsumerConfig {
             transfer_process_host: None,
             business_system_host: None,
@@ -1999,7 +1954,7 @@ mod tests {
             },
             ssh_user: None,
             ssh_private_key_path: None,
-            ssi_wallet_config: SSIWalletConfig {   
+            ssi_wallet_config: SSIWalletConfig {
                 wallet_api_protocol: "http".to_string(),
                 wallet_api_url: server_host,
                 wallet_api_port: Some(server_port),
@@ -2021,14 +1976,14 @@ mod tests {
 
         // Mocks
         let did_info = DidsInfo {
-                did: "did:example:123456789".to_string(),
-                alias: "alias1".to_string(),
-                document: r#"{"id":"did:example:123456789","@context":"https://www.w3.org/ns/did/v1"}"#.to_string(),
-                key_id: "key1".to_string(),
-                default: true,
-                created_on: "2023-01-01T00:00:00Z".to_string(),
-            };
-        
+            did: "did:example:123456789".to_string(),
+            alias: "alias1".to_string(),
+            document: r#"{"id":"did:example:123456789","@context":"https://www.w3.org/ns/did/v1"}"#.to_string(),
+            key_id: "key1".to_string(),
+            default: true,
+            created_on: "2023-01-01T00:00:00Z".to_string(),
+        };
+
         let manager = Manager {
             wallet_session: tokio::sync::Mutex::new(WalletSession {
                 account_id: None,
@@ -2075,16 +2030,16 @@ mod tests {
         let server = MockServer::start_async().await;
 
         // Configuramos el mock del endpoint con error 500
-        let mock = server.mock_async(|when, then| {
-            when.method(POST)
-                .path("/wallet-api/wallet/mocked_wallet_id/exchange/resolvePresentationRequest")
-                .header("content-type", "text/plain")
-                .header("accept", "text/plain")
-                .header("authorization", "Bearer mocked_token");
-            then.status(500)
-                .header("content-type", "text/plain")
-                .body("Internal Server Error");
-        }).await;
+        let mock = server
+            .mock_async(|when, then| {
+                when.method(POST)
+                    .path("/wallet-api/wallet/mocked_wallet_id/exchange/resolvePresentationRequest")
+                    .header("content-type", "text/plain")
+                    .header("accept", "text/plain")
+                    .header("authorization", "Bearer mocked_token");
+                then.status(500).header("content-type", "text/plain").body("Internal Server Error");
+            })
+            .await;
 
         // Mock of the repository
         let mock_repo_factory = Arc::new(MockRepoFactory::new());
@@ -2178,7 +2133,10 @@ mod tests {
                 cause
             );
         } else {
-            panic!("Error no es del tipo esperado AuthErrors::WalletError: {:?}", err);
+            panic!(
+                "Error no es del tipo esperado AuthErrors::WalletError: {:?}",
+                err
+            );
         }
 
         // Verified that the mock was called
@@ -2196,16 +2154,16 @@ mod tests {
         let server = MockServer::start_async().await;
 
         // We configured the mock endpoint with error 500
-        let _mock = server.mock_async(|when, then| {
-            when.method(POST)
-                .path("/wallet-api/wallet/mocked_wallet_id/exchange/resolvePresentationRequest")
-                .header("content-type", "text/plain")
-                .header("accept", "text/plain")
-                .header("authorization", "Bearer mocked_token");
-            then.status(500)
-                .header("content-type", "text/plain")
-                .body("Internal Server Error");
-        }).await;
+        let _mock = server
+            .mock_async(|when, then| {
+                when.method(POST)
+                    .path("/wallet-api/wallet/mocked_wallet_id/exchange/resolvePresentationRequest")
+                    .header("content-type", "text/plain")
+                    .header("accept", "text/plain")
+                    .header("authorization", "Bearer mocked_token");
+                then.status(500).header("content-type", "text/plain").body("Internal Server Error");
+            })
+            .await;
 
         // We created the repo factory mockup
         let _mock_repo_factory = Arc::new(MockRepoFactory::new());
@@ -2220,42 +2178,42 @@ mod tests {
         });
 
         let config = ApplicationConsumerConfig {
-                transfer_process_host: None,
-                business_system_host: None,
-                contract_negotiation_host: None,
-                catalog_bypass_host: None,
-                auth_host: None,
-                ssi_auth_host: None,
-                gateway_host: None,
-                database_config: DatabaseConfig {
-                    db_type: DbType::Postgres,
-                    url: "localhost".to_string(),
-                    port: "5432".to_string(),
-                    user: "test_user".to_string(),
-                    password: "test_pass".to_string(),
-                    name: "test_db".to_string(),
-                },
-                ssh_user: None,
-                ssh_private_key_path: None,
-                ssi_wallet_config: SSIWalletConfig {
-                    wallet_api_protocol: "http".to_string(),
-                    wallet_api_url: server_address.ip().to_string(),
-                    wallet_api_port: Some(server_address.port().to_string()),
-                    wallet_type: "mock_wallet".to_string(),
-                    wallet_name: "mock_wallet_name".to_string(),
-                    wallet_email: "wallet@example.com".to_string(),
-                    wallet_password: "supersecret".to_string(),
-                    wallet_id: Some("mocked_wallet_id".to_string()),
-                },
-                client_config: ClientConfig {
-                    class_id: "mock_class".to_string(),
-                    cert_path: "/path/to/mock/cert.pem".to_string(),
-                    display: None,
-                },
-                role: ConfigRoles::Consumer,
-                is_local: true,
-                is_gateway_in_production: true,
-            };
+            transfer_process_host: None,
+            business_system_host: None,
+            contract_negotiation_host: None,
+            catalog_bypass_host: None,
+            auth_host: None,
+            ssi_auth_host: None,
+            gateway_host: None,
+            database_config: DatabaseConfig {
+                db_type: DbType::Postgres,
+                url: "localhost".to_string(),
+                port: "5432".to_string(),
+                user: "test_user".to_string(),
+                password: "test_pass".to_string(),
+                name: "test_db".to_string(),
+            },
+            ssh_user: None,
+            ssh_private_key_path: None,
+            ssi_wallet_config: SSIWalletConfig {
+                wallet_api_protocol: "http".to_string(),
+                wallet_api_url: server_address.ip().to_string(),
+                wallet_api_port: Some(server_address.port().to_string()),
+                wallet_type: "mock_wallet".to_string(),
+                wallet_name: "mock_wallet_name".to_string(),
+                wallet_email: "wallet@example.com".to_string(),
+                wallet_password: "supersecret".to_string(),
+                wallet_id: Some("mocked_wallet_id".to_string()),
+            },
+            client_config: ClientConfig {
+                class_id: "mock_class".to_string(),
+                cert_path: "/path/to/mock/cert.pem".to_string(),
+                display: None,
+            },
+            role: ConfigRoles::Consumer,
+            is_local: true,
+            is_gateway_in_production: true,
+        };
 
         let did_info = DidsInfo {
             did: "did:example:123456789".to_string(),
@@ -2268,7 +2226,10 @@ mod tests {
 
         let binding = presentation_definition.to_string();
         let encoded_json = encode(&binding);
-        let vpd_url = format!("https://example.com/vpd?presentation_definition={}", encoded_json);
+        let vpd_url = format!(
+            "https://example.com/vpd?presentation_definition={}",
+            encoded_json
+        );
 
         let manager = Manager {
             wallet_session: tokio::sync::Mutex::new(WalletSession {
@@ -2315,7 +2276,10 @@ mod tests {
         // JSON mal formado (falta una comilla de cierre)
         let invalid_json = r#"{"id": "test-definition", "input_descriptors": [}"#;
         let encoded_json = encode(invalid_json);
-        let vpd_url = format!("https://example.com/vpd?presentation_definition={}", encoded_json);
+        let vpd_url = format!(
+            "https://example.com/vpd?presentation_definition={}",
+            encoded_json
+        );
 
         // Configuración dummy
         let config = ApplicationConsumerConfig {
@@ -2403,7 +2367,6 @@ mod tests {
         );
     }
 
-
     #[tokio::test]
     async fn test_match_vc4vp_success() {
         use serde_json::json;
@@ -2416,15 +2379,14 @@ mod tests {
         let server = MockServer::start_async().await;
         let server_address = server.address();
 
-        let mock = server.mock_async(|when, then| {
-            when.method(POST)
-                .path("/wallet-api/wallet/mocked_wallet_id/exchange/matchCredentialsForPresentationDefinition")
-                .header("content-type", "application/json")
-                .header("accept", "application/json")
-                .header("authorization", "Bearer mocked_token");
-            then.status(200)
-                .header("content-type", "application/json")
-                .json_body(json!([
+        let mock = server
+            .mock_async(|when, then| {
+                when.method(POST)
+                    .path("/wallet-api/wallet/mocked_wallet_id/exchange/matchCredentialsForPresentationDefinition")
+                    .header("content-type", "application/json")
+                    .header("accept", "application/json")
+                    .header("authorization", "Bearer mocked_token");
+                then.status(200).header("content-type", "application/json").json_body(json!([
                     {
                         "addedOn": "2023-01-01T00:00:00Z",
                         "disclosures": "[]",
@@ -2443,7 +2405,8 @@ mod tests {
                         "wallet": "mocked_wallet_id"
                     }
                 ]));
-        }).await;
+            })
+            .await;
 
         let config = build_test_config(&server_address);
         let manager = build_test_manager(config);
@@ -2473,16 +2436,16 @@ mod tests {
         let server = MockServer::start_async().await;
         let server_address = server.address();
 
-        let mock = server.mock_async(|when, then| {
-            when.method(POST)
-                .path("/wallet-api/wallet/mocked_wallet_id/exchange/matchCredentialsForPresentationDefinition")
-                .header("content-type", "application/json")
-                .header("accept", "application/json")
-                .header("authorization", "Bearer mocked_token");
-            then.status(500)
-                .header("content-type", "application/json")
-                .body("Internal Server Error");
-        }).await;
+        let mock = server
+            .mock_async(|when, then| {
+                when.method(POST)
+                    .path("/wallet-api/wallet/mocked_wallet_id/exchange/matchCredentialsForPresentationDefinition")
+                    .header("content-type", "application/json")
+                    .header("accept", "application/json")
+                    .header("authorization", "Bearer mocked_token");
+                then.status(500).header("content-type", "application/json").body("Internal Server Error");
+            })
+            .await;
 
         let config = build_test_config(&server_address);
         let manager = build_test_manager(config);
@@ -2509,18 +2472,18 @@ mod tests {
         let server = MockServer::start_async().await;
         let server_address = server.address();
 
-        let mock = server.mock_async(|when, then| {
-            when.method(POST)
-                .path("/wallet-api/wallet/mocked_wallet_id/exchange/usePresentationRequest")
-                .header("content-type", "application/json")
-                .header("accept", "application/json")
-                .header("authorization", "Bearer mocked_token");
-            then.status(200)
-                .header("content-type", "application/json")
-                .json_body(json!({
+        let mock = server
+            .mock_async(|when, then| {
+                when.method(POST)
+                    .path("/wallet-api/wallet/mocked_wallet_id/exchange/usePresentationRequest")
+                    .header("content-type", "application/json")
+                    .header("accept", "application/json")
+                    .header("authorization", "Bearer mocked_token");
+                then.status(200).header("content-type", "application/json").json_body(json!({
                     "redirectUri": "https://example.com/success"
                 }));
-        }).await;
+            })
+            .await;
 
         let config = build_test_config(&server_address);
         let manager = build_test_manager(config);
@@ -2544,16 +2507,17 @@ mod tests {
         let server = MockServer::start_async().await;
         let server_address = server.address();
 
-        let mock = server.mock_async(|when, then| {
-            when.method(POST)
-                .path("/wallet-api/wallet/mocked_wallet_id/exchange/usePresentationRequest")
-                .header("content-type", "application/json")
-                .header("accept", "application/json")
-                .header("authorization", "Bearer mocked_token");
-            then.status(500)
-                .header("content-type", "application/json")
-                .body("this is not a valid JSON"); // fuerza fallo de deserialización
-        }).await;
+        let mock = server
+            .mock_async(|when, then| {
+                when.method(POST)
+                    .path("/wallet-api/wallet/mocked_wallet_id/exchange/usePresentationRequest")
+                    .header("content-type", "application/json")
+                    .header("accept", "application/json")
+                    .header("authorization", "Bearer mocked_token");
+                then.status(500).header("content-type", "application/json").body("this is not a valid JSON");
+                // fuerza fallo de deserialización
+            })
+            .await;
 
         let config = build_test_config(&server_address);
         let manager = build_test_manager(config);
@@ -2566,12 +2530,16 @@ mod tests {
         if let Some(AuthErrors::WalletError { http_code, cause, .. }) = err.downcast_ref::<AuthErrors>() {
             assert_eq!(*http_code, 500);
             assert!(
-                cause.as_ref().map_or(false, |msg| msg.contains("Petition to present credentials failed")),
+                cause.as_ref().map_or(false, |msg| msg
+                    .contains("Petition to present credentials failed")),
                 "Mensaje de error inesperado en cause: {:?}",
                 cause
             );
         } else {
-            panic!("Error no es del tipo esperado AuthErrors::WalletError: {:?}", err);
+            panic!(
+                "Error no es del tipo esperado AuthErrors::WalletError: {:?}",
+                err
+            );
         }
 
         mock.assert_async().await;
@@ -2586,10 +2554,7 @@ mod tests {
         let config = ApplicationConsumerConfig::default();
         let manager = Manager::new(repo.clone(), config);
 
-        let expired_time = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs() - 10; // 10 seconds in the past
+        let expired_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() - 10; // 10 seconds in the past
 
         {
             let mut session = manager.wallet_session.lock().await;
@@ -2610,10 +2575,7 @@ mod tests {
         let config = ApplicationConsumerConfig::default();
         let manager = Manager::new(repo.clone(), config);
 
-        let future_time = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs() + 3600; // 1 hour in the future
+        let future_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() + 3600; // 1 hour in the future
 
         {
             let mut session = manager.wallet_session.lock().await;
@@ -2644,13 +2606,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_update_token_success() -> anyhow::Result<()> {
-
         let mut service = MockRainbowSSIAuthWalletTrait::new();
 
-        service.expect_login_wallet()
-            .returning(|| Ok(()));
-        service.expect_update_token()
-            .returning(|| Ok(()));
+        service.expect_login_wallet().returning(|| Ok(()));
+        service.expect_update_token().returning(|| Ok(()));
 
         service.update_token().await?;
 
@@ -2662,10 +2621,8 @@ mod tests {
         // Crear el mock del servicio
         let mut service = MockRainbowSSIAuthWalletTrait::new();
 
-        service.expect_login_wallet()
-            .returning(|| Err(anyhow::anyhow!("Error al iniciar sesión")));
-        service.expect_update_token()
-            .returning(|| Err(anyhow::anyhow!("Error al iniciar sesión")));
+        service.expect_login_wallet().returning(|| Err(anyhow::anyhow!("Error al iniciar sesión")));
+        service.expect_update_token().returning(|| Err(anyhow::anyhow!("Error al iniciar sesión")));
 
         let result = service.update_token().await;
         assert!(result.is_err(), "Se esperaba un error, pero se obtuvo Ok");
@@ -2677,18 +2634,15 @@ mod tests {
     #[tokio::test]
     async fn test_ok_token_expired_and_updated_successfully() {
         use mockito::Server;
+        use serde_json::json;
         use std::sync::Arc;
         use std::time::{SystemTime, UNIX_EPOCH};
-        use serde_json::json;
 
         let mut server = Server::new_async().await;
 
         let login_path = "/wallet-api/auth/login";
 
-        let exp = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs() + 3600;
+        let exp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() + 3600;
 
         let jwt_payload = json!({
             "sub": "mock_user_id",
@@ -2711,12 +2665,16 @@ mod tests {
             .match_header("content-type", "application/json")
             .match_header("accept", "application/json")
             .with_header("content-type", "application/json")
-            .with_status(200)  
-            .with_body(json!({
-                "id": "account123",
-                "username": "mock_user",
-                "token": mock_token
-            }).to_string().into_bytes())
+            .with_status(200)
+            .with_body(
+                json!({
+                    "id": "account123",
+                    "username": "mock_user",
+                    "token": mock_token
+                })
+                .to_string()
+                .into_bytes(),
+            )
             .create_async()
             .await;
 
@@ -2729,10 +2687,7 @@ mod tests {
         let manager = Manager::new(repo.clone(), config);
 
         // Simula token expirado
-        let expired_time = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs() - 10;
+        let expired_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() - 10;
 
         {
             let mut session = manager.wallet_session.lock().await;
@@ -2744,7 +2699,10 @@ mod tests {
         assert!(result.is_ok());
 
         let session = manager.wallet_session.lock().await;
-        assert_eq!(session.token.as_deref(), Some(&mock_token).map(|x| x.as_str()));
+        assert_eq!(
+            session.token.as_deref(),
+            Some(&mock_token).map(|x| x.as_str())
+        );
         assert_eq!(session.token_exp, Some(exp));
     }
 
@@ -2776,10 +2734,7 @@ mod tests {
         let manager = Manager::new(repo.clone(), config);
 
         // Simula token expirado
-        let expired_time = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs() - 10;
+        let expired_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() - 10;
 
         {
             let mut session = manager.wallet_session.lock().await;

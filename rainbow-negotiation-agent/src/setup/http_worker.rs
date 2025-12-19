@@ -31,7 +31,8 @@ use crate::protocols::protocol::ProtocolPluginTrait;
 use axum::extract::Request;
 use axum::response::IntoResponse;
 use axum::{Router, serve};
-use rainbow_common::config::global_config::ApplicationGlobalConfig;
+use rainbow_common::config::services::ContractsConfig;
+use rainbow_common::config::traits::{ApiConfigTrait, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait};
 use rainbow_common::errors::CommonErrors;
 use rainbow_common::health::HealthRouter;
 use rainbow_common::well_known::WellKnownRoot;
@@ -45,14 +46,14 @@ use uuid::Uuid;
 
 pub struct NegotiationHttpWorker {}
 impl NegotiationHttpWorker {
-    pub async fn spawn(config: &ApplicationGlobalConfig, token: &CancellationToken) -> anyhow::Result<JoinHandle<()>> {
+    pub async fn spawn(config: &ContractsConfig, token: &CancellationToken) -> anyhow::Result<JoinHandle<()>> {
         // well known router
         let well_known_router = WellKnownRoot::get_router()?;
         let health_router = HealthRouter::new().router();
         // module transfer router
         let router = Self::create_root_http_router(&config).await?.merge(well_known_router).merge(health_router);
-        let host = if config.is_local { "127.0.0.1" } else { "0.0.0.0" };
-        let port = config.contract_negotiation_host.clone().expect("no host").port;
+        let host = if config.is_local() { "127.0.0.1" } else { "0.0.0.0" };
+        let port = config.get_weird_port();
         let addr = format!("{}:{}", host, port);
 
         let listener = TcpListener::bind(&addr).await?;
@@ -72,7 +73,7 @@ impl NegotiationHttpWorker {
 
         Ok(handle)
     }
-    pub async fn create_root_http_router(config: &ApplicationGlobalConfig) -> anyhow::Result<Router> {
+    pub async fn create_root_http_router(config: &ContractsConfig) -> anyhow::Result<Router> {
         let router = create_root_http_router(config).await?.fallback(Self::handler_404).layer(
             TraceLayer::new_for_http()
                 .make_span_with(|_req: &Request<_>| tracing::info_span!("request", id = %Uuid::new_v4()))
@@ -90,10 +91,10 @@ impl NegotiationHttpWorker {
     }
 }
 
-pub async fn create_root_http_router(config: &ApplicationGlobalConfig) -> anyhow::Result<Router> {
+pub async fn create_root_http_router(config: &ContractsConfig) -> anyhow::Result<Router> {
     // ROOT Dependency Injection
     let config = Arc::new(config.clone());
-    let db_connection = Database::connect(config.database_config.as_db_url()).await.expect("Database can't connect");
+    let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
     let negotiation_repo = Arc::new(NegotiationAgentRepoForSql::create_repo(
         db_connection.clone(),
     ));
@@ -126,7 +127,7 @@ pub async fn create_root_http_router(config: &ApplicationGlobalConfig) -> anyhow
     .await?;
 
     // router
-    let router_str = format!("/api/{}/negotiation-agent", config.api_version);
+    let router_str = format!("/api/{}/negotiation-agent", config.get_api_version());
     let router = Router::new()
         .nest(
             format!("{}/negotiation-messages", router_str.as_str()).as_str(),

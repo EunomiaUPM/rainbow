@@ -45,7 +45,8 @@ use crate::http::datasets::DatasetEntityRouter;
 use crate::http::distributions::DistributionEntityRouter;
 use crate::http::odrl_policies::OdrlOfferEntityRouter;
 use crate::http::policy_templates::PolicyTemplateEntityRouter;
-use rainbow_common::config::global_config::ApplicationGlobalConfig;
+use rainbow_common::config::services::CatalogConfig;
+use rainbow_common::config::traits::{DatabaseConfigTrait, HostConfigTrait, IsLocalTrait};
 use sea_orm::Database;
 use std::sync::Arc;
 use tokio::net::TcpListener;
@@ -57,12 +58,11 @@ use tonic::transport::Server;
 pub struct CatalogGrpcWorker {}
 
 impl CatalogGrpcWorker {
-    pub async fn spawn(config: &ApplicationGlobalConfig, token: &CancellationToken) -> anyhow::Result<JoinHandle<()>> {
+    pub async fn spawn(config: &CatalogConfig, token: &CancellationToken) -> anyhow::Result<JoinHandle<()>> {
         let router = Self::create_root_grpc_router(&config).await?;
-        let host = if config.is_local { "127.0.0.1" } else { "0.0.0.0" };
-        let port = config.catalog_host.clone().expect("no host").port;
-        let grpc_port = format!("{}{}", port, "1");
-        let addr = format!("{}:{}", host, grpc_port);
+        let host = if config.is_local() { "127.0.0.1" } else { "0.0.0.0" };
+        let port = config.get_weird_port();
+        let addr = format!("{}:{}", host, port);
 
         let listener = TcpListener::bind(&addr).await?;
         let incoming = TcpListenerStream::new(listener);
@@ -82,11 +82,8 @@ impl CatalogGrpcWorker {
 
         Ok(handle)
     }
-    pub async fn create_root_grpc_router(
-        config: &ApplicationGlobalConfig,
-    ) -> anyhow::Result<tonic::transport::server::Router> {
-        let db_connection =
-            Database::connect(config.database_config.as_db_url()).await.expect("Database can't connect");
+    pub async fn create_root_grpc_router(config: &CatalogConfig) -> anyhow::Result<tonic::transport::server::Router> {
+        let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
         let catalog_agent_repo = Arc::new(CatalogAgentRepoForSql::create_repo(db_connection.clone()));
 
         // entities

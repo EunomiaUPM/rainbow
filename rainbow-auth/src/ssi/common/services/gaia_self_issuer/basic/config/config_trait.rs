@@ -16,8 +16,8 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use rainbow_common::config::types::CommonHostsConfig;
 use crate::ssi::common::types::enums::VcDataModelVersion;
+use rainbow_common::config::types::CommonHostsConfig;
 
 pub trait GaiaGaiaSelfIssuerConfigTrait {
     fn hosts(&self) -> &CommonHostsConfig;

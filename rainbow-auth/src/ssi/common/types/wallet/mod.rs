@@ -16,26 +16,26 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+mod cred_offer_resp;
 mod dids_info;
 mod key_definition;
+mod matching_vcs;
+mod oidc_uri;
+mod other;
+mod vpd;
 mod wallet_info;
 mod wallet_info_response;
 mod wallet_login_response;
 mod wallet_session;
-mod cred_offer_resp;
-mod oidc_uri;
-mod vpd;
-mod matching_vcs;
-mod other;
 
+pub use cred_offer_resp::*;
 pub use dids_info::DidsInfo;
 pub use key_definition::KeyDefinition;
+pub use matching_vcs::*;
+pub use oidc_uri::OidcUri;
+pub use other::*;
+pub use vpd::Vpd;
 pub use wallet_info::WalletInfo;
 pub use wallet_info_response::WalletInfoResponse;
 pub use wallet_login_response::WalletLoginResponse;
 pub use wallet_session::WalletSession;
-pub use cred_offer_resp::*;
-pub use oidc_uri::OidcUri;
-pub use vpd::Vpd;
-pub use matching_vcs::*;
-pub use other::*;

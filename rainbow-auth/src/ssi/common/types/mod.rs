@@ -16,9 +16,9 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-pub mod wallet;
-pub mod enums;
-pub mod jwt;
 pub mod entities;
+pub mod enums;
 pub mod gnap;
+pub mod jwt;
 pub mod vc_issuing;
+pub mod wallet;

@@ -9,7 +9,7 @@ use axum::response::IntoResponse;
 use axum::routing::{delete, get, post};
 use axum::{Json, Router};
 use rainbow_common::batch_requests::BatchRequests;
-use rainbow_common::config::global_config::ApplicationGlobalConfig;
+use rainbow_common::config::services::CatalogConfig;
 use rainbow_common::errors::CommonErrors;
 use serde::Deserialize;
 use std::sync::Arc;
@@ -17,7 +17,7 @@ use std::sync::Arc;
 #[derive(Clone)]
 pub struct PolicyTemplateEntityRouter {
     service: Arc<dyn PolicyTemplateEntityTrait>,
-    config: Arc<ApplicationGlobalConfig>,
+    config: Arc<CatalogConfig>,
 }
 
 #[derive(Deserialize)]
@@ -32,14 +32,14 @@ impl FromRef<PolicyTemplateEntityRouter> for Arc<dyn PolicyTemplateEntityTrait> 
     }
 }
 
-impl FromRef<PolicyTemplateEntityRouter> for Arc<ApplicationGlobalConfig> {
+impl FromRef<PolicyTemplateEntityRouter> for Arc<CatalogConfig> {
     fn from_ref(state: &PolicyTemplateEntityRouter) -> Self {
         state.config.clone()
     }
 }
 
 impl PolicyTemplateEntityRouter {
-    pub fn new(service: Arc<dyn PolicyTemplateEntityTrait>, config: Arc<ApplicationGlobalConfig>) -> Self {
+    pub fn new(service: Arc<dyn PolicyTemplateEntityTrait>, config: Arc<CatalogConfig>) -> Self {
         Self { service, config }
     }
 

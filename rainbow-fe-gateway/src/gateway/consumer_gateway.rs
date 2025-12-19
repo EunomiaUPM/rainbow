@@ -26,6 +26,7 @@ use axum::response::{IntoResponse, Response};
 use axum::routing::{any, get, post};
 use axum::{Json, Router};
 use rainbow_common::config::services::GatewayConfig;
+use rainbow_common::config::traits::CommonConfigTrait;
 use rainbow_common::config::types::HostType;
 use reqwest::Client;
 use rust_embed::Embed;
@@ -33,7 +34,6 @@ use serde_json::{json, Value};
 use std::time::Duration;
 use tokio::sync::broadcast;
 use tower_http::cors::{Any, CorsLayer};
-use rainbow_common::config::traits::CommonConfigTrait;
 
 pub struct RainbowConsumerGateway {
     config: GatewayConfig,
@@ -68,9 +68,7 @@ impl RainbowConsumerGateway {
             .route("/incoming-notification", post(Self::incoming_notification));
 
         if self.config.is_production() {
-            router = router
-                .route("/fe-config", get(Self::config_handler))
-                .fallback(Self::static_path_handler);
+            router = router.route("/fe-config", get(Self::config_handler)).fallback(Self::static_path_handler);
         }
 
         router.layer(cors).with_state((self.config, self.client, self.notification_tx))
@@ -120,7 +118,6 @@ impl RainbowConsumerGateway {
         (StatusCode::OK, Json(json).into_response())
     }
 
-
     async fn proxy_handler_with_extra(
         State((config, client, notification_tx)): State<(GatewayConfig, Client, broadcast::Sender<String>)>,
         Path((service_prefix, extra)): Path<(String, String)>,
@@ -157,7 +154,7 @@ impl RainbowConsumerGateway {
             "data-services" => config.transfer().get_host(HostType::Http),
             "distributions" => config.transfer().get_host(HostType::Http),
             "request" => config.transfer().get_host(HostType::Http),
-            
+
             "contract-negotiation" => config.contracts().get_host(HostType::Http),
             "mates" => config.ssi_auth().get_host(HostType::Http),
             "negotiations" => config.contracts().get_host(HostType::Http),

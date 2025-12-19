@@ -10,7 +10,7 @@ use axum::response::IntoResponse;
 use axum::routing::{delete, get, post, put};
 use axum::{Json, Router};
 use rainbow_common::batch_requests::BatchRequests;
-use rainbow_common::config::global_config::ApplicationGlobalConfig;
+use rainbow_common::config::services::CatalogConfig;
 use rainbow_common::errors::CommonErrors;
 use serde::Deserialize;
 use std::sync::Arc;
@@ -18,7 +18,7 @@ use std::sync::Arc;
 #[derive(Clone)]
 pub struct DatasetEntityRouter {
     service: Arc<dyn DatasetEntityTrait>,
-    config: Arc<ApplicationGlobalConfig>,
+    config: Arc<CatalogConfig>,
 }
 
 #[derive(Deserialize)]
@@ -33,14 +33,14 @@ impl FromRef<DatasetEntityRouter> for Arc<dyn DatasetEntityTrait> {
     }
 }
 
-impl FromRef<DatasetEntityRouter> for Arc<ApplicationGlobalConfig> {
+impl FromRef<DatasetEntityRouter> for Arc<CatalogConfig> {
     fn from_ref(state: &DatasetEntityRouter) -> Self {
         state.config.clone()
     }
 }
 
 impl DatasetEntityRouter {
-    pub fn new(service: Arc<dyn DatasetEntityTrait>, config: Arc<ApplicationGlobalConfig>) -> Self {
+    pub fn new(service: Arc<dyn DatasetEntityTrait>, config: Arc<CatalogConfig>) -> Self {
         Self { service, config }
     }
 

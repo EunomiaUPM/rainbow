@@ -35,8 +35,7 @@ use axum::{
     response::IntoResponse,
     routing::post,
 };
-use rainbow_common::config::global_config::ApplicationGlobalConfig;
-use rainbow_common::config::provider_config::ApplicationProviderConfig;
+use rainbow_common::config::services::ContractsConfig;
 use rainbow_common::errors::CommonErrors;
 use rainbow_common::protocol::context_field::ContextField;
 use serde::Serialize;
@@ -45,7 +44,7 @@ use std::sync::Arc;
 #[derive(Clone)]
 pub struct RpcRouter {
     orchestrator: Arc<dyn OrchestratorTrait>,
-    config: Arc<ApplicationGlobalConfig>,
+    config: Arc<ContractsConfig>,
 }
 
 impl FromRef<RpcRouter> for Arc<dyn OrchestratorTrait> {
@@ -54,14 +53,14 @@ impl FromRef<RpcRouter> for Arc<dyn OrchestratorTrait> {
     }
 }
 
-impl FromRef<RpcRouter> for Arc<ApplicationGlobalConfig> {
+impl FromRef<RpcRouter> for Arc<ContractsConfig> {
     fn from_ref(state: &RpcRouter) -> Self {
         state.config.clone()
     }
 }
 
 impl RpcRouter {
-    pub fn new(service: Arc<dyn OrchestratorTrait>, config: Arc<ApplicationGlobalConfig>) -> Self {
+    pub fn new(service: Arc<dyn OrchestratorTrait>, config: Arc<ContractsConfig>) -> Self {
         Self { orchestrator: service, config }
     }
 

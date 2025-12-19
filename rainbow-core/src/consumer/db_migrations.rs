@@ -18,15 +18,14 @@
  */
 
 use rainbow_auth::ssi::consumer::data::migrations::get_auth_consumer_migrations;
+use rainbow_catalog_agent::get_catalog_migrations;
 use rainbow_common::config::traits::MonoConfigTrait;
 use rainbow_common::config::ApplicationConfig;
-use rainbow_db::catalog::migrations::get_catalog_migrations;
-use rainbow_db::contracts_consumer::migrations::get_contracts_migrations;
+use rainbow_dataplane::get_dataplane_migrations;
 use rainbow_db::events::migrations::get_events_migrations;
 use rainbow_transfer_agent::get_transfer_agent_migrations;
 use sea_orm::Database;
 use sea_orm_migration::{MigrationTrait, MigratorTrait};
-use rainbow_dataplane::get_dataplane_migrations;
 
 pub struct CoreConsumerMigration;
 
@@ -34,14 +33,14 @@ impl MigratorTrait for CoreConsumerMigration {
     fn migrations() -> Vec<Box<dyn MigrationTrait>> {
         let mut migrations: Vec<Box<dyn MigrationTrait>> = vec![];
         let mut catalog_migrations = get_catalog_migrations();
-        let mut contract_negotiation_provider_migrations = get_contracts_migrations();
+        //let mut contract_negotiation_provider_migrations = get_contracts_migrations();
         let mut pub_sub_migrations = get_events_migrations();
         let mut auth_migrations = get_auth_consumer_migrations();
         let mut dataplane_migrations = get_dataplane_migrations();
         let mut transfer_agent_migrations = get_transfer_agent_migrations();
 
         migrations.append(&mut catalog_migrations);
-        migrations.append(&mut contract_negotiation_provider_migrations);
+        //migrations.append(&mut contract_negotiation_provider_migrations);
         migrations.append(&mut pub_sub_migrations);
         migrations.append(&mut auth_migrations);
         migrations.append(&mut dataplane_migrations);

@@ -1,15 +1,11 @@
 // Tests corresponding to 'rainbow-auth\src\ssi_auth\common\errors'
 
-use axum::{
-    http::{StatusCode},
-    response::{IntoResponse},
-};
-use rainbow_common::errors::{ErrorInfo, ErrorLog};
-use rainbow_auth::ssi_auth::common::errors::AuthErrors;
-use rainbow_common::errors::CommonErrors;
-use rainbow_auth::ssi_auth::common::errors::CustomToResponse;
 use anyhow::anyhow;
-
+use axum::{http::StatusCode, response::IntoResponse};
+use rainbow_auth::ssi_auth::common::errors::AuthErrors;
+use rainbow_auth::ssi_auth::common::errors::CustomToResponse;
+use rainbow_common::errors::CommonErrors;
+use rainbow_common::errors::{ErrorInfo, ErrorLog};
 
 #[cfg(test)]
 mod tests {
@@ -72,9 +68,9 @@ mod tests {
         assert_eq!(response.status(), StatusCode::BAD_GATEWAY);
 
         // Verify that the response body contains the error information
-        let body = tokio::runtime::Runtime::new().unwrap().block_on(async {
-        axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap()
-        });
+        let body = tokio::runtime::Runtime::new()
+            .unwrap()
+            .block_on(async { axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap() });
         let error_info: ErrorInfo = serde_json::from_slice(&body).unwrap();
         assert_eq!(error_info.message, "Unexpected response from the Wallet");
     }
@@ -90,9 +86,9 @@ mod tests {
         assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
 
         // Verify that the response body contains the error information
-        let body = tokio::runtime::Runtime::new().unwrap().block_on(async {
-        axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap()
-        });
+        let body = tokio::runtime::Runtime::new()
+            .unwrap()
+            .block_on(async { axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap() });
         let error_info: ErrorInfo = serde_json::from_slice(&body).unwrap();
         assert_eq!(error_info.message, "Invalid petition");
     }
@@ -128,7 +124,7 @@ mod tests {
     }
 
     // Test for 'error_adapter.rs'
-    
+
     fn dummy_error_info(status: StatusCode) -> ErrorInfo {
         ErrorInfo {
             message: "Test error".to_string(),

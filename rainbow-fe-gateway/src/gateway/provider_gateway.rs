@@ -25,6 +25,7 @@ use axum::response::{IntoResponse, Response};
 use axum::routing::{any, get, post};
 use axum::{Json, Router};
 use rainbow_common::config::services::GatewayConfig;
+use rainbow_common::config::traits::CommonConfigTrait;
 use rainbow_common::config::types::HostType;
 use reqwest::Client;
 use rust_embed::Embed;
@@ -32,7 +33,6 @@ use serde_json::{json, Value};
 use std::time::Duration;
 use tokio::sync::broadcast;
 use tower_http::cors::{Any, CorsLayer};
-use rainbow_common::config::traits::CommonConfigTrait;
 
 pub struct RainbowProviderGateway {
     config: GatewayConfig,
@@ -67,10 +67,7 @@ impl RainbowProviderGateway {
             .route("/incoming-notification", post(Self::incoming_notification));
 
         if self.config.is_production() {
-
-            router = router
-                .route("/fe-config", get(Self::config_handler))
-                .fallback(Self::static_path_handler);
+            router = router.route("/fe-config", get(Self::config_handler)).fallback(Self::static_path_handler);
         }
 
         router.layer(cors).with_state((self.config, self.client, self.notification_tx))

@@ -2,7 +2,10 @@
 
 #[cfg(test)]
 mod tests {
-    use rainbow_auth::ssi_auth::common::types::gnap::{AccessToken, GrantResponse, grant_response::{Continue4GResponse, Interact4GResponse, Subject4GResponse, UserCodeUri4Int}};
+    use rainbow_auth::ssi_auth::common::types::gnap::{
+        grant_response::{Continue4GResponse, Interact4GResponse, Subject4GResponse, UserCodeUri4Int},
+        AccessToken, GrantResponse,
+    };
     use serde_json;
 
     #[test]
@@ -83,10 +86,7 @@ mod tests {
 
     #[test]
     fn test_usercodeuri4int_serialization() {
-        let user_code_uri = UserCodeUri4Int {
-            code: "code123".to_string(),
-            uri: "https://usercode.uri".to_string(),
-        };
+        let user_code_uri = UserCodeUri4Int { code: "code123".to_string(), uri: "https://usercode.uri".to_string() };
         let json = serde_json::to_string(&user_code_uri).unwrap();
         let deserialized: UserCodeUri4Int = serde_json::from_str(&json).unwrap();
         assert_eq!(deserialized.code, "code123");

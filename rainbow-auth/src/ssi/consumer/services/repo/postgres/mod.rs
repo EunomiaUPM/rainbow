@@ -16,7 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-mod service;
 pub mod repos;
+mod service;
 
 pub use service::AuthConsumerRepoForSql;

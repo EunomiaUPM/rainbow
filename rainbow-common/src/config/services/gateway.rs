@@ -22,8 +22,8 @@ use crate::config::traits::{
     ApiConfigTrait, CommonConfigTrait, ConfigLoader, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait, KeysPathTrait,
     RoleTrait,
 };
-use serde::{Deserialize, Serialize};
 use crate::config::types::roles::RoleConfig;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct GatewayConfig {

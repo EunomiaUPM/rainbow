@@ -2,9 +2,15 @@
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
     use rainbow_common::config::provider_config::ApplicationProviderConfig;
-    use rainbow_db::auth_provider::repo_factory::{factory_trait::AuthRepoFactoryTrait, traits::{AuthInteractionRepoTrait, AuthRequestRepoTrait, AuthTokenRequirementsRepoTrait, AuthVerificationRepoTrait, BusinessMatesRepoTrait, MatesRepoTrait}};
+    use rainbow_db::auth_provider::repo_factory::{
+        factory_trait::AuthRepoFactoryTrait,
+        traits::{
+            AuthInteractionRepoTrait, AuthRequestRepoTrait, AuthTokenRequirementsRepoTrait, AuthVerificationRepoTrait,
+            BusinessMatesRepoTrait, MatesRepoTrait,
+        },
+    };
+    use std::sync::Arc;
 
     // Mock
 
@@ -47,7 +53,7 @@ mod tests {
     }
 
     //Tests
- 
+
     #[tokio::test]
     async fn test_manager_new_initializes_correctly() {
         use rainbow_auth::ssi_auth::provider::core::Manager;

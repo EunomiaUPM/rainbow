@@ -17,9 +17,9 @@
  *
  */
 // pub mod config;
-pub mod setup;
 pub mod core;
+pub mod data;
 pub mod http;
 pub mod services;
+pub mod setup;
 pub mod types;
-pub mod data;

@@ -17,6 +17,6 @@
  *
  */
 
-mod callback_trait;
 pub mod basic;
+mod callback_trait;
 pub use callback_trait::CallbackTrait;

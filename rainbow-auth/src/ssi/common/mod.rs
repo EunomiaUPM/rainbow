@@ -16,11 +16,11 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-pub mod services;
-pub mod types;
+pub mod core;
+pub mod data;
 pub mod errors;
 pub mod http;
-pub mod core;
-pub mod utils;
-pub mod data;
+pub mod services;
 pub mod setup;
+pub mod types;
+pub mod utils;

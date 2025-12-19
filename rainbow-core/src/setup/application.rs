@@ -34,6 +34,9 @@ impl CoreApplication {
         let router = match role {
             RoleConfig::Consumer => create_core_consumer_router(config).await,
             RoleConfig::Provider => create_core_provider_router(config).await,
+            _ => {
+                panic!("Invalid role");
+            }
         };
 
         let server_message = format!(

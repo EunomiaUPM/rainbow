@@ -26,7 +26,7 @@ use rainbow_common::config::traits::MonoConfigTrait;
 use rainbow_common::config::types::roles::RoleConfig;
 use rainbow_common::config::ApplicationConfig;
 use std::cmp::PartialEq;
-use tracing::debug;
+use tracing::{debug, info};
 
 #[derive(Parser, Debug)]
 #[command(name = "Rainbow Dataspace Connector Core Server")]
@@ -69,10 +69,14 @@ impl CoreCommands {
             CoreCliRoles::Provider(cmd) => match cmd {
                 CoreCliCommands::Start(args) => {
                     let config = ApplicationConfig::load(RoleConfig::Provider, args.env_file)?;
+                    let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
+                    info!("Current Core Connector Config:\n{}", table);
                     CoreApplication::run(RoleConfig::Provider, &config).await?
                 }
                 CoreCliCommands::Setup(args) => {
                     let config = ApplicationConfig::load(RoleConfig::Provider, args.env_file)?;
+                    let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
+                    info!("Current Core Connector Config:\n{}", table);
                     CoreProviderMigration::run(&config).await?;
                     match config.is_mono_catalog_datahub() {
                         true => {}
@@ -85,10 +89,14 @@ impl CoreCommands {
             CoreCliRoles::Consumer(cmd) => match cmd {
                 CoreCliCommands::Start(args) => {
                     let config = ApplicationConfig::load(RoleConfig::Consumer, args.env_file)?;
+                    let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
+                    info!("Current Core Connector Config:\n{}", table);
                     CoreApplication::run(RoleConfig::Consumer, &config).await?
                 }
                 CoreCliCommands::Setup(args) => {
                     let config = ApplicationConfig::load(RoleConfig::Consumer, args.env_file)?;
+                    let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
+                    info!("Current Core Connector Config:\n{}", table);
                     CoreConsumerMigration::run(&config).await?
                 }
             },

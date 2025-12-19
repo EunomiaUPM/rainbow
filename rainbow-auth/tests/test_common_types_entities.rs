@@ -2,7 +2,9 @@
 
 #[cfg(test)]
 mod tests {
-    use rainbow_auth::ssi_auth::common::types::entities::{ReachAuthority, ReachMethod, ReachProvider, Url2RequestVC, WhatEntity};
+    use rainbow_auth::ssi_auth::common::types::entities::{
+        ReachAuthority, ReachMethod, ReachProvider, Url2RequestVC, WhatEntity,
+    };
     use serde_json;
 
     #[test]

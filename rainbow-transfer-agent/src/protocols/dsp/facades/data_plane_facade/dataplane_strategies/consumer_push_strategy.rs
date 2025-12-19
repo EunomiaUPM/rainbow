@@ -2,10 +2,14 @@ use crate::protocols::dsp::facades::data_plane_facade::dataplane_strategies::con
 use crate::protocols::dsp::facades::data_plane_facade::dataplane_strategies::DataPlaneStrategyTrait;
 use crate::protocols::dsp::facades::data_plane_facade::DataPlaneFacadeTrait;
 use crate::protocols::dsp::protocol_types::DataAddressDto;
+use rainbow_catalog_agent::DataServiceDto;
 use rainbow_common::adv_protocol::interplane::data_plane_provision::DataPlaneProvisionRequest;
 use rainbow_common::adv_protocol::interplane::data_plane_start::DataPlaneStart;
 use rainbow_common::adv_protocol::interplane::data_plane_stop::DataPlaneStop;
-use rainbow_common::adv_protocol::interplane::{DataPlaneControllerMessages, DataPlaneControllerVersion, DataPlaneSDPConfigField, DataPlaneSDPConfigTypes, DataPlaneSDPFieldTypes, DataPlaneSDPRequestField};
+use rainbow_common::adv_protocol::interplane::{
+    DataPlaneControllerMessages, DataPlaneControllerVersion, DataPlaneSDPConfigField, DataPlaneSDPConfigTypes,
+    DataPlaneSDPFieldTypes, DataPlaneSDPRequestField,
+};
 use rainbow_common::dcat_formats::{DctFormats, FormatAction};
 use rainbow_common::protocol::catalog::dataservice_definition::{DataService, DataServiceDcatDeclaration};
 use rainbow_common::protocol::transfer::transfer_data_address::DataAddress;
@@ -37,7 +41,7 @@ impl DataPlaneFacadeTrait for ConsumerPushDataplaneStrategy {
         &self,
         session_id: &Urn,
         format: &DctFormats,
-        data_service: &Option<DataService>,
+        data_service: &Option<DataServiceDto>,
         data_address: &Option<DataAddressDto>,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -47,10 +51,10 @@ impl DataPlaneFacadeTrait for ConsumerPushDataplaneStrategy {
         &self,
         session_id: &Urn,
         format: &DctFormats,
-        data_service: &Option<DataService>,
+        data_service: &Option<DataServiceDto>,
         data_address: &Option<DataAddressDto>,
     ) -> anyhow::Result<()> {
-        let DataAddressDto { endpoint,endpoint_type, endpoint_properties } = data_address.as_ref().unwrap();
+        let DataAddressDto { endpoint, endpoint_type, endpoint_properties } = data_address.as_ref().unwrap();
         let endpoint = endpoint.as_ref().unwrap();
         let endpoint_url = Url::parse(endpoint.as_str())?;
         let endpoint_scheme = endpoint_url.scheme().to_string();
@@ -72,8 +76,7 @@ impl DataPlaneFacadeTrait for ConsumerPushDataplaneStrategy {
                     },
                     DataPlaneSDPRequestField {
                         _type: DataPlaneSDPFieldTypes::DataPlaneAddressAuthType,
-                        format: "https://www.iana.org/assignments/http-authschemes/http-authschemes.xhtml"
-                            .to_string(),
+                        format: "https://www.iana.org/assignments/http-authschemes/http-authschemes.xhtml".to_string(),
                     },
                     DataPlaneSDPRequestField {
                         _type: DataPlaneSDPFieldTypes::DataPlaneAddressAuthToken,
@@ -83,9 +86,7 @@ impl DataPlaneFacadeTrait for ConsumerPushDataplaneStrategy {
                 sdp_config: Some(vec![
                     DataPlaneSDPConfigField {
                         _type: DataPlaneSDPConfigTypes::NextHopAddressScheme,
-                        format: Some(
-                            "https://www.iana.org/assignments/uri-schemes/uri-schemes.xhtml".to_string(),
-                        ),
+                        format: Some("https://www.iana.org/assignments/uri-schemes/uri-schemes.xhtml".to_string()),
                         content: endpoint_scheme,
                     },
                     DataPlaneSDPConfigField {

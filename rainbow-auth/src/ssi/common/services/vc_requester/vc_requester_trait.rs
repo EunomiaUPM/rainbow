@@ -16,9 +16,9 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use crate::ssi::common::data::entities::{mates, req_interaction, req_vc, req_verification};
 use crate::ssi::common::types::entities::{ReachAuthority, ReachMethod};
 use axum::async_trait;
-use crate::ssi::common::data::entities::{mates, req_interaction, req_vc, req_verification};
 use reqwest::Response;
 
 #[async_trait]

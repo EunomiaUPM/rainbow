@@ -48,7 +48,7 @@ impl TransferHttpWorker {
         let router = Self::create_root_http_router(&config).await?.merge(well_known_router);
         let host = if config.is_local() { "127.0.0.1" } else { "0.0.0.0" };
         let port = config.get_weird_port();
-        let addr = format!("{}:{}", host, port);
+        let addr = format!("{}{}", host, port);
 
         let listener = TcpListener::bind(&addr).await?;
         tracing::info!("HTTP Transfer Service running on {}", addr);

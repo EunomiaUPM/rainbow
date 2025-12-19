@@ -17,9 +17,9 @@
  *
  */
 
-pub mod wallet;
-pub mod client;
-pub mod vc_requester;
 pub mod callback;
-pub mod repo;
+pub mod client;
 pub mod gaia_self_issuer;
+pub mod repo;
+pub mod vc_requester;
+pub mod wallet;

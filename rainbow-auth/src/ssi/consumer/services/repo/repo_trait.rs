@@ -17,9 +17,11 @@
  *
  */
 
-use std::sync::Arc;
-use crate::ssi::common::services::repo::subtraits::{MatesTrait, ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait, TokenRequirementsTrait};
+use crate::ssi::common::services::repo::subtraits::{
+    MatesTrait, ReqInteractionTrait, ReqVcTrait, ReqVerificationTrait, TokenRequirementsTrait,
+};
 use crate::ssi::consumer::services::repo::subtraits::ReqRequestTrait;
+use std::sync::Arc;
 
 pub trait AuthConsumerRepoTrait: Send + Sync + 'static {
     fn request_req(&self) -> Arc<dyn ReqRequestTrait>;

@@ -19,13 +19,13 @@
 
 use crate::setup::grpc_worker::CatalogGrpcWorker;
 use crate::setup::http_worker::CatalogHttpWorker;
-use rainbow_common::config::global_config::ApplicationGlobalConfig;
+use rainbow_common::config::services::CatalogConfig;
 use tokio::signal;
 use tokio_util::sync::CancellationToken;
 
 pub struct CatalogApplication;
 impl CatalogApplication {
-    pub async fn run(config: &ApplicationGlobalConfig) -> anyhow::Result<()> {
+    pub async fn run(config: &CatalogConfig) -> anyhow::Result<()> {
         let cancel_token = CancellationToken::new();
         // worker http
         tracing::info!("Spawning HTTP subsystem...");

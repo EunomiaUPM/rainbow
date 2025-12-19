@@ -16,7 +16,7 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+pub mod business_mates;
 pub mod recv_interaction;
 pub mod recv_request;
 pub mod recv_verification;
-pub mod business_mates;

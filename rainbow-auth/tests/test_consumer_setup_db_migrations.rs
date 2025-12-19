@@ -10,11 +10,11 @@ mod tests {
     use rainbow_common::config::consumer_config::ApplicationConsumerConfig;
     use rainbow_common::config::database::DbType;
     use rainbow_common::config::global_config::DatabaseConfig;
-    use sea_orm::{Database, DbErr, sea_query};
-    use sea_orm_migration::{MigratorTrait, SchemaManager, async_trait};
-    use sea_orm::{DbConn};
-    use sea_orm_migration::{MigrationTrait};
-    use sea_orm_migration::{MigrationName};
+    use sea_orm::DbConn;
+    use sea_orm::{sea_query, Database, DbErr};
+    use sea_orm_migration::MigrationName;
+    use sea_orm_migration::MigrationTrait;
+    use sea_orm_migration::{async_trait, MigratorTrait, SchemaManager};
 
     struct TestMigration;
 
@@ -26,12 +26,7 @@ mod tests {
                     sea_query::Table::create()
                         .table(sea_query::Alias::new("dummy"))
                         .if_not_exists()
-                        .col(
-                            sea_query::ColumnDef::new(sea_query::Alias::new("id"))
-                                .integer()
-                                .not_null()
-                                .primary_key(),
-                        )
+                        .col(sea_query::ColumnDef::new(sea_query::Alias::new("id")).integer().not_null().primary_key())
                         .to_owned(),
                 )
                 .await
@@ -39,12 +34,7 @@ mod tests {
 
         async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
             manager
-                .drop_table(
-                    sea_query::Table::drop()
-                        .table(sea_query::Alias::new("dummy"))
-                        .if_exists()
-                        .to_owned(),
-                )
+                .drop_table(sea_query::Table::drop().table(sea_query::Alias::new("dummy")).if_exists().to_owned())
                 .await
         }
     }
@@ -66,13 +56,9 @@ mod tests {
     #[tokio::test]
     async fn test_migrations_run_success_sqlite_memory() {
         let db_url = "sqlite::memory:";
-        let db_connection: DbConn = Database::connect(db_url)
-            .await
-            .expect("Database can't connect");
+        let db_connection: DbConn = Database::connect(db_url).await.expect("Database can't connect");
 
-        MockedMigrations::refresh(&db_connection)
-            .await
-            .expect("Migration failed");
+        MockedMigrations::refresh(&db_connection).await.expect("Migration failed");
 
         assert!(true, "Migration succeeded with SQLite in-memory DB");
     }
@@ -80,14 +66,16 @@ mod tests {
     #[tokio::test]
     async fn test_migrations_run_failure_sqlite_memory() {
         use sea_orm::{Database, DbConn, DbErr};
-        use sea_orm_migration::{MigrationTrait, MigratorTrait, MigrationName, SchemaManager};
+        use sea_orm_migration::{MigrationName, MigrationTrait, MigratorTrait, SchemaManager};
 
         struct FailingMigration;
 
         #[async_trait::async_trait]
         impl MigrationTrait for FailingMigration {
             async fn up(&self, _manager: &SchemaManager) -> Result<(), DbErr> {
-                Err(DbErr::Migration("Intentional failure for testing".to_owned()))
+                Err(DbErr::Migration(
+                    "Intentional failure for testing".to_owned(),
+                ))
             }
 
             async fn down(&self, _manager: &SchemaManager) -> Result<(), DbErr> {
@@ -110,9 +98,7 @@ mod tests {
         }
 
         let db_url = "sqlite::memory:";
-        let db_connection: DbConn = Database::connect(db_url)
-            .await
-            .expect("Database can't connect");
+        let db_connection: DbConn = Database::connect(db_url).await.expect("Database can't connect");
 
         let result = FailingMigrator::refresh(&db_connection).await;
 
@@ -131,9 +117,7 @@ mod tests {
         let db_url = "sqlite::memory:";
 
         // Connect to database
-        let db: DbConn = Database::connect(db_url)
-            .await
-            .expect("Database can't connect");
+        let db: DbConn = Database::connect(db_url).await.expect("Database can't connect");
 
         // Run the simulated migrations
         let result = MockedMigrations::refresh(&db).await;
@@ -189,9 +173,7 @@ mod tests {
             name: "db".to_string(),
         };
 
-        let result = AssertUnwindSafe(SSIAuthConsumerMigrations::run(&config))
-            .catch_unwind()
-            .await;
+        let result = AssertUnwindSafe(SSIAuthConsumerMigrations::run(&config)).catch_unwind().await;
 
         assert!(
             result.is_err(),
@@ -219,9 +201,7 @@ mod tests {
             password: "pass".to_string(),
             name: "db".to_string(),
         };
-        let result = std::panic::AssertUnwindSafe(SSIAuthConsumerMigrations::run(&config))
-            .catch_unwind()
-            .await;
+        let result = std::panic::AssertUnwindSafe(SSIAuthConsumerMigrations::run(&config)).catch_unwind().await;
         assert!(result.is_err(), "Expected panic for invalid MySQL config");
     }
 
@@ -236,21 +216,26 @@ mod tests {
             password: "pass".to_string(),
             name: "db".to_string(),
         };
-        let result = std::panic::AssertUnwindSafe(SSIAuthConsumerMigrations::run(&config))
-            .catch_unwind()
-            .await;
-        assert!(result.is_err(), "Expected panic for invalid Postgres config");
+        let result = std::panic::AssertUnwindSafe(SSIAuthConsumerMigrations::run(&config)).catch_unwind().await;
+        assert!(
+            result.is_err(),
+            "Expected panic for invalid Postgres config"
+        );
     }
 
     #[tokio::test]
     async fn test_up_and_down_should_succeed() {
-        let db = Database::connect("sqlite::memory:")
-            .await
-            .expect("Failed to connect to in-memory SQLite");
+        let db = Database::connect("sqlite::memory:").await.expect("Failed to connect to in-memory SQLite");
         let manager = SchemaManager::new(&db);
         let migration = TestMigration;
-        assert!(migration.up(&manager).await.is_ok(), "Expected up() to succeed");
-        assert!(migration.down(&manager).await.is_ok(), "Expected down() to succeed");
+        assert!(
+            migration.up(&manager).await.is_ok(),
+            "Expected up() to succeed"
+        );
+        assert!(
+            migration.down(&manager).await.is_ok(),
+            "Expected down() to succeed"
+        );
     }
 
     #[test]
@@ -261,6 +246,9 @@ mod tests {
                 vec![]
             }
         }
-        assert!(EmptyMigrator::migrations().is_empty(), "Expected empty migrations");
+        assert!(
+            EmptyMigrator::migrations().is_empty(),
+            "Expected empty migrations"
+        );
     }
 }
