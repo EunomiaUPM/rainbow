@@ -25,8 +25,8 @@ use crate::protocols::dsp::validator::traits::validate_state_transition::Validat
 use crate::protocols::dsp::validator::traits::validation_helpers::ValidationHelpers;
 use anyhow::bail;
 use log::error;
+use rainbow_common::config::types::roles::RoleConfig;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
-use rainbow_common::protocol::transfer::TransferRoles;
 use std::sync::Arc;
 
 pub struct ValidatedStateTransitionServiceForDsp {
@@ -41,14 +41,14 @@ impl ValidatedStateTransitionServiceForDsp {
 impl ValidateStateTransition for ValidatedStateTransitionServiceForDsp {
     async fn validate_role_for_message(
         &self,
-        role: &TransferRoles,
+        role: &RoleConfig,
         message_type: &NegotiationProcessMessageType,
     ) -> anyhow::Result<()> {
         match (role, message_type) {
-            (TransferRoles::Provider, NegotiationProcessMessageType::NegotiationRequestMessage) => Ok(()),
-            (TransferRoles::Provider, NegotiationProcessMessageType::NegotiationAgreementVerificationMessage) => Ok(()),
-            (TransferRoles::Consumer, NegotiationProcessMessageType::NegotiationOfferMessage) => Ok(()),
-            (TransferRoles::Consumer, NegotiationProcessMessageType::NegotiationAgreementMessage) => Ok(()),
+            (RoleConfig::Provider, NegotiationProcessMessageType::NegotiationRequestMessage) => Ok(()),
+            (RoleConfig::Provider, NegotiationProcessMessageType::NegotiationAgreementVerificationMessage) => Ok(()),
+            (RoleConfig::Consumer, NegotiationProcessMessageType::NegotiationOfferMessage) => Ok(()),
+            (RoleConfig::Consumer, NegotiationProcessMessageType::NegotiationAgreementMessage) => Ok(()),
             (_, NegotiationProcessMessageType::NegotiationEventMessage(_)) => Ok(()),
             (_, NegotiationProcessMessageType::NegotiationTerminationMessage) => Ok(()),
             _ => {

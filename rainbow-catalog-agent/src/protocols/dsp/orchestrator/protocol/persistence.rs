@@ -3,22 +3,22 @@ use crate::entities::data_services::{DataServiceDto, DataServiceEntityTrait};
 use crate::entities::datasets::{DatasetDto, DatasetEntityTrait};
 use crate::entities::distributions::{DistributionDto, DistributionEntityTrait};
 use crate::entities::odrl_policies::{OdrlPolicyDto, OdrlPolicyEntityTrait};
-use anyhow::bail;
-use rainbow_common::dcat_formats::{DctFormats, FormatAction, FormatProtocol};
-use rainbow_common::errors::{CommonErrors, ErrorLog};
-use rainbow_common::facades::ssi_auth_facade::MatesFacadeTrait;
-use rainbow_common::protocol::catalog::catalog_definition::{
+use crate::protocols::dsp::types::catalog_definition::{
     Catalog, CatalogDSpaceDeclaration, CatalogDcatDeclaration, CatalogDctDeclaration, CatalogFoafDeclaration,
 };
-use rainbow_common::protocol::catalog::dataservice_definition::{
+use crate::protocols::dsp::types::dataservice_definition::{
     DataService, DataServiceDcatDeclaration, DataServiceDctDeclaration,
 };
-use rainbow_common::protocol::catalog::dataset_definition::{Dataset, DatasetDcatDeclaration, DatasetDctDeclaration};
-use rainbow_common::protocol::catalog::distribution_definition::{
+use crate::protocols::dsp::types::dataset_definition::{Dataset, DatasetDcatDeclaration, DatasetDctDeclaration};
+use crate::protocols::dsp::types::distribution_definition::{
     Distribution, DistributionDcatDeclaration, DistributionDctDeclaration,
 };
-use rainbow_common::protocol::context_field::ContextField;
-use rainbow_common::protocol::contract::contract_odrl::{OdrlOffer, OdrlPolicyInfo, OdrlTypes};
+use anyhow::bail;
+use rainbow_common::dcat_formats::{DctFormats, FormatAction, FormatProtocol};
+use rainbow_common::dsp_common::context_field::ContextField;
+use rainbow_common::errors::{CommonErrors, ErrorLog};
+use rainbow_common::facades::ssi_auth_facade::MatesFacadeTrait;
+use rainbow_common::protocol::odrl::{OdrlOffer, OdrlPolicyInfo, OdrlTypes};
 use std::collections::HashMap;
 use std::str::FromStr;
 use std::sync::Arc;

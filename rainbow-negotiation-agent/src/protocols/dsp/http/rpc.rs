@@ -36,8 +36,8 @@ use axum::{
     routing::post,
 };
 use rainbow_common::config::services::ContractsConfig;
+use rainbow_common::dsp_common::context_field::ContextField;
 use rainbow_common::errors::CommonErrors;
-use rainbow_common::protocol::context_field::ContextField;
 use serde::Serialize;
 use std::sync::Arc;
 

@@ -17,7 +17,7 @@
  *
  */
 use crate::entities::odrl_policies::CatalogEntityTypes;
-use rainbow_common::protocol::contract::contract_odrl::OdrlPolicyInfo;
+use rainbow_common::protocol::odrl::OdrlPolicyInfo;
 use sea_orm::entity::prelude::*;
 use sea_orm::ActiveValue;
 use serde::{Deserialize, Serialize};

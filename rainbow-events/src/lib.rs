@@ -19,4 +19,5 @@
 
 pub mod core;
 pub mod data;
+pub(crate) mod errors;
 pub mod http;

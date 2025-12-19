@@ -14,9 +14,9 @@ use crate::protocols::dsp::protocol_types::{
 };
 use anyhow::bail;
 use async_trait::async_trait;
+use rainbow_common::config::types::roles::RoleConfig;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
-use rainbow_common::protocol::contract::contract_odrl::ContractRequestMessageOfferTypes;
-use rainbow_common::protocol::transfer::TransferRoles;
+use rainbow_common::protocol::odrl::ContractRequestMessageOfferTypes;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -120,10 +120,10 @@ impl OrchestrationPersistenceForProtocol {
 
 impl OrchestrationHelpers for OrchestrationPersistenceForProtocol {}
 impl OrchestrationExtractors for OrchestrationPersistenceForProtocol {
-    fn get_role_from_message_type(&self, message: &NegotiationProcessMessageType) -> anyhow::Result<TransferRoles> {
+    fn get_role_from_message_type(&self, message: &NegotiationProcessMessageType) -> anyhow::Result<RoleConfig> {
         match message {
-            NegotiationProcessMessageType::NegotiationRequestMessage => Ok(TransferRoles::Provider),
-            NegotiationProcessMessageType::NegotiationOfferMessage => Ok(TransferRoles::Consumer),
+            NegotiationProcessMessageType::NegotiationRequestMessage => Ok(RoleConfig::Provider),
+            NegotiationProcessMessageType::NegotiationOfferMessage => Ok(RoleConfig::Consumer),
             _ => {
                 let err = CommonErrors::parse_new("Message not allowed here");
                 error!("{}", err.log());
@@ -154,20 +154,29 @@ impl OrchestrationPersistenceForProtocol {
         let callback = self.get_dsp_callback_address_safely(message)?;
         let role = self.get_role_from_message_type(&message_type)?;
         let key_identifier = match role {
-            TransferRoles::Provider => "consumerPid",
-            TransferRoles::Consumer => "providerPid",
+            RoleConfig::Provider => "consumerPid",
+            RoleConfig::Consumer => "providerPid",
+            _ => "id",
         };
         let not_key_identifier = match role {
-            TransferRoles::Provider => "providerPid",
-            TransferRoles::Consumer => "consumerPid",
+            RoleConfig::Provider => "providerPid",
+            RoleConfig::Consumer => "consumerPid",
+            _ => "id",
         };
         let not_key_identifier_id = match role {
-            TransferRoles::Provider => "provider-pid",
-            TransferRoles::Consumer => "consumer-pid",
+            RoleConfig::Provider => "provider-pid",
+            RoleConfig::Consumer => "consumer-pid",
+            _ => "id",
         };
         let identifier = match role {
-            TransferRoles::Provider => self.get_dsp_consumer_pid_safely(message)?,
-            TransferRoles::Consumer => self.get_dsp_provider_pid_safely(message)?,
+            RoleConfig::Provider => self.get_dsp_consumer_pid_safely(message)?,
+            RoleConfig::Consumer => self.get_dsp_provider_pid_safely(message)?,
+            _ => {
+                let err =
+                    CommonErrors::parse_new("Something is wrong. Seems this process' state is not protocol compliant");
+                log::error!("{}", err.log());
+                bail!(err);
+            }
         };
         let mut identifiers = HashMap::new();
         identifiers.insert(key_identifier.to_string(), identifier.to_string());

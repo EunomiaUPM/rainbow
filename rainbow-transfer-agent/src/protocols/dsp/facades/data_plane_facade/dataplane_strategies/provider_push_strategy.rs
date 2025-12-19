@@ -10,8 +10,6 @@ use rainbow_common::adv_protocol::interplane::{
     DataPlaneSDPFieldTypes, DataPlaneSDPRequestField,
 };
 use rainbow_common::dcat_formats::{DctFormats, FormatAction};
-use rainbow_common::protocol::catalog::dataservice_definition::{DataService, DataServiceDcatDeclaration};
-use rainbow_common::protocol::transfer::transfer_data_address::DataAddress;
 use rainbow_dataplane::coordinator::dataplane_access_controller::DataPlaneAccessControllerTrait;
 use std::sync::Arc;
 use url::Url;
@@ -32,7 +30,7 @@ impl DataPlaneStrategyTrait for ProviderPushDataplaneStrategy {}
 
 #[async_trait::async_trait]
 impl DataPlaneFacadeTrait for ProviderPushDataplaneStrategy {
-    async fn get_dataplane_address(&self, session_id: &Urn) -> anyhow::Result<DataAddress> {
+    async fn get_dataplane_address(&self, session_id: &Urn) -> anyhow::Result<DataAddressDto> {
         todo!()
     }
 

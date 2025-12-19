@@ -3,14 +3,14 @@ use crate::protocols::dsp::protocol_types::{
     NegotiationProcessMessageTrait, NegotiationProcessMessageType, NegotiationProcessState,
 };
 use async_trait::async_trait;
+use rainbow_common::config::types::roles::RoleConfig;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
-use rainbow_common::protocol::transfer::TransferRoles;
 
 #[async_trait]
 pub trait OrchestrationExtractors: Send + Sync {
-    fn get_role_from_dto(&self, dto: &NegotiationProcessDto) -> anyhow::Result<TransferRoles> {
+    fn get_role_from_dto(&self, dto: &NegotiationProcessDto) -> anyhow::Result<RoleConfig> {
         let role = &dto.inner.role;
-        let role = role.parse::<TransferRoles>()?;
+        let role = role.parse::<RoleConfig>()?;
         Ok(role)
     }
 
@@ -25,7 +25,7 @@ pub trait OrchestrationExtractors: Send + Sync {
         Ok(state)
     }
 
-    fn get_role_from_message_type(&self, message: &NegotiationProcessMessageType) -> anyhow::Result<TransferRoles>;
+    fn get_role_from_message_type(&self, message: &NegotiationProcessMessageType) -> anyhow::Result<RoleConfig>;
     fn get_state_from_message_type(
         &self,
         message: &NegotiationProcessMessageType,

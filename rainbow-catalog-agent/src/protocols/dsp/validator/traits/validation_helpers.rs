@@ -18,12 +18,12 @@
  */
 
 #![allow(unused)]
-use rainbow_common::protocol::transfer::TransferRoles;
+use rainbow_common::config::types::roles::RoleConfig;
 use urn::Urn;
 
 #[async_trait::async_trait]
 pub trait ValidationHelpers: Send + Sync + 'static {
     async fn parse_urn(&self, uri_id: &String) -> anyhow::Result<Urn>;
-    async fn parse_identifier_into_role(&self, identifier: &str) -> anyhow::Result<TransferRoles>;
-    async fn parse_role_into_identifier(&self, role: &TransferRoles) -> anyhow::Result<&str>;
+    async fn parse_identifier_into_role(&self, identifier: &str) -> anyhow::Result<RoleConfig>;
+    async fn parse_role_into_identifier(&self, role: &RoleConfig) -> anyhow::Result<&str>;
 }

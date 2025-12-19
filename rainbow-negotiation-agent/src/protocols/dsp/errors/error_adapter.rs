@@ -20,8 +20,8 @@
 use crate::protocols::dsp::protocol_types::{
     NegotiationErrorMessageDto, NegotiationProcessMessageType, NegotiationProcessMessageWrapper,
 };
+use rainbow_common::dsp_common::context_field::ContextField;
 use rainbow_common::errors::{CommonErrors, ErrorInfo};
-use rainbow_common::protocol::context_field::ContextField;
 use urn::Urn;
 
 #[derive(Clone)]

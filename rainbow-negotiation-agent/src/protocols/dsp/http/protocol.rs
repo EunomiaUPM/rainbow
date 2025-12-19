@@ -37,8 +37,8 @@ use crate::protocols::dsp::protocol_types::{
     NegotiationProcessMessageWrapper, NegotiationRequestInitMessageDto, NegotiationRequestMessageDto,
     NegotiationTerminationMessageDto, NegotiationVerificationMessageDto,
 };
+use rainbow_common::dsp_common::context_field::ContextField;
 use rainbow_common::errors::CommonErrors;
-use rainbow_common::protocol::context_field::ContextField;
 
 #[derive(Clone)]
 pub struct DspRouter {

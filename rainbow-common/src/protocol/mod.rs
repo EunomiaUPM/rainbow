@@ -16,13 +16,5 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
-pub mod catalog;
-pub mod context_field;
-pub mod contract;
-pub mod datahub_proxy;
-pub mod transfer;
-
-pub trait ProtocolValidate {
-    fn validate(&self) -> anyhow::Result<()>;
-}
+pub mod data_address;
+pub mod odrl;

@@ -20,20 +20,20 @@
 #![allow(unused)]
 use crate::entities::negotiation_process::NegotiationProcessDto;
 use crate::protocols::dsp::protocol_types::{NegotiationProcessMessageTrait, NegotiationProcessState};
-use rainbow_common::protocol::transfer::TransferRoles;
+use rainbow_common::config::types::roles::RoleConfig;
 use urn::Urn;
 
 #[async_trait::async_trait]
 pub trait ValidationHelpers: Send + Sync + 'static {
     async fn parse_urn(&self, uri_id: &String) -> anyhow::Result<Urn>;
-    async fn parse_identifier_into_role(&self, identifier: &str) -> anyhow::Result<TransferRoles>;
-    async fn parse_role_into_identifier(&self, role: &TransferRoles) -> anyhow::Result<&str>;
+    async fn parse_identifier_into_role(&self, identifier: &str) -> anyhow::Result<RoleConfig>;
+    async fn parse_role_into_identifier(&self, role: &RoleConfig) -> anyhow::Result<&str>;
     async fn get_current_dto_from_payload(
         &self,
         payload: &dyn NegotiationProcessMessageTrait,
     ) -> anyhow::Result<NegotiationProcessDto>;
-    async fn get_pid_by_role(&self, dto: &NegotiationProcessDto, role: TransferRoles) -> anyhow::Result<Urn>;
-    async fn get_role_from_dto(&self, dto: &NegotiationProcessDto) -> anyhow::Result<TransferRoles>;
+    async fn get_pid_by_role(&self, dto: &NegotiationProcessDto, role: &RoleConfig) -> anyhow::Result<Urn>;
+    async fn get_role_from_dto(&self, dto: &NegotiationProcessDto) -> anyhow::Result<RoleConfig>;
     async fn get_state_from_dto(&self, dto: &NegotiationProcessDto) -> anyhow::Result<NegotiationProcessState>;
     async fn get_state_attribute_from_dto(&self, dto: &NegotiationProcessDto) -> anyhow::Result<String>;
 }

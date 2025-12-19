@@ -23,7 +23,7 @@ use crate::protocols::dsp::protocol_types::{
     TransferProcessMessageWrapper, TransferRequestMessageDto, TransferStartMessageDto, TransferSuspensionMessageDto,
     TransferTerminationMessageDto,
 };
-use rainbow_common::protocol::context_field::ContextField;
+use rainbow_common::dsp_common::context_field::ContextField;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use std::str::FromStr;

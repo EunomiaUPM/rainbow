@@ -10,7 +10,7 @@ use crate::grpc::api::catalog_agent::{
     PolicyTemplate, PutCatalogRequest, PutDataServiceRequest, PutDatasetRequest, PutDistributionRequest,
 };
 use rainbow_common::dcat_formats::DctFormats;
-use rainbow_common::protocol::contract::contract_odrl::OdrlPolicyInfo;
+use rainbow_common::protocol::odrl::OdrlPolicyInfo;
 use std::str::FromStr;
 use tonic::Status;
 use urn::Urn;

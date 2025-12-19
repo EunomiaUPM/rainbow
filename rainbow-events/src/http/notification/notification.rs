@@ -20,15 +20,18 @@
 use crate::core::notification::notification_err::NotificationErrors;
 use crate::core::notification::RainbowEventsNotificationTrait;
 use crate::core::subscription::subscription_types::SubscriptionEntities;
+use crate::errors::error_adapter::CustomToResponse;
 use axum::extract::{Path, State};
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use log::info;
-use rainbow_common::err::transfer_err::TransferErrorType::NotCheckedError;
+use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::utils::get_urn_from_string;
 use reqwest::StatusCode;
+use serde_json::json;
 use std::sync::Arc;
+use tracing::error;
 
 pub struct RainbowEventsNotificationRouter<T> {
     service: Arc<T>,
@@ -81,7 +84,14 @@ where
             Ok(notifications) => (StatusCode::OK, Json(notifications)).into_response(),
             Err(e) => match e.downcast::<NotificationErrors>() {
                 Ok(e_) => e_.into_response(),
-                Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
+                Err(_) => (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(json!({
+                        "message": "Internal Server Error",
+                        "error_code": 5000
+                    })),
+                )
+                    .into_response(),
             },
         }
     }
@@ -102,7 +112,14 @@ where
             Ok(notifications) => (StatusCode::OK, Json(notifications)).into_response(),
             Err(e) => match e.downcast::<NotificationErrors>() {
                 Ok(e_) => e_.into_response(),
-                Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
+                Err(_) => (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(json!({
+                        "message": "Internal Server Error",
+                        "error_code": 5000
+                    })),
+                )
+                    .into_response(),
             },
         }
     }
@@ -123,7 +140,14 @@ where
             Ok(notifications) => (StatusCode::OK, Json(notifications)).into_response(),
             Err(e) => match e.downcast::<NotificationErrors>() {
                 Ok(e_) => e_.into_response(),
-                Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
+                Err(_) => (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(json!({
+                        "message": "Internal Server Error",
+                        "error_code": 5000
+                    })),
+                )
+                    .into_response(),
             },
         }
     }
@@ -144,7 +168,14 @@ where
             Ok(notifications) => (StatusCode::ACCEPTED, Json(notifications)).into_response(),
             Err(e) => match e.downcast::<NotificationErrors>() {
                 Ok(e_) => e_.into_response(),
-                Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
+                Err(_) => (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(json!({
+                        "message": "Internal Server Error",
+                        "error_code": 5000
+                    })),
+                )
+                    .into_response(),
             },
         }
     }
@@ -170,7 +201,14 @@ where
             Ok(notifications) => (StatusCode::OK, Json(notifications)).into_response(),
             Err(e) => match e.downcast::<NotificationErrors>() {
                 Ok(e_) => e_.into_response(),
-                Err(e_) => NotCheckedError { inner_error: e_ }.into_response(),
+                Err(_) => (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(json!({
+                        "message": "Internal Server Error",
+                        "error_code": 5000
+                    })),
+                )
+                    .into_response(),
             },
         }
     }

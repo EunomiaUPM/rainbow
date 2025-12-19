@@ -24,10 +24,8 @@ use crate::protocols::dsp::protocol_types::{
     NegotiationProcessMessageWrapper, NegotiationRequestInitMessageDto, NegotiationRequestMessageDto,
     NegotiationTerminationMessageDto, NegotiationVerificationMessageDto,
 };
-use rainbow_common::protocol::context_field::ContextField;
-use rainbow_common::protocol::contract::contract_odrl::{
-    ContractRequestMessageOfferTypes, OdrlAgreement, OdrlMessageOffer,
-};
+use rainbow_common::dsp_common::context_field::ContextField;
+use rainbow_common::protocol::odrl::{ContractRequestMessageOfferTypes, OdrlAgreement};
 use rainbow_common::utils::get_urn;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;

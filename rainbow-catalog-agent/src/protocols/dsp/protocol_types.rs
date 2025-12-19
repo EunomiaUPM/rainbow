@@ -17,7 +17,7 @@
  *
  */
 
-use rainbow_common::protocol::context_field::ContextField;
+use rainbow_common::dsp_common::context_field::ContextField;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Debug, Display};
 use urn::Urn;

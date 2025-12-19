@@ -37,11 +37,10 @@ use crate::protocols::dsp::protocol_types::{
 };
 use crate::protocols::dsp::validator::traits::validation_rpc_steps::ValidationRpcSteps;
 use rainbow_common::config::services::ContractsConfig;
+use rainbow_common::config::types::roles::RoleConfig;
+use rainbow_common::dsp_common::context_field::ContextField;
 use rainbow_common::http_client::HttpClient;
-use rainbow_common::protocol::context_field::ContextField;
-use rainbow_common::protocol::contract::contract_odrl::{OdrlAgreement, OdrlMessageOffer, OdrlTypes};
-use rainbow_common::protocol::contract::contract_offer::ContractOfferMessage;
-use rainbow_common::protocol::transfer::TransferRoles;
+use rainbow_common::protocol::odrl::{OdrlAgreement, OdrlMessageOffer, OdrlTypes};
 use std::str::FromStr;
 use std::sync::Arc;
 use urn::Urn;
@@ -100,7 +99,7 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         // extract fields
         let id = self.get_rpc_consumer_pid_safely(input)?.to_string();
         let current_process = self.persistence_service.fetch_process(id.as_str()).await?;
-        let role = !current_process.inner.role.parse::<TransferRoles>()?;
+        let role = !current_process.inner.role.parse::<RoleConfig>()?;
         let role_identifier = self.parse_role_into_identifier(&role)?.to_string();
         let identifier = current_process.identifiers.get(&role_identifier).unwrap();
         let peer_address = current_process.inner.callback_address.unwrap();
@@ -152,7 +151,7 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         // extract fields
         let id = self.get_rpc_consumer_pid_safely(input)?.to_string();
         let current_process = self.persistence_service.fetch_process(id.as_str()).await?;
-        let role = !current_process.inner.role.parse::<TransferRoles>()?;
+        let role = !current_process.inner.role.parse::<RoleConfig>()?;
         let role_identifier = self.parse_role_into_identifier(&role)?.to_string();
         let identifier = current_process.identifiers.get(&role_identifier).unwrap();
         let peer_address = current_process.inner.callback_address.unwrap();
@@ -181,7 +180,7 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         // extract fields
         let id = self.get_rpc_consumer_pid_safely(input)?.to_string();
         let current_process = self.persistence_service.fetch_process(id.as_str()).await?;
-        let role = !current_process.inner.role.parse::<TransferRoles>()?;
+        let role = !current_process.inner.role.parse::<RoleConfig>()?;
         let role_identifier = self.parse_role_into_identifier(&role)?.to_string();
         let identifier = current_process.identifiers.get(&role_identifier).unwrap();
         let peer_address = current_process.inner.callback_address.unwrap();
@@ -230,7 +229,7 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         // extract fields
         let id = self.get_rpc_consumer_pid_safely(input)?.to_string();
         let current_process = self.persistence_service.fetch_process(id.as_str()).await?;
-        let role = !current_process.inner.role.parse::<TransferRoles>()?;
+        let role = !current_process.inner.role.parse::<RoleConfig>()?;
         let role_identifier = self.parse_role_into_identifier(&role)?.to_string();
         let identifier = current_process.identifiers.get(&role_identifier).unwrap();
         let peer_address = current_process.inner.callback_address.unwrap();
@@ -265,7 +264,7 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         // extract fields
         let id = self.get_rpc_consumer_pid_safely(input)?.to_string();
         let current_process = self.persistence_service.fetch_process(id.as_str()).await?;
-        let role = !current_process.inner.role.parse::<TransferRoles>()?;
+        let role = !current_process.inner.role.parse::<RoleConfig>()?;
         let role_identifier = self.parse_role_into_identifier(&role)?.to_string();
         let identifier = current_process.identifiers.get(&role_identifier).unwrap();
         let peer_address = current_process.inner.callback_address.unwrap();
@@ -295,7 +294,7 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         // extract fields
         let id = self.get_rpc_consumer_pid_safely(input)?.to_string();
         let current_process = self.persistence_service.fetch_process(id.as_str()).await?;
-        let role = !current_process.inner.role.parse::<TransferRoles>()?;
+        let role = !current_process.inner.role.parse::<RoleConfig>()?;
         let role_identifier = self.parse_role_into_identifier(&role)?.to_string();
         let identifier = current_process.identifiers.get(&role_identifier).unwrap();
         let peer_address = current_process.inner.callback_address.unwrap();
@@ -327,7 +326,7 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         // extract fields
         let id = self.get_rpc_consumer_pid_safely(input)?.to_string();
         let current_process = self.persistence_service.fetch_process(id.as_str()).await?;
-        let role = !current_process.inner.role.parse::<TransferRoles>()?;
+        let role = !current_process.inner.role.parse::<RoleConfig>()?;
         let role_identifier = self.parse_role_into_identifier(&role)?.to_string();
         let identifier = current_process.identifiers.get(&role_identifier).unwrap();
         let peer_address = current_process.inner.callback_address.unwrap();

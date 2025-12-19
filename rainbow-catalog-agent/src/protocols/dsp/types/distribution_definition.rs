@@ -17,10 +17,10 @@
  *
  */
 
-use crate::dcat_formats::DctFormats;
-use crate::protocol::catalog::dataservice_definition::DataService;
-use crate::protocol::context_field::ContextField;
-use crate::protocol::contract::contract_odrl::OdrlOffer;
+use crate::protocols::dsp::types::dataservice_definition::DataService;
+use rainbow_common::dcat_formats::DctFormats;
+use rainbow_common::dsp_common::context_field::ContextField;
+use rainbow_common::protocol::odrl::OdrlOffer;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

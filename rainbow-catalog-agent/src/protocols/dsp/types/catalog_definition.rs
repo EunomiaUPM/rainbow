@@ -17,44 +17,59 @@
  *
  */
 
-use crate::protocol::catalog::EntityTypes;
-use crate::protocol::context_field::ContextField;
-use crate::protocol::contract::contract_odrl::OdrlOffer;
+// use rainbow_db::catalog::entities::catalog;
+use crate::protocols::dsp::types::dataservice_definition::DataService;
+use crate::protocols::dsp::types::dataset_definition::Dataset;
+use rainbow_common::dsp_common::context_field::ContextField;
+use rainbow_common::protocol::odrl::OdrlOffer;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use urn::Urn;
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct DataService {
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Catalog {
     #[serde(rename = "@context")]
     pub context: ContextField,
     #[serde(rename = "@type")]
     pub _type: String,
     #[serde(rename = "@id")]
-    pub id: String,
+    pub id: Urn,
     #[serde(flatten)]
-    pub dcat: DataServiceDcatDeclaration,
+    pub foaf: CatalogFoafDeclaration,
     #[serde(flatten)]
-    pub dct: DataServiceDctDeclaration,
+    pub dcat: CatalogDcatDeclaration,
+    #[serde(flatten)]
+    pub dct: CatalogDctDeclaration,
+    #[serde(flatten)]
+    pub dspace: CatalogDSpaceDeclaration,
     #[serde(rename = "hasPolicy")]
-    pub odrl_offer: Vec<OdrlOffer>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub odrl_offer: Option<Vec<OdrlOffer>>,
     #[serde(rename = "extraFields")]
     pub extra_fields: serde_json::Value,
+    #[serde(rename = "catalog")]
+    pub catalogs: Vec<Catalog>,
+    #[serde(rename = "dataset")]
+    pub datasets: Vec<Dataset>,
+    #[serde(rename = "service")]
+    pub data_services: Vec<DataService>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct DataServiceDcatDeclaration {
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CatalogFoafDeclaration {
+    #[serde(rename = "homepage")]
+    pub homepage: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CatalogDcatDeclaration {
     #[serde(rename = "theme")]
     pub theme: String,
     #[serde(rename = "keyword")]
     pub keyword: String,
-    #[serde(rename = "endpointDescription")]
-    pub endpoint_description: String,
-    #[serde(rename = "endpointURL")]
-    pub endpoint_url: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct DataServiceDctDeclaration {
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CatalogDctDeclaration {
     #[serde(rename = "conformsTo")]
     pub conforms_to: Option<String>,
     #[serde(rename = "creator")]
@@ -71,29 +86,8 @@ pub struct DataServiceDctDeclaration {
     pub description: Vec<String>,
 }
 
-impl Default for DataService {
-    fn default() -> Self {
-        DataService {
-            context: ContextField::default(),
-            _type: EntityTypes::DataService.to_string(),
-            id: "".to_string(),
-            dcat: DataServiceDcatDeclaration {
-                theme: "".to_string(),
-                keyword: "".to_string(),
-                endpoint_description: "".to_string(),
-                endpoint_url: "".to_string(),
-            },
-            dct: DataServiceDctDeclaration {
-                conforms_to: None,
-                creator: None,
-                identifier: "".to_string(),
-                issued: chrono::Utc::now().naive_utc(),
-                modified: None,
-                title: None,
-                description: vec![],
-            },
-            odrl_offer: vec![],
-            extra_fields: Value::default(),
-        }
-    }
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CatalogDSpaceDeclaration {
+    #[serde(rename = "participantId")]
+    pub participant_id: Option<String>,
 }

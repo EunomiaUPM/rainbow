@@ -21,8 +21,8 @@ pub(crate) mod persistence;
 pub(crate) mod protocol;
 
 use crate::protocols::dsp::protocol_types::{CatalogMessageWrapper, CatalogRequestMessageDto, DatasetRequestMessage};
-use rainbow_common::protocol::catalog::catalog_definition::Catalog;
-use rainbow_common::protocol::catalog::dataset_definition::Dataset;
+use crate::protocols::dsp::types::catalog_definition::Catalog;
+use crate::protocols::dsp::types::dataset_definition::Dataset;
 
 #[async_trait::async_trait]
 pub trait ProtocolOrchestratorTrait: Send + Sync + 'static {

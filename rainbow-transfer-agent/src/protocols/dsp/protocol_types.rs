@@ -19,8 +19,8 @@
 
 use crate::entities::transfer_process::TransferProcessDto;
 use anyhow::bail;
+use rainbow_common::dsp_common::context_field::ContextField;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
-use rainbow_common::protocol::context_field::ContextField;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Debug, Display};
 use std::str::FromStr;

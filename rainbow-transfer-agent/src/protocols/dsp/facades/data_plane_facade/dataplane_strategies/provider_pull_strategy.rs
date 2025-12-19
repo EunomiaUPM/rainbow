@@ -8,8 +8,6 @@ use rainbow_common::adv_protocol::interplane::data_plane_status::DataPlaneStatus
 use rainbow_common::adv_protocol::interplane::data_plane_stop::DataPlaneStop;
 use rainbow_common::adv_protocol::interplane::{DataPlaneControllerMessages, DataPlaneControllerVersion};
 use rainbow_common::dcat_formats::DctFormats;
-use rainbow_common::protocol::catalog::dataservice_definition::DataService;
-use rainbow_common::protocol::transfer::transfer_data_address::DataAddress;
 use rainbow_dataplane::coordinator::dataplane_access_controller::DataPlaneAccessControllerTrait;
 use std::sync::Arc;
 use urn::Urn;
@@ -29,7 +27,7 @@ impl DataPlaneStrategyTrait for ProviderPullDataplaneStrategy {}
 
 #[async_trait::async_trait]
 impl DataPlaneFacadeTrait for ProviderPullDataplaneStrategy {
-    async fn get_dataplane_address(&self, session_id: &Urn) -> anyhow::Result<DataAddress> {
+    async fn get_dataplane_address(&self, session_id: &Urn) -> anyhow::Result<DataAddressDto> {
         todo!()
     }
 

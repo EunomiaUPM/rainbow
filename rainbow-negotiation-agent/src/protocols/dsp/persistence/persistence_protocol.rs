@@ -27,9 +27,9 @@ use crate::protocols::dsp::persistence::NegotiationPersistenceTrait;
 use crate::protocols::dsp::protocol_types::{
     NegotiationProcessMessageTrait, NegotiationProcessMessageType, NegotiationProcessState,
 };
+use rainbow_common::config::types::roles::RoleConfig;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
-use rainbow_common::protocol::contract::contract_odrl::ContractRequestMessageOfferTypes;
-use rainbow_common::protocol::transfer::TransferRoles;
+use rainbow_common::protocol::odrl::ContractRequestMessageOfferTypes;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::str::FromStr;
@@ -101,9 +101,9 @@ impl NegotiationPersistenceTrait for NegotiationPersistenceForProtocolService {
         // general types
         let dto_message_type = payload_dto.get_message();
         let role_from_message_type = match dto_message_type {
-            NegotiationProcessMessageType::NegotiationRequestMessage => TransferRoles::Provider,
-            NegotiationProcessMessageType::NegotiationOfferMessage => TransferRoles::Consumer,
-            _ => TransferRoles::Provider,
+            NegotiationProcessMessageType::NegotiationRequestMessage => RoleConfig::Provider,
+            NegotiationProcessMessageType::NegotiationOfferMessage => RoleConfig::Consumer,
+            _ => RoleConfig::Provider,
         };
         let state_from_message_type = match dto_message_type {
             NegotiationProcessMessageType::NegotiationRequestMessage => NegotiationProcessState::Requested,
@@ -219,7 +219,7 @@ impl NegotiationPersistenceTrait for NegotiationPersistenceForProtocolService {
         // update
         let negotiation_process_urn = Urn::from_str(negotiation_process.inner.id.as_str())?;
         // role
-        let role = negotiation_process.inner.role.parse::<TransferRoles>()?;
+        let role = negotiation_process.inner.role.parse::<RoleConfig>()?;
 
         // transfer_process
         let mut negotiation_process = self

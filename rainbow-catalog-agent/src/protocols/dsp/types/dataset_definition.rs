@@ -17,59 +17,41 @@
  *
  */
 
-use crate::protocol::catalog::dataservice_definition::DataService;
-use crate::protocol::catalog::dataset_definition::Dataset;
-use crate::protocol::context_field::ContextField;
-use crate::protocol::contract::contract_odrl::OdrlOffer;
-// use rainbow_db::catalog::entities::catalog;
+use crate::protocols::dsp::types::distribution_definition::Distribution;
+use rainbow_common::dsp_common::context_field::ContextField;
+use rainbow_common::protocol::odrl::OdrlOffer;
 use serde::{Deserialize, Serialize};
-use urn::Urn;
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Catalog {
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Dataset {
     #[serde(rename = "@context")]
     pub context: ContextField,
     #[serde(rename = "@type")]
     pub _type: String,
     #[serde(rename = "@id")]
-    pub id: Urn,
+    pub id: String,
     #[serde(flatten)]
-    pub foaf: CatalogFoafDeclaration,
+    pub dcat: DatasetDcatDeclaration,
     #[serde(flatten)]
-    pub dcat: CatalogDcatDeclaration,
-    #[serde(flatten)]
-    pub dct: CatalogDctDeclaration,
-    #[serde(flatten)]
-    pub dspace: CatalogDSpaceDeclaration,
+    pub dct: DatasetDctDeclaration,
     #[serde(rename = "hasPolicy")]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub odrl_offer: Option<Vec<OdrlOffer>>,
+    pub odrl_offer: Vec<OdrlOffer>,
     #[serde(rename = "extraFields")]
     pub extra_fields: serde_json::Value,
-    #[serde(rename = "catalog")]
-    pub catalogs: Vec<Catalog>,
-    #[serde(rename = "dataset")]
-    pub datasets: Vec<Dataset>,
-    #[serde(rename = "service")]
-    pub data_services: Vec<DataService>,
+    #[serde(rename = "distribution")]
+    pub distribution: Vec<Distribution>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct CatalogFoafDeclaration {
-    #[serde(rename = "homepage")]
-    pub homepage: Option<String>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct CatalogDcatDeclaration {
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct DatasetDcatDeclaration {
     #[serde(rename = "theme")]
     pub theme: String,
     #[serde(rename = "keyword")]
     pub keyword: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct CatalogDctDeclaration {
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct DatasetDctDeclaration {
     #[serde(rename = "conformsTo")]
     pub conforms_to: Option<String>,
     #[serde(rename = "creator")]
@@ -83,11 +65,5 @@ pub struct CatalogDctDeclaration {
     #[serde(rename = "title")]
     pub title: Option<String>,
     #[serde(rename = "description")]
-    pub description: Vec<String>, // TODO set descriptions in all...
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct CatalogDSpaceDeclaration {
-    #[serde(rename = "participantId")]
-    pub participant_id: Option<String>,
+    pub description: Vec<String>,
 }

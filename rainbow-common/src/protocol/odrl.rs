@@ -17,7 +17,6 @@
  *
  */
 
-use crate::protocol::ProtocolValidate;
 use crate::utils::get_urn;
 use anyhow::bail;
 use serde::{Deserialize, Serialize};
@@ -87,24 +86,6 @@ impl Default for OdrlMessageOffer {
     }
 }
 
-impl ProtocolValidate for OdrlMessageOffer {
-    fn validate(&self) -> anyhow::Result<()> {
-        //
-
-        // Validate any of permission or prohibition
-        match (&self.permission, &self.prohibition) {
-            (Some(_), Some(_)) => {
-                bail!("Either one of dspace:offer.permission or dspace:offer.prohibition must be present".to_string(),)
-            }
-            (None, None) => {
-                bail!("At least one of dspace:offer.permission or dspace:offer.prohibition must be present".to_string(),)
-            }
-            _ => {}
-        };
-        Ok(())
-    }
-}
-
 /// Offer is PolicyClass + MessageOffer - Offer
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(deny_unknown_fields)]
@@ -141,22 +122,6 @@ impl Default for OdrlOffer {
             prohibition: None,
             target: None,
         }
-    }
-}
-
-impl ProtocolValidate for OdrlOffer {
-    fn validate(&self) -> anyhow::Result<()> {
-        // Validate any of permission or prohibition
-        match (&self.permission, &self.prohibition) {
-            (Some(_), Some(_)) => {
-                bail!("Either one of dspace:offer.permission or dspace:offer.prohibition must be present".to_string(),)
-            }
-            (None, None) => {
-                bail!("At least one of dspace:offer.permission or dspace:offer.prohibition must be present".to_string(),)
-            }
-            _ => {}
-        };
-        Ok(())
     }
 }
 
@@ -205,12 +170,6 @@ impl Default for OdrlAgreement {
             timestamp: None,
             prohibition: None,
         }
-    }
-}
-
-impl ProtocolValidate for OdrlAgreement {
-    fn validate(&self) -> anyhow::Result<()> {
-        Ok(())
     }
 }
 
