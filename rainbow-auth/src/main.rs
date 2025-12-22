@@ -30,8 +30,8 @@ const INFO: &str = r"
 (_)\_)(__)(__)(____)(_)\_)(____/(_____)(__/\__)
 
 Starting Rainbow Auth Server 🌈🌈
-UPM Dataspace protocol implementation
-Show some love on https://github.com/ging/rainbow
+UPM Dataspace multistack agent
+Show some love on https://github.com/EunomiaUPM/rainbow
 ----------
 
 ";

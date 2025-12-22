@@ -28,8 +28,8 @@ use crate::protocols::dsp::protocol_types::{
     NegotiationProcessMessageTrait, NegotiationProcessMessageType, NegotiationProcessState,
 };
 use rainbow_common::config::types::roles::RoleConfig;
+use rainbow_common::dsp_common::odrl::ContractRequestMessageOfferTypes;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
-use rainbow_common::protocol::odrl::ContractRequestMessageOfferTypes;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::str::FromStr;

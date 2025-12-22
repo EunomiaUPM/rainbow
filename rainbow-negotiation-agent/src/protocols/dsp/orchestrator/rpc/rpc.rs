@@ -39,8 +39,8 @@ use crate::protocols::dsp::validator::traits::validation_rpc_steps::ValidationRp
 use rainbow_common::config::services::ContractsConfig;
 use rainbow_common::config::types::roles::RoleConfig;
 use rainbow_common::dsp_common::context_field::ContextField;
+use rainbow_common::dsp_common::odrl::{OdrlAgreement, OdrlMessageOffer, OdrlTypes};
 use rainbow_common::http_client::HttpClient;
-use rainbow_common::protocol::odrl::{OdrlAgreement, OdrlMessageOffer, OdrlTypes};
 use std::str::FromStr;
 use std::sync::Arc;
 use urn::Urn;

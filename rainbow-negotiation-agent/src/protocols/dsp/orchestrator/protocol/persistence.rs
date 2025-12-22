@@ -15,8 +15,8 @@ use crate::protocols::dsp::protocol_types::{
 use anyhow::bail;
 use async_trait::async_trait;
 use rainbow_common::config::types::roles::RoleConfig;
+use rainbow_common::dsp_common::odrl::ContractRequestMessageOfferTypes;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
-use rainbow_common::protocol::odrl::ContractRequestMessageOfferTypes;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::fmt::Debug;

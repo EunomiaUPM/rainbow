@@ -43,7 +43,7 @@ pub struct TransferHttpWorker {}
 impl TransferHttpWorker {
     pub async fn spawn(config: &TransferConfig, token: &CancellationToken) -> anyhow::Result<JoinHandle<()>> {
         // well known router
-        let well_known_router = WellKnownRoot::get_router()?;
+        let well_known_router = WellKnownRoot::get_well_known_router(&config.into())?;
         // module transfer router
         let router = Self::create_root_http_router(&config).await?.merge(well_known_router);
         let host = if config.is_local() { "127.0.0.1" } else { "0.0.0.0" };
@@ -116,9 +116,6 @@ pub async fn create_root_http_router(config: &TransferConfig) -> anyhow::Result<
             format!("{}/transfer-processes", router_str.as_str()).as_str(),
             entities_router.router(),
         )
-        .nest(
-            format!("{}/dsp/current/transfers", router_str.as_str()).as_str(),
-            dsp_router,
-        );
+        .nest("/dsp/current/transfers", dsp_router);
     Ok(router)
 }

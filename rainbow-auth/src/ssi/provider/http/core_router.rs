@@ -27,7 +27,7 @@ use axum::response::IntoResponse;
 use axum::routing::get;
 use axum::Router;
 use rainbow_common::config::traits::ApiConfigTrait;
-use rainbow_common::http::OpenapiRouter;
+use rainbow_common::openapi_http::OpenapiRouter;
 use rainbow_common::utils::server_status;
 use std::sync::Arc;
 use tower_http::trace::{DefaultOnResponse, TraceLayer};

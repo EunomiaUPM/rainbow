@@ -31,7 +31,7 @@ const INFO: &str = r"
 
 Starting Rainbow Negotiation Agent Server 🌈🌈
 UPM Dataspace agent
-Show some love on https://github.com/ging/rainbow
+Show some love on https://github.com/EunomiaUPM/rainbow
 ----------
 
 ";

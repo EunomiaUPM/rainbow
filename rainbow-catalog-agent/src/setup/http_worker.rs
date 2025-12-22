@@ -54,7 +54,7 @@ pub struct CatalogHttpWorker {}
 impl CatalogHttpWorker {
     pub async fn spawn(config: &CatalogConfig, token: &CancellationToken) -> anyhow::Result<JoinHandle<()>> {
         // well known router
-        let well_known_router = WellKnownRoot::get_router()?;
+        let well_known_router = WellKnownRoot::get_well_known_router(&config.into())?;
         let health_router = HealthRouter::new().router();
         // module catalog router
         let router = Self::create_root_http_router(&config).await?.merge(well_known_router).merge(health_router);
@@ -168,10 +168,7 @@ pub async fn create_root_http_router(config: &CatalogConfig) -> anyhow::Result<R
             format!("{}/policy-templates", router_str.as_str()).as_str(),
             policy_templates_router.router(),
         )
-        .nest(
-            format!("{}/dsp/current/catalog", router_str.as_str()).as_str(),
-            dsp_router,
-        );
+        .nest("/dsp/current/catalog", dsp_router);
 
     Ok(router)
 }

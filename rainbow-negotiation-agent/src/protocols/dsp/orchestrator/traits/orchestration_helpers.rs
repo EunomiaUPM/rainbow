@@ -6,8 +6,8 @@ use crate::protocols::dsp::protocol_types::{
 };
 use anyhow::{anyhow, bail};
 use rainbow_common::config::types::roles::RoleConfig;
+use rainbow_common::dsp_common::odrl::{ContractRequestMessageOfferTypes, OdrlAgreement};
 use rainbow_common::errors::{CommonErrors, ErrorLog};
-use rainbow_common::protocol::odrl::{ContractRequestMessageOfferTypes, OdrlAgreement};
 use std::str::FromStr;
 use tracing::error;
 use urn::Urn;

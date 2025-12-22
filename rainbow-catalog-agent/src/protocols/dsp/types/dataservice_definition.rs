@@ -19,7 +19,7 @@
 
 use crate::protocols::dsp::types::EntityTypes;
 use rainbow_common::dsp_common::context_field::ContextField;
-use rainbow_common::protocol::odrl::OdrlOffer;
+use rainbow_common::dsp_common::odrl::OdrlOffer;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 

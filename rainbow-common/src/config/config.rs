@@ -135,6 +135,19 @@ impl ApplicationConfig {
         };
         module.expect("Trying to access core mode without it being defined")
     }
+
+    pub fn monolith(&self) -> MonolithConfig {
+        let module = match self.monolith.as_ref() {
+            None => {
+                let error = CommonErrors::module_new("monolith");
+                error!("{}", error.log());
+                None
+            }
+            Some(data) => Some(data.clone()),
+        };
+        module.expect("Trying to access core mode without it being defined")
+    }
+
     pub fn load(role: RoleConfig, env_file: Option<String>) -> anyhow::Result<Self> {
         if let Some(env_file) = env_file {
             let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(env_file);

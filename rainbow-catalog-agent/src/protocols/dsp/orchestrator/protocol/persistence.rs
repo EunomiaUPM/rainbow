@@ -16,9 +16,9 @@ use crate::protocols::dsp::types::distribution_definition::{
 use anyhow::bail;
 use rainbow_common::dcat_formats::{DctFormats, FormatAction, FormatProtocol};
 use rainbow_common::dsp_common::context_field::ContextField;
+use rainbow_common::dsp_common::odrl::{OdrlOffer, OdrlPolicyInfo, OdrlTypes};
 use rainbow_common::errors::{CommonErrors, ErrorLog};
 use rainbow_common::facades::ssi_auth_facade::MatesFacadeTrait;
-use rainbow_common::protocol::odrl::{OdrlOffer, OdrlPolicyInfo, OdrlTypes};
 use std::collections::HashMap;
 use std::str::FromStr;
 use std::sync::Arc;

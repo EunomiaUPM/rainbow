@@ -20,6 +20,9 @@
 use serde_json::Value;
 
 pub mod context_field;
+pub mod data_address;
+pub mod odrl;
+pub mod well_known_types;
 
 pub fn schema_compiler_util(schema_content: &str) -> Value {
     serde_json::from_str::<Value>(schema_content).unwrap()

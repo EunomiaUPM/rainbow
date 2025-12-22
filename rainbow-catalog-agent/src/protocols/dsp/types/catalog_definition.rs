@@ -21,7 +21,7 @@
 use crate::protocols::dsp::types::dataservice_definition::DataService;
 use crate::protocols::dsp::types::dataset_definition::Dataset;
 use rainbow_common::dsp_common::context_field::ContextField;
-use rainbow_common::protocol::odrl::OdrlOffer;
+use rainbow_common::dsp_common::odrl::OdrlOffer;
 use serde::{Deserialize, Serialize};
 use urn::Urn;
 
