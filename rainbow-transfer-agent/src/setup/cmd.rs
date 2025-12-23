@@ -16,14 +16,15 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
-use crate::setup::application::TransferApplication;
+use std::marker::PhantomData;
+use crate::setup::boot::TransferBoot;
 use crate::setup::db_migrations::TransferAgentMigration;
 use clap::{Parser, Subcommand};
 use rainbow_common::config::services::TransferConfig;
 use rainbow_common::config::traits::ConfigLoader;
 use rainbow_common::config::types::roles::RoleConfig;
 use tracing::{debug, info};
+use rainbow_common::boot::{BootstrapInit, BootstrapStepTrait};
 
 #[derive(Parser, Debug)]
 #[command(name = "Rainbow Dataspace Connector Transfer Agent")]
@@ -53,10 +54,13 @@ impl TransferCommands {
         let cli = TransferCli::parse();
         match cli.command {
             TransferCliCommands::Start(args) => {
-                let config = TransferConfig::load(RoleConfig::NotDefined, args.env_file);
-                let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
-                info!("Current Transfer Agent Config:\n{}", table);
-                TransferApplication::run(&config).await?;
+                let init = BootstrapInit::<TransferBoot>::new(RoleConfig::NotDefined, args.env_file);
+                let step1 = init.next_step().await?; // Carga Config
+                let step2 = step1.0.next_step().await?; // Config -> Participant
+                let step3 = step2.0.next_step().await?; // Participant -> Catalog
+                let step4 = step3.0.next_step().await?; // Catalog -> DataService
+                let step5 = step4.0.next_step().await?; // -> RUN (Blocking)
+                let _final = step5.0.next_step().await?; // Finalizing log
             }
             TransferCliCommands::Setup(args) => {
                 let config = TransferConfig::load(RoleConfig::NotDefined, args.env_file);

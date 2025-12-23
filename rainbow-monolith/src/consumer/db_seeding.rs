@@ -17,14 +17,15 @@
  *
  */
 use rainbow_catalog_agent::{CatalogRepositoryForSql, CatalogRepositoryTrait, NewCatalogModel};
-use rainbow_common::config::consumer_config::{ApplicationConsumerConfig, ApplicationConsumerConfigTrait};
 use sea_orm::Database;
+use rainbow_common::config::ApplicationConfig;
+use rainbow_common::config::traits::MonoConfigTrait;
 
 pub struct CoreConsumerSeeding;
 
 impl CoreConsumerSeeding {
-    pub async fn run(config: &ApplicationConsumerConfig) -> ::anyhow::Result<()> {
-        let db_url = config.get_full_db_url();
+    pub async fn run(config: &ApplicationConfig) -> ::anyhow::Result<()> {
+        let db_url = config.get_mono_db();
         let db_connection = Database::connect(db_url).await.expect("Database can't connect");
         // run seeding
         let catalog_repo = CatalogRepositoryForSql::new(db_connection);

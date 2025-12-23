@@ -18,4 +18,5 @@
  */
 
 pub mod db_migrations;
+pub mod db_seeding;
 pub mod router;

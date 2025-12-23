@@ -17,24 +17,48 @@
  *
  */
 
-use crate::setup::grpc_worker::TransferGrpcWorker;
-use crate::setup::http_worker::TransferHttpWorker;
+
+use rainbow_common::boot::shutdown::shutdown_signal;
+use rainbow_common::boot::BootstrapServiceTrait;
 use rainbow_common::config::services::TransferConfig;
+use rainbow_common::config::traits::ConfigLoader;
+use rainbow_common::config::types::roles::RoleConfig;
 use tokio::signal;
 use tokio_util::sync::CancellationToken;
+use rainbow_common::config::ApplicationConfig;
+use crate::setup::CoreHttpWorker;
 
-pub struct TransferApplication;
-impl TransferApplication {
-    pub async fn run(config: &TransferConfig) -> anyhow::Result<()> {
+pub struct CoreBoot;
+
+#[async_trait::async_trait]
+impl BootstrapServiceTrait for CoreBoot {
+    type Config = ApplicationConfig;
+    async fn load_config(role_config: RoleConfig, env_file: Option<String>) -> anyhow::Result<Self::Config> {
+        let config = Self::Config::load(role_config, env_file)?;
+        let table = json_to_table::json_to_table(&serde_json::to_value(&config.monolith())?).collapse().to_string();
+        tracing::info!("Current Monolith Dataspace Agent Config:\n{}", table);
+        Ok(config)
+    }
+    fn enable_participant() -> bool {
+        false
+    }
+    fn enable_catalog() -> bool {
+        false
+    }
+    fn enable_dataservice() -> bool {
+        false
+    }
+    async fn start_services(
+        config: &Self::Config,
+        participant_id: Option<String>,
+        catalog_id: Option<String>,
+    ) -> anyhow::Result<()> {
         let cancel_token = CancellationToken::new();
         // worker http
         tracing::info!("Spawning HTTP subsystem...");
-        let http_handle = TransferHttpWorker::spawn(config, &cancel_token).await?;
-        // worker grpc
-        tracing::info!("Spawning gRPC subsystem...");
-        let grpc_handle = TransferGrpcWorker::spawn(config, &cancel_token).await?;
+        let http_handle = CoreHttpWorker::spawn(config, &cancel_token).await?;
         // shutdown loop
-        let shutdown_signal = Self::shutdown_signal();
+        let shutdown_signal = shutdown_signal();
         tokio::select! {
             _ = shutdown_signal => {
                 tracing::warn!("Shutdown signal received from OS.");
@@ -42,34 +66,11 @@ impl TransferApplication {
             _ = async { http_handle.await } => {
                 tracing::error!("HTTP subsystem failed or stopped unexpectedly!");
             }
-            _ = async { grpc_handle.await } => {
-                tracing::error!("GRPC subsystem failed or stopped unexpectedly!");
-            }
         }
         // teardown
         tracing::info!("Initiating graceful shutdown sequence...");
         cancel_token.cancel();
         tracing::info!("System shut down gracefully.");
-        Ok(())
-    }
-
-    async fn shutdown_signal() -> anyhow::Result<()> {
-        let ctrl_c = async {
-            signal::ctrl_c().await.expect("failed to install Ctrl+C handler");
-        };
-        #[cfg(unix)]
-        let terminate = async {
-            signal::unix::signal(signal::unix::SignalKind::terminate())
-                .expect("failed to install signal handler")
-                .recv()
-                .await;
-        };
-        #[cfg(not(unix))]
-        let terminate = std::future::pending::<()>();
-        tokio::select! {
-            _ = ctrl_c => {},
-            _ = terminate => {},
-        }
         Ok(())
     }
 }

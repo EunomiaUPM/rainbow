@@ -20,13 +20,15 @@
 use crate::consumer::db_migrations::CoreConsumerMigration;
 use crate::provider::db_migrations::CoreProviderMigration;
 use crate::provider::db_seeding::CoreProviderSeeding;
-use crate::setup::CoreApplication;
+use crate::setup::CoreHttpWorker;
 use clap::{Parser, Subcommand};
 use rainbow_common::config::traits::MonoConfigTrait;
 use rainbow_common::config::types::roles::RoleConfig;
 use rainbow_common::config::ApplicationConfig;
 use std::cmp::PartialEq;
 use tracing::{debug, info};
+use rainbow_common::boot::{BootstrapInit, BootstrapStepTrait};
+use crate::setup::boot::CoreBoot;
 
 #[derive(Parser, Debug)]
 #[command(name = "Rainbow Dataspace Connector Core Server")]
@@ -68,14 +70,17 @@ impl CoreCommands {
         match cli.role {
             CoreCliRoles::Provider(cmd) => match cmd {
                 CoreCliCommands::Start(args) => {
-                    let config = ApplicationConfig::load(RoleConfig::Provider, args.env_file)?;
-                    let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
-                    info!("Current Core Connector Config:\n{}", table);
-                    CoreApplication::run(RoleConfig::Provider, &config).await?
+                    let init = BootstrapInit::<CoreBoot>::new(RoleConfig::Provider, args.env_file);
+                    let step1 = init.next_step().await?; // Carga Config
+                    let step2 = step1.0.next_step().await?; // Config -> Participant
+                    let step3 = step2.0.next_step().await?; // Participant -> Catalog
+                    let step4 = step3.0.next_step().await?; // Catalog -> DataService
+                    let step5 = step4.0.next_step().await?; // -> RUN (Blocking)
+                    let _final = step5.0.next_step().await?; // Finalizing log
                 }
                 CoreCliCommands::Setup(args) => {
                     let config = ApplicationConfig::load(RoleConfig::Provider, args.env_file)?;
-                    let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
+                    let table = json_to_table::json_to_table(&serde_json::to_value(&config.monolith())?).collapse().to_string();
                     info!("Current Core Connector Config:\n{}", table);
                     CoreProviderMigration::run(&config).await?;
                     match config.is_mono_catalog_datahub() {
@@ -88,14 +93,17 @@ impl CoreCommands {
             },
             CoreCliRoles::Consumer(cmd) => match cmd {
                 CoreCliCommands::Start(args) => {
-                    let config = ApplicationConfig::load(RoleConfig::Consumer, args.env_file)?;
-                    let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
-                    info!("Current Core Connector Config:\n{}", table);
-                    CoreApplication::run(RoleConfig::Consumer, &config).await?
+                    let init = BootstrapInit::<CoreBoot>::new(RoleConfig::Consumer, args.env_file);
+                    let step1 = init.next_step().await?; // Carga Config
+                    let step2 = step1.0.next_step().await?; // Config -> Participant
+                    let step3 = step2.0.next_step().await?; // Participant -> Catalog
+                    let step4 = step3.0.next_step().await?; // Catalog -> DataService
+                    let step5 = step4.0.next_step().await?; // -> RUN (Blocking)
+                    let _final = step5.0.next_step().await?; // Finalizing log
                 }
                 CoreCliCommands::Setup(args) => {
                     let config = ApplicationConfig::load(RoleConfig::Consumer, args.env_file)?;
-                    let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
+                    let table = json_to_table::json_to_table(&serde_json::to_value(&config.monolith())?).collapse().to_string();
                     info!("Current Core Connector Config:\n{}", table);
                     CoreConsumerMigration::run(&config).await?
                 }

@@ -17,7 +17,8 @@
  *
  */
 
-mod application;
+mod http_worker;
 pub mod cmd;
+pub mod boot;
 
-pub use application::CoreApplication;
+pub use http_worker::CoreHttpWorker;

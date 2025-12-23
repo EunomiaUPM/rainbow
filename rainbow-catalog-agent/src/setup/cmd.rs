@@ -17,13 +17,14 @@
  *
  */
 
-use crate::setup::application::CatalogApplication;
 use crate::setup::db_migrations::CatalogAgentMigration;
 use clap::{Parser, Subcommand};
 use rainbow_common::config::services::CatalogConfig;
 use rainbow_common::config::traits::ConfigLoader;
 use rainbow_common::config::types::roles::RoleConfig;
 use tracing::{debug, info};
+use rainbow_common::boot::{BootstrapInit, BootstrapStepTrait};
+use crate::setup::boot::CatalogAgentBoot;
 
 #[derive(Parser, Debug)]
 #[command(name = "Rainbow Dataspace Connector Catalog Agent")]
@@ -53,10 +54,13 @@ impl CatalogCommands {
         let cli = CatalogCli::parse();
         match cli.command {
             CatalogCliCommands::Start(args) => {
-                let config = CatalogConfig::load(RoleConfig::NotDefined, args.env_file);
-                let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
-                info!("Current Catalog Agent Config:\n{}", table);
-                CatalogApplication::run(&config).await?;
+                let init = BootstrapInit::<CatalogAgentBoot>::new(RoleConfig::NotDefined, args.env_file);
+                let step1 = init.next_step().await?; // Carga Config
+                let step2 = step1.0.next_step().await?; // Config -> Participant
+                let step3 = step2.0.next_step().await?; // Participant -> Catalog
+                let step4 = step3.0.next_step().await?; // Catalog -> DataService
+                let step5 = step4.0.next_step().await?; // -> RUN (Blocking)
+                let _final = step5.0.next_step().await?; // Finalizing log
             }
             CatalogCliCommands::Setup(args) => {
                 let config = CatalogConfig::load(RoleConfig::NotDefined, args.env_file);

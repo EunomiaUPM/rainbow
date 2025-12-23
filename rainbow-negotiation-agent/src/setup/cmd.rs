@@ -17,13 +17,14 @@
  *
  */
 
-use crate::setup::application::NegotiationAgentApplication;
 use crate::setup::db_migrations::NegotiationAgentMigration;
 use clap::{Parser, Subcommand};
 use rainbow_common::config::services::ContractsConfig;
 use rainbow_common::config::traits::ConfigLoader;
 use rainbow_common::config::types::roles::RoleConfig;
 use tracing::{debug, info};
+use rainbow_common::boot::{BootstrapInit, BootstrapStepTrait};
+use crate::setup::boot::NegotiationAgentBoot;
 
 #[derive(Parser, Debug)]
 #[command(name = "Rainbow Dataspace Connector Negotiation Agent")]
@@ -53,10 +54,13 @@ impl NegotiationCommands {
         let cli = NegotiationCli::parse();
         match cli.command {
             NegotiationCliCommands::Start(args) => {
-                let config = ContractsConfig::load(RoleConfig::NotDefined, args.env_file);
-                let table = json_to_table::json_to_table(&serde_json::to_value(&config)?).collapse().to_string();
-                info!("Current Negotiations Agent Config:\n{}", table);
-                NegotiationAgentApplication::run(&config).await?;
+                let init = BootstrapInit::<NegotiationAgentBoot>::new(RoleConfig::NotDefined, args.env_file);
+                let step1 = init.next_step().await?; // Carga Config
+                let step2 = step1.0.next_step().await?; // Config -> Participant
+                let step3 = step2.0.next_step().await?; // Participant -> Catalog
+                let step4 = step3.0.next_step().await?; // Catalog -> DataService
+                let step5 = step4.0.next_step().await?; // -> RUN (Blocking)
+                let _final = step5.0.next_step().await?; // Finalizing log
             }
             NegotiationCliCommands::Setup(args) => {
                 let config = ContractsConfig::load(RoleConfig::NotDefined, args.env_file);

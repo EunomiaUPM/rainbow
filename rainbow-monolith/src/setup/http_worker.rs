@@ -16,46 +16,45 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use crate::ssi::consumer::setup::AuthConsumerApplication;
-use crate::ssi::provider::setup::AuthProviderApplication;
+
+use crate::consumer::router::create_core_consumer_router;
+use crate::provider::router::create_core_provider_router;
 use axum::serve;
-use rainbow_common::config::services::SsiAuthConfig;
-use rainbow_common::config::traits::{HostConfigTrait, IsLocalTrait, RoleTrait};
+use rainbow_auth::ssi::consumer::setup::AuthConsumerApplication;
+use rainbow_auth::ssi::provider::setup::AuthProviderApplication;
+use rainbow_common::config::traits::{MonoConfigTrait, RoleTrait};
 use rainbow_common::config::types::roles::RoleConfig;
 use rainbow_common::config::types::HostType;
+use rainbow_common::config::ApplicationConfig;
+use rainbow_common::well_known::WellKnownRoot;
 use tokio::net::TcpListener;
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
-use rainbow_common::well_known::WellKnownRoot;
 
-pub struct SSIAuthHttpWorker {}
+pub struct CoreHttpWorker;
 
-impl SSIAuthHttpWorker {
-    pub async fn spawn(config: &SsiAuthConfig, token: &CancellationToken) -> anyhow::Result<JoinHandle<()>> {
-        // well known router
-        let well_known_router = WellKnownRoot::get_well_known_router(&config.clone().into())?;
+impl CoreHttpWorker {
+    pub async fn spawn(config: &ApplicationConfig, token: &CancellationToken) -> anyhow::Result<JoinHandle<()>> {
         // message
         let server_message = format!(
-            "Starting Auth Consumer server in {}",
-            config.get_host(HostType::Http)
+            "Starting Dataspace http server in {}",
+            config.get_mono_host()
         );
         tracing::info!("{}", server_message);
         // router
-        let router = match config.get_role() {
-            RoleConfig::Consumer => AuthConsumerApplication::create_router(&config).await,
-            RoleConfig::Provider => AuthProviderApplication::create_router(&config).await,
+        let router = match config.monolith().get_role() {
+            RoleConfig::Consumer => create_core_consumer_router(config).await,
+            RoleConfig::Provider => create_core_provider_router(config).await,
             _ => {
                 panic!("Unsupported role");
             }
-        }.merge(well_known_router);
-
+        };
         // config
-        let host = if config.is_local() { "127.0.0.1" } else { "0.0.0.0" };
-        let port = config.get_weird_port();
+        let host = if config.is_mono_local() { "127.0.0.1" } else { "0.0.0.0" };
+        let port = config.get_weird_mono_port();
         let addr = format!("{}{}", host, port);
         // listener
         let listener = TcpListener::bind(&addr).await?;
-        tracing::info!("HTTP Auth Consumer server running on {}", addr);
         // gracefully cancelation token
         let token = token.clone();
         let handle = tokio::spawn(async move {
