@@ -205,6 +205,15 @@ impl HttpClient {
         Self::deserialize_internal(response).await
     }
 
+    pub async fn post_void<R>(&self, url: &str) -> anyhow::Result<R, HttpClientError>
+    where
+        R: ApiResponse,
+    {
+        let response = self.dispatch(reqwest::Method::POST, url, None, None).await?;
+
+        R::from_response(response).await
+    }
+
     pub async fn put_json<T, R>(&self, url: &str, payload: &T) -> anyhow::Result<R, HttpClientError>
     where
         T: Serialize,

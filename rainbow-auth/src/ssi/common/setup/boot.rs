@@ -67,7 +67,7 @@ impl BootstrapServiceTrait for SSIAuthBoot {
                     tracing::info!("Shutdown command received from Main Pipeline.");
                 }
                 _ = async { http_handle.await } => {
-                    tracing::error!("CRITICAL: HTTP subsystem failed or stopped unexpectedly!");
+                    tracing::error!("HTTP subsystem failed or stopped unexpectedly!");
                 }
             }
 

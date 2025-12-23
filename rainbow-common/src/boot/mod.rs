@@ -21,14 +21,14 @@ pub trait BootstrapServiceTrait: Send + Sync {
     fn enable_catalog() -> bool {
         true
     }
-    async fn load_catalog(_config: &Self::Config) -> anyhow::Result<String> {
+    async fn load_catalog(_participant_id: &Option<String>, _config: &Self::Config) -> anyhow::Result<String> {
         anyhow::bail!("This service does not support creation of catalogs.");
     }
 
     fn enable_dataservice() -> bool {
         true
     }
-    async fn load_dataservice(_config: &Self::Config) -> anyhow::Result<String> {
+    async fn load_dataservice(_catalog_id: &Option<String>, _config: &Self::Config) -> anyhow::Result<String> {
         anyhow::bail!("This service does not support creation of data services.");
     }
 
@@ -42,9 +42,6 @@ pub trait BootstrapStepTrait: Send + Sync {
 }
 
 pub struct BootstrapCurrentState<S: BootstrapStepTrait>(pub S);
-
-// --- STRUCTS (Vagones del tren) ---
-// Todos, desde ServicesStarted, deben llevar el shutdown_tx
 
 pub struct BootstrapInit<S: BootstrapServiceTrait> {
     pub _marker: PhantomData<S>,
@@ -71,20 +68,20 @@ pub struct BootstrapServicesStarted<S: BootstrapServiceTrait> {
 
 pub struct BootstrapSelfParticipantOnBoarded<S: BootstrapServiceTrait> {
     pub config: S::Config,
-    pub shutdown_tx: broadcast::Sender<()>, // <--- IMPORTANTE
+    pub shutdown_tx: broadcast::Sender<()>,
     pub participant_id: Option<String>,
 }
 
 pub struct BootstrapCatalogLoaded<S: BootstrapServiceTrait> {
     pub config: S::Config,
-    pub shutdown_tx: broadcast::Sender<()>, // <--- IMPORTANTE
+    pub shutdown_tx: broadcast::Sender<()>,
     pub participant_id: Option<String>,
     pub catalog_id: Option<String>,
 }
 
 pub struct BootstrapDataServiceLoaded<S: BootstrapServiceTrait> {
     pub config: S::Config,
-    pub shutdown_tx: broadcast::Sender<()>, // <--- IMPORTANTE
+    pub shutdown_tx: broadcast::Sender<()>,
     pub participant_id: Option<String>,
     pub catalog_id: Option<String>,
     pub dataservice_id: Option<String>,
@@ -92,12 +89,10 @@ pub struct BootstrapDataServiceLoaded<S: BootstrapServiceTrait> {
 
 pub struct BootstrapFinalized<S: BootstrapServiceTrait> {
     pub _marker: PhantomData<S>,
-    pub shutdown_tx: broadcast::Sender<()>, // <--- IMPORTANTE
+    pub shutdown_tx: broadcast::Sender<()>,
 }
 
 pub struct BootstrapTerminated<S: BootstrapServiceTrait>(PhantomData<S>);
-
-// --- IMPLEMENTACIONES ---
 
 #[async_trait::async_trait]
 impl<S: BootstrapServiceTrait> BootstrapStepTrait for BootstrapInit<S> {
@@ -124,7 +119,7 @@ impl<S: BootstrapServiceTrait> BootstrapStepTrait for BootstrapConfigLoaded<S> {
         tracing::info!("Step [3/7]: Starting Services in Background");
         let shutdown_tx = S::start_services_background(&config).await?;
 
-        // Espera de seguridad para arranque de puertos
+        // waiting for port setup
         tokio::time::sleep(std::time::Duration::from_millis(200)).await;
 
         Ok(BootstrapCurrentState(BootstrapServicesStarted {
@@ -144,8 +139,6 @@ impl<S: BootstrapServiceTrait> BootstrapStepTrait for BootstrapServicesStarted<S
         let participant_id =
             if S::enable_participant() { Some(S::create_participant(&self.config).await?) } else { None };
 
-        // OJO AQUÍ: Pasamos self.shutdown_tx en AMBOS casos.
-        // Si no lo pasamos aquí, se dropea y el servidor se apaga.
         Ok(BootstrapCurrentState(BootstrapSelfParticipantOnBoarded {
             config: self.config,
             shutdown_tx: self.shutdown_tx,
@@ -161,11 +154,12 @@ impl<S: BootstrapServiceTrait> BootstrapStepTrait for BootstrapSelfParticipantOn
     async fn next_step(self) -> anyhow::Result<Self::NextState> {
         tracing::info!("Step [5/7]: Loading main catalog");
 
-        let catalog_id = if S::enable_catalog() { Some(S::load_catalog(&self.config).await?) } else { None };
+        let catalog_id =
+            if S::enable_catalog() { Some(S::load_catalog(&self.participant_id, &self.config).await?) } else { None };
 
         Ok(BootstrapCurrentState(BootstrapCatalogLoaded {
             config: self.config,
-            shutdown_tx: self.shutdown_tx, // Pasando el testigo...
+            shutdown_tx: self.shutdown_tx,
             participant_id: self.participant_id,
             catalog_id,
         }))
@@ -179,12 +173,15 @@ impl<S: BootstrapServiceTrait> BootstrapStepTrait for BootstrapCatalogLoaded<S> 
     async fn next_step(self) -> anyhow::Result<Self::NextState> {
         tracing::info!("Step [6/7]: Loading main dataservice");
 
-        let dataservice_id =
-            if S::enable_dataservice() { Some(S::load_dataservice(&self.config).await?) } else { None };
+        let dataservice_id = if S::enable_dataservice() {
+            Some(S::load_dataservice(&self.catalog_id, &self.config).await?)
+        } else {
+            None
+        };
 
         Ok(BootstrapCurrentState(BootstrapDataServiceLoaded {
             config: self.config,
-            shutdown_tx: self.shutdown_tx, // Pasando el testigo...
+            shutdown_tx: self.shutdown_tx,
             participant_id: self.participant_id,
             catalog_id: self.catalog_id,
             dataservice_id,
@@ -201,7 +198,7 @@ impl<S: BootstrapServiceTrait> BootstrapStepTrait for BootstrapDataServiceLoaded
 
         Ok(BootstrapCurrentState(BootstrapFinalized {
             _marker: PhantomData,
-            shutdown_tx: self.shutdown_tx, // El testigo llega a la meta
+            shutdown_tx: self.shutdown_tx,
         }))
     }
 }
@@ -218,7 +215,7 @@ impl<S: BootstrapServiceTrait> BootstrapStepTrait for BootstrapFinalized<S> {
             Err(err) => tracing::error!("Unable to listen for shutdown signal: {}", err),
         }
         tracing::info!("Sending shutdown signal to background services...");
-        let _ = self.shutdown_tx.send(()); // Disparamos el cierre
+        let _ = self.shutdown_tx.send(());
 
         tokio::time::sleep(std::time::Duration::from_millis(500)).await;
 

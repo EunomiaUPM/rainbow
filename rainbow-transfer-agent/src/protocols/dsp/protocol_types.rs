@@ -507,7 +507,7 @@ impl FromStr for TransferStateAttribute {
             "ByProvider" => Ok(TransferStateAttribute::ByProvider),
             v => {
                 let err = CommonErrors::parse_new(&format!(
-                    "Critical: Invalid or unknown TransferStateAttribute '{}'",
+                    "Invalid or unknown TransferStateAttribute '{}'",
                     v
                 ));
                 error!("{}", err.log());
@@ -524,8 +524,7 @@ impl TryFrom<TransferProcessDto> for TransferProcessMessageWrapper<TransferProce
         let consumer_str = match value.identifiers.get("consumerPid") {
             Some(val) => val,
             None => {
-                let err =
-                    CommonErrors::parse_new("Critical: Missing 'consumerPid' in TransferProcessDto identifiers map");
+                let err = CommonErrors::parse_new("Missing 'consumerPid' in TransferProcessDto identifiers map");
                 error!("{}", err.log());
                 bail!(err);
             }
@@ -534,7 +533,7 @@ impl TryFrom<TransferProcessDto> for TransferProcessMessageWrapper<TransferProce
             Ok(urn) => urn,
             Err(e) => {
                 let err = CommonErrors::parse_new(&format!(
-                    "Critical: Invalid URN format for consumerPid '{}': {}",
+                    "Invalid URN format for consumerPid '{}': {}",
                     consumer_str, e
                 ));
                 error!("{}", err.log());
@@ -545,8 +544,7 @@ impl TryFrom<TransferProcessDto> for TransferProcessMessageWrapper<TransferProce
         let provider_str = match value.identifiers.get("providerPid") {
             Some(val) => val,
             None => {
-                let err =
-                    CommonErrors::parse_new("Critical: Missing 'providerPid' in TransferProcessDto identifiers map");
+                let err = CommonErrors::parse_new("Missing 'providerPid' in TransferProcessDto identifiers map");
                 error!("{}", err.log());
                 bail!(err);
             }
@@ -555,7 +553,7 @@ impl TryFrom<TransferProcessDto> for TransferProcessMessageWrapper<TransferProce
             Ok(urn) => urn,
             Err(e) => {
                 let err = CommonErrors::parse_new(&format!(
-                    "Critical: Invalid URN format for providerPid '{}': {}",
+                    "Invalid URN format for providerPid '{}': {}",
                     provider_str, e
                 ));
                 error!("{}", err.log());
@@ -567,7 +565,7 @@ impl TryFrom<TransferProcessDto> for TransferProcessMessageWrapper<TransferProce
             Ok(s) => s,
             Err(_) => {
                 let err = CommonErrors::parse_new(&format!(
-                    "Critical: Invalid or unknown TransferProcessState '{}' in database model",
+                    "Invalid or unknown TransferProcessState '{}' in database model",
                     value.inner.state
                 ));
                 error!("{}", err.log());

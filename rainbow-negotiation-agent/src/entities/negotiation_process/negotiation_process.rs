@@ -48,7 +48,7 @@ impl NegotiationAgentProcessesService {
     async fn enrich_process(&self, process: negotiation_process_model::Model) -> anyhow::Result<NegotiationProcessDto> {
         let process_urn = Urn::from_str(&process.id).map_err(|e| {
             let err = CommonErrors::parse_new(&format!(
-                "Critical: Invalid URN found in database for process {}. Error: {}",
+                "Invalid URN found in database for process {}. Error: {}",
                 process.id, e
             ));
             error!("{}", err.log());

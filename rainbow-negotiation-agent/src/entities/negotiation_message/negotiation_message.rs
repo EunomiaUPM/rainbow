@@ -42,7 +42,7 @@ impl NegotiationAgentMessagesService {
     async fn enrich_message(&self, message: negotiation_message_model::Model) -> anyhow::Result<NegotiationMessageDto> {
         let message_urn = Urn::from_str(&message.id).map_err(|e| {
             let err = CommonErrors::parse_new(&format!(
-                "Critical: Invalid URN found in database for message {}. Error: {}",
+                "Invalid URN found in database for message {}. Error: {}",
                 message.id, e
             ));
             error!("{}", err.log());

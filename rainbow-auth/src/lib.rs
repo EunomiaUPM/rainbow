@@ -19,3 +19,4 @@
 
 // pub mod ssi_auth;
 pub mod ssi;
+pub use crate::ssi::common::data::entities::mates;

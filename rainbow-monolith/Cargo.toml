@@ -34,3 +34,4 @@ uuid = "1.18.1"
 tower-http = { version = "0.6.6", features = ["trace"] }
 tokio-util = "0.7.17"
 async-trait = "0.1.89"
+urn = {workspace = true}

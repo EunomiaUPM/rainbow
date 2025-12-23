@@ -69,10 +69,10 @@ impl BootstrapServiceTrait for CatalogAgentBoot {
                     tracing::info!("Shutdown command received from Main Pipeline.");
                 }
                 _ = async { http_handle.await } => {
-                    tracing::error!("CRITICAL: HTTP subsystem failed or stopped unexpectedly!");
+                    tracing::error!("HTTP subsystem failed or stopped unexpectedly!");
                 }
                 _ = async { grpc_handle.await } => {
-                    tracing::error!("CRITICAL: GRPC subsystem failed or stopped unexpectedly!");
+                    tracing::error!("GRPC subsystem failed or stopped unexpectedly!");
                 }
             }
 

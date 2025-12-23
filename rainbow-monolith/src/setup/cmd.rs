@@ -19,11 +19,9 @@
 
 use crate::consumer::db_migrations::CoreConsumerMigration;
 use crate::provider::db_migrations::CoreProviderMigration;
-use crate::provider::db_seeding::CoreProviderSeeding;
 use crate::setup::boot::CoreBoot;
 use clap::{Parser, Subcommand};
 use rainbow_common::boot::{BootstrapInit, BootstrapStepTrait};
-use rainbow_common::config::traits::MonoConfigTrait;
 use rainbow_common::config::types::roles::RoleConfig;
 use rainbow_common::config::ApplicationConfig;
 use std::cmp::PartialEq;
@@ -84,12 +82,6 @@ impl CoreCommands {
                         json_to_table::json_to_table(&serde_json::to_value(&config.monolith())?).collapse().to_string();
                     info!("Current Core Connector Config:\n{}", table);
                     CoreProviderMigration::run(&config).await?;
-                    match config.is_mono_catalog_datahub() {
-                        true => {}
-                        false => {
-                            CoreProviderSeeding::run(&config).await?;
-                        }
-                    }
                 }
             },
             CoreCliRoles::Consumer(cmd) => match cmd {

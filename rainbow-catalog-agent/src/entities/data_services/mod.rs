@@ -3,7 +3,8 @@ pub(crate) mod data_services;
 use crate::data::entities::dataservice;
 use crate::data::entities::dataservice::{EditDataServiceModel, Model, NewDataServiceModel};
 use serde::{Deserialize, Serialize};
-use urn::Urn;
+use std::str::FromStr;
+use urn::{Urn, UrnBuilder};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -24,6 +25,21 @@ pub struct NewDataServiceDto {
     pub dct_title: Option<String>,
     pub dct_description: Option<String>,
     pub catalog_id: Urn,
+}
+
+impl Default for NewDataServiceDto {
+    fn default() -> Self {
+        Self {
+            id: None,
+            dcat_endpoint_description: None,
+            dcat_endpoint_url: "".to_string(),
+            dct_conforms_to: None,
+            dct_creator: None,
+            dct_title: None,
+            dct_description: None,
+            catalog_id: Urn::from_str("urn:fake-urn:000").unwrap(),
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
