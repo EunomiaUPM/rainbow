@@ -16,17 +16,22 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 use crate::setup::grpc_worker::CatalogGrpcWorker;
 use crate::setup::http_worker::CatalogHttpWorker;
+use crate::{CatalogDto, DataServiceDto, NewCatalogDto, NewDataServiceDto};
+use rainbow_auth::mates;
 use rainbow_common::boot::shutdown::shutdown_signal;
 use rainbow_common::boot::BootstrapServiceTrait;
 use rainbow_common::config::services::{CatalogConfig, ContractsConfig, TransferConfig};
-use rainbow_common::config::traits::ConfigLoader;
+use rainbow_common::config::traits::{ApiConfigTrait, ConfigLoader, HostConfigTrait};
 use rainbow_common::config::types::roles::RoleConfig;
+use rainbow_common::config::types::HostType;
+use rainbow_common::http_client::{HttpClient, HttpClientError};
+use std::str::FromStr;
 use tokio::signal;
 use tokio::sync::broadcast;
 use tokio_util::sync::CancellationToken;
+use urn::Urn;
 
 pub struct CatalogAgentBoot;
 
@@ -39,14 +44,72 @@ impl BootstrapServiceTrait for CatalogAgentBoot {
         tracing::info!("Current Catalog Agent Config:\n{}", table);
         Ok(config)
     }
-    fn enable_participant() -> bool {
-        false
+    async fn create_participant(config: &Self::Config) -> anyhow::Result<String> {
+        let client = HttpClient::new(1, 30);
+        let base_url = config.ssi_auth().get_host(HostType::Http);
+        let api = config.ssi_auth().get_api_version();
+
+        // attempt first
+        let url = format!("{}{}/mates/myself", base_url, api);
+        let participant = client.get_json::<mates::Model>(url.as_str()).await;
+
+        // catch error
+        if let Err(err) = participant {
+            match err {
+                // if mate not found
+                HttpClientError::HttpError { status, .. } if status.as_u16() == 404 => {
+                    // onboard mate with wallet
+                    let url = format!("{}{}/wallet/onboard", base_url, api);
+                    client.post_void::<()>(url.as_str()).await?;
+                }
+                _ => anyhow::bail!(err),
+            }
+            // attempt again
+            let url = format!("{}{}/mates/myself", base_url, api);
+            let participant = client.get_json::<mates::Model>(url.as_str()).await?;
+            // and return id
+            Ok(participant.participant_id)
+        } else {
+            // if mate exists, just return id
+            let participant = participant?;
+            Ok(participant.participant_id)
+        }
     }
-    fn enable_catalog() -> bool {
-        false
+
+    async fn load_catalog(participant_id: &Option<String>, config: &Self::Config) -> anyhow::Result<String> {
+        let participant_id = participant_id.clone().unwrap_or_default();
+        let client = HttpClient::new(1, 3);
+        let base_url = config.get_host(HostType::Http);
+        let api = config.get_api_version();
+        let url = format!("{}{}/catalog-agent/catalogs/main", base_url, api);
+        let catalog = client
+            .post_json::<NewCatalogDto, CatalogDto>(
+                url.as_str(),
+                &NewCatalogDto { dspace_participant_id: Some(participant_id), ..NewCatalogDto::default() },
+            )
+            .await?;
+        Ok(catalog.inner.id)
     }
-    fn enable_dataservice() -> bool {
-        false
+
+    async fn load_dataservice(catalog_id: &Option<String>, config: &Self::Config) -> anyhow::Result<String> {
+        let catalog_id = catalog_id.clone().unwrap_or_default();
+        let client = HttpClient::new(1, 3);
+        let base_url = config.get_host(HostType::Http);
+        let negotiation_url = config.contracts().get_host(HostType::Http);
+
+        let api = config.get_api_version();
+        let url = format!("{}{}/catalog-agent/data-services/main", base_url, api);
+        let catalog = client
+            .post_json::<NewDataServiceDto, DataServiceDto>(
+                url.as_str(),
+                &NewDataServiceDto {
+                    dcat_endpoint_url: format!("{}/dsp/current", negotiation_url),
+                    catalog_id: Urn::from_str(catalog_id.as_str())?,
+                    ..Default::default()
+                },
+            )
+            .await?;
+        Ok(catalog.inner.id)
     }
     async fn start_services_background(config: &Self::Config) -> anyhow::Result<broadcast::Sender<()>> {
         // thread control

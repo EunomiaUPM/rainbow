@@ -50,6 +50,7 @@ catalog:
   datahub_host: null
   datahub_token: null
   ssi_auth: *min_known_config
+  contracts: *min_known_config
 
 # ==========================
 # SSI AUTH

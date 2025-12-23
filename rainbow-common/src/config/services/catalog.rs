@@ -36,9 +36,14 @@ pub struct CatalogConfig {
     datahub_host: Option<HostConfig>,
     datahub_token: Option<String>,
     ssi_auth: MinKnownConfig,
+    contracts: MinKnownConfig,
 }
 
 impl CatalogConfig {
+    pub fn contracts(&self) -> MinKnownConfig {
+        self.contracts.clone()
+    }
+
     pub fn ssi_auth(&self) -> MinKnownConfig {
         self.ssi_auth.clone()
     }
@@ -66,7 +71,14 @@ impl ConfigLoader for CatalogConfig {
             is_datahub: false,
             datahub_host: None,
             datahub_token: None,
-            ssi_auth: MinKnownConfig { hosts: common_config.hosts, api_version: common_config.api.openapi_path },
+            ssi_auth: MinKnownConfig {
+                hosts: common_config.hosts.clone(),
+                api_version: common_config.api.openapi_path.clone(),
+            },
+            contracts: MinKnownConfig {
+                hosts: common_config.hosts.clone(),
+                api_version: common_config.api.openapi_path.clone(),
+            },
         }
     }
 
