@@ -23,10 +23,10 @@ use rainbow_common::config::services::SsiAuthConfig;
 use rainbow_common::config::traits::{HostConfigTrait, IsLocalTrait, RoleTrait};
 use rainbow_common::config::types::roles::RoleConfig;
 use rainbow_common::config::types::HostType;
+use rainbow_common::well_known::WellKnownRoot;
 use tokio::net::TcpListener;
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
-use rainbow_common::well_known::WellKnownRoot;
 
 pub struct SSIAuthHttpWorker {}
 
@@ -47,7 +47,8 @@ impl SSIAuthHttpWorker {
             _ => {
                 panic!("Unsupported role");
             }
-        }.merge(well_known_router);
+        }
+        .merge(well_known_router);
 
         // config
         let host = if config.is_local() { "127.0.0.1" } else { "0.0.0.0" };

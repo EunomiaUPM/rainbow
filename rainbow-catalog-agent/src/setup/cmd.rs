@@ -17,14 +17,14 @@
  *
  */
 
+use crate::setup::boot::CatalogAgentBoot;
 use crate::setup::db_migrations::CatalogAgentMigration;
 use clap::{Parser, Subcommand};
+use rainbow_common::boot::{BootstrapInit, BootstrapStepTrait};
 use rainbow_common::config::services::CatalogConfig;
 use rainbow_common::config::traits::ConfigLoader;
 use rainbow_common::config::types::roles::RoleConfig;
 use tracing::{debug, info};
-use rainbow_common::boot::{BootstrapInit, BootstrapStepTrait};
-use crate::setup::boot::CatalogAgentBoot;
 
 #[derive(Parser, Debug)]
 #[command(name = "Rainbow Dataspace Connector Catalog Agent")]

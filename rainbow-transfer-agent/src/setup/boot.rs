@@ -24,7 +24,6 @@ use rainbow_common::boot::BootstrapServiceTrait;
 use rainbow_common::config::services::TransferConfig;
 use rainbow_common::config::traits::ConfigLoader;
 use rainbow_common::config::types::roles::RoleConfig;
-use tokio::signal;
 use tokio_util::sync::CancellationToken;
 
 pub struct TransferBoot;
@@ -49,8 +48,8 @@ impl BootstrapServiceTrait for TransferBoot {
     }
     async fn start_services(
         config: &Self::Config,
-        participant_id: Option<String>,
-        catalog_id: Option<String>,
+        _participant_id: Option<String>,
+        _catalog_id: Option<String>,
     ) -> anyhow::Result<()> {
         let cancel_token = CancellationToken::new();
         // worker http

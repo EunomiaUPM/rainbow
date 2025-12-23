@@ -17,15 +17,13 @@
  *
  */
 
-
+use crate::ssi::common::setup::app::SSIAuthHttpWorker;
 use rainbow_common::boot::shutdown::shutdown_signal;
 use rainbow_common::boot::BootstrapServiceTrait;
-use rainbow_common::config::services::{SsiAuthConfig, TransferConfig};
-use rainbow_common::config::traits::{ConfigLoader, RoleTrait};
+use rainbow_common::config::services::SsiAuthConfig;
+use rainbow_common::config::traits::ConfigLoader;
 use rainbow_common::config::types::roles::RoleConfig;
-use tokio::signal;
 use tokio_util::sync::CancellationToken;
-use crate::ssi::common::setup::app::SSIAuthHttpWorker;
 
 pub struct SSIAuthBoot;
 
@@ -49,8 +47,8 @@ impl BootstrapServiceTrait for SSIAuthBoot {
     }
     async fn start_services(
         config: &Self::Config,
-        participant_id: Option<String>,
-        catalog_id: Option<String>,
+        _participant_id: Option<String>,
+        _catalog_id: Option<String>,
     ) -> anyhow::Result<()> {
         let cancel_token = CancellationToken::new();
         // worker http

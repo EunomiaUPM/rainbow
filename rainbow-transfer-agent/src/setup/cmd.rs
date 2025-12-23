@@ -16,15 +16,15 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-use std::marker::PhantomData;
+
 use crate::setup::boot::TransferBoot;
 use crate::setup::db_migrations::TransferAgentMigration;
 use clap::{Parser, Subcommand};
+use rainbow_common::boot::{BootstrapInit, BootstrapStepTrait};
 use rainbow_common::config::services::TransferConfig;
 use rainbow_common::config::traits::ConfigLoader;
 use rainbow_common::config::types::roles::RoleConfig;
 use tracing::{debug, info};
-use rainbow_common::boot::{BootstrapInit, BootstrapStepTrait};
 
 #[derive(Parser, Debug)]
 #[command(name = "Rainbow Dataspace Connector Transfer Agent")]

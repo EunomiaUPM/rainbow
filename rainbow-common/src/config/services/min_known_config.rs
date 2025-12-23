@@ -17,7 +17,7 @@
  *
  */
 
-use crate::config::services::{CatalogConfig, ContractsConfig, MonolithConfig, SsiAuthConfig, TransferConfig};
+use crate::config::services::{CatalogConfig, ContractsConfig, SsiAuthConfig, TransferConfig};
 use crate::config::traits::{ApiConfigTrait, CommonConfigTrait, ExtraHostsTrait};
 use crate::config::types::{CommonHostsConfig, HostType};
 use crate::config::ApplicationConfig;

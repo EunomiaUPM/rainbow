@@ -17,9 +17,9 @@
  *
  */
 use rainbow_catalog_agent::{CatalogRepositoryForSql, CatalogRepositoryTrait, NewCatalogModel};
-use sea_orm::Database;
-use rainbow_common::config::ApplicationConfig;
 use rainbow_common::config::traits::MonoConfigTrait;
+use rainbow_common::config::ApplicationConfig;
+use sea_orm::Database;
 
 pub struct CoreConsumerSeeding;
 

@@ -20,15 +20,14 @@
 use crate::consumer::db_migrations::CoreConsumerMigration;
 use crate::provider::db_migrations::CoreProviderMigration;
 use crate::provider::db_seeding::CoreProviderSeeding;
-use crate::setup::CoreHttpWorker;
+use crate::setup::boot::CoreBoot;
 use clap::{Parser, Subcommand};
+use rainbow_common::boot::{BootstrapInit, BootstrapStepTrait};
 use rainbow_common::config::traits::MonoConfigTrait;
 use rainbow_common::config::types::roles::RoleConfig;
 use rainbow_common::config::ApplicationConfig;
 use std::cmp::PartialEq;
 use tracing::{debug, info};
-use rainbow_common::boot::{BootstrapInit, BootstrapStepTrait};
-use crate::setup::boot::CoreBoot;
 
 #[derive(Parser, Debug)]
 #[command(name = "Rainbow Dataspace Connector Core Server")]
@@ -80,7 +79,8 @@ impl CoreCommands {
                 }
                 CoreCliCommands::Setup(args) => {
                     let config = ApplicationConfig::load(RoleConfig::Provider, args.env_file)?;
-                    let table = json_to_table::json_to_table(&serde_json::to_value(&config.monolith())?).collapse().to_string();
+                    let table =
+                        json_to_table::json_to_table(&serde_json::to_value(&config.monolith())?).collapse().to_string();
                     info!("Current Core Connector Config:\n{}", table);
                     CoreProviderMigration::run(&config).await?;
                     match config.is_mono_catalog_datahub() {
@@ -103,7 +103,8 @@ impl CoreCommands {
                 }
                 CoreCliCommands::Setup(args) => {
                     let config = ApplicationConfig::load(RoleConfig::Consumer, args.env_file)?;
-                    let table = json_to_table::json_to_table(&serde_json::to_value(&config.monolith())?).collapse().to_string();
+                    let table =
+                        json_to_table::json_to_table(&serde_json::to_value(&config.monolith())?).collapse().to_string();
                     info!("Current Core Connector Config:\n{}", table);
                     CoreConsumerMigration::run(&config).await?
                 }

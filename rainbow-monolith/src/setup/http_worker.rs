@@ -20,13 +20,9 @@
 use crate::consumer::router::create_core_consumer_router;
 use crate::provider::router::create_core_provider_router;
 use axum::serve;
-use rainbow_auth::ssi::consumer::setup::AuthConsumerApplication;
-use rainbow_auth::ssi::provider::setup::AuthProviderApplication;
 use rainbow_common::config::traits::{MonoConfigTrait, RoleTrait};
 use rainbow_common::config::types::roles::RoleConfig;
-use rainbow_common::config::types::HostType;
 use rainbow_common::config::ApplicationConfig;
-use rainbow_common::well_known::WellKnownRoot;
 use tokio::net::TcpListener;
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;

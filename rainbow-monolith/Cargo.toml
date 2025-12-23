@@ -1,6 +1,6 @@
 [package]
 name = "rainbow_monolith"
-version = "0.3.1"
+version = "0.3.8"
 edition = "2021"
 
 [lib]
@@ -15,7 +15,7 @@ path = "src/main.rs"
 rainbow_common = { version = "0.3.8", path = "../rainbow-common", default-features = false }
 rainbow_dataplane = { version = "0.3.8", path = "../rainbow-dataplane", default-features = false }
 rainbow_auth = { version = "0.3.8", path = "../rainbow-auth", default-features = false }
-rainbow_events = { version = "0.3.1", path = "../rainbow-events", default-features = false }
+rainbow_events = { version = "0.3.8", path = "../rainbow-events", default-features = false }
 rainbow_transfer_agent = { version = "0.3.8", path = "../rainbow-transfer-agent", default-features = false }
 rainbow_catalog_agent = { version = "0.3.8", path = "../rainbow-catalog-agent", default-features = false }
 

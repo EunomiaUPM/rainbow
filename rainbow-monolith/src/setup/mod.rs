@@ -17,8 +17,8 @@
  *
  */
 
-mod http_worker;
-pub mod cmd;
 pub mod boot;
+pub mod cmd;
+mod http_worker;
 
 pub use http_worker::CoreHttpWorker;

@@ -1,8 +1,8 @@
 pub mod shutdown;
 
+use crate::config::types::roles::RoleConfig;
 use std::fmt::Debug;
 use std::marker::PhantomData;
-use crate::config::types::roles::RoleConfig;
 
 #[async_trait::async_trait]
 pub trait BootstrapServiceTrait: Send + Sync {
@@ -11,19 +11,19 @@ pub trait BootstrapServiceTrait: Send + Sync {
     fn enable_participant() -> bool {
         true
     }
-    async fn create_participant(config: &Self::Config) -> anyhow::Result<String> {
+    async fn create_participant(_config: &Self::Config) -> anyhow::Result<String> {
         anyhow::bail!("This service does not support creation of participants.");
     }
     fn enable_catalog() -> bool {
         true
     }
-    async fn load_catalog(config: &Self::Config) -> anyhow::Result<Vec<String>> {
+    async fn load_catalog(_config: &Self::Config) -> anyhow::Result<Vec<String>> {
         anyhow::bail!("This service does not support creation of catalogs.");
     }
     fn enable_dataservice() -> bool {
         true
     }
-    async fn load_dataservice(config: &Self::Config) -> anyhow::Result<Vec<String>> {
+    async fn load_dataservice(_config: &Self::Config) -> anyhow::Result<Vec<String>> {
         anyhow::bail!("This service does not support creation of data services.");
     }
     async fn start_services(
@@ -68,7 +68,7 @@ pub struct BootstrapDataServiceLoaded<S: BootstrapServiceTrait> {
     pub catalog_id: Option<String>,
     pub participant_id: Option<String>,
 }
-pub struct BootstrapUpAndRunning<S: BootstrapServiceTrait>{
+pub struct BootstrapUpAndRunning<S: BootstrapServiceTrait> {
     pub config: S::Config,
     pub catalog_id: Option<String>,
     pub participant_id: Option<String>,
@@ -149,11 +149,7 @@ impl<S: BootstrapServiceTrait> BootstrapStepTrait for BootstrapUpAndRunning<S> {
 
     async fn next_step(self) -> anyhow::Result<Self::NextState> {
         tracing::info!("Step [6/6]: Service up and running");
-        S::start_services(
-            &self.config,
-            self.participant_id,
-            self.catalog_id
-        ).await?;
+        S::start_services(&self.config, self.participant_id, self.catalog_id).await?;
         Ok(BootstrapCurrentState(BootstrapFinalized(PhantomData)))
     }
 }

@@ -1,7 +1,6 @@
 use crate::dsp_common::well_known_types::{
     Auth, AuthProtocolTypes, DSPBindings, DSPIdentifierTypes, DSPProtocolVersions, Version, VersionResponse,
 };
-use axum::response::IntoResponse;
 use axum::routing::get;
 use axum::{Json, Router};
 use reqwest::StatusCode;

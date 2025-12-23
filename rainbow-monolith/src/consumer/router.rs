@@ -21,7 +21,6 @@ use axum::Router;
 use rainbow_auth::ssi::consumer::setup::app::AuthConsumerApplication;
 use rainbow_catalog_agent::setup::create_root_http_router as catalog_router;
 use rainbow_common::config::ApplicationConfig;
-use rainbow_common::well_known::dspace_version::WellKnownDSpaceVersionTrait;
 use rainbow_common::well_known::WellKnownRoot;
 use rainbow_transfer_agent::setup::create_root_http_router;
 use tower_http::trace::{DefaultOnResponse, TraceLayer};

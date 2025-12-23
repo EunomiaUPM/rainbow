@@ -17,16 +17,16 @@
  *
  */
 
+use crate::ssi::common::setup::boot::SSIAuthBoot;
 use crate::ssi::consumer::setup::migrations::ConsumerMigration;
 use crate::ssi::provider::setup::migrations::ProviderMigrations;
 use clap::{Parser, Subcommand};
+use rainbow_common::boot::{BootstrapInit, BootstrapStepTrait};
 use rainbow_common::config::services::SsiAuthConfig;
 use rainbow_common::config::traits::ConfigLoader;
 use rainbow_common::config::types::roles::RoleConfig;
 use std::cmp::PartialEq;
 use tracing::{debug, info};
-use rainbow_common::boot::{BootstrapInit, BootstrapStepTrait};
-use crate::ssi::common::setup::boot::SSIAuthBoot;
 
 #[derive(Parser, Debug)]
 #[command(name = "Rainbow Dataspace Aut Server")]

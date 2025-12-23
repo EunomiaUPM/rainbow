@@ -2,7 +2,6 @@ use crate::config::min_know_services::MinKnownConfig;
 use crate::facades::ssi_auth_facade::mates_facade::MatesFacadeService;
 use crate::http_client::HttpClient;
 use crate::well_known::dspace_version::dspace_version::WellKnownDSpaceVersionService;
-use crate::well_known::dspace_version::WellKnownDSpaceVersionTrait;
 use crate::well_known::router::WellKnownRouter;
 use crate::well_known::rpc::rpc::WellKnownRPCService;
 use std::sync::Arc;
