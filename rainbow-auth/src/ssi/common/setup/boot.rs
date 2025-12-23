@@ -17,7 +17,6 @@
  *
  */
 use crate::ssi::common::setup::app::SSIAuthHttpWorker;
-use rainbow_common::boot::shutdown::shutdown_signal;
 use rainbow_common::boot::BootstrapServiceTrait;
 use rainbow_common::config::services::SsiAuthConfig;
 use rainbow_common::config::traits::ConfigLoader;

@@ -55,12 +55,13 @@ impl TransferCommands {
         match cli.command {
             TransferCliCommands::Start(args) => {
                 let init = BootstrapInit::<TransferBoot>::new(RoleConfig::NotDefined, args.env_file);
-                let step1 = init.next_step().await?; // Carga Config
-                let step2 = step1.0.next_step().await?; // Config -> Participant
-                let step3 = step2.0.next_step().await?; // Participant -> Catalog
-                let step4 = step3.0.next_step().await?; // Catalog -> DataService
-                let step5 = step4.0.next_step().await?; // -> RUN (Blocking)
-                let _final = step5.0.next_step().await?; // Finalizing log
+                let step1 = init.next_step().await?; // Init -> Config
+                let step2 = step1.0.next_step().await?; // Config -> ServicesStarted (Background)
+                let step3 = step2.0.next_step().await?; // Services -> Participant
+                let step4 = step3.0.next_step().await?; // Participant -> Catalog
+                let step5 = step4.0.next_step().await?; // Catalog -> DataService
+                let step_finalized = step5.0.next_step().await?;
+                let _ = step_finalized.0.next_step().await?;
             }
             TransferCliCommands::Setup(args) => {
                 let config = TransferConfig::load(RoleConfig::NotDefined, args.env_file);

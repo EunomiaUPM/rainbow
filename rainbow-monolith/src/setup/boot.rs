@@ -17,7 +17,6 @@
  *
  */
 use crate::setup::CoreHttpWorker;
-use rainbow_common::boot::shutdown::shutdown_signal;
 use rainbow_common::boot::BootstrapServiceTrait;
 use rainbow_common::config::types::roles::RoleConfig;
 use rainbow_common::config::ApplicationConfig;

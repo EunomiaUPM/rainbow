@@ -19,7 +19,6 @@
 use crate::setup::grpc_worker::NegotiationGrpcWorker;
 use crate::setup::http_worker::NegotiationHttpWorker;
 use rainbow_common::boot::BootstrapServiceTrait;
-use rainbow_common::boot::shutdown::shutdown_signal;
 use rainbow_common::config::services::ContractsConfig;
 use rainbow_common::config::traits::ConfigLoader;
 use rainbow_common::config::types::roles::RoleConfig;
