@@ -25,6 +25,7 @@ use rainbow_common::config::services::{CatalogConfig, ContractsConfig, TransferC
 use rainbow_common::config::traits::ConfigLoader;
 use rainbow_common::config::types::roles::RoleConfig;
 use tokio::signal;
+use tokio::sync::broadcast;
 use tokio_util::sync::CancellationToken;
 
 pub struct CatalogAgentBoot;
@@ -47,35 +48,39 @@ impl BootstrapServiceTrait for CatalogAgentBoot {
     fn enable_dataservice() -> bool {
         false
     }
-    async fn start_services(
-        config: &Self::Config,
-        participant_id: Option<String>,
-        catalog_id: Option<String>,
-    ) -> anyhow::Result<()> {
+    async fn start_services_background(config: &Self::Config) -> anyhow::Result<broadcast::Sender<()>> {
+        // thread control
+        let (shutdown_tx, mut shutdown_rx) = broadcast::channel(1);
         let cancel_token = CancellationToken::new();
-        // worker http
+
+        // workers
         tracing::info!("Spawning HTTP subsystem...");
         let http_handle = CatalogHttpWorker::spawn(config, &cancel_token).await?;
-        // worker grpc
+
         tracing::info!("Spawning gRPC subsystem...");
         let grpc_handle = CatalogGrpcWorker::spawn(config, &cancel_token).await?;
-        // shutdown loop
-        let shutdown_signal = shutdown_signal();
-        tokio::select! {
-            _ = shutdown_signal => {
-                tracing::warn!("Shutdown signal received from OS.");
+
+        // non-blocking thread
+        let token_clone = cancel_token.clone();
+        tokio::spawn(async move {
+            tokio::select! {
+                // ctrl+c
+                _ = shutdown_rx.recv() => {
+                    tracing::info!("Shutdown command received from Main Pipeline.");
+                }
+                _ = async { http_handle.await } => {
+                    tracing::error!("CRITICAL: HTTP subsystem failed or stopped unexpectedly!");
+                }
+                _ = async { grpc_handle.await } => {
+                    tracing::error!("CRITICAL: GRPC subsystem failed or stopped unexpectedly!");
+                }
             }
-            _ = async { http_handle.await } => {
-                tracing::error!("HTTP subsystem failed or stopped unexpectedly!");
-            }
-            _ = async { grpc_handle.await } => {
-                tracing::error!("GRPC subsystem failed or stopped unexpectedly!");
-            }
-        }
-        // teardown
-        tracing::info!("Initiating graceful shutdown sequence...");
-        cancel_token.cancel();
-        tracing::info!("System shut down gracefully.");
-        Ok(())
+
+            tracing::info!("Initiating internal graceful shutdown sequence...");
+            token_clone.cancel();
+            tracing::info!("Background services stopped.");
+        });
+
+        Ok(shutdown_tx)
     }
 }

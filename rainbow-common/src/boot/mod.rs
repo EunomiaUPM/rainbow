@@ -3,34 +3,36 @@ pub mod shutdown;
 use crate::config::types::roles::RoleConfig;
 use std::fmt::Debug;
 use std::marker::PhantomData;
+use tokio::sync::broadcast;
 
 #[async_trait::async_trait]
 pub trait BootstrapServiceTrait: Send + Sync {
-    type Config: Debug + Clone + Send + Sync; // whatever type - config hasn't common trait yet
+    type Config: Debug + Clone + Send + Sync;
+
     async fn load_config(role: RoleConfig, env_file: Option<String>) -> anyhow::Result<Self::Config>;
+
     fn enable_participant() -> bool {
         true
     }
     async fn create_participant(_config: &Self::Config) -> anyhow::Result<String> {
         anyhow::bail!("This service does not support creation of participants.");
     }
+
     fn enable_catalog() -> bool {
         true
     }
-    async fn load_catalog(_config: &Self::Config) -> anyhow::Result<Vec<String>> {
+    async fn load_catalog(_config: &Self::Config) -> anyhow::Result<String> {
         anyhow::bail!("This service does not support creation of catalogs.");
     }
+
     fn enable_dataservice() -> bool {
         true
     }
-    async fn load_dataservice(_config: &Self::Config) -> anyhow::Result<Vec<String>> {
+    async fn load_dataservice(_config: &Self::Config) -> anyhow::Result<String> {
         anyhow::bail!("This service does not support creation of data services.");
     }
-    async fn start_services(
-        config: &Self::Config,
-        participant_id: Option<String>,
-        catalog_id: Option<String>,
-    ) -> anyhow::Result<()>;
+
+    async fn start_services_background(config: &Self::Config) -> anyhow::Result<broadcast::Sender<()>>;
 }
 
 #[async_trait::async_trait]
@@ -40,6 +42,7 @@ pub trait BootstrapStepTrait: Send + Sync {
 }
 
 pub struct BootstrapCurrentState<S: BootstrapStepTrait>(pub S);
+
 pub struct BootstrapInit<S: BootstrapServiceTrait> {
     pub _marker: PhantomData<S>,
     pub env_file: Option<String>,
@@ -51,29 +54,44 @@ impl<S: BootstrapServiceTrait> BootstrapInit<S> {
         Self { _marker: PhantomData, env_file, role }
     }
 }
+
 pub struct BootstrapConfigLoaded<S: BootstrapServiceTrait> {
-    pub config: S::Config,
+    pub _marker: PhantomData<S>,
+    pub env_file: Option<String>,
+    pub role: RoleConfig,
 }
+
+pub struct BootstrapServicesStarted<S: BootstrapServiceTrait> {
+    pub config: S::Config,
+    pub shutdown_tx: broadcast::Sender<()>,
+}
+
 pub struct BootstrapSelfParticipantOnBoarded<S: BootstrapServiceTrait> {
     pub config: S::Config,
+    pub shutdown_tx: broadcast::Sender<()>,
     pub participant_id: Option<String>,
 }
+
 pub struct BootstrapCatalogLoaded<S: BootstrapServiceTrait> {
     pub config: S::Config,
-    pub catalog_id: Option<String>,
+    pub shutdown_tx: broadcast::Sender<()>,
     pub participant_id: Option<String>,
+    pub catalog_id: Option<String>,
 }
+
 pub struct BootstrapDataServiceLoaded<S: BootstrapServiceTrait> {
     pub config: S::Config,
-    pub catalog_id: Option<String>,
+    pub shutdown_tx: broadcast::Sender<()>,
     pub participant_id: Option<String>,
-}
-pub struct BootstrapUpAndRunning<S: BootstrapServiceTrait> {
-    pub config: S::Config,
     pub catalog_id: Option<String>,
-    pub participant_id: Option<String>,
+    pub dataservice_id: Option<String>,
 }
-pub struct BootstrapFinalized<S: BootstrapServiceTrait>(PhantomData<S>);
+
+pub struct BootstrapFinalized<S: BootstrapServiceTrait> {
+    pub _marker: PhantomData<S>,
+    pub shutdown_tx: broadcast::Sender<()>,
+}
+
 pub struct BootstrapTerminated<S: BootstrapServiceTrait>(PhantomData<S>);
 
 #[async_trait::async_trait]
@@ -81,22 +99,47 @@ impl<S: BootstrapServiceTrait> BootstrapStepTrait for BootstrapInit<S> {
     type NextState = BootstrapCurrentState<BootstrapConfigLoaded<S>>;
 
     async fn next_step(self) -> anyhow::Result<Self::NextState> {
-        tracing::info!("Step [1/6]: Init bootstrap configuration");
-        let config = S::load_config(self.role, self.env_file).await?;
-        Ok(BootstrapCurrentState(BootstrapConfigLoaded { config }))
+        tracing::info!("Step [1/7]: Init bootstrap configuration");
+        Ok(BootstrapCurrentState(BootstrapConfigLoaded {
+            _marker: PhantomData,
+            env_file: self.env_file,
+            role: self.role,
+        }))
     }
 }
 
 #[async_trait::async_trait]
 impl<S: BootstrapServiceTrait> BootstrapStepTrait for BootstrapConfigLoaded<S> {
+    type NextState = BootstrapCurrentState<BootstrapServicesStarted<S>>;
+
+    async fn next_step(self) -> anyhow::Result<Self::NextState> {
+        tracing::info!("Step [2/7]: Configuration loading");
+        let config = S::load_config(self.role, self.env_file).await?;
+
+        tracing::info!("Step [3/7]: Starting Services in Background");
+        let shutdown_tx = S::start_services_background(&config).await?;
+        tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+
+        Ok(BootstrapCurrentState(BootstrapServicesStarted {
+            config,
+            shutdown_tx,
+        }))
+    }
+}
+
+#[async_trait::async_trait]
+impl<S: BootstrapServiceTrait> BootstrapStepTrait for BootstrapServicesStarted<S> {
     type NextState = BootstrapCurrentState<BootstrapSelfParticipantOnBoarded<S>>;
 
     async fn next_step(self) -> anyhow::Result<Self::NextState> {
-        tracing::info!("Step [2/6]: Configuration loading");
-        // create participant....
+        tracing::info!("Step [4/7]: Creating self participant");
+        let participant_id =
+            if S::enable_participant() { Some(S::create_participant(&self.config).await?) } else { None };
+
         Ok(BootstrapCurrentState(BootstrapSelfParticipantOnBoarded {
             config: self.config,
-            participant_id: None,
+            shutdown_tx: self.shutdown_tx,
+            participant_id,
         }))
     }
 }
@@ -106,11 +149,14 @@ impl<S: BootstrapServiceTrait> BootstrapStepTrait for BootstrapSelfParticipantOn
     type NextState = BootstrapCurrentState<BootstrapCatalogLoaded<S>>;
 
     async fn next_step(self) -> anyhow::Result<Self::NextState> {
-        tracing::info!("Step [3/6]: Creating self participant");
+        tracing::info!("Step [5/7]: Loading main catalog");
+        let catalog_id = if S::enable_catalog() { Some(S::load_catalog(&self.config).await?) } else { None };
+
         Ok(BootstrapCurrentState(BootstrapCatalogLoaded {
             config: self.config,
-            catalog_id: None,
-            participant_id: None,
+            shutdown_tx: self.shutdown_tx,
+            participant_id: self.participant_id,
+            catalog_id,
         }))
     }
 }
@@ -120,47 +166,49 @@ impl<S: BootstrapServiceTrait> BootstrapStepTrait for BootstrapCatalogLoaded<S> 
     type NextState = BootstrapCurrentState<BootstrapDataServiceLoaded<S>>;
 
     async fn next_step(self) -> anyhow::Result<Self::NextState> {
-        tracing::info!("Step [4/6]: Loading main dataservice");
+        tracing::info!("Step [6/7]: Loading main dataservice");
+        let dataservice_id =
+            if S::enable_dataservice() { Some(S::load_dataservice(&self.config).await?) } else { None };
+
         Ok(BootstrapCurrentState(BootstrapDataServiceLoaded {
             config: self.config,
-            catalog_id: None,
-            participant_id: None,
+            shutdown_tx: self.shutdown_tx,
+            participant_id: self.participant_id,
+            catalog_id: self.catalog_id,
+            dataservice_id,
         }))
     }
 }
 
 #[async_trait::async_trait]
 impl<S: BootstrapServiceTrait> BootstrapStepTrait for BootstrapDataServiceLoaded<S> {
-    type NextState = BootstrapCurrentState<BootstrapUpAndRunning<S>>;
+    type NextState = BootstrapCurrentState<BootstrapFinalized<S>>;
 
     async fn next_step(self) -> anyhow::Result<Self::NextState> {
-        tracing::info!("Step [5/6]: Loading main catalog");
-        Ok(BootstrapCurrentState(BootstrapUpAndRunning {
-            config: self.config,
-            catalog_id: None,
-            participant_id: None,
+        tracing::info!("Step [7/7]: Bootstrap sequence completed. Services UP.");
+        Ok(BootstrapCurrentState(BootstrapFinalized {
+            _marker: PhantomData,
+            shutdown_tx: self.shutdown_tx,
         }))
     }
 }
 
 #[async_trait::async_trait]
-impl<S: BootstrapServiceTrait> BootstrapStepTrait for BootstrapUpAndRunning<S> {
-    type NextState = BootstrapCurrentState<BootstrapFinalized<S>>;
-
-    async fn next_step(self) -> anyhow::Result<Self::NextState> {
-        tracing::info!("Step [6/6]: Service up and running");
-        S::start_services(&self.config, self.participant_id, self.catalog_id).await?;
-        Ok(BootstrapCurrentState(BootstrapFinalized(PhantomData)))
-    }
-}
-
-#[async_trait::async_trait]
 impl<S: BootstrapServiceTrait> BootstrapStepTrait for BootstrapFinalized<S> {
-    type NextState = BootstrapCurrentState<BootstrapFinalized<S>>;
+    type NextState = BootstrapCurrentState<BootstrapTerminated<S>>;
 
     async fn next_step(self) -> anyhow::Result<Self::NextState> {
-        tracing::info!("Finalizing");
-        Ok(BootstrapCurrentState(BootstrapFinalized(PhantomData)))
+        tracing::info!("System is RUNNING. Waiting for termination signal...");
+
+        match tokio::signal::ctrl_c().await {
+            Ok(()) => tracing::info!("Shutdown signal received"),
+            Err(err) => tracing::error!("Unable to listen for shutdown signal: {}", err),
+        }
+
+        let _ = self.shutdown_tx.send(());
+        tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+
+        Ok(BootstrapCurrentState(BootstrapTerminated(PhantomData)))
     }
 }
 
@@ -169,7 +217,7 @@ impl<S: BootstrapServiceTrait> BootstrapStepTrait for BootstrapTerminated<S> {
     type NextState = BootstrapCurrentState<BootstrapTerminated<S>>;
 
     async fn next_step(self) -> anyhow::Result<Self::NextState> {
-        tracing::info!("Terminating");
+        tracing::info!("Terminating process.");
         Ok(BootstrapCurrentState(BootstrapTerminated(PhantomData)))
     }
 }
