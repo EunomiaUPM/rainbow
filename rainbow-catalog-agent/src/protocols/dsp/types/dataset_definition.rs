@@ -17,7 +17,8 @@
  *
  */
 
-use crate::protocols::dsp::types::distribution_definition::Distribution;
+use crate::protocols::dsp::types::dataservice_definition::{DataService, DataServiceMinimized};
+use crate::protocols::dsp::types::distribution_definition::{Distribution, DistributionMinimized};
 use rainbow_common::dsp_common::context_field::ContextField;
 use rainbow_common::dsp_common::odrl::OdrlOffer;
 use serde::{Deserialize, Serialize};
@@ -37,33 +38,106 @@ pub struct Dataset {
     #[serde(rename = "hasPolicy")]
     pub odrl_offer: Vec<OdrlOffer>,
     #[serde(rename = "extraFields")]
+    #[serde(skip_serializing_if = "serde_json::Value::is_null")]
     pub extra_fields: serde_json::Value,
     #[serde(rename = "distribution")]
-    pub distribution: Vec<Distribution>,
+    pub distribution: DatasetDistributionTypes,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct DatasetMinimized {
+    #[serde(rename = "@type")]
+    pub _type: String,
+    #[serde(rename = "@id")]
+    pub id: String,
+    #[serde(flatten)]
+    pub dcat: DatasetDcatDeclaration,
+    #[serde(flatten)]
+    pub dct: DatasetDctDeclaration,
+    #[serde(rename = "hasPolicy")]
+    pub odrl_offer: Vec<OdrlOffer>,
+    #[serde(rename = "extraFields")]
+    #[serde(skip_serializing_if = "serde_json::Value::is_null")]
+    pub extra_fields: serde_json::Value,
+    #[serde(rename = "distribution")]
+    pub distribution: DatasetDistributionTypes,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DatasetDcatDeclaration {
     #[serde(rename = "theme")]
+    #[serde(skip_serializing_if = "String::is_empty")]
     pub theme: String,
     #[serde(rename = "keyword")]
+    #[serde(skip_serializing_if = "String::is_empty")]
     pub keyword: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DatasetDctDeclaration {
     #[serde(rename = "conformsTo")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub conforms_to: Option<String>,
     #[serde(rename = "creator")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub creator: Option<String>,
     #[serde(rename = "identifier")]
     pub identifier: String,
     #[serde(rename = "issued")]
     pub issued: chrono::NaiveDateTime,
     #[serde(rename = "modified")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub modified: Option<chrono::NaiveDateTime>,
     #[serde(rename = "title")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
     #[serde(rename = "description")]
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub description: Vec<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(untagged)]
+pub enum DatasetDistributionTypes {
+    DistributionMultipleMinimized(Vec<DistributionMinimized>),
+    DistributionMultipleOriginal(Vec<Distribution>),
+}
+
+impl From<Distribution> for DistributionMinimized {
+    fn from(dc: Distribution) -> Self {
+        Self {
+            _type: dc._type,
+            id: dc.id,
+            dcat: dc.dcat,
+            dct: dc.dct,
+            odrl_offer: dc.odrl_offer,
+            extra_fields: dc.extra_fields,
+        }
+    }
+}
+
+impl From<&Distribution> for DistributionMinimized {
+    fn from(dc: &Distribution) -> Self {
+        dc.clone().into()
+    }
+}
+
+impl From<Dataset> for DatasetMinimized {
+    fn from(dc: Dataset) -> Self {
+        Self {
+            _type: dc._type,
+            id: dc.id,
+            dcat: dc.dcat,
+            dct: dc.dct,
+            odrl_offer: dc.odrl_offer,
+            extra_fields: dc.extra_fields,
+            distribution: dc.distribution,
+        }
+    }
+}
+
+impl From<&Dataset> for DatasetMinimized {
+    fn from(dc: &Dataset) -> Self {
+        dc.clone().into()
+    }
 }

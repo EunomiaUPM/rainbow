@@ -17,6 +17,7 @@
  *
  */
 
+use crate::protocols::dsp::types::catalog_definition::CatalogServiceTypes;
 use crate::protocols::dsp::types::dataservice_definition::DataService;
 use rainbow_common::dcat_formats::DctFormats;
 use rainbow_common::dsp_common::context_field::ContextField;
@@ -36,28 +37,51 @@ pub struct Distribution {
     #[serde(flatten)]
     pub dct: DistributionDctDeclaration,
     #[serde(rename = "hasPolicy")]
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub odrl_offer: Vec<OdrlOffer>,
     #[serde(rename = "extraFields")]
+    #[serde(skip_serializing_if = "serde_json::Value::is_null")]
+    pub extra_fields: serde_json::Value,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct DistributionMinimized {
+    #[serde(rename = "@type")]
+    pub _type: String,
+    #[serde(rename = "@id")]
+    pub id: String,
+    #[serde(flatten)]
+    pub dcat: DistributionDcatDeclaration,
+    #[serde(flatten)]
+    pub dct: DistributionDctDeclaration,
+    #[serde(rename = "hasPolicy")]
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    #[serde(skip)]
+    pub odrl_offer: Vec<OdrlOffer>,
+    #[serde(rename = "extraFields")]
+    #[serde(skip_serializing_if = "serde_json::Value::is_null")]
+    #[serde(skip)]
     pub extra_fields: serde_json::Value,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DistributionDcatDeclaration {
     #[serde(rename = "accessService")]
-    pub access_service: Option<DataService>,
+    pub access_service: Option<CatalogServiceTypes>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DistributionDctDeclaration {
-    #[serde(rename = "identifier")]
-    pub identifier: String,
     #[serde(rename = "issued")]
     pub issued: chrono::NaiveDateTime,
     #[serde(rename = "modified")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub modified: Option<chrono::NaiveDateTime>,
     #[serde(rename = "title")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
     #[serde(rename = "description")]
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub description: Vec<String>,
     #[serde(rename = "formats")]
     pub formats: DctFormats,

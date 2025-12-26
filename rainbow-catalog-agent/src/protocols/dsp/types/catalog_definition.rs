@@ -18,8 +18,8 @@
  */
 
 // use rainbow_db::catalog::entities::catalog;
-use crate::protocols::dsp::types::dataservice_definition::DataService;
-use crate::protocols::dsp::types::dataset_definition::Dataset;
+use crate::protocols::dsp::types::dataservice_definition::{DataService, DataServiceMinimized};
+use crate::protocols::dsp::types::dataset_definition::{Dataset, DatasetMinimized};
 use rainbow_common::dsp_common::context_field::ContextField;
 use rainbow_common::dsp_common::odrl::OdrlOffer;
 use serde::{Deserialize, Serialize};
@@ -45,49 +45,130 @@ pub struct Catalog {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub odrl_offer: Option<Vec<OdrlOffer>>,
     #[serde(rename = "extraFields")]
+    #[serde(skip_serializing_if = "serde_json::Value::is_null")]
     pub extra_fields: serde_json::Value,
     #[serde(rename = "catalog")]
-    pub catalogs: Vec<Catalog>,
+    pub catalogs: CatalogCatalogTypes,
     #[serde(rename = "dataset")]
-    pub datasets: Vec<Dataset>,
+    pub datasets: CatalogDatasetTypes,
     #[serde(rename = "service")]
-    pub data_services: Vec<DataService>,
+    pub data_services: CatalogServiceTypes,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CatalogMinimized {
+    #[serde(rename = "@type")]
+    pub _type: String,
+    #[serde(rename = "@id")]
+    pub id: Urn,
+    #[serde(flatten)]
+    pub foaf: CatalogFoafDeclaration,
+    #[serde(flatten)]
+    pub dcat: CatalogDcatDeclaration,
+    #[serde(flatten)]
+    pub dct: CatalogDctDeclaration,
+    #[serde(flatten)]
+    pub dspace: CatalogDSpaceDeclaration,
+    #[serde(rename = "hasPolicy")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub odrl_offer: Option<Vec<OdrlOffer>>,
+    #[serde(rename = "extraFields")]
+    #[serde(skip_serializing_if = "serde_json::Value::is_null")]
+    pub extra_fields: serde_json::Value,
+    #[serde(rename = "dataset")]
+    pub datasets: CatalogDatasetTypes,
+    #[serde(rename = "service")]
+    pub data_services: CatalogServiceTypes,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CatalogFoafDeclaration {
     #[serde(rename = "homepage")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub homepage: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CatalogDcatDeclaration {
     #[serde(rename = "theme")]
+    #[serde(skip_serializing_if = "String::is_empty")]
     pub theme: String,
     #[serde(rename = "keyword")]
+    #[serde(skip_serializing_if = "String::is_empty")]
     pub keyword: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CatalogDctDeclaration {
     #[serde(rename = "conformsTo")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub conforms_to: Option<String>,
     #[serde(rename = "creator")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub creator: Option<String>,
     #[serde(rename = "identifier")]
     pub identifier: String,
     #[serde(rename = "issued")]
     pub issued: chrono::NaiveDateTime,
     #[serde(rename = "modified")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub modified: Option<chrono::NaiveDateTime>,
     #[serde(rename = "title")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
     #[serde(rename = "description")]
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub description: Vec<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CatalogDSpaceDeclaration {
     #[serde(rename = "participantId")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub participant_id: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum CatalogCatalogTypes {
+    CatalogMultipleMinimized(Vec<CatalogMinimized>),
+    CatalogMultipleOriginal(Vec<Catalog>),
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(untagged)]
+pub enum CatalogServiceTypes {
+    ServiceOnly(DataService),
+    ServiceMinimized(DataServiceMinimized),
+    ServiceMultiple(Vec<DataService>),
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum CatalogDatasetTypes {
+    DatasetMultipleMinimized(Vec<DatasetMinimized>),
+    DatasetMultipleOriginal(Vec<Dataset>),
+}
+
+impl From<Catalog> for CatalogMinimized {
+    fn from(dc: Catalog) -> Self {
+        Self {
+            _type: dc._type,
+            id: dc.id,
+            foaf: dc.foaf,
+            dcat: dc.dcat,
+            dct: dc.dct,
+            dspace: dc.dspace,
+            odrl_offer: dc.odrl_offer,
+            extra_fields: dc.extra_fields,
+            datasets: dc.datasets,
+            data_services: dc.data_services,
+        }
+    }
+}
+
+impl From<&Catalog> for CatalogMinimized {
+    fn from(dc: &Catalog) -> Self {
+        dc.into()
+    }
 }

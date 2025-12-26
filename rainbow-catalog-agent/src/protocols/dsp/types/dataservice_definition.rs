@@ -38,16 +38,30 @@ pub struct DataService {
     #[serde(rename = "hasPolicy")]
     pub odrl_offer: Vec<OdrlOffer>,
     #[serde(rename = "extraFields")]
+    #[serde(skip_serializing_if = "serde_json::Value::is_null")]
     pub extra_fields: serde_json::Value,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct DataServiceMinimized {
+    #[serde(rename = "@type")]
+    pub _type: String,
+    #[serde(rename = "@id")]
+    pub id: String,
+    #[serde(flatten)]
+    pub dcat: DataServiceDcatDeclaration,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DataServiceDcatDeclaration {
     #[serde(rename = "theme")]
+    #[serde(skip_serializing_if = "String::is_empty")]
     pub theme: String,
     #[serde(rename = "keyword")]
+    #[serde(skip_serializing_if = "String::is_empty")]
     pub keyword: String,
     #[serde(rename = "endpointDescription")]
+    #[serde(skip_serializing_if = "String::is_empty")]
     pub endpoint_description: String,
     #[serde(rename = "endpointURL")]
     pub endpoint_url: String,
@@ -56,18 +70,23 @@ pub struct DataServiceDcatDeclaration {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DataServiceDctDeclaration {
     #[serde(rename = "conformsTo")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub conforms_to: Option<String>,
     #[serde(rename = "creator")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub creator: Option<String>,
     #[serde(rename = "identifier")]
     pub identifier: String,
     #[serde(rename = "issued")]
     pub issued: chrono::NaiveDateTime,
     #[serde(rename = "modified")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub modified: Option<chrono::NaiveDateTime>,
     #[serde(rename = "title")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
     #[serde(rename = "description")]
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub description: Vec<String>,
 }
 
@@ -95,5 +114,17 @@ impl Default for DataService {
             odrl_offer: vec![],
             extra_fields: Value::default(),
         }
+    }
+}
+
+impl From<DataService> for DataServiceMinimized {
+    fn from(dc: DataService) -> Self {
+        Self { _type: dc._type, id: dc.id, dcat: dc.dcat }
+    }
+}
+
+impl From<&DataService> for DataServiceMinimized {
+    fn from(dc: &DataService) -> Self {
+        dc.clone().into()
     }
 }

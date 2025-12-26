@@ -13,6 +13,17 @@ services:
     ports:
       - "1400:5432"
 
+  ds_core_provider_redis:
+    image: redis:alpine
+    container_name: ds_core_provider_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    command: >
+      redis-server 
+      --requirepass ds_core_provider_redis
+      --user admin on >ds_core_provider_redis ~* +@all
+
   ds_core_consumer:
     # platform: linux/amd64
     container_name: "ds_core_consumer"
@@ -25,6 +36,17 @@ services:
     ports:
       - "1300:5432"
 
+  ds_core_consumer_redis:
+    image: redis:alpine
+    container_name: ds_core_consumer_redis
+    restart: always
+    ports:
+      - "6380:6379"
+    command: >
+      redis-server 
+      --requirepass ds_core_consumer_redis
+      --user admin on >ds_core_consumer_redis ~* +@all
+
   ds_authority:
     container_name: "ds_authority"
     image: "postgres"
@@ -35,3 +57,17 @@ services:
       POSTGRES_DB: ds_authority
     ports:
       - "1450:5432"
+
+  idm:
+    container_name: "idm"
+    image: "quay.io/keycloak/keycloak:26.4.7"
+    restart: always
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    ports:
+      - "2000:8080"
+    command:
+      - "start-dev"
+
+

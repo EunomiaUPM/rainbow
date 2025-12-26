@@ -4,12 +4,15 @@ use crate::entities::datasets::{DatasetDto, DatasetEntityTrait};
 use crate::entities::distributions::{DistributionDto, DistributionEntityTrait};
 use crate::entities::odrl_policies::{OdrlPolicyDto, OdrlPolicyEntityTrait};
 use crate::protocols::dsp::types::catalog_definition::{
-    Catalog, CatalogDSpaceDeclaration, CatalogDcatDeclaration, CatalogDctDeclaration, CatalogFoafDeclaration,
+    Catalog, CatalogCatalogTypes, CatalogDSpaceDeclaration, CatalogDatasetTypes, CatalogDcatDeclaration,
+    CatalogDctDeclaration, CatalogFoafDeclaration, CatalogMinimized, CatalogServiceTypes,
 };
 use crate::protocols::dsp::types::dataservice_definition::{
     DataService, DataServiceDcatDeclaration, DataServiceDctDeclaration,
 };
-use crate::protocols::dsp::types::dataset_definition::{Dataset, DatasetDcatDeclaration, DatasetDctDeclaration};
+use crate::protocols::dsp::types::dataset_definition::{
+    Dataset, DatasetDcatDeclaration, DatasetDctDeclaration, DatasetDistributionTypes,
+};
 use crate::protocols::dsp::types::distribution_definition::{
     Distribution, DistributionDcatDeclaration, DistributionDctDeclaration,
 };
@@ -22,7 +25,7 @@ use rainbow_common::facades::ssi_auth_facade::MatesFacadeTrait;
 use std::collections::HashMap;
 use std::str::FromStr;
 use std::sync::Arc;
-use tracing::error;
+use tracing::{debug, error};
 use urn::Urn;
 
 pub struct OrchestrationPersistenceForProtocol {
@@ -66,7 +69,7 @@ impl OrchestrationPersistenceForProtocol {
         let main_dataservice_dto = self.fetch_main_dataservice_dto().await?;
 
         // 2. Sub catalogs
-        let sub_catalogs = self.build_sub_catalogs().await?;
+        let sub_catalogs = self.build_sub_catalogs(&main_catalog_urn).await?;
 
         // 3. Datasets in main catalog
         let datasets = self.build_datasets_for_catalog(&main_catalog_urn).await?;
@@ -75,12 +78,7 @@ impl OrchestrationPersistenceForProtocol {
         let main_dataservice = self.map_data_service(main_dataservice_dto);
 
         // 4. Assembly
-        let catalog = self.map_catalog(
-            main_catalog_dto,
-            vec![main_dataservice],
-            sub_catalogs,
-            datasets,
-        );
+        let catalog = self.map_main_catalog(main_catalog_dto, main_dataservice, sub_catalogs, datasets);
 
         Ok(catalog)
     }
@@ -106,17 +104,18 @@ impl OrchestrationPersistenceForProtocol {
     // =========================================================================
 
     /// Create subcatalogs
-    async fn build_sub_catalogs(&self) -> anyhow::Result<Vec<Catalog>> {
+    async fn build_sub_catalogs(&self, exclude_id: &Urn) -> anyhow::Result<Vec<CatalogMinimized>> {
         let catalogs_dtos = self.catalog_entities_service.get_all_catalogs(None, None, false).await?;
         let mut dcat_catalogs = Vec::with_capacity(catalogs_dtos.len());
-
         for catalog_dto in catalogs_dtos {
             let catalog_urn = Urn::from_str(&catalog_dto.inner.id)?;
+            if &catalog_urn == exclude_id {
+                continue;
+            }
             let sub_datasets = self.build_datasets_for_catalog(&catalog_urn).await?;
             let sub_dataservice = self.build_dataservices_for_catalog(&catalog_urn).await?;
-            dcat_catalogs.push(self.map_catalog(catalog_dto, sub_dataservice, vec![], sub_datasets));
+            dcat_catalogs.push(self.map_subcatalog(catalog_dto, sub_dataservice, sub_datasets));
         }
-
         Ok(dcat_catalogs)
     }
 
@@ -228,6 +227,37 @@ impl OrchestrationPersistenceForProtocol {
     // MAPPERS from DTOs to DCAT representations
     // =========================================================================
 
+    fn map_main_catalog(
+        &self,
+        dto: CatalogDto,
+        main_dataservice_dto: DataService,
+        catalogs: Vec<CatalogMinimized>,
+        datasets: Vec<Dataset>,
+    ) -> Catalog {
+        Catalog {
+            context: ContextField::default(),
+            _type: "Catalog".to_string(),
+            id: Urn::from_str(&dto.inner.id).unwrap_or_else(|_| Urn::from_str("urn:error").unwrap()),
+            foaf: CatalogFoafDeclaration { homepage: dto.inner.foaf_home_page },
+            dcat: CatalogDcatDeclaration { theme: "".to_string(), keyword: "".to_string() },
+            dct: CatalogDctDeclaration {
+                conforms_to: dto.inner.dct_conforms_to,
+                creator: dto.inner.dct_creator,
+                identifier: dto.inner.id.clone(),
+                issued: dto.inner.dct_issued.naive_utc(),
+                modified: dto.inner.dct_modified.map(|d| d.naive_utc()),
+                title: dto.inner.dct_title,
+                description: vec![],
+            },
+            dspace: CatalogDSpaceDeclaration { participant_id: None },
+            odrl_offer: None,
+            extra_fields: Default::default(),
+            catalogs: CatalogCatalogTypes::CatalogMultipleMinimized(catalogs),
+            datasets: CatalogDatasetTypes::DatasetMultipleMinimized(datasets.iter().map(|d| d.into()).collect()),
+            data_services: CatalogServiceTypes::ServiceMinimized(main_dataservice_dto.into()),
+        }
+    }
+
     fn map_catalog(
         &self,
         dto: CatalogDto,
@@ -253,9 +283,37 @@ impl OrchestrationPersistenceForProtocol {
             dspace: CatalogDSpaceDeclaration { participant_id: None },
             odrl_offer: None,
             extra_fields: Default::default(),
-            catalogs,
-            datasets,
-            data_services: main_dataservice_dto,
+            catalogs: CatalogCatalogTypes::CatalogMultipleMinimized(catalogs.iter().map(|cat| cat.into()).collect()),
+            datasets: CatalogDatasetTypes::DatasetMultipleMinimized(datasets.iter().map(|d| d.into()).collect()),
+            data_services: CatalogServiceTypes::ServiceMultiple(main_dataservice_dto),
+        }
+    }
+
+    fn map_subcatalog(
+        &self,
+        dto: CatalogDto,
+        main_dataservice_dto: Vec<DataService>,
+        datasets: Vec<Dataset>,
+    ) -> CatalogMinimized {
+        CatalogMinimized {
+            _type: "Catalog".to_string(),
+            id: Urn::from_str(&dto.inner.id).unwrap_or_else(|_| Urn::from_str("urn:error").unwrap()),
+            foaf: CatalogFoafDeclaration { homepage: dto.inner.foaf_home_page },
+            dcat: CatalogDcatDeclaration { theme: "".to_string(), keyword: "".to_string() },
+            dct: CatalogDctDeclaration {
+                conforms_to: dto.inner.dct_conforms_to,
+                creator: dto.inner.dct_creator,
+                identifier: dto.inner.id.clone(),
+                issued: dto.inner.dct_issued.naive_utc(),
+                modified: dto.inner.dct_modified.map(|d| d.naive_utc()),
+                title: dto.inner.dct_title,
+                description: vec![],
+            },
+            dspace: CatalogDSpaceDeclaration { participant_id: None },
+            odrl_offer: None,
+            extra_fields: Default::default(),
+            datasets: CatalogDatasetTypes::DatasetMultipleMinimized(datasets.iter().map(|d| d.into()).collect()),
+            data_services: CatalogServiceTypes::ServiceMultiple(main_dataservice_dto),
         }
     }
 
@@ -276,7 +334,9 @@ impl OrchestrationPersistenceForProtocol {
             },
             odrl_offer: policies,
             extra_fields: Default::default(),
-            distribution: distributions,
+            distribution: DatasetDistributionTypes::DistributionMultipleMinimized(
+                distributions.iter().map(|d| d.into()).collect(),
+            ),
         }
     }
 
@@ -291,9 +351,10 @@ impl OrchestrationPersistenceForProtocol {
             context: ContextField::default(),
             _type: "Distribution".to_string(),
             id: dto.inner.id.clone(),
-            dcat: DistributionDcatDeclaration { access_service: service },
+            dcat: DistributionDcatDeclaration {
+                access_service: service.map(|d| CatalogServiceTypes::ServiceMinimized(d.into())),
+            },
             dct: DistributionDctDeclaration {
-                identifier: dto.inner.id.clone(),
                 issued: dto.inner.dct_issued.naive_utc(),
                 modified: dto.inner.dct_modified.map(|d| d.naive_utc()),
                 title: dto.inner.dct_title,

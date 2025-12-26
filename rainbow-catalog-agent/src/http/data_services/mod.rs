@@ -126,14 +126,11 @@ impl DataServiceEntityRouter {
         }
     }
 
-    async fn handle_get_main_data_service(
-        State(state): State<DataServiceEntityRouter>,
-        Path(id): Path<String>,
-    ) -> impl IntoResponse {
+    async fn handle_get_main_data_service(State(state): State<DataServiceEntityRouter>) -> impl IntoResponse {
         match state.service.get_main_data_service().await {
             Ok(Some(data_service)) => (StatusCode::OK, Json(ToCamelCase(data_service))).into_response(),
             Ok(None) => {
-                let err = CommonErrors::missing_resource_new(id.as_str(), "Data service not found");
+                let err = CommonErrors::missing_resource_new("", "Main Data service not found");
                 err.into_response()
             }
             Err(err) => err.to_response(),
