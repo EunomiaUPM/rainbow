@@ -64,46 +64,34 @@ impl OrchestrationPersistenceForProtocol {
         // 1. Main catalog
         let main_catalog_dto = self.fetch_main_catalog_dto().await?;
         let main_catalog_urn = Urn::from_str(&main_catalog_dto.inner.id)?;
-
         // 1b. Main service
         let main_dataservice_dto = self.fetch_main_dataservice_dto().await?;
-
         // 2. Sub catalogs
         let sub_catalogs = self.build_sub_catalogs(&main_catalog_urn).await?;
-
         // 3. Datasets in main catalog
         let datasets = self.build_datasets_for_catalog(&main_catalog_urn).await?;
-
         // 3b. Dataservice in main catalog
         let main_dataservice = self.map_data_service(main_dataservice_dto);
-
         // 4. Assembly
         let catalog = self.map_main_catalog(main_catalog_dto, main_dataservice, sub_catalogs, datasets);
-
         Ok(catalog)
     }
 
     pub async fn get_dataset(&self, dataset_id: &Urn) -> anyhow::Result<Dataset> {
         // 1. fetch dataset
         let dataset_dto = self.fetch_dataset_dto(dataset_id).await?;
-
         // 2. build policies
         let odrl_offers = self.build_odrl_policies(dataset_id).await?;
-
         // 3. build distributions
         let distributions = self.build_distributions_with_services(dataset_id).await?;
-
         // 4. final mapping
         let dataset = self.map_dataset(dataset_dto, odrl_offers, distributions);
-
         Ok(dataset)
     }
 
     // =========================================================================
     // Builders
     // =========================================================================
-
-    /// Create subcatalogs
     async fn build_sub_catalogs(&self, exclude_id: &Urn) -> anyhow::Result<Vec<CatalogMinimized>> {
         let catalogs_dtos = self.catalog_entities_service.get_all_catalogs(None, None, false).await?;
         let mut dcat_catalogs = Vec::with_capacity(catalogs_dtos.len());
@@ -118,8 +106,6 @@ impl OrchestrationPersistenceForProtocol {
         }
         Ok(dcat_catalogs)
     }
-
-    /// Create datasets
     async fn build_datasets_for_catalog(&self, catalog_id: &Urn) -> anyhow::Result<Vec<Dataset>> {
         let datasets_dtos = self.dataset_entities_service.get_datasets_by_catalog_id(catalog_id).await?;
         let mut dcat_datasets = Vec::with_capacity(datasets_dtos.len());
@@ -133,7 +119,6 @@ impl OrchestrationPersistenceForProtocol {
         Ok(dcat_datasets)
     }
 
-    // Create dataservice
     async fn build_dataservices_for_catalog(&self, catalog_id: &Urn) -> anyhow::Result<Vec<DataService>> {
         let dataservices_dtos = self.data_service_entities_service.get_data_services_by_catalog_id(catalog_id).await?;
         let mut dcat_dataservices = Vec::with_capacity(dataservices_dtos.len());
@@ -142,24 +127,18 @@ impl OrchestrationPersistenceForProtocol {
             let dcat_dataservice = self.map_data_service(dataservices_dto);
             dcat_dataservices.push(dcat_dataservice);
         }
-
         Ok(dcat_dataservices)
     }
 
-    /// Recupera y mapea las políticas ODRL
     async fn build_odrl_policies(&self, entity_id: &Urn) -> anyhow::Result<Vec<OdrlOffer>> {
         let policies_dtos =
             self.odrl_policies_service.get_all_odrl_offers_by_entity(entity_id).await.unwrap_or_default();
-
         let offers = policies_dtos.into_iter().map(|dto| self.map_odrl_policy(dto)).collect::<Result<Vec<_>, _>>()?;
-
         Ok(offers)
     }
 
-    /// Create distributions and join dataservices
     async fn build_distributions_with_services(&self, dataset_id: &Urn) -> anyhow::Result<Vec<Distribution>> {
         let distributions_dtos = self.distributions_entity_service.get_distributions_by_dataset_id(dataset_id).await?;
-
         // batch dataservices
         let access_services_ids: Vec<Urn> = distributions_dtos
             .iter()
@@ -169,7 +148,6 @@ impl OrchestrationPersistenceForProtocol {
             .unwrap_or_default();
 
         let services_batch = self.data_service_entities_service.get_batch_data_services(&access_services_ids).await?;
-
         // index indices
         let services_map: HashMap<String, DataService> =
             services_batch.into_iter().map(|dto| (dto.inner.id.clone(), self.map_data_service(dto))).collect();
@@ -182,7 +160,6 @@ impl OrchestrationPersistenceForProtocol {
 
             distributions.push(self.map_distribution(dist_dto, linked_service)?);
         }
-
         Ok(distributions)
     }
 
