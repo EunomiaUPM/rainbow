@@ -19,6 +19,13 @@ min_known_config: &min_known_config
 
 is_catalog_datahub: &is_catalog_datahub false
 
+cache_config: &cache_config
+  cache_type: Redis
+  url: "127.0.0.1"
+  port: "6380"
+  user: "default"
+  password: "ds_core_consumer_redis"
+
 common_config: &common_config
   hosts: *hosts_default
   db:
@@ -40,12 +47,14 @@ common_config: &common_config
 # ==========================
 monolith:
   common: *common_config
+  cache: *cache_config
 
 # ==========================
 # CATALOG
 # ==========================
 catalog:
   common: *common_config
+  cache: *cache_config
   is_datahub: *is_catalog_datahub
   datahub_host: null
   datahub_token: null

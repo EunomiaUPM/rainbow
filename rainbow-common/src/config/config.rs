@@ -66,6 +66,7 @@ impl MonoConfigTrait for ApplicationConfig {
         let mono = self.monolith.as_ref().expect("Trying to access core mode without it being defined");
         mono.get_full_db_url()
     }
+
     fn is_mono_local(&self) -> bool {
         let mono = self.monolith.as_ref().expect("Trying to access core mode without it being defined");
         mono.is_local()

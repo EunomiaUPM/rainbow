@@ -19,9 +19,10 @@
 use crate::config::min_know_services::MinKnownConfig;
 use crate::config::services::CommonConfig;
 use crate::config::traits::{
-    ApiConfigTrait, CommonConfigTrait, ConfigLoader, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait, KeysPathTrait,
-    RoleTrait,
+    ApiConfigTrait, CacheConfigTrait, CommonConfigTrait, ConfigLoader, DatabaseConfigTrait, HostConfigTrait,
+    IsLocalTrait, KeysPathTrait, RoleTrait,
 };
+use crate::config::types::cache::{CacheConfig, CacheType};
 use crate::config::types::roles::RoleConfig;
 use crate::config::types::HostConfig;
 use crate::errors::{CommonErrors, ErrorLog};
@@ -32,6 +33,7 @@ use tracing::error;
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CatalogConfig {
     common: CommonConfig,
+    cache: CacheConfig,
     is_datahub: bool,
     datahub_host: Option<HostConfig>,
     datahub_token: Option<String>,
@@ -47,6 +49,10 @@ impl CatalogConfig {
     pub fn ssi_auth(&self) -> MinKnownConfig {
         self.ssi_auth.clone()
     }
+    pub fn cache(&self) -> CacheConfig {
+        self.cache.clone()
+    }
+
     pub fn get_datahub_host(&self) -> String {
         let host = get_host_helper(self.datahub_host.as_ref(), "datahub");
         host.expect("datahub_host not found")
@@ -68,6 +74,13 @@ impl ConfigLoader for CatalogConfig {
     fn default(common_config: CommonConfig) -> Self {
         Self {
             common: common_config.clone(),
+            cache: CacheConfig {
+                cache_type: CacheType::Redis,
+                url: "127.0.0.1".to_string(),
+                port: "6543".to_string(),
+                user: "default".to_string(),
+                password: "default".to_string(),
+            },
             is_datahub: false,
             datahub_host: None,
             datahub_token: None,
@@ -93,6 +106,12 @@ impl ConfigLoader for CatalogConfig {
 impl CommonConfigTrait for CatalogConfig {
     fn common(&self) -> &CommonConfig {
         &self.common
+    }
+}
+
+impl CacheConfigTrait for CatalogConfig {
+    fn cache_config(&self) -> &CacheConfig {
+        &self.cache
     }
 }
 

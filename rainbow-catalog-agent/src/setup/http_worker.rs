@@ -17,6 +17,7 @@
  *
  */
 
+use crate::cache::factory_redis::CatalogAgentCacheForRedis;
 use crate::data::factory_sql::CatalogAgentRepoForSql;
 use crate::entities::catalogs::catalogs::CatalogEntities;
 use crate::entities::data_services::data_services::DataServiceEntities;
@@ -36,7 +37,9 @@ use axum::extract::Request;
 use axum::response::IntoResponse;
 use axum::{serve, Router};
 use rainbow_common::config::services::CatalogConfig;
-use rainbow_common::config::traits::{ApiConfigTrait, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait};
+use rainbow_common::config::traits::{
+    ApiConfigTrait, CacheConfigTrait, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait,
+};
 use rainbow_common::errors::CommonErrors;
 use rainbow_common::facades::ssi_auth_facade::mates_facade::MatesFacadeService;
 use rainbow_common::health::HealthRouter;
@@ -101,10 +104,14 @@ pub async fn create_root_http_router(config: &CatalogConfig) -> anyhow::Result<R
     // ROOT Dependency Injection
     let config = Arc::new(config.clone());
     let db_connection_url = config.get_full_db_url();
+    let cache_connection_url = config.get_full_cache_url();
     let db_connection = Database::connect(db_connection_url).await.expect("Database can't connect");
+    let redis_client = redis::Client::open(cache_connection_url)?;
+    let redis_connection = redis_client.get_multiplexed_async_connection().await.expect("Redis connection failed");
     let http_client = Arc::new(HttpClient::new(20, 3));
 
     // repo
+    let catalog_agent_cache = Arc::new(CatalogAgentCacheForRedis::create_repo(redis_connection));
     let catalog_agent_repo = Arc::new(CatalogAgentRepoForSql::create_repo(db_connection.clone()));
 
     // facades

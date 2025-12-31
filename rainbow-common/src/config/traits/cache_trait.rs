@@ -16,16 +16,23 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use crate::config::types::cache::{CacheConfig, CacheType};
 
-mod api;
-pub mod cache;
-mod client;
-pub mod database;
-mod host;
-pub mod roles;
-mod wallet;
-
-pub use api::ApiConfig;
-pub use client::*;
-pub use host::*;
-pub use wallet::WalletConfig;
+pub trait CacheConfigTrait {
+    fn cache_config(&self) -> &CacheConfig;
+    fn get_full_cache_url(&self) -> String {
+        match self.cache_config().cache_type {
+            CacheType::Redis => {
+                format!(
+                    "{}://{}:{}@{}:{}",
+                    self.cache_config().cache_type,
+                    self.cache_config().user,
+                    self.cache_config().password,
+                    self.cache_config().url,
+                    self.cache_config().port
+                )
+            }
+            _ => todo!("not implemented yet"),
+        }
+    }
+}
