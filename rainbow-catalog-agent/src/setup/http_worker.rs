@@ -122,15 +122,30 @@ pub async fn create_root_http_router(config: &CatalogConfig) -> anyhow::Result<R
     ));
 
     // entities
-    let catalog_controller_service = Arc::new(CatalogEntities::new(catalog_agent_repo.clone()));
+    let catalog_controller_service = Arc::new(CatalogEntities::new(
+        catalog_agent_repo.clone(),
+        catalog_agent_cache.clone(),
+    ));
     let catalog_router = CatalogEntityRouter::new(catalog_controller_service.clone(), config.clone());
-    let data_services_controller_service = Arc::new(DataServiceEntities::new(catalog_agent_repo.clone()));
+    let data_services_controller_service = Arc::new(DataServiceEntities::new(
+        catalog_agent_repo.clone(),
+        catalog_agent_cache.clone(),
+    ));
     let data_services_router = DataServiceEntityRouter::new(data_services_controller_service.clone(), config.clone());
-    let datasets_controller_service = Arc::new(DatasetEntities::new(catalog_agent_repo.clone()));
+    let datasets_controller_service = Arc::new(DatasetEntities::new(
+        catalog_agent_repo.clone(),
+        catalog_agent_cache.clone(),
+    ));
     let datasets_router = DatasetEntityRouter::new(datasets_controller_service.clone(), config.clone());
-    let distributions_controller_service = Arc::new(DistributionEntities::new(catalog_agent_repo.clone()));
+    let distributions_controller_service = Arc::new(DistributionEntities::new(
+        catalog_agent_repo.clone(),
+        catalog_agent_cache.clone(),
+    ));
     let distributions_router = DistributionEntityRouter::new(distributions_controller_service.clone(), config.clone());
-    let odrl_offer_controller_service = Arc::new(OdrlPolicyEntities::new(catalog_agent_repo.clone()));
+    let odrl_offer_controller_service = Arc::new(OdrlPolicyEntities::new(
+        catalog_agent_repo.clone(),
+        catalog_agent_cache.clone(),
+    ));
     let odrl_offer_router = OdrlOfferEntityRouter::new(odrl_offer_controller_service.clone(), config.clone());
     let policy_templates_controller_service = Arc::new(PolicyTemplateEntities::new(catalog_agent_repo.clone()));
     let policy_templates_router =

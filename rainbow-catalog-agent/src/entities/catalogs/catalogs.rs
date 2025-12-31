@@ -1,3 +1,4 @@
+use crate::cache::factory_trait::CatalogAgentCacheTrait;
 use crate::data::entities::catalog::{EditCatalogModel, NewCatalogModel};
 use crate::data::factory_trait::CatalogAgentRepoTrait;
 use crate::entities::catalogs::{CatalogDto, CatalogEntityTrait, EditCatalogDto, NewCatalogDto};
@@ -8,11 +9,12 @@ use urn::Urn;
 
 pub struct CatalogEntities {
     repo: Arc<dyn CatalogAgentRepoTrait>,
+    cache: Arc<dyn CatalogAgentCacheTrait>,
 }
 
 impl CatalogEntities {
-    pub fn new(repo: Arc<dyn CatalogAgentRepoTrait>) -> Self {
-        Self { repo }
+    pub fn new(repo: Arc<dyn CatalogAgentRepoTrait>, cache: Arc<dyn CatalogAgentCacheTrait>) -> Self {
+        Self { repo, cache }
     }
 }
 

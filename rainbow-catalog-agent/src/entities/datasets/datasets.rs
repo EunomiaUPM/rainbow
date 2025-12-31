@@ -1,3 +1,4 @@
+use crate::cache::factory_trait::CatalogAgentCacheTrait;
 use crate::data::factory_trait::CatalogAgentRepoTrait;
 use crate::entities::datasets::{DatasetDto, DatasetEntityTrait, EditDatasetDto, NewDatasetDto};
 use log::error;
@@ -7,11 +8,12 @@ use urn::Urn;
 
 pub struct DatasetEntities {
     repo: Arc<dyn CatalogAgentRepoTrait>,
+    cache: Arc<dyn CatalogAgentCacheTrait>,
 }
 
 impl DatasetEntities {
-    pub fn new(repo: Arc<dyn CatalogAgentRepoTrait>) -> Self {
-        Self { repo }
+    pub fn new(repo: Arc<dyn CatalogAgentRepoTrait>, cache: Arc<dyn CatalogAgentCacheTrait>) -> Self {
+        Self { repo, cache }
     }
 }
 

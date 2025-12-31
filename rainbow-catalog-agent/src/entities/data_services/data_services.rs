@@ -1,3 +1,4 @@
+use crate::cache::factory_trait::CatalogAgentCacheTrait;
 use crate::data::factory_trait::CatalogAgentRepoTrait;
 use crate::entities::data_services::{DataServiceDto, DataServiceEntityTrait, EditDataServiceDto, NewDataServiceDto};
 use log::error;
@@ -7,11 +8,12 @@ use urn::Urn;
 
 pub struct DataServiceEntities {
     repo: Arc<dyn CatalogAgentRepoTrait>,
+    cache: Arc<dyn CatalogAgentCacheTrait>,
 }
 
 impl DataServiceEntities {
-    pub fn new(repo: Arc<dyn CatalogAgentRepoTrait>) -> Self {
-        Self { repo }
+    pub fn new(repo: Arc<dyn CatalogAgentRepoTrait>, cache: Arc<dyn CatalogAgentCacheTrait>) -> Self {
+        Self { repo, cache }
     }
 }
 

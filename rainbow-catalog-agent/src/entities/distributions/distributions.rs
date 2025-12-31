@@ -1,3 +1,4 @@
+use crate::cache::factory_trait::CatalogAgentCacheTrait;
 use crate::data::factory_trait::CatalogAgentRepoTrait;
 use crate::entities::distributions::{
     DistributionDto, DistributionEntityTrait, EditDistributionDto, NewDistributionDto,
@@ -10,11 +11,12 @@ use urn::Urn;
 
 pub struct DistributionEntities {
     repo: Arc<dyn CatalogAgentRepoTrait>,
+    cache: Arc<dyn CatalogAgentCacheTrait>,
 }
 
 impl DistributionEntities {
-    pub fn new(repo: Arc<dyn CatalogAgentRepoTrait>) -> Self {
-        Self { repo }
+    pub fn new(repo: Arc<dyn CatalogAgentRepoTrait>, cache: Arc<dyn CatalogAgentCacheTrait>) -> Self {
+        Self { repo, cache }
     }
 }
 

@@ -1,3 +1,4 @@
+use crate::cache::factory_trait::CatalogAgentCacheTrait;
 use crate::data::factory_trait::CatalogAgentRepoTrait;
 use crate::entities::odrl_policies::{NewOdrlPolicyDto, OdrlPolicyDto, OdrlPolicyEntityTrait};
 use rainbow_common::errors::{CommonErrors, ErrorLog};
@@ -7,11 +8,12 @@ use urn::Urn;
 
 pub struct OdrlPolicyEntities {
     repo: Arc<dyn CatalogAgentRepoTrait>,
+    cache: Arc<dyn CatalogAgentCacheTrait>,
 }
 
 impl OdrlPolicyEntities {
-    pub fn new(repo: Arc<dyn CatalogAgentRepoTrait>) -> Self {
-        Self { repo }
+    pub fn new(repo: Arc<dyn CatalogAgentRepoTrait>, cache: Arc<dyn CatalogAgentCacheTrait>) -> Self {
+        Self { repo, cache }
     }
 }
 

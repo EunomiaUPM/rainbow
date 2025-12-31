@@ -19,6 +19,7 @@
  *
  */
 
+use crate::cache::factory_redis::CatalogAgentCacheForRedis;
 use crate::data::factory_sql::CatalogAgentRepoForSql;
 use crate::entities::catalogs::catalogs::CatalogEntities;
 use crate::entities::data_services::data_services::DataServiceEntities;
@@ -46,7 +47,7 @@ use crate::http::distributions::DistributionEntityRouter;
 use crate::http::odrl_policies::OdrlOfferEntityRouter;
 use crate::http::policy_templates::PolicyTemplateEntityRouter;
 use rainbow_common::config::services::CatalogConfig;
-use rainbow_common::config::traits::{DatabaseConfigTrait, HostConfigTrait, IsLocalTrait};
+use rainbow_common::config::traits::{CacheConfigTrait, DatabaseConfigTrait, HostConfigTrait, IsLocalTrait};
 use sea_orm::Database;
 use std::sync::Arc;
 use tokio::net::TcpListener;
@@ -83,19 +84,41 @@ impl CatalogGrpcWorker {
         Ok(handle)
     }
     pub async fn create_root_grpc_router(config: &CatalogConfig) -> anyhow::Result<tonic::transport::server::Router> {
+        // conn
         let db_connection = Database::connect(config.get_full_db_url()).await.expect("Database can't connect");
+        let cache_connection_url = config.get_full_cache_url();
+        let redis_client = redis::Client::open(cache_connection_url)?;
+        let redis_connection = redis_client.get_multiplexed_async_connection().await.expect("Redis connection failed");
+
+        // repo
+        let catalog_agent_cache = Arc::new(CatalogAgentCacheForRedis::create_repo(redis_connection));
         let catalog_agent_repo = Arc::new(CatalogAgentRepoForSql::create_repo(db_connection.clone()));
 
         // entities
-        let catalog_controller_service = Arc::new(CatalogEntities::new(catalog_agent_repo.clone()));
+        let catalog_controller_service = Arc::new(CatalogEntities::new(
+            catalog_agent_repo.clone(),
+            catalog_agent_cache.clone(),
+        ));
         let catalog_router = CatalogEntityGrpc::new(catalog_controller_service.clone());
-        let data_services_controller_service = Arc::new(DataServiceEntities::new(catalog_agent_repo.clone()));
+        let data_services_controller_service = Arc::new(DataServiceEntities::new(
+            catalog_agent_repo.clone(),
+            catalog_agent_cache.clone(),
+        ));
         let data_services_router = DataServiceEntityGrpc::new(data_services_controller_service.clone());
-        let datasets_controller_service = Arc::new(DatasetEntities::new(catalog_agent_repo.clone()));
+        let datasets_controller_service = Arc::new(DatasetEntities::new(
+            catalog_agent_repo.clone(),
+            catalog_agent_cache.clone(),
+        ));
         let datasets_router = DatasetEntityGrpc::new(datasets_controller_service.clone());
-        let distributions_controller_service = Arc::new(DistributionEntities::new(catalog_agent_repo.clone()));
+        let distributions_controller_service = Arc::new(DistributionEntities::new(
+            catalog_agent_repo.clone(),
+            catalog_agent_cache.clone(),
+        ));
         let distributions_router = DistributionEntityGrpc::new(distributions_controller_service.clone());
-        let odrl_offer_controller_service = Arc::new(OdrlPolicyEntities::new(catalog_agent_repo.clone()));
+        let odrl_offer_controller_service = Arc::new(OdrlPolicyEntities::new(
+            catalog_agent_repo.clone(),
+            catalog_agent_cache.clone(),
+        ));
         let odrl_offer_router = OdrlPolicyEntityGrpc::new(odrl_offer_controller_service.clone());
         let policy_templates_controller_service = Arc::new(PolicyTemplateEntities::new(catalog_agent_repo.clone()));
         let policy_templates_router = PolicyTemplateEntityGrpc::new(policy_templates_controller_service.clone());
