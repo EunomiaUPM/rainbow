@@ -5,6 +5,6 @@ use serde::Serialize;
 pub trait RedisCacheConnectorTrait: Send + Sync {
     type Dto: Serialize + DeserializeOwned + Send + Sync;
 
-    fn get_conn(&mut self) -> &mut redis::aio::MultiplexedConnection;
+    fn get_conn(&self) -> redis::aio::MultiplexedConnection;
     fn get_entity_name(&self) -> &str;
 }

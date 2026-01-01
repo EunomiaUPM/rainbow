@@ -1,8 +1,10 @@
+use crate::cache::cache_traits::lookup_cache_trait::LookupCacheTrait;
 use crate::cache::factory_trait::CatalogAgentCacheTrait;
 use crate::data::factory_trait::CatalogAgentRepoTrait;
 use crate::entities::data_services::{DataServiceDto, DataServiceEntityTrait, EditDataServiceDto, NewDataServiceDto};
 use log::error;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
+use std::str::FromStr;
 use std::sync::Arc;
 use urn::Urn;
 
@@ -24,66 +26,146 @@ impl DataServiceEntityTrait for DataServiceEntities {
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<DataServiceDto>> {
-        let data_services = self.repo.get_dataservice_repo().get_all_data_services(limit, page).await.map_err(|e| {
-            let err = CommonErrors::database_new(&e.to_string());
-            error!("{}", err.log());
-            err
-        })?;
-        let mut dtos = Vec::with_capacity(data_services.len());
-        for c in data_services {
-            let dto: DataServiceDto = c.into();
-            dtos.push(dto);
+        // cache
+        if let Ok(dtos) = self.cache.get_dataservice_cache().get_collection(limit, page).await {
+            if !dtos.is_empty() {
+                return Ok(dtos);
+            }
         }
+
+        // db
+        let data_services = self
+            .repo
+            .get_dataservice_repo()
+            .get_all_data_services(limit, page)
+            .await
+            .map_err(|e| CommonErrors::database_new(&e.to_string()))?;
+
+        let dtos: Vec<DataServiceDto> = data_services.into_iter().map(Into::into).collect();
+
+        // hydration
+        let cache = self.cache.get_dataservice_cache();
+        for dto in &dtos {
+            if let Ok(id) = Urn::from_str(dto.inner.id.as_str()) {
+                let score = dto.inner.dct_issued.timestamp() as f64;
+                let _ = cache.set_single(&id, dto).await;
+                let _ = cache.add_to_collection(&id, score).await;
+            }
+        }
+
         Ok(dtos)
     }
 
     async fn get_batch_data_services(&self, ids: &Vec<Urn>) -> anyhow::Result<Vec<DataServiceDto>> {
-        let data_services = self.repo.get_dataservice_repo().get_batch_data_services(ids).await.map_err(|e| {
-            let err = CommonErrors::database_new(&e.to_string());
-            error!("{}", err.log());
-            err
-        })?;
-        let mut dtos = Vec::with_capacity(data_services.len());
-        for c in data_services {
-            let dto: DataServiceDto = c.into();
-            dtos.push(dto);
+        // cache
+        if let Ok(dtos) = self.cache.get_dataservice_cache().get_batch(ids).await {
+            if !dtos.is_empty() {
+                return Ok(dtos);
+            }
+        }
+
+        // db
+        let data_services = self
+            .repo
+            .get_dataservice_repo()
+            .get_batch_data_services(ids)
+            .await
+            .map_err(|e| CommonErrors::database_new(&e.to_string()))?;
+
+        let dtos: Vec<DataServiceDto> = data_services.into_iter().map(Into::into).collect();
+
+        // cache hydration
+        let cache = self.cache.get_dataservice_cache();
+        for dto in &dtos {
+            if let Ok(id) = Urn::from_str(dto.inner.id.as_str()) {
+                let _ = cache.set_single(&id, dto).await;
+                let _ = cache.add_to_collection(&id, dto.inner.dct_issued.timestamp() as f64).await;
+            }
         }
         Ok(dtos)
     }
 
     async fn get_data_services_by_catalog_id(&self, catalog_id: &Urn) -> anyhow::Result<Vec<DataServiceDto>> {
-        let data_services =
-            self.repo.get_dataservice_repo().get_data_services_by_catalog_id(catalog_id).await.map_err(|e| {
-                let err = CommonErrors::database_new(&e.to_string());
-                error!("{}", err.log());
-                err
-            })?;
-        let mut dtos = Vec::with_capacity(data_services.len());
-        for c in data_services {
-            let dto: DataServiceDto = c.into();
-            dtos.push(dto);
+        // cache hit using LookupCacheTrait
+        if let Ok(dtos) = self.cache.get_dataservice_cache().get_by_relation("catalogs", catalog_id, None, None).await {
+            if !dtos.is_empty() {
+                return Ok(dtos);
+            }
         }
+
+        // database fetch
+        let data_services = self
+            .repo
+            .get_dataservice_repo()
+            .get_data_services_by_catalog_id(catalog_id)
+            .await
+            .map_err(|e| CommonErrors::database_new(&e.to_string()))?;
+
+        let dtos: Vec<DataServiceDto> = data_services.into_iter().map(Into::into).collect();
+
+        // hydration of relation index
+        let cache = self.cache.get_dataservice_cache();
+        for dto in &dtos {
+            if let Ok(id) = Urn::from_str(dto.inner.id.as_str()) {
+                let score = dto.inner.dct_issued.timestamp() as f64;
+                let _ = cache.set_single(&id, dto).await;
+                // Hydrate both global collection and catalog-specific relation
+                let _ = cache.add_to_collection(&id, score).await;
+                let _ = cache.add_to_relation("catalogs", catalog_id, &id, score).await;
+            }
+        }
+
         Ok(dtos)
     }
 
     async fn get_main_data_service(&self) -> anyhow::Result<Option<DataServiceDto>> {
-        let data_service = self.repo.get_dataservice_repo().get_main_data_service().await.map_err(|e| {
-            let err = CommonErrors::database_new(&e.to_string());
-            error!("{}", err.log());
-            err
-        })?;
-        let dto = data_service.map(|dto| dto.into());
+        let cache = self.cache.get_dataservice_cache();
+        // cache
+        if let Ok(Some(dto)) = cache.get_main().await {
+            return Ok(Some(dto));
+        }
+        // db
+        let data_service = self
+            .repo
+            .get_dataservice_repo()
+            .get_main_data_service()
+            .await
+            .map_err(|e| CommonErrors::database_new(&e.to_string()))?;
+
+        let dto: Option<DataServiceDto> = data_service.map(Into::into);
+
+        // cache hydration
+        if let Some(dto) = &dto {
+            if let Ok(id) = Urn::from_str(dto.inner.id.as_str()) {
+                let _ = cache.set_main(&id, dto).await;
+            }
+        }
         Ok(dto)
     }
 
     async fn get_data_service_by_id(&self, data_service_id: &Urn) -> anyhow::Result<Option<DataServiceDto>> {
-        let data_service =
-            self.repo.get_dataservice_repo().get_data_service_by_id(data_service_id).await.map_err(|e| {
-                let err = CommonErrors::database_new(&e.to_string());
-                error!("{}", err.log());
-                err
-            })?;
-        let dto = data_service.map(|dto| dto.into());
+        // cache hit
+        if let Ok(Some(dto)) = self.cache.get_dataservice_cache().get_single(data_service_id).await {
+            return Ok(Some(dto));
+        }
+
+        // db
+        let data_service = self
+            .repo
+            .get_dataservice_repo()
+            .get_data_service_by_id(data_service_id)
+            .await
+            .map_err(|e| CommonErrors::database_new(&e.to_string()))?;
+
+        let dto: Option<DataServiceDto> = data_service.map(Into::into);
+
+        // cache hydration
+        if let Some(dto) = &dto {
+            let cache = self.cache.get_dataservice_cache();
+            let _ = cache.set_single(data_service_id, dto).await;
+            let _ = cache.add_to_collection(data_service_id, dto.inner.dct_issued.timestamp() as f64).await;
+        }
+
         Ok(dto)
     }
 
@@ -93,26 +175,48 @@ impl DataServiceEntityTrait for DataServiceEntities {
         edit_data_service_model: &EditDataServiceDto,
     ) -> anyhow::Result<DataServiceDto> {
         let edit_model = edit_data_service_model.clone().into();
-        let data_service =
-            self.repo.get_dataservice_repo().put_data_service_by_id(data_service_id, &edit_model).await.map_err(
-                |e| {
-                    let err = CommonErrors::database_new(&e.to_string());
-                    error!("{}", err.log());
-                    err
-                },
-            )?;
-        let dto = data_service.into();
+        let data_service = self
+            .repo
+            .get_dataservice_repo()
+            .put_data_service_by_id(data_service_id, &edit_model)
+            .await
+            .map_err(|e| CommonErrors::database_new(&e.to_string()))?;
+
+        let dto: DataServiceDto = data_service.into();
+        let ds_urn = Urn::from_str(dto.inner.id.as_str())?;
+
+        // hydration
+        let cache = self.cache.get_dataservice_cache();
+        let _ = cache.set_single(&ds_urn, &dto).await;
+        let _ = cache.add_to_collection(&ds_urn, dto.inner.dct_issued.timestamp() as f64).await;
+
         Ok(dto)
     }
 
     async fn create_data_service(&self, new_data_service_model: &NewDataServiceDto) -> anyhow::Result<DataServiceDto> {
+        // db
         let new_model = new_data_service_model.clone().into();
-        let data_service = self.repo.get_dataservice_repo().create_data_service(&new_model).await.map_err(|e| {
-            let err = CommonErrors::database_new(&e.to_string());
-            error!("{}", err.log());
-            err
-        })?;
-        let dto = data_service.into();
+        let data_service = self
+            .repo
+            .get_dataservice_repo()
+            .create_data_service(&new_model)
+            .await
+            .map_err(|e| CommonErrors::database_new(&e.to_string()))?;
+
+        let dto: DataServiceDto = data_service.into();
+        let ds_urn = Urn::from_str(dto.inner.id.as_str())?;
+        let score = dto.inner.dct_issued.timestamp() as f64;
+
+        // hydration
+        let cache = self.cache.get_dataservice_cache();
+        let _ = cache.set_single(&ds_urn, &dto).await;
+        let _ = cache.add_to_collection(&ds_urn, score).await;
+
+        // lookup cache hydration
+        if let Ok(catalog_id) = Urn::from_str(&*dto.inner.catalog_id) {
+            let _ = cache.add_to_relation("catalogs", &catalog_id, &ds_urn, score).await;
+        }
+
         Ok(dto)
     }
 
@@ -120,23 +224,46 @@ impl DataServiceEntityTrait for DataServiceEntities {
         &self,
         new_data_service_model: &NewDataServiceDto,
     ) -> anyhow::Result<DataServiceDto> {
+        // db
         let new_model = new_data_service_model.clone().into();
-        let data_service =
-            self.repo.get_dataservice_repo().create_main_data_service(&new_model).await.map_err(|e| {
-                let err = CommonErrors::database_new(&e.to_string());
-                error!("{}", err.log());
-                err
-            })?;
-        let dto = data_service.into();
+        let data_service = self
+            .repo
+            .get_dataservice_repo()
+            .create_main_data_service(&new_model)
+            .await
+            .map_err(|e| CommonErrors::database_new(&e.to_string()))?;
+        let dto: DataServiceDto = data_service.into();
+
+        // cache
+        if let Ok(id) = Urn::from_str(dto.inner.id.as_str()) {
+            let _ = self.cache.get_dataservice_cache().set_main(&id, &dto).await;
+        }
         Ok(dto)
     }
 
     async fn delete_data_service_by_id(&self, data_service_id: &Urn) -> anyhow::Result<()> {
-        self.repo.get_dataservice_repo().delete_data_service_by_id(data_service_id).await.map_err(|e| {
-            let err = CommonErrors::database_new(&e.to_string());
-            error!("{}", err.log());
-            err
-        })?;
+        // db self
+        let current = self.get_data_service_by_id(data_service_id).await?;
+
+        // db
+        self.repo
+            .get_dataservice_repo()
+            .delete_data_service_by_id(data_service_id)
+            .await
+            .map_err(|e| CommonErrors::database_new(&e.to_string()))?;
+
+        // invalidation
+        let cache = self.cache.get_dataservice_cache();
+        let _ = cache.delete_single(data_service_id).await;
+        let _ = cache.remove_from_collection(data_service_id).await;
+
+        // lookup invalidation
+        if let Some(dto) = current {
+            if let Ok(catalog_id) = Urn::from_str(&*dto.inner.catalog_id) {
+                let _ = cache.remove_from_relation("catalogs", &catalog_id, data_service_id).await;
+            }
+        }
+
         Ok(())
     }
 }

@@ -21,8 +21,8 @@ impl UtilsCacheTrait for CatalogCacheForRedis {
 }
 impl RedisCacheConnectorTrait for CatalogCacheForRedis {
     type Dto = CatalogDto;
-    fn get_conn(&mut self) -> &mut redis::aio::MultiplexedConnection {
-        &mut self.redis_connection
+    fn get_conn(&self) -> redis::aio::MultiplexedConnection {
+        self.redis_connection.clone()
     }
     fn get_entity_name(&self) -> &str {
         "catalogs"

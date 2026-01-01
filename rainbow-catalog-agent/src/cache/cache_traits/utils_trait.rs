@@ -50,14 +50,15 @@ pub trait UtilsCacheTrait: Send + Sync {
     // --- Hydration logic (Static methods for the Blanket Implementation) ---
 
     async fn hydrate_from_multiple_keys(
-        connection: &mut redis::aio::MultiplexedConnection,
+        mut connection: redis::aio::MultiplexedConnection,
         keys: Vec<String>,
     ) -> anyhow::Result<Vec<Self::Dto>> {
         if keys.is_empty() {
             return Ok(vec![]);
         }
 
-        let data: Vec<Option<String>> = redis::cmd("JSON.MGET").arg(&keys).arg("$").query_async(connection).await?;
+        let data: Vec<Option<String>> =
+            redis::cmd("JSON.MGET").arg(&keys).arg("$").query_async(&mut connection).await?;
 
         let mut results = Vec::with_capacity(data.len());
         for entry in data.into_iter().flatten() {
@@ -70,10 +71,10 @@ pub trait UtilsCacheTrait: Send + Sync {
     }
 
     async fn hydrate_from_single_key(
-        connection: &mut redis::aio::MultiplexedConnection,
+        mut connection: redis::aio::MultiplexedConnection,
         key: String,
     ) -> anyhow::Result<Option<Self::Dto>> {
-        let data: Option<String> = redis::cmd("JSON.GET").arg(&key).arg("$").query_async(connection).await?;
+        let data: Option<String> = redis::cmd("JSON.GET").arg(&key).arg("$").query_async(&mut connection).await?;
 
         if let Some(json_str) = data {
             let mut models: Vec<Self::Dto> = serde_json::from_str(&json_str)?;

@@ -21,8 +21,8 @@ impl UtilsCacheTrait for OdrlOfferCacheForRedis {
 
 impl RedisCacheConnectorTrait for OdrlOfferCacheForRedis {
     type Dto = OdrlPolicyDto;
-    fn get_conn(&mut self) -> &mut redis::aio::MultiplexedConnection {
-        &mut self.redis_connection
+    fn get_conn(&self) -> redis::aio::MultiplexedConnection {
+        self.redis_connection.clone()
     }
     fn get_entity_name(&self) -> &str {
         "odrl-offers"

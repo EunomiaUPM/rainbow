@@ -5,6 +5,7 @@ use crate::entities::distributions::{
 };
 use rainbow_common::dcat_formats::DctFormats;
 use rainbow_common::errors::{CommonErrors, ErrorLog};
+use std::str::FromStr;
 use std::sync::Arc;
 use tracing::error;
 use urn::Urn;
@@ -27,45 +28,92 @@ impl DistributionEntityTrait for DistributionEntities {
         limit: Option<u64>,
         page: Option<u64>,
     ) -> anyhow::Result<Vec<DistributionDto>> {
-        let distributions =
-            self.repo.get_distribution_repo().get_all_distributions(limit, page).await.map_err(|e| {
-                let err = CommonErrors::database_new(&e.to_string());
-                error!("{}", err.log());
-                err
-            })?;
-        let mut dtos = Vec::with_capacity(distributions.len());
-        for c in distributions {
-            let dto: DistributionDto = c.into();
-            dtos.push(dto);
+        // cache
+        if let Ok(dtos) = self.cache.get_distribution_cache().get_collection(limit, page).await {
+            if !dtos.is_empty() {
+                return Ok(dtos);
+            }
+        }
+
+        // db
+        let distributions = self
+            .repo
+            .get_distribution_repo()
+            .get_all_distributions(limit, page)
+            .await
+            .map_err(|e| CommonErrors::database_new(&e.to_string()))?;
+
+        let dtos: Vec<DistributionDto> = distributions.into_iter().map(Into::into).collect();
+
+        // hydration
+        let cache = self.cache.get_distribution_cache();
+        for dto in &dtos {
+            if let Ok(id) = Urn::from_str(dto.inner.id.as_str()) {
+                let score = dto.inner.dct_issued.timestamp() as f64;
+                let _ = cache.set_single(&id, dto).await;
+                let _ = cache.add_to_collection(&id, score).await;
+            }
         }
         Ok(dtos)
     }
 
     async fn get_batch_distributions(&self, ids: &Vec<Urn>) -> anyhow::Result<Vec<DistributionDto>> {
-        let distributions = self.repo.get_distribution_repo().get_batch_distributions(ids).await.map_err(|e| {
-            let err = CommonErrors::database_new(&e.to_string());
-            error!("{}", err.log());
-            err
-        })?;
-        let mut dtos = Vec::with_capacity(distributions.len());
-        for c in distributions {
-            let dto: DistributionDto = c.into();
-            dtos.push(dto);
+        // cache
+        if let Ok(dtos) = self.cache.get_distribution_cache().get_batch(ids).await {
+            if !dtos.is_empty() {
+                return Ok(dtos);
+            }
+        }
+
+        // db
+        let distributions = self
+            .repo
+            .get_distribution_repo()
+            .get_batch_distributions(ids)
+            .await
+            .map_err(|e| CommonErrors::database_new(&e.to_string()))?;
+
+        let dtos: Vec<DistributionDto> = distributions.into_iter().map(Into::into).collect();
+
+        // hydration
+        let cache = self.cache.get_distribution_cache();
+        for dto in &dtos {
+            if let Ok(id) = Urn::from_str(dto.inner.id.as_str()) {
+                let _ = cache.set_single(&id, dto).await;
+                let _ = cache.add_to_collection(&id, dto.inner.dct_issued.timestamp() as f64).await;
+            }
         }
         Ok(dtos)
     }
 
     async fn get_distributions_by_dataset_id(&self, dataset_id: &Urn) -> anyhow::Result<Vec<DistributionDto>> {
-        let distributions =
-            self.repo.get_distribution_repo().get_distributions_by_dataset_id(dataset_id).await.map_err(|e| {
-                let err = CommonErrors::database_new(&e.to_string());
-                error!("{}", err.log());
-                err
-            })?;
-        let mut dtos = Vec::with_capacity(distributions.len());
-        for c in distributions {
-            let dto: DistributionDto = c.into();
-            dtos.push(dto);
+        // cache
+        if let Ok(dtos) = self.cache.get_distribution_cache().get_by_relation("datasets", dataset_id, None, None).await
+        {
+            if !dtos.is_empty() {
+                return Ok(dtos);
+            }
+        }
+
+        // Database fetch
+        let distributions = self
+            .repo
+            .get_distribution_repo()
+            .get_distributions_by_dataset_id(dataset_id)
+            .await
+            .map_err(|e| CommonErrors::database_new(&e.to_string()))?;
+
+        let dtos: Vec<DistributionDto> = distributions.into_iter().map(Into::into).collect();
+
+        // hydration
+        let cache = self.cache.get_distribution_cache();
+        for dto in &dtos {
+            if let Ok(id) = Urn::from_str(dto.inner.id.as_str()) {
+                let score = dto.inner.dct_issued.timestamp() as f64;
+                let _ = cache.set_single(&id, dto).await;
+                let _ = cache.add_to_collection(&id, score).await;
+                let _ = cache.add_to_relation("datasets", dataset_id, &id, score).await;
+            }
         }
         Ok(dtos)
     }
@@ -80,23 +128,40 @@ impl DistributionEntityTrait for DistributionEntities {
             .get_distribution_repo()
             .get_distribution_by_dataset_id_and_dct_format(dataset_id, dct_formats)
             .await
-            .map_err(|e| {
-                let err = CommonErrors::database_new(&e.to_string());
-                error!("{}", err.log());
-                err
-            })?;
-        let dto = distribution.into();
+            .map_err(|e| CommonErrors::database_new(&e.to_string()))?;
+
+        let dto: DistributionDto = distribution.into();
+
+        // Hydrate single
+        if let Ok(id) = Urn::from_str(dto.inner.id.as_str()) {
+            let _ = self.cache.get_distribution_cache().set_single(&id, &dto).await;
+        }
+
         Ok(dto)
     }
 
     async fn get_distribution_by_id(&self, distribution_id: &Urn) -> anyhow::Result<Option<DistributionDto>> {
-        let distribution =
-            self.repo.get_distribution_repo().get_distribution_by_id(distribution_id).await.map_err(|e| {
-                let err = CommonErrors::database_new(&e.to_string());
-                error!("{}", err.log());
-                err
-            })?;
-        let dto = distribution.map(|d| d.into());
+        // Cache
+        if let Ok(Some(dto)) = self.cache.get_distribution_cache().get_single(distribution_id).await {
+            return Ok(Some(dto));
+        }
+
+        // Database
+        let distribution = self
+            .repo
+            .get_distribution_repo()
+            .get_distribution_by_id(distribution_id)
+            .await
+            .map_err(|e| CommonErrors::database_new(&e.to_string()))?;
+
+        let dto: Option<DistributionDto> = distribution.map(Into::into);
+
+        // Safe hydration
+        if let Some(dto) = &dto {
+            let cache = self.cache.get_distribution_cache();
+            let _ = cache.set_single(distribution_id, dto).await;
+            let _ = cache.add_to_collection(distribution_id, dto.inner.dct_issued.timestamp() as f64).await;
+        }
         Ok(dto)
     }
 
@@ -106,15 +171,21 @@ impl DistributionEntityTrait for DistributionEntities {
         edit_distribution_model: &EditDistributionDto,
     ) -> anyhow::Result<DistributionDto> {
         let edit_model = edit_distribution_model.clone().into();
-        let distribution =
-            self.repo.get_distribution_repo().put_distribution_by_id(distribution_id, &edit_model).await.map_err(
-                |e| {
-                    let err = CommonErrors::database_new(&e.to_string());
-                    error!("{}", err.log());
-                    err
-                },
-            )?;
-        let dto = distribution.into();
+        let distribution = self
+            .repo
+            .get_distribution_repo()
+            .put_distribution_by_id(distribution_id, &edit_model)
+            .await
+            .map_err(|e| CommonErrors::database_new(&e.to_string()))?;
+
+        let dto: DistributionDto = distribution.into();
+        let dist_urn = Urn::from_str(dto.inner.id.as_str())?;
+
+        // Update single and score
+        let cache = self.cache.get_distribution_cache();
+        let _ = cache.set_single(&dist_urn, &dto).await;
+        let _ = cache.add_to_collection(&dist_urn, dto.inner.dct_issued.timestamp() as f64).await;
+
         Ok(dto)
     }
 
@@ -123,21 +194,52 @@ impl DistributionEntityTrait for DistributionEntities {
         new_distribution_model: &NewDistributionDto,
     ) -> anyhow::Result<DistributionDto> {
         let new_model = new_distribution_model.clone().into();
-        let distribution = self.repo.get_distribution_repo().create_distribution(&new_model).await.map_err(|e| {
-            let err = CommonErrors::database_new(&e.to_string());
-            error!("{}", err.log());
-            err
-        })?;
-        let dto = distribution.into();
+        let distribution = self
+            .repo
+            .get_distribution_repo()
+            .create_distribution(&new_model)
+            .await
+            .map_err(|e| CommonErrors::database_new(&e.to_string()))?;
+
+        let dto: DistributionDto = distribution.into();
+        let dist_urn = Urn::from_str(dto.inner.id.as_str())?;
+        let score = dto.inner.dct_issued.timestamp() as f64;
+
+        // Proactive hydration
+        let cache = self.cache.get_distribution_cache();
+        let _ = cache.set_single(&dist_urn, &dto).await;
+        let _ = cache.add_to_collection(&dist_urn, score).await;
+
+        // Lookup hydration (Distribution -> Dataset)
+        if let Ok(dataset_id) = Urn::from_str(&*dto.inner.dataset_id) {
+            let _ = cache.add_to_relation("datasets", &dataset_id, &dist_urn, score).await;
+        }
+
         Ok(dto)
     }
 
     async fn delete_distribution_by_id(&self, distribution_id: &Urn) -> anyhow::Result<()> {
-        self.repo.get_distribution_repo().delete_distribution_by_id(distribution_id).await.map_err(|e| {
-            let err = CommonErrors::database_new(&e.to_string());
-            error!("{}", err.log());
-            err
-        })?;
+        let current = self.get_distribution_by_id(distribution_id).await?;
+
+        // db
+        self.repo
+            .get_distribution_repo()
+            .delete_distribution_by_id(distribution_id)
+            .await
+            .map_err(|e| CommonErrors::database_new(&e.to_string()))?;
+
+        // cache invalidation
+        let cache = self.cache.get_distribution_cache();
+        let _ = cache.delete_single(distribution_id).await;
+        let _ = cache.remove_from_collection(distribution_id).await;
+
+        // lookup invalidation
+        if let Some(dto) = current {
+            if let Ok(dataset_id) = Urn::from_str(&*dto.inner.dataset_id) {
+                let _ = cache.remove_from_relation("datasets", &dataset_id, distribution_id).await;
+            }
+        }
+
         Ok(())
     }
 }
