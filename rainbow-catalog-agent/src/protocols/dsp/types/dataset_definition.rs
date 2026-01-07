@@ -39,8 +39,8 @@ pub struct Dataset {
     #[serde(rename = "hasPolicy")]
     pub odrl_offer: Vec<OdrlOffer>,
     #[serde(rename = "extraFields")]
-    #[serde(skip_serializing_if = "serde_json::Value::is_null")]
-    pub extra_fields: serde_json::Value,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub extra_fields: Option<serde_json::Value>,
     #[serde(rename = "distribution")]
     pub distribution: DatasetDistributionTypes,
 }
@@ -60,8 +60,8 @@ pub struct DatasetMinimized {
     #[serde(rename = "hasPolicy")]
     pub odrl_offer: Vec<OdrlOffer>,
     #[serde(rename = "extraFields")]
-    #[serde(skip_serializing_if = "serde_json::Value::is_null")]
-    pub extra_fields: serde_json::Value,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub extra_fields: Option<serde_json::Value>,
     #[serde(rename = "distribution")]
     pub distribution: DatasetDistributionTypes,
 }
@@ -69,11 +69,11 @@ pub struct DatasetMinimized {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DatasetDcatDeclaration {
     #[serde(rename = "theme")]
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub theme: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub theme: Option<String>,
     #[serde(rename = "keyword")]
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub keyword: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub keyword: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

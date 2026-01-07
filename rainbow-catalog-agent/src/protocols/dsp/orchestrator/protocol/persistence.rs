@@ -296,7 +296,7 @@ impl OrchestrationPersistenceForProtocol {
             context: ContextField::default(),
             _type: "Dataset".to_string(),
             id: dto.inner.id.clone(),
-            dcat: DatasetDcatDeclaration { theme: "".to_string(), keyword: "".to_string() },
+            dcat: DatasetDcatDeclaration { theme: None, keyword: None },
             dct: DatasetDctDeclaration {
                 conforms_to: dto.inner.dct_conforms_to,
                 creator: dto.inner.dct_creator,
