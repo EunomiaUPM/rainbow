@@ -1,6 +1,10 @@
 version: "3.5"
 services:
 
+
+  # ====================================================================
+  # PROVIDER Persistence layer =========================================
+  # ====================================================================
   ds_core_provider:
     # platform: linux/amd64
     container_name: "ds_core_provider"
@@ -24,6 +28,10 @@ services:
       --requirepass ds_core_provider_redis
       --user admin on >ds_core_provider_redis ~* +@all
 
+
+  # ====================================================================
+  # CONSUMER Persistence layer =========================================
+  # ====================================================================
   ds_core_consumer:
     # platform: linux/amd64
     container_name: "ds_core_consumer"
@@ -47,17 +55,12 @@ services:
       --requirepass ds_core_consumer_redis
       --user admin on >ds_core_consumer_redis ~* +@all
 
-  ds_authority:
-    container_name: "ds_authority"
-    image: "postgres"
-    restart: always
-    environment:
-      POSTGRES_PASSWORD: ds_authority
-      POSTGRES_USER: ds_authority
-      POSTGRES_DB: ds_authority
-    ports:
-      - "1450:5432"
 
+
+  # ====================================================================
+  # IDM ================================================================
+  # Keycloack
+  # ====================================================================
   idm:
     container_name: "idm"
     image: "quay.io/keycloak/keycloak:26.4.7"
@@ -71,3 +74,46 @@ services:
       - "start-dev"
 
 
+  # ====================================================================
+  # AUTHORITY ==========================================================
+  # Authority with start and setup services, along with its database
+  # ====================================================================
+  ds_authority:
+    container_name: ds_authority
+    image: quay.io/eunomia_upm/rainbow_authority:0.3.8
+    platform: linux/amd64
+    restart: on-failure
+    depends_on:
+      - ds_authority_db
+    ports:
+      - "1500:1500"
+    volumes:
+      - ./../static/config/.env.authority:/app/.env.authority
+      - ./../static/certificates:/app/certificates
+      - ./../static/specs:/app/specs
+    entrypoint: [ "/usr/local/bin/rainbow_authority" ]
+    command: [ "start", "--env-file", "/app/.env.authority" ]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  ds_authority_setup:
+    container_name: ds_authority_setup
+    image: quay.io/eunomia_upm/rainbow_authority:0.3.8
+    platform: linux/amd64
+    depends_on:
+      - ds_authority_db
+    volumes:
+      - ./../static/config/.env.authority:/app/.env.authority
+    entrypoint: [ "/usr/local/bin/rainbow_authority" ]
+    command: [ "setup", "--env-file", "/app/.env.authority" ]
+
+  ds_authority_db:
+    container_name: ds_authority_db
+    image: "postgres"
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: ds_authority
+      POSTGRES_USER: ds_authority
+      POSTGRES_DB: ds_authority
+    ports:
+      - "1450:5432"
