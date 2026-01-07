@@ -3,9 +3,9 @@ use crate::protocols::dsp::orchestrator::rpc::types::{
     RpcCatalogMessageTrait, RpcCatalogRequestMessageDto, RpcCatalogResponseMessageDto, RpcDatasetRequestMessageDto,
 };
 use crate::protocols::dsp::orchestrator::rpc::RPCOrchestratorTrait;
-use crate::protocols::dsp::protocol_types::{
-    CatalogMessageDto, CatalogMessageWrapper, CatalogRequestMessageDto, DatasetMessageDto, DatasetRequestMessage,
-};
+use crate::protocols::dsp::protocol_types::{CatalogMessageWrapper, CatalogRequestMessageDto, DatasetRequestMessage};
+use crate::protocols::dsp::types::catalog_definition::Catalog;
+use crate::protocols::dsp::types::dataset_definition::Dataset;
 use crate::protocols::dsp::validator::traits::validation_dsp_steps::ValidationDspSteps;
 use crate::protocols::dsp::validator::traits::validation_rpc_steps::ValidationRpcSteps;
 use rainbow_common::http_client::HttpClient;
@@ -34,7 +34,7 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
     async fn setup_catalog_request_rpc(
         &self,
         input: &RpcCatalogRequestMessageDto,
-    ) -> anyhow::Result<RpcCatalogResponseMessageDto<RpcCatalogRequestMessageDto, CatalogMessageDto>> {
+    ) -> anyhow::Result<RpcCatalogResponseMessageDto<RpcCatalogRequestMessageDto, Catalog>> {
         // validation
         self.validator.on_catalog_request(input).await?;
 
@@ -46,11 +46,15 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
             .await
             .resolve_dataspace_current_path(&WellKnownRPCRequest { participant_id })
             .await?;
+
         let peer_url = format!("{}/catalog/request", provider_address);
         let request_body: CatalogMessageWrapper<CatalogRequestMessageDto> = input.clone().into();
         self.http_client.set_auth_token("blabla".to_string()).await;
-        let response: CatalogMessageDto = self.http_client.post_json(peer_url.as_str(), &request_body).await?;
 
+        let response = self
+            .http_client
+            .post_json::<CatalogMessageWrapper<CatalogRequestMessageDto>, Catalog>(peer_url.as_str(), &request_body)
+            .await?;
         let response = RpcCatalogResponseMessageDto { request: input.clone(), response };
         Ok(response)
     }
@@ -58,7 +62,7 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
     async fn setup_dataset_request_rpc(
         &self,
         input: &RpcDatasetRequestMessageDto,
-    ) -> anyhow::Result<RpcCatalogResponseMessageDto<RpcDatasetRequestMessageDto, DatasetMessageDto>> {
+    ) -> anyhow::Result<RpcCatalogResponseMessageDto<RpcDatasetRequestMessageDto, Dataset>> {
         // validation
         self.validator.on_dataset_request(input).await?;
 
@@ -73,7 +77,7 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         let peer_url = format!("{}/catalog/datasets/{}", provider_address, dataset);
         let request_body: CatalogMessageWrapper<DatasetRequestMessage> = input.clone().into();
         self.http_client.set_auth_token("blabla".to_string()).await;
-        let response: DatasetMessageDto = self.http_client.post_json(peer_url.as_str(), &request_body).await?;
+        let response: Dataset = self.http_client.post_json(peer_url.as_str(), &request_body).await?;
 
         let response = RpcCatalogResponseMessageDto { request: input.clone(), response };
         Ok(response)

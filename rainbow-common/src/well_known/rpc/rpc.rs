@@ -1,4 +1,4 @@
-use crate::dsp_common::well_known_types::VersionResponse;
+use crate::dsp_common::well_known_types::{VersionPath, VersionResponse};
 use crate::errors::{CommonErrors, ErrorLog};
 use crate::facades::ssi_auth_facade::MatesFacadeTrait;
 use crate::http_client::HttpClient;
@@ -33,18 +33,20 @@ impl WellKnownRPCService {
 
 #[async_trait::async_trait]
 impl WellKnownRPCTrait for WellKnownRPCService {
-    async fn fetch_dataspace_well_known(&self, input: &WellKnownRPCRequest) -> anyhow::Result<VersionResponse> {
+    async fn fetch_dataspace_well_known(
+        &self,
+        input: &WellKnownRPCRequest,
+    ) -> anyhow::Result<(VersionResponse, String)> {
         let mate_id = input.participant_id.clone();
         let base_url = self.get_base_url(mate_id).await?;
         let url = format!("{}/.well-known/dspace-version", base_url);
         let response = self.http_client.get_json::<VersionResponse>(url.as_str()).await?;
-        Ok(response)
+        Ok((response, base_url))
     }
 
-    async fn fetch_dataspace_current_path(&self, input: &WellKnownRPCRequest) -> anyhow::Result<String> {
-        let mate_id = input.participant_id.clone();
-        let base_url = self.get_base_url(mate_id).await?;
-        let wk = self.fetch_dataspace_well_known(input).await?;
+    async fn fetch_dataspace_current_path(&self, input: &WellKnownRPCRequest) -> anyhow::Result<VersionPath> {
+        let (wk, base_url) = self.fetch_dataspace_well_known(input).await?;
+
         let current = wk.protocol_versions.iter().find(|p| p.version == DSP_CURRENT_VERSION);
         if current.is_none() {
             let err = CommonErrors::parse_new("Could not find protocol version");
@@ -53,6 +55,6 @@ impl WellKnownRPCTrait for WellKnownRPCService {
         }
         let current = current.unwrap();
         let path = format!("{}{}", base_url, current.path);
-        Ok(path)
+        Ok(VersionPath { path })
     }
 }

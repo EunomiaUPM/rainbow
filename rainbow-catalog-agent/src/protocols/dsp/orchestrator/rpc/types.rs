@@ -1,7 +1,8 @@
 use crate::protocols::dsp::protocol_types::{
-    CatalogErrorDto, CatalogMessageDto, CatalogMessageTrait, CatalogMessageType, CatalogMessageWrapper,
-    CatalogRequestMessageDto, DatasetRequestMessage,
+    CatalogErrorDto, CatalogMessageTrait, CatalogMessageType, CatalogMessageWrapper, CatalogRequestMessageDto,
+    DatasetRequestMessage,
 };
+use crate::protocols::dsp::types::CatalogDspTraitDefinition;
 use rainbow_common::dsp_common::context_field::ContextField;
 use rainbow_common::dsp_common::odrl::ContractRequestMessageOfferTypes;
 use serde::{Deserialize, Serialize};
@@ -86,7 +87,7 @@ impl RpcCatalogMessageTrait for RpcDatasetRequestMessageDto {
 pub struct RpcCatalogResponseMessageDto<T, U>
 where
     T: RpcCatalogMessageTrait,
-    U: CatalogMessageTrait,
+    U: CatalogDspTraitDefinition,
 {
     pub request: T,
     pub response: U,

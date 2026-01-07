@@ -66,7 +66,7 @@ impl WellKnownRouter {
             Err(e) => return e,
         };
         match state.dspace_version_rpc.fetch_dataspace_well_known(&input).await {
-            Ok(res) => (StatusCode::OK, Json(res)).into_response(),
+            Ok(res) => (StatusCode::OK, Json(res.0)).into_response(),
             Err(err) => err.to_response(),
         }
     }
@@ -79,7 +79,7 @@ impl WellKnownRouter {
             Err(e) => return e,
         };
         match state.dspace_version_rpc.fetch_dataspace_current_path(&input).await {
-            Ok(res) => (StatusCode::OK, res).into_response(),
+            Ok(res) => (StatusCode::OK, Json(res)).into_response(),
             Err(err) => err.to_response(),
         }
     }

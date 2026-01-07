@@ -20,6 +20,7 @@
 // use rainbow_db::catalog::entities::catalog;
 use crate::protocols::dsp::types::dataservice_definition::{DataService, DataServiceMinimized};
 use crate::protocols::dsp::types::dataset_definition::{Dataset, DatasetMinimized};
+use crate::protocols::dsp::types::CatalogDspTraitDefinition;
 use rainbow_common::dsp_common::context_field::ContextField;
 use rainbow_common::dsp_common::odrl::OdrlOffer;
 use serde::{Deserialize, Serialize};
@@ -45,8 +46,8 @@ pub struct Catalog {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub odrl_offer: Option<Vec<OdrlOffer>>,
     #[serde(rename = "extraFields")]
-    #[serde(skip_serializing_if = "serde_json::Value::is_null")]
-    pub extra_fields: serde_json::Value,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub extra_fields: Option<serde_json::Value>,
     #[serde(rename = "catalog")]
     pub catalogs: CatalogCatalogTypes,
     #[serde(rename = "dataset")]
@@ -54,6 +55,8 @@ pub struct Catalog {
     #[serde(rename = "service")]
     pub data_services: CatalogServiceTypes,
 }
+
+impl CatalogDspTraitDefinition for Catalog {}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CatalogMinimized {
@@ -73,8 +76,8 @@ pub struct CatalogMinimized {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub odrl_offer: Option<Vec<OdrlOffer>>,
     #[serde(rename = "extraFields")]
-    #[serde(skip_serializing_if = "serde_json::Value::is_null")]
-    pub extra_fields: serde_json::Value,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub extra_fields: Option<serde_json::Value>,
     #[serde(rename = "dataset")]
     pub datasets: CatalogDatasetTypes,
     #[serde(rename = "service")]
@@ -91,11 +94,11 @@ pub struct CatalogFoafDeclaration {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CatalogDcatDeclaration {
     #[serde(rename = "theme")]
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub theme: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub theme: Option<String>,
     #[serde(rename = "keyword")]
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub keyword: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub keyword: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

@@ -213,7 +213,7 @@ impl OrchestrationPersistenceForProtocol {
             _type: "Catalog".to_string(),
             id: Urn::from_str(&dto.inner.id).unwrap_or_else(|_| Urn::from_str("urn:error").unwrap()),
             foaf: CatalogFoafDeclaration { homepage: dto.inner.foaf_home_page },
-            dcat: CatalogDcatDeclaration { theme: "".to_string(), keyword: "".to_string() },
+            dcat: CatalogDcatDeclaration { theme: None, keyword: None },
             dct: CatalogDctDeclaration {
                 conforms_to: dto.inner.dct_conforms_to,
                 creator: dto.inner.dct_creator,
@@ -244,7 +244,7 @@ impl OrchestrationPersistenceForProtocol {
             _type: "Catalog".to_string(),
             id: Urn::from_str(&dto.inner.id).unwrap_or_else(|_| Urn::from_str("urn:error").unwrap()),
             foaf: CatalogFoafDeclaration { homepage: dto.inner.foaf_home_page },
-            dcat: CatalogDcatDeclaration { theme: "".to_string(), keyword: "".to_string() },
+            dcat: CatalogDcatDeclaration { theme: None, keyword: None },
             dct: CatalogDctDeclaration {
                 conforms_to: dto.inner.dct_conforms_to,
                 creator: dto.inner.dct_creator,
@@ -273,7 +273,7 @@ impl OrchestrationPersistenceForProtocol {
             _type: "Catalog".to_string(),
             id: Urn::from_str(&dto.inner.id).unwrap_or_else(|_| Urn::from_str("urn:error").unwrap()),
             foaf: CatalogFoafDeclaration { homepage: dto.inner.foaf_home_page },
-            dcat: CatalogDcatDeclaration { theme: "".to_string(), keyword: "".to_string() },
+            dcat: CatalogDcatDeclaration { theme: None, keyword: None },
             dct: CatalogDctDeclaration {
                 conforms_to: dto.inner.dct_conforms_to,
                 creator: dto.inner.dct_creator,
@@ -346,9 +346,9 @@ impl OrchestrationPersistenceForProtocol {
             _type: "DataService".to_string(),
             id: dto.inner.id.clone(),
             dcat: DataServiceDcatDeclaration {
-                theme: "".to_string(),
-                keyword: "".to_string(),
-                endpoint_description: dto.inner.dcat_endpoint_description.unwrap_or_default(),
+                theme: None,
+                keyword: None,
+                endpoint_description: dto.inner.dcat_endpoint_description,
                 endpoint_url: dto.inner.dcat_endpoint_url,
             },
             dct: DataServiceDctDeclaration {

@@ -19,6 +19,7 @@
 
 use crate::protocols::dsp::types::dataservice_definition::{DataService, DataServiceMinimized};
 use crate::protocols::dsp::types::distribution_definition::{Distribution, DistributionMinimized};
+use crate::protocols::dsp::types::CatalogDspTraitDefinition;
 use rainbow_common::dsp_common::context_field::ContextField;
 use rainbow_common::dsp_common::odrl::OdrlOffer;
 use serde::{Deserialize, Serialize};
@@ -43,6 +44,8 @@ pub struct Dataset {
     #[serde(rename = "distribution")]
     pub distribution: DatasetDistributionTypes,
 }
+
+impl CatalogDspTraitDefinition for Dataset {}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DatasetMinimized {

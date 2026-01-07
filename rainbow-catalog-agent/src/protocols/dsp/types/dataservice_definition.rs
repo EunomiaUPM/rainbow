@@ -55,14 +55,14 @@ pub struct DataServiceMinimized {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DataServiceDcatDeclaration {
     #[serde(rename = "theme")]
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub theme: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub theme: Option<String>,
     #[serde(rename = "keyword")]
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub keyword: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub keyword: Option<String>,
     #[serde(rename = "endpointDescription")]
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub endpoint_description: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub endpoint_description: Option<String>,
     #[serde(rename = "endpointURL")]
     pub endpoint_url: String,
 }
@@ -97,9 +97,9 @@ impl Default for DataService {
             _type: EntityTypes::DataService.to_string(),
             id: "".to_string(),
             dcat: DataServiceDcatDeclaration {
-                theme: "".to_string(),
-                keyword: "".to_string(),
-                endpoint_description: "".to_string(),
+                theme: None,
+                keyword: None,
+                endpoint_description: None,
                 endpoint_url: "".to_string(),
             },
             dct: DataServiceDctDeclaration {

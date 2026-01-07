@@ -33,6 +33,8 @@ pub enum EntityTypes {
     Distribution,
 }
 
+pub trait CatalogDspTraitDefinition {}
+
 impl TryFrom<&str> for EntityTypes {
     type Error = anyhow::Error;
 

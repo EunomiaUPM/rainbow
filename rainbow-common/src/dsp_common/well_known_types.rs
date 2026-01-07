@@ -63,3 +63,8 @@ pub struct Auth {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub profile: Option<Vec<String>>,
 }
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct VersionPath {
+    pub path: String,
+}

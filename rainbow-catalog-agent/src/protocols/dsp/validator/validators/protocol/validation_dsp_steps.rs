@@ -17,7 +17,9 @@
  *
  */
 
-use crate::protocols::dsp::protocol_types::{CatalogMessageDto, CatalogMessageWrapper, DatasetMessageDto};
+use crate::protocols::dsp::protocol_types::CatalogMessageWrapper;
+use crate::protocols::dsp::types::catalog_definition::Catalog;
+use crate::protocols::dsp::types::dataset_definition::Dataset;
 use crate::protocols::dsp::validator::traits::validate_payload::ValidatePayload;
 use crate::protocols::dsp::validator::traits::validation_dsp_steps::ValidationDspSteps;
 use crate::protocols::dsp::validator::traits::validation_helpers::ValidationHelpers;
@@ -35,15 +37,11 @@ impl ValidationDspStepsService {
 
 #[async_trait::async_trait]
 impl ValidationDspSteps for ValidationDspStepsService {
-    async fn on_catalog_request(&self, input: &CatalogMessageWrapper<CatalogMessageDto>) -> anyhow::Result<()> {
+    async fn on_catalog_request(&self, input: &CatalogMessageWrapper<Catalog>) -> anyhow::Result<()> {
         todo!()
     }
 
-    async fn on_dataset_request(
-        &self,
-        uri_id: &String,
-        input: &CatalogMessageWrapper<DatasetMessageDto>,
-    ) -> anyhow::Result<()> {
+    async fn on_dataset_request(&self, uri_id: &String, input: &CatalogMessageWrapper<Dataset>) -> anyhow::Result<()> {
         todo!()
     }
 }

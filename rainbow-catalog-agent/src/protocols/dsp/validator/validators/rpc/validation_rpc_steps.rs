@@ -18,7 +18,7 @@
  */
 
 use crate::protocols::dsp::orchestrator::rpc::types::{RpcCatalogRequestMessageDto, RpcDatasetRequestMessageDto};
-use crate::protocols::dsp::protocol_types::{CatalogMessageDto, CatalogMessageWrapper, DatasetMessageDto};
+use crate::protocols::dsp::protocol_types::CatalogMessageWrapper;
 use crate::protocols::dsp::validator::traits::validate_payload::ValidatePayload;
 use crate::protocols::dsp::validator::traits::validation_dsp_steps::ValidationDspSteps;
 use crate::protocols::dsp::validator::traits::validation_helpers::ValidationHelpers;

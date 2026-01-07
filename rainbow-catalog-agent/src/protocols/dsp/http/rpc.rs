@@ -1,8 +1,11 @@
+use crate::protocols::dsp::orchestrator::rpc::types::{RpcCatalogRequestMessageDto, RpcDatasetRequestMessageDto};
 use crate::protocols::dsp::orchestrator::OrchestratorTrait;
+use axum::extract::rejection::JsonRejection;
 use axum::extract::{FromRef, State};
+use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::get;
-use axum::Router;
+use axum::{Json, Router};
 use std::sync::Arc;
 
 #[derive(Clone)]
@@ -33,10 +36,30 @@ impl RpcRouter {
             .with_state(self)
     }
 
-    async fn handle_rpc_catalog_request(State(state): State<RpcRouter>) -> impl IntoResponse {
-        "catalog"
+    async fn handle_rpc_catalog_request(
+        State(state): State<RpcRouter>,
+        input: Result<Json<RpcCatalogRequestMessageDto>, JsonRejection>,
+    ) -> impl IntoResponse {
+        let input = match input {
+            Ok(input) => input.0,
+            Err(e) => return (StatusCode::BAD_REQUEST, e.body_text()).into_response(),
+        };
+        match state.orchestrator.get_rpc_service().setup_catalog_request_rpc(&input).await {
+            Ok(catalog) => (StatusCode::OK, Json(catalog)).into_response(),
+            Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
+        }
     }
-    async fn handle_rpc_dataset_request(State(state): State<RpcRouter>) -> impl IntoResponse {
-        "dataset"
+    async fn handle_rpc_dataset_request(
+        State(state): State<RpcRouter>,
+        input: Result<Json<RpcDatasetRequestMessageDto>, JsonRejection>,
+    ) -> impl IntoResponse {
+        let input = match input {
+            Ok(input) => input.0,
+            Err(e) => return (StatusCode::BAD_REQUEST, e.body_text()).into_response(),
+        };
+        match state.orchestrator.get_rpc_service().setup_dataset_request_rpc(&input).await {
+            Ok(catalog) => (StatusCode::OK, Json(catalog)).into_response(),
+            Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
+        }
     }
 }
