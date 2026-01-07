@@ -5,16 +5,20 @@ use crate::entities::distributions::DistributionEntityTrait;
 use crate::entities::odrl_policies::OdrlPolicyEntityTrait;
 use crate::protocols::dsp::facades::FacadeService;
 use crate::protocols::dsp::http::protocol::DspRouter;
+use crate::protocols::dsp::http::rpc::RpcRouter;
 use crate::protocols::dsp::orchestrator::orchestrator::OrchestratorService;
 use crate::protocols::dsp::orchestrator::protocol::persistence::OrchestrationPersistenceForProtocol;
 use crate::protocols::dsp::orchestrator::protocol::protocol::ProtocolOrchestratorService;
+use crate::protocols::dsp::orchestrator::rpc::rpc::RPCOrchestratorService;
 use crate::protocols::dsp::validator::validators::protocol::validation_dsp_steps::ValidationDspStepsService;
+use crate::protocols::dsp::validator::validators::rpc::validation_rpc_steps::ValidationRpcStepsService;
 use crate::protocols::dsp::validator::validators::validate_payload::ValidatePayloadService;
 use crate::protocols::dsp::validator::validators::validation_helpers::ValidationHelperService;
 use crate::protocols::protocol::ProtocolPluginTrait;
 use axum::Router;
 use rainbow_common::config::services::CatalogConfig;
 use rainbow_common::facades::ssi_auth_facade::MatesFacadeTrait;
+use rainbow_common::http_client::HttpClient;
 use std::sync::Arc;
 
 mod errors;
@@ -72,10 +76,17 @@ impl ProtocolPluginTrait for CatalogDSP {
     }
 
     async fn build_router(&self) -> anyhow::Result<Router> {
+        // http
+        let http_client = Arc::new(HttpClient::new(10, 3));
+
         // Validator
         let validator_helper = Arc::new(ValidationHelperService::new());
         let validator_payload = Arc::new(ValidatePayloadService::new(validator_helper.clone()));
         let dsp_validator = Arc::new(ValidationDspStepsService::new(
+            validator_payload.clone(),
+            validator_helper.clone(),
+        ));
+        let rpc_validation = Arc::new(ValidationRpcStepsService::new(
             validator_payload.clone(),
             validator_helper.clone(),
         ));
@@ -84,28 +95,34 @@ impl ProtocolPluginTrait for CatalogDSP {
         let facades = Arc::new(FacadeService::new());
 
         // persistence
-        let persistence = Arc::new(OrchestrationPersistenceForProtocol::new(
+        let dsp_persistence = Arc::new(OrchestrationPersistenceForProtocol::new(
             self.catalog_entities_service.clone(),
             self.data_service_entities_service.clone(),
             self.dataset_entities_service.clone(),
             self.odrl_policies_service.clone(),
             self.distributions_entity_service.clone(),
-            self.mates_facade.clone(),
         ));
 
         // orchestrators
-        let http_orchestator = Arc::new(ProtocolOrchestratorService::new(
+        let dsp_orchestator = Arc::new(ProtocolOrchestratorService::new(
             dsp_validator.clone(),
             facades.clone(),
-            persistence.clone(),
+            dsp_persistence.clone(),
         ));
-
-        let orchestrator_service = Arc::new(OrchestratorService::new(http_orchestator.clone()));
+        let rpc_orchestrator = Arc::new(RPCOrchestratorService::new(
+            rpc_validation.clone(),
+            http_client.clone(),
+        ));
+        let orchestrator_service = Arc::new(OrchestratorService::new(
+            dsp_orchestator.clone(),
+            rpc_orchestrator.clone(),
+        ));
 
         // router
         let dsp_router = DspRouter::new(orchestrator_service.clone());
+        let rpc_router = RpcRouter::new(orchestrator_service.clone());
 
-        Ok(Router::new().merge(dsp_router.router()))
+        Ok(Router::new().merge(dsp_router.router()).merge(rpc_router.router()))
     }
 
     fn build_grpc_router(&self) -> anyhow::Result<Option<Router>> {

@@ -34,7 +34,6 @@ pub struct OrchestrationPersistenceForProtocol {
     pub dataset_entities_service: Arc<dyn DatasetEntityTrait>,
     pub odrl_policies_service: Arc<dyn OdrlPolicyEntityTrait>,
     pub distributions_entity_service: Arc<dyn DistributionEntityTrait>,
-    pub mates_facade: Arc<dyn MatesFacadeTrait>,
 }
 
 impl OrchestrationPersistenceForProtocol {
@@ -44,7 +43,6 @@ impl OrchestrationPersistenceForProtocol {
         dataset_entities_service: Arc<dyn DatasetEntityTrait>,
         odrl_policies_service: Arc<dyn OdrlPolicyEntityTrait>,
         distributions_entity_service: Arc<dyn DistributionEntityTrait>,
-        mates_facade: Arc<dyn MatesFacadeTrait>,
     ) -> Self {
         Self {
             catalog_entities_service,
@@ -52,7 +50,6 @@ impl OrchestrationPersistenceForProtocol {
             dataset_entities_service,
             odrl_policies_service,
             distributions_entity_service,
-            mates_facade,
         }
     }
 

@@ -20,3 +20,4 @@
 pub(crate) mod validate_payload;
 pub(crate) mod validation_dsp_steps;
 pub(crate) mod validation_helpers;
+pub mod validation_rpc_steps;

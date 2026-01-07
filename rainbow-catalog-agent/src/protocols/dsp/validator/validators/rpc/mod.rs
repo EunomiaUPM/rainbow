@@ -17,5 +17,4 @@
  *
  */
 
-pub(crate) mod protocol;
-pub(crate) mod rpc;
+pub mod validation_rpc_steps;

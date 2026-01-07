@@ -16,6 +16,10 @@
  *  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
+use crate::protocols::dsp::orchestrator::rpc::types::{RpcCatalogRequestMessageDto, RpcDatasetRequestMessageDto};
 
-pub(crate) mod protocol;
-pub(crate) mod rpc;
+#[async_trait::async_trait]
+pub trait ValidationRpcSteps: Send + Sync + 'static {
+    async fn on_catalog_request(&self, input: &RpcCatalogRequestMessageDto) -> anyhow::Result<()>;
+    async fn on_dataset_request(&self, input: &RpcDatasetRequestMessageDto) -> anyhow::Result<()>;
+}
