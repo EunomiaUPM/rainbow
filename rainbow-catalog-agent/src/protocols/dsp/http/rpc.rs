@@ -22,8 +22,14 @@ impl RpcRouter {
     }
     pub fn router(self) -> Router {
         Router::new()
-            .route("/rpc/setup-catalog-request", get(Self::handle_rpc_catalog_request))
-            .route("/rpc/setup-dataset-request", get(Self::handle_rpc_dataset_request))
+            .route(
+                "/rpc/setup-catalog-request",
+                get(Self::handle_rpc_catalog_request),
+            )
+            .route(
+                "/rpc/setup-dataset-request",
+                get(Self::handle_rpc_dataset_request),
+            )
             .with_state(self)
     }
 

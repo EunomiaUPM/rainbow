@@ -3,6 +3,7 @@ use crate::entities::data_services::DataServiceEntityTrait;
 use crate::entities::datasets::DatasetEntityTrait;
 use crate::entities::distributions::DistributionEntityTrait;
 use crate::entities::odrl_policies::OdrlPolicyEntityTrait;
+use crate::protocols::dsp::facades::well_known_rpc_facade::well_known_rpc_facade::WellKnownRPCFacadeForDSProtocol;
 use crate::protocols::dsp::facades::FacadeService;
 use crate::protocols::dsp::http::protocol::DspRouter;
 use crate::protocols::dsp::http::rpc::RpcRouter;
@@ -36,7 +37,7 @@ pub struct CatalogDSP {
     pub odrl_policies_service: Arc<dyn OdrlPolicyEntityTrait>,
     pub distributions_entity_service: Arc<dyn DistributionEntityTrait>,
     pub mates_facade: Arc<dyn MatesFacadeTrait>,
-    _config: Arc<CatalogConfig>,
+    config: Arc<CatalogConfig>,
 }
 
 impl CatalogDSP {
@@ -56,7 +57,7 @@ impl CatalogDSP {
             odrl_policies_service,
             distributions_entity_service,
             mates_facade,
-            _config: config,
+            config: config,
         }
     }
 }
@@ -92,7 +93,11 @@ impl ProtocolPluginTrait for CatalogDSP {
         ));
 
         // facades
-        let facades = Arc::new(FacadeService::new());
+        let catalog_well_known_rpc_facade = Arc::new(WellKnownRPCFacadeForDSProtocol::new(
+            self.config.clone(),
+            http_client.clone(),
+        ));
+        let facades = Arc::new(FacadeService::new(catalog_well_known_rpc_facade.clone()));
 
         // persistence
         let dsp_persistence = Arc::new(OrchestrationPersistenceForProtocol::new(
@@ -112,6 +117,7 @@ impl ProtocolPluginTrait for CatalogDSP {
         let rpc_orchestrator = Arc::new(RPCOrchestratorService::new(
             rpc_validation.clone(),
             http_client.clone(),
+            facades.clone(),
         ));
         let orchestrator_service = Arc::new(OrchestratorService::new(
             dsp_orchestator.clone(),

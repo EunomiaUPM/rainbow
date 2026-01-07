@@ -46,6 +46,10 @@ impl WellKnownRouter {
                 "/rpc/.well-known/dspace-version",
                 post(Self::handle_post_well_known_version_from_participant),
             )
+            .route(
+                "/rpc/.well-known/dspace-version/path",
+                post(Self::handle_post_well_known_version_from_participant_path),
+            )
             .with_state(self)
     }
 
@@ -63,6 +67,19 @@ impl WellKnownRouter {
         };
         match state.dspace_version_rpc.fetch_dataspace_well_known(&input).await {
             Ok(res) => (StatusCode::OK, Json(res)).into_response(),
+            Err(err) => err.to_response(),
+        }
+    }
+    async fn handle_post_well_known_version_from_participant_path(
+        State(state): State<WellKnownRouter>,
+        input: Result<Json<WellKnownRPCRequest>, JsonRejection>,
+    ) -> impl IntoResponse {
+        let input = match extract_payload(input) {
+            Ok(v) => v,
+            Err(e) => return e,
+        };
+        match state.dspace_version_rpc.fetch_dataspace_current_path(&input).await {
+            Ok(res) => (StatusCode::OK, res).into_response(),
             Err(err) => err.to_response(),
         }
     }

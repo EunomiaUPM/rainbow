@@ -1,22 +1,31 @@
+use crate::protocols::dsp::facades::FacadeTrait;
 use crate::protocols::dsp::orchestrator::rpc::types::{
     RpcCatalogMessageTrait, RpcCatalogRequestMessageDto, RpcCatalogResponseMessageDto, RpcDatasetRequestMessageDto,
 };
 use crate::protocols::dsp::orchestrator::rpc::RPCOrchestratorTrait;
-use crate::protocols::dsp::protocol_types::{CatalogMessageDto, CatalogMessageWrapper, CatalogRequestMessageDto, DatasetMessageDto, DatasetRequestMessage};
-use rainbow_common::http_client::HttpClient;
-use std::marker::PhantomData;
-use std::sync::Arc;
+use crate::protocols::dsp::protocol_types::{
+    CatalogMessageDto, CatalogMessageWrapper, CatalogRequestMessageDto, DatasetMessageDto, DatasetRequestMessage,
+};
 use crate::protocols::dsp::validator::traits::validation_dsp_steps::ValidationDspSteps;
 use crate::protocols::dsp::validator::traits::validation_rpc_steps::ValidationRpcSteps;
+use rainbow_common::http_client::HttpClient;
+use rainbow_common::well_known::rpc::WellKnownRPCRequest;
+use std::marker::PhantomData;
+use std::sync::Arc;
 
 pub struct RPCOrchestratorService {
     validator: Arc<dyn ValidationRpcSteps>,
     http_client: Arc<HttpClient>,
+    facades: Arc<dyn FacadeTrait>,
 }
 
 impl RPCOrchestratorService {
-    pub fn new(validator: Arc<dyn ValidationRpcSteps>, http_client: Arc<HttpClient>) -> RPCOrchestratorService {
-        Self { validator, http_client }
+    pub fn new(
+        validator: Arc<dyn ValidationRpcSteps>,
+        http_client: Arc<HttpClient>,
+        facades: Arc<dyn FacadeTrait>,
+    ) -> RPCOrchestratorService {
+        Self { validator, http_client, facades }
     }
 }
 
@@ -30,13 +39,17 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         self.validator.on_catalog_request(input).await?;
 
         // send message to peer
-        let provider_address = "";
+        let participant_id = input.get_associated_agent_peer().ok_or(anyhow::Error::msg("No associated agent"))?;
+        let provider_address = self
+            .facades
+            .get_catalog_rpc_path_facade()
+            .await
+            .resolve_dataspace_current_path(&WellKnownRPCRequest { participant_id })
+            .await?;
         let peer_url = format!("{}/catalog/request", provider_address);
         let request_body: CatalogMessageWrapper<CatalogRequestMessageDto> = input.clone().into();
         self.http_client.set_auth_token("blabla".to_string()).await;
         let response: CatalogMessageDto = self.http_client.post_json(peer_url.as_str(), &request_body).await?;
-
-        // todo persist
 
         let response = RpcCatalogResponseMessageDto { request: input.clone(), response };
         Ok(response)
@@ -49,14 +62,18 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         // validation
         self.validator.on_dataset_request(input).await?;
 
-        let provider_address = "";
+        let participant_id = input.get_associated_agent_peer().ok_or(anyhow::Error::msg("No associated agent"))?;
+        let provider_address = self
+            .facades
+            .get_catalog_rpc_path_facade()
+            .await
+            .resolve_dataspace_current_path(&WellKnownRPCRequest { participant_id })
+            .await?;
         let dataset = input.get_dataset_id().unwrap_or("".to_string());
         let peer_url = format!("{}/catalog/datasets/{}", provider_address, dataset);
         let request_body: CatalogMessageWrapper<DatasetRequestMessage> = input.clone().into();
         self.http_client.set_auth_token("blabla".to_string()).await;
         let response: DatasetMessageDto = self.http_client.post_json(peer_url.as_str(), &request_body).await?;
-
-        // todo persist
 
         let response = RpcCatalogResponseMessageDto { request: input.clone(), response };
         Ok(response)

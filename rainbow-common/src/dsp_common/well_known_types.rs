@@ -10,7 +10,7 @@ pub enum AuthProtocolTypes {
     Gnap,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub enum DSPProtocolVersions {
     #[serde(rename = "2024-1")]
     V2024_1,

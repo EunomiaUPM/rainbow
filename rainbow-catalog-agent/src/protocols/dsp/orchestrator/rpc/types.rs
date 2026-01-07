@@ -1,4 +1,7 @@
-use crate::protocols::dsp::protocol_types::{CatalogErrorDto, CatalogMessageDto, CatalogMessageTrait, CatalogMessageType, CatalogMessageWrapper, CatalogRequestMessageDto, DatasetRequestMessage};
+use crate::protocols::dsp::protocol_types::{
+    CatalogErrorDto, CatalogMessageDto, CatalogMessageTrait, CatalogMessageType, CatalogMessageWrapper,
+    CatalogRequestMessageDto, DatasetRequestMessage,
+};
 use rainbow_common::dsp_common::context_field::ContextField;
 use rainbow_common::dsp_common::odrl::ContractRequestMessageOfferTypes;
 use serde::{Deserialize, Serialize};
@@ -58,9 +61,7 @@ impl Into<CatalogMessageWrapper<DatasetRequestMessage>> for RpcDatasetRequestMes
         CatalogMessageWrapper {
             context: ContextField::default(),
             _type: CatalogMessageType::DatasetRequestMessage,
-            dto: DatasetRequestMessage {
-                dataset: dataset_urn
-            },
+            dto: DatasetRequestMessage { dataset: dataset_urn },
         }
     }
 }

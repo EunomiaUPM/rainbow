@@ -17,13 +17,13 @@
  *
  */
 
+use crate::protocols::dsp::orchestrator::rpc::types::{RpcCatalogRequestMessageDto, RpcDatasetRequestMessageDto};
 use crate::protocols::dsp::protocol_types::{CatalogMessageDto, CatalogMessageWrapper, DatasetMessageDto};
 use crate::protocols::dsp::validator::traits::validate_payload::ValidatePayload;
 use crate::protocols::dsp::validator::traits::validation_dsp_steps::ValidationDspSteps;
 use crate::protocols::dsp::validator::traits::validation_helpers::ValidationHelpers;
-use std::sync::Arc;
-use crate::protocols::dsp::orchestrator::rpc::types::{RpcCatalogRequestMessageDto, RpcDatasetRequestMessageDto};
 use crate::protocols::dsp::validator::traits::validation_rpc_steps::ValidationRpcSteps;
+use std::sync::Arc;
 
 pub struct ValidationRpcStepsService {
     payload_validator: Arc<dyn ValidatePayload>,
@@ -38,10 +38,10 @@ impl ValidationRpcStepsService {
 #[async_trait::async_trait]
 impl ValidationRpcSteps for ValidationRpcStepsService {
     async fn on_catalog_request(&self, input: &RpcCatalogRequestMessageDto) -> anyhow::Result<()> {
-        todo!()
+        Ok(())
     }
 
     async fn on_dataset_request(&self, input: &RpcDatasetRequestMessageDto) -> anyhow::Result<()> {
-        todo!()
+        Ok(())
     }
 }
