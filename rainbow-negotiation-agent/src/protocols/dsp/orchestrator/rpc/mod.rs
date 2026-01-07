@@ -23,7 +23,6 @@ use crate::protocols::dsp::orchestrator::rpc::types::{
     RpcNegotiationVerificationMessageDto,
 };
 
-pub(crate) mod peer_communication;
 pub(crate) mod persistence;
 pub(crate) mod rpc;
 pub(crate) mod types;

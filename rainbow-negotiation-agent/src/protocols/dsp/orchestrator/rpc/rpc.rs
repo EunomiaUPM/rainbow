@@ -19,7 +19,6 @@
 
 use crate::entities::negotiation_process::NegotiationProcessDto;
 use crate::protocols::dsp::orchestrator::rpc::RPCOrchestratorTrait;
-use crate::protocols::dsp::orchestrator::rpc::peer_communication::PeerCommunication;
 use crate::protocols::dsp::orchestrator::rpc::persistence::OrchestrationPersistenceForRpc;
 use crate::protocols::dsp::orchestrator::rpc::types::{
     RpcNegotiationAgreementMessageDto, RpcNegotiationEventAcceptedMessageDto, RpcNegotiationEventFinalizedMessageDto,
