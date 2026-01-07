@@ -4,7 +4,7 @@ use axum::extract::rejection::JsonRejection;
 use axum::extract::{FromRef, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use axum::routing::get;
+use axum::routing::{get, post};
 use axum::{Json, Router};
 use std::sync::Arc;
 
@@ -27,11 +27,11 @@ impl RpcRouter {
         Router::new()
             .route(
                 "/rpc/setup-catalog-request",
-                get(Self::handle_rpc_catalog_request),
+                post(Self::handle_rpc_catalog_request),
             )
             .route(
                 "/rpc/setup-dataset-request",
-                get(Self::handle_rpc_dataset_request),
+                post(Self::handle_rpc_dataset_request),
             )
             .with_state(self)
     }
@@ -58,7 +58,7 @@ impl RpcRouter {
             Err(e) => return (StatusCode::BAD_REQUEST, e.body_text()).into_response(),
         };
         match state.orchestrator.get_rpc_service().setup_dataset_request_rpc(&input).await {
-            Ok(catalog) => (StatusCode::OK, Json(catalog)).into_response(),
+            Ok(dataset) => (StatusCode::OK, Json(dataset)).into_response(),
             Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
         }
     }

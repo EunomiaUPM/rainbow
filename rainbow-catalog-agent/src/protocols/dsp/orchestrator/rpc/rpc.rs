@@ -77,7 +77,7 @@ impl RPCOrchestratorTrait for RPCOrchestratorService {
         let peer_url = format!("{}/catalog/datasets/{}", provider_address, dataset);
         let request_body: CatalogMessageWrapper<DatasetRequestMessage> = input.clone().into();
         self.http_client.set_auth_token("blabla".to_string()).await;
-        let response: Dataset = self.http_client.post_json(peer_url.as_str(), &request_body).await?;
+        let response: Dataset = self.http_client.get_json_with_payload(peer_url.as_str(), &request_body).await?;
 
         let response = RpcCatalogResponseMessageDto { request: input.clone(), response };
         Ok(response)
