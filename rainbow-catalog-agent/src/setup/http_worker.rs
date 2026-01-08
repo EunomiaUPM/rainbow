@@ -24,12 +24,14 @@ use crate::entities::data_services::data_services::DataServiceEntities;
 use crate::entities::datasets::datasets::DatasetEntities;
 use crate::entities::distributions::distributions::DistributionEntities;
 use crate::entities::odrl_policies::odrl_policies::OdrlPolicyEntities;
+use crate::entities::peer_catalogs::peer_catalogs::PeerCatalogEntities;
 use crate::entities::policy_templates::policy_templates::PolicyTemplateEntities;
 use crate::http::catalogs::CatalogEntityRouter;
 use crate::http::data_services::DataServiceEntityRouter;
 use crate::http::datasets::DatasetEntityRouter;
 use crate::http::distributions::DistributionEntityRouter;
 use crate::http::odrl_policies::OdrlOfferEntityRouter;
+use crate::http::peer_catalog::PeerCatalogEntityRouter;
 use crate::http::policy_templates::PolicyTemplateEntityRouter;
 use crate::protocols::dsp::CatalogDSP;
 use crate::protocols::protocol::ProtocolPluginTrait;
@@ -150,6 +152,8 @@ pub async fn create_root_http_router(config: &CatalogConfig) -> anyhow::Result<R
     let policy_templates_controller_service = Arc::new(PolicyTemplateEntities::new(catalog_agent_repo.clone()));
     let policy_templates_router =
         PolicyTemplateEntityRouter::new(policy_templates_controller_service.clone(), config.clone());
+    let peer_catalog_service = Arc::new(PeerCatalogEntities::new(catalog_agent_cache.clone()));
+    let peer_catalog_router = PeerCatalogEntityRouter::new(peer_catalog_service.clone());
 
     // dsp
     let dsp_router = CatalogDSP::new(
@@ -158,6 +162,7 @@ pub async fn create_root_http_router(config: &CatalogConfig) -> anyhow::Result<R
         datasets_controller_service.clone(),
         odrl_offer_controller_service.clone(),
         distributions_controller_service.clone(),
+        peer_catalog_service.clone(),
         mates_facade.clone(),
         config.clone(),
     )
@@ -189,6 +194,10 @@ pub async fn create_root_http_router(config: &CatalogConfig) -> anyhow::Result<R
         .nest(
             format!("{}/policy-templates", router_str.as_str()).as_str(),
             policy_templates_router.router(),
+        )
+        .nest(
+            format!("{}/peer-catalogs", router_str.as_str()).as_str(),
+            peer_catalog_router.router(),
         )
         .nest("/dsp/current/catalog", dsp_router);
 

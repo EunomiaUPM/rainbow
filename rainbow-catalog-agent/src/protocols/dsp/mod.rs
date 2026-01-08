@@ -3,6 +3,7 @@ use crate::entities::data_services::DataServiceEntityTrait;
 use crate::entities::datasets::DatasetEntityTrait;
 use crate::entities::distributions::DistributionEntityTrait;
 use crate::entities::odrl_policies::OdrlPolicyEntityTrait;
+use crate::entities::peer_catalogs::PeerCatalogTrait;
 use crate::protocols::dsp::facades::well_known_rpc_facade::well_known_rpc_facade::WellKnownRPCFacadeForDSProtocol;
 use crate::protocols::dsp::facades::FacadeService;
 use crate::protocols::dsp::http::protocol::DspRouter;
@@ -10,6 +11,7 @@ use crate::protocols::dsp::http::rpc::RpcRouter;
 use crate::protocols::dsp::orchestrator::orchestrator::OrchestratorService;
 use crate::protocols::dsp::orchestrator::protocol::persistence::OrchestrationPersistenceForProtocol;
 use crate::protocols::dsp::orchestrator::protocol::protocol::ProtocolOrchestratorService;
+use crate::protocols::dsp::orchestrator::rpc::persistence::OrchestrationPersistenceForProtocolForRPC;
 use crate::protocols::dsp::orchestrator::rpc::rpc::RPCOrchestratorService;
 use crate::protocols::dsp::validator::validators::protocol::validation_dsp_steps::ValidationDspStepsService;
 use crate::protocols::dsp::validator::validators::rpc::validation_rpc_steps::ValidationRpcStepsService;
@@ -36,6 +38,7 @@ pub struct CatalogDSP {
     pub dataset_entities_service: Arc<dyn DatasetEntityTrait>,
     pub odrl_policies_service: Arc<dyn OdrlPolicyEntityTrait>,
     pub distributions_entity_service: Arc<dyn DistributionEntityTrait>,
+    pub peer_catalog_entity_service: Arc<dyn PeerCatalogTrait>,
     pub mates_facade: Arc<dyn MatesFacadeTrait>,
     config: Arc<CatalogConfig>,
 }
@@ -47,6 +50,7 @@ impl CatalogDSP {
         dataset_entities_service: Arc<dyn DatasetEntityTrait>,
         odrl_policies_service: Arc<dyn OdrlPolicyEntityTrait>,
         distributions_entity_service: Arc<dyn DistributionEntityTrait>,
+        peer_catalog_entity_service: Arc<dyn PeerCatalogTrait>,
         mates_facade: Arc<dyn MatesFacadeTrait>,
         config: Arc<CatalogConfig>,
     ) -> Self {
@@ -56,6 +60,7 @@ impl CatalogDSP {
             dataset_entities_service,
             odrl_policies_service,
             distributions_entity_service,
+            peer_catalog_entity_service,
             mates_facade,
             config: config,
         }
@@ -107,6 +112,9 @@ impl ProtocolPluginTrait for CatalogDSP {
             self.odrl_policies_service.clone(),
             self.distributions_entity_service.clone(),
         ));
+        let rpc_persistence = Arc::new(OrchestrationPersistenceForProtocolForRPC::new(
+            self.peer_catalog_entity_service.clone(),
+        ));
 
         // orchestrators
         let dsp_orchestator = Arc::new(ProtocolOrchestratorService::new(
@@ -118,6 +126,7 @@ impl ProtocolPluginTrait for CatalogDSP {
             rpc_validation.clone(),
             http_client.clone(),
             facades.clone(),
+            rpc_persistence.clone(),
         ));
         let orchestrator_service = Arc::new(OrchestratorService::new(
             dsp_orchestator.clone(),

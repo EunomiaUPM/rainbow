@@ -22,7 +22,9 @@ use crate::cache::cache_redis::dataservice_cache::DataServiceCacheForRedis;
 use crate::cache::cache_redis::dataset_cache::DatasetCacheForRedis;
 use crate::cache::cache_redis::distribution_cache::DistributionCacheForRedis;
 use crate::cache::cache_redis::odrl_offer_cache::OdrlOfferCacheForRedis;
+use crate::cache::cache_redis::peer_catalog_cache::DcatCatalogCacheForRedis;
 use crate::cache::cache_traits::entity_cache_trait::EntityCacheTrait;
+use crate::cache::cache_traits::peer_catalog_cache_trait::PeerCatalogCacheTrait;
 use crate::cache::factory_trait::CatalogAgentCacheTrait;
 use crate::data::factory_trait::CatalogAgentRepoTrait;
 use crate::data::repo_traits::catalog_repo::CatalogRepositoryTrait;
@@ -48,6 +50,7 @@ pub struct CatalogAgentCacheForRedis {
     dataset_repo: Arc<dyn EntityCacheTrait<DatasetDto>>,
     distribution_repo: Arc<dyn EntityCacheTrait<DistributionDto>>,
     odrl_offer_repo: Arc<dyn EntityCacheTrait<OdrlPolicyDto>>,
+    peer_catalog_repo: Arc<dyn PeerCatalogCacheTrait>,
 }
 
 impl CatalogAgentCacheForRedis {
@@ -58,6 +61,7 @@ impl CatalogAgentCacheForRedis {
             dataset_repo: Arc::new(DatasetCacheForRedis::new(db_connection.clone())),
             distribution_repo: Arc::new(DistributionCacheForRedis::new(db_connection.clone())),
             odrl_offer_repo: Arc::new(OdrlOfferCacheForRedis::new(db_connection.clone())),
+            peer_catalog_repo: Arc::new(DcatCatalogCacheForRedis::new(db_connection.clone())),
         }
     }
 }
@@ -81,5 +85,9 @@ impl CatalogAgentCacheTrait for CatalogAgentCacheForRedis {
 
     fn get_odrl_offer_cache(&self) -> Arc<dyn EntityCacheTrait<OdrlPolicyDto>> {
         self.odrl_offer_repo.clone()
+    }
+
+    fn get_peer_catalog_cache(&self) -> Arc<dyn PeerCatalogCacheTrait> {
+        self.peer_catalog_repo.clone()
     }
 }

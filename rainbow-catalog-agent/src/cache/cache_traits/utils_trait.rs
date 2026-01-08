@@ -10,6 +10,10 @@ pub trait UtilsCacheTrait: Send + Sync {
         format!("rainbow_catalogs:{}:{}", entity, id)
     }
 
+    fn format_key_name_with_string(&self, entity: &str, id: &String) -> String {
+        format!("rainbow_catalogs:{}:{}", entity, id)
+    }
+
     /// Key for the main pointer: rainbow_catalogs:entity_name:main
     fn format_key_name_main(&self, entity: &str) -> String {
         format!("rainbow_catalogs:{}:main", entity)
