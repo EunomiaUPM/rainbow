@@ -47,6 +47,7 @@ tonic-reflection = "0.14.2"
 convert_case = "0.6"
 json_to_table = {workspace = true}
 redis = {version = "1.0.2", features = ["default", "aio", "tokio-comp", "json"]}
+regex = "1.12.2"
 
 [build-dependencies]
 tonic-prost-build = "0.14.2"

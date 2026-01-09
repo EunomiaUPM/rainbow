@@ -1,5 +1,6 @@
 pub(crate) mod policy_templates;
 pub(crate) mod types;
+pub(crate) mod validator;
 
 use crate::data::entities::policy_template;
 use crate::data::entities::policy_template::{Model, NewPolicyTemplateModel};

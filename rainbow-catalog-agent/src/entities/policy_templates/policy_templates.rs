@@ -90,6 +90,11 @@ impl PolicyTemplateEntityTrait for PolicyTemplateEntities {
         &self,
         new_policy_template: &NewPolicyTemplateDto,
     ) -> anyhow::Result<PolicyTemplateDto> {
+        new_policy_template.validate_dto().map_err(|e| {
+            let err = CommonErrors::parse_new(&e.to_string());
+            error!("{}", err.log());
+            err
+        })?;
         let new_model: NewPolicyTemplateModel = new_policy_template.clone().try_into()?;
         let policy_template =
             self.repo.get_policy_template_repo().create_policy_template(&new_model).await.map_err(|e| {
