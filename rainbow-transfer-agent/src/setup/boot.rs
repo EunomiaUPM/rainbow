@@ -46,6 +46,9 @@ impl BootstrapServiceTrait for TransferBoot {
     fn enable_dataservice() -> bool {
         false
     }
+    fn enable_policy_templates() -> bool {
+        false
+    }
 
     async fn start_services_background(config: &Self::Config) -> anyhow::Result<Sender<()>> {
         // thread control

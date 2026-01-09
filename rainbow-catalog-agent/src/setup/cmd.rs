@@ -60,7 +60,8 @@ impl CatalogCommands {
                 let step3 = step2.0.next_step().await?; // Services -> Participant
                 let step4 = step3.0.next_step().await?; // Participant -> Catalog
                 let step5 = step4.0.next_step().await?; // Catalog -> DataService
-                let step_finalized = step5.0.next_step().await?;
+                let step6 = step5.0.next_step().await?; // DataService -> PolicyTemplates
+                let step_finalized = step6.0.next_step().await?;
                 let _ = step_finalized.0.next_step().await?;
             }
             CatalogCliCommands::Setup(args) => {

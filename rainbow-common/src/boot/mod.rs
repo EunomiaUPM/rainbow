@@ -32,6 +32,13 @@ pub trait BootstrapServiceTrait: Send + Sync {
         anyhow::bail!("This service does not support creation of data services.");
     }
 
+    fn enable_policy_templates() -> bool {
+        true
+    }
+    async fn load_policy_templates(_config: &Self::Config) -> anyhow::Result<()> {
+        anyhow::bail!("This service does not support creation of policy templates.");
+    }
+
     async fn start_services_background(config: &Self::Config) -> anyhow::Result<broadcast::Sender<()>>;
 }
 
@@ -87,6 +94,11 @@ pub struct BootstrapDataServiceLoaded<S: BootstrapServiceTrait> {
     pub dataservice_id: Option<String>,
 }
 
+pub struct BootstrapPolicyTemplateLoaded<S: BootstrapServiceTrait> {
+    pub config: S::Config,
+    pub shutdown_tx: broadcast::Sender<()>,
+}
+
 pub struct BootstrapFinalized<S: BootstrapServiceTrait> {
     pub _marker: PhantomData<S>,
     pub shutdown_tx: broadcast::Sender<()>,
@@ -99,7 +111,7 @@ impl<S: BootstrapServiceTrait> BootstrapStepTrait for BootstrapInit<S> {
     type NextState = BootstrapCurrentState<BootstrapConfigLoaded<S>>;
 
     async fn next_step(self) -> anyhow::Result<Self::NextState> {
-        tracing::info!("Step [1/7]: Init bootstrap configuration");
+        tracing::info!("Step [1/8]: Init bootstrap configuration");
         Ok(BootstrapCurrentState(BootstrapConfigLoaded {
             _marker: PhantomData,
             env_file: self.env_file,
@@ -113,10 +125,10 @@ impl<S: BootstrapServiceTrait> BootstrapStepTrait for BootstrapConfigLoaded<S> {
     type NextState = BootstrapCurrentState<BootstrapServicesStarted<S>>;
 
     async fn next_step(self) -> anyhow::Result<Self::NextState> {
-        tracing::info!("Step [2/7]: Configuration loading");
+        tracing::info!("Step [2/8]: Configuration loading");
         let config = S::load_config(self.role, self.env_file).await?;
 
-        tracing::info!("Step [3/7]: Starting Services in Background");
+        tracing::info!("Step [3/8]: Starting Services in Background");
         let shutdown_tx = S::start_services_background(&config).await?;
 
         // waiting for port setup
@@ -134,7 +146,7 @@ impl<S: BootstrapServiceTrait> BootstrapStepTrait for BootstrapServicesStarted<S
     type NextState = BootstrapCurrentState<BootstrapSelfParticipantOnBoarded<S>>;
 
     async fn next_step(self) -> anyhow::Result<Self::NextState> {
-        tracing::info!("Step [4/7]: Creating self participant");
+        tracing::info!("Step [4/8]: Creating self participant");
 
         let participant_id =
             if S::enable_participant() { Some(S::create_participant(&self.config).await?) } else { None };
@@ -152,7 +164,7 @@ impl<S: BootstrapServiceTrait> BootstrapStepTrait for BootstrapSelfParticipantOn
     type NextState = BootstrapCurrentState<BootstrapCatalogLoaded<S>>;
 
     async fn next_step(self) -> anyhow::Result<Self::NextState> {
-        tracing::info!("Step [5/7]: Loading main catalog");
+        tracing::info!("Step [5/8]: Loading main catalog");
 
         let catalog_id =
             if S::enable_catalog() { Some(S::load_catalog(&self.participant_id, &self.config).await?) } else { None };
@@ -171,7 +183,7 @@ impl<S: BootstrapServiceTrait> BootstrapStepTrait for BootstrapCatalogLoaded<S> 
     type NextState = BootstrapCurrentState<BootstrapDataServiceLoaded<S>>;
 
     async fn next_step(self) -> anyhow::Result<Self::NextState> {
-        tracing::info!("Step [6/7]: Loading main dataservice");
+        tracing::info!("Step [6/8]: Loading main dataservice");
 
         let dataservice_id = if S::enable_dataservice() {
             Some(S::load_dataservice(&self.catalog_id, &self.config).await?)
@@ -191,10 +203,28 @@ impl<S: BootstrapServiceTrait> BootstrapStepTrait for BootstrapCatalogLoaded<S> 
 
 #[async_trait::async_trait]
 impl<S: BootstrapServiceTrait> BootstrapStepTrait for BootstrapDataServiceLoaded<S> {
+    type NextState = BootstrapCurrentState<BootstrapPolicyTemplateLoaded<S>>;
+
+    async fn next_step(self) -> anyhow::Result<Self::NextState> {
+        tracing::info!("Step [7/8]: Loading policy templates.");
+
+        if S::enable_policy_templates() {
+            S::load_policy_templates(&self.config).await?
+        }
+
+        Ok(BootstrapCurrentState(BootstrapPolicyTemplateLoaded {
+            config: self.config,
+            shutdown_tx: self.shutdown_tx,
+        }))
+    }
+}
+
+#[async_trait::async_trait]
+impl<S: BootstrapServiceTrait> BootstrapStepTrait for BootstrapPolicyTemplateLoaded<S> {
     type NextState = BootstrapCurrentState<BootstrapFinalized<S>>;
 
     async fn next_step(self) -> anyhow::Result<Self::NextState> {
-        tracing::info!("Step [7/7]: Bootstrap sequence completed. Services UP.");
+        tracing::info!("Step [8/8]: Bootstrap sequence completed. Services UP.");
 
         Ok(BootstrapCurrentState(BootstrapFinalized {
             _marker: PhantomData,

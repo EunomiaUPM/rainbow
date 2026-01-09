@@ -28,9 +28,10 @@ use rainbow_common::config::types::roles::RoleConfig;
 use rainbow_common::config::types::HostType;
 use rainbow_common::http_client::{HttpClient, HttpClientError};
 use std::str::FromStr;
-use tokio::signal;
 use tokio::sync::broadcast;
+use tokio::{fs, signal};
 use tokio_util::sync::CancellationToken;
+use tracing::error;
 use urn::Urn;
 
 pub struct CatalogAgentBoot;
@@ -111,6 +112,51 @@ impl BootstrapServiceTrait for CatalogAgentBoot {
             .await?;
         Ok(catalog.inner.id)
     }
+
+    async fn load_policy_templates(config: &Self::Config) -> anyhow::Result<()> {
+        let client = HttpClient::new(1, 3);
+        let base_url = config.get_host(HostType::Http);
+        let api = config.get_api_version();
+        let url = format!("{}{}/catalog-agent/policy-templates", base_url, api);
+        // load files
+        let policies_folder = config.get_policy_templates_folder();
+        let mut read_dir = match fs::read_dir(&policies_folder).await {
+            Ok(c) => c,
+            Err(e) => {
+                error!("Failed to read folder: {}", e.to_string());
+                return Ok(());
+            }
+        };
+        while let Ok(Some(entry)) = read_dir.next_entry().await {
+            let path = entry.path();
+            if path.is_file() && path.extension().map_or(false, |ext| ext == "json") {
+                let content = match fs::read_to_string(&path).await {
+                    Ok(c) => c,
+                    Err(e) => {
+                        error!("Failed to read file {:?}: {}", path, e);
+                        continue;
+                    }
+                };
+                let json_payload: serde_json::Value = match serde_json::from_str(&content) {
+                    Ok(json) => json,
+                    Err(e) => {
+                        error!("Invalid JSON format in file {:?}: {}", path, e);
+                        continue;
+                    }
+                };
+                let _ =
+                    match client.post_json::<serde_json::Value, serde_json::Value>(url.as_str(), &json_payload).await {
+                        Ok(_) => {}
+                        Err(e) => {
+                            error!("Invalid request {:?}: {}", path, e);
+                            continue;
+                        }
+                    };
+            }
+        }
+        Ok(())
+    }
+
     async fn start_services_background(config: &Self::Config) -> anyhow::Result<broadcast::Sender<()>> {
         // thread control
         let (shutdown_tx, mut shutdown_rx) = broadcast::channel(1);

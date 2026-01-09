@@ -35,6 +35,7 @@ pub struct CatalogConfig {
     common: CommonConfig,
     cache: CacheConfig,
     is_datahub: bool,
+    policy_templates_folder: Option<String>,
     datahub_host: Option<HostConfig>,
     datahub_token: Option<String>,
     ssi_auth: MinKnownConfig,
@@ -68,6 +69,9 @@ impl CatalogConfig {
         };
         token.expect("datahub_token not found")
     }
+    pub fn get_policy_templates_folder(&self) -> String {
+        self.policy_templates_folder.clone().unwrap_or("/".to_string())
+    }
 }
 
 impl ConfigLoader for CatalogConfig {
@@ -82,6 +86,7 @@ impl ConfigLoader for CatalogConfig {
                 password: "default".to_string(),
             },
             is_datahub: false,
+            policy_templates_folder: None,
             datahub_host: None,
             datahub_token: None,
             ssi_auth: MinKnownConfig {

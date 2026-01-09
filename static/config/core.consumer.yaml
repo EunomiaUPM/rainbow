@@ -19,6 +19,8 @@ min_known_config: &min_known_config
 
 is_catalog_datahub: &is_catalog_datahub false
 
+policy_templates_folder: &policy_templates_folder "../static/policy_templates"
+
 cache_config: &cache_config
   cache_type: Redis
   url: "127.0.0.1"
@@ -56,6 +58,7 @@ catalog:
   common: *common_config
   cache: *cache_config
   is_datahub: *is_catalog_datahub
+  policy_templates_folder: *policy_templates_folder
   datahub_host: null
   datahub_token: null
   ssi_auth: *min_known_config

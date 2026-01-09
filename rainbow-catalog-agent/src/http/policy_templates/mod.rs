@@ -26,6 +26,11 @@ pub struct PaginationParams {
     pub page: Option<u64>,
 }
 
+#[derive(Deserialize)]
+pub struct SilentParams {
+    pub silent: Option<bool>,
+}
+
 impl FromRef<PolicyTemplateEntityRouter> for Arc<dyn PolicyTemplateEntityTrait> {
     fn from_ref(state: &PolicyTemplateEntityRouter) -> Self {
         state.service.clone()
@@ -106,15 +111,37 @@ impl PolicyTemplateEntityRouter {
     }
     async fn handle_create_policy_template(
         State(state): State<PolicyTemplateEntityRouter>,
+        Query(params): Query<SilentParams>,
         input: Result<Json<NewPolicyTemplateDto>, JsonRejection>,
     ) -> impl IntoResponse {
-        let input = match extract_payload(input) {
-            Ok(v) => v,
-            Err(e) => return e,
+        let silent = params.silent.unwrap_or(false);
+        let input = match input {
+            Ok(Json(v)) => v,
+            Err(e) => {
+                if silent {
+                    tracing::warn!("Silent mode: Invalid JSON payload ignored: {}", e);
+                    // RETORNO TEMPRANO: Devolvemos 200 OK y terminamos la ejecución
+                    return (StatusCode::OK).into_response();
+                }
+                return (StatusCode::BAD_REQUEST, format!("Invalid JSON: {}", e)).into_response();
+            }
         };
         match state.service.create_policy_template(&input).await {
             Ok(template) => (StatusCode::OK, Json(ToCamelCase(template))).into_response(),
-            Err(err) => err.to_response(),
+            Err(err) => {
+                if silent {
+                    (
+                        StatusCode::NOT_ACCEPTABLE,
+                        format!(
+                            "Silent mode: Failed to create policy template. Error: {:?}",
+                            err
+                        ),
+                    )
+                        .into_response()
+                } else {
+                    err.to_response()
+                }
+            }
         }
     }
     async fn handle_delete_policy_template_by_id_and_version(
