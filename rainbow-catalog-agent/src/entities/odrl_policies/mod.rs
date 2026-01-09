@@ -47,7 +47,15 @@ impl Display for CatalogEntityTypes {
 
 impl From<NewOdrlPolicyDto> for NewOdrlOfferModel {
     fn from(dto: NewOdrlPolicyDto) -> Self {
-        Self { id: dto.id, odrl_offer: dto.odrl_offer, entity_id: dto.entity_id, entity_type: dto.entity_type }
+        Self {
+            id: dto.id,
+            odrl_offer: dto.odrl_offer,
+            entity_id: dto.entity_id,
+            entity_type: dto.entity_type,
+            source_template_id: None,
+            source_template_version: None,
+            instantiation_parameters: None,
+        }
     }
 }
 

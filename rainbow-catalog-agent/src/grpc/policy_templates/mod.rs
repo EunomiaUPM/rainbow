@@ -1,8 +1,8 @@
 use crate::entities::policy_templates::{NewPolicyTemplateDto, PolicyTemplateEntityTrait};
 use crate::grpc::api::catalog_agent::policy_template_entity_service_server::PolicyTemplateEntityService;
 use crate::grpc::api::catalog_agent::{
-    CreatePolicyTemplateRequest, DeleteByIdRequest, GetAllRequest, GetBatchRequest, GetByIdRequest, PolicyTemplate,
-    PolicyTemplateListResponse, PolicyTemplateResponse,
+    CreatePolicyTemplateRequest, DeleteByIdRequest, DeleteByVersionRequest, GetAllRequest, GetBatchRequest,
+    GetByIdRequest, GetByVersionRequest, PolicyTemplate, PolicyTemplateListResponse, PolicyTemplateResponse,
 };
 use std::str::FromStr;
 use std::sync::Arc;
@@ -44,12 +44,7 @@ impl PolicyTemplateEntityService for PolicyTemplateEntityGrpc {
         request: Request<GetBatchRequest>,
     ) -> Result<Response<PolicyTemplateListResponse>, Status> {
         let req = request.into_inner();
-        let urns: Vec<Urn> = req
-            .ids
-            .iter()
-            .map(|id| Urn::from_str(id))
-            .collect::<Result<Vec<_>, _>>()
-            .map_err(|_| Status::invalid_argument("One or more IDs are invalid URNs"))?;
+        let urns = req.ids;
 
         let templates =
             self.service.get_batch_policy_templates(&urns).await.map_err(|e| Status::internal(e.to_string()))?;
@@ -61,21 +56,42 @@ impl PolicyTemplateEntityService for PolicyTemplateEntityGrpc {
         }))
     }
 
-    async fn get_policy_template_by_id(
+    async fn get_policy_templates_by_id(
         &self,
         request: Request<GetByIdRequest>,
+    ) -> Result<Response<PolicyTemplateListResponse>, Status> {
+        let req = request.into_inner();
+        let policy_template = req.id;
+
+        let templates = self
+            .service
+            .get_policies_template_by_id(&policy_template)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
+        let proto_templates: Vec<PolicyTemplate> = templates.into_iter().map(Into::into).collect();
+
+        Ok(Response::new(PolicyTemplateListResponse {
+            policy_templates: proto_templates,
+        }))
+    }
+
+    async fn get_policy_template_by_version(
+        &self,
+        request: Request<GetByVersionRequest>,
     ) -> Result<Response<PolicyTemplateResponse>, Status> {
         let req = request.into_inner();
-        let urn = Urn::from_str(&req.id).map_err(|_| Status::invalid_argument("Invalid URN"))?;
-
-        let template_opt =
-            self.service.get_policy_template_by_id(&urn).await.map_err(|e| Status::internal(e.to_string()))?;
-
-        match template_opt {
+        let policy_template = req.id;
+        let version = req.version;
+        let templates = self
+            .service
+            .get_policies_template_by_version_and_id(&policy_template, &version)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
+        match templates {
             Some(dto) => Ok(Response::new(PolicyTemplateResponse {
                 policy_template: Some(dto.into()),
             })),
-            None => Err(Status::not_found("Policy Template not found")),
+            None => Err(Status::not_found("Policy template not found")),
         }
     }
 
@@ -97,14 +113,19 @@ impl PolicyTemplateEntityService for PolicyTemplateEntityGrpc {
         }))
     }
 
-    async fn delete_policy_template_by_id(&self, request: Request<DeleteByIdRequest>) -> Result<Response<()>, Status> {
+    async fn delete_policy_template_by_version(
+        &self,
+        request: Request<DeleteByVersionRequest>,
+    ) -> Result<Response<()>, Status> {
         let req = request.into_inner();
-        let urn = Urn::from_str(&req.id).map_err(|_| Status::invalid_argument("Invalid URN"))?;
+        let policy_template = req.id;
+        let version = req.version;
 
-        self.service
-            .delete_policy_template_by_id(&urn)
+        let _ = self
+            .service
+            .delete_policy_template_by_version_and_id(&policy_template, &version)
             .await
-            .map_err(|e| Status::internal(format!("Failed to delete Policy Template: {}", e)))?;
+            .map_err(|e| Status::internal(format!("Failed to create Policy Template: {}", e)))?;
 
         Ok(Response::new(()))
     }

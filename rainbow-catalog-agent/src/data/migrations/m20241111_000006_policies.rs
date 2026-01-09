@@ -22,7 +22,7 @@ use sea_orm_migration::prelude::*;
 pub struct Migration;
 impl MigrationName for Migration {
     fn name(&self) -> &str {
-        "m20241111_000005_odrl_offers"
+        "m20241111_000006_policies"
     }
 }
 
@@ -38,6 +38,26 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(CatalogODRLOffers::Entity).string().not_null())
                     .col(ColumnDef::new(CatalogODRLOffers::EntityType).string().not_null())
                     .col(ColumnDef::new(CatalogODRLOffers::CreatedAt).timestamp_with_time_zone().not_null())
+                    .col(ColumnDef::new(CatalogODRLOffers::SourceTemplateId).string().null())
+                    .col(ColumnDef::new(CatalogODRLOffers::SourceTemplateVersion).string().null())
+                    .col(ColumnDef::new(CatalogODRLOffers::InstantiationParameters).json_binary().null())
+                    .foreign_key(
+                        ForeignKey::create()
+                            .name("fk_odrl_offers_template_source")
+                            .from(
+                                CatalogODRLOffers::Table,
+                                (
+                                    CatalogODRLOffers::SourceTemplateId,
+                                    CatalogODRLOffers::SourceTemplateVersion,
+                                ),
+                            )
+                            .to(
+                                PolicyTemplates::Table,
+                                (PolicyTemplates::Id, PolicyTemplates::Version),
+                            )
+                            .on_delete(ForeignKeyAction::SetNull)
+                            .on_update(ForeignKeyAction::Cascade),
+                    )
                     .to_owned(),
             )
             .await
@@ -56,4 +76,14 @@ pub enum CatalogODRLOffers {
     Entity,
     EntityType,
     CreatedAt,
+    SourceTemplateId,
+    SourceTemplateVersion,
+    InstantiationParameters,
+}
+
+#[derive(Iden)]
+pub enum PolicyTemplates {
+    Table,
+    Id,
+    Version,
 }

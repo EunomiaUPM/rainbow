@@ -366,10 +366,8 @@ impl OrchestrationPersistenceForProtocol {
     }
 
     fn map_odrl_policy(&self, dto: OdrlPolicyDto) -> anyhow::Result<OdrlOffer> {
-        let odrl_info = serde_json::from_value::<OdrlPolicyInfo>(
-            dto.inner.odrl_offer.ok_or_else(|| anyhow::anyhow!("Missing policy content"))?,
-        )
-        .map_err(|e| anyhow::anyhow!("Invalid Policy JSON: {}", e))?;
+        let odrl_info = serde_json::from_value::<OdrlPolicyInfo>(dto.inner.odrl_offer)
+            .map_err(|e| anyhow::anyhow!("Invalid Policy JSON: {}", e))?;
 
         Ok(OdrlOffer {
             id: Urn::from_str(&dto.inner.id)?,

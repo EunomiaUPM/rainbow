@@ -1,6 +1,8 @@
 use crate::data::entities::policy_template;
-use crate::data::entities::policy_template::NewPolicyTemplateModel;
-use crate::data::repo_traits::catalog_db_errors::{CatalogAgentRepoErrors, PolicyTemplatesRepoErrors};
+use crate::data::entities::policy_template::{Model, NewPolicyTemplateModel};
+use crate::data::repo_traits::catalog_db_errors::{
+    CatalogAgentRepoErrors, OdrlOfferRepoErrors, PolicyTemplatesRepoErrors,
+};
 use crate::data::repo_traits::policy_template_repo::PolicyTemplatesRepositoryTrait;
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder, QuerySelect};
 use urn::Urn;
@@ -27,7 +29,7 @@ impl PolicyTemplatesRepositoryTrait for PolicyTemplatesRepositoryForSql {
         let calculated_offset = (page_number.max(1) - 1) * page_limit;
 
         match policy_template::Entity::find()
-            .order_by_desc(policy_template::Column::CreatedAt)
+            .order_by_desc(policy_template::Column::Date)
             .limit(page_limit)
             .offset(calculated_offset)
             .all(&self.db_connection)
@@ -42,9 +44,9 @@ impl PolicyTemplatesRepositoryTrait for PolicyTemplatesRepositoryForSql {
 
     async fn get_batch_policy_templates(
         &self,
-        ids: &Vec<Urn>,
+        ids: &Vec<String>,
     ) -> anyhow::Result<Vec<policy_template::Model>, CatalogAgentRepoErrors> {
-        let policy_ids = ids.iter().map(|t| t.to_string()).collect::<Vec<_>>();
+        let policy_ids = ids.clone();
         let policy_process = policy_template::Entity::find()
             .filter(policy_template::Column::Id.is_in(policy_ids))
             .all(&self.db_connection)
@@ -57,12 +59,30 @@ impl PolicyTemplatesRepositoryTrait for PolicyTemplatesRepositoryForSql {
         }
     }
 
-    async fn get_policy_template_by_id(
+    async fn get_policy_templates_by_id(
         &self,
-        template_id: &Urn,
-    ) -> anyhow::Result<Option<policy_template::Model>, CatalogAgentRepoErrors> {
+        template_id: &String,
+    ) -> anyhow::Result<Vec<Model>, CatalogAgentRepoErrors> {
         let template_id = template_id.to_string();
-        match policy_template::Entity::find_by_id(template_id).one(&self.db_connection).await {
+        match policy_template::Entity::find()
+            .filter(policy_template::Column::Id.eq(template_id))
+            .all(&self.db_connection)
+            .await
+        {
+            Ok(template) => Ok(template),
+            Err(err) => Err(CatalogAgentRepoErrors::PolicyTemplatesRepoErrors(
+                PolicyTemplatesRepoErrors::ErrorFetchingPolicyTemplate(err.into()),
+            )),
+        }
+    }
+
+    async fn get_policy_template_by_id_and_version(
+        &self,
+        template_id: &String,
+        version: &String,
+    ) -> anyhow::Result<Option<Model>, CatalogAgentRepoErrors> {
+        match policy_template::Entity::find_by_id((template_id.clone(), version.clone())).one(&self.db_connection).await
+        {
             Ok(template) => Ok(template),
             Err(err) => Err(CatalogAgentRepoErrors::PolicyTemplatesRepoErrors(
                 PolicyTemplatesRepoErrors::ErrorFetchingPolicyTemplate(err.into()),
@@ -83,10 +103,21 @@ impl PolicyTemplatesRepositoryTrait for PolicyTemplatesRepositoryForSql {
         }
     }
 
-    async fn delete_policy_template_by_id(&self, template_id: &Urn) -> anyhow::Result<(), CatalogAgentRepoErrors> {
-        let template_id = template_id.to_string();
-        match policy_template::Entity::delete_by_id(template_id).exec(&self.db_connection).await {
-            Ok(_) => Ok(()),
+    async fn delete_policy_template_by_id_and_version(
+        &self,
+        template_id: &String,
+        version: &String,
+    ) -> anyhow::Result<(), CatalogAgentRepoErrors> {
+        match policy_template::Entity::delete_by_id((template_id.clone(), version.clone()))
+            .exec(&self.db_connection)
+            .await
+        {
+            Ok(delete_result) => match delete_result.rows_affected {
+                0 => Err(CatalogAgentRepoErrors::PolicyTemplatesRepoErrors(
+                    PolicyTemplatesRepoErrors::PolicyTemplateNotFound,
+                )),
+                _ => Ok(()),
+            },
             Err(err) => Err(CatalogAgentRepoErrors::PolicyTemplatesRepoErrors(
                 PolicyTemplatesRepoErrors::ErrorDeletingPolicyTemplate(err.into()),
             )),

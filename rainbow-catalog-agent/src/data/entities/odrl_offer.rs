@@ -28,10 +28,13 @@ use urn::{Urn, UrnBuilder};
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: String,
-    pub odrl_offer: Option<serde_json::Value>,
+    pub odrl_offer: serde_json::Value,
     pub entity: String,
     pub entity_type: String,
     pub created_at: DateTimeWithTimeZone,
+    pub source_template_id: Option<String>,
+    pub source_template_version: Option<String>,
+    pub instantiation_parameters: Option<serde_json::Value>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
@@ -52,6 +55,18 @@ pub enum Relation {
         to = "super::distribution::Column::Id"
     )]
     Distribution,
+    #[sea_orm(
+        belongs_to = "super::policy_template::Entity",
+        from = "(Column::SourceTemplateId, Column::SourceTemplateVersion)",
+        to = "(super::policy_template::Column::Id, super::policy_template::Column::Version)"
+    )]
+    Template,
+}
+
+impl Related<super::policy_template::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Template.def()
+    }
 }
 impl Related<super::catalog::Entity> for Entity {
     fn to() -> RelationDef {
@@ -82,6 +97,9 @@ pub struct NewOdrlOfferModel {
     pub odrl_offer: OdrlPolicyInfo,
     pub entity_id: Urn,
     pub entity_type: CatalogEntityTypes,
+    pub source_template_id: Option<String>,
+    pub source_template_version: Option<String>,
+    pub instantiation_parameters: Option<serde_json::Value>,
 }
 
 impl From<NewOdrlOfferModel> for ActiveModel {
@@ -91,10 +109,13 @@ impl From<NewOdrlOfferModel> for ActiveModel {
             .expect("UrnBuilder failed");
         Self {
             id: ActiveValue::Set(dto.id.clone().unwrap_or(new_urn.clone()).to_string()),
-            odrl_offer: ActiveValue::Set(serde_json::to_value(dto.odrl_offer).ok()),
+            odrl_offer: ActiveValue::Set(serde_json::to_value(dto.odrl_offer).unwrap_or_default()),
             entity: ActiveValue::Set(dto.entity_id.to_string()),
             entity_type: ActiveValue::Set(dto.entity_type.to_string()),
             created_at: ActiveValue::Set(chrono::Utc::now().into()),
+            source_template_id: ActiveValue::Set(dto.source_template_id),
+            source_template_version: ActiveValue::Set(dto.source_template_version),
+            instantiation_parameters: ActiveValue::Set(dto.instantiation_parameters),
         }
     }
 }

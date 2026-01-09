@@ -22,7 +22,7 @@ use sea_orm_migration::prelude::*;
 pub struct Migration;
 impl MigrationName for Migration {
     fn name(&self) -> &str {
-        "m20250528_000002_policy_templates"
+        "m20241111_000005_policy_templates"
     }
 }
 
@@ -33,12 +33,20 @@ impl MigrationTrait for Migration {
             .create_table(
                 Table::create()
                     .table(PolicyTemplates::Table)
-                    .col(ColumnDef::new(PolicyTemplates::Id).string().not_null().primary_key())
-                    .col(ColumnDef::new(PolicyTemplates::Title).string())
-                    .col(ColumnDef::new(PolicyTemplates::Description).string())
-                    .col(ColumnDef::new(PolicyTemplates::Content).json().not_null())
-                    .col(ColumnDef::new(PolicyTemplates::OperandOptions).json().not_null())
-                    .col(ColumnDef::new(PolicyTemplates::CreatedAt).timestamp_with_time_zone().not_null())
+                    .col(ColumnDef::new(PolicyTemplates::Id).string().not_null())
+                    .col(ColumnDef::new(PolicyTemplates::Version).string().not_null())
+                    .col(ColumnDef::new(PolicyTemplates::Date).timestamp_with_time_zone().not_null())
+                    .col(ColumnDef::new(PolicyTemplates::Author).string().not_null())
+                    .col(ColumnDef::new(PolicyTemplates::Title).json_binary())
+                    .col(ColumnDef::new(PolicyTemplates::Description).json_binary())
+                    .col(ColumnDef::new(PolicyTemplates::Content).json_binary().not_null())
+                    .col(ColumnDef::new(PolicyTemplates::Parameters).json_binary().not_null())
+                    .primary_key(
+                        Index::create()
+                            .name("pk_policy_templates")
+                            .col(PolicyTemplates::Id)
+                            .col(PolicyTemplates::Version),
+                    )
                     .to_owned(),
             )
             .await
@@ -53,9 +61,11 @@ impl MigrationTrait for Migration {
 pub enum PolicyTemplates {
     Table,
     Id,
+    Version,
+    Date,
+    Author,
     Title,
     Description,
     Content,
-    OperandOptions,
-    CreatedAt,
+    Parameters,
 }

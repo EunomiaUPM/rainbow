@@ -23,8 +23,8 @@ mod m20241111_000001_catalog;
 mod m20241111_000002_dataset;
 mod m20241111_000003_distribution;
 mod m20241111_000004_dataservice;
-mod m20241111_000005_policies;
-mod m20250528_000002_policy_templates;
+mod m20241111_000005_policy_templates;
+mod m20241111_000006_policies;
 
 pub fn get_catalog_migrations() -> Vec<Box<dyn MigrationTrait>> {
     vec![
@@ -32,8 +32,8 @@ pub fn get_catalog_migrations() -> Vec<Box<dyn MigrationTrait>> {
         Box::new(m20241111_000002_dataset::Migration),
         Box::new(m20241111_000003_distribution::Migration),
         Box::new(m20241111_000004_dataservice::Migration),
-        Box::new(m20241111_000005_policies::Migration),
-        Box::new(m20250528_000002_policy_templates::Migration),
+        Box::new(m20241111_000005_policy_templates::Migration),
+        Box::new(m20241111_000006_policies::Migration),
     ]
 }
 pub struct Migrator;

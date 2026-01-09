@@ -2,7 +2,6 @@ syntax = "proto3";
 
 package catalog.v1;
 
-import "google/protobuf/struct.proto";
 import "google/protobuf/empty.proto";
 import "catalog_models.proto";
 
@@ -80,10 +79,10 @@ service DistributionEntityService {
 service PolicyTemplateEntityService {
   rpc GetAllPolicyTemplates (GetAllRequest) returns (PolicyTemplateListResponse);
   rpc GetBatchPolicyTemplates (GetBatchRequest) returns (PolicyTemplateListResponse);
-  rpc GetPolicyTemplateById (GetByIdRequest) returns (PolicyTemplateResponse);
-
+  rpc GetPolicyTemplatesById (GetByIdRequest) returns (PolicyTemplateListResponse);
+  rpc GetPolicyTemplateByVersion (GetByVersionRequest) returns (PolicyTemplateResponse);
   rpc CreatePolicyTemplate (CreatePolicyTemplateRequest) returns (PolicyTemplateResponse);
-  rpc DeletePolicyTemplateById (DeleteByIdRequest) returns (google.protobuf.Empty);
+  rpc DeletePolicyTemplateByVersion (DeleteByVersionRequest) returns (google.protobuf.Empty);
 }
 
 // ---------------------------------------------------------
@@ -99,174 +98,4 @@ service OdrlPolicyEntityService {
   rpc CreateOdrlOffer (CreateOdrlPolicyRequest) returns (OdrlPolicyResponse);
   rpc DeleteOdrlOfferById (DeleteByIdRequest) returns (google.protobuf.Empty);
   rpc DeleteOdrlOffersByEntity (DeleteByEntityIdRequest) returns (google.protobuf.Empty);
-}
-
-// ---------------------------------------------------------
-// Common Requests
-// ---------------------------------------------------------
-
-message GetAllRequest {
-  optional uint64 limit = 1;
-  optional uint64 page = 2;
-}
-
-message GetBatchRequest {
-  repeated string ids = 1;
-}
-
-message GetByIdRequest {
-  string id = 1;
-}
-
-message DeleteByIdRequest {
-  string id = 1;
-}
-
-message GetByParentIdRequest {
-  string parent_id = 1; //
-}
-
-message GetByEntityIdRequest {
-  string entity_id = 1;
-}
-
-message DeleteByEntityIdRequest {
-  string entity_id = 1;
-}
-
-// ---------------------------------------------------------
-// Specific Request/Response Objects
-// ---------------------------------------------------------
-
-// --- Catalog ---
-
-message GetAllCatalogsRequest {
-  optional uint64 limit = 1;
-  optional uint64 page = 2;
-  bool with_main_catalog = 3;
-}
-
-message CatalogResponse {
-  optional Catalog catalog = 1;
-}
-
-message CreateCatalogRequest {
-  optional string id = 1;
-  optional string foaf_home_page = 2;
-  optional string dct_conforms_to = 3;
-  optional string dct_creator = 4;
-  optional string dct_title = 5;
-  optional string dspace_participant_id = 6;
-}
-
-message PutCatalogRequest {
-  string id = 1;
-  optional string foaf_home_page = 2;
-  optional string dct_conforms_to = 3;
-  optional string dct_creator = 4;
-  optional string dct_title = 5;
-}
-
-// --- DataService ---
-
-message DataServiceResponse {
-  optional DataService data_service = 1;
-}
-
-message CreateDataServiceRequest {
-  optional string id = 1;
-  optional string dcat_endpoint_description = 2;
-  string dcat_endpoint_url = 3;
-  optional string dct_conforms_to = 4;
-  optional string dct_creator = 5;
-  optional string dct_title = 6;
-  optional string dct_description = 7;
-  string catalog_id = 8;
-}
-
-message PutDataServiceRequest {
-  string id = 1;
-  optional string dcat_endpoint_description = 2;
-  optional string dcat_endpoint_url = 3;
-  optional string dct_conforms_to = 4;
-  optional string dct_creator = 5;
-  optional string dct_title = 6;
-  optional string dct_description = 7;
-}
-
-// --- Dataset ---
-
-message DatasetResponse {
-  optional Dataset dataset = 1;
-}
-
-message CreateDatasetRequest {
-  optional string id = 1;
-  optional string dct_conforms_to = 2;
-  optional string dct_creator = 3;
-  optional string dct_title = 4;
-  optional string dct_description = 5;
-  string catalog_id = 6;
-}
-
-message PutDatasetRequest {
-  string id = 1;
-  optional string dct_conforms_to = 2;
-  optional string dct_creator = 3;
-  optional string dct_title = 4;
-  optional string dct_description = 5;
-}
-
-// --- Distribution ---
-
-message DistributionResponse {
-  optional Distribution distribution = 1;
-}
-
-message GetDistributionByFormatRequest {
-  string dataset_id = 1;
-  string dct_formats = 2;
-}
-
-message CreateDistributionRequest {
-  optional string id = 1;
-  optional string dct_title = 2;
-  optional string dct_description = 3;
-  string dct_formats = 4;
-  string dcat_access_service = 5;
-  string dataset_id = 6;
-}
-
-message PutDistributionRequest {
-  string id = 1;
-  optional string dct_title = 2;
-  optional string dct_description = 3;
-  optional string dcat_access_service = 4;
-}
-
-// --- PolicyTemplate ---
-
-message PolicyTemplateResponse {
-  optional PolicyTemplate policy_template = 1;
-}
-
-message CreatePolicyTemplateRequest {
-  optional string id = 1;
-  optional string title = 2;
-  optional string description = 3;
-  google.protobuf.Struct content = 4;
-  optional google.protobuf.Struct operand_options = 5;
-}
-
-// --- OdrlPolicy ---
-
-message OdrlPolicyResponse {
-  optional OdrlPolicy policy = 1;
-}
-
-message CreateOdrlPolicyRequest {
-  optional string id = 1;
-  google.protobuf.Struct odrl_offer = 2;
-  string entity_id = 3;
-  CatalogEntityType entity_type = 4;
 }
