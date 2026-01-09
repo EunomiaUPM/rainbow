@@ -371,7 +371,15 @@ impl TryFrom<CreateOdrlPolicyRequest> for NewOdrlPolicyDto {
             }
         };
 
-        Ok(Self { id, odrl_offer, entity_id, entity_type })
+        Ok(Self {
+            id,
+            odrl_offer,
+            entity_id,
+            entity_type,
+            source_template_id: None,
+            source_template_version: None,
+            instantiation_parameters: None,
+        })
     }
 }
 

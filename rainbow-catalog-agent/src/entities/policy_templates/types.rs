@@ -1,3 +1,4 @@
+use crate::entities::common::PolicyTemplateAllowedDefaultValues;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
@@ -40,13 +41,6 @@ pub enum ParameterDataType {
     Time,
     DateTime,
     Selection,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(untagged)]
-pub enum AllowedDefaultValues {
-    Stringable(String),
-    Numerable(f32),
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
@@ -96,5 +90,5 @@ pub struct ParameterDefinition {
     #[serde(default)]
     pub ui: UiHints,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub default_value: Option<AllowedDefaultValues>,
+    pub default_value: Option<PolicyTemplateAllowedDefaultValues>,
 }

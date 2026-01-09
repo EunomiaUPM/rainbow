@@ -1,3 +1,4 @@
+use crate::entities::instantiation_engine::{NewPolicyInstantiationDto, PolicyInstantiationTrait};
 use crate::entities::policy_templates::{NewPolicyTemplateDto, PolicyTemplateEntityTrait};
 use crate::errors::error_adapter::CustomToResponse;
 use crate::http::common::to_camel_case::ToCamelCase;
@@ -17,6 +18,7 @@ use std::sync::Arc;
 #[derive(Clone)]
 pub struct PolicyTemplateEntityRouter {
     service: Arc<dyn PolicyTemplateEntityTrait>,
+    policy_engine: Arc<dyn PolicyInstantiationTrait>,
     config: Arc<CatalogConfig>,
 }
 
@@ -37,6 +39,12 @@ impl FromRef<PolicyTemplateEntityRouter> for Arc<dyn PolicyTemplateEntityTrait> 
     }
 }
 
+impl FromRef<PolicyTemplateEntityRouter> for Arc<dyn PolicyInstantiationTrait> {
+    fn from_ref(state: &PolicyTemplateEntityRouter) -> Self {
+        state.policy_engine.clone()
+    }
+}
+
 impl FromRef<PolicyTemplateEntityRouter> for Arc<CatalogConfig> {
     fn from_ref(state: &PolicyTemplateEntityRouter) -> Self {
         state.config.clone()
@@ -44,8 +52,12 @@ impl FromRef<PolicyTemplateEntityRouter> for Arc<CatalogConfig> {
 }
 
 impl PolicyTemplateEntityRouter {
-    pub fn new(service: Arc<dyn PolicyTemplateEntityTrait>, config: Arc<CatalogConfig>) -> Self {
-        Self { service, config }
+    pub fn new(
+        service: Arc<dyn PolicyTemplateEntityTrait>,
+        policy_engine: Arc<dyn PolicyInstantiationTrait>,
+        config: Arc<CatalogConfig>,
+    ) -> Self {
+        Self { service, policy_engine, config }
     }
 
     pub fn router(self) -> Router {
@@ -61,6 +73,10 @@ impl PolicyTemplateEntityRouter {
             .route(
                 "/:id/:version",
                 delete(Self::handle_delete_policy_template_by_id_and_version),
+            )
+            .route(
+                "/instantiate-odrl-offer",
+                post(Self::handle_instantiate_offer),
             )
             .with_state(self)
     }
@@ -150,6 +166,33 @@ impl PolicyTemplateEntityRouter {
     ) -> impl IntoResponse {
         match state.service.delete_policy_template_by_version_and_id(&id, &version).await {
             Ok(_) => StatusCode::ACCEPTED.into_response(),
+            Err(err) => match err.downcast::<CommonErrors>() {
+                Ok(ce) => match ce {
+                    CommonErrors::DatabaseError { ref cause, .. } => {
+                        if cause.contains("not found") {
+                            let err = CommonErrors::missing_resource_new("", cause.as_str());
+                            return err.into_response();
+                        } else {
+                            ce.into_response()
+                        }
+                    }
+                    e => return e.into_response(),
+                },
+                Err(e) => e.to_response(),
+            },
+        }
+    }
+
+    async fn handle_instantiate_offer(
+        State(state): State<PolicyTemplateEntityRouter>,
+        input: Result<Json<NewPolicyInstantiationDto>, JsonRejection>,
+    ) -> impl IntoResponse {
+        let input = match extract_payload(input) {
+            Ok(v) => v,
+            Err(e) => return e,
+        };
+        match state.policy_engine.instantiate_policy(&input).await {
+            Ok(dto) => (StatusCode::ACCEPTED, Json(ToCamelCase(dto))).into_response(),
             Err(err) => match err.downcast::<CommonErrors>() {
                 Ok(ce) => match ce {
                     CommonErrors::DatabaseError { ref cause, .. } => {

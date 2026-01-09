@@ -23,6 +23,7 @@ use crate::entities::catalogs::catalogs::CatalogEntities;
 use crate::entities::data_services::data_services::DataServiceEntities;
 use crate::entities::datasets::datasets::DatasetEntities;
 use crate::entities::distributions::distributions::DistributionEntities;
+use crate::entities::instantiation_engine::instantiation_engine::PolicyInstantiationEngine;
 use crate::entities::odrl_policies::odrl_policies::OdrlPolicyEntities;
 use crate::entities::peer_catalogs::peer_catalogs::PeerCatalogEntities;
 use crate::entities::policy_templates::policy_templates::PolicyTemplateEntities;
@@ -149,9 +150,17 @@ pub async fn create_root_http_router(config: &CatalogConfig) -> anyhow::Result<R
         catalog_agent_cache.clone(),
     ));
     let odrl_offer_router = OdrlOfferEntityRouter::new(odrl_offer_controller_service.clone(), config.clone());
+
     let policy_templates_controller_service = Arc::new(PolicyTemplateEntities::new(catalog_agent_repo.clone()));
-    let policy_templates_router =
-        PolicyTemplateEntityRouter::new(policy_templates_controller_service.clone(), config.clone());
+    let policy_engine_service = Arc::new(PolicyInstantiationEngine::new(
+        odrl_offer_controller_service.clone(),
+        policy_templates_controller_service.clone(),
+    ));
+    let policy_templates_router = PolicyTemplateEntityRouter::new(
+        policy_templates_controller_service.clone(),
+        policy_engine_service.clone(),
+        config.clone(),
+    );
     let peer_catalog_service = Arc::new(PeerCatalogEntities::new(catalog_agent_cache.clone()));
     let peer_catalog_router = PeerCatalogEntityRouter::new(peer_catalog_service.clone());
 
